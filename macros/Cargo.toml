@@ -1,0 +1,16 @@
+[package]
+name = "macros"
+version.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+edition.workspace = true
+
+
+[lib]
+proc-macro = true
+
+
+[dependencies]
+quote = "1.0"
+litrs = "0.4.0"

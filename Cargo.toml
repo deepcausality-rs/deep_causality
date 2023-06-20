@@ -1,0 +1,22 @@
+[workspace]
+members = ["macros"]
+
+
+[workspace.package]
+authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
+edition = "2021"
+repository = ""
+rust-version = "1.65"
+version = "0.4.0"
+
+
+[workspace.dependencies]
+# using a patched version of petgraph until PR #547 went through
+petgraph = { git = "https://github.com/marvin-hansen/petgraph.git", rev = "a685be8" }
+
+
+[profile.release]
+strip = true  # Automatically strip debug symbols from the binary
+lto = true    # Enable Link Time Optimization (LTO)
+codegen-units = 1 # Reduce Parallel Code Generation Units to Increase Optimization
+panic = "abort"  # disabled
