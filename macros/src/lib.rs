@@ -8,9 +8,6 @@ extern crate proc_macro;
 use proc_macro::TokenStream;
 use std::convert::TryFrom;
 
-use litrs::StringLit;
-use quote::quote;
-
 #[proc_macro]
 pub fn make_run(_input: TokenStream) -> TokenStream
 {
@@ -78,42 +75,4 @@ pub fn make_vec_to_vec(_item: TokenStream) -> TokenStream
     "fn to_vec(&self) -> Vec<T> {
         self.clone()
     }".parse().unwrap()
-}
-
-// How do I get the value and type of a Literal in a procedural macro?
-// https://stackoverflow.com/questions/61169932/how-do-i-get-the-value-and-type-of-a-literal-in-a-procedural-macro
-// https://crates.io/crates/litrs
-
-#[proc_macro]
-pub fn make_experiment(input: TokenStream) -> TokenStream
-{
-    // Parse input.
-    let input = input.into_iter().collect::<Vec<_>>();
-
-    // Verify input.
-    if input.len() != 1 {
-        let msg = format!("expected exactly one input str token, got {}", input.len());
-        return quote! { compile_error!(#msg) }.into();
-    }
-
-    let string_lit = match StringLit::try_from(&input[0]) {
-        // Error if the token is not a string literal
-        Err(e) => return e.to_compile_error(),
-        Ok(lit) => lit,
-    };
-
-    // Extract actual string literal value.
-    let descr = string_lit.value();
-
-    // Generate the actual constructor call and inject the string literal value.
-    let gen = quote! {
-            Experiment::new(
-            id,
-            stringify!(#descr),
-            cm,
-            exp::func,
-        )
-    };
-
-    gen.into()
 }

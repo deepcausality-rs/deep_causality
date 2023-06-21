@@ -1,19 +1,38 @@
+# The Manifest Format
+# https://doc.rust-lang.org/cargo/reference/manifest.html
+
 [workspace]
 members = ["macros"]
 
-
-[workspace.package]
-authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
+[package]
+name = "deep_causality_rs"
+version = "0.0.1"
 edition = "2021"
-repository = ""
 rust-version = "1.65"
-version = "0.4.0"
+readme = "README.md"
+license = "MIT"
+license-file = "LICENSE.txt"
 
+description = "Computational causality library. Provides causality graph, collections, context and causal reasoning."
+#documentation = ""
+#homepage = ""
+repository = "https://github.com/deepcausality/deep_causality.rs"
+keywords = ["cauality","causal-data-structure", "causal-graph","causal-reasoning","graph"]
+categories = ["data-structures","science","aerospace","finance","mathematics"]
+authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 
-[workspace.dependencies]
+[dependencies]
 # using a patched version of petgraph until PR #547 went through
 petgraph = { git = "https://github.com/marvin-hansen/petgraph.git", rev = "a685be8" }
 
+[workspace.package]
+version = "0.4.0"
+edition = "2021"
+rust-version = "1.65"
+repository = "https://github.com/deepcausality/deep_causality.rs"
+authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
+
+[workspace.dependencies]
 
 [profile.release]
 strip = true  # Automatically strip debug symbols from the binary
