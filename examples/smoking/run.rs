@@ -114,7 +114,7 @@ fn build_smoke_tar_causaloid() -> Causaloid
     let data_set_id = "Data set abc from study Homer et al. DOI: 122345 ".to_string();
 
     //3) Build the causaloid
-    reasoning_types::causable::build_causaloid(
+    build_causaloid(
         id,
         causal_fn,
         description,
@@ -231,8 +231,8 @@ fn causal_fn(
 
     let threshold: NumericalValue = 0.55;
     if !obs.ge(&threshold) {
-        return Ok(false)
+        return Ok(false);
     };
 
-    return Ok(true)
+    return Ok(true);
 }
