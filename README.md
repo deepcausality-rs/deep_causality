@@ -18,8 +18,10 @@ Also, take a look at [how is deep causality different from deep learning?](/doc/
 
 ## Install
 
-```Bash
-@TODO
+Add the following to your Cargo.toml
+
+```toml
+deep_causality = { git = "https://github.com/deepcausality/deep_causality.git", tag = "0.2.1" }
 ```
 
 ## Usage:
