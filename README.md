@@ -1,17 +1,12 @@
 # Deep Causality
 
-## About
-
-
-
-## Concepts
+## About 
 
 ## Install
 
 ```Bash
 cargo add deep_causality
 ```
-
 
 ## Usage:
 
@@ -23,21 +18,21 @@ Full code in [Smoking example](examples/smoking/run.rs)
 ```
 
 See:
+
 * [Benchmark](benches/benchmarks)
 * [Example](examples/smoking/run.rs)
 * [Test](tests)
-
 
 ## Cargo & Make
 
 Cargo works as expected, but in addition to cargo, a makefile exists
 that abstracts over a number of additional tools you may have to install
 before all make scripts work:
+
 * [nextest](https://nexte.st/)
 * [outdated](https://github.com/kbknapp/cargo-outdated)
 * [udeps](https://crates.io/crates/cargo-udeps)
 * [audit](https://crates.io/crates/cargo-audit)
-
 
 ```bash 
     make build          Builds the code base incrementally (fast).
