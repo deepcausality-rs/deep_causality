@@ -46,8 +46,15 @@ pub fn run()
     println!("Does Smoking causes cancer: {}", final_conclusion);
     println!();
 
-    println!("Apply Causaloid to a new patient A");
+    println!("Apply Causaloid to a new patient A with new measurements");
     println!();
+    println!(
+        "Patient A arrives with: \
+     \n * nicotine measurement of 77;\
+     \n * tar measurement of 81.2;"
+    );
+    let data = [77.0, 81.2];
+
     apply_causal_model(&data, &all_known_causes);
     println!();
 
@@ -59,13 +66,6 @@ fn apply_causal_model(
     data: &[NumericalValue],
     model: &AllCauses)
 {
-    println!(
-        "Patient A arrives with: \
-     \n * nicotine measurement of 77;\
-     \n * tar measurement of 84;"
-    );
-    println!();
-
     let cancer_estimate = model.reason_all_causes(data).unwrap();
     println!("Has the patient a lung cancer risk: {}", cancer_estimate);
 }
