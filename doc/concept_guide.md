@@ -22,19 +22,24 @@ for more details.
 
 Rust uses traits instead of protocols but there are some minor differences:
 
-1) Swift protocols can contain values, traits cannot. In Rust you can use abstract getters instead to access values in  default implementation.
-2) Swift protocols use extensions to add a default implementation. Rust, however, uses the defining trait or a sub-trait.
-3) Swift protocols allow overriding default implementations, but this prohibits dynamic dispatching. In Rust, trait objects would suit this scenario.
+1) Swift protocols can contain values, traits cannot. In Rust you can use abstract getters instead to access values in
+   default implementation.
+2) Swift protocols use extensions to add a default implementation. Rust, however, uses the defining trait or a
+   sub-trait.
+3) Swift protocols allow overriding default implementations, but this prohibits dynamic dispatching. In Rust, trait
+   objects would suit this scenario.
 
 ### Extensions
 
 Both, Swift protocols and Rust traits allowing the extension of external libraries (i.e. std lib).
-Swift uses the [extension keyword](https://colab.research.google.com/github/tensorflow/swift/blob/main/docs/site/tutorials/protocol_oriented_generics.ipynb#scrollTo=c_Xmw5cDy_rZ&line=1&uniqifier=1) to
-add additional functionality to an existing type whereas Rust uses the [Extension Trait](http://xion.io/post/code/rust-extension-traits.html) design pattern.
+Swift uses
+the [extension keyword](https://colab.research.google.com/github/tensorflow/swift/blob/main/docs/site/tutorials/protocol_oriented_generics.ipynb#scrollTo=c_Xmw5cDy_rZ&line=1&uniqifier=1)
+to
+add additional functionality to an existing type whereas Rust uses
+the [Extension Trait](http://xion.io/post/code/rust-extension-traits.html) design pattern.
 
 Extension traits mean that you implement a local trait for an external type. In Rust, however,you cannot implement
 an external trait for an external type.
-
 
 ## Concepts
 
@@ -57,10 +62,12 @@ Deep causality implements verifiable assumptions as following:
 ### Assumptions
 
 Traits:
-* [Assumable](/src/protocols/assumable/assumable.rs) 
+
+* [Assumable](/src/protocols/assumable/assumable.rs)
 * [AssumableReasoning](/src/protocols/assumable/assumable_reasoning.rs)
 
 Extensions:
+
 * [Assumable Array](/src/extensions/assumable/assumable_array.rs)
 * [Assumable Map](/src/extensions/assumable/assumable_map.rs)
 * [Assumable Vector](/src/extensions/assumable/assumable_vector.rs)
@@ -84,12 +91,29 @@ Once a set of assumptions has been identified and encoded, the next question is 
 all of the assumptions actually exists in the data? Deep causality implements observations as following:
 
 Traits:
+
 * [Observable](/src/protocols/observable/observable.rs)
 * [ObservableReasoning](/src/protocols/observable/observable_reasoning.rs)
 
 Extensions:
+
 * [Observable Array](/src/extensions/observable/observation_array.rs)
 * [Observable Map](/src/extensions/observable/observation_map.rs)
 * [Observable Vector](/src/extensions/observable/observation_vector.rs)
 
-An observation defines whether a
+Types:
+* [Observation](/src/types/reasoning_types/observable/observation.rs)
+
+An observation defines an observed value i.e. a measured metric and  an observed effect. 
+The idea is to hold the observation immutable and invariant after the observation. 
+The assumable protocol then adds a default implementation to determine if a target effect 
+has been observed relative to the observation in excess of a threshold. Both, the target effect and
+target threshold are given as a parameter because it may happen that certain effects may only become 
+detectable when adjusting the threshold.
+
+Multiple observations are stored in standard collections (array, map, vector) which are extended with
+[ObservableReasoning](/src/protocols/observable/observable_reasoning.rs) to identify the number or percent of
+observations vs non-observations.
+
+###  2) Control of confounding
+
