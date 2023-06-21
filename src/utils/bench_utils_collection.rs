@@ -5,9 +5,9 @@
 use crate::prelude::Causaloid;
 use crate::utils::{bench_utils_shared, test_utils};
 
-const SMALL: usize = 1000;
-const MEDIUM: usize = 100_000;
-const LARGE: usize = 1_000_000;
+const SMALL: usize = 100;
+const MEDIUM: usize = 10_000;
+const LARGE: usize = 100_000;
 
 pub fn get_small_collection_and_data()
     -> (Vec<Causaloid>, [f64; SMALL + 1])
