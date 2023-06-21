@@ -10,10 +10,6 @@ use crate::utils::math_utils::abs_num;
 
 pub trait Inferable: Debug + Identifiable
 {
-    /// NumericalValue must be specified in the implementation
-    /// and adhere to the outlined type constraints of PartialOrd.
-    type NumericValue: PartialOrd;
-
     fn question(&self) -> DescriptionValue;
     fn observation(&self) -> NumericalValue;
     fn threshold(&self) -> NumericalValue;

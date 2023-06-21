@@ -2,7 +2,6 @@
  * Copyright (c) 2023. Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
  */
 
-use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
 
 use crate::prelude::*;
@@ -33,8 +32,6 @@ impl Identifiable for Inference {
 
 impl Inferable for Inference
 {
-    type NumericValue = NumericalValue;
-
     fn question(&self) -> DescriptionValue {
         self.question.to_string()
     }
