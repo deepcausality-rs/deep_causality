@@ -3,5 +3,5 @@
  */
 
 pub mod observation_array;
-pub mod observation_collection;
+pub mod observation_vector;
 pub mod observation_map;

@@ -3,5 +3,5 @@
  */
 
 pub mod assumable_array;
-pub mod assumable_collection;
+pub mod assumable_vector;
 pub mod assumable_map;

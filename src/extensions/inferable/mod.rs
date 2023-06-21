@@ -3,5 +3,5 @@
  */
 
 pub mod inferable_array;
-pub mod inferable_collection;
+pub mod inferable_vector;
 pub mod inferable_map;

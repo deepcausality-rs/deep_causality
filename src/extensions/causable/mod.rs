@@ -3,5 +3,5 @@
  */
 
 pub mod causaloid_array;
-pub mod causaloid_collection;
+pub mod causaloid_vector;
 pub mod causaloid_map;
