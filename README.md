@@ -12,9 +12,7 @@ or for real-time applications.
 > "... several of the limitations in ML today are a consequence of the inability to incorporate contextual
 > and background knowledge, and treating each data set as an independent, uncorrelated input.
 > In the real world, observations are often correlated and a product of an underlying causal mechanism,
-> which can be modeled and understood" - [ANSR](https://www.darpa.mil/program/assured-neuro-symbolic-learning-and-reasoning)
-
-For more background information, see the [motivation document](/doc/motivation.md).
+> which can be modeled and understood" - [motivation document](/doc/motivation.md).
 
 Also, take a look at [how is deep causality different from deep learning?](/doc/difference.md)
 
