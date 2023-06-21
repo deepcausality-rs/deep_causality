@@ -1,19 +1,10 @@
 # The Manifest Format
 # https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[workspace]
-members = ["macros"]
-
-[workspace.package]
-version = "0.4.0"
-edition = "2021"
-rust-version = "1.65"
-repository = "https://github.com/deepcausality/deep_causality.rs"
-authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 
 [package]
 name = "deep_causality"
-version = "0.0.1"
+version = "0.2.0"
 edition = "2021"
 rust-version = "1.65"
 readme = "README.md"
@@ -23,8 +14,8 @@ description = "Computational causality library. Provides causality graph, collec
 #documentation = ""
 #homepage = ""
 repository = "https://github.com/deepcausality/deep_causality.rs"
-keywords = ["cauality","causal-data-structure", "causal-graph","causal-reasoning","graph"]
-categories = ["data-structures","science","aerospace","finance","mathematics"]
+keywords = ["cauality", "causal-data-structure", "causal-graph", "causal-reasoning", "graph"]
+categories = ["data-structures", "science", "aerospace", "finance", "mathematics"]
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 
 [dependencies]
@@ -48,3 +39,13 @@ strip = true  # Automatically strip debug symbols from the binary
 lto = true    # Enable Link Time Optimization (LTO)
 codegen-units = 1 # Reduce Parallel Code Generation Units to Increase Optimization
 panic = "abort"  # disabled
+
+[workspace]
+members = ["macros"]
+
+[workspace.package]
+version = "0.4.0"
+edition = "2021"
+rust-version = "1.65"
+repository = "https://github.com/deepcausality/deep_causality.rs"
+authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
