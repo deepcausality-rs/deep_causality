@@ -9,7 +9,7 @@ or for real-time applications.
 
 **Why?**
 
-> "ANSR hypothesizes that several of the limitations in ML today are a consequence of the inability to incorporate contextual
+> "... several of the limitations in ML today are a consequence of the inability to incorporate contextual
 > and background knowledge, and treating each data set as an independent, uncorrelated input.
 > In the real world, observations are often correlated and a product of an underlying causal mechanism,
 > which can be modeled and understood" - [ANSR](https://www.darpa.mil/program/assured-neuro-symbolic-learning-and-reasoning)
