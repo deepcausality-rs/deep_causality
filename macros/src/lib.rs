@@ -6,7 +6,6 @@
 extern crate proc_macro;
 
 use proc_macro::TokenStream;
-use std::convert::TryFrom;
 
 #[proc_macro]
 pub fn make_run(_input: TokenStream) -> TokenStream

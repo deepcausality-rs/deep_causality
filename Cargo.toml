@@ -4,6 +4,13 @@
 [workspace]
 members = ["macros"]
 
+[workspace.package]
+version = "0.4.0"
+edition = "2021"
+rust-version = "1.65"
+repository = "https://github.com/deepcausality/deep_causality.rs"
+authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
+
 [package]
 name = "deep_causality_rs"
 version = "0.0.1"
@@ -11,7 +18,6 @@ edition = "2021"
 rust-version = "1.65"
 readme = "README.md"
 license = "MIT"
-license-file = "LICENSE.txt"
 
 description = "Computational causality library. Provides causality graph, collections, context and causal reasoning."
 #documentation = ""
@@ -25,14 +31,17 @@ authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 # using a patched version of petgraph until PR #547 went through
 petgraph = { git = "https://github.com/marvin-hansen/petgraph.git", rev = "a685be8" }
 
-[workspace.package]
-version = "0.4.0"
-edition = "2021"
-rust-version = "1.65"
-repository = "https://github.com/deepcausality/deep_causality.rs"
-authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
+[dependencies.macros]
+path = "macros"
+version = "^0.4.0"
 
-[workspace.dependencies]
+[dev-dependencies]
+criterion = { version = "0.5.1", features = ["html_reports"] }
+rand = { version = "0.8.5", features = ["small_rng"] }
+
+#[[bench]]
+#name = "bench_main"
+#harness = false
 
 [profile.release]
 strip = true  # Automatically strip debug symbols from the binary
