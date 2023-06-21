@@ -8,6 +8,7 @@ set -o nounset
 set -o pipefail
 
 # Check for outdated dependencies
+# https://github.com/kbknapp/cargo-outdated
 command cargo outdated
 
 
@@ -23,11 +24,4 @@ command cargo +nightly udeps
 command cargo audit --ignore RUSTSEC-2020-0071
 
 
-# Additional security scan
-# https://crates.io/crates/cargo-deny
-# https://github.com/EmbarkStudios/cargo-deny/tree/main/examples
-#command cargo deny check advisories
-
 command cargo check
-
-#command cargo fix

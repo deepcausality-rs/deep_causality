@@ -10,7 +10,7 @@ help:
 	@echo '    make check   	Checks the code base for security vulnerabilities.'
 	@echo '    make example   	Runs the default example: Smoking.'
 	@echo '    make fix   		Fixes linting issues as reported by cargo'
-	@echo '    make test   		Runs all tests in the target defined.'
+	@echo '    make test   	Runs all tests across all crates.'
 
 # "---------------------------------------------------------"
 # Development
