@@ -17,7 +17,7 @@ pub trait Adjustable
     )
         -> Result<(), AdjustmentError>
     {
-        // Depending on the type of node your adjusting,
+        // Depending on the type of node your adjustment,
         // select a 2,3, or 4 dimensional array grid that
         // contains the transformation data to apply to the node.
         let _ = array_grid.array_grid_2d();
