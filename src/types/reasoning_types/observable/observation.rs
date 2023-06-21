@@ -8,14 +8,14 @@ use crate::prelude::*;
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct Observation {
     id: IdentificationValue,
-    observed_trigger: NumericalValue,
-    observed_factor: NumericalValue,
+    observation: NumericalValue,
+    observed_effect: NumericalValue,
 }
 
 impl Observation
 {
-    pub fn new(id: IdentificationValue, observed_trigger: NumericalValue, observed_factor: NumericalValue) -> Self {
-        Self { id, observed_trigger, observed_factor }
+    pub fn new(id: IdentificationValue, observation: NumericalValue, observed_effect: NumericalValue) -> Self {
+        Self { id, observation, observed_effect }
     }
 }
 
@@ -31,21 +31,11 @@ impl Identifiable for Observation
 impl Observable for Observation
 {
     fn observation(&self) -> NumericalValue {
-        self.observed_trigger
+        self.observation
     }
 
-    fn effect_observed(
-        &self,
-        target_threshold: NumericalValue,
-        target_effect: NumericalValue,
-    ) -> bool {
-        return if (self.observed_trigger >= target_threshold)
-            && (self.observed_factor == target_effect)
-        {
-            true
-        } else {
-            false
-        };
+    fn observed_effect(&self) -> NumericalValue {
+        self.observed_effect
     }
 }
 
@@ -54,8 +44,10 @@ impl Display for Observation
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Observation {{\n id: {},\n observation: {},\n }}",
-            self.id, self.observed_trigger,
+            "Observation {{\n id: {},\n observation: {},\n observed effect: {},\n}}",
+            self.id,
+            self.observation,
+            self.observed_effect
         )
     }
 }
