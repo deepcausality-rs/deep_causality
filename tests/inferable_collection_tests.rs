@@ -40,8 +40,8 @@ fn test_all_non_inferable() {
 fn test_conjoint_delta() {
     let col = get_test_inf_coll();
     // in the synthetic test data,
-    // the conjoint delta is 100% because all samples explain the observations.
-    assert_eq!(100.0, col.conjoint_delta());
+    // the conjoint delta is 0.0% because all causes explain the observed effects.
+    assert_eq!(0.0, col.conjoint_delta());
 }
 
 #[test]
