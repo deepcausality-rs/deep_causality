@@ -63,10 +63,12 @@ pub trait InferableReasoning<T>
     /// The conjoint delta estimates the effect of those unobserverd conjoint factors.
     ///  conjoint_delta = abs(sum_cbservation/total))
     fn conjoint_delta(&self) -> NumericalValue {
+        let one = 1.0;
         let total = self.len() as NumericalValue;
         let non_inferable = self.number_non_inferable();
         let cum_conjoint = total - non_inferable;
-        return abs_num((cum_conjoint / total) * 100 as NumericalValue);
+
+        return abs_num(one - (cum_conjoint / total));
     }
     /// numbers inferable observations
     fn number_inferable(&self) -> NumericalValue {
