@@ -1,20 +1,18 @@
 # Deep Causality
 
-## About 
+## About
 
-Deep Causality is a hyper-geometric computational causality library that enables fast context
-aware causal reasoning across arbitrary complex causal models. Deep Causality induces only
-minimal overhead and thus is suitable for deployment on low power (IoT) devices 
-or for real-time applications. 
+Deep Causality is a hyper-geometric computational causality library that enables fast context aware causal reasoning.
+Deep Causality contributes a novel contextualized causality reasoning engine that enables deterministic reasoning over
+poly-contextual, complex multi-stage causality models. Deep Causality leverages contemporary advancements in static-type
+systems, adding only minimal overhead, and thus is suitable for deployment on low-power (IoT) devices or real-time
+applications without any additional acceleration hardware.
 
-**Why?**
+**Documents:**
 
-> "... several of the limitations in ML today are a consequence of the inability to incorporate contextual
-> and background knowledge, and treating each data set as an independent, uncorrelated input.
-> In the real world, observations are often correlated and a product of an underlying causal mechanism,
-> which can be modeled and understood" - [motivation document](/doc/motivation.md).
-
-Also, take a look at [how is deep causality different from deep learning?](/doc/difference.md)
+* [Motivation](/doc/motivation.md)
+* [How is deep causality different?](/doc/difference.md)
+* [Concepts](/doc/concept_guide.md)
 
 ## Install
 
