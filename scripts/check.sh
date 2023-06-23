@@ -18,10 +18,8 @@ command cargo +nightly udeps
 
 
 # Scan again to report all unfixed vulnerabilities
-# https://crates.io/crates/cargo-audit
-# Seems to be a false positive in chrono
-# https://rustsec.org/advisories/RUSTSEC-2020-0071
-command cargo audit --ignore RUSTSEC-2020-0071
+# https://crates.io/crates/cargo-audi
+command cargo audit
 
 
 command cargo check
