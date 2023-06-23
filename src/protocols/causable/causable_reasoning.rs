@@ -66,11 +66,9 @@ pub trait CausableReasoning<T>
             return Err(CausalityError("Causality collection is empty".into()));
         }
 
-        // Emulate the data index assuming that values in the map have the same order as the data.
-        // Since HashMap requires key to be Eq and Hash, Its not given that the key is a NumericalValue.'
-        let mut i = 0;
-        for cause in self.get_all_items().iter()
-        {
+        // Emulate the data index using an enumerated iterator
+        // assuming that values in the map have the same order as the data.
+        for (i, cause) in self.get_all_items().iter().enumerate() {
             let valid = if cause.is_singleton()
             {
                 match cause.verify_single_cause(data.get(i).expect("failed to get value")) {
@@ -87,8 +85,6 @@ pub trait CausableReasoning<T>
             if !valid {
                 return Ok(false);
             }
-
-            i += 1;
         }
 
         Ok(true)
