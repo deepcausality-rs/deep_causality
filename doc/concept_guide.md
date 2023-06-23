@@ -60,8 +60,8 @@ Deep causality implements verifiable assumptions in the following way:
 
 Traits:
 
-* [Assumable](/src/protocols/assumable/assumable.rs)
-* [Assumable Reasoning](/src/protocols/assumable/assumable_reasoning.rs)
+* [Assumable](/src/protocols/assumable/mod.rs)
+* [Assumable Reasoning](/src/protocols/assumable/mod.rs)
 
 Extensions:
 
@@ -80,7 +80,7 @@ assumable trait adds functionality to test the assumption, check if it has alrea
 been valid.
 
 Multiple assumptions are represented in standard collections (array, map, vector), which are extended with
-the default implementation of the [AssumableReasoning](/src/protocols/assumable/assumable_reasoning.rs) trait
+the default implementation of the [AssumableReasoning](/src/protocols/assumable/mod.rs) trait
 that adds aggregating functionality i.e. how many of the assumptions are valid or tested.
 
 ### Observation
@@ -90,8 +90,8 @@ the data. Deep causality implements observations in the following way:
 
 Traits:
 
-* [Observable](/src/protocols/observable/observable.rs)
-* [ObservableReasoning](/src/protocols/observable/observable_reasoning.rs)
+* [Observable](/src/protocols/observable/mod.rs)
+* [ObservableReasoning](/src/protocols/observable/mod.rs)
 
 Extensions:
 
@@ -111,7 +111,7 @@ target threshold are given as a parameter because it may happen that certain eff
 detectable when adjusting the threshold.
 
 Multiple observations are stored in standard collections (array, map, vector) which are extended with
-[ObservableReasoning](/src/protocols/observable/observable_reasoning.rs) to identify the number or percent of
+[ObservableReasoning](/src/protocols/observable/mod.rs) to identify the number or percent of
 observations vs non-observations.
 
 ### 2) Control of confounding
@@ -126,8 +126,8 @@ in tandem with the expected observation to decide whether one can infer the expe
 
 Traits:
 
-* [Inferable](/src/protocols/inferable/inferable.rs)
-* [InferableReasoning](/src/protocols/inferable/inferable_reasoning.rs)
+* [Inferable](/src/protocols/inferable/mod.rs)
+* [InferableReasoning](/src/protocols/inferable/mod.rs)
 
 Extensions:
 

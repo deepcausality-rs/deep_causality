@@ -23,7 +23,8 @@
 // may require a large amount of memory (> 10GB) to process due to the underlying compressed matrix
 // representation.
 
-use deep_causality::prelude::{CausableGraph, CausableGraphReasoning, NodeIndex};
+use deep_causality::prelude::NodeIndex;
+use deep_causality::protocols::causable_graph::{CausableGraph, CausableGraphReasoning};
 use deep_causality::utils::bench_utils_graph;
 
 #[test]

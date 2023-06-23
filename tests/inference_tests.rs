@@ -4,7 +4,9 @@
 
 
 
-use deep_causality::prelude::{Inferable, Inference, ObservableCollection};
+use deep_causality::prelude::Inference;
+use deep_causality::protocols::inferable::Inferable;
+use deep_causality::protocols::observable::ObservableReasoning;
 use deep_causality::types::alias_types::DescriptionValue;
 use deep_causality::utils::test_utils::get_test_obs_coll;
 

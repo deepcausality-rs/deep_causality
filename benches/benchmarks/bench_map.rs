@@ -4,7 +4,7 @@
 
 use criterion::{Criterion, criterion_group};
 
-use deep_causality::prelude::CausableReasoning;
+use deep_causality::protocols::causable::CausableReasoning;
 use deep_causality::utils::bench_utils_map;
 
 // Small = 100

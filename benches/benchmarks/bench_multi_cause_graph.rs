@@ -4,7 +4,8 @@
 
 use criterion::{Criterion, criterion_group};
 
-use deep_causality::prelude::{CausableGraphReasoning, NodeIndex};
+use deep_causality::prelude::NodeIndex;
+use deep_causality::protocols::causable_graph::CausableGraphReasoning;
 use deep_causality::utils::bench_utils_graph;
 
 fn small_multi_layer_graph_benchmark(criterion: &mut Criterion)

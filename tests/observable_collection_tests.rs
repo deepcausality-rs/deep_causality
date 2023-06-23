@@ -3,7 +3,7 @@
  */
 
 
-use deep_causality::prelude::ObservableCollection;
+use deep_causality::protocols::observable::ObservableReasoning;
 use deep_causality::types::alias_types::NumericalValue;
 use deep_causality::utils::test_utils::{get_test_obs_coll, get_test_observation};
 
