@@ -51,3 +51,27 @@ impl fmt::Display for AdjustmentError {
         write!(f, "AdjustmentError: {}", self.0)
     }
 }
+
+
+#[derive(Debug, Clone)]
+pub struct PropagateError(pub String);
+
+impl Error for PropagateError {}
+
+impl fmt::Display for PropagateError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "UpdateError: {}", self.0)
+    }
+}
+
+
+#[derive(Debug, Clone)]
+pub struct UpdateError(pub String);
+
+impl Error for UpdateError {}
+
+impl fmt::Display for UpdateError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "UpdateError: {}", self.0)
+    }
+}
