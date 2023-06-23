@@ -6,7 +6,7 @@ use std::fmt::Debug;
 
 use crate::prelude::{Adjustable, CausalFn, CausalityError, Causaloid, CausaloidGraph, DescriptionValue, Identifiable, IdentificationValue, NumericalValue};
 
-pub trait Causable: Debug + Identifiable + Adjustable {
+pub trait Causable: Debug + Identifiable {
     fn causal_function(&self) -> CausalFn;
     fn causal_collection(&self) -> Option<Vec<Causaloid>>;
     fn causal_graph(&self) -> Option<CausaloidGraph<Causaloid>>;

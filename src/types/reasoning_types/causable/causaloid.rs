@@ -140,9 +140,6 @@ impl Identifiable for Causaloid
     }
 }
 
-// Optional. Override only when needed.
-impl Adjustable for Causaloid {}
-
 impl Causable for Causaloid
 {
     fn causal_function(&self) -> CausalFn {
@@ -200,7 +197,7 @@ impl Causable for Causaloid
             let reason = format!("Causaloid: {} has not been evaluated. Call verify() to activate it", self.id);
 
             Err(CausalityError(reason))
-        }
+        };
     }
 
     fn is_active(&self) -> bool {
@@ -227,7 +224,7 @@ impl Causable for Causaloid
                 // store the applied data to provide details in explain()
                 *self.last_obs.borrow_mut() = obs.to_owned();
                 res
-            },
+            }
             Err(e) => return Err(e),
         };
 
@@ -259,7 +256,7 @@ impl Causable for Causaloid
                                 };
 
                                 Ok(self.check_active_return(res))
-                            },
+                            }
                     }
                 }
 
@@ -277,7 +274,7 @@ impl Causable for Causaloid
                                 };
 
                                 Ok(self.check_active_return(res))
-                            },
+                            }
                     }
                 }
         }
