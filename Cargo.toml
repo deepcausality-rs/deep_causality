@@ -1,45 +1,6 @@
-[package]
-name = "deep_causality"
-version = "0.2.1"
-edition = "2021"
-rust-version = "1.65"
-readme = "README.md"
-license = "MIT"
-
-description = "Computational causality library. Provides causality graph, collections, context and causal reasoning."
-documentation = "https://docs.rs/deep_causality"
-#homepage = ""
-repository = "https://github.com/deepcausality/deep_causality.rs"
-keywords = ["cauality", "causal-data-structure", "causal-graph", "causal-reasoning", "graph"]
-categories = ["data-structures", "science", "aerospace", "finance", "mathematics"]
-authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
-
-[dependencies]
-# using a patched version of petgraph until PR #547 went through
-petgraph = { git = "https://github.com/marvin-hansen/petgraph.git", rev = "a685be8" }
-
-
-[dependencies.macros]
-path = "macros"
-version = "^0.4.0"
-
-
-[dev-dependencies]
-criterion = { version = "0.5.1", features = ["html_reports"] }
-rand = { version = "0.8.5", features = ["small_rng"] }
-
-
-[[bench]]
-name = "bench_main"
-harness = false
-
-
-[profile.release]
-strip = true  # Automatically strip debug symbols from the binary
-lto = true    # Enable Link Time Optimization (LTO)
-codegen-units = 1 # Reduce Parallel Code Generation Units to Increase Optimization
-panic = "abort"  # disabled
-
-
 [workspace]
-members = ["macros"]
+resolver = "2"
+members = [
+    "deep_causality",
+    "deep_causality_macros"
+]

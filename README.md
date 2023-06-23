@@ -10,9 +10,9 @@ hardware.
 
 **Documents:**
 
-* [Motivation](/docs/motivation.md)
-* [How is deep causality different?](/docs/difference.md)
-* [Concepts](/docs/concept_guide.md)
+* [Motivation](docs/motivation.md)
+* [How is deep causality different?](docs/difference.md)
+* [Concepts](docs/concept_guide.md)
 
 ## Install
 
@@ -26,9 +26,9 @@ deep_causality = { git = "https://github.com/deepcausality/deep_causality.git", 
 
 See:
 
-* [Benchmark](benches/benchmarks)
-* [Example](examples/smoking/run.rs)
-* [Test](tests)
+* [Benchmark](deep_causality/benches/benchmarks)
+* [Example](deep_causality/examples/smoking/run.rs)
+* [Test](deep_causality/tests)
 
 ## Cargo & Make
 
@@ -52,7 +52,7 @@ before all make scripts work:
 
 ## Licence
 
-This project is licensed under the [MIT license](LICENSE).
+This project is licensed under the [MIT license](deep_causality/LICENSE).
 
 ## Contribution
 
