@@ -1,11 +1,14 @@
 [package]
 name = "macros"
-version.workspace = true
-authors.workspace = true
-rust-version.workspace = true
-repository.workspace = true
-edition.workspace = true
+version = "0.4.0"
+edition = "2021"
+rust-version = "1.65"
+repository = "https://github.com/deepcausality/deep_causality.rs"
+authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
+license = "MIT"
 
+description = "Macros for deep_causality crate"
+documentation = "https://docs.rs/deep_causality"
 
 [lib]
 proc-macro = true
