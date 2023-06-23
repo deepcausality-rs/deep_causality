@@ -76,7 +76,7 @@ pub fn get_test_causality_map()
 pub fn get_test_causaloid()
     -> Causaloid
 {
-    let id: IdentificationValue = 01;
+    let id: IdentificationValue = 1;
     let description: String = "tests whether data exceeds threshold of 0.55".to_string() as DescriptionValue;
     let data_set_id = "Test data".to_string() as DescriptionValue;
     let inferable_coll = get_inferable_coll(false);
@@ -166,7 +166,7 @@ pub fn get_test_observation()
 pub fn get_test_assumption()
     -> Assumption
 {
-    let id: IdentificationValue = 01;
+    let id: IdentificationValue = 1;
     let description: String = "Test assumption that data are there".to_string() as DescriptionValue;
     let assumption_fn: EvalFn = test_has_data;
 
