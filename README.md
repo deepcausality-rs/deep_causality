@@ -10,9 +10,9 @@ hardware.
 
 **Documents:**
 
-* [Motivation](/doc/motivation.md)
-* [How is deep causality different?](/doc/difference.md)
-* [Concepts](/doc/concept_guide.md)
+* [Motivation](/docs/motivation.md)
+* [How is deep causality different?](/docs/difference.md)
+* [Concepts](/docs/concept_guide.md)
 
 ## Install
 

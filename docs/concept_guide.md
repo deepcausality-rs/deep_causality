@@ -2,7 +2,7 @@
 
 ## Origin
 
-The [original design](/doc/swift/Swift_Inference.ipynb) of deep causality was implemented in Swift using protocols and
+The [original design](/docs/swift/Swift_Inference.ipynb) of deep causality was implemented in Swift using protocols and
 extensions inspired
 by [differentiable types](https://github.com/tensorflow/swift/blob/main/docs/DifferentiableTypes.md).
 A rewrite became necessary for several reasons, and Rust was chosen.
