@@ -4,8 +4,7 @@ Procedural macros for use with deep_causality.
 
 ## Licence
 
-* [MIT Licence](LICENSE)
-* Software is "as is" without any warranty.
+This project is licensed under the [MIT license](LICENSE).
 
 ## Contribution
 
