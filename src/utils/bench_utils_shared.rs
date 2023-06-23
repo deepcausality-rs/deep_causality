@@ -13,6 +13,6 @@ pub fn generate_sample_data<const N: usize>(
         data[i] += 0.99;
     }
 
-    return data;
+    data
 }
 

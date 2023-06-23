@@ -15,12 +15,6 @@ pub trait Observable: Debug + Identifiable {
         target_threshold: NumericalValue,
         target_effect: NumericalValue,
     ) -> bool {
-        return if (self.observation() >= target_threshold)
-            && (self.observed_effect() == target_effect)
-        {
-            true
-        } else {
-            false
-        };
+        (self.observation() >= target_threshold) && (self.observed_effect() == target_effect)
     }
 }

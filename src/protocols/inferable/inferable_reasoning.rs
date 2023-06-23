@@ -39,7 +39,7 @@ pub trait InferableReasoning<T>
                 return false;
             }
         }
-        return true;
+        true
     }
     /// returns true if all elements are inverse inferable
     fn all_inverse_inferable(&self) -> bool {
@@ -48,7 +48,7 @@ pub trait InferableReasoning<T>
                 return false;
             }
         }
-        return true;
+        true
     }
     /// returns true if all elements are NON-inferable
     fn all_non_inferable(&self) -> bool {
@@ -58,7 +58,7 @@ pub trait InferableReasoning<T>
                 return true;
             }
         }
-        return false;
+        false
     }
     /// The conjoint delta estimates the effect of those unobserverd conjoint factors.
     ///  conjoint_delta = abs(sum_cbservation/total))
@@ -68,7 +68,7 @@ pub trait InferableReasoning<T>
         let non_inferable = self.number_non_inferable();
         let cum_conjoint = total - non_inferable;
 
-        return abs_num(one - (cum_conjoint / total));
+        abs_num(one - (cum_conjoint / total))
     }
     /// numbers inferable observations
     fn number_inferable(&self) -> NumericalValue {

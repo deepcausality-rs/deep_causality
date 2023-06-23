@@ -23,9 +23,9 @@ pub trait CausableReasoning<T>
     fn explain(&self) -> String {
         let mut explanation = String::new();
         for cause in self.get_all_items() {
-            explanation.push_str("\n");
+            explanation.push('\n');
             explanation.push_str(format!(" * {}", cause.explain().unwrap()).as_str());
-            explanation.push_str("\n");
+            explanation.push('\n');
         }
         explanation
     }
@@ -36,7 +36,7 @@ pub trait CausableReasoning<T>
             }
         }
 
-        return true;
+        true
     }
     fn get_all_active_causes(&self) -> Vec<&T> {
         self.get_all_items()
@@ -91,6 +91,6 @@ pub trait CausableReasoning<T>
             i += 1;
         }
 
-        return Ok(true);
+        Ok(true)
     }
 }

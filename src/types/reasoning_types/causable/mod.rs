@@ -25,12 +25,12 @@ pub fn build_causaloid_from_collection(
     -> Result<Causaloid, Box<dyn Error>>
 {
     // check description
-    if description.len() == 0 {
+    if description.is_empty() {
         return Err(Box::new(BuildError("Description empty".into())));
     }
 
     // check data_set_id
-    if data_set_id.len() == 0 {
+    if data_set_id.is_empty() {
         return Err(Box::new(BuildError("Data set identifier empty".into())));
     }
 
@@ -64,12 +64,12 @@ pub fn build_causaloid_from_graph(
     -> Result<Causaloid, Box<dyn Error>>
 {
     // check description
-    if description.len() == 0 {
+    if description.is_empty() {
         return Err(Box::new(BuildError("Description empty".into())));
     }
 
     // check data_set_id
-    if data_set_id.len() == 0 {
+    if data_set_id.is_empty() {
         return Err(Box::new(BuildError("Data set identifier empty".into())));
     }
 
@@ -105,17 +105,17 @@ pub fn build_causaloid(
 {
 
     // check description
-    if description.len() == 0 {
+    if description.is_empty() {
         return Err(Box::new(BuildError("Description empty".into())));
     }
 
     // check data_set_id
-    if data_set_id.len() == 0 {
+    if data_set_id.is_empty() {
         return Err(Box::new(BuildError("Data set identifier empty".into())));
     }
 
     // check inferable collection
-    if inferable_coll.len() == 0 {
+    if inferable_coll.is_empty() {
         return Err(Box::new(BuildError("Inferable collection empty".into())));
     }
 
@@ -128,7 +128,7 @@ pub fn build_causaloid(
     }
 
     // check inverse inferable collection
-    if inverse_inferable_coll.len() == 0 {
+    if inverse_inferable_coll.is_empty() {
         return Err(Box::new(BuildError("Inverse inferable collection empty".into())));
     }
 

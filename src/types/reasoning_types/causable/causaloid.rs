@@ -136,7 +136,7 @@ impl Causaloid
 impl Identifiable for Causaloid
 {
     fn id(&self) -> u64 {
-        self.id as u64
+        self.id
     }
 }
 
@@ -146,7 +146,7 @@ impl Adjustable for Causaloid {}
 impl Causable for Causaloid
 {
     fn causal_function(&self) -> CausalFn {
-        self.causal_fn.clone()
+        self.causal_fn
     }
 
     fn causal_collection(&self) -> Option<Vec<Causaloid>> {
@@ -208,7 +208,7 @@ impl Causable for Causaloid
     }
 
     fn is_singleton(&self) -> bool {
-        return match self.causal_type {
+        match self.causal_type {
             CausalType::Singleton => true,
             CausalType::Collection => false,
             CausalType::Graph => false,
@@ -231,7 +231,7 @@ impl Causable for Causaloid
             Err(e) => return Err(e),
         };
 
-        return Ok(self.check_active_return(res))
+        Ok(self.check_active_return(res))
     }
 
     fn verify_all_causes(
@@ -241,7 +241,7 @@ impl Causable for Causaloid
     )
         -> Result<bool, CausalityError>
     {
-        return match self.causal_type
+        match self.causal_type
         {
             CausalType::Singleton => Err(CausalityError("Causaloid is singleton. Call verify_singleton instead.".into())),
 
@@ -258,7 +258,7 @@ impl Causable for Causaloid
                                     Err(e) => return Err(e),
                                 };
 
-                                return Ok(self.check_active_return(res))
+                                Ok(self.check_active_return(res))
                             },
                     }
                 }
@@ -276,7 +276,7 @@ impl Causable for Causaloid
                                     Err(e) => return Err(CausalityError(e.to_string())),
                                 };
 
-                                return Ok(self.check_active_return(res))
+                                Ok(self.check_active_return(res))
                             },
                     }
                 }

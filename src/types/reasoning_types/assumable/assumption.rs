@@ -48,15 +48,15 @@ impl Assumable for Assumption
     }
 
     fn assumption_fn(&self) -> EvalFn {
-        self.assumption_fn.clone()
+        self.assumption_fn
     }
 
     fn assumption_tested(&self) -> bool {
-        self.assumption_tested.borrow().clone()
+        *self.assumption_tested.borrow()
     }
 
     fn assumption_valid(&self) -> bool {
-        self.assumption_valid.borrow().clone()
+        *self.assumption_valid.borrow()
     }
 
     fn verify_assumption(&self, data: &[NumericalValue]) -> bool {
@@ -67,7 +67,7 @@ impl Assumable for Assumption
         if res {
             *self.assumption_valid.borrow_mut() = true;
         }
-        return res;
+        res
     }
 }
 
@@ -93,10 +93,9 @@ impl Assumption
     // derive Debug isn't general enough to cover function pointers hence the function signature.
     fn fmt_write(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f,
-               "Assumption:\n id: {},\n description: {},\n assumption_fn: {},\n assumption_tested: {},\n assumption_valid: {}",
+               "Assumption:\n id: {},\n description: {},\n assumption_fn: fn(&[NumericalValue]) -> bool;,\n assumption_tested: {},\n assumption_valid: {}",
                self.id,
                self.description,
-               "fn(&[NumericalValue]) -> bool;",
                self.assumption_tested.borrow(),
                self.assumption_valid.borrow()
         )

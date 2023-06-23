@@ -40,12 +40,12 @@ impl<T, const W: usize, const H: usize, const D: usize, const C: usize> ArrayGri
         T: Copy + Default,
 {
     pub fn new(array_type: ArrayType) -> ArrayGrid<T, W, H, D, C> {
-        return match array_type {
+        match array_type {
             ArrayType::Array1D => ArrayGrid::ArrayGrid1D(Grid::new([T::default(); H])),
             ArrayType::Array2D => ArrayGrid::ArrayGrid2D(Grid::new([[T::default(); W]; H])),
             ArrayType::Array3D => ArrayGrid::ArrayGrid3D(Grid::new([[[T::default(); W]; H]; D])),
             ArrayType::Array4D => ArrayGrid::ArrayGrid4D(Grid::new([[[[T::default(); W]; H]; D]; C])),
-        };
+        }
     }
 
     pub fn array_grid_1d(&self) -> Option<&ArrayGrid1DType<T, H>>

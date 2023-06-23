@@ -21,21 +21,11 @@ pub trait Inferable: Debug + Identifiable
     }
 
     fn is_inferable(&self) -> bool {
-        if (self.observation().total_cmp(&self.threshold()) == Ordering::Greater)
-            && approx_equal(self.effect(), self.target(), 4) {
-            true
-        } else {
-            false
-        }
+        (self.observation().total_cmp(&self.threshold()) == Ordering::Greater) && approx_equal(self.effect(), self.target(), 4)
     }
 
     fn is_inverse_inferable(&self) -> bool {
-        if (self.observation().total_cmp(&self.threshold()) == Ordering::Less)
-            && approx_equal(self.effect(), self.target(), 4) {
-            true
-        } else {
-            false
-        }
+        (self.observation().total_cmp(&self.threshold()) == Ordering::Less) && approx_equal(self.effect(), self.target(), 4)
     }
 }
 

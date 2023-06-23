@@ -256,10 +256,10 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
         let start_index = self.root_index;
         let stop_index = NodeIndex::new(self.causes_map.len());
 
-        return match self.explain_from_to_cause(start_index, stop_index) {
+        match self.explain_from_to_cause(start_index, stop_index) {
             Ok(explanation) => Ok(explanation),
             Err(e) => Err(e)
-        };
+        }
     }
 
     fn explain_subgraph_from_cause(
@@ -269,10 +269,10 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
         -> Result<String, CausalityGraphError>
     {
         let stop_index = NodeIndex::new(self.causes_map.len());
-        return match self.explain_from_to_cause(start_index, stop_index) {
+        match self.explain_from_to_cause(start_index, stop_index) {
             Ok(explanation) => Ok(explanation),
             Err(e) => Err(e)
-        };
+        }
     }
 
     fn explain_shortest_path_between_causes(
@@ -282,10 +282,10 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
     )
         -> Result<String, CausalityGraphError>
     {
-        return match self.explain_shortest_path_from_to_cause(start_index, stop_index) {
+        match self.explain_shortest_path_from_to_cause(start_index, stop_index) {
             Ok(explanation) => Ok(explanation),
             Err(e) => Err(e)
-        };
+        }
     }
 
     fn reason_all_causes(
@@ -300,10 +300,10 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
             let start_index = self.root_index;
             let stop_index = NodeIndex::new(self.causes_map.len());
 
-            return match self.reason_from_to_cause(start_index, stop_index, data, data_index) {
+            match self.reason_from_to_cause(start_index, stop_index, data, data_index) {
                 Ok(result) => Ok(result),
                 Err(e) => Err(e)
-            };
+            }
         } else {
             Err(CausalityGraphError("Graph does not contains root causaloid".into()))
         }
@@ -318,10 +318,10 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
         -> Result<bool, CausalityGraphError>
     {
         let stop_index = NodeIndex::new(self.causes_map.len());
-        return match self.reason_from_to_cause(start_index, stop_index, data, data_index) {
+        match self.reason_from_to_cause(start_index, stop_index, data, data_index) {
             Ok(result) => Ok(result),
             Err(e) => Err(e)
-        };
+        }
     }
 
     fn reason_shortest_path_between_causes(
@@ -332,7 +332,7 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
     )
         -> Result<bool, CausalityGraphError>
     {
-        return match self.reason_shortest_path_from_to_cause(
+        match self.reason_shortest_path_from_to_cause(
             start_index,
             stop_index,
             data,
@@ -340,7 +340,7 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
         {
             Ok(result) => Ok(result),
             Err(e) => Err(e)
-        };
+        }
     }
 
     fn reason_single_cause(
@@ -360,7 +360,7 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
             return Err(CausalityGraphError("Graph does not contain causaloid".to_string()));
         }
 
-        if data.len() == 0
+        if data.is_empty()
         {
             return Err(CausalityGraphError("Data are empty (len ==0).".into()));
         }
@@ -368,7 +368,7 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
         let causaloid = self.get_causaloid(index)
             .expect("Failed to get causaloid");
 
-        return self.verify_cause(causaloid, data);
+        self.verify_cause(causaloid, data)
     }
 }
 
@@ -484,7 +484,7 @@ impl<T> CausaloidGraph<T>
             return Err(CausalityGraphError("Graph does not contains start causaloid".into()));
         }
 
-        if data.len() == 0
+        if data.is_empty()
         {
             return Err(CausalityGraphError("Data are empty (len ==0).".into()));
         }
@@ -496,7 +496,7 @@ impl<T> CausaloidGraph<T>
         let res = match cause.verify_single_cause(&obs)
         {
             Ok(res) => res,
-            Err(e) => return Err(CausalityGraphError(e.0.into())),
+            Err(e) => return Err(CausalityGraphError(e.0)),
         };
 
         if !res
@@ -521,13 +521,13 @@ impl<T> CausaloidGraph<T>
                     match cause.verify_single_cause(&obs)
                     {
                         Ok(res) => res,
-                        Err(e) => return Err(CausalityGraphError(e.0.into())),
+                        Err(e) => return Err(CausalityGraphError(e.0)),
                     }
                 } else {
                     match cause.verify_all_causes(data, data_index)
                     {
                         Ok(res) => res,
-                        Err(e) => return Err(CausalityGraphError(e.0.into())),
+                        Err(e) => return Err(CausalityGraphError(e.0)),
                     }
                 };
 
@@ -549,7 +549,7 @@ impl<T> CausaloidGraph<T>
 
         // If all of the previous nodes evaluated to true,
         // then all nodes must be true, hence return true.
-        return Ok(true);
+        Ok(true)
     }
 
     fn reason_shortest_path_from_to_cause(
@@ -588,7 +588,7 @@ impl<T> CausaloidGraph<T>
             let res = match cause.verify_single_cause(&obs)
             {
                 Ok(res) => res,
-                Err(e) => return Err(CausalityGraphError(e.0.into())),
+                Err(e) => return Err(CausalityGraphError(e.0)),
             };
 
             if !res
@@ -626,19 +626,19 @@ impl<T> CausaloidGraph<T>
     )
         -> Result<bool, CausalityGraphError>
     {
-        if data.len() == 0
+        if data.is_empty()
         {
             return Err(CausalityGraphError("Data are empty (len=0)".into()));
         }
 
         if data.len() == 1
         {
-            let obs = data.get(0)
+            let obs = data.first()
                 .expect("Failed to get data");
 
             return match causaloid.verify_single_cause(obs) {
                 Ok(res) => Ok(res),
-                Err(e) => Err(CausalityGraphError(e.0.into())),
+                Err(e) => Err(CausalityGraphError(e.0)),
             };
         }
 
@@ -677,7 +677,7 @@ impl<T> CausaloidGraph<T>
                 .expect("Failed to get data")
         };
 
-        return obs.to_owned();
+        obs.to_owned()
     }
 }
 
@@ -688,9 +688,9 @@ fn append_string<'l>(
 )
     -> &'l str
 {
-    s1.push_str("\n");
+    s1.push('\n');
     s1.push_str(format!(" * {}", s2).as_str());
-    s1.push_str("\n");
+    s1.push('\n');
 
     s1
 }

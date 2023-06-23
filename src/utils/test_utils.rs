@@ -97,9 +97,9 @@ pub fn get_test_causaloid()
 
         let threshold: NumericalValue = 0.55;
         if !obs.ge(&threshold) {
-            return Ok(false)
+            Ok(false)
         } else {
-            return Ok(true)
+            Ok(true)
         }
     }
 
@@ -135,7 +135,7 @@ pub fn get_test_inferable(
     let question = "".to_string() as DescriptionValue;
     let all_obs = get_test_obs_coll();
 
-    return if inverse
+    if inverse
     {
         let target_threshold = 11.0;
         let target_effect = 0.0;
@@ -154,7 +154,7 @@ pub fn get_test_inferable(
         let target = 1.0; //true
 
         Inference::new(id, question, observation, threshold, effect, target)
-    };
+    }
 }
 
 pub fn get_test_observation()
@@ -178,11 +178,7 @@ fn test_has_data(
 )
     -> bool
 {
-    return if data.len() == 0 {
-        false
-    } else {
-        true
-    }
+    !data.is_empty()
 }
 
 pub fn get_test_num_array()
