@@ -50,14 +50,19 @@ before all make scripts work:
     make test           Runs all tests across all crates.
 ```
 
+## Licence
+
+* [MIT Licence](LICENSE)
+* Software is "as is" without any warranty.
+
+## Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in deep_causality by you,
+shall be licensed as MIT, without any additional terms or conditions.
+
 ## Author
 
 * Marvin Hansen
 * Github key ID: 4AEE18F83AFDEB23
 * GPG key ID: 210D39BC
 * GPG Fingerprint: 4B18 F7B2 04B9 7A72 967E 663E 369D 5A0B 210D 39BC
-
-## Licence
-
-* [MIT Licence](LICENSE)
-* Software is "as is" without any warranty. 
