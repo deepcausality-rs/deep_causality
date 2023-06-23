@@ -4,11 +4,28 @@
 
 // Empty default implementation as alternative to optional traits.
 // https://stackoverflow.com/questions/51915551/how-does-one-define-optional-methods-on-traits
-use crate::errors::AdjustmentError;
+use crate::errors::{AdjustmentError, PropagateError, UpdateError};
 use crate::types::grid_types::array_grid::ArrayGrid;
 
 pub trait Adjustable
 {
+    /// The default implementation does nothing by default to keep update optional.
+    fn update<T: Copy + Default>(
+        data: T
+    )
+        -> Result<(), UpdateError>
+    {
+        let _ = data.to_owned();
+        Ok(())
+    }
+
+    /// The default implementation does nothing by default to keep propagate optional.
+    fn propagate()
+        -> Result<(), PropagateError>
+    {
+        Ok(())
+    }
+
     /// The default implementation does nothing by default to keep adjustment optional.
     /// Override this method to implement a node adjustment when needed.
     fn adjust<T: Copy + Default, const W: usize, const H: usize, const D: usize, const C: usize>(
