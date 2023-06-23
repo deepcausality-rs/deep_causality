@@ -6,7 +6,7 @@
 use std::collections::HashMap;
 use std::hash::Hash;
 
-use macros::{make_get_all_map_items, make_len};
+use macros::{make_get_all_map_items, make_is_empty, make_len};
 
 use crate::prelude::*;
 
@@ -16,5 +16,6 @@ impl<K, V> AssumableReasoning<V> for HashMap<K, V>
         V: Assumable + Clone,
 {
     make_len!();
+    make_is_empty!();
     make_get_all_map_items!();
 }
