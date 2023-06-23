@@ -7,11 +7,18 @@ repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 license = "MIT"
 
-description = "Macros for deep_causality crate"
+description = "Procedural macros for use with deep_causality."
 documentation = "https://docs.rs/deep_causality"
+
 
 [lib]
 proc-macro = true
 
+[features]
+
 
 [dependencies]
+
+
+[package.metadata.docs.rs]
+all-features = true
