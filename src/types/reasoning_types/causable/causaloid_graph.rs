@@ -57,6 +57,14 @@ impl<T> CausaloidGraph<T>
     }
 }
 
+impl<T> Default for CausaloidGraph<T>
+    where
+        T: Debug + Causable + Clone + PartialEq,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl<T> CausableGraph<T> for CausaloidGraph<T>
     where
