@@ -7,6 +7,12 @@ pub use crate::errors::BuildError;
 pub use crate::errors::CausalityError;
 pub use crate::errors::CausalityGraphError;
 //
+// Extensions
+pub use crate::extensions::assumable::*;
+pub use crate::extensions::causable::*;
+pub use crate::extensions::inferable::*;
+pub use crate::extensions::observable::*;
+//
 // Protocols
 pub use crate::protocols::adjustable::Adjustable;
 pub use crate::protocols::assumable::Assumable;
@@ -53,4 +59,3 @@ pub use crate::types::reasoning_types::causable::causaloid::*;
 pub use crate::types::reasoning_types::causable::causaloid_graph::*;
 pub use crate::types::reasoning_types::inferable::inference::*;
 pub use crate::types::reasoning_types::observable::observation::Observation;
-

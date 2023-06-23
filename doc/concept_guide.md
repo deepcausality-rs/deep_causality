@@ -65,9 +65,9 @@ Traits:
 
 Extensions:
 
-* [Assumable Array](/src/extensions/assumable/assumable_array.rs)
-* [Assumable Map](/src/extensions/assumable/assumable_map.rs)
-* [Assumable Vector](/src/extensions/assumable/assumable_vector.rs)
+* [Assumable Array](/src/extensions/assumable/mod.rs)
+* [Assumable Map](/src/extensions/assumable/mod.rs)
+* [Assumable Vector](/src/extensions/assumable/mod.rs)
 
 Types:
 
@@ -95,9 +95,9 @@ Traits:
 
 Extensions:
 
-* [Observable Array](/src/extensions/observable/observation_array.rs)
-* [Observable Map](/src/extensions/observable/observation_map.rs)
-* [Observable Vector](/src/extensions/observable/observation_vector.rs)
+* [Observable Array](/src/extensions/observable/mod.rs)
+* [Observable Map](/src/extensions/observable/mod.rs)
+* [Observable Vector](/src/extensions/observable/mod.rs)
 
 Types:
 
@@ -131,9 +131,9 @@ Traits:
 
 Extensions:
 
-* [Inferable Array](/src/extensions/inferable/inferable_array.rs)
-* [Inferable Map](/src/extensions/inferable/inferable_map.rs)
-* [Inferable Vector](/src/extensions/inferable/inferable_vector.rs)
+* [Inferable Array](/src/extensions/inferable/mod.rs)
+* [Inferable Map](/src/extensions/inferable/mod.rs)
+* [Inferable Vector](/src/extensions/inferable/mod.rs)
 
 Types:
 
