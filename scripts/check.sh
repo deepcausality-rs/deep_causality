@@ -24,5 +24,6 @@ command cargo audit
 
 command cargo check
 
-https://github.com/rust-lang/rust-clippy
+# Run linter
+# https://github.com/rust-lang/rust-clippy
 command cargo clippy
