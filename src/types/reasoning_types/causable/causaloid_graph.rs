@@ -12,6 +12,8 @@ use petgraph::matrix_graph::MatrixGraph;
 use petgraph::prelude::EdgeRef;
 
 use crate::prelude::*;
+use crate::protocols::causable::Causable;
+use crate::protocols::causable_graph::CausableGraph;
 
 type DefaultIx = u32;
 

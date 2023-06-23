@@ -4,6 +4,7 @@
 use std::fmt::{Display, Formatter};
 
 use crate::prelude::*;
+use crate::protocols::contextuable::{Datable, SpaceTemporal, Spatial, Temporal};
 
 // Node type needs to be generic over S and T to allow
 // for categories of spacial and temporal types.

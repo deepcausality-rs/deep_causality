@@ -4,10 +4,10 @@
 // Extension trait http://xion.io/post/code/rust-extension-traits.html
 
 use macros::{make_get_all_items, make_is_empty, make_len};
+use crate::prelude::{Observable, ObservableReasoning};
 
-use crate::prelude::{Observable, ObservableCollection};
 
-impl<T> ObservableCollection<T> for Vec<T>
+impl<T> ObservableReasoning<T> for Vec<T>
     where
         T: Observable,
 {

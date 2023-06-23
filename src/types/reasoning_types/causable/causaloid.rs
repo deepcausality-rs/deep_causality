@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 
 use crate::prelude::*;
+use crate::protocols::causable::Causable;
 
 // Internal enum to represent the type of causaloid, which
 // is required to redirect verify and explain method calls to

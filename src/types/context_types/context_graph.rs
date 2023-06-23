@@ -3,7 +3,8 @@
  */
 
 
-use crate::prelude::{ContextKind, ContextMatrixGraph, Datable, SpaceTemporal, Spatial, Temporal};
+use crate::prelude::{ContextKind, ContextMatrixGraph};
+use crate::protocols::contextuable::{Datable, SpaceTemporal, Spatial, Temporal};
 
 pub struct ContextGraph<D, S, T, ST>
     where

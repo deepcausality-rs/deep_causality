@@ -8,24 +8,22 @@ pub use crate::errors::CausalityError;
 pub use crate::errors::CausalityGraphError;
 //
 // Protocols
-pub use crate::protocols::adjustable::adjustable::*;
-pub use crate::protocols::adjustable::adjustable::Adjustable;
-pub use crate::protocols::assumable::assumable::*;
-pub use crate::protocols::assumable::assumable_reasoning::*;
-pub use crate::protocols::causable::causable::*;
-pub use crate::protocols::causable::causable_graph::*;
-pub use crate::protocols::causable::causable_graph_reasoning::*;
-pub use crate::protocols::causable::causable_reasoning::*;
-pub use crate::protocols::contextuable::datable::*;
-pub use crate::protocols::contextuable::spacetemporal::*;
-pub use crate::protocols::contextuable::spatial::*;
-pub use crate::protocols::contextuable::temporal::*;
-pub use crate::protocols::identifiable::identifiable::*;
-pub use crate::protocols::identifiable::identifiable::Identifiable;
-pub use crate::protocols::inferable::inferable::*;
-pub use crate::protocols::inferable::inferable_reasoning::*;
-pub use crate::protocols::observable::observable::*;
-pub use crate::protocols::observable::observable_reasoning::*;
+pub use crate::protocols::adjustable::Adjustable;
+pub use crate::protocols::assumable::Assumable;
+pub use crate::protocols::assumable::AssumableReasoning;
+pub use crate::protocols::causable::Causable;
+pub use crate::protocols::causable::CausableReasoning;
+pub use crate::protocols::causable_graph::CausableGraph;
+pub use crate::protocols::causable_graph::CausableGraphReasoning;
+pub use crate::protocols::contextuable::Datable;
+pub use crate::protocols::contextuable::Spatial;
+pub use crate::protocols::contextuable::SpaceTemporal;
+pub use crate::protocols::contextuable::Temporal;
+pub use crate::protocols::identifiable::Identifiable;
+pub use crate::protocols::inferable::Inferable;
+pub use crate::protocols::inferable::InferableReasoning;
+pub use crate::protocols::observable::Observable;
+pub use crate::protocols::observable::ObservableReasoning;
 //
 // Types
 //

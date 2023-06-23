@@ -4,7 +4,9 @@
 
 use std::error::Error;
 
-use crate::prelude::{BuildError, CausableGraph, Causaloid, CausaloidGraph, InferableReasoning, Inference};
+use crate::prelude::{BuildError, Causaloid, CausaloidGraph, Inference};
+use crate::protocols::causable_graph::CausableGraph;
+use crate::protocols::inferable::InferableReasoning;
 use crate::types::alias_types::{CausalFn, DescriptionValue, IdentificationValue};
 
 pub mod causaloid;

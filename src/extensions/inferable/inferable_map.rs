@@ -7,8 +7,8 @@ use std::collections::HashMap;
 use std::hash::Hash;
 
 use macros::{make_get_all_map_items, make_is_empty, make_len};
+use crate::prelude::{Inferable, InferableReasoning};
 
-use crate::prelude::*;
 
 impl<K, V> InferableReasoning<V> for HashMap<K, V>
     where

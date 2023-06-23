@@ -3,7 +3,9 @@
  */
 use std::fmt::{Display, Formatter};
 
-use crate::prelude::{Datable, Identifiable, NodeType, SpaceTemporal, Spatial, Temporal};
+use crate::prelude::NodeType;
+use crate::protocols::contextuable::{Datable, SpaceTemporal, Spatial, Temporal};
+use crate::protocols::identifiable::Identifiable;
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Node<D, S, T, ST>

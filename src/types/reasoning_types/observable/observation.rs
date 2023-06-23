@@ -4,6 +4,7 @@
 use std::fmt::{Display, Formatter};
 
 use crate::prelude::*;
+use crate::protocols::observable::Observable;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct Observation {

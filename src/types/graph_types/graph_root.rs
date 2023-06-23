@@ -3,7 +3,7 @@
  */
 use std::fmt::{Display, Formatter};
 
-use crate::prelude::Identifiable;
+use crate::protocols::identifiable::Identifiable;
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Root {

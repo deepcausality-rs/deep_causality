@@ -5,6 +5,7 @@
 use std::fmt::{Display, Formatter};
 
 use crate::prelude::*;
+use crate::protocols::inferable::Inferable;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct Inference {

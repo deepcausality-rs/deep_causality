@@ -3,7 +3,8 @@
  */
 
 
-use crate::prelude::{Assumption, Causaloid, Identifiable};
+use crate::prelude::{Assumption, Causaloid};
+use crate::protocols::identifiable::Identifiable;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Model<'l> {

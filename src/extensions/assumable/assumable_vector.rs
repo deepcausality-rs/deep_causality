@@ -6,6 +6,7 @@
 use macros::{make_get_all_items, make_is_empty, make_len};
 
 use crate::prelude::*;
+use crate::protocols::assumable::Assumable;
 
 impl<T> AssumableReasoning<T> for Vec<T>
     where

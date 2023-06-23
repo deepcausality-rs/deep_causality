@@ -5,7 +5,9 @@
 use std::cell::RefCell;
 use std::fmt::{Debug, Display, Formatter};
 
-use crate::prelude::{Assumable, DescriptionValue, EvalFn, Identifiable, IdentificationValue, NumericalValue};
+use crate::prelude::{DescriptionValue, EvalFn, IdentificationValue, NumericalValue};
+use crate::protocols::assumable::Assumable;
+use crate::protocols::identifiable::Identifiable;
 
 #[derive(Clone)]
 pub struct Assumption

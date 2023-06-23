@@ -9,6 +9,7 @@ use std::hash::Hash;
 use macros::{make_get_all_map_items, make_is_empty, make_len};
 
 use crate::prelude::*;
+use crate::protocols::assumable::Assumable;
 
 impl<K, V> AssumableReasoning<V> for HashMap<K, V>
     where
