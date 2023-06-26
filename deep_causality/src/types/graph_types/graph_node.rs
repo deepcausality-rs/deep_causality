@@ -1,8 +1,8 @@
 /*
  * Copyright (c) 2023. Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
  */
-use std::fmt::{Display, Formatter};
 
+use std::fmt::{Display, Formatter};
 use crate::prelude::NodeType;
 use crate::protocols::contextuable::{Datable, SpaceTemporal, Spatial, Temporal};
 use crate::protocols::identifiable::Identifiable;

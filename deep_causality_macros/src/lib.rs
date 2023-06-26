@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2023. Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
  */
+
 // Procedural Macros https://doc.rust-lang.org/reference/procedural-macros.html
 
 extern crate proc_macro;
@@ -73,5 +74,68 @@ pub fn make_vec_to_vec(_item: TokenStream) -> TokenStream
 {
     "fn to_vec(&self) -> Vec<T> {
         self.clone()
+    }".parse().unwrap()
+}
+
+// macros used in deep_causality/src/types/window_type
+
+#[proc_macro]
+pub fn make_first(_item: TokenStream) -> TokenStream
+{
+    "#[inline(always)]
+    fn first(&self) -> Result<T, String> {
+        if self.tail != 0 {
+            Ok(self.store[self.head])
+        } else {
+            Err(\"Array is empty. Add some elements to the array first\".to_string())
+        }
+    }
+    ".parse().unwrap()
+}
+
+#[proc_macro]
+pub fn make_last(_item: TokenStream) -> TokenStream
+{
+    "#[inline(always)]
+    fn last(&self) -> Result<T, String> {
+        if self.filled() {
+            Ok(self.store[self.tail - 1])
+        } else {
+            Err(\"Array is not yet filled. Add some elements to the array first\".to_string())
+        }
+    }
+    ".parse().unwrap()
+}
+
+#[proc_macro]
+pub fn make_tail(_item: TokenStream) -> TokenStream
+{
+    "#[inline(always)]
+    fn tail(&self) -> usize {
+        self.tail
+    }".parse().unwrap()
+}
+
+#[proc_macro]
+pub fn make_size(_item: TokenStream) -> TokenStream
+{
+    "#[inline(always)]
+    fn size(&self) -> usize {
+        self.size
+    }".parse().unwrap()
+}
+
+#[proc_macro]
+pub fn make_get_slice(_item: TokenStream) -> TokenStream
+{
+    "#[inline(always)]
+    fn get_slice(&self) -> &[T] {
+        if self.tail > self.size
+        {
+            // Adjust offset in case the window is larger than the slice.
+            &self.store[self.head + 1..self.tail]
+        } else {
+            &self.store[self.head..self.tail]
+        }
     }".parse().unwrap()
 }
