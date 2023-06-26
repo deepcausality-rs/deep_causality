@@ -33,6 +33,7 @@ Cargo works as expected, but in addition to cargo, a makefile exists
 that abstracts over a number of additional tools you may have to install
 before all make scripts work:
 
+* [clippy](https://github.com/rust-lang/rust-clippy)
 * [nextest](https://nexte.st/)
 * [outdated](https://github.com/kbknapp/cargo-outdated)
 * [udeps](https://crates.io/crates/cargo-udeps)
