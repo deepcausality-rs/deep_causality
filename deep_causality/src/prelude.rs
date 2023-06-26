@@ -63,3 +63,6 @@ pub use crate::types::reasoning_types::observable::observation::Observation;
 pub use crate::types::window_type::storage::WindowStorage;
 pub use crate::types::window_type::storage_array::ArrayStorage;
 pub use crate::types::window_type::storage_vec::VectorStorage;
+pub use crate::types::window_type::sliding_window;
+pub use crate::types::window_type::sliding_window::SlidingWindow;
+
