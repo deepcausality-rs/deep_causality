@@ -3,7 +3,6 @@ resolver = "2"
 members = [
     "deep_causality",
     "deep_causality_macros",
-    "deep_graph_core"
 ]
 
 [profile.release]

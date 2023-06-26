@@ -24,6 +24,16 @@ impl<T, const SIZE: usize, const CAPACITY: usize> ArrayStorage<T, SIZE, CAPACITY
     }
 }
 
+impl<T, const SIZE: usize, const CAPACITY: usize> Default for ArrayStorage<T, SIZE, CAPACITY>
+    where
+        T: PartialEq + Copy + Default,
+        [T; SIZE]: Sized,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T, const SIZE: usize, const CAPACITY: usize> WindowStorage<T> for ArrayStorage<T, SIZE, CAPACITY>
     where
         T: PartialEq + Copy + Default,
