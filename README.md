@@ -44,7 +44,7 @@ before all make scripts work:
     make bench          Runs all benchmarks across all crates.
     make check          Checks the code base for security vulnerabilities.
     make example        Runs the default example: Smoking.
-    make fix            Fixes linting issues as reported by cargo
+    make fix            Auto-fixes linting issues as reported by cargo and clippy.
     make test           Runs all tests across all crates.
 ```
 
