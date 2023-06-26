@@ -8,3 +8,4 @@ pub mod graph_types;
 pub mod grid_types;
 pub mod model_types;
 pub mod reasoning_types;
+pub mod window_type;

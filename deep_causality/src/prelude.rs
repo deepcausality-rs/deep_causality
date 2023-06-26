@@ -59,3 +59,7 @@ pub use crate::types::reasoning_types::causable::causaloid::*;
 pub use crate::types::reasoning_types::causable::causaloid_graph::*;
 pub use crate::types::reasoning_types::inferable::inference::*;
 pub use crate::types::reasoning_types::observable::observation::Observation;
+// window types
+pub use crate::types::window_type::storage::WindowStorage;
+pub use crate::types::window_type::storage_array::ArrayStorage;
+pub use crate::types::window_type::storage_vec::VectorStorage;
