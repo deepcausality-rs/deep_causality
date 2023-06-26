@@ -1,0 +1,12 @@
+[package]
+name = "deep_graph_core"
+version = "0.4.0"
+edition = "2021"
+rust-version = "1.65"
+repository = "https://github.com/deepcausality/deep_causality.rs"
+authors = ["Petgraph Project>" ]
+license = "MIT"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
