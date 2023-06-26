@@ -1,6 +1,4 @@
-/*
- * Copyright (c) 2023. Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
- */
+// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use deep_causality::protocols::assumable::AssumableReasoning;
 use deep_causality::utils::test_utils::{get_test_assumption, get_test_assumption_map, get_test_num_array};

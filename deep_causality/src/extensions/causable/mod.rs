@@ -1,6 +1,4 @@
-/*
- * Copyright (c) 2023. Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
- */
+// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 
 // Extension trait http://xion.io/post/code/rust-extension-traits.html

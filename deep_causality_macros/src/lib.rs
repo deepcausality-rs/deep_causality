@@ -1,6 +1,4 @@
-/*
- * Copyright (c) 2023. Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
- */
+// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 // Procedural Macros https://doc.rust-lang.org/reference/procedural-macros.html
 

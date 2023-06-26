@@ -1,6 +1,4 @@
-/*
- * Copyright (c) 2023. Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
- */
+// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use crate::prelude::Causaloid;
 use crate::utils::{bench_utils_shared, test_utils};

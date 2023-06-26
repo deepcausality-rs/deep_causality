@@ -1,6 +1,4 @@
-/*
- * Copyright (c) 2023. Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
- */
+// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use deep_causality::prelude::{SlidingWindow, VectorStorage};
 use deep_causality::prelude::sliding_window::new_with_vector_storage;

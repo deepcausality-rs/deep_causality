@@ -1,6 +1,4 @@
-/*
- * Copyright (c) 2023. Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
- */
+// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 use deep_causality_macros::{make_first, make_get_slice, make_last, make_size, make_tail};
 use crate::prelude::WindowStorage;
 

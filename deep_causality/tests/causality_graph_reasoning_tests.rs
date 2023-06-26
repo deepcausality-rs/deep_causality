@@ -1,6 +1,4 @@
-/*
- * Copyright (c) 2023. Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
- */
+// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 // Tests causality reasoning over a selection of hyper-graphs.
 // The selection is non-exhaustive because there are no arbitrary constraints

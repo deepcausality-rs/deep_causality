@@ -1,6 +1,4 @@
-/*
- * Copyright (c) 2023. Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
- */
+// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use deep_causality::prelude::{ArrayGrid, Grid, PointIndex};
 use deep_causality::prelude::ArrayType::{Array1D, Array2D, Array3D, Array4D};

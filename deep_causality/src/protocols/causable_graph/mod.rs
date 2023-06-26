@@ -1,3 +1,4 @@
+// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 use std::collections::HashMap;
 use crate::errors::CausalityGraphError;
 use crate::prelude::{Causable, IdentificationValue, NodeIndex, NumericalValue};
