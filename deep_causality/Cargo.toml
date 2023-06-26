@@ -14,6 +14,7 @@ keywords = ["cauality", "causal-data-structure", "causal-graph", "causal-reasoni
 categories = ["data-structures", "science", "aerospace", "finance", "mathematics"]
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 
+
 [dependencies]
 # using a patched version of petgraph until PR #547 went through
 petgraph = { git = "https://github.com/marvin-hansen/petgraph.git", rev = "a685be8" }
