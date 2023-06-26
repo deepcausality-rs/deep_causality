@@ -5,8 +5,7 @@ use criterion::criterion_main;
 mod benchmarks;
 
 // In case of SIGSEGV: invalid memory reference,
-// just reduce sample size in the causality benchmarks.
-
+// just reduce sample size in the linear or multi cause graph benchmarks.
 criterion_main! {
     benchmarks::bench_grid_array::array_grid,
     benchmarks::bench_collection::causality_collection,

@@ -16,12 +16,10 @@ fn get_sliding_window() -> SlidingWindow<ArrayStorage<Data, SIZE, MULT>, Data> {
 
 fn array_backed_benchmark(criterion: &mut Criterion)
 {
-    let d1 = Data { dats: 0 };
     let mut w = get_sliding_window();
-
     criterion.bench_function("array_push", |bencher| {
         bencher.iter(||
-            w.push(d1)
+            w.push( Data{ dats: 0 })
         )
     });
 }

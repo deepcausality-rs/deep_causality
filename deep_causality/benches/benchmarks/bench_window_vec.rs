@@ -5,7 +5,6 @@ use deep_causality::prelude::{SlidingWindow, VectorStorage};
 use deep_causality::prelude::sliding_window::new_with_vector_storage;
 use crate::benchmarks::fields::{MULT, SIZE};
 
-
 #[derive(Default, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Data {
     dats: i32,
@@ -16,12 +15,10 @@ fn get_sliding_window() -> SlidingWindow<VectorStorage<Data>, Data> {
 
 fn vector_backed_benchmark(criterion: &mut Criterion)
 {
-    let d1 = Data{dats:0};
     let mut w = get_sliding_window();
-
     criterion.bench_function("vector_push", |bencher| {
         bencher.iter(||
-            w.push(d1)
+            w.push(Data{dats:0})
         )
     });
 }
