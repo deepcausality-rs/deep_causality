@@ -4,3 +4,9 @@ members = [
     "deep_causality",
     "deep_causality_macros"
 ]
+
+[profile.release]
+strip = true  # Automatically strip debug symbols from the binary
+lto = true    # Enable Link Time Optimization (LTO)
+codegen-units = 1 # Reduce Parallel Code Generation Units to Increase Optimization
+panic = "abort"  # disabled

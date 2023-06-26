@@ -32,10 +32,3 @@ rand = { version = "0.8.5", features = ["small_rng"] }
 [[bench]]
 name = "bench_main"
 harness = false
-
-
-[profile.release]
-strip = true  # Automatically strip debug symbols from the binary
-lto = true    # Enable Link Time Optimization (LTO)
-codegen-units = 1 # Reduce Parallel Code Generation Units to Increase Optimization
-panic = "abort"  # disabled
