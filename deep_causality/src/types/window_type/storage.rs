@@ -26,34 +26,24 @@ pub trait WindowStorage<T>
 
     /// Returns true if the window is empty.
     fn empty(&self) -> bool {
-        return if self.tail() == 0 {
-            true
-        } else {
-            false
-        };
+        self.tail() == 0
     }
 
     /// Returns true if the window is filled.
     fn filled(&self) -> bool
     {
-        return if self.tail() < self.size() {
-            false
-        } else {
-            true
-        };
+        self.tail() >= self.size()
     }
 
     /// Returns the sliding window as a fixed size static array.
     fn arr<const S: usize>(&self) -> Result<[T; S], String> {
         if !self.filled() {
-            return Err(format!("Sliding window is not yet filled. Add some elements to the array first"));
+            return Err("Sliding window is not yet filled. Add some elements to the array first".to_string());
         }
 
         let mut arr: [T; S] = [T::default(); S];
         let slice = self.get_slice();
-        for i in 0..self.size() {
-            arr[i] = slice[i];
-        }
+        arr[..self.size()].copy_from_slice(&slice[..self.size()]);
 
         Ok(arr)
     }
@@ -61,7 +51,7 @@ pub trait WindowStorage<T>
     /// Returns the sliding window as a slice.
     fn slice(&self) -> Result<&[T], String> {
         return if !self.filled() {
-            Err(format!("Sliding window is not yet filled. Add some elements to the array first"))
+            Err("Sliding window is not yet filled. Add some elements to the array first".to_string())
         } else {
             Ok(self.get_slice())
         };
@@ -70,7 +60,7 @@ pub trait WindowStorage<T>
     /// Returns the sliding window as a vector.
     fn vec(&self) -> Result<Vec<T>, String> {
         return if !self.filled() {
-            Err(format!("Sliding window is not yet filled. Add some elements to the array first"))
+            Err("Sliding window is not yet filled. Add some elements to the array first".to_string())
         } else {
             Ok(self.get_slice().to_vec())
         };

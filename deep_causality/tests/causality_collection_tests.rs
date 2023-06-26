@@ -20,26 +20,26 @@ fn test_add()
 fn test_all_active()
 {
     let col = get_test_causality_coll();
-    assert_eq!(false, col.get_all_causes_true());
+    assert!(!col.get_all_causes_true());
 
     let obs = 0.99;
     for cause in &col {
         cause.verify_single_cause(&obs).expect("verify failed");
     }
-    assert_eq!(true, col.get_all_causes_true());
+    assert!(col.get_all_causes_true());
 }
 
 #[test]
 fn test_number_active()
 {
     let col = get_test_causality_coll();
-    assert_eq!(false, col.get_all_causes_true());
+    assert!(!col.get_all_causes_true());
 
     let obs = 0.99;
     for cause in &col {
         cause.verify_single_cause(&obs).expect("verify failed");
     }
-    assert_eq!(true, col.get_all_causes_true());
+    assert!(col.get_all_causes_true());
     assert_eq!(3.0, col.number_active());
 }
 
@@ -47,13 +47,13 @@ fn test_number_active()
 fn test_percent_active()
 {
     let col = get_test_causality_coll();
-    assert_eq!(false, col.get_all_causes_true());
+    assert!(!col.get_all_causes_true());
 
     let obs = 0.99;
     for cause in &col {
         cause.verify_single_cause(&obs).expect("verify failed");
     }
-    assert_eq!(true, col.get_all_causes_true());
+    assert!(col.get_all_causes_true());
     assert_eq!(3.0, col.number_active());
     assert_eq!(100.0, col.percent_active());
 }
@@ -69,5 +69,5 @@ fn test_size()
 fn test_is_empty()
 {
     let col = get_test_causality_coll();
-    assert_eq!(false, col.is_empty());
+    assert!(!col.is_empty());
 }

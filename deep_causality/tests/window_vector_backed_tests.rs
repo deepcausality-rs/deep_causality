@@ -20,7 +20,7 @@ fn get_sliding_window() -> SlidingWindow<VectorStorage<Data>, Data> {
 #[test]
 fn test_new() {
     let window = get_sliding_window();
-    assert_eq!(window.empty(), true);
+    assert!(window.empty());
     assert_eq!(window.size(), SIZE);
 }
 
@@ -28,24 +28,24 @@ fn test_new() {
 fn test_empty() {
     let d1 = Data { dats: 0 };
     let mut window = get_sliding_window();
-    assert_eq!(window.empty(), true);
+    assert!(window.empty());
 
     window.push(d1);
     assert_eq!(window.size(), SIZE);
-    assert_eq!(window.empty(), false);
+    assert!(!window.empty());
 }
 
 #[test]
 fn test_push() {
     let mut window = get_sliding_window();
     assert_eq!(window.size(), SIZE);
-    assert_eq!(window.filled(), false);
-    assert_eq!(window.empty(), true);
+    assert!(!window.filled());
+    assert!(window.empty());
 
     let d1 = Data { dats: 0 };
     window.push(d1);
-    assert_eq!(window.filled(), false);
-    assert_eq!(window.empty(), false);
+    assert!(!window.filled());
+    assert!(!window.empty());
 }
 
 #[test]
@@ -55,39 +55,39 @@ fn test_filled() {
     assert_eq!(window.size(), SIZE);
 
     assert_eq!(window.size(), SIZE);
-    assert_eq!(window.filled(), false);
+    assert!(!window.filled());
 
     window.push(d);
-    assert_eq!(window.filled(), false);
+    assert!(!window.filled());
 
     window.push(d);
-    assert_eq!(window.filled(), false);
+    assert!(!window.filled());
 
     window.push(d);
-    assert_eq!(window.filled(), false);
+    assert!(!window.filled());
 
     // Filled
     window.push(d);
-    assert_eq!(window.filled(), true);
+    assert!(window.filled());
 
     window.push(d);
-    assert_eq!(window.filled(), true);
+    assert!(window.filled());
 
     window.push(d);
-    assert_eq!(window.filled(), true);
+    assert!(window.filled());
 
     window.push(d);
-    assert_eq!(window.filled(), true);
+    assert!(window.filled());
 
     window.push(d);
-    assert_eq!(window.filled(), true);
+    assert!(window.filled());
 
     // Rewinds b/c max capacity of 8 was reached
     window.push(d);
-    assert_eq!(window.filled(), true);
+    assert!(window.filled());
 
     window.push(d);
-    assert_eq!(window.filled(), true);
+    assert!(window.filled());
 }
 
 #[test]
@@ -96,16 +96,16 @@ fn test_first() {
     let mut window = get_sliding_window();
     assert_eq!(window.size(), SIZE);
     assert_eq!(window.size(), SIZE);
-    assert_eq!(window.filled(), false);
+    assert!(!window.filled());
 
     let res = window.first();
-    assert_eq!(res.is_err(), true);
+    assert!(res.is_err());
 
     window.push(d);
-    assert_eq!(window.filled(), false);
+    assert!(!window.filled());
 
     let res = window.first();
-    assert_eq!(res.is_ok(), true);
+    assert!(res.is_ok());
 
     let data = res.unwrap();
     assert_eq!(data.dats, 0);
@@ -117,20 +117,20 @@ fn test_last() {
     let mut window = get_sliding_window();
     assert_eq!(window.size(), SIZE);
     assert_eq!(window.size(), SIZE);
-    assert_eq!(window.filled(), false);
+    assert!(!window.filled());
 
     let res = window.last();
-    assert_eq!(res.is_err(), true);
+    assert!(res.is_err());
 
     let d = Data { dats: 0 };
     window.push(d);
     window.push(d);
     window.push(d);
     window.push(d);
-    assert_eq!(window.filled(), true);
+    assert!(window.filled());
 
     let res = window.first();
-    assert_eq!(res.is_ok(), true);
+    assert!(res.is_ok());
 
     let data = res.unwrap();
     assert_eq!(data.dats, 0);
@@ -139,7 +139,7 @@ fn test_last() {
     window.push(d);
 
     let res = window.last();
-    assert_eq!(res.is_ok(), true);
+    assert!(res.is_ok());
 
     let data = res.unwrap();
     assert_eq!(data.dats, 42);
@@ -151,14 +151,14 @@ fn test_slice() {
     let mut window = get_sliding_window();
     assert_eq!(window.size(), SIZE);
     assert_eq!(window.size(), SIZE);
-    assert_eq!(window.filled(), false);
+    assert!(!window.filled());
 
     let d = Data { dats: 0 };
     window.push(d);
     window.push(d);
     window.push(d);
     window.push(d);
-    assert_eq!(window.filled(), true);
+    assert!(window.filled());
 
     let d = Data { dats: 42 };
     window.push(d);
@@ -180,13 +180,13 @@ fn test_vec() {
     assert_eq!(window.size(), SIZE);
 
     assert_eq!(window.size(), SIZE);
-    assert_eq!(window.filled(), false);
+    assert!(!window.filled());
 
     window.push(d1);
     window.push(d1);
     window.push(d1);
     window.push(d1);
-    assert_eq!(window.filled(), true);
+    assert!(window.filled());
 
     let d2 = Data { dats: 42 };
     window.push(d2);

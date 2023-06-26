@@ -40,7 +40,7 @@ fn test_remove()
 
     map.remove(&3);
     assert_eq!(2, map.len());
-    assert_eq!(false, map.contains_key(&3));
+    assert!(!map.contains_key(&3));
 }
 
 
@@ -51,13 +51,13 @@ fn test_all_assumptions_tested()
     assert_eq!(map.len(), 3);
 
     let all_tested = map.all_assumptions_tested();
-    assert_eq!(all_tested, false);
+    assert!(!all_tested);
 
     let data = get_test_num_array();
     map.verify_all_assumptions(&data);
 
     let all_tested = map.all_assumptions_tested();
-    assert_eq!(all_tested, true);
+    assert!(all_tested);
 }
 
 
@@ -68,18 +68,18 @@ fn test_all_assumptions_valid()
     assert_eq!(map.len(), 3);
 
     let all_tested = map.all_assumptions_tested();
-    assert_eq!(all_tested, false);
+    assert!(!all_tested);
 
     let all_valid = map.all_assumptions_valid();
-    assert_eq!(all_valid, false);
+    assert!(!all_valid);
 
     let data = get_test_num_array();
     map.verify_all_assumptions(&data);
     let all_tested = map.all_assumptions_tested();
-    assert_eq!(all_tested, true);
+    assert!(all_tested);
 
     let all_valid = map.all_assumptions_valid();
-    assert_eq!(all_valid, true);
+    assert!(all_valid);
 }
 
 
@@ -90,10 +90,10 @@ fn test_percent_assumption_valid()
     assert_eq!(map.len(), 3);
 
     let all_tested = map.all_assumptions_tested();
-    assert_eq!(all_tested, false);
+    assert!(!all_tested);
 
     let all_valid = map.all_assumptions_valid();
-    assert_eq!(all_valid, false);
+    assert!(!all_valid);
 
     let all_valid_percent = map.percent_assumption_valid();
     assert_eq!(all_valid_percent, 0.0);
@@ -101,10 +101,10 @@ fn test_percent_assumption_valid()
     let data = get_test_num_array();
     map.verify_all_assumptions(&data);
     let all_tested = map.all_assumptions_tested();
-    assert_eq!(all_tested, true);
+    assert!(all_tested);
 
     let all_valid = map.all_assumptions_valid();
-    assert_eq!(all_valid, true);
+    assert!(all_valid);
 
     let all_valid_percent = map.percent_assumption_valid();
     assert_eq!(all_valid_percent, 100.0);
@@ -118,10 +118,10 @@ fn test_get_all_invalid_assumptions()
     assert_eq!(map.len(), 3);
 
     let all_tested = map.all_assumptions_tested();
-    assert_eq!(all_tested, false);
+    assert!(!all_tested);
 
     let all_valid = map.all_assumptions_valid();
-    assert_eq!(all_valid, false);
+    assert!(!all_valid);
 
     let all_valid_percent = map.percent_assumption_valid();
     assert_eq!(all_valid_percent, 0.0);
@@ -129,7 +129,7 @@ fn test_get_all_invalid_assumptions()
     let data = get_test_num_array();
     map.verify_all_assumptions(&data);
     let all_tested = map.all_assumptions_tested();
-    assert_eq!(all_tested, true);
+    assert!(all_tested);
 
     let all_invalid = map.get_all_invalid_assumptions();
     assert_eq!(all_invalid.len(), 0);
@@ -142,10 +142,10 @@ fn test_get_all_valid_assumptions()
     assert_eq!(map.len(), 3);
 
     let all_tested = map.all_assumptions_tested();
-    assert_eq!(all_tested, false);
+    assert!(!all_tested);
 
     let all_valid = map.all_assumptions_valid();
-    assert_eq!(all_valid, false);
+    assert!(!all_valid);
 
     let all_valid_percent = map.percent_assumption_valid();
     assert_eq!(all_valid_percent, 0.0);
@@ -154,7 +154,7 @@ fn test_get_all_valid_assumptions()
     map.verify_all_assumptions(&data);
 
     let all_tested = map.all_assumptions_tested();
-    assert_eq!(all_tested, true);
+    assert!(all_tested);
 
     let all_valid = map.get_all_valid_assumptions();
     assert_eq!(all_valid.len(), 3);
@@ -167,10 +167,10 @@ fn test_get_all_tested_assumptions()
     assert_eq!(map.len(), 3);
 
     let all_tested = map.all_assumptions_tested();
-    assert_eq!(all_tested, false);
+    assert!(!all_tested);
 
     let all_valid = map.all_assumptions_valid();
-    assert_eq!(all_valid, false);
+    assert!(!all_valid);
 
     let all_valid_percent = map.percent_assumption_valid();
     assert_eq!(all_valid_percent, 0.0);
@@ -179,7 +179,7 @@ fn test_get_all_tested_assumptions()
     map.verify_all_assumptions(&data);
 
     let all_tested = map.all_assumptions_tested();
-    assert_eq!(all_tested, true);
+    assert!(all_tested);
 
     let all_tested_assumptions = map.get_all_tested_assumptions();
     assert_eq!(all_tested_assumptions.len(), 3);
@@ -193,10 +193,10 @@ fn test_get_all_untested_assumptions()
     assert_eq!(map.len(), 3);
 
     let all_tested = map.all_assumptions_tested();
-    assert_eq!(all_tested, false);
+    assert!(!all_tested);
 
     let all_valid = map.all_assumptions_valid();
-    assert_eq!(all_valid, false);
+    assert!(!all_valid);
 
     let all_untested = map.get_all_untested_assumptions();
     assert_eq!(all_untested.len(), 3);
@@ -208,7 +208,7 @@ fn test_get_all_untested_assumptions()
     map.verify_all_assumptions(&data);
 
     let all_tested = map.all_assumptions_tested();
-    assert_eq!(all_tested, true);
+    assert!(all_tested);
 
     let all_untested = map.get_all_untested_assumptions();
     assert_eq!(all_untested.len(), 0);
@@ -221,10 +221,10 @@ fn test_verify_all_assumptions()
     assert_eq!(map.len(), 3);
 
     let all_tested = map.all_assumptions_tested();
-    assert_eq!(all_tested, false);
+    assert!(!all_tested);
 
     let all_valid = map.all_assumptions_valid();
-    assert_eq!(all_valid, false);
+    assert!(!all_valid);
 
     let all_valid_percent = map.percent_assumption_valid();
     assert_eq!(all_valid_percent, 0.0);
@@ -233,8 +233,8 @@ fn test_verify_all_assumptions()
     map.verify_all_assumptions(&data);
 
     let all_tested = map.all_assumptions_tested();
-    assert_eq!(all_tested, true);
+    assert!(all_tested);
 
     let all_valid = map.all_assumptions_valid();
-    assert_eq!(all_valid, true);
+    assert!(all_valid);
 }

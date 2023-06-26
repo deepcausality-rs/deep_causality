@@ -62,19 +62,19 @@ impl<T> WindowStorage<T> for VectorStorage<T>
     }
 
     fn first(&self) -> Result<T, String> {
-        return if self.tail != 0 {
+        if self.tail != 0 {
             Ok(self.vec[self.head])
         } else {
-            Err(format!("Array is empty. Add some elements to the array first"))
-        };
+            Err("Array is empty. Add some elements to the array first".to_string())
+        }
     }
 
     fn last(&self) -> Result<T, String> {
-        return if self.filled() {
+        if self.filled() {
             Ok(self.vec[self.tail - 1])
         } else {
-            Err(format!("Array is not yet filled. Add some elements to the array first"))
-        };
+            Err("Array is not yet filled. Add some elements to the array first".to_string())
+        }
     }
 
     #[inline(always)]

@@ -38,27 +38,27 @@ fn test_remove()
 
     map.remove(&3);
     assert_eq!(2, map.len());
-    assert_eq!(false, map.contains_key(&3));
+    assert!(!map.contains_key(&3));
 }
 
 #[test]
 fn test_all_active()
 {
     let map = get_test_causality_map();
-    assert_eq!(false, map.get_all_causes_true());
+    assert!(!map.get_all_causes_true());
 
     let obs = 0.99;
     for (_, cause) in &map {
         cause.verify_single_cause(&obs).expect("verify failed");
     }
-    assert_eq!(true, map.get_all_causes_true());
+    assert!(map.get_all_causes_true());
 }
 
 #[test]
 fn test_number_active()
 {
     let map = get_test_causality_map();
-    assert_eq!(false, map.get_all_causes_true());
+    assert!(!map.get_all_causes_true());
     assert_eq!(0.0, map.number_active());
 
     let obs = 0.99;
@@ -66,7 +66,7 @@ fn test_number_active()
         cause.verify_single_cause(&obs).expect("verify failed");
     }
 
-    assert_eq!(true, map.get_all_causes_true());
+    assert!(map.get_all_causes_true());
     assert_eq!(3.0, map.number_active());
 }
 
@@ -74,13 +74,13 @@ fn test_number_active()
 fn test_percent_active()
 {
     let map = get_test_causality_map();
-    assert_eq!(false, map.get_all_causes_true());
+    assert!(!map.get_all_causes_true());
 
     let obs = 0.99;
     for (_, cause) in &map {
         cause.verify_single_cause(&obs).expect("verify failed");
     }
-    assert_eq!(true, map.get_all_causes_true());
+    assert!(map.get_all_causes_true());
     assert_eq!(3.0, map.number_active());
     assert_eq!(100.0, map.percent_active());
 }
@@ -96,5 +96,5 @@ fn test_size()
 fn test_is_empty()
 {
     let map = get_test_causality_map();
-    assert_eq!(false, map.is_empty());
+    assert!(!map.is_empty());
 }

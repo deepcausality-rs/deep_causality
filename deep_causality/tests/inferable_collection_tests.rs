@@ -20,20 +20,20 @@ fn test_add() {
 fn test_all_inferable() {
     let f = get_test_inferable(3, false);
     let col: Vec<Inference> = Vec::from_iter([f]);
-    assert_eq!(true, col.all_inferable());
+    assert!(col.all_inferable());
 }
 
 #[test]
 fn test_all_inverse_inferable() {
     let f = get_test_inferable(3, true);
     let col: Vec<Inference> = Vec::from_iter([f]);
-    assert_eq!(true, col.all_inverse_inferable());
+    assert!(col.all_inverse_inferable());
 }
 
 #[test]
 fn test_all_non_inferable() {
     let col = get_test_inf_coll();
-    assert_eq!(false, col.all_non_inferable());
+    assert!(!col.all_non_inferable());
 }
 
 #[test]
@@ -115,5 +115,5 @@ fn test_size() {
 #[test]
 fn test_is_empty() {
     let col = get_test_inf_coll();
-    assert_eq!(false, col.is_empty());
+    assert!(!col.is_empty());
 }

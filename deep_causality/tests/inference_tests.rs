@@ -21,7 +21,7 @@ fn test_inferable() {
     let threshold = 0.55; // Threshold above which the observations is considered an inference.
     let effect = 1.0; // expected effect of the inference once the threshold is reached or exceeded
     let infer = Inference::new(0, question, observation, threshold, effect, target_effect);
-    assert_eq!(true, infer.is_inferable())
+    assert!(infer.is_inferable())
 }
 
 #[test]
@@ -37,5 +37,5 @@ fn test_inverse_inferable() {
     let threshold = 0.55; // threshold remains the same
     let infer = Inference::new(0, question, observation, threshold, effect, target_effect);
 
-    assert_eq!(true, infer.is_inverse_inferable())
+    assert!(infer.is_inverse_inferable())
 }

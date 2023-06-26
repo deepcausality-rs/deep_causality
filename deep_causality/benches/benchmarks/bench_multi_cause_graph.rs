@@ -18,7 +18,7 @@ fn small_multi_layer_graph_benchmark(criterion: &mut Criterion)
         )
     });
 
-    let x = (data.len() / 2) as usize;
+    let x = data.len() / 2;
     let index = NodeIndex::new(x);
 
     criterion.bench_function("small_multi_layer_graph_reason_subgraph_from_cause", |bencher| {

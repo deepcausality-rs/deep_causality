@@ -30,8 +30,18 @@ impl<T, const SIZE: usize, const CAPACITY: usize> ArrayStorage<T, SIZE, CAPACITY
             tail: 0,
         }
     }
+
 }
 
+impl<T, const SIZE: usize, const CAPACITY: usize> Default for ArrayStorage<T, SIZE, CAPACITY>
+    where
+        T: PartialEq + Copy + Default,
+        [T; SIZE]: Sized,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl<T, const SIZE: usize, const CAPACITY: usize> WindowStorage<T> for ArrayStorage<T, SIZE, CAPACITY>
     where
@@ -66,19 +76,19 @@ impl<T, const SIZE: usize, const CAPACITY: usize> WindowStorage<T> for ArrayStor
     }
 
     fn first(&self) -> Result<T, String> {
-        return if self.tail != 0 {
+        if self.tail != 0 {
             Ok(self.arr[self.head])
         } else {
-            Err(format!("Array is empty. Add some elements to the array first"))
-        };
+            Err("Array is empty. Add some elements to the array first".to_string())
+        }
     }
 
     fn last(&self) -> Result<T, String> {
-        return if self.filled() {
+        if self.filled() {
             Ok(self.arr[self.tail - 1])
         } else {
-            Err(format!("Array is not yet filled. Add some elements to the array first"))
-        };
+            Err("Array is not yet filled. Add some elements to the array first".to_string())
+        }
     }
 
     fn tail(&self) -> usize {

@@ -12,6 +12,6 @@ fn test_effect_observed() {
     let false_effect = 0.0;
     let true_effect = 1.0;
 
-    assert_eq!(false, o1.effect_observed(target_threshold, false_effect));
-    assert_eq!(true, o1.effect_observed(target_threshold, true_effect));
+    assert!(!o1.effect_observed(target_threshold, false_effect));
+    assert!(o1.effect_observed(target_threshold, true_effect));
 }

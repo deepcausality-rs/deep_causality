@@ -7,5 +7,5 @@ mod utils;
 
 fn main() {
     utils::print_header("Smoking Example!");
-    utils::time(|| run::run(), "main_run");
+    utils::time(run::run, "main_run");
 }

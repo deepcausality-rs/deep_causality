@@ -25,13 +25,13 @@ fn test_all_assumptions_tested()
     assert_eq!(col.len(), 3);
 
     let all_tested = col.all_assumptions_tested();
-    assert_eq!(all_tested, false);
+    assert!(!all_tested);
 
     let data = get_test_num_array();
     col.verify_all_assumptions(&data);
 
     let all_tested = col.all_assumptions_tested();
-    assert_eq!(all_tested, true);
+    assert!(all_tested);
 }
 
 #[test]
@@ -41,18 +41,18 @@ fn test_all_assumptions_valid()
     assert_eq!(col.len(), 3);
 
     let all_tested = col.all_assumptions_tested();
-    assert_eq!(all_tested, false);
+    assert!(!all_tested);
 
     let all_valid = col.all_assumptions_valid();
-    assert_eq!(all_valid, false);
+    assert!(!all_valid);
 
     let data = get_test_num_array();
     col.verify_all_assumptions(&data);
     let all_tested = col.all_assumptions_tested();
-    assert_eq!(all_tested, true);
+    assert!(all_tested);
 
     let all_valid = col.all_assumptions_valid();
-    assert_eq!(all_valid, true);
+    assert!(all_valid);
 }
 
 #[test]
@@ -62,10 +62,10 @@ fn test_percent_assumption_valid()
     assert_eq!(col.len(), 3);
 
     let all_tested = col.all_assumptions_tested();
-    assert_eq!(all_tested, false);
+    assert!(!all_tested);
 
     let all_valid = col.all_assumptions_valid();
-    assert_eq!(all_valid, false);
+    assert!(!all_valid);
 
     let all_valid_percent = col.percent_assumption_valid();
     assert_eq!(all_valid_percent, 0.0);
@@ -73,10 +73,10 @@ fn test_percent_assumption_valid()
     let data = get_test_num_array();
     col.verify_all_assumptions(&data);
     let all_tested = col.all_assumptions_tested();
-    assert_eq!(all_tested, true);
+    assert!(all_tested);
 
     let all_valid = col.all_assumptions_valid();
-    assert_eq!(all_valid, true);
+    assert!(all_valid);
 
     let all_valid_percent = col.percent_assumption_valid();
     assert_eq!(all_valid_percent, 100.0);
@@ -89,10 +89,10 @@ fn test_get_all_invalid_assumptions()
     assert_eq!(col.len(), 3);
 
     let all_tested = col.all_assumptions_tested();
-    assert_eq!(all_tested, false);
+    assert!(!all_tested);
 
     let all_valid = col.all_assumptions_valid();
-    assert_eq!(all_valid, false);
+    assert!(!all_valid);
 
     let all_valid_percent = col.percent_assumption_valid();
     assert_eq!(all_valid_percent, 0.0);
@@ -100,7 +100,7 @@ fn test_get_all_invalid_assumptions()
     let data = get_test_num_array();
     col.verify_all_assumptions(&data);
     let all_tested = col.all_assumptions_tested();
-    assert_eq!(all_tested, true);
+    assert!(all_tested);
 
     let all_invalid = col.get_all_invalid_assumptions();
     assert_eq!(all_invalid.len(), 0);
@@ -113,10 +113,10 @@ fn test_get_all_valid_assumptions()
     assert_eq!(col.len(), 3);
 
     let all_tested = col.all_assumptions_tested();
-    assert_eq!(all_tested, false);
+    assert!(!all_tested);
 
     let all_valid = col.all_assumptions_valid();
-    assert_eq!(all_valid, false);
+    assert!(!all_valid);
 
     let all_valid_percent = col.percent_assumption_valid();
     assert_eq!(all_valid_percent, 0.0);
@@ -125,7 +125,7 @@ fn test_get_all_valid_assumptions()
     col.verify_all_assumptions(&data);
 
     let all_tested = col.all_assumptions_tested();
-    assert_eq!(all_tested, true);
+    assert!(all_tested);
 
     let all_valid = col.get_all_valid_assumptions();
     assert_eq!(all_valid.len(), 3);
@@ -138,10 +138,10 @@ fn test_get_all_tested_assumptions()
     assert_eq!(col.len(), 3);
 
     let all_tested = col.all_assumptions_tested();
-    assert_eq!(all_tested, false);
+    assert!(!all_tested);
 
     let all_valid = col.all_assumptions_valid();
-    assert_eq!(all_valid, false);
+    assert!(!all_valid);
 
     let all_valid_percent = col.percent_assumption_valid();
     assert_eq!(all_valid_percent, 0.0);
@@ -150,7 +150,7 @@ fn test_get_all_tested_assumptions()
     col.verify_all_assumptions(&data);
 
     let all_tested = col.all_assumptions_tested();
-    assert_eq!(all_tested, true);
+    assert!(all_tested);
 
     let all_tested_assumptions = col.get_all_tested_assumptions();
     assert_eq!(all_tested_assumptions.len(), 3);
@@ -163,10 +163,10 @@ fn test_get_all_untested_assumptions()
     assert_eq!(col.len(), 3);
 
     let all_tested = col.all_assumptions_tested();
-    assert_eq!(all_tested, false);
+    assert!(!all_tested);
 
     let all_valid = col.all_assumptions_valid();
-    assert_eq!(all_valid, false);
+    assert!(!all_valid);
 
     let all_untested = col.get_all_untested_assumptions();
     assert_eq!(all_untested.len(), 3);
@@ -178,7 +178,7 @@ fn test_get_all_untested_assumptions()
     col.verify_all_assumptions(&data);
 
     let all_tested = col.all_assumptions_tested();
-    assert_eq!(all_tested, true);
+    assert!(all_tested);
 
     let all_untested = col.get_all_untested_assumptions();
     assert_eq!(all_untested.len(), 0);
@@ -191,10 +191,10 @@ fn test_verify_all_assumptions()
     assert_eq!(col.len(), 3);
 
     let all_tested = col.all_assumptions_tested();
-    assert_eq!(all_tested, false);
+    assert!(!all_tested);
 
     let all_valid = col.all_assumptions_valid();
-    assert_eq!(all_valid, false);
+    assert!(!all_valid);
 
     let all_valid_percent = col.percent_assumption_valid();
     assert_eq!(all_valid_percent, 0.0);
@@ -203,8 +203,8 @@ fn test_verify_all_assumptions()
     col.verify_all_assumptions(&data);
 
     let all_tested = col.all_assumptions_tested();
-    assert_eq!(all_tested, true);
+    assert!(all_tested);
 
     let all_valid = col.all_assumptions_valid();
-    assert_eq!(all_valid, true);
+    assert!(all_valid);
 }

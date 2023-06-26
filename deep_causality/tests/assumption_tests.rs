@@ -10,13 +10,13 @@ fn test_assumption_tested() {
     let assumption = get_test_assumption();
 
     let tested = assumption.assumption_tested();
-    assert_eq!(tested, false);
+    assert!(!tested);
 
     let data = get_test_num_array();
     assumption.verify_assumption(&data);
 
     let tested = assumption.assumption_tested();
-    assert_eq!(tested, true);
+    assert!(tested);
 }
 
 #[test]
@@ -24,14 +24,14 @@ fn test_verify_assumption() {
     let assumption = get_test_assumption();
 
     let tested = assumption.assumption_tested();
-    assert_eq!(tested, false);
+    assert!(!tested);
 
     let valid = assumption.assumption_tested();
-    assert_eq!(valid, false);
+    assert!(!valid);
 
     let data = get_test_num_array();
     let valid = assumption.verify_assumption(&data);
-    assert_eq!(valid, true);
+    assert!(valid);
 }
 
 #[test]
@@ -39,18 +39,18 @@ fn test_assumption_valid() {
     let assumption = get_test_assumption();
 
     let tested = assumption.assumption_tested();
-    assert_eq!(tested, false);
+    assert!(!tested);
 
     let valid = assumption.assumption_tested();
-    assert_eq!(valid, false);
+    assert!(!valid);
 
     let data = get_test_num_array();
     let valid = assumption.verify_assumption(&data);
-    assert_eq!(valid, true);
+    assert!(valid);
 
     let tested = assumption.assumption_tested();
-    assert_eq!(tested, true);
+    assert!(tested);
 
     let valid = assumption.assumption_valid();
-    assert_eq!(valid, true);
+    assert!(valid);
 }

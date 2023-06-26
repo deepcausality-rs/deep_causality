@@ -44,5 +44,5 @@ fn test_size() {
 #[test]
 fn test_is_empty() {
     let col = get_test_obs_coll();
-    assert_eq!(false, col.is_empty());
+    assert!(!col.is_empty());
 }

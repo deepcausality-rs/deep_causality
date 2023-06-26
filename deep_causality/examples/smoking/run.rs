@@ -234,5 +234,5 @@ fn causal_fn(
         return Ok(false);
     };
 
-    return Ok(true);
+    Ok(true)
 }
