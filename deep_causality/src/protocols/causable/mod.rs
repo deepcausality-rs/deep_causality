@@ -1,12 +1,10 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use std::fmt::Debug;
 use std::collections::HashMap;
 use crate::errors::CausalityError;
 use crate::prelude::{CausalFn, Causaloid, CausaloidGraph, DescriptionValue, Identifiable, IdentificationValue, NumericalValue};
 
-
-pub trait Causable: Debug + Identifiable {
+pub trait Causable: Identifiable {
     fn causal_function(&self) -> CausalFn;
     fn causal_collection(&self) -> Option<Vec<Causaloid>>;
     fn causal_graph(&self) -> Option<CausaloidGraph<Causaloid>>;

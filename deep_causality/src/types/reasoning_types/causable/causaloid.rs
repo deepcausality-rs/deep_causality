@@ -29,7 +29,7 @@ impl Display for CausalType
 }
 
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone)]
 pub struct Causaloid {
     id: IdentificationValue,
     active: RefCell<bool>,
@@ -131,6 +131,16 @@ impl Causaloid
     }
 }
 
+
+impl PartialEq for Causaloid{
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+
+    fn ne(&self, other: &Self) -> bool {
+        self.id != other.id
+    }
+}
 
 impl Identifiable for Causaloid
 {

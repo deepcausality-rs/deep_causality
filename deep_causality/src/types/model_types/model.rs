@@ -4,7 +4,7 @@
 use crate::prelude::{Assumption, Causaloid};
 use crate::protocols::identifiable::Identifiable;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct Model<'l> {
     id: u64,
     author: &'l str,

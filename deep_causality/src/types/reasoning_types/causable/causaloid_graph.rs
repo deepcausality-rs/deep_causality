@@ -18,10 +18,10 @@ type DefaultIx = u32;
 pub type NodeIndex<Ix = DefaultIx> = GraphNodeIndex<Ix>;
 
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone)]
 pub struct CausaloidGraph<T>
     where
-        T: Debug + Causable + Clone + PartialEq,
+        T: Causable + Clone + PartialEq,
 {
     root_index: NodeIndex,
     // Edge weights need to be numerical (u64) to make shortest path algo work.
@@ -32,14 +32,14 @@ pub struct CausaloidGraph<T>
 
 impl<T> CausaloidGraph<T>
     where
-        T: Debug + Causable + Clone + PartialEq,
+        T: Causable + Clone + PartialEq,
 {
     pub fn new()
         -> Self
     {
         Self {
             root_index: NodeIndex::new(0),
-            causaloid_graph: MatrixGraph::new(),
+            causaloid_graph: MatrixGraph::default(),
             causes_map: HashMap::new(),
         }
     }
@@ -51,7 +51,7 @@ impl<T> CausaloidGraph<T>
     {
         Self {
             root_index: NodeIndex::new(0),
-            causaloid_graph: MatrixGraph::new(),
+            causaloid_graph: MatrixGraph::default(),
             causes_map: HashMap::with_capacity(capacity),
         }
     }
@@ -68,7 +68,7 @@ impl<T> Default for CausaloidGraph<T>
 
 impl<T> CausableGraph<T> for CausaloidGraph<T>
     where
-        T: Debug + Causable + Clone + PartialEq,
+        T: Causable + Clone + PartialEq,
 {
     fn add_root_causaloid(
         &mut self,
@@ -254,7 +254,7 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
 
 impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
     where
-        T: Debug + Causable + Clone + PartialEq,
+        T: Causable + Clone + PartialEq,
 {
     fn explain_all_causes(
         &self
@@ -383,7 +383,7 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
 
 impl<T> CausaloidGraph<T>
     where
-        T: Debug + Causable + Clone + PartialEq,
+        T: Causable + Clone + PartialEq,
 {
     fn explain_from_to_cause(
         &self,

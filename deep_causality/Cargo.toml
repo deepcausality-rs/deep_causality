@@ -16,8 +16,7 @@ authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 
 
 [dependencies]
-# using a patched version of petgraph until PR #547 went through
-petgraph = { git = "https://github.com/marvin-hansen/petgraph.git", rev = "a685be8" }
+petgraph = { version = "0.6.3" }
 
 
 [dependencies.deep_causality_macros]
