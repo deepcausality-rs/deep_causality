@@ -1,8 +1,6 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use deep_causality::errors::CausalityError;
 use deep_causality::prelude::*;
-use deep_causality::types::alias_types::{DescriptionValue, NumericalValue};
 use deep_causality::types::reasoning_types;
 
 type AllCauses = Vec<Causaloid>; // type alias for brevity
