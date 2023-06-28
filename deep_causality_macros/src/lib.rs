@@ -9,10 +9,18 @@ use proc_macro::TokenStream;
 #[proc_macro]
 pub fn make_run(_input: TokenStream) -> TokenStream
 {
-    "if let Err(e) = run::run() {
-        eprintln!(\"Error: {}\", e);
-        process::exit(1);
-    }".parse().unwrap()
+    "time(run::run, \"main_run\");
+
+    fn time<T, F: FnOnce() -> T>(f: F, f_name: &str) -> T {
+        let start = std::time::Instant::now();
+        let res = f();
+        println!(\"{} Execution took {:?} \",
+            f_name.to_uppercase(),
+            start.elapsed()
+        );
+        res
+    }
+    ".parse().unwrap()
 }
 
 #[proc_macro]
