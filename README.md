@@ -1,4 +1,4 @@
-# 💡 Deep Causality
+# 💡 DeepCausality
 
 DeepCausality is a hyper-geometric computational causality library that enables fast and deterministic context aware
 causal reasoning over complex multi-stage causality models. Deep Causality adds only minimal overhead,
@@ -20,6 +20,7 @@ hardware.
 * [Motivation](docs/motivation.md)
 * [How is deep causality different?](docs/difference.md)
 * [Concepts](docs/concepts.md)
+* [Heilmeier Questions](docs/heilmeier_questions.md)
 
 ## 🚀 Install
 
@@ -62,6 +63,7 @@ The project took inspiration by work from several researchers and their teams:
 
 * [Judea Pearl](http://bayes.cs.ucla.edu/jp_home.html) at UCLA
 * [Lucien Hardy](https://perimeterinstitute.ca/people/lucien-hardy) at the Perimeter Institute
+* [Kenneth O. Stanley](https://www.kenstanley.net/home) at OpenAI
 * [Ilya Shpitser](https://www.cs.jhu.edu/~ilyas/) at Johns Hopkins University
 * [Miguel Hernan](https://www.hsph.harvard.edu/miguel-hernan/), [Causal Lab](https://causalab.sph.harvard.edu/) at
   Harvard University
@@ -83,7 +85,7 @@ run make check locally before opening a PR and please add tests to make the PR m
 relatively straight forward.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in deep_causality by you,
-shall be licensed as MIT, without any additional terms or conditions.
+shall be licensed under the MIT licence, without any additional terms or conditions.
 
 ## 📜 Licence
 
