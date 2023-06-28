@@ -1,6 +1,4 @@
-# Deep Causality
-
-## 💡 About
+# 💡 Deep Causality
 
 DeepCausality is a hyper-geometric computational causality library that enables fast and deterministic context aware
 causal reasoning over complex multi-stage causality models. Deep Causality adds only minimal overhead,
@@ -21,7 +19,7 @@ hardware.
 
 * [Motivation](docs/motivation.md)
 * [How is deep causality different?](docs/difference.md)
-* [Concepts](docs/concept_guide.md)
+* [Concepts](docs/concepts.md)
 
 ## 🚀 Install
 
@@ -60,17 +58,22 @@ before all make commands work:
 
 ## 🙏 Credits
 
-Parts of the codebase are inspired by work from a number of researchers and their teams:
+The project took inspiration by work from several researchers and their teams:
 
 * [Judea Pearl](http://bayes.cs.ucla.edu/jp_home.html) at UCLA
 * [Lucien Hardy](https://perimeterinstitute.ca/people/lucien-hardy) at the Perimeter Institute
 * [Ilya Shpitser](https://www.cs.jhu.edu/~ilyas/) at Johns Hopkins University
 * [Miguel Hernan](https://www.hsph.harvard.edu/miguel-hernan/), [Causal Lab](https://causalab.sph.harvard.edu/) at
-  Harvard University.
+  Harvard University
 * [Elias Bareinboim](https://causalai.net/) at Columbia University
 * [Causality and Machine Learning](https://www.microsoft.com/en-us/research/group/causal-inference/) at Microsoft
   Research
 
+Parts of the implementation are inspired by:
+
+* [Differentiable Types](https://github.com/tensorflow/swift/blob/main/docs/DifferentiableTypes.md)
+* [Extension Trait](http://xion.io/post/code/rust-extension-traits.html)
+* [Storage API](https://github.com/petgraph/petgraph/issues/563)
 
 ## 👨‍💻👩‍💻 Contribution
 
@@ -82,13 +85,11 @@ relatively straight forward.
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in deep_causality by you,
 shall be licensed as MIT, without any additional terms or conditions.
 
-
 ## 📜 Licence
 
 This project is licensed under the [MIT license](LICENSE).
 
-
-## 👮️ Security 
+## 👮️ Security
 
 For details about security, please read the [security policy](https://github.com/deepcausality-rs/deep_causality/blob/main/SECURITY.md).
 

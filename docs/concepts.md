@@ -2,7 +2,7 @@
 
 ## Origin
 
-The [original design](/deep_causality/docs_causality/docs/swift/Swift_Inference.ipynb) of deep causality was implemented in Swift using protocols and
+The [original design](/docs/swift/Swift_Inference.ipynb) of deep causality was implemented in Swift using protocols and
 extensions inspired
 by [differentiable types](https://github.com/tensorflow/swift/blob/main/docs/DifferentiableTypes.md).
 A rewrite became necessary for several reasons, and Rust was chosen.
@@ -60,19 +60,19 @@ Deep causality implements verifiable assumptions in the following way:
 
 Traits:
 
-* [Assumable](/tocols/assumable/mod.rs)
-* [Assumable Reasoning](/tocols/assumable/mod.rs)
+* [Assumable](/deep_causality/src/protocols/assumable/mod.rs)
+* [Assumable Reasoning](/deep_causality/src/protocols/assumable/mod.rs)
 
 Extensions:
 
-* [Assumable Array](/ensions/assumable/mod.rs)
-* [Assumable Map](/ensions/assumable/mod.rs)
-* [Assumable Vector](/ensions/assumable/mod.rs)
+* [Assumable Array](/deep_causality/src/extensions/assumable/mod.rs)
+* [Assumable Map](/deep_causality/src/extensions/assumable/mod.rs)
+* [Assumable Vector](/deep_causality/src/extensions/assumable/mod.rs)
 
 Types:
 
-* [Assumption](/es/reasoning_types/assumable/assumption.rs)
-* [EvalFn](/es/alias_types/mod.rs)
+* [Assumption](/deep_causality/src/types/reasoning_types/assumable/assumption.rs)
+* [EvalFn](/deep_causality/src/types/reasoning_types/assumable/mod.rs)
 
 The assumption type explicitly encodes an assumption in a textual description and an eval function that takes a slice of
 numerical values as an argument and returns a boolean for which the assumption holds on the given data. Implementing the
@@ -80,7 +80,7 @@ assumable trait adds functionality to test the assumption, check if it has alrea
 been valid.
 
 Multiple assumptions are represented in standard collections (array, map, vector), which are extended with
-the default implementation of the [AssumableReasoning](/tocols/assumable/mod.rs) trait
+the default implementation of the [AssumableReasoning](/deep_causality/src/protocols/assumable/mod.rs) trait
 that adds aggregating functionality i.e. how many of the assumptions are valid or tested.
 
 ### Observation
@@ -90,18 +90,18 @@ the data. Deep causality implements observations in the following way:
 
 Traits:
 
-* [Observable](/tocols/observable/mod.rs)
-* [ObservableReasoning](/tocols/observable/mod.rs)
+* [Observable](/deep_causality/src/protocols/observable/mod.rs)
+* [ObservableReasoning](/deep_causality/src/protocols/observable/mod.rs)
 
 Extensions:
 
-* [Observable Array](/ensions/observable/mod.rs)
-* [Observable Map](/ensions/observable/mod.rs)
-* [Observable Vector](/ensions/observable/mod.rs)
+* [Observable Array](/deep_causality/src/extensions/observable/mod.rs)
+* [Observable Map](/deep_causality/src/extensions/observable/mod.rs)
+* [Observable Vector](/deep_causality/src/extensions/observable/mod.rs)
 
 Types:
 
-* [Observation](/es/reasoning_types/observable/observation.rs)
+* [Observation](/deep_causality/src/types/reasoning_types/observable/observation.rs)
 
 An observation defines an observed value i.e., a measured metric and an observed effect.
 The idea is to hold the observation immutable and invariant after the observation.
@@ -111,7 +111,7 @@ target threshold are given as a parameter because it may happen that certain eff
 detectable when adjusting the threshold.
 
 Multiple observations are stored in standard collections (array, map, vector) which are extended with
-[ObservableReasoning](/tocols/observable/mod.rs) to identify the number or percent of
+[ObservableReasoning](/deep_causality/src/protocols/observable/mod.rs) to identify the number or percent of
 observations vs non-observations.
 
 ### 2) Control of confounding
@@ -126,18 +126,18 @@ in tandem with the expected observation to decide whether one can infer the expe
 
 Traits:
 
-* [Inferable](/tocols/inferable/mod.rs)
-* [InferableReasoning](/tocols/inferable/mod.rs)
+* [Inferable](/deep_causality/src/protocols/inferable/mod.rs)
+* [InferableReasoning](/deep_causality/src/protocols/inferable/mod.rs)
 
 Extensions:
 
-* [Inferable Array](/ensions/inferable/mod.rs)
-* [Inferable Map](/ensions/inferable/mod.rs)
-* [Inferable Vector](/ensions/inferable/mod.rs)
+* [Inferable Array](/deep_causality/src/extensions/inferable/mod.rs)
+* [Inferable Map](/deep_causality/src/extensions/inferable/mod.rs)
+* [Inferable Vector](/deep_causality/src/extensions/inferable/mod.rs)
 
 Types:
 
-* [Inference](/es/reasoning_types/inferable/inference.rs)
+* [Inference](/deep_causality/src/types/reasoning_types/inferable/inference.rs)
 
 Deep Causality addresses confounding via a third approach called conjoint delta. For a single observation, the conjoint
 delta refers to the difference between an expected and observed effect normalized to one. If the expected effect is
