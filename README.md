@@ -71,9 +71,6 @@ Parts of the codebase are inspired by work from a number of researchers and thei
 * [Causality and Machine Learning](https://www.microsoft.com/en-us/research/group/causal-inference/) at Microsoft
   Research
 
-## 📜 Licence
-
-This project is licensed under the [MIT license](LICENSE).
 
 ## 👨‍💻👩‍💻 Contribution
 
@@ -84,6 +81,10 @@ relatively straight forward.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in deep_causality by you,
 shall be licensed as MIT, without any additional terms or conditions.
+
+## 📜 Licence
+
+This project is licensed under the [MIT license](LICENSE).
 
 ## 💻 Author
 
