@@ -21,7 +21,7 @@ petgraph = { version = "0.6.3" }
 
 [dependencies.deep_causality_macros]
 path = "../deep_causality_macros"
-version = "^0.4.0"
+version = "^0.4.1"
 
 
 [dev-dependencies]
