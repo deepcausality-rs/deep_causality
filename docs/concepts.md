@@ -39,7 +39,7 @@ the [Extension Trait](http://xion.io/post/code/rust-extension-traits.html) desig
 Extension traits mean that you implement a local trait for an external type. In Rust, however,you cannot implement
 an external trait for an external type.
 
-## Concepts
+## Core Concepts
 
 The core concepts implemented in deep causality derive from "Theoretical Impediments to Machine
 Learning" ([Perl,2018](https://arxiv.org/abs/1801.04016))
@@ -155,3 +155,75 @@ eliminating confounding might not be feasible. Instead, it's sensible to establi
 reasoning and inference can proceed with the understanding that the conjoint delta captures everything not explained by
 the causal model.
 
+### 3) Counterfactuals
+
+Counterfactual analysis deals with behavior of specific individuals, identified by a distinct set of characteristics.
+Counterfactuals analysis falls broadly into two categories; the process of determining analytically if the probability
+of a factual sentence is estimable from experimental or observational studies, or combination thereof. And, second,
+counterfactual questions concerning “causes of effects” as opposed to effects of causes. Lets suppose Joe died
+in the water during a swimming exercise, with his death as factual effect, a counterfactual question would be,
+would Joe be alive if he would have not taken part of the swimming exercise? In other words,
+was the swimming exercise a cause of Joe’s death?
+
+For the first category of counterfactuals, Deep Causality provides the inferable protocol as an alternative to the
+established methods to determine if a a factual sentence is estimable from experimental or observational data.
+
+For the second category, however, Deep Causality does not provide a solution as this topic is still subject
+to ongoing research.
+
+### 4) Mediation Analysis and the Assessment of Direct and Indirect Effects
+
+Mediation analysis concerns the mechanisms that transmit changes from a cause to its effects.
+The identification of such intermediate mechanism is essential for generating explanations.
+Typical queries answerable by this analysis are: What fraction of the effect of X on Y is mediated by variable Z.
+
+Deep Causality offers a novel mechanism of mediation analysis called conjoint delta as explained in the previous section
+about confounding. The difference between one and the conjoint delta quantifies the exact direct contribution of a cause
+to an effect. That means, for a multi-causality, it is decidable how much each cause contributes to the observed effect.
+Furthermore, in a multi layer causality, sectional conjoint-delta refers to the relative indirect impact of a cause
+on the final effect.
+
+### 5) External Validity and Sample Selection Bias
+
+The validity of every experimental study is challenged by disparities between the experimental and implementation
+setups. A machine trained in one environment cannot be expected to perform well when environmental conditions change,
+unless the changes are localized and identified. This problem, and its various manifestations are well recognized.
+
+Deep Causality addresses this problem with the encoding of explicit assumption, as elaborated in section 1.
+
+A few implications follow from causality models that are conditional on explicit assumptions:
+
+1) Applicability of a model to a new dataset only requires testing the assumptions required by the model.
+2) The relative impact of a change of context can be assessed relative to how the change affects the models assumptions.
+3) Transfer learning, from one domain to another, becomes easier in the sense transfer is fundamentally possible
+   whenever the assumptions hold true.
+
+In terms of selection bias, the causal model usually is is free of a bias unless explicitly stated in the assumptions.
+
+Currently, Deep Causality cannot verify whether a causal function depends on unstated assumptions but rather relies
+on the model designer to make any assumption explicit. This is a tradeoff that follows from the decision to
+encode the causal relation as a generic function, which cannot easily be verified w.r.t to implicit assumptions.
+This is one of the areas where more work is needed.
+
+### 6) Missing Data
+
+Problems of missing data plague every science project. Respondents do not answer every question,
+sensors fade, and patients often drop from a clinical study. The rich literature provides multiple
+techniques of dealing with missing data, often applying techniques such as substituting missing values
+either with an average value or a certain default value. These techniques assume an unknown causal process
+of data generation and therefore an indiscriminate handling of missing data is applied. This is a direct result
+of the model blind paradigm prevalent in all statistic based machine learning methods.
+
+Deep Causality, similar to related work, allows the modeling of the data generation process as
+a separate causal model with the implication that, within limits, causal relationships can be recovered from incomplete
+data.
+
+### 7) Causal Discovery
+
+Existing work from other research groups can detect and enumerate the testable implications of a given causal model.
+This opens the possibility of inferring, with mild assumptions, the set of models that are compatible with the data.
+
+Deep Causality, however, does not provide such a mechanism by default. However, what can be done with Deep Causality
+is to run all assumptions of all models against a set of data to determine which models are applicable to the data.
+While this accomplishes something similar, this is a rather experimental approach without formalization and
+requires that all models have explicit and testable assumptions. 
