@@ -19,7 +19,9 @@ hardware.
 
 * [Motivation](docs/motivation.md)
 * [How is deep causality different?](docs/difference.md)
+* [Causal Structure](docs/causal_structure.md)
 * [Concepts](docs/concepts.md)
+* [Context](docs/context.md)
 * [Heilmeier Questions](docs/heilmeier_questions.md)
 
 ## 🚀 Install
@@ -93,7 +95,8 @@ This project is licensed under the [MIT license](LICENSE).
 
 ## 👮️ Security
 
-For details about security, please read the [security policy](https://github.com/deepcausality-rs/deep_causality/blob/main/SECURITY.md).
+For details about security, please read
+the [security policy](https://github.com/deepcausality-rs/deep_causality/blob/main/SECURITY.md).
 
 ## 💻 Author
 
