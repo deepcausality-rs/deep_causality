@@ -6,7 +6,7 @@ dimensions.
 
 ## Data Context
 
-The most basic form of contextualization adds just more data to a model. For example, when modeling GDP for any country,
+The most basic form of contextualization adds more data to a model. For example, when modeling GDP for any country,
 commodity prices such as oil play a significant role in addition to several national factors. Conventionally, the GDP
 model separates internal from external factors to isolate systematic risk. DeepCausality solves this by adding two
 distinct data contexts, one for national data, i.e., population growth & manufacturing output, and a second context for
@@ -33,10 +33,10 @@ the data stream requires contextualization relative to the tempo-spatial positio
 meaningful information to the model.
 
 DeepCausality solves this by adding a temporal master context that structures time as a 4-dimensional hyper-graph where
-each node encodes a unit of time (A tempo) which itself contains a link to a sub-node that encodes spatial information (
-A spaced), which then links to the actual chunk of data through a data object (A data). That way, multiple drones can
-stream multiple data to update a 4D context graph that informs the model and allows for real-time monitoring of complex
-but critical tempo-spatial patterns, for example, when controlling high-temperature plasma fusion.
+each node encodes a unit of time (A tempoid) which itself contains a link to a sub-node that encodes spatial 
+information (A spaceoid), which then links to the actual chunk of data through a data object (A dataoid). 
+That way, multiple drones can stream multiple data to update a 4D context graph that informs the model 
+and allows for real-time monitoring of complex tempo-spatial patterns.
 
 ## Adjustable Temporal and Spatial Context
 
@@ -54,7 +54,7 @@ sensible before updating the context graph.
 In the second scenario, there is a gradual adjustment for different measurements. Often, this requires the formulation
 of an adjustment matrix. The matrix can already be attached to each element of the context graph but may require
 periodic updates depending on the change of gravitational force. In this case, the secondary process calculates the new
-ad-justment matrix for each element of the context graph and then calls the adjustment of the entire context graph,
+adjustment matrix for each element of the context graph and then calls the adjustment of the entire context graph,
 ensuring all measurements in the context get adjusted relative to the new adjustment matrix that represents the impact
 of gravitational change.
 

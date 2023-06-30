@@ -32,13 +32,15 @@ Add the following to your Cargo.toml
 deep_causality = { git = "https://github.com/deepcausality/deep_causality.git", tag = "0.2.1" }
 ```
 
-## 🛠️ Usage:
+## ⭐ Usage:
 
 See:
 
 * [Benchmark](deep_causality/benches/benchmarks)
 * [Example](deep_causality/examples/smoking/run.rs)
 * [Test](deep_causality/tests)
+
+## 🛠️ Cargo & Make:
 
 Cargo works as expected, but in addition to cargo, a makefile exists
 that abstracts over a number of additional tools you may have to install

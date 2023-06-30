@@ -1,24 +1,11 @@
 # Causal Structure
 
-As previously outlined, some use cases require gradient adjustment of 4D hyper-graph struc-tures. Still, space-temporal
-adjustment implies a less obvious problem:
 
-Can causal structure shift or even invert when the adjustment becomes large enough?
+DeepCausality uses the causaloid as its central structure, an idea
+borrowed from a [novel causal concept](https://arxiv.org/abs/gr-qc/0608043) pioneered 
+by [Lucien Hardy](https://perimeterinstitute.ca/people/lucien-hardy) at the [Perimeter Institute](https://perimeterinstitute.ca/)
+of [theoretical physics](https://perimeterinstitute.ca/why-theoretical-physics).
 
-As it turned out, causal inversion can only happen under rare circumstances (spacetime in-version inside a black hole),
-but in a more practical sense, temporal shift and, with it, causal shift, will strike long before reaching a black hole.
-Specifically, a relatively minor temporal shift already occurs when adjusting time-dilatation when correcting GPS
-signals for spacetime curvature.
-
-However, the degree of the temporal shift depends on distance and gravity. Therefore, any larger extra-terrestrial
-distance or major change in gravity force induces a significant tem-poral shift. Fundamentally, this makes causal
-relation that are relying on a cause-effect no-tion non-stationary because, when the temporal shift becomes large
-enough, causes be-come effects, and effects become causes. This non-trivial problem roots in the time sym-metry
-assumption and can result in complete system failure.
-
-DeepCausality solves this problem by borrowing and implementing
-a [novel causal concept pioneered by Lucien Hardy](https://arxiv.org/abs/gr-qc/0608043) who
-works now at the Perimeter Institute:
 
 ## The causaloid
 
