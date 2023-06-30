@@ -5,3 +5,4 @@
 * [Causal Structure](causal_structure.md)
 * [Concepts](concepts.md)
 * [Contexts](context.md)
+* [Limitations](limitations.md)

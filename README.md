@@ -2,8 +2,7 @@
 
 DeepCausality is a hyper-geometric computational causality library that enables fast and deterministic context aware
 causal reasoning over complex multi-stage causality models. Deep Causality adds only minimal overhead,
-and thus is suitable for deployment on low-power (IoT) devices or real-time applications without additional acceleration
-hardware.
+and thus is suitable for real-time applications without additional acceleration hardware.
 
 ## 🤔 Why DeepCausality?
 
@@ -15,7 +14,7 @@ hardware.
 4) DeepCausality simplified modelling of complex tempo-spatial patterns.
 5) DeepCausality is small, efficient, and fast, really fast. Run [benchmarks](deep_causality/benches) and see it.
 
-## 📚 Docs:
+## 📚 Docs
 
 * [Motivation](docs/motivation.md)
 * [How is deep causality different?](docs/difference.md)
@@ -23,6 +22,7 @@ hardware.
 * [Concepts](docs/concepts.md)
 * [Context](docs/context.md)
 * [Heilmeier Questions](docs/heilmeier_questions.md)
+* [Limitations](docs/limitations.md)
 
 ## 🚀 Install
 
@@ -32,7 +32,7 @@ Add the following to your Cargo.toml
 deep_causality = { git = "https://github.com/deepcausality/deep_causality.git", tag = "0.2.1" }
 ```
 
-## ⭐ Usage:
+## ⭐ Usage
 
 See:
 
@@ -40,7 +40,7 @@ See:
 * [Example](deep_causality/examples/smoking/run.rs)
 * [Test](deep_causality/tests)
 
-## 🛠️ Cargo & Make:
+## 🛠️ Cargo & Make
 
 Cargo works as expected, but in addition to cargo, a makefile exists
 that abstracts over a number of additional tools you may have to install
@@ -102,6 +102,6 @@ the [security policy](https://github.com/deepcausality-rs/deep_causality/blob/ma
 
 ## 💻 Author
 
-* Marvin Hansen
+* Marvin Hansen, [Emet-Labs](https://emet-labs.com/).
 * Github GPG key ID: 369D5A0B210D39BC
 * GPG Fingerprint: 4B18 F7B2 04B9 7A72 967E 663E 369D 5A0B 210D 39BC
