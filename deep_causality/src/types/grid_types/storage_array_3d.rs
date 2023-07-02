@@ -19,15 +19,15 @@ impl<T, const W: usize, const H: usize, const D: usize> Storage<T> for [[[T; W];
         self[p.y][p.x][p.z] = elem
     }
 
-    fn height(&self) -> Option<usize> {
-        Some(H)
+    fn height(&self) -> Option<&usize> {
+        Some(&H)
     }
 
-    fn depth(&self) -> Option<usize> {
-        Some(D)
+    fn depth(&self) -> Option<&usize> {
+        Some(&D)
     }
 
-    fn width(&self) -> Option<usize> {
-        Some(W)
+    fn width(&self) -> Option<&usize> {
+        Some(&W)
     }
 }

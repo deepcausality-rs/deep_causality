@@ -18,7 +18,7 @@ impl<T, const H: usize> Storage<T> for [T; H]
         self[p.x] = elem
     }
 
-    fn height(&self) -> Option<usize> {
-        Some(H)
+    fn height(&self) -> Option<&usize> {
+        Some(&H)
     }
 }

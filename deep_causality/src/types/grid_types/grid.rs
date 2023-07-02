@@ -1,4 +1,6 @@
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+/*
+ * Copyright (c) 2023. Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+ */
 
 use std::cell::RefCell;
 use std::fmt::Debug;
@@ -35,27 +37,41 @@ impl<S, T> Grid<S, T>
             ty: Default::default(),
         }
     }
+
+    pub fn get(&self, p: PointIndex) -> T { self.inner.borrow().get(p).to_owned() }
+
+    pub fn set(&self, p: PointIndex, value: T) { self.inner.borrow_mut().set(p, value); }
+
     pub fn depth(&self) -> Option<usize> {
-        self.inner.borrow().depth()
+        // we have to deref inner value
+        if self.inner.borrow().depth().is_some() {
+            Some(*self.inner.borrow().depth().unwrap())
+        } else {
+            None
+        }
     }
 
     pub fn height(&self) -> Option<usize> {
-        self.inner.borrow().height()
+        if self.inner.borrow().height().is_some() {
+            Some(*self.inner.borrow().height().unwrap())
+        } else {
+            None
+        }
     }
 
     pub fn time(&self) -> Option<usize> {
-        self.inner.borrow().time()
+        if self.inner.borrow().time().is_some() {
+            Some(*self.inner.borrow().time().unwrap())
+        } else {
+            None
+        }
     }
 
     pub fn width(&self) -> Option<usize> {
-        self.inner.borrow().width()
-    }
-
-    pub fn get(&self, p: PointIndex) -> T {
-        self.inner.borrow().get(p).to_owned()
-    }
-
-    pub fn set(&self, p: PointIndex, value: T) {
-        self.inner.borrow_mut().set(p, value);
+        if self.inner.borrow().width().is_some() {
+            Some(*self.inner.borrow().width().unwrap())
+        } else {
+            None
+        }
     }
 }

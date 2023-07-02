@@ -7,7 +7,7 @@
 // Storage API:
 // Single entry type Grid which is generic over its storage and implements for all traits.
 // - Only expose a minimal subset to interact with the grid over the storage API
-// - Implementing new representations is a lot easier.
+// - Implementing new storage types is a lot easier.
 // - The disparity between different representations and what they implement is removed.
 // https://github.com/petgraph/petgraph/issues/563
 
@@ -19,15 +19,8 @@ pub trait Storage<T>
 {
     fn get(&self, p: PointIndex) -> &T;
     fn set(&mut self, p: PointIndex, elem: T);
-    //
-    fn height(&self) -> Option<usize>;
-    fn depth(&self) -> Option<usize> {
-        None
-    }
-    fn time(&self) -> Option<usize> {
-        None
-    }
-    fn width(&self) -> Option<usize> {
-        None
-    }
+    fn height(&self) -> Option<&usize>;
+    fn depth(&self) -> Option<&usize> { None }
+    fn time(&self) -> Option<&usize> { None }
+    fn width(&self) -> Option<&usize> { None }
 }

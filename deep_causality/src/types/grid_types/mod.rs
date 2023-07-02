@@ -2,7 +2,6 @@
 
 pub mod array_grid;
 pub mod grid;
-pub mod grid_like;
 pub mod point;
 pub mod storage;
 pub mod storage_array_1d;

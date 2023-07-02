@@ -1,12 +1,12 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-/// A point used to index a GridArray.
+/// A point used to index a GridArray up to four dimensions.
 #[derive(Debug, Clone, Copy)]
 pub struct PointIndex {
-    pub x: usize,
-    pub y: usize,
-    pub z: usize,
-    pub t: usize,
+    pub x: usize, // Height
+    pub y: usize, // Width
+    pub z: usize, // Depth
+    pub t: usize, // Time
 }
 
 impl PointIndex

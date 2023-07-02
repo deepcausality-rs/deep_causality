@@ -2,7 +2,7 @@
 
 use std::fmt::{Debug, Display, Formatter};
 
-use crate::prelude::Grid;
+use crate::prelude::{Grid, PointIndex};
 
 // Fixed sized static ArrayGrid
 pub type ArrayGrid1DType<T, const H: usize> = Grid<[T; H], T>;
@@ -18,11 +18,11 @@ pub enum ArrayType {
 }
 
 
-/// T Type
-/// W Width
-/// H Height
-/// D Depth
-/// C Chronos since T was already taken for Type T
+// T Type
+// W Width
+// H Height
+// D Depth
+// C Chronos since T was already taken for Type T
 pub enum ArrayGrid<T, const W: usize, const H: usize, const D: usize, const C: usize>
     where
         T: Copy,
@@ -45,7 +45,35 @@ impl<T, const W: usize, const H: usize, const D: usize, const C: usize> ArrayGri
             ArrayType::Array4D => ArrayGrid::ArrayGrid4D(Grid::new([[[[T::default(); W]; H]; D]; C])),
         }
     }
+}
 
+impl<T, const W: usize, const H: usize, const D: usize, const C: usize> ArrayGrid<T, W, H, D, C>
+    where
+        T: Copy + Default,
+{
+    pub fn get(&self, p: PointIndex) -> T {
+        match self {
+            ArrayGrid::ArrayGrid1D(grid) => { grid.get(p) }
+            ArrayGrid::ArrayGrid2D(grid) => { grid.get(p) }
+            ArrayGrid::ArrayGrid3D(grid) => { grid.get(p) }
+            ArrayGrid::ArrayGrid4D(grid) => { grid.get(p) }
+        }
+    }
+
+    pub fn set(&self, p: PointIndex, value: T) {
+        match self {
+            ArrayGrid::ArrayGrid1D(grid) => { grid.set(p, value) }
+            ArrayGrid::ArrayGrid2D(grid) => { grid.set(p, value) }
+            ArrayGrid::ArrayGrid3D(grid) => { grid.set(p, value) }
+            ArrayGrid::ArrayGrid4D(grid) => { grid.set(p, value) }
+        }
+    }
+}
+
+impl<T, const W: usize, const H: usize, const D: usize, const C: usize> ArrayGrid<T, W, H, D, C>
+    where
+        T: Copy + Default,
+{
     pub fn array_grid_1d(&self) -> Option<&ArrayGrid1DType<T, H>>
     {
         if let ArrayGrid::ArrayGrid1D(array_grid) = self {

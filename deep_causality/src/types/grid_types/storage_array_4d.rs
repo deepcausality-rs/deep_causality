@@ -6,7 +6,7 @@ use crate::prelude::{PointIndex, Storage};
 // W Width
 // H Height
 // D Depth
-// C Chronos since T was already taken for Type T
+// C Chronos (Time) since T was already taken for Type T
 impl<T, const W: usize, const H: usize, const D: usize, const C: usize> Storage<T> for [[[[T; W]; H]; D]; C]
     where
         T: Copy,
@@ -20,19 +20,19 @@ impl<T, const W: usize, const H: usize, const D: usize, const C: usize> Storage<
         self[p.y][p.x][p.z][p.t] = elem
     }
 
-    fn height(&self) -> Option<usize> {
-        Some(H)
+    fn height(&self) -> Option<&usize> {
+        Some(&H)
     }
 
-    fn depth(&self) -> Option<usize> {
-        Some(D)
+    fn depth(&self) -> Option<&usize> {
+        Some(&D)
     }
 
-    fn time(&self) -> Option<usize> {
-        Some(C)
+    fn time(&self) -> Option<&usize> {
+        Some(&C)
     }
 
-    fn width(&self) -> Option<usize> {
-        Some(W)
+    fn width(&self) -> Option<&usize> {
+        Some(&W)
     }
 }
