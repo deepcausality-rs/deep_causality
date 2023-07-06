@@ -9,6 +9,7 @@ license = "MIT"
 description = "Data structures for for deep_causality."
 documentation = "https://docs.rs/deep_causality"
 
+
 [dependencies.deep_causality_macros]
 path = "../deep_causality_macros"
 version = "^0.4.2"
@@ -19,7 +20,7 @@ criterion = { version = "0.5.1", features = ["html_reports"] }
 rand = { version = "0.8.5", features = ["small_rng"] }
 
 
-#[[bench]]
-#name = "bench_main"
-#harness = false
+[[bench]]
+name = "bench_main"
+harness = false
 

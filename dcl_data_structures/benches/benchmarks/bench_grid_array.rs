@@ -3,8 +3,8 @@
 use criterion::{Criterion, criterion_group};
 use rand::Rng;
 
-use deep_causality::prelude::{ArrayGrid, Grid, PointIndex};
-use deep_causality::prelude::ArrayType::{Array1D, Array2D, Array3D, Array4D};
+use dcl_data_structures::prelude::{ArrayGrid, Grid, PointIndex};
+use dcl_data_structures::prelude::ArrayType::{Array1D, Array2D, Array3D, Array4D};
 
 const WIDTH: usize = 10;
 const HEIGHT: usize = 10;

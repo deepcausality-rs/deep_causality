@@ -1,8 +1,8 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use criterion::{Criterion, criterion_group};
-use deep_causality::prelude::{SlidingWindow, VectorStorage};
-use deep_causality::prelude::sliding_window::new_with_vector_storage;
+use dcl_data_structures::prelude::{SlidingWindow, VectorStorage};
+use dcl_data_structures::prelude::sliding_window::new_with_vector_storage;
 use crate::benchmarks::fields::{MULT, SIZE};
 
 #[derive(Default, Debug, Copy, Clone, Hash, Eq, PartialEq)]

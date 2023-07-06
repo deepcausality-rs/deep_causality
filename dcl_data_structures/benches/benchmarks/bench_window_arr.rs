@@ -1,16 +1,16 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use criterion::{Criterion, criterion_group};
-use deep_causality::prelude::{ArrayStorage, SlidingWindow};
-use deep_causality::prelude::sliding_window::new_with_array_storage;
-use crate::benchmarks::fields::{MULT, SIZE};
+use dcl_data_structures::prelude::{ArrayStorage, SlidingWindow};
+use dcl_data_structures::prelude::sliding_window::new_with_array_storage;
+use crate::benchmarks::fields::{SIZE, MULT};
 
 #[derive(Default, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Data {
     dats: i32,
 }
 
-fn get_sliding_window() -> SlidingWindow<ArrayStorage<Data, SIZE, MULT>, Data> {
+fn get_sliding_window() -> SlidingWindow<ArrayStorage<Data, SIZE , MULT>, Data> {
     new_with_array_storage()
 }
 
