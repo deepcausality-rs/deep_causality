@@ -1,6 +1,8 @@
 # Macros
 
-Procedural macros for use with deep_causality.
+Procedural macros dependency for [deep_causality](https://github.com/deepcausality-rs/deep_causality) because
+macros have to be in a separate crate. No standalone usage intended hence no docs & examples. 
+
 
 ## Licence
 
