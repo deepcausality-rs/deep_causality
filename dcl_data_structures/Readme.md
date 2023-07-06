@@ -6,8 +6,8 @@ GridArray and sliding window implementation used in [DeepCausality](https://gith
 
 The sliding window implementation over-allocates to trade space (memory) for time complexity by delaying the rewind
 operation when hitting the end of the underlying data structure.
-Specifically, a sliding window of size N can hold, without any array copy, approximately C-1, where C is the total
-capacity defined as NxM with M as a multiple.
+Specifically, a sliding window of size N can hold, without any array copy, approximately C-1 elements, 
+where C is the total capacity defined as NxM with N as the window size and M as a multiple.
 This crate has two implementations, one over vector and the second over a const generic array. The const generic
 implementation is significantly faster than the vector-based version.
 
