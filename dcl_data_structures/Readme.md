@@ -1,22 +1,75 @@
-# Data structures for DeepCausality 
+# 💡 Data structures for DeepCausality
 
 Web: https://deepcausality.com/about/
 
 GridArray and sliding window implementation used in [DeepCausality](https://github.com/deepcausality-rs/deep_causality).
-A sliding window of fixed size n holds the newest element at position 0 and
-the oldest one at position n. Adding one more element shifts the index so that
-the oldest element will be dropped. This crate has two implementations, one over vector
-and a second one over a const generic array. The const generic implementation is significantly
-faster than the vector based version.
 
+The sliding window implementation over-allocates to trade space (memory) for time complexity by delaying the rewind
+operation when hitting the end of the underlying data structure.
+Specifically, for a sliding window of size N, the number of elements that can be hold without any array copy
+is approx C-1, where C is the total capacity defined as NxM with M as a multiple.
+This crate has two implementations, one over vector and a second one over a const generic array with the
+const generic implementation being significantly faster than the vector based version.
+
+ArrayGrid is an abstraction over scalars, vectors, and lod dimensional matrices similar in idea to a tensor.
+In contrast to a tensor, an ArrayGrid is limited to low dimensions (1 to 4), only allowing a scalar,
+vector, or matrix type, but all of them are represented as a static fixed-size const generic array.
+Fixed-sized arrays allow for several compiler optimizations, including a cache aligned data layout and the removal of
+runtime array boundary checks, because all structural parameters are known upfront, providing a significant
+performance boost over tensors.
 
 ## 🤔 Why?
 
+1) Zero dependencies. Not quite. See below.
+2) Zero cost abstraction.
+3) 100% safe Rust
 
+Macros had to move to a separate crate because somehow these can't reside in the same crate using them.
+
+**SlidingWindow**
+
+When looking for existing sliding windows in Rust, I noticed three minor issues.
+First, either vector was used with a certain performance penalty or some unsafe code
+was used for maximum performance. However, I was looking for a fast yet safe implementation.
+
+Second, a sliding window usually performs better when over-allocated meaning, for size n, you
+allocate k*n with a constant k to delay the index shift when hitting the end of the underlying data structure.
+In that sense, you trade memory for better performance. Back when I was looking at existing sliding windows,
+this feature was not implemented.
+
+Third, some crates lacked documentation, others seemed abandoned, and so I couldn't find a default
+implementation to use therefore I wrote the SlidingWindow with
+
+## 🚀 Install
+
+Just run:
+
+```shell
+cargo add dcl_data_structures
+```
+
+Alternatively, add the following to your Cargo.toml
+
+```toml
+dcl_data_structures = "0.4.2"
+```
+
+## 📚 Docs
+
+* [ArrayGrid](docs/ArrayGrid.md)
+* [SlidingWindow](docs/SlidingWindow.md)
+
+## ⭐ Usage
+
+See:
+
+* [Benchmark](benches/benchmarks)
+* [Test](tests)
 
 ## 🙏 Credits
 
 The project took inspiration from:
+
 * [sliding_features](https://crates.io/crates/sliding_features)
 * [sliding-window-aggregation](https://crates.io/crates/sliding-window-aggregation)
 * [sliding_window_alt](https://crates.io/crates/sliding_window_alt)
@@ -25,7 +78,7 @@ The project took inspiration from:
 ## 👨‍💻👩‍💻 Contribution
 
 Contributions are welcomed especially related to documentation, example code, and fixes.
-If unsure where to start, just open an issue and ask. 
+If unsure where to start, just open an issue and ask.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in deep_causality by you,
 shall be licensed under the MIT licence, without any additional terms or conditions.

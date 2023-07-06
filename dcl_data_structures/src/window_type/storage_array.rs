@@ -20,7 +20,7 @@ impl<T, const SIZE: usize, const CAPACITY: usize> ArrayStorage<T, SIZE, CAPACITY
 {
     pub fn new() -> Self
     {
-        Self { store: [T::default(); CAPACITY], size: SIZE, head: 0, tail: 0, }
+        Self { store: [T::default(); CAPACITY], size: SIZE, head: 0, tail: 0 }
     }
 }
 
@@ -66,10 +66,7 @@ impl<T, const SIZE: usize, const CAPACITY: usize> WindowStorage<T> for ArrayStor
         self.tail += 1;
     }
 
-    // macro generated implementations of trait methods.
-    make_first!();
-    make_last!();
-    make_tail!();
-    make_size!();
-    make_get_slice!();
+    // Boilerplate trait methods generated via compiler macros.
+    // See macro crate for definition: https://crates.io/crates/deep_causality_macros
+    make_first!(); make_last!(); make_tail!(); make_size!(); make_get_slice!();
 }

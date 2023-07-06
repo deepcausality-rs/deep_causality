@@ -9,7 +9,7 @@ context graph but may require periodic updates depending on the required changes
 
 The exact adjustment for temporal-spatial data depends on the actual structure of the representative structure.
 Theoretically, a tensor would be the preferred data structure to do so because a tensor allowing for multi-dimensional
-adjustment representation with just a sin-gle structure. In practice, however, tensors incur a non-trivial overhead
+adjustment representation with just a single structure. In practice, however, tensors incur a non-trivial overhead
 leading to a significant performance penalty especially on low (<5) dimensional data. For adjusting values in a context
 graph, no more than a 4D matrix is expected in practice hence a tensor really is unnecessary.
 The root cause of the tensor performance problem comes from its complex object model that increases the number of CPU

@@ -8,6 +8,8 @@ authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 license = "MIT"
 description = "Data structures for for deep_causality crate."
 documentation = "https://docs.rs/deep_causality"
+categories = ["data-structures", "science"]
+keywords = ["data-structures", "sliding-window", "GridArray"]
 
 
 [dependencies.deep_causality_macros]
