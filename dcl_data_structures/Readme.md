@@ -6,17 +6,17 @@ GridArray and sliding window implementation used in [DeepCausality](https://gith
 
 The sliding window implementation over-allocates to trade space (memory) for time complexity by delaying the rewind
 operation when hitting the end of the underlying data structure.
-Specifically, for a sliding window of size N, the number of elements that can be hold without any array copy
-is approx C-1, where C is the total capacity defined as NxM with M as a multiple.
-This crate has two implementations, one over vector and a second one over a const generic array with the
-const generic implementation being significantly faster than the vector based version.
+Specifically, a sliding window of size N can hold, without any array copy, approximately C-1, where C is the total
+capacity defined as NxM with M as a multiple.
+This crate has two implementations, one over vector and the second over a const generic array. The const generic
+implementation is significantly faster than the vector-based version.
 
-ArrayGrid is an abstraction over scalars, vectors, and lod dimensional matrices similar in idea to a tensor.
+ArrayGrid is an abstraction over scalars, vectors, and low dimensional matrices similar to a tensor.
 In contrast to a tensor, an ArrayGrid is limited to low dimensions (1 to 4), only allowing a scalar,
-vector, or matrix type, but all of them are represented as a static fixed-size const generic array.
-Fixed-sized arrays allow for several compiler optimizations, including a cache aligned data layout and the removal of
-runtime array boundary checks, because all structural parameters are known upfront, providing a significant
-performance boost over tensors.
+vector, or matrix type. Still, all of them are represented as a static fixed-size const generic array.
+Fixed-sized arrays allow for several compiler optimizations, including a cache-aligned data layout and the removal of
+runtime array boundary checks because all structural parameters are known upfront, providing a significant performance
+boost over tensors.
 
 ## 🤔 Why?
 
@@ -28,23 +28,32 @@ Macros had to move to a separate crate because somehow these can't reside in the
 
 **SlidingWindow**
 
-When looking for existing sliding windows in Rust, I noticed three minor issues.
-First, either vector was used with a certain performance penalty or some unsafe code
+I noticed three minor issues when looking for existing sliding windows in Rust.
+First, either vector was used with a particular performance penalty, or some unsafe code
 was used for maximum performance. However, I was looking for a fast yet safe implementation.
 
-Second, a sliding window usually performs better when over-allocated meaning, for size n, you
+Second, a sliding window usually performs better when over-allocated, meaning, for size n, you
 allocate k*n with a constant k to delay the index shift when hitting the end of the underlying data structure.
-In that sense, you trade memory for better performance. Back when I was looking at existing sliding windows,
-this feature was not implemented.
+In that sense, you trade memory for better performance. When I looked at existing sliding windows,this feature was not
+implemented.
 
-Third, some crates lacked documentation, others seemed abandoned, and so I couldn't find a default
-implementation to use therefore I wrote the SlidingWindow with
+Third, some crates lacked documentation, others seemed abandoned, and so I couldn't find a default implementation to
+use; therefore, I wrote the SlidingWindow.
+
+**ArrayGrid**
+
+ArrayGrid became necessary in a trait that has a signature requiring a single type that could represent
+multiple shapes, from scalar to a 4D Matrix. Conventionally, a tensor would be a good fit, but since
+the signature is part of the hot path, performance became a consideration. After seeing the significant
+performance boost resulting from the const generic array implementation of the sliding window, it was time to
+take the idea one step further. Therefore, I wrote the ArrayGrid, a single unified type representing
+only low dimensional structures (Scalar, Vector, Matrix) as a static const generic array for best performance.
 
 ## 🚀 Install
 
 Just run:
 
-```shell
+```toml
 cargo add dcl_data_structures
 ```
 
