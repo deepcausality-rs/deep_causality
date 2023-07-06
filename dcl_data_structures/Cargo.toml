@@ -1,0 +1,25 @@
+[package]
+name = "dcl_data_structures"
+version = "0.4.2"
+edition = "2021"
+rust-version = "1.65"
+repository = "https://github.com/deepcausality/deep_causality.rs"
+authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
+license = "MIT"
+description = "Data structures for for deep_causality."
+documentation = "https://docs.rs/deep_causality"
+
+[dependencies.deep_causality_macros]
+path = "../deep_causality_macros"
+version = "^0.4.2"
+
+
+[dev-dependencies]
+criterion = { version = "0.5.1", features = ["html_reports"] }
+rand = { version = "0.8.5", features = ["small_rng"] }
+
+
+#[[bench]]
+#name = "bench_main"
+#harness = false
+

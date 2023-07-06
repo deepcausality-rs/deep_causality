@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "dcl_data_structures",
     "deep_causality",
     "deep_causality_macros",
 ]
