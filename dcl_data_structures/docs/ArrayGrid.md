@@ -1,11 +1,19 @@
 
 # ArrayGrid - A Faster Tensor For Low Dim. Data
 
+ArrayGrid is an abstraction over scalars, vectors, and lod dimensional matrices similar in idea to a tensor.
+In contrast to a tensor, an ArrayGrid is limited to low dimensions (1 to 4), only allowing a scalar,
+vector, or matrix type, but all of them are represented as a static fixed-size const generic array.
+Fixed-sized arrays allow for several compiler optimizations, including a cache aligned data layout and the removal of
+runtime array boundary checks, because all structural parameters are known upfront, providing a significant
+performance boost over tensors.
+
+
+## Problem
+
 DeepCausality allows fast and efficient adjustment of all values stored in a context hyper-graph.
 Often, this requires the formulation of an adjustment matrix. The matrix can already be attached to each element of the
 context graph but may require periodic updates depending on the required changes.
-
-## Problem
 
 The exact adjustment for temporal-spatial data depends on the actual structure of the representative structure.
 Theoretically, a tensor would be the preferred data structure to do so because a tensor allowing for multi-dimensional
