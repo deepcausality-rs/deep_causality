@@ -26,5 +26,3 @@ mod inference_tests;
 mod observable_collection_tests;
 #[cfg(test)]
 mod observation_tests;
-#[cfg(test)]
-mod grid_array_tests;
