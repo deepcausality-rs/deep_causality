@@ -43,11 +43,6 @@ pub use crate::types::graph_types::graph_node::*;
 pub use crate::types::graph_types::graph_node_type::*;
 pub use crate::types::graph_types::graph_relation_kind::*;
 pub use crate::types::graph_types::graph_root::*;
-// Array Grid types
-pub use crate::types::grid_types::array_grid::*;
-pub use crate::types::grid_types::grid::Grid;
-pub use crate::types::grid_types::point::PointIndex;
-pub use crate::types::grid_types::storage::Storage;
 // Model types
 pub use crate::types::model_types::model::Model;
 // Reasoning types
@@ -57,10 +52,5 @@ pub use crate::types::reasoning_types::causable::causaloid::*;
 pub use crate::types::reasoning_types::causable::causaloid_graph::*;
 pub use crate::types::reasoning_types::inferable::inference::*;
 pub use crate::types::reasoning_types::observable::observation::Observation;
-// window types
-pub use crate::types::window_type::storage::WindowStorage;
-pub use crate::types::window_type::storage_array::ArrayStorage;
-pub use crate::types::window_type::storage_vec::VectorStorage;
-pub use crate::types::window_type::sliding_window;
-pub use crate::types::window_type::sliding_window::SlidingWindow;
+
 

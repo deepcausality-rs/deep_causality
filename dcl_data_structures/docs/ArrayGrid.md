@@ -140,9 +140,6 @@ for interior mutability.
 Because of the interior mutability, borrow and borrow_mut become required when accessing the storage as seen
 in the set and get methods. Type T must implement Default because of the PhantomData binding in the type signature. The
 complete Grid type implementation is relatively verbose, the listing below shows only the important parts.
-The full source code
-is [available on Github](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality/src/types/grid_types).
-
 ```rust
 
 impl<S, T> Grid<S, T>
@@ -369,7 +366,7 @@ behaves like any other API with the added bonus of interior mutability.
 
 In terms of performance, it seems that the Rust compiler does an excellent job optimizing away the abstractions
 and generates as close to the metal bytecode as
-possible. [Benchmarks have been written](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality/benches/benchmarks),
+possible. [Benchmarks have been written](../benches),
 but frankly these are completely pointless since the test arrays fit in the cache of any modern CPU hence yielding
 absurd throughput and latency results. And that was the entire purpose of the exercise because you do not
 get even remotely these benchmarks results with a Tensor type. Tensors remain an invaluable type for higher dimensional

@@ -16,9 +16,9 @@ Two different implementations are available:
 Take window size N and multiple M as arguments 
 
 See:
-* [Benchmark](../../../benches/benchmarks/bench_window_vec.rs)
-* [Code](storage_vec.rs)
-* [Test](../../../tests/window_vector_backed_tests.rs)
+* [Benchmark](../benches/benchmarks/bench_window_vec.rs)
+* [Code](../src/window_type/storage_vec.rs)
+* [Test](../tests/window_vector_backed_tests.rs)
 
 ## Array backed implementation
 
@@ -26,9 +26,9 @@ Takes window size SIZE and a CAPACITY as generic parameters.
 This is because static arrays requiring const generics parameter.
 
 See:
-* [Benchmark](../../../benches/benchmarks/bench_window_arr.rs)
-* [Code](storage_array.rs)
-* [Test](../../../tests/window_array_backed_tests.rs)
+* [Benchmark](../benches/benchmarks/bench_window_arr.rs)
+* [Code](../src/window_type/storage_array.rs)
+* [Test](../tests/window_array_backed_tests.rs)
 
 ## Configuration  
 
@@ -46,11 +46,3 @@ then it's best to run an optimizer to find the best value for M that maximizes t
 Both implementations perform well on inserts with the array backed implementation 
 being about 1/3 faster than the vector backed implementation. Read operations are basically free O(1) since 
 the sliding window is just a slice over the backing data structure.
-
-
-## Author
-
-* Marvin Hansen
-* Github key ID: 4AEE18F83AFDEB23
-* GPG key ID: 210D39BC
-* GPG Fingerprint: 4B18 F7B2 04B9 7A72 967E 663E 369D 5A0B 210D 39BC

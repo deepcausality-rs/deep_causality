@@ -6,7 +6,7 @@ rust-version = "1.65"
 repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 license = "MIT"
-description = "Data structures for for deep_causality."
+description = "Data structures for for deep_causality crate."
 documentation = "https://docs.rs/deep_causality"
 
 
