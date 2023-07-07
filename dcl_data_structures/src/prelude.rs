@@ -1,7 +1,9 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 // Array Grid types
-pub use crate::grid_type::array_grid::*;
+pub use crate::grid_type::ArrayGrid;
+pub use crate::grid_type::ArrayType;
+pub use crate::grid_type::ArrayType::*;
 pub use crate::grid_type::grid::Grid;
 pub use crate::grid_type::point::PointIndex;
 pub use crate::grid_type::storage::Storage;
