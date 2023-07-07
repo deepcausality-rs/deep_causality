@@ -1,8 +1,7 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use criterion::{Criterion, criterion_group};
-use dcl_data_structures::prelude::{SlidingWindow, VectorStorage};
-use dcl_data_structures::prelude::sliding_window::new_with_vector_storage;
+use dcl_data_structures::prelude::{SlidingWindow, VectorStorage, window_type};
 use crate::benchmarks::fields::{MULT, SIZE};
 
 #[derive(Default, Debug, Copy, Clone, Hash, Eq, PartialEq)]
@@ -10,7 +9,7 @@ pub struct Data {
     dats: i32,
 }
 fn get_sliding_window() -> SlidingWindow<VectorStorage<Data>, Data> {
-    new_with_vector_storage(SIZE, MULT)
+    window_type::new_with_vector_storage(SIZE, MULT)
 }
 
 fn vector_backed_benchmark(criterion: &mut Criterion)

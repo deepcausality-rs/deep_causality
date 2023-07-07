@@ -1,8 +1,7 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use criterion::{Criterion, criterion_group};
-use dcl_data_structures::prelude::{ArrayStorage, SlidingWindow};
-use dcl_data_structures::prelude::sliding_window::new_with_array_storage;
+use dcl_data_structures::prelude::{ArrayStorage, SlidingWindow, window_type};
 use crate::benchmarks::fields::{SIZE, MULT};
 
 #[derive(Default, Debug, Copy, Clone, Hash, Eq, PartialEq)]
@@ -11,7 +10,7 @@ pub struct Data {
 }
 
 fn get_sliding_window() -> SlidingWindow<ArrayStorage<Data, SIZE , MULT>, Data> {
-    new_with_array_storage()
+    window_type::new_with_array_storage()
 }
 
 fn array_backed_benchmark(criterion: &mut Criterion)
