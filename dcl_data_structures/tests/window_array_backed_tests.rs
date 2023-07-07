@@ -1,7 +1,6 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use dcl_data_structures::prelude::{ArrayStorage, SlidingWindow};
-use dcl_data_structures::prelude::sliding_window::new_with_array_storage;
+use dcl_data_structures::prelude::{ArrayStorage, SlidingWindow,sliding_window};
 
 const SIZE: usize = 4;
 const CAPACITY: usize = 1200;
@@ -12,7 +11,7 @@ pub struct Data {
 }
 
 fn get_sliding_window() -> SlidingWindow<ArrayStorage<Data, SIZE, CAPACITY>, Data> {
-    new_with_array_storage()
+    sliding_window::new_with_array_storage()
 }
 
 #[test]

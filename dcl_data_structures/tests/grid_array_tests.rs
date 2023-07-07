@@ -1,7 +1,6 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use dcl_data_structures::prelude::{ArrayGrid, Grid, PointIndex};
-use dcl_data_structures::prelude::ArrayType::{Array1D, Array2D, Array3D, Array4D};
+use dcl_data_structures::prelude::{ArrayGrid, ArrayType, Grid, PointIndex};
 
 const WIDTH: usize = 5;
 const HEIGHT: usize = 5;
@@ -69,7 +68,7 @@ fn test_array_grid_4d() {
 
 #[test]
 fn test_array_grid_array_1d() {
-    let array_type = Array1D;
+    let array_type = ArrayType::Array1D;
     let ag: ArrayGrid<usize, WIDTH, HEIGHT, DEPTH, TIME> = ArrayGrid::new(array_type);
 
     let p = PointIndex::new1d(1);
@@ -85,7 +84,7 @@ fn test_array_grid_array_1d() {
 
 #[test]
 fn test_array_grid_array_2d() {
-    let array_type = Array2D;
+    let array_type = ArrayType::Array2D;
     let ag: ArrayGrid<usize, WIDTH, HEIGHT, DEPTH, TIME> = ArrayGrid::new(array_type);
 
     let p = PointIndex::new2d(1, 2);
@@ -102,7 +101,7 @@ fn test_array_grid_array_2d() {
 
 #[test]
 fn test_array_grid_array_3d() {
-    let array_type = Array3D;
+    let array_type = ArrayType::Array3D;
     let ag: ArrayGrid<usize, WIDTH, HEIGHT, DEPTH, TIME> = ArrayGrid::new(array_type);
 
     let p = PointIndex::new3d(1, 2, 3);
@@ -122,7 +121,7 @@ fn test_array_grid_array_3d() {
 
 #[test]
 fn test_array_grid_array_4d() {
-    let array_type = Array4D;
+    let array_type = ArrayType::Array4D;
     let ag: ArrayGrid<usize, WIDTH, HEIGHT, DEPTH, TIME> = ArrayGrid::new(array_type);
     let g = ag.array_grid_4d()
         .expect("failed to create array grid");

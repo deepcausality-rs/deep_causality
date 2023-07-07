@@ -1,7 +1,6 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use dcl_data_structures::prelude::{SlidingWindow, VectorStorage};
-use dcl_data_structures::prelude::sliding_window::new_with_vector_storage;
+use dcl_data_structures::prelude::{SlidingWindow, sliding_window, VectorStorage};
 
 const SIZE: usize = 4;
 const MULT: usize = 2;
@@ -12,7 +11,7 @@ pub struct Data {
 }
 
 fn get_sliding_window() -> SlidingWindow<VectorStorage<Data>, Data> {
-    new_with_vector_storage(SIZE, MULT)
+    sliding_window::new_with_vector_storage(SIZE, MULT)
 }
 
 #[test]
