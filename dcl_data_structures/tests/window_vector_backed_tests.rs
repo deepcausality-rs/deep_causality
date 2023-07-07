@@ -1,8 +1,10 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 use dcl_data_structures::prelude::{VectorStorage,window_type, SlidingWindow};
 
+// Maximum number of elements held in the sliding window.
 const SIZE: usize = 4;
-const MULT: usize = 2;
+// Multiplier to calculate capacity as size * multiple
+const MULT: usize = 12;
 
 #[derive(Default, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Data {
