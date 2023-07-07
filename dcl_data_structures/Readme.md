@@ -42,8 +42,9 @@ dcl_data_structures = "0.4.2"
 ```
 ## 📚 Docs
 
-* [ArrayGrid](docs/ArrayGrid.md)
-* [SlidingWindow](docs/SlidingWindow.md)
+* [API Docs](https://docs.rs/dcl_data_structures/0.4.3/dcl_data_structures/)
+* [ArrayGrid Design & Details](docs/ArrayGrid.md)
+* [SlidingWindow Summary](docs/SlidingWindow.md)
 
 ## ⭐ Usage
 
@@ -52,12 +53,12 @@ See:
 * [Examples](examples)
 * [Test](tests)
 
+### ArrayGrid
+
 Important details:
 * All const generic parameters are requires regardless of which ArrayType you are using
 * To change the ArrayGrid type, just change the enum and your good.
 * There are no array bounds checks past compilation, so its your job to ensure PointIndex does not exceed the Array boundaries.
-
-### ArrayGrid 
 
 ```rust
 use dcl_data_structures::prelude::{ArrayGrid, ArrayType, PointIndex};
