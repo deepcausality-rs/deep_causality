@@ -1,6 +1,6 @@
 [package]
 name = "dcl_data_structures"
-version = "0.4.2"
+version = "0.4.3"
 edition = "2021"
 rust-version = "1.65"
 repository = "https://github.com/deepcausality/deep_causality.rs"
@@ -14,7 +14,7 @@ keywords = ["data-structures", "sliding-window", "grid-array"]
 
 [dependencies.deep_causality_macros]
 path = "../deep_causality_macros"
-version = "^0.4.2"
+version = "^0.4.3"
 
 
 [dev-dependencies]
