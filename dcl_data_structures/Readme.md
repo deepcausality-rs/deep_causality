@@ -1,4 +1,4 @@
-# 💡 Data structures for DeepCausality
+# 🏁 Data structures for DeepCausality 🏁
 
 Web: https://deepcausality.com/about/
 
@@ -26,28 +26,6 @@ boost over tensors.
 
 Macros had to move to a separate crate because somehow these can't reside in the same crate using them.
 
-**SlidingWindow**
-
-I noticed three minor issues when looking for existing sliding windows in Rust.
-First, either vector was used with a particular performance penalty, or some unsafe code
-was used for maximum performance. However, I was looking for a fast yet safe implementation.
-
-Second, a sliding window usually performs better when over-allocated, meaning, for size n, you
-allocate k*n with a constant k to delay the index shift when hitting the end of the underlying data structure.
-In that sense, you trade memory for better performance. When I looked at existing sliding windows,this feature was not
-implemented.
-
-Third, some crates lacked documentation, others seemed abandoned, and so I couldn't find a default implementation to
-use; therefore, I wrote the SlidingWindow.
-
-**ArrayGrid**
-
-ArrayGrid became necessary in a trait that has a signature requiring a single type that could represent
-multiple shapes, from scalar to a 4D Matrix. Conventionally, a tensor would be a good fit, but since
-the signature is part of the hot path, performance became a consideration. After seeing the significant
-performance boost resulting from the const generic array implementation of the sliding window, it was time to
-take the idea one step further. Therefore, I wrote the ArrayGrid, a single unified type representing
-only low dimensional structures (Scalar, Vector, Matrix) as a static const generic array for best performance.
 
 ## 🚀 Install
 
@@ -62,7 +40,6 @@ Alternatively, add the following to your Cargo.toml
 ```toml
 dcl_data_structures = "0.4.2"
 ```
-
 ## 📚 Docs
 
 * [ArrayGrid](docs/ArrayGrid.md)
@@ -71,9 +48,85 @@ dcl_data_structures = "0.4.2"
 ## ⭐ Usage
 
 See:
-
 * [Benchmark](benches/benchmarks)
+* [Examples](examples)
 * [Test](tests)
+
+Important details:
+* All const generic parameters are requires regardless of which ArrayType you are using
+* To change the ArrayGrid type, just change the enum and your good.
+* There are no array bounds checks past compilation, so its your job to ensure PointIndex does not exceed the Array boundaries.
+
+### ArrayGrid 
+
+```rust
+use dcl_data_structures::prelude::{ArrayGrid, ArrayType, PointIndex};
+
+// Consts dimensions requires for const generic paramaters
+// Use these to check whether your PointIndex stays within the Array boundaries.
+const WIDTH: usize = 5;
+const HEIGHT: usize = 5;
+const DEPTH: usize = 5;
+const TIME: usize = 5;
+
+pub fn main(){
+    // Make a simple 1D Array of type usize
+    let array_type = ArrayType::Array1D;
+    let ag: ArrayGrid<usize, WIDTH, HEIGHT, DEPTH, TIME> = ArrayGrid::new(array_type);
+
+    // Create a 1D index
+    let p = PointIndex::new1d(1);
+
+    // Store a usize with the point index
+    ag.set(p, 42);
+
+    // Get the usize for the point index
+    let res = ag.get(p);
+    assert_eq!(res, 42);
+    
+    // Make a custom struct 
+    // ArrayGrid requires Copy + Default to store MyStuct
+    #[derive(Debug, Default, Copy, Clone)]
+    struct MyStruct{
+        number: usize,
+        mod_five: bool,
+    }
+    
+    // Make a 4D array aka matrix over x,y,z that stores My struct
+    // Notice, only the ArrayType changes to do that. 
+    let array_type = ArrayType::Array4D;
+    let ag: ArrayGrid<MyStruct, WIDTH, HEIGHT, DEPTH, TIME> = ArrayGrid::new(array_type);
+
+    // Create a new 4D point index where only time varies
+    let idx_t0 = PointIndex::new4d(1, 1, 1, 0);
+    let idx_t1 = PointIndex::new4d(1, 1, 1, 1);
+    let idx_t2 = PointIndex::new4d(1, 1, 1, 2);
+
+    // Create some data for each index 
+    let my_struct_t0 = MyStruct{ number: 23, mod_five: false };
+    let my_struct_t1 = MyStruct{ number: 24, mod_five: false };
+    let my_struct_t2 = MyStruct{ number: 25, mod_five: true };
+
+    // Store data
+    ag.set(idx_t0, my_struct_t0);
+    ag.set(idx_t1, my_struct_t1);
+    ag.set(idx_t2, my_struct_t2);
+
+    // Get data at t2
+    let res = ag.get(idx_t2);
+    
+    // Verify results
+    let exp_number = 25;
+    assert_eq!(res.number, exp_number);
+    let exp_mod = true;
+    assert_eq!(res.mod_five, exp_mod);
+}
+
+
+```
+
+### SlidingWindow
+
 
 ## 🙏 Credits
 
