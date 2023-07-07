@@ -20,11 +20,9 @@ boost over tensors.
 
 ## 🤔 Why?
 
-1) Zero dependencies. Not quite. See below.
+1) Zero dependencies.
 2) Zero cost abstraction.
-3) 100% safe Rust
-
-Macros had to move to a separate crate because somehow these can't reside in the same crate using them.
+3) Zero unsafe. 100% safe and fast Rust.
 
 
 ## 🚀 Install

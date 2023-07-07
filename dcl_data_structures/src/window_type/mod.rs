@@ -7,6 +7,21 @@ pub mod storage_vec;
 pub mod storage_array;
 pub mod storage;
 
+/// Returns a new sliding window with the size and capacity given as parameters.
+///
+/// # Arguments
+///
+/// * `size: usize` - Maximum number of elements held in the sliding window.
+/// * `multiple: usize` - Multiple to calculate capacity as size * multiple
+///
+/// # Examples
+///
+/// ```
+/// // You can have rust code between fences inside the comments
+/// // If you pass --test to `rustdoc`, it will even test it for you!
+/// use doc::Person;
+/// let person = Person::new("name");
+/// ```
 pub fn new_with_vector_storage<T: PartialEq + Copy + Default>(
     size: usize,
     multiple: usize,

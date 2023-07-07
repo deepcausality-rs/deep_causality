@@ -12,11 +12,6 @@ categories = ["data-structures", "science"]
 keywords = ["data-structures", "sliding-window", "grid-array"]
 
 
-[dependencies.deep_causality_macros]
-path = "../deep_causality_macros"
-version = "^0.4.3"
-
-
 [dev-dependencies]
 criterion = { version = "0.5.1", features = ["html_reports"] }
 rand = { version = "0.8.5", features = ["small_rng"] }
