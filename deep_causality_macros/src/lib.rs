@@ -83,15 +83,21 @@ pub fn make_vec_to_vec(_item: TokenStream) -> TokenStream
     }".parse().unwrap()
 }
 
-// macros used in deep_causality/src/types/window_type
+// macros used in dcl_data_structures/src/window_type
 
 #[proc_macro]
 pub fn make_first(_item: TokenStream) -> TokenStream
 {
-    "#[inline(always)]
+    " #[inline(always)]
     fn first(&self) -> Result<T, String> {
         if self.tail != 0 {
-            Ok(self.store[self.head])
+            if self.tail > self.size
+            {
+                Ok(self.store[self.head+1])
+            }
+            else {
+                Ok(self.store[self.head])
+            }
         } else {
             Err(\"Array is empty. Add some elements to the array first\".to_string())
         }
@@ -138,7 +144,7 @@ pub fn make_get_slice(_item: TokenStream) -> TokenStream
     fn get_slice(&self) -> &[T] {
         if self.tail > self.size
         {
-            // Adjust offset in case the window is larger than the slice.
+            // Adjust offset
             &self.store[self.head + 1..self.tail]
         } else {
             &self.store[self.head..self.tail]
