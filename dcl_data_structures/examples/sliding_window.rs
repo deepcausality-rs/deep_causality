@@ -27,8 +27,7 @@ pub fn main(){
     // Filled means, the window holds 4 elements.
     assert!(!window.filled());
 
-    // If you try to access an element before the window id filled,
-    // you get an error.
+    // If you try to access an element before the window id filled, you get an error.
     let res = window.first();
     assert!(res.is_err());
 
@@ -43,13 +42,13 @@ pub fn main(){
     assert!(window.filled());
 
     // Now we can access elements of the window
-    // Last one added was 0
+    // Last element added was 0
     let res = window.last();
     assert!(res.is_ok());
     let data = res.unwrap();
     assert_eq!(data.dats, 0);
 
-    // First one added was 3
+    // First (oldest) element added was 3
     let res = window.first();
     assert!(res.is_ok());
     let data = res.unwrap();
@@ -69,7 +68,8 @@ pub fn main(){
     let data = res.unwrap();
     assert_eq!(data.dats, 42);
 
-    // Because 42 was added, 3 was dropped therefore
+    // Because 42 was added at the front,
+    // 3 was dropped at the end therefore
     // the oldest element is now 2
     let res = window.first();
     assert!(res.is_ok());
