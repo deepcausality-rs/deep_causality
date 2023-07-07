@@ -75,18 +75,6 @@ impl<T, const W: usize, const H: usize, const D: usize, const C: usize> ArrayGri
     ///     // Make a 3D Array of type usize
     ///     let ag: ArrayGrid<usize, WIDTH, HEIGHT, DEPTH, TIME> = ArrayGrid::new(ArrayType::Array3D);
     ///
-    /// // If you don't like type annotations or have to build a larger number of ArrayGrids,
-    /// // then you may add a util function with the type signature in its return type.
-    /// fn get_array_grid<T: Copy + Default>(array_type: ArrayType) -> ArrayGrid<T, WIDTH, HEIGHT, DEPTH, TIME> {
-    ///     ArrayGrid::new(array_type)
-    /// }
-    ///
-    ///    // All types inferred.
-    ///    let array_type = ArrayType::Array1D;
-    ///    let ag = get_array_grid(array_type);
-    ///
-    ///    let array_type = ArrayType::Array3D;
-    ///    let ag = get_array_grid(array_type);
     ///
     /// ```
     pub fn new(array_type: ArrayType) -> ArrayGrid<T, W, H, D, C> {
