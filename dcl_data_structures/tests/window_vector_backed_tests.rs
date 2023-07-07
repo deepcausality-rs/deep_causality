@@ -1,5 +1,4 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
-
 use dcl_data_structures::prelude::{SlidingWindow, sliding_window, VectorStorage};
 
 const SIZE: usize = 4;
@@ -89,7 +88,6 @@ fn test_filled() {
 
 #[test]
 fn test_first() {
-    let d = Data { dats: 0 };
     let mut window = get_sliding_window();
     assert_eq!(window.size(), SIZE);
     assert_eq!(window.size(), SIZE);
@@ -98,14 +96,40 @@ fn test_first() {
     let res = window.first();
     assert!(res.is_err());
 
-    window.push(d);
-    assert!(!window.filled());
+    window.push(Data { dats: 3 });
+    window.push(Data { dats: 2 });
+    window.push(Data { dats: 1 });
+    window.push(Data { dats: 0 });
+    assert!(window.filled());
 
     let res = window.first();
     assert!(res.is_ok());
+    let data = res.unwrap();
+    assert_eq!(data.dats, 3);
 
+    window.push(Data { dats: 4 });
+    let res = window.first();
+    assert!(res.is_ok());
+    let data = res.unwrap();
+    assert_eq!(data.dats, 2);
+
+    window.push(Data { dats: 5 });
+    let res = window.first();
+    assert!(res.is_ok());
+    let data = res.unwrap();
+    assert_eq!(data.dats, 1);
+
+    window.push(Data { dats: 6 });
+    let res = window.first();
+    assert!(res.is_ok());
     let data = res.unwrap();
     assert_eq!(data.dats, 0);
+
+    window.push(Data { dats: 7 });
+    let res = window.first();
+    assert!(res.is_ok());
+    let data = res.unwrap();
+    assert_eq!(data.dats, 4);
 }
 
 
