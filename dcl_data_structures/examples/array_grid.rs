@@ -1,4 +1,3 @@
-
 use dcl_data_structures::prelude::{ArrayGrid, ArrayType, PointIndex};
 
 // Consts dimensions requires for const generic parameters
@@ -8,13 +7,18 @@ const HEIGHT: usize = 5;
 const DEPTH: usize = 5;
 const TIME: usize = 5;
 
-pub fn main(){
+// Util function that helps with type inference.
+fn get_array_grid<T: Copy + Default>(array_type: ArrayType) -> ArrayGrid<T, WIDTH, HEIGHT, DEPTH, TIME> {
+    ArrayGrid::new(array_type)
+}
+
+pub fn main() {
 
     // Make a simple 1D Array of type usize
     let array_type = ArrayType::Array1D;
-    let ag: ArrayGrid<usize, WIDTH, HEIGHT, DEPTH, TIME> = ArrayGrid::new(array_type);
+    let ag = get_array_grid(array_type);
 
-    // Create a 1D index
+    // Create a 1D PointIndex
     let p = PointIndex::new1d(1);
 
     // Store a usize with the point index
@@ -28,7 +32,7 @@ pub fn main(){
     // Notice, only the ArrayType changes to do that.
     // Also, notice the target type (u64) is always the first generic parameter
     let array_type = ArrayType::Array3D;
-    let ag: ArrayGrid<u64, WIDTH, HEIGHT, DEPTH, TIME> = ArrayGrid::new(array_type);
+    let ag = get_array_grid(array_type);
 
     // Create a new 3D point index
     let p = PointIndex::new3d(1, 2, 3);
@@ -44,7 +48,7 @@ pub fn main(){
 
     // ArrayGrid requires Copy + Default to store MyStuct
     #[derive(Debug, Default, Copy, Clone)]
-    struct MyStruct{
+    struct MyStruct {
         number: usize,
         mod_five: bool,
     }
@@ -60,9 +64,9 @@ pub fn main(){
     let idx_t2 = PointIndex::new4d(1, 1, 1, 2);
 
     // Create some data for each index
-    let my_struct_t0 = MyStruct{ number: 23, mod_five: false };
-    let my_struct_t1 = MyStruct{ number: 24, mod_five: false };
-    let my_struct_t2 = MyStruct{ number: 25, mod_five: true };
+    let my_struct_t0 = MyStruct { number: 23, mod_five: false };
+    let my_struct_t1 = MyStruct { number: 24, mod_five: false };
+    let my_struct_t2 = MyStruct { number: 25, mod_five: true };
 
     // Store data
     ag.set(idx_t0, my_struct_t0);
