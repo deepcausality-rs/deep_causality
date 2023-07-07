@@ -7,9 +7,9 @@ pub trait WindowStorage<T>
     /// Pushes a new element to the beginning of the sliding window.
     /// If the window is filled, the last element will be dropped.
     fn push(&mut self, value: T);
-    /// Returns the first element in the sliding window
+    /// Returns the first (oldest) element in the sliding window
     fn first(&self) -> Result<T, String>;
-    /// Returns the last element in the sliding window
+    /// Returns the last (newest) element in the sliding window
     fn last(&self) -> Result<T, String>;
     /// Returns tail cursor
     fn tail(&self) -> usize;
