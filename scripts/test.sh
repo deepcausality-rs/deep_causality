@@ -3,6 +3,6 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-command cargo nextest run
-
 command cargo test --doc
+
+command cargo nextest run
