@@ -309,7 +309,8 @@ impl Causaloid
 
 impl Display for Causaloid
 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result
+    {
         write!(f, "Causaloid id: {} \n Causaloid type: {} \n description: {} is active: {}",
                self.id,
                self.causal_type,
