@@ -3,14 +3,18 @@
 use deep_causality::prelude::{Causable, Causaloid};
 use crate::causal_state::CausalState;
 
-struct CSM {}
+struct CSM<'l> {
+    states: &'l [&'l CausalState<'l>],
+}
 
-impl CSM {
-    pub fn new() -> Self {
-        Self {}
+impl<'l> CSM<'l>
+{
+    pub fn new(states: &'l [&'l CausalState<'l>]) -> Self {
+        Self { states }
     }
 }
 
-impl CSM {
-    pub fn eval(c: &CausalState) {}
+impl<'l> CSM<'l>
+{
+    pub fn eval() {}
 }
