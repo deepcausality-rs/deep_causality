@@ -1,6 +1,23 @@
-# 💡 DeepCausality
+# DeepCausality
 
-Web: https://deepcausality.com/about/
+[//]: # ([![Crates.io][crates-badge]][crates-url])
+[![MIT licensed][mit-badge]][mit-url]
+![Audit][audit-url]
+![Tests][test-url]
+![Clippy][clippy-url]
+
+
+[crates-badge]: https://img.shields.io/badge/crates.io-latest-blue
+[crates-url]: https://crates.io/crates/dcl_data_structures
+
+[mit-badge]: https://img.shields.io/badge/License-MIT-blue.svg
+[mit-url]: https://github.com/deepcausality-rs/deep_causality/blob/main/LICENSE
+
+[audit-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/audit.yml/badge.svg
+[clippy-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/rust-clippy.yml/badge.svg
+[test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
+
+Web: https://deepcausality.com
 
 DeepCausality is a hyper-geometric computational causality library that enables fast and deterministic context aware
 causal reasoning over complex multi-stage causality models. Deep Causality adds only minimal overhead,
