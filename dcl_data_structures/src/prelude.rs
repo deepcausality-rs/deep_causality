@@ -1,5 +1,7 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
+#![forbid(unsafe_code)]
+
 // Array Grid types
 pub use crate::grid_type::ArrayGrid;
 pub use crate::grid_type::ArrayType;

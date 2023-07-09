@@ -1,5 +1,7 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
+#![forbid(unsafe_code)]
+
 use std::fmt::{Debug, Display, Formatter};
 use crate::prelude::{Grid, PointIndex};
 
