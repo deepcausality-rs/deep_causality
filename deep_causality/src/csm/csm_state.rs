@@ -38,6 +38,19 @@ impl<'l> CausalState<'l>
             self.causaloid.verify_all_causes(self.data, None)
         }
     }
+    pub fn eval_with_data(
+        &self,
+        data: &'l [NumericalValue],
+    )
+        -> Result<bool, CausalityError>
+    {
+        if self.causaloid.is_singleton() {
+            let obs = &data[0];
+            self.causaloid.verify_single_cause(obs)
+        } else {
+            self.causaloid.verify_all_causes(data, None)
+        }
+    }
 }
 
 impl<'l> CausalState<'l>

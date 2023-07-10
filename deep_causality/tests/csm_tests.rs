@@ -37,7 +37,42 @@ fn test_new()
 }
 
 #[test]
-fn test_eval()
+fn eval_single_state()
+{
+    let id = 42;
+    let version = 1;
+    let data = &[0.23f64];
+    let causaloid = &test_utils::get_test_causaloid();
+
+    let cs =  CausalState::new(id, version, data, causaloid);
+    let ca = get_test_action();
+    let state_action = &[(&cs, &ca)];
+    let csm = CSM::new(state_action);
+
+    let data = &[0.89f64];
+    let res = csm.eval_single_state(id, data);
+    assert!(res.is_ok())
+}
+
+#[test]
+fn eval_single_state_err_not_found()
+{
+    let id = 42;
+    let version = 1;
+    let data = &[0.23f64];
+    let causaloid = &test_utils::get_test_causaloid();
+
+    let cs =  CausalState::new(id, version, data, causaloid);
+    let ca = get_test_action();
+    let state_action = &[(&cs, &ca)];
+    let csm = CSM::new(state_action);
+
+    let res = csm.eval_single_state(23, data);
+    assert!(res.is_err())
+}
+
+#[test]
+fn update_single_state()
 {
     let id = 42;
     let version = 1;
@@ -51,14 +86,47 @@ fn test_eval()
 
     let csm = CSM::new(state_action);
 
-    let res = csm.eval_all_states();
-
+    let data = &[0.89f64];
+    let res = csm.eval_single_state(id, data);
     assert!(res.is_ok())
-
 }
 
 #[test]
-fn test_update()
+fn update_single_state_err_not_found()
+{
+    let id = 42;
+    let version = 1;
+    let data = &[0.23f64];
+    let causaloid = &test_utils::get_test_causaloid();
+
+    let cs =  CausalState::new(id, version, data, causaloid);
+    let ca = get_test_action();
+    let state_action = &[(&cs, &ca)];
+    let csm = CSM::new(state_action);
+
+    let res = csm.eval_single_state(99, data);
+    assert!(res.is_err())
+}
+
+#[test]
+fn eval_all_states()
+{
+    let id = 42;
+    let version = 1;
+    let data = &[0.23f64];
+    let causaloid = &test_utils::get_test_causaloid();
+
+    let cs =  CausalState::new(id, version, data, causaloid);
+    let ca = get_test_action();
+    let state_action = &[(&cs, &ca)];
+    let csm = CSM::new(state_action);
+
+    let res = csm.eval_all_states();
+    assert!(res.is_ok())
+}
+
+#[test]
+fn update_all_states()
 {
     let id = 42;
     let version = 1;
