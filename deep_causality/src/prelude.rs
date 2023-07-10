@@ -1,9 +1,9 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 //
 // CSM
-pub use crate::csm::causal_action::CausalAction;
-pub use crate::csm::causal_state::CausalState;
-pub use crate::csm::causal_state_machine::CSM;
+pub use crate::csm::csm_action::CausalAction;
+pub use crate::csm::csm_state::CausalState;
+pub use crate::csm::csm::CSM;
 //
 // Error
 pub use crate::errors::ActionError;

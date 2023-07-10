@@ -2,7 +2,6 @@
 
 use crate::prelude::{ActionError, CausalAction, CausalState};
 
-
 pub struct CSM<'l> {
     state_actions: &'l [(&'l CausalState<'l>, &'l CausalAction)],
 }
