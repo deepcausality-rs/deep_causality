@@ -32,7 +32,7 @@ pub fn run()
         (&fire_cs, &fire_ca),
     ];
 
-    println!("Create the Causal State Machine");
+    println!("Create Causal State Machine");
     let csm = CSM::new(state_actions);
 
     let smoke_data = get_smoke_sensor_data();

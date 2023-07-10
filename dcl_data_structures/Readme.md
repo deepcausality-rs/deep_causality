@@ -39,7 +39,6 @@ Alternatively, add the following to your Cargo.toml
 dcl_data_structures = "0.4.2"
 ```
 ## 📚 Docs
-
 * [API Docs](https://docs.rs/dcl_data_structures/0.4.3/dcl_data_structures/)
 * [ArrayGrid Design & Details](docs/ArrayGrid.md)
 * [SlidingWindow Summary](docs/SlidingWindow.md)
