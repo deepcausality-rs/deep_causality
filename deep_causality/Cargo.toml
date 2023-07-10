@@ -10,7 +10,7 @@ description = "Computational causality library. Provides causality graph, collec
 documentation = "https://docs.rs/deep_causality"
 homepage = "https://deepcausality.com/about/"
 repository = "https://github.com/deepcausality/deep_causality.rs"
-keywords = ["cauality", "causal-data-structure", "causal-graph", "causal-reasoning", "graph"]
+keywords = ["cauality", "causal-graph", "causal-reasoning", "graph"]
 categories = ["data-structures", "science", "aerospace", "finance", "mathematics"]
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 
