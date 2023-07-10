@@ -14,3 +14,6 @@ The state machine, therefore, only evaluates the causal state with its structure
 at a point in time. Therefore, revision requires to encapsulate the causaloid in structure that
 carries meta-data that inform about structural changes. 
 
+* [Source](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality/src/csm)
+* [Example](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality/examples/csm)
+* [Test](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality/tests)
