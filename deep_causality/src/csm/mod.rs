@@ -38,7 +38,7 @@ impl<'l> CSM<'l>
     pub fn eval_single_state(
         &self,
         id: usize,
-        data: &'l [NumericalValue],
+        data: & [NumericalValue],
     )
         -> Result<(), ActionError>
     {

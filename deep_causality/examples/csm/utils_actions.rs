@@ -1,7 +1,8 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+
 use deep_causality::prelude::{ActionError, CausalAction};
 
-fn get_smoke_alert_action() -> CausalAction
+pub fn get_smoke_alert_action() -> CausalAction
 {
     let func = raise_smoke_alert;
     let descr = "Action that triggers the smoke alert";
@@ -15,7 +16,7 @@ fn get_smoke_alert_action() -> CausalAction
     CausalAction::new(func, descr, version)
 }
 
-fn get_fire_alert_action() -> CausalAction
+pub fn get_fire_alert_action() -> CausalAction
 {
     let func = raise_fire_alert;
     let descr = "Action that triggers the fire alert";
@@ -29,7 +30,7 @@ fn get_fire_alert_action() -> CausalAction
     CausalAction::new(func, descr, version)
 }
 
-fn get_explosion_alert_action() -> CausalAction
+pub fn get_explosion_alert_action() -> CausalAction
 {
     let func = raise_explosion_alert;
     let descr = "Action that triggers the explosion alert";

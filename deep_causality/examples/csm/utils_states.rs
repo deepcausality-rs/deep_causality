@@ -7,15 +7,15 @@ pub fn get_smoke_sensor_causaloid()
     -> Causaloid
 {
     let id: IdentificationValue = 1;
-    let description: String = "Tests whether smoke signal exceeds threshold of 0.65".to_string() as DescriptionValue;
+    let description: String = "Tests whether smoke signal exceeds threshold of 65.0".to_string() as DescriptionValue;
     let data_set_id = "".to_string() as DescriptionValue;
 
     fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
-        if verify_obs(obs).is_err(){
+        if verify_obs(obs).is_err() {
             return Err(verify_obs(obs).err().unwrap());
         }
 
-        let threshold: NumericalValue = 0.65;
+        let threshold: NumericalValue = 65.0;
         if !obs.ge(&threshold) {
             Ok(false)
         } else {
@@ -23,7 +23,7 @@ pub fn get_smoke_sensor_causaloid()
         }
     }
 
-    Causaloid::new(id, causal_fn,data_set_id,description)
+    Causaloid::new(id, causal_fn, data_set_id, description)
 }
 
 pub fn get_fire_sensor_causaloid()
@@ -34,7 +34,7 @@ pub fn get_fire_sensor_causaloid()
     let data_set_id = "".to_string() as DescriptionValue;
 
     fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
-        if verify_obs(obs).is_err(){
+        if verify_obs(obs).is_err() {
             return Err(verify_obs(obs).err().unwrap());
         }
 
@@ -46,7 +46,7 @@ pub fn get_fire_sensor_causaloid()
         }
     }
 
-    Causaloid::new(id, causal_fn,data_set_id,description)
+    Causaloid::new(id, causal_fn, data_set_id, description)
 }
 
 pub fn get_explosion_sensor_causaloid()
@@ -57,7 +57,7 @@ pub fn get_explosion_sensor_causaloid()
     let data_set_id = "".to_string() as DescriptionValue;
 
     fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
-        if verify_obs(obs).is_err(){
+        if verify_obs(obs).is_err() {
             return Err(verify_obs(obs).err().unwrap());
         }
 
@@ -69,11 +69,14 @@ pub fn get_explosion_sensor_causaloid()
         }
     }
 
-    Causaloid::new(id, causal_fn,data_set_id,description)
+    Causaloid::new(id, causal_fn, data_set_id, description)
 }
 
-fn verify_obs(obs: NumericalValue) -> Result<(), CausalityError> {
-
+fn verify_obs(
+    obs: NumericalValue
+)
+    -> Result<(), CausalityError>
+{
     if obs.is_nan() {
         return Err(CausalityError("Observation is NULL/NAN".into()));
     }
