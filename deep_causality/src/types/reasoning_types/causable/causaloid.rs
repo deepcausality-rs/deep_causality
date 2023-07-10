@@ -1,7 +1,7 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::fmt::{Display, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 
 use crate::prelude::*;
 use crate::protocols::causable::Causable;
@@ -304,11 +304,7 @@ impl Causaloid
             false
         };
     }
-}
 
-
-impl Display for Causaloid
-{
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result
     {
         write!(f, "Causaloid id: {} \n Causaloid type: {} \n description: {} is active: {}",
@@ -317,5 +313,21 @@ impl Display for Causaloid
                self.description,
                self.is_active(),
         )
+    }
+}
+
+impl Debug for Causaloid
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result
+    {
+        self.fmt(f)
+    }
+}
+
+impl Display for Causaloid
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result
+    {
+       self.fmt(f)
     }
 }
