@@ -9,7 +9,7 @@ pub fn get_smoke_alert_action() -> CausalAction
     let version = 1;
 
     fn raise_smoke_alert() -> Result<(), ActionError> {
-        println!("Sensor detected smoke and raises alert");
+        println!("Sensor detected smoke and raised smoke alert");
         Ok(())
     }
 
@@ -23,7 +23,7 @@ pub fn get_fire_alert_action() -> CausalAction
     let version = 1;
 
     fn raise_fire_alert() -> Result<(), ActionError> {
-        println!("Sensor detected fire and raises alert");
+        println!("Sensor detected fire and raised the fire alert");
         Ok(())
     }
 
@@ -37,7 +37,7 @@ pub fn get_explosion_alert_action() -> CausalAction
     let version = 1;
 
     fn raise_explosion_alert() -> Result<(), ActionError> {
-        println!("Sensor detected an explosion and raises alert");
+        println!("Sensor detected an explosion and raised explosion alert");
         Ok(())
     }
 
