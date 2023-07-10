@@ -1,9 +1,9 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use std::fmt::{Display, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 use crate::prelude::{Causable, CausalityError, Causaloid, NumericalValue};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct CausalState<'l>
 {
     id: usize,
