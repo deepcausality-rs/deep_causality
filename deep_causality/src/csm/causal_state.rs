@@ -1,7 +1,7 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use std::fmt::{Display, Formatter};
-use deep_causality::prelude::{Causable, CausalityError, Causaloid, NumericalValue};
+use crate::prelude::{Causable, CausalityError, Causaloid, NumericalValue};
 
 #[derive(Clone)]
 pub struct CausalState<'l>
@@ -35,7 +35,7 @@ impl<'l> CausalState<'l>
             let obs = &self.data[0];
             self.causaloid.verify_single_cause(obs)
         } else {
-            self.causaloid.verify_all_causes(&self.data, None)
+            self.causaloid.verify_all_causes(self.data, None)
         }
     }
 }

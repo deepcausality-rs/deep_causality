@@ -1,6 +1,12 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 //
+// CSM
+pub use crate::csm::causal_action::CausalAction;
+pub use crate::csm::causal_state::CausalState;
+pub use crate::csm::causal_state_machine::CSM;
+//
 // Error
+pub use crate::errors::ActionError;
 pub use crate::errors::BuildError;
 pub use crate::errors::CausalityError;
 pub use crate::errors::CausalityGraphError;

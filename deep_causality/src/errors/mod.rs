@@ -73,3 +73,14 @@ impl fmt::Display for UpdateError {
         write!(f, "UpdateError: {}", self.0)
     }
 }
+
+#[derive(Debug, Clone)]
+pub struct ActionError(pub String);
+
+impl Error for ActionError {}
+
+impl fmt::Display for ActionError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "CausalityError: {}", self.0)
+    }
+}
