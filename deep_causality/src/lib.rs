@@ -6,4 +6,4 @@ pub mod protocols;
 pub mod prelude;
 pub mod types;
 pub mod utils;
-pub mod errors;
+pub (crate) mod errors;
