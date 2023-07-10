@@ -33,7 +33,7 @@ pub fn run()
         (&explosion_cs, &explosion_ca),
     ];
 
-    // Create a Causal State Machine
+    // Create the Causal State Machine
     let csm = CSM::new(state_actions);
 
     let smoke_data = get_smoke_sensor_data();
@@ -42,14 +42,11 @@ pub fn run()
 
     for i in 0..12 {
         wait();
-        csm.eval_single_state(SMOKE_SENSOR, &[smoke_data[i]])
-            .expect("Panic: Smoke sensor failed");
+        csm.eval_single_state(SMOKE_SENSOR, &[smoke_data[i]]).expect("Panic: Smoke sensor failed");
 
-        csm.eval_single_state(FIRE_SENSOR, &[fire_data[i]])
-            .expect("Panic: Fire sensor failed");
+        csm.eval_single_state(FIRE_SENSOR, &[fire_data[i]]).expect("Panic: Fire sensor failed");
 
-        csm.eval_single_state(EXPLOSION_SENSOR, &[exp_data[i]])
-            .expect("Panic: Explosion sensor failed");
+        csm.eval_single_state(EXPLOSION_SENSOR, &[exp_data[i]]).expect("Panic: Explosion sensor failed");
     }
 }
 

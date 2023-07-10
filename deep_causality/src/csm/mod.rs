@@ -35,10 +35,52 @@ impl<'l> CSM<'l>
 
 impl<'l> CSM<'l>
 {
+    pub fn add_single_state(
+        &self,
+        idx: usize,
+        state_action: (&'l CausalState<'l>, &'l CausalAction),
+    )
+        -> Result<(), UpdateError>
+    {
+        // Check if the key exists, if so return error
+        if self.state_actions.borrow().get(&idx).is_some() {
+            return Err(UpdateError(format!("State {} already exists.", idx)));
+        }
+
+        // Insert the new state/action at the idx position
+        self.state_actions.borrow_mut().insert(idx, state_action);
+
+        Ok(())
+    }
+
+    pub fn remove_single_state(
+        &self,
+        id: usize,
+    )
+        -> Result<(), UpdateError>
+    {
+        // Need binding to prevent dropped tmp value warnings
+        let mut binding = self.state_actions.borrow_mut();
+
+        // Check if state actually exists in the HashMap
+        let state_action = binding.get(&id);
+        if state_action.is_none() {
+            return Err(UpdateError(format!("State {} does not exists and  cannot be removed", id)));
+        }
+
+        // remove the new state/action at the idx position
+        binding.remove(&id);
+
+        Ok(())
+    }
+}
+
+impl<'l> CSM<'l>
+{
     pub fn eval_single_state(
         &self,
         id: usize,
-        data: & [NumericalValue],
+        data: &[NumericalValue],
     )
         -> Result<(), ActionError>
     {
