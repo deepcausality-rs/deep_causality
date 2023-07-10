@@ -1,15 +1,15 @@
 # DeepCausality
 
-[//]: # ([![Crates.io][crates-badge]][crates-url])
+[![Crates.io][crates-badge]][crates-url]
 [![MIT licensed][mit-badge]][mit-url]
 ![Audit][audit-url]
 ![Tests][test-url]
 ![Clippy][clippy-url]
 
 
-[crates-badge]: https://img.shields.io/badge/crates.io-latest-blue
+[crates-badge]: https://img.shields.io/badge/Crates.io-Latest-blue
 
-[crates-url]: https://crates.io/crates/dcl_data_structures
+[crates-url]: https://crates.io/crates/deep_causality
 
 [mit-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
