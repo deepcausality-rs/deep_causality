@@ -51,7 +51,7 @@ fn test_eval()
 
     let csm = CSM::new(state_action);
 
-    let res = csm.eval();
+    let res = csm.eval_all_states();
 
     assert!(res.is_ok())
 
@@ -79,7 +79,7 @@ fn test_update()
 
     let state_actions = &[(&cs, &ca), (&cs2, &ca2)];
 
-    csm.update(state_actions);
+    csm.update_all_states(state_actions);
 
     assert_eq!(csm.len(), 2)
 }

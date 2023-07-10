@@ -20,15 +20,20 @@ impl<'l> CSM<'l>
 
 impl<'l> CSM<'l>
 {
+
+}
+
+impl<'l> CSM<'l>
+{
     pub fn len(&self) -> usize {
         self.state_actions.borrow().len()
     }
 
-    pub fn update(&self, state_actions: &'l [(&'l CausalState<'l>, &'l CausalAction)]) {
+    pub fn update_all_states(&self, state_actions: &'l [(&'l CausalState<'l>, &'l CausalAction)]) {
         *self.state_actions.borrow_mut() = state_actions
     }
 
-    pub fn eval(&self) -> Result<(), ActionError>
+    pub fn eval_all_states(&self) -> Result<(), ActionError>
     {
         for (state, action) in self.state_actions.borrow().iter() {
             let eval = state.eval();
