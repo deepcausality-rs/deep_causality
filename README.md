@@ -51,7 +51,7 @@ at [how is deep causality different from deep learning?](docs/difference.md)
 
 Just run:
 
-```toml
+```bash
 cargo add deep_causality
 ```
 
