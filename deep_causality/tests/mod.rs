@@ -19,6 +19,12 @@ mod causality_map_tests;
 #[cfg(test)]
 mod causaloid_tests;
 #[cfg(test)]
+mod csm_action_tests;
+#[cfg(test)]
+mod csm_state_tests;
+#[cfg(test)]
+mod csm_tests;
+#[cfg(test)]
 mod inferable_collection_tests;
 #[cfg(test)]
 mod inference_tests;

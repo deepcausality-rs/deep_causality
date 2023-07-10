@@ -3,7 +3,7 @@
 // CSM
 pub use crate::csm::csm_action::CausalAction;
 pub use crate::csm::csm_state::CausalState;
-pub use crate::csm::csm::CSM;
+pub use crate::csm::CSM;
 //
 // Error
 pub use crate::errors::ActionError;
