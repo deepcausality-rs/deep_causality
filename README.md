@@ -8,35 +8,38 @@
 
 
 [crates-badge]: https://img.shields.io/badge/crates.io-latest-blue
+
 [crates-url]: https://crates.io/crates/dcl_data_structures
 
 [mit-badge]: https://img.shields.io/badge/License-MIT-blue.svg
+
 [mit-url]: https://github.com/deepcausality-rs/deep_causality/blob/main/LICENSE
 
 [audit-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/audit.yml/badge.svg
+
 [clippy-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/rust-clippy.yml/badge.svg
+
 [test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
 
 Web: https://deepcausality.com
 
-DeepCausality is a hyper-geometric computational causality library that enables fast and deterministic context aware
-causal reasoning over complex multi-stage causality models. Deep Causality adds only minimal overhead,
-and thus is suitable for real-time applications without additional acceleration hardware. Take a look
+DeepCausality is a hyper-geometric computational causality library that enables fast and deterministic context-aware
+causal reasoning over complex multi-stage causality models. Deep Causality adds only minimal overhead and thus is
+suitable for real-time applications without additional acceleration hardware. Take a look
 at [how is deep causality different from deep learning?](docs/difference.md)
 
 ## 🤔 Why DeepCausality?
 
-1) DeepCausality is written in Rust with production grade safety, reliability, and performance in mind.
-2) DeepCausality provides recursive causal data-structures that enable concise expression of arbitrary complex causal
+1) DeepCausality is written in Rust with production-grade safety, reliability, and performance in mind.
+2) DeepCausality provides recursive causal data structures that concisely express arbitrary complex causal
    structures.
 3) DeepCausality enables context awareness across data-like, time-like, space-like, spacetime-like entities stored
    within (multiple) context-hyper-graphs.
-4) DeepCausality simplified modelling of complex tempo-spatial patterns.
+4) DeepCausality simplified modeling of complex tempo-spatial patterns.
 5) DeepCausality comes with [Causal State Machine (CSM)](docs/causal_state_machine.md)
-6) DeepCausality is small, efficient, and fast, really fast. Run [benchmarks](deep_causality/benches) and see it.
-7) DeepCausality comes with plenty of [tests](deep_causality/tests)
 
 ## 📚 Docs
+
 * [API Docs](https://docs.rs/deep_causality/0.2.4/deep_causality/)
 * [Motivation](docs/motivation.md)
 * [How is deep causality different?](docs/difference.md)
@@ -71,14 +74,13 @@ See:
 
 ### Causal State Machine
 
-A causal state machine is used to model a context-free system where
-each cause maps to a known effect. For example, a sensor network 
-screens an industry site for smoke, fire, and explosions. Because the
-sensors are reliable, whenever the sensor exceeds a certain threshold,
-an alert will be raises. This kind of system could be implemented in many different ways, 
-but as the example shows, the causal state machine makes the system relatively easy
-to maintain and extent. New sensors, for example from a drone inspection, can
-be added and evaluated dynamically. 
+A causal state machine models a context-free system where each cause maps to a known effect. The example below
+models a sensor network that screens an industry site for smoke, fire, and explosions. Because the
+sensors are reliable, an alert will be raised whenever the sensor exceeds a certain threshold.
+
+You could implement this kind of system in many different ways, but as the example shows, the causal state machine makes
+the system relatively easy to maintain and extend. New sensors, for example, from a drone inspection, can
+be added and evaluated dynamically.
 
 [Full example code](deep_causality/examples/csm)
 
@@ -131,7 +133,7 @@ pub fn run() {
 ## 🛠️ Cargo & Make
 
 Cargo works as expected, but in addition to cargo, a makefile exists
-that abstracts over a number of additional tools you may have to install
+that abstracts over several additional tools you may have to install
 before all make commands work:
 
 * [clippy](https://github.com/rust-lang/rust-clippy)
@@ -172,12 +174,11 @@ Parts of the implementation are inspired by:
 ## 👨‍💻👩‍💻 Contribution
 
 Contributions are welcomed especially related to documentation, example code, and fixes.
-If unsure where to start, just open an issue and ask. For larger code contributions, please
-run make check locally before opening a PR and please add tests to make the PR merge
-relatively straight forward.
+If unsure where to start, open an issue and ask. For more significant code contributions, 
+please run make test and make check locally before opening a PR.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in deep_causality by you,
-shall be licensed under the MIT licence, without any additional terms or conditions.
+shall be licensed under the MIT license without additional terms or conditions.
 
 ## 📜 Licence
 
