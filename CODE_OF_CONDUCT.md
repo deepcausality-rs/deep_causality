@@ -1,116 +1,148 @@
 # Code of Conduct - DeepCausality
 
-## Our Pledge
+Effective: July 14, 2023
 
-In the interest of fostering an open and welcoming environment, we as
-contributors and maintainers pledge to make participation in our project and
-our community a harassment-free experience for everyone, regardless of age, body
-size, disability, ethnicity, sex characteristics, gender identity and expression,
-level of experience, education, socio-economic status, nationality, personal
-appearance, race, religion, or sexual identity and orientation.
+## Introduction
 
-## Our Standards
+The purposes of DeepCausality Projects are to:
 
-Examples of behavior that contributes to a positive environment for our
-community include:
+support the collaborative development, availability and adoption of open source software, hardware and networking and
+other technologies and the collaborative development, availability and adoption of open protocols and standards (
+individually and collectively, “Open Technology”);
 
-* Demonstrating empathy and kindness toward other people
-* Being respectful of differing opinions, viewpoints, and experiences
-* Giving and gracefully accepting constructive feedback
-* Accepting responsibility and apologizing to those affected by our mistakes,
-  and learning from the experience
-* Focusing on what is best not just for us as individuals, but for the
-  overall community
+DeepCausality hosts communities where participants choose to work together, and in that process experience differences
+in language, location, nationality, and experience. In such a diverse environment, misunderstandings and disagreements
+happen, which in most cases can be resolved informally. In rare cases, however, behavior can intimidate, harass, or
+otherwise disrupt one or more people in the community, which DeepCausality Projects will not tolerate.
 
-Examples of unacceptable behavior include:
+A Code of Conduct (“Code”) is useful to define accepted and acceptable behaviors and to promote high standards of
+professional practice. It also provides a benchmark for self-evaluation and acts as a vehicle for better identity of the
+organization.
 
-* The use of sexualized language or imagery, and sexual attention or
-  advances
-* Trolling, insulting or derogatory comments, and personal or political attacks
-* Public or private harassment
-* Publishing others' private information, such as a physical or email
-  address, without their explicit permission
-* Other conduct which could reasonably be considered inappropriate in a
-  professional setting
+This Code applies to any participant of any Project – including without limitation developers, participants in meetings,
+teleconferences, mailing lists, conferences or functions, and contributors. Note that this Code complements rather than
+replaces legal rights and obligations pertaining to any particular situation. In addition, with the approval of
+DeepCausality Projects, Projects are free to adopt their own code of conduct in place of the Code.
 
-## Our Responsibilities
+## Statement of Intent
 
-Project maintainers are responsible for clarifying and enforcing our standards of
-acceptable behavior and will take appropriate and fair corrective action in
-response to any behavior that they deem inappropriate,
-threatening, offensive, or harmful.
+DeepCausality Projects is committed to maintain a positive, professional work environment. This commitment calls for
+workplaces where participants at all levels behave according to the rules of the following code. A foundational concept
+of this code is that we all share responsibility for our work environment.
 
-Project maintainers have the right and responsibility to remove, edit, or reject
-comments, commits, code, wiki edits, issues, and other contributions that are
-not aligned to this Code of Conduct, and will
-communicate reasons for moderation decisions when appropriate.
+## Code
 
-## Scope
+1. Treat each other with respect, professionalism, fairness, and sensitivity to our many differences and strengths,
+   including in situations of high pressure and urgency.
+2. Never harass or bully anyone verbally, physically or sexually.
+3. Never discriminate on the basis of personal characteristics or group membership.
+4. Communicate constructively and avoid demeaning or insulting behavior or language.
+5. Seek, accept, and offer objective work criticism, and acknowledge properly the contributions of others.
+6. Be honest about your own qualifications, and about any circumstances that might lead to conflicts of interest.
+7. Respect the privacy of others and the confidentiality of data you access.
+8. With respect to cultural differences, be conservative in what you do and liberal in what you accept from others, but
+   not to the point of accepting disrespectful, unprofessional or unfair or unwelcome behavior or advances.
+9. Promote the rules of this Code and take action (especially if you are in a leadership position) to bring the
+   discussion back to a more civil level whenever inappropriate behaviors are observed.
+10. Stay on topic: Make sure that you are posting to the correct channel and avoid off-topic discussions. Remember when
+    you update an issue or respond to an email you are potentially sending to a large number of people.
+11. Step down considerately: participants in every project come and go, and LF Projects is no different. When you leave
+    or disengage from the project, in whole or in part, we ask that you do so in a way that minimizes disruption to the
+    project. This means you should tell people you are leaving and take the proper steps to ensure that others can pick
+    up where you left off.
 
-This Code of Conduct applies within all community spaces, and also applies when
-an individual is officially representing the community in public spaces.
-Examples of representing our community include using an official e-mail address,
-posting via an official social media account, or acting as an appointed
-representative at an online or offline event.
+### Glossary
 
-## Enforcement
+**Demeaning behavior**
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the community leaders responsible for enforcement at <marvin.hansen@gmail.com>.
-All complaints will be reviewed and investigated promptly and fairly.
+is acting in a way that reduces another person’s dignity, sense of self-worth or respect within the community.
 
-All community leaders are obligated to respect the privacy and security of the
-reporter of any incident.
+**Discrimination**
 
-## Enforcement Guidelines
+is the prejudicial treatment of an individual based on criteria such as: physical appearance, race, ethnic origin,
+genetic differences, national or social origin, name, religion, gender, sexual orientation, family or health situation,
+pregnancy, disability, age, education, wealth, domicile, political view, morals, employment, or union activity.
 
-Community leaders will follow these Community Impact Guidelines in determining
-the consequences for any action they deem in violation of this Code of Conduct:
+**Insulting behavior**
 
-### 1. Correction
+is treating another person with scorn or disrespect.
 
-**Community Impact**: Use of inappropriate language or other behavior deemed
-unprofessional or unwelcome in the community.
+**Acknowledgement**
 
-**Consequence**: A private, written warning from community leaders, providing
-clarity around the nature of the violation and an explanation of why the
-behavior was inappropriate. A public apology may be requested.
+is a record of the origin(s) and author(s) of a contribution.
 
-### 2. Warning
+**Harassment**
 
-**Community Impact**: A violation through a single incident or series
-of actions.
+is any conduct, verbal or physical, that has the intent or effect of interfering with an individual, or that creates an
+intimidating, hostile, or offensive environment.
 
-**Consequence**: A warning with consequences for continued behavior. No
-interaction with the people involved, including unsolicited interaction with
-those enforcing the Code of Conduct, for a specified period of time. This
-includes avoiding interactions in community spaces as well as external channels
-like social media. Violating these terms may lead to a temporary or
-permanent ban.
+**Leadership position**
 
-### 3. Temporary Ban
+includes group Chairs, project maintainers, staff members, and Board members.
 
-**Community Impact**: A serious violation of community standards, including
-sustained inappropriate behavior.
+**Participant**
 
-**Consequence**: A temporary ban from any sort of interaction or public
-communication with the community for a specified period of time. No public or
-private interaction with the people involved, including unsolicited interaction
-with those enforcing the Code of Conduct, is allowed during this period.
-Violating these terms may lead to a permanent ban.
+includes the following persons:
 
-### 4. Permanent Ban
+* Developers
+* Representatives of corporate participants
+* Anyone from the Public partaking in DeepCausality Projects work environment (e.g. contribute code, comment on our code
+  or specs, email us, attend our conferences, functions, etc)
 
-**Community Impact**: Demonstrating a pattern of violation of community
-standards, including sustained inappropriate behavior,  harassment of an
-individual, or aggression toward or disparagement of classes of individuals.
+**Respect**
 
-**Consequence**: A permanent ban from any sort of public interaction within
-the community.
+is the genuine consideration you have for someone (if only because of their status as participant in DeepCausality Projects, like
+yourself), and that you show by treating them in a polite and kind way.
+
+**Sexual harassment**
+
+includes visual displays of degrading sexual images, sexually suggestive conduct, offensive remarks of a sexual nature,
+requests for sexual favors, unwelcome physical contact, and sexual assault.
+
+**Unwelcome behavior**
+
+Hard to define? Some questions to ask yourself are:
+
+* how would I feel if I were in the position of the recipient?
+* would my spouse, parent, child, sibling or friend like to be treated this way?
+* would I like an account of my behavior published in the organization’s newsletter?
+* could my behavior offend or hurt other members of the work group?
+* could someone misinterpret my behavior as intentionally harmful or harassing?
+* would I treat my boss or a person I admire at work like that ?
+
+Summary: if you are unsure whether something might be welcome or unwelcome, don’t do it.
+
+**Unwelcome sexual advance**
+
+includes requests for sexual favors, and other verbal or physical conduct of a sexual nature, where:
+
+submission to such conduct is made either explicitly or implicitly a term or condition of an individual’s employment,
+submission to or rejection of such conduct by an individual is used as a basis for employment decisions affecting the
+individual, such conduct has the purpose or effect of unreasonably interfering with an individual’s work performance or
+creating an
+intimidating hostile or offensive working environment.
+
+**Workplace Bullying**
+
+is a tendency of individuals or groups to use persistent aggressive or unreasonable behavior (e.g. verbal or written
+abuse, offensive conduct or any interference which undermines or impedes work) against a co-worker or any professional
+relations.
+
+**Work Environment**
+
+is the set of all available means of collaboration, including, but not limited to messages to mailing lists, private
+correspondence, Web pages, chat channels, phone and video teleconferences, and any kind of face-to-face meetings or
+discussions.
+
+**Incident Procedure**
+
+To report incidents or to appeal reports of incidents, send email to the active maintainer as stated in the README.md.
+Please include any available relevant information, including links to any publicly accessible
+material relating to the matter. Every effort will be taken to ensure a safe and collegial environment in which to
+collaborate on matters relating to the Project. In order to protect the community, the Project reserves the right to
+take appropriate action, potentially including the removal of an individual from any and all participation in the
+project. The Project will work towards an equitable resolution in the event of a misunderstanding.
 
 ## Attribution
 
-This Code of Conduct is adapted from the [Contributor Covenant](https://contributor-covenant.org/), version
-[1.4](https://www.contributor-covenant.org/version/1/4/code-of-conduct/code_of_conduct.md) and
-[2.0](https://www.contributor-covenant.org/version/2/0/code_of_conduct/code_of_conduct.md),
-and was generated by [contributing-gen](https://github.com/bttger/contributing-gen).
+This code is based on the [Linux Foundations Code of Conduct](https://lfprojects.org/policies/code-of-conduct/). 
