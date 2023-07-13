@@ -6,6 +6,7 @@
 ![Audit][audit-url]
 ![Tests][test-url]
 ![Clippy][clippy-url]
+[![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/7568/badge)](https://bestpractices.coreinfrastructure.org/projects/7568)
 
 [crates-badge]: https://img.shields.io/badge/Crates.io-Latest-blue
 
