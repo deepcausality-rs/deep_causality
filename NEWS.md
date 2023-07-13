@@ -1,3 +1,5 @@
+# What's New
+
 ## [0.2.4](https://github.com/deepcausality-rs/deep_causality/releases/tag/0.2.4) (2023-07-10)
 
 > Description
