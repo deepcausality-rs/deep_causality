@@ -23,3 +23,7 @@ Please include as much of the information as you can to help us better understan
 ## Reponse time
 
 We aim to respond within 7 to 10 working days to reported security vulnerabilities.
+
+## Disclosure
+
+We identify every known security vulnerability after it was closed in the release notes,
