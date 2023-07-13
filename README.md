@@ -1,15 +1,19 @@
 # DeepCausality
 
 [![Crates.io][crates-badge]][crates-url]
+[![Docs.rs][docs-badge]][docs-url]
 [![MIT licensed][mit-badge]][mit-url]
 ![Audit][audit-url]
 ![Tests][test-url]
 ![Clippy][clippy-url]
 
-
 [crates-badge]: https://img.shields.io/badge/Crates.io-Latest-blue
 
 [crates-url]: https://crates.io/crates/deep_causality
+
+[docs-badge]: https://img.shields.io/badge/Docs.rs-Latest-blue
+
+[docs-url]: https://docs.rs/deep_causality/latest/deep_causality/
 
 [mit-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
@@ -151,6 +155,26 @@ before all make commands work:
     make test           Runs all tests across all crates.
 ```
 
+## 👩‍👩‍👧‍👦 Community
+
+* [Code of Conduct](CODE_OF_CONDUCT.md)
+* [Support](SUPPORT.md)
+
+## 👨‍💻👩‍💻 Contribution
+
+Contributions are welcomed especially related to documentation, example code, and fixes.
+If unsure where to start, open an issue and ask. For more significant code contributions,
+please run make test and make check locally before opening a PR.
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in deep_causality by you,
+shall be licensed under the MIT license without additional terms or conditions.
+
+For details:
+
+* [Code of Conduct](CODE_OF_CONDUCT.md)
+* [Contributing](CONTRIBUTING.md)
+* [Release](RELEASE.md)
+
 ## 🙏 Credits
 
 The project took inspiration by work from several researchers and their teams:
@@ -170,15 +194,6 @@ Parts of the implementation are inspired by:
 * [Differentiable Types](https://github.com/tensorflow/swift/blob/main/docs/DifferentiableTypes.md)
 * [Extension Trait](http://xion.io/post/code/rust-extension-traits.html)
 * [Storage API](https://github.com/petgraph/petgraph/issues/563)
-
-## 👨‍💻👩‍💻 Contribution
-
-Contributions are welcomed especially related to documentation, example code, and fixes.
-If unsure where to start, open an issue and ask. For more significant code contributions, 
-please run make test and make check locally before opening a PR.
-
-Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in deep_causality by you,
-shall be licensed under the MIT license without additional terms or conditions.
 
 ## 📜 Licence
 
