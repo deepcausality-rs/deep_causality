@@ -55,14 +55,8 @@ at [how is deep causality different from deep learning?](docs/difference.md)
 ## 📚 Docs
 
 * [API Docs](https://docs.rs/deep_causality/0.2.4/deep_causality/)
-* [Motivation](docs/motivation.md)
-* [How is deep causality different?](docs/difference.md)
-* [Causal Structure](docs/causal_structure.md)
-* [Causal State Machine (CSM)](docs/causal_state_machine.md)
-* [Concepts](docs/concepts.md)
-* [Context](docs/context.md)
-* [Heilmeier Questions](docs/heilmeier_questions.md)
-* [Limitations](docs/limitations.md)
+* [Docs](docs/README.md)
+
 
 ## 🚀 Install
 
