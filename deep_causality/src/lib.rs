@@ -6,4 +6,8 @@ pub mod protocols;
 pub mod prelude;
 pub mod types;
 pub mod utils;
-pub (crate) mod errors;
+pub mod errors;
+
+/// DeepCausality is a hyper-geometric computational causality library
+/// that enables fast and deterministic context-aware causal reasoning over complex causality models.
+
