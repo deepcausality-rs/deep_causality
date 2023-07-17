@@ -14,6 +14,7 @@ pub struct CSM<'l> {
 
 impl<'l> CSM<'l>
 {
+    /// Constructs a new CSM.
     pub fn new(
         state_actions: &'l [(&'l CausalState<'l>, &'l CausalAction)]
     )
@@ -28,13 +29,21 @@ impl<'l> CSM<'l>
         Self { state_actions: RefCell::new(state_map) }
     }
 
+    /// Returns the number of elements in the CSM.
     pub fn len(&self) -> usize {
         self.state_actions.borrow().len()
+    }
+
+    /// Returns true if the CSM contains no elements.
+    pub fn is_empty(&self) -> bool{
+        self.state_actions.borrow().is_empty()
     }
 }
 
 impl<'l> CSM<'l>
 {
+    /// Inserts a new state action at the index position idx.
+    /// Returns UpdateError if the index already exists.
     pub fn add_single_state(
         &self,
         idx: usize,
@@ -53,6 +62,8 @@ impl<'l> CSM<'l>
         Ok(())
     }
 
+    /// Removes a state action at the index position idx.
+    /// Returns UpdateError if the index does not exists.
     pub fn remove_single_state(
         &self,
         id: usize,
@@ -77,6 +88,8 @@ impl<'l> CSM<'l>
 
 impl<'l> CSM<'l>
 {
+    /// Evaluates a single causal state at the index position idx.
+    /// Returns ActionError if the evaluation failed.
     pub fn eval_single_state(
         &self,
         id: usize,
@@ -109,15 +122,15 @@ impl<'l> CSM<'l>
             .expect("CSM[eval]: Failed to unwrap evaluation result from causal state}");
 
         // If the state evaluated to true, fire the associated action.
-        if trigger {
-            if action.fire().is_err() {
+        if trigger && action.fire().is_err() {
                 return Err(ActionError(format!("CSM[eval]: Failed to fire action associated with causal state {}", state)));
-            }
         }
 
         Ok(())
     }
 
+    /// Updates a causal state with a new state at the index position idx.
+    /// Returns UpdateError if the update operation failed.
     pub fn update_single_state(
         &self,
         idx: usize,
@@ -142,6 +155,8 @@ impl<'l> CSM<'l>
 
 impl<'l> CSM<'l>
 {
+    /// Evaluates all causal states in the CSM.
+    /// Returns ActionError if the evaluation failed.
     pub fn eval_all_states(&self) -> Result<(), ActionError>
     {
         for (_, (state, action)) in self.state_actions.borrow().iter() {
@@ -157,16 +172,17 @@ impl<'l> CSM<'l>
                 .expect("CSM[eval]: Failed to unwrap evaluation result from causal state}");
 
             // If the state evaluated to true, fire the associated action.
-            if trigger {
-                if action.fire().is_err() {
+            if trigger && action.fire().is_err() {
                     return Err(ActionError(format!("CSM[eval]: Failed to fire action associated with causal state {}", state)));
-                }
             }
         }
 
         Ok(())
     }
 
+    /// Updates all causal state with a new state collection.
+    /// Note, this operation erases all previous states in the CSM by generating a new collection.
+    /// Returns UpdateError if the update operation failed.
     pub fn update_all_states(&self, state_actions: &'l [(&'l CausalState<'l>, &'l CausalAction)])
     {
         // Generate a new HashMap from the collection
