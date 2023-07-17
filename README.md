@@ -146,11 +146,13 @@ before all make commands work:
 * [outdated](https://github.com/kbknapp/cargo-outdated)
 * [udeps](https://crates.io/crates/cargo-udeps)
 * [audit](https://crates.io/crates/cargo-audit)
+* [llvm-cov](https://github.com/taiki-e/cargo-llvm-cov#installation)
 
 ```bash 
     make build          Builds the code base incrementally (fast).
     make bench          Runs all benchmarks across all crates.
     make check          Checks the code base for security vulnerabilities.
+    make coverage       Checks test coverage and generates a html report.
     make example        Runs the default example: Smoking.
     make fix            Auto-fixes linting issues as reported by cargo and clippy.
     make test           Runs all tests across all crates.

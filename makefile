@@ -8,6 +8,7 @@ help:
 	@echo '    make build   	Builds the code base incrementally (fast) for dev.'
 	@echo '    make bench   	Runs all benchmarks across all crates.'
 	@echo '    make check   	Checks the code base for security vulnerabilities.'
+	@echo '    make coverage   	Checks test coverage and generates a html report.'
 	@echo '    make example   	Runs the default example: Smoking.'
 	@echo '    make fix   		Fixes linting issues as reported by cargo'
 	@echo '    make test   	Runs all tests across all crates.'
@@ -35,6 +36,11 @@ check:
 .PHONY: clean
 clean:
 	@source scripts/clean.sh
+
+
+.PHONY: coverage
+coverage:
+	@source scripts/coverage.sh
 
 
 PHONY: example
