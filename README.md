@@ -6,7 +6,16 @@
 ![Audit][audit-url]
 ![Tests][test-url]
 ![Clippy][clippy-url]
-[![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/7568/badge)](https://bestpractices.coreinfrastructure.org/projects/7568)
+[![codecov][codecov-badge]][codecov-url]
+[![OpenSSF Best Practices][ossf-badge]][ossf-url]
+
+[codecov-badge]: https://codecov.io/gh/deepcausality-rs/deep_causality/branch/main/graph/badge.svg?token=W9TA1VVJ7O
+
+[codecov-url]: https://codecov.io/gh/deepcausality-rs/deep_causality
+
+[ossf-badge]: https://bestpractices.coreinfrastructure.org/projects/7568/badge
+
+[ossf-url]:https://bestpractices.coreinfrastructure.org/projects/7568
 
 [crates-badge]: https://img.shields.io/badge/Crates.io-Latest-blue
 
