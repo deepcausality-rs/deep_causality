@@ -6,8 +6,8 @@
 ![Audit][audit-url]
 ![Tests][test-url]
 ![Clippy][clippy-url]
-[![codecov][codecov-badge]][codecov-url]
 [![OpenSSF Best Practices][ossf-badge]][ossf-url]
+[![codecov][codecov-badge]][codecov-url]
 
 [codecov-badge]: https://codecov.io/gh/deepcausality-rs/deep_causality/branch/main/graph/badge.svg?token=W9TA1VVJ7O
 
