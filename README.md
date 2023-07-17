@@ -62,7 +62,7 @@ cargo add deep_causality
 Alternatively, add the following to your Cargo.toml
 
 ```toml
-deep_causality =  "0.2.4" 
+deep_causality =  "0.2.6" 
 ```
 
 ## ⭐ Usage
