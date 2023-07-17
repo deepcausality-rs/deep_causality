@@ -97,7 +97,7 @@ before all make commands work:
 * [audit](https://crates.io/crates/cargo-audit)
 * [llvm-cov](https://github.com/taiki-e/cargo-llvm-cov#installation)
 
-```toml
+```bash
     make build          Builds the code base incrementally (fast).
     make bench          Runs all benchmarks across all crates.
     make check          Checks the code base for security vulnerabilities.
