@@ -10,27 +10,21 @@
 [![codecov][codecov-badge]][codecov-url]
 
 [codecov-badge]: https://codecov.io/gh/deepcausality-rs/deep_causality/branch/main/graph/badge.svg?token=W9TA1VVJ7O
-
 [codecov-url]: https://codecov.io/gh/deepcausality-rs/deep_causality
 
 [ossf-badge]: https://bestpractices.coreinfrastructure.org/projects/7568/badge
-
 [ossf-url]:https://bestpractices.coreinfrastructure.org/projects/7568
 
 [crates-badge]: https://img.shields.io/badge/Crates.io-Latest-blue
-
 [crates-url]: https://crates.io/crates/deep_causality
 
 [docs-badge]: https://img.shields.io/badge/Docs.rs-Latest-blue
-
 [docs-url]: https://docs.rs/deep_causality/latest/deep_causality/
 
 [mit-badge]: https://img.shields.io/badge/License-MIT-blue.svg
-
 [mit-url]: https://github.com/deepcausality-rs/deep_causality/blob/main/LICENSE
 
 [audit-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/audit.yml/badge.svg
-
 [clippy-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/rust-clippy.yml/badge.svg
 
 [test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
@@ -49,14 +43,13 @@ at [how is deep causality different from deep learning?](docs/difference.md)
    structures.
 3) DeepCausality enables context awareness across data-like, time-like, space-like, spacetime-like entities stored
    within (multiple) context-hyper-graphs.
-4) DeepCausality simplified modeling of complex tempo-spatial patterns.
+4) DeepCausality simplifies modeling of complex tempo-spatial patterns.
 5) DeepCausality comes with [Causal State Machine (CSM)](docs/causal_state_machine.md)
 
 ## 📚 Docs
 
 * [API Docs](https://docs.rs/deep_causality/0.2.4/deep_causality/)
 * [Docs](docs/README.md)
-
 
 ## 🚀 Install
 
@@ -84,12 +77,12 @@ See:
 
 A causal state machine models a context-free system where each cause maps to a known effect. The example below
 models a sensor network that screens an industry site for smoke, fire, and explosions. Because the
-sensors are reliable, an alert will be raised whenever the sensor exceeds a certain threshold. 
+sensors are reliable, an alert will be raised whenever the sensor exceeds a certain threshold.
 You could implement this kind of system in many different ways, but as the example shows, the causal state machine makes
-the system relatively easy to maintain. New sensors, for example, from a drone inspection, can be added and evaluated dynamically.
+the system relatively easy to maintain. New sensors, for example, from a drone inspection, can be added and evaluated
+dynamically.
 
 [Full example code](deep_causality/examples/csm)
-
 
 ## 🛠️ Cargo & Make
 
@@ -104,7 +97,7 @@ before all make commands work:
 * [audit](https://crates.io/crates/cargo-audit)
 * [llvm-cov](https://github.com/taiki-e/cargo-llvm-cov#installation)
 
-```bash 
+```toml
     make build          Builds the code base incrementally (fast).
     make bench          Runs all benchmarks across all crates.
     make check          Checks the code base for security vulnerabilities.
@@ -136,7 +129,7 @@ For details:
 
 ## 🙏 Credits
 
-The project took inspiration by work from several researchers and their teams:
+The project took inspiration from several researchers and their projects in the field:
 
 * [Judea Pearl](http://bayes.cs.ucla.edu/jp_home.html) at UCLA
 * [Lucien Hardy](https://perimeterinstitute.ca/people/lucien-hardy) at the Perimeter Institute
@@ -145,14 +138,15 @@ The project took inspiration by work from several researchers and their teams:
 * [Miguel Hernan](https://www.hsph.harvard.edu/miguel-hernan/), [Causal Lab](https://causalab.sph.harvard.edu/) at
   Harvard University
 * [Elias Bareinboim](https://causalai.net/) at Columbia University
-* [Causality and Machine Learning](https://www.microsoft.com/en-us/research/group/causal-inference/) at Microsoft
-  Research
+* [Causality and Machine Learning](https://www.microsoft.com/en-us/research/group/causal-inference/) at Microsoft Research
 
 Parts of the implementation are inspired by:
 
 * [Differentiable Types](https://github.com/tensorflow/swift/blob/main/docs/DifferentiableTypes.md)
 * [Extension Trait](http://xion.io/post/code/rust-extension-traits.html)
 * [Storage API](https://github.com/petgraph/petgraph/issues/563)
+
+Finally, inspiration, especially related to the hypergraph structure, was derived from reading the [Quanta Magazine](https://www.quantamagazine.org/). 
 
 ## 📜 Licence
 
