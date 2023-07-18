@@ -1,4 +1,4 @@
-# Checklist for hoisting at the Linux Foundation
+# Checklist for hosting DeepCausality with LF AI & Data
 
 ## Basic preparations in the GH org and repo
 
@@ -7,7 +7,7 @@
 
 :white_check_mark: Install the GitHub DCO app on all repos.
 
-:white_check_mark: Achieve the basic OpenSSF badge [Link](https://bestpractices.coreinfrastructure.org/en/projects/7568)
+:white_check_mark: [Achieve the basic OpenSSF badge](https://bestpractices.coreinfrastructure.org/en/projects/7568)
 
 :white_check_mark: Have the following files in GitHub:
 
@@ -20,7 +20,7 @@
 * [SUPPORT.md](../SUPPORT.md)
 * [SECURITY.md ](../SECURITY.md)
 
-## Community Standards
+## Github Community Standards
 
 :white_check_mark: Description
 
@@ -40,9 +40,7 @@
 
 :white_check_mark:  Repository admins accept content reports
 
-
-
-## Github security 
+## Github Security 
 
 :white_check_mark: Verified & approved domains: deepcausality.com
 
@@ -60,3 +58,35 @@
 
 :white_check_mark: Secret scanning alerts • Enabled
 
+## OSS LICENSING
+
+:white_check_mark: Project license exists and is OSI-approved:
+* Project license: [The MIT LICENSE.md](../LICENSE)
+* OSI-approved: [The MIT License](https://opensource.org/license/mit/)
+
+:white_check_mark: Determine known components/dependencies are under a compatible license
+* OSI-approved: [Apache License, Version 2.0](https://opensource.org/license/apache-2-0/)
+* OSI-approved: [The MIT License](https://opensource.org/license/mit/)
+
+**Project components (Crates):**
+
+* dcl_data_structures: [The MIT LICENSE.md](https://github.com/deepcausality-rs/deep_causality/blob/main/dcl_data_structures/LICENSE)
+
+* deep_causality_macros: [The MIT LICENSE](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality_macros/LICENSE)
+
+* deep_causality: [The MIT LICENSE](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/LICENSE)
+
+
+**Project git repositories:**
+
+* deep_causality: [The MIT LICENSE](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/LICENSE)
+
+* .github (GH Org Readme): [The MIT LICENSE](https://github.com/deepcausality-rs/.github/blob/main/LICENSE)
+
+* sites (Project websites): [https://github.com/deepcausality-rs/sites/blob/main/LICENSE)
+
+**Project dependencies:**
+
+* PetGraph ([Project](https://github.com/petgraph/petgraph)): [Apache-2.0, MIT licenses ](https://github.com/petgraph/petgraph)
+* criterion.rs ([Project](https://github.com/bheisler/criterion.rs)): [Apache-2.0, MIT licenses ](https://github.com/bheisler/criterion.rs#license)
+* rand ([Project](https://github.com/rust-random/rand)): [Apache-2.0, MIT licenses ](https://github.com/rust-random/rand)
