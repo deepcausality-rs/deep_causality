@@ -38,7 +38,7 @@ at [how is deep causality different from deep learning?](deep_causality/docs/dif
 
 ## 🤔 Why DeepCausality?
 
-1) DeepCausality is written in Rust with production-grade safety, reliability, and performance in mind.
+1) DeepCausality is written in Rust with safety, reliability, and performance in mind.
 2) DeepCausality provides recursive causal data structures that concisely express arbitrary complex causal
    structures.
 3) DeepCausality enables context awareness across data-like, time-like, space-like, spacetime-like entities stored
