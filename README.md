@@ -139,6 +139,7 @@ The project took inspiration from several researchers and their projects in the 
   Harvard University
 * [Elias Bareinboim](https://causalai.net/) at Columbia University
 * [Causality and Machine Learning](https://www.microsoft.com/en-us/research/group/causal-inference/) at Microsoft Research
+* [Causal ML](https://github.com/uber/causalml) at uber.
 
 Parts of the implementation are inspired by:
 
