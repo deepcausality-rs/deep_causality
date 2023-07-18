@@ -34,7 +34,7 @@ Web: https://deepcausality.com
 DeepCausality is a hyper-geometric computational causality library that enables fast and deterministic context-aware
 causal reasoning over complex multi-stage causality models. Deep Causality adds only minimal overhead and thus is
 suitable for real-time applications without additional acceleration hardware. Take a look
-at [how is deep causality different from deep learning?](docs/difference.md)
+at [how is deep causality different from deep learning?](deep_causality/docs/difference.md)
 
 ## 🤔 Why DeepCausality?
 
@@ -44,12 +44,12 @@ at [how is deep causality different from deep learning?](docs/difference.md)
 3) DeepCausality enables context awareness across data-like, time-like, space-like, spacetime-like entities stored
    within (multiple) context-hyper-graphs.
 4) DeepCausality simplifies modeling of complex tempo-spatial patterns.
-5) DeepCausality comes with [Causal State Machine (CSM)](docs/causal_state_machine.md)
+5) DeepCausality comes with [Causal State Machine (CSM)](deep_causality/docs/causal_state_machine.md)
 
 ## 📚 Docs
 
 * [API Docs](https://docs.rs/deep_causality/0.2.4/deep_causality/)
-* [Docs](docs/README.md)
+* [Docs](deep_causality/docs/README.md)
 
 ## 🚀 Install
 

@@ -45,7 +45,7 @@ DeepCausality manages bug and enhancement using it's [issue tracker](https://git
 
 [api_docs]: https://docs.rs/deep_causality/latest/deep_causality/
 
-[docs]: docs/README.md
+[docs]: deep_causality/docs/README.md
 
 [coc]: CODE_OF_CONDUCT.md
 
