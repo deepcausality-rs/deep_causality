@@ -68,7 +68,7 @@
 * OSI-approved: [Apache License, Version 2.0](https://opensource.org/license/apache-2-0/)
 * OSI-approved: [The MIT License](https://opensource.org/license/mit/)
 
-**Project components (Crates):**
+:white_check_mark: **Project components (Crates):**
 
 * dcl_data_structures: [The MIT LICENSE.md](https://github.com/deepcausality-rs/deep_causality/blob/main/dcl_data_structures/LICENSE)
 
@@ -77,15 +77,15 @@
 * deep_causality: [The MIT LICENSE](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/LICENSE)
 
 
-**Project git repositories:**
+:white_check_mark: **Project git repositories:**
 
 * deep_causality: [The MIT LICENSE](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/LICENSE)
 
 * .github (GH Org Readme): [The MIT LICENSE](https://github.com/deepcausality-rs/.github/blob/main/LICENSE)
 
-* sites (Project websites): [https://github.com/deepcausality-rs/sites/blob/main/LICENSE)
+* sites (Project websites): [The MIT LICENSE](https://github.com/deepcausality-rs/sites/blob/main/LICENSE)
 
-**Project dependencies:**
+:white_check_mark: **Project dependencies:**
 
 * PetGraph ([Project](https://github.com/petgraph/petgraph)): [Apache-2.0, MIT licenses ](https://github.com/petgraph/petgraph)
 * criterion.rs ([Project](https://github.com/bheisler/criterion.rs)): [Apache-2.0, MIT licenses ](https://github.com/bheisler/criterion.rs#license)
