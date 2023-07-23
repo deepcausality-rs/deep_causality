@@ -7,7 +7,17 @@ use crate::prelude::*;
 use crate::types::alias_types::{DescriptionValue, EvalFn, IdentificationValue, NumericalValue};
 use crate::types::reasoning_types;
 
-pub fn get_test_assumption_coll()
+pub fn get_test_assumption_arr()
+    -> [Assumption; 3]
+{
+    let a1 = get_test_assumption();
+    let a2 = get_test_assumption();
+    let a3 = get_test_assumption();
+    [a1, a2, a3]
+}
+
+
+pub fn get_test_assumption_vec()
     -> Vec<Assumption>
 {
     let a1 = get_test_assumption();
