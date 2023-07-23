@@ -53,16 +53,10 @@ at [how is deep causality different from deep learning?](deep_causality/docs/dif
 
 ## 🚀 Install
 
-Just run:
+In the project folder, just run in aa terminal:
 
 ```bash
 cargo add deep_causality
-```
-
-Alternatively, add the following to your Cargo.toml
-
-```toml
-deep_causality =  "0.2.7" 
 ```
 
 ## ⭐ Usage
@@ -138,7 +132,8 @@ The project took inspiration from several researchers and their projects in the 
 * [Miguel Hernan](https://www.hsph.harvard.edu/miguel-hernan/), [Causal Lab](https://causalab.sph.harvard.edu/) at
   Harvard University
 * [Elias Bareinboim](https://causalai.net/) at Columbia University
-* [Causality and Machine Learning](https://www.microsoft.com/en-us/research/group/causal-inference/) at Microsoft Research
+* [Causality and Machine Learning](https://www.microsoft.com/en-us/research/group/causal-inference/) at Microsoft
+  Research
 * [Causal ML](https://github.com/uber/causalml) at uber.
 
 Parts of the implementation are inspired by:
@@ -147,7 +142,8 @@ Parts of the implementation are inspired by:
 * [Extension Trait](http://xion.io/post/code/rust-extension-traits.html)
 * [Storage API](https://github.com/petgraph/petgraph/issues/563)
 
-Finally, inspiration, especially related to the hypergraph structure, was derived from reading the [Quanta Magazine](https://www.quantamagazine.org/). 
+Finally, inspiration, especially related to the hypergraph structure, was derived from reading
+the [Quanta Magazine](https://www.quantamagazine.org/).
 
 ## 📜 Licence
 
