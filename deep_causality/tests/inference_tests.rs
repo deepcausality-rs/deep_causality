@@ -6,12 +6,12 @@ use deep_causality::prelude::Inference;
 use deep_causality::protocols::inferable::Inferable;
 use deep_causality::protocols::observable::ObservableReasoning;
 use deep_causality::types::alias_types::DescriptionValue;
-use deep_causality::utils::test_utils::get_test_obs_coll;
+use deep_causality::utils::test_utils::get_test_obs_vec;
 
 #[test]
 fn test_inferable() {
     let question = "Test inference ".to_string() as DescriptionValue;
-    let all_obs = get_test_obs_coll();
+    let all_obs = get_test_obs_vec();
     let target_effect = 1.0;
     let target_threshold = 10.0;
     let observation = all_obs.percent_observation(target_threshold, target_effect);
@@ -27,7 +27,7 @@ fn test_inverse_inferable() {
     let question = "Test inference  ".to_string() as DescriptionValue;
     let target_effect = 0.0;
     let target_threshold = 10.0;
-    let all_obs = get_test_obs_coll();
+    let all_obs = get_test_obs_vec();
     let observation = all_obs.percent_observation(target_threshold, target_effect);
 
     // inversion means, no observation means no effect hence inverted inference.

@@ -29,6 +29,10 @@ mod inferable_collection_tests;
 #[cfg(test)]
 mod inference_tests;
 #[cfg(test)]
-mod observable_collection_tests;
+mod observable_arr_tests;
+#[cfg(test)]
+mod observable_map_tests;
+#[cfg(test)]
+mod observable_vec_tests;
 #[cfg(test)]
 mod observation_tests;
