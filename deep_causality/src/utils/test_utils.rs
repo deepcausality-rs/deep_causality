@@ -44,7 +44,7 @@ pub fn get_test_obs_map()
     let o3 = Observation::new(2, 10.0, 1.0);
     let o4 = Observation::new(3, 12.0, 0.0);
     let o5 = Observation::new(4, 14.0, 0.0);
-    HashMap::from_iter([(1,o1), (2,o2), (3,o3), (4,o4), (5,o5)])
+    HashMap::from_iter([(1, o1), (2, o2), (3, o3), (4, o4), (5, o5)])
 }
 
 pub fn get_test_obs_arr()
@@ -59,7 +59,23 @@ pub fn get_test_obs_arr()
     [o1, o2, o3, o4, o5]
 }
 
-pub fn get_test_inf_coll()
+pub fn get_test_inf_arr()
+    -> [Inference; 2]
+{
+    let i1 = get_test_inferable(0, true);
+    let i2 = get_test_inferable(1, false);
+    [i1, i2]
+}
+
+pub fn get_test_inf_map()
+    -> HashMap<usize, Inference>
+{
+    let i1 = get_test_inferable(0, true);
+    let i2 = get_test_inferable(1, false);
+    HashMap::from_iter([(1, i1), (2, i2)])
+}
+
+pub fn get_test_inf_vec()
     -> Vec<Inference>
 {
     let i1 = get_test_inferable(0, true);
