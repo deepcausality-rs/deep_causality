@@ -84,7 +84,17 @@ fn test_percent_active()
 }
 
 #[test]
-fn test_size()
+fn test_get_all_items() {
+    let col = get_test_causality_map();
+    let all_items = col.get_all_items();
+
+    let exp_len = col.len();
+    let actual_len = all_items.len();
+    assert_eq!(exp_len, actual_len);
+}
+
+#[test]
+fn test_len()
 {
     let map = get_test_causality_map();
     assert_eq!(3, map.len());
@@ -95,4 +105,11 @@ fn test_is_empty()
 {
     let map = get_test_causality_map();
     assert!(!map.is_empty());
+}
+
+#[test]
+fn test_to_vec()
+{
+    let map = get_test_causality_map();
+    assert_eq!(3, map.to_vec().len());
 }

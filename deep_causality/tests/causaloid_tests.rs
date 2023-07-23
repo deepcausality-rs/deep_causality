@@ -22,7 +22,7 @@ fn test_from_causal_collection() {
     let id: IdentificationValue = 01;
     let description: String = "tests whether data exceeds threshold of 0.55".to_string() as DescriptionValue;
     let data_set_id = "Test data".to_string() as DescriptionValue;
-    let causal_coll = test_utils::get_test_causality_coll();
+    let causal_coll = test_utils::get_test_causality_vec();
 
     let data = [0.89, 0.89, 0.99];
     assert_eq!(data.len(), causal_coll.len());

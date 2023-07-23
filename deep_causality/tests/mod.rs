@@ -9,15 +9,15 @@ mod assumable_vec_tests;
 #[cfg(test)]
 mod assumption_tests;
 #[cfg(test)]
-mod causality_array_tests;
+mod causable_arr_tests;
 #[cfg(test)]
-mod causality_collection_tests;
+mod causable_vec_tests;
 #[cfg(test)]
 mod causality_graph_reasoning_tests;
 #[cfg(test)]
 mod causality_graph_tests;
 #[cfg(test)]
-mod causality_map_tests;
+mod causable_map_tests;
 #[cfg(test)]
 mod causaloid_tests;
 #[cfg(test)]

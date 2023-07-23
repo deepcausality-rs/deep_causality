@@ -99,7 +99,7 @@ pub fn get_test_causality_array() -> [Causaloid; 10]
     array::from_fn(|_| get_test_causaloid())
 }
 
-pub fn get_test_causality_coll()
+pub fn get_test_causality_vec()
     -> Vec<Causaloid>
 {
     let q1 = get_test_causaloid();
