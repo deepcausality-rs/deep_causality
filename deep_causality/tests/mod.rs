@@ -27,6 +27,8 @@ mod csm_tests;
 #[cfg(test)]
 mod inferable_arr_tests;
 #[cfg(test)]
+mod inferable_map_tests;
+#[cfg(test)]
 mod inferable_vec_tests;
 #[cfg(test)]
 mod inference_tests;
