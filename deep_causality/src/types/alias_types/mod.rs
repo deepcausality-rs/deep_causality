@@ -14,4 +14,4 @@ pub type DescriptionValue = String;
 pub type EvalFn = fn(&[NumericalValue]) -> bool;
 pub type CausalFn = fn(NumericalValue) -> Result<bool, CausalityError>;
 pub type ContextMatrixGraph<D, S, T, ST> = MGraph<Node<D, S, T, ST>, RelationKind, Directed, Option<RelationKind>, u32>;
-//pub type MatrixGraph<N, E> = petgraph::matrix_graph::MatrixGraph<N, E>;
+pub type MatrixGraph<N, E> = petgraph::matrix_graph::MatrixGraph<N, E>;
