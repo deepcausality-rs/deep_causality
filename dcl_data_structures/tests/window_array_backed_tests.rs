@@ -1,6 +1,6 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use dcl_data_structures::prelude::{ArrayStorage, SlidingWindow,window_type};
+use dcl_data_structures::prelude::{ArrayStorage, SlidingWindow, window_type};
 
 const SIZE: usize = 4;
 const CAPACITY: usize = 1200;
@@ -23,6 +23,12 @@ fn test_empty() {
     window.push(d1);
     assert_eq!(window.size(), SIZE);
     assert!(!window.empty());
+}
+
+#[test]
+fn test_default() {
+    let window: SlidingWindow<ArrayStorage<Data, SIZE, CAPACITY>, Data> = window_type::default_array_storage();
+    assert_eq!(window.size(), SIZE);
 }
 
 #[test]
@@ -314,6 +320,6 @@ fn test_arr_err() {
     assert_eq!(window.size(), SIZE);
     assert!(!window.filled());
 
-    let arr:  Result<[Data; SIZE], String>= window.arr();
+    let arr: Result<[Data; SIZE], String> = window.arr();
     assert!(arr.is_err());
 }

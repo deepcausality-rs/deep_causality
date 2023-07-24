@@ -99,6 +99,16 @@ pub fn new_with_array_storage<T: PartialEq + Copy + Default, const SIZE: usize, 
     )
 }
 
+pub fn default_array_storage<T: PartialEq + Copy + Default, const SIZE: usize, const CAPACITY: usize>()
+    -> SlidingWindow<ArrayStorage<T, SIZE, CAPACITY>, T>
+{
+    assert!(CAPACITY > SIZE);
+
+    SlidingWindow::with_storage(
+        ArrayStorage::default()
+    )
+}
+
 pub struct SlidingWindow<S, T>
     where
         T: PartialEq + Copy + Default,
