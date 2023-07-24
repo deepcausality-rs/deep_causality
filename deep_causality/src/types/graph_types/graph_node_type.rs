@@ -40,6 +40,14 @@ impl<D, S, T, ST> NodeType<D, S, T, ST>
         ST: SpaceTemporal,
 
 {
+    pub fn root(&self) -> Option<&Root> {
+        if let NodeType::Root(b) = self {
+            Some(b)
+        } else {
+            None
+        }
+    }
+
     pub fn dataoid(&self) -> Option<&D> {
         if let NodeType::Datoid(b) = self {
             Some(b)
@@ -49,13 +57,6 @@ impl<D, S, T, ST> NodeType<D, S, T, ST>
     }
     pub fn tempoid(&self) -> Option<&T> {
         if let NodeType::Tempoid(b) = self {
-            Some(b)
-        } else {
-            None
-        }
-    }
-    pub fn root(&self) -> Option<&Root> {
-        if let NodeType::Root(b) = self {
             Some(b)
         } else {
             None
