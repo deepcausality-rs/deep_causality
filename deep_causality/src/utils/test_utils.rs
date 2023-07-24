@@ -5,7 +5,6 @@ use std::collections::HashMap;
 use crate::errors::CausalityError;
 use crate::prelude::*;
 use crate::types::alias_types::{DescriptionValue, EvalFn, IdentificationValue, NumericalValue};
-use crate::types::reasoning_types;
 
 pub fn get_test_assumption_arr()
     -> [Assumption; 3]
@@ -149,15 +148,14 @@ pub fn get_test_causaloid()
         }
     }
 
-    reasoning_types::causable::build_causaloid(
+    build_causaloid(
         id,
         causal_fn,
         description,
         data_set_id,
         &inferable_coll,
         &inverse_inferable_coll,
-    )
-        .unwrap()
+    ).unwrap()
 }
 
 

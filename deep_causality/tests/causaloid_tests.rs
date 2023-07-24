@@ -5,16 +5,53 @@ use deep_causality::prelude::*;
 use deep_causality::types::alias_types::{DescriptionValue, IdentificationValue};
 use deep_causality::utils::bench_utils_graph;
 use deep_causality::utils::test_utils;
+use deep_causality::utils::test_utils::get_inferable_coll;
 
 #[test]
 fn test_build_causaloid() {
-    let causaloid = test_utils::get_test_causaloid();
+    let id: IdentificationValue = 1;
+    let description: String = "tests whether data exceeds threshold of 0.55".to_string() as DescriptionValue;
+    let data_set_id = "Test data".to_string() as DescriptionValue;
+    let inferable_coll = get_inferable_coll(false);
+    let inverse_inferable_coll = get_inferable_coll(true);
+    fn causal_fn(_obs: NumericalValue) -> Result<bool, CausalityError> { Ok(true) }
+
+    let causaloid = build_causaloid(
+        id,
+        causal_fn,
+        description,
+        data_set_id,
+        &inferable_coll,
+        &inverse_inferable_coll,
+    ).unwrap();
+
     assert!(causaloid.is_singleton());
 
     assert_eq!(01, causaloid.id());
     assert_eq!("tests whether data exceeds threshold of 0.55".to_string(), causaloid.description());
     assert!(!causaloid.is_active());
     assert!(causaloid.explain().is_err());
+}
+
+#[test]
+fn test_build_causaloid_err() {
+    let id: IdentificationValue = 1;
+    let description: String = "".to_string() as DescriptionValue;
+    let data_set_id = "".to_string() as DescriptionValue;
+    let inferable_coll = get_inferable_coll(false);
+    let inverse_inferable_coll = get_inferable_coll(true);
+    fn causal_fn(_obs: NumericalValue) -> Result<bool, CausalityError> { Ok(true) }
+
+    let causaloid = build_causaloid(
+        id,
+        causal_fn,
+        description,
+        data_set_id,
+        &inferable_coll,
+        &inverse_inferable_coll,
+    );
+
+    assert!(causaloid.is_err());
 }
 
 #[test]
