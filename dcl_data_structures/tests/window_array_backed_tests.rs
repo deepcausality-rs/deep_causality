@@ -196,6 +196,16 @@ fn test_slice() {
 }
 
 #[test]
+fn test_slice_err() {
+    let window = get_sliding_window();
+    assert_eq!(window.size(), SIZE);
+    assert!(!window.filled());
+
+    let s: Result<&[Data], String> = window.slice();
+    assert!(s.is_err());
+}
+
+#[test]
 fn test_vec() {
     let d1 = Data { dats: 0 };
     let mut window = get_sliding_window();
@@ -228,6 +238,16 @@ fn test_vec() {
     let e2 = window.last().unwrap();
     let v2 = v.get(SIZE - 1).unwrap();
     assert_eq!(e2.dats, v2.dats);
+}
+
+#[test]
+fn test_vec_err() {
+    let window = get_sliding_window();
+    assert_eq!(window.size(), SIZE);
+    assert!(!window.filled());
+
+    let v: Result<Vec<Data>, String> = window.vec();
+    assert!(v.is_err());
 }
 
 #[test]
@@ -286,4 +306,14 @@ fn test_arr() {
     assert_eq!(arr[1].dats, 0);
     assert_eq!(arr[2].dats, 42);
     assert_eq!(arr[3].dats, 0);
+}
+
+#[test]
+fn test_arr_err() {
+    let window = get_sliding_window();
+    assert_eq!(window.size(), SIZE);
+    assert!(!window.filled());
+
+    let arr:  Result<[Data; SIZE], String>= window.arr();
+    assert!(arr.is_err());
 }
