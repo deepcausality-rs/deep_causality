@@ -10,15 +10,15 @@ use crate::types::alias_types::{CausalFn, DescriptionValue, IdentificationValue}
 pub mod causaloid;
 pub mod causaloid_graph;
 
-/// Create a new causaloid from a causal collection.
+/// Create a new causaloid from a causal vector.
 /// Encapsulates a linear causal collection into one single causaloid
 /// that can be used individually, as part of another causal collection,
 /// or embedded into a causal graph.
 ///
 /// Verifies that description, data_set_id, and causal_coll are non-empty.
-pub fn build_causaloid_from_collection(
+pub fn build_causaloid_from_vec(
     id: IdentificationValue,
-    causal_coll: Vec<Causaloid>,
+    causal_vec: Vec<Causaloid>,
     data_set_id: DescriptionValue,
     description: DescriptionValue,
 )
@@ -35,14 +35,14 @@ pub fn build_causaloid_from_collection(
     }
 
     // check causal collection
-    if causal_coll.is_empty() {
+    if causal_vec.is_empty() {
         return Err(Box::new(BuildError("Causal collection empty".into())));
     }
 
     Ok(
         Causaloid::from_causal_collection(
             id,
-            causal_coll,
+            causal_vec,
             data_set_id,
             description,
         )
