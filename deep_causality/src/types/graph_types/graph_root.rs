@@ -8,24 +8,24 @@ pub struct Root {
     id: u64,
 }
 
-impl Root {
+impl Root
+{
     pub fn new(id: u64) -> Self {
         Self { id }
     }
-    pub fn id(&self) -> u64 {
-        self.id
-    }
 }
 
-impl Identifiable for Root {
+impl Identifiable for Root
+{
     fn id(&self) -> u64 {
         self.id
     }
 }
 
-impl Display for Root {
+impl Display for Root
+{
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Root \n ID: {}",
+        write!(f, "Root ID: {}",
                self.id,
         )
     }
