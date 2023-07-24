@@ -1,10 +1,12 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
-use deep_causality_macros::make_run;
 
 mod run;
 mod utils_actions;
 mod utils_states;
 mod utils_data;
 
-// The macro assumes a mod named run with a pub method run().
-fn main() { make_run!(); }
+use deep_causality::prelude::time_execution;
+
+fn main() {
+    time_execution(run::run, "main_run");
+}

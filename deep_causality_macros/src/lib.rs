@@ -1,27 +1,9 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
-
 // Procedural Macros https://doc.rust-lang.org/reference/procedural-macros.html
 
 extern crate proc_macro;
 
 use proc_macro::TokenStream;
-
-#[proc_macro]
-pub fn make_run(_input: TokenStream) -> TokenStream
-{
-    "time(run::run, \"main_run\");
-
-    fn time<T, F: FnOnce() -> T>(f: F, f_name: &str) -> T {
-        let start = std::time::Instant::now();
-        let res = f();
-        println!(\"{} Execution took {:?} \",
-            f_name.to_uppercase(),
-            start.elapsed()
-        );
-        res
-    }
-    ".parse().unwrap()
-}
 
 #[proc_macro]
 pub fn make_len(_item: TokenStream) -> TokenStream

@@ -7,7 +7,6 @@ use std::collections::HashMap;
 use std::hash::Hash;
 use crate::prelude::{Causable, CausableReasoning};
 
-
 impl<K, V> CausableReasoning<V> for HashMap<K, V>
     where
         K: Eq + Hash,
