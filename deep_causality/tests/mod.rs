@@ -27,6 +27,8 @@ mod csm_state_tests;
 #[cfg(test)]
 mod csm_tests;
 #[cfg(test)]
+mod error_tests;
+#[cfg(test)]
 mod inferable_arr_tests;
 #[cfg(test)]
 mod inferable_map_tests;
