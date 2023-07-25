@@ -2,7 +2,7 @@
 
 
 use deep_causality::prelude::Datable;
-use crate::bar_range::BarRange;
+use crate::types::bar_range::BarRange;
 
 pub trait Rangeable: Datable
 {
