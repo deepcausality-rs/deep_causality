@@ -20,5 +20,5 @@ pub trait Spatial: Identifiable + Adjustable {
 }
 
 pub trait SpaceTemporal: Identifiable + Spatial + Temporal + Adjustable {
-    fn t(&self) -> i64; // returns 4th dimension, t
+    fn t(&self) -> u64; // returns 4th dimension, t
 }
