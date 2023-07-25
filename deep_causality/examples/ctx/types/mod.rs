@@ -5,4 +5,3 @@ pub mod dateoid;
 pub mod data_symbol;
 pub mod date_time_bar;
 pub mod sampled_date_time_bar;
-pub mod tempoid;

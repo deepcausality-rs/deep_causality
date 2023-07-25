@@ -1,9 +1,20 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 
-use deep_causality::prelude::TimeScale;
+use std::error::Error;
+use deep_causality::prelude::{ContextMatrixGraph, Spaceoid, Tempoid, TimeScale};
+use deep_causality::types::context_types::node_types::space_tempoid::SpaceTempoid;
+use crate::types::dateoid::Dataoid;
+use crate::types::sampled_date_time_bar::SampledDataBars;
 
+pub fn generate_time_data_graph(
+    data: &SampledDataBars,
+    time_scale: TimeScale,
+)
+    -> Result<ContextMatrixGraph<Dataoid, Spaceoid, Tempoid, SpaceTempoid>, Box<dyn Error>>
+{
 
+}
 
 fn get_boolean_control_map(
     time_scale: TimeScale
