@@ -3,7 +3,7 @@
 use std::fmt::{Display, Formatter};
 use deep_causality::prelude::{Adjustable, Datable, Identifiable};
 use crate::bar_range::BarRange;
-use crate::rangeable::Rangeable;
+use crate::protocols::rangeable::Rangeable;
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Dataoid

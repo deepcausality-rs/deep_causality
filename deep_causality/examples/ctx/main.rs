@@ -1,11 +1,8 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 mod run;
-mod bar_range;
-mod rangeable;
-mod dateoid;
-mod data_symbol;
-mod date_time_bar;
+mod protocols;
+mod types;
 
 use deep_causality::prelude::time_execution;
 
