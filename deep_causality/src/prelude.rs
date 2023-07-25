@@ -19,19 +19,26 @@ pub use crate::extensions::observable::*;
 //
 // Protocols
 pub use crate::protocols::adjustable::Adjustable;
+// Assumeable protocols
 pub use crate::protocols::assumable::Assumable;
 pub use crate::protocols::assumable::AssumableReasoning;
+// Causable protocols
 pub use crate::protocols::causable::Causable;
 pub use crate::protocols::causable::CausableReasoning;
 pub use crate::protocols::causable_graph::CausableGraph;
 pub use crate::protocols::causable_graph::CausableGraphReasoning;
+// contextuable protocols
 pub use crate::protocols::contextuable::Datable;
 pub use crate::protocols::contextuable::Spatial;
 pub use crate::protocols::contextuable::SpaceTemporal;
 pub use crate::protocols::contextuable::Temporal;
+pub use crate::protocols::contextuable::Temporable;
+// Identifiable protocols
 pub use crate::protocols::identifiable::Identifiable;
+// Inferable protocols
 pub use crate::protocols::inferable::Inferable;
 pub use crate::protocols::inferable::InferableReasoning;
+// Observable protocols
 pub use crate::protocols::observable::Observable;
 pub use crate::protocols::observable::ObservableReasoning;
 //
@@ -42,6 +49,7 @@ pub use crate::types::alias_types::*;
 pub use crate::types::context_types::context_graph;
 pub use crate::types::context_types::context_graph::ContextGraph;
 // Context types
+pub use crate::types::context_types::node_types::tempoid::Tempoid;
 pub use crate::types::context_types::context_kind::ContextKind;
 pub use crate::types::context_types::time_scale::TimeScale;
 // Graph types

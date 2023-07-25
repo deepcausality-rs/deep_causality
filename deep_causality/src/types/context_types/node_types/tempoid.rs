@@ -1,9 +1,7 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use std::fmt::Display;
-
-use deep_causality::prelude::{Adjustable, Identifiable, Temporal, TimeScale};
-use crate::protocols::temporable::Temporable;
+use crate::prelude::{Adjustable, Identifiable, Temporable, Temporal, TimeScale};
 
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
