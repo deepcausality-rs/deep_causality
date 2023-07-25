@@ -11,11 +11,6 @@ pub enum RelationKind {
 
 impl Display for RelationKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            RelationKind::Datial => write!(f, "Datial"),
-            RelationKind::Temporal => write!(f, "Temporal"),
-            RelationKind::Spatial => write!(f, "Spatial"),
-            RelationKind::SpaceTemporal => write!(f, "SpaceTemporal"),
-        }
+        write!(f, "{:?}", self)
     }
 }
