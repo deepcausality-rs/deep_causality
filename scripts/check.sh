@@ -12,7 +12,7 @@ command cargo outdated
 
 # Scan for unused dependencies
 # https://crates.io/crates/cargo-udeps
-command cargo +nightly udeps
+command cargo +nightly udeps --all-targets
 
 
 # Scan again to report all unfixed vulnerabilities
