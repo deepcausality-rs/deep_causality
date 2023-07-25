@@ -50,6 +50,11 @@ impl Spatial for Spaceoid
 
 impl Display for Spaceoid {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "Spaceoid: id={}, x={}, y={}, z={}",
+               self.id,
+               self.x,
+               self.y,
+               self.z
+        )
     }
 }
