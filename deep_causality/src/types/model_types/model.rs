@@ -9,13 +9,13 @@ pub struct Model<'l> {
     id: u64,
     author: &'l str,
     description: &'l str,
-    assumptions: &'l Vec<&'l Assumption>,
-    model: &'l Causaloid,
+    assumptions: &'l Option<&'l Vec<&'l Assumption>>,
+    causaloid: &'l Causaloid,
 }
 
 impl<'l> Model<'l> {
-    pub fn new(id: u64, author: &'l str, description: &'l str, assumptions: &'l Vec<&'l Assumption>, model: &'l Causaloid) -> Self {
-        Self { id, author, description, assumptions, model }
+    pub fn new(id: u64, author: &'l str, description: &'l str, assumptions: &'l Option<&'l Vec<&'l Assumption>>, model: &'l Causaloid) -> Self {
+        Self { id, author, description, assumptions, causaloid: model }
     }
 }
 
@@ -26,11 +26,11 @@ impl<'l> Model<'l> {
     pub fn description(&self) -> &'l str {
         self.description
     }
-    pub fn assumptions(&self) -> &'l Vec<&'l Assumption> {
+    pub fn assumptions(&self) -> &'l Option<&'l Vec<&'l Assumption>> {
         self.assumptions
     }
-    pub fn model(&self) -> &'l Causaloid {
-        self.model
+    pub fn causaloid(&self) -> &'l Causaloid {
+        self.causaloid
     }
 }
 
