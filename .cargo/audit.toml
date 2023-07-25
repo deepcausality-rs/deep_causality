@@ -1,4 +1,12 @@
 [advisories]
 ignore = [
-    "RUSTSEC-2020-0071"
+    "RUSTSEC-2020-0071",
+    # A possible workaround for crates affected through the transitive dependency in chrono,
+    # is to avoid using the default oldtime feature dependency of the chrono crate
+    # by disabling its default-features and manually specifying the required features instead.
+    # https://rustsec.org/advisories/RUSTSEC-2020-0071.html
+
+    "RUSTSEC-2023-0033",
+    #  Therefore, if not ZST are used for serialization, then you are not affected by this issue.
+    #  https://rustsec.org/advisories/RUSTSEC-2023-0033.html
 ]
