@@ -3,4 +3,4 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-command cargo run --release --example smoking
+command cargo run --example ctx
