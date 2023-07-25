@@ -131,3 +131,15 @@ fn test_space_tempoid_none()
     let node: Node<Dataoid, Spaceoid, Tempoid, SpaceTempoid> = Node::new(id, NodeType::Root(root));
     assert!(node.vertex_type().space_tempoid().is_none());
 }
+
+#[test]
+fn test_to_string()
+{
+    let id = 1;
+    let root = Root::new(id);
+    let node: Node<Dataoid, Spaceoid, Tempoid, SpaceTempoid> = Node::new(id, NodeType::Root(root));
+
+    let expected = format!("Vertex ID: 1 Type: Root: Root ID: 1");
+    let actual = node.to_string();
+    assert_eq!(actual, expected);
+}
