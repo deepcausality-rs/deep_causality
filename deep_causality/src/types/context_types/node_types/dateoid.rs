@@ -8,14 +8,17 @@ use crate::prelude::{Adjustable, Datable, Identifiable};
 pub struct Dataoid
 {
     id: u64,
-    data_range: i32,
+    data: i32,
 }
 
 
 impl Dataoid
 {
     pub fn new(id: u64, data_range: i32) -> Self {
-        Self { id, data_range }
+        Self { id, data: data_range }
+    }
+    pub fn data(&self) -> i32 {
+        self.data
     }
 }
 
@@ -35,6 +38,6 @@ impl Identifiable for Dataoid
 impl Display for Dataoid
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "id: {} range: {}", self.id, self.data_range)
+        write!(f, "Dataoid: id: {} data: {}", self.id, self.data)
     }
 }
