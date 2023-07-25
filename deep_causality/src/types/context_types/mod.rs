@@ -2,3 +2,4 @@
 
 pub mod context_kind;
 pub mod context_graph;
+pub mod time_scale;
