@@ -18,8 +18,9 @@ authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 [dependencies]
 chrono = { version = "0.4.26", features = ["serde"] }
 petgraph = "0.6.3"
-rust_decimal = "1.28.1"
-serde = { version = "1.0.163", features = ["derive"] }
+rust_decimal = "1.30.0"
+serde = { version = "1.0.175", features = ["derive"] }
+
 
 [dependencies.dcl_data_structures]
 path = "../dcl_data_structures"
@@ -33,7 +34,6 @@ version = "^0.4.4"
 
 [dev-dependencies]
 criterion = { version = "0.5.1", features = ["html_reports"] }
-rand = { version = "0.8.5", features = ["small_rng"] }
 
 
 [[bench]]
