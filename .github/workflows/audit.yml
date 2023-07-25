@@ -6,8 +6,6 @@ on:
     paths:
       - '**/Cargo.toml'
       - '**/Cargo.lock'
-    schedule:
-      - cron: '0 2 * * *' # run at 2 AM UTC
 
 env:
   CARGO_TERM_COLOR: always
