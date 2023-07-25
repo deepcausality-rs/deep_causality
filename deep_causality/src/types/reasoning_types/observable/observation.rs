@@ -43,7 +43,7 @@ impl Display for Observation
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Observation {{\n id: {},\n observation: {},\n observed effect: {},\n}}",
+            "Observation {{ id: {},observation: {},observed effect: {}}}",
             self.id,
             self.observation,
             self.observed_effect
