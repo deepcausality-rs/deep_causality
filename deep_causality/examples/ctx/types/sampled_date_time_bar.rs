@@ -33,12 +33,6 @@ impl Default for SampledDataBars
 
 impl SampledDataBars
 {
-    pub fn set_minute_bars(&mut self, minute_bars: Vec<DateTimeBar>) {
-        self.minute_bars = minute_bars;
-    }
-    pub fn set_hour_bars(&mut self, hour_bars: Vec<DateTimeBar>) {
-        self.hour_bars = hour_bars;
-    }
     pub fn set_day_bars(&mut self, day_bars: Vec<DateTimeBar>) {
         self.day_bars = day_bars;
     }
@@ -48,9 +42,6 @@ impl SampledDataBars
     pub fn set_month_bars(&mut self, month_bars: Vec<DateTimeBar>) {
         self.month_bars = month_bars;
     }
-    pub fn set_quarter_bars(&mut self, quarter_bars: Vec<DateTimeBar>) {
-        self.quarter_bars = quarter_bars;
-    }
     pub fn set_year_bars(&mut self, year_bars: Vec<DateTimeBar>) {
         self.year_bars = year_bars;
     }
@@ -59,12 +50,6 @@ impl SampledDataBars
 
 impl SampledDataBars
 {
-    pub fn minute_bars(&self) -> &Vec<DateTimeBar> {
-        &self.minute_bars
-    }
-    pub fn hour_bars(&self) -> &Vec<DateTimeBar> {
-        &self.hour_bars
-    }
     pub fn day_bars(&self) -> &Vec<DateTimeBar> {
         &self.day_bars
     }
@@ -73,9 +58,6 @@ impl SampledDataBars
     }
     pub fn month_bars(&self) -> &Vec<DateTimeBar> {
         &self.month_bars
-    }
-    pub fn quarter_bars(&self) -> &Vec<DateTimeBar> {
-        &self.quarter_bars
     }
     pub fn year_bars(&self) -> &Vec<DateTimeBar> {
         &self.year_bars

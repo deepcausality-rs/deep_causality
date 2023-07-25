@@ -17,10 +17,6 @@ impl Dataoid
     pub fn new(id: u64, data_range: BarRange) -> Self {
         Self { id, data_range }
     }
-
-    pub fn from(bar: &(impl Datable + Rangeable)) -> Self {
-        Self { id: bar.id(), data_range: bar.data_range(), }
-    }
 }
 impl Adjustable for Dataoid {}
 
