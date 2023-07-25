@@ -49,7 +49,7 @@ impl Display for Tempoid
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f,
-               "Tempoid(id: {}, time_scale: {}, time_unit: {})",
+               "Tempoid: id: {}, time_scale: {}, time_unit: {}",
                self.id, self.time_scale, self.time_unit
         )
     }
