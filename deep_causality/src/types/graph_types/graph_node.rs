@@ -26,10 +26,6 @@ impl<D, S, T, ST> Node<D, S, T, ST>
     pub fn new(id: u64, vertex_type: NodeType<D, S, T, ST>) -> Self {
         Self { id, vertex_type }
     }
-
-    pub fn id(&self) -> u64 {
-        self.id
-    }
     pub fn vertex_type(&self) -> &NodeType<D, S, T, ST> {
         &self.vertex_type
     }
