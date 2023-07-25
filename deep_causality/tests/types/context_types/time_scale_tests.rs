@@ -9,18 +9,6 @@ fn test_time_scale()
     assert_eq!(ts, TimeScale::NoScale);
     assert_eq!(ts.to_string(), "NoScale");
 
-    let ts = TimeScale::Nanosecond;
-    assert_eq!(ts, TimeScale::Nanosecond);
-    assert_eq!(ts.to_string(), "Nanosecond");
-
-    let ts = TimeScale::Microsecond;
-    assert_eq!(ts, TimeScale::Microsecond);
-    assert_eq!(ts.to_string(), "Microsecond");
-
-    let ts = TimeScale::Millisecond;
-    assert_eq!(ts, TimeScale::Millisecond);
-    assert_eq!(ts.to_string(), "Millisecond");
-
     let ts = TimeScale::Second;
     assert_eq!(ts, TimeScale::Second);
     assert_eq!(ts.to_string(), "Second");

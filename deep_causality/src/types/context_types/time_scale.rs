@@ -7,9 +7,6 @@ use std::fmt::{Display, Formatter};
 pub enum TimeScale
 {
     NoScale,
-    Nanosecond,
-    Microsecond,
-    Millisecond,
     Second,
     Minute,
     Hour,
