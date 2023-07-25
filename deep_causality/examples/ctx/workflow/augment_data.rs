@@ -2,11 +2,10 @@
 
 use std::ops::Sub;
 use chrono::{Datelike, Timelike};
-use deep_causality::prelude::TimeScale;
+use deep_causality::prelude::{Tempoid, TimeScale};
 use crate::types::bar_range::BarRange;
 use crate::types::date_time_bar::DateTimeBar;
 use crate::types::dateoid::Dataoid;
-use crate::types::tempoid::Tempoid;
 
 pub fn convert_bar_to_augmented(
     data_bar: &DateTimeBar,
