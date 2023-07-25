@@ -6,7 +6,7 @@ use std::fmt::Display;
 use chrono::{DateTime, Utc};
 use rust_decimal::prelude::*;
 use serde::{Deserialize, Serialize};
-use crate::data_symbol::DataSymbol;
+use crate::types::data_symbol::DataSymbol;
 
 
 #[derive(Deserialize, Serialize, Debug, Copy, Clone, Hash, Eq, Ord, PartialEq, PartialOrd)]

@@ -3,6 +3,7 @@
 mod run;
 mod protocols;
 mod types;
+mod augment_data;
 
 use deep_causality::prelude::time_execution;
 
