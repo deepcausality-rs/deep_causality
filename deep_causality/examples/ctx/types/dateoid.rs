@@ -2,8 +2,8 @@
 
 use std::fmt::{Display, Formatter};
 use deep_causality::prelude::{Adjustable, Datable, Identifiable};
-use crate::bar_range::BarRange;
 use crate::protocols::rangeable::Rangeable;
+use crate::types::bar_range::BarRange;
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Dataoid
