@@ -1,10 +1,10 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 
-use crate::prelude::{ContextKind, ContextMatrixGraph};
+use crate::prelude::{ContextMatrixGraph};
 use crate::protocols::contextuable::{Datable, SpaceTemporal, Spatial, Temporal};
 
-pub struct ContextGraph<D, S, T, ST>
+pub struct Context<D, S, T, ST>
     where
         D: Datable,
         S: Spatial,
@@ -13,12 +13,11 @@ pub struct ContextGraph<D, S, T, ST>
 {
     id: u64,
     name: String,
-    kind: ContextKind,
     graph: ContextMatrixGraph<D, S, T, ST>,
 }
 
 
-impl<D, S, T, ST> ContextGraph<D, S, T, ST>
+impl<D, S, T, ST> Context<D, S, T, ST>
     where
         D: Datable,
         S: Spatial,
@@ -28,12 +27,11 @@ impl<D, S, T, ST> ContextGraph<D, S, T, ST>
     pub fn new(
         id: u64,
         name: String,
-        kind: ContextKind,
         graph: ContextMatrixGraph<D, S, T, ST>,
     )
         -> Self
     {
-        Self { id, name, kind, graph }
+        Self { id, name, graph }
     }
 
     pub fn id(&self) -> u64 {
@@ -42,10 +40,6 @@ impl<D, S, T, ST> ContextGraph<D, S, T, ST>
 
     pub fn name(&self) -> &str {
         &self.name
-    }
-
-    pub fn kind(&self) -> &ContextKind {
-        &self.kind
     }
 
     pub fn node_count(&self) -> usize {
