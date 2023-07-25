@@ -4,3 +4,5 @@
 mod context_kind_tests;
 #[cfg(test)]
 mod context_graph_tests;
+#[cfg(test)]
+mod time_scale_tests;

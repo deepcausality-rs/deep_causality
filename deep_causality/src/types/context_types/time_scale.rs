@@ -8,6 +8,7 @@ pub enum TimeScale
 {
     NoScale,
     Nanosecond,
+    Microsecond,
     Millisecond,
     Second,
     Minute,

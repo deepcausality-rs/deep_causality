@@ -43,7 +43,7 @@ pub use crate::types::context_types::context_graph;
 pub use crate::types::context_types::context_graph::ContextGraph;
 // Context types
 pub use crate::types::context_types::context_kind::ContextKind;
-pub use crate::types::context_types::context_kind::ContextKind::*;
+pub use crate::types::context_types::time_scale::TimeScale;
 // Graph types
 pub use crate::types::graph_types::graph_node::*;
 pub use crate::types::graph_types::graph_node_type::*;
