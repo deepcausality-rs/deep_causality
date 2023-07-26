@@ -1,6 +1,5 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-
 use deep_causality::prelude::*;
 use deep_causality::types::alias_types::{DescriptionValue, IdentificationValue};
 use deep_causality::utils::bench_utils_graph;
@@ -43,7 +42,6 @@ fn test_build_causaloid_err() {
     fn causal_fn(_obs: NumericalValue) -> Result<bool, CausalityError> { Ok(true) }
 
     let causaloid = build_causaloid(id, causal_fn, description, data_set_id, &inferable_coll, &inverse_inferable_coll,);
-
     assert!(causaloid.is_err());
 }
 
@@ -71,7 +69,6 @@ fn test_build_causaloid_from_vec_err() {
     let causal_vec = get_test_causality_vec();
 
     let causaloid = build_causaloid_from_vec(id, causal_vec, data_set_id, description,);
-
     assert!(causaloid.is_err());
 }
 

@@ -123,7 +123,8 @@ impl Causaloid
 }
 
 
-impl PartialEq for Causaloid {
+impl PartialEq for Causaloid
+{
     fn eq(&self, other: &Self) -> bool {
         self.id == other.id
     }
@@ -203,7 +204,6 @@ impl Causable for Causaloid
             CausalType::Graph => false,
         }
     }
-
 
     fn verify_single_cause(
         &self,
@@ -305,16 +305,10 @@ impl Causaloid
 
 impl Debug for Causaloid
 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result
-    {
-        self.fmt(f)
-    }
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { self.fmt(f) }
 }
 
 impl Display for Causaloid
 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result
-    {
-        self.fmt(f)
-    }
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { self.fmt(f) }
 }
