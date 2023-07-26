@@ -16,21 +16,12 @@ enum CausalType {
     Graph,
 }
 
-
-impl Display for CausalType
-{
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Singleton => write!(f, "Singleton"),
-            Self::Collection => write!(f, "Collection"),
-            Self::Graph => write!(f, "Graph"),
-        }
-    }
-}
+impl Display for CausalType { fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { write!(f, "{:?}", self) } }
 
 
 #[derive(Clone)]
-pub struct Causaloid {
+pub struct Causaloid
+{
     id: IdentificationValue,
     active: RefCell<bool>,
     causal_type: CausalType,
@@ -132,7 +123,7 @@ impl Causaloid
 }
 
 
-impl PartialEq for Causaloid{
+impl PartialEq for Causaloid {
     fn eq(&self, other: &Self) -> bool {
         self.id == other.id
     }
@@ -147,10 +138,6 @@ impl Identifiable for Causaloid
 
 impl Causable for Causaloid
 {
-    fn causal_function(&self) -> CausalFn {
-        self.causal_fn
-    }
-
     fn causal_collection(&self) -> Option<Vec<Causaloid>> {
         self.causal_coll.clone()
     }
@@ -328,6 +315,6 @@ impl Display for Causaloid
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result
     {
-       self.fmt(f)
+        self.fmt(f)
     }
 }

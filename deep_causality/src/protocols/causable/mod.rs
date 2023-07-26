@@ -2,11 +2,10 @@
 
 use std::collections::HashMap;
 use crate::errors::CausalityError;
-use crate::prelude::{CausalFn, Causaloid, CausaloidGraph, DescriptionValue, Identifiable, IdentificationValue, NumericalValue};
+use crate::prelude::{Causaloid, CausaloidGraph, DescriptionValue, Identifiable, IdentificationValue, NumericalValue};
 
 pub trait Causable: Identifiable
 {
-    fn causal_function(&self) -> CausalFn;
     fn causal_collection(&self) -> Option<Vec<Causaloid>>;
     fn causal_graph(&self) -> Option<CausaloidGraph<Causaloid>>;
     fn description(&self) -> DescriptionValue;

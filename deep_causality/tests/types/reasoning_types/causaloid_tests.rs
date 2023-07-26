@@ -158,16 +158,36 @@ fn test_from_causal_graph() {
     assert!(causaloid.is_active());
 }
 
+#[test]
+fn test_causal_graph()
+{
+    let id: IdentificationValue = 01;
+    let description: String = "tests whether data exceeds threshold of 0.55".to_string() as DescriptionValue;
+    let data_set_id = "Test data".to_string() as DescriptionValue;
+    let (causal_graph, _) = bench_utils_graph::get_small_multi_layer_cause_graph_and_data();
+
+    let causaloid = Causaloid::from_causal_graph(id, causal_graph, data_set_id, description);
+    assert!(!causaloid.is_singleton());
+
+    assert!(causaloid.causal_graph().is_some());
+    assert!(causaloid.causal_collection().is_none());
+}
 
 #[test]
-fn test_verify() {
-    let causaloid = test_utils::get_test_causaloid();
-    assert!(!causaloid.is_active());
+fn test_causal_collection() {
+    let id: IdentificationValue = 01;
+    let description: String = "tests whether data exceeds threshold of 0.55".to_string() as DescriptionValue;
+    let data_set_id = "Test data".to_string() as DescriptionValue;
+    let causal_coll = test_utils::get_test_causality_vec();
 
-    let obs: f64 = 0.78;
-    let res = causaloid.verify_single_cause(&obs).unwrap();
-    assert!(res);
-    assert!(causaloid.is_active());
+    let data = [0.89, 0.89, 0.99];
+    assert_eq!(data.len(), causal_coll.len());
+
+    let causaloid = Causaloid::from_causal_collection(id, causal_coll, data_set_id, description);
+    assert!(!causaloid.is_singleton());
+
+    assert!(causaloid.causal_collection().is_some());
+    assert!(causaloid.causal_graph().is_none());
 }
 
 #[test]
@@ -186,5 +206,27 @@ fn test_explain() {
 
     let actual = causaloid.explain().unwrap();
     let expected = "Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.78 evaluated to true".to_string();
+    assert_eq!(actual, expected);
+}
+
+#[test]
+fn test_verify_single_cause() {
+    let causaloid = test_utils::get_test_causaloid();
+    assert!(!causaloid.is_active());
+
+    let obs: f64 = 0.78;
+    let res = causaloid.verify_single_cause(&obs).unwrap();
+    assert!(res);
+    assert!(causaloid.is_active());
+}
+
+#[test]
+fn test_to_string() {
+    let causaloid = test_utils::get_test_causaloid();
+    assert!(!causaloid.is_active());
+
+    let expected = format!("Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55 is active: false");
+    let actual = causaloid.to_string();
+
     assert_eq!(actual, expected);
 }
