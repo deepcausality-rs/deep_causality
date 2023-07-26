@@ -56,6 +56,50 @@ fn test_get_all_items() {
 }
 
 #[test]
+fn test_get_all_active_causes()
+{
+    let col = get_test_causality_array();
+    assert!(!col.get_all_causes_true());
+
+    let obs = 0.99;
+    for cause in &col {
+        cause.verify_single_cause(&obs).expect("verify failed");
+    }
+    assert!(col.get_all_causes_true());
+    assert_eq!(10, col.get_all_active_causes().len());
+}
+
+#[test]
+fn test_get_all_inactive_causes()
+{
+    let col = get_test_causality_array();
+    assert!(!col.get_all_causes_true());
+
+    let obs = 0.99;
+    for cause in &col {
+        cause.verify_single_cause(&obs).expect("verify failed");
+    }
+    assert!(col.get_all_causes_true());
+    assert_eq!(0, col.get_all_inactive_causes().len());
+}
+
+#[test]
+fn test_explain()
+{
+    let col = get_test_causality_array();
+    assert!(!col.get_all_causes_true());
+
+    let obs = 0.99;
+    for cause in &col {
+        cause.verify_single_cause(&obs).expect("verify failed");
+    }
+
+    let expected = format!("\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n");
+    let actual = col.explain();
+    assert_eq!(expected, actual);
+}
+
+#[test]
 fn test_len()
 {
     let col = get_test_causality_array();
