@@ -12,6 +12,7 @@ pub trait CausableGraph<T>
     fn contains_root_causaloid(&self) -> bool;
     fn get_root_causaloid(&self) -> Option<&T>;
     fn get_root_index(&self) -> Option<NodeIndex>;
+    fn get_last_index(&self) ->  Result<NodeIndex, CausalityGraphError>;
 
     // Nodes
     fn add_causaloid(&mut self, value: T) -> NodeIndex;

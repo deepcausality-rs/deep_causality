@@ -97,7 +97,7 @@ fn test_multi_cause_graph() {
     let res = g.reason_subgraph_from_cause(index, &data, None).unwrap();
     assert!(res);
 
-    let total_nodes = 2.0_f64;
+    let total_nodes = 2.0;
     let number_active = g.number_active();
     assert_eq!(number_active, total_nodes);
 

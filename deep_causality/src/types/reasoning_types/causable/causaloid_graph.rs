@@ -101,6 +101,16 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
         }
     }
 
+    fn get_last_index(&self)
+                      -> Result<NodeIndex, CausalityGraphError>
+    {
+        if !self.is_empty() {
+            Ok(NodeIndex::new(self.causes_map.len() - 1))
+        } else {
+            Err(CausalityGraphError("Graph is empty".to_string()))
+        }
+    }
+
     fn add_causaloid(
         &mut self,
         value: T,
@@ -262,11 +272,14 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
         -> Result<String, CausalityGraphError>
     {
         let start_index = self.root_index;
-        let stop_index = NodeIndex::new(self.causes_map.len());
+        let stop_index = match self.get_last_index() {
+            Ok(stop_index) => stop_index,
+            Err(e) => return Err(e),
+        };
 
         match self.explain_from_to_cause(start_index, stop_index) {
             Ok(explanation) => Ok(explanation),
-            Err(e) => Err(e)
+            Err(e) => Err(e),
         }
     }
 
@@ -276,10 +289,14 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
     )
         -> Result<String, CausalityGraphError>
     {
-        let stop_index = NodeIndex::new(self.causes_map.len());
+        let stop_index = match self.get_last_index() {
+            Ok(stop_index) => stop_index,
+            Err(e) => return Err(e),
+        };
+
         match self.explain_from_to_cause(start_index, stop_index) {
             Ok(explanation) => Ok(explanation),
-            Err(e) => Err(e)
+            Err(e) => Err(e),
         }
     }
 
@@ -292,7 +309,7 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
     {
         match self.explain_shortest_path_from_to_cause(start_index, stop_index) {
             Ok(explanation) => Ok(explanation),
-            Err(e) => Err(e)
+            Err(e) => Err(e),
         }
     }
 
@@ -306,6 +323,7 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
         if self.contains_root_causaloid()
         {
             let start_index = self.root_index;
+
             let stop_index = NodeIndex::new(self.causes_map.len());
 
             match self.reason_from_to_cause(start_index, stop_index, data, data_index) {
