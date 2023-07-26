@@ -3,6 +3,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+# Bash Select (Make Menus) https://linuxize.com/post/bash-select/
+
 echo ""
 echo "--------------------------------"
 echo "Select example to run: "
