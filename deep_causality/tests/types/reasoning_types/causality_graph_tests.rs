@@ -4,6 +4,27 @@ use deep_causality::prelude::*;
 use deep_causality::utils::{bench_utils_graph, test_utils};
 
 #[test]
+fn test_new() {
+    let g: CausaloidGraph<Causaloid> = CausaloidGraph::default();
+    assert_eq!(g.node_count(), 0);
+    assert_eq!(g.edge_count(), 0);
+}
+
+#[test]
+fn test_new_with_capacity() {
+    let g: CausaloidGraph<Causaloid> = CausaloidGraph::default();
+    assert_eq!(g.node_count(), 0);
+    assert_eq!(g.edge_count(), 0);
+}
+
+#[test]
+fn test_default() {
+    let g: CausaloidGraph<Causaloid> = CausaloidGraph::default();
+    assert_eq!(g.node_count(), 0);
+    assert_eq!(g.edge_count(), 0);
+}
+
+#[test]
 fn test_add_root_causaloid() {
     let mut g = CausaloidGraph::new();
     let root_causaloid = test_utils::get_test_causaloid();
@@ -22,7 +43,7 @@ fn test_get_root_causaloid() {
     let contains_root = g.contains_causaloid(root_index);
     assert!(contains_root);
 
-    let causaloid = g.get_causaloid(root_index).unwrap();
+    let causaloid = g.get_root_causaloid().unwrap();
 
     let id = causaloid.id();
     causaloid.description();
@@ -30,6 +51,19 @@ fn test_get_root_causaloid() {
 
     assert_eq!(id, 01);
     assert_eq!(data_set_id, "Test data");
+}
+
+#[test]
+fn test_get_root_index() {
+    let mut g = CausaloidGraph::new();
+    let root_causaloid = test_utils::get_test_causaloid();
+
+    let root_index = g.add_root_causaloid(root_causaloid);
+    let contains_root = g.contains_causaloid(root_index);
+    assert!(contains_root);
+
+    let r_index = g.get_root_index().unwrap();
+    assert_eq!(root_index, r_index);
 }
 
 #[test]
@@ -111,6 +145,26 @@ fn test_add_edge() {
     assert!(contains_b);
 
     g.add_edge(idx_a, idx_b);
+    let contains_edge = g.contains_edge(idx_a, idx_b);
+    assert!(contains_edge);
+}
+
+#[test]
+fn test_add_edg_with_weight() {
+    let mut g = CausaloidGraph::new();
+    let causaloid = test_utils::get_test_causaloid();
+
+    let idx_a = g.add_causaloid(causaloid);
+    let contains_a = g.contains_causaloid(idx_a);
+    assert!(contains_a);
+
+    let causaloid = test_utils::get_test_causaloid();
+    let idx_b = g.add_causaloid(causaloid);
+    let contains_b = g.contains_causaloid(idx_b);
+    assert!(contains_b);
+
+    let weight = 1;
+    g.add_edg_with_weight(idx_a, idx_b, weight);
     let contains_edge = g.contains_edge(idx_a, idx_b);
     assert!(contains_edge);
 }
@@ -287,7 +341,7 @@ fn test_clear() {
 #[test]
 fn test_count_edges() {
     let mut g = CausaloidGraph::new();
-    let count_edges = g.count_edges();
+    let count_edges = g.edge_count();
     assert_eq!(count_edges, 0);
 
     let causaloid = test_utils::get_test_causaloid();
@@ -305,21 +359,21 @@ fn test_count_edges() {
     let contains_edge = g.contains_edge(idx_a, idx_b);
     assert!(contains_edge);
 
-    let count_edges = g.count_edges();
+    let count_edges = g.edge_count();
     assert_eq!(count_edges, 1);
 
     g.remove_edge(idx_a, idx_b);
     let contains_edge = g.contains_edge(idx_a, idx_b);
     assert!(!contains_edge);
 
-    let count_edges = g.count_edges();
+    let count_edges = g.edge_count();
     assert_eq!(count_edges, 0);
 }
 
 #[test]
 fn test_count_nodes() {
     let mut g = CausaloidGraph::new();
-    let count_nodes = g.count_nodes();
+    let count_nodes = g.node_count();
     assert_eq!(count_nodes, 0);
 
     let causaloid = test_utils::get_test_causaloid();
@@ -328,7 +382,7 @@ fn test_count_nodes() {
     let contains = g.contains_causaloid(index);
     assert!(contains);
 
-    let count_nodes = g.count_nodes();
+    let count_nodes = g.node_count();
     assert_eq!(count_nodes, 1);
 
     let causaloid = g.get_causaloid(index).unwrap();
@@ -345,7 +399,7 @@ fn test_count_nodes() {
     let contains = g.contains_causaloid(index);
     assert!(!contains);
 
-    let count_nodes = g.count_nodes();
+    let count_nodes = g.node_count();
     assert_eq!(count_nodes, 0);
 }
 

@@ -33,8 +33,8 @@ pub trait CausableGraph<T>
     fn size(&self) -> usize;
     fn is_empty(&self) -> bool;
     fn clear(&mut self);
-    fn count_edges(&self) -> usize;
-    fn count_nodes(&self) -> usize;
+    fn edge_count(&self) -> usize;
+    fn node_count(&self) -> usize;
 }
 
 /// Describes signatures for causal reasoning and explaining

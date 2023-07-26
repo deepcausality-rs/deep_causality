@@ -59,7 +59,7 @@ fn test_linear_graph() {
     let percent_active = g.percent_active();
     assert_eq!(percent_active, 100.0);
 
-    let total_nodes = g.count_nodes() as f64;
+    let total_nodes = g.node_count() as f64;
     let number_active = g.number_active();
     assert_eq!(number_active, total_nodes);
 }
@@ -138,7 +138,7 @@ fn test_multi_cause_graph() {
     let percent_active = g.percent_active();
     assert_eq!(percent_active, 100.0);
 
-    let total_nodes = g.count_nodes() as f64;
+    let total_nodes = g.node_count() as f64;
     let number_active = g.number_active();
     assert_eq!(number_active, total_nodes);
 }
@@ -229,7 +229,7 @@ fn test_multi_layer_cause_graph() {
     assert!(res);
 
     // Verify that the graph is fully active.
-    let total_nodes = g.count_nodes() as f64;
+    let total_nodes = g.node_count() as f64;
     let number_active = g.number_active();
     assert_eq!(number_active, total_nodes);
 
@@ -330,7 +330,7 @@ fn test_left_imbalanced_cause_graph() {
     let percent_active = g.percent_active();
     assert_eq!(percent_active, 100.0);
 
-    let total_nodes = g.count_nodes() as f64;
+    let total_nodes = g.node_count() as f64;
     let number_active = g.number_active();
     assert_eq!(number_active, total_nodes);
 }
@@ -417,7 +417,7 @@ fn test_right_imbalanced_cause_graph() {
     let percent_active = g.percent_active();
     assert_eq!(percent_active, 100.0);
 
-    let total_nodes = g.count_nodes() as f64;
+    let total_nodes = g.node_count() as f64;
     let number_active = g.number_active();
     assert_eq!(number_active, total_nodes);
 }
