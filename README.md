@@ -83,7 +83,8 @@ DeepCausality reasons uses the causaloid as its central data structure.
 A causaloid encodes a causal relation as a causal function that maps input data
 to an output decision determining  whether the causal relation applied to the input data holds true.
 
-The causaloid, however, can be a singleton, a collection, or a graph. The causaloid-graph, however, is a hypergraph with each node being a causaloid. This recursive structure means a sub-graph can be encapsulated as a causaloid which then becomes a node of a graph. A HashMap of causes can be encapsulated as a causaloid and embedded into the same graph. Then, the entire causaloid-graph can be analyzed in a variety of ways, for example:
+The causaloid, however, can be a singleton, a collection, or a graph. The causaloid-graph, however, is a hypergraph with each node being a causaloid. This recursive structure means a sub-graph can be encapsulated as a causaloid which then becomes a node of a graph. A HashMap of causes can be encapsulated as a causaloid and embedded into the same graph. 
+Then, the entire causaloid-graph can be analyzed in a variety of ways, for example:
 
 * Reason over the entire graph
 * Reason only over a specific causaloid
