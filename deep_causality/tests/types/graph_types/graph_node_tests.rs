@@ -1,6 +1,6 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use deep_causality::prelude::{Dataoid, Identifiable, Node, NodeType, Root, Spaceoid, SpaceTempoid, Tempoid, TimeScale};
+use deep_causality::prelude::{Dataoid, Identifiable, Node, NodeType, Root, Spaceoid, SpaceTempoid, Tempoid};
 
 #[test]
 fn test_new()

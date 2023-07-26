@@ -6,7 +6,8 @@ use crate::prelude::*;
 use crate::protocols::inferable::Inferable;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub struct Inference {
+pub struct Inference
+{
     id: IdentificationValue,
     question: DescriptionValue,
     observation: NumericalValue,
@@ -15,15 +16,21 @@ pub struct Inference {
     target: NumericalValue,
 }
 
-impl Inference {
-    pub fn new(id: IdentificationValue, question: DescriptionValue, observation: NumericalValue,
-               threshold: NumericalValue, effect: NumericalValue, target: NumericalValue, ) -> Self {
+impl Inference
+{
+    pub fn new(
+        id: IdentificationValue, question: DescriptionValue, observation: NumericalValue,
+        threshold: NumericalValue, effect: NumericalValue, target: NumericalValue,
+    )
+        -> Self
+    {
         Self { id, question, observation, threshold, effect, target }
     }
 }
 
 
-impl Identifiable for Inference {
+impl Identifiable for Inference
+{
     fn id(&self) -> IdentificationValue {
         self.id
     }
@@ -56,10 +63,9 @@ impl Inferable for Inference
 impl Display for Inference
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Inference: \n id: {},\n question: {},\n observation: {},\n threshold: {},\n effect: {}",
-            self.id, self.question, self.observation, self.threshold, self.effect
+        write!(f,
+               "Inference: id: {}, question: {}, observation: {}, threshold: {}, effect: {}",
+               self.id, self.question, self.observation, self.threshold, self.effect
         )
     }
 }
