@@ -1,26 +1,5 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-// Tests causality reasoning over a selection of hyper-graphs.
-// The selection is non-exhaustive because there are no arbitrary constraints
-// on the causality graph structure. As long as causal mechanisms can be expressed
-// as a hyper-graph, the graph is guaranteed to evaluate. That means, any combination of
-// single cause, multi cause, or partial cause can be expressed across many layers.
-//
-// Also note, once activated, a causaloid stays activated until a different dataset evaluates
-// negatively that will then deactivate the causaloid. Therefore, if parts of the dataset remain
-// unchanged, the corresponding causaloids will remain active.
-//
-// By default, the causaloid ID is matched to the data index. For example, the root causaloid
-// at index 0 will match to the data at index 0 and the data from index 0 will be used to
-// evaluated the root causaloid. If, for any reason, the data set is ordered differently,
-// an optional data_index parameter can be specified that basically is a hashmap that maps
-// the causaloid ID to a custom data index position.
-//
-// Reasoning performance for basic causality functions is guaranteed sub-second for graphs below 10k nodes
-// and micro seconds for graphs below 1k nodes. However, graphs with well above 100k nodes
-// may require a large amount of memory (> 10GB) to process due to the underlying compressed matrix
-// representation.
-
 use deep_causality::prelude::NodeIndex;
 use deep_causality::protocols::causable_graph::{CausableGraph, CausableGraphReasoning};
 use deep_causality::utils::bench_utils_graph;

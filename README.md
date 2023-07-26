@@ -53,7 +53,7 @@ at [how is deep causality different from deep learning?](deep_causality/docs/dif
 
 ## 🚀 Install
 
-In the project folder, just run in aa terminal:
+In your project folder, just run in a terminal:
 
 ```bash
 cargo add deep_causality
@@ -71,12 +71,47 @@ See:
 
 A causal state machine models a context-free system where each cause maps to a known effect. The example below
 models a sensor network that screens an industry site for smoke, fire, and explosions. Because the
-sensors are reliable, an alert will be raised whenever the sensor exceeds a certain threshold.
-You could implement this kind of system in many different ways, but as the example shows, the causal state machine makes
+sensors are reliable, an alert will be raised whenever the sensor exceeds a certain threshold. You could implement this kind of system in many different ways, but as the example shows, the causal state machine makes
 the system relatively easy to maintain. New sensors, for example, from a drone inspection, can be added and evaluated
 dynamically.
 
 [Full example code](deep_causality/examples/csm)
+
+### Causal Graph Reasoning 
+
+DeepCausality reasons uses the causaloid as its central data structure. 
+A causaloid encodes a causal relation as a causal function that maps input data
+to an output decision determining  whether the causal relation applied to the input data holds true.
+
+The causaloid, however, can be a singleton, a collection, or a graph. The causaloid-graph, however, is a hypergraph with each node being a causaloid. This recursive structure means a sub-graph can be encapsulated as a causaloid which then becomes a node of a graph. A HashMap of causes can be encapsulated as a causaloid and embedded into the same graph. Then, the entire causaloid-graph can be analyzed in a variety of ways, for example:
+
+* Reason over the entire graph
+* Reason only over a specific causaloid
+* Reason over all causaloid between a start and stop causaloid.
+* Reason over the shortest path between two causaloid.
+
+As long as causal mechanisms can be expressed
+as a hyper-graph, the graph is guaranteed to evaluate. That means, any combination of
+single cause, multi cause, or partial cause can be expressed across many layers.
+
+Also note, once activated, a causaloid stays activated until a different dataset evaluates
+negatively that will then deactivate the causaloid. Therefore, if parts of the dataset remain
+unchanged, the corresponding causaloids will remain active.
+
+By default, the causaloid ID is matched to the data index. For example, the root causaloid at index 0 will match to the data at index 0 and the data from index 0 will be used to
+evaluated the root causaloid. If, for any reason, the data set is ordered differently,
+an optional data_index parameter can be specified that basically is a hashmap that maps
+the causaloid ID to a custom data index position.
+
+Reasoning performance for basic causality functions is guaranteed sub-second for graphs below 10k nodes  and micro seconds for graphs below 1k nodes. However, graphs with well above 100k nodes may require a large amount of memory (> 10GB) because the underlying matrix representation.
+
+See tests as code examples:
+
+* [Causaloid](deep_causality/tests/types/reasoning_types/causaloid_tests.rs)
+* [Causal Graph](deep_causality/tests/types/reasoning_types/causality_graph_tests.rs)
+* [Causal Graph Reasoning](deep_causality/tests/types/reasoning_types/causality_graph_reasoning_tests.rs)
+* [Causal Graph Explaining ](deep_causality/tests/types/reasoning_types/causality_graph_explaining_tests.rs)
+
 
 ## 🛠️ Cargo & Make
 
