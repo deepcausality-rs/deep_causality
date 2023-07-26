@@ -4,7 +4,8 @@ use std::collections::HashMap;
 use crate::errors::CausalityError;
 use crate::prelude::{CausalFn, Causaloid, CausaloidGraph, DescriptionValue, Identifiable, IdentificationValue, NumericalValue};
 
-pub trait Causable: Identifiable {
+pub trait Causable: Identifiable
+{
     fn causal_function(&self) -> CausalFn;
     fn causal_collection(&self) -> Option<Vec<Causaloid>>;
     fn causal_graph(&self) -> Option<CausaloidGraph<Causaloid>>;
@@ -36,14 +37,13 @@ pub trait CausableReasoning<T>
     fn len(&self) -> usize;
     fn is_empty(&self) -> bool;
     fn to_vec(&self) -> Vec<T>;
-
-    // This method must be implemented by the user.
-    //  Apply different data to each causaloid i.e 23,45,89 to Q1, Q2,Q2
-    // Requires that data and items in the collection have the same order and the same length,
     fn get_all_items(&self) -> Vec<&T>;
+
     // Default implementations for all other methods are provided below.
 
-    fn explain(&self) -> String {
+    fn explain(&self)
+        -> String
+    {
         let mut explanation = String::new();
         for cause in self.get_all_items() {
             explanation.push('\n');
@@ -52,7 +52,9 @@ pub trait CausableReasoning<T>
         }
         explanation
     }
-    fn get_all_causes_true(&self) -> bool {
+    fn get_all_causes_true(&self)
+        -> bool
+    {
         for cause in self.get_all_items() {
             if !cause.is_active() {
                 return false;
@@ -61,29 +63,46 @@ pub trait CausableReasoning<T>
 
         true
     }
-    fn get_all_active_causes(&self) -> Vec<&T> {
+
+    fn get_all_active_causes(&self)
+        -> Vec<&T>
+    {
         self.get_all_items()
             .into_iter()
             .filter(|cause| cause.is_active())
             .collect()
     }
-    fn get_all_inactive_causes(&self) -> Vec<&T> {
+
+    fn get_all_inactive_causes(&self)
+        -> Vec<&T>
+    {
         self.get_all_items()
             .into_iter()
             .filter(|cause| !cause.is_active())
             .collect()
     }
-    fn number_active(&self) -> NumericalValue {
+
+    fn number_active(&self)
+        -> NumericalValue
+    {
         self.get_all_items()
             .iter()
             .filter(|c| c.is_active()).count() as NumericalValue
     }
-    fn percent_active(&self) -> NumericalValue {
+
+    fn percent_active(&self)
+        -> NumericalValue
+    {
         let count = self.number_active();
         let total = self.len() as NumericalValue;
         (count / total) * (100 as NumericalValue)
     }
-    fn reason_all_causes(&self, data: &[NumericalValue]) -> Result<bool, CausalityError>
+
+    fn reason_all_causes(
+        &self,
+        data: &[NumericalValue]
+    )
+        -> Result<bool, CausalityError>
     {
         if self.is_empty() {
             return Err(CausalityError("Causality collection is empty".into()));

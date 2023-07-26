@@ -18,9 +18,11 @@ pub trait AssumableReasoning<T>
     fn len(&self) -> usize;
     fn is_empty(&self) -> bool;
     fn get_all_items(&self) -> Vec<&T>;
-    // Default implementations for all other methods are provided below.
 
-    fn all_assumptions_tested(&self) -> bool
+    // Default implementations for all other methods below.
+
+    fn all_assumptions_tested(&self)
+        -> bool
     {
         for elem in self.get_all_items() {
             if !elem.assumption_tested() {
@@ -30,7 +32,8 @@ pub trait AssumableReasoning<T>
         true
     }
 
-    fn all_assumptions_valid(&self) -> bool
+    fn all_assumptions_valid(&self)
+        -> bool
     {
         for a in self.get_all_items() {
             if !a.assumption_valid() {
@@ -40,7 +43,8 @@ pub trait AssumableReasoning<T>
         true
     }
 
-    fn number_assumption_valid(&self) -> NumericalValue
+    fn number_assumption_valid(&self)
+        -> NumericalValue
     {
         self.get_all_items()
             .iter()
@@ -48,21 +52,26 @@ pub trait AssumableReasoning<T>
             .count() as NumericalValue
     }
 
-    fn percent_assumption_valid(&self) -> NumericalValue
+    fn percent_assumption_valid(&self)
+        -> NumericalValue
     {
         let total = self.len() as NumericalValue;
         let count = self.number_assumption_valid();
         (count / total) * 100.0
     }
 
-    fn verify_all_assumptions(&self, data: &[NumericalValue])
+    fn verify_all_assumptions(
+        &self,
+        data: &[NumericalValue]
+    )
     {
         for a in self.get_all_items() {
             a.verify_assumption(data);
         }
     }
 
-    fn get_all_invalid_assumptions(&self) -> Vec<&T>
+    fn get_all_invalid_assumptions(&self)
+        -> Vec<&T>
     {
         self.get_all_items()
             .into_iter()
@@ -70,7 +79,8 @@ pub trait AssumableReasoning<T>
             .collect()
     }
 
-    fn get_all_valid_assumptions(&self) -> Vec<&T>
+    fn get_all_valid_assumptions(&self)
+        -> Vec<&T>
     {
         self.get_all_items()
             .into_iter()
@@ -78,7 +88,8 @@ pub trait AssumableReasoning<T>
             .collect()
     }
 
-    fn get_all_tested_assumptions(&self) -> Vec<&T>
+    fn get_all_tested_assumptions(&self)
+        -> Vec<&T>
     {
         self.get_all_items()
             .into_iter()
@@ -86,7 +97,8 @@ pub trait AssumableReasoning<T>
             .collect()
     }
 
-    fn get_all_untested_assumptions(&self) -> Vec<&T>
+    fn get_all_untested_assumptions(&self)
+        -> Vec<&T>
     {
         self.get_all_items()
             .into_iter()
