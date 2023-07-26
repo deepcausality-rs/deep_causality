@@ -132,7 +132,7 @@ before all make commands work:
     make bench          Runs all benchmarks across all crates.
     make check          Checks the code base for security vulnerabilities.
     make coverage       Checks test coverage and generates a html report.
-    make example        Runs the default example: Smoking.
+    make example        Runs the code examples.
     make fix            Auto-fixes linting issues as reported by cargo and clippy.
     make test           Runs all tests across all crates.
 ```
