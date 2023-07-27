@@ -19,6 +19,7 @@ authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 # default-features = false mitigates "RUSTSEC-2020-0071".
 # See https://rustsec.org/advisories/RUSTSEC-2020-0071.html
 chrono = { version = "0.4", default-features = false , features = ["serde", "clock"] }
+parquet = "44.0.0"
 petgraph = "0.6.3"
 rust_decimal = "1.30.0"
 serde = { version = "1.0.175", features = ["derive"] }
