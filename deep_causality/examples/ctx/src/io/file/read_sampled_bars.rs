@@ -15,13 +15,12 @@ use crate::types::sampled_date_time_bar::SampledDataBars;
 
 pub fn read_sampled_bars<'a>(
     time_scale: &'a TimeScale,
+    capacity: usize,
     sampled_bars: &'a mut SampledDataBars,
 )
     -> Result<(), Box<dyn Error>>
 {
-    let capacity = get_capacity(time_scale);
     let config = config::get_sampled_bar_config(time_scale);
-
     read_sampled_bars_from_parquet(&config, capacity, sampled_bars)
         .expect("Failed to read hourly sampled bars from parquet file");
 
@@ -64,17 +63,3 @@ fn read_sampled_bars_from_parquet<'a>(
     Ok(())
 }
 
-fn get_capacity(
-    time_scale: &TimeScale,
-)
-    -> usize
-{
-    match time_scale {
-        TimeScale::Hour => 9_000,
-        TimeScale::Day => 3_700,
-        TimeScale::Week => 50,
-        TimeScale::Month => 12,
-        TimeScale::Year => 1,
-        _ => 500, // default
-    }
-}

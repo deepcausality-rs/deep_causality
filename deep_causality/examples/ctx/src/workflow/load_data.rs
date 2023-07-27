@@ -8,13 +8,28 @@ use crate::types::sampled_date_time_bar::SampledDataBars;
 pub fn load_data()
     -> Result<SampledDataBars, Box<dyn Error>>
 {
-    let mut result = SampledDataBars::default();
+    let mut sampled_bars = SampledDataBars::default();
     let scales = vec![TimeScale::Day,TimeScale::Week,TimeScale::Month,TimeScale::Year];
 
     for time_scale in scales {
-        read_sampled_bars(&time_scale, &mut result)
+        let capacity = get_capacity(&time_scale);
+        read_sampled_bars(&time_scale, capacity,&mut sampled_bars)
             .expect("Failed to read sampled data bars from parquet file");
     }
 
-    Ok(result)
+    Ok(sampled_bars)
+}
+
+fn get_capacity(
+    time_scale: &TimeScale,
+)
+    -> usize
+{
+    match time_scale {
+        TimeScale::Day => 370,
+        TimeScale::Week => 60,
+        TimeScale::Month => 12,
+        TimeScale::Year => 1,
+        _ => 500, // default
+    }
 }
