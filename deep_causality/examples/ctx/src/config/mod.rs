@@ -24,8 +24,8 @@ fn get_file_config(
     -> ParquetConfig
 {
     ParquetConfig::new(
-        format!("/data/btc/{}.parquet", time_scale.to_string()),
-        format!("BTC"),
+        format!("/data/btc/{}.parquet", time_scale),
+        "BTC".to_string(),
         *time_scale,
     )
 }

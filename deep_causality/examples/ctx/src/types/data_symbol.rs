@@ -4,32 +4,26 @@ use std::fmt::{Display, Formatter};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq, PartialOrd, Ord, Deserialize, Serialize)]
+#[derive(Debug, Default, Copy, Clone, Hash, Eq, PartialEq, PartialOrd, Ord, Deserialize, Serialize)]
 pub enum DataSymbol
 {
-    NONE,
-    BTCUSD,
-    ETHUSD,
+    #[default]
+    NoSymbol,
+    BtcUsd,
+    EthUsd,
 }
 
 impl DataSymbol
 {
     pub fn from_str(s: &str) -> Option<DataSymbol> {
         match s.to_lowercase().as_str() {
-            "btcusd" => Some(DataSymbol::BTCUSD),
-            "ethusd" => Some(DataSymbol::ETHUSD),
+            "btcusd" => Some(DataSymbol::BtcUsd),
+            "ethusd" => Some(DataSymbol::EthUsd),
             _ => None,
         }
     }
 }
 
-impl Default for DataSymbol
-{
-    fn default() -> Self
-    {
-        DataSymbol::NONE
-    }
-}
 
 impl Display for DataSymbol
 {

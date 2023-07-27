@@ -20,7 +20,7 @@ pub fn run()
     let lap = Instant::now();
 
     let context = match build_time_data_context(
-        01,
+        1,
         "BTC-1Y".to_uppercase(),
         &data,
         max_time_scale,

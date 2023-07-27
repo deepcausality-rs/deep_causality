@@ -153,7 +153,6 @@ pub fn generate_time_data_context_graph(
                 let time_scale = TimeScale::Day;
                 let elements = data.day_bars();
                 for data_bar in elements {
-
                     if data_bar.date_time().year() != year {
                         continue;
                     }
@@ -191,7 +190,6 @@ pub fn generate_time_data_context_graph(
                         day_index,
                         RelationKind::Datial,
                     );
-
                 } // end day
             } // end week
         } // end month
@@ -205,7 +203,7 @@ fn get_boolean_control_map(
 )
     -> Vec<bool>
 {
-    return match time_scale {
+    match time_scale {
         // Boolean Index:
         // 0: Year,1: Quarter,2: Month,3: Week,4: Day,5: Hour,6: Minute, 7: Second
         TimeScale::NoScale => vec![true, true, true, true, true, true, true, true],
@@ -217,5 +215,5 @@ fn get_boolean_control_map(
         TimeScale::Month => vec![true, true, true, false, false, false, false, false],
         TimeScale::Quarter => vec![true, true, false, false, false, false, false, false],
         TimeScale::Year => vec![true, false, false, false, false, false, false, false],
-    };
+    }
 }

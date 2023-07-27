@@ -39,7 +39,7 @@ fn read_sampled_bars_from_parquet<'a>(
     let mut content: Vec<DateTimeBar> = Vec::with_capacity(capacity);
 
     let path = config.path();
-    let file = File::open(&Path::new(path)).expect("Could not open file");
+    let file = File::open(Path::new(path)).expect("Could not open file");
     let symbol = config.symbol();
 
     let reader = SerializedFileReader::new(file)
@@ -69,12 +69,12 @@ fn get_capacity(
 )
     -> usize
 {
-    return match time_scale {
+    match time_scale {
         TimeScale::Hour => 9_000,
         TimeScale::Day => 3_700,
         TimeScale::Week => 50,
         TimeScale::Month => 12,
         TimeScale::Year => 1,
         _ => 500, // default
-    };
+    }
 }
