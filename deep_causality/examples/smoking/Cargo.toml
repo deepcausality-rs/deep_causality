@@ -1,0 +1,8 @@
+[package]
+name = "example-deep-causality-smoking"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+deep_causality = "0.2.8"
