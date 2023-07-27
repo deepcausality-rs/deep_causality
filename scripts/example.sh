@@ -16,17 +16,17 @@ do
   case $opt in
     csm)
       echo "Selected example: CSM (Causal State Machine)"
-      command cargo run --release --example csm
+      command cargo run --release --bin example-csm
       break
       ;;
     ctx)
       echo "Selected example: CTX (Context)"
-      command cargo run --release --example ctx
+      command cargo run --release --bin example-ctx
       break
       ;;
     smoking)
       echo "Selected example: SMOKING (Smoking)"
-      command cargo run --release --example smoking
+       command cargo run --release --bin example-smoking
       break
       ;;
     quit)

@@ -1,5 +1,5 @@
 [package]
-name = "example-deep-causality-smoking"
+name = "example-smoking"
 version = "0.1.0"
 edition = "2021"
 publish = false
