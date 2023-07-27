@@ -12,16 +12,16 @@ use crate::types::date_time_bar::DateTimeBar;
 use crate::types::parquet_config::ParquetConfig;
 use crate::types::sampled_date_time_bar::SampledDataBars;
 
-pub fn read_sampled_bars_from_parquet(
-    config: &ParquetConfig,
-    sampled_bars: &mut SampledDataBars,
+pub fn read_sampled_bars_from_parquet<'a>(
+    config: &'a ParquetConfig,
+    sampled_bars: &'a mut SampledDataBars,
 )
-    -> Result<&SampledDataBars, Box<dyn Error>>
+    -> Result<&'a SampledDataBars, Box<dyn Error>>
 {
     let time_scale = config.time_scale();
     let mut content: Vec<DateTimeBar> = Vec::with_capacity(1300); // fixed pre-allocation
 
-    let path = config.in_file();
+    let path = config.path();
     let file = File::open(&Path::new(path)).expect("Could not open file");
     let symbol = config.symbol();
 
