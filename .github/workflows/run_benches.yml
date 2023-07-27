@@ -1,4 +1,4 @@
-name: Run Tests
+name: Run Benchmarks
 
 on:
   push:
@@ -18,8 +18,5 @@ jobs:
       - name: Build
         run: cargo build --verbose
 
-      - name: Run Doc tests
-        run: cargo test --doc --verbose
-
-      - name: Run tests
-        run: cargo test --verbose
+      - name: Run benchmarks
+        run: cargo bench --verbose
