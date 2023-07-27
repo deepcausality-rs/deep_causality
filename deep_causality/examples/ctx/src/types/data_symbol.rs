@@ -5,7 +5,9 @@ use std::fmt::{Display, Formatter};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq, PartialOrd, Ord, Deserialize, Serialize)]
-pub enum DataSymbol {
+pub enum DataSymbol
+{
+    NONE,
     BTCUSD,
     ETHUSD,
 }
@@ -19,20 +21,13 @@ impl DataSymbol
             _ => None,
         }
     }
-
-    pub fn as_str(&self) -> &'static str {
-        match *self {
-            DataSymbol::BTCUSD => "btcusd",
-            DataSymbol::ETHUSD => "ethusd",
-        }
-    }
 }
 
 impl Default for DataSymbol
 {
     fn default() -> Self
     {
-        DataSymbol::BTCUSD
+        DataSymbol::NONE
     }
 }
 

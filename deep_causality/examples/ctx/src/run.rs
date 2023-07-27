@@ -3,14 +3,14 @@
 use std::time::{Duration, Instant};
 use deep_causality::prelude::TimeScale;
 use crate::workflow::build_time_data_context;
-use crate::workflow::load_data::load_agg_data;
+use crate::workflow::load_data::load_data;
 
 pub fn run()
 {
     let max_time_scale = TimeScale::Day;
 
     let lap = Instant::now();
-    let data = match load_agg_data() {
+    let data = match load_data() {
         Ok(res) => res,
         Err(e) => panic!("{}", e),
     };

@@ -5,6 +5,7 @@ mod protocols;
 mod types;
 mod workflow;
 mod io;
+mod config;
 
 use deep_causality::prelude::time_execution;
 
