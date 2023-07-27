@@ -8,16 +8,20 @@ use crate::types::dateoid::Dataoid;
 use crate::types::sampled_date_time_bar::SampledDataBars;
 use crate::workflow::augment_data;
 
-const NODE_CAPACITY: usize = 1000;
-
 
 pub fn build_time_data_context(
     data: &SampledDataBars,
     max_time_scale: TimeScale,
+    node_capacity: usize,
 )
     -> Result<Context<Dataoid, Spaceoid, Tempoid, SpaceTempoid>, Box<dyn Error>>
 {
-    let graph = match generate_time_data_context_graph(data, max_time_scale) {
+    let graph = match generate_time_data_context_graph(
+        data,
+        max_time_scale,
+        node_capacity
+    )
+    {
         Ok(g) => g,
         Err(e) => return Err(e),
     };
@@ -50,12 +54,13 @@ fn get_boolean_control_map(
 fn generate_time_data_context_graph(
     data: &SampledDataBars,
     time_scale: TimeScale,
+    node_capacity: usize,
 )
     -> Result<ContextMatrixGraph<Dataoid, Spaceoid, Tempoid, SpaceTempoid>, Box<dyn Error>>
 {
     let counter = counter::RelaxedAtomicCounter::new();
 
-    let mut g = ContextMatrixGraph::with_capacity(NODE_CAPACITY);
+    let mut g = ContextMatrixGraph::with_capacity(node_capacity);
 
     let cm = get_boolean_control_map(time_scale);
     let add_month = *cm.get(2).unwrap();
