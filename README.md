@@ -6,6 +6,7 @@
 ![Audit][audit-url]
 ![Tests][test-url]
 ![Clippy][clippy-url]
+![Benchmarks][benches-url]
 [![OpenSSF Best Practices][ossf-badge]][ossf-url]
 [![codecov][codecov-badge]][codecov-url]
 
@@ -25,8 +26,8 @@
 [mit-url]: https://github.com/deepcausality-rs/deep_causality/blob/main/LICENSE
 
 [audit-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/audit.yml/badge.svg
+[benches-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_benches.yml/badge.svg
 [clippy-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/rust-clippy.yml/badge.svg
-
 [test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
 
 Web: https://deepcausality.com
