@@ -24,7 +24,7 @@ fn get_file_config(
     -> ParquetConfig
 {
     ParquetConfig::new(
-        format!("/data/btc/pqt/{}.parquet", time_scale),
+        format!("deep_causality/examples/ctx/data/btc/pqt/{}.parquet", time_scale),
         "btcusd".to_string(),
         *time_scale,
     )

@@ -25,11 +25,11 @@ pub fn convert_field_to_date_time_bar(
     // 7 trades u64
     let date_time = get_date_time_field(record).expect("Failed to get date_time field");
     let symbol = DataSymbol::from_str(symbol).expect("Cannot convert str symbol to DataSymbol");
-    let open = Decimal::from_f64(record.get_double(1).unwrap()).unwrap();
-    let high = Decimal::from_f64(record.get_double(2).unwrap()).unwrap();
-    let low = Decimal::from_f64(record.get_double(3).unwrap()).unwrap();
-    let close = Decimal::from_f64(record.get_double(4).unwrap()).unwrap();
-    let volume = Decimal::from_f64(record.get_double(5).unwrap()).unwrap();
+    let open = Decimal::from_f64(record.get_double(2).unwrap()).unwrap();
+    let high = Decimal::from_f64(record.get_double(3).unwrap()).unwrap();
+    let low = Decimal::from_f64(record.get_double(4).unwrap()).unwrap();
+    let close = Decimal::from_f64(record.get_double(5).unwrap()).unwrap();
+    let volume = Decimal::from_f64(record.get_double(6).unwrap()).unwrap();
 
     DateTimeBar::new(symbol, date_time, open, high, low, close, volume)
 }
