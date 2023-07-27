@@ -35,9 +35,9 @@ pub fn run()
 
     // This context hypergraph is low resolution (Day), relatively small (<1k nodes),
     // and thus takes only a few milliseconds to generate. In practice,
-    // you would probably update the context regularly. Bear in mind, if you do update the context
+    // you would probably update the context regularly. Bear in mind, if you do update
     // on a regular basis, the context hypergraph will grow significantly over time. Therefore, you
-    // may want to prune old branches every once in a while to stay within you pre-allocated node
+    // may want to prune old branches every once in a while to stay within the pre-allocated node
     // capacity to prevent expensive graph resizing operations in production.
     let lap = Instant::now();
     let context = match build_time_data_context(&data, max_time_scale, node_capacity) {

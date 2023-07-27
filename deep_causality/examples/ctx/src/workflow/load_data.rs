@@ -11,6 +11,8 @@ pub fn load_data()
     let mut sampled_bars = SampledDataBars::default();
     let scales = vec![TimeScale::Day,TimeScale::Week,TimeScale::Month,TimeScale::Year];
 
+    // Sequential data loading because the mutable reference to sampled_bars prevents parallel loading.
+    // However, because the data set is so small, it is not really beneficial to parallelize.
     for time_scale in scales {
         let capacity = get_capacity(&time_scale);
         read_sampled_bars(&time_scale, capacity,&mut sampled_bars)
