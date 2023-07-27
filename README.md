@@ -4,9 +4,9 @@
 [![Docs.rs][docs-badge]][docs-url]
 [![MIT licensed][mit-badge]][mit-url]
 ![Audit][audit-url]
-![Tests][test-url]
-![Clippy][clippy-url]
 ![Benchmarks][benches-url]
+![Clippy][clippy-url]
+![Tests][test-url]
 [![OpenSSF Best Practices][ossf-badge]][ossf-url]
 [![codecov][codecov-badge]][codecov-url]
 
