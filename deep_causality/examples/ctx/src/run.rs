@@ -2,34 +2,38 @@
 
 use std::time::{Duration, Instant};
 use deep_causality::prelude::TimeScale;
-use crate::workflow::build_time_data_context;
-use crate::workflow::load_data::load_data;
+use crate::workflow::{build_time_data_context, load_data};
 
 pub fn run()
 {
+    // Dermines the lowest level of time resolution in the context hypergraph.
+    // Important: If you change this value to a lower level i.e. seconds,
+    // the initial context hypergraph generation requires exponentially more time and memory.
+    //  For 10 years of market data at minute resolution, you would need 30 - 50 GB of memory
+    //  and quite a long time to generate a comprehensive context hypergraph. Right now, a context cannot
+    //  be serialized and stored, but it's technically possible with Serde.
     let max_time_scale = TimeScale::Day;
 
+    // Here we just load a bunch of pre-sampled data from parquet files.
     let lap = Instant::now();
     let data = match load_data() {
         Ok(res) => res,
         Err(e) => panic!("{}", e),
     };
 
+    // Reading parquet files is at least 10x faster than reading CSV files.
     let elapsed = &lap.elapsed();
     print_duration("Load Data", elapsed);
 
+    //
     let lap = Instant::now();
-    let context = match build_time_data_context(
-        1,
-        "BTC-1Y".to_uppercase(),
-        &data,
-        max_time_scale,
-    )
+    let context = match build_time_data_context(&data, max_time_scale)
     {
         Ok(res) => res,
         Err(e) => panic!("{}", e),
     };
 
+    //
     let elapsed = &lap.elapsed();
     print_duration("Build Context HyperGraph", elapsed);
 

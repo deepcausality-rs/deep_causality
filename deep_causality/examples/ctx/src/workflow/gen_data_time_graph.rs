@@ -2,7 +2,7 @@
 
 use std::error::Error;
 use chrono::Datelike;
-use deep_causality::prelude::{ContextMatrixGraph, Node, NodeType, RelationKind, Root, Spaceoid, SpaceTempoid, Tempoid, TimeScale};
+use deep_causality::prelude::{Context, ContextMatrixGraph, Node, NodeType, RelationKind, Root, Spaceoid, SpaceTempoid, Tempoid, TimeScale};
 use crate::types::counter;
 use crate::types::dateoid::Dataoid;
 use crate::types::sampled_date_time_bar::SampledDataBars;
@@ -10,7 +10,44 @@ use crate::workflow::augment_data;
 
 const NODE_CAPACITY: usize = 1000;
 
-pub fn generate_time_data_context_graph(
+
+pub fn build_time_data_context(
+    data: &SampledDataBars,
+    max_time_scale: TimeScale,
+)
+    -> Result<Context<Dataoid, Spaceoid, Tempoid, SpaceTempoid>, Box<dyn Error>>
+{
+    let graph = match generate_time_data_context_graph(data, max_time_scale) {
+        Ok(g) => g,
+        Err(e) => return Err(e),
+    };
+
+    Ok(Context::new(1, "BTC-1Y".to_string(), graph))
+}
+
+
+fn get_boolean_control_map(
+    time_scale: TimeScale
+)
+    -> Vec<bool>
+{
+    match time_scale {
+        // Boolean Index:
+        // 0: Year,1: Quarter,2: Month,3: Week,4: Day,5: Hour,6: Minute, 7: Second
+        TimeScale::NoScale => vec![true, true, true, true, true, true, true, true],
+        TimeScale::Second => vec![true, true, true, true, true, true, true, true],
+        TimeScale::Minute => vec![true, true, true, true, true, true, true, false],
+        TimeScale::Hour => vec![true, true, true, true, true, true, false, false],
+        TimeScale::Day => vec![true, true, true, true, true, false, false, false],
+        TimeScale::Week => vec![true, true, true, true, false, false, false, false],
+        TimeScale::Month => vec![true, true, true, false, false, false, false, false],
+        TimeScale::Quarter => vec![true, true, false, false, false, false, false, false],
+        TimeScale::Year => vec![true, false, false, false, false, false, false, false],
+    }
+}
+
+
+fn generate_time_data_context_graph(
     data: &SampledDataBars,
     time_scale: TimeScale,
 )
@@ -198,22 +235,3 @@ pub fn generate_time_data_context_graph(
     Ok(g)
 }
 
-fn get_boolean_control_map(
-    time_scale: TimeScale
-)
-    -> Vec<bool>
-{
-    match time_scale {
-        // Boolean Index:
-        // 0: Year,1: Quarter,2: Month,3: Week,4: Day,5: Hour,6: Minute, 7: Second
-        TimeScale::NoScale => vec![true, true, true, true, true, true, true, true],
-        TimeScale::Second => vec![true, true, true, true, true, true, true, true],
-        TimeScale::Minute => vec![true, true, true, true, true, true, true, false],
-        TimeScale::Hour => vec![true, true, true, true, true, true, false, false],
-        TimeScale::Day => vec![true, true, true, true, true, false, false, false],
-        TimeScale::Week => vec![true, true, true, true, false, false, false, false],
-        TimeScale::Month => vec![true, true, true, false, false, false, false, false],
-        TimeScale::Quarter => vec![true, true, false, false, false, false, false, false],
-        TimeScale::Year => vec![true, false, false, false, false, false, false, false],
-    }
-}
