@@ -2,10 +2,11 @@
 
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
+#[derive(Debug, Default, Copy, Clone, Hash, Eq, PartialEq)]
 #[repr(u8)]
 pub enum TimeScale
 {
+    #[default]
     NoScale,
     Second,
     Minute,
@@ -19,7 +20,5 @@ pub enum TimeScale
 
 impl Display for TimeScale
 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { write!(f, "{:?}", self) }
 }
