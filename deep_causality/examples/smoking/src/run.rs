@@ -105,7 +105,7 @@ fn build_smoke_tar_causaloid() -> Causaloid
     let inferable_coll: Vec<Inference> = Vec::from_iter([inference]);
     let inverse_inferable_coll: Vec<Inference> = Vec::from_iter([inv_inference]);
     // 2) Describe the causal relation
-    let id = 01;
+    let id = 1;
     let description = "Causal relation between smoking and tar in the lung".to_string();
     let data_set_id = "Data set abc from study Homer et al. DOI: 122345 ".to_string();
 
@@ -152,7 +152,7 @@ fn build_tar_cancer_causaloid() -> Causaloid
     let inverse_inferable_coll: Vec<Inference> = Vec::from_iter([inv_inference]);
 
     // 2) Describe the causal relation
-    let id = 02;
+    let id = 2;
     let description = "Causal relation tar in the lung and lung cancer".to_string();
     let data_set_id = "Aggregated data set from meta study Parcel et al. DOI: 122345 ".to_string();
 
@@ -185,7 +185,7 @@ fn _build_cancer_death_causaloid() -> Causaloid {
     let inv_inference = Inference::new(0, inv_question, inv_observation, threshold, inv_effect, inv_target);
 
     // Causaloid
-    let id = 03;
+    let id = 3;
     let description = "Causal relation lung cancer and early death".to_string();
     let data_set_id = "Aggregated data set from meta study Morbid et al. DOI: 122345 ".to_string();
     let inverse_inferable_coll: Vec<Inference> = Vec::from_iter([inv_inference]);
