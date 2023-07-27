@@ -14,4 +14,4 @@ chrono = { version = "0.4", default-features = false , features = ["serde", "clo
 parquet = "44.0.0"
 petgraph = "0.6.3"
 rust_decimal = "1.30.0"
-serde = { version = "1.0.175", features = ["derive"] }
+serde = { version = "1.0.176", features = ["derive"] }
