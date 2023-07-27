@@ -16,9 +16,9 @@ pub fn run()
     };
 
     let elapsed = &lap.elapsed();
-    print_duration("Read data", elapsed);
-    let lap = Instant::now();
+    print_duration("Load Data", elapsed);
 
+    let lap = Instant::now();
     let context = match build_time_data_context(
         1,
         "BTC-1Y".to_uppercase(),
@@ -31,7 +31,7 @@ pub fn run()
     };
 
     let elapsed = &lap.elapsed();
-    print_duration("Generate HyperGraph", elapsed);
+    print_duration("Build Context HyperGraph", elapsed);
 
     let data_size = data.day_bars().len() as u64;
     let vertex_count = context.node_count();
