@@ -25,7 +25,8 @@ pub fn run()
     let elapsed = &lap.elapsed();
     print_duration("Load Data", elapsed);
 
-    //
+    // This context hypergraph is low resolution and relatively small (<1k nodes)
+    // and thus takes only a few milliseconds to generate.
     let lap = Instant::now();
     let context = match build_time_data_context(&data, max_time_scale)
     {
@@ -33,17 +34,13 @@ pub fn run()
         Err(e) => panic!("{}", e),
     };
 
-    //
     let elapsed = &lap.elapsed();
     print_duration("Build Context HyperGraph", elapsed);
 
-    let data_size = data.day_bars().len() as u64;
-    let vertex_count = context.node_count();
-    let edge_count = context.edge_count();
-
-    println!("Edge Count: {}", edge_count);
-    println!("Vertex Count: {}", vertex_count);
-    println!("Number Datapoints: {}", data_size);
+    // Print out some key metrics of the context graph.
+    println!("Edge Count: {}", context.edge_count());
+    println!("Vertex Count: {}", context.node_count());
+    println!("Number Datapoints: {}", data.total_number_of_bars());
 }
 
 fn print_duration(msg: &str, elapsed: &Duration)

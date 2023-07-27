@@ -14,6 +14,9 @@ pub struct SampledDataBars
 
 impl SampledDataBars
 {
+    pub fn total_number_of_bars(&self) -> usize {
+        self.day_bars.len() + self.week_bars.len() + self.month_bars.len() + self.year_bars.len()
+    }
     pub fn set_day_bars(&mut self, day_bars: Vec<DateTimeBar>) {
         self.day_bars = day_bars;
     }
