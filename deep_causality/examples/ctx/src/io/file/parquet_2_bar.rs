@@ -34,40 +34,6 @@ pub fn convert_field_to_date_time_bar(
     DateTimeBar::new(symbol, date_time, open, high, low, close, volume)
 }
 
-pub fn convert_field_to_sampled_date_time_bar(
-    row: &Row
-)
-    -> DateTimeBar
-{
-    // parquet index. We can safely unwrap b/c all data are complete and correct.
-    // 0 date_time_sampled string
-    // 1 symbol String
-    // 2 open f64
-    // 3 high f64
-    // 4 low f64
-    // 5 close f64
-    // 6 delta_close f64 (skipped b/c not in struct)
-    // 7 volume f64
-    // 8 delta_volume f64 (skipped b/c not in struct)
-
-    let date_time: DateTime<Utc> = get_date_time_field(row).expect("Failed to get date_time field");
-    let symbol: &str = row.get_string(1).expect("Cannot extract str symbol");
-    let open_price: f64 = row.get_double(2).expect("Cannot extract open price");
-    let high_price: f64 = row.get_double(3).expect("Cannot extract high price");
-    let low_price: f64 = row.get_double(4).expect("Cannot extract low price");
-    let close_price: f64 = row.get_double(5).expect("Cannot extract close price");
-    let volume: f64 = get_volume_field(row);
-    DateTimeBar::new(
-        DataSymbol::from_str(symbol).expect("Failed to parse symbol"),
-        date_time,
-        Decimal::from_f64(open_price).expect("Failed to parse open price"),
-        Decimal::from_f64(high_price).expect("Failed to parse high price"),
-        Decimal::from_f64(low_price).expect("Failed to parse low price"),
-        Decimal::from_f64(close_price).expect("Failed to parse close price"),
-        Decimal::from_f64(volume).expect("Failed to parse volume"),
-    )
-}
-
 fn get_date_time_field(
     row: &Row
 )
@@ -99,16 +65,4 @@ fn get_date_time_field(
     }
 
     panic!("get_date_time_field: Cannot extract datetime field");
-}
-
-fn get_volume_field(
-    row: &Row
-)
-    -> f64
-{
-    return if row.get_double(6).is_ok() {
-        row.get_double(6).expect("Cannot extract volume")
-    } else {
-        row.get_double(7).expect("Cannot extract volume")
-    };
 }

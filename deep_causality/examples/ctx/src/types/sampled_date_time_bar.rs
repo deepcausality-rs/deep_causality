@@ -5,12 +5,9 @@ use crate::types::date_time_bar::DateTimeBar;
 #[derive(Debug, Clone)]
 pub struct SampledDataBars
 {
-    minute_bars: Vec<DateTimeBar>,
-    hour_bars: Vec<DateTimeBar>,
     day_bars: Vec<DateTimeBar>,
     week_bars: Vec<DateTimeBar>,
     month_bars: Vec<DateTimeBar>,
-    quarter_bars: Vec<DateTimeBar>,
     year_bars: Vec<DateTimeBar>,
 }
 
@@ -19,12 +16,9 @@ impl Default for SampledDataBars
 {
     fn default() -> Self {
         Self {
-            minute_bars: Vec::new(),
-            hour_bars: Vec::new(),
             day_bars: Vec::new(),
             week_bars: Vec::new(),
             month_bars: Vec::new(),
-            quarter_bars: Vec::new(),
             year_bars: Vec::new(),
         }
     }

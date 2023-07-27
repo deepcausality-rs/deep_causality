@@ -6,20 +6,37 @@ use std::path::Path;
 
 use parquet::file::reader::{FileReader, SerializedFileReader};
 use deep_causality::prelude::TimeScale;
+use crate::config;
 
 use crate::io::file::parquet_2_bar;
 use crate::types::date_time_bar::DateTimeBar;
 use crate::types::parquet_config::ParquetConfig;
 use crate::types::sampled_date_time_bar::SampledDataBars;
 
-pub fn read_sampled_bars_from_parquet<'a>(
-    config: &'a ParquetConfig,
+pub fn read_sampled_bars<'a>(
+    time_scale: &'a TimeScale,
     sampled_bars: &'a mut SampledDataBars,
 )
-    -> Result<&'a SampledDataBars, Box<dyn Error>>
+    -> Result<(), Box<dyn Error>>
+{
+    let capacity = get_capacity(time_scale);
+    let config = config::get_sampled_bar_config(time_scale);
+
+    read_sampled_bars_from_parquet(&config, capacity, sampled_bars)
+        .expect("Failed to read hourly sampled bars from parquet file");
+
+    Ok(())
+}
+
+fn read_sampled_bars_from_parquet<'a>(
+    config: &'a ParquetConfig,
+    capacity: usize,
+    sampled_bars: &'a mut SampledDataBars,
+)
+    -> Result<(), Box<dyn Error>>
 {
     let time_scale = config.time_scale();
-    let mut content: Vec<DateTimeBar> = Vec::with_capacity(1300); // fixed pre-allocation
+    let mut content: Vec<DateTimeBar> = Vec::with_capacity(capacity);
 
     let path = config.path();
     let file = File::open(&Path::new(path)).expect("Could not open file");
@@ -44,5 +61,20 @@ pub fn read_sampled_bars_from_parquet<'a>(
         _ => {}
     }
 
-    Ok(sampled_bars)
+    Ok(())
+}
+
+fn get_capacity(
+    time_scale: &TimeScale,
+)
+    -> usize
+{
+    return match time_scale {
+        TimeScale::Hour => 9_000,
+        TimeScale::Day => 3_700,
+        TimeScale::Week => 50,
+        TimeScale::Month => 12,
+        TimeScale::Year => 1,
+        _ => 500, // default
+    };
 }

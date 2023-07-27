@@ -12,6 +12,16 @@ pub struct ParquetConfig
     time_scale: TimeScale,
 }
 
+impl Default for ParquetConfig{
+    fn default() -> Self {
+        Self {
+            path: "".to_string(),
+            symbol: "".to_string(),
+            time_scale: TimeScale::NoScale,
+        }
+    }
+}
+
 impl ParquetConfig
 {
 

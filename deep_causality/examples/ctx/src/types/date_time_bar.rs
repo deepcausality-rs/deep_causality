@@ -50,9 +50,6 @@ impl Default for DateTimeBar
 
 impl DateTimeBar
 {
-    pub fn symbol(&self) -> DataSymbol {
-        self.symbol
-    }
     pub fn date_time(&self) -> DateTime<Utc> {
         self.date_time
     }
