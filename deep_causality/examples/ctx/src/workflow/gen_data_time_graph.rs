@@ -8,7 +8,7 @@ use crate::types::dateoid::Dataoid;
 use crate::types::sampled_date_time_bar::SampledDataBars;
 use crate::workflow::augment_data;
 
-const NODE_CAPACITY: usize = 525600;
+const NODE_CAPACITY: usize = 1000;
 
 pub fn generate_time_data_context_graph(
     data: &SampledDataBars,
