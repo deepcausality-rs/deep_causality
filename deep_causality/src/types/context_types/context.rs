@@ -4,7 +4,8 @@ use std::collections::HashMap;
 use std::fmt::{Debug, Display, Formatter};
 use petgraph::Directed;
 use petgraph::matrix_graph::MatrixGraph;
-use crate::prelude::{Contextoid, NodeIndex,Datable, SpaceTemporal, Spatial, Temporal};
+use crate::prelude::{Contextuable, Contextoid, Datable, NodeIndex, SpaceTemporal, Spatial, Temporal};
+
 
 #[derive(Clone)]
 pub struct Context<'l, D, S, T, ST>
@@ -69,12 +70,11 @@ impl<'l, D, S, T, ST> Default for Context<'l, D, S, T, ST>
     }
 }
 
-impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
-    where
-        D: Datable,
-        S: Spatial,
-        T: Temporal,
-        ST: SpaceTemporal
+impl<'l, D, S, T, ST> Contextuable<'l, D, S, T, ST> for Context<'l, D, S, T, ST> where
+    D: Datable,
+    S: Spatial,
+    T: Temporal,
+    ST: SpaceTemporal
 {
     fn add_contextoid(
         &mut self,
@@ -87,7 +87,6 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
 
         node_index
     }
-
     fn contains_contextoid(
         &self,
         index: NodeIndex,
@@ -96,7 +95,6 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
     {
         self.context_map.contains_key(&index)
     }
-
     fn get_contextoid(
         &self,
         index: NodeIndex,
@@ -105,7 +103,6 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
     {
         self.context_map.get(&index)
     }
-
     fn remove_contextoid(
         &mut self,
         index: NodeIndex,
@@ -115,6 +112,13 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
         self.context_map.remove(&index);
     }
 
+    fn add_edge(&mut self, a: NodeIndex, b: NodeIndex) {
+         self.graph.add_edge(a, b, 0);
+    }
+
+    fn add_edg_with_weight(&mut self, a: NodeIndex, b: NodeIndex, weight: u64) {
+        self.graph.add_edge(a, b, weight);
+    }
 
     fn contains_edge(
         &self,
@@ -126,6 +130,16 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
         self.graph.has_edge(a, b)
     }
 
+    fn remove_edge(
+        &mut self,
+        a: NodeIndex,
+        b: NodeIndex
+    )
+        -> u64
+    {
+        self.graph.remove_edge(a,b)
+    }
+
     fn size(
         &self
     )
@@ -133,7 +147,6 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
     {
         self.context_map.len()
     }
-
     fn is_empty(
         &self
     )
@@ -141,12 +154,10 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
     {
         self.context_map.is_empty()
     }
-
-    pub fn node_count(&self) -> usize {
+    fn node_count(&self) -> usize {
         self.graph.node_count()
     }
-
-    pub fn edge_count(&self) -> usize {
+    fn edge_count(&self) -> usize {
         self.graph.edge_count()
     }
 }

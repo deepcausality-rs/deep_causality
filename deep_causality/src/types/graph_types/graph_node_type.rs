@@ -28,7 +28,7 @@ pub enum NodeType<D, S, T, ST>
     Datoid(D),
     Tempoid(T),
     Root(Root),
-    Spaceiod(S),
+    Spaceoid(S),
     SpaceTempoid(ST),
 }
 
@@ -63,7 +63,7 @@ impl<D, S, T, ST> NodeType<D, S, T, ST>
         }
     }
     pub fn spaceiod(&self) -> Option<&S> {
-        if let NodeType::Spaceiod(b) = self {
+        if let NodeType::Spaceoid(b) = self {
             Some(b)
         } else {
             None
@@ -90,7 +90,7 @@ impl<D, S, T, ST> Display for NodeType<D, S, T, ST>
             NodeType::Datoid(b) => write!(f, "Datoid: {}", b),
             NodeType::Tempoid(b) => write!(f, "Tempoid: {}", b),
             NodeType::Root(b) => write!(f, "Root: {}", b),
-            NodeType::Spaceiod(b) => write!(f, "Spaceiod: {}", b),
+            NodeType::Spaceoid(b) => write!(f, "Spaceiod: {}", b),
             NodeType::SpaceTempoid(b) => write!(f, "SpaceTempoid: {}", b),
         }
     }

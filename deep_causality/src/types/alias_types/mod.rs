@@ -1,8 +1,6 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use petgraph::Directed;
-
-use crate::prelude::{CausalityError, Contextoid, RelationKind};
+use crate::prelude::{CausalityError};
 
 // Type aliases
 pub type IdentificationValue = u64;

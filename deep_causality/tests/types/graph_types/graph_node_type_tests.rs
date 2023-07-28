@@ -85,7 +85,7 @@ fn test_spaceiod_some()
     let z = 9;
 
     let d = Spaceoid::new(id, x, y, z);
-    let node: Contextoid<Dataoid, Spaceoid, Tempoid, SpaceTempoid> = Contextoid::new(id, NodeType::Spaceiod(d));
+    let node: Contextoid<Dataoid, Spaceoid, Tempoid, SpaceTempoid> = Contextoid::new(id, NodeType::Spaceoid(d));
     assert!(node.vertex_type().spaceiod().is_some());
     //
     assert!(node.vertex_type().dataoid().is_none());
