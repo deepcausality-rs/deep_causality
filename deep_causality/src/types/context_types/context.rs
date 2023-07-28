@@ -48,7 +48,7 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
     }
 
     pub fn edge_count(&self) -> usize {
-        self.graph.edgemak_count()
+        self.graph.edge_count()
     }
 
     fn format(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
