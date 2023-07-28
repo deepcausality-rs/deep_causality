@@ -178,6 +178,7 @@ Parts of the implementation are inspired by:
 * [Differentiable Types](https://github.com/tensorflow/swift/blob/main/docs/DifferentiableTypes.md)
 * [Extension Trait](http://xion.io/post/code/rust-extension-traits.html)
 * [Storage API](https://github.com/petgraph/petgraph/issues/563)
+* [gTime: Time Graph](https://youtu.be/dIeYjLtg6s4)
 
 Finally, inspiration, especially related to the hypergraph structure, was derived from reading
 the [Quanta Magazine](https://www.quantamagazine.org/).
