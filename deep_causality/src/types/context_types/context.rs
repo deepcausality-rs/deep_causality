@@ -5,7 +5,7 @@ use std::fmt::{Debug, Display, Formatter};
 use crate::prelude::{ContextMatrixGraph};
 use crate::protocols::contextuable::{Datable, SpaceTemporal, Spatial, Temporal};
 
-pub struct Context<D, S, T, ST>
+pub struct Context<'l, D, S, T, ST>
     where
         D: Datable,
         S: Spatial,
@@ -14,11 +14,11 @@ pub struct Context<D, S, T, ST>
 {
     id: u64,
     name: String,
-    graph: ContextMatrixGraph<D, S, T, ST>,
+    graph: &'l ContextMatrixGraph<D, S, T, ST>,
 }
 
 
-impl<D, S, T, ST> Context<D, S, T, ST>
+impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
     where
         D: Datable,
         S: Spatial,
@@ -28,7 +28,7 @@ impl<D, S, T, ST> Context<D, S, T, ST>
     pub fn new(
         id: u64,
         name: String,
-        graph: ContextMatrixGraph<D, S, T, ST>,
+        graph: &'l ContextMatrixGraph<D, S, T, ST>,
     )
         -> Self
     {
@@ -48,7 +48,7 @@ impl<D, S, T, ST> Context<D, S, T, ST>
     }
 
     pub fn edge_count(&self) -> usize {
-        self.graph.edge_count()
+        self.graph.edgemak_count()
     }
 
     fn format(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -62,7 +62,7 @@ impl<D, S, T, ST> Context<D, S, T, ST>
     }
 }
 
-impl<D, S, T, ST> Debug for Context<D, S, T, ST>
+impl<'l, D, S, T, ST> Debug for Context<'l, D, S, T, ST>
     where
         D: Datable,
         S: Spatial,
@@ -74,7 +74,7 @@ impl<D, S, T, ST> Debug for Context<D, S, T, ST>
     }
 }
 
-impl<D, S, T, ST> Display for Context<D, S, T, ST>
+impl<'l, D, S, T, ST> Display for Context<'l, D, S, T, ST>
     where
         D: Datable,
         S: Spatial,

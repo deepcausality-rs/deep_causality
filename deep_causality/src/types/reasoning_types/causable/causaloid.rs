@@ -20,20 +20,20 @@ impl Display for CausalType { fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::
 
 
 #[derive(Clone)]
-pub struct Causaloid
+pub struct Causaloid<'l>
 {
     id: IdentificationValue,
     active: RefCell<bool>,
     causal_type: CausalType,
     causal_fn: CausalFn,
-    causal_coll: Option<Vec<Causaloid>>,
-    causal_graph: Option<CausaloidGraph<Causaloid>>,
+    causal_coll: Option<&'l Vec<Causaloid<'l>>>,
+    causal_graph: Option<&'l CausaloidGraph<Causaloid<'l>>>,
     last_obs: RefCell<NumericalValue>,
     description: DescriptionValue,
 }
 
 
-impl Causaloid
+impl<'l> Causaloid<'l>
 {
     /// Singleton constructor. Assumes causality function is valid.
     /// Only use for non-fallible construction i.e.verified a-priori knowledge about the correctness of the causal function.
@@ -65,7 +65,7 @@ impl Causaloid
     /// about the correctness of the causal graph.
     pub fn from_causal_collection(
         id: IdentificationValue,
-        causal_coll: Vec<Causaloid>,
+        causal_coll: &'l Vec<Causaloid>,
         description: DescriptionValue,
     )
         -> Self
@@ -94,7 +94,7 @@ impl Causaloid
     /// about the correctness of the causal graph.
     pub fn from_causal_graph(
         id: IdentificationValue,
-        causal_graph: CausaloidGraph<Causaloid>,
+        causal_graph: &'l CausaloidGraph<Causaloid>,
         description: DescriptionValue,
     )
         -> Self
@@ -116,28 +116,28 @@ impl Causaloid
 }
 
 
-impl PartialEq for Causaloid
+impl<'l> PartialEq for Causaloid<'l>
 {
     fn eq(&self, other: &Self) -> bool {
         self.id == other.id
     }
 }
 
-impl Identifiable for Causaloid
+impl<'l> Identifiable for Causaloid<'l>
 {
     fn id(&self) -> u64 {
         self.id
     }
 }
 
-impl Causable for Causaloid
+impl<'l> Causable for Causaloid<'l>
 {
-    fn causal_collection(&self) -> Option<Vec<Causaloid>> {
-        self.causal_coll.clone()
+    fn causal_collection(&self) -> Option<&Vec<Causaloid>> {
+        self.causal_coll
     }
 
-    fn causal_graph(&self) -> Option<CausaloidGraph<Causaloid>> {
-        self.causal_graph.clone()
+    fn causal_graph(&self) -> Option<&CausaloidGraph<Causaloid>> {
+        self.causal_graph
     }
 
     fn description(&self) -> DescriptionValue {
@@ -263,7 +263,7 @@ impl Causable for Causaloid
 }
 
 
-impl Causaloid
+impl<'l> Causaloid<'l>
 {
     #[inline(always)]
     fn check_active_return(
@@ -292,12 +292,12 @@ impl Causaloid
     }
 }
 
-impl Debug for Causaloid
+impl<'l> Debug for Causaloid<'l>
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { self.fmt(f) }
 }
 
-impl Display for Causaloid
+impl<'l> Display for Causaloid<'l>
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { self.fmt(f) }
 }

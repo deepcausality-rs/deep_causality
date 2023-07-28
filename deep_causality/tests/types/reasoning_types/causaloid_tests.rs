@@ -46,7 +46,7 @@ fn test_build_causaloid_err() {
 fn test_build_causaloid_from_vec() {
     let id: IdentificationValue = 1;
     let description: String = "tests whether data exceeds threshold of 0.55".to_string() as DescriptionValue;
-    let causal_vec = get_test_causality_vec();
+    let causal_vec = &get_test_causality_vec();
 
     let causaloid = build_causaloid_from_vec(id, causal_vec, description,).unwrap();
 
@@ -61,7 +61,7 @@ fn test_build_causaloid_from_vec() {
 fn test_build_causaloid_from_vec_err() {
     let id: IdentificationValue = 1;
     let description: String = "".to_string() as DescriptionValue;
-    let causal_vec = get_test_causality_vec();
+    let causal_vec = &get_test_causality_vec();
 
     let causaloid = build_causaloid_from_vec(id, causal_vec, description,);
     assert!(causaloid.is_err());
@@ -73,7 +73,7 @@ fn test_build_causaloid_from_graph() {
     let description: String = "tests whether data exceeds threshold of 0.55".to_string() as DescriptionValue;
     let (causal_graph, _) = bench_utils_graph::get_small_multi_layer_cause_graph_and_data();
 
-    let causaloid = build_causaloid_from_graph(id, causal_graph, description,).unwrap();
+    let causaloid = build_causaloid_from_graph(id, &causal_graph, description,).unwrap();
 
     assert!(!causaloid.is_singleton());
     assert_eq!(01, causaloid.id());
@@ -88,7 +88,7 @@ fn test_build_causaloid_from_graph_descr_err() {
     let description: String = "".to_string() as DescriptionValue;
     let (causal_graph, _) = bench_utils_graph::get_small_multi_layer_cause_graph_and_data();
 
-    let causaloid = build_causaloid_from_graph(id, causal_graph, description,);
+    let causaloid = build_causaloid_from_graph(id, &causal_graph, description,);
 
     assert!(causaloid.is_err());
 }
@@ -99,7 +99,7 @@ fn test_build_causaloid_from_graph_data_err() {
     let description: String = "".to_string() as DescriptionValue;
     let (causal_graph, _) = bench_utils_graph::get_small_multi_layer_cause_graph_and_data();
 
-    let causaloid = build_causaloid_from_graph(id, causal_graph, description,);
+    let causaloid = build_causaloid_from_graph(id, &causal_graph, description,);
 
     assert!(causaloid.is_err());
 }
@@ -108,7 +108,7 @@ fn test_build_causaloid_from_graph_data_err() {
 fn test_from_causal_collection() {
     let id: IdentificationValue = 01;
     let description: String = "tests whether data exceeds threshold of 0.55".to_string() as DescriptionValue;
-    let causal_coll = test_utils::get_test_causality_vec();
+    let causal_coll = &get_test_causality_vec();
 
     let data = [0.89, 0.89, 0.99];
     assert_eq!(data.len(), causal_coll.len());
@@ -132,7 +132,7 @@ fn test_from_causal_graph() {
     let description: String = "tests whether data exceeds threshold of 0.55".to_string() as DescriptionValue;
     let (causal_graph, data) = bench_utils_graph::get_small_multi_layer_cause_graph_and_data();
 
-    let causaloid = Causaloid::from_causal_graph(id, causal_graph, description);
+    let causaloid = Causaloid::from_causal_graph(id, &causal_graph, description);
     assert!(!causaloid.is_singleton());
 
     assert!(!causaloid.is_active());
@@ -152,7 +152,7 @@ fn test_causal_graph()
     let description: String = "tests whether data exceeds threshold of 0.55".to_string() as DescriptionValue;
     let (causal_graph, _) = bench_utils_graph::get_small_multi_layer_cause_graph_and_data();
 
-    let causaloid = Causaloid::from_causal_graph(id, causal_graph, description);
+    let causaloid = Causaloid::from_causal_graph(id, &causal_graph, description);
     assert!(!causaloid.is_singleton());
 
     assert!(causaloid.causal_graph().is_some());
@@ -168,7 +168,7 @@ fn test_causal_collection() {
     let data = [0.89, 0.89, 0.99];
     assert_eq!(data.len(), causal_coll.len());
 
-    let causaloid = Causaloid::from_causal_collection(id, causal_coll, description);
+    let causaloid = Causaloid::from_causal_collection(id, &causal_coll, description);
     assert!(!causaloid.is_singleton());
 
     assert!(causaloid.causal_collection().is_some());

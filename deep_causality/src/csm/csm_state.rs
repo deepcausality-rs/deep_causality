@@ -9,7 +9,7 @@ pub struct CausalState<'l>
     id: usize,
     version: usize,
     data: &'l [NumericalValue],
-    causaloid: &'l Causaloid,
+    causaloid: &'l Causaloid<'l>,
 }
 
 impl<'l> CausalState<'l>

@@ -11,21 +11,21 @@ const LARGE: usize = 100_000;
 
 
 pub fn get_small_map_and_data()
-    -> (HashMap<usize, Causaloid>, [f64; SMALL + 1])
+    -> (HashMap<usize, Causaloid<'static>>, [f64; SMALL + 1])
 { // Builds a linear graph: root -> a -> b -> c
     let k = SMALL;
     (build_causality_map(k), bench_utils_shared::generate_sample_data())
 }
 
 pub fn get_medium_map_and_data()
-    -> (HashMap<usize, Causaloid>, [f64; MEDIUM + 1])
+    -> (HashMap<usize, Causaloid<'static>>, [f64; MEDIUM + 1])
 { // Builds a linear graph: root -> a -> b -> c
     let k = MEDIUM;
     (build_causality_map(k), bench_utils_shared::generate_sample_data())
 }
 
 pub fn get_large_map_and_data()
-    -> (HashMap<usize, Causaloid>, [f64; LARGE + 1])
+    -> (HashMap<usize, Causaloid<'static>>, [f64; LARGE + 1])
 { // Builds a linear graph: root -> a -> b -> c
     (build_causality_map(LARGE), bench_utils_shared::generate_sample_data())
 }
@@ -33,7 +33,7 @@ pub fn get_large_map_and_data()
 fn build_causality_map(
     k: usize
 )
-    -> HashMap<usize, Causaloid>
+    -> HashMap<usize, Causaloid<'static>>
 {
     let mut v = HashMap::with_capacity(k);
     for k in 0..k {

@@ -13,7 +13,7 @@ fn test_new() {
     let name = format!("base context");
     let graph = get_graph();
 
-    let context = Context::new(id, name, graph);
+    let context = Context::new(id, name, &graph);
     assert_eq!(context.id(), id);
 }
 
@@ -23,7 +23,7 @@ fn test_id() {
     let name = format!("base context");
     let graph = get_graph();
 
-    let context = Context::new(id, name, graph);
+    let context = Context::new(id, name, &graph);
     assert_eq!(context.id(), id);
 }
 
@@ -33,7 +33,7 @@ fn test_name() {
     let name = format!("base context");
     let graph = get_graph();
 
-    let context = Context::new(id, name.clone(), graph);
+    let context = Context::new(id, name.clone(), &graph);
     assert_eq!(context.id(), id);
     assert_eq!(context.name(), &name);
 }
@@ -44,10 +44,11 @@ fn test_node_count() {
     let name = format!("base context");
     let graph = get_graph();
 
-    let context = Context::new(id, name.clone(), graph.clone());
+    let context = Context::new(id, name.clone(), &graph);
     assert_eq!(context.id(), id);
     assert_eq!(context.name(), name);
-    assert_eq!(context.node_count(), graph.node_count());
+    let node_count = graph.node_count();
+    assert_eq!(context.node_count(), node_count);
 }
 
 #[test]
@@ -56,11 +57,14 @@ fn test_edge_count() {
     let name = format!("base context");
     let graph = get_graph();
 
-    let context = Context::new(id, name.clone(), graph.clone());
+    let context = Context::new(id, name.clone(), &graph);
     assert_eq!(context.id(), id);
     assert_eq!(context.name(), name);
-    assert_eq!(context.node_count(), graph.clone().node_count());
-    assert_eq!(context.edge_count(), graph.clone().edge_count());
+
+    let node_count = graph.node_count();
+    assert_eq!(context.node_count(), node_count);
+    let edge_count = graph.edge_count();
+    assert_eq!(context.edge_count(), edge_count);
 }
 
 #[test]
@@ -69,7 +73,7 @@ fn test_to_string() {
     let name = format!("base context");
     let graph = get_graph();
 
-    let context = Context::new(id, name.clone(), graph.clone());
+    let context = Context::new(id, name.clone(), &graph);
 
     let exp = format!("Context: id: 1, name: base context, node_count: 0, edge_count: 0");
     let act = context.to_string();

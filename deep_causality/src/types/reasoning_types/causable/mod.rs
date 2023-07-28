@@ -15,12 +15,12 @@ pub mod causaloid_graph;
 /// or embedded into a causal graph.
 ///
 /// Verifies that description, data_set_id, and causal_coll are non-empty.
-pub fn build_causaloid_from_vec(
+pub fn build_causaloid_from_vec<'l>(
     id: IdentificationValue,
-    causal_vec: Vec<Causaloid>,
+    causal_vec: &'l Vec<Causaloid>,
     description: DescriptionValue,
 )
-    -> Result<Causaloid, Box<dyn Error>>
+    -> Result<Causaloid<'l>, Box<dyn Error>>
 {
     // check description
     if description.is_empty() {
@@ -47,12 +47,12 @@ pub fn build_causaloid_from_vec(
 /// or embedded into another causal graph.
 ///
 /// Verifies that description, data_set_id, and causal_graph are non-empty.
-pub fn build_causaloid_from_graph(
+pub fn build_causaloid_from_graph<'l>(
     id: IdentificationValue,
-    causal_graph: CausaloidGraph<Causaloid>,
+    causal_graph: &'l CausaloidGraph<Causaloid>,
     description: DescriptionValue,
 )
-    -> Result<Causaloid, Box<dyn Error>>
+    -> Result<Causaloid<'l>, Box<dyn Error>>
 {
     // check description
     if description.is_empty() {
@@ -73,14 +73,14 @@ pub fn build_causaloid_from_graph(
 ///
 /// Verifies that causal function is valid,
 /// by checking the underlying inference collections.
-pub fn build_causaloid(
+pub fn build_causaloid<'l>(
     id: IdentificationValue,
     causal_fn: CausalFn,
     description: DescriptionValue,
-    inferable_coll: &Vec<Inference>,
-    inverse_inferable_coll: &Vec<Inference>,
+    inferable_coll: &'l Vec<Inference>,
+    inverse_inferable_coll: &'l Vec<Inference>,
 )
-    -> Result<Causaloid, Box<dyn Error>>
+    -> Result<Causaloid<'l>, Box<dyn Error>>
 {
 
     // check description
@@ -114,11 +114,6 @@ pub fn build_causaloid(
         return Err(Box::new(BuildError("Inverse inferable collection is non-inferable".into())));
     }
 
-    Ok(
-        Causaloid::new(
-            id,
-            causal_fn,
-            description,
-        )
+    Ok(Causaloid::new(id, causal_fn, description,)
     )
 }

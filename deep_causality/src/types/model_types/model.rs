@@ -10,7 +10,7 @@ pub struct Model<'l> {
     author: &'l str,
     description: &'l str,
     assumptions: &'l Option<&'l Vec<&'l Assumption>>,
-    causaloid: &'l Causaloid,
+    causaloid: &'l Causaloid<'l>,
 }
 
 impl<'l> Model<'l> {

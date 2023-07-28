@@ -92,14 +92,14 @@ pub fn get_test_inf_vec()
     Vec::from_iter([i1, i2])
 }
 
-pub fn get_test_causality_array() -> [Causaloid; 10]
+pub fn get_test_causality_array() -> [Causaloid<'static>; 10]
 {
 // Causaloid doesn't implement Copy hence the from_fn workaround for array initialization
     array::from_fn(|_| get_test_causaloid())
 }
 
 pub fn get_test_causality_vec()
-    -> Vec<Causaloid>
+    -> Vec<Causaloid<'static>>
 {
     let q1 = get_test_causaloid();
     let q2 = get_test_causaloid();
@@ -109,7 +109,7 @@ pub fn get_test_causality_vec()
 
 pub fn get_test_causality_map()
 // i8 as key b/c I assume all testing will be done with less than 265 items.
-    -> HashMap<i8, Causaloid>
+    -> HashMap<i8, Causaloid<'static>>
 {
     let q1 = get_test_causaloid();
     let q2 = get_test_causaloid();
@@ -118,13 +118,11 @@ pub fn get_test_causality_map()
 }
 
 
-pub fn get_test_causaloid()
-    -> Causaloid
+pub fn get_test_causaloid<'l>()
+    -> Causaloid<'l>
 {
     let id: IdentificationValue = 1;
     let description: String = "tests whether data exceeds threshold of 0.55".to_string() as DescriptionValue;
-    let inferable_coll = get_inferable_coll(false);
-    let inverse_inferable_coll = get_inferable_coll(true);
 
     fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
         if obs.is_nan() {
@@ -147,13 +145,7 @@ pub fn get_test_causaloid()
         }
     }
 
-    build_causaloid(
-        id,
-        causal_fn,
-        description,
-        &inferable_coll,
-        &inverse_inferable_coll,
-    ).unwrap()
+    Causaloid::new(id, causal_fn, description)
 }
 
 

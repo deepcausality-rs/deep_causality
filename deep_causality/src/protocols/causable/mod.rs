@@ -6,8 +6,8 @@ use crate::prelude::{Causaloid, CausaloidGraph, DescriptionValue, Identifiable, 
 
 pub trait Causable: Identifiable
 {
-    fn causal_collection(&self) -> Option<Vec<Causaloid>>;
-    fn causal_graph(&self) -> Option<CausaloidGraph<Causaloid>>;
+    fn causal_collection(&self) -> Option<&Vec<Causaloid>>;
+    fn causal_graph(&self) -> Option<&CausaloidGraph<Causaloid>>;
     fn description(&self) -> DescriptionValue;
     fn explain(&self) -> Result<String, CausalityError>;
     fn is_active(&self) -> bool;
