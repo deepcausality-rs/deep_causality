@@ -58,10 +58,10 @@ pub use crate::types::context_types::node_types::tempoid::Tempoid;
 pub use crate::types::context_types::context::Context;
 pub use crate::types::context_types::time_scale::TimeScale;
 // Graph types
-pub use crate::types::graph_types::graph_node::*;
-pub use crate::types::graph_types::graph_node_type::*;
-pub use crate::types::graph_types::graph_relation_kind::*;
-pub use crate::types::graph_types::graph_root::*;
+pub use crate::types::context_types::contextoid::*;
+pub use crate::types::context_types::contextoid_type::*;
+pub use crate::types::context_types::relation_kind::*;
+pub use crate::types::context_types::root::*;
 // Model types
 pub use crate::types::model_types::model::Model;
 // Reasoning types
