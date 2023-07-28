@@ -1,13 +1,13 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 
-use deep_causality::prelude::{CausalityError, Causaloid, DescriptionValue, IdentificationValue, NumericalValue};
+use deep_causality::prelude::{CausalityError, Causaloid, IdentificationValue, NumericalValue};
 
 pub fn get_smoke_sensor_causaloid()
     ->  Causaloid<'static>
 {
     let id: IdentificationValue = 1;
-    let description: String = "Tests whether smoke signal exceeds threshold of 65.0".to_string() as DescriptionValue;
+    let description = "Tests whether smoke signal exceeds threshold of 65.0";
     fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
         if verify_obs(obs).is_err() {
             return Err(verify_obs(obs).err().unwrap());
@@ -28,7 +28,7 @@ pub fn get_fire_sensor_causaloid()
     ->  Causaloid<'static>
 {
     let id: IdentificationValue = 2;
-    let description: String = "Tests if temperature exceeds 85 degree celsius (185 degree Fahrenheit) ".to_string() as DescriptionValue;
+    let description = "Tests if temperature exceeds 85 degree celsius (185 degree Fahrenheit) ";
     fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
         if verify_obs(obs).is_err() {
             return Err(verify_obs(obs).err().unwrap());
@@ -49,7 +49,7 @@ pub fn get_explosion_sensor_causaloid()
     ->  Causaloid<'static>
 {
     let id: IdentificationValue = 3;
-    let description: String = "Tests if air pressure exceeds 100 PSI. Regular Atmospheric pressure is 14.696 psi ".to_string() as DescriptionValue;
+    let description = "Tests if air pressure exceeds 100 PSI. Regular Atmospheric pressure is 14.696 psi ";
 
     fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
         if verify_obs(obs).is_err() {
