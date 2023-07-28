@@ -5,7 +5,7 @@ use deep_causality::prelude::{Context, Contextoid, Contextuable, Dataoid, Contex
 fn get_context<'l>() -> Context<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>
 {
     let id = 1;
-    let name = format!("base context");
+    let name = "base context";
     Context::with_capacity(id, name, 10)
 }
 

@@ -19,7 +19,7 @@ pub struct Context<'l, D, S, T, ST>
         ST: SpaceTemporal
 {
     id: u64,
-    name: String,
+    name: &'l str,
     graph: CtxGraph<'l, D, S, T, ST>,
     context_map: CtxMap<'l, D, S, T, ST>,
 }
@@ -34,7 +34,7 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
 {
     pub fn new(
         id: u64,
-        name: String,
+        name:  &'l str,
     )
         -> Self
     {
@@ -43,7 +43,7 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
 
     pub fn with_capacity(
         id: u64,
-        name: String,
+        name:  &'l str,
         capacity: usize,
     )
         -> Self
@@ -56,7 +56,7 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
     }
 
     pub fn name(&self) -> &str {
-        &self.name
+        self.name
     }
 }
 
