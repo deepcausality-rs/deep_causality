@@ -1,4 +1,5 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt::{Debug, Display, Formatter};
@@ -29,7 +30,7 @@ pub struct Causaloid<'l>
     causal_coll: Option<&'l Vec<Causaloid<'l>>>,
     causal_graph: Option<&'l CausaloidGraph<Causaloid<'l>>>,
     last_obs: RefCell<NumericalValue>,
-    description: DescriptionValue,
+    description: &'l str,
 }
 
 
@@ -40,7 +41,7 @@ impl<'l> Causaloid<'l>
     pub fn new(
         id: IdentificationValue,
         causal_fn: CausalFn,
-        description: DescriptionValue,
+        description: &'l str,
     )
         -> Self
     {
@@ -66,7 +67,7 @@ impl<'l> Causaloid<'l>
     pub fn from_causal_collection(
         id: IdentificationValue,
         causal_coll: &'l Vec<Causaloid>,
-        description: DescriptionValue,
+        description: &'l str,
     )
         -> Self
     {
@@ -95,7 +96,7 @@ impl<'l> Causaloid<'l>
     pub fn from_causal_graph(
         id: IdentificationValue,
         causal_graph: &'l CausaloidGraph<Causaloid>,
-        description: DescriptionValue,
+        description: &'l str,
     )
         -> Self
     {
@@ -140,8 +141,9 @@ impl<'l> Causable for Causaloid<'l>
         self.causal_graph
     }
 
-    fn description(&self) -> DescriptionValue {
-        self.description.clone()
+    fn description(&self) -> &str
+    {
+        self.description
     }
 
     fn explain(

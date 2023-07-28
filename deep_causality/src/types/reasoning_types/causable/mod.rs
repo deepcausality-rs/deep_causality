@@ -4,7 +4,7 @@ use std::error::Error;
 
 use crate::prelude::{BuildError, Causaloid, CausaloidGraph, Inference};
 use crate::protocols::inferable::InferableReasoning;
-use crate::types::alias_types::{CausalFn, DescriptionValue, IdentificationValue};
+use crate::types::alias_types::{CausalFn, IdentificationValue};
 
 pub mod causaloid;
 pub mod causaloid_graph;
@@ -18,7 +18,7 @@ pub mod causaloid_graph;
 pub fn build_causaloid_from_vec<'l>(
     id: IdentificationValue,
     causal_vec: &'l Vec<Causaloid>,
-    description: DescriptionValue,
+    description: &'l str,
 )
     -> Result<Causaloid<'l>, Box<dyn Error>>
 {
@@ -50,7 +50,7 @@ pub fn build_causaloid_from_vec<'l>(
 pub fn build_causaloid_from_graph<'l>(
     id: IdentificationValue,
     causal_graph: &'l CausaloidGraph<Causaloid>,
-    description: DescriptionValue,
+    description: &'l str,
 )
     -> Result<Causaloid<'l>, Box<dyn Error>>
 {
@@ -76,7 +76,7 @@ pub fn build_causaloid_from_graph<'l>(
 pub fn build_causaloid<'l>(
     id: IdentificationValue,
     causal_fn: CausalFn,
-    description: DescriptionValue,
+    description: &'l str,
     inferable_coll: &'l Vec<Inference>,
     inverse_inferable_coll: &'l Vec<Inference>,
 )

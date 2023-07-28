@@ -3,7 +3,7 @@
 use deep_causality::prelude::*;
 use deep_causality::types::reasoning_types;
 
-type AllCauses = Vec<Causaloid>; // type alias for brevity
+type AllCauses<'l> = Vec<Causaloid<'l>>; // type alias for brevity
 
 pub fn run()
 {
@@ -66,7 +66,7 @@ fn apply_causal_model(
     println!("Has the patient a lung cancer risk: {}", cancer_estimate);
 }
 
-fn build_smoke_tar_causaloid() -> Causaloid
+fn build_smoke_tar_causaloid() -> Causaloid<'static>
 {
     println!();
     let all_obs = get_all_observations();
@@ -107,20 +107,18 @@ fn build_smoke_tar_causaloid() -> Causaloid
     // 2) Describe the causal relation
     let id = 1;
     let description = "Causal relation between smoking and tar in the lung".to_string();
-    let data_set_id = "Data set abc from study Homer et al. DOI: 122345 ".to_string();
 
     //3) Build the causaloid
     build_causaloid(
         id,
         causal_fn,
         description,
-        data_set_id,
         &inferable_coll,
         &inverse_inferable_coll,
     ).unwrap()
 }
 
-fn build_tar_cancer_causaloid() -> Causaloid
+fn build_tar_cancer_causaloid() -> Causaloid<'static>
 {
     println!();
     let threshold = 0.55; // Threshold above which the observations is considered an inference.
@@ -154,20 +152,18 @@ fn build_tar_cancer_causaloid() -> Causaloid
     // 2) Describe the causal relation
     let id = 2;
     let description = "Causal relation tar in the lung and lung cancer".to_string();
-    let data_set_id = "Aggregated data set from meta study Parcel et al. DOI: 122345 ".to_string();
 
     //3) Build the causaloid
     reasoning_types::causable::build_causaloid(
         id,
         causal_fn,
         description,
-        data_set_id,
         &inferable_coll,
         &inverse_inferable_coll,
     ).unwrap()
 }
 
-fn _build_cancer_death_causaloid() -> Causaloid {
+fn _build_cancer_death_causaloid() -> Causaloid<'static> {
     // regular inference
     let threshold = 0.55; // Threshold above which the observations is considered an inference.
     let question = "Do people with lung cancer die earlier compared to those without?".to_string();
@@ -187,14 +183,12 @@ fn _build_cancer_death_causaloid() -> Causaloid {
     // Causaloid
     let id = 3;
     let description = "Causal relation lung cancer and early death".to_string();
-    let data_set_id = "Aggregated data set from meta study Morbid et al. DOI: 122345 ".to_string();
     let inverse_inferable_coll: Vec<Inference> = Vec::from_iter([inv_inference]);
 
     reasoning_types::causable::build_causaloid(
         id,
         causal_fn,
         description,
-        data_set_id,
         &inferable_coll,
         &inverse_inferable_coll,
     ).unwrap()

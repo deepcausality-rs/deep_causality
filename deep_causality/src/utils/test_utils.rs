@@ -122,7 +122,7 @@ pub fn get_test_causaloid<'l>()
     -> Causaloid<'l>
 {
     let id: IdentificationValue = 1;
-    let description: String = "tests whether data exceeds threshold of 0.55".to_string() as DescriptionValue;
+    let description = "tests whether data exceeds threshold of 0.55";
 
     fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
         if obs.is_nan() {
