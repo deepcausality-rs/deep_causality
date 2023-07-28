@@ -6,6 +6,9 @@ use petgraph::Directed;
 use petgraph::matrix_graph::MatrixGraph;
 use crate::prelude::{Contextuable, Contextoid, Datable, NodeIndex, SpaceTemporal, Spatial, Temporal};
 
+// Edge weights need to be numerical (u64) to make shortest path algo work.
+type CtxGraph<'l, D, S, T, ST> = MatrixGraph<&'l Contextoid<D, S, T, ST>, u64, Directed, Option<u64>, u32>;
+type CtxMap<'l, D, S, T, ST> = HashMap<NodeIndex, &'l Contextoid<D, S, T, ST>>;
 
 #[derive(Clone)]
 pub struct Context<'l, D, S, T, ST>
@@ -17,9 +20,8 @@ pub struct Context<'l, D, S, T, ST>
 {
     id: u64,
     name: String,
-    // Edge weights need to be numerical (u64) to make shortest path algo work.
-    graph: MatrixGraph<&'l Contextoid<D, S, T, ST>, u64, Directed, Option<u64>, u32>,
-    context_map: HashMap<NodeIndex, &'l Contextoid<D, S, T, ST>>,
+    graph: CtxGraph<'l, D, S, T, ST>,
+    context_map: CtxMap<'l, D, S, T, ST>,
 }
 
 
@@ -58,17 +60,6 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
     }
 }
 
-impl<'l, D, S, T, ST> Default for Context<'l, D, S, T, ST>
-    where
-        D: Datable,
-        S: Spatial,
-        T: Temporal,
-        ST: SpaceTemporal
-{
-    fn default() -> Self {
-        Self::new(0, "default".to_string())
-    }
-}
 
 impl<'l, D, S, T, ST> Contextuable<'l, D, S, T, ST> for Context<'l, D, S, T, ST> where
     D: Datable,
@@ -87,6 +78,7 @@ impl<'l, D, S, T, ST> Contextuable<'l, D, S, T, ST> for Context<'l, D, S, T, ST>
 
         node_index
     }
+
     fn contains_contextoid(
         &self,
         index: NodeIndex,
@@ -95,6 +87,7 @@ impl<'l, D, S, T, ST> Contextuable<'l, D, S, T, ST> for Context<'l, D, S, T, ST>
     {
         self.context_map.contains_key(&index)
     }
+
     fn get_contextoid(
         &self,
         index: NodeIndex,
@@ -112,11 +105,22 @@ impl<'l, D, S, T, ST> Contextuable<'l, D, S, T, ST> for Context<'l, D, S, T, ST>
         self.context_map.remove(&index);
     }
 
-    fn add_edge(&mut self, a: NodeIndex, b: NodeIndex) {
-         self.graph.add_edge(a, b, 0);
+    fn add_edge(
+        &mut self,
+        a: NodeIndex,
+        b: NodeIndex
+    )
+    {
+        self.graph.add_edge(a, b, 0);
     }
 
-    fn add_edg_with_weight(&mut self, a: NodeIndex, b: NodeIndex, weight: u64) {
+    fn add_edg_with_weight(
+        &mut self,
+        a: NodeIndex,
+        b: NodeIndex,
+        weight: u64
+    )
+    {
         self.graph.add_edge(a, b, weight);
     }
 
@@ -133,11 +137,11 @@ impl<'l, D, S, T, ST> Contextuable<'l, D, S, T, ST> for Context<'l, D, S, T, ST>
     fn remove_edge(
         &mut self,
         a: NodeIndex,
-        b: NodeIndex
+        b: NodeIndex,
     )
         -> u64
     {
-        self.graph.remove_edge(a,b)
+        self.graph.remove_edge(a, b)
     }
 
     fn size(
@@ -154,10 +158,20 @@ impl<'l, D, S, T, ST> Contextuable<'l, D, S, T, ST> for Context<'l, D, S, T, ST>
     {
         self.context_map.is_empty()
     }
-    fn node_count(&self) -> usize {
+
+    fn node_count(
+        &self
+    )
+        -> usize
+    {
         self.graph.node_count()
     }
-    fn edge_count(&self) -> usize {
+
+    fn edge_count(
+        &self
+    )
+        -> usize
+    {
         self.graph.edge_count()
     }
 }
