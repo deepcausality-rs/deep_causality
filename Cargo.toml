@@ -2,7 +2,8 @@
 resolver = "2"
 members = [
     "deep_causality/examples/csm",
-    "deep_causality/examples/smoking",
+#    "deep_causality/examples/ctx",
+#    "deep_causality/examples/smoking",
     "dcl_data_structures",
     "deep_causality",
     "deep_causality_macros",
