@@ -28,6 +28,17 @@ impl fmt::Display for CausalityGraphError
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct ContextIndexError(pub String);
+
+impl Error for ContextIndexError {}
+
+impl fmt::Display for ContextIndexError
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "ContextIndexError: {}", self.0)
+    }
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CausalityError(pub String);

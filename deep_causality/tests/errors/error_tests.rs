@@ -1,6 +1,6 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use deep_causality::errors::{ActionError, AdjustmentError, PropagateError, UpdateError};
+use deep_causality::errors::{ActionError, AdjustmentError, ContextIndexError, PropagateError, UpdateError};
 use deep_causality::prelude::{BuildError, CausalityGraphError, CausalityError};
 
 #[test]
@@ -20,6 +20,16 @@ fn test_causality_graph_error() {
     ));
     let error = result.unwrap_err();
     assert_eq!(error.to_string(), format!("CausalityGraphError: unexpected cause"));
+}
+
+#[test]
+fn test_context_index_error() {
+    let result: Result<usize, ContextIndexError> = Err(ContextIndexError(
+        format!("unexpected cause"),
+    ));
+    let error = result.unwrap_err();
+    assert_eq!(error.to_string(), format!("ContextIndexError: unexpected cause"));
+
 }
 
 #[test]

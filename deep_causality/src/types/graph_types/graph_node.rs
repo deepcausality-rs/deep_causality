@@ -6,7 +6,7 @@ use crate::protocols::contextuable::{Datable, SpaceTemporal, Spatial, Temporal};
 use crate::protocols::identifiable::Identifiable;
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
-pub struct Node<D, S, T, ST>
+pub struct Contextoid<D, S, T, ST>
     where
         D: Datable,
         S: Spatial,
@@ -16,7 +16,7 @@ pub struct Node<D, S, T, ST>
     vertex_type: NodeType<D, S, T, ST>,
 }
 
-impl<D, S, T, ST> Node<D, S, T, ST>
+impl<D, S, T, ST> Contextoid<D, S, T, ST>
     where
         D: Datable,
         S: Spatial,
@@ -31,7 +31,7 @@ impl<D, S, T, ST> Node<D, S, T, ST>
     }
 }
 
-impl<D, S, T, ST> Identifiable for Node<D, S, T, ST>
+impl<D, S, T, ST> Identifiable for Contextoid<D, S, T, ST>
     where
         D: Datable,
         S: Spatial,
@@ -43,7 +43,7 @@ impl<D, S, T, ST> Identifiable for Node<D, S, T, ST>
     }
 }
 
-impl<D, S, T, ST> Display for Node<D, S, T, ST>
+impl<D, S, T, ST> Display for Contextoid<D, S, T, ST>
     where
         D: Datable + Display,
         S: Spatial + Display,
