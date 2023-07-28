@@ -1,7 +1,7 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use std::fmt::{Display, Formatter};
-use crate::prelude::NodeType;
+use crate::prelude::ContextoidType;
 use crate::protocols::contextuable::{Datable, SpaceTemporal, Spatial, Temporal};
 use crate::protocols::identifiable::Identifiable;
 
@@ -13,7 +13,7 @@ pub struct Contextoid<D, S, T, ST>
         T: Temporal,
         ST: SpaceTemporal, {
     id: u64,
-    vertex_type: NodeType<D, S, T, ST>,
+    vertex_type: ContextoidType<D, S, T, ST>,
 }
 
 impl<D, S, T, ST> Contextoid<D, S, T, ST>
@@ -23,10 +23,10 @@ impl<D, S, T, ST> Contextoid<D, S, T, ST>
         T: Temporal,
         ST: SpaceTemporal,
 {
-    pub fn new(id: u64, vertex_type: NodeType<D, S, T, ST>) -> Self {
+    pub fn new(id: u64, vertex_type: ContextoidType<D, S, T, ST>) -> Self {
         Self { id, vertex_type }
     }
-    pub fn vertex_type(&self) -> &NodeType<D, S, T, ST> {
+    pub fn vertex_type(&self) -> &ContextoidType<D, S, T, ST> {
         &self.vertex_type
     }
 }

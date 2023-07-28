@@ -18,7 +18,7 @@ use crate::protocols::contextuable::{Datable, SpaceTemporal, Spatial, Temporal};
 
 // https://stackoverflow.com/questions/69173586/either-type-a-or-b-in-rust
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
-pub enum NodeType<D, S, T, ST>
+pub enum ContextoidType<D, S, T, ST>
     where
         D: Datable,
         S: Spatial,
@@ -32,7 +32,7 @@ pub enum NodeType<D, S, T, ST>
     SpaceTempoid(ST),
 }
 
-impl<D, S, T, ST> NodeType<D, S, T, ST>
+impl<D, S, T, ST> ContextoidType<D, S, T, ST>
     where
         D: Datable,
         S: Spatial,
@@ -41,7 +41,7 @@ impl<D, S, T, ST> NodeType<D, S, T, ST>
 
 {
     pub fn root(&self) -> Option<&Root> {
-        if let NodeType::Root(b) = self {
+        if let ContextoidType::Root(b) = self {
             Some(b)
         } else {
             None
@@ -49,28 +49,28 @@ impl<D, S, T, ST> NodeType<D, S, T, ST>
     }
 
     pub fn dataoid(&self) -> Option<&D> {
-        if let NodeType::Datoid(b) = self {
+        if let ContextoidType::Datoid(b) = self {
             Some(b)
         } else {
             None
         }
     }
     pub fn tempoid(&self) -> Option<&T> {
-        if let NodeType::Tempoid(b) = self {
+        if let ContextoidType::Tempoid(b) = self {
             Some(b)
         } else {
             None
         }
     }
     pub fn spaceiod(&self) -> Option<&S> {
-        if let NodeType::Spaceoid(b) = self {
+        if let ContextoidType::Spaceoid(b) = self {
             Some(b)
         } else {
             None
         }
     }
     pub fn space_tempoid(&self) -> Option<&ST> {
-        if let NodeType::SpaceTempoid(b) = self {
+        if let ContextoidType::SpaceTempoid(b) = self {
             Some(b)
         } else {
             None
@@ -78,7 +78,7 @@ impl<D, S, T, ST> NodeType<D, S, T, ST>
     }
 }
 
-impl<D, S, T, ST> Display for NodeType<D, S, T, ST>
+impl<D, S, T, ST> Display for ContextoidType<D, S, T, ST>
     where
         D: Datable + Display,
         S: Spatial + Display,
@@ -87,11 +87,11 @@ impl<D, S, T, ST> Display for NodeType<D, S, T, ST>
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            NodeType::Datoid(b) => write!(f, "Datoid: {}", b),
-            NodeType::Tempoid(b) => write!(f, "Tempoid: {}", b),
-            NodeType::Root(b) => write!(f, "Root: {}", b),
-            NodeType::Spaceoid(b) => write!(f, "Spaceiod: {}", b),
-            NodeType::SpaceTempoid(b) => write!(f, "SpaceTempoid: {}", b),
+            ContextoidType::Datoid(b) => write!(f, "Datoid: {}", b),
+            ContextoidType::Tempoid(b) => write!(f, "Tempoid: {}", b),
+            ContextoidType::Root(b) => write!(f, "Root: {}", b),
+            ContextoidType::Spaceoid(b) => write!(f, "Spaceiod: {}", b),
+            ContextoidType::SpaceTempoid(b) => write!(f, "SpaceTempoid: {}", b),
         }
     }
 }
