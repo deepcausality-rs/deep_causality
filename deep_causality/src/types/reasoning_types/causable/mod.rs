@@ -18,7 +18,6 @@ pub mod causaloid_graph;
 pub fn build_causaloid_from_vec(
     id: IdentificationValue,
     causal_vec: Vec<Causaloid>,
-    data_set_id: DescriptionValue,
     description: DescriptionValue,
 )
     -> Result<Causaloid, Box<dyn Error>>
@@ -26,11 +25,6 @@ pub fn build_causaloid_from_vec(
     // check description
     if description.is_empty() {
         return Err(Box::new(BuildError("Description empty".into())));
-    }
-
-    // check data_set_id
-    if data_set_id.is_empty() {
-        return Err(Box::new(BuildError("Data set identifier empty".into())));
     }
 
     // check causal collection
@@ -42,7 +36,6 @@ pub fn build_causaloid_from_vec(
         Causaloid::from_causal_collection(
             id,
             causal_vec,
-            data_set_id,
             description,
         )
     )
@@ -57,7 +50,6 @@ pub fn build_causaloid_from_vec(
 pub fn build_causaloid_from_graph(
     id: IdentificationValue,
     causal_graph: CausaloidGraph<Causaloid>,
-    data_set_id: DescriptionValue,
     description: DescriptionValue,
 )
     -> Result<Causaloid, Box<dyn Error>>
@@ -67,16 +59,10 @@ pub fn build_causaloid_from_graph(
         return Err(Box::new(BuildError("Description empty".into())));
     }
 
-    // check data_set_id
-    if data_set_id.is_empty() {
-        return Err(Box::new(BuildError("Data set identifier empty".into())));
-    }
-
     Ok(
         Causaloid::from_causal_graph(
             id,
             causal_graph,
-            data_set_id,
             description,
         )
     )
@@ -91,7 +77,6 @@ pub fn build_causaloid(
     id: IdentificationValue,
     causal_fn: CausalFn,
     description: DescriptionValue,
-    data_set_id: DescriptionValue,
     inferable_coll: &Vec<Inference>,
     inverse_inferable_coll: &Vec<Inference>,
 )
@@ -101,11 +86,6 @@ pub fn build_causaloid(
     // check description
     if description.is_empty() {
         return Err(Box::new(BuildError("Description empty".into())));
-    }
-
-    // check data_set_id
-    if data_set_id.is_empty() {
-        return Err(Box::new(BuildError("Data set identifier empty".into())));
     }
 
     // check inferable collection
@@ -138,7 +118,6 @@ pub fn build_causaloid(
         Causaloid::new(
             id,
             causal_fn,
-            data_set_id,
             description,
         )
     )

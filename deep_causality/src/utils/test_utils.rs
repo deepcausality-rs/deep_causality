@@ -123,7 +123,6 @@ pub fn get_test_causaloid()
 {
     let id: IdentificationValue = 1;
     let description: String = "tests whether data exceeds threshold of 0.55".to_string() as DescriptionValue;
-    let data_set_id = "Test data".to_string() as DescriptionValue;
     let inferable_coll = get_inferable_coll(false);
     let inverse_inferable_coll = get_inferable_coll(true);
 
@@ -152,7 +151,6 @@ pub fn get_test_causaloid()
         id,
         causal_fn,
         description,
-        data_set_id,
         &inferable_coll,
         &inverse_inferable_coll,
     ).unwrap()

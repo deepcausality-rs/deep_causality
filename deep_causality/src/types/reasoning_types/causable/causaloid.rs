@@ -29,7 +29,6 @@ pub struct Causaloid
     causal_coll: Option<Vec<Causaloid>>,
     causal_graph: Option<CausaloidGraph<Causaloid>>,
     last_obs: RefCell<NumericalValue>,
-    data_set_id: DescriptionValue,
     description: DescriptionValue,
 }
 
@@ -41,7 +40,6 @@ impl Causaloid
     pub fn new(
         id: IdentificationValue,
         causal_fn: CausalFn,
-        data_set_id: DescriptionValue,
         description: DescriptionValue,
     )
         -> Self
@@ -54,7 +52,6 @@ impl Causaloid
             causal_coll: None,
             causal_graph: None,
             last_obs: RefCell::new(0.0),
-            data_set_id,
             description,
         }
     }
@@ -69,7 +66,6 @@ impl Causaloid
     pub fn from_causal_collection(
         id: IdentificationValue,
         causal_coll: Vec<Causaloid>,
-        data_set_id: DescriptionValue,
         description: DescriptionValue,
     )
         -> Self
@@ -85,7 +81,6 @@ impl Causaloid
             causal_coll: Some(causal_coll),
             causal_graph: None,
             last_obs: RefCell::new(0.0),
-            data_set_id,
             description,
         }
     }
@@ -100,7 +95,6 @@ impl Causaloid
     pub fn from_causal_graph(
         id: IdentificationValue,
         causal_graph: CausaloidGraph<Causaloid>,
-        data_set_id: DescriptionValue,
         description: DescriptionValue,
     )
         -> Self
@@ -116,7 +110,6 @@ impl Causaloid
             causal_coll: None,
             causal_graph: Some(causal_graph),
             last_obs: RefCell::new(0.0),
-            data_set_id,
             description,
         }
     }
@@ -149,10 +142,6 @@ impl Causable for Causaloid
 
     fn description(&self) -> DescriptionValue {
         self.description.clone()
-    }
-
-    fn data_set_id(&self) -> DescriptionValue {
-        self.data_set_id.clone()
     }
 
     fn explain(

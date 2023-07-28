@@ -46,11 +46,7 @@ fn test_get_root_causaloid() {
     let causaloid = g.get_root_causaloid().unwrap();
 
     let id = causaloid.id();
-    causaloid.description();
-    let data_set_id = causaloid.data_set_id();
-
     assert_eq!(id, 01);
-    assert_eq!(data_set_id, "Test data");
 }
 
 #[test]
@@ -99,11 +95,9 @@ fn test_get_causaloid() {
 
     let id = causaloid.id();
     let description = causaloid.description();
-    let data_set_id = causaloid.data_set_id();
 
     assert_eq!(id, 01);
     assert_eq!(description, "tests whether data exceeds threshold of 0.55");
-    assert_eq!(data_set_id, "Test data");
 }
 
 #[test]
@@ -119,11 +113,9 @@ fn test_remove_causaloid() {
 
     let id = causaloid.id();
     let description = causaloid.description();
-    let data_set_id = causaloid.data_set_id();
 
     assert_eq!(id, 01);
     assert_eq!(description, "tests whether data exceeds threshold of 0.55");
-    assert_eq!(data_set_id, "Test data");
 
     g.remove_causaloid(index);
     let contains = g.contains_causaloid(index);
@@ -388,12 +380,7 @@ fn test_count_nodes() {
     let causaloid = g.get_causaloid(index).unwrap();
 
     let id = causaloid.id();
-    let description = causaloid.description();
-    let data_set_id = causaloid.data_set_id();
-
     assert_eq!(id, 01);
-    assert_eq!(description, "tests whether data exceeds threshold of 0.55");
-    assert_eq!(data_set_id, "Test data");
 
     g.remove_causaloid(index);
     let contains = g.contains_causaloid(index);
