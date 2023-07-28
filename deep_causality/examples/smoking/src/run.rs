@@ -1,17 +1,26 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use deep_causality::prelude::*;
-use deep_causality::types::reasoning_types;
 
 type AllCauses<'l> = Vec<Causaloid<'l>>; // type alias for brevity
 
+////////////////////////////////////////////
+// Classic Smoking - Tar - Cancer example //
+////////////////////////////////////////////
+
 pub fn run()
 {
-    // Build causaloid from raw observations
+    // Infer whether there is a causal relationship between smoking / nicotine level and tar
+    infer_smoke_tar_causal_relation();
+
+    // Build causaloid to represent the link between nicotine level (smoking) and tar.
     println!("Build Causaloid representing the link between nicotine level (smoking) and tar.");
     let q_smoke_tar = build_smoke_tar_causaloid();
 
-    // Build causaloid from existing results i.e.from studies or meta-studies
+    // Infer whether there is a causal relationship between tar levels and cancer
+    infer_tar_cancer_causaloid();
+
+    // Build causaloid representing the link between tar levels and cancer.
     println!("Build Causaloid from known data representing the link between tar and cancer.");
     let q_tar_cancer = build_tar_cancer_causaloid();
 
@@ -66,9 +75,8 @@ fn apply_causal_model(
     println!("Has the patient a lung cancer risk: {}", cancer_estimate);
 }
 
-fn build_smoke_tar_causaloid() -> Causaloid<'static>
+fn infer_smoke_tar_causal_relation()
 {
-    println!();
     let all_obs = get_all_observations();
 
     let target_threshold = 0.55;
@@ -89,6 +97,7 @@ fn build_smoke_tar_causaloid() -> Causaloid<'static>
     );
     println!();
 
+
     let inv_question = "Do NON smokers have NO tar in the lung?".to_string() as DescriptionValue;
     let inv_observation = percent_non_obs;
     let inv_effect = 0.0; // observed effect
@@ -99,26 +108,20 @@ fn build_smoke_tar_causaloid() -> Causaloid<'static>
         "Can we infer from the data that NON smokers have NO tar in the lung? : {:?}",
         inv_inference.is_inverse_inferable()
     );
-    println!();
-
-    // 1) Build inference collection
-    let inferable_coll: Vec<Inference> = Vec::from_iter([inference]);
-    let inverse_inferable_coll: Vec<Inference> = Vec::from_iter([inv_inference]);
-    // 2) Describe the causal relation
-    let id = 1;
-    let description = "Causal relation between smoking and tar in the lung".to_string();
-
-    //3) Build the causaloid
-    build_causaloid(
-        id,
-        causal_fn,
-        description,
-        &inferable_coll,
-        &inverse_inferable_coll,
-    ).unwrap()
+    println!()
 }
 
-fn build_tar_cancer_causaloid() -> Causaloid<'static>
+
+fn build_smoke_tar_causaloid()
+    -> Causaloid<'static>
+{
+    let id = 1;
+    let description = "Causal relation between smoking and tar in the lung";
+
+    Causaloid::new(id, causal_fn, description,)
+}
+
+fn infer_tar_cancer_causaloid()
 {
     println!();
     let threshold = 0.55; // Threshold above which the observations is considered an inference.
@@ -144,54 +147,31 @@ fn build_tar_cancer_causaloid() -> Causaloid<'static>
         inv_inference.is_inverse_inferable()
     );
     println!();
-
-    // 1) Build inference collection
-    let inferable_coll: Vec<Inference> = Vec::from_iter([inference]);
-    let inverse_inferable_coll: Vec<Inference> = Vec::from_iter([inv_inference]);
-
-    // 2) Describe the causal relation
-    let id = 2;
-    let description = "Causal relation tar in the lung and lung cancer".to_string();
-
-    //3) Build the causaloid
-    reasoning_types::causable::build_causaloid(
-        id,
-        causal_fn,
-        description,
-        &inferable_coll,
-        &inverse_inferable_coll,
-    ).unwrap()
 }
 
-fn _build_cancer_death_causaloid() -> Causaloid<'static> {
-    // regular inference
-    let threshold = 0.55; // Threshold above which the observations is considered an inference.
-    let question = "Do people with lung cancer die earlier compared to those without?".to_string();
-    let observation = 0.89;
-    let effect = 1.0;
-    let target = 1.0; // expected effect of the inference once the threshold is reached or exceeded
-    let inference = Inference::new(0, question, observation, threshold, effect, target);
-    let inferable_coll: Vec<Inference> = Vec::from_iter([inference]);
+fn build_tar_cancer_causaloid()
+    -> Causaloid<'static>
+{
+    let id = 2;
+    let description = "Causal relation tar in the lung and lung cancer";
 
-    // inverse inference
-    let inv_question = "Do people with NO lung cancer do NOT die earlier?".to_string();
-    let inv_observation = 0.15;
-    let inv_effect = 0.0;
-    let inv_target = 0.0; // expected effect of the inference once the threshold is reached or exceeded
-    let inv_inference = Inference::new(0, inv_question, inv_observation, threshold, inv_effect, inv_target);
+    Causaloid::new(id, causal_fn, description)
+}
 
-    // Causaloid
-    let id = 3;
-    let description = "Causal relation lung cancer and early death".to_string();
-    let inverse_inferable_coll: Vec<Inference> = Vec::from_iter([inv_inference]);
 
-    reasoning_types::causable::build_causaloid(
-        id,
-        causal_fn,
-        description,
-        &inferable_coll,
-        &inverse_inferable_coll,
-    ).unwrap()
+fn causal_fn(obs: NumericalValue)
+    -> Result<bool, CausalityError>
+{
+    if obs.is_nan() {
+        return Err(CausalityError("Observation is NULL/NAN".into()));
+    }
+
+    let threshold: NumericalValue = 0.55;
+    if !obs.ge(&threshold) {
+        return Ok(false);
+    };
+
+    Ok(true)
 }
 
 fn get_all_observations() -> Vec<Observation>
@@ -209,20 +189,3 @@ fn get_all_observations() -> Vec<Observation>
     Vec::from_iter([o1, o2, o3, o4, o5, o6, o7, o8, o9])
 }
 
-
-fn causal_fn(
-    obs: NumericalValue
-)
-    -> Result<bool, CausalityError>
-{
-    if obs.is_nan() {
-        return Err(CausalityError("Observation is NULL/NAN".into()));
-    }
-
-    let threshold: NumericalValue = 0.55;
-    if !obs.ge(&threshold) {
-        return Ok(false);
-    };
-
-    Ok(true)
-}

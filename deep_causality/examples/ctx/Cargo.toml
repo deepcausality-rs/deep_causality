@@ -7,8 +7,9 @@ publish = false
 
 [dependencies]
 deep_causality = "0.2.8"
+# deep_causality = { git = "https://github.com/deepcausality-rs/deep_causality.git", rev = "50ae0c64f8f89ed402a0fd8358084721d0d0baff"}
 
-# default-features = false mitigates "RUSTSEC-2020-0071".
+# chrono default-features = false mitigates "RUSTSEC-2020-0071".
 # See https://rustsec.org/advisories/RUSTSEC-2020-0071.html
 chrono = { version = "0.4", default-features = false , features = ["serde", "clock"] }
 parquet = "44.0"
