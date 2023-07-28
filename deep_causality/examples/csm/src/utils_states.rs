@@ -4,12 +4,10 @@
 use deep_causality::prelude::{CausalityError, Causaloid, DescriptionValue, IdentificationValue, NumericalValue};
 
 pub fn get_smoke_sensor_causaloid()
-    -> Causaloid
+    ->  Causaloid<'static>
 {
     let id: IdentificationValue = 1;
     let description: String = "Tests whether smoke signal exceeds threshold of 65.0".to_string() as DescriptionValue;
-    let data_set_id = "".to_string() as DescriptionValue;
-
     fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
         if verify_obs(obs).is_err() {
             return Err(verify_obs(obs).err().unwrap());
@@ -23,16 +21,14 @@ pub fn get_smoke_sensor_causaloid()
         }
     }
 
-    Causaloid::new(id, causal_fn, data_set_id, description)
+    Causaloid::new(id, causal_fn, description)
 }
 
 pub fn get_fire_sensor_causaloid()
-    -> Causaloid
+    ->  Causaloid<'static>
 {
     let id: IdentificationValue = 2;
     let description: String = "Tests if temperature exceeds 85 degree celsius (185 degree Fahrenheit) ".to_string() as DescriptionValue;
-    let data_set_id = "".to_string() as DescriptionValue;
-
     fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
         if verify_obs(obs).is_err() {
             return Err(verify_obs(obs).err().unwrap());
@@ -46,15 +42,14 @@ pub fn get_fire_sensor_causaloid()
         }
     }
 
-    Causaloid::new(id, causal_fn, data_set_id, description)
+    Causaloid::new(id, causal_fn, description)
 }
 
 pub fn get_explosion_sensor_causaloid()
-    -> Causaloid
+    ->  Causaloid<'static>
 {
     let id: IdentificationValue = 3;
     let description: String = "Tests if air pressure exceeds 100 PSI. Regular Atmospheric pressure is 14.696 psi ".to_string() as DescriptionValue;
-    let data_set_id = "".to_string() as DescriptionValue;
 
     fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
         if verify_obs(obs).is_err() {
@@ -69,7 +64,7 @@ pub fn get_explosion_sensor_causaloid()
         }
     }
 
-    Causaloid::new(id, causal_fn, data_set_id, description)
+    Causaloid::new(id, causal_fn, description)
 }
 
 fn verify_obs(
