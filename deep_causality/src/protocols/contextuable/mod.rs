@@ -37,9 +37,9 @@ pub trait Contextuable<'l, D, S, T, ST>
         ST: SpaceTemporal,
         T: Temporal
 {
-    fn add_node(&mut self, value: &'l Contextoid<D, S, T, ST>) -> NodeIndex;
+    fn add_node(&mut self, value: Contextoid<D, S, T, ST>) -> NodeIndex;
     fn contains_node(&self, index: NodeIndex) -> bool;
-    fn get_node(&self, index: NodeIndex) -> Option<&&Contextoid<D, S, T, ST>>;
+    fn get_node(&self, index: NodeIndex) -> Option<&Contextoid<D, S, T, ST>>;
     fn remove_node(&mut self, index: NodeIndex);
     fn add_edge(&mut self, a: NodeIndex, b: NodeIndex, weight: RelationKind);
     fn contains_edge(&self, a: NodeIndex, b: NodeIndex) -> bool;

@@ -7,16 +7,16 @@ use petgraph::matrix_graph::MatrixGraph;
 use crate::prelude::{Contextuable, Contextoid, Datable, NodeIndex, SpaceTemporal, Spatial, Temporal, RelationKind};
 
 // Edge weights need to be numerical (u64) to make shortest path algo work.
-type CtxGraph<'l, D, S, T, ST> = MatrixGraph<&'l Contextoid<D, S, T, ST>, u64, Directed, Option<u64>, u32>;
-type CtxMap<'l, D, S, T, ST> = HashMap<NodeIndex, &'l Contextoid<D, S, T, ST>>;
+type CtxGraph<'l, D, S, T, ST> = MatrixGraph<Contextoid<D, S, T, ST>, u64, Directed, Option<u64>, u32>;
+type CtxMap<'l, D, S, T, ST> = HashMap<NodeIndex,Contextoid<D, S, T, ST>>;
 
 #[derive(Clone)]
 pub struct Context<'l, D, S, T, ST>
     where
-        D: Datable,
-        S: Spatial,
-        T: Temporal,
-        ST: SpaceTemporal
+        D: Datable+Clone,
+        S: Spatial+Clone,
+        T: Temporal+Clone,
+        ST: SpaceTemporal+Clone
 {
     id: u64,
     name: &'l str,
@@ -27,10 +27,10 @@ pub struct Context<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
     where
-        D: Datable,
-        S: Spatial,
-        T: Temporal,
-        ST: SpaceTemporal
+        D: Datable+Clone,
+        S: Spatial+Clone,
+        T: Temporal+Clone,
+        ST: SpaceTemporal+Clone
 {
     pub fn new(
         id: u64,
@@ -62,18 +62,19 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
 
 
 impl<'l, D, S, T, ST> Contextuable<'l, D, S, T, ST> for Context<'l, D, S, T, ST> where
-    D: Datable,
-    S: Spatial,
-    T: Temporal,
-    ST: SpaceTemporal
+    D: Datable+Clone,
+    S: Spatial+Clone,
+    T: Temporal+Clone,
+    ST: SpaceTemporal+Clone
 {
     fn add_node(
         &mut self,
-        value: &'l Contextoid<D, S, T, ST>,
+        value: Contextoid<D, S, T, ST>,
     )
         -> NodeIndex
     {
-        let node_index = self.graph.add_node(value);
+
+        let node_index = self.graph.add_node(value.clone());
         self.context_map.insert(node_index, value);
 
         node_index
@@ -92,7 +93,7 @@ impl<'l, D, S, T, ST> Contextuable<'l, D, S, T, ST> for Context<'l, D, S, T, ST>
         &self,
         index: NodeIndex,
     )
-        -> Option<&&Contextoid<D, S, T, ST>>
+        -> Option<&Contextoid<D, S, T, ST>>
     {
         self.context_map.get(&index)
     }
@@ -169,10 +170,10 @@ impl<'l, D, S, T, ST> Contextuable<'l, D, S, T, ST> for Context<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
     where
-        D: Datable,
-        S: Spatial,
-        T: Temporal,
-        ST: SpaceTemporal
+        D: Datable+Clone,
+        S: Spatial+Clone,
+        T: Temporal+Clone,
+        ST: SpaceTemporal+Clone
 {
     fn format(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f,
@@ -187,10 +188,10 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> Debug for Context<'l, D, S, T, ST>
     where
-        D: Datable,
-        S: Spatial,
-        T: Temporal,
-        ST: SpaceTemporal
+        D: Datable+Clone,
+        S: Spatial+Clone,
+        T: Temporal+Clone,
+        ST: SpaceTemporal+Clone
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.format(f)
@@ -199,10 +200,10 @@ impl<'l, D, S, T, ST> Debug for Context<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> Display for Context<'l, D, S, T, ST>
     where
-        D: Datable,
-        S: Spatial,
-        T: Temporal,
-        ST: SpaceTemporal
+        D: Datable+Clone,
+        S: Spatial+Clone,
+        T: Temporal+Clone,
+        ST: SpaceTemporal+Clone
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.format(f)
