@@ -1,7 +1,7 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use std::time::{Duration, Instant};
-use deep_causality::prelude::TimeScale;
+use deep_causality::prelude::{Contextuable, TimeScale};
 use crate::workflow::{build_time_data_context, load_data};
 
 pub fn run()
