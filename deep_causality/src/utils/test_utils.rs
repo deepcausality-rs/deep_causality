@@ -148,6 +148,11 @@ pub fn get_test_causaloid<'l>()
     Causaloid::new(id, causal_fn, description)
 }
 
+pub fn get_test_context<'l>()
+    -> Context<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>
+{
+    Context::with_capacity(1, "Test-Context", 10)
+}
 
 pub fn get_inferable_coll(
     inverse: bool

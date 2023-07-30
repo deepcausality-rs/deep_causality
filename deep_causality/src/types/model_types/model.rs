@@ -1,40 +1,82 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 
-use crate::prelude::{Assumption, Causaloid};
+use crate::prelude::{Assumption, Causaloid, Context, Datable, SpaceTemporal, Spatial, Temporal};
 use crate::protocols::identifiable::Identifiable;
 
 #[derive(Clone, Copy)]
-pub struct Model<'l> {
+pub struct Model<'l, D, S, T, ST>
+    where
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
+{
     id: u64,
     author: &'l str,
     description: &'l str,
-    assumptions: &'l Option<&'l Vec<&'l Assumption>>,
+    assumptions: Option<&'l Vec<&'l Assumption>>,
     causaloid: &'l Causaloid<'l>,
+    context: Option<&'l Context<'l, D, S, T, ST>, >,
 }
 
-impl<'l> Model<'l> {
-    pub fn new(id: u64, author: &'l str, description: &'l str, assumptions: &'l Option<&'l Vec<&'l Assumption>>, model: &'l Causaloid) -> Self {
-        Self { id, author, description, assumptions, causaloid: model }
+impl<'l, D, S, T, ST> Model<'l, D, S, T, ST>
+    where
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
+{
+    pub fn new(
+        id: u64,
+        author: &'l str,
+        description: &'l str,
+        assumptions: Option<&'l Vec<&'l Assumption>>,
+        causaloid: &'l Causaloid<'l>,
+        context: Option<&'l Context<'l, D, S, T, ST>>
+    ) -> Self {
+        Self {
+            id,
+            author,
+            description,
+            assumptions,
+            causaloid,
+            context
+        }
     }
 }
 
-impl<'l> Model<'l> {
+impl<'l, D, S, T, ST> Model<'l, D, S, T, ST>
+    where
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
+{
     pub fn author(&self) -> &'l str {
         self.author
     }
     pub fn description(&self) -> &'l str {
         self.description
     }
-    pub fn assumptions(&self) -> &'l Option<&'l Vec<&'l Assumption>> {
+    pub fn assumptions(&self) -> Option<&'l Vec<&'l Assumption>> {
         self.assumptions
     }
     pub fn causaloid(&self) -> &'l Causaloid {
         self.causaloid
     }
+    pub fn context(&self) -> Option<&'l Context<'l, D, S, T, ST>> {
+        self.context
+    }
 }
 
-impl<'l> Identifiable for Model<'l> {
+impl<'l, D, S, T, ST> Identifiable for Model<'l, D, S, T, ST>
+    where
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
+{
     fn id(&self) -> u64 {
         self.id
     }

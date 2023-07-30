@@ -4,19 +4,21 @@ use std::collections::HashMap;
 use std::fmt::{Debug, Display, Formatter};
 use petgraph::Directed;
 use petgraph::matrix_graph::MatrixGraph;
-use crate::prelude::{Contextuable, Contextoid, Datable, NodeIndex, SpaceTemporal, Spatial, Temporal, RelationKind};
+use crate::prelude::{Contextuable, Contextoid, Datable, NodeIndex, SpaceTemporal, Spatial, Temporal, RelationKind, Identifiable};
 
 // Edge weights need to be numerical (u64) to make shortest path algo work.
 type CtxGraph<'l, D, S, T, ST> = MatrixGraph<Contextoid<D, S, T, ST>, u64, Directed, Option<u64>, u32>;
-type CtxMap<'l, D, S, T, ST> = HashMap<NodeIndex,Contextoid<D, S, T, ST>>;
+// Preferably, hashmap should hold only a reference to the contextoid in the graph,
+// but this causes some problems with the borrow checker hence the value and clone requirement.
+type CtxMap<'l, D, S, T, ST> = HashMap<NodeIndex, Contextoid<D, S, T, ST>>;
 
 #[derive(Clone)]
 pub struct Context<'l, D, S, T, ST>
     where
-        D: Datable+Clone,
-        S: Spatial+Clone,
-        T: Temporal+Clone,
-        ST: SpaceTemporal+Clone
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
 {
     id: u64,
     name: &'l str,
@@ -27,14 +29,14 @@ pub struct Context<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
     where
-        D: Datable+Clone,
-        S: Spatial+Clone,
-        T: Temporal+Clone,
-        ST: SpaceTemporal+Clone
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
 {
     pub fn new(
         id: u64,
-        name:  &'l str,
+        name: &'l str,
     )
         -> Self
     {
@@ -43,7 +45,7 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
 
     pub fn with_capacity(
         id: u64,
-        name:  &'l str,
+        name: &'l str,
         capacity: usize,
     )
         -> Self
@@ -51,21 +53,28 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
         Self { id, name, graph: MatrixGraph::default(), context_map: HashMap::with_capacity(capacity) }
     }
 
-    pub fn id(&self) -> u64 {
-        self.id
-    }
 
     pub fn name(&self) -> &str {
         self.name
     }
 }
 
+impl<'l, D, S, T, ST> Identifiable for Context<'l, D, S, T, ST> where
+    D: Datable + Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone
+{
+    fn id(&self) -> u64 {
+        self.id
+    }
+}
 
 impl<'l, D, S, T, ST> Contextuable<'l, D, S, T, ST> for Context<'l, D, S, T, ST> where
-    D: Datable+Clone,
-    S: Spatial+Clone,
-    T: Temporal+Clone,
-    ST: SpaceTemporal+Clone
+    D: Datable + Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone
 {
     fn add_node(
         &mut self,
@@ -73,7 +82,6 @@ impl<'l, D, S, T, ST> Contextuable<'l, D, S, T, ST> for Context<'l, D, S, T, ST>
     )
         -> NodeIndex
     {
-
         let node_index = self.graph.add_node(value.clone());
         self.context_map.insert(node_index, value);
 
@@ -170,10 +178,10 @@ impl<'l, D, S, T, ST> Contextuable<'l, D, S, T, ST> for Context<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
     where
-        D: Datable+Clone,
-        S: Spatial+Clone,
-        T: Temporal+Clone,
-        ST: SpaceTemporal+Clone
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
 {
     fn format(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f,
@@ -188,10 +196,10 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> Debug for Context<'l, D, S, T, ST>
     where
-        D: Datable+Clone,
-        S: Spatial+Clone,
-        T: Temporal+Clone,
-        ST: SpaceTemporal+Clone
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.format(f)
@@ -200,10 +208,10 @@ impl<'l, D, S, T, ST> Debug for Context<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> Display for Context<'l, D, S, T, ST>
     where
-        D: Datable+Clone,
-        S: Spatial+Clone,
-        T: Temporal+Clone,
-        ST: SpaceTemporal+Clone
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.format(f)
