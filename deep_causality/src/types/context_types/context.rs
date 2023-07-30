@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::fmt::{Debug, Display, Formatter};
 use petgraph::Directed;
 use petgraph::matrix_graph::MatrixGraph;
-use crate::prelude::{Contextuable, Contextoid, Datable, NodeIndex, SpaceTemporal, Spatial, Temporal};
+use crate::prelude::{Contextuable, Contextoid, Datable, NodeIndex, SpaceTemporal, Spatial, Temporal, RelationKind};
 
 // Edge weights need to be numerical (u64) to make shortest path algo work.
 type CtxGraph<'l, D, S, T, ST> = MatrixGraph<&'l Contextoid<D, S, T, ST>, u64, Directed, Option<u64>, u32>;
@@ -108,20 +108,11 @@ impl<'l, D, S, T, ST> Contextuable<'l, D, S, T, ST> for Context<'l, D, S, T, ST>
     fn add_edge(
         &mut self,
         a: NodeIndex,
-        b: NodeIndex
-    )
-    {
-        self.graph.add_edge(a, b, 0);
-    }
-
-    fn add_edg_with_weight(
-        &mut self,
-        a: NodeIndex,
         b: NodeIndex,
-        weight: u64
+        weight: RelationKind,
     )
     {
-        self.graph.add_edge(a, b, weight);
+        self.graph.add_edge(a, b, weight as u64);
     }
 
     fn contains_edge(

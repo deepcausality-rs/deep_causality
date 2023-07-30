@@ -1,6 +1,6 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use crate::prelude::{Adjustable, Contextoid, Identifiable, NodeIndex, TimeScale};
+use crate::prelude::{Adjustable, Contextoid, Identifiable, NodeIndex, RelationKind, TimeScale};
 
 pub trait Datable: Adjustable + Identifiable {}
 
@@ -41,8 +41,7 @@ pub trait Contextuable<'l, D, S, T, ST>
     fn contains_contextoid(&self, index: NodeIndex) -> bool;
     fn get_contextoid(&self, index: NodeIndex) -> Option<&&Contextoid<D, S, T, ST>>;
     fn remove_contextoid(&mut self, index: NodeIndex);
-    fn add_edge(&mut self, a: NodeIndex, b: NodeIndex);
-    fn add_edg_with_weight(&mut self, a: NodeIndex, b: NodeIndex, weight: u64);
+    fn add_edge(&mut self, a: NodeIndex, b: NodeIndex, weight: RelationKind);
     fn contains_edge(&self, a: NodeIndex, b: NodeIndex) -> bool;
     fn remove_edge(&mut self, a: NodeIndex, b: NodeIndex) -> u64;
     fn size(&self) -> usize;
