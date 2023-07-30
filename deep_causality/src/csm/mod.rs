@@ -8,6 +8,9 @@ use crate::prelude::{CausalAction, CausalState, Datable, NumericalValue, SpaceTe
 pub mod csm_action;
 pub mod csm_state;
 
+pub type CSMMap<'l, D, S, T, ST> = HashMap<usize, (&'l CausalState<'l, D, S, T, ST>, &'l CausalAction)>;
+pub type CSMStateActions<'l, D, S, T, ST> = [(&'l CausalState<'l, D, S, T, ST>, &'l CausalAction)];
+
 pub struct CSM<'l, D, S, T, ST>
     where
         D: Datable + Clone,
@@ -15,7 +18,7 @@ pub struct CSM<'l, D, S, T, ST>
         T: Temporal + Clone,
         ST: SpaceTemporal + Clone
 {
-    state_actions: RefCell<HashMap<usize, (&'l CausalState<'l, D, S, T, ST>, &'l CausalAction)>>,
+    state_actions: RefCell<CSMMap<'l, D, S, T, ST>>,
 }
 
 impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
@@ -27,12 +30,12 @@ impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
 {
     /// Constructs a new CSM.
     pub fn new(
-        state_actions: &'l [(&'l CausalState<'l, D, S, T, ST>, &'l CausalAction)]
+        state_actions: &'l CSMStateActions<'l, D, S, T, ST>
     )
         -> Self
     {
         // Generate a new HashMap from the collection.
-        let mut state_map: HashMap<usize, (&'l CausalState<'l, D, S, T, ST>, &'l CausalAction)> = HashMap::with_capacity(state_actions.len());
+        let mut state_map: CSMMap<'l, D, S, T, ST> = HashMap::with_capacity(state_actions.len());
         for (state, action) in state_actions {
             state_map.insert(state.id(), (state, action));
         }
@@ -209,10 +212,10 @@ impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
     /// Updates all causal state with a new state collection.
     /// Note, this operation erases all previous states in the CSM by generating a new collection.
     /// Returns UpdateError if the update operation failed.
-    pub fn update_all_states(&self, state_actions: &'l [(&'l CausalState<'l, D, S, T, ST>, &'l CausalAction)])
+    pub fn update_all_states(&self, state_actions: &'l CSMStateActions<'l, D, S, T, ST>)
     {
         // Generate a new HashMap from the collection
-        let mut state_map: HashMap<usize, (&'l CausalState<'l, D, S, T, ST>, &'l CausalAction)> = HashMap::with_capacity(state_actions.len());
+        let mut state_map: CSMMap<'l, D, S, T, ST> = HashMap::with_capacity(state_actions.len());
         for (state, action) in state_actions {
             state_map.insert(state.id(), (state, action));
         }
