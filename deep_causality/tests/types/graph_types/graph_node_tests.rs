@@ -40,7 +40,7 @@ fn test_to_string()
     let root = Root::new(id);
     let node: Contextoid<Dataoid, Spaceoid, Tempoid, SpaceTempoid> = Contextoid::new(id, ContextoidType::Root(root));
 
-    let expected = format!("Vertex ID: 1 Type: Root: Root ID: 1");
+    let expected = format!("Contextoid ID: 1 Type: Root: Root ID: 1");
     let actual = node.to_string();
     assert_eq!(actual, expected);
 }

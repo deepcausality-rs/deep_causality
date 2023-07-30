@@ -2,6 +2,8 @@
 #[cfg(test)]
 mod dateoid_tests;
 #[cfg(test)]
+mod root_tests;
+#[cfg(test)]
 mod space_tempoid_tests;
 #[cfg(test)]
 mod spaceoid_tests;

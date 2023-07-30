@@ -5,4 +5,6 @@ mod node_types;
 #[cfg(test)]
 mod context_tests;
 #[cfg(test)]
+mod contextoid_tests;
+#[cfg(test)]
 mod time_scale_tests;

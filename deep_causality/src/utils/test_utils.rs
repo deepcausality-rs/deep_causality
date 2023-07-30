@@ -151,7 +151,14 @@ pub fn get_test_causaloid<'l>()
 pub fn get_test_context<'l>()
     -> Context<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>
 {
-    Context::with_capacity(1, "Test-Context", 10)
+    let mut context = Context::with_capacity(1, "Test-Context", 10);
+
+    let id = 1;
+    let root = Root::new(id);
+    let contextoid = Contextoid::new(id, ContextoidType::Root(root));
+    context.add_node(contextoid);
+
+    context
 }
 
 pub fn get_inferable_coll(

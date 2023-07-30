@@ -51,7 +51,7 @@ impl<D, S, T, ST> Display for Contextoid<D, S, T, ST>
         ST: SpaceTemporal + Display,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Vertex ID: {} Type: {}",
+        write!(f, "Contextoid ID: {} Type: {}",
                self.id,
                self.vertex_type
         )
