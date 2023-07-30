@@ -2,7 +2,7 @@
 
 use std::error::Error;
 use chrono::Datelike;
-use deep_causality::prelude::{Context, ContextMatrixGraph, Node, NodeType, RelationKind, Root, Spaceoid, SpaceTempoid, Tempoid, TimeScale};
+use deep_causality::prelude::{Context, Contextoid, ContextoidType, Contextuable, RelationKind, Root, Spaceoid, SpaceTempoid, Tempoid, TimeScale};
 use crate::types::counter;
 use crate::types::dateoid::Dataoid;
 use crate::types::sampled_date_time_bar::SampledDataBars;
@@ -16,17 +16,12 @@ pub fn build_time_data_context(
 )
     -> Result<Context<Dataoid, Spaceoid, Tempoid, SpaceTempoid>, Box<dyn Error>>
 {
-    let graph = match generate_time_data_context_graph(
-        data,
-        max_time_scale,
-        node_capacity
-    )
-    {
+    let context = match build_time_data_context_graph(data, max_time_scale, node_capacity) {
         Ok(g) => g,
         Err(e) => return Err(e),
     };
 
-    Ok(Context::new(1, "BTC-1Y".to_string(), graph))
+    Ok(context)
 }
 
 
@@ -51,16 +46,16 @@ fn get_boolean_control_map(
 }
 
 
-fn generate_time_data_context_graph(
+fn build_time_data_context_graph(
     data: &SampledDataBars,
     time_scale: TimeScale,
     node_capacity: usize,
 )
-    -> Result<ContextMatrixGraph<Dataoid, Spaceoid, Tempoid, SpaceTempoid>, Box<dyn Error>>
+    -> Result<Context<Dataoid, Spaceoid, Tempoid, SpaceTempoid>, Box<dyn Error>>
 {
     let counter = counter::RelaxedAtomicCounter::new();
 
-    let mut g = ContextMatrixGraph::with_capacity(node_capacity);
+    let mut g = Context::with_capacity(1, "BTC-1Y", node_capacity);
 
     let cm = get_boolean_control_map(time_scale);
     let add_month = *cm.get(2).unwrap();
@@ -70,7 +65,7 @@ fn generate_time_data_context_graph(
     // == ADD ROOT ==//
     let id = counter.increment_and_get();
     let root = Root::new(id);
-    let root_node = Node::new(id, NodeType::Root(root));
+    let root_node = Contextoid::new(id, ContextoidType::Root(root));
     let root_index = g.add_node(root_node);
 
     // == ADD YEAR ==//
@@ -82,26 +77,18 @@ fn generate_time_data_context_graph(
         let (tempoid, dataoid) = augment_data::convert_bar_to_augmented(data_bar, time_scale);
 
         let key = counter.increment_and_get();
-        let time_node = Node::new(key, NodeType::Tempoid(tempoid));
+        let time_node = Contextoid::new(key, ContextoidType::Tempoid(tempoid));
         let year_index = g.add_node(time_node);
 
         let data_id = counter.increment_and_get();
-        let data_node = Node::new(data_id, NodeType::Datoid(dataoid));
+        let data_node = Contextoid::new(data_id, ContextoidType::Datoid(dataoid));
         let data_index = g.add_node(data_node);
 
         // link root to year
-        g.add_edge(
-            root_index,
-            year_index,
-            RelationKind::Temporal,
-        );
+        g.add_edge(root_index, year_index, RelationKind::Temporal);
 
         // link data to year
-        g.add_edge(
-            data_index,
-            year_index,
-            RelationKind::Datial,
-        );
+        g.add_edge(data_index, year_index, RelationKind::Datial);
 
         if !add_month {
             continue;
@@ -121,27 +108,19 @@ fn generate_time_data_context_graph(
 
             // Add Month
             let key = counter.increment_and_get();
-            let time_node = Node::new(key, NodeType::Tempoid(tempoid));
+            let time_node = Contextoid::new(key, ContextoidType::Tempoid(tempoid));
             let month_index = g.add_node(time_node);
 
             // Add data
             let data_id = counter.increment_and_get();
-            let data_node = Node::new(data_id, NodeType::Datoid(dataoid));
+            let data_node = Contextoid::new(data_id, ContextoidType::Datoid(dataoid));
             let data_index = g.add_node(data_node);
 
             // link month to year
-            g.add_edge(
-                month_index,
-                year_index,
-                RelationKind::Temporal,
-            );
+            g.add_edge(month_index, year_index, RelationKind::Temporal,);
 
             // link data to month
-            g.add_edge(
-                data_index,
-                month_index,
-                RelationKind::Datial,
-            );
+            g.add_edge(data_index, month_index, RelationKind::Datial);
 
             if !add_week {
                 continue;
@@ -165,27 +144,19 @@ fn generate_time_data_context_graph(
 
                 // Add Week
                 let key = counter.increment_and_get();
-                let time_node = Node::new(key, NodeType::Tempoid(tempoid));
+                let time_node = Contextoid::new(key, ContextoidType::Tempoid(tempoid));
                 let week_index = g.add_node(time_node);
 
                 // Add data
                 let data_id = counter.increment_and_get();
-                let data_node = Node::new(data_id, NodeType::Datoid(dataoid));
+                let data_node = Contextoid::new(data_id, ContextoidType::Datoid(dataoid));
                 let data_index = g.add_node(data_node);
 
                 // link week to month
-                g.add_edge(
-                    week_index,
-                    month_index,
-                    RelationKind::Temporal,
-                );
+                g.add_edge(week_index, month_index, RelationKind::Temporal);
 
                 // link data to week
-                g.add_edge(
-                    data_index,
-                    week_index,
-                    RelationKind::Datial,
-                );
+                g.add_edge(data_index, week_index, RelationKind::Datial);
 
                 if !add_day {
                     continue;
@@ -211,27 +182,20 @@ fn generate_time_data_context_graph(
 
                     // Add day
                     let key = counter.increment_and_get();
-                    let time_node = Node::new(key, NodeType::Tempoid(tempoid));
+                    let time_node = Contextoid::new(key, ContextoidType::Tempoid(tempoid));
                     let day_index = g.add_node(time_node);
 
                     // Add data
                     let data_id = counter.increment_and_get();
-                    let data_node = Node::new(data_id, NodeType::Datoid(dataoid));
+                    let data_node = Contextoid::new(data_id, ContextoidType::Datoid(dataoid));
                     let data_index = g.add_node(data_node);
 
                     // link day to week
-                    g.add_edge(
-                        day_index,
-                        week_index,
-                        RelationKind::Temporal,
-                    );
+                    g.add_edge(day_index, week_index, RelationKind::Temporal);
 
                     // link data to week
-                    g.add_edge(
-                        data_index,
-                        day_index,
-                        RelationKind::Datial,
-                    );
+                    g.add_edge(data_index, day_index, RelationKind::Datial);
+
                 } // end day
             } // end week
         } // end month
@@ -239,4 +203,3 @@ fn generate_time_data_context_graph(
 
     Ok(g)
 }
-
