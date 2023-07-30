@@ -69,6 +69,27 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
         }
     }
 
+    pub fn new_with_context(
+        id: IdentificationValue,
+        causal_fn: CausalFn,
+        context: Option<&'l Context<'l, D, S, T, ST>, >,
+        description: &'l str,
+    )
+        -> Self
+    {
+        Causaloid {
+            id,
+            active: RefCell::new(false),
+            causal_type: CausalType::Singleton,
+            causal_fn,
+            causal_coll: None,
+            causal_graph: None,
+            last_obs: RefCell::new(0.0),
+            description,
+            context,
+        }
+    }
+
     /// Create a new causaloid from a causal collection.
     /// Encapsulates a linear causal collection into one single causaloid
     /// that can be used individually, as part of another causal collection,
@@ -96,6 +117,34 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
             last_obs: RefCell::new(0.0),
             description,
             context: None,
+        }
+    }
+
+    /// Create a new causaloid from a causal collection with a context.
+    /// Encapsulates a linear causal collection into one single causaloid
+    /// that can be used individually, as part of another causal collection,
+    /// or embedded into a causal graph.
+    pub fn from_causal_collection_with_context(
+        id: IdentificationValue,
+        causal_coll: &'l Vec<Causaloid<D, S, T, ST>>,
+        context: Option<&'l Context<'l, D, S, T, ST>, >,
+        description: &'l str,
+    )
+        -> Self
+    {
+        // empty causal function.
+        fn causal_fn(_obs: NumericalValue) -> Result<bool, CausalityError> { Ok(false) }
+
+        Causaloid {
+            id,
+            active: RefCell::new(false),
+            causal_type: CausalType::Collection,
+            causal_fn,
+            causal_coll: Some(causal_coll),
+            causal_graph: None,
+            last_obs: RefCell::new(0.0),
+            description,
+            context,
         }
     }
 
@@ -128,6 +177,34 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
             context: None,
         }
     }
+
+    /// Create a new causaloid from a causal graph with a context embedded.
+    /// Encapsulates a complex causal graph into one single causaloid
+    /// that can be used individually, as part of causal collection,
+    /// or embedded into another causal graph.
+    pub fn from_causal_graph_with_context(
+        id: IdentificationValue,
+        causal_graph: &'l CausaloidGraph<Causaloid<D, S, T, ST>>,
+        context: Option<&'l Context<'l, D, S, T, ST>, >,
+        description: &'l str,
+    )
+        -> Self
+    {
+        // empty causal function
+        fn causal_fn(_obs: NumericalValue) -> Result<bool, CausalityError> { Ok(false) }
+
+        Causaloid {
+            id,
+            active: RefCell::new(false),
+            causal_type: CausalType::Graph,
+            causal_fn,
+            causal_coll: None,
+            causal_graph: Some(causal_graph),
+            last_obs: RefCell::new(0.0),
+            description,
+            context,
+        }
+    }
 }
 
 // Getters
@@ -138,13 +215,10 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
         T: Temporal + Clone,
         ST: SpaceTemporal + Clone
 {
-    pub fn id(&self) -> IdentificationValue {
-        self.id
-    }
     pub fn active(&self) -> &RefCell<bool> {
         &self.active
     }
-    pub fn causal_coll(&self) -> Option<&'l Vec<Causaloid<'l, D, S, T, ST>>> {
+    pub fn causal_collection(&self) -> Option<&'l Vec<Causaloid<'l, D, S, T, ST>>> {
         self.causal_coll
     }
     pub fn causal_graph(&self) -> Option<&'l CausaloidGraph<Causaloid<'l, D, S, T, ST>>> {

@@ -5,21 +5,21 @@ use deep_causality::utils::{bench_utils_graph, test_utils};
 
 #[test]
 fn test_new() {
-    let g: CausaloidGraph<Causaloid> = CausaloidGraph::default();
+    let g: CausaloidGraph<Causaloid<Dataoid, Spaceoid, Tempoid, SpaceTempoid>> = CausaloidGraph::default();
     assert_eq!(g.node_count(), 0);
     assert_eq!(g.edge_count(), 0);
 }
 
 #[test]
 fn test_new_with_capacity() {
-    let g: CausaloidGraph<Causaloid> = CausaloidGraph::default();
+    let g: CausaloidGraph<Causaloid<Dataoid, Spaceoid, Tempoid, SpaceTempoid>> = CausaloidGraph::default();
     assert_eq!(g.node_count(), 0);
     assert_eq!(g.edge_count(), 0);
 }
 
 #[test]
 fn test_default() {
-    let g: CausaloidGraph<Causaloid> = CausaloidGraph::default();
+    let g: CausaloidGraph<Causaloid<Dataoid, Spaceoid, Tempoid, SpaceTempoid>> = CausaloidGraph::default();
     assert_eq!(g.node_count(), 0);
     assert_eq!(g.edge_count(), 0);
 }
