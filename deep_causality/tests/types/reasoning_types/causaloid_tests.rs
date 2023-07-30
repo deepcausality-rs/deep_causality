@@ -6,36 +6,56 @@ use deep_causality::utils::bench_utils_graph;
 use deep_causality::utils::test_utils;
 
 #[test]
-fn test_from_causal_graph() {
-    let id: IdentificationValue = 01;
+fn test_new() {
+    let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
-    let (causal_graph, data) = bench_utils_graph::get_small_multi_layer_cause_graph_and_data();
 
-    let causaloid = Causaloid::from_causal_graph(id, &causal_graph, description);
-    assert!(!causaloid.is_singleton());
+    fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
+        if obs.is_nan() {
+            return Err(CausalityError("Observation is NULL/NAN".into()));
+        }
 
-    assert!(!causaloid.is_active());
-    assert!(causaloid.explain().is_err());
+        let threshold: NumericalValue = 0.75;
+        if !obs.ge(&threshold) {
+            Ok(false)
+        } else {
+            Ok(true)
+        }
+    }
 
-    let res = causaloid.verify_all_causes(&data, None);
-    assert!(res.is_ok());
+    let causaloid: Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid> = Causaloid::new(id, causal_fn, description);
 
-    assert!(res.unwrap());
-    assert!(causaloid.is_active());
+    assert!(causaloid.is_singleton());
+    assert!(causaloid.causal_collection().is_none());
+    assert!(causaloid.causal_graph().is_none());
+    assert!(causaloid.context().is_none());
 }
 
 #[test]
-fn test_causal_graph()
-{
-    let id: IdentificationValue = 01;
+fn test_new_with_context() {
+    let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
-    let (causal_graph, _) = bench_utils_graph::get_small_multi_layer_cause_graph_and_data();
 
-    let causaloid = Causaloid::from_causal_graph(id, &causal_graph, description);
-    assert!(!causaloid.is_singleton());
+    fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
+        if obs.is_nan() {
+            return Err(CausalityError("Observation is NULL/NAN".into()));
+        }
 
-    assert!(causaloid.causal_graph().is_some());
+        let threshold: NumericalValue = 0.55;
+        if !obs.ge(&threshold) {
+            Ok(false)
+        } else {
+            Ok(true)
+        }
+    }
+
+    let context = &test_utils::get_test_context();
+    let causaloid: Causaloid<Dataoid, Spaceoid, Tempoid, SpaceTempoid> = Causaloid::new_with_context(id, causal_fn, Some(context), description);
+
+    assert!(causaloid.is_singleton());
     assert!(causaloid.causal_collection().is_none());
+    assert!(causaloid.causal_graph().is_none());
+    assert!(causaloid.context().is_some());
 }
 
 #[test]
@@ -52,7 +72,84 @@ fn test_from_causal_collection() {
 
     assert!(causaloid.causal_collection().is_some());
     assert!(causaloid.causal_graph().is_none());
+    assert!(causaloid.context().is_none());
 }
+
+#[test]
+fn test_from_causal_collection_with_context() {
+    let id: IdentificationValue = 01;
+    let description = "tests whether data exceeds threshold of 0.55";
+    let causal_coll = test_utils::get_test_causality_vec();
+
+    let data = [0.89, 0.89, 0.99];
+    assert_eq!(data.len(), causal_coll.len());
+
+    let context = &test_utils::get_test_context();
+
+    let causaloid = Causaloid::from_causal_collection_with_context(id, &causal_coll, Some(context), description);
+
+    assert!(!causaloid.is_singleton());
+    assert!(causaloid.causal_collection().is_some());
+    assert!(causaloid.causal_graph().is_none());
+    assert!(causaloid.context().is_some());
+}
+
+#[test]
+fn test_from_causal_graph() {
+    let id: IdentificationValue = 01;
+    let description = "tests whether data exceeds threshold of 0.55";
+    let (causal_graph, data) = bench_utils_graph::get_small_multi_layer_cause_graph_and_data();
+
+    let causaloid = Causaloid::from_causal_graph(id, &causal_graph, description);
+    assert!(!causaloid.is_singleton());
+
+    assert!(!causaloid.is_active());
+    assert!(causaloid.explain().is_err());
+
+    let res = causaloid.verify_all_causes(&data, None);
+    assert!(res.is_ok());
+
+    assert!(res.unwrap());
+    assert!(causaloid.is_active());
+    assert!(causaloid.context().is_none());
+}
+
+#[test]
+fn test_from_causal_graph_with_context() {
+    let id: IdentificationValue = 01;
+    let description = "tests whether data exceeds threshold of 0.55";
+    let (causal_graph, data) = bench_utils_graph::get_small_multi_layer_cause_graph_and_data();
+
+    let context = &test_utils::get_test_context();
+
+    let causaloid = Causaloid::from_causal_graph_with_context(id, &causal_graph, Some(&context), description);
+    assert!(!causaloid.is_singleton());
+
+    assert!(!causaloid.is_active());
+    assert!(causaloid.explain().is_err());
+
+    let res = causaloid.verify_all_causes(&data, None);
+    assert!(res.is_ok());
+
+    assert!(res.unwrap());
+    assert!(causaloid.is_active());
+    assert!(causaloid.context().is_some());
+}
+
+#[test]
+fn test_causal_graph()
+{
+    let id: IdentificationValue = 01;
+    let description = "tests whether data exceeds threshold of 0.55";
+    let (causal_graph, _) = bench_utils_graph::get_small_multi_layer_cause_graph_and_data();
+
+    let causaloid = Causaloid::from_causal_graph(id, &causal_graph, description);
+    assert!(!causaloid.is_singleton());
+
+    assert!(causaloid.causal_graph().is_some());
+    assert!(causaloid.causal_collection().is_none());
+}
+
 
 #[test]
 fn test_explain() {

@@ -148,8 +148,8 @@ pub fn get_test_causaloid<'l>()
     Causaloid::new(id, causal_fn, description)
 }
 
-pub fn get_test_context<'l>()
-    -> Context<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>
+pub fn get_test_context()
+    -> Context<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>
 {
     let mut context = Context::with_capacity(1, "Test-Context", 10);
 
