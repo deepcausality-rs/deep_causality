@@ -92,14 +92,14 @@ pub fn get_test_inf_vec()
     Vec::from_iter([i1, i2])
 }
 
-pub fn get_test_causality_array() -> [Causaloid<'static>; 10]
+pub fn get_test_causality_array() -> [Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>; 10]
 {
 // Causaloid doesn't implement Copy hence the from_fn workaround for array initialization
     array::from_fn(|_| get_test_causaloid())
 }
 
 pub fn get_test_causality_vec()
-    -> Vec<Causaloid<'static>>
+    -> Vec<Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>
 {
     let q1 = get_test_causaloid();
     let q2 = get_test_causaloid();
@@ -109,7 +109,7 @@ pub fn get_test_causality_vec()
 
 pub fn get_test_causality_map()
 // i8 as key b/c I assume all testing will be done with less than 265 items.
-    -> HashMap<i8, Causaloid<'static>>
+    -> HashMap<i8, Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>
 {
     let q1 = get_test_causaloid();
     let q2 = get_test_causaloid();
@@ -119,7 +119,7 @@ pub fn get_test_causality_map()
 
 
 pub fn get_test_causaloid<'l>()
-    -> Causaloid<'l>
+    -> Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>
 {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";

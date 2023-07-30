@@ -3,25 +3,36 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 use crate::errors::{ActionError, UpdateError};
-use crate::prelude::{CausalAction, CausalState, NumericalValue};
+use crate::prelude::{CausalAction, CausalState, Datable, NumericalValue, SpaceTemporal, Spatial, Temporal};
 
 pub mod csm_action;
 pub mod csm_state;
 
-pub struct CSM<'l> {
-    state_actions: RefCell<HashMap<usize, (&'l CausalState<'l>, &'l CausalAction)>>,
+pub struct CSM<'l, D, S, T, ST>
+    where
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
+{
+    state_actions: RefCell<HashMap<usize, (&'l CausalState<'l, D, S, T, ST>, &'l CausalAction)>>,
 }
 
-impl<'l> CSM<'l>
+impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
+    where
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
 {
     /// Constructs a new CSM.
     pub fn new(
-        state_actions: &'l [(&'l CausalState<'l>, &'l CausalAction)]
+        state_actions: &'l [(&'l CausalState<'l, D, S, T, ST>, &'l CausalAction)]
     )
         -> Self
     {
         // Generate a new HashMap from the collection.
-        let mut state_map: HashMap<usize, (&'l CausalState<'l>, &'l CausalAction)> = HashMap::with_capacity(state_actions.len());
+        let mut state_map: HashMap<usize, (&'l CausalState<'l, D, S, T, ST>, &'l CausalAction)> = HashMap::with_capacity(state_actions.len());
         for (state, action) in state_actions {
             state_map.insert(state.id(), (state, action));
         }
@@ -40,14 +51,19 @@ impl<'l> CSM<'l>
     }
 }
 
-impl<'l> CSM<'l>
+impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
+    where
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
 {
     /// Inserts a new state action at the index position idx.
     /// Returns UpdateError if the index already exists.
     pub fn add_single_state(
         &self,
         idx: usize,
-        state_action: (&'l CausalState<'l>, &'l CausalAction),
+        state_action: (&'l CausalState<'l, D, S, T, ST>, &'l CausalAction),
     )
         -> Result<(), UpdateError>
     {
@@ -86,7 +102,12 @@ impl<'l> CSM<'l>
     }
 }
 
-impl<'l> CSM<'l>
+impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
+    where
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
 {
     /// Evaluates a single causal state at the index position idx.
     /// Returns ActionError if the evaluation failed.
@@ -134,7 +155,7 @@ impl<'l> CSM<'l>
     pub fn update_single_state(
         &self,
         idx: usize,
-        state_action: (&'l CausalState<'l>, &'l CausalAction),
+        state_action: (&'l CausalState<'l, D, S, T, ST>, &'l CausalAction),
     )
         -> Result<(), UpdateError>
     {
@@ -153,7 +174,12 @@ impl<'l> CSM<'l>
 }
 
 
-impl<'l> CSM<'l>
+impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
+    where
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
 {
     /// Evaluates all causal states in the CSM.
     /// Returns ActionError if the evaluation failed.
@@ -183,10 +209,10 @@ impl<'l> CSM<'l>
     /// Updates all causal state with a new state collection.
     /// Note, this operation erases all previous states in the CSM by generating a new collection.
     /// Returns UpdateError if the update operation failed.
-    pub fn update_all_states(&self, state_actions: &'l [(&'l CausalState<'l>, &'l CausalAction)])
+    pub fn update_all_states(&self, state_actions: &'l [(&'l CausalState<'l, D, S, T, ST>, &'l CausalAction)])
     {
         // Generate a new HashMap from the collection
-        let mut state_map: HashMap<usize, (&'l CausalState<'l>, &'l CausalAction)> = HashMap::with_capacity(state_actions.len());
+        let mut state_map: HashMap<usize, (&'l CausalState<'l, D, S, T, ST>, &'l CausalAction)> = HashMap::with_capacity(state_actions.len());
         for (state, action) in state_actions {
             state_map.insert(state.id(), (state, action));
         }

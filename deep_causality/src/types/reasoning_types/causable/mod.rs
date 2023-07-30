@@ -2,7 +2,7 @@
 
 use std::error::Error;
 
-use crate::prelude::{BuildError, Causaloid, CausaloidGraph, Inference};
+use crate::prelude::{BuildError, Causaloid, CausaloidGraph, Datable, Inference, SpaceTemporal, Spatial, Temporal};
 use crate::protocols::inferable::InferableReasoning;
 use crate::types::alias_types::{CausalFn, IdentificationValue};
 
@@ -15,12 +15,17 @@ pub mod causaloid_graph;
 /// or embedded into a causal graph.
 ///
 /// Verifies that description, data_set_id, and causal_coll are non-empty.
-pub fn build_causaloid_from_vec<'l>(
+pub fn build_causaloid_from_vec<'l, D, S, T, ST>(
     id: IdentificationValue,
-    causal_vec: &'l Vec<Causaloid>,
+    causal_vec: &'l Vec<Causaloid<'l, D, S, T, ST>>,
     description: &'l str,
 )
-    -> Result<Causaloid<'l>, Box<dyn Error>>
+    -> Result<Causaloid<'l, D, S, T, ST>, Box<dyn Error>>
+    where
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
 {
     // check description
     if description.is_empty() {
@@ -47,12 +52,17 @@ pub fn build_causaloid_from_vec<'l>(
 /// or embedded into another causal graph.
 ///
 /// Verifies that description, data_set_id, and causal_graph are non-empty.
-pub fn build_causaloid_from_graph<'l>(
+pub fn build_causaloid_from_graph<'l, D, S, T, ST>(
     id: IdentificationValue,
-    causal_graph: &'l CausaloidGraph<Causaloid>,
+    causal_graph: &'l CausaloidGraph<Causaloid<'l, D, S, T, ST>>,
     description: &'l str,
 )
-    -> Result<Causaloid<'l>, Box<dyn Error>>
+    -> Result<Causaloid<'l, D, S, T, ST>, Box<dyn Error>>
+    where
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
 {
     // check description
     if description.is_empty() {
@@ -73,14 +83,19 @@ pub fn build_causaloid_from_graph<'l>(
 ///
 /// Verifies that causal function is valid,
 /// by checking the underlying inference collections.
-pub fn build_causaloid<'l>(
+pub fn build_causaloid<'l, D, S, T, ST>(
     id: IdentificationValue,
     causal_fn: CausalFn,
     description: &'l str,
     inferable_coll: &'l Vec<Inference>,
     inverse_inferable_coll: &'l Vec<Inference>,
 )
-    -> Result<Causaloid<'l>, Box<dyn Error>>
+    -> Result<Causaloid<'l, D, S, T, ST>, Box<dyn Error>>
+    where
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
 {
 
     // check description
@@ -114,6 +129,6 @@ pub fn build_causaloid<'l>(
         return Err(Box::new(BuildError("Inverse inferable collection is non-inferable".into())));
     }
 
-    Ok(Causaloid::new(id, causal_fn, description,)
+    Ok(Causaloid::new(id, causal_fn, description)
     )
 }

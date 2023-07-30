@@ -49,6 +49,7 @@ pub fn run()
     print_duration("Build Context HyperGraph", elapsed);
 
     // Print out some key metrics of the context graph.
+    println!("Context HyperGraph Metrics:");
     println!("Edge Count: {}", context.edge_count());
     println!("Vertex Count: {}", context.node_count());
     println!("Number Datapoints: {}", data.total_number_of_bars());

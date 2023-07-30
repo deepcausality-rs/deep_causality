@@ -16,8 +16,8 @@ pub struct Model<'l, D, S, T, ST>
     author: &'l str,
     description: &'l str,
     assumptions: Option<&'l Vec<&'l Assumption>>,
-    causaloid: &'l Causaloid<'l>,
-    context: Option<&'l Context<'l, D, S, T, ST>, >,
+    causaloid: &'l Causaloid<'l, D, S, T, ST>,
+    context: Option<&'l Context<'l, D, S, T, ST>,>,
 }
 
 impl<'l, D, S, T, ST> Model<'l, D, S, T, ST>
@@ -32,7 +32,7 @@ impl<'l, D, S, T, ST> Model<'l, D, S, T, ST>
         author: &'l str,
         description: &'l str,
         assumptions: Option<&'l Vec<&'l Assumption>>,
-        causaloid: &'l Causaloid<'l>,
+        causaloid: &'l Causaloid<'l, D, S, T, ST>,
         context: Option<&'l Context<'l, D, S, T, ST>>
     ) -> Self {
         Self {
@@ -62,7 +62,7 @@ impl<'l, D, S, T, ST> Model<'l, D, S, T, ST>
     pub fn assumptions(&self) -> Option<&'l Vec<&'l Assumption>> {
         self.assumptions
     }
-    pub fn causaloid(&self) -> &'l Causaloid {
+    pub fn causaloid(&self) -> &'l Causaloid<D, S, T, ST> {
         self.causaloid
     }
     pub fn context(&self) -> Option<&'l Context<'l, D, S, T, ST>> {

@@ -8,7 +8,7 @@ use crate::prelude::*;
 use crate::protocols::causable::Causable;
 
 // Internal enum to represent the type of causaloid, which
-// is required to redirect verify and explain method calls to
+// is required to dispatch verify and explain method calls to
 // either a singleton, a causal collection, or causal graph.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 enum CausalType {
@@ -21,20 +21,31 @@ impl Display for CausalType { fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::
 
 
 #[derive(Clone)]
-pub struct Causaloid<'l>
+pub struct Causaloid<'l, D, S, T, ST>
+    where
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
 {
     id: IdentificationValue,
     active: RefCell<bool>,
     causal_type: CausalType,
     causal_fn: CausalFn,
-    causal_coll: Option<&'l Vec<Causaloid<'l>>>,
-    causal_graph: Option<&'l CausaloidGraph<Causaloid<'l>>>,
+    causal_coll: Option<&'l Vec<Causaloid<'l, D, S, T, ST>>>,
+    causal_graph: Option<&'l CausaloidGraph<Causaloid<'l, D, S, T, ST>>>,
     last_obs: RefCell<NumericalValue>,
     description: &'l str,
+    context: Option<&'l Context<'l, D, S, T, ST>, >,
 }
 
-
-impl<'l> Causaloid<'l>
+// Constructors
+impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
+    where
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
 {
     /// Singleton constructor. Assumes causality function is valid.
     /// Only use for non-fallible construction i.e.verified a-priori knowledge about the correctness of the causal function.
@@ -54,6 +65,7 @@ impl<'l> Causaloid<'l>
             causal_graph: None,
             last_obs: RefCell::new(0.0),
             description,
+            context: None,
         }
     }
 
@@ -66,7 +78,7 @@ impl<'l> Causaloid<'l>
     /// about the correctness of the causal graph.
     pub fn from_causal_collection(
         id: IdentificationValue,
-        causal_coll: &'l Vec<Causaloid>,
+        causal_coll: &'l Vec<Causaloid<D, S, T, ST>>,
         description: &'l str,
     )
         -> Self
@@ -83,6 +95,7 @@ impl<'l> Causaloid<'l>
             causal_graph: None,
             last_obs: RefCell::new(0.0),
             description,
+            context: None,
         }
     }
 
@@ -95,7 +108,7 @@ impl<'l> Causaloid<'l>
     /// about the correctness of the causal graph.
     pub fn from_causal_graph(
         id: IdentificationValue,
-        causal_graph: &'l CausaloidGraph<Causaloid>,
+        causal_graph: &'l CausaloidGraph<Causaloid<D, S, T, ST>>,
         description: &'l str,
     )
         -> Self
@@ -112,44 +125,75 @@ impl<'l> Causaloid<'l>
             causal_graph: Some(causal_graph),
             last_obs: RefCell::new(0.0),
             description,
+            context: None,
         }
     }
 }
 
+// Getters
+impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
+    where
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
+{
+    pub fn id(&self) -> IdentificationValue {
+        self.id
+    }
+    pub fn active(&self) -> &RefCell<bool> {
+        &self.active
+    }
+    pub fn causal_coll(&self) -> Option<&'l Vec<Causaloid<'l, D, S, T, ST>>> {
+        self.causal_coll
+    }
+    pub fn causal_graph(&self) -> Option<&'l CausaloidGraph<Causaloid<'l, D, S, T, ST>>> {
+        self.causal_graph
+    }
+    pub fn last_obs(&self) -> &RefCell<NumericalValue> {
+        &self.last_obs
+    }
+    pub fn description(&self) -> &'l str {
+        self.description
+    }
+    pub fn context(&self) -> Option<&'l Context<'l, D, S, T, ST>> {
+        self.context
+    }
+}
 
-impl<'l> PartialEq for Causaloid<'l>
+impl<'l, D, S, T, ST> PartialEq for Causaloid<'l, D, S, T, ST>
+    where
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
 {
     fn eq(&self, other: &Self) -> bool {
         self.id == other.id
     }
 }
 
-impl<'l> Identifiable for Causaloid<'l>
+impl<'l, D, S, T, ST> Identifiable for Causaloid<'l, D, S, T, ST>
+    where
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
 {
     fn id(&self) -> u64 {
         self.id
     }
 }
 
-impl<'l> Causable for Causaloid<'l>
+impl<'l, D, S, T, ST> Causable for Causaloid<'l, D, S, T, ST>
+    where
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
 {
-    fn causal_collection(&self) -> Option<&Vec<Causaloid>> {
-        self.causal_coll
-    }
-
-    fn causal_graph(&self) -> Option<&CausaloidGraph<Causaloid>> {
-        self.causal_graph
-    }
-
-    fn description(&self) -> &str
-    {
-        self.description
-    }
-
-    fn explain(
-        &self
-    )
-        -> Result<String, CausalityError>
+    fn explain(&self)
+               -> Result<String, CausalityError>
     {
         return if *self.active.borrow()
         {
@@ -211,7 +255,7 @@ impl<'l> Causable for Causaloid<'l>
             Err(e) => return Err(e),
         };
 
-        Ok(self.check_active_return(res))
+        Ok(self.check_active(res))
     }
 
     fn verify_all_causes(
@@ -238,7 +282,7 @@ impl<'l> Causable for Causaloid<'l>
                                     Err(e) => return Err(e),
                                 };
 
-                                Ok(self.check_active_return(res))
+                                Ok(self.check_active(res))
                             }
                     }
                 }
@@ -256,7 +300,7 @@ impl<'l> Causable for Causaloid<'l>
                                     Err(e) => return Err(CausalityError(e.to_string())),
                                 };
 
-                                Ok(self.check_active_return(res))
+                                Ok(self.check_active(res))
                             }
                     }
                 }
@@ -265,10 +309,15 @@ impl<'l> Causable for Causaloid<'l>
 }
 
 
-impl<'l> Causaloid<'l>
+impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
+    where
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
 {
     #[inline(always)]
-    fn check_active_return(
+    fn check_active(
         &self,
         res: bool,
     )
@@ -294,12 +343,22 @@ impl<'l> Causaloid<'l>
     }
 }
 
-impl<'l> Debug for Causaloid<'l>
+impl<'l, D, S, T, ST> Debug for Causaloid<'l, D, S, T, ST>
+    where
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { self.fmt(f) }
 }
 
-impl<'l> Display for Causaloid<'l>
+impl<'l, D, S, T, ST> Display for Causaloid<'l, D, S, T, ST>
+    where
+        D: Datable + Clone,
+        S: Spatial + Clone,
+        T: Temporal + Clone,
+        ST: SpaceTemporal + Clone
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { self.fmt(f) }
 }
