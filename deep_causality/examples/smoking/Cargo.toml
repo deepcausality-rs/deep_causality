@@ -5,4 +5,4 @@ edition = "2021"
 publish = false
 
 [dependencies]
-deep_causality = { git = "https://github.com/deepcausality-rs/deep_causality.git", rev = "b41aa229fe0f9b8eefb4c87aecef2e6f968d2296"}
+deep_causality = { git = "https://github.com/deepcausality-rs/deep_causality.git", rev = "0e0253266bef41d838463e269519e04052bdbbfe"}
