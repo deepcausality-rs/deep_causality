@@ -8,20 +8,22 @@ const SMALL: usize = 100;
 const MEDIUM: usize = 1_000;
 const LARGE: usize = 10_000;
 
+type CausalGraph = CausaloidGraph<Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>;
+
 pub fn get_small_linear_graph_and_data()
-    -> (CausaloidGraph<Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>, [f64; SMALL + 1])
+    -> (CausalGraph, [f64; SMALL + 1])
 { // Builds a linear graph: root -> a -> b -> c
     (build_linear_graph(SMALL), bench_utils_shared::generate_sample_data())
 }
 
 pub fn get_medium_linear_graph_and_data()
-    -> (CausaloidGraph<Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>, [f64; MEDIUM + 1])
+    -> (CausalGraph, [f64; MEDIUM + 1])
 { // Builds a linear graph: root -> a -> b -> c ...
     (build_linear_graph(MEDIUM), bench_utils_shared::generate_sample_data())
 }
 
 pub fn get_large_linear_graph_and_data()
-    -> (CausaloidGraph<Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>, [f64; LARGE + 1])
+    -> (CausalGraph, [f64; LARGE + 1])
 { // Builds a linear graph: root -> a -> b -> c ...
     (build_linear_graph(LARGE), bench_utils_shared::generate_sample_data())
 }
@@ -29,7 +31,7 @@ pub fn get_large_linear_graph_and_data()
 fn build_linear_graph(
     k: usize
 )
-    -> CausaloidGraph<Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>
+    -> CausalGraph
 {   // Builds a linear graph: root -> a -> b -> c
     let mut g = CausaloidGraph::new();
 
@@ -53,13 +55,13 @@ fn build_linear_graph(
 }
 
 pub fn get_small_multi_cause_graph_and_data()
-    -> (CausaloidGraph<Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>, [f64; 4 + 1])
+    -> (CausalGraph, [f64; 4 + 1])
 {   // Builds a multi-layer cause graph:
     (build_multi_cause_graph(), bench_utils_shared::generate_sample_data())
 }
 
 fn build_multi_cause_graph()
-    -> CausaloidGraph<Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>
+    -> CausalGraph
 {
     // Builds a multi cause graph:
     //  root
@@ -102,13 +104,13 @@ fn build_multi_cause_graph()
 }
 
 pub fn get_small_multi_layer_cause_graph_and_data()
-    -> (CausaloidGraph<Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>, [f64; 8 + 1])
+    -> (CausalGraph, [f64; 8 + 1])
 {   // Builds a multi-layer cause graph:
     (build_multi_layer_cause_graph(), bench_utils_shared::generate_sample_data())
 }
 
 fn build_multi_layer_cause_graph()
-    -> CausaloidGraph<Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>
+    -> CausalGraph
 {
     // Builds a multi-layer cause graph:
     //    root
@@ -177,7 +179,7 @@ fn build_multi_layer_cause_graph()
 }
 
 pub fn get_left_imbalanced_cause_graph()
-    -> (CausaloidGraph<Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>, [f64; 6 + 1])
+    -> (CausalGraph, [f64; 6 + 1])
 {   // Builds a multi-layer cause graph:
     (build_left_imbalanced_cause_graph(), bench_utils_shared::generate_sample_data())
 }
@@ -236,13 +238,13 @@ fn build_left_imbalanced_cause_graph()
 }
 
 pub fn get_right_imbalanced_cause_graph()
-    -> (CausaloidGraph<Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>, [f64; 6 + 1])
+    -> (CausalGraph, [f64; 6 + 1])
 {   // Builds a multi-layer cause graph:
     (build_right_imbalanced_cause_graph(), bench_utils_shared::generate_sample_data())
 }
 
 fn build_right_imbalanced_cause_graph()
-    -> CausaloidGraph<Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>
+    -> CausalGraph
 {
     // Builds a multi-layer cause graph:
     //    root
