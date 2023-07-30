@@ -67,7 +67,7 @@ impl<'l, D, S, T, ST> Contextuable<'l, D, S, T, ST> for Context<'l, D, S, T, ST>
     T: Temporal,
     ST: SpaceTemporal
 {
-    fn add_contextoid(
+    fn add_node(
         &mut self,
         value: &'l Contextoid<D, S, T, ST>,
     )
@@ -79,7 +79,7 @@ impl<'l, D, S, T, ST> Contextuable<'l, D, S, T, ST> for Context<'l, D, S, T, ST>
         node_index
     }
 
-    fn contains_contextoid(
+    fn contains_node(
         &self,
         index: NodeIndex,
     )
@@ -88,7 +88,7 @@ impl<'l, D, S, T, ST> Contextuable<'l, D, S, T, ST> for Context<'l, D, S, T, ST>
         self.context_map.contains_key(&index)
     }
 
-    fn get_contextoid(
+    fn get_node(
         &self,
         index: NodeIndex,
     )
@@ -96,7 +96,7 @@ impl<'l, D, S, T, ST> Contextuable<'l, D, S, T, ST> for Context<'l, D, S, T, ST>
     {
         self.context_map.get(&index)
     }
-    fn remove_contextoid(
+    fn remove_node(
         &mut self,
         index: NodeIndex,
     )

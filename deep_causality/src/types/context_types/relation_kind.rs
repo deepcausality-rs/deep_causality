@@ -2,7 +2,7 @@
 use std::fmt::{Debug, Display};
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
-#[repr(u16)]
+#[repr(u8)]
 pub enum RelationKind {
     Datial,
     Temporal,
