@@ -5,6 +5,22 @@ use deep_causality::types::alias_types::{IdentificationValue};
 use deep_causality::utils::bench_utils_graph;
 use deep_causality::utils::test_utils;
 
+fn get_context<'l>() -> Context<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>
+{
+    let id = 1;
+
+    let name = "base context";
+    let mut context = Context::with_capacity(id, name, 10);
+    assert_eq!(context.size(), 0);
+
+    let root = Root::new(id);
+    let contextoid  = Contextoid::new(id, ContextoidType::Root(root));
+    context.add_node(contextoid);
+    assert_eq!(context.size(), 1);
+
+    context
+}
+
 #[test]
 fn test_new() {
     let id: IdentificationValue = 1;
@@ -49,13 +65,31 @@ fn test_new_with_context() {
         }
     }
 
-    let context = &test_utils::get_test_context();
-    let causaloid: Causaloid<Dataoid, Spaceoid, Tempoid, SpaceTempoid> = Causaloid::new_with_context(id, causal_fn, Some(context), description);
+    let context = get_context();
+    let causaloid: Causaloid<Dataoid, Spaceoid, Tempoid, SpaceTempoid> = Causaloid::new_with_context(id, causal_fn, Some(&context), description);
 
     assert!(causaloid.is_singleton());
     assert!(causaloid.causal_collection().is_none());
     assert!(causaloid.causal_graph().is_none());
     assert!(causaloid.context().is_some());
+
+    let context = causaloid.context();
+    assert!(context.is_some());
+
+
+    // Safe to unwrap because the context is some
+    let context = context.unwrap();
+
+    // element still there.
+    assert_eq!(context.size(), 1);
+
+    // Fails to retrieve element from the context
+    // assertion failed: contextoid.is_some()
+
+    // let x: usize =1 ;
+    // let idx = NodeIndex::new(x);
+    // let contextoid = context.get_node(idx);
+    // assert!(contextoid.is_some());
 }
 
 #[test]
