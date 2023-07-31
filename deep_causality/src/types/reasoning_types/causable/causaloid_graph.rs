@@ -322,7 +322,7 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
         self.causes_map.clear();
     }
 
-    fn edge_count(
+    fn number_edges(
         &self
     )
         -> usize
@@ -330,7 +330,7 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
         self.causaloid_graph.edge_count()
     }
 
-    fn node_count(
+    fn number_nodes(
         &self
     )
         -> usize

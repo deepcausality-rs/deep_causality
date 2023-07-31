@@ -8,3 +8,11 @@ mod context_tests;
 mod contextoid_tests;
 #[cfg(test)]
 mod time_scale_tests;
+#[cfg(test)]
+mod graph_node_tests;
+#[cfg(test)]
+mod graph_node_type_tests;
+#[cfg(test)]
+mod graph_relation_kind_tests;
+#[cfg(test)]
+mod graph_root_tests;

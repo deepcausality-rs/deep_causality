@@ -1,7 +1,6 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 
-use deep_causality::prelude::NodeIndex;
 use deep_causality::protocols::causable_graph::{CausableGraph, CausableGraphReasoning};
 use deep_causality::utils::bench_utils_graph;
 
@@ -39,7 +38,7 @@ fn test_explain_all_causes() {
     let percent_active = g.percent_active();
     assert_eq!(percent_active, 100.0);
 
-    let total_nodes = g.node_count() as f64;
+    let total_nodes = g.number_nodes() as f64;
     let number_active = g.number_active();
     assert_eq!(number_active, total_nodes);
 
@@ -83,13 +82,13 @@ fn test_explain_subgraph_from_cause() {
     let percent_active = g.percent_active();
     assert_eq!(percent_active, 100.0);
 
-    let total_nodes = g.node_count() as f64;
+    let total_nodes = g.number_nodes() as f64;
     let number_active = g.number_active();
     assert_eq!(number_active, total_nodes);
 
     // Explain partial reasoning over sub-graph
     //
-    let start_index = NodeIndex::new(2);
+    let start_index = 2;
     let res = g.explain_subgraph_from_cause(start_index).unwrap();
     let expected = format!("\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n");
     assert_eq!(res, expected);
@@ -129,14 +128,14 @@ fn test_explain_shortest_path_between_causes() {
     let percent_active = g.percent_active();
     assert_eq!(percent_active, 100.0);
 
-    let total_nodes = g.node_count() as f64;
+    let total_nodes = g.number_nodes() as f64;
     let number_active = g.number_active();
     assert_eq!(number_active, total_nodes);
 
     // Reasoning over shortest path through the graph
     //
-    let start_index = NodeIndex::new(2);
-    let stop_index = NodeIndex::new(3);
+    let start_index = 2;
+    let stop_index = 3;
     let res = g.reason_shortest_path_between_causes(start_index, stop_index, &data, None).unwrap();
     assert!(res);
 

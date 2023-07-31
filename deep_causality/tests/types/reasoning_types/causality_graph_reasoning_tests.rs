@@ -1,6 +1,5 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use deep_causality::prelude::NodeIndex;
 use deep_causality::protocols::causable_graph::{CausableGraph, CausableGraphReasoning};
 use deep_causality::utils::bench_utils_graph;
 
@@ -38,7 +37,7 @@ fn test_linear_graph() {
     let percent_active = g.percent_active();
     assert_eq!(percent_active, 100.0);
 
-    let total_nodes = g.node_count() as f64;
+    let total_nodes = g.number_nodes() as f64;
     let number_active = g.number_active();
     assert_eq!(number_active, total_nodes);
 }
@@ -63,7 +62,7 @@ fn test_multi_cause_graph() {
 
     // Single reasoning
     let obs = 0.99;
-    let index = NodeIndex::new(2);
+    let index = 2;
     let res = g.reason_single_cause(index, &[obs]).unwrap();
     assert!(res);
 
@@ -72,7 +71,7 @@ fn test_multi_cause_graph() {
     assert_eq!(number_active, total_nodes);
 
     // Partial reasoning from B (index 2)
-    let index = NodeIndex::new(2);
+    let index = 2;
     let res = g.reason_subgraph_from_cause(index, &data, None).unwrap();
     assert!(res);
 
@@ -83,7 +82,7 @@ fn test_multi_cause_graph() {
     // Single reasoning
     // Only reason over C (index 3)
     let obs = 0.02;
-    let index = NodeIndex::new(3);
+    let index = 3;
     let res = g.reason_single_cause(index, &[obs]).unwrap();
 
     // we expect the result to be false because the
@@ -117,7 +116,7 @@ fn test_multi_cause_graph() {
     let percent_active = g.percent_active();
     assert_eq!(percent_active, 100.0);
 
-    let total_nodes = g.node_count() as f64;
+    let total_nodes = g.number_nodes() as f64;
     let number_active = g.number_active();
     assert_eq!(number_active, total_nodes);
 }
@@ -146,7 +145,7 @@ fn test_multi_layer_cause_graph() {
     // Single reasoning
     // Only reason over C
     let obs = 0.99;
-    let index = NodeIndex::new(3);
+    let index = 3;
     let res = g.reason_single_cause(index, &[obs]).unwrap();
     assert!(res);
 
@@ -156,7 +155,7 @@ fn test_multi_layer_cause_graph() {
 
     // Partial reasoning
     // Start at C, and reason over C, F, G
-    let index = NodeIndex::new(3);
+    let index = 3;
     let res = g.reason_subgraph_from_cause(index, &data, None).unwrap();
     assert!(res);
 
@@ -168,7 +167,7 @@ fn test_multi_layer_cause_graph() {
 
     // Partial reasoning
     // Start at B, and reason over B , E, and F
-    let index = NodeIndex::new(2);
+    let index = 2;
     let res = g.reason_subgraph_from_cause(index, &data, None).unwrap();
     assert!(res);
 
@@ -183,7 +182,7 @@ fn test_multi_layer_cause_graph() {
     // Single reasoning
     // Only reason over G (index 7)
     let obs = 0.02;
-    let index = NodeIndex::new(7);
+    let index = 7;
     let res = g.reason_single_cause(index, &[obs]).unwrap();
 
     // we expect the result to be false because the
@@ -208,7 +207,7 @@ fn test_multi_layer_cause_graph() {
     assert!(res);
 
     // Verify that the graph is fully active.
-    let total_nodes = g.node_count() as f64;
+    let total_nodes = g.number_nodes() as f64;
     let number_active = g.number_active();
     assert_eq!(number_active, total_nodes);
 
@@ -242,7 +241,7 @@ fn test_left_imbalanced_cause_graph() {
     // Single reasoning
     // Only reason over C
     let obs = 0.99;
-    let index = NodeIndex::new(3);
+    let index = 3;
     let res = g.reason_single_cause(index, &[obs]).unwrap();
     assert!(res);
 
@@ -252,7 +251,7 @@ fn test_left_imbalanced_cause_graph() {
 
     // Partial reasoning
     // Start at A, and reason over A, D, E
-    let index = NodeIndex::new(1);
+    let index = 1;
     let res = g.reason_subgraph_from_cause(index, &data, None).unwrap();
     assert!(res);
 
@@ -265,8 +264,8 @@ fn test_left_imbalanced_cause_graph() {
 
     // Selective sub-graph reasoning
     // Start at A, and stop at D
-    let start_index = NodeIndex::new(1);
-    let stop_index = NodeIndex::new(4);
+    let start_index = 1;
+    let stop_index = 4;
     let res = g.reason_shortest_path_between_causes(start_index, stop_index, &data, None).unwrap();
     assert!(res);
 
@@ -278,7 +277,7 @@ fn test_left_imbalanced_cause_graph() {
     // Single reasoning
     // Only reason over A (index 1)
     let obs = 0.02;
-    let index = NodeIndex::new(1);
+    let index = 1;
     let res = g.reason_single_cause(index, &[obs]).unwrap();
 
     // we expect the result to be false because the
@@ -309,7 +308,7 @@ fn test_left_imbalanced_cause_graph() {
     let percent_active = g.percent_active();
     assert_eq!(percent_active, 100.0);
 
-    let total_nodes = g.node_count() as f64;
+    let total_nodes = g.number_nodes() as f64;
     let number_active = g.number_active();
     assert_eq!(number_active, total_nodes);
 }
@@ -338,7 +337,7 @@ fn test_right_imbalanced_cause_graph() {
     // Single reasoning
     // Only reason over C
     let obs = 0.99;
-    let index = NodeIndex::new(3);
+    let index = 3;
     let res = g.reason_single_cause(index, &[obs]).unwrap();
     assert!(res);
 
@@ -348,7 +347,7 @@ fn test_right_imbalanced_cause_graph() {
 
     // Partial reasoning
     // Start at C, and reason over C, F, G
-    let index = NodeIndex::new(3);
+    let index = 3;
     let res = g.reason_subgraph_from_cause(index, &data, None).unwrap();
     assert!(res);
 
@@ -364,7 +363,7 @@ fn test_right_imbalanced_cause_graph() {
     // Single reasoning
     // Only reason over C (index 2)
     let obs = 0.02;
-    let index = NodeIndex::new(2);
+    let index = 2;
     let res = g.reason_single_cause(index, &[obs]).unwrap();
 
     // we expect the result to be false because the
@@ -396,7 +395,7 @@ fn test_right_imbalanced_cause_graph() {
     let percent_active = g.percent_active();
     assert_eq!(percent_active, 100.0);
 
-    let total_nodes = g.node_count() as f64;
+    let total_nodes = g.number_nodes() as f64;
     let number_active = g.number_active();
     assert_eq!(number_active, total_nodes);
 }

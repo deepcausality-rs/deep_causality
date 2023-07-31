@@ -6,22 +6,22 @@ use deep_causality::utils::{bench_utils_graph, test_utils};
 #[test]
 fn test_new() {
     let g: CausaloidGraph<Causaloid<Dataoid, Spaceoid, Tempoid, SpaceTempoid>> = CausaloidGraph::default();
-    assert_eq!(g.node_count(), 0);
-    assert_eq!(g.edge_count(), 0);
+    assert_eq!(g.number_nodes(), 0);
+    assert_eq!(g.number_edges(), 0);
 }
 
 #[test]
 fn test_new_with_capacity() {
     let g: CausaloidGraph<Causaloid<Dataoid, Spaceoid, Tempoid, SpaceTempoid>> = CausaloidGraph::default();
-    assert_eq!(g.node_count(), 0);
-    assert_eq!(g.edge_count(), 0);
+    assert_eq!(g.number_nodes(), 0);
+    assert_eq!(g.number_edges(), 0);
 }
 
 #[test]
 fn test_default() {
     let g: CausaloidGraph<Causaloid<Dataoid, Spaceoid, Tempoid, SpaceTempoid>> = CausaloidGraph::default();
-    assert_eq!(g.node_count(), 0);
-    assert_eq!(g.edge_count(), 0);
+    assert_eq!(g.number_nodes(), 0);
+    assert_eq!(g.number_edges(), 0);
 }
 
 #[test]
@@ -117,7 +117,9 @@ fn test_remove_causaloid() {
     assert_eq!(id, 01);
     assert_eq!(description, "tests whether data exceeds threshold of 0.55");
 
-    g.remove_causaloid(index);
+    let res = g.remove_causaloid(index);
+    assert!(res.is_ok());
+
     let contains = g.contains_causaloid(index);
     assert!(!contains);
 }
@@ -136,7 +138,9 @@ fn test_add_edge() {
     let contains_b = g.contains_causaloid(idx_b);
     assert!(contains_b);
 
-    g.add_edge(idx_a, idx_b);
+    let res = g.add_edge(idx_a, idx_b);
+    assert!(res.is_ok());
+
     let contains_edge = g.contains_edge(idx_a, idx_b);
     assert!(contains_edge);
 }
@@ -156,7 +160,9 @@ fn test_add_edg_with_weight() {
     assert!(contains_b);
 
     let weight = 1;
-    g.add_edg_with_weight(idx_a, idx_b, weight);
+    let res = g.add_edg_with_weight(idx_a, idx_b, weight);
+    assert!(res.is_ok());
+
     let contains_edge = g.contains_edge(idx_a, idx_b);
     assert!(contains_edge);
 }
@@ -175,11 +181,15 @@ fn test_remove_edge() {
     let contains_b = g.contains_causaloid(idx_b);
     assert!(contains_b);
 
-    g.add_edge(idx_a, idx_b);
+    let res = g.add_edge(idx_a, idx_b);
+    assert!(res.is_ok());
+
     let contains_edge = g.contains_edge(idx_a, idx_b);
     assert!(contains_edge);
 
-    g.remove_edge(idx_a, idx_b);
+    let res = g.remove_edge(idx_a, idx_b);
+    assert!(res.is_ok());
+
     let contains_edge = g.contains_edge(idx_a, idx_b);
     assert!(!contains_edge);
 }
@@ -333,7 +343,7 @@ fn test_clear() {
 #[test]
 fn test_count_edges() {
     let mut g = CausaloidGraph::new();
-    let count_edges = g.edge_count();
+    let count_edges = g.number_edges();
     assert_eq!(count_edges, 0);
 
     let causaloid = test_utils::get_test_causaloid();
@@ -347,25 +357,29 @@ fn test_count_edges() {
     let contains_b = g.contains_causaloid(idx_b);
     assert!(contains_b);
 
-    g.add_edge(idx_a, idx_b);
+    let res = g.add_edge(idx_a, idx_b);
+    assert!(res.is_ok());
+
     let contains_edge = g.contains_edge(idx_a, idx_b);
     assert!(contains_edge);
 
-    let count_edges = g.edge_count();
+    let count_edges = g.number_edges();
     assert_eq!(count_edges, 1);
 
-    g.remove_edge(idx_a, idx_b);
+    let res = g.remove_edge(idx_a, idx_b);
+    assert!(res.is_ok());
+
     let contains_edge = g.contains_edge(idx_a, idx_b);
     assert!(!contains_edge);
 
-    let count_edges = g.edge_count();
+    let count_edges = g.number_edges();
     assert_eq!(count_edges, 0);
 }
 
 #[test]
 fn test_count_nodes() {
     let mut g = CausaloidGraph::new();
-    let count_nodes = g.node_count();
+    let count_nodes = g.number_nodes();
     assert_eq!(count_nodes, 0);
 
     let causaloid = test_utils::get_test_causaloid();
@@ -374,7 +388,7 @@ fn test_count_nodes() {
     let contains = g.contains_causaloid(index);
     assert!(contains);
 
-    let count_nodes = g.node_count();
+    let count_nodes = g.number_nodes();
     assert_eq!(count_nodes, 1);
 
     let causaloid = g.get_causaloid(index).unwrap();
@@ -382,11 +396,14 @@ fn test_count_nodes() {
     let id = causaloid.id();
     assert_eq!(id, 01);
 
-    g.remove_causaloid(index);
+    let res = g.remove_causaloid(index);
+    assert!(res.is_ok());
+
+
     let contains = g.contains_causaloid(index);
     assert!(!contains);
 
-    let count_nodes = g.node_count();
+    let count_nodes = g.number_nodes();
     assert_eq!(count_nodes, 0);
 }
 
@@ -408,7 +425,9 @@ fn test_reason_all_causes() {
     assert!(contains_a);
 
     // Link causaloid A to root causaloid
-    g.add_edge(root_index, idx_a);
+    let res = g.add_edge(root_index, idx_a);
+    assert!(res.is_ok());
+
     let contains_edge = g.contains_edge(root_index, idx_a);
     assert!(contains_edge);
 
@@ -419,7 +438,9 @@ fn test_reason_all_causes() {
     assert!(contains_b);
 
     // Link causaloid B to root causaloid
-    g.add_edge(root_index, idx_b);
+    let res = g.add_edge(root_index, idx_b);
+    assert!(res.is_ok());
+
     let contains_edge = g.contains_edge(root_index, idx_b);
     assert!(contains_edge);
 
@@ -430,7 +451,9 @@ fn test_reason_all_causes() {
     assert!(contains_c);
 
     // Link causaloid C to A
-    g.add_edge(idx_a, idx_c);
+    let res = g.add_edge(idx_a, idx_c);
+    assert!(res.is_ok());
+
     let contains_edge = g.contains_edge(idx_a, idx_c);
     assert!(contains_edge);
 
@@ -474,7 +497,9 @@ fn test_reason_subgraph_from_cause() {
     assert!(contains_a);
 
     // Link causaloid A to root causaloid
-    g.add_edge(root_index, idx_a);
+    let res = g.add_edge(root_index, idx_a);
+    assert!(res.is_ok());
+
     let contains_edge = g.contains_edge(root_index, idx_a);
     assert!(contains_edge);
 
@@ -485,7 +510,9 @@ fn test_reason_subgraph_from_cause() {
     assert!(contains_b);
 
     // Link causaloid B to root causaloid
-    g.add_edge(root_index, idx_b);
+    let res = g.add_edge(root_index, idx_b);
+    assert!(res.is_ok());
+
     let contains_edge = g.contains_edge(root_index, idx_b);
     assert!(contains_edge);
 
@@ -496,7 +523,9 @@ fn test_reason_subgraph_from_cause() {
     assert!(contains_c);
 
     // Link causaloid C to A
-    g.add_edge(idx_a, idx_c);
+    let res = g.add_edge(idx_a, idx_c);
+    assert!(res.is_ok());
+
     let contains_edge = g.contains_edge(idx_a, idx_c);
     assert!(contains_edge);
 
@@ -531,8 +560,8 @@ fn test_reason_shortest_path_between_causes() {
     let all_true = g.all_active();
     assert!(!all_true);
 
-    let start_index = NodeIndex::new(10);
-    let stop_index = NodeIndex::new(19);
+    let start_index = 10;
+    let stop_index = 19;
     let res = g.reason_shortest_path_between_causes(
         start_index,
         stop_index,
@@ -547,8 +576,8 @@ fn test_reason_shortest_path_between_causes() {
     let number_true = g.number_active();
     assert_eq!(number_true, 10.0);
 
-    let start_index = NodeIndex::new(30);
-    let stop_index = NodeIndex::new(49);
+    let start_index = 30;
+    let stop_index = 49;
     let res = g.reason_shortest_path_between_causes(
         start_index,
         stop_index,
