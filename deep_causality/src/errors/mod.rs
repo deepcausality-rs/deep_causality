@@ -3,7 +3,7 @@
 use std::error::Error;
 use std::fmt;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
 pub struct BuildError(pub String);
 
 impl Error for BuildError {}
@@ -16,7 +16,7 @@ impl fmt::Display for BuildError
 }
 
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
 pub struct CausalityGraphError(pub String);
 
 impl Error for CausalityGraphError {}
@@ -28,7 +28,7 @@ impl fmt::Display for CausalityGraphError
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
 pub struct ContextIndexError(pub String);
 
 impl Error for ContextIndexError {}
@@ -40,7 +40,7 @@ impl fmt::Display for ContextIndexError
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
 pub struct CausalityError(pub String);
 
 impl Error for CausalityError {}
@@ -53,7 +53,7 @@ impl fmt::Display for CausalityError
 }
 
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
 pub struct AdjustmentError(pub String);
 
 impl Error for AdjustmentError {}
@@ -66,7 +66,7 @@ impl fmt::Display for AdjustmentError
 }
 
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
 pub struct PropagateError(pub String);
 
 impl Error for PropagateError {}
@@ -79,7 +79,7 @@ impl fmt::Display for PropagateError
 }
 
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
 pub struct UpdateError(pub String);
 
 impl Error for UpdateError {}
@@ -92,7 +92,7 @@ impl fmt::Display for UpdateError
 }
 
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
 pub struct ActionError(pub String);
 
 impl Error for ActionError {}
