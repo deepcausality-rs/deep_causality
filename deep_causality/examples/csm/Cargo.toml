@@ -6,4 +6,4 @@ publish = false
 
 [dependencies]
 #deep_causality = "0.2.8"
-deep_causality = { git = "https://github.com/deepcausality-rs/deep_causality.git", rev = "0e0253266bef41d838463e269519e04052bdbbfe"}
+deep_causality = { git = "https://github.com/deepcausality-rs/deep_causality.git", rev = "56259a781364445ac595ad505f2c9e840b180ba5"}
