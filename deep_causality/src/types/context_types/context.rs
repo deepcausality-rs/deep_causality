@@ -157,7 +157,7 @@ impl<'l, D, S, T, ST> Contextuable<'l, D, S, T, ST> for Context<'l, D, S, T, ST>
     )
         -> bool
     {
-        self.index_map.get(&index).is_none()
+        self.index_map.get(&index).is_some()
     }
 
     /// Returns a reference to the contextoid with the given index.
