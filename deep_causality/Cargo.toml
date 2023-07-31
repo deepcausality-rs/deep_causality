@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality"
-version = "0.2.8"
+version = "0.2.9"
 edition = "2021"
 rust-version = "1.65"
 readme = "../README.md"
@@ -21,16 +21,16 @@ petgraph = "0.6.3"
 
 [dependencies.dcl_data_structures]
 path = "../dcl_data_structures"
-version = "^0.4.4"
+version = "^0.4"
 
 
 [dependencies.deep_causality_macros]
 path = "../deep_causality_macros"
-version = "^0.4.4"
+version = "^0.4"
 
 
 [dev-dependencies]
-criterion = { version = "0.5.1", features = ["html_reports"] }
+criterion = { version = "0.5", features = ["html_reports"] }
 
 
 [[bench]]
