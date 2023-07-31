@@ -2,7 +2,6 @@
 
 use deep_causality::prelude::*;
 
-type AllCauses<'l> = Vec<Causaloid<'l>>; // type alias for brevity
 
 ////////////////////////////////////////////
 // Classic Smoking - Tar - Cancer example //
@@ -26,7 +25,7 @@ pub fn run()
 
     println!("Aggregate all known causes");
     let iter = [q_smoke_tar, q_tar_cancer];
-    let all_known_causes: AllCauses = Vec::from_iter(iter);
+    let all_known_causes: BaseCausaloidVec = Vec::from_iter(iter);
     println!();
 
     println!("Reason over all aggregated known causes...");
@@ -69,7 +68,8 @@ pub fn run()
 
 fn apply_causal_model(
     data: &[NumericalValue],
-    model: &AllCauses)
+    model: &BaseCausaloidVec
+)
 {
     let cancer_estimate = model.reason_all_causes(data).unwrap();
     println!("Has the patient a lung cancer risk: {}", cancer_estimate);
@@ -113,7 +113,7 @@ fn infer_smoke_tar_causal_relation()
 
 
 fn build_smoke_tar_causaloid()
-    -> Causaloid<'static>
+    -> BaseCausaloid<'static>
 {
     let id = 1;
     let description = "Causal relation between smoking and tar in the lung";
@@ -150,7 +150,7 @@ fn infer_tar_cancer_causaloid()
 }
 
 fn build_tar_cancer_causaloid()
-    -> Causaloid<'static>
+    -> BaseCausaloid<'static>
 {
     let id = 2;
     let description = "Causal relation tar in the lung and lung cancer";
