@@ -2,7 +2,6 @@
 
 use criterion::{Criterion, criterion_group};
 
-use deep_causality::prelude::NodeIndex;
 use deep_causality::protocols::causable_graph::CausableGraphReasoning;
 use deep_causality::utils::bench_utils_graph;
 
@@ -16,8 +15,7 @@ fn small_multi_layer_graph_benchmark(criterion: &mut Criterion)
         )
     });
 
-    let x = data.len() / 2;
-    let index = NodeIndex::new(x);
+    let index = data.len() / 2;
 
     criterion.bench_function("small_multi_layer_graph_reason_subgraph_from_cause", |bencher| {
         bencher.iter(||
@@ -25,8 +23,8 @@ fn small_multi_layer_graph_benchmark(criterion: &mut Criterion)
         )
     });
 
-    let start_index = NodeIndex::new(0);
-    let stop_index = NodeIndex::new(1);
+    let start_index = 0;
+    let stop_index = 1;
 
     criterion.bench_function("small_multi_layer_graph_reason_shortest_path_between_causes", |bencher| {
         bencher.iter(||

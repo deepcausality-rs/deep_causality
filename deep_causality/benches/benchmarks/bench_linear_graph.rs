@@ -2,7 +2,6 @@
 
 use criterion::{Criterion, criterion_group};
 
-use deep_causality::prelude::NodeIndex;
 use deep_causality::protocols::causable_graph::CausableGraphReasoning;
 use deep_causality::utils::bench_utils_graph;
 
@@ -21,8 +20,7 @@ fn small_linear_graph_benchmark(criterion: &mut Criterion)
         )
     });
 
-    let x = data.len() / 2;
-    let index = NodeIndex::new(x);
+    let index = data.len() / 2;
 
     criterion.bench_function("small_linear_graph_reason_subgraph_from_cause", |bencher| {
         bencher.iter(||
@@ -31,8 +29,8 @@ fn small_linear_graph_benchmark(criterion: &mut Criterion)
     });
 
     let x = data.len() / 2;
-    let start_index = NodeIndex::new(x);
-    let stop_index = NodeIndex::new(x + 25);
+    let start_index = x;
+    let stop_index = x + 25;
 
     criterion.bench_function("small_linear_graph_reason_shortest_path_between_causes", |bencher| {
         bencher.iter(||
@@ -59,8 +57,7 @@ fn medium_linear_graph_benchmark(criterion: &mut Criterion)
         )
     });
 
-    let x = data.len() / 2;
-    let index = NodeIndex::new(x);
+    let index = data.len() / 2;
 
     criterion.bench_function("medium_linear_graph_reason_subgraph_from_cause", |bencher| {
         bencher.iter(||
@@ -69,8 +66,8 @@ fn medium_linear_graph_benchmark(criterion: &mut Criterion)
     });
 
     let x = data.len() / 2;
-    let start_index = NodeIndex::new(x);
-    let stop_index = NodeIndex::new(x + 25);
+    let start_index = x;
+    let stop_index = x + 25;
 
     criterion.bench_function("medium_linear_graph_reason_shortest_path_between_causes", |bencher| {
         bencher.iter(||
@@ -97,8 +94,7 @@ fn large_linear_graph_benchmark(criterion: &mut Criterion)
         )
     });
 
-    let x = data.len() / 2;
-    let index = NodeIndex::new(x);
+    let index = data.len() / 2;
 
     criterion.bench_function("large_linear_graph_reason_subgraph_from_cause", |bencher| {
         bencher.iter(||
@@ -107,8 +103,8 @@ fn large_linear_graph_benchmark(criterion: &mut Criterion)
     });
 
     let x = data.len() / 2;
-    let start_index = NodeIndex::new(x);
-    let stop_index = NodeIndex::new(x + 25);
+    let start_index = x;
+    let stop_index = x + 25;
 
     criterion.bench_function("large_linear_graph_reason_shortest_path_between_causes", |bencher| {
         bencher.iter(||
