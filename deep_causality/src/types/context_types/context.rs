@@ -3,9 +3,13 @@
 use std::collections::HashMap;
 use std::fmt::{Debug, Display, Formatter};
 use petgraph::Directed;
+use petgraph::graph::{NodeIndex as GraphNodeIndex};
 use petgraph::matrix_graph::MatrixGraph;
 use crate::errors::ContextIndexError;
-use crate::prelude::{Contextuable, Contextoid, Datable, NodeIndex, SpaceTemporal, Spatial, Temporal, RelationKind, Identifiable};
+use crate::prelude::{Contextuable, Contextoid, Datable, SpaceTemporal, Spatial, Temporal, RelationKind, Identifiable};
+
+type DefaultIx = u32;
+type NodeIndex<Ix = DefaultIx> = GraphNodeIndex<Ix>;
 
 //
 // Edge weights need to be numerical (u64) to make shortest path algo work.
@@ -185,7 +189,7 @@ impl<'l, D, S, T, ST> Contextuable<'l, D, S, T, ST> for Context<'l, D, S, T, ST>
         -> Result<(), ContextIndexError>
     {
         if !self.contains_node(index) {
-            return Err(ContextIndexError("index not found".into()));
+            return Err(ContextIndexError(format!("index {} not found", index)));
         };
 
         let k = self.index_map.get(&index).unwrap();
@@ -209,11 +213,11 @@ impl<'l, D, S, T, ST> Contextuable<'l, D, S, T, ST> for Context<'l, D, S, T, ST>
         -> Result<(), ContextIndexError>
     {
         if !self.contains_node(a) {
-            return Err(ContextIndexError("index a not found".into()));
+            return Err(ContextIndexError(format!("index a {} not found", a)));
         };
 
         if !self.contains_node(b) {
-            return Err(ContextIndexError("index b not found".into()));
+            return Err(ContextIndexError(format!("index b {} not found", b)));
         };
 
         let k = self.index_map.get(&a).expect("index not found");

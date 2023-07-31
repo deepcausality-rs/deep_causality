@@ -1,31 +1,32 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 use std::collections::HashMap;
-use crate::errors::CausalityGraphError;
-use crate::prelude::{Causable, IdentificationValue, NodeIndex, NumericalValue};
+use crate::errors::{CausalGraphIndexError, CausalityGraphError};
+use crate::prelude::{Causable, IdentificationValue, NumericalValue};
 
 pub trait CausableGraph<T>
     where
         T: Causable + PartialEq,
 {
     // Root Node
-    fn add_root_causaloid(&mut self, value: T) -> NodeIndex;
+    fn add_root_causaloid(&mut self, value: T) -> usize;
     fn contains_root_causaloid(&self) -> bool;
     fn get_root_causaloid(&self) -> Option<&T>;
-    fn get_root_index(&self) -> Option<NodeIndex>;
-    fn get_last_index(&self) ->  Result<NodeIndex, CausalityGraphError>;
+    fn get_root_index(&self) -> Option<usize>;
+    fn get_last_index(&self) -> Result<usize, CausalityGraphError>;
 
     // Nodes
-    fn add_causaloid(&mut self, value: T) -> NodeIndex;
-    fn contains_causaloid(&self, index: NodeIndex) -> bool;
-    fn get_causaloid(&self, index: NodeIndex) -> Option<&T>;
-    fn remove_causaloid(&mut self, index: NodeIndex);
+    fn add_causaloid(&mut self, value: T) -> usize;
+    fn contains_causaloid(&self, index: usize) -> bool;
+    fn get_causaloid(&self, index: usize) -> Option<&T>;
+    fn remove_causaloid(&mut self, index: usize) -> Result<(), CausalGraphIndexError>
+    ;
 
     // Edges
-    fn add_edge(&mut self, a: NodeIndex, b: NodeIndex);
-    fn add_edg_with_weight(&mut self, a: NodeIndex, b: NodeIndex, weight: u64);
+    fn add_edge(&mut self, a: usize, b: usize) -> Result<(), CausalGraphIndexError>;
+    fn add_edg_with_weight(&mut self, a: usize, b: usize, weight: u64) -> Result<(), CausalGraphIndexError>;
 
-    fn contains_edge(&self, a: NodeIndex, b: NodeIndex) -> bool;
-    fn remove_edge(&mut self, a: NodeIndex, b: NodeIndex);
+    fn contains_edge(&self, a: usize, b: usize) -> bool;
+    fn remove_edge(&mut self, a: usize, b: usize) -> Result<(), CausalGraphIndexError>;
 
     // Utils
     fn all_active(&self) -> bool;
@@ -60,7 +61,7 @@ pub trait CausableGraphReasoning<T>
     /// Returns: String representing the explanation or an error
     fn explain_subgraph_from_cause(
         &self,
-        start_index: NodeIndex,
+        start_index: usize,
     )
         -> Result<String, CausalityGraphError>;
 
@@ -74,8 +75,8 @@ pub trait CausableGraphReasoning<T>
     /// Returns: String representing the explanation or an error
     fn explain_shortest_path_between_causes(
         &self,
-        start_index: NodeIndex,
-        stop_index: NodeIndex,
+        start_index: usize,
+        stop_index: usize,
     )
         -> Result<String, CausalityGraphError>;
 
@@ -115,7 +116,7 @@ pub trait CausableGraphReasoning<T>
     /// a CausalityGraphError in case of failure.
     fn reason_subgraph_from_cause(
         &self,
-        start_index: NodeIndex,
+        start_index: usize,
         data: &[NumericalValue],
         data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>,
     )
@@ -138,8 +139,8 @@ pub trait CausableGraphReasoning<T>
     /// a CausalityGraphError in case of failure.
     fn reason_shortest_path_between_causes(
         &self,
-        start_index: NodeIndex,
-        stop_index: NodeIndex,
+        start_index: usize,
+        stop_index: usize,
         data: &[NumericalValue],
         data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>,
     )
@@ -153,7 +154,7 @@ pub trait CausableGraphReasoning<T>
     /// a CausalityGraphError in case of failure.
     fn reason_single_cause(
         &self,
-        index: NodeIndex,
+        index: usize,
         data: &[NumericalValue],
     )
         -> Result<bool, CausalityGraphError>;

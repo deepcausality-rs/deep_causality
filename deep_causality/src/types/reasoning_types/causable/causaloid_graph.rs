@@ -5,18 +5,21 @@ use std::fmt::Debug;
 
 use petgraph::algo::astar;
 use petgraph::Directed;
-use petgraph::graph::NodeIndex as GraphNodeIndex;
+use petgraph::graph::{NodeIndex as GraphNodeIndex};
 use petgraph::matrix_graph::MatrixGraph;
 use petgraph::prelude::EdgeRef;
 
 use crate::prelude::*;
-use crate::protocols::causable::Causable;
-use crate::protocols::causable_graph::CausableGraph;
 
+// Custom index type. See documentation in
+// src/protocols/contextuable/mod.rs
+// for more details.
 type DefaultIx = u32;
+type NodeIndex<Ix = DefaultIx> = GraphNodeIndex<Ix>;
+type IndexMap = HashMap<usize, NodeIndex>;
 
-pub type NodeIndex<Ix = DefaultIx> = GraphNodeIndex<Ix>;
-
+// Edge weights need to be numerical (u64) to make shortest path algo work.
+type CausalGraph<T> = MatrixGraph<T, u64, Directed, Option<u64>, u32>;
 
 #[derive(Clone)]
 pub struct CausaloidGraph<T>
@@ -24,9 +27,9 @@ pub struct CausaloidGraph<T>
         T: Causable + Clone + PartialEq,
 {
     root_index: NodeIndex,
-    // Edge weights need to be numerical (u64) to make shortest path algo work.
-    causaloid_graph: MatrixGraph<T, u64, Directed, Option<u64>, u32>,
+    causaloid_graph: CausalGraph<T>,
     causes_map: HashMap<NodeIndex, T>,
+    index_map: IndexMap,
 }
 
 
@@ -41,6 +44,7 @@ impl<T> CausaloidGraph<T>
             root_index: NodeIndex::new(0),
             causaloid_graph: MatrixGraph::default(),
             causes_map: HashMap::new(),
+            index_map: HashMap::new(),
         }
     }
 
@@ -53,6 +57,7 @@ impl<T> CausaloidGraph<T>
             root_index: NodeIndex::new(0),
             causaloid_graph: MatrixGraph::default(),
             causes_map: HashMap::with_capacity(capacity),
+            index_map: HashMap::with_capacity(capacity),
         }
     }
 }
@@ -74,11 +79,14 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
         &mut self,
         value: T,
     )
-        -> NodeIndex
+        -> usize
     {
-        let root_index = self.add_causaloid(value);
+        let idx = self.add_causaloid(value);
+        let root_index = NodeIndex::new(idx);
         self.root_index = root_index;
-        root_index
+        self.index_map.insert(root_index.index(), root_index);
+
+        root_index.index()
     }
 
     fn contains_root_causaloid(
@@ -93,19 +101,19 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
         self.causes_map.get(&self.root_index)
     }
 
-    fn get_root_index(&self) -> Option<NodeIndex> {
+    fn get_root_index(&self) -> Option<usize> {
         if self.contains_root_causaloid() {
-            Some(self.root_index)
+            Some(self.root_index.index())
         } else {
             None
         }
     }
 
     fn get_last_index(&self)
-                      -> Result<NodeIndex, CausalityGraphError>
+                      -> Result<usize, CausalityGraphError>
     {
         if !self.is_empty() {
-            Ok(NodeIndex::new(self.causes_map.len() - 1))
+            Ok(self.causes_map.len() - 1)
         } else {
             Err(CausalityGraphError("Graph is empty".to_string()))
         }
@@ -115,77 +123,147 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
         &mut self,
         value: T,
     )
-        -> NodeIndex
+        -> usize
     {
         let node_index = self.causaloid_graph.add_node(value.clone());
 
         self.causes_map.insert(node_index, value);
+        self.index_map.insert(node_index.index(), node_index);
 
-        node_index
+        node_index.index()
     }
 
     fn contains_causaloid(
         &self,
-        index: NodeIndex,
+        index: usize,
     )
         -> bool
     {
-        self.causes_map.contains_key(&index)
+        self.index_map.get(&index).is_some()
     }
 
     fn get_causaloid(
         &self,
-        index: NodeIndex,
+        index: usize,
     )
         -> Option<&T>
     {
-        self.causes_map.get(&index)
+        if !self.contains_causaloid(index) {
+            None
+        } else {
+            let k = self.index_map.get(&index).expect("index not found");
+            self.causes_map.get(k)
+        }
     }
 
     fn remove_causaloid(
         &mut self,
-        index: NodeIndex,
+        index: usize,
     )
+        -> Result<(), CausalGraphIndexError>
     {
-        self.causaloid_graph.remove_node(index);
-        self.causes_map.remove(&index);
+        if !self.contains_causaloid(index) {
+            return Err(CausalGraphIndexError(format!("index not found: {}", index)));
+        };
+
+        let k = self.index_map.get(&index).unwrap();
+        self.causaloid_graph.remove_node(*k);
+        self.causes_map.remove(k);
+
+        self.index_map.remove(&index);
+
+        Ok(())
     }
 
     fn add_edge(
         &mut self,
-        a: NodeIndex,
-        b: NodeIndex,
+        a: usize,
+        b: usize,
     )
+        -> Result<(), CausalGraphIndexError>
     {
-        self.causaloid_graph.add_edge(a, b, 0);
+        if !self.contains_causaloid(a) {
+            return Err(CausalGraphIndexError(format!("index a {} not found", a)));
+        };
+
+        if !self.contains_causaloid(b) {
+            return Err(CausalGraphIndexError(format!("index b {} not found", b)));
+        };
+
+        let k = self.index_map.get(&a).expect("index not found");
+        let l = self.index_map.get(&b).expect("index not found");
+
+        self.causaloid_graph.add_edge(*k, *l, 0);
+
+        Ok(())
     }
 
     fn add_edg_with_weight(
         &mut self,
-        a: NodeIndex,
-        b: NodeIndex,
-        weight: u64)
+        a: usize,
+        b: usize,
+        weight: u64,
+    )
+        -> Result<(), CausalGraphIndexError>
     {
-        self.causaloid_graph.add_edge(a, b, weight);
+        if !self.contains_causaloid(a) {
+            return Err(CausalGraphIndexError(format!("index a {} not found", a)));
+        };
+
+        if !self.contains_causaloid(b) {
+            return Err(CausalGraphIndexError(format!("index b {} not found", b)));
+        };
+
+        let k = self.index_map.get(&a).expect("index not found");
+        let l = self.index_map.get(&b).expect("index not found");
+
+        self.causaloid_graph.add_edge(*k, *l, weight);
+
+        Ok(())
     }
 
     fn contains_edge(
         &self,
-        a: NodeIndex,
-        b: NodeIndex,
+        a: usize,
+        b: usize,
     )
         -> bool
     {
-        self.causaloid_graph.has_edge(a, b)
+        if !self.contains_causaloid(a) {
+            return false;
+        };
+
+        if !self.contains_causaloid(b) {
+            return false;
+        };
+
+        let k = self.index_map.get(&a).expect("index not found");
+        let l = self.index_map.get(&b).expect("index not found");
+
+        self.causaloid_graph.has_edge(*k, *l)
     }
 
     fn remove_edge(
         &mut self,
-        a: NodeIndex,
-        b: NodeIndex,
+        a: usize,
+        b: usize,
     )
+        -> Result<(), CausalGraphIndexError>
     {
-        self.causaloid_graph.remove_edge(a, b);
+        if !self.contains_causaloid(a) {
+            return Err(CausalGraphIndexError("index a not found".into()));
+        };
+
+        if !self.contains_causaloid(b) {
+            return Err(CausalGraphIndexError("index b not found".into()));
+        };
+
+        let k = self.index_map.get(&a).expect("index not found");
+        let l = self.index_map.get(&b).expect("index not found");
+
+        self.causaloid_graph.remove_edge(*k, *l);
+
+        Ok(())
     }
 
     fn all_active(
@@ -277,6 +355,8 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
             Err(e) => return Err(e),
         };
 
+        let stop_index = NodeIndex::new(stop_index);
+
         match self.explain_from_to_cause(start_index, stop_index) {
             Ok(explanation) => Ok(explanation),
             Err(e) => Err(e),
@@ -285,7 +365,7 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
 
     fn explain_subgraph_from_cause(
         &self,
-        start_index: NodeIndex,
+        start_index: usize,
     )
         -> Result<String, CausalityGraphError>
     {
@@ -293,6 +373,9 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
             Ok(stop_index) => stop_index,
             Err(e) => return Err(e),
         };
+
+        let start_index = NodeIndex::new(start_index);
+        let stop_index = NodeIndex::new(stop_index);
 
         match self.explain_from_to_cause(start_index, stop_index) {
             Ok(explanation) => Ok(explanation),
@@ -302,11 +385,14 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
 
     fn explain_shortest_path_between_causes(
         &self,
-        start_index: NodeIndex,
-        stop_index: NodeIndex,
+        start_index: usize,
+        stop_index: usize,
     )
         -> Result<String, CausalityGraphError>
     {
+        let start_index = NodeIndex::new(start_index);
+        let stop_index = NodeIndex::new(stop_index);
+
         match self.explain_shortest_path_from_to_cause(start_index, stop_index) {
             Ok(explanation) => Ok(explanation),
             Err(e) => Err(e),
@@ -337,12 +423,13 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
 
     fn reason_subgraph_from_cause(
         &self,
-        start_index: NodeIndex,
+        start_index: usize,
         data: &[NumericalValue],
         data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>,
     )
         -> Result<bool, CausalityGraphError>
     {
+        let start_index = NodeIndex::new(start_index);
         let stop_index = NodeIndex::new(self.causes_map.len());
         match self.reason_from_to_cause(start_index, stop_index, data, data_index) {
             Ok(result) => Ok(result),
@@ -352,12 +439,16 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
 
     fn reason_shortest_path_between_causes(
         &self,
-        start_index: NodeIndex,
-        stop_index: NodeIndex, data: &[NumericalValue],
+        start_index: usize,
+        stop_index: usize,
+        data: &[NumericalValue],
         data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>,
     )
         -> Result<bool, CausalityGraphError>
     {
+        let start_index = NodeIndex::new(start_index);
+        let stop_index = NodeIndex::new(stop_index);
+
         match self.reason_shortest_path_from_to_cause(
             start_index,
             stop_index,
@@ -371,7 +462,7 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
 
     fn reason_single_cause(
         &self,
-        index: NodeIndex,
+        index: usize,
         data: &[NumericalValue],
     )
         -> Result<bool, CausalityGraphError>
@@ -415,18 +506,18 @@ impl<T> CausaloidGraph<T>
             return Err(CausalityGraphError("Graph is empty".to_string()));
         }
 
-        if !self.contains_causaloid(start_index) {
+        if !self.contains_causaloid(start_index.index()) {
             return Err(CausalityGraphError("Graph does not contains start causaloid".into()));
         }
 
-        if !self.contains_causaloid(stop_index) {
+        if !self.contains_causaloid(stop_index.index()) {
             return Err(CausalityGraphError("Graph does not contains stop causaloid".into()));
         }
 
         let mut stack = Vec::with_capacity(self.causes_map.len());
         let mut explanation = String::new();
 
-        let cause = self.get_causaloid(start_index).expect("Failed to get causaloid");
+        let cause = self.get_causaloid(start_index.index()).expect("Failed to get causaloid");
 
         append_string(&mut explanation, &cause.explain().unwrap());
 
@@ -434,7 +525,7 @@ impl<T> CausaloidGraph<T>
 
         while let Some(children) = stack.last_mut() {
             if let Some(child) = children.next() {
-                let cause = self.get_causaloid(child)
+                let cause = self.get_causaloid(child.index())
                     .expect("Failed to get causaloid");
 
                 append_string(&mut explanation, &cause.explain().unwrap());
@@ -464,11 +555,11 @@ impl<T> CausaloidGraph<T>
             return Err(CausalityGraphError("Graph is empty".to_string()));
         }
 
-        if !self.contains_causaloid(start_index) {
+        if !self.contains_causaloid(start_index.index()) {
             return Err(CausalityGraphError("Graph does not contains start causaloid".into()));
         }
 
-        if !self.contains_causaloid(stop_index) {
+        if !self.contains_causaloid(stop_index.index()) {
             return Err(CausalityGraphError("Graph does not contains stop causaloid".into()));
         }
 
@@ -480,7 +571,7 @@ impl<T> CausaloidGraph<T>
         let mut explanation = String::new();
 
         for index in shortest_path {
-            let cause = self.get_causaloid(index)
+            let cause = self.get_causaloid(index.index())
                 .expect("Failed to get causaloid");
 
             append_string(&mut explanation, &cause.explain().unwrap());
@@ -505,7 +596,7 @@ impl<T> CausaloidGraph<T>
             return Err(CausalityGraphError("Graph is empty".to_string()));
         }
 
-        if !self.contains_causaloid(start_index)
+        if !self.contains_causaloid(start_index.index())
         {
             return Err(CausalityGraphError("Graph does not contains start causaloid".into()));
         }
@@ -515,7 +606,7 @@ impl<T> CausaloidGraph<T>
             return Err(CausalityGraphError("Data are empty (len ==0).".into()));
         }
 
-        let cause = self.get_causaloid(start_index).expect("Failed to get causaloid");
+        let cause = self.get_causaloid(start_index.index()).expect("Failed to get causaloid");
 
         let obs = self.get_obs(cause.id(), data, &data_index);
 
@@ -537,7 +628,7 @@ impl<T> CausaloidGraph<T>
         {
             if let Some(child) = children.next()
             {
-                let cause = self.get_causaloid(child)
+                let cause = self.get_causaloid(child.index())
                     .expect("Failed to get causaloid");
 
                 let obs = self.get_obs(cause.id(), data, &data_index);
@@ -592,11 +683,11 @@ impl<T> CausaloidGraph<T>
             return Err(CausalityGraphError("Graph is empty".to_string()));
         }
 
-        if !self.contains_causaloid(start_index) {
+        if !self.contains_causaloid(start_index.index()) {
             return Err(CausalityGraphError("Graph does not contains start causaloid".into()));
         }
 
-        if !self.contains_causaloid(stop_index) {
+        if !self.contains_causaloid(stop_index.index()) {
             return Err(CausalityGraphError("Graph does not contains stop causaloid".into()));
         }
 
@@ -606,7 +697,7 @@ impl<T> CausaloidGraph<T>
         };
 
         for index in shortest_path {
-            let cause = self.get_causaloid(index)
+            let cause = self.get_causaloid(index.index())
                 .expect("Failed to get causaloid");
 
             let obs = self.get_obs(cause.id(), data, &data_index);
