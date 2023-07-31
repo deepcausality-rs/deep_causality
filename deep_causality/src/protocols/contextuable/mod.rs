@@ -1,6 +1,6 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use crate::prelude::{Adjustable, Contextoid, Identifiable, NodeIndex, RelationKind, TimeScale};
+use crate::prelude::{Adjustable, Contextoid, Identifiable, RelationKind, TimeScale};
 
 pub trait Datable: Adjustable + Identifiable {}
 
@@ -37,13 +37,13 @@ pub trait Contextuable<'l, D, S, T, ST>
         ST: SpaceTemporal,
         T: Temporal
 {
-    fn add_node(&mut self, value: Contextoid<D, S, T, ST>) -> NodeIndex;
-    fn contains_node(&self, index: NodeIndex) -> bool;
-    fn get_node(&self, index: NodeIndex) -> Option<&Contextoid<D, S, T, ST>>;
-    fn remove_node(&mut self, index: NodeIndex);
-    fn add_edge(&mut self, a: NodeIndex, b: NodeIndex, weight: RelationKind);
-    fn contains_edge(&self, a: NodeIndex, b: NodeIndex) -> bool;
-    fn remove_edge(&mut self, a: NodeIndex, b: NodeIndex) -> u64;
+    fn add_node(&mut self, value: Contextoid<D, S, T, ST>) -> usize;
+    fn contains_node(&self, index: usize) -> bool;
+    fn get_node(&self, index: usize) -> Option<&Contextoid<D, S, T, ST>>;
+    fn remove_node(&mut self, index: usize);
+    fn add_edge(&mut self, a: usize, b: usize, weight: RelationKind);
+    fn contains_edge(&self, a: usize, b: usize) -> bool;
+    fn remove_edge(&mut self, a: usize, b: usize) -> u64;
     fn size(&self) -> usize;
     fn is_empty(&self) -> bool;
     fn node_count(&self) -> usize;

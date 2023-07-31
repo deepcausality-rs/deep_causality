@@ -11,6 +11,9 @@ type CtxGraph<'l, D, S, T, ST> = MatrixGraph<Contextoid<D, S, T, ST>, u64, Direc
 // Preferably, hashmap should hold only a reference to the contextoid in the graph,
 // but this causes some problems with the borrow checker hence the value and clone requirement.
 type CtxMap<'l, D, S, T, ST> = HashMap<NodeIndex, Contextoid<D, S, T, ST>>;
+//
+//
+type IndexMap = HashMap<usize, NodeIndex>;
 
 #[derive(Clone)]
 pub struct Context<'l, D, S, T, ST>
@@ -24,6 +27,7 @@ pub struct Context<'l, D, S, T, ST>
     name: &'l str,
     graph: CtxGraph<'l, D, S, T, ST>,
     context_map: CtxMap<'l, D, S, T, ST>,
+    index_map: IndexMap,
 }
 
 
@@ -40,7 +44,13 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
     )
         -> Self
     {
-        Self { id, name, graph: MatrixGraph::default(), context_map: HashMap::new() }
+        Self {
+            id,
+            name,
+            graph: MatrixGraph::default(),
+            context_map: HashMap::new(),
+            index_map: HashMap::new(),
+        }
     }
 
     pub fn with_capacity(
@@ -50,7 +60,13 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
     )
         -> Self
     {
-        Self { id, name, graph: MatrixGraph::default(), context_map: HashMap::with_capacity(capacity) }
+        Self {
+            id,
+            name,
+            graph: MatrixGraph::default(),
+            context_map: HashMap::with_capacity(capacity),
+            index_map: HashMap::with_capacity(capacity),
+        }
     }
 
 
@@ -76,72 +92,86 @@ impl<'l, D, S, T, ST> Contextuable<'l, D, S, T, ST> for Context<'l, D, S, T, ST>
     T: Temporal + Clone,
     ST: SpaceTemporal + Clone
 {
+
     fn add_node(
         &mut self,
         value: Contextoid<D, S, T, ST>,
     )
-        -> NodeIndex
+        -> usize
     {
         let node_index = self.graph.add_node(value.clone());
         self.context_map.insert(node_index, value);
+        self.index_map.insert(node_index.index(), node_index);
 
-        node_index
+        node_index.index()
     }
 
     fn contains_node(
         &self,
-        index: NodeIndex,
+        index: usize,
     )
         -> bool
     {
-        self.context_map.contains_key(&index)
+        let k = self.index_map.get(&index).expect("index not found");
+        self.context_map.contains_key(k)
     }
 
     fn get_node(
         &self,
-        index: NodeIndex,
+        index: usize,
     )
         -> Option<&Contextoid<D, S, T, ST>>
     {
-        self.context_map.get(&index)
+        let k = self.index_map.get(&index).expect("index not found");
+        self.context_map.get(&k)
     }
+
     fn remove_node(
         &mut self,
-        index: NodeIndex,
+        index: usize,
     )
     {
-        self.graph.remove_node(index);
-        self.context_map.remove(&index);
+        let k = self.index_map.get(&index).expect("index not found");
+        self.graph.remove_node(*k);
+        self.context_map.remove(&k);
     }
 
     fn add_edge(
         &mut self,
-        a: NodeIndex,
-        b: NodeIndex,
+        a: usize,
+        b: usize,
         weight: RelationKind,
     )
     {
-        self.graph.add_edge(a, b, weight as u64);
+        let k = self.index_map.get(&a).expect("index not found");
+        let l = self.index_map.get(&b).expect("index not found");
+
+        self.graph.add_edge(*k, *l, weight as u64);
     }
 
     fn contains_edge(
         &self,
-        a: NodeIndex,
-        b: NodeIndex,
+        a: usize,
+        b: usize,
     )
         -> bool
     {
-        self.graph.has_edge(a, b)
+        let k = self.index_map.get(&a).expect("index not found");
+        let l = self.index_map.get(&b).expect("index not found");
+        self.graph.has_edge(*k, *l)
     }
 
     fn remove_edge(
         &mut self,
-        a: NodeIndex,
-        b: NodeIndex,
+        a: usize,
+        b: usize,
     )
         -> u64
     {
-        self.graph.remove_edge(a, b)
+        let k = self.index_map.get(&a).expect("index not found");
+        let l = self.index_map.get(&b).expect("index not found");
+
+        self.graph.remove_edge(*k, *l)
     }
 
     fn size(
