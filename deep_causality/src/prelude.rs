@@ -47,8 +47,8 @@ pub use crate::protocols::observable::ObservableReasoning;
 //
 // Alias types
 pub use crate::types::alias_types::*;
-pub use crate::types::context_types::context;
 // Context types
+pub use crate::types::context_types::context;
 // Default context node types. Overwrite traits to customize.
 pub use crate::types::context_types::node_types::dateoid::Dataoid;
 pub use crate::types::context_types::node_types::space_tempoid::SpaceTempoid;
