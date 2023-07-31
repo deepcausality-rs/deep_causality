@@ -1,5 +1,6 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
+use crate::errors::ContextIndexError;
 use crate::prelude::{Adjustable, Contextoid, Identifiable, RelationKind, TimeScale};
 
 pub trait Datable: Adjustable + Identifiable {}
@@ -40,10 +41,10 @@ pub trait Contextuable<'l, D, S, T, ST>
     fn add_node(&mut self, value: Contextoid<D, S, T, ST>) -> usize;
     fn contains_node(&self, index: usize) -> bool;
     fn get_node(&self, index: usize) -> Option<&Contextoid<D, S, T, ST>>;
-    fn remove_node(&mut self, index: usize);
-    fn add_edge(&mut self, a: usize, b: usize, weight: RelationKind);
+    fn remove_node(&mut self, index: usize) -> Result<(), ContextIndexError>;
+    fn add_edge(&mut self, a: usize, b: usize, weight: RelationKind) -> Result<(), ContextIndexError>;
     fn contains_edge(&self, a: usize, b: usize) -> bool;
-    fn remove_edge(&mut self, a: usize, b: usize) -> u64;
+    fn remove_edge(&mut self, a: usize, b: usize) -> Result<(), ContextIndexError>;
     fn size(&self) -> usize;
     fn is_empty(&self) -> bool;
     fn node_count(&self) -> usize;

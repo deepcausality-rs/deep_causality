@@ -122,7 +122,7 @@ fn test_remove_node() {
 
     let root = Root::new(id);
     let contextoid = Contextoid::new(id, ContextoidType::Root(root));
-     context.add_node(contextoid);
+    context.add_node(contextoid);
     assert_eq!(context.size(), 1);
 
     let idx: usize = 0;
@@ -131,9 +131,8 @@ fn test_remove_node() {
     let contextoid = context.get_node(idx);
     assert!(contextoid.is_some());
 
-    context.remove_node(idx);
-    let contextoid = context.get_node(idx);
-    assert!(contextoid.is_none());
+    assert!(context.remove_node(idx).is_ok());
+    assert!(!context.contains_node(idx));
 }
 
 #[test]
@@ -161,7 +160,8 @@ fn test_add_edge() {
     let contextoid = Contextoid::new(id, ContextoidType::Tempoid(tempoid));
     let t_idx = context.add_node(contextoid);
 
-    context.add_edge(roodidx, t_idx, RelationKind::Temporal);
+    let res = context.add_edge(roodidx, t_idx, RelationKind::Temporal);
+    assert!(res.is_ok());
 
     assert!(context.contains_edge(roodidx, t_idx));
 }
@@ -190,7 +190,8 @@ fn test_contains_edge() {
     let id = 2;
     let contextoid = Contextoid::new(id, ContextoidType::Tempoid(tempoid));
     let t_idx = context.add_node(contextoid);
-    context.add_edge(roodidx, t_idx, RelationKind::Temporal);
+    let res = context.add_edge(roodidx, t_idx, RelationKind::Temporal);
+    assert!(res.is_ok());
 
     assert!(context.contains_edge(roodidx, t_idx));
 }
@@ -219,11 +220,14 @@ fn test_remove_edge() {
     let id = 2;
     let contextoid = Contextoid::new(id, ContextoidType::Tempoid(tempoid));
     let t_idx = context.add_node(contextoid);
-    context.add_edge(roodidx, t_idx, RelationKind::Temporal);
+    let res = context.add_edge(roodidx, t_idx, RelationKind::Temporal);
+    assert!(res.is_ok());
 
     assert!(context.contains_edge(roodidx, t_idx));
 
-    context.remove_edge(roodidx, t_idx);
+    let res = context.remove_edge(roodidx, t_idx);
+    assert!(res.is_ok());
+
     assert!(!context.contains_edge(roodidx, t_idx));
 }
 
