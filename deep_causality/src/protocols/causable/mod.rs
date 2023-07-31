@@ -36,17 +36,6 @@ pub trait CausableReasoning<T>
 
     // Default implementations for all other methods are provided below.
 
-    fn explain(&self)
-        -> String
-    {
-        let mut explanation = String::new();
-        for cause in self.get_all_items() {
-            explanation.push('\n');
-            explanation.push_str(format!(" * {}", cause.explain().unwrap()).as_str());
-            explanation.push('\n');
-        }
-        explanation
-    }
     fn get_all_causes_true(&self)
         -> bool
     {
@@ -125,5 +114,17 @@ pub trait CausableReasoning<T>
         }
 
         Ok(true)
+    }
+
+    fn explain(&self)
+               -> String
+    {
+        let mut explanation = String::new();
+        for cause in self.get_all_items() {
+            explanation.push('\n');
+            explanation.push_str(format!(" * {}", cause.explain().unwrap()).as_str());
+            explanation.push('\n');
+        }
+        explanation
     }
 }

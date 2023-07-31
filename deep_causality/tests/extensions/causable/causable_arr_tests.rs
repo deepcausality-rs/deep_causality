@@ -1,7 +1,7 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use deep_causality::prelude::*;
-use deep_causality::utils::test_utils::get_test_causality_array;
+use deep_causality::utils::test_utils::{get_test_causality_array, get_test_causality_data};
 
 #[test]
 fn test_all_active()
@@ -81,6 +81,22 @@ fn test_get_all_inactive_causes()
     }
     assert!(col.get_all_causes_true());
     assert_eq!(0, col.get_all_inactive_causes().len());
+}
+
+
+#[test]
+fn test_reason_all_causes()
+{
+    let col = get_test_causality_array();
+    assert!(!col.get_all_causes_true());
+
+    let data = get_test_causality_data();
+
+    let res = col.reason_all_causes(&data);
+    assert!(res.is_ok());
+
+    let valid = res.unwrap();
+    assert!(valid);
 }
 
 #[test]

@@ -98,6 +98,11 @@ pub fn get_test_causality_array() -> [Causaloid<'static, Dataoid, Spaceoid, Temp
     array::from_fn(|_| get_test_causaloid())
 }
 
+pub fn get_test_causality_data() -> [NumericalValue; 10]
+{
+    [60.0, 99.0, 82.0, 93.8, 74.8, 82.0, 93.8, 74.0,74.8, 82.0]
+}
+
 pub fn get_test_causality_vec()
     -> Vec<Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>
 {
