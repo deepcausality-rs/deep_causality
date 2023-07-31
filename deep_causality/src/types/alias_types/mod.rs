@@ -12,5 +12,5 @@ pub type EvalFn = fn(&[NumericalValue]) -> bool;
 pub type CausalFn = fn(NumericalValue) -> Result<bool, CausalityError>;
 
 // Default type aliases for basic causaloids
-type BaseCausaloidVec<'l> = Vec<Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>;
-type BaseCausaloid<'l> = Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>;
+pub type BaseCausaloidVec<'l> = Vec<Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>;
+pub type BaseCausaloid<'l> = Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>;
