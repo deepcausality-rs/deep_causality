@@ -85,10 +85,12 @@ fn build_time_data_context_graph<'l>(
         let data_index = g.add_node(data_node);
 
         // link root to year
-        g.add_edge(root_index, year_index, RelationKind::Temporal);
+        g.add_edge(root_index, year_index, RelationKind::Temporal)
+            .expect("Failed to add edge between root and year.");
 
         // link data to year
-        g.add_edge(data_index, year_index, RelationKind::Datial);
+        g.add_edge(data_index, year_index, RelationKind::Datial)
+            .expect("Failed to add edge between year and data");
 
         if !add_month {
             continue;
@@ -117,10 +119,12 @@ fn build_time_data_context_graph<'l>(
             let data_index = g.add_node(data_node);
 
             // link month to year
-            g.add_edge(month_index, year_index, RelationKind::Temporal,);
+            g.add_edge(month_index, year_index, RelationKind::Temporal)
+                .expect("Failed to add edge between month and year.");
 
             // link data to month
-            g.add_edge(data_index, month_index, RelationKind::Datial);
+            g.add_edge(data_index, month_index, RelationKind::Datial)
+                .expect("Failed to add edge between month and data.");
 
             if !add_week {
                 continue;
@@ -153,10 +157,12 @@ fn build_time_data_context_graph<'l>(
                 let data_index = g.add_node(data_node);
 
                 // link week to month
-                g.add_edge(week_index, month_index, RelationKind::Temporal);
+                g.add_edge(week_index, month_index, RelationKind::Temporal)
+                    .expect("Failed to add edge between week and month.");
 
                 // link data to week
-                g.add_edge(data_index, week_index, RelationKind::Datial);
+                g.add_edge(data_index, week_index, RelationKind::Datial)
+                    .expect("Failed to add edge between week and data.");
 
                 if !add_day {
                     continue;
@@ -191,10 +197,12 @@ fn build_time_data_context_graph<'l>(
                     let data_index = g.add_node(data_node);
 
                     // link day to week
-                    g.add_edge(day_index, week_index, RelationKind::Temporal);
+                    g.add_edge(day_index, week_index, RelationKind::Temporal)
+                        .expect("Failed to add edge between day and week.");
 
                     // link data to week
-                    g.add_edge(data_index, day_index, RelationKind::Datial);
+                    g.add_edge(data_index, day_index, RelationKind::Datial)
+                        .expect("Failed to add edge between day and data.");
 
                 } // end day
             } // end week
