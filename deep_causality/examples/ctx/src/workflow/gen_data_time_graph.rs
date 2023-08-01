@@ -46,7 +46,7 @@ fn get_boolean_control_map(
 }
 
 
-fn build_time_data_context_graph<'l>(
+fn build_time_data_context_graph(
     data: &SampledDataBars,
     time_scale: TimeScale,
     node_capacity: usize,

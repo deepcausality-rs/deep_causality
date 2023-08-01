@@ -65,9 +65,6 @@ impl DateTimeBar
     pub fn close(&self) -> Decimal {
         self.close
     }
-    pub fn volume(&self) -> Decimal {
-        self.volume
-    }
 }
 
 impl Display for DateTimeBar
