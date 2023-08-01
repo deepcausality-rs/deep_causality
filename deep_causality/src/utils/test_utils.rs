@@ -92,7 +92,8 @@ pub fn get_test_inf_vec()
     Vec::from_iter([i1, i2])
 }
 
-pub fn get_test_causality_array() -> [Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>; 10]
+pub fn get_test_causality_array<'l>()
+    -> [Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>; 10]
 {
 // Causaloid doesn't implement Copy hence the from_fn workaround for array initialization
     array::from_fn(|_| get_test_causaloid())
@@ -103,8 +104,8 @@ pub fn get_test_causality_data() -> [NumericalValue; 10]
     [60.0, 99.0, 82.0, 93.8, 74.8, 82.0, 93.8, 74.0,74.8, 82.0]
 }
 
-pub fn get_test_causality_vec()
-    -> Vec<Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>
+pub fn get_test_causality_vec<'l>()
+    -> Vec<Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>
 {
     let q1 = get_test_causaloid();
     let q2 = get_test_causaloid();
@@ -112,9 +113,9 @@ pub fn get_test_causality_vec()
     Vec::from_iter([q1, q2, q3])
 }
 
-pub fn get_test_causality_map()
+pub fn get_test_causality_map<'l>()
 // i8 as key b/c I assume all testing will be done with less than 265 items.
-    -> HashMap<i8, Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>
+    -> HashMap<i8, Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>
 {
     let q1 = get_test_causaloid();
     let q2 = get_test_causaloid();
