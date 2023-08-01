@@ -29,7 +29,7 @@ impl<'l, D, S, T, ST>  CausalState<'l, D, S, T, ST>
         id: usize,
         version: usize,
         data: &'l [NumericalValue],
-        causaloid: &'l Causaloid<D, S, T, ST>,
+        causaloid: &'l Causaloid<'l, D, S, T, ST>,
     )
         -> Self
     {

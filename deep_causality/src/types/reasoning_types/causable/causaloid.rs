@@ -31,12 +31,14 @@ pub struct Causaloid<'l, D, S, T, ST>
     id: IdentificationValue,
     active: RefCell<bool>,
     causal_type: CausalType,
-    causal_fn: CausalFn,
+    causal_fn: Option<CausalFn>,
+    context_causal_fn: Option<ContextualCausalFn<'l, D, S, T, ST>>,
+    context: Option<&'l Context<'l, D, S, T, ST>, >,
+    has_context: bool,
     causal_coll: Option<&'l Vec<Causaloid<'l, D, S, T, ST>>>,
     causal_graph: Option<&'l CausaloidGraph<Causaloid<'l, D, S, T, ST>>>,
     last_obs: RefCell<NumericalValue>,
     description: &'l str,
-    context: Option<&'l Context<'l, D, S, T, ST>, >,
 }
 
 // Constructors
@@ -60,18 +62,20 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
             id,
             active: RefCell::new(false),
             causal_type: CausalType::Singleton,
-            causal_fn,
+            causal_fn: Some(causal_fn),
+            context_causal_fn: None,
+            context: None,
+            has_context: false,
             causal_coll: None,
             causal_graph: None,
             last_obs: RefCell::new(0.0),
             description,
-            context: None,
         }
     }
 
     pub fn new_with_context(
         id: IdentificationValue,
-        causal_fn: CausalFn,
+        context_causal_fn: ContextualCausalFn<'l, D, S, T, ST>,
         context: Option<&'l Context<'l, D, S, T, ST>, >,
         description: &'l str,
     )
@@ -81,12 +85,14 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
             id,
             active: RefCell::new(false),
             causal_type: CausalType::Singleton,
-            causal_fn,
+            causal_fn: None,
+            context_causal_fn: Some(context_causal_fn),
+            context,
+            has_context: true,
             causal_coll: None,
             causal_graph: None,
             last_obs: RefCell::new(0.0),
             description,
-            context,
         }
     }
 
@@ -99,24 +105,23 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     /// about the correctness of the causal graph.
     pub fn from_causal_collection(
         id: IdentificationValue,
-        causal_coll: &'l Vec<Causaloid<D, S, T, ST>>,
+        causal_coll: &'l Vec<Causaloid<'l, D, S, T, ST>>,
         description: &'l str,
     )
         -> Self
     {
-        // empty causal function.
-        fn causal_fn(_obs: NumericalValue) -> Result<bool, CausalityError> { Ok(false) }
-
         Causaloid {
             id,
             active: RefCell::new(false),
             causal_type: CausalType::Collection,
-            causal_fn,
+            causal_fn: None,
             causal_coll: Some(causal_coll),
             causal_graph: None,
             last_obs: RefCell::new(0.0),
             description,
             context: None,
+            has_context: false,
+            context_causal_fn: None,
         }
     }
 
@@ -126,25 +131,24 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     /// or embedded into a causal graph.
     pub fn from_causal_collection_with_context(
         id: IdentificationValue,
-        causal_coll: &'l Vec<Causaloid<D, S, T, ST>>,
+        causal_coll: &'l Vec<Causaloid<'l, D, S, T, ST>>,
         context: Option<&'l Context<'l, D, S, T, ST>, >,
         description: &'l str,
     )
         -> Self
     {
-        // empty causal function.
-        fn causal_fn(_obs: NumericalValue) -> Result<bool, CausalityError> { Ok(false) }
-
         Causaloid {
             id,
             active: RefCell::new(false),
             causal_type: CausalType::Collection,
-            causal_fn,
+            causal_fn: None,
             causal_coll: Some(causal_coll),
             causal_graph: None,
             last_obs: RefCell::new(0.0),
             description,
             context,
+            has_context: true,
+            context_causal_fn: None,
         }
     }
 
@@ -157,24 +161,23 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     /// about the correctness of the causal graph.
     pub fn from_causal_graph(
         id: IdentificationValue,
-        causal_graph: &'l CausaloidGraph<Causaloid<D, S, T, ST>>,
+        causal_graph: &'l CausaloidGraph<Causaloid<'l, D, S, T, ST>>,
         description: &'l str,
     )
         -> Self
     {
-        // empty causal function
-        fn causal_fn(_obs: NumericalValue) -> Result<bool, CausalityError> { Ok(false) }
-
         Causaloid {
             id,
             active: RefCell::new(false),
             causal_type: CausalType::Graph,
-            causal_fn,
+            causal_fn: None,
             causal_coll: None,
             causal_graph: Some(causal_graph),
             last_obs: RefCell::new(0.0),
             description,
             context: None,
+            has_context: false,
+            context_causal_fn: None,
         }
     }
 
@@ -184,25 +187,24 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     /// or embedded into another causal graph.
     pub fn from_causal_graph_with_context(
         id: IdentificationValue,
-        causal_graph: &'l CausaloidGraph<Causaloid<D, S, T, ST>>,
+        causal_graph: &'l CausaloidGraph<Causaloid<'l, D, S, T, ST>>,
         context: Option<&'l Context<'l, D, S, T, ST>, >,
         description: &'l str,
     )
         -> Self
     {
-        // empty causal function
-        fn causal_fn(_obs: NumericalValue) -> Result<bool, CausalityError> { Ok(false) }
-
         Causaloid {
             id,
             active: RefCell::new(false),
             causal_type: CausalType::Graph,
-            causal_fn,
+            causal_fn: None,
             causal_coll: None,
             causal_graph: Some(causal_graph),
             last_obs: RefCell::new(0.0),
             description,
             context,
+            has_context: true,
+            context_causal_fn: None,
         }
     }
 }
@@ -320,16 +322,36 @@ impl<'l, D, S, T, ST> Causable for Causaloid<'l, D, S, T, ST>
     )
         -> Result<bool, CausalityError>
     {
-        let res = match (self.causal_fn)(obs.to_owned()) {
-            Ok(res) => {
-                // store the applied data to provide details in explain()
-                *self.last_obs.borrow_mut() = obs.to_owned();
-                res
-            }
-            Err(e) => return Err(e),
-        };
+        if self.has_context
+        {
+            let contextual_causal_fn = self.context_causal_fn.expect("Causaloid::verify_single_cause: context_causal_fn is None");
+            let context = self.context.expect("Causaloid::verify_single_cause: context is None");
 
-        Ok(self.check_active(res))
+            let res = match (contextual_causal_fn)(obs.to_owned(), context)
+            {
+                Ok(res) => {
+                    // store the applied data to provide details in explain()
+                    *self.last_obs.borrow_mut() = obs.to_owned();
+                    res
+                }
+                Err(e) => return Err(e),
+            };
+
+            Ok(self.check_active(res))
+        } else {
+            let causal_fn = self.causal_fn.expect("Causaloid::verify_single_cause: causal_fn is None");
+            let res = match (causal_fn)(obs.to_owned())
+            {
+                Ok(res) => {
+                    // store the applied data to provide details in explain()
+                    *self.last_obs.borrow_mut() = obs.to_owned();
+                    res
+                }
+                Err(e) => return Err(e),
+            };
+
+            Ok(self.check_active(res))
+        }
     }
 
     fn verify_all_causes(
@@ -347,7 +369,7 @@ impl<'l, D, S, T, ST> Causable for Causaloid<'l, D, S, T, ST>
                 {
                     match &self.causal_coll
                     {
-                        None => Err(CausalityError("Causal collection is None".into())),
+                        None => Err(CausalityError("Causaloid::verify_all_causes: causal collection is None".into())),
                         Some(coll) =>
                             {
                                 let res = match coll.reason_all_causes(data)
@@ -365,7 +387,7 @@ impl<'l, D, S, T, ST> Causable for Causaloid<'l, D, S, T, ST>
                 {
                     match &self.causal_graph
                     {
-                        None => Err(CausalityError("Causal graph is None".into())),
+                        None => Err(CausalityError("Causaloid::verify_all_causes: Causal graph is None".into())),
                         Some(graph) =>
                             {
                                 let res = match graph.reason_all_causes(data, data_index)
@@ -408,11 +430,12 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
 
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result
     {
-        write!(f, "Causaloid id: {} \n Causaloid type: {} \n description: {} is active: {}",
+        write!(f, "Causaloid id: {} \n Causaloid type: {} \n description: {} is active: {} has context: {}",
                self.id,
                self.causal_type,
                self.description,
                self.is_active(),
+               self.has_context,
         )
     }
 }
