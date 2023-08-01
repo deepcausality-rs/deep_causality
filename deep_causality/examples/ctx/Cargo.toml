@@ -7,7 +7,7 @@ publish = false
 
 [dependencies]
 #deep_causality = "0.2.8"
-deep_causality = { git = "https://github.com/deepcausality-rs/deep_causality.git", tag = "0.2.9"}
+deep_causality = { git = "https://github.com/deepcausality-rs/deep_causality.git", rev = "c2c316246b840ed4c9f279fb5ff95c437c8a84b1"}
 
 # chrono default-features = false mitigates "RUSTSEC-2020-0071".
 # See https://rustsec.org/advisories/RUSTSEC-2020-0071.html

@@ -84,6 +84,7 @@ fn build_time_data_context_graph(
         let data_node = Contextoid::new(data_id, ContextoidType::Datoid(dataoid));
         let data_index = g.add_node(data_node);
 
+
         // link root to year
         g.add_edge(root_index, year_index, RelationKind::Temporal)
             .expect("Failed to add edge between root and year.");

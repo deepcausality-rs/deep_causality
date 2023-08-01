@@ -7,8 +7,8 @@ use rust_decimal::Decimal;
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct BarRange
 {
-    high_low: Decimal,
-    open_close: Decimal,
+    high: Decimal,
+    close: Decimal,
     close_above_open: bool,
     close_below_open: bool,
 }
@@ -18,17 +18,17 @@ impl BarRange
     pub fn new(high_low: Decimal, open_close: Decimal, close_above_open: bool, close_below_open: bool)
         -> Self
     {
-        Self { high_low, open_close, close_above_open, close_below_open }
+        Self { high: high_low, close: open_close, close_above_open, close_below_open }
     }
 }
 
 impl BarRange
 {
-    pub fn high_low(&self) -> Decimal {
-        self.high_low
+    pub fn high(&self) -> Decimal {
+        self.high
     }
-    pub fn open_close(&self) -> Decimal {
-        self.open_close
+    pub fn close(&self) -> Decimal {
+        self.close
     }
     pub fn close_above_open(&self) -> bool {
         self.close_above_open

@@ -28,12 +28,12 @@ fn calculate_ranges(
 )
     -> BarRange
 {
-    let high_low = data_bar.high().sub(data_bar.low());
-    let open_close = data_bar.open().sub(data_bar.close());
+    let high = data_bar.high();
+    let close = data_bar.open();
     let close_above_open = data_bar.close() > data_bar.open();
     let close_below_open = data_bar.close() < data_bar.open();
 
-    BarRange::new(high_low, open_close, close_above_open, close_below_open)
+    BarRange::new(high, close, close_above_open, close_below_open)
 }
 
 fn get_time_unit(
