@@ -1,8 +1,9 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use deep_causality::prelude::{Contextuable, Identifiable, TimeScale};
 use crate::model::get_main_causaloid;
+use crate::utils;
 use crate::workflow::{build_time_data_context, load_data};
 use crate::workflow::build_model::build_model;
 
@@ -34,7 +35,7 @@ pub fn run()
 
     // Reading parquet files is at least 10x faster than reading CSV files.
     let elapsed = &lap.elapsed();
-    print_duration("Load Data", elapsed);
+    utils::print_duration("Load Data", elapsed);
 
     // This context hypergraph is low resolution (Day), relatively small (<1k nodes),
     // and thus takes only a few milliseconds to generate. In practice,
@@ -50,7 +51,7 @@ pub fn run()
     };
 
     let elapsed = &lap.elapsed();
-    print_duration("Build Context HyperGraph", elapsed);
+    utils::print_duration("Build Context HyperGraph", elapsed);
 
     // Print out some key metrics of the context graph.
     println!("Context HyperGraph Metrics:");
@@ -67,16 +68,10 @@ pub fn run()
         Err(e) => panic!("{}", e),
     };
     let elapsed = &lap.elapsed();
-    print_duration("Build Causal Model", elapsed);
+    utils::print_duration("Build Causal Model", elapsed);
 
     println!("Causal Model:");
     println!("Model ID: {}", model.id());
     println!("Model Description: {}", model.description());
-    println!();
-}
-
-fn print_duration(msg: &str, elapsed: &Duration)
-{
-    println!("{} took: {:?} ", msg, elapsed);
     println!();
 }

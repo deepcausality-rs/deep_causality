@@ -59,9 +59,6 @@ impl DateTimeBar
     pub fn high(&self) -> Decimal {
         self.high
     }
-    pub fn low(&self) -> Decimal {
-        self.low
-    }
     pub fn close(&self) -> Decimal {
         self.close
     }

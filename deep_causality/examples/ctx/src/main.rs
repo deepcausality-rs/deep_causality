@@ -7,6 +7,7 @@ mod workflow;
 mod io;
 mod config;
 mod model;
+mod utils;
 
 use deep_causality::prelude::time_execution;
 

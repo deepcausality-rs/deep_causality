@@ -36,9 +36,10 @@ fn build_causaloid<'l>(
 
     let _ = g.add_edge(root_index, month_index);
 
+    // Here we wrap the causal graph into a causaloid
     Causaloid::from_causal_graph_with_context(
         0,
-        &g,
+        g,
         Option::from(context),
             "Causaloid main graph"
     )
