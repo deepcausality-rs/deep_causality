@@ -3,8 +3,8 @@
 
 use deep_causality::prelude::{BaseCausaloid, CausalityError, Causaloid, IdentificationValue, NumericalValue};
 
-pub fn get_smoke_sensor_causaloid()
-    ->  BaseCausaloid<'static>
+pub fn get_smoke_sensor_causaloid<'l>()
+    ->  BaseCausaloid<'l>
 {
     let id: IdentificationValue = 1;
     let description = "Tests whether smoke signal exceeds threshold of 65.0";
@@ -24,8 +24,8 @@ pub fn get_smoke_sensor_causaloid()
     Causaloid::new(id, causal_fn, description)
 }
 
-pub fn get_fire_sensor_causaloid()
-    ->  BaseCausaloid<'static>
+pub fn get_fire_sensor_causaloid<'l>()
+    ->  BaseCausaloid<'l>
 {
     let id: IdentificationValue = 2;
     let description = "Tests if temperature exceeds 85 degree celsius (185 degree Fahrenheit) ";
@@ -45,8 +45,8 @@ pub fn get_fire_sensor_causaloid()
     Causaloid::new(id, causal_fn, description)
 }
 
-pub fn get_explosion_sensor_causaloid()
-    ->  BaseCausaloid<'static>
+pub fn get_explosion_sensor_causaloid<'l>()
+    ->  BaseCausaloid<'l>
 {
     let id: IdentificationValue = 3;
     let description = "Tests if air pressure exceeds 100 PSI. Regular Atmospheric pressure is 14.696 psi ";
