@@ -72,11 +72,13 @@ See:
 
 A causal state machine models a context-free system where each cause maps to a known effect. The example below
 models a sensor network that screens an industry site for smoke, fire, and explosions. Because the
-sensors are reliable, an alert will be raised whenever the sensor exceeds a certain threshold. You could implement this kind of system in many different ways, but as the example shows, the causal state machine makes
-the system relatively easy to maintain. New sensors, for example, from a drone inspection, can be added and evaluated
+sensors are reliable, an alert will be raised whenever the sensor exceeds a certain threshold. You could implement this kind of system in many different ways, but as the example shows, the causal state machine makes the system relatively easy to maintain. New sensors, for example, from a drone inspection, can be added and evaluated
 dynamically.
 
-[Full example code](deep_causality/examples/csm)
+* [CSM](deep_causality/src/types/csm_types/mod.rs)
+* [CsmAction](deep_causality/src/types/csm_types/csm_action.rs)
+* [Csm CausalState](deep_causality/src/types/csm_types/csm_state.rs)
+* [CSM example code](deep_causality/examples/csm)
 
 ### Causal Graph Reasoning 
 
@@ -114,6 +116,33 @@ See tests as code examples:
 * [Causal Graph Reasoning](deep_causality/tests/types/reasoning_types/causality_graph_reasoning_tests.rs)
 * [Causal Graph Explaining ](deep_causality/tests/types/reasoning_types/causality_graph_explaining_tests.rs)
 
+
+### Contextual Causal Model 
+
+DeepCausality enables context aware causality reasoning through combining contexts and causal structures in
+a causal model. A context consists of multiple contoids with each one storing relevant contextual information.
+For example, a temporal context comprises of contextoids storing time information. Note that the temporal structure
+of a context is usually a time hypergraph in which time information is stored as nodes in the context. Next, the context
+may also defines specific data that occur either at a certain time, a certain place, or at a certain place at a certain time (space-time). In each of these cases, the context defines a separate data object, called a dataoid that contains all the
+data and which is then linked to the corresponding tempoid in case of a time context. When data are generated in such a way that they vary in space and in time, for example from a sensor attaches to a drone, the measurements of the sensor are
+then stored in a custom dataoid whereas the meta-data of the dataid are stored in a custom space-tempoid that 
+represents the time and location of the data. The reason for this seperation is that, at any point in space/time,
+more than one measurement may occur. In the drone example, lets assume that the drone may have 5 different sensors
+that are all read in the same interval, the the space-time node links to all five sensors dataoids.
+
+A context can either be static or dynamic depending on the specific situation. When building and updating a dynamic
+context, it is possible that the underlying hypergraph may grow very large and therefore it is necessary to implement
+a pruning mechanism that removes old branches from the context graph at a regular interval.
+
+Causal models can be built as either without a context or with a context. In the later case, an immutable reference to the context is passed into the constructor of the causaloid. The idea is that tha causal model never modifies the context.
+When constructing a causaloid that reasons over observed data in relation to the context, the causal function with context is to be used instead of the regular causal function. Within that causal function, you can access the full context graph.
+However, if the context is generated dynamically, you you might want to use a dynamic secondary index to determine the
+actual index of any contextoid in the context. The dynamic secondary index could be an algorithm to calculate the index 
+based on certain parameters derivable from the data i.e. temporal arithmetic based on timestamps. To  make the secondary index accessible from within the causal function, you may extend the context with an extension trait and corresponding implementation.
+
+* [Contextoid](deep_causality/src/types/context_types/contextoid.rs)
+* [Context Graph](deep_causality/src/types/context_types/context.rs)
+* [Example of contextualized causal model](deep_causality/examples/ctx/src/run.rs)
 
 ## 🛠️ Cargo & Make
 
