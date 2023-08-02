@@ -6,7 +6,7 @@ use deep_causality::utils::test_utils;
 
 // BaseContext is a type alias for a basic context that can be used for testing
 // It matches the type signature of the base causaloid also uses in these tests.
-// See src/types/alias_types/mod.rs for definition.
+// See src/types/alias_types/csm_types for definition.
 fn get_context<'l>() -> BaseContext<'l>
 {
     let id = 1;

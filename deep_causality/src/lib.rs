@@ -11,7 +11,6 @@
 //! * DeepCausality simplifies modeling of complex tempo-spatial patterns.
 //! * DeepCausality comes with Causal State Machine (CSM)
 //!
-pub mod csm;
 pub mod extensions;
 pub mod protocols;
 pub mod prelude;

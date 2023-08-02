@@ -1,7 +1,6 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use deep_causality::csm::CSM;
-use deep_causality::prelude::{ActionError, CausalAction, CausalState};
+use deep_causality::prelude::{CSM, ActionError, CausalAction, CausalState};
 use deep_causality::utils::test_utils;
 
 fn state_action() -> Result<(), ActionError> {

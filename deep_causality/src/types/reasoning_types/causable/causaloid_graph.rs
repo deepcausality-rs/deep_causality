@@ -12,7 +12,7 @@ use petgraph::prelude::EdgeRef;
 use crate::prelude::*;
 
 // Custom index type. See documentation in
-// src/protocols/contextuable/mod.rs
+// src/protocols/contextuable/csm_types
 // for more details.
 type DefaultIx = u32;
 type NodeIndex<Ix = DefaultIx> = GraphNodeIndex<Ix>;

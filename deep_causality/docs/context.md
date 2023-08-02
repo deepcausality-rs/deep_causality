@@ -1,7 +1,7 @@
 # Context
 
-DeepCausality enables context awareness causality reason across data-like, time-like, space-like, and spacetime-like
-entities stored within (multiple) context-hyper-graphs. Fundamentally, this allows scalable contextualization up to four
+DeepCausality enables context aware causality reason across data-like, time-like, space-like, and spacetime-like
+entities stored within a context-hyper-graphs. Fundamentally, this allows scalable contextualization up to four
 dimensions.
 
 ## Data Context
@@ -11,6 +11,7 @@ commodity prices such as oil play a significant role in addition to several nati
 model separates internal from external factors to isolate systematic risk. DeepCausality solves this by adding two
 distinct data contexts, one for national data, i.e., population growth & manufacturing output, and a second context for
 data from external factors, i.e., standard crude oil price.
+
 In a more realistic context, temporal structures become a significant contributing factor. For example, when modeling
 volatile markets, the current price action usually operates within a particular micro and macro temporal structure,
 often represented as the daily and weekly pivot points and, in some cases, the annual low/high values. For most days,

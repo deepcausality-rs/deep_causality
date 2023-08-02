@@ -1,9 +1,5 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 //
-// CSM
-pub use crate::csm::csm_action::CausalAction;
-pub use crate::csm::csm_state::CausalState;
-pub use crate::csm::CSM;
 //
 // Error
 pub use crate::errors::*;
@@ -59,6 +55,10 @@ pub use crate::types::context_types::contextoid::*;
 pub use crate::types::context_types::contextoid_type::*;
 pub use crate::types::context_types::relation_kind::*;
 pub use crate::types::context_types::root::*;
+// CSM types
+pub use crate::types::csm_types::csm_action::CausalAction;
+pub use crate::types::csm_types::csm_state::CausalState;
+pub use crate::types::csm_types::CSM;
 // Model types
 pub use crate::types::model_types::model::Model;
 // Reasoning types

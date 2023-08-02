@@ -2,3 +2,4 @@
 mod reasoning_types;
 mod context_types;
 mod model_types;
+mod csm_types;
