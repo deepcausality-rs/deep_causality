@@ -11,7 +11,7 @@ pub fn get_year_causaloid<'l>(
     -> Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>
 {
     let id = 1;
-    let description = "Checks id the current price exceeds the all year high";
+    let description = "Checks if the current price exceeds the all year high";
 
     fn contextual_causal_fn(
         obs: NumericalValue,
@@ -39,5 +39,10 @@ pub fn get_year_causaloid<'l>(
         }
     }
 
-    Causaloid::new_with_context(id, contextual_causal_fn, Some(context), description)
+    Causaloid::new_with_context(
+        id,
+        contextual_causal_fn,
+        Some(context),
+        description
+    )
 }

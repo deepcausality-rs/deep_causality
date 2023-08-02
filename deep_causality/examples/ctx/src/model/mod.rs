@@ -6,6 +6,7 @@ use crate::types::dateoid::Dataoid;
 
 pub mod utils;
 pub mod causaloid_year;
+pub mod causaloid_month;
 
 pub fn get_causaloid<'l>(
     context: &'l Context<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>

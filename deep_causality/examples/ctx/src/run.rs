@@ -59,7 +59,7 @@ pub fn run()
     println!("Number Datapoints: {}", data.total_number_of_bars());
 
     println!();
-    println!("Building Causal Model");
+    println!("Building Causal Model...");
     let lap = Instant::now();
     let causaloid = get_causaloid(&context);
     let model = match build_model(&context, &causaloid){
@@ -68,7 +68,6 @@ pub fn run()
     };
     let elapsed = &lap.elapsed();
     print_duration("Build Causal Model", elapsed);
-
 
     println!("Causal Model:");
     println!("Model ID: {}", model.id());
