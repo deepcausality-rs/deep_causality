@@ -1,8 +1,10 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use std::time::{Duration, Instant};
-use deep_causality::prelude::{Contextuable, TimeScale};
+use deep_causality::prelude::{Contextuable, Identifiable, TimeScale};
+use crate::model::get_causaloid;
 use crate::workflow::{build_time_data_context, load_data};
+use crate::workflow::build_model::build_model;
 
 pub fn run()
 {
@@ -23,6 +25,7 @@ pub fn run()
     let node_capacity: usize = 800;
 
     // Here we load a bunch of pre-sampled market data from parquet files.
+    println!("Loading data...");
     let lap = Instant::now();
     let data = match load_data() {
         Ok(res) => res,
@@ -39,6 +42,7 @@ pub fn run()
     // on a regular basis, the context hypergraph will grow significantly over time. Therefore, you
     // may want to prune old branches every once in a while to stay within the pre-allocated node
     // capacity to prevent expensive graph resizing operations in production.
+    println!("Building Context HyperGraph...");
     let lap = Instant::now();
     let context = match build_time_data_context(&data, max_time_scale, node_capacity) {
         Ok(res) => res,
@@ -53,6 +57,23 @@ pub fn run()
     println!("Edge Count: {}", context.edge_count());
     println!("Vertex Count: {}", context.node_count());
     println!("Number Datapoints: {}", data.total_number_of_bars());
+
+    println!();
+    println!("Building Causal Model");
+    let lap = Instant::now();
+    let causaloid = get_causaloid(&context);
+    let model = match build_model(&context, &causaloid){
+        Ok(res) => res,
+        Err(e) => panic!("{}", e),
+    };
+    let elapsed = &lap.elapsed();
+    print_duration("Build Causal Model", elapsed);
+
+
+    println!("Causal Model:");
+    println!("Model ID: {}", model.id());
+    println!("Model Description: {}", model.description());
+    println!();
 }
 
 fn print_duration(msg: &str, elapsed: &Duration)
