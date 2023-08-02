@@ -35,8 +35,8 @@ pub struct Causaloid<'l, D, S, T, ST>
     context_causal_fn: Option<ContextualCausalFn<'l, D, S, T, ST>>,
     context: Option<&'l Context<'l, D, S, T, ST>, >,
     has_context: bool,
-    causal_coll: Option<&'l Vec<Causaloid<'l, D, S, T, ST>>>,
-    causal_graph: Option<&'l CausaloidGraph<Causaloid<'l, D, S, T, ST>>>,
+    causal_coll: Option<Vec<Causaloid<'l, D, S, T, ST>>>,
+    causal_graph: Option<CausaloidGraph<Causaloid<'l, D, S, T, ST>>>,
     last_obs: RefCell<NumericalValue>,
     description: &'l str,
 }
@@ -105,7 +105,7 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     /// about the correctness of the causal graph.
     pub fn from_causal_collection(
         id: IdentificationValue,
-        causal_coll: &'l Vec<Causaloid<'l, D, S, T, ST>>,
+        causal_coll: Vec<Causaloid<'l, D, S, T, ST>>,
         description: &'l str,
     )
         -> Self
@@ -131,7 +131,7 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     /// or embedded into a causal graph.
     pub fn from_causal_collection_with_context(
         id: IdentificationValue,
-        causal_coll: &'l Vec<Causaloid<'l, D, S, T, ST>>,
+        causal_coll: Vec<Causaloid<'l, D, S, T, ST>>,
         context: Option<&'l Context<'l, D, S, T, ST>, >,
         description: &'l str,
     )
@@ -161,7 +161,7 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     /// about the correctness of the causal graph.
     pub fn from_causal_graph(
         id: IdentificationValue,
-        causal_graph: &'l CausaloidGraph<Causaloid<'l, D, S, T, ST>>,
+        causal_graph: CausaloidGraph<Causaloid<'l, D, S, T, ST>>,
         description: &'l str,
     )
         -> Self
@@ -187,7 +187,7 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     /// or embedded into another causal graph.
     pub fn from_causal_graph_with_context(
         id: IdentificationValue,
-        causal_graph: &'l CausaloidGraph<Causaloid<'l, D, S, T, ST>>,
+        causal_graph: CausaloidGraph<Causaloid<'l, D, S, T, ST>>,
         context: Option<&'l Context<'l, D, S, T, ST>, >,
         description: &'l str,
     )
@@ -220,11 +220,11 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     pub fn active(&self) -> &RefCell<bool> {
         &self.active
     }
-    pub fn causal_collection(&self) -> Option<&'l Vec<Causaloid<'l, D, S, T, ST>>> {
-        self.causal_coll
+    pub fn causal_collection(&self) -> Option<Vec<Causaloid<'l, D, S, T, ST>>> {
+        self.causal_coll.clone()
     }
-    pub fn causal_graph(&self) -> Option<&'l CausaloidGraph<Causaloid<'l, D, S, T, ST>>> {
-        self.causal_graph
+    pub fn causal_graph(&self) -> Option<CausaloidGraph<Causaloid<'l, D, S, T, ST>>> {
+        self.causal_graph.clone()
     }
     pub fn last_obs(&self) -> &RefCell<NumericalValue> {
         &self.last_obs

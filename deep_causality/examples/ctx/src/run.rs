@@ -2,7 +2,7 @@
 
 use std::time::{Duration, Instant};
 use deep_causality::prelude::{Contextuable, Identifiable, TimeScale};
-use crate::model::get_causaloid;
+use crate::model::get_main_causaloid;
 use crate::workflow::{build_time_data_context, load_data};
 use crate::workflow::build_model::build_model;
 
@@ -61,7 +61,7 @@ pub fn run()
     println!();
     println!("Building Causal Model...");
     let lap = Instant::now();
-    let causaloid = get_causaloid(&context);
+    let causaloid = get_main_causaloid(&context);
     let model = match build_model(&context, &causaloid){
         Ok(res) => res,
         Err(e) => panic!("{}", e),

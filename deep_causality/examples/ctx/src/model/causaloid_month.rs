@@ -31,15 +31,20 @@ pub fn get_month_causaloid<'l>(
             return Err(CausalityError("Observation is NULL/NAN".into()));
         }
 
+        // We just pick a random month here to use as an example.
+        // In practice, you might want to use a dynamic secondary index
+        // to determine the actual index of the previous or current month tempoid relative
+        // to the now() timestamp. To do this, you may extend the context
+        // with an extension trait and corresponding implementation.
+        // See http://xion.io/post/code/rust-extension-traits.html
         let month = ctx.get_node(14)
             .expect("node with index 2 not found");
-
         let data = month.vertex_type().dataoid()
             .expect("Failed to get data out of year node");
 
         let check_month_breakout = || {
-            // This is obviously complete nonsense market wise, but it demonstrates that you can
-            // split complex causal functions into multiple sub-closures.
+            // This logic is obviously complete nonsense, but it demonstrates that you can
+            // split complex causal functions into multiple closures.
             return if data.data_range().close_above_open() && !data.data_range().close_below_open() {
                 true
             } else {
