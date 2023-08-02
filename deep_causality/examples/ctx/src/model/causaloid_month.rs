@@ -45,20 +45,12 @@ pub fn get_month_causaloid<'l>(
         let check_month_breakout = || {
             // This logic is obviously complete nonsense, but it demonstrates that you can
             // split complex causal functions into multiple closures.
-            return if data.data_range().close_above_open() && !data.data_range().close_below_open() {
-                true
-            } else {
-                false
-            };
+            data.data_range().close_above_open() && !data.data_range().close_below_open()
         };
 
         // Another closure that captures the context within the causal function.
         let check_price_above_high = || {
-            return if obs.gt(&data.data_range().high().to_f64().unwrap()) {
-                true
-            } else {
-                false
-            };
+            obs.gt(&data.data_range().high().to_f64().unwrap())
         };
 
         // With the closures in place, the main logic becomes straightforward and simple to understand.
