@@ -2,12 +2,12 @@
 
 
 use std::error::Error;
-use deep_causality::prelude::{Context, Model, Spaceoid, SpaceTempoid, Tempoid};
-use crate::model::causaloid_year::get_year_causaloid;
+use deep_causality::prelude::{Causaloid, Context, Model, Spaceoid, SpaceTempoid, Tempoid};
 use crate::types::dateoid::Dataoid;
 
 pub fn build_model<'l>(
-    context: &'l Context<Dataoid, Spaceoid, Tempoid, SpaceTempoid>
+    context: &'l Context<Dataoid, Spaceoid, Tempoid, SpaceTempoid>,
+    causaloid: &'l  Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>,
 )
     -> Result<Model<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>, Box<dyn Error>>
 {
@@ -16,7 +16,6 @@ pub fn build_model<'l>(
     let author = "Marvin Hansen <marvin.hansen@gmail.com>";
     let description = "This is a test model";
     let assumptions = None;
-    let causaloid = get_year_causaloid(context);
 
     Ok(
         Model::new(
@@ -24,7 +23,7 @@ pub fn build_model<'l>(
             author,
             description,
             assumptions,
-            &causaloid,
+            causaloid,
             Some(context)
         )
     )
