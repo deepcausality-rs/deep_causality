@@ -1,6 +1,6 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use deep_causality::prelude::{Context, Contextoid, Contextuable, Identifiable, Dataoid, ContextoidType, Root, Spaceoid, SpaceTempoid, Tempoid, TimeScale, RelationKind};
+use deep_causality::prelude::{Context, Contextoid, ContextuableGraph, Identifiable, Dataoid, ContextoidType, Root, Spaceoid, SpaceTempoid, Tempoid, TimeScale, RelationKind};
 
 fn get_context<'l>() -> Context<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>
 {
