@@ -11,12 +11,12 @@ echo "Select example to run: "
 echo "--------------------------------"
 echo ""
 
-select opt in  csm_types ctx smoking quit;
+select opt in  csm ctx smoking quit;
 do
   case $opt in
-    csm_types)
+    csm)
       echo "Selected example: CSM (Causal State Machine)"
-      command cargo run --release --bin example-csm_types
+      command cargo run --release --bin example-csm
       break
       ;;
     ctx)
