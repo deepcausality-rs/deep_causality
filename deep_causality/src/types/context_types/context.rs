@@ -6,7 +6,7 @@ use petgraph::Directed;
 use petgraph::graph::{NodeIndex as GraphNodeIndex};
 use petgraph::matrix_graph::MatrixGraph;
 use crate::errors::ContextIndexError;
-use crate::prelude::{Contextuable, Contextoid, Datable, SpaceTemporal, Spatial, Temporal, RelationKind, Identifiable};
+use crate::prelude::{ContextuableGraph, Contextoid, Datable, SpaceTemporal, Spatial, Temporal, RelationKind, Identifiable};
 
 type DefaultIx = u32;
 type NodeIndex<Ix = DefaultIx> = GraphNodeIndex<Ix>;
@@ -131,7 +131,7 @@ impl<'l, D, S, T, ST> Identifiable for Context<'l, D, S, T, ST>
     }
 }
 
-impl<'l, D, S, T, ST> Contextuable<'l, D, S, T, ST> for Context<'l, D, S, T, ST>
+impl<'l, D, S, T, ST> ContextuableGraph<'l, D, S, T, ST> for Context<'l, D, S, T, ST>
     where
         D: Datable + Clone,
         S: Spatial + Clone,

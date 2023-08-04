@@ -2,7 +2,7 @@
 
 use std::fmt::{Display, Formatter};
 use crate::prelude::ContextoidType;
-use crate::protocols::contextuable::{Datable, SpaceTemporal, Spatial, Temporal};
+use crate::protocols::contextuable::{Contextuable, Datable, SpaceTemporal, Spatial, Temporal};
 use crate::protocols::identifiable::Identifiable;
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
@@ -11,7 +11,8 @@ pub struct Contextoid<D, S, T, ST>
         D: Datable,
         S: Spatial,
         T: Temporal,
-        ST: SpaceTemporal, {
+        ST: SpaceTemporal,
+{
     id: u64,
     vertex_type: ContextoidType<D, S, T, ST>,
 }
@@ -23,10 +24,20 @@ impl<D, S, T, ST> Contextoid<D, S, T, ST>
         T: Temporal,
         ST: SpaceTemporal,
 {
-    pub fn new(id: u64, vertex_type: ContextoidType<D, S, T, ST>) -> Self {
+    pub fn new(id: u64, vertex_type: ContextoidType<D, S, T, ST>) -> Self
+    {
         Self { id, vertex_type }
     }
-    pub fn vertex_type(&self) -> &ContextoidType<D, S, T, ST> {
+}
+
+impl<D, S, T, ST> Contextuable<D, S, T, ST> for Contextoid<D, S, T, ST>
+    where
+        D: Datable,
+        S: Spatial,
+        T: Temporal,
+        ST: SpaceTemporal,
+{
+    fn vertex_type(&self) -> &ContextoidType<D, S, T, ST> {
         &self.vertex_type
     }
 }

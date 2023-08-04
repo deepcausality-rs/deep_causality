@@ -22,6 +22,7 @@ pub use crate::protocols::causable_graph::CausableGraph;
 pub use crate::protocols::causable_graph::CausableGraphReasoning;
 // contextuable protocols
 pub use crate::protocols::contextuable::Contextuable;
+pub use crate::protocols::contextuable::ContextuableGraph;
 pub use crate::protocols::contextuable::Datable;
 pub use crate::protocols::contextuable::Spatial;
 pub use crate::protocols::contextuable::SpaceTemporal;

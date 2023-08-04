@@ -1,7 +1,7 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use crate::errors::ContextIndexError;
-use crate::prelude::{Adjustable, Contextoid, Identifiable, RelationKind, TimeScale};
+use crate::prelude::{Adjustable, Contextoid, ContextoidType, Identifiable, RelationKind, TimeScale};
 
 pub trait Datable: Adjustable + Identifiable {}
 
@@ -30,8 +30,17 @@ pub trait SpaceTemporal: Identifiable + Spatial + Temporal + Adjustable
     fn t(&self) -> u64; // returns 4th dimension, t
 }
 
+pub trait Contextuable<D, S, T, ST>: Identifiable
+    where
+        D: Datable,
+        S: Spatial,
+        ST: SpaceTemporal,
+        T: Temporal
+{
+    fn vertex_type(&self) -> &ContextoidType<D, S, T, ST>;
+}
 
-pub trait Contextuable<'l, D, S, T, ST>
+pub trait ContextuableGraph<'l, D, S, T, ST>
     where
         D: Datable,
         S: Spatial,
