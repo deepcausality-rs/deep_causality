@@ -148,7 +148,7 @@ fn eval_single_state()
     let state_action = &[(&cs, &ca)];
     let csm = CSM::new(state_action);
 
-    let data = &0.89f64;
+    let data = 0.89f64;
     let res = csm.eval_single_state(id, data);
     assert!(res.is_ok())
 }
@@ -166,7 +166,7 @@ fn eval_single_state_err_not_found()
     let state_action = &[(&cs, &ca)];
     let csm = CSM::new(state_action);
 
-    let res = csm.eval_single_state(23, &data);
+    let res = csm.eval_single_state(23, data);
     assert!(res.is_err())
 }
 
@@ -186,7 +186,7 @@ fn update_single_state()
     let csm = CSM::new(state_action);
 
     let data = 0.89f64;
-    let res = csm.eval_single_state(id, &data);
+    let res = csm.eval_single_state(id, data);
     assert!(res.is_ok())
 }
 
@@ -203,7 +203,7 @@ fn update_single_state_err_not_found()
     let state_action = &[(&cs, &ca)];
     let csm = CSM::new(state_action);
 
-    let res = csm.eval_single_state(99, &data);
+    let res = csm.eval_single_state(99, data);
     assert!(res.is_err())
 }
 
