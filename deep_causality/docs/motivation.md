@@ -1,3 +1,7 @@
+---
+SPDX-License-Identifier: MIT
+---
+
 # Motivation
 
 The rapid progress in deep learning led to impressive results in several areas such as text to image (Midjourney,

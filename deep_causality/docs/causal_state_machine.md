@@ -1,3 +1,7 @@
+---
+SPDX-License-Identifier: MIT
+---
+
 # Causal State Machine
 
 The causal state machine encodes causal entities as types with the actual constraint represented as a causal function.

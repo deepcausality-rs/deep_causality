@@ -1,3 +1,7 @@
+---
+SPDX-License-Identifier: MIT
+---
+
 # DeepCausality
 
 [![Crates.io][crates-badge]][crates-url]

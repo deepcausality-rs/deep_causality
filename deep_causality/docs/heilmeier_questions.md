@@ -1,3 +1,7 @@
+---
+SPDX-License-Identifier: MIT
+---
+
 # Heilmeier Questions
 
 Original: [The Heilmeier Catechism](https://www.darpa.mil/work-with-us/heilmeier-catechism)

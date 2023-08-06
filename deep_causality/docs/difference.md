@@ -1,3 +1,7 @@
+---
+SPDX-License-Identifier: MIT
+---
+
 # How is deep causality different from deep learning?
 
 * Free of the [independent and identically distributed data (IID) assumption.](https://towardsdatascience.com/independent-and-identically-distributed-ce250ad1bfa8)

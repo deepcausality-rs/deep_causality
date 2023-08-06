@@ -1,3 +1,7 @@
+---
+SPDX-License-Identifier: MIT
+---
+
 # Checklist for hosting DeepCausality with LF AI & Data
 
 ## Basic preparations in the GH org and repo

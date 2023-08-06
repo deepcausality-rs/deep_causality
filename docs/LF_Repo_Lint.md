@@ -1,3 +1,7 @@
+---
+SPDX-License-Identifier: MIT
+---
+
 # Repolinter Report
 
 *This report was generated automatically by the Repolinter.*

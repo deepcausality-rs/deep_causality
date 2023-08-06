@@ -1,3 +1,7 @@
+---
+SPDX-License-Identifier: MIT
+---
+
 # 🏁 Data structures for DeepCausality 🏁
 
 Web: https://deepcausality.com/about/

@@ -1,3 +1,7 @@
+---
+SPDX-License-Identifier: MIT
+---
+
 # sliding_window
 
 This sliding window implementation over-allocates to trade space (memory) for time complexity by delaying expensive array copy operations.

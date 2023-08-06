@@ -1,3 +1,7 @@
+---
+SPDX-License-Identifier: MIT
+---
+
 <!-- omit in toc -->
 # Contributing to DeepCausality
 

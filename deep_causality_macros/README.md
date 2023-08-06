@@ -1,3 +1,7 @@
+---
+SPDX-License-Identifier: MIT
+---
+
 # Macros
 
 Procedural macros dependency for [deep_causality](https://github.com/deepcausality-rs/deep_causality) because

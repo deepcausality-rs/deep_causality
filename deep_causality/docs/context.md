@@ -1,3 +1,7 @@
+---
+SPDX-License-Identifier: MIT
+---
+
 # Context
 
 DeepCausality enables context aware causality reason across data-like, time-like, space-like, and spacetime-like

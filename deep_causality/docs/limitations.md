@@ -1,3 +1,7 @@
+---
+SPDX-License-Identifier: MIT
+---
+
 # Limitations
 
 DeepCausality still has some more groundwork to do because of its early stage. In its current state (0.2.X),

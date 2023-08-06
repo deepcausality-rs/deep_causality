@@ -1,3 +1,6 @@
+---
+SPDX-License-Identifier: MIT
+---
 
 # ArrayGrid - A Faster Tensor For Low Dim. Data
 

@@ -1,3 +1,7 @@
+---
+SPDX-License-Identifier: MIT
+---
+
 # What is the DCO?
 
 When contributing, the developer must include a sign-off statement in the commit message.

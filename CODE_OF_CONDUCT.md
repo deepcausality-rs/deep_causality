@@ -1,3 +1,7 @@
+---
+SPDX-License-Identifier: MIT
+---
+
 # Code of Conduct - DeepCausality
 
 Effective: July 14, 2023
