@@ -41,7 +41,7 @@ pub fn run()
     for i in 0..12
     {
         wait();
-        csm.eval_single_state(SMOKE_SENSOR, smoke_data[i]).expect("Failed to");
+        csm.eval_single_state(SMOKE_SENSOR, smoke_data[i]).expect("Panic: Smoke sensor failed");
         csm.eval_single_state(FIRE_SENSOR, fire_data[i]).expect("Panic: Fire sensor failed");
         csm.eval_single_state(EXPLOSION_SENSOR, exp_data[i]).expect("Panic: Explosion sensor failed");
     }
