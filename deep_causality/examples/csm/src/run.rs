@@ -1,6 +1,5 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-
 use std::thread;
 use std::time::Duration;
 use deep_causality::prelude::{CausalState, CSM};
@@ -12,7 +11,7 @@ const SMOKE_SENSOR: usize = 1;
 const FIRE_SENSOR: usize = 2;
 const EXPLOSION_SENSOR: usize = 3;
 
-pub fn run<'l>()
+pub fn run()
 {
     let data = 0.0f64;
     let smoke_causloid = get_smoke_sensor_causaloid();
@@ -27,22 +26,18 @@ pub fn run<'l>()
     let explosion_cs = CausalState::new(EXPLOSION_SENSOR, 1, data, &explosion_causaloid);
     let explosion_ca = get_explosion_alert_action();
 
-    let state_actions = &[
-        (&smoke_cs, &smoke_ca),
-        (&fire_cs, &fire_ca),
-    ];
-
     println!("Create Causal State Machine");
+    let state_actions = &[(&smoke_cs, &smoke_ca), (&fire_cs, &fire_ca)];
     let csm = CSM::new(state_actions);
-
-    let smoke_data = get_smoke_sensor_data();
-    let fire_data = get_fire_sensor_data();
-    let exp_data = get_explosion_sensor_data();
 
     println!("Add a new sensor");
     csm.add_single_state(EXPLOSION_SENSOR, (&explosion_cs, &explosion_ca)).expect("Failed to add Explosion sensor");
 
     println!("Start data feed and monitor senors");
+    let smoke_data = get_smoke_sensor_data();
+    let fire_data = get_fire_sensor_data();
+    let exp_data = get_explosion_sensor_data();
+
     for i in 0..12
     {
         wait();
