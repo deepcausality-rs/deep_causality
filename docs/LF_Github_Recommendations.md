@@ -48,7 +48,8 @@ These practices will help you improve your GitHub presence in an effort to help 
 14. Identify who on the project will be handling security issues (could be a team) and set up a separate email account.  Consider having the project become a CNA (CVE Numbering Authority).
     * [SECURITY](https://github.com/deepcausality-rs/deep_causality/blob/main/SECURITY.md)
     
-15. Include an SPDX short-form identifier in a comment at the top of each file in the repo, wherever reasonably possible.
+15. ✅Include an SPDX short-form identifier in a comment at the top of each file in the repo, wherever reasonably possible.
+    * SPDX-License-Identifier: MIT
 
 16. ✅ Depending on whether your project uses the DCO and/or CLAs:
     * DCO: [WHAT_IS_DCO](https://github.com/deepcausality-rs/deep_causality/blob/main/WHAT_IS_DCO.md)
