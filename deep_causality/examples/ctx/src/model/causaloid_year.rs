@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use deep_causality::prelude::{CausalityError, Causaloid, Context, Contextuable, ContextuableGraph, NumericalValue, Spaceoid, SpaceTempoid, Tempoid};

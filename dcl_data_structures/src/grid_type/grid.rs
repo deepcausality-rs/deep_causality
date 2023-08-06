@@ -1,6 +1,5 @@
-/*
- * Copyright (c) 2023. Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
- */
+// SPDX-License-Identifier: MIT
+// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use std::cell::RefCell;
 use std::fmt::Debug;

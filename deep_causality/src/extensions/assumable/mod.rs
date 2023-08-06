@@ -1,5 +1,5 @@
+// SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
-// Extension trait http://xion.io/post/code/rust-extension-traits.html
 
 use deep_causality_macros::{make_get_all_items, make_get_all_map_items, make_is_empty, make_len};
 use std::collections::HashMap;

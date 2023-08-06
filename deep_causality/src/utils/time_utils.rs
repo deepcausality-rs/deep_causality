@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 pub fn time_execution<T, F: FnOnce() -> T>(f: F, f_name: &str) -> T {
