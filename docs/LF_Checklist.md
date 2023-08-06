@@ -1,6 +1,6 @@
----
-SPDX-License-Identifier: MIT
----
+[//]: # (---)
+[//]: # (SPDX-License-Identifier: MIT)
+[//]: # (---)
 
 # Checklist for hosting DeepCausality with LF AI & Data
 

@@ -1,6 +1,6 @@
----
-SPDX-License-Identifier: MIT
----
+[//]: # (---)
+[//]: # (SPDX-License-Identifier: MIT)
+[//]: # (---)
 
 # Project contributors
 All the maintainers and contributors are listed here

@@ -1,6 +1,6 @@
----
-SPDX-License-Identifier: MIT
----
+[//]: # (---)
+[//]: # (SPDX-License-Identifier: MIT)
+[//]: # (---)
 
 # Recommended Practices for LF AI & Data Projects Hosting Code on GitHub
 

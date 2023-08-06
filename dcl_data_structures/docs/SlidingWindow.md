@@ -1,6 +1,6 @@
----
-SPDX-License-Identifier: MIT
----
+[//]: # (---)
+[//]: # (SPDX-License-Identifier: MIT)
+[//]: # (---)
 
 # sliding_window
 
