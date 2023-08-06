@@ -2,6 +2,8 @@
 
 Effective: July 14, 2023
 
+Contact: Marvin Hansen <marvin.hansen@gmail.com>
+
 ## Introduction
 
 The purposes of DeepCausality Projects are to:
