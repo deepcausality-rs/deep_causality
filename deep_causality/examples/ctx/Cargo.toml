@@ -6,7 +6,7 @@ publish = false
 
 
 [dependencies]
-deep_causality = "0.3.0"
+deep_causality = "0.3.1"
 
 # chrono default-features = false mitigates "RUSTSEC-2020-0071".
 # See https://rustsec.org/advisories/RUSTSEC-2020-0071.html

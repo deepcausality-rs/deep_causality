@@ -2,7 +2,7 @@
 
 use std::error::Error;
 use chrono::Datelike;
-use deep_causality::prelude::{Context, Contextoid, ContextoidType, Contextuable, RelationKind, Root, Spaceoid, SpaceTempoid, Tempoid, TimeScale};
+use deep_causality::prelude::{Context, Contextoid, ContextoidType, ContextuableGraph, RelationKind, Root, Spaceoid, SpaceTempoid, Tempoid, TimeScale};
 use crate::types::counter;
 use crate::types::dateoid::Dataoid;
 use crate::types::sampled_date_time_bar::SampledDataBars;
