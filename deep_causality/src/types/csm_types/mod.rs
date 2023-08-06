@@ -117,7 +117,7 @@ impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
     pub fn eval_single_state(
         &self,
         id: usize,
-        data: &'l NumericalValue,
+        data: NumericalValue,
     )
         -> Result<(), ActionError>
     {
@@ -134,7 +134,7 @@ impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
         let (state, action) = state_action.unwrap();
 
         // Apply data and evaluate causal state
-        let eval = state.eval_with_data(data);
+        let eval = state.eval_with_data(&data);
 
         // Check if the causal state evaluation returned an error
         if eval.is_err() {

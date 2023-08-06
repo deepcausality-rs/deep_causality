@@ -3,7 +3,7 @@
 
 use std::thread;
 use std::time::Duration;
-use deep_causality::prelude::{CausalState, CSM, NumericalValue};
+use deep_causality::prelude::{CausalState, CSM};
 use crate::utils_actions::*;
 use crate::utils_data::{get_explosion_sensor_data, get_fire_sensor_data, get_smoke_sensor_data};
 use crate::utils_states::*;
@@ -14,7 +14,7 @@ const EXPLOSION_SENSOR: usize = 3;
 
 pub fn run<'l>()
 {
-    let data = &[0.0f64];
+    let data = 0.0f64;
     let smoke_causloid = get_smoke_sensor_causaloid();
     let smoke_cs = CausalState::new(SMOKE_SENSOR, 1, data, &smoke_causloid);
     let smoke_ca = get_smoke_alert_action();
@@ -50,9 +50,8 @@ pub fn run<'l>()
     {
         wait();
 
-        let data = get_smoke_sensor_data()[i];
-
-        csm.eval_single_state(SMOKE_SENSOR, &[data])
+        let data = smoke_data[i];
+        csm.eval_single_state(SMOKE_SENSOR, data)
             .expect("Failed to");
 
         // csm.eval_single_state(FIRE_SENSOR, &[fire_data[i]]).expect("Panic: Fire sensor failed");
