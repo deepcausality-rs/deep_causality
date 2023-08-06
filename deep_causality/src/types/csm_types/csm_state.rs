@@ -13,7 +13,7 @@ pub struct CausalState<'l, D, S, T, ST>
 {
     id: usize,
     version: usize,
-    data: &'l [NumericalValue],
+    data: NumericalValue,
     causaloid: &'l Causaloid<'l, D, S, T, ST>,
 }
 
@@ -28,11 +28,13 @@ impl<'l, D, S, T, ST>  CausalState<'l, D, S, T, ST>
     (
         id: usize,
         version: usize,
-        data: &'l [NumericalValue],
+        data: NumericalValue,
         causaloid: &'l Causaloid<'l, D, S, T, ST>,
     )
         -> Self
     {
+        assert!(causaloid.is_singleton());
+
         Self { id, version, data, causaloid }
     }
 }
@@ -46,25 +48,16 @@ impl<'l, D, S, T, ST>  CausalState<'l, D, S, T, ST>
 {
     pub fn eval(&self) -> Result<bool, CausalityError>
     {
-        if self.causaloid.is_singleton() {
-            let obs = &self.data[0];
-            self.causaloid.verify_single_cause(obs)
-        } else {
-            self.causaloid.verify_all_causes(self.data, None)
-        }
+        self.causaloid.verify_single_cause(&self.data)
     }
     pub fn eval_with_data(
         &self,
-        data: &'l [NumericalValue],
+        data: &NumericalValue,
     )
         -> Result<bool, CausalityError>
     {
-        if self.causaloid.is_singleton() {
-            let obs = &data[0];
-            self.causaloid.verify_single_cause(obs)
-        } else {
-            self.causaloid.verify_all_causes(data, None)
-        }
+        self.causaloid.verify_single_cause(data)
+
     }
 }
 
@@ -83,7 +76,7 @@ impl<'l, D, S, T, ST>  CausalState<'l, D, S, T, ST>
     {
         self.version
     }
-    pub fn data(&self) -> &'l [NumericalValue]
+    pub fn data(&self) -> NumericalValue
     {
         self.data
     }

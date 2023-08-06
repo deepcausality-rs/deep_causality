@@ -117,7 +117,7 @@ impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
     pub fn eval_single_state(
         &self,
         id: usize,
-        data: &'l [NumericalValue],
+        data: &'l NumericalValue,
     )
         -> Result<(), ActionError>
     {

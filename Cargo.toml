@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
-    "deep_causality/examples/csm",
+#    "deep_causality/examples/csm",
     "deep_causality/examples/ctx",
     "deep_causality/examples/smoking",
     "dcl_data_structures",
