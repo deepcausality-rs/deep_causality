@@ -18,6 +18,9 @@ help:
 # Development
 # "---------------------------------------------------------"
 
+.PHONY: run
+run:
+	@source scripts/run.sh
 
 .PHONY: build
 build:
