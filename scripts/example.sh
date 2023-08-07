@@ -4,7 +4,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-# Bash Select (Make Menus) https://linuxize.com/post/bash-select/
+# Bash Select (Make Menu) https://linuxize.com/post/bash-select/
 
 echo ""
 echo "--------------------------------"
@@ -12,7 +12,7 @@ echo "Select example to run: "
 echo "--------------------------------"
 echo ""
 
-select opt in  csm ctx smoking quit;
+select opt in  csm ctx dtx smoking quit;
 do
   case $opt in
     csm)
@@ -23,6 +23,11 @@ do
     ctx)
       echo "Selected example: CTX (Context)"
       command cargo run --release --bin example-ctx
+      break
+      ;;
+    dtx)
+      echo "Selected example: DTX (Dynamic Context)"
+      command cargo run --release --bin example-dtx
       break
       ;;
     smoking)
