@@ -1,3 +1,7 @@
+mod run;
+
+use deep_causality::prelude::time_execution;
+
 fn main() {
-    println!("Hello, world!");
+    time_execution(run::run, "main_run");
 }
