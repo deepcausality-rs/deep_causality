@@ -38,8 +38,7 @@ Web: https://deepcausality.com
 
 DeepCausality is a hyper-geometric computational causality library that enables fast and deterministic context-aware
 causal reasoning over complex multi-stage causality models. Deep Causality adds only minimal overhead and thus is
-suitable for real-time applications without additional acceleration hardware. [So, how is deep causality different from deep learning?![image](https://github.com/deepcausality-rs/deep_causality/assets/24190940/c586efe5-3a69-4402-99dc-9e2cad5a4cc0)
-](deep_causality/docs/difference.md)
+suitable for real-time applications without additional acceleration hardware.[So, how is deep causality different from deep learning?](deep_causality/docs/difference.md)
 
 ## 🤔 Why DeepCausality?
 
