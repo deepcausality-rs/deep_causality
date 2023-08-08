@@ -129,9 +129,18 @@ DeepCausality enables context aware causality reasoning through combining contex
 A context can either be static or dynamic depending on the specific situation. When building and updating a dynamic context, 
 it is possible that the underlying hypergraph may grow very large and therefore it is necessary to implement a pruning mechanism that removes old branches from the context graph at regular intervals.
 
-Causal models can be built either without a context or with a context. In the latter case, an immutable reference to the context is passed into the constructor of the causaloid. The idea is that the causal model never modifies the context. When constructing a causaloid which reasons over observed data in relation to the context, the causal function with context is used instead of the regular causal function. Within that causal function, you can access the full context graph. However, if the context is generated dynamically, you might want to use a dynamic secondary index to determine the actual index of any contextoid in the context. The dynamic secondary index could be an algorithm to calculate the index based on certain parameters derivable from the data, i.e. temporal arithmetic based on timestamps. To make the secondary index accessible from within the causal function, you may extend the context with an extension trait and corresponding implementation.
-![image](https://github.com/deepcausality-rs/deep_causality/assets/24190940/844bbd4a-6f7f-4ee6-b905-f21b3aaa9fb7)
-
+Causal models can be built either without a context or with a context. 
+In the latter case, an immutable reference to the context is passed into the constructor 
+of the causaloid. The idea is that the causal model never modifies the context. 
+When constructing a causaloid which reasons over observed data in relation to the context, 
+the causal function with context is used instead of the regular causal function. 
+Within that causal function, you can access the full context graph. 
+However, if the context is generated dynamically, you might want to use a dynamic secondary index 
+to determine the actual index of any contextoid in the context. The dynamic secondary index 
+could be an algorithm to calculate the index based on certain parameters derivable from 
+the data, i.e. temporal arithmetic based on timestamps. To make the secondary index accessible 
+from within the causal function, you may extend the context with an extension trait 
+and corresponding implementation.
 
 * [Contextoid](deep_causality/src/types/context_types/contextoid.rs)
 * [Context Graph](deep_causality/src/types/context_types/context.rs)
