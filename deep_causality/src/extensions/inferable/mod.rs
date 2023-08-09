@@ -6,7 +6,6 @@ use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::hash::Hash;
 use crate::prelude::{Inferable, InferableReasoning};
 
-
 impl<T> InferableReasoning<T> for [T]
     where
         T: Inferable,
