@@ -35,10 +35,7 @@ pub trait ObservableReasoning<T>
     )
         -> NumericalValue
     {
-        self.get_all_items()
-            .iter()
-            .filter(|o| o.effect_observed(target_threshold, target_effect))
-            .count() as NumericalValue
+        self.get_all_items().iter().filter(|o| o.effect_observed(target_threshold, target_effect)).count() as NumericalValue
     }
 
     fn number_non_observation(
@@ -48,9 +45,7 @@ pub trait ObservableReasoning<T>
     )
         -> NumericalValue
     {
-        let num_obs = self.number_observation(target_threshold, target_effect);
-        let total = self.len() as NumericalValue;
-        total - num_obs
+        self.len() as NumericalValue - self.number_observation(target_threshold, target_effect)
     }
 
     fn percent_observation(
@@ -60,9 +55,7 @@ pub trait ObservableReasoning<T>
     )
         -> NumericalValue
     {
-        let total = self.len() as NumericalValue;
-        let number = self.number_observation(target_threshold, target_effect);
-        number / total // * (100 as NumericalValue)
+        self.number_observation(target_threshold, target_effect) / self.len() as NumericalValue // * (100 as NumericalValue)
     }
 
     fn percent_non_observation(
@@ -72,7 +65,6 @@ pub trait ObservableReasoning<T>
     )
         -> NumericalValue
     {
-        let perc_obs = self.percent_observation(target_threshold, target_effect);
-        1.0 - perc_obs
+        1.0 - self.percent_observation(target_threshold, target_effect)
     }
 }

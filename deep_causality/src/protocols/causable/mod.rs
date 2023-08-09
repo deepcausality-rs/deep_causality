@@ -52,27 +52,19 @@ pub trait CausableReasoning<T>
     fn get_all_active_causes(&self)
         -> Vec<&T>
     {
-        self.get_all_items()
-            .into_iter()
-            .filter(|cause| cause.is_active())
-            .collect()
+        self.get_all_items().into_iter().filter(|cause| cause.is_active()).collect()
     }
 
     fn get_all_inactive_causes(&self)
         -> Vec<&T>
     {
-        self.get_all_items()
-            .into_iter()
-            .filter(|cause| !cause.is_active())
-            .collect()
+        self.get_all_items().into_iter().filter(|cause| !cause.is_active()).collect()
     }
 
     fn number_active(&self)
         -> NumericalValue
     {
-        self.get_all_items()
-            .iter()
-            .filter(|c| c.is_active()).count() as NumericalValue
+        self.get_all_items().iter().filter(|c| c.is_active()).count() as NumericalValue
     }
 
     fn percent_active(&self)

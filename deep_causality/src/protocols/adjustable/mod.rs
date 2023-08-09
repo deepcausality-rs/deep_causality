@@ -4,7 +4,6 @@
 use crate::errors::{AdjustmentError, PropagateError, UpdateError};
 use dcl_data_structures::prelude::ArrayGrid;
 
-
 pub trait Adjustable
 {
     /// The default implementation does nothing by default to keep update optional.
@@ -32,7 +31,7 @@ pub trait Adjustable
     )
         -> Result<(), AdjustmentError>
     {
-        // Depending on the type of node your adjustment,
+        // Depending on the type of node adjustment,
         // select a 2,3, or 4 dimensional array grid that
         // contains the transformation data to apply to the node.
         let _ = array_grid.array_grid_2d();

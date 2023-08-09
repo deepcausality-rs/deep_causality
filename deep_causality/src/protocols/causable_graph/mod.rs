@@ -19,13 +19,11 @@ pub trait CausableGraph<T>
     fn add_causaloid(&mut self, value: T) -> usize;
     fn contains_causaloid(&self, index: usize) -> bool;
     fn get_causaloid(&self, index: usize) -> Option<&T>;
-    fn remove_causaloid(&mut self, index: usize) -> Result<(), CausalGraphIndexError>
-    ;
+    fn remove_causaloid(&mut self, index: usize) -> Result<(), CausalGraphIndexError>;
 
     // Edges
     fn add_edge(&mut self, a: usize, b: usize) -> Result<(), CausalGraphIndexError>;
     fn add_edg_with_weight(&mut self, a: usize, b: usize, weight: u64) -> Result<(), CausalGraphIndexError>;
-
     fn contains_edge(&self, a: usize, b: usize) -> bool;
     fn remove_edge(&mut self, a: usize, b: usize) -> Result<(), CausalGraphIndexError>;
 
