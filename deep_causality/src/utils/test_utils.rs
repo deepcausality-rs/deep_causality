@@ -2,7 +2,6 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use std::array;
-use std::collections::HashMap;
 use crate::errors::CausalityError;
 use crate::prelude::*;
 use crate::types::alias_types::{DescriptionValue, EvalFn, IdentificationValue, NumericalValue};
@@ -55,17 +54,6 @@ pub fn get_test_causality_vec<'l>()
     let q3 = get_test_causaloid();
     Vec::from_iter([q1, q2, q3])
 }
-
-pub fn get_test_causality_map<'l>()
-// i8 as key b/c I assume all testing will be done with less than 265 items.
-    -> HashMap<i8, Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>
-{
-    let q1 = get_test_causaloid();
-    let q2 = get_test_causaloid();
-    let q3 = get_test_causaloid();
-    HashMap::from_iter([(1, q1), (2, q2), (3, q3)])
-}
-
 
 pub fn get_test_causaloid<'l>()
     -> Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>
