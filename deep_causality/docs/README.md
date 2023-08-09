@@ -10,5 +10,6 @@
 * [Causal State Machine (CSM)](causal_state_machine.md)
 * [Concepts](concepts.md)
 * [Contexts](context.md)
+* [Customizing context](customizing_context.md)
 * [Heilmeier Questions](heilmeier_questions.md)
 * [Limitations](limitations.md)

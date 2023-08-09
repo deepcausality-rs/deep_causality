@@ -9,8 +9,8 @@ Specifically, here we implement the following traits for standard collections in
 * ObservableReasoning
 
 Each trait has a significant default implementation that the Rust compiler
-inserts into the type extension whenever the trait with the default implementation is imported. Traits and default implementations are defined in the protocols folder.
-See the tests for usage.
+inserts into the type extension whenever the trait with the default implementation is imported. 
+Traits and default implementations are defined in the protocols folder.
 
 Because Rust does not have unified collections, it is therefore necessary
 to write one type extension for each collection type.
@@ -21,6 +21,9 @@ Type extensions are implemented for the following Rust standard collections:
 * BTreeMap: https://doc.rust-lang.org/std/collections/struct.BTreeMap.html
 * Vector: https://doc.rust-lang.org/std/vec/struct.Vec.html
 * VecDeque: https://doc.rust-lang.org/std/collections/struct.VecDeque.html
+
+Set, HashSet, and LinkedList are not implemented because these would require significant more trait constraints such
+as Eq, Hash etc. and its unclear where these collections would be used especially when Vector is already quite useful.
 
 Because Rust default implementation can only rely on methods defined in the trait,
 a certain number of methods needs to be implemented in the extension. Most of them
