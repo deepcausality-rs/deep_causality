@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use std::collections::{ VecDeque};
-use deep_causality::prelude::{Assumption,  AssumableReasoning};
+use std::collections::{VecDeque};
+use deep_causality::prelude::{Assumption, AssumableReasoning};
 use deep_causality::utils::test_utils::{get_test_assumption, get_test_assumption_vec, get_test_num_array};
 
 fn get_test_assumption_vec_deque()
@@ -25,7 +25,7 @@ fn test_add()
 #[test]
 fn test_all_assumptions_tested()
 {
-    let col= get_test_assumption_vec_deque();
+    let col = get_test_assumption_vec_deque();
     assert_eq!(col.len(), 3);
 
     let all_tested = col.all_assumptions_tested();
@@ -41,7 +41,7 @@ fn test_all_assumptions_tested()
 #[test]
 fn test_all_assumptions_valid()
 {
-    let col= get_test_assumption_vec_deque();
+    let col = get_test_assumption_vec_deque();
     assert_eq!(col.len(), 3);
 
     let all_tested = col.all_assumptions_tested();
@@ -62,7 +62,7 @@ fn test_all_assumptions_valid()
 #[test]
 fn test_percent_assumption_valid()
 {
-    let col= get_test_assumption_vec_deque();
+    let col = get_test_assumption_vec_deque();
     assert_eq!(col.len(), 3);
 
     let all_tested = col.all_assumptions_tested();
@@ -89,7 +89,7 @@ fn test_percent_assumption_valid()
 #[test]
 fn test_get_all_invalid_assumptions()
 {
-    let col= get_test_assumption_vec_deque();
+    let col = get_test_assumption_vec_deque();
     assert_eq!(col.len(), 3);
 
     let all_tested = col.all_assumptions_tested();
@@ -113,7 +113,7 @@ fn test_get_all_invalid_assumptions()
 #[test]
 fn test_get_all_valid_assumptions()
 {
-    let col= get_test_assumption_vec_deque();
+    let col = get_test_assumption_vec_deque();
     assert_eq!(col.len(), 3);
 
     let all_tested = col.all_assumptions_tested();
@@ -138,7 +138,7 @@ fn test_get_all_valid_assumptions()
 #[test]
 fn test_get_all_tested_assumptions()
 {
-    let col= get_test_assumption_vec_deque();
+    let col = get_test_assumption_vec_deque();
     assert_eq!(col.len(), 3);
 
     let all_tested = col.all_assumptions_tested();
@@ -163,7 +163,7 @@ fn test_get_all_tested_assumptions()
 #[test]
 fn test_get_all_untested_assumptions()
 {
-    let col= get_test_assumption_vec_deque();
+    let col = get_test_assumption_vec_deque();
     assert_eq!(col.len(), 3);
 
     let all_tested = col.all_assumptions_tested();
@@ -191,7 +191,7 @@ fn test_get_all_untested_assumptions()
 #[test]
 fn test_verify_all_assumptions()
 {
-    let col= get_test_assumption_vec_deque();
+    let col = get_test_assumption_vec_deque();
     assert_eq!(col.len(), 3);
 
     let all_tested = col.all_assumptions_tested();
