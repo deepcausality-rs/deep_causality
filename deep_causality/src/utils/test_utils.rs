@@ -27,28 +27,6 @@ pub fn get_test_obs_vec()
     Vec::from_iter([o1, o2, o3, o4, o5])
 }
 
-pub fn get_test_obs_map()
-    -> HashMap<usize, Observation>
-{
-    let o1 = Observation::new(0, 10.0, 1.0);
-    let o2 = Observation::new(1, 10.0, 1.0);
-    let o3 = Observation::new(2, 10.0, 1.0);
-    let o4 = Observation::new(3, 12.0, 0.0);
-    let o5 = Observation::new(4, 14.0, 0.0);
-    HashMap::from_iter([(1, o1), (2, o2), (3, o3), (4, o4), (5, o5)])
-}
-
-pub fn get_test_obs_arr()
-    -> [Observation; 5]
-{
-    let o1 = Observation::new(0, 10.0, 1.0);
-    let o2 = Observation::new(1, 10.0, 1.0);
-    let o3 = Observation::new(2, 10.0, 1.0);
-    let o4 = Observation::new(3, 12.0, 0.0);
-    let o5 = Observation::new(4, 14.0, 0.0);
-
-    [o1, o2, o3, o4, o5]
-}
 
 pub fn get_test_inf_arr()
     -> [Inference; 2]

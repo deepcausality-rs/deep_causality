@@ -1,15 +1,26 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-
-
+use std::collections::HashMap;
+use deep_causality::prelude::Observation;
 use deep_causality::protocols::observable::ObservableReasoning;
 use deep_causality::types::alias_types::NumericalValue;
 use deep_causality::utils::test_utils;
 
+fn get_test_obs_map()
+    -> HashMap<usize, Observation>
+{
+    let o1 = Observation::new(0, 10.0, 1.0);
+    let o2 = Observation::new(1, 10.0, 1.0);
+    let o3 = Observation::new(2, 10.0, 1.0);
+    let o4 = Observation::new(3, 12.0, 0.0);
+    let o5 = Observation::new(4, 14.0, 0.0);
+    HashMap::from_iter([(1, o1), (2, o2), (3, o3), (4, o4), (5, o5)])
+}
+
 #[test]
 fn test_add() {
-    let mut col = test_utils::get_test_obs_map();
+    let mut col = get_test_obs_map();
     assert_eq!(5, col.len());
 
     let o6 = test_utils::get_test_observation();
@@ -19,7 +30,7 @@ fn test_add() {
 
 #[test]
 fn test_number_observation() {
-    let observations = test_utils::get_test_obs_map();
+    let observations = get_test_obs_map();
     let target_threshold = 10.0 as NumericalValue;
     let target_effect = 1.0 as NumericalValue;
     let total_observation = observations.number_observation(target_threshold, target_effect);
@@ -28,7 +39,7 @@ fn test_number_observation() {
 
 #[test]
 fn test_percent_observation() {
-    let observations = test_utils::get_test_obs_map();
+    let observations = get_test_obs_map();
     let target_threshold = 10.0;
     let target_effect = 1.0;
     let percent_observation = observations.percent_observation(target_threshold, target_effect);
@@ -37,7 +48,7 @@ fn test_percent_observation() {
 
 #[test]
 fn test_number_non_observation() {
-    let observations = test_utils::get_test_obs_map();
+    let observations = get_test_obs_map();
     let target_threshold = 10.0 as NumericalValue;
     let target_effect = 1.0 as NumericalValue;
     let total_non_observation = observations.number_non_observation(target_threshold, target_effect);
@@ -46,7 +57,7 @@ fn test_number_non_observation() {
 
 #[test]
 fn test_percent_non_observation() {
-    let observations = test_utils::get_test_obs_map();
+    let observations = get_test_obs_map();
     let target_threshold = 10.0;
     let target_effect = 1.0;
     let percent_non_observation = observations.percent_non_observation(target_threshold, target_effect);
@@ -55,7 +66,7 @@ fn test_percent_non_observation() {
 
 #[test]
 fn test_get_all_items() {
-    let observations = test_utils::get_test_obs_map();
+    let observations = get_test_obs_map();
     let all_items = observations.get_all_items();
 
     let exp_len = observations.len();
@@ -65,12 +76,12 @@ fn test_get_all_items() {
 
 #[test]
 fn test_len() {
-    let col = test_utils::get_test_obs_map();
+    let col = get_test_obs_map();
     assert_eq!(5, col.len());
 }
 
 #[test]
 fn test_is_empty() {
-    let col = test_utils::get_test_obs_map();
+    let col = get_test_obs_map();
     assert!(!col.is_empty());
 }
