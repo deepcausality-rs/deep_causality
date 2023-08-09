@@ -3,7 +3,7 @@
 
 use deep_causality::prelude::Assumption;
 use deep_causality::protocols::assumable::AssumableReasoning;
-use deep_causality::utils::test_utils::{get_test_assumption, get_test_assumption_vec, get_test_num_array};
+use deep_causality::utils::test_utils::{get_test_assumption, get_test_num_array};
 
 fn get_test_assumption_arr()
     -> [Assumption; 3]
@@ -207,7 +207,7 @@ fn test_verify_all_assumptions()
 
 #[test]
 fn test_get_all_items() {
-    let col = get_test_assumption_vec();
+    let col = get_test_assumption_arr();
     let all_items = col.get_all_items();
 
     let exp_len = col.len();
@@ -217,12 +217,12 @@ fn test_get_all_items() {
 
 #[test]
 fn test_len() {
-    let col = get_test_assumption_vec();
+    let col = get_test_assumption_arr();
     assert_eq!(3, col.len());
 }
 
 #[test]
 fn test_is_empty() {
-    let col = get_test_assumption_vec();
+    let col = get_test_assumption_arr();
     assert!(!col.is_empty());
 }

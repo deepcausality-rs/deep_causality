@@ -2,8 +2,7 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use std::collections::HashMap;
-use deep_causality::prelude::Assumption;
-use deep_causality::protocols::assumable::AssumableReasoning;
+use deep_causality::prelude::{Assumption, AssumableReasoning};
 use deep_causality::utils::test_utils::{get_test_assumption, get_test_num_array};
 
 fn get_test_assumption_map()
@@ -247,4 +246,26 @@ fn test_verify_all_assumptions()
 
     let all_valid = map.all_assumptions_valid();
     assert!(all_valid);
+}
+
+#[test]
+fn test_get_all_items() {
+    let col = get_test_assumption_map();
+    let all_items = col.get_all_items();
+
+    let exp_len = col.len();
+    let actual_len = all_items.len();
+    assert_eq!(exp_len, actual_len);
+}
+
+#[test]
+fn test_len() {
+    let col = get_test_assumption_map();
+    assert_eq!(3, col.len());
+}
+
+#[test]
+fn test_is_empty() {
+    let col = get_test_assumption_map();
+    assert!(!col.is_empty());
 }
