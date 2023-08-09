@@ -10,7 +10,7 @@ use crate::prelude::{Assumable, AssumableReasoning};
 /// https://doc.rust-lang.org/std/primitive.array.html
 impl<T> AssumableReasoning<T> for [T]
     where
-        T: Assumable + Clone,
+        T: Assumable,
 {
     make_len!();
     make_is_empty!();
@@ -21,7 +21,7 @@ impl<T> AssumableReasoning<T> for [T]
 impl<K, V> AssumableReasoning<V> for HashMap<K, V>
     where
         K: Eq + Hash,
-        V: Assumable + Clone,
+        V: Assumable,
 {
     make_len!();
     make_is_empty!();
@@ -32,7 +32,7 @@ impl<K, V> AssumableReasoning<V> for HashMap<K, V>
 impl<K, V> AssumableReasoning<V> for BTreeMap<K, V>
     where
         K: Eq + Hash,
-        V: Assumable + Clone,
+        V: Assumable,
 {
     make_len!();
     make_is_empty!();
@@ -42,7 +42,7 @@ impl<K, V> AssumableReasoning<V> for BTreeMap<K, V>
 /// https://doc.rust-lang.org/std/vec/struct.Vec.html
 impl<T> AssumableReasoning<T> for Vec<T>
     where
-        T: Assumable + Clone,
+        T: Assumable,
 {
     make_len!();
     make_is_empty!();
@@ -52,7 +52,7 @@ impl<T> AssumableReasoning<T> for Vec<T>
 /// https://doc.rust-lang.org/std/collections/struct.VecDeque.html
 impl<T> AssumableReasoning<T> for VecDeque<T>
     where
-        T: Assumable + Clone,
+        T: Assumable,
 {
     make_len!();
     make_is_empty!();
