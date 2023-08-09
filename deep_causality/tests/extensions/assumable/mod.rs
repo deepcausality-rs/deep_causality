@@ -7,5 +7,6 @@ mod assumable_btree_map_tests;
 #[cfg(test)]
 mod assumable_hash_map_tests;
 #[cfg(test)]
+mod assumable_vec_deque_tests;
+#[cfg(test)]
 mod assumable_vec_tests;
-
