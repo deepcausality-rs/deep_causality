@@ -7,4 +7,6 @@ mod inferable_btree_map_tests;
 #[cfg(test)]
 mod inferable_map_tests;
 #[cfg(test)]
+mod inferable_vec_deque_tests;
+#[cfg(test)]
 mod inferable_vec_tests;
