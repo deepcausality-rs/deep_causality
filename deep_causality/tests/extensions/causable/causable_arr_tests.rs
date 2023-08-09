@@ -1,8 +1,22 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
+use std::array;
 use deep_causality::prelude::*;
-use deep_causality::utils::test_utils::{get_test_causality_array, get_test_causality_data};
+use deep_causality::utils::test_utils::{get_test_causaloid};
+
+fn get_test_causality_data()
+    -> [NumericalValue; 10]
+{
+    [60.0, 99.0, 82.0, 93.8, 74.8, 82.0, 93.8, 74.0, 74.8, 82.0]
+}
+
+pub fn get_test_causality_array<'l>()
+    -> [Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>; 10]
+{
+// Causaloid doesn't implement Copy hence the from_fn workaround for array initialization
+    array::from_fn(|_| get_test_causaloid())
+}
 
 #[test]
 fn test_all_active()

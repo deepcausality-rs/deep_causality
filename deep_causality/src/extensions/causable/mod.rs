@@ -58,7 +58,7 @@ impl<T> CausableReasoning<T> for VecDeque<T>
     make_get_all_items!();
     // VecDeque can't be turned into a vector hence the custom implementation
     // https://github.com/rust-lang/rust/issues/23308
-    // Also, make_contiguous requires self to be mutable, which would violate the API.
+    // Also, make_contiguous requires self to be mutable, which would violate the API, hence the clone.
     // https://doc.rust-lang.org/std/collections/struct.VecDeque.html#method.make_contiguous
     fn to_vec(&self) -> Vec<T> {
         let mut v = Vec::with_capacity(self.len());

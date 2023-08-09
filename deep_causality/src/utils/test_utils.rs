@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use std::array;
 use crate::errors::CausalityError;
 use crate::prelude::*;
 use crate::types::alias_types::{DescriptionValue, EvalFn, IdentificationValue, NumericalValue};
@@ -32,18 +31,6 @@ pub fn get_test_inf_vec()
     let i1 = get_test_inferable(0, true);
     let i2 = get_test_inferable(1, false);
     Vec::from_iter([i1, i2])
-}
-
-pub fn get_test_causality_array<'l>()
-    -> [Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>; 10]
-{
-// Causaloid doesn't implement Copy hence the from_fn workaround for array initialization
-    array::from_fn(|_| get_test_causaloid())
-}
-
-pub fn get_test_causality_data() -> [NumericalValue; 10]
-{
-    [60.0, 99.0, 82.0, 93.8, 74.8, 82.0, 93.8, 74.0,74.8, 82.0]
 }
 
 pub fn get_test_causality_vec<'l>()
@@ -96,17 +83,6 @@ pub fn get_test_context()
     context.add_node(contextoid);
 
     context
-}
-
-pub fn get_inferable_coll(
-    inverse: bool
-)
-    -> Vec<Inference>
-{
-    let i1 = get_test_inferable(0, inverse);
-    let i2 = get_test_inferable(1, inverse);
-    let i3 = get_test_inferable(1, inverse);
-    Vec::from_iter([i1, i2, i3])
 }
 
 pub fn get_test_inferable(
