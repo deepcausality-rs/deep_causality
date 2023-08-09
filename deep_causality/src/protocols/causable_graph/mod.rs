@@ -45,7 +45,6 @@ pub trait CausableGraphReasoning<T>
         T: Causable + PartialEq,
 {
     /// Explains the line of reasoning across the entire graph.
-    ///
     /// Returns: String representing the explanation or an error
     fn explain_all_causes(
         &self
@@ -54,9 +53,7 @@ pub trait CausableGraphReasoning<T>
 
     /// Explains the line of reasoning across a subgraph starting from a given node index until
     /// the end of the graph.
-    ///
     /// index: NodeIndex - index of the starting node
-    ///
     /// Returns: String representing the explanation or an error
     fn explain_subgraph_from_cause(
         &self,
@@ -67,10 +64,8 @@ pub trait CausableGraphReasoning<T>
 
     /// Explains the line of reasoning of the shortest sub-graph
     /// between a start and stop cause.
-    ///
     /// start_index: NodeIndex - index of the start cause
     /// stop_index: NodeIndex - index of the stop cause
-    ///
     /// Returns: String representing the explanation or an error
     fn explain_shortest_path_between_causes(
         &self,
@@ -80,7 +75,6 @@ pub trait CausableGraphReasoning<T>
         -> Result<String, CausalityGraphError>;
 
     /// Reason over the entire graph.
-    ///
     /// data: &[NumericalValue] - data applied to the subgraph
     /// Optional: data_index - provide when the data have a different index sorting than
     /// the causaloids.
@@ -146,9 +140,7 @@ pub trait CausableGraphReasoning<T>
         -> Result<bool, CausalityGraphError>;
 
     /// Reason over single node given by its index
-    ///
     /// index: NodeIndex - index of the node
-    ///
     /// Returns Result either true or false in case of successful reasoning or
     /// a CausalityGraphError in case of failure.
     fn reason_single_cause(

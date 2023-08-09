@@ -17,8 +17,7 @@ pub trait Adjustable
     }
 
     /// The default implementation does nothing by default to keep propagate optional.
-    fn propagate()
-        -> Result<(), PropagateError>
+    fn propagate() -> Result<(), PropagateError>
     {
         Ok(())
     }

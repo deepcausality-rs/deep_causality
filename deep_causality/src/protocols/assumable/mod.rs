@@ -22,8 +22,7 @@ pub trait AssumableReasoning<T>
 
     // Default implementations for all other methods below.
 
-    fn all_assumptions_tested(&self)
-        -> bool
+    fn all_assumptions_tested(&self) -> bool
     {
         for elem in self.get_all_items() {
             if !elem.assumption_tested() {
@@ -33,8 +32,7 @@ pub trait AssumableReasoning<T>
         true
     }
 
-    fn all_assumptions_valid(&self)
-        -> bool
+    fn all_assumptions_valid(&self) -> bool
     {
         for a in self.get_all_items() {
             if !a.assumption_valid() {
@@ -44,21 +42,14 @@ pub trait AssumableReasoning<T>
         true
     }
 
-    fn number_assumption_valid(&self)
-        -> NumericalValue
+    fn number_assumption_valid(&self) -> NumericalValue
     {
-        self.get_all_items()
-            .iter()
-            .filter(|a| a.assumption_valid())
-            .count() as NumericalValue
+        self.get_all_items().iter().filter(|a| a.assumption_valid()).count() as NumericalValue
     }
 
-    fn percent_assumption_valid(&self)
-        -> NumericalValue
+    fn percent_assumption_valid(&self) -> NumericalValue
     {
-        let total = self.len() as NumericalValue;
-        let count = self.number_assumption_valid();
-        (count / total) * 100.0
+        (self.number_assumption_valid() / self.len() as NumericalValue) * 100.0
     }
 
     fn verify_all_assumptions(
@@ -71,39 +62,23 @@ pub trait AssumableReasoning<T>
         }
     }
 
-    fn get_all_invalid_assumptions(&self)
-        -> Vec<&T>
+    fn get_all_invalid_assumptions(&self) -> Vec<&T>
     {
-        self.get_all_items()
-            .into_iter()
-            .filter(|a| !a.assumption_valid())
-            .collect()
+        self.get_all_items().into_iter().filter(|a| !a.assumption_valid()).collect()
     }
 
-    fn get_all_valid_assumptions(&self)
-        -> Vec<&T>
+    fn get_all_valid_assumptions(&self) -> Vec<&T>
     {
-        self.get_all_items()
-            .into_iter()
-            .filter(|a| a.assumption_valid())
-            .collect()
+        self.get_all_items().into_iter().filter(|a| a.assumption_valid()).collect()
     }
 
-    fn get_all_tested_assumptions(&self)
-        -> Vec<&T>
+    fn get_all_tested_assumptions(&self) -> Vec<&T>
     {
-        self.get_all_items()
-            .into_iter()
-            .filter(|a| a.assumption_tested())
-            .collect()
+        self.get_all_items().into_iter().filter(|a| a.assumption_tested()).collect()
     }
 
-    fn get_all_untested_assumptions(&self)
-        -> Vec<&T>
+    fn get_all_untested_assumptions(&self) -> Vec<&T>
     {
-        self.get_all_items()
-            .into_iter()
-            .filter(|a| !a.assumption_tested())
-            .collect()
+        self.get_all_items().into_iter().filter(|a| !a.assumption_tested()).collect()
     }
 }
