@@ -27,23 +27,6 @@ pub fn get_test_obs_vec()
     Vec::from_iter([o1, o2, o3, o4, o5])
 }
 
-
-pub fn get_test_inf_arr()
-    -> [Inference; 2]
-{
-    let i1 = get_test_inferable(0, true);
-    let i2 = get_test_inferable(1, false);
-    [i1, i2]
-}
-
-pub fn get_test_inf_map()
-    -> HashMap<usize, Inference>
-{
-    let i1 = get_test_inferable(0, true);
-    let i2 = get_test_inferable(1, false);
-    HashMap::from_iter([(1, i1), (2, i2)])
-}
-
 pub fn get_test_inf_vec()
     -> Vec<Inference>
 {
