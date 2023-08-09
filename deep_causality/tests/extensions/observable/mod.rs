@@ -7,4 +7,6 @@ mod observable_btree_map_tests;
 #[cfg(test)]
 mod observable_map_tests;
 #[cfg(test)]
+mod observable_vec_deque_tests;
+#[cfg(test)]
 mod observable_vec_tests;
