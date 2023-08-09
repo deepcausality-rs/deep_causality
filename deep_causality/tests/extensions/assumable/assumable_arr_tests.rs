@@ -1,8 +1,18 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
+use deep_causality::prelude::Assumption;
 use deep_causality::protocols::assumable::AssumableReasoning;
-use deep_causality::utils::test_utils::{get_test_assumption_arr, get_test_assumption_vec, get_test_num_array};
+use deep_causality::utils::test_utils::{get_test_assumption, get_test_assumption_vec, get_test_num_array};
+
+fn get_test_assumption_arr()
+    -> [Assumption; 3]
+{
+    let a1 = get_test_assumption();
+    let a2 = get_test_assumption();
+    let a3 = get_test_assumption();
+    [a1, a2, a3]
+}
 
 #[test]
 fn test_all_assumptions_tested()

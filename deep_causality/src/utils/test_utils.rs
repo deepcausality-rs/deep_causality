@@ -7,16 +7,6 @@ use crate::errors::CausalityError;
 use crate::prelude::*;
 use crate::types::alias_types::{DescriptionValue, EvalFn, IdentificationValue, NumericalValue};
 
-pub fn get_test_assumption_arr()
-    -> [Assumption; 3]
-{
-    let a1 = get_test_assumption();
-    let a2 = get_test_assumption();
-    let a3 = get_test_assumption();
-    [a1, a2, a3]
-}
-
-
 pub fn get_test_assumption_vec()
     -> Vec<Assumption>
 {
@@ -24,15 +14,6 @@ pub fn get_test_assumption_vec()
     let a2 = get_test_assumption();
     let a3 = get_test_assumption();
     Vec::from_iter([a1, a2, a3])
-}
-
-pub fn get_test_assumption_map()
-    -> HashMap<i8, Assumption>
-{
-    let a1 = get_test_assumption();
-    let a2 = get_test_assumption();
-    let a3 = get_test_assumption();
-    HashMap::from_iter([(1, a1), (2, a2), (3, a3)])
 }
 
 pub fn get_test_obs_vec()

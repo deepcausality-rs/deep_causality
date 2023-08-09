@@ -1,8 +1,19 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
+use std::collections::HashMap;
+use deep_causality::prelude::Assumption;
 use deep_causality::protocols::assumable::AssumableReasoning;
-use deep_causality::utils::test_utils::{get_test_assumption, get_test_assumption_map, get_test_num_array};
+use deep_causality::utils::test_utils::{get_test_assumption, get_test_num_array};
+
+fn get_test_assumption_map()
+    -> HashMap<i8, Assumption>
+{
+    let a1 = get_test_assumption();
+    let a2 = get_test_assumption();
+    let a3 = get_test_assumption();
+    HashMap::from_iter([(1, a1), (2, a2), (3, a3)])
+}
 
 #[test]
 fn test_add()
