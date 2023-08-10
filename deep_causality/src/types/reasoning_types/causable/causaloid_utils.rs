@@ -29,16 +29,12 @@ pub fn get_obs<'a>(
 {
     let obs = if data_index.is_some()
     {
-        let idx = data_index.unwrap().get(&cause_id)
-            .expect("Failed to get data index");
-
+        let idx = data_index.unwrap().get(&cause_id).expect("Failed to get data index");
         let index = idx.to_owned() as usize;
-        data.get(index)
-            .expect("Failed to get data")
+        data.get(index).expect("Failed to get data")
     } else {
         let index = cause_id as usize;
-        data.get(index)
-            .expect("Failed to get data")
+        data.get(index).expect("Failed to get data")
     };
 
     obs.to_owned()
@@ -58,9 +54,7 @@ pub fn verify_cause(
 
     if data.len() == 1
     {
-        let obs = data.first()
-            .expect("Failed to get data");
-
+        let obs = data.first().expect("Failed to get data");
         return match causaloid.verify_single_cause(obs) {
             Ok(res) => Ok(res),
             Err(e) => Err(CausalityGraphError(e.0)),
@@ -70,8 +64,7 @@ pub fn verify_cause(
     if data.len() > 1
     {
         for obs in data.iter() {
-            if !causaloid.verify_single_cause(obs)
-                .expect("Failed to verify data") {
+            if !causaloid.verify_single_cause(obs).expect("Failed to verify data") {
                 return Ok(false);
             }
         }
