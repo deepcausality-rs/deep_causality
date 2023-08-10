@@ -2,9 +2,7 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use std::collections::HashMap;
-use crate::errors::CausalityGraphError;
-use crate::prelude::{Causable, IdentificationValue, NumericalValue};
-
+use crate::prelude::{IdentificationValue, NumericalValue};
 
 pub fn append_string<'l>(
     s1: &'l mut String,
@@ -18,7 +16,6 @@ pub fn append_string<'l>(
 
     s1
 }
-
 
 pub fn get_obs<'a>(
     cause_id: IdentificationValue,
@@ -38,37 +35,4 @@ pub fn get_obs<'a>(
     };
 
     obs.to_owned()
-}
-
-
-pub fn verify_cause(
-    causaloid: &impl Causable,
-    data: &[NumericalValue],
-)
-    -> Result<bool, CausalityGraphError>
-{
-    if data.is_empty()
-    {
-        return Err(CausalityGraphError("Data are empty (len=0)".into()));
-    }
-
-    if data.len() == 1
-    {
-        let obs = data.first().expect("Failed to get data");
-        return match causaloid.verify_single_cause(obs) {
-            Ok(res) => Ok(res),
-            Err(e) => Err(CausalityGraphError(e.0)),
-        };
-    }
-
-    if data.len() > 1
-    {
-        for obs in data.iter() {
-            if !causaloid.verify_single_cause(obs).expect("Failed to verify data") {
-                return Ok(false);
-            }
-        }
-    }
-
-    Ok(true)
 }

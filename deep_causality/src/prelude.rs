@@ -16,8 +16,10 @@ pub use crate::protocols::assumable::AssumableReasoning;
 // Causable protocols
 pub use crate::protocols::causable::Causable;
 pub use crate::protocols::causable::CausableReasoning;
-pub use crate::protocols::causable_graph::CausableGraph;
-pub use crate::protocols::causable_graph::CausableGraphReasoning;
+pub use crate::protocols::causable_graph::*;
+pub use crate::protocols::causable_graph::causable_graph_type::CausableGraph;
+pub use crate::protocols::causable_graph::causable_graph_reasoning::CausableGraphReasoning;
+pub use crate::protocols::causable_graph::causable_graph_explaining::CausableGraphExplaining;
 // contextuable protocols
 pub use crate::protocols::contextuable::Contextuable;
 pub use crate::protocols::contextuable::ContextuableGraph;
