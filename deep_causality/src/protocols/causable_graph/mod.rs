@@ -10,6 +10,7 @@ use crate::prelude::{Causable, IdentificationValue, NumericalValue};
 pub mod graph;
 pub mod graph_reasoning;
 pub mod graph_explaining;
+mod graph_reasoning_utils;
 
 // Custom index type. See documentation in
 // src/protocols/contextuable/csm_types

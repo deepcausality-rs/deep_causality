@@ -3,7 +3,6 @@
 
 use crate::prelude::{Causable, CausableGraph, CausalityGraphError};
 use crate::protocols::causable_graph::NodeIndex;
-use crate::utils::reasoning_utils;
 
 pub trait CausableGraphExplaining<T> : CausableGraph<T>
     where
@@ -35,7 +34,7 @@ pub trait CausableGraphExplaining<T> : CausableGraph<T>
 
         let cause = self.get_causaloid(start_index.index()).expect("Failed to get causaloid");
 
-        reasoning_utils::append_string(&mut explanation, &cause.explain().unwrap());
+        append_string(&mut explanation, &cause.explain().unwrap());
 
         stack.push(self.get_graph().neighbors(start_index));
 
@@ -44,7 +43,7 @@ pub trait CausableGraphExplaining<T> : CausableGraph<T>
                 let cause = self.get_causaloid(child.index())
                     .expect("Failed to get causaloid");
 
-                reasoning_utils::append_string(&mut explanation, &cause.explain().unwrap());
+                append_string(&mut explanation, &cause.explain().unwrap());
 
                 if child == stop_index {
                     return Ok(explanation);
@@ -144,10 +143,21 @@ pub trait CausableGraphExplaining<T> : CausableGraph<T>
             let cause = self.get_causaloid(index.index())
                 .expect("Failed to get causaloid");
 
-            reasoning_utils::append_string(&mut explanation, &cause.explain().unwrap());
+            append_string(&mut explanation, &cause.explain().unwrap());
         }
 
         Ok(explanation)
     }
 }
 
+fn append_string<'l>(
+    s1: &'l mut String,
+    s2: &'l str,
+)
+    -> &'l str
+{
+    s1.push('\n');
+    s1.push_str(format!(" * {}", s2).as_str());
+    s1.push('\n');
+    s1
+}
