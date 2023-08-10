@@ -5,8 +5,7 @@ use std::collections::HashMap;
 
 use crate::errors::CausalityGraphError;
 use crate::prelude::{Causable, CausableGraph, IdentificationValue, NumericalValue};
-use crate::protocols::causable_graph::NodeIndex;
-use crate::utils::reasoning_utils;
+use crate::protocols::causable_graph::{graph_reasoning_utils, NodeIndex};
 
 /// Describes signatures for causal reasoning and explaining
 /// in causality hyper graph.
@@ -41,7 +40,7 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
 
         let cause = self.get_causaloid(start_index.index()).expect("Failed to get causaloid");
 
-        let obs = reasoning_utils::get_obs(cause.id(), data, &data_index);
+        let obs = graph_reasoning_utils::get_obs(cause.id(), data, &data_index);
 
         let res = match cause.verify_single_cause(&obs)
         {
@@ -64,7 +63,7 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
                 let cause = self.get_causaloid(child.index())
                     .expect("Failed to get causaloid");
 
-                let obs = reasoning_utils::get_obs(cause.id(), data, &data_index);
+                let obs = graph_reasoning_utils::get_obs(cause.id(), data, &data_index);
 
                 let res = if cause.is_singleton()
                 {
@@ -236,7 +235,7 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
         for index in shortest_path {
             let cause = self.get_causaloid(index.index()).expect("Failed to get causaloid");
 
-            let obs = reasoning_utils::get_obs(cause.id(), data, &data_index);
+            let obs = graph_reasoning_utils::get_obs(cause.id(), data, &data_index);
 
             let res = match cause.verify_single_cause(&obs)
             {
@@ -281,38 +280,6 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
 
         let causaloid = self.get_causaloid(index).expect("Failed to get causaloid");
 
-        verify_cause(causaloid, data)
+        graph_reasoning_utils::verify_cause(causaloid, data)
     }
-}
-
-fn verify_cause(
-    causaloid: &impl Causable,
-    data: &[NumericalValue],
-)
-    -> Result<bool, CausalityGraphError>
-{
-    if data.is_empty()
-    {
-        return Err(CausalityGraphError("Data are empty (len=0)".into()));
-    }
-
-    if data.len() == 1
-    {
-        let obs = data.first().expect("Failed to get data");
-        return match causaloid.verify_single_cause(obs) {
-            Ok(res) => Ok(res),
-            Err(e) => Err(CausalityGraphError(e.0)),
-        };
-    }
-
-    if data.len() > 1
-    {
-        for obs in data.iter() {
-            if !causaloid.verify_single_cause(obs).expect("Failed to verify data") {
-                return Ok(false);
-            }
-        }
-    }
-
-    Ok(true)
 }
