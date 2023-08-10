@@ -5,7 +5,6 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 
 use petgraph::algo::astar;
-use petgraph::Directed;
 use petgraph::graph::NodeIndex as GraphNodeIndex;
 use petgraph::matrix_graph::MatrixGraph;
 use petgraph::prelude::EdgeRef;
@@ -20,8 +19,8 @@ type DefaultIx = u32;
 type NodeIndex<Ix = DefaultIx> = GraphNodeIndex<Ix>;
 type IndexMap = HashMap<usize, NodeIndex>;
 
-// Edge weights need to be numerical (u64) to make shortest path algo work.
-type CausalGraph<T> = MatrixGraph<T, u64, Directed, Option<u64>, u32>;
+// CausalGraph is a type alias defined in in the causable graph protocol.
+// see src/protocols/causable/mod.rs for more details.
 
 #[derive(Clone)]
 pub struct CausaloidGraph<T>
@@ -29,7 +28,7 @@ pub struct CausaloidGraph<T>
         T: Causable + Clone + PartialEq,
 {
     root_index: NodeIndex,
-    causaloid_graph: CausalGraph<T>,
+    graph: CausalGraph<T>,
     causes_map: HashMap<NodeIndex, T>,
     index_map: IndexMap,
 }
@@ -44,7 +43,7 @@ impl<T> CausaloidGraph<T>
     {
         Self {
             root_index: NodeIndex::new(0),
-            causaloid_graph: MatrixGraph::default(),
+            graph: MatrixGraph::default(),
             causes_map: HashMap::new(),
             index_map: HashMap::new(),
         }
@@ -57,7 +56,7 @@ impl<T> CausaloidGraph<T>
     {
         Self {
             root_index: NodeIndex::new(0),
-            causaloid_graph: MatrixGraph::default(),
+            graph: MatrixGraph::with_capacity(capacity),
             causes_map: HashMap::with_capacity(capacity),
             index_map: HashMap::with_capacity(capacity),
         }
@@ -127,7 +126,7 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
     )
         -> usize
     {
-        let node_index = self.causaloid_graph.add_node(value.clone());
+        let node_index = self.graph.add_node(value.clone());
 
         self.causes_map.insert(node_index, value);
         self.index_map.insert(node_index.index(), node_index);
@@ -169,7 +168,7 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
         };
 
         let k = self.index_map.get(&index).unwrap();
-        self.causaloid_graph.remove_node(*k);
+        self.graph.remove_node(*k);
         self.causes_map.remove(k);
 
         self.index_map.remove(&index);
@@ -195,7 +194,7 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
         let k = self.index_map.get(&a).expect("index not found");
         let l = self.index_map.get(&b).expect("index not found");
 
-        self.causaloid_graph.add_edge(*k, *l, 0);
+        self.graph.add_edge(*k, *l, 0);
 
         Ok(())
     }
@@ -219,7 +218,7 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
         let k = self.index_map.get(&a).expect("index not found");
         let l = self.index_map.get(&b).expect("index not found");
 
-        self.causaloid_graph.add_edge(*k, *l, weight);
+        self.graph.add_edge(*k, *l, weight);
 
         Ok(())
     }
@@ -242,7 +241,7 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
         let k = self.index_map.get(&a).expect("index not found");
         let l = self.index_map.get(&b).expect("index not found");
 
-        self.causaloid_graph.has_edge(*k, *l)
+        self.graph.has_edge(*k, *l)
     }
 
     fn remove_edge(
@@ -263,7 +262,7 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
         let k = self.index_map.get(&a).expect("index not found");
         let l = self.index_map.get(&b).expect("index not found");
 
-        self.causaloid_graph.remove_edge(*k, *l);
+        self.graph.remove_edge(*k, *l);
 
         Ok(())
     }
@@ -320,7 +319,7 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
         &mut self
     )
     {
-        self.causaloid_graph.clear();
+        self.graph.clear();
         self.causes_map.clear();
     }
 
@@ -329,7 +328,7 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
     )
         -> usize
     {
-        self.causaloid_graph.edge_count()
+        self.graph.edge_count()
     }
 
     fn number_nodes(
@@ -337,7 +336,11 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
     )
         -> usize
     {
-        self.causaloid_graph.node_count()
+        self.graph.node_count()
+    }
+
+    fn get_graph(&self) -> &CausalGraph<T> {
+        &self.graph
     }
 }
 
@@ -523,7 +526,7 @@ impl<T> CausaloidGraph<T>
 
         causaloid_utils::append_string(&mut explanation, &cause.explain().unwrap());
 
-        stack.push(self.causaloid_graph.neighbors(start_index));
+        stack.push(self.graph.neighbors(start_index));
 
         while let Some(children) = stack.last_mut() {
             if let Some(child) = children.next() {
@@ -535,7 +538,7 @@ impl<T> CausaloidGraph<T>
                 if child == stop_index {
                     return Ok(explanation);
                 } else {
-                    stack.push(self.causaloid_graph.neighbors(child));
+                    stack.push(self.graph.neighbors(child));
                 }
             } else {
                 stack.pop();
@@ -624,7 +627,7 @@ impl<T> CausaloidGraph<T>
         }
 
         let mut stack = Vec::with_capacity(self.causes_map.len());
-        stack.push(self.causaloid_graph.neighbors(start_index));
+        stack.push(self.graph.neighbors(start_index));
 
         while let Some(children) = stack.last_mut()
         {
@@ -659,7 +662,7 @@ impl<T> CausaloidGraph<T>
                 {
                     return Ok(true);
                 } else {
-                    stack.push(self.causaloid_graph.neighbors(child));
+                    stack.push(self.graph.neighbors(child));
                 }
             } else {
                 stack.pop();
@@ -728,7 +731,7 @@ impl<T> CausaloidGraph<T>
     {
         // A* algorithm
         // https://docs.rs/petgraph/latest/petgraph/algo/astar/fn.astar.html
-        let (_, path) = astar(&self.causaloid_graph,
+        let (_, path) = astar(&self.graph,
                               start_index,
                               |finish| finish == stop_index,
                               |e| *e.weight(),

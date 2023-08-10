@@ -3,7 +3,7 @@
 
 use criterion::{Criterion, criterion_group};
 
-use deep_causality::protocols::causable_graph::CausableGraphReasoning;
+use deep_causality::prelude::*;
 use deep_causality::utils::bench_utils_graph;
 
 // Graph size
