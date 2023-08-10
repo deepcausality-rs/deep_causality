@@ -3,10 +3,10 @@
 
 use std::collections::HashMap;
 use std::fmt::Debug;
-use petgraph::matrix_graph::MatrixGraph;
-use crate::prelude::*;
-use crate::utils::reasoning_utils;
 
+use petgraph::matrix_graph::MatrixGraph;
+
+use crate::prelude::*;
 
 #[derive(Clone)]
 pub struct CausaloidGraph<T>
@@ -19,14 +19,11 @@ pub struct CausaloidGraph<T>
     index_map: IndexMap,
 }
 
-
 impl<T> CausaloidGraph<T>
     where
         T: Causable + Clone + PartialEq,
 {
-    pub fn new()
-        -> Self
-    {
+    pub fn new() -> Self {
         Self {
             root_index: NodeIndex::new(0),
             graph: MatrixGraph::default(),
@@ -35,11 +32,7 @@ impl<T> CausaloidGraph<T>
         }
     }
 
-    pub fn new_with_capacity(
-        capacity: usize
-    )
-        -> Self
-    {
+    pub fn new_with_capacity(capacity: usize) -> Self {
         Self {
             root_index: NodeIndex::new(0),
             graph: MatrixGraph::with_capacity(capacity),
@@ -58,6 +51,13 @@ impl<T> Default for CausaloidGraph<T>
     }
 }
 
+// See default implementation in protocols/causable_graph/causable_graph_explaining.rs
+impl<T> CausableGraphExplaining<T> for CausaloidGraph<T> where T: Causable + Clone + PartialEq {}
+
+
+// See default implementation in protocols/causable_graph/causable_graph_explaining.rs
+impl<T> CausableGraphReasoning<T> for CausaloidGraph<T> where T: Causable + Clone + PartialEq {}
+
 impl<T> CausableGraph<T> for CausaloidGraph<T>
     where
         T: Causable + Clone + PartialEq,
@@ -72,7 +72,6 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
         let root_index = NodeIndex::new(idx);
         self.root_index = root_index;
         self.index_map.insert(root_index.index(), root_index);
-
         root_index.index()
     }
 
@@ -96,8 +95,7 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
         }
     }
 
-    fn get_last_index(&self)
-                      -> Result<usize, CausalityGraphError>
+    fn get_last_index(&self) -> Result<usize, CausalityGraphError>
     {
         if !self.is_empty() {
             Ok(self.causes_map.len() - 1)
@@ -113,10 +111,8 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
         -> usize
     {
         let node_index = self.graph.add_node(value.clone());
-
         self.causes_map.insert(node_index, value);
         self.index_map.insert(node_index.index(), node_index);
-
         node_index.index()
     }
 
@@ -156,9 +152,7 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
         let k = self.index_map.get(&index).unwrap();
         self.graph.remove_node(*k);
         self.causes_map.remove(k);
-
         self.index_map.remove(&index);
-
         Ok(())
     }
 
@@ -179,9 +173,7 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
 
         let k = self.index_map.get(&a).expect("index not found");
         let l = self.index_map.get(&b).expect("index not found");
-
         self.graph.add_edge(*k, *l, 0);
-
         Ok(())
     }
 
@@ -203,9 +195,7 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
 
         let k = self.index_map.get(&a).expect("index not found");
         let l = self.index_map.get(&b).expect("index not found");
-
         self.graph.add_edge(*k, *l, weight);
-
         Ok(())
     }
 
@@ -216,17 +206,12 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
     )
         -> bool
     {
-        if !self.contains_causaloid(a) {
-            return false;
-        };
-
-        if !self.contains_causaloid(b) {
+        if !self.contains_causaloid(a) || !self.contains_causaloid(b) {
             return false;
         };
 
         let k = self.index_map.get(&a).expect("index not found");
         let l = self.index_map.get(&b).expect("index not found");
-
         self.graph.has_edge(*k, *l)
     }
 
@@ -253,10 +238,7 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
         Ok(())
     }
 
-    fn all_active(
-        &self
-    )
-        -> bool
+    fn all_active(&self) -> bool
     {
         for (_, cause) in self.causes_map.iter() {
             if !cause.is_active() {
@@ -267,216 +249,43 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
         true
     }
 
-    fn number_active(
-        &self
-    )
-        -> NumericalValue
+    fn number_active(&self) -> NumericalValue
     {
         self.causes_map.iter().filter(|(_, c)| c.is_active()).count() as NumericalValue
     }
 
-    fn percent_active(
-        &self
-    )
-        -> NumericalValue
+    fn percent_active(&self) -> NumericalValue
     {
-        let count = self.number_active();
-        let total = self.size() as NumericalValue;
-        (count / total) * (100 as NumericalValue)
+        (self.number_active() / self.size() as NumericalValue) * (100 as NumericalValue)
     }
 
-    fn size(
-        &self
-    )
-        -> usize
+    fn size(&self) -> usize
     {
         self.causes_map.len()
     }
 
-    fn is_empty(
-        &self
-    )
-        -> bool
+    fn is_empty(&self) -> bool
     {
         self.causes_map.is_empty()
     }
 
-    fn clear(
-        &mut self
-    )
+    fn clear(&mut self)
     {
         self.graph.clear();
         self.causes_map.clear();
     }
 
-    fn number_edges(
-        &self
-    )
-        -> usize
+    fn number_edges(&self) -> usize
     {
         self.graph.edge_count()
     }
 
-    fn number_nodes(
-        &self
-    )
-        -> usize
+    fn number_nodes(&self) -> usize
     {
         self.graph.node_count()
     }
 
     fn get_graph(&self) -> &CausalGraph<T> {
         &self.graph
-    }
-}
-
-impl<T> CausableGraphExplaining<T> for CausaloidGraph<T>
-    where
-        T: Causable + Clone + PartialEq,
-{
-    // This method is the only requirement for the default implementation of CausableGraphExplaining
-    // See CausableGraphExplaining for all other provided methods.
-    fn explain_from_to_cause(
-        &self,
-        start_index: NodeIndex,
-        stop_index: NodeIndex,
-    )
-        -> Result<String, CausalityGraphError>
-    {
-        if self.is_empty()
-        {
-            return Err(CausalityGraphError("Graph is empty".to_string()));
-        }
-
-        if !self.contains_causaloid(start_index.index()) {
-            return Err(CausalityGraphError("Graph does not contains start causaloid".into()));
-        }
-
-        if !self.contains_causaloid(stop_index.index()) {
-            return Err(CausalityGraphError("Graph does not contains stop causaloid".into()));
-        }
-
-        let mut stack = Vec::with_capacity(self.causes_map.len());
-        let mut explanation = String::new();
-
-        let cause = self.get_causaloid(start_index.index()).expect("Failed to get causaloid");
-
-        reasoning_utils::append_string(&mut explanation, &cause.explain().unwrap());
-
-        stack.push(self.get_graph().neighbors(start_index));
-
-        while let Some(children) = stack.last_mut() {
-            if let Some(child) = children.next() {
-                let cause = self.get_causaloid(child.index())
-                    .expect("Failed to get causaloid");
-
-                reasoning_utils::append_string(&mut explanation, &cause.explain().unwrap());
-
-                if child == stop_index {
-                    return Ok(explanation);
-                } else {
-                    stack.push(self.get_graph().neighbors(child));
-                }
-            } else {
-                stack.pop();
-            }
-        }
-
-        Ok(explanation)
-    }
-}
-
-impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
-    where
-        T: Causable + Clone + PartialEq,
-{
-    // This method is the only requirement for the default implementation of CausableGraphReasoning
-    // See CausableGraphReasoning for all other methods provided by default when importing the protocol.
-    // Algo inspired by simple path https://github.com/petgraph/petgraph/blob/master/src/algo/simple_paths.rs
-    fn reason_from_to_cause(
-        &self,
-        start_index: NodeIndex,
-        stop_index: NodeIndex,
-        data: &[NumericalValue],
-        data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>,
-    )
-        -> Result<bool, CausalityGraphError>
-    {
-        if self.is_empty()
-        {
-            return Err(CausalityGraphError("Graph is empty".to_string()));
-        }
-
-        if !self.contains_causaloid(start_index.index())
-        {
-            return Err(CausalityGraphError("Graph does not contains start causaloid".into()));
-        }
-
-        if data.is_empty()
-        {
-            return Err(CausalityGraphError("Data are empty (len ==0).".into()));
-        }
-
-        let cause = self.get_causaloid(start_index.index()).expect("Failed to get causaloid");
-
-        let obs = reasoning_utils::get_obs(cause.id(), data, &data_index);
-
-        let res = match cause.verify_single_cause(&obs)
-        {
-            Ok(res) => res,
-            Err(e) => return Err(CausalityGraphError(e.0)),
-        };
-
-        if !res
-        {
-            return Ok(false);
-        }
-
-        let mut stack = Vec::with_capacity(self.causes_map.len());
-        stack.push(self.get_graph().neighbors(start_index));
-
-        while let Some(children) = stack.last_mut()
-        {
-            if let Some(child) = children.next()
-            {
-                let cause = self.get_causaloid(child.index())
-                    .expect("Failed to get causaloid");
-
-                let obs = reasoning_utils::get_obs(cause.id(), data, &data_index);
-
-                let res = if cause.is_singleton()
-                {
-                    match cause.verify_single_cause(&obs)
-                    {
-                        Ok(res) => res,
-                        Err(e) => return Err(CausalityGraphError(e.0)),
-                    }
-                } else {
-                    match cause.verify_all_causes(data, data_index)
-                    {
-                        Ok(res) => res,
-                        Err(e) => return Err(CausalityGraphError(e.0)),
-                    }
-                };
-
-                if !res
-                {
-                    return Ok(false);
-                }
-
-                if child == stop_index
-                {
-                    return Ok(true);
-                } else {
-                    stack.push(self.graph.neighbors(child));
-                }
-            } else {
-                stack.pop();
-            }
-        }
-
-        // If all of the previous nodes evaluated to true,
-        // then all nodes must be true, hence return true.
-        Ok(true)
     }
 }
