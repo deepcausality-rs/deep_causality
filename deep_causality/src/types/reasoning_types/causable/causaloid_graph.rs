@@ -334,6 +334,8 @@ impl<T> CausableGraphExplaining<T> for CausaloidGraph<T>
     where
         T: Causable + Clone + PartialEq,
 {
+    // This method is the only requirement for the default implementation of CausableGraphExplaining
+    // See CausableGraphExplaining for all other provided methods.
     fn explain_from_to_cause(
         &self,
         start_index: NodeIndex,
@@ -388,6 +390,8 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
     where
         T: Causable + Clone + PartialEq,
 {
+    // This method is the only requirement for the default implementation of CausableGraphReasoning
+    // See CausableGraphReasoning for all other methods provided by default when importing the protocol.
     // Algo inspired by simple path https://github.com/petgraph/petgraph/blob/master/src/algo/simple_paths.rs
     fn reason_from_to_cause(
         &self,
