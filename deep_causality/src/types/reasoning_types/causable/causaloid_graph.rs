@@ -51,11 +51,11 @@ impl<T> Default for CausaloidGraph<T>
     }
 }
 
-// See default implementation in protocols/causable_graph/causable_graph_explaining.rs
+// See default implementation in protocols/causable_graph/graph_explaining
 impl<T> CausableGraphExplaining<T> for CausaloidGraph<T> where T: Causable + Clone + PartialEq {}
 
 
-// See default implementation in protocols/causable_graph/causable_graph_explaining.rs
+// See default implementation in protocols/causable_graph/graph_explaining
 impl<T> CausableGraphReasoning<T> for CausaloidGraph<T> where T: Causable + Clone + PartialEq {}
 
 impl<T> CausableGraph<T> for CausaloidGraph<T>

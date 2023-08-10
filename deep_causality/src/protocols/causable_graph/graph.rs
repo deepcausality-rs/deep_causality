@@ -3,6 +3,7 @@
 
 use petgraph::algo::astar;
 use petgraph::prelude::EdgeRef;
+
 use crate::errors::{CausalGraphIndexError, CausalityGraphError};
 use crate::prelude::{Causable, NodeIndex, NumericalValue};
 use crate::protocols::causable_graph::CausalGraph;
