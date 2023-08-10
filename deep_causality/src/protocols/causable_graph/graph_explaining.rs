@@ -3,7 +3,6 @@
 
 use crate::prelude::{Causable, CausableGraph, CausalityGraphError};
 use crate::protocols::causable_graph::NodeIndex;
-use crate::utils::reasoning_utils;
 
 pub trait CausableGraphExplaining<T> : CausableGraph<T>
     where
