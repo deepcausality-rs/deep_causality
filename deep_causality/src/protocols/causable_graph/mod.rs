@@ -40,7 +40,7 @@ pub trait CausableGraph<T>
 
 /// Describes signatures for causal reasoning and explaining
 /// in causality hyper graph.
-pub trait CausableGraphReasoning<T>
+pub trait CausableGraphReasoning<T> : CausableGraph<T>
     where
         T: Causable + PartialEq,
 {

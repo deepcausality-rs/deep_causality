@@ -6,11 +6,12 @@ use std::fmt::Debug;
 
 use petgraph::algo::astar;
 use petgraph::Directed;
-use petgraph::graph::{NodeIndex as GraphNodeIndex};
+use petgraph::graph::NodeIndex as GraphNodeIndex;
 use petgraph::matrix_graph::MatrixGraph;
 use petgraph::prelude::EdgeRef;
 
 use crate::prelude::*;
+use crate::types::reasoning_types::causable::causaloid_utils;
 
 // Custom index type. See documentation in
 // src/protocols/contextuable/csm_types
@@ -486,7 +487,7 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T>
         let causaloid = self.get_causaloid(index)
             .expect("Failed to get causaloid");
 
-        self.verify_cause(causaloid, data)
+        causaloid_utils::verify_cause(causaloid, data)
     }
 }
 
@@ -520,7 +521,7 @@ impl<T> CausaloidGraph<T>
 
         let cause = self.get_causaloid(start_index.index()).expect("Failed to get causaloid");
 
-        append_string(&mut explanation, &cause.explain().unwrap());
+        causaloid_utils::append_string(&mut explanation, &cause.explain().unwrap());
 
         stack.push(self.causaloid_graph.neighbors(start_index));
 
@@ -529,7 +530,7 @@ impl<T> CausaloidGraph<T>
                 let cause = self.get_causaloid(child.index())
                     .expect("Failed to get causaloid");
 
-                append_string(&mut explanation, &cause.explain().unwrap());
+                causaloid_utils::append_string(&mut explanation, &cause.explain().unwrap());
 
                 if child == stop_index {
                     return Ok(explanation);
@@ -575,7 +576,7 @@ impl<T> CausaloidGraph<T>
             let cause = self.get_causaloid(index.index())
                 .expect("Failed to get causaloid");
 
-            append_string(&mut explanation, &cause.explain().unwrap());
+            causaloid_utils::append_string(&mut explanation, &cause.explain().unwrap());
         }
 
         Ok(explanation)
@@ -609,7 +610,7 @@ impl<T> CausaloidGraph<T>
 
         let cause = self.get_causaloid(start_index.index()).expect("Failed to get causaloid");
 
-        let obs = self.get_obs(cause.id(), data, &data_index);
+        let obs = causaloid_utils::get_obs(cause.id(), data, &data_index);
 
         let res = match cause.verify_single_cause(&obs)
         {
@@ -632,7 +633,7 @@ impl<T> CausaloidGraph<T>
                 let cause = self.get_causaloid(child.index())
                     .expect("Failed to get causaloid");
 
-                let obs = self.get_obs(cause.id(), data, &data_index);
+                let obs = causaloid_utils::get_obs(cause.id(), data, &data_index);
 
                 let res = if cause.is_singleton()
                 {
@@ -701,7 +702,7 @@ impl<T> CausaloidGraph<T>
             let cause = self.get_causaloid(index.index())
                 .expect("Failed to get causaloid");
 
-            let obs = self.get_obs(cause.id(), data, &data_index);
+            let obs = causaloid_utils::get_obs(cause.id(), data, &data_index);
 
             let res = match cause.verify_single_cause(&obs)
             {
@@ -737,78 +738,4 @@ impl<T> CausaloidGraph<T>
         Ok(path)
     }
 
-    fn verify_cause(
-        &self,
-        causaloid: &impl Causable,
-        data: &[NumericalValue],
-    )
-        -> Result<bool, CausalityGraphError>
-    {
-        if data.is_empty()
-        {
-            return Err(CausalityGraphError("Data are empty (len=0)".into()));
-        }
-
-        if data.len() == 1
-        {
-            let obs = data.first()
-                .expect("Failed to get data");
-
-            return match causaloid.verify_single_cause(obs) {
-                Ok(res) => Ok(res),
-                Err(e) => Err(CausalityGraphError(e.0)),
-            };
-        }
-
-        if data.len() > 1
-        {
-            for obs in data.iter() {
-                if !causaloid.verify_single_cause(obs)
-                    .expect("Failed to verify data") {
-                    return Ok(false);
-                }
-            }
-        }
-
-        Ok(true)
-    }
-
-    fn get_obs<'a>(
-        &self,
-        cause_id: IdentificationValue,
-        data: &'a [NumericalValue],
-        data_index: &'a Option<&HashMap<IdentificationValue, IdentificationValue>>,
-    )
-        -> NumericalValue
-    {
-        let obs = if data_index.is_some()
-        {
-            let idx = data_index.unwrap().get(&cause_id)
-                .expect("Failed to get data index");
-
-            let index = idx.to_owned() as usize;
-            data.get(index)
-                .expect("Failed to get data")
-        } else {
-            let index = cause_id as usize;
-            data.get(index)
-                .expect("Failed to get data")
-        };
-
-        obs.to_owned()
-    }
-}
-
-
-fn append_string<'l>(
-    s1: &'l mut String,
-    s2: &'l str,
-)
-    -> &'l str
-{
-    s1.push('\n');
-    s1.push_str(format!(" * {}", s2).as_str());
-    s1.push('\n');
-
-    s1
 }
