@@ -14,6 +14,7 @@ The default implementation of a protocol is re-used for each type extension of t
 For example, the protocols above have been implemented as type extension for five standard collections
 meaning the default implementation is the only code to maintain while its inserted into each of the five type extensions.
 
+
 The causable graph protocol has been seperaeted into three different protocols:
 
 1) Causable_graph_type: Describes the type (struct). Most interface
