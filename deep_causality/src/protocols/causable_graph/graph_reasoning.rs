@@ -2,6 +2,7 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use std::collections::HashMap;
+
 use crate::errors::CausalityGraphError;
 use crate::prelude::{Causable, CausableGraph, IdentificationValue, NumericalValue};
 use crate::protocols::causable_graph::NodeIndex;
@@ -13,6 +14,7 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
     where
         T: Causable + PartialEq,
 {
+    // Algo inspired by simple path https://github.com/petgraph/petgraph/blob/master/src/algo/simple_paths.rs
     fn reason_from_to_cause(
         &self,
         start_index: NodeIndex,
@@ -20,7 +22,85 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
         data: &[NumericalValue],
         data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>,
     )
-        -> Result<bool, CausalityGraphError>;
+        -> Result<bool, CausalityGraphError>
+    {
+        if self.is_empty()
+        {
+            return Err(CausalityGraphError("Graph is empty".to_string()));
+        }
+
+        if !self.contains_causaloid(start_index.index())
+        {
+            return Err(CausalityGraphError("Graph does not contains start causaloid".into()));
+        }
+
+        if data.is_empty()
+        {
+            return Err(CausalityGraphError("Data are empty (len ==0).".into()));
+        }
+
+        let cause = self.get_causaloid(start_index.index()).expect("Failed to get causaloid");
+
+        let obs = reasoning_utils::get_obs(cause.id(), data, &data_index);
+
+        let res = match cause.verify_single_cause(&obs)
+        {
+            Ok(res) => res,
+            Err(e) => return Err(CausalityGraphError(e.0)),
+        };
+
+        if !res
+        {
+            return Ok(false);
+        }
+
+        let mut stack = Vec::with_capacity(self.size());
+        stack.push(self.get_graph().neighbors(start_index));
+
+        while let Some(children) = stack.last_mut()
+        {
+            if let Some(child) = children.next()
+            {
+                let cause = self.get_causaloid(child.index())
+                    .expect("Failed to get causaloid");
+
+                let obs = reasoning_utils::get_obs(cause.id(), data, &data_index);
+
+                let res = if cause.is_singleton()
+                {
+                    match cause.verify_single_cause(&obs)
+                    {
+                        Ok(res) => res,
+                        Err(e) => return Err(CausalityGraphError(e.0)),
+                    }
+                } else {
+                    match cause.verify_all_causes(data, data_index)
+                    {
+                        Ok(res) => res,
+                        Err(e) => return Err(CausalityGraphError(e.0)),
+                    }
+                };
+
+                if !res
+                {
+                    return Ok(false);
+                }
+
+                if child == stop_index
+                {
+                    return Ok(true);
+                } else {
+                    stack.push(self.get_graph().neighbors(child));
+                }
+            } else {
+                stack.pop();
+            }
+        }
+
+        // If all of the previous nodes evaluated to true,
+        // then all nodes must be true, hence return true.
+        Ok(true)
+    }
 
     /// Reason over the entire graph.
     /// data: &[NumericalValue] - data applied to the subgraph

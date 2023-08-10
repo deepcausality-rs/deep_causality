@@ -15,7 +15,49 @@ pub trait CausableGraphExplaining<T> : CausableGraph<T>
         start_index: NodeIndex,
         stop_index: NodeIndex,
     )
-        -> Result<String, CausalityGraphError>;
+        -> Result<String, CausalityGraphError>
+    {
+        if self.is_empty()
+        {
+            return Err(CausalityGraphError("Graph is empty".to_string()));
+        }
+
+        if !self.contains_causaloid(start_index.index()) {
+            return Err(CausalityGraphError("Graph does not contains start causaloid".into()));
+        }
+
+        if !self.contains_causaloid(stop_index.index()) {
+            return Err(CausalityGraphError("Graph does not contains stop causaloid".into()));
+        }
+
+        let mut stack = Vec::with_capacity(self.size());
+        let mut explanation = String::new();
+
+        let cause = self.get_causaloid(start_index.index()).expect("Failed to get causaloid");
+
+        reasoning_utils::append_string(&mut explanation, &cause.explain().unwrap());
+
+        stack.push(self.get_graph().neighbors(start_index));
+
+        while let Some(children) = stack.last_mut() {
+            if let Some(child) = children.next() {
+                let cause = self.get_causaloid(child.index())
+                    .expect("Failed to get causaloid");
+
+                reasoning_utils::append_string(&mut explanation, &cause.explain().unwrap());
+
+                if child == stop_index {
+                    return Ok(explanation);
+                } else {
+                    stack.push(self.get_graph().neighbors(child));
+                }
+            } else {
+                stack.pop();
+            }
+        }
+
+        Ok(explanation)
+    }
 
     /// Explains the line of reasoning across the entire graph.
     /// Returns: String representing the explanation or an error

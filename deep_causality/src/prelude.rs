@@ -17,17 +17,17 @@ pub use crate::protocols::assumable::AssumableReasoning;
 pub use crate::protocols::causable::Causable;
 pub use crate::protocols::causable::CausableReasoning;
 pub use crate::protocols::causable_graph::*;
-pub use crate::protocols::causable_graph::causable_graph_type::CausableGraph;
-pub use crate::protocols::causable_graph::causable_graph_reasoning::CausableGraphReasoning;
-pub use crate::protocols::causable_graph::causable_graph_explaining::CausableGraphExplaining;
+pub use crate::protocols::causable_graph::graph::CausableGraph;
+pub use crate::protocols::causable_graph::graph_explaining::CausableGraphExplaining;
+pub use crate::protocols::causable_graph::graph_reasoning::CausableGraphReasoning;
 // contextuable protocols
 pub use crate::protocols::contextuable::Contextuable;
 pub use crate::protocols::contextuable::ContextuableGraph;
 pub use crate::protocols::contextuable::Datable;
-pub use crate::protocols::contextuable::Spatial;
 pub use crate::protocols::contextuable::SpaceTemporal;
-pub use crate::protocols::contextuable::Temporal;
+pub use crate::protocols::contextuable::Spatial;
 pub use crate::protocols::contextuable::Temporable;
+pub use crate::protocols::contextuable::Temporal;
 // Identifiable protocols
 pub use crate::protocols::identifiable::Identifiable;
 // Inferable protocols
@@ -43,23 +43,23 @@ pub use crate::protocols::observable::ObservableReasoning;
 pub use crate::types::alias_types::*;
 // Context types
 pub use crate::types::context_types::context;
+// Context graph types
+pub use crate::types::context_types::context::Context;
+// Graph types
+pub use crate::types::context_types::contextoid::*;
+pub use crate::types::context_types::contextoid_type::*;
 // Default context node types. Overwrite traits to customize.
 pub use crate::types::context_types::node_types::dateoid::Dataoid;
 pub use crate::types::context_types::node_types::space_tempoid::SpaceTempoid;
 pub use crate::types::context_types::node_types::spaceoid::Spaceoid;
 pub use crate::types::context_types::node_types::tempoid::Tempoid;
-// Context graph types
-pub use crate::types::context_types::context::Context;
-pub use crate::types::context_types::time_scale::TimeScale;
-// Graph types
-pub use crate::types::context_types::contextoid::*;
-pub use crate::types::context_types::contextoid_type::*;
 pub use crate::types::context_types::relation_kind::*;
 pub use crate::types::context_types::root::*;
+pub use crate::types::context_types::time_scale::TimeScale;
+pub use crate::types::csm_types::CSM;
 // CSM types
 pub use crate::types::csm_types::csm_action::CausalAction;
 pub use crate::types::csm_types::csm_state::CausalState;
-pub use crate::types::csm_types::CSM;
 // Model types
 pub use crate::types::model_types::model::Model;
 // Reasoning types
@@ -73,3 +73,4 @@ pub use crate::types::reasoning_types::observable::observation::Observation;
 // Utils
 //
 pub use crate::utils::time_utils::*;
+
