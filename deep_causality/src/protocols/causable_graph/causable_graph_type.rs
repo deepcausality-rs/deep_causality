@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use petgraph::matrix_graph::MatrixGraph;
-use petgraph::Directed;
+use petgraph::algo::astar;
+use petgraph::prelude::EdgeRef;
 use crate::errors::{CausalGraphIndexError, CausalityGraphError};
-use crate::prelude::{Causable, NumericalValue};
-
-
-// Edge weights need to be numerical (u64) to make shortest path algo work.
-pub type CausalGraph<T> = MatrixGraph<T, u64, Directed, Option<u64>, u32>;
+use crate::prelude::{Causable, NodeIndex, NumericalValue};
+use crate::protocols::causable_graph::CausalGraph;
 
 pub trait CausableGraph<T>
     where
@@ -43,5 +40,25 @@ pub trait CausableGraph<T>
     fn number_edges(&self) -> usize;
     fn number_nodes(&self) -> usize;
     fn get_graph(&self) -> &CausalGraph<T>;
+
+    /// Default implementation for shortest path algorithm based on a star
+    fn get_shortest_path(
+        &self,
+        start_index: NodeIndex,
+        stop_index: NodeIndex,
+    )
+        -> Result<Vec<NodeIndex>, CausalityGraphError>
+    {
+        // A* algorithm https://docs.rs/petgraph/latest/petgraph/algo/astar/fn.astar.html
+        let (_, path) = astar(
+            &self.get_graph(),
+            start_index,
+            |finish| finish == stop_index,
+            |e| *e.weight(),
+            |_| 0)
+            .expect("Could not find shortest path");
+
+        Ok(path)
+    }
 }
 
