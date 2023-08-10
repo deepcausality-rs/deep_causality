@@ -19,6 +19,13 @@ fn test_new_with_capacity() {
 }
 
 #[test]
+fn test_default() {
+    let g: CausaloidGraph<Causaloid<Dataoid, Spaceoid, Tempoid, SpaceTempoid>> = CausaloidGraph::default();
+    assert_eq!(g.number_nodes(), 0);
+    assert_eq!(g.number_edges(), 0);
+}
+
+#[test]
 fn test_add_root_causaloid() {
     let mut g = CausaloidGraph::new();
     let root_causaloid = test_utils::get_test_causaloid();

@@ -2,6 +2,7 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use std::collections::HashMap;
+use std::fmt::Debug;
 use petgraph::matrix_graph::MatrixGraph;
 use crate::prelude::*;
 use crate::utils::reasoning_utils;
@@ -48,6 +49,14 @@ impl<T> CausaloidGraph<T>
     }
 }
 
+impl<T> Default for CausaloidGraph<T>
+    where
+        T: Debug + Causable + Clone + PartialEq,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl<T> CausableGraph<T> for CausaloidGraph<T>
     where
