@@ -10,8 +10,18 @@ members = [
     "deep_causality_macros",
 ]
 
+# Optimize all crates
 [profile.release]
+opt-level = 3
 strip = true  # Automatically strip debug symbols from the binary
 lto = true    # Enable Link Time Optimization (LTO)
 codegen-units = 1 # Reduce Parallel Code Generation Units to Increase Optimization
 panic = "abort"  # disabled
+
+# There's a Cargo feature named profile-overrides
+# that lets you override the optimization level of dependencies.
+# https://docs.rust-embedded.org/book/unsorted/speed-vs-size.html
+[profile.release.package."*"]
+opt-level = 3
+strip = true  # Automatically strip debug symbols from the binary to reduce size
+codegen-units = 1 # Reduce Parallel Code Generation Units to Increase Optimization
