@@ -2,9 +2,9 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use std::cell::RefCell;
-use std::fmt::Error;
 use std::marker::PhantomData;
 
+use crate::error::HyperGraphError;
 use crate::graph_like::GraphLike;
 use crate::storage::Storage;
 
@@ -49,19 +49,19 @@ impl<S, T> GraphLike<T> for HyperGraph<S, T>
         self.storage.borrow().contains_node(index)
     }
 
-    fn get_node(&self, index: usize) -> Option<T> {
-        self.storage.borrow().get_node(index)
+    // fn get_node(&self, index: usize) -> Option<T> {
+    //     self.storage.borrow().get_node(index)
+    // }
+
+    fn remove_node(&mut self, index: usize) -> Result<(), HyperGraphError> {
+        self.storage.borrow_mut().remove_node(index)
     }
 
-    fn remove_node(&mut self, a: usize) -> T {
-        self.storage.borrow_mut().remove_node(a)
-    }
-
-    fn add_edge(&mut self, a: usize, b: usize) -> Result<(), Error> {
+    fn add_edge(&mut self, a: usize, b: usize) -> Result<(), HyperGraphError> {
         self.storage.borrow_mut().add_edge(a, b)
     }
 
-    fn add_edge_with_weight(&mut self, a: usize, b: usize, weight: u64) -> Result<(), Error> {
+    fn add_edge_with_weight(&mut self, a: usize, b: usize, weight: u64) -> Result<(), HyperGraphError> {
         self.storage.borrow_mut().add_edge_with_weight(a, b, weight)
     }
 
@@ -69,7 +69,7 @@ impl<S, T> GraphLike<T> for HyperGraph<S, T>
         self.storage.borrow().contains_edge(a, b)
     }
 
-    fn remove_edge(&mut self, a: usize, b: usize) -> Result<(), Error> {
+    fn remove_edge(&mut self, a: usize, b: usize) -> Result<(), HyperGraphError> {
         self.storage.borrow_mut().remove_edge(a, b)
     }
 }
