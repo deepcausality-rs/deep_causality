@@ -11,7 +11,12 @@ pub mod errors;
 pub mod storage;
 pub mod types;
 
-pub fn new_matrix_storage_with_capacity<T>(
+/// Returns a new UltraGraph with matrix storage backend.
+///
+/// # Arguments
+/// * Capacity refers to the maximum number of nodes that fit into the graph before a resize occurs.
+///
+pub fn new_with_matrix_storage<T>(
     capacity: usize
 )
     -> UltraGraph<StorageMatrixGraph<T>, T>
@@ -21,7 +26,14 @@ pub fn new_matrix_storage_with_capacity<T>(
     UltraGraph::new(StorageMatrixGraph::<T>::new_with_capacity(capacity))
 }
 
-pub fn new_csr_storage_with_capacity<T>(
+/// Returns a new UltraGraph with a Compressed Sparse Representation (CSR) as storage backend.
+/// APPEND ONLY UltraGraph!
+/// CSR storage does not support the removal of nodes or edges.
+///
+/// # Arguments
+/// * Capacity refers to the maximum number of nodes that fit into the graph before a resize occurs.
+///
+pub fn new_with_csr_storage<T>(
     capacity: usize
 )
     -> UltraGraph<StorageCSRGraph<T>, T>
