@@ -11,5 +11,5 @@ pub use crate::storage::storage_csr::StorageCSRGraph;
 // Storage
 pub use crate::storage::storage_matrix::StorageMatrixGraph;
 // Main type
-pub use crate::ultra_graph::UltraGraph;
+pub use crate::types::ultra_graph::UltraGraph;
 

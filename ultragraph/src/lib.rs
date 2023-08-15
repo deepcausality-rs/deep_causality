@@ -6,10 +6,10 @@
 use crate::prelude::{StorageCSRGraph, StorageMatrixGraph, UltraGraph};
 
 pub mod prelude;
-pub mod ultra_graph;
 pub mod protocols;
 pub mod errors;
 pub mod storage;
+pub mod types;
 
 pub fn new_matrix_storage_with_capacity<T>(
     capacity: usize
