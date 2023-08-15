@@ -92,17 +92,15 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
         self.index_map.get(&index).is_some()
     }
 
-    // map returns Option<&T>
-    //
-    // fn get_node(&self, index: usize) -> Option<T>
-    // {
-    //     if !self.contains_node(index) {
-    //         None
-    //     } else {
-    //         let k = self.index_map.get(&index).expect("index not found");
-    //         self.index_map.get(&k.index())
-    //     }
-    // }
+    fn get_node(&self, index: usize) -> Option<&T>
+    {
+        if !self.contains_node(index) {
+            None
+        } else {
+            let k = self.index_map.get(&index).expect("index not found");
+            self.node_map.get(&k)
+        }
+    }
 
     fn remove_node(&mut self, index: usize) -> Result<(), HyperGraphError> {
         if !self.contains_node(index) {

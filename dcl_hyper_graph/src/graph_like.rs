@@ -14,7 +14,7 @@ pub trait GraphLike<T>
 
     fn contains_node(&self, index: usize) -> bool;
 
-    //fn get_node(&self, index: usize) -> Option<T>;
+    fn get_node(&self, index: usize) -> Option<&T>;
 
     fn remove_node(&mut self, index: usize) -> Result<(), HyperGraphError>;
 
