@@ -20,7 +20,7 @@ type NodeIndex<Ix = DefaultIx> = GraphNodeIndex<Ix>;
 // coming from the u16 default node index default type in petgraph.
 // u32 has a limit of 2^31 - 1 (4,294,967,295). NodeIndex can be at most u32 because petgraph has no implementation
 // for u64 or u128. See: https://docs.rs/petgraph/latest/petgraph/graph/trait.IndexType.html
-pub type HyperGraph<T> = MatrixGraph<T, u64, Directed, Option<u64>, u32>;
+type HyperGraph<T> = MatrixGraph<T, u64, Directed, Option<u64>, u32>;
 
 //
 // Petgraph has no good way to retrieve a specific node hence the hashmap as support structure

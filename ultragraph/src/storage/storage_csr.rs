@@ -43,6 +43,15 @@ impl<T> StorageCSRGraph<T>
     }
 }
 
+impl<T> Default for StorageCSRGraph<T>
+    where
+        T: Copy + Clone + Default
+{
+    fn default() -> Self {
+        Self::new_with_capacity(100)
+    }
+}
+
 
 impl<T> GraphStorage<T> for StorageCSRGraph<T>
     where

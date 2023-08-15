@@ -6,7 +6,7 @@ use crate::protocols::graph_root::GraphRoot;
 
 pub trait GraphStorage<T>: GraphLike<T> + GraphRoot<T>
     where
-        T: Copy,
+        T: Copy
 {
     fn size(&self) -> usize;
 
