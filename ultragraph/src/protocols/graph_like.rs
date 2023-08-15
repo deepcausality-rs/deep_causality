@@ -8,8 +8,6 @@ pub trait GraphLike<T>
     where
         T: Copy,
 {
-    fn clear(&mut self);
-
     fn add_node(&mut self, value: T) -> usize;
 
     fn contains_node(&self, index: usize) -> bool;

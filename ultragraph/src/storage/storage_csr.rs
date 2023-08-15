@@ -72,6 +72,13 @@ impl<T> GraphStorage<T> for StorageCSRGraph<T>
     fn number_edges(&self) -> usize {
         self.graph.edge_count()
     }
+
+    fn clear(&mut self) {
+        self.graph.clear_edges();
+        self.node_map.clear();
+        self.index_map.clear();
+        self.root_index = None;
+    }
 }
 
 
@@ -128,12 +135,6 @@ impl<T> GraphLike<T> for StorageCSRGraph<T>
     where
         T: Copy + Clone + Default
 {
-    fn clear(&mut self) {
-        self.graph.clear_edges();
-        self.node_map.clear();
-        self.index_map.clear();
-        self.root_index = None;
-    }
 
     fn add_node(&mut self, value: T) -> usize
     {

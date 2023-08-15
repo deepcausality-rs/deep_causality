@@ -10,7 +10,7 @@ use crate::prelude::*;
 #[derive(Debug, Clone)]
 pub struct UltraGraph<S, T>
     where
-        T: Copy,
+        T: Copy + Clone + Default,
         S: GraphStorage<T>,
 {
     storage: S,
@@ -19,7 +19,7 @@ pub struct UltraGraph<S, T>
 
 impl<S, T> UltraGraph<S, T>
     where
-        T: Copy + Default,
+        T: Copy + Clone + Default,
         S: GraphStorage<T>,
 {
     pub fn new(storage: S) -> Self {
@@ -30,9 +30,35 @@ impl<S, T> UltraGraph<S, T>
     }
 }
 
+impl<S, T> GraphStorage<T> for UltraGraph<S, T>
+    where
+        T: Copy + Clone + Default,
+        S: GraphStorage<T>,
+{
+    fn size(&self) -> usize {
+        self.storage.size()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.storage.is_empty()
+    }
+
+    fn number_nodes(&self) -> usize {
+        self.storage.number_nodes()
+    }
+
+    fn number_edges(&self) -> usize {
+        self.storage.number_edges()
+    }
+
+    fn clear(&mut self) {
+        self.storage.clear()
+    }
+}
+
 impl<S, T> GraphRoot<T> for UltraGraph<S, T>
     where
-        T: Copy + Default,
+        T: Copy + Clone + Default,
         S: GraphStorage<T>,
 {
     fn add_root_node(&mut self, value: T) -> usize {
@@ -58,13 +84,9 @@ impl<S, T> GraphRoot<T> for UltraGraph<S, T>
 
 impl<S, T> GraphLike<T> for UltraGraph<S, T>
     where
-        T: Copy + Default,
+        T: Copy + Clone + Default,
         S: GraphStorage<T>,
 {
-    fn clear(&mut self) {
-        self.storage.clear()
-    }
-
     fn add_node(&mut self, value: T) -> usize {
         self.storage.add_node(value)
     }
@@ -95,27 +117,5 @@ impl<S, T> GraphLike<T> for UltraGraph<S, T>
 
     fn remove_edge(&mut self, a: usize, b: usize) -> Result<(), UltraGraphError> {
         self.storage.remove_edge(a, b)
-    }
-}
-
-impl<S, T> GraphStorage<T> for UltraGraph<S, T>
-    where
-        T: Copy + Default,
-        S: GraphStorage<T>,
-{
-    fn size(&self) -> usize {
-        self.storage.size()
-    }
-
-    fn is_empty(&self) -> bool {
-        self.storage.is_empty()
-    }
-
-    fn number_nodes(&self) -> usize {
-        self.storage.number_nodes()
-    }
-
-    fn number_edges(&self) -> usize {
-        self.storage.number_edges()
     }
 }
