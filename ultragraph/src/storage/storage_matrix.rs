@@ -73,6 +73,28 @@ impl<T> StorageMatrixGraph<T>
 }
 
 
+impl<T> GraphStorage<T> for StorageMatrixGraph<T>
+    where
+        T: Copy
+{
+    fn size(&self) -> usize {
+        self.graph.node_count()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.graph.node_count() == 0
+    }
+
+    fn number_nodes(&self) -> usize {
+        self.graph.node_count()
+    }
+
+    fn number_edges(&self) -> usize {
+        self.graph.edge_count()
+    }
+}
+
+
 impl<T> GraphRoot<T> for StorageMatrixGraph<T>
     where
         T: Copy + Clone,
@@ -109,7 +131,7 @@ impl<T> GraphRoot<T> for StorageMatrixGraph<T>
     fn get_last_index(&self) -> Result<usize, UltraGraphError>
     {
         if !self.is_empty() {
-            Ok(self.causes_map.len() - 1)
+            Ok(self.node_map.len() - 1)
         } else {
             Err(UltraGraphError("Graph is empty".to_string()))
         }
@@ -216,26 +238,5 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
         self.graph.remove_edge(*k, *l);
 
         Ok(())
-    }
-}
-
-impl<T> GraphStorage<T> for StorageMatrixGraph<T>
-    where
-        T: Copy
-{
-    fn size(&self) -> usize {
-        self.graph.node_count()
-    }
-
-    fn is_empty(&self) -> bool {
-        self.graph.node_count() == 0
-    }
-
-    fn number_nodes(&self) -> usize {
-        self.graph.node_count()
-    }
-
-    fn number_edges(&self) -> usize {
-        self.graph.edge_count()
     }
 }
