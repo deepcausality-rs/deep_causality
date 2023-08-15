@@ -58,15 +58,15 @@ impl<T> GraphStorage<T> for StorageCSRGraph<T>
         T: Copy + Clone + Default
 {
     fn size(&self) -> usize {
-        self.graph.node_count()
+        self.node_map.len()
     }
 
     fn is_empty(&self) -> bool {
-        self.graph.node_count() == 0
+        self.node_map.is_empty()
     }
 
     fn number_nodes(&self) -> usize {
-        self.graph.node_count()
+        self.node_map.len()
     }
 
     fn number_edges(&self) -> usize {
@@ -106,9 +106,8 @@ impl<T> GraphRoot<T> for StorageCSRGraph<T>
         {
             self.node_map.get(&self.root_index.unwrap())
         } else {
-            return None;
+            None
         }
-
     }
 
     fn get_root_index(&self) -> Option<usize>
@@ -135,7 +134,6 @@ impl<T> GraphLike<T> for StorageCSRGraph<T>
     where
         T: Copy + Clone + Default
 {
-
     fn add_node(&mut self, value: T) -> usize
     {
         let node_index = self.graph.add_node(value);
@@ -159,13 +157,9 @@ impl<T> GraphLike<T> for StorageCSRGraph<T>
         }
     }
 
-    fn remove_node(&mut self, index: usize) -> Result<(), UltraGraphError> {
-        if !self.contains_node(index) {
-            return Err(UltraGraphError(format!("index {} not found", index)));
-        };
-
-        // CSR DOES NOT have a way to remove a node...
-        Ok(())
+    /// UNSUPPORTED
+    fn remove_node(&mut self, _index: usize) -> Result<(), UltraGraphError> {
+        Err(UltraGraphError("CSR DOES NOT SUPPORT REMOVE NODES".to_string()))
     }
 
     fn add_edge(&mut self, a: usize, b: usize) -> Result<(), UltraGraphError> {
@@ -209,17 +203,8 @@ impl<T> GraphLike<T> for StorageCSRGraph<T>
         self.graph.contains_edge(*k, *l)
     }
 
-    fn remove_edge(&mut self, a: usize, b: usize) -> Result<(), UltraGraphError> {
-        if !self.contains_node(a) {
-            return Err(UltraGraphError("index a not found".into()));
-        };
-
-        if !self.contains_node(b) {
-            return Err(UltraGraphError("index b not found".into()));
-        };
-
-        // CSR DOES NOT have a way to remove an edge...
-
-        Ok(())
+    /// UNSUPPORTED
+    fn remove_edge(&mut self, _a: usize, _b: usize) -> Result<(), UltraGraphError> {
+        Err(UltraGraphError("CSR DOES NOT SUPPORT remove_edge".to_string()))
     }
 }

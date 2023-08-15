@@ -9,7 +9,7 @@ pub struct Data {
 }
 
 fn get_ultra_graph() -> UltraGraph<StorageMatrixGraph<Data>, Data> {
-    ultragraph::new_with_matrix_storage::<Data>(100)
+    ultragraph::new_with_matrix_storage::<Data>(10)
 }
 
 #[test]
@@ -44,6 +44,35 @@ fn test_number_edges() {
     let g = get_ultra_graph();
 
     let expected = 0;
+    let actual = g.number_edges();
+    assert_eq!(expected, actual);
+}
+
+#[test]
+fn test_clear() {
+    let mut g = get_ultra_graph();
+    assert!(g.is_empty());
+    let expected = 0;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+
+    let d = Data { x: 1 };
+    let root_index = g.add_root_node(d);
+    assert_eq!(root_index, 0);
+    assert!(!g.is_empty());
+
+    let expected = 1;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+
+    g.clear();
+
+    assert!(g.is_empty());
+    let expected = 0;
+
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+
     let actual = g.number_edges();
     assert_eq!(expected, actual);
 }
@@ -147,5 +176,309 @@ fn test_get_last_index() {
     assert_eq!(expected, actual);
 }
 
+#[test]
+fn test_add_node() {
+    let mut g = get_ultra_graph();
+    assert!(g.is_empty());
+    let expected = 0;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+
+    let d = Data { x: 1 };
+    let root_index = g.add_root_node(d);
+    assert_eq!(root_index, 0);
+
+    let expected = 1;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+
+    let d = Data { x: 42 };
+    let index = g.add_node(d);
+    assert_eq!(index, 1);
+
+    let expected = 2;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+}
+
+#[test]
+fn test_contains_node() {
+    let mut g = get_ultra_graph();
+    assert!(g.is_empty());
+    let expected = 0;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+
+    let d = Data { x: 1 };
+    let root_index = g.add_root_node(d);
+    assert_eq!(root_index, 0);
+
+    let expected = 1;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+
+    let expected = false;
+    let actual = g.contains_node(1);
+    assert_eq!(expected, actual);
+
+    let d = Data { x: 42 };
+    let index = g.add_node(d);
+    assert_eq!(index, 1);
+
+    let expected = true;
+    let actual = g.contains_node(1);
+    assert_eq!(expected, actual);
+
+    let expected = 2;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+}
+
+#[test]
+fn test_get_node() {
+    let mut g = get_ultra_graph();
+    assert!(g.is_empty());
+    let expected = 0;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+
+    let d = Data { x: 1 };
+    let root_index = g.add_root_node(d);
+    assert_eq!(root_index, 0);
+
+    let expected = 1;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+
+    let expected = false;
+    let actual = g.contains_node(1);
+    assert_eq!(expected, actual);
+
+    let d = Data { x: 42 };
+    let index = g.add_node(d);
+    assert_eq!(index, 1);
+
+    let data = g.get_node(1).unwrap();
+    assert_eq!(*data, d);
+    assert_eq!(data.x, d.x);
+    assert_eq!(data.x, 42);
+
+    let expected = true;
+    let actual = g.contains_node(1);
+    assert_eq!(expected, actual);
+
+    let expected = 2;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+}
 
 
+#[test]
+fn test_remove_node() {
+    let mut g = get_ultra_graph();
+    assert!(g.is_empty());
+    let expected = 0;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+
+    let d = Data { x: 1 };
+    let root_index = g.add_root_node(d);
+    assert_eq!(root_index, 0);
+
+    let expected = 1;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+
+    let expected = false;
+    let actual = g.contains_node(1);
+    assert_eq!(expected, actual);
+
+    let d = Data { x: 42 };
+    let index = g.add_node(d);
+    assert_eq!(index, 1);
+
+    let data = g.get_node(1).unwrap();
+    assert_eq!(*data, d);
+    assert_eq!(data.x, d.x);
+    assert_eq!(data.x, 42);
+
+    let expected = true;
+    let actual = g.contains_node(1);
+    assert_eq!(expected, actual);
+
+    let result = g.remove_node(1);
+    assert!(result.is_ok());
+    assert!(!g.contains_node(1));
+
+    let expected = 1;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+}
+
+#[test]
+fn test_add_edge() {
+    let mut g = get_ultra_graph();
+    assert!(g.is_empty());
+    let expected = 0;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+
+    let d = Data { x: 1 };
+    let root_index = g.add_root_node(d);
+    assert_eq!(root_index, 0);
+
+    let expected = 1;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+
+    let expected = false;
+    let actual = g.contains_node(1);
+    assert_eq!(expected, actual);
+
+    let d = Data { x: 42 };
+    let node_a_index = g.add_node(d);
+    assert_eq!(node_a_index, 1);
+
+    let expected = true;
+    let actual = g.contains_node(1);
+    assert_eq!(expected, actual);
+
+    let expected = 2;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+
+    let res = g.add_edge(root_index, node_a_index);
+    assert!(res.is_ok());
+}
+
+#[test]
+fn test_add_edge_with_weight() {
+    let mut g = get_ultra_graph();
+    assert!(g.is_empty());
+    let expected = 0;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+
+    let d = Data { x: 1 };
+    let root_index = g.add_root_node(d);
+    assert_eq!(root_index, 0);
+
+    let expected = 1;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+
+    let expected = false;
+    let actual = g.contains_node(1);
+    assert_eq!(expected, actual);
+
+    let d = Data { x: 42 };
+    let node_a_index = g.add_node(d);
+    assert_eq!(node_a_index, 1);
+
+    let expected = true;
+    let actual = g.contains_node(1);
+    assert_eq!(expected, actual);
+
+    let expected = 2;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+
+    let res = g.add_edge_with_weight(root_index, node_a_index, 42);
+    assert!(res.is_ok());
+}
+
+#[test]
+fn test_contains_edge() {
+    let mut g = get_ultra_graph();
+    assert!(g.is_empty());
+    let expected = 0;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+
+    let d = Data { x: 1 };
+    let root_index = g.add_root_node(d);
+    assert_eq!(root_index, 0);
+
+    let expected = 1;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+
+    let expected = false;
+    let actual = g.contains_node(1);
+    assert_eq!(expected, actual);
+
+    let d = Data { x: 42 };
+    let node_a_index = g.add_node(d);
+    assert_eq!(node_a_index, 1);
+
+    let expected = true;
+    let actual = g.contains_node(1);
+    assert_eq!(expected, actual);
+
+    let expected = 2;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+
+    let expected = false;
+    let actual = g.contains_edge(root_index, node_a_index);
+    assert_eq!(expected, actual);
+
+    let res = g.add_edge(root_index, node_a_index);
+    assert!(res.is_ok());
+
+    let expected = true;
+    let actual = g.contains_edge(root_index, node_a_index);
+    assert_eq!(expected, actual);
+}
+
+
+#[test]
+fn test_remove_edge() {
+    let mut g = get_ultra_graph();
+    assert!(g.is_empty());
+    let expected = 0;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+
+    let d = Data { x: 1 };
+    let root_index = g.add_root_node(d);
+    assert_eq!(root_index, 0);
+
+    let expected = 1;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+
+    let expected = false;
+    let actual = g.contains_node(1);
+    assert_eq!(expected, actual);
+
+    let d = Data { x: 42 };
+    let node_a_index = g.add_node(d);
+    assert_eq!(node_a_index, 1);
+
+    let expected = true;
+    let actual = g.contains_node(1);
+    assert_eq!(expected, actual);
+
+    let expected = 2;
+    let actual = g.number_nodes();
+    assert_eq!(expected, actual);
+
+    let expected = false;
+    let actual = g.contains_edge(root_index, node_a_index);
+    assert_eq!(expected, actual);
+
+    let res = g.add_edge(root_index, node_a_index);
+    assert!(res.is_ok());
+
+    let expected = true;
+    let actual = g.contains_edge(root_index, node_a_index);
+    assert_eq!(expected, actual);
+
+    let res = g.remove_edge(root_index, node_a_index);
+    assert!(res.is_ok());
+
+    let expected = false;
+    let actual = g.contains_edge(root_index, node_a_index);
+    assert_eq!(expected, actual);
+}

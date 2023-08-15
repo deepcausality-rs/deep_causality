@@ -136,7 +136,7 @@ impl<T> GraphRoot<T> for StorageMatrixGraph<T>
         {
             self.node_map.get(&self.root_index.unwrap())
         } else {
-            return None;
+            None
         }
     }
 
@@ -194,7 +194,7 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
 
         let k = self.index_map.get(&index).unwrap();
         self.graph.remove_node(*k);
-        self.node_map.remove(&k);
+        self.node_map.remove(k);
         self.index_map.remove(&k.index());
         Ok(())
     }
