@@ -7,9 +7,10 @@ use petgraph::Directed;
 use petgraph::graph::NodeIndex as GraphNodeIndex;
 use petgraph::matrix_graph::MatrixGraph;
 
-use crate::error::HyperGraphError;
-use crate::graph_like::GraphLike;
-use crate::storage::Storage;
+use crate::errors::UltraGraphError;
+use crate::protocols::graph_like::GraphLike;
+use crate::protocols::graph_root::GraphRoot;
+use crate::protocols::graph_storage::GraphStorage;
 
 type DefaultIx = u32;
 type NodeIndex<Ix = DefaultIx> = GraphNodeIndex<Ix>;
@@ -71,6 +72,33 @@ impl<T> StorageMatrixGraph<T>
     }
 }
 
+
+impl<T> GraphRoot<T> for StorageMatrixGraph<T>
+    where
+        T: Copy + Clone,
+{
+    fn add_root_node(&mut self, value: T) -> usize {
+        todo!()
+    }
+
+    fn contains_root_node(&self) -> bool {
+        todo!()
+    }
+
+    fn get_root_node(&self) -> Option<&T> {
+        todo!()
+    }
+
+    fn get_root_index(&self) -> Option<usize> {
+        todo!()
+    }
+
+    fn get_last_index(&self) -> Result<usize, UltraGraphError> {
+        todo!()
+    }
+}
+
+
 impl<T> GraphLike<T> for StorageMatrixGraph<T>
     where
         T: Copy + Clone,
@@ -102,9 +130,9 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
         }
     }
 
-    fn remove_node(&mut self, index: usize) -> Result<(), HyperGraphError> {
+    fn remove_node(&mut self, index: usize) -> Result<(), UltraGraphError> {
         if !self.contains_node(index) {
-            return Err(HyperGraphError(format!("index {} not found", index)));
+            return Err(UltraGraphError(format!("index {} not found", index)));
         };
 
         let k = self.index_map.get(&index).unwrap();
@@ -114,13 +142,13 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
         Ok(())
     }
 
-    fn add_edge(&mut self, a: usize, b: usize) -> Result<(), HyperGraphError> {
+    fn add_edge(&mut self, a: usize, b: usize) -> Result<(), UltraGraphError> {
         if !self.contains_node(a) {
-            return Err(HyperGraphError(format!("index a {} not found", a)));
+            return Err(UltraGraphError(format!("index a {} not found", a)));
         };
 
         if !self.contains_node(b) {
-            return Err(HyperGraphError(format!("index b {} not found", b)));
+            return Err(UltraGraphError(format!("index b {} not found", b)));
         };
 
         let k = self.index_map.get(&a).expect("index not found");
@@ -129,13 +157,13 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
         Ok(())
     }
 
-    fn add_edge_with_weight(&mut self, a: usize, b: usize, weight: u64) -> Result<(), HyperGraphError> {
+    fn add_edge_with_weight(&mut self, a: usize, b: usize, weight: u64) -> Result<(), UltraGraphError> {
         if !self.contains_node(a) {
-            return Err(HyperGraphError(format!("index a {} not found", a)));
+            return Err(UltraGraphError(format!("index a {} not found", a)));
         };
 
         if !self.contains_node(b) {
-            return Err(HyperGraphError(format!("index b {} not found", b)));
+            return Err(UltraGraphError(format!("index b {} not found", b)));
         };
 
         let k = self.index_map.get(&a).expect("index not found");
@@ -155,13 +183,13 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
         self.graph.has_edge(*k, *l)
     }
 
-    fn remove_edge(&mut self, a: usize, b: usize) -> Result<(), HyperGraphError> {
+    fn remove_edge(&mut self, a: usize, b: usize) -> Result<(), UltraGraphError> {
         if !self.contains_node(a) {
-            return Err(HyperGraphError("index a not found".into()));
+            return Err(UltraGraphError("index a not found".into()));
         };
 
         if !self.contains_node(b) {
-            return Err(HyperGraphError("index b not found".into()));
+            return Err(UltraGraphError("index b not found".into()));
         };
 
         let k = self.index_map.get(&a).expect("index not found");
@@ -173,7 +201,7 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
     }
 }
 
-impl<T> Storage<T> for StorageMatrixGraph<T>
+impl<T> GraphStorage<T> for StorageMatrixGraph<T>
     where
         T: Copy
 {

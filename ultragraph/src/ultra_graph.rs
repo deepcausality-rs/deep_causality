@@ -3,15 +3,13 @@
 
 use std::marker::PhantomData;
 
-use crate::error::HyperGraphError;
-use crate::graph_like::GraphLike;
-use crate::storage::Storage;
+use crate::prelude::*;
 
 #[derive(Debug, Clone)]
 pub struct UltraGraph<S, T>
     where
         T: Copy,
-        S: Storage<T>,
+        S: GraphStorage<T>,
 {
     storage: S,
     ty: PhantomData<T>,
@@ -20,7 +18,7 @@ pub struct UltraGraph<S, T>
 impl<S, T> UltraGraph<S, T>
     where
         T: Copy + Default,
-        S: Storage<T>,
+        S: GraphStorage<T>,
 {
     pub fn new(storage: S) -> Self {
         Self {
@@ -30,10 +28,36 @@ impl<S, T> UltraGraph<S, T>
     }
 }
 
+impl<S, T> GraphRoot<T> for UltraGraph<S, T>
+    where
+        T: Copy + Default,
+        S: GraphStorage<T>,
+{
+    fn add_root_node(&mut self, value: T) -> usize {
+        self.storage.add_root_node(value)
+    }
+
+    fn contains_root_node(&self) -> bool {
+        self.storage.contains_root_node()
+    }
+
+    fn get_root_node(&self) -> Option<&T> {
+        self.storage.get_root_node()
+    }
+
+    fn get_root_index(&self) -> Option<usize> {
+        self.storage.get_root_index()
+    }
+
+    fn get_last_index(&self) -> Result<usize, UltraGraphError> {
+        self.storage.get_last_index()
+    }
+}
+
 impl<S, T> GraphLike<T> for UltraGraph<S, T>
     where
         T: Copy + Default,
-        S: Storage<T>,
+        S: GraphStorage<T>,
 {
     fn clear_graph(&mut self) {
         self.storage.clear_graph()
@@ -51,15 +75,15 @@ impl<S, T> GraphLike<T> for UltraGraph<S, T>
         self.storage.get_node(index)
     }
 
-    fn remove_node(&mut self, index: usize) -> Result<(), HyperGraphError> {
+    fn remove_node(&mut self, index: usize) -> Result<(), UltraGraphError> {
         self.storage.remove_node(index)
     }
 
-    fn add_edge(&mut self, a: usize, b: usize) -> Result<(), HyperGraphError> {
+    fn add_edge(&mut self, a: usize, b: usize) -> Result<(), UltraGraphError> {
         self.storage.add_edge(a, b)
     }
 
-    fn add_edge_with_weight(&mut self, a: usize, b: usize, weight: u64) -> Result<(), HyperGraphError> {
+    fn add_edge_with_weight(&mut self, a: usize, b: usize, weight: u64) -> Result<(), UltraGraphError> {
         self.storage.add_edge_with_weight(a, b, weight)
     }
 
@@ -67,15 +91,15 @@ impl<S, T> GraphLike<T> for UltraGraph<S, T>
         self.storage.contains_edge(a, b)
     }
 
-    fn remove_edge(&mut self, a: usize, b: usize) -> Result<(), HyperGraphError> {
+    fn remove_edge(&mut self, a: usize, b: usize) -> Result<(), UltraGraphError> {
         self.storage.remove_edge(a, b)
     }
 }
 
-impl<S, T> Storage<T> for UltraGraph<S, T>
+impl<S, T> GraphStorage<T> for UltraGraph<S, T>
     where
         T: Copy + Default,
-        S: Storage<T>,
+        S: GraphStorage<T>,
 {
     fn size(&self) -> usize {
         self.storage.size()

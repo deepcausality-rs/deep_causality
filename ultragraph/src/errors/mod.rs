@@ -5,13 +5,13 @@ use std::error::Error;
 use std::fmt;
 
 #[derive(Debug)]
-pub struct HyperGraphError(pub String);
+pub struct UltraGraphError(pub String);
 
-impl Error for HyperGraphError {}
+impl Error for UltraGraphError {}
 
-impl fmt::Display for HyperGraphError
+impl fmt::Display for UltraGraphError
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "HyperGraphError: {}", self.0)
+        write!(f, "UltraGraphError: {}", self.0)
     }
 }
