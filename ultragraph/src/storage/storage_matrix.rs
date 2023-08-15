@@ -189,8 +189,8 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
 
         let k = self.index_map.get(&index).unwrap();
         self.graph.remove_node(*k);
+        self.node_map.remove(&k);
         self.index_map.remove(&k.index());
-        self.index_map.remove(&index);
         Ok(())
     }
 

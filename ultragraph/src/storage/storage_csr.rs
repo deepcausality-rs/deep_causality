@@ -118,10 +118,6 @@ impl<T> GraphLike<T> for StorageCSRGraph<T>
         self.node_map.clear();
         self.index_map.clear();
         self.root_index = NodeIndex::new(0);
-        // &self.root_index = &NodeIndex::new(0);
-        // &self.graph = &CsrGraph::with_nodes(self.capacity);
-        // &self.node_map = &HashMap::with_capacity(self.capacity);
-        // &self.index_map = &HashMap::with_capacity(self.capacity);
     }
 
     fn add_node(&mut self, value: T) -> usize
@@ -152,10 +148,7 @@ impl<T> GraphLike<T> for StorageCSRGraph<T>
             return Err(UltraGraphError(format!("index {} not found", index)));
         };
 
-        // let k = self.index_map.get(&index).unwrap();
-        // self.graph.remove_node(*k);
-        // self.index_map.remove(&k.index());
-        // self.index_map.remove(&index);
+        // CSR DOES NOT have a way to remove a node...
         Ok(())
     }
 
@@ -209,9 +202,7 @@ impl<T> GraphLike<T> for StorageCSRGraph<T>
             return Err(UltraGraphError("index b not found".into()));
         };
 
-        // let k = self.index_map.get(&a).expect("index not found");
-        // let l = self.index_map.get(&b).expect("index not found");
-        // self.graph.remove_edge(*k, *l);
+        // CSR DOES NOT have a way to remove an edge...
 
         Ok(())
     }

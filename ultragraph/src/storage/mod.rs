@@ -5,4 +5,3 @@
 
 pub mod storage_matrix;
 pub mod storage_csr;
-pub mod storage_map;
