@@ -8,7 +8,7 @@ use crate::graph_like::GraphLike;
 use crate::storage::Storage;
 
 #[derive(Debug, Clone)]
-pub struct HyperGraph<S, T>
+pub struct UltraGraph<S, T>
     where
         T: Copy,
         S: Storage<T>,
@@ -17,7 +17,7 @@ pub struct HyperGraph<S, T>
     ty: PhantomData<T>,
 }
 
-impl<S, T> HyperGraph<S, T>
+impl<S, T> UltraGraph<S, T>
     where
         T: Copy + Default,
         S: Storage<T>,
@@ -30,7 +30,7 @@ impl<S, T> HyperGraph<S, T>
     }
 }
 
-impl<S, T> GraphLike<T> for HyperGraph<S, T>
+impl<S, T> GraphLike<T> for UltraGraph<S, T>
     where
         T: Copy + Default,
         S: Storage<T>,
@@ -72,7 +72,7 @@ impl<S, T> GraphLike<T> for HyperGraph<S, T>
     }
 }
 
-impl<S, T> Storage<T> for HyperGraph<S, T>
+impl<S, T> Storage<T> for UltraGraph<S, T>
     where
         T: Copy + Default,
         S: Storage<T>,
