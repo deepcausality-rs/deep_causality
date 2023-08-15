@@ -2,7 +2,7 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 
-use crate::error::HyperGraphError;
+use crate::errors::UltraGraphError;
 
 pub trait GraphLike<T>
     where
@@ -16,14 +16,14 @@ pub trait GraphLike<T>
 
     fn get_node(&self, index: usize) -> Option<&T>;
 
-    fn remove_node(&mut self, index: usize) -> Result<(), HyperGraphError>;
+    fn remove_node(&mut self, index: usize) -> Result<(), UltraGraphError>;
 
     fn add_edge(
         &mut self,
         a: usize,
         b: usize,
     )
-        -> Result<(), HyperGraphError>;
+        -> Result<(), UltraGraphError>;
 
     fn add_edge_with_weight(
         &mut self,
@@ -31,7 +31,7 @@ pub trait GraphLike<T>
         b: usize,
         weight: u64,
     )
-        -> Result<(), HyperGraphError>;
+        -> Result<(), UltraGraphError>;
 
     fn contains_edge(
         &self,
@@ -45,5 +45,5 @@ pub trait GraphLike<T>
         a: usize,
         b: usize,
     )
-        -> Result<(), HyperGraphError>;
+        -> Result<(), UltraGraphError>;
 }

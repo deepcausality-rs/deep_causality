@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use crate::graph_like::GraphLike;
+use crate::protocols::graph_like::GraphLike;
+use crate::protocols::graph_root::GraphRoot;
 
-pub trait Storage<T>: GraphLike<T>
+pub trait GraphStorage<T>: GraphLike<T> + GraphRoot<T>
     where
         T: Copy,
 {
