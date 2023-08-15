@@ -77,24 +77,42 @@ impl<T> GraphRoot<T> for StorageMatrixGraph<T>
     where
         T: Copy + Clone,
 {
-    fn add_root_node(&mut self, value: T) -> usize {
-        todo!()
+    fn add_root_node(&mut self, value: T) -> usize
+    {
+        let idx = self.add_node(value);
+        let root_index = NodeIndex::new(idx);
+        self.root_index = root_index;
+        self.index_map.insert(root_index.index(), root_index);
+        root_index.index()
     }
 
-    fn contains_root_node(&self) -> bool {
-        todo!()
+    fn contains_root_node(&self) -> bool
+    {
+        self.node_map.contains_key(&self.root_index)
     }
 
-    fn get_root_node(&self) -> Option<&T> {
-        todo!()
+    fn get_root_node(&self) -> Option<&T>
+    {
+        self.node_map.get(&self.root_index)
+
     }
 
-    fn get_root_index(&self) -> Option<usize> {
-        todo!()
+    fn get_root_index(&self) -> Option<usize>
+    {
+        if self.contains_root_node() {
+            Some(self.root_index.index())
+        } else {
+            None
+        }
     }
 
-    fn get_last_index(&self) -> Result<usize, UltraGraphError> {
-        todo!()
+    fn get_last_index(&self) -> Result<usize, UltraGraphError>
+    {
+        if !self.is_empty() {
+            Ok(self.causes_map.len() - 1)
+        } else {
+            Err(UltraGraphError("Graph is empty".to_string()))
+        }
     }
 }
 
