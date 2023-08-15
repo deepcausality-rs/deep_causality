@@ -41,7 +41,7 @@ type IndexMap = HashMap<usize, NodeIndex>;
 
 pub struct StorageMatrixGraph<T>
     where
-        T: Copy + Clone,
+        T: Copy
 {
     root_index: Option<NodeIndex>,
     graph: HyperGraph<T>,
@@ -51,7 +51,7 @@ pub struct StorageMatrixGraph<T>
 
 impl<T> StorageMatrixGraph<T>
     where
-        T: Copy + Clone,
+        T: Copy
 {
     pub fn new() -> Self {
         Self {
@@ -75,7 +75,7 @@ impl<T> StorageMatrixGraph<T>
 
 impl<T> Default for StorageMatrixGraph<T>
     where
-        T: Copy + Clone
+        T: Copy
 {
     fn default() -> Self {
         Self::new()
@@ -114,7 +114,7 @@ impl<T> GraphStorage<T> for StorageMatrixGraph<T>
 
 impl<T> GraphRoot<T> for StorageMatrixGraph<T>
     where
-        T: Copy + Clone,
+        T: Copy
 {
     fn add_root_node(&mut self, value: T) -> usize
     {
@@ -162,7 +162,7 @@ impl<T> GraphRoot<T> for StorageMatrixGraph<T>
 
 impl<T> GraphLike<T> for StorageMatrixGraph<T>
     where
-        T: Copy + Clone,
+        T: Copy
 {
     fn add_node(&mut self, value: T) -> usize
     {

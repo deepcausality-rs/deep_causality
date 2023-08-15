@@ -33,7 +33,7 @@ impl<S, T> Grid<S, T>
         {
             // interior mutability https://doc.rust-lang.org/book/ch15-05-interior-mutability.html
             inner: RefCell::new(storage),
-            ty: Default::default(),
+            ty: PhantomData,
         }
     }
 

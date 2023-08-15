@@ -4,4 +4,3 @@
 #![forbid(unsafe_code)]
 
 pub mod storage_matrix;
-pub mod storage_csr;

@@ -3,7 +3,7 @@
 
 #![forbid(unsafe_code)]
 
-use crate::prelude::{StorageCSRGraph, StorageMatrixGraph, UltraGraph};
+use crate::prelude::{StorageMatrixGraph, UltraGraph};
 
 pub mod prelude;
 pub mod protocols;
@@ -47,50 +47,7 @@ pub fn new_with_matrix_storage<T>(
 )
     -> UltraGraph<StorageMatrixGraph<T>, T>
     where
-        T: Copy + Clone + Default
+        T: Copy,
 {
     UltraGraph::new(StorageMatrixGraph::<T>::new_with_capacity(capacity))
-}
-
-/// EXPERIMENTAL Sparse Representation (CSR)storage backend.
-///
-/// APPEND ONLY UltraGraph!
-///
-/// CSR storage does not support the removal of nodes or edges.
-///
-/// # Arguments:
-/// * Capacity refers to the maximum number of nodes that fit into the graph before a resize occurs.
-///
-/// # Example:
-///
-/// ```
-/// use ultragraph::prelude::*;
-///
-/// const SIZE: usize = 10;
-///
-/// #[derive(Default, Debug, Copy, Clone, Hash, Eq, PartialEq)]
-/// pub struct Data {
-///     x: u8,
-/// }
-///
-///  let mut g = ultragraph::new_with_csr_storage::<Data>(SIZE);
-///  assert!(g.is_empty());
-///
-///  let d = Data { x: 1 };
-///  let root_index = g.add_root_node(d);
-///  assert_eq!(root_index, 10);
-///  assert!(!g.is_empty());
-///
-///  let expected = 1;
-///  let actual = g.number_nodes();
-///  assert_eq!(expected, actual);
-/// ```
-pub fn new_with_csr_storage<T>(
-    capacity: usize
-)
-    -> UltraGraph<StorageCSRGraph<T>, T>
-    where
-        T: Copy + Clone + Default
-{
-    UltraGraph::new(StorageCSRGraph::<T>::new_with_capacity(capacity))
 }

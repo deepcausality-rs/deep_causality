@@ -7,7 +7,6 @@ pub use crate::errors::UltraGraphError;
 pub use crate::protocols::graph_like::GraphLike;
 pub use crate::protocols::graph_root::GraphRoot;
 pub use crate::protocols::graph_storage::GraphStorage;
-pub use crate::storage::storage_csr::StorageCSRGraph;
 // Storage
 pub use crate::storage::storage_matrix::StorageMatrixGraph;
 // Main type

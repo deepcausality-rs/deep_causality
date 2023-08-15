@@ -3,6 +3,3 @@
 
 #[cfg(test)]
 mod ultra_graph_with_matrix_storage_tests;
-
-#[cfg(test)]
-mod ultra_graph_with_csr_storage_tests;
