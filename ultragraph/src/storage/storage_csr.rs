@@ -22,7 +22,7 @@ pub struct StorageCSRGraph<T>
     where
         T: Copy + Clone + Default
 {
-    root_index: NodeIndex,
+    root_index: Option<NodeIndex>,
     graph: CsrGraph<T>,
     node_map: HashMap<NodeIndex, T>,
     index_map: IndexMap,
@@ -35,7 +35,7 @@ impl<T> StorageCSRGraph<T>
 {
     pub fn new_with_capacity(capacity: usize) -> Self {
         Self {
-            root_index: NodeIndex::new(0),
+            root_index: None,
             graph: CsrGraph::with_nodes(capacity),
             node_map: HashMap::with_capacity(capacity),
             index_map: HashMap::with_capacity(capacity),
@@ -74,25 +74,31 @@ impl<T> GraphRoot<T> for StorageCSRGraph<T>
     {
         let idx = self.add_node(value);
         let root_index = NodeIndex::new(idx);
-        self.root_index = root_index;
+        self.root_index = Some(root_index);
         self.index_map.insert(root_index.index(), root_index);
         root_index.index()
     }
 
     fn contains_root_node(&self) -> bool
     {
-        self.node_map.contains_key(&self.root_index)
+        self.root_index.is_some()
     }
 
     fn get_root_node(&self) -> Option<&T>
     {
-        self.node_map.get(&self.root_index)
+        if self.contains_root_node()
+        {
+            self.node_map.get(&self.root_index.unwrap())
+        } else {
+            return None;
+        }
+
     }
 
     fn get_root_index(&self) -> Option<usize>
     {
         if self.contains_root_node() {
-            Some(self.root_index.index())
+            Some(self.root_index.unwrap().index())
         } else {
             None
         }
@@ -117,7 +123,7 @@ impl<T> GraphLike<T> for StorageCSRGraph<T>
         self.graph.clear_edges();
         self.node_map.clear();
         self.index_map.clear();
-        self.root_index = NodeIndex::new(0);
+        self.root_index = None;
     }
 
     fn add_node(&mut self, value: T) -> usize
