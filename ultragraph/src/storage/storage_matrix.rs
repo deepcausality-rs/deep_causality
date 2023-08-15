@@ -73,6 +73,16 @@ impl<T> StorageMatrixGraph<T>
 }
 
 
+impl<T> Default for StorageMatrixGraph<T>
+    where
+        T: Copy + Clone
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+
 impl<T> GraphStorage<T> for StorageMatrixGraph<T>
     where
         T: Copy
@@ -116,7 +126,6 @@ impl<T> GraphRoot<T> for StorageMatrixGraph<T>
     fn get_root_node(&self) -> Option<&T>
     {
         self.node_map.get(&self.root_index)
-
     }
 
     fn get_root_index(&self) -> Option<usize>
@@ -149,7 +158,7 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
 
     fn add_node(&mut self, value: T) -> usize
     {
-        let node_index = self.graph.add_node(value.clone());
+        let node_index = self.graph.add_node(value);
         self.node_map.insert(node_index, value);
         self.index_map.insert(node_index.index(), node_index);
         node_index.index()
@@ -166,7 +175,7 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
             None
         } else {
             let k = self.index_map.get(&index).expect("index not found");
-            self.node_map.get(&k)
+            self.node_map.get(k)
         }
     }
 
