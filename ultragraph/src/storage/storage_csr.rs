@@ -1,71 +1,42 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
+
 use std::collections::HashMap;
 
-use petgraph::Directed;
+use petgraph::csr::Csr;
 use petgraph::graph::NodeIndex as GraphNodeIndex;
-use petgraph::matrix_graph::MatrixGraph;
+use petgraph::prelude::*;
 
-use crate::errors::UltraGraphError;
-use crate::protocols::graph_like::GraphLike;
-use crate::protocols::graph_root::GraphRoot;
-use crate::protocols::graph_storage::GraphStorage;
+use crate::prelude::{GraphLike, GraphRoot, GraphStorage, UltraGraphError};
 
 type DefaultIx = u32;
 type NodeIndex<Ix = DefaultIx> = GraphNodeIndex<Ix>;
 
-// Edge weights need to be numerical (u64) to make shortest path algo work.
-// Also, u32 is used as node node index type to bypass the fairly ancient 65k node limit
-// coming from the u16 default node index default type in petgraph.
-// u32 has a limit of 2^31 - 1 (4,294,967,295). NodeIndex can be at most u32 because petgraph has no implementation
-// for u64 or u128. See: https://docs.rs/petgraph/latest/petgraph/graph/trait.IndexType.html
-pub type HyperGraph<T> = MatrixGraph<T, u64, Directed, Option<u64>, u32>;
+type CsrGraph<T> = Csr<T, u64, Directed, NodeIndex>;
 
-//
-// Petgraph has no good way to retrieve a specific node hence the hashmap as support structure
-// for the get & contains node methods. Given that the context will be embedded as a reference
-// into many causaloids, it is safe to say that nodes from the context will be retrieved quite
-// freequently therefore the direct access from the hashmap should speed things up.
-//
-// Ideally, the hashmap should hold only a reference to the contextoid in the graph,
-// but this causes trouble with the borrow checker hence the node is stored as a value.
-// As a consequence, all nodes stores in the graph and hashmap must implement the clone trait.
-//
-// While this is inefficient and memory intensive for large context graphs, it should be fine
-// for small to medium graphs.
-// type CtxMap<'l, CNT,D, S, T, ST> = HashMap<NodeIndex, CNT<D, S, T, ST>>;
-// //
-//
 type IndexMap = HashMap<usize, NodeIndex>;
 
-pub struct StorageMatrixGraph<T>
+
+pub struct StorageCSRGraph<T>
     where
-        T: Copy + Clone,
+        T: Copy + Clone + Default
 {
     root_index: NodeIndex,
-    graph: HyperGraph<T>,
+    graph: CsrGraph<T>,
     node_map: HashMap<NodeIndex, T>,
     index_map: IndexMap,
 }
 
-impl<T> StorageMatrixGraph<T>
-    where
-        T: Copy + Clone,
-{
-    pub fn new() -> Self {
-        Self {
-            root_index: NodeIndex::new(0),
-            graph: MatrixGraph::default(),
-            node_map: HashMap::new(),
-            index_map: HashMap::new(),
-        }
-    }
 
+impl<T> StorageCSRGraph<T>
+    where
+        T: Copy + Clone + Default
+{
     pub fn new_with_capacity(capacity: usize) -> Self {
         Self {
             root_index: NodeIndex::new(0),
-            graph: MatrixGraph::with_capacity(capacity),
+            graph: CsrGraph::with_nodes(capacity),
             node_map: HashMap::with_capacity(capacity),
             index_map: HashMap::with_capacity(capacity),
         }
@@ -73,19 +44,9 @@ impl<T> StorageMatrixGraph<T>
 }
 
 
-impl<T> Default for StorageMatrixGraph<T>
+impl<T> GraphStorage<T> for StorageCSRGraph<T>
     where
-        T: Copy + Clone
-{
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-
-impl<T> GraphStorage<T> for StorageMatrixGraph<T>
-    where
-        T: Copy
+        T: Copy + Clone + Default
 {
     fn size(&self) -> usize {
         self.graph.node_count()
@@ -105,9 +66,9 @@ impl<T> GraphStorage<T> for StorageMatrixGraph<T>
 }
 
 
-impl<T> GraphRoot<T> for StorageMatrixGraph<T>
+impl<T> GraphRoot<T> for StorageCSRGraph<T>
     where
-        T: Copy + Clone,
+        T: Copy + Clone + Default
 {
     fn add_root_node(&mut self, value: T) -> usize
     {
@@ -148,15 +109,19 @@ impl<T> GraphRoot<T> for StorageMatrixGraph<T>
 }
 
 
-impl<T> GraphLike<T> for StorageMatrixGraph<T>
+impl<T> GraphLike<T> for StorageCSRGraph<T>
     where
-        T: Copy + Clone,
+        T: Copy + Clone + Default
 {
     fn clear(&mut self) {
-        self.graph.clear();
+        self.graph.clear_edges();
         self.node_map.clear();
         self.index_map.clear();
         self.root_index = NodeIndex::new(0);
+        // &self.root_index = &NodeIndex::new(0);
+        // &self.graph = &CsrGraph::with_nodes(self.capacity);
+        // &self.node_map = &HashMap::with_capacity(self.capacity);
+        // &self.index_map = &HashMap::with_capacity(self.capacity);
     }
 
     fn add_node(&mut self, value: T) -> usize
@@ -187,10 +152,10 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
             return Err(UltraGraphError(format!("index {} not found", index)));
         };
 
-        let k = self.index_map.get(&index).unwrap();
-        self.graph.remove_node(*k);
-        self.index_map.remove(&k.index());
-        self.index_map.remove(&index);
+        // let k = self.index_map.get(&index).unwrap();
+        // self.graph.remove_node(*k);
+        // self.index_map.remove(&k.index());
+        // self.index_map.remove(&index);
         Ok(())
     }
 
@@ -232,7 +197,7 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
 
         let k = self.index_map.get(&a).expect("index not found");
         let l = self.index_map.get(&b).expect("index not found");
-        self.graph.has_edge(*k, *l)
+        self.graph.contains_edge(*k, *l)
     }
 
     fn remove_edge(&mut self, a: usize, b: usize) -> Result<(), UltraGraphError> {
@@ -244,10 +209,9 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
             return Err(UltraGraphError("index b not found".into()));
         };
 
-        let k = self.index_map.get(&a).expect("index not found");
-        let l = self.index_map.get(&b).expect("index not found");
-
-        self.graph.remove_edge(*k, *l);
+        // let k = self.index_map.get(&a).expect("index not found");
+        // let l = self.index_map.get(&b).expect("index not found");
+        // self.graph.remove_edge(*k, *l);
 
         Ok(())
     }

@@ -61,8 +61,8 @@ impl<S, T> GraphLike<T> for UltraGraph<S, T>
         T: Copy + Default,
         S: GraphStorage<T>,
 {
-    fn clear_graph(&mut self) {
-        self.storage.clear_graph()
+    fn clear(&mut self) {
+        self.storage.clear()
     }
 
     fn add_node(&mut self, value: T) -> usize {

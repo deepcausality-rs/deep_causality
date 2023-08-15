@@ -8,7 +8,7 @@ pub trait GraphLike<T>
     where
         T: Copy,
 {
-    fn clear_graph(&mut self);
+    fn clear(&mut self);
 
     fn add_node(&mut self, value: T) -> usize;
 
