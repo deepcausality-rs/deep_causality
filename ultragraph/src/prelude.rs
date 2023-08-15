@@ -8,5 +8,7 @@ pub use crate::protocols::graph_like::GraphLike;
 pub use crate::protocols::graph_root::GraphRoot;
 pub use crate::protocols::graph_storage::GraphStorage;
 // Storage
-pub use crate::storage::storage_matrix;
+pub use crate::storage::storage_matrix::StorageMatrixGraph;
+// Main type
+pub use crate::ultra_graph::UltraGraph;
 
