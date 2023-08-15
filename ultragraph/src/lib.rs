@@ -20,7 +20,7 @@ pub mod types;
 /// ```
 /// use ultragraph::prelude::*;
 ///
-/// #[derive(Default, Debug, Copy, Clone, Hash, Eq, PartialEq)]
+/// #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 /// pub struct Data {
 ///     x: u8,
 /// }

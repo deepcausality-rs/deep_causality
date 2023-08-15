@@ -1,101 +1,35 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use std::collections::HashMap;
 use std::fmt::{Debug, Display, Formatter};
-use petgraph::Directed;
-use petgraph::graph::{NodeIndex as GraphNodeIndex};
-use petgraph::matrix_graph::MatrixGraph;
+
+use ultragraph::prelude::*;
+
 use crate::errors::ContextIndexError;
-use crate::prelude::{ContextuableGraph, Contextoid, Datable, SpaceTemporal, Spatial, Temporal, RelationKind, Identifiable};
+use crate::prelude::{Contextoid, ContextuableGraph, Datable, Identifiable, RelationKind, SpaceTemporal, Spatial, Temporal};
 
-type DefaultIx = u32;
-type NodeIndex<Ix = DefaultIx> = GraphNodeIndex<Ix>;
+type CtxGraph<'l, D, S, T, ST> = UltraGraph<StorageMatrixGraph<Contextoid<D, S, T, ST>>, Contextoid<D, S, T, ST>>;
 
-//
-// Edge weights need to be numerical (u64) to make shortest path algo work.
-// Also, u32 is used as node node index type to bypass the fairly ancient 65k node limit
-// coming from the u16 default node index default type in petgraph.
-// u32 has a limit of 2^31 - 1 (4,294,967,295). NodeIndex can be at most u32 because petgraph has no implementation
-// for u64 or u128. See: https://docs.rs/petgraph/latest/petgraph/graph/trait.IndexType.html
-type CtxGraph<'l, D, S, T, ST> = MatrixGraph<Contextoid<D, S, T, ST>, u64, Directed, Option<u64>, u32>;
-//
-// Petgraph has no good way to retrieve a specific node hence the hashmap as support structure
-// for the get & contains node methods. Given that the context will be embedded as a reference
-// into many causaloids, it is safe to say that nodes from the context will be retrieved quite
-// freequently therefore the direct access from the hashmap should speed things up.
-//
-// Ideally, the hashmap should hold only a reference to the contextoid in the graph,
-// but this causes trouble with the borrow checker hence the node is stored as a value.
-// As a consequence, all nodes stores in the graph and hashmap must implement the clone trait.
-//
-// While this is inefficient and memory intensive for large context graphs, it should be fine
-// for small to medium graphs.
-type CtxMap<'l, D, S, T, ST> = HashMap<NodeIndex, Contextoid<D, S, T, ST>>;
-//
-// There is a weirdo bug in the petgraph crate so that if you try to access a node of the graph
-// with a newly constructed NodeIndex, it always returns None. However, if you use the NodeIndex
-// returned from the add node method, it works.
-//
-// let idx NodeIndex::new(0)
-// graph.get(idx) // returns None
-//
-// let idx = graph.add_node(Contextoid::<D, S, T, ST>::default()); // idx 0
-// graph.get(idx) // returns Some
-//
-// NodeIndex is an alias:
-// pub type NodeIndex<Ix = DefaultIx> = GraphNodeIndex<Ix>;
-//
-// Given that the CtxGraph overwrites the default (u16) NodeIndex type with u32 to bypass
-// the 65k node limit (#547 https://github.com/petgraph/petgraph/pull/547),
-// it might be possible that the NodeIndex may still leans on the internal default U16 index type
-// and hence generates incompatible indices.
-//
-// Theoretically, you can override the NodeIndex with a custom type alias and re-export it,
-// but in general, you don't really want to expose the internal graph index type through the API.
-// Therefore I added an internal map that literally only maps usize to NodeIndex.
-type IndexMap = HashMap<usize, NodeIndex>;
-
-
-#[derive(Clone)]
 pub struct Context<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     id: u64,
     name: &'l str,
     graph: CtxGraph<'l, D, S, T, ST>,
-    context_map: CtxMap<'l, D, S, T, ST>,
-    index_map: IndexMap,
 }
 
 
 impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
-    /// Creates a new context with the given name and id.
-    pub fn new(
-        id: u64,
-        name: &'l str,
-    )
-        -> Self
-    {
-        Self {
-            id,
-            name,
-            graph: MatrixGraph::default(),
-            context_map: HashMap::new(),
-            index_map: HashMap::new(),
-        }
-    }
-
     /// Creates a new context with the given node capacity.
     pub fn with_capacity(
         id: u64,
@@ -107,9 +41,7 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
         Self {
             id,
             name,
-            graph: MatrixGraph::default(),
-            context_map: HashMap::with_capacity(capacity),
-            index_map: HashMap::with_capacity(capacity),
+            graph: ultragraph::new_with_matrix_storage(capacity),
         }
     }
 
@@ -121,10 +53,10 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> Identifiable for Context<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     /// Returns the id of the context.
     fn id(&self) -> u64 {
@@ -134,10 +66,10 @@ impl<'l, D, S, T, ST> Identifiable for Context<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> ContextuableGraph<'l, D, S, T, ST> for Context<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     /// Ads a new Contextoid to the context.
     /// You can add the same contextoid multiple times,
@@ -148,11 +80,7 @@ impl<'l, D, S, T, ST> ContextuableGraph<'l, D, S, T, ST> for Context<'l, D, S, T
     )
         -> usize
     {
-        let node_index = self.graph.add_node(value.clone());
-        self.context_map.insert(node_index, value);
-        self.index_map.insert(node_index.index(), node_index);
-
-        node_index.index()
+        self.graph.add_node(value)
     }
 
     /// Returns only true if the context contains the contextoid with the given index.
@@ -162,7 +90,7 @@ impl<'l, D, S, T, ST> ContextuableGraph<'l, D, S, T, ST> for Context<'l, D, S, T
     )
         -> bool
     {
-        self.index_map.get(&index).is_some()
+        self.graph.contains_node(index)
     }
 
     /// Returns a reference to the contextoid with the given index.
@@ -173,12 +101,7 @@ impl<'l, D, S, T, ST> ContextuableGraph<'l, D, S, T, ST> for Context<'l, D, S, T
     )
         -> Option<&Contextoid<D, S, T, ST>>
     {
-        return if !self.contains_node(index) {
-            None
-        } else {
-            let k = self.index_map.get(&index).expect("index not found");
-            self.context_map.get(k)
-        };
+        self.graph.get_node(index)
     }
 
     /// Removes a contextoid from the context.
@@ -193,11 +116,9 @@ impl<'l, D, S, T, ST> ContextuableGraph<'l, D, S, T, ST> for Context<'l, D, S, T
             return Err(ContextIndexError(format!("index {} not found", index)));
         };
 
-        let k = self.index_map.get(&index).unwrap();
-        self.graph.remove_node(*k);
-        self.context_map.remove(k);
-
-        self.index_map.remove(&index);
+        if self.graph.remove_node(index).is_err() {
+            return Err(ContextIndexError(format!("index {} not found", index)));
+        };
 
         Ok(())
     }
@@ -221,10 +142,9 @@ impl<'l, D, S, T, ST> ContextuableGraph<'l, D, S, T, ST> for Context<'l, D, S, T
             return Err(ContextIndexError(format!("index b {} not found", b)));
         };
 
-        let k = self.index_map.get(&a).expect("index not found");
-        let l = self.index_map.get(&b).expect("index not found");
-
-        self.graph.add_edge(*k, *l, weight as u64);
+        if self.graph.add_edge_with_weight(a, b, weight as u64).is_err() {
+            return Err(ContextIndexError(format!("Failed to add edge for index a {} and b {}", a, b)));
+        }
 
         Ok(())
     }
@@ -239,18 +159,7 @@ impl<'l, D, S, T, ST> ContextuableGraph<'l, D, S, T, ST> for Context<'l, D, S, T
     )
         -> bool
     {
-        if !self.contains_node(a) {
-            return false;
-        };
-
-        if !self.contains_node(b) {
-            return false;
-        };
-
-        let k = self.index_map.get(&a).expect("index not found");
-        let l = self.index_map.get(&b).expect("index not found");
-
-        self.graph.has_edge(*k, *l)
+        self.graph.contains_edge(a, b)
     }
 
     /// Removes an edge between two nodes.
@@ -271,10 +180,9 @@ impl<'l, D, S, T, ST> ContextuableGraph<'l, D, S, T, ST> for Context<'l, D, S, T
             return Err(ContextIndexError("index b not found".into()));
         };
 
-        let k = self.index_map.get(&a).expect("index not found");
-        let l = self.index_map.get(&b).expect("index not found");
-
-        self.graph.remove_edge(*k, *l);
+        if self.graph.remove_edge(a, b).is_err() {
+            return Err(ContextIndexError(format!("Failed to remove edge for index a {} and b {}", a, b)));
+        }
 
         Ok(())
     }
@@ -285,7 +193,7 @@ impl<'l, D, S, T, ST> ContextuableGraph<'l, D, S, T, ST> for Context<'l, D, S, T
     )
         -> usize
     {
-        self.context_map.len()
+        self.graph.size()
     }
 
     /// Returns true if the context contains no nodes.
@@ -294,7 +202,7 @@ impl<'l, D, S, T, ST> ContextuableGraph<'l, D, S, T, ST> for Context<'l, D, S, T
     )
         -> bool
     {
-        self.context_map.is_empty()
+        self.graph.is_empty()
     }
 
     /// Returns the number of nodes in the context.
@@ -303,7 +211,7 @@ impl<'l, D, S, T, ST> ContextuableGraph<'l, D, S, T, ST> for Context<'l, D, S, T
     )
         -> usize
     {
-        self.graph.node_count()
+        self.graph.number_nodes()
     }
 
     /// Returns the number of edges in the context.
@@ -312,16 +220,16 @@ impl<'l, D, S, T, ST> ContextuableGraph<'l, D, S, T, ST> for Context<'l, D, S, T
     )
         -> usize
     {
-        self.graph.edge_count()
+        self.graph.number_edges()
     }
 }
 
 impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     fn format(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f,
@@ -336,10 +244,10 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> Debug for Context<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.format(f)
@@ -348,10 +256,10 @@ impl<'l, D, S, T, ST> Debug for Context<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> Display for Context<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.format(f)

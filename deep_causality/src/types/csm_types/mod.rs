@@ -3,6 +3,7 @@
 
 use std::cell::RefCell;
 use std::collections::HashMap;
+
 use crate::errors::{ActionError, UpdateError};
 use crate::prelude::{CausalAction, CausalState, Datable, NumericalValue, SpaceTemporal, Spatial, Temporal};
 
@@ -14,20 +15,20 @@ pub type CSMStateActions<'l, D, S, T, ST> = [(&'l CausalState<'l, D, S, T, ST>, 
 
 pub struct CSM<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     state_actions: RefCell<CSMMap<'l, D, S, T, ST>>,
 }
 
 impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     /// Constructs a new CSM.
     pub fn new(
@@ -57,10 +58,10 @@ impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     /// Inserts a new state action at the index position idx.
     /// Returns UpdateError if the index already exists.
@@ -108,10 +109,10 @@ impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     /// Evaluates a single causal state at the index position idx.
     /// Returns ActionError if the evaluation failed.
@@ -180,10 +181,10 @@ impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     /// Evaluates all causal states in the CSM.
     /// Returns ActionError if the evaluation failed.
