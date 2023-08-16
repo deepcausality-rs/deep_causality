@@ -260,6 +260,10 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
             return Err(UltraGraphError(format!("index b {} not found", b)));
         };
 
+        if self.contains_edge(a, b) {
+            return Err(UltraGraphError(format!("Edge already exists between: {} and {}", a, b)))
+        }
+
         let k = self.index_map.get(&a).expect("index not found");
         let l = self.index_map.get(&b).expect("index not found");
         self.graph.add_edge(*k, *l, 0);
@@ -281,6 +285,10 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
         if !self.contains_node(b) {
             return Err(UltraGraphError(format!("index b {} not found", b)));
         };
+
+        if self.contains_edge(a, b) {
+            return Err(UltraGraphError(format!("Edge already exists between: {} and {}", a, b)))
+        }
 
         let k = self.index_map.get(&a).expect("index not found");
         let l = self.index_map.get(&b).expect("index not found");
@@ -319,10 +327,16 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
             return Err(UltraGraphError("index b not found".into()));
         };
 
+        if !self.contains_edge(a, b) {
+            return Err(UltraGraphError(format!("Edge does not exists between: {} and {}", a, b)))
+        }
+
         let k = self.index_map.get(&a).expect("index not found");
         let l = self.index_map.get(&b).expect("index not found");
 
         self.graph.remove_edge(*k, *l);
+        self.index_map.remove(&a);
+        self.index_map.remove(&b);
 
         Ok(())
     }
@@ -360,7 +374,7 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
         Ok(result)
     }
 
-    fn neighbors(
+    fn outgoing_edges(
         &self,
         a: usize,
     )

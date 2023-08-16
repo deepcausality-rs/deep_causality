@@ -54,7 +54,7 @@ pub trait GraphLike<T>
         -> Result<Vec<usize>, UltraGraphError>;
 
     /// Returns all nodes with an outgoing edge starting from a.
-    fn neighbors(
+    fn outgoing_edges(
         &self,
         a: usize,
     )

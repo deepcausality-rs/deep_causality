@@ -123,7 +123,7 @@ impl<S, T> GraphLike<T> for UltraGraph<S, T>
         self.storage.shortest_path(start_index, stop_index)
     }
 
-    fn neighbors(&self, a: usize) -> Result<Vec<usize>, UltraGraphError> {
-        self.storage.neighbors(a)
+    fn outgoing_edges(&self, a: usize) -> Result<Vec<usize>, UltraGraphError> {
+        self.storage.outgoing_edges(a)
     }
 }
