@@ -870,7 +870,7 @@ fn test_outgoing_edges() {
 
 #[test]
 fn test_outgoing_edges_error() {
-    let mut g = get_ultra_graph();
+    let g = get_ultra_graph();
     assert!(g.is_empty());
     let expected = 0;
     let actual = g.number_nodes();
