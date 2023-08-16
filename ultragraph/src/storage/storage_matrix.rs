@@ -3,9 +3,11 @@
 
 use std::collections::HashMap;
 
+use petgraph::algo::astar;
 use petgraph::Directed;
 use petgraph::graph::NodeIndex as GraphNodeIndex;
 use petgraph::matrix_graph::MatrixGraph;
+use petgraph::prelude::EdgeRef;
 
 use crate::errors::UltraGraphError;
 use crate::protocols::graph_like::GraphLike;
@@ -77,7 +79,9 @@ impl<T> Default for StorageMatrixGraph<T>
     where
         T: Copy
 {
-    fn default() -> Self {
+    fn default()
+        -> Self
+    {
         Self::new()
     }
 }
@@ -87,23 +91,32 @@ impl<T> GraphStorage<T> for StorageMatrixGraph<T>
     where
         T: Copy
 {
-    fn size(&self) -> usize {
+    fn size(&self)
+            -> usize
+    {
         self.graph.node_count()
     }
 
-    fn is_empty(&self) -> bool {
+    fn is_empty(&self)
+                -> bool
+    {
         self.graph.node_count() == 0
     }
 
-    fn number_nodes(&self) -> usize {
+    fn number_nodes(&self)
+                    -> usize
+    {
         self.graph.node_count()
     }
 
-    fn number_edges(&self) -> usize {
+    fn number_edges(&self)
+                    -> usize
+    {
         self.graph.edge_count()
     }
 
-    fn clear(&mut self) {
+    fn clear(&mut self)
+    {
         self.graph.clear();
         self.node_map.clear();
         self.index_map.clear();
@@ -116,7 +129,11 @@ impl<T> GraphRoot<T> for StorageMatrixGraph<T>
     where
         T: Copy
 {
-    fn add_root_node(&mut self, value: T) -> usize
+    fn add_root_node(
+        &mut self,
+        value: T,
+    )
+        -> usize
     {
         let idx = self.add_node(value);
         let root_index = NodeIndex::new(idx);
@@ -125,12 +142,18 @@ impl<T> GraphRoot<T> for StorageMatrixGraph<T>
         root_index.index()
     }
 
-    fn contains_root_node(&self) -> bool
+    fn contains_root_node(
+        &self
+    )
+        -> bool
     {
         self.root_index.is_some()
     }
 
-    fn get_root_node(&self) -> Option<&T>
+    fn get_root_node(
+        &self
+    )
+        -> Option<&T>
     {
         if self.contains_root_node()
         {
@@ -140,7 +163,10 @@ impl<T> GraphRoot<T> for StorageMatrixGraph<T>
         }
     }
 
-    fn get_root_index(&self) -> Option<usize>
+    fn get_root_index(
+        &self
+    )
+        -> Option<usize>
     {
         if self.contains_root_node() {
             Some(self.root_index.unwrap().index())
@@ -149,7 +175,10 @@ impl<T> GraphRoot<T> for StorageMatrixGraph<T>
         }
     }
 
-    fn get_last_index(&self) -> Result<usize, UltraGraphError>
+    fn get_last_index(
+        &self
+    )
+        -> Result<usize, UltraGraphError>
     {
         if !self.is_empty() {
             Ok(self.node_map.len() - 1)
@@ -164,7 +193,11 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
     where
         T: Copy
 {
-    fn add_node(&mut self, value: T) -> usize
+    fn add_node(
+        &mut self,
+        value: T,
+    )
+        -> usize
     {
         let node_index = self.graph.add_node(value);
         self.node_map.insert(node_index, value);
@@ -172,12 +205,20 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
         node_index.index()
     }
 
-    fn contains_node(&self, index: usize) -> bool
+    fn contains_node(
+        &self,
+        index: usize,
+    )
+        -> bool
     {
         self.index_map.get(&index).is_some()
     }
 
-    fn get_node(&self, index: usize) -> Option<&T>
+    fn get_node(
+        &self,
+        index: usize,
+    )
+        -> Option<&T>
     {
         if !self.contains_node(index) {
             None
@@ -187,7 +228,12 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
         }
     }
 
-    fn remove_node(&mut self, index: usize) -> Result<(), UltraGraphError> {
+    fn remove_node(
+        &mut self,
+        index: usize,
+    )
+        -> Result<(), UltraGraphError>
+    {
         if !self.contains_node(index) {
             return Err(UltraGraphError(format!("index {} not found", index)));
         };
@@ -199,7 +245,13 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
         Ok(())
     }
 
-    fn add_edge(&mut self, a: usize, b: usize) -> Result<(), UltraGraphError> {
+    fn add_edge(
+        &mut self,
+        a: usize,
+        b: usize,
+    )
+        -> Result<(), UltraGraphError>
+    {
         if !self.contains_node(a) {
             return Err(UltraGraphError(format!("index a {} not found", a)));
         };
@@ -214,7 +266,14 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
         Ok(())
     }
 
-    fn add_edge_with_weight(&mut self, a: usize, b: usize, weight: u64) -> Result<(), UltraGraphError> {
+    fn add_edge_with_weight(
+        &mut self,
+        a: usize,
+        b: usize,
+        weight: u64,
+    )
+        -> Result<(), UltraGraphError>
+    {
         if !self.contains_node(a) {
             return Err(UltraGraphError(format!("index a {} not found", a)));
         };
@@ -229,7 +288,12 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
         Ok(())
     }
 
-    fn contains_edge(&self, a: usize, b: usize) -> bool
+    fn contains_edge(
+        &self,
+        a: usize,
+        b: usize,
+    )
+        -> bool
     {
         if !self.contains_node(a) || !self.contains_node(b) {
             return false;
@@ -240,7 +304,13 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
         self.graph.has_edge(*k, *l)
     }
 
-    fn remove_edge(&mut self, a: usize, b: usize) -> Result<(), UltraGraphError> {
+    fn remove_edge(
+        &mut self,
+        a: usize,
+        b: usize,
+    )
+        -> Result<(), UltraGraphError>
+    {
         if !self.contains_node(a) {
             return Err(UltraGraphError("index a not found".into()));
         };
@@ -255,5 +325,38 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
         self.graph.remove_edge(*k, *l);
 
         Ok(())
+    }
+
+    fn get_shortest_path(
+        &self,
+        start_index: usize,
+        stop_index: usize,
+    )
+        -> Result<Vec<usize>, UltraGraphError>
+    {
+        if !self.contains_node(start_index) {
+            return Err(UltraGraphError(format!("start_index not found: {}", start_index)));
+        };
+
+        if !self.contains_node(stop_index) {
+            return Err(UltraGraphError(format!("stop_index not found: {}", start_index)));
+        };
+
+        let mut result: Vec<usize> = Vec::new();
+
+        // A* algorithm https://docs.rs/petgraph/latest/petgraph/algo/astar/fn.astar.html
+        let (_, path) = astar(
+            &self.graph,
+            NodeIndex::new(start_index),
+            |finish| finish == NodeIndex::new(stop_index),
+            |e| *e.weight(),
+            |_| 0)
+            .expect("Could not find shortest path");
+
+        for p in path {
+            result.push(p.index());
+        }
+
+        Ok(result)
     }
 }

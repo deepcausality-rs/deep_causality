@@ -8,7 +8,6 @@ pub trait CausableGraphExplaining<T> : CausableGraph<T>
     where
         T: Causable + PartialEq,
 {
-
     fn explain_from_to_cause(
         &self,
         start_index: NodeIndex,
@@ -36,6 +35,7 @@ pub trait CausableGraphExplaining<T> : CausableGraph<T>
 
         append_string(&mut explanation, &cause.explain().unwrap());
 
+        // Move neighbors to ultragraph
         stack.push(self.get_graph().neighbors(start_index));
 
         while let Some(children) = stack.last_mut() {

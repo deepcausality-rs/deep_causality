@@ -62,6 +62,10 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
     where
         T: Causable + Clone + PartialEq,
 {
+    fn get_graph(&self) -> &CausalGraph<T> {
+        &self.graph
+    }
+
     fn add_root_causaloid(
         &mut self,
         value: T,
@@ -285,7 +289,4 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
         self.graph.node_count()
     }
 
-    fn get_graph(&self) -> &CausalGraph<T> {
-        &self.graph
-    }
 }

@@ -12,6 +12,9 @@ pub trait CausableGraph<T>
     where
         T: Causable + PartialEq,
 {
+    // This method enables the default implementation of the
+    // CausableGraphExplaining and CausableGraphReasoning traits.
+    fn get_graph(&self) -> &CausalGraph<T>;
     // Root Node
     fn add_root_causaloid(&mut self, value: T) -> usize;
     fn contains_root_causaloid(&self) -> bool;
@@ -40,9 +43,9 @@ pub trait CausableGraph<T>
     fn clear(&mut self);
     fn number_edges(&self) -> usize;
     fn number_nodes(&self) -> usize;
-    fn get_graph(&self) -> &CausalGraph<T>;
 
-    /// Default implementation for shortest path algorithm based on a star
+    // Move shortest path to ultragraph
+    /// Default implementation for shortest path algorithm based on a-star algo
     fn get_shortest_path(
         &self,
         start_index: NodeIndex,

@@ -44,4 +44,12 @@ pub trait GraphLike<T>
         b: usize,
     )
         -> Result<(), UltraGraphError>;
+
+    fn get_shortest_path(
+        &self,
+        start_index: usize,
+        stop_index: usize,
+    )
+        -> Result<Vec<usize>, UltraGraphError>;
+
 }
