@@ -327,7 +327,7 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
         Ok(())
     }
 
-    fn get_shortest_path(
+    fn shortest_path(
         &self,
         start_index: usize,
         stop_index: usize,
@@ -353,8 +353,29 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
             |_| 0)
             .expect("Could not find shortest path");
 
-        for p in path {
-            result.push(p.index());
+        for node in path {
+            result.push(node.index());
+        }
+
+        Ok(result)
+    }
+
+    fn neighbors(
+        &self,
+        a: usize,
+    )
+        -> Result<Vec<usize>, UltraGraphError>
+    {
+        if !self.contains_node(a) {
+            return Err(UltraGraphError("index a not found".into()));
+        };
+
+        let mut result: Vec<usize> = Vec::new();
+
+        let neighbors = self.graph.neighbors(NodeIndex::new(a));
+
+        for node in neighbors {
+            result.push(node.index());
         }
 
         Ok(result)

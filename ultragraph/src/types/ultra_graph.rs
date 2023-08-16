@@ -30,9 +30,6 @@ impl<S, T> UltraGraph<S, T>
     }
 }
 
-// Type tag
-impl<S, T> UltraGraphable<T> for UltraGraph<S, T> where T: Copy, S: GraphStorage<T>, {}
-
 impl<S, T> GraphStorage<T> for UltraGraph<S, T>
     where
         T: Copy,
@@ -122,7 +119,11 @@ impl<S, T> GraphLike<T> for UltraGraph<S, T>
         self.storage.remove_edge(a, b)
     }
 
-    fn get_shortest_path(&self, start_index: usize, stop_index: usize) -> Result<Vec<usize>, UltraGraphError> {
-        self.storage.get_shortest_path(start_index, stop_index)
+    fn shortest_path(&self, start_index: usize, stop_index: usize) -> Result<Vec<usize>, UltraGraphError> {
+        self.storage.shortest_path(start_index, stop_index)
+    }
+
+    fn neighbors(&self, a: usize) -> Result<Vec<usize>, UltraGraphError> {
+        self.storage.neighbors(a)
     }
 }

@@ -45,11 +45,18 @@ pub trait GraphLike<T>
     )
         -> Result<(), UltraGraphError>;
 
-    fn get_shortest_path(
+    /// Returns the path of subsequent NodeId from start to finish, if one was found.
+    fn shortest_path(
         &self,
         start_index: usize,
         stop_index: usize,
     )
         -> Result<Vec<usize>, UltraGraphError>;
 
+    /// Returns all nodes with an outgoing edge starting from a.
+    fn neighbors(
+        &self,
+        a: usize,
+    )
+        -> Result<Vec<usize>, UltraGraphError>;
 }
