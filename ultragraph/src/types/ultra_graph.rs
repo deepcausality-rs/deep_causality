@@ -7,10 +7,9 @@ use std::marker::PhantomData;
 
 use crate::prelude::*;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct UltraGraph<S, T>
     where
-        T: Copy,
         S: GraphStorage<T>,
 {
     storage: S,
@@ -19,7 +18,6 @@ pub struct UltraGraph<S, T>
 
 impl<S, T> UltraGraph<S, T>
     where
-        T: Copy,
         S: GraphStorage<T>,
 {
     pub fn new(storage: S) -> Self {
@@ -32,7 +30,6 @@ impl<S, T> UltraGraph<S, T>
 
 impl<S, T> GraphStorage<T> for UltraGraph<S, T>
     where
-        T: Copy,
         S: GraphStorage<T>,
 {
     fn size(&self) -> usize {
@@ -51,7 +48,7 @@ impl<S, T> GraphStorage<T> for UltraGraph<S, T>
         self.storage.number_edges()
     }
 
-    fn get_all_nodes(&self) -> Vec<T> {
+    fn get_all_nodes(&self) -> Vec<&T> {
         self.storage.get_all_nodes()
     }
 
@@ -66,7 +63,6 @@ impl<S, T> GraphStorage<T> for UltraGraph<S, T>
 
 impl<S, T> GraphRoot<T> for UltraGraph<S, T>
     where
-        T: Copy,
         S: GraphStorage<T>,
 {
     fn add_root_node(&mut self, value: T) -> usize {
@@ -92,7 +88,6 @@ impl<S, T> GraphRoot<T> for UltraGraph<S, T>
 
 impl<S, T> GraphLike<T> for UltraGraph<S, T>
     where
-        T: Copy,
         S: GraphStorage<T>,
 {
     fn add_node(&mut self, value: T) -> usize {

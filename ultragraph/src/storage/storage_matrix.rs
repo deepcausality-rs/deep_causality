@@ -39,18 +39,14 @@ type HyperGraph<T> = MatrixGraph<T, u64, Directed, Option<u64>, u32>;
 //
 
 pub struct StorageMatrixGraph<T>
-    where
-        T: Copy
 {
     root_index: Option<NodeIndex>,
-    graph: HyperGraph<T>,
+    graph: HyperGraph<u8>,
     node_map: HashMap<NodeIndex, T>,
     index_map: HashMap<usize, NodeIndex>,
 }
 
 impl<T> StorageMatrixGraph<T>
-    where
-        T: Copy
 {
     pub fn new() -> Self {
         Self {
@@ -73,8 +69,6 @@ impl<T> StorageMatrixGraph<T>
 
 
 impl<T> Default for StorageMatrixGraph<T>
-    where
-        T: Copy
 {
     fn default()
         -> Self
@@ -85,8 +79,6 @@ impl<T> Default for StorageMatrixGraph<T>
 
 
 impl<T> GraphStorage<T> for StorageMatrixGraph<T>
-    where
-        T: Copy
 {
     fn size(&self)
             -> usize
@@ -112,8 +104,15 @@ impl<T> GraphStorage<T> for StorageMatrixGraph<T>
         self.graph.edge_count()
     }
 
-    fn get_all_nodes(&self) -> Vec<T> {
-        self.node_map.values().cloned().collect()
+    fn get_all_nodes(&self) -> Vec<&T> {
+        let mut res = Vec::with_capacity(self.graph.node_count());
+
+        for val in self.node_map.values() {
+            res.push(val);
+        }
+
+
+        res
     }
 
     fn get_all_edges(&self) -> Vec<(usize, usize)>
@@ -140,8 +139,6 @@ impl<T> GraphStorage<T> for StorageMatrixGraph<T>
 
 
 impl<T> GraphRoot<T> for StorageMatrixGraph<T>
-    where
-        T: Copy
 {
     fn add_root_node(
         &mut self,
@@ -204,8 +201,6 @@ impl<T> GraphRoot<T> for StorageMatrixGraph<T>
 
 
 impl<T> GraphLike<T> for StorageMatrixGraph<T>
-    where
-        T: Copy
 {
     fn add_node(
         &mut self,
@@ -213,7 +208,7 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
     )
         -> usize
     {
-        let node_index = self.graph.add_node(value);
+        let node_index = self.graph.add_node(0);
         self.node_map.insert(node_index, value);
         self.index_map.insert(node_index.index(), node_index);
         node_index.index()

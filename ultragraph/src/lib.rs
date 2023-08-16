@@ -46,8 +46,6 @@ pub fn new_with_matrix_storage<T>(
     capacity: usize
 )
     -> UltraGraph<StorageMatrixGraph<T>, T>
-    where
-        T: Copy,
 {
     UltraGraph::new(StorageMatrixGraph::<T>::new_with_capacity(capacity))
 }

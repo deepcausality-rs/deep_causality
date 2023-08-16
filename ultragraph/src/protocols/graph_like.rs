@@ -5,8 +5,6 @@
 use crate::errors::UltraGraphError;
 
 pub trait GraphLike<T>
-    where
-        T: Copy,
 {
     fn add_node(&mut self, value: T) -> usize;
 

@@ -5,8 +5,6 @@ use crate::protocols::graph_like::GraphLike;
 use crate::protocols::graph_root::GraphRoot;
 
 pub trait GraphStorage<T>: GraphLike<T> + GraphRoot<T>
-    where
-        T: Copy
 {
     fn size(&self) -> usize;
 
@@ -16,7 +14,7 @@ pub trait GraphStorage<T>: GraphLike<T> + GraphRoot<T>
 
     fn number_edges(&self) -> usize;
 
-    fn get_all_nodes(&self) -> Vec<T>;
+    fn get_all_nodes(&self) -> Vec<&T>;
 
     fn get_all_edges(&self) -> Vec<(usize, usize)>;
 

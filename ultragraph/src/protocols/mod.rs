@@ -10,4 +10,4 @@ pub mod graph_root;
 pub mod graph_storage;
 
 /// Super trait as type tag for custom graph implementations.
-pub trait UltraGraphable<T>: GraphLike<T> + GraphStorage<T> + GraphRoot<T> where T: Copy, {}
+pub trait UltraGraphable<T>: GraphLike<T> + GraphStorage<T> + GraphRoot<T> {}
