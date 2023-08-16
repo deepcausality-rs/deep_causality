@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use std::collections::HashMap;
 use std::fmt::Debug;
 
-use petgraph::matrix_graph::MatrixGraph;
+use ultragraph::prelude::*;
 
 use crate::prelude::*;
 
@@ -13,10 +12,7 @@ pub struct CausaloidGraph<T>
     where
         T: Causable + Clone + PartialEq,
 {
-    root_index: NodeIndex,
     graph: CausalGraph<T>,
-    causes_map: HashMap<NodeIndex, T>,
-    index_map: IndexMap,
 }
 
 impl<T> CausaloidGraph<T>
@@ -25,19 +21,13 @@ impl<T> CausaloidGraph<T>
 {
     pub fn new() -> Self {
         Self {
-            root_index: NodeIndex::new(0),
-            graph: MatrixGraph::default(),
-            causes_map: HashMap::new(),
-            index_map: HashMap::new(),
+            graph: ultragraph::new_with_matrix_storage(500),
         }
     }
 
     pub fn new_with_capacity(capacity: usize) -> Self {
         Self {
-            root_index: NodeIndex::new(0),
-            graph: MatrixGraph::with_capacity(capacity),
-            causes_map: HashMap::with_capacity(capacity),
-            index_map: HashMap::with_capacity(capacity),
+            graph: ultragraph::new_with_matrix_storage(capacity),
         }
     }
 }
@@ -62,101 +52,63 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
     where
         T: Causable + Clone + PartialEq,
 {
-    fn get_graph(&self) -> &CausalGraph<T> {
+    fn get_graph(&self) -> &CausalGraph<T>
+    {
         &self.graph
     }
 
-    fn add_root_causaloid(
-        &mut self,
-        value: T,
-    )
-        -> usize
+    fn add_root_causaloid(&mut self, value: T) -> usize
     {
-        let idx = self.add_causaloid(value);
-        let root_index = NodeIndex::new(idx);
-        self.root_index = root_index;
-        self.index_map.insert(root_index.index(), root_index);
-        root_index.index()
+        self.graph.add_root_causaloid(value)
     }
 
-    fn contains_root_causaloid(
-        &self
-    )
-        -> bool
+    fn contains_root_causaloid(&self) -> bool
     {
-        self.causes_map.contains_key(&self.root_index)
+        self.graph.contains_root_node()
     }
 
-    fn get_root_causaloid(&self) -> Option<&T> {
-        self.causes_map.get(&self.root_index)
+    fn get_root_causaloid(&self) -> Option<&T>
+    {
+        self.graph.get_root_causaloid()
     }
 
-    fn get_root_index(&self) -> Option<usize> {
-        if self.contains_root_causaloid() {
-            Some(self.root_index.index())
-        } else {
-            None
-        }
+    fn get_root_index(&self) -> Option<usize>
+    {
+        self.graph.get_root_index()
     }
 
     fn get_last_index(&self) -> Result<usize, CausalityGraphError>
     {
         if !self.is_empty() {
-            Ok(self.causes_map.len() - 1)
+            Ok(self.graph.get_last_index())
         } else {
             Err(CausalityGraphError("Graph is empty".to_string()))
         }
     }
 
-    fn add_causaloid(
-        &mut self,
-        value: T,
-    )
-        -> usize
+    fn add_causaloid(&mut self, value: T) -> usize
     {
-        let node_index = self.graph.add_node(value.clone());
-        self.causes_map.insert(node_index, value);
-        self.index_map.insert(node_index.index(), node_index);
-        node_index.index()
+        self.graph.add_node(value)
     }
 
-    fn contains_causaloid(
-        &self,
-        index: usize,
-    )
-        -> bool
+    fn contains_causaloid(&self, index: usize) -> bool
     {
-        self.index_map.get(&index).is_some()
+        self.graph.contains_node(index)
     }
 
-    fn get_causaloid(
-        &self,
-        index: usize,
-    )
-        -> Option<&T>
+    fn get_causaloid(&self, index: usize) -> Option<&T>
     {
-        if !self.contains_causaloid(index) {
-            None
-        } else {
-            let k = self.index_map.get(&index).expect("index not found");
-            self.causes_map.get(k)
-        }
+        self.graph.get_node(index)
     }
 
-    fn remove_causaloid(
-        &mut self,
-        index: usize,
-    )
-        -> Result<(), CausalGraphIndexError>
+    fn remove_causaloid(&mut self, index: usize) -> Result<(), CausalGraphIndexError>
     {
         if !self.contains_causaloid(index) {
             return Err(CausalGraphIndexError(format!("index not found: {}", index)));
         };
 
-        let k = self.index_map.get(&index).unwrap();
-        self.graph.remove_node(*k);
-        self.causes_map.remove(k);
-        self.index_map.remove(&index);
+        self.graph.remove_node(index);
+
         Ok(())
     }
 
@@ -167,18 +119,10 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
     )
         -> Result<(), CausalGraphIndexError>
     {
-        if !self.contains_causaloid(a) {
-            return Err(CausalGraphIndexError(format!("index a {} not found", a)));
-        };
-
-        if !self.contains_causaloid(b) {
-            return Err(CausalGraphIndexError(format!("index b {} not found", b)));
-        };
-
-        let k = self.index_map.get(&a).expect("index not found");
-        let l = self.index_map.get(&b).expect("index not found");
-        self.graph.add_edge(*k, *l, 0);
-        Ok(())
+        return match self.graph.add_edge(a, b) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(CausalGraphIndexError(e)),
+        }
     }
 
     fn add_edg_with_weight(
@@ -189,18 +133,10 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
     )
         -> Result<(), CausalGraphIndexError>
     {
-        if !self.contains_causaloid(a) {
-            return Err(CausalGraphIndexError(format!("index a {} not found", a)));
-        };
-
-        if !self.contains_causaloid(b) {
-            return Err(CausalGraphIndexError(format!("index b {} not found", b)));
-        };
-
-        let k = self.index_map.get(&a).expect("index not found");
-        let l = self.index_map.get(&b).expect("index not found");
-        self.graph.add_edge(*k, *l, weight);
-        Ok(())
+        return match self.graph.add_edge_with_weight(a, b, weight) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(CausalGraphIndexError(e)),
+        }
     }
 
     fn contains_edge(
@@ -210,13 +146,7 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
     )
         -> bool
     {
-        if !self.contains_causaloid(a) || !self.contains_causaloid(b) {
-            return false;
-        };
-
-        let k = self.index_map.get(&a).expect("index not found");
-        let l = self.index_map.get(&b).expect("index not found");
-        self.graph.has_edge(*k, *l)
+        self.graph.contains_edge(a, b)
     }
 
     fn remove_edge(
@@ -226,20 +156,10 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
     )
         -> Result<(), CausalGraphIndexError>
     {
-        if !self.contains_causaloid(a) {
-            return Err(CausalGraphIndexError("index a not found".into()));
-        };
-
-        if !self.contains_causaloid(b) {
-            return Err(CausalGraphIndexError("index b not found".into()));
-        };
-
-        let k = self.index_map.get(&a).expect("index not found");
-        let l = self.index_map.get(&b).expect("index not found");
-
-        self.graph.remove_edge(*k, *l);
-
-        Ok(())
+        return match self.graph.remove_edge(a, b) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(CausalGraphIndexError(e)),
+        }
     }
 
     fn all_active(&self) -> bool
@@ -265,28 +185,26 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
 
     fn size(&self) -> usize
     {
-        self.causes_map.len()
+        self.graph.size()
     }
 
     fn is_empty(&self) -> bool
     {
-        self.causes_map.is_empty()
+        self.graph.is_empty()
     }
 
     fn clear(&mut self)
     {
         self.graph.clear();
-        self.causes_map.clear();
     }
 
     fn number_edges(&self) -> usize
     {
-        self.graph.edge_count()
+        self.graph.number_edges()
     }
 
     fn number_nodes(&self) -> usize
     {
-        self.graph.node_count()
+        self.graph.number_nodes()
     }
-
 }

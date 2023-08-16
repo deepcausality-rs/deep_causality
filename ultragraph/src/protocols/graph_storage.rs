@@ -15,5 +15,10 @@ pub trait GraphStorage<T>: GraphLike<T> + GraphRoot<T>
     fn number_nodes(&self) -> usize;
 
     fn number_edges(&self) -> usize;
+
+    fn get_all_nodes(&self) -> Vec<T>;
+
+    fn get_all_edges(&self) -> Vec<(usize, usize)>;
+
     fn clear(&mut self);
 }

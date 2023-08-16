@@ -51,6 +51,14 @@ impl<S, T> GraphStorage<T> for UltraGraph<S, T>
         self.storage.number_edges()
     }
 
+    fn get_all_nodes(&self) -> Vec<T> {
+        self.storage.get_all_nodes()
+    }
+
+    fn get_all_edges(&self) -> Vec<(usize, usize)> {
+        self.storage.get_all_edges()
+    }
+
     fn clear(&mut self) {
         self.storage.clear()
     }

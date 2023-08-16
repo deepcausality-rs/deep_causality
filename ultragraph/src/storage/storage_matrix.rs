@@ -36,10 +36,7 @@ type HyperGraph<T> = MatrixGraph<T, u64, Directed, Option<u64>, u32>;
 //
 // While this is inefficient and memory intensive for large context graphs, it should be fine
 // for small to medium graphs.
-// type CtxMap<'l, CNT,D, S, T, ST> = HashMap<NodeIndex, CNT<D, S, T, ST>>;
-// //
 //
-type IndexMap = HashMap<usize, NodeIndex>;
 
 pub struct StorageMatrixGraph<T>
     where
@@ -48,7 +45,7 @@ pub struct StorageMatrixGraph<T>
     root_index: Option<NodeIndex>,
     graph: HyperGraph<T>,
     node_map: HashMap<NodeIndex, T>,
-    index_map: IndexMap,
+    index_map: HashMap<usize, NodeIndex>,
 }
 
 impl<T> StorageMatrixGraph<T>
@@ -113,6 +110,23 @@ impl<T> GraphStorage<T> for StorageMatrixGraph<T>
                     -> usize
     {
         self.graph.edge_count()
+    }
+
+    fn get_all_nodes(&self) -> Vec<T> {
+        self.node_map.values().cloned().collect()
+    }
+
+    fn get_all_edges(&self) -> Vec<(usize, usize)>
+    {
+        let mut edges = Vec::with_capacity(self.node_map.len());
+
+        for (idx, _) in &self.node_map {
+            for e in self.graph.neighbors(*idx) {
+                edges.push((idx.index(), e.index()));
+            }
+        }
+
+        edges
     }
 
     fn clear(&mut self)
@@ -261,7 +275,7 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
         };
 
         if self.contains_edge(a, b) {
-            return Err(UltraGraphError(format!("Edge already exists between: {} and {}", a, b)))
+            return Err(UltraGraphError(format!("Edge already exists between: {} and {}", a, b)));
         }
 
         let k = self.index_map.get(&a).expect("index not found");
@@ -287,7 +301,7 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
         };
 
         if self.contains_edge(a, b) {
-            return Err(UltraGraphError(format!("Edge already exists between: {} and {}", a, b)))
+            return Err(UltraGraphError(format!("Edge already exists between: {} and {}", a, b)));
         }
 
         let k = self.index_map.get(&a).expect("index not found");
@@ -328,7 +342,7 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
         };
 
         if !self.contains_edge(a, b) {
-            return Err(UltraGraphError(format!("Edge does not exists between: {} and {}", a, b)))
+            return Err(UltraGraphError(format!("Edge does not exists between: {} and {}", a, b)));
         }
 
         let k = self.index_map.get(&a).expect("index not found");
