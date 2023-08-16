@@ -16,7 +16,6 @@ authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 
 
 [dependencies]
-petgraph = "0.6.3"
 
 
 [dependencies.dcl_data_structures]

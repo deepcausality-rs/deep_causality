@@ -157,7 +157,7 @@ fn test_from_causal_graph_with_context() {
     let (causal_graph, data) = bench_utils_graph::get_small_multi_layer_cause_graph_and_data();
     let context = &test_utils::get_test_context();
 
-    let causaloid = Causaloid::from_causal_graph_with_context(id, causal_graph, Some(&context), description);
+    let causaloid = Causaloid::from_causal_graph_with_context(id, causal_graph, Some(context), description);
     assert!(!causaloid.is_singleton());
 
     assert!(!causaloid.is_active());
@@ -221,7 +221,7 @@ fn test_to_string() {
     let causaloid = test_utils::get_test_causaloid();
     assert!(!causaloid.is_active());
 
-    let expected = format!("Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55 is active: false has context: false");
+    let expected = "Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55 is active: false has context: false".to_string();
     let actual = causaloid.to_string();
 
     assert_eq!(actual, expected);

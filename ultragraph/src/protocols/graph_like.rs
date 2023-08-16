@@ -2,6 +2,8 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 
+use std::vec::IntoIter;
+
 use crate::errors::UltraGraphError;
 
 pub trait GraphLike<T>
@@ -49,12 +51,12 @@ pub trait GraphLike<T>
         start_index: usize,
         stop_index: usize,
     )
-        -> Result<Vec<usize>, UltraGraphError>;
+        -> Option<Vec<usize>>;
 
     /// Returns all nodes with an outgoing edge starting from a.
     fn outgoing_edges(
         &self,
         a: usize,
     )
-        -> Result<Vec<usize>, UltraGraphError>;
+        -> Result<IntoIter<usize>, UltraGraphError>;
 }

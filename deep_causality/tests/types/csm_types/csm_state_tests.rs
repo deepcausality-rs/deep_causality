@@ -38,7 +38,7 @@ fn test_eval()
     assert!(res.is_ok());
 
     let trigger = res.expect("Failed to unwrap eval result from causal state");
-    assert_eq!(trigger, false);
+    assert!(!trigger);
 
     let data = 0.93f64;
     let cs2 = CausalState::new(id, version, data, causaloid);
@@ -47,7 +47,7 @@ fn test_eval()
     assert!(res.is_ok());
 
     let trigger = res.expect("Failed to unwrap eval result from causal state");
-    assert_eq!(trigger, true);
+    assert!(trigger);
 }
 
 #[test]
@@ -63,19 +63,19 @@ fn eval_with_data()
     assert!(res.is_ok());
 
     let trigger = res.expect("Failed to unwrap eval result from causal state");
-    assert_eq!(trigger, false);
+    assert!(!trigger);
 
     let data = &0.0f64;
     let res = cs.eval_with_data(data);
     assert!(res.is_ok());
 
     let trigger = res.expect("Failed to unwrap eval result from causal state");
-    assert_eq!(trigger, false);
+    assert!(!trigger);
 
     let data = &0.89f64;
     let res = cs.eval_with_data(data);
     assert!(res.is_ok());
 
     let trigger = res.expect("Failed to unwrap eval result from causal state");
-    assert_eq!(trigger, true);
+    assert!(trigger);
 }

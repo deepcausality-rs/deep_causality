@@ -11,7 +11,7 @@ pub mod graph_explaining;
 mod graph_reasoning_utils;
 
 // Type alias is shared between trait and implementation
-pub(crate) type CausalGraph<T: Causable + Clone + PartialEq> = UltraGraph<StorageMatrixGraph<T>, T>;
+pub(crate) type CausalGraph<T> = UltraGraph<StorageMatrixGraph<T>, T>;
 
 pub trait CausableGraph<T>
     where

@@ -41,7 +41,7 @@ fn test_to_string() {
     let contextoid: Contextoid< Dataoid, Spaceoid, Tempoid, SpaceTempoid> = Contextoid::new(id, ContextoidType::Datoid(d));
     assert_eq!(contextoid.id(), id);
 
-    let expected = format!("Contextoid ID: 1 Type: Datoid: Dataoid: id: 1 data: 42");
+    let expected = "Contextoid ID: 1 Type: Datoid: Dataoid: id: 1 data: 42".to_string();
     let actual = contextoid.to_string();
     assert_eq!(actual, expected);
 }

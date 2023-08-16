@@ -171,7 +171,7 @@ fn test_get_last_index() {
     let actual = g.number_nodes();
     assert_eq!(expected, actual);
 
-    let expected = 0;
+    let expected = 1;
     let actual = g.get_last_index().unwrap();
     assert_eq!(expected, actual);
 }
@@ -795,11 +795,11 @@ fn test_shortest_path_error() {
 
     // 1. Node a doesnt exist
     let res = g.shortest_path(42, root_index);
-    assert!(res.is_err());
+    assert!(res.is_none());
 
     // 2. Node b doesnt exist
     let res = g.shortest_path(root_index, 23);
-    assert!(res.is_err());
+    assert!(res.is_none());
 }
 
 #[test]

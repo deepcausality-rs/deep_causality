@@ -3,6 +3,7 @@
 
 use deep_causality::prelude::*;
 use deep_causality::utils::test_utils;
+use ultragraph::prelude::*;
 
 #[test]
 fn test_new() {
@@ -416,6 +417,6 @@ fn test_get_graph() {
     assert_eq!(size, 0);
 
     let graph = g.get_graph();
-    assert_eq!(graph.edge_count(), 0);
-    assert_eq!(graph.node_count(), 0);
+    assert_eq!(graph.number_edges(), 0);
+    assert_eq!(graph.number_nodes(), 0);
 }

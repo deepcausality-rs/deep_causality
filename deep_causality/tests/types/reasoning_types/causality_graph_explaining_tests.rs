@@ -141,6 +141,6 @@ fn test_explain_shortest_path_between_causes() {
     // Explain partial reasoning over shortest path through the graph
     //
     let res = g.explain_shortest_path_between_causes(start_index, stop_index).unwrap();
-    let expected = format!("\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n");
+    let expected = "\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n".to_string();
     assert_eq!(res, expected);
 }

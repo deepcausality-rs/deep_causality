@@ -4,6 +4,7 @@
 #![forbid(unsafe_code)]
 
 use std::marker::PhantomData;
+use std::vec::IntoIter;
 
 use crate::prelude::*;
 
@@ -122,11 +123,12 @@ impl<S, T> GraphLike<T> for UltraGraph<S, T>
         self.storage.remove_edge(a, b)
     }
 
-    fn shortest_path(&self, start_index: usize, stop_index: usize) -> Result<Vec<usize>, UltraGraphError> {
+    fn shortest_path(&self, start_index: usize, stop_index: usize) -> Option<Vec<usize>>
+    {
         self.storage.shortest_path(start_index, stop_index)
     }
 
-    fn outgoing_edges(&self, a: usize) -> Result<Vec<usize>, UltraGraphError> {
+    fn outgoing_edges(&self, a: usize) -> Result<IntoIter<usize>, UltraGraphError> {
         self.storage.outgoing_edges(a)
     }
 }

@@ -10,14 +10,14 @@ use crate::prelude::*;
 #[derive(Clone)]
 pub struct CausaloidGraph<T>
     where
-        T: Causable + Clone + PartialEq,
+        T: Causable + PartialEq,
 {
     graph: CausalGraph<T>,
 }
 
 impl<T> CausaloidGraph<T>
     where
-        T: Causable + Clone + PartialEq,
+        T: Causable + PartialEq,
 {
     pub fn new() -> Self {
         Self {
@@ -34,7 +34,7 @@ impl<T> CausaloidGraph<T>
 
 impl<T> Default for CausaloidGraph<T>
     where
-        T: Debug + Causable + Clone + PartialEq,
+        T: Debug + Causable + PartialEq,
 {
     fn default() -> Self {
         Self::new()
@@ -42,15 +42,15 @@ impl<T> Default for CausaloidGraph<T>
 }
 
 // See default implementation in protocols/causable_graph/graph_explaining
-impl<T> CausableGraphExplaining<T> for CausaloidGraph<T> where T: Causable + Clone + PartialEq {}
+impl<T> CausableGraphExplaining<T> for CausaloidGraph<T> where T: Causable + PartialEq {}
 
 
 // See default implementation in protocols/causable_graph/graph_explaining
-impl<T> CausableGraphReasoning<T> for CausaloidGraph<T> where T: Causable + Clone + PartialEq {}
+impl<T> CausableGraphReasoning<T> for CausaloidGraph<T> where T: Causable + PartialEq {}
 
 impl<T> CausableGraph<T> for CausaloidGraph<T>
     where
-        T: Causable + Clone + PartialEq,
+        T: Causable + PartialEq,
 {
     fn get_graph(&self) -> &CausalGraph<T>
     {
@@ -59,7 +59,7 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
 
     fn add_root_causaloid(&mut self, value: T) -> usize
     {
-        self.graph.add_root_causaloid(value)
+        self.graph.add_root_node(value)
     }
 
     fn contains_root_causaloid(&self) -> bool
@@ -69,7 +69,7 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
 
     fn get_root_causaloid(&self) -> Option<&T>
     {
-        self.graph.get_root_causaloid()
+        self.graph.get_root_node()
     }
 
     fn get_root_index(&self) -> Option<usize>
@@ -80,7 +80,9 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
     fn get_last_index(&self) -> Result<usize, CausalityGraphError>
     {
         if !self.is_empty() {
-            Ok(self.graph.get_last_index())
+            let last_index = self.graph.get_last_index().expect("Could not get last index");
+
+            Ok(last_index)
         } else {
             Err(CausalityGraphError("Graph is empty".to_string()))
         }
@@ -103,13 +105,10 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
 
     fn remove_causaloid(&mut self, index: usize) -> Result<(), CausalGraphIndexError>
     {
-        if !self.contains_causaloid(index) {
-            return Err(CausalGraphIndexError(format!("index not found: {}", index)));
-        };
-
-        self.graph.remove_node(index);
-
-        Ok(())
+        match self.graph.remove_node(index) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(CausalGraphIndexError(e.to_string())),
+        }
     }
 
     fn add_edge(
@@ -119,9 +118,9 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
     )
         -> Result<(), CausalGraphIndexError>
     {
-        return match self.graph.add_edge(a, b) {
+        match self.graph.add_edge(a, b) {
             Ok(_) => Ok(()),
-            Err(e) => Err(CausalGraphIndexError(e)),
+            Err(e) => Err(CausalGraphIndexError(e.to_string())),
         }
     }
 
@@ -133,9 +132,9 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
     )
         -> Result<(), CausalGraphIndexError>
     {
-        return match self.graph.add_edge_with_weight(a, b, weight) {
+        match self.graph.add_edge_with_weight(a, b, weight) {
             Ok(_) => Ok(()),
-            Err(e) => Err(CausalGraphIndexError(e)),
+            Err(e) => Err(CausalGraphIndexError(e.to_string())),
         }
     }
 
@@ -156,15 +155,15 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
     )
         -> Result<(), CausalGraphIndexError>
     {
-        return match self.graph.remove_edge(a, b) {
+        match self.graph.remove_edge(a, b) {
             Ok(_) => Ok(()),
-            Err(e) => Err(CausalGraphIndexError(e)),
+            Err(e) => Err(CausalGraphIndexError(e.to_string())),
         }
     }
 
     fn all_active(&self) -> bool
     {
-        for (_, cause) in self.causes_map.iter() {
+        for cause in self.graph.get_all_nodes() {
             if !cause.is_active() {
                 return false;
             }
@@ -175,7 +174,7 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
 
     fn number_active(&self) -> NumericalValue
     {
-        self.causes_map.iter().filter(|(_, c)| c.is_active()).count() as NumericalValue
+        self.graph.get_all_nodes().iter().filter(|c| c.is_active()).count() as NumericalValue
     }
 
     fn percent_active(&self) -> NumericalValue

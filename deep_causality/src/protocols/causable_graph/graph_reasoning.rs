@@ -3,9 +3,11 @@
 
 use std::collections::HashMap;
 
+use ultragraph::prelude::*;
+
 use crate::errors::CausalityGraphError;
 use crate::prelude::{Causable, CausableGraph, IdentificationValue, NumericalValue};
-use crate::protocols::causable_graph::{graph_reasoning_utils, NodeIndex};
+use crate::protocols::causable_graph::graph_reasoning_utils;
 
 /// Describes signatures for causal reasoning and explaining
 /// in causality hyper graph.
@@ -16,8 +18,8 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
     // Algo inspired by simple path https://github.com/petgraph/petgraph/blob/master/src/algo/simple_paths.rs
     fn reason_from_to_cause(
         &self,
-        start_index: NodeIndex,
-        stop_index: NodeIndex,
+        start_index: usize,
+        stop_index: usize,
         data: &[NumericalValue],
         data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>,
     )
@@ -28,7 +30,7 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
             return Err(CausalityGraphError("Graph is empty".to_string()));
         }
 
-        if !self.contains_causaloid(start_index.index())
+        if !self.contains_causaloid(start_index)
         {
             return Err(CausalityGraphError("Graph does not contains start causaloid".into()));
         }
@@ -38,7 +40,7 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
             return Err(CausalityGraphError("Data are empty (len ==0).".into()));
         }
 
-        let cause = self.get_causaloid(start_index.index()).expect("Failed to get causaloid");
+        let cause = self.get_causaloid(start_index).expect("Failed to get causaloid");
 
         let obs = graph_reasoning_utils::get_obs(cause.id(), data, &data_index);
 
@@ -54,13 +56,13 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
         }
 
         let mut stack = Vec::with_capacity(self.size());
-        stack.push(self.get_graph().neighbors(start_index));
+        stack.push(self.get_graph().outgoing_edges(start_index).unwrap());
 
         while let Some(children) = stack.last_mut()
         {
             if let Some(child) = children.next()
             {
-                let cause = self.get_causaloid(child.index())
+                let cause = self.get_causaloid(child)
                     .expect("Failed to get causaloid");
 
                 let obs = graph_reasoning_utils::get_obs(cause.id(), data, &data_index);
@@ -89,7 +91,7 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
                 {
                     return Ok(true);
                 } else {
-                    stack.push(self.get_graph().neighbors(child));
+                    stack.push(self.get_graph().outgoing_edges(child).unwrap());
                 }
             } else {
                 stack.pop();
@@ -123,9 +125,9 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
         if self.contains_root_causaloid()
         {
             let root_index = self.get_root_index().expect("Root causaloid not found.");
-            let start_index = NodeIndex::new(root_index);
+            let start_index = root_index;
 
-            let stop_index = NodeIndex::new(self.size());
+            let stop_index = self.get_last_index().unwrap();
 
             match self.reason_from_to_cause(start_index, stop_index, data, data_index) {
                 Ok(result) => Ok(result),
@@ -158,8 +160,7 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
     )
         -> Result<bool, CausalityGraphError>
     {
-        let start_index = NodeIndex::new(start_index);
-        let stop_index = NodeIndex::new(self.size());
+        let stop_index = self.get_last_index().unwrap();
         match self.reason_from_to_cause(start_index, stop_index, data, data_index) {
             Ok(result) => Ok(result),
             Err(e) => Err(e)
@@ -190,8 +191,6 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
     )
         -> Result<bool, CausalityGraphError>
     {
-        let start_index = NodeIndex::new(start_index);
-        let stop_index = NodeIndex::new(stop_index);
 
         match self.reason_shortest_path_from_to_cause(
             start_index,
@@ -207,8 +206,8 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
 
     fn reason_shortest_path_from_to_cause(
         &self,
-        start_index: NodeIndex,
-        stop_index: NodeIndex,
+        start_index: usize,
+        stop_index: usize,
         data: &[NumericalValue],
         data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>,
     )
@@ -219,11 +218,11 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
             return Err(CausalityGraphError("Graph is empty".to_string()));
         }
 
-        if !self.contains_causaloid(start_index.index()) {
+        if !self.contains_causaloid(start_index) {
             return Err(CausalityGraphError("Graph does not contains start causaloid".into()));
         }
 
-        if !self.contains_causaloid(stop_index.index()) {
+        if !self.contains_causaloid(stop_index) {
             return Err(CausalityGraphError("Graph does not contains stop causaloid".into()));
         }
 
@@ -233,7 +232,7 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
         };
 
         for index in shortest_path {
-            let cause = self.get_causaloid(index.index()).expect("Failed to get causaloid");
+            let cause = self.get_causaloid(index).expect("Failed to get causaloid");
 
             let obs = graph_reasoning_utils::get_obs(cause.id(), data, &data_index);
 

@@ -2,6 +2,7 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use std::collections::HashMap;
+use std::vec::IntoIter;
 
 use petgraph::algo::astar;
 use petgraph::Directed;
@@ -38,6 +39,7 @@ type HyperGraph<T> = MatrixGraph<T, u64, Directed, Option<u64>, u32>;
 // for small to medium graphs.
 //
 
+#[derive(Clone)]
 pub struct StorageMatrixGraph<T>
 {
     root_index: Option<NodeIndex>,
@@ -111,7 +113,6 @@ impl<T> GraphStorage<T> for StorageMatrixGraph<T>
             res.push(val);
         }
 
-
         res
     }
 
@@ -119,7 +120,7 @@ impl<T> GraphStorage<T> for StorageMatrixGraph<T>
     {
         let mut edges = Vec::with_capacity(self.node_map.len());
 
-        for (idx, _) in &self.node_map {
+        for idx in self.node_map.keys() {
             for e in self.graph.neighbors(*idx) {
                 edges.push((idx.index(), e.index()));
             }
@@ -192,7 +193,7 @@ impl<T> GraphRoot<T> for StorageMatrixGraph<T>
         -> Result<usize, UltraGraphError>
     {
         if !self.is_empty() {
-            Ok(self.node_map.len() - 1)
+            Ok(self.node_map.len())
         } else {
             Err(UltraGraphError("Graph is empty".to_string()))
         }
@@ -355,14 +356,14 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
         start_index: usize,
         stop_index: usize,
     )
-        -> Result<Vec<usize>, UltraGraphError>
+        -> Option<Vec<usize>>
     {
         if !self.contains_node(start_index) {
-            return Err(UltraGraphError(format!("start_index not found: {}", start_index)));
+            return None;
         };
 
         if !self.contains_node(stop_index) {
-            return Err(UltraGraphError(format!("stop_index not found: {}", start_index)));
+            return None;
         };
 
         let mut result: Vec<usize> = Vec::new();
@@ -380,14 +381,14 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
             result.push(node.index());
         }
 
-        Ok(result)
+        Some(result)
     }
 
     fn outgoing_edges(
         &self,
         a: usize,
     )
-        -> Result<Vec<usize>, UltraGraphError>
+        -> Result<IntoIter<usize>, UltraGraphError>
     {
         if !self.contains_node(a) {
             return Err(UltraGraphError("index a not found".into()));
@@ -401,6 +402,6 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
             result.push(node.index());
         }
 
-        Ok(result)
+        Ok(result.into_iter())
     }
 }
