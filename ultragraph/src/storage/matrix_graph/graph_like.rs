@@ -1,207 +1,17 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use std::collections::HashMap;
 use std::vec::IntoIter;
 
 use petgraph::algo::astar;
-use petgraph::Directed;
-use petgraph::graph::NodeIndex as GraphNodeIndex;
-use petgraph::matrix_graph::MatrixGraph;
 use petgraph::prelude::EdgeRef;
 
 use crate::errors::UltraGraphError;
-use crate::protocols::graph_like::GraphLike;
-use crate::protocols::graph_root::GraphRoot;
-use crate::protocols::graph_storage::GraphStorage;
+use crate::prelude::GraphLike;
 
-type DefaultIx = u32;
-type NodeIndex<Ix = DefaultIx> = GraphNodeIndex<Ix>;
+use super::{NodeIndex, UltraMatrixGraph};
 
-// Edge weights need to be numerical (u64) to make shortest path algo work.
-// Also, u32 is used as node node index type to bypass the fairly ancient 65k node limit
-// coming from the u16 default node index default type in petgraph.
-// u32 has a limit of 2^31 - 1 (4,294,967,295). NodeIndex can be at most u32 because petgraph has no implementation
-// for u64 or u128. See: https://docs.rs/petgraph/latest/petgraph/graph/trait.IndexType.html
-type HyperGraph<T> = MatrixGraph<T, u64, Directed, Option<u64>, u32>;
-
-//
-// Petgraph has no good way to retrieve a specific node hence the hashmap as support structure
-// for the get & contains node methods. Given that the context will be embedded as a reference
-// into many causaloids, it is safe to say that nodes from the context will be retrieved quite
-// freequently therefore the direct access from the hashmap should speed things up.
-//
-// Ideally, the hashmap should hold only a reference to the contextoid in the graph,
-// but this causes trouble with the borrow checker hence the node is stored as a value.
-// As a consequence, all nodes stores in the graph and hashmap must implement the clone trait.
-//
-// While this is inefficient and memory intensive for large context graphs, it should be fine
-// for small to medium graphs.
-//
-
-#[derive(Clone)]
-pub struct StorageMatrixGraph<T>
-{
-    root_index: Option<NodeIndex>,
-    graph: HyperGraph<u8>,
-    node_map: HashMap<NodeIndex, T>,
-    index_map: HashMap<usize, NodeIndex>,
-}
-
-impl<T> StorageMatrixGraph<T>
-{
-    pub fn new() -> Self {
-        Self {
-            root_index: None,
-            graph: MatrixGraph::default(),
-            node_map: HashMap::new(),
-            index_map: HashMap::new(),
-        }
-    }
-
-    pub fn new_with_capacity(capacity: usize) -> Self {
-        Self {
-            root_index: None,
-            graph: MatrixGraph::with_capacity(capacity),
-            node_map: HashMap::with_capacity(capacity),
-            index_map: HashMap::with_capacity(capacity),
-        }
-    }
-}
-
-
-impl<T> Default for StorageMatrixGraph<T>
-{
-    fn default()
-        -> Self
-    {
-        Self::new()
-    }
-}
-
-
-impl<T> GraphStorage<T> for StorageMatrixGraph<T>
-{
-    fn size(&self)
-            -> usize
-    {
-        self.graph.node_count()
-    }
-
-    fn is_empty(&self)
-                -> bool
-    {
-        self.graph.node_count() == 0
-    }
-
-    fn number_nodes(&self)
-                    -> usize
-    {
-        self.graph.node_count()
-    }
-
-    fn number_edges(&self)
-                    -> usize
-    {
-        self.graph.edge_count()
-    }
-
-    fn get_all_nodes(&self) -> Vec<&T> {
-        let mut res = Vec::with_capacity(self.graph.node_count());
-
-        for val in self.node_map.values() {
-            res.push(val);
-        }
-
-        res
-    }
-
-    fn get_all_edges(&self) -> Vec<(usize, usize)>
-    {
-        let mut edges = Vec::with_capacity(self.node_map.len());
-
-        for idx in self.node_map.keys() {
-            for e in self.graph.neighbors(*idx) {
-                edges.push((idx.index(), e.index()));
-            }
-        }
-
-        edges
-    }
-
-    fn clear(&mut self)
-    {
-        self.graph.clear();
-        self.node_map.clear();
-        self.index_map.clear();
-        self.root_index = None;
-    }
-}
-
-
-impl<T> GraphRoot<T> for StorageMatrixGraph<T>
-{
-    fn add_root_node(
-        &mut self,
-        value: T,
-    )
-        -> usize
-    {
-        let idx = self.add_node(value);
-        let root_index = NodeIndex::new(idx);
-        self.root_index = Some(root_index);
-        self.index_map.insert(root_index.index(), root_index);
-        root_index.index()
-    }
-
-    fn contains_root_node(
-        &self
-    )
-        -> bool
-    {
-        self.root_index.is_some()
-    }
-
-    fn get_root_node(
-        &self
-    )
-        -> Option<&T>
-    {
-        if self.contains_root_node()
-        {
-            self.node_map.get(&self.root_index.unwrap())
-        } else {
-            None
-        }
-    }
-
-    fn get_root_index(
-        &self
-    )
-        -> Option<usize>
-    {
-        if self.contains_root_node() {
-            Some(self.root_index.unwrap().index())
-        } else {
-            None
-        }
-    }
-
-    fn get_last_index(
-        &self
-    )
-        -> Result<usize, UltraGraphError>
-    {
-        if !self.is_empty() {
-            Ok(self.node_map.len())
-        } else {
-            Err(UltraGraphError("Graph is empty".to_string()))
-        }
-    }
-}
-
-
-impl<T> GraphLike<T> for StorageMatrixGraph<T>
+impl<T> GraphLike<T> for UltraMatrixGraph<T>
 {
     fn add_node(
         &mut self,
@@ -209,7 +19,7 @@ impl<T> GraphLike<T> for StorageMatrixGraph<T>
     )
         -> usize
     {
-        let node_index = self.graph.add_node(0);
+        let node_index = self.graph.add_node(true);
         self.node_map.insert(node_index, value);
         self.index_map.insert(node_index.index(), node_index);
         node_index.index()

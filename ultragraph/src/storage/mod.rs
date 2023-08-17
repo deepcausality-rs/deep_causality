@@ -3,4 +3,4 @@
 
 #![forbid(unsafe_code)]
 
-pub mod storage_matrix;
+pub mod matrix_graph;

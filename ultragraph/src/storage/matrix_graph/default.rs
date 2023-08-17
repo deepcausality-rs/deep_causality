@@ -1,0 +1,13 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+
+use super::UltraMatrixGraph;
+
+impl<T> Default for UltraMatrixGraph<T>
+{
+    fn default()
+        -> Self
+    {
+        Self::new()
+    }
+}
