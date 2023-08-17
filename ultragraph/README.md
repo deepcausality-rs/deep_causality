@@ -1,5 +1,35 @@
 # ultragraph
 
+[![Crates.io][crates-badge]][crates-url]
+[![Docs.rs][docs-badge]][docs-url]
+[![MIT licensed][mit-badge]][mit-url]
+![Audit][audit-url]
+![Clippy][clippy-url]
+![Tests][test-url]
+[![OpenSSF Best Practices][ossf-badge]][ossf-url]
+
+[ossf-badge]: https://bestpractices.coreinfrastructure.org/projects/7568/badge
+
+[ossf-url]:https://bestpractices.coreinfrastructure.org/projects/7568
+
+[crates-badge]: https://img.shields.io/badge/Crates.io-Latest-blue
+
+[crates-url]: https://crates.io/crates/ultragraph
+
+[docs-badge]: https://img.shields.io/badge/Docs.rs-Latest-blue
+
+[docs-url]: https://docs.rs/deep_causality/latest/ultragraph/
+
+[mit-badge]: https://img.shields.io/badge/License-MIT-blue.svg
+
+[mit-url]: https://github.com/deepcausality-rs/deep_causality/blob/main/LICENSE
+
+[audit-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/audit.yml/badge.svg
+
+[clippy-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/rust-clippy.yml/badge.svg
+
+[test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
+
 ## 📣 Goal
 
 Ultragraph aims to simplify working with directed graph data structures by adding more features such
@@ -35,6 +65,11 @@ ultragraph = "current_version"
 ```
 
 ## ⭐ Usage
+
+See:
+
+* [Examples](examples)
+* [Test](tests)
 
 ```rust
 use ultragraph::prelude::*;
