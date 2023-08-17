@@ -3,17 +3,15 @@
 
 #![forbid(unsafe_code)]
 
-use crate::prelude::{UltraGraphContainer, UltraMatrixGraph};
+use crate::prelude::{UltraGraph, UltraGraphContainer, UltraMatrixGraph};
 
 pub mod prelude;
 pub mod protocols;
 pub mod errors;
 pub mod storage;
 pub mod types;
+pub mod alias;
 
-// Type alias for convenience and to shorten type annotations / inference.
-// This also allows for simple swapping of the underlying storage type.
-pub type UltraGraph<T> = UltraGraphContainer<UltraMatrixGraph<T>, T>;
 
 /// Returns a new UltraGraph with matrix storage backend.
 /// Default capacity is 500 nodes.
