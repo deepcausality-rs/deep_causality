@@ -6,8 +6,9 @@ rust-version = "1.65"
 repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 license = "MIT"
-description = "Hypergraph data structure for for deep_causality crate."
-documentation = "https://docs.rs/deep_causality"
+description = "Hypergraph data structure."
+documentation = "https://docs.rs/ultragraph"
+website = "https://github.com/deepcausality/deep_causality/tree/main/ultragraph"
 categories = ["data-structures"]
 keywords = ["data-structures"]
 
