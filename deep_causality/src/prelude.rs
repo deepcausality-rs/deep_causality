@@ -63,12 +63,11 @@ pub use crate::types::csm_types::csm_state::CausalState;
 // Model types
 pub use crate::types::model_types::model::Model;
 // Reasoning types
-pub use crate::types::reasoning_types::assumable::assumption::*;
-pub use crate::types::reasoning_types::causable::*;
-pub use crate::types::reasoning_types::causable::causaloid::*;
-pub use crate::types::reasoning_types::causable::causaloid_graph::*;
-pub use crate::types::reasoning_types::inferable::inference::*;
-pub use crate::types::reasoning_types::observable::observation::Observation;
+pub use crate::types::reasoning_types::assumption::Assumption;
+pub use crate::types::reasoning_types::causaloid::Causaloid;
+pub use crate::types::reasoning_types::causaloid_graph::CausaloidGraph;
+pub use crate::types::reasoning_types::inference::Inference;
+pub use crate::types::reasoning_types::observation::Observation;
 //
 // Utils
 //
