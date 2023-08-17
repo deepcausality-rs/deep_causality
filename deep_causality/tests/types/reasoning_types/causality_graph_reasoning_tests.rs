@@ -142,7 +142,7 @@ fn test_reason_subgraph_from_cause() {
 #[test]
 fn test_reason_shortest_path_between_causes() {
     // Reasons over a linear graph:
-    // root(0) -> A(1) -> B(2) -> C(3) ... XYZ(100)
+    // root(0) -> A(1) -> B(2) -> C(3) ... XYZ(10)
     // We assume a linear chain of causality.
     let (g, data) = bench_utils_graph::get_small_linear_graph_and_data();
 
@@ -156,8 +156,11 @@ fn test_reason_shortest_path_between_causes() {
     let all_true = g.all_active();
     assert!(!all_true);
 
-    let start_index = 10;
-    let stop_index = 19;
+    // the graph has 11 nodes, root plus 1 ...10
+    // here we evaluate the first half, 1...6
+
+    let start_index = 1;
+    let stop_index = 6;
     let res = g.reason_shortest_path_between_causes(
         start_index,
         stop_index,
@@ -169,24 +172,52 @@ fn test_reason_shortest_path_between_causes() {
     let all_true = g.all_active();
     assert!(!all_true);
 
+    let number_true = g.number_active();
+    assert_eq!(number_true, 6.0);
+
+    // And then evaluate the second half, 7...9.
+
+    let start_index = 7;
+    let stop_index = 9;
+    let res = g.reason_shortest_path_between_causes(
+        start_index,
+        stop_index,
+        &data,
+        None,
+    ).unwrap();
+    assert!(res);
+
+    // Note, because root node was not evaluated,
+    // only 9 out of 10 nodes or 90% are active.
+    let number_true = g.number_active();
+    assert_eq!(number_true, 9.0);
+
+    let percent_true = g.percent_active();
+    assert_eq!(percent_true, 90.0);
+
+    let all_true = g.all_active();
+    assert!(!all_true);
+
+    // Evaluate root node using shortest path between root and node 1
+    let start_index = 0;
+    let stop_index = 1;
+    let res = g.reason_shortest_path_between_causes(
+        start_index,
+        stop_index,
+        &data,
+        None,
+    ).unwrap();
+    assert!(res);
+
+    // Now, all ten nodes or 100% are active.
     let number_true = g.number_active();
     assert_eq!(number_true, 10.0);
 
-    let start_index = 30;
-    let stop_index = 49;
-    let res = g.reason_shortest_path_between_causes(
-        start_index,
-        stop_index,
-        &data,
-        None,
-    ).unwrap();
-    assert!(res);
-
-    let number_true = g.number_active();
-    assert_eq!(number_true, 30.0);
+    let percent_true = g.percent_active();
+    assert_eq!(percent_true, 100.0);
 
     let all_true = g.all_active();
-    assert!(!all_true);
+    assert!(all_true);
 }
 
 #[test]

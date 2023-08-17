@@ -45,7 +45,7 @@ pub mod alias;
 pub fn new<T>()
     -> UltraGraph<T>
 {
-    UltraGraphContainer::new(UltraMatrixGraph::<T>::new_with_capacity(500))
+    UltraGraphContainer::new(UltraMatrixGraph::<T>::new())
 }
 
 
@@ -94,4 +94,10 @@ pub fn new_with_matrix_storage<T>(
     -> UltraGraph<T>
 {
     UltraGraphContainer::new(UltraMatrixGraph::<T>::new_with_capacity(capacity))
+}
+
+pub fn default<T>()
+    -> UltraGraph<T>
+{
+    UltraGraphContainer::new(UltraMatrixGraph::<T>::default())
 }

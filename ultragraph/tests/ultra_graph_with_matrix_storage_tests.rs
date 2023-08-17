@@ -9,7 +9,7 @@ pub struct Data {
 }
 
 fn get_ultra_graph() -> UltraGraph<Data> {
-    ultragraph::new_with_matrix_storage::<Data>(10)
+    ultragraph::with_capacity::<Data>(10)
 }
 
 #[test]
