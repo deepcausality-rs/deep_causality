@@ -8,8 +8,6 @@ use ultragraph::prelude::*;
 use crate::errors::ContextIndexError;
 use crate::prelude::{Contextoid, ContextuableGraph, Datable, Identifiable, RelationKind, SpaceTemporal, Spatial, Temporal};
 
-type CtxGraph<'l, D, S, T, ST> = UltraGraph<StorageMatrixGraph<Contextoid<D, S, T, ST>>, Contextoid<D, S, T, ST>>;
-
 pub struct Context<'l, D, S, T, ST>
     where
         D: Datable + Clone + Copy,
@@ -19,7 +17,7 @@ pub struct Context<'l, D, S, T, ST>
 {
     id: u64,
     name: &'l str,
-    graph: CtxGraph<'l, D, S, T, ST>,
+    graph: UltraGraph<Contextoid<D, S, T, ST>>,
 }
 
 
