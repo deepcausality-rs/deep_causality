@@ -6,11 +6,8 @@
 ![Audit][audit-url]
 ![Clippy][clippy-url]
 ![Tests][test-url]
-[![OpenSSF Best Practices][ossf-badge]][ossf-url]
 
 [ossf-badge]: https://bestpractices.coreinfrastructure.org/projects/7568/badge
-
-[ossf-url]:https://bestpractices.coreinfrastructure.org/projects/7568
 
 [crates-badge]: https://img.shields.io/badge/Crates.io-Latest-blue
 
@@ -18,7 +15,7 @@
 
 [docs-badge]: https://img.shields.io/badge/Docs.rs-Latest-blue
 
-[docs-url]: https://docs.rs/deep_causality/latest/ultragraph/
+[docs-url]: https://docs.rs/ultragraph/latest/ultragraph/
 
 [mit-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
@@ -54,7 +51,7 @@ some basic algorithm such as shortest path.
 
 Just run:
 
-```toml
+```bash
 cargo add ultragraph
 ```
 
