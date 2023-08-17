@@ -4,7 +4,5 @@
 pub mod node_types;
 pub mod context;
 pub mod time_scale;
-pub mod root;
 pub mod contextoid;
 pub mod relation_kind;
-pub mod contextoid_type;

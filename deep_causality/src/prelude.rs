@@ -47,14 +47,14 @@ pub use crate::types::context_types::context;
 pub use crate::types::context_types::context::Context;
 // Graph types
 pub use crate::types::context_types::contextoid::*;
-pub use crate::types::context_types::contextoid_type::*;
+pub use crate::types::context_types::contextoid::contextoid_type::*;
 // Default context node types. Overwrite traits to customize.
 pub use crate::types::context_types::node_types::dateoid::Dataoid;
+pub use crate::types::context_types::node_types::root::*;
 pub use crate::types::context_types::node_types::space_tempoid::SpaceTempoid;
 pub use crate::types::context_types::node_types::spaceoid::Spaceoid;
 pub use crate::types::context_types::node_types::tempoid::Tempoid;
 pub use crate::types::context_types::relation_kind::*;
-pub use crate::types::context_types::root::*;
 pub use crate::types::context_types::time_scale::TimeScale;
 pub use crate::types::csm_types::CSM;
 // CSM types

@@ -6,6 +6,7 @@ use crate::prelude::{ContextoidType, Datable, SpaceTemporal, Spatial, Temporal};
 mod identifiable;
 mod display;
 mod contextuable;
+pub mod contextoid_type;
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Contextoid<D, S, T, ST>
