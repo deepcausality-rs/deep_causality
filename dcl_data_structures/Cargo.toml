@@ -1,6 +1,6 @@
 [package]
 name = "dcl_data_structures"
-version = "0.4.4"
+version = "0.4.5"
 edition = "2021"
 rust-version = "1.65"
 repository = "https://github.com/deepcausality/deep_causality.rs"
