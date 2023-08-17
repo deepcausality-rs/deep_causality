@@ -10,7 +10,10 @@ use crate::benchmarks::data::Data;
 use crate::benchmarks::fields::{LARGE, MEDIUM, SMALL};
 use crate::benchmarks::utils;
 
-// 0.8.5
+// Graph size
+// const SMALL: usize = 10;
+// const MEDIUM: usize = 100;
+// const LARGE: usize = 1_000;
 
 fn get_empty_ultra_graph(capacity: usize) -> UltraGraph<Data> {
     ultragraph::new_with_matrix_storage::<Data>(capacity)

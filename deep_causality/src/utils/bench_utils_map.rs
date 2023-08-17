@@ -6,9 +6,9 @@ use std::collections::HashMap;
 use crate::prelude::{Causaloid, Dataoid, Spaceoid, SpaceTempoid, Tempoid};
 use crate::utils::{bench_utils_shared, test_utils};
 
-const SMALL: usize = 100;
-const MEDIUM: usize = 10_000;
-const LARGE: usize = 100_000;
+const SMALL: usize = 10;
+const MEDIUM: usize = 1_000;
+const LARGE: usize = 10_000;
 
 type CausalMap = HashMap<usize, Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>;
 

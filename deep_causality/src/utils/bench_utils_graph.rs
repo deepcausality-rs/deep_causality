@@ -5,9 +5,9 @@ use crate::prelude::{Causaloid, CausaloidGraph, Dataoid, Spaceoid, SpaceTempoid,
 use crate::protocols::causable_graph::graph::CausableGraph;
 use crate::utils::{bench_utils_shared, test_utils};
 
-const SMALL: usize = 100;
-const MEDIUM: usize = 1_000;
-const LARGE: usize = 10_000;
+const SMALL: usize = 10;
+const MEDIUM: usize = 1_00;
+const LARGE: usize = 1_000;
 
 type CausalGraph<'l> = CausaloidGraph<Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>;
 

@@ -7,9 +7,9 @@ use deep_causality::prelude::*;
 use deep_causality::utils::bench_utils_graph;
 
 // Graph size
-// Small = 100
-// Medium = 1_000
-// Large = 10_000
+// const SMALL: usize = 10;
+// const MEDIUM: usize = 100;
+// const LARGE: usize = 1_000;
 
 fn small_linear_graph_benchmark(criterion: &mut Criterion)
 {
