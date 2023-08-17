@@ -3,13 +3,17 @@
 
 #![forbid(unsafe_code)]
 
-use crate::prelude::{StorageMatrixGraph, UltraGraph};
+use crate::prelude::{UltraGraphContainer, UltraMatrixGraph};
 
 pub mod prelude;
 pub mod protocols;
 pub mod errors;
 pub mod storage;
 pub mod types;
+
+// Type alias for convenience and to shorten type annotations / inference.
+// This also allows for simple swapping of the underlying storage type.
+pub type UltraGraph<T> = UltraGraphContainer<UltraMatrixGraph<T>, T>;
 
 /// Returns a new UltraGraph with matrix storage backend.
 /// Default capacity is 500 nodes.
@@ -41,9 +45,9 @@ pub mod types;
 ///  assert!(res.is_ok());
 /// ```
 pub fn new<T>()
-    -> UltraGraph<StorageMatrixGraph<T>, T>
+    -> UltraGraph<T>
 {
-    UltraGraph::new(StorageMatrixGraph::<T>::new_with_capacity(500))
+    UltraGraphContainer::new(UltraMatrixGraph::<T>::new_with_capacity(500))
 }
 
 
@@ -81,15 +85,15 @@ pub fn new<T>()
 pub fn with_capacity<T>(
     capacity: usize
 )
-    -> UltraGraph<StorageMatrixGraph<T>, T>
+    -> UltraGraph<T>
 {
-    UltraGraph::new(StorageMatrixGraph::<T>::new_with_capacity(capacity))
+    UltraGraphContainer::new(UltraMatrixGraph::<T>::new_with_capacity(capacity))
 }
 
 pub fn new_with_matrix_storage<T>(
     capacity: usize
 )
-    -> UltraGraph<StorageMatrixGraph<T>, T>
+    -> UltraGraph<T>
 {
-    UltraGraph::new(StorageMatrixGraph::<T>::new_with_capacity(capacity))
+    UltraGraphContainer::new(UltraMatrixGraph::<T>::new_with_capacity(capacity))
 }
