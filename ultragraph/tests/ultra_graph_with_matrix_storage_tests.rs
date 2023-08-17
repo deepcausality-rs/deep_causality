@@ -40,6 +40,66 @@ fn test_number_nodes() {
 }
 
 #[test]
+fn test_get_all_nodes_empty() {
+    let g = get_ultra_graph();
+
+    let expected = 0;
+    let actual = g.get_all_nodes().len();
+    assert_eq!(expected, actual);
+}
+
+#[test]
+fn test_get_all_nodes() {
+    let mut g = get_ultra_graph();
+
+    let _ = g.add_root_node(Data { x: 3 });
+    let _ = g.add_node(Data { x: 7 });
+    let _ = g.add_node(Data { x: 9 });
+    let _ = g.add_node(Data { x: 11 });
+
+    let expected = 4;
+    let actual = g.get_all_nodes().len();
+    assert_eq!(expected, actual);
+}
+
+#[test]
+fn test_get_get_all_edges_empty() {
+    let g = get_ultra_graph();
+
+    let expected = 0;
+    let actual = g.get_all_edges().len();
+    assert_eq!(expected, actual);
+}
+
+#[test]
+fn test_get_get_all_edges() {
+    let mut g = get_ultra_graph();
+
+    let root_index = g.add_root_node(Data { x: 3 });
+    let node_a_index = g.add_node(Data { x: 7 });
+    let node_b_index = g.add_node(Data { x: 9 });
+    let node_c_index = g.add_node(Data { x: 11 });
+
+    let expected = 4;
+    let actual = g.get_all_nodes().len();
+    assert_eq!(expected, actual);
+
+    let res = g.add_edge(root_index, node_a_index);
+    assert!(res.is_ok());
+    // Link node a to node b
+    let res = g.add_edge(node_a_index, node_b_index);
+    assert!(res.is_ok());
+    // Link node root to node c
+    let res = g.add_edge(root_index, node_c_index);
+    assert!(res.is_ok());
+
+    let expected = 3;
+    let actual = g.get_all_edges().len();
+    assert_eq!(expected, actual);
+}
+
+
+#[test]
 fn test_number_edges() {
     let g = get_ultra_graph();
 
