@@ -42,9 +42,9 @@ pub use crate::protocols::observable::ObservableReasoning;
 // Alias types
 pub use crate::types::alias_types::*;
 // Context types
-pub use crate::types::context_types::context;
+pub use crate::types::context_types::context_graph;
 // Context graph types
-pub use crate::types::context_types::context::Context;
+pub use crate::types::context_types::context_graph::Context;
 // Graph types
 pub use crate::types::context_types::contextoid::*;
 pub use crate::types::context_types::contextoid::contextoid_type::*;
