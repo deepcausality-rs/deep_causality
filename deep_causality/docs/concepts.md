@@ -46,7 +46,7 @@ an external trait for an external type.
 ## Core Concepts
 
 The core concepts implemented in deep causality derive from "Theoretical Impediments to Machine
-Learning" ([Perl,2018](https://arxiv.org/abs/1801.04016))
+Learning" ([Pearl,2018](https://arxiv.org/abs/1801.04016))
 
 ### 1) Encoding Causal Assumptions
 
