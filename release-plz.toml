@@ -1,0 +1,4 @@
+[[package]] # the double square brackets define a TOML table array
+name = "deep_causality" # name of the package to configure
+changelog_include = ["deep_causality"] # include commits from `deep_causality` in the changelog
+changelog_path = "./CHANGELOG.md" # set the path of the changelog to the root of the repository
