@@ -20,11 +20,11 @@ ahash = "0.8.3"
 petgraph = "0.6.3"
 
 
-#[dev-dependencies]
-#criterion = { version = "0.5", features = ["html_reports"] }
-#rand = { version = "0.8", features = ["small_rng"] }
-#
-#
-#[[bench]]
-#name = "bench_main"
-#harness = false
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+rand = { version = "0.8.5", features = ["small_rng"] }
+
+
+[[bench]]
+name = "bench_main"
+harness = false
