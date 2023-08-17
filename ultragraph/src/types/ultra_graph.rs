@@ -9,7 +9,7 @@ use std::vec::IntoIter;
 use crate::prelude::*;
 
 #[derive(Debug, Copy, Clone)]
-pub struct UltraGraph<S, T>
+pub struct UltraGraphContainer<S, T>
     where
         S: GraphStorage<T>,
 {
@@ -17,7 +17,7 @@ pub struct UltraGraph<S, T>
     ty: PhantomData<T>,
 }
 
-impl<S, T> UltraGraph<S, T>
+impl<S, T> UltraGraphContainer<S, T>
     where
         S: GraphStorage<T>,
 {
@@ -29,7 +29,7 @@ impl<S, T> UltraGraph<S, T>
     }
 }
 
-impl<S, T> GraphStorage<T> for UltraGraph<S, T>
+impl<S, T> GraphStorage<T> for UltraGraphContainer<S, T>
     where
         S: GraphStorage<T>,
 {
@@ -62,7 +62,7 @@ impl<S, T> GraphStorage<T> for UltraGraph<S, T>
     }
 }
 
-impl<S, T> GraphRoot<T> for UltraGraph<S, T>
+impl<S, T> GraphRoot<T> for UltraGraphContainer<S, T>
     where
         S: GraphStorage<T>,
 {
@@ -87,7 +87,7 @@ impl<S, T> GraphRoot<T> for UltraGraph<S, T>
     }
 }
 
-impl<S, T> GraphLike<T> for UltraGraph<S, T>
+impl<S, T> GraphLike<T> for UltraGraphContainer<S, T>
     where
         S: GraphStorage<T>,
 {
