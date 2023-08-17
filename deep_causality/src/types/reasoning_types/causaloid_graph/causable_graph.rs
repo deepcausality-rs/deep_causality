@@ -1,52 +1,16 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use std::fmt::Debug;
 
-use ultragraph::prelude::*;
+use super::*;
 
-use crate::prelude::*;
-
-#[derive(Clone)]
-pub struct CausaloidGraph<T>
-    where
-        T: Causable + PartialEq,
-{
-    graph: CausalGraph<T>,
-}
-
-impl<T> CausaloidGraph<T>
-    where
-        T: Causable + PartialEq,
-{
-    pub fn new() -> Self {
-        Self {
-            graph: ultragraph::new_with_matrix_storage(500),
-        }
-    }
-
-    pub fn new_with_capacity(capacity: usize) -> Self {
-        Self {
-            graph: ultragraph::new_with_matrix_storage(capacity),
-        }
-    }
-}
-
-impl<T> Default for CausaloidGraph<T>
-    where
-        T: Debug + Causable + PartialEq,
-{
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-// See default implementation in protocols/causable_graph/graph_explaining
+// See default implementation in protocols/causaloid_graph/graph_explaining. Requires CausableGraph impl.
 impl<T> CausableGraphExplaining<T> for CausaloidGraph<T> where T: Causable + PartialEq {}
 
 
-// See default implementation in protocols/causable_graph/graph_explaining
+// See default implementation in protocols/causaloid_graph/graph_explaining. Requires CausableGraph impl.
 impl<T> CausableGraphReasoning<T> for CausaloidGraph<T> where T: Causable + PartialEq {}
+
 
 impl<T> CausableGraph<T> for CausaloidGraph<T>
     where

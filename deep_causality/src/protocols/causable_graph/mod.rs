@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use ultragraph::prelude::{StorageMatrixGraph, UltraGraph};
+use ultragraph::prelude::UltraGraph;
 
 use crate::errors::{CausalGraphIndexError, CausalityGraphError};
 use crate::prelude::{Causable, IdentificationValue, NumericalValue};
@@ -11,7 +11,7 @@ pub mod graph_explaining;
 mod graph_reasoning_utils;
 
 // Type alias is shared between trait and implementation
-pub(crate) type CausalGraph<T> = UltraGraph<StorageMatrixGraph<T>, T>;
+pub(crate) type CausalGraph<T> = UltraGraph<T>;
 
 pub trait CausableGraph<T>
     where

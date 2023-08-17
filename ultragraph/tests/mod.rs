@@ -3,3 +3,9 @@
 
 #[cfg(test)]
 mod ultra_graph_with_matrix_storage_tests;
+
+#[cfg(test)]
+mod constructor_tests;
+
+#[cfg(test)]
+mod error_tests;

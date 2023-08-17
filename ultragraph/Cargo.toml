@@ -1,6 +1,6 @@
 [package]
 name = "ultragraph"
-version = "0.4.4"
+version = "0.4.5"
 edition = "2021"
 rust-version = "1.65"
 repository = "https://github.com/deepcausality/deep_causality.rs"
@@ -16,14 +16,15 @@ keywords = ["data-structures"]
 
 
 [dependencies]
+ahash = "0.8.3"
 petgraph = "0.6.3"
 
 
-#[dev-dependencies]
-#criterion = { version = "0.5", features = ["html_reports"] }
-#rand = { version = "0.8", features = ["small_rng"] }
-#
-#
-#[[bench]]
-#name = "bench_main"
-#harness = false
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+rand = { version = "0.8.5", features = ["small_rng"] }
+
+
+[[bench]]
+name = "bench_main"
+harness = false

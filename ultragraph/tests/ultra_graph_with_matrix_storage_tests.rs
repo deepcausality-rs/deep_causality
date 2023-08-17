@@ -8,8 +8,8 @@ pub struct Data {
     x: u8,
 }
 
-fn get_ultra_graph() -> UltraGraph<StorageMatrixGraph<Data>, Data> {
-    ultragraph::new_with_matrix_storage::<Data>(10)
+fn get_ultra_graph() -> UltraGraph<Data> {
+    ultragraph::with_capacity::<Data>(10)
 }
 
 #[test]

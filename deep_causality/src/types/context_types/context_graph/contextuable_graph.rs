@@ -1,75 +1,14 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use std::fmt::{Debug, Display, Formatter};
-
-use ultragraph::prelude::*;
-
-use crate::errors::ContextIndexError;
-use crate::prelude::{Contextoid, ContextuableGraph, Datable, Identifiable, RelationKind, SpaceTemporal, Spatial, Temporal};
-
-type CtxGraph<'l, D, S, T, ST> = UltraGraph<StorageMatrixGraph<Contextoid<D, S, T, ST>>, Contextoid<D, S, T, ST>>;
-
-pub struct Context<'l, D, S, T, ST>
-    where
-        D: Datable + Clone + Copy,
-        S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
-        ST: SpaceTemporal + Clone + Copy,
-{
-    id: u64,
-    name: &'l str,
-    graph: CtxGraph<'l, D, S, T, ST>,
-}
-
-
-impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
-    where
-        D: Datable + Clone + Copy,
-        S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
-        ST: SpaceTemporal + Clone + Copy,
-{
-    /// Creates a new context with the given node capacity.
-    pub fn with_capacity(
-        id: u64,
-        name: &'l str,
-        capacity: usize,
-    )
-        -> Self
-    {
-        Self {
-            id,
-            name,
-            graph: ultragraph::new_with_matrix_storage(capacity),
-        }
-    }
-
-    /// Returns the name of the context.
-    pub fn name(&self) -> &str {
-        self.name
-    }
-}
-
-impl<'l, D, S, T, ST> Identifiable for Context<'l, D, S, T, ST>
-    where
-        D: Datable + Clone + Copy,
-        S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
-        ST: SpaceTemporal + Clone + Copy,
-{
-    /// Returns the id of the context.
-    fn id(&self) -> u64 {
-        self.id
-    }
-}
+use super::*;
 
 impl<'l, D, S, T, ST> ContextuableGraph<'l, D, S, T, ST> for Context<'l, D, S, T, ST>
     where
-        D: Datable + Clone + Copy,
-        S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
-        ST: SpaceTemporal + Clone + Copy,
+        D: Datable,
+        S: Spatial,
+        T: Temporal,
+        ST: SpaceTemporal,
 {
     /// Ads a new Contextoid to the context.
     /// You can add the same contextoid multiple times,
@@ -221,47 +160,5 @@ impl<'l, D, S, T, ST> ContextuableGraph<'l, D, S, T, ST> for Context<'l, D, S, T
         -> usize
     {
         self.graph.number_edges()
-    }
-}
-
-impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
-    where
-        D: Datable + Clone + Copy,
-        S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
-        ST: SpaceTemporal + Clone + Copy,
-{
-    fn format(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f,
-               "Context: id: {}, name: {}, node_count: {}, edge_count: {}",
-               self.id,
-               self.name,
-               self.node_count(),
-               self.edge_count(),
-        )
-    }
-}
-
-impl<'l, D, S, T, ST> Debug for Context<'l, D, S, T, ST>
-    where
-        D: Datable + Clone + Copy,
-        S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
-        ST: SpaceTemporal + Clone + Copy,
-{
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        self.format(f)
-    }
-}
-
-impl<'l, D, S, T, ST> Display for Context<'l, D, S, T, ST>
-    where
-        D: Datable + Clone + Copy,
-        S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
-        ST: SpaceTemporal + Clone + Copy,
-{
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        self.format(f)
     }
 }

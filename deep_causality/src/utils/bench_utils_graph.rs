@@ -5,9 +5,9 @@ use crate::prelude::{Causaloid, CausaloidGraph, Dataoid, Spaceoid, SpaceTempoid,
 use crate::protocols::causable_graph::graph::CausableGraph;
 use crate::utils::{bench_utils_shared, test_utils};
 
-const SMALL: usize = 100;
-const MEDIUM: usize = 1_000;
-const LARGE: usize = 10_000;
+const SMALL: usize = 9;
+const MEDIUM: usize = 1_00;
+const LARGE: usize = 1_000;
 
 type CausalGraph<'l> = CausaloidGraph<Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>;
 
@@ -29,7 +29,7 @@ pub fn get_large_linear_graph_and_data<'l>()
     (build_linear_graph(LARGE), bench_utils_shared::generate_sample_data())
 }
 
-fn build_linear_graph<'l>(
+pub fn build_linear_graph<'l>(
     k: usize
 )
     -> CausalGraph<'l>

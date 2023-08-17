@@ -164,7 +164,7 @@ and corresponding implementation.
 
 * [Contexts](deep_causality/docs/context.md)
 * [Customizing context](deep_causality/docs/customizing_context.md)
-* [Contextoid](deep_causality/src/types/context_types/contextoid.rs)
+* [Contextoid](deep_causality/src/types/context_types/contextoid/contextoid.rs)
 * [Context Graph](deep_causality/src/types/context_types/context.rs)
 * [Example of contextualized causal model](deep_causality/examples/ctx/src/run.rs)
 

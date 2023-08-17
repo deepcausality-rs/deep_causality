@@ -42,19 +42,19 @@ pub use crate::protocols::observable::ObservableReasoning;
 // Alias types
 pub use crate::types::alias_types::*;
 // Context types
-pub use crate::types::context_types::context;
+pub use crate::types::context_types::context_graph;
 // Context graph types
-pub use crate::types::context_types::context::Context;
+pub use crate::types::context_types::context_graph::Context;
 // Graph types
 pub use crate::types::context_types::contextoid::*;
-pub use crate::types::context_types::contextoid_type::*;
+pub use crate::types::context_types::contextoid::contextoid_type::*;
 // Default context node types. Overwrite traits to customize.
 pub use crate::types::context_types::node_types::dateoid::Dataoid;
+pub use crate::types::context_types::node_types::root::*;
 pub use crate::types::context_types::node_types::space_tempoid::SpaceTempoid;
 pub use crate::types::context_types::node_types::spaceoid::Spaceoid;
 pub use crate::types::context_types::node_types::tempoid::Tempoid;
 pub use crate::types::context_types::relation_kind::*;
-pub use crate::types::context_types::root::*;
 pub use crate::types::context_types::time_scale::TimeScale;
 pub use crate::types::csm_types::CSM;
 // CSM types
@@ -63,12 +63,11 @@ pub use crate::types::csm_types::csm_state::CausalState;
 // Model types
 pub use crate::types::model_types::model::Model;
 // Reasoning types
-pub use crate::types::reasoning_types::assumable::assumption::*;
-pub use crate::types::reasoning_types::causable::*;
-pub use crate::types::reasoning_types::causable::causaloid::*;
-pub use crate::types::reasoning_types::causable::causaloid_graph::*;
-pub use crate::types::reasoning_types::inferable::inference::*;
-pub use crate::types::reasoning_types::observable::observation::Observation;
+pub use crate::types::reasoning_types::assumption::Assumption;
+pub use crate::types::reasoning_types::causaloid::Causaloid;
+pub use crate::types::reasoning_types::causaloid_graph::CausaloidGraph;
+pub use crate::types::reasoning_types::inference::Inference;
+pub use crate::types::reasoning_types::observation::Observation;
 //
 // Utils
 //

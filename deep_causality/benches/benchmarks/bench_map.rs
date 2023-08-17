@@ -6,9 +6,9 @@ use criterion::{Criterion, criterion_group};
 use deep_causality::protocols::causable::CausableReasoning;
 use deep_causality::utils::bench_utils_map;
 
-// Small = 100
-// Medium = 10_000
-// Large = 100_000
+// Small = 10
+// Medium = 1_000
+// Large = 10_000
 
 fn small_causality_map_benchmark(criterion: &mut Criterion) {
     let (map, data) = bench_utils_map::get_small_map_and_data();

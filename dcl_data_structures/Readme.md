@@ -2,9 +2,32 @@
 [//]: # (SPDX-License-Identifier: MIT)
 [//]: # (---)
 
-# 🏁 Data structures for DeepCausality 🏁
+# 🏁 Data structures 🏁
 
-Web: https://deepcausality.com/about/
+[![Crates.io][crates-badge]][crates-url]
+[![Docs.rs][docs-badge]][docs-url]
+[![MIT licensed][mit-badge]][mit-url]
+![Audit][audit-url]
+![Clippy][clippy-url]
+![Tests][test-url]
+
+[crates-badge]: https://img.shields.io/badge/Crates.io-Latest-blue
+
+[crates-url]: https://crates.io/crates/dcl_data_structures
+
+[docs-badge]: https://img.shields.io/badge/Docs.rs-Latest-blue
+
+[docs-url]: https://docs.rs/dcl_data_structures/latest/dcl_data_structures/
+
+[mit-badge]: https://img.shields.io/badge/License-MIT-blue.svg
+
+[mit-url]: https://github.com/deepcausality-rs/deep_causality/blob/main/LICENSE
+
+[audit-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/audit.yml/badge.svg
+
+[clippy-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/rust-clippy.yml/badge.svg
+
+[test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
 
 GridArray and sliding window implementation used in [DeepCausality](https://github.com/deepcausality-rs/deep_causality).
 
@@ -33,7 +56,7 @@ boost over tensors.
 
 Just run:
 
-```toml
+```bash
 cargo add dcl_data_structures
 ```
 

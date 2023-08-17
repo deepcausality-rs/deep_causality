@@ -3,11 +3,6 @@
 
 #![forbid(unsafe_code)]
 
-use crate::prelude::{GraphLike, GraphRoot, GraphStorage};
-
 pub mod graph_like;
 pub mod graph_root;
 pub mod graph_storage;
-
-/// Super trait as type tag for custom graph implementations.
-pub trait UltraGraphable<T>: GraphLike<T> + GraphStorage<T> + GraphRoot<T> {}
