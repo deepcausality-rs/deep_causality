@@ -31,7 +31,7 @@ fn small_linear_graph_benchmark(criterion: &mut Criterion)
 
     let x = data.len() / 2;
     let start_index = x;
-    let stop_index = x + 25;
+    let stop_index = data.len() - 1;
 
     criterion.bench_function("small_linear_graph_reason_shortest_path_between_causes", |bencher| {
         bencher.iter(||
@@ -68,7 +68,7 @@ fn medium_linear_graph_benchmark(criterion: &mut Criterion)
 
     let x = data.len() / 2;
     let start_index = x;
-    let stop_index = x + 25;
+    let stop_index = data.len() - 1;
 
     criterion.bench_function("medium_linear_graph_reason_shortest_path_between_causes", |bencher| {
         bencher.iter(||
@@ -105,7 +105,7 @@ fn large_linear_graph_benchmark(criterion: &mut Criterion)
 
     let x = data.len() / 2;
     let start_index = x;
-    let stop_index = x + 25;
+    let stop_index = data.len() - 1;
 
     criterion.bench_function("large_linear_graph_reason_shortest_path_between_causes", |bencher| {
         bencher.iter(||
