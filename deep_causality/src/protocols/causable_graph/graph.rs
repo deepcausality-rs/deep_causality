@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use petgraph::algo::astar;
-use petgraph::prelude::EdgeRef;
+use ultragraph::prelude::*;
 
 use crate::errors::{CausalGraphIndexError, CausalityGraphError};
-use crate::prelude::{Causable, NodeIndex, NumericalValue};
+use crate::prelude::{Causable, NumericalValue};
 use crate::protocols::causable_graph::CausalGraph;
 
 pub trait CausableGraph<T>
     where
         T: Causable + PartialEq,
 {
+    // This method enables the default implementation of the
+    // CausableGraphExplaining and CausableGraphReasoning traits.
+    fn get_graph(&self) -> &CausalGraph<T>;
     // Root Node
     fn add_root_causaloid(&mut self, value: T) -> usize;
     fn contains_root_causaloid(&self) -> bool;
@@ -40,26 +42,19 @@ pub trait CausableGraph<T>
     fn clear(&mut self);
     fn number_edges(&self) -> usize;
     fn number_nodes(&self) -> usize;
-    fn get_graph(&self) -> &CausalGraph<T>;
 
-    /// Default implementation for shortest path algorithm based on a star
+    /// Default implementation for shortest path algorithm
     fn get_shortest_path(
         &self,
-        start_index: NodeIndex,
-        stop_index: NodeIndex,
+        start_index: usize,
+        stop_index: usize,
     )
-        -> Result<Vec<NodeIndex>, CausalityGraphError>
+        -> Result<Vec<usize>, CausalityGraphError>
     {
-        // A* algorithm https://docs.rs/petgraph/latest/petgraph/algo/astar/fn.astar.html
-        let (_, path) = astar(
-            &self.get_graph(),
-            start_index,
-            |finish| finish == stop_index,
-            |e| *e.weight(),
-            |_| 0)
-            .expect("Could not find shortest path");
-
-        Ok(path)
+        return match self.get_graph().shortest_path(start_index, stop_index) {
+            Some(path) => Ok(path),
+            None => Err(CausalityGraphError("No path found".to_string())),
+        };
     }
 }
 

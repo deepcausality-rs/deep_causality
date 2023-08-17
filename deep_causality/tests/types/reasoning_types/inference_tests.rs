@@ -155,7 +155,7 @@ fn test_to_string() {
     let effect = 1.0; // expected effect of the inference once the threshold is reached or exceeded
     let infer = Inference::new(id, question, observation, threshold, effect, target_effect);
 
-    let expected_string = format!("Inference: id: 0, question: Test inference , observation: 0.6, threshold: 0.55, effect: 1");
+    let expected_string = "Inference: id: 0, question: Test inference , observation: 0.6, threshold: 0.55, effect: 1".to_string();
     let actual_string = infer.to_string();
     assert_eq!(expected_string, actual_string);
 }

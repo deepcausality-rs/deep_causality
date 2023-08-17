@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use deep_causality::prelude::{Dataoid, Contextoid, Contextuable, ContextoidType, Root, Spaceoid, SpaceTempoid, Tempoid, TimeScale};
+use deep_causality::prelude::{Contextoid, ContextoidType, Contextuable, Dataoid, Root, Spaceoid, SpaceTempoid, Tempoid, TimeScale};
 
 #[test]
 fn test_root_some()
@@ -140,7 +140,7 @@ fn test_to_string()
     let root = Root::new(id);
     let node: Contextoid<Dataoid, Spaceoid, Tempoid, SpaceTempoid> = Contextoid::new(id, ContextoidType::Root(root));
 
-    let expected = format!("Contextoid ID: 1 Type: Root: Root ID: 1");
+    let expected = "Contextoid ID: 1 Type: Root: Root ID: 1".to_string();
     let actual = node.to_string();
     assert_eq!(actual, expected);
 }

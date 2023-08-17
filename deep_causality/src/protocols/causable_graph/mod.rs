@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 
-use petgraph::Directed;
-use petgraph::graph::NodeIndex as GraphNodeIndex;
-use petgraph::matrix_graph::MatrixGraph;
+use ultragraph::prelude::{StorageMatrixGraph, UltraGraph};
 
 use crate::errors::{CausalGraphIndexError, CausalityGraphError};
 use crate::prelude::{Causable, IdentificationValue, NumericalValue};
@@ -12,16 +10,8 @@ pub mod graph_reasoning;
 pub mod graph_explaining;
 mod graph_reasoning_utils;
 
-// Custom index type. See documentation in
-// src/protocols/contextuable/csm_types
-// for more details.
-pub(crate) type DefaultIx = u32;
-pub(crate) type NodeIndex<Ix = DefaultIx> = GraphNodeIndex<Ix>;
-pub(crate) type IndexMap = HashMap<usize, NodeIndex>;
-
-// CausalGraph type alias
-// Edge weights need to be numerical (u64) to make shortest path algo work.
-pub(crate) type CausalGraph<T> = MatrixGraph<T, u64, Directed, Option<u64>, u32>;
+// Type alias is shared between trait and implementation
+pub(crate) type CausalGraph<T> = UltraGraph<StorageMatrixGraph<T>, T>;
 
 pub trait CausableGraph<T>
     where

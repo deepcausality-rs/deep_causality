@@ -92,6 +92,12 @@ cargo run --release --bin example-ctx
 cargo run --release --bin example-smoking
 ```
 
+## 📦 Subcrates
+
+* [Datastructures](https://github.com/deepcausality-rs/deep_causality/tree/main/dcl_data_structures)
+* [Ultragraph](https://github.com/deepcausality-rs/deep_causality/tree/main/ultragraph)
+* [Macros](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_macros)
+
 ## ⭐ Usage
 
 See:

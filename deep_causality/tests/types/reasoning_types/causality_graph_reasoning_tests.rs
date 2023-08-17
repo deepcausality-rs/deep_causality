@@ -66,14 +66,14 @@ fn test_reason_all_causes() {
     let res = g.reason_all_causes(&data, None).unwrap();
     assert!(res);
 
-    let all_true = g.all_active();
-    assert!(all_true);
-
     let percent_active = g.percent_active();
     assert_eq!(percent_active, 100.0);
 
     let number_active = g.number_active();
     assert_eq!(number_active, 4.0);
+
+    let all_true = g.all_active();
+    assert!(all_true);
 }
 
 #[test]
@@ -515,11 +515,11 @@ fn test_left_imbalanced_cause_graph() {
     assert!(res);
 
     // Verify that the graph is fully active.
-    let all_true = g.all_active();
-    assert!(all_true);
-
     let percent_active = g.percent_active();
     assert_eq!(percent_active, 100.0);
+
+    let all_true = g.all_active();
+    assert!(all_true);
 
     let total_nodes = g.number_nodes() as f64;
     let number_active = g.number_active();

@@ -2,7 +2,7 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use deep_causality::errors::{ActionError, AdjustmentError, ContextIndexError, PropagateError, UpdateError};
-use deep_causality::prelude::{BuildError, CausalityGraphError, CausalityError, CausalGraphIndexError};
+use deep_causality::prelude::{BuildError, CausalGraphIndexError, CausalityError, CausalityGraphError};
 
 #[test]
 fn test_build_error() {
@@ -17,7 +17,7 @@ fn test_build_error() {
 #[test]
 fn test_causality_graph_error() {
     let result: Result<usize, CausalityGraphError> = Err(CausalityGraphError(
-        format!("unexpected cause"),
+        "unexpected cause".to_string(),
     ));
     let error = result.unwrap_err();
     assert_eq!(error.to_string(), format!("CausalityGraphError: unexpected cause"));
@@ -26,7 +26,7 @@ fn test_causality_graph_error() {
 #[test]
 fn test_context_index_error() {
     let result: Result<usize, ContextIndexError> = Err(ContextIndexError(
-        format!("unexpected cause"),
+        "unexpected cause".to_string(),
     ));
     let error = result.unwrap_err();
     assert_eq!(error.to_string(), format!("ContextIndexError: unexpected cause"));
@@ -36,7 +36,7 @@ fn test_context_index_error() {
 #[test]
 fn test_causal_graph_index_error() {
     let result: Result<usize, CausalGraphIndexError> = Err(CausalGraphIndexError(
-        format!("unexpected cause"),
+        "unexpected cause".to_string(),
     ));
     let error = result.unwrap_err();
     assert_eq!(error.to_string(), format!("CausalGraphIndexError: unexpected cause"));
@@ -45,7 +45,7 @@ fn test_causal_graph_index_error() {
 #[test]
 fn test_causality_error() {
     let result: Result<usize, CausalityError> = Err(CausalityError(
-        format!("unexpected cause"),
+        "unexpected cause".to_string(),
     ));
     let error = result.unwrap_err();
     assert_eq!(error.to_string(), format!("CausalityError: unexpected cause"));
@@ -54,7 +54,7 @@ fn test_causality_error() {
 #[test]
 fn test_adjustment_error() {
     let result: Result<usize, AdjustmentError> = Err(AdjustmentError(
-        format!("unexpected issue"),
+        "unexpected issue".to_string(),
     ));
     let error = result.unwrap_err();
     assert_eq!(error.to_string(), format!("AdjustmentError: unexpected issue"));
@@ -63,7 +63,7 @@ fn test_adjustment_error() {
 #[test]
 fn test_propagate_error() {
     let result: Result<usize, PropagateError> = Err(PropagateError(
-        format!("unexpected issue"),
+        "unexpected issue".to_string(),
     ));
     let error = result.unwrap_err();
     assert_eq!(error.to_string(), format!("PropagateError: unexpected issue"));
@@ -72,7 +72,7 @@ fn test_propagate_error() {
 #[test]
 fn test_update_error() {
     let result: Result<usize, UpdateError> = Err(UpdateError(
-        format!("unexpected issue"),
+        "unexpected issue".to_string(),
     ));
     let error = result.unwrap_err();
     assert_eq!(error.to_string(), format!("UpdateError: unexpected issue"));
@@ -81,7 +81,7 @@ fn test_update_error() {
 #[test]
 fn test_action_error() {
     let result: Result<usize, ActionError> = Err(ActionError(
-        format!("unexpected issue"),
+        "unexpected issue".to_string(),
     ));
     let error = result.unwrap_err();
     assert_eq!(error.to_string(), format!("ActionError: unexpected issue"));

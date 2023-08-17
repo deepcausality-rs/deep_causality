@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use deep_causality::prelude::{Context, Contextoid, ContextuableGraph, Identifiable, Dataoid, ContextoidType, Root, Spaceoid, SpaceTempoid, Tempoid, TimeScale, RelationKind};
+use deep_causality::prelude::{Context, Contextoid, ContextoidType, ContextuableGraph, Dataoid, Identifiable, RelationKind, Root, Spaceoid, SpaceTempoid, Tempoid, TimeScale};
 
 fn get_context<'l>() -> Context<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>
 {
@@ -28,7 +28,7 @@ fn test_id() {
 #[test]
 fn test_name() {
     let id = 1;
-    let name = format!("base context");
+    let name = "base context".to_string();
 
     let context = get_context();
     assert_eq!(context.id(), id);
@@ -38,7 +38,7 @@ fn test_name() {
 #[test]
 fn test_node_count() {
     let id = 1;
-    let name = format!("base context");
+    let name = "base context".to_string();
 
     let context = get_context();
     assert_eq!(context.id(), id);
@@ -50,7 +50,7 @@ fn test_node_count() {
 #[test]
 fn test_edge_count() {
     let id = 1;
-    let name = format!("base context");
+    let name = "base context".to_string();
 
     let context = get_context();
     assert_eq!(context.id(), id);
@@ -65,7 +65,7 @@ fn test_edge_count() {
 #[test]
 fn test_add_node() {
     let id = 1;
-    let name = format!("base context");
+    let name = "base context".to_string();
 
     let mut context = get_context();
     assert_eq!(context.id(), id);
@@ -248,7 +248,7 @@ fn is_empty() {
 fn test_to_string() {
     let context = get_context();
 
-    let exp = format!("Context: id: 1, name: base context, node_count: 0, edge_count: 0");
+    let exp = "Context: id: 1, name: base context, node_count: 0, edge_count: 0".to_string();
     let act = context.to_string();
     assert_eq!(exp, act);
 }

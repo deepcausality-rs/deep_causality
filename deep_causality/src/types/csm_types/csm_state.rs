@@ -2,15 +2,16 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
 use std::fmt::{Debug, Display, Formatter};
+
 use crate::prelude::{Causable, CausalityError, Causaloid, Datable, NumericalValue, SpaceTemporal, Spatial, Temporal};
 
 #[derive(Clone, Debug)]
 pub struct CausalState<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     id: usize,
     version: usize,
@@ -20,10 +21,10 @@ pub struct CausalState<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST>  CausalState<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     pub fn new
     (
@@ -42,10 +43,10 @@ impl<'l, D, S, T, ST>  CausalState<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST>  CausalState<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     pub fn eval(&self) -> Result<bool, CausalityError>
     {
@@ -64,10 +65,10 @@ impl<'l, D, S, T, ST>  CausalState<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST>  CausalState<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     pub fn id(&self) -> usize
     {
@@ -89,10 +90,10 @@ impl<'l, D, S, T, ST>  CausalState<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> Display for CausalState<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result
     {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 
-use std::cell::RefCell;
+use std::cell::Cell;
 use std::collections::HashMap;
 use std::fmt::{Debug, Display, Formatter};
 
@@ -24,13 +24,13 @@ impl Display for CausalType { fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::
 #[derive(Clone)]
 pub struct Causaloid<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     id: IdentificationValue,
-    active: RefCell<bool>,
+    active: Cell<bool>,
     causal_type: CausalType,
     causal_fn: Option<CausalFn>,
     context_causal_fn: Option<ContextualCausalFn<'l, D, S, T, ST>>,
@@ -38,17 +38,17 @@ pub struct Causaloid<'l, D, S, T, ST>
     has_context: bool,
     causal_coll: Option<Vec<Causaloid<'l, D, S, T, ST>>>,
     causal_graph: Option<CausaloidGraph<Causaloid<'l, D, S, T, ST>>>,
-    last_obs: RefCell<NumericalValue>,
+    last_obs: Cell<NumericalValue>,
     description: &'l str,
 }
 
 // Constructors
 impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     /// Singleton constructor. Assumes causality function is valid.
     /// Only use for non-fallible construction i.e.verified a-priori knowledge about the correctness of the causal function.
@@ -61,7 +61,7 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     {
         Causaloid {
             id,
-            active: RefCell::new(false),
+            active: Cell::new(false),
             causal_type: CausalType::Singleton,
             causal_fn: Some(causal_fn),
             context_causal_fn: None,
@@ -69,7 +69,7 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
             has_context: false,
             causal_coll: None,
             causal_graph: None,
-            last_obs: RefCell::new(0.0),
+            last_obs: Cell::new(0.0),
             description,
         }
     }
@@ -84,7 +84,7 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     {
         Causaloid {
             id,
-            active: RefCell::new(false),
+            active: Cell::new(false),
             causal_type: CausalType::Singleton,
             causal_fn: None,
             context_causal_fn: Some(context_causal_fn),
@@ -92,7 +92,7 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
             has_context: true,
             causal_coll: None,
             causal_graph: None,
-            last_obs: RefCell::new(0.0),
+            last_obs: Cell::new(0.0),
             description,
         }
     }
@@ -113,12 +113,12 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     {
         Causaloid {
             id,
-            active: RefCell::new(false),
+            active: Cell::new(false),
             causal_type: CausalType::Collection,
             causal_fn: None,
             causal_coll: Some(causal_coll),
             causal_graph: None,
-            last_obs: RefCell::new(0.0),
+            last_obs: Cell::new(0.0),
             description,
             context: None,
             has_context: false,
@@ -140,12 +140,12 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     {
         Causaloid {
             id,
-            active: RefCell::new(false),
+            active: Cell::new(false),
             causal_type: CausalType::Collection,
             causal_fn: None,
             causal_coll: Some(causal_coll),
             causal_graph: None,
-            last_obs: RefCell::new(0.0),
+            last_obs: Cell::new(0.0),
             description,
             context,
             has_context: true,
@@ -169,12 +169,12 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     {
         Causaloid {
             id,
-            active: RefCell::new(false),
+            active: Cell::new(false),
             causal_type: CausalType::Graph,
             causal_fn: None,
             causal_coll: None,
             causal_graph: Some(causal_graph),
-            last_obs: RefCell::new(0.0),
+            last_obs: Cell::new(0.0),
             description,
             context: None,
             has_context: false,
@@ -196,12 +196,12 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     {
         Causaloid {
             id,
-            active: RefCell::new(false),
+            active: Cell::new(false),
             causal_type: CausalType::Graph,
             causal_fn: None,
             causal_coll: None,
             causal_graph: Some(causal_graph),
-            last_obs: RefCell::new(0.0),
+            last_obs: Cell::new(0.0),
             description,
             context,
             has_context: true,
@@ -213,13 +213,13 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
 // Getters
 impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
-    pub fn active(&self) -> &RefCell<bool> {
-        &self.active
+    pub fn active(&self) -> bool {
+        self.active.get()
     }
     pub fn causal_collection(&self) -> Option<Vec<Causaloid<'l, D, S, T, ST>>> {
         self.causal_coll.clone()
@@ -227,8 +227,8 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     pub fn causal_graph(&self) -> Option<CausaloidGraph<Causaloid<'l, D, S, T, ST>>> {
         self.causal_graph.clone()
     }
-    pub fn last_obs(&self) -> &RefCell<NumericalValue> {
-        &self.last_obs
+    pub fn last_obs(&self) -> NumericalValue {
+        self.last_obs.get()
     }
     pub fn description(&self) -> &'l str {
         self.description
@@ -240,10 +240,10 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> PartialEq for Causaloid<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     fn eq(&self, other: &Self) -> bool {
         self.id == other.id
@@ -252,10 +252,10 @@ impl<'l, D, S, T, ST> PartialEq for Causaloid<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> Identifiable for Causaloid<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     fn id(&self) -> u64 {
         self.id
@@ -264,22 +264,22 @@ impl<'l, D, S, T, ST> Identifiable for Causaloid<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> Causable for Causaloid<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     fn explain(&self)
                -> Result<String, CausalityError>
     {
-        return if *self.active.borrow()
+        return if self.active.get()
         {
             match self.causal_type
             {
                 CausalType::Singleton =>
                     {
                         let reason = format!("Causaloid: {} {} on last data {} evaluated to {}",
-                                             self.id, self.description, self.last_obs.borrow(), self.is_active());
+                                             self.id, self.description, self.last_obs.get(), self.is_active());
                         Ok(reason)
                     }
 
@@ -306,7 +306,7 @@ impl<'l, D, S, T, ST> Causable for Causaloid<'l, D, S, T, ST>
     }
 
     fn is_active(&self) -> bool {
-        *self.active.borrow()
+        self.active.get()
     }
 
     fn is_singleton(&self) -> bool {
@@ -332,7 +332,7 @@ impl<'l, D, S, T, ST> Causable for Causaloid<'l, D, S, T, ST>
             {
                 Ok(res) => {
                     // store the applied data to provide details in explain()
-                    *self.last_obs.borrow_mut() = obs.to_owned();
+                    self.last_obs.set(obs.to_owned());
                     res
                 }
                 Err(e) => return Err(e),
@@ -345,7 +345,7 @@ impl<'l, D, S, T, ST> Causable for Causaloid<'l, D, S, T, ST>
             {
                 Ok(res) => {
                     // store the applied data to provide details in explain()
-                    *self.last_obs.borrow_mut() = obs.to_owned();
+                    self.last_obs.set(obs.to_owned());
                     res
                 }
                 Err(e) => return Err(e),
@@ -408,10 +408,10 @@ impl<'l, D, S, T, ST> Causable for Causaloid<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     #[inline(always)]
     fn check_active(
@@ -420,13 +420,13 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     )
         -> bool
     {
-        return if res {
-            *self.active.borrow_mut() = true;
+        if res {
+            self.active.set(true);
             true
         } else {
-            *self.active.borrow_mut() = false;
+            self.active.set(false);
             false
-        };
+        }
     }
 
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result
@@ -443,20 +443,20 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> Debug for Causaloid<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { self.fmt(f) }
 }
 
 impl<'l, D, S, T, ST> Display for Causaloid<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { self.fmt(f) }
 }

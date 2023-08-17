@@ -16,7 +16,6 @@ authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 
 
 [dependencies]
-petgraph = "0.6.3"
 
 
 [dependencies.dcl_data_structures]
@@ -26,6 +25,10 @@ version = "^0.4"
 
 [dependencies.deep_causality_macros]
 path = "../deep_causality_macros"
+version = "^0.4"
+
+[dependencies.ultragraph]
+path = "../ultragraph"
 version = "^0.4"
 
 

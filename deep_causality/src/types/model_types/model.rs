@@ -8,10 +8,10 @@ use crate::protocols::identifiable::Identifiable;
 #[derive(Clone, Copy)]
 pub struct Model<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     id: u64,
     author: &'l str,
@@ -23,10 +23,10 @@ pub struct Model<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> Model<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     pub fn new(
         id: u64,
@@ -49,10 +49,10 @@ impl<'l, D, S, T, ST> Model<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> Model<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     pub fn author(&self) -> &'l str {
         self.author
@@ -73,10 +73,10 @@ impl<'l, D, S, T, ST> Model<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> Identifiable for Model<'l, D, S, T, ST>
     where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone
+        D: Datable + Clone + Copy,
+        S: Spatial + Clone + Copy,
+        T: Temporal + Clone + Copy,
+        ST: SpaceTemporal + Clone + Copy,
 {
     fn id(&self) -> u64 {
         self.id
