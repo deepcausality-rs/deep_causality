@@ -66,7 +66,8 @@ ultragraph = "current_version"
 See:
 
 * [Examples](examples)
-* [Test](tests)
+* [Benchmarks](benches)
+* [Tests](tests)
 
 ```rust
 use ultragraph::prelude::*;
