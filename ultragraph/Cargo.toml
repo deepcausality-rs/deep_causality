@@ -16,6 +16,7 @@ keywords = ["data-structures"]
 
 
 [dependencies]
+ahash = "0.8.3"
 petgraph = "0.6.3"
 
 
