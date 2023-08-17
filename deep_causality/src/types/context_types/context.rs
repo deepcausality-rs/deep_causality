@@ -10,10 +10,10 @@ use crate::prelude::{Contextoid, ContextuableGraph, Datable, Identifiable, Relat
 
 pub struct Context<'l, D, S, T, ST>
     where
-        D: Datable + Clone + Copy,
-        S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
-        ST: SpaceTemporal + Clone + Copy,
+        D: Datable,
+        S: Spatial,
+        T: Temporal,
+        ST: SpaceTemporal,
 {
     id: u64,
     name: &'l str,
@@ -23,10 +23,10 @@ pub struct Context<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
     where
-        D: Datable + Clone + Copy,
-        S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
-        ST: SpaceTemporal + Clone + Copy,
+        D: Datable,
+        S: Spatial,
+        T: Temporal,
+        ST: SpaceTemporal,
 {
     /// Creates a new context with the given node capacity.
     pub fn with_capacity(
@@ -51,10 +51,10 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> Identifiable for Context<'l, D, S, T, ST>
     where
-        D: Datable + Clone + Copy,
-        S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
-        ST: SpaceTemporal + Clone + Copy,
+        D: Datable,
+        S: Spatial,
+        T: Temporal,
+        ST: SpaceTemporal,
 {
     /// Returns the id of the context.
     fn id(&self) -> u64 {
@@ -64,10 +64,10 @@ impl<'l, D, S, T, ST> Identifiable for Context<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> ContextuableGraph<'l, D, S, T, ST> for Context<'l, D, S, T, ST>
     where
-        D: Datable + Clone + Copy,
-        S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
-        ST: SpaceTemporal + Clone + Copy,
+        D: Datable,
+        S: Spatial,
+        T: Temporal,
+        ST: SpaceTemporal,
 {
     /// Ads a new Contextoid to the context.
     /// You can add the same contextoid multiple times,
@@ -224,10 +224,10 @@ impl<'l, D, S, T, ST> ContextuableGraph<'l, D, S, T, ST> for Context<'l, D, S, T
 
 impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
     where
-        D: Datable + Clone + Copy,
-        S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
-        ST: SpaceTemporal + Clone + Copy,
+        D: Datable,
+        S: Spatial,
+        T: Temporal,
+        ST: SpaceTemporal,
 {
     fn format(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f,
@@ -242,10 +242,10 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> Debug for Context<'l, D, S, T, ST>
     where
-        D: Datable + Clone + Copy,
-        S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
-        ST: SpaceTemporal + Clone + Copy,
+        D: Datable,
+        S: Spatial,
+        T: Temporal,
+        ST: SpaceTemporal,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.format(f)
@@ -254,10 +254,10 @@ impl<'l, D, S, T, ST> Debug for Context<'l, D, S, T, ST>
 
 impl<'l, D, S, T, ST> Display for Context<'l, D, S, T, ST>
     where
-        D: Datable + Clone + Copy,
-        S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
-        ST: SpaceTemporal + Clone + Copy,
+        D: Datable,
+        S: Spatial,
+        T: Temporal,
+        ST: SpaceTemporal,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.format(f)
