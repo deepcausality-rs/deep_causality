@@ -17,7 +17,10 @@ pub fn make_len(_item: TokenStream) -> TokenStream
 #[proc_macro]
 pub fn make_is_empty(_item: TokenStream) -> TokenStream
 {
-    "fn is_empty(&self) -> bool { self.is_empty()}".parse().unwrap()
+    "fn is_empty(&self) -> bool \
+    {\
+        self.is_empty()\
+    }".parse().unwrap()
 }
 
 #[proc_macro]

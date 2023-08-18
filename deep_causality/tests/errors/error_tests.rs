@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use deep_causality::errors::{ActionError, AdjustmentError, ContextIndexError, PropagateError, UpdateError};
+use deep_causality::errors::{ActionError, AdjustmentError, ContextIndexError, UpdateError};
 use deep_causality::prelude::{BuildError, CausalGraphIndexError, CausalityError, CausalityGraphError};
 
 #[test]
@@ -58,15 +58,6 @@ fn test_adjustment_error() {
     ));
     let error = result.unwrap_err();
     assert_eq!(error.to_string(), format!("AdjustmentError: unexpected issue"));
-}
-
-#[test]
-fn test_propagate_error() {
-    let result: Result<usize, PropagateError> = Err(PropagateError(
-        "unexpected issue".to_string(),
-    ));
-    let error = result.unwrap_err();
-    assert_eq!(error.to_string(), format!("PropagateError: unexpected issue"));
 }
 
 #[test]
