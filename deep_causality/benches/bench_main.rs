@@ -10,6 +10,6 @@ mod benchmarks;
 criterion_main! {
     benchmarks::bench_collection::causality_collection,
     benchmarks::bench_map::causality_map,
-    benchmarks::bench_linear_graph::linear_graph,
+    benchmarks::bench_graph::linear_graph,
     benchmarks::bench_multi_cause_graph::multi_layer_graph,
 }

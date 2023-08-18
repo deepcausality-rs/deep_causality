@@ -4,7 +4,8 @@
 use criterion::{Criterion, criterion_group};
 
 use deep_causality::prelude::*;
-use deep_causality::utils::bench_utils_graph;
+
+use crate::benchmarks::utils_linear_graph;
 
 // Graph size
 // const SMALL: usize = 10;
@@ -13,7 +14,7 @@ use deep_causality::utils::bench_utils_graph;
 
 fn small_linear_graph_benchmark(criterion: &mut Criterion)
 {
-    let (g, data) = bench_utils_graph::get_small_linear_graph_and_data();
+    let (g, data) = utils_linear_graph::get_small_linear_graph_and_data();
 
     criterion.bench_function("small_linear_graph_reason_all_causes", |bencher| {
         bencher.iter(||
@@ -50,7 +51,7 @@ fn small_linear_graph_benchmark(criterion: &mut Criterion)
 
 fn medium_linear_graph_benchmark(criterion: &mut Criterion)
 {
-    let (g, data) = bench_utils_graph::get_medium_linear_graph_and_data();
+    let (g, data) = utils_linear_graph::get_medium_linear_graph_and_data();
 
     criterion.bench_function("medium_linear_graph_reason_all_causes", |bencher| {
         bencher.iter(||
@@ -87,7 +88,7 @@ fn medium_linear_graph_benchmark(criterion: &mut Criterion)
 
 fn large_linear_graph_benchmark(criterion: &mut Criterion)
 {
-    let (g, data) = bench_utils_graph::get_large_linear_graph_and_data();
+    let (g, data) = utils_linear_graph::get_large_linear_graph_and_data();
 
     criterion.bench_function("large_linear_graph_reason_all_causes", |bencher| {
         bencher.iter(||
