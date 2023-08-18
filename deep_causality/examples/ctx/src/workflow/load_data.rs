@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use std::error::Error;
+
 use deep_causality::prelude::TimeScale;
+
 use crate::io::file::read_sampled_bars::read_sampled_bars;
 use crate::types::sampled_date_time_bar::SampledDataBars;
 

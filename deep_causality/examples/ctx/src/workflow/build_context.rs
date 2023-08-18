@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use std::error::Error;
+
 use chrono::Datelike;
 use deep_causality::prelude::{Context, Contextoid, ContextoidType, ContextuableGraph, RelationKind, Root, Spaceoid, SpaceTempoid, Tempoid, TimeScale};
+
 use crate::types::counter;
 use crate::types::dateoid::Dataoid;
 use crate::types::sampled_date_time_bar::SampledDataBars;
 use crate::workflow::augment_data;
-
 
 pub fn build_time_data_context(
     data: &SampledDataBars,

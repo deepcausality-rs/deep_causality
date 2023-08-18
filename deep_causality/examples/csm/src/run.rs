@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use std::thread;
 use std::time::Duration;
+
 use deep_causality::prelude::{CausalState, CSM};
+
 use crate::utils_actions::*;
 use crate::utils_data::{get_explosion_sensor_data, get_fire_sensor_data, get_smoke_sensor_data};
 use crate::utils_states::*;

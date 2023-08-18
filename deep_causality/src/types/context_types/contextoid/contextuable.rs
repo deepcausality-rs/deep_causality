@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 use crate::prelude::{Contextoid, ContextoidType, Contextuable, Datable, SpaceTemporal, Spatial, Temporal};
 
 impl<D, S, T, ST> Contextuable<D, S, T, ST> for Contextoid<D, S, T, ST>

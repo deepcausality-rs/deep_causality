@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use std::fmt::{Display, Formatter};
+
 use deep_causality::prelude::{Adjustable, Datable, Identifiable};
+
 use crate::protocols::rangeable::Rangeable;
 use crate::types::bar_range::BarRange;
 

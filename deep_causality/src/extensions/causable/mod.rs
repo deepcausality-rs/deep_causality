@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
+use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::hash::Hash;
 
 // Extension trait http://xion.io/post/code/rust-extension-traits.html
 use deep_causality_macros::{make_array_to_vec, make_get_all_items, make_get_all_map_items, make_is_empty, make_len, make_map_to_vec, make_vec_to_vec};
-use std::collections::{BTreeMap, HashMap, VecDeque};
-use std::hash::Hash;
+
 use crate::prelude::{Causable, CausableReasoning};
 
 impl<T> CausableReasoning<T> for [T]

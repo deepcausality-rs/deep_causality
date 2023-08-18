@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::TimeScale;
-use crate::types::parquet_config::ParquetConfig;
 
+use crate::types::parquet_config::ParquetConfig;
 
 pub fn get_sampled_bar_config(
     time_scale: &TimeScale

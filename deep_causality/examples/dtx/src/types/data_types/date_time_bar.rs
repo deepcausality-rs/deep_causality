@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use std::fmt;
 use std::fmt::Display;
@@ -7,8 +7,8 @@ use std::fmt::Display;
 use chrono::{DateTime, Utc};
 use rust_decimal::prelude::*;
 use serde::{Deserialize, Serialize};
-use crate::types::data_types::data_symbol::DataSymbol;
 
+use crate::types::data_types::data_symbol::DataSymbol;
 
 #[derive(Deserialize, Serialize, Debug, Copy, Clone, Hash, Eq, Ord, PartialEq, PartialOrd)]
 pub struct DateTimeBar

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use std::fmt::Display;
-use crate::prelude::{Adjustable, Identifiable, Temporable, Temporal, TimeScale};
 
+use crate::prelude::{Adjustable, Identifiable, Temporable, Temporal, TimeScale};
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Tempoid

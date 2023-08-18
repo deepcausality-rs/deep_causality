@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
-use dcl_data_structures::prelude::{VectorStorage,window_type, SlidingWindow};
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+use dcl_data_structures::prelude::{SlidingWindow, VectorStorage, window_type};
 
 // Maximum number of elements held in the sliding window.
 const SIZE: usize = 4;

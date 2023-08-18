@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use std::error::Error;
 use std::fs::File;
 use std::path::Path;
 
-use parquet::file::reader::{FileReader, SerializedFileReader};
 use deep_causality::prelude::TimeScale;
-use crate::config;
+use parquet::file::reader::{FileReader, SerializedFileReader};
 
+use crate::config;
 use crate::io::file::parquet_2_bar;
 use crate::types::date_time_bar::DateTimeBar;
 use crate::types::parquet_config::ParquetConfig;
