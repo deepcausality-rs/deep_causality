@@ -4,11 +4,12 @@
 use criterion::{Criterion, criterion_group};
 
 use deep_causality::prelude::*;
-use deep_causality::utils::bench_utils_graph;
+
+use crate::benchmarks::utils_linear_graph;
 
 fn small_multi_layer_graph_benchmark(criterion: &mut Criterion)
 {
-    let (g, data) = bench_utils_graph::get_small_multi_cause_graph_and_data();
+    let (g, data) = utils_linear_graph::get_small_multi_cause_graph_and_data();
 
     criterion.bench_function("small_multi_layer_graph_reason_all_causes", |bencher| {
         bencher.iter(||

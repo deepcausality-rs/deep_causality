@@ -2,7 +2,8 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::*;
-use deep_causality::utils::test_utils::get_test_inferable;
+
+use crate::utils::test_utils::*;
 
 fn get_test_inf_arr()
     -> [Inference; 2]

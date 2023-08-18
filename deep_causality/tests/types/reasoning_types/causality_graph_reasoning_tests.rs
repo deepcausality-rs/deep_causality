@@ -2,7 +2,8 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::*;
-use deep_causality::utils::{bench_utils_graph, test_utils};
+
+use crate::utils::{test_utils, test_utils_graph};
 
 #[test]
 fn test_reason_all_causes() {
@@ -144,7 +145,7 @@ fn test_reason_shortest_path_between_causes() {
     // Reasons over a linear graph:
     // root(0) -> A(1) -> B(2) -> C(3) ... XYZ(10)
     // We assume a linear chain of causality.
-    let (g, data) = bench_utils_graph::get_small_linear_graph_and_data();
+    let (g, data) = test_utils_graph::get_small_linear_graph_and_data();
 
     // Verify that the graph is fully inactive.
     let percent_active = g.percent_active();
@@ -252,7 +253,7 @@ fn test_linear_graph() {
     // Reasons over a linear graph:
     // root(0) -> A(1) -> B(2) -> C(3) ... XYZ(100)
     // We assume a linear chain of causality.
-    let (g, data) = bench_utils_graph::get_small_linear_graph_and_data();
+    let (g, data) = test_utils_graph::get_small_linear_graph_and_data();
 
     // Verify that the graph is fully inactive.
     let percent_active = g.percent_active();
@@ -295,7 +296,7 @@ fn test_multi_cause_graph() {
     //  \ /
     //  C(3)
     // We assume two causes (A and B) for C and single cause for A and B.
-    let (g, data) = bench_utils_graph::get_small_multi_cause_graph_and_data();
+    let (g, data) = test_utils_graph::get_small_multi_cause_graph_and_data();
 
     // Verify that the graph is fully inactive.
     let percent_active = g.percent_active();
@@ -374,7 +375,7 @@ fn test_multi_layer_cause_graph() {
     // /  \  /  \ / \
     //D(4) E(5) F(6) G(7)
     // We assume multiple causes for each layer below the root node.
-    let (g, data) = bench_utils_graph::get_small_multi_layer_cause_graph_and_data();
+    let (g, data) = test_utils_graph::get_small_multi_layer_cause_graph_and_data();
 
     // Verify that the graph is fully inactive.
     let percent_active = g.percent_active();
@@ -470,7 +471,7 @@ fn test_left_imbalanced_cause_graph() {
     // /  \
     //D(4) E(5)
     // We assume single causality with an imbalance to the left side of the graph.
-    let (g, data) = bench_utils_graph::get_left_imbalanced_cause_graph();
+    let (g, data) = test_utils_graph::get_left_imbalanced_cause_graph();
 
     // Verify that the graph is fully inactive.
     let percent_active = g.percent_active();
@@ -566,7 +567,7 @@ fn test_right_imbalanced_cause_graph() {
     //           /  \
     //         D(4) E(5)
     // We assume single causality with an imbalance to the right side of the graph.
-    let (g, data) = bench_utils_graph::get_right_imbalanced_cause_graph();
+    let (g, data) = test_utils_graph::get_right_imbalanced_cause_graph();
 
     // Verify that the graph is fully inactive.
     let percent_active = g.percent_active();

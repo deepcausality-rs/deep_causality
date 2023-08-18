@@ -36,7 +36,6 @@ fn test_update_err() {
     assert_eq!(d.time_unit(), 42);
 }
 
-
 #[test]
 fn test_adjust() {
     let mut d = AdjustableTime::new(0, TimeScale::Minute, 42);
@@ -50,7 +49,6 @@ fn test_adjust() {
 
     assert_eq!(d.time_unit(), 64);
 }
-
 
 #[test]
 fn test_adjust_err() {

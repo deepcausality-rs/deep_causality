@@ -6,7 +6,8 @@ use std::collections::BTreeMap;
 use deep_causality::prelude::Observation;
 use deep_causality::protocols::observable::ObservableReasoning;
 use deep_causality::types::alias_types::NumericalValue;
-use deep_causality::utils::test_utils;
+
+use crate::utils::test_utils;
 
 fn get_test_obs_btree_map()
     -> BTreeMap<usize, Observation>

@@ -3,7 +3,8 @@
 
 use deep_causality::prelude::Assumption;
 use deep_causality::protocols::assumable::AssumableReasoning;
-use deep_causality::utils::test_utils::{get_test_assumption, get_test_assumption_vec, get_test_num_array};
+
+use crate::utils::test_utils::*;
 
 #[test]
 fn test_add()

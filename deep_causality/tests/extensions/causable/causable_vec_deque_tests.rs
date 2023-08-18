@@ -4,7 +4,8 @@
 use std::collections::VecDeque;
 
 use deep_causality::prelude::*;
-use deep_causality::utils::test_utils::{get_test_causality_vec, get_test_causaloid};
+
+use crate::utils::test_utils::*;
 
 fn get_test_causality_vec_deque<'l>()
     -> VecDeque<Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>

@@ -4,7 +4,8 @@
 use std::collections::BTreeMap;
 
 use deep_causality::prelude::*;
-use deep_causality::utils::test_utils::get_test_causaloid;
+
+use crate::utils::test_utils::*;
 
 fn get_test_causality_btree_map<'l>()
 // i8 as key b/c I assume all testing will be done with less than 265 items.

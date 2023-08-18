@@ -4,7 +4,8 @@
 use std::collections::HashMap;
 
 use deep_causality::prelude::*;
-use deep_causality::utils::test_utils::get_test_inferable;
+
+use crate::utils::test_utils::*;
 
 fn get_test_inf_map()
     -> HashMap<usize, Inference>

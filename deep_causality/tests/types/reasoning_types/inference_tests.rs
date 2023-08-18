@@ -5,7 +5,8 @@ use deep_causality::prelude::{Identifiable, Inference};
 use deep_causality::protocols::inferable::Inferable;
 use deep_causality::protocols::observable::ObservableReasoning;
 use deep_causality::types::alias_types::DescriptionValue;
-use deep_causality::utils::test_utils::get_test_obs_vec;
+
+use crate::utils::test_utils::*;
 
 #[test]
 fn test_id() {

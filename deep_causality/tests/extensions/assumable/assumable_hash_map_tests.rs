@@ -4,7 +4,8 @@
 use std::collections::HashMap;
 
 use deep_causality::prelude::{AssumableReasoning, Assumption};
-use deep_causality::utils::test_utils::{get_test_assumption, get_test_num_array};
+
+use crate::utils::test_utils::*;
 
 fn get_test_assumption_map()
     -> HashMap<i8, Assumption>

@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use crate::errors::CausalityError;
-use crate::prelude::*;
-use crate::types::alias_types::{DescriptionValue, EvalFn, IdentificationValue, NumericalValue};
+use deep_causality::prelude::*;
 
 pub fn get_test_assumption_vec()
     -> Vec<Assumption>
