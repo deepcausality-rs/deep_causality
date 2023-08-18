@@ -41,6 +41,9 @@ pub use crate::protocols::observable::ObservableReasoning;
 //
 // Alias types
 pub use crate::types::alias_types::*;
+// Adjustable types
+pub use crate::types::context_types::adjustable::adjustable_data::*;
+pub use crate::types::context_types::adjustable::adjustable_time::*;
 // Context types
 pub use crate::types::context_types::context_graph;
 // Context graph types

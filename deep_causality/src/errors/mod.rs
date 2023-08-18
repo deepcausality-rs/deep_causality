@@ -78,20 +78,6 @@ impl fmt::Display for AdjustmentError
     }
 }
 
-
-#[derive(Debug)]
-pub struct PropagateError(pub String);
-
-impl Error for PropagateError {}
-
-impl fmt::Display for PropagateError
-{
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "PropagateError: {}", self.0)
-    }
-}
-
-
 #[derive(Debug)]
 pub struct UpdateError(pub String);
 

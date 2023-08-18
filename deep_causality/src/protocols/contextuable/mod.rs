@@ -2,12 +2,12 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use crate::errors::ContextIndexError;
-use crate::prelude::{Adjustable, Contextoid, ContextoidType, Identifiable, RelationKind, TimeScale};
+use crate::prelude::{Contextoid, ContextoidType, Identifiable, RelationKind, TimeScale};
 
-pub trait Datable: Adjustable + Identifiable {}
+pub trait Datable: Identifiable {}
 
 
-pub trait Temporal: Identifiable + Adjustable {}
+pub trait Temporal: Identifiable {}
 
 
 // Specializes the `Temporal` trait.
@@ -18,7 +18,7 @@ pub trait Temporable: Temporal
 }
 
 
-pub trait Spatial: Identifiable + Adjustable
+pub trait Spatial: Identifiable
 {
     fn x(&self) -> i64;
     fn y(&self) -> i64;
@@ -26,7 +26,7 @@ pub trait Spatial: Identifiable + Adjustable
 }
 
 
-pub trait SpaceTemporal: Identifiable + Spatial + Temporal + Adjustable
+pub trait SpaceTemporal: Identifiable + Spatial + Temporal
 {
     fn t(&self) -> u64; // returns 4th dimension, t
 }

@@ -3,7 +3,7 @@
 
 use std::fmt::{Display, Formatter};
 
-use crate::prelude::{Adjustable, Identifiable, Spatial};
+use crate::prelude::{Identifiable, Spatial};
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Spaceoid
@@ -22,7 +22,7 @@ impl Spaceoid
 }
 
 // Optional. Override only when needed.
-impl Adjustable for Spaceoid {}
+// impl Adjustable for Spaceoid {}
 
 
 impl Identifiable for Spaceoid
