@@ -2,7 +2,8 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::*;
-use deep_causality::utils::test_utils::{get_test_causality_vec, get_test_causaloid};
+
+use crate::utils::test_utils::*;
 
 #[test]
 fn test_add()

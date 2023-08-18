@@ -4,7 +4,8 @@
 use std::array;
 
 use deep_causality::prelude::*;
-use deep_causality::utils::test_utils::get_test_causaloid;
+
+use crate::utils::test_utils::*;
 
 fn get_test_causality_data()
     -> [NumericalValue; 10]

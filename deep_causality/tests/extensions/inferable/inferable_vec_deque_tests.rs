@@ -4,7 +4,8 @@
 use std::collections::VecDeque;
 
 use deep_causality::prelude::*;
-use deep_causality::utils::test_utils::{get_test_inf_vec, get_test_inferable};
+
+use crate::utils::test_utils::*;
 
 pub fn get_test_inf_vec_deque()
     -> VecDeque<Inference>

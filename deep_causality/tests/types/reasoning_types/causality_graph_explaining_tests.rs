@@ -2,7 +2,8 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::*;
-use deep_causality::utils::bench_utils_graph;
+
+use crate::utils::test_utils_graph;
 
 #[test]
 fn test_explain_all_causes() {
@@ -13,7 +14,7 @@ fn test_explain_all_causes() {
     //  \ /
     //  C(3)
     // We assume two causes (A and B) for C and single cause for A and B.
-    let (g, data) = bench_utils_graph::get_small_multi_cause_graph_and_data();
+    let (g, data) = test_utils_graph::get_small_multi_cause_graph_and_data();
 
     // Verify that the graph is fully inactive.
     let percent_active = g.percent_active();
@@ -57,7 +58,7 @@ fn test_explain_subgraph_from_cause() {
     //  \ /
     //  C(3)
     // We assume two causes (A and B) for C and single cause for A and B.
-    let (g, data) = bench_utils_graph::get_small_multi_cause_graph_and_data();
+    let (g, data) = test_utils_graph::get_small_multi_cause_graph_and_data();
 
     // Verify that the graph is fully inactive.
     let percent_active = g.percent_active();
@@ -103,7 +104,7 @@ fn test_explain_shortest_path_between_causes() {
     //  \ /
     //  C(3)
     // We assume two causes (A and B) for C and single cause for A and B.
-    let (g, data) = bench_utils_graph::get_small_multi_cause_graph_and_data();
+    let (g, data) = test_utils_graph::get_small_multi_cause_graph_and_data();
 
     // Verify that the graph is fully inactive.
     let percent_active = g.percent_active();

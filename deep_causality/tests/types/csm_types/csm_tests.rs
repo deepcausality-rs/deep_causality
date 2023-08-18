@@ -2,7 +2,8 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::{ActionError, CausalAction, CausalState, CSM};
-use deep_causality::utils::test_utils;
+
+use crate::utils::test_utils;
 
 fn state_action() -> Result<(), ActionError> {
     println!("Detected something and acted upon");

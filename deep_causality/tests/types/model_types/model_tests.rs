@@ -3,7 +3,8 @@
 
 
 use deep_causality::prelude::{Identifiable, Model};
-use deep_causality::utils::test_utils::{get_test_causaloid, get_test_context};
+
+use crate::utils::test_utils::*;
 
 #[test]
 fn test_new() {

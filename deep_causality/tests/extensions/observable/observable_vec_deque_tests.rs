@@ -4,7 +4,8 @@
 use std::collections::VecDeque;
 
 use deep_causality::prelude::{NumericalValue, ObservableReasoning, Observation};
-use deep_causality::utils::test_utils::get_test_observation;
+
+use crate::utils::test_utils::*;
 
 pub fn get_test_obs_vec_deque()
     -> VecDeque<Observation>

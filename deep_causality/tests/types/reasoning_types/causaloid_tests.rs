@@ -2,8 +2,8 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::*;
-use deep_causality::utils::bench_utils_graph;
-use deep_causality::utils::test_utils;
+
+use crate::utils::*;
 
 // BaseContext is a type alias for a basic context that can be used for testing
 // It matches the type signature of the base causaloid also uses in these tests.
@@ -134,7 +134,7 @@ fn test_from_causal_collection_with_context() {
 fn test_from_causal_graph() {
     let id: IdentificationValue = 01;
     let description = "tests whether data exceeds threshold of 0.55";
-    let (causal_graph, data) = bench_utils_graph::get_small_multi_layer_cause_graph_and_data();
+    let (causal_graph, data) = test_utils_graph::get_small_multi_layer_cause_graph_and_data();
 
     let causaloid = Causaloid::from_causal_graph(id, causal_graph, description);
     assert!(!causaloid.is_singleton());
@@ -154,7 +154,7 @@ fn test_from_causal_graph() {
 fn test_from_causal_graph_with_context() {
     let id: IdentificationValue = 01;
     let description = "tests whether data exceeds threshold of 0.55";
-    let (causal_graph, data) = bench_utils_graph::get_small_multi_layer_cause_graph_and_data();
+    let (causal_graph, data) = test_utils_graph::get_small_multi_layer_cause_graph_and_data();
     let context = &test_utils::get_test_context();
 
     let causaloid = Causaloid::from_causal_graph_with_context(id, causal_graph, Some(context), description);
@@ -176,7 +176,7 @@ fn test_causal_graph()
 {
     let id: IdentificationValue = 01;
     let description = "tests whether data exceeds threshold of 0.55";
-    let (causal_graph, _) = bench_utils_graph::get_small_multi_layer_cause_graph_and_data();
+    let (causal_graph, _) = test_utils_graph::get_small_multi_layer_cause_graph_and_data();
 
     let causaloid = Causaloid::from_causal_graph(id, causal_graph, description);
     assert!(!causaloid.is_singleton());

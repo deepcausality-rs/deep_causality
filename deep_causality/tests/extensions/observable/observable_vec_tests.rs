@@ -4,7 +4,8 @@
 
 use deep_causality::protocols::observable::ObservableReasoning;
 use deep_causality::types::alias_types::NumericalValue;
-use deep_causality::utils::test_utils::{get_test_obs_vec, get_test_observation};
+
+use crate::utils::test_utils::*;
 
 #[test]
 fn test_add() {
