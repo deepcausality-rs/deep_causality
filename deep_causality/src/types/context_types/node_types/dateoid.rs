@@ -4,7 +4,7 @@
 
 use std::fmt::{Display, Formatter};
 
-use crate::prelude::{Adjustable, Datable, Identifiable};
+use crate::prelude::{Datable, Identifiable};
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Dataoid
@@ -24,7 +24,8 @@ impl Dataoid
     }
 }
 
-impl Adjustable for Dataoid {}
+// Optional. Override only when needed.
+// impl Adjustable for Dataoid {}
 
 impl Datable for Dataoid {}
 

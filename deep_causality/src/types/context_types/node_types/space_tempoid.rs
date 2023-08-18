@@ -2,7 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 use std::fmt::{Display, Formatter};
 
-use crate::prelude::{Adjustable, Identifiable, SpaceTemporal, Spatial, Temporable, Temporal, TimeScale};
+use crate::prelude::{Identifiable, SpaceTemporal, Spatial, Temporable, Temporal, TimeScale};
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct SpaceTempoid {
@@ -28,7 +28,7 @@ impl Identifiable for SpaceTempoid
 }
 
 // Optional. Override only when needed.
-impl Adjustable for SpaceTempoid {}
+// impl Adjustable for SpaceTempoid {}
 
 impl Temporal for SpaceTempoid {}
 

@@ -3,7 +3,7 @@
 
 use std::fmt::Display;
 
-use crate::prelude::{Adjustable, Identifiable, Temporable, Temporal, TimeScale};
+use crate::prelude::{Identifiable, Temporable, Temporal, TimeScale};
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Tempoid
@@ -31,7 +31,7 @@ impl Identifiable for Tempoid {
 }
 
 // Optional. Override only when needed.
-impl Adjustable for Tempoid {}
+// impl Adjustable for Tempoid {}
 
 impl Temporal for Tempoid {}
 
