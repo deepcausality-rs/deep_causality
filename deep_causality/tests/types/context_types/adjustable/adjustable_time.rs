@@ -67,3 +67,23 @@ fn test_adjust_err() {
     // Old value still in place, as before the failed adjustment.
     assert_eq!(d.time_unit(), 21);
 }
+
+#[test]
+fn test_id() {
+    let id = 1;
+
+    let d = AdjustableTime::new(id, TimeScale::Minute, 21);
+    assert_eq!(d.id(), id);
+}
+
+#[test]
+fn test_to_string() {
+    let id = 1;
+    let time_unit = 21;
+    let time_scale = TimeScale::Minute;
+
+    let d = AdjustableTime::new(id, time_scale, time_unit);
+    let exp = format!("AdjustableTime: id: {}, time_scale: {}, time_unit: {}", id, time_scale, time_unit);
+    let act = d.to_string();
+    assert_eq!(act, exp);
+}
