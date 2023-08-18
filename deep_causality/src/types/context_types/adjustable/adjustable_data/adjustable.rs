@@ -27,7 +27,7 @@ impl<T> Adjustable<T> for AdjustableData<T>
 
         // Check if the new data are okay to update
         if update_data == 0 {
-            return Err(UpdateError("Update failed, new data id ZERO".into()));
+            return Err(UpdateError("Update failed, new data is ZERO".into()));
         }
 
         // Update the internal data
