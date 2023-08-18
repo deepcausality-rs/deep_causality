@@ -55,7 +55,8 @@ suitable for real-time applications without additional acceleration hardware.
 ## 📚 Docs
 
 * [API Docs](https://docs.rs/deep_causality/0.2.4/deep_causality/)
-* [Docs](deep_causality/docs/README.md)
+* [Changelog](CHANGELOG.md)
+* [Documentation](deep_causality/docs/README.md)
 * [Slides](deep_causality/docs/slides/)
 
 ## 🚀 Install
