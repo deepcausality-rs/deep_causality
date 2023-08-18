@@ -164,10 +164,9 @@ impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
     )
         -> Result<(), UpdateError>
     {
-        let binding = self.state_actions.borrow();
 
         // Check if the key exists, if not return error
-        if binding.get(&idx).is_none() {
+        if self.state_actions.borrow().get(&idx).is_none() {
             return Err(UpdateError(format!("State {} does not exists. Add it first before evaluating", idx)));
         }
 
