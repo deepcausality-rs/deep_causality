@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use chrono::{DateTime, TimeZone, Utc};
 use parquet::record::{Row, RowAccessor};
 use rust_decimal::Decimal;
 use rust_decimal::prelude::FromPrimitive;
+
 use crate::types::data_types::data_symbol::DataSymbol;
 use crate::types::data_types::date_time_bar::DateTimeBar;
-
 
 pub fn convert_field_to_date_time_bar(
     record: &Row,

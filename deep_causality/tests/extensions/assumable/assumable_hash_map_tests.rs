@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use std::collections::HashMap;
-use deep_causality::prelude::{Assumption, AssumableReasoning};
+
+use deep_causality::prelude::{AssumableReasoning, Assumption};
 use deep_causality::utils::test_utils::{get_test_assumption, get_test_num_array};
 
 fn get_test_assumption_map()

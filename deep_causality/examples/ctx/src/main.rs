@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
+use deep_causality::prelude::time_execution;
 
 mod run;
 mod protocols;
@@ -9,8 +11,6 @@ mod io;
 mod config;
 mod model;
 mod utils;
-
-use deep_causality::prelude::time_execution;
 
 fn main() {
     time_execution(run::run, "main_run");

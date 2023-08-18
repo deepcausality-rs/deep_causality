@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::Assumption;
 use deep_causality::protocols::assumable::AssumableReasoning;
 use deep_causality::utils::test_utils::{get_test_assumption, get_test_assumption_vec, get_test_num_array};
-
 
 #[test]
 fn test_add()

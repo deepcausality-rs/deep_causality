@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
-use dcl_data_structures::prelude::{ArrayStorage, SlidingWindow,window_type};
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+use dcl_data_structures::prelude::{ArrayStorage, SlidingWindow, window_type};
 
 // Size refers to the maximum number of elements the sliding window can store.
 const SIZE: usize = 4;

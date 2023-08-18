@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use crate::errors::ContextIndexError;
 use crate::prelude::{Adjustable, Contextoid, ContextoidType, Identifiable, RelationKind, TimeScale};

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 #![forbid(unsafe_code)]
 
 use std::marker::PhantomData;
+
 use crate::prelude::{ArrayStorage, VectorStorage, WindowStorage};
 
 pub mod storage_vec;

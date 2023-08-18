@@ -1,10 +1,33 @@
+## IMPORTANT: Please sign the Developer Certificate of Origin
+
+Thank you for your contribution to DeepCausality. Please note, when contributing, the developer must include
+a [DCO sign-off statement]( https://developercertificate.org/) indicating the DCO acceptance in one commit message. Here
+is an example DCO Signed-off-by line in a commit message:
+
+```
+Signed-off-by: J. Doe <j.doe@domain.com>
+```
+
+OR
+
+```
+$ git commit -s
+```
+
+DeepCausality is hosted at the Linux Foundation (LF) and all LF projects
+are required to accept only contributions with a signed DC. Thank you for your understanding.
+
 ## Describe your changes
 
 ## Issue ticket number and link
 
-## Checklist before requesting a review
-- [ ] I have performed a self-review of my code
-- [ ] If it is a core feature, I have added thorough tests.
-- [ ] Do we need to implement analytics?
-- [ ] Will this be part of an update? If yes, please write one phrase about this update.
+## Code checklist before requesting a review
 
+- [ ] I have signed the DCO?
+- [ ] All tests are passing when running make test?
+- [ ] No errors or security vulnerabilities are reported by make check?
+
+For details on make, [please see BUILD.md](../BUILD.md)
+
+Note: The CI runs all of the above and fixing things before they hit CI speeds
+up the review and merge process. Thank you.

@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use std::time::Instant;
+
 use deep_causality::prelude::{ContextuableGraph, Identifiable, TimeScale};
+
 use crate::model::get_main_causaloid;
 use crate::utils;
 use crate::workflow::{build_time_data_context, load_data};

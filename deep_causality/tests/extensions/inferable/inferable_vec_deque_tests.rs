@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use std::collections::VecDeque;
+
 use deep_causality::prelude::*;
 use deep_causality::utils::test_utils::{get_test_inf_vec, get_test_inferable};
 

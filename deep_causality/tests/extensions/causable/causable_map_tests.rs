@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use std::collections::HashMap;
-use deep_causality::prelude::*;
-use deep_causality::utils::test_utils::{get_test_causaloid};
 
- fn get_test_causality_map<'l>()
+use deep_causality::prelude::*;
+use deep_causality::utils::test_utils::get_test_causaloid;
+
+fn get_test_causality_map<'l>()
 // i8 as key b/c I assume all testing will be done with less than 265 items.
     -> HashMap<i8, Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>
 {

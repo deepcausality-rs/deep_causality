@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use crate::model::causaloid_year::get_year_causaloid;
 use deep_causality::prelude::{CausableGraph, Causaloid, CausaloidGraph, Context, Spaceoid, SpaceTempoid, Tempoid};
+
 use crate::model::causaloid_month::get_month_causaloid;
+use crate::model::causaloid_year::get_year_causaloid;
 use crate::types::dateoid::Dataoid;
 
 pub mod utils;

@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use std::fmt::Debug;
 use std::cmp::Ordering;
+use std::fmt::Debug;
+
 use crate::prelude::{DescriptionValue, Identifiable, NumericalValue};
 use crate::utils::math_utils::abs_num;
 

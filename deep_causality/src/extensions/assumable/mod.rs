@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use deep_causality_macros::{make_get_all_items, make_get_all_map_items, make_is_empty, make_len};
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::hash::Hash;
-use crate::prelude::{Assumable, AssumableReasoning};
 
+use deep_causality_macros::{make_get_all_items, make_get_all_map_items, make_is_empty, make_len};
+
+use crate::prelude::{Assumable, AssumableReasoning};
 
 impl<T> AssumableReasoning<T> for [T]
     where

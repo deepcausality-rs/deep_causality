@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use criterion::{Criterion, criterion_group};
+
 use dcl_data_structures::prelude::{SlidingWindow, VectorStorage, window_type};
+
 use crate::benchmarks::fields::{MULT, SIZE};
 
 #[derive(Default, Debug, Copy, Clone, Hash, Eq, PartialEq)]
