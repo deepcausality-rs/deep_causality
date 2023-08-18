@@ -18,3 +18,5 @@ before all make commands work:
     make fix            Auto-fixes linting issues as reported by cargo and clippy.
     make test           Runs all tests across all crates.
 ```
+
+The scripts called by each make command are located in the [script folder.](scripts)
