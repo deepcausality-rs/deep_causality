@@ -15,11 +15,28 @@ pub struct Data<T>
     filled: bool,
 }
 
+
 #[test]
-fn test_derive() {
+fn test_derive_struct() {
     let d = Data::new(0, 42, true);
 
     assert_eq!(*d.data_id(), 0);
     assert_eq!(*d.data(), 42);
     assert_eq!(*d.filled(), true);
+}
+
+#[derive(Constructor)]
+#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
+pub enum Scale {
+    Small,
+    Big,
+}
+
+#[test]
+fn test_derive_enum() {
+    let big = Scale::new_big();
+    assert_eq!(big, Scale::Big);
+
+    let small = Scale::new_small();
+    assert_eq!(small, Scale::Small)
 }
