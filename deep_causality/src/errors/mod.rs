@@ -4,7 +4,9 @@
 use std::error::Error;
 use std::fmt;
 
-#[derive(Debug)]
+use deep_causality_macros::Constructor;
+
+#[derive(Constructor, Debug)]
 pub struct BuildError(pub String);
 
 impl Error for BuildError {}
@@ -17,7 +19,7 @@ impl fmt::Display for BuildError
 }
 
 
-#[derive(Debug)]
+#[derive(Constructor, Debug)]
 pub struct CausalityGraphError(pub String);
 
 impl Error for CausalityGraphError {}
@@ -29,7 +31,7 @@ impl fmt::Display for CausalityGraphError
     }
 }
 
-#[derive(Debug)]
+#[derive(Constructor, Debug)]
 pub struct ContextIndexError(pub String);
 
 impl Error for ContextIndexError {}
@@ -41,7 +43,7 @@ impl fmt::Display for ContextIndexError
     }
 }
 
-#[derive(Debug)]
+#[derive(Constructor, Debug)]
 pub struct CausalGraphIndexError(pub String);
 
 impl Error for CausalGraphIndexError {}
@@ -53,7 +55,7 @@ impl fmt::Display for CausalGraphIndexError
     }
 }
 
-#[derive(Debug)]
+#[derive(Constructor, Debug)]
 pub struct CausalityError(pub String);
 
 impl Error for CausalityError {}
@@ -66,7 +68,7 @@ impl fmt::Display for CausalityError
 }
 
 
-#[derive(Debug)]
+#[derive(Constructor, Debug)]
 pub struct AdjustmentError(pub String);
 
 impl Error for AdjustmentError {}
@@ -78,7 +80,7 @@ impl fmt::Display for AdjustmentError
     }
 }
 
-#[derive(Debug)]
+#[derive(Constructor, Debug)]
 pub struct UpdateError(pub String);
 
 impl Error for UpdateError {}
@@ -91,7 +93,7 @@ impl fmt::Display for UpdateError
 }
 
 
-#[derive(Debug)]
+#[derive(Constructor, Debug)]
 pub struct ActionError(pub String);
 
 impl Error for ActionError {}
