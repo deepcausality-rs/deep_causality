@@ -1,35 +1,21 @@
+use deep_causality_macros::{Constructor, Getters};
+
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
-
 use crate::prelude::Datable;
 
 mod adjustable;
 mod display;
 mod identifiable;
 
+#[derive(Getters, Constructor)]
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct AdjustableData<T>
     where T: Copy + Default,
 {
+    #[getter(name = data_id)] // Rename ID getter to prevent conflict impl with identifiable
     id: u64,
     data: T,
-}
-
-impl<T> AdjustableData<T>
-    where T: Copy + Default,
-{
-    pub fn new(id: u64, data: T) -> Self
-    {
-        Self { id, data }
-    }
-}
-
-impl<T> AdjustableData<T>
-    where T: Copy + Default,
-{
-    pub fn data(&self) -> T {
-        self.data
-    }
 }
 
 // Type tag required for context.
