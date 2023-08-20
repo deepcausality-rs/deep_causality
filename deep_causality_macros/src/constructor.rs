@@ -32,9 +32,9 @@ fn new_for_struct(
     variant: Option<&syn::Ident>,
 ) -> proc_macro2::TokenStream {
     match *fields {
-        syn::Fields::Named(ref fields) => new_impl(&ast, Some(&fields.named), true, variant),
-        syn::Fields::Unit => new_impl(&ast, None, false, variant),
-        syn::Fields::Unnamed(ref fields) => new_impl(&ast, Some(&fields.unnamed), false, variant),
+        syn::Fields::Named(ref fields) => new_impl(ast, Some(&fields.named), true, variant),
+        syn::Fields::Unit => new_impl(ast, None, false, variant),
+        syn::Fields::Unnamed(ref fields) => new_impl(ast, Some(&fields.unnamed), false, variant),
     }
 }
 
@@ -110,7 +110,7 @@ fn collect_parent_lint_attrs(attrs: &[syn::Attribute]) -> Vec<syn::Attribute> {
     fn is_lint(item: &syn::Meta) -> bool {
         if let syn::Meta::List(ref l) = *item {
             let path = &l.path;
-            return path.is_ident("allow") || path.is_ident("deny") || path.is_ident("forbid") || path.is_ident("warn")
+            return path.is_ident("allow") || path.is_ident("deny") || path.is_ident("forbid") || path.is_ident("warn");
         }
         false
     }
@@ -160,7 +160,7 @@ impl FieldAttr {
                 .segments
                 .last()
                 .expect("Expected at least one segment where #[segment[::segment*](..)]");
-            if (*last_attr_path).ident != "new" {
+            if (last_attr_path).ident != "new" {
                 continue;
             }
             let list = match attr.meta {
@@ -188,10 +188,8 @@ impl FieldAttr {
                     syn::Meta::NameValue(kv) => {
                         if let syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Str(ref s), .. }) = kv.value {
                             if kv.path.is_ident("value") {
-                                let tokens = lit_str_to_token_stream(s).ok().expect(&format!(
-                                    "Invalid expression in #[new]: `{}`",
-                                    s.value()
-                                ));
+                                let tokens = lit_str_to_token_stream(s)
+                                    .unwrap_or_else(|_| panic!("Invalid expression in #[new]: `{}`", s.value()));
                                 result = Some(FieldAttr::Value(tokens));
                             } else {
                                 panic!("Invalid #[new] attribute: #[new({} = ..)]", path_to_string(&kv.path));
@@ -227,7 +225,7 @@ impl<'a> FieldExt<'a> {
             } else {
                 syn::Ident::new(&format!("f{}", idx), proc_macro2::Span::call_site())
             },
-            named: named,
+            named,
         }
     }
 
@@ -285,7 +283,7 @@ fn lit_str_to_token_stream(s: &syn::LitStr) -> Result<TokenStream2, proc_macro2:
 
 fn set_ts_span_recursive(ts: TokenStream2, span: &proc_macro2::Span) -> TokenStream2 {
     ts.into_iter().map(|mut tt| {
-        tt.set_span(span.clone());
+        tt.set_span(*span);
         if let proc_macro2::TokenTree::Group(group) = &mut tt {
             let stream = set_ts_span_recursive(group.stream(), span);
             *group = proc_macro2::Group::new(group.delimiter(), stream);
@@ -300,13 +298,12 @@ fn to_snake_case(s: &str) -> String {
             .fold((None, None, String::new()), |(prev, ch, mut acc), next| {
                 if let Some(ch) = ch {
                     if let Some(prev) = prev {
-                        if ch.is_uppercase() {
-                            if prev.is_lowercase()
+                        if ch.is_uppercase() && (
+                            prev.is_lowercase()
                                 || prev.is_numeric()
-                                || (prev.is_uppercase() && next.is_lowercase())
-                            {
-                                acc.push('_');
-                            }
+                                || (prev.is_uppercase() && next.is_lowercase()))
+                        {
+                            acc.push('_');
                         }
                     }
                     acc.extend(ch.to_lowercase());
