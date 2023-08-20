@@ -23,8 +23,8 @@ fn test_new()
 {
     let ca = get_test_action();
 
-    assert_eq!(ca.descr(),  "Test action that prints Hello State");
-    assert_eq!(ca.version(), 1);
+    assert_eq!(*ca.descr(), "Test action that prints Hello State");
+    assert_eq!(*ca.version(), 1);
 }
 
 #[test]
@@ -35,6 +35,6 @@ fn test_fire()
     let res = ca.fire();
 
     assert!(res.is_ok());
-    assert_eq!(ca.descr(),  "Test action that prints Hello State");
-    assert_eq!(ca.version(), 1);
+    assert_eq!(*ca.descr(), "Test action that prints Hello State");
+    assert_eq!(*ca.version(), 1);
 }

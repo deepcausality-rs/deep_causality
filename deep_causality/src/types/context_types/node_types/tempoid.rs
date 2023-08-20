@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
-
 use std::fmt::Display;
+
+use deep_causality_macros::Constructor;
 
 use crate::prelude::{Identifiable, Temporable, Temporal, TimeScale};
 
-#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
+#[derive(Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Tempoid
 {
     id: u64,
@@ -13,25 +14,12 @@ pub struct Tempoid
     time_unit: u32,
 }
 
-impl Tempoid
-{
-    pub fn new(id: u64, time_scale: TimeScale, time_unit: u32) -> Self {
-        Self {
-            id,
-            time_scale,
-            time_unit,
-        }
-    }
-}
 
 impl Identifiable for Tempoid {
     fn id(&self) -> u64 {
         self.id
     }
 }
-
-// Optional. Override only when needed.
-// impl Adjustable for Tempoid {}
 
 impl Temporal for Tempoid {}
 

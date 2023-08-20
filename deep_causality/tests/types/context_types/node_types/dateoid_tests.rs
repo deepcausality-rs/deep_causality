@@ -28,7 +28,8 @@ fn test_data() {
 
     let d = Dataoid::new(id, data);
     assert_eq!(d.id(), id);
-    assert_eq!(d.data(), data);
+    assert_eq!(*d.data_id(), id);
+    assert_eq!(*d.data(), data);
 }
 
 #[test]
@@ -38,7 +39,8 @@ fn test_to_string() {
 
     let d = Dataoid::new(id, data);
     assert_eq!(d.id(), id);
-    assert_eq!(d.data(), data);
+    assert_eq!(*d.data_id(), id);
+    assert_eq!(*d.data(), data);
 
     let exp = format!("Dataoid: id: {} data: {}", id, data);
     let act = d.to_string();

@@ -19,10 +19,10 @@ fn test_new()
     let data = 0.23f64;
     let cs = CausalState::new(id, version, data, causaloid);
 
-    assert_eq!(cs.id(), id);
-    assert_eq!(cs.version(), version);
-    assert_eq!(cs.data(), data);
-    assert_eq!(cs.causaloid(), causaloid);
+    assert_eq!(*cs.id(), id);
+    assert_eq!(*cs.version(), version);
+    assert_eq!(*cs.data(), data);
+    assert_eq!(*cs.causaloid(), causaloid);
 }
 
 #[test]

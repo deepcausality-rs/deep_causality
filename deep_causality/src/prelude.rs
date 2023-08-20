@@ -64,7 +64,7 @@ pub use crate::types::csm_types::CSM;
 pub use crate::types::csm_types::csm_action::CausalAction;
 pub use crate::types::csm_types::csm_state::CausalState;
 // Model types
-pub use crate::types::model_types::model::Model;
+pub use crate::types::model_types::Model;
 // Reasoning types
 pub use crate::types::reasoning_types::assumption::Assumption;
 pub use crate::types::reasoning_types::causaloid::Causaloid;

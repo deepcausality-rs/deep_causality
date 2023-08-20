@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+use deep_causality_macros::Constructor;
 
 use crate::prelude::{DescriptionValue, IdentificationValue, NumericalValue};
 
@@ -8,7 +9,7 @@ mod inferable;
 mod display;
 
 
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Constructor, Debug, Clone, PartialEq, PartialOrd)]
 pub struct Inference
 {
     id: IdentificationValue,
@@ -17,16 +18,4 @@ pub struct Inference
     threshold: NumericalValue,
     effect: NumericalValue,
     target: NumericalValue,
-}
-
-impl Inference
-{
-    pub fn new(
-        id: IdentificationValue, question: DescriptionValue, observation: NumericalValue,
-        threshold: NumericalValue, effect: NumericalValue, target: NumericalValue,
-    )
-        -> Self
-    {
-        Self { id, question, observation, threshold, effect, target }
-    }
 }

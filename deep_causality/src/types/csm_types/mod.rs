@@ -39,7 +39,7 @@ impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
         // Generate a new HashMap from the collection.
         let mut state_map: CSMMap<'l, D, S, T, ST> = HashMap::with_capacity(state_actions.len());
         for (state, action) in state_actions {
-            state_map.insert(state.id(), (state, action));
+            state_map.insert(*state.id(), (state, action));
         }
 
         Self { state_actions: RefCell::new(state_map) }
@@ -218,7 +218,7 @@ impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
         // Generate a new HashMap from the collection
         let mut state_map: CSMMap<'l, D, S, T, ST> = HashMap::with_capacity(state_actions.len());
         for (state, action) in state_actions {
-            state_map.insert(state.id(), (state, action));
+            state_map.insert(*state.id(), (state, action));
         }
 
         // Replace the existing map with the newly generated one.
