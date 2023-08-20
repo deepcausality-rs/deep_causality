@@ -41,7 +41,7 @@ fn test_ref() {
     assert!(page.category().is_none());
 
     let page = WebRef::new("Hacker News", "https://news.ycombinator.com//", Some("News"));
-    assert_eq!(*page.name(), "GitHub");
+    assert_eq!(*page.name(), "Hacker News");
     assert!(!page.url().is_empty());
     assert!(page.category().is_some());
 }
