@@ -61,3 +61,12 @@ fn test_derive_enum() {
     let small = Scale::new_small();
     assert_eq!(small, Scale::Small)
 }
+
+#[derive(Constructor)]
+pub struct Unnamed(i32);
+
+#[test]
+fn test_unnamed_fields() {
+    let a = Unnamed::new(98);
+    assert_eq!(a.0, 98);
+}

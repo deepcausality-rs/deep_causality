@@ -173,8 +173,7 @@ impl FieldAttr {
             if result.is_some() {
                 panic!("Expected at most one #[new] attribute");
             }
-            for item in list
-                .parse_args_with(Punctuated::<syn::Meta, Token![,]>::parse_terminated)
+            for item in list.parse_args_with(Punctuated::<syn::Meta, Token![,]>::parse_terminated)
                 .unwrap_or_else(|err| panic!("Invalid #[new] attribute: {}", err))
             {
                 match item {
@@ -188,8 +187,7 @@ impl FieldAttr {
                     syn::Meta::NameValue(kv) => {
                         if let syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Str(ref s), .. }) = kv.value {
                             if kv.path.is_ident("value") {
-                                let tokens = lit_str_to_token_stream(s)
-                                    .unwrap_or_else(|_| panic!("Invalid expression in #[new]: `{}`", s.value()));
+                                let tokens = lit_str_to_token_stream(s).unwrap_or_else(|_| panic!("Invalid expression in #[new]: `{}`", s.value()));
                                 result = Some(FieldAttr::Value(tokens));
                             } else {
                                 panic!("Invalid #[new] attribute: #[new({} = ..)]", path_to_string(&kv.path));
@@ -235,10 +233,11 @@ impl<'a> FieldExt<'a> {
 
     pub fn is_phantom_data(&self) -> bool {
         match *self.ty {
-            syn::Type::Path(syn::TypePath {
-                                qself: None,
-                                ref path,
-                            }) => path
+            syn::Type::Path(
+                syn::TypePath {
+                    qself: None,
+                    ref path,
+                }) => path
                 .segments
                 .last()
                 .map(|x| x.ident == "PhantomData")
@@ -276,18 +275,13 @@ impl<'a> FieldExt<'a> {
 }
 
 fn lit_str_to_token_stream(s: &syn::LitStr) -> Result<TokenStream2, proc_macro2::LexError> {
-    let code = s.value();
-    let ts: TokenStream2 = code.parse()?;
-    Ok(set_ts_span_recursive(ts, &s.span()))
+    Ok(set_ts_span_recursive(s.value().parse()?, &s.span()))
 }
 
 fn set_ts_span_recursive(ts: TokenStream2, span: &proc_macro2::Span) -> TokenStream2 {
     ts.into_iter().map(|mut tt| {
         tt.set_span(*span);
-        if let proc_macro2::TokenTree::Group(group) = &mut tt {
-            let stream = set_ts_span_recursive(group.stream(), span);
-            *group = proc_macro2::Group::new(group.delimiter(), stream);
-        }
+        if let proc_macro2::TokenTree::Group(group) = &mut tt { *group = proc_macro2::Group::new(group.delimiter(), set_ts_span_recursive(group.stream(), span)); }
         tt
     }).collect()
 }
@@ -298,11 +292,7 @@ fn to_snake_case(s: &str) -> String {
             .fold((None, None, String::new()), |(prev, ch, mut acc), next| {
                 if let Some(ch) = ch {
                     if let Some(prev) = prev {
-                        if ch.is_uppercase() && (
-                            prev.is_lowercase()
-                                || prev.is_numeric()
-                                || (prev.is_uppercase() && next.is_lowercase()))
-                        {
+                        if ch.is_uppercase() && (prev.is_lowercase() || prev.is_numeric() || (prev.is_uppercase() && next.is_lowercase())) {
                             acc.push('_');
                         }
                     }
