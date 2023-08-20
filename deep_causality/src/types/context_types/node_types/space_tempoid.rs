@@ -2,8 +2,11 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 use std::fmt::{Display, Formatter};
 
+use deep_causality_macros::Constructor;
+
 use crate::prelude::{Identifiable, SpaceTemporal, Spatial, Temporable, Temporal, TimeScale};
 
+#[derive(Constructor)]
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct SpaceTempoid {
     id: u64,
@@ -14,12 +17,6 @@ pub struct SpaceTempoid {
     z: i64,
 }
 
-impl SpaceTempoid {
-    pub fn new(id: u64, time_scale: TimeScale, time_unit: u32, x: i64, y: i64, z: i64) -> Self {
-        Self { id, time_scale, time_unit, x, y, z }
-    }
-}
-
 impl Identifiable for SpaceTempoid
 {
     fn id(&self) -> u64 {
@@ -27,10 +24,8 @@ impl Identifiable for SpaceTempoid
     }
 }
 
-// Optional. Override only when needed.
-// impl Adjustable for SpaceTempoid {}
-
 impl Temporal for SpaceTempoid {}
+
 
 impl Temporable for SpaceTempoid
 {
@@ -71,12 +66,7 @@ impl SpaceTemporal for SpaceTempoid
 impl Display for SpaceTempoid {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "SpaceTempoid: id={}, time_scale={}, time_unit={}, x={}, y={}, z={}",
-               self.id,
-               self.time_scale,
-               self.time_unit,
-               self.x,
-               self.y,
-               self.z,
+               self.id, self.time_scale, self.time_unit, self.x, self.y, self.z,
         )
     }
 }

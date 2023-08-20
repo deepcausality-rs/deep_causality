@@ -3,8 +3,11 @@
 
 use std::fmt::{Debug, Display, Formatter};
 
+use deep_causality_macros::{Constructor, Getters};
+
 use crate::prelude::{Causable, CausalityError, Causaloid, Datable, NumericalValue, SpaceTemporal, Spatial, Temporal};
 
+#[derive(Getters, Constructor)]
 #[derive(Clone, Debug)]
 pub struct CausalState<'l, D, S, T, ST>
     where
@@ -17,28 +20,6 @@ pub struct CausalState<'l, D, S, T, ST>
     version: usize,
     data: NumericalValue,
     causaloid: &'l Causaloid<'l, D, S, T, ST>,
-}
-
-impl<'l, D, S, T, ST>  CausalState<'l, D, S, T, ST>
-    where
-        D: Datable + Clone + Copy,
-        S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
-        ST: SpaceTemporal + Clone + Copy,
-{
-    pub fn new
-    (
-        id: usize,
-        version: usize,
-        data: NumericalValue,
-        causaloid: &'l Causaloid<'l, D, S, T, ST>,
-    )
-        -> Self
-    {
-        assert!(causaloid.is_singleton());
-
-        Self { id, version, data, causaloid }
-    }
 }
 
 impl<'l, D, S, T, ST>  CausalState<'l, D, S, T, ST>
@@ -63,30 +44,6 @@ impl<'l, D, S, T, ST>  CausalState<'l, D, S, T, ST>
     }
 }
 
-impl<'l, D, S, T, ST>  CausalState<'l, D, S, T, ST>
-    where
-        D: Datable + Clone + Copy,
-        S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
-        ST: SpaceTemporal + Clone + Copy,
-{
-    pub fn id(&self) -> usize
-    {
-        self.id
-    }
-    pub fn version(&self) -> usize
-    {
-        self.version
-    }
-    pub fn data(&self) -> NumericalValue
-    {
-        self.data
-    }
-    pub fn causaloid(&self) -> &'l Causaloid<D, S, T, ST>
-    {
-        self.causaloid
-    }
-}
 
 impl<'l, D, S, T, ST> Display for CausalState<'l, D, S, T, ST>
     where
