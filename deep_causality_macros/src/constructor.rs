@@ -233,10 +233,11 @@ impl<'a> FieldExt<'a> {
 
     pub fn is_phantom_data(&self) -> bool {
         match *self.ty {
-            syn::Type::Path(syn::TypePath {
-                                qself: None,
-                                ref path,
-                            }) => path
+            syn::Type::Path(
+                syn::TypePath {
+                    qself: None,
+                    ref path,
+                }) => path
                 .segments
                 .last()
                 .map(|x| x.ident == "PhantomData")
@@ -274,17 +275,13 @@ impl<'a> FieldExt<'a> {
 }
 
 fn lit_str_to_token_stream(s: &syn::LitStr) -> Result<TokenStream2, proc_macro2::LexError> {
-    let ts: TokenStream2 = s.value().parse()?;
-    Ok(set_ts_span_recursive(ts, &s.span()))
+    Ok(set_ts_span_recursive(s.value().parse()?, &s.span()))
 }
 
 fn set_ts_span_recursive(ts: TokenStream2, span: &proc_macro2::Span) -> TokenStream2 {
     ts.into_iter().map(|mut tt| {
         tt.set_span(*span);
-        if let proc_macro2::TokenTree::Group(group) = &mut tt {
-            let stream = set_ts_span_recursive(group.stream(), span);
-            *group = proc_macro2::Group::new(group.delimiter(), stream);
-        }
+        if let proc_macro2::TokenTree::Group(group) = &mut tt { *group = proc_macro2::Group::new(group.delimiter(), set_ts_span_recursive(group.stream(), span)); }
         tt
     }).collect()
 }
