@@ -13,10 +13,7 @@ impl<T> CausableReasoning<T> for [T]
     where
         T: Causable + Clone
 {
-    make_len!();
-    make_is_empty!();
-    make_get_all_items!();
-    make_array_to_vec!();
+    make_len!();make_is_empty!();make_get_all_items!();make_array_to_vec!();
 }
 
 impl<K, V> CausableReasoning<V> for BTreeMap<K, V>
@@ -24,10 +21,7 @@ impl<K, V> CausableReasoning<V> for BTreeMap<K, V>
         K: Eq + Hash,
         V: Causable + Clone
 {
-    make_len!();
-    make_is_empty!();
-    make_map_to_vec!();
-    make_get_all_map_items!();
+    make_len!();make_is_empty!();make_map_to_vec!();make_get_all_map_items!();
 }
 
 impl<K, V> CausableReasoning<V> for HashMap<K, V>
@@ -35,29 +29,21 @@ impl<K, V> CausableReasoning<V> for HashMap<K, V>
         K: Eq + Hash,
         V: Causable + Clone
 {
-    make_len!();
-    make_is_empty!();
-    make_map_to_vec!();
-    make_get_all_map_items!();
+    make_len!();make_is_empty!();make_map_to_vec!();make_get_all_map_items!();
 }
 
 impl<T> CausableReasoning<T> for Vec<T>
     where
         T: Causable + Clone
 {
-    make_len!();
-    make_is_empty!();
-    make_vec_to_vec!();
-    make_get_all_items!();
+    make_len!();make_is_empty!();make_vec_to_vec!();make_get_all_items!();
 }
 
 impl<T> CausableReasoning<T> for VecDeque<T>
     where
         T: Causable + Clone
 {
-    make_len!();
-    make_is_empty!();
-    make_get_all_items!();
+    make_len!();make_is_empty!();make_get_all_items!();
     // VecDeque can't be turned into a vector hence the custom implementation
     // https://github.com/rust-lang/rust/issues/23308
     // Also, make_contiguous requires self to be mutable, which would violate the API, hence the clone.

@@ -12,9 +12,7 @@ impl<T> AssumableReasoning<T> for [T]
     where
         T: Assumable,
 {
-    make_len!();
-    make_is_empty!();
-    make_get_all_items!();
+    make_len!();make_is_empty!();make_get_all_items!();
 }
 
 impl<K, V> AssumableReasoning<V> for HashMap<K, V>
@@ -22,9 +20,7 @@ impl<K, V> AssumableReasoning<V> for HashMap<K, V>
         K: Eq + Hash,
         V: Assumable,
 {
-    make_len!();
-    make_is_empty!();
-    make_get_all_map_items!();
+    make_len!();make_is_empty!();make_get_all_map_items!();
 }
 
 impl<K, V> AssumableReasoning<V> for BTreeMap<K, V>
@@ -32,25 +28,19 @@ impl<K, V> AssumableReasoning<V> for BTreeMap<K, V>
         K: Eq + Hash,
         V: Assumable,
 {
-    make_len!();
-    make_is_empty!();
-    make_get_all_map_items!();
+    make_len!();make_is_empty!();make_get_all_map_items!();
 }
 
 impl<T> AssumableReasoning<T> for Vec<T>
     where
         T: Assumable,
 {
-    make_len!();
-    make_is_empty!();
-    make_get_all_items!();
+    make_len!();make_is_empty!();make_get_all_items!();
 }
 
 impl<T> AssumableReasoning<T> for VecDeque<T>
     where
         T: Assumable,
 {
-    make_len!();
-    make_is_empty!();
-    make_get_all_items!();
+    make_len!();make_is_empty!();make_get_all_items!();
 }
