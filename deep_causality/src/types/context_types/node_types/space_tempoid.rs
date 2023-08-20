@@ -6,8 +6,7 @@ use deep_causality_macros::Constructor;
 
 use crate::prelude::{Identifiable, SpaceTemporal, Spatial, Temporable, Temporal, TimeScale};
 
-#[derive(Constructor)]
-#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
+#[derive(Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct SpaceTempoid {
     id: u64,
     time_scale: TimeScale,

@@ -7,8 +7,7 @@ use deep_causality_macros::{Constructor, Getters};
 
 use crate::prelude::{Causable, CausalityError, Causaloid, Datable, NumericalValue, SpaceTemporal, Spatial, Temporal};
 
-#[derive(Getters, Constructor)]
-#[derive(Clone, Debug)]
+#[derive(Getters, Constructor, Clone, Debug)]
 pub struct CausalState<'l, D, S, T, ST>
     where
         D: Datable + Clone + Copy,

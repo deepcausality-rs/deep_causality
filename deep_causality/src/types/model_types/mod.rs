@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
-
 use deep_causality_macros::{Constructor, Getters};
 
 use crate::prelude::{Assumption, Causaloid, Context, Datable, Identifiable, SpaceTemporal, Spatial, Temporal};
 
-#[derive(Constructor, Getters)]
-#[derive(Clone, Copy)]
+#[derive(Getters, Constructor, Clone, Debug)]
 pub struct Model<'l, D, S, T, ST>
     where
         D: Datable + Clone + Copy,

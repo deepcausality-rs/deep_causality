@@ -6,8 +6,7 @@ use deep_causality_macros::Constructor;
 
 use crate::protocols::identifiable::Identifiable;
 
-#[derive(Constructor)]
-#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
+#[derive(Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Root {
     id: u64,
 }

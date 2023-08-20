@@ -8,8 +8,7 @@ mod adjustable;
 mod display;
 mod identifiable;
 
-#[derive(Getters, Constructor)]
-#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
+#[derive(Getters, Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct AdjustableTime<T>
     where T: Copy + Default,
 {

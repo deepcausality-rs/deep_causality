@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
-
 use std::fmt::Display;
 
 use deep_causality_macros::Constructor;
 
 use crate::prelude::{Identifiable, Temporable, Temporal, TimeScale};
 
-#[derive(Constructor)]
-#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
+#[derive(Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Tempoid
 {
     id: u64,

@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
-
 use std::fmt::{Display, Formatter};
 
 use deep_causality_macros::Constructor;
 
 use crate::prelude::{Identifiable, Spatial};
 
-#[derive(Constructor)]
-#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
+#[derive(Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Spaceoid
 {
     id: u64,

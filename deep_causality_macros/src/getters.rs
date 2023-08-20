@@ -82,21 +82,16 @@ impl GetterMetaData {
     }
 }
 
-impl Parse for GetterMetaData
-{
+impl Parse for GetterMetaData {
     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
         let lookahead = input.lookahead1();
         if lookahead.peek(kw::name) {
             let _: kw::name = input.parse()?;
             let _: Token![=] = input.parse()?;
             let name = input.parse()?;
-
             Ok(Self { name: Some(name), vis: None })
         } else if lookahead.peek(kw::vis) {
-            let _: kw::vis = input.parse()?;
-            let _: Token![=] = input.parse()?;
             let vis = input.parse()?;
-
             Ok(Self { name: None, vis: Some(vis) })
         } else {
             Err(lookahead.error())
