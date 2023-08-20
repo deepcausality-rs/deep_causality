@@ -173,8 +173,7 @@ impl FieldAttr {
             if result.is_some() {
                 panic!("Expected at most one #[new] attribute");
             }
-            for item in list
-                .parse_args_with(Punctuated::<syn::Meta, Token![,]>::parse_terminated)
+            for item in list.parse_args_with(Punctuated::<syn::Meta, Token![,]>::parse_terminated)
                 .unwrap_or_else(|err| panic!("Invalid #[new] attribute: {}", err))
             {
                 match item {
@@ -188,8 +187,7 @@ impl FieldAttr {
                     syn::Meta::NameValue(kv) => {
                         if let syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Str(ref s), .. }) = kv.value {
                             if kv.path.is_ident("value") {
-                                let tokens = lit_str_to_token_stream(s)
-                                    .unwrap_or_else(|_| panic!("Invalid expression in #[new]: `{}`", s.value()));
+                                let tokens = lit_str_to_token_stream(s).unwrap_or_else(|_| panic!("Invalid expression in #[new]: `{}`", s.value()));
                                 result = Some(FieldAttr::Value(tokens));
                             } else {
                                 panic!("Invalid #[new] attribute: #[new({} = ..)]", path_to_string(&kv.path));
@@ -276,8 +274,7 @@ impl<'a> FieldExt<'a> {
 }
 
 fn lit_str_to_token_stream(s: &syn::LitStr) -> Result<TokenStream2, proc_macro2::LexError> {
-    let code = s.value();
-    let ts: TokenStream2 = code.parse()?;
+    let ts: TokenStream2 = s.value().parse()?;
     Ok(set_ts_span_recursive(ts, &s.span()))
 }
 
@@ -298,11 +295,7 @@ fn to_snake_case(s: &str) -> String {
             .fold((None, None, String::new()), |(prev, ch, mut acc), next| {
                 if let Some(ch) = ch {
                     if let Some(prev) = prev {
-                        if ch.is_uppercase() && (
-                            prev.is_lowercase()
-                                || prev.is_numeric()
-                                || (prev.is_uppercase() && next.is_lowercase()))
-                        {
+                        if ch.is_uppercase() && (prev.is_lowercase() || prev.is_numeric() || (prev.is_uppercase() && next.is_lowercase())) {
                             acc.push('_');
                         }
                     }
