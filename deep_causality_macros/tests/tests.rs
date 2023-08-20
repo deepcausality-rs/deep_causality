@@ -25,6 +25,27 @@ fn test_derive_struct() {
     assert_eq!(*d.filled(), true);
 }
 
+#[derive(Getters, Constructor)]
+struct WebRef<'a> {
+    name: &'a str,
+    url: &'a str,
+    category: Option<&'a str>,
+}
+
+#[test]
+fn test_ref() {
+    let page = WebRef::new("GitHub", "https://github.com/", None);
+
+    assert_eq!(*page.name(), "GitHub");
+    assert!(!page.url().is_empty());
+    assert!(page.category().is_none());
+
+    let page = WebRef::new("Hacker News", "https://news.ycombinator.com//", Some("News"));
+    assert_eq!(*page.name(), "GitHub");
+    assert!(!page.url().is_empty());
+    assert!(page.category().is_some());
+}
+
 #[derive(Constructor)]
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub enum Scale {
