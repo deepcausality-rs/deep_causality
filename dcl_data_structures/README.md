@@ -249,8 +249,13 @@ shall be licensed under the MIT licence, without any additional terms or conditi
 
 This project is licensed under the [MIT license](LICENSE).
 
+## 👮️ Security
+
+For details about security, please read
+the [security policy](https://github.com/deepcausality-rs/deep_causality/blob/main/SECURITY.md).
+
 ## 💻 Author
 
-* Marvin Hansen, [Emet-Labs](https://emet-labs.com/).
+* [Marvin Hansen](https://github.com/marvin-hansen).
 * Github GPG key ID: 369D5A0B210D39BC
 * GPG Fingerprint: 4B18 F7B2 04B9 7A72 967E 663E 369D 5A0B 210D 39BC
