@@ -69,14 +69,12 @@ Traits:
 
 Extensions:
 
-* [Assumable Array](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/extensions/assumable/mod.rs)
-* [Assumable Map](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/extensions/assumable/mod.rs)
-* [Assumable Vector](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/extensions/assumable/mod.rs)
+* [Assumable collections](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/extensions/assumable/mod.rs)
 
 Types:
 
-* [Assumption](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/types/reasoning_types/assumable/assumption.rs)
-* [EvalFn](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/types/reasoning_types/assumable/mod.rs)
+* [Assumption](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/types/reasoning_types/assumption/mod.rs)
+* [EvalFn](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/types/alias_types/mod.rs)
 
 The assumption type explicitly encodes an assumption in a textual description and an eval function that takes a slice of
 numerical values as an argument and returns a boolean for which the assumption holds on the given data. Implementing the
@@ -99,13 +97,11 @@ Traits:
 
 Extensions:
 
-* [Observable Array](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/extensions/observable/mod.rs)
-* [Observable Map](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/extensions/observable/mod.rs)
-* [Observable Vector](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/extensions/observable/mod.rs)
+* [Observable collections](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/extensions/observable/mod.rs)
 
 Types:
 
-* [Observation](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/types/reasoning_types/observable/observation.rs)
+* [Observation](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/types/reasoning_types/mod.rs)
 
 An observation defines an observed value i.e., a measured metric and an observed effect.
 The idea is to hold the observation immutable and invariant after the observation.
@@ -135,13 +131,11 @@ Traits:
 
 Extensions:
 
-* [Inferable Array](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/extensions/inferable/mod.rs)
-* [Inferable Map](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/extensions/inferable/mod.rs)
-* [Inferable Vector](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/extensions/inferable/mod.rs)
+* [Inferable collections](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/extensions/inferable/mod.rs)
 
 Types:
 
-* [Inference](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/types/reasoning_types/inferable/inference.rs)
+* [Inference](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/types/reasoning_types/inference/mod.rs)
 
 Deep Causality addresses confounding via a third approach called conjoint delta. For a single observation, the conjoint
 delta refers to the difference between an expected and observed effect normalized to one. If the expected effect is
