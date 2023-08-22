@@ -3,7 +3,7 @@
 
 use deep_causality::prelude::*;
 
-use crate::utils::test_utils_graph;
+use crate::utils::{test_utils, test_utils_graph};
 
 #[test]
 fn test_explain_all_causes() {
@@ -50,6 +50,27 @@ fn test_explain_all_causes() {
 }
 
 #[test]
+fn test_explain_all_causes_error() {
+    let mut g = CausaloidGraph::new();
+    assert!(g.is_empty());
+
+    // Error: Graph is empty
+    let res = g.explain_all_causes();
+    assert!(res.is_err());
+
+    // Add causaloid A
+    let causaloid = test_utils::get_test_causaloid();
+    let idx_a = g.add_causaloid(causaloid);
+    let contains_a = g.contains_causaloid(idx_a);
+    assert!(contains_a);
+    assert!(!g.is_empty());
+
+    // Error: Graph does not contains root causaloid
+    let res = g.explain_all_causes();
+    assert!(res.is_err());
+}
+
+#[test]
 fn test_explain_subgraph_from_cause() {
     // Reasons over a multi-cause graph:
     //  root(0)
@@ -92,6 +113,29 @@ fn test_explain_subgraph_from_cause() {
     let res = g.explain_subgraph_from_cause(start_index).unwrap();
     let expected = format!("\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n");
     assert_eq!(res, expected);
+}
+
+#[test]
+fn test_explain_subgraph_from_cause_error() {
+    let mut g = CausaloidGraph::new();
+    assert!(g.is_empty());
+
+    let no_idx = 99;
+
+    // Error: Graph is empty
+    let res = g.explain_subgraph_from_cause(no_idx);
+    assert!(res.is_err());
+
+    // Add causaloid A
+    let causaloid = test_utils::get_test_causaloid();
+    let idx_a = g.add_causaloid(causaloid);
+    let contains_a = g.contains_causaloid(idx_a);
+    assert!(contains_a);
+    assert!(!g.is_empty());
+
+    // Error: No path
+    let res = g.explain_subgraph_from_cause(idx_a);
+    assert!(res.is_err());
 }
 
 

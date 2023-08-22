@@ -79,10 +79,6 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
             return Err(CausalityGraphError("Graph does not contains root causaloid".into()));
         }
 
-        if self.get_last_index().is_err() {
-            return Err(CausalityGraphError("Graph does not contains stop causaloid".into()));
-        }
-
         // These is safe as we have tested above that these exists
         let start_index = self.get_root_index().expect("Root causaloid not found.");
         let stop_index = self.get_last_index().expect("Last causaloid not found");
