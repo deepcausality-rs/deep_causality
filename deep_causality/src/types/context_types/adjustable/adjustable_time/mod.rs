@@ -1,14 +1,15 @@
-use deep_causality_macros::{Constructor, Getters};
-
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
+use deep_causality_macros::{Constructor, Getters};
+
 use crate::prelude::{Temporable, TimeScale};
 
 mod adjustable;
 mod display;
 mod identifiable;
 
-// Generic and non-generic time unit. This is unnecessary.
+// Generic and non-generic time unit field... This is unnecessary.
 
 #[derive(Getters, Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct AdjustableTime<T>

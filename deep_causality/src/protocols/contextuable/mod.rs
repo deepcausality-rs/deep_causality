@@ -6,11 +6,15 @@ use crate::prelude::{Contextoid, ContextoidType, Identifiable, RelationKind, Tim
 
 pub trait Datable: Identifiable {}
 
+// Make Spatial and Temporable trait generic
+// Issue #42
+// https://github.com/deepcausality-rs/deep_causality/issues/42
+
+// See also:
 // https://stackoverflow.com/questions/72523459/how-can-i-specify-trait-bounds-with-or-logic
 
 pub trait Temporable: Identifiable
 //  where T: Default + Add<T, Output=T> + Mul<T, Output=T> // ...
-
 {
     fn time_scale(&self) -> TimeScale;
     fn time_unit(&self) -> u32;
@@ -28,7 +32,6 @@ pub trait Spatial: Identifiable
 
 pub trait SpaceTemporal: Identifiable + Spatial + Temporable
 //  where T: Default + Add<T, Output=T> + Mul<T, Output=T> // ...
-
 {
     fn t(&self) -> u64; // returns 4th dimension, t
 }
