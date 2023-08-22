@@ -10,7 +10,6 @@ pub trait Datable: Identifiable {}
 pub trait Temporal: Identifiable {}
 
 
-// Specializes the `Temporal` trait.
 pub trait Temporable: Temporal
 {
     fn time_scale(&self) -> TimeScale;

@@ -179,19 +179,20 @@ impl<T> GraphLike<T> for UltraMatrixGraph<T>
         let mut result: Vec<usize> = Vec::new();
 
         // A* algorithm https://docs.rs/petgraph/latest/petgraph/algo/astar/fn.astar.html
-        let (_, path) = astar(
+        if let Some((_, path)) = astar(
             &self.graph,
             NodeIndex::new(start_index),
             |finish| finish == NodeIndex::new(stop_index),
             |e| *e.weight(),
             |_| 0)
-            .expect("Could not find shortest path");
-
-        for node in path {
-            result.push(node.index());
+        {
+            for node in path {
+                result.push(node.index());
+            }
+            Some(result)
+        } else {
+            None
         }
-
-        Some(result)
     }
 
     fn outgoing_edges(

@@ -64,8 +64,9 @@ fn test_reason_all_causes() {
     assert!(!all_true);
 
     let data = [0.99, 0.98, 0.97];
-    let res = g.reason_all_causes(&data, None).unwrap();
-    assert!(res);
+    let res = g.reason_all_causes(&data, None);
+    assert!(res.is_ok());
+    assert!(res.unwrap());
 
     let percent_active = g.percent_active();
     assert_eq!(percent_active, 100.0);
@@ -75,6 +76,19 @@ fn test_reason_all_causes() {
 
     let all_true = g.all_active();
     assert!(all_true);
+}
+
+#[test]
+fn test_reason_all_causes_error() {
+    // Need type annotation as nothing is added and thus no type inference.
+    let g: CausaloidGraph<BaseCausaloid> = CausaloidGraph::new();
+    // Double check no root node exists
+    assert!(!g.contains_root_causaloid());
+    assert!(g.is_empty());
+
+    let data = [0.99, 0.98, 0.97];
+    let res = g.reason_all_causes(&data, None);
+    assert!(res.is_err());
 }
 
 #[test]
@@ -133,11 +147,28 @@ fn test_reason_subgraph_from_cause() {
     assert!(!all_true);
 
     let data = [0.99, 0.98];
-    let res = g.reason_subgraph_from_cause(idx_a, &data, None).unwrap();
-    assert!(res);
+    let res = g.reason_subgraph_from_cause(idx_a, &data, None);
+    assert!(res.is_ok());
+    assert!(res.unwrap());
 
     let percent_active = g.percent_active();
     assert_eq!(percent_active, 50.0);
+}
+
+#[test]
+fn test_reason_subgraph_from_cause_error() {
+    // Need type annotation as nothing is added and thus no type inference.
+    let g: CausaloidGraph<BaseCausaloid> = CausaloidGraph::new();
+
+    // Double check graph is empty
+    assert!(!g.contains_root_causaloid());
+
+    let data = [0.99, 0.98];
+    let no_idx = 99;
+
+    // Error: Graph is empty
+    let res = g.reason_subgraph_from_cause(no_idx, &data, None);
+    assert!(res.is_err());
 }
 
 #[test]
@@ -162,13 +193,9 @@ fn test_reason_shortest_path_between_causes() {
 
     let start_index = 1;
     let stop_index = 6;
-    let res = g.reason_shortest_path_between_causes(
-        start_index,
-        stop_index,
-        &data,
-        None,
-    ).unwrap();
-    assert!(res);
+    let res = g.reason_shortest_path_between_causes(start_index, stop_index, &data, None);
+    assert!(res.is_ok());
+    assert!(res.unwrap());
 
     let all_true = g.all_active();
     assert!(!all_true);
@@ -180,13 +207,9 @@ fn test_reason_shortest_path_between_causes() {
 
     let start_index = 7;
     let stop_index = 9;
-    let res = g.reason_shortest_path_between_causes(
-        start_index,
-        stop_index,
-        &data,
-        None,
-    ).unwrap();
-    assert!(res);
+    let res = g.reason_shortest_path_between_causes(start_index, stop_index, &data, None);
+    assert!(res.is_ok());
+    assert!(res.unwrap());
 
     // Note, because root node was not evaluated,
     // only 9 out of 10 nodes or 90% are active.
@@ -202,13 +225,10 @@ fn test_reason_shortest_path_between_causes() {
     // Evaluate root node using shortest path between root and node 1
     let start_index = 0;
     let stop_index = 1;
-    let res = g.reason_shortest_path_between_causes(
-        start_index,
-        stop_index,
-        &data,
-        None,
-    ).unwrap();
-    assert!(res);
+    let res = g.reason_shortest_path_between_causes(start_index, stop_index, &data, None);
+    assert!(res.is_ok());
+    assert!(res.unwrap());
+
 
     // Now, all ten nodes or 100% are active.
     let number_true = g.number_active();
@@ -219,6 +239,53 @@ fn test_reason_shortest_path_between_causes() {
 
     let all_true = g.all_active();
     assert!(all_true);
+}
+
+#[test]
+fn test_reason_shortest_path_between_causes_error() {
+    let mut g = CausaloidGraph::new();
+    assert!(g.is_empty());
+
+    let obs = 0.99;
+
+    let start_idx = 21;
+    let stop_idx = 99;
+    // Error: Graph is empty
+    let res = g.reason_shortest_path_between_causes(start_idx, stop_idx, &[obs], None);
+    assert!(res.is_err());
+
+    let causaloid = test_utils::get_test_causaloid();
+    let index = g.add_causaloid(causaloid);
+    let contains = g.contains_causaloid(index);
+    assert!(contains);
+
+    // Graph is non-empty
+    let start_idx = 21;
+    let stop_idx = 99;
+    // Error: Graph does not contains start causaloid
+    let res = g.reason_shortest_path_between_causes(start_idx, stop_idx, &[obs], None);
+    assert!(res.is_err());
+
+    let start_idx = index;
+    let stop_idx = 99;
+    // Error: Graph does not contains stop causaloid
+    let res = g.reason_shortest_path_between_causes(start_idx, stop_idx, &[obs], None);
+    assert!(res.is_err());
+
+    // Error: Start and Stop node identical
+    let res = g.reason_shortest_path_between_causes(start_idx, start_idx, &[obs], None);
+    assert!(res.is_err());
+
+    let err_causaloid = test_utils::get_test_error_causaloid();
+    let err_index = g.add_causaloid(err_causaloid);
+    let contains = g.contains_causaloid(index);
+    assert!(contains);
+
+    let start_idx = index;
+
+    // Error: No path found
+    let res = g.reason_shortest_path_between_causes(start_idx, err_index, &[obs], None);
+    assert!(res.is_err());
 }
 
 #[test]
@@ -237,9 +304,9 @@ fn test_reason_single_cause() {
     assert!(!all_true);
 
     let obs = 0.99;
-    let res = g.reason_single_cause(index, &[obs]).unwrap();
-
-    assert!(res);
+    let res = g.reason_single_cause(index, &[obs]);
+    assert!(res.is_ok());
+    assert!(res.unwrap());
 
     let percent_active = g.percent_active();
     assert_eq!(percent_active, 100.0);
@@ -247,6 +314,43 @@ fn test_reason_single_cause() {
     let all_true = g.all_active();
     assert!(all_true);
 }
+
+#[test]
+fn test_reason_single_cause_err_empty_graph() {
+    let mut g = CausaloidGraph::new();
+    assert!(g.is_empty());
+
+    let index = 99;
+    let obs = 0.99;
+
+    // Error: Graph is empty
+    let res = g.reason_single_cause(index, &[obs]);
+    assert!(res.is_err());
+
+    let causaloid = test_utils::get_test_causaloid();
+    let index = g.add_causaloid(causaloid);
+    let contains = g.contains_causaloid(index);
+    assert!(contains);
+
+    // Error Data are empty
+    let res = g.reason_single_cause(index, &[]);
+    assert!(res.is_err());
+
+    // Error: Graph does not contains start causaloid
+    let res = g.reason_single_cause(99, &[obs]);
+    assert!(res.is_err());
+
+    let causaloid = test_utils::get_test_error_causaloid();
+    let index = g.add_causaloid(causaloid);
+    let contains = g.contains_causaloid(index);
+    assert!(contains);
+
+    // CausalityGraphError: Test error
+    let obs = 0.99;
+    let res = g.reason_single_cause(index, &[obs]);
+    assert!(res.is_err());
+}
+
 
 #[test]
 fn test_linear_graph() {
@@ -272,8 +376,9 @@ fn test_linear_graph() {
     // after full reasoning. Rather, only a certain number / percentage.
     // After the reasoning process, it's most sensible to use a percentage
     // of active nodes as threshold to decide whether to proceed further.
-    let res = g.reason_all_causes(&data, None).unwrap();
-    assert!(res);
+    let res = g.reason_all_causes(&data, None);
+    assert!(res.is_ok());
+    assert!(res.unwrap());
 
     // Verify that the graph is fully active.
     let all_true = g.all_active();
@@ -308,8 +413,9 @@ fn test_multi_cause_graph() {
     // Single reasoning
     let obs = 0.99;
     let index = 2;
-    let res = g.reason_single_cause(index, &[obs]).unwrap();
-    assert!(res);
+    let res = g.reason_single_cause(index, &[obs]);
+    assert!(res.is_ok());
+    assert!(res.unwrap());
 
     let total_nodes = 1.0_f64;
     let number_active = g.number_active();
@@ -317,8 +423,9 @@ fn test_multi_cause_graph() {
 
     // Partial reasoning from B (index 2)
     let index = 2;
-    let res = g.reason_subgraph_from_cause(index, &data, None).unwrap();
-    assert!(res);
+    let res = g.reason_subgraph_from_cause(index, &data, None);
+    assert!(res.is_ok());
+    assert!(res.unwrap());
 
     let total_nodes = 2.0;
     let number_active = g.number_active();
@@ -328,12 +435,13 @@ fn test_multi_cause_graph() {
     // Only reason over C (index 3)
     let obs = 0.02;
     let index = 3;
-    let res = g.reason_single_cause(index, &[obs]).unwrap();
+    let res = g.reason_single_cause(index, &[obs]);
+    assert!(res.is_ok());
 
     // we expect the result to be false because the
     // observation of 0.02 is well below the threshold
     // and thus node is not active anymore.
-    assert!(!res);
+    assert!(!res.unwrap());
 
     // We expect one less node active because C was deactivated.
     // Hence only 1 active node.
@@ -351,8 +459,9 @@ fn test_multi_cause_graph() {
     let all_true = g.all_active();
     assert!(!all_true);
 
-    let res = g.reason_all_causes(&data, None).unwrap();
-    assert!(res);
+    let res = g.reason_all_causes(&data, None);
+    assert!(res.is_ok());
+    assert!(res.unwrap());
 
     // Verify that the graph is fully active.
     let all_true = g.all_active();
@@ -391,8 +500,9 @@ fn test_multi_layer_cause_graph() {
     // Only reason over C
     let obs = 0.99;
     let index = 3;
-    let res = g.reason_single_cause(index, &[obs]).unwrap();
-    assert!(res);
+    let res = g.reason_single_cause(index, &[obs]);
+    assert!(res.is_ok());
+    assert!(res.unwrap());
 
     let total_nodes = 1.0_f64;
     let number_active = g.number_active();
@@ -401,8 +511,9 @@ fn test_multi_layer_cause_graph() {
     // Partial reasoning
     // Start at C, and reason over C, F, G
     let index = 3;
-    let res = g.reason_subgraph_from_cause(index, &data, None).unwrap();
-    assert!(res);
+    let res = g.reason_subgraph_from_cause(index, &data, None);
+    assert!(res.is_ok());
+    assert!(res.unwrap());
 
     // We expect 3 active nodes because C,F, and G
     // must be active after reasoning.
@@ -413,8 +524,9 @@ fn test_multi_layer_cause_graph() {
     // Partial reasoning
     // Start at B, and reason over B , E, and F
     let index = 2;
-    let res = g.reason_subgraph_from_cause(index, &data, None).unwrap();
-    assert!(res);
+    let res = g.reason_subgraph_from_cause(index, &data, None);
+    assert!(res.is_ok());
+    assert!(res.unwrap());
 
     // We expect 2 active nodes because F was already activated
     // during the previous reasoning so only B and E will be active in
@@ -428,12 +540,13 @@ fn test_multi_layer_cause_graph() {
     // Only reason over G (index 7)
     let obs = 0.02;
     let index = 7;
-    let res = g.reason_single_cause(index, &[obs]).unwrap();
+    let res = g.reason_single_cause(index, &[obs]);
+    assert!(res.is_ok());
 
     // we expect the result to be false because the
     // observation of 0.02 is well below the threshold
     // and thus node is not active anymore.
-    assert!(!res);
+    assert!(!res.unwrap());
 
     // We expect one less node active because G was deactivated.
     // Hence only 4 active nodes.
@@ -448,8 +561,9 @@ fn test_multi_layer_cause_graph() {
     // after full reasoning. Rather, only a certain number / percentage.
     // After the reasoning process, it's most sensible to use a percentage
     // of active nodes as threshold to decide whether to proceed further.
-    let res = g.reason_all_causes(&data, None).unwrap();
-    assert!(res);
+    let res = g.reason_all_causes(&data, None);
+    assert!(res.is_ok());
+    assert!(res.unwrap());
 
     // Verify that the graph is fully active.
     let total_nodes = g.number_nodes() as f64;
@@ -487,8 +601,9 @@ fn test_left_imbalanced_cause_graph() {
     // Only reason over C
     let obs = 0.99;
     let index = 3;
-    let res = g.reason_single_cause(index, &[obs]).unwrap();
-    assert!(res);
+    let res = g.reason_single_cause(index, &[obs]);
+    assert!(res.is_ok());
+    assert!(res.unwrap());
 
     let total_nodes = 1.0_f64;
     let number_active = g.number_active();
@@ -497,8 +612,9 @@ fn test_left_imbalanced_cause_graph() {
     // Partial reasoning
     // Start at A, and reason over A, D, E
     let index = 1;
-    let res = g.reason_subgraph_from_cause(index, &data, None).unwrap();
-    assert!(res);
+    let res = g.reason_subgraph_from_cause(index, &data, None);
+    assert!(res.is_ok());
+    assert!(res.unwrap());
 
     // We expect 4 active nodes because
     // single reasoning activated C
@@ -511,8 +627,9 @@ fn test_left_imbalanced_cause_graph() {
     // Start at A, and stop at D
     let start_index = 1;
     let stop_index = 4;
-    let res = g.reason_shortest_path_between_causes(start_index, stop_index, &data, None).unwrap();
-    assert!(res);
+    let res = g.reason_shortest_path_between_causes(start_index, stop_index, &data, None);
+    assert!(res.is_ok());
+    assert!(res.unwrap());
 
     // We expect 4 active nodes because node A and D were already active before
     let total_nodes = 4.0_f64;
@@ -523,12 +640,13 @@ fn test_left_imbalanced_cause_graph() {
     // Only reason over A (index 1)
     let obs = 0.02;
     let index = 1;
-    let res = g.reason_single_cause(index, &[obs]).unwrap();
+    let res = g.reason_single_cause(index, &[obs]);
+    assert!(res.is_ok());
 
     // we expect the result to be false because the
     // observation of 0.02 is well below the threshold
     // and thus node is not active anymore.
-    assert!(!res);
+    assert!(!res.unwrap());
 
     // We expect one less node active because A was deactivated.
     // Hence only 3 active nodes.
@@ -543,8 +661,9 @@ fn test_left_imbalanced_cause_graph() {
     // after full reasoning. Rather, only a certain number / percentage.
     // After the reasoning process, it's most sensible to use a percentage
     // of active nodes as threshold to decide whether to proceed further.
-    let res = g.reason_all_causes(&data, None).unwrap();
-    assert!(res);
+    let res = g.reason_all_causes(&data, None);
+    assert!(res.is_ok());
+    assert!(res.unwrap());
 
     // Verify that the graph is fully active.
     let percent_active = g.percent_active();
@@ -583,8 +702,9 @@ fn test_right_imbalanced_cause_graph() {
     // Only reason over C
     let obs = 0.99;
     let index = 3;
-    let res = g.reason_single_cause(index, &[obs]).unwrap();
-    assert!(res);
+    let res = g.reason_single_cause(index, &[obs]);
+    assert!(res.is_ok());
+    assert!(res.unwrap());
 
     let total_nodes = 1.0_f64;
     let number_active = g.number_active();
@@ -593,8 +713,9 @@ fn test_right_imbalanced_cause_graph() {
     // Partial reasoning
     // Start at C, and reason over C, F, G
     let index = 3;
-    let res = g.reason_subgraph_from_cause(index, &data, None).unwrap();
-    assert!(res);
+    let res = g.reason_subgraph_from_cause(index, &data, None);
+    assert!(res.is_ok());
+    assert!(res.unwrap());
 
     // We expect 3 active nodes because
     // single reasoning activated C
@@ -609,11 +730,13 @@ fn test_right_imbalanced_cause_graph() {
     // Only reason over C (index 2)
     let obs = 0.02;
     let index = 2;
-    let res = g.reason_single_cause(index, &[obs]).unwrap();
+    let res = g.reason_single_cause(index, &[obs]);
+    assert!(res.is_ok());
 
     // we expect the result to be false because the
     // observation of 0.02 is well below the threshold
     // and thus the node remains inactive.
+    let res = res.unwrap();
     assert!(!res);
 
     // We expect the same number of nodes as before
@@ -630,8 +753,9 @@ fn test_right_imbalanced_cause_graph() {
     // after full reasoning. Rather, only a certain number / percentage.
     // After the reasoning process, it's most sensible to use a percentage
     // of active nodes as threshold to decide whether to proceed further.
-    let res = g.reason_all_causes(&data, None).unwrap();
-    assert!(res);
+    let res = g.reason_all_causes(&data, None);
+    assert!(res.is_ok());
+    assert!(res.unwrap());
 
     // Verify that the graph is fully active.
     let all_true = g.all_active();

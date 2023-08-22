@@ -6,7 +6,9 @@
 use std::error::Error;
 use std::fmt;
 
-#[derive(Debug)]
+use deep_causality_macros::Constructor;
+
+#[derive(Constructor, Debug)]
 pub struct UltraGraphError(pub String);
 
 impl Error for UltraGraphError {}

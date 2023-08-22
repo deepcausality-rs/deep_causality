@@ -15,6 +15,118 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
     where
         T: Causable + PartialEq,
 {
+    /// Reason over single node given by its index
+    /// index: NodeIndex - index of the node
+    /// Returns Result either true or false in case of successful reasoning or
+    /// a CausalityGraphError in case of failure.
+    fn reason_single_cause(
+        &self,
+        index: usize,
+        data: &[NumericalValue],
+    )
+        -> Result<bool, CausalityGraphError>
+    {
+        if !self.contains_causaloid(index) {
+            return Err(CausalityGraphError("Graph does not contain causaloid".to_string()));
+        }
+
+        if data.is_empty() {
+            return Err(CausalityGraphError("Data are empty (len ==0).".into()));
+        }
+
+        let causaloid = self.get_causaloid(index).expect("Failed to get causaloid");
+
+        if data.len() == 1 {
+            let obs = data.first().expect("Failed to get data");
+            return match causaloid.verify_single_cause(obs) {
+                Ok(res) => Ok(res),
+                Err(e) => Err(CausalityGraphError(e.0)),
+            };
+        }
+
+        if data.len() > 1 {
+            for obs in data.iter() {
+                if !causaloid.verify_single_cause(obs).expect("Failed to verify data") {
+                    return Ok(false);
+                }
+            }
+        }
+
+        Ok(true)
+    }
+
+
+    /// Reason over the entire graph.
+    /// data: &[NumericalValue] - data applied to the subgraph
+    /// Optional: data_index - provide when the data have a different index sorting than
+    /// the causaloids.
+    ///
+    /// Conventionally, the index of the causaloid is matched to the
+    /// index of the data so that data at index i get applied to causaloid i.
+    /// If, for any reason, the data use a different index, the the optional data_index
+    /// is used to match a causaloid i to its data at a (different) index n.
+    ///
+    /// Returns Result either true or false in case of successful reasoning or
+    /// a CausalityGraphError in case of failure.
+    fn reason_all_causes(
+        &self,
+        data: &[NumericalValue],
+        data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>,
+    )
+        -> Result<bool, CausalityGraphError>
+    {
+        if !self.contains_root_causaloid() {
+            return Err(CausalityGraphError("Graph does not contains root causaloid".into()));
+        }
+
+        if self.get_last_index().is_err() {
+            return Err(CausalityGraphError("Graph does not contains stop causaloid".into()));
+        }
+
+        // These is safe as we have tested above that these exists
+        let start_index = self.get_root_index().expect("Root causaloid not found.");
+        let stop_index = self.get_last_index().expect("Last causaloid not found");
+
+        match self.reason_from_to_cause(start_index, stop_index, data, data_index) {
+            Ok(result) => Ok(result),
+            Err(e) => Err(e)
+        }
+    }
+
+    /// Reason over a subgraph starting from a given node index.
+    ///
+    /// start_index: NodeIndex - index of the starting node
+    /// data: &[NumericalValue] - data applied to the subgraph
+    /// Optional: data_index - provide when the data have a different index sorting than
+    /// the causaloids.
+    ///
+    /// Conventionally, the index of the causaloid is matched to the
+    /// index of the data so that data at index i get applied to causaloid i.
+    /// If, for any reason, the data use a different index, the the optional data_index
+    /// is used to match a causaloid i to its data at a (different) index n.
+    ///
+    /// Returns Result either true or false in case of successful reasoning or
+    /// a CausalityGraphError in case of failure.
+    fn reason_subgraph_from_cause(
+        &self,
+        start_index: usize,
+        data: &[NumericalValue],
+        data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>,
+    )
+        -> Result<bool, CausalityGraphError>
+    {
+        if self.get_last_index().is_err() {
+            return Err(CausalityGraphError("Graph does not contains stop causaloid".into()));
+        }
+
+        let stop_index = self.get_last_index().expect("Last causaloid not found");
+
+        match self.reason_from_to_cause(start_index, stop_index, data, data_index) {
+            Ok(result) => Ok(result),
+            Err(e) => Err(e)
+        }
+    }
+
     // Algo inspired by simple path https://github.com/petgraph/petgraph/blob/master/src/algo/simple_paths.rs
     fn reason_from_to_cause(
         &self,
@@ -25,33 +137,28 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
     )
         -> Result<bool, CausalityGraphError>
     {
-        if self.is_empty()
-        {
+        if self.is_empty() {
             return Err(CausalityGraphError("Graph is empty".to_string()));
         }
 
-        if !self.contains_causaloid(start_index)
-        {
-            return Err(CausalityGraphError("Graph does not contains start causaloid".into()));
+        if data.is_empty() {
+            return Err(CausalityGraphError("Data are empty (len ==0).".into()));
         }
 
-        if data.is_empty()
-        {
-            return Err(CausalityGraphError("Data are empty (len ==0).".into()));
+        if !self.contains_causaloid(start_index) {
+            return Err(CausalityGraphError("Graph does not contains start causaloid".into()));
         }
 
         let cause = self.get_causaloid(start_index).expect("Failed to get causaloid");
 
         let obs = graph_reasoning_utils::get_obs(cause.id(), data, &data_index);
 
-        let res = match cause.verify_single_cause(&obs)
-        {
+        let res = match cause.verify_single_cause(&obs) {
             Ok(res) => res,
             Err(e) => return Err(CausalityGraphError(e.0)),
         };
 
-        if !res
-        {
+        if !res {
             return Ok(false);
         }
 
@@ -103,70 +210,6 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
         Ok(true)
     }
 
-    /// Reason over the entire graph.
-    /// data: &[NumericalValue] - data applied to the subgraph
-    /// Optional: data_index - provide when the data have a different index sorting than
-    /// the causaloids.
-    ///
-    /// Conventionally, the index of the causaloid is matched to the
-    /// index of the data so that data at index i get applied to causaloid i.
-    /// If, for any reason, the data use a different index, the the optional data_index
-    /// is used to match a causaloid i to its data at a (different) index n.
-    ///
-    /// Returns Result either true or false in case of successful reasoning or
-    /// a CausalityGraphError in case of failure.
-    fn reason_all_causes(
-        &self,
-        data: &[NumericalValue],
-        data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>,
-    )
-        -> Result<bool, CausalityGraphError>
-    {
-        if self.contains_root_causaloid()
-        {
-            let root_index = self.get_root_index().expect("Root causaloid not found.");
-            let start_index = root_index;
-
-            let stop_index = self.get_last_index().unwrap();
-
-            match self.reason_from_to_cause(start_index, stop_index, data, data_index) {
-                Ok(result) => Ok(result),
-                Err(e) => Err(e)
-            }
-        } else {
-            Err(CausalityGraphError("Graph does not contains root causaloid".into()))
-        }
-    }
-
-    /// Reason over a subgraph starting from a given node index.
-    ///
-    /// start_index: NodeIndex - index of the starting node
-    /// data: &[NumericalValue] - data applied to the subgraph
-    /// Optional: data_index - provide when the data have a different index sorting than
-    /// the causaloids.
-    ///
-    /// Conventionally, the index of the causaloid is matched to the
-    /// index of the data so that data at index i get applied to causaloid i.
-    /// If, for any reason, the data use a different index, the the optional data_index
-    /// is used to match a causaloid i to its data at a (different) index n.
-    ///
-    /// Returns Result either true or false in case of successful reasoning or
-    /// a CausalityGraphError in case of failure.
-    fn reason_subgraph_from_cause(
-        &self,
-        start_index: usize,
-        data: &[NumericalValue],
-        data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>,
-    )
-        -> Result<bool, CausalityGraphError>
-    {
-        let stop_index = self.get_last_index().unwrap();
-        match self.reason_from_to_cause(start_index, stop_index, data, data_index) {
-            Ok(result) => Ok(result),
-            Err(e) => Err(e)
-        }
-    }
-
     /// Reason over the shortest subgraph spanning between a start and stop cause.
     ///
     /// start_index: NodeIndex - index of the start cause
@@ -183,28 +226,6 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
     /// Returns Result either true or false in case of successful reasoning or
     /// a CausalityGraphError in case of failure.
     fn reason_shortest_path_between_causes(
-        &self,
-        start_index: usize,
-        stop_index: usize,
-        data: &[NumericalValue],
-        data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>,
-    )
-        -> Result<bool, CausalityGraphError>
-    {
-
-        match self.reason_shortest_path_from_to_cause(
-            start_index,
-            stop_index,
-            data,
-            data_index)
-        {
-            Ok(result) => Ok(result),
-            Err(e) => Err(e)
-        }
-    }
-
-
-    fn reason_shortest_path_from_to_cause(
         &self,
         start_index: usize,
         stop_index: usize,
@@ -249,36 +270,5 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
         }
 
         Ok(true)
-    }
-
-    /// Reason over single node given by its index
-    /// index: NodeIndex - index of the node
-    /// Returns Result either true or false in case of successful reasoning or
-    /// a CausalityGraphError in case of failure.
-    fn reason_single_cause(
-        &self,
-        index: usize,
-        data: &[NumericalValue],
-    )
-        -> Result<bool, CausalityGraphError>
-    {
-        if self.is_empty()
-        {
-            return Err(CausalityGraphError("Graph is empty".to_string()));
-        }
-
-        if !self.contains_causaloid(index)
-        {
-            return Err(CausalityGraphError("Graph does not contain causaloid".to_string()));
-        }
-
-        if data.is_empty()
-        {
-            return Err(CausalityGraphError("Data are empty (len ==0).".into()));
-        }
-
-        let causaloid = self.get_causaloid(index).expect("Failed to get causaloid");
-
-        graph_reasoning_utils::verify_cause(causaloid, data)
     }
 }

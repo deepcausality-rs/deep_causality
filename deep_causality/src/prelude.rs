@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+//
 pub use crate::errors::*;
 //
-// Extensions
+// Type Extensions
+//
 pub use crate::extensions::assumable::*;
 pub use crate::extensions::causable::*;
 pub use crate::extensions::inferable::*;
 pub use crate::extensions::observable::*;
 //
 // Protocols
+//
+// Adjustable protocol
 pub use crate::protocols::adjustable::Adjustable;
 // Assumeable protocols
 pub use crate::protocols::assumable::Assumable;
@@ -28,9 +32,9 @@ pub use crate::protocols::contextuable::SpaceTemporal;
 pub use crate::protocols::contextuable::Spatial;
 pub use crate::protocols::contextuable::Temporable;
 pub use crate::protocols::contextuable::Temporal;
-// Identifiable protocols
+// Identifiable protocol
 pub use crate::protocols::identifiable::Identifiable;
-// Inferable protocols
+// Inferable protocol
 pub use crate::protocols::inferable::Inferable;
 pub use crate::protocols::inferable::InferableReasoning;
 // Observable protocols

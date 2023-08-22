@@ -11,7 +11,7 @@ pub trait CausableGraph<T>
     where
         T: Causable + PartialEq,
 {
-    // This method enables the default implementation of the
+    // The get_graph method enables the default implementation of the
     // CausableGraphExplaining and CausableGraphReasoning traits.
     fn get_graph(&self) -> &CausalGraph<T>;
     // Root Node
@@ -51,6 +51,10 @@ pub trait CausableGraph<T>
     )
         -> Result<Vec<usize>, CausalityGraphError>
     {
+        if start_index == stop_index {
+            return Err(CausalityGraphError("Start and Stop node identical: No shortest path possible".into()));
+        }
+
         return match self.get_graph().shortest_path(start_index, stop_index) {
             Some(path) => Ok(path),
             None => Err(CausalityGraphError("No path found".to_string())),

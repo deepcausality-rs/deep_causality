@@ -15,6 +15,12 @@ keywords = ["data-structures"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 
+[dependencies.deep_causality_macros]
+path = "../deep_causality_macros"
+version = "^0.4"
+
+
+
 [dependencies]
 ahash = "0.8.3"
 petgraph = "0.6.3"

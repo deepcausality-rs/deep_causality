@@ -70,6 +70,19 @@ pub fn get_test_causaloid<'l>()
     Causaloid::new(id, causal_fn, description)
 }
 
+pub fn get_test_error_causaloid<'l>()
+    -> Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>
+{
+    let id: IdentificationValue = 1;
+    let description = "tests whether data exceeds threshold of 0.55";
+
+    fn causal_fn(_obs: NumericalValue) -> Result<bool, CausalityError> {
+        return Err(CausalityError("Test error".into()));
+    }
+
+    Causaloid::new(id, causal_fn, description)
+}
+
 pub fn get_test_context()
     -> Context<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>
 {
