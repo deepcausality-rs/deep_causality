@@ -4,7 +4,7 @@ use std::fmt::Display;
 
 use deep_causality_macros::Constructor;
 
-use crate::prelude::{Identifiable, Temporable, Temporal, TimeScale};
+use crate::prelude::{Identifiable, Temporable, TimeScale};
 
 #[derive(Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Tempoid
@@ -20,8 +20,6 @@ impl Identifiable for Tempoid {
         self.id
     }
 }
-
-impl Temporal for Tempoid {}
 
 impl Temporable for Tempoid
 {

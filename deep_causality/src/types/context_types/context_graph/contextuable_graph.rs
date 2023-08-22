@@ -7,7 +7,7 @@ impl<'l, D, S, T, ST> ContextuableGraph<'l, D, S, T, ST> for Context<'l, D, S, T
     where
         D: Datable,
         S: Spatial,
-        T: Temporal,
+        T: Temporable,
         ST: SpaceTemporal,
 {
     /// Ads a new Contextoid to the context.

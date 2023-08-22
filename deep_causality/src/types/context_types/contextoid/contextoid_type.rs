@@ -22,7 +22,7 @@ pub enum ContextoidType<D, S, T, ST>
     where
         D: Datable,
         S: Spatial,
-        T: Temporal,
+        T: Temporable,
         ST: SpaceTemporal,
 {
     Datoid(D),
@@ -36,7 +36,7 @@ impl<D, S, T, ST> ContextoidType<D, S, T, ST>
     where
         D: Datable,
         S: Spatial,
-        T: Temporal,
+        T: Temporable,
         ST: SpaceTemporal,
 
 {
@@ -82,7 +82,7 @@ impl<D, S, T, ST> Display for ContextoidType<D, S, T, ST>
     where
         D: Datable + Display,
         S: Spatial + Display,
-        T: Temporal + Display,
+        T: Temporable + Display,
         ST: SpaceTemporal + Display,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

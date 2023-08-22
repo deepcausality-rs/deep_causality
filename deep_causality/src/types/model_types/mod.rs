@@ -2,14 +2,14 @@
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 use deep_causality_macros::{Constructor, Getters};
 
-use crate::prelude::{Assumption, Causaloid, Context, Datable, Identifiable, SpaceTemporal, Spatial, Temporal};
+use crate::prelude::{Assumption, Causaloid, Context, Datable, Identifiable, SpaceTemporal, Spatial, Temporable};
 
 #[derive(Getters, Constructor, Clone, Debug)]
 pub struct Model<'l, D, S, T, ST>
     where
         D: Datable + Clone + Copy,
         S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
+        T: Temporable + Clone + Copy,
         ST: SpaceTemporal + Clone + Copy,
 {
     #[getter(name = model_id)] // Rename ID getter to prevent conflict impl with identifiable
@@ -25,7 +25,7 @@ impl<'l, D, S, T, ST> Identifiable for Model<'l, D, S, T, ST>
     where
         D: Datable + Clone + Copy,
         S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
+        T: Temporable + Clone + Copy,
         ST: SpaceTemporal + Clone + Copy,
 {
     fn id(&self) -> u64 { self.id }

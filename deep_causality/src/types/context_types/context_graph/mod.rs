@@ -5,7 +5,7 @@ use ultragraph::prelude::*;
 
 use crate::prelude::{
     ContextIndexError, Contextoid, ContextuableGraph, Datable,
-    RelationKind, SpaceTemporal, Spatial, Temporal,
+    RelationKind, SpaceTemporal, Spatial, Temporable,
 };
 
 mod debug;
@@ -16,7 +16,7 @@ pub struct Context<'l, D, S, T, ST>
     where
         D: Datable,
         S: Spatial,
-        T: Temporal,
+        T: Temporable,
         ST: SpaceTemporal,
 {
     id: u64,
@@ -29,7 +29,7 @@ impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
     where
         D: Datable,
         S: Spatial,
-        T: Temporal,
+        T: Temporable,
         ST: SpaceTemporal,
 {
     /// Creates a new context with the given node capacity.

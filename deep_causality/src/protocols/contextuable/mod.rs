@@ -6,11 +6,11 @@ use crate::prelude::{Contextoid, ContextoidType, Identifiable, RelationKind, Tim
 
 pub trait Datable: Identifiable {}
 
+// https://stackoverflow.com/questions/72523459/how-can-i-specify-trait-bounds-with-or-logic
 
-pub trait Temporal: Identifiable {}
+pub trait Temporable: Identifiable
+//  where T: Default + Add<T, Output=T> + Mul<T, Output=T> // ...
 
-
-pub trait Temporable: Temporal
 {
     fn time_scale(&self) -> TimeScale;
     fn time_unit(&self) -> u32;
@@ -18,6 +18,7 @@ pub trait Temporable: Temporal
 
 
 pub trait Spatial: Identifiable
+//  where T: Default + Add<T, Output=T> + Mul<T, Output=T> // ...
 {
     fn x(&self) -> i64;
     fn y(&self) -> i64;
@@ -25,7 +26,9 @@ pub trait Spatial: Identifiable
 }
 
 
-pub trait SpaceTemporal: Identifiable + Spatial + Temporal
+pub trait SpaceTemporal: Identifiable + Spatial + Temporable
+//  where T: Default + Add<T, Output=T> + Mul<T, Output=T> // ...
+
 {
     fn t(&self) -> u64; // returns 4th dimension, t
 }
@@ -35,7 +38,7 @@ pub trait Contextuable<D, S, T, ST>: Identifiable
         D: Datable,
         S: Spatial,
         ST: SpaceTemporal,
-        T: Temporal
+        T: Temporable
 {
     fn vertex_type(&self) -> &ContextoidType<D, S, T, ST>;
 }
@@ -45,7 +48,7 @@ pub trait ContextuableGraph<'l, D, S, T, ST>
         D: Datable,
         S: Spatial,
         ST: SpaceTemporal,
-        T: Temporal
+        T: Temporable
 {
     fn add_node(&mut self, value: Contextoid<D, S, T, ST>) -> usize;
     fn contains_node(&self, index: usize) -> bool;

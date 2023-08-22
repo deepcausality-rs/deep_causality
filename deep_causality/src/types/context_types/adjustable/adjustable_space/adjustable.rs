@@ -4,6 +4,7 @@
 use std::ops::Add;
 
 use dcl_data_structures::grid_type::ArrayGrid;
+use dcl_data_structures::prelude::PointIndex;
 
 use crate::prelude::{Adjustable, AdjustmentError, UpdateError};
 
@@ -14,38 +15,38 @@ impl<T> Adjustable<T> for AdjustableSpace<T>
 {
     fn update<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,
-        _array_grid: &ArrayGrid<T, W, H, D, C>,
+        array_grid: &ArrayGrid<T, W, H, D, C>,
     )
         -> Result<(), UpdateError>
     {
 
-        // // Create a 3D PointIndex for each of the updated x,y,z coordinates
-        // let p1 = PointIndex::new3d(0, 0, 0);
-        // let p2 = PointIndex::new3d(0, 0, 1);
-        // let p3 = PointIndex::new3d(0, 0, 2);
-        //
-        // // get the data at the index position
-        // let new_x = array_grid.get(p1);
-        // let new_y = array_grid.get(p2);
-        // let new_z = array_grid.get(p3);
-        //
-        // // Check if the new data are okay to update
-        // if new_x == 0 {
-        //     return Err(UpdateError("Update failed, new X data is ZERO".into()));
-        // }
-        //
-        // if new_y == 0 {
-        //     return Err(UpdateError("Update failed, new Y data is ZERO".into()));
-        // }
-        //
-        // if new_z == 0 {
-        //     return Err(UpdateError("Update failed, new Z data is ZERO".into()));
-        // }
-        //
-        // // Update the internal data
-        // self.x = new_x;
-        // self.y = new_y;
-        // self.z = new_z;
+        // Create a 3D PointIndex for each of the updated x,y,z coordinates
+        let p1 = PointIndex::new3d(0, 0, 0);
+        let p2 = PointIndex::new3d(0, 0, 1);
+        let p3 = PointIndex::new3d(0, 0, 2);
+
+        // get the data at the index position
+        let new_x = array_grid.get(p1);
+        let new_y = array_grid.get(p2);
+        let new_z = array_grid.get(p3);
+
+        // Check if the new data are okay to update
+        if new_x == 0 {
+            return Err(UpdateError("Update failed, new X data is ZERO".into()));
+        }
+
+        if new_y == 0 {
+            return Err(UpdateError("Update failed, new Y data is ZERO".into()));
+        }
+
+        if new_z == 0 {
+            return Err(UpdateError("Update failed, new Z data is ZERO".into()));
+        }
+
+        // Update the internal data
+        self.x = new_x;
+        self.y = new_y;
+        self.z = new_z;
 
         Ok(())
     }

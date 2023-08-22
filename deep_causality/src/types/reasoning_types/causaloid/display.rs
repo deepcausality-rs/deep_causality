@@ -7,7 +7,7 @@ impl<'l, D, S, T, ST> Display for Causaloid<'l, D, S, T, ST>
     where
         D: Datable + Clone,
         S: Spatial + Clone,
-        T: Temporal + Clone,
+        T: Temporable + Clone,
         ST: SpaceTemporal + Clone,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -20,7 +20,7 @@ impl<'l, D, S, T, ST> Debug for Causaloid<'l, D, S, T, ST>
     where
         D: Datable + Clone,
         S: Spatial + Clone,
-        T: Temporal + Clone,
+        T: Temporable + Clone,
         ST: SpaceTemporal + Clone,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -33,7 +33,7 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     where
         D: Datable + Clone,
         S: Spatial + Clone,
-        T: Temporal + Clone,
+        T: Temporable + Clone,
         ST: SpaceTemporal + Clone,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result

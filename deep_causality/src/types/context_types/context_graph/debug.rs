@@ -2,13 +2,13 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 use std::fmt::{Debug, Display, Formatter};
 
-use crate::prelude::{Context, ContextuableGraph, Datable, SpaceTemporal, Spatial, Temporal};
+use crate::prelude::{Context, ContextuableGraph, Datable, SpaceTemporal, Spatial, Temporable};
 
 impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
     where
         D: Datable,
         S: Spatial,
-        T: Temporal,
+        T: Temporable,
         ST: SpaceTemporal,
 {
     fn format(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -26,7 +26,7 @@ impl<'l, D, S, T, ST> Debug for Context<'l, D, S, T, ST>
     where
         D: Datable,
         S: Spatial,
-        T: Temporal,
+        T: Temporable,
         ST: SpaceTemporal,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -38,7 +38,7 @@ impl<'l, D, S, T, ST> Display for Context<'l, D, S, T, ST>
     where
         D: Datable,
         S: Spatial,
-        T: Temporal,
+        T: Temporable,
         ST: SpaceTemporal,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

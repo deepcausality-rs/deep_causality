@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter};
 
 use deep_causality_macros::Constructor;
 
-use crate::prelude::{Identifiable, SpaceTemporal, Spatial, Temporable, Temporal, TimeScale};
+use crate::prelude::{Identifiable, SpaceTemporal, Spatial, Temporable, TimeScale};
 
 #[derive(Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct SpaceTempoid {
@@ -22,9 +22,6 @@ impl Identifiable for SpaceTempoid
         self.id
     }
 }
-
-impl Temporal for SpaceTempoid {}
-
 
 impl Temporable for SpaceTempoid
 {

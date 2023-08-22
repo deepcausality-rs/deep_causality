@@ -31,7 +31,6 @@ pub use crate::protocols::contextuable::Datable;
 pub use crate::protocols::contextuable::SpaceTemporal;
 pub use crate::protocols::contextuable::Spatial;
 pub use crate::protocols::contextuable::Temporable;
-pub use crate::protocols::contextuable::Temporal;
 // Identifiable protocol
 pub use crate::protocols::identifiable::Identifiable;
 // Inferable protocol

@@ -5,7 +5,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 
 use crate::errors::{ActionError, UpdateError};
-use crate::prelude::{CausalAction, CausalState, Datable, NumericalValue, SpaceTemporal, Spatial, Temporal};
+use crate::prelude::{CausalAction, CausalState, Datable, NumericalValue, SpaceTemporal, Spatial, Temporable};
 
 pub mod csm_action;
 pub mod csm_state;
@@ -17,7 +17,7 @@ pub struct CSM<'l, D, S, T, ST>
     where
         D: Datable + Clone + Copy,
         S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
+        T: Temporable + Clone + Copy,
         ST: SpaceTemporal + Clone + Copy,
 {
     state_actions: RefCell<CSMMap<'l, D, S, T, ST>>,
@@ -27,7 +27,7 @@ impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
     where
         D: Datable + Clone + Copy,
         S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
+        T: Temporable + Clone + Copy,
         ST: SpaceTemporal + Clone + Copy,
 {
     /// Constructs a new CSM.
@@ -60,7 +60,7 @@ impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
     where
         D: Datable + Clone + Copy,
         S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
+        T: Temporable + Clone + Copy,
         ST: SpaceTemporal + Clone + Copy,
 {
     /// Inserts a new state action at the index position idx.
@@ -111,7 +111,7 @@ impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
     where
         D: Datable + Clone + Copy,
         S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
+        T: Temporable + Clone + Copy,
         ST: SpaceTemporal + Clone + Copy,
 {
     /// Evaluates a single causal state at the index position idx.
@@ -182,7 +182,7 @@ impl<'l, D, S, T, ST> CSM<'l, D, S, T, ST>
     where
         D: Datable + Clone + Copy,
         S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
+        T: Temporable + Clone + Copy,
         ST: SpaceTemporal + Clone + Copy,
 {
     /// Evaluates all causal states in the CSM.

@@ -5,14 +5,14 @@ use std::fmt::{Debug, Display, Formatter};
 
 use deep_causality_macros::{Constructor, Getters};
 
-use crate::prelude::{Causable, CausalityError, Causaloid, Datable, NumericalValue, SpaceTemporal, Spatial, Temporal};
+use crate::prelude::{Causable, CausalityError, Causaloid, Datable, NumericalValue, SpaceTemporal, Spatial, Temporable};
 
 #[derive(Getters, Constructor, Clone, Debug)]
 pub struct CausalState<'l, D, S, T, ST>
     where
         D: Datable + Clone + Copy,
         S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
+        T: Temporable + Clone + Copy,
         ST: SpaceTemporal + Clone + Copy,
 {
     id: usize,
@@ -25,7 +25,7 @@ impl<'l, D, S, T, ST>  CausalState<'l, D, S, T, ST>
     where
         D: Datable + Clone + Copy,
         S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
+        T: Temporable + Clone + Copy,
         ST: SpaceTemporal + Clone + Copy,
 {
     pub fn eval(&self) -> Result<bool, CausalityError>
@@ -48,7 +48,7 @@ impl<'l, D, S, T, ST> Display for CausalState<'l, D, S, T, ST>
     where
         D: Datable + Clone + Copy,
         S: Spatial + Clone + Copy,
-        T: Temporal + Clone + Copy,
+        T: Temporable + Clone + Copy,
         ST: SpaceTemporal + Clone + Copy,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result

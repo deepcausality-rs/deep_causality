@@ -8,14 +8,15 @@ use deep_causality_macros::{Constructor, Getters};
 mod identifiable;
 mod adjustable;
 mod display;
+mod spatial;
 
 #[derive(Getters, Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct AdjustableSpace<T>
     where T: Copy + Default
 {
     id: u64,
-    x: i64,
-    y: i64,
-    z: i64,
+    x: T,
+    y: T,
+    z: T,
     ty: PhantomData<T>, // Need to bind T
 }

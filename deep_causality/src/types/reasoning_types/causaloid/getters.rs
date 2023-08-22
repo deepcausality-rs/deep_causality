@@ -8,7 +8,7 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     where
         D: Datable + Clone,
         S: Spatial + Clone,
-        T: Temporal + Clone,
+        T: Temporable + Clone,
         ST: SpaceTemporal + Clone,
 {
     pub fn active(&self) -> bool {

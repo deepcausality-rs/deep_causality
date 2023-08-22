@@ -3,14 +3,14 @@
 use std::collections::HashMap;
 
 use crate::errors::CausalityError;
-use crate::prelude::{Causable, CausableGraphExplaining, CausableGraphReasoning, CausableReasoning, Causaloid, Datable, IdentificationValue, NumericalValue, SpaceTemporal, Spatial, Temporal};
+use crate::prelude::{Causable, CausableGraphExplaining, CausableGraphReasoning, CausableReasoning, Causaloid, Datable, IdentificationValue, NumericalValue, SpaceTemporal, Spatial, Temporable};
 use crate::types::reasoning_types::causaloid::causal_type::CausalType;
 
 impl<'l, D, S, T, ST> Causable for Causaloid<'l, D, S, T, ST>
     where
         D: Datable + Clone,
         S: Spatial + Clone,
-        T: Temporal + Clone,
+        T: Temporable + Clone,
         ST: SpaceTemporal + Clone,
 {
     fn explain(&self)
@@ -154,7 +154,7 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     where
         D: Datable + Clone,
         S: Spatial + Clone,
-        T: Temporal + Clone,
+        T: Temporable + Clone,
         ST: SpaceTemporal + Clone,
 {
     #[inline(always)]
