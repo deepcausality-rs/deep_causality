@@ -23,7 +23,7 @@ pub fn main() {
 
     assert_eq!(*d.data_id(), 0);
     assert_eq!(*d.data(), 42);
-    assert_eq!(*d.filled(), true);
+    assert!(*d.filled());
 
     let big = Scale::new_big();
     assert_eq!(big, Scale::Big);

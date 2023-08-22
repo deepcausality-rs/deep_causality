@@ -5,8 +5,7 @@ use std::ops::Add;
 use dcl_data_structures::grid_type::ArrayGrid;
 use dcl_data_structures::prelude::PointIndex;
 
-use crate::errors::{AdjustmentError, UpdateError};
-use crate::prelude::Adjustable;
+use crate::prelude::{Adjustable, AdjustmentError, UpdateError};
 
 use super::*;
 

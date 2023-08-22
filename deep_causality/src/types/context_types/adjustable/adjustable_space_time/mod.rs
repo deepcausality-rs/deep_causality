@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-
-use std::fmt::Display;
 use std::marker::PhantomData;
 
 use deep_causality_macros::{Constructor, Getters};
 
-use crate::prelude::{Adjustable, Identifiable, SpaceTemporal, Spatial, Temporable, Temporal, TimeScale};
+use crate::prelude::TimeScale;
 
 mod identifiable;
 mod adjustable;

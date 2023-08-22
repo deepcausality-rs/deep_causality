@@ -22,7 +22,7 @@ fn test_derive_struct() {
 
     assert_eq!(*d.data_id(), 0);
     assert_eq!(*d.data(), 42);
-    assert_eq!(*d.filled(), true);
+    assert!(*d.filled());
 }
 
 #[derive(Getters, Constructor)]

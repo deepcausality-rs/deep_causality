@@ -77,7 +77,7 @@ pub fn get_test_error_causaloid<'l>()
     let description = "tests whether data exceeds threshold of 0.55";
 
     fn causal_fn(_obs: NumericalValue) -> Result<bool, CausalityError> {
-        return Err(CausalityError("Test error".into()));
+        Err(CausalityError("Test error".into()))
     }
 
     Causaloid::new(id, causal_fn, description)
