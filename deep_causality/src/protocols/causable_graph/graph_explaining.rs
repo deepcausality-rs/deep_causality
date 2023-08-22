@@ -34,7 +34,12 @@ pub trait CausableGraphExplaining<T>: CausableGraph<T>
 
         let cause = self.get_causaloid(start_index).expect("Failed to get causaloid");
 
-        append_string(&mut explanation, &cause.explain().unwrap());
+        let explain = match cause.explain() {
+            Ok(res) => res,
+            Err(e) => return Err(CausalityGraphError(e.to_string())),
+        };
+
+        append_string(&mut explanation, &explain);
 
         // get all neighbors of the start causaloid
         let neighbors = match self.get_graph().outgoing_edges(start_index) {
@@ -77,6 +82,16 @@ pub trait CausableGraphExplaining<T>: CausableGraph<T>
     )
         -> Result<String, CausalityGraphError>
     {
+        if self.is_empty()
+        {
+            return Err(CausalityGraphError("Graph is empty".to_string()));
+        }
+
+        if !self.contains_root_causaloid() {
+            return Err(CausalityGraphError("Graph does not contains root causaloid".into()));
+        }
+
+        // These is safe as we have tested above that these exists
         let start_index = self.get_root_index().expect("Root causaloid not found.");
         let stop_index = self.size() - 1;
 
@@ -96,6 +111,10 @@ pub trait CausableGraphExplaining<T>: CausableGraph<T>
     )
         -> Result<String, CausalityGraphError>
     {
+        if self.is_empty() {
+            return Err(CausalityGraphError("Graph is empty".to_string()));
+        }
+
         let stop_index = self.size() - 1;
 
         match self.explain_from_to_cause(start_index, stop_index) {
