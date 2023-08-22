@@ -78,6 +78,19 @@ fn test_reason_all_causes() {
 }
 
 #[test]
+fn test_reason_all_causes_error() {
+    // Need type annotation as nothing is added and thus no type inference.
+    let g: CausaloidGraph<BaseCausaloid> = CausaloidGraph::new();
+    // Double check no root node exists
+    assert!(!g.contains_root_causaloid());
+    assert!(g.is_empty());
+
+    let data = [0.99, 0.98, 0.97];
+    let res = g.reason_all_causes(&data, None);
+    assert!(res.is_err());
+}
+
+#[test]
 fn test_reason_subgraph_from_cause() {
     let mut g = CausaloidGraph::new();
 
@@ -222,6 +235,53 @@ fn test_reason_shortest_path_between_causes() {
 }
 
 #[test]
+fn test_reason_shortest_path_between_causes_error() {
+    let mut g = CausaloidGraph::new();
+    assert!(g.is_empty());
+
+    let obs = 0.99;
+
+    let start_idx = 21;
+    let stop_idx = 99;
+    // Error: Graph is empty
+    let res = g.reason_shortest_path_between_causes(start_idx, stop_idx, &[obs], None);
+    assert!(res.is_err());
+
+    let causaloid = test_utils::get_test_causaloid();
+    let index = g.add_causaloid(causaloid);
+    let contains = g.contains_causaloid(index);
+    assert!(contains);
+
+    // Graph is non-empty
+    let start_idx = 21;
+    let stop_idx = 99;
+    // Error: Graph does not contains start causaloid
+    let res = g.reason_shortest_path_between_causes(start_idx, stop_idx, &[obs], None);
+    assert!(res.is_err());
+
+    let start_idx = index;
+    let stop_idx = 99;
+    // Error: Graph does not contains stop causaloid
+    let res = g.reason_shortest_path_between_causes(start_idx, stop_idx, &[obs], None);
+    assert!(res.is_err());
+
+    // Error: Start and Stop node identical
+    let res = g.reason_shortest_path_between_causes(start_idx, start_idx, &[obs], None);
+    assert!(res.is_err());
+
+    let err_causaloid = test_utils::get_test_error_causaloid();
+    let err_index = g.add_causaloid(err_causaloid);
+    let contains = g.contains_causaloid(index);
+    assert!(contains);
+
+    let start_idx = index;
+
+    // Error: No path found
+    let res = g.reason_shortest_path_between_causes(start_idx, err_index, &[obs], None);
+    assert!(res.is_err());
+}
+
+#[test]
 fn test_reason_single_cause() {
     let mut g = CausaloidGraph::new();
     let causaloid = test_utils::get_test_causaloid();
@@ -247,6 +307,43 @@ fn test_reason_single_cause() {
     let all_true = g.all_active();
     assert!(all_true);
 }
+
+#[test]
+fn test_reason_single_cause_err_empty_graph() {
+    let mut g = CausaloidGraph::new();
+    assert!(g.is_empty());
+
+    let index = 99;
+    let obs = 0.99;
+
+    // Error: Graph is empty
+    let res = g.reason_single_cause(index, &[obs]);
+    assert!(res.is_err());
+
+    let causaloid = test_utils::get_test_causaloid();
+    let index = g.add_causaloid(causaloid);
+    let contains = g.contains_causaloid(index);
+    assert!(contains);
+
+    // Error Data are empty
+    let res = g.reason_single_cause(index, &[]);
+    assert!(res.is_err());
+
+    // Error: Graph does not contains start causaloid
+    let res = g.reason_single_cause(99, &[obs]);
+    assert!(res.is_err());
+
+    let causaloid = test_utils::get_test_error_causaloid();
+    let index = g.add_causaloid(causaloid);
+    let contains = g.contains_causaloid(index);
+    assert!(contains);
+
+    // CausalityGraphError: Test error
+    let obs = 0.99;
+    let res = g.reason_single_cause(index, &[obs]);
+    assert!(res.is_err());
+}
+
 
 #[test]
 fn test_linear_graph() {

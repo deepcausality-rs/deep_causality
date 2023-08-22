@@ -191,7 +191,6 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
     )
         -> Result<bool, CausalityGraphError>
     {
-
         match self.reason_shortest_path_from_to_cause(
             start_index,
             stop_index,
@@ -279,6 +278,22 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
 
         let causaloid = self.get_causaloid(index).expect("Failed to get causaloid");
 
-        graph_reasoning_utils::verify_cause(causaloid, data)
+        if data.len() == 1 {
+            let obs = data.first().expect("Failed to get data");
+            return match causaloid.verify_single_cause(obs) {
+                Ok(res) => Ok(res),
+                Err(e) => Err(CausalityGraphError(e.0)),
+            };
+        }
+
+        if data.len() > 1 {
+            for obs in data.iter() {
+                if !causaloid.verify_single_cause(obs).expect("Failed to verify data") {
+                    return Ok(false);
+                }
+            }
+        }
+
+        Ok(true)
     }
 }
