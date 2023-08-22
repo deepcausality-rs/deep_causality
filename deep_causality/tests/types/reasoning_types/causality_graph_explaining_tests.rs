@@ -28,8 +28,8 @@ fn test_explain_all_causes() {
     let all_true = g.all_active();
     assert!(!all_true);
 
-    let res = g.reason_all_causes(&data, None).unwrap();
-    assert!(res);
+    let res = g.reason_all_causes(&data, None);
+    assert!(res.is_ok());
 
     // Verify that the graph is fully active.
     let all_active = g.all_active();
