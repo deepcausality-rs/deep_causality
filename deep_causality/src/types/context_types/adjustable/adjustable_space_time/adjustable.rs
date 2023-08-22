@@ -17,7 +17,8 @@ impl<T> Adjustable<T> for AdjustableSpaceTime<T>
     )
         -> Result<(), UpdateError>
     {
-        todo!()
+        Ok(())
+
     }
 
     fn adjust<const W: usize, const H: usize, const D: usize, const C: usize>(
@@ -25,6 +26,6 @@ impl<T> Adjustable<T> for AdjustableSpaceTime<T>
         _array_grid: &ArrayGrid<T, W, H, D, C>,
     ) -> Result<(), AdjustmentError>
     {
-        todo!()
+        Ok(())
     }
 }
