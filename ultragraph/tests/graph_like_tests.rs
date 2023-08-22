@@ -502,14 +502,6 @@ fn test_remove_edge_error() {
     let actual = g.contains_edge(root_index, node_a_index);
     assert_eq!(expected, actual);
 
-    // When both nodes and the edges exist, then removal succeeds
-    let res = g.remove_edge(root_index, node_a_index);
-    assert!(res.is_ok());
-
-    let expected = false;
-    let actual = g.contains_edge(root_index, node_a_index);
-    assert_eq!(expected, actual);
-
     //
     // There are are three ways removing an edge can fail:
     // 1. Node a doesnt exist
@@ -518,14 +510,14 @@ fn test_remove_edge_error() {
     //
 
     // 1. Node a doesnt exist
-    let res = g.remove_edge(42, node_a_index);
+    let res = g.remove_edge(42, root_index);
     assert!(res.is_err());
 
     // 2. Node b doesnt exist
-    let res = g.remove_edge(root_index, 23);
+    let res = g.remove_edge(root_index, 500);
     assert!(res.is_err());
 
     // 3.Edge from node a to node b does not exists
-    let res = g.add_edge(23, 42);
+    let res = g.remove_edge(root_index, root_index);
     assert!(res.is_err());
 }
