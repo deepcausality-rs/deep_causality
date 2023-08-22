@@ -51,15 +51,22 @@ fn test_contains_root_node() {
 fn test_get_root_node() {
     let mut g = get_ultra_graph();
     assert!(g.is_empty());
+
     let expected = 0;
     let actual = g.number_nodes();
     assert_eq!(expected, actual);
     assert!(!g.contains_root_node());
 
+    let res = g.get_root_node();
+    assert!(res.is_none());
+
     let d = Data { x: 1 };
     let root_index = g.add_root_node(d);
     assert!(g.contains_root_node());
     assert_eq!(root_index, 0);
+
+    let res = g.get_root_node();
+    assert!(res.is_some());
 
     let expected = 1;
     let actual = g.number_nodes();
@@ -74,6 +81,9 @@ fn test_get_root_index() {
     let actual = g.number_nodes();
     assert_eq!(expected, actual);
     assert!(!g.contains_root_node());
+
+    let res = g.get_root_index();
+    assert!(res.is_none());
 
     let d = Data { x: 1 };
     let root_index = g.add_root_node(d);
@@ -95,7 +105,9 @@ fn test_get_last_index() {
     let expected = 0;
     let actual = g.number_nodes();
     assert_eq!(expected, actual);
-    assert!(!g.contains_root_node());
+
+    let res = g.get_last_index();
+    assert!(res.is_err());
 
     let d = Data { x: 1 };
     let root_index = g.add_root_node(d);
