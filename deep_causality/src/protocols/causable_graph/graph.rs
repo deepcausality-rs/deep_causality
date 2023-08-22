@@ -11,7 +11,7 @@ pub trait CausableGraph<T>
     where
         T: Causable + PartialEq,
 {
-    // This method enables the default implementation of the
+    // The get_graph method enables the default implementation of the
     // CausableGraphExplaining and CausableGraphReasoning traits.
     fn get_graph(&self) -> &CausalGraph<T>;
     // Root Node
