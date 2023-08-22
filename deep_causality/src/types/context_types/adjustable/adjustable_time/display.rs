@@ -2,7 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 use std::fmt::{Display, Formatter};
 
-use crate::types::context_types::adjustable::adjustable_time::AdjustableTime;
+use super::*;
 
 impl<T> Display for AdjustableTime<T>
     where T: Copy + Default + Display

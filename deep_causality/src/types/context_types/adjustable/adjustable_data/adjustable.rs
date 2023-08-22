@@ -7,7 +7,8 @@ use dcl_data_structures::prelude::PointIndex;
 
 use crate::errors::{AdjustmentError, UpdateError};
 use crate::prelude::Adjustable;
-use crate::types::context_types::adjustable::adjustable_data::AdjustableData;
+
+use super::*;
 
 impl<T> Adjustable<T> for AdjustableData<T>
     where T: Copy + Default + Add<Output=T> + PartialOrd<i32>,

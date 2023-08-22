@@ -7,7 +7,8 @@ use dcl_data_structures::prelude::PointIndex;
 
 use crate::errors::{AdjustmentError, UpdateError};
 use crate::prelude::Adjustable;
-use crate::types::context_types::adjustable::adjustable_time::AdjustableTime;
+
+use super::*;
 
 impl<T> Adjustable<T> for AdjustableTime<T>
     where T: Copy + Default + Add<Output=T> + PartialOrd<i32>,

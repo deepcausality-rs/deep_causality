@@ -4,7 +4,7 @@ use crate::prelude::Identifiable;
 
 use super::*;
 
-impl<T> Identifiable for AdjustableTime<T> where T: Copy + Default {
+impl<T> Identifiable for AdjustableSpaceTime<T> where T: Copy + Default {
     fn id(&self) -> u64 {
         self.id
     }

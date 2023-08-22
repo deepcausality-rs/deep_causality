@@ -2,7 +2,7 @@ use deep_causality_macros::{Constructor, Getters};
 
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
-use crate::prelude::Datable;
+use crate::prelude::{Datable, SpaceTemporal};
 
 mod adjustable;
 mod display;
