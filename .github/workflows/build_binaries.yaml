@@ -1,4 +1,4 @@
-name: build_binary
+name: Build binaries
 
 on:
   push:
