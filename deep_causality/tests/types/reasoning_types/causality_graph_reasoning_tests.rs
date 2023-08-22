@@ -86,7 +86,13 @@ fn test_reason_all_causes_error() {
     assert!(!g.contains_root_causaloid());
     assert!(g.is_empty());
 
+    // No root causaloid
     let data = [0.99, 0.98, 0.97];
+    let res = g.reason_all_causes(&data, None);
+    assert!(res.is_err());
+
+    // No data
+    let data = [];
     let res = g.reason_all_causes(&data, None);
     assert!(res.is_err());
 }
@@ -158,7 +164,7 @@ fn test_reason_subgraph_from_cause() {
 #[test]
 fn test_reason_subgraph_from_cause_error() {
     // Need type annotation as nothing is added and thus no type inference.
-    let g: CausaloidGraph<BaseCausaloid> = CausaloidGraph::new();
+    let mut g = CausaloidGraph::new();
 
     // Double check graph is empty
     assert!(!g.contains_root_causaloid());
@@ -168,6 +174,17 @@ fn test_reason_subgraph_from_cause_error() {
 
     // Error: Graph is empty
     let res = g.reason_subgraph_from_cause(no_idx, &data, None);
+    assert!(res.is_err());
+
+    // Add root causaloid
+    let root_causaloid = test_utils::get_test_causaloid();
+    let root_index = g.add_root_causaloid(root_causaloid);
+    let contains_root = g.contains_causaloid(root_index);
+    assert!(contains_root);
+
+    let data = [];
+    // Error: No data
+    let res = g.reason_subgraph_from_cause(root_index, &data, None);
     assert!(res.is_err());
 }
 
@@ -289,7 +306,7 @@ fn test_reason_shortest_path_between_causes_error() {
 }
 
 #[test]
-fn test_reason_single_cause() {
+fn test_reason_single_cause_single_data() {
     let mut g = CausaloidGraph::new();
     let causaloid = test_utils::get_test_causaloid();
 
@@ -305,6 +322,33 @@ fn test_reason_single_cause() {
 
     let obs = 0.99;
     let res = g.reason_single_cause(index, &[obs]);
+    assert!(res.is_ok());
+    assert!(res.unwrap());
+
+    let percent_active = g.percent_active();
+    assert_eq!(percent_active, 100.0);
+
+    let all_true = g.all_active();
+    assert!(all_true);
+}
+
+
+#[test]
+fn test_reason_single_cause_multi_data() {
+    let mut g = CausaloidGraph::new();
+    let causaloid = test_utils::get_test_causaloid();
+
+    let index = g.add_causaloid(causaloid);
+    let contains = g.contains_causaloid(index);
+    assert!(contains);
+
+    let percent_active = g.percent_active();
+    assert_eq!(percent_active, 0.0);
+
+    let all_true = g.all_active();
+    assert!(!all_true);
+
+    let res = g.reason_single_cause(index, &[0.99, 0.98, 0.97]);
     assert!(res.is_ok());
     assert!(res.unwrap());
 
