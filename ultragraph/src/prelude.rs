@@ -14,4 +14,3 @@ pub use crate::protocols::graph_storage::GraphStorage;
 pub use crate::storage::matrix_graph::UltraMatrixGraph;
 // Types
 pub use crate::types::ultra_graph::UltraGraphContainer;
-
