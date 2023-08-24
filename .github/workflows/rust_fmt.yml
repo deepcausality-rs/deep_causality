@@ -1,18 +1,23 @@
 name: Rustfmt
 
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [ "main" ]
+on: pull_request
+
 jobs:
   format:
+    name: rustfmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@nightly
-      - uses: mbrobbel/rustfmt-check@master
+      - uses: actions/checkout@v2
+      - run: echo "date=$(date -d '1 month ago' +'%Y-%m-%d')" >> $GITHUB_ENV
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-${{ env.date }}
+          components: rustfmt
+      - uses: LoliGothick/rustfmt-check@master
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          mode: review
+#          toolchain: nightly-${{ env.date }}
+#          flags: --all
+#          options: --manifest-path=Cargo.toml
+#          args: --config-path=path/to/rustfmt.toml
+#          working-directory: my_crate
