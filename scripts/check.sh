@@ -21,8 +21,20 @@ command cargo +nightly udeps --all-targets
 command cargo audit
 
 
+# Check a package and all of its dependencies for errors.
+# https://doc.rust-lang.org/cargo/commands/cargo-check.html
 command cargo check
 
-# Run linter
+# Consider checking each crate for re-exporting external types
+# https://crates.io/crates/cargo-check-external-types
+# cargo +nightly check-external-types
+
+
+# Check for linter errors
 # https://github.com/rust-lang/rust-clippy
 command cargo clippy
+
+
+# Check code formatting
+# https://github.com/rust-lang/rustfmt
+command cargo fmt --all --check
