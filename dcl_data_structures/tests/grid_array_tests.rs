@@ -8,7 +8,9 @@ const HEIGHT: usize = 5;
 const DEPTH: usize = 5;
 const TIME: usize = 5;
 
-fn get_array_grid<T: Copy + Default>(array_type: ArrayType) -> ArrayGrid<T, WIDTH, HEIGHT, DEPTH, TIME> {
+fn get_array_grid<T: Copy + Default>(
+    array_type: ArrayType,
+) -> ArrayGrid<T, WIDTH, HEIGHT, DEPTH, TIME> {
     ArrayGrid::new(array_type)
 }
 
@@ -23,13 +25,11 @@ fn test_array_grid_array_1d() {
     let res = ag.get(p);
     assert_eq!(res, 1);
 
-    let g = ag.array_grid_1d()
-        .expect("failed to get 1D array grid");
+    let g = ag.array_grid_1d().expect("failed to get 1D array grid");
 
     let height = g.height().unwrap();
     assert_eq!(height, HEIGHT);
 }
-
 
 #[test]
 fn test_array_grid_array_2d() {
@@ -43,8 +43,7 @@ fn test_array_grid_array_2d() {
     let exp = 2;
     assert_eq!(res, exp);
 
-    let g = ag.array_grid_2d()
-        .expect("failed to get 2D array grid");
+    let g = ag.array_grid_2d().expect("failed to get 2D array grid");
 
     let height = g.height().unwrap();
     assert_eq!(height, HEIGHT);
@@ -52,7 +51,6 @@ fn test_array_grid_array_2d() {
     let width = g.width().unwrap();
     assert_eq!(width, WIDTH);
 }
-
 
 #[test]
 fn test_array_grid_array_3d() {
@@ -65,8 +63,7 @@ fn test_array_grid_array_3d() {
     let exp = 3;
     assert_eq!(res, exp);
 
-    let g = ag.array_grid_3d()
-        .expect("failed to get 3D array grid");
+    let g = ag.array_grid_3d().expect("failed to get 3D array grid");
 
     let height = g.height().unwrap();
     assert_eq!(height, HEIGHT);
@@ -77,7 +74,6 @@ fn test_array_grid_array_3d() {
     let depth = g.depth().unwrap();
     assert_eq!(depth, DEPTH);
 }
-
 
 #[test]
 fn test_array_grid_array_4d() {
@@ -90,8 +86,7 @@ fn test_array_grid_array_4d() {
     let exp = 4;
     assert_eq!(res, exp);
 
-    let g = ag.array_grid_4d()
-        .expect("failed to create array grid");
+    let g = ag.array_grid_4d().expect("failed to create array grid");
 
     let height = g.height().unwrap();
     assert_eq!(height, HEIGHT);
@@ -104,7 +99,6 @@ fn test_array_grid_array_4d() {
 
     let time = g.time().unwrap();
     assert_eq!(time, TIME);
-
 }
 
 #[test]

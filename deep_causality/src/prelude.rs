@@ -20,10 +20,10 @@ pub use crate::protocols::assumable::AssumableReasoning;
 // Causable protocols
 pub use crate::protocols::causable::Causable;
 pub use crate::protocols::causable::CausableReasoning;
-pub use crate::protocols::causable_graph::*;
 pub use crate::protocols::causable_graph::graph::CausableGraph;
 pub use crate::protocols::causable_graph::graph_explaining::CausableGraphExplaining;
 pub use crate::protocols::causable_graph::graph_reasoning::CausableGraphReasoning;
+pub use crate::protocols::causable_graph::*;
 // contextuable protocols
 pub use crate::protocols::contextuable::Contextuable;
 pub use crate::protocols::contextuable::ContextuableGraph;
@@ -51,8 +51,8 @@ pub use crate::types::context_types::adjustable::adjustable_time::*;
 pub use crate::types::context_types::context_graph;
 // Context graph types
 pub use crate::types::context_types::context_graph::Context;
-// Graph types
 pub use crate::types::context_types::contextoid::*;
+// Graph types
 pub use crate::types::context_types::contextoid::contextoid_type::*;
 // Default context node types. Overwrite traits to customize.
 pub use crate::types::context_types::node_types::dateoid::Dataoid;
@@ -78,4 +78,3 @@ pub use crate::types::reasoning_types::observation::Observation;
 // Utils
 //
 pub use crate::utils::time_utils::*;
-

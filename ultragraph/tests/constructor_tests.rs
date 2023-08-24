@@ -21,7 +21,6 @@ fn test_new_with_matrix_storage() {
     assert!(g.is_empty());
 }
 
-
 #[test]
 fn test_default() {
     let g = ultragraph::default::<u8>();

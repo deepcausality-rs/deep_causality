@@ -4,42 +4,35 @@
 use ultragraph::prelude::*;
 
 use crate::prelude::{
-    ContextIndexError, Contextoid, ContextuableGraph, Datable,
-    RelationKind, SpaceTemporal, Spatial, Temporable,
+    ContextIndexError, Contextoid, ContextuableGraph, Datable, RelationKind, SpaceTemporal,
+    Spatial, Temporable,
 };
 
+mod contextuable_graph;
 mod debug;
 mod identifiable;
-mod contextuable_graph;
 
 pub struct Context<'l, D, S, T, ST>
-    where
-        D: Datable,
-        S: Spatial,
-        T: Temporable,
-        ST: SpaceTemporal,
+where
+    D: Datable,
+    S: Spatial,
+    T: Temporable,
+    ST: SpaceTemporal,
 {
     id: u64,
     name: &'l str,
     graph: UltraGraph<Contextoid<D, S, T, ST>>,
 }
 
-
 impl<'l, D, S, T, ST> Context<'l, D, S, T, ST>
-    where
-        D: Datable,
-        S: Spatial,
-        T: Temporable,
-        ST: SpaceTemporal,
+where
+    D: Datable,
+    S: Spatial,
+    T: Temporable,
+    ST: SpaceTemporal,
 {
     /// Creates a new context with the given node capacity.
-    pub fn with_capacity(
-        id: u64,
-        name: &'l str,
-        capacity: usize,
-    )
-        -> Self
-    {
+    pub fn with_capacity(id: u64, name: &'l str, capacity: usize) -> Self {
         Self {
             id,
             name,

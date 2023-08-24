@@ -5,12 +5,14 @@ use std::fmt::{Display, Formatter};
 use super::*;
 
 impl<T> Display for AdjustableTime<T>
-    where T: Copy + Default + Display
+where
+    T: Copy + Default + Display,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f,
-               "AdjustableTime: id: {}, time_scale: {}, time_unit: {}",
-               self.id, self.time_scale, self.time_unit
+        write!(
+            f,
+            "AdjustableTime: id: {}, time_scale: {}, time_unit: {}",
+            self.id, self.time_scale, self.time_unit
         )
     }
 }

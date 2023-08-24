@@ -5,8 +5,7 @@ use crate::protocols::graph_algorithms::GraphAlgorithms;
 use crate::protocols::graph_like::GraphLike;
 use crate::protocols::graph_root::GraphRoot;
 
-pub trait GraphStorage<T>: GraphLike<T> + GraphRoot<T> + GraphAlgorithms<T>
-{
+pub trait GraphStorage<T>: GraphLike<T> + GraphRoot<T> + GraphAlgorithms<T> {
     fn size(&self) -> usize;
 
     fn is_empty(&self) -> bool;

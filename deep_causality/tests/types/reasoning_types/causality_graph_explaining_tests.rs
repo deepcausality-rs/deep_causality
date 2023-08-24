@@ -138,7 +138,6 @@ fn test_explain_subgraph_from_cause_error() {
     assert!(res.is_err());
 }
 
-
 #[test]
 fn test_explain_shortest_path_between_causes() {
     // Reasons over a multi-cause graph:
@@ -180,12 +179,16 @@ fn test_explain_shortest_path_between_causes() {
     //
     let start_index = 2;
     let stop_index = 3;
-    let res = g.reason_shortest_path_between_causes(start_index, stop_index, &data, None).unwrap();
+    let res = g
+        .reason_shortest_path_between_causes(start_index, stop_index, &data, None)
+        .unwrap();
     assert!(res);
 
     // Explain partial reasoning over shortest path through the graph
     //
-    let res = g.explain_shortest_path_between_causes(start_index, stop_index).unwrap();
+    let res = g
+        .explain_shortest_path_between_causes(start_index, stop_index)
+        .unwrap();
     let expected = "\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n".to_string();
     assert_eq!(res, expected);
 }

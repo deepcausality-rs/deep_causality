@@ -4,17 +4,16 @@
 use deep_causality_macros::{Constructor, Getters};
 
 // Generate a default constructor and getters for all fields.
-#[derive(Getters, Constructor)]
-#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
+#[derive(Getters, Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Data<T>
-    where T: Copy + Default
+where
+    T: Copy + Default,
 {
     #[getter(name = data_id)] // Rename getter methods as you wish
     id: u64,
     data: T,
     filled: bool,
 }
-
 
 #[test]
 fn test_derive_struct() {
@@ -40,14 +39,17 @@ fn test_ref() {
     assert!(!page.url().is_empty());
     assert!(page.category().is_none());
 
-    let page = WebRef::new("Hacker News", "https://news.ycombinator.com//", Some("News"));
+    let page = WebRef::new(
+        "Hacker News",
+        "https://news.ycombinator.com//",
+        Some("News"),
+    );
     assert_eq!(*page.name(), "Hacker News");
     assert!(!page.url().is_empty());
     assert!(page.category().is_some());
 }
 
-#[derive(Constructor)]
-#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
+#[derive(Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub enum Scale {
     Small,
     Big,

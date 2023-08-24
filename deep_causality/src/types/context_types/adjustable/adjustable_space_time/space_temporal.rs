@@ -5,7 +5,8 @@ use crate::prelude::SpaceTemporal;
 use super::*;
 
 impl<T> SpaceTemporal for AdjustableSpaceTime<T>
-    where T: Copy + Default
+where
+    T: Copy + Default,
 {
     fn t(&self) -> u64 {
         self.time_unit as u64

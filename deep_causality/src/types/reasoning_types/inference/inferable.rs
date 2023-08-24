@@ -2,8 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 use crate::prelude::{DescriptionValue, Inferable, Inference, NumericalValue};
 
-impl Inferable for Inference
-{
+impl Inferable for Inference {
     fn question(&self) -> DescriptionValue {
         self.question.to_string()
     }

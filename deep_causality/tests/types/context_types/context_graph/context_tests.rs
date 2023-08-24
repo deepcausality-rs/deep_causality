@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use deep_causality::prelude::{Context, Contextoid, ContextoidType, ContextuableGraph, Dataoid, Identifiable, RelationKind, Root, Spaceoid, SpaceTempoid, Tempoid, TimeScale};
+use deep_causality::prelude::{
+    Context, Contextoid, ContextoidType, ContextuableGraph, Dataoid, Identifiable, RelationKind,
+    Root, SpaceTempoid, Spaceoid, Tempoid, TimeScale,
+};
 
-fn get_context<'l>() -> Context<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>
-{
+fn get_context<'l>() -> Context<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid> {
     let id = 1;
     let name = "base context";
     Context::with_capacity(id, name, 10)
@@ -113,7 +115,6 @@ fn test_get_node() {
     let contextoid = context.get_node(idx);
     assert!(contextoid.is_some());
 }
-
 
 #[test]
 fn test_remove_node() {

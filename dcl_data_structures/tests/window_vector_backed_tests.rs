@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
-use dcl_data_structures::prelude::{SlidingWindow, VectorStorage, window_type};
+use dcl_data_structures::prelude::{window_type, SlidingWindow, VectorStorage};
 
 // Maximum number of elements held in the sliding window.
 const SIZE: usize = 4;
@@ -135,7 +135,6 @@ fn test_first() {
     assert_eq!(data.dats, 4);
 }
 
-
 #[test]
 fn test_last() {
     let mut window = get_sliding_window();
@@ -168,7 +167,6 @@ fn test_last() {
     let data = res.unwrap();
     assert_eq!(data.dats, 42);
 }
-
 
 #[test]
 fn test_slice() {
@@ -316,6 +314,6 @@ fn test_arr_err() {
     assert_eq!(window.size(), SIZE);
     assert!(!window.filled());
 
-    let arr:  Result<[Data; SIZE], String>= window.arr();
+    let arr: Result<[Data; SIZE], String> = window.arr();
     assert!(arr.is_err());
 }

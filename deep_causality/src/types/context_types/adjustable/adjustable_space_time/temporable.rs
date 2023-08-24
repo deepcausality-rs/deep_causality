@@ -7,7 +7,8 @@ use super::*;
 // Type tag required for context.
 
 impl<T> Temporable for AdjustableSpaceTime<T>
-    where T: Copy + Default
+where
+    T: Copy + Default,
 {
     fn time_scale(&self) -> TimeScale {
         self.time_scale

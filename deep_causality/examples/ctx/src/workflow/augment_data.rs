@@ -11,9 +11,7 @@ use crate::types::dateoid::Dataoid;
 pub fn convert_bar_to_augmented(
     data_bar: &DateTimeBar,
     time_scale: TimeScale,
-)
-    -> (Tempoid, Dataoid)
-{
+) -> (Tempoid, Dataoid) {
     let id = data_bar.date_time().timestamp() as u64;
     let data_range = calculate_ranges(data_bar);
 
@@ -24,11 +22,7 @@ pub fn convert_bar_to_augmented(
     (tempoid, dataoid)
 }
 
-fn calculate_ranges(
-    data_bar: &DateTimeBar
-)
-    -> BarRange
-{
+fn calculate_ranges(data_bar: &DateTimeBar) -> BarRange {
     let high = data_bar.high();
     let close = data_bar.open();
     let close_above_open = data_bar.close() > data_bar.open();
@@ -37,14 +31,8 @@ fn calculate_ranges(
     BarRange::new(high, close, close_above_open, close_below_open)
 }
 
-fn get_time_unit(
-    data_bar: &DateTimeBar,
-    time_scale: TimeScale,
-)
-    -> u32
-{
-    match time_scale
-    {
+fn get_time_unit(data_bar: &DateTimeBar, time_scale: TimeScale) -> u32 {
+    match time_scale {
         TimeScale::NoScale => data_bar.date_time().minute(),
         TimeScale::Second => data_bar.date_time().second(),
         TimeScale::Minute => data_bar.date_time().minute(),

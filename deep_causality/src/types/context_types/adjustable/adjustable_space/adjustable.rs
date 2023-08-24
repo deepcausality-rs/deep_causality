@@ -11,15 +11,13 @@ use crate::prelude::{Adjustable, AdjustmentError, UpdateError};
 use super::*;
 
 impl<T> Adjustable<T> for AdjustableSpace<T>
-    where T: Copy + Default + Add<Output=T> + PartialOrd<i64>,
+where
+    T: Copy + Default + Add<Output = T> + PartialOrd<i64>,
 {
     fn update<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,
         array_grid: &ArrayGrid<T, W, H, D, C>,
-    )
-        -> Result<(), UpdateError>
-    {
-
+    ) -> Result<(), UpdateError> {
         // Create a 3D PointIndex for each of the updated x,y,z coordinates
         let p1 = PointIndex::new3d(0, 0, 0);
         let p2 = PointIndex::new3d(0, 0, 1);
@@ -54,10 +52,7 @@ impl<T> Adjustable<T> for AdjustableSpace<T>
     fn adjust<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,
         _array_grid: &ArrayGrid<T, W, H, D, C>,
-    )
-        -> Result<(), AdjustmentError>
-    {
-
+    ) -> Result<(), AdjustmentError> {
         // // Create a 3D PointIndex for each of the updated x,y,z coordinates
         // let p1 = PointIndex::new3d(0, 0, 0);
         // let p2 = PointIndex::new3d(0, 0, 1);

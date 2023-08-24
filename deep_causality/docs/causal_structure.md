@@ -1,20 +1,21 @@
 [//]: # (---)
+
 [//]: # (SPDX-License-Identifier: MIT)
+
 [//]: # (---)
 
 # Causal Structure
 
-
 DeepCausality uses the causaloid as its central structure, an idea
-borrowed from a [novel causal concept](https://arxiv.org/abs/gr-qc/0608043) pioneered 
-by [Lucien Hardy](https://perimeterinstitute.ca/people/lucien-hardy) at the [Perimeter Institute](https://perimeterinstitute.ca/)
+borrowed from a [novel causal concept](https://arxiv.org/abs/gr-qc/0608043) pioneered
+by [Lucien Hardy](https://perimeterinstitute.ca/people/lucien-hardy) at
+the [Perimeter Institute](https://perimeterinstitute.ca/)
 of [theoretical physics](https://perimeterinstitute.ca/why-theoretical-physics).
-
 
 ## The causaloid
 
-The causaloid encodes a causal relation as a causal function that maps input data 
-to an output decision determining  whether, on the input data, the causal relation, encoded as a function, holds.
+The causaloid encodes a causal relation as a causal function that maps input data
+to an output decision determining whether, on the input data, the causal relation, encoded as a function, holds.
 Therefore, the causaloid folds cause and effect into one single entity. Causaloids are structurally invariant and,
 therefore, temporarily stationary. In the event of a temporal shift, only the order of causal evaluation may shift
 following the temporary shift. Still, the causal structure remains intact because there is no conceptual distinction

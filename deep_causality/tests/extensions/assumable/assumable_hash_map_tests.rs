@@ -7,9 +7,7 @@ use deep_causality::prelude::{AssumableReasoning, Assumption};
 
 use crate::utils::test_utils::*;
 
-fn get_test_assumption_map()
-    -> HashMap<i8, Assumption>
-{
+fn get_test_assumption_map() -> HashMap<i8, Assumption> {
     let a1 = get_test_assumption();
     let a2 = get_test_assumption();
     let a3 = get_test_assumption();
@@ -17,8 +15,7 @@ fn get_test_assumption_map()
 }
 
 #[test]
-fn test_add()
-{
+fn test_add() {
     let mut map = get_test_assumption_map();
     assert_eq!(map.len(), 3);
 
@@ -27,10 +24,8 @@ fn test_add()
     assert_eq!(map.len(), 4);
 }
 
-
 #[test]
-fn test_contains()
-{
+fn test_contains() {
     let mut map = get_test_assumption_map();
     assert_eq!(3, map.len());
     assert!(map.contains_key(&1));
@@ -41,10 +36,8 @@ fn test_contains()
     assert!(map.contains_key(&4));
 }
 
-
 #[test]
-fn test_remove()
-{
+fn test_remove() {
     let mut map = get_test_assumption_map();
     assert_eq!(3, map.len());
     assert!(map.contains_key(&3));
@@ -54,10 +47,8 @@ fn test_remove()
     assert!(!map.contains_key(&3));
 }
 
-
 #[test]
-fn test_all_assumptions_tested()
-{
+fn test_all_assumptions_tested() {
     let map = get_test_assumption_map();
     assert_eq!(map.len(), 3);
 
@@ -71,10 +62,8 @@ fn test_all_assumptions_tested()
     assert!(all_tested);
 }
 
-
 #[test]
-fn test_all_assumptions_valid()
-{
+fn test_all_assumptions_valid() {
     let map = get_test_assumption_map();
     assert_eq!(map.len(), 3);
 
@@ -93,10 +82,8 @@ fn test_all_assumptions_valid()
     assert!(all_valid);
 }
 
-
 #[test]
-fn test_percent_assumption_valid()
-{
+fn test_percent_assumption_valid() {
     let map = get_test_assumption_map();
     assert_eq!(map.len(), 3);
 
@@ -121,10 +108,8 @@ fn test_percent_assumption_valid()
     assert_eq!(all_valid_percent, 100.0);
 }
 
-
 #[test]
-fn test_get_all_invalid_assumptions()
-{
+fn test_get_all_invalid_assumptions() {
     let map = get_test_assumption_map();
     assert_eq!(map.len(), 3);
 
@@ -147,8 +132,7 @@ fn test_get_all_invalid_assumptions()
 }
 
 #[test]
-fn test_get_all_valid_assumptions()
-{
+fn test_get_all_valid_assumptions() {
     let map = get_test_assumption_map();
     assert_eq!(map.len(), 3);
 
@@ -172,8 +156,7 @@ fn test_get_all_valid_assumptions()
 }
 
 #[test]
-fn test_get_all_tested_assumptions()
-{
+fn test_get_all_tested_assumptions() {
     let map = get_test_assumption_map();
     assert_eq!(map.len(), 3);
 
@@ -196,10 +179,8 @@ fn test_get_all_tested_assumptions()
     assert_eq!(all_tested_assumptions.len(), 3);
 }
 
-
 #[test]
-fn test_get_all_untested_assumptions()
-{
+fn test_get_all_untested_assumptions() {
     let map = get_test_assumption_map();
     assert_eq!(map.len(), 3);
 
@@ -226,8 +207,7 @@ fn test_get_all_untested_assumptions()
 }
 
 #[test]
-fn test_verify_all_assumptions()
-{
+fn test_verify_all_assumptions() {
     let map = get_test_assumption_map();
     assert_eq!(map.len(), 3);
 

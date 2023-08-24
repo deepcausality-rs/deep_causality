@@ -8,21 +8,24 @@ use crate::utils::test_utils;
 
 #[test]
 fn test_new() {
-    let g: CausaloidGraph<Causaloid<Dataoid, Spaceoid, Tempoid, SpaceTempoid>> = CausaloidGraph::new();
+    let g: CausaloidGraph<Causaloid<Dataoid, Spaceoid, Tempoid, SpaceTempoid>> =
+        CausaloidGraph::new();
     assert_eq!(g.number_nodes(), 0);
     assert_eq!(g.number_edges(), 0);
 }
 
 #[test]
 fn test_new_with_capacity() {
-    let g: CausaloidGraph<Causaloid<Dataoid, Spaceoid, Tempoid, SpaceTempoid>> = CausaloidGraph::new_with_capacity(10);
+    let g: CausaloidGraph<Causaloid<Dataoid, Spaceoid, Tempoid, SpaceTempoid>> =
+        CausaloidGraph::new_with_capacity(10);
     assert_eq!(g.number_nodes(), 0);
     assert_eq!(g.number_edges(), 0);
 }
 
 #[test]
 fn test_default() {
-    let g: CausaloidGraph<Causaloid<Dataoid, Spaceoid, Tempoid, SpaceTempoid>> = CausaloidGraph::default();
+    let g: CausaloidGraph<Causaloid<Dataoid, Spaceoid, Tempoid, SpaceTempoid>> =
+        CausaloidGraph::default();
     assert_eq!(g.number_nodes(), 0);
     assert_eq!(g.number_edges(), 0);
 }
@@ -242,7 +245,6 @@ fn test_number_active() {
     assert_eq!(number_active, 1.0);
 }
 
-
 #[test]
 fn test_percent_active() {
     let mut g = CausaloidGraph::new();
@@ -402,7 +404,6 @@ fn test_count_nodes() {
     let res = g.remove_causaloid(index);
     assert!(res.is_ok());
 
-
     let contains = g.contains_causaloid(index);
     assert!(!contains);
 
@@ -412,7 +413,8 @@ fn test_count_nodes() {
 
 #[test]
 fn test_get_graph() {
-    let g: CausaloidGraph<Causaloid<Dataoid, Spaceoid, Tempoid, SpaceTempoid>> = CausaloidGraph::new();
+    let g: CausaloidGraph<Causaloid<Dataoid, Spaceoid, Tempoid, SpaceTempoid>> =
+        CausaloidGraph::new();
 
     let size = g.size();
     assert_eq!(size, 0);

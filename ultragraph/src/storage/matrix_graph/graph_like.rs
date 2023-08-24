@@ -6,35 +6,19 @@ use crate::prelude::GraphLike;
 
 use super::UltraMatrixGraph;
 
-impl<T> GraphLike<T> for UltraMatrixGraph<T>
-{
-    fn add_node(
-        &mut self,
-        value: T,
-    )
-        -> usize
-    {
+impl<T> GraphLike<T> for UltraMatrixGraph<T> {
+    fn add_node(&mut self, value: T) -> usize {
         let node_index = self.graph.add_node(true);
         self.node_map.insert(node_index, value);
         self.index_map.insert(node_index.index(), node_index);
         node_index.index()
     }
 
-    fn contains_node(
-        &self,
-        index: usize,
-    )
-        -> bool
-    {
+    fn contains_node(&self, index: usize) -> bool {
         self.index_map.get(&index).is_some()
     }
 
-    fn get_node(
-        &self,
-        index: usize,
-    )
-        -> Option<&T>
-    {
+    fn get_node(&self, index: usize) -> Option<&T> {
         if !self.contains_node(index) {
             None
         } else {
@@ -43,12 +27,7 @@ impl<T> GraphLike<T> for UltraMatrixGraph<T>
         }
     }
 
-    fn remove_node(
-        &mut self,
-        index: usize,
-    )
-        -> Result<(), UltraGraphError>
-    {
+    fn remove_node(&mut self, index: usize) -> Result<(), UltraGraphError> {
         if !self.contains_node(index) {
             return Err(UltraGraphError(format!("index {} not found", index)));
         };
@@ -60,13 +39,7 @@ impl<T> GraphLike<T> for UltraMatrixGraph<T>
         Ok(())
     }
 
-    fn add_edge(
-        &mut self,
-        a: usize,
-        b: usize,
-    )
-        -> Result<(), UltraGraphError>
-    {
+    fn add_edge(&mut self, a: usize, b: usize) -> Result<(), UltraGraphError> {
         if !self.contains_node(a) {
             return Err(UltraGraphError(format!("index a {} not found", a)));
         };
@@ -76,7 +49,10 @@ impl<T> GraphLike<T> for UltraMatrixGraph<T>
         };
 
         if self.contains_edge(a, b) {
-            return Err(UltraGraphError(format!("Edge already exists between: {} and {}", a, b)));
+            return Err(UltraGraphError(format!(
+                "Edge already exists between: {} and {}",
+                a, b
+            )));
         }
 
         let k = self.index_map.get(&a).expect("index not found");
@@ -90,9 +66,7 @@ impl<T> GraphLike<T> for UltraMatrixGraph<T>
         a: usize,
         b: usize,
         weight: u64,
-    )
-        -> Result<(), UltraGraphError>
-    {
+    ) -> Result<(), UltraGraphError> {
         if !self.contains_node(a) {
             return Err(UltraGraphError(format!("index a {} not found", a)));
         };
@@ -102,7 +76,10 @@ impl<T> GraphLike<T> for UltraMatrixGraph<T>
         };
 
         if self.contains_edge(a, b) {
-            return Err(UltraGraphError(format!("Edge already exists between: {} and {}", a, b)));
+            return Err(UltraGraphError(format!(
+                "Edge already exists between: {} and {}",
+                a, b
+            )));
         }
 
         let k = self.index_map.get(&a).expect("index not found");
@@ -111,13 +88,7 @@ impl<T> GraphLike<T> for UltraMatrixGraph<T>
         Ok(())
     }
 
-    fn contains_edge(
-        &self,
-        a: usize,
-        b: usize,
-    )
-        -> bool
-    {
+    fn contains_edge(&self, a: usize, b: usize) -> bool {
         if !self.contains_node(a) || !self.contains_node(b) {
             return false;
         };
@@ -127,13 +98,7 @@ impl<T> GraphLike<T> for UltraMatrixGraph<T>
         self.graph.has_edge(*k, *l)
     }
 
-    fn remove_edge(
-        &mut self,
-        a: usize,
-        b: usize,
-    )
-        -> Result<(), UltraGraphError>
-    {
+    fn remove_edge(&mut self, a: usize, b: usize) -> Result<(), UltraGraphError> {
         if !self.contains_node(a) {
             return Err(UltraGraphError("index a not found".into()));
         };
@@ -143,7 +108,10 @@ impl<T> GraphLike<T> for UltraMatrixGraph<T>
         };
 
         if !self.contains_edge(a, b) {
-            return Err(UltraGraphError(format!("Edge does not exists between: {} and {}", a, b)));
+            return Err(UltraGraphError(format!(
+                "Edge does not exists between: {} and {}",
+                a, b
+            )));
         }
 
         let k = self.index_map.get(&a).expect("index not found");

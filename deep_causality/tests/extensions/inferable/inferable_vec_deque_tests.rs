@@ -7,12 +7,9 @@ use deep_causality::prelude::*;
 
 use crate::utils::test_utils::*;
 
-pub fn get_test_inf_vec_deque()
-    -> VecDeque<Inference>
-{
+pub fn get_test_inf_vec_deque() -> VecDeque<Inference> {
     VecDeque::from_iter(get_test_inf_vec())
 }
-
 
 #[test]
 fn test_add() {

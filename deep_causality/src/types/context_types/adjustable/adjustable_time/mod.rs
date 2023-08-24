@@ -13,7 +13,8 @@ mod identifiable;
 
 #[derive(Getters, Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct AdjustableTime<T>
-    where T: Copy + Default,
+where
+    T: Copy + Default,
 {
     #[getter(name = time_id)] // Rename ID getter to prevent conflict impl with identifiable
     id: u64,
@@ -26,7 +27,10 @@ pub struct AdjustableTime<T>
 // types/context_types/adjustable/adjustable_time_tests.rs
 
 // Type tag required for context.
-impl<T> Temporable for AdjustableTime<T> where T: Copy + Default {
+impl<T> Temporable for AdjustableTime<T>
+where
+    T: Copy + Default,
+{
     fn time_scale(&self) -> TimeScale {
         self.time_scale
     }

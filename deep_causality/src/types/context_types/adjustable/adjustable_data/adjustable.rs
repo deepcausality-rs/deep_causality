@@ -10,15 +10,13 @@ use crate::prelude::{Adjustable, AdjustmentError, UpdateError};
 use super::*;
 
 impl<T> Adjustable<T> for AdjustableData<T>
-    where T: Copy + Default + Add<Output=T> + PartialOrd<i32>,
+where
+    T: Copy + Default + Add<Output = T> + PartialOrd<i32>,
 {
     fn update<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,
         array_grid: &ArrayGrid<T, W, H, D, C>,
-    )
-        -> Result<(), UpdateError>
-    {
-
+    ) -> Result<(), UpdateError> {
         // Create a 1D PointIndex
         let p = PointIndex::new1d(0);
 
@@ -36,13 +34,10 @@ impl<T> Adjustable<T> for AdjustableData<T>
         Ok(())
     }
 
-
     fn adjust<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,
         array_grid: &ArrayGrid<T, W, H, D, C>,
-    )
-        -> Result<(), AdjustmentError>
-    {
+    ) -> Result<(), AdjustmentError> {
         // Create a 1D PointIndex
         let p = PointIndex::new1d(0);
 
@@ -54,7 +49,9 @@ impl<T> Adjustable<T> for AdjustableData<T>
 
         // Check for errors i.e. div by zero / overflow and return either an error or OK().
         if adjusted_data < 0 {
-            return Err(AdjustmentError("Adjustment failed, result is a negative number".into()));
+            return Err(AdjustmentError(
+                "Adjustment failed, result is a negative number".into(),
+            ));
         }
 
         // replace the internal data with the adjusted data

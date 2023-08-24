@@ -10,7 +10,8 @@ mod identifiable;
 
 #[derive(Getters, Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct AdjustableData<T>
-    where T: Copy + Default,
+where
+    T: Copy + Default,
 {
     #[getter(name = data_id)] // Rename ID getter to prevent conflict impl with identifiable
     id: u64,

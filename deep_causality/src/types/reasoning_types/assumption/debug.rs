@@ -4,24 +4,19 @@ use std::fmt::{Debug, Display, Formatter};
 
 use crate::types::reasoning_types::assumption::Assumption;
 
-impl Debug for Assumption
-{
+impl Debug for Assumption {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.fmt_write(f)
     }
 }
 
-
-impl Display for Assumption
-{
+impl Display for Assumption {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.fmt_write(f)
     }
 }
 
-
-impl Assumption
-{
+impl Assumption {
     // derive Debug isn't general enough to cover function pointers hence the function signature.
     fn fmt_write(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f,

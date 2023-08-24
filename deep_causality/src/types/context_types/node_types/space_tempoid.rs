@@ -16,15 +16,13 @@ pub struct SpaceTempoid {
     z: i64,
 }
 
-impl Identifiable for SpaceTempoid
-{
+impl Identifiable for SpaceTempoid {
     fn id(&self) -> u64 {
         self.id
     }
 }
 
-impl Temporable for SpaceTempoid
-{
+impl Temporable for SpaceTempoid {
     fn time_scale(&self) -> TimeScale {
         self.time_scale
     }
@@ -34,9 +32,7 @@ impl Temporable for SpaceTempoid
     }
 }
 
-
-impl Spatial for SpaceTempoid
-{
+impl Spatial for SpaceTempoid {
     fn x(&self) -> i64 {
         self.x
     }
@@ -50,19 +46,18 @@ impl Spatial for SpaceTempoid
     }
 }
 
-
-impl SpaceTemporal for SpaceTempoid
-{
+impl SpaceTemporal for SpaceTempoid {
     fn t(&self) -> u64 {
         self.time_unit as u64
     }
 }
 
-
 impl Display for SpaceTempoid {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "SpaceTempoid: id={}, time_scale={}, time_unit={}, x={}, y={}, z={}",
-               self.id, self.time_scale, self.time_unit, self.x, self.y, self.z,
+        write!(
+            f,
+            "SpaceTempoid: id={}, time_scale={}, time_unit={}, x={}, y={}, z={}",
+            self.id, self.time_scale, self.time_unit, self.x, self.y, self.z,
         )
     }
 }

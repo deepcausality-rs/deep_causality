@@ -6,33 +6,36 @@ use ultragraph::prelude::*;
 use crate::prelude::{Causable, CausableGraph, CausalityGraphError};
 
 pub trait CausableGraphExplaining<T>: CausableGraph<T>
-    where
-        T: Causable + PartialEq,
+where
+    T: Causable + PartialEq,
 {
     fn explain_from_to_cause(
         &self,
         start_index: usize,
         stop_index: usize,
-    )
-        -> Result<String, CausalityGraphError>
-    {
-        if self.is_empty()
-        {
+    ) -> Result<String, CausalityGraphError> {
+        if self.is_empty() {
             return Err(CausalityGraphError("Graph is empty".to_string()));
         }
 
         if !self.contains_causaloid(start_index) {
-            return Err(CausalityGraphError("Graph does not contains start causaloid".into()));
+            return Err(CausalityGraphError(
+                "Graph does not contains start causaloid".into(),
+            ));
         }
 
         if !self.contains_causaloid(stop_index) {
-            return Err(CausalityGraphError("Graph does not contains stop causaloid".into()));
+            return Err(CausalityGraphError(
+                "Graph does not contains stop causaloid".into(),
+            ));
         }
 
         let mut stack = Vec::with_capacity(self.size());
         let mut explanation = String::new();
 
-        let cause = self.get_causaloid(start_index).expect("Failed to get causaloid");
+        let cause = self
+            .get_causaloid(start_index)
+            .expect("Failed to get causaloid");
 
         let explain = match cause.explain() {
             Ok(res) => res,
@@ -49,10 +52,8 @@ pub trait CausableGraphExplaining<T>: CausableGraph<T>
 
         stack.push(neighbors);
 
-        while let Some(children) = stack.last_mut()
-        {
-            if let Some(child) = children.next()
-            {
+        while let Some(children) = stack.last_mut() {
+            if let Some(child) = children.next() {
                 let cause = self.get_causaloid(child).expect("Failed to get causaloid");
 
                 append_string(&mut explanation, &cause.explain().unwrap());
@@ -77,18 +78,15 @@ pub trait CausableGraphExplaining<T>: CausableGraph<T>
 
     /// Explains the line of reasoning across the entire graph.
     /// Returns: String representing the explanation or an error
-    fn explain_all_causes(
-        &self
-    )
-        -> Result<String, CausalityGraphError>
-    {
-        if self.is_empty()
-        {
+    fn explain_all_causes(&self) -> Result<String, CausalityGraphError> {
+        if self.is_empty() {
             return Err(CausalityGraphError("Graph is empty".to_string()));
         }
 
         if !self.contains_root_causaloid() {
-            return Err(CausalityGraphError("Graph does not contains root causaloid".into()));
+            return Err(CausalityGraphError(
+                "Graph does not contains root causaloid".into(),
+            ));
         }
 
         // These is safe as we have tested above that these exists
@@ -108,9 +106,7 @@ pub trait CausableGraphExplaining<T>: CausableGraph<T>
     fn explain_subgraph_from_cause(
         &self,
         start_index: usize,
-    )
-        -> Result<String, CausalityGraphError>
-    {
+    ) -> Result<String, CausalityGraphError> {
         if self.is_empty() {
             return Err(CausalityGraphError("Graph is empty".to_string()));
         }
@@ -132,32 +128,32 @@ pub trait CausableGraphExplaining<T>: CausableGraph<T>
         &self,
         start_index: usize,
         stop_index: usize,
-    )
-        -> Result<String, CausalityGraphError>
-    {
-        if self.is_empty()
-        {
+    ) -> Result<String, CausalityGraphError> {
+        if self.is_empty() {
             return Err(CausalityGraphError("Graph is empty".to_string()));
         }
 
         if !self.contains_causaloid(start_index) {
-            return Err(CausalityGraphError("Graph does not contains start causaloid".into()));
+            return Err(CausalityGraphError(
+                "Graph does not contains start causaloid".into(),
+            ));
         }
 
         if !self.contains_causaloid(stop_index) {
-            return Err(CausalityGraphError("Graph does not contains stop causaloid".into()));
+            return Err(CausalityGraphError(
+                "Graph does not contains stop causaloid".into(),
+            ));
         }
 
         let shortest_path = match self.get_shortest_path(start_index, stop_index) {
             Ok(shortest_path) => shortest_path,
-            Err(e) => return Err(e)
+            Err(e) => return Err(e),
         };
 
         let mut explanation = String::new();
 
         for index in shortest_path {
-            let cause = self.get_causaloid(index)
-                .expect("Failed to get causaloid");
+            let cause = self.get_causaloid(index).expect("Failed to get causaloid");
 
             append_string(&mut explanation, &cause.explain().unwrap());
         }
@@ -166,12 +162,7 @@ pub trait CausableGraphExplaining<T>: CausableGraph<T>
     }
 }
 
-fn append_string<'l>(
-    s1: &'l mut String,
-    s2: &'l str,
-)
-    -> &'l str
-{
+fn append_string<'l>(s1: &'l mut String, s2: &'l str) -> &'l str {
     s1.push('\n');
     s1.push_str(format!(" * {}", s2).as_str());
     s1.push('\n');

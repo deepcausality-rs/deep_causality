@@ -5,9 +5,12 @@ use proc_macro::TokenStream;
 
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{quote, ToTokens};
-use syn::{Data,
-          DataStruct, Fields, Ident, parse::{Parse, ParseStream}, parse_quote, punctuated::Punctuated,
-          Token, Visibility};
+use syn::{
+    parse::{Parse, ParseStream},
+    parse_quote,
+    punctuated::Punctuated,
+    Data, DataStruct, Fields, Ident, Token, Visibility,
+};
 
 // Procedural Macros: A simple derive macro
 // Published 2021-02-20 on blog.turbo.fish
@@ -17,7 +20,10 @@ pub fn expand_getters(input: TokenStream) -> syn::Result<TokenStream2> {
     let input: syn::DeriveInput = syn::parse(input).expect("Couldn't parse item");
 
     let fields = match input.data {
-        Data::Struct(DataStruct { fields: Fields::Named(fields), .. }) => fields.named,
+        Data::Struct(DataStruct {
+            fields: Fields::Named(fields),
+            ..
+        }) => fields.named,
         _ => panic!("this derive macro only works on structs with named fields"),
     };
 
@@ -36,7 +42,9 @@ pub fn expand_getters(input: TokenStream) -> syn::Result<TokenStream2> {
                 })?;
 
             let visibility = meta.vis.unwrap_or_else(|| parse_quote! { pub });
-            let method_name = meta.name.unwrap_or_else(|| f.ident.clone().expect("a named field"));
+            let method_name = meta
+                .name
+                .unwrap_or_else(|| f.ident.clone().expect("a named field"));
             let field_name = f.ident;
             let field_ty = f.ty;
 
@@ -45,7 +53,8 @@ pub fn expand_getters(input: TokenStream) -> syn::Result<TokenStream2> {
                     &self.#field_name
                 }
             })
-        }).collect::<syn::Result<TokenStream2>>()?;
+        })
+        .collect::<syn::Result<TokenStream2>>()?;
 
     let st_name = input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
@@ -78,7 +87,10 @@ impl GetterMetaData {
             }
         }
 
-        Ok(Self { name: either(self.name, other.name)?, vis: either(self.vis, other.vis)? })
+        Ok(Self {
+            name: either(self.name, other.name)?,
+            vis: either(self.vis, other.vis)?,
+        })
     }
 }
 
@@ -89,18 +101,23 @@ impl Parse for GetterMetaData {
             let _: kw::name = input.parse()?;
             let _: Token![=] = input.parse()?;
             let name = input.parse()?;
-            Ok(Self { name: Some(name), vis: None })
+            Ok(Self {
+                name: Some(name),
+                vis: None,
+            })
         } else if lookahead.peek(kw::vis) {
             let vis = input.parse()?;
-            Ok(Self { name: None, vis: Some(vis) })
+            Ok(Self {
+                name: None,
+                vis: Some(vis),
+            })
         } else {
             Err(lookahead.error())
         }
     }
 }
 
-mod kw
-{
+mod kw {
     use syn::custom_keyword;
 
     custom_keyword!(name);

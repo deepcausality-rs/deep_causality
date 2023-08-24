@@ -9,23 +9,20 @@ use crate::prelude::{Adjustable, AdjustmentError, UpdateError};
 use super::*;
 
 impl<T> Adjustable<T> for AdjustableSpaceTime<T>
-    where T: Copy + Default + Add<Output=T> + PartialOrd<i64>,
+where
+    T: Copy + Default + Add<Output = T> + PartialOrd<i64>,
 {
     fn update<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,
         _array_grid: &ArrayGrid<T, W, H, D, C>,
-    )
-        -> Result<(), UpdateError>
-    {
+    ) -> Result<(), UpdateError> {
         Ok(())
-
     }
 
     fn adjust<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,
         _array_grid: &ArrayGrid<T, W, H, D, C>,
-    ) -> Result<(), AdjustmentError>
-    {
+    ) -> Result<(), AdjustmentError> {
         Ok(())
     }
 }

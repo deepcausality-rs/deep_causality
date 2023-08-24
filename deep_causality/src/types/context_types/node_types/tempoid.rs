@@ -7,13 +7,11 @@ use deep_causality_macros::Constructor;
 use crate::prelude::{Identifiable, Temporable, TimeScale};
 
 #[derive(Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
-pub struct Tempoid
-{
+pub struct Tempoid {
     id: u64,
     time_scale: TimeScale,
     time_unit: u32,
 }
-
 
 impl Identifiable for Tempoid {
     fn id(&self) -> u64 {
@@ -21,8 +19,7 @@ impl Identifiable for Tempoid {
     }
 }
 
-impl Temporable for Tempoid
-{
+impl Temporable for Tempoid {
     fn time_scale(&self) -> TimeScale {
         self.time_scale
     }
@@ -32,12 +29,12 @@ impl Temporable for Tempoid
     }
 }
 
-impl Display for Tempoid
-{
+impl Display for Tempoid {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f,
-               "Tempoid: id: {}, time_scale: {}, time_unit: {}",
-               self.id, self.time_scale, self.time_unit
+        write!(
+            f,
+            "Tempoid: id: {}, time_scale: {}, time_unit: {}",
+            self.id, self.time_scale, self.time_unit
         )
     }
 }

@@ -11,8 +11,7 @@ pub struct Data<T> {
     filled: bool,
 }
 
-#[derive(Constructor)]
-#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
+#[derive(Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub enum Scale {
     Small,
     Big,

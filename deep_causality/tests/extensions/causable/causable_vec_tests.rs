@@ -6,8 +6,7 @@ use deep_causality::prelude::*;
 use crate::utils::test_utils::*;
 
 #[test]
-fn test_add()
-{
+fn test_add() {
     let mut col = get_test_causality_vec();
     assert_eq!(3, col.len());
 
@@ -17,8 +16,7 @@ fn test_add()
 }
 
 #[test]
-fn test_all_active()
-{
+fn test_all_active() {
     let col = get_test_causality_vec();
     assert!(!col.get_all_causes_true());
 
@@ -30,8 +28,7 @@ fn test_all_active()
 }
 
 #[test]
-fn test_number_active()
-{
+fn test_number_active() {
     let col = get_test_causality_vec();
     assert!(!col.get_all_causes_true());
 
@@ -44,8 +41,7 @@ fn test_number_active()
 }
 
 #[test]
-fn test_percent_active()
-{
+fn test_percent_active() {
     let col = get_test_causality_vec();
     assert!(!col.get_all_causes_true());
 
@@ -59,22 +55,19 @@ fn test_percent_active()
 }
 
 #[test]
-fn test_size()
-{
+fn test_size() {
     let col = get_test_causality_vec();
     assert_eq!(3, col.len());
 }
 
 #[test]
-fn test_is_empty()
-{
+fn test_is_empty() {
     let col = get_test_causality_vec();
     assert!(!col.is_empty());
 }
 
 #[test]
-fn test_to_vec()
-{
+fn test_to_vec() {
     let col = get_test_causality_vec();
     assert_eq!(3, col.to_vec().len());
 }

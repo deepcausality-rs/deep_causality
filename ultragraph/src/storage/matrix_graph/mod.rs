@@ -2,15 +2,15 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use ahash::AHashMap;
-use petgraph::Directed;
 use petgraph::graph::NodeIndex as GraphNodeIndex;
 use petgraph::matrix_graph::MatrixGraph;
+use petgraph::Directed;
 
 mod default;
-mod graph_storage;
-mod graph_root;
-mod graph_like;
 mod graph_algorithms;
+mod graph_like;
+mod graph_root;
+mod graph_storage;
 
 type DefaultIx = u32;
 type NodeIndex<Ix = DefaultIx> = GraphNodeIndex<Ix>;
@@ -54,16 +54,14 @@ type NodeMap<T> = AHashMap<NodeIndex, T>;
 type RootIndex = Option<NodeIndex>;
 
 #[derive(Clone)]
-pub struct UltraMatrixGraph<T>
-{
+pub struct UltraMatrixGraph<T> {
     root_index: RootIndex,
     graph: HyperGraph<bool>,
     node_map: NodeMap<T>,
     index_map: IndexMap,
 }
 
-impl<T> UltraMatrixGraph<T>
-{
+impl<T> UltraMatrixGraph<T> {
     pub fn new() -> Self {
         Self {
             root_index: None,

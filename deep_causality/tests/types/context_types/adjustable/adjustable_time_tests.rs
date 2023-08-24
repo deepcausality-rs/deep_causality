@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-
 use deep_causality::prelude::{Adjustable, AdjustableTime, Identifiable, TimeScale};
 
 use crate::types::context_types::adjustable::utils;
@@ -82,12 +81,12 @@ fn test_id() {
 
 #[test]
 fn test_to_string() {
-//     let id = 1;
-//     let time_unit = 21;
-//     let time_scale = TimeScale::Minute;
-//
-//     let mut d = AdjustableTime::new(0, TimeScale::Minute, 21, 21);
-//     let exp = format!("AdjustableTime: id: {}, time_scale: {:?}, time_unit: {}", id, time_scale, time_unit, &time_unit);
-//     let act = d.to_string();
-//     assert_eq!(act, exp);
+    //     let id = 1;
+    //     let time_unit = 21;
+    //     let time_scale = TimeScale::Minute;
+    //
+    //     let mut d = AdjustableTime::new(0, TimeScale::Minute, 21, 21);
+    //     let exp = format!("AdjustableTime: id: {}, time_scale: {:?}, time_unit: {}", id, time_scale, time_unit, &time_unit);
+    //     let act = d.to_string();
+    //     assert_eq!(act, exp);
 }

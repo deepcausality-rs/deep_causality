@@ -19,8 +19,8 @@ pub trait Observable: Debug + Identifiable {
 }
 
 pub trait ObservableReasoning<T>
-    where
-        T: Observable,
+where
+    T: Observable,
 {
     // Compiler generated methods using macros.
     fn len(&self) -> usize;
@@ -33,19 +33,18 @@ pub trait ObservableReasoning<T>
         &self,
         target_threshold: NumericalValue,
         target_effect: NumericalValue,
-    )
-        -> NumericalValue
-    {
-        self.get_all_items().iter().filter(|o| o.effect_observed(target_threshold, target_effect)).count() as NumericalValue
+    ) -> NumericalValue {
+        self.get_all_items()
+            .iter()
+            .filter(|o| o.effect_observed(target_threshold, target_effect))
+            .count() as NumericalValue
     }
 
     fn number_non_observation(
         &self,
         target_threshold: NumericalValue,
         target_effect: NumericalValue,
-    )
-        -> NumericalValue
-    {
+    ) -> NumericalValue {
         self.len() as NumericalValue - self.number_observation(target_threshold, target_effect)
     }
 
@@ -53,19 +52,16 @@ pub trait ObservableReasoning<T>
         &self,
         target_threshold: NumericalValue,
         target_effect: NumericalValue,
-    )
-        -> NumericalValue
-    {
-        self.number_observation(target_threshold, target_effect) / self.len() as NumericalValue // * (100 as NumericalValue)
+    ) -> NumericalValue {
+        self.number_observation(target_threshold, target_effect) / self.len() as NumericalValue
+        // * (100 as NumericalValue)
     }
 
     fn percent_non_observation(
         &self,
         target_threshold: NumericalValue,
         target_effect: NumericalValue,
-    )
-        -> NumericalValue
-    {
+    ) -> NumericalValue {
         1.0 - self.percent_observation(target_threshold, target_effect)
     }
 }

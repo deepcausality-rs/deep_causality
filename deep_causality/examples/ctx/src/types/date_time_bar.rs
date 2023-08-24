@@ -11,8 +11,7 @@ use serde::{Deserialize, Serialize};
 use crate::types::data_symbol::DataSymbol;
 
 #[derive(Deserialize, Serialize, Debug, Copy, Clone, Hash, Eq, Ord, PartialEq, PartialOrd)]
-pub struct DateTimeBar
-{
+pub struct DateTimeBar {
     date_time: DateTime<Utc>,
     symbol: DataSymbol,
     open: Decimal,
@@ -23,20 +22,32 @@ pub struct DateTimeBar
     one_hundred: Decimal,
 }
 
-
-impl DateTimeBar
-{
-    pub fn new(symbol: DataSymbol, date_time: DateTime<Utc>, open: Decimal, high: Decimal, low: Decimal, close: Decimal, volume: Decimal) -> Self {
-        Self { symbol, date_time, open, high, low, close, volume, one_hundred: Decimal::new(100, 2) }
+impl DateTimeBar {
+    pub fn new(
+        symbol: DataSymbol,
+        date_time: DateTime<Utc>,
+        open: Decimal,
+        high: Decimal,
+        low: Decimal,
+        close: Decimal,
+        volume: Decimal,
+    ) -> Self {
+        Self {
+            symbol,
+            date_time,
+            open,
+            high,
+            low,
+            close,
+            volume,
+            one_hundred: Decimal::new(100, 2),
+        }
     }
 }
 
-impl Default for DateTimeBar
-{
-    fn default() -> Self
-    {
-        Self
-        {
+impl Default for DateTimeBar {
+    fn default() -> Self {
+        Self {
             date_time: Utc::now(),
             symbol: DataSymbol::default(),
             open: Decimal::default(),
@@ -49,8 +60,7 @@ impl Default for DateTimeBar
     }
 }
 
-impl DateTimeBar
-{
+impl DateTimeBar {
     pub fn date_time(&self) -> DateTime<Utc> {
         self.date_time
     }
@@ -65,10 +75,10 @@ impl DateTimeBar
     }
 }
 
-impl Display for DateTimeBar
-{
+impl Display for DateTimeBar {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f,
+        write!(
+            f,
             "DataTime: {},\n Symbol {},\n Open {},\n High {},\n Low {},\n Close {},\n Volume {},",
             self.date_time, self.symbol, self.open, self.high, self.low, self.close, self.volume
         )

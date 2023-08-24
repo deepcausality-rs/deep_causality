@@ -18,8 +18,10 @@ pub mod storage_array_4d;
 /// Type alias for fixed sized static ArrayGrid
 pub type ArrayGrid1DType<T, const H: usize> = Grid<[T; H], T>;
 pub type ArrayGrid2DType<T, const W: usize, const H: usize> = Grid<[[T; W]; H], T>;
-pub type ArrayGrid3DType<T, const W: usize, const H: usize, const D: usize> = Grid<[[[T; W]; H]; D], T>;
-pub type ArrayGrid4DType<T, const W: usize, const H: usize, const D: usize, const C: usize> = Grid<[[[[T; W]; H]; D]; C], T>;
+pub type ArrayGrid3DType<T, const W: usize, const H: usize, const D: usize> =
+    Grid<[[[T; W]; H]; D], T>;
+pub type ArrayGrid4DType<T, const W: usize, const H: usize, const D: usize, const C: usize> =
+    Grid<[[[[T; W]; H]; D]; C], T>;
 
 /// ArrayType to determine what kind of ArrayGrid to build.
 pub enum ArrayType {
@@ -30,8 +32,8 @@ pub enum ArrayType {
 }
 
 pub enum ArrayGrid<T, const W: usize, const H: usize, const D: usize, const C: usize>
-    where
-        T: Copy,
+where
+    T: Copy,
 {
     ArrayGrid1D(ArrayGrid1DType<T, H>),
     ArrayGrid2D(ArrayGrid2DType<T, W, H>),
@@ -40,8 +42,8 @@ pub enum ArrayGrid<T, const W: usize, const H: usize, const D: usize, const C: u
 }
 
 impl<T, const W: usize, const H: usize, const D: usize, const C: usize> ArrayGrid<T, W, H, D, C>
-    where
-        T: Copy + Default,
+where
+    T: Copy + Default,
 {
     /// Returns a new ArrayGrid with the ArrayType given as argument
     ///
@@ -86,7 +88,9 @@ impl<T, const W: usize, const H: usize, const D: usize, const C: usize> ArrayGri
             ArrayType::Array1D => ArrayGrid::ArrayGrid1D(Grid::new([T::default(); H])),
             ArrayType::Array2D => ArrayGrid::ArrayGrid2D(Grid::new([[T::default(); W]; H])),
             ArrayType::Array3D => ArrayGrid::ArrayGrid3D(Grid::new([[[T::default(); W]; H]; D])),
-            ArrayType::Array4D => ArrayGrid::ArrayGrid4D(Grid::new([[[[T::default(); W]; H]; D]; C])),
+            ArrayType::Array4D => {
+                ArrayGrid::ArrayGrid4D(Grid::new([[[[T::default(); W]; H]; D]; C]))
+            }
         }
     }
 
@@ -118,13 +122,12 @@ impl<T, const W: usize, const H: usize, const D: usize, const C: usize> ArrayGri
     /// ```
     pub fn get(&self, p: PointIndex) -> T {
         match self {
-            ArrayGrid::ArrayGrid1D(grid) => { grid.get(p) }
-            ArrayGrid::ArrayGrid2D(grid) => { grid.get(p) }
-            ArrayGrid::ArrayGrid3D(grid) => { grid.get(p) }
-            ArrayGrid::ArrayGrid4D(grid) => { grid.get(p) }
+            ArrayGrid::ArrayGrid1D(grid) => grid.get(p),
+            ArrayGrid::ArrayGrid2D(grid) => grid.get(p),
+            ArrayGrid::ArrayGrid3D(grid) => grid.get(p),
+            ArrayGrid::ArrayGrid4D(grid) => grid.get(p),
         }
     }
-
 
     /// Sets the item at the given PointIndex
     ///
@@ -155,10 +158,10 @@ impl<T, const W: usize, const H: usize, const D: usize, const C: usize> ArrayGri
     /// ```
     pub fn set(&self, p: PointIndex, value: T) {
         match self {
-            ArrayGrid::ArrayGrid1D(grid) => { grid.set(p, value) }
-            ArrayGrid::ArrayGrid2D(grid) => { grid.set(p, value) }
-            ArrayGrid::ArrayGrid3D(grid) => { grid.set(p, value) }
-            ArrayGrid::ArrayGrid4D(grid) => { grid.set(p, value) }
+            ArrayGrid::ArrayGrid1D(grid) => grid.set(p, value),
+            ArrayGrid::ArrayGrid2D(grid) => grid.set(p, value),
+            ArrayGrid::ArrayGrid3D(grid) => grid.set(p, value),
+            ArrayGrid::ArrayGrid4D(grid) => grid.set(p, value),
         }
     }
 
@@ -191,8 +194,7 @@ impl<T, const W: usize, const H: usize, const D: usize, const C: usize> ArrayGri
     ///     assert_eq!(height, HEIGHT);
     ///
     /// ```
-    pub fn array_grid_1d(&self) -> Option<&ArrayGrid1DType<T, H>>
-    {
+    pub fn array_grid_1d(&self) -> Option<&ArrayGrid1DType<T, H>> {
         if let ArrayGrid::ArrayGrid1D(array_grid) = self {
             Some(array_grid)
         } else {
@@ -232,8 +234,7 @@ impl<T, const W: usize, const H: usize, const D: usize, const C: usize> ArrayGri
     ///     assert_eq!(width, WIDTH);
     ///
     /// ```
-    pub fn array_grid_2d(&self) -> Option<&ArrayGrid2DType<T, W, H>>
-    {
+    pub fn array_grid_2d(&self) -> Option<&ArrayGrid2DType<T, W, H>> {
         if let ArrayGrid::ArrayGrid2D(array_grid) = self {
             Some(array_grid)
         } else {
@@ -331,9 +332,10 @@ impl<T, const W: usize, const H: usize, const D: usize, const C: usize> ArrayGri
     }
 }
 
-impl<T, const W: usize, const H: usize, const D: usize, const C: usize> Display for ArrayGrid<T, W, H, D, C>
-    where
-        T: Copy + Debug,
+impl<T, const W: usize, const H: usize, const D: usize, const C: usize> Display
+    for ArrayGrid<T, W, H, D, C>
+where
+    T: Copy + Debug,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {

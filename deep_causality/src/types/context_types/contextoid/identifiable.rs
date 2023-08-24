@@ -3,11 +3,11 @@
 use crate::prelude::{Contextoid, Datable, Identifiable, SpaceTemporal, Spatial, Temporable};
 
 impl<D, S, T, ST> Identifiable for Contextoid<D, S, T, ST>
-    where
-        D: Datable,
-        S: Spatial,
-        T: Temporable,
-        ST: SpaceTemporal,
+where
+    D: Datable,
+    S: Spatial,
+    T: Temporable,
+    ST: SpaceTemporal,
 {
     fn id(&self) -> u64 {
         self.id

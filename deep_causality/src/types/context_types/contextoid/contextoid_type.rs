@@ -8,7 +8,6 @@ use crate::prelude::*;
 // for categories of spacial and temporal types.
 // https://stackoverflow.com/questions/31123882/how-to-map-a-parametrized-enum-from-a-generic-type-to-another
 
-
 // Add type constraints to the where clause so that S adhere to spatial trait requirements
 // and to temporal trait requirements for T.
 
@@ -19,11 +18,11 @@ use crate::prelude::*;
 // https://stackoverflow.com/questions/69173586/either-type-a-or-b-in-rust
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub enum ContextoidType<D, S, T, ST>
-    where
-        D: Datable,
-        S: Spatial,
-        T: Temporable,
-        ST: SpaceTemporal,
+where
+    D: Datable,
+    S: Spatial,
+    T: Temporable,
+    ST: SpaceTemporal,
 {
     Datoid(D),
     Tempoid(T),
@@ -33,12 +32,11 @@ pub enum ContextoidType<D, S, T, ST>
 }
 
 impl<D, S, T, ST> ContextoidType<D, S, T, ST>
-    where
-        D: Datable,
-        S: Spatial,
-        T: Temporable,
-        ST: SpaceTemporal,
-
+where
+    D: Datable,
+    S: Spatial,
+    T: Temporable,
+    ST: SpaceTemporal,
 {
     pub fn root(&self) -> Option<&Root> {
         if let ContextoidType::Root(b) = self {
@@ -79,11 +77,11 @@ impl<D, S, T, ST> ContextoidType<D, S, T, ST>
 }
 
 impl<D, S, T, ST> Display for ContextoidType<D, S, T, ST>
-    where
-        D: Datable + Display,
-        S: Spatial + Display,
-        T: Temporable + Display,
-        ST: SpaceTemporal + Display,
+where
+    D: Datable + Display,
+    S: Spatial + Display,
+    T: Temporable + Display,
+    ST: SpaceTemporal + Display,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {

@@ -4,7 +4,10 @@ use crate::prelude::Spatial;
 
 use super::*;
 
-impl<T> Spatial for AdjustableSpaceTime<T> where T: Copy + Default {
+impl<T> Spatial for AdjustableSpaceTime<T>
+where
+    T: Copy + Default,
+{
     fn x(&self) -> i64 {
         self.x
     }

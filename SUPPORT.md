@@ -1,5 +1,7 @@
 [//]: # (---)
+
 [//]: # (SPDX-License-Identifier: MIT)
+
 [//]: # (---)
 
 # Support
@@ -20,20 +22,19 @@ There are a few ways to connect with the project:
 * Questions can go to [GitHub discussions][chat].
 * Submit an [issue](https://github.com/deepcausality-rs/deep_causality/issues)
 
-
 ## How to Ask for Help
 
-*   Don’t fall for the [XY problem][xy]
-*   Read the API [documentation][api_docs]
-*   Read the [documentation][docs]
-*   Search to find out if a similar question has been asked
-*   Try to define what you need help with:
-    *   Is there something in particular you want to do?
-    *   What problem are you encountering and what steps have you taken to try
-        and fix it?
-    *   Is there a concept you don’t understand?
-*   Provide sample code, such as a [CodeSandbox][cs], if possible
-*   The more thought you put into asking your question, the better and faster we can help you
+* Don’t fall for the [XY problem][xy]
+* Read the API [documentation][api_docs]
+* Read the [documentation][docs]
+* Search to find out if a similar question has been asked
+* Try to define what you need help with:
+    * Is there something in particular you want to do?
+    * What problem are you encountering and what steps have you taken to try
+      and fix it?
+    * Is there a concept you don’t understand?
+* Provide sample code, such as a [CodeSandbox][cs], if possible
+* The more thought you put into asking your question, the better and faster we can help you
 
 ## Contributions
 
@@ -41,7 +42,8 @@ See [`contributing.md`][contributing] on how to contribute.
 
 ## How to report a bug or request an enhancement
 
-DeepCausality manages bug and enhancement using it's [issue tracker](https://github.com/deepcausality-rs/deep_causality/issues). 
+DeepCausality manages bug and enhancement using
+it's [issue tracker](https://github.com/deepcausality-rs/deep_causality/issues).
 
 
 

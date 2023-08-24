@@ -8,16 +8,16 @@ use crate::errors::{CausalGraphIndexError, CausalityGraphError};
 use crate::prelude::{Causable, IdentificationValue, NumericalValue};
 
 pub mod graph;
-pub mod graph_reasoning;
 pub mod graph_explaining;
+pub mod graph_reasoning;
 mod graph_reasoning_utils;
 
 // Type alias is shared between trait and implementation
 pub(crate) type CausalGraph<T> = UltraGraph<T>;
 
 pub trait CausableGraph<T>
-    where
-        T: Causable + PartialEq,
+where
+    T: Causable + PartialEq,
 {
     // Root Node
     fn add_root_causaloid(&mut self, value: T) -> usize;
@@ -34,7 +34,12 @@ pub trait CausableGraph<T>
 
     // Edges
     fn add_edge(&mut self, a: usize, b: usize) -> Result<(), CausalGraphIndexError>;
-    fn add_edg_with_weight(&mut self, a: usize, b: usize, weight: u64) -> Result<(), CausalGraphIndexError>;
+    fn add_edg_with_weight(
+        &mut self,
+        a: usize,
+        b: usize,
+        weight: u64,
+    ) -> Result<(), CausalGraphIndexError>;
     fn contains_edge(&self, a: usize, b: usize) -> bool;
     fn remove_edge(&mut self, a: usize, b: usize) -> Result<(), CausalGraphIndexError>;
 
@@ -52,15 +57,12 @@ pub trait CausableGraph<T>
 /// Describes signatures for causal reasoning and explaining
 /// in causality hyper graph.
 pub trait CausableGraphReasoning<T>: CausableGraph<T>
-    where
-        T: Causable + PartialEq,
+where
+    T: Causable + PartialEq,
 {
     /// Explains the line of reasoning across the entire graph.
     /// Returns: String representing the explanation or an error
-    fn explain_all_causes(
-        &self
-    )
-        -> Result<String, CausalityGraphError>;
+    fn explain_all_causes(&self) -> Result<String, CausalityGraphError>;
 
     /// Explains the line of reasoning across a subgraph starting from a given node index until
     /// the end of the graph.
@@ -69,9 +71,7 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
     fn explain_subgraph_from_cause(
         &self,
         start_index: usize,
-    )
-        -> Result<String, CausalityGraphError>;
-
+    ) -> Result<String, CausalityGraphError>;
 
     /// Explains the line of reasoning of the shortest sub-graph
     /// between a start and stop cause.
@@ -82,8 +82,7 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
         &self,
         start_index: usize,
         stop_index: usize,
-    )
-        -> Result<String, CausalityGraphError>;
+    ) -> Result<String, CausalityGraphError>;
 
     /// Reason over the entire graph.
     /// data: &[NumericalValue] - data applied to the subgraph
@@ -101,8 +100,7 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
         &self,
         data: &[NumericalValue],
         data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>,
-    )
-        -> Result<bool, CausalityGraphError>;
+    ) -> Result<bool, CausalityGraphError>;
 
     /// Reason over a subgraph starting from a given node index.
     ///
@@ -123,8 +121,7 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
         start_index: usize,
         data: &[NumericalValue],
         data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>,
-    )
-        -> Result<bool, CausalityGraphError>;
+    ) -> Result<bool, CausalityGraphError>;
 
     /// Reason over the shortest subgraph spanning between a start and stop cause.
     ///
@@ -147,8 +144,7 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
         stop_index: usize,
         data: &[NumericalValue],
         data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>,
-    )
-        -> Result<bool, CausalityGraphError>;
+    ) -> Result<bool, CausalityGraphError>;
 
     /// Reason over single node given by its index
     /// index: NodeIndex - index of the node
@@ -158,6 +154,5 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
         &self,
         index: usize,
         data: &[NumericalValue],
-    )
-        -> Result<bool, CausalityGraphError>;
+    ) -> Result<bool, CausalityGraphError>;
 }

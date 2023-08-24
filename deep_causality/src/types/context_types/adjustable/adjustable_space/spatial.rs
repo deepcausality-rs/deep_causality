@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-
 // Spatial needs to be generic over the type of the data.
 //
 // impl<T> Spatial for AdjustableSpace<T> where T: Copy + Default {

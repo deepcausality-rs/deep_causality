@@ -3,18 +3,14 @@
 
 use deep_causality::prelude::*;
 
-pub fn get_test_assumption_vec()
-    -> Vec<Assumption>
-{
+pub fn get_test_assumption_vec() -> Vec<Assumption> {
     let a1 = get_test_assumption();
     let a2 = get_test_assumption();
     let a3 = get_test_assumption();
     Vec::from_iter([a1, a2, a3])
 }
 
-pub fn get_test_obs_vec()
-    -> Vec<Observation>
-{
+pub fn get_test_obs_vec() -> Vec<Observation> {
     let o1 = Observation::new(0, 10.0, 1.0);
     let o2 = Observation::new(1, 10.0, 1.0);
     let o3 = Observation::new(2, 10.0, 1.0);
@@ -23,16 +19,13 @@ pub fn get_test_obs_vec()
     Vec::from_iter([o1, o2, o3, o4, o5])
 }
 
-pub fn get_test_inf_vec()
-    -> Vec<Inference>
-{
+pub fn get_test_inf_vec() -> Vec<Inference> {
     let i1 = get_test_inferable(0, true);
     let i2 = get_test_inferable(1, false);
     Vec::from_iter([i1, i2])
 }
 
-pub fn get_test_causality_vec<'l>()
-    -> Vec<Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>
+pub fn get_test_causality_vec<'l>() -> Vec<Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>
 {
     let q1 = get_test_causaloid();
     let q2 = get_test_causaloid();
@@ -40,9 +33,7 @@ pub fn get_test_causality_vec<'l>()
     Vec::from_iter([q1, q2, q3])
 }
 
-pub fn get_test_causaloid<'l>()
-    -> Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>
-{
+pub fn get_test_causaloid<'l>() -> Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid> {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
 
@@ -70,9 +61,7 @@ pub fn get_test_causaloid<'l>()
     Causaloid::new(id, causal_fn, description)
 }
 
-pub fn get_test_error_causaloid<'l>()
-    -> Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>
-{
+pub fn get_test_error_causaloid<'l>() -> Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid> {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
 
@@ -83,9 +72,7 @@ pub fn get_test_error_causaloid<'l>()
     Causaloid::new(id, causal_fn, description)
 }
 
-pub fn get_test_context()
-    -> Context<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>
-{
+pub fn get_test_context() -> Context<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid> {
     let mut context = Context::with_capacity(1, "Test-Context", 10);
 
     let id = 1;
@@ -96,23 +83,17 @@ pub fn get_test_context()
     context
 }
 
-pub fn get_test_inferable(
-    id: IdentificationValue,
-    inverse: bool,
-)
-    -> Inference
-{
+pub fn get_test_inferable(id: IdentificationValue, inverse: bool) -> Inference {
     let question = "".to_string() as DescriptionValue;
     let all_obs = get_test_obs_vec();
 
-    if inverse
-    {
+    if inverse {
         let target_threshold = 11.0;
         let target_effect = 0.0;
         let observation = all_obs.percent_observation(target_threshold, target_effect);
         let threshold = 0.55;
-        let effect = 0.0;// false
-        let target = 0.0;// false
+        let effect = 0.0; // false
+        let target = 0.0; // false
 
         Inference::new(id, question, observation, threshold, effect, target)
     } else {
@@ -127,15 +108,11 @@ pub fn get_test_inferable(
     }
 }
 
-pub fn get_test_observation()
-    -> Observation
-{
+pub fn get_test_observation() -> Observation {
     Observation::new(0, 14.0, 1.0)
 }
 
-pub fn get_test_assumption()
-    -> Assumption
-{
+pub fn get_test_assumption() -> Assumption {
     let id: IdentificationValue = 1;
     let description: String = "Test assumption that data are there".to_string() as DescriptionValue;
     let assumption_fn: EvalFn = test_has_data;
@@ -143,16 +120,10 @@ pub fn get_test_assumption()
     Assumption::new(id, description, assumption_fn)
 }
 
-fn test_has_data(
-    data: &[NumericalValue]
-)
-    -> bool
-{
+fn test_has_data(data: &[NumericalValue]) -> bool {
     !data.is_empty()
 }
 
-pub fn get_test_num_array()
-    -> [NumericalValue; 10]
-{
+pub fn get_test_num_array() -> [NumericalValue; 10] {
     [8.4, 8.5, 9.1, 9.3, 9.4, 9.5, 9.7, 9.7, 9.9, 9.9]
 }

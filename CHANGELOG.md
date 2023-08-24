@@ -1,4 +1,5 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
@@ -9,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.3.1...deep_causality-v0.4.0) - 2023-08-17
 
 ### Other
+
 - Fixed broken benchmark.
 - Separated context graph type into multiple files.
 - Moved contextoid_type into contextoid folder.
@@ -31,8 +33,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Moved reasoning utils to protocol.
 - Limited visibility of internal type aliases to pub(crate)
 - renamed some files.
-- Moved remaining reasoning methods from CausaloidGraph into the default implementation in causable_graph_explaining protocol
-- Moved remaining explain methods from CausaloidGraph into the default implementation in causable_graph_explaining protocol
+- Moved remaining reasoning methods from CausaloidGraph into the default implementation in causable_graph_explaining
+  protocol
+- Moved remaining explain methods from CausaloidGraph into the default implementation in causable_graph_explaining
+  protocol
 - Added test for get_graph. Reorganized graph reasoning tests.
 - Updated code documentation of CausaloidGraph
 - Fixed a bunch of linter errors, re-added default implementation to CausaloidGraph and updated tests.
@@ -88,9 +92,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated SPDX-License-Identifier to GFM comment to prevent rendering meta data as table.
 - Updated copyright with SPDX-License code.
 - Added SPDX-License-Identifier to all docs
-[//]: # (---)
-[//]: # (SPDX-License-Identifier: MIT)
-[//]: # (---)
+  [//]: # (---)
+  [//]: # (SPDX-License-Identifier: MIT)
+  [//]: # (---)
 
 # What's New
 
@@ -101,20 +105,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Feature update
 
 ### Upgrade Steps
-* Updated version in Cargo.toml 
+
+* Updated version in Cargo.toml
 
 ### Breaking Changes
-* None 
+
+* None
 
 ### New Features
+
 * Added Causal State Machine (CSM)
 * Updated code example & tests
 
 ### Bug Fixes
+
 * None
 
 ### Performance Improvements
+
 * None
 
 ### Other Changes
+
 * Added tests for Causal State Machine

@@ -7,9 +7,7 @@ use deep_causality::prelude::*;
 
 use crate::utils::test_utils::*;
 
-fn get_test_inf_btree_map()
-    -> BTreeMap<usize, Inference>
-{
+fn get_test_inf_btree_map() -> BTreeMap<usize, Inference> {
     let i1 = get_test_inferable(0, true);
     let i2 = get_test_inferable(1, false);
     BTreeMap::from_iter([(1, i1), (2, i2)])
@@ -21,7 +19,7 @@ fn test_add() {
     assert_eq!(2, col.len());
 
     let f3 = get_test_inferable(3, true);
-    col.insert(3,f3);
+    col.insert(3, f3);
     assert_eq!(3, col.len());
 }
 

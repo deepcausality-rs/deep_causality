@@ -7,8 +7,7 @@ use deep_causality::prelude::*;
 // Classic Smoking - Tar - Cancer example //
 ////////////////////////////////////////////
 
-pub fn run()
-{
+pub fn run() {
     // Infer whether there is a causal relationship between smoking / nicotine level and tar
     infer_smoke_tar_causal_relation();
 
@@ -36,7 +35,7 @@ pub fn run()
     // Adoption only requires to plug in either real study results or raw observational data.
     let nic_level = 0.82; // Heavy smoker ( high nicotine level )
     let tar_level = 0.87; // Tar in lung
-    // The order of these numbers must match the order of the causaloids above for correct auto-reasoning.
+                          // The order of these numbers must match the order of the causaloids above for correct auto-reasoning.
     let data = [nic_level, tar_level];
 
     println!(
@@ -66,17 +65,12 @@ pub fn run()
     println!("{}", &all_known_causes.explain());
 }
 
-fn apply_causal_model(
-    data: &[NumericalValue],
-    model: &BaseCausaloidVec
-)
-{
+fn apply_causal_model(data: &[NumericalValue], model: &BaseCausaloidVec) {
     let cancer_estimate = model.reason_all_causes(data).unwrap();
     println!("Has the patient a lung cancer risk: {}", cancer_estimate);
 }
 
-fn infer_smoke_tar_causal_relation()
-{
+fn infer_smoke_tar_causal_relation() {
     let all_obs = get_all_observations();
 
     let target_threshold = 0.55;
@@ -97,12 +91,18 @@ fn infer_smoke_tar_causal_relation()
     );
     println!();
 
-
     let inv_question = "Do NON smokers have NO tar in the lung?".to_string() as DescriptionValue;
     let inv_observation = percent_non_obs;
     let inv_effect = 0.0; // observed effect
     let inv_target = 0.0; // expected effect of the inference once the threshold is reached or exceeded
-    let inv_inference = Inference::new(0, inv_question, inv_observation, threshold, inv_effect, inv_target);
+    let inv_inference = Inference::new(
+        0,
+        inv_question,
+        inv_observation,
+        threshold,
+        inv_effect,
+        inv_target,
+    );
 
     println!(
         "Can we infer from the data that NON smokers have NO tar in the lung? : {:?}",
@@ -111,18 +111,14 @@ fn infer_smoke_tar_causal_relation()
     println!()
 }
 
-
-fn build_smoke_tar_causaloid()
-    -> BaseCausaloid<'static>
-{
+fn build_smoke_tar_causaloid() -> BaseCausaloid<'static> {
     let id = 1;
     let description = "Causal relation between smoking and tar in the lung";
 
-    Causaloid::new(id, causal_fn, description,)
+    Causaloid::new(id, causal_fn, description)
 }
 
-fn infer_tar_cancer_causaloid()
-{
+fn infer_tar_cancer_causaloid() {
     println!();
     let threshold = 0.55; // Threshold above which the observations is considered an inference.
     let question = "Do people with tar in the lung get cancer?".to_string() as DescriptionValue;
@@ -141,7 +137,14 @@ fn infer_tar_cancer_causaloid()
     let inv_observation = 0.12;
     let inv_effect = 0.0;
     let inv_target = 0.0; // expected effect of the inference once the threshold is reached or exceeded
-    let inv_inference = Inference::new(0, inv_question, inv_observation, threshold, inv_effect, inv_target);
+    let inv_inference = Inference::new(
+        0,
+        inv_question,
+        inv_observation,
+        threshold,
+        inv_effect,
+        inv_target,
+    );
     println!(
         "Can we infer from the data that NON tar people have NO lung cancer? : {:?}",
         inv_inference.is_inverse_inferable()
@@ -149,19 +152,14 @@ fn infer_tar_cancer_causaloid()
     println!();
 }
 
-fn build_tar_cancer_causaloid()
-    -> BaseCausaloid<'static>
-{
+fn build_tar_cancer_causaloid() -> BaseCausaloid<'static> {
     let id = 2;
     let description = "Causal relation tar in the lung and lung cancer";
 
     Causaloid::new(id, causal_fn, description)
 }
 
-
-fn causal_fn(obs: NumericalValue)
-    -> Result<bool, CausalityError>
-{
+fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
     if obs.is_nan() {
         return Err(CausalityError("Observation is NULL/NAN".into()));
     }
@@ -174,8 +172,7 @@ fn causal_fn(obs: NumericalValue)
     Ok(true)
 }
 
-fn get_all_observations() -> Vec<Observation>
-{
+fn get_all_observations() -> Vec<Observation> {
     let o1 = Observation::new(1, 0.89, 1.0);
     let o2 = Observation::new(2, 0.87, 1.0);
     let o3 = Observation::new(3, 0.78, 1.0);
@@ -188,4 +185,3 @@ fn get_all_observations() -> Vec<Observation>
 
     Vec::from_iter([o1, o2, o3, o4, o5, o6, o7, o8, o9])
 }
-

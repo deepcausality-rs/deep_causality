@@ -6,10 +6,10 @@ use std::vec::IntoIter;
 use crate::prelude::{GraphAlgorithms, GraphStorage, UltraGraphContainer, UltraGraphError};
 
 impl<S, T> GraphAlgorithms<T> for UltraGraphContainer<S, T>
-    where S: GraphStorage<T>
+where
+    S: GraphStorage<T>,
 {
-    fn shortest_path(&self, start_index: usize, stop_index: usize) -> Option<Vec<usize>>
-    {
+    fn shortest_path(&self, start_index: usize, stop_index: usize) -> Option<Vec<usize>> {
         self.storage.shortest_path(start_index, stop_index)
     }
 

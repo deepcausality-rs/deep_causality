@@ -2,49 +2,75 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::errors::{ActionError, AdjustmentError, ContextIndexError, UpdateError};
-use deep_causality::prelude::{BuildError, CausalGraphIndexError, CausalityError, CausalityGraphError};
+use deep_causality::prelude::{
+    BuildError, CausalGraphIndexError, CausalityError, CausalityGraphError,
+};
 
 #[test]
 fn test_build_error() {
     let x = 1;
-    let result: Result<usize, BuildError> = Err(BuildError::new(format!("unexpected number {}", x)));
+    let result: Result<usize, BuildError> =
+        Err(BuildError::new(format!("unexpected number {}", x)));
     let build_error = result.unwrap_err();
-    assert_eq!(build_error.to_string(), format!("BuildError: unexpected number {}", 1));
+    assert_eq!(
+        build_error.to_string(),
+        format!("BuildError: unexpected number {}", 1)
+    );
 }
 
 #[test]
 fn test_causality_graph_error() {
-    let result: Result<usize, CausalityGraphError> = Err(CausalityGraphError::new("unexpected cause".to_string()));
+    let result: Result<usize, CausalityGraphError> =
+        Err(CausalityGraphError::new("unexpected cause".to_string()));
     let error = result.unwrap_err();
-    assert_eq!(error.to_string(), format!("CausalityGraphError: unexpected cause"));
+    assert_eq!(
+        error.to_string(),
+        format!("CausalityGraphError: unexpected cause")
+    );
 }
 
 #[test]
 fn test_context_index_error() {
-    let result: Result<usize, ContextIndexError> = Err(ContextIndexError::new("unexpected cause".to_string()));
+    let result: Result<usize, ContextIndexError> =
+        Err(ContextIndexError::new("unexpected cause".to_string()));
     let error = result.unwrap_err();
-    assert_eq!(error.to_string(), format!("ContextIndexError: unexpected cause"));
+    assert_eq!(
+        error.to_string(),
+        format!("ContextIndexError: unexpected cause")
+    );
 }
 
 #[test]
 fn test_causal_graph_index_error() {
-    let result: Result<usize, CausalGraphIndexError> = Err(CausalGraphIndexError::new("unexpected cause".to_string()));
+    let result: Result<usize, CausalGraphIndexError> =
+        Err(CausalGraphIndexError::new("unexpected cause".to_string()));
     let error = result.unwrap_err();
-    assert_eq!(error.to_string(), format!("CausalGraphIndexError: unexpected cause"));
+    assert_eq!(
+        error.to_string(),
+        format!("CausalGraphIndexError: unexpected cause")
+    );
 }
 
 #[test]
 fn test_causality_error() {
-    let result: Result<usize, CausalityError> = Err(CausalityError::new("unexpected cause".to_string()));
+    let result: Result<usize, CausalityError> =
+        Err(CausalityError::new("unexpected cause".to_string()));
     let error = result.unwrap_err();
-    assert_eq!(error.to_string(), format!("CausalityError: unexpected cause"));
+    assert_eq!(
+        error.to_string(),
+        format!("CausalityError: unexpected cause")
+    );
 }
 
 #[test]
 fn test_adjustment_error() {
-    let result: Result<usize, AdjustmentError> = Err(AdjustmentError::new("unexpected issue".to_string()));
+    let result: Result<usize, AdjustmentError> =
+        Err(AdjustmentError::new("unexpected issue".to_string()));
     let error = result.unwrap_err();
-    assert_eq!(error.to_string(), format!("AdjustmentError: unexpected issue"));
+    assert_eq!(
+        error.to_string(),
+        format!("AdjustmentError: unexpected issue")
+    );
 }
 
 #[test]

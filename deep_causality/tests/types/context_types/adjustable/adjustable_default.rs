@@ -9,7 +9,10 @@ use crate::types::context_types::adjustable::utils;
 // Tests the (empty) default implementation of the adjustable protocol.
 
 #[derive(Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
-pub struct Data<T> where T: Copy + Default {
+pub struct Data<T>
+where
+    T: Copy + Default,
+{
     data: T,
 }
 

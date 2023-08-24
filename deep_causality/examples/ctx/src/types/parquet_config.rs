@@ -1,20 +1,18 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-
 use std::fmt::{Display, Formatter};
 
 use deep_causality::prelude::TimeScale;
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq)]
-pub struct ParquetConfig
-{
+pub struct ParquetConfig {
     path: String,
     symbol: String,
     time_scale: TimeScale,
 }
 
-impl Default for ParquetConfig{
+impl Default for ParquetConfig {
     fn default() -> Self {
         Self {
             path: "".to_string(),
@@ -24,11 +22,13 @@ impl Default for ParquetConfig{
     }
 }
 
-impl ParquetConfig
-{
-
+impl ParquetConfig {
     pub fn new(path: String, symbol: String, time_scale: TimeScale) -> Self {
-        Self { path, symbol, time_scale }
+        Self {
+            path,
+            symbol,
+            time_scale,
+        }
     }
 
     pub fn path(&self) -> &str {
@@ -44,11 +44,12 @@ impl ParquetConfig
     }
 }
 
-impl Display for ParquetConfig
-{
+impl Display for ParquetConfig {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "ParquetConfig symbol: {} path: {} ",
-               self.symbol, self.path
+        write!(
+            f,
+            "ParquetConfig symbol: {} path: {} ",
+            self.symbol, self.path
         )
     }
 }

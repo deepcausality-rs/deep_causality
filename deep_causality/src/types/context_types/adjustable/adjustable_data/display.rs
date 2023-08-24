@@ -4,7 +4,9 @@ use std::fmt::{Display, Formatter};
 
 use super::*;
 
-impl<T> Display for AdjustableData<T> where T: Copy + Default + Display,
+impl<T> Display for AdjustableData<T>
+where
+    T: Copy + Default + Display,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "AdjustableData: id: {} data: {}", self.id, self.data)

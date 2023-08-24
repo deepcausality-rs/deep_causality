@@ -3,33 +3,31 @@
 
 use crate::prelude::{ContextoidType, Datable, SpaceTemporal, Spatial, Temporable};
 
-mod identifiable;
-mod display;
-mod contextuable;
 pub mod contextoid_type;
+mod contextuable;
+mod display;
+mod identifiable;
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Contextoid<D, S, T, ST>
-    where
-        D: Datable,
-        S: Spatial,
-        T: Temporable,
-        ST: SpaceTemporal,
+where
+    D: Datable,
+    S: Spatial,
+    T: Temporable,
+    ST: SpaceTemporal,
 {
     id: u64,
     vertex_type: ContextoidType<D, S, T, ST>,
 }
 
 impl<D, S, T, ST> Contextoid<D, S, T, ST>
-    where
-        D: Datable,
-        S: Spatial,
-        T: Temporable,
-        ST: SpaceTemporal,
+where
+    D: Datable,
+    S: Spatial,
+    T: Temporable,
+    ST: SpaceTemporal,
 {
-    pub fn new(id: u64, vertex_type: ContextoidType<D, S, T, ST>) -> Self
-    {
+    pub fn new(id: u64, vertex_type: ContextoidType<D, S, T, ST>) -> Self {
         Self { id, vertex_type }
     }
 }
-

@@ -1,5 +1,7 @@
 [//]: # (---)
+
 [//]: # (SPDX-License-Identifier: MIT)
+
 [//]: # (---)
 
 # Context
@@ -38,9 +40,9 @@ the data stream requires contextualization relative to the tempo-spatial positio
 meaningful information to the model.
 
 DeepCausality solves this by adding a temporal master context that structures time as a 4-dimensional hyper-graph where
-each node encodes a unit of time (A tempoid) which itself contains a link to a sub-node that encodes spatial 
-information (A spaceoid), which then links to the actual chunk of data through a data object (A dataoid). 
-That way, multiple drones can stream multiple data to update a 4D context graph that informs the model 
+each node encodes a unit of time (A tempoid) which itself contains a link to a sub-node that encodes spatial
+information (A spaceoid), which then links to the actual chunk of data through a data object (A dataoid).
+That way, multiple drones can stream multiple data to update a 4D context graph that informs the model
 and allows for real-time monitoring of complex tempo-spatial patterns.
 
 ## Adjustable Temporal and Spatial Context

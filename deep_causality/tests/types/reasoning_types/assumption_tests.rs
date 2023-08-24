@@ -86,4 +86,3 @@ fn test_assumption_to_string() {
     let actual = assumption.to_string();
     assert_eq!(actual, expected);
 }
-

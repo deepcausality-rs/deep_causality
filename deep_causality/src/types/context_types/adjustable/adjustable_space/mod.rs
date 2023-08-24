@@ -5,14 +5,15 @@ use std::marker::PhantomData;
 
 use deep_causality_macros::{Constructor, Getters};
 
-mod identifiable;
 mod adjustable;
 mod display;
+mod identifiable;
 mod spatial;
 
 #[derive(Getters, Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct AdjustableSpace<T>
-    where T: Copy + Default
+where
+    T: Copy + Default,
 {
     id: u64,
     x: T,

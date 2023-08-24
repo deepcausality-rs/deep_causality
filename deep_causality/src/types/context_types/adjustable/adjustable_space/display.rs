@@ -5,10 +5,18 @@ use std::fmt::{Display, Formatter};
 use super::*;
 
 impl<T> Display for AdjustableSpace<T>
-    where T: Copy + Default + Display,
+where
+    T: Copy + Default + Display,
 {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(f, "AdjustableSpace<{}> {{ id: {}, x: {}, y: {}, z: {} }}",
-               T::default(), self.id, self.x, self.y, self.z)
+        write!(
+            f,
+            "AdjustableSpace<{}> {{ id: {}, x: {}, y: {}, z: {} }}",
+            T::default(),
+            self.id,
+            self.x,
+            self.y,
+            self.z
+        )
     }
 }

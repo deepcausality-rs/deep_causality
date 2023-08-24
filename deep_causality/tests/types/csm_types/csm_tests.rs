@@ -20,8 +20,7 @@ fn get_test_action() -> CausalAction {
 }
 
 #[test]
-fn test_new()
-{
+fn test_new() {
     let id = 42;
     let version = 1;
     let data = 0.23f64;
@@ -38,8 +37,7 @@ fn test_new()
 }
 
 #[test]
-fn test_is_empty()
-{
+fn test_is_empty() {
     let id = 42;
     let version = 1;
     let data = 0.23f64;
@@ -56,8 +54,7 @@ fn test_is_empty()
 }
 
 #[test]
-fn add_single_state()
-{
+fn add_single_state() {
     let id = 42;
     let version = 1;
     let data = 0.23f64;
@@ -80,10 +77,8 @@ fn add_single_state()
     assert_eq!(csm.len(), 2);
 }
 
-
 #[test]
-fn add_single_state_err_already_exists()
-{
+fn add_single_state_err_already_exists() {
     let id = 42;
     let version = 1;
     let data = 0.23f64;
@@ -107,8 +102,7 @@ fn add_single_state_err_already_exists()
 }
 
 #[test]
-fn update_single_state()
-{
+fn update_single_state() {
     let id = 42;
     let version = 1;
     let data = 0.23f64;
@@ -121,7 +115,6 @@ fn update_single_state()
 
     let csm = CSM::new(state_action);
     assert_eq!(csm.len(), 1);
-
 
     let id = 44;
     let version = 1;
@@ -139,8 +132,7 @@ fn update_single_state()
 }
 
 #[test]
-fn update_single_state_err_not_found()
-{
+fn update_single_state_err_not_found() {
     let id = 42;
     let version = 1;
     let data = 0.23f64;
@@ -156,8 +148,7 @@ fn update_single_state_err_not_found()
 }
 
 #[test]
-fn remove_single_state()
-{
+fn remove_single_state() {
     let id = 42;
     let version = 1;
     let data = 0.23f64;
@@ -185,8 +176,7 @@ fn remove_single_state()
 }
 
 #[test]
-fn remove_single_state_err_not_found()
-{
+fn remove_single_state_err_not_found() {
     let id = 42;
     let version = 1;
     let data = 0.23f64;
@@ -205,8 +195,7 @@ fn remove_single_state_err_not_found()
 }
 
 #[test]
-fn eval_single_state()
-{
+fn eval_single_state() {
     let id = 42;
     let version = 1;
     let data = 0.23f64;
@@ -223,8 +212,7 @@ fn eval_single_state()
 }
 
 #[test]
-fn eval_single_state_err_not_found()
-{
+fn eval_single_state_err_not_found() {
     let id = 42;
     let version = 1;
     let data = 0.23f64;
@@ -240,8 +228,7 @@ fn eval_single_state_err_not_found()
 }
 
 #[test]
-fn eval_all_states()
-{
+fn eval_all_states() {
     let id = 42;
     let version = 1;
     let data = 0.23f64;
@@ -257,8 +244,7 @@ fn eval_all_states()
 }
 
 #[test]
-fn update_all_states()
-{
+fn update_all_states() {
     let id = 42;
     let version = 1;
     let data = 0.23f64;

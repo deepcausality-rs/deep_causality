@@ -7,27 +7,21 @@ use deep_causality_macros::{Constructor, Getters};
 use crate::prelude::{Datable, Identifiable};
 
 #[derive(Getters, Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
-pub struct Dataoid
-{
+pub struct Dataoid {
     #[getter(name = data_id)] // Rename ID getter to prevent conflict impl with identifiable
     id: u64,
     data: i32,
 }
 
-
 impl Datable for Dataoid {}
 
-
-impl Identifiable for Dataoid
-{
+impl Identifiable for Dataoid {
     fn id(&self) -> u64 {
         self.id
     }
 }
 
-
-impl Display for Dataoid
-{
+impl Display for Dataoid {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "Dataoid: id: {} data: {}", self.id, self.data)
     }

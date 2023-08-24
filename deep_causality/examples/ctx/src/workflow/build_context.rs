@@ -4,7 +4,10 @@
 use std::error::Error;
 
 use chrono::Datelike;
-use deep_causality::prelude::{Context, Contextoid, ContextoidType, ContextuableGraph, RelationKind, Root, Spaceoid, SpaceTempoid, Tempoid, TimeScale};
+use deep_causality::prelude::{
+    Context, Contextoid, ContextoidType, ContextuableGraph, RelationKind, Root, SpaceTempoid,
+    Spaceoid, Tempoid, TimeScale,
+};
 
 use crate::types::counter;
 use crate::types::dateoid::Dataoid;
@@ -15,9 +18,7 @@ pub fn build_time_data_context(
     data: &SampledDataBars,
     max_time_scale: TimeScale,
     node_capacity: usize,
-)
-    -> Result<Context<Dataoid, Spaceoid, Tempoid, SpaceTempoid>, Box<dyn Error>>
-{
+) -> Result<Context<Dataoid, Spaceoid, Tempoid, SpaceTempoid>, Box<dyn Error>> {
     let context = match build_time_data_context_graph(data, max_time_scale, node_capacity) {
         Ok(g) => g,
         Err(e) => return Err(e),
@@ -26,12 +27,7 @@ pub fn build_time_data_context(
     Ok(context)
 }
 
-
-fn get_boolean_control_map(
-    time_scale: TimeScale
-)
-    -> Vec<bool>
-{
+fn get_boolean_control_map(time_scale: TimeScale) -> Vec<bool> {
     match time_scale {
         // Boolean Index:
         // 0: Year,1: Quarter,2: Month,3: Week,4: Day,5: Hour,6: Minute, 7: Second
@@ -47,14 +43,11 @@ fn get_boolean_control_map(
     }
 }
 
-
 fn build_time_data_context_graph(
     data: &SampledDataBars,
     time_scale: TimeScale,
     node_capacity: usize,
-)
-    -> Result<Context<Dataoid, Spaceoid, Tempoid, SpaceTempoid>, Box<dyn Error>>
-{
+) -> Result<Context<Dataoid, Spaceoid, Tempoid, SpaceTempoid>, Box<dyn Error>> {
     let counter = counter::RelaxedAtomicCounter::new();
 
     let mut g = Context::with_capacity(1, "BTC-1Y", node_capacity);
@@ -85,7 +78,6 @@ fn build_time_data_context_graph(
         let data_id = counter.increment_and_get();
         let data_node = Contextoid::new(data_id, ContextoidType::Datoid(dataoid));
         let data_index = g.add_node(data_node);
-
 
         // link root to year
         g.add_edge(root_index, year_index, RelationKind::Temporal)
@@ -147,7 +139,8 @@ fn build_time_data_context_graph(
                     continue;
                 }
 
-                let (tempoid, dataoid) = augment_data::convert_bar_to_augmented(data_bar, time_scale);
+                let (tempoid, dataoid) =
+                    augment_data::convert_bar_to_augmented(data_bar, time_scale);
 
                 // Add Week
                 let key = counter.increment_and_get();
@@ -187,7 +180,8 @@ fn build_time_data_context_graph(
                         continue;
                     }
 
-                    let (tempoid, dataoid) = augment_data::convert_bar_to_augmented(data_bar, time_scale);
+                    let (tempoid, dataoid) =
+                        augment_data::convert_bar_to_augmented(data_bar, time_scale);
 
                     // Add day
                     let key = counter.increment_and_get();
@@ -206,7 +200,6 @@ fn build_time_data_context_graph(
                     // link data to week
                     g.add_edge(data_index, day_index, RelationKind::Datial)
                         .expect("Failed to add edge between day and data.");
-
                 } // end day
             } // end week
         } // end month

@@ -5,14 +5,12 @@ use std::cell::RefCell;
 
 use crate::prelude::{DescriptionValue, EvalFn, IdentificationValue};
 
-mod identifiable;
 mod assumable;
 mod debug;
-
+mod identifiable;
 
 #[derive(Clone)]
-pub struct Assumption
-{
+pub struct Assumption {
     id: IdentificationValue,
     description: DescriptionValue,
     assumption_fn: EvalFn,
@@ -21,11 +19,12 @@ pub struct Assumption
 }
 
 // Constructor
-impl Assumption
-{
-    pub fn new(id: IdentificationValue, description: DescriptionValue, assumption_fn: EvalFn,
-    ) -> Self
-    {
+impl Assumption {
+    pub fn new(
+        id: IdentificationValue,
+        description: DescriptionValue,
+        assumption_fn: EvalFn,
+    ) -> Self {
         Self {
             id,
             description,

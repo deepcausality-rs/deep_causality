@@ -7,25 +7,20 @@ use deep_causality_macros::Constructor;
 use crate::prelude::{Identifiable, Spatial};
 
 #[derive(Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
-pub struct Spaceoid
-{
+pub struct Spaceoid {
     id: u64,
     x: i64,
     y: i64,
     z: i64,
 }
 
-
-impl Identifiable for Spaceoid
-{
+impl Identifiable for Spaceoid {
     fn id(&self) -> u64 {
         self.id
     }
 }
 
-
-impl Spatial for Spaceoid
-{
+impl Spatial for Spaceoid {
     fn x(&self) -> i64 {
         self.x
     }
@@ -39,11 +34,12 @@ impl Spatial for Spaceoid
     }
 }
 
-
 impl Display for Spaceoid {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Spaceoid: id={}, x={}, y={}, z={}",
-               self.id, self.x, self.y, self.z
+        write!(
+            f,
+            "Spaceoid: id={}, x={}, y={}, z={}",
+            self.id, self.x, self.y, self.z
         )
     }
 }

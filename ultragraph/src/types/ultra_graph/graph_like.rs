@@ -3,8 +3,8 @@
 use crate::prelude::{GraphLike, GraphStorage, UltraGraphContainer, UltraGraphError};
 
 impl<S, T> GraphLike<T> for UltraGraphContainer<S, T>
-    where
-        S: GraphStorage<T>,
+where
+    S: GraphStorage<T>,
 {
     fn add_node(&mut self, value: T) -> usize {
         self.storage.add_node(value)
@@ -26,7 +26,12 @@ impl<S, T> GraphLike<T> for UltraGraphContainer<S, T>
         self.storage.add_edge(a, b)
     }
 
-    fn add_edge_with_weight(&mut self, a: usize, b: usize, weight: u64) -> Result<(), UltraGraphError> {
+    fn add_edge_with_weight(
+        &mut self,
+        a: usize,
+        b: usize,
+        weight: u64,
+    ) -> Result<(), UltraGraphError> {
         self.storage.add_edge_with_weight(a, b, weight)
     }
 

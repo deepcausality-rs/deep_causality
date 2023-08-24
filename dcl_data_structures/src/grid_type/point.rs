@@ -4,16 +4,23 @@
 /// A point used to index a GridArray up to four dimensions.
 #[derive(Debug, Clone, Copy)]
 pub struct PointIndex {
-    pub x: usize, // Height
-    pub y: usize, // Width
-    pub z: usize, // Depth
+    pub x: usize,
+    // Height
+    pub y: usize,
+    // Width
+    pub z: usize,
+    // Depth
     pub t: usize, // Time
 }
 
-impl PointIndex
-{
+impl PointIndex {
     pub fn new1d(x: usize) -> Self {
-        Self { x, y: 0, z: 0, t: 0 }
+        Self {
+            x,
+            y: 0,
+            z: 0,
+            t: 0,
+        }
     }
 
     pub fn new2d(x: usize, y: usize) -> Self {

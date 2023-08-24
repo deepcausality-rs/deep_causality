@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
-use deep_causality::prelude::{Identifiable, SpaceTempoid, SpaceTemporal, Spatial, Temporable, TimeScale};
+use deep_causality::prelude::{
+    Identifiable, SpaceTempoid, SpaceTemporal, Spatial, Temporable, TimeScale,
+};
 
 #[test]
 fn test_new() {
@@ -141,7 +143,10 @@ fn test_to_string() {
     assert_eq!(d.y(), y);
     assert_eq!(d.z(), z);
 
-    let expected = format!("SpaceTempoid: id={}, time_scale={}, time_unit={}, x={}, y={}, z={}", id, time_scale, time_unit, x, y, z);
+    let expected = format!(
+        "SpaceTempoid: id={}, time_scale={}, time_unit={}, x={}, y={}, z={}",
+        id, time_scale, time_unit, x, y, z
+    );
     let actual = d.to_string();
     assert_eq!(actual, expected);
 }

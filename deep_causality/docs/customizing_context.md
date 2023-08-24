@@ -1,7 +1,8 @@
-# Customizing context 
+# Customizing context
 
 The contextuable protocols are a set of traits wihtout default implementations that specify a context and
-its node  types. Each node type has a default type implementation in the type folder. However, these types are fairly basic and whenever you want a custom context, you have to do some customizations;
+its node types. Each node type has a default type implementation in the type folder. However, these types are fairly
+basic and whenever you want a custom context, you have to do some customizations;
 
 ## Customizing context:
 
@@ -54,6 +55,7 @@ impl Temporable for Tempoid
 ### Import super traits and the new custom trait to build a custom context
 
 Also, you have to import the custom trait wherever you want to access the
-custom functionality of your custom type. 
+custom functionality of your custom type.
 
-See the ctx example for an [end to end code example](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality/examples/ctx)
+See the ctx example for
+an [end to end code example](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality/examples/ctx)

@@ -5,11 +5,11 @@ use super::*;
 
 // Getters
 impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
-    where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporable + Clone,
-        ST: SpaceTemporal + Clone,
+where
+    D: Datable + Clone,
+    S: Spatial + Clone,
+    T: Temporable + Clone,
+    ST: SpaceTemporal + Clone,
 {
     pub fn active(&self) -> bool {
         self.active.get()
@@ -30,4 +30,3 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
         self.context
     }
 }
-

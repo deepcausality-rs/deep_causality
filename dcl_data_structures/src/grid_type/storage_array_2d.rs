@@ -7,15 +7,23 @@ use crate::prelude::{PointIndex, Storage};
 // W Width
 // H Height
 impl<T, const W: usize, const H: usize> Storage<T> for [[T; W]; H]
-    where
-        T: Copy,
-        [[T; W]; H]: Sized,
+where
+    T: Copy,
+    [[T; W]; H]: Sized,
 {
-    fn get(&self, p: PointIndex) -> &T { &self[p.y][p.x] }
+    fn get(&self, p: PointIndex) -> &T {
+        &self[p.y][p.x]
+    }
 
-    fn set(&mut self, p: PointIndex, elem: T) { self[p.y][p.x] = elem }
+    fn set(&mut self, p: PointIndex, elem: T) {
+        self[p.y][p.x] = elem
+    }
 
-    fn height(&self) -> Option<&usize> { Some(&H) }
+    fn height(&self) -> Option<&usize> {
+        Some(&H)
+    }
 
-    fn width(&self) -> Option<&usize> { Some(&W) }
+    fn width(&self) -> Option<&usize> {
+        Some(&W)
+    }
 }

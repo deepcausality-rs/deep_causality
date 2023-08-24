@@ -1,11 +1,12 @@
 [//]: # (---)
+
 [//]: # (SPDX-License-Identifier: MIT)
+
 [//]: # (---)
 
 # Checklist for hosting DeepCausality with LF AI & Data
 
 ## Basic preparations in the GH org and repo
-
 
 :white_check_mark: Enable two-factor authentication for all members of the project’s GitHub org.
 
@@ -44,11 +45,11 @@
 
 :white_check_mark:  Repository admins accept content reports
 
-## Github Security 
+## Github Security
 
 :white_check_mark: Verified & approved domains: deepcausality.com
 
-:white_check_mark: Branch protection rule: Commit requires signature 
+:white_check_mark: Branch protection rule: Commit requires signature
 
 :white_check_mark: Security policy • Enabled
 
@@ -65,21 +66,24 @@
 ## OSS LICENSING
 
 :white_check_mark: Project license exists and is OSI-approved:
+
 * Project license: [The MIT LICENSE.md](../LICENSE)
 * OSI-approved: [The MIT License](https://opensource.org/license/mit/)
 
 :white_check_mark: Determine known components/dependencies are under a compatible license
+
 * OSI-approved: [Apache License, Version 2.0](https://opensource.org/license/apache-2-0/)
 * OSI-approved: [The MIT License](https://opensource.org/license/mit/)
 
 :white_check_mark: **Project components (Crates):**
 
-* dcl_data_structures: [The MIT LICENSE.md](https://github.com/deepcausality-rs/deep_causality/blob/main/dcl_data_structures/LICENSE)
+*
+dcl_data_structures: [The MIT LICENSE.md](https://github.com/deepcausality-rs/deep_causality/blob/main/dcl_data_structures/LICENSE)
 
-* deep_causality_macros: [The MIT LICENSE](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality_macros/LICENSE)
+*
+deep_causality_macros: [The MIT LICENSE](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality_macros/LICENSE)
 
 * deep_causality: [The MIT LICENSE](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/LICENSE)
-
 
 :white_check_mark: **Project git repositories:**
 
@@ -91,6 +95,9 @@
 
 :white_check_mark: **Project dependencies:**
 
-* PetGraph ([Project](https://github.com/petgraph/petgraph)): [Apache-2.0, MIT licenses ](https://github.com/petgraph/petgraph)
-* criterion.rs ([Project](https://github.com/bheisler/criterion.rs)): [Apache-2.0, MIT licenses ](https://github.com/bheisler/criterion.rs#license)
-* rand ([Project](https://github.com/rust-random/rand)): [Apache-2.0, MIT licenses ](https://github.com/rust-random/rand)
+*
+PetGraph ([Project](https://github.com/petgraph/petgraph)): [Apache-2.0, MIT licenses ](https://github.com/petgraph/petgraph)
+*
+criterion.rs ([Project](https://github.com/bheisler/criterion.rs)): [Apache-2.0, MIT licenses ](https://github.com/bheisler/criterion.rs#license)
+*
+rand ([Project](https://github.com/rust-random/rand)): [Apache-2.0, MIT licenses ](https://github.com/rust-random/rand)

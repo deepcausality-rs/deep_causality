@@ -11,14 +11,13 @@ use crate::prelude::Adjustable;
 use super::*;
 
 impl<T> Adjustable<T> for AdjustableTime<T>
-    where T: Copy + Default + Add<Output=T> + PartialOrd<i32>,
+where
+    T: Copy + Default + Add<Output = T> + PartialOrd<i32>,
 {
     fn update<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,
         array_grid: &ArrayGrid<T, W, H, D, C>,
-    )
-        -> Result<(), UpdateError>
-    {
+    ) -> Result<(), UpdateError> {
         // Create a 1D PointIndex
         let p = PointIndex::new1d(0);
 
@@ -44,9 +43,7 @@ impl<T> Adjustable<T> for AdjustableTime<T>
     fn adjust<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,
         array_grid: &ArrayGrid<T, W, H, D, C>,
-    )
-        -> Result<(), AdjustmentError>
-    {
+    ) -> Result<(), AdjustmentError> {
         // Create a 1D PointIndex
         let p = PointIndex::new1d(0);
 
@@ -55,7 +52,9 @@ impl<T> Adjustable<T> for AdjustableTime<T>
 
         // Check if the new time is non-negative. Unless you want to go back in time...
         if time_adjustment < 0 {
-            return Err(AdjustmentError("Adjustment failed, new time is NEGATIVE".into()));
+            return Err(AdjustmentError(
+                "Adjustment failed, new time is NEGATIVE".into(),
+            ));
         }
 
         // Calculate the data adjustment
@@ -63,12 +62,16 @@ impl<T> Adjustable<T> for AdjustableTime<T>
 
         // Check for errors i.e. div by zero / overflow and return either an error or OK().
         if adjusted_time < 0 {
-            return Err(AdjustmentError("Adjustment failed, result is a negative number".into()));
+            return Err(AdjustmentError(
+                "Adjustment failed, result is a negative number".into(),
+            ));
         }
 
         // Check if the new time is non-zero
         if adjusted_time == 0 {
-            return Err(AdjustmentError("Adjustment failed, new time is ZERO".into()));
+            return Err(AdjustmentError(
+                "Adjustment failed, new time is ZERO".into(),
+            ));
         }
 
         // replace the internal time with the adjusted time

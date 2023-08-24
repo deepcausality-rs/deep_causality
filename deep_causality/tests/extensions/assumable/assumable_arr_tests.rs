@@ -6,9 +6,7 @@ use deep_causality::protocols::assumable::AssumableReasoning;
 
 use crate::utils::test_utils::*;
 
-fn get_test_assumption_arr()
-    -> [Assumption; 3]
-{
+fn get_test_assumption_arr() -> [Assumption; 3] {
     let a1 = get_test_assumption();
     let a2 = get_test_assumption();
     let a3 = get_test_assumption();
@@ -16,8 +14,7 @@ fn get_test_assumption_arr()
 }
 
 #[test]
-fn test_all_assumptions_tested()
-{
+fn test_all_assumptions_tested() {
     let col = get_test_assumption_arr();
     assert_eq!(col.len(), 3);
 
@@ -32,8 +29,7 @@ fn test_all_assumptions_tested()
 }
 
 #[test]
-fn test_all_assumptions_valid()
-{
+fn test_all_assumptions_valid() {
     let col = get_test_assumption_arr();
     assert_eq!(col.len(), 3);
 
@@ -53,8 +49,7 @@ fn test_all_assumptions_valid()
 }
 
 #[test]
-fn test_percent_assumption_valid()
-{
+fn test_percent_assumption_valid() {
     let col = get_test_assumption_arr();
     assert_eq!(col.len(), 3);
 
@@ -80,8 +75,7 @@ fn test_percent_assumption_valid()
 }
 
 #[test]
-fn test_get_all_invalid_assumptions()
-{
+fn test_get_all_invalid_assumptions() {
     let col = get_test_assumption_arr();
     assert_eq!(col.len(), 3);
 
@@ -104,8 +98,7 @@ fn test_get_all_invalid_assumptions()
 }
 
 #[test]
-fn test_get_all_valid_assumptions()
-{
+fn test_get_all_valid_assumptions() {
     let col = get_test_assumption_arr();
     assert_eq!(col.len(), 3);
 
@@ -129,8 +122,7 @@ fn test_get_all_valid_assumptions()
 }
 
 #[test]
-fn test_get_all_tested_assumptions()
-{
+fn test_get_all_tested_assumptions() {
     let col = get_test_assumption_arr();
     assert_eq!(col.len(), 3);
 
@@ -154,8 +146,7 @@ fn test_get_all_tested_assumptions()
 }
 
 #[test]
-fn test_get_all_untested_assumptions()
-{
+fn test_get_all_untested_assumptions() {
     let col = get_test_assumption_arr();
     assert_eq!(col.len(), 3);
 
@@ -182,8 +173,7 @@ fn test_get_all_untested_assumptions()
 }
 
 #[test]
-fn test_verify_all_assumptions()
-{
+fn test_verify_all_assumptions() {
     let col = get_test_assumption_arr();
     assert_eq!(col.len(), 3);
 

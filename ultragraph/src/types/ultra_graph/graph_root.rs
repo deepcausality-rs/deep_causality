@@ -3,8 +3,8 @@
 use crate::prelude::{GraphRoot, GraphStorage, UltraGraphContainer, UltraGraphError};
 
 impl<S, T> GraphRoot<T> for UltraGraphContainer<S, T>
-    where
-        S: GraphStorage<T>,
+where
+    S: GraphStorage<T>,
 {
     fn add_root_node(&mut self, value: T) -> usize {
         self.storage.add_root_node(value)

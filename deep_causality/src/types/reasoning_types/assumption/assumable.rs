@@ -3,8 +3,7 @@
 use crate::prelude::{Assumable, DescriptionValue, EvalFn, NumericalValue};
 use crate::types::reasoning_types::assumption::Assumption;
 
-impl Assumable for Assumption
-{
+impl Assumable for Assumption {
     fn description(&self) -> DescriptionValue {
         self.description.to_string() as DescriptionValue
     }

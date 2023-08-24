@@ -77,7 +77,7 @@ fn test_to_string() {
     assert_eq!(d.y(), y);
     assert_eq!(d.z(), z);
 
-    let expected = format!("Spaceoid: id={}, x={}, y={}, z={}", id, x, y,z);
+    let expected = format!("Spaceoid: id={}, x={}, y={}, z={}", id, x, y, z);
     let actual = d.to_string();
     assert_eq!(actual, expected);
 }

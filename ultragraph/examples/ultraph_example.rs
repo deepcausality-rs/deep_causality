@@ -14,7 +14,6 @@ pub fn main() {
     test_shortest_path();
 }
 
-
 fn test_get_node() {
     println!("test_get_node");
     let mut g = ultragraph::with_capacity::<Data>(10);
@@ -57,7 +56,6 @@ fn test_get_node() {
         println!("node: {:?}", node);
     }
 }
-
 
 fn test_shortest_path() {
     println!("test_shortest_path");
@@ -108,13 +106,17 @@ fn test_shortest_path() {
     // | *     | *     |
     // \------ e ------/
 
-    let path = g.shortest_path(node_a_index, node_f_index).expect("Failed to get Shortest path");
+    let path = g
+        .shortest_path(node_a_index, node_f_index)
+        .expect("Failed to get Shortest path");
     assert_eq!(path.len(), 4);
-    assert_eq!(path, vec![node_a_index, node_d_index, node_e_index, node_f_index]);
+    assert_eq!(
+        path,
+        vec![node_a_index, node_d_index, node_e_index, node_f_index]
+    );
 
     println!("Shortest path: {:?}", path)
 }
-
 
 fn test_outgoing_edges() {
     println!("test_outgoing_edges");
@@ -159,7 +161,6 @@ fn test_outgoing_edges() {
 
     // Node b has zero outgoing_edges
     assert_eq!(neighbors.len(), 0);
-
 
     // get all outgoing_edges of root node
     let neighbors = g.outgoing_edges(root_index).unwrap();

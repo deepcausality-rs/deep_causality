@@ -4,8 +4,8 @@
 use crate::prelude::{GraphStorage, UltraGraphContainer};
 
 impl<S, T> GraphStorage<T> for UltraGraphContainer<S, T>
-    where
-        S: GraphStorage<T>,
+where
+    S: GraphStorage<T>,
 {
     fn size(&self) -> usize {
         self.storage.size()

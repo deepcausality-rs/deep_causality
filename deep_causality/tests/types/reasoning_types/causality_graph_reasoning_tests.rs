@@ -246,7 +246,6 @@ fn test_reason_shortest_path_between_causes() {
     assert!(res.is_ok());
     assert!(res.unwrap());
 
-
     // Now, all ten nodes or 100% are active.
     let number_true = g.number_active();
     assert_eq!(number_true, 10.0);
@@ -332,7 +331,6 @@ fn test_reason_single_cause_single_data() {
     assert!(all_true);
 }
 
-
 #[test]
 fn test_reason_single_cause_multi_data() {
     let mut g = CausaloidGraph::new();
@@ -394,7 +392,6 @@ fn test_reason_single_cause_err_empty_graph() {
     let res = g.reason_single_cause(index, &[obs]);
     assert!(res.is_err());
 }
-
 
 #[test]
 fn test_linear_graph() {
@@ -579,7 +576,6 @@ fn test_multi_layer_cause_graph() {
     let number_active = g.number_active();
     assert_eq!(number_active, total_nodes);
 
-
     // Single reasoning
     // Only reason over G (index 7)
     let obs = 0.02;
@@ -721,7 +717,6 @@ fn test_left_imbalanced_cause_graph() {
     assert_eq!(number_active, total_nodes);
 }
 
-
 #[test]
 fn test_right_imbalanced_cause_graph() {
     //   root(0)
@@ -768,7 +763,6 @@ fn test_right_imbalanced_cause_graph() {
     let total_nodes = 3.0_f64;
     let number_active = g.number_active();
     assert_eq!(number_active, total_nodes);
-
 
     // Single reasoning
     // Only reason over C (index 2)

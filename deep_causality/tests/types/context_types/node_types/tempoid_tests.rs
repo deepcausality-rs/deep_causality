@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-
 use deep_causality::prelude::{Identifiable, Tempoid, Temporable, TimeScale};
 
 #[test]
@@ -58,7 +57,10 @@ fn test_to_string() {
     assert_eq!(d.time_scale(), time_scale);
     assert_eq!(d.time_unit(), time_unit);
 
-    let exp = format!("Tempoid: id: {}, time_scale: {}, time_unit: {}", id, time_scale, time_unit);
+    let exp = format!(
+        "Tempoid: id: {}, time_scale: {}, time_unit: {}",
+        id, time_scale, time_unit
+    );
     let act = d.to_string();
     assert_eq!(act, exp);
 }

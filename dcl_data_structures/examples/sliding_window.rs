@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
-use dcl_data_structures::prelude::{ArrayStorage, SlidingWindow, window_type};
+use dcl_data_structures::prelude::{window_type, ArrayStorage, SlidingWindow};
 
 // Size refers to the maximum number of elements the sliding window can store.
 const SIZE: usize = 4;
@@ -21,7 +21,7 @@ fn get_sliding_window() -> SlidingWindow<ArrayStorage<Data, SIZE, CAPACITY>, Dat
     window_type::new_with_array_storage()
 }
 
-pub fn main(){
+pub fn main() {
     let mut window = get_sliding_window();
     assert_eq!(window.size(), SIZE);
 
@@ -76,6 +76,4 @@ pub fn main(){
     assert!(res.is_ok());
     let data = res.unwrap();
     assert_eq!(data.dats, 2);
-
 }
-

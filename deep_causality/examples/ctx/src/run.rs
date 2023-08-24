@@ -7,11 +7,10 @@ use deep_causality::prelude::{ContextuableGraph, Identifiable, TimeScale};
 
 use crate::model::get_main_causaloid;
 use crate::utils;
-use crate::workflow::{build_time_data_context, load_data};
 use crate::workflow::build_model::build_model;
+use crate::workflow::{build_time_data_context, load_data};
 
-pub fn run()
-{
+pub fn run() {
     // Determines the maximum level of time resolution in the context hypergraph.
     // Important: If you change this value to a lower level i.e. seconds,
     // the initial context hypergraph generation requires exponentially more time and memory.
@@ -66,7 +65,7 @@ pub fn run()
     println!("Building Causal Model...");
     let lap = Instant::now();
     let causaloid = get_main_causaloid(&context);
-    let model = match build_model(&context, &causaloid){
+    let model = match build_model(&context, &causaloid) {
         Ok(res) => res,
         Err(e) => panic!("{}", e),
     };

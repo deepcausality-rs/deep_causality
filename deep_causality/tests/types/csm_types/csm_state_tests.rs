@@ -6,16 +6,18 @@ use deep_causality::prelude::{Causable, CausalState, Identifiable};
 use crate::utils::test_utils;
 
 #[test]
-fn test_new()
-{
+fn test_new() {
     let causaloid = &test_utils::get_test_causaloid();
     assert!(causaloid.is_singleton());
     assert_eq!(01, causaloid.id());
-    assert_eq!("tests whether data exceeds threshold of 0.55".to_string(), causaloid.description());
+    assert_eq!(
+        "tests whether data exceeds threshold of 0.55".to_string(),
+        causaloid.description()
+    );
     assert!(!causaloid.is_active());
 
     let id = 42;
-    let version =1;
+    let version = 1;
     let data = 0.23f64;
     let cs = CausalState::new(id, version, data, causaloid);
 
@@ -26,10 +28,9 @@ fn test_new()
 }
 
 #[test]
-fn test_eval()
-{
+fn test_eval() {
     let id = 42;
-    let version =1;
+    let version = 1;
     let data = 0.23f64;
     let causaloid = &test_utils::get_test_causaloid();
 
@@ -52,10 +53,9 @@ fn test_eval()
 }
 
 #[test]
-fn eval_with_data()
-{
+fn eval_with_data() {
     let id = 42;
-    let version =1;
+    let version = 1;
     let data = 0.0f64;
     let causaloid = &test_utils::get_test_causaloid();
     let cs = CausalState::new(id, version, data, causaloid);
@@ -82,12 +82,14 @@ fn eval_with_data()
 }
 
 #[test]
-fn test_to_string()
-{
+fn test_to_string() {
     let causaloid = &test_utils::get_test_causaloid();
     assert!(causaloid.is_singleton());
     assert_eq!(01, causaloid.id());
-    assert_eq!("tests whether data exceeds threshold of 0.55".to_string(), causaloid.description());
+    assert_eq!(
+        "tests whether data exceeds threshold of 0.55".to_string(),
+        causaloid.description()
+    );
     assert!(!causaloid.is_active());
 
     let id = 42;

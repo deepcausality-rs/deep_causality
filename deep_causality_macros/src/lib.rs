@@ -8,18 +8,22 @@ use getters::expand_getters;
 use crate::collections::*;
 use crate::constructor::expand_constructor;
 
-mod getters;
-mod constructor;
 mod collections;
+mod constructor;
+mod getters;
 
 #[proc_macro_derive(Constructor, attributes(new))]
 pub fn derive(input: TokenStream) -> TokenStream {
-    expand_constructor(input).unwrap_or_else(syn::Error::into_compile_error).into()
+    expand_constructor(input)
+        .unwrap_or_else(syn::Error::into_compile_error)
+        .into()
 }
 
 #[proc_macro_derive(Getters, attributes(getter))]
 pub fn getters(input: TokenStream) -> TokenStream {
-    expand_getters(input).unwrap_or_else(syn::Error::into_compile_error).into()
+    expand_getters(input)
+        .unwrap_or_else(syn::Error::into_compile_error)
+        .into()
 }
 
 // The macros below are code generators used to implement type extensions with minimal boilerplate.

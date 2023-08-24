@@ -7,7 +7,6 @@ mod contextoid;
 mod node_types;
 
 #[cfg(test)]
-mod time_scale_tests;
-#[cfg(test)]
 mod relation_kind_tests;
-
+#[cfg(test)]
+mod time_scale_tests;

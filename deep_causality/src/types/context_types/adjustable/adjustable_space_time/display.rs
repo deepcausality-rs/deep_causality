@@ -5,7 +5,8 @@ use std::fmt::{Display, Formatter};
 use super::*;
 
 impl<T> Display for AdjustableSpaceTime<T>
-    where T: Copy + Default + Display,
+where
+    T: Copy + Default + Display,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "AdjustableSpaceTime<{}> {{ id: {}, time_scale: {}, time_unit: {}, x: {}, y: {}, z: {} }}",

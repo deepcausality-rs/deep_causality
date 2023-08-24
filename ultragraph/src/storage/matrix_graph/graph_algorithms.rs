@@ -10,13 +10,7 @@ use crate::prelude::{GraphAlgorithms, GraphLike, UltraMatrixGraph};
 use crate::storage::matrix_graph::NodeIndex;
 
 impl<T> GraphAlgorithms<T> for UltraMatrixGraph<T> {
-    fn shortest_path(
-        &self,
-        start_index: usize,
-        stop_index: usize,
-    )
-        -> Option<Vec<usize>>
-    {
+    fn shortest_path(&self, start_index: usize, stop_index: usize) -> Option<Vec<usize>> {
         if !self.contains_node(start_index) {
             return None;
         };
@@ -33,8 +27,8 @@ impl<T> GraphAlgorithms<T> for UltraMatrixGraph<T> {
             NodeIndex::new(start_index),
             |finish| finish == NodeIndex::new(stop_index),
             |e| *e.weight(),
-            |_| 0)
-        {
+            |_| 0,
+        ) {
             for node in path {
                 result.push(node.index());
             }
@@ -44,12 +38,7 @@ impl<T> GraphAlgorithms<T> for UltraMatrixGraph<T> {
         }
     }
 
-    fn outgoing_edges(
-        &self,
-        a: usize,
-    )
-        -> Result<IntoIter<usize>, UltraGraphError>
-    {
+    fn outgoing_edges(&self, a: usize) -> Result<IntoIter<usize>, UltraGraphError> {
         if !self.contains_node(a) {
             return Err(UltraGraphError("index a not found".into()));
         };
