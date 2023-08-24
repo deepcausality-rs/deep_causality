@@ -6,3 +6,4 @@
 pub mod graph_like;
 pub mod graph_root;
 pub mod graph_storage;
+pub mod graph_algorithms;

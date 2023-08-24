@@ -10,6 +10,7 @@ mod default;
 mod graph_storage;
 mod graph_root;
 mod graph_like;
+mod graph_algorithms;
 
 type DefaultIx = u32;
 type NodeIndex<Ix = DefaultIx> = GraphNodeIndex<Ix>;
