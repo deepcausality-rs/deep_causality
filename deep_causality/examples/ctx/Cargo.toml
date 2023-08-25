@@ -11,8 +11,8 @@ deep_causality = "0.4.0"
 
 # chrono default-features = false mitigates "RUSTSEC-2020-0071".
 # See https://rustsec.org/advisories/RUSTSEC-2020-0071.html
-chrono = { version = "0.4.26", default-features = false, features = ["serde", "clock"] }
-parquet = "45.0"
+chrono = { version = "0.4.26", default-features = false , features = ["serde", "clock"] }
+parquet = "46.0"
 petgraph = "0.6"
 rust_decimal = "1.31"
 serde = { version = "1.0.181", features = ["derive"] }
