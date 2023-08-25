@@ -6,6 +6,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.4.0...deep_causality-v0.5.0) - 2023-08-25
+
+### Other
+- Update parquet requirement from 45.0 to 46.0
+- Added more corner case testing causal graph explaining.
+- Added more corner case testing causal graph reasoning.
+- Added tests for error handing in graph reasoning.
+- Updated graph reasoning protocol with more error handling and removed dead code.
+- Added missing error handing tests to causal graph reasoning.
+- Fixed several broken links ik documentation.
+- Code formatting.
+- Added tests to adjustable protocol.
+- Added default constructor to custom errors.
+- Code formatting.
+- Code formatting.
+- Update tests to match generated getters.
+- Updated multiple types to use macros to generate constructors and getters.
+- Updated adjustable types in deep causality to use macros to generate constructor and getters.
+- Added more tests to CSM types.
+- Moved all test utils into test folder. Updated import path in affected tests.
+- Moved all benchmark utils into benchmark folder.
+- Removed benchmark and test utils from src/utils folder.
+- Reformatted Adjustable protocol.
+- Update AdjustableTime
+- Added tests for adjustable time type.
+- Added AdjustableTime type.
+- Updated prelude to export new AdjustableData type.
+- Misc minor changes.
+- Removed PropagationError together with propagation method in adjustable protocol.
+- Updated adjustable protocol for generic usage and uniform signature.
+- Reorganized context tests to mirror folder structure in src folder.
+- Added tests for adjustable data type
+- Added adjustable data type that implements adjustable protocol.
+- Updated copyright in all source and bash script files.
+- Updated copyright in all licence files.
+- Update mod.rs
+- Uncomment adjustable trait with a notice that it needs review and an actual implementation with tests.
+- Updated deep causality code examples to use latest version.
+
 ## [0.4.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.3.1...deep_causality-v0.4.0) - 2023-08-17
 
 ### Other
