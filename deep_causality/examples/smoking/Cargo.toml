@@ -6,4 +6,4 @@ rust-version = "1.65"
 publish = false
 
 [dependencies]
-deep_causality = "0.4.0"
+deep_causality = "0.4"
