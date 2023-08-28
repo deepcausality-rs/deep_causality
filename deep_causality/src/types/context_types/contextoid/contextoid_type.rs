@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 use std::fmt::{Display, Formatter};
+use std::marker::PhantomData;
+use std::ops::*;
 
 use crate::prelude::*;
 
@@ -17,26 +19,29 @@ use crate::prelude::*;
 
 // https://stackoverflow.com/questions/69173586/either-type-a-or-b-in-rust
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
-pub enum ContextoidType<D, S, T, ST>
+pub enum ContextoidType<D, S, T, ST, V>
 where
     D: Datable,
-    S: Spatial,
-    T: Temporable,
-    ST: SpaceTemporal,
+    S: Spatial<V>,
+    T: Temporable<V>,
+    ST: SpaceTemporal<V>,
+    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V>,
 {
     Datoid(D),
     Tempoid(T),
     Root(Root),
     Spaceoid(S),
     SpaceTempoid(ST),
+    _Unreachable(PhantomData<V>),
 }
 
-impl<D, S, T, ST> ContextoidType<D, S, T, ST>
+impl<D, S, T, ST, V> ContextoidType<D, S, T, ST, V>
 where
     D: Datable,
-    S: Spatial,
-    T: Temporable,
-    ST: SpaceTemporal,
+    S: Spatial<V>,
+    T: Temporable<V>,
+    ST: SpaceTemporal<V>,
+    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V>,
 {
     pub fn root(&self) -> Option<&Root> {
         if let ContextoidType::Root(b) = self {
@@ -76,12 +81,13 @@ where
     }
 }
 
-impl<D, S, T, ST> Display for ContextoidType<D, S, T, ST>
+impl<D, S, T, ST, V> Display for ContextoidType<D, S, T, ST, V>
 where
-    D: Datable + Display,
-    S: Spatial + Display,
-    T: Temporable + Display,
-    ST: SpaceTemporal + Display,
+    D: Display + Datable,
+    S: Display + Spatial<V>,
+    T: Display + Temporable<V>,
+    ST: Display + SpaceTemporal<V>,
+    V: Display + Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V>,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -90,6 +96,7 @@ where
             ContextoidType::Root(b) => write!(f, "Root: {}", b),
             ContextoidType::Spaceoid(b) => write!(f, "Spaceiod: {}", b),
             ContextoidType::SpaceTempoid(b) => write!(f, "SpaceTempoid: {}", b),
+            _ => write!(f, ""),
         }
     }
 }

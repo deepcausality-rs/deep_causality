@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 use std::collections::HashMap;
+use std::ops::*;
 
 use crate::errors::CausalityError;
 use crate::prelude::{
@@ -9,12 +10,13 @@ use crate::prelude::{
 };
 use crate::types::reasoning_types::causaloid::causal_type::CausalType;
 
-impl<'l, D, S, T, ST> Causable for Causaloid<'l, D, S, T, ST>
+impl<'l, D, S, T, ST, V> Causable for Causaloid<'l, D, S, T, ST, V>
 where
     D: Datable + Clone,
-    S: Spatial + Clone,
-    T: Temporable + Clone,
-    ST: SpaceTemporal + Clone,
+    S: Spatial<V> + Clone,
+    T: Temporable<V> + Clone,
+    ST: SpaceTemporal<V> + Clone,
+    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
 {
     fn explain(&self) -> Result<String, CausalityError> {
         return if self.active.get() {
@@ -139,12 +141,13 @@ where
     }
 }
 
-impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
+impl<'l, D, S, T, ST, V> Causaloid<'l, D, S, T, ST, V>
 where
     D: Datable + Clone,
-    S: Spatial + Clone,
-    T: Temporable + Clone,
-    ST: SpaceTemporal + Clone,
+    S: Spatial<V> + Clone,
+    T: Temporable<V> + Clone,
+    ST: SpaceTemporal<V> + Clone,
+    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
 {
     #[inline(always)]
     fn check_active(&self, res: bool) -> bool {

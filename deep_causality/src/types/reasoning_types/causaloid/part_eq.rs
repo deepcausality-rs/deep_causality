@@ -3,12 +3,13 @@
 
 use super::*;
 
-impl<'l, D, S, T, ST> PartialEq for Causaloid<'l, D, S, T, ST>
+impl<'l, D, S, T, ST, V> PartialEq for Causaloid<'l, D, S, T, ST, V>
 where
     D: Datable + Clone,
-    S: Spatial + Clone,
-    T: Temporable + Clone,
-    ST: SpaceTemporal + Clone,
+    S: Spatial<V> + Clone,
+    T: Temporable<V> + Clone,
+    ST: SpaceTemporal<V> + Clone,
+    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
 {
     fn eq(&self, other: &Self) -> bool {
         self.id == other.id

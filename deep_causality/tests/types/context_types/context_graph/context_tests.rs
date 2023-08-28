@@ -2,9 +2,10 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::{
-    Context, Contextoid, ContextoidType, ContextuableGraph, Dataoid, Identifiable, RelationKind,
-    Root, SpaceTempoid, Spaceoid, Tempoid, TimeScale,
+    Context, Contextoid, ContextoidType, Dataoid, Identifiable, RelationKind, Root, SpaceTempoid,
+    Spaceoid, Tempoid, TimeScale,
 };
+use deep_causality::protocols::contextuable_graph::ContextuableGraph;
 
 fn get_context<'l>() -> Context<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid> {
     let id = 1;
