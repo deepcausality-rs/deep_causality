@@ -1,5 +1,7 @@
 [//]: # (---)
+
 [//]: # (SPDX-License-Identifier: MIT)
+
 [//]: # (---)
 
 # Repolinter Report
@@ -7,38 +9,38 @@
 *This report was generated automatically by the Repolinter.*
 
 This Repolinter run generated the following results:
-| ❗  Error | ❌  Fail | ⚠️  Warn | ✅  Pass | Ignored | Total |
+| ❗ Error | ❌ Fail | ⚠️ Warn | ✅ Pass | Ignored | Total |
 |---|---|---|---|---|---|
 | 0 | 0 | 1 | 14 | 10 | 25 |
 
 - [Warning](#user-content-warning)
-  - [⚠️ `source-license-headers-exist`](#user-content--source-license-headers-exist)
+    - [⚠️ `source-license-headers-exist`](#user-content--source-license-headers-exist)
 - [Passed](#user-content-passed)
-  - [✅ `license-file-exists`](#user-content--license-file-exists)
-  - [✅ `readme-file-exists`](#user-content--readme-file-exists)
-  - [✅ `contributing-file-exists`](#user-content--contributing-file-exists)
-  - [✅ `code-of-conduct-file-exists`](#user-content--code-of-conduct-file-exists)
-  - [✅ `changelog-file-exists`](#user-content--changelog-file-exists)
-  - [✅ `security-file-exists`](#user-content--security-file-exists)
-  - [✅ `support-file-exists`](#user-content--support-file-exists)
-  - [✅ `readme-references-license`](#user-content--readme-references-license)
-  - [✅ `binaries-not-present`](#user-content--binaries-not-present)
-  - [✅ `test-directory-exists`](#user-content--test-directory-exists)
-  - [✅ `integrates-with-ci`](#user-content--integrates-with-ci)
-  - [✅ `code-of-conduct-file-contains-email`](#user-content--code-of-conduct-file-contains-email)
-  - [✅ `github-issue-template-exists`](#user-content--github-issue-template-exists)
-  - [✅ `github-pull-request-template-exists`](#user-content--github-pull-request-template-exists)
+    - [✅ `license-file-exists`](#user-content--license-file-exists)
+    - [✅ `readme-file-exists`](#user-content--readme-file-exists)
+    - [✅ `contributing-file-exists`](#user-content--contributing-file-exists)
+    - [✅ `code-of-conduct-file-exists`](#user-content--code-of-conduct-file-exists)
+    - [✅ `changelog-file-exists`](#user-content--changelog-file-exists)
+    - [✅ `security-file-exists`](#user-content--security-file-exists)
+    - [✅ `support-file-exists`](#user-content--support-file-exists)
+    - [✅ `readme-references-license`](#user-content--readme-references-license)
+    - [✅ `binaries-not-present`](#user-content--binaries-not-present)
+    - [✅ `test-directory-exists`](#user-content--test-directory-exists)
+    - [✅ `integrates-with-ci`](#user-content--integrates-with-ci)
+    - [✅ `code-of-conduct-file-contains-email`](#user-content--code-of-conduct-file-contains-email)
+    - [✅ `github-issue-template-exists`](#user-content--github-issue-template-exists)
+    - [✅ `github-pull-request-template-exists`](#user-content--github-pull-request-template-exists)
 - [Ignored](#user-content-ignored)
-  - [`javascript-package-metadata-exists`](#user-content-javascript-package-metadata-exists)
-  - [`ruby-package-metadata-exists`](#user-content-ruby-package-metadata-exists)
-  - [`java-package-metadata-exists`](#user-content-java-package-metadata-exists)
-  - [`python-package-metadata-exists`](#user-content-python-package-metadata-exists)
-  - [`objective-c-package-metadata-exists`](#user-content-objective-c-package-metadata-exists)
-  - [`swift-package-metadata-exists`](#user-content-swift-package-metadata-exists)
-  - [`erlang-package-metadata-exists`](#user-content-erlang-package-metadata-exists)
-  - [`elixir-package-metadata-exists`](#user-content-elixir-package-metadata-exists)
-  - [`license-detectable-by-licensee`](#user-content-license-detectable-by-licensee)
-  - [`notice-file-exists`](#user-content-notice-file-exists)
+    - [`javascript-package-metadata-exists`](#user-content-javascript-package-metadata-exists)
+    - [`ruby-package-metadata-exists`](#user-content-ruby-package-metadata-exists)
+    - [`java-package-metadata-exists`](#user-content-java-package-metadata-exists)
+    - [`python-package-metadata-exists`](#user-content-python-package-metadata-exists)
+    - [`objective-c-package-metadata-exists`](#user-content-objective-c-package-metadata-exists)
+    - [`swift-package-metadata-exists`](#user-content-swift-package-metadata-exists)
+    - [`erlang-package-metadata-exists`](#user-content-erlang-package-metadata-exists)
+    - [`elixir-package-metadata-exists`](#user-content-elixir-package-metadata-exists)
+    - [`license-detectable-by-licensee`](#user-content-license-detectable-by-licensee)
+    - [`notice-file-exists`](#user-content-notice-file-exists)
 
 ## Warning <a href="#user-content-warning" id="warning">#</a>
 

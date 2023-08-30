@@ -18,9 +18,7 @@ pub fn read_sampled_bars<'a>(
     time_scale: &'a TimeScale,
     capacity: usize,
     sampled_bars: &'a mut SampledDataBars,
-)
-    -> Result<(), Box<dyn Error>>
-{
+) -> Result<(), Box<dyn Error>> {
     let config = config::get_sampled_bar_config(time_scale);
     read_sampled_bars_from_parquet(&config, capacity, sampled_bars)
         .expect("Failed to read hourly sampled bars from parquet file");
@@ -32,9 +30,7 @@ fn read_sampled_bars_from_parquet<'a>(
     config: &'a ParquetConfig,
     capacity: usize,
     sampled_bars: &'a mut SampledDataBars,
-)
-    -> Result<(), Box<dyn Error>>
-{
+) -> Result<(), Box<dyn Error>> {
     let time_scale = config.time_scale();
     let mut content: Vec<DateTimeBar> = Vec::with_capacity(capacity);
 
@@ -42,15 +38,17 @@ fn read_sampled_bars_from_parquet<'a>(
     let file = File::open(Path::new(path)).expect("Could not open file");
     let symbol = config.symbol();
 
-    let reader = SerializedFileReader::new(file)
-        .expect("Could not create parquet reader");
+    let reader = SerializedFileReader::new(file).expect("Could not create parquet reader");
 
     let iter = reader
         .get_row_iter(None)
         .expect("Could not create parquet row iterator");
 
     for record in iter {
-        content.push(parquet_2_bar::convert_field_to_date_time_bar(&record.unwrap(), symbol));
+        content.push(parquet_2_bar::convert_field_to_date_time_bar(
+            &record.unwrap(),
+            symbol,
+        ));
     }
 
     match time_scale {
@@ -63,4 +61,3 @@ fn read_sampled_bars_from_parquet<'a>(
 
     Ok(())
 }
-

@@ -1,7 +1,5 @@
-
 # Make will use bash instead of sh
 SHELL := /usr/bin/env bash
-# GNU make man page: http://www.gnu.org/software/make/manual/make.html
 
 .PHONY: help
 help:
@@ -10,17 +8,14 @@ help:
 	@echo '    make bench   	Runs all benchmarks across all crates.'
 	@echo '    make check   	Checks the code base for security vulnerabilities.'
 	@echo '    make coverage   	Checks test coverage and generates a html report.'
-	@echo '    make example   	Runs the default example: Smoking.'
+	@echo '    make example   	Runs the example code.'
 	@echo '    make fix   		Fixes linting issues as reported by cargo'
+	@echo '    make format   	Formats call code according to cargo fmt style'
+	@echo '    make start   	Starts the dev day with updating rust, pulling from git remote, and build the project'
 	@echo '    make test   	Runs all tests across all crates.'
 
 # "---------------------------------------------------------"
-# Development
 # "---------------------------------------------------------"
-
-.PHONY: run
-run:
-	@source scripts/run.sh
 
 .PHONY: build
 build:
@@ -37,17 +32,12 @@ check:
 	@source scripts/check.sh
 
 
-.PHONY: clean
-clean:
-	@source scripts/clean.sh
-
-
 .PHONY: coverage
 coverage:
 	@source scripts/coverage.sh
 
 
-PHONY: example
+.PHONY: example
 example:
 	@source scripts/example.sh
 
@@ -55,6 +45,16 @@ example:
 .PHONY: fix
 fix:
 	@source scripts/fix.sh
+
+
+.PHONY: format
+format:
+	@source scripts/format.sh
+
+
+.PHONY: start
+start:
+	@source scripts/start.sh
 
 
 .PHONY: test

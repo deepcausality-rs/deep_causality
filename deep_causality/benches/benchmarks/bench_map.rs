@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use criterion::{Criterion, criterion_group};
+use criterion::{criterion_group, Criterion};
 
 use deep_causality::protocols::causable::CausableReasoning;
 
@@ -14,27 +14,21 @@ use crate::benchmarks::utils_map;
 fn small_causality_map_benchmark(criterion: &mut Criterion) {
     let (map, data) = utils_map::get_small_map_and_data();
     criterion.bench_function("small_causality_map", |bencher| {
-        bencher.iter(|| {
-            map.reason_all_causes(&data).unwrap()
-        })
+        bencher.iter(|| map.reason_all_causes(&data).unwrap())
     });
 }
 
 fn medium_causality_map_benchmark(criterion: &mut Criterion) {
     let (map, data) = utils_map::get_medium_map_and_data();
     criterion.bench_function("medium_causality_map", |bencher| {
-        bencher.iter(|| {
-            map.reason_all_causes(&data).unwrap()
-        })
+        bencher.iter(|| map.reason_all_causes(&data).unwrap())
     });
 }
 
 fn large_causality_map_benchmark(criterion: &mut Criterion) {
     let (map, data) = utils_map::get_large_map_and_data();
     criterion.bench_function("large_causality_map", |bencher| {
-        bencher.iter(|| {
-            map.reason_all_causes(&data).unwrap()
-        })
+        bencher.iter(|| map.reason_all_causes(&data).unwrap())
     });
 }
 

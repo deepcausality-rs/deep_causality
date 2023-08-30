@@ -3,6 +3,6 @@
 
 pub mod assumption;
 pub mod causaloid;
+pub mod causaloid_graph;
 pub mod inference;
 pub mod observation;
-pub mod causaloid_graph;

@@ -3,41 +3,41 @@
 
 use super::*;
 
-impl<'l, D, S, T, ST> Display for Causaloid<'l, D, S, T, ST>
-    where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone,
+impl<'l, D, S, T, ST, V> Display for Causaloid<'l, D, S, T, ST, V>
+where
+    D: Datable + Clone,
+    S: Spatial<V> + Clone,
+    T: Temporable<V> + Clone,
+    ST: SpaceTemporal<V> + Clone,
+    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.fmt(f)
     }
 }
 
-
-impl<'l, D, S, T, ST> Debug for Causaloid<'l, D, S, T, ST>
-    where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone,
+impl<'l, D, S, T, ST, V> Debug for Causaloid<'l, D, S, T, ST, V>
+where
+    D: Datable + Clone,
+    S: Spatial<V> + Clone,
+    T: Temporable<V> + Clone,
+    ST: SpaceTemporal<V> + Clone,
+    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.fmt(f)
     }
 }
 
-
-impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
-    where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone,
+impl<'l, D, S, T, ST, V> Causaloid<'l, D, S, T, ST, V>
+where
+    D: Datable + Clone,
+    S: Spatial<V> + Clone,
+    T: Temporable<V> + Clone,
+    ST: SpaceTemporal<V> + Clone,
+    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result
-    {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "Causaloid id: {} \n Causaloid type: {} \n description: {} is active: {} has context: {}",
                self.id,
                self.causal_type,

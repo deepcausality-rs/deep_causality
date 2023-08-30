@@ -11,10 +11,8 @@ pub struct CausalAction {
     version: usize,
 }
 
-impl CausalAction
-{
-    pub fn fire(&self) -> Result<(), ActionError>
-    {
+impl CausalAction {
+    pub fn fire(&self) -> Result<(), ActionError> {
         (self.action)()
     }
 }

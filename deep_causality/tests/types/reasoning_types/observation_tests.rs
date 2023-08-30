@@ -31,7 +31,10 @@ fn test_effect_to_string() {
     let observation = 14.0;
     let observed_effect = 1.0;
 
-    let expected = format!("Observation {{ id: {},observation: {},observed effect: {}}}", id,observation,observed_effect);
+    let expected = format!(
+        "Observation {{ id: {},observation: {},observed effect: {}}}",
+        id, observation, observed_effect
+    );
     let actual = o1.to_string();
 
     assert_eq!(actual, expected);

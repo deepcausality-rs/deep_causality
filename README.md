@@ -1,5 +1,7 @@
 [//]: # (---)
+
 [//]: # (SPDX-License-Identifier: MIT)
+
 [//]: # (---)
 
 # DeepCausality
@@ -15,30 +17,38 @@
 [![codecov][codecov-badge]][codecov-url]
 
 [codecov-badge]: https://codecov.io/gh/deepcausality-rs/deep_causality/branch/main/graph/badge.svg?token=W9TA1VVJ7O
+
 [codecov-url]: https://codecov.io/gh/deepcausality-rs/deep_causality
 
 [ossf-badge]: https://bestpractices.coreinfrastructure.org/projects/7568/badge
+
 [ossf-url]:https://bestpractices.coreinfrastructure.org/projects/7568
 
 [crates-badge]: https://img.shields.io/badge/Crates.io-Latest-blue
+
 [crates-url]: https://crates.io/crates/deep_causality
 
 [docs-badge]: https://img.shields.io/badge/Docs.rs-Latest-blue
+
 [docs-url]: https://docs.rs/deep_causality/latest/deep_causality/
 
 [mit-badge]: https://img.shields.io/badge/License-MIT-blue.svg
+
 [mit-url]: https://github.com/deepcausality-rs/deep_causality/blob/main/LICENSE
 
 [audit-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/audit.yml/badge.svg
+
 [benches-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_benches.yml/badge.svg
+
 [clippy-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/rust-clippy.yml/badge.svg
+
 [test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
 
 Web: https://deepcausality.com
 
 DeepCausality is a hyper-geometric computational causality library that enables fast and deterministic context-aware
 causal reasoning over complex multi-stage causality models. Deep Causality adds only minimal overhead and thus is
-suitable for real-time applications without additional acceleration hardware. 
+suitable for real-time applications without additional acceleration hardware.
 
 [How is deep causality different from deep learning?](deep_causality/docs/difference.md)
 
@@ -107,13 +117,15 @@ See:
 * [Examples](deep_causality/examples)
 * [Tests](deep_causality/tests)
 
-## Causal Graph Reasoning 
+## Causal Graph Reasoning
 
-DeepCausality reasons using the causaloid as its central data structure. 
+DeepCausality reasons using the causaloid as its central data structure.
 A causaloid encodes a causal relation as a causal function that maps input data
-to an output decision determining  whether the causal relation applied to the input data holds true.
+to an output decision determining whether the causal relation applied to the input data holds true.
 
-The causaloid, however, can be a singleton, a collection, or a graph. The causaloid-graph, however, is a hypergraph with each node being a causaloid. This recursive structure means a sub-graph can be encapsulated as a causaloid which then becomes a node of a graph. A HashMap of causes can be encapsulated as a causaloid and embedded into the same graph. 
+The causaloid, however, can be a singleton, a collection, or a graph. The causaloid-graph, however, is a hypergraph with
+each node being a causaloid. This recursive structure means a sub-graph can be encapsulated as a causaloid which then
+becomes a node of a graph. A HashMap of causes can be encapsulated as a causaloid and embedded into the same graph.
 Then, the entire causaloid-graph can be analyzed in a variety of ways, for example:
 
 * Reason over the entire graph
@@ -128,13 +140,15 @@ Also note, once activated, a causaloid stays activated until a different dataset
 negatively which will then deactivate the causaloid. Therefore, if parts of the dataset remain
 unchanged, the corresponding causaloids will remain active.
 
-By default, the causaloid ID is matched to the data index. For example, the root causaloid at index 0 will match to the data at index 0 and the data from index 0 will be used to
+By default, the causaloid ID is matched to the data index. For example, the root causaloid at index 0 will match to the
+data at index 0 and the data from index 0 will be used to
 evaluated the root causaloid. If, for any reason, the data set is ordered differently,
 an optional data_index parameter can be specified that is basically is a hashmap that maps
 the causaloid ID to a custom data index position.
 
 Reasoning performance for basic causality functions is a guaranteed sub-second for graphs below 10k nodes
-and microseconds for graphs below 1k nodes. However, graphs with well above 100k nodes may require a large amount of memory (> 10GB) because of the underlying sparse matrix representation.
+and microseconds for graphs below 1k nodes. However, graphs with well above 100k nodes may require a large amount of
+memory (> 10GB) because of the underlying sparse matrix representation.
 
 See tests as code examples:
 
@@ -143,24 +157,40 @@ See tests as code examples:
 * [Causal Graph Reasoning](deep_causality/tests/types/reasoning_types/causality_graph_reasoning_tests.rs)
 * [Causal Graph Explaining ](deep_causality/tests/types/reasoning_types/causality_graph_explaining_tests.rs)
 
+## Contextual Causal Model
 
-## Contextual Causal Model 
+DeepCausality enables context aware causality reasoning through combining contexts and causal structures in a causal
+model. A context consists of multiple contoids with each one storing relevant contextual information. For example, a
+temporal context is comprised of contextoids storing time information. Note that the temporal structure of a context is
+usually a time hypergraph in which time information is stored as nodes in the context.
 
-DeepCausality enables context aware causality reasoning through combining contexts and causal structures in a causal model. A context consists of multiple contoids with each one storing relevant contextual information. For example, a temporal context is comprised of contextoids storing time information. Note that the temporal structure of a context is usually a time hypergraph in which time information is stored as nodes in the context. 
+Next, the context may also define specific data that occurs either at a certain time, a certain place, or at a certain
+place at a certain time (space-time). In each of these cases, the context defines a separate data object, called a
+dataoid that contains all the data and which is then linked to the corresponding tempoid in case of a time context.
 
-Next, the context may also define specific data that occurs either at a certain time, a certain place, or at a certain place at a certain time (space-time). In each of these cases, the context defines a separate data object, called a dataoid that contains all the data and which is then linked to the corresponding tempoid in case of a time context. 
+When data is generated in such a way that it varies in space and in time, for example from a sensor attached to a drone,
+the measurements of the sensor are then stored in a custom dataoid whereas the meta-data of the dataid is stored in a
+custom space-tempoid that represents the time and location of the data. The reason for this separation is that, at any
+point in space/time, more than one measurement may occur. In the drone example, let us assume that the drone may have 5
+different sensors that are all read in the same interval, the space-time node links to all five sensor dataoids.
 
-When data is generated in such a way that it varies in space and in time, for example from a sensor attached to a drone, the measurements of the sensor are then stored in a custom dataoid whereas the meta-data of the dataid is stored in a custom space-tempoid that represents the time and location of the data. The reason for this separation is that, at any point in space/time, more than one measurement may occur. In the drone example, let us assume that the drone may have 5 different sensors that are all read in the same interval, the space-time node links to all five sensor dataoids.
+A context can either be static or dynamic depending on the specific situation. When building and updating a dynamic
+context,
+it is possible that the underlying hypergraph may grow very large and therefore it is necessary to implement a pruning
+mechanism that removes old branches from the context graph at regular intervals.
 
-A context can either be static or dynamic depending on the specific situation. When building and updating a dynamic context, 
-it is possible that the underlying hypergraph may grow very large and therefore it is necessary to implement a pruning mechanism that removes old branches from the context graph at regular intervals.
+Causal models can be built either without a context or with a context.
+In the latter case, an immutable reference to the context is passed into the constructor of the causaloid. The idea is
+that the causal model never modifies the context. When constructing a causaloid which reasons over observed data in
+relation to the context, the causal function with context is used instead of the regular causal function. Within that
+causal function, you can access the full context graph.
 
-Causal models can be built either without a context or with a context. 
-In the latter case, an immutable reference to the context is passed into the constructor of the causaloid. The idea is that the causal model never modifies the context. When constructing a causaloid which reasons over observed data in relation to the context, the causal function with context is used instead of the regular causal function. Within that causal function, you can access the full context graph. 
-
-However, if the context is generated dynamically, you might want to use a dynamic secondary index to determine the actual index of any contextoid in the context. 
-The dynamic secondary index could be an algorithm to calculate the index based on certain parameters derivable from the data, i.e. temporal arithmetic based 
-on timestamps. To make the secondary index accessible from within the causal function, you may extend the context with an extension trait 
+However, if the context is generated dynamically, you might want to use a dynamic secondary index to determine the
+actual index of any contextoid in the context.
+The dynamic secondary index could be an algorithm to calculate the index based on certain parameters derivable from the
+data, i.e. temporal arithmetic based
+on timestamps. To make the secondary index accessible from within the causal function, you may extend the context with
+an extension trait
 and corresponding implementation.
 
 * [Contexts](deep_causality/docs/context.md)
@@ -171,8 +201,11 @@ and corresponding implementation.
 
 ## Causal State Machine
 
-A causal state machine models a context-free system where each cause maps to a known effect. The example below models a sensor network that screens an industry site for smoke, fire, and explosions. Because the sensors are reliable, an alert will be raised whenever the sensor exceeds a certain threshold. You could implement this kind of system in many ways,
-but as the example shows, the causal state machine makes the system relatively easy to maintain. New sensors, for example, from a drone inspection, can be added and evaluated
+A causal state machine models a context-free system where each cause maps to a known effect. The example below models a
+sensor network that screens an industry site for smoke, fire, and explosions. Because the sensors are reliable, an alert
+will be raised whenever the sensor exceeds a certain threshold. You could implement this kind of system in many ways,
+but as the example shows, the causal state machine makes the system relatively easy to maintain. New sensors, for
+example, from a drone inspection, can be added and evaluated
 dynamically.
 
 * [CSM](deep_causality/src/types/csm_types/mod.rs)

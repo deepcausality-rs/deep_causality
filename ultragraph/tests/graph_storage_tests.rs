@@ -97,7 +97,6 @@ fn test_get_get_all_edges() {
     assert_eq!(expected, actual);
 }
 
-
 #[test]
 fn test_number_edges() {
     let g = get_ultra_graph();

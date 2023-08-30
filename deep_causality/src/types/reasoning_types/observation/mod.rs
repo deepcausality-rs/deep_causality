@@ -5,9 +5,9 @@ use deep_causality_macros::Constructor;
 
 use crate::prelude::{IdentificationValue, NumericalValue};
 
+mod display;
 mod identifiable;
 mod observable;
-mod display;
 
 #[derive(Constructor, Debug, Clone, PartialEq, PartialOrd)]
 pub struct Observation {

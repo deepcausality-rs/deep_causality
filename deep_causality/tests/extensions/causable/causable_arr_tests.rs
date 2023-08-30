@@ -7,22 +7,17 @@ use deep_causality::prelude::*;
 
 use crate::utils::test_utils::*;
 
-fn get_test_causality_data()
-    -> [NumericalValue; 10]
-{
+fn get_test_causality_data() -> [NumericalValue; 10] {
     [60.0, 99.0, 82.0, 93.8, 74.8, 82.0, 93.8, 74.0, 74.8, 82.0]
 }
 
-pub fn get_test_causality_array<'l>()
-    -> [Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>; 10]
-{
-// Causaloid doesn't implement Copy hence the from_fn workaround for array initialization
+pub fn get_test_causality_array<'l>() -> [BaseCausaloid<'l>; 10] {
+    // Causaloid doesn't implement Copy hence the from_fn workaround for array initialization
     array::from_fn(|_| get_test_causaloid())
 }
 
 #[test]
-fn test_all_active()
-{
+fn test_all_active() {
     let col = get_test_causality_array();
     assert!(!col.get_all_causes_true());
 
@@ -34,8 +29,7 @@ fn test_all_active()
 }
 
 #[test]
-fn test_number_active()
-{
+fn test_number_active() {
     let col = get_test_causality_array();
     assert!(!col.get_all_causes_true());
 
@@ -48,8 +42,7 @@ fn test_number_active()
 }
 
 #[test]
-fn test_percent_active()
-{
+fn test_percent_active() {
     let col = get_test_causality_array();
     assert!(!col.get_all_causes_true());
 
@@ -73,8 +66,7 @@ fn test_get_all_items() {
 }
 
 #[test]
-fn test_get_all_active_causes()
-{
+fn test_get_all_active_causes() {
     let col = get_test_causality_array();
     assert!(!col.get_all_causes_true());
 
@@ -87,8 +79,7 @@ fn test_get_all_active_causes()
 }
 
 #[test]
-fn test_get_all_inactive_causes()
-{
+fn test_get_all_inactive_causes() {
     let col = get_test_causality_array();
     assert!(!col.get_all_causes_true());
 
@@ -100,10 +91,8 @@ fn test_get_all_inactive_causes()
     assert_eq!(0, col.get_all_inactive_causes().len());
 }
 
-
 #[test]
-fn test_reason_all_causes()
-{
+fn test_reason_all_causes() {
     let col = get_test_causality_array();
     assert!(!col.get_all_causes_true());
 
@@ -117,8 +106,7 @@ fn test_reason_all_causes()
 }
 
 #[test]
-fn test_explain()
-{
+fn test_explain() {
     let col = get_test_causality_array();
     assert!(!col.get_all_causes_true());
 
@@ -133,22 +121,19 @@ fn test_explain()
 }
 
 #[test]
-fn test_len()
-{
+fn test_len() {
     let col = get_test_causality_array();
     assert_eq!(10, col.len());
 }
 
 #[test]
-fn test_is_empty()
-{
+fn test_is_empty() {
     let col = get_test_causality_array();
     assert!(!col.is_empty());
 }
 
 #[test]
-fn test_to_vec()
-{
+fn test_to_vec() {
     let col = get_test_causality_array();
     assert_eq!(10, col.to_vec().len());
 }

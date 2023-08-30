@@ -8,10 +8,11 @@ use crate::prelude::{PointIndex, Storage};
 // H Height
 // D Depth
 // C Chronos (Time) since T was already taken for Type T
-impl<T, const W: usize, const H: usize, const D: usize, const C: usize> Storage<T> for [[[[T; W]; H]; D]; C]
-    where
-        T: Copy,
-        [[[[T; W]; H]; D]; C]: Sized,
+impl<T, const W: usize, const H: usize, const D: usize, const C: usize> Storage<T>
+    for [[[[T; W]; H]; D]; C]
+where
+    T: Copy,
+    [[[[T; W]; H]; D]; C]: Sized,
 {
     fn get(&self, p: PointIndex) -> &T {
         &self[p.y][p.x][p.z][p.t]

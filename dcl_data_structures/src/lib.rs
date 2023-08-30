@@ -3,6 +3,6 @@
 
 #![forbid(unsafe_code)]
 
+pub mod grid_type;
 pub mod prelude;
 pub mod window_type;
-pub mod grid_type;

@@ -3,18 +3,13 @@
 
 use chrono::{DateTime, TimeZone, Utc};
 use parquet::record::{Row, RowAccessor};
-use rust_decimal::Decimal;
 use rust_decimal::prelude::FromPrimitive;
+use rust_decimal::Decimal;
 
 use crate::types::data_symbol::DataSymbol;
 use crate::types::date_time_bar::DateTimeBar;
 
-pub fn convert_field_to_date_time_bar(
-    record: &Row,
-    symbol: &str,
-)
-    -> DateTimeBar
-{
+pub fn convert_field_to_date_time_bar(record: &Row, symbol: &str) -> DateTimeBar {
     // parquet index. We can safely unwrap b/c all data are complete and correct.
     // 0 date_time Int
     // 1 symbol String
@@ -35,18 +30,15 @@ pub fn convert_field_to_date_time_bar(
     DateTimeBar::new(symbol, date_time, open, high, low, close, volume)
 }
 
-fn get_date_time_field(
-    row: &Row
-)
-    -> Result<DateTime<Utc>, Box<dyn std::error::Error>>
-{
+fn get_date_time_field(row: &Row) -> Result<DateTime<Utc>, Box<dyn std::error::Error>> {
     if row.get_string(0).is_ok() {
         // supported timezone syntax for DateTime from string https://github.com/chronotope/chrono/issues/219
         let fmt = "%Y-%m-%d %H:%M:%S%.6f%z";
         let s = row.get_string(0).expect("Cannot extract datetime str");
         // supported timezone syntax for DateTime from string https://github.com/chronotope/chrono/issues/219
         let date_time: DateTime<Utc> = DateTime::parse_from_str(s, fmt)
-            .expect("Cannot convert string to DateTime").with_timezone(&Utc);
+            .expect("Cannot convert string to DateTime")
+            .with_timezone(&Utc);
 
         return Ok(date_time);
     }
@@ -58,7 +50,9 @@ fn get_date_time_field(
     }
 
     if row.get_timestamp_micros(0).is_ok() {
-        let micros = row.get_timestamp_micros(0).expect("Cannot extract datetime millis");
+        let micros = row
+            .get_timestamp_micros(0)
+            .expect("Cannot extract datetime millis");
         let millis = micros / 1000;
 
         let date_time: DateTime<Utc> = Utc.timestamp_millis_opt(millis).unwrap();

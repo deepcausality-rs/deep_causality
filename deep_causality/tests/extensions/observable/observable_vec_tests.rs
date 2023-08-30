@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-
 use deep_causality::protocols::observable::ObservableReasoning;
 use deep_causality::types::alias_types::NumericalValue;
 
@@ -40,7 +39,8 @@ fn test_number_non_observation() {
     let observations = get_test_obs_vec();
     let target_threshold = 10.0 as NumericalValue;
     let target_effect = 1.0 as NumericalValue;
-    let total_non_observation = observations.number_non_observation(target_threshold, target_effect);
+    let total_non_observation =
+        observations.number_non_observation(target_threshold, target_effect);
     assert_eq!(2.0, total_non_observation);
 }
 
@@ -49,7 +49,8 @@ fn test_percent_non_observation() {
     let observations = get_test_obs_vec();
     let target_threshold = 10.0;
     let target_effect = 1.0;
-    let percent_non_observation = observations.percent_non_observation(target_threshold, target_effect);
+    let percent_non_observation =
+        observations.percent_non_observation(target_threshold, target_effect);
     assert_eq!(0.4, percent_non_observation);
 }
 

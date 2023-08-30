@@ -8,8 +8,8 @@ use crate::prelude::{Causable, NumericalValue};
 use crate::protocols::causable_graph::CausalGraph;
 
 pub trait CausableGraph<T>
-    where
-        T: Causable + PartialEq,
+where
+    T: Causable + PartialEq,
 {
     // The get_graph method enables the default implementation of the
     // CausableGraphExplaining and CausableGraphReasoning traits.
@@ -29,7 +29,12 @@ pub trait CausableGraph<T>
 
     // Edges
     fn add_edge(&mut self, a: usize, b: usize) -> Result<(), CausalGraphIndexError>;
-    fn add_edg_with_weight(&mut self, a: usize, b: usize, weight: u64) -> Result<(), CausalGraphIndexError>;
+    fn add_edg_with_weight(
+        &mut self,
+        a: usize,
+        b: usize,
+        weight: u64,
+    ) -> Result<(), CausalGraphIndexError>;
     fn contains_edge(&self, a: usize, b: usize) -> bool;
     fn remove_edge(&mut self, a: usize, b: usize) -> Result<(), CausalGraphIndexError>;
 
@@ -48,11 +53,11 @@ pub trait CausableGraph<T>
         &self,
         start_index: usize,
         stop_index: usize,
-    )
-        -> Result<Vec<usize>, CausalityGraphError>
-    {
+    ) -> Result<Vec<usize>, CausalityGraphError> {
         if start_index == stop_index {
-            return Err(CausalityGraphError("Start and Stop node identical: No shortest path possible".into()));
+            return Err(CausalityGraphError(
+                "Start and Stop node identical: No shortest path possible".into(),
+            ));
         }
 
         return match self.get_graph().shortest_path(start_index, stop_index) {
@@ -61,4 +66,3 @@ pub trait CausableGraph<T>
         };
     }
 }
-

@@ -4,17 +4,14 @@
 use crate::types::date_time_bar::DateTimeBar;
 
 #[derive(Debug, Default, Clone)]
-pub struct SampledDataBars
-{
+pub struct SampledDataBars {
     day_bars: Vec<DateTimeBar>,
     week_bars: Vec<DateTimeBar>,
     month_bars: Vec<DateTimeBar>,
     year_bars: Vec<DateTimeBar>,
 }
 
-
-impl SampledDataBars
-{
+impl SampledDataBars {
     pub fn total_number_of_bars(&self) -> usize {
         self.day_bars.len() + self.week_bars.len() + self.month_bars.len() + self.year_bars.len()
     }

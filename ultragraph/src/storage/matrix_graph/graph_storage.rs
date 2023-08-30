@@ -5,25 +5,20 @@ use crate::prelude::GraphStorage;
 
 use super::UltraMatrixGraph;
 
-impl<T> GraphStorage<T> for UltraMatrixGraph<T>
-{
-    fn size(&self) -> usize
-    {
+impl<T> GraphStorage<T> for UltraMatrixGraph<T> {
+    fn size(&self) -> usize {
         self.graph.node_count()
     }
 
-    fn is_empty(&self) -> bool
-    {
+    fn is_empty(&self) -> bool {
         self.graph.node_count() == 0
     }
 
-    fn number_nodes(&self) -> usize
-    {
+    fn number_nodes(&self) -> usize {
         self.graph.node_count()
     }
 
-    fn number_edges(&self) -> usize
-    {
+    fn number_edges(&self) -> usize {
         self.graph.edge_count()
     }
 
@@ -37,8 +32,7 @@ impl<T> GraphStorage<T> for UltraMatrixGraph<T>
         res
     }
 
-    fn get_all_edges(&self) -> Vec<(usize, usize)>
-    {
+    fn get_all_edges(&self) -> Vec<(usize, usize)> {
         let mut edges = Vec::with_capacity(self.node_map.len());
 
         for idx in self.node_map.keys() {
@@ -50,8 +44,7 @@ impl<T> GraphStorage<T> for UltraMatrixGraph<T>
         edges
     }
 
-    fn clear(&mut self)
-    {
+    fn clear(&mut self) {
         self.graph.clear();
         self.node_map.clear();
         self.index_map.clear();

@@ -3,8 +3,7 @@
 use crate::prelude::{Identifiable, IdentificationValue};
 use crate::types::reasoning_types::assumption::Assumption;
 
-impl Identifiable for Assumption
-{
+impl Identifiable for Assumption {
     fn id(&self) -> IdentificationValue {
         self.id
     }

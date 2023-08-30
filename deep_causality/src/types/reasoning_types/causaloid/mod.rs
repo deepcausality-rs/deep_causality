@@ -3,56 +3,56 @@
 
 use std::cell::Cell;
 use std::fmt::{Debug, Display, Formatter};
+use std::marker::PhantomData;
+use std::ops::*;
 
-use crate::prelude::{Causable, CausalFn, CausaloidGraph, Context, ContextualCausalFn, Datable, Identifiable, IdentificationValue, NumericalValue, SpaceTemporal, Spatial, Temporal};
+use crate::prelude::*;
 use crate::types::reasoning_types::causaloid::causal_type::CausalType;
 
+mod causable;
 mod causal_type;
-mod part_eq;
+mod display;
 mod getters;
 mod identifiable;
-mod display;
-mod causable;
+mod part_eq;
 
+pub type CausalVec<'l, D, S, T, ST, V> = Vec<Causaloid<'l, D, S, T, ST, V>>;
+pub type CausalGraph<'l, D, S, T, ST, V> = CausaloidGraph<Causaloid<'l, D, S, T, ST, V>>;
 #[derive(Clone)]
-pub struct Causaloid<'l, D, S, T, ST>
-    where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone,
+pub struct Causaloid<'l, D, S, T, ST, V>
+where
+    D: Datable + Clone,
+    S: Spatial<V> + Clone,
+    T: Temporable<V> + Clone,
+    ST: SpaceTemporal<V> + Clone,
+    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
 {
     id: IdentificationValue,
     active: Cell<bool>,
     causal_type: CausalType,
     causal_fn: Option<CausalFn>,
-    context_causal_fn: Option<ContextualCausalFn<'l, D, S, T, ST>>,
-    context: Option<&'l Context<'l, D, S, T, ST>, >,
+    context_causal_fn: Option<ContextualCausalFn<'l, D, S, T, ST, V>>,
+    context: Option<&'l Context<'l, D, S, T, ST, V>>,
     has_context: bool,
-    causal_coll: Option<Vec<Causaloid<'l, D, S, T, ST>>>,
-    causal_graph: Option<CausaloidGraph<Causaloid<'l, D, S, T, ST>>>,
+    causal_coll: Option<CausalVec<'l, D, S, T, ST, V>>,
+    causal_graph: Option<CausalGraph<'l, D, S, T, ST, V>>,
     last_obs: Cell<NumericalValue>,
     description: &'l str,
+    ty: PhantomData<V>,
 }
 
-
 // Constructors
-impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
-    where
-        D: Datable + Clone,
-        S: Spatial + Clone,
-        T: Temporal + Clone,
-        ST: SpaceTemporal + Clone,
+impl<'l, D, S, T, ST, V> Causaloid<'l, D, S, T, ST, V>
+where
+    D: Datable + Clone,
+    S: Spatial<V> + Clone,
+    T: Temporable<V> + Clone,
+    ST: SpaceTemporal<V> + Clone,
+    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
 {
     /// Singleton constructor. Assumes causality function is valid.
     /// Only use for non-fallible construction i.e.verified a-priori knowledge about the correctness of the causal function.
-    pub fn new(
-        id: IdentificationValue,
-        causal_fn: CausalFn,
-        description: &'l str,
-    )
-        -> Self
-    {
+    pub fn new(id: IdentificationValue, causal_fn: CausalFn, description: &'l str) -> Self {
         Causaloid {
             id,
             active: Cell::new(false),
@@ -65,17 +65,16 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
             causal_graph: None,
             last_obs: Cell::new(0.0),
             description,
+            ty: PhantomData,
         }
     }
 
     pub fn new_with_context(
         id: IdentificationValue,
-        context_causal_fn: ContextualCausalFn<'l, D, S, T, ST>,
-        context: Option<&'l Context<'l, D, S, T, ST>, >,
+        context_causal_fn: ContextualCausalFn<'l, D, S, T, ST, V>,
+        context: Option<&'l Context<'l, D, S, T, ST, V>>,
         description: &'l str,
-    )
-        -> Self
-    {
+    ) -> Self {
         Causaloid {
             id,
             active: Cell::new(false),
@@ -88,6 +87,7 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
             causal_graph: None,
             last_obs: Cell::new(0.0),
             description,
+            ty: PhantomData,
         }
     }
 
@@ -100,11 +100,9 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     /// about the correctness of the causal graph.
     pub fn from_causal_collection(
         id: IdentificationValue,
-        causal_coll: Vec<Causaloid<'l, D, S, T, ST>>,
+        causal_coll: Vec<Causaloid<'l, D, S, T, ST, V>>,
         description: &'l str,
-    )
-        -> Self
-    {
+    ) -> Self {
         Causaloid {
             id,
             active: Cell::new(false),
@@ -117,6 +115,7 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
             context: None,
             has_context: false,
             context_causal_fn: None,
+            ty: PhantomData,
         }
     }
 
@@ -126,12 +125,10 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     /// or embedded into a causal graph.
     pub fn from_causal_collection_with_context(
         id: IdentificationValue,
-        causal_coll: Vec<Causaloid<'l, D, S, T, ST>>,
-        context: Option<&'l Context<'l, D, S, T, ST>, >,
+        causal_coll: Vec<Causaloid<'l, D, S, T, ST, V>>,
+        context: Option<&'l Context<'l, D, S, T, ST, V>>,
         description: &'l str,
-    )
-        -> Self
-    {
+    ) -> Self {
         Causaloid {
             id,
             active: Cell::new(false),
@@ -144,6 +141,7 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
             context,
             has_context: true,
             context_causal_fn: None,
+            ty: PhantomData,
         }
     }
 
@@ -156,11 +154,9 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     /// about the correctness of the causal graph.
     pub fn from_causal_graph(
         id: IdentificationValue,
-        causal_graph: CausaloidGraph<Causaloid<'l, D, S, T, ST>>,
+        causal_graph: CausaloidGraph<Causaloid<'l, D, S, T, ST, V>>,
         description: &'l str,
-    )
-        -> Self
-    {
+    ) -> Self {
         Causaloid {
             id,
             active: Cell::new(false),
@@ -173,6 +169,7 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
             context: None,
             has_context: false,
             context_causal_fn: None,
+            ty: PhantomData,
         }
     }
 
@@ -182,12 +179,10 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
     /// or embedded into another causal graph.
     pub fn from_causal_graph_with_context(
         id: IdentificationValue,
-        causal_graph: CausaloidGraph<Causaloid<'l, D, S, T, ST>>,
-        context: Option<&'l Context<'l, D, S, T, ST>, >,
+        causal_graph: CausaloidGraph<Causaloid<'l, D, S, T, ST, V>>,
+        context: Option<&'l Context<'l, D, S, T, ST, V>>,
         description: &'l str,
-    )
-        -> Self
-    {
+    ) -> Self {
         Causaloid {
             id,
             active: Cell::new(false),
@@ -200,11 +195,7 @@ impl<'l, D, S, T, ST> Causaloid<'l, D, S, T, ST>
             context,
             has_context: true,
             context_causal_fn: None,
+            ty: PhantomData,
         }
     }
 }
-
-
-
-
-

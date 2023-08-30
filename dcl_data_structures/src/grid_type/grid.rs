@@ -15,31 +15,34 @@ use crate::prelude::{PointIndex, Storage};
 
 #[derive(Debug, Clone)]
 pub struct Grid<S, T>
-    where
-        T: Copy,
-        S: Storage<T>,
+where
+    T: Copy,
+    S: Storage<T>,
 {
     inner: RefCell<S>,
     ty: PhantomData<T>,
 }
 
 impl<S, T> Grid<S, T>
-    where
-        T: Copy + Default,
-        S: Storage<T>,
+where
+    T: Copy + Default,
+    S: Storage<T>,
 {
     pub fn new(storage: S) -> Self {
-        Self
-        {
+        Self {
             // interior mutability https://doc.rust-lang.org/book/ch15-05-interior-mutability.html
             inner: RefCell::new(storage),
             ty: PhantomData,
         }
     }
 
-    pub fn get(&self, p: PointIndex) -> T { self.inner.borrow().get(p).to_owned() }
+    pub fn get(&self, p: PointIndex) -> T {
+        self.inner.borrow().get(p).to_owned()
+    }
 
-    pub fn set(&self, p: PointIndex, value: T) { self.inner.borrow_mut().set(p, value); }
+    pub fn set(&self, p: PointIndex, value: T) {
+        self.inner.borrow_mut().set(p, value);
+    }
 
     pub fn depth(&self) -> Option<usize> {
         // we have to deref inner value

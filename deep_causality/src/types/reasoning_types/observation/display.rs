@@ -4,15 +4,12 @@ use std::fmt::{Display, Formatter};
 
 use crate::prelude::Observation;
 
-impl Display for Observation
-{
+impl Display for Observation {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
             "Observation {{ id: {},observation: {},observed effect: {}}}",
-            self.id,
-            self.observation,
-            self.observed_effect
+            self.id, self.observation, self.observed_effect
         )
     }
 }

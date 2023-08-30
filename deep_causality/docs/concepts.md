@@ -1,12 +1,15 @@
 [//]: # (---)
+
 [//]: # (SPDX-License-Identifier: MIT)
+
 [//]: # (---)
 
 # Concepts
 
 ## Origin
 
-The [original design](/deep_causality/docs/swift/Swift_Inference.ipynb) of deep causality was implemented in Swift using protocols and
+The [original design](/deep_causality/docs/swift/Swift_Inference.ipynb) of deep causality was implemented in Swift using
+protocols and
 extensions inspired
 by [differentiable types](https://github.com/tensorflow/swift/blob/main/docs/DifferentiableTypes.md).
 A rewrite became necessary for several reasons, and Rust was chosen.
@@ -82,7 +85,9 @@ assumable trait adds functionality to test the assumption, check if it has alrea
 been valid.
 
 Multiple assumptions are represented in standard collections (array, map, vector), which are extended with
-the default implementation of the [AssumableReasoning](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/protocols/assumable/mod.rs) trait
+the default implementation of
+the [AssumableReasoning](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/protocols/assumable/mod.rs)
+trait
 that adds aggregating functionality i.e. how many of the assumptions are valid or tested.
 
 ### Observation
@@ -111,7 +116,8 @@ target threshold are given as a parameter because it may happen that certain eff
 detectable when adjusting the threshold.
 
 Multiple observations are stored in standard collections (array, map, vector) which are extended with
-[ObservableReasoning](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/protocols/observable/mod.rs) to identify the number or percent of
+[ObservableReasoning](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/protocols/observable/mod.rs)
+to identify the number or percent of
 observations vs non-observations.
 
 ### 2) Control of confounding

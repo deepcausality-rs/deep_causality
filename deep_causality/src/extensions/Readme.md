@@ -3,19 +3,21 @@
 A type extensions implements a local trait for an external type.
 
 Specifically, here we implement the following traits for standard collections in Rust:
+
 * AssumableReasoning
 * CausableReasoning
 * InferableReasoning
 * ObservableReasoning
 
 Each trait has a significant default implementation that the Rust compiler
-inserts into the type extension whenever the trait with the default implementation is imported. 
+inserts into the type extension whenever the trait with the default implementation is imported.
 Traits and default implementations are defined in the protocols folder.
 
 Because Rust does not have unified collections, it is therefore necessary
 to write one type extension for each collection type.
 
 Type extensions are implemented for the following Rust standard collections:
+
 * Array: https://doc.rust-lang.org/std/primitive.array.html
 * HashMap: https://doc.rust-lang.org/std/collections/hash_map/struct.HashMap.html
 * BTreeMap: https://doc.rust-lang.org/std/collections/struct.BTreeMap.html

@@ -1,5 +1,7 @@
 [//]: # (---)
+
 [//]: # (SPDX-License-Identifier: MIT)
+
 [//]: # (---)
 
 # Heilmeier Questions
@@ -97,9 +99,11 @@ significant reduction of complexity, faster run-time performance, and faster inf
 
 Reasoning performance for basic causality functions is micro-second for graphs below 1k nodes and still
 sub-seconds for graphs below 10k nodes. Only complex graphs with well over 10k nodes induce notable latency. However,
-inference measured on simple causality collections i.e. vector or array is multiple orders of magnitudes faster than graph
-structures for large number of causes i.e. 1 million or more. When dealing with very large models, memory is more of a concern
-than inference speed. 
+inference measured on simple causality collections i.e. vector or array is multiple orders of magnitudes faster than
+graph
+structures for large number of causes i.e. 1 million or more. When dealing with very large models, memory is more of a
+concern
+than inference speed.
 
 ### Second order:
 

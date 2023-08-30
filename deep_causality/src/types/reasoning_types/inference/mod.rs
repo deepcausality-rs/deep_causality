@@ -4,14 +4,12 @@ use deep_causality_macros::Constructor;
 
 use crate::prelude::{DescriptionValue, IdentificationValue, NumericalValue};
 
+mod display;
 mod identifiable;
 mod inferable;
-mod display;
-
 
 #[derive(Constructor, Debug, Clone, PartialEq, PartialOrd)]
-pub struct Inference
-{
+pub struct Inference {
     id: IdentificationValue,
     question: DescriptionValue,
     observation: NumericalValue,

@@ -7,9 +7,7 @@ use deep_causality::prelude::{NumericalValue, ObservableReasoning, Observation};
 
 use crate::utils::test_utils::*;
 
-pub fn get_test_obs_vec_deque()
-    -> VecDeque<Observation>
-{
+pub fn get_test_obs_vec_deque() -> VecDeque<Observation> {
     let o1 = Observation::new(0, 10.0, 1.0);
     let o2 = Observation::new(1, 10.0, 1.0);
     let o3 = Observation::new(2, 10.0, 1.0);
@@ -51,7 +49,8 @@ fn test_number_non_observation() {
     let observations = get_test_obs_vec_deque();
     let target_threshold = 10.0 as NumericalValue;
     let target_effect = 1.0 as NumericalValue;
-    let total_non_observation = observations.number_non_observation(target_threshold, target_effect);
+    let total_non_observation =
+        observations.number_non_observation(target_threshold, target_effect);
     assert_eq!(2.0, total_non_observation);
 }
 
@@ -60,7 +59,8 @@ fn test_percent_non_observation() {
     let observations = get_test_obs_vec_deque();
     let target_threshold = 10.0;
     let target_effect = 1.0;
-    let percent_non_observation = observations.percent_non_observation(target_threshold, target_effect);
+    let percent_non_observation =
+        observations.percent_non_observation(target_threshold, target_effect);
     assert_eq!(0.4, percent_non_observation);
 }
 

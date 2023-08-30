@@ -1,5 +1,7 @@
 [//]: # (---)
+
 [//]: # (SPDX-License-Identifier: MIT)
+
 [//]: # (---)
 
 # 🏁 Data structures 🏁
@@ -33,7 +35,7 @@ GridArray and sliding window implementation used in [DeepCausality](https://gith
 
 The sliding window implementation over-allocates to trade space (memory) for time complexity by delaying the rewind
 operation when hitting the end of the underlying data structure.
-Specifically, a sliding window of size N can hold, without any array copy, approximately C-1 elements, 
+Specifically, a sliding window of size N can hold, without any array copy, approximately C-1 elements,
 where C is the total capacity defined as NxM with N as the window size and M as a multiple.
 This crate has two implementations, one over vector and the second over a const generic array. The const generic
 implementation is significantly faster than the vector-based version.
@@ -51,7 +53,6 @@ boost over tensors.
 2) Zero cost abstraction.
 3) Zero unsafe. 100% safe and fast Rust.
 
-
 ## 🚀 Install
 
 Just run:
@@ -65,7 +66,9 @@ Alternatively, add the following to your Cargo.toml
 ```toml
 dcl_data_structures = "0.4.2"
 ```
+
 ## 📚 Docs
+
 * [API Docs](https://docs.rs/dcl_data_structures/0.4.3/dcl_data_structures/)
 * [ArrayGrid Design & Details](docs/ArrayGrid.md)
 * [SlidingWindow Summary](docs/SlidingWindow.md)
@@ -73,6 +76,7 @@ dcl_data_structures = "0.4.2"
 ## ⭐ Usage
 
 See:
+
 * [Benchmark](benches/benchmarks)
 * [Examples](examples)
 * [Test](tests)
@@ -80,9 +84,11 @@ See:
 ### ArrayGrid
 
 Important details:
+
 * All const generic parameters are requires regardless of which ArrayType you are using
 * To change the ArrayGrid type, just change the enum and your good.
-* There are no array bounds checks past compilation, so its your job to ensure PointIndex does not exceed the Array boundaries.
+* There are no array bounds checks past compilation, so its your job to ensure PointIndex does not exceed the Array
+  boundaries.
 
 ```rust
 use dcl_data_structures::prelude::{ArrayGrid, ArrayType, PointIndex};
@@ -151,6 +157,7 @@ pub fn main(){
 ### SlidingWindow
 
 Important details:
+
 * ArrayStorage and VectorStorage have different signatures because only ArrayStorage requires const generics
 * Size refers to the maximum number of elements the sliding window can store.
 * Capacity refers to the maximum number of elements before a rewind occurs.
@@ -226,7 +233,6 @@ pub fn main(){
     assert_eq!(data.dats, 2);
 }
 ```
-
 
 ## 🙏 Credits
 

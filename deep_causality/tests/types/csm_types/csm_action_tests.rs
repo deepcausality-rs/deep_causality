@@ -4,13 +4,12 @@
 use deep_causality::prelude::{ActionError, CausalAction};
 
 fn hello_state() -> Result<(), ActionError> {
-
     println!("Hello State");
 
     Ok(())
 }
 
-fn get_test_action() -> CausalAction{
+fn get_test_action() -> CausalAction {
     let func = hello_state;
     let descr = "Test action that prints Hello State";
     let version = 1;
@@ -19,8 +18,7 @@ fn get_test_action() -> CausalAction{
 }
 
 #[test]
-fn test_new()
-{
+fn test_new() {
     let ca = get_test_action();
 
     assert_eq!(*ca.descr(), "Test action that prints Hello State");
@@ -28,8 +26,7 @@ fn test_new()
 }
 
 #[test]
-fn test_fire()
-{
+fn test_fire() {
     let ca = get_test_action();
 
     let res = ca.fire();

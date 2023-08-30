@@ -5,13 +5,12 @@
 
 use crate::prelude::{UltraGraph, UltraGraphContainer, UltraMatrixGraph};
 
+pub mod alias;
+pub mod errors;
 pub mod prelude;
 pub mod protocols;
-pub mod errors;
 pub mod storage;
 pub mod types;
-pub mod alias;
-
 
 /// Returns a new UltraGraph with matrix storage backend.
 /// Default capacity is 500 nodes.
@@ -42,12 +41,9 @@ pub mod alias;
 ///  let res = g.add_edge(root_index, node_a_index);
 ///  assert!(res.is_ok());
 /// ```
-pub fn new<T>()
-    -> UltraGraph<T>
-{
+pub fn new<T>() -> UltraGraph<T> {
     UltraGraphContainer::new(UltraMatrixGraph::<T>::new())
 }
-
 
 /// Returns a new UltraGraph with matrix storage backend.
 ///
@@ -80,24 +76,14 @@ pub fn new<T>()
 ///  let res = g.add_edge(root_index, node_a_index);
 ///  assert!(res.is_ok());
 /// ```
-pub fn with_capacity<T>(
-    capacity: usize
-)
-    -> UltraGraph<T>
-{
+pub fn with_capacity<T>(capacity: usize) -> UltraGraph<T> {
     UltraGraphContainer::new(UltraMatrixGraph::<T>::new_with_capacity(capacity))
 }
 
-pub fn new_with_matrix_storage<T>(
-    capacity: usize
-)
-    -> UltraGraph<T>
-{
+pub fn new_with_matrix_storage<T>(capacity: usize) -> UltraGraph<T> {
     UltraGraphContainer::new(UltraMatrixGraph::<T>::new_with_capacity(capacity))
 }
 
-pub fn default<T>()
-    -> UltraGraph<T>
-{
+pub fn default<T>() -> UltraGraph<T> {
     UltraGraphContainer::new(UltraMatrixGraph::<T>::default())
 }

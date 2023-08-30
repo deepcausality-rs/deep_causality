@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-
-use deep_causality::prelude::{Contextoid, ContextoidType, Dataoid, Identifiable, Spaceoid, SpaceTempoid, Tempoid};
+use deep_causality::prelude::*;
 
 #[test]
 fn test_new() {
@@ -12,10 +11,9 @@ fn test_new() {
     let d = Dataoid::new(id, data);
     assert_eq!(d.id(), id);
 
-    let contextoid: Contextoid< Dataoid, Spaceoid, Tempoid, SpaceTempoid> = Contextoid::new(id, ContextoidType::Datoid(d));
+    let contextoid: BaseContextoid = Contextoid::new(id, ContextoidType::Datoid(d));
     assert_eq!(contextoid.id(), id);
 }
-
 
 #[test]
 fn test_id() {
@@ -25,10 +23,9 @@ fn test_id() {
     let d = Dataoid::new(id, data);
     assert_eq!(d.id(), id);
 
-    let contextoid: Contextoid< Dataoid, Spaceoid, Tempoid, SpaceTempoid> = Contextoid::new(id, ContextoidType::Datoid(d));
+    let contextoid: BaseContextoid = Contextoid::new(id, ContextoidType::Datoid(d));
     assert_eq!(contextoid.id(), id);
 }
-
 
 #[test]
 fn test_to_string() {
@@ -38,7 +35,8 @@ fn test_to_string() {
     let d = Dataoid::new(id, data);
     assert_eq!(d.id(), id);
 
-    let contextoid: Contextoid< Dataoid, Spaceoid, Tempoid, SpaceTempoid> = Contextoid::new(id, ContextoidType::Datoid(d));
+    let contextoid: BaseContextoid = Contextoid::new(id, ContextoidType::Datoid(d));
+
     assert_eq!(contextoid.id(), id);
 
     let expected = "Contextoid ID: 1 Type: Datoid: Dataoid: id: 1 data: 42".to_string();

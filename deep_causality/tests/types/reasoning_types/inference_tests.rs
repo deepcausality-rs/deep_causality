@@ -19,7 +19,14 @@ fn test_id() {
 
     let threshold = 0.55; // Threshold above which the observations is considered an inference.
     let effect = 1.0; // expected effect of the inference once the threshold is reached or exceeded
-    let infer = Inference::new(id, question.clone(), observation, threshold, effect, target_effect);
+    let infer = Inference::new(
+        id,
+        question.clone(),
+        observation,
+        threshold,
+        effect,
+        target_effect,
+    );
     assert_eq!(infer.id(), id);
 }
 
@@ -34,7 +41,14 @@ fn test_question() {
 
     let threshold = 0.55; // Threshold above which the observations is considered an inference.
     let effect = 1.0; // expected effect of the inference once the threshold is reached or exceeded
-    let infer = Inference::new(id, question.clone(), observation, threshold, effect, target_effect);
+    let infer = Inference::new(
+        id,
+        question.clone(),
+        observation,
+        threshold,
+        effect,
+        target_effect,
+    );
     assert_eq!(infer.id(), id);
     assert_eq!(infer.question(), question.clone());
 }
@@ -50,7 +64,14 @@ fn test_observation() {
 
     let threshold = 0.55; // Threshold above which the observations is considered an inference.
     let effect = 1.0; // expected effect of the inference once the threshold is reached or exceeded
-    let infer = Inference::new(id, question.clone(), observation, threshold, effect, target_effect);
+    let infer = Inference::new(
+        id,
+        question.clone(),
+        observation,
+        threshold,
+        effect,
+        target_effect,
+    );
     assert_eq!(infer.id(), id);
     assert_eq!(infer.question(), question.clone());
     assert_eq!(infer.observation(), observation);
@@ -67,7 +88,14 @@ fn test_threshold() {
 
     let threshold = 0.55; // Threshold above which the observations is considered an inference.
     let effect = 1.0; // expected effect of the inference once the threshold is reached or exceeded
-    let infer = Inference::new(id, question.clone(), observation, threshold, effect, target_effect);
+    let infer = Inference::new(
+        id,
+        question.clone(),
+        observation,
+        threshold,
+        effect,
+        target_effect,
+    );
     assert_eq!(infer.id(), id);
     assert_eq!(infer.question(), question.clone());
     assert_eq!(infer.observation(), observation);
@@ -85,7 +113,14 @@ fn test_effect() {
 
     let threshold = 0.55; // Threshold above which the observations is considered an inference.
     let effect = 1.0; // expected effect of the inference once the threshold is reached or exceeded
-    let infer = Inference::new(id, question.clone(), observation, threshold, effect, target_effect);
+    let infer = Inference::new(
+        id,
+        question.clone(),
+        observation,
+        threshold,
+        effect,
+        target_effect,
+    );
     assert_eq!(infer.id(), id);
     assert_eq!(infer.question(), question.clone());
     assert_eq!(infer.observation(), observation);
@@ -104,7 +139,14 @@ fn test_target() {
 
     let threshold = 0.55; // Threshold above which the observations is considered an inference.
     let effect = 1.0; // expected effect of the inference once the threshold is reached or exceeded
-    let infer = Inference::new(id, question.clone(), observation, threshold, effect, target_effect);
+    let infer = Inference::new(
+        id,
+        question.clone(),
+        observation,
+        threshold,
+        effect,
+        target_effect,
+    );
     assert_eq!(infer.id(), id);
     assert_eq!(infer.question(), question.clone());
     assert_eq!(infer.observation(), observation);
@@ -156,7 +198,9 @@ fn test_to_string() {
     let effect = 1.0; // expected effect of the inference once the threshold is reached or exceeded
     let infer = Inference::new(id, question, observation, threshold, effect, target_effect);
 
-    let expected_string = "Inference: id: 0, question: Test inference , observation: 0.6, threshold: 0.55, effect: 1".to_string();
+    let expected_string =
+        "Inference: id: 0, question: Test inference , observation: 0.6, threshold: 0.55, effect: 1"
+            .to_string();
     let actual_string = infer.to_string();
     assert_eq!(expected_string, actual_string);
 }

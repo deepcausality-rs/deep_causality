@@ -18,7 +18,8 @@ pub fn build_linear_graph(k: usize) -> UltraGraph<Data> {
         let current_idx = g.add_node(data);
 
         // link current causaloid to previos causaloid
-        g.add_edge(previous_idx, current_idx).expect("Failed to add edge");
+        g.add_edge(previous_idx, current_idx)
+            .expect("Failed to add edge");
 
         previous_idx = current_idx;
     }

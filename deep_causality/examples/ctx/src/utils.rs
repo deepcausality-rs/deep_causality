@@ -3,8 +3,7 @@
 
 use std::time::Duration;
 
-pub fn print_duration(msg: &str, elapsed: &Duration)
-{
+pub fn print_duration(msg: &str, elapsed: &Duration) {
     println!("{} took: {:?} ", msg, elapsed);
     println!();
 }

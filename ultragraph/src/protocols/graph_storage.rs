@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
+use crate::protocols::graph_algorithms::GraphAlgorithms;
 use crate::protocols::graph_like::GraphLike;
 use crate::protocols::graph_root::GraphRoot;
 
-pub trait GraphStorage<T>: GraphLike<T> + GraphRoot<T>
-{
+pub trait GraphStorage<T>: GraphLike<T> + GraphRoot<T> + GraphAlgorithms<T> {
     fn size(&self) -> usize;
 
     fn is_empty(&self) -> bool;

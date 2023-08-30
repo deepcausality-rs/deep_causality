@@ -2,8 +2,8 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 pub trait WindowStorage<T>
-    where
-        T: PartialEq + Copy + Default
+where
+    T: PartialEq + Copy + Default,
 {
     /// Pushes a new element to the beginning of the sliding window.
     /// If the window is filled, the last element will be dropped.
@@ -29,15 +29,17 @@ pub trait WindowStorage<T>
     }
 
     /// Returns true if the window is filled.
-    fn filled(&self) -> bool
-    {
+    fn filled(&self) -> bool {
         self.tail() >= self.size()
     }
 
     /// Returns the sliding window as a fixed size static array.
     fn arr<const S: usize>(&self) -> Result<[T; S], String> {
         if !self.filled() {
-            return Err("Sliding window is not yet filled. Add some elements to the array first".to_string());
+            return Err(
+                "Sliding window is not yet filled. Add some elements to the array first"
+                    .to_string(),
+            );
         }
 
         let mut arr: [T; S] = [T::default(); S];
@@ -50,7 +52,10 @@ pub trait WindowStorage<T>
     /// Returns the sliding window as a slice.
     fn slice(&self) -> Result<&[T], String> {
         return if !self.filled() {
-            Err("Sliding window is not yet filled. Add some elements to the array first".to_string())
+            Err(
+                "Sliding window is not yet filled. Add some elements to the array first"
+                    .to_string(),
+            )
         } else {
             Ok(self.get_slice())
         };
@@ -59,7 +64,10 @@ pub trait WindowStorage<T>
     /// Returns the sliding window as a vector.
     fn vec(&self) -> Result<Vec<T>, String> {
         return if !self.filled() {
-            Err("Sliding window is not yet filled. Add some elements to the array first".to_string())
+            Err(
+                "Sliding window is not yet filled. Add some elements to the array first"
+                    .to_string(),
+            )
         } else {
             Ok(self.get_slice().to_vec())
         };

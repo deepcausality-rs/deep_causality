@@ -4,8 +4,7 @@
 use deep_causality::prelude::time_execution;
 
 #[test]
-fn test_time()
-{
+fn test_time() {
     time_execution(run, "run");
 }
 

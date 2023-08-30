@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-
 use deep_causality::prelude::Identifiable;
 use deep_causality::types::model_types::Model;
 

@@ -1,5 +1,7 @@
 [//]: # (---)
+
 [//]: # (SPDX-License-Identifier: MIT)
+
 [//]: # (---)
 
 # Code of Conduct - DeepCausality
@@ -97,7 +99,8 @@ includes the following persons:
 
 **Respect**
 
-is the genuine consideration you have for someone (if only because of their status as participant in DeepCausality Projects, like
+is the genuine consideration you have for someone (if only because of their status as participant in DeepCausality
+Projects, like
 yourself), and that you show by treating them in a polite and kind way.
 
 **Sexual harassment**

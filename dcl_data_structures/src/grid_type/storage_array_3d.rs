@@ -8,9 +8,9 @@ use crate::prelude::{PointIndex, Storage};
 // H Height
 // D Depth
 impl<T, const W: usize, const H: usize, const D: usize> Storage<T> for [[[T; W]; H]; D]
-    where
-        T: Copy,
-        [[[T; W]; H]; D]: Sized,
+where
+    T: Copy,
+    [[[T; W]; H]; D]: Sized,
 {
     fn get(&self, p: PointIndex) -> &T {
         &self[p.y][p.x][p.z]

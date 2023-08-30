@@ -12,8 +12,8 @@ use crate::protocols::causable_graph::graph_reasoning_utils;
 /// Describes signatures for causal reasoning and explaining
 /// in causality hyper graph.
 pub trait CausableGraphReasoning<T>: CausableGraph<T>
-    where
-        T: Causable + PartialEq,
+where
+    T: Causable + PartialEq,
 {
     /// Reason over single node given by its index
     /// index: NodeIndex - index of the node
@@ -23,11 +23,11 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
         &self,
         index: usize,
         data: &[NumericalValue],
-    )
-        -> Result<bool, CausalityGraphError>
-    {
+    ) -> Result<bool, CausalityGraphError> {
         if !self.contains_causaloid(index) {
-            return Err(CausalityGraphError("Graph does not contain causaloid".to_string()));
+            return Err(CausalityGraphError(
+                "Graph does not contain causaloid".to_string(),
+            ));
         }
 
         if data.is_empty() {
@@ -46,7 +46,10 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
 
         if data.len() > 1 {
             for obs in data.iter() {
-                if !causaloid.verify_single_cause(obs).expect("Failed to verify data") {
+                if !causaloid
+                    .verify_single_cause(obs)
+                    .expect("Failed to verify data")
+                {
                     return Ok(false);
                 }
             }
@@ -54,7 +57,6 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
 
         Ok(true)
     }
-
 
     /// Reason over the entire graph.
     /// data: &[NumericalValue] - data applied to the subgraph
@@ -72,11 +74,11 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
         &self,
         data: &[NumericalValue],
         data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>,
-    )
-        -> Result<bool, CausalityGraphError>
-    {
+    ) -> Result<bool, CausalityGraphError> {
         if !self.contains_root_causaloid() {
-            return Err(CausalityGraphError("Graph does not contains root causaloid".into()));
+            return Err(CausalityGraphError(
+                "Graph does not contains root causaloid".into(),
+            ));
         }
 
         // These is safe as we have tested above that these exists
@@ -85,7 +87,7 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
 
         match self.reason_from_to_cause(start_index, stop_index, data, data_index) {
             Ok(result) => Ok(result),
-            Err(e) => Err(e)
+            Err(e) => Err(e),
         }
     }
 
@@ -108,18 +110,18 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
         start_index: usize,
         data: &[NumericalValue],
         data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>,
-    )
-        -> Result<bool, CausalityGraphError>
-    {
+    ) -> Result<bool, CausalityGraphError> {
         if self.get_last_index().is_err() {
-            return Err(CausalityGraphError("Graph does not contains stop causaloid".into()));
+            return Err(CausalityGraphError(
+                "Graph does not contains stop causaloid".into(),
+            ));
         }
 
         let stop_index = self.get_last_index().expect("Last causaloid not found");
 
         match self.reason_from_to_cause(start_index, stop_index, data, data_index) {
             Ok(result) => Ok(result),
-            Err(e) => Err(e)
+            Err(e) => Err(e),
         }
     }
 
@@ -130,9 +132,7 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
         stop_index: usize,
         data: &[NumericalValue],
         data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>,
-    )
-        -> Result<bool, CausalityGraphError>
-    {
+    ) -> Result<bool, CausalityGraphError> {
         if self.is_empty() {
             return Err(CausalityGraphError("Graph is empty".to_string()));
         }
@@ -142,10 +142,14 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
         }
 
         if !self.contains_causaloid(start_index) {
-            return Err(CausalityGraphError("Graph does not contains start causaloid".into()));
+            return Err(CausalityGraphError(
+                "Graph does not contains start causaloid".into(),
+            ));
         }
 
-        let cause = self.get_causaloid(start_index).expect("Failed to get causaloid");
+        let cause = self
+            .get_causaloid(start_index)
+            .expect("Failed to get causaloid");
 
         let obs = graph_reasoning_utils::get_obs(cause.id(), data, &data_index);
 
@@ -161,37 +165,29 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
         let mut stack = Vec::with_capacity(self.size());
         stack.push(self.get_graph().outgoing_edges(start_index).unwrap());
 
-        while let Some(children) = stack.last_mut()
-        {
-            if let Some(child) = children.next()
-            {
-                let cause = self.get_causaloid(child)
-                    .expect("Failed to get causaloid");
+        while let Some(children) = stack.last_mut() {
+            if let Some(child) = children.next() {
+                let cause = self.get_causaloid(child).expect("Failed to get causaloid");
 
                 let obs = graph_reasoning_utils::get_obs(cause.id(), data, &data_index);
 
-                let res = if cause.is_singleton()
-                {
-                    match cause.verify_single_cause(&obs)
-                    {
+                let res = if cause.is_singleton() {
+                    match cause.verify_single_cause(&obs) {
                         Ok(res) => res,
                         Err(e) => return Err(CausalityGraphError(e.0)),
                     }
                 } else {
-                    match cause.verify_all_causes(data, data_index)
-                    {
+                    match cause.verify_all_causes(data, data_index) {
                         Ok(res) => res,
                         Err(e) => return Err(CausalityGraphError(e.0)),
                     }
                 };
 
-                if !res
-                {
+                if !res {
                     return Ok(false);
                 }
 
-                if child == stop_index
-                {
+                if child == stop_index {
                     return Ok(true);
                 } else {
                     stack.push(self.get_graph().outgoing_edges(child).unwrap());
@@ -227,25 +223,26 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
         stop_index: usize,
         data: &[NumericalValue],
         data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>,
-    )
-        -> Result<bool, CausalityGraphError>
-    {
-        if self.is_empty()
-        {
+    ) -> Result<bool, CausalityGraphError> {
+        if self.is_empty() {
             return Err(CausalityGraphError("Graph is empty".to_string()));
         }
 
         if !self.contains_causaloid(start_index) {
-            return Err(CausalityGraphError("Graph does not contains start causaloid".into()));
+            return Err(CausalityGraphError(
+                "Graph does not contains start causaloid".into(),
+            ));
         }
 
         if !self.contains_causaloid(stop_index) {
-            return Err(CausalityGraphError("Graph does not contains stop causaloid".into()));
+            return Err(CausalityGraphError(
+                "Graph does not contains stop causaloid".into(),
+            ));
         }
 
         let shortest_path = match self.get_shortest_path(start_index, stop_index) {
             Ok(shortest_path) => shortest_path,
-            Err(e) => return Err(e)
+            Err(e) => return Err(e),
         };
 
         for index in shortest_path {
@@ -253,14 +250,12 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
 
             let obs = graph_reasoning_utils::get_obs(cause.id(), data, &data_index);
 
-            let res = match cause.verify_single_cause(&obs)
-            {
+            let res = match cause.verify_single_cause(&obs) {
                 Ok(res) => res,
                 Err(e) => return Err(CausalityGraphError(e.0)),
             };
 
-            if !res
-            {
+            if !res {
                 return Ok(false);
             }
         }

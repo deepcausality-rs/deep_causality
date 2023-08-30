@@ -7,15 +7,12 @@ use deep_causality::prelude::{AssumableReasoning, Assumption};
 
 use crate::utils::test_utils::*;
 
-fn get_test_assumption_vec_deque()
-    -> VecDeque<Assumption>
-{
+fn get_test_assumption_vec_deque() -> VecDeque<Assumption> {
     VecDeque::from(get_test_assumption_vec())
 }
 
 #[test]
-fn test_add()
-{
+fn test_add() {
     let mut col = get_test_assumption_vec_deque();
     assert_eq!(col.len(), 3);
 
@@ -25,8 +22,7 @@ fn test_add()
 }
 
 #[test]
-fn test_all_assumptions_tested()
-{
+fn test_all_assumptions_tested() {
     let col = get_test_assumption_vec_deque();
     assert_eq!(col.len(), 3);
 
@@ -41,8 +37,7 @@ fn test_all_assumptions_tested()
 }
 
 #[test]
-fn test_all_assumptions_valid()
-{
+fn test_all_assumptions_valid() {
     let col = get_test_assumption_vec_deque();
     assert_eq!(col.len(), 3);
 
@@ -62,8 +57,7 @@ fn test_all_assumptions_valid()
 }
 
 #[test]
-fn test_percent_assumption_valid()
-{
+fn test_percent_assumption_valid() {
     let col = get_test_assumption_vec_deque();
     assert_eq!(col.len(), 3);
 
@@ -89,8 +83,7 @@ fn test_percent_assumption_valid()
 }
 
 #[test]
-fn test_get_all_invalid_assumptions()
-{
+fn test_get_all_invalid_assumptions() {
     let col = get_test_assumption_vec_deque();
     assert_eq!(col.len(), 3);
 
@@ -113,8 +106,7 @@ fn test_get_all_invalid_assumptions()
 }
 
 #[test]
-fn test_get_all_valid_assumptions()
-{
+fn test_get_all_valid_assumptions() {
     let col = get_test_assumption_vec_deque();
     assert_eq!(col.len(), 3);
 
@@ -138,8 +130,7 @@ fn test_get_all_valid_assumptions()
 }
 
 #[test]
-fn test_get_all_tested_assumptions()
-{
+fn test_get_all_tested_assumptions() {
     let col = get_test_assumption_vec_deque();
     assert_eq!(col.len(), 3);
 
@@ -163,8 +154,7 @@ fn test_get_all_tested_assumptions()
 }
 
 #[test]
-fn test_get_all_untested_assumptions()
-{
+fn test_get_all_untested_assumptions() {
     let col = get_test_assumption_vec_deque();
     assert_eq!(col.len(), 3);
 
@@ -191,8 +181,7 @@ fn test_get_all_untested_assumptions()
 }
 
 #[test]
-fn test_verify_all_assumptions()
-{
+fn test_verify_all_assumptions() {
     let col = get_test_assumption_vec_deque();
     assert_eq!(col.len(), 3);
 

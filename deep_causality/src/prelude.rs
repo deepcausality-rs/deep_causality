@@ -21,17 +21,18 @@ pub use crate::protocols::assumable::AssumableReasoning;
 pub use crate::protocols::causable::Causable;
 pub use crate::protocols::causable::CausableReasoning;
 pub use crate::protocols::causable_graph::*;
+// Causable Graph protocols
 pub use crate::protocols::causable_graph::graph::CausableGraph;
 pub use crate::protocols::causable_graph::graph_explaining::CausableGraphExplaining;
 pub use crate::protocols::causable_graph::graph_reasoning::CausableGraphReasoning;
 // contextuable protocols
 pub use crate::protocols::contextuable::Contextuable;
-pub use crate::protocols::contextuable::ContextuableGraph;
 pub use crate::protocols::contextuable::Datable;
 pub use crate::protocols::contextuable::SpaceTemporal;
 pub use crate::protocols::contextuable::Spatial;
 pub use crate::protocols::contextuable::Temporable;
-pub use crate::protocols::contextuable::Temporal;
+// contextuable Graph protocol
+pub use crate::protocols::contextuable_graph::ContextuableGraph;
 // Identifiable protocol
 pub use crate::protocols::identifiable::Identifiable;
 // Inferable protocol
@@ -45,22 +46,22 @@ pub use crate::protocols::observable::ObservableReasoning;
 //
 // Alias types
 pub use crate::types::alias_types::*;
-// Adjustable types
-pub use crate::types::context_types::adjustable::adjustable_data::*;
-pub use crate::types::context_types::adjustable::adjustable_time::*;
 // Context types
 pub use crate::types::context_types::context_graph;
 // Context graph types
 pub use crate::types::context_types::context_graph::Context;
-// Graph types
 pub use crate::types::context_types::contextoid::*;
+// Graph types
 pub use crate::types::context_types::contextoid::contextoid_type::*;
 // Default context node types. Overwrite traits to customize.
-pub use crate::types::context_types::node_types::dateoid::Dataoid;
-pub use crate::types::context_types::node_types::root::*;
-pub use crate::types::context_types::node_types::space_tempoid::SpaceTempoid;
-pub use crate::types::context_types::node_types::spaceoid::Spaceoid;
-pub use crate::types::context_types::node_types::tempoid::Tempoid;
+pub use crate::types::context_types::node_types::data::Dataoid;
+pub use crate::types::context_types::node_types::root::Root;
+pub use crate::types::context_types::node_types::space::Spaceoid;
+pub use crate::types::context_types::node_types::space_time::SpaceTempoid;
+pub use crate::types::context_types::node_types::time::Tempoid;
+// Adjustable types
+pub use crate::types::context_types::node_types_adjustable::adjustable_data::*;
+pub use crate::types::context_types::node_types_adjustable::adjustable_time::*;
 pub use crate::types::context_types::relation_kind::*;
 pub use crate::types::context_types::time_scale::TimeScale;
 pub use crate::types::csm_types::CSM;
@@ -79,4 +80,3 @@ pub use crate::types::reasoning_types::observation::Observation;
 // Utils
 //
 pub use crate::utils::time_utils::*;
-

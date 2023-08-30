@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use deep_causality::prelude::{CausalityError, Causaloid, Context, Contextuable, ContextuableGraph, NumericalValue, Spaceoid, SpaceTempoid, Tempoid};
+use deep_causality::prelude::{
+    CausalityError, Causaloid, Context, Contextuable, ContextuableGraph, NumericalValue,
+    SpaceTempoid, Spaceoid, Tempoid,
+};
 use rust_decimal::prelude::ToPrimitive;
 
 use crate::protocols::rangeable::Rangeable;
 use crate::types::dateoid::Dataoid;
 
 pub fn get_month_causaloid<'l>(
-    context: &'l Context<Dataoid, Spaceoid, Tempoid, SpaceTempoid>
-)
-    -> Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>
-{
+    context: &'l Context<Dataoid, Spaceoid, Tempoid, SpaceTempoid>,
+) -> Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid> {
     let id = 2;
     let description = "Checks if the current price exceeds the monthly high level";
 
@@ -26,9 +27,7 @@ pub fn get_month_causaloid<'l>(
     fn contextual_causal_fn(
         obs: NumericalValue,
         ctx: &Context<Dataoid, Spaceoid, Tempoid, SpaceTempoid>,
-    )
-        -> Result<bool, CausalityError>
-    {
+    ) -> Result<bool, CausalityError> {
         if obs.is_nan() {
             return Err(CausalityError("Observation is NULL/NAN".into()));
         }
@@ -39,9 +38,10 @@ pub fn get_month_causaloid<'l>(
         // to the now() timestamp. To do this, you may extend the context
         // with an extension trait and corresponding implementation.
         // See http://xion.io/post/code/rust-extension-traits.html
-        let month = ctx.get_node(14)
-            .expect("node with index 2 not found");
-        let data = month.vertex_type().dataoid()
+        let month = ctx.get_node(14).expect("node with index 2 not found");
+        let data = month
+            .vertex_type()
+            .dataoid()
             .expect("Failed to get data out of year node");
 
         let check_month_breakout = || {
@@ -51,23 +51,15 @@ pub fn get_month_causaloid<'l>(
         };
 
         // Another closure that captures the context within the causal function.
-        let check_price_above_high = || {
-            obs.gt(&data.data_range().high().to_f64().unwrap())
-        };
+        let check_price_above_high = || obs.gt(&data.data_range().high().to_f64().unwrap());
 
         // With the closures in place, the main logic becomes straightforward and simple to understand.
-        if check_price_above_high() && check_month_breakout()
-        {
+        if check_price_above_high() && check_month_breakout() {
             Ok(true)
         } else {
             Ok(false)
         }
     }
 
-    Causaloid::new_with_context(
-        id,
-        contextual_causal_fn,
-        Some(context),
-        description,
-    )
+    Causaloid::new_with_context(id, contextual_causal_fn, Some(context), description)
 }

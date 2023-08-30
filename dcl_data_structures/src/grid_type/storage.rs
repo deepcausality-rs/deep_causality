@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-
 // Grids in Rust, part 2: const generics
 // https://blog.adamchalmers.com/grids-2/#benchmarks-1d-vs-2d-vec-vs-array
 
@@ -15,13 +14,19 @@
 use crate::prelude::PointIndex;
 
 pub trait Storage<T>
-    where
-        T: Copy,
+where
+    T: Copy,
 {
     fn get(&self, p: PointIndex) -> &T;
     fn set(&mut self, p: PointIndex, elem: T);
     fn height(&self) -> Option<&usize>;
-    fn depth(&self) -> Option<&usize> { None }
-    fn time(&self) -> Option<&usize> { None }
-    fn width(&self) -> Option<&usize> { None }
+    fn depth(&self) -> Option<&usize> {
+        None
+    }
+    fn time(&self) -> Option<&usize> {
+        None
+    }
+    fn width(&self) -> Option<&usize> {
+        None
+    }
 }

@@ -1,18 +1,23 @@
 [//]: # (---)
+
 [//]: # (SPDX-License-Identifier: MIT)
+
 [//]: # (---)
 
 # How is deep causality different from deep learning?
 
-* Free of the [independent and identically distributed data (IID) assumption.](https://towardsdatascience.com/independent-and-identically-distributed-ce250ad1bfa8)
+* Free of
+  the [independent and identically distributed data (IID) assumption.](https://towardsdatascience.com/independent-and-identically-distributed-ce250ad1bfa8)
 * Deterministic and explainable causal reasoning.
 * Reasoning over causal collection, graph, or hyper-graph structure supported.
 * Recursive causal data-structures enable concise expression of arbitrary complex causal structures.
-* Context aware causality reasoning across data-like, time-like, space-like, spacetime-like entities stored within (multiple) context-hyper-graphs
+* Context aware causality reasoning across data-like, time-like, space-like, spacetime-like entities stored within (
+  multiple) context-hyper-graphs
 
 ## When to use deep causality and when to use  deep learning?
 
 **Use deep learning (PyTorch, Tensorflow, Keras, MXNEet etc):**
+
 * Explanations are not needed.
 * Language models (ChatGPT etc)
 * Generative models (Midjourney etc.)
@@ -52,4 +57,5 @@ has been detected triggers the engagement of a drone with a more sophisticated A
 to discern what kind of anomaly may occurs. On a more fundamental level, when multiple causal models
 haven been developed, [hyper geometric deep learning ](https://deephypergraph.com/) may help to find
 more or novel causality graph representations.
-These are just a few examples, but in reality endless possibilities emerge from combining deep learning with deep causality. 
+These are just a few examples, but in reality endless possibilities emerge from combining deep learning with deep
+causality. 

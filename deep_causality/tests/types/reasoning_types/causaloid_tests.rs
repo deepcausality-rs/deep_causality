@@ -8,8 +8,7 @@ use crate::utils::*;
 // BaseContext is a type alias for a basic context that can be used for testing
 // It matches the type signature of the base causaloid also uses in these tests.
 // See src/types/alias_types/csm_types for definition.
-fn get_context<'l>() -> BaseContext<'l>
-{
+fn get_context<'l>() -> BaseContext<'l> {
     let id = 1;
     let name = "base context";
     let mut context = Context::with_capacity(id, name, 10);
@@ -40,7 +39,7 @@ fn test_new() {
         }
     }
 
-    let causaloid: Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid> = Causaloid::new(id, causal_fn, description);
+    let causaloid: BaseCausaloid<'static> = Causaloid::new(id, causal_fn, description);
 
     assert!(causaloid.is_singleton());
     assert!(causaloid.causal_collection().is_none());
@@ -54,11 +53,11 @@ fn test_new_with_context() {
     let description = "tests whether data exceeds threshold of 0.55";
     let context = get_context();
 
-    fn contextual_causal_fn<'l>(obs: NumericalValue, ctx: &'l BaseContext<'l>)
-                                -> Result<bool, CausalityError>
-    {
-        if obs.is_nan()
-        {
+    fn contextual_causal_fn<'l>(
+        obs: NumericalValue,
+        ctx: &'l BaseContext<'l>,
+    ) -> Result<bool, CausalityError> {
+        if obs.is_nan() {
             return Err(CausalityError("Observation is NULL/NAN".into()));
         }
 
@@ -81,19 +80,14 @@ fn test_new_with_context() {
         }
     }
 
-    let causaloid: BaseCausaloid = Causaloid::new_with_context(
-        id,
-        contextual_causal_fn,
-        Some(&context),
-        description,
-    );
+    let causaloid: BaseCausaloid =
+        Causaloid::new_with_context(id, contextual_causal_fn, Some(&context), description);
 
     assert!(causaloid.is_singleton());
     assert!(causaloid.causal_collection().is_none());
     assert!(causaloid.causal_graph().is_none());
     assert!(causaloid.context().is_some());
 }
-
 
 #[test]
 fn test_from_causal_collection() {
@@ -122,7 +116,8 @@ fn test_from_causal_collection_with_context() {
     let data = [0.89, 0.89, 0.99];
     assert_eq!(data.len(), causal_coll.len());
 
-    let causaloid = Causaloid::from_causal_collection_with_context(id, causal_coll, Some(context), description);
+    let causaloid =
+        Causaloid::from_causal_collection_with_context(id, causal_coll, Some(context), description);
 
     assert!(!causaloid.is_singleton());
     assert!(causaloid.causal_collection().is_some());
@@ -157,7 +152,8 @@ fn test_from_causal_graph_with_context() {
     let (causal_graph, data) = test_utils_graph::get_small_multi_layer_cause_graph_and_data();
     let context = &test_utils::get_test_context();
 
-    let causaloid = Causaloid::from_causal_graph_with_context(id, causal_graph, Some(context), description);
+    let causaloid =
+        Causaloid::from_causal_graph_with_context(id, causal_graph, Some(context), description);
     assert!(!causaloid.is_singleton());
 
     assert!(!causaloid.is_active());
@@ -172,8 +168,7 @@ fn test_from_causal_graph_with_context() {
 }
 
 #[test]
-fn test_causal_graph()
-{
+fn test_causal_graph() {
     let id: IdentificationValue = 01;
     let description = "tests whether data exceeds threshold of 0.55";
     let (causal_graph, _) = test_utils_graph::get_small_multi_layer_cause_graph_and_data();
@@ -184,7 +179,6 @@ fn test_causal_graph()
     assert!(causaloid.causal_graph().is_some());
     assert!(causaloid.causal_collection().is_none());
 }
-
 
 #[test]
 fn test_explain() {

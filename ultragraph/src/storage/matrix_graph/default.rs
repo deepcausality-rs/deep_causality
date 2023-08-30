@@ -3,11 +3,8 @@
 
 use super::UltraMatrixGraph;
 
-impl<T> Default for UltraMatrixGraph<T>
-{
-    fn default()
-        -> Self
-    {
+impl<T> Default for UltraMatrixGraph<T> {
+    fn default() -> Self {
         Self::new()
     }
 }

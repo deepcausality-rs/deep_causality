@@ -7,10 +7,7 @@ use deep_causality::prelude::*;
 
 use crate::utils::test_utils::*;
 
-fn get_test_causality_btree_map<'l>()
-// i8 as key b/c I assume all testing will be done with less than 265 items.
-    -> BTreeMap<i8, Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>
-{
+fn get_test_causality_btree_map<'l>() -> BTreeMap<i8, BaseCausaloid<'l>> {
     let q1 = get_test_causaloid();
     let q2 = get_test_causaloid();
     let q3 = get_test_causaloid();
@@ -18,8 +15,7 @@ fn get_test_causality_btree_map<'l>()
 }
 
 #[test]
-fn test_add()
-{
+fn test_add() {
     let mut map = get_test_causality_btree_map();
     assert_eq!(3, map.len());
 
@@ -29,8 +25,7 @@ fn test_add()
 }
 
 #[test]
-fn test_contains()
-{
+fn test_contains() {
     let mut map = get_test_causality_btree_map();
     assert_eq!(3, map.len());
     assert!(map.contains_key(&1));
@@ -42,8 +37,7 @@ fn test_contains()
 }
 
 #[test]
-fn test_remove()
-{
+fn test_remove() {
     let mut map = get_test_causality_btree_map();
     assert_eq!(3, map.len());
     assert!(map.contains_key(&1));
@@ -54,8 +48,7 @@ fn test_remove()
 }
 
 #[test]
-fn test_all_active()
-{
+fn test_all_active() {
     let map = get_test_causality_btree_map();
     assert!(!map.get_all_causes_true());
 
@@ -67,8 +60,7 @@ fn test_all_active()
 }
 
 #[test]
-fn test_number_active()
-{
+fn test_number_active() {
     let map = get_test_causality_btree_map();
     assert!(!map.get_all_causes_true());
     assert_eq!(0.0, map.number_active());
@@ -83,8 +75,7 @@ fn test_number_active()
 }
 
 #[test]
-fn test_percent_active()
-{
+fn test_percent_active() {
     let map = get_test_causality_btree_map();
     assert!(!map.get_all_causes_true());
 
@@ -108,22 +99,19 @@ fn test_get_all_items() {
 }
 
 #[test]
-fn test_len()
-{
+fn test_len() {
     let map = get_test_causality_btree_map();
     assert_eq!(3, map.len());
 }
 
 #[test]
-fn test_is_empty()
-{
+fn test_is_empty() {
     let map = get_test_causality_btree_map();
     assert!(!map.is_empty());
 }
 
 #[test]
-fn test_to_vec()
-{
+fn test_to_vec() {
     let map = get_test_causality_btree_map();
     assert_eq!(3, map.to_vec().len());
 }

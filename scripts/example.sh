@@ -12,7 +12,6 @@ echo "Select example to run: "
 echo "--------------------------------"
 echo "csm: Causal state machine"
 echo "ctx: Causal model with base (static) context"
-#echo "dtx: Causal model with dynamic Context"
 echo "smoking: Simple causal model without  Context"
 echo "--------------------------------"
 echo ""
@@ -30,11 +29,6 @@ do
       command cargo run --release --bin example-ctx
       break
       ;;
-#    dtx)
-#      echo "Selected example: DTX (Dynamic Context)"
-#      command cargo run --release --bin example-dtx
-#      break
-#      ;;
     smoking)
       echo "Selected example: SMOKING (Smoking)"
        command cargo run --release --bin example-smoking

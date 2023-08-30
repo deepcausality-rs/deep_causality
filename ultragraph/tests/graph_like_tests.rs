@@ -11,7 +11,6 @@ fn get_ultra_graph() -> UltraGraph<Data> {
     ultragraph::with_capacity::<Data>(10)
 }
 
-
 #[test]
 fn test_add_node() {
     let mut g = get_ultra_graph();
@@ -137,7 +136,6 @@ fn test_get_node_error() {
     assert!(node.is_none());
 }
 
-
 #[test]
 fn test_remove_node() {
     let mut g = get_ultra_graph();
@@ -203,7 +201,6 @@ fn test_remove_node_error() {
     let result = g.remove_node(1);
     assert!(result.is_err());
 }
-
 
 #[test]
 fn test_add_edge() {
@@ -338,7 +335,6 @@ fn test_add_edge_with_weight_error() {
     let actual = g.number_nodes();
     assert_eq!(expected, actual);
 
-
     // There are are three ways adding an edge can fail:
     // 1. Node a doesnt exist
     // 2. Node b doesnt exist
@@ -406,7 +402,6 @@ fn test_contains_edge() {
     assert_eq!(expected, actual);
 }
 
-
 #[test]
 fn test_remove_edge() {
     let mut g = get_ultra_graph();
@@ -457,7 +452,6 @@ fn test_remove_edge() {
     let actual = g.contains_edge(root_index, node_a_index);
     assert_eq!(expected, actual);
 }
-
 
 #[test]
 fn test_remove_edge_error() {

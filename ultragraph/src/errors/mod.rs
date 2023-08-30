@@ -13,8 +13,7 @@ pub struct UltraGraphError(pub String);
 
 impl Error for UltraGraphError {}
 
-impl fmt::Display for UltraGraphError
-{
+impl fmt::Display for UltraGraphError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "UltraGraphError: {}", self.0)
     }

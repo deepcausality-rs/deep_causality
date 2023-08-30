@@ -91,9 +91,14 @@ fn test_shortest_path() {
     // | *     | *     |
     // \------ e ------/
 
-    let path = g.shortest_path(node_a_index, node_f_index).expect("Failed to get Shortest path");
+    let path = g
+        .shortest_path(node_a_index, node_f_index)
+        .expect("Failed to get Shortest path");
     assert_eq!(path.len(), 4);
-    assert_eq!(path, vec![node_a_index, node_d_index, node_e_index, node_f_index]);
+    assert_eq!(
+        path,
+        vec![node_a_index, node_d_index, node_e_index, node_f_index]
+    );
 }
 
 #[test]

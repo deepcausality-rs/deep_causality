@@ -8,15 +8,6 @@ is an example DCO Signed-off-by line in a commit message:
 Signed-off-by: J. Doe <j.doe@domain.com>
 ```
 
-OR
-
-```
-$ git commit -s
-```
-
-DeepCausality is hosted at the Linux Foundation (LF) and all LF projects
-are required to accept only contributions with a signed DC. Thank you for your understanding.
-
 ## Describe your changes
 
 ## Issue ticket number and link

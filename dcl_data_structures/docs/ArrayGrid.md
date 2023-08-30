@@ -1,5 +1,7 @@
 [//]: # (---)
+
 [//]: # (SPDX-License-Identifier: MIT)
+
 [//]: # (---)
 
 # ArrayGrid - A Faster Tensor For Low Dim. Data
@@ -10,7 +12,6 @@ vector, or matrix type, but all of them are represented as a static fixed-size c
 Fixed-sized arrays allow for several compiler optimizations, including a cache aligned data layout and the removal of
 runtime array boundary checks, because all structural parameters are known upfront, providing a significant
 performance boost over tensors.
-
 
 ## Problem
 
@@ -151,6 +152,7 @@ for interior mutability.
 Because of the interior mutability, borrow and borrow_mut become required when accessing the storage as seen
 in the set and get methods. Type T must implement Default because of the PhantomData binding in the type signature. The
 complete Grid type implementation is relatively verbose, the listing below shows only the important parts.
+
 ```rust
 
 impl<S, T> Grid<S, T>
@@ -381,5 +383,6 @@ possible. [Benchmarks have been written](../benches),
 but frankly these are completely pointless since the test arrays fit in the cache of any modern CPU hence yielding
 absurd throughput and latency results. And that was the entire purpose of the exercise because you do not
 get even remotely these benchmarks results with a Tensor type. Tensors remain an invaluable type for higher dimensional
-data in machine learning. For low dimensional (<5) data in performance critical applications, however,the GridArray offers
+data in machine learning. For low dimensional (<5) data in performance critical applications, however,the GridArray
+offers
 an alternative with attractive performance characteristics. 

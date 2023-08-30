@@ -3,14 +3,14 @@
 
 use deep_causality::prelude::time_execution;
 
-mod run;
-mod protocols;
-mod types;
-mod workflow;
-mod io;
 mod config;
+mod io;
 mod model;
+mod protocols;
+mod run;
+mod types;
 mod utils;
+mod workflow;
 
 fn main() {
     time_execution(run::run, "main_run");

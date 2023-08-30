@@ -2,7 +2,9 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 use crate::prelude::WindowStorage;
 
-pub struct VectorStorage<T> where T: PartialEq + Copy
+pub struct VectorStorage<T>
+where
+    T: PartialEq + Copy,
 {
     vec: Vec<T>,
     size: usize,
@@ -11,24 +13,28 @@ pub struct VectorStorage<T> where T: PartialEq + Copy
 }
 
 impl<T> VectorStorage<T>
-    where T: PartialEq + Copy + Default
+where
+    T: PartialEq + Copy + Default,
 {
-    pub fn new(size: usize, multiple: usize) -> Self
-    {
-        Self { vec: Vec::with_capacity(size * multiple), size, head: 0, tail: 0 }
+    pub fn new(size: usize, multiple: usize) -> Self {
+        Self {
+            vec: Vec::with_capacity(size * multiple),
+            size,
+            head: 0,
+            tail: 0,
+        }
     }
 }
 
 impl<T> WindowStorage<T> for VectorStorage<T>
-    where T: PartialEq + Copy + Default
+where
+    T: PartialEq + Copy + Default,
 {
     fn push(&mut self, value: T) {
         // if the array is full, rewind
-        if self.tail > 0 && self.tail == self.vec.capacity()
-        {
+        if self.tail > 0 && self.tail == self.vec.capacity() {
             // rewind
-            for i in 0..self.size - 1
-            {
+            for i in 0..self.size - 1 {
                 self.vec[i] = self.vec[self.head + i];
             }
             self.head = 0;
@@ -38,8 +44,7 @@ impl<T> WindowStorage<T> for VectorStorage<T>
         self.vec.push(value); // store the value
 
         // check if the window is full,
-        if self.tail - self.head > self.size
-        {
+        if self.tail - self.head > self.size {
             // if so, move head cursor one position forward
             self.head += 1;
         }
@@ -51,8 +56,7 @@ impl<T> WindowStorage<T> for VectorStorage<T>
     #[inline(always)]
     fn first(&self) -> Result<T, String> {
         if self.tail != 0 {
-            if self.tail > self.size
-            {
+            if self.tail > self.size {
                 Ok(self.vec[self.head + 1])
             } else {
                 Ok(self.vec[self.head])
@@ -83,8 +87,7 @@ impl<T> WindowStorage<T> for VectorStorage<T>
 
     #[inline(always)]
     fn get_slice(&self) -> &[T] {
-        if self.tail > self.size
-        {
+        if self.tail > self.size {
             // Adjust offset
             &self.vec[self.head + 1..self.tail]
         } else {

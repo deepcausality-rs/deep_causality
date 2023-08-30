@@ -4,8 +4,7 @@
 use deep_causality::types::context_types::time_scale::TimeScale;
 
 #[test]
-fn test_time_scale()
-{
+fn test_time_scale() {
     let ts = TimeScale::NoScale;
     assert_eq!(ts, TimeScale::NoScale);
     assert_eq!(ts.to_string(), "NoScale");

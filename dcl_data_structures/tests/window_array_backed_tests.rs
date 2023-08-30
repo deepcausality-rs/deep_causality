@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use dcl_data_structures::prelude::{ArrayStorage, SlidingWindow, window_type};
+use dcl_data_structures::prelude::{window_type, ArrayStorage, SlidingWindow};
 
 const SIZE: usize = 4;
 const CAPACITY: usize = 1200;
@@ -28,7 +28,8 @@ fn test_empty() {
 
 #[test]
 fn test_default() {
-    let window: SlidingWindow<ArrayStorage<Data, SIZE, CAPACITY>, Data> = window_type::default_array_storage();
+    let window: SlidingWindow<ArrayStorage<Data, SIZE, CAPACITY>, Data> =
+        window_type::default_array_storage();
     assert_eq!(window.size(), SIZE);
 }
 
@@ -44,7 +45,6 @@ fn test_push() {
     assert!(!window.filled());
     assert!(!window.empty());
 }
-
 
 #[test]
 fn test_first() {
@@ -92,7 +92,6 @@ fn test_first() {
     assert_eq!(data.dats, 4);
 }
 
-
 #[test]
 fn test_last() {
     let mut window = get_sliding_window();
@@ -124,7 +123,6 @@ fn test_last() {
     let data = res.unwrap();
     assert_eq!(data.dats, 42);
 }
-
 
 #[test]
 fn test_filled() {

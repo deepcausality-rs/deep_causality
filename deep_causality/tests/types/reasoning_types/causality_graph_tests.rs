@@ -6,30 +6,62 @@ use ultragraph::prelude::*;
 
 use crate::utils::test_utils;
 
+fn get_causal_graph() -> BaseCausalGraph<'static> {
+    let g: BaseCausalGraph<'static> = CausaloidGraph::new();
+    g
+}
+
 #[test]
 fn test_new() {
-    let g: CausaloidGraph<Causaloid<Dataoid, Spaceoid, Tempoid, SpaceTempoid>> = CausaloidGraph::new();
+    let g: CausaloidGraph<
+        Causaloid<
+            'static,
+            Dataoid<BaseNumberType>,
+            Spaceoid<BaseNumberType>,
+            Tempoid<BaseNumberType>,
+            SpaceTempoid<BaseNumberType>,
+            BaseNumberType,
+        >,
+    > = CausaloidGraph::new();
     assert_eq!(g.number_nodes(), 0);
     assert_eq!(g.number_edges(), 0);
 }
 
 #[test]
 fn test_new_with_capacity() {
-    let g: CausaloidGraph<Causaloid<Dataoid, Spaceoid, Tempoid, SpaceTempoid>> = CausaloidGraph::new_with_capacity(10);
+    let g: CausaloidGraph<
+        Causaloid<
+            'static,
+            Dataoid<BaseNumberType>,
+            Spaceoid<BaseNumberType>,
+            Tempoid<BaseNumberType>,
+            SpaceTempoid<BaseNumberType>,
+            BaseNumberType,
+        >,
+    > = CausaloidGraph::new_with_capacity(10);
     assert_eq!(g.number_nodes(), 0);
     assert_eq!(g.number_edges(), 0);
 }
 
 #[test]
 fn test_default() {
-    let g: CausaloidGraph<Causaloid<Dataoid, Spaceoid, Tempoid, SpaceTempoid>> = CausaloidGraph::default();
+    let g: CausaloidGraph<
+        Causaloid<
+            'static,
+            Dataoid<BaseNumberType>,
+            Spaceoid<BaseNumberType>,
+            Tempoid<BaseNumberType>,
+            SpaceTempoid<BaseNumberType>,
+            BaseNumberType,
+        >,
+    > = CausaloidGraph::default();
     assert_eq!(g.number_nodes(), 0);
     assert_eq!(g.number_edges(), 0);
 }
 
 #[test]
 fn test_add_root_causaloid() {
-    let mut g = CausaloidGraph::new();
+    let mut g = get_causal_graph();
     let root_causaloid = test_utils::get_test_causaloid();
 
     let root_index = g.add_root_causaloid(root_causaloid);
@@ -39,7 +71,7 @@ fn test_add_root_causaloid() {
 
 #[test]
 fn test_get_root_causaloid() {
-    let mut g = CausaloidGraph::new();
+    let mut g = get_causal_graph();
     let root_causaloid = test_utils::get_test_causaloid();
 
     let root_index = g.add_root_causaloid(root_causaloid);
@@ -54,7 +86,7 @@ fn test_get_root_causaloid() {
 
 #[test]
 fn test_get_root_index() {
-    let mut g = CausaloidGraph::new();
+    let mut g = get_causal_graph();
     let root_causaloid = test_utils::get_test_causaloid();
 
     let root_index = g.add_root_causaloid(root_causaloid);
@@ -67,7 +99,7 @@ fn test_get_root_index() {
 
 #[test]
 fn test_add_causaloid() {
-    let mut g = CausaloidGraph::new();
+    let mut g = get_causal_graph();
     let causaloid = test_utils::get_test_causaloid();
 
     let index = g.add_causaloid(causaloid);
@@ -77,7 +109,7 @@ fn test_add_causaloid() {
 
 #[test]
 fn test_contains_causaloid() {
-    let mut g = CausaloidGraph::new();
+    let mut g = get_causal_graph();
     let causaloid = test_utils::get_test_causaloid();
 
     let index = g.add_causaloid(causaloid);
@@ -87,7 +119,7 @@ fn test_contains_causaloid() {
 
 #[test]
 fn test_get_causaloid() {
-    let mut g = CausaloidGraph::new();
+    let mut g = get_causal_graph();
     let causaloid = test_utils::get_test_causaloid();
 
     let index = g.add_causaloid(causaloid);
@@ -105,7 +137,7 @@ fn test_get_causaloid() {
 
 #[test]
 fn test_remove_causaloid() {
-    let mut g = CausaloidGraph::new();
+    let mut g = get_causal_graph();
     let causaloid = test_utils::get_test_causaloid();
 
     let index = g.add_causaloid(causaloid);
@@ -129,7 +161,7 @@ fn test_remove_causaloid() {
 
 #[test]
 fn test_add_edge() {
-    let mut g = CausaloidGraph::new();
+    let mut g = get_causal_graph();
     let causaloid = test_utils::get_test_causaloid();
 
     let idx_a = g.add_causaloid(causaloid);
@@ -150,7 +182,7 @@ fn test_add_edge() {
 
 #[test]
 fn test_add_edg_with_weight() {
-    let mut g = CausaloidGraph::new();
+    let mut g = get_causal_graph();
     let causaloid = test_utils::get_test_causaloid();
 
     let idx_a = g.add_causaloid(causaloid);
@@ -172,7 +204,7 @@ fn test_add_edg_with_weight() {
 
 #[test]
 fn test_remove_edge() {
-    let mut g = CausaloidGraph::new();
+    let mut g = get_causal_graph();
     let causaloid = test_utils::get_test_causaloid();
 
     let idx_a = g.add_causaloid(causaloid);
@@ -199,7 +231,7 @@ fn test_remove_edge() {
 
 #[test]
 fn test_all_true() {
-    let mut g = CausaloidGraph::new();
+    let mut g = get_causal_graph();
     let causaloid = test_utils::get_test_causaloid();
 
     let idx_a = g.add_causaloid(causaloid);
@@ -219,7 +251,7 @@ fn test_all_true() {
 
 #[test]
 fn test_number_active() {
-    let mut g = CausaloidGraph::new();
+    let mut g = get_causal_graph();
     let causaloid = test_utils::get_test_causaloid();
 
     let idx_a = g.add_causaloid(causaloid);
@@ -242,10 +274,9 @@ fn test_number_active() {
     assert_eq!(number_active, 1.0);
 }
 
-
 #[test]
 fn test_percent_active() {
-    let mut g = CausaloidGraph::new();
+    let mut g = get_causal_graph();
     let causaloid = test_utils::get_test_causaloid();
 
     let idx_a = g.add_causaloid(causaloid);
@@ -277,7 +308,7 @@ fn test_percent_active() {
 
 #[test]
 fn test_size() {
-    let mut g = CausaloidGraph::new();
+    let mut g = get_causal_graph();
 
     let size = g.size();
     assert_eq!(size, 0);
@@ -299,7 +330,7 @@ fn test_size() {
 
 #[test]
 fn test_is_empty() {
-    let mut g = CausaloidGraph::new();
+    let mut g = get_causal_graph();
     let is_empty = g.is_empty();
     assert!(is_empty);
 
@@ -320,7 +351,7 @@ fn test_is_empty() {
 
 #[test]
 fn test_clear() {
-    let mut g = CausaloidGraph::new();
+    let mut g = get_causal_graph();
     let is_empty = g.is_empty();
     assert!(is_empty);
 
@@ -345,7 +376,7 @@ fn test_clear() {
 
 #[test]
 fn test_count_edges() {
-    let mut g = CausaloidGraph::new();
+    let mut g = get_causal_graph();
     let count_edges = g.number_edges();
     assert_eq!(count_edges, 0);
 
@@ -381,7 +412,7 @@ fn test_count_edges() {
 
 #[test]
 fn test_count_nodes() {
-    let mut g = CausaloidGraph::new();
+    let mut g = get_causal_graph();
     let count_nodes = g.number_nodes();
     assert_eq!(count_nodes, 0);
 
@@ -402,7 +433,6 @@ fn test_count_nodes() {
     let res = g.remove_causaloid(index);
     assert!(res.is_ok());
 
-
     let contains = g.contains_causaloid(index);
     assert!(!contains);
 
@@ -412,7 +442,7 @@ fn test_count_nodes() {
 
 #[test]
 fn test_get_graph() {
-    let g: CausaloidGraph<Causaloid<Dataoid, Spaceoid, Tempoid, SpaceTempoid>> = CausaloidGraph::new();
+    let g = get_causal_graph();
 
     let size = g.size();
     assert_eq!(size, 0);
