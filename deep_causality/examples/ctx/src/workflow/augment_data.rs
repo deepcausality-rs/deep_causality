@@ -2,22 +2,22 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use chrono::{Datelike, Timelike};
-use deep_causality::prelude::{Tempoid, TimeScale};
+use deep_causality::prelude::{BaseNumberType, Tempoid, TimeScale};
 
 use crate::types::bar_range::BarRange;
 use crate::types::date_time_bar::DateTimeBar;
-use crate::types::dateoid::Dataoid;
+use crate::types::dateoid::CustomData;
 
 pub fn convert_bar_to_augmented(
     data_bar: &DateTimeBar,
     time_scale: TimeScale,
-) -> (Tempoid, Dataoid) {
+) -> (Tempoid<BaseNumberType>, CustomData) {
     let id = data_bar.date_time().timestamp() as u64;
     let data_range = calculate_ranges(data_bar);
 
-    let time_unit = get_time_unit(data_bar, time_scale);
+    let time_unit = get_time_unit(data_bar, time_scale) as BaseNumberType;
     let tempoid = Tempoid::new(id, time_scale, time_unit);
-    let dataoid = Dataoid::new(id, data_range);
+    let dataoid = CustomData::new(id, data_range);
 
     (tempoid, dataoid)
 }

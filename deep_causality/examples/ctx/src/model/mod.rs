@@ -1,20 +1,15 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use deep_causality::prelude::{
-    CausableGraph, Causaloid, CausaloidGraph, Context, SpaceTempoid, Spaceoid, Tempoid,
-};
+use deep_causality::prelude::{CausableGraph, Causaloid, CausaloidGraph};
 
 use crate::model::causaloid_month::get_month_causaloid;
 use crate::model::causaloid_year::get_year_causaloid;
-use crate::types::dateoid::Dataoid;
+use crate::types::alias::{CustomCausaloid, CustomContext};
 
 pub mod causaloid_month;
 pub mod causaloid_year;
 pub mod utils;
-
-type CustomContext<'l> = Context<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>;
-type CustomCausaloid<'l> = Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>;
 
 pub fn get_main_causaloid<'l>(context: &'l CustomContext<'l>) -> CustomCausaloid<'l> {
     build_causaloid(context)
