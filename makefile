@@ -11,11 +11,11 @@ help:
 	@echo '    make example   	Runs the example code.'
 	@echo '    make fix   		Fixes linting issues as reported by cargo'
 	@echo '    make format   	Formats call code according to cargo fmt style'
+	@echo '    make start   	Starts the dev day with updating rust, pulling from git remote, and build the project'
 	@echo '    make test   	Runs all tests across all crates.'
 
 # "---------------------------------------------------------"
 # "---------------------------------------------------------"
-
 
 .PHONY: build
 build:
@@ -50,6 +50,11 @@ fix:
 .PHONY: format
 format:
 	@source scripts/format.sh
+
+
+.PHONY: start
+start:
+	@source scripts/start.sh
 
 
 .PHONY: test
