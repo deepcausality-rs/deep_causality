@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
+use deep_causality::prelude::BaseCausaloidVec;
+
 use crate::benchmarks::utils_shared;
-use crate::benchmarks::utils_types::CausalVector;
 
 const SMALL: usize = 10;
 const MEDIUM: usize = 1_000;
 const LARGE: usize = 10_000;
 
-pub fn get_small_collection_and_data() -> (CausalVector, [f64; SMALL + 1]) {
+pub fn get_small_collection_and_data<'l>() -> (BaseCausaloidVec<'l>, [f64; SMALL + 1]) {
     // Builds a linear graph: root -> a -> b -> c
     (
         build_causaloid_collection(SMALL),
@@ -16,7 +17,7 @@ pub fn get_small_collection_and_data() -> (CausalVector, [f64; SMALL + 1]) {
     )
 }
 
-pub fn get_medium_collection_and_data() -> (CausalVector, [f64; MEDIUM + 1]) {
+pub fn get_medium_collection_and_data<'l>() -> (BaseCausaloidVec<'l>, [f64; MEDIUM + 1]) {
     // Builds a linear graph: root -> a -> b -> c
     (
         build_causaloid_collection(MEDIUM),
@@ -24,7 +25,7 @@ pub fn get_medium_collection_and_data() -> (CausalVector, [f64; MEDIUM + 1]) {
     )
 }
 
-pub fn get_large_collection_and_data() -> (CausalVector, [f64; LARGE + 1]) {
+pub fn get_large_collection_and_data<'l>() -> (BaseCausaloidVec<'l>, [f64; LARGE + 1]) {
     // Builds a linear graph: root -> a -> b -> c
     (
         build_causaloid_collection(LARGE),
@@ -32,7 +33,7 @@ pub fn get_large_collection_and_data() -> (CausalVector, [f64; LARGE + 1]) {
     )
 }
 
-fn build_causaloid_collection(k: usize) -> CausalVector {
+fn build_causaloid_collection<'l>(k: usize) -> BaseCausaloidVec<'l> {
     let mut v = Vec::with_capacity(k);
 
     for _ in 0..k {

@@ -19,6 +19,8 @@ mod getters;
 mod identifiable;
 mod part_eq;
 
+pub type CausalVec<'l, D, S, T, ST, V> = Option<Vec<Causaloid<'l, D, S, T, ST, V>>>;
+pub type CausalGraph<'l, D, S, T, ST, V> = CausaloidGraph<Causaloid<'l, D, S, T, ST, V>>;
 #[derive(Clone)]
 pub struct Causaloid<'l, D, S, T, ST, V>
 where
@@ -35,8 +37,8 @@ where
     context_causal_fn: Option<ContextualCausalFn<'l, D, S, T, ST, V>>,
     context: Option<&'l Context<'l, D, S, T, ST, V>>,
     has_context: bool,
-    causal_coll: Option<Vec<Causaloid<'l, D, S, T, ST, V>>>,
-    causal_graph: Option<CausaloidGraph<Causaloid<'l, D, S, T, ST, V>>>,
+    causal_coll: CausalVec<'l, D, S, T, ST, V>,
+    causal_graph: Option<CausalGraph<'l, D, S, T, ST, V>>,
     last_obs: Cell<NumericalValue>,
     description: &'l str,
     ty: PhantomData<V>,
