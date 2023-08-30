@@ -6,10 +6,7 @@ use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
 use std::ops::*;
 
-use crate::prelude::{
-    Causable, CausalFn, CausaloidGraph, Context, ContextualCausalFn, Datable, Identifiable,
-    IdentificationValue, NumericalValue, SpaceTemporal, Spatial, Temporable,
-};
+use crate::prelude::*;
 use crate::types::reasoning_types::causaloid::causal_type::CausalType;
 
 mod causable;
@@ -19,7 +16,7 @@ mod getters;
 mod identifiable;
 mod part_eq;
 
-pub type CausalVec<'l, D, S, T, ST, V> = Option<Vec<Causaloid<'l, D, S, T, ST, V>>>;
+pub type CausalVec<'l, D, S, T, ST, V> = Vec<Causaloid<'l, D, S, T, ST, V>>;
 pub type CausalGraph<'l, D, S, T, ST, V> = CausaloidGraph<Causaloid<'l, D, S, T, ST, V>>;
 #[derive(Clone)]
 pub struct Causaloid<'l, D, S, T, ST, V>
@@ -37,7 +34,7 @@ where
     context_causal_fn: Option<ContextualCausalFn<'l, D, S, T, ST, V>>,
     context: Option<&'l Context<'l, D, S, T, ST, V>>,
     has_context: bool,
-    causal_coll: CausalVec<'l, D, S, T, ST, V>,
+    causal_coll: Option<CausalVec<'l, D, S, T, ST, V>>,
     causal_graph: Option<CausalGraph<'l, D, S, T, ST, V>>,
     last_obs: Cell<NumericalValue>,
     description: &'l str,

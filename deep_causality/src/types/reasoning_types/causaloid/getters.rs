@@ -15,7 +15,7 @@ where
     pub fn active(&self) -> bool {
         self.active.get()
     }
-    pub fn causal_collection(&self) -> CausalVec<'l, D, S, T, ST, V> {
+    pub fn causal_collection(&self) -> Option<CausalVec<'l, D, S, T, ST, V>> {
         self.causal_coll.clone()
     }
     pub fn causal_graph(&self) -> Option<CausalGraph<'l, D, S, T, ST, V>> {
