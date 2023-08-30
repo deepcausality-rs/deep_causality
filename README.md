@@ -52,6 +52,8 @@ suitable for real-time applications without additional acceleration hardware.
 
 [How is deep causality different from deep learning?](../../sites/old_docs/difference.md)
 
+DeepCausality is is hosted as a sandbox project in the LF AI & Data Foundation.
+
 ## 🤔 Why DeepCausality?
 
 1) DeepCausality is written in Rust with safety, reliability, and performance in mind.
