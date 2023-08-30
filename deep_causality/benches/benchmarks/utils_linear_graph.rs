@@ -1,18 +1,15 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use deep_causality::prelude::{
-    Causaloid, CausaloidGraph, Dataoid, SpaceTempoid, Spaceoid, Tempoid,
-};
+use deep_causality::prelude::CausaloidGraph;
 use deep_causality::protocols::causable_graph::graph::CausableGraph;
 
 use crate::benchmarks::utils_shared;
+use crate::benchmarks::utils_types::CausalGraph;
 
 const SMALL: usize = 9;
 const MEDIUM: usize = 1_00;
 const LARGE: usize = 1_000;
-
-type CausalGraph<'l> = CausaloidGraph<Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>;
 
 pub fn get_small_linear_graph_and_data<'l>() -> (CausalGraph<'l>, [f64; SMALL + 1]) {
     // Builds a linear graph: root -> a -> b -> c

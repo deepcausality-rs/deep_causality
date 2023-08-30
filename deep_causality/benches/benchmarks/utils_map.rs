@@ -3,15 +3,12 @@
 
 use std::collections::HashMap;
 
-use deep_causality::prelude::{Causaloid, Dataoid, SpaceTempoid, Spaceoid, Tempoid};
-
 use crate::benchmarks::utils_shared;
+use crate::benchmarks::utils_types::CausalMap;
 
 const SMALL: usize = 10;
 const MEDIUM: usize = 1_000;
 const LARGE: usize = 10_000;
-
-type CausalMap = HashMap<usize, Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid>>;
 
 pub fn get_small_map_and_data() -> (CausalMap, [f64; SMALL + 1]) {
     // Builds a linear graph: root -> a -> b -> c

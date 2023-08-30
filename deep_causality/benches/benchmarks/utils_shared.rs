@@ -2,13 +2,11 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::errors::CausalityError;
-use deep_causality::prelude::{
-    Causaloid, Dataoid, IdentificationValue, NumericalValue, SpaceTempoid, Spaceoid, Tempoid,
-};
+use deep_causality::prelude::{Causaloid, IdentificationValue, NumericalValue};
 
-// Generates a fixed sized array with sample data
+use crate::benchmarks::utils_types::Causal;
 
-pub fn get_test_causaloid<'l>() -> Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid> {
+pub fn get_test_causaloid<'l>() -> Causal<'l> {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
     fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
