@@ -34,7 +34,7 @@ fn test_x() {
 
     let d = Spaceoid::new(id, x, y, z);
     assert_eq!(d.id(), id);
-    assert_eq!(d.x(), x);
+    assert_eq!(*d.x(), x);
 }
 
 #[test]
@@ -46,8 +46,8 @@ fn test_y() {
 
     let d = Spaceoid::new(id, x, y, z);
     assert_eq!(d.id(), id);
-    assert_eq!(d.x(), x);
-    assert_eq!(d.y(), y);
+    assert_eq!(*d.x(), x);
+    assert_eq!(*d.y(), y);
 }
 
 #[test]
@@ -59,9 +59,9 @@ fn test_z() {
 
     let d = Spaceoid::new(id, x, y, z);
     assert_eq!(d.id(), id);
-    assert_eq!(d.x(), x);
-    assert_eq!(d.y(), y);
-    assert_eq!(d.z(), z);
+    assert_eq!(*d.x(), x);
+    assert_eq!(*d.y(), y);
+    assert_eq!(*d.z(), z);
 }
 
 #[test]
@@ -73,9 +73,9 @@ fn test_to_string() {
 
     let d = Spaceoid::new(id, x, y, z);
     assert_eq!(d.id(), id);
-    assert_eq!(d.x(), x);
-    assert_eq!(d.y(), y);
-    assert_eq!(d.z(), z);
+    assert_eq!(*d.x(), x);
+    assert_eq!(*d.y(), y);
+    assert_eq!(*d.z(), z);
 
     let expected = format!("Spaceoid: id={}, x={}, y={}, z={}", id, x, y, z);
     let actual = d.to_string();

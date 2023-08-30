@@ -39,8 +39,7 @@ fn test_new() {
         }
     }
 
-    let causaloid: Causaloid<'static, Dataoid, Spaceoid, Tempoid, SpaceTempoid> =
-        Causaloid::new(id, causal_fn, description);
+    let causaloid: BaseCausaloid<'static> = Causaloid::new(id, causal_fn, description);
 
     assert!(causaloid.is_singleton());
     assert!(causaloid.causal_collection().is_none());

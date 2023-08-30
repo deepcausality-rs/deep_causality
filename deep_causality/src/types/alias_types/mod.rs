@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
+use std::collections::HashMap;
+
 use crate::prelude::{
-    CausalityError, Causaloid, Context, Dataoid, SpaceTempoid, Spaceoid, Tempoid,
+    CausalityError, Causaloid, CausaloidGraph, Context, Contextoid, Dataoid, SpaceTempoid,
+    Spaceoid, Tempoid,
 };
 
 // Type aliases
@@ -20,7 +23,17 @@ pub type ContextualCausalFn<'l, D, S, T, ST, V> =
 
 // Default type aliases for basic causaloids
 
-type BaseNumberType = u64;
+pub type BaseNumberType = u64;
+
+pub type BaseCausaloid<'l> = Causaloid<
+    'l,
+    Dataoid<BaseNumberType>,
+    Spaceoid<BaseNumberType>,
+    Tempoid<BaseNumberType>,
+    SpaceTempoid<BaseNumberType>,
+    BaseNumberType,
+>;
+
 pub type BaseCausaloidVec<'l> = Vec<
     Causaloid<
         'l,
@@ -32,7 +45,31 @@ pub type BaseCausaloidVec<'l> = Vec<
     >,
 >;
 
-pub type BaseCausaloid<'l> = Causaloid<
+pub type BaseCausalMap<'l> = HashMap<
+    usize,
+    Causaloid<
+        'l,
+        Dataoid<BaseNumberType>,
+        Spaceoid<BaseNumberType>,
+        Tempoid<BaseNumberType>,
+        SpaceTempoid<BaseNumberType>,
+        BaseNumberType,
+    >,
+>;
+
+pub type BaseCausalGraph<'l> = CausaloidGraph<
+    Causaloid<
+        'l,
+        Dataoid<BaseNumberType>,
+        Spaceoid<BaseNumberType>,
+        Tempoid<BaseNumberType>,
+        SpaceTempoid<BaseNumberType>,
+        BaseNumberType,
+    >,
+>;
+
+// Default type alias for basic context. It's used in tests
+pub type BaseContext<'l> = Context<
     'l,
     Dataoid<BaseNumberType>,
     Spaceoid<BaseNumberType>,
@@ -41,9 +78,7 @@ pub type BaseCausaloid<'l> = Causaloid<
     BaseNumberType,
 >;
 
-// Default type alias for basic context. It's used in tests
-pub type BaseContext<'l> = Context<
-    'l,
+pub type BaseContextoid = Contextoid<
     Dataoid<BaseNumberType>,
     Spaceoid<BaseNumberType>,
     Tempoid<BaseNumberType>,

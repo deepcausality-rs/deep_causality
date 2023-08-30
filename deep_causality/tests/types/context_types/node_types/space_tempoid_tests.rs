@@ -56,7 +56,7 @@ fn test_time_unit() {
     let d = SpaceTempoid::new(id, time_scale, time_unit, x, y, z);
     assert_eq!(d.id(), id);
     assert_eq!(d.time_scale(), time_scale);
-    assert_eq!(d.time_unit(), time_unit);
+    assert_eq!(*d.time_unit(), time_unit);
 }
 
 #[test]
@@ -71,8 +71,8 @@ fn test_t() {
     let d = SpaceTempoid::new(id, time_scale, time_unit, x, y, z);
     assert_eq!(d.id(), id);
     assert_eq!(d.time_scale(), time_scale);
-    assert_eq!(d.time_unit(), time_unit);
-    assert_eq!(d.t(), time_unit as u64);
+    assert_eq!(*d.time_unit(), time_unit);
+    assert_eq!(*d.t(), time_unit as u64);
 }
 
 #[test]
@@ -87,8 +87,8 @@ fn test_x() {
     let d = SpaceTempoid::new(id, time_scale, time_unit, x, y, z);
     assert_eq!(d.id(), id);
     assert_eq!(d.time_scale(), time_scale);
-    assert_eq!(d.time_unit(), time_unit);
-    assert_eq!(d.x(), x);
+    assert_eq!(*d.time_unit(), time_unit);
+    assert_eq!(*d.x(), x);
 }
 
 #[test]
@@ -103,9 +103,9 @@ fn test_y() {
     let d = SpaceTempoid::new(id, time_scale, time_unit, x, y, z);
     assert_eq!(d.id(), id);
     assert_eq!(d.time_scale(), time_scale);
-    assert_eq!(d.time_unit(), time_unit);
-    assert_eq!(d.x(), x);
-    assert_eq!(d.y(), y);
+    assert_eq!(*d.time_unit(), time_unit);
+    assert_eq!(*d.x(), x);
+    assert_eq!(*d.y(), y);
 }
 
 #[test]
@@ -120,10 +120,10 @@ fn test_z() {
     let d = SpaceTempoid::new(id, time_scale, time_unit, x, y, z);
     assert_eq!(d.id(), id);
     assert_eq!(d.time_scale(), time_scale);
-    assert_eq!(d.time_unit(), time_unit);
-    assert_eq!(d.x(), x);
-    assert_eq!(d.y(), y);
-    assert_eq!(d.z(), z);
+    assert_eq!(*d.time_unit(), time_unit);
+    assert_eq!(*d.x(), x);
+    assert_eq!(*d.y(), y);
+    assert_eq!(*d.z(), z);
 }
 
 #[test]
@@ -138,13 +138,13 @@ fn test_to_string() {
     let d = SpaceTempoid::new(id, time_scale, time_unit, x, y, z);
     assert_eq!(d.id(), id);
     assert_eq!(d.time_scale(), time_scale);
-    assert_eq!(d.time_unit(), time_unit);
-    assert_eq!(d.x(), x);
-    assert_eq!(d.y(), y);
-    assert_eq!(d.z(), z);
+    assert_eq!(*d.time_unit(), time_unit);
+    assert_eq!(*d.x(), x);
+    assert_eq!(*d.y(), y);
+    assert_eq!(*d.z(), z);
 
     let expected = format!(
-        "SpaceTempoid: id={}, time_scale={}, time_unit={}, x={}, y={}, z={}",
+        "SpaceTempoid: id={}, time_scale={:?}, time_unit={}, x={}, y={}, z={}",
         id, time_scale, time_unit, x, y, z
     );
     let actual = d.to_string();

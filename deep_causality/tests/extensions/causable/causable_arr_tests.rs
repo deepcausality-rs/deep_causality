@@ -11,8 +11,7 @@ fn get_test_causality_data() -> [NumericalValue; 10] {
     [60.0, 99.0, 82.0, 93.8, 74.8, 82.0, 93.8, 74.0, 74.8, 82.0]
 }
 
-pub fn get_test_causality_array<'l>(
-) -> [Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>; 10] {
+pub fn get_test_causality_array<'l>() -> [BaseCausaloid<'l>; 10] {
     // Causaloid doesn't implement Copy hence the from_fn workaround for array initialization
     array::from_fn(|_| get_test_causaloid())
 }

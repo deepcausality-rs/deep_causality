@@ -2,12 +2,12 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::{
-    Context, Contextoid, ContextoidType, Dataoid, Identifiable, RelationKind, Root, SpaceTempoid,
-    Spaceoid, Tempoid, TimeScale,
+    BaseContext, Context, Contextoid, ContextoidType, Identifiable, RelationKind, Root, Tempoid,
+    TimeScale,
 };
 use deep_causality::protocols::contextuable_graph::ContextuableGraph;
 
-fn get_context<'l>() -> Context<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid> {
+fn get_context<'l>() -> BaseContext<'l> {
     let id = 1;
     let name = "base context";
     Context::with_capacity(id, name, 10)

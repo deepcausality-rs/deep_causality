@@ -7,7 +7,7 @@ use crate::types::context_types::adjustable::utils;
 
 #[test]
 fn test_update() {
-    let mut d = AdjustableTime::new(0, TimeScale::Minute, 12, 12);
+    let mut d = AdjustableTime::new(0, TimeScale::Minute, 12);
     assert_eq!(*d.time_unit(), 12);
     assert_eq!(*d.time_scale(), TimeScale::Minute);
 
@@ -20,7 +20,7 @@ fn test_update() {
 
 #[test]
 fn test_update_err() {
-    let mut d = AdjustableTime::new(0, TimeScale::Minute, 42, 42);
+    let mut d = AdjustableTime::new(0, TimeScale::Minute, 42);
     assert_eq!(*d.time_unit(), 42);
     assert_eq!(*d.time_scale(), TimeScale::Minute);
 
@@ -36,7 +36,7 @@ fn test_update_err() {
 
 #[test]
 fn test_adjust() {
-    let mut d = AdjustableTime::new(0, TimeScale::Minute, 42, 42);
+    let mut d = AdjustableTime::new(0, TimeScale::Minute, 42);
     assert_eq!(*d.time_unit(), 42);
     assert_eq!(*d.time_scale(), TimeScale::Minute);
 
@@ -49,7 +49,7 @@ fn test_adjust() {
 
 #[test]
 fn test_adjust_err() {
-    let mut d = AdjustableTime::new(0, TimeScale::Minute, 21, 21);
+    let mut d = AdjustableTime::new(0, TimeScale::Minute, 21);
     assert_eq!(*d.time_unit(), 21);
     assert_eq!(*d.time_scale(), TimeScale::Minute);
 
@@ -67,7 +67,7 @@ fn test_adjust_err() {
 fn test_time_id() {
     let id = 1;
 
-    let d = AdjustableTime::new(1, TimeScale::Minute, 21, 21);
+    let d = AdjustableTime::new(1, TimeScale::Minute, 21);
     assert_eq!(*d.time_id(), id);
 }
 
@@ -75,7 +75,7 @@ fn test_time_id() {
 fn test_id() {
     let id = 1;
 
-    let d = AdjustableTime::new(1, TimeScale::Minute, 21, 21);
+    let d = AdjustableTime::new(1, TimeScale::Minute, 21);
     assert_eq!(d.id(), id);
 }
 

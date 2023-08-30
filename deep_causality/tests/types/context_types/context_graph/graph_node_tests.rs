@@ -2,34 +2,34 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::{
-    Contextoid, ContextoidType, Contextuable, Dataoid, Identifiable, Root, SpaceTempoid, Spaceoid,
-    Tempoid,
+    BaseContextoid, Contextoid, ContextoidType, Contextuable, Identifiable, Root,
 };
+
+fn get_test_contextoid() -> BaseContextoid {
+    let id = 1;
+    let root = Root::new(id);
+    let node: BaseContextoid = Contextoid::new(id, ContextoidType::Root(root));
+    node
+}
 
 #[test]
 fn test_new() {
     let id = 1;
-    let root = Root::new(id);
-    let node: Contextoid<Dataoid, Spaceoid, Tempoid, SpaceTempoid> =
-        Contextoid::new(id, ContextoidType::Root(root));
+    let node = get_test_contextoid();
     assert_eq!(node.id(), id);
 }
 
 #[test]
 fn test_id() {
     let id = 1;
-    let root = Root::new(id);
-    let node: Contextoid<Dataoid, Spaceoid, Tempoid, SpaceTempoid> =
-        Contextoid::new(id, ContextoidType::Root(root));
+    let node = get_test_contextoid();
     assert_eq!(node.id(), id);
 }
 
 #[test]
 fn test_vertex_type() {
-    let id = 1;
-    let root = Root::new(id);
-    let node: Contextoid<Dataoid, Spaceoid, Tempoid, SpaceTempoid> =
-        Contextoid::new(id, ContextoidType::Root(root));
+    let node = get_test_contextoid();
+
     assert!(node.vertex_type().root().is_some());
     assert!(node.vertex_type().dataoid().is_none());
     assert!(node.vertex_type().tempoid().is_none());
@@ -39,10 +39,7 @@ fn test_vertex_type() {
 
 #[test]
 fn test_to_string() {
-    let id = 1;
-    let root = Root::new(id);
-    let node: Contextoid<Dataoid, Spaceoid, Tempoid, SpaceTempoid> =
-        Contextoid::new(id, ContextoidType::Root(root));
+    let node = get_test_contextoid();
 
     let expected = "Contextoid ID: 1 Type: Root: Root ID: 1".to_string();
     let actual = node.to_string();
