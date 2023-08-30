@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
+pub mod alias;
 pub mod bar_range;
 pub mod counter;
 pub mod data_symbol;

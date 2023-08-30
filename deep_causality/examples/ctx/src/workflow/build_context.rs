@@ -4,21 +4,18 @@
 use std::error::Error;
 
 use chrono::Datelike;
-use deep_causality::prelude::{
-    Context, Contextoid, ContextoidType, ContextuableGraph, RelationKind, Root, SpaceTempoid,
-    Spaceoid, Tempoid, TimeScale,
-};
+use deep_causality::prelude::*;
 
+use crate::types::alias::CustomContext;
 use crate::types::counter;
-use crate::types::dateoid::Dataoid;
 use crate::types::sampled_date_time_bar::SampledDataBars;
 use crate::workflow::augment_data;
 
-pub fn build_time_data_context(
+pub fn build_time_data_context<'l>(
     data: &SampledDataBars,
     max_time_scale: TimeScale,
     node_capacity: usize,
-) -> Result<Context<Dataoid, Spaceoid, Tempoid, SpaceTempoid>, Box<dyn Error>> {
+) -> Result<CustomContext<'l>, Box<dyn Error>> {
     let context = match build_time_data_context_graph(data, max_time_scale, node_capacity) {
         Ok(g) => g,
         Err(e) => return Err(e),
@@ -43,11 +40,11 @@ fn get_boolean_control_map(time_scale: TimeScale) -> Vec<bool> {
     }
 }
 
-fn build_time_data_context_graph(
+fn build_time_data_context_graph<'l>(
     data: &SampledDataBars,
     time_scale: TimeScale,
     node_capacity: usize,
-) -> Result<Context<Dataoid, Spaceoid, Tempoid, SpaceTempoid>, Box<dyn Error>> {
+) -> Result<CustomContext<'l>, Box<dyn Error>> {
     let counter = counter::RelaxedAtomicCounter::new();
 
     let mut g = Context::with_capacity(1, "BTC-1Y", node_capacity);

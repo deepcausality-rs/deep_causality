@@ -72,7 +72,7 @@ fn test_t() {
     assert_eq!(d.id(), id);
     assert_eq!(d.time_scale(), time_scale);
     assert_eq!(*d.time_unit(), time_unit);
-    assert_eq!(*d.t(), time_unit as u64);
+    assert_eq!(*d.t(), { time_unit });
 }
 
 #[test]

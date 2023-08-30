@@ -50,7 +50,7 @@ DeepCausality is a hyper-geometric computational causality library that enables 
 causal reasoning over complex multi-stage causality models. Deep Causality adds only minimal overhead and thus is
 suitable for real-time applications without additional acceleration hardware.
 
-[How is deep causality different from deep learning?](deep_causality/docs/difference.md)
+[How is deep causality different from deep learning?](../../sites/old_docs/difference.md)
 
 ## 🤔 Why DeepCausality?
 
@@ -60,13 +60,13 @@ suitable for real-time applications without additional acceleration hardware.
 3) DeepCausality enables context awareness across data-like, time-like, space-like, spacetime-like entities stored
    within (multiple) context-hyper-graphs.
 4) DeepCausality simplifies modeling of complex tempo-spatial patterns.
-5) DeepCausality comes with [Causal State Machine (CSM)](deep_causality/docs/causal_state_machine.md)
+5) DeepCausality comes with [Causal State Machine (CSM)](../../sites/old_docs/causal_state_machine.md)
 
 ## 📚 Docs
 
 * [API Docs](https://docs.rs/deep_causality/0.2.4/deep_causality/)
 * [Changelog](CHANGELOG.md)
-* [Documentation](deep_causality/docs/README.md)
+* [Documentation](https://deepcausality.com/docs/)
 * [Slides](deep_causality/docs/slides/)
 
 ## 🚀 Install
@@ -193,8 +193,8 @@ on timestamps. To make the secondary index accessible from within the causal fun
 an extension trait
 and corresponding implementation.
 
-* [Contexts](deep_causality/docs/context.md)
-* [Customizing context](deep_causality/docs/customizing_context.md)
+* [Contexts](../../sites/old_docs/context.md)
+* [Customizing context](../../sites/old_docs/customizing_context.md)
 * [Contextoid](deep_causality/src/types/context_types/contextoid/contextoid.rs)
 * [Context Graph](deep_causality/src/types/context_types/context.rs)
 * [Example of contextualized causal model](deep_causality/examples/ctx/src/run.rs)

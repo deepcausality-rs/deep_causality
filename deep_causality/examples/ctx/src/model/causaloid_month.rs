@@ -2,17 +2,14 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::{
-    CausalityError, Causaloid, Context, Contextuable, ContextuableGraph, NumericalValue,
-    SpaceTempoid, Spaceoid, Tempoid,
+    CausalityError, Causaloid, Contextuable, ContextuableGraph, NumericalValue,
 };
 use rust_decimal::prelude::ToPrimitive;
 
 use crate::protocols::rangeable::Rangeable;
-use crate::types::dateoid::Dataoid;
+use crate::types::alias::{CustomCausaloid, CustomContext};
 
-pub fn get_month_causaloid<'l>(
-    context: &'l Context<Dataoid, Spaceoid, Tempoid, SpaceTempoid>,
-) -> Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid> {
+pub fn get_month_causaloid<'l>(context: &'l CustomContext<'l>) -> CustomCausaloid<'l> {
     let id = 2;
     let description = "Checks if the current price exceeds the monthly high level";
 
@@ -24,9 +21,9 @@ pub fn get_month_causaloid<'l>(
     // The causal fucntion must be a function and not a closure because the function
     // will be coercived into a function pointer later on, which is not possible with a closure.
     // Within the causal function, you can write safety as many closures as you want. See below.
-    fn contextual_causal_fn(
+    fn contextual_causal_fn<'l>(
         obs: NumericalValue,
-        ctx: &Context<Dataoid, Spaceoid, Tempoid, SpaceTempoid>,
+        ctx: &'l CustomContext<'l>,
     ) -> Result<bool, CausalityError> {
         if obs.is_nan() {
             return Err(CausalityError("Observation is NULL/NAN".into()));

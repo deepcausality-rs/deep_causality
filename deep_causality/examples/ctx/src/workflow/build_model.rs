@@ -3,14 +3,14 @@
 
 use std::error::Error;
 
-use deep_causality::prelude::{Causaloid, Context, Model, SpaceTempoid, Spaceoid, Tempoid};
+use deep_causality::prelude::Model;
 
-use crate::types::dateoid::Dataoid;
+use crate::types::alias::{CustomCausaloid, CustomContext, CustomModel};
 
 pub fn build_model<'l>(
-    context: &'l Context<Dataoid, Spaceoid, Tempoid, SpaceTempoid>,
-    causaloid: &'l Causaloid<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>,
-) -> Result<Model<'l, Dataoid, Spaceoid, Tempoid, SpaceTempoid>, Box<dyn Error>> {
+    context: &'l CustomContext<'l>,
+    causaloid: &'l CustomCausaloid<'l>,
+) -> Result<CustomModel<'l>, Box<dyn Error>> {
     let id = 1;
     let author = "Marvin Hansen <marvin.hansen@gmail.com>";
     let description = "This is a test model";
