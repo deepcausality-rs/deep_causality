@@ -53,9 +53,7 @@ DeepCausality is a hyper-geometric computational causality library that enables 
 causal reasoning over complex multi-stage causality models. Deep Causality adds only minimal overhead and thus is
 suitable for real-time applications without additional acceleration hardware.
 
-[How is deep causality different from deep learning?](../../sites/old_docs/difference.md)
-
-DeepCausality is is hosted as a sandbox project in the LF AI & Data Foundation.
+DeepCausality is hosted as a sandbox project in the [LF AI & Data Foundation](https://landscape.lfai.foundation/).
 
 ## 🤔 Why DeepCausality?
 
@@ -72,7 +70,9 @@ DeepCausality is is hosted as a sandbox project in the LF AI & Data Foundation.
 * [API Docs](https://docs.rs/deep_causality/0.2.4/deep_causality/)
 * [Changelog](CHANGELOG.md)
 * [Documentation](https://deepcausality.com/docs/)
-* [Slides](deep_causality/docs/slides/)
+* [Slides](deep_causality/docs/slides/LF_2023/DeepCausality.pdf)
+* [How is deep causality different from deep learning?](../../sites/old_docs/difference.md)
+
 
 ## 🚀 Install
 
