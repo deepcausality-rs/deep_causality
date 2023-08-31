@@ -4,8 +4,6 @@
 
 [//]: # (---)
 
-# DeepCausality
-
 [![Crates.io][crates-badge]][crates-url]
 [![Docs.rs][docs-badge]][docs-url]
 [![MIT licensed][mit-badge]][mit-url]
@@ -43,6 +41,8 @@
 [clippy-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/rust-clippy.yml/badge.svg
 
 [test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
+
+![Logo](/img/logo_color.png "DeepCausality Logo")
 
 Web: https://deepcausality.com
 
