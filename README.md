@@ -44,7 +44,6 @@
 
 ![Logo](/img/logo.png "Logo")
 
-
 Web: https://deepcausality.com
 
 DeepCausality is a hyper-geometric computational causality library that enables fast and deterministic context-aware
