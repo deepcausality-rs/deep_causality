@@ -1,0 +1,36 @@
+#SPDX-License-Identifier: MIT
+#Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
+# Phylum defends from supply-chain malware, malicious open-source authors,
+# and engineering risk, in addtion to software vulnerabilities and license risks.
+# https://github.com/marketplace/actions/phylum-analyze-pr
+
+name: Phylum SCM scan
+
+on:
+  pull_request:
+
+jobs:
+  analyze_deps:
+    name: Analyze dependencies with Phylum
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Analyze dependencies
+        uses: phylum-dev/phylum-analyze-pr-action@v2
+        with:
+          phylum_token: ${{ secrets.PHYLUM_TOKEN }}
+          # -vv Provide debug level output
+          # Consider all dependencies in analysis results instead of just the newly added ones.
+          # Specifying `--all-deps` can be useful for casting the widest net for strict adherence to Quality Assurance (QA) standards.
+          cmd: phylum-ci -vv --all-deps
