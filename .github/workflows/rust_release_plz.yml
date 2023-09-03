@@ -1,3 +1,6 @@
+#SPDX-License-Identifier: MIT
+#Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
 # release-plz creates a pull request with the new versions, where it prepares the next release.
 # release-plz releases the unpublished packages.
 # https://release-plz.ieni.dev/docs/github
