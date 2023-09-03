@@ -8,7 +8,7 @@ set -o pipefail
 
 # Check for outdated dependencies
 # https://github.com/kbknapp/cargo-outdated
-command cargo outdated
+command cargo outdated --workspace
 
 
 # Scan for unused dependencies
@@ -23,7 +23,7 @@ command cargo audit
 
 # Check a package and all of its dependencies for errors.
 # https://doc.rust-lang.org/cargo/commands/cargo-check.html
-command cargo check
+command cargo check --all-targets
 
 # Consider checking each crate for re-exporting external types
 # https://crates.io/crates/cargo-check-external-types
@@ -32,7 +32,7 @@ command cargo check
 
 # Check for linter errors
 # https://github.com/rust-lang/rust-clippy
-command cargo clippy
+command cargo clippy --all-targets
 
 
 # Check code formatting
