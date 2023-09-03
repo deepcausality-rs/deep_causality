@@ -6,7 +6,7 @@ rust-version = "1.65"
 repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 license = "MIT"
-description = "Procedural macros dependency for deep_causality; no standalone usage intended."
+description = "Procedural macros that generate constructurs and getters."
 documentation = "https://docs.rs/deep_causality"
 
 [lib]
