@@ -114,10 +114,16 @@ fn test_context() {
     let description = "This is a test model";
     let assumptions = None;
     let causaloid = &get_test_causaloid();
-    let binding = get_test_context();
-    let context = Some(&binding);
+    let context = get_test_context();
 
-    let model = Model::new(id, author, description, assumptions, causaloid, context);
+    let model = Model::new(
+        id,
+        author,
+        description,
+        assumptions,
+        causaloid,
+        Some(&context),
+    );
 
     assert_eq!(model.id(), id);
     assert_eq!(*model.author(), author);
@@ -125,5 +131,5 @@ fn test_context() {
     assert!(model.assumptions().is_none());
     assert_eq!(*model.causaloid(), causaloid);
     assert!(model.context().is_some());
-    assert_eq!(model.context().unwrap().id(), context.unwrap().id());
+    assert_eq!(model.context().unwrap().id(), id);
 }

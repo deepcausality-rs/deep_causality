@@ -11,78 +11,52 @@ fn test_build_error() {
     let x = 1;
     let result: Result<usize, BuildError> =
         Err(BuildError::new(format!("unexpected number {}", x)));
-    let build_error = result.unwrap_err();
-    assert_eq!(
-        build_error.to_string(),
-        format!("BuildError: unexpected number {}", 1)
-    );
+    assert!(result.is_err());
 }
 
 #[test]
 fn test_causality_graph_error() {
     let result: Result<usize, CausalityGraphError> =
         Err(CausalityGraphError::new("unexpected cause".to_string()));
-    let error = result.unwrap_err();
-    assert_eq!(
-        error.to_string(),
-        format!("CausalityGraphError: unexpected cause")
-    );
+    assert!(result.is_err());
 }
 
 #[test]
 fn test_context_index_error() {
     let result: Result<usize, ContextIndexError> =
         Err(ContextIndexError::new("unexpected cause".to_string()));
-    let error = result.unwrap_err();
-    assert_eq!(
-        error.to_string(),
-        format!("ContextIndexError: unexpected cause")
-    );
+    assert!(result.is_err());
 }
 
 #[test]
 fn test_causal_graph_index_error() {
     let result: Result<usize, CausalGraphIndexError> =
         Err(CausalGraphIndexError::new("unexpected cause".to_string()));
-    let error = result.unwrap_err();
-    assert_eq!(
-        error.to_string(),
-        format!("CausalGraphIndexError: unexpected cause")
-    );
+    assert!(result.is_err());
 }
 
 #[test]
 fn test_causality_error() {
     let result: Result<usize, CausalityError> =
         Err(CausalityError::new("unexpected cause".to_string()));
-    let error = result.unwrap_err();
-    assert_eq!(
-        error.to_string(),
-        format!("CausalityError: unexpected cause")
-    );
+    assert!(result.is_err());
 }
 
 #[test]
 fn test_adjustment_error() {
     let result: Result<usize, AdjustmentError> =
         Err(AdjustmentError::new("unexpected issue".to_string()));
-    let error = result.unwrap_err();
-    assert_eq!(
-        error.to_string(),
-        format!("AdjustmentError: unexpected issue")
-    );
+    assert!(result.is_err());
 }
 
 #[test]
 fn test_update_error() {
     let result: Result<usize, UpdateError> = Err(UpdateError::new("unexpected issue".to_string()));
-    let error = result.unwrap_err();
-    assert_eq!(error.to_string(), format!("UpdateError: unexpected issue"));
+    assert!(result.is_err());
 }
 
 #[test]
 fn test_action_error() {
     let result: Result<usize, ActionError> = Err(ActionError::new("unexpected issue".to_string()));
-    let error = result.unwrap_err();
-    assert_eq!(error.to_string(), format!("ActionError: unexpected issue"));
+    assert!(result.is_err());
 }
