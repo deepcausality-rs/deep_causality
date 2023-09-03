@@ -9,7 +9,7 @@ use crate::utils::test_utils;
 fn test_new() {
     let causaloid = &test_utils::get_test_causaloid();
     assert!(causaloid.is_singleton());
-    assert_eq!(01, causaloid.id());
+    assert_eq!(1, causaloid.id());
     assert_eq!(
         "tests whether data exceeds threshold of 0.55".to_string(),
         causaloid.description()
@@ -85,7 +85,7 @@ fn eval_with_data() {
 fn test_to_string() {
     let causaloid = &test_utils::get_test_causaloid();
     assert!(causaloid.is_singleton());
-    assert_eq!(01, causaloid.id());
+    assert_eq!(1, causaloid.id());
     assert_eq!(
         "tests whether data exceeds threshold of 0.55".to_string(),
         causaloid.description()

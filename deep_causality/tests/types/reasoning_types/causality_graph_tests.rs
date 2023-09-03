@@ -6,6 +6,18 @@ use ultragraph::prelude::*;
 
 use crate::utils::test_utils;
 
+// Custom type alias
+type CustomCausaloidGraph = CausaloidGraph<
+    Causaloid<
+        'static,
+        Dataoid<BaseNumberType>,
+        Spaceoid<BaseNumberType>,
+        Tempoid<BaseNumberType>,
+        SpaceTempoid<BaseNumberType>,
+        BaseNumberType,
+    >,
+>;
+
 fn get_causal_graph() -> BaseCausalGraph<'static> {
     let g: BaseCausalGraph<'static> = CausaloidGraph::new();
     g
@@ -13,48 +25,21 @@ fn get_causal_graph() -> BaseCausalGraph<'static> {
 
 #[test]
 fn test_new() {
-    let g: CausaloidGraph<
-        Causaloid<
-            'static,
-            Dataoid<BaseNumberType>,
-            Spaceoid<BaseNumberType>,
-            Tempoid<BaseNumberType>,
-            SpaceTempoid<BaseNumberType>,
-            BaseNumberType,
-        >,
-    > = CausaloidGraph::new();
+    let g: CustomCausaloidGraph = CausaloidGraph::new();
     assert_eq!(g.number_nodes(), 0);
     assert_eq!(g.number_edges(), 0);
 }
 
 #[test]
 fn test_new_with_capacity() {
-    let g: CausaloidGraph<
-        Causaloid<
-            'static,
-            Dataoid<BaseNumberType>,
-            Spaceoid<BaseNumberType>,
-            Tempoid<BaseNumberType>,
-            SpaceTempoid<BaseNumberType>,
-            BaseNumberType,
-        >,
-    > = CausaloidGraph::new_with_capacity(10);
+    let g: CustomCausaloidGraph = CausaloidGraph::new_with_capacity(10);
     assert_eq!(g.number_nodes(), 0);
     assert_eq!(g.number_edges(), 0);
 }
 
 #[test]
 fn test_default() {
-    let g: CausaloidGraph<
-        Causaloid<
-            'static,
-            Dataoid<BaseNumberType>,
-            Spaceoid<BaseNumberType>,
-            Tempoid<BaseNumberType>,
-            SpaceTempoid<BaseNumberType>,
-            BaseNumberType,
-        >,
-    > = CausaloidGraph::default();
+    let g: CustomCausaloidGraph = CausaloidGraph::default();
     assert_eq!(g.number_nodes(), 0);
     assert_eq!(g.number_edges(), 0);
 }
@@ -81,7 +66,7 @@ fn test_get_root_causaloid() {
     let causaloid = g.get_root_causaloid().unwrap();
 
     let id = causaloid.id();
-    assert_eq!(id, 01);
+    assert_eq!(id, 1);
 }
 
 #[test]
@@ -131,7 +116,7 @@ fn test_get_causaloid() {
     let id = causaloid.id();
     let description = causaloid.description();
 
-    assert_eq!(id, 01);
+    assert_eq!(id, 1);
     assert_eq!(description, "tests whether data exceeds threshold of 0.55");
 }
 
@@ -149,7 +134,7 @@ fn test_remove_causaloid() {
     let id = causaloid.id();
     let description = causaloid.description();
 
-    assert_eq!(id, 01);
+    assert_eq!(id, 1);
     assert_eq!(description, "tests whether data exceeds threshold of 0.55");
 
     let res = g.remove_causaloid(index);
@@ -428,7 +413,7 @@ fn test_count_nodes() {
     let causaloid = g.get_causaloid(index).unwrap();
 
     let id = causaloid.id();
-    assert_eq!(id, 01);
+    assert_eq!(id, 1);
 
     let res = g.remove_causaloid(index);
     assert!(res.is_ok());

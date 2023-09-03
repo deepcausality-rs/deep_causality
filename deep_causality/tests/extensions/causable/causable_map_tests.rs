@@ -53,7 +53,7 @@ fn test_all_active() {
     assert!(!map.get_all_causes_true());
 
     let obs = 0.99;
-    for (_, cause) in &map {
+    for cause in map.values() {
         cause.verify_single_cause(&obs).expect("verify failed");
     }
     assert!(map.get_all_causes_true());
@@ -66,7 +66,7 @@ fn test_number_active() {
     assert_eq!(0.0, map.number_active());
 
     let obs = 0.99;
-    for (_, cause) in &map {
+    for cause in map.values() {
         cause.verify_single_cause(&obs).expect("verify failed");
     }
 
@@ -80,7 +80,7 @@ fn test_percent_active() {
     assert!(!map.get_all_causes_true());
 
     let obs = 0.99;
-    for (_, cause) in &map {
+    for cause in map.values() {
         cause.verify_single_cause(&obs).expect("verify failed");
     }
     assert!(map.get_all_causes_true());

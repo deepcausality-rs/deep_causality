@@ -91,7 +91,7 @@ fn test_new_with_context() {
 
 #[test]
 fn test_from_causal_collection() {
-    let id: IdentificationValue = 01;
+    let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
     let causal_coll = test_utils::get_test_causality_vec();
 
@@ -108,7 +108,7 @@ fn test_from_causal_collection() {
 
 #[test]
 fn test_from_causal_collection_with_context() {
-    let id: IdentificationValue = 01;
+    let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
     let causal_coll = test_utils::get_test_causality_vec();
     let context = &test_utils::get_test_context();
@@ -127,7 +127,7 @@ fn test_from_causal_collection_with_context() {
 
 #[test]
 fn test_from_causal_graph() {
-    let id: IdentificationValue = 01;
+    let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
     let (causal_graph, data) = test_utils_graph::get_small_multi_layer_cause_graph_and_data();
 
@@ -147,7 +147,7 @@ fn test_from_causal_graph() {
 
 #[test]
 fn test_from_causal_graph_with_context() {
-    let id: IdentificationValue = 01;
+    let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
     let (causal_graph, data) = test_utils_graph::get_small_multi_layer_cause_graph_and_data();
     let context = &test_utils::get_test_context();
@@ -169,7 +169,7 @@ fn test_from_causal_graph_with_context() {
 
 #[test]
 fn test_causal_graph() {
-    let id: IdentificationValue = 01;
+    let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
     let (causal_graph, _) = test_utils_graph::get_small_multi_layer_cause_graph_and_data();
 
