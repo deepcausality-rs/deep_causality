@@ -63,7 +63,7 @@ DeepCausality is hosted as a sandbox project in the [LF AI & Data Foundation](ht
 3) DeepCausality enables context awareness across data-like, time-like, space-like, spacetime-like entities stored
    within (multiple) context-hyper-graphs.
 4) DeepCausality simplifies modeling of complex tempo-spatial patterns.
-5) DeepCausality comes with [Causal State Machine (CSM)](../../sites/old_docs/causal_state_machine.md)
+5) DeepCausality comes with Causal State Machine (CSM)
 
 ## 📚 Docs
 
@@ -71,7 +71,6 @@ DeepCausality is hosted as a sandbox project in the [LF AI & Data Foundation](ht
 * [Changelog](CHANGELOG.md)
 * [Documentation](https://deepcausality.com/docs/)
 * [Slides](deep_causality/docs/slides/LF_2023/DeepCausality.pdf)
-* [How is deep causality different from deep learning?](../../sites/old_docs/difference.md)
 
 
 ## 🚀 Install
@@ -198,10 +197,9 @@ on timestamps. To make the secondary index accessible from within the causal fun
 an extension trait
 and corresponding implementation.
 
-* [Contexts](../../sites/old_docs/context.md)
-* [Customizing context](../../sites/old_docs/customizing_context.md)
-* [Contextoid](deep_causality/src/types/context_types/contextoid/contextoid.rs)
-* [Context Graph](deep_causality/src/types/context_types/context.rs)
+
+* [Contextoid](deep_causality/src/types/context_types/contextoid/mod.rs)
+* [Context Graph](deep_causality/src/types/context_types/mod.rs)
 * [Example of contextualized causal model](deep_causality/examples/ctx/src/run.rs)
 
 ## Causal State Machine
@@ -242,7 +240,7 @@ before all make commands work:
 ```
 
 ## 👩‍👩‍👧‍👦 Community
-
+* [Charta](DeepCausalityProjectCharter.pdf)
 * [Code of Conduct](CODE_OF_CONDUCT.md)
 * [Support](SUPPORT.md)
 

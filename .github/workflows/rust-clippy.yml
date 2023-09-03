@@ -1,3 +1,6 @@
+#SPDX-License-Identifier: MIT
+#Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
 # rust-clippy is a tool that runs a bunch of lints to catch common
 # mistakes in your Rust code and help improve your Rust code.
 # More details at https://github.com/rust-lang/rust-clippy
