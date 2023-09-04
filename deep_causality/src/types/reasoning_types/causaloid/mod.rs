@@ -31,7 +31,7 @@ where
     active: Cell<bool>,
     causal_type: CausalType,
     causal_fn: Option<CausalFn>,
-    context_causal_fn: Option<ContextualCausalFn<'l, D, S, T, ST, V>>,
+    context_causal_fn: Option<ContextualCausalDataFn<'l, D, S, T, ST, V>>,
     context: Option<&'l Context<'l, D, S, T, ST, V>>,
     has_context: bool,
     causal_coll: Option<CausalVec<'l, D, S, T, ST, V>>,
@@ -71,7 +71,7 @@ where
 
     pub fn new_with_context(
         id: IdentificationValue,
-        context_causal_fn: ContextualCausalFn<'l, D, S, T, ST, V>,
+        context_causal_fn: ContextualCausalDataFn<'l, D, S, T, ST, V>,
         context: Option<&'l Context<'l, D, S, T, ST, V>>,
         description: &'l str,
     ) -> Self {

@@ -17,8 +17,10 @@ pub type EvalFn = fn(&[NumericalValue]) -> bool;
 
 // Fn aliases for causal function with and without context
 pub type CausalFn = fn(NumericalValue) -> Result<bool, CausalityError>;
-pub type ContextualCausalFn<'l, D, S, T, ST, V> =
+pub type ContextualCausalDataFn<'l, D, S, T, ST, V> =
     fn(NumericalValue, &'l Context<D, S, T, ST, V>) -> Result<bool, CausalityError>;
+pub type ContextualCausalFn<'l, D, S, T, ST, V> =
+    fn(&'l Context<D, S, T, ST, V>) -> Result<bool, CausalityError>;
 
 // Default type aliases for basic causaloids
 
