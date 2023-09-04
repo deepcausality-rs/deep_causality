@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 use deep_causality::prelude::{
-    Identifiable, SpaceTempoid, SpaceTemporal, Spatial, Temporable, TimeScale,
+    Identifiable, SpaceTemporal, SpaceTime, Spatial, Temporable, TimeScale,
 };
 
 #[test]
@@ -13,7 +13,7 @@ fn test_new() {
     let y = 8;
     let z = 9;
 
-    let d = SpaceTempoid::new(id, time_scale, time_unit, x, y, z);
+    let d = SpaceTime::new(id, time_scale, time_unit, x, y, z);
     assert_eq!(d.id(), id);
 }
 
@@ -26,7 +26,7 @@ fn test_id() {
     let y = 8;
     let z = 9;
 
-    let d = SpaceTempoid::new(id, time_scale, time_unit, x, y, z);
+    let d = SpaceTime::new(id, time_scale, time_unit, x, y, z);
     assert_eq!(d.id(), id);
 }
 
@@ -39,7 +39,7 @@ fn test_time_scale() {
     let y = 8;
     let z = 9;
 
-    let d = SpaceTempoid::new(id, time_scale, time_unit, x, y, z);
+    let d = SpaceTime::new(id, time_scale, time_unit, x, y, z);
     assert_eq!(d.id(), id);
     assert_eq!(d.time_scale(), time_scale);
 }
@@ -53,7 +53,7 @@ fn test_time_unit() {
     let y = 8;
     let z = 9;
 
-    let d = SpaceTempoid::new(id, time_scale, time_unit, x, y, z);
+    let d = SpaceTime::new(id, time_scale, time_unit, x, y, z);
     assert_eq!(d.id(), id);
     assert_eq!(d.time_scale(), time_scale);
     assert_eq!(*d.time_unit(), time_unit);
@@ -68,7 +68,7 @@ fn test_t() {
     let y = 8;
     let z = 9;
 
-    let d = SpaceTempoid::new(id, time_scale, time_unit, x, y, z);
+    let d = SpaceTime::new(id, time_scale, time_unit, x, y, z);
     assert_eq!(d.id(), id);
     assert_eq!(d.time_scale(), time_scale);
     assert_eq!(*d.time_unit(), time_unit);
@@ -84,7 +84,7 @@ fn test_x() {
     let y = 8;
     let z = 9;
 
-    let d = SpaceTempoid::new(id, time_scale, time_unit, x, y, z);
+    let d = SpaceTime::new(id, time_scale, time_unit, x, y, z);
     assert_eq!(d.id(), id);
     assert_eq!(d.time_scale(), time_scale);
     assert_eq!(*d.time_unit(), time_unit);
@@ -100,7 +100,7 @@ fn test_y() {
     let y = 8;
     let z = 9;
 
-    let d = SpaceTempoid::new(id, time_scale, time_unit, x, y, z);
+    let d = SpaceTime::new(id, time_scale, time_unit, x, y, z);
     assert_eq!(d.id(), id);
     assert_eq!(d.time_scale(), time_scale);
     assert_eq!(*d.time_unit(), time_unit);
@@ -117,7 +117,7 @@ fn test_z() {
     let y = 8;
     let z = 9;
 
-    let d = SpaceTempoid::new(id, time_scale, time_unit, x, y, z);
+    let d = SpaceTime::new(id, time_scale, time_unit, x, y, z);
     assert_eq!(d.id(), id);
     assert_eq!(d.time_scale(), time_scale);
     assert_eq!(*d.time_unit(), time_unit);
@@ -135,7 +135,7 @@ fn test_to_string() {
     let y = 8;
     let z = 9;
 
-    let d = SpaceTempoid::new(id, time_scale, time_unit, x, y, z);
+    let d = SpaceTime::new(id, time_scale, time_unit, x, y, z);
     assert_eq!(d.id(), id);
     assert_eq!(d.time_scale(), time_scale);
     assert_eq!(*d.time_unit(), time_unit);

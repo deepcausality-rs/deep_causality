@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use deep_causality::prelude::{Identifiable, Tempoid, Temporable, TimeScale};
+use deep_causality::prelude::{Identifiable, Temporable, Time, TimeScale};
 
 #[test]
 fn test_new() {
@@ -9,7 +9,7 @@ fn test_new() {
     let time_scale = TimeScale::Month;
     let time_unit = 12;
 
-    let d = Tempoid::new(id, time_scale, time_unit);
+    let d = Time::new(id, time_scale, time_unit);
     assert_eq!(d.id(), id);
 }
 
@@ -19,7 +19,7 @@ fn test_id() {
     let time_scale = TimeScale::Month;
     let time_unit = 12;
 
-    let d = Tempoid::new(id, time_scale, time_unit);
+    let d = Time::new(id, time_scale, time_unit);
     assert_eq!(d.id(), id);
 }
 
@@ -29,7 +29,7 @@ fn test_time_scale() {
     let time_scale = TimeScale::Month;
     let time_unit = 12;
 
-    let d = Tempoid::new(id, time_scale, time_unit);
+    let d = Time::new(id, time_scale, time_unit);
     assert_eq!(d.id(), id);
     assert_eq!(d.time_scale(), time_scale);
 }
@@ -40,7 +40,7 @@ fn test_time_unit() {
     let time_scale = TimeScale::Month;
     let time_unit = 12;
 
-    let d = Tempoid::new(id, time_scale, time_unit);
+    let d = Time::new(id, time_scale, time_unit);
     assert_eq!(d.id(), id);
     assert_eq!(d.time_scale(), time_scale);
     assert_eq!(*d.time_unit(), time_unit);
@@ -52,7 +52,7 @@ fn test_to_string() {
     let time_scale = TimeScale::Month;
     let time_unit = 12;
 
-    let d = Tempoid::new(id, time_scale, time_unit);
+    let d = Time::new(id, time_scale, time_unit);
     assert_eq!(d.id(), id);
     assert_eq!(d.time_scale(), time_scale);
     assert_eq!(*d.time_unit(), time_unit);

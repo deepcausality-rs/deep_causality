@@ -4,7 +4,7 @@ use std::fmt::{Debug, Display, Formatter};
 
 use super::*;
 
-impl<T> Display for Spaceoid<T>
+impl<T> Display for Space<T>
 where
     T: Default + Debug + Add<T, Output = T> + Sub<T, Output = T> + Mul<T, Output = T>,
 {

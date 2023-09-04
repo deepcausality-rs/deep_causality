@@ -8,7 +8,7 @@ fn test_new() {
     let id = 1;
     let data = 42;
 
-    let d = Dataoid::new(id, data);
+    let d = Data::new(id, data);
     assert_eq!(d.id(), id);
 
     let contextoid: BaseContextoid = Contextoid::new(id, ContextoidType::Datoid(d));
@@ -20,7 +20,7 @@ fn test_id() {
     let id = 1;
     let data = 42;
 
-    let d = Dataoid::new(id, data);
+    let d = Data::new(id, data);
     assert_eq!(d.id(), id);
 
     let contextoid: BaseContextoid = Contextoid::new(id, ContextoidType::Datoid(d));
@@ -32,7 +32,7 @@ fn test_to_string() {
     let id = 1;
     let data = 42;
 
-    let d = Dataoid::new(id, data);
+    let d = Data::new(id, data);
     assert_eq!(d.id(), id);
 
     let contextoid: BaseContextoid = Contextoid::new(id, ContextoidType::Datoid(d));

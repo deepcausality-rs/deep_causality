@@ -6,7 +6,7 @@ use crate::prelude::Spatial;
 
 use super::*;
 
-impl<T> Spatial<T> for Spaceoid<T>
+impl<T> Spatial<T> for Space<T>
 where
     T: Default + Add<T, Output = T> + Sub<T, Output = T> + Mul<T, Output = T>,
 {

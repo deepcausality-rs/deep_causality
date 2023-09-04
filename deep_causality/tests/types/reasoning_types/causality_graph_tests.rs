@@ -10,10 +10,10 @@ use crate::utils::test_utils;
 type CustomCausaloidGraph = CausaloidGraph<
     Causaloid<
         'static,
-        Dataoid<BaseNumberType>,
-        Spaceoid<BaseNumberType>,
-        Tempoid<BaseNumberType>,
-        SpaceTempoid<BaseNumberType>,
+        Data<BaseNumberType>,
+        Space<BaseNumberType>,
+        Time<BaseNumberType>,
+        SpaceTime<BaseNumberType>,
         BaseNumberType,
     >,
 >;

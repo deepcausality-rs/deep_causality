@@ -9,7 +9,7 @@ mod display;
 pub mod identifiable;
 
 #[derive(Getters, Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
-pub struct Dataoid<T>
+pub struct Data<T>
 where
     T: Copy + Default,
 {
@@ -19,4 +19,4 @@ where
 }
 
 // Type tag required for context.
-impl<T> Datable for Dataoid<T> where T: Copy + Default {}
+impl<T> Datable for Data<T> where T: Copy + Default {}

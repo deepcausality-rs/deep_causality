@@ -3,9 +3,9 @@
 use std::ops::{Add, Mul, Sub};
 
 use crate::prelude::Identifiable;
-use crate::types::context_types::node_types::space::Spaceoid;
+use crate::types::context_types::node_types::space::Space;
 
-impl<T> Identifiable for Spaceoid<T>
+impl<T> Identifiable for Space<T>
 where
     T: Default + Add<T, Output = T> + Sub<T, Output = T> + Mul<T, Output = T>,
 {

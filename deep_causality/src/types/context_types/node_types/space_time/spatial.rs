@@ -3,9 +3,9 @@
 use std::ops::{Add, Mul, Sub};
 
 use crate::prelude::Spatial;
-use crate::types::context_types::node_types::space_time::SpaceTempoid;
+use crate::types::context_types::node_types::space_time::SpaceTime;
 
-impl<T> Spatial<T> for SpaceTempoid<T>
+impl<T> Spatial<T> for SpaceTime<T>
 where
     T: Default + Add<T, Output = T> + Sub<T, Output = T> + Mul<T, Output = T>,
 {

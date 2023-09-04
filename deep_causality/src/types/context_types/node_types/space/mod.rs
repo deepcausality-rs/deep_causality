@@ -10,7 +10,7 @@ mod identifiable;
 mod spatial;
 
 #[derive(Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
-pub struct Spaceoid<T>
+pub struct Space<T>
 where
     T: Default + Add<T, Output = T> + Sub<T, Output = T> + Mul<T, Output = T>,
 {
