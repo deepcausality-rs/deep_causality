@@ -4,8 +4,7 @@
 use std::collections::HashMap;
 
 use crate::prelude::{
-    CausalityError, Causaloid, CausaloidGraph, Context, Contextoid, Dataoid, SpaceTempoid,
-    Spaceoid, Tempoid,
+    CausalityError, Causaloid, CausaloidGraph, Context, Contextoid, Data, Space, SpaceTime, Time,
 };
 
 // Type aliases
@@ -27,20 +26,20 @@ pub type BaseNumberType = u64;
 
 pub type BaseCausaloid<'l> = Causaloid<
     'l,
-    Dataoid<BaseNumberType>,
-    Spaceoid<BaseNumberType>,
-    Tempoid<BaseNumberType>,
-    SpaceTempoid<BaseNumberType>,
+    Data<BaseNumberType>,
+    Space<BaseNumberType>,
+    Time<BaseNumberType>,
+    SpaceTime<BaseNumberType>,
     BaseNumberType,
 >;
 
 pub type BaseCausaloidVec<'l> = Vec<
     Causaloid<
         'l,
-        Dataoid<BaseNumberType>,
-        Spaceoid<BaseNumberType>,
-        Tempoid<BaseNumberType>,
-        SpaceTempoid<BaseNumberType>,
+        Data<BaseNumberType>,
+        Space<BaseNumberType>,
+        Time<BaseNumberType>,
+        SpaceTime<BaseNumberType>,
         BaseNumberType,
     >,
 >;
@@ -49,10 +48,10 @@ pub type BaseCausalMap<'l> = HashMap<
     usize,
     Causaloid<
         'l,
-        Dataoid<BaseNumberType>,
-        Spaceoid<BaseNumberType>,
-        Tempoid<BaseNumberType>,
-        SpaceTempoid<BaseNumberType>,
+        Data<BaseNumberType>,
+        Space<BaseNumberType>,
+        Time<BaseNumberType>,
+        SpaceTime<BaseNumberType>,
         BaseNumberType,
     >,
 >;
@@ -60,10 +59,10 @@ pub type BaseCausalMap<'l> = HashMap<
 pub type BaseCausalGraph<'l> = CausaloidGraph<
     Causaloid<
         'l,
-        Dataoid<BaseNumberType>,
-        Spaceoid<BaseNumberType>,
-        Tempoid<BaseNumberType>,
-        SpaceTempoid<BaseNumberType>,
+        Data<BaseNumberType>,
+        Space<BaseNumberType>,
+        Time<BaseNumberType>,
+        SpaceTime<BaseNumberType>,
         BaseNumberType,
     >,
 >;
@@ -71,17 +70,17 @@ pub type BaseCausalGraph<'l> = CausaloidGraph<
 // Default type alias for basic context. It's used in tests
 pub type BaseContext<'l> = Context<
     'l,
-    Dataoid<BaseNumberType>,
-    Spaceoid<BaseNumberType>,
-    Tempoid<BaseNumberType>,
-    SpaceTempoid<BaseNumberType>,
+    Data<BaseNumberType>,
+    Space<BaseNumberType>,
+    Time<BaseNumberType>,
+    SpaceTime<BaseNumberType>,
     BaseNumberType,
 >;
 
 pub type BaseContextoid = Contextoid<
-    Dataoid<BaseNumberType>,
-    Spaceoid<BaseNumberType>,
-    Tempoid<BaseNumberType>,
-    SpaceTempoid<BaseNumberType>,
+    Data<BaseNumberType>,
+    Space<BaseNumberType>,
+    Time<BaseNumberType>,
+    SpaceTime<BaseNumberType>,
     BaseNumberType,
 >;

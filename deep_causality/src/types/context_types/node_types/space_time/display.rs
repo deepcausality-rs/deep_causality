@@ -3,9 +3,9 @@
 use std::fmt::{Debug, Display, Formatter};
 use std::ops::{Add, Mul, Sub};
 
-use crate::types::context_types::node_types::space_time::SpaceTempoid;
+use crate::types::context_types::node_types::space_time::SpaceTime;
 
-impl<T> Display for SpaceTempoid<T>
+impl<T> Display for SpaceTime<T>
 where
     T: Copy + Debug + Default + Add<T, Output = T> + Sub<T, Output = T> + Mul<T, Output = T>,
 {

@@ -3,9 +3,9 @@
 use std::ops::{Add, Mul, Sub};
 
 use crate::prelude::{Temporable, TimeScale};
-use crate::types::context_types::node_types::time::Tempoid;
+use crate::types::context_types::node_types::time::Time;
 
-impl<T> Temporable<T> for Tempoid<T>
+impl<T> Temporable<T> for Time<T>
 where
     T: Default + Add<T, Output = T> + Sub<T, Output = T> + Mul<T, Output = T>,
 {

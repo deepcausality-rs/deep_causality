@@ -3,9 +3,9 @@
 use std::fmt::{Debug, Display};
 use std::ops::{Add, Mul, Sub};
 
-use crate::types::context_types::node_types::time::Tempoid;
+use crate::types::context_types::node_types::time::Time;
 
-impl<T> Display for Tempoid<T>
+impl<T> Display for Time<T>
 where
     T: Debug + Default + Add<T, Output = T> + Sub<T, Output = T> + Mul<T, Output = T>,
 {

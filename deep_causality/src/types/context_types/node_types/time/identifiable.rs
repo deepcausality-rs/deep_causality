@@ -3,9 +3,9 @@
 use std::ops::{Add, Mul, Sub};
 
 use crate::prelude::Identifiable;
-use crate::types::context_types::node_types::time::Tempoid;
+use crate::types::context_types::node_types::time::Time;
 
-impl<T> Identifiable for Tempoid<T>
+impl<T> Identifiable for Time<T>
 where
     T: Default + Add<T, Output = T> + Sub<T, Output = T> + Mul<T, Output = T>,
 {

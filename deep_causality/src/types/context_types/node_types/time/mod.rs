@@ -11,7 +11,7 @@ mod identifiable;
 mod temporable;
 
 #[derive(Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
-pub struct Tempoid<T>
+pub struct Time<T>
 where
     T: Default + Add<T, Output = T> + Sub<T, Output = T> + Mul<T, Output = T>,
 {
