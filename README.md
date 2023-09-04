@@ -115,8 +115,8 @@ cargo run --release --bin example-smoking
 ## ⭐ Usage
 
 Docs:
-* [Introduction](https://deepcausality.com/docs/)
-* [Background](https://deepcausality.com/docs/intro/)
+* [Introduction](https://deepcausality.com/docs/intro/)
+* [Background](https://deepcausality.com/docs/background/)
 * [Concepts](https://deepcausality.com/docs/concepts/)
 
 Code:
