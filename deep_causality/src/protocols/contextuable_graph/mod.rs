@@ -44,4 +44,12 @@ where
     fn check_extra_context_exists(&self, idx: usize) -> bool;
     fn set_extra_default_context(&mut self, idx: usize) -> Result<(), ContextIndexError>;
     fn unset_extra_default_context(&mut self) -> Result<(), ContextIndexError>;
+    fn extra_ctx_add_node(
+        &mut self,
+        value: Contextoid<D, S, T, ST, V>,
+    ) -> Result<usize, ContextIndexError>;
+    fn extra_ctx_contains_node(&mut self, index: usize) -> Result<bool, ContextIndexError>;
+    // fn extra_ctx_get_node(&self, index: usize) -> Result<&Contextoid<D, S, T, ST, V>, ContextIndexError>;
+    fn extra_ctx_remove_node(&mut self, index: usize) -> Result<(), ContextIndexError>;
+    //fn extra_ctx_add_edge(&mut self, a: usize, b: usize, weight: RelationKind, ) -> Result<(), ContextIndexError>;
 }

@@ -57,4 +57,81 @@ where
 
         Ok(())
     }
+
+    fn extra_ctx_add_node(
+        &mut self,
+        value: Contextoid<D, S, T, ST, V>,
+    ) -> Result<usize, ContextIndexError> {
+        return match self.get_extra_default_context() {
+            Ok(ctx) => Ok(ctx.add_node(value)),
+            Err(e) => Err(e),
+        };
+    }
+
+    fn extra_ctx_contains_node(&mut self, index: usize) -> Result<bool, ContextIndexError> {
+        return match self.get_extra_default_context() {
+            Ok(ctx) => Ok(ctx.contains_node(index)),
+            Err(e) => Err(e),
+        };
+    }
+
+    // Fix
+    // fn extra_ctx_get_node(
+    //     &mut self,
+    //     index: usize,
+    // ) -> Result<&Contextoid<D, S, T, ST, V>, ContextIndexError> {
+    //     return match self.get_extra_default_context()
+    //     {
+    //         Ok(ctx) => match ctx.get_node(index) {
+    //             Some(node) => Ok(node),
+    //             None => Err(ContextIndexError::new(format!(
+    //                 "node {} does not exist",
+    //                 index
+    //             ))),
+    //         },
+    //         Err(e) => Err(e),
+    //     };
+    // }
+
+    fn extra_ctx_remove_node(&mut self, index: usize) -> Result<(), ContextIndexError> {
+        return match self.get_extra_default_context() {
+            Ok(ctx) => match ctx.remove_node(index) {
+                Ok(()) => Ok(()),
+                Err(e) => Err(ContextIndexError::new(e.to_string())),
+            },
+            Err(e) => Err(e),
+        };
+    }
+}
+
+impl<'l, D, S, T, ST, V> Context<'l, D, S, T, ST, V>
+where
+    D: Datable,
+    S: Spatial<V>,
+    T: Temporable<V>,
+    ST: SpaceTemporal<V>,
+    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V>,
+{
+    fn get_extra_default_context(
+        &mut self,
+    ) -> Result<&mut UltraGraph<Contextoid<D, S, T, ST, V>>, ContextIndexError> {
+        if self.extra_context_id == 0 {
+            return Err(ContextIndexError::new("context ID not set".into()));
+        }
+
+        if self.check_extra_context_exists(self.extra_context_id) {
+            return Err(ContextIndexError::new("context does not exists".into()));
+        }
+
+        let ctx = self
+            .extra_contexts
+            .as_mut()
+            .unwrap()
+            .get_mut(&self.extra_context_id);
+
+        return match ctx {
+            None => Err(ContextIndexError::new("context does not exists".into())),
+            Some(ctx) => Ok(ctx),
+        };
+    }
 }
