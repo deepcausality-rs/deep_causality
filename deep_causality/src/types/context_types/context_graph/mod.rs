@@ -13,6 +13,10 @@ mod debug;
 mod extendable_contextuable_graph;
 mod identifiable;
 
+type ExtraContext<D, S, T, ST, V> = UltraGraph<Contextoid<D, S, T, ST, V>>;
+
+type ExtraContextMap<D, S, T, ST, V> = HashMap<usize, ExtraContext<D, S, T, ST, V>>;
+
 pub struct Context<'l, D, S, T, ST, V>
 where
     D: Datable,
@@ -24,7 +28,7 @@ where
     id: u64,
     name: &'l str,
     base_context: UltraGraph<Contextoid<D, S, T, ST, V>>,
-    extra_contexts: Option<HashMap<usize, UltraGraph<Contextoid<D, S, T, ST, V>>>>,
+    extra_contexts: Option<ExtraContextMap<D, S, T, ST, V>>,
     number_of_extra_contexts: usize,
     extra_context_id: usize,
 }

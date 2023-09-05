@@ -35,11 +35,7 @@ where
     }
 
     fn check_extra_context_exists(&self, idx: usize) -> bool {
-        if idx <= self.number_of_extra_contexts {
-            true
-        } else {
-            false
-        }
+        idx <= self.number_of_extra_contexts
     }
 
     fn set_extra_default_context(&mut self, idx: usize) -> Result<(), ContextIndexError> {
@@ -196,7 +192,7 @@ where
 {
     fn get_current_extra_context(
         &self,
-    ) -> Result<&UltraGraph<Contextoid<D, S, T, ST, V>>, ContextIndexError> {
+    ) -> Result<&ExtraContext<D, S, T, ST, V>, ContextIndexError> {
         if self.extra_context_id == 0 {
             return Err(ContextIndexError::new("context ID not set".into()));
         }
@@ -211,15 +207,15 @@ where
             .unwrap()
             .get(&self.extra_context_id);
 
-        return match ctx {
+        match ctx {
             None => Err(ContextIndexError::new("context does not exists".into())),
             Some(ctx) => Ok(ctx),
-        };
+        }
     }
 
     fn get_current_extra_context_mut(
         &mut self,
-    ) -> Result<&mut UltraGraph<Contextoid<D, S, T, ST, V>>, ContextIndexError> {
+    ) -> Result<&mut ExtraContext<D, S, T, ST, V>, ContextIndexError> {
         if self.extra_context_id == 0 {
             return Err(ContextIndexError::new("context ID not set".into()));
         }
@@ -234,9 +230,9 @@ where
             .unwrap()
             .get_mut(&self.extra_context_id);
 
-        return match ctx {
+        match ctx {
             None => Err(ContextIndexError::new("context does not exists".into())),
             Some(ctx) => Ok(ctx),
-        };
+        }
     }
 }
