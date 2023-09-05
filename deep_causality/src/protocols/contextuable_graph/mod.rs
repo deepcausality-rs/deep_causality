@@ -31,3 +31,17 @@ where
     fn node_count(&self) -> usize;
     fn edge_count(&self) -> usize;
 }
+
+pub trait ExtendableContextuableGraph<'l, D, S, T, ST, V>
+where
+    D: Datable,
+    S: Spatial<V>,
+    ST: SpaceTemporal<V>,
+    T: Temporable<V>,
+    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V>,
+{
+    fn add_extra_context(&mut self, capacity: usize, default: bool) -> usize;
+    fn check_extra_context_exists(&self, idx: usize) -> bool;
+    fn set_extra_default_context(&mut self, idx: usize) -> Result<(), ContextIndexError>;
+    fn unset_extra_default_context(&mut self) -> Result<(), ContextIndexError>;
+}

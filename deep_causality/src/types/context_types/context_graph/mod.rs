@@ -6,13 +6,11 @@ use std::ops::*;
 
 use ultragraph::prelude::*;
 
-use crate::prelude::{
-    ContextIndexError, Contextoid, Datable, RelationKind, SpaceTemporal, Spatial, Temporable,
-};
-use crate::protocols::contextuable_graph::ContextuableGraph;
+use crate::prelude::*;
 
 mod contextuable_graph;
 mod debug;
+mod extendable_contextuable_graph;
 mod identifiable;
 
 pub struct Context<'l, D, S, T, ST, V>
@@ -26,7 +24,9 @@ where
     id: u64,
     name: &'l str,
     base_context: UltraGraph<Contextoid<D, S, T, ST, V>>,
-    extra_context: Option<HashMap<u64, UltraGraph<Contextoid<D, S, T, ST, V>>>>,
+    extra_contexts: Option<HashMap<usize, UltraGraph<Contextoid<D, S, T, ST, V>>>>,
+    number_of_extra_contexts: usize,
+    extra_context_id: usize,
 }
 
 impl<'l, D, S, T, ST, V> Context<'l, D, S, T, ST, V>
@@ -43,7 +43,9 @@ where
             id,
             name,
             base_context: ultragraph::new_with_matrix_storage(capacity),
-            extra_context: None,
+            extra_contexts: None,
+            number_of_extra_contexts: 0,
+            extra_context_id: 0,
         }
     }
 
