@@ -62,43 +62,125 @@ where
         &mut self,
         value: Contextoid<D, S, T, ST, V>,
     ) -> Result<usize, ContextIndexError> {
-        return match self.get_extra_default_context() {
+        return match self.get_current_extra_context_mut() {
             Ok(ctx) => Ok(ctx.add_node(value)),
             Err(e) => Err(e),
         };
     }
 
-    fn extra_ctx_contains_node(&mut self, index: usize) -> Result<bool, ContextIndexError> {
-        return match self.get_extra_default_context() {
-            Ok(ctx) => Ok(ctx.contains_node(index)),
+    fn extra_ctx_contains_node(&self, index: usize) -> bool {
+        return match self.get_current_extra_context() {
+            Ok(ctx) => ctx.contains_node(index),
+            Err(_) => false,
+        };
+    }
+
+    fn extra_ctx_get_node(
+        &self,
+        index: usize,
+    ) -> Result<&Contextoid<D, S, T, ST, V>, ContextIndexError> {
+        return match self.get_current_extra_context() {
+            Ok(ctx) => match ctx.get_node(index) {
+                Some(node) => Ok(node),
+                None => Err(ContextIndexError::new(format!(
+                    "node {} does not exist",
+                    index
+                ))),
+            },
             Err(e) => Err(e),
         };
     }
 
-    // Fix
-    // fn extra_ctx_get_node(
-    //     &mut self,
-    //     index: usize,
-    // ) -> Result<&Contextoid<D, S, T, ST, V>, ContextIndexError> {
-    //     return match self.get_extra_default_context()
-    //     {
-    //         Ok(ctx) => match ctx.get_node(index) {
-    //             Some(node) => Ok(node),
-    //             None => Err(ContextIndexError::new(format!(
-    //                 "node {} does not exist",
-    //                 index
-    //             ))),
-    //         },
-    //         Err(e) => Err(e),
-    //     };
-    // }
-
     fn extra_ctx_remove_node(&mut self, index: usize) -> Result<(), ContextIndexError> {
-        return match self.get_extra_default_context() {
+        return match self.get_current_extra_context_mut() {
             Ok(ctx) => match ctx.remove_node(index) {
                 Ok(()) => Ok(()),
                 Err(e) => Err(ContextIndexError::new(e.to_string())),
             },
+            Err(e) => Err(e),
+        };
+    }
+
+    fn extra_ctx_add_edge(
+        &mut self,
+        a: usize,
+        b: usize,
+        weight: RelationKind,
+    ) -> Result<(), ContextIndexError> {
+        if !self.extra_ctx_contains_node(a) {
+            return Err(ContextIndexError(format!("index a {} not found", a)));
+        };
+
+        if !self.extra_ctx_contains_node(b) {
+            return Err(ContextIndexError(format!("index b {} not found", b)));
+        };
+
+        return match self.get_current_extra_context_mut() {
+            Ok(ctx) => match ctx.add_edge_with_weight(a, b, weight as u64) {
+                Ok(()) => Ok(()),
+                Err(e) => Err(ContextIndexError::new(e.to_string())),
+            },
+            Err(e) => Err(e),
+        };
+    }
+
+    fn extra_ctx_contains_edge(&self, a: usize, b: usize) -> bool {
+        if !self.extra_ctx_contains_node(a) {
+            return false;
+        };
+
+        if !self.extra_ctx_contains_node(b) {
+            return false;
+        };
+
+        return match self.get_current_extra_context() {
+            Ok(ctx) => ctx.contains_edge(a, b),
+            Err(_) => false,
+        };
+    }
+
+    fn extra_ctx_remove_edge(&mut self, a: usize, b: usize) -> Result<(), ContextIndexError> {
+        if !self.contains_node(a) {
+            return Err(ContextIndexError("index a not found".into()));
+        };
+
+        if !self.contains_node(b) {
+            return Err(ContextIndexError("index b not found".into()));
+        };
+
+        return match self.get_current_extra_context_mut() {
+            Ok(ctx) => match ctx.remove_edge(a, b) {
+                Ok(()) => Ok(()),
+                Err(e) => Err(ContextIndexError::new(e.to_string())),
+            },
+            Err(e) => Err(e),
+        };
+    }
+
+    fn extra_ctx_size(&self) -> Result<usize, ContextIndexError> {
+        return match self.get_current_extra_context() {
+            Ok(ctx) => Ok(ctx.size()),
+            Err(e) => Err(e),
+        };
+    }
+
+    fn extra_ctx_is_empty(&self) -> Result<bool, ContextIndexError> {
+        return match self.get_current_extra_context() {
+            Ok(ctx) => Ok(ctx.is_empty()),
+            Err(e) => Err(e),
+        };
+    }
+
+    fn extra_ctx_node_count(&self) -> Result<usize, ContextIndexError> {
+        return match self.get_current_extra_context() {
+            Ok(ctx) => Ok(ctx.number_nodes()),
+            Err(e) => Err(e),
+        };
+    }
+
+    fn extra_ctx_edge_count(&self) -> Result<usize, ContextIndexError> {
+        return match self.get_current_extra_context() {
+            Ok(ctx) => Ok(ctx.number_edges()),
             Err(e) => Err(e),
         };
     }
@@ -112,7 +194,30 @@ where
     ST: SpaceTemporal<V>,
     V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V>,
 {
-    fn get_extra_default_context(
+    fn get_current_extra_context(
+        &self,
+    ) -> Result<&UltraGraph<Contextoid<D, S, T, ST, V>>, ContextIndexError> {
+        if self.extra_context_id == 0 {
+            return Err(ContextIndexError::new("context ID not set".into()));
+        }
+
+        if self.check_extra_context_exists(self.extra_context_id) {
+            return Err(ContextIndexError::new("context does not exists".into()));
+        }
+
+        let ctx = self
+            .extra_contexts
+            .as_ref()
+            .unwrap()
+            .get(&self.extra_context_id);
+
+        return match ctx {
+            None => Err(ContextIndexError::new("context does not exists".into())),
+            Some(ctx) => Ok(ctx),
+        };
+    }
+
+    fn get_current_extra_context_mut(
         &mut self,
     ) -> Result<&mut UltraGraph<Contextoid<D, S, T, ST, V>>, ContextIndexError> {
         if self.extra_context_id == 0 {

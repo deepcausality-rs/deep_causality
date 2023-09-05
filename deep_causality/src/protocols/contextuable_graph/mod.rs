@@ -48,8 +48,22 @@ where
         &mut self,
         value: Contextoid<D, S, T, ST, V>,
     ) -> Result<usize, ContextIndexError>;
-    fn extra_ctx_contains_node(&mut self, index: usize) -> Result<bool, ContextIndexError>;
-    // fn extra_ctx_get_node(&self, index: usize) -> Result<&Contextoid<D, S, T, ST, V>, ContextIndexError>;
+    fn extra_ctx_contains_node(&self, index: usize) -> bool;
+    fn extra_ctx_get_node(
+        &self,
+        index: usize,
+    ) -> Result<&Contextoid<D, S, T, ST, V>, ContextIndexError>;
     fn extra_ctx_remove_node(&mut self, index: usize) -> Result<(), ContextIndexError>;
-    //fn extra_ctx_add_edge(&mut self, a: usize, b: usize, weight: RelationKind, ) -> Result<(), ContextIndexError>;
+    fn extra_ctx_add_edge(
+        &mut self,
+        a: usize,
+        b: usize,
+        weight: RelationKind,
+    ) -> Result<(), ContextIndexError>;
+    fn extra_ctx_contains_edge(&self, a: usize, b: usize) -> bool;
+    fn extra_ctx_remove_edge(&mut self, a: usize, b: usize) -> Result<(), ContextIndexError>;
+    fn extra_ctx_size(&self) -> Result<usize, ContextIndexError>;
+    fn extra_ctx_is_empty(&self) -> Result<bool, ContextIndexError>;
+    fn extra_ctx_node_count(&self) -> Result<usize, ContextIndexError>;
+    fn extra_ctx_edge_count(&self) -> Result<usize, ContextIndexError>;
 }
