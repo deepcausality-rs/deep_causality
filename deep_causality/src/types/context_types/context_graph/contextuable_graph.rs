@@ -15,18 +15,18 @@ where
     /// You can add the same contextoid multiple times,
     /// but each one will return a new and unique node index.
     fn add_node(&mut self, value: Contextoid<D, S, T, ST, V>) -> usize {
-        self.graph.add_node(value)
+        self.base_context.add_node(value)
     }
 
     /// Returns only true if the context contains the contextoid with the given index.
     fn contains_node(&self, index: usize) -> bool {
-        self.graph.contains_node(index)
+        self.base_context.contains_node(index)
     }
 
     /// Returns a reference to the contextoid with the given index.
     /// If the context does not contain the contextoid, it will return None.
     fn get_node(&self, index: usize) -> Option<&Contextoid<D, S, T, ST, V>> {
-        self.graph.get_node(index)
+        self.base_context.get_node(index)
     }
 
     /// Removes a contextoid from the context.
@@ -36,7 +36,7 @@ where
             return Err(ContextIndexError(format!("index {} not found", index)));
         };
 
-        if self.graph.remove_node(index).is_err() {
+        if self.base_context.remove_node(index).is_err() {
             return Err(ContextIndexError(format!("index {} not found", index)));
         };
 
@@ -61,7 +61,7 @@ where
         };
 
         if self
-            .graph
+            .base_context
             .add_edge_with_weight(a, b, weight as u64)
             .is_err()
         {
@@ -78,7 +78,7 @@ where
     /// If the context does not contain the edge or any of the nodes it will return false.
     /// You may want to call contains_node first to ascertain that the nodes are in the context.
     fn contains_edge(&self, a: usize, b: usize) -> bool {
-        self.graph.contains_edge(a, b)
+        self.base_context.contains_edge(a, b)
     }
 
     /// Removes an edge between two nodes.
@@ -93,7 +93,7 @@ where
             return Err(ContextIndexError("index b not found".into()));
         };
 
-        if self.graph.remove_edge(a, b).is_err() {
+        if self.base_context.remove_edge(a, b).is_err() {
             return Err(ContextIndexError(format!(
                 "Failed to remove edge for index a {} and b {}",
                 a, b
@@ -105,21 +105,21 @@ where
 
     /// Returns the number of nodes in the context. Alias for node_count().
     fn size(&self) -> usize {
-        self.graph.size()
+        self.base_context.size()
     }
 
     /// Returns true if the context contains no nodes.
     fn is_empty(&self) -> bool {
-        self.graph.is_empty()
+        self.base_context.is_empty()
     }
 
     /// Returns the number of nodes in the context.
     fn node_count(&self) -> usize {
-        self.graph.number_nodes()
+        self.base_context.number_nodes()
     }
 
     /// Returns the number of edges in the context.
     fn edge_count(&self) -> usize {
-        self.graph.number_edges()
+        self.base_context.number_edges()
     }
 }

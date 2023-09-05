@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
+use std::collections::HashMap;
 use std::ops::*;
 
 use ultragraph::prelude::*;
@@ -24,7 +25,8 @@ where
 {
     id: u64,
     name: &'l str,
-    graph: UltraGraph<Contextoid<D, S, T, ST, V>>,
+    base_context: UltraGraph<Contextoid<D, S, T, ST, V>>,
+    extra_context: Option<HashMap<u64, UltraGraph<Contextoid<D, S, T, ST, V>>>>,
 }
 
 impl<'l, D, S, T, ST, V> Context<'l, D, S, T, ST, V>
@@ -40,7 +42,8 @@ where
         Self {
             id,
             name,
-            graph: ultragraph::new_with_matrix_storage(capacity),
+            base_context: ultragraph::new_with_matrix_storage(capacity),
+            extra_context: None,
         }
     }
 
