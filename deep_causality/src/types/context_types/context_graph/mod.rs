@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use std::marker::PhantomData;
 use std::ops::*;
 
 use ultragraph::prelude::*;
@@ -26,7 +25,6 @@ where
     id: u64,
     name: &'l str,
     graph: UltraGraph<Contextoid<D, S, T, ST, V>>,
-    ty: PhantomData<V>,
 }
 
 impl<'l, D, S, T, ST, V> Context<'l, D, S, T, ST, V>
@@ -43,7 +41,6 @@ where
             id,
             name,
             graph: ultragraph::new_with_matrix_storage(capacity),
-            ty: PhantomData,
         }
     }
 
