@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.7](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_macros-v0.4.6...deep_causality_macros-v0.4.7) - 2023-09-06
+
+### Other
+- Updated Cargo.toml for macros
+
 ## [0.4.6](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_macros-v0.4.5...deep_causality_macros-v0.4.6) - 2023-08-30
 
 ### Other
