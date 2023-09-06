@@ -68,6 +68,7 @@ DeepCausality is hosted as a sandbox project in the [LF AI & Data Foundation](ht
 ## 📚 Docs
 
 * [API Docs](https://docs.rs/deep_causality/0.2.4/deep_causality/)
+* [Documentation](https://deepcausality.com/docs/intro/)
 * [Changelog](CHANGELOG.md)
 * [Slides](docs/slides/LF_2023/DeepCausality.pdf)
 
