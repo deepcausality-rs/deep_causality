@@ -33,6 +33,7 @@ pub use crate::protocols::contextuable::Spatial;
 pub use crate::protocols::contextuable::Temporable;
 // contextuable Graph protocol
 pub use crate::protocols::contextuable_graph::ContextuableGraph;
+pub use crate::protocols::contextuable_graph::ExtendableContextuableGraph;
 // Identifiable protocol
 pub use crate::protocols::identifiable::Identifiable;
 // Inferable protocol

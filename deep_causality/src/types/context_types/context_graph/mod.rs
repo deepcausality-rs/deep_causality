@@ -1,19 +1,21 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use std::marker::PhantomData;
+use std::collections::HashMap;
 use std::ops::*;
 
 use ultragraph::prelude::*;
 
-use crate::prelude::{
-    ContextIndexError, Contextoid, Datable, RelationKind, SpaceTemporal, Spatial, Temporable,
-};
-use crate::protocols::contextuable_graph::ContextuableGraph;
+use crate::prelude::*;
 
 mod contextuable_graph;
 mod debug;
+mod extendable_contextuable_graph;
 mod identifiable;
+
+type ExtraContext<D, S, T, ST, V> = UltraGraph<Contextoid<D, S, T, ST, V>>;
+
+type ExtraContextMap<D, S, T, ST, V> = HashMap<u64, ExtraContext<D, S, T, ST, V>>;
 
 pub struct Context<'l, D, S, T, ST, V>
 where
@@ -25,8 +27,10 @@ where
 {
     id: u64,
     name: &'l str,
-    graph: UltraGraph<Contextoid<D, S, T, ST, V>>,
-    ty: PhantomData<V>,
+    base_context: UltraGraph<Contextoid<D, S, T, ST, V>>,
+    extra_contexts: Option<ExtraContextMap<D, S, T, ST, V>>,
+    number_of_extra_contexts: u64,
+    extra_context_id: u64,
 }
 
 impl<'l, D, S, T, ST, V> Context<'l, D, S, T, ST, V>
@@ -42,8 +46,10 @@ where
         Self {
             id,
             name,
-            graph: ultragraph::new_with_matrix_storage(capacity),
-            ty: PhantomData,
+            base_context: ultragraph::new_with_matrix_storage(capacity),
+            extra_contexts: None,
+            number_of_extra_contexts: 0,
+            extra_context_id: 0,
         }
     }
 

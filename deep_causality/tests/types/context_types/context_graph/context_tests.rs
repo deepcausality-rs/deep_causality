@@ -2,10 +2,9 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::{
-    BaseContext, Context, Contextoid, ContextoidType, Identifiable, RelationKind, Root, Time,
-    TimeScale,
+    BaseContext, Context, Contextoid, ContextoidType, ContextuableGraph, Identifiable,
+    RelationKind, Root, Time, TimeScale,
 };
-use deep_causality::protocols::contextuable_graph::ContextuableGraph;
 
 fn get_context<'l>() -> BaseContext<'l> {
     let id = 1;
@@ -75,8 +74,7 @@ fn test_add_node() {
     assert_eq!(context.name(), name);
     assert_eq!(context.size(), 0);
 
-    let root = Root::new(id);
-    let contextoid = Contextoid::new(id, ContextoidType::Root(root));
+    let contextoid = Contextoid::new(id, ContextoidType::Root(Root::new(id)));
     let idx = context.add_node(contextoid);
 
     assert_eq!(idx, 0);
