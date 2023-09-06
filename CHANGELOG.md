@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.5.0...deep_causality-v0.6.0) - 2023-09-06
+
+### Other
+- Tested multiple contexts implementation.
+- Finalized multiple contexts implementation.
+- Implemented multiple contexts.
+- Working on multiple contexts.
+- Implemented initial support for multiple contexts.
+- Added field extra_context to Context.
+- Removed PhantomData marker in Context type since all generic parameters are bound.
+- Renamed type alias.
+- Renamed node structs to something more sensible and intuitive.
+- Moved slides into main doc folder.
+- Fixed various linting issues.
+- Removed old swift notebook.
+- Moved all documentation to project website.
+- Fixed a test
+
 ## [0.5.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.4.0...deep_causality-v0.5.0) - 2023-08-30
 
 ### Other
