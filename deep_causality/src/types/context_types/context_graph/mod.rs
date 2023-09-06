@@ -15,7 +15,7 @@ mod identifiable;
 
 type ExtraContext<D, S, T, ST, V> = UltraGraph<Contextoid<D, S, T, ST, V>>;
 
-type ExtraContextMap<D, S, T, ST, V> = HashMap<usize, ExtraContext<D, S, T, ST, V>>;
+type ExtraContextMap<D, S, T, ST, V> = HashMap<u64, ExtraContext<D, S, T, ST, V>>;
 
 pub struct Context<'l, D, S, T, ST, V>
 where
@@ -29,8 +29,8 @@ where
     name: &'l str,
     base_context: UltraGraph<Contextoid<D, S, T, ST, V>>,
     extra_contexts: Option<ExtraContextMap<D, S, T, ST, V>>,
-    number_of_extra_contexts: usize,
-    extra_context_id: usize,
+    number_of_extra_contexts: u64,
+    extra_context_id: u64,
 }
 
 impl<'l, D, S, T, ST, V> Context<'l, D, S, T, ST, V>

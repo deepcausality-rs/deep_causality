@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+// Copyright (c) "2023" The DeepCausality Authors. All Rights Reserved.
 
 use super::*;
 
@@ -12,7 +12,7 @@ where
     ST: SpaceTemporal<V>,
     V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V>,
 {
-    fn add_extra_context(&mut self, capacity: usize, default: bool) -> usize {
+    fn extra_ctx_add_new(&mut self, capacity: usize, default: bool) -> u64 {
         if self.extra_contexts.is_none() {
             self.extra_contexts = Some(HashMap::new());
         }
@@ -21,10 +21,9 @@ where
 
         self.number_of_extra_contexts += 1;
 
-        let _ = self
-            .extra_contexts
+        self.extra_contexts
             .as_mut()
-            .unwrap()
+            .expect("Failed get a mutable reference to extra_contexts")
             .insert(self.number_of_extra_contexts, new_context);
 
         if default {
@@ -34,22 +33,20 @@ where
         self.number_of_extra_contexts
     }
 
-    fn check_extra_context_exists(&self, idx: usize) -> bool {
+    fn extra_ctx_check_exists(&self, idx: u64) -> bool {
         idx <= self.number_of_extra_contexts
     }
 
-    fn set_extra_default_context(&mut self, idx: usize) -> Result<(), ContextIndexError> {
-        if self.check_extra_context_exists(idx) {
+    fn extra_ctx_get_current_id(&self) -> u64 {
+        self.extra_context_id
+    }
+
+    fn extra_ctx_set_current_id(&mut self, idx: u64) -> Result<(), ContextIndexError> {
+        if !self.extra_ctx_check_exists(idx) {
             return Err(ContextIndexError::new("context does not exists".into()));
         }
 
         self.extra_context_id = idx;
-
-        Ok(())
-    }
-
-    fn unset_extra_default_context(&mut self) -> Result<(), ContextIndexError> {
-        self.extra_context_id = 0;
 
         Ok(())
     }
@@ -136,11 +133,11 @@ where
     }
 
     fn extra_ctx_remove_edge(&mut self, a: usize, b: usize) -> Result<(), ContextIndexError> {
-        if !self.contains_node(a) {
+        if !self.extra_ctx_contains_node(a) {
             return Err(ContextIndexError("index a not found".into()));
         };
 
-        if !self.contains_node(b) {
+        if !self.extra_ctx_contains_node(b) {
             return Err(ContextIndexError("index b not found".into()));
         };
 
@@ -197,14 +194,14 @@ where
             return Err(ContextIndexError::new("context ID not set".into()));
         }
 
-        if self.check_extra_context_exists(self.extra_context_id) {
+        if !self.extra_ctx_check_exists(self.extra_context_id) {
             return Err(ContextIndexError::new("context does not exists".into()));
         }
 
         let ctx = self
             .extra_contexts
             .as_ref()
-            .unwrap()
+            .expect("Failed to get a reference to extra_contexts")
             .get(&self.extra_context_id);
 
         match ctx {
@@ -220,14 +217,14 @@ where
             return Err(ContextIndexError::new("context ID not set".into()));
         }
 
-        if self.check_extra_context_exists(self.extra_context_id) {
+        if !self.extra_ctx_check_exists(self.extra_context_id) {
             return Err(ContextIndexError::new("context does not exists".into()));
         }
 
         let ctx = self
             .extra_contexts
             .as_mut()
-            .unwrap()
+            .expect("Failed to get a reference to extra_contexts")
             .get_mut(&self.extra_context_id);
 
         match ctx {

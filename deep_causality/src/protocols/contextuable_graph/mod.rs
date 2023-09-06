@@ -40,10 +40,11 @@ where
     T: Temporable<V>,
     V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V>,
 {
-    fn add_extra_context(&mut self, capacity: usize, default: bool) -> usize;
-    fn check_extra_context_exists(&self, idx: usize) -> bool;
-    fn set_extra_default_context(&mut self, idx: usize) -> Result<(), ContextIndexError>;
-    fn unset_extra_default_context(&mut self) -> Result<(), ContextIndexError>;
+    // Creates a new context and returns the index of the new context.
+    fn extra_ctx_add_new(&mut self, capacity: usize, default: bool) -> u64;
+    fn extra_ctx_check_exists(&self, idx: u64) -> bool;
+    fn extra_ctx_get_current_id(&self) -> u64;
+    fn extra_ctx_set_current_id(&mut self, idx: u64) -> Result<(), ContextIndexError>;
     fn extra_ctx_add_node(
         &mut self,
         value: Contextoid<D, S, T, ST, V>,
