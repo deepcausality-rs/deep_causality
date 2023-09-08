@@ -45,6 +45,8 @@ where
     fn extra_ctx_check_exists(&self, idx: u64) -> bool;
     fn extra_ctx_get_current_id(&self) -> u64;
     fn extra_ctx_set_current_id(&mut self, idx: u64) -> Result<(), ContextIndexError>;
+    fn extra_ctx_unset_current_id(&mut self) -> Result<(), ContextIndexError>;
+
     fn extra_ctx_add_node(
         &mut self,
         value: Contextoid<D, S, T, ST, V>,
