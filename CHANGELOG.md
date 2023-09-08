@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.6.0...deep_causality-v0.6.1) - 2023-09-08
+
+### Other
+- Added unset method to extendable_contextuable_graph.rs
+
 ## [0.6.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.5.0...deep_causality-v0.6.0) - 2023-09-06
 
 ### Other
