@@ -107,6 +107,32 @@ fn test_extra_ctx_set_current_id() {
 }
 
 #[test]
+fn test_extra_ctx_unset_current_id() {
+    let id = 1;
+    let mut context = get_context();
+    assert_eq!(context.id(), id);
+
+    let capacity = 10;
+    let default = true;
+
+    let ctx_id = context.extra_ctx_add_new(capacity, default);
+    assert_eq!(ctx_id, 1);
+
+    let exists = context.extra_ctx_check_exists(ctx_id);
+    assert!(exists);
+
+    let current_id = context.extra_ctx_get_current_id();
+    assert_eq!(current_id, ctx_id);
+
+    let res = context.extra_ctx_unset_current_id();
+    assert!(res.is_ok());
+
+    // Zero is the default value for the extra context if nothing else is set
+    let current_id = context.extra_ctx_get_current_id();
+    assert_eq!(current_id, 0);
+}
+
+#[test]
 fn test_extra_ctx_set_current_id_err() {
     let id = 1;
     let mut context = get_context();

@@ -51,6 +51,12 @@ where
         Ok(())
     }
 
+    fn extra_ctx_unset_current_id(&mut self) -> Result<(), ContextIndexError> {
+        self.extra_context_id = 0;
+
+        Ok(())
+    }
+
     fn extra_ctx_add_node(
         &mut self,
         value: Contextoid<D, S, T, ST, V>,
