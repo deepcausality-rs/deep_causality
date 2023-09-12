@@ -6,7 +6,8 @@ use deep_causality::prelude::*;
 fn get_context<'l>() -> BaseContext<'l> {
     let id = 1;
     let name = "base context";
-    Context::with_capacity(id, name, 10)
+    let capacity = 10; // adjust as needed
+    Context::with_capacity(id, name, capacity)
 }
 
 #[test]
