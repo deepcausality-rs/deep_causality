@@ -1,7 +1,5 @@
 [//]: # (---)
-
 [//]: # (SPDX-License-Identifier: MIT)
-
 [//]: # (---)
 
 [![Crates.io][crates-badge]][crates-url]
