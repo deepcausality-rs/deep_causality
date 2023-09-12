@@ -19,4 +19,9 @@ jobs:
         uses: phylum-dev/phylum-analyze-pr-action@v2
         with:
           phylum_token: ${{ secrets.PHYLUM_TOKEN }}
-          cmd: phylum-ci --all-deps
+          # Mix and match for your specific use case.
+          cmd: |
+            phylum-ci \
+              -vv \
+              --lockfile ./Cargo.toml \
+              --all-deps
