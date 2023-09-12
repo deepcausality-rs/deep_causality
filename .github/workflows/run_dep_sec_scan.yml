@@ -14,14 +14,16 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-
-      - name: Analyze dependencies
-        uses: phylum-dev/phylum-analyze-pr-action@v2
-        with:
-          phylum_token: ${{ secrets.PHYLUM_TOKEN }}
-          # Mix and match for your specific use case.
-          cmd: |
-            phylum-ci \
-              -vv \
-              --lockfile ./Cargo.toml \
-              --all-deps
+#
+# Disabled due to issue https://github.com/phylum-dev/phylum-analyze-pr-action/issues/29
+#
+#      - name: Analyze dependencies
+#        uses: phylum-dev/phylum-analyze-pr-action@v2
+#        with:
+#          phylum_token: ${{ secrets.PHYLUM_TOKEN }}
+#          # Mix and match for your specific use case.
+#          cmd: |
+#            phylum-ci \
+#              -vv \
+#              --lockfile ./Cargo.toml \
+#              --all-deps
