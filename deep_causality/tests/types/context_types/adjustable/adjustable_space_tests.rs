@@ -31,9 +31,15 @@ fn test_update_err() {
     assert_eq!(d.y(), &2);
     assert_eq!(d.z(), &3);
 
-    let array_grid = utils::get_3d_array_grid(0, 0, 0);
+    let array_grid = utils::get_3d_array_grid(0, 1, 2);
+    let res = d.update(&array_grid);
+    assert!(res.is_err());
 
-    // Update fails with UpdateError
+    let array_grid = utils::get_3d_array_grid(1, 9, 2);
+    let res = d.update(&array_grid);
+    assert!(res.is_err());
+
+    let array_grid = utils::get_3d_array_grid(1, 9, 0);
     let res = d.update(&array_grid);
     assert!(res.is_err());
 
@@ -67,9 +73,15 @@ fn test_adjust_err() {
     assert_eq!(d.y(), &2);
     assert_eq!(d.z(), &3);
 
-    let array_grid = utils::get_3d_array_grid(-10, -20, -30);
+    let array_grid = utils::get_3d_array_grid(-10, 20, 30);
+    let res = d.adjust(&array_grid);
+    assert!(res.is_err());
 
-    // Update fails with UpdateError
+    let array_grid = utils::get_3d_array_grid(10, -10, 30);
+    let res = d.adjust(&array_grid);
+    assert!(res.is_err());
+
+    let array_grid = utils::get_3d_array_grid(10, 10, -10);
     let res = d.adjust(&array_grid);
     assert!(res.is_err());
 
@@ -121,4 +133,20 @@ fn test_z() {
     assert_eq!(d.x(), &x);
     assert_eq!(d.y(), &y);
     assert_eq!(d.z(), &z);
+}
+
+#[test]
+fn test_to_string() {
+    let id = 1;
+    let x = 42;
+    let y = 23;
+    let z = 99;
+
+    let d = AdjustableSpace::new(id, x, y, z);
+    let exp = format!(
+        "AdjustableSpace {{ id={:?}, x={:?}, y={:?}, z={:?} }}",
+        id, x, y, z
+    );
+    let act = d.to_string();
+    assert_eq!(act, exp);
 }
