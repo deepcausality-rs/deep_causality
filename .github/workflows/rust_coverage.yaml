@@ -26,7 +26,7 @@ jobs:
       - name: Build
         run: cargo build --verbose
         env:
-          # These will ensure that things like dead code elimination do not skew the coverage.
+          # These will ensure that things like dead code elimination do not skew the coverage. 
           # https://github.com/mozilla/grcov/blob/master/README.md#example-how-to-generate-gcda-files-for-a-rust-project
           CARGO_INCREMENTAL: 0
           RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests'
@@ -58,3 +58,4 @@ jobs:
           # Specify whether the Codecov output should be verbose
           verbose: true
           fail_ci_if_error: true
+          
