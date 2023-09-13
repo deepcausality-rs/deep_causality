@@ -9,7 +9,10 @@ where
     T: Copy + Display + Default + Add<T, Output = T> + Sub<T, Output = T> + Mul<T, Output = T>,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "AdjustableSpaceTime<{}> {{ id: {}, time_scale: {}, time_unit: {}, x: {}, y: {}, z: {} }}",
-               T::default(), self.id, self.time_scale, self.time_unit, self.x, self.y, self.z)
+        write!(
+            f,
+            "AdjustableSpaceTime {{ id: {}, time_scale: {}, time_unit: {}, x: {}, y: {}, z: {} }}",
+            self.id, self.time_scale, self.time_unit, self.x, self.y, self.z
+        )
     }
 }

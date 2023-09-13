@@ -21,7 +21,7 @@ impl<T> Adjustable<T> for Data<T> where T: Copy + Default {}
 #[test]
 fn test_update() {
     let mut d = Data::new(32);
-    let array_grid = utils::get_array_grid(42);
+    let array_grid = utils::get_1d_array_grid(42);
 
     // Default implementation does nothing
     let res = d.update(&array_grid);
@@ -31,7 +31,7 @@ fn test_update() {
 #[test]
 fn test_adjustment() {
     let mut d = Data::new(32);
-    let array_grid = utils::get_array_grid(42);
+    let array_grid = utils::get_1d_array_grid(42);
 
     // Default implementation does nothing
     let res = d.adjust(&array_grid);

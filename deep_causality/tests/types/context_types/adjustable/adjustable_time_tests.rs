@@ -11,7 +11,7 @@ fn test_update() {
     assert_eq!(*d.time_unit(), 12);
     assert_eq!(*d.time_scale(), TimeScale::Minute);
 
-    let array_grid = utils::get_array_grid(42);
+    let array_grid = utils::get_1d_array_grid(42);
 
     let res = d.update(&array_grid);
     assert!(res.is_ok());
@@ -24,7 +24,7 @@ fn test_update_err() {
     assert_eq!(*d.time_unit(), 42);
     assert_eq!(*d.time_scale(), TimeScale::Minute);
 
-    let array_grid = utils::get_array_grid(0);
+    let array_grid = utils::get_1d_array_grid(0);
 
     // Update fails with UpdateError
     let res = d.update(&array_grid);
@@ -40,7 +40,7 @@ fn test_adjust() {
     assert_eq!(*d.time_unit(), 42);
     assert_eq!(*d.time_scale(), TimeScale::Minute);
 
-    let array_grid = utils::get_array_grid(22);
+    let array_grid = utils::get_1d_array_grid(22);
 
     let res = d.adjust(&array_grid);
     assert!(res.is_ok());
@@ -53,13 +53,32 @@ fn test_adjust_err() {
     assert_eq!(*d.time_unit(), 21);
     assert_eq!(*d.time_scale(), TimeScale::Minute);
 
-    let array_grid = utils::get_array_grid(-23);
+    let array_grid = utils::get_1d_array_grid(-23);
 
     // adjustment fails with AdjustmentError
     let res = d.adjust(&array_grid);
     assert!(res.is_err());
 
     // Old value still in place, as before the failed adjustment.
+    assert_eq!(*d.time_unit(), 21);
+}
+
+#[test]
+fn test_time_scale() {
+    let id = 1;
+
+    let d = AdjustableTime::new(1, TimeScale::Minute, 21);
+    assert_eq!(*d.time_id(), id);
+    assert_eq!(*d.time_scale(), TimeScale::Minute);
+}
+
+#[test]
+fn test_time_unit() {
+    let id = 1;
+
+    let d = AdjustableTime::new(1, TimeScale::Minute, 21);
+    assert_eq!(*d.time_id(), id);
+    assert_eq!(*d.time_scale(), TimeScale::Minute);
     assert_eq!(*d.time_unit(), 21);
 }
 
@@ -81,12 +100,15 @@ fn test_id() {
 
 #[test]
 fn test_to_string() {
-    //     let id = 1;
-    //     let time_unit = 21;
-    //     let time_scale = TimeScale::Minute;
-    //
-    //     let mut d = AdjustableTime::new(0, TimeScale::Minute, 21, 21);
-    //     let exp = format!("AdjustableTime: id: {}, time_scale: {:?}, time_unit: {}", id, time_scale, time_unit, &time_unit);
-    //     let act = d.to_string();
-    //     assert_eq!(act, exp);
+    let id = 1;
+    let time_unit = 21;
+    let time_scale = TimeScale::Minute;
+
+    let d = AdjustableTime::new(id, TimeScale::Minute, 21);
+    let exp = format!(
+        "AdjustableTime: id: {}, time_scale: {:?}, time_unit: {}",
+        id, time_scale, time_unit
+    );
+    let act = d.to_string();
+    assert_eq!(act, exp);
 }

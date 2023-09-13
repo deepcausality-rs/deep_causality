@@ -13,9 +13,8 @@ pub fn expand_make_len() -> TokenStream {
 }
 
 pub fn expand_make_is_empty() -> TokenStream {
-    "fn is_empty(&self) -> bool
-    {
-        self.is_empty()\
+    "fn is_empty(&self) -> bool{
+        self.is_empty()
     }"
     .parse()
     .unwrap()
