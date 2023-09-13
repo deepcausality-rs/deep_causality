@@ -6,8 +6,8 @@ use std::hash::Hash;
 
 // Extension trait http://xion.io/post/code/rust-extension-traits.html
 use deep_causality_macros::{
-    make_array_to_vec, make_get_all_items, make_get_all_map_items, make_len, make_map_to_vec,
-    make_vec_to_vec,
+    make_array_to_vec, make_get_all_items, make_get_all_map_items, make_is_empty, make_len,
+    make_map_to_vec, make_vec_to_vec,
 };
 
 use crate::prelude::{Causable, CausableReasoning};
@@ -17,11 +17,9 @@ where
     T: Causable + Clone,
 {
     make_len!();
+    make_is_empty!();
     make_get_all_items!();
     make_array_to_vec!();
-    fn is_empty(&self) -> bool {
-        self.is_empty()
-    }
 }
 
 impl<K, V> CausableReasoning<V> for BTreeMap<K, V>
@@ -30,11 +28,9 @@ where
     V: Causable + Clone,
 {
     make_len!();
+    make_is_empty!();
     make_map_to_vec!();
     make_get_all_map_items!();
-    fn is_empty(&self) -> bool {
-        self.is_empty()
-    }
 }
 
 impl<K, V> CausableReasoning<V> for HashMap<K, V>
@@ -43,11 +39,9 @@ where
     V: Causable + Clone,
 {
     make_len!();
+    make_is_empty!();
     make_map_to_vec!();
     make_get_all_map_items!();
-    fn is_empty(&self) -> bool {
-        self.is_empty()
-    }
 }
 
 impl<T> CausableReasoning<T> for Vec<T>
@@ -55,11 +49,9 @@ where
     T: Causable + Clone,
 {
     make_len!();
+    make_is_empty!();
     make_vec_to_vec!();
     make_get_all_items!();
-    fn is_empty(&self) -> bool {
-        self.is_empty()
-    }
 }
 
 impl<T> CausableReasoning<T> for VecDeque<T>
@@ -67,11 +59,8 @@ where
     T: Causable + Clone,
 {
     make_len!();
+    make_is_empty!();
     make_get_all_items!();
-    fn is_empty(&self) -> bool {
-        self.is_empty()
-    }
-
     // VecDeque can't be turned into a vector hence the custom implementation
     // https://github.com/rust-lang/rust/issues/23308
     // Also, make_contiguous requires self to be mutable, which would violate the API, hence the clone.
