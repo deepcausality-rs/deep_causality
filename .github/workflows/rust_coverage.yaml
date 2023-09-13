@@ -1,5 +1,9 @@
 #SPDX-License-Identifier: MIT
 #Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
+# Configuration inspired by Omnissi/NISTRS
+# https://github.com/Omnissi/NISTRS/blob/main/.github/workflows/rust.yml
+
 name: Code Coverage
 
 on:
@@ -45,6 +49,6 @@ jobs:
         with:
           # Repository upload token - get it from codecov.io. Required only for private repositories
           token: ${{ secrets.CODECOV_TOKEN }}
-          # Specify whether the Codecov output should be verbose
-          verbose: true
+          files: lcov.info # configured in actions-rs/grcov.yml files
           fail_ci_if_error: true
+          verbose: true
