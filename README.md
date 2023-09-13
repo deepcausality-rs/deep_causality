@@ -5,12 +5,18 @@
 [![Crates.io][crates-badge]][crates-url]
 [![Docs.rs][docs-badge]][docs-url]
 [![MIT licensed][mit-badge]][mit-url]
+[![CodeFactor][codefactor-badge]][codefactor-url]
 ![Audit][audit-url]
 ![Benchmarks][benches-url]
 ![Clippy][clippy-url]
 ![Tests][test-url]
 [![OpenSSF Best Practices][ossf-badge]][ossf-url]
 [![codecov][codecov-badge]][codecov-url]
+
+
+[codefactor-badge]: https://www.codefactor.io/repository/github/deepcausality-rs/deep_causality/badge
+
+[codefactor-url]: https://www.codefactor.io/repository/github/deepcausality-rs/deep_causality
 
 [codecov-badge]: https://codecov.io/gh/deepcausality-rs/deep_causality/branch/main/graph/badge.svg?token=W9TA1VVJ7O
 
