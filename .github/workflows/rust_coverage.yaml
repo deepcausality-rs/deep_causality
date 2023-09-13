@@ -3,24 +3,52 @@
 
 name: Code Coverage
 
-on: [ pull_request, push ]
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
-  coverage:
+  build:
     runs-on: ubuntu-latest
-    env:
-      CARGO_TERM_COLOR: always
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Install Rust
-        run: rustup update stable
-      - name: Install cargo-llvm-cov
-        uses: taiki-e/install-action@cargo-llvm-cov
-      - name: Generate code coverage
-        run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
-      - name: Upload coverage to Codecov
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+
+      - name: Build
+        run: cargo build --verbose
+
+      - name: Run tests
+        # Fixes missing coverage for macos
+        # https://community.codecov.com/t/format-not-tested/2261
+        run: cargo test --tests --verbose
+        env:
+          CARGO_INCREMENTAL: '0'
+          # These will ensure that things like dead code elimination do not skew the coverage.
+          # https://github.com/mozilla/grcov/blob/master/README.md#example-how-to-generate-gcda-files-for-a-rust-project
+          RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
+          RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
+
+      - name: rust-grcov
+        # You may pin to the exact commit or the version.
+        # uses: actions-rs/grcov@bb47b1ed7883a1502fa6875d562727ace2511248
+        uses: actions-rs/grcov@v0.1
+
+      - name: Codecov
+        # You may pin to the exact commit or the version.
+        # uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378
         uses: codecov/codecov-action@v3
         with:
+          # Repository upload token - get it from codecov.io. Required only for private repositories
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: lcov.info
+          # Specify whether the Codecov output should be verbose
+          verbose: true
           fail_ci_if_error: true
