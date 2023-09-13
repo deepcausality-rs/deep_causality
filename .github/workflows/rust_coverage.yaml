@@ -31,11 +31,11 @@ jobs:
         # https://community.codecov.com/t/format-not-tested/2261
         run: cargo test --tests --verbose
         env:
-          CARGO_INCREMENTAL: '0'
           # These will ensure that things like dead code elimination do not skew the coverage.
           # https://github.com/mozilla/grcov/blob/master/README.md#example-how-to-generate-gcda-files-for-a-rust-project
-          RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
-          RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
+          CARGO_INCREMENTAL: 0
+          RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort'
+          RUSTDOCFLAGS: '-Cpanic=abort'
 
       - name: rust-grcov
         # You may pin to the exact commit or the version.
