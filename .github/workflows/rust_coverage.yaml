@@ -1,9 +1,6 @@
 #SPDX-License-Identifier: MIT
 #Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-# Configuration inspired by Omnissi/NISTRS
-# https://github.com/Omnissi/NISTRS/blob/main/.github/workflows/rust.yml
-
 name: Code Coverage
 
 on:
@@ -12,43 +9,76 @@ on:
   pull_request:
     branches: [ "main" ]
 
-env:
-  CARGO_TERM_COLOR: always
+permissions:
+    contents: read
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          override: true
-
-      - name: Run tests
-        # Fixes missing coverage for macos
-        # https://community.codecov.com/t/format-not-tested/2261
-        run: cargo test --tests --verbose
-        env:
-          # These will ensure that things like dead code elimination do not skew the coverage.
-          # https://github.com/mozilla/grcov/blob/master/README.md#example-how-to-generate-gcda-files-for-a-rust-project
-          CARGO_INCREMENTAL: 0
-          RUSTFLAGS: '-Cinstrument-coverage -Zpanic_abort_tests'
-          RUSTDOCFLAGS: '-Cpanic=abort'
-
-      - name: rust-grcov
-        # You may pin to the exact commit or the version.
-        # uses: actions-rs/grcov@bb47b1ed7883a1502fa6875d562727ace2511248
-        uses: actions-rs/grcov@v0.1
-
-      - name: Codecov
-        # You may pin to the exact commit or the version.
-        # uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378
-        uses: codecov/codecov-action@v3
-        with:
-          # Repository upload token - get it from codecov.io. Required only for private repositories
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: lcov.info # configured in actions-rs/grcov.yml files
-          fail_ci_if_error: true
-          verbose: true
+    build_and_test:
+        runs-on: ubuntu-latest
+        name: Build and test
+        steps:
+            - name: Cache cargo registry
+              uses: actions/cache@v3
+              with:
+                  path: ~/.cargo/registry
+                  key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+            - name: Cache cargo index
+              uses: actions/cache@v3
+              with:
+                  path: ~/.cargo/git
+                  key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+            - name: Cache cargo build
+              uses: actions/cache@v3
+              with:
+                  path: target
+                  key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+            - name: Checkout repository
+              uses: actions/checkout@v3
+            - name: Set up toolchain
+              uses: actions-rs/toolchain@v1
+              with:
+                  profile: minimal
+                  toolchain: 1.64.0
+                  override: true
+                  components: llvm-tools-preview
+            - name: Build
+              uses: actions-rs/cargo@v1
+              with:
+                  command: build
+                  args: --release
+              env:
+                CARGO_INCREMENTAL: '0'
+                RUSTFLAGS: '-Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cinstrument-coverage'
+                RUSTDOCFLAGS: '-Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cinstrument-coverage'
+            - name: Test
+              uses: actions-rs/cargo@v1
+              with:
+                  command: test
+                  args: --all-features --no-fail-fast
+              env:
+                CARGO_INCREMENTAL: '0'
+                RUSTFLAGS: '-Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cinstrument-coverage'
+                RUSTDOCFLAGS: '-Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cinstrument-coverage'
+            - name: Download grcov
+              run: |
+                set -eux;
+                mkdir -p "${HOME}/.local/bin"
+                curl -sL https://github.com/mozilla/grcov/releases/download/v0.8.13/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf - -C "${HOME}/.local/bin"
+                echo "$HOME/.local/bin" >> $GITHUB_PATH
+            - name: grcov
+              id: coverage
+              run: |
+                set -eux;
+                grcov . --binary-path ./target/debug/deps/ -s . -t lcov --branch --ignore-not-existing --ignore '../*' --ignore "/*" -o ./lcov.info
+                echo "report=./lcov.info" >> $GITHUB_OUTPUT
+              #uses: actions-rs/grcov@v0.1
+            - uses: codecov/codecov-action@v3
+              with:
+                token: ${{ secrets.CODECOV_TOKEN }}
+                files: ${{ steps.coverage.outputs.report }}
+                flags: rust
+                fail_ci_if_error: true # optional (default = false)
