@@ -1,9 +1,5 @@
 #SPDX-License-Identifier: MIT
 #Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
-
-# Configuration inspired by Omnissi/NISTRS
-# https://github.com/Omnissi/NISTRS/blob/main/.github/workflows/rust.yml
-
 name: Code Coverage
 
 on:
@@ -25,15 +21,6 @@ jobs:
         with:
           toolchain: nightly
           override: true
-
-      - name: Build
-        run: cargo build --verbose
-        env:
-          # These will ensure that things like dead code elimination do not skew the coverage.
-          # https://github.com/mozilla/grcov/blob/master/README.md#example-how-to-generate-gcda-files-for-a-rust-project
-          CARGO_INCREMENTAL: 0
-          RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests'
-          RUSTDOCFLAGS: '-Cpanic=abort'
 
       - name: Run tests
         # Fixes missing coverage for macos
@@ -58,6 +45,6 @@ jobs:
         with:
           # Repository upload token - get it from codecov.io. Required only for private repositories
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: lcov.info # configured in actions-rs/grcov.yml files
-          fail_ci_if_error: true
+          # Specify whether the Codecov output should be verbose
           verbose: true
+          fail_ci_if_error: true
