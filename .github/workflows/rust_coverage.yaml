@@ -3,82 +3,28 @@
 
 name: Code Coverage
 
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
-permissions:
-    contents: read
-
-concurrency:
-    group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: true
+on: [ pull_request, push ]
 
 jobs:
-    build_and_test:
-        runs-on: ubuntu-latest
-        name: Build and test
-        steps:
-            - name: Cache cargo registry
-              uses: actions/cache@v3
-              with:
-                  path: ~/.cargo/registry
-                  key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-            - name: Cache cargo index
-              uses: actions/cache@v3
-              with:
-                  path: ~/.cargo/git
-                  key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-            - name: Cache cargo build
-              uses: actions/cache@v3
-              with:
-                  path: target
-                  key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
-            - name: Checkout repository
-              uses: actions/checkout@v3
-            - name: Set up toolchain
-              uses: actions-rs/toolchain@v1
-              with:
-                  profile: minimal
-                  toolchain: 1.70
-                  override: true
-                  components: llvm-tools-preview
-            - name: Build
-              uses: actions-rs/cargo@v1
-              with:
-                  command: build
-                  args: --release
-              env:
-                CARGO_INCREMENTAL: '0'
-                RUSTFLAGS: '-Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cinstrument-coverage'
-                RUSTDOCFLAGS: '-Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cinstrument-coverage'
-            - name: Test
-              uses: actions-rs/cargo@v1
-              with:
-                  command: test
-                  args: --all-features --no-fail-fast
-              env:
-                CARGO_INCREMENTAL: '0'
-                RUSTFLAGS: '-Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cinstrument-coverage'
-                RUSTDOCFLAGS: '-Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cinstrument-coverage'
-            - name: Download grcov
-              run: |
-                set -eux;
-                mkdir -p "${HOME}/.local/bin"
-                curl -sL https://github.com/mozilla/grcov/releases/download/v0.8.13/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf - -C "${HOME}/.local/bin"
-                echo "$HOME/.local/bin" >> $GITHUB_PATH
-            - name: grcov
-              id: coverage
-              run: |
-                set -eux;
-                grcov . --binary-path ./target/debug/deps/ -s . -t lcov --branch --ignore-not-existing --ignore '../*' --ignore "/*" -o ./lcov.info
-                echo "report=./lcov.info" >> $GITHUB_OUTPUT
-              #uses: actions-rs/grcov@v0.1
-            - uses: codecov/codecov-action@v3
-              with:
-                token: ${{ secrets.CODECOV_TOKEN }}
-                files: ${{ steps.coverage.outputs.report }}
-                flags: rust
-                fail_ci_if_error: true # optional (default = false)
+  coverage:
+    runs-on: ubuntu-latest
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        run: rustup update stable
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Generate code coverage
+        run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: lcov.info
+          fail_ci_if_error: true
