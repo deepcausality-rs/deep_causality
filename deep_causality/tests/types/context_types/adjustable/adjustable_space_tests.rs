@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use deep_causality::prelude::{Adjustable, AdjustableSpace};
+use deep_causality::prelude::{Adjustable, AdjustableSpace, Identifiable};
 
 use crate::types::context_types::adjustable::utils;
 
@@ -96,7 +96,7 @@ fn test_id() {
     let id = 1;
 
     let d = AdjustableSpace::new(id, 1, 2, 3);
-    assert_eq!(d.id(), &id);
+    assert_eq!(d.id(), id);
 }
 
 #[test]
@@ -105,7 +105,7 @@ fn test_x() {
     let x = 42;
 
     let d = AdjustableSpace::new(id, x, 2, 3);
-    assert_eq!(d.id(), &id);
+    assert_eq!(d.id(), id);
     assert_eq!(d.x(), &x);
 }
 
@@ -116,7 +116,7 @@ fn test_y() {
     let y = 23;
 
     let d = AdjustableSpace::new(id, x, y, 3);
-    assert_eq!(d.id(), &id);
+    assert_eq!(d.id(), id);
     assert_eq!(d.x(), &x);
     assert_eq!(d.y(), &y);
 }
@@ -129,7 +129,7 @@ fn test_z() {
     let z = 99;
 
     let d = AdjustableSpace::new(id, x, y, z);
-    assert_eq!(d.id(), &id);
+    assert_eq!(d.id(), id);
     assert_eq!(d.x(), &x);
     assert_eq!(d.y(), &y);
     assert_eq!(d.z(), &z);

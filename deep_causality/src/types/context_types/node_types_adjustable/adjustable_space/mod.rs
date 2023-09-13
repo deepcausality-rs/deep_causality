@@ -15,6 +15,7 @@ pub struct AdjustableSpace<T>
 where
     T: Default + Add<T, Output = T> + Sub<T, Output = T> + Mul<T, Output = T> + Copy,
 {
+    #[getter(name = space_id)] // Rename ID getter to prevent conflict impl with identifiable
     id: u64,
     x: T,
     y: T,
