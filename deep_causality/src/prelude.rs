@@ -62,6 +62,8 @@ pub use crate::types::context_types::node_types::space_time::SpaceTime;
 pub use crate::types::context_types::node_types::time::Time;
 // Adjustable types
 pub use crate::types::context_types::node_types_adjustable::adjustable_data::*;
+pub use crate::types::context_types::node_types_adjustable::adjustable_space::*;
+pub use crate::types::context_types::node_types_adjustable::adjustable_space_time::*;
 pub use crate::types::context_types::node_types_adjustable::adjustable_time::*;
 pub use crate::types::context_types::relation_kind::*;
 pub use crate::types::context_types::time_scale::TimeScale;

@@ -3,7 +3,9 @@
 #[cfg(test)]
 mod adjustable_data_tests;
 #[cfg(test)]
-mod adjustable_default;
+mod adjustable_default_tests;
+#[cfg(test)]
+mod adjustable_space_tests;
 #[cfg(test)]
 mod adjustable_time_tests;
 mod utils;
