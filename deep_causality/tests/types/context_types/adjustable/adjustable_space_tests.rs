@@ -35,7 +35,7 @@ fn test_update_err() {
     let res = d.update(&array_grid);
     assert!(res.is_err());
 
-    let array_grid = utils::get_3d_array_grid(1, 9, 2);
+    let array_grid = utils::get_3d_array_grid(1, 0, 2);
     let res = d.update(&array_grid);
     assert!(res.is_err());
 
