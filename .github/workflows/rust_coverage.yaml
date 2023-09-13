@@ -1,6 +1,9 @@
 #SPDX-License-Identifier: MIT
 #Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
+# Configuration inspired by Omnissi/NISTRS
+# https://github.com/Omnissi/NISTRS/blob/main/.github/workflows/rust.yml
+
 name: Code Coverage
 
 on:
