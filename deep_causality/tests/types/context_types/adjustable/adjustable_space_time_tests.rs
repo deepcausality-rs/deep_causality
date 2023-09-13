@@ -20,16 +20,49 @@ fn test_update() {
 
     // Shift coordinates and time
     let array_grid = utils::get_4d_array_grid(2, 3, 4, 5);
-
     let res = d.update(&array_grid);
     assert!(res.is_ok());
 
     assert_eq!(d.time_scale(), &TimeScale::Minute);
-
     assert_eq!(d.x(), &2);
     assert_eq!(d.y(), &3);
     assert_eq!(d.z(), &4);
     assert_eq!(d.time_unit(), &5);
+}
+
+#[test]
+fn test_update_err() {
+    let id = 1;
+    let mut d = AdjustableSpaceTime::new(id, TimeScale::Minute, 4, 1, 2, 3);
+    assert_eq!(d.id(), id);
+    assert_eq!(d.time_scale(), &TimeScale::Minute);
+    assert_eq!(d.time_unit(), &4);
+    assert_eq!(d.x(), &1);
+    assert_eq!(d.y(), &2);
+    assert_eq!(d.z(), &3);
+
+    let array_grid = utils::get_4d_array_grid(0, 3, 4, 5);
+    let res = d.update(&array_grid);
+    assert!(res.is_err());
+
+    let array_grid = utils::get_4d_array_grid(1, 0, 4, 5);
+    let res = d.update(&array_grid);
+    assert!(res.is_err());
+
+    let array_grid = utils::get_4d_array_grid(1, 2, 0, 5);
+    let res = d.update(&array_grid);
+    assert!(res.is_err());
+
+    let array_grid = utils::get_4d_array_grid(1, 2, 3, -5);
+    let res = d.update(&array_grid);
+    assert!(res.is_err());
+
+    assert_eq!(d.id(), id);
+    assert_eq!(d.time_scale(), &TimeScale::Minute);
+    assert_eq!(d.time_unit(), &4);
+    assert_eq!(d.x(), &1);
+    assert_eq!(d.y(), &2);
+    assert_eq!(d.z(), &3);
 }
 
 #[test]
@@ -55,6 +88,41 @@ fn test_adjust() {
     assert_eq!(d.y(), &12);
     assert_eq!(d.z(), &13);
     assert_eq!(d.time_unit(), &14);
+}
+
+#[test]
+fn test_adjust_err() {
+    let id = 1;
+    let mut d = AdjustableSpaceTime::new(id, TimeScale::Minute, 4, 1, 2, 3);
+    assert_eq!(d.id(), id);
+    assert_eq!(d.time_scale(), &TimeScale::Minute);
+    assert_eq!(d.time_unit(), &4);
+    assert_eq!(d.x(), &1);
+    assert_eq!(d.y(), &2);
+    assert_eq!(d.z(), &3);
+
+    let array_grid = utils::get_4d_array_grid(-10, 3, 4, 5);
+    let res = d.adjust(&array_grid);
+    assert!(res.is_err());
+
+    let array_grid = utils::get_4d_array_grid(1, -10, 4, 5);
+    let res = d.adjust(&array_grid);
+    assert!(res.is_err());
+
+    let array_grid = utils::get_4d_array_grid(1, 2, -10, 5);
+    let res = d.adjust(&array_grid);
+    assert!(res.is_err());
+
+    let array_grid = utils::get_4d_array_grid(1, 2, 3, -10);
+    let res = d.adjust(&array_grid);
+    assert!(res.is_err());
+
+    assert_eq!(d.id(), id);
+    assert_eq!(d.time_scale(), &TimeScale::Minute);
+    assert_eq!(d.time_unit(), &4);
+    assert_eq!(d.x(), &1);
+    assert_eq!(d.y(), &2);
+    assert_eq!(d.z(), &3);
 }
 
 #[test]
