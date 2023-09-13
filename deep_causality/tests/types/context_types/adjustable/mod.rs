@@ -7,5 +7,7 @@ mod adjustable_default_tests;
 #[cfg(test)]
 mod adjustable_space_tests;
 #[cfg(test)]
+mod adjustable_space_time_tests;
+#[cfg(test)]
 mod adjustable_time_tests;
 mod utils;
