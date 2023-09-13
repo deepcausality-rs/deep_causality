@@ -34,7 +34,7 @@ jobs:
           # These will ensure that things like dead code elimination do not skew the coverage.
           # https://github.com/mozilla/grcov/blob/master/README.md#example-how-to-generate-gcda-files-for-a-rust-project
           CARGO_INCREMENTAL: 0
-          RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Copt-level=0 -Coverflow-checks=off -Zpanic_abort_tests'
+          RUSTFLAGS: '-Cinstrument-coverage -Zpanic_abort_tests'
           RUSTDOCFLAGS: '-Cpanic=abort'
 
       - name: rust-grcov
