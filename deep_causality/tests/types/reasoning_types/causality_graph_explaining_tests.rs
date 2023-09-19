@@ -93,7 +93,9 @@ fn test_explain_subgraph_from_cause() {
     let all_true = g.all_active();
     assert!(!all_true);
 
-    let res = g.reason_all_causes(&data, None).expect("`");
+    let res = g
+        .reason_all_causes(&data, None)
+        .expect("Failed to reason over the entire graph");
     assert!(res);
 
     // Verify that the graph is fully active.
