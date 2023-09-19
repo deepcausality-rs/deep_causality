@@ -85,6 +85,11 @@ In your project folder, just run in a terminal:
 cargo add deep_causality
 ```
 
+## 🚀 Getting Started
+
+See the [starter example](deep_causality/examples/starter/src/main.rs).
+
+
 ## How to run the example code
 
 ```bash
@@ -109,6 +114,9 @@ cargo run --release --bin example-ctx
 
 # Smoking inference
 cargo run --release --bin example-smoking
+
+# Getting started example
+cargo run --release --bin starter
 ```
 
 ## 📦 Sub-Crates
