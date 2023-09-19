@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.8](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_macros-v0.4.7...deep_causality_macros-v0.4.8) - 2023-09-19
+
+### Other
+- Added custom is_empty implementation to test if codecov recolonize it.
+- Restored macro tests
+- [no ci]
+
 ## [0.4.7](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_macros-v0.4.6...deep_causality_macros-v0.4.7) - 2023-09-06
 
 ### Other

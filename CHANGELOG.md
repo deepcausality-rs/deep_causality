@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.6.1...deep_causality-v0.6.2) - 2023-09-19
+
+### Fixed
+- fixed failing test.
+
+### Other
+- Updated starter example.
+- Added starter code example
+- Removed unused import
+- Added missing error message
+- Created new starter example
+- Restored macros in causable extension
+- Fixed missing test for Identifiable in AdjustableSpace.
+- Added error case tests to adjustable space time tests
+- Added custom is_empty implementation to test if codecov recolonize it.
+- Added more tests for adjustable types.
+- Added more tests for adjustable types.
+- Added more tests for adjustable types.
+- Added more error tests to drive up code coverage.
+- Merge remote-tracking branch 'origin/main'
+- Trying phylum gh action again.
+
 ## [0.6.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.6.0...deep_causality-v0.6.1) - 2023-09-08
 
 ### Other
