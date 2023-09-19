@@ -1,6 +1,7 @@
 use deep_causality::prelude::*;
 
 fn main() {
+    println!();
     println!("Build new causality graph");
     let g = get_multi_cause_graph();
     println!();
