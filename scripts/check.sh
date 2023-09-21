@@ -17,7 +17,7 @@ command cargo +nightly udeps --all-targets
 
 
 # Scan again to report all unfixed vulnerabilities
-# https://crates.io/crates/cargo-audi
+# https://crates.io/crates/cargo-audit
 command cargo audit
 
 
