@@ -1,5 +1,7 @@
 [//]: # (---)
+
 [//]: # (SPDX-License-Identifier: MIT)
+
 [//]: # (---)
 
 [![Crates.io][crates-badge]][crates-url]
@@ -49,6 +51,7 @@
 [![DeepCausality Logo][image]][hyperlink]
 
 [hyperlink]: https://deepcausality.com
+
 [image]: /img/logo_color.png (DeepCausality Logo)
 
 Web: https://deepcausality.com
@@ -76,8 +79,7 @@ DeepCausality is hosted as a sandbox project in the [LF AI & Data Foundation](ht
 * [Changelog](CHANGELOG.md)
 * [Slides](docs/slides/LF_2023/DeepCausality.pdf)
 
-
-## 🚀 Install
+## 🚀 Getting Started
 
 In your project folder, just run in a terminal:
 
@@ -85,10 +87,7 @@ In your project folder, just run in a terminal:
 cargo add deep_causality
 ```
 
-## 🚀 Getting Started
-
-See the [starter example](deep_causality/examples/starter/src/main.rs).
-
+See the [starter example](https://deepcausality.com/getting-started/).
 
 ## How to run the example code
 
@@ -128,19 +127,19 @@ cargo run --release --bin starter
 ## ⭐ Usage
 
 Docs:
+
 * [Introduction](https://deepcausality.com/docs/intro/)
 * [Architecture](https://deepcausality.com/docs/architecture/)
 * [Background](https://deepcausality.com/docs/background/)
 * [Concepts](https://deepcausality.com/docs/concepts/)
 
 Code:
+
 * [Benchmarks](deep_causality/benches/benchmarks)
 * [Example code](deep_causality/examples)
 * [Tests](deep_causality/tests)
 
-
 ## 🛠️ Cargo & Make
-
 
 Cargo works as expected, but in addition to cargo, a makefile exists
 that abstracts over several additional tools you may have to install
@@ -170,6 +169,7 @@ After all dependencies have been installed, the following commands are ready to 
 The scripts called by each make command are located in the [script folder.](scripts)
 
 ## 👩‍👩‍👧‍👦 Community
+
 * [Charta](DeepCausalityProjectCharter.pdf)
 * [Code of Conduct](CODE_OF_CONDUCT.md)
 * [Support](SUPPORT.md)
@@ -222,6 +222,16 @@ This project is licensed under the [MIT license](LICENSE).
 
 For details about security, please read
 the [security policy](https://github.com/deepcausality-rs/deep_causality/blob/main/SECURITY.md).
+
+## 🎁 Sponsors
+
+![JetBrains logo](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg)
+
+[JetBrains](https://www.jetbrains.com/), the premier software development tool provider, has granted a
+free [all-product license](https://www.jetbrains.com/all/) under
+its [open-source community support program](https://www.jetbrains.com/community/opensource/#support) to the
+DeepCausality project. The project team expresses its gratitude towards JetBrains generous contribution. Thank you for
+your commitment to OSS development!
 
 ## 💻 Author
 
