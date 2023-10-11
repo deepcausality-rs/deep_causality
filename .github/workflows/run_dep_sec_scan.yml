@@ -1,4 +1,4 @@
-name: Phylum_analyze
+name: phylum_analyze
 on: pull_request
 
 jobs:
@@ -14,16 +14,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-#
-# Disabled due to issue https://github.com/phylum-dev/phylum-analyze-pr-action/issues/29
-#
-#      - name: Analyze dependencies
-#        uses: phylum-dev/phylum-analyze-pr-action@v2
-#        with:
-#          phylum_token: ${{ secrets.PHYLUM_TOKEN }}
-#          # Mix and match for your specific use case.
-#          cmd: |
-#            phylum-ci \
-#              -vv \
-#              --lockfile ./Cargo.toml \
-#              --all-deps
+      # See issue https://github.com/phylum-dev/phylum-analyze-pr-action/issues/29
+      - name: Analyze dependencies
+        uses: phylum-dev/phylum-analyze-pr-action@manifest_support
+        with:
+          phylum_token: ${{ secrets.PHYLUM_TOKEN }}
+          # Mix and match for your specific use case.
+          cmd: |
+            phylum-ci \
+              -vv \
+              --lockfile ./Cargo.toml \
+              --all-deps
