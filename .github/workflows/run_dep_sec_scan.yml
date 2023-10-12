@@ -1,5 +1,5 @@
 name: phylum_analyze
-on: pull_request
+on: push
 
 jobs:
   analyze_deps:
