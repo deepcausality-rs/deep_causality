@@ -4,11 +4,11 @@
 pub use crate::errors::*;
 //
 // Type Extensions
-//
-pub use crate::extensions::assumable::*;
-pub use crate::extensions::causable::*;
-pub use crate::extensions::inferable::*;
-pub use crate::extensions::observable::*;
+// Unused global re-exports
+// pub use crate::extensions::assumable::*;
+// pub use crate::extensions::causable::*;
+// pub use crate::extensions::inferable::*;
+// pub use crate::extensions::observable::*;
 //
 // Protocols
 //

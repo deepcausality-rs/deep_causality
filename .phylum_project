@@ -1,7 +1,0 @@
-id: 56a898e0-b14d-4b08-84ee-662a7d164b7e
-name: deep_causality
-created_at: 2023-09-12T18:34:39.348825+08:00
-group_name: null
-lockfiles:
-- path: ./Cargo.toml
-  type: cargo
