@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
+use std::iter::Sum;
+use std::ops::Add;
+
 use crate::types::alias_types::NumericalValue;
 
 pub const ZERO: NumericalValue = 0.0;
@@ -13,4 +16,14 @@ pub fn abs_num(val: NumericalValue) -> NumericalValue {
     } else {
         MINUS_ONE * val
     }
+}
+
+/// Returns the sum of all elements in an iterable.
+pub fn sum<I, S>(iterable: I) -> S
+where
+    I: IntoIterator,
+    S: Sum<I::Item>,
+    I::Item: Add<I::Item, Output = S>,
+{
+    iterable.into_iter().sum()
 }
