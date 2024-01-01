@@ -237,7 +237,7 @@ fn test_vec() {
     assert_eq!(v.len(), SIZE);
 
     let e1 = window.first().unwrap();
-    let v1 = v.get(0).unwrap();
+    let v1 = v.first().unwrap();
     assert_eq!(e1.dats, v1.dats);
 
     let e2 = window.last().unwrap();
@@ -289,7 +289,7 @@ fn test_arr() {
     assert_eq!(arr.len(), SIZE);
 
     let e1 = window.first().unwrap();
-    let a1 = arr.get(0).unwrap();
+    let a1 = arr.first().unwrap();
     assert_eq!(e1.dats, a1.dats);
 
     let e2 = window.last().unwrap();
