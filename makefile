@@ -52,6 +52,10 @@ install:
 	@source scripts/install_deps.sh
 
 
+.PHONY: release
+release:
+	@source scripts/release.sh
+
 .PHONY: start
 start:
 	@source scripts/start.sh
