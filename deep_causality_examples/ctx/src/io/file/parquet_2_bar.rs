@@ -3,8 +3,8 @@
 
 use chrono::{DateTime, TimeZone, Utc};
 use parquet::record::{Row, RowAccessor};
-use rust_decimal::prelude::FromPrimitive;
 use rust_decimal::Decimal;
+use rust_decimal::prelude::FromPrimitive;
 
 use crate::types::data_symbol::DataSymbol;
 use crate::types::date_time_bar::DateTimeBar;

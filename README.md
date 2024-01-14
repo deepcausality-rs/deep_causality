@@ -136,7 +136,7 @@ Docs:
 Code:
 
 * [Benchmarks](deep_causality/benches/benchmarks)
-* [Example code](deep_causality/examples)
+* [Example code](deep_causality_examples)
 * [Tests](deep_causality/tests)
 
 ## 🛠️ Cargo & Make
