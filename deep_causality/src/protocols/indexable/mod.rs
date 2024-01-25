@@ -2,26 +2,31 @@
 // Copyright (c) "2024" . The DeepCausality Authors. All Rights Reserved.
 
 pub trait Indexable {
-    /// Get the index for the given key.
+    /// Gets the index for the provided key from either the current or previous
+    /// index map, depending on the value of `current`.
     ///
     /// # Parameters
     ///
-    /// * `key` - The key representing the index type, typically an enum value like `TimeScale`.
-    /// * `current` - Whether to get the current or previous index.
+    /// * `key` - The key to look up in the index map
+    /// * `current` - Whether to check the current or previous index map
     ///
     /// # Returns
     ///
-    /// The index value for the given key, typically a `usize` array position.
+    /// Returns the index for the provided key if it exists, otherwise returns None.
     ///
-    fn get_index(&self, key: usize, current: bool) -> usize;
+    fn get_index(&self, key: &usize, current: bool) -> Option<&usize>;
 
-    /// Set the index for the given key.
+    /// Sets the index for the provided key in either the current or previous
+    /// index map, depending on the value of `current`.
     ///
     /// # Parameters
     ///
-    /// * `key` - The key representing the index type, typically an enum value like `TimeScale`.
-    /// * `index` - The index value to set, typically a `usize` array position.
-    /// * `current` - Whether to set the current or previous index.
+    /// * `key` - The key to insert into the index map
+    /// * `index` - The index value to associate with the key
+    /// * `current` - Whether to insert into the current or previous index map
+    ///
+    /// If the key already exists in the chosen index map, the existing value
+    /// will be overwritten with the provided `index` value.
     ///
     fn set_index(&mut self, key: usize, index: usize, current: bool);
 }

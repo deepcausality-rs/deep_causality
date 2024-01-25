@@ -12,6 +12,7 @@ mod contextuable_graph;
 mod debug;
 mod extendable_contextuable_graph;
 mod identifiable;
+mod indexable;
 
 type ExtraContext<D, S, T, ST, V> = UltraGraph<Contextoid<D, S, T, ST, V>>;
 
@@ -31,6 +32,8 @@ where
     extra_contexts: Option<ExtraContextMap<D, S, T, ST, V>>,
     number_of_extra_contexts: u64,
     extra_context_id: u64,
+    current_index_map: HashMap<usize, usize>,
+    previous_index_map: HashMap<usize, usize>,
 }
 
 impl<'l, D, S, T, ST, V> Context<'l, D, S, T, ST, V>
@@ -50,6 +53,8 @@ where
             extra_contexts: None,
             number_of_extra_contexts: 0,
             extra_context_id: 0,
+            current_index_map: HashMap::new(),
+            previous_index_map: HashMap::new(),
         }
     }
 
