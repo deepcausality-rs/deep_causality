@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 use std::fmt::{Display, Formatter};
+use std::hash::Hash;
 use std::marker::PhantomData;
 use std::ops::*;
 
@@ -25,7 +26,15 @@ where
     S: Spatial<V>,
     T: Temporable<V>,
     ST: SpaceTemporal<V>,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V>,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>,
 {
     Datoid(D),
     Tempoid(T),
@@ -41,7 +50,15 @@ where
     S: Spatial<V>,
     T: Temporable<V>,
     ST: SpaceTemporal<V>,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V>,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>,
 {
     pub fn root(&self) -> Option<&Root> {
         if let ContextoidType::Root(b) = self {
@@ -87,7 +104,16 @@ where
     S: Display + Spatial<V>,
     T: Display + Temporable<V>,
     ST: Display + SpaceTemporal<V>,
-    V: Display + Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V>,
+    V: Display
+        + Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {

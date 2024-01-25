@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
+use std::hash::Hash;
 use std::marker::PhantomData;
 use std::ops::*;
 
@@ -18,7 +19,15 @@ where
     S: Spatial<V>,
     T: Temporable<V>,
     ST: SpaceTemporal<V>,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V>,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>,
 {
     id: u64,
     vertex_type: ContextoidType<D, S, T, ST, V>,
@@ -31,7 +40,15 @@ where
     S: Spatial<V>,
     T: Temporable<V>,
     ST: SpaceTemporal<V>,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V>,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>,
 {
     pub fn new(id: u64, vertex_type: ContextoidType<D, S, T, ST, V>) -> Self {
         Self {

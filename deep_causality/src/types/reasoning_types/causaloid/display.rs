@@ -9,7 +9,16 @@ where
     S: Spatial<V> + Clone,
     T: Temporable<V> + Clone,
     ST: SpaceTemporal<V> + Clone,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>
+        + Debug,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.fmt(f)
@@ -22,7 +31,16 @@ where
     S: Spatial<V> + Clone,
     T: Temporable<V> + Clone,
     ST: SpaceTemporal<V> + Clone,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>
+        + Clone,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.fmt(f)
@@ -35,7 +53,16 @@ where
     S: Spatial<V> + Clone,
     T: Temporable<V> + Clone,
     ST: SpaceTemporal<V> + Clone,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>
+        + Clone,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "Causaloid id: {} \n Causaloid type: {} \n description: {} is active: {} has context: {}",

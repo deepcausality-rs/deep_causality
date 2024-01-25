@@ -10,7 +10,16 @@ where
     S: Spatial<V> + Clone,
     T: Temporable<V> + Clone,
     ST: SpaceTemporal<V> + Clone,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>
+        + Clone,
 {
     pub fn active(&self) -> bool {
         self.active.get()

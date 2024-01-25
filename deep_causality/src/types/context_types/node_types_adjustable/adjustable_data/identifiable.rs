@@ -6,7 +6,7 @@ use super::*;
 
 impl<T> Identifiable for AdjustableData<T>
 where
-    T: Copy + Default,
+    T: Default + Copy + Clone + Hash + Eq + PartialEq,
 {
     fn id(&self) -> u64 {
         self.id

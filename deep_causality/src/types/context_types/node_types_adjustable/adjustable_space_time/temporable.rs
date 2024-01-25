@@ -8,7 +8,15 @@ use super::*;
 
 impl<T> Temporable<T> for AdjustableSpaceTime<T>
 where
-    T: Default + Add<T, Output = T> + Sub<T, Output = T> + Mul<T, Output = T> + Copy,
+    T: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<T, Output = T>
+        + Sub<T, Output = T>
+        + Mul<T, Output = T>,
 {
     fn time_scale(&self) -> TimeScale {
         self.time_scale

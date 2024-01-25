@@ -10,7 +10,15 @@ where
     S: Spatial<V>,
     T: Temporable<V>,
     ST: SpaceTemporal<V>,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V>,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>,
 {
     fn extra_ctx_add_new(&mut self, capacity: usize, default: bool) -> u64 {
         if self.extra_contexts.is_none() {
@@ -191,7 +199,15 @@ where
     S: Spatial<V>,
     T: Temporable<V>,
     ST: SpaceTemporal<V>,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V>,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>,
 {
     fn get_current_extra_context(
         &self,

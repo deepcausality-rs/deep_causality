@@ -6,7 +6,16 @@ use super::*;
 
 impl<T> Display for AdjustableTime<T>
 where
-    T: Debug + Default + Add<T, Output = T> + Sub<T, Output = T> + Mul<T, Output = T> + Copy,
+    T: Debug
+        + Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<T, Output = T>
+        + Sub<T, Output = T>
+        + Mul<T, Output = T>,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(

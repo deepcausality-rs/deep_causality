@@ -1,3 +1,5 @@
+use std::hash::Hash;
+
 use deep_causality_macros::{Constructor, Getters};
 
 // SPDX-License-Identifier: MIT
@@ -11,7 +13,7 @@ mod identifiable;
 #[derive(Getters, Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct AdjustableData<T>
 where
-    T: Copy + Default,
+    T: Default + Copy + Clone + Hash + Eq + PartialEq,
 {
     #[getter(name = data_id)] // Rename ID getter to prevent conflict impl with identifiable
     id: u64,
@@ -19,4 +21,4 @@ where
 }
 
 // Type tag required for context.
-impl<T> Datable for AdjustableData<T> where T: Copy + Default {}
+impl<T> Datable for AdjustableData<T> where T: Default + Copy + Clone + Hash + Eq + PartialEq {}
