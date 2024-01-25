@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.6.4...deep_causality-v0.6.5) - 2024-01-25
+
+### Other
+- Narrowed down overly general type constrains on generic type parameters.
+
 ## [0.6.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.6.3...deep_causality-v0.6.4) - 2024-01-25
 
 ### Other
