@@ -7,8 +7,8 @@ use deep_causality::prelude::{ContextuableGraph, Identifiable, TimeScale};
 
 use crate::model::get_main_causaloid;
 use crate::utils;
-use crate::workflow::{build_time_data_context, load_data};
 use crate::workflow::build_model::build_model;
+use crate::workflow::{build_time_data_context, load_data};
 
 pub fn run() {
     // Determines the maximum level of time resolution in the context hypergraph.

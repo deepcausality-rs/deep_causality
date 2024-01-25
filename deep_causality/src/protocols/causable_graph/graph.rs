@@ -7,6 +7,32 @@ use crate::errors::{CausalGraphIndexError, CausalityGraphError};
 use crate::prelude::{Causable, NumericalValue};
 use crate::protocols::causable_graph::CausalGraph;
 
+/// The CausableGraph trait defines the core interface for a causal graph.
+///
+/// It builds on the CausalGraph data structure.
+///
+/// Provides methods for:
+///
+/// - Adding a root node
+/// - Adding/removing nodes
+/// - Adding/removing edges
+/// - Accessing nodes/edges
+/// - Getting graph metrics like size and active nodes
+///
+/// The get_graph() method returns the underlying CausalGraph instance.
+/// This enables default implementations for reasoning and explaining.
+///
+/// Also includes a default implementation of shortest_path() using the
+/// underlying CausalGraph.
+///
+/// Nodes are indexed by usize.
+///
+/// Edges are added by specifying the node indices.
+///
+/// Nodes must be unique. Edges can be duplicated.
+///
+/// Errors on invalid node/edge indices.
+///
 pub trait CausableGraph<T>
 where
     T: Causable + PartialEq,
@@ -48,7 +74,20 @@ where
     fn number_edges(&self) -> usize;
     fn number_nodes(&self) -> usize;
 
-    /// Default implementation for shortest path algorithm
+    /// Default implementation for shortest path algorithm.
+    ///
+    /// Finds the shortest path between two node indices in the graph.
+    ///
+    /// start_index: The start node index
+    /// stop_index: The target node index
+    ///
+    /// Returns:
+    /// - Ok(Vec<usize>): The node indices of the shortest path
+    /// - Err(CausalityGraphError): If no path exists
+    ///
+    /// Checks if start and stop nodes are identical and early returns error.
+    /// Otherwise calls shortest_path() on the underlying CausalGraph.
+    ///
     fn get_shortest_path(
         &self,
         start_index: usize,

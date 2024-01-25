@@ -15,6 +15,28 @@ mod graph_reasoning_utils;
 // Type alias is shared between trait and implementation
 pub(crate) type CausalGraph<T> = UltraGraph<T>;
 
+/// The CausableGraph trait defines the interface for a causal graph data structure.
+///
+/// It operates on generic type T which must implement the Causable trait.
+///
+/// Provides methods for:
+///
+/// - Adding a root node
+/// - Adding/removing nodes
+/// - Adding/removing edges
+/// - Accessing nodes/edges
+/// - Getting graph metrics like size and active nodes
+///
+/// The root node is a special "start" node for causal reasoning.
+///
+/// Nodes are indexed by usize.
+///
+/// Edges are added by specifying the node indices.
+///
+/// Nodes must be unique. Edges can be duplicated.
+///
+/// Errors on invalid node/edge indices.
+///
 pub trait CausableGraph<T>
 where
     T: Causable + PartialEq,
@@ -54,8 +76,22 @@ where
     fn number_nodes(&self) -> usize;
 }
 
-/// Describes signatures for causal reasoning and explaining
-/// in causality hyper graph.
+/// The CausableGraphReasoning trait extends CausableGraph with reasoning methods.
+///
+/// Provides explain and reason methods for:
+/// - The entire graph
+/// - Subgraphs starting from a given node
+/// - Shortest path between two nodes
+/// - Single nodes
+///
+/// The explain methods return a string explanation.
+///
+/// The reason methods take input data and return a Result<bool> indicating
+/// if reasoning succeeded or failed.
+///
+/// An optional data_index can be provided to map data to nodes when the indices
+/// differ.
+///
 pub trait CausableGraphReasoning<T>: CausableGraph<T>
 where
     T: Causable + PartialEq,
