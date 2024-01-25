@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.6.2...deep_causality-v0.6.3) - 2024-01-14
+
+### Other
+- Moved example folder back to deep_causality folder due to cargo config errors.
+- Flattened folder structure.
+- Updated dependencies to latest version.
+- Update parquet requirement from 48 to 49
+- Restricted ctx example dependency to mitigate yanked sub sub dependency warning.
+- Removed pointless tests that only threw clippy linting errors.
+- Added generic sum util with tests.
+- Disabled unused re-exports in prelude.
+- Updated examples to latest DC version.
+
 ## [0.6.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.6.1...deep_causality-v0.6.2) - 2023-09-19
 
 ### Fixed
