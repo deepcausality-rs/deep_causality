@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.6.3...deep_causality-v0.6.4) - 2024-01-25
+
+### Other
+- Merge branch 'deepcausality-rs:main' into main
+- Documented all protocols in deep causality.
+- Code formatting & linting.
+- Implemented Indexable trait for Context
+- Added Indexable protocol to deep causality crate
+
 ## [0.6.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.6.2...deep_causality-v0.6.3) - 2024-01-14
 
 ### Other
