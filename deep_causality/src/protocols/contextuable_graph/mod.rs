@@ -6,6 +6,25 @@ use std::ops::{Add, Mul, Sub};
 use crate::errors::ContextIndexError;
 use crate::prelude::{Contextoid, Datable, RelationKind, SpaceTemporal, Spatial, Temporable};
 
+/// Trait for graph containing context-aware nodes.
+///
+/// D: Datable trait object
+/// S: Spatial trait object
+/// T: Temporable trait object
+/// ST: SpaceTemporal trait object
+/// V: Numeric type for dimension values
+///
+/// Provides methods for:
+/// - Adding/removing nodes and edges
+/// - Checking if nodes/edges exist
+/// - Getting node references
+/// - Getting graph size and counts
+///
+/// Nodes are Contextoid objects implementing required traits.
+/// Edges have a relation kind weight.
+///
+/// Methods return Result or Option types for error handling.
+///
 pub trait ContextuableGraph<'l, D, S, T, ST, V>
 where
     D: Datable,
@@ -32,6 +51,29 @@ where
     fn edge_count(&self) -> usize;
 }
 
+/// Trait for poly-contextuable causal graphs.
+/// By default, the context graph is assumed to be a single-context graph.
+///
+/// This trait supports multiple contexts by extending the ContextuableGraph trait.
+///
+/// Extends ContextuableGraph trait with methods for:
+///
+/// - Creating and managing additional "contexts"
+/// - Setting a current context ID
+/// - Context-specific node/edge methods
+///
+/// Provides methods for:
+///
+/// - Creating new contexts
+/// - Checking if a context ID exists
+/// - Getting/setting current context ID
+/// - Context-specific node and edge methods
+///
+/// Nodes are Contextoid objects implementing required traits.
+/// Edges have a relation kind weight.
+///
+/// Methods return Result or Option types for error handling.
+///
 pub trait ExtendableContextuableGraph<'l, D, S, T, ST, V>
 where
     D: Datable,

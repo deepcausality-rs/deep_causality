@@ -6,6 +6,21 @@ use std::collections::HashMap;
 use crate::errors::CausalityError;
 use crate::prelude::{Identifiable, IdentificationValue, NumericalValue};
 
+/// The Causable trait defines the core behavior for causal reasoning.
+///
+/// It requires implementing the Identifiable trait.
+///
+/// # Trait Methods
+///
+/// * `explain` - Returns an explanation of the cause as a String.
+/// * `is_active` - Returns true if this cause is currently active.
+/// * `is_singleton` - Returns true if this cause acts on a single data point.
+/// * `verify_single_cause` - Verifies this cause against a single data point.
+/// * `verify_all_causes` - Verifies this cause against multiple data points.
+///
+/// `verify_single_cause` and `verify_all_causes` return a Result indicating
+/// if the cause was validated or not.
+///
 pub trait Causable: Identifiable {
     fn explain(&self) -> Result<String, CausalityError>;
     fn is_active(&self) -> bool;
@@ -20,6 +35,24 @@ pub trait Causable: Identifiable {
     ) -> Result<bool, CausalityError>;
 }
 
+/// The CausableReasoning trait provides default implementations for reasoning over collections of Causable items.
+///
+/// It requires the generic type T to implement the Causable trait.
+///
+/// The trait provides default methods for:
+///
+/// - Getting active/inactive causes
+/// - Counting active causes
+/// - Calculating percentage of active causes
+/// - Explaining all causes
+/// - Verifying causes against data
+///
+/// The `reason_all_causes` method verifies all causes in the collection against the provided data,
+/// using the cause's `is_singleton` method to determine whether to call `verify_single_cause` or
+/// `verify_all_causes`.
+///
+/// An index is emulated for the data to enable singleton cause verification.
+///
 pub trait CausableReasoning<T>
 where
     T: Causable,
@@ -30,8 +63,17 @@ where
     fn to_vec(&self) -> Vec<T>;
     fn get_all_items(&self) -> Vec<&T>;
 
+    //
     // Default implementations for all other methods are provided below.
+    //
 
+    /// Checks if all causes in the collection are active.
+    ///
+    /// Iterates through all causes via `get_all_items()` and returns false
+    /// if any cause's `is_active()` method returns false.
+    ///
+    /// If all causes are active, returns true.
+    ///
     fn get_all_causes_true(&self) -> bool {
         for cause in self.get_all_items() {
             if !cause.is_active() {
@@ -42,6 +84,11 @@ where
         true
     }
 
+    /// Returns a vector containing references to all active causes.
+    ///
+    /// Gets all causes via `get_all_items()`, filters to keep only those where
+    /// `is_active()` returns true, and collects into a vector.
+    ///
     fn get_all_active_causes(&self) -> Vec<&T> {
         self.get_all_items()
             .into_iter()
@@ -49,6 +96,11 @@ where
             .collect()
     }
 
+    /// Returns a vector containing references to all inactive causes.
+    ///
+    /// Gets all causes via `get_all_items()`, filters to keep only those where
+    /// `is_active()` returns false, and collects into a vector.
+    ///
     fn get_all_inactive_causes(&self) -> Vec<&T> {
         self.get_all_items()
             .into_iter()
@@ -56,6 +108,11 @@ where
             .collect()
     }
 
+    /// Returns the number of active causes.
+    ///
+    /// Gets all causes via `get_all_items()`, filters to keep only active ones,
+    /// counts them, and returns the count as a NumericalValue.
+    ///
     fn number_active(&self) -> NumericalValue {
         self.get_all_items()
             .iter()
@@ -63,12 +120,33 @@ where
             .count() as NumericalValue
     }
 
+    /// Calculates the percentage of active causes.
+    ///
+    /// Gets the number of active causes via `number_active()`.
+    /// Gets the total number of causes via `len()`.
+    /// Divides the active count by the total.
+    /// Multiplies by 100 to get a percentage.
+    /// Returns the result as a NumericalValue.
+    ///
     fn percent_active(&self) -> NumericalValue {
         let count = self.number_active();
         let total = self.len() as NumericalValue;
         (count / total) * (100 as NumericalValue)
     }
 
+    /// Verifies all causes in the collection against the provided data.
+    ///
+    /// Returns an error if the collection is empty.
+    ///
+    /// Iterates through all causes, using the cause's `is_singleton()` method
+    /// to determine whether to call `verify_single_cause()` or `verify_all_causes()`.
+    ///
+    /// For singleton causes, the data index is emulated to enable lookup by index.
+    ///
+    /// If any cause fails verification, returns Ok(false).
+    ///
+    /// If all causes pass verification, returns Ok(true).
+    ///
     fn reason_all_causes(&self, data: &[NumericalValue]) -> Result<bool, CausalityError> {
         if self.is_empty() {
             return Err(CausalityError("Causality collection is empty".into()));
@@ -97,6 +175,13 @@ where
         Ok(true)
     }
 
+    /// Generates an explanation by concatenating the explain() text of all causes.
+    ///
+    /// Calls explain() on each cause and unwraps the result.
+    /// Concatenates the explanations by inserting newlines between each one.
+    ///
+    /// Returns the concatenated explanation string.
+    ///
     fn explain(&self) -> String {
         let mut explanation = String::new();
         for cause in self.get_all_items() {

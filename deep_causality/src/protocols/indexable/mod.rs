@@ -1,6 +1,21 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2024" . The DeepCausality Authors. All Rights Reserved.
 
+/// Trait for types that can be indexed.
+///
+/// Provides methods for:
+///
+/// - get_index(): Lookup an index by key
+/// - set_index(): Insert/update a key-index mapping
+///
+/// Maintains separate current and previous index maps.
+///
+/// get_index() and set_index() take a `current` arg to
+/// specify which index map to use.
+///
+/// Allows indexing items by an usized integer key. Enables mapping
+/// between item IDs and indices.
+///
 pub trait Indexable {
     /// Gets the index for the provided key from either the current or previous
     /// index map, depending on the value of `current`.

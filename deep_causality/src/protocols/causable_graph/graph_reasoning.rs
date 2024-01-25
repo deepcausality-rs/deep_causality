@@ -125,7 +125,30 @@ where
         }
     }
 
-    // Algo inspired by simple path https://github.com/petgraph/petgraph/blob/master/src/algo/simple_paths.rs
+    /// Reasons over the graph from start_index to stop_index.
+    ///
+    /// start_index: Node index to start reasoning from
+    /// stop_index: Node index to end reasoning
+    /// data: Observations to apply to nodes
+    /// data_index: Optional index map if data indices differ from node indices
+    ///
+    /// Gets start node and verifies it. If false, returns false.
+    ///
+    /// Uses a stack to traverse nodes depth-first:
+    /// - Get node's children and push to stack
+    /// - Pop next node and get observations
+    /// - Verify node and if false, return false
+    /// - If node is stop_index, return true
+    /// - Else, push node's children to stack
+    ///
+    /// Returns:
+    /// - Ok(bool): True if all nodes verify, False if any node fails
+    /// - Err(CausalityGraphError): On invalid indices or empty data
+    ///
+    /// Traverses nodes depth-first, verifying each one.
+    /// If any node fails, returns false. If all pass, returns true.
+    ///
+    /// Algo inspired by simple path https://github.com/petgraph/petgraph/blob/master/src/algo/simple_paths.rs
     fn reason_from_to_cause(
         &self,
         start_index: usize,
