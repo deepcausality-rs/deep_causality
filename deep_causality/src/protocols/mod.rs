@@ -8,5 +8,7 @@ pub mod causable_graph;
 pub mod contextuable;
 pub mod contextuable_graph;
 pub mod identifiable;
+pub mod indexable;
+
 pub mod inferable;
 pub mod observable;

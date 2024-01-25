@@ -36,6 +36,8 @@ pub use crate::protocols::contextuable_graph::ContextuableGraph;
 pub use crate::protocols::contextuable_graph::ExtendableContextuableGraph;
 // Identifiable protocol
 pub use crate::protocols::identifiable::Identifiable;
+// Indexable protocol
+pub use crate::protocols::indexable::Indexable;
 // Inferable protocol
 pub use crate::protocols::inferable::Inferable;
 pub use crate::protocols::inferable::InferableReasoning;
@@ -83,3 +85,4 @@ pub use crate::types::reasoning_types::observation::Observation;
 // Utils
 //
 pub use crate::utils::time_utils::*;
+
