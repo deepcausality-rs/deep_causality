@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use std::cell::RefCell;
+use std::sync::{Arc, RwLock};
 
 use crate::prelude::{DescriptionValue, EvalFn, IdentificationValue};
 
@@ -9,13 +9,17 @@ mod assumable;
 mod debug;
 mod identifiable;
 
+// Interior mutability in Rust, part 2: thread safety
+// https://ricardomartins.cc/2016/06/25/interior-mutability-thread-safety
+type ArcRWLock<T> = Arc<RwLock<T>>;
+
 #[derive(Clone)]
 pub struct Assumption {
     id: IdentificationValue,
     description: DescriptionValue,
     assumption_fn: EvalFn,
-    assumption_tested: RefCell<bool>,
-    assumption_valid: RefCell<bool>,
+    assumption_tested: ArcRWLock<bool>,
+    assumption_valid: ArcRWLock<bool>,
 }
 
 // Constructor
@@ -29,8 +33,8 @@ impl Assumption {
             id,
             description,
             assumption_fn,
-            assumption_tested: RefCell::from(false),
-            assumption_valid: RefCell::from(false),
+            assumption_tested: Arc::new(RwLock::new(false)),
+            assumption_valid: Arc::new(RwLock::new(false)),
         }
     }
 }

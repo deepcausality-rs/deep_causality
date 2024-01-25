@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use std::cell::Cell;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
 use std::marker::PhantomData;
 use std::ops::*;
+use std::sync::{Arc, RwLock};
 
 use crate::prelude::*;
 use crate::types::reasoning_types::causaloid::causal_type::CausalType;
@@ -18,8 +18,13 @@ mod getters;
 mod identifiable;
 mod part_eq;
 
+// Interior mutability in Rust, part 2: thread safety
+// https://ricardomartins.cc/2016/06/25/interior-mutability-thread-safety
+type ArcRWLock<T> = Arc<RwLock<T>>;
+
 pub type CausalVec<'l, D, S, T, ST, V> = Vec<Causaloid<'l, D, S, T, ST, V>>;
 pub type CausalGraph<'l, D, S, T, ST, V> = CausaloidGraph<Causaloid<'l, D, S, T, ST, V>>;
+
 #[derive(Clone)]
 pub struct Causaloid<'l, D, S, T, ST, V>
 where
@@ -39,15 +44,14 @@ where
         + Clone,
 {
     id: IdentificationValue,
-    active: Cell<bool>,
+    active: ArcRWLock<bool>,
     causal_type: CausalType,
     causal_fn: Option<CausalFn>,
     context_causal_fn: Option<ContextualCausalDataFn<'l, D, S, T, ST, V>>,
     context: Option<&'l Context<'l, D, S, T, ST, V>>,
     has_context: bool,
-    causal_coll: Option<CausalVec<'l, D, S, T, ST, V>>,
-    causal_graph: Option<CausalGraph<'l, D, S, T, ST, V>>,
-    last_obs: Cell<NumericalValue>,
+    causal_coll: Option<&'l CausalVec<'l, D, S, T, ST, V>>,
+    causal_graph: Option<&'l CausalGraph<'l, D, S, T, ST, V>>,
     description: &'l str,
     ty: PhantomData<V>,
 }
@@ -75,7 +79,7 @@ where
     pub fn new(id: IdentificationValue, causal_fn: CausalFn, description: &'l str) -> Self {
         Causaloid {
             id,
-            active: Cell::new(false),
+            active: Arc::new(RwLock::new(false)),
             causal_type: CausalType::Singleton,
             causal_fn: Some(causal_fn),
             context_causal_fn: None,
@@ -83,7 +87,6 @@ where
             has_context: false,
             causal_coll: None,
             causal_graph: None,
-            last_obs: Cell::new(0.0),
             description,
             ty: PhantomData,
         }
@@ -97,7 +100,7 @@ where
     ) -> Self {
         Causaloid {
             id,
-            active: Cell::new(false),
+            active: Arc::new(RwLock::new(false)),
             causal_type: CausalType::Singleton,
             causal_fn: None,
             context_causal_fn: Some(context_causal_fn),
@@ -105,7 +108,6 @@ where
             has_context: true,
             causal_coll: None,
             causal_graph: None,
-            last_obs: Cell::new(0.0),
             description,
             ty: PhantomData,
         }
@@ -120,17 +122,16 @@ where
     /// about the correctness of the causal graph.
     pub fn from_causal_collection(
         id: IdentificationValue,
-        causal_coll: Vec<Causaloid<'l, D, S, T, ST, V>>,
+        causal_coll: &'l Vec<Causaloid<'l, D, S, T, ST, V>>,
         description: &'l str,
     ) -> Self {
         Causaloid {
             id,
-            active: Cell::new(false),
+            active: Arc::new(RwLock::new(false)),
             causal_type: CausalType::Collection,
             causal_fn: None,
             causal_coll: Some(causal_coll),
             causal_graph: None,
-            last_obs: Cell::new(0.0),
             description,
             context: None,
             has_context: false,
@@ -145,18 +146,17 @@ where
     /// or embedded into a causal graph.
     pub fn from_causal_collection_with_context(
         id: IdentificationValue,
-        causal_coll: Vec<Causaloid<'l, D, S, T, ST, V>>,
+        causal_coll: &'l Vec<Causaloid<'l, D, S, T, ST, V>>,
         context: Option<&'l Context<'l, D, S, T, ST, V>>,
         description: &'l str,
     ) -> Self {
         Causaloid {
             id,
-            active: Cell::new(false),
+            active: Arc::new(RwLock::new(false)),
             causal_type: CausalType::Collection,
             causal_fn: None,
             causal_coll: Some(causal_coll),
             causal_graph: None,
-            last_obs: Cell::new(0.0),
             description,
             context,
             has_context: true,
@@ -174,17 +174,16 @@ where
     /// about the correctness of the causal graph.
     pub fn from_causal_graph(
         id: IdentificationValue,
-        causal_graph: CausaloidGraph<Causaloid<'l, D, S, T, ST, V>>,
+        causal_graph: &'l CausaloidGraph<Causaloid<'l, D, S, T, ST, V>>,
         description: &'l str,
     ) -> Self {
         Causaloid {
             id,
-            active: Cell::new(false),
+            active: Arc::new(RwLock::new(false)),
             causal_type: CausalType::Graph,
             causal_fn: None,
             causal_coll: None,
             causal_graph: Some(causal_graph),
-            last_obs: Cell::new(0.0),
             description,
             context: None,
             has_context: false,
@@ -199,18 +198,17 @@ where
     /// or embedded into another causal graph.
     pub fn from_causal_graph_with_context(
         id: IdentificationValue,
-        causal_graph: CausaloidGraph<Causaloid<'l, D, S, T, ST, V>>,
+        causal_graph: &'l CausaloidGraph<Causaloid<'l, D, S, T, ST, V>>,
         context: Option<&'l Context<'l, D, S, T, ST, V>>,
         description: &'l str,
     ) -> Self {
         Causaloid {
             id,
-            active: Cell::new(false),
+            active: Arc::new(RwLock::new(false)),
             causal_type: CausalType::Graph,
             causal_fn: None,
             causal_coll: None,
             causal_graph: Some(causal_graph),
-            last_obs: Cell::new(0.0),
             description,
             context,
             has_context: true,

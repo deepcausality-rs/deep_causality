@@ -23,8 +23,8 @@ impl Assumption {
                "Assumption: id: {}, description: {}, assumption_fn: fn(&[NumericalValue]) -> bool;, assumption_tested: {},assumption_valid: {}",
                self.id,
                self.description,
-               self.assumption_tested.borrow(),
-               self.assumption_valid.borrow()
+               self.assumption_tested.read().unwrap().clone(),
+               self.assumption_valid.read().unwrap().clone()
         )
     }
 }

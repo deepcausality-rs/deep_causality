@@ -6,8 +6,8 @@ use std::ops::*;
 
 use crate::errors::CausalityError;
 use crate::prelude::{
-    Causable, CausableGraphExplaining, CausableGraphReasoning, CausableReasoning, Causaloid,
-    Datable, IdentificationValue, NumericalValue, SpaceTemporal, Spatial, Temporable,
+    Causable, CausableGraph, CausableGraphExplaining, CausableGraphReasoning, CausableReasoning,
+    Causaloid, Datable, IdentificationValue, NumericalValue, SpaceTemporal, Spatial, Temporable,
 };
 use crate::types::reasoning_types::causaloid::causal_type::CausalType;
 
@@ -29,14 +29,13 @@ where
         + Clone,
 {
     fn explain(&self) -> Result<String, CausalityError> {
-        return if self.active.get() {
+        return if self.is_active() {
             match self.causal_type {
                 CausalType::Singleton => {
                     let reason = format!(
-                        "Causaloid: {} {} on last data {} evaluated to {}",
+                        "Causaloid: {} {} evaluated to {}",
                         self.id,
                         self.description,
-                        self.last_obs.get(),
                         self.is_active()
                     );
                     Ok(reason)
@@ -63,7 +62,11 @@ where
     }
 
     fn is_active(&self) -> bool {
-        self.active.get()
+        match self.causal_type {
+            CausalType::Singleton => *self.active.read().unwrap(),
+            CausalType::Collection => self.causal_coll.as_ref().unwrap().number_active() > 0f64,
+            CausalType::Graph => self.causal_graph.as_ref().unwrap().number_active() > 0f64,
+        }
     }
 
     fn is_singleton(&self) -> bool {
@@ -79,34 +82,33 @@ where
             let contextual_causal_fn = self
                 .context_causal_fn
                 .expect("Causaloid::verify_single_cause: context_causal_fn is None");
+
             let context = self
                 .context
                 .expect("Causaloid::verify_single_cause: context is None");
 
             let res = match (contextual_causal_fn)(obs.to_owned(), context) {
-                Ok(res) => {
-                    // store the applied data to provide details in explain()
-                    self.last_obs.set(obs.to_owned());
-                    res
-                }
+                Ok(res) => res,
                 Err(e) => return Err(e),
             };
 
-            Ok(self.check_active(res))
+            let mut guard = self.active.write().unwrap();
+            *guard = res;
+
+            Ok(res)
         } else {
             let causal_fn = self
                 .causal_fn
                 .expect("Causaloid::verify_single_cause: causal_fn is None");
             let res = match (causal_fn)(obs.to_owned()) {
-                Ok(res) => {
-                    // store the applied data to provide details in explain()
-                    self.last_obs.set(obs.to_owned());
-                    res
-                }
+                Ok(res) => res,
                 Err(e) => return Err(e),
             };
 
-            Ok(self.check_active(res))
+            let mut guard = self.active.write().unwrap();
+            *guard = res;
+
+            Ok(res)
         }
     }
 
@@ -117,7 +119,7 @@ where
     ) -> Result<bool, CausalityError> {
         match self.causal_type {
             CausalType::Singleton => Err(CausalityError(
-                "Causaloid is singleton. Call verify_singleton instead.".into(),
+                "Causaloid is singleton. Call verify_single_cause instead.".into(),
             )),
 
             CausalType::Collection => match &self.causal_coll {
@@ -130,7 +132,7 @@ where
                         Err(e) => return Err(e),
                     };
 
-                    Ok(self.check_active(res))
+                    Ok(res)
                 }
             },
 
@@ -144,38 +146,9 @@ where
                         Err(e) => return Err(CausalityError(e.to_string())),
                     };
 
-                    Ok(self.check_active(res))
+                    Ok(res)
                 }
             },
-        }
-    }
-}
-
-impl<'l, D, S, T, ST, V> Causaloid<'l, D, S, T, ST, V>
-where
-    D: Datable + Clone,
-    S: Spatial<V> + Clone,
-    T: Temporable<V> + Clone,
-    ST: SpaceTemporal<V> + Clone,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>
-        + Clone,
-{
-    #[inline(always)]
-    fn check_active(&self, res: bool) -> bool {
-        if res {
-            self.active.set(true);
-            true
-        } else {
-            self.active.set(false);
-            false
         }
     }
 }
