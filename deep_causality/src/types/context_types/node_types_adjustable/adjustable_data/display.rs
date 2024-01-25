@@ -6,7 +6,7 @@ use super::*;
 
 impl<T> Display for AdjustableData<T>
 where
-    T: Copy + Default + Debug,
+    T: Debug + Default + Copy + Clone + Hash + Eq + PartialEq,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "AdjustableData: id: {} data: {:?}", self.id, self.data)

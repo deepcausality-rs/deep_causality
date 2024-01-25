@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+use std::hash::Hash;
 use std::ops::Add;
 
 // SPDX-License-Identifier: MIT
@@ -11,11 +13,15 @@ use super::*;
 
 impl<T> Adjustable<T> for AdjustableSpaceTime<T>
 where
-    T: Default
+    T: Debug
+        + Default
         + Add<T, Output = T>
         + Sub<T, Output = T>
         + Mul<T, Output = T>
         + Copy
+        + Clone
+        + Hash
+        + Eq
         + PartialEq
         + PartialOrd,
 {

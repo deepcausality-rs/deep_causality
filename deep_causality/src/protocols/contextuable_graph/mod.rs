@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
+use std::hash::Hash;
 use std::ops::{Add, Mul, Sub};
 
 use crate::errors::ContextIndexError;
@@ -31,7 +32,15 @@ where
     S: Spatial<V>,
     ST: SpaceTemporal<V>,
     T: Temporable<V>,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V>,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>,
 {
     fn add_node(&mut self, value: Contextoid<D, S, T, ST, V>) -> usize;
     fn contains_node(&self, index: usize) -> bool;
@@ -80,7 +89,15 @@ where
     S: Spatial<V>,
     ST: SpaceTemporal<V>,
     T: Temporable<V>,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V>,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>,
 {
     // Creates a new context and returns the index of the new context.
     fn extra_ctx_add_new(&mut self, capacity: usize, default: bool) -> u64;

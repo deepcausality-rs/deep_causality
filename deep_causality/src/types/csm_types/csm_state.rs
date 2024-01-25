@@ -2,6 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use std::fmt::{Debug, Display, Formatter};
+use std::hash::Hash;
 use std::ops::*;
 
 use deep_causality_macros::{Constructor, Getters};
@@ -18,7 +19,16 @@ where
     S: Spatial<V> + Clone,
     T: Temporable<V> + Clone,
     ST: SpaceTemporal<V> + Clone,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>
+        + Clone,
 {
     id: usize,
     version: usize,
@@ -32,7 +42,16 @@ where
     S: Spatial<V> + Clone,
     T: Temporable<V> + Clone,
     ST: SpaceTemporal<V> + Clone,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>
+        + Clone,
 {
     pub fn eval(&self) -> Result<bool, CausalityError> {
         self.causaloid.verify_single_cause(&self.data)
@@ -56,7 +75,16 @@ where
     S: Spatial<V> + Clone,
     T: Temporable<V> + Clone,
     ST: SpaceTemporal<V> + Clone,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>
+        + Clone,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.fmt_print(f)

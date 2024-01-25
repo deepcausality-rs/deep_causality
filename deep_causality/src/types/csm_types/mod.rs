@@ -3,6 +3,7 @@
 
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::hash::Hash;
 use std::ops::{Add, Mul, Sub};
 
 use crate::errors::{ActionError, UpdateError};
@@ -24,7 +25,15 @@ where
     S: Spatial<V> + Clone + Copy,
     T: Temporable<V> + Clone + Copy,
     ST: SpaceTemporal<V> + Clone + Copy,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>,
 {
     state_actions: RefCell<CSMMap<'l, D, S, T, ST, V>>,
 }
@@ -35,7 +44,15 @@ where
     S: Spatial<V> + Clone + Copy,
     T: Temporable<V> + Clone + Copy,
     ST: SpaceTemporal<V> + Clone + Copy,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>,
 {
     /// Constructs a new CSM.
     pub fn new(state_actions: &'l CSMStateActions<'l, D, S, T, ST, V>) -> Self {
@@ -67,7 +84,15 @@ where
     S: Spatial<V> + Clone + Copy,
     T: Temporable<V> + Clone + Copy,
     ST: SpaceTemporal<V> + Clone + Copy,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>,
 {
     /// Inserts a new state action at the index position idx.
     /// Returns UpdateError if the index already exists.
@@ -115,7 +140,15 @@ where
     S: Spatial<V> + Clone + Copy,
     T: Temporable<V> + Clone + Copy,
     ST: SpaceTemporal<V> + Clone + Copy,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>,
 {
     /// Evaluates a single causal state at the index position idx.
     /// Returns ActionError if the evaluation failed.
@@ -189,7 +222,15 @@ where
     S: Spatial<V> + Clone + Copy,
     T: Temporable<V> + Clone + Copy,
     ST: SpaceTemporal<V> + Clone + Copy,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>,
 {
     /// Evaluates all causal states in the CSM.
     /// Returns ActionError if the evaluation failed.

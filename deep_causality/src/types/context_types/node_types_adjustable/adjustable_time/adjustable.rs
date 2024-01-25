@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
+use std::fmt::Debug;
+use std::hash::Hash;
 use std::ops::*;
 
 use dcl_data_structures::grid_type::ArrayGrid;
@@ -11,11 +13,15 @@ use crate::prelude::{Adjustable, AdjustableTime};
 
 impl<T> Adjustable<T> for AdjustableTime<T>
 where
-    T: Default
+    T: Debug
+        + Default
         + Add<T, Output = T>
         + Sub<T, Output = T>
         + Mul<T, Output = T>
         + Copy
+        + Clone
+        + Hash
+        + Eq
         + PartialEq
         + PartialOrd,
 {

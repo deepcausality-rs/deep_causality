@@ -7,7 +7,15 @@ use super::*;
 
 impl<T> Spatial<T> for AdjustableSpace<T>
 where
-    T: Default + Add<T, Output = T> + Sub<T, Output = T> + Mul<T, Output = T> + Copy,
+    T: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<T, Output = T>
+        + Sub<T, Output = T>
+        + Mul<T, Output = T>,
 {
     fn x(&self) -> &T {
         &self.x

@@ -3,6 +3,7 @@
 
 use std::cell::Cell;
 use std::fmt::{Debug, Display, Formatter};
+use std::hash::Hash;
 use std::marker::PhantomData;
 use std::ops::*;
 
@@ -11,6 +12,7 @@ use crate::types::reasoning_types::causaloid::causal_type::CausalType;
 
 mod causable;
 mod causal_type;
+mod debug;
 mod display;
 mod getters;
 mod identifiable;
@@ -25,7 +27,16 @@ where
     S: Spatial<V> + Clone,
     T: Temporable<V> + Clone,
     ST: SpaceTemporal<V> + Clone,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>
+        + Clone,
 {
     id: IdentificationValue,
     active: Cell<bool>,
@@ -48,7 +59,16 @@ where
     S: Spatial<V> + Clone,
     T: Temporable<V> + Clone,
     ST: SpaceTemporal<V> + Clone,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>
+        + Clone,
 {
     /// Singleton constructor. Assumes causality function is valid.
     /// Only use for non-fallible construction i.e.verified a-priori knowledge about the correctness of the causal function.

@@ -1,3 +1,4 @@
+use std::hash::Hash;
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . Marvin Hansen <marvin.hansen@gmail.com> All rights reserved.
 use std::ops::*;
@@ -15,7 +16,15 @@ where
     S: Spatial<V> + Clone,
     T: Temporable<V> + Clone,
     ST: SpaceTemporal<V> + Clone,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>,
 {
     #[getter(name = model_id)] // Rename ID getter to prevent conflict impl with identifiable
     id: u64,
@@ -32,7 +41,15 @@ where
     S: Spatial<V> + Clone,
     T: Temporable<V> + Clone,
     ST: SpaceTemporal<V> + Clone,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V> + Clone,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>,
 {
     fn id(&self) -> u64 {
         self.id

@@ -9,7 +9,15 @@ where
     S: Spatial<V>,
     T: Temporable<V>,
     ST: SpaceTemporal<V>,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V>,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>,
 {
     /// Ads a new Contextoid to the context.
     /// You can add the same contextoid multiple times,

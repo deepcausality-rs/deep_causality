@@ -2,6 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use std::collections::HashMap;
+use std::hash::Hash;
 use std::ops::*;
 
 use ultragraph::prelude::*;
@@ -24,7 +25,15 @@ where
     S: Spatial<V>,
     T: Temporable<V>,
     ST: SpaceTemporal<V>,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V>,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>,
 {
     id: u64,
     name: &'l str,
@@ -42,7 +51,15 @@ where
     S: Spatial<V>,
     T: Temporable<V>,
     ST: SpaceTemporal<V>,
-    V: Default + Add<V, Output = V> + Sub<V, Output = V> + Mul<V, Output = V>,
+    V: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<V, Output = V>
+        + Sub<V, Output = V>
+        + Mul<V, Output = V>,
 {
     /// Creates a new context with the given node capacity.
     pub fn with_capacity(id: u64, name: &'l str, capacity: usize) -> Self {

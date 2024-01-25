@@ -6,7 +6,16 @@ use super::*;
 
 impl<T> Display for AdjustableSpace<T>
 where
-    T: Default + Debug + Add<T, Output = T> + Sub<T, Output = T> + Mul<T, Output = T> + Copy,
+    T: Debug
+        + Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<T, Output = T>
+        + Sub<T, Output = T>
+        + Mul<T, Output = T>,
 {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         write!(

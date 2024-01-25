@@ -6,7 +6,15 @@ use super::*;
 
 impl<T> Identifiable for AdjustableSpaceTime<T>
 where
-    T: Default + Add<T, Output = T> + Sub<T, Output = T> + Mul<T, Output = T> + Copy,
+    T: Default
+        + Copy
+        + Clone
+        + Hash
+        + Eq
+        + PartialEq
+        + Add<T, Output = T>
+        + Sub<T, Output = T>
+        + Mul<T, Output = T>,
 {
     fn id(&self) -> u64 {
         self.id

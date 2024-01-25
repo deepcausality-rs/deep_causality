@@ -19,6 +19,9 @@ where
         + Sub<T, Output = T>
         + Mul<T, Output = T>
         + Copy
+        + Clone
+        + Hash
+        + Eq
         + PartialEq
         + PartialOrd,
 {
