@@ -13,20 +13,21 @@ impl Assumable for Assumption {
     }
 
     fn assumption_tested(&self) -> bool {
-        *self.assumption_tested.borrow()
+        *self.assumption_tested.read().unwrap()
     }
 
     fn assumption_valid(&self) -> bool {
-        *self.assumption_valid.borrow()
+        *self.assumption_valid.read().unwrap()
     }
 
     fn verify_assumption(&self, data: &[NumericalValue]) -> bool {
         let res = (self.assumption_fn)(data);
-        // int. mutability: https://doc.rust-lang.org/book/ch15-05-interior-mutability.html
-        *self.assumption_tested.borrow_mut() = true;
+        let mut guard_tested = self.assumption_tested.write().unwrap();
+        *guard_tested = true;
 
         if res {
-            *self.assumption_valid.borrow_mut() = true;
+            let mut guard_valid = self.assumption_valid.write().unwrap();
+            *guard_valid = true;
         }
         res
     }

@@ -22,16 +22,13 @@ where
         + Clone,
 {
     pub fn active(&self) -> bool {
-        self.active.get()
+        self.is_active()
     }
-    pub fn causal_collection(&self) -> Option<CausalVec<'l, D, S, T, ST, V>> {
-        self.causal_coll.clone()
+    pub fn causal_collection(&self) -> Option<&CausalVec<'l, D, S, T, ST, V>> {
+        self.causal_coll
     }
-    pub fn causal_graph(&self) -> Option<CausalGraph<'l, D, S, T, ST, V>> {
-        self.causal_graph.clone()
-    }
-    pub fn last_obs(&self) -> NumericalValue {
-        self.last_obs.get()
+    pub fn causal_graph(&self) -> Option<&CausalGraph<'l, D, S, T, ST, V>> {
+        self.causal_graph
     }
     pub fn description(&self) -> &'l str {
         self.description

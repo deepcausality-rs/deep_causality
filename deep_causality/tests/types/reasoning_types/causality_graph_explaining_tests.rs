@@ -45,7 +45,7 @@ fn test_explain_all_causes() {
     // Explain all full reasoning over the entire graph
     //
     let res = g.explain_all_causes().unwrap();
-    let expected = "\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n".to_string();
+    let expected = "\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n".to_string();
     assert_eq!(res, expected);
 }
 
@@ -113,7 +113,7 @@ fn test_explain_subgraph_from_cause() {
     //
     let start_index = 2;
     let res = g.explain_subgraph_from_cause(start_index).unwrap();
-    let expected = "\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n".to_string();
+    let expected = "\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n".to_string();
     assert_eq!(res, expected);
 }
 
@@ -191,6 +191,6 @@ fn test_explain_shortest_path_between_causes() {
     let res = g
         .explain_shortest_path_between_causes(start_index, stop_index)
         .unwrap();
-    let expected = "\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 on last data 0.99 evaluated to true\n".to_string();
+    let expected = "\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n";
     assert_eq!(res, expected);
 }
