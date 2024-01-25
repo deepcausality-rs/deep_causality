@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.6.5...deep_causality-v0.7.0) - 2024-01-25
+
+### Other
+- Replaced Cell types with Arc/RwLock to make interior mutability thread safe.
+
 ## [0.6.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.6.4...deep_causality-v0.6.5) - 2024-01-25
 
 ### Other
