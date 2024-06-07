@@ -14,7 +14,7 @@ deep_causality = "0.6.2"
 # chrono default-features = false mitigates "RUSTSEC-2020-0071".
 # See https://rustsec.org/advisories/RUSTSEC-2020-0071.html
 chrono = { version = "0.4", default-features = false , features = ["serde", "clock"] }
-parquet = "51.0.0"
+parquet = "52.0.0"
 petgraph = "0.6"
 # default-features = false mitigates a warning of a yanked sub-sub dependency
 rust_decimal = { version = "1", default-features = false, features = ["serde"] }
