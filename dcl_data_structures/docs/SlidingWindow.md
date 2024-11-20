@@ -54,6 +54,46 @@ then it's best to run an optimizer to find the best value for M that maximizes t
 
 ## Performance
 
-Both implementations perform well on inserts with the array backed implementation
-being about 1/3 faster than the vector backed implementation. Read operations are basically free O(1) since
-the sliding window is just a slice over the backing data structure.
+Both implementations perform well by default, but the array backed implementation is more performant so 
+chose this one for performance-critical applications. 
+
+Detailed performance comparison:
+
+Single Push Operation:
+* ArrayStorage: ~891 ps
+*  VectorStorage: ~3.69 ns
+
+VectorStorage is about 4x slower
+
+Sequential Operations:
+* ArrayStorage: ~2.24 ns
+* VectorStorage: ~3.71 ns
+
+VectorStorage is about 1.7x slower
+
+Batch Operations (10/100/1000 elements):
+* ArrayStorage: 9.5 ns / 102 ns / 951 ns
+* VectorStorage: 36.5 ns / 375 ns / 3700 ns
+
+VectorStorage is about 3.8x slower across all batch sizes
+
+The performance difference between ArrayStorage and VectorStorage can be attributed to:
+
+Memory Layout:
+* ArrayStorage uses a fixed-size array ([T; CAPACITY])
+* VectorStorage uses a dynamically growing Vec
+
+The fixed-size array provides better cache locality and fewer allocations
+* Bounds Checking:
+* ArrayStorage's size is known at compile time
+* VectorStorage requires runtime bounds checking
+
+Memory Management:
+* ArrayStorage allocates all memory upfront
+* VectorStorage may need to reallocate and grow
+
+Despite being slower, VectorStorage still has its advantages:
+
+* More flexible since it doesn't require compile-time size constants
+* Can handle varying window sizes
+* More memory efficient when the actual data size is much smaller than the capacity
