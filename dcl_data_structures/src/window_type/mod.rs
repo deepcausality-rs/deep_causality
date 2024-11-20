@@ -5,11 +5,11 @@
 
 use std::marker::PhantomData;
 
-use crate::prelude::{ArrayStorage, VectorStorage, WindowStorage};
+use crate::prelude::{ArrayStorage, UnsafeArrayStorage, VectorStorage, WindowStorage};
 
-pub mod storage;
-pub mod storage_array;
-pub mod storage_vec;
+pub(crate)  mod storage;
+pub(crate) mod storage_safe;
+pub(crate) mod storage_unsafe;
 
 /// Returns a new sliding window with a vector storage and the size and capacity given as parameters.
 ///
@@ -96,6 +96,17 @@ pub fn new_with_array_storage<
 
     SlidingWindow::with_storage(ArrayStorage::new())
 }
+
+pub fn new_with_unsafe_array_storage<
+    T: PartialEq + Copy + Default,
+    const SIZE: usize,
+    const CAPACITY: usize,
+>() -> SlidingWindow<UnsafeArrayStorage<T, SIZE, CAPACITY>, T> {
+    assert!(CAPACITY > SIZE);
+
+    SlidingWindow::with_storage(UnsafeArrayStorage::new())
+}
+
 
 pub fn default_array_storage<
     T: PartialEq + Copy + Default,

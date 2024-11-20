@@ -13,6 +13,10 @@ pub use crate::grid_type::storage::Storage;
 // window types
 pub use crate::window_type;
 pub use crate::window_type::storage::WindowStorage;
-pub use crate::window_type::storage_array::ArrayStorage;
-pub use crate::window_type::storage_vec::VectorStorage;
+// Safe storage impl
+pub use crate::window_type::storage_safe::storage_array::ArrayStorage;
+pub use crate::window_type::storage_safe::storage_vec::VectorStorage;
+// Unsafe storage impl
+pub use crate::window_type::storage_unsafe::unsafe_storage_array::UnsafeArrayStorage;
+
 pub use crate::window_type::SlidingWindow;
