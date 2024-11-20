@@ -2,7 +2,6 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 use crate::prelude::WindowStorage;
 
-
 #[derive(Debug)]
 pub struct UnsafeArrayStorage<T, const SIZE: usize, const CAPACITY: usize>
 where
@@ -20,7 +19,6 @@ where
     T: PartialEq + Copy + Default,
     [T; CAPACITY]: Sized,
 {
-
     #[inline(always)]
     pub fn new() -> Self {
         assert!(CAPACITY > SIZE, "CAPACITY must be greater than SIZE");
@@ -32,18 +30,15 @@ where
         }
     }
 
-
     #[inline(always)]
     const fn is_full(&self) -> bool {
         self.tail >= CAPACITY
     }
 
-
     #[inline(always)]
     const fn needs_head_adjustment(&self) -> bool {
         self.tail.saturating_sub(self.head) > self.size
     }
-
 
     #[inline(always)]
     fn rewind(&mut self) {
@@ -59,7 +54,6 @@ where
     T: PartialEq + Copy + Default,
     [T; SIZE]: Sized,
 {
-
     #[inline(always)]
     fn default() -> Self {
         Self::new()
@@ -67,12 +61,11 @@ where
 }
 
 impl<T, const SIZE: usize, const CAPACITY: usize> WindowStorage<T>
-for UnsafeArrayStorage<T, SIZE, CAPACITY>
+    for UnsafeArrayStorage<T, SIZE, CAPACITY>
 where
     T: PartialEq + Copy + Default,
     [T; SIZE]: Sized,
 {
-
     fn push(&mut self, value: T) {
         if self.is_full() {
             self.rewind();
@@ -87,7 +80,6 @@ where
         self.tail += 1;
     }
 
-
     #[inline(always)]
     fn first(&self) -> Result<T, String> {
         if self.tail == 0 {
@@ -100,7 +92,6 @@ where
             self.arr[self.head]
         })
     }
-
 
     #[inline(always)]
     fn last(&self) -> Result<T, String> {
@@ -122,7 +113,6 @@ where
     fn size(&self) -> usize {
         self.size
     }
-
 
     #[inline(always)]
     fn get_slice(&self) -> &[T] {

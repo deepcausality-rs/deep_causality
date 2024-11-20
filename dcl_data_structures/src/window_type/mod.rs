@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-#![forbid(unsafe_code)]
-
 use std::marker::PhantomData;
 
 use crate::prelude::{ArrayStorage, UnsafeArrayStorage, VectorStorage, WindowStorage};
 
-pub(crate)  mod storage;
+pub(crate) mod storage;
 pub(crate) mod storage_safe;
 pub(crate) mod storage_unsafe;
 
@@ -106,7 +104,6 @@ pub fn new_with_unsafe_array_storage<
 
     SlidingWindow::with_storage(UnsafeArrayStorage::new())
 }
-
 
 pub fn default_array_storage<
     T: PartialEq + Copy + Default,

@@ -3,12 +3,12 @@
 use crate::prelude::WindowStorage;
 
 /// A fixed-size array-based sliding window implementation
-/// 
+///
 /// # Type Parameters
 /// * `T` - The type of elements stored in the window
 /// * `SIZE` - The size of the sliding window
 /// * `CAPACITY` - The total capacity of the underlying array
-/// 
+///
 /// # Implementation Note
 /// Uses a fixed-size array with constant memory footprint. The window slides through
 /// the array using head and tail pointers, with rewind operations when needed.
@@ -30,10 +30,10 @@ where
     [T; CAPACITY]: Sized,
 {
     /// Creates a new ArrayStorage instance
-    /// 
+    ///
     /// # Returns
     /// * `Self` - A new ArrayStorage instance with initialized array and pointers
-    /// 
+    ///
     /// # Implementation Note
     /// Initializes a fixed-size array with default values and sets up window tracking
     #[inline(always)]
@@ -48,10 +48,10 @@ where
     }
 
     /// Checks if the window is full
-    /// 
+    ///
     /// # Returns
     /// * `bool` - True if the window is full, false otherwise
-    /// 
+    ///
     /// # Implementation Note
     /// Determines if the tail pointer has reached the end of the array
     #[inline(always)]
@@ -60,10 +60,10 @@ where
     }
 
     /// Checks if the window needs to be rewound
-    /// 
+    ///
     /// # Returns
     /// * `bool` - True if the window needs rewinding, false otherwise
-    /// 
+    ///
     /// # Implementation Note
     /// Determines if the active window size exceeds the configured size
     #[inline(always)]
@@ -72,7 +72,7 @@ where
     }
 
     /// Rewinds the window by copying elements to the start of the array
-    /// 
+    ///
     /// # Implementation Note
     /// Uses copy_within for efficient memory movement when rewinding
     #[inline(always)]
@@ -90,10 +90,10 @@ where
     [T; SIZE]: Sized,
 {
     /// Creates a new ArrayStorage instance
-    /// 
+    ///
     /// # Returns
     /// * `Self` - A new ArrayStorage instance with initialized array and pointers
-    /// 
+    ///
     /// # Implementation Note
     /// Initializes a fixed-size array with default values and sets up window tracking
     #[inline(always)]
@@ -109,10 +109,10 @@ where
     [T; SIZE]: Sized,
 {
     /// Pushes a new element into the sliding window
-    /// 
+    ///
     /// # Args
     /// * `value` - The value to be pushed into the window
-    /// 
+    ///
     /// # Implementation Note
     /// Handles window rewind when needed and maintains the sliding window invariant
     #[inline(always)]
@@ -131,11 +131,11 @@ where
     }
 
     /// Returns the first (oldest) element in the sliding window
-    /// 
+    ///
     /// # Returns
     /// * `Ok(T)` - The first element in the window
     /// * `Err(String)` - If the window is empty
-    /// 
+    ///
     /// # Implementation Note
     /// Accounts for window position and size to return the correct element
     #[inline(always)]
@@ -152,11 +152,11 @@ where
     }
 
     /// Returns the last (newest) element in the sliding window
-    /// 
+    ///
     /// # Returns
     /// * `Ok(T)` - The last element in the window
     /// * `Err(String)` - If the window is not yet filled
-    /// 
+    ///
     /// # Implementation Note
     /// Uses the tail position to access the most recently added element
     #[inline(always)]
@@ -171,10 +171,10 @@ where
     }
 
     /// Returns the current tail position of the window
-    /// 
+    ///
     /// # Returns
     /// * `usize` - The current tail position
-    /// 
+    ///
     /// # Implementation Note
     /// The tail position indicates where the next element will be inserted
     #[inline(always)]
@@ -183,10 +183,10 @@ where
     }
 
     /// Returns the size of the sliding window
-    /// 
+    ///
     /// # Returns
     /// * `usize` - The configured size of the sliding window
-    /// 
+    ///
     /// # Implementation Note
     /// This is the fixed size specified by the SIZE generic parameter
     #[inline(always)]
@@ -195,10 +195,10 @@ where
     }
 
     /// Returns a slice of the current window contents
-    /// 
+    ///
     /// # Returns
     /// * `&[T]` - A slice containing the current window elements
-    /// 
+    ///
     /// # Implementation Note
     /// Returns a slice from the underlying array based on head position and size
     #[inline(always)]

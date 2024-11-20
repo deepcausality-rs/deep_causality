@@ -26,7 +26,6 @@ fn test_empty() {
     assert!(!window.empty());
 }
 
-
 #[test]
 fn test_push() {
     let mut window = get_sliding_window();

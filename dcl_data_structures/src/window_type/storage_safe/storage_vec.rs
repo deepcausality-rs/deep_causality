@@ -3,7 +3,7 @@
 use crate::prelude::WindowStorage;
 
 /// A vector-based sliding window implementation
-/// 
+///
 /// # Implementation Note
 /// Uses a Vec<T> as the underlying storage mechanism with dynamic resizing capabilities.
 /// The window maintains a head and tail pointer to track the active window region.
@@ -23,11 +23,11 @@ where
     T: PartialEq + Copy + Default,
 {
     /// Creates a new VectorStorage instance with the specified size and multiple.
-    /// 
+    ///
     /// # Args
     /// * `size` - The size of the sliding window
     /// * `multiple` - The multiple of the size for the underlying vector capacity
-    /// 
+    ///
     /// # Returns
     /// * `Self` - A new VectorStorage instance
     pub fn new(size: usize, multiple: usize) -> Self {
@@ -45,10 +45,10 @@ where
     T: PartialEq + Copy + Default,
 {
     /// Pushes a new element into the sliding window
-    /// 
+    ///
     /// # Args
     /// * `value` - The value to be pushed into the window
-    /// 
+    ///
     /// # Implementation Note
     /// If the window is full (tail == capacity), it performs a rewind operation using copy_within
     /// to maintain the sliding window invariant.
@@ -76,11 +76,11 @@ where
     }
 
     /// Returns the first (oldest) element in the sliding window
-    /// 
+    ///
     /// # Returns
     /// * `Ok(T)` - The first element in the window
     /// * `Err(String)` - If the window is empty
-    /// 
+    ///
     /// # Implementation Note
     /// Takes into account the window's head position and size to return the correct element
     #[inline(always)]
@@ -97,11 +97,11 @@ where
     }
 
     /// Returns the last (newest) element in the sliding window
-    /// 
+    ///
     /// # Returns
     /// * `Ok(T)` - The last element in the window
     /// * `Err(String)` - If the window is not yet filled
-    /// 
+    ///
     /// # Implementation Note
     /// Uses the tail position to determine the newest element
     #[inline(always)]
@@ -114,10 +114,10 @@ where
     }
 
     /// Returns the current tail position of the window
-    /// 
+    ///
     /// # Returns
     /// * `usize` - The current tail position
-    /// 
+    ///
     /// # Implementation Note
     /// The tail position indicates where the next element will be inserted
     #[inline(always)]
@@ -126,10 +126,10 @@ where
     }
 
     /// Returns the size of the sliding window
-    /// 
+    ///
     /// # Returns
     /// * `usize` - The configured size of the sliding window
-    /// 
+    ///
     /// # Implementation Note
     /// This is the fixed size specified during construction
     #[inline(always)]
@@ -138,10 +138,10 @@ where
     }
 
     /// Returns a slice of the current window contents
-    /// 
+    ///
     /// # Returns
     /// * `&[T]` - A slice containing the current window elements
-    /// 
+    ///
     /// # Implementation Note
     /// Returns a slice from the underlying vector based on head position and size
     #[inline(always)]
