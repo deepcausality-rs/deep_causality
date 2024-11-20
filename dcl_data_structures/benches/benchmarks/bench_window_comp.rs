@@ -10,6 +10,10 @@ const SIZE: usize = 4;
 const CAPACITY: usize = 1200;
 const MULT: usize = 300; // 300 * 4 = 1200 Same capacity for Vec impl as for Array impl
 
+
+//
+// Safe ArrayStorage
+//
 fn array_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("array_operations");
 
@@ -75,6 +79,9 @@ fn array_operations(c: &mut Criterion) {
     group.finish();
 }
 
+//
+// Unsafe ArrayStorage
+//
 fn unsafe_array_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("unsafe_array_operations");
 
@@ -140,6 +147,9 @@ fn unsafe_array_operations(c: &mut Criterion) {
     group.finish();
 }
 
+//
+// Safe VectorStorage
+//
 fn vector_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("vector_operations");
 

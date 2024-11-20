@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+use std::mem::align_of;
 use crate::prelude::WindowStorage;
 
+const ERR_EMPTY: &str = "Array is empty. Add some elements to the array first";
+const ERR_NOT_FILLED: &str = "Array is not yet filled. Add some elements to the array first";
+
+#[repr(C, align(64))]  // Cache line alignment
 #[derive(Debug)]
 pub struct UnsafeArrayStorage<T, const SIZE: usize, const CAPACITY: usize>
 where
@@ -9,6 +14,7 @@ where
     [T; CAPACITY]: Sized,
 {
     arr: [T; CAPACITY],
+    ptr: *mut T,        // Cached pointer to array
     size: usize,
     head: usize,
     tail: usize,
@@ -22,12 +28,16 @@ where
     #[inline(always)]
     pub fn new() -> Self {
         assert!(CAPACITY > SIZE, "CAPACITY must be greater than SIZE");
-        Self {
+        assert!(align_of::<T>() >= 4, "Type must be at least 4-byte aligned");
+        let mut storage = Self {
             arr: [T::default(); CAPACITY],
+            ptr: std::ptr::null_mut(),
             size: SIZE,
             head: 0,
             tail: 0,
-        }
+        };
+        storage.ptr = storage.arr.as_mut_ptr();
+        storage
     }
 
     #[inline(always)]
@@ -41,9 +51,42 @@ where
     }
 
     #[inline(always)]
-    fn rewind(&mut self) {
-        self.arr
-            .copy_within(self.head..self.head + self.size - 1, 0);
+    unsafe fn rewind(&mut self) {
+        // Use optimized copy for larger types
+        if std::mem::size_of::<T>() >= 4 && align_of::<T>() >= 4 {
+            let src = self.ptr.add(self.head);
+            let dst = self.ptr;
+            
+            // Copy in chunks of 16 bytes when possible
+            let simd_chunks = (self.size - 1) / 4;
+            if simd_chunks > 0 {
+                std::ptr::copy_nonoverlapping(
+                    src as *const u8,
+                    dst as *mut u8,
+                    simd_chunks * 16
+                );
+                
+                // Copy remaining elements
+                let remaining = (self.size - 1) % 4;
+                if remaining > 0 {
+                    std::ptr::copy_nonoverlapping(
+                        src.add(simd_chunks * 4),
+                        dst.add(simd_chunks * 4),
+                        remaining
+                    );
+                }
+            } else {
+                std::ptr::copy_nonoverlapping(src, dst, self.size - 1);
+            }
+        } else {
+            // Fallback for smaller types
+            std::ptr::copy_nonoverlapping(
+                self.ptr.add(self.head),
+                self.ptr,
+                self.size - 1
+            );
+        }
+        
         self.head = 0;
         self.tail = self.size;
     }
@@ -66,42 +109,47 @@ where
     T: PartialEq + Copy + Default,
     [T; SIZE]: Sized,
 {
+    #[inline(always)]
     fn push(&mut self, value: T) {
-        if self.is_full() {
-            self.rewind();
+        unsafe {
+            if self.is_full() {
+                self.rewind();
+            }
+
+            *self.ptr.add(self.tail) = value;
+
+            if self.needs_head_adjustment() {
+                self.head += 1;
+            }
+
+            self.tail += 1;
         }
-
-        self.arr[self.tail] = value;
-
-        if self.needs_head_adjustment() {
-            self.head += 1;
-        }
-
-        self.tail += 1;
     }
 
     #[inline(always)]
     fn first(&self) -> Result<T, String> {
         if self.tail == 0 {
-            return Err("Array is empty. Add some elements to the array first".to_string());
+            return Err(ERR_EMPTY.to_string());
         }
 
-        Ok(if self.tail > self.size {
-            self.arr[self.head + 1]
-        } else {
-            self.arr[self.head]
-        })
+        unsafe {
+            Ok(if self.tail > self.size {
+                *self.ptr.add(self.head + 1)
+            } else {
+                *self.ptr.add(self.head)
+            })
+        }
     }
 
     #[inline(always)]
     fn last(&self) -> Result<T, String> {
         if !self.filled() {
-            return Err(
-                "Array is not yet filled. Add some elements to the array first".to_string(),
-            );
+            return Err(ERR_NOT_FILLED.to_string());
         }
 
-        Ok(self.arr[self.tail - 1])
+        unsafe {
+            Ok(*self.ptr.add(self.tail - 1))
+        }
     }
 
     #[inline(always)]
@@ -116,10 +164,18 @@ where
 
     #[inline(always)]
     fn get_slice(&self) -> &[T] {
-        if self.tail > self.size {
-            &self.arr[self.head + 1..self.tail]
-        } else {
-            &self.arr[self.head..self.tail]
+        unsafe {
+            if self.tail > self.size {
+                std::slice::from_raw_parts(
+                    self.ptr.add(self.head + 1),
+                    self.tail - (self.head + 1)
+                )
+            } else {
+                std::slice::from_raw_parts(
+                    self.ptr.add(self.head),
+                    self.tail - self.head
+                )
+            }
         }
     }
 }
