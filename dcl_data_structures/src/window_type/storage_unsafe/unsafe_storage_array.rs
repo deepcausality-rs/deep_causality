@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
-use std::mem::align_of;
 use crate::prelude::WindowStorage;
+use std::mem::align_of;
 
 const ERR_EMPTY: &str = "Array is empty. Add some elements to the array first";
 const ERR_NOT_FILLED: &str = "Array is not yet filled. Add some elements to the array first";
 
 /// High-performance array-based storage using unsafe operations
-/// 
+///
 /// # Implementation Notes
 /// - Uses 64-byte alignment for cache optimization
 /// - Maintains cached array pointer for fast access
@@ -32,7 +32,7 @@ where
     [T; CAPACITY]: Sized,
 {
     /// Creates a new UnsafeArrayStorage instance
-    /// 
+    ///
     /// # Implementation Notes
     /// - Initializes array with default values
     /// - Caches array pointer for optimized access
@@ -63,7 +63,7 @@ where
     }
 
     /// Rewinds storage by copying elements to array start
-    /// 
+    ///
     /// # Implementation Notes
     /// - Uses optimized copying for 4+ byte types
     /// - Copies in 16-byte chunks when possible
@@ -74,23 +74,19 @@ where
         if std::mem::size_of::<T>() >= 4 && align_of::<T>() >= 4 {
             let src = self.ptr.add(self.head);
             let dst = self.ptr;
-            
+
             // Copy in chunks of 16 bytes when possible
             let simd_chunks = (self.size - 1) / 4;
             if simd_chunks > 0 {
-                std::ptr::copy_nonoverlapping(
-                    src as *const u8,
-                    dst as *mut u8,
-                    simd_chunks * 16
-                );
-                
+                std::ptr::copy_nonoverlapping(src as *const u8, dst as *mut u8, simd_chunks * 16);
+
                 // Copy remaining elements
                 let remaining = (self.size - 1) % 4;
                 if remaining > 0 {
                     std::ptr::copy_nonoverlapping(
                         src.add(simd_chunks * 4),
                         dst.add(simd_chunks * 4),
-                        remaining
+                        remaining,
                     );
                 }
             } else {
@@ -98,13 +94,9 @@ where
             }
         } else {
             // Fallback for smaller types
-            std::ptr::copy_nonoverlapping(
-                self.ptr.add(self.head),
-                self.ptr,
-                self.size - 1
-            );
+            std::ptr::copy_nonoverlapping(self.ptr.add(self.head), self.ptr, self.size - 1);
         }
-        
+
         self.head = 0;
         self.tail = self.size;
     }
@@ -129,10 +121,10 @@ where
     [T; SIZE]: Sized,
 {
     /// Pushes a new value into storage
-    /// 
+    ///
     /// # Args
     /// * `value` - Value to push
-    /// 
+    ///
     /// # Implementation Notes
     /// - Uses direct pointer access for performance
     /// - Automatically rewinds when full
@@ -155,10 +147,10 @@ where
     }
 
     /// Returns first element in window
-    /// 
+    ///
     /// # Errors
     /// Returns error if storage is empty
-    /// 
+    ///
     /// # Implementation Notes
     /// - Uses cached pointer for fast access
     /// - Handles both normal and wrapped states
@@ -178,10 +170,10 @@ where
     }
 
     /// Returns last element in window
-    /// 
+    ///
     /// # Errors
     /// Returns error if storage not filled
-    /// 
+    ///
     /// # Implementation Notes
     /// - Uses cached pointer for fast access
     /// - Verifies fill state before access
@@ -191,9 +183,7 @@ where
             return Err(ERR_NOT_FILLED.to_string());
         }
 
-        unsafe {
-            Ok(*self.ptr.add(self.tail - 1))
-        }
+        unsafe { Ok(*self.ptr.add(self.tail - 1)) }
     }
 
     /// Returns current tail position
@@ -209,7 +199,7 @@ where
     }
 
     /// Returns slice of current window contents
-    /// 
+    ///
     /// # Implementation Notes
     /// - Creates slice from raw pointers for performance
     /// - Handles both normal and wrapped states
@@ -218,15 +208,9 @@ where
     fn get_slice(&self) -> &[T] {
         unsafe {
             if self.tail > self.size {
-                std::slice::from_raw_parts(
-                    self.ptr.add(self.head + 1),
-                    self.tail - (self.head + 1)
-                )
+                std::slice::from_raw_parts(self.ptr.add(self.head + 1), self.tail - (self.head + 1))
             } else {
-                std::slice::from_raw_parts(
-                    self.ptr.add(self.head),
-                    self.tail - self.head
-                )
+                std::slice::from_raw_parts(self.ptr.add(self.head), self.tail - self.head)
             }
         }
     }

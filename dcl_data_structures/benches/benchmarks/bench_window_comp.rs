@@ -3,13 +3,12 @@
 
 use criterion::{black_box, criterion_group, BenchmarkId, Criterion};
 use dcl_data_structures::prelude::{
-    ArrayStorage, UnsafeArrayStorage, VectorStorage, WindowStorage,
+    ArrayStorage, UnsafeArrayStorage, UnsafeVectorStorage, VectorStorage, WindowStorage,
 };
 
 const SIZE: usize = 4;
 const CAPACITY: usize = 1200;
 const MULT: usize = 300; // 300 * 4 = 1200 Same capacity for Vec impl as for Array impl
-
 
 //
 // Safe ArrayStorage
@@ -190,8 +189,51 @@ fn vector_operations(c: &mut Criterion) {
     group.finish();
 }
 
+//
+// Unsafe VectorStorage
+//
+fn unsafe_vector_operations(c: &mut Criterion) {
+    let mut group = c.benchmark_group("unsafe_vector_operations");
+
+    // Basic push operation
+    group.bench_function("push_single", |b| {
+        let mut storage = UnsafeVectorStorage::new(SIZE, MULT);
+        b.iter(|| {
+            storage.push(black_box(42));
+        });
+    });
+
+    // Sequential operations
+    group.bench_function("sequential_ops", |b| {
+        let mut storage = UnsafeVectorStorage::new(SIZE, MULT);
+        for i in 0..SIZE {
+            storage.push(i as i32);
+        }
+        b.iter(|| {
+            storage.push(black_box(42));
+            black_box(storage.first().unwrap());
+            black_box(storage.last().unwrap());
+            black_box(storage.get_slice());
+        });
+    });
+
+    // Batch operations
+    for size in [10, 50, 100].iter() {
+        group.bench_with_input(BenchmarkId::new("batch_push", size), size, |b, &size| {
+            let mut storage = UnsafeVectorStorage::new(SIZE, MULT);
+            b.iter(|| {
+                for i in 0..size {
+                    storage.push(black_box(i as i32));
+                }
+            });
+        });
+    }
+
+    group.finish();
+}
+
 criterion_group! {
     name = window_impl_comp;
     config = Criterion::default().sample_size(100);
-    targets = array_operations, unsafe_array_operations, vector_operations,
+    targets = array_operations, unsafe_array_operations, vector_operations, unsafe_vector_operations,
 }

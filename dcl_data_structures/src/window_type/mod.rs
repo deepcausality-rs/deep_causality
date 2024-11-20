@@ -3,7 +3,9 @@
 
 use std::marker::PhantomData;
 
-use crate::prelude::{ArrayStorage, UnsafeArrayStorage, VectorStorage, WindowStorage};
+use crate::prelude::{
+    ArrayStorage, UnsafeArrayStorage, UnsafeVectorStorage, VectorStorage, WindowStorage,
+};
 
 pub(crate) mod storage;
 pub(crate) mod storage_safe;
@@ -44,6 +46,13 @@ pub fn new_with_vector_storage<T: PartialEq + Copy + Default>(
     multiple: usize,
 ) -> SlidingWindow<VectorStorage<T>, T> {
     SlidingWindow::with_storage(VectorStorage::new(size, multiple))
+}
+
+pub fn new_with_unsafe_vector_storage<T: PartialEq + Copy + Default>(
+    size: usize,
+    multiple: usize,
+) -> SlidingWindow<UnsafeVectorStorage<T>, T> {
+    SlidingWindow::with_storage(UnsafeVectorStorage::new(size, multiple))
 }
 
 /// Returns a new sliding window with an const generic array storage and
