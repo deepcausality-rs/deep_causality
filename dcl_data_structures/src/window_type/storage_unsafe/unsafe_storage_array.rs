@@ -6,7 +6,13 @@ use crate::prelude::WindowStorage;
 const ERR_EMPTY: &str = "Array is empty. Add some elements to the array first";
 const ERR_NOT_FILLED: &str = "Array is not yet filled. Add some elements to the array first";
 
-#[repr(C, align(64))]  // Cache line alignment
+/// High-performance array-based storage using unsafe operations
+/// 
+/// # Implementation Notes
+/// - Uses 64-byte alignment for cache optimization
+/// - Maintains cached array pointer for fast access
+/// - Implements optimized memory operations for 4+ byte types
+#[repr(C, align(64))]
 #[derive(Debug)]
 pub struct UnsafeArrayStorage<T, const SIZE: usize, const CAPACITY: usize>
 where
@@ -14,7 +20,7 @@ where
     [T; CAPACITY]: Sized,
 {
     arr: [T; CAPACITY],
-    ptr: *mut T,        // Cached pointer to array
+    ptr: *mut T,
     size: usize,
     head: usize,
     tail: usize,
@@ -25,6 +31,12 @@ where
     T: PartialEq + Copy + Default,
     [T; CAPACITY]: Sized,
 {
+    /// Creates a new UnsafeArrayStorage instance
+    /// 
+    /// # Implementation Notes
+    /// - Initializes array with default values
+    /// - Caches array pointer for optimized access
+    /// - Requires 4-byte alignment for optimal performance
     #[inline(always)]
     pub fn new() -> Self {
         assert!(CAPACITY > SIZE, "CAPACITY must be greater than SIZE");
@@ -50,6 +62,12 @@ where
         self.tail.saturating_sub(self.head) > self.size
     }
 
+    /// Rewinds storage by copying elements to array start
+    /// 
+    /// # Implementation Notes
+    /// - Uses optimized copying for 4+ byte types
+    /// - Copies in 16-byte chunks when possible
+    /// - Falls back to standard copy for smaller types
     #[inline(always)]
     unsafe fn rewind(&mut self) {
         // Use optimized copy for larger types
@@ -97,6 +115,7 @@ where
     T: PartialEq + Copy + Default,
     [T; SIZE]: Sized,
 {
+    /// Creates a default UnsafeArrayStorage instance
     #[inline(always)]
     fn default() -> Self {
         Self::new()
@@ -109,6 +128,15 @@ where
     T: PartialEq + Copy + Default,
     [T; SIZE]: Sized,
 {
+    /// Pushes a new value into storage
+    /// 
+    /// # Args
+    /// * `value` - Value to push
+    /// 
+    /// # Implementation Notes
+    /// - Uses direct pointer access for performance
+    /// - Automatically rewinds when full
+    /// - Adjusts head when window size exceeded
     #[inline(always)]
     fn push(&mut self, value: T) {
         unsafe {
@@ -126,6 +154,14 @@ where
         }
     }
 
+    /// Returns first element in window
+    /// 
+    /// # Errors
+    /// Returns error if storage is empty
+    /// 
+    /// # Implementation Notes
+    /// - Uses cached pointer for fast access
+    /// - Handles both normal and wrapped states
     #[inline(always)]
     fn first(&self) -> Result<T, String> {
         if self.tail == 0 {
@@ -141,6 +177,14 @@ where
         }
     }
 
+    /// Returns last element in window
+    /// 
+    /// # Errors
+    /// Returns error if storage not filled
+    /// 
+    /// # Implementation Notes
+    /// - Uses cached pointer for fast access
+    /// - Verifies fill state before access
     #[inline(always)]
     fn last(&self) -> Result<T, String> {
         if !self.filled() {
@@ -152,16 +196,24 @@ where
         }
     }
 
+    /// Returns current tail position
     #[inline(always)]
     fn tail(&self) -> usize {
         self.tail
     }
 
+    /// Returns window size
     #[inline(always)]
     fn size(&self) -> usize {
         self.size
     }
 
+    /// Returns slice of current window contents
+    /// 
+    /// # Implementation Notes
+    /// - Creates slice from raw pointers for performance
+    /// - Handles both normal and wrapped states
+    /// - Uses cached pointer to avoid conversions
     #[inline(always)]
     fn get_slice(&self) -> &[T] {
         unsafe {
