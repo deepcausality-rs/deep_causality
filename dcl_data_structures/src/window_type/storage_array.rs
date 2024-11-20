@@ -124,7 +124,7 @@ where
         self.arr[self.tail] = value;
 
         if self.needs_head_adjustment() {
-            self.head += 1;
+            self.head = (self.head + 1).min(CAPACITY - SIZE);
         }
 
         self.tail += 1;
