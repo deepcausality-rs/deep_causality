@@ -50,6 +50,7 @@ where
     pub fn new(size: usize, multiple: usize) -> Self {
         let capacity = size * multiple;
         let vec = vec![T::default(); capacity];
+        assert!(!vec.as_ptr().is_null(), "Vector allocation failed");
         Self {
             vec,
             size,
