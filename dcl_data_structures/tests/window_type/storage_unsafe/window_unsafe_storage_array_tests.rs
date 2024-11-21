@@ -192,12 +192,19 @@ fn test_big_size() {
     }
 }
 
+
+
 #[test]
 fn test_small_size() {
     const SIZE: usize = 2;
     const CAPACITY: usize = 4 * SIZE;
 
-    fn get_sliding_window() -> SlidingWindow<UnsafeArrayStorage<Data, SIZE, CAPACITY>, Data> {
+    #[derive(Default, Debug, Copy, Clone, Hash, Eq, PartialEq)]
+    pub struct SmallData {
+        dats: bool,
+    }
+
+    fn get_sliding_window() -> SlidingWindow<UnsafeArrayStorage<SmallData, SIZE, CAPACITY>, SmallData> {
         window_type::new_with_unsafe_array_storage()
     }
 
@@ -205,7 +212,7 @@ fn test_small_size() {
 
     // Perform multiple rewinds
     for i in 0..CAPACITY * 3 {
-        let d = Data { dats: i as i32 };
+        let d = SmallData { dats: false };
 
         window.push(d);
         if i >= SIZE {
