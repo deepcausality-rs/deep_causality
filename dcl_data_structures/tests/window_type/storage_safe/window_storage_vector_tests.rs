@@ -381,7 +381,7 @@ fn test_arr_err() {
 #[test]
 fn test_push_boundary_conditions() {
     let mut storage = VectorStorage::<i32>::new(2, 2);
-    
+
     // Test pushing values and checking last
     for i in 0..2 {
         storage.push(i);
@@ -468,27 +468,27 @@ fn test_rewind_with_different_sizes() {
 #[test]
 fn test_performance_scaling() {
     use std::time::Instant;
-    
+
     // Test with different capacity multipliers
     let sizes = [100, 1000, 10000];
     let multipliers = [2, 4, 8];
-    
+
     for &size in &sizes {
         for &mult in &multipliers {
             let mut storage = VectorStorage::<i32>::new(size, mult);
             let start = Instant::now();
-            
+
             // Push elements up to capacity
             for i in 0..size * mult {
                 storage.push(i as i32);
             }
-            
+
             let duration = start.elapsed();
             println!(
                 "Size: {}, Multiplier: {}, Duration: {:?}",
                 size, mult, duration
             );
-            
+
             // Verify correctness
             assert_eq!(storage.last().unwrap(), ((size * mult - 1) as i32));
             assert!(storage.filled());

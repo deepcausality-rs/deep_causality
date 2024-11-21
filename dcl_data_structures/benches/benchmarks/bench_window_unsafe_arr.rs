@@ -8,9 +8,9 @@ use criterion::Criterion;
 #[cfg(feature = "unsafe")]
 use dcl_data_structures::prelude::{window_type, SlidingWindow, UnsafeArrayStorage};
 
+use crate::benchmarks::fields::CAPACITY;
 #[cfg(feature = "unsafe")]
 use crate::benchmarks::fields::SIZE;
-use crate::benchmarks::fields::CAPACITY;
 
 #[derive(Default, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Data {

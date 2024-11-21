@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 #[cfg(feature = "unsafe")]
-use crate::benchmarks::fields::SIZE;
-#[cfg(feature = "unsafe")]
 use crate::benchmarks::fields::MULT;
+#[cfg(feature = "unsafe")]
+use crate::benchmarks::fields::SIZE;
 #[cfg(feature = "unsafe")]
 use criterion::criterion_group;
 #[cfg(feature = "unsafe")]

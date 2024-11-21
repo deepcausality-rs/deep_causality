@@ -32,12 +32,12 @@ fn test_empty() {
 #[test]
 fn test_partial_fill() {
     let mut window = get_sliding_window();
-    
+
     // Fill half of the window
-    for i in 0..SIZE/2 {
+    for i in 0..SIZE / 2 {
         window.push(Data { dats: i as i32 });
     }
-    
+
     assert!(window.slice().is_err());
     assert!(!window.filled());
 }
@@ -172,7 +172,7 @@ fn test_multiple_rewinds() {
 #[test]
 fn test_big_size() {
     const SIZE: usize = 128;
-    const CAPACITY: usize = 8*SIZE;
+    const CAPACITY: usize = 8 * SIZE;
 
     fn get_sliding_window() -> SlidingWindow<UnsafeArrayStorage<Data, SIZE, CAPACITY>, Data> {
         window_type::new_with_unsafe_array_storage()
@@ -192,11 +192,10 @@ fn test_big_size() {
     }
 }
 
-
 #[test]
 fn test_small_size() {
     const SIZE: usize = 2;
-    const CAPACITY: usize = 4*SIZE;
+    const CAPACITY: usize = 4 * SIZE;
 
     fn get_sliding_window() -> SlidingWindow<UnsafeArrayStorage<Data, SIZE, CAPACITY>, Data> {
         window_type::new_with_unsafe_array_storage()
@@ -322,7 +321,7 @@ fn test_slice() {
     assert_eq!(slice[3].dats, 0);
 }
 
-#[test] 
+#[test]
 fn test_first_element_sliding() {
     let mut window = get_sliding_window();
 
@@ -336,7 +335,7 @@ fn test_first_element_sliding() {
     window.push(Data { dats: 5 });
     assert_eq!(window.first().unwrap().dats, 2);
 
-    window.push(Data { dats: 6 }); 
+    window.push(Data { dats: 6 });
     assert_eq!(window.first().unwrap().dats, 3);
 }
 
@@ -466,16 +465,16 @@ fn test_arr_err() {
 #[test]
 fn test_push_when_full() {
     let mut window = get_sliding_window();
-    
+
     // Fill the window completely
-    for i in 0..CAPACITY+SIZE {
+    for i in 0..CAPACITY + SIZE {
         window.push(Data { dats: i as i32 });
     }
     assert!(window.filled());
 
     // Add one more element, which should trigger rewind
     window.push(Data { dats: 42 });
-    
+
     // Verify the window still contains SIZE elements
     let slice: [Data; SIZE] = window.arr().unwrap();
     assert_eq!(slice.len(), SIZE);
