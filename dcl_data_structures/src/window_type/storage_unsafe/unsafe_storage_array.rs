@@ -1,17 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
-use crate::prelude::WindowStorage;
-use std::mem::align_of;
 
-const ERR_EMPTY: &str = "Array is empty. Add some elements to the array first";
-const ERR_NOT_FILLED: &str = "Array is not yet filled. Add some elements to the array first";
+use crate::window_type::WindowStorage;
 
-/// High-performance array-based storage using unsafe operations
-///
-/// # Implementation Notes
-/// - Uses 64-byte alignment for cache optimization
-/// - Maintains cached array pointer for fast access
-/// - Implements optimized memory operations for 4+ byte types
 #[cfg(feature = "unsafe")]
 #[repr(C, align(64))]
 #[derive(Debug)]
@@ -42,7 +33,6 @@ where
     #[inline(always)]
     pub fn new() -> Self {
         assert!(CAPACITY > SIZE, "CAPACITY must be greater than SIZE");
-        assert!(align_of::<T>() >= 4, "Type must be at least 4-byte aligned");
         let mut storage = Self {
             arr: [T::default(); CAPACITY],
             ptr: std::ptr::null_mut(),
@@ -73,7 +63,7 @@ where
     #[inline(always)]
     unsafe fn rewind(&mut self) {
         // Use optimized copy for larger types
-        if std::mem::size_of::<T>() >= 4 && align_of::<T>() >= 4 {
+        if std::mem::size_of::<T>() >= 4 {
             let src = self.ptr.add(self.head);
             let dst = self.ptr;
 
@@ -161,7 +151,7 @@ where
     #[inline(always)]
     fn first(&self) -> Result<T, String> {
         if self.tail == 0 {
-            return Err(ERR_EMPTY.to_string());
+            return Err("Array is empty. Add some elements to the array first".to_string());
         }
 
         unsafe {
@@ -184,7 +174,7 @@ where
     #[inline(always)]
     fn last(&self) -> Result<T, String> {
         if !self.filled() {
-            return Err(ERR_NOT_FILLED.to_string());
+            return Err("Array is not yet filled. Add some elements to the array first".to_string());
         }
 
         unsafe { Ok(*self.ptr.add(self.tail - 1)) }

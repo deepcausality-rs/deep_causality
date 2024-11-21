@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
-use crate::prelude::WindowStorage;
+
+use crate::window_type::WindowStorage;
 
 /// An unsafe but highly optimized sliding window implementation using a vector as the underlying storage.
 ///

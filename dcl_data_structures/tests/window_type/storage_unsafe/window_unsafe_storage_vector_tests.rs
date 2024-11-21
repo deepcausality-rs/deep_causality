@@ -1,28 +1,33 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
+#[cfg(feature = "unsafe")]
 use dcl_data_structures::prelude::{window_type, SlidingWindow, UnsafeVectorStorage};
 
 // Maximum number of elements held in the sliding window.
-const SIZE: usize = 4;
+// const SIZE: usize = 4;
 // Multiplier to calculate capacity as size * multiple
-const MULT: usize = 12;
+// const MULT: usize = 12;
 
 #[derive(Default, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Data {
     dats: i32,
 }
 
+#[cfg(feature = "unsafe")]
 fn get_sliding_window() -> SlidingWindow<UnsafeVectorStorage<Data>, Data> {
-    window_type::new_with_unsafe_vector_storage(SIZE, MULT)
+    window_type::new_with_unsafe_vector_storage(4, 12)
 }
 
+#[cfg(feature = "unsafe")]
 #[test]
 fn test_new() {
     let window = get_sliding_window();
     assert!(window.empty());
-    assert_eq!(window.size(), SIZE);
+    assert_eq!(window.size(), 4);
 }
 
+#[cfg(feature = "unsafe")]
 #[test]
 fn test_empty() {
     let d1 = Data { dats: 0 };
@@ -30,14 +35,15 @@ fn test_empty() {
     assert!(window.empty());
 
     window.push(d1);
-    assert_eq!(window.size(), SIZE);
+    assert_eq!(window.size(), 4);
     assert!(!window.empty());
 }
 
+#[cfg(feature = "unsafe")]
 #[test]
 fn test_push() {
     let mut window = get_sliding_window();
-    assert_eq!(window.size(), SIZE);
+    assert_eq!(window.size(), 4);
     assert!(!window.filled());
     assert!(window.empty());
 
@@ -47,13 +53,14 @@ fn test_push() {
     assert!(!window.empty());
 }
 
+#[cfg(feature = "unsafe")]
 #[test]
 fn test_filled() {
     let d = Data { dats: 0 };
     let mut window = get_sliding_window();
-    assert_eq!(window.size(), SIZE);
+    assert_eq!(window.size(), 4);
 
-    assert_eq!(window.size(), SIZE);
+    assert_eq!(window.size(), 4);
     assert!(!window.filled());
 
     window.push(d);
@@ -89,11 +96,12 @@ fn test_filled() {
     assert!(window.filled());
 }
 
+#[cfg(feature = "unsafe")]
 #[test]
 fn test_first() {
     let mut window = get_sliding_window();
-    assert_eq!(window.size(), SIZE);
-    assert_eq!(window.size(), SIZE);
+    assert_eq!(window.size(), 4);
+    assert_eq!(window.size(), 4);
     assert!(!window.filled());
 
     let res = window.first();
@@ -135,11 +143,12 @@ fn test_first() {
     assert_eq!(data.dats, 4);
 }
 
+#[cfg(feature = "unsafe")]
 #[test]
 fn test_last() {
     let mut window = get_sliding_window();
-    assert_eq!(window.size(), SIZE);
-    assert_eq!(window.size(), SIZE);
+    assert_eq!(window.size(), 4);
+    assert_eq!(window.size(), 4);
     assert!(!window.filled());
 
     let res = window.last();
@@ -168,11 +177,12 @@ fn test_last() {
     assert_eq!(data.dats, 42);
 }
 
+#[cfg(feature = "unsafe")]
 #[test]
 fn test_slice() {
     let mut window = get_sliding_window();
-    assert_eq!(window.size(), SIZE);
-    assert_eq!(window.size(), SIZE);
+    assert_eq!(window.size(), 4);
+    assert_eq!(window.size(), 4);
     assert!(!window.filled());
 
     let d = Data { dats: 0 };
@@ -186,7 +196,7 @@ fn test_slice() {
     window.push(d);
 
     let slice = window.slice().unwrap();
-    assert_eq!(slice.len(), SIZE);
+    assert_eq!(slice.len(), 4);
 
     assert_eq!(slice[0].dats, 0);
     assert_eq!(slice[1].dats, 0);
@@ -194,65 +204,69 @@ fn test_slice() {
     assert_eq!(slice[3].dats, 42);
 }
 
+#[cfg(feature = "unsafe")]
 #[test]
 fn test_slice_err() {
     let window = get_sliding_window();
-    assert_eq!(window.size(), SIZE);
+    assert_eq!(window.size(), 4);
     assert!(!window.filled());
 
     let res = window.slice();
     assert!(res.is_err());
 }
 
+#[cfg(feature = "unsafe")]
 #[test]
 fn test_rewind_behavior() {
     let mut window = get_sliding_window();
 
     // Fill the window
-    for i in 0..SIZE {
+    for i in 0..4 {
         window.push(Data { dats: i as i32 });
     }
     assert!(window.filled());
 
     // Push more elements to test rewind
-    for i in SIZE..(SIZE * 2) {
+    for i in 4..(4 * 2) {
         window.push(Data { dats: i as i32 });
     }
 
-    // Verify the window contains the latest SIZE elements
+    // Verify the window contains the latest 4 elements
     let slice = window.slice().unwrap();
-    assert_eq!(slice.len(), SIZE);
-    let start = SIZE * 2 - SIZE;
+    assert_eq!(slice.len(), 4);
+    let start = (4 * 2) - 4;
     for (i, item) in slice.iter().enumerate() {
         assert_eq!(item.dats, (start + i) as i32);
     }
 
     // Test first and last elements
     assert_eq!(window.first().unwrap().dats, start as i32);
-    assert_eq!(window.last().unwrap().dats, (SIZE * 2 - 1) as i32);
+    assert_eq!(window.last().unwrap().dats, (4 * 2 - 1) as i32);
 }
 
+#[cfg(feature = "unsafe")]
 #[test]
 fn test_sequential_push() {
     let mut window = get_sliding_window();
 
     // Test sequential pushes and verify window state
-    for i in 0..SIZE * 2 {
+    for i in 0..(4 * 2) {
         window.push(Data { dats: i as i32 });
 
-        if i < SIZE - 1 {
+        if i < 4 - 1 {
             assert!(!window.filled());
             assert_eq!(window.first().unwrap().dats, 0);
             assert!(window.last().is_err());
         } else {
             assert!(window.filled());
             let first = window.first().unwrap();
-            assert_eq!(first.dats, (i + 1 - SIZE) as i32);
+            assert_eq!(first.dats, (i + 1 - 4) as i32);
             assert_eq!(window.last().unwrap().dats, i as i32);
         }
     }
 }
 
+#[cfg(feature = "unsafe")]
 #[test]
 fn test_edge_cases() {
     let mut window = get_sliding_window();
@@ -269,12 +283,12 @@ fn test_edge_cases() {
     assert!(window.slice().is_err()); // Window not filled yet
 
     // Fill the window
-    for _ in 1..SIZE {
+    for _ in 1..4 {
         window.push(Data { dats: 42 });
     }
     assert!(window.filled());
     assert!(window.slice().is_ok());
-    assert_eq!(window.slice().unwrap().len(), SIZE);
+    assert_eq!(window.slice().unwrap().len(), 4);
 
     // Test maximum value
     window.push(Data { dats: i32::MAX });
@@ -287,31 +301,33 @@ fn test_edge_cases() {
     assert_eq!(window.last().unwrap().dats, i32::MIN);
 }
 
+#[cfg(feature = "unsafe")]
 #[test]
 fn test_rapid_pushes() {
     let mut window = get_sliding_window();
 
     // Perform rapid pushes
-    for i in 0..SIZE * 3 {
+    for i in 0..(4 * 3) {
         window.push(Data { dats: i as i32 });
     }
 
     // Verify final state
     assert!(window.filled());
     let slice = window.slice().unwrap();
-    assert_eq!(slice.len(), SIZE);
+    assert_eq!(slice.len(), 4);
 
-    // Verify the contents are the last SIZE elements
-    let start = (SIZE * 3) - SIZE;
+    // Verify the contents are the last 4 elements
+    let start = (4 * 3) - 4;
     for (i, item) in slice.iter().enumerate() {
         assert_eq!(item.dats, (start + i) as i32);
     }
 }
 
+#[cfg(feature = "unsafe")]
 #[test]
 fn test_vec() {
     let mut window = get_sliding_window();
-    assert_eq!(window.size(), SIZE);
+    assert_eq!(window.size(), 4);
     assert!(!window.filled());
 
     let d = Data { dats: 0 };
@@ -325,7 +341,7 @@ fn test_vec() {
     window.push(d);
 
     let vec = window.vec().unwrap();
-    assert_eq!(vec.len(), SIZE);
+    assert_eq!(vec.len(), 4);
 
     assert_eq!(vec[0].dats, 0);
     assert_eq!(vec[1].dats, 0);
@@ -333,20 +349,22 @@ fn test_vec() {
     assert_eq!(vec[3].dats, 42);
 }
 
+#[cfg(feature = "unsafe")]
 #[test]
 fn test_vec_err() {
     let window = get_sliding_window();
-    assert_eq!(window.size(), SIZE);
+    assert_eq!(window.size(), 4);
     assert!(!window.filled());
 
     let res = window.vec();
     assert!(res.is_err());
 }
 
+#[cfg(feature = "unsafe")]
 #[test]
 fn test_arr() {
     let mut window = get_sliding_window();
-    assert_eq!(window.size(), SIZE);
+    assert_eq!(window.size(), 4);
     assert!(!window.filled());
 
     let d = Data { dats: 0 };
@@ -359,8 +377,8 @@ fn test_arr() {
     let d = Data { dats: 42 };
     window.push(d);
 
-    let arr: [Data; SIZE] = window.arr().unwrap();
-    assert_eq!(arr.len(), SIZE);
+    let arr: [Data; 4] = window.arr().unwrap();
+    assert_eq!(arr.len(), 4);
 
     assert_eq!(arr[0].dats, 0);
     assert_eq!(arr[1].dats, 0);
@@ -368,12 +386,13 @@ fn test_arr() {
     assert_eq!(arr[3].dats, 42);
 }
 
+#[cfg(feature = "unsafe")]
 #[test]
 fn test_arr_err() {
     let window = get_sliding_window();
-    assert_eq!(window.size(), SIZE);
+    assert_eq!(window.size(), 4);
     assert!(!window.filled());
 
-    let res: Result<[Data; SIZE], String> = window.arr();
+    let res: Result<[Data; 4], String> = window.arr();
     assert!(res.is_err());
 }

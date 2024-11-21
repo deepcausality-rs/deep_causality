@@ -2,8 +2,15 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use criterion::{black_box, criterion_group, BenchmarkId, Criterion};
+
+#[cfg(feature = "unsafe")]
 use dcl_data_structures::prelude::{
     ArrayStorage, UnsafeArrayStorage, UnsafeVectorStorage, VectorStorage, WindowStorage,
+};
+
+#[cfg(not(feature = "unsafe"))]
+use dcl_data_structures::prelude::{
+    ArrayStorage, VectorStorage, WindowStorage,
 };
 
 const SIZE: usize = 4;
@@ -81,6 +88,7 @@ fn array_operations(c: &mut Criterion) {
 //
 // Unsafe ArrayStorage
 //
+#[cfg(feature = "unsafe")]
 fn unsafe_array_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("unsafe_array_operations");
 
@@ -192,6 +200,7 @@ fn vector_operations(c: &mut Criterion) {
 //
 // Unsafe VectorStorage
 //
+#[cfg(feature = "unsafe")]
 fn unsafe_vector_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("unsafe_vector_operations");
 
@@ -232,8 +241,16 @@ fn unsafe_vector_operations(c: &mut Criterion) {
     group.finish();
 }
 
+#[cfg(feature = "unsafe")]
 criterion_group! {
     name = window_impl_comp;
     config = Criterion::default().sample_size(100);
-    targets = array_operations, unsafe_array_operations, vector_operations, unsafe_vector_operations,
+    targets = array_operations, unsafe_array_operations, vector_operations, unsafe_vector_operations
+}
+
+#[cfg(not(feature = "unsafe"))]
+criterion_group! {
+    name = window_impl_comp;
+    config = Criterion::default().sample_size(100);
+    targets = array_operations, vector_operations
 }
