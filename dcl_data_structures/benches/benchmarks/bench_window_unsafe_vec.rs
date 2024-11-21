@@ -3,6 +3,8 @@
 #[cfg(feature = "unsafe")]
 use crate::benchmarks::fields::SIZE;
 #[cfg(feature = "unsafe")]
+use crate::benchmarks::fields::MULT;
+#[cfg(feature = "unsafe")]
 use criterion::criterion_group;
 #[cfg(feature = "unsafe")]
 use criterion::Criterion;
@@ -16,7 +18,7 @@ pub struct Data {
 
 #[cfg(feature = "unsafe")]
 fn get_sliding_window() -> SlidingWindow<UnsafeVectorStorage<Data>, Data> {
-    window_type::new_with_unsafe_vector_storage(SIZE, 1)
+    window_type::new_with_unsafe_vector_storage(SIZE, MULT)
 }
 
 #[cfg(feature = "unsafe")]

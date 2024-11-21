@@ -10,6 +10,7 @@ use dcl_data_structures::prelude::{window_type, SlidingWindow, UnsafeArrayStorag
 
 #[cfg(feature = "unsafe")]
 use crate::benchmarks::fields::SIZE;
+use crate::benchmarks::fields::CAPACITY;
 
 #[derive(Default, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Data {
@@ -17,7 +18,7 @@ pub struct Data {
 }
 
 #[cfg(feature = "unsafe")]
-fn get_sliding_window() -> SlidingWindow<UnsafeArrayStorage<Data, SIZE, 2>, Data> {
+fn get_sliding_window() -> SlidingWindow<UnsafeArrayStorage<Data, SIZE, CAPACITY>, Data> {
     window_type::new_with_unsafe_array_storage()
 }
 
