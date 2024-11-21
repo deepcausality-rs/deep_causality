@@ -9,9 +9,7 @@ use dcl_data_structures::prelude::{
 };
 
 #[cfg(not(feature = "unsafe"))]
-use dcl_data_structures::prelude::{
-    ArrayStorage, VectorStorage, WindowStorage,
-};
+use dcl_data_structures::prelude::{ArrayStorage, VectorStorage, WindowStorage};
 
 const SIZE: usize = 4;
 const CAPACITY: usize = 1200;

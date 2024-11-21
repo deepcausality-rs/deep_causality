@@ -78,8 +78,9 @@ where
             self.vec[self.tail] = value;
             self.tail += 1;
             if self.tail - self.head > self.size {
-                    self.head += 1;
-                }            return;
+                self.head += 1;
+            }
+            return;
         }
 
         // Slow path: rewind needed

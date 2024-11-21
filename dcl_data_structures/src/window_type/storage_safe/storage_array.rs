@@ -87,7 +87,7 @@ where
     #[inline(always)]
     fn push(&mut self, value: T) {
         // Rewind if there's not enough space for the next element
-        if self.tail + 1 >= CAPACITY{
+        if self.tail + 1 >= CAPACITY {
             self.rewind();
         }
 

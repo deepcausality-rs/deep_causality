@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
-
-use crate::window_type::WindowStorage;
+#[cfg(feature = "unsafe")]
+use crate::prelude::WindowStorage;
 
 #[cfg(feature = "unsafe")]
 #[repr(C, align(64))]
@@ -174,7 +174,9 @@ where
     #[inline(always)]
     fn last(&self) -> Result<T, String> {
         if !self.filled() {
-            return Err("Array is not yet filled. Add some elements to the array first".to_string());
+            return Err(
+                "Array is not yet filled. Add some elements to the array first".to_string(),
+            );
         }
 
         unsafe { Ok(*self.ptr.add(self.tail - 1)) }
