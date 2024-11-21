@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
-use dcl_data_structures::prelude::{window_type, SlidingWindow, VectorStorage};
+use dcl_data_structures::prelude::{window_type, SlidingWindow, VectorStorage, WindowStorage};
 
 // Maximum number of elements held in the sliding window.
 const SIZE: usize = 4;
@@ -376,4 +376,122 @@ fn test_arr_err() {
 
     let res: Result<[Data; SIZE], String> = window.arr();
     assert!(res.is_err());
+}
+
+#[test]
+fn test_push_boundary_conditions() {
+    let mut storage = VectorStorage::<i32>::new(2, 2);
+    
+    // Test pushing values and checking last
+    for i in 0..2 {
+        storage.push(i);
+        // last() should return error until window is filled
+        if i < 1 {
+            assert!(storage.last().is_err());
+        } else {
+            assert_eq!(storage.last().unwrap(), i);
+        }
+    }
+
+    // Now the window is filled, push more values
+    storage.push(2);
+    assert_eq!(storage.vec().unwrap(), vec![1, 2]);
+
+    storage.push(3);
+    assert_eq!(storage.vec().unwrap(), vec![2, 3]);
+
+    storage.push(4);
+    assert_eq!(storage.vec().unwrap(), vec![2, 3, 4]);
+
+    storage.push(5);
+    assert_eq!(storage.vec().unwrap(), vec![3, 4, 5]);
+}
+
+#[test]
+fn test_error_conditions() {
+    let mut storage = VectorStorage::<i32>::new(2, 2);
+
+    // Test empty storage conditions
+    assert!(storage.first().is_err());
+    assert!(storage.last().is_err());
+    assert!(storage.vec().is_err());
+
+    // Add one element
+    storage.push(1);
+    assert_eq!(storage.first().unwrap(), 1); // first() works with any elements
+    assert!(storage.last().is_err()); // last() requires window to be filled
+    assert_eq!(storage.vec().is_err(), true);
+
+    // Add second element to fill the window
+    storage.push(2);
+    assert_eq!(storage.first().unwrap(), 1);
+    assert_eq!(storage.last().unwrap(), 2); // Now last() works as window is filled
+    assert_eq!(storage.vec().unwrap(), vec![1, 2]);
+
+    // Verify error messages
+    let empty_storage = VectorStorage::<i32>::new(2, 2);
+    assert_eq!(
+        empty_storage.first().unwrap_err(),
+        "Vector is empty. Add some elements to the array first"
+    );
+
+    // Add one element to test last() error message
+    let mut partial_storage = VectorStorage::<i32>::new(2, 2);
+    partial_storage.push(1);
+    assert_eq!(
+        partial_storage.last().unwrap_err(),
+        "Vector is not yet filled. Add some elements to the array first"
+    );
+}
+
+#[test]
+fn test_rewind_with_different_sizes() {
+    let sizes = [2, 3, 4, 5];
+    let mults = [2, 3, 4];
+
+    for &size in sizes.iter() {
+        for &mult in mults.iter() {
+            let mut storage = VectorStorage::<i32>::new(size, mult);
+
+            // Fill the storage
+            for i in 0..size {
+                storage.push(i as i32);
+            }
+
+            // Verify the content
+            let expected: Vec<i32> = (0..size).map(|x| x as i32).collect();
+            assert_eq!(storage.vec().unwrap(), expected);
+        }
+    }
+}
+
+#[test]
+fn test_performance_scaling() {
+    use std::time::Instant;
+    
+    // Test with different capacity multipliers
+    let sizes = [100, 1000, 10000];
+    let multipliers = [2, 4, 8];
+    
+    for &size in &sizes {
+        for &mult in &multipliers {
+            let mut storage = VectorStorage::<i32>::new(size, mult);
+            let start = Instant::now();
+            
+            // Push elements up to capacity
+            for i in 0..size * mult {
+                storage.push(i as i32);
+            }
+            
+            let duration = start.elapsed();
+            println!(
+                "Size: {}, Multiplier: {}, Duration: {:?}",
+                size, mult, duration
+            );
+            
+            // Verify correctness
+            assert_eq!(storage.last().unwrap(), ((size * mult - 1) as i32));
+            assert!(storage.filled());
+        }
+    }
 }
