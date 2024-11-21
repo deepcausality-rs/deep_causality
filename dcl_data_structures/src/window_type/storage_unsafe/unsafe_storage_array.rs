@@ -12,6 +12,7 @@ const ERR_NOT_FILLED: &str = "Array is not yet filled. Add some elements to the 
 /// - Uses 64-byte alignment for cache optimization
 /// - Maintains cached array pointer for fast access
 /// - Implements optimized memory operations for 4+ byte types
+#[cfg(feature = "unsafe")]
 #[repr(C, align(64))]
 #[derive(Debug)]
 pub struct UnsafeArrayStorage<T, const SIZE: usize, const CAPACITY: usize>
@@ -26,6 +27,7 @@ where
     tail: usize,
 }
 
+#[cfg(feature = "unsafe")]
 impl<T, const SIZE: usize, const CAPACITY: usize> UnsafeArrayStorage<T, SIZE, CAPACITY>
 where
     T: PartialEq + Copy + Default,
@@ -102,6 +104,7 @@ where
     }
 }
 
+#[cfg(feature = "unsafe")]
 impl<T, const SIZE: usize, const CAPACITY: usize> Default for UnsafeArrayStorage<T, SIZE, CAPACITY>
 where
     T: PartialEq + Copy + Default,
@@ -114,6 +117,7 @@ where
     }
 }
 
+#[cfg(feature = "unsafe")]
 impl<T, const SIZE: usize, const CAPACITY: usize> WindowStorage<T>
     for UnsafeArrayStorage<T, SIZE, CAPACITY>
 where

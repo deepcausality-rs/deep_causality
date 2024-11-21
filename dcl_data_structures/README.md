@@ -51,8 +51,13 @@ boost over tensors.
 
 1) Zero dependencies.
 2) Zero cost abstraction.
-3) Zero unsafe by default. There are unsafe implementations, but you have to enable it.
+3) Zero unsafe by default. Unsafe implementations are available through the `unsafe` feature flag.
 
+To enable unsafe implementations, add this to your `Cargo.toml`:
+```toml
+[dependencies]
+dcl_data_structures = { version = "0.4.7", features = ["unsafe"] }
+```
 
 # Performance:
 
@@ -92,7 +97,7 @@ cargo add dcl_data_structures
 Alternatively, add the following to your Cargo.toml
 
 ```toml
-dcl_data_structures = "0.4.2"
+dcl_data_structures = "0.4.7"
 ```
 
 ## 📚 Docs
@@ -115,7 +120,7 @@ dcl_data_structures = "0.4.2"
 * [Examples](examples/sliding_window.rs)
 * [Test](tests/window_type)
 
-## 🙏 Credits
+## 🙏 Prior Art
 
 The project took inspiration from:
 

@@ -18,6 +18,7 @@ use crate::prelude::WindowStorage;
 /// - Pre-allocated uninitialized memory
 /// - Bounds-check elimination where safe
 /// - Cache-line alignment for better CPU cache utilization
+#[cfg(feature = "unsafe")]
 #[repr(align(64))]
 #[derive(Debug)]
 pub struct UnsafeVectorStorage<T>
@@ -31,6 +32,7 @@ where
     capacity: usize,
 }
 
+#[cfg(feature = "unsafe")]
 impl<T> UnsafeVectorStorage<T>
 where
     T: PartialEq + Copy + Default,
@@ -65,6 +67,7 @@ where
     }
 }
 
+#[cfg(feature = "unsafe")]
 impl<T> WindowStorage<T> for UnsafeVectorStorage<T>
 where
     T: PartialEq + Copy + Default,

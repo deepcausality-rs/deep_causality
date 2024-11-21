@@ -11,13 +11,14 @@ documentation = "https://docs.rs/deep_causality"
 categories = ["data-structures", "science"]
 keywords = ["data-structures", "sliding-window", "grid-array"]
 
+[features]
+default = []
+unsafe = [] # Enable unsafe implementations
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
 rand = { version = "0.8", features = ["small_rng"] }
 
-
 [[bench]]
 name = "bench_main"
 harness = false
-
