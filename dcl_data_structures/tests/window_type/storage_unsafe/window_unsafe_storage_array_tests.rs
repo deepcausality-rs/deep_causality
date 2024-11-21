@@ -4,7 +4,7 @@
 use dcl_data_structures::window_type;
 use dcl_data_structures::window_type::SlidingWindow;
 
-use dcl_data_structures::prelude::UnsafeArrayStorage;
+use dcl_data_structures::prelude::{UnsafeArrayStorage, WindowStorage};
 
 const SIZE: usize = 4;
 const CAPACITY: usize = 1200;
@@ -27,6 +27,37 @@ fn test_empty() {
     window.push(d1);
     assert_eq!(window.size(), SIZE);
     assert!(!window.empty());
+}
+
+#[test]
+fn test_partial_fill() {
+    let mut window = get_sliding_window();
+    
+    // Fill half of the window
+    for i in 0..SIZE/2 {
+        window.push(Data { dats: i as i32 });
+    }
+    
+    assert!(window.slice().is_err());
+    assert!(!window.filled());
+}
+
+#[test]
+fn test_array_storage_default() {
+    const SIZE: usize = 3;
+    const CAPACITY: usize = 6;
+    let storage = UnsafeArrayStorage::<i32, SIZE, CAPACITY>::default();
+    assert_eq!(storage.size(), SIZE);
+    assert_eq!(storage.tail(), 0);
+    assert!(storage.get_slice().is_empty());
+}
+
+#[test]
+#[should_panic(expected = "CAPACITY must be greater than SIZE")]
+fn test_array_storage_invalid_capacity() {
+    const SIZE: usize = 4;
+    const CAPACITY: usize = 3; // Invalid: CAPACITY < SIZE
+    let _storage = UnsafeArrayStorage::<i32, SIZE, CAPACITY>::new();
 }
 
 #[test]
@@ -243,6 +274,24 @@ fn test_slice() {
     assert_eq!(slice[1].dats, 0);
     assert_eq!(slice[2].dats, 42);
     assert_eq!(slice[3].dats, 0);
+}
+
+#[test] 
+fn test_first_element_sliding() {
+    let mut window = get_sliding_window();
+
+    window.push(Data { dats: 1 });
+    window.push(Data { dats: 2 });
+    window.push(Data { dats: 3 });
+    window.push(Data { dats: 4 });
+
+    assert_eq!(window.first().unwrap().dats, 1);
+
+    window.push(Data { dats: 5 });
+    assert_eq!(window.first().unwrap().dats, 2);
+
+    window.push(Data { dats: 6 }); 
+    assert_eq!(window.first().unwrap().dats, 3);
 }
 
 #[test]
