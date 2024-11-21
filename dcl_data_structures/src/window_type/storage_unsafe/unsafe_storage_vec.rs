@@ -37,26 +37,18 @@ impl<T> UnsafeVectorStorage<T>
 where
     T: PartialEq + Copy + Default,
 {
-    /// Creates a new UnsafeVectorStorage with the specified size and capacity multiplier.
+    /// Creates a new UnsafeVectorStorage with the given size and capacity multiple.
     ///
     /// # Arguments
-    /// * `size` - The maximum number of elements that can be viewed in the sliding window at once
-    /// * `multiple` - The capacity multiplier. Total capacity will be size * multiple
+    /// * `size` - The size of the sliding window
+    /// * `multiple` - The capacity multiplier for the underlying vector
     ///
-    /// # Returns
-    /// A new instance of UnsafeVectorStorage
-    ///
-    /// # Implementation Notes
-    /// - Pre-allocates memory for the entire capacity upfront
-    /// - Uses uninitialized memory for better performance
-    /// - Aligns the structure to cache line boundaries (64 bytes)
+    /// # Safety
+    /// This function initializes the vector with default values to ensure memory safety.
     #[inline(always)]
     pub fn new(size: usize, multiple: usize) -> Self {
         let capacity = size * multiple;
-        let mut vec = Vec::with_capacity(capacity);
-        unsafe {
-            vec.set_len(capacity);
-        }
+        let vec = vec![T::default(); capacity];
         Self {
             vec,
             size,
