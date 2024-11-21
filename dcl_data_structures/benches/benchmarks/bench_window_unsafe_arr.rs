@@ -3,7 +3,7 @@
 
 #[cfg(feature = "unsafe")]
 use criterion::Criterion;
-
+use criterion::criterion_group;
 #[cfg(feature = "unsafe")]
 use dcl_data_structures::prelude::{window_type, SlidingWindow, UnsafeArrayStorage};
 
