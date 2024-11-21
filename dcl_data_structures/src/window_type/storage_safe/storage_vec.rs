@@ -77,8 +77,9 @@ where
         if self.tail < self.capacity {
             self.vec[self.tail] = value;
             self.tail += 1;
-            self.head += (self.tail - self.head > self.size) as usize;
-            return;
+            if self.tail - self.head > self.size {
+                    self.head += 1;
+                }            return;
         }
 
         // Slow path: rewind needed

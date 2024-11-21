@@ -86,8 +86,8 @@ where
     /// Optimized for the common case with minimal branching
     #[inline(always)]
     fn push(&mut self, value: T) {
-        // Rewind if we're at capacity
-        if self.tail >= CAPACITY {
+        // Rewind if there's not enough space for the next element
+        if self.tail + 1 >= CAPACITY{
             self.rewind();
         }
 
@@ -97,7 +97,7 @@ where
 
         // Update head if window size exceeded
         if self.tail - self.head > self.size {
-            self.head += 1;
+            self.head = self.tail - self.size;
         }
     }
 
@@ -153,6 +153,6 @@ where
     /// Checks if the sliding window is filled to its maximum size
     #[inline(always)]
     fn filled(&self) -> bool {
-        self.tail >= self.size
+        self.tail - self.head >= self.size
     }
 }
