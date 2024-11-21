@@ -12,12 +12,11 @@ pub use crate::grid_type::point::PointIndex;
 pub use crate::grid_type::storage::Storage;
 // window types
 pub use crate::window_type;
+pub use crate::window_type::SlidingWindow;
+
 pub use crate::window_type::storage::WindowStorage;
-// Safe storage impl
 pub use crate::window_type::storage_safe::storage_array::ArrayStorage;
 pub use crate::window_type::storage_safe::storage_vec::VectorStorage;
-// Unsafe storage impl
-pub use crate::window_type::storage_unsafe::unsafe_storage_array::UnsafeArrayStorage;
-pub use crate::window_type::storage_unsafe::unsafe_storage_vec::UnsafeVectorStorage;
 
-pub use crate::window_type::SlidingWindow;
+#[cfg(feature = "unsafe")]
+pub use crate::window_type::storage_unsafe::{UnsafeArrayStorage, UnsafeVectorStorage};

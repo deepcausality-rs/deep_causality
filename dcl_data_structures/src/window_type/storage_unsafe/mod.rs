@@ -1,6 +1,7 @@
-#[cfg(feature = "unsafe")]
+// SPDX-License-Identifier: MIT
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
 pub(crate) mod unsafe_storage_array;
-#[cfg(feature = "unsafe")]
 pub(crate) mod unsafe_storage_vec;
 
 #[cfg(feature = "unsafe")]
