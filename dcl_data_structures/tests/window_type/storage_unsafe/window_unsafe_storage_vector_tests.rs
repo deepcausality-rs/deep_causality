@@ -396,3 +396,29 @@ fn test_arr_err() {
     let res: Result<[Data; 4], String> = window.arr();
     assert!(res.is_err());
 }
+
+#[cfg(feature = "unsafe")]
+#[test]
+fn test_push_beyond_capacity() {
+    let mut window = get_sliding_window();
+    let size = window.size();
+    
+    // Fill up to capacity (size * 12 elements)
+    for i in 0..48 {  // 4 * 12 = 48 (size * mult)
+        window.push(Data { dats: i as i32 });
+    }
+    
+    // Add one more element to trigger rewind
+    window.push(Data { dats: 999 });
+    
+    // Verify the window state after rewind
+    let slice = window.slice().unwrap();
+    assert_eq!(slice.len(), size, "Window should maintain its size of {}", size);
+    assert!(window.filled(), "Window should still be filled after rewind");
+    
+    // After rewind, we should have the last 3 elements before 999 followed by 999
+    assert_eq!(slice[0].dats, 45, "First element should be element 45");
+    assert_eq!(slice[1].dats, 46, "Second element should be element 46");
+    assert_eq!(slice[2].dats, 47, "Third element should be element 47");
+    assert_eq!(slice[3].dats, 999, "Fourth element should be element 999");
+}

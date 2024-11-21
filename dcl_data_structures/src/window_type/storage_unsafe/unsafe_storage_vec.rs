@@ -97,6 +97,7 @@ where
             self.tail = self.size;
             *self.vec.get_unchecked_mut(self.tail) = value;
             self.tail += 1;
+            self.head += (self.tail - self.head > self.size) as usize;
         }
     }
 

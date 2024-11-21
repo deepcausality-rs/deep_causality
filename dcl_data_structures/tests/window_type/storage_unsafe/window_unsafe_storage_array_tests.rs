@@ -173,6 +173,11 @@ fn test_multiple_rewinds() {
 fn test_big_size() {
     const SIZE: usize = 128;
     const CAPACITY: usize = 8*SIZE;
+
+    fn get_sliding_window() -> SlidingWindow<UnsafeArrayStorage<Data, SIZE, CAPACITY>, Data> {
+        window_type::new_with_unsafe_array_storage()
+    }
+
     let mut window = get_sliding_window();
 
     // Perform multiple rewinds
@@ -192,6 +197,11 @@ fn test_big_size() {
 fn test_small_size() {
     const SIZE: usize = 2;
     const CAPACITY: usize = 4*SIZE;
+
+    fn get_sliding_window() -> SlidingWindow<UnsafeArrayStorage<Data, SIZE, CAPACITY>, Data> {
+        window_type::new_with_unsafe_array_storage()
+    }
+
     let mut window = get_sliding_window();
 
     // Perform multiple rewinds
