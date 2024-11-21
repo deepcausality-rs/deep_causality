@@ -4,7 +4,7 @@
 
 [//]: # (---)
 
-# ArrayGrid - A Faster Tensor For Low Dim. Data
+# ArrayGrid - A Faster Tensor For Low Dimensional Data
 
 ArrayGrid is an abstraction over scalars, vectors, and lod dimensional matrices similar in idea to a tensor.
 In contrast to a tensor, an ArrayGrid is limited to low dimensions (1 to 4), only allowing a scalar,
@@ -12,6 +12,79 @@ vector, or matrix type, but all of them are represented as a static fixed-size c
 Fixed-sized arrays allow for several compiler optimizations, including a cache aligned data layout and the removal of
 runtime array boundary checks, because all structural parameters are known upfront, providing a significant
 performance boost over tensors.
+
+
+## Usage
+
+Important details:
+
+* All const generic parameters are requires regardless of which ArrayType you are using
+* To change the ArrayGrid type, just change the enum and your good.
+* There are no array bounds checks past compilation, so you have to ensure PointIndex does not exceed the Array boundaries.
+
+```rust
+use dcl_data_structures::prelude::{ArrayGrid, ArrayType, PointIndex};
+
+// Consts dimensions requires for const generic paramaters
+// Use these to check whether your PointIndex stays within the Array boundaries.
+const WIDTH: usize = 5;
+const HEIGHT: usize = 5;
+const DEPTH: usize = 5;
+const TIME: usize = 5;
+
+pub fn main(){
+    // Make a simple 1D Array of type usize
+    let array_type = ArrayType::Array1D;
+    let ag: ArrayGrid<usize, WIDTH, HEIGHT, DEPTH, TIME> = ArrayGrid::new(array_type);
+
+    // Create a 1D index
+    let p = PointIndex::new1d(1);
+
+    // Store a usize with the point index
+    ag.set(p, 42);
+
+    // Get the usize for the point index
+    let res = ag.get(p);
+    assert_eq!(res, 42);
+    
+    // Make a custom struct 
+    // ArrayGrid requires Copy + Default to store MyStuct
+    #[derive(Debug, Default, Copy, Clone)]
+    struct MyStruct{
+        number: usize,
+        mod_five: bool,
+    }
+    
+    // Make a 4D array aka matrix over x,y,z that stores My struct
+    // Notice, only the ArrayType changes to do that. 
+    let array_type = ArrayType::Array4D;
+    let ag: ArrayGrid<MyStruct, WIDTH, HEIGHT, DEPTH, TIME> = ArrayGrid::new(array_type);
+
+    // Create a new 4D point index where only time varies
+    let idx_t0 = PointIndex::new4d(1, 1, 1, 0);
+    let idx_t1 = PointIndex::new4d(1, 1, 1, 1);
+    let idx_t2 = PointIndex::new4d(1, 1, 1, 2);
+
+    // Create some data for each index 
+    let my_struct_t0 = MyStruct{ number: 23, mod_five: false };
+    let my_struct_t1 = MyStruct{ number: 24, mod_five: false };
+    let my_struct_t2 = MyStruct{ number: 25, mod_five: true };
+
+    // Store data
+    ag.set(idx_t0, my_struct_t0);
+    ag.set(idx_t1, my_struct_t1);
+    ag.set(idx_t2, my_struct_t2);
+
+    // Get data at t2
+    let res = ag.get(idx_t2);
+    
+    // Verify results
+    let exp_number = 25;
+    assert_eq!(res.number, exp_number);
+    let exp_mod = true;
+    assert_eq!(res.mod_five, exp_mod);
+}
+```
 
 ## Problem
 
@@ -377,12 +450,3 @@ a 2D Matrix, then its best to set the remaining const generic values (Depth, Tim
 there is no practical way around this requirement. Another observation is that the ArrayGrid type, once created,
 behaves like any other API with the added bonus of interior mutability.
 
-In terms of performance, it seems that the Rust compiler does an excellent job optimizing away the abstractions
-and generates as close to the metal bytecode as
-possible. [Benchmarks have been written](../benches),
-but frankly these are completely pointless since the test arrays fit in the cache of any modern CPU hence yielding
-absurd throughput and latency results. And that was the entire purpose of the exercise because you do not
-get even remotely these benchmarks results with a Tensor type. Tensors remain an invaluable type for higher dimensional
-data in machine learning. For low dimensional (<5) data in performance critical applications, however,the GridArray
-offers
-an alternative with attractive performance characteristics. 

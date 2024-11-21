@@ -8,7 +8,7 @@ set -o pipefail
 # https://nexte.st/book/installing-from-source.html
 # cargo install cargo-nextest --locked
 
-RUSTFLAGS='-C target-cpu=native' cargo test --doc --release
+FEATURES=unsafe RUSTFLAGS='-C target-cpu=native' cargo test --doc --release
 
 # https://llogiq.github.io/2017/06/01/perf-pitfalls.html
-RUSTFLAGS='-C target-cpu=native' cargo nextest run --release
+FEATURES=unsafe RUSTFLAGS='-C target-cpu=native' cargo nextest run --release

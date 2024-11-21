@@ -6,4 +6,4 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-command cargo build
+FEATURES=unsafe cargo build
