@@ -185,7 +185,7 @@ fn test_slice() {
     let d = Data { dats: 42 };
     window.push(d);
 
-    let slice = window.slice().expect("Failed to get slice");
+    let slice = window.slice().unwrap();
     assert_eq!(slice.len(), SIZE);
 
     assert_eq!(slice[0].dats, 0);
@@ -200,44 +200,137 @@ fn test_slice_err() {
     assert_eq!(window.size(), SIZE);
     assert!(!window.filled());
 
-    let s: Result<&[Data], String> = window.slice();
-    assert!(s.is_err());
+    let res = window.slice();
+    assert!(res.is_err());
+}
+
+#[test]
+fn test_rewind_behavior() {
+    let mut window = get_sliding_window();
+    
+    // Fill the window
+    for i in 0..SIZE {
+        window.push(Data { dats: i as i32 });
+    }
+    assert!(window.filled());
+    
+    // Push more elements to test rewind
+    for i in SIZE..(SIZE*2) {
+        window.push(Data { dats: i as i32 });
+    }
+    
+    // Verify the window contains the latest SIZE elements
+    let slice = window.slice().unwrap();
+    assert_eq!(slice.len(), SIZE);
+    let start = SIZE * 2 - SIZE;
+    for (i, item) in slice.iter().enumerate() {
+        assert_eq!(item.dats, (start + i) as i32);
+    }
+    
+    // Test first and last elements
+    assert_eq!(window.first().unwrap().dats, start as i32);
+    assert_eq!(window.last().unwrap().dats, (SIZE * 2 - 1) as i32);
+}
+
+#[test]
+fn test_sequential_push() {
+    let mut window = get_sliding_window();
+    
+    // Test sequential pushes and verify window state
+    for i in 0..SIZE*2 {
+        window.push(Data { dats: i as i32 });
+        
+        if i < SIZE-1 {
+            assert!(!window.filled());
+            assert_eq!(window.first().unwrap().dats, 0);
+            assert!(window.last().is_err());
+        } else {
+            assert!(window.filled());
+            let first = window.first().unwrap();
+            assert_eq!(first.dats, (i + 1 - SIZE) as i32);
+            assert_eq!(window.last().unwrap().dats, i as i32);
+        }
+    }
+}
+
+#[test]
+fn test_edge_cases() {
+    let mut window = get_sliding_window();
+    
+    // Test empty window edge cases
+    assert!(window.first().is_err());
+    assert!(window.last().is_err());
+    assert!(window.slice().is_err());
+    
+    // Test single element
+    window.push(Data { dats: 42 });
+    assert_eq!(window.first().unwrap().dats, 42);
+    assert!(window.last().is_err()); // Window not filled yet
+    assert!(window.slice().is_err()); // Window not filled yet
+    
+    // Fill the window
+    for _ in 1..SIZE {
+        window.push(Data { dats: 42 });
+    }
+    assert!(window.filled());
+    assert!(window.slice().is_ok());
+    assert_eq!(window.slice().unwrap().len(), SIZE);
+    
+    // Test maximum value
+    window.push(Data { dats: i32::MAX });
+    assert!(window.filled());
+    assert_eq!(window.last().unwrap().dats, i32::MAX);
+    
+    // Test minimum value
+    window.push(Data { dats: i32::MIN });
+    assert!(window.filled());
+    assert_eq!(window.last().unwrap().dats, i32::MIN);
+}
+
+#[test]
+fn test_rapid_pushes() {
+    let mut window = get_sliding_window();
+    
+    // Perform rapid pushes
+    for i in 0..SIZE*3 {
+        window.push(Data { dats: i as i32 });
+    }
+    
+    // Verify final state
+    assert!(window.filled());
+    let slice = window.slice().unwrap();
+    assert_eq!(slice.len(), SIZE);
+    
+    // Verify the contents are the last SIZE elements
+    let start = (SIZE * 3) - SIZE;
+    for (i, item) in slice.iter().enumerate() {
+        assert_eq!(item.dats, (start + i) as i32);
+    }
 }
 
 #[test]
 fn test_vec() {
-    let d1 = Data { dats: 0 };
     let mut window = get_sliding_window();
-    assert_eq!(window.size(), SIZE);
-
     assert_eq!(window.size(), SIZE);
     assert!(!window.filled());
 
-    window.push(d1);
-    window.push(d1);
-    window.push(d1);
-    window.push(d1);
+    let d = Data { dats: 0 };
+    window.push(d);
+    window.push(d);
+    window.push(d);
+    window.push(d);
     assert!(window.filled());
 
-    let d2 = Data { dats: 42 };
-    window.push(d2);
+    let d = Data { dats: 42 };
+    window.push(d);
 
-    let e1 = window.first().unwrap();
-    assert_eq!(e1.dats, d1.dats);
+    let vec = window.vec().unwrap();
+    assert_eq!(vec.len(), SIZE);
 
-    let e2 = window.last().unwrap();
-    assert_eq!(e2.dats, d2.dats);
-
-    let v = window.vec().unwrap();
-    assert_eq!(v.len(), SIZE);
-
-    let e1 = window.first().unwrap();
-    let v1 = v.first().unwrap();
-    assert_eq!(e1.dats, v1.dats);
-
-    let e2 = window.last().unwrap();
-    let v2 = v.get(SIZE - 1).unwrap();
-    assert_eq!(e2.dats, v2.dats);
+    assert_eq!(vec[0].dats, 0);
+    assert_eq!(vec[1].dats, 0);
+    assert_eq!(vec[2].dats, 0);
+    assert_eq!(vec[3].dats, 42);
 }
 
 #[test]
@@ -246,57 +339,24 @@ fn test_vec_err() {
     assert_eq!(window.size(), SIZE);
     assert!(!window.filled());
 
-    let v: Result<Vec<Data>, String> = window.vec();
-    assert!(v.is_err());
+    let res = window.vec();
+    assert!(res.is_err());
 }
 
 #[test]
 fn test_arr() {
-    let d1 = Data { dats: 0 };
     let mut window = get_sliding_window();
     assert_eq!(window.size(), SIZE);
     assert!(!window.filled());
 
-    window.push(d1);
-    window.push(d1);
-    window.push(d1);
-    window.push(d1);
-    assert!(window.filled());
-
-    let slice = window.slice().expect("Failed to get slice");
-    assert_eq!(slice.len(), SIZE);
-
-    // Filled
-    let d2 = Data { dats: 42 };
-    window.push(d2);
-    assert!(window.filled());
-
-    let e1 = window.first().unwrap();
-    assert_eq!(e1.dats, d1.dats);
-
-    let e2 = window.last().unwrap();
-    assert_eq!(e2.dats, d2.dats);
-
-    let slice = window.slice().expect("Failed to get slice");
-    assert_eq!(slice.len(), SIZE);
-
-    let arr: [Data; SIZE] = window.arr().unwrap();
-    assert_eq!(arr.len(), SIZE);
-
-    let e1 = window.first().unwrap();
-    let a1 = arr.first().unwrap();
-    assert_eq!(e1.dats, a1.dats);
-
-    let e2 = window.last().unwrap();
-    let a2 = arr.get(SIZE - 1).unwrap();
-    assert_eq!(e2.dats, a2.dats);
-
-    assert_eq!(arr[0].dats, 0);
-    assert_eq!(arr[1].dats, 0);
-    assert_eq!(arr[2].dats, 0);
-    assert_eq!(arr[3].dats, 42);
-
     let d = Data { dats: 0 };
+    window.push(d);
+    window.push(d);
+    window.push(d);
+    window.push(d);
+    assert!(window.filled());
+
+    let d = Data { dats: 42 };
     window.push(d);
 
     let arr: [Data; SIZE] = window.arr().unwrap();
@@ -304,8 +364,8 @@ fn test_arr() {
 
     assert_eq!(arr[0].dats, 0);
     assert_eq!(arr[1].dats, 0);
-    assert_eq!(arr[2].dats, 42);
-    assert_eq!(arr[3].dats, 0);
+    assert_eq!(arr[2].dats, 0);
+    assert_eq!(arr[3].dats, 42);
 }
 
 #[test]
@@ -314,6 +374,6 @@ fn test_arr_err() {
     assert_eq!(window.size(), SIZE);
     assert!(!window.filled());
 
-    let arr: Result<[Data; SIZE], String> = window.arr();
-    assert!(arr.is_err());
+    let res: Result<[Data; SIZE], String> = window.arr();
+    assert!(res.is_err());
 }

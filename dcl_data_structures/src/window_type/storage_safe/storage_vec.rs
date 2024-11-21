@@ -2,11 +2,18 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 use crate::prelude::WindowStorage;
 
-/// A vector-based sliding window implementation
+/// A highly optimized vector-based sliding window implementation using only safe Rust.
 ///
-/// # Implementation Note
-/// Uses a Vec<T> as the underlying storage mechanism with dynamic resizing capabilities.
-/// The window maintains a head and tail pointer to track the active window region.
+/// # Type Parameters
+/// * `T` - The type of elements stored in the window. Must implement `PartialEq` and `Copy`.
+///
+/// # Performance Optimizations
+/// - Cache line alignment for better CPU cache utilization
+/// - Pre-allocated capacity with default values
+/// - Fast path for common operations
+/// - Efficient memory reuse during rewind
+/// - Branchless arithmetic where possible
+#[repr(align(64))]
 #[derive(Debug)]
 pub struct VectorStorage<T>
 where
@@ -16,26 +23,37 @@ where
     size: usize,
     head: usize,
     tail: usize,
+    capacity: usize,
 }
 
 impl<T> VectorStorage<T>
 where
     T: PartialEq + Copy + Default,
 {
-    /// Creates a new VectorStorage instance with the specified size and multiple.
+    /// Creates a new VectorStorage with pre-allocated capacity.
     ///
-    /// # Args
-    /// * `size` - The size of the sliding window
-    /// * `multiple` - The multiple of the size for the underlying vector capacity
+    /// # Arguments
+    /// * `size` - The maximum number of elements that can be viewed in the sliding window at once
+    /// * `multiple` - The capacity multiplier. Total capacity will be size * multiple
     ///
     /// # Returns
-    /// * `Self` - A new VectorStorage instance
+    /// A new instance of VectorStorage
+    ///
+    /// # Implementation Notes
+    /// - Pre-allocates memory for the entire capacity upfront
+    /// - Initializes with default values to avoid reallocation
+    /// - Aligns the structure to cache line boundaries
+    #[inline(always)]
     pub fn new(size: usize, multiple: usize) -> Self {
+        let capacity = size * multiple;
+        let mut vec = Vec::with_capacity(capacity);
+        vec.resize(capacity, T::default());
         Self {
-            vec: Vec::with_capacity(size * multiple),
+            vec,
             size,
             head: 0,
             tail: 0,
+            capacity,
         }
     }
 }
@@ -44,113 +62,105 @@ impl<T> WindowStorage<T> for VectorStorage<T>
 where
     T: PartialEq + Copy + Default,
 {
-    /// Pushes a new element into the sliding window
+    /// Pushes a new value into the sliding window.
     ///
-    /// # Args
-    /// * `value` - The value to be pushed into the window
+    /// # Arguments
+    /// * `value` - The value to push into the window
     ///
-    /// # Implementation Note
-    /// If the window is full (tail == capacity), it performs a rewind operation using copy_within
-    /// to maintain the sliding window invariant.
+    /// # Implementation Notes
+    /// - Uses a fast path for the common case
+    /// - Employs branchless arithmetic for head updates
+    /// - Efficiently rewinds using copy_within when needed
     #[inline(always)]
     fn push(&mut self, value: T) {
-        // if the array is full, rewind
-        if self.tail > 0 && self.tail == self.vec.capacity() {
-            // rewind
-            self.vec
-                .copy_within(self.head..self.head + self.size - 1, 0);
-            self.head = 0;
-            self.tail = self.size;
+        // Fast path: just append if there's space
+        if self.tail < self.capacity {
+            self.vec[self.tail] = value;
+            self.tail += 1;
+            self.head += (self.tail - self.head > self.size) as usize;
+            return;
         }
 
-        self.vec.push(value); // store the value
-
-        // check if the window is full,
-        if self.tail - self.head > self.size {
-            // if so, move head cursor one position forward
-            self.head += 1;
-        }
-
-        // otherwise increase tail cursor to next position
+        // Slow path: rewind needed
+        self.vec.copy_within(self.head..self.head + self.size, 0);
+        self.head = 0;
+        self.tail = self.size;
+        self.vec[self.tail] = value;
         self.tail += 1;
     }
 
-    /// Returns the first (oldest) element in the sliding window
+    /// Returns the first element in the sliding window.
     ///
     /// # Returns
-    /// * `Ok(T)` - The first element in the window
-    /// * `Err(String)` - If the window is empty
+    /// * `Ok(T)` - The first element if the window is not empty
+    /// * `Err(String)` - An error message if the window is empty
     ///
-    /// # Implementation Note
-    /// Takes into account the window's head position and size to return the correct element
+    /// # Implementation Notes
+    /// - Uses direct indexing for performance
+    /// - Maintains safety through explicit empty check
     #[inline(always)]
     fn first(&self) -> Result<T, String> {
-        if self.tail != 0 {
-            if self.tail > self.size {
-                Ok(self.vec[self.head + 1])
-            } else {
-                Ok(self.vec[self.head])
-            }
-        } else {
-            Err("Vector is empty. Add some elements to the array first".to_string())
+        if self.tail == 0 {
+            return Err("Vector is empty. Add some elements to the array first".to_string());
         }
+        Ok(self.vec[self.head])
     }
 
-    /// Returns the last (newest) element in the sliding window
+    /// Returns the last element in the sliding window.
     ///
     /// # Returns
-    /// * `Ok(T)` - The last element in the window
-    /// * `Err(String)` - If the window is not yet filled
+    /// * `Ok(T)` - The last element if the window is filled
+    /// * `Err(String)` - An error message if the window is not yet filled
     ///
-    /// # Implementation Note
-    /// Uses the tail position to determine the newest element
+    /// # Implementation Notes
+    /// - Uses direct indexing for performance
+    /// - Maintains safety through explicit filled check
     #[inline(always)]
     fn last(&self) -> Result<T, String> {
-        if self.filled() {
-            Ok(self.vec[self.tail - 1])
-        } else {
-            Err("Vector is not yet filled. Add some elements to the array first".to_string())
+        if !self.filled() {
+            return Err("Vector is not yet filled. Add some elements to the array first".to_string());
         }
+        Ok(self.vec[self.tail - 1])
     }
 
-    /// Returns the current tail position of the window
+    /// Returns the current tail position of the sliding window.
     ///
     /// # Returns
-    /// * `usize` - The current tail position
-    ///
-    /// # Implementation Note
-    /// The tail position indicates where the next element will be inserted
+    /// The current tail index
     #[inline(always)]
     fn tail(&self) -> usize {
         self.tail
     }
 
-    /// Returns the size of the sliding window
+    /// Returns the size of the sliding window.
     ///
     /// # Returns
-    /// * `usize` - The configured size of the sliding window
-    ///
-    /// # Implementation Note
-    /// This is the fixed size specified during construction
+    /// The maximum number of elements that can be viewed in the window at once
     #[inline(always)]
     fn size(&self) -> usize {
         self.size
     }
 
-    /// Returns a slice of the current window contents
+    /// Returns a slice containing all current elements in the sliding window.
     ///
     /// # Returns
-    /// * `&[T]` - A slice containing the current window elements
+    /// A slice containing the current elements from head to tail
     ///
-    /// # Implementation Note
-    /// Returns a slice from the underlying vector based on head position and size
+    /// # Implementation Notes
+    /// - Uses direct slice indexing for performance
+    /// - Maintains safety through proper bounds management
     #[inline(always)]
     fn get_slice(&self) -> &[T] {
-        if self.tail > self.size {
-            // Adjust offset
-            &self.vec[self.head + 1..self.tail]
-        } else {
-            &self.vec[self.head..self.tail]
-        }
+        &self.vec[self.head..self.tail]
+    }
+
+    /// Checks if the sliding window is filled to its maximum size.
+    ///
+    /// # Returns
+    /// * `true` - If the window contains the maximum number of elements
+    /// * `false` - If the window is not yet filled to capacity
+    #[inline(always)]
+    fn filled(&self) -> bool {
+        self.tail >= self.size
     }
 }
