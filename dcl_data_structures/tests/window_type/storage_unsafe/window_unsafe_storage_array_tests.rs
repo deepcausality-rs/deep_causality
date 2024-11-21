@@ -170,6 +170,42 @@ fn test_multiple_rewinds() {
 }
 
 #[test]
+fn test_big_size() {
+    const SIZE: usize = 128;
+    const CAPACITY: usize = 8*SIZE;
+    let mut window = get_sliding_window();
+
+    // Perform multiple rewinds
+    for i in 0..CAPACITY * 3 {
+        let d = Data { dats: i as i32 };
+
+        window.push(d);
+        if i >= SIZE {
+            let slice = window.slice().unwrap();
+            assert_eq!(slice.len(), SIZE);
+        }
+    }
+}
+
+
+#[test]
+fn test_small_size() {
+    const SIZE: usize = 2;
+    const CAPACITY: usize = 4*SIZE;
+    let mut window = get_sliding_window();
+
+    // Perform multiple rewinds
+    for i in 0..CAPACITY * 3 {
+        let d = Data { dats: i as i32 };
+
+        window.push(d);
+        if i >= SIZE {
+            let slice = window.slice().unwrap();
+            assert_eq!(slice.len(), SIZE);
+        }
+    }
+}
+#[test]
 fn test_rewind_at_capacity_boundary() {
     const SIZE: usize = 4;
     const CAPACITY: usize = 8;
