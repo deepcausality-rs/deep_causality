@@ -72,9 +72,10 @@ where
     /// - Falls back to standard copy for smaller types
     #[inline(always)]
     unsafe fn rewind(&mut self) {
-        // Use optimized copy for larger types
-        if std::mem::size_of::<T>() >= 4 && align_of::<T>() >= 4 {
-            let src = self.ptr.add(self.head);
+        self.head = 0;
+        self.tail = self.size;
+        debug_assert!(self.tail <= CAPACITY, "Tail position overflow detected");
+    }
             let dst = self.ptr;
 
             // Copy in chunks of 16 bytes when possible
