@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.5.2...ultragraph-v0.5.3) - 2024-11-21
+
+### Other
+
+- update Cargo.lock dependencies
+
 ## [0.5.2](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.5.1...ultragraph-v0.5.2) - 2024-01-14
 
 ### Other

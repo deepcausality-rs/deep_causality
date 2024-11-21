@@ -431,16 +431,16 @@ checksum = "7a81dae078cea95a014a339291cec439d2f232ebe854a9d672b796c6afafa9b7"
 [[package]]
 name = "dcl_data_structures"
 version = "0.4.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "068316d162870187e81178c217c07b9e65a449afb15d7a564f98c3e4ada24647"
+
+[[package]]
+name = "dcl_data_structures"
+version = "0.5.0"
 dependencies = [
  "criterion",
  "rand",
 ]
-
-[[package]]
-name = "dcl_data_structures"
-version = "0.4.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "068316d162870187e81178c217c07b9e65a449afb15d7a564f98c3e4ada24647"
 
 [[package]]
 name = "deep_causality"
@@ -448,24 +448,26 @@ version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e3a132c3ce4bb6409d1f43157f03c9c37335bfa959df5491cd06b2c2e79bdcd"
 dependencies = [
- "dcl_data_structures 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "deep_causality_macros 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "ultragraph 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "deep_causality"
-version = "0.7.0"
-dependencies = [
- "criterion",
  "dcl_data_structures 0.4.7",
  "deep_causality_macros 0.4.8",
  "ultragraph 0.5.2",
 ]
 
 [[package]]
+name = "deep_causality"
+version = "0.7.1"
+dependencies = [
+ "criterion",
+ "dcl_data_structures 0.5.0",
+ "deep_causality_macros 0.4.9",
+ "ultragraph 0.5.3",
+]
+
+[[package]]
 name = "deep_causality_macros"
 version = "0.4.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9282c0a4b0c8bab1baf75a01d63d76936ff67a13a6eaa20c8feebff82bdffd5c"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -474,9 +476,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_macros"
-version = "0.4.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9282c0a4b0c8bab1baf75a01d63d76936ff67a13a6eaa20c8feebff82bdffd5c"
+version = "0.4.9"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1218,23 +1218,23 @@ dependencies = [
 [[package]]
 name = "ultragraph"
 version = "0.5.2"
-dependencies = [
- "ahash",
- "criterion",
- "deep_causality_macros 0.4.8",
- "petgraph",
- "rand",
-]
-
-[[package]]
-name = "ultragraph"
-version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "40190430ac98e8e996e710fb5c4924a8d48366944eb1569c083f80edae45cbd3"
 dependencies = [
  "ahash",
- "deep_causality_macros 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deep_causality_macros 0.4.8",
  "petgraph",
+]
+
+[[package]]
+name = "ultragraph"
+version = "0.5.3"
+dependencies = [
+ "ahash",
+ "criterion",
+ "deep_causality_macros 0.4.9",
+ "petgraph",
+ "rand",
 ]
 
 [[package]]
