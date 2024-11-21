@@ -416,3 +416,24 @@ fn test_arr_err() {
     let arr: Result<[Data; SIZE], String> = window.arr();
     assert!(arr.is_err());
 }
+
+#[test]
+fn test_push_when_full() {
+    let mut window = get_sliding_window();
+    
+    // Fill the window completely
+    for i in 0..CAPACITY+SIZE {
+        window.push(Data { dats: i as i32 });
+    }
+    assert!(window.filled());
+
+    // Add one more element, which should trigger rewind
+    window.push(Data { dats: 42 });
+    
+    // Verify the window still contains SIZE elements
+    let slice: [Data; SIZE] = window.arr().unwrap();
+    assert_eq!(slice.len(), SIZE);
+
+    // The last element should be what we just pushed (42)
+    assert_eq!(slice[SIZE - 1].dats, 42);
+}
