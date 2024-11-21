@@ -118,7 +118,9 @@ where
     #[inline(always)]
     fn last(&self) -> Result<T, String> {
         if !self.filled() {
-            return Err("Vector is not yet filled. Add some elements to the array first".to_string());
+            return Err(
+                "Vector is not yet filled. Add some elements to the array first".to_string(),
+            );
         }
         Ok(self.vec[self.tail - 1])
     }

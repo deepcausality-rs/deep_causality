@@ -3,7 +3,7 @@
 use crate::prelude::WindowStorage;
 
 /// An unsafe but highly optimized sliding window implementation using a vector as the underlying storage.
-/// 
+///
 /// This implementation uses unsafe Rust features to achieve maximum performance while maintaining
 /// memory safety through careful bounds checking and memory management.
 ///
@@ -135,7 +135,9 @@ where
     #[inline(always)]
     fn last(&self) -> Result<T, String> {
         if !self.filled() {
-            return Err("Vector is not yet filled. Add some elements to the array first".to_string());
+            return Err(
+                "Vector is not yet filled. Add some elements to the array first".to_string(),
+            );
         }
         unsafe { Ok(*self.vec.get_unchecked(self.tail - 1)) }
     }

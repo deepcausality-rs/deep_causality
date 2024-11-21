@@ -207,18 +207,18 @@ fn test_slice_err() {
 #[test]
 fn test_rewind_behavior() {
     let mut window = get_sliding_window();
-    
+
     // Fill the window
     for i in 0..SIZE {
         window.push(Data { dats: i as i32 });
     }
     assert!(window.filled());
-    
+
     // Push more elements to test rewind
-    for i in SIZE..(SIZE*2) {
+    for i in SIZE..(SIZE * 2) {
         window.push(Data { dats: i as i32 });
     }
-    
+
     // Verify the window contains the latest SIZE elements
     let slice = window.slice().unwrap();
     assert_eq!(slice.len(), SIZE);
@@ -226,7 +226,7 @@ fn test_rewind_behavior() {
     for (i, item) in slice.iter().enumerate() {
         assert_eq!(item.dats, (start + i) as i32);
     }
-    
+
     // Test first and last elements
     assert_eq!(window.first().unwrap().dats, start as i32);
     assert_eq!(window.last().unwrap().dats, (SIZE * 2 - 1) as i32);
@@ -235,12 +235,12 @@ fn test_rewind_behavior() {
 #[test]
 fn test_sequential_push() {
     let mut window = get_sliding_window();
-    
+
     // Test sequential pushes and verify window state
-    for i in 0..SIZE*2 {
+    for i in 0..SIZE * 2 {
         window.push(Data { dats: i as i32 });
-        
-        if i < SIZE-1 {
+
+        if i < SIZE - 1 {
             assert!(!window.filled());
             assert_eq!(window.first().unwrap().dats, 0);
             assert!(window.last().is_err());
@@ -256,18 +256,18 @@ fn test_sequential_push() {
 #[test]
 fn test_edge_cases() {
     let mut window = get_sliding_window();
-    
+
     // Test empty window edge cases
     assert!(window.first().is_err());
     assert!(window.last().is_err());
     assert!(window.slice().is_err());
-    
+
     // Test single element
     window.push(Data { dats: 42 });
     assert_eq!(window.first().unwrap().dats, 42);
     assert!(window.last().is_err()); // Window not filled yet
     assert!(window.slice().is_err()); // Window not filled yet
-    
+
     // Fill the window
     for _ in 1..SIZE {
         window.push(Data { dats: 42 });
@@ -275,12 +275,12 @@ fn test_edge_cases() {
     assert!(window.filled());
     assert!(window.slice().is_ok());
     assert_eq!(window.slice().unwrap().len(), SIZE);
-    
+
     // Test maximum value
     window.push(Data { dats: i32::MAX });
     assert!(window.filled());
     assert_eq!(window.last().unwrap().dats, i32::MAX);
-    
+
     // Test minimum value
     window.push(Data { dats: i32::MIN });
     assert!(window.filled());
@@ -290,17 +290,17 @@ fn test_edge_cases() {
 #[test]
 fn test_rapid_pushes() {
     let mut window = get_sliding_window();
-    
+
     // Perform rapid pushes
-    for i in 0..SIZE*3 {
+    for i in 0..SIZE * 3 {
         window.push(Data { dats: i as i32 });
     }
-    
+
     // Verify final state
     assert!(window.filled());
     let slice = window.slice().unwrap();
     assert_eq!(slice.len(), SIZE);
-    
+
     // Verify the contents are the last SIZE elements
     let start = (SIZE * 3) - SIZE;
     for (i, item) in slice.iter().enumerate() {

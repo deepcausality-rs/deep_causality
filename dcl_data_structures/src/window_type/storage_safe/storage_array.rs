@@ -53,7 +53,8 @@ where
     /// Uses copy_within for efficient memory movement when rewinding
     #[inline(always)]
     fn rewind(&mut self) {
-        self.arr.copy_within(self.head..self.head + self.size - 1, 0);
+        self.arr
+            .copy_within(self.head..self.head + self.size - 1, 0);
         self.head = 0;
         self.tail = self.size;
     }

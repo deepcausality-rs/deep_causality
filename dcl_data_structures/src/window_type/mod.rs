@@ -7,8 +7,7 @@ use crate::prelude::{ArrayStorage, VectorStorage, WindowStorage};
 
 #[cfg(feature = "unsafe")]
 use crate::window_type::storage_unsafe::{
-    unsafe_storage_array::UnsafeArrayStorage,
-    unsafe_storage_vec::UnsafeVectorStorage,
+    unsafe_storage_array::UnsafeArrayStorage, unsafe_storage_vec::UnsafeVectorStorage,
 };
 
 pub(crate) mod storage;
@@ -45,7 +44,10 @@ pub(crate) mod storage_unsafe;
 /// assert!(window.empty());
 /// assert_eq!(window.size(), SIZE);
 /// ```
-pub fn new_with_vector_storage<T>(size: usize, multiple: usize) -> SlidingWindow<VectorStorage<T>, T>
+pub fn new_with_vector_storage<T>(
+    size: usize,
+    multiple: usize,
+) -> SlidingWindow<VectorStorage<T>, T>
 where
     T: PartialEq + Copy + Default,
 {
@@ -201,12 +203,12 @@ where
 /// // Create a sliding window of size 3 with capacity 5
 /// let mut window = new_with_unsafe_array_storage::<f64, 3, 5>();
 /// assert!(window.empty());
-/// 
+///
 /// // Fill the window
 /// window.push(1.0);
 /// window.push(2.0);
 /// window.push(3.0);
-/// 
+///
 /// // Now we can safely check first and last elements
 /// assert!(window.first().is_ok());
 /// assert_eq!(window.first().unwrap(), 1.0);
