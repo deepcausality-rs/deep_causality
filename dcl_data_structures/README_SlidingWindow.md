@@ -25,9 +25,9 @@ Take window size N and multiple M as arguments
 
 See:
 
-* [Benchmark](../benches/benchmarks/bench_window_vec.rs)
-* [Code](../src/window_type/storage_vec.rs)
-* [Test](../tests/window_vector_backed_tests.rs)
+* [Benchmark](benches/benchmarks/bench_window_vec.rs)
+* [Code](src/window_type/)
+* [Test](tests/window_type/)
 
 ## Array backed implementation
 
@@ -36,9 +36,9 @@ This is because static arrays requiring const generics parameter.
 
 See:
 
-* [Benchmark](../benches/benchmarks/bench_window_arr.rs)
-* [Code](../src/window_type/storage_array.rs)
-* [Test](../tests/window_array_backed_tests.rs)
+* [Benchmark](benches/benchmarks/bench_window_arr.rs)
+* [Code](src/window_type)
+* [Test](tests/window_type)
 
 ## Configuration
 
@@ -137,7 +137,7 @@ pub fn main(){
 ### Single Push Operations
 
 | Implementation      	| Single Push Time 	| Notes                                                	|
-|---------------------	|------------------	|------------------------------------------------------	|
+|----------------|----------------|--------------------------| 
 | UnsafeArrayStorage | ~1.9ns | Fastest overall | 
 | ArrayStorage | ~2.08ns | Good balance | 
 | UnsafeVectorStorage | ~2.3ns | Fast with dynamic sizing | 
@@ -146,7 +146,7 @@ pub fn main(){
 Batch Operations (100 elements)
 
 | Implementation      	| Batch Push Time 	 | Notes                                                	|
-|---------------------	|-------------------|------------------------------------------------------	|
+|----------------|----------------|--------------------------| 
 | UnsafeArrayStorage | ~1.7ns            | Best for large batches | 
 | ArrayStorage | ~1.95ns           | Consistent performance |
 | UnsafeVectorStorage | ~2.1ns            | Good amortized time | 
@@ -162,18 +162,21 @@ Sequential Operations
 | VectorStorage | ~850ps | Most predictable         |
 
 **Why UnsafeArrayStorage is Fastest**
-1) Zero Bounds Checking
+**Zero Bounds Checking**
 * Eliminates runtime bounds checks
 * Reduces CPU instruction count
-2) Memory Layout
+
+**Memory Layout**
 * Contiguous stack memory allocation
 * Better cache line utilization
 * No heap allocation overhead
-3) Optimized Head Management
+
+**Optimized Head Management**
 * Branchless head adjustment
 * Reduced CPU pipeline stalls
 * Better branch prediction
-4) Direct Memory Access
+
+**Direct Memory Access**
 * No safety abstractions overhead
 * Minimal pointer indirection 
 

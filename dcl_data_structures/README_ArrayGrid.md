@@ -450,12 +450,3 @@ a 2D Matrix, then its best to set the remaining const generic values (Depth, Tim
 there is no practical way around this requirement. Another observation is that the ArrayGrid type, once created,
 behaves like any other API with the added bonus of interior mutability.
 
-In terms of performance, it seems that the Rust compiler does an excellent job optimizing away the abstractions
-and generates as close to the metal bytecode as
-possible. [Benchmarks have been written](../benches),
-but frankly these are completely pointless since the test arrays fit in the cache of any modern CPU hence yielding
-absurd throughput and latency results. And that was the entire purpose of the exercise because you do not
-get even remotely these benchmarks results with a Tensor type. Tensors remain an invaluable type for higher dimensional
-data in machine learning. For low dimensional (<5) data in performance critical applications, however,the GridArray
-offers
-an alternative with attractive performance characteristics. 
