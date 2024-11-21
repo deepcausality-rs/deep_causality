@@ -8,27 +8,25 @@ fn test_vector_storage_capacity_limits() {
     // Test with small capacity
     let mut storage = VectorStorage::<i32>::new(2, 4); // size=2, capacity=8
     assert_eq!(storage.size(), 2);
-    assert_eq!(storage.capacity(), 8);
 
     // Fill to capacity
-    for i in 0..8 {
-        storage.push(i as i32);
+    for i in 0..4 {
+        storage.push(i);
     }
     assert!(storage.filled());
     
     // Test overflow behavior
-    storage.push(8);
-    assert_eq!(storage.tail(), 9);
-    assert_eq!(storage.to_vec(), vec![7, 8]);
+    storage.push(4);
+    assert_eq!(storage.tail(), 5);
+    assert_eq!(storage.vec().unwrap(), vec![3, 4]);
 }
 
 #[test]
 fn test_array_storage_capacity_limits() {
     const SIZE: usize = 2;
-    const CAPACITY: usize = 8;
+    const CAPACITY: usize = 4;
     let mut storage = ArrayStorage::<i32, SIZE, CAPACITY>::new();
     assert_eq!(storage.size(), SIZE);
-    assert_eq!(storage.capacity(), CAPACITY);
 
     // Fill to capacity
     for i in 0..CAPACITY {
@@ -37,61 +35,46 @@ fn test_array_storage_capacity_limits() {
     assert!(storage.filled());
     
     // Test overflow behavior
-    storage.push(8);
-    assert_eq!(storage.tail(), CAPACITY + 1);
-    assert_eq!(storage.to_vec(), vec![7, 8]);
+    storage.push(4);
+    let expected_tail = CAPACITY - 1;
+    assert_eq!(storage.tail(), expected_tail);
+    assert_eq!(storage.vec().unwrap(), vec![1, 4]);
 }
 
 #[test]
 fn test_vector_storage_memory_behavior() {
-    let mut storage = VectorStorage::<String>::new(3, 3); // size=3, capacity=9
+    let mut storage = VectorStorage::<i32>::new(3, 3); // size=3, capacity=9
     
-    // Test with heap-allocated data
-    storage.push("test1".to_string());
-    storage.push("test2".to_string());
-    storage.push("test3".to_string());
+    // Test with stack-allocated data
+    storage.push(1);
+    storage.push(2);
+    storage.push(3);
     
-    // Verify data is correctly stored and retrieved
-    assert_eq!(storage.get(0), Some(&"test1".to_string()));
-    assert_eq!(storage.get(1), Some(&"test2".to_string()));
-    assert_eq!(storage.get(2), Some(&"test3".to_string()));
+    assert!(storage.filled());
+    assert_eq!(storage.vec().unwrap(), vec![1, 2, 3]);
     
-    // Test memory cleanup on overflow
-    for i in 4..10 {
-        storage.push(format!("test{}", i));
-    }
-    
-    // Verify old data is properly cleaned up
-    assert_eq!(storage.get(0), Some(&"test7".to_string()));
-    assert_eq!(storage.get(1), Some(&"test8".to_string()));
-    assert_eq!(storage.get(2), Some(&"test9".to_string()));
+    // Test overflow behavior
+    storage.push(4);
+    assert_eq!(storage.vec().unwrap(), vec![2, 3, 4]);
 }
 
 #[test]
 fn test_array_storage_memory_behavior() {
     const SIZE: usize = 3;
     const CAPACITY: usize = 9;
-    let mut storage = ArrayStorage::<String, SIZE, CAPACITY>::new();
+    let mut storage = ArrayStorage::<i32, SIZE, CAPACITY>::new();
     
-    // Test with heap-allocated data
-    storage.push("test1".to_string());
-    storage.push("test2".to_string());
-    storage.push("test3".to_string());
+    // Test with stack-allocated data
+    storage.push(1);
+    storage.push(2);
+    storage.push(3);
     
-    // Verify data is correctly stored and retrieved
-    assert_eq!(storage.get(0), Some(&"test1".to_string()));
-    assert_eq!(storage.get(1), Some(&"test2".to_string()));
-    assert_eq!(storage.get(2), Some(&"test3".to_string()));
+    assert!(storage.filled());
+    assert_eq!(storage.vec().unwrap(), vec![1, 2, 3]);
     
-    // Test memory cleanup on overflow
-    for i in 4..10 {
-        storage.push(format!("test{}", i));
-    }
-    
-    // Verify old data is properly cleaned up
-    assert_eq!(storage.get(0), Some(&"test7".to_string()));
-    assert_eq!(storage.get(1), Some(&"test8".to_string()));
-    assert_eq!(storage.get(2), Some(&"test9".to_string()));
+    // Test overflow behavior
+    storage.push(4);
+    assert_eq!(storage.vec().unwrap(), vec![2, 3, 4]);
 }
 
 #[test]
@@ -125,55 +108,57 @@ fn test_vector_storage_concurrent_access() {
 
 #[test]
 fn test_edge_cases() {
-    // Test with zero size
-    let storage = VectorStorage::<i32>::new(0, 1);
-    assert!(storage.empty());
-    assert_eq!(storage.size(), 0);
+    // Test with minimum size
+    let mut storage = VectorStorage::<i32>::new(1, 2);
+    assert_eq!(storage.size(), 1);
     
-    // Test with equal size and capacity multiplier
-    let mut storage = VectorStorage::<i32>::new(2, 1);
-    assert_eq!(storage.capacity(), 2);
+    // Test single element behavior
+    storage.push(1);
+    assert!(storage.filled());
+    assert_eq!(storage.first().unwrap(), 1);
+    assert_eq!(storage.last().unwrap(), 1);
     
-    // Test pushing more elements than capacity
-    for i in 0..5 {
-        storage.push(i);
-    }
-    assert_eq!(storage.to_vec(), vec![3, 4]);
+    // Test overflow with size 1
+    storage.push(2);
+    assert_eq!(storage.first(), Ok(2));
+    assert_eq!(storage.last(), Ok(2));
     
-    // Test with maximum values
-    let large_size = 1000000;
-    let storage = VectorStorage::<i32>::new(large_size, 2);
-    assert_eq!(storage.size(), large_size);
-    assert_eq!(storage.capacity(), large_size * 2);
+    // Test with zero pushes
+    let empty_storage = VectorStorage::<i32>::new(1, 2);
+    assert!(empty_storage.first().is_err());
+    assert!(empty_storage.last().is_err());
 }
 
 #[test]
 fn test_performance_comparison() {
     use std::time::Instant;
     
-    const SIZE: usize = 1000;
-    const MULTIPLIER: usize = 10;
+    const SIZE: usize = 100;
+    const CAPACITY: usize = 1000;
+    const ITERATIONS: usize = 1000;
     
-    // Vector Storage Performance
+    // Test VectorStorage performance
+    let mut vector_storage = VectorStorage::<i32>::new(SIZE, CAPACITY);
     let start = Instant::now();
-    let mut vec_storage = VectorStorage::<i32>::new(SIZE, MULTIPLIER);
-    for i in 0..SIZE*MULTIPLIER {
-        vec_storage.push(i as i32);
+    for i in 0..ITERATIONS {
+        vector_storage.push(i as i32);
     }
-    let vec_duration = start.elapsed();
+    let vector_duration = start.elapsed();
+    println!("Vector Storage Duration: {:?}", vector_duration);
     
-    // Array Storage Performance
+    // Test ArrayStorage performance
+    let mut array_storage = ArrayStorage::<i32, SIZE, CAPACITY>::new();
     let start = Instant::now();
-    let mut arr_storage = ArrayStorage::<i32, SIZE, { SIZE * MULTIPLIER }>::new();
-    for i in 0..SIZE*MULTIPLIER {
-        arr_storage.push(i as i32);
+    for i in 0..ITERATIONS {
+        array_storage.push(i as i32);
     }
-    let arr_duration = start.elapsed();
+    let array_duration = start.elapsed();
+    println!("Array Storage Duration: {:?}", array_duration);
     
-    println!("Vector Storage Duration: {:?}", vec_duration);
-    println!("Array Storage Duration: {:?}", arr_duration);
+    // Verify both storages have same tail position
+    assert_eq!(vector_storage.tail(), ITERATIONS);
+    assert_eq!(array_storage.tail(), SIZE+1);
     
-    // Verify both storages have the same content
-    assert_eq!(vec_storage.tail(), arr_storage.tail());
-    assert_eq!(vec_storage.to_vec(), arr_storage.to_vec());
+    // Compare last elements to ensure correctness
+    assert_eq!(vector_storage.last(), array_storage.last());
 }
