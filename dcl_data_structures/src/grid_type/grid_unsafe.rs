@@ -2,8 +2,8 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use std::fmt::Debug;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::hint::black_box;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use crate::prelude::{PointIndex, Storage};
 
