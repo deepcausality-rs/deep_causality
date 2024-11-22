@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
+use deep_causality_macros::Constructor;
+
 #[test]
 fn test_derive_struct() {
-    use deep_causality_macros::Constructor;
-
     #[derive(Constructor)]
     struct Test {
         field1: i32,
@@ -18,8 +18,6 @@ fn test_derive_struct() {
 
 #[test]
 fn test_derive_enum() {
-    use deep_causality_macros::Constructor;
-
     #[derive(Constructor)]
     enum TestEnum {
         Variant1(i32),
@@ -41,8 +39,6 @@ fn test_derive_enum() {
 
 #[test]
 fn test_unnamed_fields() {
-    use deep_causality_macros::Constructor;
-
     #[derive(Constructor)]
     struct TestTuple(i32, String);
 
@@ -53,7 +49,6 @@ fn test_unnamed_fields() {
 
 #[test]
 fn test_ref() {
-    use deep_causality_macros::Constructor;
     use std::marker::PhantomData;
 
     #[derive(Constructor)]
@@ -67,3 +62,122 @@ fn test_ref() {
     let test: Test<'_, i32> = Test::new(s);
     assert_eq!(test.field, "test");
 }
+
+#[test]
+fn test_unit_struct() {
+    #[derive(Constructor)]
+    struct Empty;
+
+    let _empty = Empty::new();
+}
+
+#[test]
+fn test_custom_field_value() {
+    #[derive(Constructor, Debug, PartialEq)]
+    struct Test {
+        #[new(value = "42")]
+        field1: i32,
+        field2: String,
+    }
+
+    let test = Test::new("test".to_string());
+    assert_eq!(test.field1, 42);
+    assert_eq!(test.field2, "test");
+}
+
+#[test]
+fn test_lint_attrs() {
+    #[allow(dead_code, unused_variables)]
+    #[derive(Constructor)]
+    struct Test {
+        field1: i32,
+        field2: String,
+    }
+
+    let test = Test::new(42, "test".to_string());
+    assert_eq!(test.field1, 42);
+    assert_eq!(test.field2, "test");
+}
+
+#[test]
+fn test_cfg_attr_lint() {
+    #[cfg_attr(test, allow(dead_code))]
+    #[derive(Constructor)]
+    struct Test {
+        field1: i32,
+        field2: String,
+    }
+
+    let test = Test::new(42, "test".to_string());
+    assert_eq!(test.field1, 42);
+    assert_eq!(test.field2, "test");
+}
+
+#[test]
+fn test_generic_with_bounds() {
+    #[derive(Constructor)]
+    struct Test<T: Clone + Default> {
+        field: T,
+        #[new(default)]
+        extra: String,
+    }
+
+    let test = Test::new(42);
+    assert_eq!(test.field, 42);
+    assert_eq!(test.extra, String::default());
+}
+
+#[test]
+fn test_multiple_field_attrs() {
+    #[derive(Constructor)]
+    struct Test {
+        field1: i32,
+        #[allow(dead_code)]
+        #[new(default)]
+        field2: String,
+    }
+
+    let test = Test::new(42);
+    assert_eq!(test.field1, 42);
+    assert_eq!(test.field2, String::default());
+}
+
+// The following tests verify compile-time errors
+
+// This should fail to compile:
+// #[test]
+// fn test_empty_enum() {
+//     #[derive(Constructor)]
+//     enum Empty {}
+// }
+
+// This should fail to compile:
+// #[test]
+// fn test_enum_with_discriminant() {
+//     #[derive(Constructor)]
+//     enum Test {
+//         A = 1,
+//         B = 2,
+//     }
+// }
+
+// This should fail to compile:
+// #[test]
+// fn test_multiple_new_attrs() {
+//     #[derive(Constructor)]
+//     struct Test {
+//         #[new(default)]
+//         #[new(value = "42")]
+//         field: i32,
+//     }
+// }
+
+// This should fail to compile:
+// #[test]
+// fn test_invalid_new_attr() {
+//     #[derive(Constructor)]
+//     struct Test {
+//         #[new(invalid)]
+//         field: i32,
+//     }
+// }
