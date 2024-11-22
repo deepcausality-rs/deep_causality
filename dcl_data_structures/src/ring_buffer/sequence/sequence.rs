@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
 use std::sync::atomic::{AtomicU64, Ordering};
 
 pub type Sequence = u64;

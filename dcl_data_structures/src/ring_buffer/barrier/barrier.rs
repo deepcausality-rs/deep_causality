@@ -1,4 +1,6 @@
-use crate::prelude::*;
+// SPDX-License-Identifier: MIT
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
 use crate::ring_buffer::sequence::sequence::{AtomicSequence, Sequence};
 use crate::ring_buffer::traits::sequencer::SequenceBarrier;
 use crate::ring_buffer::traits::wait_strategy::WaitStrategy;

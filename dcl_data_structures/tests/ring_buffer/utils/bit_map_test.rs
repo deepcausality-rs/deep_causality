@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
 use std::num::NonZeroUsize;
 use std::sync::Arc;
 use std::thread;

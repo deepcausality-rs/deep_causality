@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
 use crate::ring_buffer::sequence::sequence::AtomicSequence;
 use crate::ring_buffer::traits::data_provider::DataProvider;
 use crate::ring_buffer::traits::runnable::Runnable;
