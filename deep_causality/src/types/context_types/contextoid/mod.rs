@@ -49,9 +49,6 @@ where
         + Mul<V, Output = V>,
 {
     pub fn new(id: u64, vertex_type: ContextoidType<D, S, T, ST, V>) -> Self {
-        Self {
-            id,
-            vertex_type,
-        }
+        Self { id, vertex_type }
     }
 }

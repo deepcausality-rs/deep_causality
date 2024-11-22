@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use std::collections::HashMap;
-use std::sync::{Arc, RwLock};
 use crate::prelude::{
     CausalityError, Causaloid, CausaloidGraph, Context, Contextoid, Data, Space, SpaceTime, Time,
 };
+use std::collections::HashMap;
+use std::sync::{Arc, RwLock};
 
 // Type aliases
 pub type IdentificationValue = u64;

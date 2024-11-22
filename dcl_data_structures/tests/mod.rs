@@ -2,4 +2,5 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 mod grid_type;
+mod ring_buffer;
 mod window_type;
