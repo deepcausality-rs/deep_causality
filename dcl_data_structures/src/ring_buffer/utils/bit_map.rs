@@ -9,7 +9,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 const WORD_BITS: usize = size_of::<AtomicU64>() * 8;
 
 /// A thread-safe bitmap implementation using atomic operations for concurrent access.
-/// 
+///
 /// `BitMap` provides a fixed-size bit array that can be safely accessed and modified
 /// from multiple threads. It uses atomic operations to ensure thread safety without
 /// requiring explicit locks.

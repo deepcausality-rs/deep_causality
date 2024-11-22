@@ -55,7 +55,11 @@ fn bitmap_benchmark(c: &mut Criterion) {
 
     c.bench_function("bitmap_random_access", |b| {
         b.iter(|| {
-            for i in [73, 2, 45, 12, 89, 34, 67, 91, 23, 56].iter().cycle().take(100) {
+            for i in [73, 2, 45, 12, 89, 34, 67, 91, 23, 56]
+                .iter()
+                .cycle()
+                .take(100)
+            {
                 bitmap.set(black_box(*i));
             }
         })

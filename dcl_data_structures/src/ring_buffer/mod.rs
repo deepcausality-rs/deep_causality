@@ -5,5 +5,3 @@ mod barrier;
 pub mod sequence;
 mod traits;
 pub mod utils;
-
-pub use crate::ring_buffer::sequence::*;

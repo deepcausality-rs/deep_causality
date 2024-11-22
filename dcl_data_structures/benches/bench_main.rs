@@ -8,6 +8,7 @@ mod benchmarks;
 #[cfg(not(feature = "unsafe"))]
 criterion_main! {
     benchmarks::ring_buffer::bit_map_benchmark::bitmap,
+    benchmarks::ring_buffer::sequence_bench::sequence,
     benchmarks::grid_type::bench_grid_array::array_grid,
     benchmarks::window_type::bench_window_arr::window_array_backed,
     benchmarks::window_type::bench_window_vec::window_vector_backed,
@@ -18,6 +19,7 @@ criterion_main! {
 #[cfg(feature = "unsafe")]
 criterion_main! {
     benchmarks::ring_buffer::bit_map_benchmark::bitmap,
+    benchmarks::ring_buffer::sequence_bench::sequence,
     benchmarks::grid_type::bench_grid_array::array_grid,
     benchmarks::window_type::bench_window_arr::window_array_backed,
     benchmarks::window_type::bench_window_vec::window_vector_backed,

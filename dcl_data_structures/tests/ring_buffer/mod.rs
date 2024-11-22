@@ -1,2 +1,2 @@
-mod utils;
 mod sequence;
+mod utils;

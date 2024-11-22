@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-
 use std::sync::Arc;
 use std::thread;
 
@@ -81,17 +80,17 @@ fn test_atomic_sequence_into() {
 #[test]
 fn test_atomic_sequence_multiple_modifications() {
     let seq = AtomicSequence::default();
-    
+
     // Test multiple modifications in sequence
     seq.set(1);
     assert_eq!(seq.get(), 1);
-    
+
     seq.set(5);
     assert_eq!(seq.get(), 5);
-    
+
     assert!(seq.compare_exchange(5, 10));
     assert_eq!(seq.get(), 10);
-    
+
     assert!(!seq.compare_exchange(5, 15));
     assert_eq!(seq.get(), 10);
 }
