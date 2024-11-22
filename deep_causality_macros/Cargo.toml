@@ -2,7 +2,7 @@
 name = "deep_causality_macros"
 version = "0.4.9"
 edition = "2021"
-rust-version = "1.65"
+rust-version = "1.80"
 repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 license = "MIT"
