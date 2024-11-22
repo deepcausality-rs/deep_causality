@@ -161,6 +161,21 @@ Sequential Operations
 | UnsafeVectorStorage | ~750ps | Good for mixed workloads | 
 | VectorStorage | ~850ps | Most predictable         |
 
+
+## Technical Details
+- Sample size: 100 measurements per benchmark
+- Outliers properly detected and handled (2-8% outliers per benchmark)
+- All benchmarks were run with random access patterns to simulate real-world usage
+
+
+## Hardware & OS
+- Architecture: ARM64 (Apple Silicon, M3 Max)
+- OS: macOS Darwin 24.1.0
+- Kernel: XNU 11215.41.3~2
+- Machine: MacBook Pro (T6031)
+
+# Implementation Details
+
 **Why UnsafeArrayStorage is Fastest**
 **Zero Bounds Checking**
 * Eliminates runtime bounds checks
