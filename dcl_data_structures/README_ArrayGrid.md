@@ -116,10 +116,10 @@ therefore the benchmark skips the get operation because there is nothing worth m
 
 | Dimension | Safe Implementation | Unsafe Implementation | Improvement |
 |-----------|-------------------|---------------------|-------------|
-| 1D Grid   | 604.71 ps        | 543.38 ps          | 10.1%       |
-| 2D Grid   | 581.33 ps        | 414.32 ps          | 28.7%       |
-| 3D Grid   | 862.16 ps        | 587.49 ps          | 31.9%       |
-| 4D Grid   | 1.137 ns         | 820.57 ps          | 27.8%       |
+| 1D Grid   | 604.71 ps        | 271.38 ps          | 55.1%       |
+| 2D Grid   | 581.33 ps        | 417.39 ps          | 28.2%       |
+| 3D Grid   | 862.16 ps        | 577.04 ps          | 33.0%       |
+| 4D Grid   | 1.137 ns         | 812.62 ps          | 28.5%       |
 
 ## Technical Details
 - Sample size: 100 measurements per benchmark
@@ -129,7 +129,7 @@ therefore the benchmark skips the get operation because there is nothing worth m
 
 ## Hardware & OS
 - Architecture: ARM64 (Apple Silicon, M3 Max)
-- OS: macOS Darwin 24.1.0
+- OS: macOS Darwin 24.1.0 (Seqoia 15.1)
 - Kernel: XNU 11215.41.3~2
 - Machine: MacBook Pro (T6031)
 
