@@ -4,3 +4,4 @@
 mod extensions;
 mod types;
 mod utils;
+mod errors;

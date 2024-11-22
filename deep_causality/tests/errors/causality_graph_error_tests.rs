@@ -28,6 +28,6 @@ fn test_causality_graph_error_debug() {
 #[test]
 fn test_causality_graph_error_is_error() {
     let error = CausalityGraphError::new("test".to_string());
-    let is_error = error.as_ref() as &dyn Error;
+    let is_error: &dyn Error = &error;
     assert!(is_error.is::<CausalityGraphError>());
 }
