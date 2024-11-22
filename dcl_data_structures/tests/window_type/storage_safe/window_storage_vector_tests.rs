@@ -420,7 +420,7 @@ fn test_error_conditions() {
     storage.push(1);
     assert_eq!(storage.first().unwrap(), 1); // first() works with any elements
     assert!(storage.last().is_err()); // last() requires window to be filled
-    assert_eq!(storage.vec().is_err(), true);
+    assert!(storage.vec().is_err());
 
     // Add second element to fill the window
     storage.push(2);

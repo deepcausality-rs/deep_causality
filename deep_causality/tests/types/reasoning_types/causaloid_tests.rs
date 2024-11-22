@@ -8,7 +8,7 @@ use crate::utils::*;
 // BaseContext is a type alias for a basic context that can be used for testing
 // It matches the type signature of the base causaloid also uses in these tests.
 // See src/types/alias_types/csm_types for definition.
-fn get_context<'l>() -> BaseContext{
+fn get_context<'l>() -> BaseContext {
     let id = 1;
     let name = "base context";
     let mut context = Context::with_capacity(id, name, 10);

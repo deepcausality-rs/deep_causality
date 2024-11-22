@@ -35,7 +35,7 @@ where
     }
 }
 
-impl<D, S, T, ST, V> Debug for Context< D, S, T, ST, V>
+impl<D, S, T, ST, V> Debug for Context<D, S, T, ST, V>
 where
     D: Datable,
     S: Spatial<V>,

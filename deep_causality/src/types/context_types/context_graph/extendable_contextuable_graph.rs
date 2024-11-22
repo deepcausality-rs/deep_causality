@@ -3,8 +3,7 @@
 
 use super::*;
 
-impl<D, S, T, ST, V> ExtendableContextuableGraph<D, S, T, ST, V>
-    for Context<D, S, T, ST, V>
+impl<D, S, T, ST, V> ExtendableContextuableGraph<D, S, T, ST, V> for Context<D, S, T, ST, V>
 where
     D: Datable,
     S: Spatial<V>,

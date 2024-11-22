@@ -70,7 +70,7 @@ pub type BaseCausalGraph<'l> = CausaloidGraph<
 >;
 
 // Default type alias for basic context. It's used in tests
-pub type BaseContext= Context<
+pub type BaseContext = Context<
     Data<BaseNumberType>,
     Space<BaseNumberType>,
     Time<BaseNumberType>,
