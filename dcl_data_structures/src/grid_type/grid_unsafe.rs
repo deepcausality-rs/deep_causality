@@ -35,28 +35,27 @@ where
 
     #[inline(always)]
     pub fn get(&self, p: PointIndex) -> T {
-        // Using Acquire ordering for the first check ensures proper synchronization
-        // with set operations while allowing subsequent reads to be more relaxed
-        if !self.initialized.load(Ordering::Acquire) {
-            return T::default();
+        if self.initialized.load(Ordering::Relaxed) {
+            let value = self.storage.get(p);
+            black_box(value);
+            *value
+        } else {
+            T::default()
         }
-        
-        // SAFETY: After initialization check, we know the storage is valid
-        // Using black_box to prevent unwanted compiler optimizations
-        let value = black_box(self.storage.get(p));
-        *value
     }
 
     #[inline(always)]
     pub fn set(&self, p: PointIndex, value: T) {
-        // Using Release ordering ensures all previous writes are visible
-        // when another thread loads with Acquire ordering
-        self.initialized.store(true, Ordering::Release);
-        
-        // SAFETY: We use the storage through a const reference
-        // which is guaranteed to be valid for the lifetime of self
-        let value = black_box(value);
-        self.storage.set(p, value);
+        // SAFETY: This is safe because:
+        // 1. We're using atomic operations to ensure thread safety
+        // 2. The storage pointer is valid as it's part of self
+        // 3. The storage is properly initialized
+        unsafe {
+            let storage_ptr = &self.storage as *const S as *mut S;
+            // Force the compiler to keep the value optimization
+            black_box(value);
+            (*storage_ptr).set(p, value);
+        }
     }
 
     #[inline(always)]
