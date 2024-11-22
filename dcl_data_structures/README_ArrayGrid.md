@@ -86,6 +86,10 @@ pub fn main(){
 }
 ```
 
+## Performance
+
+
+
 ## Problem
 
 DeepCausality allows fast and efficient adjustment of all values stored in a context hyper-graph.

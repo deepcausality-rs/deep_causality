@@ -35,7 +35,7 @@ where
 
     #[inline(always)]
     pub fn get(&self, p: PointIndex) -> T {
-        if self.initialized.load(Ordering::Relaxed) {
+        if self.initialized.load(Ordering::Acquire) {
             *self.storage.get(p)
         } else {
             T::default()
