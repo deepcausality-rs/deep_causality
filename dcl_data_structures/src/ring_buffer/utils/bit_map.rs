@@ -53,7 +53,7 @@ impl BitMap {
     fn build(capacity: NonZeroUsize) -> BitMap {
         let len = (capacity.get() + WORD_BITS - 1) / WORD_BITS;
 
-        let slots = std::iter::repeat_with(|| AtomicU64::default())
+        let slots = std::iter::repeat_with(AtomicU64::default)
             .take(len)
             .collect::<Vec<_>>()
             .into_boxed_slice();

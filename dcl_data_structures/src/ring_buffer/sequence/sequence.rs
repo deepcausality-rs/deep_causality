@@ -53,8 +53,8 @@ impl From<Sequence> for AtomicSequence {
     }
 }
 
-impl Into<Sequence> for AtomicSequence {
-    fn into(self) -> Sequence {
-        self.offset.into_inner()
+impl From<AtomicSequence> for Sequence {
+    fn from(val: AtomicSequence) -> Self {
+        val.offset.into_inner()
     }
 }
