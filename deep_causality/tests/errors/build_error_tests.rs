@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use std::error::Error;
 use deep_causality::prelude::BuildError;
+use std::error::Error;
 
 #[test]
 fn test_build_error_creation() {
@@ -22,7 +22,10 @@ fn test_build_error_display() {
 fn test_build_error_debug() {
     let error_msg = "test error message";
     let error = BuildError::new(error_msg.to_string());
-    assert_eq!(format!("{:?}", error), format!("BuildError({:?})", error_msg));
+    assert_eq!(
+        format!("{:?}", error),
+        format!("BuildError({:?})", error_msg)
+    );
 }
 
 #[test]

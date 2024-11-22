@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use std::error::Error;
 use deep_causality::prelude::ActionError;
+use std::error::Error;
 
 #[test]
 fn test_action_error_creation() {
@@ -22,7 +22,10 @@ fn test_action_error_display() {
 fn test_action_error_debug() {
     let error_msg = "test error message";
     let error = ActionError::new(error_msg.to_string());
-    assert_eq!(format!("{:?}", error), format!("ActionError({:?})", error_msg));
+    assert_eq!(
+        format!("{:?}", error),
+        format!("ActionError({:?})", error_msg)
+    );
 }
 
 #[test]

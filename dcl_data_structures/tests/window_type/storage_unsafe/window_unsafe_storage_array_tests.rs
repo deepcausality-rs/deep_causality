@@ -192,8 +192,6 @@ fn test_big_size() {
     }
 }
 
-
-
 #[test]
 fn test_small_size() {
     const SIZE: usize = 2;
@@ -204,7 +202,8 @@ fn test_small_size() {
         dats: bool,
     }
 
-    fn get_sliding_window() -> SlidingWindow<UnsafeArrayStorage<SmallData, SIZE, CAPACITY>, SmallData> {
+    fn get_sliding_window(
+    ) -> SlidingWindow<UnsafeArrayStorage<SmallData, SIZE, CAPACITY>, SmallData> {
         window_type::new_with_unsafe_array_storage()
     }
 
