@@ -3,7 +3,7 @@
 
 use super::*;
 
-impl<'l, D, S, T, ST, V> ContextuableGraph<'l, D, S, T, ST, V> for Context<'l, D, S, T, ST, V>
+impl<D, S, T, ST, V> ContextuableGraph<D, S, T, ST, V> for Context<D, S, T, ST, V>
 where
     D: Datable,
     S: Spatial<V>,

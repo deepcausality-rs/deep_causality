@@ -3,8 +3,8 @@
 
 use super::*;
 
-impl<'l, D, S, T, ST, V> ExtendableContextuableGraph<'l, D, S, T, ST, V>
-    for Context<'l, D, S, T, ST, V>
+impl<D, S, T, ST, V> ExtendableContextuableGraph<D, S, T, ST, V>
+    for Context<D, S, T, ST, V>
 where
     D: Datable,
     S: Spatial<V>,
@@ -193,7 +193,7 @@ where
     }
 }
 
-impl<'l, D, S, T, ST, V> Context<'l, D, S, T, ST, V>
+impl<'l, D, S, T, ST, V> Context<D, S, T, ST, V>
 where
     D: Datable,
     S: Spatial<V>,

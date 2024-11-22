@@ -6,7 +6,7 @@ use deep_causality::prelude::{
     RelationKind, Root, Time, TimeScale,
 };
 
-fn get_context<'l>() -> BaseContext<'l> {
+fn get_context<'l>() -> BaseContext {
     let id = 1;
     let name = "base context";
     Context::with_capacity(id, name, 10)

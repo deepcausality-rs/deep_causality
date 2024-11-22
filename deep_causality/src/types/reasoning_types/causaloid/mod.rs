@@ -48,7 +48,7 @@ where
     causal_type: CausalType,
     causal_fn: Option<CausalFn>,
     context_causal_fn: Option<ContextualCausalDataFn<'l, D, S, T, ST, V>>,
-    context: Option<&'l Context<'l, D, S, T, ST, V>>,
+    context: Option<&'l Context<D, S, T, ST, V>>,
     has_context: bool,
     causal_coll: Option<&'l CausalVec<'l, D, S, T, ST, V>>,
     causal_graph: Option<&'l CausalGraph<'l, D, S, T, ST, V>>,
@@ -95,7 +95,7 @@ where
     pub fn new_with_context(
         id: IdentificationValue,
         context_causal_fn: ContextualCausalDataFn<'l, D, S, T, ST, V>,
-        context: Option<&'l Context<'l, D, S, T, ST, V>>,
+        context: Option<&'l Context<D, S, T, ST, V>>,
         description: &'l str,
     ) -> Self {
         Causaloid {
@@ -147,7 +147,7 @@ where
     pub fn from_causal_collection_with_context(
         id: IdentificationValue,
         causal_coll: &'l Vec<Causaloid<'l, D, S, T, ST, V>>,
-        context: Option<&'l Context<'l, D, S, T, ST, V>>,
+        context: Option<&'l Context<D, S, T, ST, V>>,
         description: &'l str,
     ) -> Self {
         Causaloid {
@@ -199,7 +199,7 @@ where
     pub fn from_causal_graph_with_context(
         id: IdentificationValue,
         causal_graph: &'l CausaloidGraph<Causaloid<'l, D, S, T, ST, V>>,
-        context: Option<&'l Context<'l, D, S, T, ST, V>>,
+        context: Option<&'l Context<D, S, T, ST, V>>,
         description: &'l str,
     ) -> Self {
         Causaloid {

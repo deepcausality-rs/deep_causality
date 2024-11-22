@@ -8,7 +8,7 @@ use crate::utils::*;
 // BaseContext is a type alias for a basic context that can be used for testing
 // It matches the type signature of the base causaloid also uses in these tests.
 // See src/types/alias_types/csm_types for definition.
-fn get_context<'l>() -> BaseContext<'l> {
+fn get_context<'l>() -> BaseContext{
     let id = 1;
     let name = "base context";
     let mut context = Context::with_capacity(id, name, 10);
@@ -53,9 +53,9 @@ fn test_new_with_context() {
     let description = "tests whether data exceeds threshold of 0.55";
     let context = get_context();
 
-    fn contextual_causal_fn<'l>(
+    fn contextual_causal_fn(
         obs: NumericalValue,
-        ctx: &'l BaseContext<'l>,
+        ctx: &BaseContext,
     ) -> Result<bool, CausalityError> {
         if obs.is_nan() {
             return Err(CausalityError("Observation is NULL/NAN".into()));
