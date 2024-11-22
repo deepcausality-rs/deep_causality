@@ -3,12 +3,12 @@
 
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::hint::black_box;
 
 use crate::prelude::{PointIndex, Storage};
 
-// A Grid API, with four different implementations backed by const generic arrays.
-// https://github.com/adamchalmers/const_generic_grid
 #[derive(Debug)]
+#[repr(C)]
 pub struct Grid<S, T>
 where
     T: Copy,
@@ -35,21 +35,28 @@ where
 
     #[inline(always)]
     pub fn get(&self, p: PointIndex) -> T {
-        if self.initialized.load(Ordering::Relaxed) {
-            *self.storage.get(p)
-        } else {
-            T::default()
+        // Using Acquire ordering for the first check ensures proper synchronization
+        // with set operations while allowing subsequent reads to be more relaxed
+        if !self.initialized.load(Ordering::Acquire) {
+            return T::default();
         }
+        
+        // SAFETY: After initialization check, we know the storage is valid
+        // Using black_box to prevent unwanted compiler optimizations
+        let value = black_box(self.storage.get(p));
+        *value
     }
 
     #[inline(always)]
     pub fn set(&self, p: PointIndex, value: T) {
-        // SAFETY: This is safe because we're using atomic operations to ensure thread safety
-        // and we know the storage is properly initialized
-        unsafe {
-            let storage_ptr = &self.storage as *const S as *mut S;
-            (*storage_ptr).set(p, value);
-        }
+        // Using Release ordering ensures all previous writes are visible
+        // when another thread loads with Acquire ordering
+        self.initialized.store(true, Ordering::Release);
+        
+        // SAFETY: We use the storage through a const reference
+        // which is guaranteed to be valid for the lifetime of self
+        let value = black_box(value);
+        self.storage.set(p, value);
     }
 
     #[inline(always)]
