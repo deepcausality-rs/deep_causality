@@ -18,10 +18,6 @@ mod getters;
 mod identifiable;
 mod part_eq;
 
-// Interior mutability in Rust, part 2: thread safety
-// https://ricardomartins.cc/2016/06/25/interior-mutability-thread-safety
-type ArcRWLock<T> = Arc<RwLock<T>>;
-
 pub type CausalVec<'l, D, S, T, ST, V> = Vec<Causaloid<'l, D, S, T, ST, V>>;
 pub type CausalGraph<'l, D, S, T, ST, V> = CausaloidGraph<Causaloid<'l, D, S, T, ST, V>>;
 
