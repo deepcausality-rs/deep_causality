@@ -37,10 +37,8 @@ pub fn expand_getters(input: TokenStream) -> syn::Result<TokenStream2> {
                 .try_fold(GetterMetaData::default(), |meta, attr| {
                     let list: Punctuated<GetterMetaData, Token![,]> =
                         attr.parse_args_with(Punctuated::parse_terminated)?;
-
                     list.into_iter().try_fold(meta, GetterMetaData::merge)
                 })?;
-
             let visibility = meta.vis.unwrap_or_else(|| parse_quote! { pub });
             let method_name = meta
                 .name
@@ -104,12 +102,6 @@ impl Parse for GetterMetaData {
             Ok(Self {
                 name: Some(name),
                 vis: None,
-            })
-        } else if lookahead.peek(kw::vis) {
-            let vis = input.parse()?;
-            Ok(Self {
-                name: None,
-                vis: Some(vis),
             })
         } else {
             Err(lookahead.error())
