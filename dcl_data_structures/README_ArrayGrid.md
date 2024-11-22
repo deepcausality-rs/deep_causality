@@ -88,7 +88,50 @@ pub fn main(){
 
 ## Performance
 
+The benchmark measures the performance of set operations on a 1D, 2D, 3D, and 4D ArryGrid.
+Because of the const generic, the get operation performs at a near constant time O(1),
+therefore the benchmark skips the get operation because there is nothing worth measuring.
 
+
+### Safe Implementation Performance Summary
+- **1D Grid**: 604.71 ps (±5.01 ps) 
+- **2D Grid**: 581.33 ps (±2.81 ps) 
+- **3D Grid**: 862.16 ps (±13.60 ps) 
+- **4D Grid**: 1.137 ns (±0.029 ns) 
+
+
+### Key Observations
+1. The 1D and 2D grid operations maintain excellent performance
+2. Performance degrades progressively with higher dimensions, particularly noticeable in 3D and 4D operations
+3. The 4D grid operations show the most significant performance impact, taking nearly twice as long as lower-dimensional operations
+
+
+### Unsafe Implementation
+- 1D Grid: 543.38 ps 
+- 2D Grid: 414.32 ps
+- 3D Grid: 587.49 ps 
+- 4D Grid: 820.57 ps 
+
+## Safe vs. Unsafe Implementation 
+
+| Dimension | Safe Implementation | Unsafe Implementation | Improvement |
+|-----------|-------------------|---------------------|-------------|
+| 1D Grid   | 604.71 ps        | 543.38 ps          | 10.1%       |
+| 2D Grid   | 581.33 ps        | 414.32 ps          | 28.7%       |
+| 3D Grid   | 862.16 ps        | 587.49 ps          | 31.9%       |
+| 4D Grid   | 1.137 ns         | 820.57 ps          | 27.8%       |
+
+## Technical Details
+- Sample size: 100 measurements per benchmark
+- Outliers properly detected and handled (2-8% outliers per benchmark)
+- All benchmarks were run with random access patterns to simulate real-world usage
+
+
+## Hardware & OS
+- Architecture: ARM64 (Apple Silicon, M3 Max)
+- OS: macOS Darwin 24.1.0
+- Kernel: XNU 11215.41.3~2
+- Machine: MacBook Pro (T6031)
 
 ## Problem
 
@@ -453,4 +496,3 @@ which specific storage will be instantiated. When writing a library that, for ex
 a 2D Matrix, then its best to set the remaining const generic values (Depth, Time) to one. As explained above,
 there is no practical way around this requirement. Another observation is that the ArrayGrid type, once created,
 behaves like any other API with the added bonus of interior mutability.
-

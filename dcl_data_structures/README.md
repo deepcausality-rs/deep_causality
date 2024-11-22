@@ -61,6 +61,21 @@ dcl_data_structures = { version = "0.4.7", features = ["unsafe"] }
 
 # Performance:
 
+## ArrayGrid
+
+**Set value:**
+
+| Dimension | Safe Implementation | Unsafe Implementation | Improvement |
+|-----------|-------------------|---------------------|-------------|
+| 1D Grid   | 604.71 ps        | 543.38 ps          | 10.1%       |
+| 2D Grid   | 581.33 ps        | 414.32 ps          | 28.7%       |
+| 3D Grid   | 862.16 ps        | 587.49 ps          | 31.9%       |
+| 4D Grid   | 1.137 ns         | 820.57 ps          | 27.8%       |
+
+More details on performance can be found in the [Performance](README_ArrayGrid.md#performance) section
+of the [ArrayGrid document](README_ArrayGrid.md).
+
+
 ## Sliding Window
 
 **Single Push:**
