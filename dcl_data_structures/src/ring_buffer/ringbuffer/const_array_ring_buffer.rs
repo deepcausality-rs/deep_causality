@@ -19,19 +19,15 @@ use std::cell::UnsafeCell;
 /// between CPU cores, which is crucial for multi-threaded performance.
 ///
 /// # Safety
-/// This implementation uses unsafe code internally to achieve maximum performance,
-/// but provides a safe external interface. The unsafe code is carefully audited
-/// and follows Rust's safety guidelines.
+/// The implementation ensures thread safety through atomic operations and memory barriers.
+/// The buffer size must be a power of two to enable efficient wrapping using bitwise AND.
 ///
 /// # Examples
 /// ```
 /// use dcl_data_structures::ring_buffer::prelude::*;
 ///
-/// // Create a ring buffer with capacity 1024 (must be power of 2)
 /// let ring_buffer = RingBuffer::<u64, 1024>::new();
-///
-/// // Get the recommended batch size for optimal performance
-/// let batch_size = RingBuffer::<u64, 1024>::optimal_batch_size();
+/// assert_eq!(ring_buffer.capacity(), 1024);
 /// ```
 #[repr(align(64))] // Align to cache line size
 pub struct RingBuffer<T, const N: usize>
@@ -63,19 +59,22 @@ where
 {
     /// Creates a new RingBuffer with the specified capacity.
     ///
+    /// # Arguments
+    /// None
+    ///
+    /// # Returns
+    /// A new RingBuffer instance
+    ///
     /// # Panics
-    /// Panics if N is 0 or not a power of 2.
+    /// Panics if N is 0 or not a power of two
     ///
-    /// # Implementation Details
-    /// - Initializes a fixed-size array of size N
-    /// - Sets up the mask for efficient index calculations
-    /// - Pre-initializes all elements with their default value
+    /// # Examples
+    /// ```
+    /// use dcl_data_structures::ring_buffer::prelude::*;
     ///
-    /// # Safety
-    /// Uses unsafe code for performance but guarantees:
-    /// - No uninitialized memory
-    /// - No memory leaks
-    /// - Thread-safe operations
+    /// let ring_buffer = RingBuffer::<u64, 1024>::new();
+    /// assert_eq!(ring_buffer.capacity(), 1024);
+    /// ```
     #[inline(always)]
     pub fn new() -> Self {
         assert!(
@@ -83,15 +82,27 @@ where
             "capacity must be power of two"
         );
 
-        let data = unsafe {
-            let mut data: [UnsafeCell<T>; N] = std::mem::MaybeUninit::uninit().assume_init();
-            for element in &mut data[..] {
-                std::ptr::write(element, UnsafeCell::new(T::default()));
-            }
-            data
-        };
+        // Initialize the array with default values in a safe way
+        let data = [(); N].map(|_| UnsafeCell::new(T::default()));
 
         RingBuffer { data, mask: N - 1 }
+    }
+
+    /// Returns the capacity of the ring buffer.
+    ///
+    /// # Returns
+    /// The capacity of the ring buffer, which is always a power of two.
+    ///
+    /// # Examples
+    /// ```
+    /// use dcl_data_structures::ring_buffer::prelude::*;
+    ///
+    /// let ring_buffer = RingBuffer::<u64, 1024>::new();
+    /// assert_eq!(ring_buffer.capacity(), 1024);
+    /// ```
+    #[inline(always)]
+    pub fn capacity(&self) -> usize {
+        N
     }
 
     /// Returns the optimal batch size for best performance based on benchmark results.

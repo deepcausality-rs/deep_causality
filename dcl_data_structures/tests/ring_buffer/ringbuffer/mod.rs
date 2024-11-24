@@ -1,1 +1,1 @@
-mod ringbuffer_tests;
+mod const_array_ring_buffer_tests;

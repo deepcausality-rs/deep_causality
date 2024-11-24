@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, Criterion};
-use dcl_data_structures::ring_buffer::sequence::sequence::AtomicSequence;
+use dcl_data_structures::ring_buffer::sequence::atomic_sequence::AtomicSequence;
 
 fn sequence_benchmark(c: &mut Criterion) {
     let sequence = AtomicSequence::default();

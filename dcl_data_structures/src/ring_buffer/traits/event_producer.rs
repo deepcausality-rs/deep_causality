@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use crate::ring_buffer::sequence::sequence::Sequence;
+use crate::ring_buffer::sequence::atomic_sequence::Sequence;
 
 /// A trait that represents a producer of events in a ring buffer.
 ///
