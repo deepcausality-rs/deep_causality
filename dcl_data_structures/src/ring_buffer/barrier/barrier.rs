@@ -7,24 +7,24 @@ use std::sync::{
     Arc,
 };
 
-//! # Sequence Barrier Implementation
-//! 
-//! This module provides a sequence barrier implementation for ring buffers, which is used to coordinate
-//! multiple threads accessing a ring buffer in a lock-free manner. The barrier ensures proper
-//! sequencing of operations and prevents data races between producers and consumers.
-//!
-//! ## Overview
-//!
-//! The sequence barrier acts as a coordination point between producers and consumers in a ring buffer,
-//! ensuring that:
-//! - Producers don't overwrite data that hasn't been processed by consumers
-//! - Consumers don't read data that hasn't been fully written by producers
-//!
-//! ## Usage
-//!
-//! The barrier is typically used in conjunction with a ring buffer implementation where multiple
-//! threads need to coordinate their access to shared data structures.
-//!
+/// Sequence Barrier Implementation
+///
+/// This module provides a sequence barrier implementation for ring buffers, which is used to coordinate
+/// multiple threads accessing a ring buffer in a lock-free manner. The barrier ensures proper
+/// sequencing of operations and prevents data races between producers and consumers.
+///
+/// # Overview
+///
+/// The sequence barrier acts as a coordination point between producers and consumers in a ring buffer,
+/// ensuring that:
+/// - Producers don't overwrite data that hasn't been processed by consumers
+/// - Consumers don't read data that hasn't been fully written by producers
+///
+/// # Usage
+///
+/// The barrier is typically used in conjunction with a ring buffer implementation where multiple
+/// threads need to coordinate their access to shared data structures.
+///
 /// # Type Parameters
 ///
 /// * `W` - The wait strategy type that implements the `WaitStrategy` trait, determining how
@@ -37,8 +37,11 @@ use std::sync::{
 /// * `is_alerted` - A flag indicating whether the barrier has been alerted (typically for shutdown)
 ///
 pub struct ProcessingSequenceBarrier<W: WaitStrategy> {
+    /// A vector of atomic sequences that this barrier depends on
     gating_sequences: Vec<Arc<AtomicSequence>>,
+    /// The strategy used for waiting when sequences are not yet available
     wait_strategy: Arc<W>,
+    /// A flag indicating whether the barrier has been alerted (typically for shutdown)
     is_alerted: Arc<AtomicBool>,
 }
 
