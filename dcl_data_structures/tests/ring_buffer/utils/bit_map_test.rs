@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use dcl_data_structures::ring_buffer::utils::bit_map::BitMap;
+use dcl_data_structures::ring_buffer::prelude::*;
 use std::num::NonZeroUsize;
 use std::sync::Arc;
 use std::thread;

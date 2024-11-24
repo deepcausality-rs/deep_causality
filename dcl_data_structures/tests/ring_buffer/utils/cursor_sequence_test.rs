@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use dcl_data_structures::ring_buffer::sequence::sequence::AtomicSequence;
-use dcl_data_structures::ring_buffer::utils::cursor_sequence::min_cursor_sequence;
+use dcl_data_structures::ring_buffer::prelude::*;
 
 #[test]
 fn test_min_cursor_sequence_empty() {

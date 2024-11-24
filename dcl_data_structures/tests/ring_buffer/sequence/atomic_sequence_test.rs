@@ -4,7 +4,7 @@
 use std::sync::Arc;
 use std::thread;
 
-use dcl_data_structures::ring_buffer::sequence::sequence::{AtomicSequence, Sequence};
+use dcl_data_structures::ring_buffer::prelude::*;
 
 #[test]
 fn test_atomic_sequence_default() {

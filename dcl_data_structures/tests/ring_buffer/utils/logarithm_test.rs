@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use dcl_data_structures::ring_buffer::utils::logarithm::log2;
+use dcl_data_structures::ring_buffer::prelude::*;
 
 #[test]
 fn test_log2_zero() {
