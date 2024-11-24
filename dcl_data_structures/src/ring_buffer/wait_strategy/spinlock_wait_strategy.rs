@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use std::{
-    borrow::Borrow,
-};
 use crate::ring_buffer::prelude::*;
+use std::borrow::Borrow;
 
 pub struct SpinLoopWaitStrategy;
 

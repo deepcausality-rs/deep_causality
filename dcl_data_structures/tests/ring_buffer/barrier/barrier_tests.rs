@@ -71,11 +71,8 @@ fn test_barrier_signal() {
     let gating_sequences = vec![Arc::new(AtomicSequence::default())];
     let is_alerted = Arc::new(AtomicBool::new(false));
 
-    let barrier = ProcessingSequenceBarrier::new(
-        Arc::clone(&wait_strategy),
-        gating_sequences,
-        is_alerted,
-    );
+    let barrier =
+        ProcessingSequenceBarrier::new(Arc::clone(&wait_strategy), gating_sequences, is_alerted);
 
     barrier.signal();
     assert_eq!(wait_strategy.counter.get(), 1);
@@ -83,12 +80,13 @@ fn test_barrier_signal() {
 
 #[test]
 fn test_barrier_with_alert_condition() {
-    let wait_strategy = Arc::new(TestWaitStrategy::new());  // Use TestWaitStrategy instead
+    let wait_strategy = Arc::new(TestWaitStrategy::new()); // Use TestWaitStrategy instead
     let gating_sequences = vec![Arc::new(AtomicSequence::default())];
     let is_alerted = Arc::new(AtomicBool::new(false));
 
-    let barrier = ProcessingSequenceBarrier::new(wait_strategy, gating_sequences, is_alerted.clone());
-    
+    let barrier =
+        ProcessingSequenceBarrier::new(wait_strategy, gating_sequences, is_alerted.clone());
+
     // Set the alert condition
     is_alerted.store(true, Ordering::Relaxed);
 

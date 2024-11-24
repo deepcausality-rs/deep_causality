@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use std::sync::{Condvar, Mutex};
-use std::{
-    borrow::Borrow,
-};
 use crate::ring_buffer::prelude::*;
+use std::borrow::Borrow;
+use std::sync::{Condvar, Mutex};
 
 pub struct BlockingWaitStrategy {
     guard: Mutex<()>,

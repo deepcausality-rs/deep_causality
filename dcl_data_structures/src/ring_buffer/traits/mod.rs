@@ -6,7 +6,7 @@ mod event_handler;
 mod event_processor;
 mod event_producer;
 mod runnable;
- mod sequencer;
+mod sequencer;
 mod wait_strategy;
 
 // Re export
