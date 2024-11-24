@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.10](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_macros-v0.4.9...deep_causality_macros-v0.4.10) - 2024-11-24
+
+### Other
+
+- Code linting & formatting
+- Bumped up minimum rust version to 1.80.
+- Increased test coverage of constructor macro
+- Increased test coverage of getter macro
+- Added tests to macros
+
 ## [0.4.9](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_macros-v0.4.8...deep_causality_macros-v0.4.9) - 2024-11-21
 
 ### Other

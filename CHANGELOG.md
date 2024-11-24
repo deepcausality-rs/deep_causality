@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.7.1...deep_causality-v0.7.2) - 2024-11-24
+
+### Other
+
+- Added initial work on a custom ring_buffer implementation
+- Updated alias types
+- Code linting & formatting
+- Removed lifetimes from context types.
+- Bumped up minimum rust version to 1.80.
+- Code formatting
+- Update error tests
+- Refactored Error module in deep_causality and added test coverage.
+
+### Removed
+
+- removed phantom marker
+
 ## [0.7.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.7.0...deep_causality-v0.7.1) - 2024-11-21
 
 ### Other

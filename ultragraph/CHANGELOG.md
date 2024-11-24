@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.4](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.5.3...ultragraph-v0.5.4) - 2024-11-24
+
+### Other
+
+- Bumped up minimum rust version to 1.80.
+
 ## [0.5.3](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.5.2...ultragraph-v0.5.3) - 2024-11-21
 
 ### Other
