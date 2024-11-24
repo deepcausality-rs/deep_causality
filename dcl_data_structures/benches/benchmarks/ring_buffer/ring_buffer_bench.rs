@@ -16,7 +16,11 @@ impl EventHandler<i64> for Checker {
     }
 }
 
-fn ring_buffer_channel<S: Sequencer, F: FnOnce(&RingBuffer<i64, BUFFER_SIZE>) -> S>(n: u64, b: u64, f: F) {
+fn ring_buffer_channel<S: Sequencer, F: FnOnce(&RingBuffer<i64, BUFFER_SIZE>) -> S>(
+    n: u64,
+    b: u64,
+    f: F,
+) {
     let data: Arc<RingBuffer<i64, BUFFER_SIZE>> = Arc::new(RingBuffer::new());
     let mut sequencer = f(data.as_ref());
 

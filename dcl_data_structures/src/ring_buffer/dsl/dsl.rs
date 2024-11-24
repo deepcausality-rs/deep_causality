@@ -181,7 +181,9 @@ impl RustDisruptorBuilder {
     ///
     /// # Panics
     /// Panics if capacity is 0 or not a power of two
-    pub fn with_ring_buffer<T, const N: usize>(capacity: usize) -> WithDataProvider<RingBuffer<T, N>, T>
+    pub fn with_ring_buffer<T, const N: usize>(
+        capacity: usize,
+    ) -> WithDataProvider<RingBuffer<T, N>, T>
     where
         T: Default + Copy + Send + Sync,
     {
@@ -267,7 +269,7 @@ where
 }
 
 impl<'a, S: Sequencer + 'a, W: WaitStrategy, D: DataProvider<T> + 'a, T: Send + Sync + 'a>
-WithSequencer<S, W, D, T>
+    WithSequencer<S, W, D, T>
 {
     /// Configures event handlers within a barrier scope.
     ///
@@ -381,7 +383,7 @@ impl<'a, S: Sequencer + 'a, D: DataProvider<T> + 'a, T: Send + 'a> BarrierScope<
 }
 
 impl<'a, S: Sequencer + 'a, W: WaitStrategy, D: DataProvider<T> + 'a, T: Send + Sync + 'a>
-WithEventHandlers<'a, S, W, D, T>
+    WithEventHandlers<'a, S, W, D, T>
 {
     /// Creates a nested barrier scope.
     ///

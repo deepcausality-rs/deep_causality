@@ -33,7 +33,7 @@ use std::cell::UnsafeCell;
 /// // Get the recommended batch size for optimal performance
 /// let batch_size = RingBuffer::<u64, 1024>::optimal_batch_size();
 /// ```
-#[repr(align(64))]  // Align to cache line size
+#[repr(align(64))] // Align to cache line size
 pub struct RingBuffer<T, const N: usize>
 where
     T: Default + Copy,
@@ -41,7 +41,7 @@ where
     /// The underlying array storing the elements.
     /// Uses UnsafeCell to allow interior mutability required for lock-free operations.
     data: [UnsafeCell<T>; N],
-    
+
     /// Bitmask for fast modulo operations.
     /// Equal to N-1 where N is a power of 2, allowing us to use bitwise AND
     /// instead of expensive modulo operations.
@@ -82,10 +82,7 @@ where
             data
         };
 
-        RingBuffer {
-            data,
-            mask: N - 1,
-        }
+        RingBuffer { data, mask: N - 1 }
     }
 
     /// Returns the optimal batch size for best performance based on benchmark results.
@@ -99,7 +96,7 @@ where
     /// and provides good performance for both single and multi-producer scenarios.
     #[inline(always)]
     pub const fn optimal_batch_size() -> usize {
-        80  // Estimated optimal batch size based on benchmarks (average of 50-100 range)
+        80 // Estimated optimal batch size based on benchmarks (average of 50-100 range)
     }
 }
 
