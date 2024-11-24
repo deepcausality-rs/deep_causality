@@ -87,7 +87,7 @@ impl BitMap {
     /// Uses unchecked array access for performance. The safety is guaranteed by
     /// the index masking operation that ensures the index is within bounds.
     pub fn is_set(&self, sequence: Sequence) -> bool {
-        let index = ((sequence & self.index_mask) >> self.index_shift) as usize;
+        let index = (sequence & self.index_mask >> self.index_shift) as usize;
         let slot = unsafe { self.slots.get_unchecked(index) };
         let val = slot.load(Ordering::SeqCst);
         val & (1 << (index & self.word_bits_mask)) != 0
