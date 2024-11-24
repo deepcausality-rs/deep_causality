@@ -73,7 +73,7 @@ More details on performance can be found in the [Performance](README_ArrayGrid.m
 of the [ArrayGrid document](README_ArrayGrid.md).
 
 
-### RingBu$er: Single Producer/Consumer Performance
+### RingBuffer: Single Producer/Consumer Performance
 | Batch Size | Throughput      | Latency    |
 |------------|-----------------|------------|
 | 1          | 220.47 Melem/s  | 4.54 ms   |
@@ -115,12 +115,6 @@ Just run:
 
 ```bash
 cargo add dcl_data_structures
-```
-
-Alternatively, add the following to your Cargo.toml
-
-```toml
-dcl_data_structures = "0.4.7"
 ```
 
 ## 📚 Docs

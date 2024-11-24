@@ -38,9 +38,6 @@ let (executor, producer) = RustDisruptorBuilder::with_ring_buffer::<u64, 1024>(1
     })
     .build();
 
-// Start processing events
-executor.start();
-
 // Publish events
 producer.publish(42);
 ```
