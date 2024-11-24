@@ -6,6 +6,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0](https://github.com/deepcausality-rs/deep_causality/compare/dcl_data_structures-v0.5.0...dcl_data_structures-v0.6.0) - 2024-11-24
+
+### Other
+
+- Updated README.md
+- Applied various code lints.
+- Added more tests to DSL.
+- Added test
+- Improved test coverage for BatchEventProcessor
+- Fixed bench_dcl_data_structures.rs
+- Added test coverage of DSL in RingBuffer
+- Improved test coverage of RingBuffer type
+- Improved test coverage of ArrayGrid type
+- Rolled back breaking changes
+- Update dcl_data_structures/tests/ring_buffer/wait_strategy/spinloop_wait_strategy_tests.rs
+- Update dcl_data_structures/tests/ring_buffer/producer/multi_producer_tests.rs
+- Update dcl_data_structures/src/ring_buffer/utils/bit_map.rs
+- Code linting
+- Code format
+- Updated README.md
+- Documented DSL in RingBuffer
+- Added DSl to RinglBuffer
+- Added documentation to RingBuffer
+- Added benchmark and various tweaks to ring buffer
+- Added documentation to single and multi producer.
+- Added single and multi producer with tests
+- Added documentation and tests to consumer / BatchEventProcessor
+- Added consumer to ring buffer
+- Added documentation, example, and tests to executor in ring buffer
+- Added executor to ring buffer
+- Added tests for wait strategy in ring_buffer
+- Added documentation to sequence in ring_buffer
+- Code forma!ing
+- Added tests to barrier in ring_buffer
+- Added documentation to barrier in ring_buffer
+- Added wait strategy to rin_buffer
+- Fixed missing import
+- Code linting and formatting
+- Added benchmark and tests for atomic_sequence.
+- Added tests for atomic_sequence
+- Added tests for the custom rin_buffer
+- Added initial work on a custom ring_buffer implementation
+- Code linting & formatting
+- Bumped up minimum rust version to 1.80.
+- Code formatting
+- Updated Readme in data structure crate with the latest benchmark results.
+- Improve performance of unsafe ArrayGrid further
+- # Optimize Unsafe ArrayGrid Implementation
+- Code formatted
+- Updated README files in dcl_data_structures crate
+- Added more tests to  unsafe ArrayGrid.
+- Added unsafe ArrayGrid Type that performs up tp 50% faster than the safe counter part
+- Added some more tests
+- Code formatting
+
 ## [0.5.0](https://github.com/deepcausality-rs/deep_causality/compare/dcl_data_structures-v0.4.7...dcl_data_structures-v0.5.0) - 2024-11-21
 
 ### Other
