@@ -103,9 +103,13 @@ fn test_spinloop_wait_strategy_stress() {
         }));
     }
 
-    thread::sleep(Duration::from_millis(50));
-    deps[0].set(10);
-    strategy.signal();
+let barrier = Arc::new(std::sync::Barrier::new(3));
+let barrier_clone = barrier.clone();
+
+// Wait for all threads to be ready
+barrier.wait();
+deps[0].set(10);
+strategy.signal();
 
     for handle in handles {
         assert_eq!(handle.join().unwrap(), Some(10));
