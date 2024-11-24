@@ -46,9 +46,12 @@ fn test_multi_producer_next_sequence() {
     let wait_strategy = BlockingWaitStrategy::new();
     let sequencer = MultiProducerSequencer::new(buffer_size, wait_strategy);
 
-    let (start, end) = sequencer.next(3);
-    assert_eq!(start, 1);
-    assert_eq!(end, 3);
+// First verify initial sequence
+assert_eq!(sequencer.get_cursor().get(), 0);
+
+let (start, end) = sequencer.next(3);
+assert_eq!(start, 1);
+assert_eq!(end, 3);
 
     let (start2, end2) = sequencer.next(2);
     assert_eq!(start2, 4);
