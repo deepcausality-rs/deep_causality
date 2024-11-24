@@ -1,5 +1,6 @@
 // Re-exports
 pub use crate::ring_buffer::barrier::barrier::*;
+pub use crate::ring_buffer::consumer::batch_event_processor::*;
 pub use crate::ring_buffer::executor::*;
 pub use crate::ring_buffer::sequence::sequence::*;
 pub use crate::ring_buffer::traits::*;
