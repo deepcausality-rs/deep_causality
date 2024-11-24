@@ -41,8 +41,8 @@
 //! assert_eq!(seq.get(), 43);
 //! ```
 
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::mem::size_of;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 /// Type alias for sequence numbers in the ring buffer.
 /// Uses u64 to provide a large range of sequence numbers before wrapping.
