@@ -104,3 +104,24 @@ fn test_multi_producer_barrier() {
     // Check barrier's sequence is initialized
     assert!(barrier.wait_for(0).is_some());
 }
+
+#[test]
+fn test_multi_producer_drain() {
+    let buffer_size = 8;
+    let wait_strategy = BlockingWaitStrategy::new();
+    let mut sequencer = MultiProducerSequencer::new(buffer_size, wait_strategy);
+
+    // Create a gating sequence that will track our test consumer
+    let gating_sequence = Arc::new(AtomicSequence::default());
+    sequencer.add_gating_sequence(&gating_sequence);
+
+    // Publish some sequences
+    let (start, end) = sequencer.next(3);
+    sequencer.publish(start, end);
+
+    // Update the gating sequence to match the published sequences
+    gating_sequence.set(end);
+
+    // Now drain should complete since the gating sequence has caught up
+    sequencer.drain();
+}
