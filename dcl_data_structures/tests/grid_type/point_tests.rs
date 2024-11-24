@@ -39,13 +39,13 @@ fn test_new4d() {
 #[test]
 fn test_copy_clone() {
     let point = PointIndex::new4d(1, 2, 3, 4);
-    let copied = point;  // Test Copy
+    let copied = point; // Test Copy
     assert_eq!(point.x, copied.x);
     assert_eq!(point.y, copied.y);
     assert_eq!(point.z, copied.z);
     assert_eq!(point.t, copied.t);
 
-    let cloned = point.clone();  // Test Clone
+    let cloned = point.clone(); // Test Clone
     assert_eq!(point.x, cloned.x);
     assert_eq!(point.y, cloned.y);
     assert_eq!(point.z, cloned.z);

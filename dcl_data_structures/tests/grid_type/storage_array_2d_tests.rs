@@ -40,7 +40,10 @@ fn test_multiple_updates() {
 
     // Verify values
     for (point, expected_value) in points.iter() {
-        assert_eq!(*<[[i32; 3]; 4] as Storage<i32>>::get(&array, *point), *expected_value);
+        assert_eq!(
+            *<[[i32; 3]; 4] as Storage<i32>>::get(&array, *point),
+            *expected_value
+        );
     }
 }
 
@@ -57,7 +60,10 @@ fn test_array_bounds() {
     ];
 
     for (point, expected_value) in points.iter() {
-        assert_eq!(*<[[i32; 2]; 2] as Storage<i32>>::get(&array, *point), *expected_value);
+        assert_eq!(
+            *<[[i32; 2]; 2] as Storage<i32>>::get(&array, *point),
+            *expected_value
+        );
     }
 }
 
@@ -83,15 +89,24 @@ fn test_different_types() {
     let mut float_array: [[f64; 2]; 2] = [[0.0; 2]; 2];
     let point = PointIndex::new2d(1, 1);
     <[[f64; 2]; 2] as Storage<f64>>::set(&mut float_array, point, 3.14);
-    assert_eq!(*<[[f64; 2]; 2] as Storage<f64>>::get(&float_array, point), 3.14);
+    assert_eq!(
+        *<[[f64; 2]; 2] as Storage<f64>>::get(&float_array, point),
+        3.14
+    );
 
     // Test with bool
     let mut bool_array: [[bool; 2]; 2] = [[false; 2]; 2];
     <[[bool; 2]; 2] as Storage<bool>>::set(&mut bool_array, point, true);
-    assert_eq!(*<[[bool; 2]; 2] as Storage<bool>>::get(&bool_array, point), true);
+    assert_eq!(
+        *<[[bool; 2]; 2] as Storage<bool>>::get(&bool_array, point),
+        true
+    );
 
     // Test with char
     let mut char_array: [[char; 2]; 2] = [['a'; 2]; 2];
     <[[char; 2]; 2] as Storage<char>>::set(&mut char_array, point, 'z');
-    assert_eq!(*<[[char; 2]; 2] as Storage<char>>::get(&char_array, point), 'z');
+    assert_eq!(
+        *<[[char; 2]; 2] as Storage<char>>::get(&char_array, point),
+        'z'
+    );
 }

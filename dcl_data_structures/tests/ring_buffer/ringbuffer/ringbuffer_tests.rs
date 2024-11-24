@@ -1,6 +1,6 @@
+use dcl_data_structures::ring_buffer::prelude::*;
 use std::sync::Arc;
 use std::thread;
-use dcl_data_structures::ring_buffer::prelude::*;
 
 #[test]
 fn test_new_ringbuffer() {
@@ -65,12 +65,12 @@ fn test_wrapping_behavior() {
     // Write values that wrap around the buffer
     unsafe {
         *rb.get_mut(0) = 1;
-        *rb.get_mut(4) = 2;  // Should wrap to index 0
-        *rb.get_mut(8) = 3;  // Should wrap to index 0
+        *rb.get_mut(4) = 2; // Should wrap to index 0
+        *rb.get_mut(8) = 3; // Should wrap to index 0
 
         // Verify wrapping behavior
-        assert_eq!(*rb.get(8), 3);  // Should read from index 0
-        assert_eq!(*rb.get(0), 3);  // Same physical location
+        assert_eq!(*rb.get(8), 3); // Should read from index 0
+        assert_eq!(*rb.get(0), 3); // Same physical location
     }
 }
 
