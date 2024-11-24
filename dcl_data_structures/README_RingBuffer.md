@@ -103,7 +103,7 @@ The RingBuffer implementation consists of several key components:
 └─────────────┘    └─────────────┘    └─────────────┘
 ```
 
-## Performance 
+## Performance
 
 ### Single Producer Performance
 | Batch Size | Throughput      | Latency    |
