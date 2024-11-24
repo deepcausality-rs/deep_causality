@@ -48,6 +48,15 @@ where
     mask: usize,
 }
 
+impl<T, const N: usize> Default for RingBuffer<T, N>
+where
+    T: Default + Copy,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T, const N: usize> RingBuffer<T, N>
 where
     T: Default + Copy,
