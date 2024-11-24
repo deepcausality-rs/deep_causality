@@ -56,12 +56,6 @@ implementation is significantly faster than the vector-based version.
 2) Zero cost abstraction.
 3) Zero unsafe by default. Unsafe implementations are available through the `unsafe` feature flag.
 
-To enable unsafe implementations, add this to your `Cargo.toml`:
-```toml
-[dependencies]
-dcl_data_structures = { version = "0.4.7", features = ["unsafe"] }
-```
-
 # Performance:
 
 ## ArrayGrid
