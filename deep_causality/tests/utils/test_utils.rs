@@ -71,7 +71,7 @@ pub fn get_test_error_causaloid<'l>() -> BaseCausaloid<'l> {
     Causaloid::new(id, causal_fn, description)
 }
 
-pub fn get_test_context() -> BaseContext<'static> {
+pub fn get_test_context() -> BaseContext {
     let mut context = Context::with_capacity(1, "Test-Context", 10);
 
     let id = 1;

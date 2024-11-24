@@ -7,7 +7,7 @@ use std::ops::*;
 use crate::prelude::{Context, Datable, SpaceTemporal, Spatial, Temporable};
 use crate::protocols::contextuable_graph::ContextuableGraph;
 
-impl<'l, D, S, T, ST, V> Context<'l, D, S, T, ST, V>
+impl<D, S, T, ST, V> Context<D, S, T, ST, V>
 where
     D: Datable,
     S: Spatial<V>,
@@ -35,7 +35,7 @@ where
     }
 }
 
-impl<'l, D, S, T, ST, V> Debug for Context<'l, D, S, T, ST, V>
+impl<D, S, T, ST, V> Debug for Context<D, S, T, ST, V>
 where
     D: Datable,
     S: Spatial<V>,
@@ -56,7 +56,7 @@ where
     }
 }
 
-impl<'l, D, S, T, ST, V> Display for Context<'l, D, S, T, ST, V>
+impl<'l, D, S, T, ST, V> Display for Context<D, S, T, ST, V>
 where
     D: Datable,
     S: Spatial<V>,

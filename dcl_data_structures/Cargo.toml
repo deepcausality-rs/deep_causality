@@ -16,9 +16,10 @@ default = []
 unsafe = [] # Enable unsafe implementations
 
 [dev-dependencies]
+crossbeam-utils = "0.8"
 criterion = { version = "0.5", features = ["html_reports"] }
 rand = { version = "0.8", features = ["small_rng"] }
 
 [[bench]]
-name = "bench_main"
+name = "bench_dcl_data_structures"
 harness = false

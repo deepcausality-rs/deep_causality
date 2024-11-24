@@ -31,7 +31,16 @@
 
 [test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
 
-High performance GridArray and SlidingWindow datastructures used in [DeepCausality](https://github.com/deepcausality-rs/deep_causality).
+High performance SlidingWindow datastructures used in [DeepCausality](https://github.com/deepcausality-rs/deep_causality) and elsewhere.
+
+RingBuffer is a high-performance, lock-free data structure implementation inspired by the LMAX Disruptor pattern.
+
+ArrayGrid is an abstraction over scalars, vectors, and low dimensional matrices similar to a tensor.
+In contrast to a tensor, an ArrayGrid is limited to low dimensions (1 to 4), only allowing a scalar,
+vector, or matrix type. Still, all of them are represented as a static fixed-size const generic array.
+Fixed-sized arrays allow for several compiler optimizations, including a cache-aligned data layout and the removal of
+runtime array boundary checks because all structural parameters are known upfront, providing a significant performance
+boost over tensors.
 
 The sliding window implementation over-allocates to trade space (memory) for time complexity by delaying the rewind
 operation when hitting the end of the underlying data structure.
@@ -40,12 +49,6 @@ where C is the total capacity defined as NxM with N as the window size and M as 
 This crate has two implementations, one over vector and the second over a const generic array. The const generic
 implementation is significantly faster than the vector-based version.
 
-ArrayGrid is an abstraction over scalars, vectors, and low dimensional matrices similar to a tensor.
-In contrast to a tensor, an ArrayGrid is limited to low dimensions (1 to 4), only allowing a scalar,
-vector, or matrix type. Still, all of them are represented as a static fixed-size const generic array.
-Fixed-sized arrays allow for several compiler optimizations, including a cache-aligned data layout and the removal of
-runtime array boundary checks because all structural parameters are known upfront, providing a significant performance
-boost over tensors.
 
 ## 🤔 Why?
 
@@ -75,6 +78,17 @@ dcl_data_structures = { version = "0.4.7", features = ["unsafe"] }
 More details on performance can be found in the [Performance](README_ArrayGrid.md#performance) section
 of the [ArrayGrid document](README_ArrayGrid.md).
 
+
+### RingBu$er: Single Producer/Consumer Performance
+| Batch Size | Throughput      | Latency    |
+|------------|-----------------|------------|
+| 1          | 220.47 Melem/s  | 4.54 ms   |
+| 10         | 1.65 Gelem/s    | 604.88 µs |
+| 50         | 1.67 Gelem/s    | 597.67 µs |
+| 100        | 1.68 Gelem/s    | 596.12 µs |
+
+More details on performance can be found in the [Performance](README_RingBuffer.md#performance) section
+of the [RingBuffer document](README_RingBuffer.md).
 
 ## Sliding Window
 

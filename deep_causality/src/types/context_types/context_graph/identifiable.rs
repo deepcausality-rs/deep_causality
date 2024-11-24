@@ -5,7 +5,7 @@ use std::ops::*;
 
 use crate::prelude::{Context, Datable, Identifiable, SpaceTemporal, Spatial, Temporable};
 
-impl<'l, D, S, T, ST, V> Identifiable for Context<'l, D, S, T, ST, V>
+impl<D, S, T, ST, V> Identifiable for Context<D, S, T, ST, V>
 where
     D: Datable,
     S: Spatial<V>,

@@ -60,7 +60,7 @@ fn array_operations(c: &mut Criterion) {
             let mut storage = ArrayStorage::<i32, SIZE, CAPACITY>::new();
             b.iter(|| {
                 for i in 0..size {
-                    storage.push(black_box(i as i32));
+                    storage.push(black_box(i));
                 }
             });
         });
@@ -186,7 +186,7 @@ fn vector_operations(c: &mut Criterion) {
             let mut storage = VectorStorage::new(SIZE, MULT);
             b.iter(|| {
                 for i in 0..size {
-                    storage.push(black_box(i as i32));
+                    storage.push(black_box(i));
                 }
             });
         });

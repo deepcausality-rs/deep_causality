@@ -26,7 +26,7 @@ use crate::prelude::{Contextoid, Datable, RelationKind, SpaceTemporal, Spatial, 
 ///
 /// Methods return Result or Option types for error handling.
 ///
-pub trait ContextuableGraph<'l, D, S, T, ST, V>
+pub trait ContextuableGraph<D, S, T, ST, V>
 where
     D: Datable,
     S: Spatial<V>,
@@ -83,7 +83,7 @@ where
 ///
 /// Methods return Result or Option types for error handling.
 ///
-pub trait ExtendableContextuableGraph<'l, D, S, T, ST, V>
+pub trait ExtendableContextuableGraph<D, S, T, ST, V>
 where
     D: Datable,
     S: Spatial<V>,

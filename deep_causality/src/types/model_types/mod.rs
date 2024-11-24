@@ -32,7 +32,7 @@ where
     description: &'l str,
     assumptions: Option<&'l Vec<&'l Assumption>>,
     causaloid: &'l Causaloid<'l, D, S, T, ST, V>,
-    context: Option<&'l Context<'l, D, S, T, ST, V>>,
+    context: Option<&'l Context<D, S, T, ST, V>>,
 }
 
 impl<'l, D, S, T, ST, V> Identifiable for Model<'l, D, S, T, ST, V>

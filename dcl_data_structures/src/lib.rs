@@ -3,4 +3,5 @@
 
 pub mod grid_type;
 pub mod prelude;
+pub mod ring_buffer;
 pub mod window_type;

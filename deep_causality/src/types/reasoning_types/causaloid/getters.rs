@@ -33,7 +33,7 @@ where
     pub fn description(&self) -> &'l str {
         self.description
     }
-    pub fn context(&self) -> Option<&'l Context<'l, D, S, T, ST, V>> {
+    pub fn context(&self) -> Option<&'l Context<D, S, T, ST, V>> {
         self.context
     }
 }

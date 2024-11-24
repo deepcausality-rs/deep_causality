@@ -14,7 +14,7 @@ fn test_len() {
         make_len!();
     }
 
-    let test = Vec::from(vec![1, 2, 3]);
+    let test = [1, 2, 3];
     assert_eq!(test.len(), 3);
 }
 
@@ -34,10 +34,10 @@ fn test_is_empty() {
         make_is_empty!();
     }
 
-    let test = Vec::from(vec![1, 2, 3]);
+    let test = [1, 2, 3];
     assert!(!test.is_empty());
 
-    let empty: Vec<i32> = Vec::from(vec![]);
+    let empty: Vec<i32> = vec![];
     assert!(empty.is_empty());
 }
 
@@ -57,7 +57,7 @@ fn test_get_all_items() {
         make_get_all_items!();
     }
 
-    let test = Vec::from(vec![1, 2, 3]);
+    let test = vec![1, 2, 3];
     let items: Vec<&i32> = test.get_all_items();
     assert_eq!(items, vec![&1, &2, &3]);
 }
@@ -78,7 +78,7 @@ fn test_to_vec() {
         make_vec_to_vec!();
     }
 
-    let test = Vec::from(vec![1, 2, 3]);
+    let test = vec![1, 2, 3];
     let vec: Vec<i32> = test.to_vec();
     assert_eq!(vec, vec![1, 2, 3]);
 }

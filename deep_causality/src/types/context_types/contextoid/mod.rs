@@ -2,7 +2,6 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use std::hash::Hash;
-use std::marker::PhantomData;
 use std::ops::*;
 
 use crate::prelude::{ContextoidType, Datable, SpaceTemporal, Spatial, Temporable};
@@ -31,7 +30,6 @@ where
 {
     id: u64,
     vertex_type: ContextoidType<D, S, T, ST, V>,
-    ty: PhantomData<V>,
 }
 
 impl<D, S, T, ST, V> Contextoid<D, S, T, ST, V>
@@ -51,10 +49,6 @@ where
         + Mul<V, Output = V>,
 {
     pub fn new(id: u64, vertex_type: ContextoidType<D, S, T, ST, V>) -> Self {
-        Self {
-            id,
-            vertex_type,
-            ty: PhantomData,
-        }
+        Self { id, vertex_type }
     }
 }

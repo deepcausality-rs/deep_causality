@@ -19,7 +19,7 @@ type ExtraContext<D, S, T, ST, V> = UltraGraph<Contextoid<D, S, T, ST, V>>;
 
 type ExtraContextMap<D, S, T, ST, V> = HashMap<u64, ExtraContext<D, S, T, ST, V>>;
 
-pub struct Context<'l, D, S, T, ST, V>
+pub struct Context<D, S, T, ST, V>
 where
     D: Datable,
     S: Spatial<V>,
@@ -36,7 +36,7 @@ where
         + Mul<V, Output = V>,
 {
     id: u64,
-    name: &'l str,
+    name: String,
     base_context: UltraGraph<Contextoid<D, S, T, ST, V>>,
     extra_contexts: Option<ExtraContextMap<D, S, T, ST, V>>,
     number_of_extra_contexts: u64,
@@ -45,7 +45,7 @@ where
     previous_index_map: HashMap<usize, usize>,
 }
 
-impl<'l, D, S, T, ST, V> Context<'l, D, S, T, ST, V>
+impl<D, S, T, ST, V> Context<D, S, T, ST, V>
 where
     D: Datable,
     S: Spatial<V>,
@@ -62,10 +62,10 @@ where
         + Mul<V, Output = V>,
 {
     /// Creates a new context with the given node capacity.
-    pub fn with_capacity(id: u64, name: &'l str, capacity: usize) -> Self {
+    pub fn with_capacity(id: u64, name: &str, capacity: usize) -> Self {
         Self {
             id,
-            name,
+            name: name.to_string(),
             base_context: ultragraph::new_with_matrix_storage(capacity),
             extra_contexts: None,
             number_of_extra_contexts: 0,
@@ -77,6 +77,6 @@ where
 
     /// Returns the name of the context.
     pub fn name(&self) -> &str {
-        self.name
+        self.name.as_str()
     }
 }
