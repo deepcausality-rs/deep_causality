@@ -1,10 +1,109 @@
-# RingBuffer 
+# RingBuffer
 
 ## Overview
-The RingBuffer is a high-performance, lock-free data structure designed for efficient producer-consumer scenarios. 
-This guide provides performance characteristics and recommendations based on extensive benchmarking.
 
-## Performance Characteristics
+The RingBuffer module is a high-performance, lock-free data structure implementation inspired by the LMAX Disruptor pattern. It provides a concurrent message-passing mechanism optimized for both high throughput and low latency scenarios. The implementation supports both single-producer and multi-producer configurations, with flexible event handling and customizable wait strategies.
+
+### Key Features
+
+- Lock-free implementation using atomic operations
+- Support for both single-producer and multi-producer scenarios
+- Flexible event handling with mutable and immutable handlers
+- Customizable wait strategies (SpinLoop and Blocking)
+- Batch processing capabilities for improved throughput
+- DSL for easy configuration and setup
+- Cache-line aligned for optimal performance
+
+## Usage
+
+### Basic Example
+
+```rust
+use dcl_data_structures::ring_buffer::prelude::*;
+
+// Define an event handler
+struct PrintHandler;
+impl EventHandler<u64> for PrintHandler {
+    fn handle_event(&self, event: &u64, sequence: u64, end_of_batch: bool) {
+        println!("Received: {} at sequence {}", event, sequence);
+    }
+}
+
+// Create a ring buffer with single producer
+let (executor, producer) = RustDisruptorBuilder::with_ring_buffer::<u64, 1024>(1024)
+    .with_blocking_wait()
+    .with_single_producer()
+    .with_barrier(|scope| {
+        scope.handle_events(PrintHandler);
+    })
+    .build();
+
+// Start processing events
+executor.start();
+
+// Publish events
+producer.publish(42);
+```
+
+### Advanced Configuration
+
+```rust
+// Create a multi-producer ring buffer with custom wait strategy
+let (executor, producer) = RustDisruptorBuilder::with_ring_buffer::<i32, 2048>(2048)
+    .with_spin_wait()
+    .with_multi_producer()
+    .with_barrier(|scope| {
+        // Add multiple handlers in sequence
+        scope.handle_events(FirstHandler);
+        scope.handle_events_mut(SecondHandler);
+        
+        // Create a nested barrier for parallel processing
+        scope.with_barrier(|nested| {
+            nested.handle_events(ParallelHandler1);
+            nested.handle_events(ParallelHandler2);
+        });
+    })
+    .build();
+```
+
+## Implementation
+
+The RingBuffer implementation consists of several key components:
+
+### Core Components
+
+1. **RingBuffer**: The central data structure that stores events in a circular buffer.
+   - Uses atomic operations for thread-safe access
+   - Implements cache-line padding to prevent false sharing
+   - Supports power-of-2 sizes for optimal indexing
+
+2. **Sequencers**: Manage sequence numbers for producers and consumers
+   - SingleProducerSequencer: Optimized for single-thread publishing
+   - MultiProducerSequencer: Ensures thread-safe publishing from multiple threads
+
+3. **Wait Strategies**: Control how consumers wait for new events
+   - SpinLoopWaitStrategy: Active spinning for lowest latency
+   - BlockingWaitStrategy: Condition variables for power efficiency
+
+4. **Event Processors**: Handle event processing and batching
+   - BatchEventProcessor: Processes events in batches for improved throughput
+   - Support for both mutable and immutable event handlers
+
+### Architecture
+
+```
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   Producer  │ -> │  RingBuffer │ -> │  Consumer   │
+└─────────────┘    └─────────────┘    └─────────────┘
+       ↑                  ↑                  ↑
+       │                  │                  │
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│  Sequencer  │    │    Data     │    │    Event    │
+│             │ -> │  Provider   │ -> │  Processor  │
+└─────────────┘    └─────────────┘    └─────────────┘
+```
+
+## Performance 
 
 ### Single Producer Performance
 | Batch Size | Throughput      | Latency    |
@@ -21,6 +120,12 @@ This guide provides performance characteristics and recommendations based on ext
 | 10         | 162.09 Melem/s | 6.17 ms   |
 | 50         | 273.06 Melem/s | 3.66 ms   |
 | 100        | 332.22 Melem/s | 3.01 ms   |
+
+### Hardware & OS
+- Architecture: ARM64 (Apple Silicon, M3 Max)
+- OS: macOS Darwin 24.1.0 (Seqoia 15.1)
+- Kernel: XNU 11215.41.3~2
+- Machine: MacBook Pro (T6031)
 
 ## Optimization Guidelines
 
@@ -44,37 +149,60 @@ This guide provides performance characteristics and recommendations based on ext
 
 ## Best Practices
 
-1. **Batch Processing**
-   - Always process events in batches when possible
-   - Use the optimal batch size provided by the API
-   - Adjust batch size based on your latency requirements
+### 1. Batch Processing
+- Always process events in batches when possible
+- Use the optimal batch size provided by the API
+- Adjust batch size based on your latency requirements
 
-2. **Memory Layout**
-   - RingBuffer is cache-line aligned for optimal performance
-   - Keep hot data together to minimize cache misses
-   - Consider CPU affinity for critical threads
+### 2. Memory Layout
+- RingBuffer is cache-line aligned for optimal performance
+- Keep hot data together to minimize cache misses
+- Consider CPU affinity for critical threads
 
-3. **Error Handling**
-   - Use appropriate error handling for buffer full/empty conditions
-   - Implement backoff strategies for high contention scenarios
+### 3. Error Handling
+- Use appropriate error handling for buffer full/empty conditions
+- Implement backoff strategies for high contention scenarios
+- Consider using Result types for error propagation
 
-4. **Monitoring**
-   - Monitor throughput and latency in production
-   - Watch for signs of contention in multi-producer scenarios
-   - Adjust batch sizes if performance degrades
+### 4. Monitoring
+- Monitor throughput and latency in production
+- Watch for signs of contention in multi-producer scenarios
+- Adjust batch sizes if performance degrades
 
-## Example Usage
+### 5. Thread Management
+- Assign appropriate thread priorities
+- Consider using dedicated threads for critical producers/consumers
+- Implement proper shutdown procedures
 
-```rust
-use dcl_data_structures::ring_buffer::prelude::*;
+## Common Pitfalls
 
-// Create a RingBuffer with optimal configuration
-let buffer: RingBuffer<i64, 65536> = RingBuffer::new();
+1. **Non-Power-of-2 Buffer Sizes**
+   - Always use power of 2 sizes to ensure optimal performance
+   - Incorrect sizes will cause assertion failures
 
-// Get the optimal batch size
-let batch_size = RingBuffer::<i64, 65536>::optimal_batch_size();
+2. **Blocking in Event Handlers**
+   - Avoid blocking operations in event handlers
+   - Use async processing for I/O operations
 
-// Use the optimal batch size for processing
-let (start, end) = sequencer.next(batch_size);
-// Process batch...
-sequencer.publish(start, end);
+3. **Insufficient Batch Sizes**
+   - Too small batch sizes can limit throughput
+   - Too large batch sizes can increase latency
+   - Use performance metrics to find the right balance
+
+4. **Memory Barriers**
+   - Be aware of memory ordering requirements
+   - Use appropriate atomic operations
+
+## Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch
+3. Add tests for new functionality
+4. Ensure all tests pass
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
