@@ -87,6 +87,7 @@ pub struct MultiProducerSequencer<W: WaitStrategy> {
     ready_sequences: BitMap,
     /// Flag indicating if the sequencer has been drained
     is_done: Arc<AtomicBool>,
+    low_watermark: AtomicSequence,
 }
 
 /// Manual implementation of Clone for MultiProducerSequencer
@@ -100,6 +101,7 @@ impl<W: WaitStrategy> Clone for MultiProducerSequencer<W> {
             high_watermark: AtomicSequence::default(),
             ready_sequences: BitMap::new(NonZeroUsize::try_from(self.buffer_size).unwrap()),
             is_done: self.is_done.clone(),
+            low_watermark: AtomicSequence::default(),
         }
     }
 }
@@ -120,6 +122,7 @@ impl<W: WaitStrategy> MultiProducerSequencer<W> {
             high_watermark: AtomicSequence::default(),
             ready_sequences: BitMap::new(NonZeroUsize::try_from(buffer_size).unwrap()),
             is_done: Default::default(),
+            low_watermark: AtomicSequence::default(),
         }
     }
 
@@ -155,6 +158,7 @@ impl<W: WaitStrategy> Sequencer for MultiProducerSequencer<W> {
     /// # Returns
     ///
     /// A tuple of (start_sequence, end_sequence) representing the claimed range
+    #[inline(always)]
     fn next(&self, count: usize) -> (Sequence, Sequence) {
         loop {
             let high_watermark = self.high_watermark.get();
@@ -173,19 +177,20 @@ impl<W: WaitStrategy> Sequencer for MultiProducerSequencer<W> {
     ///
     /// * `lo` - The lowest sequence to publish
     /// * `hi` - The highest sequence to publish
+    #[inline(always)]
     fn publish(&self, lo: Sequence, hi: Sequence) {
         for n in lo..=hi {
             self.ready_sequences.set(n);
         }
 
-        let low_watermark = self.cursor.get() + 1;
-        let mut good_to_release = low_watermark - 1;
-        for n in low_watermark..=self.high_watermark.get() {
-            if self.ready_sequences.is_set(n) {
-                good_to_release = n;
-            } else {
+        let low_watermark = self.low_watermark.get();
+        let mut good_to_release = low_watermark;
+
+        while good_to_release < hi {
+            if !self.ready_sequences.is_set(good_to_release + 1) {
                 break;
             }
+            good_to_release += 1;
         }
 
         if good_to_release > low_watermark {
@@ -200,9 +205,10 @@ impl<W: WaitStrategy> Sequencer for MultiProducerSequencer<W> {
                     break;
                 }
             }
-        }
 
-        self.wait_strategy.signal();
+            self.low_watermark.set(good_to_release);
+            self.wait_strategy.signal();
+        }
     }
 
     /// Creates a barrier for coordinating with consumers.

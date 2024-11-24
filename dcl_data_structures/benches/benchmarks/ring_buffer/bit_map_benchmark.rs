@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, Criterion};
-use dcl_data_structures::ring_buffer::utils::bit_map::BitMap;
+use dcl_data_structures::ring_buffer::prelude::*;
 use std::num::NonZeroUsize;
 
 fn bitmap_benchmark(c: &mut Criterion) {

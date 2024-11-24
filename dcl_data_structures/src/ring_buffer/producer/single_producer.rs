@@ -132,6 +132,7 @@ impl<W: WaitStrategy> Sequencer for SingleProducerSequencer<W> {
     /// # Returns
     ///
     /// A tuple of (start_sequence, end_sequence) representing the claimed range
+    #[inline(always)]
     fn next(&self, count: usize) -> (Sequence, Sequence) {
         let mut min_sequence = self.cached_available_sequence.take();
         let next = self.next_write_sequence.take();
@@ -153,6 +154,7 @@ impl<W: WaitStrategy> Sequencer for SingleProducerSequencer<W> {
     ///
     /// * `_` - The lowest sequence to publish (unused in single-producer case)
     /// * `hi` - The highest sequence to publish
+    #[inline(always)]
     fn publish(&self, _: Sequence, hi: Sequence) {
         self.cursor.set(hi);
         self.wait_strategy.signal();
