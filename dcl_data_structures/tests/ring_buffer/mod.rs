@@ -4,6 +4,7 @@
 mod barrier;
 mod consumer;
 mod executor;
+mod producer;
 mod sequence;
 mod utils;
 mod wait_strategy;

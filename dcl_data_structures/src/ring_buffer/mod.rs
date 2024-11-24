@@ -5,6 +5,7 @@ pub mod barrier;
 mod consumer;
 mod executor;
 pub mod prelude;
+mod producer;
 pub mod sequence;
 pub mod traits;
 pub mod utils;
