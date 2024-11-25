@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1](https://github.com/deepcausality-rs/deep_causality/compare/dcl_data_structures-v0.6.0...dcl_data_structures-v0.6.1) - 2024-11-25
+
+### Other
+
+- code formatting,
+- Updated RingBuffer example code documentation and Readme.
+- Added examples for the ring_buffer in different configurations.
+- Merged tests into one file
+- Updated README.md
+
 ## [0.6.0](https://github.com/deepcausality-rs/deep_causality/compare/dcl_data_structures-v0.5.0...dcl_data_structures-v0.6.0) - 2024-11-24
 
 ### Other
