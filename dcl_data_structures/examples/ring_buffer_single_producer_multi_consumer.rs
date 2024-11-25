@@ -1,9 +1,9 @@
 //! Single Producer Multiple Consumer Ring Buffer Example
-//! 
+//!
 //! This example shows how to process events through multiple consumers in parallel:
 //! - One producer thread writing events
 //! - Multiple consumers processing events in different ways
-//! 
+//!
 //! Key points:
 //! - Each consumer runs in its own barrier for parallel processing
 //! - Consumers can be mixed (immutable and mutable)
@@ -32,7 +32,10 @@ struct MultiplyHandler;
 impl EventHandlerMut<i32> for MultiplyHandler {
     fn handle_event(&mut self, event: &mut i32, sequence: u64, _end_of_batch: bool) {
         *event *= 2;
-        println!("Multiply handler: new value = {} at sequence {}", event, sequence);
+        println!(
+            "Multiply handler: new value = {} at sequence {}",
+            event, sequence
+        );
     }
 }
 
@@ -54,8 +57,11 @@ impl EventHandlerMut<i32> for StatsHandler {
         self.count += 1;
         self.sum += *event;
         println!(
-            "Stats handler: count = {}, sum = {}, avg = {} at sequence {}", 
-            self.count, self.sum, self.sum as f64 / self.count as f64, sequence
+            "Stats handler: count = {}, sum = {}, avg = {} at sequence {}",
+            self.count,
+            self.sum,
+            self.sum as f64 / self.count as f64,
+            sequence
         );
     }
 }
@@ -90,7 +96,7 @@ fn main() {
     // Single producer can write events without synchronization
     for i in 0..5 {
         producer.write(std::iter::once(i + 1), |slot, _, val| *slot = *val);
-        thread::sleep(Duration::from_millis(10));  // Simulated work
+        thread::sleep(Duration::from_millis(10)); // Simulated work
     }
 
     // STEP 4: Cleanup
@@ -102,5 +108,8 @@ fn main() {
     // - Total processing time is roughly max(consumer_times) + overhead
     // - Real performance will be higher without prints and sleeps
     let duration = start_time.elapsed();
-    println!("Single producer multi-consumer example completed in {:?}", duration);
+    println!(
+        "Single producer multi-consumer example completed in {:?}",
+        duration
+    );
 }

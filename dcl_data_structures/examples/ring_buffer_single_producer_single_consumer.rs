@@ -1,9 +1,9 @@
 //! Single Producer Single Consumer Ring Buffer Example
-//! 
+//!
 //! This example demonstrates the simplest ring buffer configuration with:
 //! - One producer thread writing events
 //! - Two consumers in sequence (one immutable, one mutable)
-//! 
+//!
 //! Key points:
 //! - Use `with_single_producer()` for single producer scenarios (more efficient than multi-producer)
 //! - Chain handlers using barriers for sequential processing
@@ -34,7 +34,10 @@ struct MultiplyHandler {
 impl EventHandlerMut<i32> for MultiplyHandler {
     fn handle_event(&mut self, event: &mut i32, sequence: u64, _end_of_batch: bool) {
         *event *= self.factor;
-        println!("Multiplied event at sequence {}: new value = {}", sequence, event);
+        println!(
+            "Multiplied event at sequence {}: new value = {}",
+            sequence, event
+        );
     }
 }
 
@@ -65,7 +68,7 @@ fn main() {
     // The producer can be used from a single thread without synchronization
     for i in 0..5 {
         producer.write(std::iter::once(i + 1), |slot, _, val| *slot = *val);
-        thread::sleep(Duration::from_millis(10));  // Simulated work
+        thread::sleep(Duration::from_millis(10)); // Simulated work
     }
 
     // STEP 4: Cleanup

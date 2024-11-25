@@ -1,9 +1,9 @@
 //! Multiple Producer Multiple Consumer Ring Buffer Example
-//! 
+//!
 //! This example demonstrates the most complex ring buffer configuration:
 //! - Multiple producers writing events concurrently
 //! - Multiple consumers processing events in parallel
-//! 
+//!
 //! Key points:
 //! - Combines features of multi-producer and multi-consumer patterns
 //! - Each producer writes independently
@@ -85,7 +85,7 @@ impl EventHandlerMut<(i32, usize)> for AddHandler {
 fn main() {
     println!("\nRunning multi-producer multi-consumer example...");
     let start_time = Instant::now();
-    
+
     // STEP 1: Create ring buffer with multiple barriers
     let (executor, producer) = RustDisruptorBuilder::with_ring_buffer::<(i32, usize), 1024>(1024)
         .with_blocking_wait()
@@ -112,7 +112,7 @@ fn main() {
 
     // STEP 4: Launch producer threads
     let mut producer_handles = vec![];
-    
+
     for producer_id in 0..3 {
         let producer = Arc::clone(&producer);
         let handle = thread::spawn(move || {
@@ -121,9 +121,9 @@ fn main() {
                 let value = (producer_id + 1) * (i + 1);
                 producer.write(
                     std::iter::once((value as i32, producer_id)),
-                    |slot, _, val| *slot = *val
+                    |slot, _, val| *slot = *val,
                 );
-                thread::sleep(Duration::from_millis(10));  // Simulated work
+                thread::sleep(Duration::from_millis(10)); // Simulated work
             }
             println!("Producer {} finished", producer_id);
         });
@@ -143,5 +143,8 @@ fn main() {
     // - Total throughput = min(producer_rate, consumer_rate)
     // - Real performance much higher without prints/sleeps
     let duration = start_time.elapsed();
-    println!("Multi-producer multi-consumer example completed in {:?}", duration);
+    println!(
+        "Multi-producer multi-consumer example completed in {:?}",
+        duration
+    );
 }

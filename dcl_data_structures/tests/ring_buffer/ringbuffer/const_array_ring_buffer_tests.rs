@@ -127,7 +127,6 @@ fn test_cache_alignment() {
     assert_eq!(mem::align_of::<RingBuffer<i32, 16>>(), 64);
 }
 
-
 const SIZE: usize = 1024;
 
 #[test]

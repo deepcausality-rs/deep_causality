@@ -1,9 +1,9 @@
 //! Multiple Producer Single Consumer Ring Buffer Example
-//! 
+//!
 //! This example demonstrates concurrent event production with:
 //! - Multiple producer threads writing events concurrently
 //! - One consumer aggregating and processing all events
-//! 
+//!
 //! Key points:
 //! - Use `with_multi_producer()` for concurrent producers
 //! - Wrap producer in Arc for thread-safe sharing
@@ -19,7 +19,7 @@ use std::time::{Duration, Instant};
 // Shows how to track events from different sources
 struct AggregateHandler {
     total_sum: i32,
-    producer_counts: [i32; 3],  // Track events from each producer
+    producer_counts: [i32; 3], // Track events from each producer
 }
 
 impl AggregateHandler {
@@ -36,15 +36,15 @@ impl EventHandlerMut<(i32, usize)> for AggregateHandler {
         let (value, producer_id) = *event;
         self.total_sum += value;
         self.producer_counts[producer_id] += 1;
-        
+
         println!(
             "Received value {} from producer {} at sequence {}. Running total: {}",
             value, producer_id, sequence, self.total_sum
         );
-        
+
         if end_of_batch {
             println!(
-                "Batch ended at sequence {}. Events per producer: {:?}", 
+                "Batch ended at sequence {}. Events per producer: {:?}",
                 sequence, self.producer_counts
             );
         }
@@ -54,7 +54,7 @@ impl EventHandlerMut<(i32, usize)> for AggregateHandler {
 fn main() {
     println!("\nRunning multi-producer single consumer example...");
     let start_time = Instant::now();
-    
+
     // STEP 1: Create the ring buffer
     // Use multi-producer mode for concurrent event publishing
     let (executor, producer) = RustDisruptorBuilder::with_ring_buffer::<(i32, usize), 1024>(1024)
@@ -73,7 +73,7 @@ fn main() {
 
     // STEP 4: Create producer threads
     let mut producer_handles = vec![];
-    
+
     // Launch multiple producers
     for producer_id in 0..3 {
         let producer = Arc::clone(&producer);
@@ -83,9 +83,9 @@ fn main() {
                 let value = (producer_id + 1) * (i + 1);
                 producer.write(
                     std::iter::once((value as i32, producer_id)),
-                    |slot, _, val| *slot = *val
+                    |slot, _, val| *slot = *val,
                 );
-                thread::sleep(Duration::from_millis(10));  // Simulated work
+                thread::sleep(Duration::from_millis(10)); // Simulated work
             }
             println!("Producer {} finished", producer_id);
         });
@@ -104,5 +104,8 @@ fn main() {
     // - Thread synchronization adds some overhead
     // - Real performance scales with number of producers
     let duration = start_time.elapsed();
-    println!("Multi-producer single consumer example completed in {:?}", duration);
+    println!(
+        "Multi-producer single consumer example completed in {:?}",
+        duration
+    );
 }
