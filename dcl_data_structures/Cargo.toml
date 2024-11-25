@@ -9,7 +9,31 @@ license = "MIT"
 description = "Data structures for for deep_causality crate."
 documentation = "https://docs.rs/deep_causality"
 categories = ["data-structures", "science"]
-keywords = ["data-structures", "sliding-window", "grid-array"]
+keywords = ["data-structures", "sliding-window", "grid-array", "ringbuffer", "disruptor"]
+
+[[example]]
+name = "array_grid"
+path = "examples/array_grid.rs"
+
+[[example]]
+name = "sliding_window"
+path = "examples/sliding_window.rs"
+
+[[example]]
+name = "ring_buffer_single_producer_single_consume"
+path = "examples/ring_buffer_single_producer_single_consumer.rs"
+
+[[example]]
+name = "ring_buffer_single_producer_multi_consumer"
+path = "examples/ring_buffer_single_producer_multi_consumer.rs"
+
+[[example]]
+name = "ring_buffer_multi_producer_single_consumer"
+path = "examples/ring_buffer_multi_producer_single_consumer.rs"
+
+[[example]]
+name = "ring_buffer_multi_producer_multi_consumer"
+path = "examples/ring_buffer_multi_producer_multi_consumer.rs"
 
 [features]
 default = []
