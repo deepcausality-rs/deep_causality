@@ -34,6 +34,11 @@
 High performance SlidingWindow datastructures used in [DeepCausality](https://github.com/deepcausality-rs/deep_causality) and elsewhere.
 
 RingBuffer is a high-performance, lock-free data structure implementation inspired by the LMAX Disruptor pattern.
+The RingBuffer supports the following configurations:
+- Single producer / single consumer
+- Single producer / muliple consumer
+- Multi producer / single consumer
+- Multi producer / multi consumer
 
 ArrayGrid is an abstraction over scalars, vectors, and low dimensional matrices similar to a tensor.
 In contrast to a tensor, an ArrayGrid is limited to low dimensions (1 to 4), only allowing a scalar,
@@ -73,7 +78,7 @@ More details on performance can be found in the [Performance](README_ArrayGrid.m
 of the [ArrayGrid document](README_ArrayGrid.md).
 
 
-### RingBu$er: Single Producer/Consumer Performance
+### RingBuffer: Single Producer/Consumer Performance
 | Batch Size | Throughput      | Latency    |
 |------------|-----------------|------------|
 | 1          | 220.47 Melem/s  | 4.54 ms   |
@@ -115,12 +120,6 @@ Just run:
 
 ```bash
 cargo add dcl_data_structures
-```
-
-Alternatively, add the following to your Cargo.toml
-
-```toml
-dcl_data_structures = "0.4.7"
 ```
 
 ## 📚 Docs
