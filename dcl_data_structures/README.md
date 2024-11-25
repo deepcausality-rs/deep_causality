@@ -34,6 +34,11 @@
 High performance SlidingWindow datastructures used in [DeepCausality](https://github.com/deepcausality-rs/deep_causality) and elsewhere.
 
 RingBuffer is a high-performance, lock-free data structure implementation inspired by the LMAX Disruptor pattern.
+The RingBuffer supports the following configurations:
+- Single producer / single consumer
+- Single producer / muliple consumer
+- Multi producer / single consumer
+- Multi producer / multi consumer
 
 ArrayGrid is an abstraction over scalars, vectors, and low dimensional matrices similar to a tensor.
 In contrast to a tensor, an ArrayGrid is limited to low dimensions (1 to 4), only allowing a scalar,

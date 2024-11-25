@@ -1,66 +1,154 @@
 # RingBuffer
 
-## Overview
 
 The RingBuffer module is a high-performance, lock-free data structure implementation inspired by the LMAX Disruptor pattern. It provides a concurrent message-passing mechanism optimized for both high throughput and low latency scenarios. The implementation supports both single-producer and multi-producer configurations, with flexible event handling and customizable wait strategies.
 
+### Supported configurartions
+
+- Single producer / single consumer
+- Single producer / muliple consumer
+- Multi producer / single consumer
+- Multi producer / multi consumer
+
 ### Key Features
 
+- Blocking and spinning wait strategies
+- Event batching for improved throughput
+- Thread-safe concurrent operations
+- Zero-allocation event handling
 - Lock-free implementation using atomic operations
-- Support for both single-producer and multi-producer scenarios
 - Flexible event handling with mutable and immutable handlers
 - Customizable wait strategies (SpinLoop and Blocking)
 - Batch processing capabilities for improved throughput
 - DSL for easy configuration and setup
 - Cache-line aligned for optimal performance
 
-## Usage
+## Build and Test
 
-### Basic Example
+Build all examples:
+```bash
+cargo build --examples
+```
+
+Run tests:
+```bash
+cargo test ring_buffer
+```
+
+## Usage
 
 ```rust
 use dcl_data_structures::ring_buffer::prelude::*;
+use std::thread;
+use std::time::{Duration, Instant};
 
-// Define an event handler
+// First handler: Immutable handler that just prints events
+// Implement EventHandler for read-only access to events. 
+// For mutable handlers, implement the EventHandlerMut trait.
 struct PrintHandler;
-impl EventHandler<u64> for PrintHandler {
-    fn handle_event(&self, event: &u64, sequence: u64, end_of_batch: bool) {
+impl EventHandler<i32> for PrintHandler {
+    fn handle_event(&self, event: &i32, sequence: u64, end_of_batch: bool) {
         println!("Received: {} at sequence {}", event, sequence);
+        if end_of_batch {
+            println!("End of batch at sequence {}", sequence);
+        }
     }
 }
 
-// Create a ring buffer with single producer
-let (executor, producer) = RustDisruptorBuilder::with_ring_buffer::<u64, 1024>(1024)
-    .with_blocking_wait()
-    .with_single_producer()
-    .with_barrier(|scope| {
-        scope.handle_events(PrintHandler);
-    })
-    .build();
+    // STEP 1: Create the ring buffer
+    // - Specify the event type (i32) and buffer size (1024)
+    // - Use blocking wait strategy for simplicity
+    // - Configure for single producer
+    let (executor, producer) = RustDisruptorBuilder::with_ring_buffer::<i32, 1024>(1024)
+        .with_blocking_wait()
+        .with_single_producer()
+        // Add handlers in sequence - events flow through them in this order
+        .with_barrier(|scope| {
+            scope.handle_events(PrintHandler);
+        })
+        .build();
 
-// Publish events
-producer.publish(42);
+    // STEP 2: Start event processing in a separate thread
+    let handle = executor.spawn();
+
+    // STEP 3: Publish events
+    // The producer can be used from a single thread without synchronization
+    for i in 0..5 {
+        producer.write(std::iter::once(i + 1), |slot, _, val| *slot = *val);
+        thread::sleep(Duration::from_millis(10));  // Simulated work
+    }
+
+    // STEP 4: Cleanup
+    // Drop the producer and wait for all events to be processed
+    drop(producer);
+    handle.join();
 ```
 
-### Advanced Configuration
 
-```rust
-// Create a multi-producer ring buffer with custom wait strategy
-let (executor, producer) = RustDisruptorBuilder::with_ring_buffer::<i32, 2048>(2048)
-    .with_spin_wait()
-    .with_multi_producer()
-    .with_barrier(|scope| {
-        // Add multiple handlers in sequence
-        scope.handle_events(FirstHandler);
-        scope.handle_events_mut(SecondHandler);
-        
-        // Create a nested barrier for parallel processing
-        scope.with_barrier(|nested| {
-            nested.handle_events(ParallelHandler1);
-            nested.handle_events(ParallelHandler2);
-        });
-    })
-    .build();
+## Examples
+
+The following examples demonstrate different ring buffer configurations, from simple to complex.
+Please note, that all examples include timing measurements, but the actual performance will be substantially higher than shown in examples. 
+
+- For best performance:
+  - Remove sleep delays
+  - Disable debug printing
+  - Use release mode builds
+  - Consider using spinning wait strategy for low latency
+
+### 1. Single Producer Single Consumer
+[`examples/ring_buffer_single_producer_single_consumer.rs`](examples/ring_buffer_single_producer_single_consumer.rs)
+
+Demonstrates the simplest ring buffer configuration:
+- One producer thread writing events
+- Two consumers in sequence (one immutable, one mutable)
+- Shows basic event handling and transformation
+
+Run with:
+```bash
+cargo run --example ring_buffer_single_producer_single_consumer
+```
+
+### 2. Single Producer Multiple Consumers
+[`examples/ring_buffer_single_producer_multi_consumer.rs`](examples/ring_buffer_single_producer_multi_consumer.rs)
+
+Shows parallel event processing:
+- One producer thread
+- Multiple consumers processing events concurrently
+- Demonstrates state tracking and event transformation
+- Shows how to maintain consumer-specific state
+
+Run with:
+```bash
+cargo run --example ring_buffer_single_producer_multi_consumer
+```
+
+### 3. Multiple Producers Single Consumer
+[`examples/ring_buffer_multi_producer_single_consumer.rs`](examples/ring_buffer_multi_producer_single_consumer.rs)
+
+Illustrates concurrent event production:
+- Multiple producer threads writing concurrently
+- One consumer aggregating all events
+- Shows how to track events from different producers
+- Demonstrates thread-safe producer sharing
+
+Run with:
+```bash
+cargo run --example ring_buffer_multi_producer_single_consumer
+```
+
+### 4. Multiple Producers Multiple Consumers
+[`examples/ring_buffer_multi_producer_multi_consumer.rs`](examples/ring_buffer_multi_producer_multi_consumer.rs)
+
+The most complex configuration, combining:
+- Multiple producers writing concurrently
+- Multiple consumers processing in parallel
+- Full event pipeline with transformation and aggregation
+- Perfect for high-throughput event processing
+
+Run with:
+```bash
+cargo run --example ring_buffer_multi_producer_multi_consumer
 ```
 
 ## Implementation
@@ -189,16 +277,6 @@ The RingBuffer implementation consists of several key components:
 4. **Memory Barriers**
    - Be aware of memory ordering requirements
    - Use appropriate atomic operations
-
-## Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass
-5. Submit a pull request
 
 ## License
 
