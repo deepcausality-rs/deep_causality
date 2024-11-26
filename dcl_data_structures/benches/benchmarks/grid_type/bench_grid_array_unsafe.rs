@@ -2,10 +2,10 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use criterion::{criterion_group, Criterion};
+use dcl_data_structures::prelude::{
+    Array1D, Array2D, Array3D, Array4D, ArrayGrid, Grid, PointIndex,
+};
 use rand::Rng;
-
-use dcl_data_structures::prelude::ArrayType::{Array1D, Array2D, Array3D, Array4D};
-use dcl_data_structures::prelude::{ArrayGrid, Grid, PointIndex};
 
 const WIDTH: usize = 10;
 const HEIGHT: usize = 10;
@@ -17,7 +17,7 @@ fn set_array_grid_1d_unsafe_benchmark(criterion: &mut Criterion) {
     let g: &Grid<[usize; HEIGHT], usize> = ag.array_grid_1d().expect("failed to create array grid");
 
     let value = get_value();
-    let point = get_point_index();
+    let point = PointIndex::new1d(get_point_index().x);
 
     criterion.bench_function("set_array_grid_1d_unsafe", |b| {
         b.iter(|| g.set(point, value))
@@ -30,7 +30,7 @@ fn set_array_grid_2d_unsafe_benchmark(criterion: &mut Criterion) {
         ag.array_grid_2d().expect("failed to create array grid");
 
     let value = get_value();
-    let point = get_point_index();
+    let point = PointIndex::new2d(get_point_index().x, get_point_index().y);
 
     criterion.bench_function("set_array_grid_2d_unsafe", |b| {
         b.iter(|| g.set(point, value))
@@ -43,7 +43,11 @@ fn set_array_grid_3d_unsafe_benchmark(criterion: &mut Criterion) {
         ag.array_grid_3d().expect("failed to create array grid");
 
     let value = get_value();
-    let point = get_point_index();
+    let point = PointIndex::new3d(
+        get_point_index().x,
+        get_point_index().y,
+        get_point_index().z,
+    );
 
     criterion.bench_function("set_array_grid_3d_unsafe", |b| {
         b.iter(|| g.set(point, value))
@@ -56,7 +60,12 @@ fn set_array_grid_4d_unsafe_benchmark(criterion: &mut Criterion) {
         ag.array_grid_4d().expect("failed to create array grid");
 
     let value = get_value();
-    let point = get_point_index();
+    let point = PointIndex::new4d(
+        get_point_index().x,
+        get_point_index().y,
+        get_point_index().z,
+        get_point_index().t,
+    );
 
     criterion.bench_function("set_array_grid_4d_unsafe", |b| {
         b.iter(|| g.set(point, value))
@@ -65,16 +74,17 @@ fn set_array_grid_4d_unsafe_benchmark(criterion: &mut Criterion) {
 
 fn get_point_index() -> PointIndex {
     let mut rng = rand::thread_rng();
-    PointIndex {
-        x: rng.gen_range(0..WIDTH),
-        y: rng.gen_range(0..HEIGHT),
-        z: rng.gen_range(0..DEPTH),
-        t: rng.gen_range(0..TIME),
-    }
+    PointIndex::new4d(
+        rng.gen_range(0..WIDTH),
+        rng.gen_range(0..HEIGHT),
+        rng.gen_range(0..DEPTH),
+        rng.gen_range(0..TIME),
+    )
 }
 
 fn get_value() -> usize {
-    rand::thread_rng().gen()
+    let mut rng = rand::thread_rng();
+    rng.gen_range(0..100)
 }
 
 #[cfg(feature = "unsafe")]

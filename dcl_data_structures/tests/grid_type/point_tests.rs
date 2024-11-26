@@ -1,5 +1,5 @@
-use dcl_data_structures::prelude::PointIndex;
 use dcl_data_structures::grid_type::point::PointIndexType;
+use dcl_data_structures::prelude::PointIndex;
 
 #[test]
 fn test_point_index_type_values() {
@@ -52,7 +52,7 @@ fn test_new4d() {
 #[test]
 fn test_copy_clone() {
     let point = PointIndex::new4d(1, 2, 3, 4);
-    
+
     // Test Copy
     let copied = point;
     assert_eq!(copied.x, 1);
@@ -60,7 +60,7 @@ fn test_copy_clone() {
     assert_eq!(point.y, copied.y);
     assert_eq!(point.z, copied.z);
     assert_eq!(point.t, copied.t);
-    
+
     // Test Clone
     let cloned = point.clone();
     assert_eq!(cloned.x, 1);
@@ -76,7 +76,7 @@ fn test_debug() {
     let point_2d = PointIndex::new2d(5, 10);
     let point_3d = PointIndex::new3d(5, 10, 15);
     let point_4d = PointIndex::new4d(5, 10, 15, 20);
-    
+
     assert!(format!("{:?}", point_1d).contains("PointIndex"));
     assert!(format!("{:?}", point_2d).contains("PointIndex"));
     assert!(format!("{:?}", point_3d).contains("PointIndex"));
@@ -89,7 +89,7 @@ fn test_display() {
     let point_2d = PointIndex::new2d(5, 10);
     let point_3d = PointIndex::new3d(5, 10, 15);
     let point_4d = PointIndex::new4d(5, 10, 15, 20);
-    
+
     assert_eq!(format!("{}", point_1d), "(x:5)");
     assert_eq!(format!("{}", point_2d), "(x:5, y:10)");
     assert_eq!(format!("{}", point_3d), "(x:5, y:10, z:15)");
@@ -101,7 +101,7 @@ fn test_edge_cases() {
     // Test with zero values
     let point = PointIndex::new4d(0, 0, 0, 0);
     assert_eq!(format!("{}", point), "(x:0, y:0, z:0, t:0)");
-    
+
     // Test with max usize values
     let max = usize::MAX;
     let point = PointIndex::new4d(max, max, max, max);
@@ -117,13 +117,13 @@ fn test_point_type_consistency() {
     let point_2d = PointIndex::new2d(5, 10);
     let point_3d = PointIndex::new3d(5, 10, 15);
     let point_4d = PointIndex::new4d(5, 10, 15, 20);
-    
+
     // Test that point types remain consistent after operations
     let cloned_1d = point_1d.clone();
     let cloned_2d = point_2d.clone();
     let cloned_3d = point_3d.clone();
     let cloned_4d = point_4d.clone();
-    
+
     assert!(matches!(cloned_1d.point_type(), PointIndexType::OneD));
     assert!(matches!(cloned_2d.point_type(), PointIndexType::TwoD));
     assert!(matches!(cloned_3d.point_type(), PointIndexType::ThreeD));

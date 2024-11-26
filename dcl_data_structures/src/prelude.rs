@@ -9,6 +9,7 @@ pub use crate::grid_type::ArrayType::*;
 // Array Grid types
 pub use crate::grid_type::grid::Grid;
 pub use crate::grid_type::point::PointIndex;
+pub use crate::grid_type::point::PointIndexType;
 pub use crate::grid_type::storage::Storage;
 // window types
 pub use crate::window_type;
