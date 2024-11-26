@@ -79,7 +79,7 @@ where
 }
 
 impl<T, const SIZE: usize, const CAPACITY: usize> WindowStorage<T>
-for ArrayStorage<T, SIZE, CAPACITY>
+    for ArrayStorage<T, SIZE, CAPACITY>
 where
     T: PartialEq + Copy + Default,
     [T; SIZE]: Sized,

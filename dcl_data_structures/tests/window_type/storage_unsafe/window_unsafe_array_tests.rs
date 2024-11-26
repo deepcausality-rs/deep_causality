@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+use dcl_data_structures::prelude::{UnsafeArrayStorage, WindowStorage};
 #[cfg(feature = "unsafe")]
 use dcl_data_structures::window_type;
 use dcl_data_structures::window_type::SlidingWindow;
-use dcl_data_structures::prelude::{UnsafeArrayStorage, WindowStorage};
 
 const SIZE: usize = 4;
 const CAPACITY: usize = 1200;

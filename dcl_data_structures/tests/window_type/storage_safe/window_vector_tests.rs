@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use dcl_data_structures::prelude::{window_type, VectorStorage, SlidingWindow, WindowStorage};
+use dcl_data_structures::prelude::{window_type, SlidingWindow, VectorStorage, WindowStorage};
 
 // Maximum number of elements held in the sliding window.
 const SIZE: usize = 4;

@@ -18,7 +18,6 @@ fn test_vector_storage_capacity_limits() {
     assert_eq!(storage.vec().unwrap(), vec![3, 4]);
 }
 
-
 #[test]
 fn test_vector_storage_memory_behavior() {
     let mut storage = UnsafeVectorStorage::<i32>::new(3, 3); // size=3, capacity=9
@@ -35,7 +34,6 @@ fn test_vector_storage_memory_behavior() {
     storage.push(4);
     assert_eq!(storage.vec().unwrap(), vec![2, 3, 4]);
 }
-
 
 #[test]
 fn test_vector_storage_concurrent_access() {
@@ -65,7 +63,6 @@ fn test_vector_storage_concurrent_access() {
     assert_eq!(final_storage.tail(), 5);
     assert!(final_storage.filled());
 }
-
 
 #[test]
 fn test_vector_storage_edge_cases() {

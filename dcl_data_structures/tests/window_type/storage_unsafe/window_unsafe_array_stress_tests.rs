@@ -82,7 +82,7 @@ fn test_edge_cases() {
     assert_eq!(storage.last(), Ok(2));
 
     // Test with zero pushes
-    let empty_storage =  UnsafeArrayStorage::<i32, SIZE, CAPACITY>::new();
+    let empty_storage = UnsafeArrayStorage::<i32, SIZE, CAPACITY>::new();
     assert!(empty_storage.first().is_err());
     assert!(empty_storage.last().is_err());
 }
