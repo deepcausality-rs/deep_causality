@@ -17,6 +17,7 @@ fn get_array_grid<T: Copy + Default>(
 }
 
 pub fn main() {
+    println!("\n1. Testing 1D Array:");
     // Make a simple 1D Array of type usize
     let array_type = ArrayType::Array1D;
     let ag = get_array_grid(array_type);
@@ -29,11 +30,11 @@ pub fn main() {
 
     // Get the usize for the point index
     let res = ag.get(p);
+    println!("Value at 1D point index {}: {}", p, res);
     assert_eq!(res, 42);
 
+    println!("\n2. Testing 3D Array:");
     // Make a 3D array aka matrix over x,y,z that stores u64
-    // Notice, only the ArrayType changes to do that.
-    // Also, notice the target type (u64) is always the first generic parameter
     let array_type = ArrayType::Array3D;
     let ag = get_array_grid(array_type);
 
@@ -45,9 +46,10 @@ pub fn main() {
 
     // Get the value at the point index
     let res = ag.get(p);
-    let exp = 3;
-    assert_eq!(res, exp);
+    println!("Value at 3D point index {}: {}", p, res);
+    assert_eq!(res, 3);
 
+    println!("\n3. Testing 4D Array with Custom Struct:");
     // ArrayGrid requires Copy + Default to store MyStuct
     #[derive(Debug, Default, Copy, Clone)]
     struct MyStruct {
@@ -56,7 +58,6 @@ pub fn main() {
     }
 
     // Make a 4D array aka matrix over x,y,z that stores My struct
-    // Notice, only the ArrayType changes to do that.
     let array_type = ArrayType::Array4D;
     let ag: ArrayGrid<MyStruct, WIDTH, HEIGHT, DEPTH, TIME> = ArrayGrid::new(array_type);
 
@@ -84,12 +85,16 @@ pub fn main() {
     ag.set(idx_t1, my_struct_t1);
     ag.set(idx_t2, my_struct_t2);
 
-    // Get data at t2
-    let res = ag.get(idx_t2);
+    // Get data at each time point
+    println!("Values at fixed position (1,1,1) over time:");
+    println!("t=0: {:?}", ag.get(idx_t0));
+    println!("t=1: {:?}", ag.get(idx_t1));
+    println!("t=2: {:?}", ag.get(idx_t2));
 
     // Verify results
-    let exp_number = 25;
-    assert_eq!(res.number, exp_number);
-    let exp_mod = true;
-    assert_eq!(res.mod_five, exp_mod);
+    let res = ag.get(idx_t2);
+    assert_eq!(res.number, 25);
+    assert_eq!(res.mod_five, true);
+
+    println!("\nAll tests passed successfully!");
 }

@@ -13,27 +13,39 @@ keywords = ["data-structures", "sliding-window", "grid-array", "ringbuffer", "di
 
 [[example]]
 name = "array_grid"
-path = "examples/array_grid.rs"
+path = "examples/array_grid/array_grid.rs"
 
 [[example]]
-name = "sliding_window"
-path = "examples/sliding_window.rs"
+name = "window_type_array_storage"
+path = "examples/window_type/array_storage.rs"
 
 [[example]]
-name = "ring_buffer_single_producer_single_consume"
-path = "examples/ring_buffer_single_producer_single_consumer.rs"
+name = "window_type_unsafe_array_storage"
+path = "examples/window_type/unsafe_array_storage.rs"
+
+[[example]]
+name = "window_type_vector_storage"
+path = "examples/window_type/vector_storage.rs"
+
+[[example]]
+name = "window_type_unsafe_vector_storage"
+path = "examples/window_type/unsafe_vector_storage.rs"
+
+[[example]]
+name = "ring_buffer_single_producer_single_consumer"
+path = "examples/ring_buffer/ring_buffer_single_producer_single_consumer.rs"
 
 [[example]]
 name = "ring_buffer_single_producer_multi_consumer"
-path = "examples/ring_buffer_single_producer_multi_consumer.rs"
+path = "examples/ring_buffer/ring_buffer_single_producer_multi_consumer.rs"
 
 [[example]]
 name = "ring_buffer_multi_producer_single_consumer"
-path = "examples/ring_buffer_multi_producer_single_consumer.rs"
+path = "examples/ring_buffer/ring_buffer_multi_producer_single_consumer.rs"
 
 [[example]]
 name = "ring_buffer_multi_producer_multi_consumer"
-path = "examples/ring_buffer_multi_producer_multi_consumer.rs"
+path = "examples/ring_buffer/ring_buffer_multi_producer_multi_consumer.rs"
 
 [features]
 default = []
