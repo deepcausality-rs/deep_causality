@@ -322,3 +322,42 @@ fn test_arr_err() {
     let arr: Result<[Data; SIZE], String> = window.arr();
     assert!(arr.is_err());
 }
+
+#[test]
+fn test_drop_old_values() {
+    const SIZE: usize = 3;
+    const CAPACITY: usize = 6;
+    let mut window: SlidingWindow<ArrayStorage<i32, SIZE, CAPACITY>, i32> =
+        window_type::new_with_array_storage();
+
+    // Fill the window
+    window.push(1);
+    window.push(2);
+    window.push(3);
+    assert!(window.filled());
+    assert_eq!(window.vec().unwrap(), vec![1, 2, 3]);
+
+    // Push more values, older values should be dropped
+    window.push(4);
+    let vec = window.vec().unwrap();
+    assert_eq!(vec, vec![2, 3, 4]);
+
+    window.push(5);
+    let vec = window.vec().unwrap();
+    assert_eq!(vec, vec![3, 4, 5]);
+
+    window.push(6);
+    let vec = window.vec().unwrap();
+    assert_eq!(vec, vec![4, 5, 6]);
+
+    // Verify first and last values
+    assert_eq!(window.first().unwrap(), 4);
+    assert_eq!(window.last().unwrap(), 6);
+
+    // Push enough values to trigger a rewind
+    window.push(7);
+    window.push(8);
+    window.push(9);
+    let vec = window.vec().unwrap();
+    assert_eq!(vec, vec![7, 8, 9]);
+}

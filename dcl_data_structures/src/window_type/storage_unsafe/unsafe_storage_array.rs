@@ -1,8 +1,31 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
 #[cfg(feature = "unsafe")]
 use crate::prelude::WindowStorage;
 
+#[cfg(feature = "unsafe")]
+const ERROR_EMPTY_ARRAY: &str = "Array is empty";
+
+#[cfg(feature = "unsafe")]
+const ERROR_ARRAY_NOT_FILLED: &str = "Array is not yet filled";
+
+/// A high-performance, unsafe implementation of a fixed-size sliding window storage using a raw array.
+/// This implementation prioritizes performance by using unsafe Rust features and manual memory management.
+///
+/// # Type Parameters
+/// - `T`: The type of elements stored in the array
+/// - `SIZE`: The logical size of the sliding window
+/// - `CAPACITY`: The physical capacity of the underlying array
+///
+/// # Constraints
+/// - `T` must implement `PartialEq + Copy + Default`
+/// - `CAPACITY` must be greater than `SIZE`
+/// - The array `[T; CAPACITY]` must be sized
+///
+/// # Memory Layout
+/// The structure is aligned to 64 bytes for optimal cache line usage.
+///
 #[cfg(feature = "unsafe")]
 #[repr(C, align(64))]
 #[derive(Debug)]
@@ -11,11 +34,14 @@ where
     T: PartialEq + Copy + Default,
     [T; CAPACITY]: Sized,
 {
+    /// The underlying array storing the elements
     arr: [T; CAPACITY],
-    ptr: *mut T,
-    size: usize,
+    /// Index of the first element in the window
     head: usize,
+    /// Index where the next element will be inserted
     tail: usize,
+    /// The logical size of the sliding window
+    size: usize,
 }
 
 #[cfg(feature = "unsafe")]
@@ -24,71 +50,77 @@ where
     T: PartialEq + Copy + Default,
     [T; CAPACITY]: Sized,
 {
-    /// Creates a new UnsafeArrayStorage instance
+    /// Creates a new `UnsafeArrayStorage` instance.
     ///
-    /// # Implementation Notes
-    /// - Initializes array with default values
-    /// - Caches array pointer for optimized access
-    /// - Requires 4-byte alignment for optimal performance
+    /// # Panics
+    /// Panics if `CAPACITY` is not greater than `SIZE`.
+    ///
     #[inline(always)]
     pub fn new() -> Self {
         assert!(CAPACITY > SIZE, "CAPACITY must be greater than SIZE");
-        let mut storage = Self {
+        Self {
             arr: [T::default(); CAPACITY],
-            ptr: std::ptr::null_mut(),
-            size: SIZE,
             head: 0,
             tail: 0,
-        };
-        storage.ptr = storage.arr.as_mut_ptr();
-        storage
+            size: SIZE,
+        }
     }
 
-    #[inline(always)]
-    const fn is_full(&self) -> bool {
-        self.tail >= CAPACITY
-    }
-
-    #[inline(always)]
-    const fn needs_head_adjustment(&self) -> bool {
-        self.tail.saturating_sub(self.head) > self.size
-    }
-
-    /// Rewinds storage by copying elements to array start
+    /// Checks if the storage contains the full window size of elements.
     ///
-    /// # Implementation Notes
-    /// - Uses optimized copying for 4+ byte types
-    /// - Copies in 16-byte chunks when possible
-    /// - Falls back to standard copy for smaller types
+    /// # Safety
+    /// Uses unchecked subtraction for performance.
     #[inline(always)]
-    unsafe fn rewind(&mut self) {
-        // Use optimized copy for larger types
-        if std::mem::size_of::<T>() >= 4 {
-            let src = self.ptr.add(self.head);
-            let dst = self.ptr;
+    fn filled(&self) -> bool {
+        unsafe { self.tail.unchecked_sub(self.head) >= self.size }
+    }
 
-            // Copy in chunks of 16 bytes when possible
-            let simd_chunks = (self.size - 1) / 4;
-            if simd_chunks > 0 {
-                std::ptr::copy_nonoverlapping(src as *const u8, dst as *mut u8, simd_chunks * 16);
+    /// Rewinds the storage by copying the last `SIZE` elements to the beginning.
+    ///
+    /// This method uses optimized copying strategies:
+    /// - For types >= 4 bytes: Uses 16-byte chunk copying
+    /// - For smaller types: Falls back to standard copying
+    ///
+    /// # Safety
+    /// Uses unsafe pointer manipulation and unchecked arithmetic.
+    ///
+    #[inline(always)]
+    fn rewind(&mut self) {
+        unsafe {
+            let type_size = std::mem::size_of::<T>();
+            let src = self.arr.as_ptr().add(self.tail - self.size);
+            let dst = self.arr.as_mut_ptr();
 
-                // Copy remaining elements
-                let remaining = (self.size - 1) % 4;
-                if remaining > 0 {
-                    std::ptr::copy_nonoverlapping(
-                        src.add(simd_chunks * 4),
-                        dst.add(simd_chunks * 4),
-                        remaining,
-                    );
+            if type_size >= 4 {
+                // For 4+ byte types, use optimized copying
+                let bytes_to_copy = self.size * type_size;
+                let chunks_16 = bytes_to_copy / 16;
+                let remainder = bytes_to_copy % 16;
+
+                // Copy 16-byte chunks
+                if chunks_16 > 0 {
+                    let src_bytes = src as *const u8;
+                    let dst_bytes = dst as *mut u8;
+                    for i in 0..chunks_16 {
+                        std::ptr::copy_nonoverlapping(
+                            src_bytes.add(i * 16),
+                            dst_bytes.add(i * 16),
+                            16,
+                        );
+                    }
+                }
+
+                // Copy remaining bytes
+                if remainder > 0 {
+                    let src_bytes = (src as *const u8).add(chunks_16 * 16);
+                    let dst_bytes = (dst as *mut u8).add(chunks_16 * 16);
+                    std::ptr::copy_nonoverlapping(src_bytes, dst_bytes, remainder);
                 }
             } else {
-                std::ptr::copy_nonoverlapping(src, dst, self.size - 1);
+                // Fall back to standard copy for smaller types
+                std::ptr::copy_nonoverlapping(src, dst, self.size);
             }
-        } else {
-            // Fallback for smaller types
-            std::ptr::copy_nonoverlapping(self.ptr.add(self.head), self.ptr, self.size - 1);
         }
-
         self.head = 0;
         self.tail = self.size;
     }
@@ -100,7 +132,6 @@ where
     T: PartialEq + Copy + Default,
     [T; SIZE]: Sized,
 {
-    /// Creates a default UnsafeArrayStorage instance
     #[inline(always)]
     fn default() -> Self {
         Self::new()
@@ -114,100 +145,83 @@ where
     T: PartialEq + Copy + Default,
     [T; SIZE]: Sized,
 {
-    /// Pushes a new value into storage
+    /// Pushes a new value into the storage.
+    /// Drops old values if the storage is full relative to its size.
     ///
-    /// # Args
-    /// * `value` - Value to push
+    /// If the storage is full, it automatically rewinds by moving the last `SIZE`
+    /// elements to the beginning of the array.
     ///
-    /// # Implementation Notes
-    /// - Uses direct pointer access for performance
-    /// - Automatically rewinds when full
-    /// - Adjusts head when window size exceeded
+    /// # Safety
+    /// Uses unchecked operations for performance.
     #[inline(always)]
     fn push(&mut self, value: T) {
         unsafe {
-            if self.is_full() {
+            if self.tail >= CAPACITY {
                 self.rewind();
             }
 
-            *self.ptr.add(self.tail) = value;
+            *self.arr.get_unchecked_mut(self.tail) = value;
+            self.tail = self.tail.wrapping_add(1);
 
-            if self.needs_head_adjustment() {
-                self.head += 1;
+            if self.tail.unchecked_sub(self.head) > self.size {
+                self.head = self.tail.unchecked_sub(self.size);
             }
-
-            self.tail += 1;
         }
     }
 
-    /// Returns first element in window
+    /// Returns the first element in the storage.
     ///
     /// # Errors
-    /// Returns error if storage is empty
+    /// Returns an error if the storage is empty.
     ///
-    /// # Implementation Notes
-    /// - Uses cached pointer for fast access
-    /// - Handles both normal and wrapped states
+    /// # Safety
+    /// Uses unchecked array access for performance.
     #[inline(always)]
     fn first(&self) -> Result<T, String> {
         if self.tail == 0 {
-            return Err("Array is empty. Add some elements to the array first".to_string());
+            return Err(ERROR_EMPTY_ARRAY.to_string());
         }
-
-        unsafe {
-            Ok(if self.tail > self.size {
-                *self.ptr.add(self.head + 1)
-            } else {
-                *self.ptr.add(self.head)
-            })
-        }
+        unsafe { Ok(*self.arr.get_unchecked(self.head)) }
     }
 
-    /// Returns last element in window
+    /// Returns the last element in the storage.
     ///
     /// # Errors
-    /// Returns error if storage not filled
+    /// Returns an error if the storage is not filled to size.
     ///
-    /// # Implementation Notes
-    /// - Uses cached pointer for fast access
-    /// - Verifies fill state before access
+    /// # Safety
+    /// Uses unchecked array access for performance.
     #[inline(always)]
     fn last(&self) -> Result<T, String> {
         if !self.filled() {
-            return Err(
-                "Array is not yet filled. Add some elements to the array first".to_string(),
-            );
+            return Err(ERROR_ARRAY_NOT_FILLED.to_string());
         }
-
-        unsafe { Ok(*self.ptr.add(self.tail - 1)) }
+        unsafe { Ok(*self.arr.get_unchecked(self.tail - 1)) }
     }
 
-    /// Returns current tail position
+    /// Returns the current tail index.
     #[inline(always)]
     fn tail(&self) -> usize {
         self.tail
     }
 
-    /// Returns window size
+    /// Returns the size of the sliding window.
     #[inline(always)]
     fn size(&self) -> usize {
         self.size
     }
 
-    /// Returns slice of current window contents
+    /// Returns a slice of the current window contents.
     ///
-    /// # Implementation Notes
-    /// - Creates slice from raw pointers for performance
-    /// - Handles both normal and wrapped states
-    /// - Uses cached pointer to avoid conversions
+    /// # Safety
+    /// Uses unsafe raw pointer manipulation for creating the slice.
     #[inline(always)]
     fn get_slice(&self) -> &[T] {
         unsafe {
-            if self.tail > self.size {
-                std::slice::from_raw_parts(self.ptr.add(self.head + 1), self.tail - (self.head + 1))
-            } else {
-                std::slice::from_raw_parts(self.ptr.add(self.head), self.tail - self.head)
-            }
+            std::slice::from_raw_parts(
+                self.arr.as_ptr().add(self.head),
+                self.tail.saturating_sub(self.head).min(self.size),
+            )
         }
     }
 }

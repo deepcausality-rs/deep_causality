@@ -11,7 +11,7 @@ criterion_main! {
     benchmarks::ring_buffer::bit_map_benchmark::bitmap,
     benchmarks::ring_buffer::sequence_bench::sequence,
     benchmarks::ring_buffer::ring_buffer_bench::ring_buffer,
-    benchmarks::grid_type::bench_grid_array::array_grid,
+    benchmarks::bench_grid_array::array_grid,
     benchmarks::window_type::bench_window_arr::window_array_backed,
     benchmarks::window_type::bench_window_vec::window_vector_backed,
     benchmarks::window_type::bench_window_comp::window_impl_comp
@@ -25,6 +25,7 @@ criterion_main! {
     benchmarks::ring_buffer::sequence_bench::sequence,
     benchmarks::ring_buffer::ring_buffer_bench::ring_buffer,
     benchmarks::grid_type::bench_grid_array::array_grid,
+    benchmarks::grid_type::bench_grid_array_unsafe::array_grid_unsafe,
     benchmarks::window_type::bench_window_arr::window_array_backed,
     benchmarks::window_type::bench_window_vec::window_vector_backed,
     benchmarks::window_type::bench_window_comp::window_impl_comp,

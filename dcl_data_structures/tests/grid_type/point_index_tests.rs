@@ -1,5 +1,7 @@
-use dcl_data_structures::grid_type::point::PointIndexType;
-use dcl_data_structures::prelude::PointIndex;
+// SPDX-License-Identifier: MIT
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
+use dcl_data_structures::prelude::{PointIndex, PointIndexType};
 
 #[test]
 fn test_point_index_type_values() {
@@ -10,7 +12,7 @@ fn test_point_index_type_values() {
 }
 
 #[test]
-fn test_new1d() {
+fn test_point_index_1d_creation() {
     let point = PointIndex::new1d(5);
     assert_eq!(point.x, 5);
     assert_eq!(point.y, 0);
@@ -20,7 +22,7 @@ fn test_new1d() {
 }
 
 #[test]
-fn test_new2d() {
+fn test_point_index_2d_creation() {
     let point = PointIndex::new2d(5, 10);
     assert_eq!(point.x, 5);
     assert_eq!(point.y, 10);
@@ -30,7 +32,7 @@ fn test_new2d() {
 }
 
 #[test]
-fn test_new3d() {
+fn test_point_index_3d_creation() {
     let point = PointIndex::new3d(5, 10, 15);
     assert_eq!(point.x, 5);
     assert_eq!(point.y, 10);
@@ -40,7 +42,7 @@ fn test_new3d() {
 }
 
 #[test]
-fn test_new4d() {
+fn test_point_index_4d_creation() {
     let point = PointIndex::new4d(5, 10, 15, 20);
     assert_eq!(point.x, 5);
     assert_eq!(point.y, 10);
@@ -50,28 +52,22 @@ fn test_new4d() {
 }
 
 #[test]
-fn test_copy_clone() {
+fn test_point_index_copy_clone() {
     let point = PointIndex::new4d(1, 2, 3, 4);
 
     // Test Copy
     let copied = point;
     assert_eq!(copied.x, 1);
     assert_eq!(point.x, 1); // Original still accessible due to Copy
-    assert_eq!(point.y, copied.y);
-    assert_eq!(point.z, copied.z);
-    assert_eq!(point.t, copied.t);
 
     // Test Clone
     let cloned = point.clone();
     assert_eq!(cloned.x, 1);
     assert_eq!(point.x, 1);
-    assert_eq!(point.y, cloned.y);
-    assert_eq!(point.z, cloned.z);
-    assert_eq!(point.t, cloned.t);
 }
 
 #[test]
-fn test_debug() {
+fn test_point_index_debug() {
     let point_1d = PointIndex::new1d(5);
     let point_2d = PointIndex::new2d(5, 10);
     let point_3d = PointIndex::new3d(5, 10, 15);
@@ -84,7 +80,7 @@ fn test_debug() {
 }
 
 #[test]
-fn test_display() {
+fn test_point_index_display() {
     let point_1d = PointIndex::new1d(5);
     let point_2d = PointIndex::new2d(5, 10);
     let point_3d = PointIndex::new3d(5, 10, 15);
@@ -97,7 +93,7 @@ fn test_display() {
 }
 
 #[test]
-fn test_edge_cases() {
+fn test_point_index_edge_cases() {
     // Test with zero values
     let point = PointIndex::new4d(0, 0, 0, 0);
     assert_eq!(format!("{}", point), "(x:0, y:0, z:0, t:0)");

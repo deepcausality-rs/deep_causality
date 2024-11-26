@@ -15,6 +15,8 @@ pub mod storage_array_4d;
 
 use std::fmt::{Debug, Display, Formatter};
 
+pub use point::PointIndexType;
+
 use crate::prelude::{Grid, PointIndex};
 
 #[derive(Debug, Copy, Clone)]

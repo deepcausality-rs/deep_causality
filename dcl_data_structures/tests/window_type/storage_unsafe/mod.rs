@@ -1,4 +1,8 @@
 #[cfg(feature = "unsafe")]
-mod window_unsafe_storage_array_tests;
+mod window_unsafe_array_stress_tests;
 #[cfg(feature = "unsafe")]
-mod window_unsafe_storage_vector_tests;
+mod window_unsafe_array_tests;
+#[cfg(feature = "unsafe")]
+mod window_unsafe_vector_tests;
+#[cfg(feature = "unsafe")]
+mod window_vector_stress_tests;

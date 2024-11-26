@@ -61,12 +61,7 @@ mod tests {
         let grid: Grid<[u32; SIZE_1D], u32> = Grid::new(storage);
 
         // First verify that we get the actual value when initialized
-        let point = PointIndex {
-            x: 0,
-            y: 2,
-            z: 0,
-            t: 0,
-        };
+        let point = PointIndex::new1d(2);
         let value = grid.get(point);
         assert_eq!(value, 42u32);
 
@@ -90,12 +85,7 @@ mod tests {
         let storage = [0u32; SIZE_1D];
         let grid: Grid<[u32; SIZE_1D], u32> = Grid::new(storage);
 
-        let point = PointIndex {
-            x: 0,
-            y: 2,
-            z: 0,
-            t: 0,
-        };
+        let point = PointIndex::new1d(2);
         let value = 42u32;
 
         grid.set(point, value);
@@ -109,12 +99,7 @@ mod tests {
         let storage = [[0u32; SIZE_2D]; SIZE_2D];
         let grid: Grid<[[u32; SIZE_2D]; SIZE_2D], u32> = Grid::new(storage);
 
-        let point = PointIndex {
-            x: 1,
-            y: 2,
-            z: 0,
-            t: 0,
-        };
+        let point = PointIndex::new2d(1, 2);
         let value = 42u32;
 
         grid.set(point, value);
@@ -128,12 +113,7 @@ mod tests {
         let storage = [[[0u32; SIZE_3D]; SIZE_3D]; SIZE_3D];
         let grid: Grid<[[[u32; SIZE_3D]; SIZE_3D]; SIZE_3D], u32> = Grid::new(storage);
 
-        let point = PointIndex {
-            x: 1,
-            y: 1,
-            z: 1,
-            t: 0,
-        };
+        let point = PointIndex::new3d(1, 1, 1);
         let value = 42u32;
 
         grid.set(point, value);
@@ -147,12 +127,7 @@ mod tests {
         let storage = [[[[0u32; SIZE_4D]; SIZE_4D]; SIZE_4D]; SIZE_4D];
         let grid: Grid<[[[[u32; SIZE_4D]; SIZE_4D]; SIZE_4D]; SIZE_4D], u32> = Grid::new(storage);
 
-        let point = PointIndex {
-            x: 1,
-            y: 1,
-            z: 1,
-            t: 1,
-        };
+        let point = PointIndex::new4d(1, 1, 1, 1);
         let value = 42u32;
 
         grid.set(point, value);
@@ -167,24 +142,9 @@ mod tests {
         let grid: Grid<[[u32; SIZE_2D]; SIZE_2D], u32> = Grid::new(storage);
 
         let points = [
-            PointIndex {
-                x: 0,
-                y: 0,
-                z: 0,
-                t: 0,
-            },
-            PointIndex {
-                x: 1,
-                y: 1,
-                z: 0,
-                t: 0,
-            },
-            PointIndex {
-                x: 2,
-                y: 2,
-                z: 0,
-                t: 0,
-            },
+            PointIndex::new2d(0, 0),
+            PointIndex::new2d(1, 1),
+            PointIndex::new2d(2, 2),
         ];
         let values = [1u32, 2u32, 3u32];
 
@@ -206,12 +166,7 @@ mod tests {
         let storage = [[0u32; SIZE_2D]; SIZE_2D];
         let grid: Grid<[[u32; SIZE_2D]; SIZE_2D], u32> = Grid::new(storage);
 
-        let point = PointIndex {
-            x: SIZE_2D,
-            y: SIZE_2D,
-            z: 0,
-            t: 0,
-        };
+        let point = PointIndex::new2d(SIZE_2D, SIZE_2D);
         grid.set(point, 42);
     }
 
@@ -220,12 +175,7 @@ mod tests {
         let storage = [0u32; SIZE_1D];
         let grid: Grid<[u32; SIZE_1D], u32> = Grid::new(storage);
 
-        let point = PointIndex {
-            x: 0,
-            y: 2,
-            z: 0,
-            t: 0,
-        };
+        let point = PointIndex::new1d(2);
 
         grid.set(point, 42);
         assert_eq!(grid.get(point), 42);
