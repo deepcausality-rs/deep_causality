@@ -38,7 +38,7 @@ fn test_array_storage_capacity_limits() {
     storage.push(4);
     let expected_tail = CAPACITY - 1;
     assert_eq!(storage.tail(), expected_tail);
-    assert_eq!(storage.vec().unwrap(), vec![1, 4]);
+    assert_eq!(storage.vec().unwrap(), vec![3, 4]);
 }
 
 #[test]
@@ -157,7 +157,7 @@ fn test_performance_comparison() {
 
     // Verify both storages have same tail position
     assert_eq!(vector_storage.tail(), ITERATIONS);
-    assert_eq!(array_storage.tail(), SIZE + 1);
+    assert_eq!(array_storage.tail(),ITERATIONS);
 
     // Compare last elements to ensure correctness
     assert_eq!(vector_storage.last(), array_storage.last());
