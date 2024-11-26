@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use dcl_data_structures::grid_type::{PointIndex, PointIndexType};
+use dcl_data_structures::prelude::{PointIndex, PointIndexType};
 
 #[test]
 fn test_point_index_type_values() {
