@@ -41,13 +41,9 @@
 //! assert_eq!(seq.get(), 43);
 //! ```
 
-use crate::ring_buffer::prelude::AtomicSequence;
+use crate::ring_buffer::prelude::{AtomicSequence, Sequence};
 use std::mem::size_of;
 use std::sync::atomic::{AtomicU64, Ordering};
-
-/// Type alias for sequence numbers in the ring buffer.
-/// Uses u64 to provide a large range of sequence numbers before wrapping.
-pub type Sequence = u64;
 
 #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
 const CACHE_LINE_SIZE: usize = 128;

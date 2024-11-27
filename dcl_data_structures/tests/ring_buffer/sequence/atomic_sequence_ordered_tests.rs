@@ -4,7 +4,7 @@
 use std::sync::Arc;
 use std::thread;
 
-use dcl_data_structures::ring_buffer::prelude::*;
+use dcl_data_structures::ring_buffer::prelude::{AtomicSequence, AtomicSequenceOrdered, Sequence};
 
 #[test]
 fn test_atomic_sequence_default() {
@@ -115,4 +115,49 @@ fn test_atomic_sequence_concurrent_reads() {
     for handle in handles {
         handle.join().unwrap();
     }
+}
+
+#[test]
+fn test_atomic_sequence_increment() {
+    let seq = AtomicSequenceOrdered::default();
+
+    // First increment should return 1 and set value to 1
+    assert_eq!(seq.increment(), 1);
+    assert_eq!(seq.get(), 1);
+
+    // Second increment should return 2 and set value to 2
+    assert_eq!(seq.increment(), 2);
+    assert_eq!(seq.get(), 2);
+
+    // Test multiple increments in sequence
+    for i in 3..10 {
+        assert_eq!(seq.increment(), i);
+        assert_eq!(seq.get(), i);
+    }
+}
+
+#[test]
+fn test_atomic_sequence_concurrent_increment() {
+    let seq = Arc::new(AtomicSequenceOrdered::default());
+    let mut handles = vec![];
+    let num_threads = 10;
+    let increments_per_thread = 1000;
+
+    // Spawn multiple threads that increment the sequence
+    for _ in 0..num_threads {
+        let seq_clone = Arc::clone(&seq);
+        handles.push(thread::spawn(move || {
+            for _ in 0..increments_per_thread {
+                seq_clone.increment();
+            }
+        }));
+    }
+
+    // Wait for all threads to complete
+    for handle in handles {
+        handle.join().unwrap();
+    }
+
+    // Verify final value
+    assert_eq!(seq.get(), (num_threads * increments_per_thread) as Sequence);
 }

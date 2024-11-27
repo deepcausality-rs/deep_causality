@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
+use crate::ring_buffer::prelude::{AtomicSequence, Sequence};
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
-use crate::ring_buffer::prelude::{AtomicSequence};
 
 const MIN_BATCH_SIZE: u64 = 32;
 const CACHE_LINE_PADDING: usize = 56;
-
-/// Type alias for sequence numbers in the ring buffer.
-pub type Sequence = i64;
 
 /// An optimized atomic sequence with relaxed memory ordering and adaptive batch sizing.
 ///
@@ -25,7 +22,6 @@ pub struct AtomicSequenceRelaxed {
     contention_counter: AtomicUsize,
     current_batch_size: AtomicU64,
 }
-
 
 impl Default for AtomicSequenceRelaxed {
     fn default() -> Self {
@@ -58,14 +54,23 @@ impl AtomicSequence for AtomicSequenceRelaxed {
         self.offset.store(value as u64, Ordering::Relaxed);
     }
 
-    fn increment(&self) -> crate::ring_buffer::prelude::Sequence {
-        self.offset.fetch_add(1, Ordering::Relaxed) as crate::ring_buffer::prelude::Sequence
+    fn compare_and_swap(
+        &self,
+        current: crate::ring_buffer::prelude::Sequence,
+        new: crate::ring_buffer::prelude::Sequence,
+    ) -> bool {
+        self.offset
+            .compare_exchange(
+                current as u64,
+                new as u64,
+                Ordering::Relaxed,
+                Ordering::Relaxed,
+            )
+            .is_ok()
     }
 
-    fn compare_and_swap(&self, current: crate::ring_buffer::prelude::Sequence, new: crate::ring_buffer::prelude::Sequence) -> bool {
-        self.offset
-            .compare_exchange(current as u64, new as u64, Ordering::Relaxed, Ordering::Relaxed)
-            .is_ok()
+    fn increment(&self) -> crate::ring_buffer::prelude::Sequence {
+        self.offset.fetch_add(1, Ordering::Relaxed) as crate::ring_buffer::prelude::Sequence
     }
 }
 
