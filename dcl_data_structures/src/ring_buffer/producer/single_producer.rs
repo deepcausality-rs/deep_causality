@@ -139,7 +139,8 @@ impl<W: WaitStrategy> Sequencer for SingleProducerSequencer<W> {
         let (start, end) = (next, next + (count - 1) as Sequence);
 
         while min_sequence + (self.buffer_size as Sequence) < end {
-            min_sequence = get_min_cursor_sequence::<_, AtomicSequenceOrdered>(&self.gating_sequences);
+            min_sequence =
+                get_min_cursor_sequence::<_, AtomicSequenceOrdered>(&self.gating_sequences);
         }
 
         self.cached_available_sequence.set(min_sequence);
@@ -201,7 +202,8 @@ impl<W: WaitStrategy> Sequencer for SingleProducerSequencer<W> {
     /// Drains the sequencer, preventing further event production.
     fn drain(self) {
         let current = self.next_write_sequence.take() - 1;
-        while get_min_cursor_sequence::<_, AtomicSequenceOrdered>(&self.gating_sequences) < current {
+        while get_min_cursor_sequence::<_, AtomicSequenceOrdered>(&self.gating_sequences) < current
+        {
             self.wait_strategy.signal();
         }
         self.is_done.store(true, Ordering::SeqCst);

@@ -4,7 +4,6 @@ use crate::ring_buffer::prelude::Sequence;
 
 /// A trait for atomic sequence operations
 pub trait AtomicSequence: Send + Sync {
-
     /// Get the current sequence value
     fn get(&self) -> Sequence;
 

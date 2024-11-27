@@ -41,9 +41,9 @@
 //! assert_eq!(seq.get(), 43);
 //! ```
 
+use crate::ring_buffer::prelude::AtomicSequence;
 use std::mem::size_of;
 use std::sync::atomic::{AtomicU64, Ordering};
-use crate::ring_buffer::prelude::AtomicSequence;
 
 /// Type alias for sequence numbers in the ring buffer.
 /// Uses u64 to provide a large range of sequence numbers before wrapping.
@@ -83,7 +83,6 @@ pub struct AtomicSequenceOrdered {
     offset: AtomicU64,
 }
 
-
 impl Default for AtomicSequenceOrdered {
     /// Creates a new `AtomicSequence` with a default value of 0.
     ///
@@ -106,7 +105,7 @@ impl AtomicSequence for AtomicSequenceOrdered {
     /// # Returns
     ///
     /// The current sequence value
-     fn get(&self) -> Sequence {
+    fn get(&self) -> Sequence {
         self.offset.load(Ordering::Acquire)
     }
 
@@ -117,7 +116,7 @@ impl AtomicSequence for AtomicSequenceOrdered {
     /// # Parameters
     ///
     /// * `value` - The new sequence value to store
-     fn set(&self, value: Sequence) {
+    fn set(&self, value: Sequence) {
         self.offset.store(value, Ordering::Release);
     }
 
@@ -134,7 +133,7 @@ impl AtomicSequence for AtomicSequenceOrdered {
     /// # Returns
     ///
     /// `true` if the exchange was successful, `false` otherwise
-     fn compare_and_swap(&self, current: Sequence, new: Sequence) -> bool {
+    fn compare_and_swap(&self, current: Sequence, new: Sequence) -> bool {
         self.offset
             .compare_exchange(current, new, Ordering::SeqCst, Ordering::Acquire)
             .is_ok()
@@ -147,11 +146,10 @@ impl AtomicSequence for AtomicSequenceOrdered {
     /// # Returns
     ///
     /// The new sequence value
-     fn increment(&self) -> Sequence {
+    fn increment(&self) -> Sequence {
         self.offset.fetch_add(1, Ordering::SeqCst) + 1
     }
 }
-
 
 impl From<Sequence> for AtomicSequenceOrdered {
     /// Creates a new `AtomicSequence` from a sequence value.

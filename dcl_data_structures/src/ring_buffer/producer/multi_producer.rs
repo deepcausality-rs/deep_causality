@@ -138,7 +138,10 @@ impl<W: WaitStrategy> MultiProducerSequencer<W> {
     /// `true` if there is enough space in the buffer, `false` otherwise
     fn has_capacity(&self, high_watermark: Sequence, count: usize) -> bool {
         self.buffer_size
-            > (high_watermark - get_min_cursor_sequence::<_, AtomicSequenceOrdered>(&self.gating_sequences)) as usize + count
+            > (high_watermark
+                - get_min_cursor_sequence::<_, AtomicSequenceOrdered>(&self.gating_sequences))
+                as usize
+                + count
     }
 }
 
@@ -252,7 +255,8 @@ impl<W: WaitStrategy> Sequencer for MultiProducerSequencer<W> {
     /// Drains the sequencer, preventing further event production.
     fn drain(self) {
         let current = self.cursor.get();
-        while get_min_cursor_sequence::<_, AtomicSequenceOrdered>(&self.gating_sequences) < current {
+        while get_min_cursor_sequence::<_, AtomicSequenceOrdered>(&self.gating_sequences) < current
+        {
             self.wait_strategy.signal();
         }
         self.is_done.store(true, Ordering::SeqCst);
