@@ -8,6 +8,8 @@ use std::time::Duration;
 
 const BUFFER_SIZE: usize = 65536;
 
+const BATCH_SIZES: [u64; 3] = [1, 10, 100];
+
 struct Checker;
 
 impl EventHandler<i64> for Checker {
@@ -61,7 +63,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     group.throughput(Throughput::Elements(N));
     group.warm_up_time(Duration::from_secs(10));
     group.sampling_mode(SamplingMode::Flat);
-    for batch_size in [1, 10, 50, 100] {
+    for batch_size in BATCH_SIZES {
         group.bench_with_input(
             BenchmarkId::from_parameter(batch_size),
             &batch_size,
@@ -80,7 +82,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     group.throughput(Throughput::Elements(N));
     group.warm_up_time(Duration::from_secs(10));
     group.sampling_mode(SamplingMode::Flat);
-    for batch_size in [10, 50, 100, 1000] {
+    for batch_size in BATCH_SIZES {
         group.bench_with_input(
             BenchmarkId::from_parameter(batch_size),
             &batch_size,
@@ -99,7 +101,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     group.throughput(Throughput::Elements(N));
     group.warm_up_time(Duration::from_secs(10));
     group.sampling_mode(SamplingMode::Flat);
-    for batch_size in [1, 10, 50, 100, 1000] {
+    for batch_size in BATCH_SIZES {
         group.bench_with_input(
             BenchmarkId::from_parameter(batch_size),
             &batch_size,
@@ -118,7 +120,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     group.throughput(Throughput::Elements(N));
     group.warm_up_time(Duration::from_secs(10));
     group.sampling_mode(SamplingMode::Flat);
-    for batch_size in [10, 50, 100, 1000] {
+    for batch_size in BATCH_SIZES {
         group.bench_with_input(
             BenchmarkId::from_parameter(batch_size),
             &batch_size,
