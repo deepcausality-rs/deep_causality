@@ -74,20 +74,20 @@ use std::sync::{
 /// * `W` - The wait strategy used for coordinating between producers and consumers
 pub struct MultiProducerSequencer<W: WaitStrategy> {
     /// The current cursor position in the ring buffer
-    cursor: Arc<AtomicSequence>,
+    cursor: Arc<AtomicSequenceOrdered>,
     /// The strategy used for waiting when the buffer is full
     wait_strategy: Arc<W>,
     /// Sequences that this producer must wait for before overwriting slots
-    gating_sequences: Vec<Arc<AtomicSequence>>,
+    gating_sequences: Vec<Arc<AtomicSequenceOrdered>>,
     /// Size of the ring buffer
     buffer_size: usize,
     /// Tracks the highest claimed sequence
-    high_watermark: AtomicSequence,
+    high_watermark: AtomicSequenceOrdered,
     /// Bitmap tracking which sequences are ready for publishing
     ready_sequences: BitMap,
     /// Flag indicating if the sequencer has been drained
     is_done: Arc<AtomicBool>,
-    low_watermark: AtomicSequence,
+    low_watermark: AtomicSequenceOrdered,
 }
 
 /// Manual implementation of Clone for MultiProducerSequencer
@@ -98,10 +98,10 @@ impl<W: WaitStrategy> Clone for MultiProducerSequencer<W> {
             wait_strategy: self.wait_strategy.clone(),
             gating_sequences: self.gating_sequences.clone(),
             buffer_size: self.buffer_size,
-            high_watermark: AtomicSequence::default(),
+            high_watermark: AtomicSequenceOrdered::default(),
             ready_sequences: BitMap::new(NonZeroUsize::try_from(self.buffer_size).unwrap()),
             is_done: self.is_done.clone(),
-            low_watermark: AtomicSequence::default(),
+            low_watermark: AtomicSequenceOrdered::default(),
         }
     }
 }
@@ -115,14 +115,14 @@ impl<W: WaitStrategy> MultiProducerSequencer<W> {
     /// * `wait_strategy` - The strategy to use when waiting for available slots
     pub fn new(buffer_size: usize, wait_strategy: W) -> Self {
         MultiProducerSequencer {
-            cursor: Arc::new(AtomicSequence::default()),
+            cursor: Arc::new(AtomicSequenceOrdered::default()),
             wait_strategy: Arc::new(wait_strategy),
             gating_sequences: Vec::new(),
             buffer_size,
-            high_watermark: AtomicSequence::default(),
+            high_watermark: AtomicSequenceOrdered::default(),
             ready_sequences: BitMap::new(NonZeroUsize::try_from(buffer_size).unwrap()),
             is_done: Default::default(),
-            low_watermark: AtomicSequence::default(),
+            low_watermark: AtomicSequenceOrdered::default(),
         }
     }
 
@@ -138,7 +138,10 @@ impl<W: WaitStrategy> MultiProducerSequencer<W> {
     /// `true` if there is enough space in the buffer, `false` otherwise
     fn has_capacity(&self, high_watermark: Sequence, count: usize) -> bool {
         self.buffer_size
-            > (high_watermark - min_cursor_sequence(&self.gating_sequences)) as usize + count
+            > (high_watermark
+                - get_min_cursor_sequence::<_, AtomicSequenceOrdered>(&self.gating_sequences))
+                as usize
+                + count
     }
 }
 
@@ -164,7 +167,7 @@ impl<W: WaitStrategy> Sequencer for MultiProducerSequencer<W> {
             let high_watermark = self.high_watermark.get();
             if self.has_capacity(high_watermark, count) {
                 let end = high_watermark + count as Sequence;
-                if self.high_watermark.compare_exchange(high_watermark, end) {
+                if self.high_watermark.compare_and_swap(high_watermark, end) {
                     return (high_watermark + 1, end);
                 }
             }
@@ -199,7 +202,7 @@ impl<W: WaitStrategy> Sequencer for MultiProducerSequencer<W> {
             }
 
             let mut current = low_watermark;
-            while !self.cursor.compare_exchange(current, good_to_release) {
+            while !self.cursor.compare_and_swap(current, good_to_release) {
                 current = self.cursor.get();
                 if current > good_to_release {
                     break;
@@ -222,7 +225,7 @@ impl<W: WaitStrategy> Sequencer for MultiProducerSequencer<W> {
     /// A new processing sequence barrier
     fn create_barrier(
         &mut self,
-        gating_sequences: &[Arc<AtomicSequence>],
+        gating_sequences: &[Arc<AtomicSequenceOrdered>],
     ) -> ProcessingSequenceBarrier<W> {
         ProcessingSequenceBarrier::new(
             self.wait_strategy.clone(),
@@ -236,7 +239,7 @@ impl<W: WaitStrategy> Sequencer for MultiProducerSequencer<W> {
     /// # Arguments
     ///
     /// * `gating_sequence` - The sequence to add
-    fn add_gating_sequence(&mut self, gating_sequence: &Arc<AtomicSequence>) {
+    fn add_gating_sequence(&mut self, gating_sequence: &Arc<AtomicSequenceOrdered>) {
         self.gating_sequences.push(gating_sequence.clone());
     }
 
@@ -245,14 +248,15 @@ impl<W: WaitStrategy> Sequencer for MultiProducerSequencer<W> {
     /// # Returns
     ///
     /// The current cursor as an atomic sequence
-    fn get_cursor(&self) -> Arc<AtomicSequence> {
+    fn get_cursor(&self) -> Arc<AtomicSequenceOrdered> {
         self.cursor.clone()
     }
 
     /// Drains the sequencer, preventing further event production.
     fn drain(self) {
         let current = self.cursor.get();
-        while min_cursor_sequence(&self.gating_sequences) < current {
+        while get_min_cursor_sequence::<_, AtomicSequenceOrdered>(&self.gating_sequences) < current
+        {
             self.wait_strategy.signal();
         }
         self.is_done.store(true, Ordering::SeqCst);

@@ -78,11 +78,11 @@ impl DataProvider<TestData> for TestDataProvider {
 
 #[allow(dead_code)]
 struct TestBarrier {
-    cursor: Arc<AtomicSequence>,
+    cursor: Arc<AtomicSequenceOrdered>,
     wait_strategy: Arc<SpinLoopWaitStrategy>,
-    dependent_sequences: Vec<Arc<AtomicSequence>>,
+    dependent_sequences: Vec<Arc<AtomicSequenceOrdered>>,
     processed_count: Arc<AtomicUsize>,
-    max_sequence: Arc<AtomicSequence>,
+    max_sequence: Arc<AtomicSequenceOrdered>,
 }
 
 impl SequenceBarrier for TestBarrier {
@@ -143,11 +143,11 @@ fn test_immutable_processor_event_handling() {
     let data_provider = Arc::new(TestDataProvider { data });
 
     let wait_strategy = Arc::new(SpinLoopWaitStrategy::new());
-    let max_sequence = Arc::new(AtomicSequence::default());
+    let max_sequence = Arc::new(AtomicSequenceOrdered::default());
     max_sequence.set(2); // We have 3 elements (0, 1, 2)
 
     let barrier = TestBarrier {
-        cursor: Arc::new(AtomicSequence::default()),
+        cursor: Arc::new(AtomicSequenceOrdered::default()),
         wait_strategy,
         dependent_sequences: vec![],
         processed_count: Arc::new(AtomicUsize::new(0)),
@@ -188,11 +188,11 @@ fn test_mutable_processor_event_handling() {
     let data_provider = Arc::new(TestDataProvider { data });
 
     let wait_strategy = Arc::new(SpinLoopWaitStrategy::new());
-    let max_sequence = Arc::new(AtomicSequence::default());
+    let max_sequence = Arc::new(AtomicSequenceOrdered::default());
     max_sequence.set(2); // We have 3 elements (0, 1, 2)
 
     let barrier = TestBarrier {
-        cursor: Arc::new(AtomicSequence::default()),
+        cursor: Arc::new(AtomicSequenceOrdered::default()),
         wait_strategy,
         dependent_sequences: vec![],
         processed_count: Arc::new(AtomicUsize::new(0)),
@@ -233,12 +233,12 @@ fn test_processor_with_dependencies() {
     let data_provider = Arc::new(TestDataProvider { data });
 
     let wait_strategy = Arc::new(SpinLoopWaitStrategy::new());
-    let dependent_sequence = Arc::new(AtomicSequence::default());
-    let max_sequence = Arc::new(AtomicSequence::default());
+    let dependent_sequence = Arc::new(AtomicSequenceOrdered::default());
+    let max_sequence = Arc::new(AtomicSequenceOrdered::default());
     max_sequence.set(2); // We have 3 elements (0, 1, 2)
 
     let barrier = TestBarrier {
-        cursor: Arc::new(AtomicSequence::default()),
+        cursor: Arc::new(AtomicSequenceOrdered::default()),
         wait_strategy,
         dependent_sequences: vec![dependent_sequence.clone()],
         processed_count: Arc::new(AtomicUsize::new(0)),
@@ -282,8 +282,8 @@ fn test_processor_cursor_progression() {
     let data_provider = Arc::new(TestDataProvider { data });
 
     let wait_strategy = Arc::new(SpinLoopWaitStrategy::new());
-    let cursor = Arc::new(AtomicSequence::default());
-    let max_sequence = Arc::new(AtomicSequence::default());
+    let cursor = Arc::new(AtomicSequenceOrdered::default());
+    let max_sequence = Arc::new(AtomicSequenceOrdered::default());
     max_sequence.set(2); // We have 3 elements (0, 1, 2)
 
     let barrier = TestBarrier {

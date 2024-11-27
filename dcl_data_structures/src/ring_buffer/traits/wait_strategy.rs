@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use crate::ring_buffer::sequence::atomic_sequence::{AtomicSequence, Sequence};
+use crate::ring_buffer::prelude::{AtomicSequenceOrdered, Sequence};
 use std::borrow::Borrow;
 
 /// A trait defining a wait strategy.
@@ -21,7 +21,7 @@ use std::borrow::Borrow;
 /// strategy.
 pub trait WaitStrategy: Send + Sync {
     fn new() -> Self;
-    fn wait_for<F: Fn() -> bool, S: Borrow<AtomicSequence>>(
+    fn wait_for<F: Fn() -> bool, S: Borrow<AtomicSequenceOrdered>>(
         &self,
         sequence: Sequence,
         dependencies: &[S],

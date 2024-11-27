@@ -141,7 +141,7 @@ struct Processor<E, T> {
     /// The event handler implementation
     handler: E,
     /// Cursor tracking the current position in the event sequence
-    cursor: Arc<AtomicSequence>,
+    cursor: Arc<AtomicSequenceOrdered>,
     /// Phantom data to handle type parameters
     _marker: PhantomData<T>,
 }
@@ -158,7 +158,7 @@ struct ProcessorMut<E, T> {
     /// The mutable event handler implementation
     handler: E,
     /// Cursor tracking the current position in the event sequence
-    cursor: Arc<AtomicSequence>,
+    cursor: Arc<AtomicSequenceOrdered>,
     /// Phantom data to handle type parameters
     _marker: PhantomData<T>,
 }
@@ -218,7 +218,7 @@ where
         })
     }
 
-    fn get_cursor(&self) -> Arc<AtomicSequence> {
+    fn get_cursor(&self) -> Arc<AtomicSequenceOrdered> {
         self.cursor.clone()
     }
 }
@@ -240,7 +240,7 @@ where
         })
     }
 
-    fn get_cursor(&self) -> Arc<AtomicSequence> {
+    fn get_cursor(&self) -> Arc<AtomicSequenceOrdered> {
         self.cursor.clone()
     }
 }

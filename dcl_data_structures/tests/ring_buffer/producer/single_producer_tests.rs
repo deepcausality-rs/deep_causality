@@ -103,7 +103,7 @@ fn test_single_producer_gating_sequence() {
     let wait_strategy = BlockingWaitStrategy::new();
     let mut sequencer = SingleProducerSequencer::new(buffer_size, wait_strategy);
 
-    let gating_sequence = Arc::new(AtomicSequence::default());
+    let gating_sequence = Arc::new(AtomicSequenceOrdered::default());
     sequencer.add_gating_sequence(&gating_sequence);
 
     // The producer should respect the gating sequence
@@ -124,7 +124,7 @@ fn test_single_producer_barrier() {
     let wait_strategy = BlockingWaitStrategy::new();
     let mut sequencer = SingleProducerSequencer::new(buffer_size, wait_strategy);
 
-    let gating_sequences = vec![Arc::new(AtomicSequence::default())];
+    let gating_sequences = vec![Arc::new(AtomicSequenceOrdered::default())];
     let barrier = sequencer.create_barrier(&gating_sequences);
 
     assert!(barrier.wait_for(0).is_some());

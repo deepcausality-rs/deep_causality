@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use crate::ring_buffer::sequence::atomic_sequence::AtomicSequence;
+use crate::ring_buffer::sequence::atomic_sequence_ordered::AtomicSequenceOrdered;
 use crate::ring_buffer::traits::data_provider::DataProvider;
 use crate::ring_buffer::traits::runnable::Runnable;
 use crate::ring_buffer::traits::sequencer::SequenceBarrier;
@@ -32,7 +32,7 @@ pub trait EventProcessorMut<'a, T> {
     ///
     /// The cursor sequence is used to track the sequence of events that have
     /// been processed by the event processor.
-    fn get_cursor(&self) -> Arc<AtomicSequence>;
+    fn get_cursor(&self) -> Arc<AtomicSequenceOrdered>;
 }
 
 /// A trait for event processors that can be used for event processing.

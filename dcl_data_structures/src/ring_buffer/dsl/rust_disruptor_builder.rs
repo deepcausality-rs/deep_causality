@@ -122,8 +122,8 @@ where
 pub struct BarrierScope<'a, S: Sequencer, D: DataProvider<T>, T> {
     sequencer: S,
     data_provider: Arc<D>,
-    gating_sequences: Vec<Arc<AtomicSequence>>,
-    cursors: Vec<Arc<AtomicSequence>>,
+    gating_sequences: Vec<Arc<AtomicSequenceOrdered>>,
+    cursors: Vec<Arc<AtomicSequenceOrdered>>,
     event_handlers: Vec<Box<dyn Runnable + 'a>>,
     _element: PhantomData<T>,
 }
@@ -144,7 +144,7 @@ where
 {
     with_sequencer: WithSequencer<S, W, D, T>,
     event_handlers: Vec<Box<dyn Runnable + 'a>>,
-    gating_sequences: Vec<Arc<AtomicSequence>>,
+    gating_sequences: Vec<Arc<AtomicSequenceOrdered>>,
 }
 
 impl RustDisruptorBuilder {

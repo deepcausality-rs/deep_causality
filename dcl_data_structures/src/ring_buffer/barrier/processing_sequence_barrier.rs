@@ -38,7 +38,7 @@ use std::sync::{
 ///
 pub struct ProcessingSequenceBarrier<W: WaitStrategy> {
     /// A vector of atomic sequences that this barrier depends on
-    gating_sequences: Vec<Arc<AtomicSequence>>,
+    gating_sequences: Vec<Arc<AtomicSequenceOrdered>>,
     /// The strategy used for waiting when sequences are not yet available
     wait_strategy: Arc<W>,
     /// A flag indicating whether the barrier has been alerted (typically for shutdown)
@@ -59,7 +59,7 @@ impl<W: WaitStrategy> ProcessingSequenceBarrier<W> {
     /// Returns a new instance of `ProcessingSequenceBarrier`
     pub fn new(
         wait_strategy: Arc<W>,
-        gating_sequences: Vec<Arc<AtomicSequence>>,
+        gating_sequences: Vec<Arc<AtomicSequenceOrdered>>,
         is_alerted: Arc<AtomicBool>,
     ) -> Self {
         ProcessingSequenceBarrier {

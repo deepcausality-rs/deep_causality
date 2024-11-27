@@ -9,13 +9,13 @@ use dcl_data_structures::ring_buffer::prelude::*;
 
 // Mock wait strategy for testing
 struct TestWaitStrategy {
-    counter: AtomicSequence,
+    counter: AtomicSequenceOrdered,
 }
 
 impl TestWaitStrategy {
     fn new() -> Self {
         Self {
-            counter: AtomicSequence::default(),
+            counter: AtomicSequenceOrdered::default(),
         }
     }
 }
@@ -25,7 +25,7 @@ impl WaitStrategy for TestWaitStrategy {
         Self::new()
     }
 
-    fn wait_for<F: Fn() -> bool, S: std::borrow::Borrow<AtomicSequence>>(
+    fn wait_for<F: Fn() -> bool, S: std::borrow::Borrow<AtomicSequenceOrdered>>(
         &self,
         sequence: Sequence,
         _dependencies: &[S],
@@ -48,7 +48,7 @@ impl WaitStrategy for TestWaitStrategy {
 #[test]
 fn test_barrier_creation() {
     let wait_strategy = Arc::new(TestWaitStrategy::new());
-    let gating_sequences = vec![Arc::new(AtomicSequence::default())];
+    let gating_sequences = vec![Arc::new(AtomicSequenceOrdered::default())];
     let is_alerted = Arc::new(AtomicBool::new(false));
 
     let _barrier = ProcessingSequenceBarrier::new(wait_strategy, gating_sequences, is_alerted);
@@ -57,7 +57,7 @@ fn test_barrier_creation() {
 #[test]
 fn test_barrier_wait_for() {
     let wait_strategy = Arc::new(TestWaitStrategy::new());
-    let gating_sequences = vec![Arc::new(AtomicSequence::default())];
+    let gating_sequences = vec![Arc::new(AtomicSequenceOrdered::default())];
     let is_alerted = Arc::new(AtomicBool::new(false));
 
     let barrier = ProcessingSequenceBarrier::new(wait_strategy, gating_sequences, is_alerted);
@@ -68,7 +68,7 @@ fn test_barrier_wait_for() {
 #[test]
 fn test_barrier_signal() {
     let wait_strategy = Arc::new(TestWaitStrategy::new());
-    let gating_sequences = vec![Arc::new(AtomicSequence::default())];
+    let gating_sequences = vec![Arc::new(AtomicSequenceOrdered::default())];
     let is_alerted = Arc::new(AtomicBool::new(false));
 
     let barrier =
@@ -81,7 +81,7 @@ fn test_barrier_signal() {
 #[test]
 fn test_barrier_with_alert_condition() {
     let wait_strategy = Arc::new(TestWaitStrategy::new()); // Use TestWaitStrategy instead
-    let gating_sequences = vec![Arc::new(AtomicSequence::default())];
+    let gating_sequences = vec![Arc::new(AtomicSequenceOrdered::default())];
     let is_alerted = Arc::new(AtomicBool::new(false));
 
     let barrier =
@@ -99,9 +99,9 @@ fn test_barrier_with_alert_condition() {
 fn test_barrier_multiple_gating_sequences() {
     let wait_strategy = Arc::new(TestWaitStrategy::new());
     let gating_sequences = vec![
-        Arc::new(AtomicSequence::default()),
-        Arc::new(AtomicSequence::default()),
-        Arc::new(AtomicSequence::default()),
+        Arc::new(AtomicSequenceOrdered::default()),
+        Arc::new(AtomicSequenceOrdered::default()),
+        Arc::new(AtomicSequenceOrdered::default()),
     ];
     let is_alerted = Arc::new(AtomicBool::new(false));
 
@@ -113,7 +113,7 @@ fn test_barrier_multiple_gating_sequences() {
 #[test]
 fn test_barrier_concurrent_access() {
     let wait_strategy = Arc::new(TestWaitStrategy::new());
-    let gating_sequences = vec![Arc::new(AtomicSequence::default())];
+    let gating_sequences = vec![Arc::new(AtomicSequenceOrdered::default())];
     let is_alerted = Arc::new(AtomicBool::new(false));
 
     let barrier = Arc::new(ProcessingSequenceBarrier::new(

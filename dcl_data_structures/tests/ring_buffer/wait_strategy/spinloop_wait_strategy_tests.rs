@@ -9,8 +9,8 @@ use std::time::Duration;
 use dcl_data_structures::ring_buffer::prelude::*;
 
 // Helper function to create test dependencies
-fn create_test_dependencies(value: Sequence) -> Vec<AtomicSequence> {
-    vec![AtomicSequence::from(value)]
+fn create_test_dependencies(value: Sequence) -> Vec<AtomicSequenceOrdered> {
+    vec![AtomicSequenceOrdered::from(value)]
 }
 
 #[test]
@@ -71,9 +71,9 @@ fn test_spinloop_wait_strategy_concurrent() {
 fn test_spinloop_wait_strategy_multiple_dependencies() {
     let strategy = SpinLoopWaitStrategy::new();
     let deps = vec![
-        AtomicSequence::from(5),
-        AtomicSequence::from(10),
-        AtomicSequence::from(15),
+        AtomicSequenceOrdered::from(5),
+        AtomicSequenceOrdered::from(10),
+        AtomicSequenceOrdered::from(15),
     ];
     let alert = AtomicBool::new(false);
 

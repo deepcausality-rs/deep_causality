@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use crate::ring_buffer::sequence::atomic_sequence::Sequence;
+use crate::ring_buffer::prelude::Sequence;
 use crate::ring_buffer::utils::logarithm::log2;
 use std::num::NonZeroUsize;
 use std::sync::atomic::{AtomicU64, Ordering};

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use crate::ring_buffer::sequence::atomic_sequence::{AtomicSequence, Sequence};
+use crate::ring_buffer::prelude::{AtomicSequenceOrdered, Sequence};
 use std::sync::Arc;
 
 /// A trait that represents a barrier for a sequence.
@@ -50,18 +50,18 @@ pub trait Sequencer {
     /// The method takes a slice of gating sequences as argument and returns a
     /// barrier that will block until the cursor is greater than or equal to
     /// any of the gating sequences.
-    fn create_barrier(&mut self, gating_sequences: &[Arc<AtomicSequence>]) -> Self::Barrier;
+    fn create_barrier(&mut self, gating_sequences: &[Arc<AtomicSequenceOrdered>]) -> Self::Barrier;
 
     /// Add a gating sequence to the barriers.
     ///
     /// The method takes a gating sequence as argument and adds it to all the
     /// barriers.
-    fn add_gating_sequence(&mut self, gating_sequence: &Arc<AtomicSequence>);
+    fn add_gating_sequence(&mut self, gating_sequence: &Arc<AtomicSequenceOrdered>);
 
     /// Get the current value of the cursor.
     ///
     /// The method returns the current value of the cursor as an atomic sequence.
-    fn get_cursor(&self) -> Arc<AtomicSequence>;
+    fn get_cursor(&self) -> Arc<AtomicSequenceOrdered>;
 
     /// Drain the sequencer.
     ///

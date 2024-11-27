@@ -18,7 +18,7 @@ impl WaitStrategy for BlockingWaitStrategy {
         }
     }
 
-    fn wait_for<F: Fn() -> bool, S: Borrow<AtomicSequence>>(
+    fn wait_for<F: Fn() -> bool, S: Borrow<AtomicSequenceOrdered>>(
         &self,
         sequence: Sequence,
         dependencies: &[S],
@@ -30,7 +30,7 @@ impl WaitStrategy for BlockingWaitStrategy {
                 return None;
             }
 
-            let available = min_cursor_sequence(dependencies);
+            let available = get_min_cursor_sequence(dependencies);
             if available >= sequence {
                 return Some(available);
             } else {
