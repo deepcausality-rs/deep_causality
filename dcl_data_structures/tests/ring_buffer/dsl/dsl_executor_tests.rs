@@ -36,7 +36,7 @@ fn test_executor_with_multiple_handlers() {
 #[test]
 fn test_executor_with_custom_handler() {
     struct CustomHandler {
-        count: Arc<AtomicSequence>,
+        count: Arc<AtomicSequenceOrdered>,
     }
 
     impl EventHandler<u64> for CustomHandler {
@@ -46,7 +46,7 @@ fn test_executor_with_custom_handler() {
         }
     }
 
-    let counter = Arc::new(AtomicSequence::default());
+    let counter = Arc::new(AtomicSequenceOrdered::default());
     let handler = CustomHandler {
         count: counter.clone(),
     };

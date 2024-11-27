@@ -49,12 +49,12 @@ mod tests {
     fn test_barrier_with_custom_sequence_barrier() {
         struct CustomBarrier {
             wait_strategy: Arc<SpinLoopWaitStrategy>,
-            dependent_sequences: Vec<Arc<AtomicSequence>>,
+            dependent_sequences: Vec<Arc<AtomicSequenceOrdered>>,
         }
 
         impl SequenceBarrier for CustomBarrier {
             fn wait_for(&self, sequence: u64) -> Option<u64> {
-                let deps: Vec<&AtomicSequence> = self
+                let deps: Vec<&AtomicSequenceOrdered> = self
                     .dependent_sequences
                     .iter()
                     .map(|s| s.borrow())

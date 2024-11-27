@@ -11,14 +11,14 @@ impl WaitStrategy for SpinLoopWaitStrategy {
         SpinLoopWaitStrategy {}
     }
 
-    fn wait_for<F: Fn() -> bool, S: Borrow<AtomicSequence>>(
+    fn wait_for<F: Fn() -> bool, S: Borrow<AtomicSequenceOrdered>>(
         &self,
         sequence: Sequence,
         dependencies: &[S],
         check_alert: F,
     ) -> Option<Sequence> {
         loop {
-            let available = min_cursor_sequence(dependencies);
+            let available = get_min_cursor_sequence(dependencies);
             if available >= sequence {
                 return Some(available);
             }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use crate::ring_buffer::sequence::atomic_sequence::Sequence;
+use crate::ring_buffer::sequence::atomic_sequence_ordered::Sequence;
 
 pub trait EventHandler<T> {
     /// Handle an event from the ring buffer.

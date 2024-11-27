@@ -27,7 +27,7 @@
 //! use dcl_data_structures::ring_buffer::prelude::*;
 //!
 //! // Create a new atomic sequence with default value (0)
-//! let seq = AtomicSequence::default();
+//! let seq = AtomicSequenceOrdered::default();
 //!
 //! // Set a sequence value
 //! seq.set(42);
@@ -36,13 +36,14 @@
 //! assert_eq!(seq.get(), 42);
 //!
 //! // Perform a compare-exchange operation
-//! let success = seq.compare_exchange(42, 43);
+//! let success = seq.compare_and_swap(42, 43);
 //! assert!(success);
 //! assert_eq!(seq.get(), 43);
 //! ```
 
 use std::mem::size_of;
 use std::sync::atomic::{AtomicU64, Ordering};
+use crate::ring_buffer::prelude::AtomicSequence;
 
 /// Type alias for sequence numbers in the ring buffer.
 /// Uses u64 to provide a large range of sequence numbers before wrapping.
@@ -77,12 +78,27 @@ const CACHE_LINE_PADDING: usize = CACHE_LINE_SIZE - size_of::<AtomicU64>();
 /// - `set` uses Release ordering
 /// - `compare_exchange` uses SeqCst for success and Acquire for failure
 #[repr(align(64))]
-pub struct AtomicSequence {
+pub struct AtomicSequenceOrdered {
     _pad: [u8; CACHE_LINE_PADDING],
     offset: AtomicU64,
 }
 
-impl AtomicSequence {
+
+impl Default for AtomicSequenceOrdered {
+    /// Creates a new `AtomicSequence` with a default value of 0.
+    ///
+    /// # Returns
+    ///
+    /// A new `AtomicSequence` instance initialized to 0
+    fn default() -> Self {
+        Self {
+            _pad: [0; CACHE_LINE_PADDING],
+            offset: AtomicU64::default(),
+        }
+    }
+}
+
+impl AtomicSequence for AtomicSequenceOrdered {
     /// Atomically loads and returns the current sequence value.
     ///
     /// Uses Acquire ordering to ensure visibility of values written by other threads.
@@ -90,7 +106,7 @@ impl AtomicSequence {
     /// # Returns
     ///
     /// The current sequence value
-    pub fn get(&self) -> Sequence {
+     fn get(&self) -> Sequence {
         self.offset.load(Ordering::Acquire)
     }
 
@@ -101,7 +117,7 @@ impl AtomicSequence {
     /// # Parameters
     ///
     /// * `value` - The new sequence value to store
-    pub fn set(&self, value: Sequence) {
+     fn set(&self, value: Sequence) {
         self.offset.store(value, Ordering::Release);
     }
 
@@ -118,28 +134,26 @@ impl AtomicSequence {
     /// # Returns
     ///
     /// `true` if the exchange was successful, `false` otherwise
-    pub fn compare_exchange(&self, current: Sequence, new: Sequence) -> bool {
+     fn compare_and_swap(&self, current: Sequence, new: Sequence) -> bool {
         self.offset
             .compare_exchange(current, new, Ordering::SeqCst, Ordering::Acquire)
             .is_ok()
     }
-}
 
-impl Default for AtomicSequence {
-    /// Creates a new `AtomicSequence` with a default value of 0.
+    /// Atomically increments the sequence value.
+    ///
+    /// Uses SeqCst ordering to ensure strong consistency across threads.
     ///
     /// # Returns
     ///
-    /// A new `AtomicSequence` instance initialized to 0
-    fn default() -> Self {
-        Self {
-            _pad: [0; CACHE_LINE_PADDING],
-            offset: AtomicU64::default(),
-        }
+    /// The new sequence value
+     fn increment(&self) -> Sequence {
+        self.offset.fetch_add(1, Ordering::SeqCst) + 1
     }
 }
 
-impl From<Sequence> for AtomicSequence {
+
+impl From<Sequence> for AtomicSequenceOrdered {
     /// Creates a new `AtomicSequence` from a sequence value.
     ///
     /// # Parameters
@@ -157,7 +171,7 @@ impl From<Sequence> for AtomicSequence {
     }
 }
 
-impl From<AtomicSequence> for Sequence {
+impl From<AtomicSequenceOrdered> for Sequence {
     /// Converts an `AtomicSequence` into its raw sequence value.
     ///
     /// # Parameters
@@ -167,7 +181,7 @@ impl From<AtomicSequence> for Sequence {
     /// # Returns
     ///
     /// The underlying sequence value
-    fn from(val: AtomicSequence) -> Self {
+    fn from(val: AtomicSequenceOrdered) -> Self {
         val.offset.into_inner()
     }
 }

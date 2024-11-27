@@ -81,7 +81,7 @@ pub struct Producer<D: DataProvider<T>, T, S: Sequencer> {
 /// * `W` - The wait strategy used for coordinating with consumers
 pub struct SingleProducerSequencer<W: WaitStrategy> {
     /// The current cursor position in the ring buffer
-    cursor: Arc<AtomicSequence>,
+    cursor: Arc<AtomicSequenceOrdered>,
     /// The next sequence to write to
     next_write_sequence: Cell<Sequence>,
     /// Cached sequence value to reduce consumer queries
@@ -89,7 +89,7 @@ pub struct SingleProducerSequencer<W: WaitStrategy> {
     /// The strategy used for waiting when the buffer is full
     wait_strategy: Arc<W>,
     /// Sequences that this producer must wait for before overwriting slots
-    gating_sequences: Vec<Arc<AtomicSequence>>,
+    gating_sequences: Vec<Arc<AtomicSequenceOrdered>>,
     /// Size of the ring buffer
     buffer_size: usize,
     /// Flag indicating if the sequencer has been drained
@@ -105,7 +105,7 @@ impl<W: WaitStrategy> SingleProducerSequencer<W> {
     /// * `wait_strategy` - The strategy to use when waiting for available slots
     pub fn new(buffer_size: usize, wait_strategy: W) -> Self {
         SingleProducerSequencer {
-            cursor: Arc::new(AtomicSequence::default()),
+            cursor: Arc::new(AtomicSequenceOrdered::default()),
             next_write_sequence: Cell::new(0),
             cached_available_sequence: Cell::new(Sequence::default()),
             wait_strategy: Arc::new(wait_strategy),
@@ -139,7 +139,7 @@ impl<W: WaitStrategy> Sequencer for SingleProducerSequencer<W> {
         let (start, end) = (next, next + (count - 1) as Sequence);
 
         while min_sequence + (self.buffer_size as Sequence) < end {
-            min_sequence = min_cursor_sequence(&self.gating_sequences);
+            min_sequence = get_min_cursor_sequence::<_, AtomicSequenceOrdered>(&self.gating_sequences);
         }
 
         self.cached_available_sequence.set(min_sequence);
@@ -171,7 +171,7 @@ impl<W: WaitStrategy> Sequencer for SingleProducerSequencer<W> {
     /// A new processing sequence barrier
     fn create_barrier(
         &mut self,
-        gating_sequences: &[Arc<AtomicSequence>],
+        gating_sequences: &[Arc<AtomicSequenceOrdered>],
     ) -> ProcessingSequenceBarrier<W> {
         ProcessingSequenceBarrier::new(
             self.wait_strategy.clone(),
@@ -185,7 +185,7 @@ impl<W: WaitStrategy> Sequencer for SingleProducerSequencer<W> {
     /// # Arguments
     ///
     /// * `gating_sequence` - The sequence to add
-    fn add_gating_sequence(&mut self, gating_sequence: &Arc<AtomicSequence>) {
+    fn add_gating_sequence(&mut self, gating_sequence: &Arc<AtomicSequenceOrdered>) {
         self.gating_sequences.push(gating_sequence.clone());
     }
 
@@ -194,14 +194,14 @@ impl<W: WaitStrategy> Sequencer for SingleProducerSequencer<W> {
     /// # Returns
     ///
     /// The current cursor as an atomic sequence
-    fn get_cursor(&self) -> Arc<AtomicSequence> {
+    fn get_cursor(&self) -> Arc<AtomicSequenceOrdered> {
         self.cursor.clone()
     }
 
     /// Drains the sequencer, preventing further event production.
     fn drain(self) {
         let current = self.next_write_sequence.take() - 1;
-        while min_cursor_sequence(&self.gating_sequences) < current {
+        while get_min_cursor_sequence::<_, AtomicSequenceOrdered>(&self.gating_sequences) < current {
             self.wait_strategy.signal();
         }
         self.is_done.store(true, Ordering::SeqCst);

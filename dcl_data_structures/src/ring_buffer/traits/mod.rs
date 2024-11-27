@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
+mod atomic_sequence;
 mod data_provider;
 mod event_handler;
 mod event_processor;
@@ -10,6 +11,7 @@ mod sequencer;
 mod wait_strategy;
 
 // Re export
+pub use atomic_sequence::*;
 pub use data_provider::*;
 pub use event_handler::*;
 pub use event_processor::*;

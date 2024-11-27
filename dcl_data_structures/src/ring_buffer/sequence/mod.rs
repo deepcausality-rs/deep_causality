@@ -1,4 +1,4 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-pub mod atomic_sequence;
+pub mod atomic_sequence_ordered;

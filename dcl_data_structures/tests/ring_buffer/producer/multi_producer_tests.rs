@@ -75,7 +75,7 @@ fn test_multi_producer_gating_sequence() {
     let wait_strategy = BlockingWaitStrategy::new();
     let mut sequencer = MultiProducerSequencer::new(buffer_size, wait_strategy);
 
-    let gating_sequence = Arc::new(AtomicSequence::default());
+    let gating_sequence = Arc::new(AtomicSequenceOrdered::default());
     sequencer.add_gating_sequence(&gating_sequence);
 
     // The producer should respect the gating sequence
@@ -98,7 +98,7 @@ fn test_multi_producer_barrier() {
     let wait_strategy = BlockingWaitStrategy::new();
     let mut sequencer = MultiProducerSequencer::new(buffer_size, wait_strategy);
 
-    let gating_sequences = vec![Arc::new(AtomicSequence::default())];
+    let gating_sequences = vec![Arc::new(AtomicSequenceOrdered::default())];
     let barrier = sequencer.create_barrier(&gating_sequences);
 
     // Check barrier's sequence is initialized
@@ -112,7 +112,7 @@ fn test_multi_producer_drain() {
     let mut sequencer = MultiProducerSequencer::new(buffer_size, wait_strategy);
 
     // Create a gating sequence that will track our test consumer
-    let gating_sequence = Arc::new(AtomicSequence::default());
+    let gating_sequence = Arc::new(AtomicSequenceOrdered::default());
     sequencer.add_gating_sequence(&gating_sequence);
 
     // Publish some sequences
