@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0](https://github.com/deepcausality-rs/deep_causality/compare/dcl_data_structures-v0.6.1...dcl_data_structures-v0.7.0) - 2024-11-26
+
+### Other
+
+- Fixed import in tests
+- Fixed ArrayGrid tests and benchmark.
+- Fixed module declaration
+- Added test coverage for point_index
+- Merge branch 'deepcausality-rs:main' into main
+- Added or updated example code for dcl_data_structures
+- Fixed rewind bug in unsafe_storage_array.
+- Added more tests to window type
+- Fixed rewind bug in ArrayStorage
+
 ## [0.6.1](https://github.com/deepcausality-rs/deep_causality/compare/dcl_data_structures-v0.6.0...dcl_data_structures-v0.6.1) - 2024-11-25
 
 ### Other
