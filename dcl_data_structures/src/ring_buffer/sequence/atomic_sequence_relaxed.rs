@@ -46,31 +46,22 @@ impl Clone for AtomicSequenceRelaxed {
 }
 
 impl AtomicSequence for AtomicSequenceRelaxed {
-    fn get(&self) -> crate::ring_buffer::prelude::Sequence {
-        self.offset.load(Ordering::Relaxed) as crate::ring_buffer::prelude::Sequence
+    fn get(&self) -> Sequence {
+        self.offset.load(Ordering::Relaxed) as Sequence
     }
 
-    fn set(&self, value: crate::ring_buffer::prelude::Sequence) {
-        self.offset.store(value as u64, Ordering::Relaxed);
+    fn set(&self, value: Sequence) {
+        self.offset.store(value, Ordering::Relaxed);
     }
 
-    fn compare_and_swap(
-        &self,
-        current: crate::ring_buffer::prelude::Sequence,
-        new: crate::ring_buffer::prelude::Sequence,
-    ) -> bool {
+    fn compare_and_swap(&self, current: Sequence, new: Sequence) -> bool {
         self.offset
-            .compare_exchange(
-                current as u64,
-                new as u64,
-                Ordering::Relaxed,
-                Ordering::Relaxed,
-            )
+            .compare_exchange(current, new, Ordering::Relaxed, Ordering::Relaxed)
             .is_ok()
     }
 
-    fn increment(&self) -> crate::ring_buffer::prelude::Sequence {
-        self.offset.fetch_add(1, Ordering::Relaxed) as crate::ring_buffer::prelude::Sequence
+    fn increment(&self) -> Sequence {
+        self.offset.fetch_add(1, Ordering::Relaxed) as Sequence
     }
 }
 
@@ -78,7 +69,7 @@ impl From<Sequence> for AtomicSequenceRelaxed {
     fn from(value: Sequence) -> Self {
         Self {
             _pad: [0; CACHE_LINE_PADDING],
-            offset: AtomicU64::new(value as u64),
+            offset: AtomicU64::new(value),
             contention_counter: AtomicUsize::new(0),
             current_batch_size: AtomicU64::new(MIN_BATCH_SIZE),
         }
