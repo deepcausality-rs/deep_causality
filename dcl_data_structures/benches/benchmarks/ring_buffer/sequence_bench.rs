@@ -1,4 +1,5 @@
 use criterion::{black_box, criterion_group, Criterion};
+use dcl_data_structures::ring_buffer::prelude::AtomicSequence;
 use dcl_data_structures::ring_buffer::sequence::atomic_sequence_ordered::AtomicSequenceOrdered;
 
 fn sequence_benchmark(c: &mut Criterion) {
