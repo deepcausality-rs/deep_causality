@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0](https://github.com/deepcausality-rs/deep_causality/compare/dcl_data_structures-v0.7.0...dcl_data_structures-v0.8.0) - 2024-12-24
+
+### Other
+
+- Code formatting and linting
+- Added or updated tests for all atomic sequence implementations.
+- Code formatting
+- Fixed tests and benches
+- made get_min_cursor_sequence generic
+- made get_min_cursor_sequence generic
+- Added Atomic sequence trait
+- Added uniform batch sizes to all ring_buffer benchmarks
+
 ## [0.7.0](https://github.com/deepcausality-rs/deep_causality/compare/dcl_data_structures-v0.6.1...dcl_data_structures-v0.7.0) - 2024-11-26
 
 ### Other
