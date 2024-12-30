@@ -35,7 +35,7 @@ do
 
     starter)
       echo "Selected example: Starter (Starter)"
-      command cargo run --release --bin starter
+      command cargo run --release --bin example-starter
       break
       ;;
 
