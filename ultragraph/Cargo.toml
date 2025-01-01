@@ -22,7 +22,7 @@ version = "^0.4"
 
 [dependencies]
 ahash = "0.8"
-petgraph = "0.6"
+petgraph = "0.7"
 
 
 [dev-dependencies]
