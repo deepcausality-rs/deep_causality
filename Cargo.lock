@@ -441,7 +441,7 @@ checksum = "068316d162870187e81178c217c07b9e65a449afb15d7a564f98c3e4ada24647"
 
 [[package]]
 name = "dcl_data_structures"
-version = "0.7.0"
+version = "0.7.1"
 dependencies = [
  "criterion",
  "crossbeam-utils",
@@ -464,9 +464,9 @@ name = "deep_causality"
 version = "0.7.3"
 dependencies = [
  "criterion",
- "dcl_data_structures 0.7.0",
- "deep_causality_macros 0.4.10",
- "ultragraph 0.5.4",
+ "dcl_data_structures 0.7.1",
+ "deep_causality_macros 0.4.11",
+ "ultragraph 0.5.5",
 ]
 
 [[package]]
@@ -482,7 +482,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_macros"
-version = "0.4.10"
+version = "0.4.11"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1263,11 +1263,11 @@ dependencies = [
 
 [[package]]
 name = "ultragraph"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "ahash",
  "criterion",
- "deep_causality_macros 0.4.10",
+ "deep_causality_macros 0.4.11",
  "petgraph 0.7.1",
  "rand",
 ]
