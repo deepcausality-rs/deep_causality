@@ -15,7 +15,6 @@
 [![OpenSSF Best Practices][ossf-badge]][ossf-url]
 [![codecov][codecov-badge]][codecov-url]
 
-
 [codefactor-badge]: https://www.codefactor.io/repository/github/deepcausality-rs/deep_causality/badge
 
 [codefactor-url]: https://www.codefactor.io/repository/github/deepcausality-rs/deep_causality
