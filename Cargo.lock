@@ -515,7 +515,6 @@ dependencies = [
  "chrono",
  "deep_causality 0.6.5",
  "parquet",
- "petgraph 0.7.1",
  "rust_decimal",
  "serde",
 ]
