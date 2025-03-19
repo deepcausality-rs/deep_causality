@@ -41,7 +41,7 @@ fn small_get_node_benchmark(criterion: &mut Criterion) {
     let g = get_pre_filled_ultra_graph(capacity);
 
     criterion.bench_function("small_get_node", |bencher| {
-        bencher.iter(|| g.get_node(rand::thread_rng().gen_range(0..capacity)))
+        bencher.iter(|| g.get_node(rand::rng().random_range(0..capacity)))
     });
 }
 
@@ -58,7 +58,7 @@ fn medium_get_node_benchmark(criterion: &mut Criterion) {
     let g = get_pre_filled_ultra_graph(capacity);
 
     criterion.bench_function("medium_get_node", |bencher| {
-        bencher.iter(|| g.get_node(rand::thread_rng().gen_range(0..capacity)))
+        bencher.iter(|| g.get_node(rand::rng().random_range(0..capacity)))
     });
 }
 
@@ -75,7 +75,7 @@ fn large_get_node_benchmark(criterion: &mut Criterion) {
     let g = get_pre_filled_ultra_graph(capacity);
 
     criterion.bench_function("array_push", |bencher| {
-        bencher.iter(|| g.get_node(rand::thread_rng().gen_range(0..capacity)))
+        bencher.iter(|| g.get_node(rand::rng().random_range(0..capacity)))
     });
 }
 

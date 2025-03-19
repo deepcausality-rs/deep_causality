@@ -156,15 +156,9 @@ where
         // assuming that values in the map have the same order as the data.
         for (i, cause) in self.get_all_items().iter().enumerate() {
             let valid = if cause.is_singleton() {
-                match cause.verify_single_cause(data.get(i).expect("failed to get value")) {
-                    Ok(res) => res,
-                    Err(e) => return Err(e),
-                }
+                cause.verify_single_cause(data.get(i).expect("failed to get value"))?
             } else {
-                match cause.verify_all_causes(data, None) {
-                    Ok(res) => res,
-                    Err(e) => return Err(e),
-                }
+                cause.verify_all_causes(data, None)?
             };
 
             if !valid {

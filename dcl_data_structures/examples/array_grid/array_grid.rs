@@ -94,7 +94,7 @@ pub fn main() {
     // Verify results
     let res = ag.get(idx_t2);
     assert_eq!(res.number, 25);
-    assert_eq!(res.mod_five, true);
+    assert!(res.mod_five);
 
     println!("\nAll tests passed successfully!");
 }

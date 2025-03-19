@@ -27,6 +27,9 @@ pub enum ArrayType {
     Array4D,
 }
 
+type GridType<T, const W: usize, const H: usize, const D: usize, const C: usize> =
+    Grid<[[[[T; W]; H]; D]; C], T>;
+
 // ArrayGrid is a wrapper around Grid that provides a more convenient API
 // for working with arrays of different dimensions.
 #[derive(Debug)]
@@ -37,7 +40,7 @@ where
     ArrayGrid1D(Grid<[T; H], T>),
     ArrayGrid2D(Grid<[[T; W]; H], T>),
     ArrayGrid3D(Grid<[[[T; W]; H]; D], T>),
-    ArrayGrid4D(Grid<[[[[T; W]; H]; D]; C], T>),
+    ArrayGrid4D(GridType<T, W, H, D, C>),
 }
 
 impl<T, const W: usize, const H: usize, const D: usize, const C: usize> ArrayGrid<T, W, H, D, C>
@@ -51,9 +54,9 @@ where
             ArrayType::Array1D => ArrayGrid::ArrayGrid1D(Grid::new([T::default(); H])),
             ArrayType::Array2D => ArrayGrid::ArrayGrid2D(Grid::new([[T::default(); W]; H])),
             ArrayType::Array3D => ArrayGrid::ArrayGrid3D(Grid::new([[[T::default(); W]; H]; D])),
-            ArrayType::Array4D => {
-                ArrayGrid::ArrayGrid4D(Grid::new([[[[T::default(); W]; H]; D]; C]))
-            }
+            ArrayType::Array4D => ArrayGrid::ArrayGrid4D(GridType::<T, W, H, D, C>::new(
+                [[[[T::default(); W]; H]; D]; C],
+            )),
         }
     }
 
@@ -85,7 +88,7 @@ where
     }
 
     #[inline(always)]
-    pub fn array_grid_4d(&self) -> Option<&Grid<[[[[T; W]; H]; D]; C], T>> {
+    pub fn array_grid_4d(&self) -> Option<&GridType<T, W, H, D, C>> {
         if let ArrayGrid::ArrayGrid4D(grid) = self {
             Some(grid)
         } else {

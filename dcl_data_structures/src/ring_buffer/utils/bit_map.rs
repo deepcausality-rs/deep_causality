@@ -51,7 +51,7 @@ impl BitMap {
     }
 
     fn build(capacity: NonZeroUsize) -> BitMap {
-        let len = (capacity.get() + WORD_BITS - 1) / WORD_BITS;
+        let len = capacity.get().div_ceil(WORD_BITS);
 
         let slots = std::iter::repeat_with(AtomicU64::default)
             .take(len)
@@ -87,7 +87,7 @@ impl BitMap {
     /// Uses unchecked array access for performance. The safety is guaranteed by
     /// the index masking operation that ensures the index is within bounds.
     pub fn is_set(&self, sequence: Sequence) -> bool {
-        let index = (sequence & self.index_mask >> self.index_shift) as usize;
+        let index = (sequence & (self.index_mask >> self.index_shift)) as usize;
         let slot = unsafe { self.slots.get_unchecked(index) };
         let val = slot.load(Ordering::SeqCst);
         val & (1 << (index & self.word_bits_mask)) != 0
@@ -104,7 +104,7 @@ impl BitMap {
     /// Uses unchecked array access for performance. The safety is guaranteed by
     /// the index masking operation that ensures the index is within bounds.
     pub fn set(&self, sequence: Sequence) {
-        let index = (sequence & self.index_mask >> self.index_shift) as usize;
+        let index = (sequence & (self.index_mask >> self.index_shift)) as usize;
         let slot = unsafe { self.slots.get_unchecked(index) };
         let val = 1 << (index & self.word_bits_mask);
         slot.fetch_or(val, Ordering::SeqCst);
@@ -121,7 +121,7 @@ impl BitMap {
     /// Uses unchecked array access for performance. The safety is guaranteed by
     /// the index masking operation that ensures the index is within bounds.
     pub fn unset(&self, sequence: Sequence) {
-        let index = (sequence & self.index_mask >> self.index_shift) as usize;
+        let index = (sequence & (self.index_mask >> self.index_shift)) as usize;
         let slot = unsafe { self.slots.get_unchecked(index) };
         let val = !(1 << (index & self.word_bits_mask));
         slot.fetch_and(val, Ordering::SeqCst);
