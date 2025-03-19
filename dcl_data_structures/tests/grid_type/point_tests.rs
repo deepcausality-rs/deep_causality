@@ -62,7 +62,7 @@ fn test_copy_clone() {
     assert_eq!(point.t, copied.t);
 
     // Test Clone
-    let cloned = point.clone();
+    let cloned = point;
     assert_eq!(cloned.x, 1);
     assert_eq!(point.x, 1);
     assert_eq!(point.y, cloned.y);
@@ -119,10 +119,10 @@ fn test_point_type_consistency() {
     let point_4d = PointIndex::new4d(5, 10, 15, 20);
 
     // Test that point types remain consistent after operations
-    let cloned_1d = point_1d.clone();
-    let cloned_2d = point_2d.clone();
-    let cloned_3d = point_3d.clone();
-    let cloned_4d = point_4d.clone();
+    let cloned_1d = point_1d;
+    let cloned_2d = point_2d;
+    let cloned_3d = point_3d;
+    let cloned_4d = point_4d;
 
     assert!(matches!(cloned_1d.point_type(), PointIndexType::OneD));
     assert!(matches!(cloned_2d.point_type(), PointIndexType::TwoD));

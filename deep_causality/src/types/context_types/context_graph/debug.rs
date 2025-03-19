@@ -56,7 +56,7 @@ where
     }
 }
 
-impl<'l, D, S, T, ST, V> Display for Context<D, S, T, ST, V>
+impl<D, S, T, ST, V> Display for Context<D, S, T, ST, V>
 where
     D: Datable,
     S: Spatial<V>,

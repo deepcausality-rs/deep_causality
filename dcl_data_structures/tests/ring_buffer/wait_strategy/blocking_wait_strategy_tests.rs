@@ -14,12 +14,6 @@ fn create_test_dependencies(value: Sequence) -> Vec<AtomicSequenceOrdered> {
 }
 
 #[test]
-fn test_blocking_wait_strategy_creation() {
-    let _ = BlockingWaitStrategy::new();
-    assert!(true, "BlockingWaitStrategy created successfully");
-}
-
-#[test]
 fn test_blocking_wait_strategy_immediate_success() {
     let strategy = BlockingWaitStrategy::new();
     let deps = create_test_dependencies(10);
