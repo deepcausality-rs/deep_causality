@@ -68,24 +68,24 @@ where
         &mut self,
         value: Contextoid<D, S, T, ST, V>,
     ) -> Result<usize, ContextIndexError> {
-        return match self.get_current_extra_context_mut() {
+        match self.get_current_extra_context_mut() {
             Ok(ctx) => Ok(ctx.add_node(value)),
             Err(e) => Err(e),
-        };
+        }
     }
 
     fn extra_ctx_contains_node(&self, index: usize) -> bool {
-        return match self.get_current_extra_context() {
+        match self.get_current_extra_context() {
             Ok(ctx) => ctx.contains_node(index),
             Err(_) => false,
-        };
+        }
     }
 
     fn extra_ctx_get_node(
         &self,
         index: usize,
     ) -> Result<&Contextoid<D, S, T, ST, V>, ContextIndexError> {
-        return match self.get_current_extra_context() {
+        match self.get_current_extra_context() {
             Ok(ctx) => match ctx.get_node(index) {
                 Some(node) => Ok(node),
                 None => Err(ContextIndexError::new(format!(
@@ -94,17 +94,17 @@ where
                 ))),
             },
             Err(e) => Err(e),
-        };
+        }
     }
 
     fn extra_ctx_remove_node(&mut self, index: usize) -> Result<(), ContextIndexError> {
-        return match self.get_current_extra_context_mut() {
+        match self.get_current_extra_context_mut() {
             Ok(ctx) => match ctx.remove_node(index) {
                 Ok(()) => Ok(()),
                 Err(e) => Err(ContextIndexError::new(e.to_string())),
             },
             Err(e) => Err(e),
-        };
+        }
     }
 
     fn extra_ctx_add_edge(
@@ -121,13 +121,13 @@ where
             return Err(ContextIndexError(format!("index b {} not found", b)));
         };
 
-        return match self.get_current_extra_context_mut() {
+        match self.get_current_extra_context_mut() {
             Ok(ctx) => match ctx.add_edge_with_weight(a, b, weight as u64) {
                 Ok(()) => Ok(()),
                 Err(e) => Err(ContextIndexError::new(e.to_string())),
             },
             Err(e) => Err(e),
-        };
+        }
     }
 
     fn extra_ctx_contains_edge(&self, a: usize, b: usize) -> bool {
@@ -139,10 +139,10 @@ where
             return false;
         };
 
-        return match self.get_current_extra_context() {
+        match self.get_current_extra_context() {
             Ok(ctx) => ctx.contains_edge(a, b),
             Err(_) => false,
-        };
+        }
     }
 
     fn extra_ctx_remove_edge(&mut self, a: usize, b: usize) -> Result<(), ContextIndexError> {
@@ -154,45 +154,45 @@ where
             return Err(ContextIndexError("index b not found".into()));
         };
 
-        return match self.get_current_extra_context_mut() {
+        match self.get_current_extra_context_mut() {
             Ok(ctx) => match ctx.remove_edge(a, b) {
                 Ok(()) => Ok(()),
                 Err(e) => Err(ContextIndexError::new(e.to_string())),
             },
             Err(e) => Err(e),
-        };
+        }
     }
 
     fn extra_ctx_size(&self) -> Result<usize, ContextIndexError> {
-        return match self.get_current_extra_context() {
+        match self.get_current_extra_context() {
             Ok(ctx) => Ok(ctx.size()),
             Err(e) => Err(e),
-        };
+        }
     }
 
     fn extra_ctx_is_empty(&self) -> Result<bool, ContextIndexError> {
-        return match self.get_current_extra_context() {
+        match self.get_current_extra_context() {
             Ok(ctx) => Ok(ctx.is_empty()),
             Err(e) => Err(e),
-        };
+        }
     }
 
     fn extra_ctx_node_count(&self) -> Result<usize, ContextIndexError> {
-        return match self.get_current_extra_context() {
+        match self.get_current_extra_context() {
             Ok(ctx) => Ok(ctx.number_nodes()),
             Err(e) => Err(e),
-        };
+        }
     }
 
     fn extra_ctx_edge_count(&self) -> Result<usize, ContextIndexError> {
-        return match self.get_current_extra_context() {
+        match self.get_current_extra_context() {
             Ok(ctx) => Ok(ctx.number_edges()),
             Err(e) => Err(e),
-        };
+        }
     }
 }
 
-impl<'l, D, S, T, ST, V> Context<D, S, T, ST, V>
+impl<D, S, T, ST, V> Context<D, S, T, ST, V>
 where
     D: Datable,
     S: Spatial<V>,

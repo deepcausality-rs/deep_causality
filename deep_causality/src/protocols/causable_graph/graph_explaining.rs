@@ -217,10 +217,7 @@ where
             ));
         }
 
-        let shortest_path = match self.get_shortest_path(start_index, stop_index) {
-            Ok(shortest_path) => shortest_path,
-            Err(e) => return Err(e),
-        };
+        let shortest_path = self.get_shortest_path(start_index, stop_index)?;
 
         let mut explanation = String::new();
 

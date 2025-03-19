@@ -35,7 +35,7 @@ where
     context: Option<&'l Context<D, S, T, ST, V>>,
 }
 
-impl<'l, D, S, T, ST, V> Identifiable for Model<'l, D, S, T, ST, V>
+impl<D, S, T, ST, V> Identifiable for Model<'_, D, S, T, ST, V>
 where
     D: Datable + Clone,
     S: Spatial<V> + Clone,

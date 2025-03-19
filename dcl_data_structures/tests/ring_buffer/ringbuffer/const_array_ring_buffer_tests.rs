@@ -88,11 +88,11 @@ fn test_different_types() {
 
         // Test bool
         *rb_bool.get_mut(0) = true;
-        assert_eq!(*rb_bool.get(0), true);
+        assert!(*rb_bool.get(0));
 
         // Test f64
-        *rb_f64.get_mut(0) = 3.14;
-        assert!(((*rb_f64.get(0) - 3.14).abs() < f64::EPSILON));
+        *rb_f64.get_mut(0) = std::f64::consts::PI;
+        assert!(((*rb_f64.get(0) - std::f64::consts::PI).abs() < f64::EPSILON));
     }
 }
 

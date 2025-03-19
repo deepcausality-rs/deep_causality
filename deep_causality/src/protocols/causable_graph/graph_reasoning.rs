@@ -263,10 +263,7 @@ where
             ));
         }
 
-        let shortest_path = match self.get_shortest_path(start_index, stop_index) {
-            Ok(shortest_path) => shortest_path,
-            Err(e) => return Err(e),
-        };
+        let shortest_path = self.get_shortest_path(start_index, stop_index)?;
 
         for index in shortest_path {
             let cause = self.get_causaloid(index).expect("Failed to get causaloid");

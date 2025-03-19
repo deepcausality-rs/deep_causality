@@ -19,17 +19,17 @@ path = "examples/array_grid/array_grid.rs"
 name = "window_type_array_storage"
 path = "examples/window_type/array_storage.rs"
 
-[[example]]
-name = "window_type_unsafe_array_storage"
-path = "examples/window_type/unsafe_array_storage.rs"
+#[[example]]
+#name = "window_type_unsafe_array_storage"
+#path = "examples/window_type/unsafe_array_storage.rs"
 
 [[example]]
 name = "window_type_vector_storage"
 path = "examples/window_type/vector_storage.rs"
 
-[[example]]
-name = "window_type_unsafe_vector_storage"
-path = "examples/window_type/unsafe_vector_storage.rs"
+#[[example]]
+#name = "window_type_unsafe_vector_storage"
+#path = "examples/window_type/unsafe_vector_storage.rs"
 
 [[example]]
 name = "ring_buffer_single_producer_single_consumer"

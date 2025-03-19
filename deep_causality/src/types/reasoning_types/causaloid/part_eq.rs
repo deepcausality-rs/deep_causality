@@ -3,7 +3,7 @@
 
 use super::*;
 
-impl<'l, D, S, T, ST, V> PartialEq for Causaloid<'l, D, S, T, ST, V>
+impl<D, S, T, ST, V> PartialEq for Causaloid<'_, D, S, T, ST, V>
 where
     D: Datable + Clone,
     S: Spatial<V> + Clone,

@@ -11,7 +11,7 @@ use crate::prelude::{
 };
 use crate::types::reasoning_types::causaloid::causal_type::CausalType;
 
-impl<'l, D, S, T, ST, V> Causable for Causaloid<'l, D, S, T, ST, V>
+impl<D, S, T, ST, V> Causable for Causaloid<'_, D, S, T, ST, V>
 where
     D: Datable + Clone,
     S: Spatial<V> + Clone,
@@ -29,7 +29,7 @@ where
         + Clone,
 {
     fn explain(&self) -> Result<String, CausalityError> {
-        return if self.is_active() {
+        if self.is_active() {
             match self.causal_type {
                 CausalType::Singleton => {
                     let reason = format!(
@@ -51,14 +51,12 @@ where
                 }
             }
         } else {
-            // Return an error message that the causaloid is not active
             let reason = format!(
                 "Causaloid: {} has not been evaluated. Call verify() to activate it",
                 self.id
             );
-
             Err(CausalityError(reason))
-        };
+        }
     }
 
     fn is_active(&self) -> bool {
@@ -87,10 +85,7 @@ where
                 .context
                 .expect("Causaloid::verify_single_cause: context is None");
 
-            let res = match (contextual_causal_fn)(obs.to_owned(), context) {
-                Ok(res) => res,
-                Err(e) => return Err(e),
-            };
+            let res = (contextual_causal_fn)(obs.to_owned(), context)?;
 
             let mut guard = self.active.write().unwrap();
             *guard = res;
@@ -100,10 +95,7 @@ where
             let causal_fn = self
                 .causal_fn
                 .expect("Causaloid::verify_single_cause: causal_fn is None");
-            let res = match (causal_fn)(obs.to_owned()) {
-                Ok(res) => res,
-                Err(e) => return Err(e),
-            };
+            let res = (causal_fn)(obs.to_owned())?;
 
             let mut guard = self.active.write().unwrap();
             *guard = res;
@@ -126,14 +118,7 @@ where
                 None => Err(CausalityError(
                     "Causaloid::verify_all_causes: causal collection is None".into(),
                 )),
-                Some(coll) => {
-                    let res = match coll.reason_all_causes(data) {
-                        Ok(res) => res,
-                        Err(e) => return Err(e),
-                    };
-
-                    Ok(res)
-                }
+                Some(coll) => coll.reason_all_causes(data),
             },
 
             CausalType::Graph => match &self.causal_graph {

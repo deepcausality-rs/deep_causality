@@ -16,10 +16,7 @@ pub fn build_time_data_context<'l>(
     max_time_scale: TimeScale,
     node_capacity: usize,
 ) -> Result<CustomContext<'l>, Box<dyn Error>> {
-    let context = match build_time_data_context_graph(data, max_time_scale, node_capacity) {
-        Ok(g) => g,
-        Err(e) => return Err(e),
-    };
+    let context = build_time_data_context_graph(data, max_time_scale, node_capacity)?;
 
     Ok(context)
 }
