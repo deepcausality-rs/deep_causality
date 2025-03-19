@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
