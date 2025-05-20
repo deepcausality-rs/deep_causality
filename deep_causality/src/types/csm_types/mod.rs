@@ -19,6 +19,39 @@ pub type CSMMap<'l, D, S, T, ST, V> =
 pub type CSMStateActions<'l, D, S, T, ST, V> =
     [(&'l CausalState<'l, D, S, T, ST, V>, &'l CausalAction)];
 
+/// # Causal State Machine (CSM)
+///
+/// A Causal State Machine (CSM) is a structure that manages relationships between causal states and actions.
+/// It provides a mechanism for evaluating states based on input data and triggering associated actions
+/// when specific conditions are met.
+///
+/// ## Purpose
+///
+/// The CSM is designed to model systems where different states can trigger specific actions when
+/// certain conditions are met. It's particularly useful for:
+///
+/// - Event-driven systems where actions should be triggered based on state changes
+/// - Monitoring systems that need to respond to specific conditions
+/// - Control systems that need to take actions based on sensor readings
+/// - Any system where cause-effect relationships need to be modeled and evaluated
+///
+/// ## How It Works
+///
+/// 1. The CSM maintains a collection of causal states paired with actions
+/// 2. Each causal state contains a causaloid that defines when the state should trigger its action
+/// 3. When data is fed into the CSM, it evaluates the relevant states
+/// 4. If a state's conditions are met (evaluated to true), the associated action is triggered
+///
+/// ## Usage
+///
+/// The CSM is typically used by:
+///
+/// 1. Creating causal states with appropriate causaloids that define trigger conditions
+/// 2. Creating actions that should be executed when states are triggered
+/// 3. Initializing a CSM with state-action pairs
+/// 4. Feeding data into the CSM for evaluation
+///
+/// See the example in `deep_causality/examples/csm/src/main.rs` for a practical implementation.
 pub struct CSM<'l, D, S, T, ST, V>
 where
     D: Datable + Clone + Copy,
