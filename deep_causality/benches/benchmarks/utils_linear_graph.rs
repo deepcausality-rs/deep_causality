@@ -6,9 +6,9 @@ use deep_causality::protocols::causable_graph::graph::CausableGraph;
 
 use crate::benchmarks::utils_shared;
 
-const SMALL: usize = 9;
-const MEDIUM: usize = 1_00;
-const LARGE: usize = 1_000;
+const SMALL: usize = 10;
+const MEDIUM: usize = 1_000;
+const LARGE: usize = 10_000;
 
 pub fn get_small_linear_graph_and_data<'l>() -> (BaseCausalGraph<'l>, [f64; SMALL + 1]) {
     // Builds a linear graph: root -> a -> b -> c
