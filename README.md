@@ -8,9 +8,7 @@
 [![Docs.rs][docs-badge]][docs-url]
 [![MIT licensed][mit-badge]][mit-url]
 [![CodeFactor][codefactor-badge]][codefactor-url]
-![Audit][audit-url]
 ![Benchmarks][benches-url]
-![Clippy][clippy-url]
 ![Tests][test-url]
 [![OpenSSF Best Practices][ossf-badge]][ossf-url]
 [![codecov][codecov-badge]][codecov-url]
@@ -40,11 +38,7 @@
 
 [mit-url]: https://github.com/deepcausality-rs/deep_causality/blob/main/LICENSE
 
-[audit-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/audit.yml/badge.svg
-
 [benches-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_benches.yml/badge.svg
-
-[clippy-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/rust-clippy.yml/badge.svg
 
 [test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
 
@@ -136,7 +130,7 @@ Docs:
 Code:
 
 * [Benchmarks](deep_causality/benches/benchmarks)
-* [Example code](deep_causality_examples)
+* [Example code](deep_causality/examples)
 * [Tests](deep_causality/tests)
 
 ## 🛠️ Cargo & Make
