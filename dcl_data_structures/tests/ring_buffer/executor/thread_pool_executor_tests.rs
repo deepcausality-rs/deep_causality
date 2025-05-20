@@ -39,18 +39,6 @@ impl Runnable for TestRunnable {
 }
 
 #[test]
-fn test_executor_creation() {
-    let counter = Arc::new(AtomicUsize::new(0));
-    let finished = Arc::new(AtomicBool::new(false));
-    let runnable: Box<dyn Runnable> =
-        Box::new(TestRunnable::new(counter.clone(), None, finished.clone()));
-    let runnables = vec![runnable];
-
-    let _executor = ThreadedExecutor::with_runnables(runnables);
-    assert!(true, "Executor created successfully");
-}
-
-#[test]
 fn test_executor_single_task() {
     let counter = Arc::new(AtomicUsize::new(0));
     let finished = Arc::new(AtomicBool::new(false));
@@ -138,13 +126,4 @@ fn test_executor_handle_drop() {
 
     assert_eq!(counter.load(Ordering::SeqCst), 1);
     assert!(finished.load(Ordering::SeqCst));
-}
-
-#[test]
-fn test_executor_empty_runnables() {
-    let runnables = Vec::new();
-    let _executor = ThreadedExecutor::with_runnables(runnables);
-    let handle = _executor.spawn();
-    handle.join();
-    assert!(true, "Empty executor completed successfully");
 }

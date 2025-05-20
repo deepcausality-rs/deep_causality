@@ -14,12 +14,6 @@ fn create_test_dependencies(value: Sequence) -> Vec<AtomicSequenceOrdered> {
 }
 
 #[test]
-fn test_spinloop_wait_strategy_creation() {
-    let _ = SpinLoopWaitStrategy::new();
-    assert!(true, "SpinLoopWaitStrategy created successfully");
-}
-
-#[test]
 fn test_spinloop_wait_strategy_immediate_success() {
     let strategy = SpinLoopWaitStrategy::new();
     let deps = create_test_dependencies(10);

@@ -3,7 +3,7 @@
 
 use deep_causality::prelude::*;
 
-fn get_context<'l>() -> BaseContext {
+fn get_context() -> BaseContext {
     let id = 1;
     let name = "base context";
     let capacity = 10; // adjust as needed

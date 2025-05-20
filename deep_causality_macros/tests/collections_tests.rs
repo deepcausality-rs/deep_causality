@@ -34,9 +34,6 @@ fn test_is_empty() {
         make_is_empty!();
     }
 
-    let test = [1, 2, 3];
-    assert!(!test.is_empty());
-
     let empty: Vec<i32> = vec![];
     assert!(empty.is_empty());
 }

@@ -99,9 +99,9 @@ where
             ));
         }
 
-        return match self.get_graph().shortest_path(start_index, stop_index) {
+        match self.get_graph().shortest_path(start_index, stop_index) {
             Some(path) => Ok(path),
             None => Err(CausalityGraphError("No path found".to_string())),
-        };
+        }
     }
 }

@@ -222,13 +222,13 @@ fn test_rewind_behavior() {
 
     // Fill the window
     for i in 0..4 {
-        window.push(Data { dats: i as i32 });
+        window.push(Data { dats: i });
     }
     assert!(window.filled());
 
     // Push more elements to test rewind
     for i in 4..(4 * 2) {
-        window.push(Data { dats: i as i32 });
+        window.push(Data { dats: i });
     }
 
     // Verify the window contains the latest 4 elements
@@ -241,7 +241,7 @@ fn test_rewind_behavior() {
 
     // Test first and last elements
     assert_eq!(window.first().unwrap().dats, start as i32);
-    assert_eq!(window.last().unwrap().dats, (4 * 2 - 1) as i32);
+    assert_eq!(window.last().unwrap().dats, (4 * 2 - 1));
 }
 
 #[cfg(feature = "unsafe")]
@@ -251,7 +251,7 @@ fn test_sequential_push() {
 
     // Test sequential pushes and verify window state
     for i in 0..(4 * 2) {
-        window.push(Data { dats: i as i32 });
+        window.push(Data { dats: i });
 
         if i < 4 - 1 {
             assert!(!window.filled());
@@ -260,8 +260,8 @@ fn test_sequential_push() {
         } else {
             assert!(window.filled());
             let first = window.first().unwrap();
-            assert_eq!(first.dats, (i + 1 - 4) as i32);
-            assert_eq!(window.last().unwrap().dats, i as i32);
+            assert_eq!(first.dats, (i + 1 - 4));
+            assert_eq!(window.last().unwrap().dats, i);
         }
     }
 }
@@ -308,7 +308,7 @@ fn test_rapid_pushes() {
 
     // Perform rapid pushes
     for i in 0..(4 * 3) {
-        window.push(Data { dats: i as i32 });
+        window.push(Data { dats: i });
     }
 
     // Verify final state
@@ -406,7 +406,7 @@ fn test_push_beyond_capacity() {
     // Fill up to capacity (size * 12 elements)
     for i in 0..48 {
         // 4 * 12 = 48 (size * mult)
-        window.push(Data { dats: i as i32 });
+        window.push(Data { dats: i });
     }
 
     // Add one more element to trigger rewind

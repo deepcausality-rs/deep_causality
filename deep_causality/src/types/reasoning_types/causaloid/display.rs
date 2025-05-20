@@ -3,7 +3,7 @@
 
 use super::*;
 
-impl<'l, D, S, T, ST, V> Display for Causaloid<'l, D, S, T, ST, V>
+impl<D, S, T, ST, V> Display for Causaloid<'_, D, S, T, ST, V>
 where
     D: Datable + Clone,
     S: Spatial<V> + Clone,
@@ -25,7 +25,7 @@ where
     }
 }
 
-impl<'l, D, S, T, ST, V> Debug for Causaloid<'l, D, S, T, ST, V>
+impl<D, S, T, ST, V> Debug for Causaloid<'_, D, S, T, ST, V>
 where
     D: Datable + Clone,
     S: Spatial<V> + Clone,
@@ -47,7 +47,7 @@ where
     }
 }
 
-impl<'l, D, S, T, ST, V> Causaloid<'l, D, S, T, ST, V>
+impl<D, S, T, ST, V> Causaloid<'_, D, S, T, ST, V>
 where
     D: Datable + Clone,
     S: Spatial<V> + Clone,

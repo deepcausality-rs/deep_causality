@@ -60,18 +60,18 @@ fn set_array_grid_4d_safe_benchmark(criterion: &mut Criterion) {
 }
 
 fn get_point_index() -> PointIndex {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     PointIndex::new4d(
-        rng.gen_range(0..WIDTH),
-        rng.gen_range(0..HEIGHT),
-        rng.gen_range(0..DEPTH),
-        rng.gen_range(0..TIME),
+        rng.random_range(0..WIDTH),
+        rng.random_range(0..HEIGHT),
+        rng.random_range(0..DEPTH),
+        rng.random_range(0..TIME),
     )
 }
 
 fn get_value() -> usize {
-    let mut rng = rand::thread_rng();
-    rng.gen_range(0..100)
+    let mut rng = rand::rng();
+    rng.random_range(0..100)
 }
 
 criterion_group! {

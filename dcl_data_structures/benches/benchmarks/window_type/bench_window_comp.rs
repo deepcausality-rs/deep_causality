@@ -129,7 +129,7 @@ fn unsafe_array_operations(c: &mut Criterion) {
             let mut storage = UnsafeArrayStorage::<i32, SIZE, CAPACITY>::new();
             b.iter(|| {
                 for i in 0..size {
-                    storage.push(black_box(i as i32));
+                    storage.push(black_box(i));
                 }
             });
         });
@@ -230,7 +230,7 @@ fn unsafe_vector_operations(c: &mut Criterion) {
             let mut storage = UnsafeVectorStorage::new(SIZE, MULT);
             b.iter(|| {
                 for i in 0..size {
-                    storage.push(black_box(i as i32));
+                    storage.push(black_box(i));
                 }
             });
         });

@@ -36,7 +36,7 @@ where
     causaloid: &'l Causaloid<'l, D, S, T, ST, V>,
 }
 
-impl<'l, D, S, T, ST, V> CausalState<'l, D, S, T, ST, V>
+impl<D, S, T, ST, V> CausalState<'_, D, S, T, ST, V>
 where
     D: Datable + Clone,
     S: Spatial<V> + Clone,
@@ -69,7 +69,7 @@ where
     }
 }
 
-impl<'l, D, S, T, ST, V> Display for CausalState<'l, D, S, T, ST, V>
+impl<D, S, T, ST, V> Display for CausalState<'_, D, S, T, ST, V>
 where
     D: Datable + Clone,
     S: Spatial<V> + Clone,
