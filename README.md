@@ -48,13 +48,17 @@
 
 [image]: /img/logo_color.png (DeepCausality Logo)
 
-Web: https://deepcausality.com
+
+<div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; text-align: center;">
+
+[Website](https://deepcausality.com) | [Getting started](https://deepcausality.com/getting-started/) | [Documentation](https://deepcausality.com/docs/intro/) | [Blog](https://deepcausality.com/blog/) | [Discord](https://discord.gg/sTue79Sx) | [Crates](https://crates.io/crates/deep_causality)
+
+</div>
+
 
 DeepCausality is a hyper-geometric computational causality library that enables fast and deterministic context-aware
 causal reasoning over complex multi-stage causality models. Deep Causality adds only minimal overhead and thus is
-suitable for real-time applications without additional acceleration hardware.
-
-DeepCausality is hosted as a sandbox project in the [LF AI & Data Foundation](https://landscape.lfai.foundation/).
+suitable for real-time applications without additional acceleration hardware. DeepCausality is hosted as a sandbox project in the [LF AI & Data Foundation](https://landscape.lfai.foundation/).
 
 ## 🤔 Why DeepCausality?
 
@@ -164,9 +168,10 @@ The scripts called by each make command are located in the [script folder.](scri
 
 ## 👩‍👩‍👧‍👦 Community
 
-* [Charta](DeepCausalityProjectCharter.pdf)
-* [Code of Conduct](CODE_OF_CONDUCT.md)
-* [Support](SUPPORT.md)
+* [Discord](https://discord.gg/sTue79Sx)
+* [GH Discussions](https://github.com/orgs/deepcausality-rs/discussions)
+* [Email Lists](https://deepcausality.com/community/)
+
 
 ## 👨‍💻👩‍💻 Contribution
 
@@ -178,10 +183,11 @@ Unless you explicitly state otherwise, any contribution intentionally submitted 
 shall be licensed under the MIT license without additional terms or conditions.
 
 For details:
-
+* [Charta](DeepCausalityProjectCharter.pdf)
 * [Code of Conduct](CODE_OF_CONDUCT.md)
 * [Contributing](CONTRIBUTING.md)
 * [Release](RELEASE.md)
+* [Support](SUPPORT.md)
 
 ## 🙏 Credits
 
