@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality"
-version = "0.7.3"
+version = "0.7.4"
 edition = "2021"
 rust-version = "1.80"
 readme = "../README.md"
@@ -20,7 +20,7 @@ authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 
 [dependencies.dcl_data_structures]
 path = "../dcl_data_structures"
-version = "0.7"
+version = "0.8"
 
 
 [dependencies.deep_causality_macros]
