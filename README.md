@@ -46,7 +46,7 @@
 
 [hyperlink]: https://deepcausality.com
 
-[image]: /img/logo_color.png (DeepCausality Logo)
+[image]: https://github.com/deepcausality-rs/deep_causality/blob/main/img/logo_color.png (DeepCausality Logo)
 
 
 <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; text-align: center;">
@@ -76,6 +76,12 @@ suitable for real-time applications without additional acceleration hardware. De
 * [Documentation](https://deepcausality.com/docs/intro/)
 * [Changelog](CHANGELOG.md)
 * [Slides](docs/slides/LF_2023/DeepCausality.pdf)
+
+## 🌎 Community
+
+* [Discord](https://discord.gg/sTue79Sx)
+* [GH Discussions](https://github.com/orgs/deepcausality-rs/discussions)
+* [LF Email Lists](https://deepcausality.com/community/)
 
 ## 🚀 Getting Started
 
@@ -162,13 +168,6 @@ After all dependencies have been installed, the following commands are ready to 
 ```
 
 The scripts called by each make command are located in the [script folder.](scripts)
-
-## 👩‍👩‍👧‍👦 Community
-
-* [Discord](https://discord.gg/sTue79Sx)
-* [GH Discussions](https://github.com/orgs/deepcausality-rs/discussions)
-* [Email Lists](https://deepcausality.com/community/)
-
 
 ## 👨‍💻👩‍💻 Contribution
 
