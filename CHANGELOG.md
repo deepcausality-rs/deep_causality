@@ -28,6 +28,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Merge remote-tracking branch 'origin/main'
 - Add comprehensive documentation to CSM struct
 
+## [0.7.5](https://github.com/marvin-hansen/deep_causality/compare/deep_causality-v0.7.4...deep_causality-v0.7.5) - 2025-06-19
+
+### Added
+
+- *(deep_causality)* Updated README.md
+
+### Other
+
+- Merge remote-tracking branch 'origin/main'
+- Removed legacy docs folder.
+- Moved examples into root folder.
+- Updated Readme with Discord and various other project links.
+- Fixed missing badges in README.md
+- Bump criterion from 0.5 to 0.6.0
+- Bump parquet to 55.1.0
+- Bump parquet to 55.1.0
+- Updated scale in linear graph bench util
+- Add comprehensive documentation to CSM CausalAction type and CausalState type
+- Merge remote-tracking branch 'origin/main'
+- Add comprehensive documentation to CSM struct
+
 ## [0.7.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.7.3...deep_causality-v0.7.4) - 2025-05-16
 
 ### Other

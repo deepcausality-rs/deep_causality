@@ -203,8 +203,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e3a132c3ce4bb6409d1f43157f03c9c37335bfa959df5491cd06b2c2e79bdcd"
 dependencies = [
  "dcl_data_structures 0.4.7",
- "deep_causality_macros 0.4.10",
- "ultragraph 0.5.4",
+ "deep_causality_macros 0.4.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ultragraph 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -219,9 +219,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_macros"
-version = "0.4.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7637b29da496b4ee0e6aaea919f4a65e69cc54cf691a77cdfa548764f2e26da4"
+version = "0.4.11"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -231,6 +229,8 @@ dependencies = [
 [[package]]
 name = "deep_causality_macros"
 version = "0.4.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5821842efca6560a74debc04aba4d3a4bf5adcae38c6d45e7a6b92cdb0ba2dca"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -269,12 +269,6 @@ version = "0.1.0"
 dependencies = [
  "deep_causality 0.6.5",
 ]
-
-[[package]]
-name = "fixedbitset"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ce7134b9999ecaf8bcd65542e436736ef32ddca1b3e06094cb6ec5755203b80"
 
 [[package]]
 name = "fixedbitset"
@@ -395,21 +389,11 @@ checksum = "d6790f58c7ff633d8771f42965289203411a5e5c68388703c06e14f24770b41e"
 
 [[package]]
 name = "petgraph"
-version = "0.6.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4c5cc86750666a3ed20bdaf5ca2a0344f9c67674cae0515bec2da16fbaa47db"
-dependencies = [
- "fixedbitset 0.4.2",
- "indexmap",
-]
-
-[[package]]
-name = "petgraph"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3672b37090dbd86368a4145bc067582552b29c27377cad4e0a306c97f9bd7772"
 dependencies = [
- "fixedbitset 0.5.7",
+ "fixedbitset",
  "indexmap",
 ]
 
@@ -628,24 +612,24 @@ dependencies = [
 
 [[package]]
 name = "ultragraph"
-version = "0.5.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b89d842f7e6b9c798f7a3edbc7759293afc6f1494f7b6b15ce05926a77a8dfa"
-dependencies = [
- "ahash",
- "deep_causality_macros 0.4.10",
- "petgraph 0.6.5",
-]
-
-[[package]]
-name = "ultragraph"
 version = "0.5.6"
 dependencies = [
  "ahash",
  "criterion",
  "deep_causality_macros 0.4.11",
- "petgraph 0.7.1",
+ "petgraph",
  "rand",
+]
+
+[[package]]
+name = "ultragraph"
+version = "0.5.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f5831113055bd5c30faf2da665da86a525a99a8cdf9fe7900db20d9bde405d23"
+dependencies = [
+ "ahash",
+ "deep_causality_macros 0.4.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "petgraph",
 ]
 
 [[package]]
