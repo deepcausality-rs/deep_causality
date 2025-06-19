@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.6](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.5.5...ultragraph-v0.5.6) - 2025-06-19
+
+### Other
+
+- Merge pull request #201 from deepcausality-rs/release-plz-2025-04-03T05-42-30Z
+- Bump criterion from 0.5 to 0.6.0
+
 ## [0.5.5](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.5.4...ultragraph-v0.5.5) - 2025-05-16
 
 ### Other
