@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.7.3...deep_causality-v0.7.4) - 2025-05-16
+
+### Other
+
+- Bump parquet from 54.2.1 to 54.3.1
+- Applied a ton of lints.
+- Fixed tests, benchmarks, and fixed some lints
+
 ## [0.7.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.7.2...deep_causality-v0.7.3) - 2024-11-26
 
 ### Other
