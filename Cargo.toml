@@ -3,7 +3,7 @@ resolver = "2"
 members = [
     "dcl_data_structures",
     "deep_causality",
-    "deep_causality/examples/*",
+    "examples/*",
     "deep_causality_macros",
     "ultragraph",
 ]
