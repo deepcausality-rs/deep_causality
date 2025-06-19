@@ -106,9 +106,6 @@ cd deep_causality
 # CSM (Causal State Machine)
 cargo run --release --bin example-csm
 
-# CTX (Context) 
-cargo run --release --bin example-ctx
-
 # Smoking inference
 cargo run --release --bin example-smoking
 
