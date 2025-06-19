@@ -36,7 +36,6 @@ default = []
 unsafe = [] # Enable unsafe implementations
 
 [dev-dependencies]
-crossbeam-utils = "0.8"
 criterion = { version = "0.6", features = ["html_reports"] }
 rand = { version = "0.9", features = ["small_rng"] }
 

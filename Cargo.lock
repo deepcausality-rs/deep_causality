@@ -435,7 +435,6 @@ name = "dcl_data_structures"
 version = "0.7.0"
 dependencies = [
  "criterion",
- "crossbeam-utils",
  "rand",
 ]
 

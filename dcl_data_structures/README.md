@@ -114,13 +114,13 @@ cargo add dcl_data_structures
 **ArrayGrid:**
 * [Design & Details](README_ArrayGrid)
 * [Benchmark](benches/benchmarks)
-* [Examples](examples/array_grid.rs)
+* [Examples](examples/array_grid)
 * [Test](tests/grid_type)
 
 **SlidingWindow:**
 * [Design & Details](README_SlidingWindow.md)
 * [Benchmark](benches/benchmarks)
-* [Examples](examples/sliding_window.rs)
+* [Examples](examples/window_type)
 * [Test](tests/window_type)
 
 ## 🙏 Prior Art
