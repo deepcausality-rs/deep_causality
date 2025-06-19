@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0](https://github.com/deepcausality-rs/deep_causality/compare/dcl_data_structures-v0.8.0...dcl_data_structures-v0.9.0) - 2025-06-19
+
+### Other
+
+- Merge pull request #201 from deepcausality-rs/release-plz-2025-04-03T05-42-30Z
+- Set MSRV to 1.80
+- *(dcl_data_structures)* remove RingBuffer implementation\n\nThis commit removes the entire RingBuffer implementation including all related source code files, test files, benchmark code, and example code. Also updated Cargo.toml by removing 'ringbuffer' and 'disruptor' from keywords and removed references to RingBuffer from documentation. The RingBuffer functionality was previously developed in versions 0.6.0 and 0.6.1 but has now been removed from the codebase.
+- Bump criterion from 0.5 to 0.6.0
+
 ## [0.8.0](https://github.com/deepcausality-rs/deep_causality/compare/dcl_data_structures-v0.7.0...dcl_data_structures-v0.8.0) - 2025-05-16
 
 ### Other

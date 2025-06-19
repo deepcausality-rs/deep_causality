@@ -190,7 +190,7 @@ checksum = "068316d162870187e81178c217c07b9e65a449afb15d7a564f98c3e4ada24647"
 
 [[package]]
 name = "dcl_data_structures"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "criterion",
  "rand",
@@ -209,12 +209,12 @@ dependencies = [
 
 [[package]]
 name = "deep_causality"
-version = "0.7.4"
+version = "0.7.5"
 dependencies = [
  "criterion",
- "dcl_data_structures 0.8.0",
+ "dcl_data_structures 0.9.0",
  "deep_causality_macros 0.4.11",
- "ultragraph 0.5.5",
+ "ultragraph 0.5.6",
 ]
 
 [[package]]
@@ -639,7 +639,7 @@ dependencies = [
 
 [[package]]
 name = "ultragraph"
-version = "0.5.5"
+version = "0.5.6"
 dependencies = [
  "ahash",
  "criterion",
