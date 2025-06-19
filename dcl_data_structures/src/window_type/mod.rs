@@ -180,8 +180,7 @@ where
 ///
 /// * `T` - The type of elements stored in the window, must implement `PartialEq + Copy + Default`
 /// * `SIZE` - The fixed size of the sliding window, must be a const generic parameter
-/// * `CAPACITY` - The total capacity of the internal buffer, must be a const generic parameter
-///                and should be greater than or equal to `SIZE`
+/// * `CAPACITY` - The total capacity of the internal buffer, must be greater than or equal to `SIZE`
 ///
 /// # Generic Constraints
 ///

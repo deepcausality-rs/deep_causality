@@ -31,14 +31,7 @@
 
 [test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
 
-High performance SlidingWindow datastructures used in [DeepCausality](https://github.com/deepcausality-rs/deep_causality) and elsewhere.
-
-RingBuffer is a high-performance, lock-free data structure implementation inspired by the LMAX Disruptor pattern.
-The RingBuffer supports the following configurations:
-- Single producer / single consumer
-- Single producer / muliple consumer
-- Multi producer / single consumer
-- Multi producer / multi consumer
+High performance datastructures used in [DeepCausality](https://github.com/deepcausality-rs/deep_causality).
 
 ArrayGrid is an abstraction over scalars, vectors, and low dimensional matrices similar to a tensor.
 In contrast to a tensor, an ArrayGrid is limited to low dimensions (1 to 4), only allowing a scalar,
@@ -76,18 +69,6 @@ implementation is significantly faster than the vector-based version.
 
 More details on performance can be found in the [Performance](README_ArrayGrid.md#performance) section
 of the [ArrayGrid document](README_ArrayGrid.md).
-
-
-### RingBuffer: Single Producer/Consumer Performance
-| Batch Size | Throughput      | Latency    |
-|------------|-----------------|------------|
-| 1          | 220.47 Melem/s  | 4.54 ms   |
-| 10         | 1.65 Gelem/s    | 604.88 µs |
-| 50         | 1.67 Gelem/s    | 597.67 µs |
-| 100        | 1.68 Gelem/s    | 596.12 µs |
-
-More details on performance can be found in the [Performance](README_RingBuffer.md#performance) section
-of the [RingBuffer document](README_RingBuffer.md).
 
 ## Sliding Window
 
@@ -133,13 +114,13 @@ cargo add dcl_data_structures
 **ArrayGrid:**
 * [Design & Details](README_ArrayGrid)
 * [Benchmark](benches/benchmarks)
-* [Examples](examples/array_grid.rs)
+* [Examples](examples/array_grid)
 * [Test](tests/grid_type)
 
 **SlidingWindow:**
 * [Design & Details](README_SlidingWindow.md)
 * [Benchmark](benches/benchmarks)
-* [Examples](examples/sliding_window.rs)
+* [Examples](examples/window_type)
 * [Test](tests/window_type)
 
 ## 🙏 Prior Art
