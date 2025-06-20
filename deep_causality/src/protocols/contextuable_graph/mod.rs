@@ -5,7 +5,7 @@ use std::hash::Hash;
 use std::ops::{Add, Mul, Sub};
 
 use crate::errors::ContextIndexError;
-use crate::prelude::{Contextoid, Datable, RelationKind, SpaceTemporal, Spatial, Temporable};
+use crate::prelude::{Contextoid, Datable, RelationKind, SpaceTemporal, Spatial, Symbolic, Temporable};
 
 /// Trait for graph containing context-aware nodes.
 ///
@@ -26,25 +26,17 @@ use crate::prelude::{Contextoid, Datable, RelationKind, SpaceTemporal, Spatial, 
 ///
 /// Methods return Result or Option types for error handling.
 ///
-pub trait ContextuableGraph<D, S, T, ST, V>
+pub trait ContextuableGraph<D, S, T, ST, SYM, V>
 where
     D: Datable,
     S: Spatial<V>,
-    ST: SpaceTemporal<V>,
     T: Temporable<V>,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>,
+    ST: SpaceTemporal<V>,
+    SYM: Symbolic,
 {
-    fn add_node(&mut self, value: Contextoid<D, S, T, ST, V>) -> usize;
+    fn add_node(&mut self, value: Contextoid<D, S, T, ST, SYM, V>) -> usize;
     fn contains_node(&self, index: usize) -> bool;
-    fn get_node(&self, index: usize) -> Option<&Contextoid<D, S, T, ST, V>>;
+    fn get_node(&self, index: usize) -> Option<&Contextoid<D, S, T, ST, SYM, V>>;
     fn remove_node(&mut self, index: usize) -> Result<(), ContextIndexError>;
     fn add_edge(
         &mut self,
@@ -83,21 +75,13 @@ where
 ///
 /// Methods return Result or Option types for error handling.
 ///
-pub trait ExtendableContextuableGraph<D, S, T, ST, V>
+pub trait ExtendableContextuableGraph<D, S, T, ST, SYM, V>
 where
     D: Datable,
     S: Spatial<V>,
-    ST: SpaceTemporal<V>,
     T: Temporable<V>,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>,
+    ST: SpaceTemporal<V>,
+    SYM: Symbolic,
 {
     // Creates a new context and returns the index of the new context.
     fn extra_ctx_add_new(&mut self, capacity: usize, default: bool) -> u64;
@@ -108,13 +92,13 @@ where
 
     fn extra_ctx_add_node(
         &mut self,
-        value: Contextoid<D, S, T, ST, V>,
+        value: Contextoid<D, S, T, ST, SYM, V>,
     ) -> Result<usize, ContextIndexError>;
     fn extra_ctx_contains_node(&self, index: usize) -> bool;
     fn extra_ctx_get_node(
         &self,
         index: usize,
-    ) -> Result<&Contextoid<D, S, T, ST, V>, ContextIndexError>;
+    ) -> Result<&Contextoid<D, S, T, ST, SYM, V>, ContextIndexError>;
     fn extra_ctx_remove_node(&mut self, index: usize) -> Result<(), ContextIndexError>;
     fn extra_ctx_add_edge(
         &mut self,
