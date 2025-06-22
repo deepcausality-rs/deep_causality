@@ -42,16 +42,25 @@
 
 [test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
 
+
+
+---
+
+<div align="center">
 [![DeepCausality Logo][image]][hyperlink]
 
 [hyperlink]: https://deepcausality.com
 
-[image]: https://github.com/deepcausality-rs/deep_causality/blob/main/img/logo_color.png (DeepCausality Logo)
+[image]: img/logo_color.png (DeepCausality Logo)
 
+
+</div>
+
+---
 
 <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; text-align: center;">
 
-[Website](https://deepcausality.com) | [Getting started](https://deepcausality.com/getting-started/) | [Documentation](https://deepcausality.com/docs/intro/) | [Blog](https://deepcausality.com/blog/) | [Discord](https://discord.gg/sTue79Sx) | [Crates](https://crates.io/crates/deep_causality)
+[Website](https://deepcausality.com) | [Getting started](https://deepcausality.com/getting-started/) | [Documentation](https://deepcausality.com/docs/intro/) | [Blog](https://deepcausality.com/blog/) | [Discord](https://discord.gg/Bxj9P7JXSj) | [Crates](https://crates.io/crates/deep_causality)
 
 </div>
 
