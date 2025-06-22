@@ -43,7 +43,6 @@
 [test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
 
 
-
 ---
 
 <div align="center">
