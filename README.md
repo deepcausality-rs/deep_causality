@@ -42,12 +42,21 @@
 
 [test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
 
+
+
+---
+
+<div align="center">
 [![DeepCausality Logo][image]][hyperlink]
 
 [hyperlink]: https://deepcausality.com
 
-[image]: https://github.com/deepcausality-rs/deep_causality/blob/main/img/logo_color.png (DeepCausality Logo)
+[image]: img/logo_color.png (DeepCausality Logo)
 
+
+</div>
+
+---
 
 <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; text-align: center;">
 
