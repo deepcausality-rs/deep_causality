@@ -47,12 +47,8 @@
 ---
 
 <div align="center">
-[![DeepCausality Logo][image]][hyperlink]
 
-[hyperlink]: https://deepcausality.com
-
-[image]: img/logo_color.png (DeepCausality Logo)
-
+[![DeepCausality Logo][img/logo_color.png]][https://deepcausality.com]
 
 </div>
 
