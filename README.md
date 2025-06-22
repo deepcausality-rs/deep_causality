@@ -48,7 +48,7 @@
 
 <div align="center">
 
-[<img src="img/logo_color.png">](https://deepcausality.com),
+[<img src="img/logo_color.png">](https://deepcausality.com)
 
 </div>
 
