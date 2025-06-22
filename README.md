@@ -79,7 +79,7 @@ suitable for real-time applications without additional acceleration hardware. De
 
 ## 🌎 Community
 
-* [Discord](https://discord.gg/sTue79Sx)
+* [Discord](https://discord.gg/Bxj9P7JXSj)
 * [GH Discussions](https://github.com/orgs/deepcausality-rs/discussions)
 * [LF Email Lists](https://deepcausality.com/community/)
 
