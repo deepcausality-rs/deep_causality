@@ -48,7 +48,7 @@
 
 <div align="center">
 
-[![DeepCausality Logo][img/logo_color.png]][https://deepcausality.com]
+![DeepCausality Logo](img/logo_color.png)[https://deepcausality.com]
 
 </div>
 
