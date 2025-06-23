@@ -2,7 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::{DescriptionValue, Identifiable};
-use deep_causality::protocols::assumable::Assumable;
+use deep_causality::traits::assumable::Assumable;
 
 use crate::utils::test_utils::*;
 

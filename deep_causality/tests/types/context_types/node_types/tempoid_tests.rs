@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use deep_causality::prelude::{Identifiable, Temporable, Time, TimeScale};
+use deep_causality::prelude::{Identifiable, Time, TimeScale};
+use deep_causality::traits::contextuable::temporal::Temporal;
 
 #[test]
 fn test_new() {

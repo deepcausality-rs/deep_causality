@@ -2,8 +2,8 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::{Identifiable, Inference};
-use deep_causality::protocols::inferable::Inferable;
-use deep_causality::protocols::observable::ObservableReasoning;
+use deep_causality::traits::inferable::Inferable;
+use deep_causality::traits::observable::ObservableReasoning;
 use deep_causality::types::alias_types::DescriptionValue;
 
 use crate::utils::test_utils::*;

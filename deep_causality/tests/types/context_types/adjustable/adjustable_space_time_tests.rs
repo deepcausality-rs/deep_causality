@@ -2,9 +2,9 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::{
-    Adjustable, AdjustableSpaceTime, Identifiable, SpaceTemporal, TimeScale,
+    Adjustable, AdjustableSpaceTime, Identifiable, TimeScale,
 };
-
+use deep_causality::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::types::context_types::adjustable::utils;
 
 #[test]

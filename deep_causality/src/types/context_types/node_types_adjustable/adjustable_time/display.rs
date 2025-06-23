@@ -8,14 +8,15 @@ impl<T> Display for AdjustableTime<T>
 where
     T: Debug
         + Default
+        + Add<T, Output = T>
+        + Sub<T, Output = T>
+        + Mul<T, Output = T>
         + Copy
         + Clone
         + Hash
         + Eq
         + PartialEq
-        + Add<T, Output = T>
-        + Sub<T, Output = T>
-        + Mul<T, Output = T>,
+        + PartialOrd,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(

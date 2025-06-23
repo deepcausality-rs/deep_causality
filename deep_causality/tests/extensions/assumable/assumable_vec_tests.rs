@@ -2,7 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::Assumption;
-use deep_causality::protocols::assumable::AssumableReasoning;
+use deep_causality::traits::assumable::AssumableReasoning;
 
 use crate::utils::test_utils::*;
 

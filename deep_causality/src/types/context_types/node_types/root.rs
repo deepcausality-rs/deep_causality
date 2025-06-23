@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter};
 
 use deep_causality_macros::Constructor;
 
-use crate::protocols::identifiable::Identifiable;
+use crate::traits::identifiable::Identifiable;
 
 #[derive(Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Root {

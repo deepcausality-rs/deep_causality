@@ -1,0 +1,11 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+//
+
+use crate::prelude::{LorentzianSpacetime, SpaceTemporal};
+
+impl SpaceTemporal<f64> for LorentzianSpacetime {
+    fn t(&self) -> &f64 {
+        &self.t
+    }
+}

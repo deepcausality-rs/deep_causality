@@ -1,16 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use std::fmt::{Debug, Display, Formatter};
-use std::hash::Hash;
-use std::ops::*;
-
+use crate::prelude::{Causable, CausalityError, Causaloid, Datable, NumericalValue, Symbolic};
+use crate::traits::contextuable::space_temporal::SpaceTemporal;
+use crate::traits::contextuable::spatial::Spatial;
+use crate::traits::contextuable::temporal::Temporal;
 use deep_causality_macros::{Constructor, Getters};
-
-use crate::prelude::{
-    Causable, CausalityError, Causaloid, Datable, NumericalValue, SpaceTemporal, Spatial,
-    Temporable,
-};
+use std::fmt::{Display, Formatter};
 
 /// A `CausalState` represents a state in a causal state machine (CSM) that can be evaluated
 /// based on causal conditions.
@@ -67,22 +63,14 @@ use crate::prelude::{
 /// }
 /// ```
 #[derive(Getters, Constructor, Clone, Debug)]
-pub struct CausalState<'l, D, S, T, ST, V>
+pub struct CausalState<'l, D, S, T, ST, SYM, V>
 where
     D: Datable + Clone,
     S: Spatial<V> + Clone,
-    T: Temporable<V> + Clone,
+    T: Temporal<V> + Clone,
     ST: SpaceTemporal<V> + Clone,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>
-        + Clone,
+    SYM: Symbolic + Clone,
+    V: Clone,
 {
     /// Unique identifier for the state
     id: usize,
@@ -91,25 +79,17 @@ where
     /// Numerical data used for state evaluation
     data: NumericalValue,
     /// Reference to a causaloid that defines when this state is active
-    causaloid: &'l Causaloid<'l, D, S, T, ST, V>,
+    causaloid: &'l Causaloid<'l, D, S, T, ST, SYM, V>,
 }
 
-impl<D, S, T, ST, V> CausalState<'_, D, S, T, ST, V>
+impl<D, S, T, ST, SYM, V> CausalState<'_, D, S, T, ST, SYM, V>
 where
     D: Datable + Clone,
     S: Spatial<V> + Clone,
-    T: Temporable<V> + Clone,
+    T: Temporal<V> + Clone,
     ST: SpaceTemporal<V> + Clone,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>
-        + Clone,
+    SYM: Symbolic + Clone,
+    V: Clone,
 {
     /// Evaluates the state using its internal data.
     ///
@@ -144,28 +124,22 @@ where
     }
 }
 
-impl<D, S, T, ST, V> Display for CausalState<'_, D, S, T, ST, V>
+impl<D, S, T, ST, SYM, V> Display for CausalState<'_, D, S, T, ST, SYM, V>
 where
-    D: Datable + Clone,
-    S: Spatial<V> + Clone,
-    T: Temporable<V> + Clone,
-    ST: SpaceTemporal<V> + Clone,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>
-        + Clone,
+    D: Datable + Clone + Display,
+    S: Spatial<V> + Clone + Display,
+    T: Temporal<V> + Clone + Display,
+    ST: SpaceTemporal<V> + Clone + Display,
+    SYM: Symbolic + Clone + Display,
+    V: Clone + Display,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "CausalState: \n id: {} version: {} \n data: {:?} causaloid: {:?}",
-            self.id, self.version, self.data, self.causaloid,
+            "CausalState: \n id: {} version: {} \n data: {:?} causaloid: N/Implemented",
+            self.id,
+            self.version,
+            self.data, //self.causaloid,
         )
     }
 }

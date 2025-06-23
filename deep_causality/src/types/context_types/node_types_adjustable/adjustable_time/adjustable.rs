@@ -23,7 +23,7 @@ where
         + Hash
         + Eq
         + PartialEq
-        + PartialOrd,
+        + PartialOrd
 {
     fn update<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,
@@ -34,16 +34,7 @@ where
 
         // get the data at the index position
         let update_time = array_grid.get(p);
-
-        // Check if the new time is non-zero
-        if update_time == T::default() {
-            return Err(UpdateError("Update failed, new time is ZERO".into()));
-        }
-
-        // Check if the new time is non-negative. Unless you want to go back in time...
-        if update_time < T::default() {
-            return Err(UpdateError("Update failed, new time is NEGATIVE".into()));
-        }
+        
 
         // Update the internal time to the new time
         self.time_unit = update_time;

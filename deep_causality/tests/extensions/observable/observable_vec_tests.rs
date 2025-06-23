@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use deep_causality::protocols::observable::ObservableReasoning;
+use deep_causality::traits::observable::ObservableReasoning;
 use deep_causality::types::alias_types::NumericalValue;
 
 use crate::utils::test_utils::*;

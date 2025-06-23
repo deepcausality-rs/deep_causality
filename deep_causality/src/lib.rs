@@ -14,6 +14,6 @@
 pub mod errors;
 pub mod extensions;
 pub mod prelude;
-pub mod protocols;
+pub mod traits;
 pub mod types;
 pub mod utils;

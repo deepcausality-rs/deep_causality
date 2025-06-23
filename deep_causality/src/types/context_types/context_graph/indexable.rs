@@ -1,26 +1,18 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2024" . The DeepCausality Authors. All Rights Reserved.
 
-use std::hash::Hash;
-use std::ops::{Add, Mul, Sub};
+use crate::prelude::{Context, Datable, Indexable, Symbolic};
+use crate::traits::contextuable::space_temporal::SpaceTemporal;
+use crate::traits::contextuable::spatial::Spatial;
+use crate::traits::contextuable::temporal::Temporal;
 
-use crate::prelude::{Context, Datable, Indexable, SpaceTemporal, Spatial, Temporable};
-
-impl<D, S, T, ST, V> Indexable for Context<D, S, T, ST, V>
+impl<D, S, T, ST, SYM, V> Indexable for Context<D, S, T, ST, SYM, V>
 where
     D: Datable,
     S: Spatial<V>,
-    T: Temporable<V>,
+    T: Temporal<V>,
     ST: SpaceTemporal<V>,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>,
+    SYM: Symbolic,
 {
     fn get_index(&self, key: &usize, current: bool) -> Option<&usize> {
         {

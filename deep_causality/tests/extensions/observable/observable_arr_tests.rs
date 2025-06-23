@@ -2,7 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::Observation;
-use deep_causality::protocols::observable::ObservableReasoning;
+use deep_causality::traits::observable::ObservableReasoning;
 use deep_causality::types::alias_types::NumericalValue;
 
 pub fn get_test_obs_arr() -> [Observation; 5] {

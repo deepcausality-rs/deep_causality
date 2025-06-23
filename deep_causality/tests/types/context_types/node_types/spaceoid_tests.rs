@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use deep_causality::prelude::{Identifiable, Space, Spatial};
+use deep_causality::prelude::{Identifiable, Space};
+use deep_causality::traits::contextuable::spatial::Spatial;
 
 #[test]
 fn test_new() {

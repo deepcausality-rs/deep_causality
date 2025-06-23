@@ -3,7 +3,7 @@
 
 use criterion::{criterion_group, Criterion};
 
-use deep_causality::protocols::causable::CausableReasoning;
+use deep_causality::traits::causable::CausableReasoning;
 
 use crate::benchmarks::utils_map;
 

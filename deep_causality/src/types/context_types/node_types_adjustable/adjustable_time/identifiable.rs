@@ -6,15 +6,17 @@ use super::*;
 
 impl<T> Identifiable for AdjustableTime<T>
 where
-    T: Default
+    T: Debug
+        + Default
+        + Add<T, Output = T>
+        + Sub<T, Output = T>
+        + Mul<T, Output = T>
         + Copy
         + Clone
         + Hash
         + Eq
         + PartialEq
-        + Add<T, Output = T>
-        + Sub<T, Output = T>
-        + Mul<T, Output = T>,
+        + PartialOrd,
 {
     fn id(&self) -> u64 {
         self.id

@@ -1,22 +1,17 @@
-use std::hash::Hash;
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
-use std::ops::{Add, Mul, Sub};
+//
 
-use crate::prelude::{Temporable, TimeScale};
+use std::fmt::Debug;
+use std::hash::Hash;
+
+use crate::prelude::TimeScale;
+use crate::traits::contextuable::temporal::Temporal;
 use crate::types::context_types::node_types::time::Time;
 
-impl<T> Temporable<T> for Time<T>
+impl<T> Temporal<T> for Time<T>
 where
-    T: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<T, Output = T>
-        + Sub<T, Output = T>
-        + Mul<T, Output = T>,
+    T: Copy + Clone + Hash + Eq + PartialEq + Debug,
 {
     fn time_scale(&self) -> TimeScale {
         self.time_scale

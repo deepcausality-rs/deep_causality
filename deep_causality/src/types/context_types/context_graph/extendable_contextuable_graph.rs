@@ -3,21 +3,14 @@
 
 use super::*;
 
-impl<D, S, T, ST, V> ExtendableContextuableGraph<D, S, T, ST, V> for Context<D, S, T, ST, V>
+impl<D, S, T, ST, SYM, V> ExtendableContextuableGraph<D, S, T, ST, SYM, V>
+    for Context<D, S, T, ST, SYM, V>
 where
     D: Datable,
     S: Spatial<V>,
-    T: Temporable<V>,
+    T: Temporal<V>,
     ST: SpaceTemporal<V>,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>,
+    SYM: Symbolic,
 {
     fn extra_ctx_add_new(&mut self, capacity: usize, default: bool) -> u64 {
         if self.extra_contexts.is_none() {
@@ -66,7 +59,7 @@ where
 
     fn extra_ctx_add_node(
         &mut self,
-        value: Contextoid<D, S, T, ST, V>,
+        value: Contextoid<D, S, T, ST, SYM, V>,
     ) -> Result<usize, ContextIndexError> {
         match self.get_current_extra_context_mut() {
             Ok(ctx) => Ok(ctx.add_node(value)),
@@ -84,7 +77,7 @@ where
     fn extra_ctx_get_node(
         &self,
         index: usize,
-    ) -> Result<&Contextoid<D, S, T, ST, V>, ContextIndexError> {
+    ) -> Result<&Contextoid<D, S, T, ST, SYM, V>, ContextIndexError> {
         match self.get_current_extra_context() {
             Ok(ctx) => match ctx.get_node(index) {
                 Some(node) => Ok(node),
@@ -192,25 +185,17 @@ where
     }
 }
 
-impl<D, S, T, ST, V> Context<D, S, T, ST, V>
+impl<D, S, T, ST, SYM, V> Context<D, S, T, ST, SYM, V>
 where
     D: Datable,
     S: Spatial<V>,
-    T: Temporable<V>,
+    T: Temporal<V>,
     ST: SpaceTemporal<V>,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>,
+    SYM: Symbolic,
 {
     fn get_current_extra_context(
         &self,
-    ) -> Result<&ExtraContext<D, S, T, ST, V>, ContextIndexError> {
+    ) -> Result<&ExtraContext<D, S, T, ST, SYM, V>, ContextIndexError> {
         if self.extra_context_id == 0 {
             return Err(ContextIndexError::new("context ID not set".into()));
         }
@@ -233,7 +218,7 @@ where
 
     fn get_current_extra_context_mut(
         &mut self,
-    ) -> Result<&mut ExtraContext<D, S, T, ST, V>, ContextIndexError> {
+    ) -> Result<&mut ExtraContext<D, S, T, ST, SYM, V>, ContextIndexError> {
         if self.extra_context_id == 0 {
             return Err(ContextIndexError::new("context ID not set".into()));
         }

@@ -2,53 +2,38 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use std::hash::Hash;
-use std::ops::*;
-
-use crate::prelude::{ContextoidType, Datable, SpaceTemporal, Spatial, Temporable};
+use crate::prelude::{ContextoidType, Datable, Symbolic};
+use crate::traits::contextuable::space_temporal::SpaceTemporal;
+use crate::traits::contextuable::spatial::Spatial;
+use crate::traits::contextuable::temporal::Temporal;
 
 pub mod contextoid_type;
 mod contextuable;
 mod display;
 mod identifiable;
 
-#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
-pub struct Contextoid<D, S, T, ST, V>
+#[derive(Debug, Copy, Clone, Hash)]
+pub struct Contextoid<D, S, T, ST, SYM, V>
 where
     D: Datable,
     S: Spatial<V>,
-    T: Temporable<V>,
+    T: Temporal<V>,
     ST: SpaceTemporal<V>,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>,
+    SYM: Symbolic,
 {
     id: u64,
-    vertex_type: ContextoidType<D, S, T, ST, V>,
+    vertex_type: ContextoidType<D, S, T, ST, SYM, V>,
 }
 
-impl<D, S, T, ST, V> Contextoid<D, S, T, ST, V>
+impl<D, S, T, ST, SYM, V> Contextoid<D, S, T, ST, SYM, V>
 where
     D: Datable,
     S: Spatial<V>,
-    T: Temporable<V>,
+    T: Temporal<V>,
     ST: SpaceTemporal<V>,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>,
+    SYM: Symbolic,
 {
-    pub fn new(id: u64, vertex_type: ContextoidType<D, S, T, ST, V>) -> Self {
+    pub fn new(id: u64, vertex_type: ContextoidType<D, S, T, ST, SYM, V>) -> Self {
         Self { id, vertex_type }
     }
 }

@@ -2,8 +2,6 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use std::collections::HashMap;
-use std::hash::Hash;
-use std::ops::*;
 
 use ultragraph::prelude::*;
 
@@ -15,51 +13,35 @@ mod extendable_contextuable_graph;
 mod identifiable;
 mod indexable;
 
-type ExtraContext<D, S, T, ST, V> = UltraGraph<Contextoid<D, S, T, ST, V>>;
+type ExtraContext<D, S, T, ST, SYM, V> = UltraGraph<Contextoid<D, S, T, ST, SYM, V>>;
 
-type ExtraContextMap<D, S, T, ST, V> = HashMap<u64, ExtraContext<D, S, T, ST, V>>;
+type ExtraContextMap<D, S, T, ST, SYM, V> = HashMap<u64, ExtraContext<D, S, T, ST, SYM, V>>;
 
-pub struct Context<D, S, T, ST, V>
+pub struct Context<D, S, T, ST, SYM, V>
 where
     D: Datable,
     S: Spatial<V>,
-    T: Temporable<V>,
+    T: Temporal<V>,
     ST: SpaceTemporal<V>,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>,
+    SYM: Symbolic,
 {
     id: u64,
     name: String,
-    base_context: UltraGraph<Contextoid<D, S, T, ST, V>>,
-    extra_contexts: Option<ExtraContextMap<D, S, T, ST, V>>,
+    base_context: UltraGraph<Contextoid<D, S, T, ST, SYM, V>>,
+    extra_contexts: Option<ExtraContextMap<D, S, T, ST, SYM, V>>,
     number_of_extra_contexts: u64,
     extra_context_id: u64,
     current_index_map: HashMap<usize, usize>,
     previous_index_map: HashMap<usize, usize>,
 }
 
-impl<D, S, T, ST, V> Context<D, S, T, ST, V>
+impl<D, S, T, ST, SYM, V> Context<D, S, T, ST, SYM, V>
 where
     D: Datable,
     S: Spatial<V>,
-    T: Temporable<V>,
+    T: Temporal<V>,
     ST: SpaceTemporal<V>,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>,
+    SYM: Symbolic,
 {
     /// Creates a new context with the given node capacity.
     pub fn with_capacity(id: u64, name: &str, capacity: usize) -> Self {

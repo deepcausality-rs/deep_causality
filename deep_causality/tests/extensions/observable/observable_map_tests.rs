@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 
 use deep_causality::prelude::Observation;
-use deep_causality::protocols::observable::ObservableReasoning;
+use deep_causality::traits::observable::ObservableReasoning;
 use deep_causality::types::alias_types::NumericalValue;
 
 use crate::utils::test_utils;

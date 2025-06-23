@@ -2,7 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::{BaseCausalGraph, CausaloidGraph};
-use deep_causality::protocols::causable_graph::graph::CausableGraph;
+use deep_causality::traits::causable_graph::graph::CausableGraph;
 
 use crate::benchmarks::utils_shared;
 
