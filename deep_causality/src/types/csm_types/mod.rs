@@ -14,11 +14,18 @@ use crate::traits::contextuable::temporal::Temporal;
 pub mod csm_action;
 pub mod csm_state;
 
-pub type CSMMap<'l, D, S, T, ST, SYM, V> =
-    HashMap<usize, (&'l CausalState<'l, D, S, T, ST, SYM, V>, &'l CausalAction)>;
+pub type CSMMap<'l, D, S, T, ST, SYM, VS, VT> = HashMap<
+    usize,
+    (
+        &'l CausalState<'l, D, S, T, ST, SYM, VS, VT>,
+        &'l CausalAction,
+    ),
+>;
 
-pub type CSMStateActions<'l, D, S, T, ST, SYM, V> =
-    [(&'l CausalState<'l, D, S, T, ST, SYM, V>, &'l CausalAction)];
+pub type CSMStateActions<'l, D, S, T, ST, SYM, VS, VT> = [(
+    &'l CausalState<'l, D, S, T, ST, SYM, VS, VT>,
+    &'l CausalAction,
+)];
 
 /// # Causal State Machine (CSM)
 ///
@@ -53,31 +60,34 @@ pub type CSMStateActions<'l, D, S, T, ST, SYM, V> =
 /// 4. Feeding data into the CSM for evaluation
 ///
 /// See the example in `examples/csm/src/main.rs` for a practical implementation.
-pub struct CSM<'l, D, S, T, ST, SYM, V>
+pub struct CSM<'l, D, S, T, ST, SYM, VS, VT>
 where
-    D: Datable + Clone + Debug,
-    S: Spatial<V> + Clone  + Debug,
-    T: Temporal<V> + Clone  + Debug,
-    ST: SpaceTemporal<V> + Clone + Debug,
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone + Debug,
+    T: Temporal<VT> + Clone + Debug,
+    ST: SpaceTemporal<VS, VT> + Clone + Debug,
     SYM: Symbolic + Clone + Debug,
-    V: Clone  + Debug,
+    VS: Clone + Debug,
+    VT: Clone+ Debug,
 {
-    state_actions: RefCell<CSMMap<'l, D, S, T, ST, SYM, V>>,
+    state_actions: RefCell<CSMMap<'l, D, S, T, ST, SYM, VS, VT>>,
 }
 
-impl<'l,  D, S, T, ST, SYM, V> CSM<'l, D, S, T, ST, SYM, V>
+impl<'l, D, S, T, ST, SYM, VS, VT> CSM<'l, D, S, T, ST, SYM, VS, VT>
 where
-    D: Datable + Clone + Debug,
-    S: Spatial<V> + Clone  + Debug,
-    T: Temporal<V> + Clone  + Debug,
-    ST: SpaceTemporal<V> + Clone + Debug,
+    D: Datable + Clone+ Debug, 
+    S: Spatial<VS> + Clone + Debug,
+    T: Temporal<VT> + Clone+ Debug,
+    ST: SpaceTemporal<VS, VT> + Clone+ Debug,
     SYM: Symbolic + Clone + Debug,
-    V: Clone  + Debug,
+    VS: Clone + Debug,
+    VT: Clone+ Debug,
 {
     /// Constructs a new CSM.
-    pub fn new(state_actions: &'l CSMStateActions<'l, D, S, T, ST, SYM, V>) -> Self {
+    pub fn new(state_actions: &'l CSMStateActions<'l, D, S, T, ST, SYM, VS, VT>) -> Self {
         // Generate a new HashMap from the collection.
-        let mut state_map: CSMMap<'l, D, S, T, ST, SYM, V> = HashMap::with_capacity(state_actions.len());
+        let mut state_map: CSMMap<'l, D, S, T, ST, SYM, VS, VT> =
+            HashMap::with_capacity(state_actions.len());
         for (state, action) in state_actions {
             state_map.insert(*state.id(), (state, action));
         }
@@ -101,7 +111,10 @@ where
     pub fn add_single_state(
         &self,
         idx: usize,
-        state_action: (&'l CausalState<'l, D, S, T, ST, SYM, V>, &'l CausalAction),
+        state_action: (
+            &'l CausalState<'l, D, S, T, ST, SYM, VS, VT>,
+            &'l CausalAction,
+        ),
     ) -> Result<(), UpdateError> {
         // Check if the key exists, if so return error
         if self.state_actions.borrow().get(&idx).is_some() {
@@ -184,7 +197,7 @@ where
     pub fn update_single_state(
         &self,
         idx: usize,
-        state_action: (&'l CausalState<'l, D, S, T, ST, SYM, V>, &'l CausalAction),
+        state_action: (&'l CausalState<'l, D, S, T, ST, SYM, VS, VT>, &'l CausalAction),
     ) -> Result<(), UpdateError> {
         // Check if the key exists, if not return error
         if self.state_actions.borrow().get(&idx).is_none() {
@@ -233,9 +246,10 @@ where
     /// Updates all causal state with a new state collection.
     /// Note, this operation erases all previous states in the CSM by generating a new collection.
     /// Returns UpdateError if the update operation failed.
-    pub fn update_all_states(&self, state_actions: &'l CSMStateActions<'l, D, S, T, ST, SYM, V>) {
+    pub fn update_all_states(&self, state_actions: &'l CSMStateActions<'l, D, S, T, ST, SYM, VS, VT>) {
         // Generate a new HashMap from the collection
-        let mut state_map: CSMMap<'l, D, S, T, ST, SYM, V> = HashMap::with_capacity(state_actions.len());
+        let mut state_map: CSMMap<'l, D, S, T, ST, SYM, VS, VT> =
+            HashMap::with_capacity(state_actions.len());
         for (state, action) in state_actions {
             state_map.insert(*state.id(), (state, action));
         }

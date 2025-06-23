@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
+use crate::prelude::*;
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
 use std::sync::{Arc, RwLock};
-use crate::prelude::*;
 
 mod causable;
 mod display;
@@ -12,41 +12,44 @@ mod getters;
 mod identifiable;
 mod part_eq;
 
-pub type CausalVec<'l, D, S, T, ST, SYM, V> = Vec<Causaloid<'l, D, S, T, ST, SYM, V>>;
-pub type CausalGraph<'l, D, S, T, ST, SYM, V> = CausaloidGraph<Causaloid<'l, D, S, T, ST, SYM, V>>;
+pub type CausalVec<'l, D, S, T, ST, SYM, VS, VT> = Vec<Causaloid<'l, D, S, T, ST, SYM, VS, VT>>;
+pub type CausalGraph<'l, D, S, TM, ST, SYM, VS, VT> =
+    CausaloidGraph<Causaloid<'l, D, S, TM, ST, SYM, VS, VT>>;
 
 #[derive(Clone)]
-pub struct Causaloid<'l, D, S, T, ST, SYM, V>
+pub struct Causaloid<'l, D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,
-    S: Spatial<V> + Clone,
-    T: Temporal<V> + Clone,
-    ST: SpaceTemporal<V> + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
     SYM: Symbolic + Clone,
-    V: Clone,
+    VS: Clone,
+    VT: Clone,
 {
     id: IdentificationValue,
     active: ArcRWLock<bool>,
     causal_type: CausaloidType,
     causal_fn: Option<CausalFn>,
-    context_causal_fn: Option<ContextualCausalDataFn<'l, D, S, T, ST, SYM, V>>,
-    context: Option<&'l Context<D, S, T, ST, SYM, V>>,
+    context_causal_fn: Option<ContextualCausalDataFn<'l, D, S, T, ST, SYM, VS, VT>>,
+    context: Option<&'l Context<D, S, T, ST, SYM, VS, VT>>,
     has_context: bool,
-    causal_coll: Option<&'l CausalVec<'l, D, S, T, ST, SYM, V>>,
-    causal_graph: Option<&'l CausalGraph<'l, D, S, T, ST, SYM, V>>,
+    causal_coll: Option<&'l CausalVec<'l, D, S, T, ST, SYM, VS, VT>>,
+    causal_graph: Option<&'l CausalGraph<'l, D, S, T, ST, SYM, VS, VT>>,
     description: &'l str,
-    ty: PhantomData<V>,
+    ty: PhantomData<(VS, VT)>,
 }
 
 // Constructors
-impl<'l, D, S, T, ST, SYM, V> Causaloid<'l, D, S, T, ST, SYM, V>
+impl<'l, D, S, T, ST, SYM, VS, VT> Causaloid<'l, D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,
-    S: Spatial<V> + Clone,
-    T: Temporal<V> + Clone,
-    ST: SpaceTemporal<V> + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
     SYM: Symbolic + Clone,
-    V: Clone,
+    VS: Clone,
+    VT: Clone,
 {
     /// Singleton constructor. Assumes causality function is valid.
     /// Only use for non-fallible construction i.e.verified a-priori knowledge about the correctness of the causal function.
@@ -68,8 +71,8 @@ where
 
     pub fn new_with_context(
         id: IdentificationValue,
-        context_causal_fn: ContextualCausalDataFn<'l, D, S, T, ST, SYM, V>,
-        context: Option<&'l Context<D, S, T, ST, SYM, V>>,
+        context_causal_fn: ContextualCausalDataFn<'l, D, S, T, ST, SYM, VS, VT>,
+        context: Option<&'l Context<D, S, T, ST, SYM, VS, VT>>,
         description: &'l str,
     ) -> Self {
         Causaloid {
@@ -96,7 +99,7 @@ where
     /// about the correctness of the causal graph.
     pub fn from_causal_collection(
         id: IdentificationValue,
-        causal_coll: &'l Vec<Causaloid<'l, D, S, T, ST, SYM, V>>,
+        causal_coll: &'l Vec<Causaloid<'l, D, S, T, ST, SYM, VS, VT>>,
         description: &'l str,
     ) -> Self {
         Causaloid {
@@ -120,8 +123,8 @@ where
     /// or embedded into a causal graph.
     pub fn from_causal_collection_with_context(
         id: IdentificationValue,
-        causal_coll: &'l Vec<Causaloid<'l, D, S, T, ST, SYM, V>>,
-        context: Option<&'l Context<D, S, T, ST, SYM, V>>,
+        causal_coll: &'l Vec<Causaloid<'l, D, S, T, ST, SYM, VS, VT>>,
+        context: Option<&'l Context<D, S, T, ST, SYM, VS, VT>>,
         description: &'l str,
     ) -> Self {
         Causaloid {
@@ -148,7 +151,7 @@ where
     /// about the correctness of the causal graph.
     pub fn from_causal_graph(
         id: IdentificationValue,
-        causal_graph: &'l CausaloidGraph<Causaloid<'l, D, S, T, ST, SYM, V>>,
+        causal_graph: &'l CausaloidGraph<Causaloid<'l, D, S, T, ST, SYM, VS, VT>>,
         description: &'l str,
     ) -> Self {
         Causaloid {
@@ -172,8 +175,8 @@ where
     /// or embedded into another causal graph.
     pub fn from_causal_graph_with_context(
         id: IdentificationValue,
-        causal_graph: &'l CausaloidGraph<Causaloid<'l, D, S, T, ST, SYM, V>>,
-        context: Option<&'l Context<D, S, T, ST, SYM, V>>,
+        causal_graph: &'l CausaloidGraph<Causaloid<'l, D, S, T, ST, SYM, VS, VT>>,
+        context: Option<&'l Context<D, S, T, ST, SYM, VS, VT>>,
         description: &'l str,
     ) -> Self {
         Causaloid {

@@ -3,18 +3,20 @@
 
 use super::*;
 
-impl<D, S, T, ST, SYM, V> ContextuableGraph<D, S, T, ST, SYM, V> for Context<D, S, T, ST, SYM, V>
+impl<D, S, T, ST, SYM, VS, VT> ContextuableGraph<D, S, T, ST, SYM, VS, VT> for Context<D, S, T, ST, SYM, VS, VT>
 where
-    D: Datable,
-    S: Spatial<V>,
-    T: Temporal<V>,
-    ST: SpaceTemporal<V>,
-    SYM: Symbolic,
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
 {
     /// Ads a new Contextoid to the context.
     /// You can add the same contextoid multiple times,
     /// but each one will return a new and unique node index.
-    fn add_node(&mut self, value: Contextoid<D, S, T, ST, SYM, V>) -> usize {
+    fn add_node(&mut self, value: Contextoid<D, S, T, ST, SYM, VS, VT>) -> usize {
         self.base_context.add_node(value)
     }
 
@@ -25,7 +27,7 @@ where
 
     /// Returns a reference to the contextoid with the given index.
     /// If the context does not contain the contextoid, it will return None.
-    fn get_node(&self, index: usize) -> Option<&Contextoid<D, S, T, ST, SYM, V>> {
+    fn get_node(&self, index: usize) -> Option<&Contextoid<D, S, T, ST, SYM, VS, VT>> {
         self.base_context.get_node(index)
     }
 

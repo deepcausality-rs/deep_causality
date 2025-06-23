@@ -3,8 +3,7 @@
 
 use crate::prelude::{
     BaseSymbol, CausalityError, Causaloid, CausaloidGraph, Context, Contextoid, Data,
-    EuclideanSpace, EuclideanSpacetime,
-    SymbolicResult, Time,
+    EuclideanSpace, EuclideanSpacetime, SymbolicResult, Time,
 };
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
@@ -29,24 +28,26 @@ pub type ProbabilisticCausalFn = fn(NumericalValue) -> Result<NumericalValue, Ca
 // Fn aliases for causal function with and without context
 pub type CausalFn = fn(NumericalValue) -> Result<bool, CausalityError>;
 
-pub type ContextualCausalDataFn<'l, D, S, T, ST, SYM, V> =
-    fn(NumericalValue, &'l Context<D, S, T, ST, SYM, V>) -> Result<bool, CausalityError>;
+pub type ContextualCausalDataFn<'l, D, S, T, ST, SYM, VS, VT> =
+    fn(NumericalValue, &'l Context<D, S, T, ST, SYM, VS, VT>) -> Result<bool, CausalityError>;
 
-pub type ContextualCausalFn<'l, D, S, T, ST, SYM, V> =
-    fn(&'l Context<D, S, T, ST, SYM, V>) -> Result<bool, CausalityError>;
+pub type ContextualCausalFn<'l, D, S, T, ST, SYM, VS, VT> =
+    fn(&'l Context<D, S, T, ST, SYM, VS, VT>) -> Result<bool, CausalityError>;
 
 // Default type aliases for basic causaloids
 
 pub type BaseNumberType = u64;
+pub type BaseFloatType = f64;
 
 pub type BaseCausaloid<'l> = Causaloid<
     'l,
     Data<BaseNumberType>,
     EuclideanSpace,
-    Time<BaseNumberType>,
+    Time,
     EuclideanSpacetime,
     BaseSymbol,
-    BaseNumberType,
+    BaseFloatType,
+    BaseFloatType,
 >;
 
 pub type BaseCausaloidVec<'l> = Vec<
@@ -54,10 +55,11 @@ pub type BaseCausaloidVec<'l> = Vec<
         'l,
         Data<BaseNumberType>,
         EuclideanSpace,
-        Time<BaseNumberType>,
+        Time,
         EuclideanSpacetime,
         BaseSymbol,
-        BaseNumberType,
+        BaseFloatType,
+        BaseFloatType,
     >,
 >;
 
@@ -67,10 +69,11 @@ pub type BaseCausalMap<'l> = HashMap<
         'l,
         Data<BaseNumberType>,
         EuclideanSpace,
-        Time<BaseNumberType>,
+        Time,
         EuclideanSpacetime,
         BaseSymbol,
-        BaseNumberType,
+        BaseFloatType,
+        BaseFloatType,
     >,
 >;
 
@@ -79,10 +82,11 @@ pub type BaseCausalGraph<'l> = CausaloidGraph<
         'l,
         Data<BaseNumberType>,
         EuclideanSpace,
-        Time<BaseNumberType>,
+        Time,
         EuclideanSpacetime,
         BaseSymbol,
-        BaseNumberType,
+        BaseFloatType,
+        BaseFloatType,
     >,
 >;
 
@@ -90,17 +94,19 @@ pub type BaseCausalGraph<'l> = CausaloidGraph<
 pub type BaseContext = Context<
     Data<BaseNumberType>,
     EuclideanSpace,
-    Time<BaseNumberType>,
+    Time,
     EuclideanSpacetime,
     BaseSymbol,
-    BaseNumberType,
+    BaseFloatType,
+    BaseFloatType,
 >;
 
 pub type BaseContextoid = Contextoid<
     Data<BaseNumberType>,
     EuclideanSpace,
-    Time<BaseNumberType>,
+    Time,
     EuclideanSpacetime,
     BaseSymbol,
-    BaseNumberType,
+    BaseFloatType,
+    BaseFloatType,
 >;

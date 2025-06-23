@@ -63,19 +63,20 @@ mod temporal;
 /// - [`MetricTensor4D`] — for curvature configuration
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct TangentSpacetime {
-    pub id: u64,
+    id: u64,
 
+    // Time
+    t: f64, // seconds
     // Position
-    pub t: f64, // seconds
-    pub x: f64, // meters
-    pub y: f64,
-    pub z: f64,
+    x: f64, // meters
+    y: f64,
+    z: f64,
 
     // Velocity / tangent vector
-    pub dt: f64, // unit or proper time derivative
-    pub dx: f64, // meters/second
-    pub dy: f64,
-    pub dz: f64,
+    dt: f64, // unit or proper time derivative
+    dx: f64, // meters/second
+    dy: f64,
+    dz: f64,
 
     // Local metric tensor (mutable)
     metric: [[f64; 4]; 4],

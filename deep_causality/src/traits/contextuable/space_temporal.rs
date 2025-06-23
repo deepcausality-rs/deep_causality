@@ -19,9 +19,9 @@ use crate::traits::contextuable::temporal::Temporal;
 /// # Note
 /// The actual meaning of `t()` depends on the context—e.g., wall clock time,
 /// simulation ticks, or a relativistic coordinate frame.
-pub trait SpaceTemporal<V>: Identifiable + Spatial<V> + Temporal<V> {
+pub trait SpaceTemporal<VS, VT>: Identifiable + Spatial<VS> + Temporal<VT> {
     /// Returns the value associated with the temporal (4th) dimension.
-    fn t(&self) -> &V;
+    fn t(&self) -> &VT;
 }
 
 /// Trait for spacetime types that support Minkowski-style interval calculations.
@@ -50,43 +50,7 @@ pub trait SpaceTemporal<V>: Identifiable + Spatial<V> + Temporal<V> {
 /// # Default Method
 /// - `interval_squared(&self, &Self) -> f64`: Computes the squared interval between two events
 ///
-/// # Example
-/// ```
-/// use deep_causality::prelude::*;
-///
-/// #[derive(Debug)]
-/// struct Event {
-///     t: f64,           // seconds
-///     x: f64,
-///     y: f64,
-///     z: f64,
-/// }
-///
-/// impl SpaceTemporalInterval for Event {
-///     fn time(&self) -> f64 {
-///         self.t
-///     }
-///
-///     fn position(&self) -> [f64; 3] {
-///         [self.x, self.y, self.z]
-///     }
-/// }
-///
-/// fn causal_relation<T: SpaceTemporalInterval>(a: &T, b: &T) -> &'static str {
-///     match a.interval_squared(b) {
-///         x if x < 0.0 => "time-like",
-///         x if x > 0.0 => "space-like",
-///         _ => "light-like",
-///     }
-/// }
-///
-/// let e1 = Event { t: 1.0, x: 0.0, y: 0.0, z: 0.0 };
-/// let e2 = Event { t: 3.0, x: 1.0, y: 1.0, z: 0.0 };
-///
-/// let relation = causal_relation(&e1, &e2);
-/// println!("Causal relation: {relation}");
-/// assert_eq!(relation, "time-like");
-/// ```
+
 pub trait SpaceTemporalInterval {
     /// Returns the time coordinate in **seconds**.
     fn time(&self) -> f64;

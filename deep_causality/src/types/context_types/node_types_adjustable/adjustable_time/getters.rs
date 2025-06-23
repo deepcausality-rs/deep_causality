@@ -1,27 +1,14 @@
-use crate::prelude::{AdjustableTime, TimeScale};
-use std::fmt::Debug;
-use std::hash::Hash;
-use std::ops::{Add, Mul, Sub};
+// SPDX-License-Identifier: MIT
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-impl<T> AdjustableTime<T>
-where
-    T: Debug
-        + Default
-        + Add<T, Output = T>
-        + Sub<T, Output = T>
-        + Mul<T, Output = T>
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + PartialOrd,
-{
+use crate::prelude::{AdjustableTime, TimeScale};
+
+impl AdjustableTime {
     pub fn time_scale(&self) -> TimeScale {
         self.time_scale
     }
 
-    pub fn time_unit(&self) -> T {
+    pub fn time_unit(&self) -> u64 {
         self.time_unit
     }
 }

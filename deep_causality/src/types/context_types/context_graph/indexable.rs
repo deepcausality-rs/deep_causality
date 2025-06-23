@@ -6,13 +6,15 @@ use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
 
-impl<D, S, T, ST, SYM, V> Indexable for Context<D, S, T, ST, SYM, V>
+impl<D, S, T, ST, SYM, VS, VT> Indexable for Context<D, S, T, ST, SYM, VS, VT>
 where
-    D: Datable,
-    S: Spatial<V>,
-    T: Temporal<V>,
-    ST: SpaceTemporal<V>,
-    SYM: Symbolic,
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
 {
     fn get_index(&self, key: &usize, current: bool) -> Option<&usize> {
         {

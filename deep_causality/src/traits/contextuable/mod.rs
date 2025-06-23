@@ -32,23 +32,26 @@ pub mod temporal;
 /// - `T`: A [`Temporal`] node
 /// - `ST`: A [`SpaceTemporal`] node (4D entity)
 /// - `SYM`: A [`Symbolic`] node (logical/abstract)
-/// - `V`: The numeric or symbolic coordinate type
+/// - `VS`: The numeric or symbolic coordinate type
+/// - `VT`: The numeric or symbolic time type
 ///
 /// # Design Note
 /// This trait is the dispatch point for `ContextoidType`, allowing static or
 /// dynamic graph traversal based on node kind. It intentionally generalizes
 /// over all possible causal node roles.
-pub trait Contextuable<D, S, T, ST, SYM, V>: Identifiable
+pub trait Contextuable<D, S, T, ST, SYM, VS, VT>: Identifiable
 where
-    D: Datable,
-    S: Spatial<V>,
-    T: Temporal<V>,
-    ST: SpaceTemporal<V>,
-    SYM: Symbolic,
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
 {
     /// Returns a reference to the type-erased node variant.
     ///
     /// Use this to determine the role of the current node (data, space, time, etc.)
     /// and then downcast or dispatch accordingly.
-    fn vertex_type(&self) -> &ContextoidType<D, S, T, ST, SYM, V>;
+    fn vertex_type(&self) -> &ContextoidType<D, S, T, ST, SYM, VS, VT>;
 }

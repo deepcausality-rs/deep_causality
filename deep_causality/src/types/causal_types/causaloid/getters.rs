@@ -4,28 +4,29 @@
 use super::*;
 
 // Getters
-impl<'l,D, S, T, ST, SYM, V>  Causaloid<'l, D, S, T, ST, SYM, V>
+impl<'l, D, S, T, ST, SYM, VS, VT> Causaloid<'l, D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,
-    S: Spatial<V> + Clone,
-    T: Temporal<V> + Clone,
-    ST: SpaceTemporal<V> + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
     SYM: Symbolic + Clone,
-    V: Clone,
+    VS: Clone,
+    VT: Clone,
 {
     pub fn active(&self) -> bool {
         self.is_active()
     }
-    pub fn causal_collection(&self) -> Option<&CausalVec<'l, D, S, T, ST, SYM, V>> {
+    pub fn causal_collection(&self) -> Option<&CausalVec<'l, D, S, T, ST, SYM, VS, VT>> {
         self.causal_coll
     }
-    pub fn causal_graph(&self) -> Option<&CausalGraph<'l, D, S, T, ST, SYM, V>> {
+    pub fn causal_graph(&self) -> Option<&CausalGraph<'l, D, S, T, ST, SYM, VS, VT>> {
         self.causal_graph
     }
     pub fn description(&self) -> &'l str {
         self.description
     }
-    pub fn context(&self) -> Option<&'l Context<D, S, T, ST, SYM, V>> {
+    pub fn context(&self) -> Option<&'l Context<D, S, T, ST, SYM, VS, VT>> {
         self.context
     }
 }

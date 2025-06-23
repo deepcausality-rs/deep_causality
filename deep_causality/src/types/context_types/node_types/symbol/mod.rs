@@ -1,5 +1,7 @@
+use deep_causality_macros::Constructor;
 use crate::prelude::{Identifiable, Symbolic, SymbolicRepresentation};
 
+#[derive(Constructor, Debug, Clone, PartialEq)]
 pub struct BaseSymbol {
     id: u64,
     repr: SymbolicRepresentation,

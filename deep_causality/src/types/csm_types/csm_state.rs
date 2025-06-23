@@ -63,14 +63,15 @@ use std::fmt::{Display, Formatter};
 /// }
 /// ```
 #[derive(Getters, Constructor, Clone, Debug)]
-pub struct CausalState<'l, D, S, T, ST, SYM, V>
+pub struct CausalState<'l, D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,
-    S: Spatial<V> + Clone,
-    T: Temporal<V> + Clone,
-    ST: SpaceTemporal<V> + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
     SYM: Symbolic + Clone,
-    V: Clone,
+    VS: Clone,
+    VT: Clone,
 {
     /// Unique identifier for the state
     id: usize,
@@ -79,17 +80,18 @@ where
     /// Numerical data used for state evaluation
     data: NumericalValue,
     /// Reference to a causaloid that defines when this state is active
-    causaloid: &'l Causaloid<'l, D, S, T, ST, SYM, V>,
+    causaloid: &'l Causaloid<'l, D, S, T, ST, SYM, VS, VT>,
 }
 
-impl<D, S, T, ST, SYM, V> CausalState<'_, D, S, T, ST, SYM, V>
+impl<D, S, T, ST, SYM, VS, VT> CausalState<'_, D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,
-    S: Spatial<V> + Clone,
-    T: Temporal<V> + Clone,
-    ST: SpaceTemporal<V> + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
     SYM: Symbolic + Clone,
-    V: Clone,
+    VS: Clone,
+    VT: Clone,
 {
     /// Evaluates the state using its internal data.
     ///
@@ -124,14 +126,15 @@ where
     }
 }
 
-impl<D, S, T, ST, SYM, V> Display for CausalState<'_, D, S, T, ST, SYM, V>
+impl<D, S, T, ST, SYM, VS, VT> Display for CausalState<'_, D, S, T, ST, SYM, VS, VT>
 where
-    D: Datable + Clone + Display,
-    S: Spatial<V> + Clone + Display,
-    T: Temporal<V> + Clone + Display,
-    ST: SpaceTemporal<V> + Clone + Display,
-    SYM: Symbolic + Clone + Display,
-    V: Clone + Display,
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(

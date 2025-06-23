@@ -4,7 +4,7 @@
 
 use crate::prelude::{AdjustableMinkowskiSpacetime, SpaceTemporal};
 
-impl SpaceTemporal<f64> for AdjustableMinkowskiSpacetime {
+impl SpaceTemporal<f64, f64> for AdjustableMinkowskiSpacetime {
     fn t(&self) -> &f64 {
         &self.t
     }

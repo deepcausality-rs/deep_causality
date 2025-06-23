@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use std::fmt::Debug;
-use std::hash::Hash;
-use std::ops::*;
-
 use deep_causality_macros::Constructor;
+use std::fmt::Debug;
 
 use crate::prelude::TimeScale;
 
@@ -16,21 +13,8 @@ mod identifiable;
 mod temporable;
 
 #[derive(Constructor, Debug, Copy, Clone, Eq, PartialEq)]
-pub struct AdjustableTime<T>
-where
-    T: Debug
-        + Default
-        + Add<T, Output = T>
-        + Sub<T, Output = T>
-        + Mul<T, Output = T>
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + PartialOrd,
-{
+pub struct AdjustableTime {
     id: u64,
     time_scale: TimeScale,
-    time_unit: T,
+    time_unit: u64,
 }

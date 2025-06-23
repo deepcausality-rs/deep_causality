@@ -32,13 +32,15 @@ pub enum ContextKind {
 }
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
-pub enum ContextoidType<D, S, T, ST, SYM, V>
+pub enum ContextoidType<D, S, T, ST, SYM, VS, VT>
 where
-    D: Datable,
-    S: Spatial<V>,
-    T: Temporal<V>,
-    ST: SpaceTemporal<V>,
-    SYM: Symbolic,
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
 {
     Datoid(D),
     Tempoid(T),
@@ -47,16 +49,18 @@ where
     SpaceTempoid(ST),
     Symboid(SYM),
     #[doc(hidden)]
-    _Marker(PhantomData<V>),
+    _Marker(PhantomData<(VS, VT)>),
 }
 
-impl<D, S, T, ST, SYM, V> ContextoidType<D, S, T, ST, SYM, V>
+impl<D, S, T, ST, SYM, VS, VT> ContextoidType<D, S, T, ST, SYM, VS, VT>
 where
-    D: Datable,
-    S: Spatial<V>,
-    T: Temporal<V>,
-    ST: SpaceTemporal<V>,
-    SYM: Symbolic,
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
 {
     pub fn kind(&self) -> ContextKind {
         match self {
@@ -71,13 +75,15 @@ where
     }
 }
 
-impl<D, S, T, ST, SYM, V> ContextoidType<D, S, T, ST, SYM, V>
+impl<D, S, T, ST, SYM, VS, VT> ContextoidType<D, S, T, ST, SYM, VS, VT>
 where
-    D: Datable,
-    S: Spatial<V>,
-    T: Temporal<V>,
-    ST: SpaceTemporal<V>,
-    SYM: Symbolic,
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
 {
     pub fn root(&self) -> Option<&Root> {
         if let ContextoidType::Root(b) = self {
@@ -125,13 +131,15 @@ where
     }
 }
 
-impl<D, S, T, ST, SYM, V> Display for ContextoidType<D, S, T, ST, SYM, V>
+impl<D, S, T, ST, SYM, VS, VT> Display for ContextoidType<D, S, T, ST, SYM, VS, VT>
 where
-    D: Display + Datable,
-    S: Display + Spatial<V>,
-    T: Display + Temporal<V>,
-    ST: Display + SpaceTemporal<V>,
-    SYM: Display + Symbolic,
+    D: Display + Datable + Clone,
+    S: Display + Spatial<VS> + Clone,
+    T: Display + Temporal<VT> + Clone,
+    ST: Display + SpaceTemporal<VS, VT> + Clone,
+    SYM: Display + Symbolic + Clone,
+    VS: Display + Clone,
+    VT: Display + Clone,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -141,7 +149,9 @@ where
             ContextoidType::Spaceoid(b) => write!(f, "Spaceoid: {}", b),
             ContextoidType::SpaceTempoid(b) => write!(f, "SpaceTempoid: {}", b),
             ContextoidType::Symboid(b) => write!(f, "Symboid: {}", b),
-            ContextoidType::_Marker(_) => unreachable!("_Marker variant should never be accessed directly"),
+            ContextoidType::_Marker(_) => {
+                unreachable!("_Marker variant should never be accessed directly")
+            }
         }
     }
 }

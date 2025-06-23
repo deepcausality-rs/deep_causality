@@ -1,14 +1,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use std::fmt::{Debug, Display};
-use std::hash::Hash;
 use crate::types::context_types::node_types::time::Time;
+use std::fmt::Display;
 
-impl<T> Display for Time<T>
-where
-T: Copy + Clone + Hash + Eq + PartialEq +Debug,
-{
+impl Display for Time {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,

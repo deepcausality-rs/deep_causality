@@ -58,7 +58,7 @@ pub struct MinkowskiSpacetime {
     y: f64,
     /// Spatial Z coordinate in meters
     z: f64,
-    // time in SI time unit, 
+    /// time in SI time unit, 
     t: f64,
     time_scale: TimeScale, // SI time unit
 }

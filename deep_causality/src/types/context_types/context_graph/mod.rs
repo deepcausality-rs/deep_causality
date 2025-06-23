@@ -13,35 +13,39 @@ mod extendable_contextuable_graph;
 mod identifiable;
 mod indexable;
 
-type ExtraContext<D, S, T, ST, SYM, V> = UltraGraph<Contextoid<D, S, T, ST, SYM, V>>;
+type ExtraContext<D, S, T, ST, SYM, VS, VT> = UltraGraph<Contextoid<D, S, T, ST, SYM, VS, VT>>;
 
-type ExtraContextMap<D, S, T, ST, SYM, V> = HashMap<u64, ExtraContext<D, S, T, ST, SYM, V>>;
+type ExtraContextMap<D, S, T, ST, SYM, VS, VT> = HashMap<u64, ExtraContext<D, S, T, ST, SYM, VS, VT>>;
 
-pub struct Context<D, S, T, ST, SYM, V>
+pub struct Context<D, S, T, ST, SYM, VS, VT>
 where
-    D: Datable,
-    S: Spatial<V>,
-    T: Temporal<V>,
-    ST: SpaceTemporal<V>,
-    SYM: Symbolic,
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
 {
     id: u64,
     name: String,
-    base_context: UltraGraph<Contextoid<D, S, T, ST, SYM, V>>,
-    extra_contexts: Option<ExtraContextMap<D, S, T, ST, SYM, V>>,
+    base_context: UltraGraph<Contextoid<D, S, T, ST, SYM, VS, VT>>,
+    extra_contexts: Option<ExtraContextMap<D, S, T, ST, SYM, VS, VT>>,
     number_of_extra_contexts: u64,
     extra_context_id: u64,
     current_index_map: HashMap<usize, usize>,
     previous_index_map: HashMap<usize, usize>,
 }
 
-impl<D, S, T, ST, SYM, V> Context<D, S, T, ST, SYM, V>
+impl<D, S, T, ST, SYM, VS, VT> Context<D, S, T, ST, SYM, VS, VT>
 where
-    D: Datable,
-    S: Spatial<V>,
-    T: Temporal<V>,
-    ST: SpaceTemporal<V>,
-    SYM: Symbolic,
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
 {
     /// Creates a new context with the given node capacity.
     pub fn with_capacity(id: u64, name: &str, capacity: usize) -> Self {

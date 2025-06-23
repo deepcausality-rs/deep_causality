@@ -13,27 +13,31 @@ mod display;
 mod identifiable;
 
 #[derive(Debug, Copy, Clone, Hash)]
-pub struct Contextoid<D, S, T, ST, SYM, V>
+pub struct Contextoid<D, S, T, ST, SYM, VS, VT>
 where
-    D: Datable,
-    S: Spatial<V>,
-    T: Temporal<V>,
-    ST: SpaceTemporal<V>,
-    SYM: Symbolic,
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
 {
     id: u64,
-    vertex_type: ContextoidType<D, S, T, ST, SYM, V>,
+    vertex_type: ContextoidType<D, S, T, ST, SYM, VS, VT>,
 }
 
-impl<D, S, T, ST, SYM, V> Contextoid<D, S, T, ST, SYM, V>
+impl<D, S, T, ST, SYM, VS, VT> Contextoid<D, S, T, ST, SYM, VS, VT>
 where
-    D: Datable,
-    S: Spatial<V>,
-    T: Temporal<V>,
-    ST: SpaceTemporal<V>,
-    SYM: Symbolic,
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
 {
-    pub fn new(id: u64, vertex_type: ContextoidType<D, S, T, ST, SYM, V>) -> Self {
+    pub fn new(id: u64, vertex_type: ContextoidType<D, S, T, ST, SYM, VS, VT>) -> Self {
         Self { id, vertex_type }
     }
 }

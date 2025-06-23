@@ -3,14 +3,15 @@
 
 use super::*;
 
-impl< D, S, T, ST, SYM, V> Identifiable for Causaloid<'_, D, S, T, ST, SYM, V>
+impl< D, S, T, ST, SYM, VS, VT> Identifiable for Causaloid<'_, D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,
-    S: Spatial<V> + Clone,
-    T: Temporal<V> + Clone,
-    ST: SpaceTemporal<V> + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
     SYM: Symbolic + Clone,
-    V: Clone,
+    VS: Clone,
+    VT: Clone,
 {
     fn id(&self) -> u64 {
         self.id

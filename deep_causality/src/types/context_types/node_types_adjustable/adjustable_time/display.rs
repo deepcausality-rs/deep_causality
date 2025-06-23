@@ -1,23 +1,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
-use std::fmt::{Debug, Display, Formatter};
+use std::fmt::{Display, Formatter};
 
 use super::*;
 
-impl<T> Display for AdjustableTime<T>
-where
-    T: Debug
-        + Default
-        + Add<T, Output = T>
-        + Sub<T, Output = T>
-        + Mul<T, Output = T>
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + PartialOrd,
-{
+impl Display for AdjustableTime {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,

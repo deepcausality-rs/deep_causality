@@ -26,17 +26,19 @@ use crate::traits::contextuable::temporal::Temporal;
 ///
 /// Methods return Result or Option types for error handling.
 ///
-pub trait ContextuableGraph<D, S, T, ST, SYM, V>
+pub trait ContextuableGraph<D, S, T, ST, SYM, VS, VT>
 where
-    D: Datable,
-    S: Spatial<V>,
-    T: Temporal<V>,
-    ST: SpaceTemporal<V>,
-    SYM: Symbolic,
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
 {
-    fn add_node(&mut self, value: Contextoid<D, S, T, ST, SYM, V>) -> usize;
+    fn add_node(&mut self, value: Contextoid<D, S, T, ST, SYM, VS, VT>) -> usize;
     fn contains_node(&self, index: usize) -> bool;
-    fn get_node(&self, index: usize) -> Option<&Contextoid<D, S, T, ST, SYM, V>>;
+    fn get_node(&self, index: usize) -> Option<&Contextoid<D, S, T, ST, SYM, VS, VT>>;
     fn remove_node(&mut self, index: usize) -> Result<(), ContextIndexError>;
     fn add_edge(
         &mut self,
@@ -75,13 +77,15 @@ where
 ///
 /// Methods return Result or Option types for error handling.
 ///
-pub trait ExtendableContextuableGraph<D, S, T, ST, SYM, V>
+pub trait ExtendableContextuableGraph<D, S, T, ST, SYM, VS, VT>
 where
-    D: Datable,
-    S: Spatial<V>,
-    T: Temporal<V>,
-    ST: SpaceTemporal<V>,
-    SYM: Symbolic,
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
 {
     // Creates a new context and returns the index of the new context.
     fn extra_ctx_add_new(&mut self, capacity: usize, default: bool) -> u64;
@@ -92,13 +96,13 @@ where
 
     fn extra_ctx_add_node(
         &mut self,
-        value: Contextoid<D, S, T, ST, SYM, V>,
+        value: Contextoid<D, S, T, ST, SYM, VS, VT>,
     ) -> Result<usize, ContextIndexError>;
     fn extra_ctx_contains_node(&self, index: usize) -> bool;
     fn extra_ctx_get_node(
         &self,
         index: usize,
-    ) -> Result<&Contextoid<D, S, T, ST, SYM, V>, ContextIndexError>;
+    ) -> Result<&Contextoid<D, S, T, ST, SYM, VS, VT>, ContextIndexError>;
     fn extra_ctx_remove_node(&mut self, index: usize) -> Result<(), ContextIndexError>;
     fn extra_ctx_add_edge(
         &mut self,

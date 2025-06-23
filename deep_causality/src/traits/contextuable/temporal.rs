@@ -13,10 +13,10 @@ use crate::prelude::{Identifiable, TimeScale};
 ///
 /// # Notes
 /// The numeric type `V` must support ordering and arithmetic if used for inference.
-pub trait Temporal<V>: Identifiable {
+pub trait Temporal<VT>: Identifiable {
     /// Returns the unit scale of time (e.g. `TimeScale::Milliseconds`).
     fn time_scale(&self) -> TimeScale;
 
     /// Returns a reference to the numeric time unit (e.g. 0, 100, 32768).
-    fn time_unit(&self) -> &V;
+    fn time_unit(&self) -> &VT;
 }
