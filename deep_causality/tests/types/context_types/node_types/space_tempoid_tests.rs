@@ -3,14 +3,7 @@
 use deep_causality::prelude::{
     Identifiable, SpaceTime, TimeScale,
 };
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 use deep_causality::traits::contextuable::space_temporal::SpaceTemporal;
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
-use deep_causality::traits::contextuable::spatial::Spatial;
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 use deep_causality::traits::contextuable::temporal::Temporal;
 
 #[test]

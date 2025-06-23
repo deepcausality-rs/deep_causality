@@ -2,9 +2,10 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 //
 
+mod temporable;
 mod identifiable;
 mod display;
-mod temporable;
+mod adjustable;
 
 use deep_causality_macros::Constructor;
 
@@ -27,15 +28,15 @@ use deep_causality_macros::Constructor;
 ///
 /// # Examples
 /// ```rust
-/// use deep_causality::prelude::{EntropicTime, Temporal, TimeScale};
+/// use deep_causality::prelude::{AdjustableEntropicTime, Temporal, TimeScale};
 ///
-/// let t1 = EntropicTime::new(1, 0); // system start
-/// let t2 = EntropicTime::new(2, 1); // one entropy event later
+/// let t1 = AdjustableEntropicTime::new(1, 0); // system start
+/// let t2 = AdjustableEntropicTime::new(2, 1); // one entropy event later
 ///
 /// assert!(t1.time_unit() < t2.time_unit());
 /// ```
 #[derive(Constructor, Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub struct EntropicTime {
+pub struct AdjustableEntropicTime {
     /// Unique ID for this time instance
     pub id: u64,
 

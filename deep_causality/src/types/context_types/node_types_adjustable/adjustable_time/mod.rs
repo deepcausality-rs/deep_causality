@@ -1,20 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use deep_causality_macros::Constructor;
-use std::fmt::Debug;
-
-use crate::prelude::TimeScale;
-
-mod adjustable;
-mod display;
-mod getters;
-mod identifiable;
-mod temporable;
-
-#[derive(Constructor, Debug, Copy, Clone, Eq, PartialEq)]
-pub struct AdjustableTime {
-    id: u64,
-    time_scale: TimeScale,
-    time_unit: u64,
-}
+pub mod adjustable_discrete_time;
+pub mod adjustable_entropic_time;
+pub mod adjustable_euclidean_time;
+pub mod adjustable_lorentzian_time;
+pub mod adjustable_symbolic_time;
+pub mod adjustable_time_kind;

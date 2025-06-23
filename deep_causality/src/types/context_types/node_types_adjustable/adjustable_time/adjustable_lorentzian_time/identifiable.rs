@@ -2,9 +2,9 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 //
 
-use crate::prelude::{EntropicTime, Identifiable};
+use crate::prelude::{Identifiable, AdjustableLorentzianTime};
 
-impl Identifiable for EntropicTime {
+impl Identifiable for AdjustableLorentzianTime {
     fn id(&self) -> u64 {
         self.id
     }
