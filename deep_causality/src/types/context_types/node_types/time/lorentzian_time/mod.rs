@@ -32,7 +32,7 @@ use crate::prelude::TimeScale;
 ///
 /// assert_eq!(t.id(), 1);
 /// assert_eq!(t.time_scale(), TimeScale::Second);
-/// assert_eq!(*t.time_unit(), 2.71828);
+/// assert_eq!(*t.time_unit(), std::f64::consts::E);
 /// ```
 ///
 /// # Use Cases

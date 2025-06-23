@@ -44,7 +44,7 @@ mod adjustable;
 /// use deep_causality::prelude::*;
 ///
 /// // Represents a 90-degree rotation around the Z-axis
-/// let q = QuaternionSpace::new(1, [0.7071068, 0.0, 0.0, 0.7071068]);
+/// let q = QuaternionSpace::new(1, [std::f64::consts::FRAC_1_SQRT_2, 0.0, 0.0, std::f64::consts::FRAC_1_SQRT_2]);
 ///
 /// println!("{}", q);
 /// assert_eq!(q.dimension(), 4);
