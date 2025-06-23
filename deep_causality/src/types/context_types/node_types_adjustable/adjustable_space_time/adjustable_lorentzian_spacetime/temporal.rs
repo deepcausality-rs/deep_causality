@@ -8,7 +8,7 @@ impl Temporal<f64> for AdjustableLorentzianSpacetime {
     fn time_scale(&self) -> TimeScale {
         self.time_scale
     }
-    fn time_unit(&self) -> &f64 {
-        &self.t
+    fn time_unit(&self) -> f64 {
+        self.t
     }
 }

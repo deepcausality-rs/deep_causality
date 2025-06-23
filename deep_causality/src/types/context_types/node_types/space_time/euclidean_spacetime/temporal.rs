@@ -9,7 +9,7 @@ impl Temporal<f64> for EuclideanSpacetime {
         self.time_scale
     }
 
-    fn time_unit(&self) -> &f64 {
-        &self.t
+    fn time_unit(&self) -> f64 {
+        self.t
     }
 }

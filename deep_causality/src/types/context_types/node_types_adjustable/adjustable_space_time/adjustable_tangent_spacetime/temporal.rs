@@ -8,7 +8,7 @@ impl Temporal<f64> for AdjustableTangentSpacetime {
     fn time_scale(&self) -> TimeScale {
         TimeScale::Second
     }
-    fn time_unit(&self) -> &f64 {
-        &self.t
+    fn time_unit(&self) -> f64 {
+        self.t
     }
 }

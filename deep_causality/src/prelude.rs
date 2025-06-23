@@ -86,7 +86,12 @@ pub use crate::types::context_types::node_types::symbol::BaseSymbol;
 pub use crate::types::context_types::node_types::symbol_spacetime::causal_set_spacetime::CausalSetSpacetime;
 pub use crate::types::context_types::node_types::symbol_spacetime::conformal_spacetime::ConformalSpacetime;
 // Time context node types.
-pub use crate::types::context_types::node_types::time::Time;
+pub use crate::types::context_types::node_types::time::discrete_time::DiscreteTime;
+pub use crate::types::context_types::node_types::time::entropic_time::EntropicTime;
+pub use crate::types::context_types::node_types::time::euclidean_time::EuclideanTime;
+pub use crate::types::context_types::node_types::time::lorentzian_time::LorentzianTime;
+pub use crate::types::context_types::node_types::time::symbolic_time::{SymbolicTimeUnit, SymbolicTime};
+pub use crate::types::context_types::node_types::time::time_kind::TimeKind;
 // Adjustable context node types.
 pub use crate::types::context_types::node_types_adjustable::adjustable_data::*;
 // Adjustable space node types.

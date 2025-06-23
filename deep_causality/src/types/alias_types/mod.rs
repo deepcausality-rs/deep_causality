@@ -3,7 +3,7 @@
 
 use crate::prelude::{
     BaseSymbol, CausalityError, Causaloid, CausaloidGraph, Context, Contextoid, Data,
-    EuclideanSpace, EuclideanSpacetime, SymbolicResult, Time,
+    EuclideanSpace, EuclideanSpacetime, EuclideanTime, SymbolicResult,
 };
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
@@ -43,7 +43,7 @@ pub type BaseCausaloid<'l> = Causaloid<
     'l,
     Data<BaseNumberType>,
     EuclideanSpace,
-    Time,
+    EuclideanTime,
     EuclideanSpacetime,
     BaseSymbol,
     BaseFloatType,
@@ -55,7 +55,7 @@ pub type BaseCausaloidVec<'l> = Vec<
         'l,
         Data<BaseNumberType>,
         EuclideanSpace,
-        Time,
+        EuclideanTime,
         EuclideanSpacetime,
         BaseSymbol,
         BaseFloatType,
@@ -69,7 +69,7 @@ pub type BaseCausalMap<'l> = HashMap<
         'l,
         Data<BaseNumberType>,
         EuclideanSpace,
-        Time,
+        EuclideanTime,
         EuclideanSpacetime,
         BaseSymbol,
         BaseFloatType,
@@ -82,7 +82,7 @@ pub type BaseCausalGraph<'l> = CausaloidGraph<
         'l,
         Data<BaseNumberType>,
         EuclideanSpace,
-        Time,
+        EuclideanTime,
         EuclideanSpacetime,
         BaseSymbol,
         BaseFloatType,
@@ -94,7 +94,7 @@ pub type BaseCausalGraph<'l> = CausaloidGraph<
 pub type BaseContext = Context<
     Data<BaseNumberType>,
     EuclideanSpace,
-    Time,
+    EuclideanTime,
     EuclideanSpacetime,
     BaseSymbol,
     BaseFloatType,
@@ -104,7 +104,7 @@ pub type BaseContext = Context<
 pub type BaseContextoid = Contextoid<
     Data<BaseNumberType>,
     EuclideanSpace,
-    Time,
+    EuclideanTime,
     EuclideanSpacetime,
     BaseSymbol,
     BaseFloatType,

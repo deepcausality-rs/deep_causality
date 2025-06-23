@@ -18,5 +18,5 @@ pub trait Temporal<VT>: Identifiable {
     fn time_scale(&self) -> TimeScale;
 
     /// Returns a reference to the numeric time unit (e.g. 0, 100, 32768).
-    fn time_unit(&self) -> &VT;
+    fn time_unit(&self) -> VT;
 }

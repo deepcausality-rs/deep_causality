@@ -2,10 +2,9 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 //
 
-use crate::prelude::Identifiable;
-use crate::types::context_types::node_types::time::Time;
+use crate::prelude::{DiscreteTime, Identifiable};
 
-impl Identifiable for Time {
+impl Identifiable for DiscreteTime {
     fn id(&self) -> u64 {
         self.id
     }
