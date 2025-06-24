@@ -4,6 +4,7 @@
 mod display;
 mod identifiable;
 mod temporable;
+mod scalar_projector;
 
 use crate::prelude::{
     AdjustableDiscreteTime, AdjustableEntropicTime, AdjustableEuclideanTime,

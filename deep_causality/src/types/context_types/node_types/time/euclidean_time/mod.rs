@@ -2,11 +2,12 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 mod display;
-mod temporable;
 mod identifiable;
+mod scalar_projector;
+mod temporable;
 
-use deep_causality_macros::Constructor;
 use crate::prelude::TimeScale;
+use deep_causality_macros::Constructor;
 
 /// A time model based on **Euclidean (imaginary) time**, primarily used in theoretical and computational physics.
 ///
@@ -65,11 +66,11 @@ use crate::prelude::TimeScale;
 #[derive(Constructor, Debug, Copy, Clone, PartialEq)]
 pub struct EuclideanTime {
     /// Unique numeric identifier for the time instance.
-    pub id: u64,
+    id: u64,
 
     /// Resolution or interpretation of the time unit (e.g., Seconds, Milliseconds).
-    pub time_scale: TimeScale,
+    time_scale: TimeScale,
 
     /// The Euclidean (imaginary) time value, represented as a real number.
-    pub time_unit: f64,
+    time_unit: f64,
 }

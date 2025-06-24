@@ -6,6 +6,7 @@ mod temporable;
 mod identifiable;
 mod display;
 mod adjustable;
+mod scalar_projector;
 
 use deep_causality_macros::Constructor;
 

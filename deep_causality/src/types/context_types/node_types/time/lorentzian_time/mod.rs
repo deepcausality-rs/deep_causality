@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-mod temporable;
-mod identifiable;
 mod display;
+mod identifiable;
+mod scalar_projector;
+mod temporable;
 
-use deep_causality_macros::Constructor;
 use crate::prelude::TimeScale;
+use deep_causality_macros::Constructor;
 
 /// A time model representing **Lorentzian (physical) time** in relativistic spacetimes.
 ///
@@ -61,11 +62,11 @@ use crate::prelude::TimeScale;
 #[derive(Constructor, Debug, Copy, Clone, PartialEq)]
 pub struct LorentzianTime {
     /// Unique numeric identifier for the time instance.
-    pub id: u64,
+    id: u64,
 
     /// The scale/granularity of the time unit (e.g., Seconds, Nanoseconds).
-    pub time_scale: TimeScale,
+    time_scale: TimeScale,
 
     /// Real-valued coordinate time in seconds or scaled units.
-    pub time_unit: f64,
+    time_unit: f64,
 }

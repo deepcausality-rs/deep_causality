@@ -26,21 +26,20 @@ pub type SymbolicCausalFn = fn(SymbolicRepr) -> Result<SymbolicResult, Causality
 pub type ProbabilisticCausalFn = fn(NumericalValue) -> Result<NumericalValue, CausalityError>; // Bayes update, etc.
 
 // Fn aliases for causal function with and without context
-pub type CausalFn = fn(NumericalValue) -> Result<bool, CausalityError>;
+pub type CausalFn = fn(&NumericalValue) -> Result<bool, CausalityError>;
 
-pub type ContextualCausalDataFn<'l, D, S, T, ST, SYM, VS, VT> =
-    fn(NumericalValue, &'l Context<D, S, T, ST, SYM, VS, VT>) -> Result<bool, CausalityError>;
+pub type ContextualCausalDataFn<D, S, T, ST, SYM, VS, VT> =
+    fn(&NumericalValue, &Arc<Context<D, S, T, ST, SYM, VS, VT>>) -> Result<bool, CausalityError>;
 
-pub type ContextualCausalFn<'l, D, S, T, ST, SYM, VS, VT> =
-    fn(&'l Context<D, S, T, ST, SYM, VS, VT>) -> Result<bool, CausalityError>;
+pub type ContextualCausalFn<D, S, T, ST, SYM, VS, VT> =
+    fn(&Arc<Context<D, S, T, ST, SYM, VS, VT>>) -> Result<bool, CausalityError>;
 
 // Default type aliases for basic causaloids
 
 pub type BaseNumberType = u64;
 pub type BaseFloatType = f64;
 
-pub type BaseCausaloid<'l> = Causaloid<
-    'l,
+pub type BaseCausaloid = Causaloid<
     Data<BaseNumberType>,
     EuclideanSpace,
     EuclideanTime,
@@ -50,9 +49,8 @@ pub type BaseCausaloid<'l> = Causaloid<
     BaseFloatType,
 >;
 
-pub type BaseCausaloidVec<'l> = Vec<
+pub type BaseCausaloidVec= Vec<
     Causaloid<
-        'l,
         Data<BaseNumberType>,
         EuclideanSpace,
         EuclideanTime,
@@ -63,10 +61,9 @@ pub type BaseCausaloidVec<'l> = Vec<
     >,
 >;
 
-pub type BaseCausalMap<'l> = HashMap<
+pub type BaseCausalMap = HashMap<
     usize,
     Causaloid<
-        'l,
         Data<BaseNumberType>,
         EuclideanSpace,
         EuclideanTime,
@@ -77,9 +74,8 @@ pub type BaseCausalMap<'l> = HashMap<
     >,
 >;
 
-pub type BaseCausalGraph<'l> = CausaloidGraph<
+pub type BaseCausalGraph = CausaloidGraph<
     Causaloid<
-        'l,
         Data<BaseNumberType>,
         EuclideanSpace,
         EuclideanTime,

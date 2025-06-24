@@ -43,7 +43,7 @@ use std::fmt::{Display, Formatter};
 /// let state_id = 1;
 /// let version = 1;
 /// let initial_data = 45.0;
-/// let state = CausalState::new(state_id, version, initial_data, &causaloid);
+/// let state = CausalState::new(state_id, version, initial_data, causaloid);
 ///
 /// // Evaluate the state
 /// match state.eval() {
@@ -63,7 +63,7 @@ use std::fmt::{Display, Formatter};
 /// }
 /// ```
 #[derive(Getters, Constructor, Clone, Debug)]
-pub struct CausalState<'l, D, S, T, ST, SYM, VS, VT>
+pub struct CausalState<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
@@ -80,10 +80,10 @@ where
     /// Numerical data used for state evaluation
     data: NumericalValue,
     /// Reference to a causaloid that defines when this state is active
-    causaloid: &'l Causaloid<'l, D, S, T, ST, SYM, VS, VT>,
+    causaloid: Causaloid<D, S, T, ST, SYM, VS, VT>,
 }
 
-impl<D, S, T, ST, SYM, VS, VT> CausalState<'_, D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, SYM, VS, VT> CausalState<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
@@ -126,7 +126,7 @@ where
     }
 }
 
-impl<D, S, T, ST, SYM, VS, VT> Display for CausalState<'_, D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, SYM, VS, VT> Display for CausalState<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,

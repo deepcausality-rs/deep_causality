@@ -11,7 +11,7 @@ impl Identifiable for TimeKind {
             TimeKind::Entropic(t) => t.id(),
             TimeKind::Discrete(t) => t.id(),
             TimeKind::Lorentzian(t) => t.id(),
-            TimeKind::Symbolic(t) => t.id(),
+            // TimeKind::Symbolic(t) => t.id(),
         }
     }
 }

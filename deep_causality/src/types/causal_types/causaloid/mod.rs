@@ -12,12 +12,12 @@ mod getters;
 mod identifiable;
 mod part_eq;
 
-pub type CausalVec<'l, D, S, T, ST, SYM, VS, VT> = Vec<Causaloid<'l, D, S, T, ST, SYM, VS, VT>>;
-pub type CausalGraph<'l, D, S, TM, ST, SYM, VS, VT> =
-    CausaloidGraph<Causaloid<'l, D, S, TM, ST, SYM, VS, VT>>;
+pub type CausalVec<D, S, T, ST, SYM, VS, VT> = Vec<Causaloid<D, S, T, ST, SYM, VS, VT>>;
+pub type CausalGraph<D, S, TM, ST, SYM, VS, VT> =
+    CausaloidGraph<Causaloid<D, S, TM, ST, SYM, VS, VT>>;
 
 #[derive(Clone)]
-pub struct Causaloid<'l, D, S, T, ST, SYM, VS, VT>
+pub struct Causaloid<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
@@ -31,17 +31,17 @@ where
     active: ArcRWLock<bool>,
     causal_type: CausaloidType,
     causal_fn: Option<CausalFn>,
-    context_causal_fn: Option<ContextualCausalDataFn<'l, D, S, T, ST, SYM, VS, VT>>,
-    context: Option<&'l Context<D, S, T, ST, SYM, VS, VT>>,
+    context_causal_fn: Option<ContextualCausalDataFn<D, S, T, ST, SYM, VS, VT>>,
+    context: Option<Arc<Context<D, S, T, ST, SYM, VS, VT>>>,
     has_context: bool,
-    causal_coll: Option<&'l CausalVec<'l, D, S, T, ST, SYM, VS, VT>>,
-    causal_graph: Option<&'l CausalGraph<'l, D, S, T, ST, SYM, VS, VT>>,
-    description: &'l str,
+    causal_coll: Option<Arc<CausalVec<D, S, T, ST, SYM, VS, VT>>>,
+    causal_graph: Option<Arc<CausalGraph<D, S, T, ST, SYM, VS, VT>>>,
+    description: String,
     ty: PhantomData<(VS, VT)>,
 }
 
 // Constructors
-impl<'l, D, S, T, ST, SYM, VS, VT> Causaloid<'l, D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, SYM, VS, VT> Causaloid<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
@@ -53,7 +53,7 @@ where
 {
     /// Singleton constructor. Assumes causality function is valid.
     /// Only use for non-fallible construction i.e.verified a-priori knowledge about the correctness of the causal function.
-    pub fn new(id: IdentificationValue, causal_fn: CausalFn, description: &'l str) -> Self {
+    pub fn new(id: IdentificationValue, causal_fn: CausalFn, description: &str) -> Self {
         Causaloid {
             id,
             active: Arc::new(RwLock::new(false)),
@@ -64,16 +64,16 @@ where
             has_context: false,
             causal_coll: None,
             causal_graph: None,
-            description,
+            description: description.to_string(),
             ty: PhantomData,
         }
     }
 
     pub fn new_with_context(
         id: IdentificationValue,
-        context_causal_fn: ContextualCausalDataFn<'l, D, S, T, ST, SYM, VS, VT>,
-        context: Option<&'l Context<D, S, T, ST, SYM, VS, VT>>,
-        description: &'l str,
+        context_causal_fn: ContextualCausalDataFn<D, S, T, ST, SYM, VS, VT>,
+        context: Arc<Context<D, S, T, ST, SYM, VS, VT>>,
+        description: &str,
     ) -> Self {
         Causaloid {
             id,
@@ -81,11 +81,11 @@ where
             causal_type: CausaloidType::Singleton,
             causal_fn: None,
             context_causal_fn: Some(context_causal_fn),
-            context,
+            context: Some(context),
             has_context: true,
             causal_coll: None,
             causal_graph: None,
-            description,
+            description: description.to_string(),
             ty: PhantomData,
         }
     }
@@ -99,8 +99,8 @@ where
     /// about the correctness of the causal graph.
     pub fn from_causal_collection(
         id: IdentificationValue,
-        causal_coll: &'l Vec<Causaloid<'l, D, S, T, ST, SYM, VS, VT>>,
-        description: &'l str,
+        causal_coll: Arc<Vec<Causaloid<D, S, T, ST, SYM, VS, VT>>>,
+        description: &str,
     ) -> Self {
         Causaloid {
             id,
@@ -109,7 +109,7 @@ where
             causal_fn: None,
             causal_coll: Some(causal_coll),
             causal_graph: None,
-            description,
+            description: description.to_string(),
             context: None,
             has_context: false,
             context_causal_fn: None,
@@ -123,19 +123,19 @@ where
     /// or embedded into a causal graph.
     pub fn from_causal_collection_with_context(
         id: IdentificationValue,
-        causal_coll: &'l Vec<Causaloid<'l, D, S, T, ST, SYM, VS, VT>>,
-        context: Option<&'l Context<D, S, T, ST, SYM, VS, VT>>,
-        description: &'l str,
+        causal_coll:Vec<Causaloid<D, S, T, ST, SYM, VS, VT>>,
+        context: Arc<Context<D, S, T, ST, SYM, VS, VT>>,
+        description: &str,
     ) -> Self {
         Causaloid {
             id,
             active: Arc::new(RwLock::new(false)),
             causal_type: CausaloidType::Collection,
             causal_fn: None,
-            causal_coll: Some(causal_coll),
+            causal_coll: Some(Arc::new(causal_coll)),
             causal_graph: None,
-            description,
-            context,
+            description: description.to_string(),
+            context: Some(context),
             has_context: true,
             context_causal_fn: None,
             ty: PhantomData,
@@ -151,8 +151,8 @@ where
     /// about the correctness of the causal graph.
     pub fn from_causal_graph(
         id: IdentificationValue,
-        causal_graph: &'l CausaloidGraph<Causaloid<'l, D, S, T, ST, SYM, VS, VT>>,
-        description: &'l str,
+        causal_graph: Arc<CausaloidGraph<Causaloid<D, S, T, ST, SYM, VS, VT>>>,
+        description: &str,
     ) -> Self {
         Causaloid {
             id,
@@ -161,7 +161,7 @@ where
             causal_fn: None,
             causal_coll: None,
             causal_graph: Some(causal_graph),
-            description,
+            description: description.to_string(),
             context: None,
             has_context: false,
             context_causal_fn: None,
@@ -175,9 +175,9 @@ where
     /// or embedded into another causal graph.
     pub fn from_causal_graph_with_context(
         id: IdentificationValue,
-        causal_graph: &'l CausaloidGraph<Causaloid<'l, D, S, T, ST, SYM, VS, VT>>,
-        context: Option<&'l Context<D, S, T, ST, SYM, VS, VT>>,
-        description: &'l str,
+        causal_graph: Arc<CausaloidGraph<Causaloid<D, S, T, ST, SYM, VS, VT>>>,
+        context: Arc<Context<D, S, T, ST, SYM, VS, VT>>,
+        description: &str,
     ) -> Self {
         Causaloid {
             id,
@@ -186,8 +186,8 @@ where
             causal_fn: None,
             causal_coll: None,
             causal_graph: Some(causal_graph),
-            description,
-            context,
+            description: description.to_string(),
+            context: Some(context),
             has_context: true,
             context_causal_fn: None,
             ty: PhantomData,

@@ -50,6 +50,9 @@ pub use crate::traits::inferable::InferableReasoning;
 // Observable Traits
 pub use crate::traits::observable::Observable;
 pub use crate::traits::observable::ObservableReasoning;
+// Scalar Traits
+pub use crate::traits::scalar::scalar_projector::ScalarProjector;
+pub use crate::traits::scalar::scalar_value::ScalarValue;
 //
 // Types
 //
@@ -111,7 +114,6 @@ pub use crate::types::context_types::node_types_adjustable::adjustable_time::adj
 pub use crate::types::context_types::node_types_adjustable::adjustable_time::adjustable_euclidean_time::AdjustableEuclideanTime;
 pub use crate::types::context_types::node_types_adjustable::adjustable_time::adjustable_lorentzian_time::AdjustableLorentzianTime;
 pub use crate::types::context_types::node_types_adjustable::adjustable_time::adjustable_time_kind::AdjustableTimeKind;
-
 // Other context types 
 pub use crate::types::context_types::relation_kind::*;
 pub use crate::types::context_types::time_scale::TimeScale;

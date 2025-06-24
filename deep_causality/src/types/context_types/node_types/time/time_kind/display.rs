@@ -12,7 +12,7 @@ impl fmt::Display for TimeKind {
             TimeKind::Entropic(t) => write!(f, "EntropicTime(id: {}, t: {})", t.id(), t.time_unit()),
             TimeKind::Discrete(t) => write!(f, "DiscreteTime(id: {}, tick: {})", t.id(), t.time_unit()),
             TimeKind::Lorentzian(t) => write!(f, "LorentzianTime(id: {}, t: {})", t.id(), t.time_unit()),
-            TimeKind::Symbolic(t) => write!(f, "SymbolicTime(id: {}, {})", t.id(), t),
+            // TimeKind::Symbolic(t) => write!(f, "SymbolicTime(id: {}, {})", t.id(), t),
         }
     }
 }

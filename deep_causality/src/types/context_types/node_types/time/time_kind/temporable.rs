@@ -11,7 +11,7 @@ impl Temporal<f64> for TimeKind {
             TimeKind::Euclidean(t) => t.time_scale(),
             TimeKind::Entropic(t) => t.time_scale(),
             TimeKind::Lorentzian(t) => t.time_scale(),
-            TimeKind::Symbolic(t) => t.time_scale(),
+            // TimeKind::Symbolic(t) => t.time_scale(),
         }
     }
 
@@ -21,7 +21,7 @@ impl Temporal<f64> for TimeKind {
             TimeKind::Euclidean(t) => t.time_unit(),
             TimeKind::Discrete(t) => t.time_unit() as f64,
             TimeKind::Entropic(t) => t.time_unit() as f64,
-            TimeKind::Symbolic(t) => t.time_unit() as f64,
+            // TimeKind::Symbolic(t) => t.time_unit() as f64,
         }
     }
 }

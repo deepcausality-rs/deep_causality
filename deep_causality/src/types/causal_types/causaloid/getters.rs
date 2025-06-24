@@ -4,7 +4,7 @@
 use super::*;
 
 // Getters
-impl<'l, D, S, T, ST, SYM, VS, VT> Causaloid<'l, D, S, T, ST, SYM, VS, VT>
+impl<'l, D, S, T, ST, SYM, VS, VT> Causaloid<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
@@ -17,16 +17,19 @@ where
     pub fn active(&self) -> bool {
         self.is_active()
     }
-    pub fn causal_collection(&self) -> Option<&CausalVec<'l, D, S, T, ST, SYM, VS, VT>> {
-        self.causal_coll
+    pub fn context(&self) -> &Option<Arc<Context<D, S, T, ST, SYM, VS, VT>>> {
+        &self.context
     }
-    pub fn causal_graph(&self) -> Option<&CausalGraph<'l, D, S, T, ST, SYM, VS, VT>> {
-        self.causal_graph
+
+    pub fn causal_coll(&self) -> &Option<Arc<CausalVec<D, S, T, ST, SYM, VS, VT>>> {
+        &self.causal_coll
     }
-    pub fn description(&self) -> &'l str {
-        self.description
+
+    pub fn causal_graph(&self) -> &Option<Arc<CausalGraph<D, S, T, ST, SYM, VS, VT>>> {
+        &self.causal_graph
     }
-    pub fn context(&self) -> Option<&'l Context<D, S, T, ST, SYM, VS, VT>> {
-        self.context
+
+    pub fn description(&self) -> &str {
+        &self.description
     }
 }

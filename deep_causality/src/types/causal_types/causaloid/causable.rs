@@ -12,7 +12,7 @@ use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
 use crate::types::causal_types::causaloid::causal_type::CausaloidType;
 
-impl<D, S, T, ST, SYM, VS, VT> Causable for Causaloid<'_, D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, SYM, VS, VT> Causable for Causaloid<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
@@ -77,9 +77,10 @@ where
 
             let context = self
                 .context
+                .as_ref()
                 .expect("Causaloid::verify_single_cause: context is None");
 
-            let res = (contextual_causal_fn)(obs.to_owned(), context)?;
+            let res = (contextual_causal_fn)(obs, context)?;
 
             let mut guard = self.active.write().unwrap();
             *guard = res;
@@ -89,7 +90,7 @@ where
             let causal_fn = self
                 .causal_fn
                 .expect("Causaloid::verify_single_cause: causal_fn is None");
-            let res = (causal_fn)(obs.to_owned())?;
+            let res = (causal_fn)(obs)?;
 
             let mut guard = self.active.write().unwrap();
             *guard = res;

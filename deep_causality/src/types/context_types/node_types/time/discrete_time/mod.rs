@@ -3,6 +3,7 @@
 
 mod display;
 mod identifiable;
+mod scalar_projector;
 mod temporable;
 
 use crate::prelude::TimeScale;
@@ -59,12 +60,11 @@ use deep_causality_macros::Constructor;
 #[derive(Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct DiscreteTime {
     /// Unique identifier for this discrete time instance.
-    pub id: u64,
+    id: u64,
 
     /// Semantic scale of the ticks (e.g., Steps, Cycles, Milliseconds).
-    pub tick_scale: TimeScale,
+    tick_scale: TimeScale,
 
     /// The actual tick count (monotonic unit of progression).
-    pub tick_unit: u64,
+    tick_unit: u64,
 }
-

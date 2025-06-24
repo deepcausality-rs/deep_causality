@@ -2,9 +2,10 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 //
 
-mod identifiable;
 mod display;
+mod identifiable;
 mod temporable;
+mod scalar_projector;
 
 use deep_causality_macros::Constructor;
 
@@ -37,8 +38,8 @@ use deep_causality_macros::Constructor;
 #[derive(Constructor, Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct EntropicTime {
     /// Unique ID for this time instance
-    pub id: u64,
+    id: u64,
 
     /// Irreversible "tick" counter driven by entropy or state progression
-    pub entropy_tick: u64,
+    entropy_tick: u64,
 }

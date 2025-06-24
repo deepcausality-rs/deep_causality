@@ -4,15 +4,16 @@
 
 mod display;
 mod identifiable;
+mod scalar_projector;
 mod temporable;
 
-use crate::prelude::{DiscreteTime, EntropicTime, EuclideanTime, LorentzianTime, SymbolicTime};
+use crate::prelude::{DiscreteTime, EntropicTime, EuclideanTime, LorentzianTime};
 
 /// An enumeration of supported time models for unified, heterogeneous temporal reasoning.
 ///
 /// `TimeKind` provides a polymorphic abstraction over multiple **time semantics**
 /// used in both physical and symbolic systems. It allows causal models,
-/// simulations, or reasoning engines to switch between **continuous**, **discrete**, 
+/// simulations, or reasoning engines to switch between **continuous**, **discrete**,
 /// and **qualitative** time representations in a unified way.
 ///
 /// This is especially useful in hybrid environments where:
@@ -25,7 +26,7 @@ use crate::prelude::{DiscreteTime, EntropicTime, EuclideanTime, LorentzianTime, 
 /// - Spacetime graphs mixing physics and logic
 /// - Abstract symbolic timelines
 /// - Causal models across domains (AI, physics, engineering)
-/// 
+///
 /// # Variants
 ///
 /// - `Lorentzian(LorentzianTime)`
@@ -43,9 +44,9 @@ use crate::prelude::{DiscreteTime, EntropicTime, EuclideanTime, LorentzianTime, 
 ///   - Unitless or context-dependent
 ///   - Used in agent-based models, control systems, and RL environments
 ///
-/// - `Symbolic(SymbolicTime)`
-///   - Qualitative, label-based time points (e.g., `"Before(A)"`, `"T1"`)
-///   - Useful in symbolic AI, planning, explainable graphs, or formal logic
+// /// - `Symbolic(SymbolicTime)`
+// ///   - Qualitative, label-based time points (e.g., `"Before(A)"`, `"T1"`)
+// ///   - Useful in symbolic AI, planning, explainable graphs, or formal logic
 ///
 /// # Example
 ///
@@ -75,7 +76,6 @@ use crate::prelude::{DiscreteTime, EntropicTime, EuclideanTime, LorentzianTime, 
 /// a principled and type-safe solution.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TimeKind {
-    
     /// Imaginary-time axis for quantum/statistical models via Wick rotation.
     Euclidean(EuclideanTime),
 
@@ -87,7 +87,6 @@ pub enum TimeKind {
 
     /// Real-valued coordinate time in Lorentzian (causal, relativistic) geometry.
     Lorentzian(LorentzianTime),
-    
-    /// Symbolic or qualitative time labels (e.g., "before event A", "T1").
-    Symbolic(SymbolicTime),
+    // /// Symbolic or qualitative time labels (e.g., "before event A", "T1").
+    // Symbolic(SymbolicTime),
 }

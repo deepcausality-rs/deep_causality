@@ -6,6 +6,7 @@ use deep_causality_macros::Constructor;
 mod display;
 mod identifiable;
 mod temporable;
+mod scalar_projector;
 
 /// A symbolic time representation for use in logic-based, non-numeric, or event-driven causal systems.
 ///
@@ -65,9 +66,17 @@ mod temporable;
 /// should override raw comparisons.
 #[derive(Constructor, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct SymbolicTime {
-    pub id: u64,
-    pub time: SymbolicTimeUnit,
+     id: u64,
+    time: SymbolicTimeUnit,
 }
+
+impl SymbolicTime{
+
+    pub fn time(&self) -> &SymbolicTimeUnit {
+        &self.time
+    }
+}
+
 
 /// Represents a symbolic unit of time with a qualitative relationship to named events.
 ///
