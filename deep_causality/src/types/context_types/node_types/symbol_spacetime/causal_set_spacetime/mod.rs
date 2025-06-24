@@ -2,6 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use std::collections::BTreeSet;
+use std::fmt::Display;
 
 /// A symbolic, discrete model of spacetime based on causal set theory (CST).
 ///
@@ -72,5 +73,15 @@ impl CausalSetSpacetime {
     /// Returns the causal depth (number of direct predecessors)
     pub fn causal_depth(&self) -> usize {
         self.predecessors.len()
+    }
+}
+
+impl Display for CausalSetSpacetime {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "CausalSetSpacetime {{ id: {}, label: {:?}, predecessors: {:?} }}",
+            self.id, self.label, self.predecessors
+        )
     }
 }

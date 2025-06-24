@@ -2,6 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use std::collections::BTreeSet;
+use std::fmt::Display;
 
 /// A minimal spacetime model preserving only causal and angular structure,
 /// based on conformal geometry.
@@ -69,5 +70,15 @@ impl ConformalSpacetime {
     /// Returns number of causal outputs (fanout of light cone)
     pub fn fanout(&self) -> usize {
         self.causal_links.len()
+    }
+}
+
+impl Display for ConformalSpacetime {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "ConformalSpacetime {{ id: {}, label: {:?} }}",
+            self.id, self.label
+        )
     }
 }
