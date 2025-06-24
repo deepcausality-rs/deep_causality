@@ -139,10 +139,11 @@ where
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "CausalState: \n id: {} version: {} \n data: {:?} causaloid: N/Implemented",
+            "CausalState: \n id: {} version: {} \n data: {:?} causaloid: {}",
             self.id,
             self.version,
-            self.data, //self.causaloid,
+            self.data, 
+            self.causaloid,
         )
     }
 }

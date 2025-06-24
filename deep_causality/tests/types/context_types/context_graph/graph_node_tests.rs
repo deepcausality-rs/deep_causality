@@ -2,7 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::{
-    BaseContextoid, Contextoid, ContextoidType, Contextuable, Identifiable, Root,
+    BaseContextoid, Contextoid, ContextoidType, Identifiable, Root,
 };
 
 fn get_test_contextoid() -> BaseContextoid {

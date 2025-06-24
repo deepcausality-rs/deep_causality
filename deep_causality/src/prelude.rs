@@ -77,7 +77,7 @@ pub use crate::types::context_types::node_types::space::euclidean_space::Euclide
 pub use crate::types::context_types::node_types::space::geo_space::GeoSpace;
 pub use crate::types::context_types::node_types::space::ned_space::NedSpace;
 pub use crate::types::context_types::node_types::space::quaternion_space::QuaternionSpace;
-pub use crate::types::context_types::node_types::space::space_kind;
+pub use crate::types::context_types::node_types::space::space_kind::SpaceKind;
 // Space time context node types.
 pub use crate::types::context_types::node_types::space_time::euclidean_spacetime::EuclideanSpacetime;
 pub use crate::types::context_types::node_types::space_time::lorentzian_spacetime::LorentzianSpacetime;

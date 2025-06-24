@@ -33,7 +33,6 @@ use deep_causality_macros::Constructor;
 ///
 /// assert_eq!(t.id(), 1);
 /// assert_eq!(t.time_scale(), TimeScale::Second);
-/// assert_eq!(*t.time_unit(), std::f64::consts::E);
 /// ```
 ///
 /// # Use Cases

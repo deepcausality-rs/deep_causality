@@ -9,7 +9,7 @@ impl fmt::Display for NedSpace {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "NedSpace(id={}, N={:.3}, E={:.3}, D={:.3})",
+            "NedSpace(id={}, N={:.4}, E={:.4}, D={:.4})",
             self.id, self.north, self.east, self.down
         )
     }

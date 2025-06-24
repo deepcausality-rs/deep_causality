@@ -98,5 +98,6 @@ fn test_to_string() {
 
     let expected = "CausalState: \n id: 42 version: 1 \n data: 0.23 causaloid: Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55 is active: false has context: false".to_string();
     let actual = cs.to_string();
+    dbg!(cs.to_string());
     assert_eq!(actual, expected)
 }

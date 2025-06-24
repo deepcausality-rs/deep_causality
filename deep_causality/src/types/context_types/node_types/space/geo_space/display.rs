@@ -15,7 +15,7 @@ impl Display for GeoSpace {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "GeoSpace(id=\"{}\", lat={:.6}, lon={:.6}, alt={}m)",
+            "GeoSpace(id={}, x={:.4}, y={:.4}, z={:.4})",
             self.id, self.lat, self.lon, self.alt
         )
     }

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
 use std::fmt::{Display, Formatter};
 
 use deep_causality_macros::Constructor;

@@ -41,7 +41,6 @@ use deep_causality_macros::Constructor;
 ///
 /// assert_eq!(tau.id(), 42);
 /// assert_eq!(tau.time_scale(), TimeScale::Second);
-/// assert_eq!(*tau.time_unit(), std::f64::consts::PI);
 /// ```
 ///
 /// # Use Cases

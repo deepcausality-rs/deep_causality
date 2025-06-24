@@ -5,10 +5,15 @@ use crate::prelude::{Coordinate, EuclideanSpace};
 
 impl Coordinate<f64> for EuclideanSpace {
     fn dimension(&self) -> usize {
-        self.coords.len()
+        3
     }
 
     fn coordinate(&self, index: usize) -> &f64 {
-        &self.coords[index] // panics if index ≥ 3 — per contract
+        match index {
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            _ => panic!("GeoSpace: index out of bounds"),
+        }
     }
 }

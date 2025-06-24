@@ -5,7 +5,7 @@ use crate::prelude::{MinkowskiSpacetime, SpaceTemporalInterval};
 
 impl SpaceTemporalInterval for MinkowskiSpacetime {
     fn time(&self) -> f64 {
-        self.t as f64
+        self.t 
     }
     fn position(&self) -> [f64; 3] {
         [self.x, self.y, self.z]

@@ -2,7 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::{
-    BaseContextoid, Contextoid, ContextoidType, Contextuable, Data, EuclideanSpace,
+    BaseContextoid, Contextoid, ContextoidType, Data, EuclideanSpace,
     EuclideanSpacetime, EuclideanTime, Root, TimeScale,
 };
 
@@ -77,9 +77,8 @@ fn test_tempoid_none() {
 #[test]
 fn test_spaceoid_some() {
     let id = 1;
-    let coord = [0.0, 0.0, 0.0];
 
-    let d = EuclideanSpace::new(id, coord);
+    let d = EuclideanSpace::new(id, 1.0, 2.0, 3.0);
     let node: BaseContextoid = Contextoid::new(id, ContextoidType::Spaceoid(d));
     assert!(node.vertex_type().spaceoid().is_some());
     //

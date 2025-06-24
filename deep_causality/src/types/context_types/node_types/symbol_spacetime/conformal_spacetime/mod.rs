@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use deep_causality_macros::Constructor;
+use std::collections::BTreeSet;
 
 /// A minimal spacetime model preserving only causal and angular structure,
 /// based on conformal geometry.
@@ -33,7 +33,7 @@ use deep_causality_macros::Constructor;
 ///
 /// assert!(n1.can_affect(2));
 /// ```
-#[derive(Constructor, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ConformalSpacetime {
     /// Unique identifier for this event
     pub id: u64,
@@ -43,6 +43,16 @@ pub struct ConformalSpacetime {
 
     /// Causally reachable nodes (light cone structure only)
     pub causal_links: std::collections::BTreeSet<u64>,
+}
+
+impl ConformalSpacetime {
+    pub fn new(id: u64, label: Option<String>) -> Self {
+        Self {
+            id,
+            label,
+            causal_links: BTreeSet::new(),
+        }
+    }
 }
 
 impl ConformalSpacetime {

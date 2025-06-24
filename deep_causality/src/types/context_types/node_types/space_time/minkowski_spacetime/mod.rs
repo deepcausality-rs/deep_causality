@@ -42,7 +42,7 @@ mod temporal;
 /// use deep_causality::prelude::*;
 ///
 /// let e1 = MinkowskiSpacetime::new(1, 1.0, 0.0, 0.0, 0.0, TimeScale::Second);
-/// let e2 = MinkowskiSpacetime::new(2, 3.0, 3.0, 4.0, 0.0, TimeScale::Second);
+/// let e2 = MinkowskiSpacetime::new(2, 3.0, 3.0, 4.0, 1.0, TimeScale::Second);
 ///
 /// let s2 = e1.interval_squared(&e2);
 /// println!("s² = {}", s2);

@@ -24,7 +24,7 @@ pub fn get_1d_array_grid(val: i32) -> AdjustmentData {
     ag
 }
 
-pub fn get_3d_array_grid(v1: i32, v2: i32, v3: i32) -> AdjustmentData {
+pub fn _get_3d_array_grid(v1: i32, v2: i32, v3: i32) -> AdjustmentData {
     let array_type = ArrayType::Array3D;
     let ag: ArrayGrid<i32, WIDTH, HEIGHT, DEPTH, TIME> = ArrayGrid::new(array_type);
 
@@ -41,7 +41,7 @@ pub fn get_3d_array_grid(v1: i32, v2: i32, v3: i32) -> AdjustmentData {
     ag
 }
 
-pub fn get_4d_array_grid(v1: i32, v2: i32, v3: i32, t: i32) -> AdjustmentData {
+pub fn _get_4d_array_grid(v1: i32, v2: i32, v3: i32, t: i32) -> AdjustmentData {
     let array_type = ArrayType::Array4D;
     let ag: ArrayGrid<i32, WIDTH, HEIGHT, DEPTH, TIME> = ArrayGrid::new(array_type);
 

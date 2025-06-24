@@ -9,7 +9,7 @@ impl fmt::Display for EcefSpace {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "EcefSpace(id={}, x={:.3}, y={:.3}, z={:.3})",
+            "EcefSpace(id={}, x={:.4}, y={:.4}, z={:.4})",
             self.id, self.x, self.y, self.z
         )
     }

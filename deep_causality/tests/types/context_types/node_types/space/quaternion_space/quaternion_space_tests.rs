@@ -1,0 +1,50 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
+use deep_causality::prelude::*;
+
+#[test]
+fn test_identifiable_trait() {
+    let q = QuaternionSpace::new(1, [1.0, 0.0, 0.0, 0.0]);
+    assert_eq!(q.id(), 1);
+}
+
+#[test]
+fn test_coordinate_trait() {
+    let q = QuaternionSpace::new(2, [0.5, 0.5, 0.5, 0.5]);
+
+    assert_eq!(q.dimension(), 4);
+    assert_eq!(*q.coordinate(0), 0.5);
+    assert_eq!(*q.coordinate(1), 0.5);
+    assert_eq!(*q.coordinate(2), 0.5);
+    assert_eq!(*q.coordinate(3), 0.5);
+}
+
+#[test]
+#[should_panic(expected = "index out of bounds")]
+fn test_coordinate_out_of_bounds() {
+    let q = QuaternionSpace::new(1, [1.0, 0.0, 0.0, 0.0]);
+    let _ = q.coordinate(4); // Should panic
+}
+
+#[test]
+fn test_display_trait() {
+    let q = QuaternionSpace::new(1, [1.0, 0.0, 0.0, 0.0]);
+    let output = format!("{}", q);
+    assert_eq!(output, "QuaternionSpace(id=1, w=1.0000, x=0.0000, y=0.0000, z=0.0000)");
+}
+
+#[test]
+fn test_metric_trait() {
+    let q1 = QuaternionSpace::new(1, [1.0, 0.0, 0.0, 0.0]);
+    let q2 = QuaternionSpace::new(2, [0.0, 1.0, 0.0, 0.0]);
+
+    let dist = q1.distance(&q2);
+    assert_eq!(dist, (2.0f64).sqrt()); // sqrt((1 - 0)^2 + (0 - 1)^2)
+}
+
+#[test]
+fn test_spatial_trait_is_implemented() {
+    fn assert_spatial_impl<T: Spatial<f64>>() {}
+    assert_spatial_impl::<QuaternionSpace>();
+}
