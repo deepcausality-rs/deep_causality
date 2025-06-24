@@ -2,7 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 //
 
-use crate::prelude::{Identifiable, AdjustableQuaternionSpace};
+use crate::prelude::{AdjustableQuaternionSpace, Identifiable};
 
 impl Identifiable for AdjustableQuaternionSpace {
     fn id(&self) -> u64 {

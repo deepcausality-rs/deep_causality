@@ -2,8 +2,8 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 //
 
-use std::fmt;
 use crate::prelude::EcefSpace;
+use std::fmt;
 
 impl fmt::Display for EcefSpace {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

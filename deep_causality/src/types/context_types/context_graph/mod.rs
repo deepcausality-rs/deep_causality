@@ -15,7 +15,8 @@ mod indexable;
 
 type ExtraContext<D, S, T, ST, SYM, VS, VT> = UltraGraph<Contextoid<D, S, T, ST, SYM, VS, VT>>;
 
-type ExtraContextMap<D, S, T, ST, SYM, VS, VT> = HashMap<u64, ExtraContext<D, S, T, ST, SYM, VS, VT>>;
+type ExtraContextMap<D, S, T, ST, SYM, VS, VT> =
+    HashMap<u64, ExtraContext<D, S, T, ST, SYM, VS, VT>>;
 
 pub struct Context<D, S, T, ST, SYM, VS, VT>
 where

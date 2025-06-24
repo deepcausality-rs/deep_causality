@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use std::sync::Arc;
-use deep_causality_macros::{Constructor, Getters};
 use crate::prelude::{Assumption, Causaloid, Context, Datable, Identifiable, Symbolic};
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
+use deep_causality_macros::{Constructor, Getters};
+use std::sync::Arc;
 
 #[derive(Getters, Constructor)]
 pub struct Model<D, S, T, ST, SYM, VS, VT>

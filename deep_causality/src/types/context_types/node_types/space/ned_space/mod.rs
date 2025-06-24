@@ -6,10 +6,10 @@ use deep_causality_macros::Constructor;
 
 mod coordinate;
 mod display;
+mod getters;
 mod identifiable;
 mod metric;
 mod spatial;
-mod getters;
 
 /// A local tangent-plane spatial context using the North-East-Down (NED) reference frame.
 ///
@@ -67,4 +67,3 @@ pub struct NedSpace {
     /// Vertical distance down from the reference point (in meters, positive = downward)
     down: f64,
 }
-

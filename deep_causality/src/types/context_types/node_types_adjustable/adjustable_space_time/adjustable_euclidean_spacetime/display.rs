@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use std::fmt;
 use crate::prelude::AdjustableEuclideanSpacetime;
+use std::fmt;
 
 impl fmt::Display for AdjustableEuclideanSpacetime {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

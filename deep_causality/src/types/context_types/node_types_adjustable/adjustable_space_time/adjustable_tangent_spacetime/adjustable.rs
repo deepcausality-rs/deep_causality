@@ -6,7 +6,7 @@ use crate::prelude::{Adjustable, AdjustableTangentSpacetime, AdjustmentError, Up
 use dcl_data_structures::prelude::{ArrayGrid, PointIndex};
 
 /// Updates the position of the TangentSpacetime node.
-/// The metric tensor is updated via the 'update_metric_tensor' method. 
+/// The metric tensor is updated via the 'update_metric_tensor' method.
 impl Adjustable<f64> for AdjustableTangentSpacetime {
     fn update<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,

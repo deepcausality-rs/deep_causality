@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use std::fmt::{Debug};
+use std::fmt::Debug;
 
 use deep_causality_macros::Constructor;
 
-mod display;
-mod identifiable;
-mod spatial;
 mod coordinate;
-mod metric;
+mod display;
 mod getters;
+mod identifiable;
+mod metric;
+mod spatial;
 
 /// A 3-dimensional spatial context represented in standard Euclidean coordinates (x, y, z).
 ///
@@ -41,7 +41,6 @@ mod getters;
 /// ```
 #[derive(Constructor, Debug, Clone, PartialEq)]
 pub struct EuclideanSpace {
-      id: u64,
-      coords: [f64; 3],
+    id: u64,
+    coords: [f64; 3],
 }
-

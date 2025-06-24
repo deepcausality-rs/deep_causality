@@ -6,7 +6,7 @@ use crate::prelude::{EntropicTime, Temporal, TimeScale};
 
 impl Temporal<u64> for EntropicTime {
     fn time_scale(&self) -> TimeScale {
-        TimeScale::NoScale 
+        TimeScale::NoScale
     }
 
     fn time_unit(&self) -> u64 {

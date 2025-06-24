@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use deep_causality::prelude::{
-    Adjustable, AdjustableSpaceTime, Identifiable, TimeScale,
-};
-use deep_causality::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::types::context_types::adjustable::utils;
+use deep_causality::prelude::{Adjustable, AdjustableSpaceTime, Identifiable, TimeScale};
+use deep_causality::traits::contextuable::space_temporal::SpaceTemporal;
 
 #[test]
 fn test_update() {

@@ -24,7 +24,7 @@ pub enum SymbolicRepresentation {
 
     /// A logical NOT operation: ¬A
     Not(Box<SymbolicRepresentation>),
-    
+
     /// A logical implication: A → B
     Implies(Box<SymbolicRepresentation>, Box<SymbolicRepresentation>),
 

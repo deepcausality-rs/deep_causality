@@ -5,7 +5,7 @@
 use crate::prelude::AdjustableEuclideanSpace;
 
 impl AdjustableEuclideanSpace {
-      pub fn coords(&self) -> [f64; 3] {
-            self.coords
-      }
+    pub fn coords(&self) -> [f64; 3] {
+        self.coords
+    }
 }

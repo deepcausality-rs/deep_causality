@@ -4,8 +4,8 @@
 
 mod display;
 mod identifiable;
-mod temporable;
 mod scalar_projector;
+mod temporable;
 
 use deep_causality_macros::Constructor;
 

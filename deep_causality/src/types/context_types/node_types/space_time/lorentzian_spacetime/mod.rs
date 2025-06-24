@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-mod identifiable;
 mod coordinate;
-mod spatial;
-mod temporal;
+mod identifiable;
 mod space_temporal;
 mod space_temporal_interval;
+mod spatial;
+mod temporal;
 
-use deep_causality_macros::Constructor;
 use crate::prelude::TimeScale;
-
+use deep_causality_macros::Constructor;
 
 /// A 4-dimensional spacetime context based on Lorentzian geometry, as used in General Relativity.
 ///
@@ -52,10 +51,10 @@ use crate::prelude::TimeScale;
 /// ```
 #[derive(Constructor, Debug, Clone, PartialEq)]
 pub struct LorentzianSpacetime {
-     id: u64,
-     x: f64,  // space in meters
-     y: f64,
-     z: f64,
-     t: f64,  // time in SI time unit
+    id: u64,
+    x: f64, // space in meters
+    y: f64,
+    z: f64,
+    t: f64,                // time in SI time unit
     time_scale: TimeScale, // SI time unit
 }

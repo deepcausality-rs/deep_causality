@@ -49,7 +49,6 @@ pub struct CausalSetSpacetime {
 }
 
 impl CausalSetSpacetime {
-
     /// Adds a causal link (edge) from another event that precedes this one.
     pub fn add_predecessor(&mut self, parent_id: u64) {
         self.predecessors.insert(parent_id);

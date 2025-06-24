@@ -2,7 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 //
 
-use crate::prelude::{Coordinate, AdjustableTangentSpacetime};
+use crate::prelude::{AdjustableTangentSpacetime, Coordinate};
 
 impl Coordinate<f64> for AdjustableTangentSpacetime {
     fn dimension(&self) -> usize {

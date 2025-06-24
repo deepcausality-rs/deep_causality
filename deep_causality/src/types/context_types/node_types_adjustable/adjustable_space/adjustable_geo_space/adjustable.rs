@@ -1,7 +1,7 @@
-use dcl_data_structures::grid_type::ArrayGrid;
-use dcl_data_structures::prelude::PointIndex;
 use crate::errors::{AdjustmentError, UpdateError};
 use crate::prelude::{Adjustable, AdjustableGeoSpace};
+use dcl_data_structures::grid_type::ArrayGrid;
+use dcl_data_structures::prelude::PointIndex;
 
 impl Adjustable<f64> for AdjustableGeoSpace {
     fn update<const W: usize, const H: usize, const D: usize, const C: usize>(

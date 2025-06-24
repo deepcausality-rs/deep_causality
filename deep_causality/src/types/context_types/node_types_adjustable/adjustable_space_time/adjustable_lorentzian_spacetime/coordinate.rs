@@ -2,7 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 //
 
-use crate::prelude::{Coordinate, AdjustableLorentzianSpacetime};
+use crate::prelude::{AdjustableLorentzianSpacetime, Coordinate};
 
 impl Coordinate<f64> for AdjustableLorentzianSpacetime {
     fn dimension(&self) -> usize {

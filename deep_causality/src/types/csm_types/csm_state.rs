@@ -33,9 +33,9 @@ use std::fmt::{Display, Formatter};
 /// // Create a causaloid that defines when the state is active
 /// let id = 1;
 /// let description = "Temperature threshold detector";
-/// fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
+/// fn causal_fn(obs: &NumericalValue) -> Result<bool, CausalityError> {
 ///     let threshold = 75.0;
-///     Ok(obs >= threshold)
+///     Ok(obs >= &threshold)
 /// }
 /// let causaloid = BaseCausaloid::new(id, causal_fn, description);
 ///

@@ -6,10 +6,10 @@ use deep_causality_macros::Constructor;
 
 mod coordinate;
 mod display;
+mod getters;
 mod identifiable;
 mod metric;
 mod spatial;
-mod getters;
 
 /// A spatial context in Earth-Centered, Earth-Fixed (ECEF) coordinates.
 ///
@@ -32,4 +32,3 @@ pub struct EcefSpace {
     y: f64,
     z: f64,
 }
-

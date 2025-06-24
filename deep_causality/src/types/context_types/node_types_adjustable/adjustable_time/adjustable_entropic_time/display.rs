@@ -10,7 +10,9 @@ impl Display for AdjustableEntropicTime {
         write!(
             f,
             "AdjustableEntropicTime: id: {}, tick_scale: {}, tick_unit: {:?}",
-            self.id, self.time_scale(), self.time_unit()
+            self.id,
+            self.time_scale(),
+            self.time_unit()
         )
     }
 }

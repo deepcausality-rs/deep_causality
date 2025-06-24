@@ -1,9 +1,8 @@
-
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use crate::prelude::{AdjustableGeoSpace, Metric};
-    
+
 // Metric (with simple haversine approximation)
 impl Metric<f64> for AdjustableGeoSpace {
     fn distance(&self, other: &Self) -> f64 {
@@ -13,8 +12,9 @@ impl Metric<f64> for AdjustableGeoSpace {
         let dlon = (other.lon - self.lon).to_radians();
 
         let a = (dlat / 2.0).sin().powi(2)
-            + self.lat.to_radians().cos() * other.lat.to_radians().cos()
-            * (dlon / 2.0).sin().powi(2);
+            + self.lat.to_radians().cos()
+                * other.lat.to_radians().cos()
+                * (dlon / 2.0).sin().powi(2);
 
         let c = 2.0 * a.sqrt().atan2((1.0 - a).sqrt());
         let surface_distance = radius * c;

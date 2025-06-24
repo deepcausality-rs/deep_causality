@@ -14,7 +14,7 @@ where
     VT: Clone,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        self.fmt_causaloid(f)   
+        self.fmt_causaloid(f)
     }
 }
 

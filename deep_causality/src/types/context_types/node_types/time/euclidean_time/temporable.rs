@@ -2,8 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 //
 
-use crate::prelude::{TimeScale, Temporal, EuclideanTime};
-
+use crate::prelude::{EuclideanTime, Temporal, TimeScale};
 
 impl Temporal<f64> for EuclideanTime {
     fn time_scale(&self) -> TimeScale {

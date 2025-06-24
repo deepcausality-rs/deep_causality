@@ -2,7 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 //
 
-use crate::prelude::{Identifiable, AdjustableEuclideanSpacetime};
+use crate::prelude::{AdjustableEuclideanSpacetime, Identifiable};
 
 impl Identifiable for AdjustableEuclideanSpacetime {
     fn id(&self) -> u64 {

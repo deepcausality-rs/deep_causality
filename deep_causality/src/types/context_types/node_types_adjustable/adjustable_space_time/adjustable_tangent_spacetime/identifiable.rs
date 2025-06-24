@@ -2,7 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 //
 
-use crate::prelude::{Identifiable, AdjustableTangentSpacetime};
+use crate::prelude::{AdjustableTangentSpacetime, Identifiable};
 
 impl Identifiable for AdjustableTangentSpacetime {
     fn id(&self) -> u64 {

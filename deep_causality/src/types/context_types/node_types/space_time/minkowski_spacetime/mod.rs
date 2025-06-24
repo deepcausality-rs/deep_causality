@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use deep_causality_macros::Constructor;
 use crate::prelude::TimeScale;
+use deep_causality_macros::Constructor;
 
 mod coordinate;
+mod display;
 mod identifiable;
 mod space_temporal;
 mod space_temporal_interval;
 mod spatial;
 mod temporal;
-mod display;
 
 /// A 4D spacetime context based on the Minkowski metric of special relativity.
 ///
@@ -58,7 +58,7 @@ pub struct MinkowskiSpacetime {
     y: f64,
     /// Spatial Z coordinate in meters
     z: f64,
-    /// time in SI time unit, 
+    /// time in SI time unit,
     t: f64,
     time_scale: TimeScale, // SI time unit
 }

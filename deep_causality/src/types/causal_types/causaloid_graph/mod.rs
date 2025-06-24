@@ -16,14 +16,14 @@ mod default;
 #[derive(Clone)]
 pub struct CausaloidGraph<T>
 where
-    T: Causable + PartialEq + Clone +Display,
+    T: Causable + PartialEq + Clone + Display,
 {
     graph: CausalGraph<T>,
 }
 
 impl<T> CausaloidGraph<T>
 where
-    T: Causable + PartialEq + Clone +Display,
+    T: Causable + PartialEq + Clone + Display,
 {
     pub fn new() -> Self {
         Self {

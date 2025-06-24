@@ -1,11 +1,11 @@
-mod temporable;
-mod identifiable;
-mod display;
 mod adjustable;
+mod display;
+mod identifiable;
 mod scalar_projector;
+mod temporable;
 
-use deep_causality_macros::Constructor;
 use crate::prelude::TimeScale;
+use deep_causality_macros::Constructor;
 
 /// A time model based on **Euclidean (imaginary) time**, primarily used in theoretical and computational physics.
 ///

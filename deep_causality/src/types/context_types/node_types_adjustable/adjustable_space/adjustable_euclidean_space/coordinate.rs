@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use crate::prelude::{Coordinate, AdjustableEuclideanSpace};
-
+use crate::prelude::{AdjustableEuclideanSpace, Coordinate};
 
 impl Coordinate<f64> for AdjustableEuclideanSpace {
     fn dimension(&self) -> usize {

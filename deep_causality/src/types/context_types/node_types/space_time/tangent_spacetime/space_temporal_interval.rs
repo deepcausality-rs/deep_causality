@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 //
-use crate::prelude::{TangentSpacetime, SpaceTemporalInterval};
+use crate::prelude::{SpaceTemporalInterval, TangentSpacetime};
 use crate::traits::contextuable::metric_tensor::MetricTensor4D;
 
 impl SpaceTemporalInterval for TangentSpacetime {

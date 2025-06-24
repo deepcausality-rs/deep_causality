@@ -4,4 +4,3 @@
 use crate::prelude::{AdjustableEuclideanSpace, Spatial};
 
 impl Spatial<f64> for AdjustableEuclideanSpace {}
-

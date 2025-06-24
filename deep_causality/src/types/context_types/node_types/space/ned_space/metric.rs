@@ -3,7 +3,7 @@
 //
 
 use crate::prelude::{Metric, NedSpace};
-    
+
 impl Metric<f64> for NedSpace {
     fn distance(&self, other: &Self) -> f64 {
         let dn = self.north - other.north;

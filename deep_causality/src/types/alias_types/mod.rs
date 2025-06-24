@@ -49,7 +49,7 @@ pub type BaseCausaloid = Causaloid<
     BaseFloatType,
 >;
 
-pub type BaseCausaloidVec= Vec<
+pub type BaseCausaloidVec = Vec<
     Causaloid<
         Data<BaseNumberType>,
         EuclideanSpace,

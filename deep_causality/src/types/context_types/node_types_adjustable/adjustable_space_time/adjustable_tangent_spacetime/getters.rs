@@ -10,7 +10,7 @@ impl AdjustableTangentSpacetime {
     pub fn velocity(&self) -> [f64; 4] {
         [self.dt, self.dx, self.dy, self.dz]
     }
-    
+
     /// Returns the coordinate-time velocity (∂t/∂τ)
     pub fn time_velocity(&self) -> f64 {
         self.dt

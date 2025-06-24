@@ -2,7 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 //
 
-use crate::prelude::{Coordinate, AdjustableNedSpace};
+use crate::prelude::{AdjustableNedSpace, Coordinate};
 
 impl Coordinate<f64> for AdjustableNedSpace {
     fn dimension(&self) -> usize {

@@ -6,7 +6,8 @@ use crate::prelude::{EuclideanSpacetime, Metric};
 
 impl Metric<f64> for EuclideanSpacetime {
     fn distance(&self, other: &Self) -> f64 {
-        self.coords.iter()
+        self.coords
+            .iter()
             .zip(other.coords.iter())
             .map(|(a, b)| (a - b).powi(2))
             .sum::<f64>()

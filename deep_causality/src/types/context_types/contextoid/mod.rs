@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use std::hash::Hash;
 use crate::prelude::{ContextoidType, Datable, Symbolic};
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
+use std::hash::Hash;
 
 pub mod contextoid_type;
 mod contextuable;

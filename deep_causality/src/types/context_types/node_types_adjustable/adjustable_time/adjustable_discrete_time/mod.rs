@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-mod temporable;
-mod identifiable;
-mod display;
 mod adjustable;
+mod display;
+mod identifiable;
 mod scalar_projector;
+mod temporable;
 
 use crate::prelude::TimeScale;
 use deep_causality_macros::Constructor;
@@ -69,4 +69,3 @@ pub struct AdjustableDiscreteTime {
     /// The actual tick count (monotonic unit of progression).
     pub tick_unit: u64,
 }
-

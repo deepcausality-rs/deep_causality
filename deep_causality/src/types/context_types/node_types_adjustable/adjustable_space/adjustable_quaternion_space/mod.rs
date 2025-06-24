@@ -4,13 +4,13 @@
 
 use deep_causality_macros::Constructor;
 
+mod adjustable;
 mod coordinate;
 mod display;
 mod getters;
 mod identifiable;
 mod metric;
 mod spatial;
-mod adjustable;
 
 /// A spatial context representing 3D orientation using unit quaternions.
 ///

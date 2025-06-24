@@ -2,7 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 //
 
-use crate::prelude::{Identifiable, AdjustableTimeKind};
+use crate::prelude::{AdjustableTimeKind, Identifiable};
 
 impl Identifiable for AdjustableTimeKind {
     fn id(&self) -> u64 {

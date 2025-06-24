@@ -10,7 +10,9 @@ impl Display for EntropicTime {
         write!(
             f,
             "EntropicTime: id: {}, tick_scale: {}, tick_unit: {:?}",
-            self.id, self.time_scale(), self.time_unit()
+            self.id,
+            self.time_scale(),
+            self.time_unit()
         )
     }
 }

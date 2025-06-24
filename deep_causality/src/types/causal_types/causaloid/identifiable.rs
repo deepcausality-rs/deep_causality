@@ -3,7 +3,7 @@
 
 use super::*;
 
-impl< D, S, T, ST, SYM, VS, VT> Identifiable for Causaloid<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, SYM, VS, VT> Identifiable for Causaloid<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,

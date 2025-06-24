@@ -93,7 +93,9 @@ pub use crate::types::context_types::node_types::time::discrete_time::DiscreteTi
 pub use crate::types::context_types::node_types::time::entropic_time::EntropicTime;
 pub use crate::types::context_types::node_types::time::euclidean_time::EuclideanTime;
 pub use crate::types::context_types::node_types::time::lorentzian_time::LorentzianTime;
-pub use crate::types::context_types::node_types::time::symbolic_time::{SymbolicTimeUnit, SymbolicTime};
+pub use crate::types::context_types::node_types::time::symbolic_time::{
+    SymbolicTime, SymbolicTimeUnit,
+};
 pub use crate::types::context_types::node_types::time::time_kind::TimeKind;
 // Adjustable context node types.
 pub use crate::types::context_types::node_types_adjustable::adjustable_data::*;
@@ -114,7 +116,7 @@ pub use crate::types::context_types::node_types_adjustable::adjustable_time::adj
 pub use crate::types::context_types::node_types_adjustable::adjustable_time::adjustable_euclidean_time::AdjustableEuclideanTime;
 pub use crate::types::context_types::node_types_adjustable::adjustable_time::adjustable_lorentzian_time::AdjustableLorentzianTime;
 pub use crate::types::context_types::node_types_adjustable::adjustable_time::adjustable_time_kind::AdjustableTimeKind;
-// Other context types 
+// Other context types
 pub use crate::types::context_types::relation_kind::*;
 pub use crate::types::context_types::time_scale::TimeScale;
 // CSM types

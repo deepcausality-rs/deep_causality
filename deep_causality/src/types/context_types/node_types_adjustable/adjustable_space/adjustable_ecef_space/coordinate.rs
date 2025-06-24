@@ -2,7 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 //
 
-use crate::prelude::{Coordinate, AdjustableEcefSpace};
+use crate::prelude::{AdjustableEcefSpace, Coordinate};
 
 impl Coordinate<f64> for AdjustableEcefSpace {
     fn dimension(&self) -> usize {

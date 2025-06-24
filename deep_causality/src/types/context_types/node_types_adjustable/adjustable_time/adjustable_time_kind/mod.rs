@@ -3,8 +3,8 @@
 //
 mod display;
 mod identifiable;
-mod temporable;
 mod scalar_projector;
+mod temporable;
 
 use crate::prelude::{
     AdjustableDiscreteTime, AdjustableEntropicTime, AdjustableEuclideanTime,

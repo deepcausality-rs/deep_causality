@@ -3,7 +3,7 @@
 
 use crate::prelude::{EuclideanSpace, Metric};
 
-impl Metric<f64>  for EuclideanSpace {
+impl Metric<f64> for EuclideanSpace {
     fn distance(&self, other: &Self) -> f64 {
         self.coords
             .iter()

@@ -3,13 +3,13 @@
 
 use deep_causality_macros::Constructor;
 
+mod adjustable;
 mod coordinate;
 mod display;
 mod getters;
 mod identifiable;
 mod metric;
 mod spatial;
-mod adjustable;
 
 /// A non-Euclidean spatial context based on geodetic coordinates (WGS84).
 ///

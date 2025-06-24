@@ -79,6 +79,6 @@ pub trait SpaceTemporalInterval {
         let dy = y1 - y2;
         let dz = z1 - z2;
 
-        - (c * dt).powi(2) + dx.powi(2) + dy.powi(2) + dz.powi(2)
+        -(c * dt).powi(2) + dx.powi(2) + dy.powi(2) + dz.powi(2)
     }
 }

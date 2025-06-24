@@ -93,7 +93,7 @@ impl Adjustable<f64> for AdjustableEuclideanSpacetime {
                 "Adjustment failed, new Z data exceeds max f64 value ".into(),
             ));
         }
-        
+
         if adjusted_t > f64::MAX {
             return Err(AdjustmentError(
                 "Adjustment failed, new T data exceeds max f64 value ".into(),
@@ -105,7 +105,7 @@ impl Adjustable<f64> for AdjustableEuclideanSpacetime {
         self.coords[1] = adjusted_y;
         self.coords[2] = adjusted_z;
         self.t = adjusted_t;
-        
+
         Ok(())
     }
 }

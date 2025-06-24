@@ -2,7 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 //
 
-use crate::prelude::{Coordinate, AdjustableEuclideanSpacetime};
+use crate::prelude::{AdjustableEuclideanSpacetime, Coordinate};
 
 impl Coordinate<f64> for AdjustableEuclideanSpacetime {
     fn dimension(&self) -> usize {

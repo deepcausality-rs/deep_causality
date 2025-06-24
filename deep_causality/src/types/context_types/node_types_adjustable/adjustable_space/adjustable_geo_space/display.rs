@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
+use crate::prelude::AdjustableGeoSpace;
 use std::fmt;
 use std::fmt::{Display, Formatter};
-use crate::prelude::AdjustableGeoSpace;
 
 /// Implements human-readable formatting for a geographic spatial context.
 ///

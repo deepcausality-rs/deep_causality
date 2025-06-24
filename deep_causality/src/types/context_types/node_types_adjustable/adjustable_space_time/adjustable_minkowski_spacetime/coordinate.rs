@@ -2,7 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 //
 
-use crate::prelude::{Coordinate, AdjustableMinkowskiSpacetime};
+use crate::prelude::{AdjustableMinkowskiSpacetime, Coordinate};
 
 impl Coordinate<f64> for AdjustableMinkowskiSpacetime {
     fn dimension(&self) -> usize {

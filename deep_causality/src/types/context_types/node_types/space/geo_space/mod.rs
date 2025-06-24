@@ -10,7 +10,6 @@ mod identifiable;
 mod metric;
 mod spatial;
 
-
 /// A non-Euclidean spatial context based on geodetic coordinates (WGS84).
 ///
 /// `GeoSpace` represents a geographic location on Earth using the [WGS84](https://en.wikipedia.org/wiki/World_Geodetic_System) standard.

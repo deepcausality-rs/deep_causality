@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use std::fmt;
 use crate::prelude::SymbolicTime;
 use crate::types::context_types::node_types::time::symbolic_time::SymbolicTimeUnit;
+use std::fmt;
 
 impl fmt::Display for SymbolicTime {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -11,8 +11,9 @@ impl fmt::Display for SymbolicTime {
             SymbolicTimeUnit::Before(label, t) => write!(f, "#{}, Before({label}) @ {t}", self.id),
             SymbolicTimeUnit::Named(label, t) => write!(f, "#{}, Named({label}) @ {t}", self.id),
             SymbolicTimeUnit::After(label, t) => write!(f, "#{}, After({label}) @ {t}", self.id),
-            SymbolicTimeUnit::Simultaneous(labels, t) =>
-                write!(f, "#{}, Simultaneous({:?}) @ {t}", self.id, labels),
+            SymbolicTimeUnit::Simultaneous(labels, t) => {
+                write!(f, "#{}, Simultaneous({:?}) @ {t}", self.id, labels)
+            }
         }
     }
 }

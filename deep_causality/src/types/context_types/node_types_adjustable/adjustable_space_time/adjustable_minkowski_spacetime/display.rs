@@ -1,5 +1,5 @@
-use std::fmt;
 use crate::prelude::AdjustableMinkowskiSpacetime;
+use std::fmt;
 
 impl fmt::Display for AdjustableMinkowskiSpacetime {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

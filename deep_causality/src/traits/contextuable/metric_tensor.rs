@@ -24,4 +24,3 @@ pub trait MetricTensor4D {
     /// - In curved models, tensor should be valid under coordinate charts
     fn update_metric_tensor(&mut self, new_metric: [[f64; 4]; 4]);
 }
-
