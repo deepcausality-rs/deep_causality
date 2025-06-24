@@ -8,9 +8,9 @@ use dcl_data_structures::grid_type::ArrayGrid;
 use dcl_data_structures::prelude::PointIndex;
 
 impl Adjustable<f64> for AdjustableEuclideanSpace {
-    fn update<const W: usize, const H: usize, const D: usize, const C: usize>(
+    fn update<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize, const TIME: usize>(
         &mut self,
-        array_grid: &ArrayGrid<f64, W, H, D, C>,
+        array_grid: &ArrayGrid<f64, WIDTH, HEIGHT, DEPTH, TIME>,
     ) -> Result<(), UpdateError> {
         // Create a 3D PointIndex for each of the updated x,y,z coordinates
         let p1 = PointIndex::new3d(0, 0, 0);
@@ -22,30 +22,36 @@ impl Adjustable<f64> for AdjustableEuclideanSpace {
         let new_y = array_grid.get(p2);
         let new_z = array_grid.get(p3);
 
-        // Check if the new data are non zero and good to update
-        if new_x == f64::default() {
-            return Err(UpdateError("Update failed, new X data is ZERO".into()));
+        // Check if the adjusted data are safe to update i.e. not greater than max f64 value
+        if !new_x.is_finite() {
+            return Err(UpdateError(
+                "Update failed, new X value is not finite".into(),
+            ));
         }
 
-        if new_y == f64::default() {
-            return Err(UpdateError("Update failed, new Y data is ZERO".into()));
+        if !new_y.is_finite() {
+            return Err(UpdateError(
+                "Update failed, new Y value is not finite".into(),
+            ));
         }
 
-        if new_z == f64::default() {
-            return Err(UpdateError("Update failed, new Z data is ZERO".into()));
+        if !new_z.is_finite() {
+            return Err(UpdateError(
+                "Update failed, new Z value is not finite".into(),
+            ));
         }
 
         // Update the internal data
-        self.coords[0] = new_x;
-        self.coords[1] = new_y;
-        self.coords[2] = new_z;
+        self.x = new_x;
+        self.y = new_y;
+        self.z = new_z;
 
         Ok(())
     }
 
-    fn adjust<const W: usize, const H: usize, const D: usize, const C: usize>(
+    fn adjust<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize, const TIME: usize>(
         &mut self,
-        array_grid: &ArrayGrid<f64, W, H, D, C>,
+        array_grid: &ArrayGrid<f64, WIDTH, HEIGHT, DEPTH, TIME>,
     ) -> Result<(), AdjustmentError> {
         // Create a 3D PointIndex for each of the updated x,y,z coordinates
         let p1 = PointIndex::new3d(0, 0, 0);
@@ -58,33 +64,33 @@ impl Adjustable<f64> for AdjustableEuclideanSpace {
         let new_z = array_grid.get(p3);
 
         // Calculate the adjusted data by adding the new data to the current data
-        let adjusted_x = self.coords[0] + new_x;
-        let adjusted_y = self.coords[1] + new_y;
-        let adjusted_z = self.coords[2] + new_z;
+        let adjusted_x = self.x + new_x;
+        let adjusted_y = self.y + new_y;
+        let adjusted_z = self.z + new_z;
 
         // Check if the adjusted data are safe to update i.e. not greater than max f64 value
-        if adjusted_x > f64::MAX {
+        if !adjusted_x.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new X data exceeds max f64 value ".into(),
+                "Adjustment failed, new X value is not finite".into(),
             ));
         }
 
-        if adjusted_y > f64::MAX {
+        if !adjusted_y.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new Y data exceeds max f64 value ".into(),
+                "Adjustment failed, new Y value is not finite".into(),
             ));
         }
 
-        if adjusted_z > f64::MAX {
+        if !adjusted_z.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new Z data exceeds max f64 value ".into(),
+                "Adjustment failed, new Z value is not finite".into(),
             ));
         }
 
         // Update the internal data
-        self.coords[0] = adjusted_x;
-        self.coords[1] = adjusted_y;
-        self.coords[2] = adjusted_z;
+        self.x = adjusted_x;
+        self.y = adjusted_y;
+        self.z = adjusted_z;
 
         Ok(())
     }

@@ -23,6 +23,25 @@ impl Adjustable<f64> for AdjustableEcefSpace {
         let new_y = array_grid.get(p2);
         let new_z = array_grid.get(p3);
 
+        // Check if the adjusted data are safe to update
+        if !new_x.is_finite() {
+            return Err(UpdateError(
+                "Update failed, new X value is not finite".into(),
+            ));
+        }
+
+        if !new_y.is_finite() {
+            return Err(UpdateError(
+                "Update failed, new Y value is not finite".into(),
+            ));
+        }
+
+        if !new_z.is_finite() {
+            return Err(UpdateError(
+                "Update failed, new Z value is not finite".into(),
+            ));
+        }
+
         // Replace the internal data with the new data
         self.x = new_x;
         self.y = new_y;
@@ -50,22 +69,22 @@ impl Adjustable<f64> for AdjustableEcefSpace {
         let adjusted_y = self.y + new_y;
         let adjusted_z = self.z + new_z;
 
-        // Check if the adjusted data are safe to update i.e. not greater than max f64 value
-        if adjusted_x > f64::MAX {
+        // Check if the adjusted data are safe to update
+        if !adjusted_x.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new X data exceeds max f64 value ".into(),
+                "Adjustment failed, new X value is not finite".into(),
             ));
         }
 
-        if adjusted_y > f64::MAX {
+        if !adjusted_y.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new Y data exceeds max f64 value ".into(),
+                "Adjustment failed, new Y value is not finite".into(),
             ));
         }
 
-        if adjusted_z > f64::MAX {
+        if !adjusted_z.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new Z data exceeds max f64 value ".into(),
+                "Adjustment failed, new Z value is not finite".into(),
             ));
         }
 

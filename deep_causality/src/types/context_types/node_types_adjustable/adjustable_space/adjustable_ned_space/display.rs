@@ -9,7 +9,7 @@ impl fmt::Display for AdjustableNedSpace {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "NedSpace(id={}, N={:.3}, E={:.3}, D={:.3})",
+            "AdjustableNedSpace(id={}, N={:.3}, E={:.3}, D={:.3})",
             self.id, self.north, self.east, self.down
         )
     }

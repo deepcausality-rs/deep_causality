@@ -5,11 +5,9 @@ use crate::prelude::{AdjustableEuclideanSpace, Metric};
 
 impl Metric<f64> for AdjustableEuclideanSpace {
     fn distance(&self, other: &Self) -> f64 {
-        self.coords
-            .iter()
-            .zip(other.coords.iter())
-            .map(|(a, b)| (a - b).powi(2))
-            .sum::<f64>()
-            .sqrt()
+        let dx = self.x - other.x;
+        let dy = self.y - other.y;
+        let dz = self.z - other.z;
+        (dx * dx + dy * dy + dz * dz).sqrt()
     }
 }

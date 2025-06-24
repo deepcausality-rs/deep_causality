@@ -9,8 +9,8 @@ impl Display for AdjustableEuclideanSpace {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         write!(
             f,
-            "Spaceoid: id={:?}, coordinates (x,y,x)={:?}",
-            self.id, self.coords
+            "AdjustableEuclideanSpace(id={}, x={:.4}, y={:.4}, z={:.4})",
+            self.id, self.x, self.y, self.z
         )
     }
 }

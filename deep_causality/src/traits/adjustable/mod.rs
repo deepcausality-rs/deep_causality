@@ -12,9 +12,9 @@ where
     /// The default implementation does nothing to keep update optional.
     /// Override this method to implement a node update when needed.
     /// For a sample implementation, see src/types/context_types/node_types_adjustable
-    fn update<const W: usize, const H: usize, const D: usize, const C: usize>(
+    fn update<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize, const TIME: usize>(
         &mut self,
-        _array_grid: &ArrayGrid<T, W, H, D, C>,
+        _array_grid: &ArrayGrid<T, WIDTH, HEIGHT, DEPTH, TIME>,
     ) -> Result<(), UpdateError> {
         Ok(())
     }
@@ -24,9 +24,9 @@ where
     /// Depending on the type of node adjustment, select a 1, 2,3, or 4 dimensional array grid
     /// that contains the transformation data to apply to the node.
     /// For a sample implementation, see src/types/context_types/node_types_adjustable
-    fn adjust<const W: usize, const H: usize, const D: usize, const C: usize>(
+    fn adjust<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize, const TIME: usize>(
         &mut self,
-        _array_grid: &ArrayGrid<T, W, H, D, C>,
+        _array_grid: &ArrayGrid<T, WIDTH, HEIGHT, DEPTH, TIME>,
     ) -> Result<(), AdjustmentError> {
         Ok(())
     }

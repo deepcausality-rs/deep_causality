@@ -22,6 +22,23 @@ impl Adjustable<f64> for AdjustableGeoSpace {
         let new_lon = array_grid.get(p2);
         let new_alt = array_grid.get(p3);
 
+        // Check if the adjusted data are safe to update i.e. not greater than max f64 value
+        if !new_lat.is_finite() {
+            return Err(UpdateError(
+                "Update failed, new X value is not finite".into(),
+            ));
+        }
+
+        if !new_lon.is_finite() {
+            return Err(UpdateError(
+                "Update failed, new Y value is not finite".into(),
+            ));
+        }
+
+        if !new_alt.is_finite() {
+            return Err(UpdateError("Update failed, new value is not finite".into()));
+        }
+
         // Replace the internal data with the new data
         self.lat = new_lat;
         self.lon = new_lon;
@@ -54,21 +71,21 @@ impl Adjustable<f64> for AdjustableGeoSpace {
         let adjusted_alt = self.alt + new_alt;
 
         // Check if the adjusted data are safe to update i.e. not greater than max f64 value
-        if adjusted_lat > f64::MAX {
+        if !adjusted_lat.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new lat data exceeds max f64 value ".into(),
+                "Adjustment failed, new X value is not finite".into(),
             ));
         }
 
-        if adjusted_lon > f64::MAX {
+        if !adjusted_lon.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new lon data exceeds max f64 value ".into(),
+                "Adjustment failed, new Y value is not finite".into(),
             ));
         }
 
-        if adjusted_alt > f64::MAX {
+        if !adjusted_alt.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new alt data exceeds max f64 value ".into(),
+                "Adjustment failed, new value is not finite".into(),
             ));
         }
 

@@ -105,6 +105,7 @@ pub use crate::types::context_types::node_types_adjustable::adjustable_space::ad
 pub use crate::types::context_types::node_types_adjustable::adjustable_space::adjustable_geo_space::AdjustableGeoSpace;
 pub use crate::types::context_types::node_types_adjustable::adjustable_space::adjustable_ned_space::AdjustableNedSpace;
 pub use crate::types::context_types::node_types_adjustable::adjustable_space::adjustable_quaternion_space::AdjustableQuaternionSpace;
+pub use crate::types::context_types::node_types_adjustable::adjustable_space::adjustable_space_kind::AdjustableSpaceKind;
 // Adjustable spacetime node types.
 pub use crate::types::context_types::node_types_adjustable::adjustable_space_time::adjustable_euclidean_spacetime::AdjustableEuclideanSpacetime;
 pub use crate::types::context_types::node_types_adjustable::adjustable_space_time::adjustable_lorentzian_spacetime::AdjustableLorentzianSpacetime;

@@ -14,7 +14,7 @@ impl Coordinate<f64> for AdjustableEcefSpace {
             0 => &self.x,
             1 => &self.y,
             2 => &self.z,
-            _ => panic!("EcefSpace: coordinate index out of bounds"),
+            _ => panic!("AdjustableEcefSpace: coordinate index out of bounds"),
         }
     }
 }

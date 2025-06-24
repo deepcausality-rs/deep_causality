@@ -22,6 +22,29 @@ impl Adjustable<f64> for AdjustableQuaternionSpace {
         let new_y = array_grid.get(p3);
         let new_z = array_grid.get(p4);
 
+        // Check if the adjusted data are safe to update i.e. not greater than max f64 value
+        if !new_w.is_finite() {
+            return Err(UpdateError(
+                "Update failed, new X value is not finite".into(),
+            ));
+        }
+
+        if !new_x.is_finite() {
+            return Err(UpdateError(
+                "Update failed, new X value is not finite".into(),
+            ));
+        }
+
+        if !new_y.is_finite() {
+            return Err(UpdateError(
+                "Update failed, new Y value is not finite".into(),
+            ));
+        }
+
+        if !new_z.is_finite() {
+            return Err(UpdateError("Update failed, new value is not finite".into()));
+        }
+
         // Update the internal data
         self.quat[0] = new_w;
         self.quat[1] = new_x;
@@ -54,27 +77,27 @@ impl Adjustable<f64> for AdjustableQuaternionSpace {
         let adjusted_z = self.quat[3] + new_z;
 
         // Check if the adjusted data are safe to update i.e. not greater than max f64 value
-        if adjusted_w > f64::MAX {
+        if !adjusted_w.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new W data exceeds max f64 value ".into(),
+                "Adjustment failed, new X value is not finite".into(),
             ));
         }
 
-        if adjusted_x > f64::MAX {
+        if !adjusted_x.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new X data exceeds max f64 value ".into(),
+                "Adjustment failed, new X value is not finite".into(),
             ));
         }
 
-        if adjusted_y > f64::MAX {
+        if !adjusted_y.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new Y data exceeds max f64 value ".into(),
+                "Adjustment failed, new Y value is not finite".into(),
             ));
         }
 
-        if adjusted_z > f64::MAX {
+        if !adjusted_z.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new Z data exceeds max f64 value ".into(),
+                "Adjustment failed, new value is not finite".into(),
             ));
         }
 
