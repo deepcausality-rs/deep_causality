@@ -21,7 +21,7 @@ where
         &self.context
     }
 
-    pub fn causal_coll(&self) -> &Option<Arc<CausalVec<D, S, T, ST, SYM, VS, VT>>> {
+    pub fn causal_collection(&self) -> &Option<Arc<CausalVec<D, S, T, ST, SYM, VS, VT>>> {
         &self.causal_coll
     }
 

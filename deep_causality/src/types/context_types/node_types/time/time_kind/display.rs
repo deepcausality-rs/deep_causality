@@ -19,8 +19,7 @@ impl fmt::Display for TimeKind {
             }
             TimeKind::Lorentzian(t) => {
                 write!(f, "LorentzianTime(id: {}, t: {})", t.id(), t.time_unit())
-            }
-            // TimeKind::Symbolic(t) => write!(f, "SymbolicTime(id: {}, {})", t.id(), t),
+            } // TimeKind::Symbolic(t) => write!(f, "SymbolicTime(id: {}, {})", t.id(), t),
         }
     }
 }

@@ -7,10 +7,10 @@ const SMALL: usize = 9;
 // const MEDIUM: usize = 1_00;
 // const LARGE: usize = 1_000;
 
-fn get_test_causaloid<'l>() -> BaseCausaloid<'l> {
+fn get_test_causaloid<'l>() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
-    fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
+    fn causal_fn(obs: &NumericalValue) -> Result<bool, CausalityError> {
         if obs.is_sign_negative() {
             return Err(CausalityError("Observation is negative".into()));
         }
@@ -26,12 +26,12 @@ fn get_test_causaloid<'l>() -> BaseCausaloid<'l> {
     Causaloid::new(id, causal_fn, description)
 }
 
-pub fn get_small_linear_graph_and_data<'l>() -> (BaseCausalGraph<'l>, [f64; SMALL + 1]) {
+pub fn get_small_linear_graph_and_data<'l>() -> (BaseCausalGraph, [f64; SMALL + 1]) {
     // Builds a linear graph: root -> a -> b -> c
     (build_linear_graph(SMALL), generate_sample_data())
 }
 
-pub fn build_linear_graph<'l>(k: usize) -> BaseCausalGraph<'l> {
+pub fn build_linear_graph<'l>(k: usize) -> BaseCausalGraph {
     // Builds a linear graph: root -> a -> b -> c
     let mut g = CausaloidGraph::new();
 
@@ -55,12 +55,12 @@ pub fn build_linear_graph<'l>(k: usize) -> BaseCausalGraph<'l> {
     g
 }
 
-pub fn get_small_multi_cause_graph_and_data<'l>() -> (BaseCausalGraph<'l>, [f64; 4 + 1]) {
+pub fn get_small_multi_cause_graph_and_data<'l>() -> (BaseCausalGraph, [f64; 4 + 1]) {
     // Builds a multi-layer cause graph:
     (build_multi_cause_graph(), generate_sample_data())
 }
 
-fn build_multi_cause_graph<'l>() -> BaseCausalGraph<'l> {
+fn build_multi_cause_graph<'l>() -> BaseCausalGraph {
     // Builds a multi cause graph:
     //  root
     //  / \
@@ -105,12 +105,12 @@ fn build_multi_cause_graph<'l>() -> BaseCausalGraph<'l> {
     g
 }
 
-pub fn get_small_multi_layer_cause_graph_and_data<'l>() -> (BaseCausalGraph<'l>, [f64; 8 + 1]) {
+pub fn get_small_multi_layer_cause_graph_and_data<'l>() -> (BaseCausalGraph, [f64; 8 + 1]) {
     // Builds a multi-layer cause graph:
     (build_multi_layer_cause_graph(), generate_sample_data())
 }
 
-fn build_multi_layer_cause_graph<'l>() -> BaseCausalGraph<'l> {
+fn build_multi_layer_cause_graph<'l>() -> BaseCausalGraph {
     // Builds a multi-layer cause graph:
     //    root
     //  /   |  \
@@ -186,12 +186,12 @@ fn build_multi_layer_cause_graph<'l>() -> BaseCausalGraph<'l> {
     g
 }
 
-pub fn get_left_imbalanced_cause_graph<'l>() -> (BaseCausalGraph<'l>, [f64; 6 + 1]) {
+pub fn get_left_imbalanced_cause_graph<'l>() -> (BaseCausalGraph, [f64; 6 + 1]) {
     // Builds a multi-layer cause graph:
     (build_left_imbalanced_cause_graph(), generate_sample_data())
 }
 
-fn build_left_imbalanced_cause_graph<'l>() -> BaseCausalGraph<'l> {
+fn build_left_imbalanced_cause_graph<'l>() -> BaseCausalGraph {
     // Builds a multi-layer cause graph:
     //    root
     //  /   |  \
@@ -247,12 +247,12 @@ fn build_left_imbalanced_cause_graph<'l>() -> BaseCausalGraph<'l> {
     g
 }
 
-pub fn get_right_imbalanced_cause_graph<'l>() -> (BaseCausalGraph<'l>, [f64; 6 + 1]) {
+pub fn get_right_imbalanced_cause_graph<'l>() -> (BaseCausalGraph, [f64; 6 + 1]) {
     // Builds a multi-layer cause graph:
     (build_right_imbalanced_cause_graph(), generate_sample_data())
 }
 
-fn build_right_imbalanced_cause_graph<'l>() -> BaseCausalGraph<'l> {
+fn build_right_imbalanced_cause_graph<'l>() -> BaseCausalGraph {
     // Builds a multi-layer cause graph:
     //    root
     //  /   |  \

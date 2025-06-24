@@ -2,8 +2,8 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::{
-    BaseContextoid, Contextoid, ContextoidType, Contextuable, Data, Root, Space, SpaceTime, Time,
-    TimeScale,
+    BaseContextoid, Contextoid, ContextoidType, Contextuable, Data, EuclideanSpace, Root, Space,
+    SpaceTime, Time, TimeScale,
 };
 
 #[test]
@@ -15,7 +15,7 @@ fn test_root_some() {
     //
     assert!(node.vertex_type().dataoid().is_none());
     assert!(node.vertex_type().tempoid().is_none());
-    assert!(node.vertex_type().spaceiod().is_none());
+    assert!(node.vertex_type().spaceoid().is_none());
     assert!(node.vertex_type().space_tempoid().is_none());
 }
 
@@ -38,7 +38,7 @@ fn test_dataoid_some() {
     //
     assert!(node.vertex_type().root().is_none());
     assert!(node.vertex_type().tempoid().is_none());
-    assert!(node.vertex_type().spaceiod().is_none());
+    assert!(node.vertex_type().spaceoid().is_none());
     assert!(node.vertex_type().space_tempoid().is_none());
 }
 
@@ -62,7 +62,7 @@ fn test_tempoid_some() {
     //
     assert!(node.vertex_type().dataoid().is_none());
     assert!(node.vertex_type().root().is_none());
-    assert!(node.vertex_type().spaceiod().is_none());
+    assert!(node.vertex_type().spaceoid().is_none());
     assert!(node.vertex_type().space_tempoid().is_none());
 }
 
@@ -75,15 +75,15 @@ fn test_tempoid_none() {
 }
 
 #[test]
-fn test_spaceiod_some() {
+fn test_spaceoid_some() {
     let id = 1;
     let x = 7;
     let y = 8;
     let z = 9;
 
-    let d = Space::new(id, x, y, z);
+    let d = EuclideanSpace::new(id, x, y, z);
     let node: BaseContextoid = Contextoid::new(id, ContextoidType::Spaceoid(d));
-    assert!(node.vertex_type().spaceiod().is_some());
+    assert!(node.vertex_type().spaceoid().is_some());
     //
     assert!(node.vertex_type().dataoid().is_none());
     assert!(node.vertex_type().root().is_none());
@@ -92,11 +92,11 @@ fn test_spaceiod_some() {
 }
 
 #[test]
-fn test_spaceiod_none() {
+fn test_spaceoid_none() {
     let id = 1;
     let root = Root::new(id);
     let node: BaseContextoid = Contextoid::new(id, ContextoidType::Root(root));
-    assert!(node.vertex_type().spaceiod().is_none());
+    assert!(node.vertex_type().spaceoid().is_none());
 }
 
 #[test]
@@ -115,7 +115,7 @@ fn test_space_tempoid_some() {
     assert!(node.vertex_type().dataoid().is_none());
     assert!(node.vertex_type().root().is_none());
     assert!(node.vertex_type().tempoid().is_none());
-    assert!(node.vertex_type().spaceiod().is_none());
+    assert!(node.vertex_type().spaceoid().is_none());
 }
 
 #[test]

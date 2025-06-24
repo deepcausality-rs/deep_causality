@@ -27,7 +27,7 @@ fn get_context() -> BaseContext {
 fn test_new() {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
-    fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
+    fn causal_fn(obs: &NumericalValue) -> Result<bool, CausalityError> {
         if obs.is_nan() {
             return Err(CausalityError("Observation is NULL/NAN".into()));
         }
@@ -39,7 +39,7 @@ fn test_new() {
         }
     }
 
-    let causaloid: BaseCausaloid<'static> = Causaloid::new(id, causal_fn, description);
+    let causaloid: BaseCausaloid = Causaloid::new(id, causal_fn, description);
 
     assert!(causaloid.is_singleton());
     assert!(causaloid.causal_collection().is_none());

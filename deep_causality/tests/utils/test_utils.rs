@@ -25,18 +25,18 @@ pub fn get_test_inf_vec() -> Vec<Inference> {
     Vec::from_iter([i1, i2])
 }
 
-pub fn get_test_causality_vec<'l>() -> BaseCausaloidVec<'l> {
+pub fn get_test_causality_vec<'l>() -> BaseCausaloidVec {
     let q1 = get_test_causaloid();
     let q2 = get_test_causaloid();
     let q3 = get_test_causaloid();
     Vec::from_iter([q1, q2, q3])
 }
 
-pub fn get_test_causaloid<'l>() -> BaseCausaloid<'l> {
+pub fn get_test_causaloid<'l>() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
 
-    fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
+    fn causal_fn(obs: &NumericalValue) -> Result<bool, CausalityError> {
         if obs.is_nan() {
             return Err(CausalityError("Observation is NULL/NAN".into()));
         }
@@ -60,11 +60,11 @@ pub fn get_test_causaloid<'l>() -> BaseCausaloid<'l> {
     Causaloid::new(id, causal_fn, description)
 }
 
-pub fn get_test_error_causaloid<'l>() -> BaseCausaloid<'l> {
+pub fn get_test_error_causaloid<'l>() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
 
-    fn causal_fn(_obs: NumericalValue) -> Result<bool, CausalityError> {
+    fn causal_fn(_obs: &NumericalValue) -> Result<bool, CausalityError> {
         Err(CausalityError("Test error".into()))
     }
 

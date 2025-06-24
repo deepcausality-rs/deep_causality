@@ -7,7 +7,7 @@ use deep_causality::prelude::*;
 
 use crate::utils::test_utils::*;
 
-fn get_test_causality_vec_deque<'l>() -> VecDeque<BaseCausaloid<'l>> {
+fn get_test_causality_vec_deque<'l>() -> VecDeque<BaseCausaloid> {
     VecDeque::from_iter(get_test_causality_vec())
 }
 

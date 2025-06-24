@@ -16,7 +16,7 @@ where
     VS: Clone,
     VT: Clone,
 {
-    fn _vertex_type(&self) -> &ContextoidType<D, S, T, ST, SYM, VS, VT> {
+    pub fn vertex_type(&self) -> &ContextoidType<D, S, T, ST, SYM, VS, VT> {
         &self.vertex_type
     }
 }

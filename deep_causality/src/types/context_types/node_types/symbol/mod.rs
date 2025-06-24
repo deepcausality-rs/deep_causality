@@ -1,5 +1,6 @@
 use crate::prelude::{Identifiable, Symbolic, SymbolicRepresentation};
 use deep_causality_macros::Constructor;
+use std::fmt::Display;
 
 #[derive(Constructor, Debug, Clone, PartialEq)]
 pub struct BaseSymbol {
@@ -28,5 +29,11 @@ impl Default for BaseSymbol {
             id: 0,
             repr: SymbolicRepresentation::new_atom("Default".to_string()),
         }
+    }
+}
+
+impl Display for BaseSymbol {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.repr)
     }
 }
