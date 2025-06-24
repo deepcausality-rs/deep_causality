@@ -3,7 +3,7 @@
 
 use deep_causality::prelude::{Adjustable, AdjustableData, Identifiable};
 
-use crate::types::context_types::adjustable::utils;
+use crate::types::context_types::node_types_adjustable::utils;
 
 #[test]
 fn test_update() {

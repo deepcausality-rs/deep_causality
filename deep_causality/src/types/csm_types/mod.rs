@@ -76,9 +76,15 @@ where
     VT: Clone + Debug,
 {
     /// Constructs a new CSM.
-    pub fn new(state_map: CSMMap<D, S, T, ST, SYM, VS, VT>) -> Self {
+    pub fn new(state_actions: &[(&CausalState<D, S, T, ST, SYM, VS, VT>, &CausalAction)]) -> Self {
+        let mut map = HashMap::with_capacity(state_actions.len());
+
+        for (state, action) in state_actions {
+            map.insert(*state.id(), ((*state).clone(), (*action).clone()));
+        }
+
         Self {
-            state_actions: Arc::new(RwLock::new(state_map)),
+            state_actions: Arc::new(RwLock::new(map)),
         }
     }
 
@@ -234,8 +240,15 @@ where
     /// Updates all causal state with a new state collection.
     /// Note, this operation erases all previous states in the CSM by generating a new collection.
     /// Returns UpdateError if the update operation failed.
-    pub fn update_all_states(&self, state_map: CSMMap<D, S, T, ST, SYM, VS, VT>) {
+    pub fn update_all_states(&self, state_actions: &[(&CausalState<D, S, T, ST, SYM, VS, VT>, &CausalAction)]) {
+        let mut state_map = HashMap::with_capacity(state_actions.len());
+
+        for (state, action) in state_actions {
+            state_map.insert(*state.id(), ((*state).clone(), (*action).clone()));
+        }
         // Replace the existing map with the newly generated one.
+        
         *self.state_actions.write().unwrap() = state_map
     }
+    
 }

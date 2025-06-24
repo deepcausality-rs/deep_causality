@@ -2,8 +2,8 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::{
-    BaseContextoid, Contextoid, ContextoidType, Contextuable, Data, EuclideanSpace, Root, Space,
-    SpaceTime, Time, TimeScale,
+    BaseContextoid, Contextoid, ContextoidType, Contextuable, Data, EuclideanSpace,
+    EuclideanSpacetime, EuclideanTime, Root, TimeScale,
 };
 
 #[test]
@@ -54,9 +54,9 @@ fn test_dataoid_none() {
 fn test_tempoid_some() {
     let id = 1;
     let time_scale = TimeScale::Month;
-    let time_unit = 1;
+    let time_unit = 1f64;
 
-    let tempoid = Time::new(id, time_scale, time_unit);
+    let tempoid = EuclideanTime::new(id, time_scale, time_unit);
     let node: BaseContextoid = Contextoid::new(id, ContextoidType::Tempoid(tempoid));
     assert!(node.vertex_type().tempoid().is_some());
     //
@@ -77,11 +77,10 @@ fn test_tempoid_none() {
 #[test]
 fn test_spaceoid_some() {
     let id = 1;
-    let x = 7;
-    let y = 8;
-    let z = 9;
+    let coord = [0.0, 0.0, 0.0];
 
-    let d = EuclideanSpace::new(id, x, y, z);
+
+    let d = EuclideanSpace::new(id, coord);
     let node: BaseContextoid = Contextoid::new(id, ContextoidType::Spaceoid(d));
     assert!(node.vertex_type().spaceoid().is_some());
     //
@@ -103,12 +102,10 @@ fn test_spaceoid_none() {
 fn test_space_tempoid_some() {
     let id = 1;
     let time_scale = TimeScale::Month;
-    let time_unit = 1;
-    let x = 7;
-    let y = 8;
-    let z = 9;
+    let time_unit = 1f64;
+    let coord = [0.0, 0.0, 0.0];
 
-    let d = SpaceTime::new(id, time_scale, time_unit, x, y, z);
+    let d = EuclideanSpacetime::new(id, coord, time_unit, time_scale);
     let node: BaseContextoid = Contextoid::new(id, ContextoidType::SpaceTempoid(d));
     assert!(node.vertex_type().space_tempoid().is_some());
     //

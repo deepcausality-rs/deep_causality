@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-mod adjustable;
+mod node_types_adjustable;
 mod context_graph;
 mod contextoid;
 mod node_types;

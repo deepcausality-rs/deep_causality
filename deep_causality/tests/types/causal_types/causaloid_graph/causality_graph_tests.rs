@@ -9,17 +9,18 @@ use crate::utils::test_utils;
 // Custom type alias
 type CustomCausaloidGraph = CausaloidGraph<
     Causaloid<
-        'static,
         Data<BaseNumberType>,
-        Space<BaseNumberType>,
-        Time<BaseNumberType>,
-        SpaceTime<BaseNumberType>,
-        BaseNumberType,
+        EuclideanSpace,
+        EuclideanTime,
+        EuclideanSpacetime,
+        BaseSymbol,
+        BaseFloatType,
+        BaseFloatType,
     >,
 >;
 
-fn get_causal_graph() -> BaseCausalGraph<'static> {
-    let g: BaseCausalGraph<'static> = CausaloidGraph::new();
+fn get_causal_graph() -> BaseCausalGraph {
+    let g: BaseCausalGraph = CausaloidGraph::new();
     g
 }
 

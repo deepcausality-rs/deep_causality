@@ -5,10 +5,10 @@ use crate::prelude::{Assumption, Causaloid, Context, Datable, Identifiable, Symb
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
-use deep_causality_macros::{Constructor, Getters};
+use deep_causality_macros::Getters;
 use std::sync::Arc;
 
-#[derive(Getters, Constructor)]
+#[derive(Getters)]
 pub struct Model<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,
@@ -26,6 +26,35 @@ where
     assumptions: Option<Arc<Vec<Assumption>>>,
     causaloid: Arc<Causaloid<D, S, T, ST, SYM, VS, VT>>,
     context: Option<Arc<Context<D, S, T, ST, SYM, VS, VT>>>,
+}
+
+impl<D, S, T, ST, SYM, VS, VT> Model<D, S, T, ST, SYM, VS, VT>
+where
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
+{
+    pub fn new(
+        id: u64,
+        author: &str,
+        description: &str,
+        assumptions: Option<Arc<Vec<Assumption>>>,
+        causaloid: Arc<Causaloid<D, S, T, ST, SYM, VS, VT>>,
+        context: Option<Arc<Context<D, S, T, ST, SYM, VS, VT>>>,
+    ) -> Self {
+        Self {
+            id,
+            author: author.to_string(),
+            description: description.to_string(),
+            assumptions,
+            causaloid,
+            context,
+        }
+    }
 }
 
 impl<D, S, T, ST, SYM, VS, VT> Identifiable for Model<D, S, T, ST, SYM, VS, VT>

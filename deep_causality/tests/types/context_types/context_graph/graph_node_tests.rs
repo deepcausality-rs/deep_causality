@@ -33,7 +33,7 @@ fn test_vertex_type() {
     assert!(node.vertex_type().root().is_some());
     assert!(node.vertex_type().dataoid().is_none());
     assert!(node.vertex_type().tempoid().is_none());
-    assert!(node.vertex_type().spaceiod().is_none());
+    assert!(node.vertex_type().spaceoid().is_none());
     assert!(node.vertex_type().space_tempoid().is_none());
 }
 

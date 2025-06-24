@@ -3,3 +3,9 @@
 
 #[cfg(test)]
 mod model_tests;
+#[cfg(test)]
+mod assumption_tests;
+#[cfg(test)]
+mod inference_tests;
+#[cfg(test)]
+mod observation_tests;

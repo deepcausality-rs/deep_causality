@@ -123,7 +123,7 @@ where
     /// or embedded into a causal graph.
     pub fn from_causal_collection_with_context(
         id: IdentificationValue,
-        causal_coll: Vec<Causaloid<D, S, T, ST, SYM, VS, VT>>,
+        causal_coll: Arc<Vec<Causaloid<D, S, T, ST, SYM, VS, VT>>>,
         context: Arc<Context<D, S, T, ST, SYM, VS, VT>>,
         description: &str,
     ) -> Self {
@@ -132,7 +132,7 @@ where
             active: Arc::new(RwLock::new(false)),
             causal_type: CausaloidType::Collection,
             causal_fn: None,
-            causal_coll: Some(Arc::new(causal_coll)),
+            causal_coll: Some(causal_coll),
             causal_graph: None,
             description: description.to_string(),
             context: Some(context),

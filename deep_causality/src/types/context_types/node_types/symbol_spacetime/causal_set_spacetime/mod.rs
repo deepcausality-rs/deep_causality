@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use deep_causality_macros::Constructor;
+use std::collections::BTreeSet;
 
 /// A symbolic, discrete model of spacetime based on causal set theory (CST).
 ///
@@ -36,7 +36,7 @@ use deep_causality_macros::Constructor;
 /// assert!(e2.predecessors.contains(&1));
 /// assert_eq!(e2.label.as_deref(), Some("B"));
 /// ```
-#[derive(Constructor, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CausalSetSpacetime {
     /// Unique event identifier
     pub id: u64,
@@ -46,6 +46,16 @@ pub struct CausalSetSpacetime {
 
     /// List of causally preceding event IDs (must be acyclic)
     pub predecessors: std::collections::BTreeSet<u64>,
+}
+
+impl CausalSetSpacetime {
+    pub fn new(id: u64, label: Option<String>) -> Self {
+        Self {
+            id,
+            label,
+            predecessors: BTreeSet::new(),
+        }
+    }
 }
 
 impl CausalSetSpacetime {

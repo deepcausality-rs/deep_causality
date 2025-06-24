@@ -2,6 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::*;
+use std::sync::Arc;
 
 use crate::utils::*;
 
@@ -54,8 +55,8 @@ fn test_new_with_context() {
     let context = get_context();
 
     fn contextual_causal_fn(
-        obs: NumericalValue,
-        ctx: &BaseContext,
+        obs: &NumericalValue,
+        ctx: &Arc<BaseContext>,
     ) -> Result<bool, CausalityError> {
         if obs.is_nan() {
             return Err(CausalityError("Observation is NULL/NAN".into()));
@@ -81,7 +82,7 @@ fn test_new_with_context() {
     }
 
     let causaloid: BaseCausaloid =
-        Causaloid::new_with_context(id, contextual_causal_fn, Some(&context), description);
+        Causaloid::new_with_context(id, contextual_causal_fn, Arc::new(context), description);
 
     assert!(causaloid.is_singleton());
     assert!(causaloid.causal_collection().is_none());
@@ -98,7 +99,7 @@ fn test_from_causal_collection() {
     let data = [0.89, 0.89, 0.99];
     assert_eq!(data.len(), causal_coll.len());
 
-    let causaloid = Causaloid::from_causal_collection(id, &causal_coll, description);
+    let causaloid = Causaloid::from_causal_collection(id, Arc::new(causal_coll), description);
     assert!(!causaloid.is_singleton());
 
     assert!(causaloid.causal_collection().is_some());
@@ -111,15 +112,15 @@ fn test_from_causal_collection_with_context() {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
     let causal_coll = test_utils::get_test_causality_vec();
-    let context = &test_utils::get_test_context();
+    let context = get_context();
 
     let data = [0.89, 0.89, 0.99];
     assert_eq!(data.len(), causal_coll.len());
 
     let causaloid = Causaloid::from_causal_collection_with_context(
         id,
-        &causal_coll,
-        Some(context),
+        Arc::new(causal_coll),
+        Arc::new(context),
         description,
     );
 
@@ -135,7 +136,7 @@ fn test_from_causal_graph() {
     let description = "tests whether data exceeds threshold of 0.55";
     let (causal_graph, data) = test_utils_graph::get_small_multi_layer_cause_graph_and_data();
 
-    let causaloid = Causaloid::from_causal_graph(id, &causal_graph, description);
+    let causaloid = Causaloid::from_causal_graph(id, Arc::new(causal_graph), description);
     assert!(!causaloid.is_singleton());
 
     assert!(!causaloid.is_active());
@@ -154,10 +155,14 @@ fn test_from_causal_graph_with_context() {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
     let (causal_graph, data) = test_utils_graph::get_small_multi_layer_cause_graph_and_data();
-    let context = &test_utils::get_test_context();
+    let context = get_context();
 
-    let causaloid =
-        Causaloid::from_causal_graph_with_context(id, &causal_graph, Some(context), description);
+    let causaloid = Causaloid::from_causal_graph_with_context(
+        id,
+        Arc::new(causal_graph),
+        Arc::new(context),
+        description,
+    );
     assert!(!causaloid.is_singleton());
 
     assert!(!causaloid.is_active());
@@ -177,7 +182,7 @@ fn test_causal_graph() {
     let description = "tests whether data exceeds threshold of 0.55";
     let (causal_graph, _) = test_utils_graph::get_small_multi_layer_cause_graph_and_data();
 
-    let causaloid = Causaloid::from_causal_graph(id, &causal_graph, description);
+    let causaloid = Causaloid::from_causal_graph(id, Arc::new(causal_graph), description);
     assert!(!causaloid.is_singleton());
 
     assert!(causaloid.causal_graph().is_some());
