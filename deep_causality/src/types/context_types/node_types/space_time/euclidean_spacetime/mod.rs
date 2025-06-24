@@ -37,8 +37,8 @@ use deep_causality_macros::Constructor;
 /// ```
 /// use deep_causality::prelude::*;
 ///
-/// let s1 = EuclideanSpacetime::new(1, [0.0, 0.0, 0.0], 1_000_000.00f64, TimeScale::Microseconds);
-/// let s2 = EuclideanSpacetime::new(2, [3.0, 4.0, 0.0], 2_000_000.00f64, TimeScale::Microseconds);
+/// let s1 = EuclideanSpacetime::new(1, [0.0, 0.0, 0.0], 1_000_000.00f64, TimeScale::Second);
+/// let s2 = EuclideanSpacetime::new(2, [3.0, 4.0, 0.0], 2_000_000.00f64, TimeScale::Second);
 ///
 /// let spatial_dist = s1.distance(&s2); // should be 5.0
 /// println!("Distance: {:.2} meters", spatial_dist);

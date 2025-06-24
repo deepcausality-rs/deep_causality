@@ -38,10 +38,7 @@ fn test_coordinate_out_of_bounds() {
 fn test_display_trait() {
     let sk = SpaceKind::Ned(NedSpace::new(1, 100.0, 50.0, 10.0));
     let output = format!("{}", sk);
-    assert_eq!(
-        output,
-        "NedSpace(id=1, N=100.0000, E=50.0000, D=10.0000)"
-    );
+    assert_eq!(output, "NedSpace(id=1, N=100.0000, E=50.0000, D=10.0000)");
 }
 
 #[test]

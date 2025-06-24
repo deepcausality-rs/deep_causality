@@ -65,13 +65,13 @@ mod temporal;
 pub struct TangentSpacetime {
     id: u64,
 
-    // Time
-    t: f64, // seconds
     // Position
     x: f64, // meters
     y: f64,
     z: f64,
 
+    // Time
+    t: f64, // seconds
     // Velocity / tangent vector
     dt: f64, // unit or proper time derivative
     dx: f64, // meters/second
@@ -86,10 +86,10 @@ impl TangentSpacetime {
     /// Create a new tangent bundle point with a default Minkowski metric.
     pub fn new(
         id: u64,
-        t: f64,
         x: f64,
         y: f64,
         z: f64,
+        t: f64,
         dt: f64,
         dx: f64,
         dy: f64,

@@ -2,6 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 mod coordinate;
+mod display;
 mod identifiable;
 mod space_temporal;
 mod space_temporal_interval;

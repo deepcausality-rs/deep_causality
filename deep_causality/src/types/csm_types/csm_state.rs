@@ -140,10 +140,7 @@ where
         write!(
             f,
             "CausalState: \n id: {} version: {} \n data: {:?} causaloid: {}",
-            self.id,
-            self.version,
-            self.data, 
-            self.causaloid,
+            self.id, self.version, self.data, self.causaloid,
         )
     }
 }

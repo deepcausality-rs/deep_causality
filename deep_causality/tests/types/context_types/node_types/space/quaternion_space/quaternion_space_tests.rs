@@ -31,7 +31,10 @@ fn test_coordinate_out_of_bounds() {
 fn test_display_trait() {
     let q = QuaternionSpace::new(1, [1.0, 0.0, 0.0, 0.0]);
     let output = format!("{}", q);
-    assert_eq!(output, "QuaternionSpace(id=1, w=1.0000, x=0.0000, y=0.0000, z=0.0000)");
+    assert_eq!(
+        output,
+        "QuaternionSpace(id=1, w=1.0000, x=0.0000, y=0.0000, z=0.0000)"
+    );
 }
 
 #[test]

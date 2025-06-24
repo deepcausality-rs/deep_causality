@@ -2,8 +2,8 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
 use deep_causality::prelude::{
-    BaseContextoid, Contextoid, ContextoidType, Data, EuclideanSpace,
-    EuclideanSpacetime, EuclideanTime, Root, TimeScale,
+    BaseContextoid, Contextoid, ContextoidType, Data, EuclideanSpace, EuclideanSpacetime,
+    EuclideanTime, Root, TimeScale,
 };
 
 #[test]

@@ -11,10 +11,10 @@ impl Coordinate<f64> for MinkowskiSpacetime {
 
     fn coordinate(&self, index: usize) -> &f64 {
         match index {
-            0 => &self.t,
-            1 => &self.x,
-            2 => &self.y,
-            3 => &self.z,
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            3 => &self.t,
             _ => panic!("MinkowskiSpacetime: index out of bounds"),
         }
     }

@@ -1,7 +1,4 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-mod data;
-mod root;
-mod space;
-mod space_time;
+mod euclidean_spacetime_tests;
