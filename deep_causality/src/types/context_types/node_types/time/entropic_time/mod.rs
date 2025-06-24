@@ -7,6 +7,7 @@ mod identifiable;
 mod scalar_projector;
 mod temporable;
 
+use crate::prelude::TimeKind;
 use deep_causality_macros::Constructor;
 
 /// A time model based on **entropy-driven progression**, suitable for
@@ -42,4 +43,9 @@ pub struct EntropicTime {
 
     /// Irreversible "tick" counter driven by entropy or state progression
     entropy_tick: u64,
+}
+impl From<EntropicTime> for TimeKind {
+    fn from(t: EntropicTime) -> Self {
+        TimeKind::Entropic(t)
+    }
 }

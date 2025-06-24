@@ -6,7 +6,7 @@ mod identifiable;
 mod scalar_projector;
 mod temporable;
 
-use crate::prelude::TimeScale;
+use crate::prelude::{TimeKind, TimeScale};
 use deep_causality_macros::Constructor;
 
 /// A time model representing **discrete, uniformly spaced ticks** instead of continuous physical time.
@@ -67,4 +67,10 @@ pub struct DiscreteTime {
 
     /// The actual tick count (monotonic unit of progression).
     tick_unit: u64,
+}
+
+impl From<DiscreteTime> for TimeKind {
+    fn from(t: DiscreteTime) -> Self {
+        TimeKind::Discrete(t)
+    }
 }
