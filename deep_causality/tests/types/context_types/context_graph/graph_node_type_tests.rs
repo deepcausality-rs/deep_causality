@@ -79,7 +79,6 @@ fn test_spaceoid_some() {
     let id = 1;
     let coord = [0.0, 0.0, 0.0];
 
-
     let d = EuclideanSpace::new(id, coord);
     let node: BaseContextoid = Contextoid::new(id, ContextoidType::Spaceoid(d));
     assert!(node.vertex_type().spaceoid().is_some());

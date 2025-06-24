@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use deep_causality::prelude::{BaseContext, Context, Contextoid, ContextoidType, ContextuableGraph, EuclideanTime, Identifiable, RelationKind, Root, TimeScale};
+use deep_causality::prelude::{
+    BaseContext, Context, Contextoid, ContextoidType, ContextuableGraph, EuclideanTime,
+    Identifiable, RelationKind, Root, TimeScale,
+};
 
 fn get_context() -> BaseContext {
     let id = 1;
