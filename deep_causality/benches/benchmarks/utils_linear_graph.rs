@@ -10,22 +10,22 @@ const SMALL: usize = 10;
 const MEDIUM: usize = 1_000;
 const LARGE: usize = 10_000;
 
-pub fn get_small_linear_graph_and_data<'l>() -> (BaseCausalGraph<'l>, [f64; SMALL + 1]) {
+pub fn get_small_linear_graph_and_data<'l>() -> (BaseCausalGraph, [f64; SMALL + 1]) {
     // Builds a linear graph: root -> a -> b -> c
     (build_linear_graph(SMALL), generate_sample_data())
 }
 
-pub fn get_medium_linear_graph_and_data<'l>() -> (BaseCausalGraph<'l>, [f64; MEDIUM + 1]) {
+pub fn get_medium_linear_graph_and_data<'l>() -> (BaseCausalGraph, [f64; MEDIUM + 1]) {
     // Builds a linear graph: root -> a -> b -> c ...
     (build_linear_graph(MEDIUM), generate_sample_data())
 }
 
-pub fn get_large_linear_graph_and_data<'l>() -> (BaseCausalGraph<'l>, [f64; LARGE + 1]) {
+pub fn get_large_linear_graph_and_data<'l>() -> (BaseCausalGraph, [f64; LARGE + 1]) {
     // Builds a linear graph: root -> a -> b -> c ...
     (build_linear_graph(LARGE), generate_sample_data())
 }
 
-pub fn build_linear_graph<'l>(k: usize) -> BaseCausalGraph<'l> {
+pub fn build_linear_graph<'l>(k: usize) -> BaseCausalGraph {
     // Builds a linear graph: root -> a -> b -> c
     let mut g = CausaloidGraph::new();
 
@@ -49,12 +49,12 @@ pub fn build_linear_graph<'l>(k: usize) -> BaseCausalGraph<'l> {
     g
 }
 
-pub fn get_small_multi_cause_graph_and_data<'l>() -> (BaseCausalGraph<'l>, [f64; 4 + 1]) {
+pub fn get_small_multi_cause_graph_and_data<'l>() -> (BaseCausalGraph, [f64; 4 + 1]) {
     // Builds a multi-layer cause graph:
     (build_multi_cause_graph(), generate_sample_data())
 }
 
-fn build_multi_cause_graph<'l>() -> BaseCausalGraph<'l> {
+fn build_multi_cause_graph<'l>() -> BaseCausalGraph {
     // Builds a multi cause graph:
     //  root
     //  / \
