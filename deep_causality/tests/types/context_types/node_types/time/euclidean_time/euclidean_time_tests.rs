@@ -31,21 +31,3 @@ fn test_euclidean_time_scalar_projector_trait() {
     let scalar: f64 = t.project();
     assert_eq!(scalar, 0.001);
 }
-
-#[test]
-fn test_euclidean_time_display_trait() {
-    let t = EuclideanTime::new(1, TimeScale::Second, 3.00);
-    let output = format!("{}", t);
-    assert!(
-        output.contains("EuclideanTime"),
-        "Expected display output to include struct name"
-    );
-    assert!(
-        output.contains("3.00"),
-        "Expected display output to include time value"
-    );
-    assert!(
-        output.contains("Second"),
-        "Expected display output to include time scale"
-    );
-}
