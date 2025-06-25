@@ -59,27 +59,27 @@ impl Adjustable<f64> for TangentSpacetime {
         let adjusted_t = self.t + new_t;
 
         // Check if the adjusted data are safe to update i.e. not greater than max f64 value
-        if adjusted_x > f64::MAX {
+        if !adjusted_x.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new X data exceeds max f64 value ".into(),
+                "Adjustment failed, new x value is not finite".into(),
             ));
         }
 
-        if adjusted_y > f64::MAX {
+        if !adjusted_y.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new Y data exceeds max f64 value ".into(),
+                "Adjustment failed, new Y value is not finite".into(),
             ));
         }
 
-        if adjusted_z > f64::MAX {
+        if !adjusted_z.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new Z data exceeds max f64 value ".into(),
+                "Adjustment failed, new z value is not finite".into(),
             ));
         }
 
-        if adjusted_t > f64::MAX {
+        if !adjusted_t.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new T data exceeds max f64 value ".into(),
+                "Adjustment failed, new t value is not finite".into(),
             ));
         }
 
