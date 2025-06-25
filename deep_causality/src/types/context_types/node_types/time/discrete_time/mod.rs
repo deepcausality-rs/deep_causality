@@ -5,6 +5,7 @@ mod display;
 mod identifiable;
 mod scalar_projector;
 mod temporable;
+mod adjustable;
 
 use crate::prelude::{TimeKind, TimeScale};
 use deep_causality_macros::Constructor;
