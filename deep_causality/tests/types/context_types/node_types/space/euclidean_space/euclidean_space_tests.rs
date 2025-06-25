@@ -14,16 +14,16 @@ fn test_coordinate_trait() {
     let space = EuclideanSpace::new(1, 10.0, 20.0, 30.0);
 
     assert_eq!(space.dimension(), 3);
-    assert_eq!(*space.coordinate(0), 10.0);
-    assert_eq!(*space.coordinate(1), 20.0);
-    assert_eq!(*space.coordinate(2), 30.0);
+    assert_eq!(*space.coordinate(0).unwrap(), 10.0);
+    assert_eq!(*space.coordinate(1).unwrap(), 20.0);
+    assert_eq!(*space.coordinate(2).unwrap(), 30.0);
 }
 
 #[test]
-#[should_panic(expected = "index out of bounds")]
 fn test_coordinate_out_of_bounds() {
     let space = EuclideanSpace::new(1, 0.0, 0.0, 0.0);
-    let _ = space.coordinate(3); // should panic
+    let res = space.coordinate(3);
+    assert!(res.is_err());
 }
 
 #[test]

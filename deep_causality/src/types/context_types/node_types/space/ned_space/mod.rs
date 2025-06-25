@@ -4,6 +4,7 @@
 
 use deep_causality_macros::Constructor;
 
+mod adjustable;
 mod coordinate;
 mod display;
 mod getters;
@@ -32,6 +33,12 @@ mod spatial;
 /// - `north`: Position in meters along the northward axis
 /// - `east`: Position in meters along the eastward axis
 /// - `down`: Position in meters along the downward (gravity-aligned) axis
+///
+/// # Coordinate Index Mapping
+/// When used with the [`Coordinate`] trait, the following index mapping applies:
+/// - `0 => north`
+/// - `1 => east`
+/// - `2 => down`
 ///
 /// # Common Applications
 /// - Aircraft position estimation relative to a flight segment origin

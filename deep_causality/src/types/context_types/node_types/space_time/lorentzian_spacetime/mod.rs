@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
+mod adjustable;
 mod coordinate;
 mod display;
 mod identifiable;
@@ -26,9 +27,19 @@ use deep_causality_macros::Constructor;
 /// For curved general relativistic spacetime, a metric tensor can be added later.
 ///
 /// # Fields
-/// - `id`: Unique identifier
-/// - `t`: Time coordinate (in seconds or proper time units)
-/// - `x`, `y`, `z`: Spatial coordinates (in meters)
+/// - `id`: Unique numeric identifier
+/// - `x`: X-coordinate in meters
+/// - `y`: Y-coordinate in meters
+/// - `z`: Z-coordinate in meters
+/// - `t`: time (e.g., seconds)
+/// - `time_scale`: Time scale unit (e.g., seconds, milliseconds)
+///
+/// # Coordinate Index Mapping
+/// When used with the [`Coordinate`] trait, the following index mapping applies:
+/// - `0 => x`
+/// - `1 => y`
+/// - `2 => z`
+/// - `3 => t`
 ///
 /// # Minkowski interval (squared):
 /// ```text

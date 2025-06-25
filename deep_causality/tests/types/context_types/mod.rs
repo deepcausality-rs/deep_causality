@@ -4,7 +4,7 @@
 mod context_graph;
 mod contextoid;
 mod node_types;
-mod node_types_adjustable;
+pub(crate) mod utils;
 
 #[cfg(test)]
 mod relation_kind_tests;

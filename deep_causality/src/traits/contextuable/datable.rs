@@ -13,12 +13,9 @@ use crate::prelude::Identifiable;
 /// in how data is modeled. You may wrap sensor input, encoded strings,
 /// discrete values, or even external references.
 ///
-/// # Example
-/// ```
-/// use deep_causality::prelude::{Datable, Identifiable};
-///
-/// struct SensorReading { id: u64, value: f64 }
-/// impl Identifiable for SensorReading { fn id(&self) -> u64 { self.id } }
-/// impl Datable for SensorReading {}
-/// ```
-pub trait Datable: Identifiable {}
+pub trait Datable: Identifiable {
+    type Data;
+
+    fn get_data(&self) -> Self::Data;
+    fn set_data(&mut self, value: Self::Data);
+}

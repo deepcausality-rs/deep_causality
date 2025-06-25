@@ -2,6 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 //
 
+mod adjustable;
 mod display;
 mod identifiable;
 mod scalar_projector;

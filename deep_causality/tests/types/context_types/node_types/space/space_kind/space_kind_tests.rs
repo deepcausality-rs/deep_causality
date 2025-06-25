@@ -14,24 +14,24 @@ fn test_identifiable_trait() {
 fn test_coordinate_trait_geo() {
     let sk = SpaceKind::Geo(GeoSpace::new(1, 52.5, 13.4, 34.0));
     assert_eq!(sk.dimension(), 3);
-    assert_eq!(*sk.coordinate(0), 52.5);
-    assert_eq!(*sk.coordinate(1), 13.4);
-    assert_eq!(*sk.coordinate(2), 34.0);
+    assert_eq!(*sk.coordinate(0).unwrap(), 52.5);
+    assert_eq!(*sk.coordinate(1).unwrap(), 13.4);
+    assert_eq!(*sk.coordinate(2).unwrap(), 34.0);
 }
 
 #[test]
 fn test_coordinate_trait_quaternion() {
-    let sk = SpaceKind::Quaternion(QuaternionSpace::new(5, [1.0, 0.0, 0.0, 0.0]));
+    let sk = SpaceKind::Quaternion(QuaternionSpace::new(5, 1.0, 0.0, 0.0, 0.0));
     assert_eq!(sk.dimension(), 4);
-    assert_eq!(*sk.coordinate(0), 1.0);
-    assert_eq!(*sk.coordinate(3), 0.0);
+    assert_eq!(*sk.coordinate(0).unwrap(), 1.0);
+    assert_eq!(*sk.coordinate(3).unwrap(), 0.0);
 }
 
 #[test]
-#[should_panic(expected = "index out of bounds")]
 fn test_coordinate_out_of_bounds() {
     let sk = SpaceKind::Euclidean(EuclideanSpace::new(2, 1.0, 2.0, 3.0));
-    let _ = sk.coordinate(3); // should panic
+    let res = sk.coordinate(3);
+    assert!(res.is_err());
 }
 
 #[test]
@@ -49,7 +49,10 @@ fn test_all_variants_id_and_display() {
     let ned = SpaceKind::Ned(NedSpace::new(4, 7.0, 8.0, 9.0));
     let quat = SpaceKind::Quaternion(QuaternionSpace::new(
         5,
-        [FRAC_1_SQRT_2, 0.0, 0.0, FRAC_1_SQRT_2],
+        FRAC_1_SQRT_2,
+        0.0,
+        0.0,
+        FRAC_1_SQRT_2,
     ));
 
     assert_eq!(geo.id(), 1);

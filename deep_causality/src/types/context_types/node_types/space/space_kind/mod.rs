@@ -2,6 +2,7 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 //
 
+use crate::errors::IndexError;
 use crate::prelude::{
     Coordinate, EcefSpace, EuclideanSpace, GeoSpace, Identifiable, NedSpace, QuaternionSpace,
     Spatial,
@@ -35,7 +36,7 @@ impl Coordinate<f64> for SpaceKind {
         }
     }
 
-    fn coordinate(&self, index: usize) -> &f64 {
+    fn coordinate(&self, index: usize) -> Result<&f64, IndexError> {
         match self {
             SpaceKind::Geo(s) => s.coordinate(index),
             SpaceKind::Ecef(s) => s.coordinate(index),

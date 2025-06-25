@@ -4,6 +4,7 @@
 
 use deep_causality_macros::Constructor;
 
+mod adjustable;
 mod coordinate;
 mod display;
 mod getters;
@@ -25,6 +26,21 @@ mod spatial;
 /// - `x`: X-coordinate in meters
 /// - `y`: Y-coordinate in meters
 /// - `z`: Z-coordinate in meters
+///
+/// # Coordinate Index Mapping
+/// When used with the [`Coordinate`] trait, the following index mapping applies:
+/// - `0 => x`
+/// - `1 => y`
+/// - `2 => z`
+///
+/// # Trait Implementations
+/// This type implements:
+/// - [`Identifiable`]
+/// - [`Coordinate<f64>`]
+/// - [`Metric`] using the Haversine approximation
+/// - [`Spatial<f64>`]
+/// - [`Display`] for human-readable output
+///
 #[derive(Constructor, Debug, Clone, PartialEq)]
 pub struct EcefSpace {
     id: u64,

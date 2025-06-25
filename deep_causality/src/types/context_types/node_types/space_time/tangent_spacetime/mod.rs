@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
+mod adjustable;
 mod coordinate;
 mod display;
 mod getters;
@@ -25,11 +26,20 @@ mod temporal;
 ///
 /// # Fields
 /// - `id`: Unique numeric identifier
-/// - `t`: Time coordinate in seconds
-/// - `x, y, z`: Spatial coordinates in meters
+/// - `x`: X-coordinate in meters
+/// - `y`: Y-coordinate in meters
+/// - `z`: Z-coordinate in meters
+/// - `t`: time (e.g., seconds)
 /// - `dt`: Proper time velocity (usually `1.0`)
 /// - `dx, dy, dz`: Spatial velocity components (in meters/second)
 /// - `metric`: Local 4×4 metric tensor defining the geometry
+///
+/// # Coordinate Index Mapping
+/// When used with the [`Coordinate`] trait, the following index mapping applies:
+/// - `0 => x`
+/// - `1 => y`
+/// - `2 => z`
+/// - `3 => t`
 ///
 /// # Curvature Support
 /// The default metric is flat Minkowski (− + + +), but this can be replaced at runtime:
@@ -72,6 +82,7 @@ pub struct TangentSpacetime {
 
     // Time
     t: f64, // seconds
+
     // Velocity / tangent vector
     dt: f64, // unit or proper time derivative
     dx: f64, // meters/second

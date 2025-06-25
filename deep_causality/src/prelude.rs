@@ -3,13 +3,6 @@
 //
 pub use crate::errors::*;
 //
-// Type Extensions
-// Unused global re-exports
-// pub use crate::extensions::assumable::*;
-// pub use crate::extensions::causable::*;
-// pub use crate::extensions::inferable::*;
-// pub use crate::extensions::observable::*;
-//
 // Traits
 //
 // Adjustable Traits
@@ -82,6 +75,7 @@ pub use crate::types::context_types::node_types::space::space_kind::SpaceKind;
 pub use crate::types::context_types::node_types::space_time::euclidean_spacetime::EuclideanSpacetime;
 pub use crate::types::context_types::node_types::space_time::lorentzian_spacetime::LorentzianSpacetime;
 pub use crate::types::context_types::node_types::space_time::minkowski_spacetime::MinkowskiSpacetime;
+pub use crate::types::context_types::node_types::space_time::space_time_kind::SpaceTimeKind;
 pub use crate::types::context_types::node_types::space_time::tangent_spacetime::TangentSpacetime;
 // Symbolic context node types.
 pub use crate::types::context_types::node_types::symbol::BaseSymbol;
@@ -97,26 +91,6 @@ pub use crate::types::context_types::node_types::time::symbolic_time::{
     SymbolicTime, SymbolicTimeUnit,
 };
 pub use crate::types::context_types::node_types::time::time_kind::TimeKind;
-// Adjustable context node types.
-pub use crate::types::context_types::node_types_adjustable::adjustable_data::*;
-// Adjustable space node types.
-pub use crate::types::context_types::node_types_adjustable::adjustable_space::adjustable_ecef_space::AdjustableEcefSpace;
-pub use crate::types::context_types::node_types_adjustable::adjustable_space::adjustable_euclidean_space::AdjustableEuclideanSpace;
-pub use crate::types::context_types::node_types_adjustable::adjustable_space::adjustable_geo_space::AdjustableGeoSpace;
-pub use crate::types::context_types::node_types_adjustable::adjustable_space::adjustable_ned_space::AdjustableNedSpace;
-pub use crate::types::context_types::node_types_adjustable::adjustable_space::adjustable_quaternion_space::AdjustableQuaternionSpace;
-pub use crate::types::context_types::node_types_adjustable::adjustable_space::adjustable_space_kind::AdjustableSpaceKind;
-// Adjustable spacetime node types.
-pub use crate::types::context_types::node_types_adjustable::adjustable_space_time::adjustable_euclidean_spacetime::AdjustableEuclideanSpacetime;
-pub use crate::types::context_types::node_types_adjustable::adjustable_space_time::adjustable_lorentzian_spacetime::AdjustableLorentzianSpacetime;
-pub use crate::types::context_types::node_types_adjustable::adjustable_space_time::adjustable_minkowski_spacetime::AdjustableMinkowskiSpacetime;
-pub use crate::types::context_types::node_types_adjustable::adjustable_space_time::adjustable_tangent_spacetime::AdjustableTangentSpacetime;
-// Adjustable time node types.
-pub use crate::types::context_types::node_types_adjustable::adjustable_time::adjustable_discrete_time::AdjustableDiscreteTime;
-pub use crate::types::context_types::node_types_adjustable::adjustable_time::adjustable_entropic_time::AdjustableEntropicTime;
-pub use crate::types::context_types::node_types_adjustable::adjustable_time::adjustable_euclidean_time::AdjustableEuclideanTime;
-pub use crate::types::context_types::node_types_adjustable::adjustable_time::adjustable_lorentzian_time::AdjustableLorentzianTime;
-pub use crate::types::context_types::node_types_adjustable::adjustable_time::adjustable_time_kind::AdjustableTimeKind;
 // Other context types
 pub use crate::types::context_types::relation_kind::*;
 pub use crate::types::context_types::time_scale::TimeScale;

@@ -101,9 +101,8 @@ fn test_space_tempoid_some() {
     let id = 1;
     let time_scale = TimeScale::Month;
     let time_unit = 1f64;
-    let coord = [0.0, 0.0, 0.0];
 
-    let d = EuclideanSpacetime::new(id, coord, time_unit, time_scale);
+    let d = EuclideanSpacetime::new(id, 0.0, 0.0, 0.0, time_unit, time_scale);
     let node: BaseContextoid = Contextoid::new(id, ContextoidType::SpaceTempoid(d));
     assert!(node.vertex_type().space_tempoid().is_some());
     //

@@ -13,17 +13,17 @@ fn test_coordinate_trait() {
     let s = TangentSpacetime::new(1, 1.0, 2.0, 3.0, 4.0, 1.0, 0.0, 0.0, 0.0);
 
     assert_eq!(s.dimension(), 4);
-    assert_eq!(*s.coordinate(0), 1.0);
-    assert_eq!(*s.coordinate(1), 2.0);
-    assert_eq!(*s.coordinate(2), 3.0);
-    assert_eq!(*s.coordinate(3), 4.0);
+    assert_eq!(*s.coordinate(0).unwrap(), 1.0);
+    assert_eq!(*s.coordinate(1).unwrap(), 2.0);
+    assert_eq!(*s.coordinate(2).unwrap(), 3.0);
+    assert_eq!(*s.coordinate(3).unwrap(), 4.0);
 }
 
 #[test]
-#[should_panic]
 fn test_coordinate_index_out_of_bounds() {
     let s = TangentSpacetime::new(1, 1.0, 2.0, 3.0, 4.0, 1.0, 0.0, 0.0, 0.0);
-    let _ = s.coordinate(5); // invalid index
+    let res = s.coordinate(5);
+    assert!(res.is_err());
 }
 
 #[test]
@@ -37,7 +37,7 @@ fn test_temporal_trait() {
 fn test_space_temporal_trait() {
     let s = TangentSpacetime::new(1, 4.0, 5.0, 6.0, 42.0, 1.0, 0.0, 0.0, 0.0);
     assert_eq!(s.t(), &42.0);
-    assert_eq!(*s.coordinate(0), 4.0);
+    assert_eq!(*s.coordinate(0).unwrap(), 4.0);
 }
 
 #[test]

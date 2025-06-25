@@ -2,14 +2,34 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 //
 
+use crate::coord_match;
+use crate::errors::IndexError;
 use crate::prelude::{Coordinate, EuclideanSpacetime};
 
 impl Coordinate<f64> for EuclideanSpacetime {
+    /// Returns the number of dimensions in the coordinate system (always 4).
     fn dimension(&self) -> usize {
-        3
+        4
     }
 
-    fn coordinate(&self, index: usize) -> &f64 {
-        &self.coords[index]
+    /// Returns a reference to the coordinate value at the specified index.
+    ///
+    /// # Index Mapping
+    /// - `0 => x`
+    /// - `1 => y`
+    /// - `2 => z`
+    /// - `3 => t`
+    ///
+    /// # Errors
+    /// Returns `IndexError` if the index is out of bounds.
+    ///
+    fn coordinate(&self, index: usize) -> Result<&f64, IndexError> {
+        coord_match!(index,
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            3 => &self.t,
+
+        )
     }
 }

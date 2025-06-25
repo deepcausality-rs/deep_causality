@@ -4,6 +4,7 @@
 use crate::prelude::TimeScale;
 use deep_causality_macros::Constructor;
 
+mod adjustable;
 mod coordinate;
 mod display;
 mod identifiable;
@@ -29,8 +30,18 @@ mod temporal;
 ///
 /// # Fields
 /// - `id`: Unique numeric identifier
-/// - `t`: Time coordinate (in seconds)
-/// - `x, y, z`: Spatial coordinates (in meters)
+/// - `x`: X-coordinate in meters
+/// - `y`: Y-coordinate in meters
+/// - `z`: Z-coordinate in meters
+/// - `t`: time (e.g., seconds)
+/// - `time_scale`: Time scale unit (e.g., microseconds, milliseconds)
+///
+/// # Coordinate Index Mapping
+/// When used with the [`Coordinate`] trait, the following index mapping applies:
+/// - `0 => x`
+/// - `1 => y`
+/// - `2 => z`
+/// - `3 => t`
 ///
 /// # Common Applications
 /// - Relativistic simulation

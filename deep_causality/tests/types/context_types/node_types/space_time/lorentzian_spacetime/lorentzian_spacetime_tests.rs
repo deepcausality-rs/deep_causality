@@ -13,16 +13,16 @@ fn test_coordinate_trait() {
     let s = LorentzianSpacetime::new(1, 1.0, 2.0, 3.0, 0.0, TimeScale::Second);
 
     assert_eq!(s.dimension(), 4);
-    assert_eq!(*s.coordinate(0), 1.0);
-    assert_eq!(*s.coordinate(1), 2.0);
-    assert_eq!(*s.coordinate(2), 3.0);
+    assert_eq!(*s.coordinate(0).unwrap(), 1.0);
+    assert_eq!(*s.coordinate(1).unwrap(), 2.0);
+    assert_eq!(*s.coordinate(2).unwrap(), 3.0);
 }
 
 #[test]
-#[should_panic(expected = "index out of bounds")]
 fn test_coordinate_trait_out_of_bounds() {
     let s = LorentzianSpacetime::new(1, 1.0, 2.0, 3.0, 0.0, TimeScale::Second);
-    let _ = s.coordinate(4); // Should panic
+    let res = s.coordinate(4);
+    assert!(res.is_err());
 }
 
 #[test]
@@ -50,5 +50,5 @@ fn test_space_temporal_trait() {
     // dbg!(*s.t());
     assert_eq!(s.t(), &999999.0);
     // dbg!(*s.coordinate(0));
-    assert_eq!(*s.coordinate(0), 1.0);
+    assert_eq!(*s.coordinate(0).unwrap(), 1.0);
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-use deep_causality::prelude::{Data, Identifiable};
+use deep_causality::prelude::{Data, Datable, Identifiable};
 
 #[test]
 fn test_new() {
@@ -9,6 +9,7 @@ fn test_new() {
     let data = 42;
 
     let d = Data::new(id, data);
+
     assert_eq!(d.id(), id);
 }
 
@@ -28,8 +29,7 @@ fn test_data() {
 
     let d = Data::new(id, data);
     assert_eq!(d.id(), id);
-    assert_eq!(*d.data_id(), id);
-    assert_eq!(*d.data(), data);
+    assert_eq!(d.get_data(), data);
 }
 
 #[test]
@@ -39,8 +39,8 @@ fn test_to_string() {
 
     let d = Data::new(id, data);
     assert_eq!(d.id(), id);
-    assert_eq!(*d.data_id(), id);
-    assert_eq!(*d.data(), data);
+    assert_eq!(d.id(), id);
+    assert_eq!(d.get_data(), data);
 
     let exp = format!("Dataoid: id: {} data: {}", id, data);
     let act = d.to_string();

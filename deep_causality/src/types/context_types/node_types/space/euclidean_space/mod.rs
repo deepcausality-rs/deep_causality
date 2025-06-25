@@ -5,6 +5,7 @@ use std::fmt::Debug;
 
 use deep_causality_macros::Constructor;
 
+mod adjustable;
 mod coordinate;
 mod display;
 mod getters;
@@ -20,13 +21,15 @@ mod spatial;
 ///
 /// # Fields
 /// - `id`: A unique identifier for this spatial entity
-/// - `coords`: A `[f64; 3]` array representing the spatial coordinates in 3D space
+/// - `x`: X-coordinate in meters
+/// - `y`: Y-coordinate in meters
+/// - `z`: Z-coordinate in meters
 ///
-/// # Traits Implemented
-/// - [`Identifiable`]
-/// - [`Coordinate<f64>`]
-/// - [`Metric`]
-/// - [`Spatial<f64>`]
+/// # Coordinate Index Mapping
+/// When used with the [`Coordinate`] trait, the following index mapping applies:
+/// - `0 => x`
+/// - `1 => y`
+/// - `2 => z`
 ///
 /// # Examples
 /// ```
@@ -36,7 +39,7 @@ mod spatial;
 /// let space_b = EuclideanSpace::new(2, 4.0, 6.0, 3.0);
 ///
 /// assert_eq!(space_a.dimension(), 3);
-/// assert_eq!(space_a.coordinate(1), &2.0);
+/// assert_eq!(space_a.coordinate(1).unwrap(), &2.0);
 /// assert_eq!(space_a.distance(&space_b), 5.0);
 /// ```
 #[derive(Constructor, Debug, Clone, PartialEq)]

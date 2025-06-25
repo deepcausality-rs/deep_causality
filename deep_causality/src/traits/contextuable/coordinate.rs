@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
+use crate::prelude::IndexError;
+
 /// Provides a generalized interface for N-dimensional coordinate access.
 ///
 /// This trait is agnostic to geometry and is designed to support
@@ -14,7 +16,7 @@
 ///
 /// # Example
 /// ```
-/// use deep_causality::prelude::Coordinate;
+/// use deep_causality::prelude::{Coordinate, IndexError};
 ///
 /// struct Vec3D {
 ///     x: f64,
@@ -27,12 +29,12 @@
 ///         3
 ///     }
 ///
-///     fn coordinate(&self, index: usize) -> &f64 {
+///      fn coordinate(&self, index: usize) -> Result<&f64, IndexError> {
 ///         match index {
-///             0 => &self.x,
-///             1 => &self.y,
-///             2 => &self.z,
-///             _ => panic!("Index {} out of bounds for Vec3D", index),
+///             0 => Ok(&self.x),
+///             1 => Ok(&self.y),
+///             2 => Ok(&self.z),
+///             _ => Err(IndexError("Index out of bounds".to_string())),
 ///         }
 ///     }
 /// }
@@ -43,7 +45,7 @@ pub trait Coordinate<V> {
 
     /// Returns a reference to the value at a given axis index (0-based).
     ///
-    /// # Panics
-    /// May panic if index is out of bounds; implementations may handle this gracefully.
-    fn coordinate(&self, index: usize) -> &V;
+    /// # Errors
+    /// Returns `IndexError` if the index is out of bounds.
+    fn coordinate(&self, index: usize) -> Result<&V, IndexError>;
 }

@@ -5,7 +5,19 @@
 use crate::prelude::QuaternionSpace;
 
 impl QuaternionSpace {
-    pub fn quat(&self) -> [f64; 4] {
-        self.quat
+    pub fn w(&self) -> f64 {
+        self.w
+    }
+
+    pub fn x(&self) -> f64 {
+        self.x
+    }
+
+    pub fn y(&self) -> f64 {
+        self.y
+    }
+
+    pub fn z(&self) -> f64 {
+        self.z
     }
 }

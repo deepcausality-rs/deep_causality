@@ -15,5 +15,6 @@ mod causality_error_tests;
 mod causality_graph_error_tests;
 #[cfg(test)]
 mod context_index_error_tests;
+mod index_error_tests;
 #[cfg(test)]
 mod update_error_tests;

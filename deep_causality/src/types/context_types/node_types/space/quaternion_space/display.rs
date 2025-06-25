@@ -9,7 +9,7 @@ impl std::fmt::Display for QuaternionSpace {
         write!(
             f,
             "QuaternionSpace(id={}, w={:.4}, x={:.4}, y={:.4}, z={:.4})",
-            self.id, self.quat[0], self.quat[1], self.quat[2], self.quat[3]
+            self.id, self.w, self.x, self.y, self.z
         )
     }
 }

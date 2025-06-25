@@ -2,14 +2,33 @@
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 //
 
+use crate::coord_match;
+use crate::errors::IndexError;
 use crate::prelude::{Coordinate, QuaternionSpace};
 
 impl Coordinate<f64> for QuaternionSpace {
+    /// Returns the number of dimensions in the coordinate system (always 4).
     fn dimension(&self) -> usize {
         4
     }
 
-    fn coordinate(&self, index: usize) -> &f64 {
-        &self.quat[index]
+    /// Returns a reference to the coordinate value at the specified index.
+    ///
+    /// # Index Mapping
+    /// - `0 => w`
+    /// - `1 => x`
+    /// - `2 => y`
+    /// - `3 => z`
+    ///
+    /// # Errors
+    /// Returns `IndexError` if the index is out of bounds.
+    ///
+    fn coordinate(&self, index: usize) -> Result<&f64, IndexError> {
+        coord_match!(index,
+            0 => &self.w,
+            1 => &self.x,
+            2 => &self.y,
+            3 => &self.z,
+        )
     }
 }

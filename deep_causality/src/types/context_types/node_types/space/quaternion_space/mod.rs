@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 // Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
-//
-
 use deep_causality_macros::Constructor;
 
+mod adjustable;
 mod coordinate;
 mod display;
 mod getters;
@@ -26,6 +26,14 @@ mod spatial;
 ///   - `w`: scalar component (cos(θ/2))
 ///   - `x, y, z`: vector part representing the axis of rotation (unit vector scaled by sin(θ/2))
 ///
+///
+/// # Coordinate Index Mapping
+/// When used with the [`Coordinate`] trait, the following index mapping applies:
+/// - `0 => w`
+/// - `1 => x`
+/// - `2 => y`
+/// - `3 => z`
+///
 /// # Background
 /// Quaternions are an extension of complex numbers used to represent
 /// rotations in three-dimensional space. Unlike Euler angles or axis-angle representations,
@@ -43,7 +51,7 @@ mod spatial;
 /// use deep_causality::prelude::*;
 ///
 /// // Represents a 90-degree rotation around the Z-axis
-/// let q = QuaternionSpace::new(1, [std::f64::consts::FRAC_1_SQRT_2, 0.0, 0.0, std::f64::consts::FRAC_1_SQRT_2]);
+/// let q = QuaternionSpace::new(1, std::f64::consts::FRAC_1_SQRT_2, 0.0, 0.0, std::f64::consts::FRAC_1_SQRT_2);
 ///
 /// println!("{}", q);
 /// assert_eq!(q.dimension(), 4);
@@ -59,5 +67,8 @@ pub struct QuaternionSpace {
     /// Unique identifier for this orientation context
     id: u64,
     /// The quaternion representing the rotation in [w, x, y, z] order
-    quat: [f64; 4],
+    w: f64,
+    x: f64,
+    y: f64,
+    z: f64,
 }

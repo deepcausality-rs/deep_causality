@@ -9,7 +9,7 @@ impl fmt::Display for EuclideanSpacetime {
         write!(
             f,
             "EuclideanSpacetime(id={}, x={:.3}, y={:.3}, z={:.3}, t={} {:?})",
-            self.id, self.coords[0], self.coords[1], self.coords[2], self.t, self.time_scale
+            self.id, self.x, self.y, self.z, self.t, self.time_scale
         )
     }
 }

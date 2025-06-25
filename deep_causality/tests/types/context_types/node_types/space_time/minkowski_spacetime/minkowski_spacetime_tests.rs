@@ -14,16 +14,16 @@ fn test_coordinate_trait() {
     let e = MinkowskiSpacetime::new(1, 3.0, 4.0, 5.0, 6.0, TimeScale::Second);
 
     assert_eq!(e.dimension(), 4);
-    assert_eq!(*e.coordinate(0), 3.0);
-    assert_eq!(*e.coordinate(1), 4.0);
-    assert_eq!(*e.coordinate(2), 5.0);
+    assert_eq!(*e.coordinate(0).unwrap(), 3.0);
+    assert_eq!(*e.coordinate(1).unwrap(), 4.0);
+    assert_eq!(*e.coordinate(2).unwrap(), 5.0);
 }
 
 #[test]
-#[should_panic(expected = "index out of bounds")]
 fn test_coordinate_out_of_bounds() {
     let e = MinkowskiSpacetime::new(1, 3.0, 4.0, 5.0, 6.0, TimeScale::Second);
-    let _ = e.coordinate(4);
+    let res = e.coordinate(4);
+    assert!(res.is_err());
 }
 
 #[test]
@@ -48,7 +48,7 @@ fn test_space_temporal_trait() {
     let e = MinkowskiSpacetime::new(1, 1.0, 2.0, 3.0, 9999.0, TimeScale::Second);
 
     assert_eq!(e.t(), &9999.0);
-    assert_eq!(*e.coordinate(1), 2.0);
+    assert_eq!(*e.coordinate(1).unwrap(), 2.0);
 }
 
 #[test]

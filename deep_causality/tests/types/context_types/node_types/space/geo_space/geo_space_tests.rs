@@ -14,16 +14,16 @@ fn test_coordinate_trait() {
     let g = GeoSpace::new(1, 52.52, 13.40, 34.0);
 
     assert_eq!(g.dimension(), 3);
-    assert_eq!(*g.coordinate(0), 52.52);
-    assert_eq!(*g.coordinate(1), 13.40);
-    assert_eq!(*g.coordinate(2), 34.0);
+    assert_eq!(*g.coordinate(0).unwrap(), 52.52);
+    assert_eq!(*g.coordinate(1).unwrap(), 13.40);
+    assert_eq!(*g.coordinate(2).unwrap(), 34.0);
 }
 
 #[test]
-#[should_panic(expected = "index out of bounds")]
 fn test_coordinate_out_of_bounds() {
     let g = GeoSpace::new(1, 0.0, 0.0, 0.0);
-    let _ = g.coordinate(3); // should panic
+    let res = g.coordinate(3);
+    assert!(res.is_err());
 }
 
 #[test]
