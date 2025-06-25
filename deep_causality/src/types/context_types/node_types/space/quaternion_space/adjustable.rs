@@ -77,7 +77,7 @@ impl Adjustable<f64> for QuaternionSpace {
         // Calculate the adjusted data by adding the new data to the current data
         let adjusted_w = self.w + new_w;
         let adjusted_x = self.x + new_x;
-        let adjusted_y = self.z + new_y;
+        let adjusted_y = self.y + new_y;
         let adjusted_z = self.z + new_z;
 
         // Check if the adjusted data are safe to update i.e. not greater than max f64 value
