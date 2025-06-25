@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
 // Grids in Rust, part 2: const generics
 // https://blog.adamchalmers.com/grids-2/#benchmarks-1d-vs-2d-vec-vs-array

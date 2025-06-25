@@ -1,5 +1,7 @@
-<!-- SPDX-License-Identifier: MIT -->
-<!-- Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved. -->
+<!--
+  - SPDX-License-Identifier: MIT
+  - Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+  -->
 <svg height="180" viewBox="0 0 180 180" width="180" xmlns="http://www.w3.org/2000/svg">
     <linearGradient id="a" gradientUnits="userSpaceOnUse" x1="32.64" x2="82.77" y1="61.16" y2="85.54">
         <stop offset=".21" stop-color="#fe2857"/>

@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
 use crate::prelude::{Identifiable, Symbolic, SymbolicRepresentation};
 use deep_causality_macros::Constructor;
 use std::fmt::Display;
