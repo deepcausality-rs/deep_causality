@@ -97,6 +97,7 @@ pub struct TangentSpacetime {
 
 impl TangentSpacetime {
     /// Create a new tangent bundle point with a default Minkowski metric.
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         id: u64,
         x: f64,

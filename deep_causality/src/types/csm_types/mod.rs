@@ -15,11 +15,14 @@ use std::sync::{Arc, RwLock};
 pub mod csm_action;
 pub mod csm_state;
 
-pub type CSMMap<D, S, T, ST, SYM, VS, VT> =
-    HashMap<usize, (CausalState<D, S, T, ST, SYM, VS, VT>, CausalAction)>;
+/// A tuple consisting of a causal state and an associated causal action.
+///
+/// This is used to represent the result of state-action reasoning steps.
+pub type StateAction<D, S, T, ST, SYM, VS, VT> =
+    (CausalState<D, S, T, ST, SYM, VS, VT>, CausalAction);
+pub type CSMMap<D, S, T, ST, SYM, VS, VT> = HashMap<usize, StateAction<D, S, T, ST, SYM, VS, VT>>;
 
-pub type CSMStateActions<D, S, T, ST, SYM, VS, VT> =
-    [(CausalState<D, S, T, ST, SYM, VS, VT>, CausalAction)];
+pub type CSMStateActions<D, S, T, ST, SYM, VS, VT> = [StateAction<D, S, T, ST, SYM, VS, VT>];
 
 /// # Causal State Machine (CSM)
 ///
@@ -104,7 +107,7 @@ where
     pub fn add_single_state(
         &self,
         idx: usize,
-        state_action: (CausalState<D, S, T, ST, SYM, VS, VT>, CausalAction),
+        state_action: StateAction<D, S, T, ST, SYM, VS, VT>,
     ) -> Result<(), UpdateError> {
         // Check if the key exists, if so return error
         if self.state_actions.read().unwrap().get(&idx).is_some() {
@@ -190,7 +193,7 @@ where
     pub fn update_single_state(
         &self,
         idx: usize,
-        state_action: (CausalState<D, S, T, ST, SYM, VS, VT>, CausalAction),
+        state_action: StateAction<D, S, T, ST, SYM, VS, VT>,
     ) -> Result<(), UpdateError> {
         // Check if the key exists, if not return error
         if self.state_actions.read().unwrap().get(&idx).is_none() {

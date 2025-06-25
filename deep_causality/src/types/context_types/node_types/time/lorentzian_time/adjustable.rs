@@ -50,9 +50,11 @@ impl Adjustable<f64> for LorentzianTime {
         let adjusted_time = self.time_unit + time_adjustment;
 
         if !adjusted_time.is_finite() {
-            return Err(AdjustmentError("Adjustment failed, result is not finite".into()));
+            return Err(AdjustmentError(
+                "Adjustment failed, result is not finite".into(),
+            ));
         }
-        
+
         // Check for errors i.e. div by zero / overflow and return either an error or OK().
         if adjusted_time < f64::default() {
             return Err(AdjustmentError(

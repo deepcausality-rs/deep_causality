@@ -35,13 +35,12 @@ impl Adjustable<u64> for EntropicTime {
 
         // get the data at the index position
         let time_adjustment = array_grid.get(p);
-        
 
         // Calculate checked data adjustment
         let Some(adjusted_time) = self.entropy_tick.checked_add(time_adjustment) else {
             return Err(AdjustmentError("Adjustment failed, u64 overflow".into()));
         };
-        
+
         // Check for errors i.e. div by zero / overflow and return either an error or OK().
         if adjusted_time < u64::default() {
             return Err(AdjustmentError(

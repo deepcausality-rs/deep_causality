@@ -30,7 +30,6 @@ fn test_discrete_time_adjust_success() {
     assert_eq!(dt.time_unit(), 15); // 10 + 5
 }
 
-
 #[test]
 fn test_discrete_time_adjust_zero() {
     let mut dt = DiscreteTime::new(1, TimeScale::Steps, 0);

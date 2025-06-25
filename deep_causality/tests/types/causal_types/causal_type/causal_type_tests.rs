@@ -26,10 +26,10 @@ fn test_partial_ord() {
 }
 
 #[test]
-fn test_clone_and_copy() {
+fn test_copy() {
     let original = CausaloidType::Graph;
     let copied = original;
-    let cloned = original.clone();
+    let cloned = original;
 
     assert_eq!(original, copied);
     assert_eq!(original, cloned);

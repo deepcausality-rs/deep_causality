@@ -33,7 +33,7 @@ pub fn get_large_map_and_data() -> (BaseCausalMap, [f64; LARGE + 1]) {
     )
 }
 
-fn build_causality_map<'l>(k: usize) -> BaseCausalMap {
+fn build_causality_map(k: usize) -> BaseCausalMap {
     let mut v = HashMap::with_capacity(k);
     for k in 0..k {
         v.insert(k, utils_shared::get_test_causaloid());

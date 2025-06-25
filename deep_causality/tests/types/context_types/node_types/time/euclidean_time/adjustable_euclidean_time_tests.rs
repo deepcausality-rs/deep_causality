@@ -12,11 +12,11 @@ fn test_euclidean_time_update_success() {
     assert_eq!(t.time_unit(), 0.0);
 
     let grid: ArrayGrid<f64, 1, 1, 1, 1> = ArrayGrid::new(ArrayType::Array1D);
-    grid.set(PointIndex::new1d(0), 3.14);
+    grid.set(PointIndex::new1d(0), 3.00);
 
     let result = t.update(&grid);
     assert!(result.is_ok());
-    assert_eq!(t.time_unit(), 3.14);
+    assert_eq!(t.time_unit(), 3.00);
 }
 
 #[test]

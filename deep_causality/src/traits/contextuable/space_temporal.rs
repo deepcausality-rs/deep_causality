@@ -52,7 +52,6 @@ pub trait SpaceTemporal<VS, VT>: Identifiable + Spatial<VS> + Temporal<VT> {
 /// # Default Method
 /// - `interval_squared(&self, &Self) -> f64`: Computes the squared interval between two events
 ///
-
 pub trait SpaceTemporalInterval {
     /// Returns the time coordinate in **seconds**.
     fn time(&self) -> f64;

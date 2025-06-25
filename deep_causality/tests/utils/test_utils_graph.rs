@@ -33,7 +33,7 @@ pub fn get_small_linear_graph_and_data() -> (BaseCausalGraph, [f64; SMALL + 1]) 
     (build_linear_graph(SMALL), generate_sample_data())
 }
 
-pub fn build_linear_graph<'l>(k: usize) -> BaseCausalGraph {
+pub fn build_linear_graph(k: usize) -> BaseCausalGraph {
     // Builds a linear graph: root -> a -> b -> c
     let mut g = CausaloidGraph::new();
 

@@ -56,13 +56,11 @@ impl Adjustable<f64> for EuclideanTime {
                 "Adjustment failed, result is not finite (NaN or Inf)".into(),
             ));
         }
-        
+
         if adjusted_time.is_nan() {
-            return Err(AdjustmentError(
-                "Adjustment failed, result is NaN".into(),
-            ));
+            return Err(AdjustmentError("Adjustment failed, result is NaN".into()));
         }
-        
+
         // Check for errors i.e. div by zero / overflow and return either an error or OK().
         if adjusted_time < f64::default() {
             return Err(AdjustmentError(

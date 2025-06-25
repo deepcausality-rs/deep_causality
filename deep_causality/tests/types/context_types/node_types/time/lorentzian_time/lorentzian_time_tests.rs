@@ -28,8 +28,8 @@ fn test_temporal_trait() {
 
 #[test]
 fn test_scalar_projector_trait() {
-    let t = LorentzianTime::new(2, TimeScale::Second, 3.14);
-    assert!((t.project() - 3.14).abs() < f64::EPSILON);
+    let t = LorentzianTime::new(2, TimeScale::Second, 3.00);
+    assert!((t.project() - 3.00).abs() < f64::EPSILON);
 }
 
 #[test]
@@ -52,10 +52,10 @@ fn test_partial_eq() {
 }
 
 #[test]
-fn test_copy_clone() {
+fn test_copy() {
     let t1 = LorentzianTime::new(42, TimeScale::Millisecond, 1.23);
     let t2 = t1;
-    let t3 = t1.clone();
+    let t3 = t1;
     assert_eq!(t1, t2);
     assert_eq!(t1, t3);
 }

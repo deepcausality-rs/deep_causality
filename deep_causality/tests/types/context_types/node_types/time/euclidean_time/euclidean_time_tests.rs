@@ -34,14 +34,14 @@ fn test_euclidean_time_scalar_projector_trait() {
 
 #[test]
 fn test_euclidean_time_display_trait() {
-    let t = EuclideanTime::new(1, TimeScale::Second, 3.14);
+    let t = EuclideanTime::new(1, TimeScale::Second, 3.00);
     let output = format!("{}", t);
     assert!(
         output.contains("EuclideanTime"),
         "Expected display output to include struct name"
     );
     assert!(
-        output.contains("3.14"),
+        output.contains("3.00"),
         "Expected display output to include time value"
     );
     assert!(
