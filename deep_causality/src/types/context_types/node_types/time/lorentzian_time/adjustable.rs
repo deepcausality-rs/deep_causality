@@ -35,6 +35,10 @@ impl Adjustable<f64> for LorentzianTime {
         // get the data at the index position
         let time_adjustment = array_grid.get(p);
 
+        if time_adjustment.is_nan() {
+            return Err(AdjustmentError("Adjustment failed, time is NaN".into()));
+        }
+
         // Check if the new time is non-negative. Unless you want to go back in time...
         if time_adjustment < f64::default() {
             return Err(AdjustmentError(
@@ -45,6 +49,10 @@ impl Adjustable<f64> for LorentzianTime {
         // Calculate the data adjustment
         let adjusted_time = self.time_unit + time_adjustment;
 
+        if !adjusted_time.is_finite() {
+            return Err(AdjustmentError("Adjustment failed, result is not finite".into()));
+        }
+        
         // Check for errors i.e. div by zero / overflow and return either an error or OK().
         if adjusted_time < f64::default() {
             return Err(AdjustmentError(

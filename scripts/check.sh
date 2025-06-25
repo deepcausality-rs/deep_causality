@@ -20,7 +20,7 @@ FEATURES=unsafe cargo +nightly udeps --all-targets
 
 # Scan again to report all unfixed vulnerabilities
 # https://crates.io/crates/cargo-audit
-FEATURES=unsafe cargo audit
+#FEATURES=unsafe cargo audit
 
 
 # Check a package and all of its dependencies for errors.

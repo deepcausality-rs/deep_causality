@@ -6,7 +6,7 @@
 use deep_causality::errors::CausalityError;
 use deep_causality::prelude::{BaseCausaloid, Causaloid, IdentificationValue, NumericalValue};
 
-pub fn get_test_causaloid<'l>() -> BaseCausaloid {
+pub fn get_test_causaloid() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
     fn causal_fn(obs: &NumericalValue) -> Result<bool, CausalityError> {

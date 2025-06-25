@@ -5,7 +5,6 @@
 
 use dcl_data_structures::grid_type::ArrayGrid;
 use dcl_data_structures::prelude::PointIndex;
-use std::u64;
 
 use crate::errors::{AdjustmentError, UpdateError};
 use crate::prelude::{Adjustable, DiscreteTime};
@@ -44,8 +43,10 @@ impl Adjustable<u64> for DiscreteTime {
             ));
         }
 
-        // Calculate the data adjustment
-        let adjusted_time = self.tick_unit + time_adjustment;
+        // Calculate checked data adjustment
+        let Some(adjusted_time) = self.tick_unit.checked_add(time_adjustment) else {
+            return Err(AdjustmentError("Adjustment failed, u64 overflow".into()));
+        };
 
         // Check for errors i.e. div by zero / overflow and return either an error or OK().
         if adjusted_time < u64::default() {

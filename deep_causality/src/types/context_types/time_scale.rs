@@ -10,6 +10,7 @@ use std::fmt::{Display, Formatter};
 pub enum TimeScale {
     #[default]
     NoScale,
+    Steps,
     Symbolic,
     Nanoseconds,
     Microseconds,

@@ -3,11 +3,11 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+mod adjustable;
 mod display;
 mod identifiable;
 mod scalar_projector;
 mod temporable;
-mod adjustable;
 
 use crate::prelude::{TimeKind, TimeScale};
 use deep_causality_macros::Constructor;

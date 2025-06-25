@@ -5,7 +5,6 @@
 
 use dcl_data_structures::grid_type::ArrayGrid;
 use dcl_data_structures::prelude::PointIndex;
-use std::u64;
 
 use crate::errors::{AdjustmentError, UpdateError};
 use crate::prelude::{Adjustable, EntropicTime};
@@ -36,17 +35,13 @@ impl Adjustable<u64> for EntropicTime {
 
         // get the data at the index position
         let time_adjustment = array_grid.get(p);
+        
 
-        // Check if the new time is non-negative. Unless you want to go back in time...
-        if time_adjustment < u64::default() {
-            return Err(AdjustmentError(
-                "Adjustment failed, new time is NEGATIVE".into(),
-            ));
-        }
-
-        // Calculate the data adjustment
-        let adjusted_time = self.entropy_tick + time_adjustment;
-
+        // Calculate checked data adjustment
+        let Some(adjusted_time) = self.entropy_tick.checked_add(time_adjustment) else {
+            return Err(AdjustmentError("Adjustment failed, u64 overflow".into()));
+        };
+        
         // Check for errors i.e. div by zero / overflow and return either an error or OK().
         if adjusted_time < u64::default() {
             return Err(AdjustmentError(
@@ -55,7 +50,7 @@ impl Adjustable<u64> for EntropicTime {
         }
 
         // Check if the new time is non-zero
-        if adjusted_time == u64::default() {
+        if time_adjustment == 0 {
             return Err(AdjustmentError(
                 "Adjustment failed, new time is ZERO".into(),
             ));

@@ -9,7 +9,7 @@ use deep_causality::prelude::*;
 
 use crate::utils::test_utils::*;
 
-fn get_test_causality_btree_map<'l>() -> BTreeMap<i8, BaseCausaloid> {
+fn get_test_causality_btree_map() -> BTreeMap<i8, BaseCausaloid> {
     let q1 = get_test_causaloid();
     let q2 = get_test_causaloid();
     let q3 = get_test_causaloid();

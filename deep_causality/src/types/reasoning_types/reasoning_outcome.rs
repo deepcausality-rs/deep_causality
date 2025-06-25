@@ -23,17 +23,11 @@ impl ReasoningOutcome {
     }
 
     pub fn is_probabilistic(&self) -> bool {
-        match self {
-            ReasoningOutcome::Probabilistic(_) => true,
-            _ => false,
-        }
+        matches!(self, ReasoningOutcome::Probabilistic(_))
     }
 
     pub fn is_symbolic(&self) -> bool {
-        match self {
-            ReasoningOutcome::Symbolic(_) => true,
-            _ => false,
-        }
+        matches!(self, ReasoningOutcome::Probabilistic(_))
     }
 }
 

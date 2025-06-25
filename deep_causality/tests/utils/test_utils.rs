@@ -27,14 +27,14 @@ pub fn get_test_inf_vec() -> Vec<Inference> {
     Vec::from_iter([i1, i2])
 }
 
-pub fn get_test_causality_vec<'l>() -> BaseCausaloidVec {
+pub fn get_test_causality_vec() -> BaseCausaloidVec {
     let q1 = get_test_causaloid();
     let q2 = get_test_causaloid();
     let q3 = get_test_causaloid();
     Vec::from_iter([q1, q2, q3])
 }
 
-pub fn get_test_causaloid<'l>() -> BaseCausaloid {
+pub fn get_test_causaloid() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
 
@@ -62,7 +62,7 @@ pub fn get_test_causaloid<'l>() -> BaseCausaloid {
     Causaloid::new(id, causal_fn, description)
 }
 
-pub fn get_test_error_causaloid<'l>() -> BaseCausaloid {
+pub fn get_test_error_causaloid() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
 
