@@ -9,6 +9,7 @@ use deep_causality_macros::Constructor;
 mod adjustable;
 mod coordinate;
 mod display;
+mod getters;
 mod identifiable;
 mod space_temporal;
 mod space_temporal_interval;

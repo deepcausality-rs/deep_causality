@@ -25,6 +25,30 @@ impl Adjustable<f64> for EuclideanSpacetime {
         let new_z = array_grid.get(p3);
         let new_t = array_grid.get(p4);
 
+        if !new_x.is_finite() {
+            return Err(UpdateError(
+                "Update failed, new X is not a finite value ".into(),
+            ));
+        }
+
+        if !new_y.is_finite() {
+            return Err(UpdateError(
+                "Update failed, new Y is not a finite value ".into(),
+            ));
+        }
+
+        if !new_z.is_finite() {
+            return Err(UpdateError(
+                "Update failed, new Z is not a finite value ".into(),
+            ));
+        }
+
+        if !new_t.is_finite() {
+            return Err(UpdateError(
+                "Update failed, new T is not a finite value ".into(),
+            ));
+        }
+
         // Check if the new data are non zero and good to update
         if new_x == f64::default() {
             return Err(UpdateError("Update failed, new X data is ZERO".into()));
@@ -73,27 +97,27 @@ impl Adjustable<f64> for EuclideanSpacetime {
         let adjusted_t = self.t + new_t;
 
         // Check if the adjusted data are safe to update i.e. not greater than max f64 value
-        if adjusted_x > f64::MAX {
+        if !adjusted_x.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new X data exceeds max f64 value ".into(),
+                "Adjustment failed, new X is not a finite value ".into(),
             ));
         }
 
-        if adjusted_y > f64::MAX {
+        if !adjusted_y.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new Y data exceeds max f64 value ".into(),
+                "Adjustment failed, new Y is not a finite value ".into(),
             ));
         }
 
-        if adjusted_z > f64::MAX {
+        if !adjusted_z.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new Z data exceeds max f64 value ".into(),
+                "Adjustment failed, new Z is not a finite value ".into(),
             ));
         }
 
-        if adjusted_t > f64::MAX {
+        if !adjusted_t.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new T data exceeds max f64 value ".into(),
+                "Adjustment failed, new T is not a finite value ".into(),
             ));
         }
 

@@ -25,6 +25,30 @@ impl Adjustable<f64> for TangentSpacetime {
         let new_z = array_grid.get(p3);
         let new_t = array_grid.get(p4);
 
+        if !new_x.is_finite() {
+            return Err(UpdateError(
+                "Update failed, new X is not a finite value".into(),
+            ));
+        }
+
+        if !new_y.is_finite() {
+            return Err(UpdateError(
+                "Update failed, new Y is not a finite value".into(),
+            ));
+        }
+
+        if !new_z.is_finite() {
+            return Err(UpdateError(
+                "Update failed, new Z is not a finite value".into(),
+            ));
+        }
+
+        if !new_t.is_finite() {
+            return Err(UpdateError(
+                "Update failed, new T is not a finite value".into(),
+            ));
+        }
+
         // Replace the internal data with the new data
         self.x = new_x;
         self.y = new_y;

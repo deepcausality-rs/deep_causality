@@ -6,6 +6,7 @@
 mod adjustable;
 mod coordinate;
 mod display;
+mod getters;
 mod identifiable;
 mod metric;
 mod space_temporal;

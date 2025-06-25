@@ -6,6 +6,18 @@
 use crate::prelude::TangentSpacetime;
 
 impl TangentSpacetime {
+    pub fn x(&self) -> f64 {
+        self.x
+    }
+
+    pub fn y(&self) -> f64 {
+        self.y
+    }
+
+    pub fn z(&self) -> f64 {
+        self.z
+    }
+
     /// Returns position as [t, x, y, z]
     pub fn position(&self) -> [f64; 4] {
         [self.t, self.x, self.y, self.z]
