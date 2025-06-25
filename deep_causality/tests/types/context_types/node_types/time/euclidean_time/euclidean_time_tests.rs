@@ -31,3 +31,18 @@ fn test_euclidean_time_scalar_projector_trait() {
     let scalar: f64 = t.project();
     assert_eq!(scalar, 0.001);
 }
+
+#[test]
+fn test_from_euclidean_time_to_time_kind() {
+    let time = EuclideanTime::new(1, TimeScale::Second, 3.00);
+    let kind: TimeKind = time.into();
+
+    match kind {
+        TimeKind::Euclidean(t) => {
+            assert_eq!(t.id(), 1);
+            assert_eq!(t.time_scale(), TimeScale::Second);
+            assert_eq!(t.time_unit(), 3.00);
+        }
+        _ => panic!("Expected TimeKind::Euclidean variant"),
+    }
+}

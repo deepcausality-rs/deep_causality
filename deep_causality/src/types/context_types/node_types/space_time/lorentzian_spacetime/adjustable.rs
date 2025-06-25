@@ -81,25 +81,25 @@ impl Adjustable<f64> for LorentzianSpacetime {
         // Check if the adjusted data are safe to update i.e. not greater than max f64 value
         if !adjusted_x.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new X is not a finite value ".into(),
+                "Adjustment failed, adjusted X is not a finite value ".into(),
             ));
         }
 
         if !adjusted_y.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new Y is not a finite value ".into(),
+                "Adjustment failed, adjusted Y is not a finite value ".into(),
             ));
         }
 
         if !adjusted_z.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new Z is not a finite value ".into(),
+                "Adjustment failed, adjusted Z is not a finite value ".into(),
             ));
         }
 
         if !adjusted_t.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new T is not a finite value ".into(),
+                "Adjustment failed, adjusted T is not a finite value ".into(),
             ));
         }
 

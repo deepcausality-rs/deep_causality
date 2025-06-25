@@ -46,3 +46,18 @@ fn test_scalar_projector_trait() {
 
     assert_eq!(scalar, 12345);
 }
+
+#[test]
+fn test_from_discrete_time_to_time_kind() {
+    let time = DiscreteTime::new(42, TimeScale::Second, 123);
+    let kind: TimeKind = time.into();
+
+    match kind {
+        TimeKind::Discrete(t) => {
+            assert_eq!(t.id(), 42);
+            assert_eq!(t.time_scale(), TimeScale::Second);
+            assert_eq!(t.time_unit(), 123);
+        }
+        _ => panic!("Expected TimeKind::Discrete variant"),
+    }
+}

@@ -72,3 +72,51 @@ fn test_lorentzian_spacetime_adjust_with_infinity_should_fail() {
     let err = result.unwrap_err().to_string();
     assert!(err.contains("not a finite value"));
 }
+
+#[test]
+fn test_lorentzian_spacetime_update_fails_with_non_finite_x() {
+    let mut s = LorentzianSpacetime::new(0, 1.0, 2.0, 3.0, 4.0, TimeScale::Second);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array3D);
+    grid.set(PointIndex::new3d(0, 0, 0), f64::NAN); // x
+    grid.set(PointIndex::new3d(0, 0, 1), 2.0); // y
+    grid.set(PointIndex::new3d(0, 0, 2), 3.0); // z
+    grid.set(PointIndex::new3d(0, 0, 3), 4.0); // t
+    let result = s.update(&grid);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_lorentzian_spacetime_update_fails_with_non_finite_y() {
+    let mut s = LorentzianSpacetime::new(0, 1.0, 2.0, 3.0, 4.0, TimeScale::Second);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array3D);
+    grid.set(PointIndex::new3d(0, 0, 0), 1.0);
+    grid.set(PointIndex::new3d(0, 0, 1), f64::INFINITY); // y
+    grid.set(PointIndex::new3d(0, 0, 2), 3.0);
+    grid.set(PointIndex::new3d(0, 0, 3), 4.0);
+    let result = s.update(&grid);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_lorentzian_spacetime_update_fails_with_non_finite_z() {
+    let mut s = LorentzianSpacetime::new(0, 1.0, 2.0, 3.0, 4.0, TimeScale::Second);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array3D);
+    grid.set(PointIndex::new3d(0, 0, 0), 1.0);
+    grid.set(PointIndex::new3d(0, 0, 1), 2.0);
+    grid.set(PointIndex::new3d(0, 0, 2), f64::NEG_INFINITY); // z
+    grid.set(PointIndex::new3d(0, 0, 3), 4.0);
+    let result = s.update(&grid);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_lorentzian_spacetime_update_fails_with_non_finite_t() {
+    let mut s = LorentzianSpacetime::new(0, 1.0, 2.0, 3.0, 4.0, TimeScale::Second);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array3D);
+    grid.set(PointIndex::new3d(0, 0, 0), 1.0);
+    grid.set(PointIndex::new3d(0, 0, 1), 2.0);
+    grid.set(PointIndex::new3d(0, 0, 2), 3.0);
+    grid.set(PointIndex::new3d(0, 0, 3), f64::NAN); // t
+    let result = s.update(&grid);
+    assert!(result.is_err());
+}

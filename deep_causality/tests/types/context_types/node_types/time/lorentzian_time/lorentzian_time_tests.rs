@@ -59,3 +59,20 @@ fn test_copy() {
     assert_eq!(t1, t2);
     assert_eq!(t1, t3);
 }
+
+use deep_causality::prelude::*;
+
+#[test]
+fn test_from_lorentzian_time_to_time_kind() {
+    let time = LorentzianTime::new(42, TimeScale::Second, 3.14);
+    let kind: TimeKind = time.into();
+
+    match kind {
+        TimeKind::Lorentzian(t) => {
+            assert_eq!(t.id(), 42);
+            assert_eq!(t.time_scale(), TimeScale::Second);
+            assert_eq!(t.time_unit(), 3.14);
+        }
+        _ => panic!("Expected TimeKind::Lorentzian variant"),
+    }
+}

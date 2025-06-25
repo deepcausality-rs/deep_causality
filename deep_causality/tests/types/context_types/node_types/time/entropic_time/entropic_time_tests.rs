@@ -47,3 +47,17 @@ fn test_display_trait_output() {
     assert!(output.contains("tick_scale: NoScale"));
     assert!(output.contains("tick_unit: 99"));
 }
+
+#[test]
+fn test_from_entropic_time_to_time_kind() {
+    let time = EntropicTime::new(7, 1);
+    let kind: TimeKind = time.into();
+
+    match kind {
+        TimeKind::Entropic(t) => {
+            assert_eq!(t.id(), 7);
+            assert_eq!(t.time_unit(), 1);
+        }
+        _ => panic!("Expected TimeKind::Entropic variant"),
+    }
+}

@@ -85,25 +85,25 @@ impl Adjustable<f64> for TangentSpacetime {
         // Check if the adjusted data are safe to update i.e. not greater than max f64 value
         if !adjusted_x.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new x value is not finite".into(),
+                "Adjustment failed, adjusted x value is not finite".into(),
             ));
         }
 
         if !adjusted_y.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new Y value is not finite".into(),
+                "Adjustment failed, adjusted Y value is not finite".into(),
             ));
         }
 
         if !adjusted_z.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new z value is not finite".into(),
+                "Adjustment failed, adjusted z value is not finite".into(),
             ));
         }
 
         if !adjusted_t.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new t value is not finite".into(),
+                "Adjustment failed, adjusted t value is not finite".into(),
             ));
         }
 

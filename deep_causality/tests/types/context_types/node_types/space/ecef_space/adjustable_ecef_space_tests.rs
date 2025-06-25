@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use dcl_data_structures::prelude::{ArrayGrid, ArrayType};
+use dcl_data_structures::prelude::{ArrayGrid, ArrayType, PointIndex};
 use deep_causality::prelude::{Adjustable, Coordinate, EcefSpace, Identifiable, Metric, Spatial};
 
 #[test]
@@ -79,4 +79,43 @@ fn test_ecef_space_trait_default_impls() {
 fn test_spatial_trait_marker() {
     fn assert_spatial<T: Spatial<f64>>() {}
     assert_spatial::<EcefSpace>();
+}
+
+#[test]
+fn test_ecef_update_x_not_finite() {
+    let mut space = EcefSpace::new(1, 1.0, 1.0, 1.0);
+    let grid: ArrayGrid<f64, 3, 3, 3, 3> = ArrayGrid::new(ArrayType::Array3D);
+
+    grid.set(PointIndex::new3d(0, 0, 0), f64::NAN);
+    grid.set(PointIndex::new3d(0, 0, 1), 1.0);
+    grid.set(PointIndex::new3d(0, 0, 2), 1.0);
+
+    let result = space.update(&grid);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_ecef_update_y_not_finite() {
+    let mut space = EcefSpace::new(2, 1.0, 1.0, 1.0);
+    let grid: ArrayGrid<f64, 3, 3, 3, 3> = ArrayGrid::new(ArrayType::Array3D);
+
+    grid.set(PointIndex::new3d(0, 0, 0), 1.0);
+    grid.set(PointIndex::new3d(0, 0, 1), f64::INFINITY);
+    grid.set(PointIndex::new3d(0, 0, 2), 1.0);
+
+    let result = space.update(&grid);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_ecef_update_z_not_finite() {
+    let mut space = EcefSpace::new(3, 1.0, 1.0, 1.0);
+    let grid: ArrayGrid<f64, 3, 3, 3, 3> = ArrayGrid::new(ArrayType::Array3D);
+
+    grid.set(PointIndex::new3d(0, 0, 0), 1.0);
+    grid.set(PointIndex::new3d(0, 0, 1), 1.0);
+    grid.set(PointIndex::new3d(0, 0, 2), f64::NEG_INFINITY);
+
+    let result = space.update(&grid);
+    assert!(result.is_err());
 }
