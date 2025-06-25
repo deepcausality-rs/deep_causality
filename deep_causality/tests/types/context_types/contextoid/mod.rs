@@ -4,3 +4,4 @@
  */
 #[cfg(test)]
 mod contextoid_tests;
+mod contextoid_type_tests;
