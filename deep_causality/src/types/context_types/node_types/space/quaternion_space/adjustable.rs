@@ -83,7 +83,7 @@ impl Adjustable<f64> for QuaternionSpace {
         // Check if the adjusted data are safe to update i.e. not greater than max f64 value
         if !adjusted_w.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new X value is not finite".into(),
+                "Adjustment failed, new W value is not finite".into(),
             ));
         }
 
