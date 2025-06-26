@@ -32,7 +32,7 @@ fn test_coordinate_out_of_bounds() {
 fn test_display_trait() {
     let g = GeoSpace::new(1, 52.520008, 13.404954, 34.0);
     let output = format!("{}", g);
-    assert_eq!(output, "GeoSpace(id=1, x=52.5200, y=13.4050, z=34.0000)");
+    assert_eq!(output, "GeoSpace(id=1, lat=52.5200, lon=13.4050, alt=34.0000)");
 }
 
 #[test]

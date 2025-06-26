@@ -13,7 +13,7 @@ fn test_adjustable_geo_space_display_and_id() {
     assert_eq!(id, 1);
     assert_eq!(
         format!("{}", geo),
-        "GeoSpace(id=1, x=52.5200, y=13.4000, z=34.0000)"
+        "GeoSpace(id=1, lat=52.5200, lon=13.4000, alt=34.0000)"
     );
 }
 
