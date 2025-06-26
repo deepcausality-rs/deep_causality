@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
 use crate::prelude::{PointIndex, Storage};
 
@@ -8,6 +10,11 @@ use crate::prelude::{PointIndex, Storage};
 // H Height
 // D Depth
 // C Chronos (Time) since T was already taken for Type T
+/// Implements `Storage` for 4D arrays `[[[[T; W]; H]; D]; C]`
+/// indexed along X (width), Y (height), Z (depth), and T (time) axes.
+///
+/// Note: The last dimension `C` represents **chronos** (time),
+/// since `T` is used for the value type.
 impl<T, const W: usize, const H: usize, const D: usize, const C: usize> Storage<T>
     for [[[[T; W]; H]; D]; C]
 where

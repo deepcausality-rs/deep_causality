@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
 use std::array;
 
@@ -11,7 +13,7 @@ fn get_test_causality_data() -> [NumericalValue; 10] {
     [60.0, 99.0, 82.0, 93.8, 74.8, 82.0, 93.8, 74.0, 74.8, 82.0]
 }
 
-pub fn get_test_causality_array<'l>() -> [BaseCausaloid<'l>; 10] {
+pub fn get_test_causality_array() -> [BaseCausaloid; 10] {
     // Causaloid doesn't implement Copy hence the from_fn workaround for array initialization
     array::from_fn(|_| get_test_causaloid())
 }

@@ -1,11 +1,15 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
 use crate::prelude::{PointIndex, Storage};
 
 // T Type
 // W Width
 // H Height
+/// Implements `Storage` for 2D arrays `[[T; W]; H]`
+/// indexed along X (width) and Y (height) axes.
 impl<T, const W: usize, const H: usize> Storage<T> for [[T; W]; H]
 where
     T: Copy,

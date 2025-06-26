@@ -1,9 +1,9 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
-use deep_causality::prelude::{
-    BaseContextoid, Contextoid, ContextoidType, Contextuable, Identifiable, Root,
-};
+use deep_causality::prelude::{BaseContextoid, Contextoid, ContextoidType, Identifiable, Root};
 
 fn get_test_contextoid() -> BaseContextoid {
     let id = 1;
@@ -33,7 +33,7 @@ fn test_vertex_type() {
     assert!(node.vertex_type().root().is_some());
     assert!(node.vertex_type().dataoid().is_none());
     assert!(node.vertex_type().tempoid().is_none());
-    assert!(node.vertex_type().spaceiod().is_none());
+    assert!(node.vertex_type().spaceoid().is_none());
     assert!(node.vertex_type().space_tempoid().is_none());
 }
 

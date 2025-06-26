@@ -1,9 +1,11 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
 use deep_causality::prelude::{
-    BaseContext, Context, Contextoid, ContextoidType, ContextuableGraph, Identifiable,
-    RelationKind, Root, Time, TimeScale,
+    BaseContext, Context, Contextoid, ContextoidType, ContextuableGraph, EuclideanTime,
+    Identifiable, RelationKind, Root, TimeScale,
 };
 
 fn get_context() -> BaseContext {
@@ -154,8 +156,8 @@ fn test_add_edge() {
 
     let t_id = 12;
     let t_time_scale = TimeScale::Month;
-    let t_time_unit = 12;
-    let tempoid = Time::new(t_id, t_time_scale, t_time_unit);
+    let t_time_unit = 12.0f64;
+    let tempoid = EuclideanTime::new(t_id, t_time_scale, t_time_unit);
 
     let id = 2;
     let contextoid = Contextoid::new(id, ContextoidType::Tempoid(tempoid));
@@ -185,8 +187,8 @@ fn test_contains_edge() {
 
     let t_id = 12;
     let t_time_scale = TimeScale::Month;
-    let t_time_unit = 12;
-    let tempoid = Time::new(t_id, t_time_scale, t_time_unit);
+    let t_time_unit = 12.0f64;
+    let tempoid = EuclideanTime::new(t_id, t_time_scale, t_time_unit);
 
     let id = 2;
     let contextoid = Contextoid::new(id, ContextoidType::Tempoid(tempoid));
@@ -215,8 +217,8 @@ fn test_remove_edge() {
 
     let t_id = 12;
     let t_time_scale = TimeScale::Month;
-    let t_time_unit = 12;
-    let tempoid = Time::new(t_id, t_time_scale, t_time_unit);
+    let t_time_unit = 12.0f64;
+    let tempoid = EuclideanTime::new(t_id, t_time_scale, t_time_unit);
 
     let id = 2;
     let contextoid = Contextoid::new(id, ContextoidType::Tempoid(tempoid));

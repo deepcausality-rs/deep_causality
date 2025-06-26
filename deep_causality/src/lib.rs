@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
 //! DeepCausality is a hyper-geometric computational causality library
 //! that enables fast and deterministic context-aware causal reasoning over complex causality models.
@@ -13,7 +15,8 @@
 //!
 pub mod errors;
 pub mod extensions;
+pub(crate) mod macros;
 pub mod prelude;
-pub mod protocols;
+pub mod traits;
 pub mod types;
 pub mod utils;

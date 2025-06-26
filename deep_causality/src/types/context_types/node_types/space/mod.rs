@@ -1,30 +1,11 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
-use std::hash::Hash;
-use std::ops::{Add, Mul, Sub};
-
-use deep_causality_macros::Constructor;
-
-mod display;
-mod identifiable;
-mod spatial;
-
-#[derive(Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
-pub struct Space<T>
-where
-    T: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<T, Output = T>
-        + Sub<T, Output = T>
-        + Mul<T, Output = T>,
-{
-    id: u64,
-    x: T,
-    y: T,
-    z: T,
-}
+pub mod ecef_space;
+pub mod euclidean_space;
+pub mod geo_space;
+pub mod ned_space;
+pub mod quaternion_space;
+pub mod space_kind;

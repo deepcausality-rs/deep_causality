@@ -1,0 +1,14 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+use crate::prelude::{LorentzianTime, ScalarProjector, Temporal};
+
+impl ScalarProjector for LorentzianTime {
+    type Scalar = f64;
+
+    fn project(&self) -> Self::Scalar {
+        self.time_unit()
+    }
+}

@@ -1,9 +1,11 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
 use deep_causality::prelude::{
-    BaseContextoid, Contextoid, ContextoidType, Contextuable, Data, Root, Space, SpaceTime, Time,
-    TimeScale,
+    BaseContextoid, Contextoid, ContextoidType, Data, EuclideanSpace, EuclideanSpacetime,
+    EuclideanTime, Root, TimeScale,
 };
 
 #[test]
@@ -15,7 +17,7 @@ fn test_root_some() {
     //
     assert!(node.vertex_type().dataoid().is_none());
     assert!(node.vertex_type().tempoid().is_none());
-    assert!(node.vertex_type().spaceiod().is_none());
+    assert!(node.vertex_type().spaceoid().is_none());
     assert!(node.vertex_type().space_tempoid().is_none());
 }
 
@@ -38,7 +40,7 @@ fn test_dataoid_some() {
     //
     assert!(node.vertex_type().root().is_none());
     assert!(node.vertex_type().tempoid().is_none());
-    assert!(node.vertex_type().spaceiod().is_none());
+    assert!(node.vertex_type().spaceoid().is_none());
     assert!(node.vertex_type().space_tempoid().is_none());
 }
 
@@ -54,15 +56,15 @@ fn test_dataoid_none() {
 fn test_tempoid_some() {
     let id = 1;
     let time_scale = TimeScale::Month;
-    let time_unit = 1;
+    let time_unit = 1f64;
 
-    let tempoid = Time::new(id, time_scale, time_unit);
+    let tempoid = EuclideanTime::new(id, time_scale, time_unit);
     let node: BaseContextoid = Contextoid::new(id, ContextoidType::Tempoid(tempoid));
     assert!(node.vertex_type().tempoid().is_some());
     //
     assert!(node.vertex_type().dataoid().is_none());
     assert!(node.vertex_type().root().is_none());
-    assert!(node.vertex_type().spaceiod().is_none());
+    assert!(node.vertex_type().spaceoid().is_none());
     assert!(node.vertex_type().space_tempoid().is_none());
 }
 
@@ -75,15 +77,12 @@ fn test_tempoid_none() {
 }
 
 #[test]
-fn test_spaceiod_some() {
+fn test_spaceoid_some() {
     let id = 1;
-    let x = 7;
-    let y = 8;
-    let z = 9;
 
-    let d = Space::new(id, x, y, z);
+    let d = EuclideanSpace::new(id, 1.0, 2.0, 3.0);
     let node: BaseContextoid = Contextoid::new(id, ContextoidType::Spaceoid(d));
-    assert!(node.vertex_type().spaceiod().is_some());
+    assert!(node.vertex_type().spaceoid().is_some());
     //
     assert!(node.vertex_type().dataoid().is_none());
     assert!(node.vertex_type().root().is_none());
@@ -92,30 +91,27 @@ fn test_spaceiod_some() {
 }
 
 #[test]
-fn test_spaceiod_none() {
+fn test_spaceoid_none() {
     let id = 1;
     let root = Root::new(id);
     let node: BaseContextoid = Contextoid::new(id, ContextoidType::Root(root));
-    assert!(node.vertex_type().spaceiod().is_none());
+    assert!(node.vertex_type().spaceoid().is_none());
 }
 
 #[test]
 fn test_space_tempoid_some() {
     let id = 1;
     let time_scale = TimeScale::Month;
-    let time_unit = 1;
-    let x = 7;
-    let y = 8;
-    let z = 9;
+    let time_unit = 1f64;
 
-    let d = SpaceTime::new(id, time_scale, time_unit, x, y, z);
+    let d = EuclideanSpacetime::new(id, 0.0, 0.0, 0.0, time_unit, time_scale);
     let node: BaseContextoid = Contextoid::new(id, ContextoidType::SpaceTempoid(d));
     assert!(node.vertex_type().space_tempoid().is_some());
     //
     assert!(node.vertex_type().dataoid().is_none());
     assert!(node.vertex_type().root().is_none());
     assert!(node.vertex_type().tempoid().is_none());
-    assert!(node.vertex_type().spaceiod().is_none());
+    assert!(node.vertex_type().spaceoid().is_none());
 }
 
 #[test]

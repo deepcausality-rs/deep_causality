@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
 use std::collections::HashMap;
 
@@ -7,7 +9,7 @@ use deep_causality::prelude::*;
 
 use crate::utils::test_utils::*;
 
-fn get_test_causality_map<'l>() -> HashMap<i8, BaseCausaloid<'l>> {
+fn get_test_causality_map() -> HashMap<i8, BaseCausaloid> {
     let q1 = get_test_causaloid();
     let q2 = get_test_causaloid();
     let q3 = get_test_causaloid();

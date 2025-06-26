@@ -1,9 +1,9 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
 use std::collections::HashMap;
-use std::hash::Hash;
-use std::ops::*;
 
 use ultragraph::prelude::*;
 
@@ -15,51 +15,41 @@ mod extendable_contextuable_graph;
 mod identifiable;
 mod indexable;
 
-type ExtraContext<D, S, T, ST, V> = UltraGraph<Contextoid<D, S, T, ST, V>>;
+type ExtraContext<D, S, T, ST, SYM, VS, VT> = UltraGraph<Contextoid<D, S, T, ST, SYM, VS, VT>>;
 
-type ExtraContextMap<D, S, T, ST, V> = HashMap<u64, ExtraContext<D, S, T, ST, V>>;
+type ExtraContextMap<D, S, T, ST, SYM, VS, VT> =
+    HashMap<u64, ExtraContext<D, S, T, ST, SYM, VS, VT>>;
 
-pub struct Context<D, S, T, ST, V>
+#[allow(clippy::type_complexity)]
+pub struct Context<D, S, T, ST, SYM, VS, VT>
 where
-    D: Datable,
-    S: Spatial<V>,
-    T: Temporable<V>,
-    ST: SpaceTemporal<V>,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>,
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
 {
     id: u64,
     name: String,
-    base_context: UltraGraph<Contextoid<D, S, T, ST, V>>,
-    extra_contexts: Option<ExtraContextMap<D, S, T, ST, V>>,
+    base_context: UltraGraph<Contextoid<D, S, T, ST, SYM, VS, VT>>,
+    extra_contexts: Option<ExtraContextMap<D, S, T, ST, SYM, VS, VT>>,
     number_of_extra_contexts: u64,
     extra_context_id: u64,
     current_index_map: HashMap<usize, usize>,
     previous_index_map: HashMap<usize, usize>,
 }
 
-impl<D, S, T, ST, V> Context<D, S, T, ST, V>
+impl<D, S, T, ST, SYM, VS, VT> Context<D, S, T, ST, SYM, VS, VT>
 where
-    D: Datable,
-    S: Spatial<V>,
-    T: Temporable<V>,
-    ST: SpaceTemporal<V>,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>,
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
 {
     /// Creates a new context with the given node capacity.
     pub fn with_capacity(id: u64, name: &str, capacity: usize) -> Self {

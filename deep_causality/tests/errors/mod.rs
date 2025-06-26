@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
 #[cfg(test)]
 mod action_error_tests;
@@ -15,5 +17,6 @@ mod causality_error_tests;
 mod causality_graph_error_tests;
 #[cfg(test)]
 mod context_index_error_tests;
+mod index_error_tests;
 #[cfg(test)]
 mod update_error_tests;

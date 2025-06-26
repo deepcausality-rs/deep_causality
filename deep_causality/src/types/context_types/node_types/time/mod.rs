@@ -1,30 +1,11 @@
-use std::hash::Hash;
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
-use std::ops::*;
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
-use deep_causality_macros::Constructor;
-
-use crate::prelude::TimeScale;
-
-mod display;
-mod identifiable;
-mod temporable;
-
-#[derive(Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
-pub struct Time<T>
-where
-    T: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<T, Output = T>
-        + Sub<T, Output = T>
-        + Mul<T, Output = T>,
-{
-    id: u64,
-    time_scale: TimeScale,
-    time_unit: T,
-}
+pub mod discrete_time;
+pub mod entropic_time;
+pub mod euclidean_time;
+pub mod lorentzian_time;
+pub mod symbolic_time;
+pub mod time_kind;

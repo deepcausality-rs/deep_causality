@@ -1,28 +1,26 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
 use super::*;
 
-impl<D, S, T, ST, V> ContextuableGraph<D, S, T, ST, V> for Context<D, S, T, ST, V>
+#[allow(clippy::type_complexity)]
+impl<D, S, T, ST, SYM, VS, VT> ContextuableGraph<D, S, T, ST, SYM, VS, VT>
+    for Context<D, S, T, ST, SYM, VS, VT>
 where
-    D: Datable,
-    S: Spatial<V>,
-    T: Temporable<V>,
-    ST: SpaceTemporal<V>,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>,
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
 {
     /// Ads a new Contextoid to the context.
     /// You can add the same contextoid multiple times,
     /// but each one will return a new and unique node index.
-    fn add_node(&mut self, value: Contextoid<D, S, T, ST, V>) -> usize {
+    fn add_node(&mut self, value: Contextoid<D, S, T, ST, SYM, VS, VT>) -> usize {
         self.base_context.add_node(value)
     }
 
@@ -33,7 +31,7 @@ where
 
     /// Returns a reference to the contextoid with the given index.
     /// If the context does not contain the contextoid, it will return None.
-    fn get_node(&self, index: usize) -> Option<&Contextoid<D, S, T, ST, V>> {
+    fn get_node(&self, index: usize) -> Option<&Contextoid<D, S, T, ST, SYM, VS, VT>> {
         self.base_context.get_node(index)
     }
 

@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
 use std::collections::VecDeque;
 
@@ -7,7 +9,7 @@ use deep_causality::prelude::*;
 
 use crate::utils::test_utils::*;
 
-fn get_test_causality_vec_deque<'l>() -> VecDeque<BaseCausaloid<'l>> {
+fn get_test_causality_vec_deque() -> VecDeque<BaseCausaloid> {
     VecDeque::from_iter(get_test_causality_vec())
 }
 

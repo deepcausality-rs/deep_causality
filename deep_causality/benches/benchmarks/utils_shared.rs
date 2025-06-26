@@ -1,13 +1,15 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
 use deep_causality::errors::CausalityError;
 use deep_causality::prelude::{BaseCausaloid, Causaloid, IdentificationValue, NumericalValue};
 
-pub fn get_test_causaloid<'l>() -> BaseCausaloid<'l> {
+pub fn get_test_causaloid() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
-    fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
+    fn causal_fn(obs: &NumericalValue) -> Result<bool, CausalityError> {
         if obs.is_sign_negative() {
             return Err(CausalityError("Observation is negative".into()));
         }

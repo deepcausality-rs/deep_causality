@@ -1,23 +1,28 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
-
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::hash::Hash;
-use std::ops::{Add, Mul, Sub};
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
 use crate::errors::{ActionError, UpdateError};
-use crate::prelude::{
-    CausalAction, CausalState, Datable, NumericalValue, SpaceTemporal, Spatial, Temporable,
-};
+use crate::prelude::{CausalAction, CausalState, Datable, NumericalValue, Symbolic};
+use crate::traits::contextuable::space_temporal::SpaceTemporal;
+use crate::traits::contextuable::spatial::Spatial;
+use crate::traits::contextuable::temporal::Temporal;
+use std::collections::HashMap;
+use std::fmt::Debug;
+use std::sync::{Arc, RwLock};
 
 pub mod csm_action;
 pub mod csm_state;
 
-pub type CSMMap<'l, D, S, T, ST, V> =
-    HashMap<usize, (&'l CausalState<'l, D, S, T, ST, V>, &'l CausalAction)>;
-pub type CSMStateActions<'l, D, S, T, ST, V> =
-    [(&'l CausalState<'l, D, S, T, ST, V>, &'l CausalAction)];
+/// A tuple consisting of a causal state and an associated causal action.
+///
+/// This is used to represent the result of state-action reasoning steps.
+pub type StateAction<D, S, T, ST, SYM, VS, VT> =
+    (CausalState<D, S, T, ST, SYM, VS, VT>, CausalAction);
+pub type CSMMap<D, S, T, ST, SYM, VS, VT> = HashMap<usize, StateAction<D, S, T, ST, SYM, VS, VT>>;
+
+pub type CSMStateActions<D, S, T, ST, SYM, VS, VT> = [StateAction<D, S, T, ST, SYM, VS, VT>];
 
 /// # Causal State Machine (CSM)
 ///
@@ -51,96 +56,71 @@ pub type CSMStateActions<'l, D, S, T, ST, V> =
 /// 3. Initializing a CSM with state-action pairs
 /// 4. Feeding data into the CSM for evaluation
 ///
-/// See the example in `deep_causality/examples/csm/src/main.rs` for a practical implementation.
-pub struct CSM<'l, D, S, T, ST, V>
+/// See the example in `examples/csm/src/main.rs` for a practical implementation.
+#[allow(clippy::type_complexity)]
+pub struct CSM<D, S, T, ST, SYM, VS, VT>
 where
-    D: Datable + Clone + Copy,
-    S: Spatial<V> + Clone + Copy,
-    T: Temporable<V> + Clone + Copy,
-    ST: SpaceTemporal<V> + Clone + Copy,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>,
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone + Debug,
+    T: Temporal<VT> + Clone + Debug,
+    ST: SpaceTemporal<VS, VT> + Clone + Debug,
+    SYM: Symbolic + Clone + Debug,
+    VS: Clone + Debug,
+    VT: Clone + Debug,
 {
-    state_actions: RefCell<CSMMap<'l, D, S, T, ST, V>>,
+    state_actions: Arc<RwLock<CSMMap<D, S, T, ST, SYM, VS, VT>>>,
 }
 
-impl<'l, D, S, T, ST, V> CSM<'l, D, S, T, ST, V>
+#[allow(clippy::type_complexity)]
+impl<D, S, T, ST, SYM, VS, VT> CSM<D, S, T, ST, SYM, VS, VT>
 where
-    D: Datable + Clone + Copy,
-    S: Spatial<V> + Clone + Copy,
-    T: Temporable<V> + Clone + Copy,
-    ST: SpaceTemporal<V> + Clone + Copy,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>,
+    D: Datable + Clone + Debug,
+    S: Spatial<VS> + Clone + Debug,
+    T: Temporal<VT> + Clone + Debug,
+    ST: SpaceTemporal<VS, VT> + Clone + Debug,
+    SYM: Symbolic + Clone + Debug,
+    VS: Clone + Debug,
+    VT: Clone + Debug,
 {
     /// Constructs a new CSM.
-    pub fn new(state_actions: &'l CSMStateActions<'l, D, S, T, ST, V>) -> Self {
-        // Generate a new HashMap from the collection.
-        let mut state_map: CSMMap<'l, D, S, T, ST, V> = HashMap::with_capacity(state_actions.len());
+    pub fn new(state_actions: &[(&CausalState<D, S, T, ST, SYM, VS, VT>, &CausalAction)]) -> Self {
+        let mut map = HashMap::with_capacity(state_actions.len());
+
         for (state, action) in state_actions {
-            state_map.insert(*state.id(), (state, action));
+            map.insert(*state.id(), ((*state).clone(), (*action).clone()));
         }
 
         Self {
-            state_actions: RefCell::new(state_map),
+            state_actions: Arc::new(RwLock::new(map)),
         }
     }
 
     /// Returns the number of elements in the CSM.
     pub fn len(&self) -> usize {
-        self.state_actions.borrow().len()
+        self.state_actions.read().unwrap().len()
     }
 
     /// Returns true if the CSM contains no elements.
     pub fn is_empty(&self) -> bool {
-        self.state_actions.borrow().is_empty()
+        self.state_actions.read().unwrap().is_empty()
     }
-}
-
-impl<'l, D, S, T, ST, V> CSM<'l, D, S, T, ST, V>
-where
-    D: Datable + Clone + Copy,
-    S: Spatial<V> + Clone + Copy,
-    T: Temporable<V> + Clone + Copy,
-    ST: SpaceTemporal<V> + Clone + Copy,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>,
-{
     /// Inserts a new state action at the index position idx.
     /// Returns UpdateError if the index already exists.
     pub fn add_single_state(
         &self,
         idx: usize,
-        state_action: (&'l CausalState<'l, D, S, T, ST, V>, &'l CausalAction),
+        state_action: StateAction<D, S, T, ST, SYM, VS, VT>,
     ) -> Result<(), UpdateError> {
         // Check if the key exists, if so return error
-        if self.state_actions.borrow().get(&idx).is_some() {
+        if self.state_actions.read().unwrap().get(&idx).is_some() {
             return Err(UpdateError(format!("State {} already exists.", idx)));
         }
 
         // Insert the new state/action at the idx position
-        self.state_actions.borrow_mut().insert(idx, state_action);
+        self.state_actions
+            .write()
+            .unwrap()
+            .insert(idx, state_action);
 
         Ok(())
     }
@@ -149,7 +129,7 @@ where
     /// Returns UpdateError if the index does not exists.
     pub fn remove_single_state(&self, id: usize) -> Result<(), UpdateError> {
         // Need binding to prevent dropped tmp value warnings
-        let mut binding = self.state_actions.borrow_mut();
+        let mut binding = self.state_actions.write().unwrap();
 
         // Check if state actually exists in the HashMap
         let state_action = binding.get(&id);
@@ -165,29 +145,15 @@ where
 
         Ok(())
     }
-}
 
-impl<'l, D, S, T, ST, V> CSM<'l, D, S, T, ST, V>
-where
-    D: Datable + Clone + Copy,
-    S: Spatial<V> + Clone + Copy,
-    T: Temporable<V> + Clone + Copy,
-    ST: SpaceTemporal<V> + Clone + Copy,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>,
-{
     /// Evaluates a single causal state at the index position idx.
     /// Returns ActionError if the evaluation failed.
     pub fn eval_single_state(&self, id: usize, data: NumericalValue) -> Result<(), ActionError> {
-        // Need binding to prevent dropped tmp value warnings
-        let binding = self.state_actions.borrow();
+        // Need binding to prevent dropped tmp value warnings and check for rw lock poisoning
+        let binding = self
+            .state_actions
+            .read()
+            .map_err(|_| ActionError("RwLock poisoned during state evaluation".to_string()))?;
 
         // Check if state actually exists in the HashMap
         let state_action = binding.get(&id);
@@ -207,7 +173,7 @@ where
         // Check if the causal state evaluation returned an error
         if eval.is_err() {
             return Err(ActionError(format!(
-                "CSM[eval]: Error evaluating causal state: {}",
+                "CSM[eval]: Error evaluating causal state: {:?}",
                 state
             )));
         }
@@ -219,7 +185,7 @@ where
         // If the state evaluated to true, fire the associated action.
         if trigger && action.fire().is_err() {
             return Err(ActionError(format!(
-                "CSM[eval]: Failed to fire action associated with causal state {}",
+                "CSM[eval]: Failed to fire action associated with causal state {:?}",
                 state
             )));
         }
@@ -232,10 +198,10 @@ where
     pub fn update_single_state(
         &self,
         idx: usize,
-        state_action: (&'l CausalState<'l, D, S, T, ST, V>, &'l CausalAction),
+        state_action: StateAction<D, S, T, ST, SYM, VS, VT>,
     ) -> Result<(), UpdateError> {
         // Check if the key exists, if not return error
-        if self.state_actions.borrow().get(&idx).is_none() {
+        if self.state_actions.read().unwrap().get(&idx).is_none() {
             return Err(UpdateError(format!(
                 "State {} does not exists. Add it first before evaluating",
                 idx
@@ -243,38 +209,24 @@ where
         }
 
         // Update state/action at the idx position
-        self.state_actions.borrow_mut().insert(idx, state_action);
+        self.state_actions
+            .write()
+            .unwrap()
+            .insert(idx, state_action);
 
         Ok(())
     }
-}
 
-impl<'l, D, S, T, ST, V> CSM<'l, D, S, T, ST, V>
-where
-    D: Datable + Clone + Copy,
-    S: Spatial<V> + Clone + Copy,
-    T: Temporable<V> + Clone + Copy,
-    ST: SpaceTemporal<V> + Clone + Copy,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>,
-{
     /// Evaluates all causal states in the CSM.
     /// Returns ActionError if the evaluation failed.
     pub fn eval_all_states(&self) -> Result<(), ActionError> {
-        for (_, (state, action)) in self.state_actions.borrow().iter() {
+        for (_, (state, action)) in self.state_actions.read().unwrap().iter() {
             let eval = state.eval();
 
             // check if the causal state evaluation returned an error
             if eval.is_err() {
                 return Err(ActionError(format!(
-                    "CSM[eval]: Error evaluating causal state: {}",
+                    "CSM[eval]: Error evaluating causal state: {:?}",
                     state
                 )));
             }
@@ -286,7 +238,7 @@ where
             // If the state evaluated to true, fire the associated action.
             if trigger && action.fire().is_err() {
                 return Err(ActionError(format!(
-                    "CSM[eval]: Failed to fire action associated with causal state {}",
+                    "CSM[eval]: Failed to fire action associated with causal state {:?}",
                     state
                 )));
             }
@@ -298,14 +250,22 @@ where
     /// Updates all causal state with a new state collection.
     /// Note, this operation erases all previous states in the CSM by generating a new collection.
     /// Returns UpdateError if the update operation failed.
-    pub fn update_all_states(&self, state_actions: &'l CSMStateActions<'l, D, S, T, ST, V>) {
-        // Generate a new HashMap from the collection
-        let mut state_map: CSMMap<'l, D, S, T, ST, V> = HashMap::with_capacity(state_actions.len());
+    pub fn update_all_states(
+        &self,
+        state_actions: &[(&CausalState<D, S, T, ST, SYM, VS, VT>, &CausalAction)],
+    ) -> Result<(), UpdateError> {
+        let mut state_map = HashMap::with_capacity(state_actions.len());
+
         for (state, action) in state_actions {
-            state_map.insert(*state.id(), (state, action));
+            state_map.insert(*state.id(), ((*state).clone(), (*action).clone()));
         }
 
         // Replace the existing map with the newly generated one.
-        *self.state_actions.borrow_mut() = state_map
+        *self
+            .state_actions
+            .write()
+            .map_err(|_| UpdateError("RwLock poisoned during CSM state update".to_string()))? =
+            state_map;
+        Ok(())
     }
 }

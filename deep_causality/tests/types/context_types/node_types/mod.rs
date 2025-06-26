@@ -1,12 +1,12 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
-#[cfg(test)]
-mod dateoid_tests;
-#[cfg(test)]
-mod root_tests;
-#[cfg(test)]
-mod space_tempoid_tests;
-#[cfg(test)]
-mod spaceoid_tests;
-#[cfg(test)]
-mod tempoid_tests;
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+mod data;
+mod root;
+mod space;
+mod space_time;
+mod symbol;
+mod symbol_spacetime;
+mod time;

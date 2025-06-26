@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
 // Example demonstrating the usage of window_type with array storage
 use dcl_data_structures::window_type;
 

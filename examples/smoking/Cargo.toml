@@ -6,6 +6,4 @@ rust-version = "1.80"
 publish = false
 
 [dependencies]
-# For testing with latest commit in main repository
-#deep_causality = { git = "https://github.com/deepcausality-rs/deep_causality", branch = "main" }
-deep_causality = "0.6.2"
+deep_causality = { path = "../../deep_causality" }

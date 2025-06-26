@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
 use std::fmt::{Display, Formatter};
 
@@ -8,6 +10,11 @@ use std::fmt::{Display, Formatter};
 pub enum TimeScale {
     #[default]
     NoScale,
+    Steps,
+    Symbolic,
+    Nanoseconds,
+    Microseconds,
+    Millisecond,
     Second,
     Minute,
     Hour,

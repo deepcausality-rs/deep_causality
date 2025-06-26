@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
 use deep_causality::prelude::{ActionError, CausalAction, CausalState, CSM};
 
@@ -24,7 +26,7 @@ fn test_new() {
     let id = 42;
     let version = 1;
     let data = 0.23f64;
-    let causaloid = &test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid();
 
     let cs = CausalState::new(id, version, data, causaloid);
     let ca = get_test_action();
@@ -41,7 +43,7 @@ fn test_is_empty() {
     let id = 42;
     let version = 1;
     let data = 0.23f64;
-    let causaloid = &test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid();
 
     let cs = CausalState::new(id, version, data, causaloid);
     let ca = get_test_action();
@@ -60,16 +62,16 @@ fn add_single_state() {
     let data = 0.23f64;
     let causaloid = test_utils::get_test_causaloid();
 
-    let cs = CausalState::new(id, version, data, &causaloid);
+    let cs = CausalState::new(id, version, data, causaloid.clone());
     let ca = get_test_action();
     let state_action = &[(&cs, &ca)];
     let csm = CSM::new(state_action);
 
     assert_eq!(csm.len(), 1);
 
-    let cs2 = CausalState::new(2, 2, data, &causaloid);
+    let cs2 = CausalState::new(2, 2, data, causaloid);
     let ca2 = get_test_action();
-    let state_action = (&cs2, &ca2);
+    let state_action = (cs2, ca2);
 
     let res = csm.add_single_state(43, state_action);
 
@@ -84,16 +86,16 @@ fn add_single_state_err_already_exists() {
     let data = 0.23f64;
     let causaloid = test_utils::get_test_causaloid();
 
-    let cs = CausalState::new(id, version, data, &causaloid);
+    let cs = CausalState::new(id, version, data, causaloid.clone());
     let ca = get_test_action();
     let state_action = &[(&cs, &ca)];
     let csm = CSM::new(state_action);
 
     assert_eq!(csm.len(), 1);
 
-    let cs2 = CausalState::new(2, 2, data, &causaloid);
+    let cs2 = CausalState::new(2, 2, data, causaloid);
     let ca2 = get_test_action();
-    let state_action = (&cs2, &ca2);
+    let state_action = (cs2, ca2);
 
     let res = csm.add_single_state(id, state_action);
 
@@ -106,7 +108,7 @@ fn update_single_state() {
     let id = 42;
     let version = 1;
     let data = 0.23f64;
-    let causaloid = &test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid();
 
     let cs = CausalState::new(id, version, data, causaloid);
     let ca = get_test_action();
@@ -119,12 +121,12 @@ fn update_single_state() {
     let id = 44;
     let version = 1;
     let data = 0.7f64;
-    let causaloid = &test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid();
 
     let cs = CausalState::new(id, version, data, causaloid);
     let ca = get_test_action();
 
-    let state_action = (&cs, &ca);
+    let state_action = (cs, ca);
 
     let res = csm.update_single_state(42, state_action);
     assert!(res.is_ok());
@@ -136,14 +138,14 @@ fn update_single_state_err_not_found() {
     let id = 42;
     let version = 1;
     let data = 0.23f64;
-    let causaloid = &test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid();
 
     let cs = CausalState::new(id, version, data, causaloid);
     let ca = get_test_action();
     let state_action = &[(&cs, &ca)];
     let csm = CSM::new(state_action);
 
-    let res = csm.update_single_state(99, (&cs, &ca));
+    let res = csm.update_single_state(99, (cs, ca));
     assert!(res.is_err());
 }
 
@@ -154,16 +156,16 @@ fn remove_single_state() {
     let data = 0.23f64;
     let causaloid = test_utils::get_test_causaloid();
 
-    let cs = CausalState::new(id, version, data, &causaloid);
+    let cs = CausalState::new(id, version, data, causaloid.clone());
     let ca = get_test_action();
     let state_action = &[(&cs, &ca)];
     let csm = CSM::new(state_action);
 
     assert_eq!(csm.len(), 1);
 
-    let cs2 = CausalState::new(2, 2, data, &causaloid);
+    let cs2 = CausalState::new(2, 2, data, causaloid);
     let ca2 = get_test_action();
-    let state_action = (&cs2, &ca2);
+    let state_action = (cs2, ca2);
 
     let res = csm.add_single_state(43, state_action);
 
@@ -182,7 +184,7 @@ fn remove_single_state_err_not_found() {
     let data = 0.23f64;
     let causaloid = test_utils::get_test_causaloid();
 
-    let cs = CausalState::new(id, version, data, &causaloid);
+    let cs = CausalState::new(id, version, data, causaloid);
     let ca = get_test_action();
     let state_action = &[(&cs, &ca)];
     let csm = CSM::new(state_action);
@@ -199,7 +201,7 @@ fn eval_single_state() {
     let id = 42;
     let version = 1;
     let data = 0.23f64;
-    let causaloid = &test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid();
 
     let cs = CausalState::new(id, version, data, causaloid);
     let ca = get_test_action();
@@ -216,7 +218,7 @@ fn eval_single_state_err_not_found() {
     let id = 42;
     let version = 1;
     let data = 0.23f64;
-    let causaloid = &test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid();
 
     let cs = CausalState::new(id, version, data, causaloid);
     let ca = get_test_action();
@@ -232,7 +234,7 @@ fn eval_all_states() {
     let id = 42;
     let version = 1;
     let data = 0.23f64;
-    let causaloid = &test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid();
 
     let cs = CausalState::new(id, version, data, causaloid);
     let ca = get_test_action();
@@ -248,9 +250,9 @@ fn update_all_states() {
     let id = 42;
     let version = 1;
     let data = 0.23f64;
-    let causaloid = &test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid();
 
-    let cs = CausalState::new(id, version, data, causaloid);
+    let cs = CausalState::new(id, version, data, causaloid.clone());
     let ca = get_test_action();
 
     let state_actions = &[(&cs, &ca)];
@@ -264,7 +266,8 @@ fn update_all_states() {
 
     let state_actions = &[(&cs, &ca), (&cs2, &ca2)];
 
-    csm.update_all_states(state_actions);
+    let res = csm.update_all_states(state_actions);
+    assert!(res.is_ok());
 
     assert_eq!(csm.len(), 2)
 }

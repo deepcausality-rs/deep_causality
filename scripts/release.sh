@@ -1,5 +1,7 @@
+#
 # SPDX-License-Identifier: MIT
-# Copyright (c) "2024" . The DeepCausality Authors. All Rights Reserved.
+# Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+#
 
 # bin/bash
 set -o errexit

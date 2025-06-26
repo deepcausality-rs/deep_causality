@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 use deep_causality_macros::{Constructor, Getters};
 
 use crate::prelude::ActionError;
@@ -36,6 +38,7 @@ use crate::prelude::ActionError;
 ///     CausalAction::new(func, descr, version)
 /// }
 /// ```
+#[allow(clippy::type_complexity)]
 #[derive(Getters, Constructor, Clone, Debug)]
 pub struct CausalAction {
     // The function to execute when the action is fired.

@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
 use deep_causality::prelude::*;
 
@@ -111,7 +113,7 @@ fn infer_smoke_tar_causal_relation() {
     println!()
 }
 
-fn build_smoke_tar_causaloid() -> BaseCausaloid<'static> {
+fn build_smoke_tar_causaloid() -> BaseCausaloid {
     let id = 1;
     let description = "Causal relation between smoking and tar in the lung";
 
@@ -152,14 +154,14 @@ fn infer_tar_cancer_causaloid() {
     println!();
 }
 
-fn build_tar_cancer_causaloid() -> BaseCausaloid<'static> {
+fn build_tar_cancer_causaloid() -> BaseCausaloid {
     let id = 2;
     let description = "Causal relation tar in the lung and lung cancer";
 
     Causaloid::new(id, causal_fn, description)
 }
 
-fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
+fn causal_fn(obs: &NumericalValue) -> Result<bool, CausalityError> {
     if obs.is_nan() {
         return Err(CausalityError("Observation is NULL/NAN".into()));
     }

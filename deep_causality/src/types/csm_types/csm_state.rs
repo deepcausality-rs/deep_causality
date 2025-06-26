@@ -1,16 +1,14 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
-use std::fmt::{Debug, Display, Formatter};
-use std::hash::Hash;
-use std::ops::*;
-
+use crate::prelude::{Causable, CausalityError, Causaloid, Datable, NumericalValue, Symbolic};
+use crate::traits::contextuable::space_temporal::SpaceTemporal;
+use crate::traits::contextuable::spatial::Spatial;
+use crate::traits::contextuable::temporal::Temporal;
 use deep_causality_macros::{Constructor, Getters};
-
-use crate::prelude::{
-    Causable, CausalityError, Causaloid, Datable, NumericalValue, SpaceTemporal, Spatial,
-    Temporable,
-};
+use std::fmt::{Display, Formatter};
 
 /// A `CausalState` represents a state in a causal state machine (CSM) that can be evaluated
 /// based on causal conditions.
@@ -37,9 +35,9 @@ use crate::prelude::{
 /// // Create a causaloid that defines when the state is active
 /// let id = 1;
 /// let description = "Temperature threshold detector";
-/// fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
+/// fn causal_fn(obs: &NumericalValue) -> Result<bool, CausalityError> {
 ///     let threshold = 75.0;
-///     Ok(obs >= threshold)
+///     Ok(obs >= &threshold)
 /// }
 /// let causaloid = BaseCausaloid::new(id, causal_fn, description);
 ///
@@ -47,7 +45,7 @@ use crate::prelude::{
 /// let state_id = 1;
 /// let version = 1;
 /// let initial_data = 45.0;
-/// let state = CausalState::new(state_id, version, initial_data, &causaloid);
+/// let state = CausalState::new(state_id, version, initial_data, causaloid);
 ///
 /// // Evaluate the state
 /// match state.eval() {
@@ -66,23 +64,17 @@ use crate::prelude::{
 ///     Err(e) => println!("Evaluation error: {}", e),
 /// }
 /// ```
+#[allow(clippy::type_complexity)]
 #[derive(Getters, Constructor, Clone, Debug)]
-pub struct CausalState<'l, D, S, T, ST, V>
+pub struct CausalState<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,
-    S: Spatial<V> + Clone,
-    T: Temporable<V> + Clone,
-    ST: SpaceTemporal<V> + Clone,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>
-        + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
 {
     /// Unique identifier for the state
     id: usize,
@@ -91,25 +83,18 @@ where
     /// Numerical data used for state evaluation
     data: NumericalValue,
     /// Reference to a causaloid that defines when this state is active
-    causaloid: &'l Causaloid<'l, D, S, T, ST, V>,
+    causaloid: Causaloid<D, S, T, ST, SYM, VS, VT>,
 }
 
-impl<D, S, T, ST, V> CausalState<'_, D, S, T, ST, V>
+impl<D, S, T, ST, SYM, VS, VT> CausalState<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,
-    S: Spatial<V> + Clone,
-    T: Temporable<V> + Clone,
-    ST: SpaceTemporal<V> + Clone,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>
-        + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
 {
     /// Evaluates the state using its internal data.
     ///
@@ -144,27 +129,20 @@ where
     }
 }
 
-impl<D, S, T, ST, V> Display for CausalState<'_, D, S, T, ST, V>
+impl<D, S, T, ST, SYM, VS, VT> Display for CausalState<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,
-    S: Spatial<V> + Clone,
-    T: Temporable<V> + Clone,
-    ST: SpaceTemporal<V> + Clone,
-    V: Default
-        + Copy
-        + Clone
-        + Hash
-        + Eq
-        + PartialEq
-        + Add<V, Output = V>
-        + Sub<V, Output = V>
-        + Mul<V, Output = V>
-        + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "CausalState: \n id: {} version: {} \n data: {:?} causaloid: {:?}",
+            "CausalState: \n id: {} version: {} \n data: {:?} causaloid: {}",
             self.id, self.version, self.data, self.causaloid,
         )
     }

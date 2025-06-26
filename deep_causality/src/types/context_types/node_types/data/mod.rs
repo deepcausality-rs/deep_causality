@@ -1,24 +1,39 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
 use std::hash::Hash;
 
-use deep_causality_macros::{Constructor, Getters};
+use deep_causality_macros::Constructor;
 
 use crate::prelude::Datable;
 
+pub mod adjustable;
 mod display;
 pub mod identifiable;
 
-#[derive(Getters, Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
+#[derive(Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Data<T>
 where
     T: Default + Copy + Clone + Hash + Eq + PartialEq,
 {
-    #[getter(name = data_id)] // Rename ID getter to prevent conflict impl with identifiable
     id: u64,
     data: T,
 }
 
 // Type tag required for context.
-impl<T> Datable for Data<T> where T: Default + Copy + Clone + Hash + Eq + PartialEq {}
+impl<T> Datable for Data<T>
+where
+    T: Default + Copy + Clone + Hash + Eq + PartialEq,
+{
+    type Data = T;
+
+    fn get_data(&self) -> Self::Data {
+        self.data
+    }
+
+    fn set_data(&mut self, value: Self::Data) {
+        self.data = value;
+    }
+}

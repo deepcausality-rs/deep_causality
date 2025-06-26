@@ -1,9 +1,11 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
 use criterion::{criterion_group, Criterion};
 
-use deep_causality::protocols::causable::CausableReasoning;
+use deep_causality::traits::causable::CausableReasoning;
 
 use crate::benchmarks::utils_map;
 

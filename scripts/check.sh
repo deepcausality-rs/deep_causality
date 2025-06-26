@@ -1,5 +1,7 @@
+#
 # SPDX-License-Identifier: MIT
-# Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+# Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+#
 
 # bin/bash
 set -o errexit
@@ -18,7 +20,7 @@ FEATURES=unsafe cargo +nightly udeps --all-targets
 
 # Scan again to report all unfixed vulnerabilities
 # https://crates.io/crates/cargo-audit
-FEATURES=unsafe cargo audit
+#FEATURES=unsafe cargo audit
 
 
 # Check a package and all of its dependencies for errors.

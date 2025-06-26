@@ -1,8 +1,17 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
 use std::fmt;
 
+/// Enumeration representing the dimensionality of a `PointIndex`.
+///
+/// Used internally to determine how to format and interpret the index:
+/// - `OneD`: Only the X dimension is used.
+/// - `TwoD`: X and Y dimensions are used.
+/// - `ThreeD`: X, Y, and Z dimensions are used.
+/// - `FourD`: X, Y, Z, and T (time) dimensions are used.
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
 pub enum PointIndexType {
@@ -12,7 +21,11 @@ pub enum PointIndexType {
     FourD = 3,
 }
 
-/// A point used to index a GridArray up to four dimensions.
+/// A generic, strongly-typed point index for addressing elements
+/// in up to four-dimensional grid-based storage structures.
+///
+/// Each instance tracks not just the coordinate values but also
+/// the type of index (1D–4D) to support safe formatting and introspection.
 #[derive(Debug, Clone, Copy)]
 pub struct PointIndex {
     pub x: usize,
@@ -26,6 +39,9 @@ pub struct PointIndex {
 }
 
 impl PointIndex {
+    /// Creates a 1D index with the given `x` coordinate.
+    ///
+    /// All other coordinates default to 0.
     pub fn new1d(x: usize) -> Self {
         Self {
             x,
@@ -36,6 +52,9 @@ impl PointIndex {
         }
     }
 
+    /// Creates a 2D index with the given `x` and `y` coordinates.
+    ///
+    /// `z` and `t` default to 0.
     pub fn new2d(x: usize, y: usize) -> Self {
         Self {
             x,
@@ -46,6 +65,9 @@ impl PointIndex {
         }
     }
 
+    /// Creates a 3D index with the given `x`, `y`, and `z` coordinates.
+    ///
+    /// `t` defaults to 0.
     pub fn new3d(x: usize, y: usize, z: usize) -> Self {
         Self {
             x,
@@ -56,6 +78,7 @@ impl PointIndex {
         }
     }
 
+    /// Creates a 4D index with the given `x`, `y`, `z`, and `t` coordinates.
     pub fn new4d(x: usize, y: usize, z: usize, t: usize) -> Self {
         Self {
             x,
@@ -72,6 +95,14 @@ impl PointIndex {
     }
 }
 
+/// Provides a human-readable string representation of the index,
+/// varying based on its dimensional type.
+///
+/// Examples:
+/// - 1D: `(x:3)`
+/// - 2D: `(x:3, y:2)`
+/// - 3D: `(x:3, y:2, z:1)`
+/// - 4D: `(x:3, y:2, z:1, t:0)`
 impl fmt::Display for PointIndex {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.point_type {
