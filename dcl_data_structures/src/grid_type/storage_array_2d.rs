@@ -8,6 +8,8 @@ use crate::prelude::{PointIndex, Storage};
 // T Type
 // W Width
 // H Height
+/// Implements `Storage` for 2D arrays `[[T; W]; H]`
+/// indexed along X (width) and Y (height) axes.
 impl<T, const W: usize, const H: usize> Storage<T> for [[T; W]; H]
 where
     T: Copy,

@@ -9,6 +9,8 @@ use crate::prelude::{PointIndex, Storage};
 // W Width
 // H Height
 // D Depth
+/// Implements `Storage` for 3D arrays `[[[T; W]; H]; D]`
+/// indexed along X (width), Y (height), and Z (depth) axes.
 impl<T, const W: usize, const H: usize, const D: usize> Storage<T> for [[[T; W]; H]; D]
 where
     T: Copy,
