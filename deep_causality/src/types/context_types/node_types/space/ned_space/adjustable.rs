@@ -26,18 +26,20 @@ impl Adjustable<f64> for NedSpace {
         // Check if the adjusted data are safe to update i.e. not greater than max f64 value
         if !new_north.is_finite() {
             return Err(UpdateError(
-                "Update failed, new X value is not finite".into(),
+                "Update failed, new north value is not finite".into(),
             ));
         }
 
         if !new_east.is_finite() {
             return Err(UpdateError(
-                "Update failed, new Y value is not finite".into(),
+                "Update failed, new east value is not finite".into(),
             ));
         }
 
         if !new_down.is_finite() {
-            return Err(UpdateError("Update failed, new value is not finite".into()));
+            return Err(UpdateError(
+                "Update failed, new down value is not finite".into(),
+            ));
         }
 
         // Replace the internal data with the new data
@@ -70,19 +72,19 @@ impl Adjustable<f64> for NedSpace {
         // Check if the adjusted data are safe to update i.e. not greater than max f64 value
         if !adjusted_north.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new X value is not finite".into(),
+                "Adjustment failed, new north value is not finite".into(),
             ));
         }
 
         if !adjusted_east.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new Y value is not finite".into(),
+                "Adjustment failed, new east value is not finite".into(),
             ));
         }
 
         if !adjusted_down.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new value is not finite".into(),
+                "Adjustment failed, new down value is not finite".into(),
             ));
         }
 

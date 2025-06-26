@@ -28,7 +28,7 @@ fn test_adjustable_geo_space_distance() {
 }
 
 #[test]
-fn test_geo_space_update() {
+fn test_geo_space_update_success() {
     let mut geo = GeoSpace::new(1, 0.0, 0.0, 0.0);
     let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
 
@@ -60,7 +60,46 @@ fn test_geo_space_update_allows_zero_values() {
 }
 
 #[test]
-fn test_geo_space_adjust() {
+fn test_geo_space_update_lat_fails_on_nan() {
+    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX);
+    let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
+
+    grid.set(PointIndex::new3d(0, 0, 0), f64::NAN); // lat adjustment
+    grid.set(PointIndex::new3d(0, 0, 1), 0.0); // lon adjustment
+    grid.set(PointIndex::new3d(0, 0, 2), 0.0); // alt adjustment
+
+    let result = geo.update(&grid);
+    assert!(result.is_err(), "Expected overflow to trigger an error");
+}
+
+#[test]
+fn test_geo_space_update_lon_fails_on_nan() {
+    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX);
+    let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
+
+    grid.set(PointIndex::new3d(0, 0, 0), 0.0); // lat adjustment
+    grid.set(PointIndex::new3d(0, 0, 1), f64::NAN); // lon adjustment
+    grid.set(PointIndex::new3d(0, 0, 2), 0.0); // alt adjustment
+
+    let result = geo.update(&grid);
+    assert!(result.is_err(), "Expected overflow to trigger an error");
+}
+
+#[test]
+fn test_geo_space_update_alt_fails_on_nan() {
+    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX);
+    let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
+
+    grid.set(PointIndex::new3d(0, 0, 0), 0.0); // lat adjustment
+    grid.set(PointIndex::new3d(0, 0, 1), 0.0); // lon adjustment
+    grid.set(PointIndex::new3d(0, 0, 2), f64::NAN); // alt adjustment
+
+    let result = geo.update(&grid);
+    assert!(result.is_err(), "Expected overflow to trigger an error");
+}
+
+#[test]
+fn test_geo_space_adjust_success() {
     let mut geo = GeoSpace::new(1, 50.0, 10.0, 100.0);
     let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
 

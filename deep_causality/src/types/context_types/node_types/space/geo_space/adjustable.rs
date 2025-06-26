@@ -30,18 +30,20 @@ impl Adjustable<f64> for GeoSpace {
         // Check if the adjusted data are safe to update i.e. not greater than max f64 value
         if !new_lat.is_finite() {
             return Err(UpdateError(
-                "Update failed, new X value is not finite".into(),
+                "Update failed, new lat value is not finite".into(),
             ));
         }
 
         if !new_lon.is_finite() {
             return Err(UpdateError(
-                "Update failed, new Y value is not finite".into(),
+                "Update failed, new lon value is not finite".into(),
             ));
         }
 
         if !new_alt.is_finite() {
-            return Err(UpdateError("Update failed, new value is not finite".into()));
+            return Err(UpdateError(
+                "Update failed, new alt value is not finite".into(),
+            ));
         }
 
         // Replace the internal data with the new data
@@ -78,19 +80,19 @@ impl Adjustable<f64> for GeoSpace {
         // Check if the adjusted data are safe to update i.e. not greater than max f64 value
         if !adjusted_lat.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new X value is not finite".into(),
+                "Adjustment failed, new lat value is not finite".into(),
             ));
         }
 
         if !adjusted_lon.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new Y value is not finite".into(),
+                "Adjustment failed, new lon value is not finite".into(),
             ));
         }
 
         if !adjusted_alt.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new value is not finite".into(),
+                "Adjustment failed, new alt is not finite".into(),
             ));
         }
 

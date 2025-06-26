@@ -7,7 +7,7 @@ use dcl_data_structures::prelude::{ArrayGrid, ArrayType, PointIndex};
 use deep_causality::prelude::*;
 
 #[test]
-fn test_ned_space_update() {
+fn test_ned_space_update_success() {
     let mut ned = NedSpace::new(1, 0.0, 0.0, 0.0);
     let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
 
@@ -24,7 +24,46 @@ fn test_ned_space_update() {
 }
 
 #[test]
-fn test_ned_space_adjust() {
+fn test_ned_space_update_north_fails_on_nan() {
+    let mut ned = NedSpace::new(1, 0.0, 0.0, 0.0);
+    let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
+
+    grid.set(PointIndex::new3d(0, 0, 0), f64::NAN); // North: Invalid adjustment
+    grid.set(PointIndex::new3d(0, 0, 1), 0.0);
+    grid.set(PointIndex::new3d(0, 0, 2), 0.0);
+
+    let result = ned.update(&grid);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_ned_space_update_east_fails_on_nan() {
+    let mut ned = NedSpace::new(1, 0.0, 0.0, 0.0);
+    let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
+
+    grid.set(PointIndex::new3d(0, 0, 0), 0.0);
+    grid.set(PointIndex::new3d(0, 0, 1), f64::NAN); // East: Invalid adjustment
+    grid.set(PointIndex::new3d(0, 0, 2), 0.0);
+
+    let result = ned.update(&grid);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_ned_space_update_down_fails_on_nan() {
+    let mut ned = NedSpace::new(1, 0.0, 0.0, 0.0);
+    let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
+
+    grid.set(PointIndex::new3d(0, 0, 0), 0.0);
+    grid.set(PointIndex::new3d(0, 0, 1), 0.0);
+    grid.set(PointIndex::new3d(0, 0, 2), f64::NAN); // Down: Invalid adjustment
+
+    let result = ned.update(&grid);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_ned_space_adjust_success() {
     let mut ned = NedSpace::new(1, 100.0, 50.0, 10.0);
     let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
 
