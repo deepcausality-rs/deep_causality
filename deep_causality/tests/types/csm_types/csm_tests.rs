@@ -266,7 +266,8 @@ fn update_all_states() {
 
     let state_actions = &[(&cs, &ca), (&cs2, &ca2)];
 
-    csm.update_all_states(state_actions);
-
+    let res =csm.update_all_states(state_actions);
+    assert!(res.is_ok());
+    
     assert_eq!(csm.len(), 2)
 }

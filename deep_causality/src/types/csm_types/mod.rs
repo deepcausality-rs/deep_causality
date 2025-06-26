@@ -248,14 +248,20 @@ where
     pub fn update_all_states(
         &self,
         state_actions: &[(&CausalState<D, S, T, ST, SYM, VS, VT>, &CausalAction)],
-    ) {
+    ) -> Result<(), UpdateError> {
         let mut state_map = HashMap::with_capacity(state_actions.len());
 
         for (state, action) in state_actions {
             state_map.insert(*state.id(), ((*state).clone(), (*action).clone()));
         }
+        
         // Replace the existing map with the newly generated one.
-
-        *self.state_actions.write().unwrap() = state_map
+        match self.state_actions.write() {
+            Ok(mut guard) => {
+                *guard = state_map;
+                Ok(())
+            }
+            Err(_) => Err(UpdateError("Failed to acquire write lock while updating CSM states".to_string())),
+        }
     }
 }
