@@ -48,9 +48,9 @@ fn main() {
     println!("{}", expl);
 }
 
-fn get_test_causaloid<'l>(id: IdentificationValue) -> BaseCausaloid<'l> {
+fn get_test_causaloid<'l>(id: IdentificationValue) -> BaseCausaloid {
     let description = "tests whether data exceeds threshold of 0.55";
-    fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
+    fn causal_fn(obs: &NumericalValue) -> Result<bool, CausalityError> {
         if obs.is_sign_negative() {
             return Err(CausalityError("Observation is negative".into()));
         }
@@ -66,7 +66,7 @@ fn get_test_causaloid<'l>(id: IdentificationValue) -> BaseCausaloid<'l> {
     Causaloid::new(id, causal_fn, description)
 }
 
-fn get_multi_cause_graph<'l>() -> BaseCausalGraph<'l> {
+fn get_multi_cause_graph<'l>() -> BaseCausalGraph {
     // Builds a multi cause graph:
     //  root
     //  / \
