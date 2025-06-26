@@ -74,11 +74,13 @@ where
     fn verify_single_cause(&self, obs: &NumericalValue) -> Result<bool, CausalityError> {
         if self.has_context {
             let contextual_causal_fn = self.context_causal_fn.ok_or_else(|| {
-                CausalityError("Causaloid::verify_single_cause: context_causal_fn is None".into())
+                CausalityError(format!("Causaloid {}: verify_single_cause: context_causal_fn is None", self.id))
+                
             })?;
 
             let context = self.context.as_ref().ok_or_else(|| {
-                CausalityError("Causaloid::verify_single_cause: context is None".into())
+                CausalityError(format!("Causaloid {}: verify_single_cause:  context is None", self.id))
+                
             })?;
 
             let res = (contextual_causal_fn)(obs, context)?;
@@ -89,7 +91,7 @@ where
             Ok(res)
         } else {
             let causal_fn = self.causal_fn.ok_or_else(|| {
-                CausalityError("Causaloid::verify_single_cause: causal_fn is None".into())
+                CausalityError(format!("Causaloid {}: verify_single_cause:  causal_fn is is None", self.id))
             })?;
 
             let res = (causal_fn)(obs)?;
