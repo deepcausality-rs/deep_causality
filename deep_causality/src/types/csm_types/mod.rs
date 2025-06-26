@@ -256,14 +256,11 @@ where
         }
 
         // Replace the existing map with the newly generated one.
-        match self.state_actions.write() {
-            Ok(mut guard) => {
-                *guard = state_map;
-                Ok(())
-            }
-            Err(_) => Err(UpdateError(
-                "Failed to acquire write lock while updating CSM states".to_string(),
-            )),
-        }
+        *self
+            .state_actions
+            .write()
+            .map_err(|_| UpdateError("RwLock poisoned during CSM state update".to_string()))? =
+            state_map;
+        Ok(())
     }
 }
