@@ -73,14 +73,13 @@ where
 
     fn verify_single_cause(&self, obs: &NumericalValue) -> Result<bool, CausalityError> {
         if self.has_context {
-            let contextual_causal_fn = self
-                .context_causal_fn
-                .expect("Causaloid::verify_single_cause: context_causal_fn is None");
+            let contextual_causal_fn = self.context_causal_fn.ok_or_else(|| {
+                CausalityError("Causaloid::verify_single_cause: context_causal_fn is None".into())
+            })?;
 
-            let context = self
-                .context
-                .as_ref()
-                .expect("Causaloid::verify_single_cause: context is None");
+            let context = self.context.as_ref().ok_or_else(|| {
+                CausalityError("Causaloid::verify_single_cause: context is None".into())
+            })?;
 
             let res = (contextual_causal_fn)(obs, context)?;
 
@@ -89,9 +88,10 @@ where
 
             Ok(res)
         } else {
-            let causal_fn = self
-                .causal_fn
-                .expect("Causaloid::verify_single_cause: causal_fn is None");
+            let causal_fn = self.causal_fn.ok_or_else(|| {
+                CausalityError("Causaloid::verify_single_cause: causal_fn is None".into())
+            })?;
+
             let res = (causal_fn)(obs)?;
 
             let mut guard = self.active.write().unwrap();
