@@ -7,6 +7,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.7.5...deep_causality-v0.8.0) - 2025-06-26
+
+### Other
+
+- Increased test coverage on adjustable implementations.
+- Added  RwLock poisoning handling in CSM type
+- Fixed remaining lints
+- Increased test coverage
+- Improved error message in Causable for Causaloid
+- Improved lock error handling specificity in CSM type
+- Removed redundant NaN validation in Adjustable for EuclideanTime
+- Fixed a few more lints
+- Fixed formatting and lints
+- Fixed failing tests for updated Display trait impl.
+- Fixed error message in Adjustable<f64> for QuaternionSpace
+- Replaced panic with proper error handling in Causable for Causaloid
+- Added Eq and PartialEq derives to Contextoid
+- Added Handling of lock poisoning gracefully in CSM type.
+- Fixed blanket trait implementations fo adjustable data and replaced it type bound impl.
+- Added more tests for more corner cases in non-Euclidean geometries
+- Fixed code formatting
+- Added tests for reasoning types
+- Added tests for ContextoidType
+- Added tests to increase coverage
+- Fixed invalid overflow check
+- Fix quaternion component assignment bug
+- Fixed another failing test
+- Fixed failing test
+- Fixed more lints and checks
+- Removed remaining lifetime annotations in tests and bench utils.
+- Updated copyright across the entire repo
+- Minor lints
+- merged regular and adjustable types. Made adjustable opt in via adjustable trait and type extension.
+- Added tests for adjustable space types
+- Added tests for time types
+- Added tests for symbolic spacetime
+- Added tests for spacetime types
+- Fixed up remaining tests
+- Code formatting.
+- Fixed up a lot of tests
+- Fixed up test utils and some tests
+- Fixed up benchmarks
+- Linting and formatting
+- Removed lifetime annotation from all types.
+- Added adjustable time types.
+- Fixed minor lints
+- Added multiple temporal types, just in case.
+- Fixed complex generic issue. Updated all downstream types.
+- Added initial support for non-Euclidean geometries in the context.
+- Merge remote-tracking branch 'origin/main'
+- Signed commit with gpg key.
+- Removed comma after link
+- Working on restoring link on Logo on README.md
+- Working on restoring Logo on README.md
+- Working on restoring Logo on README.md
+- Working on restoring Logo on README.md
+- Update README.md
+- Update README.md
+- Update README.md with new Discord link that never expires
+
 ## [0.7.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.7.4...deep_causality-v0.7.5) - 2025-06-19
 
 ### Added
