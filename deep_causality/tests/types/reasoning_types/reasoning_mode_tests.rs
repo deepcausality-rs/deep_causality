@@ -22,7 +22,7 @@ fn test_reasoning_mode_inequality() {
 #[test]
 fn test_reasoning_mode_clone() {
     let m1 = ReasoningMode::Symbolic;
-    let m2 = m1.clone();
+    let m2 = m1; // Copy
     assert_eq!(m1, m2);
 }
 
