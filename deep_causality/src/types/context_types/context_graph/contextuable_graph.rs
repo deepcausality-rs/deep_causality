@@ -5,6 +5,7 @@
 
 use super::*;
 
+#[allow(clippy::type_complexity)]
 impl<D, S, T, ST, SYM, VS, VT> ContextuableGraph<D, S, T, ST, SYM, VS, VT>
     for Context<D, S, T, ST, SYM, VS, VT>
 where

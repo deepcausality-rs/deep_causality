@@ -8,6 +8,7 @@ use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
 
+#[allow(clippy::type_complexity)]
 impl<D, S, T, ST, SYM, VS, VT> Indexable for Context<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,

@@ -20,6 +20,7 @@ type ExtraContext<D, S, T, ST, SYM, VS, VT> = UltraGraph<Contextoid<D, S, T, ST,
 type ExtraContextMap<D, S, T, ST, SYM, VS, VT> =
     HashMap<u64, ExtraContext<D, S, T, ST, SYM, VS, VT>>;
 
+#[allow(clippy::type_complexity)]
 pub struct Context<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,

@@ -18,6 +18,7 @@ pub type CausalVec<D, S, T, ST, SYM, VS, VT> = Vec<Causaloid<D, S, T, ST, SYM, V
 pub type CausalGraph<D, S, TM, ST, SYM, VS, VT> =
     CausaloidGraph<Causaloid<D, S, TM, ST, SYM, VS, VT>>;
 
+#[allow(clippy::type_complexity)]
 #[derive(Clone)]
 pub struct Causaloid<D, S, T, ST, SYM, VS, VT>
 where
@@ -43,6 +44,7 @@ where
 }
 
 // Constructors
+#[allow(clippy::type_complexity)]
 impl<D, S, T, ST, SYM, VS, VT> Causaloid<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,

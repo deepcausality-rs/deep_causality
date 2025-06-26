@@ -5,6 +5,7 @@
 
 use super::*;
 
+#[allow(clippy::type_complexity)]
 impl<D, S, T, ST, SYM, VS, VT> ExtendableContextuableGraph<D, S, T, ST, SYM, VS, VT>
     for Context<D, S, T, ST, SYM, VS, VT>
 where
@@ -189,6 +190,7 @@ where
     }
 }
 
+#[allow(clippy::type_complexity)]
 impl<D, S, T, ST, SYM, VS, VT> Context<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,

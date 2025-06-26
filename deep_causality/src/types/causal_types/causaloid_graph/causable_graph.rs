@@ -16,7 +16,7 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T> where
     T: Clone + Display + Causable + PartialEq
 {
 }
-
+#[allow(clippy::type_complexity)]
 impl<T> CausableGraph<T> for CausaloidGraph<T>
 where
     T: Clone + Display + Causable + PartialEq,

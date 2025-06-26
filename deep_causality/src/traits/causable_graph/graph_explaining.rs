@@ -26,6 +26,7 @@ use crate::prelude::{Causable, CausableGraph, CausalityGraphError};
 /// The explain_from_to_cause() method is the core implementation
 /// that supports the other methods.
 ///
+#[allow(clippy::type_complexity)]
 pub trait CausableGraphExplaining<T>: CausableGraph<T>
 where
     T: Causable + PartialEq,

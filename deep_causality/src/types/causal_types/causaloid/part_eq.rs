@@ -5,6 +5,7 @@
 
 use super::*;
 
+#[allow(clippy::type_complexity)]
 impl<D, S, T, ST, SYM, VS, VT> PartialEq for Causaloid<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,

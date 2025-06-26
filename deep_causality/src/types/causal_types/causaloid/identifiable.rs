@@ -5,6 +5,7 @@
 
 use super::*;
 
+#[allow(clippy::type_complexity)]
 impl<D, S, T, ST, SYM, VS, VT> Identifiable for Causaloid<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,

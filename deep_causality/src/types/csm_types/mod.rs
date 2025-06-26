@@ -57,6 +57,7 @@ pub type CSMStateActions<D, S, T, ST, SYM, VS, VT> = [StateAction<D, S, T, ST, S
 /// 4. Feeding data into the CSM for evaluation
 ///
 /// See the example in `examples/csm/src/main.rs` for a practical implementation.
+#[allow(clippy::type_complexity)]
 pub struct CSM<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,
@@ -70,6 +71,7 @@ where
     state_actions: Arc<RwLock<CSMMap<D, S, T, ST, SYM, VS, VT>>>,
 }
 
+#[allow(clippy::type_complexity)]
 impl<D, S, T, ST, SYM, VS, VT> CSM<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone + Debug,

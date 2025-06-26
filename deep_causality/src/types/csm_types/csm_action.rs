@@ -38,6 +38,7 @@ use crate::prelude::ActionError;
 ///     CausalAction::new(func, descr, version)
 /// }
 /// ```
+#[allow(clippy::type_complexity)]
 #[derive(Getters, Constructor, Clone, Debug)]
 pub struct CausalAction {
     // The function to execute when the action is fired.

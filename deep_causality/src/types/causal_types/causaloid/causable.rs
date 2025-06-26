@@ -14,6 +14,7 @@ use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
 use crate::types::causal_types::causaloid::causal_type::CausaloidType;
 
+#[allow(clippy::type_complexity)]
 impl<D, S, T, ST, SYM, VS, VT> Causable for Causaloid<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,

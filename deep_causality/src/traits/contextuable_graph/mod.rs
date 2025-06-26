@@ -28,6 +28,7 @@ use crate::traits::contextuable::temporal::Temporal;
 ///
 /// Methods return Result or Option types for error handling.
 ///
+#[allow(clippy::type_complexity)]
 pub trait ContextuableGraph<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,
@@ -79,6 +80,7 @@ where
 ///
 /// Methods return Result or Option types for error handling.
 ///
+#[allow(clippy::type_complexity)]
 pub trait ExtendableContextuableGraph<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,

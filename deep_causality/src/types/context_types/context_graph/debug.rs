@@ -10,6 +10,7 @@ use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
 use crate::traits::contextuable_graph::ContextuableGraph;
 
+#[allow(clippy::type_complexity)]
 impl<D, S, T, ST, SYM, VS, VT> Context<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,

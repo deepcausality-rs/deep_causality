@@ -64,6 +64,7 @@ use std::fmt::{Display, Formatter};
 ///     Err(e) => println!("Evaluation error: {}", e),
 /// }
 /// ```
+#[allow(clippy::type_complexity)]
 #[derive(Getters, Constructor, Clone, Debug)]
 pub struct CausalState<D, S, T, ST, SYM, VS, VT>
 where
