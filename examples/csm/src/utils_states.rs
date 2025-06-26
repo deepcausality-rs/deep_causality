@@ -7,12 +7,12 @@ use deep_causality::prelude::{
     BaseCausaloid, CausalityError, Causaloid, IdentificationValue, NumericalValue,
 };
 
-pub fn get_smoke_sensor_causaloid<'l>() -> BaseCausaloid<'l> {
+pub fn get_smoke_sensor_causaloid<'l>() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "Tests whether smoke signal exceeds threshold of 65.0";
-    fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
-        if verify_obs(obs).is_err() {
-            return Err(verify_obs(obs).err().unwrap());
+    fn causal_fn(obs: &NumericalValue) -> Result<bool, CausalityError> {
+        if verify_obs(*obs).is_err() {
+            return Err(verify_obs(*obs).err().unwrap());
         }
 
         let threshold: NumericalValue = 65.0;
@@ -26,12 +26,12 @@ pub fn get_smoke_sensor_causaloid<'l>() -> BaseCausaloid<'l> {
     Causaloid::new(id, causal_fn, description)
 }
 
-pub fn get_fire_sensor_causaloid<'l>() -> BaseCausaloid<'l> {
+pub fn get_fire_sensor_causaloid<'l>() -> BaseCausaloid {
     let id: IdentificationValue = 2;
     let description = "Tests if temperature exceeds 85 degree celsius (185 degree Fahrenheit) ";
-    fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
-        if verify_obs(obs).is_err() {
-            return Err(verify_obs(obs).err().unwrap());
+    fn causal_fn(obs: &NumericalValue) -> Result<bool, CausalityError> {
+        if verify_obs(*obs).is_err() {
+            return Err(verify_obs(*obs).err().unwrap());
         }
 
         let threshold: NumericalValue = 85.0;
@@ -45,14 +45,14 @@ pub fn get_fire_sensor_causaloid<'l>() -> BaseCausaloid<'l> {
     Causaloid::new(id, causal_fn, description)
 }
 
-pub fn get_explosion_sensor_causaloid<'l>() -> BaseCausaloid<'l> {
+pub fn get_explosion_sensor_causaloid<'l>() -> BaseCausaloid {
     let id: IdentificationValue = 3;
     let description =
         "Tests if air pressure exceeds 100 PSI. Regular Atmospheric pressure is 14.696 psi ";
 
-    fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
-        if verify_obs(obs).is_err() {
-            return Err(verify_obs(obs).err().unwrap());
+    fn causal_fn(obs: &NumericalValue) -> Result<bool, CausalityError> {
+        if verify_obs(*obs).is_err() {
+            return Err(verify_obs(*obs).err().unwrap());
         }
 
         let threshold: NumericalValue = 100.0;

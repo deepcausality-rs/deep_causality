@@ -19,15 +19,15 @@ const EXPLOSION_SENSOR: usize = 3;
 pub fn run() {
     let data = 0.0f64;
     let smoke_causloid = get_smoke_sensor_causaloid();
-    let smoke_cs = CausalState::new(SMOKE_SENSOR, 1, data, &smoke_causloid);
+    let smoke_cs = CausalState::new(SMOKE_SENSOR, 1, data, smoke_causloid);
     let smoke_ca = get_smoke_alert_action();
 
     let fire_causaloid = get_fire_sensor_causaloid();
-    let fire_cs = CausalState::new(FIRE_SENSOR, 1, data, &fire_causaloid);
+    let fire_cs = CausalState::new(FIRE_SENSOR, 1, data, fire_causaloid);
     let fire_ca = get_fire_alert_action();
 
     let explosion_causaloid = get_explosion_sensor_causaloid();
-    let explosion_cs = CausalState::new(EXPLOSION_SENSOR, 1, data, &explosion_causaloid);
+    let explosion_cs = CausalState::new(EXPLOSION_SENSOR, 1, data, explosion_causaloid);
     let explosion_ca = get_explosion_alert_action();
 
     println!("Create Causal State Machine");
@@ -35,7 +35,7 @@ pub fn run() {
     let csm = CSM::new(state_actions);
 
     println!("Add a new sensor");
-    csm.add_single_state(EXPLOSION_SENSOR, (&explosion_cs, &explosion_ca))
+    csm.add_single_state(EXPLOSION_SENSOR, (explosion_cs, explosion_ca))
         .expect("Failed to add Explosion sensor");
 
     println!("Start data feed and monitor senors");
