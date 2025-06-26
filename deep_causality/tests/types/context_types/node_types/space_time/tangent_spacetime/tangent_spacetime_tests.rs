@@ -40,6 +40,12 @@ fn test_space_temporal_trait() {
     let s = TangentSpacetime::new(1, 4.0, 5.0, 6.0, 42.0, 1.0, 0.0, 0.0, 0.0);
     assert_eq!(s.t(), &42.0);
     assert_eq!(*s.coordinate(0).unwrap(), 4.0);
+
+    let time = s.time();
+    assert_eq!(time, 42.0);
+
+    let position = s.position();
+    assert_eq!(position, [42.00, 4.0, 5.0, 6.0]);
 }
 
 #[test]

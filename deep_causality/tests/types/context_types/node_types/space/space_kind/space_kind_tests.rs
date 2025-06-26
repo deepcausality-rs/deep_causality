@@ -30,7 +30,34 @@ fn test_coordinate_trait_quaternion() {
 }
 
 #[test]
-fn test_coordinate_out_of_bounds() {
+fn test_coordinate_trait_ecef() {
+    let sk = SpaceKind::Ecef(EcefSpace::new(7, 1.0, 2.0, 3.0));
+    assert_eq!(sk.dimension(), 3);
+    assert_eq!(*sk.coordinate(0).unwrap(), 1.0);
+    assert_eq!(*sk.coordinate(1).unwrap(), 2.0);
+    assert_eq!(*sk.coordinate(2).unwrap(), 3.0);
+}
+
+#[test]
+fn test_coordinate_trait_euclidean() {
+    let sk = SpaceKind::Euclidean(EuclideanSpace::new(2, 1.0, 2.0, 3.0));
+    assert_eq!(sk.dimension(), 3);
+    assert_eq!(*sk.coordinate(0).unwrap(), 1.0);
+    assert_eq!(*sk.coordinate(1).unwrap(), 2.0);
+    assert_eq!(*sk.coordinate(2).unwrap(), 3.0);
+}
+
+#[test]
+fn test_coordinate_trait_ned() {
+    let sk = SpaceKind::Ned(NedSpace::new(11, 1.0, 2.0, 3.0));
+    assert_eq!(sk.dimension(), 3);
+    assert_eq!(*sk.coordinate(0).unwrap(), 1.0);
+    assert_eq!(*sk.coordinate(1).unwrap(), 2.0);
+    assert_eq!(*sk.coordinate(2).unwrap(), 3.0);
+}
+
+#[test]
+fn test_coordinate_trait_euclidean_out_of_bounds() {
     let sk = SpaceKind::Euclidean(EuclideanSpace::new(2, 1.0, 2.0, 3.0));
     let res = sk.coordinate(3);
     assert!(res.is_err());

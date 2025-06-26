@@ -30,16 +30,16 @@ fn test_lorentzian_time_adjust_success() {
 }
 
 #[test]
-fn test_lorentzian_time_adjust_negative_input() {
+fn test_lorentzian_time_adjust_negative_res() {
     let mut t = LorentzianTime::new(1, TimeScale::Second, 10.0);
 
     let grid: ArrayGrid<f64, 1, 1, 1, 1> = ArrayGrid::new(ArrayType::Array1D);
-    grid.set(PointIndex::new1d(0), -1.0);
+    grid.set(PointIndex::new1d(0), -12.0);
 
     let result = t.adjust(&grid);
     assert!(result.is_err());
     let err = result.unwrap_err().to_string();
-    assert!(err.contains("NEGATIVE"));
+    assert!(err.contains("Adjustment failed, result is a negative number"));
 }
 
 #[test]
@@ -52,7 +52,7 @@ fn test_lorentzian_time_adjust_zero_result() {
     let result = t.adjust(&grid);
     assert!(result.is_err());
     let err = result.unwrap_err().to_string();
-    assert!(err.contains("ZERO"));
+    assert!(err.contains("Adjustment failed, new time is ZERO"));
 }
 
 #[test]

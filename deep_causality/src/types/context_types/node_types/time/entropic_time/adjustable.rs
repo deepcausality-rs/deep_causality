@@ -41,13 +41,6 @@ impl Adjustable<u64> for EntropicTime {
             return Err(AdjustmentError("Adjustment failed, u64 overflow".into()));
         };
 
-        // Check for errors i.e. div by zero / overflow and return either an error or OK().
-        if adjusted_time < u64::default() {
-            return Err(AdjustmentError(
-                "Adjustment failed, result is a negative number".into(),
-            ));
-        }
-
         // Check if the new time is non-zero
         if time_adjustment == 0 {
             return Err(AdjustmentError(

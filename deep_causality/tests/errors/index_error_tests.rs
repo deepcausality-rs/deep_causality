@@ -9,8 +9,17 @@ use std::error::Error;
 #[test]
 fn test_index_error_creation() {
     let msg = "invalid index access";
-    let err = IndexError(msg.to_string());
+    let err = IndexError::new(msg.to_string());
     assert_eq!(err.0, msg);
+}
+
+#[test]
+fn test_index_error_debug() {
+    let msg = "index out of bounds";
+    let err = IndexError(msg.to_string());
+    let dbg = format!("{:?}", err);
+    let expected = String::from("IndexError(\"index out of bounds\")");
+    assert_eq!(format!("{}", dbg), expected);
 }
 
 #[test]
@@ -19,14 +28,6 @@ fn test_index_error_display() {
     let err = IndexError(msg.to_string());
     let expected = format!("IndexError: {}", msg);
     assert_eq!(format!("{}", err), expected);
-}
-
-#[test]
-fn test_index_error_debug() {
-    let msg = "debug this index error";
-    let err = IndexError(msg.to_string());
-    let expected = format!("IndexError({:?})", msg);
-    assert_eq!(format!("{:?}", err), expected);
 }
 
 #[test]

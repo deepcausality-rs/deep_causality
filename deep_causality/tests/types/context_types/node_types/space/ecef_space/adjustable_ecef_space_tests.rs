@@ -119,3 +119,42 @@ fn test_ecef_update_z_not_finite() {
     let result = space.update(&grid);
     assert!(result.is_err());
 }
+
+#[test]
+fn test_ecef_adjust_x_not_finite() {
+    let mut space = EcefSpace::new(1, 1.0, 1.0, 1.0);
+    let grid: ArrayGrid<f64, 3, 3, 3, 3> = ArrayGrid::new(ArrayType::Array3D);
+
+    grid.set(PointIndex::new3d(0, 0, 0), f64::NAN);
+    grid.set(PointIndex::new3d(0, 0, 1), 1.0);
+    grid.set(PointIndex::new3d(0, 0, 2), 1.0);
+
+    let result = space.adjust(&grid);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_ecef_adjust_y_not_finite() {
+    let mut space = EcefSpace::new(2, 1.0, 1.0, 1.0);
+    let grid: ArrayGrid<f64, 3, 3, 3, 3> = ArrayGrid::new(ArrayType::Array3D);
+
+    grid.set(PointIndex::new3d(0, 0, 0), 1.0);
+    grid.set(PointIndex::new3d(0, 0, 1), f64::INFINITY);
+    grid.set(PointIndex::new3d(0, 0, 2), 1.0);
+
+    let result = space.adjust(&grid);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_ecef_adjust_z_not_finite() {
+    let mut space = EcefSpace::new(3, 1.0, 1.0, 1.0);
+    let grid: ArrayGrid<f64, 3, 3, 3, 3> = ArrayGrid::new(ArrayType::Array3D);
+
+    grid.set(PointIndex::new3d(0, 0, 0), 1.0);
+    grid.set(PointIndex::new3d(0, 0, 1), 1.0);
+    grid.set(PointIndex::new3d(0, 0, 2), f64::NEG_INFINITY);
+
+    let result = space.adjust(&grid);
+    assert!(result.is_err());
+}

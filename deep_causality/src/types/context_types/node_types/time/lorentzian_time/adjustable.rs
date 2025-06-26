@@ -39,13 +39,6 @@ impl Adjustable<f64> for LorentzianTime {
             return Err(AdjustmentError("Adjustment failed, time is NaN".into()));
         }
 
-        // Check if the new time is non-negative. Unless you want to go back in time...
-        if time_adjustment < f64::default() {
-            return Err(AdjustmentError(
-                "Adjustment failed, new time is NEGATIVE".into(),
-            ));
-        }
-
         // Calculate the data adjustment
         let adjusted_time = self.time_unit + time_adjustment;
 

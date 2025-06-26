@@ -36,24 +36,10 @@ impl Adjustable<u64> for DiscreteTime {
         // get the data at the index position
         let time_adjustment = array_grid.get(p);
 
-        // Check if the new time is non-negative. Unless you want to go back in time...
-        if time_adjustment < u64::default() {
-            return Err(AdjustmentError(
-                "Adjustment failed, new time is NEGATIVE".into(),
-            ));
-        }
-
         // Calculate checked data adjustment
         let Some(adjusted_time) = self.tick_unit.checked_add(time_adjustment) else {
             return Err(AdjustmentError("Adjustment failed, u64 overflow".into()));
         };
-
-        // Check for errors i.e. div by zero / overflow and return either an error or OK().
-        if adjusted_time < u64::default() {
-            return Err(AdjustmentError(
-                "Adjustment failed, result is a negative number".into(),
-            ));
-        }
 
         // Check if the new time is non-zero
         if adjusted_time == u64::default() {

@@ -76,13 +76,78 @@ fn test_geo_space_adjust() {
 }
 
 #[test]
-fn test_geo_space_adjust_fails_on_overflow() {
+fn test_geo_space_adjust_lat_fails_on_nan() {
     let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX);
     let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
 
-    grid.set(PointIndex::new3d(0, 0, 0), f64::MAX); // lat adjustment
-    grid.set(PointIndex::new3d(0, 0, 1), f64::MAX); // lon adjustment
-    grid.set(PointIndex::new3d(0, 0, 2), f64::MAX); // alt adjustment
+    grid.set(PointIndex::new3d(0, 0, 0), f64::NAN); // lat adjustment
+    grid.set(PointIndex::new3d(0, 0, 1), 0.0); // lon adjustment
+    grid.set(PointIndex::new3d(0, 0, 2), 0.0); // alt adjustment
+
+    let result = geo.adjust(&grid);
+    assert!(result.is_err(), "Expected overflow to trigger an error");
+}
+
+#[test]
+fn test_geo_space_adjust_lat_fails_on_inf() {
+    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX);
+    let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
+
+    grid.set(PointIndex::new3d(0, 0, 0), f64::INFINITY); // lat adjustment
+    grid.set(PointIndex::new3d(0, 0, 1), 0.0); // lon adjustment
+    grid.set(PointIndex::new3d(0, 0, 2), 0.0); // alt adjustment
+
+    let result = geo.adjust(&grid);
+    assert!(result.is_err(), "Expected overflow to trigger an error");
+}
+
+#[test]
+fn test_geo_space_adjust_lon_fails_on_nan() {
+    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX);
+    let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
+
+    grid.set(PointIndex::new3d(0, 0, 0), 0.0); // lat adjustment
+    grid.set(PointIndex::new3d(0, 0, 1), f64::NAN); // lon adjustment
+    grid.set(PointIndex::new3d(0, 0, 2), 0.0); // alt adjustment
+
+    let result = geo.adjust(&grid);
+    assert!(result.is_err(), "Expected overflow to trigger an error");
+}
+
+#[test]
+fn test_geo_space_adjust_lon_fails_on_inf() {
+    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX);
+    let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
+
+    grid.set(PointIndex::new3d(0, 0, 0), 0.0); // lat adjustment
+    grid.set(PointIndex::new3d(0, 0, 1), f64::INFINITY); // lon adjustment
+    grid.set(PointIndex::new3d(0, 0, 2), 0.0); // alt adjustment
+
+    let result = geo.adjust(&grid);
+    assert!(result.is_err(), "Expected overflow to trigger an error");
+}
+
+#[test]
+fn test_geo_space_adjust_alt_fails_on_nan() {
+    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX);
+    let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
+
+    grid.set(PointIndex::new3d(0, 0, 0), 0.0); // lat adjustment
+    grid.set(PointIndex::new3d(0, 0, 1), 0.0); // lon adjustment
+    grid.set(PointIndex::new3d(0, 0, 2), f64::NAN); // alt adjustment
+
+    let result = geo.adjust(&grid);
+    assert!(result.is_err(), "Expected overflow to trigger an error");
+}
+
+#[test]
+fn test_geo_space_adjust_alt_fails_on_inf() {
+    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX);
+    let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
+
+    grid.set(PointIndex::new3d(0, 0, 0), 0.0); // lat adjustment
+    grid.set(PointIndex::new3d(0, 0, 1), 0.0); // lon adjustment
+    grid.set(PointIndex::new3d(0, 0, 2), f64::INFINITY); // alt adjustment
 
     let result = geo.adjust(&grid);
     assert!(result.is_err(), "Expected overflow to trigger an error");

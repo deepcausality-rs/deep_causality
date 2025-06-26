@@ -119,3 +119,47 @@ fn test_minkowski_spacetime_update_fails_non_finite_t() {
     grid.set(PointIndex::new3d(0, 0, 3), f64::NAN);
     assert!(s.update(&grid).is_err());
 }
+
+#[test]
+fn test_minkowski_spacetime_adjust_fails_non_finite_x() {
+    let mut s = MinkowskiSpacetime::new(0, 1.0, 2.0, 3.0, 4.0, TimeScale::Second);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array3D);
+    grid.set(PointIndex::new3d(0, 0, 0), f64::NAN);
+    grid.set(PointIndex::new3d(0, 0, 1), 2.0);
+    grid.set(PointIndex::new3d(0, 0, 2), 3.0);
+    grid.set(PointIndex::new3d(0, 0, 3), 4.0);
+    assert!(s.adjust(&grid).is_err());
+}
+
+#[test]
+fn test_minkowski_spacetime_adjust_fails_non_finite_y() {
+    let mut s = MinkowskiSpacetime::new(0, 1.0, 2.0, 3.0, 4.0, TimeScale::Second);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array3D);
+    grid.set(PointIndex::new3d(0, 0, 0), 1.0);
+    grid.set(PointIndex::new3d(0, 0, 1), f64::INFINITY);
+    grid.set(PointIndex::new3d(0, 0, 2), 3.0);
+    grid.set(PointIndex::new3d(0, 0, 3), 4.0);
+    assert!(s.adjust(&grid).is_err());
+}
+
+#[test]
+fn test_minkowski_spacetime_adjust_fails_non_finite_z() {
+    let mut s = MinkowskiSpacetime::new(0, 1.0, 2.0, 3.0, 4.0, TimeScale::Second);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array3D);
+    grid.set(PointIndex::new3d(0, 0, 0), 1.0);
+    grid.set(PointIndex::new3d(0, 0, 1), 2.0);
+    grid.set(PointIndex::new3d(0, 0, 2), f64::NEG_INFINITY);
+    grid.set(PointIndex::new3d(0, 0, 3), 4.0);
+    assert!(s.adjust(&grid).is_err());
+}
+
+#[test]
+fn test_minkowski_spacetime_adjust_fails_non_finite_t() {
+    let mut s = MinkowskiSpacetime::new(0, 1.0, 2.0, 3.0, 4.0, TimeScale::Second);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array3D);
+    grid.set(PointIndex::new3d(0, 0, 0), 1.0);
+    grid.set(PointIndex::new3d(0, 0, 1), 2.0);
+    grid.set(PointIndex::new3d(0, 0, 2), 3.0);
+    grid.set(PointIndex::new3d(0, 0, 3), f64::NAN);
+    assert!(s.adjust(&grid).is_err());
+}
