@@ -27,11 +27,11 @@ fn test_contextoid_kind_and_accessors() {
     let sy = BaseSymbol::new(42, SymbolicRepresentation::Atom("None".to_string()));
     let r = Root::new(0);
 
-    let cd: StdCtx = ContextoidType::Datoid(d.clone());
-    let ct: StdCtx = ContextoidType::Tempoid(t.clone());
-    let cr: StdCtx = ContextoidType::Root(r.clone());
+    let cd: StdCtx = ContextoidType::Datoid(d);
+    let ct: StdCtx = ContextoidType::Tempoid(t);
+    let cr: StdCtx = ContextoidType::Root(r);
     let cs: StdCtx = ContextoidType::Spaceoid(s.clone());
-    let cst: StdCtx = ContextoidType::SpaceTempoid(st.clone());
+    let cst: StdCtx = ContextoidType::SpaceTempoid(st);
     let csy: StdCtx = ContextoidType::Symboid(sy.clone());
 
     // Validate enum kind matching
