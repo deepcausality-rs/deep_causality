@@ -14,7 +14,7 @@ mod contextuable;
 mod display;
 mod identifiable;
 
-#[derive(Debug, Copy, Clone, Hash)]
+#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Contextoid<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,

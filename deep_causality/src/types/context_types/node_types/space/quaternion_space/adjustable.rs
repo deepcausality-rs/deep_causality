@@ -46,7 +46,7 @@ impl Adjustable<f64> for QuaternionSpace {
         }
 
         if !new_z.is_finite() {
-            return Err(UpdateError("Update failed, new value is not finite".into()));
+            return Err(UpdateError("Update failed, new Z value is not finite".into()));
         }
 
         // Update the internal data
@@ -101,7 +101,7 @@ impl Adjustable<f64> for QuaternionSpace {
 
         if !adjusted_z.is_finite() {
             return Err(AdjustmentError(
-                "Adjustment failed, new value is not finite".into(),
+                "Adjustment failed, new Z value is not finite".into(),
             ));
         }
 
