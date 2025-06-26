@@ -11,7 +11,6 @@ use crate::prelude::{PointIndex, Storage};
 // A Grid API, with four different implementations backed by const generic arrays.
 // https://github.com/adamchalmers/const_generic_grid
 
-
 /// A generic multi-dimensional grid abstraction backed by a user-provided storage type.
 ///
 /// `Grid` provides safe, convenient, and dimension-aware access to array-based
@@ -58,7 +57,6 @@ where
     T: Copy + Default,
     S: Storage<T>,
 {
-
     /// Creates a new [`Grid`] instance from the provided storage implementation.
     ///
     /// # Arguments

@@ -260,7 +260,7 @@ dependencies = [
 name = "example-smoking"
 version = "0.1.0"
 dependencies = [
- "deep_causality 0.6.5",
+ "deep_causality 0.7.5",
 ]
 
 [[package]]

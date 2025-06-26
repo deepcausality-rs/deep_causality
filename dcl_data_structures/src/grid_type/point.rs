@@ -65,7 +65,6 @@ impl PointIndex {
         }
     }
 
-
     /// Creates a 3D index with the given `x`, `y`, and `z` coordinates.
     ///
     /// `t` defaults to 0.
