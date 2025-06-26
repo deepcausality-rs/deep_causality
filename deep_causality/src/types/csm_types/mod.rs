@@ -149,8 +149,11 @@ where
     /// Evaluates a single causal state at the index position idx.
     /// Returns ActionError if the evaluation failed.
     pub fn eval_single_state(&self, id: usize, data: NumericalValue) -> Result<(), ActionError> {
-        // Need binding to prevent dropped tmp value warnings
-        let binding = self.state_actions.read().unwrap();
+        // Need binding to prevent dropped tmp value warnings and check for rw lock poisoning
+        let binding = self
+            .state_actions
+            .read()
+            .map_err(|_| ActionError("RwLock poisoned during state evaluation".to_string()))?;
 
         // Check if state actually exists in the HashMap
         let state_action = binding.get(&id);
