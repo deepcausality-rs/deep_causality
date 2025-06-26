@@ -8,9 +8,9 @@ use dcl_data_structures::prelude::PointIndex;
 use std::hash::Hash;
 use std::ops::{Add, Mul, Sub};
 
-use crate::prelude::{Adjustable, AdjustmentError, Datable, UpdateError};
+use crate::prelude::{Adjustable, AdjustmentError, Data, Datable, UpdateError};
 
-impl<T, U> Adjustable<T> for U
+impl<T> Adjustable<T> for Data<T>
 where
     T: Default
         + Copy
@@ -22,7 +22,6 @@ where
         + Add<T, Output = T>
         + Sub<T, Output = T>
         + Mul<T, Output = T>,
-    U: Datable<Data = T>,
 {
     fn update<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize, const TIME: usize>(
         &mut self,
