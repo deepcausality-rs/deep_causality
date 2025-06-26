@@ -47,6 +47,8 @@ do
 
     *)
       echo "Invalid option $REPLY"
+      echo "Exiting!"
+      exit 0
       ;;
   esac
 done
