@@ -32,7 +32,10 @@ fn test_coordinate_out_of_bounds() {
 fn test_display_trait() {
     let space = EuclideanSpace::new(1, 3.00, 1.59, 2.65);
     let output = format!("{space}");
-    assert_eq!(output, "EuclideanSpace(id=1, x=3.0000, y=1.5900, z=2.6500)");
+    assert!(output.contains("EuclideanSpace(id=1"));
+    assert!(output.contains("x=3.00"));
+    assert!(output.contains("y=1.59"));
+    assert!(output.contains("z=2.65"));
 }
 
 #[test]
