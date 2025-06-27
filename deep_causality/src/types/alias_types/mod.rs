@@ -5,7 +5,7 @@
 
 use crate::prelude::{
     BaseSymbol, CausalityError, Causaloid, CausaloidGraph, Context, Contextoid, Data,
-    EuclideanSpace, EuclideanSpacetime, EuclideanTime, SymbolicResult,
+    EuclideanSpace, EuclideanSpacetime, EuclideanTime, Model, SymbolicResult,
 };
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
@@ -40,6 +40,16 @@ pub type ContextualCausalFn<D, S, T, ST, SYM, VS, VT> =
 
 pub type BaseNumberType = u64;
 pub type BaseFloatType = f64;
+
+pub type BaseModel = Model<
+    Data<BaseNumberType>,
+    EuclideanSpace,
+    EuclideanTime,
+    EuclideanSpacetime,
+    BaseSymbol,
+    BaseFloatType,
+    BaseFloatType,
+>;
 
 pub type BaseCausaloid = Causaloid<
     Data<BaseNumberType>,

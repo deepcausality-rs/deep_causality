@@ -33,7 +33,6 @@ fn test_id() {
     let model = Model::new(id, author, description, assumptions, causaloid, context);
 
     assert_eq!(model.id(), id);
-    assert_eq!(*model.model_id(), id);
 }
 
 #[test]
@@ -48,7 +47,7 @@ fn test_author() {
     let model = Model::new(id, author, description, assumptions, causaloid, context);
 
     assert_eq!(model.id(), id);
-    assert_eq!(*model.author(), author);
+    assert_eq!(model.author(), author);
 }
 
 #[test]
@@ -63,8 +62,8 @@ fn test_description() {
     let model = Model::new(id, author, description, assumptions, causaloid, context);
 
     assert_eq!(model.id(), id);
-    assert_eq!(*model.author(), author);
-    assert_eq!(*model.description(), description);
+    assert_eq!(model.author(), author);
+    assert_eq!(model.description(), description);
 }
 
 #[test]
@@ -79,8 +78,8 @@ fn test_assumptions() {
     let model = Model::new(id, author, description, assumptions, causaloid, context);
 
     assert_eq!(model.id(), id);
-    assert_eq!(*model.author(), author);
-    assert_eq!(*model.description(), description);
+    assert_eq!(model.author(), author);
+    assert_eq!(model.description(), description);
     assert!(model.assumptions().is_none());
 }
 
@@ -103,8 +102,8 @@ fn test_causaloid() {
     );
 
     assert_eq!(model.id(), id);
-    assert_eq!(*model.author(), author);
-    assert_eq!(*model.description(), description);
+    assert_eq!(model.author(), author);
+    assert_eq!(model.description(), description);
     assert!(model.assumptions().is_none());
     assert_eq!(*model.causaloid(), causaloid);
 }
@@ -128,8 +127,8 @@ fn test_context() {
     );
 
     assert_eq!(model.id(), id);
-    assert_eq!(*model.author(), author);
-    assert_eq!(*model.description(), description);
+    assert_eq!(model.author(), author);
+    assert_eq!(model.description(), description);
     assert!(model.assumptions().is_none());
     assert_eq!(*model.causaloid(), causaloid);
     assert!(model.context().is_some());
