@@ -49,18 +49,18 @@ where
     VT: Clone,
 {
     fn get_time_index(&self, key: &usize, current: bool) -> Option<&usize> {
-            if current {
-                self.current_index_map.get(key)
-            } else {
-                self.previous_index_map.get(key)
-            }
+        if current {
+            self.current_index_map.get(key)
+        } else {
+            self.previous_index_map.get(key)
+        }
     }
 
     fn set_time_index(&mut self, key: usize, index: usize, current: bool) {
-            if current {
-                self.current_index_map.insert(key, index);
-            } else {
-                self.previous_index_map.insert(key, index);
+        if current {
+            self.current_index_map.insert(key, index);
+        } else {
+            self.previous_index_map.insert(key, index);
         }
     }
 }
