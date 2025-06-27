@@ -4,7 +4,7 @@
  */
 
 //
-// Errors
+// Error types
 //
 pub use crate::errors::*;
 //
@@ -111,6 +111,8 @@ pub use crate::types::context_types::time_scale::TimeScale;
 pub use crate::types::csm_types::csm_action::CausalAction;
 pub use crate::types::csm_types::csm_state::CausalState;
 pub use crate::types::csm_types::CSM;
+// Generative types
+pub use crate::types::generative_types::generative_trigger::GenerativeTrigger;
 // Model types
 pub use crate::types::model_types::assumption::Assumption;
 pub use crate::types::model_types::inference::Inference;
@@ -120,7 +122,6 @@ pub use crate::types::model_types::observation::Observation;
 pub use crate::types::reasoning_types::reasoning_mode::ReasoningMode;
 pub use crate::types::reasoning_types::reasoning_outcome::ReasoningOutcome;
 pub use crate::types::reasoning_types::unified_evidence::Evidence;
-
 //
 //Symbolic types
 pub use crate::types::symbolic_types::symbolic_representation::SymbolicRepresentation;

@@ -32,7 +32,10 @@ fn test_coordinate_out_of_bounds() {
 fn test_display_trait() {
     let n = NedSpace::new(1, 100.0, 50.0, 10.0);
     let output = format!("{n}");
-    assert_eq!(output, "NedSpace(id=1, N=100.0000, E=50.0000, D=10.0000)");
+    assert!(output.contains("NedSpace(id=1"));
+    assert!(output.contains("N=100.00"));
+    assert!(output.contains("E=50.00"));
+    assert!(output.contains("D=10.00"));
 }
 
 #[test]

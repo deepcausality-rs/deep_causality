@@ -4,6 +4,9 @@
 /target/*
 /target/*.*
 
+# Google Gemini CLI settings
+.gemini
+
 #  Code Coverage report
 coverage
 

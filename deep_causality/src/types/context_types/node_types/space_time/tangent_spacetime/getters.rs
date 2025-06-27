@@ -18,9 +18,9 @@ impl TangentSpacetime {
         self.z
     }
 
-    /// Returns position as [t, x, y, z]
-    pub fn position(&self) -> [f64; 4] {
-        [self.t, self.x, self.y, self.z]
+    /// Returns position as [x, y, z]
+    pub fn position(&self) -> [f64; 3] {
+        [self.x, self.y, self.z]
     }
 
     /// Returns velocity as [dt, dx, dy, dz]
