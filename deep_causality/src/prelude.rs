@@ -57,6 +57,11 @@ pub use crate::traits::scalar::scalar_value::ScalarValue;
 // Types
 //
 // Alias types
+pub use crate::types::alias_types::alias_function::*;
+pub use crate::types::alias_types::alias_lock::*;
+pub use crate::types::alias_types::alias_primitives::*;
+pub use crate::types::alias_types::aliases_base::*;
+pub use crate::types::alias_types::aliases_uniform::*;
 pub use crate::types::alias_types::*;
 // Causal types
 pub use crate::types::causal_types::causal_type::CausaloidType;
@@ -85,7 +90,8 @@ pub use crate::types::context_types::node_types::space_time::minkowski_spacetime
 pub use crate::types::context_types::node_types::space_time::space_time_kind::SpaceTimeKind;
 pub use crate::types::context_types::node_types::space_time::tangent_spacetime::TangentSpacetime;
 // Symbolic context node types.
-pub use crate::types::context_types::node_types::symbol::BaseSymbol;
+pub use crate::types::context_types::node_types::symbol::base_symbol::BaseSymbol;
+// pub use crate::types::context_types::node_types::symbol::symbol_kind
 // Symbolic spacetime context node types.
 pub use crate::types::context_types::node_types::symbol_spacetime::causal_set_spacetime::CausalSetSpacetime;
 pub use crate::types::context_types::node_types::symbol_spacetime::conformal_spacetime::ConformalSpacetime;

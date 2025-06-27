@@ -3,8 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::traits::observable::ObservableReasoning;
-use deep_causality::types::alias_types::NumericalValue;
+use deep_causality::prelude::{NumericalValue, ObservableReasoning};
 
 use crate::utils::test_utils::*;
 

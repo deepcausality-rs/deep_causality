@@ -3,10 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::{Identifiable, Inference};
-use deep_causality::traits::inferable::Inferable;
-use deep_causality::traits::observable::ObservableReasoning;
-use deep_causality::types::alias_types::DescriptionValue;
+use deep_causality::prelude::{
+    DescriptionValue, Identifiable, Inferable, Inference, ObservableReasoning,
+};
 
 use crate::utils::test_utils::*;
 
