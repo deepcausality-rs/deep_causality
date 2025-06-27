@@ -279,6 +279,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "example-tokio"
+version = "0.1.0"
+dependencies = [
+ "deep_causality",
+ "tokio",
+]
+
+[[package]]
 name = "fixedbitset"
 version = "0.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -736,14 +744,6 @@ checksum = "be4d6b5f19ff7664e8c98d03e2139cb510db9b0a60b55f8e8709b689d939b6bc"
 dependencies = [
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "tokio"
-version = "0.1.0"
-dependencies = [
- "deep_causality",
- "tokio 1.45.1",
 ]
 
 [[package]]
