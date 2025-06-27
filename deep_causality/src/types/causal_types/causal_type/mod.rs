@@ -17,6 +17,6 @@ pub enum CausaloidType {
 
 impl Display for CausaloidType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{self:?}")
     }
 }

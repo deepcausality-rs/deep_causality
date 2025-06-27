@@ -48,7 +48,7 @@ pub fn run() {
     println!();
 
     let final_conclusion = all_known_causes.reason_all_causes(&data).unwrap();
-    println!("Does Smoking causes cancer: {}", final_conclusion);
+    println!("Does Smoking causes cancer: {final_conclusion}");
     println!();
 
     println!("Apply Causaloid to a new patient A with new measurements");
@@ -69,7 +69,7 @@ pub fn run() {
 
 fn apply_causal_model(data: &[NumericalValue], model: &BaseCausaloidVec) {
     let cancer_estimate = model.reason_all_causes(data).unwrap();
-    println!("Has the patient a lung cancer risk: {}", cancer_estimate);
+    println!("Has the patient a lung cancer risk: {cancer_estimate}");
 }
 
 fn infer_smoke_tar_causal_relation() {

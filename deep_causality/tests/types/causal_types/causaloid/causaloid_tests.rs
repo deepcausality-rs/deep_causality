@@ -285,7 +285,7 @@ fn test_debug() {
     assert!(!causaloid.is_active());
 
     let expected = "Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55 is active: false has context: false".to_string();
-    let actual = format!("{:?}", causaloid);
+    let actual = format!("{causaloid:?}");
 
     assert_eq!(actual, expected);
 }

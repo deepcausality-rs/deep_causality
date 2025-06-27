@@ -31,7 +31,7 @@ fn test_coordinate_out_of_bounds() {
 #[test]
 fn test_display_trait() {
     let space = EcefSpace::new(1, 12.34, 56.78, 90.12);
-    let output = format!("{}", space);
+    let output = format!("{space}");
     assert_eq!(output, "EcefSpace(id=1, x=12.3400, y=56.7800, z=90.1200)");
 }
 

@@ -38,6 +38,6 @@ fn test_copy() {
 #[test]
 fn test_debug_output() {
     let value = CausaloidType::Collection;
-    let debug_str = format!("{:?}", value);
+    let debug_str = format!("{value:?}");
     assert_eq!(debug_str, "Collection");
 }

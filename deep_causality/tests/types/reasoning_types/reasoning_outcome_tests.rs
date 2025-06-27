@@ -13,7 +13,7 @@ fn test_reasoning_outcome_deterministic_true() {
     assert_eq!(outcome.as_bool(), Some(true));
     assert!(!outcome.is_probabilistic());
     assert!(!outcome.is_symbolic());
-    assert_eq!(format!("{}", outcome), "true");
+    assert_eq!(format!("{outcome}"), "true");
 }
 
 #[test]
@@ -23,7 +23,7 @@ fn test_reasoning_outcome_deterministic_false() {
     assert_eq!(outcome.as_bool(), Some(false));
     assert!(!outcome.is_probabilistic());
     assert!(!outcome.is_symbolic());
-    assert_eq!(format!("{}", outcome), "false");
+    assert_eq!(format!("{outcome}"), "false");
 }
 
 #[test]
@@ -38,7 +38,7 @@ fn test_reasoning_outcome_probabilistic() {
     assert!(!matches!(outcome, ReasoningOutcome::Symbolic(_))); // actual behavior
     assert_eq!(outcome.as_probability(), Some(prob));
     assert_eq!(outcome.as_bool(), None);
-    assert_eq!(format!("{}", outcome), format!("{}", prob));
+    assert_eq!(format!("{outcome}"), format!("{}", prob));
 }
 
 #[test]
@@ -50,7 +50,7 @@ fn test_reasoning_outcome_symbolic_proven() {
     assert!(outcome.is_symbolic());
     assert_eq!(outcome.as_symbolic(), Some(SymbolicResult::Proven));
     assert_eq!(outcome.as_bool(), None);
-    assert_eq!(format!("{}", outcome), "Proven");
+    assert_eq!(format!("{outcome}"), "Proven");
 }
 
 #[test]
@@ -58,7 +58,7 @@ fn test_reasoning_outcome_symbolic_disproven() {
     let outcome = ReasoningOutcome::Symbolic(SymbolicResult::Disproven);
     assert!(outcome.is_symbolic());
     assert_eq!(outcome.as_symbolic(), Some(SymbolicResult::Disproven));
-    assert_eq!(format!("{}", outcome), "Disproven");
+    assert_eq!(format!("{outcome}"), "Disproven");
 }
 
 #[test]
@@ -66,5 +66,5 @@ fn test_reasoning_outcome_symbolic_undetermined() {
     let outcome = ReasoningOutcome::Symbolic(SymbolicResult::Undetermined);
     assert!(outcome.is_symbolic());
     assert_eq!(outcome.as_symbolic(), Some(SymbolicResult::Undetermined));
-    assert_eq!(format!("{}", outcome), "Undetermined");
+    assert_eq!(format!("{outcome}"), "Undetermined");
 }

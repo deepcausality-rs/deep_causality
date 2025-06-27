@@ -45,7 +45,7 @@ fn main() {
         .explain_shortest_path_between_causes(start_index, stop_index)
         .unwrap();
 
-    println!("{}", expl);
+    println!("{expl}");
 }
 
 fn get_test_causaloid(id: IdentificationValue) -> BaseCausaloid {

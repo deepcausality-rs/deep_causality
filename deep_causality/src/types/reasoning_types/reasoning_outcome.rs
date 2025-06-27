@@ -57,9 +57,9 @@ impl ReasoningOutcome {
 impl Display for ReasoningOutcome {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ReasoningOutcome::Deterministic(b) => write!(f, "{}", b),
-            ReasoningOutcome::Probabilistic(p) => write!(f, "{}", p),
-            ReasoningOutcome::Symbolic(s) => write!(f, "{}", s),
+            ReasoningOutcome::Deterministic(b) => write!(f, "{b}"),
+            ReasoningOutcome::Probabilistic(p) => write!(f, "{p}"),
+            ReasoningOutcome::Symbolic(s) => write!(f, "{s}"),
         }
     }
 }

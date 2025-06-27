@@ -105,7 +105,7 @@ fn test_display() {
 fn test_edge_cases() {
     // Test with zero values
     let point = PointIndex::new4d(0, 0, 0, 0);
-    assert_eq!(format!("{}", point), "(x:0, y:0, z:0, t:0)");
+    assert_eq!(format!("{point}"), "(x:0, y:0, z:0, t:0)");
 
     // Test with max usize values
     let max = usize::MAX;

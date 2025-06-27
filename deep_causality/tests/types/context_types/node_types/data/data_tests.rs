@@ -44,7 +44,7 @@ fn test_to_string() {
     assert_eq!(d.id(), id);
     assert_eq!(d.get_data(), data);
 
-    let exp = format!("Dataoid: id: {} data: {}", id, data);
+    let exp = format!("Dataoid: id: {id} data: {data}");
     let act = d.to_string();
     assert_eq!(act, exp);
 }

@@ -18,7 +18,7 @@ fn test_causal_graph_index_error_display() {
     let error_msg = "test error message";
     let error = CausalGraphIndexError::new(error_msg.to_string());
     assert_eq!(
-        format!("{}", error),
+        format!("{error}"),
         format!("CausalGraphIndexError: {}", error_msg)
     );
 }
@@ -28,7 +28,7 @@ fn test_causal_graph_index_error_debug() {
     let error_msg = "test error message";
     let error = CausalGraphIndexError::new(error_msg.to_string());
     assert_eq!(
-        format!("{:?}", error),
+        format!("{error:?}"),
         format!("CausalGraphIndexError({:?})", error_msg)
     );
 }

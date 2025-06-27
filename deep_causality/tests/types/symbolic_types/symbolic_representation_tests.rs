@@ -8,14 +8,14 @@ use deep_causality::prelude::SymbolicRepresentation;
 #[test]
 fn test_atom_constructor_and_display() {
     let atom = SymbolicRepresentation::new_atom("A".to_string());
-    assert_eq!(format!("{}", atom), r#"Atom("A")"#);
+    assert_eq!(format!("{atom}"), r#"Atom("A")"#);
     assert_eq!(atom, SymbolicRepresentation::Atom("A".to_string()));
 }
 
 #[test]
 fn test_expr_constructor_and_display() {
     let expr = SymbolicRepresentation::new_expr("Temp > 100".to_string());
-    assert_eq!(format!("{}", expr), r#"Expr("Temp > 100")"#);
+    assert_eq!(format!("{expr}"), r#"Expr("Temp > 100")"#);
     assert_eq!(expr, SymbolicRepresentation::Expr("Temp > 100".to_string()));
 }
 
@@ -26,7 +26,7 @@ fn test_and_constructor_and_display() {
     let and_expr = SymbolicRepresentation::new_and(left.clone(), right.clone());
 
     assert_eq!(
-        format!("{}", and_expr),
+        format!("{and_expr}"),
         format!("And({:?}, {:?})", left, right)
     );
 }
@@ -38,7 +38,7 @@ fn test_or_constructor_and_display() {
     let or_expr = SymbolicRepresentation::new_or(left.clone(), right.clone());
 
     assert_eq!(
-        format!("{}", or_expr),
+        format!("{or_expr}"),
         format!("Or({:?}, {:?})", left, right)
     );
 }
@@ -48,7 +48,7 @@ fn test_not_constructor_and_display() {
     let inner = Box::new(SymbolicRepresentation::new_atom("Z".to_string()));
     let not_expr = SymbolicRepresentation::new_not(inner.clone());
 
-    assert_eq!(format!("{}", not_expr), format!("Not({:?})", inner));
+    assert_eq!(format!("{not_expr}"), format!("Not({:?})", inner));
 }
 
 #[test]
@@ -58,7 +58,7 @@ fn test_implies_constructor_and_display() {
     let implies_expr = SymbolicRepresentation::new_implies(a.clone(), b.clone());
 
     assert_eq!(
-        format!("{}", implies_expr),
+        format!("{implies_expr}"),
         format!("Implies({:?}, {:?})", a, b)
     );
 }
@@ -69,5 +69,5 @@ fn test_iff_constructor_and_display() {
     let b = Box::new(SymbolicRepresentation::new_atom("D".to_string()));
     let iff_expr = SymbolicRepresentation::new_iff(a.clone(), b.clone());
 
-    assert_eq!(format!("{}", iff_expr), format!("Iff({:?}, {:?})", a, b));
+    assert_eq!(format!("{iff_expr}"), format!("Iff({:?}, {:?})", a, b));
 }
