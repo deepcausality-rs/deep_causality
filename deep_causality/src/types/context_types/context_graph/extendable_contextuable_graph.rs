@@ -87,8 +87,7 @@ where
             Ok(ctx) => match ctx.get_node(index) {
                 Some(node) => Ok(node),
                 None => Err(ContextIndexError::new(format!(
-                    "node {} does not exist",
-                    index
+                    "node {index} does not exist"
                 ))),
             },
             Err(e) => Err(e),
@@ -112,11 +111,11 @@ where
         weight: RelationKind,
     ) -> Result<(), ContextIndexError> {
         if !self.extra_ctx_contains_node(a) {
-            return Err(ContextIndexError(format!("index a {} not found", a)));
+            return Err(ContextIndexError(format!("index a {a} not found")));
         };
 
         if !self.extra_ctx_contains_node(b) {
-            return Err(ContextIndexError(format!("index b {} not found", b)));
+            return Err(ContextIndexError(format!("index b {b} not found")));
         };
 
         match self.get_current_extra_context_mut() {

@@ -18,7 +18,7 @@ fn test_context_index_error_display() {
     let error_msg = "test error message";
     let error = ContextIndexError::new(error_msg.to_string());
     assert_eq!(
-        format!("{}", error),
+        format!("{error}"),
         format!("ContextIndexError: {}", error_msg)
     );
 }
@@ -28,7 +28,7 @@ fn test_context_index_error_debug() {
     let error_msg = "test error message";
     let error = ContextIndexError::new(error_msg.to_string());
     assert_eq!(
-        format!("{:?}", error),
+        format!("{error:?}"),
         format!("ContextIndexError({:?})", error_msg)
     );
 }

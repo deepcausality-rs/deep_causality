@@ -17,7 +17,7 @@ fn test_action_error_creation() {
 fn test_action_error_display() {
     let error_msg = "test error message";
     let error = ActionError::new(error_msg.to_string());
-    assert_eq!(format!("{}", error), format!("ActionError: {}", error_msg));
+    assert_eq!(format!("{error}"), format!("ActionError: {}", error_msg));
 }
 
 #[test]
@@ -25,7 +25,7 @@ fn test_action_error_debug() {
     let error_msg = "test error message";
     let error = ActionError::new(error_msg.to_string());
     assert_eq!(
-        format!("{:?}", error),
+        format!("{error:?}"),
         format!("ActionError({:?})", error_msg)
     );
 }

@@ -82,10 +82,10 @@ fn test_debug() {
     let point_3d = PointIndex::new3d(5, 10, 15);
     let point_4d = PointIndex::new4d(5, 10, 15, 20);
 
-    assert!(format!("{:?}", point_1d).contains("PointIndex"));
-    assert!(format!("{:?}", point_2d).contains("PointIndex"));
-    assert!(format!("{:?}", point_3d).contains("PointIndex"));
-    assert!(format!("{:?}", point_4d).contains("PointIndex"));
+    assert!(format!("{point_1d:?}").contains("PointIndex"));
+    assert!(format!("{point_2d:?}").contains("PointIndex"));
+    assert!(format!("{point_3d:?}").contains("PointIndex"));
+    assert!(format!("{point_4d:?}").contains("PointIndex"));
 }
 
 #[test]
@@ -95,17 +95,17 @@ fn test_display() {
     let point_3d = PointIndex::new3d(5, 10, 15);
     let point_4d = PointIndex::new4d(5, 10, 15, 20);
 
-    assert_eq!(format!("{}", point_1d), "(x:5)");
-    assert_eq!(format!("{}", point_2d), "(x:5, y:10)");
-    assert_eq!(format!("{}", point_3d), "(x:5, y:10, z:15)");
-    assert_eq!(format!("{}", point_4d), "(x:5, y:10, z:15, t:20)");
+    assert_eq!(format!("{point_1d}"), "(x:5)");
+    assert_eq!(format!("{point_2d}",), "(x:5, y:10)");
+    assert_eq!(format!("{point_3d}"), "(x:5, y:10, z:15)");
+    assert_eq!(format!("{point_4d}"), "(x:5, y:10, z:15, t:20)");
 }
 
 #[test]
 fn test_edge_cases() {
     // Test with zero values
     let point = PointIndex::new4d(0, 0, 0, 0);
-    assert_eq!(format!("{}", point), "(x:0, y:0, z:0, t:0)");
+    assert_eq!(format!("{point}"), "(x:0, y:0, z:0, t:0)");
 
     // Test with max usize values
     let max = usize::MAX;

@@ -35,7 +35,7 @@ fn test_scalar_projector_trait() {
 #[test]
 fn test_display_trait() {
     let t = LorentzianTime::new(7, TimeScale::Second, 123.456);
-    let s = format!("{}", t);
+    let s = format!("{t}");
     assert!(s.contains("LorentzianTime"));
     assert!(s.contains("id: 7"));
     assert!(s.contains("time_scale: Second"));

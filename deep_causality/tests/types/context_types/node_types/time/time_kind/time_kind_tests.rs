@@ -62,10 +62,10 @@ fn test_display_trait() {
     let d = setup_discrete();
     let l = setup_lorentzian();
 
-    let s1 = format!("{}", e);
-    let s2 = format!("{}", r);
-    let s3 = format!("{}", d);
-    let s4 = format!("{}", l);
+    let s1 = format!("{e}");
+    let s2 = format!("{r}");
+    let s3 = format!("{d}");
+    let s4 = format!("{l}");
 
     assert!(s1.contains("EuclideanTime"));
     assert!(s2.contains("EntropicTime"));
@@ -93,6 +93,6 @@ fn test_clone_and_debug() {
     let t = setup_entropic();
     let c = t.clone();
     assert_eq!(t, c);
-    let dbg = format!("{:?}", t);
+    let dbg = format!("{t:?}");
     assert!(dbg.contains("Entropic"));
 }

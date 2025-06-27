@@ -31,7 +31,7 @@ fn test_coordinate_out_of_bounds() {
 #[test]
 fn test_display_trait() {
     let g = GeoSpace::new(1, 52.520008, 13.404954, 34.0);
-    let output = format!("{}", g);
+    let output = format!("{g}");
     assert_eq!(
         output,
         "GeoSpace(id=1, lat=52.5200, lon=13.4050, alt=34.0000)"
@@ -57,10 +57,7 @@ fn test_metric_trait() {
 
     assert!(
         res < delta,
-        "Distance mismatch: expected ~{}, got {}, diff = {}",
-        expected,
-        distance,
-        res
+        "Distance mismatch: expected ~{expected}, got {distance}, diff = {res}"
     );
 }
 

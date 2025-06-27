@@ -9,6 +9,6 @@ use ultragraph::prelude::UltraGraphError;
 fn test_ultra_graph_error() {
     let x = 1;
     let result: Result<usize, UltraGraphError> =
-        Err(UltraGraphError::new(format!("unexpected number {}", x)));
+        Err(UltraGraphError::new(format!("unexpected number {x}")));
     assert!(result.is_err(),);
 }

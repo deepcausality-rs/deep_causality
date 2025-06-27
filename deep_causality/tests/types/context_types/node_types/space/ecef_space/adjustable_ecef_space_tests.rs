@@ -36,7 +36,7 @@ fn test_display_trait() {
     let space = EcefSpace::new(1, 1.2345, 2.3456, 3.4567);
 
     // dbg!(&space);
-    let output = format!("{}", space);
+    let output = format!("{space}");
     dbg!(&output);
     assert!(output.contains("(id=1"));
     assert!(output.contains("x=1.2345"));

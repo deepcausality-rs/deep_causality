@@ -18,7 +18,7 @@ fn test_adjustment_error_display() {
     let error_msg = "test error message";
     let error = AdjustmentError::new(error_msg.to_string());
     assert_eq!(
-        format!("{}", error),
+        format!("{error}"),
         format!("AdjustmentError: {}", error_msg)
     );
 }
@@ -28,7 +28,7 @@ fn test_adjustment_error_debug() {
     let error_msg = "test error message";
     let error = AdjustmentError::new(error_msg.to_string());
     assert_eq!(
-        format!("{:?}", error),
+        format!("{error:?}"),
         format!("AdjustmentError({:?})", error_msg)
     );
 }

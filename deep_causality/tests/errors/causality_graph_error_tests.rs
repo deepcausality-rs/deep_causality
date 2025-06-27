@@ -18,7 +18,7 @@ fn test_causality_graph_error_display() {
     let error_msg = "test error message";
     let error = CausalityGraphError::new(error_msg.to_string());
     assert_eq!(
-        format!("{}", error),
+        format!("{error}"),
         format!("CausalityGraphError: {}", error_msg)
     );
 }
@@ -28,7 +28,7 @@ fn test_causality_graph_error_debug() {
     let error_msg = "test error message";
     let error = CausalityGraphError::new(error_msg.to_string());
     assert_eq!(
-        format!("{:?}", error),
+        format!("{error:?}"),
         format!("CausalityGraphError({:?})", error_msg)
     );
 }

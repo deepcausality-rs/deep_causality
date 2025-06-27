@@ -34,7 +34,7 @@ fn test_coordinate_index_out_of_bounds() {
 #[test]
 fn test_display_trait() {
     let space = EuclideanSpace::new(5, 1.234, 5.678, 9.876);
-    let output = format!("{}", space);
+    let output = format!("{space}");
     assert!(output.contains("EuclideanSpace(id=5"));
     assert!(output.contains("x=1.234"));
     assert!(output.contains("y=5.678"));

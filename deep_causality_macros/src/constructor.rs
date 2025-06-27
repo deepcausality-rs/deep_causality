@@ -85,7 +85,7 @@ fn new_impl(
         None => (
             syn::Ident::new("new", proc_macro2::Span::call_site()),
             my_quote!(),
-            format!("Constructs a new `{}`.", name),
+            format!("Constructs a new `{name}`."),
         ),
         Some(ref variant) => (
             syn::Ident::new(
@@ -93,7 +93,7 @@ fn new_impl(
                 proc_macro2::Span::call_site(),
             ),
             my_quote!(::#variant),
-            format!("Constructs a new `{}::{}`.", name, variant),
+            format!("Constructs a new `{name}::{variant}`."),
         ),
     };
     new.set_span(proc_macro2::Span::call_site());
@@ -182,7 +182,7 @@ impl FieldAttr {
             }
             for item in list
                 .parse_args_with(Punctuated::<syn::Meta, Token![,]>::parse_terminated)
-                .unwrap_or_else(|err| panic!("Invalid #[new] attribute: {}", err))
+                .unwrap_or_else(|err| panic!("Invalid #[new] attribute: {err}"))
             {
                 match item {
                     syn::Meta::Path(path) => {
@@ -244,7 +244,7 @@ impl<'a> FieldExt<'a> {
             ident: if named {
                 field.ident.clone().unwrap()
             } else {
-                syn::Ident::new(&format!("f{}", idx), proc_macro2::Span::call_site())
+                syn::Ident::new(&format!("f{idx}"), proc_macro2::Span::call_site())
             },
             named,
         }

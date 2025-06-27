@@ -55,7 +55,7 @@ fn test_get_node() {
     println!("Neighbors of root node: ");
     for n in neighbors {
         let node = g.get_node(n).unwrap();
-        println!("node: {:?}", node);
+        println!("node: {node:?}");
     }
 }
 
@@ -117,7 +117,7 @@ fn test_shortest_path() {
         vec![node_a_index, node_d_index, node_e_index, node_f_index]
     );
 
-    println!("Shortest path: {:?}", path)
+    println!("Shortest path: {path:?}")
 }
 
 fn test_outgoing_edges() {
@@ -175,6 +175,6 @@ fn test_outgoing_edges() {
     println!("Neighbors of root node: ");
     for n in neighbors {
         let node = g.get_node(n).unwrap();
-        println!("node: {:?}", node);
+        println!("node: {node:?}");
     }
 }

@@ -32,7 +32,7 @@ pub fn main() {
 
     // Get the usize for the point index
     let res = ag.get(p);
-    println!("Value at 1D point index {}: {}", p, res);
+    println!("Value at 1D point index {p}: {res}");
     assert_eq!(res, 42);
 
     println!("\n2. Testing 3D Array:");
@@ -48,7 +48,7 @@ pub fn main() {
 
     // Get the value at the point index
     let res = ag.get(p);
-    println!("Value at 3D point index {}: {}", p, res);
+    println!("Value at 3D point index {p}: {res}");
     assert_eq!(res, 3);
 
     println!("\n3. Testing 4D Array with Custom Struct:");

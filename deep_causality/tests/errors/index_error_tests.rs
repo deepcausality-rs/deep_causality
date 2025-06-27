@@ -17,17 +17,17 @@ fn test_index_error_creation() {
 fn test_index_error_debug() {
     let msg = "index out of bounds";
     let err = IndexError(msg.to_string());
-    let dbg = format!("{:?}", err);
+    let dbg = format!("{err:?}");
     let expected = String::from("IndexError(\"index out of bounds\")");
-    assert_eq!(format!("{}", dbg), expected);
+    assert_eq!(format!("{dbg}"), expected);
 }
 
 #[test]
 fn test_index_error_display() {
     let msg = "index out of bounds";
     let err = IndexError(msg.to_string());
-    let expected = format!("IndexError: {}", msg);
-    assert_eq!(format!("{}", err), expected);
+    let expected = format!("IndexError: {msg}");
+    assert_eq!(format!("{err}"), expected);
 }
 
 #[test]

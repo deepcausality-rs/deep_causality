@@ -17,7 +17,7 @@ fn test_update_error_creation() {
 fn test_update_error_display() {
     let error_msg = "test error message";
     let error = UpdateError::new(error_msg.to_string());
-    assert_eq!(format!("{}", error), format!("UpdateError: {}", error_msg));
+    assert_eq!(format!("{error}"), format!("UpdateError: {}", error_msg));
 }
 
 #[test]
@@ -25,7 +25,7 @@ fn test_update_error_debug() {
     let error_msg = "test error message";
     let error = UpdateError::new(error_msg.to_string());
     assert_eq!(
-        format!("{:?}", error),
+        format!("{error:?}"),
         format!("UpdateError({:?})", error_msg)
     );
 }

@@ -27,6 +27,6 @@ pub enum TimeScale {
 
 impl Display for TimeScale {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{self:?}")
     }
 }

@@ -18,8 +18,6 @@
 /// - `Copy`: to avoid borrowing complexity
 /// - `Clone`: for repeated safe use
 /// - `PartialOrd`: for threshold logic
-/// - `'static`: to ensure they are lifetime-independent
-/// - `Send + Sync`: for safe multi-threading
 ///
 /// # Examples
 /// ```rust
@@ -29,7 +27,7 @@
 ///     val > T::default()
 /// }
 /// ```
-pub trait ScalarValue: Copy + Clone + PartialOrd + Default + Send + Sync + 'static {}
+pub trait ScalarValue: Copy + Clone + PartialOrd + Default {}
 
 // Blanket implementations for primitive scalar types
 impl ScalarValue for f64 {}

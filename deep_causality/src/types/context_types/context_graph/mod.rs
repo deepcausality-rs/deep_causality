@@ -13,7 +13,7 @@ mod contextuable_graph;
 mod debug;
 mod extendable_contextuable_graph;
 mod identifiable;
-mod indexable;
+mod indexable_time;
 
 type ExtraContext<D, S, T, ST, SYM, VS, VT> = UltraGraph<Contextoid<D, S, T, ST, SYM, VS, VT>>;
 

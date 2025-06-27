@@ -57,7 +57,7 @@ fn test_display_output() {
     ];
 
     for t in cases {
-        let output = format!("{}", t);
+        let output = format!("{t}");
         assert!(output.contains(&format!("#{}", t.id())));
         assert!(output.contains(&format!("@ {}", t.time_unit())));
     }

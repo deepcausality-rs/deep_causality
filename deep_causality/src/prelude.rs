@@ -2,6 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
+//
+// Errors
+//
 pub use crate::errors::*;
 //
 // Traits
@@ -37,7 +41,9 @@ pub use crate::traits::contextuable_graph::ExtendableContextuableGraph;
 // Identifiable Traits
 pub use crate::traits::identifiable::Identifiable;
 // Indexable Traits
-pub use crate::traits::indexable::Indexable;
+pub use crate::traits::indexable::time_index_current::CurrentTimeIndex;
+pub use crate::traits::indexable::time_index_previous::PreviousTimeIndex;
+pub use crate::traits::indexable::time_indexable::TimeIndexable;
 // Inferable Traits
 pub use crate::traits::inferable::Inferable;
 pub use crate::traits::inferable::InferableReasoning;

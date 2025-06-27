@@ -113,7 +113,7 @@ where
     ) -> Result<(), UpdateError> {
         // Check if the key exists, if so return error
         if self.state_actions.read().unwrap().get(&idx).is_some() {
-            return Err(UpdateError(format!("State {} already exists.", idx)));
+            return Err(UpdateError(format!("State {idx} already exists.")));
         }
 
         // Insert the new state/action at the idx position
@@ -135,8 +135,7 @@ where
         let state_action = binding.get(&id);
         if state_action.is_none() {
             return Err(UpdateError(format!(
-                "State {} does not exists and  cannot be removed",
-                id
+                "State {id} does not exists and  cannot be removed"
             )));
         }
 
@@ -159,8 +158,7 @@ where
         let state_action = binding.get(&id);
         if state_action.is_none() {
             return Err(ActionError(format!(
-                "State {} does not exists. Add it first before evaluating",
-                id
+                "State {id} does not exists. Add it first before evaluating"
             )));
         }
 
@@ -173,8 +171,7 @@ where
         // Check if the causal state evaluation returned an error
         if eval.is_err() {
             return Err(ActionError(format!(
-                "CSM[eval]: Error evaluating causal state: {:?}",
-                state
+                "CSM[eval]: Error evaluating causal state: {state:?}"
             )));
         }
 
@@ -185,8 +182,7 @@ where
         // If the state evaluated to true, fire the associated action.
         if trigger && action.fire().is_err() {
             return Err(ActionError(format!(
-                "CSM[eval]: Failed to fire action associated with causal state {:?}",
-                state
+                "CSM[eval]: Failed to fire action associated with causal state {state:?}"
             )));
         }
 
@@ -203,8 +199,7 @@ where
         // Check if the key exists, if not return error
         if self.state_actions.read().unwrap().get(&idx).is_none() {
             return Err(UpdateError(format!(
-                "State {} does not exists. Add it first before evaluating",
-                idx
+                "State {idx} does not exists. Add it first before evaluating"
             )));
         }
 
@@ -226,8 +221,7 @@ where
             // check if the causal state evaluation returned an error
             if eval.is_err() {
                 return Err(ActionError(format!(
-                    "CSM[eval]: Error evaluating causal state: {:?}",
-                    state
+                    "CSM[eval]: Error evaluating causal state: {state:?}"
                 )));
             }
 
@@ -238,8 +232,7 @@ where
             // If the state evaluated to true, fire the associated action.
             if trigger && action.fire().is_err() {
                 return Err(ActionError(format!(
-                    "CSM[eval]: Failed to fire action associated with causal state {:?}",
-                    state
+                    "CSM[eval]: Failed to fire action associated with causal state {state:?}"
                 )));
             }
         }

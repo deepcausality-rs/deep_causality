@@ -43,7 +43,7 @@ fn test_space_time_kind_variants_and_traits() {
 
         // Display
         let mut out = String::new();
-        write!(&mut out, "{}", variant).unwrap();
+        write!(&mut out, "{variant}").unwrap();
         assert!(out.contains("id") || out.contains("x"));
     }
 }

@@ -39,11 +39,11 @@ where
     /// Returns ContextIndexError if the index is not found
     fn remove_node(&mut self, index: usize) -> Result<(), ContextIndexError> {
         if !self.contains_node(index) {
-            return Err(ContextIndexError(format!("index {} not found", index)));
+            return Err(ContextIndexError(format!("index {index} not found")));
         };
 
         if self.base_context.remove_node(index).is_err() {
-            return Err(ContextIndexError(format!("index {} not found", index)));
+            return Err(ContextIndexError(format!("index {index} not found")));
         };
 
         Ok(())
@@ -59,11 +59,11 @@ where
         weight: RelationKind,
     ) -> Result<(), ContextIndexError> {
         if !self.contains_node(a) {
-            return Err(ContextIndexError(format!("index a {} not found", a)));
+            return Err(ContextIndexError(format!("index a {a} not found")));
         };
 
         if !self.contains_node(b) {
-            return Err(ContextIndexError(format!("index b {} not found", b)));
+            return Err(ContextIndexError(format!("index b {b} not found")));
         };
 
         if self
@@ -72,8 +72,7 @@ where
             .is_err()
         {
             return Err(ContextIndexError(format!(
-                "Failed to add edge for index a {} and b {}",
-                a, b
+                "Failed to add edge for index a {a} and b {b}"
             )));
         }
 
@@ -101,8 +100,7 @@ where
 
         if self.base_context.remove_edge(a, b).is_err() {
             return Err(ContextIndexError(format!(
-                "Failed to remove edge for index a {} and b {}",
-                a, b
+                "Failed to remove edge for index a {a} and b {b}"
             )));
         }
 

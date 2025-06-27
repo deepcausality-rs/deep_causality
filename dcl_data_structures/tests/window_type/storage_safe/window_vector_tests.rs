@@ -487,10 +487,7 @@ fn test_performance_scaling() {
             }
 
             let duration = start.elapsed();
-            println!(
-                "Size: {}, Multiplier: {}, Duration: {:?}",
-                size, mult, duration
-            );
+            println!("Size: {size}, Multiplier: {mult}, Duration: {duration:?}");
 
             // Verify correctness
             assert_eq!(storage.last().unwrap(), ((size * mult - 1) as i32));

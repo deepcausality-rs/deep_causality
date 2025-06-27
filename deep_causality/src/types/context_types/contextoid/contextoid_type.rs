@@ -145,12 +145,12 @@ where
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            ContextoidType::Datoid(b) => write!(f, "Datoid: {}", b),
-            ContextoidType::Tempoid(b) => write!(f, "Tempoid: {}", b),
-            ContextoidType::Root(b) => write!(f, "Root: {}", b),
-            ContextoidType::Spaceoid(b) => write!(f, "Spaceoid: {}", b),
-            ContextoidType::SpaceTempoid(b) => write!(f, "SpaceTempoid: {}", b),
-            ContextoidType::Symboid(b) => write!(f, "Symboid: {}", b),
+            ContextoidType::Datoid(b) => write!(f, "Datoid: {b}"),
+            ContextoidType::Tempoid(b) => write!(f, "Tempoid: {b}"),
+            ContextoidType::Root(b) => write!(f, "Root: {b}"),
+            ContextoidType::Spaceoid(b) => write!(f, "Spaceoid: {b}"),
+            ContextoidType::SpaceTempoid(b) => write!(f, "SpaceTempoid: {b}"),
+            ContextoidType::Symboid(b) => write!(f, "Symboid: {b}"),
             ContextoidType::_Marker(_) => {
                 unreachable!("_Marker variant should never be accessed directly")
             }

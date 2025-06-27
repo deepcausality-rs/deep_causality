@@ -17,17 +17,14 @@ fn test_build_error_creation() {
 fn test_build_error_display() {
     let error_msg = "test error message";
     let error = BuildError::new(error_msg.to_string());
-    assert_eq!(format!("{}", error), format!("BuildError: {}", error_msg));
+    assert_eq!(format!("{error}"), format!("BuildError: {}", error_msg));
 }
 
 #[test]
 fn test_build_error_debug() {
     let error_msg = "test error message";
     let error = BuildError::new(error_msg.to_string());
-    assert_eq!(
-        format!("{:?}", error),
-        format!("BuildError({:?})", error_msg)
-    );
+    assert_eq!(format!("{error:?}"), format!("BuildError({:?})", error_msg));
 }
 
 #[test]

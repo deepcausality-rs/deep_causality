@@ -29,7 +29,7 @@ fn test_reasoning_mode_clone() {
 #[test]
 fn test_reasoning_mode_debug_format() {
     let mode = ReasoningMode::Probabilistic;
-    let s = format!("{:?}", mode);
+    let s = format!("{mode:?}");
     assert_eq!(s, "Probabilistic");
 }
 

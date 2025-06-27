@@ -31,7 +31,7 @@ impl<T> GraphLike<T> for UltraMatrixGraph<T> {
 
     fn remove_node(&mut self, index: usize) -> Result<(), UltraGraphError> {
         if !self.contains_node(index) {
-            return Err(UltraGraphError(format!("index {} not found", index)));
+            return Err(UltraGraphError(format!("index {index} not found")));
         };
 
         let k = self.index_map.get(&index).unwrap();
@@ -43,17 +43,16 @@ impl<T> GraphLike<T> for UltraMatrixGraph<T> {
 
     fn add_edge(&mut self, a: usize, b: usize) -> Result<(), UltraGraphError> {
         if !self.contains_node(a) {
-            return Err(UltraGraphError(format!("index a {} not found", a)));
+            return Err(UltraGraphError(format!("index a {a} not found")));
         };
 
         if !self.contains_node(b) {
-            return Err(UltraGraphError(format!("index b {} not found", b)));
+            return Err(UltraGraphError(format!("index b {b} not found")));
         };
 
         if self.contains_edge(a, b) {
             return Err(UltraGraphError(format!(
-                "Edge already exists between: {} and {}",
-                a, b
+                "Edge already exists between: {a} and {b}"
             )));
         }
 
@@ -70,17 +69,16 @@ impl<T> GraphLike<T> for UltraMatrixGraph<T> {
         weight: u64,
     ) -> Result<(), UltraGraphError> {
         if !self.contains_node(a) {
-            return Err(UltraGraphError(format!("index a {} not found", a)));
+            return Err(UltraGraphError(format!("index a {a} not found")));
         };
 
         if !self.contains_node(b) {
-            return Err(UltraGraphError(format!("index b {} not found", b)));
+            return Err(UltraGraphError(format!("index b {b} not found")));
         };
 
         if self.contains_edge(a, b) {
             return Err(UltraGraphError(format!(
-                "Edge already exists between: {} and {}",
-                a, b
+                "Edge already exists between: {a} and {b}"
             )));
         }
 
@@ -111,8 +109,7 @@ impl<T> GraphLike<T> for UltraMatrixGraph<T> {
 
         if !self.contains_edge(a, b) {
             return Err(UltraGraphError(format!(
-                "Edge does not exists between: {} and {}",
-                a, b
+                "Edge does not exists between: {a} and {b}"
             )));
         }
 

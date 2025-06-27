@@ -246,7 +246,7 @@ where
 ///
 fn append_string<'l>(s1: &'l mut String, s2: &'l str) -> &'l str {
     s1.push('\n');
-    s1.push_str(format!(" * {}", s2).as_str());
+    s1.push_str(format!(" * {s2}").as_str());
     s1.push('\n');
     s1
 }
