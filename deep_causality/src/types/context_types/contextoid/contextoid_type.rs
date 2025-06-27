@@ -8,18 +8,6 @@ use std::hash::Hash;
 use std::marker::PhantomData;
 
 use crate::prelude::*;
-// Node type needs to be generic over S and T to allow
-// for categories of spacial and temporal types.
-// https://stackoverflow.com/questions/31123882/how-to-map-a-parametrized-enum-from-a-generic-type-to-another
-
-// Add type constraints to the where clause so that S adhere to spatial trait requirements
-// and to temporal trait requirements for T.
-
-// Make sure that traits are re-implement with S and T as generic parameters,
-// which then allows to implement those traits for existing node types.
-// https://www.geeksforgeeks.org/rust-generic-traits/
-
-// https://stackoverflow.com/questions/69173586/either-type-a-or-b-in-rust
 
 /// Enum of monoidal context node types (each a composable unit of structure).
 /// Each variant name ends in `-oid` to emphasize its monoid role as a single identity-bearing unit.
