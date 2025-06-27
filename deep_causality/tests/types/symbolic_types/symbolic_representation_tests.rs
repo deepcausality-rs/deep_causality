@@ -37,10 +37,7 @@ fn test_or_constructor_and_display() {
     let right = Box::new(SymbolicRepresentation::new_atom("Y".to_string()));
     let or_expr = SymbolicRepresentation::new_or(left.clone(), right.clone());
 
-    assert_eq!(
-        format!("{or_expr}"),
-        format!("Or({:?}, {:?})", left, right)
-    );
+    assert_eq!(format!("{or_expr}"), format!("Or({:?}, {:?})", left, right));
 }
 
 #[test]

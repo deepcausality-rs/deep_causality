@@ -419,8 +419,7 @@ fn test_push_beyond_capacity() {
     assert_eq!(
         slice.len(),
         size,
-        "Window should maintain its size of {}",
-        size
+        "Window should maintain its size of {size}"
     );
     assert!(
         window.filled(),
