@@ -64,21 +64,25 @@ fn test_lorentzian_time_and_position() {
 }
 
 #[test]
-fn test_interval_squared_timelike() {
+fn test_interval_squared_timelike_is_negative() {
+    // Two events separated by time but not space.
     let a = LorentzianSpacetime::new(1, 0.0, 0.0, 0.0, 10.0, TimeScale::Second);
     let b = LorentzianSpacetime::new(2, 0.0, 0.0, 0.0, 0.0, TimeScale::Second);
 
     let result = a.interval_squared(&b);
-    assert!(result < 0.0); // time-like
+    // s² = -c²·Δt² + Δx² = -c²·(10)² + 0 < 0
+    assert!(result < 0.0, "Expected time-like interval to be negative");
 }
 
 #[test]
-fn test_interval_squared_spacelike() {
+fn test_interval_squared_spacelike_is_positive() {
+    // Two events separated by space but not time.
     let a = LorentzianSpacetime::new(1, 3.0e3, 0.0, 0.0, 0.0, TimeScale::Second);
     let b = LorentzianSpacetime::new(2, 0.0, 0.0, 0.0, 0.0, TimeScale::Second);
 
     let result = a.interval_squared(&b);
-    assert!(result > 0.0); // space-like
+    // s² = -c²·Δt² + Δx² = 0 + (3e3)² > 0
+    assert!(result > 0.0, "Expected space-like interval to be positive");
 }
 
 #[test]
