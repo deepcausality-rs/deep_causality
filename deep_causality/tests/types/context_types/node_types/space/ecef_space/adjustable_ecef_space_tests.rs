@@ -4,14 +4,14 @@
  */
 
 use dcl_data_structures::prelude::{ArrayGrid, ArrayType, PointIndex};
-use deep_causality::prelude::{Adjustable, Coordinate, EcefSpace, Identifiable, Metric, Spatial};
+use deep_causality::prelude::{Adjustable, EcefSpace};
 
 #[test]
 fn test_ecef_space_adjustable_update_and_adjust() {
     let mut space = EcefSpace::new(1, 1.0, 2.0, 3.0);
 
     // Test update
-    let mut update_grid: ArrayGrid<f64, 3, 3, 3, 3> = ArrayGrid::new(ArrayType::Array3D);
+    let update_grid: ArrayGrid<f64, 3, 3, 3, 3> = ArrayGrid::new(ArrayType::Array3D);
     update_grid.set(PointIndex::new3d(0, 0, 0), 10.0);
     update_grid.set(PointIndex::new3d(0, 0, 1), 20.0);
     update_grid.set(PointIndex::new3d(0, 0, 2), 30.0);
@@ -22,7 +22,7 @@ fn test_ecef_space_adjustable_update_and_adjust() {
     assert_eq!(space.z(), 30.0);
 
     // Test adjust
-    let mut adjust_grid: ArrayGrid<f64, 3, 3, 3, 3> = ArrayGrid::new(ArrayType::Array3D);
+    let adjust_grid: ArrayGrid<f64, 3, 3, 3, 3> = ArrayGrid::new(ArrayType::Array3D);
     adjust_grid.set(PointIndex::new3d(0, 0, 0), 1.0);
     adjust_grid.set(PointIndex::new3d(0, 0, 1), 1.0);
     adjust_grid.set(PointIndex::new3d(0, 0, 2), 1.0);
