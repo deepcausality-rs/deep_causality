@@ -20,14 +20,17 @@ impl EventHandler {
 }
 
 impl EventHandler {
-    pub async fn run_inference(&self) -> Result<(), Box<dyn Error + Send>> {
+    pub async fn run_background_inference(&self) -> Result<(), Box<dyn Error + Send>> {
         let data = utils::get_test_data();
-        let model = self.model.read().unwrap();
 
-        let bc = model.causaloid();
+        let bc = {
+            let model = self.model.read().unwrap();
+            Arc::clone(model.causaloid())
+            // Release rw lock early for concurrency
+        };
 
         for d in data.iter() {
-            self.handle_inference(d, bc)?
+            self.handle_inference(d, &bc)?
         }
 
         Ok(())

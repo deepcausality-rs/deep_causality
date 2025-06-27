@@ -23,7 +23,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("{FN_NAME}: Start the data handler as background task",);
     tokio::spawn(async move {
-        if let Err(e) = event_handler.run_inference().await {
+        if let Err(e) = event_handler.run_background_inference().await {
             eprintln!("{FN_NAME}]: inference error: {e}");
         }
     })
