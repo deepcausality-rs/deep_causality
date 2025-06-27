@@ -7,6 +7,7 @@ use std::fmt::{Debug, Display};
 use std::hash::Hash;
 
 /// A concrete, type-safe definition of all possible triggers.
+#[derive(Debug, Clone, PartialEq)]
 pub enum GenerativeTrigger<D>
 where
     D: Default + Copy + Clone + Hash + Eq + PartialEq,
