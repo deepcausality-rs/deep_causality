@@ -4,7 +4,7 @@
  */
 
 //
-// Errors
+// Error types
 //
 pub use crate::errors::*;
 //
