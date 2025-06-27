@@ -96,7 +96,7 @@ fn test_display() {
     let point_4d = PointIndex::new4d(5, 10, 15, 20);
 
     assert_eq!(format!("{point_1d}"), "(x:5)");
-    assert_eq!(format!("{point_2d}", ), "(x:5, y:10)");
+    assert_eq!(format!("{point_2d}",), "(x:5, y:10)");
     assert_eq!(format!("{point_3d}"), "(x:5, y:10, z:15)");
     assert_eq!(format!("{point_4d}"), "(x:5, y:10, z:15, t:20)");
 }
