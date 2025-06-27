@@ -5,9 +5,7 @@
 
 use std::collections::BTreeMap;
 
-use deep_causality::prelude::Observation;
-use deep_causality::traits::observable::ObservableReasoning;
-use deep_causality::types::alias_types::NumericalValue;
+use deep_causality::prelude::{NumericalValue, ObservableReasoning, Observation};
 
 use crate::utils::test_utils;
 

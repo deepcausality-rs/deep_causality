@@ -11,13 +11,13 @@ use crate::utils::test_utils;
 // Custom type alias
 type CustomCausaloidGraph = CausaloidGraph<
     Causaloid<
-        Data<BaseNumberType>,
+        Data<NumberType>,
         EuclideanSpace,
         EuclideanTime,
         EuclideanSpacetime,
         BaseSymbol,
-        BaseFloatType,
-        BaseFloatType,
+        FloatType,
+        FloatType,
     >,
 >;
 
