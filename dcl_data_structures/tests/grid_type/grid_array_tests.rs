@@ -171,21 +171,21 @@ fn test_array_grid_display() {
 
     // Test 1D Grid Display
     let grid_1d: ArrayGrid<i32, W, H, D, T> = ArrayGrid::new(ArrayType::Array1D);
-    let display_str = format!("{}", grid_1d);
+    let display_str = format!("{grid_1d}");
     assert!(display_str.contains("ArrayGrid1D"));
 
     // Test 2D Grid Display
     let grid_2d: ArrayGrid<i32, W, H, D, T> = ArrayGrid::new(ArrayType::Array2D);
-    let display_str = format!("{}", grid_2d);
+    let display_str = format!("{grid_2d}");
     assert!(display_str.contains("ArrayGrid2D"));
 
     // Test 3D Grid Display
     let grid_3d: ArrayGrid<i32, W, H, D, T> = ArrayGrid::new(ArrayType::Array3D);
-    let display_str = format!("{}", grid_3d);
+    let display_str = format!("{grid_3d}");
     assert!(display_str.contains("ArrayGrid3D"));
 
     // Test 4D Grid Display
     let grid_4d: ArrayGrid<i32, W, H, D, T> = ArrayGrid::new(ArrayType::Array4D);
-    let display_str = format!("{}", grid_4d);
+    let display_str = format!("{grid_4d}");
     assert!(display_str.contains("ArrayGrid4D"));
 }
