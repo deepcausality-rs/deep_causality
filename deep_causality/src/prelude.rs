@@ -57,11 +57,11 @@ pub use crate::traits::scalar::scalar_value::ScalarValue;
 // Types
 //
 // Alias types
+pub use crate::types::alias_types::alias_base::*;
 pub use crate::types::alias_types::alias_function::*;
 pub use crate::types::alias_types::alias_lock::*;
 pub use crate::types::alias_types::alias_primitives::*;
-pub use crate::types::alias_types::aliases_base::*;
-pub use crate::types::alias_types::aliases_uniform::*;
+pub use crate::types::alias_types::alias_uniform::*;
 pub use crate::types::alias_types::*;
 // Causal types
 pub use crate::types::causal_types::causal_type::CausaloidType;
