@@ -8,4 +8,5 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-FEATURES=unsafe cargo build
+# FEATURES=unsafe cargo build
+command bazel build //...

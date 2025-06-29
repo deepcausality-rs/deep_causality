@@ -84,7 +84,10 @@ fn test_assumption_to_string() {
     assert_eq!(assumption.id(), id);
     assert_eq!(assumption.description(), description);
 
-    let expected = format!("Assumption: id: {}, description: {}, assumption_fn: fn(&[NumericalValue]) -> bool;, assumption_tested: {},assumption_valid: {}", id, description, false, false);
+    let expected = format!(
+        "Assumption: id: {}, description: {}, assumption_fn: fn(&[NumericalValue]) -> bool;, assumption_tested: {},assumption_valid: {}",
+        id, description, false, false
+    );
     let actual = assumption.to_string();
     assert_eq!(actual, expected);
 }

@@ -1,0 +1,250 @@
+load("@rules_rust//rust:defs.bzl", "rust_test_suite")
+
+rust_test_suite(
+    name = "errors_tests",
+    srcs = glob([
+        "errors/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//alias:deep_causality",
+    ],
+)
+
+rust_test_suite(
+    name = "extensions_tests",
+    srcs = glob([
+        "extensions/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//alias:deep_causality",
+    ],
+)
+
+rust_test_suite(
+    name = "causal_types_tests",
+    srcs = glob([
+        "types/causal_types/causal_type/*_tests.rs",
+        #        "types/causal_types/causaloid/*_tests.rs",
+        #        "types/causal_types/causaloid_graph/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//alias:deep_causality",
+    ],
+)
+
+rust_test_suite(
+    name = "ctx_types_tests",
+    srcs = glob([
+        "types/context_types/context_graph/*_tests.rs",
+        "types/context_types/contextoid/*_tests.rs",
+        # "types/context_node_types/data/*_tests.rs",
+        "types/context_node_types/root/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//alias:deep_causality",
+    ],
+)
+
+rust_test_suite(
+    name = "utils_tests",
+    srcs = glob([
+        "utils_/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//alias:deep_causality",
+    ],
+)
+
+rust_test_suite(
+    name = "ctx_space_types_tests",
+    srcs = glob([
+        "types/context_node_types/space/ecef_space/*_tests.rs",
+        "types/context_node_types/space/euclidean_space/*_tests.rs",
+        "types/context_node_types/space/geo_space/*_tests.rs",
+        "types/context_node_types/space/ned_space/*_tests.rs",
+        "types/context_node_types/space/quaternion_space/*_tests.rs",
+        "types/context_node_types/space/space_kind/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//alias:deep_causality",
+        "//alias:dcl_data_structures",
+    ],
+)
+
+rust_test_suite(
+    name = "ctx_space_time_types_tests",
+    srcs = glob([
+        "types/context_node_types/space_time/euclidean/*_tests.rs",
+        "types/context_node_types/space_time/lorentzian/*_tests.rs",
+        "types/context_node_types/space_time/minkowski/*_tests.rs",
+        "types/context_node_types/space_time/space_time_kind/*_tests.rs",
+        "types/context_node_types/space_time/tangent_spacetime/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//alias:deep_causality",
+        "//alias:dcl_data_structures",
+    ],
+)
+
+rust_test_suite(
+    name = "ctx_symbol_types_tests",
+    srcs = glob([
+        "types/context_node_types/symbol/base_symbol/*_tests.rs",
+        "types/context_node_types/symbol/symbol_kind/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//alias:deep_causality",
+    ],
+)
+
+rust_test_suite(
+    name = "ctx_symbolic_spacetime_types_tests",
+    srcs = glob([
+        "types/context_node_types/symbol_spacetime/causal_set/*_tests.rs",
+        "types/context_node_types/symbol_spacetime/conformal/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//alias:deep_causality",
+    ],
+)
+
+rust_test_suite(
+    name = "ctx_time_types_tests",
+    srcs = glob([
+        "types/context_node_types/time/discrete_time/*_tests.rs",
+        "types/context_node_types/time/entropic_time/*_tests.rs",
+        "types/context_node_types/time/euclidean_time/*_tests.rs",
+        "types/context_node_types/time/lorentzian_time/*_tests.rs",
+        "types/context_node_types/time/symbolic_time/*_tests.rs",
+        "types/context_node_types/time/time_kind/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//alias:deep_causality",
+        "//alias:dcl_data_structures",
+    ],
+)
+
+rust_test_suite(
+    name = "csm_types_tests",
+    srcs = glob([
+        # "types/csm_types/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//alias:deep_causality",
+    ],
+)
+
+rust_test_suite(
+    name = "generative_types_tests",
+    srcs = glob([
+        "types/generative_types/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//alias:deep_causality",
+    ],
+)
+
+rust_test_suite(
+    name = "model_types_tests",
+    srcs = glob([
+        # "types/model_types/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//alias:deep_causality",
+    ],
+)
+
+rust_test_suite(
+    name = "reasoning_types_tests",
+    srcs = glob([
+        "types/reasoning_types/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//alias:deep_causality",
+    ],
+)
+
+rust_test_suite(
+    name = "symbolic_types_tests",
+    srcs = glob([
+        "types/symbolic_types/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//alias:deep_causality",
+    ],
+)

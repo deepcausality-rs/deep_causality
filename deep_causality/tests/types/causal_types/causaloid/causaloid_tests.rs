@@ -75,11 +75,7 @@ fn test_new_with_context() {
             Ok(true)
         } else {
             // relate the observation (obs) to the data (val) from the contextoid
-            if !obs.ge(&val) {
-                Ok(false)
-            } else {
-                Ok(true)
-            }
+            if !obs.ge(&val) { Ok(false) } else { Ok(true) }
         }
     }
 

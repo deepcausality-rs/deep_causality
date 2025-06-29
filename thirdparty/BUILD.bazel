@@ -1,0 +1,44 @@
+load("@rules_rust//crate_universe:defs.bzl", "crate", "crates_vendor")
+
+crates_vendor(
+    name = "crates_vendor",
+    annotations = {},
+    mode = "local",
+    packages = {
+        #
+        # Proc macros dependencies
+        "proc-macro2": crate.spec(
+            default_features = True,
+            package = "proc-macro2",
+            version = "1.0",
+        ),
+        "syn": crate.spec(
+            default_features = True,
+            features = [
+                "full",
+                "extra-traits",
+            ],
+            package = "syn",
+            version = "2.0",
+        ),
+        "quote": crate.spec(
+            default_features = True,
+            package = "quote",
+            version = "1.0",
+        ),
+        #
+        # Regular dependencies
+        "ahash": crate.spec(
+            default_features = True,
+            package = "ahash",
+            version = "0.8.12",
+        ),
+        "petgraph": crate.spec(
+            default_features = True,
+            package = "petgraph",
+            version = "0.7.1",
+        ),
+    },  # End packages
+    repository_name = "deep_causality_vendored",
+    tags = ["manual"],
+)

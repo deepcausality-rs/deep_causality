@@ -1,0 +1,35 @@
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_proc_macro")
+
+# https://bazelbuild.github.io/rules_rust/rust.html#rust_proc_macro
+rust_proc_macro(
+    name = "deep_causality_macros",
+    srcs = glob([
+        "src/*.rs",
+    ]),
+    crate_root = "src/lib.rs",
+    tags = [
+        "deep_causality_macros",
+        "macro",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # External crates
+        "//thirdparty/crates:proc-macro2",
+        "//thirdparty/crates:syn",
+        "//thirdparty/crates:quote",
+    ],
+)
+
+rust_doc(
+    name = "doc",
+    crate = ":deep_causality_macros",
+    tags = ["doc"],
+    visibility = ["//visibility:public"],
+)
+
+rust_doc_test(
+    name = "doc_test",
+    crate = ":deep_causality_macros",
+    tags = ["doc-test"],
+    visibility = ["//visibility:public"],
+)

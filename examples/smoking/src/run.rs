@@ -37,7 +37,7 @@ pub fn run() {
     // Adoption only requires to plug in either real study results or raw observational data.
     let nic_level = 0.82; // Heavy smoker ( high nicotine level )
     let tar_level = 0.87; // Tar in lung
-                          // The order of these numbers must match the order of the causaloids above for correct auto-reasoning.
+    // The order of these numbers must match the order of the causaloids above for correct auto-reasoning.
     let data = [nic_level, tar_level];
 
     println!(

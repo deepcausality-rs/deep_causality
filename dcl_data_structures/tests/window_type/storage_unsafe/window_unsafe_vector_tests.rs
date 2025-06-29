@@ -4,7 +4,7 @@
  */
 
 #[cfg(feature = "unsafe")]
-use dcl_data_structures::prelude::{window_type, SlidingWindow, UnsafeVectorStorage};
+use dcl_data_structures::prelude::{SlidingWindow, UnsafeVectorStorage, window_type};
 
 // Maximum number of elements held in the sliding window.
 // const SIZE: usize = 4;

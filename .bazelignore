@@ -1,0 +1,9 @@
+.cargo
+.git
+.github
+target
+target-bzl
+target-bzl/bin
+target-bzl/out
+target-bzl/quant-engine
+target-bzl/testlogs

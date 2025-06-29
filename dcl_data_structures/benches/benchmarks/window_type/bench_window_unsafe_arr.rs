@@ -4,11 +4,11 @@
  */
 
 #[cfg(feature = "unsafe")]
-use criterion::criterion_group;
-#[cfg(feature = "unsafe")]
 use criterion::Criterion;
 #[cfg(feature = "unsafe")]
-use dcl_data_structures::prelude::{window_type, SlidingWindow, UnsafeArrayStorage};
+use criterion::criterion_group;
+#[cfg(feature = "unsafe")]
+use dcl_data_structures::prelude::{SlidingWindow, UnsafeArrayStorage, window_type};
 
 #[cfg(feature = "unsafe")]
 use crate::benchmarks::fields::{CAPACITY, SIZE};

@@ -5,7 +5,6 @@
 
 mod context_graph;
 mod contextoid;
-mod node_types;
 pub(crate) mod utils;
 
 #[cfg(test)]

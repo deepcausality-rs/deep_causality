@@ -7,11 +7,11 @@ use crate::benchmarks::fields::MULT;
 #[cfg(feature = "unsafe")]
 use crate::benchmarks::fields::SIZE;
 #[cfg(feature = "unsafe")]
-use criterion::criterion_group;
-#[cfg(feature = "unsafe")]
 use criterion::Criterion;
 #[cfg(feature = "unsafe")]
-use dcl_data_structures::prelude::{window_type, SlidingWindow, UnsafeVectorStorage};
+use criterion::criterion_group;
+#[cfg(feature = "unsafe")]
+use dcl_data_structures::prelude::{SlidingWindow, UnsafeVectorStorage, window_type};
 
 #[derive(Default, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Data {

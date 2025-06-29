@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use dcl_data_structures::prelude::{window_type, SlidingWindow, VectorStorage, WindowStorage};
+use dcl_data_structures::prelude::{SlidingWindow, VectorStorage, WindowStorage, window_type};
 
 // Maximum number of elements held in the sliding window.
 const SIZE: usize = 4;

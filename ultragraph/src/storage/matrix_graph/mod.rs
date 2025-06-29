@@ -4,9 +4,9 @@
  */
 
 use ahash::AHashMap;
+use petgraph::Directed;
 use petgraph::graph::NodeIndex as GraphNodeIndex;
 use petgraph::matrix_graph::MatrixGraph;
-use petgraph::Directed;
 
 mod default;
 mod graph_algorithms;

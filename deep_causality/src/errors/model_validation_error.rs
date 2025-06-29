@@ -40,19 +40,34 @@ impl Display for ModelValidationError {
                 )
             }
             ModelValidationError::DuplicateCausaloidID { id } => {
-                write!(f, "The generative output contains more than one 'CreateCausaloid' command, but exactly one is required. Duplicate ID: {id}")
+                write!(
+                    f,
+                    "The generative output contains more than one 'CreateCausaloid' command, but exactly one is required. Duplicate ID: {id}"
+                )
             }
             ModelValidationError::DuplicateContextId { id } => {
-                write!(f, "The generative output contains a 'CreateContext' command with a duplicate ID: {id}")
+                write!(
+                    f,
+                    "The generative output contains a 'CreateContext' command with a duplicate ID: {id}"
+                )
             }
             ModelValidationError::DuplicateContextoidId { id } => {
-                write!(f, "The generative output contains a 'CreateContextoid' command with a duplicate ID: {id}")
+                write!(
+                    f,
+                    "The generative output contains a 'CreateContextoid' command with a duplicate ID: {id}"
+                )
             }
             ModelValidationError::TargetContextNotFound { id } => {
-                write!(f, "The generative output attempts to add a Contextoid to a Context (ID: {id}) that was not created in the same generative step.")
+                write!(
+                    f,
+                    "The generative output attempts to add a Contextoid to a Context (ID: {id}) that was not created in the same generative step."
+                )
             }
             ModelValidationError::UnsupportedOperation { operation } => {
-                write!(f, "An unsupported operation was used during model construction: {operation}. Only creation commands are allowed.")
+                write!(
+                    f,
+                    "An unsupported operation was used during model construction: {operation}. Only creation commands are allowed."
+                )
             }
         }
     }

@@ -7,7 +7,7 @@ use proc_macro::TokenStream;
 
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote_spanned;
-use syn::{punctuated::Punctuated, Token};
+use syn::{Token, punctuated::Punctuated};
 
 pub fn expand_constructor(input: TokenStream) -> syn::Result<TokenStream2> {
     let ast: syn::DeriveInput = syn::parse(input).expect("Couldn't parse item");

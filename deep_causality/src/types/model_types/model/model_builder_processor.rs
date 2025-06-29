@@ -48,7 +48,7 @@ where
             ty: PhantomData,
         }
     }
-    
+
     /// Consumes the processor and returns the generated parts.
     pub fn into_results(
         self,
