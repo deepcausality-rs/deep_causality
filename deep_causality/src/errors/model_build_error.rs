@@ -19,13 +19,12 @@ impl Display for ModelBuildError {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             ModelBuildError::GenerationFailed(e) => {
-                write!(f, "The generation process failed: {}", e)
+                write!(f, "The generation process failed: {e}")
             }
             ModelBuildError::ValidationFailed(e) => {
                 write!(
                     f,
-                    "The generative output was invalid for model construction: {}",
-                    e
+                    "The generative output was invalid for model construction: {e}"
                 )
             }
         }

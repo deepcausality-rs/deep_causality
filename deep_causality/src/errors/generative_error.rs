@@ -20,16 +20,16 @@ impl Error for ModelGenerativeError {}
 impl fmt::Display for ModelGenerativeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            ModelGenerativeError::InvalidTrigger(msg) => write!(f, "Invalid trigger: {}", msg),
-            ModelGenerativeError::InvalidTimeKind(msg) => write!(f, "Invalid time kind: {}", msg),
+            ModelGenerativeError::InvalidTrigger(msg) => write!(f, "Invalid trigger: {msg}"),
+            ModelGenerativeError::InvalidTimeKind(msg) => write!(f, "Invalid time kind: {msg}"),
             ModelGenerativeError::InvalidDataReceivedError(msg) => {
-                write!(f, "Invalid data received error: {}", msg)
+                write!(f, "Invalid data received error: {msg}")
             }
             ModelGenerativeError::InvalidManualInterventionError(msg) => {
-                write!(f, "Invalid manual intervention error: {}", msg)
+                write!(f, "Invalid manual intervention error: {msg}")
             }
-            ModelGenerativeError::InternalError(msg) => write!(f, "Internal error: {}", msg),
-            ModelGenerativeError::UserDefinedError(msg) => write!(f, "User defined error: {}", msg),
+            ModelGenerativeError::InternalError(msg) => write!(f, "Internal error: {msg}"),
+            ModelGenerativeError::UserDefinedError(msg) => write!(f, "User defined error: {msg}"),
         }
     }
 }

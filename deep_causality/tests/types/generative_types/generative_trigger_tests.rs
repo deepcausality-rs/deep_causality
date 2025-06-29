@@ -10,7 +10,7 @@ use std::fmt::Write;
 #[test]
 fn test_time_elapsed_some() {
     let time_kind = TimeKind::Euclidean(EuclideanTime::new(1, TimeScale::Second, 42.0));
-    let trigger: GenerativeTrigger<NumberType> = GenerativeTrigger::TimeElapsed(time_kind.clone());
+    let trigger: GenerativeTrigger<NumberType> = GenerativeTrigger::TimeElapsed(time_kind);
     assert_eq!(trigger.time_elapsed(), Some(&time_kind));
 }
 

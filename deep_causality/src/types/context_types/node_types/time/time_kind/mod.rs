@@ -9,7 +9,6 @@ mod scalar_projector;
 mod temporable;
 
 use crate::prelude::{DiscreteTime, EntropicTime, EuclideanTime, LorentzianTime};
-use deep_causality_macros::Constructor;
 
 /// An enumeration of supported time models for unified, heterogeneous temporal reasoning.
 ///

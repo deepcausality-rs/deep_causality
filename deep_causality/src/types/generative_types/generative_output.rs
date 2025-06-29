@@ -29,6 +29,7 @@ use std::hash::Hash;
 /// * `VS`: The associated type for spatial values.
 /// * `VT`: The associated type for temporal values.
 /// * `G`: A user-defined enum that implements `Generatable`, allowing for custom evolutionary outputs.
+#[allow(clippy::type_complexity)]
 #[derive(Debug, Clone)]
 pub enum GenerativeOutput<D, S, T, ST, SYM, VS, VT, G>
 where

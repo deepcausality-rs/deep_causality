@@ -11,6 +11,7 @@ use std::hash::Hash;
 
 // The user's Generative Enum must implement this trait.
 // It is generic over itself to allow the Evolve variant to work.
+#[allow(clippy::type_complexity)]
 pub trait Generatable<D, S, T, ST, SYM, VS, VT, G>
 where
     D: Default + Datable + Copy + Clone + Hash + Eq + PartialEq,

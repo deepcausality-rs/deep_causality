@@ -91,7 +91,7 @@ fn test_partial_eq() {
 #[test]
 fn test_clone_and_debug() {
     let t = setup_entropic();
-    let c = t.clone();
+    let c = t;
     assert_eq!(t, c);
     let dbg = format!("{t:?}");
     assert!(dbg.contains("Entropic"));
