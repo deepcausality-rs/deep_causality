@@ -8,6 +8,7 @@ authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 license = "MIT"
 description = "Procedural macros that generate constructurs and getters."
 documentation = "https://docs.rs/deep_causality"
+exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
 [lib]
 proc-macro = true

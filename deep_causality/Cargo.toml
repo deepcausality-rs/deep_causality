@@ -13,6 +13,7 @@ repository = "https://github.com/deepcausality/deep_causality.rs"
 keywords = ["causality", "causal-graph", "causal-reasoning", "graph"]
 categories = ["data-structures", "science", "aerospace", "finance", "mathematics"]
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
+exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
 
 [dependencies]
