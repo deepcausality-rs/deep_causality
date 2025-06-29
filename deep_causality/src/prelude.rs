@@ -39,6 +39,7 @@ pub use crate::traits::contextuable::Contextuable;
 pub use crate::traits::contextuable_graph::ContextuableGraph;
 pub use crate::traits::contextuable_graph::ExtendableContextuableGraph;
 // Generatable traits
+pub use crate::traits::generatable::generative_processor::GenerativeProcessor;
 pub use crate::traits::generatable::Generatable;
 // Identifiable Traits
 pub use crate::traits::identifiable::Identifiable;

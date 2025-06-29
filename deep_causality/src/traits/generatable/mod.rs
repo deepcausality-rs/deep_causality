@@ -2,6 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+pub mod generative_processor;
+pub mod generator;
+
 use crate::errors::ModelGenerativeError;
 use crate::prelude::{
     Context, Datable, GenerativeOutput, GenerativeTrigger, SpaceTemporal, Spatial, Symbolic,

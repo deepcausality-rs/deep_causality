@@ -13,6 +13,7 @@ mod display;
 mod getters;
 mod identifiable;
 mod part_eq;
+mod setters;
 
 pub type CausalVec<D, S, T, ST, SYM, VS, VT> = Vec<Causaloid<D, S, T, ST, SYM, VS, VT>>;
 pub type CausalGraph<D, S, TM, ST, SYM, VS, VT> =
