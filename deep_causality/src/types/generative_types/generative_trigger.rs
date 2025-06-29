@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::prelude::{Data, TimeKind};
+use crate::prelude::{Data, Datable, TimeKind};
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 
@@ -19,7 +19,7 @@ where
 
 impl<D> GenerativeTrigger<D>
 where
-    D: Debug + Default + Copy + Clone + Hash + Eq + PartialEq,
+    D: Default + Copy + Clone + Hash + Eq + PartialEq,
 {
     /// Returns a reference to the `TimeKind` if the trigger is `TimeElapsed`.
     ///

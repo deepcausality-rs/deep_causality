@@ -8,6 +8,7 @@ pub type IdentificationValue = u64;
 
 pub type ContextId = u64;
 pub type ContextoidId = u64;
+pub type CausaloidId = u64;
 
 /// A string value that provides a human-readable description of a Cause or Context
 /// A string value that provides a human-readable description of a Cause or Context

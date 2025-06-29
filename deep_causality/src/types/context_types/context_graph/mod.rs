@@ -31,7 +31,7 @@ where
     VS: Clone,
     VT: Clone,
 {
-    id: u64,
+    id: ContextId,
     name: String,
     base_context: UltraGraph<Contextoid<D, S, T, ST, SYM, VS, VT>>,
     extra_contexts: Option<ExtraContextMap<D, S, T, ST, SYM, VS, VT>>,
@@ -52,7 +52,7 @@ where
     VT: Clone,
 {
     /// Creates a new context with the given node capacity.
-    pub fn with_capacity(id: u64, name: &str, capacity: usize) -> Self {
+    pub fn with_capacity(id: ContextId, name: &str, capacity: usize) -> Self {
         Self {
             id,
             name: name.to_string(),

@@ -9,6 +9,7 @@ mod scalar_projector;
 mod temporable;
 
 use crate::prelude::{DiscreteTime, EntropicTime, EuclideanTime, LorentzianTime};
+use deep_causality_macros::Constructor;
 
 /// An enumeration of supported time models for unified, heterogeneous temporal reasoning.
 ///
@@ -75,7 +76,7 @@ use crate::prelude::{DiscreteTime, EntropicTime, EuclideanTime, LorentzianTime};
 /// For models that need a single time field but must support multiple
 /// representations of time (e.g., symbolic vs physical), `TimeKind` provides
 /// a principled and type-safe solution.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum TimeKind {
     /// Imaginary-time axis for quantum/statistical models via Wick rotation.
     Euclidean(EuclideanTime),

@@ -35,9 +35,11 @@ pub use crate::traits::contextuable::spatial::Spatial;
 pub use crate::traits::contextuable::symbolic::Symbolic;
 pub use crate::traits::contextuable::temporal::Temporal;
 pub use crate::traits::contextuable::Contextuable;
-// contextuable Graph Traits
+// Contextuable Graph Traits
 pub use crate::traits::contextuable_graph::ContextuableGraph;
 pub use crate::traits::contextuable_graph::ExtendableContextuableGraph;
+// Generatable traits
+pub use crate::traits::generatable::Generatable;
 // Identifiable Traits
 pub use crate::traits::identifiable::Identifiable;
 // Indexable Traits
@@ -112,6 +114,7 @@ pub use crate::types::csm_types::csm_action::CausalAction;
 pub use crate::types::csm_types::csm_state::CausalState;
 pub use crate::types::csm_types::CSM;
 // Generative types
+pub use crate::types::generative_types::generative_output::GenerativeOutput;
 pub use crate::types::generative_types::generative_trigger::GenerativeTrigger;
 // Model types
 pub use crate::types::model_types::assumption::Assumption;

@@ -41,8 +41,5 @@ fn test_reasoning_outcome_probabilistic() {
 
     assert_eq!(effect.as_probability(), Some(prob));
     assert_eq!(effect.as_bool(), None);
-    assert_eq!(
-        format!("{effect}"),
-        "Probabilistic: 0.85".to_string()
-    );
+    assert_eq!(format!("{effect}"), "Probabilistic: 0.85".to_string());
 }
