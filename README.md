@@ -195,8 +195,8 @@ The project took inspiration from several researchers and their projects in the 
 
 * [Judea Pearl](http://bayes.cs.ucla.edu/jp_home.html) at UCLA
 * [Lucien Hardy](https://perimeterinstitute.ca/people/lucien-hardy) at the Perimeter Institute
-* [Kenneth O. Stanley](https://www.kenstanley.net/home) at OpenAI
-* [Ilya Shpitser](https://www.cs.jhu.edu/~ilyas/) at Johns Hopkins University
+* [Kenneth O. Stanley](https://www.kenstanley.net/home) 
+* [Ilya Shpitser](https://www.cs.jhu.edu/~ilyas/) 
 * [Miguel Hernan](https://www.hsph.harvard.edu/miguel-hernan/), [Causal Lab](https://causalab.sph.harvard.edu/) at
   Harvard University
 * [Elias Bareinboim](https://causalai.net/) at Columbia University
