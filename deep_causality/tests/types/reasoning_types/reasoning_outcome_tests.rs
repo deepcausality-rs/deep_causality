@@ -3,68 +3,46 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::{ReasoningOutcome, SymbolicResult};
+use deep_causality::prelude::PropagatingEffect;
 use std::format;
 
 #[test]
 fn test_reasoning_outcome_deterministic_true() {
-    let outcome = ReasoningOutcome::Deterministic(true);
-    assert!(outcome.is_deterministic());
-    assert_eq!(outcome.as_bool(), Some(true));
-    assert!(!outcome.is_probabilistic());
-    assert!(!outcome.is_symbolic());
-    assert_eq!(format!("{outcome}"), "true");
+    let effect = PropagatingEffect::Deterministic(true);
+    // Reasoning type is deterministic, that is true.
+    assert!(effect.is_deterministic());
+    // The actual value is true.
+    assert_eq!(effect.as_bool(), Some(true));
+    assert!(!effect.is_probabilistic());
+    assert!(!effect.is_contextual_link());
+    assert_eq!(format!("{effect}"), "Deterministic: true");
 }
 
 #[test]
 fn test_reasoning_outcome_deterministic_false() {
-    let outcome = ReasoningOutcome::Deterministic(false);
-    assert!(!outcome.is_deterministic());
-    assert_eq!(outcome.as_bool(), Some(false));
-    assert!(!outcome.is_probabilistic());
-    assert!(!outcome.is_symbolic());
-    assert_eq!(format!("{outcome}"), "false");
+    let effect = PropagatingEffect::Deterministic(false);
+    // Resulting effect type is deterministic, that is true.
+    assert!(effect.is_deterministic());
+
+    // The actual value is false.
+    assert_eq!(effect.as_bool(), Some(false));
+    assert!(!effect.is_probabilistic());
+    assert!(!effect.is_contextual_link());
+    assert_eq!(format!("{effect}"), "Deterministic: false");
 }
 
 #[test]
 fn test_reasoning_outcome_probabilistic() {
     let prob = 0.85;
-    let outcome = ReasoningOutcome::Probabilistic(prob);
-    assert!(!outcome.is_deterministic());
-    assert!(outcome.is_probabilistic());
+    let effect = PropagatingEffect::Probabilistic(prob);
+    // Resulting effect type is probabilistic.
+    assert!(effect.is_probabilistic());
+    assert!(!effect.is_deterministic());
 
-    // BUG FIX: is_symbolic() previously returned matches!(Probabilistic), likely incorrect
-    // Fixed below
-    assert!(!matches!(outcome, ReasoningOutcome::Symbolic(_))); // actual behavior
-    assert_eq!(outcome.as_probability(), Some(prob));
-    assert_eq!(outcome.as_bool(), None);
-    assert_eq!(format!("{outcome}"), format!("{}", prob));
-}
-
-#[test]
-fn test_reasoning_outcome_symbolic_proven() {
-    let symbolic = SymbolicResult::Proven;
-    let outcome = ReasoningOutcome::Symbolic(symbolic);
-    assert!(!outcome.is_deterministic());
-    assert!(!outcome.is_probabilistic());
-    assert!(outcome.is_symbolic());
-    assert_eq!(outcome.as_symbolic(), Some(SymbolicResult::Proven));
-    assert_eq!(outcome.as_bool(), None);
-    assert_eq!(format!("{outcome}"), "Proven");
-}
-
-#[test]
-fn test_reasoning_outcome_symbolic_disproven() {
-    let outcome = ReasoningOutcome::Symbolic(SymbolicResult::Disproven);
-    assert!(outcome.is_symbolic());
-    assert_eq!(outcome.as_symbolic(), Some(SymbolicResult::Disproven));
-    assert_eq!(format!("{outcome}"), "Disproven");
-}
-
-#[test]
-fn test_reasoning_outcome_symbolic_undetermined() {
-    let outcome = ReasoningOutcome::Symbolic(SymbolicResult::Undetermined);
-    assert!(outcome.is_symbolic());
-    assert_eq!(outcome.as_symbolic(), Some(SymbolicResult::Undetermined));
-    assert_eq!(format!("{outcome}"), "Undetermined");
+    assert_eq!(effect.as_probability(), Some(prob));
+    assert_eq!(effect.as_bool(), None);
+    assert_eq!(
+        format!("{effect}"),
+        "Probabilistic: 0.85".to_string()
+    );
 }

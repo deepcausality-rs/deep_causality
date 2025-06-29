@@ -9,19 +9,19 @@ use deep_causality::prelude::ReasoningMode;
 fn test_reasoning_mode_equality() {
     assert_eq!(ReasoningMode::Deterministic, ReasoningMode::Deterministic);
     assert_eq!(ReasoningMode::Probabilistic, ReasoningMode::Probabilistic);
-    assert_eq!(ReasoningMode::Symbolic, ReasoningMode::Symbolic);
+    assert_eq!(ReasoningMode::ContextualLink, ReasoningMode::ContextualLink);
 }
 
 #[test]
 fn test_reasoning_mode_inequality() {
     assert_ne!(ReasoningMode::Deterministic, ReasoningMode::Probabilistic);
-    assert_ne!(ReasoningMode::Probabilistic, ReasoningMode::Symbolic);
-    assert_ne!(ReasoningMode::Symbolic, ReasoningMode::Deterministic);
+    assert_ne!(ReasoningMode::Probabilistic, ReasoningMode::ContextualLink);
+    assert_ne!(ReasoningMode::ContextualLink, ReasoningMode::Deterministic);
 }
 
 #[test]
 fn test_reasoning_mode_clone() {
-    let m1 = ReasoningMode::Symbolic;
+    let m1 = ReasoningMode::ContextualLink;
     let m2 = m1; // Copy
     assert_eq!(m1, m2);
 }
@@ -40,10 +40,10 @@ fn test_reasoning_mode_hash() {
     let mut modes = HashSet::new();
     modes.insert(ReasoningMode::Deterministic);
     modes.insert(ReasoningMode::Probabilistic);
-    modes.insert(ReasoningMode::Symbolic);
+    modes.insert(ReasoningMode::ContextualLink);
 
     assert_eq!(modes.len(), 3);
     assert!(modes.contains(&ReasoningMode::Deterministic));
     assert!(modes.contains(&ReasoningMode::Probabilistic));
-    assert!(modes.contains(&ReasoningMode::Symbolic));
+    assert!(modes.contains(&ReasoningMode::ContextualLink));
 }

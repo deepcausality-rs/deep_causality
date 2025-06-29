@@ -119,8 +119,8 @@ pub use crate::types::model_types::inference::Inference;
 pub use crate::types::model_types::model::Model;
 pub use crate::types::model_types::observation::Observation;
 // Reasoning types
+pub use crate::types::reasoning_types::propagating_effect::PropagatingEffect;
 pub use crate::types::reasoning_types::reasoning_mode::ReasoningMode;
-pub use crate::types::reasoning_types::reasoning_outcome::ReasoningOutcome;
 pub use crate::types::reasoning_types::unified_evidence::Evidence;
 //
 //Symbolic types

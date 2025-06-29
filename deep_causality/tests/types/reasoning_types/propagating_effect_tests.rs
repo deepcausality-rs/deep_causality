@@ -34,19 +34,3 @@ fn test_evidence_probability() {
     assert_eq!(ev, Evidence::Probability(prob));
     assert_eq!(format!("{ev}"), "Probability(0.99)");
 }
-
-#[test]
-fn test_evidence_symbolic_atom() {
-    let sym = SymbolicRepresentation::new_atom("TempHigh".to_string());
-    let ev = Evidence::Symbolic(sym.clone());
-    assert_eq!(ev, Evidence::Symbolic(sym.clone()));
-    assert_eq!(format!("{ev}"), format!("Symbolic({:?})", sym));
-}
-
-#[test]
-fn test_evidence_symbolic_expr() {
-    let expr = SymbolicRepresentation::new_expr("A ∧ B".to_string());
-    let ev = Evidence::Symbolic(expr.clone());
-    assert_eq!(ev, Evidence::Symbolic(expr.clone()));
-    assert_eq!(format!("{ev}"), format!("Symbolic({:?})", expr));
-}
