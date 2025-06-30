@@ -1,12 +1,12 @@
 load("@rules_rust//rust:defs.bzl", "rust_test_suite")
 
 rust_test_suite(
-    name = "errors_tests",
+    name = "error_types_tests",
     srcs = glob([
         "errors/*_tests.rs",
     ]),
     tags = [
-        "errors_tests",
+        "error_types_tests",
         "unit-test",
     ],
     visibility = ["//visibility:public"],
