@@ -8,31 +8,31 @@ use deep_causality::prelude::*;
 #[test]
 fn test_evidence_display() {
     let evidence1 = Evidence::Deterministic(true);
-    assert_eq!(format!("{}", evidence1), "Deterministic(true)");
+    assert_eq!(format!("{evidence1}"), "Deterministic(true)");
 
     let evidence2 = Evidence::Numerical(42.0);
-    assert_eq!(format!("{}", evidence2), "Numerical(42.0)");
+    assert_eq!(format!("{evidence2}"), "Numerical(42.0)");
 
     let evidence3 = Evidence::Probability(0.75);
-    assert_eq!(format!("{}", evidence3), "Probability(0.75)");
+    assert_eq!(format!("{evidence3}"), "Probability(0.75)");
 
     let evidence4 = Evidence::ContextualLink(1, 2);
-    assert_eq!(format!("{}", evidence4), "ContextualLink(1, 2)");
+    assert_eq!(format!("{evidence4}"), "ContextualLink(1, 2)");
 }
 
 #[test]
 fn test_evidence_debug() {
     let evidence1 = Evidence::Deterministic(true);
-    assert_eq!(format!("{:?}", evidence1), "Deterministic(true)");
+    assert_eq!(format!("{evidence1:?}"), "Deterministic(true)");
 
     let evidence2 = Evidence::Numerical(42.0);
-    assert_eq!(format!("{:?}", evidence2), "Numerical(42.0)");
+    assert_eq!(format!("{evidence2:?}"), "Numerical(42.0)");
 
     let evidence3 = Evidence::Probability(0.75);
-    assert_eq!(format!("{:?}", evidence3), "Probability(0.75)");
+    assert_eq!(format!("{evidence3:?}"), "Probability(0.75)");
 
     let evidence4 = Evidence::ContextualLink(1, 2);
-    assert_eq!(format!("{:?}", evidence4), "ContextualLink(1, 2)");
+    assert_eq!(format!("{evidence4:?}"), "ContextualLink(1, 2)");
 }
 
 #[test]

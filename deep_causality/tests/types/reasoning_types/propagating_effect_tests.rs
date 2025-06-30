@@ -110,13 +110,13 @@ fn test_clone() {
 #[test]
 fn test_debug() {
     let effect1 = PropagatingEffect::Deterministic(true);
-    assert_eq!(format!("{:?}", effect1), "Deterministic(true)");
+    assert_eq!(format!("{effect1:?}"), "Deterministic(true)");
 
     let effect2 = PropagatingEffect::Probabilistic(0.5);
-    assert_eq!(format!("{:?}", effect2), "Probabilistic(0.5)");
+    assert_eq!(format!("{effect2:?}"), "Probabilistic(0.5)");
 
     let effect3 = PropagatingEffect::ContextualLink(1, 2);
-    assert_eq!(format!("{:?}", effect3), "ContextualLink(1, 2)");
+    assert_eq!(format!("{effect3:?}"), "ContextualLink(1, 2)");
 }
 
 #[test]

@@ -15,15 +15,24 @@ fn test_reasoning_mode_display() {
 
 #[test]
 fn test_reasoning_mode_debug() {
-    assert_eq!(format!("{:?}", ReasoningMode::Deterministic), "Deterministic");
-    assert_eq!(format!("{:?}", ReasoningMode::Probabilistic), "Probabilistic");
-    assert_eq!(format!("{:?}", ReasoningMode::ContextualLink), "ContextualLink");
+    assert_eq!(
+        format!("{:?}", ReasoningMode::Deterministic),
+        "Deterministic"
+    );
+    assert_eq!(
+        format!("{:?}", ReasoningMode::Probabilistic),
+        "Probabilistic"
+    );
+    assert_eq!(
+        format!("{:?}", ReasoningMode::ContextualLink),
+        "ContextualLink"
+    );
 }
 
 #[test]
 fn test_reasoning_mode_clone() {
     let mode1 = ReasoningMode::Deterministic;
-    let mode2 = mode1.clone();
+    let mode2 = mode1;
     assert_eq!(mode1, mode2);
 }
 
