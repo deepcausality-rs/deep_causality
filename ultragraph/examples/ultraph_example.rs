@@ -132,18 +132,14 @@ fn run_update_and_remove_example() {
 
     // The edge is preserved after the update
     let edge_exists = g.contains_edge(node_a, node_b);
-    println!(
-        "Edge from A to B still exists after update: {edge_exists}"
-    );
+    println!("Edge from A to B still exists after update: {edge_exists}");
     assert!(edge_exists);
 
     // Remove the edge
     println!("Removing edge from A to B...");
     g.remove_edge(node_a, node_b).unwrap();
     let edge_exists_after_remove = g.contains_edge(node_a, node_b);
-    println!(
-        "Edge from A to B exists after removal: {edge_exists_after_remove}"
-    );
+    println!("Edge from A to B exists after removal: {edge_exists_after_remove}");
     assert!(!edge_exists_after_remove);
 
     // The nodes are preserved after edge removal
