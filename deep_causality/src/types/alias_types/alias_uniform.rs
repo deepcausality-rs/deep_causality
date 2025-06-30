@@ -6,7 +6,7 @@ use crate::prelude::{
     Causaloid, CausaloidGraph, Context, Contextoid, Data, FloatType, Model, NumberType, SpaceKind,
     SpaceTimeKind, TimeKind,
 };
-use crate::types::context_types::node_types::symbol::symbol_kind::SymbolKind;
+use crate::types::context_node_types::symbol::symbol_kind::SymbolKind;
 use std::collections::HashMap;
 
 /// A type alias for a default, general-purpose `Model` configuration that uses

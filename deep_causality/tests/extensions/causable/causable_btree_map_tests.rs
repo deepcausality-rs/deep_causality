@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 
 use deep_causality::prelude::*;
 
-use crate::utils::test_utils::*;
+use deep_causality::utils_test::test_utils::*;
 
 fn get_test_causality_btree_map() -> BTreeMap<i8, BaseCausaloid> {
     let q1 = get_test_causaloid();

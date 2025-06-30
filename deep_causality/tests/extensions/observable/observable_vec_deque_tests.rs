@@ -7,7 +7,7 @@ use std::collections::VecDeque;
 
 use deep_causality::prelude::{NumericalValue, ObservableReasoning, Observation};
 
-use crate::utils::test_utils::*;
+use deep_causality::utils_test::test_utils::*;
 
 pub fn get_test_obs_vec_deque() -> VecDeque<Observation> {
     let o1 = Observation::new(0, 10.0, 1.0);

@@ -16,9 +16,9 @@ rust_test_suite(
 )
 
 rust_test_suite(
-    name = "window_type_tests",
+    name = "window_type_safe_tests",
     srcs = glob([
-        "window_type/*_tests.rs",
+        "window_type/storage_safe/*_tests.rs",
     ]),
     tags = [
         "unit-test",

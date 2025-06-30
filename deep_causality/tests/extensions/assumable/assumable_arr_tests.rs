@@ -6,7 +6,7 @@
 use deep_causality::prelude::Assumption;
 use deep_causality::traits::assumable::AssumableReasoning;
 
-use crate::utils::test_utils::*;
+use deep_causality::utils_test::test_utils::*;
 
 fn get_test_assumption_arr() -> [Assumption; 3] {
     let a1 = get_test_assumption();

@@ -6,7 +6,7 @@
 use deep_causality::prelude::*;
 use std::sync::Arc;
 
-use crate::utils::*;
+use deep_causality::utils_test::*;
 
 // BaseContext is a type alias for a basic context that can be used for testing
 // It matches the type signature of the base causaloid also uses in these tests.

@@ -4,7 +4,7 @@
  */
 
 use crate::prelude::SymbolicTime;
-use crate::types::context_types::node_types::time::symbolic_time::SymbolicTimeUnit;
+use crate::types::context_node_types::time::symbolic_time::SymbolicTimeUnit;
 use std::fmt;
 
 impl fmt::Display for SymbolicTime {

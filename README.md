@@ -144,17 +144,19 @@ Code:
 * [Example code](examples)
 * [Tests](deep_causality/tests)
 
-## 🛠️ Cargo & Make
+## 🛠️ Build & Test 
 
 Cargo works as expected, but in addition to cargo, a makefile exists
-that abstracts over several additional tools you may have to install
-before all make commands work. To do so, please run the following command:
+that abstracts over several additional tools you for linting and formatting. 
+To check and install missing tools, please run the following command:
 
 ```bash 
     make install
 ```
 
-The make install command tests and tries to install all required developer dependencies.
+You find the install script in the [script folder.](scripts/install_deps.sh)
+
+The script tests and tries to install all required developer dependencies.
 if the automatic install fails, the script will show a link with further installation instructions.
 
 After all dependencies have been installed, the following commands are ready to use.
@@ -172,6 +174,80 @@ After all dependencies have been installed, the following commands are ready to 
 ```
 
 The scripts called by each make command are located in the [script folder.](scripts)
+
+##  Bazel
+
+In addition to Cargo and related tools, the entire mono-repo is configured to build and test with Bazel.
+Please [install bazelisk ](https://github.com/bazelbuild/bazelisk)as it is the only requirement to build the repo with Bazel.  
+
+To query available crate aliases with Bazel, run:
+
+```bash 
+    bazel query "kind('alias', //alias/...)"
+```
+
+Note, this project uses Bazel aliases extensively for dependencies to ensure if crates relocate, only its alias in [alias/BUILD.bazel](alias/BUILD.bazel) needs to be update to let the build resume. 
+
+To build all targets with Bazel, run:
+
+```bash 
+    bazel build //...
+```
+
+To build only a specific target and its dependencies, run 
+
+```bash 
+    bazel build //alias:deep_causality
+```
+
+To test all targets with Bazel, run:
+
+```bash 
+    bazel test //...
+```
+
+To test only a specific target, run:
+
+```bash 
+    bazel test //deep_causality/...
+```
+
+To query all available tests to find, for example, all spacetime  tests, run:
+
+```bash 
+    bazel query "kind('rust_test', //...)" | grep spacetime
+```
+
+To explore all dependencies of a specific crate, run:
+
+```bash 
+    bazel query "deps(//alias:dcl_data_structures)"
+```
+
+To find all reverse dependencies, i.e. packages that depends on a specific crate, run:
+
+```bash 
+    bazel query "rdeps(//..., //alias:dcl_data_structures, 1)"
+```
+
+If you were to refactor the dcl_data_structures crate, the rdepds tell you 
+upfront were its used and thus helps you to estimate upfront the blast radius of braking changes. 
+
+To query available vendored external dependencies with Bazel, run:
+
+```bash 
+    bazel query "kind('rust_library', //thirdparty/...)"
+```
+
+Note, these vendored external dependencies are shared across all crates.
+
+To visualize all dependencies of the top level crate deep_causality, run 
+
+```bash 
+   bazel query 'deps(//alias:deep_causality, 3) ' --output graph --noimplicit_deps  | dot -Tpng -o graph.png
+   
+   open graph.png # Works on Mac. 
+```
 
 ## 👨‍💻👩‍💻 Contribution
 

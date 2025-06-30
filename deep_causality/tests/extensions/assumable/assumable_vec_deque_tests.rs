@@ -7,7 +7,7 @@ use std::collections::VecDeque;
 
 use deep_causality::prelude::{AssumableReasoning, Assumption};
 
-use crate::utils::test_utils::*;
+use deep_causality::utils_test::test_utils::*;
 
 fn get_test_assumption_vec_deque() -> VecDeque<Assumption> {
     VecDeque::from(get_test_assumption_vec())

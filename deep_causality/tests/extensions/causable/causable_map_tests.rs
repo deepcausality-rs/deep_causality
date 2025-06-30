@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 use deep_causality::prelude::*;
 
-use crate::utils::test_utils::*;
+use deep_causality::utils_test::test_utils::*;
 
 fn get_test_causality_map() -> HashMap<i8, BaseCausaloid> {
     let q1 = get_test_causaloid();

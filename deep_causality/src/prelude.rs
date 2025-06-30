@@ -77,36 +77,34 @@ pub use crate::types::context_types::context_graph::Context;
 pub use crate::types::context_types::contextoid::contextoid_type::*;
 pub use crate::types::context_types::contextoid::*;
 // Default context node types.
-pub use crate::types::context_types::node_types::data::Data;
-pub use crate::types::context_types::node_types::root::Root;
+pub use crate::types::context_node_types::data::Data;
+pub use crate::types::context_node_types::root::Root;
 // Space context node types.
-pub use crate::types::context_types::node_types::space::ecef_space::EcefSpace;
-pub use crate::types::context_types::node_types::space::euclidean_space::EuclideanSpace;
-pub use crate::types::context_types::node_types::space::geo_space::GeoSpace;
-pub use crate::types::context_types::node_types::space::ned_space::NedSpace;
-pub use crate::types::context_types::node_types::space::quaternion_space::QuaternionSpace;
-pub use crate::types::context_types::node_types::space::space_kind::SpaceKind;
+pub use crate::types::context_node_types::space::ecef_space::EcefSpace;
+pub use crate::types::context_node_types::space::euclidean_space::EuclideanSpace;
+pub use crate::types::context_node_types::space::geo_space::GeoSpace;
+pub use crate::types::context_node_types::space::ned_space::NedSpace;
+pub use crate::types::context_node_types::space::quaternion_space::QuaternionSpace;
+pub use crate::types::context_node_types::space::space_kind::SpaceKind;
 // Space time context node types.
-pub use crate::types::context_types::node_types::space_time::euclidean_spacetime::EuclideanSpacetime;
-pub use crate::types::context_types::node_types::space_time::lorentzian_spacetime::LorentzianSpacetime;
-pub use crate::types::context_types::node_types::space_time::minkowski_spacetime::MinkowskiSpacetime;
-pub use crate::types::context_types::node_types::space_time::space_time_kind::SpaceTimeKind;
-pub use crate::types::context_types::node_types::space_time::tangent_spacetime::TangentSpacetime;
+pub use crate::types::context_node_types::space_time::euclidean_spacetime::EuclideanSpacetime;
+pub use crate::types::context_node_types::space_time::lorentzian_spacetime::LorentzianSpacetime;
+pub use crate::types::context_node_types::space_time::minkowski_spacetime::MinkowskiSpacetime;
+pub use crate::types::context_node_types::space_time::space_time_kind::SpaceTimeKind;
+pub use crate::types::context_node_types::space_time::tangent_spacetime::TangentSpacetime;
 // Symbolic context node types.
-pub use crate::types::context_types::node_types::symbol::base_symbol::BaseSymbol;
+pub use crate::types::context_node_types::symbol::base_symbol::BaseSymbol;
 // pub use crate::types::context_types::node_types::symbol::symbol_kind
 // Symbolic spacetime context node types.
-pub use crate::types::context_types::node_types::symbol_spacetime::causal_set_spacetime::CausalSetSpacetime;
-pub use crate::types::context_types::node_types::symbol_spacetime::conformal_spacetime::ConformalSpacetime;
+pub use crate::types::context_node_types::symbol_spacetime::causal_set_spacetime::CausalSetSpacetime;
+pub use crate::types::context_node_types::symbol_spacetime::conformal_spacetime::ConformalSpacetime;
 // Time context node types.
-pub use crate::types::context_types::node_types::time::discrete_time::DiscreteTime;
-pub use crate::types::context_types::node_types::time::entropic_time::EntropicTime;
-pub use crate::types::context_types::node_types::time::euclidean_time::EuclideanTime;
-pub use crate::types::context_types::node_types::time::lorentzian_time::LorentzianTime;
-pub use crate::types::context_types::node_types::time::symbolic_time::{
-    SymbolicTime, SymbolicTimeUnit,
-};
-pub use crate::types::context_types::node_types::time::time_kind::TimeKind;
+pub use crate::types::context_node_types::time::discrete_time::DiscreteTime;
+pub use crate::types::context_node_types::time::entropic_time::EntropicTime;
+pub use crate::types::context_node_types::time::euclidean_time::EuclideanTime;
+pub use crate::types::context_node_types::time::lorentzian_time::LorentzianTime;
+pub use crate::types::context_node_types::time::symbolic_time::{SymbolicTime, SymbolicTimeUnit};
+pub use crate::types::context_node_types::time::time_kind::TimeKind;
 // Other context types
 pub use crate::types::context_types::relation_kind::*;
 pub use crate::types::context_types::time_scale::TimeScale;

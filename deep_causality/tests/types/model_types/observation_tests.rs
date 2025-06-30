@@ -5,7 +5,7 @@
 
 use deep_causality::prelude::*;
 
-use crate::utils::test_utils::*;
+use deep_causality::utils_test::test_utils::*;
 
 #[test]
 fn test_effect_observed() {

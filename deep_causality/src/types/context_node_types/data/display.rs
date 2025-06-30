@@ -5,7 +5,7 @@
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
 
-use crate::types::context_types::node_types::data::Data;
+use crate::types::context_node_types::data::Data;
 
 impl<T> Display for Data<T>
 where

@@ -18,7 +18,10 @@ rust_test_suite(
 rust_test_suite(
     name = "extensions_tests",
     srcs = glob([
-        "extensions/*_tests.rs",
+        "extensions/assumable/*_tests.rs",
+        "extensions/causable/*_tests.rs",
+        "extensions/inferable/*_tests.rs",
+        "extensions/observable/*_tests.rs",
     ]),
     tags = [
         "unit-test",
@@ -34,8 +37,8 @@ rust_test_suite(
     name = "causal_types_tests",
     srcs = glob([
         "types/causal_types/causal_type/*_tests.rs",
-        #        "types/causal_types/causaloid/*_tests.rs",
-        #        "types/causal_types/causaloid_graph/*_tests.rs",
+        "types/causal_types/causaloid/*_tests.rs",
+        "types/causal_types/causaloid_graph/*_tests.rs",
     ]),
     tags = [
         "unit-test",
@@ -44,6 +47,7 @@ rust_test_suite(
     deps = [
         # Crate to test
         "//alias:deep_causality",
+        "//alias:ultragraph",
     ],
 )
 
@@ -52,7 +56,7 @@ rust_test_suite(
     srcs = glob([
         "types/context_types/context_graph/*_tests.rs",
         "types/context_types/contextoid/*_tests.rs",
-        # "types/context_node_types/data/*_tests.rs",
+        "types/context_node_types/data/*_tests.rs",
         "types/context_node_types/root/*_tests.rs",
     ]),
     tags = [
@@ -68,7 +72,7 @@ rust_test_suite(
 rust_test_suite(
     name = "utils_tests",
     srcs = glob([
-        "utils_/*_tests.rs",
+        "utils/*_tests.rs",
     ]),
     tags = [
         "unit-test",
@@ -177,7 +181,7 @@ rust_test_suite(
 rust_test_suite(
     name = "csm_types_tests",
     srcs = glob([
-        # "types/csm_types/*_tests.rs",
+        "types/csm_types/*_tests.rs",
     ]),
     tags = [
         "unit-test",
@@ -207,7 +211,7 @@ rust_test_suite(
 rust_test_suite(
     name = "model_types_tests",
     srcs = glob([
-        # "types/model_types/*_tests.rs",
+        "types/model_types/*_tests.rs",
     ]),
     tags = [
         "unit-test",

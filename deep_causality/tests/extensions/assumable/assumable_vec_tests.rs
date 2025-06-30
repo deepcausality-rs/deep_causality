@@ -6,7 +6,7 @@
 use deep_causality::prelude::Assumption;
 use deep_causality::traits::assumable::AssumableReasoning;
 
-use crate::utils::test_utils::*;
+use deep_causality::utils_test::test_utils::*;
 
 #[test]
 fn test_add() {

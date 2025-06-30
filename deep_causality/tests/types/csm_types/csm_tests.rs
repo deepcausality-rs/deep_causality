@@ -5,7 +5,7 @@
 
 use deep_causality::prelude::{ActionError, CSM, CausalAction, CausalState};
 
-use crate::utils::test_utils;
+use deep_causality::utils_test::test_utils;
 
 fn state_action() -> Result<(), ActionError> {
     println!("Detected something and acted upon");

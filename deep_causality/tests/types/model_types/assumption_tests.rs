@@ -6,7 +6,7 @@
 use deep_causality::prelude::{DescriptionValue, Identifiable};
 use deep_causality::traits::assumable::Assumable;
 
-use crate::utils::test_utils::*;
+use deep_causality::utils_test::test_utils::*;
 
 #[test]
 fn test_assumption_tested() {

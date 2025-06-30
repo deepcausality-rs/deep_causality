@@ -7,7 +7,7 @@ use deep_causality::prelude::{
     DescriptionValue, Identifiable, Inferable, Inference, ObservableReasoning,
 };
 
-use crate::utils::test_utils::*;
+use deep_causality::utils_test::test_utils::*;
 
 #[test]
 fn test_id() {
