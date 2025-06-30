@@ -5,7 +5,7 @@
 use std::error::Error;
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Hash, Eq, PartialEq)]
 pub enum ModelGenerativeError {
     InvalidTrigger(String),
     InvalidTimeKind(String),

@@ -57,6 +57,28 @@ where
                 Ok(())
             }
 
+            GenerativeOutput::UpdateCausaloid(id, causaloid) => {
+                let causaloid_dest = self.get_causaloid_dest();
+                if causaloid_dest.is_none() {
+                    // Cannot update a causaloid that hasn't been created yet.
+                    return Err(ModelValidationError::TargetCausaloidNotFound { id });
+                }
+                // Assuming update means replacing the existing one if IDs match or simply replacing it.
+                // For this context, we'll just replace it, but a stricter check might compare IDs.
+                *causaloid_dest = Some(causaloid);
+                Ok(())
+            }
+
+            GenerativeOutput::DeleteCausaloid(id) => {
+                let causaloid_dest = self.get_causaloid_dest();
+                if causaloid_dest.is_none() {
+                    // Cannot delete a causaloid that hasn't been created yet.
+                    return Err(ModelValidationError::TargetCausaloidNotFound { id });
+                }
+                *causaloid_dest = None; // Remove the causaloid
+                Ok(())
+            }
+
             GenerativeOutput::CreateBaseContext { id, name, capacity } => {
                 let context_dest = self.get_context_dest();
                 if context_dest.is_some() {
@@ -90,7 +112,7 @@ where
             }
 
             _ => Err(ModelValidationError::UnsupportedOperation {
-                operation: "Update/Delete/Evolve".to_string(),
+                operation: "Evolve".to_string(),
             }),
         }
     }

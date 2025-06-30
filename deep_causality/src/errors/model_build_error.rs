@@ -7,10 +7,10 @@ use std::error::Error;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Hash, Eq, PartialEq)]
 pub enum ModelBuildError {
-    GenerationFailed(String),
-    ValidationFailed(String),
+    GenerationFailed(ModelGenerativeError),
+    ValidationFailed(ModelValidationError),
 }
 
 impl Error for ModelBuildError {}
@@ -33,12 +33,12 @@ impl Display for ModelBuildError {
 
 impl From<ModelGenerativeError> for ModelBuildError {
     fn from(value: ModelGenerativeError) -> Self {
-        ModelBuildError::GenerationFailed(value.to_string())
+        ModelBuildError::GenerationFailed(value)
     }
 }
 
 impl From<ModelValidationError> for ModelBuildError {
     fn from(value: ModelValidationError) -> Self {
-        ModelBuildError::ValidationFailed(value.to_string())
+        ModelBuildError::ValidationFailed(value)
     }
 }

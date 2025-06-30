@@ -34,4 +34,8 @@ where
     pub fn description(&self) -> &str {
         &self.description
     }
+
+    pub fn has_context(&self) -> bool {
+        self.has_context
+    }
 }

@@ -18,6 +18,7 @@ use std::hash::Hash;
 use std::sync::Arc;
 
 #[allow(clippy::type_complexity)]
+#[derive(Debug)]
 pub struct Model<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,

@@ -4,3 +4,4 @@
  */
 #[cfg(test)]
 mod model_tests;
+mod model_with_generator_tests;

@@ -1,10 +1,5 @@
 use deep_causality::prelude::*;
 
-#[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
-pub enum MyCustomGenerativeAction {
-    Spawn(u32),
-}
-
 #[derive(Debug, Clone, Eq, Hash, Copy, PartialEq, Default)]
 pub struct MockData {
     id: u64,
@@ -27,6 +22,11 @@ impl Datable for MockData {
     fn set_data(&mut self, value: Self::Data) {
         self.data = value
     }
+}
+
+#[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
+pub enum MyCustomGenerativeAction {
+    Spawn(u32),
 }
 
 impl

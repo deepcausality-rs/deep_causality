@@ -7,15 +7,19 @@ use std::error::Error;
 
 #[test]
 fn test_display_generation_failed() {
-    let error = ModelBuildError::GenerationFailed("Failed to generate".to_string());
-    let expected = "The generation process failed: Failed to generate";
+    let error = ModelBuildError::GenerationFailed(ModelGenerativeError::InternalError(
+        "Failed to generate".to_string(),
+    ));
+    let expected = "The generation process failed: Internal error: Failed to generate";
     assert_eq!(format!("{error}"), expected);
 }
 
 #[test]
 fn test_display_validation_failed() {
-    let error = ModelBuildError::ValidationFailed("Invalid output".to_string());
-    let expected = "The generative output was invalid for model construction: Invalid output";
+    let error = ModelBuildError::ValidationFailed(ModelValidationError::UnsupportedOperation {
+        operation: "Invalid output".to_string(),
+    });
+    let expected = "The generative output was invalid for model construction: An unsupported operation was used during model construction: Invalid output. Only creation commands are allowed.";
     assert_eq!(format!("{error}"), expected);
 }
 
@@ -79,6 +83,7 @@ fn test_from_model_validation_error_unsupported_operation() {
 
 #[test]
 fn test_error_trait() {
-    let error = ModelBuildError::GenerationFailed("test".to_string());
+    let error =
+        ModelBuildError::GenerationFailed(ModelGenerativeError::InternalError("test".to_string()));
     let _source: Option<&(dyn Error + 'static)> = error.source();
 }
