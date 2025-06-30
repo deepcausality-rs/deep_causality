@@ -30,11 +30,11 @@ mod spatial;
 ///
 /// # Trait Implementations
 /// This type implements:
-/// - [`Identifiable`]
-/// - [`Coordinate<f64>`]
-/// - [`Metric`] using the Haversine approximation
-/// - [`Spatial<f64>`]
-/// - [`Display`] for human-readable output
+/// - `Identifiable`
+/// - `Coordinate<f64>`
+/// - `Metric` using the Haversine approximation
+/// - `Spatial<f64>`
+/// - `Display` for human-readable output
 ///
 /// # Common Use Cases
 /// - Geographic sensor modeling (e.g., magnetometers on aircraft, buoys, satellites)

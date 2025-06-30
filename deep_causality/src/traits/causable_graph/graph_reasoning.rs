@@ -150,7 +150,7 @@ where
     /// Traverses nodes depth-first, verifying each one.
     /// If any node fails, returns false. If all pass, returns true.
     ///
-    /// Algo inspired by simple path https://github.com/petgraph/petgraph/blob/master/src/algo/simple_paths.rs
+    ///     /// Algo inspired by simple path <https://github.com/petgraph/petgraph/blob/master/src/algo/simple_paths.rs>
     fn reason_from_to_cause(
         &self,
         start_index: usize,

@@ -23,8 +23,8 @@ mod temporal;
 ///
 /// This model generalizes both **flat Minkowski spacetime** and **dynamic curved spacetime**
 /// (e.g., Schwarzschild or cosmological spacetimes) by exposing its metric via the
-/// [`MetricTensor4D`] trait, and supporting runtime updates via
-/// [`update_metric_tensor()`](MetricTensor4D::update_metric_tensor).
+/// `MetricTensor4D` trait, and supporting runtime updates via
+/// `update_metric_tensor()`.
 ///
 /// # Fields
 /// - `id`: Unique numeric identifier
@@ -37,7 +37,7 @@ mod temporal;
 /// - `metric`: Local 4×4 metric tensor defining the geometry
 ///
 /// # Coordinate Index Mapping
-/// When used with the [`Coordinate`] trait, the following index mapping applies:
+/// When used with the `Coordinate` trait, the following index mapping applies:
 /// - `0 => x`
 /// - `1 => y`
 /// - `2 => z`
@@ -71,8 +71,8 @@ mod temporal;
 /// - R.M. Wald, *General Relativity*, University of Chicago Press, 1984 — Ch. 3: Curved Spacetime Geometry
 ///
 /// # See also
-/// - [`SpacetimeInterval`] — for causal separation calculations
-/// - [`MetricTensor4D`] — for curvature configuration
+/// - `SpacetimeInterval` — for causal separation calculations
+/// - `MetricTensor4D` — for curvature configuration
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct TangentSpacetime {
     id: u64,

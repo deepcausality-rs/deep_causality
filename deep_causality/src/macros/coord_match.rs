@@ -63,8 +63,8 @@
 ///
 /// # See Also
 ///
-/// - [`Coordinate`] trait
-/// - [`IndexError`] type
+/// - `Coordinate` trait
+/// - `IndexError` type
 ///
 /// # Note
 ///

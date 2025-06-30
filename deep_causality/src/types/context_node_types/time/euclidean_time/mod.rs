@@ -52,8 +52,8 @@ use deep_causality_macros::Constructor;
 /// - Causal modeling systems extended to Wick-rotated or thermal domains
 ///
 /// # Trait Compatibility
-/// - Implements [`Identifiable`] via `id`
-/// - Implements [`Temporal<f64>`] via `time_unit`
+/// - Implements `Identifiable` via `id`
+/// - Implements `Temporal<f64>` via `time_unit`
 ///
 /// # Important Note
 /// The field `time_unit` contains a **real-valued representation of imaginary time** (τ),
@@ -62,9 +62,9 @@ use deep_causality_macros::Constructor;
 /// **positive-definite geometry** is intended.
 ///
 /// # See also
-/// - [`LorentzianTime`] for real-time physical models
-/// - [`ProperTime`] for observer-dependent clock time
-/// - [`SymbolicTime`] for abstract, label-based event time
+/// - `LorentzianTime` for real-time physical models
+/// - `ProperTime` for observer-dependent clock time
+/// - `SymbolicTime` for abstract, label-based event time
 #[derive(Constructor, Debug, Copy, Clone, PartialEq)]
 pub struct EuclideanTime {
     /// Unique numeric identifier for the time instance.

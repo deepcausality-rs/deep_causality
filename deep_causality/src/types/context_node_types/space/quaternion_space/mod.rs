@@ -29,7 +29,7 @@ mod spatial;
 ///
 ///
 /// # Coordinate Index Mapping
-/// When used with the [`Coordinate`] trait, the following index mapping applies:
+/// When used with the `Coordinate` trait, the following index mapping applies:
 /// - `0 => w`
 /// - `1 => x`
 /// - `2 => y`

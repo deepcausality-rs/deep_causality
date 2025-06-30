@@ -62,14 +62,14 @@ use crate::prelude::{DiscreteTime, EntropicTime, EuclideanTime, LorentzianTime};
 /// ```
 ///
 /// # Trait Compatibility
-/// - Implements [`Identifiable`] based on the inner ID
-/// - Implements [`Display`] for readable output
-/// - Can be extended to support [`Temporal<f64>`] and [`Temporal<u64>`]
+/// - Implements `Identifiable` based on the inner ID
+/// - Implements `Display` for readable output
+/// - Can be extended to support `Temporal<f64>` and `Temporal<u64>`
 ///
 /// # See also
-/// - [`LorentzianTime`], [`EuclideanTime`], [`DiscreteTime`], [`SymbolicTime`]
-/// - [`SpaceKind`] for spatial equivalents
-/// - [`SpacetimeInterval`] for reasoning over separation or causality
+/// - `LorentzianTime`, `EuclideanTime`, `DiscreteTime`, `SymbolicTime`
+/// - `SpaceKind` for spatial equivalents
+/// - `SpacetimeInterval` for reasoning over separation or causality
 ///
 /// # Design Note
 /// For models that need a single time field but must support multiple

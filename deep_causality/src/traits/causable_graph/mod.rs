@@ -88,7 +88,7 @@ where
 ///
 /// The explain methods return a string explanation.
 ///
-/// The reason methods take input data and return a Result<bool> indicating
+/// The reason methods take input data and return a `Result<bool>` indicating
 /// if reasoning succeeded or failed.
 ///
 /// An optional data_index can be provided to map data to nodes when the indices

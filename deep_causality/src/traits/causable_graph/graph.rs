@@ -84,7 +84,7 @@ where
     /// stop_index: The target node index
     ///
     /// Returns:
-    /// - Ok(Vec<usize>): The node indices of the shortest path
+    /// - Ok(`Vec<usize>`): The node indices of the shortest path
     /// - Err(CausalityGraphError): If no path exists
     ///
     /// Checks if start and stop nodes are identical and early returns error.

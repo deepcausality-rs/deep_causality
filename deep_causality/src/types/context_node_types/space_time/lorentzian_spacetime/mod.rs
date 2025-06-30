@@ -38,7 +38,7 @@ use deep_causality_macros::Constructor;
 /// - `time_scale`: Time scale unit (e.g., seconds, milliseconds)
 ///
 /// # Coordinate Index Mapping
-/// When used with the [`Coordinate`] trait, the following index mapping applies:
+/// /// When used with the `Coordinate` trait, the following index mapping applies:
 /// - `0 => x`
 /// - `1 => y`
 /// - `2 => z`

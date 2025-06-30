@@ -36,7 +36,7 @@ mod spatial;
 /// - `down`: Position in meters along the downward (gravity-aligned) axis
 ///
 /// # Coordinate Index Mapping
-/// When used with the [`Coordinate`] trait, the following index mapping applies:
+/// When used with the `Coordinate` trait, the following index mapping applies:
 /// - `0 => north`
 /// - `1 => east`
 /// - `2 => down`
@@ -63,7 +63,7 @@ mod spatial;
 /// # Notes
 /// - The "down" axis is **positive in the direction of gravity**. This is a key difference
 ///   from ENU (East-North-Up) or typical 3D Cartesian conventions.
-/// - This struct assumes **flat-Earth approximation** — for global modeling, use [`GeoSpace`] or [`EcefSpace`].
+/// - This struct assumes **flat-Earth approximation** — for global modeling, use `GeoSpace` or `EcefSpace`.
 #[derive(Constructor, Debug, Clone, PartialEq)]
 pub struct NedSpace {
     /// Unique numeric ID for this local NED context

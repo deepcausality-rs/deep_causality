@@ -45,8 +45,8 @@ use deep_causality_macros::Constructor;
 /// - Lorentz-invariant physical systems
 ///
 /// # Trait Compatibility
-/// - Implements [`Identifiable`] via `id`
-/// - Implements [`Temporal<f64>`] via `time_unit`
+/// - Implements `Identifiable` via `id`
+/// - Implements `Temporal<f64>` via `time_unit`
 ///
 /// # Theoretical Background
 /// Coordinate time in Lorentzian geometry appears in the invariant spacetime interval:
@@ -59,8 +59,8 @@ use deep_causality_macros::Constructor;
 /// and reflects real-world physics.
 ///
 /// # See also
-/// - [`EuclideanTime`] for Wick-rotated quantum/statistical domains
-/// - [`SymbolicTime`] for logic-based systems
+/// - `EuclideanTime` for Wick-rotated quantum/statistical domains
+/// - `SymbolicTime` for logic-based systems
 #[derive(Constructor, Debug, Copy, Clone, PartialEq)]
 pub struct LorentzianTime {
     /// Unique numeric identifier for the time instance.

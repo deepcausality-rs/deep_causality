@@ -44,8 +44,8 @@ use deep_causality_macros::Constructor;
 /// ```
 ///
 /// # Trait Compatibility
-/// - Implements [`Identifiable`] via `id`
-/// - Implements [`Temporal<u64>`], so it can be used in any time-aware causal context
+/// - Implements `Identifiable` via `id`
+/// - Implements `Temporal<u64>`, so it can be used in any time-aware causal context
 ///
 /// # Use Cases
 /// - Agent-based simulations with fixed timesteps
@@ -58,8 +58,8 @@ use deep_causality_macros::Constructor;
 /// unless paired with a meaningful `TimeScale`. The interpretation of ticks is context-dependent.
 ///
 /// # See also
-/// - [`SymbolicTime`] for non-numeric symbolic events
-/// - [`LorentzianTime`] or [`ProperTime`] for physical time
+/// - `SymbolicTime` for non-numeric symbolic events
+/// - `LorentzianTime` or `ProperTime` for physical time
 #[derive(Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct DiscreteTime {
     /// Unique identifier for this discrete time instance.
