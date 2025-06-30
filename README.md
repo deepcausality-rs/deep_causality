@@ -182,11 +182,6 @@ Please [install bazelisk ](https://github.com/bazelbuild/bazelisk)as it is the o
 
 To query available crate aliases with Bazel, run:
 
-```bash 
-    bazel query "kind('alias', //alias/...)"
-```
-
-Note, this project uses Bazel aliases extensively for dependencies to ensure if crates relocate, only its alias in [alias/BUILD.bazel](alias/BUILD.bazel) needs to be update to let the build resume. 
 
 To build all targets with Bazel, run:
 
@@ -197,8 +192,10 @@ To build all targets with Bazel, run:
 To build only a specific target and its dependencies, run 
 
 ```bash 
-    bazel build //alias:deep_causality
+    bazel build //deep_causality/...
 ```
+
+The format is build //crate_name/... with the three dots being a shorthand for "all targets"
 
 To test all targets with Bazel, run:
 
@@ -212,42 +209,7 @@ To test only a specific target, run:
     bazel test //deep_causality/...
 ```
 
-To query all available tests to find, for example, all spacetime  tests, run:
-
-```bash 
-    bazel query "kind('rust_test', //...)" | grep spacetime
-```
-
-To explore all dependencies of a specific crate, run:
-
-```bash 
-    bazel query "deps(//alias:dcl_data_structures)"
-```
-
-To find all reverse dependencies, i.e. packages that depends on a specific crate, run:
-
-```bash 
-    bazel query "rdeps(//..., //alias:dcl_data_structures, 1)"
-```
-
-If you were to refactor the dcl_data_structures crate, the rdepds tell you 
-upfront were its used and thus helps you to estimate upfront the blast radius of braking changes. 
-
-To query available vendored external dependencies with Bazel, run:
-
-```bash 
-    bazel query "kind('rust_library', //thirdparty/...)"
-```
-
-Note, these vendored external dependencies are shared across all crates.
-
-To visualize all dependencies of the top level crate deep_causality, run 
-
-```bash 
-   bazel query 'deps(//alias:deep_causality, 3) ' --output graph --noimplicit_deps  | dot -Tpng -o graph.png
-   
-   open graph.png # Works on Mac. 
-```
+ For more details on working with Bazel, see the [Bazel](Bazel.md) document. 
 
 ## 👨‍💻👩‍💻 Contribution
 

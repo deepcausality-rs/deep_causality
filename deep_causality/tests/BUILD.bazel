@@ -6,6 +6,7 @@ rust_test_suite(
         "errors/*_tests.rs",
     ]),
     tags = [
+        "errors_tests",
         "unit-test",
     ],
     visibility = ["//visibility:public"],
@@ -24,6 +25,7 @@ rust_test_suite(
         "extensions/observable/*_tests.rs",
     ]),
     tags = [
+        "extensions_tests",
         "unit-test",
     ],
     visibility = ["//visibility:public"],
@@ -41,6 +43,7 @@ rust_test_suite(
         "types/causal_types/causaloid_graph/*_tests.rs",
     ]),
     tags = [
+        "causal_types_tests",
         "unit-test",
     ],
     visibility = ["//visibility:public"],
@@ -60,6 +63,7 @@ rust_test_suite(
         "types/context_node_types/root/*_tests.rs",
     ]),
     tags = [
+        "context_types_tests",
         "unit-test",
     ],
     visibility = ["//visibility:public"],
@@ -76,6 +80,7 @@ rust_test_suite(
     ]),
     tags = [
         "unit-test",
+        "utils_tests",
     ],
     visibility = ["//visibility:public"],
     deps = [
@@ -95,6 +100,8 @@ rust_test_suite(
         "types/context_node_types/space/space_kind/*_tests.rs",
     ]),
     tags = [
+        "context_types_tests",
+        "space_types_tests",
         "unit-test",
     ],
     visibility = ["//visibility:public"],
@@ -115,6 +122,8 @@ rust_test_suite(
         "types/context_node_types/space_time/tangent_spacetime/*_tests.rs",
     ]),
     tags = [
+        "context_types_tests",
+        "space_time_types_tests",
         "unit-test",
     ],
     visibility = ["//visibility:public"],
@@ -132,6 +141,8 @@ rust_test_suite(
         "types/context_node_types/symbol/symbol_kind/*_tests.rs",
     ]),
     tags = [
+        "context_types_tests",
+        "symbol_types_tests",
         "unit-test",
     ],
     visibility = ["//visibility:public"],
@@ -148,6 +159,8 @@ rust_test_suite(
         "types/context_node_types/symbol_spacetime/conformal/*_tests.rs",
     ]),
     tags = [
+        "context_types_tests",
+        "symbolic_spacetime_types_tests",
         "unit-test",
     ],
     visibility = ["//visibility:public"],
@@ -168,6 +181,8 @@ rust_test_suite(
         "types/context_node_types/time/time_kind/*_tests.rs",
     ]),
     tags = [
+        "context_types_tests",
+        "time_types_tests",
         "unit-test",
     ],
     visibility = ["//visibility:public"],
@@ -184,6 +199,7 @@ rust_test_suite(
         "types/csm_types/*_tests.rs",
     ]),
     tags = [
+        "csm_types_tests",
         "unit-test",
     ],
     visibility = ["//visibility:public"],
@@ -199,6 +215,7 @@ rust_test_suite(
         "types/generative_types/*_tests.rs",
     ]),
     tags = [
+        "generative_types_tests",
         "unit-test",
     ],
     visibility = ["//visibility:public"],
@@ -214,6 +231,7 @@ rust_test_suite(
         "types/model_types/*_tests.rs",
     ]),
     tags = [
+        "model_types_tests",
         "unit-test",
     ],
     visibility = ["//visibility:public"],
@@ -229,6 +247,7 @@ rust_test_suite(
         "types/reasoning_types/*_tests.rs",
     ]),
     tags = [
+        "reasoning_types_tests",
         "unit-test",
     ],
     visibility = ["//visibility:public"],
@@ -244,6 +263,7 @@ rust_test_suite(
         "types/symbolic_types/*_tests.rs",
     ]),
     tags = [
+        "symbolic_types_tests",
         "unit-test",
     ],
     visibility = ["//visibility:public"],
