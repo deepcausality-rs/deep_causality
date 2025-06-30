@@ -228,7 +228,10 @@ rust_test_suite(
 rust_test_suite(
     name = "model_types_tests",
     srcs = glob([
-        "types/model_types/*_tests.rs",
+        "types/model_types/assumption/*_tests.rs",
+        "types/model_types/inference/*_tests.rs",
+        "types/model_types/model/*_tests.rs",
+        "types/model_types/observation/*_tests.rs",
     ]),
     tags = [
         "model_types_tests",
