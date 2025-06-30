@@ -282,7 +282,7 @@ fn test_add_edge_error() {
 }
 
 #[test]
-fn test_add_edge_with_weight_err() {
+fn test_add_edge_with_weight_ok() {
     let mut g = get_ultra_graph();
     assert!(g.is_empty());
     let expected = 0;
@@ -516,4 +516,53 @@ fn test_remove_edge_error() {
     // 3.Edge from node a to node b does not exists
     let res = g.remove_edge(root_index, root_index);
     assert!(res.is_err());
+}
+
+#[test]
+fn test_update_node_succeeds_and_preserves_edges() {
+    let mut g = get_ultra_graph();
+    let node_a = g.add_node(Data { x: 10 });
+    let node_b = g.add_node(Data { x: 20 });
+    g.add_edge(node_a, node_b).unwrap();
+
+    // Update node A
+    let update_res = g.update_node(node_a, Data { x: 99 });
+    assert!(update_res.is_ok());
+
+    // Verify the node data changed
+    let updated_node_a = g.get_node(node_a).unwrap();
+    assert_eq!(updated_node_a.x, 99);
+
+    // CRITICAL: Verify the edge still exists
+    assert!(g.contains_edge(node_a, node_b));
+}
+
+#[test]
+fn test_update_node_fails_on_nonexistent_index() {
+    let mut g = get_ultra_graph();
+    let update_res = g.update_node(999, Data { x: 1 });
+    assert!(update_res.is_err());
+}
+
+#[test]
+fn test_remove_edge_preserves_nodes() {
+    let mut g = get_ultra_graph();
+    let node_a = g.add_node(Data { x: 1 });
+    let node_b = g.add_node(Data { x: 2 });
+    g.add_edge(node_a, node_b).unwrap();
+
+    assert!(g.contains_edge(node_a, node_b));
+
+    // Remove the edge
+    let res = g.remove_edge(node_a, node_b);
+    assert!(res.is_ok());
+
+    // Assert the edge is gone, but the nodes are NOT.
+    assert!(!g.contains_edge(node_a, node_b));
+    assert!(g.contains_node(node_a)); // CRITICAL CHECK
+    assert!(g.contains_node(node_b)); // CRITICAL CHECK
+
+    // Verify we can still retrieve the node data
+    assert_eq!(g.get_node(node_a).unwrap().x, 1);
+    assert_eq!(g.get_node(node_b).unwrap().x, 2);
 }

@@ -14,6 +14,18 @@ pub trait GraphLike<T> {
 
     fn remove_node(&mut self, index: usize) -> Result<(), UltraGraphError>;
 
+    /// Updates the payload of an existing node at a given index.
+    ///
+    /// This operation preserves all edges connected to the node.
+    ///
+    /// # Arguments
+    /// * `index`: The `usize` index of the node to update.
+    /// * `value`: The new data payload for the node.
+    ///
+    /// # Errors
+    /// Returns `UltraGraphError` if no node exists at the given index.
+    fn update_node(&mut self, index: usize, value: T) -> Result<(), UltraGraphError>;
+
     fn add_edge(&mut self, a: usize, b: usize) -> Result<(), UltraGraphError>;
 
     fn add_edge_with_weight(
