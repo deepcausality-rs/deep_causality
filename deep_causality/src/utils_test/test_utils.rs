@@ -62,6 +62,30 @@ pub fn get_test_causaloid() -> BaseCausaloid {
     Causaloid::new(id, causal_fn, description)
 }
 
+// BaseContext is a type alias for a basic context that can be used for testing
+// It matches the type signature of the base causaloid also uses in these tests.
+// See src/types/alias_types/csm_types for definition.
+pub fn get_base_context() -> BaseContext {
+    let id = 1;
+    let name = "base context";
+    let mut context = Context::with_capacity(id, name, 10);
+    assert_eq!(context.size(), 0);
+
+    let root = Root::new(id);
+    let contextoid = Contextoid::new(id, ContextoidType::Root(root));
+    let idx = context.add_node(contextoid);
+    assert_eq!(idx, 0);
+    assert_eq!(context.size(), 1);
+
+    context
+}
+
+pub fn get_test_contextoid() -> BaseContextoid {
+    let id = 1;
+    let root = Root::new(id);
+    let node: BaseContextoid = Contextoid::new(id, ContextoidType::Root(root));
+    node
+}
 pub fn get_test_error_causaloid() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";

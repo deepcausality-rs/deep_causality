@@ -30,7 +30,7 @@ use std::hash::Hash;
 /// * `VT`: The associated type for temporal values.
 /// * `G`: A user-defined enum that implements `Generatable`, allowing for custom evolutionary outputs.
 #[allow(clippy::type_complexity)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum GenerativeOutput<D, S, T, ST, SYM, VS, VT, G>
 where
     D: Default + Datable + Copy + Clone + Hash + Eq + PartialEq,
