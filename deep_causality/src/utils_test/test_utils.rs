@@ -80,12 +80,6 @@ pub fn get_base_context() -> BaseContext {
     context
 }
 
-pub fn get_test_contextoid() -> BaseContextoid {
-    let id = 1;
-    let root = Root::new(id);
-    let node: BaseContextoid = Contextoid::new(id, ContextoidType::Root(root));
-    node
-}
 pub fn get_test_error_causaloid() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";

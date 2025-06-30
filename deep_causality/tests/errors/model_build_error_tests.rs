@@ -87,3 +87,26 @@ fn test_error_trait() {
         ModelBuildError::GenerationFailed(ModelGenerativeError::InternalError("test".to_string()));
     let _source: Option<&(dyn Error + 'static)> = error.source();
 }
+
+#[test]
+fn test_display_for_target_causaloid_not_found() {
+    let id = 42;
+    let error = ModelValidationError::TargetCausaloidNotFound { id };
+
+    // The expected string preserves the exact formatting from the `write!` macro.
+    let expected_str = "The generative output attempts to add a Causaloid (ID: 42)
+                    that was not created in the same generative step.";
+
+    assert_eq!(error.to_string(), expected_str);
+}
+
+#[test]
+fn test_display_for_target_contextoid_not_found() {
+    let id = 99;
+    let error = ModelValidationError::TargetContextoidNotFound { id };
+
+    // This test confirms the current output, including the typo.
+    let expected_str = "The generative output attempts to add a Contextoid 99) that was not created in the same generative step.";
+
+    assert_eq!(error.to_string(), expected_str);
+}

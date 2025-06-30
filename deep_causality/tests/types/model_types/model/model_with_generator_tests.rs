@@ -31,9 +31,7 @@ impl Datable for MockData {
 }
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
-pub enum MyCustomGenerativeAction {
-    Spawn(u32),
-}
+pub enum MyCustomGenerativeAction {}
 
 impl
     Generatable<

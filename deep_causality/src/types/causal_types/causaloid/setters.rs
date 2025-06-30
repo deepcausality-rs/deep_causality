@@ -3,9 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{
-    Causaloid, Context, ContextualCausalDataFn, Datable, SpaceTemporal, Spatial, Symbolic, Temporal,
-};
+use crate::prelude::{Causaloid, Context, Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
 use std::sync::Arc;
 
 // Constructors
@@ -26,12 +24,5 @@ where
 
     pub fn set_context(&mut self, context: Option<Arc<Context<D, S, T, ST, SYM, VS, VT>>>) {
         self.context = context;
-    }
-
-    pub fn set_context_causal_fn(
-        &mut self,
-        context_causal_fn: Option<ContextualCausalDataFn<D, S, T, ST, SYM, VS, VT>>,
-    ) {
-        self.context_causal_fn = context_causal_fn;
     }
 }
