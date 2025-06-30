@@ -154,7 +154,7 @@ To check and install missing tools, please run the following command:
     make install
 ```
 
-You find the install script in the [script folder.](scripts/install_deps.sh)
+You find the install script in the [script folder.](build/scripts/install_deps.sh)
 
 The script tests and tries to install all required developer dependencies.
 if the automatic install fails, the script will show a link with further installation instructions.
@@ -173,7 +173,7 @@ After all dependencies have been installed, the following commands are ready to 
     make test           Runs all tests across all crates.
 ```
 
-The scripts called by each make command are located in the [script folder.](scripts)
+The scripts called by each make command are located in the [script folder.](build/scripts)
 
 ##  Bazel
 

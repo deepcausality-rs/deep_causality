@@ -19,48 +19,48 @@ help:
 
 .PHONY: build
 build:
-	@source scripts/build.sh
+	@source build/scripts/build.sh
 
 
 .PHONY: bench
 bench:
-	@source scripts/bench.sh
+	@source build/scripts/bench.sh
 
 
 .PHONY: check
 check:
-	@source scripts/check.sh
+	@source build/scripts/check.sh
 
 
 .PHONY: example
 example:
-	@source scripts/example.sh
+	@source build/scripts/example.sh
 
 
 .PHONY: fix
 fix:
-	@source scripts/fix.sh
+	@source build/scripts/fix.sh
 
 
 .PHONY: format
 format:
-	@source scripts/format.sh
+	@source build/scripts/format.sh
 
 
 .PHONY: install
 install:
-	@source scripts/install_deps.sh
+	@source build/scripts/install_deps.sh
 
 
 .PHONY: release
 release:
-	@source scripts/release.sh
+	@source build/scripts/release.sh
 
 .PHONY: start
 start:
-	@source scripts/start.sh
+	@source build/scripts/start.sh
 
 
 .PHONY: test
 test:
-	@source scripts/test.sh
+	@source build/scripts/test.sh
