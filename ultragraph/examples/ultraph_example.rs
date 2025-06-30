@@ -41,7 +41,7 @@ fn run_get_node_example() {
 
     let data = node.unwrap();
     assert_eq!(data.x, 7);
-    println!("Retrieved Node A with data: {:?}", data);
+    println!("Retrieved Node A with data: {data:?}");
 
     // get all outgoing_edges of root node
     let neighbors = g.outgoing_edges(root_index).unwrap();
@@ -110,7 +110,7 @@ fn run_outgoing_edges_example() {
 
     // get all outgoing_edges of root node
     let neighbors: Vec<usize> = g.outgoing_edges(root_index).unwrap().collect();
-    println!("Neighbors of root node: {:?}", neighbors);
+    println!("Neighbors of root node: {neighbors:?}");
     assert_eq!(neighbors.len(), 2);
 }
 
@@ -121,36 +121,40 @@ fn run_update_and_remove_example() {
     let node_a = g.add_node(Data { x: 10 });
     let node_b = g.add_node(Data { x: 20 });
     g.add_edge(node_a, node_b).unwrap();
-    println!("Initial graph with edge from {} -> {}", node_a, node_b);
+    println!("Initial graph with edge from {node_a} -> {node_b}");
 
     // Update node A's data
     println!("Updating Node A's data from 10 to 99...");
     g.update_node(node_a, Data { x: 99 }).unwrap();
     let updated_node_a = g.get_node(node_a).unwrap();
-    println!("Retrieved updated Node A: {:?}", updated_node_a);
+    println!("Retrieved updated Node A: {updated_node_a:?}");
     assert_eq!(updated_node_a.x, 99);
 
     // The edge is preserved after the update
     let edge_exists = g.contains_edge(node_a, node_b);
-    println!("Edge from A to B still exists after update: {}", edge_exists);
+    println!(
+        "Edge from A to B still exists after update: {edge_exists}"
+    );
     assert!(edge_exists);
 
     // Remove the edge
     println!("Removing edge from A to B...");
     g.remove_edge(node_a, node_b).unwrap();
     let edge_exists_after_remove = g.contains_edge(node_a, node_b);
-    println!("Edge from A to B exists after removal: {}", edge_exists_after_remove);
+    println!(
+        "Edge from A to B exists after removal: {edge_exists_after_remove}"
+    );
     assert!(!edge_exists_after_remove);
 
     // The nodes are preserved after edge removal
     let node_a_exists = g.contains_node(node_a);
-    println!("Node A still exists after edge removal: {}", node_a_exists);
+    println!("Node A still exists after edge removal: {node_a_exists}");
     assert!(node_a_exists);
 
     // Remove a node
     println!("Removing Node B...");
     g.remove_node(node_b).unwrap();
     let node_b_exists = g.contains_node(node_b);
-    println!("Node B exists after removal: {}", node_b_exists);
+    println!("Node B exists after removal: {node_b_exists}");
     assert!(!node_b_exists);
 }

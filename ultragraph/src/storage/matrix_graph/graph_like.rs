@@ -142,18 +142,23 @@ impl<T> GraphLike<T> for UltraMatrixGraph<T> {
             )));
         }
 
-
         // Because of the `contains_node` checks above, these `expect` calls
         // are safe. They would only panic if there were an internal consistency
         // bug within UltraMatrixGraph itself, which is an appropriate use of expect.
-        let k = self.index_map.get(&a).expect("Inconsistent state: node a not in index_map");
-        let l = self.index_map.get(&b).expect("Inconsistent state: node b not in index_map");
+        let k = self
+            .index_map
+            .get(&a)
+            .expect("Inconsistent state: node a not in index_map");
+        let l = self
+            .index_map
+            .get(&b)
+            .expect("Inconsistent state: node b not in index_map");
 
         // This call to the panicky petgraph API is now SAFE because of our `contains_edge` check.
         // We can simply call the function and ignore its return value (the old edge weight),
         // as our function's contract is only to remove the edge and return Ok(()).
         self.graph.remove_edge(*k, *l);
-        
+
         Ok(())
     }
 }
