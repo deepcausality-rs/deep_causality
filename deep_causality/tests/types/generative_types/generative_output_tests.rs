@@ -1,28 +1,5 @@
 use deep_causality::prelude::*;
-
-#[derive(Debug, Clone, Eq, Hash, Copy, PartialEq, Default)]
-pub struct MockData {
-    id: u64,
-    data: u8,
-}
-
-impl Identifiable for MockData {
-    fn id(&self) -> u64 {
-        self.id
-    }
-}
-
-impl Datable for MockData {
-    type Data = u8;
-
-    fn get_data(&self) -> Self::Data {
-        self.data
-    }
-
-    fn set_data(&mut self, value: Self::Data) {
-        self.data = value
-    }
-}
+use deep_causality::utils_test::test_utils_generator::MockData;
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
 pub enum MyCustomGenerativeAction {
