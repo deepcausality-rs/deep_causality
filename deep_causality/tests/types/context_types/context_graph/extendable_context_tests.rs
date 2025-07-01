@@ -699,6 +699,14 @@ fn test_extra_ctx_remove_edge_err() {
     let mut context = get_context();
     assert_eq!(context.id(), id);
 
+    let result = context.extra_ctx_remove_edge(0, 1);
+    assert!(result.is_err());
+    let err = result.unwrap_err();
+    assert_eq!(
+        err.to_string(),
+        "ContextIndexError: Cannot remove edge. No extra contexts have been created."
+    );
+
     let capacity = 10;
     let default = true;
 
@@ -707,6 +715,18 @@ fn test_extra_ctx_remove_edge_err() {
 
     let exists = context.extra_ctx_check_exists(ctx_id);
     assert!(exists);
+
+    //  Attempt to remove an edge. The `get_mut(&0)` call will fail because
+    //    the map only contains the key `1`, triggering the inner `else` branch.
+    let result = context.extra_ctx_remove_edge(0, 1);
+
+    // Verify that the specific error for an invalid ID is returned.
+    assert!(result.is_err());
+    let err = result.unwrap_err();
+    assert_eq!(
+        err.to_string(),
+        "ContextIndexError: Cannot remove edge: source node with index 0 does not exist in current extra context with ID 1."
+    );
 
     let current_id = context.extra_ctx_get_current_id();
     assert_eq!(current_id, ctx_id);
@@ -720,6 +740,18 @@ fn test_extra_ctx_remove_edge_err() {
 
     let exists = context.extra_ctx_contains_node(root_id);
     assert!(exists);
+
+    //  Attempt to remove an edge. The `get_mut(&0)` call will fail because
+    //    the map only contains the key `1`, triggering the inner `else` branch.
+    let result = context.extra_ctx_remove_edge(0, 34);
+
+    // Verify that the specific error for an invalid ID is returned.
+    assert!(result.is_err());
+    let err = result.unwrap_err();
+    assert_eq!(
+        err.to_string(),
+        "ContextIndexError: Cannot remove edge: target node with index 34 does not exist in current extra context with ID 1."
+    );
 
     let t_id = 12;
     let t_time_scale = TimeScale::Month;

@@ -213,18 +213,45 @@ where
     }
 
     fn extra_ctx_remove_edge(&mut self, a: usize, b: usize) -> Result<(), ContextIndexError> {
+        // 1. Test if a valid context is available
         if let Some(extra_contexts) = self.extra_contexts.as_mut() {
             if let Some(current_ctx) = extra_contexts.get_mut(&self.extra_context_id) {
+                // We have a valid context, now check the nodes.
+
+                // 2. Test if node `a` exists
+                if !current_ctx.contains_node(a) {
+                    return Err(ContextIndexError(format!(
+                        "Cannot remove edge: source node with index {} does not exist in current extra context with ID {}.",
+                        a, self.extra_context_id
+                    )));
+                }
+
+                // 3. Test if node `b` exists
+                if !current_ctx.contains_node(b) {
+                    return Err(ContextIndexError(format!(
+                        "Cannot remove edge: target node with index {} does not exist in current extra context with ID {}.",
+                        b, self.extra_context_id
+                    )));
+                }
+
+                // 4. Try to remove the edge.
+                // At this point, we know the nodes exist, so an error from the underlying
+                // graph call means the edge itself does not exist.
                 current_ctx
                     .remove_edge(a, b)
-                    .map_err(|e| ContextIndexError(e.to_string()))
+                    .map_err(|_| ContextIndexError(format!(
+                        "Cannot remove edge: an edge from node {} to node {} does not exist in current extra context with ID {}.",
+                        a, b, self.extra_context_id
+                    )))
             } else {
+                // Error: The map of contexts exists, but the current ID is invalid.
                 Err(ContextIndexError(format!(
                     "Cannot remove edge. Current extra context with ID {} not found.",
                     self.extra_context_id
                 )))
             }
         } else {
+            // Error: The map of contexts itself doesn't exist.
             Err(ContextIndexError(
                 "Cannot remove edge. No extra contexts have been created.".to_string(),
             ))
