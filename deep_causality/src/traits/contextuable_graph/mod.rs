@@ -99,6 +99,15 @@ where
 {
     // Creates a new context and returns the index of the new context.
     fn extra_ctx_add_new(&mut self, capacity: usize, default: bool) -> u64;
+
+    /// Creates a new extra context with a specific ID.
+    fn extra_ctx_add_new_with_id(
+        &mut self,
+        id: u64,
+        capacity: usize,
+        default: bool,
+    ) -> Result<(), ContextIndexError>;
+
     fn extra_ctx_check_exists(&self, idx: u64) -> bool;
     fn extra_ctx_get_current_id(&self) -> u64;
     fn extra_ctx_set_current_id(&mut self, idx: u64) -> Result<(), ContextIndexError>;

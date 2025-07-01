@@ -13,7 +13,14 @@ pub enum ModelBuildError {
     ValidationFailed(ModelValidationError),
 }
 
-impl Error for ModelBuildError {}
+impl Error for ModelBuildError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            ModelBuildError::GenerationFailed(e) => Some(e),
+            ModelBuildError::ValidationFailed(e) => Some(e),
+        }
+    }
+}
 
 impl Display for ModelBuildError {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {

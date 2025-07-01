@@ -2,28 +2,36 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
 use crate::prelude::{CausaloidId, ContextId, ContextoidId};
 use std::error::Error;
-use std::fmt::{Display, Formatter};
+use std::fmt;
 
-/// Represents specific validation errors that can occur during model construction
-/// from a generative output.
 #[derive(Debug, Clone, Hash, Eq, PartialEq)]
 pub enum ModelValidationError {
+    // Causaloid Errors
     MissingCreateCausaloid,
     DuplicateCausaloidID { id: CausaloidId },
-    DuplicateContextId { id: ContextId },
-    DuplicateContextoidId { id: ContextoidId },
-    TargetContextNotFound { id: ContextId },
     TargetCausaloidNotFound { id: CausaloidId },
-    TargetContextoidNotFound { id: CausaloidId },
+
+    // Context Errors
+    BaseContextNotFound,
+    DuplicateContextId { id: ContextId },
+    TargetContextNotFound { id: ContextId },
+    DuplicateExtraContextId { id: u64 },
+
+    // Contextoid Errors
+    TargetContextoidNotFound { id: ContextoidId },
+    DuplicateContextoidId { id: ContextoidId },
+
+    // General Errors
     UnsupportedOperation { operation: String },
 }
 
 impl Error for ModelValidationError {}
 
-impl Display for ModelValidationError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for ModelValidationError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             ModelValidationError::MissingCreateCausaloid => {
                 write!(
@@ -32,50 +40,37 @@ impl Display for ModelValidationError {
                 )
             }
             ModelValidationError::DuplicateCausaloidID { id } => {
+                write!(f, "Duplicate Causaloid ID found: {id}")
+            }
+            ModelValidationError::TargetCausaloidNotFound { id } => {
+                write!(f, "Target Causaloid with ID {id} not found")
+            }
+            ModelValidationError::BaseContextNotFound => {
                 write!(
                     f,
-                    "The generative output contains more than one 'CreateCausaloid' command, but exactly one is required. Duplicate ID: {id}"
+                    "Cannot perform operation because the base context has not been created"
                 )
             }
             ModelValidationError::DuplicateContextId { id } => {
-                write!(
-                    f,
-                    "The generative output contains a 'CreateContext' command with a duplicate ID: {id}"
-                )
-            }
-            ModelValidationError::DuplicateContextoidId { id } => {
-                write!(
-                    f,
-                    "The generative output contains a 'CreateContextoid' command with a duplicate ID: {id}"
-                )
+                write!(f, "Duplicate Context ID found: {id}")
             }
             ModelValidationError::TargetContextNotFound { id } => {
-                write!(
-                    f,
-                    "The generative output attempts to add a Contextoid to a Context (ID: {id}) that was not created in the same generative step."
-                )
+                write!(f, "Target Context with ID {id} not found")
             }
-
-            ModelValidationError::TargetCausaloidNotFound { id } => {
-                write!(
-                    f,
-                    "The generative output attempts to add a Causaloid (ID: {id})
-                    that was not created in the same generative step."
-                )
+            ModelValidationError::DuplicateExtraContextId { id } => {
+                write!(f, "Duplicate Extra Context ID found: {id}")
             }
 
             ModelValidationError::TargetContextoidNotFound { id } => {
-                write!(
-                    f,
-                    "The generative output attempts to add a Contextoid {id}) that was not created in the same generative step."
-                )
+                write!(f, "Target Contextoid with ID {id} not found")
+            }
+
+            ModelValidationError::DuplicateContextoidId { id } => {
+                write!(f, "Duplicate Contextoid ID found: {id}")
             }
 
             ModelValidationError::UnsupportedOperation { operation } => {
-                write!(
-                    f,
-                    "An unsupported operation was used during model construction: {operation}. Only creation commands are allowed."
-                )
+                write!(f, "Unsupported operation: {operation}")
             }
         }
     }

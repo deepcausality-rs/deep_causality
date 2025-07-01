@@ -2,111 +2,90 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality::prelude::{ModelBuildError, ModelGenerativeError, ModelValidationError};
+use std::collections::hash_map::DefaultHasher;
 use std::error::Error;
+use std::hash::{Hash, Hasher};
 
-#[test]
-fn test_display_generation_failed() {
-    let error = ModelBuildError::GenerationFailed(ModelGenerativeError::InternalError(
-        "Failed to generate".to_string(),
-    ));
-    let expected = "The generation process failed: Internal error: Failed to generate";
-    assert_eq!(format!("{error}"), expected);
+use deep_causality::prelude::{ModelBuildError, ModelGenerativeError, ModelValidationError};
+
+fn get_error_source(err: &dyn Error) -> String {
+    err.source().unwrap().to_string()
 }
 
 #[test]
-fn test_display_validation_failed() {
-    let error = ModelBuildError::ValidationFailed(ModelValidationError::UnsupportedOperation {
-        operation: "Invalid output".to_string(),
-    });
-    let expected = "The generative output was invalid for model construction: An unsupported operation was used during model construction: Invalid output. Only creation commands are allowed.";
-    assert_eq!(format!("{error}"), expected);
+fn test_display() {
+    let err =
+        ModelBuildError::GenerationFailed(ModelGenerativeError::InternalError("test".to_string()));
+    assert_eq!(
+        "The generation process failed: Internal error: test",
+        err.to_string()
+    );
+
+    let err = ModelBuildError::ValidationFailed(ModelValidationError::BaseContextNotFound);
+    assert_eq!(
+        "The generative output was invalid for model construction: Cannot perform operation because the base context has not been created",
+        err.to_string()
+    );
+}
+
+#[test]
+fn test_source() {
+    let err =
+        ModelBuildError::GenerationFailed(ModelGenerativeError::InternalError("test".to_string()));
+    assert_eq!("Internal error: test", get_error_source(&err));
+
+    let err = ModelBuildError::ValidationFailed(ModelValidationError::BaseContextNotFound);
+    assert_eq!(
+        "Cannot perform operation because the base context has not been created",
+        get_error_source(&err)
+    );
 }
 
 #[test]
 fn test_from_model_generative_error() {
-    let gen_error = ModelGenerativeError::InternalError("Generation error".to_string());
-    let build_error: ModelBuildError = gen_error.into();
-    let expected = "The generation process failed: Internal error: Generation error";
-    assert_eq!(format!("{build_error}"), expected);
+    let err = ModelGenerativeError::InternalError("test".to_string());
+    let model_build_err: ModelBuildError = err.into();
+
+    assert_eq!(
+        "The generation process failed: Internal error: test",
+        model_build_err.to_string()
+    );
 }
 
 #[test]
 fn test_from_model_validation_error() {
-    let val_error = ModelValidationError::MissingCreateCausaloid;
-    let build_error: ModelBuildError = val_error.into();
-    let expected = "The generative output was invalid for model construction: The generative output is missing the mandatory Causaloid creation command.";
-    assert_eq!(format!("{build_error}"), expected);
+    let err = ModelValidationError::BaseContextNotFound;
+    let model_build_err: ModelBuildError = err.into();
+
+    assert_eq!(
+        "The generative output was invalid for model construction: Cannot perform operation because the base context has not been created",
+        model_build_err.to_string()
+    );
 }
 
 #[test]
-fn test_from_model_validation_error_duplicate_causaloid_id() {
-    let val_error = ModelValidationError::DuplicateCausaloidID { id: 1 };
-    let build_error: ModelBuildError = val_error.into();
-    let expected = "The generative output was invalid for model construction: The generative output contains more than one 'CreateCausaloid' command, but exactly one is required. Duplicate ID: 1";
-    assert_eq!(format!("{build_error}"), expected);
-}
-
-#[test]
-fn test_from_model_validation_error_duplicate_context_id() {
-    let val_error = ModelValidationError::DuplicateContextId { id: 1 };
-    let build_error: ModelBuildError = val_error.into();
-    let expected = "The generative output was invalid for model construction: The generative output contains a 'CreateContext' command with a duplicate ID: 1";
-    assert_eq!(format!("{build_error}"), expected);
-}
-
-#[test]
-fn test_from_model_validation_error_duplicate_contextoid_id() {
-    let val_error = ModelValidationError::DuplicateContextoidId { id: 1 };
-    let build_error: ModelBuildError = val_error.into();
-    let expected = "The generative output was invalid for model construction: The generative output contains a 'CreateContextoid' command with a duplicate ID: 1";
-    assert_eq!(format!("{build_error}"), expected);
-}
-
-#[test]
-fn test_from_model_validation_error_target_context_not_found() {
-    let val_error = ModelValidationError::TargetContextNotFound { id: 1 };
-    let build_error: ModelBuildError = val_error.into();
-    let expected = "The generative output was invalid for model construction: The generative output attempts to add a Contextoid to a Context (ID: 1) that was not created in the same generative step.";
-    assert_eq!(format!("{build_error}"), expected);
-}
-
-#[test]
-fn test_from_model_validation_error_unsupported_operation() {
-    let val_error = ModelValidationError::UnsupportedOperation {
-        operation: "DELETE".to_string(),
-    };
-    let build_error: ModelBuildError = val_error.into();
-    let expected = "The generative output was invalid for model construction: An unsupported operation was used during model construction: DELETE. Only creation commands are allowed.";
-    assert_eq!(format!("{build_error}"), expected);
-}
-
-#[test]
-fn test_error_trait() {
-    let error =
+fn test_debug_clone_hash_eq_partial_eq() {
+    let err1 =
         ModelBuildError::GenerationFailed(ModelGenerativeError::InternalError("test".to_string()));
-    let _source: Option<&(dyn Error + 'static)> = error.source();
-}
+    let err2 = err1.clone();
 
-#[test]
-fn test_display_for_target_causaloid_not_found() {
-    let id = 42;
-    let error = ModelValidationError::TargetCausaloidNotFound { id };
+    // Check that the cloned error is equal to the original
+    assert_eq!(err1, err2);
 
-    // The expected string preserves the exact formatting from the `write!` macro.
-    let expected_str = "The generative output attempts to add a Causaloid (ID: 42)
-                    that was not created in the same generative step.";
+    // Check that the debug format is as expected
+    assert_eq!(
+        format!("{err1:?}"),
+        "GenerationFailed(InternalError(\"test\"))"
+    );
 
-    assert_eq!(error.to_string(), expected_str);
-}
+    // Check that the hash of the two errors is the same
+    let mut hasher1 = DefaultHasher::new();
+    err1.hash(&mut hasher1);
+    let hash1 = hasher1.finish();
 
-#[test]
-fn test_display_for_target_contextoid_not_found() {
-    let id = 99;
-    let error = ModelValidationError::TargetContextoidNotFound { id };
+    let mut hasher2 = DefaultHasher::new();
+    err2.hash(&mut hasher2);
+    let hash2 = hasher2.finish();
 
-    // This test confirms the current output, including the typo.
-    let expected_str = "The generative output attempts to add a Contextoid 99) that was not created in the same generative step.";
-
-    assert_eq!(error.to_string(), expected_str);
+    assert_eq!(hash1, hash2);
 }

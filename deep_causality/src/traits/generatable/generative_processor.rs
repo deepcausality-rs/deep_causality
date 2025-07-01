@@ -6,8 +6,9 @@
 // This trait can be placed in a new module, e.g., `crate::processing`
 
 use crate::prelude::{
-    Causaloid, Context, ContextuableGraph, Datable, Generatable, GenerativeOutput, Identifiable,
-    ModelValidationError, SpaceTemporal, Spatial, Symbolic, Temporal,
+    Causaloid, Context, ContextId, ContextuableGraph, Datable, ExtendableContextuableGraph,
+    Generatable, GenerativeOutput, Identifiable, ModelValidationError, SpaceTemporal, Spatial,
+    Symbolic, Temporal,
 };
 use std::hash::Hash;
 
@@ -35,6 +36,25 @@ where
     /// Provides mutable access to the destination for the generated Context.
     /// This is a required method for the trait implementor.
     fn get_context_dest(&mut self) -> &mut Option<Context<D, S, T, ST, SYM, VS, VT>>;
+
+    /// A helper method to get and verify the target context.
+    /// This reduces boilerplate in the main processing logic.
+    #[doc(hidden)]
+    fn get_and_verify_context(
+        &mut self,
+        target_id: ContextId,
+    ) -> Result<&mut Context<D, S, T, ST, SYM, VS, VT>, ModelValidationError> {
+        let context = self
+            .get_context_dest()
+            .as_mut()
+            .ok_or(ModelValidationError::TargetContextNotFound { id: target_id })?;
+
+        if context.id() != target_id {
+            Err(ModelValidationError::TargetContextNotFound { id: target_id })
+        } else {
+            Ok(context)
+        }
+    }
 
     /// Processes a single `GenerativeOutput` command, mutating the state provided
     /// by the getter methods.
@@ -85,46 +105,49 @@ where
             }
 
             GenerativeOutput::UpdateContext { id, new_name } => {
-                let context = self
-                    .get_context_dest()
-                    .as_mut()
-                    .ok_or(ModelValidationError::TargetContextNotFound { id })?;
-
-                if context.id() != id {
-                    return Err(ModelValidationError::TargetContextNotFound { id });
-                }
-
+                let context = self.get_and_verify_context(id)?;
                 if let Some(name) = new_name {
                     context.set_name(name);
                 }
-
                 Ok(())
             }
 
             GenerativeOutput::DeleteContext { id } => {
-                let context_dest = self.get_context_dest();
-                if let Some(context) = context_dest.as_ref() {
-                    if context.id() == id {
-                        *context_dest = None; // Set the Option to None
-                        return Ok(());
-                    }
-                }
-                Err(ModelValidationError::TargetContextNotFound { id })
+                // First, verify the context exists and has the correct ID.
+                self.get_and_verify_context(id)?;
+                // If verification passes, we can safely set the destination to None.
+                *self.get_context_dest() = None;
+                Ok(())
+            }
+
+            GenerativeOutput::CreateExtraContext {
+                extra_context_id,
+                capacity,
+            } => {
+                let context = self
+                    .get_context_dest()
+                    .as_mut()
+                    // It's an error to create an extra context if the main one doesn't exist.
+                    // Note: This assumes a new `BaseContextNotFound` error variant.
+                    .ok_or(ModelValidationError::BaseContextNotFound)?;
+
+                // Call the new method on the context.
+                // We set `default` to false, as creating an extra context should not
+                // automatically make it the active one.
+                context
+                    .extra_ctx_add_new_with_id(extra_context_id, capacity, false)
+                    // Map the specific error from the context layer to the model validation layer.
+                    // Note: This assumes a new `DuplicateExtraContextId` error variant.
+                    .map_err(|_| ModelValidationError::DuplicateExtraContextId {
+                        id: extra_context_id,
+                    })
             }
 
             GenerativeOutput::AddContextoidToContext {
                 context_id,
                 contextoid,
             } => {
-                let context = self
-                    .get_context_dest()
-                    .as_mut()
-                    .ok_or(ModelValidationError::TargetContextNotFound { id: context_id })?;
-
-                if context.id() != context_id {
-                    return Err(ModelValidationError::TargetContextNotFound { id: context_id });
-                }
-
+                let context = self.get_and_verify_context(context_id)?;
                 context.add_node(contextoid);
                 Ok(())
             }
@@ -134,15 +157,7 @@ where
                 existing_contextoid,
                 new_contextoid,
             } => {
-                let context = self
-                    .get_context_dest()
-                    .as_mut()
-                    .ok_or(ModelValidationError::TargetContextNotFound { id: context_id })?;
-
-                if context.id() != context_id {
-                    return Err(ModelValidationError::TargetContextNotFound { id: context_id });
-                }
-
+                let context = self.get_and_verify_context(context_id)?;
                 context
                     .update_node(existing_contextoid, new_contextoid)
                     .map_err(|_| ModelValidationError::TargetContextoidNotFound {
@@ -154,15 +169,7 @@ where
                 context_id,
                 contextoid_id,
             } => {
-                let context = self
-                    .get_context_dest()
-                    .as_mut()
-                    .ok_or(ModelValidationError::TargetContextNotFound { id: context_id })?;
-
-                if context.id() != context_id {
-                    return Err(ModelValidationError::TargetContextNotFound { id: context_id });
-                }
-
+                let context = self.get_and_verify_context(context_id)?;
                 context.remove_node(contextoid_id).map_err(|_| {
                     ModelValidationError::TargetContextoidNotFound { id: contextoid_id }
                 })
@@ -175,12 +182,6 @@ where
                 Ok(())
             }
 
-            // Explicitly handle unimplemented or unsupported variants
-            GenerativeOutput::CreateExtraContext { .. } => {
-                Err(ModelValidationError::UnsupportedOperation {
-                    operation: "CreateExtraContext is not implemented yet".to_string(),
-                })
-            }
             GenerativeOutput::Evolve(_) => Err(ModelValidationError::UnsupportedOperation {
                 operation:
                     "The Evolve variant is not supported by the default GenerativeProcessor."

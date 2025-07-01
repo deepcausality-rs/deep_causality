@@ -150,3 +150,85 @@ fn test_deletes_context() {
     let model = model_result.unwrap();
     assert!(model.context().is_none());
 }
+
+#[test]
+fn test_creates_extra_context() {
+    struct ExtraContextGenerator;
+    impl
+        Generatable<
+            MockData,
+            EuclideanSpace,
+            EuclideanTime,
+            EuclideanSpacetime,
+            BaseSymbol,
+            FloatType,
+            FloatType,
+            ExtraContextGenerator,
+        > for ExtraContextGenerator
+    {
+        fn generate(
+            &mut self,
+            _trigger: &GenerativeTrigger<MockData>,
+            _context: &Context<
+                MockData,
+                EuclideanSpace,
+                EuclideanTime,
+                EuclideanSpacetime,
+                BaseSymbol,
+                FloatType,
+                FloatType,
+            >,
+        ) -> Result<
+            GenerativeOutput<
+                MockData,
+                EuclideanSpace,
+                EuclideanTime,
+                EuclideanSpacetime,
+                BaseSymbol,
+                FloatType,
+                FloatType,
+                ExtraContextGenerator,
+            >,
+            ModelGenerativeError,
+        > {
+            let causaloid = TestCausaloid::new(1, |_| Ok(false), "causaloid");
+            let create_causaloid = GenerativeOutput::CreateCausaloid(1, causaloid);
+
+            let create_base = GenerativeOutput::CreateBaseContext {
+                id: 10,
+                name: "Base".to_string(),
+                capacity: 10,
+            };
+
+            let create_extra = GenerativeOutput::CreateExtraContext {
+                extra_context_id: 99,
+                capacity: 5,
+            };
+
+            Ok(GenerativeOutput::Composite(vec![
+                create_causaloid,
+                create_base,
+                create_extra,
+            ]))
+        }
+    }
+
+    let model_result = TestModel::with_generator(
+        1,
+        "author",
+        "desc",
+        None,
+        ExtraContextGenerator,
+        &GenerativeTrigger::ManualIntervention("trigger".to_string()),
+    );
+
+    assert!(
+        model_result.is_ok(),
+        "Model generation failed: {:?}",
+        model_result.err()
+    );
+    let model = model_result.unwrap();
+
+    let context = model.context().as_ref().unwrap();
+    assert!(context.extra_ctx_check_exists(99));
+}
