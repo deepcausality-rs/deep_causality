@@ -50,8 +50,8 @@ use std::hash::Hash;
 /// *   `SYM`: The type for symbolic data or representations, implementing `Symbolic`.
 /// *   `VS`: The underlying value type for spatial dimensions (e.g., `f64`).
 /// *   `VT`: The underlying value type for the temporal dimension (e.g., `u64`).
-/// *   `G`: A recursive type parameter representing the `Generatable` implementor itself.
-///      This is crucial for the `GenerativeOutput::Evolve(G)` variant.
+/// *   `G`: A recursive type parameter representing the `Generatable` implementor itself, which
+///     is crucial for the `GenerativeOutput::Evolve(G)` variant.
 ///
 #[allow(clippy::type_complexity)]
 pub trait Generatable<D, S, T, ST, SYM, VS, VT, G>

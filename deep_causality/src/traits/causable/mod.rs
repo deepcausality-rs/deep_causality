@@ -23,13 +23,118 @@ use crate::prelude::{Identifiable, IdentificationValue, NumericalValue};
 /// `verify_single_cause` and `verify_all_causes` return a Result indicating
 /// if the cause was validated or not.
 ///
+/// # Examples
+///
+/// ```
+/// use deep_causality::prelude::{Causable, Identifiable, IdentificationValue, NumericalValue, CausalityError};
+/// use std::collections::HashMap;
+///
+/// struct MyCause {
+///     id: IdentificationValue,
+///     active: bool,
+///     singleton: bool,
+/// }
+///
+/// impl Identifiable for MyCause {
+///     fn id(&self) -> IdentificationValue {
+///         self.id
+///     }
+/// }
+///
+/// impl Causable for MyCause {
+///     fn explain(&self) -> Result<String, CausalityError> {
+///         Ok(format!("This is cause {}", self.id))
+///     }
+///
+///     fn is_active(&self) -> bool {
+///         self.active
+///     }
+///
+///     fn is_singleton(&self) -> bool {
+///         self.singleton
+///     }
+///
+///     fn verify_single_cause(&self, obs: &NumericalValue) -> Result<bool, CausalityError> {
+///         Ok(*obs > 0.0)
+///     }
+///
+///     fn verify_all_causes(&self, data: &[NumericalValue], data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>) -> Result<bool, CausalityError> {
+///         Ok(data.iter().all(|&x| x > 0.0))
+///     }
+/// }
+/// ```
 pub trait Causable: Identifiable {
+    /// Generates a human-readable explanation of the causaloid's current state.
+    ///
+    /// The nature of the explanation depends on the `CausaloidType`:
+    /// - For a `Singleton`, it describes whether the causaloid is active.
+    /// - For a `Collection`, it aggregates the explanations of the causaloids within it.
+    /// - For a `Graph`, it explains all the causal paths that have been evaluated.
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(String)` containing the explanation if the causaloid is active.
+    /// - `Err(CausalityError)` if the causaloid has not been evaluated yet (i.e., is not active).
     fn explain(&self) -> Result<String, CausalityError>;
+
+    /// Checks if the causaloid is currently considered active.
+    ///
+    /// The definition of "active" varies by `CausaloidType`:
+    /// - For a `Singleton`, it's active if its causal function evaluated to `true`.
+    /// - For a `Collection` or `Graph`, it's active if at least one of its contained
+    ///   causaloids is active.
+    ///
+    /// # Returns
+    ///
+    /// `true` if the causaloid is active, `false` otherwise.
     fn is_active(&self) -> bool;
+
+    /// Determines if the causaloid represents a single, indivisible causal unit.
+    ///
+    /// This method is crucial for dispatching to the correct verification logic.
+    /// If this returns `true`, `verify_single_cause` should be used.
+    /// If it returns `false`, `verify_all_causes` should be used.
+    ///
+    /// # Returns
+    ///
+    /// `true` if the `CausaloidType` is `Singleton`, `false` otherwise.
     fn is_singleton(&self) -> bool;
 
+    /// Verifies a `Singleton` causaloid against a single numerical observation.
+    ///
+    /// This method should only be called when `is_singleton()` returns `true`. It executes
+    /// the associated causal function (either contextual or non-contextual) against the
+    /// provided observation and updates the causaloid's internal `active` state based on the result.
+    ///
+    /// # Arguments
+    ///
+    /// * `obs` - A reference to the `NumericalValue` to be evaluated.
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(true)` if the causal condition is met.
+    /// - `Ok(false)` if the causal condition is not met.
+    /// - `Err(CausalityError)` if the required causal function is missing.
     fn verify_single_cause(&self, obs: &NumericalValue) -> Result<bool, CausalityError>;
 
+    /// Verifies a `Collection` or `Graph` causaloid against a slice of numerical data.
+    ///
+    /// This method should be called when `is_singleton()` returns `false`. It reasons
+    /// over the entire collection or graph of underlying causaloids.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - A slice of `NumericalValue` representing the dataset to verify against.
+    /// * `data_index` - An optional `HashMap` that maps causaloid IDs to their corresponding
+    ///   index in the `data` slice. This is primarily used for `Graph` types to ensure
+    ///   the correct data point is passed to the correct causaloid node.
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(true)` if the aggregate causal conditions of the collection/graph are met.
+    /// - `Ok(false)` if the aggregate causal conditions are not met.
+    /// - `Err(CausalityError)` if called on a `Singleton` causaloid or if the underlying
+    ///   collection/graph is not properly initialized.
     fn verify_all_causes(
         &self,
         data: &[NumericalValue],
@@ -59,10 +164,46 @@ pub trait CausableReasoning<T>
 where
     T: Causable,
 {
+    //
     // These methods can be generated by compiler macros.
+    //
+    /// Returns the total number of `Causable` items in the collection.
+    ///
+    /// This is a required method for the trait implementor, often fulfilled
+    /// by a derive macro or a straightforward implementation on a collection type.
     fn len(&self) -> usize;
+
+    /// Checks if the collection of `Causable` items is empty.
+    ///
+    /// # Returns
+    ///
+    /// `true` if the collection contains no items (`len() == 0`), `false` otherwise.
+    ///
+    /// This is a required method for the trait implementor.
     fn is_empty(&self) -> bool;
+
+    /// Creates a new vector containing the `Causable` items from the collection.
+    ///
+    /// This method typically involves cloning the items to create an owned `Vec<T>`.
+    ///
+    /// # Returns
+    ///
+    /// A `Vec<T>` containing all the items from the collection.
+    ///
+    /// This is a required method for the trait implementor.
     fn to_vec(&self) -> Vec<T>;
+
+    /// Returns a vector of references to all `Causable` items in the collection.
+    ///
+    /// This method provides non-owning, read-only access to the items and is
+    /// heavily used by the default implementations of other reasoning methods
+    /// in this trait (e.g., `get_all_active_causes`, `number_active`).
+    ///
+    /// # Returns
+    ///
+    /// A `Vec<&T>` containing references to all items.
+    ///
+    /// This is a required method for the trait implementor.
     fn get_all_items(&self) -> Vec<&T>;
 
     //

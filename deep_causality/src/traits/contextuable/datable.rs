@@ -18,6 +18,12 @@ use crate::prelude::Identifiable;
 pub trait Datable: Identifiable {
     type Data;
 
+    /// Returns the contained data.
+    ///
+    /// If `Self::Data` is `Copy`, this will typically return a copy. Otherwise, it may
+    /// return a clone or a new instance depending on the implementation.
     fn get_data(&self) -> Self::Data;
+
+    /// Sets or updates the contained data with a new value.
     fn set_data(&mut self, value: Self::Data);
 }

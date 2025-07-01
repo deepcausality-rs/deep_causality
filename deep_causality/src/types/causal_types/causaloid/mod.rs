@@ -74,6 +74,9 @@ where
         }
     }
 
+    /// Singleton constructor with a contextual causality function.
+    /// Only use for non-fallible construction i.e.verified a-priori knowledge about the correctness of the causal function.
+    /// The context is embedded within the causaloid and can be accessed by the contextual causality function.
     pub fn new_with_context(
         id: IdentificationValue,
         context_causal_fn: ContextualCausalDataFn<D, S, T, ST, SYM, VS, VT>,
