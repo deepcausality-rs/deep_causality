@@ -50,6 +50,73 @@ fn test_extra_ctx_check_exists() {
 }
 
 #[test]
+fn test_extra_ctx_set_default_err() {
+    let mut context = get_context();
+
+    // Add an extra context with a non-zero ID (e.g., 1).
+    // Crucially, pass `default: false` so that `context.extra_context_id` remains `0`.
+    context.extra_ctx_add_new_with_id(1, 10, false).unwrap();
+
+    // Current state:
+    // - `context.extra_contexts` is `Some({1: UltraGraph})`
+    // - `context.extra_context_id` is `0`
+
+    // The call to `extra_contexts.get_mut(&0)` will now correctly return `None`,
+    // because the map does not contain the key `0`. This will trigger the
+    // inner `else` branch as intended.
+    // The node indices `0` and `1` are arbitrary as the function fails before using them.
+    let result = context.extra_ctx_remove_edge(0, 1);
+
+    // ASSERT: Verify that we received the expected error from the correct branch.
+    assert!(result.is_err());
+    let err = result.unwrap_err();
+    assert_eq!(
+        err.to_string(),
+        "ContextIndexError: Cannot remove edge. Current extra context with ID 0 not found."
+    );
+
+    // Attempt to get the size. The check for `extra_contexts` will fail.
+    let result = context.extra_ctx_size();
+
+    // ASSERT: Verify the correct error is returned.
+    assert!(result.is_err());
+    let err = result.unwrap_err();
+    assert_eq!(
+        err.to_string(),
+        "ContextIndexError: Cannot get size. Current extra context with ID 0 not found."
+    );
+
+    // ACTION: Attempt to check if empty. The check for `extra_contexts` will fail.
+    let result = context.extra_ctx_is_empty();
+
+    // ASSERT: Verify the correct error is returned.
+    assert!(result.is_err());
+    let err = result.unwrap_err();
+    assert_eq!(
+        err.to_string(),
+        "ContextIndexError: Cannot check if empty. Current extra context with ID 0 not found."
+    );
+
+    let result = context.extra_ctx_node_count();
+
+    assert!(result.is_err());
+    let err = result.unwrap_err();
+    assert_eq!(
+        err.to_string(),
+        "ContextIndexError: Cannot get node count. Current extra context with ID 0 not found."
+    );
+
+    let result = context.extra_ctx_edge_count();
+
+    assert!(result.is_err());
+    let err = result.unwrap_err();
+    assert_eq!(
+        err.to_string(),
+        "ContextIndexError: Cannot get edge count. Current extra context with ID 0 not found."
+    );
+}
+
+#[test]
 fn test_extra_ctx_get_current_id() {
     let id = 1;
     let mut context = get_context();
@@ -776,6 +843,18 @@ fn test_extra_ctx_remove_edge_err() {
     let res = context.extra_ctx_edge_count();
     let node_count = res.unwrap();
     assert_eq!(node_count, 0);
+
+    //  Attempt to remove the edge between node 0 and 1 befoe it was created.
+    // Both node exists, but the edge not yet.
+    let result = context.extra_ctx_remove_edge(0, 1);
+
+    // Verify that the specific error for an invalid ID is returned.
+    assert!(result.is_err());
+    let err = result.unwrap_err();
+    assert_eq!(
+        err.to_string(),
+        "ContextIndexError: Cannot remove edge: an edge from node 0 to node 1 does not exist in current extra context with ID 1."
+    );
 
     let res = context.extra_ctx_add_edge(root_id, node_id, RelationKind::Temporal);
     assert!(res.is_ok());
