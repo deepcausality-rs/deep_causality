@@ -60,11 +60,8 @@ where
             GenerativeOutput::UpdateCausaloid(id, causaloid) => {
                 let causaloid_dest = self.get_causaloid_dest();
                 if causaloid_dest.is_none() {
-                    // Cannot update a causaloid that hasn't been created yet.
                     return Err(ModelValidationError::TargetCausaloidNotFound { id });
                 }
-                // Assuming update means replacing the existing one if IDs match or simply replacing it.
-                // For this context, we'll just replace it, but a stricter check might compare IDs.
                 *causaloid_dest = Some(causaloid);
                 Ok(())
             }
@@ -72,10 +69,9 @@ where
             GenerativeOutput::DeleteCausaloid(id) => {
                 let causaloid_dest = self.get_causaloid_dest();
                 if causaloid_dest.is_none() {
-                    // Cannot delete a causaloid that hasn't been created yet.
                     return Err(ModelValidationError::TargetCausaloidNotFound { id });
                 }
-                *causaloid_dest = None; // Remove the causaloid
+                *causaloid_dest = None;
                 Ok(())
             }
 
@@ -88,31 +84,107 @@ where
                 Ok(())
             }
 
+            GenerativeOutput::UpdateContext { id, new_name } => {
+                let context = self
+                    .get_context_dest()
+                    .as_mut()
+                    .ok_or(ModelValidationError::TargetContextNotFound { id })?;
+
+                if context.id() != id {
+                    return Err(ModelValidationError::TargetContextNotFound { id });
+                }
+
+                if let Some(name) = new_name {
+                    context.set_name(name);
+                }
+
+                Ok(())
+            }
+
+            GenerativeOutput::DeleteContext { id } => {
+                let context_dest = self.get_context_dest();
+                if let Some(context) = context_dest.as_ref() {
+                    if context.id() == id {
+                        *context_dest = None; // Set the Option to None
+                        return Ok(());
+                    }
+                }
+                Err(ModelValidationError::TargetContextNotFound { id })
+            }
+
             GenerativeOutput::AddContextoidToContext {
                 context_id,
                 contextoid,
             } => {
-                let context_dest = self.get_context_dest();
-                let context = context_dest
+                let context = self
+                    .get_context_dest()
                     .as_mut()
                     .ok_or(ModelValidationError::TargetContextNotFound { id: context_id })?;
+
                 if context.id() != context_id {
                     return Err(ModelValidationError::TargetContextNotFound { id: context_id });
                 }
+
                 context.add_node(contextoid);
                 Ok(())
             }
 
+            GenerativeOutput::UpdateContextoidInContext {
+                context_id,
+                existing_contextoid,
+                new_contextoid,
+            } => {
+                let context = self
+                    .get_context_dest()
+                    .as_mut()
+                    .ok_or(ModelValidationError::TargetContextNotFound { id: context_id })?;
+
+                if context.id() != context_id {
+                    return Err(ModelValidationError::TargetContextNotFound { id: context_id });
+                }
+
+                context
+                    .update_node(existing_contextoid, new_contextoid)
+                    .map_err(|_| ModelValidationError::TargetContextoidNotFound {
+                        id: existing_contextoid,
+                    })
+            }
+
+            GenerativeOutput::DeleteContextoidFromContext {
+                context_id,
+                contextoid_id,
+            } => {
+                let context = self
+                    .get_context_dest()
+                    .as_mut()
+                    .ok_or(ModelValidationError::TargetContextNotFound { id: context_id })?;
+
+                if context.id() != context_id {
+                    return Err(ModelValidationError::TargetContextNotFound { id: context_id });
+                }
+
+                context.remove_node(contextoid_id).map_err(|_| {
+                    ModelValidationError::TargetContextoidNotFound { id: contextoid_id }
+                })
+            }
+
             GenerativeOutput::Composite(outputs) => {
                 for out in outputs {
-                    // Recursive call to the trait method
                     self.process_output(out)?;
                 }
                 Ok(())
             }
 
-            _ => Err(ModelValidationError::UnsupportedOperation {
-                operation: "Evolve".to_string(),
+            // Explicitly handle unimplemented or unsupported variants
+            GenerativeOutput::CreateExtraContext { .. } => {
+                Err(ModelValidationError::UnsupportedOperation {
+                    operation: "CreateExtraContext is not implemented yet".to_string(),
+                })
+            }
+            GenerativeOutput::Evolve(_) => Err(ModelValidationError::UnsupportedOperation {
+                operation:
+                    "The Evolve variant is not supported by the default GenerativeProcessor."
+                        .to_string(),
             }),
         }
     }

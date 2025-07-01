@@ -6,4 +6,5 @@
 mod assumption;
 mod inference;
 mod model;
+mod model_with_generator;
 mod observation;

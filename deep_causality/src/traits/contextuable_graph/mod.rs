@@ -4,7 +4,7 @@
  */
 
 use crate::errors::ContextIndexError;
-use crate::prelude::{Contextoid, Datable, RelationKind, Symbolic};
+use crate::prelude::{Contextoid, ContextoidId, Datable, RelationKind, Symbolic};
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
@@ -42,7 +42,12 @@ where
     fn add_node(&mut self, value: Contextoid<D, S, T, ST, SYM, VS, VT>) -> usize;
     fn contains_node(&self, index: usize) -> bool;
     fn get_node(&self, index: usize) -> Option<&Contextoid<D, S, T, ST, SYM, VS, VT>>;
-    fn remove_node(&mut self, index: usize) -> Result<(), ContextIndexError>;
+    fn remove_node(&mut self, node_id: ContextoidId) -> Result<(), ContextIndexError>;
+    fn update_node(
+        &mut self,
+        node_id: ContextoidId,
+        new_node: Contextoid<D, S, T, ST, SYM, VS, VT>,
+    ) -> Result<(), ContextIndexError>;
     fn add_edge(
         &mut self,
         a: usize,
@@ -53,8 +58,9 @@ where
     fn remove_edge(&mut self, a: usize, b: usize) -> Result<(), ContextIndexError>;
     fn size(&self) -> usize;
     fn is_empty(&self) -> bool;
-    fn node_count(&self) -> usize;
-    fn edge_count(&self) -> usize;
+    // Corrected method names
+    fn number_of_nodes(&self) -> usize;
+    fn number_of_edges(&self) -> usize;
 }
 
 /// Trait for poly-contextuable causal graphs.

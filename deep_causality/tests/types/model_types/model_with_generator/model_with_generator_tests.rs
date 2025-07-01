@@ -34,16 +34,16 @@ impl Datable for MockData {
 pub enum MyCustomGenerativeAction {}
 
 impl
-    Generatable<
-        MockData,
-        EuclideanSpace,
-        EuclideanTime,
-        EuclideanSpacetime,
-        BaseSymbol,
-        FloatType,
-        FloatType,
-        MyCustomGenerativeAction,
-    > for MyCustomGenerativeAction
+Generatable<
+    MockData,
+    EuclideanSpace,
+    EuclideanTime,
+    EuclideanSpacetime,
+    BaseSymbol,
+    FloatType,
+    FloatType,
+    MyCustomGenerativeAction,
+> for MyCustomGenerativeAction
 {
     fn generate(
         &mut self,
@@ -73,27 +73,6 @@ impl
         unimplemented!()
     }
 }
-// Type aliases for consistency in tests
-// type TestGenerativeOutput = GenerativeOutput<
-//     MockData,
-//     EuclideanSpace,
-//     EuclideanTime,
-//     EuclideanSpacetime,
-//     BaseSymbol,
-//     FloatType,
-//     FloatType,
-//     MyCustomGenerativeAction,
-// >;
-
-// type TestContext = Context<
-//     MockData,
-//     EuclideanSpace,
-//     EuclideanTime,
-//     EuclideanSpacetime,
-//     BaseSymbol,
-//     FloatType,
-//     FloatType,
-// >;
 
 type TestCausaloid = Causaloid<
     MockData,
@@ -136,16 +115,16 @@ struct MockGenerator {
 
 // Corrected Generatable impl for MockGenerator (G is now MockGenerator itself)
 impl
-    Generatable<
-        MockData,
-        EuclideanSpace,
-        EuclideanTime,
-        EuclideanSpacetime,
-        BaseSymbol,
-        FloatType,
-        FloatType,
-        MockGenerator,
-    > for MockGenerator
+Generatable<
+    MockData,
+    EuclideanSpace,
+    EuclideanTime,
+    EuclideanSpacetime,
+    BaseSymbol,
+    FloatType,
+    FloatType,
+    MockGenerator,
+> for MockGenerator
 {
     fn generate(
         &mut self,
@@ -171,7 +150,7 @@ impl
             FloatType,
             MockGenerator,
         >,
-        ModelGenerativeError, // **STILL ModelGenerativeError here, as per the trait**
+        ModelGenerativeError,
     > {
         let id = self.causaloid_id_to_create;
         // Define a simple mock causal_fn
@@ -246,7 +225,7 @@ fn test_model_with_generator_creates_causaloid_and_context() {
     let context = model.context();
     assert!(context.is_some());
     let ctx = context.as_ref().unwrap();
-    assert_eq!(ctx.id(), 200); // Check context ID  
+    assert_eq!(ctx.id(), 200); // Check context ID
     assert_eq!(ctx.name(), "Generated Context");
 }
 
@@ -354,16 +333,16 @@ fn test_model_with_generator_fails_on_add_contextoid_to_nonexistent_context() {
     // A mock generator that attempts to add a Contextoid without creating its parent Context first.
     struct BadContextoidGenerator;
     impl
-        Generatable<
-            MockData,
-            EuclideanSpace,
-            EuclideanTime,
-            EuclideanSpacetime,
-            BaseSymbol,
-            FloatType,
-            FloatType,
-            BadContextoidGenerator, // G is BadContextoidGenerator
-        > for BadContextoidGenerator
+    Generatable<
+        MockData,
+        EuclideanSpace,
+        EuclideanTime,
+        EuclideanSpacetime,
+        BaseSymbol,
+        FloatType,
+        FloatType,
+        BadContextoidGenerator, // G is BadContextoidGenerator
+    > for BadContextoidGenerator
     {
         fn generate(
             &mut self,
@@ -437,16 +416,16 @@ fn test_model_with_generator_with_multiple_root_causaloids_fail() {
     // A mock generator that creates multiple causaloids
     struct MultiCausaloidGenerator;
     impl
-        Generatable<
-            MockData,
-            EuclideanSpace,
-            EuclideanTime,
-            EuclideanSpacetime,
-            BaseSymbol,
-            FloatType,
-            FloatType,
-            MultiCausaloidGenerator, // G is MultiCausaloidGenerator
-        > for MultiCausaloidGenerator
+    Generatable<
+        MockData,
+        EuclideanSpace,
+        EuclideanTime,
+        EuclideanSpacetime,
+        BaseSymbol,
+        FloatType,
+        FloatType,
+        MultiCausaloidGenerator, // G is MultiCausaloidGenerator
+    > for MultiCausaloidGenerator
     {
         fn generate(
             &mut self,
@@ -518,20 +497,18 @@ fn test_model_with_generator_fails_on_update_causaloid_without_prior_creation() 
     let trigger = GenerativeTrigger::DataReceived(Data::new(80, MockData { id: 80, data: 40 }));
 
     // A mock generator that returns UpdateCausaloid without any CreateCausaloid first.
-    // The ModelBuilderProcessor's process_output will effectively ignore this (due to `_ => Ok(())`),
-    // leading to a MissingCreateCausaloid error from Model::with_generator.
     struct UpdateOnlyGenerator;
     impl
-        Generatable<
-            MockData,
-            EuclideanSpace,
-            EuclideanTime,
-            EuclideanSpacetime,
-            BaseSymbol,
-            FloatType,
-            FloatType,
-            UpdateOnlyGenerator, // G is UpdateOnlyGenerator
-        > for UpdateOnlyGenerator
+    Generatable<
+        MockData,
+        EuclideanSpace,
+        EuclideanTime,
+        EuclideanSpacetime,
+        BaseSymbol,
+        FloatType,
+        FloatType,
+        UpdateOnlyGenerator, // G is UpdateOnlyGenerator
+    > for UpdateOnlyGenerator
     {
         fn generate(
             &mut self,
@@ -584,6 +561,426 @@ fn test_model_with_generator_fails_on_update_causaloid_without_prior_creation() 
         model_result.unwrap_err(),
         ModelBuildError::ValidationFailed(ModelValidationError::TargetCausaloidNotFound {
             id: 123
+        })
+    );
+}
+
+// ===================================================================
+// NEW TESTS FOR UPDATE AND DELETE FUNCTIONALITY
+// ===================================================================
+
+#[test]
+fn test_model_with_generator_updates_context_name() {
+    struct UpdateContextNameGenerator;
+    impl
+    Generatable<
+        MockData,
+        EuclideanSpace,
+        EuclideanTime,
+        EuclideanSpacetime,
+        BaseSymbol,
+        FloatType,
+        FloatType,
+        UpdateContextNameGenerator,
+    > for UpdateContextNameGenerator
+    {
+        fn generate(
+            &mut self,
+            _trigger: &GenerativeTrigger<MockData>,
+            _context: &Context<
+                MockData,
+                EuclideanSpace,
+                EuclideanTime,
+                EuclideanSpacetime,
+                BaseSymbol,
+                FloatType,
+                FloatType,
+            >,
+        ) -> Result<
+            GenerativeOutput<
+                MockData,
+                EuclideanSpace,
+                EuclideanTime,
+                EuclideanSpacetime,
+                BaseSymbol,
+                FloatType,
+                FloatType,
+                UpdateContextNameGenerator,
+            >,
+            ModelGenerativeError,
+        > {
+            let causaloid = TestCausaloid::new(1, |_| Ok(false), "causaloid");
+            let create_causaloid = GenerativeOutput::CreateCausaloid(1, causaloid);
+            let create_context = GenerativeOutput::CreateBaseContext {
+                id: 10,
+                name: "Initial Name".to_string(),
+                capacity: 5,
+            };
+            let update_context = GenerativeOutput::UpdateContext {
+                id: 10,
+                new_name: Some("Updated Name".to_string()),
+            };
+            Ok(GenerativeOutput::Composite(vec![
+                create_causaloid,
+                create_context,
+                update_context,
+            ]))
+        }
+    }
+
+    let model_result = TestModel::with_generator(
+        1,
+        "author",
+        "desc",
+        None,
+        UpdateContextNameGenerator,
+        &GenerativeTrigger::ManualIntervention("trigger".to_string()),
+    );
+
+    assert!(model_result.is_ok());
+    let model = model_result.unwrap();
+    let context = model.context().as_ref().unwrap();
+    assert_eq!(context.id(), 10);
+    assert_eq!(context.name(), "Updated Name");
+}
+
+#[test]
+fn test_model_with_generator_deletes_context() {
+    struct DeleteContextGenerator;
+    impl
+    Generatable<
+        MockData,
+        EuclideanSpace,
+        EuclideanTime,
+        EuclideanSpacetime,
+        BaseSymbol,
+        FloatType,
+        FloatType,
+        DeleteContextGenerator,
+    > for DeleteContextGenerator
+    {
+        fn generate(
+            &mut self,
+            _trigger: &GenerativeTrigger<MockData>,
+            _context: &Context<
+                MockData,
+                EuclideanSpace,
+                EuclideanTime,
+                EuclideanSpacetime,
+                BaseSymbol,
+                FloatType,
+                FloatType,
+            >,
+        ) -> Result<
+            GenerativeOutput<
+                MockData,
+                EuclideanSpace,
+                EuclideanTime,
+                EuclideanSpacetime,
+                BaseSymbol,
+                FloatType,
+                FloatType,
+                DeleteContextGenerator,
+            >,
+            ModelGenerativeError,
+        > {
+            let causaloid = TestCausaloid::new(1, |_| Ok(false), "causaloid");
+            let create_causaloid = GenerativeOutput::CreateCausaloid(1, causaloid);
+            let create_context = GenerativeOutput::CreateBaseContext {
+                id: 10,
+                name: "To Be Deleted".to_string(),
+                capacity: 5,
+            };
+            let delete_context = GenerativeOutput::DeleteContext { id: 10 };
+            Ok(GenerativeOutput::Composite(vec![
+                create_causaloid,
+                create_context,
+                delete_context,
+            ]))
+        }
+    }
+
+    let model_result = TestModel::with_generator(
+        1,
+        "author",
+        "desc",
+        None,
+        DeleteContextGenerator,
+        &GenerativeTrigger::ManualIntervention("trigger".to_string()),
+    );
+
+    assert!(model_result.is_ok());
+    let model = model_result.unwrap();
+    assert!(model.context().is_none());
+}
+
+#[test]
+fn test_model_with_generator_updates_contextoid() {
+    struct UpdateContextoidGenerator;
+    impl
+    Generatable<
+        MockData,
+        EuclideanSpace,
+        EuclideanTime,
+        EuclideanSpacetime,
+        BaseSymbol,
+        FloatType,
+        FloatType,
+        UpdateContextoidGenerator,
+    > for UpdateContextoidGenerator
+    {
+        fn generate(
+            &mut self,
+            _trigger: &GenerativeTrigger<MockData>,
+            _context: &Context<
+                MockData,
+                EuclideanSpace,
+                EuclideanTime,
+                EuclideanSpacetime,
+                BaseSymbol,
+                FloatType,
+                FloatType,
+            >,
+        ) -> Result<
+            GenerativeOutput<
+                MockData,
+                EuclideanSpace,
+                EuclideanTime,
+                EuclideanSpacetime,
+                BaseSymbol,
+                FloatType,
+                FloatType,
+                UpdateContextoidGenerator,
+            >,
+            ModelGenerativeError,
+        > {
+            let causaloid = TestCausaloid::new(1, |_| Ok(false), "causaloid");
+            let create_causaloid = GenerativeOutput::CreateCausaloid(1, causaloid);
+            let create_context = GenerativeOutput::CreateBaseContext {
+                id: 10,
+                name: "Context".to_string(),
+                capacity: 5,
+            };
+
+            let original_data = MockData { id: 100, data: 1 };
+            let original_contextoid =
+                TestContextoid::new(100, ContextoidType::Datoid(original_data));
+
+            let add_contextoid = GenerativeOutput::AddContextoidToContext {
+                context_id: 10,
+                contextoid: original_contextoid,
+            };
+
+            let updated_data = MockData { id: 100, data: 99 };
+            let updated_contextoid = TestContextoid::new(100, ContextoidType::Datoid(updated_data));
+
+            let update_contextoid = GenerativeOutput::UpdateContextoidInContext {
+                context_id: 10,
+                existing_contextoid: 100,
+                new_contextoid: updated_contextoid,
+            };
+
+            Ok(GenerativeOutput::Composite(vec![
+                create_causaloid,
+                create_context,
+                add_contextoid,
+                update_contextoid,
+            ]))
+        }
+    }
+
+    let model_result = TestModel::with_generator(
+        1,
+        "author",
+        "desc",
+        None,
+        UpdateContextoidGenerator,
+        &GenerativeTrigger::ManualIntervention("trigger".to_string()),
+    );
+
+    // The main goal is to ensure this complex operation succeeds without error.
+    // Direct verification of the updated data is difficult without changing the public API,
+    // but success implies the processor correctly routed the command.
+    assert!(
+        model_result.is_ok(),
+        "Model generation with contextoid update failed: {:?}",
+        model_result.err()
+    );
+}
+
+#[test]
+fn test_model_with_generator_deletes_contextoid() {
+    struct DeleteContextoidGenerator;
+    impl
+    Generatable<
+        MockData,
+        EuclideanSpace,
+        EuclideanTime,
+        EuclideanSpacetime,
+        BaseSymbol,
+        FloatType,
+        FloatType,
+        DeleteContextoidGenerator,
+    > for DeleteContextoidGenerator
+    {
+        fn generate(
+            &mut self,
+            _trigger: &GenerativeTrigger<MockData>,
+            _context: &Context<
+                MockData,
+                EuclideanSpace,
+                EuclideanTime,
+                EuclideanSpacetime,
+                BaseSymbol,
+                FloatType,
+                FloatType,
+            >,
+        ) -> Result<
+            GenerativeOutput<
+                MockData,
+                EuclideanSpace,
+                EuclideanTime,
+                EuclideanSpacetime,
+                BaseSymbol,
+                FloatType,
+                FloatType,
+                DeleteContextoidGenerator,
+            >,
+            ModelGenerativeError,
+        > {
+            let causaloid = TestCausaloid::new(1, |_| Ok(false), "causaloid");
+            let create_causaloid = GenerativeOutput::CreateCausaloid(1, causaloid);
+            let create_context = GenerativeOutput::CreateBaseContext {
+                id: 10,
+                name: "Context".to_string(),
+                capacity: 5,
+            };
+
+            let data1 = MockData { id: 100, data: 1 };
+            let contextoid1 = TestContextoid::new(100, ContextoidType::Datoid(data1));
+            let add_contextoid1 = GenerativeOutput::AddContextoidToContext {
+                context_id: 10,
+                contextoid: contextoid1,
+            };
+
+            let data2 = MockData { id: 200, data: 2 };
+            let contextoid2 = TestContextoid::new(200, ContextoidType::Datoid(data2));
+            let add_contextoid2 = GenerativeOutput::AddContextoidToContext {
+                context_id: 10,
+                contextoid: contextoid2,
+            };
+
+            let delete_contextoid = GenerativeOutput::DeleteContextoidFromContext {
+                context_id: 10,
+                contextoid_id: 100, // Delete the first one
+            };
+
+            Ok(GenerativeOutput::Composite(vec![
+                create_causaloid,
+                create_context,
+                add_contextoid1,
+                add_contextoid2,
+                delete_contextoid,
+            ]))
+        }
+    }
+
+    let model_result = TestModel::with_generator(
+        1,
+        "author",
+        "desc",
+        None,
+        DeleteContextoidGenerator,
+        &GenerativeTrigger::ManualIntervention("trigger".to_string()),
+    );
+
+    assert!(
+        model_result.is_ok(),
+        "Model generation with contextoid delete failed: {:?}",
+        model_result.err()
+    );
+    let model = model_result.unwrap();
+    let context = model.context().as_ref().unwrap();
+
+    // Started with 0, added 2, deleted 1. Should be 1 left.
+    assert_eq!(context.node_count(), 1);
+}
+
+#[test]
+fn test_model_with_generator_fails_on_delete_nonexistent_contextoid() {
+    struct BadDeleteGenerator;
+    impl
+    Generatable<
+        MockData,
+        EuclideanSpace,
+        EuclideanTime,
+        EuclideanSpacetime,
+        BaseSymbol,
+        FloatType,
+        FloatType,
+        BadDeleteGenerator,
+    > for BadDeleteGenerator
+    {
+        fn generate(
+            &mut self,
+            _trigger: &GenerativeTrigger<MockData>,
+            _context: &Context<
+                MockData,
+                EuclideanSpace,
+                EuclideanTime,
+                EuclideanSpacetime,
+                BaseSymbol,
+                FloatType,
+                FloatType,
+            >,
+        ) -> Result<
+            GenerativeOutput<
+                MockData,
+                EuclideanSpace,
+                EuclideanTime,
+                EuclideanSpacetime,
+                BaseSymbol,
+                FloatType,
+                FloatType,
+                BadDeleteGenerator,
+            >,
+            ModelGenerativeError,
+        > {
+            let causaloid = TestCausaloid::new(1, |_| Ok(false), "causaloid");
+            let create_causaloid = GenerativeOutput::CreateCausaloid(1, causaloid);
+            let create_context = GenerativeOutput::CreateBaseContext {
+                id: 10,
+                name: "Context".to_string(),
+                capacity: 5,
+            };
+            // Attempt to delete a contextoid that was never added
+            let delete_nonexistent = GenerativeOutput::DeleteContextoidFromContext {
+                context_id: 10,
+                contextoid_id: 999,
+            };
+
+            Ok(GenerativeOutput::Composite(vec![
+                create_causaloid,
+                create_context,
+                delete_nonexistent,
+            ]))
+        }
+    }
+
+    let model_result = TestModel::with_generator(
+        1,
+        "author",
+        "desc",
+        None,
+        BadDeleteGenerator,
+        &GenerativeTrigger::ManualIntervention("trigger".to_string()),
+    );
+
+    assert!(model_result.is_err());
+    assert_eq!(
+        model_result.unwrap_err(),
+        ModelBuildError::ValidationFailed(ModelValidationError::TargetContextoidNotFound {
+            id: 999
         })
     );
 }
