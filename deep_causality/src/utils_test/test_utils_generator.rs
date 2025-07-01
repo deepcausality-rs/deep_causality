@@ -3,10 +3,6 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Shared setup for `with_generator` tests.
-//! This is not a test module, but a utility module for other tests.
-#![allow(dead_code)] // Allow unused code, as not all tests will use all helpers
-
 use crate::prelude::*;
 
 // A mock data structure used across multiple tests.
@@ -29,51 +25,6 @@ impl Datable for MockData {
     }
     fn set_data(&mut self, value: Self::Data) {
         self.data = value
-    }
-}
-
-// A custom generative action enum, can be empty for most tests.
-#[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
-pub enum MockCustomAction {}
-
-impl
-    Generatable<
-        MockData,
-        EuclideanSpace,
-        EuclideanTime,
-        EuclideanSpacetime,
-        BaseSymbol,
-        FloatType,
-        FloatType,
-        MockCustomAction,
-    > for MockCustomAction
-{
-    fn generate(
-        &mut self,
-        _trigger: &GenerativeTrigger<MockData>,
-        _context: &Context<
-            MockData,
-            EuclideanSpace,
-            EuclideanTime,
-            EuclideanSpacetime,
-            BaseSymbol,
-            FloatType,
-            FloatType,
-        >,
-    ) -> Result<
-        GenerativeOutput<
-            MockData,
-            EuclideanSpace,
-            EuclideanTime,
-            EuclideanSpacetime,
-            BaseSymbol,
-            FloatType,
-            FloatType,
-            MockCustomAction,
-        >,
-        ModelGenerativeError,
-    > {
-        unimplemented!()
     }
 }
 

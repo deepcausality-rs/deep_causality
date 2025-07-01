@@ -92,7 +92,7 @@ rust_test_suite(
     name = "utils_tests",
     srcs = glob([
         "utils/*_tests.rs",
-        "utils_test/*_tests.rs",
+        "utils_tests/*_tests.rs",
     ]),
     tags = [
         "unit-test",
