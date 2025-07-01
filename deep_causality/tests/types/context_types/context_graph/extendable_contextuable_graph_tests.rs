@@ -5,7 +5,7 @@
 
 use deep_causality::prelude::{
     BaseContext, BaseContextoid, Context, Contextoid, ContextoidType, ExtendableContextuableGraph,
-    RelationKind, Root,
+    Identifiable, RelationKind, Root,
 };
 
 // Helper to create a default context for tests.
@@ -158,10 +158,13 @@ fn test_extra_ctx_node_ops_happy_path() {
 #[test]
 fn test_extra_ctx_contains_node_when_no_extra_contexts_exist() {
     // 1. Create a new context. By default, `extra_contexts` is `None`.
-    let context = get_context();
+    let mut context = get_context();
+
+    let ctx_id = 1;
+    context.extra_ctx_add_new_with_id(ctx_id, 10, true).unwrap();
 
     // 2. Call the function. The outer `if let` will fail.
-    let result = context.extra_ctx_contains_node(0);
+    let result = context.extra_ctx_contains_node(43);
 
     // 3. Assert that the function correctly returns false.
     assert!(!result);
@@ -177,7 +180,7 @@ fn test_extra_ctx_contains_node_with_invalid_current_id() {
     context.extra_ctx_add_new_with_id(1, 10, false).unwrap();
 
     // 3. Call the function. The inner `if let` will fail because the key `0` is not in the map.
-    let result = context.extra_ctx_contains_node(0);
+    let result = context.extra_ctx_contains_node(78);
 
     // 4. Assert that the function correctly returns false from the inner `else` branch.
     assert!(!result);
@@ -391,4 +394,16 @@ fn test_extra_ctx_graph_properties_err() {
     assert!(context.extra_ctx_size().is_err());
     assert!(context.extra_ctx_node_count().is_err());
     assert!(context.extra_ctx_edge_count().is_err());
+}
+
+#[test]
+fn test_debug_impl() {
+    let context = get_context();
+
+    let debug_string = format!("{context:?}");
+    let expected_prefix = format!(
+        "Context: id: {}, name: base context, node_count: 0, edge_count: 0",
+        context.id()
+    );
+    assert!(debug_string.starts_with(&expected_prefix));
 }
