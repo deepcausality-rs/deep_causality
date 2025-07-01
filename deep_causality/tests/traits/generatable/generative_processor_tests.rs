@@ -205,6 +205,38 @@ fn test_generate_create_and_update_context() {
 }
 
 #[test]
+fn test_update_context_with_mismatched_id() {
+    // 1. SETUP: Create a processor and place a context with ID 1 in its destination.
+    let mut processor = TestProcessorAlias::new();
+    processor.context_dest = Some(TestContext::with_capacity(1, "I exist", 10));
+
+    // 2. ACTION: Attempt to process an `UpdateContext` command that targets a *different* ID (e.g., 99).
+    // This will call `get_and_verify_context` with `target_id = 99`.
+    // The function will find the context with ID 1, see that `1 != 99`, and return the target error.
+    let update_with_mismatched_id: GenerativeOutput<
+        MockData,
+        EuclideanSpace,
+        EuclideanTime,
+        EuclideanSpacetime,
+        BaseSymbol,
+        FloatType,
+        FloatType,
+        DummyGenerator,
+    > = GenerativeOutput::UpdateContext {
+        id: 99, // The ID we are looking for, which doesn't match the one in the processor.
+        new_name: Some("New Name".to_string()),
+    };
+
+    let result = processor.process_output(update_with_mismatched_id);
+
+    // 3. ASSERT: Verify that the specific error for a mismatched ID was returned.
+    assert!(matches!(
+        result,
+        Err(ModelValidationError::TargetContextNotFound { id: 99 })
+    ));
+}
+
+#[test]
 fn test_generate_add_and_delete_contextoid() {
     struct ContextoidLifecycleGenerator;
     impl
