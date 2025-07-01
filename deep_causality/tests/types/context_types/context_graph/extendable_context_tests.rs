@@ -275,6 +275,13 @@ fn test_extra_ctx_contains_node_err() {
     let mut context = get_context();
     assert_eq!(context.id(), id);
 
+    // Call the function immediately. The first `if let` will fail.
+    // The node index `0` is arbitrary as the function returns before checking it.
+    let result = context.extra_ctx_contains_node(0);
+
+    // Assert that the function correctly returns false.
+    assert!(!result,);
+
     let capacity = 100;
     let default = true;
 
