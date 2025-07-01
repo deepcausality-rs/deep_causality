@@ -3,59 +3,83 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::ModelGenerativeError;
+use deep_causality::prelude::ModelValidationError;
 use std::error::Error;
 
 #[test]
-fn test_model_generative_error_invalid_trigger() {
-    let msg = "Invalid trigger message";
-    let err = ModelGenerativeError::InvalidTrigger(msg.to_string());
-    assert_eq!(format!("{err}"), format!("Invalid trigger: {}", msg));
-    assert!(err.source().is_none());
-}
-
-#[test]
-fn test_model_generative_error_invalid_time_kind() {
-    let msg = "Invalid time kind message";
-    let err = ModelGenerativeError::InvalidTimeKind(msg.to_string());
-    assert_eq!(format!("{err}"), format!("Invalid time kind: {}", msg));
-    assert!(err.source().is_none());
-}
-
-#[test]
-fn test_model_generative_error_invalid_data_received_error() {
-    let msg = "Invalid data received message";
-    let err = ModelGenerativeError::InvalidDataReceivedError(msg.to_string());
+fn test_missing_create_causaloid() {
+    let err = ModelValidationError::MissingCreateCausaloid;
     assert_eq!(
         format!("{err}"),
-        format!("Invalid data received error: {}", msg)
+        "The generative output is missing the mandatory Causaloid creation command."
     );
     assert!(err.source().is_none());
 }
 
 #[test]
-fn test_model_generative_error_invalid_manual_intervention_error() {
-    let msg = "Invalid manual intervention message";
-    let err = ModelGenerativeError::InvalidManualInterventionError(msg.to_string());
+fn test_duplicate_causaloid_id() {
+    let err = ModelValidationError::DuplicateCausaloidID { id: 42 };
+    assert_eq!(format!("{err}"), "Duplicate Causaloid ID found: 42");
+    assert!(err.source().is_none());
+}
+
+#[test]
+fn test_target_causaloid_not_found() {
+    let err = ModelValidationError::TargetCausaloidNotFound { id: 42 };
+    assert_eq!(format!("{err}"), "Target Causaloid with ID 42 not found");
+    assert!(err.source().is_none());
+}
+
+#[test]
+fn test_base_context_not_found() {
+    let err = ModelValidationError::BaseContextNotFound;
     assert_eq!(
         format!("{err}"),
-        format!("Invalid manual intervention error: {}", msg)
+        "Cannot perform operation because the base context has not been created"
     );
     assert!(err.source().is_none());
 }
 
 #[test]
-fn test_model_generative_error_internal_error() {
-    let msg = "Internal error message";
-    let err = ModelGenerativeError::InternalError(msg.to_string());
-    assert_eq!(format!("{err}"), format!("Internal error: {}", msg));
+fn test_duplicate_context_id() {
+    let err = ModelValidationError::DuplicateContextId { id: 42 };
+    assert_eq!(format!("{err}"), "Duplicate Context ID found: 42");
     assert!(err.source().is_none());
 }
 
 #[test]
-fn test_model_generative_error_user_defined_error() {
-    let msg = "User defined error message";
-    let err = ModelGenerativeError::UserDefinedError(msg.to_string());
-    assert_eq!(format!("{err}"), format!("User defined error: {}", msg));
+fn test_target_context_not_found() {
+    let err = ModelValidationError::TargetContextNotFound { id: 42 };
+    assert_eq!(format!("{err}"), "Target Context with ID 42 not found");
+    assert!(err.source().is_none());
+}
+
+#[test]
+fn test_duplicate_extra_context_id() {
+    let err = ModelValidationError::DuplicateExtraContextId { id: 42 };
+    assert_eq!(format!("{err}"), "Duplicate Extra Context ID found: 42");
+    assert!(err.source().is_none());
+}
+
+#[test]
+fn test_target_contextoid_not_found() {
+    let err = ModelValidationError::TargetContextoidNotFound { id: 42 };
+    assert_eq!(format!("{err}"), "Target Contextoid with ID 42 not found");
+    assert!(err.source().is_none());
+}
+
+#[test]
+fn test_duplicate_contextoid_id() {
+    let err = ModelValidationError::DuplicateContextoidId { id: 42 };
+    assert_eq!(format!("{err}"), "Duplicate Contextoid ID found: 42");
+    assert!(err.source().is_none());
+}
+
+#[test]
+fn test_unsupported_operation() {
+    let err = ModelValidationError::UnsupportedOperation {
+        operation: "test".to_string(),
+    };
+    assert_eq!(format!("{err}"), "Unsupported operation: test");
     assert!(err.source().is_none());
 }

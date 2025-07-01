@@ -57,7 +57,6 @@ rust_test_suite(
 rust_test_suite(
     name = "ctx_types_tests",
     srcs = glob([
-        "types/context_types/context_graph/*_tests.rs",
         "types/context_types/contextoid/*_tests.rs",
         "types/context_node_types/data/*_tests.rs",
         "types/context_node_types/root/*_tests.rs",
@@ -74,9 +73,26 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "ctx_graph_types_tests",
+    srcs = glob([
+        "types/context_types/context_graph/*_tests.rs",
+    ]),
+    tags = [
+        "ctx_graph_types_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//alias:deep_causality",
+    ],
+)
+
+rust_test_suite(
     name = "utils_tests",
     srcs = glob([
         "utils/*_tests.rs",
+        "utils_test/*_tests.rs",
     ]),
     tags = [
         "unit-test",
@@ -267,6 +283,22 @@ rust_test_suite(
     ]),
     tags = [
         "symbolic_types_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//alias:deep_causality",
+    ],
+)
+
+rust_test_suite(
+    name = "traits_tests",
+    srcs = glob([
+        "traits/generatable/*_tests.rs",
+    ]),
+    tags = [
+        "traits_tests",
         "unit-test",
     ],
     visibility = ["//visibility:public"],

@@ -88,6 +88,16 @@ pub type TestCausaloid = Causaloid<
     FloatType,
 >;
 
+pub type TestContext = Context<
+    MockData,
+    EuclideanSpace,
+    EuclideanTime,
+    EuclideanSpacetime,
+    BaseSymbol,
+    FloatType,
+    FloatType,
+>;
+
 pub type TestContextoid = Contextoid<
     MockData,
     EuclideanSpace,
