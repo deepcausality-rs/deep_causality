@@ -54,22 +54,14 @@ fn test_extra_ctx_add_new_with_id() {
     let res = context.extra_ctx_add_new_with_id(id, capacity, false);
     assert!(res.is_ok());
     assert!(context.extra_ctx_check_exists(id));
-    assert_eq!(
-        context.extra_ctx_get_current_id(),
-        0,
-        "Current ID should not change when default is false"
-    );
+    assert_eq!(context.extra_ctx_get_current_id(), 0);
 
     // Add with default=true
     let id2 = 100;
     let res2 = context.extra_ctx_add_new_with_id(id2, capacity, true);
     assert!(res2.is_ok());
     assert!(context.extra_ctx_check_exists(id2));
-    assert_eq!(
-        context.extra_ctx_get_current_id(),
-        id2,
-        "Current ID should be set when default is true"
-    );
+    assert_eq!(context.extra_ctx_get_current_id(), id2);
 }
 
 #[test]
@@ -83,28 +75,16 @@ fn test_extra_ctx_add_new_with_id_err() {
 
     // Attempt to add again with the same ID
     let res = context.extra_ctx_add_new_with_id(id, capacity, default);
-    assert!(
-        res.is_err(),
-        "Should fail when adding a context with a duplicate ID"
-    );
+    assert!(res.is_err());
 }
 
 #[test]
 fn test_extra_ctx_check_exists() {
     let mut context = get_context();
-    assert!(
-        !context.extra_ctx_check_exists(1),
-        "Should not exist before creation"
-    );
+    assert!(!context.extra_ctx_check_exists(1));
     context.extra_ctx_add_new(10, false);
-    assert!(
-        context.extra_ctx_check_exists(1),
-        "Should exist after creation"
-    );
-    assert!(
-        !context.extra_ctx_check_exists(99),
-        "Non-existent ID should return false"
-    );
+    assert!(context.extra_ctx_check_exists(1));
+    assert!(!context.extra_ctx_check_exists(99));
 }
 
 #[test]
@@ -184,10 +164,7 @@ fn test_extra_ctx_contains_node_when_no_extra_contexts_exist() {
     let result = context.extra_ctx_contains_node(0);
 
     // 3. Assert that the function correctly returns false.
-    assert!(
-        !result,
-        "Should return false when no extra contexts have been created"
-    );
+    assert!(!result);
 }
 
 #[test]
@@ -203,10 +180,7 @@ fn test_extra_ctx_contains_node_with_invalid_current_id() {
     let result = context.extra_ctx_contains_node(0);
 
     // 4. Assert that the function correctly returns false from the inner `else` branch.
-    assert!(
-        !result,
-        "Should return false when the current extra_context_id is invalid"
-    );
+    assert!(!result);
 }
 
 #[test]
