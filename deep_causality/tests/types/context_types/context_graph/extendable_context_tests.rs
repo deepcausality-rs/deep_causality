@@ -545,6 +545,13 @@ fn test_extra_ctx_contains_edge_err() {
     let res = context.extra_ctx_contains_edge(root_id, node_id);
     assert!(res);
 
+    let false_id = 99;
+    let res = context.extra_ctx_contains_edge(false_id, node_id);
+    assert!(!res);
+
+    let res = context.extra_ctx_contains_edge(root_id, false_id);
+    assert!(!res);
+
     let no_id_a = 23;
     let no_id_b = 42;
 
