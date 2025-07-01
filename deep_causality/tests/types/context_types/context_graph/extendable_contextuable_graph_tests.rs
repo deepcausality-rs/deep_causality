@@ -176,6 +176,40 @@ fn test_extra_ctx_node_ops_happy_path() {
 }
 
 #[test]
+fn test_extra_ctx_contains_node_when_no_extra_contexts_exist() {
+    // 1. Create a new context. By default, `extra_contexts` is `None`.
+    let context = get_context();
+
+    // 2. Call the function. The outer `if let` will fail.
+    let result = context.extra_ctx_contains_node(0);
+
+    // 3. Assert that the function correctly returns false.
+    assert!(
+        !result,
+        "Should return false when no extra contexts have been created"
+    );
+}
+
+#[test]
+fn test_extra_ctx_contains_node_with_invalid_current_id() {
+    // 1. Create a context.
+    let mut context = get_context();
+
+    // 2. Add an extra context with ID `1` but do NOT set it as the current one.
+    // `extra_contexts` is now `Some`, but `extra_context_id` remains `0`.
+    context.extra_ctx_add_new_with_id(1, 10, false).unwrap();
+
+    // 3. Call the function. The inner `if let` will fail because the key `0` is not in the map.
+    let result = context.extra_ctx_contains_node(0);
+
+    // 4. Assert that the function correctly returns false from the inner `else` branch.
+    assert!(
+        !result,
+        "Should return false when the current extra_context_id is invalid"
+    );
+}
+
+#[test]
 fn test_extra_ctx_add_node_err() {
     let mut context = get_context();
     let contextoid = get_contextoid(1);
@@ -203,6 +237,29 @@ fn test_extra_ctx_get_node_err() {
 }
 
 #[test]
+fn test_extra_ctx_get_node_fails_with_invalid_current_id() {
+    // 1. Setup the context.
+    let mut context = get_context();
+
+    // 2. Create an extra context with ID `1` but do NOT set it as the default.
+    // This initializes `extra_contexts` but leaves `context.extra_context_id` as `0`.
+    context.extra_ctx_add_new_with_id(1, 10, false).unwrap();
+
+    // 3. Attempt to get a node. The `get(&0)` call will fail because the map
+    //    only contains the key `1`, triggering the inner `else` branch.
+    //    The node index `99` is arbitrary as the function fails before checking it.
+    let result = context.extra_ctx_get_node(99);
+
+    // 4. Assert that we received the expected error from that specific branch.
+    assert!(result.is_err());
+    let err = result.unwrap_err();
+    assert_eq!(
+        err.to_string(),
+        "ContextIndexError: Cannot get node. Current extra context with ID 0 not found."
+    );
+}
+
+#[test]
 fn test_extra_ctx_remove_node_err() {
     let mut context = get_context();
 
@@ -212,6 +269,47 @@ fn test_extra_ctx_remove_node_err() {
     context.extra_ctx_add_new_with_id(1, 10, true).unwrap();
     // Error: Extra context exists, but node index is invalid
     assert!(context.extra_ctx_remove_node(0).is_err());
+}
+
+#[test]
+fn test_extra_ctx_remove_node_fails_when_no_extra_contexts_exist() {
+    // 1. Setup a new context. `extra_contexts` is `None` by default.
+    let mut context = get_context();
+
+    // 2. Attempt to remove a node. The index doesn't matter.
+    // The `if let Some(extra_contexts) = self.extra_contexts.as_mut()` check will fail,
+    // and the outer `else` branch will be executed.
+    let result = context.extra_ctx_remove_node(0);
+
+    // 3. Assert that we received the expected error.
+    assert!(result.is_err());
+    let err = result.unwrap_err();
+    assert_eq!(
+        err.to_string(),
+        "ContextIndexError: Cannot remove node. No extra contexts have been created."
+    );
+}
+
+#[test]
+fn test_extra_ctx_remove_node_fails_with_invalid_current_id() {
+    // 1. Setup the context.
+    let mut context = get_context();
+
+    // 2. Create an extra context with ID `1` but do NOT set it as the default.
+    // This initializes `extra_contexts` but leaves `context.extra_context_id` as `0`.
+    context.extra_ctx_add_new_with_id(1, 10, false).unwrap();
+
+    // 3. Attempt to remove a node. The `get_mut(&0)` call will fail,
+    //    triggering the inner `else` branch.
+    let result = context.extra_ctx_remove_node(0);
+
+    // 4. Assert that we received the expected error from that specific branch.
+    assert!(result.is_err());
+    let err = result.unwrap_err();
+    assert_eq!(
+        err.to_string(),
+        "ContextIndexError: Cannot remove node. Current extra context with ID 0 not found."
+    );
 }
 
 // =================================================================================
@@ -254,6 +352,33 @@ fn test_extra_ctx_add_edge_err() {
     assert!(res2.is_err());
 }
 
+#[test]
+fn test_extra_ctx_add_edge_fails_with_invalid_current_id() {
+    // 1. Setup the context.
+    // At this point, `extra_contexts` is `None` and `extra_context_id` is `0`.
+    let mut context = get_context();
+
+    // 2. Create an extra context with ID `1`. Crucially, we pass `default: false`.
+    // This initializes `extra_contexts` to `Some(HashMap)` and inserts a graph
+    // with the key `1`. However, `context.extra_context_id` remains `0`.
+    context.extra_ctx_add_new_with_id(1, 10, false).unwrap();
+
+    // 3. Now, attempt to add an edge. The code will execute the following logic:
+    //    - `if let Some(extra_contexts) = ...` -> This succeeds.
+    //    - `if let Some(current_ctx) = extra_contexts.get_mut(&0)` -> This FAILS,
+    //      because the map contains the key `1`, but not `0`.
+    //    - The `else` branch is executed.
+    let result = context.extra_ctx_add_edge(0, 1, RelationKind::Datial);
+
+    // 4. Assert that we received the expected error from the `else` branch.
+    assert!(result.is_err());
+    let err = result.unwrap_err();
+    assert_eq!(
+        err.to_string(),
+        "ContextIndexError: Cannot add edge. Current extra context with ID 0 not found."
+    );
+}
+
 // =================================================================================
 // Graph Property Tests
 // =================================================================================
@@ -278,7 +403,7 @@ fn test_extra_ctx_graph_properties() {
 
     // Check properties on non-empty graph
     assert!(!context.extra_ctx_is_empty().unwrap());
-    assert_eq!(context.extra_ctx_size().unwrap(), 2); // 2 nodes 
+    assert_eq!(context.extra_ctx_size().unwrap(), 2); // 2 nodes
     assert_eq!(context.extra_ctx_node_count().unwrap(), 2);
     assert_eq!(context.extra_ctx_edge_count().unwrap(), 1);
 }
