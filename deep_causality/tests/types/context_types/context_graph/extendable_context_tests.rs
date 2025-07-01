@@ -569,6 +569,58 @@ fn test_extra_ctx_contains_edge_err() {
 }
 
 #[test]
+fn test_extra_ctx_contains_edge_when_no_extra_contexts_exist() {
+    // This test hits the outer `else` branch.
+    let context = get_context();
+    // With no extra_contexts map, this should be false.
+    assert!(!context.extra_ctx_contains_edge(0, 1));
+}
+
+#[test]
+fn test_extra_ctx_contains_edge_with_invalid_current_id() {
+    // This test hits the inner `else` branch.
+    let mut context = get_context();
+    // Create an extra context but do NOT set it as the current one.
+    context.extra_ctx_add_new_with_id(1, 10, false).unwrap();
+
+    // The current_id is still 0, which is not a valid key in the map.
+    assert!(!context.extra_ctx_contains_edge(0, 1));
+}
+
+#[test]
+fn test_extra_ctx_contains_edge_happy_path_and_no_edge() {
+    // This test hits the main logic path.
+    let mut context = get_context();
+    context.extra_ctx_add_new_with_id(1, 10, true).unwrap();
+
+    let id = 1;
+    let c_1 = Contextoid::new(id, ContextoidType::Root(Root::new(id)));
+    let node_a = context.extra_ctx_add_node(c_1).unwrap();
+
+    let t_id = 12;
+    let t_time_scale = TimeScale::Month;
+    let t_time_unit = 12f64;
+    let tempoid = EuclideanTime::new(t_id, t_time_scale, t_time_unit);
+
+    let id = 42;
+    let c_2 = Contextoid::new(id, ContextoidType::Tempoid(tempoid));
+    let node_b = context.extra_ctx_add_node(c_2).unwrap();
+
+    // Check before adding the edge
+    assert!(!context.extra_ctx_contains_edge(node_a, node_b));
+
+    // Add the edge and check again
+    context
+        .extra_ctx_add_edge(node_a, node_b, RelationKind::Datial)
+        .unwrap();
+    assert!(context.extra_ctx_contains_edge(node_a, node_b));
+
+    // Check for non-existent edge
+    assert!(!context.extra_ctx_contains_edge(node_b, node_a)); // Directed
+    assert!(!context.extra_ctx_contains_edge(node_a, 999)); // Non-existent node
+}
+
+#[test]
 fn test_extra_ctx_remove_edge() {
     let id = 1;
     let mut context = get_context();

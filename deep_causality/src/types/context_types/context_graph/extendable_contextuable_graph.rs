@@ -194,13 +194,20 @@ where
     }
 
     fn extra_ctx_contains_edge(&self, a: usize, b: usize) -> bool {
+        // The most direct way is to get the context first.
+        // If we can't get it for any reason, we can't check for an edge.
         if let Some(extra_contexts) = self.extra_contexts.as_ref() {
             if let Some(current_ctx) = extra_contexts.get(&self.extra_context_id) {
+                // Now that we have a valid context, we can check for the edge.
+                // The underlying ultragraph's `contains_edge` is robust and will
+                // return false if the nodes don't exist.
                 current_ctx.contains_edge(a, b)
             } else {
+                // The map exists, but the current ID is invalid.
                 false
             }
         } else {
+            // The map itself doesn't exist.
             false
         }
     }
