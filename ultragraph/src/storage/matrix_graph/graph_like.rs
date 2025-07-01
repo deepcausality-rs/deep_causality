@@ -34,11 +34,40 @@ impl<T> GraphLike<T> for UltraMatrixGraph<T> {
             return Err(UltraGraphError(format!("index {index} not found")));
         };
 
+        // Check if the node to be removed is the root node.
+        if let Some(root_node_index) = self.root_index {
+            if root_node_index.index() == index {
+                // If so, clear the root index.
+                self.root_index = None;
+            }
+        }
+
         let k = self.index_map.get(&index).unwrap();
         self.graph.remove_node(*k);
         self.node_map.remove(k);
         self.index_map.remove(&k.index());
         Ok(())
+    }
+
+    fn update_node(&mut self, index: usize, value: T) -> Result<(), UltraGraphError> {
+        // 1. Find the internal, stable NodeIndex using the public-facing usize index.
+        let node_index = *self.index_map.get(&index).ok_or_else(|| {
+            UltraGraphError(format!("update_node failed: index {index} not found"))
+        })?;
+
+        // 2. Update the payload in the node_map.
+        // The `insert` method on a HashMap updates the value if the key exists.
+        // This operation does not touch the `self.graph` field, preserving all edges.
+        if self.node_map.insert(node_index, value).is_some() {
+            // The key existed and the value was updated.
+            Ok(())
+        } else {
+            // This is a consistency error: the index was in index_map but not node_map.
+            // This should be unreachable if the graph is consistent, but we handle it defensively.
+            Err(UltraGraphError(format!(
+                "update_node failed: inconsistent state for index {index}"
+            )))
+        }
     }
 
     fn add_edge(&mut self, a: usize, b: usize) -> Result<(), UltraGraphError> {
@@ -109,16 +138,26 @@ impl<T> GraphLike<T> for UltraMatrixGraph<T> {
 
         if !self.contains_edge(a, b) {
             return Err(UltraGraphError(format!(
-                "Edge does not exists between: {a} and {b}"
+                "Edge does not exist between: {a} and {b}"
             )));
         }
 
-        let k = self.index_map.get(&a).expect("index not found");
-        let l = self.index_map.get(&b).expect("index not found");
+        // Because of the `contains_node` checks above, these `expect` calls
+        // are safe. They would only panic if there were an internal consistency
+        // bug within UltraMatrixGraph itself, which is an appropriate use of expect.
+        let k = self
+            .index_map
+            .get(&a)
+            .expect("Inconsistent state: node a not in index_map");
+        let l = self
+            .index_map
+            .get(&b)
+            .expect("Inconsistent state: node b not in index_map");
 
+        // This call to the panicky petgraph API is now SAFE because of our `contains_edge` check.
+        // We can simply call the function and ignore its return value (the old edge weight),
+        // as our function's contract is only to remove the edge and return Ok(()).
         self.graph.remove_edge(*k, *l);
-        self.index_map.remove(&a);
-        self.index_map.remove(&b);
 
         Ok(())
     }

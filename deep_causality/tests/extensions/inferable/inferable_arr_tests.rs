@@ -5,7 +5,7 @@
 
 use deep_causality::prelude::*;
 
-use crate::utils::test_utils::*;
+use deep_causality::utils_test::test_utils::*;
 
 fn get_test_inf_arr() -> [Inference; 2] {
     let i1 = get_test_inferable(0, true);

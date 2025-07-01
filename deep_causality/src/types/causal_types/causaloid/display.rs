@@ -47,12 +47,14 @@ where
     VT: Clone,
 {
     fn fmt_causaloid(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Causaloid id: {} \n Causaloid type: {} \n description: {} is active: {} has context: {}",
-               self.id,
-               self.causal_type,
-               self.description,
-               self.is_active(),
-               self.has_context,
+        write!(
+            f,
+            "Causaloid id: {} \n Causaloid type: {} \n description: {} is active: {} has context: {}",
+            self.id,
+            self.causal_type,
+            self.description,
+            self.is_active(),
+            self.has_context,
         )
     }
 }

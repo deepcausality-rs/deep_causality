@@ -24,6 +24,10 @@ where
         self.storage.remove_node(index)
     }
 
+    fn update_node(&mut self, index: usize, value: T) -> Result<(), UltraGraphError> {
+        self.storage.update_node(index, value)
+    }
+
     fn add_edge(&mut self, a: usize, b: usize) -> Result<(), UltraGraphError> {
         self.storage.add_edge(a, b)
     }

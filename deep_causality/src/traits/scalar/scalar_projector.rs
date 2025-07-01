@@ -25,7 +25,7 @@ use crate::prelude::ScalarValue;
 /// # See Also
 ///
 /// - [`ScalarValue`]: A trait representing primitive scalar types
-/// - [`Causaloid`]: The core reasoning unit in DeepCausality that can consume projectors
+/// - `Causaloid`: The core reasoning unit in DeepCausality that can consume projectors
 pub trait ScalarProjector {
     /// The scalar value extracted from the input (must implement `ScalarValue`)
     type Scalar: ScalarValue;

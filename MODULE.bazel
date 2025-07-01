@@ -1,0 +1,31 @@
+module(name = "deep_causality")
+
+###############################################################################
+# Bazel Dependencies
+# https://registry.bazel.build/
+###############################################################################
+bazel_dep(name = "aspect_bazel_lib", version = "2.16.0")
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+bazel_dep(name = "platforms", version = "0.0.11")
+bazel_dep(name = "rules_rust", version = "0.62.0")
+
+###############################################################################
+# Rust toolchain
+# https://github.com/bazelbuild/rules_rust/releases
+###############################################################################
+RUST_EDITION = "2024"
+
+RUST_VERSION = "1.88.0"
+
+rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
+rust.toolchain(
+    edition = RUST_EDITION,
+    extra_target_triples = [
+        "x86_64-unknown-linux-musl",
+        "aarch64-unknown-linux-musl",
+    ],
+    versions = [RUST_VERSION],
+)
+use_repo(rust, "rust_toolchains")
+
+register_toolchains("@rust_toolchains//:all")

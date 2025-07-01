@@ -21,12 +21,13 @@ impl Display for Assumption {
 impl Assumption {
     // derive Debug isn't general enough to cover function pointers hence the function signature.
     fn fmt_write(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f,
-               "Assumption: id: {}, description: {}, assumption_fn: fn(&[NumericalValue]) -> bool;, assumption_tested: {},assumption_valid: {}",
-               self.id,
-               self.description,
-               self.assumption_tested.read().unwrap().clone(),
-               self.assumption_valid.read().unwrap().clone()
+        write!(
+            f,
+            "Assumption: id: {}, description: {}, assumption_fn: fn(&[NumericalValue]) -> bool;, assumption_tested: {},assumption_valid: {}",
+            self.id,
+            self.description,
+            self.assumption_tested.read().unwrap().clone(),
+            self.assumption_valid.read().unwrap().clone()
         )
     }
 }

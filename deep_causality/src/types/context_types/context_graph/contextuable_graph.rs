@@ -3,7 +3,12 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use super::*;
+use ultragraph::prelude::{GraphLike, GraphStorage};
+
+use crate::prelude::{
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextuableGraph, Datable, Identifiable,
+    RelationKind, SpaceTemporal, Spatial, Symbolic, Temporal,
+};
 
 #[allow(clippy::type_complexity)]
 impl<D, S, T, ST, SYM, VS, VT> ContextuableGraph<D, S, T, ST, SYM, VS, VT>
@@ -17,11 +22,11 @@ where
     VS: Clone,
     VT: Clone,
 {
-    /// Ads a new Contextoid to the context.
-    /// You can add the same contextoid multiple times,
-    /// but each one will return a new and unique node index.
     fn add_node(&mut self, value: Contextoid<D, S, T, ST, SYM, VS, VT>) -> usize {
-        self.base_context.add_node(value)
+        let contextoid_id = value.id();
+        let index = self.base_context.add_node(value);
+        self.id_to_index_map.insert(contextoid_id, index);
+        index
     }
 
     /// Returns only true if the context contains the contextoid with the given index.
@@ -35,18 +40,38 @@ where
         self.base_context.get_node(index)
     }
 
-    /// Removes a contextoid from the context.
-    /// Returns ContextIndexError if the index is not found
-    fn remove_node(&mut self, index: usize) -> Result<(), ContextIndexError> {
-        if !self.contains_node(index) {
-            return Err(ContextIndexError(format!("index {index} not found")));
-        };
+    fn remove_node(&mut self, node_id: ContextoidId) -> Result<(), ContextIndexError> {
+        if let Some(&index_to_remove) = self.id_to_index_map.get(&node_id) {
+            // Try to remove from the underlying graph first.
+            self.base_context
+                .remove_node(index_to_remove)
+                .map_err(|e| ContextIndexError(e.to_string()))?;
 
-        if self.base_context.remove_node(index).is_err() {
-            return Err(ContextIndexError(format!("index {index} not found")));
-        };
+            // If successful, then remove the entry from our map to stay in sync.
+            self.id_to_index_map.remove(&node_id);
 
-        Ok(())
+            Ok(())
+        } else {
+            Err(ContextIndexError(format!(
+                "Cannot remove node. Contextoid with ID {node_id} not found in context"
+            )))
+        }
+    }
+
+    fn update_node(
+        &mut self,
+        node_id: ContextoidId,
+        new_node: Contextoid<D, S, T, ST, SYM, VS, VT>,
+    ) -> Result<(), ContextIndexError> {
+        if let Some(&index_to_update) = self.id_to_index_map.get(&node_id) {
+            self.base_context
+                .update_node(index_to_update, new_node)
+                .map_err(|e| ContextIndexError(e.to_string()))
+        } else {
+            Err(ContextIndexError(format!(
+                "Cannot update node. Contextoid with ID {node_id} not found in context"
+            )))
+        }
     }
 
     /// Adds a new weighted edge between two nodes.
@@ -97,14 +122,9 @@ where
         if !self.contains_node(b) {
             return Err(ContextIndexError("index b not found".into()));
         };
-
-        if self.base_context.remove_edge(a, b).is_err() {
-            return Err(ContextIndexError(format!(
-                "Failed to remove edge for index a {a} and b {b}"
-            )));
-        }
-
-        Ok(())
+        self.base_context
+            .remove_edge(a, b)
+            .map_err(|e| ContextIndexError(e.to_string()))
     }
 
     /// Returns the number of nodes in the context. Alias for node_count().
@@ -118,12 +138,12 @@ where
     }
 
     /// Returns the number of nodes in the context.
-    fn node_count(&self) -> usize {
+    fn number_of_nodes(&self) -> usize {
         self.base_context.number_nodes()
     }
 
     /// Returns the number of edges in the context.
-    fn edge_count(&self) -> usize {
+    fn number_of_edges(&self) -> usize {
         self.base_context.number_edges()
     }
 }

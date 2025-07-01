@@ -144,17 +144,19 @@ Code:
 * [Example code](examples)
 * [Tests](deep_causality/tests)
 
-## 🛠️ Cargo & Make
+## 🛠️ Build & Test 
 
 Cargo works as expected, but in addition to cargo, a makefile exists
-that abstracts over several additional tools you may have to install
-before all make commands work. To do so, please run the following command:
+that abstracts over several additional tools you for linting and formatting. 
+To check and install missing tools, please run the following command:
 
 ```bash 
     make install
 ```
 
-The make install command tests and tries to install all required developer dependencies.
+You find the install script in the [script folder.](build/scripts/install_deps.sh)
+
+The script tests and tries to install all required developer dependencies.
 if the automatic install fails, the script will show a link with further installation instructions.
 
 After all dependencies have been installed, the following commands are ready to use.
@@ -171,7 +173,43 @@ After all dependencies have been installed, the following commands are ready to 
     make test           Runs all tests across all crates.
 ```
 
-The scripts called by each make command are located in the [script folder.](scripts)
+The scripts called by each make command are located in the [script folder.](build/scripts)
+
+##  Bazel
+
+In addition to Cargo and related tools, the entire mono-repo is configured to build and test with Bazel.
+Please [install bazelisk ](https://github.com/bazelbuild/bazelisk)as it is the only requirement to build the repo with Bazel.  
+
+To query available crate aliases with Bazel, run:
+
+
+To build all targets with Bazel, run:
+
+```bash 
+    bazel build //...
+```
+
+To build only a specific target and its dependencies, run 
+
+```bash 
+    bazel build //deep_causality/...
+```
+
+The format is build //crate_name/... with the three dots being a shorthand for "all targets"
+
+To test all targets with Bazel, run:
+
+```bash 
+    bazel test //...
+```
+
+To test only a specific target, run:
+
+```bash 
+    bazel test //deep_causality/...
+```
+
+ For more details on working with Bazel, see the [Bazel](Bazel.md) document. 
 
 ## 👨‍💻👩‍💻 Contribution
 
@@ -195,8 +233,8 @@ The project took inspiration from several researchers and their projects in the 
 
 * [Judea Pearl](http://bayes.cs.ucla.edu/jp_home.html) at UCLA
 * [Lucien Hardy](https://perimeterinstitute.ca/people/lucien-hardy) at the Perimeter Institute
-* [Kenneth O. Stanley](https://www.kenstanley.net/home) at OpenAI
-* [Ilya Shpitser](https://www.cs.jhu.edu/~ilyas/) at Johns Hopkins University
+* [Kenneth O. Stanley](https://www.kenstanley.net/home) 
+* [Ilya Shpitser](https://www.cs.jhu.edu/~ilyas/) 
 * [Miguel Hernan](https://www.hsph.harvard.edu/miguel-hernan/), [Causal Lab](https://causalab.sph.harvard.edu/) at
   Harvard University
 * [Elias Bareinboim](https://causalai.net/) at Columbia University

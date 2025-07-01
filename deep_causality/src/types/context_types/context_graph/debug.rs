@@ -27,8 +27,8 @@ where
             "Context: id: {}, name: {}, node_count: {}, edge_count: {}",
             self.id,
             self.name,
-            self.node_count(),
-            self.edge_count(),
+            self.number_of_nodes(),
+            self.number_of_edges(),
         )
     }
 }

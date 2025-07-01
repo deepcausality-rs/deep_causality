@@ -48,7 +48,7 @@ fn test_node_count() {
     assert_eq!(context.id(), id);
     assert_eq!(context.name(), name);
     let node_count = 0;
-    assert_eq!(context.node_count(), node_count);
+    assert_eq!(context.number_of_nodes(), node_count);
 }
 
 #[test]
@@ -61,9 +61,9 @@ fn test_edge_count() {
     assert_eq!(context.name(), name);
 
     let node_count = 0;
-    assert_eq!(context.node_count(), node_count);
+    assert_eq!(context.number_of_nodes(), node_count);
     let edge_count = 0;
-    assert_eq!(context.edge_count(), edge_count);
+    assert_eq!(context.number_of_edges(), edge_count);
 }
 
 #[test]
@@ -119,23 +119,26 @@ fn test_get_node() {
 
 #[test]
 fn test_remove_node() {
-    let id = 1;
     let mut context = get_context();
-    assert_eq!(context.size(), 0);
+    assert!(context.is_empty());
 
-    let root = Root::new(id);
-    let contextoid = Contextoid::new(id, ContextoidType::Root(root));
-    context.add_node(contextoid);
-    assert_eq!(context.size(), 1);
+    let node_id_to_remove = 1;
+    let root = Root::new(node_id_to_remove);
+    let contextoid = Contextoid::new(node_id_to_remove, ContextoidType::Root(root));
 
-    let idx: usize = 0;
-    assert!(context.contains_node(idx));
+    // Add the node and verify it's there
+    let physical_index = context.add_node(contextoid);
+    assert_eq!(context.number_of_nodes(), 1);
+    assert!(context.contains_node(physical_index));
 
-    let contextoid = context.get_node(idx);
-    assert!(contextoid.is_some());
+    // Remove the node using its LOGICAL ID, not its physical index
+    let result = context.remove_node(node_id_to_remove);
+    assert!(result.is_ok(), "Failed to remove node: {:?}", result.err());
 
-    assert!(context.remove_node(idx).is_ok());
-    assert!(!context.contains_node(idx));
+    // Verify the node is gone
+    assert_eq!(context.number_of_nodes(), 0);
+    assert!(!context.contains_node(physical_index));
+    assert!(context.is_empty());
 }
 
 #[test]

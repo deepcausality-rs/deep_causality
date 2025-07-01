@@ -25,4 +25,4 @@ After all dependencies have been installed, the following commands are ready to 
     make test           Runs all tests across all crates.
 ```
 
-The scripts called by each make command are located in the [script folder.](scripts)
+The scripts called by each make command are located in the [script folder.](build/scripts)

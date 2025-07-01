@@ -5,6 +5,7 @@
 
 pub mod alias_types;
 pub mod causal_types;
+pub mod context_node_types;
 pub mod context_types;
 pub mod csm_types;
 pub mod generative_types;

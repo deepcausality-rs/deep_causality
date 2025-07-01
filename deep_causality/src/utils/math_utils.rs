@@ -13,11 +13,7 @@ pub const MINUS_ONE: NumericalValue = -1.0;
 
 /// returns the absolute value of a numerical value
 pub fn abs_num(val: NumericalValue) -> NumericalValue {
-    if val > ZERO {
-        val
-    } else {
-        MINUS_ONE * val
-    }
+    if val > ZERO { val } else { MINUS_ONE * val }
 }
 
 /// Returns the sum of all elements in an iterable.

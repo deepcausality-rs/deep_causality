@@ -7,13 +7,13 @@
 use crate::types::alias_types::alias_primitives::{FloatType, NumberType};
 use crate::types::causal_types::causaloid::Causaloid;
 use crate::types::causal_types::causaloid_graph::CausaloidGraph;
+use crate::types::context_node_types::data::Data;
+use crate::types::context_node_types::space::euclidean_space::EuclideanSpace;
+use crate::types::context_node_types::space_time::euclidean_spacetime::EuclideanSpacetime;
+use crate::types::context_node_types::symbol::base_symbol::BaseSymbol;
+use crate::types::context_node_types::time::euclidean_time::EuclideanTime;
 use crate::types::context_types::context_graph::Context;
 use crate::types::context_types::contextoid::Contextoid;
-use crate::types::context_types::node_types::data::Data;
-use crate::types::context_types::node_types::space::euclidean_space::EuclideanSpace;
-use crate::types::context_types::node_types::space_time::euclidean_spacetime::EuclideanSpacetime;
-use crate::types::context_types::node_types::symbol::base_symbol::BaseSymbol;
-use crate::types::context_types::node_types::time::euclidean_time::EuclideanTime;
 use crate::types::model_types::model::Model;
 
 use std::collections::HashMap;

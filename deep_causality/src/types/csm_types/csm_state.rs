@@ -123,7 +123,7 @@ where
     /// - `Ok(false)` if the state's conditions are not met with the provided data
     /// - `Err(CausalityError)` if an error occurs during evaluation
     ///
-    /// ```
+    /// ```texttext
     pub fn eval_with_data(&self, data: &NumericalValue) -> Result<bool, CausalityError> {
         self.causaloid.verify_single_cause(data)
     }

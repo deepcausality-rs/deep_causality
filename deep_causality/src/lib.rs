@@ -20,3 +20,4 @@ pub mod prelude;
 pub mod traits;
 pub mod types;
 pub mod utils;
+pub mod utils_test;

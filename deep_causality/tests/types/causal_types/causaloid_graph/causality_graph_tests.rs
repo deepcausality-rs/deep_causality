@@ -6,7 +6,7 @@
 use deep_causality::prelude::*;
 use ultragraph::prelude::*;
 
-use crate::utils::test_utils;
+use deep_causality::utils_test::test_utils;
 
 // Custom type alias
 type CustomCausaloidGraph = CausaloidGraph<

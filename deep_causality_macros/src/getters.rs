@@ -6,12 +6,12 @@
 use proc_macro::TokenStream;
 
 use proc_macro2::TokenStream as TokenStream2;
-use quote::{quote, ToTokens};
+use quote::{ToTokens, quote};
 use syn::{
+    Data, DataStruct, Fields, Ident, Token, Visibility,
     parse::{Parse, ParseStream},
     parse_quote,
     punctuated::Punctuated,
-    Data, DataStruct, Fields, Ident, Token, Visibility,
 };
 
 // Procedural Macros: A simple derive macro

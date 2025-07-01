@@ -10,6 +10,8 @@ description = "Data structures for for deep_causality crate."
 documentation = "https://docs.rs/deep_causality"
 categories = ["data-structures", "science"]
 keywords = ["data-structures", "sliding-window", "grid-array"]
+# Exclude all bazel files as these conflict with Bazel workspace when vendored.
+exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
 [[example]]
 name = "array_grid"

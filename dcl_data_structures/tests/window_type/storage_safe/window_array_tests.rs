@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use dcl_data_structures::prelude::{window_type, ArrayStorage, SlidingWindow};
+use dcl_data_structures::prelude::{ArrayStorage, SlidingWindow, window_type};
 
 const SIZE: usize = 4;
 const CAPACITY: usize = 1200;

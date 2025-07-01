@@ -154,8 +154,8 @@ where
 ///
 /// ```
 ///
-pub fn new_with_array_storage<T, const SIZE: usize, const CAPACITY: usize>(
-) -> SlidingWindow<ArrayStorage<T, SIZE, CAPACITY>, T>
+pub fn new_with_array_storage<T, const SIZE: usize, const CAPACITY: usize>()
+-> SlidingWindow<ArrayStorage<T, SIZE, CAPACITY>, T>
 where
     T: PartialEq + Copy + Default,
     [T; SIZE]: Sized,
@@ -231,8 +231,8 @@ where
 /// * `CAPACITY` must be greater than or equal to `SIZE`
 /// * Both `SIZE` and `CAPACITY` must be non-zero
 #[cfg(feature = "unsafe")]
-pub fn new_with_unsafe_array_storage<T, const SIZE: usize, const CAPACITY: usize>(
-) -> SlidingWindow<UnsafeArrayStorage<T, SIZE, CAPACITY>, T>
+pub fn new_with_unsafe_array_storage<T, const SIZE: usize, const CAPACITY: usize>()
+-> SlidingWindow<UnsafeArrayStorage<T, SIZE, CAPACITY>, T>
 where
     T: PartialEq + Copy + Default,
     [T; SIZE]: Sized,

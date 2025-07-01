@@ -19,7 +19,7 @@ where
 
 impl<D> GenerativeTrigger<D>
 where
-    D: Debug + Default + Copy + Clone + Hash + Eq + PartialEq,
+    D: Default + Copy + Clone + Hash + Eq + PartialEq,
 {
     /// Returns a reference to the `TimeKind` if the trigger is `TimeElapsed`.
     ///

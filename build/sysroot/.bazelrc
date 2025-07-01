@@ -1,0 +1,116 @@
+###############################################################################
+## Bazel Configuration Flags
+##
+## `.bazelrc` is a Bazel configuration file.
+## https://bazel.build/docs/best-practices#bazelrc-file
+###############################################################################
+
+
+###############################################################################
+## Build configuration
+###############################################################################
+
+# Don't create bazel-* symlinks in the WORKSPACE directory.
+# Instead, set a prefix and put it in .gitignore
+build --symlink_prefix=target-bzl/
+
+# Non-empty glob test is disabled because some Bazels deps fail the test.
+# build --incompatible_disallow_empty_glob
+
+# This flag improves execution throughput by executing more actions in parallel.
+build --jobs=18
+
+###############################################################################
+## Test configuration
+###############################################################################
+
+# Reduce test output to just error cases and report timeout warnings.
+test --test_output=errors
+test --verbose_failures
+
+###############################################################################
+## Common configuration
+###############################################################################
+
+# Enable Bzlmod for every Bazel command
+common --enable_bzlmod
+
+# Write build outputs in a platform-specific directory;
+# avoid outputs being wiped and rewritten when switching between platforms.
+common --experimental_platform_in_output_dir
+
+# Enable proto toolchain resolution
+common --incompatible_enable_proto_toolchain_resolution
+
+# Enable misc. performance optimizations.
+# https://www.buildbuddy.io/blog/debugging-slow-bazel-builds/
+# https://www.buildbuddy.io/blog/how-bazel-7-0-makes-your-builds-faster/
+common --nolegacy_important_outputs
+common --verbose_failures
+common --noexperimental_merged_skyframe_analysis_execution
+common --reuse_sandbox_directories
+
+# Enable a more detailed performance profile
+common --noslim_profile
+common --experimental_profile_include_target_label
+common --experimental_profile_include_primary_output
+
+###############################################################################
+## Cross compilation configuration
+###############################################################################
+
+# Debug toolchain resolution
+# build --toolchain_resolution_debug='@bazel_tools//tools/cpp:toolchain_type
+
+# Required for cargo_build_script support before Bazel 7
+build --incompatible_merge_fixed_and_default_shell_env
+
+# Required to resolve C/C++ toolchain.
+# https://github.com/bazel-contrib/musl-toolchain?tab=readme-ov-file#setup
+build --incompatible_enable_cc_toolchain_resolution
+
+# Required to support cross compilation from different host systems i.e Mac and Linux
+# https://bazel.build/reference/command-line-reference#flag--enable_platform_specific_config
+common --enable_platform_specific_config
+
+# Build targets for different hosts
+build:macos --extra_execution_platforms=//build/platforms:darwin-aarch64
+build:linux --extra_execution_platforms=//build/platforms:linux-x86_64
+
+###############################################################################
+## Remote configuration
+###############################################################################
+
+# Flags shared across remote configs
+common:remote-shared --jobs=120
+common:remote-shared --remote_timeout=600
+common:remote-shared --remote_download_minimal
+common:remote-shared --experimental_remote_cache_compression
+common:remote-shared --verbose_failures
+
+# Avoid inflating blobs smaller than 100 bytes with ZSTD compression.
+common:remote-shared --experimental_remote_cache_compression_threshold=100
+
+# Remote host platform
+# https://github.com/buildbuddy-io/buildbuddy/blob/8579ca30f1a1f401ed8279d99d9b47ec5637873f/.bazelrc#L30
+common:remote-shared --host_platform=//build/platforms:linux_x86_64_remote
+common:remote-shared --extra_execution_platforms=//build/platforms:linux_x86_64_remote
+
+# Remote cross compilation
+common:remote-shared --extra_execution_platforms=//build/platforms:linux-aarch64
+common:remote-shared --extra_execution_platforms=//build/platforms:linux-x86_64
+
+# Build with --config=remote to enable Remote Build Execution (RBE)
+common:remote --config=remote-shared
+common:remote --remote_cache=grpcs://remote.buildbuddy.io
+common:remote --remote_executor=remote.buildbuddy.io
+common:remote --remote_header=x-buildbuddy-api-key=4Ml6AhYICvGtZ3XhqafP
+
+###############################################################################
+## Custom user flags
+##
+## This should always be the last thing in the `.bazelrc` file to ensure
+## consistent behavior when setting flags in that file as `.bazelrc` files are
+## evaluated top to bottom.
+###############################################################################
+try-import %workspace%/user.bazelrc

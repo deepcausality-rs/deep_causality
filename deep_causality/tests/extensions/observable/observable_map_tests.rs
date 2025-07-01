@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 use deep_causality::prelude::{NumericalValue, ObservableReasoning, Observation};
 
-use crate::utils::test_utils;
+use deep_causality::utils_test::test_utils;
 
 fn get_test_obs_map() -> HashMap<usize, Observation> {
     let o1 = Observation::new(0, 10.0, 1.0);

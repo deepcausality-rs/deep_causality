@@ -7,7 +7,7 @@ use std::collections::VecDeque;
 
 use deep_causality::prelude::*;
 
-use crate::utils::test_utils::*;
+use deep_causality::utils_test::test_utils::*;
 
 pub fn get_test_inf_vec_deque() -> VecDeque<Inference> {
     VecDeque::from_iter(get_test_inf_vec())

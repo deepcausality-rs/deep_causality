@@ -1,2 +1,0 @@
-
-All protocols are tested through the implementing types.

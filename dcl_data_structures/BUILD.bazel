@@ -1,0 +1,29 @@
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library")
+
+rust_library(
+    name = "dcl_data_structures",
+    srcs = glob([
+        "src/**",
+    ]),
+    crate_root = "src/lib.rs",
+    tags = [
+        "data_structures",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+    ],
+)
+
+rust_doc(
+    name = "doc",
+    crate = ":dcl_data_structures",
+    tags = ["doc"],
+    visibility = ["//visibility:public"],
+)
+
+rust_doc_test(
+    name = "doc_test",
+    crate = ":dcl_data_structures",
+    tags = ["doc-test"],
+    visibility = ["//visibility:public"],
+)

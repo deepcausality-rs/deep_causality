@@ -3,9 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use criterion::{criterion_group, Criterion};
+use criterion::{Criterion, criterion_group};
 
-use dcl_data_structures::prelude::{window_type, ArrayStorage, SlidingWindow};
+use dcl_data_structures::prelude::{ArrayStorage, SlidingWindow, window_type};
 
 use crate::benchmarks::fields::{MULT, SIZE};
 

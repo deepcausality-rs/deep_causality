@@ -24,6 +24,7 @@ pub use crate::traits::causable_graph::graph_explaining::CausableGraphExplaining
 pub use crate::traits::causable_graph::graph_reasoning::CausableGraphReasoning;
 pub use crate::traits::causable_graph::*;
 // contextuable Traits
+pub use crate::traits::contextuable::Contextuable;
 pub use crate::traits::contextuable::coordinate::Coordinate;
 pub use crate::traits::contextuable::datable::Datable;
 pub use crate::traits::contextuable::metric::Metric;
@@ -34,10 +35,12 @@ pub use crate::traits::contextuable::space_temporal::SpaceTemporalInterval;
 pub use crate::traits::contextuable::spatial::Spatial;
 pub use crate::traits::contextuable::symbolic::Symbolic;
 pub use crate::traits::contextuable::temporal::Temporal;
-pub use crate::traits::contextuable::Contextuable;
-// contextuable Graph Traits
+// Contextuable Graph Traits
 pub use crate::traits::contextuable_graph::ContextuableGraph;
 pub use crate::traits::contextuable_graph::ExtendableContextuableGraph;
+// Generatable traits
+pub use crate::traits::generatable::Generatable;
+pub use crate::traits::generatable::generative_processor::GenerativeProcessor;
 // Identifiable Traits
 pub use crate::traits::identifiable::Identifiable;
 // Indexable Traits
@@ -74,44 +77,43 @@ pub use crate::types::context_types::context_graph::Context;
 pub use crate::types::context_types::contextoid::contextoid_type::*;
 pub use crate::types::context_types::contextoid::*;
 // Default context node types.
-pub use crate::types::context_types::node_types::data::Data;
-pub use crate::types::context_types::node_types::root::Root;
+pub use crate::types::context_node_types::data::Data;
+pub use crate::types::context_node_types::root::Root;
 // Space context node types.
-pub use crate::types::context_types::node_types::space::ecef_space::EcefSpace;
-pub use crate::types::context_types::node_types::space::euclidean_space::EuclideanSpace;
-pub use crate::types::context_types::node_types::space::geo_space::GeoSpace;
-pub use crate::types::context_types::node_types::space::ned_space::NedSpace;
-pub use crate::types::context_types::node_types::space::quaternion_space::QuaternionSpace;
-pub use crate::types::context_types::node_types::space::space_kind::SpaceKind;
+pub use crate::types::context_node_types::space::ecef_space::EcefSpace;
+pub use crate::types::context_node_types::space::euclidean_space::EuclideanSpace;
+pub use crate::types::context_node_types::space::geo_space::GeoSpace;
+pub use crate::types::context_node_types::space::ned_space::NedSpace;
+pub use crate::types::context_node_types::space::quaternion_space::QuaternionSpace;
+pub use crate::types::context_node_types::space::space_kind::SpaceKind;
 // Space time context node types.
-pub use crate::types::context_types::node_types::space_time::euclidean_spacetime::EuclideanSpacetime;
-pub use crate::types::context_types::node_types::space_time::lorentzian_spacetime::LorentzianSpacetime;
-pub use crate::types::context_types::node_types::space_time::minkowski_spacetime::MinkowskiSpacetime;
-pub use crate::types::context_types::node_types::space_time::space_time_kind::SpaceTimeKind;
-pub use crate::types::context_types::node_types::space_time::tangent_spacetime::TangentSpacetime;
+pub use crate::types::context_node_types::space_time::euclidean_spacetime::EuclideanSpacetime;
+pub use crate::types::context_node_types::space_time::lorentzian_spacetime::LorentzianSpacetime;
+pub use crate::types::context_node_types::space_time::minkowski_spacetime::MinkowskiSpacetime;
+pub use crate::types::context_node_types::space_time::space_time_kind::SpaceTimeKind;
+pub use crate::types::context_node_types::space_time::tangent_spacetime::TangentSpacetime;
 // Symbolic context node types.
-pub use crate::types::context_types::node_types::symbol::base_symbol::BaseSymbol;
+pub use crate::types::context_node_types::symbol::base_symbol::BaseSymbol;
 // pub use crate::types::context_types::node_types::symbol::symbol_kind
 // Symbolic spacetime context node types.
-pub use crate::types::context_types::node_types::symbol_spacetime::causal_set_spacetime::CausalSetSpacetime;
-pub use crate::types::context_types::node_types::symbol_spacetime::conformal_spacetime::ConformalSpacetime;
+pub use crate::types::context_node_types::symbol_spacetime::causal_set_spacetime::CausalSetSpacetime;
+pub use crate::types::context_node_types::symbol_spacetime::conformal_spacetime::ConformalSpacetime;
 // Time context node types.
-pub use crate::types::context_types::node_types::time::discrete_time::DiscreteTime;
-pub use crate::types::context_types::node_types::time::entropic_time::EntropicTime;
-pub use crate::types::context_types::node_types::time::euclidean_time::EuclideanTime;
-pub use crate::types::context_types::node_types::time::lorentzian_time::LorentzianTime;
-pub use crate::types::context_types::node_types::time::symbolic_time::{
-    SymbolicTime, SymbolicTimeUnit,
-};
-pub use crate::types::context_types::node_types::time::time_kind::TimeKind;
+pub use crate::types::context_node_types::time::discrete_time::DiscreteTime;
+pub use crate::types::context_node_types::time::entropic_time::EntropicTime;
+pub use crate::types::context_node_types::time::euclidean_time::EuclideanTime;
+pub use crate::types::context_node_types::time::lorentzian_time::LorentzianTime;
+pub use crate::types::context_node_types::time::symbolic_time::{SymbolicTime, SymbolicTimeUnit};
+pub use crate::types::context_node_types::time::time_kind::TimeKind;
 // Other context types
 pub use crate::types::context_types::relation_kind::*;
 pub use crate::types::context_types::time_scale::TimeScale;
 // CSM types
+pub use crate::types::csm_types::CSM;
 pub use crate::types::csm_types::csm_action::CausalAction;
 pub use crate::types::csm_types::csm_state::CausalState;
-pub use crate::types::csm_types::CSM;
 // Generative types
+pub use crate::types::generative_types::generative_output::GenerativeOutput;
 pub use crate::types::generative_types::generative_trigger::GenerativeTrigger;
 // Model types
 pub use crate::types::model_types::assumption::Assumption;
@@ -119,8 +121,8 @@ pub use crate::types::model_types::inference::Inference;
 pub use crate::types::model_types::model::Model;
 pub use crate::types::model_types::observation::Observation;
 // Reasoning types
+pub use crate::types::reasoning_types::propagating_effect::PropagatingEffect;
 pub use crate::types::reasoning_types::reasoning_mode::ReasoningMode;
-pub use crate::types::reasoning_types::reasoning_outcome::ReasoningOutcome;
 pub use crate::types::reasoning_types::unified_evidence::Evidence;
 //
 //Symbolic types

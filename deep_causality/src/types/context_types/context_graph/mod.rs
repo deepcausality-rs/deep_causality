@@ -31,9 +31,10 @@ where
     VS: Clone,
     VT: Clone,
 {
-    id: u64,
+    id: ContextId,
     name: String,
     base_context: UltraGraph<Contextoid<D, S, T, ST, SYM, VS, VT>>,
+    id_to_index_map: HashMap<ContextoidId, usize>,
     extra_contexts: Option<ExtraContextMap<D, S, T, ST, SYM, VS, VT>>,
     number_of_extra_contexts: u64,
     extra_context_id: u64,
@@ -52,11 +53,12 @@ where
     VT: Clone,
 {
     /// Creates a new context with the given node capacity.
-    pub fn with_capacity(id: u64, name: &str, capacity: usize) -> Self {
+    pub fn with_capacity(id: ContextId, name: &str, capacity: usize) -> Self {
         Self {
             id,
             name: name.to_string(),
             base_context: ultragraph::new_with_matrix_storage(capacity),
+            id_to_index_map: HashMap::new(),
             extra_contexts: None,
             number_of_extra_contexts: 0,
             extra_context_id: 0,
@@ -68,5 +70,10 @@ where
     /// Returns the name of the context.
     pub fn name(&self) -> &str {
         self.name.as_str()
+    }
+
+    /// Sets the name of the context.
+    pub fn set_name(&mut self, new_name: String) {
+        self.name = new_name;
     }
 }

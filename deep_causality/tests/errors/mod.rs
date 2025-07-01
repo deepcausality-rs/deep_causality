@@ -19,4 +19,10 @@ mod causality_graph_error_tests;
 mod context_index_error_tests;
 mod index_error_tests;
 #[cfg(test)]
+mod model_build_error_tests;
+#[cfg(test)]
+mod model_generation_error_tests;
+#[cfg(test)]
+mod model_validation_error_tests;
+#[cfg(test)]
 mod update_error_tests;
