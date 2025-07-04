@@ -28,16 +28,7 @@ crates_vendor(
         ),
         #
         # Regular dependencies
-        "ahash": crate.spec(
-            default_features = True,
-            package = "ahash",
-            version = "0.8.12",
-        ),
-        "petgraph": crate.spec(
-            default_features = True,
-            package = "petgraph",
-            version = "0.7.1",
-        ),
+
     },  # End packages
     repository_name = "deep_causality_vendored",
     tags = ["manual"],
