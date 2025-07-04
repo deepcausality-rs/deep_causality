@@ -13,45 +13,53 @@ fn test_reason_all_causes() {
 
     // Add root causaloid
     let root_causaloid = test_utils::get_test_causaloid();
-    let root_index = g.add_root_causaloid(root_causaloid);
+    let root_index = g
+        .add_root_causaloid(root_causaloid)
+        .expect("Failed to add root index");
     let contains_root = g.contains_causaloid(root_index);
     assert!(contains_root);
 
     // Add causaloid A
     let causaloid = test_utils::get_test_causaloid();
-    let idx_a = g.add_causaloid(causaloid);
-    let contains_a = g.contains_causaloid(idx_a);
-    assert!(contains_a);
+    let idx_a = g.add_causaloid(causaloid).expect("Failed to add causaloid");
 
     // Link causaloid A to root causaloid
     let res = g.add_edge(root_index, idx_a);
     assert!(res.is_ok());
 
-    let contains_edge = g.contains_edge(root_index, idx_a);
-    assert!(contains_edge);
-
     // Add causaloid B
     let causaloid = test_utils::get_test_causaloid();
-    let idx_b = g.add_causaloid(causaloid);
-    let contains_b = g.contains_causaloid(idx_b);
-    assert!(contains_b);
+    let idx_b = g.add_causaloid(causaloid).expect("Failed to add causaloid");
 
     // Link causaloid B to root causaloid
     let res = g.add_edge(root_index, idx_b);
     assert!(res.is_ok());
 
-    let contains_edge = g.contains_edge(root_index, idx_b);
-    assert!(contains_edge);
-
     // Add causaloid C
     let causaloid = test_utils::get_test_causaloid();
-    let idx_c = g.add_causaloid(causaloid);
-    let contains_c = g.contains_causaloid(idx_c);
-    assert!(contains_c);
+    let idx_c = g.add_causaloid(causaloid).expect("Failed to add causaloid");
 
     // Link causaloid C to A
     let res = g.add_edge(idx_a, idx_c);
     assert!(res.is_ok());
+
+    //
+    g.freeze();
+
+    let contains_a = g.contains_causaloid(idx_a);
+    assert!(contains_a);
+
+    let contains_b = g.contains_causaloid(idx_b);
+    assert!(contains_b);
+
+    let contains_c = g.contains_causaloid(idx_c);
+    assert!(contains_c);
+
+    let contains_edge = g.contains_edge(root_index, idx_a);
+    assert!(contains_edge);
+
+    let contains_edge = g.contains_edge(root_index, idx_b);
+    assert!(contains_edge);
 
     let contains_edge = g.contains_edge(idx_a, idx_c);
     assert!(contains_edge);
@@ -105,13 +113,13 @@ fn test_reason_subgraph_from_cause() {
 
     // Add root causaloid
     let root_causaloid = test_utils::get_test_causaloid();
-    let root_index = g.add_root_causaloid(root_causaloid);
-    let contains_root = g.contains_causaloid(root_index);
-    assert!(contains_root);
+    let root_index = g
+        .add_root_causaloid(root_causaloid)
+        .expect("Failed to add root index");
 
     // Add causaloid A
     let causaloid = test_utils::get_test_causaloid();
-    let idx_a = g.add_causaloid(causaloid);
+    let idx_a = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     let contains_a = g.contains_causaloid(idx_a);
     assert!(contains_a);
 
@@ -119,14 +127,9 @@ fn test_reason_subgraph_from_cause() {
     let res = g.add_edge(root_index, idx_a);
     assert!(res.is_ok());
 
-    let contains_edge = g.contains_edge(root_index, idx_a);
-    assert!(contains_edge);
-
     // Add causaloid B
     let causaloid = test_utils::get_test_causaloid();
-    let idx_b = g.add_causaloid(causaloid);
-    let contains_b = g.contains_causaloid(idx_b);
-    assert!(contains_b);
+    let idx_b = g.add_causaloid(causaloid).expect("Failed to add causaloid");
 
     // Link causaloid B to root causaloid
     let res = g.add_edge(root_index, idx_b);
@@ -137,13 +140,25 @@ fn test_reason_subgraph_from_cause() {
 
     // Add causaloid C
     let causaloid = test_utils::get_test_causaloid();
-    let idx_c = g.add_causaloid(causaloid);
-    let contains_c = g.contains_causaloid(idx_c);
-    assert!(contains_c);
+    let idx_c = g.add_causaloid(causaloid).expect("Failed to add causaloid");
 
     // Link causaloid C to A
     let res = g.add_edge(idx_a, idx_c);
     assert!(res.is_ok());
+
+    g.freeze();
+
+    let contains_root = g.contains_causaloid(root_index);
+    assert!(contains_root);
+
+    let contains_edge = g.contains_edge(root_index, idx_a);
+    assert!(contains_edge);
+
+    let contains_b = g.contains_causaloid(idx_b);
+    assert!(contains_b);
+
+    let contains_c = g.contains_causaloid(idx_c);
+    assert!(contains_c);
 
     let contains_edge = g.contains_edge(idx_a, idx_c);
     assert!(contains_edge);
@@ -156,6 +171,7 @@ fn test_reason_subgraph_from_cause() {
 
     let data = [0.99, 0.98];
     let res = g.reason_subgraph_from_cause(idx_a, &data, None);
+    // dbg!(&res);
     assert!(res.is_ok());
     assert!(res.unwrap());
 
@@ -180,7 +196,10 @@ fn test_reason_subgraph_from_cause_error() {
 
     // Add root causaloid
     let root_causaloid = test_utils::get_test_causaloid();
-    let root_index = g.add_root_causaloid(root_causaloid);
+    let root_index = g
+        .add_root_causaloid(root_causaloid)
+        .expect("Failed to add root index");
+
     let contains_root = g.contains_causaloid(root_index);
     assert!(contains_root);
 
@@ -273,7 +292,7 @@ fn test_reason_shortest_path_between_causes_error() {
     assert!(res.is_err());
 
     let causaloid = test_utils::get_test_causaloid();
-    let index = g.add_causaloid(causaloid);
+    let index = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     let contains = g.contains_causaloid(index);
     assert!(contains);
 
@@ -295,7 +314,9 @@ fn test_reason_shortest_path_between_causes_error() {
     assert!(res.is_err());
 
     let err_causaloid = test_utils::get_test_error_causaloid();
-    let err_index = g.add_causaloid(err_causaloid);
+    let err_index = g
+        .add_causaloid(err_causaloid)
+        .expect("Failed to add causaloid");
     let contains = g.contains_causaloid(index);
     assert!(contains);
 
@@ -311,7 +332,7 @@ fn test_reason_single_cause_single_data() {
     let mut g = CausaloidGraph::new();
     let causaloid = test_utils::get_test_causaloid();
 
-    let index = g.add_causaloid(causaloid);
+    let index = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     let contains = g.contains_causaloid(index);
     assert!(contains);
 
@@ -338,7 +359,7 @@ fn test_reason_single_cause_multi_data() {
     let mut g = CausaloidGraph::new();
     let causaloid = test_utils::get_test_causaloid();
 
-    let index = g.add_causaloid(causaloid);
+    let index = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     let contains = g.contains_causaloid(index);
     assert!(contains);
 
@@ -372,7 +393,7 @@ fn test_reason_single_cause_err_empty_graph() {
     assert!(res.is_err());
 
     let causaloid = test_utils::get_test_causaloid();
-    let index = g.add_causaloid(causaloid);
+    let index = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     let contains = g.contains_causaloid(index);
     assert!(contains);
 
@@ -385,7 +406,7 @@ fn test_reason_single_cause_err_empty_graph() {
     assert!(res.is_err());
 
     let causaloid = test_utils::get_test_error_causaloid();
-    let index = g.add_causaloid(causaloid);
+    let index = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     let contains = g.contains_causaloid(index);
     assert!(contains);
 

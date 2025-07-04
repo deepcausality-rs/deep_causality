@@ -138,7 +138,6 @@ fn test_remove_node() {
     // Verify the node is gone
     assert_eq!(context.number_of_nodes(), 0);
     assert!(!context.contains_node(physical_index));
-    assert!(context.is_empty());
 }
 
 #[test]

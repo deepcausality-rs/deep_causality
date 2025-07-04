@@ -6,7 +6,8 @@ use crate::{GraphState, GraphView, UltraGraphContainer};
 
 impl<N, W> GraphView<N, W> for UltraGraphContainer<N, W>
 where
-    W: Default,
+    N: Clone,
+    W: Clone + Default,
 {
     /// Returns `true` if the graph is in the immutable, performance-optimized `Static` state.
     /// A static graph cannot be frozen only once. If you want to modify a static graph i.e. adding
@@ -66,11 +67,25 @@ where
         }
     }
 
+    fn get_all_nodes(&self) -> Vec<&N> {
+        match &self.state {
+            GraphState::Dynamic(g) => g.get_all_nodes(),
+            GraphState::Static(g) => g.get_all_nodes(),
+        }
+    }
+
     /// Returns a list of outgoing edges from a source node, including target index and weight.
     fn get_edges(&self, source: usize) -> Option<Vec<(usize, &W)>> {
         match &self.state {
             GraphState::Dynamic(g) => g.get_edges(source),
             GraphState::Static(g) => g.get_edges(source),
+        }
+    }
+
+    fn get_last_index(&self) -> Option<usize> {
+        match &self.state {
+            GraphState::Dynamic(g) => g.get_last_index(),
+            GraphState::Static(g) => g.get_last_index(),
         }
     }
 

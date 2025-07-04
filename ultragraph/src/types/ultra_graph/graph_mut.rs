@@ -7,7 +7,8 @@ use crate::{DynamicGraph, GraphError, GraphMut, GraphState, UltraGraphContainer}
 
 impl<N, W> GraphMut<N, W> for UltraGraphContainer<N, W>
 where
-    W: Default,
+    N: Clone,
+    W: Clone + Default,
 {
     /// Adds a new node with the given payload to the graph.
     ///

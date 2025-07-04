@@ -8,7 +8,7 @@ impl<N, W> GraphView<N, W> for DynamicGraph<N, W> {
     }
 
     fn is_empty(&self) -> bool {
-        self.nodes.is_empty()
+        self.nodes.iter().all(Option::is_none) && self.root_index.is_none()
     }
 
     /// Checks if a valid, non-tombstoned node exists at the given index.
@@ -56,6 +56,10 @@ impl<N, W> GraphView<N, W> for DynamicGraph<N, W> {
         self.edges.iter().map(|edge_list| edge_list.len()).sum()
     }
 
+    fn get_all_nodes(&self) -> Vec<&N> {
+        self.nodes.iter().filter_map(Option::as_ref).collect()
+    }
+
     /// Retrieves a list of all outgoing edges from a given source node.
     /// Returns `None` if the source node does not exist.
     /// The returned vector contains tuples of `(target_node_index, edge_weight_reference)`.
@@ -77,6 +81,10 @@ impl<N, W> GraphView<N, W> for DynamicGraph<N, W> {
             })
             .collect();
         Some(edges)
+    }
+
+    fn get_last_index(&self) -> Option<usize> {
+        self.nodes.iter().rposition(|node| node.is_some())
     }
 
     /// Checks if a valid, non-tombstoned root node has been designated.

@@ -6,7 +6,8 @@ use crate::{GraphError, GraphState, GraphTraversal, UltraGraphContainer};
 
 impl<N, W> GraphTraversal<N, W> for UltraGraphContainer<N, W>
 where
-    W: Default,
+    N: Clone,
+    W: Clone + Default,
 {
     /// Returns an iterator over the indices of all nodes that have an outbound edge from the given node `a`.
     ///

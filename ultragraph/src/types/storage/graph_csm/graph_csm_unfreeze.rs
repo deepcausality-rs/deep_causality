@@ -32,7 +32,8 @@ use std::mem;
 /// predictable operation.
 impl<N, W> Unfreezable<N, W> for CsmGraph<N, W>
 where
-    W: Default, // W: Default is a struct-level bound on CsmGraph.
+    N: Clone,
+    W: Clone + Default,
 {
     /// Consumes the `CsmGraph` and converts it back into a mutable `DynamicGraph`.
     ///

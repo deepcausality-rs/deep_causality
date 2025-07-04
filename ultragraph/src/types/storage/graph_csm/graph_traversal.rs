@@ -2,7 +2,8 @@ use crate::{CsmGraph, GraphError, GraphTraversal, GraphView};
 
 impl<N, W> GraphTraversal<N, W> for CsmGraph<N, W>
 where
-    W: Default,
+    N: Clone,
+    W: Clone + Default,
 {
     /// Returns a non-allocating iterator over the direct successors (outgoing edges) of node `a`.
     ///

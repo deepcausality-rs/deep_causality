@@ -7,7 +7,8 @@ use crate::{GraphAlgorithms, GraphError, GraphState, UltraGraphContainer};
 
 impl<N, W> GraphAlgorithms<N, W> for UltraGraphContainer<N, W>
 where
-    W: Default,
+    N: Clone,
+    W: Clone + Default,
 {
     /// Finds a cycle in the graph.
     ///

@@ -2,10 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
-use ultragraph::prelude::*;
-
 use crate::prelude::{Causable, CausableGraph, CausalityGraphError};
+use ultragraph::GraphTraversal;
 
 /// The CausableGraphExplaining trait provides methods to generate
 /// natural language explanations from a causal graph.
@@ -29,7 +27,7 @@ use crate::prelude::{Causable, CausableGraph, CausalityGraphError};
 #[allow(clippy::type_complexity)]
 pub trait CausableGraphExplaining<T>: CausableGraph<T>
 where
-    T: Causable + PartialEq,
+    T: Causable + PartialEq + Clone,
 {
     /// Generates an explanation by traversing the graph from start_index to stop_index.
     ///
@@ -62,6 +60,12 @@ where
             return Err(CausalityGraphError("Graph is empty".to_string()));
         }
 
+        if !self.is_frozen() {
+            return Err(CausalityGraphError(
+                "Graph is not frozen. Call g.freeze() first".to_string(),
+            ));
+        }
+
         if !self.contains_causaloid(start_index) {
             return Err(CausalityGraphError(
                 "Graph does not contains start causaloid".into(),
@@ -89,7 +93,7 @@ where
         append_string(&mut explanation, &explain);
 
         // get all neighbors of the start causaloid
-        let neighbors = match self.get_graph().outgoing_edges(start_index) {
+        let neighbors = match self.get_graph().outbound_edges(start_index) {
             Ok(neighbors) => neighbors,
             Err(e) => return Err(CausalityGraphError(e.to_string())),
         };
@@ -105,7 +109,7 @@ where
                 if child == stop_index {
                     return Ok(explanation);
                 } else {
-                    let neighbors = match self.get_graph().outgoing_edges(child) {
+                    let neighbors = match self.get_graph().outbound_edges(child) {
                         Ok(neighbors) => neighbors,
                         Err(e) => return Err(CausalityGraphError(e.to_string())),
                     };
@@ -206,6 +210,12 @@ where
     ) -> Result<String, CausalityGraphError> {
         if self.is_empty() {
             return Err(CausalityGraphError("Graph is empty".to_string()));
+        }
+
+        if !self.is_frozen() {
+            return Err(CausalityGraphError(
+                "Graph is not frozen. Call g.freeze() first".to_string(),
+            ));
         }
 
         if !self.contains_causaloid(start_index) {

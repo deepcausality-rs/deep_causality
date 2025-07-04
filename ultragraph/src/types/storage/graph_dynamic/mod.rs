@@ -9,6 +9,7 @@ mod parts;
 /// Consists of `(nodes, edges, root_index)`.
 pub type DynamicGraphParts<N, W> = (Vec<Option<N>>, Vec<Vec<(usize, W)>>, Option<usize>);
 
+#[derive(Clone)]
 pub struct DynamicGraph<N, W> {
     // Optional pre-allocated capacity for each node's edge list.
     // This is a performance optimization set by `with_capacity`.

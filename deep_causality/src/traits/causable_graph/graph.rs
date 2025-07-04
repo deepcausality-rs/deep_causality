@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use ultragraph::prelude::*;
+use ultragraph::*;
 
 use crate::errors::{CausalGraphIndexError, CausalityGraphError};
 use crate::prelude::{Causable, NumericalValue};
@@ -37,8 +37,24 @@ use crate::traits::causable_graph::CausalGraph;
 ///
 pub trait CausableGraph<T>
 where
-    T: Causable + PartialEq,
+    T: Clone + Causable + PartialEq,
 {
+    fn is_frozen(&self) -> bool;
+
+    /// Ensures the graph is in the immutable, performance-optimized `Static` state.
+    ///
+    /// If the graph is already frozen, this operation is a no-op. Otherwise, it
+    /// converts the graph from a `Dynamic` state in-place. This is an O(V + E)
+    /// operation if a state change occurs.
+    fn freeze(&mut self);
+
+    /// Ensures the graph is in the mutable, `Dynamic` state.
+    ///
+    /// If the graph is already dynamic, this operation is a no-op. Otherwise, it
+    /// converts the graph from a `Static` state in-place. This is an O(V + E)
+    /// operation if a state change occurs and requires node and edge data to be `Clone`.
+    fn unfreeze(&mut self);
+
     /// Returns a reference to the underlying `CausalGraph`.
     ///
     /// This method is primarily used to enable default implementations for
@@ -58,7 +74,7 @@ where
     /// # Returns
     ///
     /// The `usize` index of the newly added root node.
-    fn add_root_causaloid(&mut self, value: T) -> usize;
+    fn add_root_causaloid(&mut self, value: T) -> Result<usize, CausalityGraphError>;
 
     /// Checks if a root causaloid has been set in the graph.
     ///
@@ -104,7 +120,7 @@ where
     /// # Returns
     ///
     /// The `usize` index of the newly added causaloid.
-    fn add_causaloid(&mut self, value: T) -> usize;
+    fn add_causaloid(&mut self, value: T) -> Result<usize, CausalityGraphError>;
 
     /// Checks if a causaloid exists at a specific index in the graph.
     ///
@@ -295,8 +311,11 @@ where
         }
 
         match self.get_graph().shortest_path(start_index, stop_index) {
-            Some(path) => Ok(path),
-            None => Err(CausalityGraphError("No path found".to_string())),
+            Ok(path) => match path {
+                Some(path) => Ok(path),
+                None => Err(CausalityGraphError("No path found".to_string())),
+            },
+            Err(e) => Err(CausalityGraphError(format!("{e}"))),
         }
     }
 }

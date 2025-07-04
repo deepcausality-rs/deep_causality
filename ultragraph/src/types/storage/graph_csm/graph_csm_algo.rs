@@ -16,7 +16,8 @@ pub enum NodeState {
 
 impl<N, W> GraphAlgorithms<N, W> for CsmGraph<N, W>
 where
-    W: Default,
+    N: Clone,
+    W: Clone + Default,
 {
     /// Finds a cycle in the graph using an iterative Depth-First Search (DFS).
     ///

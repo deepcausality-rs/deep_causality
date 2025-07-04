@@ -21,12 +21,27 @@ impl<T> CausableGraph<T> for CausaloidGraph<T>
 where
     T: Clone + Display + Causable + PartialEq,
 {
+    fn is_frozen(&self) -> bool {
+        self.graph.is_frozen()
+    }
+
+    fn freeze(&mut self) {
+        self.graph.freeze()
+    }
+
+    fn unfreeze(&mut self) {
+        self.graph.unfreeze()
+    }
+
     fn get_graph(&self) -> &CausalGraph<T> {
         &self.graph
     }
 
-    fn add_root_causaloid(&mut self, value: T) -> usize {
-        self.graph.add_root_node(value)
+    fn add_root_causaloid(&mut self, value: T) -> Result<usize, CausalityGraphError> {
+        match self.graph.add_root_node(value) {
+            Ok(index) => Ok(index),
+            Err(e) => Err(CausalityGraphError(e.to_string())),
+        }
     }
 
     fn contains_root_causaloid(&self) -> bool {
@@ -54,8 +69,11 @@ where
         }
     }
 
-    fn add_causaloid(&mut self, value: T) -> usize {
-        self.graph.add_node(value)
+    fn add_causaloid(&mut self, value: T) -> Result<usize, CausalityGraphError> {
+        match self.graph.add_node(value) {
+            Ok(index) => Ok(index),
+            Err(e) => Err(CausalityGraphError(e.to_string())),
+        }
     }
 
     fn contains_causaloid(&self, index: usize) -> bool {
@@ -74,7 +92,7 @@ where
     }
 
     fn add_edge(&mut self, a: usize, b: usize) -> Result<(), CausalGraphIndexError> {
-        match self.graph.add_edge(a, b) {
+        match self.graph.add_edge(a, b, 0) {
             Ok(_) => Ok(()),
             Err(e) => Err(CausalGraphIndexError(e.to_string())),
         }
@@ -86,7 +104,7 @@ where
         b: usize,
         weight: u64,
     ) -> Result<(), CausalGraphIndexError> {
-        match self.graph.add_edge_with_weight(a, b, weight) {
+        match self.graph.add_edge(a, b, weight) {
             Ok(_) => Ok(()),
             Err(e) => Err(CausalGraphIndexError(e.to_string())),
         }
@@ -126,7 +144,7 @@ where
     }
 
     fn size(&self) -> usize {
-        self.graph.size()
+        self.graph.number_nodes()
     }
 
     fn is_empty(&self) -> bool {
@@ -134,7 +152,7 @@ where
     }
 
     fn clear(&mut self) {
-        self.graph.clear();
+        let _ = self.graph.clear();
     }
 
     fn number_edges(&self) -> usize {

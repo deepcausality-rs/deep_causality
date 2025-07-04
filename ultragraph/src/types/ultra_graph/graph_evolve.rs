@@ -7,7 +7,8 @@ use crate::{Freezable, GraphState, GraphView, UltraGraphContainer, Unfreezable};
 
 impl<N: Clone, W: Clone> UltraGraphContainer<N, W>
 where
-    W: Default,
+    N: Clone,
+    W: Clone + Default,
 {
     /// Ensures the graph is in the immutable, performance-optimized `Static` state.
     ///

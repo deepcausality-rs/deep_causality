@@ -5,7 +5,8 @@ const BINARY_SEARCH_THRESHOLD: usize = 64;
 
 impl<N, W> GraphView<N, W> for CsmGraph<N, W>
 where
-    W: Default,
+    N: Clone,
+    W: Clone + Default,
 {
     /// Checks if the graph is in a frozen, high-performance state.
     /// For `CsmGraph`, this is always true by definition.
@@ -14,7 +15,7 @@ where
     }
 
     fn is_empty(&self) -> bool {
-        self.nodes.is_empty()
+        self.nodes.is_empty() && self.root_index.is_none()
     }
 
     /// Checks if a node exists at the given index.
@@ -68,6 +69,10 @@ where
         self.forward_edges.targets.len()
     }
 
+    fn get_all_nodes(&self) -> Vec<&N> {
+        self.nodes.iter().collect()
+    }
+
     /// Retrieves a list of all outgoing edges from a given source node.
     /// Returns `None` if the source node does not exist.
     /// The returned vector contains tuples of `(target_node_index, edge_weight_reference)`.
@@ -91,6 +96,10 @@ where
                 .map(|(&target, weight)| (target, weight))
                 .collect(),
         )
+    }
+
+    fn get_last_index(&self) -> Option<usize> {
+        self.nodes.len().checked_sub(1)
     }
 
     /// Checks if a root node has been designated for this graph.

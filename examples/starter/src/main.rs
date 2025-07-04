@@ -79,11 +79,15 @@ fn get_multi_cause_graph() -> BaseCausalGraph {
 
     // Add root causaloid
     let root_causaloid = get_test_causaloid(0);
-    let root_index = g.add_root_causaloid(root_causaloid);
+    let root_index = g
+        .add_root_causaloid(root_causaloid)
+        .expect("Failed to add root");
 
     // Add causaloid A
     let causaloid = get_test_causaloid(1);
-    let idx_a = g.add_causaloid(causaloid);
+    let idx_a = g
+        .add_causaloid(causaloid)
+        .expect("Failed to add causaloid A");
 
     // Link causaloid A to root causaloid
     g.add_edge(root_index, idx_a)
@@ -91,7 +95,9 @@ fn get_multi_cause_graph() -> BaseCausalGraph {
 
     // Add causaloid B
     let causaloid = get_test_causaloid(2);
-    let idx_b = g.add_causaloid(causaloid);
+    let idx_b = g
+        .add_causaloid(causaloid)
+        .expect("Failed to add causaloid B");
 
     // Link causaloid B to root causaloid
     g.add_edge(root_index, idx_b)
@@ -99,7 +105,9 @@ fn get_multi_cause_graph() -> BaseCausalGraph {
 
     // Add causaloid C
     let causaloid = get_test_causaloid(3);
-    let idx_c = g.add_causaloid(causaloid);
+    let idx_c = g
+        .add_causaloid(causaloid)
+        .expect("Failed to add causaloid C");
 
     // Link causaloid C to A
     g.add_edge(idx_a, idx_c)

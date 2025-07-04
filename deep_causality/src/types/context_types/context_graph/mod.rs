@@ -5,7 +5,7 @@
 
 use std::collections::HashMap;
 
-use ultragraph::prelude::*;
+use ultragraph::*;
 
 use crate::prelude::*;
 
@@ -15,7 +15,8 @@ mod extendable_contextuable_graph;
 mod identifiable;
 mod indexable_time;
 
-type ExtraContext<D, S, T, ST, SYM, VS, VT> = UltraGraph<Contextoid<D, S, T, ST, SYM, VS, VT>>;
+type ExtraContext<D, S, T, ST, SYM, VS, VT> =
+    UltraGraphWeighted<Contextoid<D, S, T, ST, SYM, VS, VT>, u64>;
 
 type ExtraContextMap<D, S, T, ST, SYM, VS, VT> =
     HashMap<u64, ExtraContext<D, S, T, ST, SYM, VS, VT>>;
@@ -33,7 +34,7 @@ where
 {
     id: ContextId,
     name: String,
-    base_context: UltraGraph<Contextoid<D, S, T, ST, SYM, VS, VT>>,
+    base_context: UltraGraphWeighted<Contextoid<D, S, T, ST, SYM, VS, VT>, u64>,
     id_to_index_map: HashMap<ContextoidId, usize>,
     extra_contexts: Option<ExtraContextMap<D, S, T, ST, SYM, VS, VT>>,
     number_of_extra_contexts: u64,
@@ -57,7 +58,7 @@ where
         Self {
             id,
             name: name.to_string(),
-            base_context: ultragraph::new_with_matrix_storage(capacity),
+            base_context: UltraGraphWeighted::with_capacity(capacity, None),
             id_to_index_map: HashMap::new(),
             extra_contexts: None,
             number_of_extra_contexts: 0,

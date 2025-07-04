@@ -62,10 +62,7 @@ fn run_get_node_example() -> Result<(), Box<dyn std::error::Error>> {
     for neighbor_index in g.outbound_edges(root_index)? {
         // You can use the index to get the node's data
         let neighbor_data = g.get_node(neighbor_index).unwrap();
-        println!(
-            "- Found neighbor: {} at index {}",
-            neighbor_data, neighbor_index
-        );
+        println!("- Found neighbor: {neighbor_data} at index {neighbor_index}");
     }
 
     Ok(())

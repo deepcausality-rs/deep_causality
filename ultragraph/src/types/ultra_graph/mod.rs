@@ -17,17 +17,21 @@ mod graph_view;
 pub type UltraGraph<T> = UltraGraphContainer<T, ()>;
 pub type UltraGraphWeighted<T, W> = UltraGraphContainer<T, W>;
 
+#[derive(Clone)]
 pub struct UltraGraphContainer<N, W>
 where
-    W: Default,
+    N: Clone,
+    W: Clone + Default,
 {
     state: GraphState<N, W>,
 }
 
 // Constructors
+
 impl<N, W> UltraGraphContainer<N, W>
 where
-    W: Default,
+    N: Clone,
+    W: Clone + Default,
 {
     pub fn new() -> Self {
         Self {

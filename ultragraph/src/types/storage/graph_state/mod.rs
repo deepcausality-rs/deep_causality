@@ -7,10 +7,11 @@
 
 use crate::{CsmGraph, DynamicGraph};
 
-// This is the core of the refactor plan...
+#[derive(Clone)]
 pub enum GraphState<N, W>
 where
-    W: Default,
+    N: Clone,
+    W: Clone + Default,
 {
     Dynamic(DynamicGraph<N, W>), // The "unfrozen" state, for mutation
     Static(CsmGraph<N, W>),      // The "frozen" state, for analysis

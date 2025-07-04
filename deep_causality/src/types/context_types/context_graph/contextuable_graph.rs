@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use ultragraph::prelude::{GraphLike, GraphStorage};
+use ultragraph::*;
 
 use crate::prelude::{
     Context, ContextIndexError, Contextoid, ContextoidId, ContextuableGraph, Datable, Identifiable,
@@ -24,7 +24,12 @@ where
 {
     fn add_node(&mut self, value: Contextoid<D, S, T, ST, SYM, VS, VT>) -> usize {
         let contextoid_id = value.id();
-        let index = self.base_context.add_node(value);
+        let index = match self.base_context.add_node(value) {
+            Ok(index) => index,
+            Err(e) => {
+                panic!("Failed to add node to context {e:?}");
+            }
+        };
         self.id_to_index_map.insert(contextoid_id, index);
         index
     }
@@ -91,11 +96,7 @@ where
             return Err(ContextIndexError(format!("index b {b} not found")));
         };
 
-        if self
-            .base_context
-            .add_edge_with_weight(a, b, weight as u64)
-            .is_err()
-        {
+        if self.base_context.add_edge(a, b, weight as u64).is_err() {
             return Err(ContextIndexError(format!(
                 "Failed to add edge for index a {a} and b {b}"
             )));
@@ -129,7 +130,7 @@ where
 
     /// Returns the number of nodes in the context. Alias for node_count().
     fn size(&self) -> usize {
-        self.base_context.size()
+        self.base_context.number_nodes()
     }
 
     /// Returns true if the context contains no nodes.
