@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
 use std::error::Error;
 use ultragraph::GraphError;
 
@@ -40,6 +45,26 @@ fn test_graph_contains_cycle_error() {
     assert_eq!(
         format!("{}", error),
         "Operation failed because the graph contains a cycle."
+    );
+    assert!(error.source().is_none());
+}
+
+#[test]
+fn test_graph_not_frozen_error() {
+    let error = GraphError::GraphNotFrozen;
+    assert_eq!(
+        format!("{}", error),
+        "Operation not possible because the graph is not frozen. Call graph.freeze() first."
+    );
+    assert!(error.source().is_none());
+}
+
+#[test]
+fn test_graph_is_frozen_error() {
+    let error = GraphError::GraphIsFrozen;
+    assert_eq!(
+        format!("{}", error),
+        "Operation not possible because the graph is frozen and cannot be mutated. Call graph.unfreeze() first."
     );
     assert!(error.source().is_none());
 }
