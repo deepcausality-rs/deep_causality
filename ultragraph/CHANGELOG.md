@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.5.6...ultragraph-v0.6.0) - 2025-07-04
+
+### Added
+
+- feat(ultragraph) working on test coverage
+- feat(ultragraph) working on test coverage
+- feat(ultragraph) added new trait system in preparation of replacing petgraph with next_graph.
+- *(ultragraph)* Add update_node and harden graph implementationThis commit introduces a new update_node feature to the ultragraph crate and fixes several critical bugs to improve its correctness and robustness.
+
+### Other
+
+- Updated Readme for ultragraph crate
+- Updated Readme for ultragraph crate
+- Added specfile and paper to ultragraph.
+- Updated Readme for ultragraph crate
+- Updated Readme for ultragraph crate
+- Updated Readme for ultragraph crate
+- Improve test coverage
+- Update the DeepCausality crate to use the refactored UltraGraph AP
+- Increased test coverage for errors in ultragraph
+- Formatting and linting
+- Fixed benchmarks in ultragraph
+- Re-implemented ultragraph
+- Documented UltraGraph traits.
+- Fixing lints
+- Formatting and Linting
+- Marked Bazel files as excluded from Cargo release to ensure these crates vendor well when used with Bazel.
+- Added Bazel config for build and test
+- Applied more lints & autofixed
+- Fixed a bunch of lints
+- Updated copyright across the entire repo
+- Added or updated changelog files
+
 ## [0.5.6](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.5.5...ultragraph-v0.5.6) - 2025-06-19
 
 ### Other
