@@ -92,6 +92,40 @@ into a `DynamicGraph`, allowing the cycle of mutation and analysis to begin agai
 *(Note: Time units are nanoseconds (ns), microseconds (µs), and milliseconds (ms). Throughput is an approximate
 calculation based on the mean time.)*
 
+## Performance Design
+
+The design of `next_graph`'s static analysis structure, `CsmGraph`, is based on the principles for high-performance
+sparse graph representation detailed in the paper "NWHy: A Framework for Hypergraph Analytics" (Liu et al.).
+Specifically, `next_graph` adopts the paper's foundational model of using two mutually-indexed Compressed Sparse Row (
+CSR) structures to enable efficient, `O(degree)` bidirectional traversal—one for forward (outbound) edges and one for
+the transposed graph for backward (inbound) edges.
+
+However, `next_graph` introduces three significant architectural enhancements over this baseline to provide optimal
+performance and to support the specific requirements of dynamically evolving systems.
+
+1. **Struct of Arrays (SoA) Memory Layout:** The internal CSR adjacency structures are implemented using a Struct of
+   Arrays layout. Instead of a single `Vec<(target, weight)>`, `next_graph` uses two parallel vectors: `Vec<target>` and
+   `Vec<weight>`. This memory layout improves data locality for topology-only algorithms (e.g., reachability, cycle
+   detection). By iterating exclusively over the `targets` vector, these algorithms avoid loading unused edge weight
+   data into the CPU cache, which minimizes memory bandwidth usage and reduces cache pollution.
+
+2. **Adaptive Edge Containment Checks:** The `contains_edge` method employs a hybrid algorithm that adapts to the data's
+   shape at runtime. It performs an `O(1)` degree check on the source node and selects the optimal search strategy: a
+   cache-friendly linear scan for low-degree nodes (where the number of neighbors is less than a compile-time threshold,
+   e.g., 64) and a logarithmically faster binary search for high-degree nodes. This ensures the best possible lookup
+   performance across varied graph structures.
+
+3. **Formal Evolutionary Lifecycle:** The most significant architectural addition is a formal two-state model for graph
+   evolution. `next_graph` defines two distinct representations: a mutable `DynamicGraph` optimized for efficient `O(1)`
+   node and edge additions, and the immutable `CsmGraph` optimized for analysis. The library provides high-performance
+   `O(V + E)` `.freeze()` and `.unfreeze()` operations to transition between these states. This two-state model directly
+   supports systems that require dynamic structural evolution, such as those modeling emergent causality, by providing a
+   controlled mechanism to separate the mutation phase from the immutable analysis phase.
+
+While the NWHypergraph paper provides an excellent blueprint for a high-performance static graph engine, these
+modifications extend that foundation into a more flexible, cache-aware, and dynamically adaptable framework
+purpose-built for the lifecycle of evolving graph systems.
+
 ## 🚀 Install
 
 Just run:
