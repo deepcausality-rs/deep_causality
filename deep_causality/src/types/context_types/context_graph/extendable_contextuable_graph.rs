@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use ultragraph::prelude::{GraphLike, GraphStorage};
+use ultragraph::*;
 
 use crate::prelude::{
     Context, ContextIndexError, Contextoid, Datable, ExtendableContextuableGraph, RelationKind,
@@ -47,7 +47,7 @@ where
         }
 
         // Create and insert the new context graph.
-        let new_extra_context = ultragraph::new_with_matrix_storage(capacity);
+        let new_extra_context = UltraGraphWeighted::with_capacity(capacity, None);
         extra_contexts.insert(id, new_extra_context);
 
         // Update metadata.
@@ -98,7 +98,14 @@ where
     ) -> Result<usize, ContextIndexError> {
         if let Some(extra_contexts) = self.extra_contexts.as_mut() {
             if let Some(current_ctx) = extra_contexts.get_mut(&self.extra_context_id) {
-                Ok(current_ctx.add_node(value))
+                let index = match current_ctx.add_node(value) {
+                    Ok(index) => index,
+                    Err(e) => {
+                        return Err(ContextIndexError(e.to_string()));
+                    }
+                };
+
+                Ok(index)
             } else {
                 Err(ContextIndexError(format!(
                     "Cannot add node. Current extra context with ID {} not found.",
@@ -178,7 +185,7 @@ where
             if let Some(current_ctx) = extra_contexts.get_mut(&self.extra_context_id) {
                 let weight_value = weight as u64;
                 current_ctx
-                    .add_edge_with_weight(a, b, weight_value)
+                    .add_edge(a, b, weight_value)
                     .map_err(|e| ContextIndexError(e.to_string()))
             } else {
                 Err(ContextIndexError(format!(
@@ -261,7 +268,7 @@ where
     fn extra_ctx_size(&self) -> Result<usize, ContextIndexError> {
         if let Some(extra_contexts) = self.extra_contexts.as_ref() {
             if let Some(current_ctx) = extra_contexts.get(&self.extra_context_id) {
-                Ok(current_ctx.size())
+                Ok(current_ctx.number_nodes())
             } else {
                 Err(ContextIndexError(format!(
                     "Cannot get size. Current extra context with ID {} not found.",

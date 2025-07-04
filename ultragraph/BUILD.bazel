@@ -16,8 +16,6 @@ rust_library(
     visibility = ["//visibility:public"],
     deps = [
         # External crates
-        "//thirdparty/crates:ahash",
-        "//thirdparty/crates:petgraph",
     ],
 )
 

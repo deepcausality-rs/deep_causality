@@ -31,30 +31,6 @@ filegroup(
 
 # Workspace Member Dependencies
 alias(
-    name = "ahash-0.8.12",
-    actual = "//thirdparty/crates/ahash-0.8.12:ahash",
-    tags = ["manual"],
-)
-
-alias(
-    name = "ahash",
-    actual = "//thirdparty/crates/ahash-0.8.12:ahash",
-    tags = ["manual"],
-)
-
-alias(
-    name = "petgraph-0.7.1",
-    actual = "//thirdparty/crates/petgraph-0.7.1:petgraph",
-    tags = ["manual"],
-)
-
-alias(
-    name = "petgraph",
-    actual = "//thirdparty/crates/petgraph-0.7.1:petgraph",
-    tags = ["manual"],
-)
-
-alias(
     name = "proc-macro2-1.0.95",
     actual = "//thirdparty/crates/proc-macro2-1.0.95:proc_macro2",
     tags = ["manual"],

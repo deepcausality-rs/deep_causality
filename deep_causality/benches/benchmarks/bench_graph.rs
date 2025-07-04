@@ -9,11 +9,6 @@ use deep_causality::prelude::*;
 
 use crate::benchmarks::utils_linear_graph;
 
-// Graph size
-// const SMALL: usize = 10;
-// const MEDIUM: usize = 100;
-// const LARGE: usize = 1_000;
-
 fn small_linear_graph_benchmark(criterion: &mut Criterion) {
     let (g, data) = utils_linear_graph::get_small_linear_graph_and_data();
 

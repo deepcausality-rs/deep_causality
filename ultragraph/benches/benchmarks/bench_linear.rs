@@ -6,19 +6,16 @@
 use criterion::{Criterion, criterion_group};
 use rand::Rng;
 
-use ultragraph::prelude::*;
+use ultragraph::*;
 
 use crate::benchmarks::data::Data;
 use crate::benchmarks::fields::{LARGE, MEDIUM, SMALL};
 use crate::benchmarks::utils;
 
-// Graph size
-// const SMALL: usize = 10;
-// const MEDIUM: usize = 100;
-// const LARGE: usize = 1_000;
-
 fn get_empty_ultra_graph(capacity: usize) -> UltraGraph<Data> {
-    ultragraph::new_with_matrix_storage::<Data>(capacity)
+    let g: UltraGraphContainer<Data, _> = UltraGraph::with_capacity(capacity, None);
+
+    g
 }
 
 fn get_pre_filled_ultra_graph(capacity: usize) -> UltraGraph<Data> {

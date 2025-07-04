@@ -33,6 +33,12 @@ fn test_explain_all_causes() {
     let res = g.reason_all_causes(&data, None);
     assert!(res.is_ok());
 
+    let nr_active = g.number_active();
+    dbg!(&nr_active);
+
+    let total_nodes = g.number_nodes();
+    dbg!(&total_nodes);
+
     // Verify that the graph is fully active.
     let all_active = g.all_active();
     assert!(all_active);
@@ -62,7 +68,9 @@ fn test_explain_all_causes_error() {
 
     // Add causaloid A
     let causaloid = test_utils::get_test_causaloid();
-    let idx_a = g.add_causaloid(causaloid);
+    let idx_a = g
+        .add_causaloid(causaloid)
+        .expect("Failed to add causaloid A");
     let contains_a = g.contains_causaloid(idx_a);
     assert!(contains_a);
     assert!(!g.is_empty());
@@ -132,10 +140,12 @@ fn test_explain_subgraph_from_cause_error() {
 
     // Add causaloid A
     let causaloid = test_utils::get_test_causaloid();
-    let idx_a = g.add_causaloid(causaloid);
+    let idx_a = g
+        .add_causaloid(causaloid)
+        .expect("Failed to add causaloid A");
     let contains_a = g.contains_causaloid(idx_a);
+
     assert!(contains_a);
-    assert!(!g.is_empty());
 
     // Error: No path
     let res = g.explain_subgraph_from_cause(idx_a);

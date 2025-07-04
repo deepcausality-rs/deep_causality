@@ -34,12 +34,12 @@ pub fn build_linear_graph(k: usize) -> BaseCausalGraph {
     let root_causaloid = utils_shared::get_test_causaloid();
     let root_index = g.add_root_causaloid(root_causaloid);
 
-    let mut previous_idx = root_index;
+    let mut previous_idx = root_index.expect("Failed to add root causaloid");
 
     for _ in 0..k {
         // add a new causaloid and set current idx to it
         let causaloid = utils_shared::get_test_causaloid();
-        let current_idx = g.add_causaloid(causaloid);
+        let current_idx = g.add_causaloid(causaloid).expect("Failed to add causaloid");
 
         // link current causaloid to previos causaloid
         g.add_edge(previous_idx, current_idx)
@@ -47,6 +47,8 @@ pub fn build_linear_graph(k: usize) -> BaseCausalGraph {
 
         previous_idx = current_idx;
     }
+
+    g.freeze();
 
     g
 }
@@ -68,11 +70,13 @@ fn build_multi_cause_graph() -> BaseCausalGraph {
 
     // Add root causaloid
     let root_causaloid = utils_shared::get_test_causaloid();
-    let root_index = g.add_root_causaloid(root_causaloid);
+    let root_index = g
+        .add_root_causaloid(root_causaloid)
+        .expect("Failed to add root causaloid");
 
     // Add causaloid A
     let causaloid = utils_shared::get_test_causaloid();
-    let idx_a = g.add_causaloid(causaloid);
+    let idx_a = g.add_causaloid(causaloid).expect("Failed to add causaloid");
 
     // Link causaloid A to root causaloid
     g.add_edge(root_index, idx_a)
@@ -80,7 +84,7 @@ fn build_multi_cause_graph() -> BaseCausalGraph {
 
     // Add causaloid B
     let causaloid = utils_shared::get_test_causaloid();
-    let idx_b = g.add_causaloid(causaloid);
+    let idx_b = g.add_causaloid(causaloid).expect("Failed to add causaloid");
 
     // Link causaloid B to root causaloid
     g.add_edge(root_index, idx_b)
@@ -88,7 +92,7 @@ fn build_multi_cause_graph() -> BaseCausalGraph {
 
     // Add causaloid C
     let causaloid = utils_shared::get_test_causaloid();
-    let idx_c = g.add_causaloid(causaloid);
+    let idx_c = g.add_causaloid(causaloid).expect("Failed to add causaloid");
 
     // Link causaloid C to A
     g.add_edge(idx_a, idx_c)
@@ -97,6 +101,8 @@ fn build_multi_cause_graph() -> BaseCausalGraph {
     // Link causaloid C to B
     g.add_edge(idx_b, idx_c)
         .expect("Failed to add edge between C and B");
+
+    g.freeze();
 
     g
 }

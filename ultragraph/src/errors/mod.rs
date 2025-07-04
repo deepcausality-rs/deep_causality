@@ -10,6 +10,8 @@ use std::fmt;
 
 use deep_causality_macros::Constructor;
 
+pub mod graph_error;
+
 #[derive(Constructor, Debug)]
 pub struct UltraGraphError(pub String);
 

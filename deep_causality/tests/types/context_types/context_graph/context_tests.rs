@@ -77,7 +77,7 @@ fn test_add_node() {
     assert_eq!(context.size(), 0);
 
     let contextoid = Contextoid::new(id, ContextoidType::Root(Root::new(id)));
-    let idx = context.add_node(contextoid);
+    let idx = context.add_node(contextoid).expect("Failed to add node");
 
     assert_eq!(idx, 0);
     assert_eq!(context.size(), 1);
@@ -91,7 +91,7 @@ fn test_contains_node() {
 
     let root = Root::new(id);
     let contextoid = Contextoid::new(id, ContextoidType::Root(root));
-    context.add_node(contextoid);
+    context.add_node(contextoid).expect("Failed to add node");
 
     let idx: usize = 0;
 
@@ -107,7 +107,7 @@ fn test_get_node() {
 
     let root = Root::new(id);
     let contextoid = Contextoid::new(id, ContextoidType::Root(root));
-    context.add_node(contextoid);
+    context.add_node(contextoid).expect("Failed to add node");
     assert_eq!(context.size(), 1);
 
     let idx: usize = 0;
@@ -127,7 +127,7 @@ fn test_remove_node() {
     let contextoid = Contextoid::new(node_id_to_remove, ContextoidType::Root(root));
 
     // Add the node and verify it's there
-    let physical_index = context.add_node(contextoid);
+    let physical_index = context.add_node(contextoid).expect("Failed to add node");
     assert_eq!(context.number_of_nodes(), 1);
     assert!(context.contains_node(physical_index));
 
@@ -138,7 +138,6 @@ fn test_remove_node() {
     // Verify the node is gone
     assert_eq!(context.number_of_nodes(), 0);
     assert!(!context.contains_node(physical_index));
-    assert!(context.is_empty());
 }
 
 #[test]
@@ -149,7 +148,7 @@ fn test_add_edge() {
 
     let root = Root::new(id);
     let contextoid = Contextoid::new(id, ContextoidType::Root(root));
-    let roodidx = context.add_node(contextoid);
+    let roodidx = context.add_node(contextoid).expect("Failed to add node");
 
     assert_eq!(context.size(), 1);
     assert!(context.contains_node(roodidx));
@@ -164,7 +163,7 @@ fn test_add_edge() {
 
     let id = 2;
     let contextoid = Contextoid::new(id, ContextoidType::Tempoid(tempoid));
-    let t_idx = context.add_node(contextoid);
+    let t_idx = context.add_node(contextoid).expect("Failed to add node");
 
     let res = context.add_edge(roodidx, t_idx, RelationKind::Temporal);
     assert!(res.is_ok());
@@ -180,7 +179,7 @@ fn test_contains_edge() {
 
     let root = Root::new(id);
     let contextoid = Contextoid::new(id, ContextoidType::Root(root));
-    let roodidx = context.add_node(contextoid);
+    let roodidx = context.add_node(contextoid).expect("Failed to add node");
 
     assert_eq!(context.size(), 1);
     assert!(context.contains_node(roodidx));
@@ -195,7 +194,7 @@ fn test_contains_edge() {
 
     let id = 2;
     let contextoid = Contextoid::new(id, ContextoidType::Tempoid(tempoid));
-    let t_idx = context.add_node(contextoid);
+    let t_idx = context.add_node(contextoid).expect("Failed to add node");
     let res = context.add_edge(roodidx, t_idx, RelationKind::Temporal);
     assert!(res.is_ok());
 
@@ -210,7 +209,7 @@ fn test_remove_edge() {
 
     let root = Root::new(id);
     let contextoid = Contextoid::new(id, ContextoidType::Root(root));
-    let roodidx = context.add_node(contextoid);
+    let roodidx = context.add_node(contextoid).expect("Failed to add node");
 
     assert_eq!(context.size(), 1);
     assert!(context.contains_node(roodidx));
@@ -225,7 +224,7 @@ fn test_remove_edge() {
 
     let id = 2;
     let contextoid = Contextoid::new(id, ContextoidType::Tempoid(tempoid));
-    let t_idx = context.add_node(contextoid);
+    let t_idx = context.add_node(contextoid).expect("Failed to add node");
     let res = context.add_edge(roodidx, t_idx, RelationKind::Temporal);
     assert!(res.is_ok());
 

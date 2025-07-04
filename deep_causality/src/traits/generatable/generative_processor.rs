@@ -148,8 +148,10 @@ where
                 contextoid,
             } => {
                 let context = self.get_and_verify_context(context_id)?;
-                context.add_node(contextoid);
-                Ok(())
+                match context.add_node(contextoid) {
+                    Ok(_) => Ok(()),
+                    Err(e) => Err(ModelValidationError::AddContextoidError { err: e.to_string() }),
+                }
             }
 
             GenerativeOutput::UpdateContextoidInContext {

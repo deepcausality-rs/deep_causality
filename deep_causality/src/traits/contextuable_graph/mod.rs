@@ -39,7 +39,10 @@ where
     VS: Clone,
     VT: Clone,
 {
-    fn add_node(&mut self, value: Contextoid<D, S, T, ST, SYM, VS, VT>) -> usize;
+    fn add_node(
+        &mut self,
+        value: Contextoid<D, S, T, ST, SYM, VS, VT>,
+    ) -> Result<usize, ContextIndexError>;
     fn contains_node(&self, index: usize) -> bool;
     fn get_node(&self, index: usize) -> Option<&Contextoid<D, S, T, ST, SYM, VS, VT>>;
     fn remove_node(&mut self, node_id: ContextoidId) -> Result<(), ContextIndexError>;

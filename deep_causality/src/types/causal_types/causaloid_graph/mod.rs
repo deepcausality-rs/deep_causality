@@ -4,7 +4,7 @@
  */
 
 use std::fmt::Display;
-use ultragraph::prelude::*;
+use ultragraph::*;
 
 use crate::errors::{CausalGraphIndexError, CausalityGraphError};
 use crate::prelude::{
@@ -54,7 +54,7 @@ where
     ///
     pub fn new() -> Self {
         Self {
-            graph: ultragraph::new_with_matrix_storage(500),
+            graph: UltraGraphWeighted::with_capacity(500, None),
         }
     }
 
@@ -70,7 +70,7 @@ where
     ///
     pub fn new_with_capacity(capacity: usize) -> Self {
         Self {
-            graph: ultragraph::new_with_matrix_storage(capacity),
+            graph: UltraGraphWeighted::with_capacity(capacity, None),
         }
     }
 }

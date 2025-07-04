@@ -2,24 +2,46 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use std::marker::PhantomData;
 
-use deep_causality_macros::Constructor;
+#![forbid(unsafe_code)]
 
-use crate::prelude::GraphStorage;
+use crate::{DynamicGraph, GraphState};
 
-// SPDX-License-Identifier: MIT
-// Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
-mod graph_algorithms;
-mod graph_like;
-mod graph_root;
-pub mod graph_storage;
+mod default;
+mod graph_algo;
+mod graph_evolve;
+mod graph_mut;
+mod graph_traversal;
+mod graph_view;
 
-#[derive(Constructor, Debug, Copy, Clone)]
-pub struct UltraGraphContainer<S, T>
+pub type UltraGraph<T> = UltraGraphContainer<T, ()>;
+pub type UltraGraphWeighted<T, W> = UltraGraphContainer<T, W>;
+
+#[derive(Clone)]
+pub struct UltraGraphContainer<N, W>
 where
-    S: GraphStorage<T>,
+    N: Clone,
+    W: Clone + Default,
 {
-    storage: S,
-    ty: PhantomData<T>,
+    state: GraphState<N, W>,
+}
+
+// Constructors
+
+impl<N, W> UltraGraphContainer<N, W>
+where
+    N: Clone,
+    W: Clone + Default,
+{
+    pub fn new() -> Self {
+        Self {
+            state: GraphState::Dynamic(DynamicGraph::new()),
+        }
+    }
+
+    pub fn with_capacity(nodes: usize, edges: Option<usize>) -> Self {
+        Self {
+            state: GraphState::Dynamic(DynamicGraph::with_capacity(nodes, edges)),
+        }
+    }
 }

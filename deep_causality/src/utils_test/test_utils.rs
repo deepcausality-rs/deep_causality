@@ -73,7 +73,7 @@ pub fn get_base_context() -> BaseContext {
 
     let root = Root::new(id);
     let contextoid = Contextoid::new(id, ContextoidType::Root(root));
-    let idx = context.add_node(contextoid);
+    let idx = context.add_node(contextoid).expect("Failed to add node");
     assert_eq!(idx, 0);
     assert_eq!(context.size(), 1);
 
@@ -97,7 +97,7 @@ pub fn get_test_context() -> BaseContext {
     let id = 1;
     let root = Root::new(id);
     let contextoid = Contextoid::new(id, ContextoidType::Root(root));
-    context.add_node(contextoid);
+    context.add_node(contextoid).expect("Failed to add node");
 
     context
 }
