@@ -1,4 +1,9 @@
-use crate::GraphView;
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+use crate::{GraphError, GraphView};
 
 /// Defines a suite of high-performance, read-only analytical algorithms.
 ///
@@ -16,25 +21,33 @@ pub trait GraphAlgorithms<N, W>: GraphView<N, W> {
     /// # Returns
     /// `Some(Vec<usize>)` containing the sequence of node indices that form a cycle
     /// (e.g., `[0, 1, 0]`). Returns `None` if the graph is a DAG.
-    fn find_cycle(&self) -> Option<Vec<usize>>;
+    fn find_cycle(&self) -> Result<Option<Vec<usize>>, GraphError>;
 
     /// Checks if the graph contains any directed cycles.
     ///
     /// This method should be implemented as a simple call to `self.find_cycle().is_some()`.
-    fn has_cycle(&self) -> bool;
+    fn has_cycle(&self) -> Result<bool, GraphError>;
 
     /// Computes a topological sort of the graph, if it is a Directed Acyclic Graph (DAG).
     /// Returns `None` if the graph contains a cycle.
-    fn topological_sort(&self) -> Option<Vec<usize>>;
+    fn topological_sort(&self) -> Result<Option<Vec<usize>>, GraphError>;
 
     // --- Pathfinding and Reachability Algorithms ---
 
     /// Checks if a path of any length exists from a start to a stop index.
-    fn is_reachable(&self, start_index: usize, stop_index: usize) -> bool;
+    fn is_reachable(&self, start_index: usize, stop_index: usize) -> Result<bool, GraphError>;
 
     /// Returns the length of the shortest path (in number of nodes) from a start to a stop index.
-    fn shortest_path_len(&self, start_index: usize, stop_index: usize) -> Option<usize>;
+    fn shortest_path_len(
+        &self,
+        start_index: usize,
+        stop_index: usize,
+    ) -> Result<Option<usize>, GraphError>;
 
     /// Finds the complete shortest path from a start to a stop index.
-    fn shortest_path(&self, start_index: usize, stop_index: usize) -> Option<Vec<usize>>;
+    fn shortest_path(
+        &self,
+        start_index: usize,
+        stop_index: usize,
+    ) -> Result<Option<Vec<usize>>, GraphError>;
 }

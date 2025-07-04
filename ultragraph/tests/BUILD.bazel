@@ -1,11 +1,44 @@
 load("@rules_rust//rust:defs.bzl", "rust_test_suite")
 
 rust_test_suite(
-    name = "ultragraph_tests",
+    name = "error_tests",
     srcs = glob([
-        "*_tests.rs",
+        "errors/*_tests.rs",
     ]),
     tags = [
+        "ultragraph",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//alias:ultragraph",
+    ],
+)
+
+rust_test_suite(
+    name = "dynamic_tests",
+    srcs = glob([
+        "types/ultra_graph/graph_dynamic/*_tests.rs",
+    ]),
+    tags = [
+        "ultragraph",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//alias:ultragraph",
+    ],
+)
+
+rust_test_suite(
+    name = "static_tests",
+    srcs = glob([
+        "types/ultra_graph/graph_static/*_tests.rs",
+    ]),
+    tags = [
+        "ultragraph",
         "unit-test",
     ],
     visibility = ["//visibility:public"],

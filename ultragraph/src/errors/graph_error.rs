@@ -20,6 +20,12 @@ pub enum GraphError {
 
     /// The operation could not be completed because the graph contains a cycle.
     GraphContainsCycle,
+
+    /// The operation could not be completed because the graph is not frozen.
+    GraphNotFrozen,
+
+    /// Operation not possible because the graph is frozen and cannot be mutated.
+    GraphIsFrozen,
 }
 
 impl fmt::Display for GraphError {
@@ -42,6 +48,20 @@ impl fmt::Display for GraphError {
             }
             Self::GraphContainsCycle => {
                 write!(f, "Operation failed because the graph contains a cycle.")
+            }
+
+            Self::GraphNotFrozen => {
+                write!(
+                    f,
+                    "Operation not possible because the graph is not frozen. Call graph.freeze() first."
+                )
+            }
+
+            Self::GraphIsFrozen => {
+                write!(
+                    f,
+                    "Operation not possible because the graph is frozen and cannot be mutated. Call graph.unfreeze() first."
+                )
             }
         }
     }

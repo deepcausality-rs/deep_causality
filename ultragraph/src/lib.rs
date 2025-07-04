@@ -5,94 +5,23 @@
 
 #![forbid(unsafe_code)]
 
-use crate::prelude::{UltraGraph, UltraGraphContainer, UltraMatrixGraph};
-
-pub mod alias;
 pub mod errors;
-pub mod prelude;
-pub mod protocols;
-pub mod storage;
+
 mod traits;
 pub mod types;
-
+// Errors
 pub use crate::errors::graph_error::GraphError;
+// Traits
 pub use crate::traits::graph_algo::GraphAlgorithms;
+pub use crate::traits::graph_freeze::Freezable;
 pub use crate::traits::graph_mut::GraphMut;
 pub use crate::traits::graph_traversal::GraphTraversal;
+pub use crate::traits::graph_unfreeze::Unfreezable;
 pub use crate::traits::graph_view::GraphView;
-
-/// Returns a new UltraGraph with matrix storage backend.
-/// Default capacity is 500 nodes.
-///
-/// # Example:
-/// ```
-/// use ultragraph::prelude::*;
-///
-/// #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
-/// pub struct Data {
-///     x: u8,
-/// }
-///
-///  let mut g = ultragraph::new::<Data>();
-///  assert!(g.is_empty());
-///
-///  let d = Data { x: 1 };
-///  let root_index = g.add_root_node(d);
-///  assert_eq!(root_index, 0);
-///
-///  let d = Data { x: 42 };
-///  let node_a_index = g.add_node(d);
-///  assert_eq!(node_a_index, 1);
-///
-///  let data = g.get_node(1).unwrap();
-///  assert_eq!(data.x, d.x);
-///
-///  let res = g.add_edge(root_index, node_a_index);
-///  assert!(res.is_ok());
-/// ```
-pub fn new<T>() -> UltraGraph<T> {
-    UltraGraphContainer::new(UltraMatrixGraph::<T>::new())
-}
-
-/// Returns a new UltraGraph with matrix storage backend.
-///
-/// # Arguments
-/// * Capacity refers to the maximum number of nodes that fit into the graph before a resize occurs.
-///
-/// # Example:
-/// ```
-/// use ultragraph::prelude::*;
-///
-/// #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
-/// pub struct Data {
-///     x: u8,
-/// }
-///
-///  let mut g = ultragraph::with_capacity::<Data>(10);
-///  assert!(g.is_empty());
-///
-///  let d = Data { x: 1 };
-///  let root_index = g.add_root_node(d);
-///  assert_eq!(root_index, 0);
-///
-///  let d = Data { x: 42 };
-///  let node_a_index = g.add_node(d);
-///  assert_eq!(node_a_index, 1);
-///
-///  let data = g.get_node(1).unwrap();
-///  assert_eq!(data.x, d.x);
-///
-///  let res = g.add_edge(root_index, node_a_index);
-///  assert!(res.is_ok());
-/// ```
-pub fn with_capacity<T>(capacity: usize) -> UltraGraph<T> {
-    UltraGraphContainer::new(UltraMatrixGraph::<T>::new_with_capacity(capacity))
-}
-
-pub fn new_with_matrix_storage<T>(capacity: usize) -> UltraGraph<T> {
-    UltraGraphContainer::new(UltraMatrixGraph::<T>::new_with_capacity(capacity))
-}
-
-pub fn default<T>() -> UltraGraph<T> {
-    UltraGraphContainer::new(UltraMatrixGraph::<T>::default())
-}
+pub use crate::types::storage::graph_csm::CsmGraph;
+pub use crate::types::storage::graph_dynamic::DynamicGraph;
+pub use crate::types::storage::graph_state::GraphState;
+// Types
+pub use crate::types::ultra_graph::UltraGraph;
+pub use crate::types::ultra_graph::UltraGraphContainer;
+pub use crate::types::ultra_graph::UltraGraphWeighted;

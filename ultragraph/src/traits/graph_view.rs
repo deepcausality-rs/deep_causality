@@ -1,6 +1,13 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
 pub trait GraphView<N, W> {
     // State Inspection
     fn is_frozen(&self) -> bool;
+
+    fn is_empty(&self) -> bool;
 
     // Node Inspection
     fn contains_node(&self, index: usize) -> bool;

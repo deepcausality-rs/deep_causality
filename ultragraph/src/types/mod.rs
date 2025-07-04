@@ -5,4 +5,5 @@
 
 #![forbid(unsafe_code)]
 
+pub mod storage;
 pub mod ultra_graph;

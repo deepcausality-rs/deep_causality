@@ -3,5 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-mod errors;
-mod types;
+use crate::DynamicGraph;
+
+impl<N, W> Default for DynamicGraph<N, W> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
