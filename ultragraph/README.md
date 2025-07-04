@@ -73,19 +73,24 @@ This is the high-performance, read-only state.
 If you need to make further changes after a period of analysis, `g.unfreeze()` efficiently converts the `CsmGraph` back
 into a `DynamicGraph`, allowing the cycle of mutation and analysis to begin again.
 
-## 🚀 Performance
+## 🚀### Benchmark Results
 
-The CSR format of the frozen `CsmGraph` provides exceptional performance for analytical workloads. The one-time cost of
-the `freeze()` operation unlocks repeatable, high-speed analysis.
+| Operation       | Scale | Graph Configuration                          |  Mean Time  | Throughput (Est.)        |
+|:----------------|:------|:---------------------------------------------|:-----------:|:-------------------------|
+| **Edge Lookup** | Tiny  | `contains_edge` (Linear Scan, degree < 64)   | **~7.7 ns** | ~130 Million lookups/sec |
+|                 | Tiny  | `contains_edge` (Binary Search, degree > 64) | **~8.2 ns** | ~122 Million lookups/sec |
+| **Algorithms**  | Small | `shortest_path` (1k nodes)                   | **~5.3 µs** | ~188,000 paths/sec       |
+|                 | Small | `topological_sort` (1k nodes, DAG)           | **~5.2 µs** | ~192,000 sorts/sec       |
+|                 | Small | `find_cycle` (1k nodes, has cycle)           | **~7.1 µs** | ~140,000 checks/sec      |
+|                 | Large | `shortest_path` (1M nodes, 5M edges)         | **~482 µs** | ~2,000 paths/sec         |
+|                 | Large | `topological_sort` (1M nodes, 5M edges)      | **~2.9 ms** | ~345 sorts/sec           |
+| **Lifecycle**   | Small | `freeze` (1k nodes, 999 edges)               | **~42 µs**  | ~23,800 freezes/sec      |
+|                 | Small | `unfreeze` (1k nodes, 999 edges)             | **~12 µs**  | ~81,600 unfreezes/sec    |
+|                 | Large | `freeze` (1M nodes, 5M edges)                | **~75 ms**  | ~13 freezes/sec          |
+|                 | Large | `unfreeze` (1M nodes, 5M edges)              | **~24 ms**  | ~41 unfreezes/sec        |
 
-| Benchmark                                       |     Time |
-|-------------------------------------------------|---------:|
-| `small_linear_graph_reason_all_causes`          | 78.79 ns |
-| `medium_linear_graph_reason_all_causes`         |  5.23 µs |
-| `large_linear_graph_reason_all_causes`          | 51.70 µs |
-| `large_linear_graph_reason_subgraph_from_cause` | 25.79 µs |
-| `large_linear_graph_reason_shortest_path`       | 43.80 µs |
-| `large_reason_single_cause`                     |  4.86 ns |
+*(Note: Time units are nanoseconds (ns), microseconds (µs), and milliseconds (ms). Throughput is an approximate
+calculation based on the mean time.)*
 
 ## 🚀 Install
 
