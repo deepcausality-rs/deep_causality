@@ -48,6 +48,8 @@ pub fn build_linear_graph(k: usize) -> BaseCausalGraph {
         previous_idx = current_idx;
     }
 
+    g.freeze();
+
     g
 }
 
@@ -99,6 +101,8 @@ fn build_multi_cause_graph() -> BaseCausalGraph {
     // Link causaloid C to B
     g.add_edge(idx_b, idx_c)
         .expect("Failed to add edge between C and B");
+
+    g.freeze();
 
     g
 }
