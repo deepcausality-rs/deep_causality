@@ -3,8 +3,6 @@
 [![Crates.io][crates-badge]][crates-url]
 [![Docs.rs][docs-badge]][docs-url]
 [![MIT licensed][mit-badge]][mit-url]
-![Audit][audit-url]
-![Clippy][clippy-url]
 ![Tests][test-url]
 
 [ossf-badge]: https://bestpractices.coreinfrastructure.org/projects/7568/badge
@@ -20,10 +18,6 @@
 [mit-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
 [mit-url]: https://github.com/deepcausality-rs/deep_causality/blob/main/LICENSE
-
-[audit-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/audit.yml/badge.svg
-
-[clippy-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/rust-clippy.yml/badge.svg
 
 [test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
 
