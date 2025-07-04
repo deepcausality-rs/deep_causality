@@ -73,7 +73,7 @@ This is the high-performance, read-only state.
 If you need to make further changes after a period of analysis, `g.unfreeze()` efficiently converts the `CsmGraph` back
 into a `DynamicGraph`, allowing the cycle of mutation and analysis to begin again.
 
-## 🚀### Benchmark Results
+## 🚀 Benchmark Results
 
 | Operation       | Scale | Graph Configuration                          |  Mean Time  | Throughput (Est.)        |
 |:----------------|:------|:---------------------------------------------|:-----------:|:-------------------------|
