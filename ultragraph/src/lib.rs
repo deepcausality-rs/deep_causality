@@ -12,7 +12,14 @@ pub mod errors;
 pub mod prelude;
 pub mod protocols;
 pub mod storage;
+mod traits;
 pub mod types;
+
+pub use crate::errors::graph_error::GraphError;
+pub use crate::traits::graph_algo::GraphAlgorithms;
+pub use crate::traits::graph_mut::GraphMut;
+pub use crate::traits::graph_traversal::GraphTraversal;
+pub use crate::traits::graph_view::GraphView;
 
 /// Returns a new UltraGraph with matrix storage backend.
 /// Default capacity is 500 nodes.
