@@ -28,7 +28,6 @@ crates_vendor(
         ),
         #
         # Regular dependencies
-
     },  # End packages
     repository_name = "deep_causality_vendored",
     tags = ["manual"],

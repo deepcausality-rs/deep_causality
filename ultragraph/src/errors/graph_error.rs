@@ -49,14 +49,12 @@ impl fmt::Display for GraphError {
             Self::GraphContainsCycle => {
                 write!(f, "Operation failed because the graph contains a cycle.")
             }
-
             Self::GraphNotFrozen => {
                 write!(
                     f,
                     "Operation not possible because the graph is not frozen. Call graph.freeze() first."
                 )
             }
-
             Self::GraphIsFrozen => {
                 write!(
                     f,

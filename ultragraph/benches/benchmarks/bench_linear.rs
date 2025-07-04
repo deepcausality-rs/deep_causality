@@ -12,7 +12,6 @@ use crate::benchmarks::data::Data;
 use crate::benchmarks::fields::{LARGE, MEDIUM, SMALL};
 use crate::benchmarks::utils;
 
-
 fn get_empty_ultra_graph(capacity: usize) -> UltraGraph<Data> {
     let g: UltraGraphContainer<Data, _> = UltraGraph::with_capacity(capacity, None);
 
