@@ -24,8 +24,6 @@ impl fmt::Display for CausalityGraphError {
 /// for using the `?` operator to propagate errors cleanly.
 impl From<GraphError> for CausalityGraphError {
     fn from(err: GraphError) -> Self {
-        // Convert the underlying error into a string and wrap it
-        // in our domain-specific error type.
         CausalityGraphError(err.to_string())
     }
 }

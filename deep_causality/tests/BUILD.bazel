@@ -13,6 +13,7 @@ rust_test_suite(
     deps = [
         # Crate to test
         "//alias:deep_causality",
+        "//alias:ultragraph",
     ],
 )
 

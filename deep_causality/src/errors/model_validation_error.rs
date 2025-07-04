@@ -23,6 +23,7 @@ pub enum ModelValidationError {
     // Contextoid Errors
     TargetContextoidNotFound { id: ContextoidId },
     DuplicateContextoidId { id: ContextoidId },
+    AddContextoidError { err: String },
 
     // General Errors
     UnsupportedOperation { operation: String },
@@ -71,6 +72,9 @@ impl fmt::Display for ModelValidationError {
 
             ModelValidationError::UnsupportedOperation { operation } => {
                 write!(f, "Unsupported operation: {operation}")
+            }
+            ModelValidationError::AddContextoidError { err } => {
+                write!(f, "Error adding Contextoid: {err}")
             }
         }
     }

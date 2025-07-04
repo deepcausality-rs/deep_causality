@@ -5,6 +5,7 @@
 
 use deep_causality::prelude::CausalityGraphError;
 use std::error::Error;
+use ultragraph::GraphError;
 
 #[test]
 fn test_causality_graph_error_creation() {
@@ -38,4 +39,21 @@ fn test_causality_graph_error_is_error() {
     let error = CausalityGraphError::new("test".to_string());
     let is_error: &dyn Error = &error;
     assert!(is_error.is::<CausalityGraphError>());
+}
+
+#[test]
+fn test_from_graph_error_conversion() {
+    // 1. Arrange: Create an instance of the source error type.
+    let source_error = GraphError::GraphIsFrozen;
+    let expected_message = source_error.to_string();
+
+    // 2. Act: Convert the source error into the target error using `.into()`.
+    let causality_error: CausalityGraphError = source_error.into();
+
+    // 3. Assert: Verify that the converted error contains the correct message.
+    assert_eq!(causality_error.0, expected_message);
+    assert_eq!(
+        causality_error.to_string(),
+        format!("CausalityGraphError: {expected_message}")
+    );
 }

@@ -22,16 +22,17 @@ where
     VS: Clone,
     VT: Clone,
 {
-    fn add_node(&mut self, value: Contextoid<D, S, T, ST, SYM, VS, VT>) -> usize {
+    fn add_node(
+        &mut self,
+        value: Contextoid<D, S, T, ST, SYM, VS, VT>,
+    ) -> Result<usize, ContextIndexError> {
         let contextoid_id = value.id();
         let index = match self.base_context.add_node(value) {
             Ok(index) => index,
-            Err(e) => {
-                panic!("Failed to add node to context {e:?}");
-            }
+            Err(e) => return Err(ContextIndexError(e.to_string())),
         };
         self.id_to_index_map.insert(contextoid_id, index);
-        index
+        Ok(index)
     }
 
     /// Returns only true if the context contains the contextoid with the given index.

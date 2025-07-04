@@ -214,11 +214,7 @@ where
             ));
         }
 
-        // This now correctly uses the underlying graph algorithm.
-        let path = self
-            .get_graph()
-            .shortest_path(start_index, stop_index)?
-            .ok_or(CausalityGraphError("No path found between causes".into()))?;
+        let path = self.get_shortest_path(start_index, stop_index)?;
 
         for index in path {
             let cause = self.get_causaloid(index).expect("Failed to get causaloid");
