@@ -3,8 +3,6 @@
 [![Crates.io][crates-badge]][crates-url]
 [![Docs.rs][docs-badge]][docs-url]
 [![MIT licensed][mit-badge]][mit-url]
-![Audit][audit-url]
-![Clippy][clippy-url]
 ![Tests][test-url]
 
 [ossf-badge]: https://bestpractices.coreinfrastructure.org/projects/7568/badge
@@ -20,10 +18,6 @@
 [mit-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
 [mit-url]: https://github.com/deepcausality-rs/deep_causality/blob/main/LICENSE
-
-[audit-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/audit.yml/badge.svg
-
-[clippy-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/rust-clippy.yml/badge.svg
 
 [test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
 
@@ -79,19 +73,58 @@ This is the high-performance, read-only state.
 If you need to make further changes after a period of analysis, `g.unfreeze()` efficiently converts the `CsmGraph` back
 into a `DynamicGraph`, allowing the cycle of mutation and analysis to begin again.
 
-## 🚀 Performance
+## 🚀### Benchmark Results
 
-The CSR format of the frozen `CsmGraph` provides exceptional performance for analytical workloads. The one-time cost of
-the `freeze()` operation unlocks repeatable, high-speed analysis.
+| Operation       | Scale | Graph Configuration                          |  Mean Time  | Throughput (Est.)        |
+|:----------------|:------|:---------------------------------------------|:-----------:|:-------------------------|
+| **Edge Lookup** | Tiny  | `contains_edge` (Linear Scan, degree < 64)   | **~7.7 ns** | ~130 Million lookups/sec |
+|                 | Tiny  | `contains_edge` (Binary Search, degree > 64) | **~8.2 ns** | ~122 Million lookups/sec |
+| **Algorithms**  | Small | `shortest_path` (1k nodes)                   | **~5.3 µs** | ~188,000 paths/sec       |
+|                 | Small | `topological_sort` (1k nodes, DAG)           | **~5.2 µs** | ~192,000 sorts/sec       |
+|                 | Small | `find_cycle` (1k nodes, has cycle)           | **~7.1 µs** | ~140,000 checks/sec      |
+|                 | Large | `shortest_path` (1M nodes, 5M edges)         | **~482 µs** | ~2,000 paths/sec         |
+|                 | Large | `topological_sort` (1M nodes, 5M edges)      | **~2.9 ms** | ~345 sorts/sec           |
+| **Lifecycle**   | Small | `freeze` (1k nodes, 999 edges)               | **~42 µs**  | ~23,800 freezes/sec      |
+|                 | Small | `unfreeze` (1k nodes, 999 edges)             | **~12 µs**  | ~81,600 unfreezes/sec    |
+|                 | Large | `freeze` (1M nodes, 5M edges)                | **~75 ms**  | ~13 freezes/sec          |
+|                 | Large | `unfreeze` (1M nodes, 5M edges)              | **~24 ms**  | ~41 unfreezes/sec        |
 
-| Benchmark                                       |     Time |
-|-------------------------------------------------|---------:|
-| `small_linear_graph_reason_all_causes`          | 78.79 ns |
-| `medium_linear_graph_reason_all_causes`         |  5.23 µs |
-| `large_linear_graph_reason_all_causes`          | 51.70 µs |
-| `large_linear_graph_reason_subgraph_from_cause` | 25.79 µs |
-| `large_linear_graph_reason_shortest_path`       | 43.80 µs |
-| `large_reason_single_cause`                     |  4.86 ns |
+*(Note: Time units are nanoseconds (ns), microseconds (µs), and milliseconds (ms). Throughput is an approximate
+calculation based on the mean time.)*
+
+## Performance Design
+
+The design of `next_graph`'s static analysis structure, `CsmGraph`, is based on the principles for high-performance
+sparse graph representation detailed in the paper "NWHy: A Framework for Hypergraph Analytics" (Liu et al.).
+Specifically, `next_graph` adopts the paper's foundational model of using two mutually-indexed Compressed Sparse Row (
+CSR) structures to enable efficient, `O(degree)` bidirectional traversal—one for forward (outbound) edges and one for
+the transposed graph for backward (inbound) edges.
+
+However, `next_graph` introduces three significant architectural enhancements over this baseline to provide optimal
+performance and to support the specific requirements of dynamically evolving systems.
+
+1. **Struct of Arrays (SoA) Memory Layout:** The internal CSR adjacency structures are implemented using a Struct of
+   Arrays layout. Instead of a single `Vec<(target, weight)>`, `next_graph` uses two parallel vectors: `Vec<target>` and
+   `Vec<weight>`. This memory layout improves data locality for topology-only algorithms (e.g., reachability, cycle
+   detection). By iterating exclusively over the `targets` vector, these algorithms avoid loading unused edge weight
+   data into the CPU cache, which minimizes memory bandwidth usage and reduces cache pollution.
+
+2. **Adaptive Edge Containment Checks:** The `contains_edge` method employs a hybrid algorithm that adapts to the data's
+   shape at runtime. It performs an `O(1)` degree check on the source node and selects the optimal search strategy: a
+   cache-friendly linear scan for low-degree nodes (where the number of neighbors is less than a compile-time threshold,
+   e.g., 64) and a logarithmically faster binary search for high-degree nodes. This ensures the best possible lookup
+   performance across varied graph structures.
+
+3. **Formal Evolutionary Lifecycle:** The most significant architectural addition is a formal two-state model for graph
+   evolution. `next_graph` defines two distinct representations: a mutable `DynamicGraph` optimized for efficient `O(1)`
+   node and edge additions, and the immutable `CsmGraph` optimized for analysis. The library provides high-performance
+   `O(V + E)` `.freeze()` and `.unfreeze()` operations to transition between these states. This two-state model directly
+   supports systems that require dynamic structural evolution, such as those modeling emergent causality, by providing a
+   controlled mechanism to separate the mutation phase from the immutable analysis phase.
+
+While the NWHypergraph paper provides an excellent blueprint for a high-performance static graph engine, these
+modifications extend that foundation into a more flexible, cache-aware, and dynamically adaptable framework
+purpose-built for the lifecycle of evolving graph systems.
 
 ## 🚀 Install
 
