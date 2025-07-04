@@ -70,6 +70,13 @@ fn test_graph_is_frozen_error() {
 }
 
 #[test]
+fn test_root_node_error() {
+    let error = GraphError::RootNodeAlreadyExists;
+    assert_eq!(format!("{error}"), "Root node already exists");
+    assert!(error.source().is_none());
+}
+
+#[test]
 fn test_error_traits() {
     let error1 = GraphError::NodeNotFound(5);
     let error2 = GraphError::NodeNotFound(5);

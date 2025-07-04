@@ -26,6 +26,9 @@ pub enum GraphError {
 
     /// Operation not possible because the graph is frozen and cannot be mutated.
     GraphIsFrozen,
+
+    /// Root node already exists
+    RootNodeAlreadyExists,
 }
 
 impl fmt::Display for GraphError {
@@ -60,6 +63,9 @@ impl fmt::Display for GraphError {
                     f,
                     "Operation not possible because the graph is frozen and cannot be mutated. Call graph.unfreeze() first."
                 )
+            }
+            Self::RootNodeAlreadyExists => {
+                write!(f, "Root node already exists")
             }
         }
     }

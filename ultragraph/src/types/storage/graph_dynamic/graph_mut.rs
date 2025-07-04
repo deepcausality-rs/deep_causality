@@ -118,10 +118,13 @@ impl<N, W> GraphMut<N, W> for DynamicGraph<N, W> {
     /// Adds a new node and designates it as the graph's root node.
     /// Any previous root designation is overwritten.
     fn add_root_node(&mut self, node: N) -> Result<usize, GraphError> {
-        let index = self.add_node(node)?;
-
-        self.root_index = Some(index);
-        Ok(index)
+        if self.root_index.is_none() {
+            let index = self.add_node(node)?;
+            self.root_index = Some(index);
+            Ok(index)
+        } else {
+            Err(GraphError::RootNodeAlreadyExists)
+        }
     }
 
     /// Clears all nodes and edges from the graph, resetting it to an empty state.

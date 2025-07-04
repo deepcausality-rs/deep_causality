@@ -76,6 +76,15 @@ fn test_duplicate_contextoid_id() {
 }
 
 #[test]
+fn test_add_contextoid_id() {
+    let err = ModelValidationError::AddContextoidError {
+        err: "error".to_string(),
+    };
+    assert_eq!(format!("{err}"), "Error adding Contextoid: error");
+    assert!(err.source().is_none());
+}
+
+#[test]
 fn test_unsupported_operation() {
     let err = ModelValidationError::UnsupportedOperation {
         operation: "test".to_string(),

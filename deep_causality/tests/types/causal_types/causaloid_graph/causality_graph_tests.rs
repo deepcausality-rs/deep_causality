@@ -60,6 +60,21 @@ fn test_add_root_causaloid() {
 }
 
 #[test]
+fn test_add_root_causaloid_err() {
+    let mut g = get_causal_graph();
+    let root_causaloid = test_utils::get_test_causaloid();
+
+    let root_index = g
+        .add_root_causaloid(root_causaloid.clone())
+        .expect("Failed to add root index");
+    let contains_root = g.contains_causaloid(root_index);
+    assert!(contains_root);
+
+    let res = g.add_root_causaloid(root_causaloid.clone());
+    assert!(res.is_err());
+}
+
+#[test]
 fn test_get_root_causaloid() {
     let mut g = get_causal_graph();
     let root_causaloid = test_utils::get_test_causaloid();
