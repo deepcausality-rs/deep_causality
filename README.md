@@ -8,7 +8,6 @@
 [![Docs.rs][docs-badge]][docs-url]
 [![MIT licensed][mit-badge]][mit-url]
 [![CodeFactor][codefactor-badge]][codefactor-url]
-![Benchmarks][benches-url]
 ![Tests][test-url]
 [![OpenSSF Best Practices][ossf-badge]][ossf-url]
 [![codecov][codecov-badge]][codecov-url]
@@ -37,8 +36,6 @@
 [mit-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
 [mit-url]: https://github.com/deepcausality-rs/deep_causality/blob/main/LICENSE
-
-[benches-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_benches.yml/badge.svg
 
 [test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
 
