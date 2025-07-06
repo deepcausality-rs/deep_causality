@@ -16,9 +16,6 @@ authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
 
-[dependencies]
-
-
 [dependencies.dcl_data_structures]
 path = "../dcl_data_structures"
 version = "0.9"
