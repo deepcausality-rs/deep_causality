@@ -1,6 +1,6 @@
 [package]
 name = "ultragraph"
-version = "0.7.5"
+version = "0.8.0"
 edition = "2021"
 rust-version = "1.80"
 repository = "https://github.com/deepcausality/deep_causality.rs"
@@ -14,9 +14,10 @@ keywords = ["data-structures"]
 exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
 
-[dependencies]
-# Internal Dependencies
-deep_causality_macros = {workspace = true}
+[dependencies.deep_causality_macros]
+path = "../deep_causality_macros"
+version = "0.8.0"
+
 
 [dev-dependencies]
 criterion = { version = "0.6", features = ["html_reports"] }
