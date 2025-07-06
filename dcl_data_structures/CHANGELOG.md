@@ -6,6 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1](https://github.com/deepcausality-rs/deep_causality/compare/dcl_data_structures-v0.9.0...dcl_data_structures-v0.9.1) - 2025-07-06
+
+### Other
+
+- Fixed up the Bazel config.
+- Marked Bazel files as excluded from Cargo release to ensure these crates vendor well when used with Bazel.
+- Added Bazel config for build and test
+- Even more lints and formatting
+- Applied more lints & autofixed
+- Fixed a bunch of lints
+- Fixed a bunch of lints
+- Updated smoking example to latest in main branch
+- doc(dcl_data_structures) added much needed documentation to ArrayGrid type.
+- Updated copyright across the entire repo
+- Added or updated changelog files
+
 ## [0.9.0](https://github.com/deepcausality-rs/deep_causality/compare/dcl_data_structures-v0.8.0...dcl_data_structures-v0.9.0) - 2025-06-19
 
 ### Other
