@@ -225,7 +225,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_macros"
-version = "0.4.11"
+version = "0.7.5"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -745,7 +745,7 @@ dependencies = [
 
 [[package]]
 name = "ultragraph"
-version = "0.5.6"
+version = "0.7.5"
 dependencies = [
  "criterion",
  "deep_causality_macros",

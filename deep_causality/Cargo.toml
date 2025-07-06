@@ -26,12 +26,12 @@ version = "0.9"
 
 [dependencies.deep_causality_macros]
 path = "../deep_causality_macros"
-version = "0.4"
+version = "^0.7.5"
 
 
 [dependencies.ultragraph]
 path = "../ultragraph"
-version = "0.5"
+version = "^0.7.5"
 
 
 [dev-dependencies]
