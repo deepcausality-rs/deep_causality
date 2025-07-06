@@ -23,7 +23,7 @@
 
 ## 📣 Goal
 
-`ultragraph` provides a high-performance, ergonomic, and directed graph data structure. It is designed around a
+ultragraph provides a high-performance, ergonomic, and directed graph data structure. It is designed around a
 state-machine architecture that offers both a flexible, mutable graph and a blazing-fast, immutable graph, allowing
 users to choose the right tool for the right phase of their application.
 
@@ -94,17 +94,17 @@ calculation based on the mean time.)*
 
 ## Performance Design
 
-The design of `next_graph`'s static analysis structure, `CsmGraph`, is based on the principles for high-performance
+The design of `ultragraph`'s static analysis structure, `CsmGraph`, is based on the principles for high-performance
 sparse graph representation detailed in the paper "NWHy: A Framework for Hypergraph Analytics" (Liu et al.).
-Specifically, `next_graph` adopts the paper's foundational model of using two mutually-indexed Compressed Sparse Row (
+Specifically, `ultragraph` adopts the paper's foundational model of using two mutually-indexed Compressed Sparse Row (
 CSR) structures to enable efficient, `O(degree)` bidirectional traversal—one for forward (outbound) edges and one for
 the transposed graph for backward (inbound) edges.
 
-However, `next_graph` introduces three significant architectural enhancements over this baseline to provide optimal
+However, `ultragraph` introduces three significant architectural enhancements over this baseline to provide optimal
 performance and to support the specific requirements of dynamically evolving systems.
 
 1. **Struct of Arrays (SoA) Memory Layout:** The internal CSR adjacency structures are implemented using a Struct of
-   Arrays layout. Instead of a single `Vec<(target, weight)>`, `next_graph` uses two parallel vectors: `Vec<target>` and
+   Arrays layout. Instead of a single `Vec<(target, weight)>`, `ultragraph` uses two parallel vectors: `Vec<target>` and
    `Vec<weight>`. This memory layout improves data locality for topology-only algorithms (e.g., reachability, cycle
    detection). By iterating exclusively over the `targets` vector, these algorithms avoid loading unused edge weight
    data into the CPU cache, which minimizes memory bandwidth usage and reduces cache pollution.
@@ -116,7 +116,7 @@ performance and to support the specific requirements of dynamically evolving sys
    performance across varied graph structures.
 
 3. **Formal Evolutionary Lifecycle:** The most significant architectural addition is a formal two-state model for graph
-   evolution. `next_graph` defines two distinct representations: a mutable `DynamicGraph` optimized for efficient `O(1)`
+   evolution. `ultragraph` defines two distinct representations: a mutable `DynamicGraph` optimized for efficient `O(1)`
    node and edge additions, and the immutable `CsmGraph` optimized for analysis. The library provides high-performance
    `O(V + E)` `.freeze()` and `.unfreeze()` operations to transition between these states. This two-state model directly
    supports systems that require dynamic structural evolution, such as those modeling emergent causality, by providing a

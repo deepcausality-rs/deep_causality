@@ -17,21 +17,10 @@ exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE
 
 
 [dependencies]
-
-
-[dependencies.dcl_data_structures]
-path = "../dcl_data_structures"
-version = "0.9"
-
-
-[dependencies.deep_causality_macros]
-path = "../deep_causality_macros"
-version = "0.4"
-
-
-[dependencies.ultragraph]
-path = "../ultragraph"
-version = "0.5"
+# Internal Dependencies
+dcl_data_structures = {workspace = true}
+deep_causality_macros = {workspace = true}
+ultragraph = {workspace = true}
 
 
 [dev-dependencies]

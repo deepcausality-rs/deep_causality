@@ -7,6 +7,19 @@ members = [
     "deep_causality_macros",
 ]
 
+[workspace.dependencies]
+# ==============
+# Internal Dependencies Aliases
+# ==============
+dcl_data_structures = {path = "dcl_data_structures"}
+deep_causality_macros = {path = "deep_causality_macros"}
+ultragraph = {path = "ultragraph"}
+# ==============
+# External Dependencies Aliases
+# ==============
+proc-macro2 = "1.0.95"
+quote = "1.0"
+syn = "2.0"
 
 # Optimize all crates
 [profile.release]

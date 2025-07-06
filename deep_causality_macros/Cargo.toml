@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_macros"
-version = "0.4.11"
+version = "0.7.5"
 edition = "2021"
 rust-version = "1.80"
 repository = "https://github.com/deepcausality/deep_causality.rs"
@@ -16,9 +16,9 @@ proc-macro = true
 [features]
 
 [dependencies]
-proc-macro2 = "1.0.95"
-quote = "1.0"
-syn = "2.0"
+proc-macro2 = {workspace = true}
+quote = {workspace = true}
+syn = {workspace = true}
 
 [package.metadata.docs.rs]
 all-features = true
