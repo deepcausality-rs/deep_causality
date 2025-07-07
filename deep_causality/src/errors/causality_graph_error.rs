@@ -3,6 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::CausalityError;
 use deep_causality_macros::Constructor;
 use std::error::Error;
 use std::fmt;
@@ -24,6 +25,12 @@ impl fmt::Display for CausalityGraphError {
 /// for using the `?` operator to propagate errors cleanly.
 impl From<GraphError> for CausalityGraphError {
     fn from(err: GraphError) -> Self {
+        CausalityGraphError(err.to_string())
+    }
+}
+
+impl From<CausalityError> for CausalityGraphError {
+    fn from(err: CausalityError) -> Self {
         CausalityGraphError(err.to_string())
     }
 }

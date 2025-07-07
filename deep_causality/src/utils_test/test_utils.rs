@@ -38,7 +38,18 @@ pub fn get_test_causaloid() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
 
-    fn causal_fn(obs: &NumericalValue) -> Result<bool, CausalityError> {
+    fn causal_fn(evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+        let obs =
+            match evidence {
+                // If it's the Numerical variant, extract the inner value.
+                Evidence::Numerical(val) => *val,
+                // For any other type of evidence, this function cannot proceed, so return an error.
+                _ => return Err(CausalityError(
+                    "Causal function expected Numerical evidence but received a different variant."
+                        .into(),
+                )),
+            };
+
         if obs.is_nan() {
             return Err(CausalityError("Observation is NULL/NAN".into()));
         }
@@ -53,9 +64,9 @@ pub fn get_test_causaloid() -> BaseCausaloid {
 
         let threshold: NumericalValue = 0.55;
         if !obs.ge(&threshold) {
-            Ok(false)
+            Ok(PropagatingEffect::Deterministic(false))
         } else {
-            Ok(true)
+            Ok(PropagatingEffect::Deterministic(true))
         }
     }
 
@@ -84,7 +95,7 @@ pub fn get_test_error_causaloid() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
 
-    fn causal_fn(_obs: &NumericalValue) -> Result<bool, CausalityError> {
+    fn causal_fn(_obs: &Evidence) -> Result<PropagatingEffect, CausalityError> {
         Err(CausalityError("Test error".into()))
     }
 

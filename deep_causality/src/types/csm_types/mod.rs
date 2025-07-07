@@ -7,7 +7,7 @@ use crate::errors::{ActionError, UpdateError};
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
-use crate::{CausalAction, CausalState, Datable, NumericalValue, Symbolic};
+use crate::{CausalAction, CausalState, Datable, Evidence, Symbolic};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
@@ -147,7 +147,7 @@ where
 
     /// Evaluates a single causal state at the index position idx.
     /// Returns ActionError if the evaluation failed.
-    pub fn eval_single_state(&self, id: usize, data: NumericalValue) -> Result<(), ActionError> {
+    pub fn eval_single_state(&self, id: usize, data: Evidence) -> Result<(), ActionError> {
         // Need binding to prevent dropped tmp value warnings and check for rw lock poisoning
         let binding = self
             .state_actions
@@ -176,11 +176,11 @@ where
         }
 
         // Unpack the bool result that triggers the action
-        let trigger =
+        let effect =
             eval.expect("CSM[eval]: Failed to unwrap evaluation result from causal state}");
 
         // If the state evaluated to true, fire the associated action.
-        if trigger && action.fire().is_err() {
+        if !effect.is_halting() && action.fire().is_err() {
             return Err(ActionError(format!(
                 "CSM[eval]: Failed to fire action associated with causal state {state:?}"
             )));
@@ -229,8 +229,8 @@ where
             let trigger =
                 eval.expect("CSM[eval]: Failed to unwrap evaluation result from causal state}");
 
-            // If the state evaluated to true, fire the associated action.
-            if trigger && action.fire().is_err() {
+            // If the state has evaluated and is not halting, fire the associated action.
+            if !trigger.is_halting() && action.fire().is_err() {
                 return Err(ActionError(format!(
                     "CSM[eval]: Failed to fire action associated with causal state {state:?}"
                 )));

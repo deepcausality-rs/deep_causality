@@ -12,16 +12,35 @@ const SMALL: usize = 9;
 fn get_test_causaloid() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
-    fn causal_fn(obs: &NumericalValue) -> Result<bool, CausalityError> {
+    fn causal_fn(evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+        let obs =
+            match evidence {
+                // If it's the Numerical variant, extract the inner value.
+                Evidence::Numerical(val) => *val,
+                // For any other type of evidence, this function cannot proceed, so return an error.
+                _ => return Err(CausalityError(
+                    "Causal function expected Numerical evidence but received a different variant."
+                        .into(),
+                )),
+            };
+
+        if obs.is_nan() {
+            return Err(CausalityError("Observation is NULL/NAN".into()));
+        }
+
+        if obs.is_infinite() {
+            return Err(CausalityError("Observation is infinite".into()));
+        }
+
         if obs.is_sign_negative() {
             return Err(CausalityError("Observation is negative".into()));
         }
 
         let threshold: NumericalValue = 0.55;
         if !obs.ge(&threshold) {
-            Ok(false)
+            Ok(PropagatingEffect::Deterministic(false))
         } else {
-            Ok(true)
+            Ok(PropagatingEffect::Deterministic(true))
         }
     }
 
@@ -35,7 +54,7 @@ pub fn get_small_linear_graph_and_data() -> (BaseCausalGraph, [f64; SMALL + 1]) 
 
 pub fn build_linear_graph(k: usize) -> BaseCausalGraph {
     // Builds a linear graph: root -> a -> b -> c
-    let mut g = CausaloidGraph::new();
+    let mut g = CausaloidGraph::new(0);
 
     let root_causaloid = get_test_causaloid();
     let root_index = g.add_root_causaloid(root_causaloid);
@@ -72,7 +91,7 @@ fn build_multi_cause_graph() -> BaseCausalGraph {
     //  \ /
     //   C
 
-    let mut g = CausaloidGraph::new();
+    let mut g = CausaloidGraph::new(0);
 
     // Add root causaloid
     let root_causaloid = get_test_causaloid();
@@ -126,7 +145,7 @@ fn build_multi_layer_cause_graph() -> BaseCausalGraph {
     // /\  /\  /\
     //D   E   F  G
 
-    let mut g = CausaloidGraph::new();
+    let mut g = CausaloidGraph::new(0);
 
     // Add root causaloid
     let root_causaloid = get_test_causaloid();
@@ -211,7 +230,7 @@ fn build_left_imbalanced_cause_graph() -> BaseCausalGraph {
     // /\
     //D  E
 
-    let mut g = CausaloidGraph::new();
+    let mut g = CausaloidGraph::new(0);
 
     // Add root causaloid
     let root_causaloid = get_test_causaloid();
@@ -276,7 +295,7 @@ fn build_right_imbalanced_cause_graph() -> BaseCausalGraph {
     //          /\
     //         D  E
 
-    let mut g = CausaloidGraph::new();
+    let mut g = CausaloidGraph::new(0);
 
     // Add root causaloid
     let root_causaloid = get_test_causaloid();

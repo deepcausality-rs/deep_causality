@@ -9,11 +9,13 @@ use ultragraph::*;
 use crate::errors::{CausalGraphIndexError, CausalityGraphError};
 use crate::{
     Causable, CausableGraph, CausableGraphExplaining, CausableGraphReasoning, CausalGraph,
-    NumericalValue,
+    IdentificationValue, NumericalValue,
 };
 
+mod causable;
 mod causable_graph;
 mod default;
+mod identifiable;
 
 /// A specialized graph structure for representing and reasoning about causal relationships.
 ///
@@ -37,6 +39,7 @@ pub struct CausaloidGraph<T>
 where
     T: Causable + PartialEq + Clone + Display,
 {
+    id: IdentificationValue,
     graph: CausalGraph<T>,
 }
 
@@ -52,8 +55,9 @@ where
     ///
     /// # Returns
     ///
-    pub fn new() -> Self {
+    pub fn new(id: IdentificationValue) -> Self {
         Self {
+            id,
             graph: UltraGraphWeighted::with_capacity(500, None),
         }
     }
@@ -68,8 +72,9 @@ where
     ///
     /// * `capacity` - The maximum number of nodes the graph is expected to hold.
     ///
-    pub fn new_with_capacity(capacity: usize) -> Self {
+    pub fn new_with_capacity(id: IdentificationValue, capacity: usize) -> Self {
         Self {
+            id,
             graph: UltraGraphWeighted::with_capacity(capacity, None),
         }
     }

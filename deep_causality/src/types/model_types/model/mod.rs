@@ -116,7 +116,6 @@ where
             let context_arc = Arc::new(context);
 
             final_causaloid.set_context(Some(Arc::clone(&context_arc)));
-            final_causaloid.set_has_context(true);
 
             // Return the Arc for the model's own field.
             Some(context_arc)

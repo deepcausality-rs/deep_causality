@@ -7,7 +7,7 @@ use ultragraph::*;
 
 use crate::errors::{CausalGraphIndexError, CausalityGraphError};
 use crate::traits::causable_graph::CausalGraph;
-use crate::{Causable, NumericalValue};
+use crate::{Causable, CausalityError, NumericalValue};
 
 /// The CausableGraph trait defines the core interface for a causal graph.
 ///
@@ -235,21 +235,21 @@ where
     ///
     /// * `true` if every causaloid in the graph is active.
     /// * `false` if at least one causaloid is not active.
-    fn all_active(&self) -> bool;
+    fn all_active(&self) -> Result<bool, CausalityError>;
 
     /// Counts the number of active causaloids in the graph.
     ///
     /// # Returns
     ///
     /// A `NumericalValue` representing the total count of active causaloids.
-    fn number_active(&self) -> NumericalValue;
+    fn number_active(&self) -> Result<NumericalValue, CausalityError>;
 
     /// Calculates the percentage of active causaloids relative to the total number of causaloids.
     ///
     /// # Returns
     ///
     /// A `NumericalValue` representing the percentage of active causaloids (e.g., from 0.0 to 100.0).
-    fn percent_active(&self) -> NumericalValue;
+    fn percent_active(&self) -> Result<NumericalValue, CausalityError>;
 
     /// Returns the total number of causaloids (nodes) in the graph.
     ///

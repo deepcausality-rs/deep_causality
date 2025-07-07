@@ -3,13 +3,11 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 
 use ultragraph::*;
 
-use crate::errors::CausalityGraphError;
-use crate::traits::causable_graph::graph_reasoning_utils;
-use crate::{Causable, CausableGraph, IdentificationValue, NumericalValue};
+use crate::{Causable, CausableGraph, CausalityError, Evidence, PropagatingEffect};
 
 /// Describes signatures for causal reasoning and explaining
 /// in causality hyper graph.
@@ -17,112 +15,37 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
 where
     T: Causable + PartialEq + Clone,
 {
-    /// Reason over single node given by its index
-    /// index: NodeIndex - index of the node
-    /// Returns Result either true or false in case of successful reasoning or
-    /// a CausalityGraphError in case of failure.
-    fn reason_single_cause(
-        &self,
-        index: usize,
-        data: &[NumericalValue],
-    ) -> Result<bool, CausalityGraphError> {
-        if !self.contains_causaloid(index) {
-            return Err(CausalityGraphError(
-                "Graph does not contain causaloid".to_string(),
-            ));
-        }
-
-        if data.is_empty() {
-            return Err(CausalityGraphError("Data are empty (len ==0).".into()));
-        }
-
-        let causaloid = self.get_causaloid(index).expect("Failed to get causaloid");
-
-        if data.len() == 1 {
-            let obs = data.first().expect("Failed to get data");
-            return match causaloid.verify_single_cause(obs) {
-                Ok(res) => Ok(res),
-                Err(e) => Err(CausalityGraphError(e.0)),
-            };
-        }
-
-        // In case of multiple data points, all must verify the cause.
-        for obs in data.iter() {
-            if !causaloid
-                .verify_single_cause(obs)
-                .expect("Failed to verify data")
-            {
-                // If any observation fails, the reasoning is false.
-                return Ok(false);
-            }
-        }
-
-        Ok(true)
-    }
-
-    /// Reasons over the entire graph, starting from the root and traversing all reachable nodes.
-    ///
-    /// data: &[NumericalValue] - data applied to the subgraph
-    /// Optional: data_index - provide when the data have a different index sorting than
-    /// the causaloids.
-    ///
-    /// Returns Result either true or false in case of successful reasoning or
-    /// a CausalityGraphError in case of failure.
-    fn reason_all_causes(
-        &self,
-        data: &[NumericalValue],
-        data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>,
-    ) -> Result<bool, CausalityGraphError> {
-        if !self.contains_root_causaloid() {
-            return Err(CausalityGraphError(
-                "Graph does not contain root causaloid".into(),
-            ));
-        }
-
-        // This is safe as we have tested above that a root exists.
-        let start_index = self.get_root_index().expect("Root causaloid not found.");
-
-        // Delegate to the robust subgraph reasoning implementation.
-        self.reason_subgraph_from_cause(start_index, data, data_index)
-    }
-
     /// Reasons over a subgraph by traversing all nodes reachable from a given start index.
     ///
-    /// This method performs a full traversal (BFS) of all descendants of the start_index,
-    /// applying reasoning logic to each one. If any node fails its verification, the
-    /// entire process stops and returns `Ok(false)`.
+    /// This method performs a Breadth-First Search (BFS) traversal of all descendants
+    /// of the `start_index`. It calls `evaluate` on each node and uses the resulting
+    /// `PropagatingEffect` to decide whether to continue the traversal down that path.
     ///
-    /// start_index: usize - index of the starting node
-    /// data: &[NumericalValue] - data applied to the subgraph
-    /// Optional: data_index - provide when the data have a different index sorting than
-    /// the causaloids.
+    /// # Arguments
     ///
-    /// Returns Result either true or false in case of successful reasoning or
-    /// a CausalityGraphError in case of failure.
-    fn reason_subgraph_from_cause(
+    /// * `start_index` - The index of the node to start the traversal from.
+    /// * `evidence` - The runtime evidence to be passed to each node's evaluation function.
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(PropagatingEffect::Halting)` if any node in the traversal returns `Halting`.
+    /// * `Ok(PropagatingEffect::Deterministic(true))` if the traversal completes.
+    /// * `Err(CausalityError)` if the graph is not frozen, a node is missing, or an evaluation fails.
+    fn evaluate_subgraph_from_cause(
         &self,
         start_index: usize,
-        data: &[NumericalValue],
-        data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>,
-    ) -> Result<bool, CausalityGraphError> {
-        if self.is_empty() {
-            return Err(CausalityGraphError("Graph is empty".to_string()));
-        }
-
+        evidence: &Evidence,
+    ) -> Result<PropagatingEffect, CausalityError> {
         if !self.is_frozen() {
-            return Err(CausalityGraphError(
-                "Graph is not frozen. Call g.freeze() first".to_string(),
+            return Err(CausalityError(
+                "Graph is not frozen. Call freeze() first".into(),
             ));
-        }
-
-        if data.is_empty() {
-            return Err(CausalityGraphError("Data are empty (len ==0).".into()));
         }
 
         if !self.contains_causaloid(start_index) {
-            return Err(CausalityGraphError(
-                "Graph does not contain start causaloid".into(),
-            ));
+            return Err(CausalityError(format!(
+                "Graph does not contain start causaloid with index {start_index}"
+            )));
         }
 
         let mut queue = VecDeque::with_capacity(self.number_nodes());
@@ -132,23 +55,27 @@ where
         visited[start_index] = true;
 
         while let Some(current_index) = queue.pop_front() {
-            let cause = self
-                .get_causaloid(current_index)
-                .expect("Failed to get causaloid");
+            let cause = self.get_causaloid(current_index).ok_or_else(|| {
+                CausalityError(format!("Failed to get causaloid at index {current_index}"))
+            })?;
 
-            let obs = graph_reasoning_utils::get_obs(cause.id(), data, &data_index);
+            // Evaluate the current cause using the new unified method.
+            // The same `evidence` is passed to each node, and the node's CausalFn
+            // is responsible for extracting the data it needs from the evidence map.
+            let effect = cause.evaluate(evidence)?;
 
-            let res = if cause.is_singleton() {
-                cause.verify_single_cause(&obs)
-            } else {
-                cause.verify_all_causes(data, data_index)
-            };
+            match effect {
+                // If any cause halts, the entire subgraph reasoning halts immediately.
+                PropagatingEffect::Halting => return Ok(PropagatingEffect::Halting),
 
-            match res {
-                Ok(true) => {
+                // If the cause is deterministically false, we stop traversing this path,
+                // but the overall subgraph reasoning does not fail or halt.
+                PropagatingEffect::Deterministic(false) => continue,
+
+                // For any other propagating effect (true, probabilistic, etc.),
+                // we continue the traversal to its children.
+                _ => {
                     // The cause is valid, so add its children to the queue.
-                    // Using `?` ensures that any error from `outbound_edges` (like
-                    // GraphNotFrozen) is correctly propagated up.
                     let children = self.get_graph().outbound_edges(current_index)?;
                     for child_index in children {
                         if !visited[child_index] {
@@ -157,80 +84,72 @@ where
                         }
                     }
                 }
-                Ok(false) => {
-                    // If any cause evaluates to false, the entire reasoning chain is false.
-                    return Ok(false);
-                }
-                Err(e) => return Err(CausalityGraphError(e.0)),
             }
         }
 
-        // If the loop completes without any cause returning false, the reasoning is successful.
-        Ok(true)
+        // If the loop completes without halting, the reasoning is considered successful.
+        Ok(PropagatingEffect::Deterministic(true))
     }
 
     /// Reasons over the shortest path between a start and stop cause.
     ///
-    /// # Preconditions
-    /// The graph must be in a `Static` (frozen) state.
+    /// It evaluates each node along the path. If any node fails evaluation or returns
+    /// a non-propagating effect, the reasoning stops.
     ///
-    /// # Errors
-    /// Returns `CausalityGraphError` if the graph is not frozen.
+    /// # Arguments
     ///
-    /// start_index: usize - index of the start cause
-    /// stop_index: usize - index of the stop cause
-    /// data: &[NumericalValue] - data applied to the subgraph
-    /// Optional: data_index - provide when the data have a different index sorting than
-    /// the causaloids.
+    /// * `start_index` - The index of the start cause.
+    /// * `stop_index` - The index of the stop cause.
+    /// * `evidence` - The runtime evidence to be passed to each node's evaluation function.
     ///
-    /// Returns Result either true or false in case of successful reasoning or
-    /// a CausalityGraphError in case of failure.
-    fn reason_shortest_path_between_causes(
+    /// # Returns
+    ///
+    /// * `Ok(PropagatingEffect::Halting)` if any node on the path returns `Halting`.
+    /// * `Ok(PropagatingEffect::Deterministic(false))` if any node returns `Deterministic(false)`.
+    /// * `Ok(PropagatingEffect::Deterministic(true))` if all nodes on the path propagate successfully.
+    /// * `Err(CausalityError)` if the path cannot be found or an evaluation fails.
+    fn evaluate_shortest_path_between_causes(
         &self,
         start_index: usize,
         stop_index: usize,
-        data: &[NumericalValue],
-        data_index: Option<&HashMap<IdentificationValue, IdentificationValue>>,
-    ) -> Result<bool, CausalityGraphError> {
-        if self.is_empty() {
-            return Err(CausalityGraphError("Graph is empty".to_string()));
-        }
-
+        evidence: &Evidence,
+    ) -> Result<PropagatingEffect, CausalityError> {
         if !self.is_frozen() {
-            return Err(CausalityGraphError(
-                "Graph is not frozen. Call graph.freeze() first".to_string(),
+            return Err(CausalityError(
+                "Graph is not frozen. Call freeze() first".into(),
             ));
         }
 
-        if !self.contains_causaloid(start_index) {
-            return Err(CausalityGraphError(
-                "Graph does not contain start causaloid".into(),
-            ));
-        }
-
-        if !self.contains_causaloid(stop_index) {
-            return Err(CausalityGraphError(
-                "Graph does not contain stop causaloid".into(),
-            ));
-        }
-
+        // get_shortest_path will handle checks for missing nodes.
         let path = self.get_shortest_path(start_index, stop_index)?;
 
+        if path.is_empty() {
+            // This can happen if start_index == stop_index.
+            // Evaluate the single node.
+            let cause = self.get_causaloid(start_index).ok_or_else(|| {
+                CausalityError(format!("Failed to get causaloid at index {start_index}"))
+            })?;
+            return cause.evaluate(evidence);
+        }
+
         for index in path {
-            let cause = self.get_causaloid(index).expect("Failed to get causaloid");
+            let cause = self.get_causaloid(index).ok_or_else(|| {
+                CausalityError(format!("Failed to get causaloid at index {index}"))
+            })?;
 
-            let obs = graph_reasoning_utils::get_obs(cause.id(), data, &data_index);
+            let effect = cause.evaluate(evidence)?;
 
-            let res = match cause.verify_single_cause(&obs) {
-                Ok(res) => res,
-                Err(e) => return Err(CausalityGraphError(e.0)),
-            };
-
-            if !res {
-                return Ok(false);
+            match effect {
+                // If any node on the path is false or halts, the entire path fails.
+                PropagatingEffect::Deterministic(false) | PropagatingEffect::Halting => {
+                    return Ok(effect);
+                }
+                // Otherwise, continue to the next node.
+                _ => continue,
             }
         }
 
-        Ok(true)
+        // If the loop completes, all nodes on the path were successfully evaluated.
+        Ok(PropagatingEffect::Deterministic(true))
     }
 }

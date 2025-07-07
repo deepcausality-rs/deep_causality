@@ -2,7 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Causable, CausableGraph, CausalityGraphError};
+use crate::{Causable, CausableGraph, CausalityError, CausalityGraphError};
+use std::collections::VecDeque;
 use ultragraph::GraphTraversal;
 
 /// The CausableGraphExplaining trait provides methods to generate
@@ -78,83 +79,99 @@ where
             ));
         }
 
-        let mut stack = Vec::with_capacity(self.size());
         let mut explanation = String::new();
+        let mut queue = VecDeque::with_capacity(self.number_nodes());
+        let mut visited = vec![false; self.number_nodes()];
 
-        let cause = self
-            .get_causaloid(start_index)
-            .expect("Failed to get causaloid");
+        queue.push_back(start_index);
+        visited[start_index] = true;
 
-        let explain = match cause.explain() {
-            Ok(res) => res,
-            Err(e) => return Err(CausalityGraphError(e.to_string())),
-        };
-
-        append_string(&mut explanation, &explain);
-
-        // get all neighbors of the start causaloid
-        let neighbors = match self.get_graph().outbound_edges(start_index) {
-            Ok(neighbors) => neighbors,
-            Err(e) => return Err(CausalityGraphError(e.to_string())),
-        };
-
-        stack.push(neighbors);
-
-        while let Some(children) = stack.last_mut() {
-            if let Some(child) = children.next() {
-                let cause = self.get_causaloid(child).expect("Failed to get causaloid");
-
-                append_string(&mut explanation, &cause.explain().unwrap());
-
-                if child == stop_index {
-                    return Ok(explanation);
-                } else {
-                    let neighbors = match self.get_graph().outbound_edges(child) {
-                        Ok(neighbors) => neighbors,
-                        Err(e) => return Err(CausalityGraphError(e.to_string())),
-                    };
-
-                    stack.push(neighbors);
+        while let Some(current_index) = queue.pop_front() {
+            if let Some(cause) = self.get_causaloid(current_index) {
+                if let Ok(single_explanation) = cause.explain() {
+                    append_string(&mut explanation, &single_explanation);
                 }
-            } else {
-                stack.pop();
+
+                // If we've reached the stop index for this path, do not explore its children.
+                if current_index == stop_index {
+                    continue;
+                }
+
+                // Otherwise, add all unvisited children to the queue for processing.
+                let children = self.get_graph().outbound_edges(current_index)?;
+                for child_index in children {
+                    if !visited[child_index] {
+                        visited[child_index] = true;
+                        queue.push_back(child_index);
+                    }
+                }
             }
         }
 
-        Ok(explanation)
+        if explanation.is_empty() {
+            Ok(
+                "No nodes in the specified sub-graph have been evaluated or produced an explainable effect."
+                    .to_string(),
+            )
+        } else {
+            Ok(explanation)
+        }
     }
 
-    /// Explains the full causal graph from the root node to the last node.
+    /// Explains the full causal graph by traversing all reachable nodes from the root.
     ///
-    /// Checks that the graph is not empty and contains a root node.
+    /// This method performs a Breadth-First Search (BFS) starting from the root node
+    /// to ensure every node in every causal pathway is visited. For each visited node,
+    /// it attempts to get its explanation. It only includes explanations from nodes
+    /// where `explain()` succeeds (i.e., the node has an effect to report).
     ///
-    /// Gets the root node index and last node index.
+    /// # Returns
     ///
-    /// Calls explain_from_to_cause() with the root and last node indices
-    /// to generate the full explanation.
-    ///
-    /// Returns:
-    /// - Ok(String): The full graph explanation if successful
-    /// - Err(CausalityGraphError): If graph is empty or lacks a root node
-    ///
-    fn explain_all_causes(&self) -> Result<String, CausalityGraphError> {
+    /// A `Result` containing a single, formatted string of all available explanations,
+    /// or a `CausalityError` if the graph is empty or has no root.
+    fn explain_all_causes(&self) -> Result<String, CausalityError> {
         if self.is_empty() {
-            return Err(CausalityGraphError("Graph is empty".to_string()));
+            return Ok("The causal graph is empty.".to_string());
         }
 
-        if !self.contains_root_causaloid() {
-            return Err(CausalityGraphError(
-                "Graph does not contains root causaloid".into(),
-            ));
+        let start_index = self.get_root_index().ok_or_else(|| {
+            CausalityError("Cannot explain all causes: Graph has no root node.".into())
+        })?;
+
+        let mut all_explanations = String::new();
+        let mut queue = VecDeque::with_capacity(self.number_nodes());
+        let mut visited = vec![false; self.number_nodes()];
+
+        queue.push_back(start_index);
+        visited[start_index] = true;
+
+        while let Some(current_index) = queue.pop_front() {
+            if let Some(cause) = self.get_causaloid(current_index) {
+                // cause.explain() returns a Result. We only care about the Ok variants.
+                // If a node hasn't been evaluated, its explain() will return Err,
+                // which we correctly and safely ignore.
+                if let Ok(explanation) = cause.explain() {
+                    append_string(&mut all_explanations, &explanation);
+                }
+
+                // Add all unvisited children to the queue for processing.
+                let children = self.get_graph().outbound_edges(current_index)?;
+                for child_index in children {
+                    if !visited[child_index] {
+                        visited[child_index] = true;
+                        queue.push_back(child_index);
+                    }
+                }
+            }
         }
 
-        // These is safe as we have tested above that these exists
-        let start_index = self.get_root_index().expect("Root causaloid not found.");
-        let stop_index = self.size() - 1;
-
-        match self.explain_from_to_cause(start_index, stop_index) {
-            Ok(explanation) => Ok(explanation),
-            Err(e) => Err(e),
+        if all_explanations.is_empty() {
+            Ok(
+                "No nodes in the graph have been evaluated or produced an explainable effect."
+                    .to_string(),
+            )
+        } else {
+            Ok(all_explanations)
         }
     }
 
@@ -231,32 +248,33 @@ where
         }
 
         let shortest_path = self.get_shortest_path(start_index, stop_index)?;
+        if shortest_path.is_empty() {
+            return Err(CausalityGraphError(format!(
+                "No shortest path found between start Causaloid: {start_index} and stop Causaloid: {stop_index} "
+            )));
+        }
 
         let mut explanation = String::new();
 
         for index in shortest_path {
-            let cause = self.get_causaloid(index).expect("Failed to get causaloid");
+            // Safely get the causaloid, returning an error if it's missing.
+            let cause = self.get_causaloid(index).ok_or_else(|| {
+                CausalityGraphError(format!("Failed to get causaloid at index {index}"))
+            })?;
 
-            append_string(&mut explanation, &cause.explain().unwrap());
+            // Safely get the explanation, propagating any error.
+            let single_explanation = cause.explain()?;
+            append_string(&mut explanation, &single_explanation);
         }
 
         Ok(explanation)
     }
 }
 
-/// Appends a string to another string with newlines before and after.
-///
-/// s1: The string to append to
-/// s2: The string to append
-///
-/// Inserts a newline, then the s2 string formatted with a bullet point,
-/// then another newline before returning the modified s1.
-///
-/// This allows cleanly appending explain() strings with spacing.
-///
-fn append_string<'l>(s1: &'l mut String, s2: &'l str) -> &'l str {
-    s1.push('\n');
-    s1.push_str(format!(" * {s2}").as_str());
-    s1.push('\n');
-    s1
+/// Appends a string to another string with a formatted bullet point.
+fn append_string(s1: &mut String, s2: &str) {
+    if !s1.is_empty() {
+        s1.push('\n');
+    }
+    s1.push_str(&format!(" * {s2}"));
 }

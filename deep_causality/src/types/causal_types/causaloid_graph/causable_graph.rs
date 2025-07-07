@@ -2,8 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
 use super::*;
+use crate::CausalityError;
 
 // See default implementation in protocols/causaloid_graph/graph_explaining. Requires CausableGraph impl.
 impl<T> CausableGraphExplaining<T> for CausaloidGraph<T> where
@@ -16,6 +16,7 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T> where
     T: Clone + Display + Causable + PartialEq
 {
 }
+
 #[allow(clippy::type_complexity)]
 impl<T> CausableGraph<T> for CausaloidGraph<T>
 where
@@ -57,16 +58,14 @@ where
     }
 
     fn get_last_index(&self) -> Result<usize, CausalityGraphError> {
-        if !self.is_empty() {
-            let last_index = self
-                .graph
-                .get_last_index()
-                .expect("Could not get last index");
-
-            Ok(last_index)
-        } else {
-            Err(CausalityGraphError("Graph is empty".to_string()))
+        if self.is_empty() {
+            return Err(CausalityGraphError("Graph is empty".to_string()));
         }
+
+        // Handle the Option from the underlying graph implementation with a precise error.
+        self.graph.get_last_index().ok_or_else(|| {
+            CausalityGraphError("Failed to get last index from a non-empty graph".to_string())
+        })
     }
 
     fn add_causaloid(&mut self, value: T) -> Result<usize, CausalityGraphError> {
@@ -121,26 +120,41 @@ where
         }
     }
 
-    fn all_active(&self) -> bool {
+    /// Checks if all causaloids in the graph are active.
+    /// Propagates any error encountered while checking a causaloid's state.
+    fn all_active(&self) -> Result<bool, CausalityError> {
         for cause in self.graph.get_all_nodes() {
-            if !cause.is_active() {
-                return false;
+            // Use `?` to handle the Result from is_active()
+            if !cause.is_active()? {
+                return Ok(false);
             }
         }
-
-        true
+        Ok(true)
     }
 
-    fn number_active(&self) -> NumericalValue {
-        self.graph
-            .get_all_nodes()
-            .iter()
-            .filter(|c| c.is_active())
-            .count() as NumericalValue
+    /// Counts the number of active causaloids in the graph.
+    /// Propagates any error encountered while checking a causaloid's state.
+    fn number_active(&self) -> Result<NumericalValue, CausalityError> {
+        let mut count = 0;
+        for cause in self.graph.get_all_nodes() {
+            // Use `?` to handle the Result from is_active()
+            if cause.is_active()? {
+                count += 1;
+            }
+        }
+        Ok(count as NumericalValue)
     }
 
-    fn percent_active(&self) -> NumericalValue {
-        (self.number_active() / self.size() as NumericalValue) * (100 as NumericalValue)
+    /// Calculates the percentage of active causaloids in the graph.
+    /// Propagates any error encountered during the calculation.
+    fn percent_active(&self) -> Result<NumericalValue, CausalityError> {
+        let total = self.size() as NumericalValue;
+        if total == 0.0 {
+            return Ok(0.0);
+        }
+        // Use `?` to handle the Result from number_active()
+        let active_count = self.number_active()?;
+        Ok((active_count / total) * 100.0)
     }
 
     fn size(&self) -> usize {

@@ -5,7 +5,7 @@
 
 use criterion::{Criterion, criterion_group};
 
-use deep_causality::traits::causable::CausableReasoning;
+use deep_causality::traits::causable::causable_reasoning::CausableReasoning;
 
 use crate::benchmarks::utils_collection;
 

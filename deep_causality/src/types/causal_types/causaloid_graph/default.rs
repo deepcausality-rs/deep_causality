@@ -11,6 +11,6 @@ where
     T: Clone + Display + Causable + PartialEq,
 {
     fn default() -> Self {
-        Self::new()
+        Self::new(0)
     }
 }
