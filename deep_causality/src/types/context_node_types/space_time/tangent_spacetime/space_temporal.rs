@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{SpaceTemporal, TangentSpacetime};
+use crate::{SpaceTemporal, TangentSpacetime};
 
 impl SpaceTemporal<f64, f64> for TangentSpacetime {
     fn t(&self) -> &f64 {

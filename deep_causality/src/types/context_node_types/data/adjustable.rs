@@ -8,7 +8,7 @@ use dcl_data_structures::prelude::PointIndex;
 use std::hash::Hash;
 use std::ops::{Add, Mul, Sub};
 
-use crate::prelude::{Adjustable, AdjustmentError, Data, Datable, UpdateError};
+use crate::{Adjustable, AdjustmentError, Data, Datable, UpdateError};
 
 impl<T> Adjustable<T> for Data<T>
 where

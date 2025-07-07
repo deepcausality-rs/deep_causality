@@ -27,7 +27,7 @@ use std::fmt::Display;
 ///
 /// # Example
 /// ```
-/// use deep_causality::prelude::*;
+/// use deep_causality::*;
 ///
 /// let mut n1 = ConformalSpacetime::new(1, Some("Origin".into()));
 /// let mut n2 = ConformalSpacetime::new(2, Some("Infinity".into()));

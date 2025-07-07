@@ -6,7 +6,7 @@
 use std::thread;
 use std::time::Duration;
 
-use deep_causality::prelude::{CSM, CausalState};
+use deep_causality::{CSM, CausalState};
 
 use crate::utils_actions::*;
 use crate::utils_data::{get_explosion_sensor_data, get_fire_sensor_data, get_smoke_sensor_data};

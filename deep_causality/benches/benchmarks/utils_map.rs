@@ -5,7 +5,7 @@
 
 use std::collections::HashMap;
 
-use deep_causality::prelude::BaseCausalMap;
+use deep_causality::BaseCausalMap;
 
 use crate::benchmarks::utils_shared;
 

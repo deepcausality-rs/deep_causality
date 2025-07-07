@@ -4,7 +4,7 @@
  */
 
 use deep_causality::errors::CausalityError;
-use deep_causality::prelude::{BaseCausaloid, Causaloid, IdentificationValue, NumericalValue};
+use deep_causality::{BaseCausaloid, Causaloid, IdentificationValue, NumericalValue};
 
 pub fn get_test_causaloid() -> BaseCausaloid {
     let id: IdentificationValue = 1;

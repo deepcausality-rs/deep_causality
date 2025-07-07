@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::CausalGraphIndexError;
+use deep_causality::CausalGraphIndexError;
 use std::error::Error;
 
 #[test]

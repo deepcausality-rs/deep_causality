@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{LorentzianTime, ScalarProjector, Temporal};
+use crate::{LorentzianTime, ScalarProjector, Temporal};
 
 impl ScalarProjector for LorentzianTime {
     type Scalar = f64;

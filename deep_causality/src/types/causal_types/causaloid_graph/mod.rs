@@ -7,7 +7,7 @@ use std::fmt::Display;
 use ultragraph::*;
 
 use crate::errors::{CausalGraphIndexError, CausalityGraphError};
-use crate::prelude::{
+use crate::{
     Causable, CausableGraph, CausableGraphExplaining, CausableGraphReasoning, CausalGraph,
     NumericalValue,
 };

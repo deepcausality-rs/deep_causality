@@ -32,7 +32,7 @@
 ///
 /// ```rust
 /// use deep_causality::coord_match;
-/// use deep_causality::prelude::*;
+/// use deep_causality::*;
 /// use deep_causality::errors::IndexError;
 ///
 /// struct Vec3 {

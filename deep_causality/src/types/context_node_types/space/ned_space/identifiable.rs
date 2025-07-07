@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{Identifiable, NedSpace};
+use crate::{Identifiable, NedSpace};
 
 impl Identifiable for NedSpace {
     fn id(&self) -> u64 {

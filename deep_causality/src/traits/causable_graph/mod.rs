@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use ultragraph::UltraGraphWeighted;
 
 use crate::errors::{CausalGraphIndexError, CausalityGraphError};
-use crate::prelude::{Causable, IdentificationValue, NumericalValue};
+use crate::{Causable, IdentificationValue, NumericalValue};
 
 pub mod graph;
 pub mod graph_explaining;

@@ -5,7 +5,7 @@
 
 use std::collections::HashMap;
 
-use deep_causality::prelude::{AssumableReasoning, Assumption};
+use deep_causality::{AssumableReasoning, Assumption};
 
 use deep_causality::utils_test::test_utils::*;
 

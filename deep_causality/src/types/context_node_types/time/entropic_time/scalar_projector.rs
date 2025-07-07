@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{EntropicTime, ScalarProjector, Temporal};
+use crate::{EntropicTime, ScalarProjector, Temporal};
 
 impl ScalarProjector for EntropicTime {
     type Scalar = u64;

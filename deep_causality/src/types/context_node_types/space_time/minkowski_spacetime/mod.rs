@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::TimeScale;
+use crate::TimeScale;
 use deep_causality_macros::Constructor;
 
 mod adjustable;
@@ -53,7 +53,7 @@ mod temporal;
 ///
 /// # Example
 /// ```
-/// use deep_causality::prelude::*;
+/// use deep_causality::*;
 ///
 /// let e1 = MinkowskiSpacetime::new(1, 1.0, 0.0, 0.0, 0.0, TimeScale::Second);
 /// let e2 = MinkowskiSpacetime::new(2, 3.0, 3.0, 4.0, 1.0, TimeScale::Second);

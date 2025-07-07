@@ -4,7 +4,7 @@
  */
 use deep_causality_macros::{Constructor, Getters};
 
-use crate::prelude::ActionError;
+use crate::ActionError;
 
 /// A `CausalAction` represents an executable action that can be triggered in response to causal conditions.
 ///
@@ -25,7 +25,7 @@ use crate::prelude::ActionError;
 ///
 /// # Example
 /// ```
-/// use deep_causality::prelude::{ActionError, CausalAction};
+/// use deep_causality::{ActionError, CausalAction};
 ///
 /// fn get_alert_action() -> CausalAction {
 ///     let func = || {
@@ -62,7 +62,7 @@ impl CausalAction {
     ///
     /// # Example
     /// ```
-    /// use deep_causality::prelude::{ActionError, CausalAction};
+    /// use deep_causality::{ActionError, CausalAction};
     ///
     /// // Create a CausalAction
     /// let action = CausalAction::new(

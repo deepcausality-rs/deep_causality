@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::TangentSpacetime;
+use crate::TangentSpacetime;
 use crate::traits::contextuable::metric_tensor::MetricTensor4D;
 
 impl MetricTensor4D for TangentSpacetime {

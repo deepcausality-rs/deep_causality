@@ -4,7 +4,7 @@
  */
 
 use crate::errors::IndexError;
-use crate::prelude::{
+use crate::{
     Coordinate, EcefSpace, EuclideanSpace, GeoSpace, Identifiable, NedSpace, QuaternionSpace,
     Spatial,
 };

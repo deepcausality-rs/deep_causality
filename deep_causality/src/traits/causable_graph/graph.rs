@@ -6,8 +6,8 @@
 use ultragraph::*;
 
 use crate::errors::{CausalGraphIndexError, CausalityGraphError};
-use crate::prelude::{Causable, NumericalValue};
 use crate::traits::causable_graph::CausalGraph;
+use crate::{Causable, NumericalValue};
 
 /// The CausableGraph trait defines the core interface for a causal graph.
 ///

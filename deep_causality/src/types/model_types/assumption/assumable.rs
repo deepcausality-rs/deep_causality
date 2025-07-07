@@ -2,8 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::prelude::{Assumable, DescriptionValue, EvalFn, NumericalValue};
 use crate::types::model_types::assumption::Assumption;
+use crate::{Assumable, DescriptionValue, EvalFn, NumericalValue};
 
 impl Assumable for Assumption {
     fn description(&self) -> DescriptionValue {

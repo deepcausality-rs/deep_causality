@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{LorentzianSpacetime, Temporal, TimeScale};
+use crate::{LorentzianSpacetime, Temporal, TimeScale};
 
 impl Temporal<f64> for LorentzianSpacetime {
     fn time_scale(&self) -> TimeScale {

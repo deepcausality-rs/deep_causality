@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{EntropicTime, Identifiable};
+use crate::{EntropicTime, Identifiable};
 
 impl Identifiable for EntropicTime {
     fn id(&self) -> u64 {

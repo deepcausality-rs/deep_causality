@@ -6,7 +6,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::error::Error;
 use std::hash::{Hash, Hasher};
 
-use deep_causality::prelude::{ModelBuildError, ModelGenerativeError, ModelValidationError};
+use deep_causality::{ModelBuildError, ModelGenerativeError, ModelValidationError};
 
 fn get_error_source(err: &dyn Error) -> String {
     err.source().unwrap().to_string()

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::*;
+use crate::*;
 
 const SMALL: usize = 9;
 // const MEDIUM: usize = 1_00;

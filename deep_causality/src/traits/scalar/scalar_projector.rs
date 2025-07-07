@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::ScalarValue;
+use crate::ScalarValue;
 
 /// A trait that defines how to extract a scalar value from a structured input type.
 ///

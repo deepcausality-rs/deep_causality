@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{
+use crate::{
     Causaloid, Context, Datable, Generatable, GenerativeProcessor, SpaceTemporal, Spatial,
     Symbolic, Temporal,
 };

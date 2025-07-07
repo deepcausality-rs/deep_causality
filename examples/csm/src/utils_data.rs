@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::NumericalValue;
+use deep_causality::NumericalValue;
 
 pub fn get_smoke_sensor_data() -> [NumericalValue; 12] {
     [

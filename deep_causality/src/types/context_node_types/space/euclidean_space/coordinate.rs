@@ -5,7 +5,7 @@
 
 use crate::coord_match;
 use crate::errors::IndexError;
-use crate::prelude::{Coordinate, EuclideanSpace};
+use crate::{Coordinate, EuclideanSpace};
 
 impl Coordinate<f64> for EuclideanSpace {
     /// Returns the number of dimensions in the coordinate system (always 3).

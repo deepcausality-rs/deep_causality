@@ -5,10 +5,10 @@
 
 use std::fmt::{Display, Formatter};
 
-use crate::prelude::{Contextoid, Datable, Symbolic};
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
+use crate::{Contextoid, Datable, Symbolic};
 
 impl<D, S, T, ST, SYM, VS, VT> Display for Contextoid<D, S, T, ST, SYM, VS, VT>
 where

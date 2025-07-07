@@ -5,7 +5,7 @@
 
 use std::collections::VecDeque;
 
-use deep_causality::prelude::*;
+use deep_causality::*;
 
 use deep_causality::utils_test::test_utils::*;
 

@@ -1,5 +1,5 @@
-use deep_causality::prelude::*;
 use deep_causality::utils_test::test_utils_generator::MockData;
+use deep_causality::*;
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
 pub enum MyCustomGenerativeAction {

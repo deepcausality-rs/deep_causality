@@ -9,7 +9,7 @@ mod identifiable;
 mod scalar_projector;
 mod temporable;
 
-use crate::prelude::TimeKind;
+use crate::TimeKind;
 use deep_causality_macros::Constructor;
 
 /// A time model based on **entropy-driven progression**, suitable for
@@ -31,7 +31,7 @@ use deep_causality_macros::Constructor;
 ///
 /// # Examples
 /// ```rust
-/// use deep_causality::prelude::{EntropicTime, Temporal, TimeScale};
+/// use deep_causality::{EntropicTime, Temporal, TimeScale};
 ///
 /// let t1 = EntropicTime::new(1, 0); // system start
 /// let t2 = EntropicTime::new(2, 1); // one entropy event later

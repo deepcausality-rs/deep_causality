@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::{ActionError, CSM, CausalAction, CausalState};
+use deep_causality::{ActionError, CSM, CausalAction, CausalState};
 
 use deep_causality::utils_test::test_utils;
 

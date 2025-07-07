@@ -3,10 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{ContextoidType, Datable, Symbolic};
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
+use crate::{ContextoidType, Datable, Symbolic};
 use std::hash::Hash;
 
 pub mod contextoid_type;

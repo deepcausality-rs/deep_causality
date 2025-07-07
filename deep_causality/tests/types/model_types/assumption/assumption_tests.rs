@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::{DescriptionValue, Identifiable};
 use deep_causality::traits::assumable::Assumable;
+use deep_causality::{DescriptionValue, Identifiable};
 
 use deep_causality::utils_test::test_utils::*;
 

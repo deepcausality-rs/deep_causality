@@ -5,7 +5,7 @@
 
 use crate::coord_match;
 use crate::errors::IndexError;
-use crate::prelude::{Coordinate, MinkowskiSpacetime};
+use crate::{Coordinate, MinkowskiSpacetime};
 
 impl Coordinate<f64> for MinkowskiSpacetime {
     /// Returns the number of dimensions in the coordinate system (always 4).

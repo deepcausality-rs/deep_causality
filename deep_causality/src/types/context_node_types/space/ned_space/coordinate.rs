@@ -5,7 +5,7 @@
 
 use crate::coord_match;
 use crate::errors::IndexError;
-use crate::prelude::{Coordinate, NedSpace};
+use crate::{Coordinate, NedSpace};
 
 impl Coordinate<f64> for NedSpace {
     /// Returns the number of dimensions in the coordinate system (always 3).

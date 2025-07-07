@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::MinkowskiSpacetime;
+use crate::MinkowskiSpacetime;
 
 impl MinkowskiSpacetime {
     pub fn x(&self) -> f64 {

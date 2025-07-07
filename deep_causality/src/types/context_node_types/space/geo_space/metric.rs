@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{GeoSpace, Metric};
+use crate::{GeoSpace, Metric};
 
 // Metric (with simple haversine approximation)
 impl Metric<f64> for GeoSpace {

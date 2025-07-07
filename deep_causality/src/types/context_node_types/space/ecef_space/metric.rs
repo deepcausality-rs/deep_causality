@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{EcefSpace, Metric};
+use crate::{EcefSpace, Metric};
 
 impl Metric<f64> for EcefSpace {
     fn distance(&self, other: &Self) -> f64 {

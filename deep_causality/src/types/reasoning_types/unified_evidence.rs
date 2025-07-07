@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{ContextId, ContextoidId, NumericalValue};
+use crate::{ContextId, ContextoidId, NumericalValue};
 use std::fmt::Display;
 
 /// Generalized evidence container for causal reasoning.

@@ -35,7 +35,7 @@ mod spatial;
 ///
 /// # Examples
 /// ```
-/// use deep_causality::prelude::*;
+/// use deep_causality::*;
 ///
 /// let space_a = EuclideanSpace::new(1, 1.0, 2.0, 3.0);
 /// let space_b = EuclideanSpace::new(2, 4.0, 6.0, 3.0);

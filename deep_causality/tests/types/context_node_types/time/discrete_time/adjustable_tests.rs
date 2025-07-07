@@ -4,7 +4,7 @@
  */
 
 use dcl_data_structures::prelude::{ArrayGrid, ArrayType, PointIndex};
-use deep_causality::prelude::{Adjustable, DiscreteTime, Temporal, TimeScale};
+use deep_causality::{Adjustable, DiscreteTime, Temporal, TimeScale};
 
 #[test]
 fn test_update() {

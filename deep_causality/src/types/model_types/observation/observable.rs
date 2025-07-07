@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::prelude::{NumericalValue, Observable, Observation};
+use crate::{NumericalValue, Observable, Observation};
 
 impl Observable for Observation {
     fn observation(&self) -> NumericalValue {

@@ -4,7 +4,7 @@
  */
 use dcl_data_structures::grid_type::{ArrayGrid, ArrayType};
 use dcl_data_structures::prelude::PointIndex;
-use deep_causality::prelude::*;
+use deep_causality::*;
 
 #[test]
 fn test_update() {

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::{ActionError, CausalAction};
+use deep_causality::{ActionError, CausalAction};
 
 fn hello_state() -> Result<(), ActionError> {
     println!("Hello State");

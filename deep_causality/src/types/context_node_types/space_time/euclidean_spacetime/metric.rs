@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{EuclideanSpacetime, Metric};
+use crate::{EuclideanSpacetime, Metric};
 
 impl Metric<f64> for EuclideanSpacetime {
     fn distance(&self, other: &Self) -> f64 {

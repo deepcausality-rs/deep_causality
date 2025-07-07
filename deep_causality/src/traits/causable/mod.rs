@@ -6,7 +6,7 @@
 use std::collections::HashMap;
 
 use crate::errors::CausalityError;
-use crate::prelude::{Identifiable, IdentificationValue, NumericalValue};
+use crate::{Identifiable, IdentificationValue, NumericalValue};
 
 /// The Causable trait defines the core behavior for causal reasoning.
 ///
@@ -26,7 +26,7 @@ use crate::prelude::{Identifiable, IdentificationValue, NumericalValue};
 /// # Examples
 ///
 /// ```
-/// use deep_causality::prelude::{Causable, Identifiable, IdentificationValue, NumericalValue, CausalityError};
+/// use deep_causality::{Causable, Identifiable, IdentificationValue, NumericalValue, CausalityError};
 /// use std::collections::HashMap;
 ///
 /// struct MyCause {

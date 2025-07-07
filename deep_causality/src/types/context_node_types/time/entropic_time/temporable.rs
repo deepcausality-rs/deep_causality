@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{EntropicTime, Temporal, TimeScale};
+use crate::{EntropicTime, Temporal, TimeScale};
 
 impl Temporal<u64> for EntropicTime {
     fn time_scale(&self) -> TimeScale {

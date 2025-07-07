@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{Adjustable, AdjustmentError, TangentSpacetime, UpdateError};
+use crate::{Adjustable, AdjustmentError, TangentSpacetime, UpdateError};
 use dcl_data_structures::prelude::{ArrayGrid, PointIndex};
 
 /// Updates the position of the TangentSpacetime node.

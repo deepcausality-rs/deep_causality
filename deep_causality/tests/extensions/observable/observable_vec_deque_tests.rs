@@ -5,7 +5,7 @@
 
 use std::collections::VecDeque;
 
-use deep_causality::prelude::{NumericalValue, ObservableReasoning, Observation};
+use deep_causality::{NumericalValue, ObservableReasoning, Observation};
 
 use deep_causality::utils_test::test_utils::*;
 

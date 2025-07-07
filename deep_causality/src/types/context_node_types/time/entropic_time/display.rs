@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{EntropicTime, Temporal};
+use crate::{EntropicTime, Temporal};
 use std::fmt::Display;
 
 impl Display for EntropicTime {

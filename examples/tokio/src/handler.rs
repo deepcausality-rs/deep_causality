@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::utils;
-use deep_causality::prelude::{BaseCausaloid, BaseModel, Causable};
+use deep_causality::{BaseCausaloid, BaseModel, Causable};
 use std::error::Error;
 use std::sync::{Arc, RwLock};
 

@@ -13,7 +13,7 @@ mod space_temporal;
 mod spatial;
 mod temporal;
 
-use crate::prelude::TimeScale;
+use crate::TimeScale;
 use deep_causality_macros::Constructor;
 
 /// A concrete 3D + time context based on classical (Euclidean) geometry.
@@ -48,7 +48,7 @@ use deep_causality_macros::Constructor;
 ///
 /// # Example
 /// ```
-/// use deep_causality::prelude::*;
+/// use deep_causality::*;
 ///
 /// let s1 = EuclideanSpacetime::new(1, 0.0, 0.0, 0.0, 1_000_000.00f64, TimeScale::Second);
 /// let s2 = EuclideanSpacetime::new(2, 3.0, 4.0, 0.0, 2_000_000.00f64, TimeScale::Second);

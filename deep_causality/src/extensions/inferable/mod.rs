@@ -8,7 +8,7 @@ use std::hash::Hash;
 
 use deep_causality_macros::{make_get_all_items, make_get_all_map_items, make_is_empty, make_len};
 
-use crate::prelude::{Inferable, InferableReasoning};
+use crate::{Inferable, InferableReasoning};
 
 impl<T> InferableReasoning<T> for [T]
 where

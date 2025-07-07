@@ -2,10 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality::prelude::{ContextoidType, Datable, Identifiable, Root};
 use deep_causality::utils_test::test_utils_generator::{
     MockData, TestCausaloid, TestContext, TestContextoid, TestModel,
 };
+use deep_causality::{ContextoidType, Datable, Identifiable, Root};
 use std::sync::Arc;
 
 #[test]

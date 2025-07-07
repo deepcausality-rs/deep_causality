@@ -15,7 +15,7 @@ use std::sync::{Arc, RwLock};
 /// # Example
 /// ```
 /// use std::sync::{Arc, RwLock};
-/// use deep_causality::prelude::ArcRWLock;
+/// use deep_causality::ArcRWLock;
 ///
 /// let data: ArcRWLock<i32> = Arc::new(RwLock::new(0));
 /// ```

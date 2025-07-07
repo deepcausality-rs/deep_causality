@@ -5,14 +5,14 @@
 use std::collections::HashMap;
 
 use crate::errors::CausalityError;
-use crate::prelude::{
-    Causable, CausableGraph, CausableGraphExplaining, CausableGraphReasoning, CausableReasoning,
-    Causaloid, Datable, IdentificationValue, NumericalValue, Symbolic,
-};
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
 use crate::types::causal_types::causaloid::causal_type::CausaloidType;
+use crate::{
+    Causable, CausableGraph, CausableGraphExplaining, CausableGraphReasoning, CausableReasoning,
+    Causaloid, Datable, IdentificationValue, NumericalValue, Symbolic,
+};
 
 #[allow(clippy::type_complexity)]
 impl<D, S, T, ST, SYM, VS, VT> Causable for Causaloid<D, S, T, ST, SYM, VS, VT>

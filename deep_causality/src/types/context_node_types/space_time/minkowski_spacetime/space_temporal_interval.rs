@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::prelude::{MinkowskiSpacetime, SpaceTemporalInterval};
+use crate::{MinkowskiSpacetime, SpaceTemporalInterval};
 
 impl SpaceTemporalInterval for MinkowskiSpacetime {
     fn time(&self) -> f64 {

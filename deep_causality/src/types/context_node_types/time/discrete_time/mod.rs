@@ -9,7 +9,7 @@ mod identifiable;
 mod scalar_projector;
 mod temporable;
 
-use crate::prelude::{TimeKind, TimeScale};
+use crate::{TimeKind, TimeScale};
 use deep_causality_macros::Constructor;
 
 /// A time model representing **discrete, uniformly spaced ticks** instead of continuous physical time.
@@ -34,7 +34,7 @@ use deep_causality_macros::Constructor;
 /// # Examples
 ///
 /// ```rust
-/// use deep_causality::prelude::{DiscreteTime, Temporal, TimeScale};
+/// use deep_causality::{DiscreteTime, Temporal, TimeScale};
 ///
 /// let t0 = DiscreteTime::new(1, TimeScale::Microseconds, 0);
 /// let t1 = DiscreteTime::new(2, TimeScale::Microseconds, 1);

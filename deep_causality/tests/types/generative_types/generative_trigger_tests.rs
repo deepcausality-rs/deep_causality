@@ -3,9 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::{
-    Data, EuclideanTime, GenerativeTrigger, NumberType, TimeKind, TimeScale,
-};
+use deep_causality::{Data, EuclideanTime, GenerativeTrigger, NumberType, TimeKind, TimeScale};
 use std::fmt::Write;
 #[test]
 fn test_time_elapsed_some() {

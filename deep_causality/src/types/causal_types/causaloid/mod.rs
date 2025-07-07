@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::*;
+use crate::*;
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
 use std::sync::{Arc, RwLock};
@@ -35,7 +35,7 @@ where
     active: ArcRWLock<bool>,
     causal_type: CausaloidType,
     causal_fn: Option<CausalFn>,
-    context_causal_fn: Option<ContextualCausalDataFn<D, S, T, ST, SYM, VS, VT>>,
+    context_causal_fn: Option<ContextualCausalFn<D, S, T, ST, SYM, VS, VT>>,
     context: Option<Arc<Context<D, S, T, ST, SYM, VS, VT>>>,
     has_context: bool,
     causal_coll: Option<Arc<CausalVec<D, S, T, ST, SYM, VS, VT>>>,
@@ -79,7 +79,7 @@ where
     /// The context is embedded within the causaloid and can be accessed by the contextual causality function.
     pub fn new_with_context(
         id: IdentificationValue,
-        context_causal_fn: ContextualCausalDataFn<D, S, T, ST, SYM, VS, VT>,
+        context_causal_fn: ContextualCausalFn<D, S, T, ST, SYM, VS, VT>,
         context: Arc<Context<D, S, T, ST, SYM, VS, VT>>,
         description: &str,
     ) -> Self {

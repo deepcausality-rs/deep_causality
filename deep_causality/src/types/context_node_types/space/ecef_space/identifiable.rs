@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{EcefSpace, Identifiable};
+use crate::{EcefSpace, Identifiable};
 
 impl Identifiable for EcefSpace {
     fn id(&self) -> u64 {

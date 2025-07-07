@@ -4,7 +4,7 @@
  */
 
 use crate::errors::IndexError;
-use crate::prelude::{
+use crate::{
     Coordinate, EuclideanSpacetime, Identifiable, LorentzianSpacetime, MinkowskiSpacetime,
     SpaceTemporal, Spatial, TangentSpacetime, Temporal, TimeScale,
 };
@@ -29,7 +29,7 @@ use std::fmt::Formatter;
 /// # Examples
 ///
 /// ```rust
-/// use deep_causality::prelude::*;
+/// use deep_causality::*;
 ///
 /// let euclidean = EuclideanSpacetime::new(1, 0.0, 0.0, 0.0, 1.0, TimeScale::Second);
 /// let spacetime = SpaceTimeKind::Euclidean(euclidean);

@@ -3,12 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{
-    Context, CurrentTimeIndex, Datable, PreviousTimeIndex, Symbolic, TimeIndexable,
-};
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
+use crate::{Context, CurrentTimeIndex, Datable, PreviousTimeIndex, Symbolic, TimeIndexable};
 
 // Adds the default implementation to Context when the trait is imported. Can be overwritten to customize.
 impl<D, S, T, ST, SYM, VS, VT> CurrentTimeIndex for Context<D, S, T, ST, SYM, VS, VT>

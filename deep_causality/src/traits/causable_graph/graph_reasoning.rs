@@ -8,8 +8,8 @@ use std::collections::{HashMap, VecDeque};
 use ultragraph::*;
 
 use crate::errors::CausalityGraphError;
-use crate::prelude::{Causable, CausableGraph, IdentificationValue, NumericalValue};
 use crate::traits::causable_graph::graph_reasoning_utils;
+use crate::{Causable, CausableGraph, IdentificationValue, NumericalValue};
 
 /// Describes signatures for causal reasoning and explaining
 /// in causality hyper graph.

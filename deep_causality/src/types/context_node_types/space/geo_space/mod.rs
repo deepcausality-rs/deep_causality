@@ -43,7 +43,7 @@ mod spatial;
 ///
 /// # Example
 /// ```
-/// use deep_causality::prelude::*;
+/// use deep_causality::*;
 ///
 /// let g1 = GeoSpace::new(1, 52.520008, 13.404954, 34.0); // Berlin, Germany
 /// let g2 = GeoSpace::new(2, 48.856613, 2.352222, 35.0);   // Paris, France

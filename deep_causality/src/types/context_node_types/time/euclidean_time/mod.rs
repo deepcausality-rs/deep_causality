@@ -9,7 +9,7 @@ mod identifiable;
 mod scalar_projector;
 mod temporable;
 
-use crate::prelude::{TimeKind, TimeScale};
+use crate::{TimeKind, TimeScale};
 use deep_causality_macros::Constructor;
 
 /// A time model based on **Euclidean (imaginary) time**, primarily used in theoretical and computational physics.
@@ -38,7 +38,7 @@ use deep_causality_macros::Constructor;
 ///
 /// # Example
 /// ```rust
-/// use deep_causality::prelude::{EuclideanTime, Identifiable, Temporal, TimeScale};
+/// use deep_causality::{EuclideanTime, Identifiable, Temporal, TimeScale};
 ///
 /// let tau = EuclideanTime::new(42, TimeScale::Second, std::f64::consts::PI);
 ///

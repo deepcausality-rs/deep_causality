@@ -2,8 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality::prelude::{BaseSymbol, Identifiable, Symbolic, SymbolicRepresentation};
 use deep_causality::types::context_node_types::symbol::symbol_kind::SymbolKind;
+use deep_causality::{BaseSymbol, Identifiable, Symbolic, SymbolicRepresentation};
 
 #[test]
 fn test_symbol_kind_id_and_repr() {

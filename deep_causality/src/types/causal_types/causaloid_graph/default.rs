@@ -4,7 +4,7 @@
  */
 use std::fmt::Display;
 
-use crate::prelude::{Causable, CausaloidGraph};
+use crate::{Causable, CausaloidGraph};
 
 impl<T> Default for CausaloidGraph<T>
 where

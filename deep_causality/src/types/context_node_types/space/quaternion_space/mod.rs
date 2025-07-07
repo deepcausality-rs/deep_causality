@@ -49,7 +49,7 @@ mod spatial;
 ///
 /// # Example
 /// ```
-/// use deep_causality::prelude::*;
+/// use deep_causality::*;
 ///
 /// // Represents a 90-degree rotation around the Z-axis
 /// let q = QuaternionSpace::new(1, std::f64::consts::FRAC_1_SQRT_2, 0.0, 0.0, std::f64::consts::FRAC_1_SQRT_2);

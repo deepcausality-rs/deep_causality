@@ -4,7 +4,7 @@
  */
 
 use crate::coord_match;
-use crate::prelude::{Coordinate, EcefSpace, IndexError};
+use crate::{Coordinate, EcefSpace, IndexError};
 
 impl Coordinate<f64> for EcefSpace {
     /// Returns the number of dimensions in the coordinate system (always 3).

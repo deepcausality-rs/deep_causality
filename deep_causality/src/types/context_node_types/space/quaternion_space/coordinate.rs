@@ -5,7 +5,7 @@
 
 use crate::coord_match;
 use crate::errors::IndexError;
-use crate::prelude::{Coordinate, QuaternionSpace};
+use crate::{Coordinate, QuaternionSpace};
 
 impl Coordinate<f64> for QuaternionSpace {
     /// Returns the number of dimensions in the coordinate system (always 4).

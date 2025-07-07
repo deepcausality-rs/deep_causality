@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{EuclideanTime, ScalarProjector, Temporal};
+use crate::{EuclideanTime, ScalarProjector, Temporal};
 
 impl ScalarProjector for EuclideanTime {
     type Scalar = f64;

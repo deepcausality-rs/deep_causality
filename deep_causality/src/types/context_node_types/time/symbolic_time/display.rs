@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::SymbolicTime;
+use crate::SymbolicTime;
 use crate::types::context_node_types::time::symbolic_time::SymbolicTimeUnit;
 use std::fmt;
 

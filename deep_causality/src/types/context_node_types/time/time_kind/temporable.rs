@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{Temporal, TimeKind, TimeScale};
+use crate::{Temporal, TimeKind, TimeScale};
 
 impl Temporal<f64> for TimeKind {
     fn time_scale(&self) -> TimeScale {

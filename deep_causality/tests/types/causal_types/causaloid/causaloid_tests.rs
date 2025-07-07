@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::*;
+use deep_causality::*;
 use std::sync::Arc;
 
 use deep_causality::utils_test::test_utils::get_base_context;

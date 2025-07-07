@@ -4,10 +4,10 @@
  */
 
 use crate::errors::{ActionError, UpdateError};
-use crate::prelude::{CausalAction, CausalState, Datable, NumericalValue, Symbolic};
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
+use crate::{CausalAction, CausalState, Datable, NumericalValue, Symbolic};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};

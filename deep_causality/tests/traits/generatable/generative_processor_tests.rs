@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::*;
 use deep_causality::utils_test::test_utils_generator::*;
+use deep_causality::*;
 use std::hash::Hash;
 
 // A test processor to act as a destination for the generative output.

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{Identifiable, Temporal, TimeKind};
+use crate::{Identifiable, Temporal, TimeKind};
 use std::fmt;
 
 impl fmt::Display for TimeKind {

@@ -8,7 +8,7 @@ mod identifiable;
 mod scalar_projector;
 mod temporable;
 
-use crate::prelude::{DiscreteTime, EntropicTime, EuclideanTime, LorentzianTime};
+use crate::{DiscreteTime, EntropicTime, EuclideanTime, LorentzianTime};
 
 /// An enumeration of supported time models for unified, heterogeneous temporal reasoning.
 ///
@@ -52,7 +52,7 @@ use crate::prelude::{DiscreteTime, EntropicTime, EuclideanTime, LorentzianTime};
 /// # Example
 ///
 /// ```rust
-/// use deep_causality::prelude::*;
+/// use deep_causality::*;
 ///
 /// let lorentz = TimeKind::Lorentzian(LorentzianTime::new(1, TimeScale::Second, 3.14));
 /// let discrete = TimeKind::Discrete(DiscreteTime::new(2, TimeScale::Second, 42));

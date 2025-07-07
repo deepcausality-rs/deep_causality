@@ -5,7 +5,7 @@
 
 use criterion::{Criterion, criterion_group};
 
-use deep_causality::prelude::*;
+use deep_causality::*;
 
 use crate::benchmarks::utils_linear_graph;
 

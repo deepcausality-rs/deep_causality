@@ -3,10 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{Context, Datable, Identifiable, Symbolic};
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
+use crate::{Context, Datable, Identifiable, Symbolic};
 
 #[allow(clippy::type_complexity)]
 impl<D, S, T, ST, SYM, VS, VT> Identifiable for Context<D, S, T, ST, SYM, VS, VT>

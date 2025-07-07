@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::{NumericalValue, ObservableReasoning, Observation};
+use deep_causality::{NumericalValue, ObservableReasoning, Observation};
 
 pub fn get_test_obs_arr() -> [Observation; 5] {
     let o1 = Observation::new(0, 10.0, 1.0);

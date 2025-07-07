@@ -5,7 +5,7 @@
 
 use std::collections::HashMap;
 
-use crate::prelude::{IdentificationValue, NumericalValue};
+use crate::{IdentificationValue, NumericalValue};
 
 /// Gets the observation value for a cause from the given data.
 ///

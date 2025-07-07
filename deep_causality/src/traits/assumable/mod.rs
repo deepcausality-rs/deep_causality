@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{DescriptionValue, EvalFn, Identifiable, NumericalValue};
+use crate::{DescriptionValue, EvalFn, Identifiable, NumericalValue};
 
 /// The Assumable trait defines the interface for objects that represent
 /// assumptions that can be tested and verified. Assumable types must also

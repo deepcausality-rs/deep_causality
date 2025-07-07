@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{Identifiable, TangentSpacetime};
+use crate::{Identifiable, TangentSpacetime};
 
 impl Identifiable for TangentSpacetime {
     fn id(&self) -> u64 {

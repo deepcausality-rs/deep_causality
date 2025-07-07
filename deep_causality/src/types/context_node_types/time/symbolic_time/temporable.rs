@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{SymbolicTime, SymbolicTimeUnit, Temporal, TimeScale};
+use crate::{SymbolicTime, SymbolicTimeUnit, Temporal, TimeScale};
 
 impl Temporal<i64> for SymbolicTime {
     fn time_scale(&self) -> TimeScale {

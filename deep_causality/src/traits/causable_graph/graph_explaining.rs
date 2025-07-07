@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::prelude::{Causable, CausableGraph, CausalityGraphError};
+use crate::{Causable, CausableGraph, CausalityGraphError};
 use ultragraph::GraphTraversal;
 
 /// The CausableGraphExplaining trait provides methods to generate

@@ -3,10 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{Causable, CausalityError, Causaloid, Datable, NumericalValue, Symbolic};
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
+use crate::{Causable, CausalityError, Causaloid, Datable, NumericalValue, Symbolic};
 use deep_causality_macros::{Constructor, Getters};
 use std::fmt::{Display, Formatter};
 
@@ -30,7 +30,7 @@ use std::fmt::{Display, Formatter};
 ///
 /// # Example
 /// ```
-/// use deep_causality::prelude::{CausalState, Causaloid, NumericalValue, CausalityError, BaseCausaloid};
+/// use deep_causality::{CausalState, Causaloid, NumericalValue, CausalityError, BaseCausaloid};
 ///
 /// // Create a causaloid that defines when the state is active
 /// let id = 1;

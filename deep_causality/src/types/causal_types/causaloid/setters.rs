@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{Causaloid, Context, Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
+use crate::{Causaloid, Context, Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
 use std::sync::Arc;
 
 // Constructors

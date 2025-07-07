@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality::errors::CausalityError;
-use deep_causality::prelude::{
+use deep_causality::{
     BaseCausaloid, BaseContext, BaseModel, Causaloid, Context, Contextoid, ContextoidType,
     ContextuableGraph, IdentificationValue, Model, NumericalValue, Root,
 };
