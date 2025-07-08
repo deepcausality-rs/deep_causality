@@ -20,6 +20,30 @@ fn get_test_causality_map() -> TestHashMap {
     ])
 }
 
+fn get_mixed_test_causality_map() -> TestHashMap {
+    HashMap::from([
+        (1, get_test_causaloid_deterministic_true()),
+        (2, get_test_causaloid_probabilistic()),
+        (3, get_test_causaloid_deterministic_true()),
+    ])
+}
+
+fn get_mixed_test_halting_causality_map() -> TestHashMap {
+    HashMap::from([
+        (1, get_test_causaloid_deterministic_true()),
+        (2, get_test_causaloid_deterministic_true()),
+        (3, get_test_causaloid_halting()),
+    ])
+}
+
+fn get_mixed_test_ctx_link_causality_map() -> TestHashMap {
+    HashMap::from([
+        (1, get_test_causaloid_deterministic_false()),
+        (2, get_test_causaloid_deterministic_true()),
+        (3, get_test_causaloid_contextual_link()),
+    ])
+}
+
 // Helper to activate all causes in a collection for testing purposes.
 fn activate_all_causes(map: &TestHashMap) {
     // A value that ensures the default test causaloid (threshold 0.55) becomes active.
@@ -169,17 +193,32 @@ fn test_evaluate_probabilistic_propagation() {
 
 #[test]
 fn test_evaluate_mixed_propagation() {
-    let map = get_test_causality_map();
+    let map = get_mixed_test_causality_map();
 
     // Case 1: All succeed, chain remains deterministically true.
     let evidence_success = Evidence::Numerical(0.99);
     let res_success = map.evaluate_mixed_propagation(&evidence_success).unwrap();
-    assert_eq!(res_success, PropagatingEffect::Deterministic(true));
+    assert_eq!(res_success, PropagatingEffect::Probabilistic(0.0));
+}
+
+#[test]
+fn test_evaluate_mixed_propagation_halted() {
+    let map = get_mixed_test_halting_causality_map();
 
     // Case 2: One fails, chain becomes deterministically false.
     let evidence_fail = Evidence::Numerical(0.1);
-    let res_fail = map.evaluate_mixed_propagation(&evidence_fail).unwrap();
-    assert_eq!(res_fail, PropagatingEffect::Deterministic(false));
+    let res = map.evaluate_mixed_propagation(&evidence_fail).unwrap();
+    assert_eq!(res, PropagatingEffect::Halting);
+}
+
+#[test]
+fn test_evaluate_mixed_propagation_err() {
+    let map = get_mixed_test_ctx_link_causality_map();
+
+    // Case 2: One fails, chain becomes deterministically false.
+    let evidence_fail = Evidence::Numerical(0.1);
+    let res_fail = map.evaluate_mixed_propagation(&evidence_fail);
+    assert!(res_fail.is_err());
 }
 
 #[test]

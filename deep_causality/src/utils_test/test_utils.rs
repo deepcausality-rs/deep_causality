@@ -38,6 +38,56 @@ pub fn get_test_single_data(val: NumericalValue) -> Evidence {
     Evidence::Numerical(val)
 }
 
+pub fn get_test_causaloid_deterministic_true() -> BaseCausaloid {
+    let description = "tests nothing; always returns true";
+
+    fn causal_fn(_evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+        Ok(PropagatingEffect::Deterministic(true))
+    }
+
+    Causaloid::new(3, causal_fn, description)
+}
+
+pub fn get_test_causaloid_deterministic_false() -> BaseCausaloid {
+    let description = "tests nothing; always returns true";
+
+    fn causal_fn(_evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+        Ok(PropagatingEffect::Deterministic(false))
+    }
+
+    Causaloid::new(3, causal_fn, description)
+}
+
+pub fn get_test_causaloid_probabilistic() -> BaseCausaloid {
+    let description = "tests nothing; always returns 0.0";
+
+    fn causal_fn(_evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+        Ok(PropagatingEffect::Probabilistic(0.0))
+    }
+
+    Causaloid::new(5, causal_fn, description)
+}
+
+pub fn get_test_causaloid_halting() -> BaseCausaloid {
+    let description = "tests nothing; always returns Halting";
+
+    fn causal_fn(_evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+        Ok(PropagatingEffect::Halting)
+    }
+
+    Causaloid::new(7, causal_fn, description)
+}
+
+pub fn get_test_causaloid_contextual_link() -> BaseCausaloid {
+    let description = "tests nothing; always returns a contetual link";
+
+    fn causal_fn(_evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+        Ok(PropagatingEffect::ContextualLink(0, 1))
+    }
+
+    Causaloid::new(9, causal_fn, description)
+}
+
 pub fn get_test_causaloid() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
