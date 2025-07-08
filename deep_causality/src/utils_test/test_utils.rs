@@ -27,6 +27,13 @@ pub fn get_test_inf_vec() -> Vec<Inference> {
     Vec::from_iter([i1, i2])
 }
 
+pub fn get_test_causality_false_vec() -> BaseCausaloidVec {
+    let q1 = get_test_causaloid_deterministic_false();
+    let q2 = get_test_causaloid_deterministic_false();
+    let q3 = get_test_causaloid_deterministic_false();
+    Vec::from_iter([q1, q2, q3])
+}
+
 pub fn get_test_causality_vec() -> BaseCausaloidVec {
     let q1 = get_test_causaloid();
     let q2 = get_test_causaloid();
@@ -103,10 +110,6 @@ pub fn get_test_causaloid() -> BaseCausaloid {
                         .into(),
                 )),
             };
-
-        if obs.is_nan() {
-            return Err(CausalityError("Observation is NULL/NAN".into()));
-        }
 
         if obs.is_infinite() {
             return Err(CausalityError("Observation is infinite".into()));

@@ -38,6 +38,17 @@ fn test_get_all_causes_true() {
 }
 
 #[test]
+fn test_get_all_causes_false() {
+    let col = get_test_causality_false_vec();
+    // Before evaluation, is_active returns an error, so get_all_causes_true will be false.
+    assert!(!col.get_all_causes_true().unwrap_or(false));
+
+    activate_all_causes(&col);
+    // After activation, the result should be Ok(true).
+    assert!(!col.get_all_causes_true().unwrap());
+}
+
+#[test]
 fn test_number_active() {
     let col = get_test_causality_vec();
     // Before evaluation, number_active will error.
