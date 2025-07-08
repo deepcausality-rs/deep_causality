@@ -83,7 +83,7 @@ fn test_active() {
     let causaloid = Causaloid::from_causal_collection(id, Arc::new(causal_coll), description);
     assert!(!causaloid.is_singleton());
 
-    let active = causaloid.active();
+    let active = causaloid.is_active();
     assert!(!active);
 
     assert!(causaloid.causal_collection().is_some());

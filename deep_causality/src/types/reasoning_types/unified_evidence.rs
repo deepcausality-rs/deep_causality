@@ -94,8 +94,8 @@ impl Debug for Evidence {
         match self {
             Evidence::None => write!(f, "Evidence::None"),
             Evidence::Deterministic(val) => write!(f, "Evidence::Deterministic({val})"),
-            Evidence::Numerical(val) => write!(f, "Evidence::Numerical({val})"),
-            Evidence::Probability(val) => write!(f, "Evidence::Probability({val})"),
+            Evidence::Numerical(val) => write!(f, "Evidence::Numerical({val:?})"),
+            Evidence::Probability(val) => write!(f, "Evidence::Probability({val:?})"),
             Evidence::ContextualLink(id, val) => write!(f, "Evidence::ContextualLink({id}, {val})"),
             Evidence::Map(map) => {
                 write!(f, "Evidence::Map({map:?})")
@@ -112,6 +112,7 @@ impl Debug for Evidence {
 
 impl Display for Evidence {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", &self)
+        // Delegate to the Debug implementation to prevent infinite recursion.
+        write!(f, "{:?}", self)
     }
 }
