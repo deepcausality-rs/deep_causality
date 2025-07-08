@@ -104,14 +104,6 @@ pub fn get_test_causaloid() -> BaseCausaloid {
                 )),
             };
 
-        if obs.is_infinite() {
-            return Err(CausalityError("Observation is infinite".into()));
-        }
-
-        if obs.is_sign_negative() {
-            return Err(CausalityError("Observation is negative".into()));
-        }
-
         let threshold: NumericalValue = 0.55;
         if !obs.ge(&threshold) {
             Ok(PropagatingEffect::Deterministic(false))

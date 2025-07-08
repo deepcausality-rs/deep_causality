@@ -6,23 +6,15 @@
 use crate::*;
 
 const SMALL: usize = 9;
-// const MEDIUM: usize = 1_00;
-// const LARGE: usize = 1_000;
-
 fn get_test_causaloid() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
     fn causal_fn(evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
-        let obs =
-            match evidence {
-                // If it's the Numerical variant, extract the inner value.
-                Evidence::Numerical(val) => *val,
-                // For any other type of evidence, this function cannot proceed, so return an error.
-                _ => return Err(CausalityError(
-                    "Causal function expected Numerical evidence but received a different variant."
-                        .into(),
-                )),
-            };
+        let obs = match evidence {
+            // If it's the Numerical variant, extract the inner value.
+            Evidence::Numerical(val) => *val,
+            _ => 99.0, // For any other type of evidence
+        };
         let threshold: NumericalValue = 0.55;
         if !obs.ge(&threshold) {
             Ok(PropagatingEffect::Deterministic(false))
