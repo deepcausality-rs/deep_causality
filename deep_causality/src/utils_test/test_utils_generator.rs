@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
+use std::hash::Hash;
 use crate::*;
 
 // A mock data structure used across multiple tests.
@@ -68,3 +68,113 @@ pub type TestModel = Model<
     FloatType,
     FloatType,
 >;
+
+
+// A test processor to act as a destination for the generative output.
+pub struct TestProcessor<D, S, T, ST, SYM, VS, VT>
+where
+    D: Default + Datable + Copy + Clone + Hash + Eq + PartialEq,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
+{
+    pub causaloid_dest: Option<Causaloid<D, S, T, ST, SYM, VS, VT>>,
+    pub context_dest: Option<Context<D, S, T, ST, SYM, VS, VT>>,
+}
+
+impl<D, S, T, ST, SYM, VS, VT> TestProcessor<D, S, T, ST, SYM, VS, VT>
+where
+    D: Default + Datable + Copy + Clone + Hash + Eq + PartialEq,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
+{
+    pub fn new() -> Self {
+        Self {
+            causaloid_dest: None,
+            context_dest: None,
+        }
+    }
+}
+
+// Implement the processor trait so it can be used to test generators.
+impl<D, S, T, ST, SYM, VS, VT, G> GenerativeProcessor<D, S, T, ST, SYM, VS, VT, G>
+for TestProcessor<D, S, T, ST, SYM, VS, VT>
+where
+    D: Default + Datable + Copy + Clone + Hash + Eq + PartialEq,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
+    G: Generatable<D, S, T, ST, SYM, VS, VT, G>,
+{
+    fn get_causaloid_dest(&mut self) -> &mut Option<Causaloid<D, S, T, ST, SYM, VS, VT>> {
+        &mut self.causaloid_dest
+    }
+
+    fn get_context_dest(&mut self) -> &mut Option<Context<D, S, T, ST, SYM, VS, VT>> {
+        &mut self.context_dest
+    }
+}
+
+// Type alias for brevity in tests
+pub type TestProcessorAlias = TestProcessor<
+    MockData,
+    EuclideanSpace,
+    EuclideanTime,
+    EuclideanSpacetime,
+    BaseSymbol,
+    FloatType,
+    FloatType,
+>;
+
+// Define a dummy generator for testing standalone outputs.
+pub struct DummyGenerator;
+impl
+Generatable<
+    MockData,
+    EuclideanSpace,
+    EuclideanTime,
+    EuclideanSpacetime,
+    BaseSymbol,
+    FloatType,
+    FloatType,
+    DummyGenerator,
+> for DummyGenerator
+{
+    fn generate(
+        &mut self,
+        _trigger: &GenerativeTrigger<MockData>,
+        _context: &Context<
+            MockData,
+            EuclideanSpace,
+            EuclideanTime,
+            EuclideanSpacetime,
+            BaseSymbol,
+            FloatType,
+            FloatType,
+        >,
+    ) -> Result<
+        GenerativeOutput<
+            MockData,
+            EuclideanSpace,
+            EuclideanTime,
+            EuclideanSpacetime,
+            BaseSymbol,
+            FloatType,
+            FloatType,
+            DummyGenerator,
+        >,
+        ModelGenerativeError,
+    > {
+        Ok(GenerativeOutput::NoOp)
+    }
+}
