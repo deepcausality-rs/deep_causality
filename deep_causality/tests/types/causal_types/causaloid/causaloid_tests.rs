@@ -395,3 +395,61 @@ fn test_explain_collection_with_sub_explain_error() {
     let err_msg = result.unwrap_err().to_string();
     assert!(err_msg.contains("has not been evaluated"));
 }
+
+#[test]
+fn test_evaluate_singleton_with_context() {
+    let id: IdentificationValue = 1;
+    let description = "tests a causaloid with a context";
+    let context = get_base_context();
+
+    fn contextual_causal_fn(
+        evidence: &Evidence,
+        ctx: &Arc<BaseContext>,
+    ) -> Result<PropagatingEffect, CausalityError> {
+        let obs = unpack_evidence(evidence)?;
+        // Get contextoid by ID. In get_base_context, the node at index 0 has ID 1.
+        let contextoid = ctx.get_node(0).expect("Could not find contextoid");
+        // Extract a value from the contextoid.
+        let val = contextoid.id() as f64; // This will be 1.0
+        // Relate the observation (obs) to the data (val) from the contextoid.
+        let is_active = obs.ge(&val);
+        Ok(PropagatingEffect::Deterministic(is_active))
+    }
+
+    let causaloid: BaseCausaloid =
+        Causaloid::new_with_context(id, contextual_causal_fn, Arc::new(context), description);
+
+    // Evaluate with evidence that should result in true (1.5 >= 1.0)
+    let evidence_true = Evidence::Numerical(1.5);
+    let effect_true = causaloid.evaluate(&evidence_true).unwrap();
+    assert_eq!(effect_true, PropagatingEffect::Deterministic(true));
+
+    // Evaluate with evidence that should result in false (0.5 < 1.0)
+    let evidence_false = Evidence::Numerical(0.5);
+    let effect_false = causaloid.evaluate(&evidence_false).unwrap();
+    assert_eq!(effect_false, PropagatingEffect::Deterministic(false));
+}
+
+#[test]
+fn test_evaluate_collection_ignores_other_effects() {
+    // Setup: A collection with causaloids that have effects other than Deterministic or Halting.
+    let probabilistic_causaloid = test_utils::get_test_causaloid_probabilistic();
+    let contextual_link_causaloid = test_utils::get_test_causaloid_contextual_link();
+    let false_causaloid = test_utils::get_test_causaloid_deterministic_false();
+
+    let causal_coll = vec![
+        probabilistic_causaloid,
+        contextual_link_causaloid,
+        false_causaloid,
+    ];
+    let collection_causaloid =
+        Causaloid::from_causal_collection(103, Arc::new(causal_coll), "Ignore Others Collection");
+
+    // Act
+    let evidence = Evidence::Numerical(0.0);
+    let effect = collection_causaloid.evaluate(&evidence).unwrap();
+
+    // Assert: The aggregation logic should ignore Probabilistic and ContextualLink,
+    // resulting in an overall effect of Deterministic(false).
+    assert_eq!(effect, PropagatingEffect::Deterministic(false));
+}
