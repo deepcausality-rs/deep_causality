@@ -2,8 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use std::hash::Hash;
 use crate::*;
+use std::hash::Hash;
 
 // A mock data structure used across multiple tests.
 #[derive(Debug, Clone, Eq, Hash, Copy, PartialEq, Default)]
@@ -69,7 +69,6 @@ pub type TestModel = Model<
     FloatType,
 >;
 
-
 // A test processor to act as a destination for the generative output.
 pub struct TestProcessor<D, S, T, ST, SYM, VS, VT>
 where
@@ -83,6 +82,21 @@ where
 {
     pub causaloid_dest: Option<Causaloid<D, S, T, ST, SYM, VS, VT>>,
     pub context_dest: Option<Context<D, S, T, ST, SYM, VS, VT>>,
+}
+
+impl<D, S, T, ST, SYM, VS, VT> Default for TestProcessor<D, S, T, ST, SYM, VS, VT>
+where
+    D: Default + Datable + Copy + Clone + Hash + Eq + PartialEq,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
+ {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<D, S, T, ST, SYM, VS, VT> TestProcessor<D, S, T, ST, SYM, VS, VT>
@@ -105,7 +119,7 @@ where
 
 // Implement the processor trait so it can be used to test generators.
 impl<D, S, T, ST, SYM, VS, VT, G> GenerativeProcessor<D, S, T, ST, SYM, VS, VT, G>
-for TestProcessor<D, S, T, ST, SYM, VS, VT>
+    for TestProcessor<D, S, T, ST, SYM, VS, VT>
 where
     D: Default + Datable + Copy + Clone + Hash + Eq + PartialEq,
     S: Spatial<VS> + Clone,
@@ -139,16 +153,16 @@ pub type TestProcessorAlias = TestProcessor<
 // Define a dummy generator for testing standalone outputs.
 pub struct DummyGenerator;
 impl
-Generatable<
-    MockData,
-    EuclideanSpace,
-    EuclideanTime,
-    EuclideanSpacetime,
-    BaseSymbol,
-    FloatType,
-    FloatType,
-    DummyGenerator,
-> for DummyGenerator
+    Generatable<
+        MockData,
+        EuclideanSpace,
+        EuclideanTime,
+        EuclideanSpacetime,
+        BaseSymbol,
+        FloatType,
+        FloatType,
+        DummyGenerator,
+    > for DummyGenerator
 {
     fn generate(
         &mut self,
