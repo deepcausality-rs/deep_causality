@@ -88,6 +88,22 @@ fn reason_causal_chain(
     causes: &BaseCausaloidVec,
     data: &[NumericalValue],
 ) -> Result<bool, CausalityError> {
+    if causes.is_empty() {
+        return Err(CausalityError(
+            "Cannot reason over empty causal chain.".into(),
+        ));
+    }
+    if data.is_empty() {
+        return Err(CausalityError("Cannot reason with empty data.".into()));
+    }
+    if causes.len() != data.len() {
+        return Err(CausalityError(format!(
+            "Mismatch between number of causes ({}) and data points ({}).",
+            causes.len(),
+            data.len()
+        )));
+    }
+
     if causes.len() != data.len() {
         return Err(CausalityError(format!(
             "Mismatch between number of causes ({}) and data points ({}).",
