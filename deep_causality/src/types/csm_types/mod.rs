@@ -7,7 +7,7 @@ use crate::errors::{ActionError, UpdateError};
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
-use crate::{CausalAction, CausalState, Datable, Evidence, Symbolic};
+use crate::{CausalAction, CausalState, Datable, Evidence, PropagatingEffect, Symbolic};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
@@ -112,7 +112,7 @@ where
         state_action: StateAction<D, S, T, ST, SYM, VS, VT>,
     ) -> Result<(), UpdateError> {
         // Check if the key exists, if so return error
-        if self.state_actions.read().unwrap().get(&idx).is_some() {
+        if self.state_actions.read().unwrap().contains_key(&idx) {
             return Err(UpdateError(format!("State {idx} already exists.")));
         }
 
@@ -125,64 +125,67 @@ where
         Ok(())
     }
 
-    /// Removes a state action at the index position idx.
-    /// Returns UpdateError if the index does not exists.
+    /// Removes a state action at the index position id.
+    /// Returns UpdateError if the index does not exist.
     pub fn remove_single_state(&self, id: usize) -> Result<(), UpdateError> {
-        // Need binding to prevent dropped tmp value warnings
         let mut binding = self.state_actions.write().unwrap();
 
-        // Check if state actually exists in the HashMap
-        let state_action = binding.get(&id);
-        if state_action.is_none() {
+        if binding.remove(&id).is_none() {
             return Err(UpdateError(format!(
-                "State {id} does not exists and  cannot be removed"
+                "State {id} does not exist and cannot be removed"
             )));
         }
-
-        // remove the new state/action at the idx position
-        binding.remove(&id);
 
         Ok(())
     }
 
-    /// Evaluates a single causal state at the index position idx.
-    /// Returns ActionError if the evaluation failed.
+    /// Evaluates a single causal state at the index position id.
+    /// If the state evaluates to `PropagatingEffect::Deterministic(true)`, the associated action is fired.
+    ///
+    /// # Errors
+    /// Returns `ActionError` if the state does not exist, evaluation fails, the effect is not
+    /// deterministic, or the action fails to fire.
     pub fn eval_single_state(&self, id: usize, data: Evidence) -> Result<(), ActionError> {
-        // Need binding to prevent dropped tmp value warnings and check for rw lock poisoning
         let binding = self
             .state_actions
             .read()
-            .map_err(|_| ActionError("RwLock poisoned during state evaluation".to_string()))?;
+            .map_err(|e| ActionError(format!("RwLock poisoned during state evaluation: {e}")))?;
 
-        // Check if state actually exists in the HashMap
-        let state_action = binding.get(&id);
-        if state_action.is_none() {
+        // Get the state and action, or return an error if the ID doesn't exist.
+        let (state, action) = binding.get(&id).ok_or_else(|| {
+            ActionError(format!(
+                "State {id} does not exist. Add it first before evaluating."
+            ))
+        })?;
+
+        // Evaluate the state, propagating any evaluation errors.
+        let effect = state.eval_with_data(&data).map_err(|e| {
+            ActionError(format!(
+                "CSM[eval]: Error evaluating state {}: {}",
+                state.id(),
+                e
+            ))
+        })?;
+
+        // A CSM state must evaluate to a deterministic effect.
+        // Any other effect is an error.
+        if let PropagatingEffect::Deterministic(is_active) = effect {
+            // Only fire the action if the state is unambiguously active.
+            if is_active {
+                action.fire().map_err(|e| {
+                    ActionError(format!(
+                        "CSM[eval]: Failed to fire action for state {}: {}",
+                        state.id(),
+                        e
+                    ))
+                })?;
+            }
+        } else {
+            // The effect was not deterministic, which is an invalid state for a CSM.
             return Err(ActionError(format!(
-                "State {id} does not exists. Add it first before evaluating"
-            )));
-        }
-
-        // State exists, extract it.
-        let (state, action) = state_action.unwrap();
-
-        // Apply data and evaluate causal state
-        let eval = state.eval_with_data(&data);
-
-        // Check if the causal state evaluation returned an error
-        if eval.is_err() {
-            return Err(ActionError(format!(
-                "CSM[eval]: Error evaluating causal state: {state:?}"
-            )));
-        }
-
-        // Unpack the bool result that triggers the action
-        let effect =
-            eval.expect("CSM[eval]: Failed to unwrap evaluation result from causal state}");
-
-        // If the state evaluated to true, fire the associated action.
-        if !effect.is_halting() && action.fire().is_err() {
-            return Err(ActionError(format!(
-                "CSM[eval]: Failed to fire action associated with causal state {state:?}"
+                "CSM[eval]: Invalid non-deterministic effect '{:?}' for state {}",
+                effect,
+                state.id()
             )));
         }
 
@@ -197,9 +200,9 @@ where
         state_action: StateAction<D, S, T, ST, SYM, VS, VT>,
     ) -> Result<(), UpdateError> {
         // Check if the key exists, if not return error
-        if self.state_actions.read().unwrap().get(&idx).is_none() {
+        if !self.state_actions.read().unwrap().contains_key(&idx) {
             return Err(UpdateError(format!(
-                "State {idx} does not exists. Add it first before evaluating"
+                "State {idx} does not exist. Add it first before updating."
             )));
         }
 
@@ -212,27 +215,40 @@ where
         Ok(())
     }
 
-    /// Evaluates all causal states in the CSM.
-    /// Returns ActionError if the evaluation failed.
+    /// Evaluates all causal states in the CSM using their internal data.
+    /// For each state that evaluates to `PropagatingEffect::Deterministic(true)`, the associated action is fired.
+    ///
+    /// # Errors
+    /// Returns `ActionError` if any state evaluation fails, produces a non-deterministic effect,
+    /// or any triggered action fails to fire.
     pub fn eval_all_states(&self) -> Result<(), ActionError> {
-        for (_, (state, action)) in self.state_actions.read().unwrap().iter() {
-            let eval = state.eval();
+        let binding = self
+            .state_actions
+            .read()
+            .map_err(|e| ActionError(format!("RwLock poisoned during state evaluation: {e}")))?;
 
-            // check if the causal state evaluation returned an error
-            if eval.is_err() {
+        for (id, (state, action)) in binding.iter() {
+            // Evaluate the state using its internal data, propagating any evaluation errors.
+            let effect = state
+                .eval()
+                .map_err(|e| ActionError(format!("CSM[eval]: Error evaluating state {id}: {e}")))?;
+
+            // A CSM state must evaluate to a deterministic effect. Any other effect is an error.
+            if let PropagatingEffect::Deterministic(is_active) = effect {
+                // Only fire the action if the state is unambiguously active.
+                if is_active {
+                    action.fire().map_err(|e| {
+                        ActionError(format!(
+                            "CSM[eval]: Failed to fire action for state {id}: {e}"
+                        ))
+                    })?;
+                }
+            } else {
+                // The effect was not deterministic, which is an invalid state for a CSM.
                 return Err(ActionError(format!(
-                    "CSM[eval]: Error evaluating causal state: {state:?}"
-                )));
-            }
-
-            // Unpack the bool result
-            let trigger =
-                eval.expect("CSM[eval]: Failed to unwrap evaluation result from causal state}");
-
-            // If the state has evaluated and is not halting, fire the associated action.
-            if !trigger.is_halting() && action.fire().is_err() {
-                return Err(ActionError(format!(
-                    "CSM[eval]: Failed to fire action associated with causal state {state:?}"
+                    "CSM[eval]: Invalid non-deterministic effect '{:?}' for state {}",
+                    effect,
+                    state.id()
                 )));
             }
         }
@@ -257,7 +273,7 @@ where
         *self
             .state_actions
             .write()
-            .map_err(|_| UpdateError("RwLock poisoned during CSM state update".to_string()))? =
+            .map_err(|e| UpdateError(format!("RwLock poisoned during CSM state update: {e}")))? =
             state_map;
         Ok(())
     }
