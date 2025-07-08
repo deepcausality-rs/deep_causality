@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::DiscreteTime;
+use crate::DiscreteTime;
 use std::fmt::Display;
 
 impl Display for DiscreteTime {

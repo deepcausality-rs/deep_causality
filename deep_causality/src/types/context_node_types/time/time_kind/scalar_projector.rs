@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{ScalarProjector, TimeKind};
+use crate::{ScalarProjector, TimeKind};
 
 impl ScalarProjector for TimeKind {
     type Scalar = f64;

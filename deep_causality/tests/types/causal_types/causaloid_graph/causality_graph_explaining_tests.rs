@@ -3,206 +3,124 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::*;
+use deep_causality::*;
 
 use deep_causality::utils_test::{test_utils, test_utils_graph};
 
 #[test]
 fn test_explain_all_causes() {
-    // Reasons over a multi-cause graph:
-    //  root(0)
-    //  /  \
-    //A(1) B(2)
-    //  \ /
-    //  C(3)
-    // We assume two causes (A and B) for C and single cause for A and B.
-    let (g, data) = test_utils_graph::get_small_multi_cause_graph_and_data();
+    // Graph: root(0) -> A(1), root(0) -> B(2), A(1) -> C(3), B(2) -> C(3)
+    let (g, _data) = test_utils_graph::get_small_multi_cause_graph_and_data();
+    let root_index = g.get_root_index().unwrap();
 
-    // Verify that the graph is fully inactive.
-    let percent_active = g.percent_active();
-    assert_eq!(percent_active, 0.0);
+    // Before evaluation, explain returns a message that no nodes have been evaluated.
+    let pre_explanation = g.explain_all_causes().unwrap();
+    assert_eq!(
+        pre_explanation,
+        "No nodes in the graph have been evaluated or produced an explainable effect."
+    );
 
-    let number_active = g.number_active();
-    assert_eq!(number_active, 0.0);
-
-    // Full reasoning over the entire graph
-    //
-    let all_true = g.all_active();
-    assert!(!all_true);
-
-    let res = g.reason_all_causes(&data, None);
+    // Evaluate the entire graph from the root.
+    let evidence = Evidence::Numerical(0.99);
+    let res = g.evaluate_subgraph_from_cause(root_index, &evidence);
     assert!(res.is_ok());
+    assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(true));
 
-    let nr_active = g.number_active();
-    dbg!(&nr_active);
-
-    let total_nodes = g.number_nodes();
-    dbg!(&total_nodes);
-
-    // Verify that the graph is fully active.
-    let all_active = g.all_active();
-    assert!(all_active);
-
-    let percent_active = g.percent_active();
-    assert_eq!(percent_active, 100.0);
-
-    let total_nodes = g.number_nodes() as f64;
-    let number_active = g.number_active();
-    assert_eq!(number_active, total_nodes);
-
-    // Explain all full reasoning over the entire graph
-    //
-    let res = g.explain_all_causes().unwrap();
-    let expected = "\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n".to_string();
-    assert_eq!(res, expected);
+    // Explain the fully evaluated graph.
+    // The explanation order is determined by a Breadth-First Search from the root.
+    let explanation = g.explain_all_causes().unwrap();
+    let base_expl = "Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: Deterministic(true)";
+    // Expected order from BFS: 0, 1, 2, 3
+    let expected = format!(" * {base_expl}\n * {base_expl}\n * {base_expl}\n * {base_expl}");
+    assert_eq!(explanation, expected);
 }
 
 #[test]
-fn test_explain_all_causes_error() {
-    let mut g = CausaloidGraph::new();
+fn test_explain_all_causes_error_conditions() {
+    // Test with an empty graph
+    let mut g: BaseCausalGraph = CausaloidGraph::new(0);
     assert!(g.is_empty());
+    let res = g.explain_all_causes().unwrap();
+    assert_eq!(res, "The causal graph is empty.");
 
-    // Error: Graph is empty
-    let res = g.explain_all_causes();
-    assert!(res.is_err());
-
-    // Add causaloid A
+    // Test with a graph that has no root
     let causaloid = test_utils::get_test_causaloid();
-    let idx_a = g
-        .add_causaloid(causaloid)
+    g.add_causaloid(causaloid)
         .expect("Failed to add causaloid A");
-    let contains_a = g.contains_causaloid(idx_a);
-    assert!(contains_a);
     assert!(!g.is_empty());
-
-    // Error: Graph does not contains root causaloid
     let res = g.explain_all_causes();
     assert!(res.is_err());
+    assert_eq!(
+        res.unwrap_err().to_string(),
+        "CausalityError: Cannot explain all causes: Graph has no root node."
+    );
 }
 
 #[test]
 fn test_explain_subgraph_from_cause() {
-    // Reasons over a multi-cause graph:
-    //  root(0)
-    //  /  \
-    //A(1) B(2)
-    //  \ /
-    //  C(3)
-    // We assume two causes (A and B) for C and single cause for A and B.
-    let (g, data) = test_utils_graph::get_small_multi_cause_graph_and_data();
+    // Graph: root(0) -> A(1), root(0) -> B(2), A(1) -> C(3), B(2) -> C(3)
+    let (g, _data) = test_utils_graph::get_small_multi_cause_graph_and_data();
+    let root_index = g.get_root_index().unwrap();
 
-    // Verify that the graph is fully inactive.
-    let percent_active = g.percent_active();
-    assert_eq!(percent_active, 0.0);
+    // Evaluate the entire graph first.
+    let evidence = Evidence::Numerical(0.99);
+    g.evaluate_subgraph_from_cause(root_index, &evidence)
+        .unwrap();
 
-    let number_active = g.number_active();
-    assert_eq!(number_active, 0.0);
-
-    // Full reasoning over the entire graph
-    //
-    let all_true = g.all_active();
-    assert!(!all_true);
-
-    let res = g
-        .reason_all_causes(&data, None)
-        .expect("Failed to reason over the entire graph");
-    assert!(res);
-
-    // Verify that the graph is fully active.
-    let all_true = g.all_active();
-    assert!(all_true);
-
-    let percent_active = g.percent_active();
-    assert_eq!(percent_active, 100.0);
-
-    let total_nodes = g.number_nodes() as f64;
-    let number_active = g.number_active();
-    assert_eq!(number_active, total_nodes);
-
-    // Explain partial reasoning over sub-graph
-    //
+    // Explain a subgraph starting from node 2.
+    // The traversal will visit nodes 2 and its descendant, 3.
     let start_index = 2;
     let res = g.explain_subgraph_from_cause(start_index).unwrap();
-    let expected = "\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n".to_string();
+    let base_expl = "Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: Deterministic(true)";
+    let expected = format!(" * {base_expl}\n * {base_expl}");
     assert_eq!(res, expected);
 }
 
 #[test]
-fn test_explain_subgraph_from_cause_error() {
-    let mut g = CausaloidGraph::new();
+fn test_explain_subgraph_from_cause_error_conditions() {
+    let mut g: BaseCausalGraph = CausaloidGraph::new(0);
     assert!(g.is_empty());
 
-    let no_idx = 99;
-
     // Error: Graph is empty
-    let res = g.explain_subgraph_from_cause(no_idx);
+    let res = g.explain_subgraph_from_cause(99);
     assert!(res.is_err());
+    assert_eq!(
+        res.unwrap_err().to_string(),
+        "CausalityGraphError: Graph is empty"
+    );
 
-    // Add causaloid A
+    // Error: Start node does not exist
     let causaloid = test_utils::get_test_causaloid();
-    let idx_a = g
-        .add_causaloid(causaloid)
-        .expect("Failed to add causaloid A");
-    let contains_a = g.contains_causaloid(idx_a);
-
-    assert!(contains_a);
-
-    // Error: No path
-    let res = g.explain_subgraph_from_cause(idx_a);
+    g.add_causaloid(causaloid).expect("Failed to add causaloid");
+    g.freeze();
+    let res = g.explain_subgraph_from_cause(99);
     assert!(res.is_err());
+    assert_eq!(
+        res.unwrap_err().to_string(),
+        "CausalityGraphError: Graph does not contains start causaloid"
+    );
 }
 
 #[test]
 fn test_explain_shortest_path_between_causes() {
-    // Reasons over a multi-cause graph:
-    //  root(0)
-    //  /  \
-    //A(1) B(2)
-    //  \ /
-    //  C(3)
-    // We assume two causes (A and B) for C and single cause for A and B.
-    let (g, data) = test_utils_graph::get_small_multi_cause_graph_and_data();
+    // Graph: root(0) -> A(1), root(0) -> B(2), A(1) -> C(3), B(2) -> C(3)
+    let (g, _data) = test_utils_graph::get_small_multi_cause_graph_and_data();
+    let root_index = g.get_root_index().unwrap();
 
-    // Verify that the graph is fully inactive.
-    let percent_active = g.percent_active();
-    assert_eq!(percent_active, 0.0);
+    // Evaluate the entire graph first.
+    let evidence = Evidence::Numerical(0.99);
+    g.evaluate_subgraph_from_cause(root_index, &evidence)
+        .unwrap();
 
-    let number_active = g.number_active();
-    assert_eq!(number_active, 0.0);
-
-    // Full reasoning over the entire graph
-    //
-    let all_true = g.all_active();
-    assert!(!all_true);
-
-    let res = g.reason_all_causes(&data, None).expect("`");
-    assert!(res);
-
-    // Verify that the graph is fully active.
-    let all_true = g.all_active();
-    assert!(all_true);
-
-    let percent_active = g.percent_active();
-    assert_eq!(percent_active, 100.0);
-
-    let total_nodes = g.number_nodes() as f64;
-    let number_active = g.number_active();
-    assert_eq!(number_active, total_nodes);
-
-    // Reasoning over shortest path through the graph
-    //
+    // Explain the shortest path from node 2 to node 3.
+    // The path is just [2, 3].
     let start_index = 2;
     let stop_index = 3;
     let res = g
-        .reason_shortest_path_between_causes(start_index, stop_index, &data, None)
-        .unwrap();
-    assert!(res);
-
-    // Explain partial reasoning over shortest path through the graph
-    //
-    let res = g
         .explain_shortest_path_between_causes(start_index, stop_index)
         .unwrap();
-    let expected = "\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n";
+
+    let base_expl = "Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: Deterministic(true)";
+    let expected = format!(" * {base_expl}\n * {base_expl}");
     assert_eq!(res, expected);
 }

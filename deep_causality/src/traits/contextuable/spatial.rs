@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{Coordinate, Identifiable};
+use crate::{Coordinate, Identifiable};
 
 /// Marks entities that have spatial semantics.
 ///

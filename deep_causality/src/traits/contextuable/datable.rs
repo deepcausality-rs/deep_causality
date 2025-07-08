@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::Identifiable;
+use crate::Identifiable;
 
 /// Represents data-bearing entities in a causal context graph.
 ///

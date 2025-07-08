@@ -3,8 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::{BaseCausalGraph, CausaloidGraph};
-use deep_causality::traits::causable_graph::graph::CausableGraph;
+use deep_causality::{BaseCausalGraph, CausableGraph, CausaloidGraph, IdentificationValue};
 
 use crate::benchmarks::utils_shared;
 
@@ -12,29 +11,37 @@ const SMALL: usize = 10;
 const MEDIUM: usize = 1_000;
 const LARGE: usize = 10_000;
 
-pub fn get_small_linear_graph_and_data() -> (BaseCausalGraph, [f64; SMALL + 1]) {
-    // Builds a linear graph: root -> a -> b -> c
-    (build_linear_graph(SMALL), generate_sample_data())
+pub fn get_small_linear_graph_and_data() -> (BaseCausalGraph, [f64; SMALL]) {
+    (
+        build_linear_graph(SMALL),
+        utils_shared::generate_sample_data(),
+    )
 }
 
-pub fn get_medium_linear_graph_and_data() -> (BaseCausalGraph, [f64; MEDIUM + 1]) {
-    // Builds a linear graph: root -> a -> b -> c ...
-    (build_linear_graph(MEDIUM), generate_sample_data())
+pub fn get_medium_linear_graph_and_data() -> (BaseCausalGraph, [f64; MEDIUM]) {
+    (
+        build_linear_graph(MEDIUM),
+        utils_shared::generate_sample_data(),
+    )
 }
 
-pub fn get_large_linear_graph_and_data() -> (BaseCausalGraph, [f64; LARGE + 1]) {
-    // Builds a linear graph: root -> a -> b -> c ...
-    (build_linear_graph(LARGE), generate_sample_data())
+pub fn get_large_linear_graph_and_data() -> (BaseCausalGraph, [f64; LARGE]) {
+    (
+        build_linear_graph(LARGE),
+        utils_shared::generate_sample_data(),
+    )
 }
 
 pub fn build_linear_graph(k: usize) -> BaseCausalGraph {
     // Builds a linear graph: root -> a -> b -> c
-    let mut g = CausaloidGraph::new();
+    let mut g = CausaloidGraph::new(0 as IdentificationValue);
 
     let root_causaloid = utils_shared::get_test_causaloid();
-    let root_index = g.add_root_causaloid(root_causaloid);
+    let root_index = g
+        .add_root_causaloid(root_causaloid)
+        .expect("Failed to add root causaloid");
 
-    let mut previous_idx = root_index.expect("Failed to add root causaloid");
+    let mut previous_idx = root_index;
 
     for _ in 0..k {
         // add a new causaloid and set current idx to it
@@ -53,9 +60,11 @@ pub fn build_linear_graph(k: usize) -> BaseCausalGraph {
     g
 }
 
-pub fn get_small_multi_cause_graph_and_data() -> (BaseCausalGraph, [f64; 4 + 1]) {
-    // Builds a multi-layer cause graph:
-    (build_multi_cause_graph(), generate_sample_data())
+pub fn get_small_multi_cause_graph_and_data() -> (BaseCausalGraph, [f64; 4]) {
+    (
+        build_multi_cause_graph(),
+        utils_shared::generate_sample_data(),
+    )
 }
 
 fn build_multi_cause_graph() -> BaseCausalGraph {
@@ -66,7 +75,7 @@ fn build_multi_cause_graph() -> BaseCausalGraph {
     //  \ /
     //   C
 
-    let mut g = CausaloidGraph::new();
+    let mut g = CausaloidGraph::new(0 as IdentificationValue);
 
     // Add root causaloid
     let root_causaloid = utils_shared::get_test_causaloid();
@@ -105,9 +114,4 @@ fn build_multi_cause_graph() -> BaseCausalGraph {
     g.freeze();
 
     g
-}
-
-// Generates a fixed sized array with sample data
-fn generate_sample_data<const N: usize>() -> [f64; N] {
-    [0.99; N]
 }

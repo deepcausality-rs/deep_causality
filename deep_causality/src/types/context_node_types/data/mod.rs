@@ -7,7 +7,7 @@ use std::hash::Hash;
 
 use deep_causality_macros::Constructor;
 
-use crate::prelude::Datable;
+use crate::Datable;
 
 pub mod adjustable;
 mod display;

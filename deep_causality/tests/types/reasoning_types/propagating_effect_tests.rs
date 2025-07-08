@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::*;
+use deep_causality::*;
 
 #[test]
 fn test_is_deterministic() {
@@ -39,6 +39,12 @@ fn test_is_contextual_link() {
 
     let effect3 = PropagatingEffect::ContextualLink(1, 1);
     assert!(effect3.is_contextual_link());
+}
+
+#[test]
+fn test_is_halting() {
+    let effect = PropagatingEffect::Halting;
+    assert!(effect.is_halting());
 }
 
 #[test]
@@ -90,6 +96,24 @@ fn test_display() {
 
     let effect3 = PropagatingEffect::ContextualLink(1, 2);
     assert_eq!(format!("{effect3}"), "ContextualLink: 1 Contextoid: 2");
+
+    let effect4 = PropagatingEffect::Halting;
+    assert_eq!(format!("{effect4}"), "Halting");
+}
+
+#[test]
+fn test_debug() {
+    let effect1 = PropagatingEffect::Deterministic(true);
+    assert_eq!(format!("{effect1:?}"), "Deterministic(true)");
+
+    let effect2 = PropagatingEffect::Probabilistic(0.5);
+    assert_eq!(format!("{effect2:?}"), "Probabilistic(0.5)");
+
+    let effect3 = PropagatingEffect::ContextualLink(1, 2);
+    assert_eq!(format!("{effect3:?}"), "ContextualLink(1, 2)");
+
+    let effect4 = PropagatingEffect::Halting;
+    assert_eq!(format!("{effect4:?}"), "Halting");
 }
 
 #[test]
@@ -105,18 +129,6 @@ fn test_clone() {
     let effect3 = PropagatingEffect::ContextualLink(1, 2);
     let clone3 = effect3.clone();
     assert_eq!(effect3, clone3);
-}
-
-#[test]
-fn test_debug() {
-    let effect1 = PropagatingEffect::Deterministic(true);
-    assert_eq!(format!("{effect1:?}"), "Deterministic(true)");
-
-    let effect2 = PropagatingEffect::Probabilistic(0.5);
-    assert_eq!(format!("{effect2:?}"), "Probabilistic(0.5)");
-
-    let effect3 = PropagatingEffect::ContextualLink(1, 2);
-    assert_eq!(format!("{effect3:?}"), "ContextualLink(1, 2)");
 }
 
 #[test]

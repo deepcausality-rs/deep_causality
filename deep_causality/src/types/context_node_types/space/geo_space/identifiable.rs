@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{GeoSpace, Identifiable};
+use crate::{GeoSpace, Identifiable};
 
 impl Identifiable for GeoSpace {
     fn id(&self) -> u64 {

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::AdjustmentError;
+use deep_causality::AdjustmentError;
 use std::error::Error;
 
 #[test]

@@ -12,7 +12,8 @@ use deep_causality_macros::{
     make_map_to_vec, make_vec_to_vec,
 };
 
-use crate::prelude::{Causable, CausableReasoning};
+use crate::Causable;
+use crate::traits::causable::causable_reasoning::CausableReasoning;
 
 impl<T> CausableReasoning<T> for [T]
 where

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::GeoSpace;
+use crate::GeoSpace;
 
 impl GeoSpace {
     pub fn lat(&self) -> f64 {

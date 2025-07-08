@@ -13,7 +13,7 @@ mod space_temporal_interval;
 mod spatial;
 mod temporal;
 
-use crate::prelude::TimeScale;
+use crate::TimeScale;
 use deep_causality_macros::Constructor;
 
 /// A 4-dimensional spacetime context based on Lorentzian geometry, as used in General Relativity.
@@ -56,7 +56,7 @@ use deep_causality_macros::Constructor;
 ///
 /// # Example
 /// ```
-/// use deep_causality::prelude::*;
+/// use deep_causality::*;
 ///
 /// let s1 = LorentzianSpacetime::new(1, 1.0, 0.0, 0.0, 0.0, TimeScale::Second);
 /// let s2 = LorentzianSpacetime::new(2, 2.0, 3.0, 4.0, 0.0, TimeScale::Second);

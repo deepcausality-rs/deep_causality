@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::Identifiable;
+use crate::Identifiable;
 
 /// Represents a symbolic, logical, or linguistic identity.
 ///
@@ -18,7 +18,7 @@ use crate::prelude::Identifiable;
 ///
 /// # Example
 /// ```
-/// use deep_causality::prelude::{Identifiable, Symbolic};
+/// use deep_causality::{Identifiable, Symbolic};
 ///
 /// struct RuleNode { id: u64, term: String }
 ///

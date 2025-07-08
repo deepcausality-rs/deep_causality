@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::utils;
-use deep_causality::prelude::{BaseCausaloid, BaseModel, Causable};
+use deep_causality::{BaseCausaloid, BaseModel, Causable, Evidence};
 use std::error::Error;
 use std::sync::{Arc, RwLock};
 
@@ -41,12 +41,18 @@ impl EventHandler {
         data: &f64,
         bc: &BaseCausaloid,
     ) -> Result<(), Box<dyn Error + Send>> {
-        let res = bc.verify_single_cause(data).unwrap_or_else(|e| {
-            println!("EventHandler: {e}");
-            false
-        });
+        // Wrap the raw numerical data into the unified Evidence type.
+        let evidence = Evidence::Numerical(*data);
 
-        println!("EventHandler: {res}");
+        // Call the new standard `evaluate` method and handle the Result.
+        match bc.evaluate(&evidence) {
+            Ok(effect) => {
+                println!("EventHandler: Inference successful with effect: {effect:?}")
+            }
+            Err(e) => {
+                println!("EventHandler: Inference failed with error: {e}")
+            }
+        }
 
         Ok(())
     }

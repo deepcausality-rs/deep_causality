@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{LorentzianSpacetime, SpaceTemporalInterval};
+use crate::{LorentzianSpacetime, SpaceTemporalInterval};
 
 impl SpaceTemporalInterval for LorentzianSpacetime {
     fn time(&self) -> f64 {

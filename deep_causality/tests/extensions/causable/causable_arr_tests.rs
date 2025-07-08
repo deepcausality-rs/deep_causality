@@ -5,56 +5,13 @@
 
 use std::array;
 
-use deep_causality::prelude::*;
-
 use deep_causality::utils_test::test_utils::*;
+use deep_causality::*;
 
-fn get_test_causality_data() -> [NumericalValue; 10] {
-    [60.0, 99.0, 82.0, 93.8, 74.8, 82.0, 93.8, 74.0, 74.8, 82.0]
-}
-
+// Helper function to create a standard test array.
+// Causaloid doesn't implement Copy, hence the from_fn workaround for array initialization.
 pub fn get_test_causality_array() -> [BaseCausaloid; 10] {
-    // Causaloid doesn't implement Copy hence the from_fn workaround for array initialization
     array::from_fn(|_| get_test_causaloid())
-}
-
-#[test]
-fn test_all_active() {
-    let col = get_test_causality_array();
-    assert!(!col.get_all_causes_true());
-
-    let obs = 0.99;
-    for cause in &col {
-        cause.verify_single_cause(&obs).expect("verify failed");
-    }
-    assert!(col.get_all_causes_true());
-}
-
-#[test]
-fn test_number_active() {
-    let col = get_test_causality_array();
-    assert!(!col.get_all_causes_true());
-
-    let obs = 0.99;
-    for cause in &col {
-        cause.verify_single_cause(&obs).expect("verify failed");
-    }
-    assert!(col.get_all_causes_true());
-    assert_eq!(10.0, col.number_active());
-}
-
-#[test]
-fn test_percent_active() {
-    let col = get_test_causality_array();
-    assert!(!col.get_all_causes_true());
-
-    let obs = 0.99;
-    for cause in &col {
-        cause.verify_single_cause(&obs).expect("verify failed");
-    }
-    assert!(col.get_all_causes_true());
-    assert_eq!(10.0, col.number_active());
-    assert_eq!(100.0, col.percent_active());
 }
 
 #[test]
@@ -68,57 +25,76 @@ fn test_get_all_items() {
 }
 
 #[test]
-fn test_get_all_active_causes() {
+fn test_evaluate_deterministic_propagation() {
     let col = get_test_causality_array();
-    assert!(!col.get_all_causes_true());
 
-    let obs = 0.99;
-    for cause in &col {
-        cause.verify_single_cause(&obs).expect("verify failed");
-    }
-    assert!(col.get_all_causes_true());
-    assert_eq!(10, col.get_all_active_causes().len());
+    // Case 1: All succeed, chain should be deterministically true.
+    let evidence_success = Evidence::Numerical(0.99);
+    let res_success = col
+        .evaluate_deterministic_propagation(&evidence_success)
+        .unwrap();
+    assert_eq!(res_success, PropagatingEffect::Deterministic(true));
+
+    // Case 2: One fails, chain should be deterministically false.
+    let evidence_fail = Evidence::Numerical(0.1);
+    let res_fail = col
+        .evaluate_deterministic_propagation(&evidence_fail)
+        .unwrap();
+    assert_eq!(res_fail, PropagatingEffect::Deterministic(false));
 }
 
 #[test]
-fn test_get_all_inactive_causes() {
+fn test_evaluate_probabilistic_propagation() {
     let col = get_test_causality_array();
-    assert!(!col.get_all_causes_true());
 
-    let obs = 0.99;
-    for cause in &col {
-        cause.verify_single_cause(&obs).expect("verify failed");
-    }
-    assert!(col.get_all_causes_true());
-    assert_eq!(0, col.get_all_inactive_causes().len());
+    // Case 1: All succeed (Deterministic(true) is treated as probability 1.0).
+    // The cumulative probability should be 1.0.
+    let evidence_success = Evidence::Numerical(0.99);
+    let res_success = col
+        .evaluate_probabilistic_propagation(&evidence_success)
+        .unwrap();
+    assert_eq!(res_success, PropagatingEffect::Probabilistic(1.0));
+
+    // Case 2: One fails (Deterministic(false) is treated as probability 0.0).
+    // The chain should short-circuit and return a cumulative probability of 0.0.
+    let evidence_fail = Evidence::Numerical(0.1);
+    let res_fail = col
+        .evaluate_probabilistic_propagation(&evidence_fail)
+        .unwrap();
+    assert_eq!(res_fail, PropagatingEffect::Probabilistic(0.0));
 }
 
 #[test]
-fn test_reason_all_causes() {
+fn test_evaluate_mixed_propagation() {
     let col = get_test_causality_array();
-    assert!(!col.get_all_causes_true());
 
-    let data = get_test_causality_data();
+    // Case 1: All succeed, chain remains deterministically true.
+    let evidence_success = Evidence::Numerical(0.99);
+    let res_success = col.evaluate_mixed_propagation(&evidence_success).unwrap();
+    assert_eq!(res_success, PropagatingEffect::Deterministic(true));
 
-    let res = col.reason_all_causes(&data);
-    assert!(res.is_ok());
-
-    let valid = res.unwrap();
-    assert!(valid);
+    // Case 2: One fails, chain becomes deterministically false.
+    let evidence_fail = Evidence::Numerical(0.1);
+    let res_fail = col.evaluate_mixed_propagation(&evidence_fail).unwrap();
+    assert_eq!(res_fail, PropagatingEffect::Deterministic(false));
 }
 
 #[test]
 fn test_explain() {
     let col = get_test_causality_array();
-    assert!(!col.get_all_causes_true());
 
-    let obs = 0.99;
-    for cause in &col {
-        cause.verify_single_cause(&obs).expect("verify failed");
-    }
+    let evidence = Evidence::Numerical(0.99);
+    let res = col.evaluate_deterministic_propagation(&evidence);
+    assert!(res.is_ok());
 
-    let expected = "\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n\n * Causaloid: 1 tests whether data exceeds threshold of 0.55 evaluated to true\n";
-    let actual = col.explain();
+    let res = col.explain();
+    dbg!(&res);
+    assert!(res.is_ok());
+    let actual = col.explain().unwrap();
+
+    let single_explanation = "\n * Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: Deterministic(true)\n";
+    let expected = single_explanation.repeat(10);
+
     assert_eq!(expected, actual);
 }
 

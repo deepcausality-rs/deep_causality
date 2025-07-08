@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{Identifiable, LorentzianSpacetime};
+use crate::{Identifiable, LorentzianSpacetime};
 
 impl Identifiable for LorentzianSpacetime {
     fn id(&self) -> u64 {

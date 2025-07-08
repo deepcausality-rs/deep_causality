@@ -5,7 +5,7 @@
 pub mod generative_processor;
 
 use crate::errors::ModelGenerativeError;
-use crate::prelude::{
+use crate::{
     Context, Datable, GenerativeOutput, GenerativeTrigger, SpaceTemporal, Spatial, Symbolic,
     Temporal,
 };

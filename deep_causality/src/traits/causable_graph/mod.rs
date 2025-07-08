@@ -7,12 +7,11 @@ use std::collections::HashMap;
 use ultragraph::UltraGraphWeighted;
 
 use crate::errors::{CausalGraphIndexError, CausalityGraphError};
-use crate::prelude::{Causable, IdentificationValue, NumericalValue};
+use crate::{Causable, IdentificationValue, NumericalValue};
 
 pub mod graph;
 pub mod graph_explaining;
 pub mod graph_reasoning;
-mod graph_reasoning_utils;
 
 // Type alias is shared between trait and implementation
 pub(crate) type CausalGraph<T> = UltraGraphWeighted<T, u64>;

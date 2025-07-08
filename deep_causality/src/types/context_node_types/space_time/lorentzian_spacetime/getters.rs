@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::LorentzianSpacetime;
+use crate::LorentzianSpacetime;
 
 impl LorentzianSpacetime {
     pub fn x(&self) -> f64 {

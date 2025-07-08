@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::Coordinate;
+use crate::Coordinate;
 use crate::traits::contextuable::metric::Metric;
 
 /// Represents coordinate-bearing entities that also implement distance metrics.

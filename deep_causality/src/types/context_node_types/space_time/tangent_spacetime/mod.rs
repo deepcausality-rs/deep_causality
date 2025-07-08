@@ -47,7 +47,7 @@ mod temporal;
 /// The default metric is flat Minkowski (− + + +), but this can be replaced at runtime:
 ///
 /// ```
-/// use deep_causality::prelude::*;
+/// use deep_causality::*;
 ///
 /// let mut s = TangentSpacetime::new(1, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0);
 ///

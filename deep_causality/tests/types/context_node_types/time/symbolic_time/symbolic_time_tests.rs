@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::{Identifiable, SymbolicTime, SymbolicTimeUnit, Temporal, TimeScale};
+use deep_causality::{Identifiable, SymbolicTime, SymbolicTimeUnit, Temporal, TimeScale};
 
 #[test]
 fn test_construction_before() {

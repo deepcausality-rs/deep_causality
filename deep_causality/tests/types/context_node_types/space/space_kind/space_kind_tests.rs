@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::*;
+use deep_causality::*;
 use std::f64::consts::FRAC_1_SQRT_2;
 
 #[test]

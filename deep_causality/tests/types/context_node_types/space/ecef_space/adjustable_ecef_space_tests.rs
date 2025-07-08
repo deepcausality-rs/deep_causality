@@ -4,7 +4,7 @@
  */
 
 use dcl_data_structures::prelude::{ArrayGrid, ArrayType, PointIndex};
-use deep_causality::prelude::{Adjustable, EcefSpace};
+use deep_causality::{Adjustable, EcefSpace};
 
 #[test]
 fn test_ecef_space_adjustable_update_and_adjust() {

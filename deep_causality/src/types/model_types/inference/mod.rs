@@ -4,7 +4,7 @@
  */
 use deep_causality_macros::Constructor;
 
-use crate::prelude::{DescriptionValue, IdentificationValue, NumericalValue};
+use crate::{DescriptionValue, IdentificationValue, NumericalValue};
 
 mod display;
 mod identifiable;

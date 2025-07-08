@@ -5,7 +5,7 @@
 
 use crate::coord_match;
 use crate::errors::IndexError;
-use crate::prelude::{Coordinate, GeoSpace};
+use crate::{Coordinate, GeoSpace};
 
 impl Coordinate<f64> for GeoSpace {
     fn dimension(&self) -> usize {

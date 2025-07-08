@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::*;
+use deep_causality::*;
 
 fn setup_euclidean() -> TimeKind {
     TimeKind::Euclidean(EuclideanTime::new(1, TimeScale::Second, 1.23))

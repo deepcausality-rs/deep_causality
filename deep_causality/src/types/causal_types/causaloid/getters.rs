@@ -16,9 +16,6 @@ where
     VS: Clone,
     VT: Clone,
 {
-    pub fn active(&self) -> bool {
-        self.is_active()
-    }
     pub fn context(&self) -> &Option<Arc<Context<D, S, T, ST, SYM, VS, VT>>> {
         &self.context
     }
@@ -33,9 +30,5 @@ where
 
     pub fn description(&self) -> &str {
         &self.description
-    }
-
-    pub fn has_context(&self) -> bool {
-        self.has_context
     }
 }

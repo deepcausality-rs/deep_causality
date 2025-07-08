@@ -5,7 +5,7 @@
 
 // This trait can be placed in a new module, e.g., `crate::processing`
 
-use crate::prelude::{
+use crate::{
     Causaloid, Context, ContextId, ContextuableGraph, Datable, ExtendableContextuableGraph,
     Generatable, GenerativeOutput, Identifiable, ModelValidationError, SpaceTemporal, Spatial,
     Symbolic, Temporal,

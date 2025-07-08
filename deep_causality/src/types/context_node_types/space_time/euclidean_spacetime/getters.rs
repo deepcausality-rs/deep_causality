@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::EuclideanSpacetime;
+use crate::EuclideanSpacetime;
 
 impl EuclideanSpacetime {
     pub fn x(&self) -> f64 {

@@ -5,7 +5,7 @@
 
 use crate::coord_match;
 use crate::errors::IndexError;
-use crate::prelude::{Coordinate, TangentSpacetime};
+use crate::{Coordinate, TangentSpacetime};
 
 impl Coordinate<f64> for TangentSpacetime {
     /// Returns the number of dimensions in the coordinate system (always 4).

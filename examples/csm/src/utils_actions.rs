@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::{ActionError, CausalAction};
+use deep_causality::{ActionError, CausalAction};
 
 pub fn get_smoke_alert_action() -> CausalAction {
     let func = raise_smoke_alert;

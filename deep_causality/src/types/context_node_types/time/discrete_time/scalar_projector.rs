@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{DiscreteTime, ScalarProjector, Temporal};
+use crate::{DiscreteTime, ScalarProjector, Temporal};
 
 impl ScalarProjector for DiscreteTime {
     type Scalar = u64;

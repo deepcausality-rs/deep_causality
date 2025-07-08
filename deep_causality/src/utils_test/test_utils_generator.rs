@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::*;
+use crate::*;
 
 // A mock data structure used across multiple tests.
 #[derive(Debug, Clone, Eq, Hash, Copy, PartialEq, Default)]

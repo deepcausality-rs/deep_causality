@@ -3,10 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{Causable, CausalityError, Causaloid, Datable, NumericalValue, Symbolic};
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
+use crate::{Causable, CausalityError, Causaloid, Datable, Evidence, PropagatingEffect, Symbolic};
 use deep_causality_macros::{Constructor, Getters};
 use std::fmt::{Display, Formatter};
 
@@ -28,42 +28,6 @@ use std::fmt::{Display, Formatter};
 /// within a causal state machine (CSM). The CSM evaluates states and, when conditions are met,
 /// fires the associated actions.
 ///
-/// # Example
-/// ```
-/// use deep_causality::prelude::{CausalState, Causaloid, NumericalValue, CausalityError, BaseCausaloid};
-///
-/// // Create a causaloid that defines when the state is active
-/// let id = 1;
-/// let description = "Temperature threshold detector";
-/// fn causal_fn(obs: &NumericalValue) -> Result<bool, CausalityError> {
-///     let threshold = 75.0;
-///     Ok(obs >= &threshold)
-/// }
-/// let causaloid = BaseCausaloid::new(id, causal_fn, description);
-///
-/// // Create a causal state with the causaloid
-/// let state_id = 1;
-/// let version = 1;
-/// let initial_data = 45.0;
-/// let state = CausalState::new(state_id, version, initial_data, causaloid);
-///
-/// // Evaluate the state
-/// match state.eval() {
-///     Ok(true) => println!("Temperature threshold exceeded!"),
-///     Ok(false) => println!("Temperature normal"),
-///     Err(e) => println!("Evaluation error: {}", e),
-/// }
-///
-/// // Evaluate with new sensor reading
-/// let new_reading = 85.0;
-///
-/// // Evaluate the state with the new reading
-/// match state.eval_with_data(&new_reading) {
-///     Ok(true) => println!("Temperature threshold exceeded!"),
-///     Ok(false) => println!("Temperature normal"),
-///     Err(e) => println!("Evaluation error: {}", e),
-/// }
-/// ```
 #[allow(clippy::type_complexity)]
 #[derive(Getters, Constructor, Clone, Debug)]
 pub struct CausalState<D, S, T, ST, SYM, VS, VT>
@@ -81,7 +45,7 @@ where
     /// Version number for tracking changes to the state
     version: usize,
     /// Numerical data used for state evaluation
-    data: NumericalValue,
+    data: Evidence,
     /// Reference to a causaloid that defines when this state is active
     causaloid: Causaloid<D, S, T, ST, SYM, VS, VT>,
 }
@@ -106,8 +70,8 @@ where
     /// - `Ok(false)` if the state's conditions are not met
     /// - `Err(CausalityError)` if an error occurs during evaluation
     ///
-    pub fn eval(&self) -> Result<bool, CausalityError> {
-        self.causaloid.verify_single_cause(&self.data)
+    pub fn eval(&self) -> Result<PropagatingEffect, CausalityError> {
+        self.causaloid.evaluate(&self.data)
     }
 
     /// Evaluates the state using provided external data.
@@ -124,8 +88,8 @@ where
     /// - `Err(CausalityError)` if an error occurs during evaluation
     ///
     /// ```texttext
-    pub fn eval_with_data(&self, data: &NumericalValue) -> Result<bool, CausalityError> {
-        self.causaloid.verify_single_cause(data)
+    pub fn eval_with_data(&self, data: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+        self.causaloid.evaluate(data)
     }
 }
 

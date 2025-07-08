@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{Adjustable, AdjustmentError, MinkowskiSpacetime, UpdateError};
+use crate::{Adjustable, AdjustmentError, MinkowskiSpacetime, UpdateError};
 use dcl_data_structures::prelude::{ArrayGrid, PointIndex};
 
 impl Adjustable<f64> for MinkowskiSpacetime {

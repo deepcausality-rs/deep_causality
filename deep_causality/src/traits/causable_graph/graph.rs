@@ -5,8 +5,8 @@
 
 use ultragraph::*;
 
+use crate::Causable;
 use crate::errors::{CausalGraphIndexError, CausalityGraphError};
-use crate::prelude::{Causable, NumericalValue};
 use crate::traits::causable_graph::CausalGraph;
 
 /// The CausableGraph trait defines the core interface for a causal graph.
@@ -224,32 +224,6 @@ where
     /// * `Ok(())` if the edge was successfully removed.
     /// * `Err(CausalGraphIndexError)` if the edge does not exist or if either index is invalid.
     fn remove_edge(&mut self, a: usize, b: usize) -> Result<(), CausalGraphIndexError>;
-
-    // Utils
-    /// Checks if all causaloids in the graph are currently active.
-    ///
-    /// This method iterates through all causaloids in the graph and calls
-    /// the `is_active()` method on each one.
-    ///
-    /// # Returns
-    ///
-    /// * `true` if every causaloid in the graph is active.
-    /// * `false` if at least one causaloid is not active.
-    fn all_active(&self) -> bool;
-
-    /// Counts the number of active causaloids in the graph.
-    ///
-    /// # Returns
-    ///
-    /// A `NumericalValue` representing the total count of active causaloids.
-    fn number_active(&self) -> NumericalValue;
-
-    /// Calculates the percentage of active causaloids relative to the total number of causaloids.
-    ///
-    /// # Returns
-    ///
-    /// A `NumericalValue` representing the percentage of active causaloids (e.g., from 0.0 to 100.0).
-    fn percent_active(&self) -> NumericalValue;
 
     /// Returns the total number of causaloids (nodes) in the graph.
     ///

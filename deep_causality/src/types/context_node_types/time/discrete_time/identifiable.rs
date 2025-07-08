@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{DiscreteTime, Identifiable};
+use crate::{DiscreteTime, Identifiable};
 
 impl Identifiable for DiscreteTime {
     fn id(&self) -> u64 {

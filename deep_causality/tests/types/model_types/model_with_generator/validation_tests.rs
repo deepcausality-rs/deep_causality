@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::*;
 use deep_causality::utils_test::test_utils_generator::*;
+use deep_causality::*;
 
 #[test]
 fn test_fails_on_add_contextoid_to_nonexistent_context() {
@@ -46,7 +46,11 @@ fn test_fails_on_add_contextoid_to_nonexistent_context() {
             >,
             ModelGenerativeError,
         > {
-            let causaloid = TestCausaloid::new(1000, |_| Ok(false), "causaloid");
+            let causaloid = TestCausaloid::new(
+                1000,
+                |_| Ok(PropagatingEffect::Deterministic(false)),
+                "causaloid",
+            );
             let bad_contextoid = TestContextoid::new(1001, ContextoidType::Root(Root::new(101)));
             let add_contextoid_output = GenerativeOutput::AddContextoidToContext {
                 context_id: 999, // Non-existent context ID
@@ -116,8 +120,8 @@ fn test_fails_on_multiple_root_causaloids() {
             >,
             ModelGenerativeError,
         > {
-            fn mock_fn(_: &NumericalValue) -> Result<bool, CausalityError> {
-                Ok(false)
+            fn mock_fn(_: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+                Ok(PropagatingEffect::Deterministic(false))
             }
             let causaloid1 = TestCausaloid::new(100, mock_fn, "First");
             let causaloid2 = TestCausaloid::new(200, mock_fn, "Second");
@@ -185,7 +189,11 @@ fn test_fails_on_update_nonexistent_causaloid() {
             >,
             ModelGenerativeError,
         > {
-            let updated_causaloid = TestCausaloid::new(123, |_| Ok(false), "Updated");
+            let updated_causaloid = TestCausaloid::new(
+                123,
+                |_| Ok(PropagatingEffect::Deterministic(false)),
+                "Updated",
+            );
             Ok(GenerativeOutput::UpdateCausaloid(123, updated_causaloid))
         }
     }
@@ -248,7 +256,11 @@ fn test_fails_on_delete_nonexistent_contextoid() {
             >,
             ModelGenerativeError,
         > {
-            let causaloid = TestCausaloid::new(1, |_| Ok(false), "causaloid");
+            let causaloid = TestCausaloid::new(
+                1,
+                |_| Ok(PropagatingEffect::Deterministic(false)),
+                "causaloid",
+            );
             let create_causaloid = GenerativeOutput::CreateCausaloid(1, causaloid);
             let create_context = GenerativeOutput::CreateBaseContext {
                 id: 10,

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::IndexError;
+use crate::IndexError;
 
 /// Provides a generalized interface for N-dimensional coordinate access.
 ///
@@ -18,7 +18,7 @@ use crate::prelude::IndexError;
 ///
 /// # Example
 /// ```
-/// use deep_causality::prelude::{Coordinate, IndexError};
+/// use deep_causality::{Coordinate, IndexError};
 ///
 /// struct Vec3D {
 ///     x: f64,

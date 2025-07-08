@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{Identifiable, MinkowskiSpacetime};
+use crate::{Identifiable, MinkowskiSpacetime};
 
 impl Identifiable for MinkowskiSpacetime {
     fn id(&self) -> u64 {

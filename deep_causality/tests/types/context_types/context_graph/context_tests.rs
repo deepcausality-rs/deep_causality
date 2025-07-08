@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::{
+use deep_causality::{
     BaseContext, Context, Contextoid, ContextoidType, ContextuableGraph, EuclideanTime,
     Identifiable, RelationKind, Root, TimeScale,
 };

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::EuclideanTime;
+use crate::EuclideanTime;
 use std::fmt::Display;
 
 impl Display for EuclideanTime {

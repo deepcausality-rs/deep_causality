@@ -4,7 +4,7 @@
  */
 
 use crate::errors::{AdjustmentError, UpdateError};
-use crate::prelude::{Adjustable, EcefSpace};
+use crate::{Adjustable, EcefSpace};
 use dcl_data_structures::grid_type::ArrayGrid;
 use dcl_data_structures::prelude::PointIndex;
 use std::f64;

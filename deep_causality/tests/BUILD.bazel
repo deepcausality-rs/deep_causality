@@ -41,10 +41,25 @@ rust_test_suite(
     srcs = glob([
         "types/causal_types/causal_type/*_tests.rs",
         "types/causal_types/causaloid/*_tests.rs",
-        "types/causal_types/causaloid_graph/*_tests.rs",
     ]),
     tags = [
         "causal_types_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//alias:deep_causality",
+    ],
+)
+
+rust_test_suite(
+    name = "causaloid_graph_tests",
+    srcs = glob([
+        "types/causal_types/causaloid_graph/*_tests.rs",
+    ]),
+    tags = [
+        "causaloid_graph_tests",
         "unit-test",
     ],
     visibility = ["//visibility:public"],
@@ -274,6 +289,7 @@ rust_test_suite(
     deps = [
         # Crate to test
         "//alias:deep_causality",
+        "//alias:ultragraph",
     ],
 )
 

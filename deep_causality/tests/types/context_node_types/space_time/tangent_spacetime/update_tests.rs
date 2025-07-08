@@ -4,7 +4,7 @@
  */
 use dcl_data_structures::grid_type::{ArrayGrid, ArrayType};
 use dcl_data_structures::prelude::PointIndex;
-use deep_causality::prelude::{Adjustable, TangentSpacetime, Temporal};
+use deep_causality::{Adjustable, TangentSpacetime, Temporal};
 
 #[test]
 fn test_tangent_spacetime_update_success() {

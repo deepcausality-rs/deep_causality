@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{ContextId, ContextoidId, NumericalValue};
+use crate::{ContextId, ContextoidId, NumericalValue};
 use std::fmt::Display;
 
 /// Unified inference outcome across reasoning modes.
@@ -29,6 +29,8 @@ pub enum PropagatingEffect {
     /// itself becomes the `Evidence` for the next step in the process.
     /// This is the primary mechanism for data flow in the graph.
     ContextualLink(ContextId, ContextoidId),
+
+    Halting,
 }
 
 impl PropagatingEffect {
@@ -42,6 +44,9 @@ impl PropagatingEffect {
 
     pub fn is_contextual_link(&self) -> bool {
         matches!(self, PropagatingEffect::ContextualLink(_, _))
+    }
+    pub fn is_halting(&self) -> bool {
+        matches!(self, PropagatingEffect::Halting)
     }
 }
 
@@ -81,6 +86,7 @@ impl Display for PropagatingEffect {
                     "ContextualLink: {context_id} Contextoid: {contextoid_id}"
                 )
             }
+            PropagatingEffect::Halting => write!(f, "Halting"),
         }
     }
 }

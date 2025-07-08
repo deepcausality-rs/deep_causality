@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use dcl_data_structures::prelude::{ArrayGrid, ArrayType, PointIndex};
-use deep_causality::prelude::*;
+use deep_causality::*;
 
 #[test]
 fn test_update_success() {

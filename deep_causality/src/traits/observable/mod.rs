@@ -5,7 +5,7 @@
 
 use std::fmt::Debug;
 
-use crate::prelude::{Identifiable, NumericalValue};
+use crate::{Identifiable, NumericalValue};
 
 /// Observable trait for objects that can be observed.
 ///

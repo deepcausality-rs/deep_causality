@@ -6,7 +6,7 @@
 use dcl_data_structures::grid_type::ArrayGrid;
 use dcl_data_structures::prelude::PointIndex;
 
-use crate::prelude::{Adjustable, AdjustmentError, LorentzianTime, UpdateError};
+use crate::{Adjustable, AdjustmentError, LorentzianTime, UpdateError};
 
 impl Adjustable<f64> for LorentzianTime {
     fn update<const W: usize, const H: usize, const D: usize, const C: usize>(

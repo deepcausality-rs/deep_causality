@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::SymbolicRepresentation;
+use deep_causality::SymbolicRepresentation;
 
 #[test]
 fn test_atom_constructor_and_display() {

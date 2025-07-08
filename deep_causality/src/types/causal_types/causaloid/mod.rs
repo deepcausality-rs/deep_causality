@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::*;
+use crate::*;
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
 use std::sync::{Arc, RwLock};
@@ -32,12 +32,13 @@ where
     VT: Clone,
 {
     id: IdentificationValue,
-    active: ArcRWLock<bool>,
     causal_type: CausaloidType,
     causal_fn: Option<CausalFn>,
-    context_causal_fn: Option<ContextualCausalDataFn<D, S, T, ST, SYM, VS, VT>>,
+    context_causal_fn: Option<ContextualCausalFn<D, S, T, ST, SYM, VS, VT>>,
     context: Option<Arc<Context<D, S, T, ST, SYM, VS, VT>>>,
-    has_context: bool,
+    // The last calculated effect of this causaloid. It's an Option because a
+    // causaloid may not have been evaluated yet.
+    effect: ArcRWLock<Option<PropagatingEffect>>,
     causal_coll: Option<Arc<CausalVec<D, S, T, ST, SYM, VS, VT>>>,
     causal_graph: Option<Arc<CausalGraph<D, S, T, ST, SYM, VS, VT>>>,
     description: String,
@@ -56,17 +57,21 @@ where
     VS: Clone,
     VT: Clone,
 {
-    /// Singleton constructor. Assumes causality function is valid.
-    /// Only use for non-fallible construction i.e.verified a-priori knowledge about the correctness of the causal function.
+    /// Creates a new singleton `Causaloid`.
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - A unique identifier for the causaloid.
+    /// * `causal_fn` - The stateless function that defines the causaloid's reasoning logic.
+    /// * `description` - A human-readable description of the causaloid.
     pub fn new(id: IdentificationValue, causal_fn: CausalFn, description: &str) -> Self {
         Causaloid {
             id,
-            active: Arc::new(RwLock::new(false)),
             causal_type: CausaloidType::Singleton,
+            effect: Arc::new(RwLock::new(None)),
             causal_fn: Some(causal_fn),
             context_causal_fn: None,
             context: None,
-            has_context: false,
             causal_coll: None,
             causal_graph: None,
             description: description.to_string(),
@@ -74,23 +79,27 @@ where
         }
     }
 
-    /// Singleton constructor with a contextual causality function.
-    /// Only use for non-fallible construction i.e.verified a-priori knowledge about the correctness of the causal function.
-    /// The context is embedded within the causaloid and can be accessed by the contextual causality function.
+    /// Creates a new singleton `Causaloid` with a context-aware causal function.
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - A unique identifier for the causaloid.
+    /// * `context_causal_fn` - The context-aware stateless function for reasoning.
+    /// * `context` - A shared `Context` object accessible by the function.
+    /// * `description` - A human-readable description of the causaloid.
     pub fn new_with_context(
         id: IdentificationValue,
-        context_causal_fn: ContextualCausalDataFn<D, S, T, ST, SYM, VS, VT>,
+        context_causal_fn: ContextualCausalFn<D, S, T, ST, SYM, VS, VT>,
         context: Arc<Context<D, S, T, ST, SYM, VS, VT>>,
         description: &str,
     ) -> Self {
         Causaloid {
             id,
-            active: Arc::new(RwLock::new(false)),
             causal_type: CausaloidType::Singleton,
+            effect: Arc::new(RwLock::new(None)),
             causal_fn: None,
             context_causal_fn: Some(context_causal_fn),
             context: Some(context),
-            has_context: true,
             causal_coll: None,
             causal_graph: None,
             description: description.to_string(),
@@ -112,15 +121,14 @@ where
     ) -> Self {
         Causaloid {
             id,
-            active: Arc::new(RwLock::new(false)),
             causal_type: CausaloidType::Collection,
+            effect: Arc::new(RwLock::new(None)),
             causal_fn: None,
+            context_causal_fn: None,
+            context: None,
             causal_coll: Some(causal_coll),
             causal_graph: None,
             description: description.to_string(),
-            context: None,
-            has_context: false,
-            context_causal_fn: None,
             ty: PhantomData,
         }
     }
@@ -137,14 +145,13 @@ where
     ) -> Self {
         Causaloid {
             id,
-            active: Arc::new(RwLock::new(false)),
             causal_type: CausaloidType::Collection,
+            effect: Arc::new(RwLock::new(None)),
             causal_fn: None,
             causal_coll: Some(causal_coll),
             causal_graph: None,
             description: description.to_string(),
             context: Some(context),
-            has_context: true,
             context_causal_fn: None,
             ty: PhantomData,
         }
@@ -164,15 +171,14 @@ where
     ) -> Self {
         Causaloid {
             id,
-            active: Arc::new(RwLock::new(false)),
             causal_type: CausaloidType::Graph,
+            effect: Arc::new(RwLock::new(None)),
             causal_fn: None,
+            context_causal_fn: None,
+            context: None,
             causal_coll: None,
             causal_graph: Some(causal_graph),
             description: description.to_string(),
-            context: None,
-            has_context: false,
-            context_causal_fn: None,
             ty: PhantomData,
         }
     }
@@ -189,14 +195,13 @@ where
     ) -> Self {
         Causaloid {
             id,
-            active: Arc::new(RwLock::new(false)),
             causal_type: CausaloidType::Graph,
             causal_fn: None,
             causal_coll: None,
             causal_graph: Some(causal_graph),
             description: description.to_string(),
+            effect: Arc::new(RwLock::new(None)),
             context: Some(context),
-            has_context: true,
             context_causal_fn: None,
             ty: PhantomData,
         }

@@ -4,7 +4,7 @@
  */
 use std::fmt::{Display, Formatter};
 
-use crate::prelude::Observation;
+use crate::Observation;
 
 impl Display for Observation {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

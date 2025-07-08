@@ -3,9 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::*;
 use deep_causality::utils_test::test_utils::get_test_assumption_vec;
 use deep_causality::utils_test::test_utils_generator::*;
+use deep_causality::*;
 use std::sync::Arc;
 
 // A generator specifically for creation tests.
@@ -54,8 +54,8 @@ impl
         ModelGenerativeError,
     > {
         let id = self.causaloid_id_to_create;
-        fn mock_causal_fn(_obs: &NumericalValue) -> Result<bool, CausalityError> {
-            Ok(false)
+        fn mock_causal_fn(_: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+            Ok(PropagatingEffect::Deterministic(false))
         }
         let causaloid = TestCausaloid::new(id, mock_causal_fn, "TestCausaloid");
         let create_causaloid_output =
@@ -109,7 +109,6 @@ fn test_creates_causaloid_and_context() {
     assert_eq!(model.id(), model_id);
     let causaloid = model.causaloid();
     assert_eq!(causaloid.id(), 100);
-    assert!(causaloid.has_context());
 
     let context = model.context();
     assert!(context.is_some());
@@ -143,7 +142,6 @@ fn test_creates_causaloid_without_context() {
 
     let causaloid = model.causaloid();
     assert_eq!(causaloid.id(), 300);
-    assert!(!causaloid.has_context());
     assert!(model.context().is_none());
 }
 

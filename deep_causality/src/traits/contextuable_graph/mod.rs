@@ -4,10 +4,10 @@
  */
 
 use crate::errors::ContextIndexError;
-use crate::prelude::{Contextoid, ContextoidId, Datable, RelationKind, Symbolic};
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
+use crate::{Contextoid, ContextoidId, Datable, RelationKind, Symbolic};
 
 /// Trait for graph containing context-aware nodes.
 ///

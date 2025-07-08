@@ -4,11 +4,11 @@
  */
 use std::fmt::{Debug, Display, Formatter};
 
-use crate::prelude::{Context, Datable, Symbolic};
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
 use crate::traits::contextuable_graph::ContextuableGraph;
+use crate::{Context, Datable, Symbolic};
 
 #[allow(clippy::type_complexity)]
 impl<D, S, T, ST, SYM, VS, VT> Context<D, S, T, ST, SYM, VS, VT>

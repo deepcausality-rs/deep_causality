@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::QuaternionSpace;
+use crate::QuaternionSpace;
 
 impl QuaternionSpace {
     pub fn w(&self) -> f64 {

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::prelude::{ModelGenerativeError, ModelValidationError};
+use crate::{ModelGenerativeError, ModelValidationError};
 use std::error::Error;
 use std::fmt;
 use std::fmt::{Display, Formatter};

@@ -9,7 +9,7 @@ mod identifiable;
 mod scalar_projector;
 mod temporable;
 
-use crate::prelude::{TimeKind, TimeScale};
+use crate::{TimeKind, TimeScale};
 use deep_causality_macros::Constructor;
 
 /// A time model representing **Lorentzian (physical) time** in relativistic spacetimes.
@@ -30,7 +30,7 @@ use deep_causality_macros::Constructor;
 ///
 /// # Example
 /// ```rust
-/// use deep_causality::prelude::{Identifiable, LorentzianTime, Temporal, TimeScale};
+/// use deep_causality::{Identifiable, LorentzianTime, Temporal, TimeScale};
 ///
 /// let t = LorentzianTime::new(1, TimeScale::Second, std::f64::consts::E);
 ///

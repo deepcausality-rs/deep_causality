@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::prelude::{DescriptionValue, Inferable, Inference, NumericalValue};
+use crate::{DescriptionValue, Inferable, Inference, NumericalValue};
 
 impl Inferable for Inference {
     fn question(&self) -> DescriptionValue {

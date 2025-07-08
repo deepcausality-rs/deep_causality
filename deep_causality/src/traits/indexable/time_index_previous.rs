@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::prelude::{TimeIndexable, TimeScale};
+use crate::{TimeIndexable, TimeScale};
 
 /// Trait for getting and setting the previous time index for various time scales.
 ///

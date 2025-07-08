@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 use ultragraph::*;
 
-use crate::prelude::*;
+use crate::*;
 
 mod contextuable_graph;
 mod debug;

@@ -5,7 +5,7 @@
 
 use std::collections::HashMap;
 
-use deep_causality::prelude::BaseCausalMap;
+use deep_causality::{BaseCausalMap, NumericalValue};
 
 use crate::benchmarks::utils_shared;
 
@@ -13,31 +13,33 @@ const SMALL: usize = 10;
 const MEDIUM: usize = 1_000;
 const LARGE: usize = 10_000;
 
-pub fn get_small_map_and_data() -> (BaseCausalMap, [f64; SMALL + 1]) {
-    // Builds a linear graph: root -> a -> b -> c
-    let k = SMALL;
-    (build_causality_map(k), utils_shared::generate_sample_data())
+pub fn get_small_map_and_data() -> (BaseCausalMap, HashMap<usize, NumericalValue>) {
+    (build_causality_map(SMALL), generate_data_map(SMALL))
 }
 
-pub fn get_medium_map_and_data() -> (BaseCausalMap, [f64; MEDIUM + 1]) {
-    // Builds a linear graph: root -> a -> b -> c
-    let k = MEDIUM;
-    (build_causality_map(k), utils_shared::generate_sample_data())
+pub fn get_medium_map_and_data() -> (BaseCausalMap, HashMap<usize, NumericalValue>) {
+    (build_causality_map(MEDIUM), generate_data_map(MEDIUM))
 }
 
-pub fn get_large_map_and_data() -> (BaseCausalMap, [f64; LARGE + 1]) {
-    // Builds a linear graph: root -> a -> b -> c
-    (
-        build_causality_map(LARGE),
-        utils_shared::generate_sample_data(),
-    )
+pub fn get_large_map_and_data() -> (BaseCausalMap, HashMap<usize, NumericalValue>) {
+    (build_causality_map(LARGE), generate_data_map(LARGE))
 }
 
 fn build_causality_map(k: usize) -> BaseCausalMap {
-    let mut v = HashMap::with_capacity(k);
-    for k in 0..k {
-        v.insert(k, utils_shared::get_test_causaloid());
+    let mut map = HashMap::with_capacity(k);
+    for i in 0..k {
+        // All causaloids are functionally identical, which is fine for this benchmark.
+        // The differentiation comes from the data passed during evaluation via the map key.
+        map.insert(i, utils_shared::get_test_causaloid());
     }
+    map
+}
 
-    v
+fn generate_data_map(k: usize) -> HashMap<usize, NumericalValue> {
+    let mut map = HashMap::with_capacity(k);
+    for i in 0..k {
+        // Use the same sample data value for each entry.
+        map.insert(i, 0.99);
+    }
+    map
 }

@@ -5,7 +5,7 @@
 
 use ultragraph::*;
 
-use crate::prelude::{
+use crate::{
     Context, ContextIndexError, Contextoid, Datable, ExtendableContextuableGraph, RelationKind,
     SpaceTemporal, Spatial, Symbolic, Temporal,
 };

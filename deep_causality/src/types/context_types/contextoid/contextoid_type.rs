@@ -7,7 +7,7 @@ use std::fmt::{Display, Formatter};
 use std::hash::Hash;
 use std::marker::PhantomData;
 
-use crate::prelude::*;
+use crate::*;
 
 /// Enum of monoidal context node types (each a composable unit of structure).
 /// Each variant name ends in `-oid` to emphasize its monoid role as a single identity-bearing unit.

@@ -2,30 +2,42 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::errors::CausalityError;
-use crate::prelude::{Context, NumericalValue, SymbolicResult};
+use crate::{CausalityError, Context, Evidence, NumericalValue, PropagatingEffect};
 use std::sync::Arc;
 
 // Fn aliases for assumable, assumption, & assumption collection
-/// Function type for evaluating numerical values and returning a boolean result
+/// Function type for evaluating numerical values and returning a boolean result.
+/// This remains unchanged as it serves a different purpose outside the core causal reasoning.
 pub type EvalFn = fn(&[NumericalValue]) -> bool;
 
-/// Type alias for symbolic representation using String
-pub type SymbolicRepr = String;
-/// Function type for symbolic causal operations that returns a Result containing either SymbolicResult or CausalityError
-pub type SymbolicCausalFn = fn(SymbolicRepr) -> Result<SymbolicResult, CausalityError>;
+/// The unified function signature for all singleton causaloids that do not require an external context.
+///
+/// This function is a core part of the reasoning engine.
+///
+/// # Arguments
+///
+/// * `evidence` - A reference to the `Evidence` flowing through the graph during reasoning.
+///
+/// # Returns
+///
+/// A `Result` containing either a `PropagatingEffect` on success or a `CausalityError` on failure.
+pub type CausalFn = fn(evidence: &Evidence) -> Result<PropagatingEffect, CausalityError>;
 
-/// Function type for probabilistic causal operations like Bayes updates that returns a Result containing either NumericalValue or CausalityError
-pub type ProbabilisticCausalFn = fn(NumericalValue) -> Result<NumericalValue, CausalityError>; // Bayes update, etc.
-
-// Fn aliases for causal function with and without context
-/// Function type for basic causal operations that returns a Result containing either boolean or CausalityError
-pub type CausalFn = fn(&NumericalValue) -> Result<bool, CausalityError>;
-
-/// Function type for causal operations that take a numerical value and context, returning a boolean result or error
-pub type ContextualCausalDataFn<D, S, T, ST, SYM, VS, VT> =
-    fn(&NumericalValue, &Arc<Context<D, S, T, ST, SYM, VS, VT>>) -> Result<bool, CausalityError>;
-
-/// Function type for causal operations that only take a context, returning a boolean result or error
+/// The unified function signature for all singleton causaloids that require access to a shared, external context.
+///
+/// It evaluates runtime evidence against its own static configuration and the shared context
+/// to produce a causal effect.
+///
+/// # Arguments
+///
+/// * `evidence` - A reference to the `Evidence` flowing through the graph during reasoning.
+/// * `context` - A reference to the shared `Context` object.
+///
+/// # Returns
+///
+/// A `Result` containing either a `PropagatingEffect` on success or a `CausalityError` on failure.
 pub type ContextualCausalFn<D, S, T, ST, SYM, VS, VT> =
-    fn(&Arc<Context<D, S, T, ST, SYM, VS, VT>>) -> Result<bool, CausalityError>;
+    fn(
+        evidence: &Evidence,
+        context: &Arc<Context<D, S, T, ST, SYM, VS, VT>>,
+    ) -> Result<PropagatingEffect, CausalityError>;

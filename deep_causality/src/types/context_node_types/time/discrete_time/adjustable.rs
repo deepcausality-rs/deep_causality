@@ -7,7 +7,7 @@ use dcl_data_structures::grid_type::ArrayGrid;
 use dcl_data_structures::prelude::PointIndex;
 
 use crate::errors::{AdjustmentError, UpdateError};
-use crate::prelude::{Adjustable, DiscreteTime};
+use crate::{Adjustable, DiscreteTime};
 
 impl Adjustable<u64> for DiscreteTime {
     fn update<const W: usize, const H: usize, const D: usize, const C: usize>(

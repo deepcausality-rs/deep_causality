@@ -4,7 +4,7 @@
  */
 use std::fmt::{Display, Formatter};
 
-use crate::prelude::Inference;
+use crate::Inference;
 
 impl Display for Inference {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

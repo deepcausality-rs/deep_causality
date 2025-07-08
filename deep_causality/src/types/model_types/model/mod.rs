@@ -6,14 +6,14 @@ mod getters;
 mod identifiable;
 mod model_builder_processor;
 
-use crate::prelude::{
-    Assumption, Causaloid, Context, Datable, Generatable, GenerativeProcessor, GenerativeTrigger,
-    ModelBuildError, ModelValidationError, Symbolic,
-};
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
 use crate::types::model_types::model::model_builder_processor::ModelBuilderProcessor;
+use crate::{
+    Assumption, Causaloid, Context, Datable, Generatable, GenerativeProcessor, GenerativeTrigger,
+    ModelBuildError, ModelValidationError, Symbolic,
+};
 use std::hash::Hash;
 use std::sync::Arc;
 
@@ -116,7 +116,6 @@ where
             let context_arc = Arc::new(context);
 
             final_causaloid.set_context(Some(Arc::clone(&context_arc)));
-            final_causaloid.set_has_context(true);
 
             // Return the Arc for the model's own field.
             Some(context_arc)

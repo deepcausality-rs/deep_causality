@@ -5,15 +5,29 @@
 
 use std::collections::BTreeMap;
 
-use deep_causality::prelude::*;
-
 use deep_causality::utils_test::test_utils::*;
+use deep_causality::*;
 
-fn get_test_causality_btree_map() -> BTreeMap<i8, BaseCausaloid> {
-    let q1 = get_test_causaloid();
-    let q2 = get_test_causaloid();
-    let q3 = get_test_causaloid();
-    BTreeMap::from_iter([(1, q1), (2, q2), (3, q3)])
+// Type alias for clarity in test functions.
+type TestBTreeMap = BTreeMap<i8, BaseCausaloid>;
+
+// Helper function to create a standard test BTreeMap.
+fn get_test_causality_btree_map() -> TestBTreeMap {
+    BTreeMap::from([
+        (1, get_test_causaloid()),
+        (2, get_test_causaloid()),
+        (3, get_test_causaloid()),
+    ])
+}
+
+// Helper to activate all causes in a collection for testing purposes.
+fn activate_all_causes(map: &TestBTreeMap) {
+    // A value that ensures the default test causaloid (threshold 0.55) becomes active.
+    let evidence = Evidence::Numerical(0.99);
+    for cause in map.values() {
+        // We call evaluate to set the internal state, but ignore the result for this setup.
+        let _ = cause.evaluate(&evidence);
+    }
 }
 
 #[test]
@@ -50,47 +64,6 @@ fn test_remove() {
 }
 
 #[test]
-fn test_all_active() {
-    let map = get_test_causality_btree_map();
-    assert!(!map.get_all_causes_true());
-
-    let obs = 0.99;
-    for cause in map.values() {
-        cause.verify_single_cause(&obs).expect("verify failed");
-    }
-    assert!(map.get_all_causes_true());
-}
-
-#[test]
-fn test_number_active() {
-    let map = get_test_causality_btree_map();
-    assert!(!map.get_all_causes_true());
-    assert_eq!(0.0, map.number_active());
-
-    let obs = 0.99;
-    for cause in map.values() {
-        cause.verify_single_cause(&obs).expect("verify failed");
-    }
-
-    assert!(map.get_all_causes_true());
-    assert_eq!(3.0, map.number_active());
-}
-
-#[test]
-fn test_percent_active() {
-    let map = get_test_causality_btree_map();
-    assert!(!map.get_all_causes_true());
-
-    let obs = 0.99;
-    for cause in map.values() {
-        cause.verify_single_cause(&obs).expect("verify failed");
-    }
-    assert!(map.get_all_causes_true());
-    assert_eq!(3.0, map.number_active());
-    assert_eq!(100.0, map.percent_active());
-}
-
-#[test]
 fn test_get_all_items() {
     let col = get_test_causality_btree_map();
     let all_items = col.get_all_items();
@@ -98,6 +71,73 @@ fn test_get_all_items() {
     let exp_len = col.len();
     let actual_len = all_items.len();
     assert_eq!(exp_len, actual_len);
+}
+
+#[test]
+fn test_evaluate_deterministic_propagation() {
+    let map = get_test_causality_btree_map();
+
+    // Case 1: All succeed, chain should be deterministically true.
+    let evidence_success = Evidence::Numerical(0.99);
+    let res_success = map
+        .evaluate_deterministic_propagation(&evidence_success)
+        .unwrap();
+    assert_eq!(res_success, PropagatingEffect::Deterministic(true));
+
+    // Case 2: One fails, chain should be deterministically false.
+    let evidence_fail = Evidence::Numerical(0.1);
+    let res_fail = map
+        .evaluate_deterministic_propagation(&evidence_fail)
+        .unwrap();
+    assert_eq!(res_fail, PropagatingEffect::Deterministic(false));
+}
+
+#[test]
+fn test_evaluate_probabilistic_propagation() {
+    let map = get_test_causality_btree_map();
+
+    // Case 1: All succeed (Deterministic(true) is treated as probability 1.0).
+    // The cumulative probability should be 1.0.
+    let evidence_success = Evidence::Numerical(0.99);
+    let res_success = map
+        .evaluate_probabilistic_propagation(&evidence_success)
+        .unwrap();
+    assert_eq!(res_success, PropagatingEffect::Probabilistic(1.0));
+
+    // Case 2: One fails (Deterministic(false) is treated as probability 0.0).
+    // The chain should short-circuit and return a cumulative probability of 0.0.
+    let evidence_fail = Evidence::Numerical(0.1);
+    let res_fail = map
+        .evaluate_probabilistic_propagation(&evidence_fail)
+        .unwrap();
+    assert_eq!(res_fail, PropagatingEffect::Probabilistic(0.0));
+}
+
+#[test]
+fn test_evaluate_mixed_propagation() {
+    let map = get_test_causality_btree_map();
+
+    // Case 1: All succeed, chain remains deterministically true.
+    let evidence_success = Evidence::Numerical(0.99);
+    let res_success = map.evaluate_mixed_propagation(&evidence_success).unwrap();
+    assert_eq!(res_success, PropagatingEffect::Deterministic(true));
+
+    // Case 2: One fails, chain becomes deterministically false.
+    let evidence_fail = Evidence::Numerical(0.1);
+    let res_fail = map.evaluate_mixed_propagation(&evidence_fail).unwrap();
+    assert_eq!(res_fail, PropagatingEffect::Deterministic(false));
+}
+
+#[test]
+fn test_explain() {
+    let map = get_test_causality_btree_map();
+    activate_all_causes(&map);
+
+    let single_explanation = "\n * Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: Deterministic(true)\n";
+    // BTreeMap iterates in key-sorted order, so the output is predictable.
+    let expected = single_explanation.repeat(3);
+    let actual = map.explain().unwrap();
+    assert_eq!(expected, actual);
 }
 
 #[test]

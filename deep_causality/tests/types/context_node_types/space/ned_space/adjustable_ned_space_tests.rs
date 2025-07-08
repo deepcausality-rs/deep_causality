@@ -4,7 +4,7 @@
  */
 
 use dcl_data_structures::prelude::{ArrayGrid, ArrayType, PointIndex};
-use deep_causality::prelude::*;
+use deep_causality::*;
 
 #[test]
 fn test_ned_space_update_success() {

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::CausalityGraphError;
+use deep_causality::{CausalityError, CausalityGraphError};
 use std::error::Error;
 use ultragraph::GraphError;
 
@@ -54,6 +54,24 @@ fn test_from_graph_error_conversion() {
     assert_eq!(causality_error.0, expected_message);
     assert_eq!(
         causality_error.to_string(),
+        format!("CausalityGraphError: {expected_message}")
+    );
+}
+
+#[test]
+fn test_from_causality_error_conversion() {
+    // 1. Arrange: Create an instance of the source error type.
+    let source_error = CausalityError::new("inner error".to_string());
+    // The `From` impl uses the `Display` format of the source error.
+    let expected_message = source_error.to_string();
+
+    // 2. Act: Convert the source error into the target error using `.into()`.
+    let causality_graph_error: CausalityGraphError = source_error.into();
+
+    // 3. Assert: Verify that the converted error contains the correct message.
+    assert_eq!(causality_graph_error.0, expected_message);
+    assert_eq!(
+        causality_graph_error.to_string(),
         format!("CausalityGraphError: {expected_message}")
     );
 }

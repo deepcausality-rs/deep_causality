@@ -3,10 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{Contextoid, ContextoidType, Datable, Symbolic};
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
+use crate::{Contextoid, ContextoidType, Datable, Symbolic};
 
 impl<D, S, T, ST, SYM, VS, VT> Contextoid<D, S, T, ST, SYM, VS, VT>
 where

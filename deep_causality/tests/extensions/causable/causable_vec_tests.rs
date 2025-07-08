@@ -3,9 +3,19 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::*;
-
+use deep_causality::utils_test::test_utils;
 use deep_causality::utils_test::test_utils::*;
+use deep_causality::*;
+
+// Helper to activate all causes in a collection for testing purposes.
+fn activate_all_causes(col: &BaseCausaloidVec) {
+    // A value that ensures the default test causaloid (threshold 0.55) becomes active.
+    let evidence = Evidence::Numerical(0.99);
+    for cause in col {
+        // We call evaluate to set the internal state, but ignore the result for this setup.
+        let _ = cause.evaluate(&evidence);
+    }
+}
 
 #[test]
 fn test_add() {
@@ -18,46 +28,83 @@ fn test_add() {
 }
 
 #[test]
-fn test_all_active() {
+fn test_get_all_items() {
     let col = get_test_causality_vec();
-    assert!(!col.get_all_causes_true());
+    let all_items = col.get_all_items();
 
-    let obs = 0.99;
-    for cause in &col {
-        cause.verify_single_cause(&obs).expect("verify failed");
-    }
-    assert!(col.get_all_causes_true());
+    let exp_len = col.len();
+    let actual_len = all_items.len();
+    assert_eq!(exp_len, actual_len);
 }
 
 #[test]
-fn test_number_active() {
+fn test_evaluate_deterministic_propagation() {
     let col = get_test_causality_vec();
-    assert!(!col.get_all_causes_true());
 
-    let obs = 0.99;
-    for cause in &col {
-        cause.verify_single_cause(&obs).expect("verify failed");
-    }
-    assert!(col.get_all_causes_true());
-    assert_eq!(3.0, col.number_active());
+    // Case 1: All succeed, chain should be deterministically true.
+    let evidence_success = Evidence::Numerical(0.99);
+    let res_success = col
+        .evaluate_deterministic_propagation(&evidence_success)
+        .unwrap();
+    assert_eq!(res_success, PropagatingEffect::Deterministic(true));
+
+    // Case 2: One fails, chain should be deterministically false.
+    let evidence_fail = Evidence::Numerical(0.1);
+    let res_fail = col
+        .evaluate_deterministic_propagation(&evidence_fail)
+        .unwrap();
+    assert_eq!(res_fail, PropagatingEffect::Deterministic(false));
 }
 
 #[test]
-fn test_percent_active() {
+fn test_evaluate_probabilistic_propagation() {
     let col = get_test_causality_vec();
-    assert!(!col.get_all_causes_true());
 
-    let obs = 0.99;
-    for cause in &col {
-        cause.verify_single_cause(&obs).expect("verify failed");
-    }
-    assert!(col.get_all_causes_true());
-    assert_eq!(3.0, col.number_active());
-    assert_eq!(100.0, col.percent_active());
+    // Case 1: All succeed (Deterministic(true) is treated as probability 1.0).
+    // The cumulative probability should be 1.0.
+    let evidence_success = Evidence::Numerical(0.99);
+    let res_success = col
+        .evaluate_probabilistic_propagation(&evidence_success)
+        .unwrap();
+    assert_eq!(res_success, PropagatingEffect::Probabilistic(1.0));
+
+    // Case 2: One fails (Deterministic(false) is treated as probability 0.0).
+    // The chain should short-circuit and return a cumulative probability of 0.0.
+    let evidence_fail = Evidence::Numerical(0.1);
+    let res_fail = col
+        .evaluate_probabilistic_propagation(&evidence_fail)
+        .unwrap();
+    assert_eq!(res_fail, PropagatingEffect::Probabilistic(0.0));
 }
 
 #[test]
-fn test_size() {
+fn test_evaluate_mixed_propagation() {
+    let col = get_test_causality_vec();
+
+    // Case 1: All succeed, chain remains deterministically true.
+    let evidence_success = Evidence::Numerical(0.99);
+    let res_success = col.evaluate_mixed_propagation(&evidence_success).unwrap();
+    assert_eq!(res_success, PropagatingEffect::Deterministic(true));
+
+    // Case 2: One fails, chain becomes deterministically false.
+    let evidence_fail = Evidence::Numerical(0.1);
+    let res_fail = col.evaluate_mixed_propagation(&evidence_fail).unwrap();
+    assert_eq!(res_fail, PropagatingEffect::Deterministic(false));
+}
+
+#[test]
+fn test_explain() {
+    let col = get_test_causality_vec();
+    activate_all_causes(&col);
+
+    let single_explanation = "\n * Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: Deterministic(true)\n";
+    let expected = single_explanation.repeat(3);
+    let actual = col.explain().unwrap();
+    assert_eq!(expected, actual);
+}
+
+#[test]
+fn test_len() {
     let col = get_test_causality_vec();
     assert_eq!(3, col.len());
 }
@@ -72,4 +119,78 @@ fn test_is_empty() {
 fn test_to_vec() {
     let col = get_test_causality_vec();
     assert_eq!(3, col.to_vec().len());
+}
+
+// --- Tests for CausableReasoning Trait ---
+
+#[test]
+fn test_evaluate_deterministic_propagation_error_non_deterministic_effect() {
+    // Setup: A collection containing a non-deterministic (probabilistic) causaloid.
+    let true_causaloid = test_utils::get_test_causaloid_deterministic_true();
+    let probabilistic_causaloid = test_utils::get_test_causaloid_probabilistic();
+    let coll: Vec<BaseCausaloid> = vec![true_causaloid, probabilistic_causaloid];
+
+    // Act: Evaluate with deterministic propagation, which expects only deterministic effects.
+    let evidence = Evidence::Numerical(0.0);
+    let result = coll.evaluate_deterministic_propagation(&evidence);
+
+    // Assert: This covers the error branch for non-deterministic effects.
+    assert!(result.is_err());
+    let err_msg = result.unwrap_err().to_string();
+    assert!(err_msg.contains("encountered a non-deterministic effect: Probabilistic(0.0)"));
+}
+
+#[test]
+fn test_evaluate_probabilistic_propagation_success() {
+    // Setup: Create two causaloids with specific probabilities to test multiplication.
+    fn causal_fn_half(_: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+        Ok(PropagatingEffect::Probabilistic(0.5))
+    }
+    let p1 = Causaloid::new(1, causal_fn_half, "p=0.5");
+
+    fn causal_fn_quarter(_: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+        Ok(PropagatingEffect::Probabilistic(0.25))
+    }
+    let p2 = Causaloid::new(2, causal_fn_quarter, "p=0.25");
+
+    let coll: Vec<BaseCausaloid> = vec![p1, p2];
+
+    // Act: Evaluate with probabilistic propagation.
+    let evidence = Evidence::Numerical(0.0);
+    let effect = coll.evaluate_probabilistic_propagation(&evidence).unwrap();
+
+    // Assert: This covers the main logic branch, ensuring probabilities are multiplied.
+    assert_eq!(effect, PropagatingEffect::Probabilistic(0.125));
+}
+
+#[test]
+fn test_evaluate_probabilistic_propagation_with_halting() {
+    // Setup: A collection with a probabilistic causaloid followed by a halting one.
+    let probabilistic_causaloid = test_utils::get_test_causaloid_probabilistic();
+    let halting_causaloid = test_utils::get_test_causaloid_halting();
+    let coll: Vec<BaseCausaloid> = vec![probabilistic_causaloid, halting_causaloid];
+
+    // Act: Evaluate with probabilistic propagation.
+    let evidence = Evidence::Numerical(0.0);
+    let effect = coll.evaluate_probabilistic_propagation(&evidence).unwrap();
+
+    // Assert: This covers the Halting branch, which should take precedence.
+    assert_eq!(effect, PropagatingEffect::Halting);
+}
+
+#[test]
+fn test_evaluate_probabilistic_propagation_error_contextual_link() {
+    // Setup: A collection containing a ContextualLink causaloid, which is invalid for this function.
+    let probabilistic_causaloid = test_utils::get_test_causaloid_probabilistic();
+    let contextual_link_causaloid = test_utils::get_test_causaloid_contextual_link();
+    let coll: Vec<BaseCausaloid> = vec![probabilistic_causaloid, contextual_link_causaloid];
+
+    // Act: Evaluate with probabilistic propagation.
+    let evidence = Evidence::Numerical(0.0);
+    let result = coll.evaluate_probabilistic_propagation(&evidence);
+
+    // Assert: This covers the error branch for invalid ContextualLink effects.
+    assert!(result.is_err());
+    let err_msg = result.unwrap_err().to_string();
+    assert!(err_msg.contains("Encountered a ContextualLink in a probabilistic chain evaluation."));
 }

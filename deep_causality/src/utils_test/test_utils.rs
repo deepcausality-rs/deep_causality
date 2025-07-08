@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::*;
+use crate::*;
 
 pub fn get_test_assumption_vec() -> Vec<Assumption> {
     let a1 = get_test_assumption();
@@ -34,28 +34,81 @@ pub fn get_test_causality_vec() -> BaseCausaloidVec {
     Vec::from_iter([q1, q2, q3])
 }
 
+pub fn get_test_single_data(val: NumericalValue) -> Evidence {
+    Evidence::Numerical(val)
+}
+
+pub fn get_test_causaloid_deterministic_true() -> BaseCausaloid {
+    let description = "tests nothing; always returns true";
+
+    fn causal_fn(_evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+        Ok(PropagatingEffect::Deterministic(true))
+    }
+
+    Causaloid::new(3, causal_fn, description)
+}
+
+pub fn get_test_causaloid_deterministic_false() -> BaseCausaloid {
+    let description = "tests nothing; always returns true";
+
+    fn causal_fn(_evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+        Ok(PropagatingEffect::Deterministic(false))
+    }
+
+    Causaloid::new(3, causal_fn, description)
+}
+
+pub fn get_test_causaloid_probabilistic() -> BaseCausaloid {
+    let description = "tests nothing; always returns 0.0";
+
+    fn causal_fn(_evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+        Ok(PropagatingEffect::Probabilistic(0.0))
+    }
+
+    Causaloid::new(5, causal_fn, description)
+}
+
+pub fn get_test_causaloid_halting() -> BaseCausaloid {
+    let description = "tests nothing; always returns Halting";
+
+    fn causal_fn(_evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+        Ok(PropagatingEffect::Halting)
+    }
+
+    Causaloid::new(7, causal_fn, description)
+}
+
+pub fn get_test_causaloid_contextual_link() -> BaseCausaloid {
+    let description = "tests nothing; always returns a contetual link";
+
+    fn causal_fn(_evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+        Ok(PropagatingEffect::ContextualLink(0, 1))
+    }
+
+    Causaloid::new(9, causal_fn, description)
+}
+
 pub fn get_test_causaloid() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
 
-    fn causal_fn(obs: &NumericalValue) -> Result<bool, CausalityError> {
-        if obs.is_nan() {
-            return Err(CausalityError("Observation is NULL/NAN".into()));
-        }
-
-        if obs.is_infinite() {
-            return Err(CausalityError("Observation is infinite".into()));
-        }
-
-        if obs.is_sign_negative() {
-            return Err(CausalityError("Observation is negative".into()));
-        }
+    fn causal_fn(evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+        let obs =
+            match evidence {
+                // If it's the Numerical variant, extract the inner value.
+                Evidence::Numerical(val) => *val,
+                // For any other type of evidence, this function cannot proceed, so return an error.
+                _ => return Err(CausalityError(
+                    "Causal function expected Numerical evidence but received a different variant."
+                        .into(),
+                )),
+            };
 
         let threshold: NumericalValue = 0.55;
         if !obs.ge(&threshold) {
-            Ok(false)
+            Ok(PropagatingEffect::Deterministic(false))
         } else {
-            Ok(true)
+            Ok(PropagatingEffect::Deterministic(true))
         }
     }
 
@@ -84,7 +137,7 @@ pub fn get_test_error_causaloid() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
 
-    fn causal_fn(_obs: &NumericalValue) -> Result<bool, CausalityError> {
+    fn causal_fn(_obs: &Evidence) -> Result<PropagatingEffect, CausalityError> {
         Err(CausalityError("Test error".into()))
     }
 

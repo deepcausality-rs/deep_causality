@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{CausaloidId, ContextId, ContextoidId};
+use crate::{CausaloidId, ContextId, ContextoidId};
 use std::error::Error;
 use std::fmt;
 

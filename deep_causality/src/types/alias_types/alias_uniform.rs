@@ -2,11 +2,11 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::prelude::{
+use crate::types::context_node_types::symbol::symbol_kind::SymbolKind;
+use crate::{
     Causaloid, CausaloidGraph, Context, Contextoid, Data, FloatType, Model, NumberType, SpaceKind,
     SpaceTimeKind, TimeKind,
 };
-use crate::types::context_node_types::symbol::symbol_kind::SymbolKind;
 use std::collections::HashMap;
 
 /// A type alias for a default, general-purpose `Model` configuration that uses

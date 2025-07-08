@@ -3,6 +3,6 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{LorentzianSpacetime, Spatial};
+use crate::{LorentzianSpacetime, Spatial};
 
 impl Spatial<f64> for LorentzianSpacetime {}

@@ -49,7 +49,7 @@ mod spatial;
 ///
 /// # Example
 /// ```
-/// use deep_causality::prelude::*;
+/// use deep_causality::*;
 ///
 /// let n1 = NedSpace::new(1, 0.0, 0.0, 0.0);      // Reference origin
 /// let n2 = NedSpace::new(2, 100.0, 50.0, 10.0);  // 100m North, 50m East, 10m below origin

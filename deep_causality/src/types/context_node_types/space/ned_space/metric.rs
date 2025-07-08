@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::{Metric, NedSpace};
+use crate::{Metric, NedSpace};
 
 impl Metric<f64> for NedSpace {
     fn distance(&self, other: &Self) -> f64 {

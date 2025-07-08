@@ -2,7 +2,6 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
 use super::*;
 
 // See default implementation in protocols/causaloid_graph/graph_explaining. Requires CausableGraph impl.
@@ -16,6 +15,7 @@ impl<T> CausableGraphReasoning<T> for CausaloidGraph<T> where
     T: Clone + Display + Causable + PartialEq
 {
 }
+
 #[allow(clippy::type_complexity)]
 impl<T> CausableGraph<T> for CausaloidGraph<T>
 where
@@ -57,16 +57,10 @@ where
     }
 
     fn get_last_index(&self) -> Result<usize, CausalityGraphError> {
-        if !self.is_empty() {
-            let last_index = self
-                .graph
-                .get_last_index()
-                .expect("Could not get last index");
-
-            Ok(last_index)
-        } else {
-            Err(CausalityGraphError("Graph is empty".to_string()))
-        }
+        // Handle the Option from the underlying graph implementation with a precise error.
+        self.graph.get_last_index().ok_or_else(|| {
+            CausalityGraphError("Failed to get last index. Graph might be empty".to_string())
+        })
     }
 
     fn add_causaloid(&mut self, value: T) -> Result<usize, CausalityGraphError> {
@@ -119,28 +113,6 @@ where
             Ok(_) => Ok(()),
             Err(e) => Err(CausalGraphIndexError(e.to_string())),
         }
-    }
-
-    fn all_active(&self) -> bool {
-        for cause in self.graph.get_all_nodes() {
-            if !cause.is_active() {
-                return false;
-            }
-        }
-
-        true
-    }
-
-    fn number_active(&self) -> NumericalValue {
-        self.graph
-            .get_all_nodes()
-            .iter()
-            .filter(|c| c.is_active())
-            .count() as NumericalValue
-    }
-
-    fn percent_active(&self) -> NumericalValue {
-        (self.number_active() / self.size() as NumericalValue) * (100 as NumericalValue)
     }
 
     fn size(&self) -> usize {

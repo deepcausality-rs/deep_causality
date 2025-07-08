@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-// use crate::prelude::{ScalarProjector, SymbolicTime};
+// use crate::{ScalarProjector, SymbolicTime};
 //
 // impl ScalarProjector for SymbolicTime {
 //     type Scalar = i64;

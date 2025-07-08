@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::prelude::LorentzianSpacetime;
+use crate::LorentzianSpacetime;
 use std::fmt;
 
 impl fmt::Display for LorentzianSpacetime {

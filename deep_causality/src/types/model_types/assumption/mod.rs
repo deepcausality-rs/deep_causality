@@ -5,7 +5,7 @@
 
 use std::sync::{Arc, RwLock};
 
-use crate::prelude::{DescriptionValue, EvalFn, IdentificationValue};
+use crate::{DescriptionValue, EvalFn, IdentificationValue};
 
 mod assumable;
 mod debug;

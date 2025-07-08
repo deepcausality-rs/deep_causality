@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::prelude::*;
 use deep_causality::utils_test::test_utils_generator::*;
+use deep_causality::*;
 
 #[test]
 fn test_updates_contextoid() {
@@ -46,7 +46,11 @@ fn test_updates_contextoid() {
             >,
             ModelGenerativeError,
         > {
-            let causaloid = TestCausaloid::new(1, |_| Ok(false), "causaloid");
+            let causaloid = TestCausaloid::new(
+                1,
+                |_| Ok(PropagatingEffect::Deterministic(false)),
+                "causaloid",
+            );
             let create_causaloid = GenerativeOutput::CreateCausaloid(1, causaloid);
             let create_context = GenerativeOutput::CreateBaseContext {
                 id: 10,
@@ -140,7 +144,11 @@ fn test_deletes_contextoid() {
             >,
             ModelGenerativeError,
         > {
-            let causaloid = TestCausaloid::new(1, |_| Ok(false), "causaloid");
+            let causaloid = TestCausaloid::new(
+                1,
+                |_| Ok(PropagatingEffect::Deterministic(false)),
+                "causaloid",
+            );
             let create_causaloid = GenerativeOutput::CreateCausaloid(1, causaloid);
             let create_context = GenerativeOutput::CreateBaseContext {
                 id: 10,

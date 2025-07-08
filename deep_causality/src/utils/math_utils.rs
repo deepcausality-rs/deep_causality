@@ -6,7 +6,7 @@
 use std::iter::Sum;
 use std::ops::Add;
 
-use crate::prelude::NumericalValue;
+use crate::NumericalValue;
 
 pub const ZERO: NumericalValue = 0.0;
 pub const MINUS_ONE: NumericalValue = -1.0;
