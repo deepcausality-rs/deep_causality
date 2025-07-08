@@ -113,6 +113,6 @@ impl Debug for Evidence {
 impl Display for Evidence {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         // Delegate to the Debug implementation to prevent infinite recursion.
-        write!(f, "{:?}", self)
+        write!(f, "{self:?}")
     }
 }

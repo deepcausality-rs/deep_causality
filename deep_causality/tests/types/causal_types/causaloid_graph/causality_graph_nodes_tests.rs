@@ -9,17 +9,6 @@ use ultragraph::*;
 use deep_causality::utils_test::test_utils;
 
 // Custom type alias
-type CustomCausaloidGraph = CausaloidGraph<
-    Causaloid<
-        Data<NumberType>,
-        EuclideanSpace,
-        EuclideanTime,
-        EuclideanSpacetime,
-        BaseSymbol,
-        FloatType,
-        FloatType,
-    >,
->;
 
 fn get_causal_graph() -> BaseCausalGraph {
     let g: BaseCausalGraph = CausaloidGraph::new(0);

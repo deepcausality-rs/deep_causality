@@ -45,7 +45,7 @@ fn test_from_graph_error() {
     // Perform the conversion.
     let causality_err = CausalityError::from(graph_err);
     // Check that the Display output is formatted correctly.
-    let expected_msg = "CausalityError: Graph operation failed: Node with index 42 not found";
+    let expected_msg = "CausalityError: Graph operation failed: Node with index 42 not found; it may be out of bounds or have been removed.";
     assert_eq!(causality_err.to_string(), expected_msg);
 }
 
@@ -56,6 +56,6 @@ fn test_from_causality_graph_error() {
     // Perform the conversion.
     let causality_err = CausalityError::from(causal_graph_err);
     // Check that the Display output is formatted correctly.
-    let expected_msg = "CausalityError: Causal graph error: test causal graph error";
+    let expected_msg = "CausalityError: CausalityGraphError: test causal graph error";
     assert_eq!(causality_err.to_string(), expected_msg);
 }

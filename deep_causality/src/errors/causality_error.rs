@@ -31,6 +31,6 @@ impl From<GraphError> for CausalityError {
 impl From<CausalityGraphError> for CausalityError {
     fn from(err: CausalityGraphError) -> Self {
         // Convert the graph-specific error into our general causality error.
-        CausalityError(format!("Causal graph error: {err}"))
+        CausalityError(format!("{err}"))
     }
 }

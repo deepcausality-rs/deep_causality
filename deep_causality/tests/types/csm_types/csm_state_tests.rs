@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::{Causable, CausalState, Identifiable};
+use deep_causality::{Causable, CausalState, Evidence, Identifiable, PropagatingEffect};
 
 use deep_causality::utils_test::test_utils;
 
@@ -16,70 +16,71 @@ fn test_new() {
         "tests whether data exceeds threshold of 0.55".to_string(),
         causaloid.description()
     );
-    assert!(!causaloid.is_active());
+
+    // A newly created causaloid has not been evaluated, so its state is unknown.
+    // Calling is_active() will correctly return an Err.
+    let res = causaloid.is_active();
+    assert!(res.is_err());
 
     let id = 42;
     let version = 1;
-    let data = 0.23f64;
+    // CausalState now takes an Evidence enum.
+    let data = Evidence::Numerical(0.23f64);
     let cs = CausalState::new(id, version, data, causaloid);
 
     assert_eq!(*cs.id(), id);
     assert_eq!(*cs.version(), version);
-    assert_eq!(*cs.data(), data);
 }
 
 #[test]
 fn test_eval() {
     let id = 42;
     let version = 1;
-    let data = 0.23f64;
     let causaloid = test_utils::get_test_causaloid();
 
-    let cs1 = CausalState::new(id, version, data, causaloid.clone());
+    // Case 1: Evaluation results in Deterministic(false)
+    let data_fail = Evidence::Numerical(0.23f64);
+    let cs1 = CausalState::new(id, version, data_fail, causaloid.clone());
 
     let res = cs1.eval();
     assert!(res.is_ok());
+    // The result is a PropagatingEffect, not a bool.
+    assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(false));
 
-    let trigger = res.expect("Failed to unwrap eval result from causal state");
-    assert!(!trigger);
-
-    let data = 0.93f64;
-    let cs2 = CausalState::new(id, version, data, causaloid);
+    // Case 2: Evaluation results in Deterministic(true)
+    let data_success = Evidence::Numerical(0.93f64);
+    let cs2 = CausalState::new(id, version, data_success, causaloid);
 
     let res = cs2.eval();
     assert!(res.is_ok());
-
-    let trigger = res.expect("Failed to unwrap eval result from causal state");
-    assert!(trigger);
+    assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(true));
 }
 
 #[test]
 fn eval_with_data() {
     let id = 42;
     let version = 1;
-    let data = 0.0f64;
+    // The initial data in the state is often just a default.
+    let initial_data = Evidence::None;
     let causaloid = test_utils::get_test_causaloid();
-    let cs = CausalState::new(id, version, data, causaloid);
+    let cs = CausalState::new(id, version, initial_data, causaloid);
 
+    // Evaluating with internal data (None) should fail the causaloid's check.
     let res = cs.eval();
+    assert!(res.is_err(), "Evaluation with Evidence::None should fail");
+
+    // Now evaluate with external data.
+    // Case 1: Fails evaluation
+    let external_data_fail = Evidence::Numerical(0.11f64);
+    let res = cs.eval_with_data(&external_data_fail);
     assert!(res.is_ok());
+    assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(false));
 
-    let trigger = res.expect("Failed to unwrap eval result from causal state");
-    assert!(!trigger);
-
-    let data = &0.0f64;
-    let res = cs.eval_with_data(data);
+    // Case 2: Succeeds evaluation
+    let external_data_success = Evidence::Numerical(0.89f64);
+    let res = cs.eval_with_data(&external_data_success);
     assert!(res.is_ok());
-
-    let trigger = res.expect("Failed to unwrap eval result from causal state");
-    assert!(!trigger);
-
-    let data = &0.89f64;
-    let res = cs.eval_with_data(data);
-    assert!(res.is_ok());
-
-    let trigger = res.expect("Failed to unwrap eval result from causal state");
-    assert!(trigger);
+    assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(true));
 }
 
 #[test]
@@ -91,15 +92,19 @@ fn test_to_string() {
         "tests whether data exceeds threshold of 0.55".to_string(),
         causaloid.description()
     );
-    assert!(!causaloid.is_active());
+
+    // A newly created causaloid has not been evaluated, so its state is unknown.
+    // is_active() will correctly return an Err.
+    assert!(causaloid.is_active().is_err());
 
     let id = 42;
     let version = 1;
-    let data = 0.23f64;
+    let data = Evidence::Numerical(0.23f64);
     let cs = CausalState::new(id, version, data, causaloid);
 
-    let expected = "CausalState: \n id: 42 version: 1 \n data: 0.23 causaloid: Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55 is active: false has context: false".to_string();
+    // The expected string needs to be updated to match the new Debug format of Evidence
+    // and the Display format of an unevaluated Causaloid.
+    let expected = "CausalState: \n id: 42 version: 1 \n data: Evidence::Numerical(0.23) causaloid: Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55 is active: false".to_string();
     let actual = cs.to_string();
-    dbg!(cs.to_string());
-    assert_eq!(actual, expected)
+    assert_eq!(actual, expected);
 }

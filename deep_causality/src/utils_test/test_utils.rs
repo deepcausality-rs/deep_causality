@@ -34,6 +34,10 @@ pub fn get_test_causality_vec() -> BaseCausaloidVec {
     Vec::from_iter([q1, q2, q3])
 }
 
+pub fn get_test_single_data(val: NumericalValue) -> Evidence {
+    Evidence::Numerical(val)
+}
+
 pub fn get_test_causaloid() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";

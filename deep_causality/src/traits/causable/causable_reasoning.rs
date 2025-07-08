@@ -66,8 +66,7 @@ where
                 _ => {
                     // Any other effect type is a contract violation for this function.
                     return Err(CausalityError(format!(
-                        "evaluate_deterministic_chain encountered a non-deterministic effect: {:?}. Only Deterministic effects are allowed.",
-                        effect
+                        "evaluate_deterministic_chain encountered a non-deterministic effect: {effect:?}. Only Deterministic effects are allowed."
                     )));
                 }
             }
@@ -183,8 +182,7 @@ where
                 // Other combinations should not be possible due to the guards above.
                 (agg, curr) => {
                     return Err(CausalityError(format!(
-                        "Unhandled effect combination in mixed chain: Agg: {:?}, Curr: {:?}",
-                        agg, curr
+                        "Unhandled effect combination in mixed chain: Agg: {agg:?}, Curr: {curr:?}"
                     )));
                 }
             };

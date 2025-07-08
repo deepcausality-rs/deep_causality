@@ -150,7 +150,7 @@ fn test_debug_format() {
 fn test_display_format() {
     // The Display impl currently delegates to Debug, so the outputs should be identical.
     let evidence = Evidence::Numerical(99.9);
-    let display_str = format!("{}", evidence);
-    let debug_str = format!("{:?}", evidence);
+    let display_str = format!("{evidence}");
+    let debug_str = format!("{evidence:?}");
     assert_eq!(display_str, debug_str);
 }

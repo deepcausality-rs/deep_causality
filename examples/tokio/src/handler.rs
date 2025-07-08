@@ -47,10 +47,7 @@ impl EventHandler {
         // Call the new standard `evaluate` method and handle the Result.
         match bc.evaluate(&evidence) {
             Ok(effect) => {
-                println!(
-                    "EventHandler: Inference successful with effect: {:?}",
-                    effect
-                )
+                println!("EventHandler: Inference successful with effect: {effect:?}")
             }
             Err(e) => {
                 println!("EventHandler: Inference failed with error: {e}")
