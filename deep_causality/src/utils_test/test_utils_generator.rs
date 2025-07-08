@@ -93,7 +93,7 @@ where
     SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
- {
+{
     fn default() -> Self {
         Self::new()
     }
