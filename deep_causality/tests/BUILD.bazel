@@ -312,7 +312,7 @@ rust_test_suite(
 rust_test_suite(
     name = "traits_tests",
     srcs = glob([
-        "traits/generatable/*_tests.rs",
+        "traits/generatable/generative_processor/*_tests.rs",
     ]),
     tags = [
         "traits_tests",

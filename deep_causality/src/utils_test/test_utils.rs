@@ -5,6 +5,13 @@
 
 use crate::*;
 
+pub fn get_context() -> BaseContext {
+    let id = 1;
+    let name = "base context";
+    let capacity = 10; // adjust as needed
+    Context::with_capacity(id, name, capacity)
+}
+
 pub fn get_test_assumption_vec() -> Vec<Assumption> {
     let a1 = get_test_assumption();
     let a2 = get_test_assumption();
