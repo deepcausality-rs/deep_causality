@@ -93,7 +93,7 @@ where
     SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
-{
+ {
     fn default() -> Self {
         Self::new()
     }
@@ -190,5 +190,31 @@ impl
         ModelGenerativeError,
     > {
         Ok(GenerativeOutput::NoOp)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_dummy_generator_no_op() {
+        let mut generator = DummyGenerator;
+        let trigger = GenerativeTrigger::ManualIntervention("test".to_string());
+
+        // Create a context of the correct type: TestContext (which is Context<MockData, ...>)
+        let context: TestContext = TestContext::with_capacity(1, "Test Context", 10);
+
+        let result = generator.generate(&trigger, &context);
+
+        assert!(result.is_ok());
+        match result.unwrap() {
+            GenerativeOutput::NoOp => {
+                // This is the expected outcome
+            }
+            _ => {
+                panic!("DummyGenerator should always return GenerativeOutput::NoOp");
+            }
+        }
     }
 }
