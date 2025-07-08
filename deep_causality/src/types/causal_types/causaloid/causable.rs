@@ -131,7 +131,7 @@ where
                     .causal_coll
                     .as_ref()
                     .expect("Causaloid collection should not be None")
-                    .explain())
+                    .explain()?)
             }
 
             CausaloidType::Graph => {
