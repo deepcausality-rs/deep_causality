@@ -27,50 +27,6 @@ fn test_add() {
 }
 
 #[test]
-fn test_get_all_causes_true() {
-    let col = get_test_causality_vec();
-    // Before evaluation, is_active returns an error, so get_all_causes_true will be false.
-    assert!(!col.get_all_causes_true().unwrap_or(false));
-
-    activate_all_causes(&col);
-    // After activation, the result should be Ok(true).
-    assert!(col.get_all_causes_true().unwrap());
-}
-
-#[test]
-fn test_get_all_causes_false() {
-    let col = get_test_causality_false_vec();
-    // Before evaluation, is_active returns an error, so get_all_causes_true will be false.
-    assert!(!col.get_all_causes_true().unwrap_or(false));
-
-    activate_all_causes(&col);
-    // After activation, the result should be Ok(true).
-    assert!(!col.get_all_causes_true().unwrap());
-}
-
-#[test]
-fn test_number_active() {
-    let col = get_test_causality_vec();
-    // Before evaluation, number_active will error.
-    assert!(col.number_active().is_err());
-
-    activate_all_causes(&col);
-    // After activation, all 3 should be active.
-    assert_eq!(3.0, col.number_active().unwrap());
-}
-
-#[test]
-fn test_percent_active() {
-    let col = get_test_causality_vec();
-    // Before evaluation, percent_active will error.
-    assert!(col.percent_active().is_err());
-
-    activate_all_causes(&col);
-    assert_eq!(3.0, col.number_active().unwrap());
-    assert_eq!(100.0, col.percent_active().unwrap());
-}
-
-#[test]
 fn test_get_all_items() {
     let col = get_test_causality_vec();
     let all_items = col.get_all_items();
@@ -78,27 +34,6 @@ fn test_get_all_items() {
     let exp_len = col.len();
     let actual_len = all_items.len();
     assert_eq!(exp_len, actual_len);
-}
-
-#[test]
-fn test_get_all_active_and_inactive_causes() {
-    let col = get_test_causality_vec();
-
-    // 1. Evaluate all causes to be inactive.
-    let inactive_evidence = Evidence::Numerical(0.1); // Below threshold of 0.55
-    for cause in &col {
-        cause.evaluate(&inactive_evidence).unwrap();
-    }
-    assert_eq!(0, col.get_all_active_causes().unwrap().len());
-    assert_eq!(3, col.get_all_inactive_causes().unwrap().len());
-
-    // 2. Evaluate all causes to be active.
-    let active_evidence = Evidence::Numerical(0.99); // Above threshold
-    for cause in &col {
-        cause.evaluate(&active_evidence).unwrap();
-    }
-    assert_eq!(3, col.get_all_active_causes().unwrap().len());
-    assert_eq!(0, col.get_all_inactive_causes().unwrap().len());
 }
 
 #[test]

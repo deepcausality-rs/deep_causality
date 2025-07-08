@@ -14,49 +14,6 @@ pub fn get_test_causality_array() -> [BaseCausaloid; 10] {
     array::from_fn(|_| get_test_causaloid())
 }
 
-// Helper to activate all causes in a collection for testing purposes.
-fn activate_all_causes(col: &[BaseCausaloid]) {
-    // A value that ensures the default test causaloid (threshold 0.55) becomes active.
-    let evidence = Evidence::Numerical(0.99);
-    for cause in col {
-        // We call evaluate to set the internal state, but ignore the result for this setup.
-        let _ = cause.evaluate(&evidence);
-    }
-}
-
-#[test]
-fn test_get_all_causes_true() {
-    let col = get_test_causality_array();
-    // Before evaluation, is_active returns an error, so get_all_causes_true will be false.
-    assert!(!col.get_all_causes_true().unwrap_or(false));
-
-    activate_all_causes(&col);
-    // After activation, the result should be Ok(true).
-    assert!(col.get_all_causes_true().unwrap());
-}
-
-#[test]
-fn test_number_active() {
-    let col = get_test_causality_array();
-    // Before evaluation, number_active will error.
-    assert!(col.number_active().is_err());
-
-    activate_all_causes(&col);
-    // After activation, all 10 should be active.
-    assert_eq!(10.0, col.number_active().unwrap());
-}
-
-#[test]
-fn test_percent_active() {
-    let col = get_test_causality_array();
-    // Before evaluation, percent_active will error.
-    assert!(col.percent_active().is_err());
-
-    activate_all_causes(&col);
-    assert_eq!(10.0, col.number_active().unwrap());
-    assert_eq!(100.0, col.percent_active().unwrap());
-}
-
 #[test]
 fn test_get_all_items() {
     let col = get_test_causality_array();
@@ -65,27 +22,6 @@ fn test_get_all_items() {
     let exp_len = col.len();
     let actual_len = all_items.len();
     assert_eq!(exp_len, actual_len);
-}
-
-#[test]
-fn test_get_all_active_and_inactive_causes() {
-    let col = get_test_causality_array();
-
-    // 1. Evaluate all causes to be inactive.
-    let inactive_evidence = Evidence::Numerical(0.1); // Below threshold of 0.55
-    for cause in &col {
-        cause.evaluate(&inactive_evidence).unwrap();
-    }
-    assert_eq!(0, col.get_all_active_causes().unwrap().len());
-    assert_eq!(10, col.get_all_inactive_causes().unwrap().len());
-
-    // 2. Evaluate all causes to be active.
-    let active_evidence = Evidence::Numerical(0.99); // Above threshold
-    for cause in &col {
-        cause.evaluate(&active_evidence).unwrap();
-    }
-    assert_eq!(10, col.get_all_active_causes().unwrap().len());
-    assert_eq!(0, col.get_all_inactive_causes().unwrap().len());
 }
 
 #[test]
@@ -146,11 +82,19 @@ fn test_evaluate_mixed_propagation() {
 #[test]
 fn test_explain() {
     let col = get_test_causality_array();
-    activate_all_causes(&col);
+
+    let evidence = Evidence::Numerical(0.99);
+    let res = col.evaluate_deterministic_propagation(&evidence);
+    assert!(res.is_ok());
+
+    let res = col.explain();
+    dbg!(&res);
+    assert!(res.is_ok());
+    let actual = col.explain().unwrap();
 
     let single_explanation = "\n * Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: Deterministic(true)\n";
     let expected = single_explanation.repeat(10);
-    let actual = col.explain().unwrap();
+
     assert_eq!(expected, actual);
 }
 

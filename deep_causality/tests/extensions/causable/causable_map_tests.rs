@@ -88,39 +88,6 @@ fn test_remove() {
 }
 
 #[test]
-fn test_get_all_causes_true() {
-    let map = get_test_causality_map();
-    // Before evaluation, is_active returns an error, so get_all_causes_true will be false.
-    assert!(!map.get_all_causes_true().unwrap_or(false));
-
-    activate_all_causes(&map);
-    // After activation, the result should be Ok(true).
-    assert!(map.get_all_causes_true().unwrap());
-}
-
-#[test]
-fn test_number_active() {
-    let map = get_test_causality_map();
-    // Before evaluation, number_active will error.
-    assert!(map.number_active().is_err());
-
-    activate_all_causes(&map);
-    // After activation, all 3 should be active.
-    assert_eq!(3.0, map.number_active().unwrap());
-}
-
-#[test]
-fn test_percent_active() {
-    let map = get_test_causality_map();
-    // Before evaluation, percent_active will error.
-    assert!(map.percent_active().is_err());
-
-    activate_all_causes(&map);
-    assert_eq!(3.0, map.number_active().unwrap());
-    assert_eq!(100.0, map.percent_active().unwrap());
-}
-
-#[test]
 fn test_get_all_items() {
     let col = get_test_causality_map();
     let all_items = col.get_all_items();
@@ -128,27 +95,6 @@ fn test_get_all_items() {
     let exp_len = col.len();
     let actual_len = all_items.len();
     assert_eq!(exp_len, actual_len);
-}
-
-#[test]
-fn test_get_all_active_and_inactive_causes() {
-    let map = get_test_causality_map();
-
-    // 1. Evaluate all causes to be inactive.
-    let inactive_evidence = Evidence::Numerical(0.1); // Below threshold of 0.55
-    for cause in map.values() {
-        cause.evaluate(&inactive_evidence).unwrap();
-    }
-    assert_eq!(0, map.get_all_active_causes().unwrap().len());
-    assert_eq!(3, map.get_all_inactive_causes().unwrap().len());
-
-    // 2. Evaluate all causes to be active.
-    let active_evidence = Evidence::Numerical(0.99); // Above threshold
-    for cause in map.values() {
-        cause.evaluate(&active_evidence).unwrap();
-    }
-    assert_eq!(3, map.get_all_active_causes().unwrap().len());
-    assert_eq!(0, map.get_all_inactive_causes().unwrap().len());
 }
 
 #[test]

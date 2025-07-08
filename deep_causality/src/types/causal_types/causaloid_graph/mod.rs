@@ -9,7 +9,7 @@ use ultragraph::*;
 use crate::errors::{CausalGraphIndexError, CausalityGraphError};
 use crate::{
     Causable, CausableGraph, CausableGraphExplaining, CausableGraphReasoning, CausalGraph,
-    IdentificationValue, NumericalValue,
+    IdentificationValue,
 };
 
 mod causable;

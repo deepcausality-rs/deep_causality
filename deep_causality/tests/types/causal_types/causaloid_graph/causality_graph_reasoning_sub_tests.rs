@@ -36,30 +36,12 @@ fn test_evaluate_subgraph_from_cause() {
 
     g.freeze();
 
-    // 1. Before evaluation, assert that active status is unknown (returns Err)
-    assert!(g.percent_active().is_err());
-    assert!(g.all_active().is_err());
-
     // 2. Evaluate a subgraph starting from node A. This should activate nodes A and C.
     let evidence = Evidence::Numerical(0.99);
     let res = g.evaluate_subgraph_from_cause(idx_a, &evidence);
 
     assert!(res.is_ok());
     assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(true));
-
-    // 3. After evaluation, check the individual states of the evaluated nodes.
-    let node_a = g.get_causaloid(idx_a).unwrap();
-    let node_c = g.get_causaloid(idx_c).unwrap();
-    assert!(node_a.is_active().unwrap());
-    assert!(node_c.is_active().unwrap());
-
-    // And check that an unevaluated node's state is still unknown.
-    let root_node = g.get_causaloid(root_index).unwrap();
-    assert!(root_node.is_active().is_err());
-
-    // Note: percent_active() on a partially evaluated graph will correctly return an Err,
-    // because it cannot determine the full state of the graph.
-    assert!(g.percent_active().is_err());
 }
 
 #[test]

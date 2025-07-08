@@ -17,11 +17,6 @@ fn test_new() {
         causaloid.description()
     );
 
-    // A newly created causaloid has not been evaluated, so its state is unknown.
-    // Calling is_active() will correctly return an Err.
-    let res = causaloid.is_active();
-    assert!(res.is_err());
-
     let id = 42;
     let version = 1;
     // CausalState now takes an Evidence enum.
@@ -93,10 +88,6 @@ fn test_to_string() {
         causaloid.description()
     );
 
-    // A newly created causaloid has not been evaluated, so its state is unknown.
-    // is_active() will correctly return an Err.
-    assert!(causaloid.is_active().is_err());
-
     let id = 42;
     let version = 1;
     let data = Evidence::Numerical(0.23f64);
@@ -104,7 +95,7 @@ fn test_to_string() {
 
     // The expected string needs to be updated to match the new Debug format of Evidence
     // and the Display format of an unevaluated Causaloid.
-    let expected = "CausalState: \n id: 42 version: 1 \n data: Evidence::Numerical(0.23) causaloid: Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55 is active: false".to_string();
+    let expected = "CausalState: \n id: 42 version: 1 \n data: Evidence::Numerical(0.23) causaloid: Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55".to_string();
     let actual = cs.to_string();
     assert_eq!(actual, expected);
 }

@@ -3,7 +3,6 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use super::*;
-use crate::CausalityError;
 
 // See default implementation in protocols/causaloid_graph/graph_explaining. Requires CausableGraph impl.
 impl<T> CausableGraphExplaining<T> for CausaloidGraph<T> where
@@ -120,43 +119,6 @@ where
         }
     }
 
-    /// Checks if all causaloids in the graph are active.
-    /// Propagates any error encountered while checking a causaloid's state.
-    fn all_active(&self) -> Result<bool, CausalityError> {
-        for cause in self.graph.get_all_nodes() {
-            // Use `?` to handle the Result from is_active()
-            if !cause.is_active()? {
-                return Ok(false);
-            }
-        }
-        Ok(true)
-    }
-
-    /// Counts the number of active causaloids in the graph.
-    /// Propagates any error encountered while checking a causaloid's state.
-    fn number_active(&self) -> Result<NumericalValue, CausalityError> {
-        let mut count = 0;
-        for cause in self.graph.get_all_nodes() {
-            // Use `?` to handle the Result from is_active()
-            if cause.is_active()? {
-                count += 1;
-            }
-        }
-        Ok(count as NumericalValue)
-    }
-
-    /// Calculates the percentage of active causaloids in the graph.
-    /// Propagates any error encountered during the calculation.
-    fn percent_active(&self) -> Result<NumericalValue, CausalityError> {
-        let total = self.size() as NumericalValue;
-        if total == 0.0 {
-            return Ok(0.0);
-        }
-        // Use `?` to handle the Result from number_active()
-        let active_count = self.number_active()?;
-        Ok((active_count / total) * 100.0)
-    }
-
     fn size(&self) -> usize {
         self.graph.number_nodes()
     }
@@ -175,21 +137,5 @@ where
 
     fn number_nodes(&self) -> usize {
         self.graph.number_nodes()
-    }
-
-    /// Counts the number of nodes that are known to be active, ignoring unevaluated nodes.
-    ///
-    /// This is a lenient check useful for inspecting partially evaluated graphs.
-    /// It treats any unevaluated node as "not active" for the purpose of the count.
-    fn count_known_active(&self) -> NumericalValue {
-        let mut count = 0;
-        for cause in self.graph.get_all_nodes() {
-            // is_active() returns Err if not evaluated.
-            // unwrap_or(false) treats unevaluated as inactive for the count.
-            if cause.is_active().unwrap_or(false) {
-                count += 1;
-            }
-        }
-        count as NumericalValue
     }
 }

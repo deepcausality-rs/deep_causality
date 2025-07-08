@@ -191,69 +191,6 @@ where
         Ok(aggregated_effect)
     }
 
-    /// Checks if all causes in the collection are active.
-    ///
-    /// Iterates through all items and returns `Ok(false)` if any item's `is_active()`
-    /// method returns `Ok(false)`. Returns `Ok(true)` if the collection is empty.
-    /// Propagates any `Err` from `is_active`.
-    fn get_all_causes_true(&self) -> Result<bool, CausalityError> {
-        for cause in self.get_all_items() {
-            if !cause.is_active()? {
-                return Ok(false);
-            }
-        }
-        Ok(true)
-    }
-
-    /// Returns a vector containing references to all active causes.
-    /// Propagates any `Err` from `is_active`.
-    fn get_all_active_causes(&self) -> Result<Vec<&T>, CausalityError> {
-        let mut active_causes = Vec::new();
-        for cause in self.get_all_items() {
-            if cause.is_active()? {
-                active_causes.push(cause);
-            }
-        }
-        Ok(active_causes)
-    }
-
-    /// Returns a vector containing references to all inactive causes.
-    /// Propagates any `Err` from `is_active`.
-    fn get_all_inactive_causes(&self) -> Result<Vec<&T>, CausalityError> {
-        let mut inactive_causes = Vec::new();
-        for cause in self.get_all_items() {
-            if !cause.is_active()? {
-                inactive_causes.push(cause);
-            }
-        }
-        Ok(inactive_causes)
-    }
-
-    /// Returns the number of active causes as a `NumericalValue`.
-    /// Propagates any `Err` from `is_active`.
-    fn number_active(&self) -> Result<NumericalValue, CausalityError> {
-        let mut count = 0;
-        for c in self.get_all_items() {
-            if c.is_active()? {
-                count += 1;
-            }
-        }
-        Ok(count as NumericalValue)
-    }
-
-    /// Calculates the percentage of active causes.
-    ///
-    /// Returns `Ok(0.0)` if the collection is empty to avoid division by zero.
-    /// Propagates any `Err` from `number_active`.
-    fn percent_active(&self) -> Result<NumericalValue, CausalityError> {
-        let total = self.len() as NumericalValue;
-        if total == 0.0 {
-            return Ok(0.0);
-        }
-        let count = self.number_active()?;
-        Ok((count / total) * 100.0)
-    }
-
     /// Generates an explanation by concatenating the `explain()` text of all causes.
     ///
     /// Each explanation is formatted and separated by newlines.

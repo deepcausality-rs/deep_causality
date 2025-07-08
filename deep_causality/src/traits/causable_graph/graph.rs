@@ -5,9 +5,9 @@
 
 use ultragraph::*;
 
+use crate::Causable;
 use crate::errors::{CausalGraphIndexError, CausalityGraphError};
 use crate::traits::causable_graph::CausalGraph;
-use crate::{Causable, CausalityError, NumericalValue};
 
 /// The CausableGraph trait defines the core interface for a causal graph.
 ///
@@ -225,32 +225,6 @@ where
     /// * `Err(CausalGraphIndexError)` if the edge does not exist or if either index is invalid.
     fn remove_edge(&mut self, a: usize, b: usize) -> Result<(), CausalGraphIndexError>;
 
-    // Utils
-    /// Checks if all causaloids in the graph are currently active.
-    ///
-    /// This method iterates through all causaloids in the graph and calls
-    /// the `is_active()` method on each one.
-    ///
-    /// # Returns
-    ///
-    /// * `true` if every causaloid in the graph is active.
-    /// * `false` if at least one causaloid is not active.
-    fn all_active(&self) -> Result<bool, CausalityError>;
-
-    /// Counts the number of active causaloids in the graph.
-    ///
-    /// # Returns
-    ///
-    /// A `NumericalValue` representing the total count of active causaloids.
-    fn number_active(&self) -> Result<NumericalValue, CausalityError>;
-
-    /// Calculates the percentage of active causaloids relative to the total number of causaloids.
-    ///
-    /// # Returns
-    ///
-    /// A `NumericalValue` representing the percentage of active causaloids (e.g., from 0.0 to 100.0).
-    fn percent_active(&self) -> Result<NumericalValue, CausalityError>;
-
     /// Returns the total number of causaloids (nodes) in the graph.
     ///
     /// # Returns
@@ -318,9 +292,4 @@ where
             Err(e) => Err(CausalityGraphError(format!("{e}"))),
         }
     }
-    /// Counts the number of nodes that are known to be active, ignoring unevaluated nodes.
-    ///
-    /// This is a lenient check useful for inspecting partially evaluated graphs.
-    /// It treats any unevaluated node as "not active" for the purpose of the count.
-    fn count_known_active(&self) -> NumericalValue;
 }

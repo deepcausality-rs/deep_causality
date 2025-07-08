@@ -3,7 +3,6 @@ use crate::{
     CausaloidGraph, Evidence, PropagatingEffect,
 };
 use std::fmt::Display;
-use ultragraph::GraphTraversal;
 
 // This implementation allows an entire CausaloidGraph to be treated as a single,
 // evaluatable unit. It acts as a high-level facade that orchestrates the powerful,
@@ -34,9 +33,7 @@ where
             return Ok(PropagatingEffect::Halting);
         }
 
-        // After evaluation, check if any sink node is active to determine the graph's summary effect.
-        let is_active = self.is_active()?;
-        Ok(PropagatingEffect::Deterministic(is_active))
+        Ok(effect)
     }
 
     /// Generates a human-readable explanation for the entire graph.
@@ -46,45 +43,6 @@ where
     fn explain(&self) -> Result<String, CausalityError> {
         // Delegate to the explaining algorithm from the `CausableGraphExplaining` trait.
         self.explain_all_causes()
-    }
-
-    /// Checks if the graph is considered "active".
-    ///
-    /// A graph is active if at least one of its "sink" nodes (nodes with no outgoing
-    /// links) is active. This signifies that at least one full causal chain has completed
-    fn is_active(&self) -> Result<bool, CausalityError> {
-        // High-performance traversal requires the graph to be frozen.
-        if !self.is_frozen() {
-            return Err(CausalityError(
-                "Graph must be frozen to check active state. Call freeze() first.".into(),
-            ));
-        }
-
-        let num_nodes = self.number_nodes();
-        if num_nodes == 0 {
-            return Ok(false);
-        }
-
-        // To find sink nodes, we must iterate and check the out-degree of each node
-        // using the available `outbound_edges` API.
-        for i in 0..num_nodes {
-            // A node is a sink if its iterator of outbound edges is empty.
-            if self.get_graph().outbound_edges(i)?.next().is_none() {
-                // Found a sink node, now check if it's active.
-                let node = self.get_causaloid(i).ok_or_else(|| {
-                    CausalityError(format!("is_active: Failed to get sink node at index {i}"))
-                })?;
-
-                if node.is_active()? {
-                    // Short-circuit and return true on the first active sink.
-                    return Ok(true);
-                }
-            }
-        }
-
-        // If we've iterated through all nodes and found no active sinks,
-        // the graph as a whole is not active.
-        Ok(false)
     }
 
     /// A graph is a composite type, not a singleton.

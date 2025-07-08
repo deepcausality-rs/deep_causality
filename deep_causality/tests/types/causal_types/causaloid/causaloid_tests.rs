@@ -92,17 +92,12 @@ fn test_collection_causaloid_evaluation() {
     let causaloid = Causaloid::from_causal_collection(id, Arc::new(causal_coll), description);
     assert!(!causaloid.is_singleton());
 
-    // Before evaluation, is_active returns an error.
-    assert!(causaloid.is_active().is_err());
-
     // Evaluate the collection-based causaloid.
     let evidence = Evidence::Numerical(0.99);
     let effect = causaloid.evaluate(&evidence).unwrap();
 
     // The default aggregation for a collection is "any true".
     assert_eq!(effect, PropagatingEffect::Deterministic(true));
-    assert!(causaloid.is_active().unwrap());
-
     assert!(causaloid.causal_collection().is_some());
     assert!(causaloid.causal_graph().is_none());
     assert!(causaloid.context().is_none());
@@ -151,9 +146,6 @@ fn test_from_causal_graph() {
     let causaloid = Causaloid::from_causal_graph(id, Arc::new(causal_graph), description);
     assert!(!causaloid.is_singleton());
 
-    // Before evaluation, state is unknown.
-    assert!(causaloid.is_active().is_err());
-    // FIX: explain() on an unevaluated graph returns Ok, not Err.
     let explain_res = causaloid.explain().unwrap();
     assert_eq!(
         explain_res,
@@ -167,7 +159,6 @@ fn test_from_causal_graph() {
 
     // The default evaluation of a graph causaloid should propagate.
     assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(true));
-    assert!(causaloid.is_active().unwrap());
     assert!(causaloid.context().is_none());
 }
 
@@ -186,8 +177,6 @@ fn test_from_causal_graph_with_context() {
     );
     assert!(!causaloid.is_singleton());
 
-    assert!(causaloid.is_active().is_err());
-    // explain() on an unevaluated graph returns Ok, not Err.
     let explain_res = causaloid.explain().unwrap();
     assert_eq!(
         explain_res,
@@ -199,7 +188,6 @@ fn test_from_causal_graph_with_context() {
     assert!(res.is_ok());
 
     assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(true));
-    assert!(causaloid.is_active().unwrap());
     assert!(causaloid.context().is_some());
 }
 
@@ -228,8 +216,6 @@ fn test_causal_graph_explain() {
     assert!(causaloid.causal_graph().is_some());
     assert!(causaloid.causal_collection().is_none());
 
-    // Before evaluation, state is unknown.
-    assert!(causaloid.is_active().is_err());
     // explain() on an unevaluated graph returns Ok, not Err.
     let explain_res = causaloid.explain().unwrap();
     assert_eq!(
@@ -241,7 +227,6 @@ fn test_causal_graph_explain() {
     let eval = causaloid.evaluate(&evidence);
     assert!(eval.is_ok());
     assert_eq!(eval.unwrap(), PropagatingEffect::Deterministic(true));
-    assert!(causaloid.is_active().unwrap());
 
     let actual = causaloid.explain();
     assert!(actual.is_ok());
@@ -251,13 +236,11 @@ fn test_causal_graph_explain() {
 fn test_explain() {
     let causaloid = test_utils::get_test_causaloid();
     // Before evaluation, state is unknown.
-    assert!(causaloid.is_active().is_err());
     assert!(causaloid.explain().is_err());
 
     let evidence = Evidence::Numerical(0.78);
     let res = causaloid.evaluate(&evidence).unwrap();
     assert_eq!(res, PropagatingEffect::Deterministic(true));
-    assert!(causaloid.is_active().unwrap());
 
     let actual = causaloid.explain().unwrap();
     let expected = "Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: Deterministic(true)".to_string();
@@ -267,26 +250,24 @@ fn test_explain() {
 #[test]
 fn test_evaluate_singleton() {
     let causaloid = test_utils::get_test_causaloid();
-    assert!(causaloid.is_active().is_err());
 
     let evidence = Evidence::Numerical(0.78);
     let res = causaloid.evaluate(&evidence).unwrap();
     assert_eq!(res, PropagatingEffect::Deterministic(true));
-    assert!(causaloid.is_active().unwrap());
 }
 
 #[test]
 fn test_to_string() {
     let causaloid = test_utils::get_test_causaloid();
     // Before evaluation, is_active returns an error, which the Display trait should handle.
-    let expected_unevaluated = "Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55 is active: false";
+    let expected_unevaluated = "Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55";
     let actual_unevaluated = causaloid.to_string();
     assert_eq!(actual_unevaluated, expected_unevaluated);
 
     // Evaluate to active
     let evidence = Evidence::Numerical(0.99);
     causaloid.evaluate(&evidence).unwrap();
-    let expected_active = "Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55 is active: true";
+    let expected_active = "Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55";
     let actual_active = causaloid.to_string();
     assert_eq!(actual_active, expected_active);
 }
@@ -295,14 +276,14 @@ fn test_to_string() {
 fn test_debug() {
     let causaloid = test_utils::get_test_causaloid();
     // Before evaluation, is_active returns an error, which the Debug trait should handle.
-    let expected_unevaluated = "Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55 is active: false";
+    let expected_unevaluated = "Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55";
     let actual_unevaluated = format!("{causaloid:?}");
     assert_eq!(actual_unevaluated, expected_unevaluated);
 
     // Evaluate to active
     let evidence = Evidence::Numerical(0.99);
     causaloid.evaluate(&evidence).unwrap();
-    let expected_active = "Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55 is active: true";
+    let expected_active = "Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55";
     let actual_active = format!("{causaloid:?}");
     assert_eq!(actual_active, expected_active);
 }

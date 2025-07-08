@@ -43,17 +43,6 @@ pub trait Causable: Identifiable {
     /// - `Err(CausalityError)` if the state cannot be explained (e.g., not yet evaluated).
     fn explain(&self) -> Result<String, CausalityError>;
 
-    /// Checks if the causaloid is currently considered active.
-    ///
-    /// The definition of "active" is determined by the implementor but is generally
-    /// tied to the outcome of the `evaluate` method. For example, a causaloid might
-    /// be considered active if its evaluation results in `PropagatingEffect::Deterministic(true)`.
-    ///
-    /// # Returns
-    ///
-    /// `true` if the causaloid is active, `false` otherwise.
-    fn is_active(&self) -> Result<bool, CausalityError>;
-
     /// Determines if the causaloid represents a single, indivisible causal unit.
     ///
     /// This method helps distinguish base-case causaloids from composite structures

@@ -13,11 +13,6 @@ fn test_explain_all_causes() {
     let (g, _data) = test_utils_graph::get_small_multi_cause_graph_and_data();
     let root_index = g.get_root_index().unwrap();
 
-    // Verify that the active state is unknown before evaluation.
-    assert!(g.percent_active().is_err());
-    assert!(g.number_active().is_err());
-    assert!(g.all_active().is_err());
-
     // Before evaluation, explain returns a message that no nodes have been evaluated.
     let pre_explanation = g.explain_all_causes().unwrap();
     assert_eq!(
@@ -30,12 +25,6 @@ fn test_explain_all_causes() {
     let res = g.evaluate_subgraph_from_cause(root_index, &evidence);
     assert!(res.is_ok());
     assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(true));
-
-    // Verify that the graph is now fully active.
-    assert!(g.all_active().unwrap());
-    assert_eq!(g.percent_active().unwrap(), 100.0);
-    let total_nodes = g.number_nodes() as f64;
-    assert_eq!(g.number_active().unwrap(), total_nodes);
 
     // Explain the fully evaluated graph.
     // The explanation order is determined by a Breadth-First Search from the root.

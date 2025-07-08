@@ -40,12 +40,7 @@ fn test_graph_evaluate() {
 
     g.freeze();
 
-    // 1. Before evaluation, assert that active status is unknown (returns Err)
-    assert!(g.percent_active().is_err());
-    assert!(g.number_active().is_err());
-    assert!(g.all_active().is_err());
-
-    // 2. Evaluate the graph using the Causable::evaluate method
+    // Evaluate the graph using the Causable::evaluate method
     let evidence = Evidence::Numerical(0.99); // A value that will activate all nodes
     let res = g.evaluate(&evidence);
 
@@ -53,11 +48,6 @@ fn test_graph_evaluate() {
     // The graph's evaluate returns Deterministic(true) because the sink node C becomes active.
     assert!(res.is_ok());
     assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(true));
-
-    // 3. After evaluation, assert that the graph is fully active
-    assert_eq!(g.percent_active().unwrap(), 100.0);
-    assert_eq!(g.number_active().unwrap(), 4.0);
-    assert!(g.all_active().unwrap());
 }
 
 #[test]

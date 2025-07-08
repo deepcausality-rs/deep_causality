@@ -15,14 +15,6 @@ fn main() {
     g.freeze();
     println!();
 
-    println!("Verify that the graph is fully inactive");
-    // Methods for checking active state now return a Result, which we unwrap for the assertion.
-    let percent_active = g.percent_active().expect("Failed to get percent active");
-    assert_eq!(percent_active, 0.0);
-    assert_eq!(g.number_active().expect("Failed to get number active"), 0.0);
-    assert!(!g.all_active().expect("Failed to check if all active"));
-    println!();
-
     println!("Full reasoning over the entire graph");
     // The new reasoning API uses a unified `Evidence` type.
     let evidence = Evidence::Numerical(0.99);
@@ -35,14 +27,6 @@ fn main() {
 
     // The result is now a `PropagatingEffect`, not a simple bool.
     assert_eq!(res, PropagatingEffect::Deterministic(true));
-    println!();
-
-    println!("Verify that the graph is fully active");
-    assert_eq!(
-        g.percent_active().expect("Failed to get percent active"),
-        100.0
-    );
-    assert!(g.all_active().expect("Failed to check if all active"));
     println!();
 
     println!("Partial reasoning over shortest path through the graph");
