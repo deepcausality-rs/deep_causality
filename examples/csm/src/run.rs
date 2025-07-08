@@ -6,7 +6,7 @@
 use std::thread;
 use std::time::Duration;
 
-use deep_causality::{CSM, CausalState};
+use deep_causality::{CSM, CausalState, Evidence};
 
 use crate::utils_actions::*;
 use crate::utils_data::{get_explosion_sensor_data, get_fire_sensor_data, get_smoke_sensor_data};
@@ -17,17 +17,20 @@ const FIRE_SENSOR: usize = 2;
 const EXPLOSION_SENSOR: usize = 3;
 
 pub fn run() {
-    let data = 0.0f64;
-    let smoke_causloid = get_smoke_sensor_causaloid();
-    let smoke_cs = CausalState::new(SMOKE_SENSOR, 1, data, smoke_causloid);
+    // The initial data in a CausalState is often just a default.
+    // Using `Evidence::None` makes it clear that the state expects external data for evaluation.
+    let default_data = Evidence::None;
+
+    let smoke_causaloid = get_smoke_sensor_causaloid();
+    let smoke_cs = CausalState::new(SMOKE_SENSOR, 1, default_data.clone(), smoke_causaloid);
     let smoke_ca = get_smoke_alert_action();
 
     let fire_causaloid = get_fire_sensor_causaloid();
-    let fire_cs = CausalState::new(FIRE_SENSOR, 1, data, fire_causaloid);
+    let fire_cs = CausalState::new(FIRE_SENSOR, 1, default_data.clone(), fire_causaloid);
     let fire_ca = get_fire_alert_action();
 
     let explosion_causaloid = get_explosion_sensor_causaloid();
-    let explosion_cs = CausalState::new(EXPLOSION_SENSOR, 1, data, explosion_causaloid);
+    let explosion_cs = CausalState::new(EXPLOSION_SENSOR, 1, default_data, explosion_causaloid);
     let explosion_ca = get_explosion_alert_action();
 
     println!("Create Causal State Machine");
@@ -38,23 +41,33 @@ pub fn run() {
     csm.add_single_state(EXPLOSION_SENSOR, (explosion_cs, explosion_ca))
         .expect("Failed to add Explosion sensor");
 
-    println!("Start data feed and monitor senors");
+    println!("Start data feed and monitor sensors");
     let smoke_data = get_smoke_sensor_data();
     let fire_data = get_fire_sensor_data();
     let exp_data = get_explosion_sensor_data();
 
     for i in 0..12 {
         wait();
-        csm.eval_single_state(SMOKE_SENSOR, smoke_data[i])
-            .expect("Panic: Smoke sensor failed");
-        csm.eval_single_state(FIRE_SENSOR, fire_data[i])
-            .expect("Panic: Fire sensor failed");
-        csm.eval_single_state(EXPLOSION_SENSOR, exp_data[i])
-            .expect("Panic: Explosion sensor failed");
+
+        // Wrap the raw numerical data in the `Evidence` enum before passing it to the CSM.
+        let smoke_evidence = Evidence::Numerical(smoke_data[i]);
+        if let Err(e) = csm.eval_single_state(SMOKE_SENSOR, smoke_evidence) {
+            eprintln!("[CSM Error] Smoke sensor evaluation failed: {e}");
+        }
+
+        let fire_evidence = Evidence::Numerical(fire_data[i]);
+        if let Err(e) = csm.eval_single_state(FIRE_SENSOR, fire_evidence) {
+            eprintln!("[CSM Error] Fire sensor evaluation failed: {e}");
+        }
+
+        let explosion_evidence = Evidence::Numerical(exp_data[i]);
+        if let Err(e) = csm.eval_single_state(EXPLOSION_SENSOR, explosion_evidence) {
+            eprintln!("[CSM Error] Explosion sensor evaluation failed: {e}");
+        }
     }
 }
 
 fn wait() {
-    println!("Reading Sensor...");
-    thread::sleep(Duration::from_millis(250));
+    println!("\nReading Sensors...");
+    thread::sleep(Duration::from_millis(100));
 }
