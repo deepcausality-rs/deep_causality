@@ -24,7 +24,7 @@ pub fn run() {
     println!("Build Causaloid from known data representing the link between tar and cancer.");
     let q_tar_cancer = build_tar_cancer_causaloid();
 
-    println!("Aggregate all known causes");
+    println!("Aggregate all known causes into a simple causal chain");
     let iter = [q_smoke_tar, q_tar_cancer];
     let all_known_causes: BaseCausaloidVec = Vec::from_iter(iter);
     println!();
@@ -37,18 +37,19 @@ pub fn run() {
     // Adoption only requires to plug in either real study results or raw observational data.
     let nic_level = 0.82; // Heavy smoker ( high nicotine level )
     let tar_level = 0.87; // Tar in lung
-    // The order of these numbers must match the order of the causaloids above for correct auto-reasoning.
+    // The order of these numbers must match the order of the causaloids above for correct reasoning.
     let data = [nic_level, tar_level];
 
     println!(
         "Can we conclude from the data, that smoking, via tar, \
               causes lung cancer in the observed population?"
     );
-    // Reason over all known causes using the data from above;
     println!();
 
-    let final_conclusion = all_known_causes.reason_all_causes(&data).unwrap();
-    println!("Does Smoking causes cancer: {final_conclusion}");
+    // Reason over the causal chain using the new helper function.
+    let final_conclusion =
+        reason_causal_chain(&all_known_causes, &data).expect("Failed to reason over causal chain");
+    println!("Does Smoking cause cancer: {final_conclusion}");
     println!();
 
     println!("Apply Causaloid to a new patient A with new measurements");
@@ -64,11 +65,53 @@ pub fn run() {
     println!();
 
     println!("Explain your reasoning");
-    println!("{}", &all_known_causes.explain());
+    // Manually iterate and build the explanation string.
+    let mut full_explanation = String::new();
+    for cause in all_known_causes.iter() {
+        // Only include explanations from causaloids that have been evaluated.
+        if let Ok(explanation) = cause.explain() {
+            if !full_explanation.is_empty() {
+                full_explanation.push_str("\n-> ");
+            }
+            full_explanation.push_str(&explanation);
+        }
+    }
+    println!("{full_explanation}");
+}
+
+/// Reasons over a simple causal chain represented by a Vec.
+///
+/// This function simulates the old `reason_all_causes` behavior by iterating
+/// through a vector of causes and a corresponding slice of data. The chain
+/// is considered active only if every single cause evaluates to true.
+fn reason_causal_chain(
+    causes: &BaseCausaloidVec,
+    data: &[NumericalValue],
+) -> Result<bool, CausalityError> {
+    if causes.len() != data.len() {
+        return Err(CausalityError(format!(
+            "Mismatch between number of causes ({}) and data points ({}).",
+            causes.len(),
+            data.len()
+        )));
+    }
+
+    for (cause, value) in causes.iter().zip(data.iter()) {
+        let evidence = Evidence::Numerical(*value);
+        let effect = cause.evaluate(&evidence)?;
+
+        // If any link in the chain is not deterministically true, the entire chain is broken.
+        if !matches!(effect, PropagatingEffect::Deterministic(true)) {
+            return Ok(false);
+        }
+    }
+
+    // If we get through the whole loop, the entire chain is considered active.
+    Ok(true)
 }
 
 fn apply_causal_model(data: &[NumericalValue], model: &BaseCausaloidVec) {
-    let cancer_estimate = model.reason_all_causes(data).unwrap();
+    let cancer_estimate = reason_causal_chain(model, data).expect("Failed to apply causal model");
     println!("Has the patient a lung cancer risk: {cancer_estimate}");
 }
 
@@ -161,17 +204,25 @@ fn build_tar_cancer_causaloid() -> BaseCausaloid {
     Causaloid::new(id, causal_fn, description)
 }
 
-fn causal_fn(obs: &NumericalValue) -> Result<bool, CausalityError> {
+/// This single causal function is used by both causaloids in the chain.
+/// It takes generic evidence, extracts the numerical value, and checks it
+/// against a hardcoded threshold.
+fn causal_fn(evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+    // Safely extract the numerical value from the generic Evidence enum.
+    let obs = match evidence {
+        Evidence::Numerical(val) => *val,
+        _ => return Err(CausalityError("Expected Numerical evidence.".into())),
+    };
+
     if obs.is_nan() {
         return Err(CausalityError("Observation is NULL/NAN".into()));
     }
 
     let threshold: NumericalValue = 0.55;
-    if !obs.ge(&threshold) {
-        return Ok(false);
-    };
+    let is_active = obs.ge(&threshold);
 
-    Ok(true)
+    // Return the boolean result wrapped in the standard PropagatingEffect enum.
+    Ok(PropagatingEffect::Deterministic(is_active))
 }
 
 fn get_all_observations() -> Vec<Observation> {
