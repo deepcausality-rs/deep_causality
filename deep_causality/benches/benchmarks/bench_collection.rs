@@ -4,8 +4,7 @@
  */
 
 use criterion::{Criterion, criterion_group};
-
-use deep_causality::traits::causable::causable_reasoning::CausableReasoning;
+use deep_causality::*;
 
 use crate::benchmarks::utils_collection;
 
@@ -14,23 +13,31 @@ use crate::benchmarks::utils_collection;
 // Large = 10_000
 
 fn small_causality_collection_benchmark(criterion: &mut Criterion) {
-    let (coll, data) = utils_collection::get_small_collection_and_data();
-    criterion.bench_function("small_causality_collection", |bencher| {
-        bencher.iter(|| coll.reason_all_causes(&data).unwrap())
+    // The `_data` is no longer needed as we pass a single evidence object.
+    let (coll, _data) = utils_collection::get_small_collection_and_data();
+    // All propagation methods now take a single `&Evidence`.
+    let evidence = Evidence::Numerical(0.99);
+
+    criterion.bench_function("small_causality_collection_propagation", |bencher| {
+        bencher.iter(|| coll.evaluate_deterministic_propagation(&evidence).unwrap())
     });
 }
 
 fn medium_causality_collection_benchmark(criterion: &mut Criterion) {
-    let (coll, data) = utils_collection::get_medium_collection_and_data();
-    criterion.bench_function("medium_causality_collection", |bencher| {
-        bencher.iter(|| coll.reason_all_causes(&data).unwrap())
+    let (coll, _data) = utils_collection::get_medium_collection_and_data();
+    let evidence = Evidence::Numerical(0.99);
+
+    criterion.bench_function("medium_causality_collection_propagation", |bencher| {
+        bencher.iter(|| coll.evaluate_deterministic_propagation(&evidence).unwrap())
     });
 }
 
 fn large_causality_collection_benchmark(criterion: &mut Criterion) {
-    let (coll, data) = utils_collection::get_large_collection_and_data();
-    criterion.bench_function("large_causality_collection", |bencher| {
-        bencher.iter(|| coll.reason_all_causes(&data).unwrap())
+    let (coll, _data) = utils_collection::get_large_collection_and_data();
+    let evidence = Evidence::Numerical(0.99);
+
+    criterion.bench_function("large_causality_collection_propagation", |bencher| {
+        bencher.iter(|| coll.evaluate_deterministic_propagation(&evidence).unwrap())
     });
 }
 

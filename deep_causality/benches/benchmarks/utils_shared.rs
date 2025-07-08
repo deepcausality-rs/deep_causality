@@ -4,22 +4,28 @@
  */
 
 use deep_causality::errors::CausalityError;
-use deep_causality::{BaseCausaloid, Causaloid, IdentificationValue, NumericalValue};
+use deep_causality::{
+    BaseCausaloid, Causaloid, Evidence, IdentificationValue, NumericalValue, PropagatingEffect,
+};
 
 pub fn get_test_causaloid() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
-    fn causal_fn(obs: &NumericalValue) -> Result<bool, CausalityError> {
+
+    fn causal_fn(evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+        let obs = match evidence {
+            Evidence::Numerical(val) => *val,
+            _ => return Err(CausalityError("Expected Numerical evidence.".into())),
+        };
+
         if obs.is_sign_negative() {
             return Err(CausalityError("Observation is negative".into()));
         }
 
         let threshold: NumericalValue = 0.55;
-        if !obs.ge(&threshold) {
-            Ok(false)
-        } else {
-            Ok(true)
-        }
+        let is_active = obs.ge(&threshold);
+
+        Ok(PropagatingEffect::Deterministic(is_active))
     }
 
     Causaloid::new(id, causal_fn, description)

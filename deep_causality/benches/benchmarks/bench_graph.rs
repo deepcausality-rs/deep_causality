@@ -10,106 +10,98 @@ use deep_causality::*;
 use crate::benchmarks::utils_linear_graph;
 
 fn small_linear_graph_benchmark(criterion: &mut Criterion) {
-    let (g, data) = utils_linear_graph::get_small_linear_graph_and_data();
-
-    criterion.bench_function("small_linear_graph_reason_all_causes", |bencher| {
-        bencher.iter(|| g.reason_all_causes(&data, None).unwrap())
-    });
-
-    let index = data.len() / 2;
-
-    criterion.bench_function("small_linear_graph_reason_subgraph_from_cause", |bencher| {
-        bencher.iter(|| g.reason_subgraph_from_cause(index, &data, None).unwrap())
-    });
-
-    let x = data.len() / 2;
-    let start_index = x;
-    let stop_index = data.len() - 1;
+    let (g, _data) = utils_linear_graph::get_small_linear_graph_and_data();
+    let evidence = Evidence::Numerical(0.99);
+    let root_index = g.get_root_index().unwrap();
 
     criterion.bench_function(
-        "small_linear_graph_reason_shortest_path_between_causes",
+        "small_linear_graph_evaluate_subgraph_from_root",
         |bencher| {
             bencher.iter(|| {
-                g.reason_shortest_path_between_causes(start_index, stop_index, &data, None)
+                g.evaluate_subgraph_from_cause(root_index, &evidence)
                     .unwrap()
             })
         },
     );
 
-    let obs = 0.99;
+    let start_index = g.number_nodes() / 2;
+    let stop_index = g.number_nodes() - 1;
 
-    criterion.bench_function("small_linear_graph_reason_single_cause", |bencher| {
-        bencher.iter(|| g.reason_single_cause(index, &[obs]).unwrap())
+    criterion.bench_function("small_linear_graph_evaluate_shortest_path", |bencher| {
+        bencher.iter(|| {
+            g.evaluate_shortest_path_between_causes(start_index, stop_index, &evidence)
+                .unwrap()
+        })
+    });
+
+    let single_cause_index = g.number_nodes() / 2;
+    let cause_to_eval = g.get_causaloid(single_cause_index).unwrap();
+    criterion.bench_function("small_linear_graph_evaluate_single_cause", |bencher| {
+        bencher.iter(|| cause_to_eval.evaluate(&evidence).unwrap())
     });
 }
 
 fn medium_linear_graph_benchmark(criterion: &mut Criterion) {
-    let (g, data) = utils_linear_graph::get_medium_linear_graph_and_data();
-
-    criterion.bench_function("medium_linear_graph_reason_all_causes", |bencher| {
-        bencher.iter(|| g.reason_all_causes(&data, None).unwrap())
-    });
-
-    let index = data.len() / 2;
+    let (g, _data) = utils_linear_graph::get_medium_linear_graph_and_data();
+    let evidence = Evidence::Numerical(0.99);
+    let root_index = g.get_root_index().unwrap();
 
     criterion.bench_function(
-        "medium_linear_graph_reason_subgraph_from_cause",
-        |bencher| bencher.iter(|| g.reason_subgraph_from_cause(index, &data, None).unwrap()),
-    );
-
-    let x = data.len() / 2;
-    let start_index = x;
-    let stop_index = data.len() - 1;
-
-    criterion.bench_function(
-        "medium_linear_graph_reason_shortest_path_between_causes",
+        "medium_linear_graph_evaluate_subgraph_from_root",
         |bencher| {
             bencher.iter(|| {
-                g.reason_shortest_path_between_causes(start_index, stop_index, &data, None)
+                g.evaluate_subgraph_from_cause(root_index, &evidence)
                     .unwrap()
             })
         },
     );
 
-    let obs = 0.99;
+    let start_index = g.number_nodes() / 2;
+    let stop_index = g.number_nodes() - 1;
 
-    criterion.bench_function(
-        "medium_linear_graph_linear_graph_reason_single_cause",
-        |bencher| bencher.iter(|| g.reason_single_cause(index, &[obs]).unwrap()),
-    );
+    criterion.bench_function("medium_linear_graph_evaluate_shortest_path", |bencher| {
+        bencher.iter(|| {
+            g.evaluate_shortest_path_between_causes(start_index, stop_index, &evidence)
+                .unwrap()
+        })
+    });
+
+    let single_cause_index = g.number_nodes() / 2;
+    let cause_to_eval = g.get_causaloid(single_cause_index).unwrap();
+    criterion.bench_function("medium_linear_graph_evaluate_single_cause", |bencher| {
+        bencher.iter(|| cause_to_eval.evaluate(&evidence).unwrap())
+    });
 }
 
 fn large_linear_graph_benchmark(criterion: &mut Criterion) {
-    let (g, data) = utils_linear_graph::get_large_linear_graph_and_data();
-
-    criterion.bench_function("large_linear_graph_reason_all_causes", |bencher| {
-        bencher.iter(|| g.reason_all_causes(&data, None).unwrap())
-    });
-
-    let index = data.len() / 2;
-
-    criterion.bench_function("large_linear_graph_reason_subgraph_from_cause", |bencher| {
-        bencher.iter(|| g.reason_subgraph_from_cause(index, &data, None).unwrap())
-    });
-
-    let x = data.len() / 2;
-    let start_index = x;
-    let stop_index = data.len() - 1;
+    let (g, _data) = utils_linear_graph::get_large_linear_graph_and_data();
+    let evidence = Evidence::Numerical(0.99);
+    let root_index = g.get_root_index().unwrap();
 
     criterion.bench_function(
-        "large_linear_graph_reason_shortest_path_between_causes",
+        "large_linear_graph_evaluate_subgraph_from_root",
         |bencher| {
             bencher.iter(|| {
-                g.reason_shortest_path_between_causes(start_index, stop_index, &data, None)
+                g.evaluate_subgraph_from_cause(root_index, &evidence)
                     .unwrap()
             })
         },
     );
 
-    let obs = 0.99;
+    let start_index = g.number_nodes() / 2;
+    let stop_index = g.number_nodes() - 1;
 
-    criterion.bench_function("large_reason_single_cause", |bencher| {
-        bencher.iter(|| g.reason_single_cause(index, &[obs]).unwrap())
+    criterion.bench_function("large_linear_graph_evaluate_shortest_path", |bencher| {
+        bencher.iter(|| {
+            g.evaluate_shortest_path_between_causes(start_index, stop_index, &evidence)
+                .unwrap()
+        })
+    });
+
+    let single_cause_index = g.number_nodes() / 2;
+    let cause_to_eval = g.get_causaloid(single_cause_index).unwrap();
+    criterion.bench_function("large_linear_graph_evaluate_single_cause", |bencher| {
+        bencher.iter(|| cause_to_eval.evaluate(&evidence).unwrap())
     });
 }
 
