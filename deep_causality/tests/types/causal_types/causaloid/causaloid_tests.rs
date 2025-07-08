@@ -289,3 +289,109 @@ fn test_debug() {
     let actual_active = format!("{causaloid:?}");
     assert_eq!(actual_active, expected_active);
 }
+
+#[test]
+fn test_evaluate_collection_with_halting_effect() {
+    // Setup: A collection where a Halting causaloid appears before a 'true' one.
+    let halting_causaloid = test_utils::get_test_causaloid_halting();
+    let true_causaloid = test_utils::get_test_causaloid_deterministic_true();
+    let causal_coll = vec![halting_causaloid, true_causaloid];
+    let collection_causaloid =
+        Causaloid::from_causal_collection(100, Arc::new(causal_coll), "Halting Collection");
+
+    // Act
+    let evidence = Evidence::Numerical(0.0);
+    let effect = collection_causaloid.evaluate(&evidence).unwrap();
+
+    // Assert: The Halting effect should short-circuit the evaluation.
+    assert_eq!(effect, PropagatingEffect::Halting);
+}
+
+#[test]
+fn test_evaluate_collection_without_true_effect() {
+    // Setup: A collection with only 'false' causaloids.
+    let false_causaloid1 = test_utils::get_test_causaloid_deterministic_false();
+    let false_causaloid2 = test_utils::get_test_causaloid_deterministic_false();
+    let causal_coll = vec![false_causaloid1, false_causaloid2];
+    let collection_causaloid =
+        Causaloid::from_causal_collection(101, Arc::new(causal_coll), "All False Collection");
+
+    // Act
+    let evidence = Evidence::Numerical(0.0);
+    let effect = collection_causaloid.evaluate(&evidence).unwrap();
+
+    // Assert: Since no causaloid is true, the aggregated effect should be false.
+    assert_eq!(effect, PropagatingEffect::Deterministic(false));
+}
+
+#[test]
+fn test_evaluate_collection_with_sub_evaluation_error() {
+    // Setup: A collection containing a causaloid that will return an error.
+    let error_causaloid = test_utils::get_test_error_causaloid();
+    let true_causaloid = test_utils::get_test_causaloid_deterministic_true();
+
+    // The error_causaloid must come first to ensure it gets evaluated.
+    let causal_coll = vec![error_causaloid, true_causaloid]; // <-- The order is swapped here.
+
+    let collection_causaloid =
+        Causaloid::from_causal_collection(102, Arc::new(causal_coll), "Error Collection");
+
+    // Act
+    let evidence = Evidence::Numerical(0.0);
+    let result = collection_causaloid.evaluate(&evidence);
+
+    // Assert: The error from the sub-causaloid should now be propagated up.
+    assert!(result.is_err());
+    let err = result.unwrap_err();
+    assert!(err.to_string().contains("Test error"));
+}
+#[test]
+fn test_explain_collection_success() {
+    // Setup: A collection causaloid that has been evaluated.
+    let true_causaloid = test_utils::get_test_causaloid_deterministic_true();
+    let false_causaloid = test_utils::get_test_causaloid_deterministic_false();
+
+    // The `false` causaloid must come first to ensure the `evaluate` loop
+    // does not short-circuit before evaluating both.
+    let causal_coll = vec![false_causaloid, true_causaloid]; // <-- Swapped order
+
+    let collection_causaloid =
+        Causaloid::from_causal_collection(104, Arc::new(causal_coll), "Explainable Collection");
+
+    // Act: Evaluate the collection. Now both members will be evaluated.
+    let evidence = Evidence::Numerical(0.0);
+    collection_causaloid.evaluate(&evidence).unwrap();
+
+    // Now, call explain.
+    let explanation = collection_causaloid.explain().unwrap();
+
+    // Assert: The explanation should contain the results from both sub-causaloids.
+    assert!(explanation.contains("evaluated to: Deterministic(true)"));
+    assert!(explanation.contains("evaluated to: Deterministic(false)"));
+}
+// This test covers an error path in explain() for a Collection Causaloid.
+#[test]
+fn test_explain_collection_with_sub_explain_error() {
+    // Setup: A collection where one causaloid will not be evaluated due to short-circuiting.
+    let true_causaloid = test_utils::get_test_causaloid_deterministic_true();
+    let unevaluated_causaloid = test_utils::get_test_causaloid(); // This one will remain unevaluated.
+
+    let causal_coll = vec![true_causaloid, unevaluated_causaloid];
+    let collection_causaloid = Causaloid::from_causal_collection(
+        105,
+        Arc::new(causal_coll),
+        "Sub-explain Error Collection",
+    );
+
+    // Act: Evaluate the collection. The evaluation will stop after the first `true` effect.
+    let evidence = Evidence::Numerical(0.0);
+    collection_causaloid.evaluate(&evidence).unwrap();
+
+    // Now, call explain. This will fail because the second causaloid was never evaluated.
+    let result = collection_causaloid.explain();
+
+    // Assert: The result should be an error.
+    assert!(result.is_err());
+    let err_msg = result.unwrap_err().to_string();
+    assert!(err_msg.contains("has not been evaluated"));
+}

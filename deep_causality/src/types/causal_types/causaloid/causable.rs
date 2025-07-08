@@ -106,20 +106,29 @@ where
             }
 
             CausaloidType::Collection => {
-                // Delegates to the `explain` method provided by the `CausableReasoning` trait.
-                Ok(self
-                    .causal_coll
+                // Safely unwrap the collection or return a descriptive error.
+                self.causal_coll
                     .as_ref()
-                    .expect("Causaloid collection should not be None")
-                    .explain()?)
+                    .ok_or_else(|| {
+                        CausalityError(format!(
+                            "Causaloid {} is type Collection but its collection is None",
+                            self.id
+                        ))
+                    })?
+                    .explain() // Delegate to the collection's explain method.
             }
 
             CausaloidType::Graph => {
-                // Delegates to the `explain` method on the graph itself.
+                // Safely unwrap the graph or return a descriptive error.
                 self.causal_graph
                     .as_ref()
-                    .expect("Causaloid graph should not be None")
-                    .explain()
+                    .ok_or_else(|| {
+                        CausalityError(format!(
+                            "Causaloid {} is type Graph but its graph is None",
+                            self.id
+                        ))
+                    })?
+                    .explain() // Delegate to the graph's explain method.
             }
         }
     }
