@@ -188,7 +188,7 @@ fn test_explain() {
     activate_all_causes(&map);
 
     let single_explanation = "Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: Deterministic(true)";
-    let actual = map.explain();
+    let actual = map.explain().unwrap();
 
     // HashMap iteration order is not guaranteed.
     // We check that the explanation for each of the 3 causes is present.

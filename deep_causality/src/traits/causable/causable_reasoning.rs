@@ -261,18 +261,24 @@ where
     /// Each explanation is formatted and separated by newlines.
     /// It gracefully handles errors from individual `explain` calls by inserting
     /// a placeholder error message.
-    fn explain(&self) -> Result<String, CausalityError>  {
-        
-        if self.is_empty(){
-            return Err(CausalityError::new("Causal Collection is empty".to_string()))
+    fn explain(&self) -> Result<String, CausalityError> {
+        if self.is_empty() {
+            return Err(CausalityError::new(
+                "Causal Collection is empty".to_string(),
+            ));
         }
-        
+
         let mut explanation = String::new();
         for cause in self.get_all_items() {
             let cause_explanation = match cause.explain() {
                 Ok(s) => s,
-                Err(e) => 
-                return Err(CausalityError(format!("[Error explaining cause {} ('{}')]", cause.id(), e))),
+                Err(e) => {
+                    return Err(CausalityError(format!(
+                        "[Error explaining cause {} ('{}')]",
+                        cause.id(),
+                        e
+                    )));
+                }
             };
 
             explanation.push('\n');

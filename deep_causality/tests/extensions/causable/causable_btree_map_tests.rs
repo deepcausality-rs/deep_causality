@@ -190,7 +190,7 @@ fn test_explain() {
     let single_explanation = "\n * Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: Deterministic(true)\n";
     // BTreeMap iterates in key-sorted order, so the output is predictable.
     let expected = single_explanation.repeat(3);
-    let actual = map.explain();
+    let actual = map.explain().unwrap();
     assert_eq!(expected, actual);
 }
 

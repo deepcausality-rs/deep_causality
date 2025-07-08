@@ -50,7 +50,10 @@ where
         write!(
             f,
             "Causaloid id: {} \n Causaloid type: {} \n description: {} is active: {}",
-            self.id, self.causal_type, self.description, self.is_active().unwrap_or(false)
+            self.id,
+            self.causal_type,
+            self.description,
+            self.is_active().unwrap_or(false)
         )
     }
 }

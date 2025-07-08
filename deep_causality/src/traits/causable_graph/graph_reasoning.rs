@@ -15,6 +15,31 @@ pub trait CausableGraphReasoning<T>: CausableGraph<T>
 where
     T: Causable + PartialEq + Clone,
 {
+    /// Evaluates a single, specific causaloid within the graph by its index.
+    ///
+    /// This is a convenience method that locates the causaloid and calls its `evaluate` method.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The index of the causaloid to evaluate.
+    /// * `evidence` - The runtime evidence to be passed to the node's evaluation function.
+    ///
+    /// # Returns
+    ///
+    /// The `PropagatingEffect` from the evaluated causaloid, or a `CausalityError` if
+    /// the node is not found or the evaluation fails.
+    fn evaluate_single_cause(
+        &self,
+        index: usize,
+        evidence: &Evidence,
+    ) -> Result<PropagatingEffect, CausalityError> {
+        let cause = self.get_causaloid(index).ok_or_else(|| {
+            CausalityError(format!("Causaloid with index {index} not found in graph"))
+        })?;
+
+        cause.evaluate(evidence)
+    }
+
     /// Reasons over a subgraph by traversing all nodes reachable from a given start index.
     ///
     /// This method performs a Breadth-First Search (BFS) traversal of all descendants
@@ -120,17 +145,16 @@ where
             ));
         }
 
-        // get_shortest_path will handle checks for missing nodes.
-        let path = self.get_shortest_path(start_index, stop_index)?;
-
-        if path.is_empty() {
-            // This can happen if start_index == stop_index.
-            // Evaluate the single node.
+        // Handle the single-node case explicitly before calling the pathfinder.
+        if start_index == stop_index {
             let cause = self.get_causaloid(start_index).ok_or_else(|| {
                 CausalityError(format!("Failed to get causaloid at index {start_index}"))
             })?;
             return cause.evaluate(evidence);
         }
+
+        // get_shortest_path will handle checks for missing nodes.
+        let path = self.get_shortest_path(start_index, stop_index)?;
 
         for index in path {
             let cause = self.get_causaloid(index).ok_or_else(|| {

@@ -145,6 +145,22 @@ where
         Ok(count as NumericalValue)
     }
 
+    /// Counts the number of nodes that are known to be active, ignoring unevaluated nodes.
+    ///
+    /// This is a lenient check useful for inspecting partially evaluated graphs.
+    /// It treats any unevaluated node as "not active" for the purpose of the count.
+    fn count_known_active(&self) -> NumericalValue {
+        let mut count = 0;
+        for cause in self.graph.get_all_nodes() {
+            // is_active() returns Err if not evaluated.
+            // unwrap_or(false) treats unevaluated as inactive for the count.
+            if cause.is_active().unwrap_or(false) {
+                count += 1;
+            }
+        }
+        count as NumericalValue
+    }
+
     /// Calculates the percentage of active causaloids in the graph.
     /// Propagates any error encountered during the calculation.
     fn percent_active(&self) -> Result<NumericalValue, CausalityError> {

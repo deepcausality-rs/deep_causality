@@ -318,4 +318,9 @@ where
             Err(e) => Err(CausalityGraphError(format!("{e}"))),
         }
     }
+    /// Counts the number of nodes that are known to be active, ignoring unevaluated nodes.
+    ///
+    /// This is a lenient check useful for inspecting partially evaluated graphs.
+    /// It treats any unevaluated node as "not active" for the purpose of the count.
+    fn count_known_active(&self) -> NumericalValue;
 }

@@ -61,7 +61,7 @@ pub fn build_linear_graph(k: usize) -> BaseCausalGraph {
 
     let mut previous_idx = root_index.expect("Failed to add root causaloid");
 
-    for _ in 0..k {
+    for _ in 0..k + 1 {
         // add a new causaloid and set current idx to it
         let causaloid = get_test_causaloid();
         let current_idx = g.add_causaloid(causaloid).expect("Failed to add causaloid");
