@@ -100,7 +100,6 @@ fn test_get_last_index() {
 
     let res = g.get_last_index();
     assert!(res.is_err());
-
 }
 
 #[test]
