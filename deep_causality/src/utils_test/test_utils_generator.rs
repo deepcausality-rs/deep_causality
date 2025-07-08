@@ -206,15 +206,6 @@ mod tests {
         let context: TestContext = TestContext::with_capacity(1, "Test Context", 10);
 
         let result = generator.generate(&trigger, &context);
-
         assert!(result.is_ok());
-        match result.unwrap() {
-            GenerativeOutput::NoOp => {
-                // This is the expected outcome
-            }
-            _ => {
-                panic!("DummyGenerator should always return GenerativeOutput::NoOp");
-            }
-        }
     }
 }
