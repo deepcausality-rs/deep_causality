@@ -113,7 +113,11 @@ fn test_generate_create_causaloid() {
             >,
             ModelGenerativeError,
         > {
-            let causaloid = TestCausaloid::new(1, |_| Ok(false), "Test Causaloid");
+            let causaloid = TestCausaloid::new(
+                1,
+                |_| Ok(PropagatingEffect::Deterministic(false)),
+                "Test Causaloid",
+            );
             Ok(GenerativeOutput::CreateCausaloid(1, causaloid))
         }
     }
@@ -419,10 +423,18 @@ fn test_generate_update_causaloid() {
         > {
             let create_causaloid = GenerativeOutput::CreateCausaloid(
                 1,
-                TestCausaloid::new(1, |_| Ok(false), "Initial Causaloid"),
+                TestCausaloid::new(
+                    1,
+                    |_| Ok(PropagatingEffect::Deterministic(false)),
+                    "Initial Causaloid",
+                ),
             );
 
-            let updated_causaloid = TestCausaloid::new(1, |_| Ok(false), "Updated Causaloid");
+            let updated_causaloid = TestCausaloid::new(
+                1,
+                |_| Ok(PropagatingEffect::Deterministic(false)),
+                "Updated Causaloid",
+            );
             let update_causaloid = GenerativeOutput::UpdateCausaloid(1, updated_causaloid);
 
             Ok(GenerativeOutput::Composite(vec![
@@ -490,7 +502,11 @@ fn test_generate_delete_causaloid() {
         > {
             let create_causaloid = GenerativeOutput::CreateCausaloid(
                 1,
-                TestCausaloid::new(1, |_| Ok(false), "Initial Causaloid"),
+                TestCausaloid::new(
+                    1,
+                    |_| Ok(PropagatingEffect::Deterministic(false)),
+                    "Initial Causaloid",
+                ),
             );
             let delete_causaloid = GenerativeOutput::DeleteCausaloid(1);
             Ok(GenerativeOutput::Composite(vec![
@@ -809,7 +825,10 @@ fn test_processing_failures() {
         FloatType,
         FloatType,
         DummyGenerator,
-    > = GenerativeOutput::UpdateCausaloid(99, TestCausaloid::new(99, |_| Ok(false), ""));
+    > = GenerativeOutput::UpdateCausaloid(
+        99,
+        TestCausaloid::new(99, |_| Ok(PropagatingEffect::Deterministic(false)), ""),
+    );
     let res = processor.process_output(update_non_existent_causaloid);
     assert!(matches!(
         res,
@@ -845,7 +864,10 @@ fn test_processing_failures() {
         FloatType,
         FloatType,
         DummyGenerator,
-    > = GenerativeOutput::CreateCausaloid(1, TestCausaloid::new(1, |_| Ok(false), ""));
+    > = GenerativeOutput::CreateCausaloid(
+        1,
+        TestCausaloid::new(1, |_| Ok(PropagatingEffect::Deterministic(false)), ""),
+    );
     processor.process_output(create_causaloid).unwrap();
     let create_duplicate_causaloid: GenerativeOutput<
         MockData,
@@ -856,7 +878,10 @@ fn test_processing_failures() {
         FloatType,
         FloatType,
         DummyGenerator,
-    > = GenerativeOutput::CreateCausaloid(1, TestCausaloid::new(1, |_| Ok(false), ""));
+    > = GenerativeOutput::CreateCausaloid(
+        1,
+        TestCausaloid::new(1, |_| Ok(PropagatingEffect::Deterministic(false)), ""),
+    );
     let res = processor.process_output(create_duplicate_causaloid);
     assert!(matches!(
         res,

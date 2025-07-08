@@ -5,7 +5,7 @@
 use deep_causality::utils_test::test_utils_generator::{
     MockData, TestCausaloid, TestContext, TestContextoid, TestModel,
 };
-use deep_causality::{ContextoidType, Datable, Identifiable, Root};
+use deep_causality::{ContextoidType, Datable, Evidence, Identifiable, PropagatingEffect, Root};
 use std::sync::Arc;
 
 #[test]
@@ -30,7 +30,11 @@ fn test_mock_data_default() {
 fn test_test_causaloid() {
     let id = 1;
     let description = "test";
-    let causaloid = Arc::new(TestCausaloid::new(id, |_| Ok(false), description));
+    let causaloid = Arc::new(TestCausaloid::new(
+        id,
+        |_| Ok(PropagatingEffect::Deterministic(false)),
+        description,
+    ));
 
     assert_eq!(causaloid.id(), id);
     assert_eq!(causaloid.description(), description);
@@ -58,7 +62,11 @@ fn test_test_model() {
     let author = "John Doe";
     let description = "This is a test model";
     let assumptions = None;
-    let causaloid = Arc::new(TestCausaloid::new(id, |_| Ok(false), "test"));
+    let causaloid = Arc::new(TestCausaloid::new(
+        id,
+        |_| Ok(PropagatingEffect::Deterministic(false)),
+        "test",
+    ));
     let context = Some(Arc::new(TestContext::with_capacity(id, "", 12)));
 
     let model = TestModel::new(id, author, description, assumptions, causaloid, context);
