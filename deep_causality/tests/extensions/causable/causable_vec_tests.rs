@@ -3,6 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality::utils_test::test_utils;
 use deep_causality::utils_test::test_utils::*;
 use deep_causality::*;
 
@@ -118,4 +119,78 @@ fn test_is_empty() {
 fn test_to_vec() {
     let col = get_test_causality_vec();
     assert_eq!(3, col.to_vec().len());
+}
+
+// --- Tests for CausableReasoning Trait ---
+
+#[test]
+fn test_evaluate_deterministic_propagation_error_non_deterministic_effect() {
+    // Setup: A collection containing a non-deterministic (probabilistic) causaloid.
+    let true_causaloid = test_utils::get_test_causaloid_deterministic_true();
+    let probabilistic_causaloid = test_utils::get_test_causaloid_probabilistic();
+    let coll: Vec<BaseCausaloid> = vec![true_causaloid, probabilistic_causaloid];
+
+    // Act: Evaluate with deterministic propagation, which expects only deterministic effects.
+    let evidence = Evidence::Numerical(0.0);
+    let result = coll.evaluate_deterministic_propagation(&evidence);
+
+    // Assert: This covers the error branch for non-deterministic effects.
+    assert!(result.is_err());
+    let err_msg = result.unwrap_err().to_string();
+    assert!(err_msg.contains("encountered a non-deterministic effect: Probabilistic(0.0)"));
+}
+
+#[test]
+fn test_evaluate_probabilistic_propagation_success() {
+    // Setup: Create two causaloids with specific probabilities to test multiplication.
+    fn causal_fn_half(_: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+        Ok(PropagatingEffect::Probabilistic(0.5))
+    }
+    let p1 = Causaloid::new(1, causal_fn_half, "p=0.5");
+
+    fn causal_fn_quarter(_: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+        Ok(PropagatingEffect::Probabilistic(0.25))
+    }
+    let p2 = Causaloid::new(2, causal_fn_quarter, "p=0.25");
+
+    let coll: Vec<BaseCausaloid> = vec![p1, p2];
+
+    // Act: Evaluate with probabilistic propagation.
+    let evidence = Evidence::Numerical(0.0);
+    let effect = coll.evaluate_probabilistic_propagation(&evidence).unwrap();
+
+    // Assert: This covers the main logic branch, ensuring probabilities are multiplied.
+    assert_eq!(effect, PropagatingEffect::Probabilistic(0.125));
+}
+
+#[test]
+fn test_evaluate_probabilistic_propagation_with_halting() {
+    // Setup: A collection with a probabilistic causaloid followed by a halting one.
+    let probabilistic_causaloid = test_utils::get_test_causaloid_probabilistic();
+    let halting_causaloid = test_utils::get_test_causaloid_halting();
+    let coll: Vec<BaseCausaloid> = vec![probabilistic_causaloid, halting_causaloid];
+
+    // Act: Evaluate with probabilistic propagation.
+    let evidence = Evidence::Numerical(0.0);
+    let effect = coll.evaluate_probabilistic_propagation(&evidence).unwrap();
+
+    // Assert: This covers the Halting branch, which should take precedence.
+    assert_eq!(effect, PropagatingEffect::Halting);
+}
+
+#[test]
+fn test_evaluate_probabilistic_propagation_error_contextual_link() {
+    // Setup: A collection containing a ContextualLink causaloid, which is invalid for this function.
+    let probabilistic_causaloid = test_utils::get_test_causaloid_probabilistic();
+    let contextual_link_causaloid = test_utils::get_test_causaloid_contextual_link();
+    let coll: Vec<BaseCausaloid> = vec![probabilistic_causaloid, contextual_link_causaloid];
+
+    // Act: Evaluate with probabilistic propagation.
+    let evidence = Evidence::Numerical(0.0);
+    let result = coll.evaluate_probabilistic_propagation(&evidence);
+
+    // Assert: This covers the error branch for invalid ContextualLink effects.
+    assert!(result.is_err());
+    let err_msg = result.unwrap_err().to_string();
+    assert!(err_msg.contains("Encountered a ContextualLink in a probabilistic chain evaluation."));
 }
