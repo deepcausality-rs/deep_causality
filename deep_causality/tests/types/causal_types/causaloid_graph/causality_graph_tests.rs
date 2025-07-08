@@ -56,3 +56,11 @@ fn test_get_graph() {
     assert_eq!(graph.number_edges(), 0);
     assert_eq!(graph.number_nodes(), 0);
 }
+
+#[test]
+fn test_id() {
+    let g: CustomCausaloidGraph = CausaloidGraph::new(0);
+    assert_eq!(g.number_nodes(), 0);
+    assert_eq!(g.number_edges(), 0);
+    assert_eq!(g.id(), 0);
+}
