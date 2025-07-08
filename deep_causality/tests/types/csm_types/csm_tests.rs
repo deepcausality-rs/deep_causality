@@ -6,7 +6,6 @@
 use deep_causality::*;
 
 use deep_causality::utils_test::test_utils;
-use deep_causality::utils_test::test_utils::get_test_error_causaloid;
 
 // Standard action that succeeds
 fn state_action() -> Result<(), ActionError> {
@@ -17,12 +16,27 @@ fn get_test_action() -> CausalAction {
     CausalAction::new(state_action, "Test action", 1)
 }
 
+fn get_test_error_action() -> CausalAction {
+    fn err_state_action() -> Result<(), ActionError> {
+        Err(ActionError("Error".to_string()))
+    }
+
+    CausalAction::new(err_state_action, "Test action", 1)
+}
+
 // Causaloid that returns a non-deterministic effect
 fn get_test_probabilistic_causaloid() -> BaseCausaloid {
     fn causal_fn(_: &Evidence) -> Result<PropagatingEffect, CausalityError> {
         Ok(PropagatingEffect::Probabilistic(0.5))
     }
     Causaloid::new(99, causal_fn, "Probabilistic Causaloid")
+}
+
+fn get_test_error_causaloid() -> BaseCausaloid {
+    fn causal_fn(_: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+        Err(CausalityError::new("Error".to_string()))
+    }
+    Causaloid::new(78, causal_fn, "Probabilistic Causaloid")
 }
 
 #[test]
@@ -200,40 +214,6 @@ fn remove_single_state_err_not_found() {
 }
 
 #[test]
-fn eval_single_state() {
-    let id = 42;
-    let version = 1;
-    let data = Evidence::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid();
-
-    let cs = CausalState::new(id, version, data, causaloid);
-    let ca = get_test_action();
-    let state_action = &[(&cs, &ca)];
-    let csm = CSM::new(state_action);
-
-    let data = test_utils::get_test_single_data(0.23f64);
-    let res = csm.eval_single_state(23, data);
-    assert!(res.is_err())
-}
-
-#[test]
-fn eval_single_state_error_non_deter() {
-    let id = 42;
-    let version = 1;
-    let data = Evidence::Numerical(0.23f64);
-    let causaloid = get_test_probabilistic_causaloid();
-
-    let cs = CausalState::new(id, version, data, causaloid);
-    let ca = get_test_action();
-    let state_action = &[(&cs, &ca)];
-    let csm = CSM::new(state_action);
-
-    let data = test_utils::get_test_single_data(0.23f64);
-    let res = csm.eval_single_state(23, data);
-    assert!(res.is_err())
-}
-
-#[test]
 fn eval_single_state_error_fail_action() {
     let id = 42;
     let version = 1;
@@ -241,7 +221,7 @@ fn eval_single_state_error_fail_action() {
     let causaloid = get_test_error_causaloid();
 
     let cs = CausalState::new(id, version, data, causaloid);
-    let ca = get_test_action();
+    let ca = get_test_error_action();
     let state_action = &[(&cs, &ca)];
     let csm = CSM::new(state_action);
 
@@ -291,4 +271,38 @@ fn update_all_states() {
     assert!(res.is_ok());
 
     assert_eq!(csm.len(), 2)
+}
+
+#[test]
+fn eval_single_state() {
+    let id = 42;
+    let version = 1;
+    let data = Evidence::Numerical(0.23f64);
+    let causaloid = test_utils::get_test_causaloid();
+
+    let cs = CausalState::new(id, version, data, causaloid);
+    let ca = get_test_action();
+    let state_action = &[(&cs, &ca)];
+    let csm = CSM::new(state_action);
+
+    let data = test_utils::get_test_single_data(0.23f64);
+    let res = csm.eval_single_state(23, data);
+    assert!(res.is_err())
+}
+
+#[test]
+fn eval_single_state_error_non_deter() {
+    let id = 42;
+    let version = 1;
+    let data = Evidence::Numerical(0.23f64);
+    let causaloid = get_test_probabilistic_causaloid();
+
+    let cs = CausalState::new(id, version, data, causaloid);
+    let ca = get_test_action();
+    let state_action = &[(&cs, &ca)];
+    let csm = CSM::new(state_action);
+
+    let data = test_utils::get_test_single_data(0.23f64);
+    let res = csm.eval_single_state(23, data);
+    assert!(res.is_err())
 }
