@@ -84,6 +84,21 @@ where
     pub context_dest: Option<Context<D, S, T, ST, SYM, VS, VT>>,
 }
 
+impl<D, S, T, ST, SYM, VS, VT> Default for TestProcessor<D, S, T, ST, SYM, VS, VT>
+where
+    D: Default + Datable + Copy + Clone + Hash + Eq + PartialEq,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<D, S, T, ST, SYM, VS, VT> TestProcessor<D, S, T, ST, SYM, VS, VT>
 where
     D: Default + Datable + Copy + Clone + Hash + Eq + PartialEq,
@@ -192,5 +207,11 @@ mod tests {
 
         let result = generator.generate(&trigger, &context);
         assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_processor_default() {
+        let proc = TestProcessorAlias::default();
+        assert!(proc.causaloid_dest.is_none());
     }
 }
