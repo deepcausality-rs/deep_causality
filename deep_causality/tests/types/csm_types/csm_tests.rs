@@ -416,9 +416,7 @@ fn eval_single_state_error_action_fails() {
 
     assert!(res.is_err());
     let err_msg = res.unwrap_err().0;
-    assert!(err_msg.contains(&format!(
-        "CSM[eval]: Failed to fire action for state {id}"
-    )));
+    assert!(err_msg.contains(&format!("CSM[eval]: Failed to fire action for state {id}")));
 }
 
 // I've renamed the original test to be more descriptive.
@@ -498,9 +496,7 @@ fn eval_all_states_error_action_fails() {
 
     assert!(res.is_err());
     let err_msg = res.unwrap_err().0;
-    assert!(err_msg.contains(&format!(
-        "CSM[eval]: Failed to fire action for state {id}"
-    )));
+    assert!(err_msg.contains(&format!("CSM[eval]: Failed to fire action for state {id}")));
 }
 
 // New test for the third error branch: non-deterministic effect.
