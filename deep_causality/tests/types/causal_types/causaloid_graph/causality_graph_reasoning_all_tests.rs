@@ -48,6 +48,24 @@ fn test_graph_evaluate() {
     // The graph's evaluate returns Deterministic(true) because the sink node C becomes active.
     assert!(res.is_ok());
     assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(true));
+
+    g.unfreeze();
+
+    let causaloid_halt = test_utils::get_test_causaloid_halting();
+    let idx_halt = g
+        .add_causaloid(causaloid_halt)
+        .expect("Failed to add causaloid halt");
+
+    g.add_edge(idx_c, idx_halt).expect("Failed to add edge");
+    g.freeze();
+
+    // Evaluate the graph using the Causable::evaluate method
+    let evidence = Evidence::Numerical(0.99); // A value that will activate all nodes
+    let res = g.evaluate(&evidence);
+
+    dbg!(&res);
+    assert!(res.is_ok());
+    assert_eq!(res.unwrap(), PropagatingEffect::Halting);
 }
 
 #[test]

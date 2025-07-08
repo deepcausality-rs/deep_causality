@@ -57,13 +57,9 @@ where
     }
 
     fn get_last_index(&self) -> Result<usize, CausalityGraphError> {
-        if self.is_empty() {
-            return Err(CausalityGraphError("Graph is empty".to_string()));
-        }
-
         // Handle the Option from the underlying graph implementation with a precise error.
         self.graph.get_last_index().ok_or_else(|| {
-            CausalityGraphError("Failed to get last index from a non-empty graph".to_string())
+            CausalityGraphError("Failed to get last index. Graph might be empty".to_string())
         })
     }
 

@@ -64,3 +64,12 @@ fn test_id() {
     assert_eq!(g.number_edges(), 0);
     assert_eq!(g.id(), 0);
 }
+
+#[test]
+fn test_is_not_singleton() {
+    let g: CustomCausaloidGraph = CausaloidGraph::new(0);
+    assert_eq!(g.number_nodes(), 0);
+    assert_eq!(g.number_edges(), 0);
+    assert_eq!(g.id(), 0);
+    assert!(!g.is_singleton());
+}
