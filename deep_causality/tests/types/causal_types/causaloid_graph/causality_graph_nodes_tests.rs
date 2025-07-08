@@ -75,6 +75,35 @@ fn test_get_root_index() {
 }
 
 #[test]
+fn test_get_last_index() {
+    let mut g = get_causal_graph();
+
+    let res = g.get_last_index();
+    assert!(res.is_err());
+
+    let root_causaloid = test_utils::get_test_causaloid();
+
+    let root_index = g
+        .add_root_causaloid(root_causaloid)
+        .expect("Failed to add root index");
+    let contains_root = g.contains_causaloid(root_index);
+    assert!(contains_root);
+
+    let r_index = g.get_root_index().unwrap();
+    assert_eq!(root_index, r_index);
+
+    let res = g.get_last_index();
+    assert!(res.is_ok());
+
+    let res = g.remove_causaloid(root_index);
+    assert!(res.is_ok());
+
+    let res = g.get_last_index();
+    assert!(res.is_err());
+
+}
+
+#[test]
 fn test_add_causaloid() {
     let mut g = get_causal_graph();
     let causaloid = test_utils::get_test_causaloid();
