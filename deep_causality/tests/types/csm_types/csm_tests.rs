@@ -303,6 +303,66 @@ fn eval_single_state_error_non_deter() {
     let csm = CSM::new(state_action);
 
     let data = test_utils::get_test_single_data(0.23f64);
-    let res = csm.eval_single_state(23, data);
+    let res = csm.eval_single_state(id, data);
     assert!(res.is_err())
+}
+
+#[test]
+fn eval_single_state_success_fires_action() {
+    let id = 42;
+    let version = 1;
+    let data = Evidence::Numerical(0.23f64);
+    let causaloid = test_utils::get_test_causaloid(); // Returns Deterministic(true)
+
+    let cs = CausalState::new(id, version, data, causaloid);
+    let ca = get_test_action(); // Succeeds
+    let state_action = &[(&cs, &ca)];
+    let csm = CSM::new(state_action);
+
+    // Data that makes the state active
+    let eval_data = test_utils::get_test_single_data(0.23f64);
+    // Use the correct ID
+    let res = csm.eval_single_state(id, eval_data);
+    assert!(res.is_ok());
+}
+
+// Test for the case where the state is not active, so the action is not fired.
+#[test]
+fn eval_single_state_success_inactive_no_action() {
+    let id = 42;
+    let version = 1;
+    let data = Evidence::Numerical(0.88f64);
+    let causaloid = test_utils::get_test_causaloid(); // Returns Deterministic(false) for data > 0.5
+
+    let cs = CausalState::new(id, version, data, causaloid);
+    // Use an action that would fail to prove it's not being called.
+    let ca = get_test_error_action();
+    let state_action = &[(&cs, &ca)];
+    let csm = CSM::new(state_action);
+
+    // Data that makes the state inactive
+    let eval_data = test_utils::get_test_single_data(0.88f64);
+    // Use the correct ID
+    let res = csm.eval_single_state(id, eval_data);
+    assert!(res.is_err());
+}
+
+// Test for the case where the state does not exist.
+#[test]
+fn eval_single_state_error_not_found() {
+    let id = 42;
+    let version = 1;
+    let data = Evidence::Numerical(0.23f64);
+    let causaloid = test_utils::get_test_causaloid();
+
+    let cs = CausalState::new(id, version, data, causaloid);
+    let ca = get_test_action();
+    let state_action = &[(&cs, &ca)];
+    let csm = CSM::new(state_action);
+
+    let eval_data = test_utils::get_test_single_data(0.23f64);
+    // Use a non-existent ID
+    let res = csm.eval_single_state(99, eval_data);
+    assert!(res.is_err());
+    assert!(res.unwrap_err().0.contains("State 99 does not exist"));
 }
