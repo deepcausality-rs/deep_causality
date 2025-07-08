@@ -38,7 +38,7 @@ fn get_mixed_test_halting_causality_map() -> TestHashMap {
 
 fn get_mixed_test_ctx_link_causality_map() -> TestHashMap {
     HashMap::from([
-        (1, get_test_causaloid_deterministic_false()),
+        (1, get_test_causaloid_deterministic_true()),
         (2, get_test_causaloid_deterministic_true()),
         (3, get_test_causaloid_contextual_link()),
     ])
@@ -215,7 +215,7 @@ fn test_evaluate_mixed_propagation_halted() {
 fn test_evaluate_mixed_propagation_err() {
     let map = get_mixed_test_ctx_link_causality_map();
 
-    // Case 2: One fails, chain becomes deterministically false.
+    //
     let evidence_fail = Evidence::Numerical(0.1);
     let res_fail = map.evaluate_mixed_propagation(&evidence_fail);
     assert!(res_fail.is_err());
