@@ -14,7 +14,9 @@ fn unpack_evidence(evidence: &Evidence) -> Result<NumericalValue, CausalityError
     if let Evidence::Numerical(val) = evidence {
         Ok(*val)
     } else {
-        Err(CausalityError("Expected Numerical evidence.".into()))
+        Err(CausalityError(format!(
+            "Expected Numerical evidence, got: {evidence:?}"
+        )))
     }
 }
 

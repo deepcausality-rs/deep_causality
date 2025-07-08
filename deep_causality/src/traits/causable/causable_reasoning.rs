@@ -66,7 +66,7 @@ where
                 _ => {
                     // Any other effect type is a contract violation for this function.
                     return Err(CausalityError(format!(
-                        "evaluate_deterministic_chain encountered a non-deterministic effect: {effect:?}. Only Deterministic effects are allowed."
+                        "evaluate_deterministic_propagation encountered a non-deterministic effect: {effect:?}. Only Deterministic effects are allowed."
                     )));
                 }
             }
