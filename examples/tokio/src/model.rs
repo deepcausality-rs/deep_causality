@@ -5,7 +5,8 @@
 use deep_causality::errors::CausalityError;
 use deep_causality::{
     BaseCausaloid, BaseContext, BaseModel, Causaloid, Context, Contextoid, ContextoidType,
-    ContextuableGraph, IdentificationValue, Model, NumericalValue, Root,
+    ContextuableGraph, Evidence, IdentificationValue, Model, NumericalValue, PropagatingEffect,
+    Root,
 };
 use std::sync::Arc;
 
@@ -23,17 +24,24 @@ pub fn build_causal_model() -> BaseModel {
 pub fn get_test_causaloid() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.75";
-    fn causal_fn(obs: &NumericalValue) -> Result<bool, CausalityError> {
+
+    // This function must now match the standard `CausalFn` signature.
+    fn causal_fn(evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+        // Safely extract the numerical value from the generic Evidence enum.
+        let obs = match evidence {
+            Evidence::Numerical(val) => *val,
+            _ => return Err(CausalityError("Expected Numerical evidence.".into())),
+        };
+
         if obs.is_sign_negative() {
             return Err(CausalityError("Observation is negative".into()));
         }
 
         let threshold: NumericalValue = 0.75;
-        if !obs.ge(&threshold) {
-            Ok(false)
-        } else {
-            Ok(true)
-        }
+        let is_active = obs.ge(&threshold);
+
+        // Return the boolean result wrapped in the standard PropagatingEffect enum.
+        Ok(PropagatingEffect::Deterministic(is_active))
     }
 
     Causaloid::new(id, causal_fn, description)
