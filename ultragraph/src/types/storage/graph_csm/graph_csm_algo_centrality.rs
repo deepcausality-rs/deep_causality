@@ -10,6 +10,7 @@ where
     N: Clone,
     W: Clone + Default,
 {
+    /// Calculates the betweenness centrality of each node in the graph.
     fn betweenness_centrality(
         &self,
         directed: bool,
@@ -21,6 +22,11 @@ where
         }
 
         let mut centrality = vec![0.0; num_nodes];
+
+        // Betweenness centrality is 0 for graphs with less than 3 nodes.
+        if num_nodes < 3 {
+            return Ok(centrality.into_iter().enumerate().collect());
+        }
 
         for s in 0..num_nodes {
             let (_, sigma, pred, mut stack) = self._brandes_bfs_and_path_counting(s, directed)?;
@@ -46,6 +52,13 @@ where
             }
         }
 
+        // It aligns the code with the standard formal definition.
+        if !directed {
+            for score in centrality.iter_mut() {
+                *score /= 2.0;
+            }
+        }
+
         // Normalization
         if normalized {
             let scale = if directed {
@@ -64,6 +77,7 @@ where
         Ok(centrality.into_iter().enumerate().collect())
     }
 
+    /// Calculates betweenness centrality across a specific set of critical pathways.
     fn pathway_betweenness_centrality(
         &self,
         pathways: &[(usize, usize)],
@@ -72,51 +86,67 @@ where
     ) -> Result<Vec<(usize, f64)>, GraphError> {
         let num_nodes = self.number_nodes();
         if num_nodes == 0 {
-            return Ok(Vec::new());
+            return Ok(vec![]);
         }
 
         let mut centrality = vec![0.0; num_nodes];
+        let mut valid_pathways = 0;
 
+        // Unlike the global version, we cannot easily group by source,
+        // as the dependency calculation is specific to each target `t`.
         for &(s, t) in pathways {
             if !self.contains_node(s) || !self.contains_node(t) {
-                // Skip invalid pathways
                 continue;
             }
 
+            if s == t {
+                valid_pathways += 1;
+                continue;
+            }
+
+            // We need a fresh BFS for each s->t pair to get the correct stack order
             let (dist, sigma, pred, mut stack) =
                 self._brandes_bfs_and_path_counting(s, directed)?;
 
-            // Accumulation for specific pathway (s, t)
-            if dist[t].is_some() {
-                // Only accumulate if t is reachable from s
-                let mut delta = vec![0.0; num_nodes];
-                delta[t] = 1.0;
+            // If t is not reachable from s, this pathway contributes nothing.
+            if dist[t].is_none() {
+                continue;
+            }
+            valid_pathways += 1;
 
-                while let Some(w) = stack.pop() {
-                    for &v in &pred[w] {
-                        let sigma_v = sigma[v];
-                        let sigma_w = sigma[w];
-                        if sigma_w == 0.0 {
-                            return Err(GraphError::AlgorithmError(
-                                "Division by zero in sigma calculation for pathway",
-                            ));
-                        }
-                        delta[v] += (sigma_v / sigma_w) * (1.0 + delta[w]);
+            let mut delta = vec![0.0; num_nodes];
+
+            // Process nodes in reverse order from the stack
+            while let Some(w) = stack.pop() {
+                // The contribution to dependency is only propagated from nodes on a shortest path to t.
+                // This can be simplified: if a node `w` is part of an s-t path, its `delta` will be non-zero
+                // if one of its successors on the shortest path has non-zero delta. We start this at `t`.
+                if w == t {
+                    // This is the starting point of our back-propagation for this s-t path
+                    delta[w] = 1.0;
+                }
+
+                for &v in &pred[w] {
+                    // The dependency of v is its share of the dependency of w.
+                    if sigma[w] > 0.0 {
+                        delta[v] += (sigma[v] / sigma[w]) * delta[w];
                     }
-                    if w != s {
-                        centrality[w] += delta[w];
-                    }
+                }
+            }
+
+            // Add the accumulated dependencies to the final centrality scores
+            // The endpoints s and t themselves do not get centrality credit from this path.
+            for i in 0..num_nodes {
+                if i != s && i != t {
+                    centrality[i] += delta[i];
                 }
             }
         }
 
-        // Normalization
-        if normalized {
-            let num_pathways = pathways.len() as f64;
-            if num_pathways > 0.0 {
-                for score in centrality.iter_mut() {
-                    *score /= num_pathways;
-                }
+        if normalized && valid_pathways > 0 {
+            let scale = valid_pathways as f64;
+            for score in &mut centrality {
+                *score /= scale;
             }
         }
 

@@ -23,12 +23,6 @@ pub trait PathfindingGraphAlgorithms<N, W>: GraphView<N, W> {
     ) -> Result<Option<Vec<usize>>, GraphError>;
 
     /// Finds the shortest path in a weighted graph using Dijkstra's algorithm.
-    ///
-    /// The edge weight type `W` must support addition, comparison, and have a zero value.
-    ///
-    /// # Returns
-    /// A tuple containing the sequence of node indices in the path and the total cost of that path.
-    /// Returns `None` if no path exists.
     fn shortest_weighted_path(
         &self,
         start_index: usize,

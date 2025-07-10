@@ -9,6 +9,8 @@ pub mod errors;
 
 mod traits;
 pub mod types;
+pub mod utils;
+
 // Errors
 pub use crate::errors::graph_error::GraphError;
 // Traits
