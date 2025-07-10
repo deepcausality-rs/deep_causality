@@ -92,3 +92,65 @@ fn test_error_traits() {
     let copied_error = error1;
     assert_eq!(error1, copied_error);
 }
+
+/// Tests the creation and content of the AlgorithmError variant.
+#[test]
+fn test_algorithm_error_creation() {
+    let err_msg = "Pathfinding failed: graph is disconnected";
+    let error = GraphError::AlgorithmError(err_msg);
+
+    // You can use a `match` or `if let` to inspect the enum variant and its data.
+    if let GraphError::AlgorithmError(msg) = error {
+        assert_eq!(
+            msg, err_msg,
+            "The error message should be stored correctly."
+        );
+    } else {
+        panic!("Expected GraphError::AlgorithmError, but got a different variant.");
+    }
+}
+
+/// Tests the `Display` trait implementation for user-friendly output.
+#[test]
+fn test_algorithm_error_display_formatting() {
+    let err_msg = "Dijkstra's algorithm requires non-negative weights";
+    let error = GraphError::AlgorithmError(err_msg);
+    let expected_display_msg = format!("AlgorithmError: {err_msg}");
+
+    assert_eq!(error.to_string(), expected_display_msg);
+}
+
+/// Tests the `Debug` trait implementation for developer-focused output.
+#[test]
+fn test_algorithm_error_debug_formatting() {
+    let err_msg = "A cycle was detected in a directed acyclic graph (DAG)";
+    let error = GraphError::AlgorithmError(err_msg);
+    // The `Debug` format is derived automatically and includes the variant name.
+    let expected_debug_msg = format!("AlgorithmError(\"{err_msg}\")");
+
+    assert_eq!(format!("{error:?}"), expected_debug_msg);
+}
+
+/// Demonstrates how to check for a specific error variant within a `Result`.
+#[test]
+fn test_algorithm_error_in_a_result() {
+    let err_msg = "Invalid start node for traversal";
+
+    // A sample function that returns our specific error.
+    fn find_path() -> Result<Vec<usize>, GraphError> {
+        Err(GraphError::AlgorithmError(
+            "Invalid start node for traversal",
+        ))
+    }
+
+    let result = find_path();
+    assert!(result.is_err());
+
+    // Match on the error to confirm its type and contents.
+    match result {
+        Err(GraphError::AlgorithmError(msg)) => {
+            assert_eq!(msg, err_msg);
+        }
+        _ => panic!("Expected an AlgorithmError variant."),
+    }
+}

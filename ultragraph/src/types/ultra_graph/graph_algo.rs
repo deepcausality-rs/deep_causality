@@ -139,4 +139,22 @@ where
             GraphState::Dynamic(_) => Err(GraphError::GraphNotFrozen),
         }
     }
+
+    /// Finds the strongly connected components (SCCs) of the graph.
+    ///
+    /// # Preconditions
+    /// This high-performance operation is only available when the graph is in a `Static` (frozen) state.
+    ///
+    /// # Returns
+    /// A `Result` containing a `Vec<Vec<usize>>`, where each inner `Vec<usize>` represents
+    /// a strongly connected component as a list of node indices.
+    ///
+    /// # Errors
+    /// Returns `GraphError::GraphNotFrozen` if the graph is in a `Dynamic` state.
+    fn strongly_connected_components(&self) -> Result<Vec<Vec<usize>>, GraphError> {
+        match &self.state {
+            GraphState::Static(g) => g.strongly_connected_components(),
+            GraphState::Dynamic(_) => Err(GraphError::GraphNotFrozen),
+        }
+    }
 }

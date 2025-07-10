@@ -73,6 +73,46 @@ This is the high-performance, read-only state.
 If you need to make further changes after a period of analysis, `g.unfreeze()` efficiently converts the `CsmGraph` back
 into a `DynamicGraph`, allowing the cycle of mutation and analysis to begin again.
 
+## ⚙️ Graph Algorithms
+
+The `UltraGraph` crate provides a suite of high-performance, read-only analytical algorithms for
+graph analysis. These algorithms are implemented on static, optimized graph structures for efficient
+computation.
+
+* **`find_cycle()`**: Finds a single cycle in the
+  graph and returns the path of nodes that form it.
+  Returns `None` if the graph is a Directed Acyclic Graph
+  (DAG).
+
+* **`has_cycle()`**: Checks if the graph contains any
+  directed cycles.
+
+* **`topological_sort()`**: Computes a topological
+  sort of the graph if it is a DAG. Returns `None` if the
+  graph contains a cycle.
+
+* **`is_reachable(start_index, stop_index)`**: Checks
+  if a path of any length exists from a start node to a
+  stop node.
+
+* **`shortest_path_len(start_index, stop_index)`**:
+  Returns the length (number of nodes) of the shortest
+  path from a start node to a stop node.
+
+* **`shortest_path(start_index, stop_index)`**: Finds
+  the complete shortest path (sequence of nodes) from a
+  start node to a stop node.
+
+* **`shortest_weighted_path(start_index, stop_
+ index)`**: Finds the shortest path in a weighted graph
+  using Dijkstra's algorithm, returning the path and its
+  total cost.
+
+* **`strongly_connected_components()`**: Finds all
+  Strongly Connected Components (SCCs) in the graph using
+  Tarjan's algorithm, returning a list of node sets, where
+  each set represents an SCC.
+
 ## 🚀 Benchmark Results
 
 ### Dynamic Graph

@@ -66,11 +66,10 @@ pub trait GraphAlgorithms<N, W>: GraphView<N, W> {
     where
         W: Copy + Ord + Default + std::ops::Add<Output = W>;
 
-    // Implement later.
-    // /// Finds all Strongly Connected Components in the graph using Tarjan's algorithm.
-    // ///
-    // /// # Returns
-    // /// A vector of vectors, where each inner vector is a list of node indices
-    // /// belonging to a single SCC.
-    // fn strongly_connected_components(&self) -> Result<Vec<Vec<usize>>, GraphError>;
+    /// Finds all Strongly Connected Components in the graph using Tarjan's algorithm.
+    ///
+    /// # Returns
+    /// A vector of vectors, where each inner vector is a list of node indices
+    /// belonging to a single SCC.
+    fn strongly_connected_components(&self) -> Result<Vec<Vec<usize>>, GraphError>;
 }

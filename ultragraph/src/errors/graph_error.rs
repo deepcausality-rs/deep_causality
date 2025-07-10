@@ -29,6 +29,9 @@ pub enum GraphError {
 
     /// Root node already exists
     RootNodeAlreadyExists,
+
+    /// Graph algorithm error
+    AlgorithmError(&'static str),
 }
 
 impl fmt::Display for GraphError {
@@ -66,6 +69,10 @@ impl fmt::Display for GraphError {
             }
             Self::RootNodeAlreadyExists => {
                 write!(f, "Root node already exists")
+            }
+
+            Self::AlgorithmError(e) => {
+                write!(f, "AlgorithmError: {e}")
             }
         }
     }
