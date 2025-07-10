@@ -249,7 +249,7 @@ fn test_strongly_connected_components() {
     g.add_edge(6, 7, ()).unwrap();
 
     // triggers GraphNotFrozen error.
-    let res  = g.strongly_connected_components();
+    let res = g.strongly_connected_components();
     assert!(res.is_err());
 
     // Freeze the graph to enable all algorithms.
