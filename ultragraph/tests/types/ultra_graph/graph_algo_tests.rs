@@ -177,6 +177,12 @@ fn test_shortest_weighted_path_on_static_graph() {
     g.add_edge(1, 3, 5).unwrap();
     g.add_edge(2, 3, 1).unwrap();
     g.add_edge(3, 4, 1).unwrap();
+
+    let result = g.shortest_weighted_path(0, 4);
+    // triggers GraphNotFrozen error.
+    assert!(result.is_err());
+
+    // Freeze the graph to enable all algos.
     g.freeze();
 
     // Path 0 -> 1 -> 2 -> 3 -> 4, weight 1 + 2 + 1 + 1 = 5
