@@ -8,7 +8,7 @@ use ultragraph::*;
 use crate::benchmarks::data::Data;
 
 pub fn build_linear_graph(k: usize) -> UltraGraph<Data> {
-    let mut g: UltraGraphContainer<Data, _> = UltraGraph::new();
+    let mut g: UltraGraphContainer<Data, _> = UltraGraph::with_capacity(k, None);
 
     let d = Data::default();
 

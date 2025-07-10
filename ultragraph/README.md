@@ -75,6 +75,36 @@ into a `DynamicGraph`, allowing the cycle of mutation and analysis to begin agai
 
 ## 🚀 Benchmark Results
 
+### Dynamic Graph
+
+| Benchmark Name    | Graph Size | Operation  | Estimated Time (Median) | Outliers Detected |
+|:------------------|:-----------|:-----------|:------------------------|:------------------|
+| `small_add_node`  | 10         | `add_node` | 29.099 ns               | 14% (14 / 100)    |
+| `medium_add_node` | 100        | `add_node` | 45.864 ns               | 12% (12 / 100)    |
+| `large_add_node`  | 1,000      | `add_node` | 39.293 ns               | 11% (11 / 100)    |
+| `small_get_node`  | 10         | `get_node` | 3.9417 ns               | 8% (8 / 100)      |
+| `medium_get_node` | 100        | `get_node` | 3.9849 ns               | 2% (2 / 100)      |
+| `large_get_node`  | 1,000      | `get_node` | 3.9916 ns               | 7% (7 / 100)      |
+
+* SMALL = 10;
+* MEDIUM = 100;
+* LARGE = 1000;
+
+Benchmark source code in [ultragraph/benches ](../ultragraph/benches/benchmarks)
+
+---
+
+* **`add_node` Performance:** Adding a node is consistently fast, with median times ranging from **29 to 46 nanoseconds
+  **. This confirms it as an efficient O(1) operation. The minor time variations are expected and are due to
+  system-level memory allocation behavior.
+* **`get_node` Performance:** Accessing a node is extremely fast and stable across all graph sizes, with a median time
+  of approximately **4 nanoseconds**. This demonstrates the O(1) efficiency of retrieving data from the underlying
+  `Vec`.
+* **Outliers:** The presence of outliers is normal for benchmarks running on a non-dedicated machine and indicates that
+  `Criterion` is correctly identifying and filtering system-level interruptions to provide a more accurate measurement.
+
+### Static CSM Graph
+
 | Operation       | Scale | Graph Configuration                          |  Mean Time  | Throughput (Est.)        |
 |:----------------|:------|:---------------------------------------------|:-----------:|:-------------------------|
 | **Edge Lookup** | Tiny  | `contains_edge` (Linear Scan, degree < 64)   | **~7.7 ns** | ~130 Million lookups/sec |
@@ -91,6 +121,8 @@ into a `DynamicGraph`, allowing the cycle of mutation and analysis to begin agai
 
 *(Note: Time units are nanoseconds (ns), microseconds (µs), and milliseconds (ms). Throughput is an approximate
 calculation based on the mean time.)*
+
+Benchmark source code in [deep_causality/benches ](../deep_causality/benches)
 
 ## Performance Design
 
