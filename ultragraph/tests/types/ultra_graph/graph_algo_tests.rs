@@ -162,3 +162,47 @@ fn test_shortest_path_on_static_graph() {
     assert_eq!(g.shortest_path(0, 3).unwrap(), Some(vec![0, 1, 2, 3]));
     assert_eq!(g.shortest_path(3, 0).unwrap(), None);
 }
+
+#[test]
+fn test_shortest_weighted_path_on_static_graph() {
+    let mut g = UltraGraphWeighted::new();
+    g.add_node(0).unwrap();
+    g.add_node(1).unwrap();
+    g.add_node(2).unwrap();
+    g.add_node(3).unwrap();
+    g.add_node(4).unwrap();
+    g.add_edge(0, 1, 1).unwrap();
+    g.add_edge(0, 2, 4).unwrap();
+    g.add_edge(1, 2, 2).unwrap();
+    g.add_edge(1, 3, 5).unwrap();
+    g.add_edge(2, 3, 1).unwrap();
+    g.add_edge(3, 4, 1).unwrap();
+    g.freeze();
+
+    // Path 0 -> 1 -> 2 -> 3 -> 4, weight 1 + 2 + 1 + 1 = 5
+    let result = g.shortest_weighted_path(0, 4).unwrap().unwrap();
+    assert_eq!(result.0, vec![0, 1, 2, 3, 4]);
+    assert_eq!(result.1, 5);
+
+    // Path 0 -> 1 -> 2 -> 3, weight 1 + 2 + 1 = 4
+    let result = g.shortest_weighted_path(0, 3).unwrap().unwrap();
+    assert_eq!(result.0, vec![0, 1, 2, 3]);
+    assert_eq!(result.1, 4);
+
+    // Path 1 -> 2 -> 3, weight 2 + 1 = 3
+    let result = g.shortest_weighted_path(1, 3).unwrap().unwrap();
+    assert_eq!(result.0, vec![1, 2, 3]);
+    assert_eq!(result.1, 3);
+
+    // No path from 4 to 0
+    assert!(g.shortest_weighted_path(4, 0).unwrap().is_none());
+
+    // Invalid nodes
+    assert!(g.shortest_weighted_path(0, 99).unwrap().is_none());
+    assert!(g.shortest_weighted_path(99, 0).unwrap().is_none());
+
+    // Start and stop are the same
+    let result = g.shortest_weighted_path(0, 0).unwrap().unwrap();
+    assert_eq!(result.0, vec![0]);
+    assert_eq!(result.1, 0);
+}

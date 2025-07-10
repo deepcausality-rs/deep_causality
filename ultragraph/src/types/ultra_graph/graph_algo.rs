@@ -111,4 +111,18 @@ where
             GraphState::Dynamic(_) => Err(GraphError::GraphNotFrozen),
         }
     }
+
+    fn shortest_weighted_path(
+        &self,
+        start_index: usize,
+        stop_index: usize,
+    ) -> Result<Option<(Vec<usize>, W)>, GraphError>
+    where
+        W: Copy + Ord + Default + std::ops::Add<Output = W>,
+    {
+        match &self.state {
+            GraphState::Static(g) => g.shortest_weighted_path(start_index, stop_index),
+            GraphState::Dynamic(_) => Err(GraphError::GraphNotFrozen),
+        }
+    }
 }
