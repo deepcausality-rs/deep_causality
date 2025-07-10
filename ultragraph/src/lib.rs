@@ -15,10 +15,6 @@ pub mod utils;
 pub use crate::errors::graph_error::GraphError;
 // Traits
 pub use crate::traits::graph_algo::*;
-pub use crate::traits::graph_algo_centrality::*;
-pub use crate::traits::graph_algo_pathfinder::*;
-pub use crate::traits::graph_algo_structural::*;
-pub use crate::traits::graph_algo_topological::*;
 pub use crate::traits::graph_freeze::Freezable;
 pub use crate::traits::graph_mut::GraphMut;
 pub use crate::traits::graph_traversal::GraphTraversal;

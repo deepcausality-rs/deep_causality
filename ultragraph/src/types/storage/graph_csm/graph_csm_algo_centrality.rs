@@ -37,13 +37,6 @@ where
                 for &v in &pred[w] {
                     let sigma_v = sigma[v];
                     let sigma_w = sigma[w];
-                    if sigma_w == 0.0 {
-                        // This should ideally not happen if paths are correctly counted,
-                        // but as a safeguard against division by zero.
-                        return Err(GraphError::AlgorithmError(
-                            "Division by zero in sigma calculation",
-                        ));
-                    }
                     delta[v] += (sigma_v / sigma_w) * (1.0 + delta[w]);
                 }
                 if w != s {
@@ -174,6 +167,7 @@ where
         let mut dist = vec![None; num_nodes];
         let mut sigma = vec![0.0; num_nodes]; // Number of shortest paths
         let mut pred: Vec<Vec<usize>> = vec![Vec::new(); num_nodes]; // Predecessors on shortest paths
+        let mut neighbors_to_process = Vec::new(); // Reused to avoid reallocations
 
         dist[s] = Some(0);
         sigma[s] = 1.0;
@@ -181,8 +175,7 @@ where
 
         while let Some(v) = queue.pop_front() {
             stack.push(v);
-
-            let mut neighbors_to_process = Vec::new();
+            neighbors_to_process.clear(); // Clear for current node
             if directed {
                 let start = self.forward_edges.offsets[v];
                 let end = self.forward_edges.offsets[v + 1];
