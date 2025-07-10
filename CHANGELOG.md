@@ -5,6 +5,180 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.7.5...deep_causality-v0.8.0) - 2025-07-08
+
+### Added
+
+- *(generative)* Implement full lifecycle management for contexts
+- *(generative)* implement full CRUD for context and contextoids
+- Implement and refine ModelBuildError tests
+
+### Fixed
+
+- fix(deep_causality) fixed benchmarks.
+- *(deep_causality)* Improve NedSpace tests
+- *(deep_causality)* Improve NedSpace tests
+- *(ecef)* Commit remaining EcefSpace test changes
+- *(euclidean)* Improve EuclideanSpace tests
+- *(ecef)* Improve EcefSpace tests
+- *(spacetime)* Correct TangentSpacetime position method and tests
+- *(tests)* Correct Lorentzian spacetime interval tests
+
+### Other
+
+- Updated test util
+- Updated test util
+- Updated test util
+- Linting
+- Tested test utils...
+- Linting
+- Fix and linting
+- Updated Bazel test config
+- Re-organized context tests
+- Re-organized test utils
+- Re-organized trait tests
+- Increased test coverage
+- Increased test coverage
+- Increased test coverage
+- Increased test coverage
+- Linting
+- Increased test coverage
+- Increased test coverage
+- Increased test coverage
+- Increased test coverage
+- Removed active state from Causaloid and downstream usage.
+- Lints
+- Increased test coverage
+- Increased test coverage
+- Fixed failing test
+- Increased test coverage
+- Increased test coverage
+- Fixed all remaining tests
+- Fixed up all causality graph tests
+- Fixed Causaloid tests
+- Added or updated tests for reasoning types. Applied minor fixes to debug and display in Evidence type.
+- Fixed tests for GenerativeProcessor
+- Updated all tests for the collection type extensions
+- Added or updated error tests
+- Fixed benchmarks to use new API
+- Updated CSM implementation to restore fully deterministic behavior for triggering actions.
+- Implemented first version of unified reasoning.
+- Removed prelude
+- Added specs for unified reasoning
+- Added specs for unified reasoning
+- Fixed line inconsistencies in Cargo.toml
+- Preparing for ultragraph release
+- Removed benchmark badge from Readme
+- Switched to central workspace dependencies.
+- Set the version number of dependent internal crates to match deep_causality for simpler version management.
+- Improve test coverage
+- Improved test coverage and improved context API.
+- Update the DeepCausality crate to use the refactored UltraGraph AP
+- Adding more tests for coverage
+- Adding more tests for coverage
+- Adding more tests for coverage
+- Working on tests
+- Working on tests
+- Working on tests
+- Working on tests
+- Removed assert comments
+- Working on test coverage
+- Added or updated documentation
+- Increased test coverage for GenerativeProcessor
+- Updated or added trait documentation.
+- Increased test coverage of ExtendableContextuableGraph
+- Improved test coverage of test utils
+- Increased test coverage across the repo
+- Deleted dead code
+- Improved test coverage and fixed some lints.
+- Re-organized model type tests
+- Added tests for new model error types.
+- Added tests for GenerativeOutput
+- Fixed a gazillion Broken Links Locations in Rust Docs.
+- Linting and formatting
+- Added tests to  reasoning types
+- Fixed module doc
+- Moved script folder into build folder
+- Updated README.md and Bazel.md docs
+- Fixed up the Bazel config.
+- Updated README.md
+- Marked Bazel files as excluded from Cargo release to ensure these crates vendor well when used with Bazel.
+- Added Bazel config for build and test
+- Added first draft of Generative Function Traits, its implementation, and addition to the model type.
+- Lints and formats..
+- Working on generative function.
+- Reworked ReasoningMode, Evidence and PropagatingEffect
+- Added tests to GenerativeTrigger
+- Merge remote-tracking branch 'origin/main'
+- Updated prelude.rs
+- Corrected brittle `test_display_trait` assertions in both
+- Added documentation to alias module
+- Fixed circular dependency issue in alias types.
+- Added tests for SymbolicKind type.
+- Added new Uniform alias types. Re-organized alias type package. Updated source files to import all aliases from prelude.
+- Added Tokio example for async / background inference processing
+- Code formatting.
+- Added documentation to PreviousTimeIndex trait methods.
+- Removed Redundant Braces in TimeIndexable impl for Context
+- Even more lints and formatting
+- Applied more lints & autofixed
+- Added time index to generic context. Resolves  https://github.com/deepcausality-rs/deep_causality/issues/239
+- Increased test coverage on adjustable implementations.
+- Added  RwLock poisoning handling in CSM type
+- Fixed remaining lints
+- Increased test coverage
+- Improved error message in Causable for Causaloid
+- Improved lock error handling specificity in CSM type
+- Removed redundant NaN validation in Adjustable for EuclideanTime
+- Fixed a few more lints
+- Fixed formatting and lints
+- Fixed failing tests for updated Display trait impl.
+- Fixed error message in Adjustable<f64> for QuaternionSpace
+- Replaced panic with proper error handling in Causable for Causaloid
+- Added Eq and PartialEq derives to Contextoid
+- Added Handling of lock poisoning gracefully in CSM type.
+- Fixed blanket trait implementations fo adjustable data and replaced it type bound impl.
+- Added more tests for more corner cases in non-Euclidean geometries
+- Fixed code formatting
+- Added tests for reasoning types
+- Added tests for ContextoidType
+- Added tests to increase coverage
+- Fixed invalid overflow check
+- Fix quaternion component assignment bug
+- Fixed another failing test
+- Fixed failing test
+- Fixed more lints and checks
+- Removed remaining lifetime annotations in tests and bench utils.
+- Updated copyright across the entire repo
+- Minor lints
+- merged regular and adjustable types. Made adjustable opt in via adjustable trait and type extension.
+- Added tests for adjustable space types
+- Added tests for time types
+- Added tests for symbolic spacetime
+- Added tests for spacetime types
+- Fixed up remaining tests
+- Code formatting.
+- Fixed up a lot of tests
+- Fixed up test utils and some tests
+- Fixed up benchmarks
+- Linting and formatting
+- Removed lifetime annotation from all types.
+- Added adjustable time types.
+- Fixed minor lints
+- Added multiple temporal types, just in case.
+- Fixed complex generic issue. Updated all downstream types.
+- Added initial support for non-Euclidean geometries in the context.
+- Merge remote-tracking branch 'origin/main'
+- Signed commit with gpg key.
+- Removed comma after link
+- Working on restoring link on Logo on README.md
+- Working on restoring Logo on README.md
+- Working on restoring Logo on README.md
+- Working on restoring Logo on README.md
+- Update README.md
+- Update README.md
+- Update README.md with new Discord link that never expires
+
 ## [0.7.5](https://github.com/marvin-hansen/deep_causality/compare/deep_causality-v0.7.4...deep_causality-v0.7.5) - 2025-06-19
 
 ### Added
