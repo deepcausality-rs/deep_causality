@@ -23,10 +23,9 @@ pub enum PropagatingEffect {
     Probabilistic(NumericalValue),
 
     /// A propagating effect that directs the flow of causality.
-    ///
-    /// This instructs the reasoning engine to continue the propagation to the
-    /// Causaloid located at the linked Contextoid. The linked Contextoid
-    /// itself becomes the `Evidence` for the next step in the process.
+    /// It instructs the next Causaloid to locate the propagation effect
+    /// at the linked Contextoid. The linked Contextoid
+    /// itself becomes the `Evidence` for the next step in the reasoning process.
     /// This is the primary mechanism for data flow in the graph.
     ContextualLink(ContextId, ContextoidId),
 
