@@ -9,10 +9,12 @@ pub mod errors;
 
 mod traits;
 pub mod types;
+pub mod utils;
+
 // Errors
 pub use crate::errors::graph_error::GraphError;
 // Traits
-pub use crate::traits::graph_algo::GraphAlgorithms;
+pub use crate::traits::graph_algo::*;
 pub use crate::traits::graph_freeze::Freezable;
 pub use crate::traits::graph_mut::GraphMut;
 pub use crate::traits::graph_traversal::GraphTraversal;

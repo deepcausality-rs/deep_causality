@@ -7,8 +7,14 @@
 mod constructors_tests;
 #[cfg(test)]
 mod default_tests;
+
+mod graph_algo_centrality_tests;
 #[cfg(test)]
-mod graph_algo_tests;
+mod graph_algo_pathfinder_tests;
+#[cfg(test)]
+mod graph_algo_structural_tests;
+#[cfg(test)]
+mod graph_csm_algo_topological_tests;
 #[cfg(test)]
 mod graph_evolve_tests;
 #[cfg(test)]

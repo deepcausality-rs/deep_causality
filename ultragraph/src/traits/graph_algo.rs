@@ -3,73 +3,20 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{GraphError, GraphView};
+pub use crate::traits::graph_algo_centrality::*;
+pub use crate::traits::graph_algo_pathfinder::*;
+pub use crate::traits::graph_algo_structural::*;
+pub use crate::traits::graph_algo_topological::*;
 
-/// Defines a suite of high-performance, read-only analytical algorithms.
+/// A comprehensive suite of graph algorithms.
 ///
-/// This trait is intended for implementation on static, optimized graph structures
-/// like `next_graph::CsmGraph` to validate their structure and properties.
-pub trait GraphAlgorithms<N, W>: GraphView<N, W> {
-    // --- Structural Validation Algorithms ---
-
-    /// Finds a single cycle in the graph and returns the path of nodes that form it.
-    ///
-    /// This is the most powerful cycle detection method, as it not only confirms the
-    /// presence of a cycle but also identifies the specific nodes involved. This is
-    /// invaluable for debugging dynamically generated graphs.
-    ///
-    /// # Returns
-    /// `Some(Vec<usize>)` containing the sequence of node indices that form a cycle
-    /// (e.g., `[0, 1, 0]`). Returns `None` if the graph is a DAG.
-    fn find_cycle(&self) -> Result<Option<Vec<usize>>, GraphError>;
-
-    /// Checks if the graph contains any directed cycles.
-    ///
-    /// This method should be implemented as a simple call to `self.find_cycle().is_some()`.
-    fn has_cycle(&self) -> Result<bool, GraphError>;
-
-    /// Computes a topological sort of the graph, if it is a Directed Acyclic Graph (DAG).
-    /// Returns `None` if the graph contains a cycle.
-    fn topological_sort(&self) -> Result<Option<Vec<usize>>, GraphError>;
-
-    // --- Pathfinding and Reachability Algorithms ---
-
-    /// Checks if a path of any length exists from a start to a stop index.
-    fn is_reachable(&self, start_index: usize, stop_index: usize) -> Result<bool, GraphError>;
-
-    /// Returns the length of the shortest path (in number of nodes) from a start to a stop index.
-    fn shortest_path_len(
-        &self,
-        start_index: usize,
-        stop_index: usize,
-    ) -> Result<Option<usize>, GraphError>;
-
-    /// Finds the complete shortest path from a start to a stop index.
-    fn shortest_path(
-        &self,
-        start_index: usize,
-        stop_index: usize,
-    ) -> Result<Option<Vec<usize>>, GraphError>;
-
-    /// Finds the shortest path in a weighted graph using Dijkstra's algorithm.
-    ///
-    /// The edge weight type `W` must support addition, comparison, and have a zero value.
-    ///
-    /// # Returns
-    /// A tuple containing the sequence of node indices in the path and the total cost of that path.
-    /// Returns `None` if no path exists.
-    fn shortest_weighted_path(
-        &self,
-        start_index: usize,
-        stop_index: usize,
-    ) -> Result<Option<(Vec<usize>, W)>, GraphError>
-    where
-        W: Copy + Ord + Default + std::ops::Add<Output = W>;
-
-    /// Finds all Strongly Connected Components in the graph using Tarjan's algorithm.
-    ///
-    /// # Returns
-    /// A vector of vectors, where each inner vector is a list of node indices
-    /// belonging to a single SCC.
-    fn strongly_connected_components(&self) -> Result<Vec<Vec<usize>>, GraphError>;
+/// This trait aggregates several focused algorithm traits into a single, convenient
+/// supertrait. A type that implements `GraphAlgorithms` has access to all methods
+/// from the component traits.
+pub trait GraphAlgorithms<N, W>:
+    TopologicalGraphAlgorithms<N, W>
+    + PathfindingGraphAlgorithms<N, W>
+    + StructuralGraphAlgorithms<N, W>
+    + CentralityGraphAlgorithms<N, W>
+{
 }

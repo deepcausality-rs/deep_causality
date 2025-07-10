@@ -67,6 +67,8 @@ where
         }
     }
 
+    /// The order of the nodes in the returned vector is not guaranteed.
+    /// This operation is O(V) as it iterates through all possible node slots
     fn get_all_nodes(&self) -> Vec<&N> {
         match &self.state {
             GraphState::Dynamic(g) => g.get_all_nodes(),
@@ -75,6 +77,8 @@ where
     }
 
     /// Returns a list of outgoing edges from a source node, including target index and weight.
+    /// Returns `None` if the source node does not exist.
+    /// The returned vector contains tuples of `(target_node_index, edge_weight_reference)`.
     fn get_edges(&self, source: usize) -> Option<Vec<(usize, &W)>> {
         match &self.state {
             GraphState::Dynamic(g) => g.get_edges(source),

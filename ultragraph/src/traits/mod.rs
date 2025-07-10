@@ -9,5 +9,9 @@ pub mod graph_mut;
 pub mod graph_traversal;
 pub mod graph_view;
 
+pub mod graph_algo_centrality;
+pub mod graph_algo_pathfinder;
+pub mod graph_algo_structural;
+pub mod graph_algo_topological;
 pub mod graph_freeze;
 pub mod graph_unfreeze;
