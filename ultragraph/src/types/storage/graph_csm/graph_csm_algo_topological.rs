@@ -134,7 +134,7 @@ where
     fn topological_sort(&self) -> Result<Option<Vec<usize>>, GraphError> {
         let num_nodes = self.number_nodes();
         if num_nodes == 0 {
-            return Ok(Some(Vec::new()));
+            return Ok(None);
         }
 
         // 1. Compute in-degrees for all nodes.

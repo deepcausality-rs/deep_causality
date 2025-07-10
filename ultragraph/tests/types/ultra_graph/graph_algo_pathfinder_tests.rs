@@ -47,6 +47,15 @@ fn test_shortest_path_len_on_static_graph() {
 }
 
 #[test]
+fn test_shortest_path_len_is_one() {
+    let g = utils_tests::get_acyclic_graph();
+    let res = g.shortest_path_len(0, 0);
+    assert!(res.is_ok());
+    let res = res.unwrap();
+    assert_eq!(res, Some(1));
+}
+
+#[test]
 fn test_shortest_path_on_dynamic_graph() {
     let mut g = UltraGraph::new();
     g.add_node(0).unwrap();
@@ -55,6 +64,18 @@ fn test_shortest_path_on_dynamic_graph() {
         g.shortest_path(0, 1),
         Err(GraphError::GraphNotFrozen)
     ));
+}
+
+#[test]
+fn test_shortest_path_is_one() {
+    let mut g = UltraGraph::new();
+    g.add_node(0).unwrap();
+    g.freeze();
+
+    let res = g.shortest_path(0, 0);
+    assert!(res.is_ok());
+    let res = res.unwrap();
+    assert_eq!(res, Some(vec![0]));
 }
 
 #[test]

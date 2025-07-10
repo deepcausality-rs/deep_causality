@@ -3,13 +3,22 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use ultragraph::utils::utils_tests;
-use ultragraph::{GraphError, GraphMut, GraphView, TopologicalGraphAlgorithms, UltraGraph};
+use ultragraph::{
+    GraphError, GraphMut, GraphView, TopologicalGraphAlgorithms, UltraGraph, UltraGraphContainer,
+};
 
 #[test]
 fn test_find_cycle_on_dynamic_graph() {
     let mut g = UltraGraph::new();
     g.add_node(0).unwrap();
     assert!(matches!(g.find_cycle(), Err(GraphError::GraphNotFrozen)));
+}
+
+#[test]
+fn test_find_cycle_on_empty_graph() {
+    let mut g: UltraGraphContainer<u64, ()> = UltraGraph::new();
+    g.freeze();
+    assert!(matches!(g.find_cycle(), Ok(None)));
 }
 
 #[test]
@@ -70,4 +79,11 @@ fn test_topological_sort_on_acyclic_graph() {
     let g = utils_tests::get_acyclic_graph();
     let sorted = g.topological_sort().unwrap().unwrap();
     assert_eq!(sorted, vec![0, 1, 2, 3]);
+}
+
+#[test]
+fn test_topological_sort_on_empty_graph() {
+    let mut g: UltraGraphContainer<u64, ()> = UltraGraph::new();
+    g.freeze();
+    assert!(matches!(g.topological_sort(), Ok(None)));
 }

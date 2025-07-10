@@ -99,6 +99,38 @@ fn test_betweenness_centrality_normalized() {
 }
 
 #[test]
+fn test_betweenness_centrality_directed_normalized() {
+    let mut g = UltraGraphWeighted::<i32, i32>::new();
+    g.add_node(0).unwrap();
+    g.add_node(1).unwrap();
+    g.add_node(2).unwrap();
+    g.add_node(3).unwrap();
+
+    // 0 -> 1 -> 2
+    // 0 -> 3 -> 2
+    g.add_edge(0, 1, 1).unwrap();
+    g.add_edge(1, 2, 1).unwrap();
+    g.add_edge(0, 3, 1).unwrap();
+    g.add_edge(3, 2, 1).unwrap();
+    g.freeze();
+
+    // N = 4
+    // Directed normalization factor: (N-1)(N-2) = (3)(2) = 6
+    // Unnormalized BC(1) = 0.5, BC(3) = 0.5
+    // Normalized BC(1) = 0.5 / 6.0 = 0.0833...
+    // Normalized BC(3) = 0.5 / 6.0 = 0.0833...
+    let result = g.betweenness_centrality(true, true).unwrap();
+    let expected = [(0, 0.0), (1, 0.5 / 6.0), (2, 0.0), (3, 0.5 / 6.0)];
+    result.iter().for_each(|(node, score)| {
+        let expected_score = expected.iter().find(|(n, _)| n == node).unwrap().1;
+        assert!(
+            (score - expected_score).abs() < 1e-9,
+            "Node {node}: Expected {expected_score}, Got {score}"
+        );
+    });
+}
+
+#[test]
 fn test_pathway_betweenness_centrality_undirected() {
     let mut g = UltraGraphWeighted::<i32, i32>::new();
     g.add_node(0).unwrap();
