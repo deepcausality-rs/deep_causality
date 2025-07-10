@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.1](https://github.com/marvin-hansen/deep_causality/compare/ultragraph-v0.8.0...ultragraph-v0.8.1) - 2025-07-10
+
+### Other
+
+- Improved perf of deduplication in brandes_bfs_and_path_counting
+- Improved test coverage
+- Fixed breaking API by restring previous public re-export.
+- Added test coverage for betweenness_centrality algo.
+- Implemented Brandes' algorithm
+- Refactored ultragraph's trait system and algo implementations for better maintainability.
+- Updated README.md
+- Formatting and linting.
+- Improved test coverage.
+- Added Tarjan's algorithm to UltraGraph.
+- Improved test coverage for Dijkstra's algorithm. Improved docstring.
+- Removed problematic check in Dijkstra's algorithm
+- Added Dijkstra's algorithm to UltraGraph.
+- Fixed a memory leak in the ultragraph benchmark.
+
 ## [0.5.6](https://github.com/marvin-hansen/deep_causality/compare/ultragraph-v0.5.5...ultragraph-v0.5.6) - 2025-06-19
 
 ### Other
