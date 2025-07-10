@@ -3,59 +3,54 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{GraphAlgorithms, GraphError, GraphState, UltraGraphContainer};
+use crate::{
+    CentralityGraphAlgorithms, GraphAlgorithms, GraphError, GraphState, PathfindingGraphAlgorithms,
+    StructuralGraphAlgorithms, TopologicalGraphAlgorithms, UltraGraphContainer,
+};
 
 impl<N, W> GraphAlgorithms<N, W> for UltraGraphContainer<N, W>
 where
     N: Clone,
     W: Clone + Default,
 {
-    /// Finds a cycle in the graph.
-    ///
-    /// # Preconditions
-    /// This high-performance operation is only available when the graph is in a `Static` (frozen) state.
-    ///
-    /// # Errors
-    ///
-    /// Returns `GraphError::GraphNotFrozen` if the graph is in a `Dynamic` state.
-    fn find_cycle(&self) -> Result<Option<Vec<usize>>, GraphError> {
+}
+
+impl<N, W> CentralityGraphAlgorithms<N, W> for UltraGraphContainer<N, W>
+where
+    N: Clone,
+    W: Clone + Default,
+{
+    fn betweenness_centrality(
+        &self,
+        directed: bool,
+        normalized: bool,
+    ) -> Result<Vec<(usize, f64)>, GraphError> {
         match &self.state {
-            GraphState::Static(g) => g.find_cycle(),
+            GraphState::Static(g) => g.betweenness_centrality(directed, normalized),
             GraphState::Dynamic(_) => Err(GraphError::GraphNotFrozen),
         }
     }
 
-    /// Checks if the graph contains a cycle.
-    ///
-    /// # Preconditions
-    /// This high-performance operation is only available when the graph is in a `Static` (frozen) state.
-    ///
-    /// # Errors
-    ///
-    /// Returns `GraphError::GraphNotFrozen` if the graph is in a `Dynamic` state.
-    fn has_cycle(&self) -> Result<bool, GraphError> {
+    fn pathway_betweenness_centrality(
+        &self,
+        pathways: &[(usize, usize)],
+        directed: bool,
+        normalized: bool,
+    ) -> Result<Vec<(usize, f64)>, GraphError> {
         match &self.state {
-            GraphState::Static(g) => g.has_cycle(),
+            GraphState::Static(g) => {
+                g.pathway_betweenness_centrality(pathways, directed, normalized)
+            }
             GraphState::Dynamic(_) => Err(GraphError::GraphNotFrozen),
         }
     }
+}
 
-    /// Performs a topological sort of the graph's nodes.
-    ///
-    /// # Preconditions
-    /// This high-performance operation is only available when the graph is in a `Static` (frozen) state.
-    ///
-    /// # Errors
-    ///
-    /// - Returns `GraphError::GraphNotFrozen` if the graph is in a `Dynamic` state.
-    /// - Returns an error from the underlying implementation if the graph contains a cycle.
-    fn topological_sort(&self) -> Result<Option<Vec<usize>>, GraphError> {
-        match &self.state {
-            GraphState::Static(g) => g.topological_sort(),
-            GraphState::Dynamic(_) => Err(GraphError::GraphNotFrozen),
-        }
-    }
-
+impl<N, W> PathfindingGraphAlgorithms<N, W> for UltraGraphContainer<N, W>
+where
+    N: Clone,
+    W: Clone + Default,
+{
     /// Checks if a node `stop_index` is reachable from `start_index`.
     ///
     /// # Preconditions
@@ -139,7 +134,13 @@ where
             GraphState::Dynamic(_) => Err(GraphError::GraphNotFrozen),
         }
     }
+}
 
+impl<N, W> StructuralGraphAlgorithms<N, W> for UltraGraphContainer<N, W>
+where
+    N: Clone,
+    W: Clone + Default,
+{
     /// Finds the strongly connected components (SCCs) of the graph.
     ///
     /// # Preconditions
@@ -154,6 +155,58 @@ where
     fn strongly_connected_components(&self) -> Result<Vec<Vec<usize>>, GraphError> {
         match &self.state {
             GraphState::Static(g) => g.strongly_connected_components(),
+            GraphState::Dynamic(_) => Err(GraphError::GraphNotFrozen),
+        }
+    }
+}
+
+impl<N, W> TopologicalGraphAlgorithms<N, W> for UltraGraphContainer<N, W>
+where
+    N: Clone,
+    W: Clone + Default,
+{
+    /// Finds a cycle in the graph.
+    ///
+    /// # Preconditions
+    /// This high-performance operation is only available when the graph is in a `Static` (frozen) state.
+    ///
+    /// # Errors
+    ///
+    /// Returns `GraphError::GraphNotFrozen` if the graph is in a `Dynamic` state.
+    fn find_cycle(&self) -> Result<Option<Vec<usize>>, GraphError> {
+        match &self.state {
+            GraphState::Static(g) => g.find_cycle(),
+            GraphState::Dynamic(_) => Err(GraphError::GraphNotFrozen),
+        }
+    }
+
+    /// Checks if the graph contains a cycle.
+    ///
+    /// # Preconditions
+    /// This high-performance operation is only available when the graph is in a `Static` (frozen) state.
+    ///
+    /// # Errors
+    ///
+    /// Returns `GraphError::GraphNotFrozen` if the graph is in a `Dynamic` state.
+    fn has_cycle(&self) -> Result<bool, GraphError> {
+        match &self.state {
+            GraphState::Static(g) => g.has_cycle(),
+            GraphState::Dynamic(_) => Err(GraphError::GraphNotFrozen),
+        }
+    }
+
+    /// Performs a topological sort of the graph's nodes.
+    ///
+    /// # Preconditions
+    /// This high-performance operation is only available when the graph is in a `Static` (frozen) state.
+    ///
+    /// # Errors
+    ///
+    /// - Returns `GraphError::GraphNotFrozen` if the graph is in a `Dynamic` state.
+    /// - Returns an error from the underlying implementation if the graph contains a cycle.
+    fn topological_sort(&self) -> Result<Option<Vec<usize>>, GraphError> {
+        match &self.state {
+            GraphState::Static(g) => g.topological_sort(),
             GraphState::Dynamic(_) => Err(GraphError::GraphNotFrozen),
         }
     }

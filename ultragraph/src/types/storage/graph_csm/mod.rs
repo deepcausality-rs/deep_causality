@@ -1,5 +1,9 @@
 mod default;
 mod graph_csm_algo;
+mod graph_csm_algo_centrality;
+mod graph_csm_algo_pathfinder;
+mod graph_csm_algo_structural;
+mod graph_csm_algo_topological;
 mod graph_csm_unfreeze;
 mod graph_csm_view;
 mod graph_traversal;
