@@ -111,4 +111,32 @@ where
             GraphState::Dynamic(_) => Err(GraphError::GraphNotFrozen),
         }
     }
+
+    /// Finds the shortest path (as a sequence of node indices) between two nodes, considering edge weights.
+    ///
+    /// # Preconditions
+    /// This high-performance operation is only available when the graph is in a `Static` (frozen) state.
+    ///
+    /// # Type Parameters
+    /// - `W`: The weight type, which must implement `Copy`, `Ord`, `Default`, and `std::ops::Add`.
+    ///
+    /// # Errors
+    ///
+    /// - Returns `GraphError::GraphNotFrozen` if the graph is in a `Dynamic` state.
+    /// - Returns an error if either node index is invalid.
+    /// - Returns an error if the graph contains negative cycles (for algorithms like Dijkstra's).
+    ///
+    fn shortest_weighted_path(
+        &self,
+        start_index: usize,
+        stop_index: usize,
+    ) -> Result<Option<(Vec<usize>, W)>, GraphError>
+    where
+        W: Copy + Ord + Default + std::ops::Add<Output = W>,
+    {
+        match &self.state {
+            GraphState::Static(g) => g.shortest_weighted_path(start_index, stop_index),
+            GraphState::Dynamic(_) => Err(GraphError::GraphNotFrozen),
+        }
+    }
 }

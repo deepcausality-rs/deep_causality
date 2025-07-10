@@ -270,4 +270,73 @@ where
         path.reverse();
         Ok(Some(path))
     }
+
+    /// Finds the shortest path between two nodes in a weighted graph using Dijkstra's algorithm.
+    fn shortest_weighted_path(
+        &self,
+        start_index: usize,
+        stop_index: usize,
+    ) -> Result<Option<(Vec<usize>, W)>, GraphError>
+    where
+        W: Copy + Ord + Default + std::ops::Add<Output = W>,
+    {
+        use std::cmp::Reverse;
+        use std::collections::BinaryHeap;
+
+        if !self.contains_node(start_index) || !self.contains_node(stop_index) {
+            return Ok(None);
+        }
+
+        if start_index == stop_index {
+            return Ok(Some((vec![start_index], W::default())));
+        }
+
+        let num_nodes = self.number_nodes();
+        let mut distances: Vec<Option<W>> = vec![None; num_nodes];
+        let mut predecessors: Vec<Option<usize>> = vec![None; num_nodes];
+        let mut pq: BinaryHeap<(Reverse<W>, usize)> = BinaryHeap::new();
+
+        distances[start_index] = Some(W::default());
+        pq.push((Reverse(W::default()), start_index));
+
+        while let Some((Reverse(dist), u)) = pq.pop() {
+            if u == stop_index {
+                let mut path = Vec::new();
+                let mut current = Some(stop_index);
+                while let Some(node) = current {
+                    path.push(node);
+                    if node == start_index {
+                        break;
+                    }
+                    current = predecessors[node];
+                }
+                path.reverse();
+
+                return Ok(Some((path, dist)));
+            }
+
+            if let Some(known_dist) = distances[u] {
+                if dist > known_dist {
+                    continue;
+                }
+            }
+
+            let start_offset = self.forward_edges.offsets[u];
+            let end_offset = self.forward_edges.offsets[u + 1];
+
+            for i in start_offset..end_offset {
+                let v = self.forward_edges.targets[i];
+                let weight = self.forward_edges.weights[i];
+                let new_dist = dist + weight;
+
+                if distances[v].map_or(true, |d| new_dist < d) {
+                    distances[v] = Some(new_dist);
+                    predecessors[v] = Some(u);
+                    pq.push((Reverse(new_dist), v));
+                }
+            }
+        }
+
+        Ok(None)
+    }
 }
