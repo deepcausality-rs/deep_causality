@@ -3,6 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{CentralityGraphAlgorithms, CsmGraph, GraphError, GraphView};
+use std::collections::HashSet;
 use std::collections::VecDeque;
 
 impl<N, W> CentralityGraphAlgorithms<N, W> for CsmGraph<N, W>
@@ -182,8 +183,8 @@ where
                 for &neighbor in &self.forward_edges.targets[start..end] {
                     neighbors_to_process.push(neighbor);
                 }
+            // For undirected, consider both forward and backward neighbors
             } else {
-                // For undirected, consider both forward and backward neighbors
                 let start_fwd = self.forward_edges.offsets[v];
                 let end_fwd = self.forward_edges.offsets[v + 1];
                 for &neighbor in &self.forward_edges.targets[start_fwd..end_fwd] {
@@ -194,8 +195,9 @@ where
                 for &neighbor in &self.backward_edges.targets[start_bwd..end_bwd] {
                     neighbors_to_process.push(neighbor);
                 }
-                neighbors_to_process.sort_unstable();
-                neighbors_to_process.dedup(); // Remove duplicates if any
+                // Use HashSet for efficient deduplication
+                let unique_neighbors: HashSet<usize> = neighbors_to_process.drain(..).collect();
+                neighbors_to_process.extend(unique_neighbors.into_iter());
             }
 
             for &w in &neighbors_to_process {
