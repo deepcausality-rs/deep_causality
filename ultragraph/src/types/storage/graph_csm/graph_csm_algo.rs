@@ -312,11 +312,7 @@ where
                 }
                 path.reverse();
 
-                return if path.first() == Some(&start_index) {
-                    Ok(Some((path, dist)))
-                } else {
-                    Ok(None)
-                };
+                return Ok(Some((path, dist)));
             }
 
             if let Some(known_dist) = distances[u] {
@@ -333,7 +329,7 @@ where
                 let weight = self.forward_edges.weights[i];
                 let new_dist = dist + weight;
 
-                if distances[v].is_none() || new_dist < distances[v].unwrap() {
+                if distances[v].map_or(true, |d| new_dist < d) {
                     distances[v] = Some(new_dist);
                     predecessors[v] = Some(u);
                     pq.push((Reverse(new_dist), v));
