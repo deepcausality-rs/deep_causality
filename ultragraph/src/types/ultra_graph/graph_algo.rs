@@ -26,7 +26,17 @@ where
     /// appears on the shortest paths between all other pairs of nodes. It is a powerful
     /// metric for identifying bottlenecks, bridges, and critical control points in a network.
     ///
+    /// ## Time and Space Complexity
+    ///
     /// The implementation uses Brandes' algorithm, which is highly efficient.
+    ///
+    /// * Time Complexity (Unweighted): The cost is dominated by running a BFS from every vertex.
+    ///   - O(V * (V + E)), which simplifies to O(V*E) for sparse graphs.
+    /// * Time Complexity (Weighted): The cost is dominated by running Dijkstra from every vertex.
+    ///   - O(V * (E + V log V)), which simplifies to O(V*E + V² log V).
+    /// * Space Complexity: You only need to store the state for one source node s at a time.
+    ///   - O(V + E).
+    ///
     ///
     /// # Arguments
     ///
@@ -58,6 +68,17 @@ where
     /// investigation or identifying bottlenecks in specific set of graph pathways. Instead of
     /// analyzing all possible paths, it only considers the shortest paths between the
     /// start and end nodes of the pathways you provide.
+    ///
+    /// ## Time and Space Complexity
+    ///
+    /// The implementation uses Brandes' algorithm, which is highly efficient.
+    ///
+    /// * Time Complexity (Unweighted): The cost is dominated by running a BFS from every vertex.
+    ///   - O(V * (V + E)), which simplifies to O(V*E) for sparse graphs.
+    /// * Time Complexity (Weighted): The cost is dominated by running Dijkstra from every vertex.
+    ///   - O(V * (E + V log V)), which simplifies to O(V*E + V² log V).
+    /// * Space Complexity: You only need to store the state for one source node s at a time.
+    ///   - O(V + E).
     ///
     /// The algorithm correctly routes these paths through the entire graph, ensuring that
     /// the results are accurate even if the shortest path temporarily leaves a conceptual
