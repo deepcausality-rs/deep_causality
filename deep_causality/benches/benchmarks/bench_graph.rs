@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
+use std::hint::black_box;
 use criterion::{Criterion, criterion_group};
 
 use deep_causality::*;
@@ -44,7 +44,9 @@ fn small_linear_graph_benchmark(criterion: &mut Criterion) {
             // Perform the graph lookup
             let cause_to_eval = g.get_causaloid(single_cause_index).unwrap();
             // Then perform the evaluation
-            cause_to_eval.evaluate(&evidence).unwrap()
+            // Also black_box the result to ensure this code is never considered "dead" or unused.
+            black_box(cause_to_eval.evaluate(&evidence).unwrap());
+
         })
     });
 }
@@ -80,7 +82,8 @@ fn medium_linear_graph_benchmark(criterion: &mut Criterion) {
             // Perform the graph lookup
             let cause_to_eval = g.get_causaloid(single_cause_index).unwrap();
             // Then perform the evaluation
-            cause_to_eval.evaluate(&evidence).unwrap()
+            // Also black_box the result to ensure this code is never considered "dead" or unused.
+            black_box(cause_to_eval.evaluate(&evidence).unwrap());
         })
     });
 }
@@ -116,7 +119,8 @@ fn large_linear_graph_benchmark(criterion: &mut Criterion) {
             // Perform the graph lookup
             let cause_to_eval = g.get_causaloid(single_cause_index).unwrap();
             // Then perform the evaluation
-            cause_to_eval.evaluate(&evidence).unwrap()
+            // Also black_box the result to ensure this code is never considered "dead" or unused.
+            black_box(cause_to_eval.evaluate(&evidence).unwrap());
         })
     });
 }
