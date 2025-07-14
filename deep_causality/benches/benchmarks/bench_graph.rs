@@ -2,8 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use std::hint::black_box;
 use criterion::{Criterion, criterion_group};
+use std::hint::black_box;
 
 use deep_causality::*;
 
@@ -46,7 +46,6 @@ fn small_linear_graph_benchmark(criterion: &mut Criterion) {
             // Then perform the evaluation
             // Also black_box the result to ensure this code is never considered "dead" or unused.
             black_box(cause_to_eval.evaluate(&evidence).unwrap());
-
         })
     });
 }
