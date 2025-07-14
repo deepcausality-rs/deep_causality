@@ -113,6 +113,9 @@ computation.
   Tarjan's algorithm, returning a list of node sets, where
   each set represents an SCC.
 
+* **`betweenness_centrality()`**: Measures a node's importance by counting how often it
+  appears on the shortest paths between all other pairs of nodes using Brandes' algorithm.
+
 ## 🚀 Benchmark Results
 
 ### Dynamic Graph

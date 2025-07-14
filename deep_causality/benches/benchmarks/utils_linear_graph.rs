@@ -7,31 +7,6 @@ use deep_causality::{BaseCausalGraph, CausableGraph, CausaloidGraph, Identificat
 
 use crate::benchmarks::utils_shared;
 
-const SMALL: usize = 10;
-const MEDIUM: usize = 1_000;
-const LARGE: usize = 10_000;
-
-pub fn get_small_linear_graph_and_data() -> (BaseCausalGraph, [f64; SMALL]) {
-    (
-        build_linear_graph(SMALL),
-        utils_shared::generate_sample_data(),
-    )
-}
-
-pub fn get_medium_linear_graph_and_data() -> (BaseCausalGraph, [f64; MEDIUM]) {
-    (
-        build_linear_graph(MEDIUM),
-        utils_shared::generate_sample_data(),
-    )
-}
-
-pub fn get_large_linear_graph_and_data() -> (BaseCausalGraph, [f64; LARGE]) {
-    (
-        build_linear_graph(LARGE),
-        utils_shared::generate_sample_data(),
-    )
-}
-
 pub fn build_linear_graph(k: usize) -> BaseCausalGraph {
     // Builds a linear graph: root -> a -> b -> c
     let mut g = CausaloidGraph::new(0 as IdentificationValue);
