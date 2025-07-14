@@ -39,9 +39,13 @@ fn small_linear_graph_benchmark(criterion: &mut Criterion) {
     });
 
     let single_cause_index = g.number_nodes() / 2;
-    let cause_to_eval = g.get_causaloid(single_cause_index).unwrap();
     criterion.bench_function("small_linear_graph_evaluate_single_cause", |bencher| {
-        bencher.iter(|| cause_to_eval.evaluate(&evidence).unwrap())
+        bencher.iter(|| {
+            // Perform the graph lookup
+            let cause_to_eval = g.get_causaloid(single_cause_index).unwrap();
+            // Then perform the evaluation
+            cause_to_eval.evaluate(&evidence).unwrap()
+        })
     });
 }
 
@@ -71,9 +75,13 @@ fn medium_linear_graph_benchmark(criterion: &mut Criterion) {
     });
 
     let single_cause_index = g.number_nodes() / 2;
-    let cause_to_eval = g.get_causaloid(single_cause_index).unwrap();
     criterion.bench_function("medium_linear_graph_evaluate_single_cause", |bencher| {
-        bencher.iter(|| cause_to_eval.evaluate(&evidence).unwrap())
+        bencher.iter(|| {
+            // Perform the graph lookup
+            let cause_to_eval = g.get_causaloid(single_cause_index).unwrap();
+            // Then perform the evaluation
+            cause_to_eval.evaluate(&evidence).unwrap()
+        })
     });
 }
 
@@ -103,9 +111,13 @@ fn large_linear_graph_benchmark(criterion: &mut Criterion) {
     });
 
     let single_cause_index = g.number_nodes() / 2;
-    let cause_to_eval = g.get_causaloid(single_cause_index).unwrap();
     criterion.bench_function("large_linear_graph_evaluate_single_cause", |bencher| {
-        bencher.iter(|| cause_to_eval.evaluate(&evidence).unwrap())
+        bencher.iter(|| {
+            // Perform the graph lookup
+            let cause_to_eval = g.get_causaloid(single_cause_index).unwrap();
+            // Then perform the evaluation
+            cause_to_eval.evaluate(&evidence).unwrap()
+        })
     });
 }
 
