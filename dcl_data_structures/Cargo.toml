@@ -38,7 +38,7 @@ default = []
 unsafe = [] # Enable unsafe implementations
 
 [dev-dependencies]
-criterion = { version = "0.6", features = ["html_reports"] }
+criterion = { version = "0.7", features = ["html_reports"] }
 rand = { version = "0.9", features = ["small_rng"] }
 
 [[bench]]
