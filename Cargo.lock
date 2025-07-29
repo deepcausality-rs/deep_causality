@@ -151,7 +151,30 @@ dependencies = [
  "cast",
  "ciborium",
  "clap",
- "criterion-plot",
+ "criterion-plot 0.5.0",
+ "itertools 0.13.0",
+ "num-traits",
+ "oorandom",
+ "plotters",
+ "rayon",
+ "regex",
+ "serde",
+ "serde_json",
+ "tinytemplate",
+ "walkdir",
+]
+
+[[package]]
+name = "criterion"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1c047a62b0cc3e145fa84415a3191f628e980b194c2755aa12300a4e6cbd928"
+dependencies = [
+ "anes",
+ "cast",
+ "ciborium",
+ "clap",
+ "criterion-plot 0.6.0",
  "itertools 0.13.0",
  "num-traits",
  "oorandom",
@@ -172,6 +195,16 @@ checksum = "6b50826342786a51a89e2da3a28f1c32b06e387201bc2d19791f622c673706b1"
 dependencies = [
  "cast",
  "itertools 0.10.5",
+]
+
+[[package]]
+name = "criterion-plot"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9b1bcc0dc7dfae599d84ad0b1a55f80cde8af3725da8313b528da95ef783e338"
+dependencies = [
+ "cast",
+ "itertools 0.13.0",
 ]
 
 [[package]]
@@ -209,7 +242,7 @@ checksum = "43da5946c66ffcc7745f48db692ffbb10a83bfe0afd96235c5c2a4fb23994929"
 name = "dcl_data_structures"
 version = "0.9.1"
 dependencies = [
- "criterion",
+ "criterion 0.7.0",
  "rand",
 ]
 
@@ -217,7 +250,7 @@ dependencies = [
 name = "deep_causality"
 version = "0.8.1"
 dependencies = [
- "criterion",
+ "criterion 0.7.0",
  "dcl_data_structures",
  "deep_causality_macros",
  "ultragraph",
@@ -747,7 +780,7 @@ dependencies = [
 name = "ultragraph"
 version = "0.8.1"
 dependencies = [
- "criterion",
+ "criterion 0.6.0",
  "deep_causality_macros",
  "rand",
 ]
