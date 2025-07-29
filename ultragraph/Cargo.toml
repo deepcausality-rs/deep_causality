@@ -1,6 +1,6 @@
 [package]
 name = "ultragraph"
-version = "0.8.1"
+version = "0.8.2"
 edition = "2021"
 rust-version = "1.80"
 repository = "https://github.com/deepcausality/deep_causality.rs"

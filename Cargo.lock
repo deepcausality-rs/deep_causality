@@ -215,7 +215,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality"
-version = "0.8.1"
+version = "0.8.2"
 dependencies = [
  "criterion",
  "dcl_data_structures",
@@ -745,7 +745,7 @@ dependencies = [
 
 [[package]]
 name = "ultragraph"
-version = "0.8.1"
+version = "0.8.2"
 dependencies = [
  "criterion",
  "deep_causality_macros",
