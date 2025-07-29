@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality"
-version = "0.8.1"
+version = "0.8.2"
 edition = "2021"
 rust-version = "1.80"
 readme = "../README.md"
@@ -28,7 +28,7 @@ version = "0.8.0"
 
 [dependencies.ultragraph]
 path = "../ultragraph"
-version = "0.8.1"
+version = "0.8.2"
 
 
 [dev-dependencies]
