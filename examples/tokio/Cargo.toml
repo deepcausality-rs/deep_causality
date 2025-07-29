@@ -7,4 +7,4 @@ publish = false
 
 [dependencies]
 deep_causality = { path = "../../deep_causality" }
-tokio = {version = "1.46", features = ["full"]}
+tokio = {version = "1.47", features = ["full"]}
