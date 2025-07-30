@@ -154,9 +154,21 @@ fn test_clone() {
 
 #[test]
 fn test_partial_eq() {
+    let effect1 = PropagatingEffect::None;
+    let effect2 = PropagatingEffect::None;
+    let effect3 = PropagatingEffect::Deterministic(false);
+    assert_eq!(effect1, effect2);
+    assert_ne!(effect1, effect3);
+
     let effect1 = PropagatingEffect::Deterministic(true);
     let effect2 = PropagatingEffect::Deterministic(true);
     let effect3 = PropagatingEffect::Deterministic(false);
+    assert_eq!(effect1, effect2);
+    assert_ne!(effect1, effect3);
+
+    let effect1 = PropagatingEffect::Numerical(1.0);
+    let effect2 = PropagatingEffect::Numerical(1.0);
+    let effect3 = PropagatingEffect::Numerical(23.0);
     assert_eq!(effect1, effect2);
     assert_ne!(effect1, effect3);
 
@@ -175,6 +187,33 @@ fn test_partial_eq() {
     assert_ne!(effect1, effect4);
     assert_ne!(effect1, effect7);
     assert_ne!(effect4, effect7);
+
+    let map1 = HashMap::new();
+
+    let effect1 = PropagatingEffect::Map(map1.clone());
+    let effect2 = PropagatingEffect::Map(map1);
+    let effect3 = PropagatingEffect::None;
+    assert_eq!(effect1, effect2);
+    assert_ne!(effect1, effect3);
+
+    let graph = Arc::new(UltraGraph::new());
+    let effect1 = PropagatingEffect::Graph(graph.clone());
+    let effect2 = PropagatingEffect::Graph(graph.clone());
+    let effect3 = PropagatingEffect::None;
+    assert_eq!(effect1, effect2);
+    assert_ne!(effect1, effect3);
+
+    let effect1 = PropagatingEffect::Halting;
+    let effect2 = PropagatingEffect::Halting;
+    let effect3 = PropagatingEffect::Deterministic(false);
+    assert_eq!(effect1, effect2);
+    assert_ne!(effect1, effect3);
+
+    let effect7 = PropagatingEffect::RelayTo(1, Box::new(PropagatingEffect::None));
+    let effect8 = PropagatingEffect::RelayTo(1, Box::new(PropagatingEffect::None));
+    let effect9 = PropagatingEffect::None;
+    assert_eq!(effect7, effect8);
+    assert_ne!(effect7, effect9);
 }
 
 #[test]
@@ -193,7 +232,10 @@ fn test_numerical_variant() {
     assert_eq!(effect.as_numerical(), Some(123.45));
     assert_eq!(effect, PropagatingEffect::Numerical(123.45));
     assert_ne!(effect, PropagatingEffect::Numerical(543.21));
-    assert_eq!(format!("{:?}", effect), "PropagatingEffect::Numerical(123.45)");
+    assert_eq!(
+        format!("{:?}", effect),
+        "PropagatingEffect::Numerical(123.45)"
+    );
 }
 
 #[test]
@@ -216,7 +258,10 @@ fn test_map_variant() {
     assert!(effect1.is_map());
     assert_eq!(effect1, effect2);
     assert_ne!(effect1, effect3);
-    assert_eq!(format!("{:?}", effect1), format!("PropagatingEffect::Map({:?})", map1));
+    assert_eq!(
+        format!("{:?}", effect1),
+        format!("PropagatingEffect::Map({:?})", map1)
+    );
 
     // Test map specific methods
     let mut new_map = PropagatingEffect::new_map();
@@ -244,7 +289,14 @@ fn test_graph_variant() {
     assert_eq!(effect1, effect2); // Should be equal due to Arc::ptr_eq
     assert_ne!(effect1, effect3); // Should be not equal due to Arc::ptr_eq
     assert_ne!(effect1, effect4);
-    assert_eq!(format!("{:?}", effect1), format!("PropagatingEffect::Graph(nodes: {}, edges: {})", graph1.number_nodes(), graph1.number_edges()));
+    assert_eq!(
+        format!("{:?}", effect1),
+        format!(
+            "PropagatingEffect::Graph(nodes: {}, edges: {})",
+            graph1.number_nodes(),
+            graph1.number_edges()
+        )
+    );
 }
 
 #[test]
@@ -258,7 +310,10 @@ fn test_relay_to_variant() {
     assert_eq!(effect1, effect2);
     assert_ne!(effect1, effect3);
     assert_ne!(effect1, effect4);
-    assert_eq!(format!("{:?}", effect1), "PropagatingEffect::RelayTo(1, PropagatingEffect::Deterministic(true))");
+    assert_eq!(
+        format!("{:?}", effect1),
+        "PropagatingEffect::RelayTo(1, PropagatingEffect::Deterministic(true))"
+    );
 }
 
 #[test]
