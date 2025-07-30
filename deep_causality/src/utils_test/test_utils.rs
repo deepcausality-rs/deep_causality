@@ -200,7 +200,7 @@ pub fn get_test_assumption() -> Assumption {
 }
 
 fn test_has_data(data: &[PropagatingEffect]) -> Result<bool, AssumptionError> {
-    Ok(!data.is_empty())
+    Ok(!data.is_empty()) // Data is NOT empty i.e. true when it is 
 }
 
 pub fn get_test_num_array() -> [NumericalValue; 10] {

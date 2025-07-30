@@ -3,9 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{
-    AssumptionError, DescriptionValue, EvalFn, Identifiable, NumericalValue, PropagatingEffect,
-};
+use crate::{AssumptionError, DescriptionValue, Identifiable, NumericalValue, PropagatingEffect};
 
 /// The Assumable trait defines the interface for objects that represent
 /// assumptions that can be tested and verified. Assumable types must also
@@ -27,7 +25,6 @@ use crate::{
 ///
 pub trait Assumable: Identifiable {
     fn description(&self) -> DescriptionValue;
-    fn assumption_fn(&self) -> EvalFn;
     fn assumption_tested(&self) -> bool;
     fn assumption_valid(&self) -> bool;
     fn verify_assumption(&self, data: &[PropagatingEffect]) -> Result<bool, AssumptionError>;

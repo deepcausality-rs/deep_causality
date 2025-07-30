@@ -27,7 +27,7 @@ fn test_assumption_tested() {
 }
 
 #[test]
-fn test_verify_assumption() {
+fn test_verify_assumption_success() {
     let assumption = test_utils::get_test_assumption();
 
     let tested = assumption.assumption_tested();
@@ -40,7 +40,14 @@ fn test_verify_assumption() {
         .iter()
         .map(|&x| PropagatingEffect::Numerical(x))
         .collect();
-    let valid = assumption.verify_assumption(&data).unwrap();
+
+    let res = assumption.verify_assumption(&data);
+    assert!(res.is_ok());
+
+    let tested = assumption.assumption_tested();
+    assert!(tested);
+
+    let valid = assumption.assumption_valid();
     assert!(valid);
 }
 
@@ -58,14 +65,38 @@ fn test_assumption_valid() {
         .iter()
         .map(|&x| PropagatingEffect::Numerical(x))
         .collect();
-    let valid = assumption.verify_assumption(&data).unwrap();
-    assert!(valid);
+
+    let res = assumption.verify_assumption(&data);
+    assert!(res.is_ok());
 
     let tested = assumption.assumption_tested();
     assert!(tested);
 
     let valid = assumption.assumption_valid();
     assert!(valid);
+}
+
+#[test]
+fn test_verify_assumption_invalid() {
+    let assumption = test_utils::get_test_assumption();
+
+    let tested = assumption.assumption_tested();
+    assert!(!tested);
+
+    let valid = assumption.assumption_valid();
+    assert!(!valid);
+
+    // Should eval to false b/c data empty
+    let res = assumption.verify_assumption(&[]);
+    assert!(res.is_ok());
+
+    // has been tested now.
+    let tested = assumption.assumption_tested();
+    assert!(tested);
+
+    // it is not valid
+    let valid = assumption.assumption_valid();
+    assert!(!valid);
 }
 
 #[test]

@@ -3,15 +3,11 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::types::model_types::assumption::Assumption;
-use crate::{Assumable, AssumptionError, DescriptionValue, EvalFn, PropagatingEffect};
+use crate::{Assumable, AssumptionError, DescriptionValue, PropagatingEffect};
 
 impl Assumable for Assumption {
     fn description(&self) -> DescriptionValue {
         self.description.to_string() as DescriptionValue
-    }
-
-    fn assumption_fn(&self) -> EvalFn {
-        self.assumption_fn
     }
 
     fn assumption_tested(&self) -> bool {
