@@ -4,4 +4,3 @@
  */
 #[cfg(test)]
 mod propagating_effect_tests;
-

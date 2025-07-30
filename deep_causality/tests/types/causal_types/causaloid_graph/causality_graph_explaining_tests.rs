@@ -31,10 +31,7 @@ fn test_explain_all_causes() {
     let explanation = g.explain_all_causes().unwrap();
     let base_expl = "Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: PropagatingEffect::Deterministic(true)";
     // Expected order from BFS: 0, 1, 2, 3
-    let expected = format!(
-        " * {}\n * {}\n * {}\n * {}",
-        base_expl, base_expl, base_expl, base_expl
-    );
+    let expected = format!(" * {base_expl}\n * {base_expl}\n * {base_expl}\n * {base_expl}");
     assert_eq!(explanation, expected);
 }
 
@@ -74,7 +71,7 @@ fn test_explain_subgraph_from_cause() {
     let start_index = 2;
     let res = g.explain_subgraph_from_cause(start_index).unwrap();
     let base_expl = "Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: PropagatingEffect::Deterministic(true)";
-    let expected = format!(" * {}\n * {}", base_expl, base_expl);
+    let expected = format!(" * {base_expl}\n * {base_expl}");
     assert_eq!(res, expected);
 }
 
@@ -122,6 +119,6 @@ fn test_explain_shortest_path_between_causes() {
         .unwrap();
 
     let base_expl = "Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: PropagatingEffect::Deterministic(true)";
-    let expected = format!(" * {}\n * {}", base_expl, base_expl);
+    let expected = format!(" * {base_expl}\n * {base_expl}");
     assert_eq!(res, expected);
 }

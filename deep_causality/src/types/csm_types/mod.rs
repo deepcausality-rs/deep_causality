@@ -163,7 +163,7 @@ where
         })?;
 
         // Evaluate the state, propagating any evaluation errors.
-        let effect = state.eval_with_data(&data).map_err(|e| {
+        let effect = state.eval_with_data(data).map_err(|e| {
             ActionError(format!(
                 "CSM[eval]: Error evaluating state {}: {}",
                 state.id(),

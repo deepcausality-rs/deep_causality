@@ -136,8 +136,7 @@ fn test_explain() {
     let single_explanation = "Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: PropagatingEffect::Deterministic(true)";
     // BTreeMap iterates in key-sorted order, so the output is predictable.
     let expected = format!(
-        "\n * {}\n\n * {}\n\n * {}\n",
-        single_explanation, single_explanation, single_explanation
+        "\n * {single_explanation}\n\n * {single_explanation}\n\n * {single_explanation}\n"
     );
     let actual = map.explain().unwrap();
     assert_eq!(expected, actual);
