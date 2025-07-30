@@ -4,7 +4,6 @@
  */
 
 use deep_causality::utils_test::test_utils;
-use deep_causality::utils_test::test_utils::*;
 use deep_causality::*;
 
 // Helper to activate all causes in a collection for testing purposes.
@@ -19,17 +18,17 @@ fn activate_all_causes(col: &BaseCausaloidVec) {
 
 #[test]
 fn test_add() {
-    let mut col = get_test_causality_vec();
+    let mut col = test_utils::get_test_causality_vec();
     assert_eq!(3, col.len());
 
-    let q = get_test_causaloid();
+    let q = test_utils::get_test_causaloid();
     col.push(q);
     assert_eq!(4, col.len());
 }
 
 #[test]
 fn test_get_all_items() {
-    let col = get_test_causality_vec();
+    let col = test_utils::get_test_causality_vec();
     let all_items = col.get_all_items();
 
     let exp_len = col.len();
@@ -39,32 +38,32 @@ fn test_get_all_items() {
 
 #[test]
 fn test_evaluate_deterministic_propagation() {
-    let col = get_test_causality_vec();
+    let col = test_utils::get_test_causality_vec();
 
     // Case 1: All succeed, chain should be deterministically true.
     let effect_success = PropagatingEffect::Numerical(0.99);
     let res_success = col
-        .evaluate_deterministic_propagation(&effect_success)
+        .evaluate_deterministic_propagation(&effect_success, &AggregateLogic::All)
         .unwrap();
     assert_eq!(res_success, PropagatingEffect::Deterministic(true));
 
     // Case 2: One fails, chain should be deterministically false.
     let effect_fail = PropagatingEffect::Numerical(0.1);
     let res_fail = col
-        .evaluate_deterministic_propagation(&effect_fail)
+        .evaluate_deterministic_propagation(&effect_fail, &AggregateLogic::All)
         .unwrap();
     assert_eq!(res_fail, PropagatingEffect::Deterministic(false));
 }
 
 #[test]
 fn test_evaluate_probabilistic_propagation() {
-    let col = get_test_causality_vec();
+    let col = test_utils::get_test_causality_vec();
 
     // Case 1: All succeed (Deterministic(true) is treated as probability 1.0).
     // The cumulative probability should be 1.0.
     let effect_success = PropagatingEffect::Numerical(0.99);
     let res_success = col
-        .evaluate_probabilistic_propagation(&effect_success)
+        .evaluate_probabilistic_propagation(&effect_success, &AggregateLogic::All)
         .unwrap();
     assert_eq!(res_success, PropagatingEffect::Probabilistic(1.0));
 
@@ -72,29 +71,33 @@ fn test_evaluate_probabilistic_propagation() {
     // The chain should short-circuit and return a cumulative probability of 0.0.
     let effect_fail = PropagatingEffect::Numerical(0.1);
     let res_fail = col
-        .evaluate_probabilistic_propagation(&effect_fail)
+        .evaluate_probabilistic_propagation(&effect_fail, &AggregateLogic::All)
         .unwrap();
     assert_eq!(res_fail, PropagatingEffect::Probabilistic(0.0));
 }
 
 #[test]
 fn test_evaluate_mixed_propagation() {
-    let col = get_test_causality_vec();
+    let col = test_utils::get_test_causality_vec();
 
     // Case 1: All succeed, chain remains deterministically true.
     let effect_success = PropagatingEffect::Numerical(0.99);
-    let res_success = col.evaluate_mixed_propagation(&effect_success).unwrap();
+    let res_success = col
+        .evaluate_mixed_propagation(&effect_success, &AggregateLogic::All)
+        .unwrap();
     assert_eq!(res_success, PropagatingEffect::Deterministic(true));
 
     // Case 2: One fails, chain becomes deterministically false.
     let effect_fail = PropagatingEffect::Numerical(0.1);
-    let res_fail = col.evaluate_mixed_propagation(&effect_fail).unwrap();
+    let res_fail = col
+        .evaluate_mixed_propagation(&effect_fail, &AggregateLogic::All)
+        .unwrap();
     assert_eq!(res_fail, PropagatingEffect::Deterministic(false));
 }
 
 #[test]
 fn test_explain() {
-    let col = get_test_causality_vec();
+    let col = test_utils::get_test_causality_vec();
     activate_all_causes(&col);
 
     let single_explanation = "\n * Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: PropagatingEffect::Deterministic(true)\n";
@@ -105,19 +108,19 @@ fn test_explain() {
 
 #[test]
 fn test_len() {
-    let col = get_test_causality_vec();
+    let col = test_utils::get_test_causality_vec();
     assert_eq!(3, col.len());
 }
 
 #[test]
 fn test_is_empty() {
-    let col = get_test_causality_vec();
+    let col = test_utils::get_test_causality_vec();
     assert!(!col.is_empty());
 }
 
 #[test]
 fn test_to_vec() {
-    let col = get_test_causality_vec();
+    let col = test_utils::get_test_causality_vec();
     assert_eq!(3, col.to_vec().len());
 }
 
@@ -132,7 +135,7 @@ fn test_evaluate_deterministic_propagation_error_non_deterministic_effect() {
 
     // Act: Evaluate with deterministic propagation, which expects only deterministic effects.
     let effect = PropagatingEffect::Numerical(0.0);
-    let result = coll.evaluate_deterministic_propagation(&effect);
+    let result = coll.evaluate_deterministic_propagation(&effect, &AggregateLogic::All);
 
     // Assert: This covers the error branch for non-deterministic effects.
     assert!(result.is_err());
@@ -161,7 +164,9 @@ fn test_evaluate_probabilistic_propagation_success() {
 
     // Act: Evaluate with probabilistic propagation.
     let effect = PropagatingEffect::Numerical(0.0);
-    let res = coll.evaluate_probabilistic_propagation(&effect).unwrap();
+    let res = coll
+        .evaluate_probabilistic_propagation(&effect, &AggregateLogic::All)
+        .unwrap();
 
     // Assert: This covers the main logic branch, ensuring probabilities are multiplied.
     assert_eq!(res, PropagatingEffect::Probabilistic(0.125));
@@ -176,7 +181,9 @@ fn test_evaluate_probabilistic_propagation_with_halting() {
 
     // Act: Evaluate with probabilistic propagation.
     let effect = PropagatingEffect::Numerical(0.0);
-    let res = coll.evaluate_probabilistic_propagation(&effect).unwrap();
+    let res = coll
+        .evaluate_probabilistic_propagation(&effect, &AggregateLogic::All)
+        .unwrap();
 
     // Assert: This covers the Halting branch, which should take precedence.
     assert_eq!(res, PropagatingEffect::Halting);
@@ -191,7 +198,7 @@ fn test_evaluate_probabilistic_propagation_error_contextual_link() {
 
     // Act: Evaluate with probabilistic propagation.
     let effect = PropagatingEffect::Numerical(0.0);
-    let result = coll.evaluate_probabilistic_propagation(&effect);
+    let result = coll.evaluate_probabilistic_propagation(&effect, &AggregateLogic::All);
 
     // Assert: This covers the error branch for invalid ContextualLink effects.
     assert!(result.is_err());

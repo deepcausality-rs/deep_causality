@@ -3,7 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Causable, CausalityError, IdentificationValue, NumericalValue, PropagatingEffect};
+use crate::{
+    AggregateLogic, Causable, CausalityError, IdentificationValue, NumericalValue,
+    PropagatingEffect,
+};
 
 /// Provides default implementations for reasoning over collections of `Causable` items.
 ///
@@ -53,45 +56,138 @@ where
     fn evaluate_deterministic_propagation(
         &self,
         effect: &PropagatingEffect,
+        logic: &AggregateLogic,
     ) -> Result<PropagatingEffect, CausalityError> {
-        for cause in self.get_all_items() {
-            let effect = cause.evaluate(effect)?;
+        let mut resolved_effects = Vec::new();
 
-            // This function enforces a strict deterministic contract.
-            let resolved_effect = match effect {
+        for cause in self.get_all_items() {
+            let current_effect = cause.evaluate(effect)?;
+
+            let resolved_effect = match current_effect {
                 PropagatingEffect::RelayTo(target_id, inner_effect) => {
-                    let target_causaloid =
-                        self.get_item_by_id(target_id as u64).ok_or_else(|| {
+                    let target_causaloid = self
+                        .get_item_by_id(target_id as IdentificationValue)
+                        .ok_or_else(|| {
                             CausalityError(format!(
                                 "Relay target causaloid with ID {target_id} not found."
                             ))
                         })?;
                     target_causaloid.evaluate(&inner_effect)?
                 }
-                _ => effect,
+                _ => current_effect,
             };
+            resolved_effects.push(resolved_effect);
+        }
 
-            // This function enforces a strict deterministic contract.
-            match resolved_effect {
-                PropagatingEffect::Deterministic(true) => {
-                    // The link is active, continue to the next one.
-                    continue;
+        match logic {
+            AggregateLogic::All => {
+                let mut last_true_effect = PropagatingEffect::Deterministic(true);
+                for res_effect in resolved_effects {
+                    match res_effect {
+                        PropagatingEffect::Deterministic(true) => {
+                            last_true_effect = res_effect;
+                        }
+                        PropagatingEffect::Deterministic(false) => {
+                            return Ok(PropagatingEffect::Deterministic(false));
+                        }
+                        PropagatingEffect::Halting => {
+                            return Ok(PropagatingEffect::Halting);
+                        }
+                        _ => {
+                            return Err(CausalityError(format!(
+                                "evaluate_deterministic_propagation (All) encountered a non-deterministic effect: {res_effect:?}. Only Deterministic effects are allowed."
+                            )));
+                        }
+                    }
                 }
-                PropagatingEffect::Deterministic(false) => {
-                    // The chain is deterministically broken. This is a valid final outcome.
-                    return Ok(PropagatingEffect::Deterministic(false));
+                Ok(last_true_effect)
+            }
+            AggregateLogic::Any => {
+                let mut has_true = false;
+                let mut last_effect = PropagatingEffect::Halting; // Default to Halting if no true or false found
+                for res_effect in resolved_effects {
+                    match res_effect {
+                        PropagatingEffect::Deterministic(true) => {
+                            has_true = true;
+                            last_effect = res_effect;
+                        }
+                        PropagatingEffect::Deterministic(false) => {
+                            last_effect = res_effect;
+                        }
+                        PropagatingEffect::Halting => {
+                            return Ok(PropagatingEffect::Halting);
+                        }
+                        _ => {
+                            return Err(CausalityError(format!(
+                                "evaluate_deterministic_propagation (Any) encountered a non-deterministic effect: {res_effect:?}. Only Deterministic effects are allowed."
+                            )));
+                        }
+                    }
                 }
-                _ => {
-                    // Any other effect type is a contract violation for this function.
-                    return Err(CausalityError(format!(
-                        "evaluate_deterministic_propagation encountered a non-deterministic effect: {resolved_effect:?}. Only Deterministic effects are allowed."
-                    )));
+                if has_true {
+                    Ok(last_effect)
+                } else {
+                    Ok(PropagatingEffect::Deterministic(false))
+                }
+            }
+            AggregateLogic::None => {
+                let mut all_false = true;
+                let mut last_false_effect = PropagatingEffect::Deterministic(false);
+                for res_effect in resolved_effects {
+                    match res_effect {
+                        PropagatingEffect::Deterministic(true) => {
+                            all_false = false;
+                            break;
+                        }
+                        PropagatingEffect::Deterministic(false) => {
+                            last_false_effect = res_effect;
+                        }
+                        PropagatingEffect::None => {
+                            return Ok(PropagatingEffect::None);
+                        }
+                        PropagatingEffect::Halting => {
+                            return Ok(PropagatingEffect::Halting);
+                        }
+                        _ => {
+                            return Err(CausalityError(format!(
+                                "evaluate_deterministic_propagation (None) encountered a non-deterministic effect: {res_effect:?}. Only Deterministic effects are allowed."
+                            )));
+                        }
+                    }
+                }
+                if all_false {
+                    Ok(PropagatingEffect::Deterministic(true))
+                } else {
+                    Ok(PropagatingEffect::Deterministic(false))
+                }
+            }
+            AggregateLogic::Some(k) => {
+                let mut true_count = 0;
+                let mut last_true_effect = PropagatingEffect::Halting;
+                for res_effect in resolved_effects {
+                    match res_effect {
+                        PropagatingEffect::Deterministic(true) => {
+                            true_count += 1;
+                            last_true_effect = res_effect;
+                        }
+                        PropagatingEffect::Deterministic(false) => {}
+                        PropagatingEffect::Halting => {
+                            return Ok(PropagatingEffect::Halting);
+                        }
+                        _ => {
+                            return Err(CausalityError(format!(
+                                "evaluate_deterministic_propagation (Some) encountered a non-deterministic effect: {res_effect:?}. Only Deterministic effects are allowed."
+                            )));
+                        }
+                    }
+                }
+                if true_count >= *k {
+                    Ok(PropagatingEffect::Deterministic(true))
+                } else {
+                    Ok(PropagatingEffect::Deterministic(false))
                 }
             }
         }
-
-        // If the entire loop completes, all links were deterministically true.
-        Ok(PropagatingEffect::Deterministic(true))
     }
 
     /// Evaluates a linear chain of causes where each link is expected to be probabilistic.
@@ -108,13 +204,14 @@ where
     fn evaluate_probabilistic_propagation(
         &self,
         effect: &PropagatingEffect,
+        logic: &AggregateLogic,
     ) -> Result<PropagatingEffect, CausalityError> {
-        let mut cumulative_prob: NumericalValue = 1.0;
+        let mut resolved_effects = Vec::new();
 
         for cause in self.get_all_items() {
-            let effect = cause.evaluate(effect)?;
+            let current_effect = cause.evaluate(effect)?;
 
-            let resolved_effect = match effect {
+            let resolved_effect = match current_effect {
                 PropagatingEffect::RelayTo(target_id, inner_effect) => {
                     let target_causaloid = self
                         .get_item_by_id(target_id as IdentificationValue)
@@ -125,40 +222,126 @@ where
                         })?;
                     target_causaloid.evaluate(&inner_effect)?
                 }
-                _ => effect,
+                _ => current_effect,
             };
+            resolved_effects.push(resolved_effect);
+        }
 
-            match resolved_effect {
-                PropagatingEffect::Probabilistic(p) => {
-                    cumulative_prob *= p;
+        match logic {
+            AggregateLogic::All => {
+                let mut cumulative_prob: NumericalValue = 1.0;
+                for res_effect in resolved_effects {
+                    match res_effect {
+                        PropagatingEffect::None => {
+                            return Ok(PropagatingEffect::None);
+                        }
+                        PropagatingEffect::Halting => {
+                            return Ok(PropagatingEffect::Halting);
+                        }
+
+                        PropagatingEffect::Probabilistic(p) => {
+                            cumulative_prob *= p;
+                            if cumulative_prob == 0.0 {
+                                return Ok(PropagatingEffect::Probabilistic(0.0));
+                            }
+                        }
+                        PropagatingEffect::Deterministic(true) => {
+                            // Equivalent to multiplying by 1.0
+                        }
+                        PropagatingEffect::Deterministic(false) => {
+                            return Ok(PropagatingEffect::Probabilistic(0.0));
+                        }
+
+                        _ => {
+                            return Err(CausalityError(format!(
+                                "evaluate_probabilistic_propagation (All) encountered an unhandled effect: {res_effect:?}"
+                            )));
+                        }
+                    }
                 }
-                PropagatingEffect::Deterministic(true) => {
-                    // This is equivalent to multiplying by 1.0, so we do nothing and continue.
+                Ok(PropagatingEffect::Probabilistic(cumulative_prob))
+            }
+            AggregateLogic::Any => {
+                for res_effect in resolved_effects {
+                    match res_effect {
+                        PropagatingEffect::Probabilistic(p) => {
+                            if p > 0.0 {
+                                return Ok(PropagatingEffect::Probabilistic(p));
+                            }
+                        }
+                        PropagatingEffect::Deterministic(true) => {
+                            return Ok(PropagatingEffect::Deterministic(true));
+                        }
+                        PropagatingEffect::Deterministic(false) => {}
+                        PropagatingEffect::Halting => {
+                            return Ok(PropagatingEffect::Halting);
+                        }
+                        _ => {
+                            return Err(CausalityError(format!(
+                                "evaluate_probabilistic_propagation (Any) encountered an unhandled effect: {res_effect:?}"
+                            )));
+                        }
+                    }
                 }
-                PropagatingEffect::Deterministic(false) => {
-                    // If any link is deterministically false, the entire chain's probability is zero.
-                    return Ok(PropagatingEffect::Probabilistic(0.0));
+                Ok(PropagatingEffect::Probabilistic(0.0))
+            }
+            AggregateLogic::None => {
+                for res_effect in resolved_effects {
+                    match res_effect {
+                        PropagatingEffect::Probabilistic(p) => {
+                            if p > 0.0 {
+                                return Ok(PropagatingEffect::Probabilistic(0.0));
+                            }
+                        }
+                        PropagatingEffect::Deterministic(true) => {
+                            return Ok(PropagatingEffect::Probabilistic(0.0));
+                        }
+                        PropagatingEffect::Deterministic(false) => {}
+                        PropagatingEffect::Halting => {
+                            return Ok(PropagatingEffect::Halting);
+                        }
+                        _ => {
+                            return Err(CausalityError(format!(
+                                "evaluate_probabilistic_propagation (None) encountered an unhandled effect: {res_effect:?}"
+                            )));
+                        }
+                    }
                 }
-                PropagatingEffect::Halting => {
-                    // Halting always takes precedence and stops the chain.
-                    return Ok(PropagatingEffect::Halting);
+                Ok(PropagatingEffect::Probabilistic(1.0))
+            }
+            AggregateLogic::Some(k) => {
+                let mut success_count = 0;
+                let mut last_successful_effect = PropagatingEffect::Probabilistic(0.0);
+                for res_effect in resolved_effects {
+                    match res_effect {
+                        PropagatingEffect::Probabilistic(p) => {
+                            if p > 0.0 {
+                                success_count += 1;
+                                last_successful_effect = res_effect;
+                            }
+                        }
+                        PropagatingEffect::Deterministic(true) => {
+                            success_count += 1;
+                            last_successful_effect = res_effect;
+                        }
+                        PropagatingEffect::Deterministic(false) => {}
+                        PropagatingEffect::Halting => {
+                            return Ok(PropagatingEffect::Halting);
+                        }
+                        _ => {
+                            return Err(CausalityError(format!(
+                                "evaluate_probabilistic_propagation (Some) encountered an unhandled effect: {res_effect:?}"
+                            )));
+                        }
+                    }
                 }
-                PropagatingEffect::ContextualLink(_, _) => {
-                    // Contextual links are not meaningful in a probabilistic aggregation.
-                    return Err(CausalityError(
-                        "Encountered a ContextualLink in a probabilistic chain evaluation.".into(),
-                    ));
-                }
-                _ => {
-                    // Other variants are not handled in this mode.
-                    return Err(CausalityError(format!(
-                        "evaluate_probabilistic_propagation encountered an unhandled effect: {resolved_effect:?}"
-                    )));
+                if success_count >= *k {
+                    Ok(last_successful_effect)
+                } else {
+                    Ok(PropagatingEffect::Probabilistic(0.0))
                 }
             }
         }
-
-        Ok(PropagatingEffect::Probabilistic(cumulative_prob))
     }
 
     /// Evaluates a linear chain of causes that may contain a mix of deterministic and
@@ -172,14 +355,14 @@ where
     fn evaluate_mixed_propagation(
         &self,
         effect: &PropagatingEffect,
+        logic: &AggregateLogic,
     ) -> Result<PropagatingEffect, CausalityError> {
-        // The chain starts as deterministically true. It can transition to probabilistic.
-        let mut aggregated_effect = PropagatingEffect::Deterministic(true);
+        let mut resolved_effects = Vec::new();
 
         for cause in self.get_all_items() {
             let current_effect = cause.evaluate(effect)?;
 
-            let current_effect = match current_effect {
+            let resolved_effect = match current_effect {
                 PropagatingEffect::RelayTo(target_id, inner_effect) => {
                     let target_causaloid = self
                         .get_item_by_id(target_id as IdentificationValue)
@@ -192,55 +375,210 @@ where
                 }
                 _ => current_effect,
             };
-
-            // Update the aggregated effect based on the current effect.
-            aggregated_effect = match (aggregated_effect, current_effect) {
-                // Halting takes precedence over everything.
-                (_, PropagatingEffect::Halting) => return Ok(PropagatingEffect::Halting),
-
-                // Deterministic false breaks the chain.
-                (_, PropagatingEffect::Deterministic(false)) => {
-                    return Ok(PropagatingEffect::Deterministic(false));
-                }
-
-                // ContextualLink is invalid in this context.
-                (_, PropagatingEffect::ContextualLink(_, _)) => {
-                    return Err(CausalityError(
-                        "Encountered a ContextualLink in a mixed-chain evaluation.".into(),
-                    ));
-                }
-
-                // If the chain is deterministic and the new effect is true, it remains deterministic true.
-                (
-                    PropagatingEffect::Deterministic(true),
-                    PropagatingEffect::Deterministic(true),
-                ) => PropagatingEffect::Deterministic(true),
-
-                // If the chain is deterministic and the new effect is probabilistic, the chain becomes probabilistic.
-                (PropagatingEffect::Deterministic(true), PropagatingEffect::Probabilistic(p)) => {
-                    PropagatingEffect::Probabilistic(p)
-                }
-
-                // If the chain is already probabilistic and the new effect is true, the probability is unchanged.
-                (PropagatingEffect::Probabilistic(p), PropagatingEffect::Deterministic(true)) => {
-                    PropagatingEffect::Probabilistic(p)
-                }
-
-                // If the chain is probabilistic and the new effect is also probabilistic, multiply them.
-                (PropagatingEffect::Probabilistic(p1), PropagatingEffect::Probabilistic(p2)) => {
-                    PropagatingEffect::Probabilistic(p1 * p2)
-                }
-
-                // Other combinations should not be possible due to the guards above.
-                (agg, curr) => {
-                    return Err(CausalityError(format!(
-                        "Unhandled effect combination in mixed chain: Agg: {agg:?}, Curr: {curr:?}"
-                    )));
-                }
-            };
+            resolved_effects.push(resolved_effect);
         }
 
-        Ok(aggregated_effect)
+        match logic {
+            AggregateLogic::All => {
+                let mut all_true = true;
+                let mut last_successful_effect = PropagatingEffect::Deterministic(true);
+                for res_effect in resolved_effects {
+                    match res_effect {
+                        PropagatingEffect::Deterministic(true) => {
+                            last_successful_effect = res_effect;
+                        }
+                        PropagatingEffect::Probabilistic(p) => {
+                            if p > 0.0 {
+                                last_successful_effect = res_effect;
+                            } else {
+                                all_true = false;
+                                break;
+                            }
+                        }
+                        PropagatingEffect::Deterministic(false) => {
+                            all_true = false;
+                            break;
+                        }
+                        PropagatingEffect::Halting => {
+                            return Ok(PropagatingEffect::Halting);
+                        }
+                        PropagatingEffect::ContextualLink(_, _) => {
+                            return Err(CausalityError(
+                                "evaluate_mixed_propagation (All) encountered a ContextualLink."
+                                    .into(),
+                            ));
+                        }
+                        _ => {
+                            return Err(CausalityError(format!(
+                                "evaluate_mixed_propagation (All) encountered an unhandled effect: {res_effect:?}"
+                            )));
+                        }
+                    }
+                }
+                if all_true {
+                    Ok(last_successful_effect)
+                } else {
+                    Ok(PropagatingEffect::Deterministic(false))
+                }
+            }
+            AggregateLogic::Any => {
+                let mut any_true = false;
+                let mut last_successful_effect = PropagatingEffect::Deterministic(false);
+                let mut final_failure_effect: Option<PropagatingEffect> = None;
+
+                for res_effect in resolved_effects {
+                    match res_effect {
+                        PropagatingEffect::Deterministic(true) => {
+                            any_true = true;
+                            last_successful_effect = res_effect;
+                        }
+                        PropagatingEffect::Probabilistic(p) => {
+                            if p > 0.0 {
+                                any_true = true;
+                                last_successful_effect = res_effect;
+                            } else {
+                                // If a probabilistic 0.0 is encountered, it's a potential failure
+                                if final_failure_effect.is_none() {
+                                    final_failure_effect =
+                                        Some(PropagatingEffect::Probabilistic(0.0));
+                                }
+                            }
+                        }
+                        PropagatingEffect::Deterministic(false) => {
+                            // If a deterministic false is encountered, it's a potential failure
+                            if final_failure_effect.is_none()
+                                || matches!(
+                                    final_failure_effect,
+                                    Some(PropagatingEffect::Probabilistic(_))
+                                )
+                            {
+                                final_failure_effect =
+                                    Some(PropagatingEffect::Deterministic(false));
+                            }
+                        }
+                        PropagatingEffect::Halting => {
+                            return Ok(PropagatingEffect::Halting);
+                        }
+                        PropagatingEffect::ContextualLink(_, _) => {
+                            return Err(CausalityError(
+                                "evaluate_mixed_propagation (Any) encountered a ContextualLink."
+                                    .into(),
+                            ));
+                        }
+                        _ => {
+                            return Err(CausalityError(format!(
+                                "evaluate_mixed_propagation (Any) encountered an unhandled effect: {res_effect:?}"
+                            )));
+                        }
+                    }
+                }
+                if any_true {
+                    Ok(last_successful_effect)
+                } else if let Some(failure_effect) = final_failure_effect {
+                    Ok(failure_effect)
+                } else {
+                    Ok(PropagatingEffect::Deterministic(false)) // Default if no true and no specific failure effect
+                }
+            }
+            AggregateLogic::None => {
+                let mut any_true = false;
+                let mut final_failure_effect: Option<PropagatingEffect> = None;
+
+                for res_effect in resolved_effects {
+                    match res_effect {
+                        PropagatingEffect::Deterministic(true) => {
+                            any_true = true;
+                            final_failure_effect = Some(PropagatingEffect::Deterministic(false));
+                            break;
+                        }
+                        PropagatingEffect::Probabilistic(p) => {
+                            if p > 0.0 {
+                                any_true = true;
+                                final_failure_effect = Some(PropagatingEffect::Probabilistic(0.0));
+                                break;
+                            }
+                        }
+                        PropagatingEffect::Deterministic(false) => {}
+                        PropagatingEffect::Halting => {
+                            return Ok(PropagatingEffect::Halting);
+                        }
+                        PropagatingEffect::ContextualLink(_, _) => {
+                            return Err(CausalityError(
+                                "evaluate_mixed_propagation (None) encountered a ContextualLink."
+                                    .into(),
+                            ));
+                        }
+                        _ => {
+                            return Err(CausalityError(format!(
+                                "evaluate_mixed_propagation (None) encountered an unhandled effect: {res_effect:?}"
+                            )));
+                        }
+                    }
+                }
+                if any_true {
+                    if let Some(failure_effect) = final_failure_effect {
+                        Ok(failure_effect)
+                    } else {
+                        Ok(PropagatingEffect::Deterministic(false)) // Should not happen if any_true is true
+                    }
+                } else {
+                    Ok(PropagatingEffect::Deterministic(true))
+                }
+            }
+            AggregateLogic::Some(k) => {
+                let mut success_count = 0;
+                let mut last_successful_effect = PropagatingEffect::Deterministic(false);
+                let mut final_failure_effect: Option<PropagatingEffect> = None;
+
+                for res_effect in resolved_effects {
+                    match res_effect {
+                        PropagatingEffect::Deterministic(true) => {
+                            success_count += 1;
+                            last_successful_effect = res_effect;
+                        }
+                        PropagatingEffect::Probabilistic(p) => {
+                            if p > 0.0 {
+                                success_count += 1;
+                                last_successful_effect = res_effect;
+                            }
+                        }
+                        PropagatingEffect::Deterministic(false) => {
+                            if final_failure_effect.is_none()
+                                || matches!(
+                                    final_failure_effect,
+                                    Some(PropagatingEffect::Probabilistic(_))
+                                )
+                            {
+                                // Prioritize deterministic false over probabilistic 0.0
+                                final_failure_effect =
+                                    Some(PropagatingEffect::Deterministic(false));
+                            }
+                        }
+                        PropagatingEffect::Halting => {
+                            return Ok(PropagatingEffect::Halting);
+                        }
+                        PropagatingEffect::ContextualLink(_, _) => {
+                            return Err(CausalityError(
+                                "evaluate_mixed_propagation (Some) encountered a ContextualLink."
+                                    .into(),
+                            ));
+                        }
+                        _ => {
+                            return Err(CausalityError(format!(
+                                "evaluate_mixed_propagation (Some) encountered an unhandled effect: {res_effect:?}"
+                            )));
+                        }
+                    }
+                }
+                if success_count >= *k {
+                    Ok(last_successful_effect)
+                } else if let Some(failure_effect) = final_failure_effect {
+                    Ok(failure_effect)
+                } else {
+                    Ok(PropagatingEffect::Deterministic(false)) // Default if not enough successes and no specific failure effect
+                }
+            }
+        }
     }
 
     /// Generates an explanation by concatenating the `explain()` text of all causes.
