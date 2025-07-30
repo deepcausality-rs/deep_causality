@@ -28,7 +28,7 @@ impl fmt::Display for AssumptionError {
                 write!(f, "Model has no assumptions to verify")
             }
             AssumptionError::NoDataToTestDefined => {
-                write!(f, "No Data provided.")
+                write!(f, "No Data to test provided")
             }
             AssumptionError::EvaluationFailed(msg) => {
                 write!(f, "Failed to evaluate assumption: {msg}")

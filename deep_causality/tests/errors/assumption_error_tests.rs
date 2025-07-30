@@ -12,6 +12,12 @@ fn test_no_assumptions_defined_error() {
 }
 
 #[test]
+fn test_no_data_error() {
+    let error = AssumptionError::NoDataToTestDefined;
+    assert_eq!(error.to_string(), "No Data to test provided");
+}
+
+#[test]
 fn test_evaluation_failed_error() {
     let error = AssumptionError::EvaluationFailed("Test Error".to_string());
     assert_eq!(

@@ -31,15 +31,14 @@ where
             return Err(AssumptionError::NoAssumptionsDefined);
         }
 
-         let assumptions = self.assumptions.as_ref().unwrap();
-           for assumption in assumptions.iter() {
-                match assumption.verify_assumption(effect) {
-                    Ok(true) => continue,          // Assumption holds, continue checking
-                    Ok(false) => return Ok(false), // Assumption failed
-                    Err(e) => return Err(e),       // An error occurred during evaluation
-                }
+        let assumptions = self.assumptions.as_ref().unwrap();
+        for assumption in assumptions.iter() {
+            match assumption.verify_assumption(effect) {
+                Ok(true) => continue,          // Assumption holds, continue checking
+                Ok(false) => return Ok(false), // Assumption failed
+                Err(e) => return Err(e),       // An error occurred during evaluation
             }
-            Ok(true) // All assumptions passed
-
+        }
+        Ok(true) // All assumptions passed
     }
 }

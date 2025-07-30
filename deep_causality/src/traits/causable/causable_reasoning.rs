@@ -138,9 +138,7 @@ where
                             all_false = false;
                             break;
                         }
-                        PropagatingEffect::Deterministic(false) => {
-                            continue
-                        }
+                        PropagatingEffect::Deterministic(false) => continue,
                         PropagatingEffect::None => {
                             return Ok(PropagatingEffect::None);
                         }
@@ -166,7 +164,7 @@ where
                     match res_effect {
                         PropagatingEffect::Deterministic(true) => {
                             true_count += 1;
-                           continue
+                            continue;
                         }
                         PropagatingEffect::Deterministic(false) => {}
                         PropagatingEffect::Halting => {
