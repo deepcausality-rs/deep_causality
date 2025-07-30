@@ -82,14 +82,14 @@ pub fn get_test_causaloid() -> TestCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
 
-    fn causal_fn(evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+    fn causal_fn(effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
         let obs =
-            match evidence {
+            match effect {
                 // If it's the Numerical variant, extract the inner value.
-                Evidence::Numerical(val) => *val,
-                // For any other type of evidence, this function cannot proceed, so return an error.
+                PropagatingEffect::Numerical(val) => *val,
+                // For any other type of effect, this function cannot proceed, so return an error.
                 _ => return Err(CausalityError(
-                    "Causal function expected Numerical evidence but received a different variant."
+                    "Causal function expected Numerical effect but received a different variant."
                         .into(),
                 )),
             };

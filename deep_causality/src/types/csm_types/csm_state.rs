@@ -6,7 +6,7 @@
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
-use crate::{Causable, CausalityError, Causaloid, Datable, Evidence, PropagatingEffect, Symbolic};
+use crate::{Causable, CausalityError, Causaloid, Datable, PropagatingEffect, Symbolic};
 use deep_causality_macros::{Constructor, Getters};
 use std::fmt::{Display, Formatter};
 
@@ -45,7 +45,7 @@ where
     /// Version number for tracking changes to the state
     version: usize,
     /// Numerical data used for state evaluation
-    data: Evidence,
+    data: PropagatingEffect,
     /// Reference to a causaloid that defines when this state is active
     causaloid: Causaloid<D, S, T, ST, SYM, VS, VT>,
 }
@@ -88,7 +88,10 @@ where
     /// - `Err(CausalityError)` if an error occurs during evaluation
     ///
     /// ```texttext
-    pub fn eval_with_data(&self, data: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+    pub fn eval_with_data(
+        &self,
+        data: &PropagatingEffect,
+    ) -> Result<PropagatingEffect, CausalityError> {
         self.causaloid.evaluate(data)
     }
 }

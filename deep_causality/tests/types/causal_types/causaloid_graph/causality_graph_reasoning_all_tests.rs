@@ -41,8 +41,8 @@ fn test_graph_evaluate() {
     g.freeze();
 
     // Evaluate the graph using the Causable::evaluate method
-    let evidence = Evidence::Numerical(0.99); // A value that will activate all nodes
-    let res = g.evaluate(&evidence);
+    let effect = PropagatingEffect::Numerical(0.99); // A value that will activate all nodes
+    let res = g.evaluate(&effect);
 
     // Assert that evaluation was successful and the effect is as expected.
     // The graph's evaluate returns Deterministic(true) because the sink node C becomes active.
@@ -60,8 +60,8 @@ fn test_graph_evaluate() {
     g.freeze();
 
     // Evaluate the graph using the Causable::evaluate method
-    let evidence = Evidence::Numerical(0.99); // A value that will activate all nodes
-    let res = g.evaluate(&evidence);
+    let effect = PropagatingEffect::Numerical(0.99); // A value that will activate all nodes
+    let res = g.evaluate(&effect);
 
     dbg!(&res);
     assert!(res.is_ok());
@@ -75,8 +75,8 @@ fn test_graph_evaluate_error_conditions() {
     assert!(g.is_empty());
     assert!(!g.contains_root_causaloid());
 
-    let evidence = Evidence::Numerical(0.99);
-    let res = g.evaluate(&evidence);
+    let effect = PropagatingEffect::Numerical(0.99);
+    let res = g.evaluate(&effect);
     assert!(res.is_err());
     assert_eq!(
         res.unwrap_err().to_string(),
@@ -89,7 +89,7 @@ fn test_graph_evaluate_error_conditions() {
     g.add_root_causaloid(root_causaloid).unwrap();
     // DO NOT call g.freeze()
 
-    let res = g.evaluate(&evidence);
+    let res = g.evaluate(&effect);
     assert!(res.is_err());
     // The error comes from `evaluate_subgraph_from_cause` which is called by `evaluate`
     assert_eq!(

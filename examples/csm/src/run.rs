@@ -6,7 +6,7 @@
 use std::thread;
 use std::time::Duration;
 
-use deep_causality::{CSM, CausalState, Evidence};
+use deep_causality::{CSM, CausalState, PropagatingEffect};
 
 use crate::utils_actions::*;
 use crate::utils_data::{get_explosion_sensor_data, get_fire_sensor_data, get_smoke_sensor_data};
@@ -19,7 +19,7 @@ const EXPLOSION_SENSOR: usize = 3;
 pub fn run() {
     // The initial data in a CausalState is often just a default.
     // Using `Evidence::None` makes it clear that the state expects external data for evaluation.
-    let default_data = Evidence::None;
+    let default_data = PropagatingEffect::None;
 
     let smoke_causaloid = get_smoke_sensor_causaloid();
     let smoke_cs = CausalState::new(SMOKE_SENSOR, 1, default_data.clone(), smoke_causaloid);
@@ -50,18 +50,18 @@ pub fn run() {
         wait();
 
         // Wrap the raw numerical data in the `Evidence` enum before passing it to the CSM.
-        let smoke_evidence = Evidence::Numerical(smoke_data[i]);
-        if let Err(e) = csm.eval_single_state(SMOKE_SENSOR, smoke_evidence) {
+        let smoke_evidence = PropagatingEffect::Numerical(smoke_data[i]);
+        if let Err(e) = csm.eval_single_state(SMOKE_SENSOR, &smoke_evidence) {
             eprintln!("[CSM Error] Smoke sensor evaluation failed: {e}");
         }
 
-        let fire_evidence = Evidence::Numerical(fire_data[i]);
-        if let Err(e) = csm.eval_single_state(FIRE_SENSOR, fire_evidence) {
+        let fire_evidence = PropagatingEffect::Numerical(fire_data[i]);
+        if let Err(e) = csm.eval_single_state(FIRE_SENSOR, &fire_evidence) {
             eprintln!("[CSM Error] Fire sensor evaluation failed: {e}");
         }
 
-        let explosion_evidence = Evidence::Numerical(exp_data[i]);
-        if let Err(e) = csm.eval_single_state(EXPLOSION_SENSOR, explosion_evidence) {
+        let explosion_effect = PropagatingEffect::Numerical(exp_data[i]);
+        if let Err(e) = csm.eval_single_state(EXPLOSION_SENSOR, &explosion_effect) {
             eprintln!("[CSM Error] Explosion sensor evaluation failed: {e}");
         }
     }

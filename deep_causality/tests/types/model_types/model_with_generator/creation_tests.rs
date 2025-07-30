@@ -54,7 +54,7 @@ impl
         ModelGenerativeError,
     > {
         let id = self.causaloid_id_to_create;
-        fn mock_causal_fn(_: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+        fn mock_causal_fn(_: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
             Ok(PropagatingEffect::Deterministic(false))
         }
         let causaloid = TestCausaloid::new(id, mock_causal_fn, "TestCausaloid");

@@ -4,7 +4,7 @@
  */
 
 use deep_causality::{
-    BaseCausaloid, CausalityError, Causaloid, Evidence, IdentificationValue, NumericalValue,
+    BaseCausaloid, CausalityError, Causaloid, IdentificationValue, NumericalValue,
     PropagatingEffect,
 };
 
@@ -12,8 +12,8 @@ pub fn get_smoke_sensor_causaloid() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "Tests whether smoke signal exceeds threshold of 65.0";
 
-    fn causal_fn(evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
-        let obs = unpack_evidence(evidence)?;
+    fn causal_fn(effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
+        let obs = unpack_evidence(effect)?;
         verify_obs(obs)?;
 
         let threshold: NumericalValue = 65.0;
@@ -29,8 +29,8 @@ pub fn get_fire_sensor_causaloid() -> BaseCausaloid {
     let id: IdentificationValue = 2;
     let description = "Tests if temperature exceeds 85 degree celsius (185 degree Fahrenheit) ";
 
-    fn causal_fn(evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
-        let obs = unpack_evidence(evidence)?;
+    fn causal_fn(effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
+        let obs = unpack_evidence(effect)?;
         verify_obs(obs)?;
 
         let threshold: NumericalValue = 85.0;
@@ -47,8 +47,8 @@ pub fn get_explosion_sensor_causaloid() -> BaseCausaloid {
     let description =
         "Tests if air pressure exceeds 100 PSI. Regular Atmospheric pressure is 14.696 psi ";
 
-    fn causal_fn(evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
-        let obs = unpack_evidence(evidence)?;
+    fn causal_fn(effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
+        let obs = unpack_evidence(effect)?;
         verify_obs(obs)?;
 
         let threshold: NumericalValue = 100.0;
@@ -61,10 +61,10 @@ pub fn get_explosion_sensor_causaloid() -> BaseCausaloid {
 }
 
 // Helper to reduce code duplication in causal functions.
-fn unpack_evidence(evidence: &Evidence) -> Result<NumericalValue, CausalityError> {
-    match evidence {
-        Evidence::Numerical(val) => Ok(*val),
-        _ => Err(CausalityError("Expected Numerical evidence.".into())),
+fn unpack_evidence(effect: &PropagatingEffect) -> Result<NumericalValue, CausalityError> {
+    match effect {
+        PropagatingEffect::Numerical(val) => Ok(*val),
+        _ => Err(CausalityError("Expected Numerical effect.".into())),
     }
 }
 

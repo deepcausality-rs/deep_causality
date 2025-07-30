@@ -21,15 +21,15 @@ fn test_explain_all_causes() {
     );
 
     // Evaluate the entire graph from the root.
-    let evidence = Evidence::Numerical(0.99);
-    let res = g.evaluate_subgraph_from_cause(root_index, &evidence);
+    let effect = PropagatingEffect::Numerical(0.99);
+    let res = g.evaluate_subgraph_from_cause(root_index, &effect);
     assert!(res.is_ok());
     assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(true));
 
     // Explain the fully evaluated graph.
     // The explanation order is determined by a Breadth-First Search from the root.
     let explanation = g.explain_all_causes().unwrap();
-    let base_expl = "Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: Deterministic(true)";
+    let base_expl = "Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: PropagatingEffect::Deterministic(true)";
     // Expected order from BFS: 0, 1, 2, 3
     let expected = format!(" * {base_expl}\n * {base_expl}\n * {base_expl}\n * {base_expl}");
     assert_eq!(explanation, expected);
@@ -63,15 +63,14 @@ fn test_explain_subgraph_from_cause() {
     let root_index = g.get_root_index().unwrap();
 
     // Evaluate the entire graph first.
-    let evidence = Evidence::Numerical(0.99);
-    g.evaluate_subgraph_from_cause(root_index, &evidence)
-        .unwrap();
+    let effect = PropagatingEffect::Numerical(0.99);
+    g.evaluate_subgraph_from_cause(root_index, &effect).unwrap();
 
     // Explain a subgraph starting from node 2.
     // The traversal will visit nodes 2 and its descendant, 3.
     let start_index = 2;
     let res = g.explain_subgraph_from_cause(start_index).unwrap();
-    let base_expl = "Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: Deterministic(true)";
+    let base_expl = "Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: PropagatingEffect::Deterministic(true)";
     let expected = format!(" * {base_expl}\n * {base_expl}");
     assert_eq!(res, expected);
 }
@@ -108,9 +107,8 @@ fn test_explain_shortest_path_between_causes() {
     let root_index = g.get_root_index().unwrap();
 
     // Evaluate the entire graph first.
-    let evidence = Evidence::Numerical(0.99);
-    g.evaluate_subgraph_from_cause(root_index, &evidence)
-        .unwrap();
+    let effect = PropagatingEffect::Numerical(0.99);
+    g.evaluate_subgraph_from_cause(root_index, &effect).unwrap();
 
     // Explain the shortest path from node 2 to node 3.
     // The path is just [2, 3].
@@ -120,7 +118,7 @@ fn test_explain_shortest_path_between_causes() {
         .explain_shortest_path_between_causes(start_index, stop_index)
         .unwrap();
 
-    let base_expl = "Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: Deterministic(true)";
+    let base_expl = "Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: PropagatingEffect::Deterministic(true)";
     let expected = format!(" * {base_expl}\n * {base_expl}");
     assert_eq!(res, expected);
 }

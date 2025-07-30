@@ -120,7 +120,7 @@ fn test_fails_on_multiple_root_causaloids() {
             >,
             ModelGenerativeError,
         > {
-            fn mock_fn(_: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+            fn mock_fn(_: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
                 Ok(PropagatingEffect::Deterministic(false))
             }
             let causaloid1 = TestCausaloid::new(100, mock_fn, "First");

@@ -16,10 +16,10 @@ fn get_test_causality_vec_deque() -> VecDeque<BaseCausaloid> {
 // Helper to activate all causes in a collection for testing purposes.
 fn activate_all_causes(col: &VecDeque<BaseCausaloid>) {
     // A value that ensures the default test causaloid (threshold 0.55) becomes active.
-    let evidence = Evidence::Numerical(0.99);
+    let effect = PropagatingEffect::Numerical(0.99);
     for cause in col {
         // We call evaluate to set the internal state, but ignore the result for this setup.
-        let _ = cause.evaluate(&evidence);
+        let _ = cause.evaluate(&effect);
     }
 }
 
@@ -48,16 +48,16 @@ fn test_evaluate_deterministic_propagation() {
     let col = get_test_causality_vec_deque();
 
     // Case 1: All succeed, chain should be deterministically true.
-    let evidence_success = Evidence::Numerical(0.99);
+    let effect_success = PropagatingEffect::Numerical(0.99);
     let res_success = col
-        .evaluate_deterministic_propagation(&evidence_success)
+        .evaluate_deterministic_propagation(&effect_success)
         .unwrap();
     assert_eq!(res_success, PropagatingEffect::Deterministic(true));
 
     // Case 2: One fails, chain should be deterministically false.
-    let evidence_fail = Evidence::Numerical(0.1);
+    let effect_fail = PropagatingEffect::Numerical(0.1);
     let res_fail = col
-        .evaluate_deterministic_propagation(&evidence_fail)
+        .evaluate_deterministic_propagation(&effect_fail)
         .unwrap();
     assert_eq!(res_fail, PropagatingEffect::Deterministic(false));
 }
@@ -68,17 +68,17 @@ fn test_evaluate_probabilistic_propagation() {
 
     // Case 1: All succeed (Deterministic(true) is treated as probability 1.0).
     // The cumulative probability should be 1.0.
-    let evidence_success = Evidence::Numerical(0.99);
+    let effect_success = PropagatingEffect::Numerical(0.99);
     let res_success = col
-        .evaluate_probabilistic_propagation(&evidence_success)
+        .evaluate_probabilistic_propagation(&effect_success)
         .unwrap();
     assert_eq!(res_success, PropagatingEffect::Probabilistic(1.0));
 
     // Case 2: One fails (Deterministic(false) is treated as probability 0.0).
     // The chain should short-circuit and return a cumulative probability of 0.0.
-    let evidence_fail = Evidence::Numerical(0.1);
+    let effect_fail = PropagatingEffect::Numerical(0.1);
     let res_fail = col
-        .evaluate_probabilistic_propagation(&evidence_fail)
+        .evaluate_probabilistic_propagation(&effect_fail)
         .unwrap();
     assert_eq!(res_fail, PropagatingEffect::Probabilistic(0.0));
 }
@@ -88,13 +88,13 @@ fn test_evaluate_mixed_propagation() {
     let col = get_test_causality_vec_deque();
 
     // Case 1: All succeed, chain remains deterministically true.
-    let evidence_success = Evidence::Numerical(0.99);
-    let res_success = col.evaluate_mixed_propagation(&evidence_success).unwrap();
+    let effect_success = PropagatingEffect::Numerical(0.99);
+    let res_success = col.evaluate_mixed_propagation(&effect_success).unwrap();
     assert_eq!(res_success, PropagatingEffect::Deterministic(true));
 
     // Case 2: One fails, chain becomes deterministically false.
-    let evidence_fail = Evidence::Numerical(0.1);
-    let res_fail = col.evaluate_mixed_propagation(&evidence_fail).unwrap();
+    let effect_fail = PropagatingEffect::Numerical(0.1);
+    let res_fail = col.evaluate_mixed_propagation(&effect_fail).unwrap();
     assert_eq!(res_fail, PropagatingEffect::Deterministic(false));
 }
 
@@ -103,7 +103,7 @@ fn test_explain() {
     let col = get_test_causality_vec_deque();
     activate_all_causes(&col);
 
-    let single_explanation = "\n * Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: Deterministic(true)\n";
+    let single_explanation = "\n * Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: PropagatingEffect::Deterministic(true)\n";
     let expected = single_explanation.repeat(3);
     let actual = col.explain().unwrap();
     assert_eq!(expected, actual);

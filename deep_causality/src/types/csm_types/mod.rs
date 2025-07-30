@@ -7,7 +7,7 @@ use crate::errors::{ActionError, UpdateError};
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
-use crate::{CausalAction, CausalState, Datable, Evidence, PropagatingEffect, Symbolic};
+use crate::{CausalAction, CausalState, Datable, PropagatingEffect, Symbolic};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
@@ -145,7 +145,11 @@ where
     /// # Errors
     /// Returns `ActionError` if the state does not exist, evaluation fails, the effect is not
     /// deterministic, or the action fails to fire.
-    pub fn eval_single_state(&self, id: usize, data: Evidence) -> Result<(), ActionError> {
+    pub fn eval_single_state(
+        &self,
+        id: usize,
+        data: &PropagatingEffect,
+    ) -> Result<(), ActionError> {
         let binding = self
             .state_actions
             .read()
@@ -159,7 +163,7 @@ where
         })?;
 
         // Evaluate the state, propagating any evaluation errors.
-        let effect = state.eval_with_data(&data).map_err(|e| {
+        let effect = state.eval_with_data(data).map_err(|e| {
             ActionError(format!(
                 "CSM[eval]: Error evaluating state {}: {}",
                 state.id(),

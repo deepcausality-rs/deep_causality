@@ -11,10 +11,10 @@ fn test_evaluate_shortest_path_between_causes() {
     // Reasons over a linear graph: root(0) -> A(1) -> B(2) ...
     let (g, _data) = test_utils_graph::get_small_linear_graph_and_data();
 
-    let evidence = Evidence::Numerical(0.99);
+    let effect = PropagatingEffect::Numerical(0.99);
 
     // 2. Evaluate the full path from the first to the last node.
-    let res = g.evaluate_shortest_path_between_causes(0, 10, &evidence);
+    let res = g.evaluate_shortest_path_between_causes(0, 10, &effect);
     dbg!(&res);
     assert!(res.is_ok());
 
@@ -24,12 +24,12 @@ fn test_evaluate_shortest_path_between_causes() {
 
 #[test]
 fn test_shortest_path_error_conditions() {
-    let evidence = Evidence::Numerical(0.99);
+    let effect = PropagatingEffect::Numerical(0.99);
 
     // Error: Graph is not frozen
     let (mut g, _) = test_utils_graph::get_small_linear_graph_and_data();
     g.unfreeze();
-    let res = g.evaluate_shortest_path_between_causes(0, 1, &evidence);
+    let res = g.evaluate_shortest_path_between_causes(0, 1, &effect);
     assert!(res.is_err());
     assert_eq!(
         res.unwrap_err().to_string(),
@@ -40,14 +40,14 @@ fn test_shortest_path_error_conditions() {
     let (g, _) = test_utils_graph::get_small_linear_graph_and_data();
 
     // Error: Start node does not exist. The underlying pathfinder returns a generic error.
-    let res = g.evaluate_shortest_path_between_causes(99, 1, &evidence);
+    let res = g.evaluate_shortest_path_between_causes(99, 1, &effect);
     assert!(res.is_err());
 
     dbg!(&res);
     assert!(res.unwrap_err().to_string().contains("No path found"));
 
     // Error: Stop node does not exist
-    let res = g.evaluate_shortest_path_between_causes(1, 99, &evidence);
+    let res = g.evaluate_shortest_path_between_causes(1, 99, &effect);
     assert!(res.is_err());
     assert!(res.unwrap_err().to_string().contains("No path found"));
 
@@ -61,7 +61,7 @@ fn test_shortest_path_error_conditions() {
         .unwrap(); // index 1
     g_disconnected.freeze();
 
-    let res = g_disconnected.evaluate_shortest_path_between_causes(0, 1, &evidence);
+    let res = g_disconnected.evaluate_shortest_path_between_causes(0, 1, &effect);
     assert!(res.is_err());
     assert!(res.unwrap_err().to_string().contains("No path found"));
 }
@@ -70,10 +70,10 @@ fn test_shortest_path_error_conditions() {
 fn test_shortest_path_on_single_node() {
     // Evaluating a "path" where start and stop are the same should just evaluate the single node.
     let (g, _) = test_utils_graph::get_small_linear_graph_and_data();
-    let evidence = Evidence::Numerical(0.99);
+    let effect = PropagatingEffect::Numerical(0.99);
 
     let res = g
-        .evaluate_shortest_path_between_causes(5, 5, &evidence)
+        .evaluate_shortest_path_between_causes(5, 5, &effect)
         .unwrap();
     assert_eq!(res, PropagatingEffect::Deterministic(true));
 }

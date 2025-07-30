@@ -10,12 +10,12 @@ use deep_causality::utils_test::test_utils::get_base_context;
 use deep_causality::utils_test::*;
 
 // Helper function to unpack numerical evidence, used in test causal functions.
-fn unpack_evidence(evidence: &Evidence) -> Result<NumericalValue, CausalityError> {
-    if let Evidence::Numerical(val) = evidence {
+fn unpack_evidence(effect: &PropagatingEffect) -> Result<NumericalValue, CausalityError> {
+    if let PropagatingEffect::Numerical(val) = effect {
         Ok(*val)
     } else {
         Err(CausalityError(format!(
-            "Expected Numerical evidence, got: {evidence:?}"
+            "Expected Numerical effect, got: {effect:?}"
         )))
     }
 }
@@ -25,9 +25,9 @@ fn test_new() {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
 
-    // CausalFn now takes &Evidence and returns Result<PropagatingEffect, CausalityError>
-    fn causal_fn(evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
-        let obs = unpack_evidence(evidence)?;
+    // CausalFn now takes &PropagatingEffect and returns Result<PropagatingEffect, CausalityError>
+    fn causal_fn(effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
+        let obs = unpack_evidence(effect)?;
         if obs.is_nan() {
             return Err(CausalityError("Observation is NULL/NAN".into()));
         }
@@ -50,12 +50,12 @@ fn test_new_with_context() {
     let description = "tests whether data exceeds threshold of 0.55";
     let context = get_base_context();
 
-    // ContextualCausalFn now takes &Evidence and returns Result<PropagatingEffect, CausalityError>
+    // ContextualCausalFn now takes &PropagatingEffect and returns Result<PropagatingEffect, CausalityError>
     fn contextual_causal_fn(
-        evidence: &Evidence,
+        effect: &PropagatingEffect,
         ctx: &Arc<BaseContext>,
     ) -> Result<PropagatingEffect, CausalityError> {
-        let obs = unpack_evidence(evidence)?;
+        let obs = unpack_evidence(effect)?;
         if obs.is_nan() {
             return Err(CausalityError("Observation is NULL/NAN".into()));
         }
@@ -95,11 +95,11 @@ fn test_collection_causaloid_evaluation() {
     assert!(!causaloid.is_singleton());
 
     // Evaluate the collection-based causaloid.
-    let evidence = Evidence::Numerical(0.99);
-    let effect = causaloid.evaluate(&evidence).unwrap();
+    let effect = PropagatingEffect::Numerical(0.99);
+    let res = causaloid.evaluate(&effect).unwrap();
 
     // The default aggregation for a collection is "any true".
-    assert_eq!(effect, PropagatingEffect::Deterministic(true));
+    assert_eq!(res, PropagatingEffect::Deterministic(true));
     assert!(causaloid.causal_collection().is_some());
     assert!(causaloid.causal_graph().is_none());
     assert!(causaloid.context().is_none());
@@ -155,8 +155,8 @@ fn test_from_causal_graph() {
     );
 
     // Use the new `evaluate` method.
-    let evidence = Evidence::Numerical(0.99);
-    let res = causaloid.evaluate(&evidence);
+    let effect = PropagatingEffect::Numerical(0.99);
+    let res = causaloid.evaluate(&effect);
     assert!(res.is_ok());
 
     // The default evaluation of a graph causaloid should propagate.
@@ -185,8 +185,8 @@ fn test_from_causal_graph_with_context() {
         "No nodes in the graph have been evaluated or produced an explainable effect.".to_string()
     );
 
-    let evidence = Evidence::Numerical(0.99);
-    let res = causaloid.evaluate(&evidence);
+    let effect = PropagatingEffect::Numerical(0.99);
+    let res = causaloid.evaluate(&effect);
     assert!(res.is_ok());
 
     assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(true));
@@ -225,8 +225,8 @@ fn test_causal_graph_explain() {
         "No nodes in the graph have been evaluated or produced an explainable effect.".to_string()
     );
 
-    let evidence = Evidence::Numerical(0.99);
-    let eval = causaloid.evaluate(&evidence);
+    let effect = PropagatingEffect::Numerical(0.99);
+    let eval = causaloid.evaluate(&effect);
     assert!(eval.is_ok());
     assert_eq!(eval.unwrap(), PropagatingEffect::Deterministic(true));
 
@@ -240,12 +240,12 @@ fn test_explain() {
     // Before evaluation, state is unknown.
     assert!(causaloid.explain().is_err());
 
-    let evidence = Evidence::Numerical(0.78);
-    let res = causaloid.evaluate(&evidence).unwrap();
+    let effect = PropagatingEffect::Numerical(0.78);
+    let res = causaloid.evaluate(&effect).unwrap();
     assert_eq!(res, PropagatingEffect::Deterministic(true));
 
     let actual = causaloid.explain().unwrap();
-    let expected = "Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: Deterministic(true)".to_string();
+    let expected = "Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: PropagatingEffect::Deterministic(true)".to_string();
     assert_eq!(actual, expected);
 }
 
@@ -253,8 +253,8 @@ fn test_explain() {
 fn test_evaluate_singleton() {
     let causaloid = test_utils::get_test_causaloid();
 
-    let evidence = Evidence::Numerical(0.78);
-    let res = causaloid.evaluate(&evidence).unwrap();
+    let effect = PropagatingEffect::Numerical(0.78);
+    let res = causaloid.evaluate(&effect).unwrap();
     assert_eq!(res, PropagatingEffect::Deterministic(true));
 }
 
@@ -267,8 +267,8 @@ fn test_to_string() {
     assert_eq!(actual_unevaluated, expected_unevaluated);
 
     // Evaluate to active
-    let evidence = Evidence::Numerical(0.99);
-    causaloid.evaluate(&evidence).unwrap();
+    let effect = PropagatingEffect::Numerical(0.99);
+    causaloid.evaluate(&effect).unwrap();
     let expected_active = "Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55";
     let actual_active = causaloid.to_string();
     assert_eq!(actual_active, expected_active);
@@ -283,8 +283,8 @@ fn test_debug() {
     assert_eq!(actual_unevaluated, expected_unevaluated);
 
     // Evaluate to active
-    let evidence = Evidence::Numerical(0.99);
-    causaloid.evaluate(&evidence).unwrap();
+    let effect = PropagatingEffect::Numerical(0.99);
+    causaloid.evaluate(&effect).unwrap();
     let expected_active = "Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55";
     let actual_active = format!("{causaloid:?}");
     assert_eq!(actual_active, expected_active);
@@ -300,11 +300,11 @@ fn test_evaluate_collection_with_halting_effect() {
         Causaloid::from_causal_collection(100, Arc::new(causal_coll), "Halting Collection");
 
     // Act
-    let evidence = Evidence::Numerical(0.0);
-    let effect = collection_causaloid.evaluate(&evidence).unwrap();
+    let effect = PropagatingEffect::Numerical(0.0);
+    let res = collection_causaloid.evaluate(&effect).unwrap();
 
     // Assert: The Halting effect should short-circuit the evaluation.
-    assert_eq!(effect, PropagatingEffect::Halting);
+    assert_eq!(res, PropagatingEffect::Halting);
 }
 
 #[test]
@@ -317,11 +317,11 @@ fn test_evaluate_collection_without_true_effect() {
         Causaloid::from_causal_collection(101, Arc::new(causal_coll), "All False Collection");
 
     // Act
-    let evidence = Evidence::Numerical(0.0);
-    let effect = collection_causaloid.evaluate(&evidence).unwrap();
+    let effect = PropagatingEffect::Numerical(0.0);
+    let res = collection_causaloid.evaluate(&effect).unwrap();
 
     // Assert: Since no causaloid is true, the aggregated effect should be false.
-    assert_eq!(effect, PropagatingEffect::Deterministic(false));
+    assert_eq!(res, PropagatingEffect::Deterministic(false));
 }
 
 #[test]
@@ -337,8 +337,8 @@ fn test_evaluate_collection_with_sub_evaluation_error() {
         Causaloid::from_causal_collection(102, Arc::new(causal_coll), "Error Collection");
 
     // Act
-    let evidence = Evidence::Numerical(0.0);
-    let result = collection_causaloid.evaluate(&evidence);
+    let effect = PropagatingEffect::Numerical(0.0);
+    let result = collection_causaloid.evaluate(&effect);
 
     // Assert: The error from the sub-causaloid should now be propagated up.
     assert!(result.is_err());
@@ -359,15 +359,15 @@ fn test_explain_collection_success() {
         Causaloid::from_causal_collection(104, Arc::new(causal_coll), "Explainable Collection");
 
     // Act: Evaluate the collection. Now both members will be evaluated.
-    let evidence = Evidence::Numerical(0.0);
-    collection_causaloid.evaluate(&evidence).unwrap();
+    let effect = PropagatingEffect::Numerical(0.0);
+    collection_causaloid.evaluate(&effect).unwrap();
 
     // Now, call explain.
     let explanation = collection_causaloid.explain().unwrap();
 
     // Assert: The explanation should contain the results from both sub-causaloids.
-    assert!(explanation.contains("evaluated to: Deterministic(true)"));
-    assert!(explanation.contains("evaluated to: Deterministic(false)"));
+    assert!(explanation.contains("evaluated to: PropagatingEffect::Deterministic(true)"));
+    assert!(explanation.contains("evaluated to: PropagatingEffect::Deterministic(false)"));
 }
 // This test covers an error path in explain() for a Collection Causaloid.
 #[test]
@@ -384,8 +384,8 @@ fn test_explain_collection_with_sub_explain_error() {
     );
 
     // Act: Evaluate the collection. The evaluation will stop after the first `true` effect.
-    let evidence = Evidence::Numerical(0.0);
-    collection_causaloid.evaluate(&evidence).unwrap();
+    let effect = PropagatingEffect::Numerical(0.0);
+    collection_causaloid.evaluate(&effect).unwrap();
 
     // Now, call explain. This will fail because the second causaloid was never evaluated.
     let result = collection_causaloid.explain();
@@ -403,10 +403,10 @@ fn test_evaluate_singleton_with_context() {
     let context = get_base_context();
 
     fn contextual_causal_fn(
-        evidence: &Evidence,
+        effect: &PropagatingEffect,
         ctx: &Arc<BaseContext>,
     ) -> Result<PropagatingEffect, CausalityError> {
-        let obs = unpack_evidence(evidence)?;
+        let obs = unpack_evidence(effect)?;
         // Get contextoid by ID. In get_base_context, the node at index 0 has ID 1.
         let contextoid = ctx.get_node(0).expect("Could not find contextoid");
         // Extract a value from the contextoid.
@@ -420,14 +420,14 @@ fn test_evaluate_singleton_with_context() {
         Causaloid::new_with_context(id, contextual_causal_fn, Arc::new(context), description);
 
     // Evaluate with evidence that should result in true (1.5 >= 1.0)
-    let evidence_true = Evidence::Numerical(1.5);
-    let effect_true = causaloid.evaluate(&evidence_true).unwrap();
-    assert_eq!(effect_true, PropagatingEffect::Deterministic(true));
+    let effect_true = PropagatingEffect::Numerical(1.5);
+    let res_true = causaloid.evaluate(&effect_true).unwrap();
+    assert_eq!(res_true, PropagatingEffect::Deterministic(true));
 
     // Evaluate with evidence that should result in false (0.5 < 1.0)
-    let evidence_false = Evidence::Numerical(0.5);
-    let effect_false = causaloid.evaluate(&evidence_false).unwrap();
-    assert_eq!(effect_false, PropagatingEffect::Deterministic(false));
+    let effect_false = PropagatingEffect::Numerical(0.5);
+    let res_false = causaloid.evaluate(&effect_false).unwrap();
+    assert_eq!(res_false, PropagatingEffect::Deterministic(false));
 }
 
 #[test]
@@ -446,10 +446,10 @@ fn test_evaluate_collection_ignores_other_effects() {
         Causaloid::from_causal_collection(103, Arc::new(causal_coll), "Ignore Others Collection");
 
     // Act
-    let evidence = Evidence::Numerical(0.0);
-    let effect = collection_causaloid.evaluate(&evidence).unwrap();
+    let effect = PropagatingEffect::Numerical(0.0);
+    let res = collection_causaloid.evaluate(&effect).unwrap();
 
     // Assert: The aggregation logic should ignore Probabilistic and ContextualLink,
     // resulting in an overall effect of Deterministic(false).
-    assert_eq!(effect, PropagatingEffect::Deterministic(false));
+    assert_eq!(res, PropagatingEffect::Deterministic(false));
 }
