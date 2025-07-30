@@ -5,16 +5,16 @@
 
 use deep_causality::errors::CausalityError;
 use deep_causality::{
-    BaseCausaloid, Causaloid, Evidence, IdentificationValue, NumericalValue, PropagatingEffect,
+    BaseCausaloid, Causaloid, IdentificationValue, NumericalValue, PropagatingEffect,
 };
 
 pub fn get_test_causaloid() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
 
-    fn causal_fn(evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+    fn causal_fn(evidence: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
         let obs = match evidence {
-            Evidence::Numerical(val) => *val,
+            PropagatingEffect::Numerical(val) => *val,
             _ => return Err(CausalityError("Expected Numerical evidence.".into())),
         };
 
