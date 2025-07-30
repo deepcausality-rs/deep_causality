@@ -9,7 +9,6 @@ use std::sync::Arc;
 use ultragraph::UltraGraph;
 
 mod debug;
-mod default;
 mod display;
 mod partial_eq;
 
@@ -22,9 +21,10 @@ pub type EffectGraph = UltraGraph<crate::PropagatingEffect>;
 /// creating a single, uniform signal that flows through the causal graph. Its variants
 /// can represent simple data, complex structures, terminal states, or explicit
 /// commands for the reasoning engine.
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub enum PropagatingEffect {
     /// Represents the absence of a signal or evidence. Serves as the default.
+    #[default]
     None,
     /// Represents a simple boolean value. As an output, this is often a terminal effect.
     Deterministic(bool),
