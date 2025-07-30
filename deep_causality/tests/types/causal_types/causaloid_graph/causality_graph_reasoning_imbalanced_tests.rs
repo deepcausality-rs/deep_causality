@@ -14,32 +14,32 @@ fn test_left_imbalanced_cause_graph() {
 
     // Single reasoning: Activate node C (index 3).
     let index_c = 3;
-    let evidence = Evidence::Numerical(0.99);
-    let res = g.evaluate_single_cause(index_c, &evidence);
+    let effect = PropagatingEffect::Numerical(0.99);
+    let res = g.evaluate_single_cause(index_c, &effect);
     assert!(res.is_ok());
     assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(true));
 
     // 3. Partial reasoning from A (index 1). This will also activate its descendants D and E.
-    let res = g.evaluate_subgraph_from_cause(1, &evidence);
+    let res = g.evaluate_subgraph_from_cause(1, &effect);
     assert!(res.is_ok());
     assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(true));
 
     // 4. Selective sub-graph reasoning from A(1) to D(4).
     // The path is [1, 4]. These nodes are already active. Re-evaluating them is idempotent.
-    let res = g.evaluate_shortest_path_between_causes(1, 4, &evidence);
+    let res = g.evaluate_shortest_path_between_causes(1, 4, &effect);
     assert!(res.is_ok());
     assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(true));
 
     // 5. Single reasoning: Deactivate node A (index 1).
     let index_c = 1;
-    let evidence = Evidence::Numerical(0.02);
-    let res = g.evaluate_single_cause(index_c, &evidence);
+    let effect = PropagatingEffect::Numerical(0.02);
+    let res = g.evaluate_single_cause(index_c, &effect);
     assert!(res.is_ok());
     assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(false));
 
     // 6. Full reasoning over the entire graph from the root.
-    let evidence = Evidence::Numerical(0.99);
-    let res = g.evaluate(&evidence);
+    let effect = PropagatingEffect::Numerical(0.99);
+    let res = g.evaluate(&effect);
     dbg!(&res);
     assert!(res.is_ok());
     // The graph's evaluate() returns true if any sink node is active.
@@ -54,27 +54,27 @@ fn test_right_imbalanced_cause_graph() {
 
     // Single reasoning: Activate node C (index 3).
     let index_c = 3;
-    let evidence = Evidence::Numerical(0.99);
-    let res = g.evaluate_single_cause(index_c, &evidence);
+    let effect = PropagatingEffect::Numerical(0.99);
+    let res = g.evaluate_single_cause(index_c, &effect);
     assert!(res.is_ok());
     assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(true));
 
     // 3. Partial reasoning from C (index 3). This will also activate its descendants D and E.
-    let res = g.evaluate_subgraph_from_cause(3, &evidence);
+    let res = g.evaluate_subgraph_from_cause(3, &effect);
     assert!(res.is_ok());
     assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(true));
 
     // 4. Single reasoning: Deactivate node A (index 1).
     let index_c = 1;
-    let evidence = Evidence::Numerical(0.02);
-    let res = g.evaluate_single_cause(index_c, &evidence);
+    let effect = PropagatingEffect::Numerical(0.02);
+    let res = g.evaluate_single_cause(index_c, &effect);
     dbg!(&res);
     assert!(res.is_ok());
     assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(false));
 
     // 5. Full reasoning over the entire graph from the root.
-    let evidence = Evidence::Numerical(0.99);
-    let res = g.evaluate(&evidence);
+    let effect = PropagatingEffect::Numerical(0.99);
+    let res = g.evaluate(&effect);
     assert!(res.is_ok());
     assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(true));
 }

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Causable, CausalityError, Evidence, NumericalValue, PropagatingEffect};
+use crate::{Causable, CausalityError, NumericalValue, PropagatingEffect};
 
 /// Provides default implementations for reasoning over collections of `Causable` items.
 ///
@@ -42,16 +42,16 @@ where
     /// to `Deterministic(false)`, the chain evaluation stops and returns that effect.
     ///
     /// # Arguments
-    /// * `evidence` - A single `Evidence` object (e.g., a Map or Graph) that all causes will use.
+    /// * `effect` - A single `PropagatingEffect` object (e.g., a Map or Graph) that all causes will use.
     ///
     /// # Errors
     /// Returns a `CausalityError` if any cause in the chain produces a non-deterministic effect.
     fn evaluate_deterministic_propagation(
         &self,
-        evidence: &Evidence,
+        effect: &PropagatingEffect,
     ) -> Result<PropagatingEffect, CausalityError> {
         for cause in self.get_all_items() {
-            let effect = cause.evaluate(evidence)?;
+            let effect = cause.evaluate(effect)?;
 
             // This function enforces a strict deterministic contract.
             match effect {
@@ -83,18 +83,18 @@ where
     /// of 1.0 and `false` as 0.0.
     ///
     /// # Arguments
-    /// * `evidence` - A single `Evidence` object that all causes will use.
+    /// * `effect` - A single `PropagatingEffect` object that all causes will use.
     ///
     /// # Errors
     /// Returns a `CausalityError` if a `ContextualLink` is encountered.
     fn evaluate_probabilistic_propagation(
         &self,
-        evidence: &Evidence,
+        effect: &PropagatingEffect,
     ) -> Result<PropagatingEffect, CausalityError> {
         let mut cumulative_prob: NumericalValue = 1.0;
 
         for cause in self.get_all_items() {
-            let effect = cause.evaluate(evidence)?;
+            let effect = cause.evaluate(effect)?;
 
             match effect {
                 PropagatingEffect::Probabilistic(p) => {
@@ -117,6 +117,12 @@ where
                         "Encountered a ContextualLink in a probabilistic chain evaluation.".into(),
                     ));
                 }
+                _ => {
+                    // Other variants are not handled in this mode.
+                    return Err(CausalityError(format!(
+                        "evaluate_probabilistic_propagation encountered an unhandled effect: {effect:?}"
+                    )));
+                }
             }
         }
 
@@ -127,19 +133,19 @@ where
     /// probabilistic effects, aggregating them into a final effect.
     ///
     /// # Arguments
-    /// * `evidence` - A single `Evidence` object that all causes will use.
+    /// * `effect` - A single `PropagatingEffect` object that all causes will use.
     ///
     /// # Errors
     /// Returns a `CausalityError` if a `ContextualLink` is encountered.
     fn evaluate_mixed_propagation(
         &self,
-        evidence: &Evidence,
+        effect: &PropagatingEffect,
     ) -> Result<PropagatingEffect, CausalityError> {
         // The chain starts as deterministically true. It can transition to probabilistic.
         let mut aggregated_effect = PropagatingEffect::Deterministic(true);
 
         for cause in self.get_all_items() {
-            let current_effect = cause.evaluate(evidence)?;
+            let current_effect = cause.evaluate(effect)?;
 
             // Update the aggregated effect based on the current effect.
             aggregated_effect = match (aggregated_effect, current_effect) {

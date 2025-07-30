@@ -41,14 +41,14 @@ pub fn get_test_causality_vec() -> BaseCausaloidVec {
     Vec::from_iter([q1, q2, q3])
 }
 
-pub fn get_test_single_data(val: NumericalValue) -> Evidence {
-    Evidence::Numerical(val)
+pub fn get_test_single_data(val: NumericalValue) -> PropagatingEffect {
+    PropagatingEffect::Numerical(val)
 }
 
 pub fn get_test_causaloid_deterministic_true() -> BaseCausaloid {
     let description = "tests nothing; always returns true";
 
-    fn causal_fn(_evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+    fn causal_fn(_effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
         Ok(PropagatingEffect::Deterministic(true))
     }
 
@@ -58,7 +58,7 @@ pub fn get_test_causaloid_deterministic_true() -> BaseCausaloid {
 pub fn get_test_causaloid_deterministic_false() -> BaseCausaloid {
     let description = "tests nothing; always returns true";
 
-    fn causal_fn(_evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+    fn causal_fn(_effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
         Ok(PropagatingEffect::Deterministic(false))
     }
 
@@ -68,7 +68,7 @@ pub fn get_test_causaloid_deterministic_false() -> BaseCausaloid {
 pub fn get_test_causaloid_probabilistic() -> BaseCausaloid {
     let description = "tests nothing; always returns 0.0";
 
-    fn causal_fn(_evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+    fn causal_fn(_effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
         Ok(PropagatingEffect::Probabilistic(0.0))
     }
 
@@ -78,7 +78,7 @@ pub fn get_test_causaloid_probabilistic() -> BaseCausaloid {
 pub fn get_test_causaloid_halting() -> BaseCausaloid {
     let description = "tests nothing; always returns Halting";
 
-    fn causal_fn(_evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+    fn causal_fn(_effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
         Ok(PropagatingEffect::Halting)
     }
 
@@ -88,7 +88,7 @@ pub fn get_test_causaloid_halting() -> BaseCausaloid {
 pub fn get_test_causaloid_contextual_link() -> BaseCausaloid {
     let description = "tests nothing; always returns a contetual link";
 
-    fn causal_fn(_evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+    fn causal_fn(_effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
         Ok(PropagatingEffect::ContextualLink(0, 1))
     }
 
@@ -99,14 +99,14 @@ pub fn get_test_causaloid() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
 
-    fn causal_fn(evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+    fn causal_fn(effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
         let obs =
-            match evidence {
+            match effect {
                 // If it's the Numerical variant, extract the inner value.
-                Evidence::Numerical(val) => *val,
-                // For any other type of evidence, this function cannot proceed, so return an error.
+                PropagatingEffect::Numerical(val) => *val,
+                // For any other type of effect, this function cannot proceed, so return an error.
                 _ => return Err(CausalityError(
-                    "Causal function expected Numerical evidence but received a different variant."
+                    "Causal function expected Numerical effect but received a different variant."
                         .into(),
                 )),
             };
@@ -144,7 +144,7 @@ pub fn get_test_error_causaloid() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
 
-    fn causal_fn(_obs: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+    fn causal_fn(_obs: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
         Err(CausalityError("Test error".into()))
     }
 

@@ -1,6 +1,6 @@
 use crate::{
     Causable, CausableGraph, CausableGraphExplaining, CausableGraphReasoning, CausalityError,
-    CausaloidGraph, Evidence, PropagatingEffect,
+    CausaloidGraph, PropagatingEffect,
 };
 use std::fmt::Display;
 
@@ -19,7 +19,7 @@ where
     /// `CausableGraphReasoning` trait to perform the actual traversal and evaluation.
     /// The final propagated effect is determined by the graph's overall active state
     /// after the evaluation is complete.
-    fn evaluate(&self, evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+    fn evaluate(&self, effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
         // Since the graph is guaranteed to have a single root, start evaluation there.
         let root_index = self
             .get_root_index()
@@ -27,7 +27,7 @@ where
 
         // Delegate to the reasoning algorithm from the `CausableGraphReasoning` trait.
         // This will traverse and evaluate the entire graph from the root.
-        let effect = self.evaluate_subgraph_from_cause(root_index, evidence)?;
+        let effect = self.evaluate_subgraph_from_cause(root_index, effect)?;
 
         if matches!(effect, PropagatingEffect::Halting) {
             return Ok(PropagatingEffect::Halting);

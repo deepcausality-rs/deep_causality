@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalityError, Context, Evidence, NumericalValue, PropagatingEffect};
+use crate::{CausalityError, Context, NumericalValue, PropagatingEffect};
 use std::sync::Arc;
 
 // Fn aliases for assumable, assumption, & assumption collection
@@ -16,12 +16,12 @@ pub type EvalFn = fn(&[NumericalValue]) -> bool;
 ///
 /// # Arguments
 ///
-/// * `evidence` - A reference to the `Evidence` flowing through the graph during reasoning.
+/// * `effect` - A reference to the `PropagatingEffect` flowing through the graph during reasoning.
 ///
 /// # Returns
 ///
 /// A `Result` containing either a `PropagatingEffect` on success or a `CausalityError` on failure.
-pub type CausalFn = fn(evidence: &Evidence) -> Result<PropagatingEffect, CausalityError>;
+pub type CausalFn = fn(effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError>;
 
 /// The unified function signature for all singleton causaloids that require access to a shared, external context.
 ///
@@ -30,7 +30,7 @@ pub type CausalFn = fn(evidence: &Evidence) -> Result<PropagatingEffect, Causali
 ///
 /// # Arguments
 ///
-/// * `evidence` - A reference to the `Evidence` flowing through the graph during reasoning.
+/// * `effect` - A reference to the `PropagatingEffect` flowing through the graph during reasoning.
 /// * `context` - A reference to the shared `Context` object.
 ///
 /// # Returns
@@ -38,6 +38,6 @@ pub type CausalFn = fn(evidence: &Evidence) -> Result<PropagatingEffect, Causali
 /// A `Result` containing either a `PropagatingEffect` on success or a `CausalityError` on failure.
 pub type ContextualCausalFn<D, S, T, ST, SYM, VS, VT> =
     fn(
-        evidence: &Evidence,
+        effect: &PropagatingEffect,
         context: &Arc<Context<D, S, T, ST, SYM, VS, VT>>,
     ) -> Result<PropagatingEffect, CausalityError>;

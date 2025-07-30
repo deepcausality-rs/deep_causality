@@ -7,7 +7,7 @@ use std::collections::VecDeque;
 
 use ultragraph::*;
 
-use crate::{Causable, CausableGraph, CausalityError, Evidence, PropagatingEffect};
+use crate::{Causable, CausableGraph, CausalityError, PropagatingEffect};
 
 /// Describes signatures for causal reasoning and explaining
 /// in causality hyper graph.
@@ -22,7 +22,7 @@ where
     /// # Arguments
     ///
     /// * `index` - The index of the causaloid to evaluate.
-    /// * `evidence` - The runtime evidence to be passed to the node's evaluation function.
+    /// * `effect` - The runtime effect to be passed to the node's evaluation function.
     ///
     /// # Returns
     ///
@@ -31,13 +31,13 @@ where
     fn evaluate_single_cause(
         &self,
         index: usize,
-        evidence: &Evidence,
+        effect: &PropagatingEffect,
     ) -> Result<PropagatingEffect, CausalityError> {
         let cause = self.get_causaloid(index).ok_or_else(|| {
             CausalityError(format!("Causaloid with index {index} not found in graph"))
         })?;
 
-        cause.evaluate(evidence)
+        cause.evaluate(effect)
     }
 
     /// Reasons over a subgraph by traversing all nodes reachable from a given start index.
@@ -49,7 +49,7 @@ where
     /// # Arguments
     ///
     /// * `start_index` - The index of the node to start the traversal from.
-    /// * `evidence` - The runtime evidence to be passed to each node's evaluation function.
+    /// * `effect` - The runtime effect to be passed to each node's evaluation function.
     ///
     /// # Returns
     ///
@@ -59,7 +59,7 @@ where
     fn evaluate_subgraph_from_cause(
         &self,
         start_index: usize,
-        evidence: &Evidence,
+        effect: &PropagatingEffect,
     ) -> Result<PropagatingEffect, CausalityError> {
         if !self.is_frozen() {
             return Err(CausalityError(
@@ -85,9 +85,9 @@ where
             })?;
 
             // Evaluate the current cause using the new unified method.
-            // The same `evidence` is passed to each node, and the node's CausalFn
-            // is responsible for extracting the data it needs from the evidence map.
-            let effect = cause.evaluate(evidence)?;
+            // The same `effect` is passed to each node, and the node's CausalFn
+            // is responsible for extracting the data it needs from the effect map.
+            let effect = cause.evaluate(effect)?;
 
             match effect {
                 // If any cause halts, the entire subgraph reasoning halts immediately.
@@ -125,7 +125,7 @@ where
     ///
     /// * `start_index` - The index of the start cause.
     /// * `stop_index` - The index of the stop cause.
-    /// * `evidence` - The runtime evidence to be passed to each node's evaluation function.
+    /// * `effect` - The runtime effect to be passed to each node's evaluation function.
     ///
     /// # Returns
     ///
@@ -137,7 +137,7 @@ where
         &self,
         start_index: usize,
         stop_index: usize,
-        evidence: &Evidence,
+        effect: &PropagatingEffect,
     ) -> Result<PropagatingEffect, CausalityError> {
         if !self.is_frozen() {
             return Err(CausalityError(
@@ -150,7 +150,7 @@ where
             let cause = self.get_causaloid(start_index).ok_or_else(|| {
                 CausalityError(format!("Failed to get causaloid at index {start_index}"))
             })?;
-            return cause.evaluate(evidence);
+            return cause.evaluate(effect);
         }
 
         // get_shortest_path will handle checks for missing nodes.
@@ -161,7 +161,7 @@ where
                 CausalityError(format!("Failed to get causaloid at index {index}"))
             })?;
 
-            let effect = cause.evaluate(evidence)?;
+            let effect = cause.evaluate(effect)?;
 
             match effect {
                 // If any node on the path is false or halts, the entire path fails.

@@ -9,7 +9,7 @@ use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
 use crate::types::causal_types::causaloid::causal_type::CausaloidType;
-use crate::{Causable, Causaloid, Datable, Evidence, PropagatingEffect, Symbolic};
+use crate::{Causable, Causaloid, Datable, PropagatingEffect, Symbolic};
 
 #[allow(clippy::type_complexity)]
 impl<D, S, T, ST, SYM, VS, VT> Causable for Causaloid<D, S, T, ST, SYM, VS, VT>
@@ -22,7 +22,7 @@ where
     VS: Clone,
     VT: Clone,
 {
-    fn evaluate(&self, evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+    fn evaluate(&self, effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
         let effect = match self.causal_type {
             CausaloidType::Singleton => {
                 if !matches!(self.causal_type, CausaloidType::Singleton) {
@@ -39,13 +39,13 @@ where
                             self.id
                         ))
                     })?;
-                    context_fn(evidence, context)
+                    context_fn(effect, context)
                 } else {
                     // Standard path
                     let causal_fn = self.causal_fn.ok_or_else(|| {
                         CausalityError(format!("Causaloid {} is missing a causal_fn", self.id))
                     })?;
-                    causal_fn(evidence)
+                    causal_fn(effect)
                 }?
             }
 
@@ -58,7 +58,7 @@ where
                 // Prioritizes Halting, then looks for the first Deterministic(true).
                 let mut has_true = false;
                 for cause in coll.iter() {
-                    match cause.evaluate(evidence)? {
+                    match cause.evaluate(effect)? {
                         PropagatingEffect::Halting => return Ok(PropagatingEffect::Halting),
                         PropagatingEffect::Deterministic(true) => {
                             has_true = true;
@@ -75,7 +75,7 @@ where
                     CausalityError("Causaloid::evaluate: Causal graph is None".into())
                 })?;
                 // Delegate evaluation to the graph, which also implements Causable.
-                graph.evaluate(evidence)?
+                graph.evaluate(effect)?
             }
         };
 

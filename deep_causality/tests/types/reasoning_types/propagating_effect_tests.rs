@@ -89,31 +89,49 @@ fn test_as_contextual_link() {
 #[test]
 fn test_display() {
     let effect1 = PropagatingEffect::Deterministic(true);
-    assert_eq!(format!("{effect1}"), "Deterministic: true");
+    assert_eq!(
+        format!("{effect1}"),
+        "PropagatingEffect::Deterministic(true)"
+    );
 
     let effect2 = PropagatingEffect::Probabilistic(0.5);
-    assert_eq!(format!("{effect2}"), "Probabilistic: 0.5");
+    assert_eq!(
+        format!("{effect2}"),
+        "PropagatingEffect::Probabilistic(0.5)"
+    );
 
     let effect3 = PropagatingEffect::ContextualLink(1, 2);
-    assert_eq!(format!("{effect3}"), "ContextualLink: 1 Contextoid: 2");
+    assert_eq!(
+        format!("{effect3}"),
+        "PropagatingEffect::ContextualLink(1, 2)"
+    );
 
     let effect4 = PropagatingEffect::Halting;
-    assert_eq!(format!("{effect4}"), "Halting");
+    assert_eq!(format!("{effect4}"), "PropagatingEffect::Halting");
 }
 
 #[test]
 fn test_debug() {
     let effect1 = PropagatingEffect::Deterministic(true);
-    assert_eq!(format!("{effect1:?}"), "Deterministic(true)");
+    assert_eq!(
+        format!("{effect1:?}"),
+        "PropagatingEffect::Deterministic(true)"
+    );
 
     let effect2 = PropagatingEffect::Probabilistic(0.5);
-    assert_eq!(format!("{effect2:?}"), "Probabilistic(0.5)");
+    assert_eq!(
+        format!("{effect2:?}"),
+        "PropagatingEffect::Probabilistic(0.5)"
+    );
 
     let effect3 = PropagatingEffect::ContextualLink(1, 2);
-    assert_eq!(format!("{effect3:?}"), "ContextualLink(1, 2)");
+    assert_eq!(
+        format!("{effect3:?}"),
+        "PropagatingEffect::ContextualLink(1, 2)"
+    );
 
     let effect4 = PropagatingEffect::Halting;
-    assert_eq!(format!("{effect4:?}"), "Halting");
+    assert_eq!(format!("{effect4:?}"), "PropagatingEffect::Halting");
 }
 
 #[test]

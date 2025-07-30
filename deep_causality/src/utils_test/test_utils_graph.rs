@@ -9,11 +9,11 @@ const SMALL: usize = 9;
 fn get_test_causaloid() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
-    fn causal_fn(evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
-        let obs = match evidence {
+    fn causal_fn(effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
+        let obs = match effect {
             // If it's the Numerical variant, extract the inner value.
-            Evidence::Numerical(val) => *val,
-            _ => 99.0, // For any other type of evidence
+            PropagatingEffect::Numerical(val) => *val,
+            _ => 99.0, // For any other type of effect
         };
         let threshold: NumericalValue = 0.55;
         if !obs.ge(&threshold) {

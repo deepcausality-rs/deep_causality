@@ -4,7 +4,7 @@
  */
 
 use deep_causality::utils_test::test_utils_graph;
-use deep_causality::{Causable, Evidence, PropagatingEffect};
+use deep_causality::{Causable, PropagatingEffect};
 
 #[test]
 fn test_linear_graph() {
@@ -15,8 +15,8 @@ fn test_linear_graph() {
 
     // 2. Evaluate the graph using the high-level Causable::evaluate method.
     // The synthetic dataset is designed to activate all nodes.
-    let evidence = Evidence::Numerical(0.99);
-    let res = g.evaluate(&evidence);
+    let effect = PropagatingEffect::Numerical(0.99);
+    let res = g.evaluate(&effect);
 
     // Assert that evaluation was successful.
     assert!(res.is_ok());

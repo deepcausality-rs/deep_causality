@@ -13,8 +13,8 @@ fn test_evaluate_single_cause_success() {
     let index = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     g.freeze(); // Reasoning requires a frozen graph
     // Evaluate the node using the high-level graph API.
-    let evidence = Evidence::Numerical(0.99);
-    let res = g.evaluate_single_cause(index, &evidence);
+    let effect = PropagatingEffect::Numerical(0.99);
+    let res = g.evaluate_single_cause(index, &effect);
 
     assert!(res.is_ok());
     assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(true));
@@ -22,12 +22,12 @@ fn test_evaluate_single_cause_success() {
 
 #[test]
 fn test_evaluate_single_cause_error_conditions() {
-    let evidence = Evidence::Numerical(0.99);
+    let effect = PropagatingEffect::Numerical(0.99);
 
     // Case 1: Node does not exist in the graph.
     let g: BaseCausalGraph = CausaloidGraph::new(0);
     let non_existent_index = 99;
-    let res = g.evaluate_single_cause(non_existent_index, &evidence);
+    let res = g.evaluate_single_cause(non_existent_index, &effect);
 
     assert!(res.is_err());
     assert_eq!(
@@ -43,7 +43,7 @@ fn test_evaluate_single_cause_error_conditions() {
         .expect("Failed to add causaloid");
     g.freeze();
 
-    let res = g.evaluate_single_cause(index, &evidence);
+    let res = g.evaluate_single_cause(index, &effect);
 
     assert!(res.is_err());
     assert_eq!(res.unwrap_err().to_string(), "CausalityError: Test error");
