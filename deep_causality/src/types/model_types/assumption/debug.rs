@@ -23,7 +23,7 @@ impl Assumption {
     fn fmt_write(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Assumption: id: {}, description: {}, assumption_fn: fn(&[NumericalValue]) -> bool;, assumption_tested: {},assumption_valid: {}",
+            "Assumption: id: {}, description: {}, assumption_fn: fn(&[PropagatingEffect]) -> Result<bool, AssumptionError>;, assumption_tested: {},assumption_valid: {}",
             self.id,
             self.description,
             self.assumption_tested.read().unwrap().clone(),

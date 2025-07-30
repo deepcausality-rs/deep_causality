@@ -74,6 +74,8 @@ pub use crate::traits::observable::ObservableReasoning;
 // Scalar Traits
 pub use crate::traits::scalar::scalar_projector::ScalarProjector;
 pub use crate::traits::scalar::scalar_value::ScalarValue;
+// Transferable Trait
+pub use crate::traits::transferable::Transferable;
 //
 // Types
 //

@@ -199,8 +199,8 @@ pub fn get_test_assumption() -> Assumption {
     Assumption::new(id, description, assumption_fn)
 }
 
-fn test_has_data(data: &[NumericalValue]) -> bool {
-    !data.is_empty()
+fn test_has_data(data: &[PropagatingEffect]) -> Result<bool, AssumptionError> {
+    Ok(!data.is_empty())
 }
 
 pub fn get_test_num_array() -> [NumericalValue; 10] {

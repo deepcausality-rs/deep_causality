@@ -132,7 +132,6 @@ where
             }
             AggregateLogic::None => {
                 let mut all_false = true;
-                let mut last_false_effect = PropagatingEffect::Deterministic(false);
                 for res_effect in resolved_effects {
                     match res_effect {
                         PropagatingEffect::Deterministic(true) => {
@@ -140,7 +139,7 @@ where
                             break;
                         }
                         PropagatingEffect::Deterministic(false) => {
-                            last_false_effect = res_effect;
+                            continue
                         }
                         PropagatingEffect::None => {
                             return Ok(PropagatingEffect::None);
@@ -163,12 +162,11 @@ where
             }
             AggregateLogic::Some(k) => {
                 let mut true_count = 0;
-                let mut last_true_effect = PropagatingEffect::Halting;
                 for res_effect in resolved_effects {
                     match res_effect {
                         PropagatingEffect::Deterministic(true) => {
                             true_count += 1;
-                            last_true_effect = res_effect;
+                           continue
                         }
                         PropagatingEffect::Deterministic(false) => {}
                         PropagatingEffect::Halting => {

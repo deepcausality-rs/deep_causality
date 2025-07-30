@@ -5,7 +5,7 @@
 
 use std::collections::VecDeque;
 
-use deep_causality::{AssumableReasoning, Assumption};
+use deep_causality::{AssumableReasoning, Assumption, PropagatingEffect};
 
 use deep_causality::utils_test::test_utils::*;
 
@@ -31,8 +31,11 @@ fn test_all_assumptions_tested() {
     let all_tested = col.all_assumptions_tested();
     assert!(!all_tested);
 
-    let data = get_test_num_array();
-    col.verify_all_assumptions(&data);
+    let data: Vec<PropagatingEffect> = get_test_num_array()
+        .iter()
+        .map(|&x| PropagatingEffect::Numerical(x))
+        .collect();
+    col.verify_all_assumptions(&data).unwrap();
 
     let all_tested = col.all_assumptions_tested();
     assert!(all_tested);
@@ -49,8 +52,11 @@ fn test_all_assumptions_valid() {
     let all_valid = col.all_assumptions_valid();
     assert!(!all_valid);
 
-    let data = get_test_num_array();
-    col.verify_all_assumptions(&data);
+    let data: Vec<PropagatingEffect> = get_test_num_array()
+        .iter()
+        .map(|&x| PropagatingEffect::Numerical(x))
+        .collect();
+    col.verify_all_assumptions(&data).unwrap();
     let all_tested = col.all_assumptions_tested();
     assert!(all_tested);
 
@@ -69,18 +75,21 @@ fn test_percent_assumption_valid() {
     let all_valid = col.all_assumptions_valid();
     assert!(!all_valid);
 
-    let all_valid_percent = col.percent_assumption_valid();
+    let all_valid_percent = col.percent_assumption_valid().unwrap();
     assert_eq!(all_valid_percent, 0.0);
 
-    let data = get_test_num_array();
-    col.verify_all_assumptions(&data);
+    let data: Vec<PropagatingEffect> = get_test_num_array()
+        .iter()
+        .map(|&x| PropagatingEffect::Numerical(x))
+        .collect();
+    col.verify_all_assumptions(&data).unwrap();
     let all_tested = col.all_assumptions_tested();
     assert!(all_tested);
 
     let all_valid = col.all_assumptions_valid();
     assert!(all_valid);
 
-    let all_valid_percent = col.percent_assumption_valid();
+    let all_valid_percent = col.percent_assumption_valid().unwrap();
     assert_eq!(all_valid_percent, 100.0);
 }
 
@@ -95,11 +104,15 @@ fn test_get_all_invalid_assumptions() {
     let all_valid = col.all_assumptions_valid();
     assert!(!all_valid);
 
-    let all_valid_percent = col.percent_assumption_valid();
+    let all_valid_percent = col.percent_assumption_valid().unwrap();
     assert_eq!(all_valid_percent, 0.0);
 
-    let data = get_test_num_array();
-    col.verify_all_assumptions(&data);
+    let data: Vec<PropagatingEffect> = get_test_num_array()
+        .iter()
+        .map(|&x| PropagatingEffect::Numerical(x))
+        .collect();
+
+    col.verify_all_assumptions(&data).unwrap();
     let all_tested = col.all_assumptions_tested();
     assert!(all_tested);
 
@@ -118,11 +131,14 @@ fn test_get_all_valid_assumptions() {
     let all_valid = col.all_assumptions_valid();
     assert!(!all_valid);
 
-    let all_valid_percent = col.percent_assumption_valid();
+    let all_valid_percent = col.percent_assumption_valid().unwrap();
     assert_eq!(all_valid_percent, 0.0);
 
-    let data = get_test_num_array();
-    col.verify_all_assumptions(&data);
+    let data: Vec<PropagatingEffect> = get_test_num_array()
+        .iter()
+        .map(|&x| PropagatingEffect::Numerical(x))
+        .collect();
+    col.verify_all_assumptions(&data).unwrap();
 
     let all_tested = col.all_assumptions_tested();
     assert!(all_tested);
@@ -142,11 +158,14 @@ fn test_get_all_tested_assumptions() {
     let all_valid = col.all_assumptions_valid();
     assert!(!all_valid);
 
-    let all_valid_percent = col.percent_assumption_valid();
+    let all_valid_percent = col.percent_assumption_valid().unwrap();
     assert_eq!(all_valid_percent, 0.0);
 
-    let data = get_test_num_array();
-    col.verify_all_assumptions(&data);
+    let data: Vec<PropagatingEffect> = get_test_num_array()
+        .iter()
+        .map(|&x| PropagatingEffect::Numerical(x))
+        .collect();
+    col.verify_all_assumptions(&data).unwrap();
 
     let all_tested = col.all_assumptions_tested();
     assert!(all_tested);
@@ -169,11 +188,14 @@ fn test_get_all_untested_assumptions() {
     let all_untested = col.get_all_untested_assumptions();
     assert_eq!(all_untested.len(), 3);
 
-    let all_valid_percent = col.percent_assumption_valid();
+    let all_valid_percent = col.percent_assumption_valid().unwrap();
     assert_eq!(all_valid_percent, 0.0);
 
-    let data = get_test_num_array();
-    col.verify_all_assumptions(&data);
+    let data: Vec<PropagatingEffect> = get_test_num_array()
+        .iter()
+        .map(|&x| PropagatingEffect::Numerical(x))
+        .collect();
+    col.verify_all_assumptions(&data).unwrap();
 
     let all_tested = col.all_assumptions_tested();
     assert!(all_tested);
@@ -193,11 +215,14 @@ fn test_verify_all_assumptions() {
     let all_valid = col.all_assumptions_valid();
     assert!(!all_valid);
 
-    let all_valid_percent = col.percent_assumption_valid();
+    let all_valid_percent = col.percent_assumption_valid().unwrap();
     assert_eq!(all_valid_percent, 0.0);
 
-    let data = get_test_num_array();
-    col.verify_all_assumptions(&data);
+    let data: Vec<PropagatingEffect> = get_test_num_array()
+        .iter()
+        .map(|&x| PropagatingEffect::Numerical(x))
+        .collect();
+    col.verify_all_assumptions(&data).unwrap();
 
     let all_tested = col.all_assumptions_tested();
     assert!(all_tested);

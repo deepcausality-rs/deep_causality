@@ -3,7 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{DescriptionValue, EvalFn, Identifiable, NumericalValue};
+use crate::{
+    AssumptionError, DescriptionValue, EvalFn, Identifiable, NumericalValue, PropagatingEffect,
+};
 
 /// The Assumable trait defines the interface for objects that represent
 /// assumptions that can be tested and verified. Assumable types must also
@@ -28,7 +30,7 @@ pub trait Assumable: Identifiable {
     fn assumption_fn(&self) -> EvalFn;
     fn assumption_tested(&self) -> bool;
     fn assumption_valid(&self) -> bool;
-    fn verify_assumption(&self, data: &[NumericalValue]) -> bool;
+    fn verify_assumption(&self, data: &[PropagatingEffect]) -> Result<bool, AssumptionError>;
 }
 
 /// The AssumableReasoning trait provides default implementations for common
@@ -119,10 +121,19 @@ where
     /// (from `number_assumption_valid()`) by the total number of assumptions
     /// (from `len()`) and multiplying by 100.
     ///
-    /// Returns the percentage as a NumericalValue.
+    /// # Errors
     ///
-    fn percent_assumption_valid(&self) -> NumericalValue {
-        (self.number_assumption_valid() / self.len() as NumericalValue) * 100.0
+    /// Returns `AssumptionError::EvaluationFailed` if the number of assumptions is zero,
+    /// as percentage calculation would lead to a division by zero.
+    ///
+    fn percent_assumption_valid(&self) -> Result<NumericalValue, AssumptionError> {
+        if self.is_empty() {
+            return Err(AssumptionError::EvaluationFailed(
+                "Cannot calculate percentage with zero assumptions".to_string(),
+            ));
+        }
+        let percentage = (self.number_assumption_valid() / self.len() as NumericalValue) * 100.0;
+        Ok(percentage)
     }
 
     /// Verifies all assumptions in the collection against the provided data.
@@ -133,10 +144,17 @@ where
     /// This will test each assumption against the data and update the
     /// `assumption_valid` and `assumption_tested` flags accordingly.
     ///
-    fn verify_all_assumptions(&self, data: &[NumericalValue]) {
+    /// # Errors
+    ///
+    /// Returns an `AssumptionError` if any of the assumption functions fail during execution.
+    ///
+    fn verify_all_assumptions(&self, data: &[PropagatingEffect]) -> Result<(), AssumptionError> {
         for a in self.get_all_items() {
-            a.verify_assumption(data);
+            // We are interested in the side effect of updating the assumption state,
+            // but we must handle the potential error.
+            let _ = a.verify_assumption(data)?;
         }
+        Ok(())
     }
 
     /// Returns a vector containing references to all invalid assumptions.
