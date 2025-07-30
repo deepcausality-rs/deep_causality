@@ -2,11 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality::errors::CausalityError;
 use deep_causality::{
-    BaseCausaloid, BaseContext, BaseModel, Causaloid, Context, Contextoid, ContextoidType,
-    ContextuableGraph, Evidence, IdentificationValue, Model, NumericalValue, PropagatingEffect,
-    Root,
+    BaseCausaloid, BaseContext, BaseModel, CausalityError, Causaloid, Context, Contextoid,
+    ContextoidType, ContextuableGraph, IdentificationValue, Model, NumericalValue,
+    PropagatingEffect, Root,
 };
 use std::sync::Arc;
 
@@ -26,10 +25,10 @@ pub fn get_test_causaloid() -> BaseCausaloid {
     let description = "tests whether data exceeds threshold of 0.75";
 
     // This function must now match the standard `CausalFn` signature.
-    fn causal_fn(evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
+    fn causal_fn(evidence: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
         // Safely extract the numerical value from the generic Evidence enum.
         let obs = match evidence {
-            Evidence::Numerical(val) => *val,
+            PropagatingEffect::Numerical(val) => *val,
             _ => return Err(CausalityError("Expected Numerical evidence.".into())),
         };
 

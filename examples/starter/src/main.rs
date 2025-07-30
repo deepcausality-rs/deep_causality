@@ -16,8 +16,8 @@ fn main() {
     println!();
 
     println!("Full reasoning over the entire graph");
-    // The new reasoning API uses a unified `Evidence` type.
-    let evidence = Evidence::Numerical(0.99);
+    // The new reasoning API uses a unified `PropagatingEffect` type.
+    let evidence = PropagatingEffect::Numerical(0.99);
     let root_index = g.get_root_index().expect("Graph has no root");
 
     // Call the new reasoning method from the `CausableGraphReasoning` trait.
@@ -25,7 +25,6 @@ fn main() {
         .evaluate_subgraph_from_cause(root_index, &evidence)
         .expect("Failed to reason over the entire graph");
 
-    // The result is now a `PropagatingEffect`, not a simple bool.
     assert_eq!(res, PropagatingEffect::Deterministic(true));
     println!();
 
@@ -54,11 +53,11 @@ fn get_test_causaloid(id: IdentificationValue) -> BaseCausaloid {
     // The causal function must now match the `CausalFn` type alias:
     // - It takes `&Evidence` as input.
     // - It returns `Result<PropagatingEffect, CausalityError>`.
-    fn causal_fn(evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
-        // Safely extract the numerical value from the generic Evidence enum.
-        let obs = match evidence {
-            Evidence::Numerical(val) => *val,
-            _ => return Err(CausalityError("Expected Numerical evidence.".into())),
+    fn causal_fn(effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
+        // Safely extract the numerical value from the generic PropagatingEffect enum.
+        let obs = match effect {
+            PropagatingEffect::Numerical(val) => *val,
+            _ => return Err(CausalityError("Expected Numerical effect.".into())),
         };
 
         if obs.is_sign_negative() {

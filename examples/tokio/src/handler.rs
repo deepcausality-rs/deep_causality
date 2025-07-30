@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::utils;
-use deep_causality::{BaseCausaloid, BaseModel, Causable, Evidence};
+use deep_causality::{BaseCausaloid, BaseModel, Causable, PropagatingEffect};
 use std::error::Error;
 use std::sync::{Arc, RwLock};
 
@@ -42,10 +42,10 @@ impl EventHandler {
         bc: &BaseCausaloid,
     ) -> Result<(), Box<dyn Error + Send>> {
         // Wrap the raw numerical data into the unified Evidence type.
-        let evidence = Evidence::Numerical(*data);
+        let effect = PropagatingEffect::Numerical(*data);
 
         // Call the new standard `evaluate` method and handle the Result.
-        match bc.evaluate(&evidence) {
+        match bc.evaluate(&effect) {
             Ok(effect) => {
                 println!("EventHandler: Inference successful with effect: {effect:?}")
             }

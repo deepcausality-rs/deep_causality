@@ -113,7 +113,7 @@ fn reason_causal_chain(
     }
 
     for (cause, value) in causes.iter().zip(data.iter()) {
-        let evidence = Evidence::Numerical(*value);
+        let evidence = PropagatingEffect::Numerical(*value);
         let effect = cause.evaluate(&evidence)?;
 
         // If any link in the chain is not deterministically true, the entire chain is broken.
@@ -223,11 +223,11 @@ fn build_tar_cancer_causaloid() -> BaseCausaloid {
 /// This single causal function is used by both causaloids in the chain.
 /// It takes generic evidence, extracts the numerical value, and checks it
 /// against a hardcoded threshold.
-fn causal_fn(evidence: &Evidence) -> Result<PropagatingEffect, CausalityError> {
-    // Safely extract the numerical value from the generic Evidence enum.
-    let obs = match evidence {
-        Evidence::Numerical(val) => *val,
-        _ => return Err(CausalityError("Expected Numerical evidence.".into())),
+fn causal_fn(effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
+    // Safely extract the numerical value from the generic PropagatingEffect enum.
+    let obs = match effect {
+        PropagatingEffect::Numerical(val) => *val,
+        _ => return Err(CausalityError("Expected Numerical effect.".into())),
     };
 
     if obs.is_nan() {
