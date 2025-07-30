@@ -222,7 +222,7 @@ fn test_none_variant() {
     assert!(effect.is_none());
     assert_eq!(effect, PropagatingEffect::None);
     assert_ne!(effect, PropagatingEffect::Deterministic(true));
-    assert_eq!(format!("{:?}", effect), "PropagatingEffect::None");
+    assert_eq!(format!("{effect:?}"), "PropagatingEffect::None");
 }
 
 #[test]
@@ -233,7 +233,7 @@ fn test_numerical_variant() {
     assert_eq!(effect, PropagatingEffect::Numerical(123.45));
     assert_ne!(effect, PropagatingEffect::Numerical(543.21));
     assert_eq!(
-        format!("{:?}", effect),
+        format!("{effect:?}"),
         "PropagatingEffect::Numerical(123.45)"
     );
 }
@@ -259,7 +259,7 @@ fn test_map_variant() {
     assert_eq!(effect1, effect2);
     assert_ne!(effect1, effect3);
     assert_eq!(
-        format!("{:?}", effect1),
+        format!("{effect1:?}"),
         format!("PropagatingEffect::Map({:?})", map1)
     );
 
@@ -270,7 +270,7 @@ fn test_map_variant() {
     assert!(new_map.get_numerical_from_map(99).is_err());
 
     new_map.insert(11, PropagatingEffect::Deterministic(true));
-    assert_eq!(new_map.get_deterministic_from_map(11).unwrap(), true);
+    assert!(new_map.get_deterministic_from_map(11).unwrap());
     assert!(new_map.get_deterministic_from_map(99).is_err());
 }
 
@@ -290,7 +290,7 @@ fn test_graph_variant() {
     assert_ne!(effect1, effect3); // Should be not equal due to Arc::ptr_eq
     assert_ne!(effect1, effect4);
     assert_eq!(
-        format!("{:?}", effect1),
+        format!("{effect1:?}"),
         format!(
             "PropagatingEffect::Graph(nodes: {}, edges: {})",
             graph1.number_nodes(),
@@ -311,7 +311,7 @@ fn test_relay_to_variant() {
     assert_ne!(effect1, effect3);
     assert_ne!(effect1, effect4);
     assert_eq!(
-        format!("{:?}", effect1),
+        format!("{effect1:?}"),
         "PropagatingEffect::RelayTo(1, PropagatingEffect::Deterministic(true))"
     );
 }
