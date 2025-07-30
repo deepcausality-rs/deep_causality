@@ -4,6 +4,9 @@
  */
 
 use deep_causality::*;
+use std::collections::HashMap;
+use std::sync::Arc;
+use ultragraph::{GraphView, UltraGraph};
 
 #[test]
 fn test_is_deterministic() {
@@ -172,4 +175,95 @@ fn test_partial_eq() {
     assert_ne!(effect1, effect4);
     assert_ne!(effect1, effect7);
     assert_ne!(effect4, effect7);
+}
+
+#[test]
+fn test_none_variant() {
+    let effect = PropagatingEffect::None;
+    assert!(effect.is_none());
+    assert_eq!(effect, PropagatingEffect::None);
+    assert_ne!(effect, PropagatingEffect::Deterministic(true));
+    assert_eq!(format!("{:?}", effect), "PropagatingEffect::None");
+}
+
+#[test]
+fn test_numerical_variant() {
+    let effect = PropagatingEffect::Numerical(123.45);
+    assert!(effect.is_numerical());
+    assert_eq!(effect.as_numerical(), Some(123.45));
+    assert_eq!(effect, PropagatingEffect::Numerical(123.45));
+    assert_ne!(effect, PropagatingEffect::Numerical(543.21));
+    assert_eq!(format!("{:?}", effect), "PropagatingEffect::Numerical(123.45)");
+}
+
+#[test]
+fn test_map_variant() {
+    let mut map1 = HashMap::new();
+    map1.insert(1, Box::new(PropagatingEffect::Numerical(1.0)));
+    map1.insert(2, Box::new(PropagatingEffect::Deterministic(true)));
+    let effect1 = PropagatingEffect::Map(map1.clone());
+
+    let mut map2 = HashMap::new();
+    map2.insert(1, Box::new(PropagatingEffect::Numerical(1.0)));
+    map2.insert(2, Box::new(PropagatingEffect::Deterministic(true)));
+    let effect2 = PropagatingEffect::Map(map2.clone());
+
+    let mut map3 = HashMap::new();
+    map3.insert(1, Box::new(PropagatingEffect::Numerical(1.0)));
+    map3.insert(3, Box::new(PropagatingEffect::Deterministic(false))); // Different key and value
+    let effect3 = PropagatingEffect::Map(map3.clone());
+
+    assert!(effect1.is_map());
+    assert_eq!(effect1, effect2);
+    assert_ne!(effect1, effect3);
+    assert_eq!(format!("{:?}", effect1), format!("PropagatingEffect::Map({:?})", map1));
+
+    // Test map specific methods
+    let mut new_map = PropagatingEffect::new_map();
+    new_map.insert(10, PropagatingEffect::Numerical(100.0));
+    assert_eq!(new_map.get_numerical_from_map(10).unwrap(), 100.0);
+    assert!(new_map.get_numerical_from_map(99).is_err());
+
+    new_map.insert(11, PropagatingEffect::Deterministic(true));
+    assert_eq!(new_map.get_deterministic_from_map(11).unwrap(), true);
+    assert!(new_map.get_deterministic_from_map(99).is_err());
+}
+
+#[test]
+fn test_graph_variant() {
+    let graph1 = Arc::new(UltraGraph::new());
+    let graph2 = Arc::new(UltraGraph::new());
+    let graph3 = Arc::new(UltraGraph::new());
+
+    let effect1 = PropagatingEffect::Graph(Arc::clone(&graph1));
+    let effect2 = PropagatingEffect::Graph(Arc::clone(&graph1)); // Same Arc
+    let effect3 = PropagatingEffect::Graph(Arc::clone(&graph2)); // Different Arc, same content
+    let effect4 = PropagatingEffect::Graph(Arc::clone(&graph3)); // Different Arc, different content
+
+    assert!(effect1.is_graph());
+    assert_eq!(effect1, effect2); // Should be equal due to Arc::ptr_eq
+    assert_ne!(effect1, effect3); // Should be not equal due to Arc::ptr_eq
+    assert_ne!(effect1, effect4);
+    assert_eq!(format!("{:?}", effect1), format!("PropagatingEffect::Graph(nodes: {}, edges: {})", graph1.number_nodes(), graph1.number_edges()));
+}
+
+#[test]
+fn test_relay_to_variant() {
+    let effect1 = PropagatingEffect::RelayTo(1, Box::new(PropagatingEffect::Deterministic(true)));
+    let effect2 = PropagatingEffect::RelayTo(1, Box::new(PropagatingEffect::Deterministic(true)));
+    let effect3 = PropagatingEffect::RelayTo(2, Box::new(PropagatingEffect::Deterministic(true)));
+    let effect4 = PropagatingEffect::RelayTo(1, Box::new(PropagatingEffect::Deterministic(false)));
+
+    assert!(effect1.is_relay_to());
+    assert_eq!(effect1, effect2);
+    assert_ne!(effect1, effect3);
+    assert_ne!(effect1, effect4);
+    assert_eq!(format!("{:?}", effect1), "PropagatingEffect::RelayTo(1, PropagatingEffect::Deterministic(true))");
+}
+
+#[test]
+fn test_default_variant() {
+    let effect: PropagatingEffect = Default::default();
+    assert!(effect.is_none());
+    assert_eq!(effect, PropagatingEffect::None);
 }
