@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Causable, CausalityError, NumericalValue, PropagatingEffect};
+use crate::{Causable, CausalityError, IdentificationValue, NumericalValue, PropagatingEffect};
 
 /// Provides default implementations for reasoning over collections of `Causable` items.
 ///
@@ -16,6 +16,7 @@ where
 {
     //
     // These methods must be implemented by the collection type.
+    // See deep_causality/src/extensions/causable/mod.rs
     //
 
     /// Returns the total number of `Causable` items in the collection.
@@ -30,6 +31,9 @@ where
     /// Returns a vector of references to all `Causable` items in the collection.
     /// This is the primary accessor used by the trait's default methods.
     fn get_all_items(&self) -> Vec<&T>;
+
+    /// Returns a reference to a `Causable` item by its ID, if found.
+    fn get_item_by_id(&self, id: IdentificationValue) -> Option<&T>;
 
     //
     // Default implementations for all other methods are provided below.
@@ -54,7 +58,21 @@ where
             let effect = cause.evaluate(effect)?;
 
             // This function enforces a strict deterministic contract.
-            match effect {
+            let resolved_effect = match effect {
+                PropagatingEffect::RelayTo(target_id, inner_effect) => {
+                    let target_causaloid =
+                        self.get_item_by_id(target_id as u64).ok_or_else(|| {
+                            CausalityError(format!(
+                                "Relay target causaloid with ID {target_id} not found."
+                            ))
+                        })?;
+                    target_causaloid.evaluate(&inner_effect)?
+                }
+                _ => effect,
+            };
+
+            // This function enforces a strict deterministic contract.
+            match resolved_effect {
                 PropagatingEffect::Deterministic(true) => {
                     // The link is active, continue to the next one.
                     continue;
@@ -66,7 +84,7 @@ where
                 _ => {
                     // Any other effect type is a contract violation for this function.
                     return Err(CausalityError(format!(
-                        "evaluate_deterministic_propagation encountered a non-deterministic effect: {effect:?}. Only Deterministic effects are allowed."
+                        "evaluate_deterministic_propagation encountered a non-deterministic effect: {resolved_effect:?}. Only Deterministic effects are allowed."
                     )));
                 }
             }
@@ -96,7 +114,21 @@ where
         for cause in self.get_all_items() {
             let effect = cause.evaluate(effect)?;
 
-            match effect {
+            let resolved_effect = match effect {
+                PropagatingEffect::RelayTo(target_id, inner_effect) => {
+                    let target_causaloid = self
+                        .get_item_by_id(target_id as IdentificationValue)
+                        .ok_or_else(|| {
+                            CausalityError(format!(
+                                "Relay target causaloid with ID {target_id} not found."
+                            ))
+                        })?;
+                    target_causaloid.evaluate(&inner_effect)?
+                }
+                _ => effect,
+            };
+
+            match resolved_effect {
                 PropagatingEffect::Probabilistic(p) => {
                     cumulative_prob *= p;
                 }
@@ -120,7 +152,7 @@ where
                 _ => {
                     // Other variants are not handled in this mode.
                     return Err(CausalityError(format!(
-                        "evaluate_probabilistic_propagation encountered an unhandled effect: {effect:?}"
+                        "evaluate_probabilistic_propagation encountered an unhandled effect: {resolved_effect:?}"
                     )));
                 }
             }
@@ -146,6 +178,20 @@ where
 
         for cause in self.get_all_items() {
             let current_effect = cause.evaluate(effect)?;
+
+            let current_effect = match current_effect {
+                PropagatingEffect::RelayTo(target_id, inner_effect) => {
+                    let target_causaloid = self
+                        .get_item_by_id(target_id as IdentificationValue)
+                        .ok_or_else(|| {
+                            CausalityError(format!(
+                                "Relay target causaloid with ID {target_id} not found."
+                            ))
+                        })?;
+                    target_causaloid.evaluate(&inner_effect)?
+                }
+                _ => current_effect,
+            };
 
             // Update the aggregated effect based on the current effect.
             aggregated_effect = match (aggregated_effect, current_effect) {

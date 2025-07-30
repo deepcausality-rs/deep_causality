@@ -36,9 +36,9 @@ pub enum PropagatingEffect {
     /// can be interpreted by a reasoning engine as a command to fetch data.
     ContextualLink(ContextId, ContextoidId),
     /// A collection of named values, allowing for complex, structured data passing.
-    Map(HashMap<IdentificationValue, Box<crate::PropagatingEffect>>),
+    Map(HashMap<IdentificationValue, Box<PropagatingEffect>>),
     /// A graph of effects, for passing complex relational data.
-    Graph(Arc<crate::types::reasoning_types::propagating_effect::EffectGraph>),
+    Graph(Arc<EffectGraph>),
     /// A terminal effect that explicitly halts the current reasoning path.
     Halting,
     /// A dispatch command that directs a reasoning engine to jump to a specific
@@ -81,28 +81,28 @@ impl PropagatingEffect {
 impl PropagatingEffect {
     pub fn as_bool(&self) -> Option<bool> {
         match self {
-            crate::PropagatingEffect::Deterministic(b) => Some(*b),
+            PropagatingEffect::Deterministic(b) => Some(*b),
             _ => None,
         }
     }
 
     pub fn as_numerical(&self) -> Option<NumericalValue> {
         match self {
-            crate::PropagatingEffect::Numerical(p) => Some(*p),
+            PropagatingEffect::Numerical(p) => Some(*p),
             _ => None,
         }
     }
 
     pub fn as_probability(&self) -> Option<NumericalValue> {
         match self {
-            crate::PropagatingEffect::Probabilistic(p) => Some(*p),
+            PropagatingEffect::Probabilistic(p) => Some(*p),
             _ => None,
         }
     }
 
     pub fn as_contextual_link(&self) -> Option<(ContextId, ContextoidId)> {
         match self {
-            crate::PropagatingEffect::ContextualLink(context_id, contextoid_id) => {
+            PropagatingEffect::ContextualLink(context_id, contextoid_id) => {
                 Some((*context_id, *contextoid_id))
             }
             _ => None,
@@ -114,13 +114,13 @@ impl PropagatingEffect {
 impl PropagatingEffect {
     /// Creates a new empty Effect Map.
     pub fn new_map() -> Self {
-        crate::PropagatingEffect::Map(HashMap::new())
+        PropagatingEffect::Map(HashMap::new())
     }
 
     /// Inserts a key-value pair into an Effect Map.
     /// Panics if the Effect is not a Map variant.
-    pub fn insert(&mut self, key: IdentificationValue, value: crate::PropagatingEffect) {
-        if let crate::PropagatingEffect::Map(map) = self {
+    pub fn insert(&mut self, key: IdentificationValue, value: PropagatingEffect) {
+        if let PropagatingEffect::Map(map) = self {
             map.insert(key, Box::new(value));
         } else {
             panic!("Cannot insert into PropagatingEffect that is not a Map variant");
@@ -132,10 +132,10 @@ impl PropagatingEffect {
         &self,
         key: IdentificationValue,
     ) -> Result<NumericalValue, CausalityError> {
-        if let crate::PropagatingEffect::Map(map) = self {
+        if let PropagatingEffect::Map(map) = self {
             match map.get(&key) {
                 Some(effect) => {
-                    if let crate::PropagatingEffect::Numerical(val) = **effect {
+                    if let PropagatingEffect::Numerical(val) = **effect {
                         Ok(val)
                     } else {
                         Err(CausalityError(format!(
@@ -157,10 +157,10 @@ impl PropagatingEffect {
         &self,
         key: IdentificationValue,
     ) -> Result<bool, CausalityError> {
-        if let crate::PropagatingEffect::Map(map) = self {
+        if let PropagatingEffect::Map(map) = self {
             match map.get(&key) {
                 Some(effect) => {
-                    if let crate::PropagatingEffect::Deterministic(val) = **effect {
+                    if let PropagatingEffect::Deterministic(val) = **effect {
                         Ok(val)
                     } else {
                         Err(CausalityError(format!(

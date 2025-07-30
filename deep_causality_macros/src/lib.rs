@@ -65,3 +65,18 @@ pub fn make_map_to_vec(_item: TokenStream) -> TokenStream {
 pub fn make_vec_to_vec(_item: TokenStream) -> TokenStream {
     expand_make_vec_to_vec()
 }
+
+#[proc_macro]
+pub fn make_vec_deq_to_vec(_item: TokenStream) -> TokenStream {
+    expand_make_vec_deq_to_vec()
+}
+
+#[proc_macro]
+pub fn make_find_from_map_values(_item: TokenStream) -> TokenStream {
+    expand_find_from_map()
+}
+
+#[proc_macro]
+pub fn make_find_from_iter_values(_item: TokenStream) -> TokenStream {
+    expand_find_from_iter()
+}
