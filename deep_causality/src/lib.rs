@@ -140,7 +140,6 @@ pub use crate::types::model_types::model::Model;
 pub use crate::types::model_types::observation::Observation;
 // Reasoning types
 pub use crate::types::reasoning_types::propagating_effect::PropagatingEffect;
-// pub use crate::types::reasoning_types::unified_evidence::Evidence;
 //
 //Symbolic types
 pub use crate::types::symbolic_types::symbolic_representation::SymbolicRepresentation;
