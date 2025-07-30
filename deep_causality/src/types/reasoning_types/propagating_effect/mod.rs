@@ -13,7 +13,7 @@ mod display;
 mod partial_eq;
 
 // The graph type alias, updated to be recursive on the new unified enum.
-pub type EffectGraph = UltraGraph<crate::PropagatingEffect>;
+pub type EffectGraph = UltraGraph<PropagatingEffect>;
 
 /// Unified data and control-flow container for causal reasoning.
 ///
@@ -43,11 +43,11 @@ pub enum PropagatingEffect {
     Halting,
     /// A dispatch command that directs a reasoning engine to jump to a specific
     /// next causaloid with the specified id (`usize`) and provide it with the encapsulated effect as its new input.
-    RelayTo(usize, Box<crate::PropagatingEffect>),
+    RelayTo(usize, Box<PropagatingEffect>),
 }
 
 // Predicate methods
-impl crate::PropagatingEffect {
+impl PropagatingEffect {
     pub fn is_none(&self) -> bool {
         matches!(self, PropagatingEffect::None)
     }
@@ -115,10 +115,6 @@ impl PropagatingEffect {
     /// Creates a new empty Effect Map.
     pub fn new_map() -> Self {
         crate::PropagatingEffect::Map(HashMap::new())
-    }
-
-    pub fn new_map_with_capacity(size: usize) -> Self {
-        crate::PropagatingEffect::Map(HashMap::with_capacity(size))
     }
 
     /// Inserts a key-value pair into an Effect Map.
