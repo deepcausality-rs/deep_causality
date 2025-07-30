@@ -9,6 +9,18 @@ use deep_causality::{Assumption, PropagatingEffect};
 use deep_causality::utils_test::test_utils::*;
 
 #[test]
+fn test_empty() {
+    let col: Vec<Assumption> = vec![];
+    assert_eq!(col.len(), 0);
+
+    let res = col.percent_assumption_valid();
+    assert!(res.is_err());
+
+    let res = col.number_assumption_valid();
+    assert_eq!(res, 0.0);
+}
+
+#[test]
 fn test_add() {
     let mut col: Vec<Assumption> = get_test_assumption_vec();
     assert_eq!(col.len(), 3);
