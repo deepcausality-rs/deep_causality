@@ -147,7 +147,7 @@ fn test_evaluate_mixed_propagation() {
         .evaluate_mixed_propagation(&effect_success, &AggregateLogic::All)
         .unwrap();
     // This is false b/c the AggregateLogic fails i.e. not all causes evaluate
-    assert_eq!(res_success, PropagatingEffect::Deterministic(false));
+    assert_eq!(res_success, PropagatingEffect::Probabilistic(0.0));
 }
 
 #[test]
