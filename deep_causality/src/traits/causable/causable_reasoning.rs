@@ -68,7 +68,7 @@ where
                     continue;
                 }
                 PropagatingEffect::Deterministic(false) => {
-                    // The chain is deterministically broken. This is a valid final outcome.
+                    // The chain is deterministically false b/c on causaloid evaluates to false. This is a valid final outcome.
                     return Ok(PropagatingEffect::Deterministic(false));
                 }
                 _ => {
@@ -100,6 +100,7 @@ where
         effect: &PropagatingEffect,
         _logic: &AggregateLogic,
     ) -> Result<PropagatingEffect, CausalityError> {
+        // 1.0 is the multiplicative identity.
         let mut cumulative_prob: NumericalValue = 1.0;
 
         for cause in self.get_all_items() {
@@ -109,27 +110,10 @@ where
                 PropagatingEffect::Probabilistic(p) => {
                     cumulative_prob *= p;
                 }
-                PropagatingEffect::Deterministic(true) => {
-                    // This is equivalent to multiplying by 1.0, so we do nothing and continue.
-                }
-                PropagatingEffect::Deterministic(false) => {
-                    // If any link is deterministically false, the entire chain's probability is zero.
-                    return Ok(PropagatingEffect::Probabilistic(0.0));
-                }
-                PropagatingEffect::Halting => {
-                    // Halting always takes precedence and stops the chain.
-                    return Ok(PropagatingEffect::Halting);
-                }
-                PropagatingEffect::ContextualLink(_, _) => {
-                    // Contextual links are not meaningful in a probabilistic aggregation.
-                    return Err(CausalityError(
-                        "Encountered a ContextualLink in a probabilistic chain evaluation.".into(),
-                    ));
-                }
                 _ => {
                     // Other variants are not handled in this mode.
                     return Err(CausalityError(format!(
-                        "evaluate_probabilistic_propagation encountered an unhandled effect: {effect:?}"
+                        "evaluate_probabilistic_propagation encountered a non-probabilistic effect: {effect:?}. Only probabilistic effects are allowed."
                     )));
                 }
             }
@@ -159,9 +143,6 @@ where
 
             // Update the aggregated effect based on the current effect.
             aggregated_effect = match (aggregated_effect, current_effect) {
-                // Halting takes precedence over everything.
-                (_, PropagatingEffect::Halting) => return Ok(PropagatingEffect::Halting),
-
                 // Deterministic false breaks the chain.
                 (_, PropagatingEffect::Deterministic(false)) => {
                     return Ok(PropagatingEffect::Deterministic(false));
