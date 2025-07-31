@@ -6,11 +6,10 @@
 //!
 //! Implementation of the Transferable trait for the Model struct.
 //!
+
 use crate::types::model_types::model::Model;
-use crate::{
-    Assumable, AssumptionError, Datable, PropagatingEffect, SpaceTemporal, Spatial, Symbolic,
-    Temporal, Transferable,
-};
+use crate::{Assumption, Datable, SpaceTemporal, Spatial, Symbolic, Temporal, Transferable};
+use std::sync::Arc;
 
 impl<D, S, T, ST, SYM, VS, VT> Transferable for Model<D, S, T, ST, SYM, VS, VT>
 where
@@ -22,23 +21,10 @@ where
     VS: Clone,
     VT: Clone,
 {
-    fn verify_assumptions(&self, effect: &[PropagatingEffect]) -> Result<bool, AssumptionError> {
-        if effect.is_empty() {
-            return Err(AssumptionError::NoDataToTestDefined);
-        }
-
-        if self.assumptions.is_none() {
-            return Err(AssumptionError::NoAssumptionsDefined);
-        }
-
-        let assumptions = self.assumptions.as_ref().unwrap();
-        for assumption in assumptions.iter() {
-            match assumption.verify_assumption(effect) {
-                Ok(true) => continue,          // Assumption holds, continue checking
-                Ok(false) => return Ok(false), // Assumption failed
-                Err(e) => return Err(e),       // An error occurred during evaluation
-            }
-        }
-        Ok(true) // All assumptions passed
+    fn get_assumptions(&self) -> &Option<Arc<Vec<Assumption>>> {
+        &self.assumptions
     }
+
+    // verify_assumptions is derived from the Transferable trait. Overwrite for customization.
+    // fn verify_assumptions(&self, effect: &[PropagatingEffect]) -> Result<bool, AssumptionError> {}
 }

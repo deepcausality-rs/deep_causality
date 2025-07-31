@@ -124,7 +124,7 @@ fn test_assumption_debug() {
 
     // 1. Test initial state (before verification)
     let expected_initial = format!(
-        "Assumption: id: {}, description: {}, assumption_fn: fn(&[PropagatingEffect]) -> Result<bool, AssumptionError>;, assumption_tested: {},assumption_valid: {}",
+        "Assumption: id: {}, description: {}, assumption_tested: {}, assumption_valid: {}",
         id, description, false, false
     );
 
@@ -142,7 +142,7 @@ fn test_assumption_debug() {
 
     // 3. Test final state (after verification)
     let expected_after_verify = format!(
-        "Assumption: id: {}, description: {}, assumption_fn: fn(&[PropagatingEffect]) -> Result<bool, AssumptionError>;, assumption_tested: {},assumption_valid: {}",
+        "Assumption: id: {}, description: {}, assumption_tested: {}, assumption_valid: {}",
         id, description, true, true
     );
 
@@ -162,7 +162,7 @@ fn test_assumption_to_string() {
     assert_eq!(assumption.description(), description);
 
     let expected = format!(
-        "Assumption: id: {}, description: {}, assumption_fn: fn(&[PropagatingEffect]) -> Result<bool, AssumptionError>;, assumption_tested: {},assumption_valid: {}",
+        "Assumption: id: {}, description: {}, assumption_tested: {}, assumption_valid: {}",
         id, description, false, false
     );
     let actual = assumption.to_string();

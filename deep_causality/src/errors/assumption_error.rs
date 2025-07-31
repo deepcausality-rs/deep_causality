@@ -9,12 +9,14 @@
 use std::error::Error;
 use std::fmt;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AssumptionError {
     /// Error returned when verification is attempted on a model with no assumptions.
     NoAssumptionsDefined,
     ///Error returned when verification is attempted without data i.e. empty collection.
     NoDataToTestDefined,
+    ///Error to capture the specific failed assumption
+    AssumptionFailed(String),
     /// Wraps an error that occurred during the execution of an assumption function.
     EvaluationFailed(String),
 }
@@ -29,6 +31,9 @@ impl fmt::Display for AssumptionError {
             }
             AssumptionError::NoDataToTestDefined => {
                 write!(f, "No Data to test provided")
+            }
+            AssumptionError::AssumptionFailed(a) => {
+                write!(f, "Assumption failed: {a}")
             }
             AssumptionError::EvaluationFailed(msg) => {
                 write!(f, "Failed to evaluate assumption: {msg}")

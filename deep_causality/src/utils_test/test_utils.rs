@@ -194,13 +194,39 @@ pub fn get_test_observation() -> Observation {
 pub fn get_test_assumption() -> Assumption {
     let id: IdentificationValue = 1;
     let description: String = "Test assumption that data are there".to_string() as DescriptionValue;
-    let assumption_fn: EvalFn = test_has_data;
+    let assumption_fn: EvalFn = test_fn_has_data;
 
     Assumption::new(id, description, assumption_fn)
 }
 
-fn test_has_data(data: &[PropagatingEffect]) -> Result<bool, AssumptionError> {
+fn test_fn_has_data(data: &[PropagatingEffect]) -> Result<bool, AssumptionError> {
     Ok(!data.is_empty()) // Data is NOT empty i.e. true when it is 
+}
+
+pub fn get_test_assumption_false() -> Assumption {
+    let id: IdentificationValue = 2;
+    let description: String =
+        "Test assumption that is always false".to_string() as DescriptionValue;
+    let assumption_fn: EvalFn = test_fn_is_false;
+    Assumption::new(id, description, assumption_fn)
+}
+
+fn test_fn_is_false(_data: &[PropagatingEffect]) -> Result<bool, AssumptionError> {
+    Ok(false)
+}
+
+pub fn get_test_assumption_error() -> Assumption {
+    let id: IdentificationValue = 2;
+    let description: String =
+        "Test assumption that raises an error".to_string() as DescriptionValue;
+    let assumption_fn: EvalFn = test_fn_is_error;
+    Assumption::new(id, description, assumption_fn)
+}
+
+fn test_fn_is_error(_data: &[PropagatingEffect]) -> Result<bool, AssumptionError> {
+    Err(AssumptionError::AssumptionFailed(String::from(
+        "Test error",
+    )))
 }
 
 pub fn get_test_num_array() -> [NumericalValue; 10] {
