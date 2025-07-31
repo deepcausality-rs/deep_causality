@@ -19,7 +19,7 @@ use crate::{AggregateLogic, Causable, CausalityError, PropagatingEffect};
 /// # Returns
 /// A `Result` containing the final `PropagatingEffect::Deterministic` outcome
 /// or a `CausalityError` if any item returns a non-deterministic effect.
-pub fn _evaluate_deterministic_logic<T: Causable>(
+pub(super) fn _evaluate_deterministic_logic<T: Causable>(
     items: Vec<&T>,
     effect: &PropagatingEffect,
     logic: &AggregateLogic,

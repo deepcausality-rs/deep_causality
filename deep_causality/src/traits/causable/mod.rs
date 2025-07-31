@@ -6,6 +6,7 @@ use crate::{CausalityError, Identifiable, PropagatingEffect};
 
 pub mod causable_reasoning;
 mod causable_reasoning_deterministic;
+mod causable_reasoning_explain;
 mod causable_reasoning_mixed;
 mod causable_reasoning_probabilistic;
 

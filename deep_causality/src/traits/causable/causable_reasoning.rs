@@ -4,7 +4,8 @@
  */
 
 use crate::traits::causable::{
-    causable_reasoning_deterministic, causable_reasoning_mixed, causable_reasoning_probabilistic,
+    causable_reasoning_deterministic, causable_reasoning_explain, causable_reasoning_mixed,
+    causable_reasoning_probabilistic,
 };
 use crate::{
     AggregateLogic, Causable, CausalityError, IdentificationValue, NumericalValue,
@@ -135,29 +136,7 @@ where
     /// It gracefully handles errors from individual `explain` calls by inserting
     /// a placeholder error message.
     fn explain(&self) -> Result<String, CausalityError> {
-        if self.is_empty() {
-            return Err(CausalityError::new(
-                "Causal Collection is empty".to_string(),
-            ));
-        }
-
-        let mut explanation = String::new();
-        for cause in self.get_all_items() {
-            let cause_explanation = match cause.explain() {
-                Ok(s) => s,
-                Err(e) => {
-                    return Err(CausalityError(format!(
-                        "[Error explaining cause {} ('{}')]",
-                        cause.id(),
-                        e
-                    )));
-                }
-            };
-
-            explanation.push('\n');
-            explanation.push_str(format!(" * {cause_explanation}").as_str());
-            explanation.push('\n');
-        }
-        Ok(explanation)
+        // Delegate to private impl in causable_reasoning_explain
+        causable_reasoning_explain::_explain(self.get_all_items())
     }
 }

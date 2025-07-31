@@ -23,7 +23,7 @@ use crate::{AggregateLogic, Causable, CausalityError, NumericalValue, Propagatin
 /// For `AggregateLogic::All`, it returns `PropagatingEffect::Deterministic` after applying the threshold.
 /// For `Any`, `None`, and `Some(k)`, it returns `PropagatingEffect::Deterministic`.
 /// Returns a `CausalityError` if any item returns an unsupported effect type.
-pub fn _evaluate_mixed_logic<T: Causable>(
+pub(super) fn _evaluate_mixed_logic<T: Causable>(
     items: Vec<&T>,
     effect: &PropagatingEffect,
     logic: &AggregateLogic,
