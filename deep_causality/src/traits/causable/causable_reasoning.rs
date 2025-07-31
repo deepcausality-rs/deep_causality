@@ -3,6 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::traits::causable::{
+    causable_reasoning_deterministic, causable_reasoning_mixed, causable_reasoning_probabilistic,
+};
 use crate::{
     AggregateLogic, Causable, CausalityError, IdentificationValue, NumericalValue,
     PropagatingEffect,
@@ -42,46 +45,32 @@ where
     // Default implementations for all other methods are provided below.
     //
 
-    /// Evaluates a linear chain of causes where each link is strictly expected to be deterministic.
+    /// Evaluates a collection of `Causable` items, aggregating their deterministic
+    /// boolean outcomes (`true`/`false`) based on a specified `AggregateLogic`.
     ///
-    /// The chain is considered active only if every single cause in the collection
-    /// evaluates to `PropagatingEffect::Deterministic(true)`. If any cause evaluates
-    /// to `Deterministic(false)`, the chain evaluation stops and returns that effect.
+    /// This function requires that every item in the collection evaluates to a
+    /// `PropagatingEffect::Deterministic` variant. If any item returns a different
+    /// variant, the function will fail with a `CausalityError`, ensuring strict
+    /// type checking at runtime.
     ///
     /// # Arguments
-    /// * `effect` - A single `PropagatingEffect` object (e.g., a Map or Graph) that all causes will use.
+    /// * `effect` - A `PropagatingEffect` to be passed to each `Causable` item.
+    /// * `logic` - The `AggregateLogic` (e.g., `All`, `Any`, `None`, `Some(k)`)
+    ///   that defines how the boolean results are combined into a final `Deterministic` outcome.
     ///
     /// # Errors
-    /// Returns a `CausalityError` if any cause in the chain produces a non-deterministic effect.
+    /// Returns a `CausalityError` if any `Causable` item returns a non-deterministic effect.
     fn evaluate_deterministic_propagation(
         &self,
         effect: &PropagatingEffect,
-        _logic: &AggregateLogic,
+        logic: &AggregateLogic,
     ) -> Result<PropagatingEffect, CausalityError> {
-        for cause in self.get_all_items() {
-            let effect = cause.evaluate(effect)?;
-
-            // This function enforces a strict deterministic contract.
-            match effect {
-                PropagatingEffect::Deterministic(true) => {
-                    // The link is active, continue to the next one.
-                    continue;
-                }
-                PropagatingEffect::Deterministic(false) => {
-                    // The chain is deterministically false b/c on causaloid evaluates to false. This is a valid final outcome.
-                    return Ok(PropagatingEffect::Deterministic(false));
-                }
-                _ => {
-                    // Any other effect type is a contract violation for this function.
-                    return Err(CausalityError(format!(
-                        "evaluate_deterministic_propagation encountered a non-deterministic effect: {effect:?}. Only Deterministic effects are allowed."
-                    )));
-                }
-            }
-        }
-
-        // If the entire loop completes, all links were deterministically true.
-        Ok(PropagatingEffect::Deterministic(true))
+        // Delegate to private impl in causable_reasoning_deterministic
+        causable_reasoning_deterministic::_evaluate_deterministic_logic(
+            self.get_all_items(),
+            effect,
+            logic,
+        )
     }
 
     /// Evaluates a linear chain of causes where each link is expected to be probabilistic.
@@ -98,30 +87,16 @@ where
     fn evaluate_probabilistic_propagation(
         &self,
         effect: &PropagatingEffect,
-        _logic: &AggregateLogic,
+        logic: &AggregateLogic,
+        threshold: NumericalValue,
     ) -> Result<PropagatingEffect, CausalityError> {
-        // 1.0 is the multiplicative identity for cumulative probability.
-        let mut cumulative_prob: NumericalValue = 1.0;
-
-        for cause in self.get_all_items() {
-            let effect = cause.evaluate(effect)?;
-
-            match effect {
-                PropagatingEffect::Probabilistic(p) | PropagatingEffect::Numerical(p) => {
-                    cumulative_prob *= p;
-                }
-
-                _ => {
-                    // Other variants are not handled in this mode.
-                    return Err(CausalityError(format!(
-                        "evaluate_probabilistic_propagation encountered a non-probabilistic effect: {effect:?}. Only probabilistic or numerical effects are allowed."
-                    )));
-                }
-            }
-        }
-
-        // Convert final probability to a deterministic outcome based on a threshold.
-        Ok(PropagatingEffect::Probabilistic(cumulative_prob))
+        // Delegate to private impl in causable_reasoning_probabilistic
+        causable_reasoning_probabilistic::_evaluate_probabilistic_logic(
+            self.get_all_items(),
+            effect,
+            logic,
+            threshold,
+        )
     }
 
     /// Evaluates a linear chain of causes that may contain a mix of deterministic and
@@ -143,38 +118,16 @@ where
     fn evaluate_mixed_propagation(
         &self,
         effect: &PropagatingEffect,
-        _logic: &AggregateLogic,
+        logic: &AggregateLogic,
+        threshold: NumericalValue,
     ) -> Result<PropagatingEffect, CausalityError> {
-        // Start with 1.0, the multiplicative identity, to aggregate all effects numerically.
-        let mut cumulative_prob: NumericalValue = 1.0;
-
-        for cause in self.get_all_items() {
-            let current_effect = cause.evaluate(effect)?;
-
-            // Convert every effect to a numerical probability to ensure consistent, order-independent aggregation.
-            let current_prob = match current_effect {
-                PropagatingEffect::Deterministic(true) => 1.0,
-                PropagatingEffect::Deterministic(false) => 0.0,
-                PropagatingEffect::Probabilistic(p) => p,
-                PropagatingEffect::Numerical(p) => p,
-                // .
-                _ => {
-                    // Other variants are not handled in this mode.
-                    return Err(CausalityError(format!(
-                        "evaluate_mixed_propagation encountered an unsupported effect: {effect:?}. Only probabilistic, deterministic, or numerical effects are allowed."
-                    )));
-                }
-            };
-
-            cumulative_prob *= current_prob;
-        }
-
-        // Convert the final aggregated probability to a deterministic outcome based on a standard threshold.
-        if cumulative_prob > 0.5 {
-            Ok(PropagatingEffect::Deterministic(true))
-        } else {
-            Ok(PropagatingEffect::Deterministic(false))
-        }
+        // Delegate to private impl in causable_reasoning_mixed
+        causable_reasoning_mixed::_evaluate_mixed_logic(
+            self.get_all_items(),
+            effect,
+            logic,
+            threshold,
+        )
     }
     /// Generates an explanation by concatenating the `explain()` text of all causes.
     ///
