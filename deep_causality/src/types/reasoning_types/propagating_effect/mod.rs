@@ -39,8 +39,6 @@ pub enum PropagatingEffect {
     Map(HashMap<IdentificationValue, Box<PropagatingEffect>>),
     /// A graph of effects, for passing complex relational data.
     Graph(Arc<EffectGraph>),
-    /// A terminal effect that explicitly halts the current reasoning path.
-    Halting,
     /// A dispatch command that directs a reasoning engine to jump to a specific
     /// next causaloid with the specified id (`usize`) and provide it with the encapsulated effect as its new input.
     RelayTo(usize, Box<PropagatingEffect>),
@@ -68,9 +66,6 @@ impl PropagatingEffect {
     }
     pub fn is_graph(&self) -> bool {
         matches!(self, PropagatingEffect::Graph(_))
-    }
-    pub fn is_halting(&self) -> bool {
-        matches!(self, PropagatingEffect::Halting)
     }
     pub fn is_relay_to(&self) -> bool {
         matches!(self, PropagatingEffect::RelayTo(_, _))

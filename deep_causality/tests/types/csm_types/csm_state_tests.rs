@@ -9,7 +9,7 @@ use deep_causality::utils_test::test_utils;
 
 #[test]
 fn test_new() {
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
     assert!(causaloid.is_singleton());
     assert_eq!(1, causaloid.id());
     assert_eq!(
@@ -31,7 +31,7 @@ fn test_new() {
 fn test_eval() {
     let id = 42;
     let version = 1;
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
 
     // Case 1: Evaluation results in Deterministic(false)
     let data_fail = PropagatingEffect::Numerical(0.23f64);
@@ -57,7 +57,7 @@ fn eval_with_data() {
     let version = 1;
     // The initial data in the state is often just a default.
     let initial_data = PropagatingEffect::None;
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
     let cs = CausalState::new(id, version, initial_data, causaloid);
 
     // Evaluating with internal data (None) should fail the causaloid's check.
@@ -83,7 +83,7 @@ fn eval_with_data() {
 
 #[test]
 fn test_to_string() {
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
     assert!(causaloid.is_singleton());
     assert_eq!(1, causaloid.id());
     assert_eq!(

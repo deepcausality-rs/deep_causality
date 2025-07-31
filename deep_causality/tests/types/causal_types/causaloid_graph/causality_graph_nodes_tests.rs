@@ -18,7 +18,7 @@ fn get_causal_graph() -> BaseCausalGraph {
 #[test]
 fn test_add_root_causaloid() {
     let mut g = get_causal_graph();
-    let root_causaloid = test_utils::get_test_causaloid();
+    let root_causaloid = test_utils::get_test_causaloid_deterministic();
 
     let root_index = g
         .add_root_causaloid(root_causaloid)
@@ -30,7 +30,7 @@ fn test_add_root_causaloid() {
 #[test]
 fn test_add_root_causaloid_err() {
     let mut g = get_causal_graph();
-    let root_causaloid = test_utils::get_test_causaloid();
+    let root_causaloid = test_utils::get_test_causaloid_deterministic();
 
     let root_index = g
         .add_root_causaloid(root_causaloid.clone())
@@ -45,7 +45,7 @@ fn test_add_root_causaloid_err() {
 #[test]
 fn test_get_root_causaloid() {
     let mut g = get_causal_graph();
-    let root_causaloid = test_utils::get_test_causaloid();
+    let root_causaloid = test_utils::get_test_causaloid_deterministic();
 
     let root_index = g
         .add_root_causaloid(root_causaloid)
@@ -62,7 +62,7 @@ fn test_get_root_causaloid() {
 #[test]
 fn test_get_root_index() {
     let mut g = get_causal_graph();
-    let root_causaloid = test_utils::get_test_causaloid();
+    let root_causaloid = test_utils::get_test_causaloid_deterministic();
 
     let root_index = g
         .add_root_causaloid(root_causaloid)
@@ -81,7 +81,7 @@ fn test_get_last_index() {
     let res = g.get_last_index();
     assert!(res.is_err());
 
-    let root_causaloid = test_utils::get_test_causaloid();
+    let root_causaloid = test_utils::get_test_causaloid_deterministic();
 
     let root_index = g
         .add_root_causaloid(root_causaloid)
@@ -105,7 +105,7 @@ fn test_get_last_index() {
 #[test]
 fn test_add_causaloid() {
     let mut g = get_causal_graph();
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
 
     let index = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     let contains = g.contains_causaloid(index);
@@ -115,7 +115,7 @@ fn test_add_causaloid() {
 #[test]
 fn test_contains_causaloid() {
     let mut g = get_causal_graph();
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
 
     let index = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     let contains = g.contains_causaloid(index);
@@ -125,7 +125,7 @@ fn test_contains_causaloid() {
 #[test]
 fn test_get_causaloid() {
     let mut g = get_causal_graph();
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
 
     let index = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     let contains = g.contains_causaloid(index);
@@ -143,7 +143,7 @@ fn test_get_causaloid() {
 #[test]
 fn test_remove_causaloid() {
     let mut g = get_causal_graph();
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
 
     let index = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     let contains = g.contains_causaloid(index);

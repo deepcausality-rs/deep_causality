@@ -29,7 +29,6 @@ impl Debug for PropagatingEffect {
                 g.number_nodes(),
                 g.number_edges()
             ),
-            PropagatingEffect::Halting => write!(_f, "PropagatingEffect::Halting"),
             PropagatingEffect::RelayTo(idx, effect) => {
                 write!(_f, "PropagatingEffect::RelayTo({idx}, {effect:?})")
             }

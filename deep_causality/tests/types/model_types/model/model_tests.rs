@@ -13,7 +13,7 @@ fn test_new() {
     let author = "John Doe";
     let description = "This is a test model";
     let assumptions = None;
-    let causaloid = Arc::new(test_utils::get_test_causaloid());
+    let causaloid = Arc::new(test_utils::get_test_causaloid_deterministic());
     let context = Some(Arc::new(test_utils::get_test_context()));
 
     let model = Model::new(id, author, description, assumptions, causaloid, context);
@@ -27,7 +27,7 @@ fn test_id() {
     let author = "John Doe";
     let description = "This is a test model";
     let assumptions = None;
-    let causaloid = Arc::new(test_utils::get_test_causaloid());
+    let causaloid = Arc::new(test_utils::get_test_causaloid_deterministic());
     let context = Some(Arc::new(test_utils::get_test_context()));
 
     let model = Model::new(id, author, description, assumptions, causaloid, context);
@@ -41,7 +41,7 @@ fn test_author() {
     let author = "John Doe";
     let description = "This is a test model";
     let assumptions = None;
-    let causaloid = Arc::new(test_utils::get_test_causaloid());
+    let causaloid = Arc::new(test_utils::get_test_causaloid_deterministic());
     let context = Some(Arc::new(test_utils::get_test_context()));
 
     let model = Model::new(id, author, description, assumptions, causaloid, context);
@@ -56,7 +56,7 @@ fn test_description() {
     let author = "John Doe";
     let description = "This is a test model";
     let assumptions = None;
-    let causaloid = Arc::new(test_utils::get_test_causaloid());
+    let causaloid = Arc::new(test_utils::get_test_causaloid_deterministic());
     let context = Some(Arc::new(test_utils::get_test_context()));
 
     let model = Model::new(id, author, description, assumptions, causaloid, context);
@@ -72,7 +72,7 @@ fn test_causaloid() {
     let author = "John Doe";
     let description = "This is a test model";
     let assumptions = None;
-    let causaloid = Arc::new(test_utils::get_test_causaloid());
+    let causaloid = Arc::new(test_utils::get_test_causaloid_deterministic());
     let context = Some(Arc::new(test_utils::get_test_context()));
 
     let model = Model::new(
@@ -97,7 +97,7 @@ fn test_context() {
     let author = "John Doe";
     let description = "This is a test model";
     let assumptions = None;
-    let causaloid = Arc::new(test_utils::get_test_causaloid());
+    let causaloid = Arc::new(test_utils::get_test_causaloid_deterministic());
     let context = Some(Arc::new(test_utils::get_test_context()));
 
     let model = Model::new(
@@ -124,7 +124,7 @@ fn test_assumptions() {
     let author = "John Doe";
     let description = "This is a test model";
     let assumptions = None;
-    let causaloid = Arc::new(test_utils::get_test_causaloid());
+    let causaloid = Arc::new(test_utils::get_test_causaloid_deterministic());
     let context = Some(Arc::new(test_utils::get_test_context()));
 
     let model = Model::new(id, author, description, assumptions, causaloid, context);

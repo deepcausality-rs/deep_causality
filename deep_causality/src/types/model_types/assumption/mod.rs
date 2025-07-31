@@ -9,6 +9,7 @@ use crate::{DescriptionValue, EvalFn, IdentificationValue};
 
 mod assumable;
 mod debug;
+mod display;
 mod identifiable;
 
 // Interior mutability in Rust, part 2: thread safety

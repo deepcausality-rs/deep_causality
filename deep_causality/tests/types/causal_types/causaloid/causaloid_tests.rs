@@ -89,7 +89,7 @@ fn test_new_with_context() {
 fn test_collection_causaloid_evaluation() {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
-    let causal_coll = test_utils::get_test_causality_vec();
+    let causal_coll = test_utils::get_deterministic_test_causality_vec();
 
     let causaloid = Causaloid::from_causal_collection(id, Arc::new(causal_coll), description);
     assert!(!causaloid.is_singleton());
@@ -109,7 +109,7 @@ fn test_collection_causaloid_evaluation() {
 fn test_from_causal_collection() {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
-    let causal_coll = test_utils::get_test_causality_vec();
+    let causal_coll = test_utils::get_deterministic_test_causality_vec();
 
     let causaloid = Causaloid::from_causal_collection(id, Arc::new(causal_coll), description);
     assert!(!causaloid.is_singleton());
@@ -123,7 +123,7 @@ fn test_from_causal_collection() {
 fn test_from_causal_collection_with_context() {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
-    let causal_coll = test_utils::get_test_causality_vec();
+    let causal_coll = test_utils::get_deterministic_test_causality_vec();
     let context = get_base_context();
 
     let causaloid = Causaloid::from_causal_collection_with_context(
@@ -236,7 +236,7 @@ fn test_causal_graph_explain() {
 
 #[test]
 fn test_explain() {
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
     // Before evaluation, state is unknown.
     assert!(causaloid.explain().is_err());
 
@@ -251,7 +251,7 @@ fn test_explain() {
 
 #[test]
 fn test_evaluate_singleton() {
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
 
     let effect = PropagatingEffect::Numerical(0.78);
     let res = causaloid.evaluate(&effect).unwrap();
@@ -260,7 +260,7 @@ fn test_evaluate_singleton() {
 
 #[test]
 fn test_to_string() {
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
     // Before evaluation, is_active returns an error, which the Display trait should handle.
     let expected_unevaluated = "Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55";
     let actual_unevaluated = causaloid.to_string();
@@ -276,7 +276,7 @@ fn test_to_string() {
 
 #[test]
 fn test_debug() {
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
     // Before evaluation, is_active returns an error, which the Debug trait should handle.
     let expected_unevaluated = "Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55";
     let actual_unevaluated = format!("{causaloid:?}");
@@ -288,23 +288,6 @@ fn test_debug() {
     let expected_active = "Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55";
     let actual_active = format!("{causaloid:?}");
     assert_eq!(actual_active, expected_active);
-}
-
-#[test]
-fn test_evaluate_collection_with_halting_effect() {
-    // Setup: A collection where a Halting causaloid appears before a 'true' one.
-    let halting_causaloid = test_utils::get_test_causaloid_halting();
-    let true_causaloid = test_utils::get_test_causaloid_deterministic_true();
-    let causal_coll = vec![halting_causaloid, true_causaloid];
-    let collection_causaloid =
-        Causaloid::from_causal_collection(100, Arc::new(causal_coll), "Halting Collection");
-
-    // Act
-    let effect = PropagatingEffect::Numerical(0.0);
-    let res = collection_causaloid.evaluate(&effect).unwrap();
-
-    // Assert: The Halting effect should short-circuit the evaluation.
-    assert_eq!(res, PropagatingEffect::Halting);
 }
 
 #[test]
@@ -374,7 +357,7 @@ fn test_explain_collection_success() {
 fn test_explain_collection_with_sub_explain_error() {
     // Setup: A collection where one causaloid will not be evaluated due to short-circuiting.
     let true_causaloid = test_utils::get_test_causaloid_deterministic_true();
-    let unevaluated_causaloid = test_utils::get_test_causaloid(); // This one will remain unevaluated.
+    let unevaluated_causaloid = test_utils::get_test_causaloid_deterministic(); // This one will remain unevaluated.
 
     let causal_coll = vec![true_causaloid, unevaluated_causaloid];
     let collection_causaloid = Causaloid::from_causal_collection(
