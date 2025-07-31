@@ -12,11 +12,19 @@ use deep_causality::*;
 type TestBTreeMap = BTreeMap<i8, BaseCausaloid>;
 
 // Helper function to create a standard test BTreeMap.
-fn get_test_causality_btree_map() -> TestBTreeMap {
+fn get_test_causality_btree_map_deterministic() -> TestBTreeMap {
     BTreeMap::from([
         (1, get_test_causaloid_deterministic()),
         (2, get_test_causaloid_deterministic()),
         (3, get_test_causaloid_deterministic()),
+    ])
+}
+
+fn get_test_causality_btree_map_probabilistic() -> TestBTreeMap {
+    BTreeMap::from([
+        (1, get_test_causaloid_probabilistic()),
+        (2, get_test_causaloid_probabilistic()),
+        (3, get_test_causaloid_probabilistic()),
     ])
 }
 
@@ -32,7 +40,7 @@ fn activate_all_causes(map: &TestBTreeMap) {
 
 #[test]
 fn test_add() {
-    let mut map = get_test_causality_btree_map();
+    let mut map = get_test_causality_btree_map_deterministic();
     assert_eq!(3, map.len());
 
     let q = get_test_causaloid_deterministic();
@@ -42,7 +50,7 @@ fn test_add() {
 
 #[test]
 fn test_contains() {
-    let mut map = get_test_causality_btree_map();
+    let mut map = get_test_causality_btree_map_deterministic();
     assert_eq!(3, map.len());
     assert!(map.contains_key(&1));
 
@@ -54,7 +62,7 @@ fn test_contains() {
 
 #[test]
 fn test_remove() {
-    let mut map = get_test_causality_btree_map();
+    let mut map = get_test_causality_btree_map_deterministic();
     assert_eq!(3, map.len());
     assert!(map.contains_key(&1));
 
@@ -65,7 +73,7 @@ fn test_remove() {
 
 #[test]
 fn test_get_all_items() {
-    let col = get_test_causality_btree_map();
+    let col = get_test_causality_btree_map_deterministic();
     let all_items = col.get_all_items();
 
     let exp_len = col.len();
@@ -75,7 +83,7 @@ fn test_get_all_items() {
 
 #[test]
 fn test_evaluate_deterministic_propagation() {
-    let map = get_test_causality_btree_map();
+    let map = get_test_causality_btree_map_deterministic();
 
     // Case 1: All succeed, chain should be deterministically true.
     let effect_success = PropagatingEffect::Numerical(0.99);
@@ -94,7 +102,7 @@ fn test_evaluate_deterministic_propagation() {
 
 #[test]
 fn test_evaluate_probabilistic_propagation() {
-    let map = get_test_causality_btree_map();
+    let map = get_test_causality_btree_map_probabilistic();
 
     // Case 1: All succeed (Deterministic(true) is treated as probability 1.0).
     // The cumulative probability should be 1.0.
@@ -115,7 +123,7 @@ fn test_evaluate_probabilistic_propagation() {
 
 #[test]
 fn test_evaluate_mixed_propagation() {
-    let map = get_test_causality_btree_map();
+    let map = get_test_causality_btree_map_deterministic();
 
     // Case 1: All succeed, chain remains deterministically true.
     let effect_success = PropagatingEffect::Numerical(0.99);
@@ -134,7 +142,7 @@ fn test_evaluate_mixed_propagation() {
 
 #[test]
 fn test_explain() {
-    let map = get_test_causality_btree_map();
+    let map = get_test_causality_btree_map_deterministic();
     activate_all_causes(&map);
 
     let single_explanation = "Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: PropagatingEffect::Deterministic(true)";
@@ -148,18 +156,18 @@ fn test_explain() {
 
 #[test]
 fn test_len() {
-    let map = get_test_causality_btree_map();
+    let map = get_test_causality_btree_map_deterministic();
     assert_eq!(3, map.len());
 }
 
 #[test]
 fn test_is_empty() {
-    let map = get_test_causality_btree_map();
+    let map = get_test_causality_btree_map_deterministic();
     assert!(!map.is_empty());
 }
 
 #[test]
 fn test_to_vec() {
-    let map = get_test_causality_btree_map();
+    let map = get_test_causality_btree_map_deterministic();
     assert_eq!(3, map.to_vec().len());
 }

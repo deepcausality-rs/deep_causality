@@ -24,7 +24,7 @@ pub fn get_test_causality_array_mixed() -> [BaseCausaloid; 20] {
 
     // Combine a1 and a2
     a1.into_iter()
-        .chain(a2.into_iter())
+        .chain(a2)
         .collect::<Vec<_>>()
         .try_into()
         .unwrap()

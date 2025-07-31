@@ -89,7 +89,7 @@ fn test_new_with_context() {
 fn test_collection_causaloid_evaluation() {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
-    let causal_coll = test_utils::get_test_causality_vec();
+    let causal_coll = test_utils::get_deterministic_test_causality_vec();
 
     let causaloid = Causaloid::from_causal_collection(id, Arc::new(causal_coll), description);
     assert!(!causaloid.is_singleton());
@@ -109,7 +109,7 @@ fn test_collection_causaloid_evaluation() {
 fn test_from_causal_collection() {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
-    let causal_coll = test_utils::get_test_causality_vec();
+    let causal_coll = test_utils::get_deterministic_test_causality_vec();
 
     let causaloid = Causaloid::from_causal_collection(id, Arc::new(causal_coll), description);
     assert!(!causaloid.is_singleton());
@@ -123,7 +123,7 @@ fn test_from_causal_collection() {
 fn test_from_causal_collection_with_context() {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
-    let causal_coll = test_utils::get_test_causality_vec();
+    let causal_coll = test_utils::get_deterministic_test_causality_vec();
     let context = get_base_context();
 
     let causaloid = Causaloid::from_causal_collection_with_context(

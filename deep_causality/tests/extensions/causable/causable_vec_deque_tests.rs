@@ -9,8 +9,12 @@ use deep_causality::utils_test::test_utils::*;
 use deep_causality::*;
 
 // Helper function to create a standard test VecDeque.
-fn get_test_causality_vec_deque() -> VecDeque<BaseCausaloid> {
-    VecDeque::from_iter(get_test_causality_vec())
+fn get_deterministic_test_causality_vec_deque() -> VecDeque<BaseCausaloid> {
+    VecDeque::from_iter(get_deterministic_test_causality_vec())
+}
+
+fn get_probabilistic_test_causality_vec_deque() -> VecDeque<BaseCausaloid> {
+    VecDeque::from_iter(get_probabilistic_test_causality_vec())
 }
 
 // Helper to activate all causes in a collection for testing purposes.
@@ -25,7 +29,7 @@ fn activate_all_causes(col: &VecDeque<BaseCausaloid>) {
 
 #[test]
 fn test_add() {
-    let mut col = get_test_causality_vec_deque();
+    let mut col = get_deterministic_test_causality_vec_deque();
     assert_eq!(3, col.len());
 
     let q = get_test_causaloid_deterministic();
@@ -35,7 +39,7 @@ fn test_add() {
 
 #[test]
 fn test_get_all_items() {
-    let col = get_test_causality_vec_deque();
+    let col = get_deterministic_test_causality_vec_deque();
     let all_items = col.get_all_items();
 
     let exp_len = col.len();
@@ -45,7 +49,7 @@ fn test_get_all_items() {
 
 #[test]
 fn test_evaluate_deterministic_propagation() {
-    let col = get_test_causality_vec_deque();
+    let col = get_deterministic_test_causality_vec_deque();
 
     // Case 1: All succeed, chain should be deterministically true.
     let effect_success = PropagatingEffect::Numerical(0.99);
@@ -64,7 +68,7 @@ fn test_evaluate_deterministic_propagation() {
 
 #[test]
 fn test_evaluate_probabilistic_propagation() {
-    let col = get_test_causality_vec_deque();
+    let col = get_probabilistic_test_causality_vec_deque();
 
     // Case 1: All succeed (Deterministic(true) is treated as probability 1.0).
     // The cumulative probability should be 1.0.
@@ -85,7 +89,7 @@ fn test_evaluate_probabilistic_propagation() {
 
 #[test]
 fn test_evaluate_mixed_propagation() {
-    let col = get_test_causality_vec_deque();
+    let col = get_deterministic_test_causality_vec_deque();
 
     // Case 1: All succeed, chain remains deterministically true.
     let effect_success = PropagatingEffect::Numerical(0.99);
@@ -104,7 +108,7 @@ fn test_evaluate_mixed_propagation() {
 
 #[test]
 fn test_explain() {
-    let col = get_test_causality_vec_deque();
+    let col = get_deterministic_test_causality_vec_deque();
     activate_all_causes(&col);
 
     let single_explanation = "\n * Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: PropagatingEffect::Deterministic(true)\n";
@@ -115,18 +119,18 @@ fn test_explain() {
 
 #[test]
 fn test_len() {
-    let col = get_test_causality_vec_deque();
+    let col = get_deterministic_test_causality_vec_deque();
     assert_eq!(3, col.len());
 }
 
 #[test]
 fn test_is_empty() {
-    let col = get_test_causality_vec_deque();
+    let col = get_deterministic_test_causality_vec_deque();
     assert!(!col.is_empty());
 }
 
 #[test]
 fn test_to_vec() {
-    let col = get_test_causality_vec_deque();
+    let col = get_deterministic_test_causality_vec_deque();
     assert_eq!(3, col.to_vec().len());
 }
