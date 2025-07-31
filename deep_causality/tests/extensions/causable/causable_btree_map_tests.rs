@@ -14,9 +14,9 @@ type TestBTreeMap = BTreeMap<i8, BaseCausaloid>;
 // Helper function to create a standard test BTreeMap.
 fn get_test_causality_btree_map() -> TestBTreeMap {
     BTreeMap::from([
-        (1, get_test_causaloid()),
-        (2, get_test_causaloid()),
-        (3, get_test_causaloid()),
+        (1, get_test_causaloid_deterministic()),
+        (2, get_test_causaloid_deterministic()),
+        (3, get_test_causaloid_deterministic()),
     ])
 }
 
@@ -35,7 +35,7 @@ fn test_add() {
     let mut map = get_test_causality_btree_map();
     assert_eq!(3, map.len());
 
-    let q = get_test_causaloid();
+    let q = get_test_causaloid_deterministic();
     map.insert(4, q);
     assert_eq!(4, map.len());
 }
@@ -46,7 +46,7 @@ fn test_contains() {
     assert_eq!(3, map.len());
     assert!(map.contains_key(&1));
 
-    let q = get_test_causaloid();
+    let q = get_test_causaloid_deterministic();
     map.insert(4, q);
     assert_eq!(4, map.len());
     assert!(map.contains_key(&4));

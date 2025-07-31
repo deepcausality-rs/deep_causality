@@ -4,12 +4,10 @@
  */
 
 use crate::errors::CausalityError;
-use crate::traits::causable::causable_reasoning::CausableReasoning;
-use crate::traits::contextuable::space_temporal::SpaceTemporal;
-use crate::traits::contextuable::spatial::Spatial;
-use crate::traits::contextuable::temporal::Temporal;
-use crate::types::causal_types::causaloid::causal_type::CausaloidType;
-use crate::{Causable, Causaloid, Datable, PropagatingEffect, Symbolic};
+use crate::{
+    Causable, CausableReasoning, Causaloid, CausaloidType, Datable, PropagatingEffect,
+    SpaceTemporal, Spatial, Symbolic, Temporal,
+};
 
 #[allow(clippy::type_complexity)]
 impl<D, S, T, ST, SYM, VS, VT> Causable for Causaloid<D, S, T, ST, SYM, VS, VT>

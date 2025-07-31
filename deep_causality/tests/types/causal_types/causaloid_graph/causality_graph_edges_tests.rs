@@ -50,13 +50,13 @@ fn test_default() {
 #[test]
 fn test_add_edge() {
     let mut g = get_causal_graph();
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
 
     let idx_a = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     let contains_a = g.contains_causaloid(idx_a);
     assert!(contains_a);
 
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
     let idx_b = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     let contains_b = g.contains_causaloid(idx_b);
     assert!(contains_b);
@@ -71,13 +71,13 @@ fn test_add_edge() {
 #[test]
 fn test_add_edg_with_weight() {
     let mut g = get_causal_graph();
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
 
     let idx_a = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     let contains_a = g.contains_causaloid(idx_a);
     assert!(contains_a);
 
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
     let idx_b = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     let contains_b = g.contains_causaloid(idx_b);
     assert!(contains_b);
@@ -93,13 +93,13 @@ fn test_add_edg_with_weight() {
 #[test]
 fn test_remove_edge() {
     let mut g = get_causal_graph();
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
 
     let idx_a = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     let contains_a = g.contains_causaloid(idx_a);
     assert!(contains_a);
 
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
     let idx_b = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     let contains_b = g.contains_causaloid(idx_b);
     assert!(contains_b);

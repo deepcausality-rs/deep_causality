@@ -11,24 +11,24 @@ fn test_evaluate_subgraph_from_cause() {
     let mut g = CausaloidGraph::new(0);
 
     // Build a graph: root -> A, root -> B; A -> C
-    let root_causaloid = test_utils::get_test_causaloid();
+    let root_causaloid = test_utils::get_test_causaloid_deterministic();
     let root_index = g
         .add_root_causaloid(root_causaloid)
         .expect("Failed to add root index");
 
-    let causaloid_a = test_utils::get_test_causaloid();
+    let causaloid_a = test_utils::get_test_causaloid_deterministic();
     let idx_a = g
         .add_causaloid(causaloid_a)
         .expect("Failed to add causaloid A");
     g.add_edge(root_index, idx_a).expect("Failed to add edge");
 
-    let causaloid_b = test_utils::get_test_causaloid();
+    let causaloid_b = test_utils::get_test_causaloid_deterministic();
     let idx_b = g
         .add_causaloid(causaloid_b)
         .expect("Failed to add causaloid B");
     g.add_edge(root_index, idx_b).expect("Failed to add edge");
 
-    let causaloid_c = test_utils::get_test_causaloid();
+    let causaloid_c = test_utils::get_test_causaloid_deterministic();
     let idx_c = g
         .add_causaloid(causaloid_c)
         .expect("Failed to add causaloid C");
@@ -48,7 +48,7 @@ fn test_evaluate_subgraph_from_cause() {
 fn test_evaluate_subgraph_fails_if_not_frozen() {
     let effect = PropagatingEffect::Numerical(0.99);
     let mut g = CausaloidGraph::new(0);
-    let root_causaloid = test_utils::get_test_causaloid();
+    let root_causaloid = test_utils::get_test_causaloid_deterministic();
     let root_index = g.add_root_causaloid(root_causaloid).unwrap();
 
     // DO NOT call g.freeze()
@@ -67,7 +67,7 @@ fn test_evaluate_subgraph_fails_if_node_missing() {
     let mut g = CausaloidGraph::new(0); // An empty graph
 
     // Build a graph: root
-    let root_causaloid = test_utils::get_test_causaloid();
+    let root_causaloid = test_utils::get_test_causaloid_deterministic();
     let root_index = g
         .add_root_causaloid(root_causaloid)
         .expect("Failed to add root index");

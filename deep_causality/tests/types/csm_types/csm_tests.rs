@@ -44,7 +44,7 @@ fn test_new() {
     let id = 42;
     let version = 1;
     let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
 
     let cs = CausalState::new(id, version, data, causaloid);
     let ca = get_test_action();
@@ -60,7 +60,7 @@ fn test_is_empty() {
     let id = 42;
     let version = 1;
     let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
 
     let cs = CausalState::new(id, version, data, causaloid);
     let ca = get_test_action();
@@ -76,7 +76,7 @@ fn add_single_state() {
     let id = 42;
     let version = 1;
     let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
 
     let cs = CausalState::new(id, version, data, causaloid.clone());
     let ca = get_test_action();
@@ -100,7 +100,7 @@ fn add_single_state_err_already_exists() {
     let id = 42;
     let version = 1;
     let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
 
     let cs = CausalState::new(id, version, data, causaloid.clone());
     let ca = get_test_action();
@@ -124,7 +124,7 @@ fn update_single_state() {
     let id = 42;
     let version = 1;
     let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
 
     let cs = CausalState::new(id, version, data, causaloid);
     let ca = get_test_action();
@@ -138,7 +138,7 @@ fn update_single_state() {
     let version = 1;
     let data = PropagatingEffect::Numerical(0.7f64);
 
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
 
     let cs = CausalState::new(id, version, data, causaloid);
     let ca = get_test_action();
@@ -155,7 +155,7 @@ fn update_single_state_err_not_found() {
     let id = 42;
     let version = 1;
     let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
 
     let cs = CausalState::new(id, version, data, causaloid);
     let ca = get_test_action();
@@ -171,7 +171,7 @@ fn remove_single_state() {
     let id = 42;
     let version = 1;
     let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
 
     let cs = CausalState::new(id, version, data.clone(), causaloid.clone());
     let ca = get_test_action();
@@ -199,7 +199,7 @@ fn remove_single_state_err_not_found() {
     let id = 42;
     let version = 1;
     let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
 
     let cs = CausalState::new(id, version, data, causaloid);
     let ca = get_test_action();
@@ -235,7 +235,7 @@ fn eval_all_states() {
     let id = 42;
     let version = 1;
     let data = test_utils::get_test_single_data(0.23f64);
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
 
     let cs = CausalState::new(id, version, data, causaloid);
     let ca = get_test_action();
@@ -251,7 +251,7 @@ fn update_all_states() {
     let id = 42;
     let version = 1;
     let data = test_utils::get_test_single_data(0.23f64);
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
 
     let cs = CausalState::new(id, version, data, causaloid.clone());
     let ca = get_test_action();
@@ -278,7 +278,7 @@ fn eval_single_state() {
     let id = 42;
     let version = 1;
     let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
 
     let cs = CausalState::new(id, version, data, causaloid);
     let ca = get_test_action();
@@ -312,7 +312,7 @@ fn eval_single_state_success_fires_action() {
     let id = 42;
     let version = 1;
     let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid(); // Returns Deterministic(true)
+    let causaloid = test_utils::get_test_causaloid_deterministic(); // Returns Deterministic(true)
 
     let cs = CausalState::new(id, version, data, causaloid);
     let ca = get_test_action(); // Succeeds
@@ -333,7 +333,7 @@ fn eval_single_state_success_inactive_no_action() {
     let version = 1;
     // Use data that makes the state inactive (0.23 < 0.55 threshold)
     let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid(); // Returns Deterministic(false)
+    let causaloid = test_utils::get_test_causaloid_deterministic(); // Returns Deterministic(false)
 
     let cs = CausalState::new(id, version, data, causaloid);
     // Use an action that would fail to prove it's not being called.
@@ -355,7 +355,7 @@ fn eval_single_state_error_not_found() {
     let id = 42;
     let version = 1;
     let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
 
     let cs = CausalState::new(id, version, data, causaloid);
     let ca = get_test_action();
@@ -401,7 +401,7 @@ fn eval_single_state_error_action_fails() {
     let version = 1;
     // Use data that makes the state active (0.60 > 0.55 threshold in test_causaloid)
     let data = PropagatingEffect::Numerical(0.60f64);
-    let causaloid = test_utils::get_test_causaloid(); // Returns Deterministic(true)
+    let causaloid = test_utils::get_test_causaloid_deterministic(); // Returns Deterministic(true)
 
     let cs = CausalState::new(id, version, data, causaloid);
     // Use an action that is designed to fail.
@@ -427,7 +427,7 @@ fn eval_all_states_success_inactive_state() {
     let version = 1;
     // Data that makes the state inactive (0.23 < 0.55 threshold)
     let data = test_utils::get_test_single_data(0.23f64);
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
 
     let cs = CausalState::new(id, version, data, causaloid);
     let ca = get_test_action();
@@ -445,7 +445,7 @@ fn eval_all_states_success_active_state_fires_action() {
     let version = 1;
     // Data that makes the state active (0.6 > 0.55 threshold)
     let data = PropagatingEffect::Numerical(0.60f64);
-    let causaloid = test_utils::get_test_causaloid(); // Returns Deterministic(true)
+    let causaloid = test_utils::get_test_causaloid_deterministic(); // Returns Deterministic(true)
 
     let cs = CausalState::new(id, version, data, causaloid);
     let ca = get_test_action(); // Succeeds
@@ -484,7 +484,7 @@ fn eval_all_states_error_action_fails() {
     let version = 1;
     // Use data that makes the state active (0.60 > 0.55 threshold)
     let data = PropagatingEffect::Numerical(0.60f64);
-    let causaloid = test_utils::get_test_causaloid(); // Returns Deterministic(true)
+    let causaloid = test_utils::get_test_causaloid_deterministic(); // Returns Deterministic(true)
 
     let cs = CausalState::new(id, version, data, causaloid);
     // Use an action that is designed to fail.

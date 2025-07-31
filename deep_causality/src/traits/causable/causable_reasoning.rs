@@ -100,26 +100,32 @@ where
         effect: &PropagatingEffect,
         _logic: &AggregateLogic,
     ) -> Result<PropagatingEffect, CausalityError> {
-        // 1.0 is the multiplicative identity.
+        // 1.0 is the multiplicative identity for cumulative probability.
         let mut cumulative_prob: NumericalValue = 1.0;
 
         for cause in self.get_all_items() {
             let effect = cause.evaluate(effect)?;
 
             match effect {
-                PropagatingEffect::Probabilistic(p) => {
+                PropagatingEffect::Probabilistic(p) | PropagatingEffect::Numerical(p) => {
                     cumulative_prob *= p;
                 }
+
                 _ => {
                     // Other variants are not handled in this mode.
                     return Err(CausalityError(format!(
-                        "evaluate_probabilistic_propagation encountered a non-probabilistic effect: {effect:?}. Only probabilistic effects are allowed."
+                        "evaluate_probabilistic_propagation encountered a non-probabilistic effect: {effect:?}. Only probabilistic or numerical effects are allowed."
                     )));
                 }
             }
         }
 
-        Ok(PropagatingEffect::Probabilistic(cumulative_prob))
+        // Convert final probability to a deterministic outcome based on a threshold.
+        if cumulative_prob > 0.5 {
+            Ok(PropagatingEffect::Deterministic(true))
+        } else {
+            Ok(PropagatingEffect::Deterministic(false))
+        }
     }
 
     /// Evaluates a linear chain of causes that may contain a mix of deterministic and

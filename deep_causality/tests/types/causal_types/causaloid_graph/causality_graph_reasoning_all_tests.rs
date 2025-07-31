@@ -11,28 +11,28 @@ fn test_graph_evaluate() {
     let mut g = CausaloidGraph::new(0);
 
     // Add root causaloid
-    let root_causaloid = test_utils::get_test_causaloid();
+    let root_causaloid = test_utils::get_test_causaloid_deterministic();
     let root_index = g
         .add_root_causaloid(root_causaloid)
         .expect("Failed to add root index");
     assert!(g.contains_causaloid(root_index));
 
     // Add causaloid A
-    let causaloid_a = test_utils::get_test_causaloid();
+    let causaloid_a = test_utils::get_test_causaloid_deterministic();
     let idx_a = g
         .add_causaloid(causaloid_a)
         .expect("Failed to add causaloid A");
     g.add_edge(root_index, idx_a).expect("Failed to add edge");
 
     // Add causaloid B
-    let causaloid_b = test_utils::get_test_causaloid();
+    let causaloid_b = test_utils::get_test_causaloid_deterministic();
     let idx_b = g
         .add_causaloid(causaloid_b)
         .expect("Failed to add causaloid B");
     g.add_edge(root_index, idx_b).expect("Failed to add edge");
 
     // Add causaloid C
-    let causaloid_c = test_utils::get_test_causaloid();
+    let causaloid_c = test_utils::get_test_causaloid_deterministic();
     let idx_c = g
         .add_causaloid(causaloid_c)
         .expect("Failed to add causaloid C");
@@ -67,7 +67,7 @@ fn test_graph_evaluate_error_conditions() {
 
     // Test case 2: Graph is not frozen
     let mut g = CausaloidGraph::new(0);
-    let root_causaloid = test_utils::get_test_causaloid();
+    let root_causaloid = test_utils::get_test_causaloid_deterministic();
     g.add_root_causaloid(root_causaloid).unwrap();
     // DO NOT call g.freeze()
 

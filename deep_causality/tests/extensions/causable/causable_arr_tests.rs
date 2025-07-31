@@ -10,13 +10,29 @@ use deep_causality::*;
 
 // Helper function to create a standard test array.
 // Causaloid doesn't implement Copy, hence the from_fn workaround for array initialization.
-pub fn get_test_causality_array() -> [BaseCausaloid; 10] {
-    array::from_fn(|_| get_test_causaloid())
+pub fn get_test_causality_array(deterministic: bool) -> [BaseCausaloid; 10] {
+    if deterministic {
+        array::from_fn(|_| get_test_causaloid_deterministic())
+    } else {
+        array::from_fn(|_| get_test_causaloid_probabilistic())
+    }
+}
+
+pub fn get_test_causality_array_mixed() -> [BaseCausaloid; 20] {
+    let a1 = get_test_causality_array(true);
+    let a2 = get_test_causality_array(false);
+
+    // Combine a1 and a2
+    a1.into_iter()
+        .chain(a2.into_iter())
+        .collect::<Vec<_>>()
+        .try_into()
+        .unwrap()
 }
 
 #[test]
 fn test_get_all_items() {
-    let col = get_test_causality_array();
+    let col = get_test_causality_array(true);
     let all_items = col.get_all_items();
 
     let exp_len = col.len();
@@ -26,7 +42,7 @@ fn test_get_all_items() {
 
 #[test]
 fn test_evaluate_deterministic_propagation() {
-    let col = get_test_causality_array();
+    let col = get_test_causality_array(true);
 
     // Case 1: All succeed, chain should be deterministically true.
     let effect_success = PropagatingEffect::Numerical(0.99);
@@ -45,14 +61,13 @@ fn test_evaluate_deterministic_propagation() {
 
 #[test]
 fn test_evaluate_probabilistic_propagation() {
-    let col = get_test_causality_array();
+    let col = get_test_causality_array(false);
 
-    // Case 1: All succeed (Deterministic(true) is treated as probability 1.0).
-    // The cumulative probability should be 1.0.
-    let effect_success = PropagatingEffect::Numerical(0.99);
-    let res_success = col
-        .evaluate_probabilistic_propagation(&effect_success, &AggregateLogic::All)
-        .unwrap();
+    let effect_success = PropagatingEffect::Probabilistic(0.99);
+    let res = col.evaluate_probabilistic_propagation(&effect_success, &AggregateLogic::All);
+    assert!(res.is_ok());
+
+    let res_success = res.unwrap();
     assert_eq!(res_success, PropagatingEffect::Probabilistic(1.0));
 
     // Case 2: One fails (Deterministic(false) is treated as probability 0.0).
@@ -66,7 +81,7 @@ fn test_evaluate_probabilistic_propagation() {
 
 #[test]
 fn test_evaluate_mixed_propagation() {
-    let col = get_test_causality_array();
+    let col = get_test_causality_array_mixed();
 
     // Case 1: All succeed, chain remains deterministically true.
     let effect_success = PropagatingEffect::Numerical(0.99);
@@ -85,7 +100,7 @@ fn test_evaluate_mixed_propagation() {
 
 #[test]
 fn test_explain() {
-    let col = get_test_causality_array();
+    let col = get_test_causality_array(true);
 
     let effect = PropagatingEffect::Numerical(0.99);
     let res = col.evaluate_deterministic_propagation(&effect, &AggregateLogic::All);
@@ -104,18 +119,18 @@ fn test_explain() {
 
 #[test]
 fn test_len() {
-    let col = get_test_causality_array();
+    let col = get_test_causality_array(true);
     assert_eq!(10, col.len());
 }
 
 #[test]
 fn test_is_empty() {
-    let col = get_test_causality_array();
+    let col = get_test_causality_array(true);
     assert!(!col.is_empty());
 }
 
 #[test]
 fn test_to_vec() {
-    let col = get_test_causality_array();
+    let col = get_test_causality_array(true);
     assert_eq!(10, col.to_vec().len());
 }

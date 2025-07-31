@@ -54,10 +54,10 @@ fn test_shortest_path_error_conditions() {
     // Error: No path found between nodes
     let mut g_disconnected = CausaloidGraph::new(0);
     g_disconnected
-        .add_causaloid(test_utils::get_test_causaloid())
+        .add_causaloid(test_utils::get_test_causaloid_deterministic())
         .unwrap(); // index 0
     g_disconnected
-        .add_causaloid(test_utils::get_test_causaloid())
+        .add_causaloid(test_utils::get_test_causaloid_deterministic())
         .unwrap(); // index 1
     g_disconnected.freeze();
 

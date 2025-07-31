@@ -28,7 +28,7 @@ fn test_add() {
     let mut col = get_test_causality_vec_deque();
     assert_eq!(3, col.len());
 
-    let q = get_test_causaloid();
+    let q = get_test_causaloid_deterministic();
     col.push_back(q);
     assert_eq!(4, col.len());
 }

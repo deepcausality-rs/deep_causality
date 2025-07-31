@@ -44,7 +44,7 @@ fn test_explain_all_causes_error_conditions() {
     assert_eq!(res, "The causal graph is empty.");
 
     // Test with a graph that has no root
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
     g.add_causaloid(causaloid)
         .expect("Failed to add causaloid A");
     assert!(!g.is_empty());
@@ -89,7 +89,7 @@ fn test_explain_subgraph_from_cause_error_conditions() {
     );
 
     // Error: Start node does not exist
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
     g.add_causaloid(causaloid).expect("Failed to add causaloid");
     g.freeze();
     let res = g.explain_subgraph_from_cause(99);

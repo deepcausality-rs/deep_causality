@@ -9,7 +9,7 @@ use deep_causality::*;
 #[test]
 fn test_evaluate_single_cause_success() {
     let mut g = CausaloidGraph::new(0);
-    let causaloid = test_utils::get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_deterministic();
     let index = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     g.freeze(); // Reasoning requires a frozen graph
     // Evaluate the node using the high-level graph API.
