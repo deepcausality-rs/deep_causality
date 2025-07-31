@@ -46,16 +46,16 @@ fn test_evaluate_deterministic_propagation() {
 
     // Case 1: All succeed, chain should be deterministically true.
     let effect_success = PropagatingEffect::Numerical(0.99);
-    let res_success = col
-        .evaluate_deterministic_propagation(&effect_success, &AggregateLogic::All)
-        .unwrap();
+    let res = col.evaluate_deterministic_propagation(&effect_success, &AggregateLogic::All);
+    assert!(res.is_ok());
+    let res_success = res.unwrap();
     assert_eq!(res_success, PropagatingEffect::Deterministic(true));
 
     // Case 2: One fails, chain should be deterministically false.
     let effect_fail = PropagatingEffect::Numerical(0.1);
-    let res_fail = col
-        .evaluate_deterministic_propagation(&effect_fail, &AggregateLogic::All)
-        .unwrap();
+    let res = col.evaluate_deterministic_propagation(&effect_fail, &AggregateLogic::All);
+    assert!(res.is_ok());
+    let res_fail = res.unwrap();
     assert_eq!(res_fail, PropagatingEffect::Deterministic(false));
 }
 
@@ -73,9 +73,9 @@ fn test_evaluate_probabilistic_propagation() {
     // Case 2: One fails (Deterministic(false) is treated as probability 0.0).
     // The chain should short-circuit and return a cumulative probability of 0.0.
     let effect_fail = PropagatingEffect::Numerical(0.1);
-    let res_fail = col
-        .evaluate_probabilistic_propagation(&effect_fail, &AggregateLogic::All, 0.5)
-        .unwrap();
+    let res = col.evaluate_probabilistic_propagation(&effect_fail, &AggregateLogic::All, 0.5);
+    assert!(res.is_ok());
+    let res_fail = res.unwrap();
     assert_eq!(res_fail, PropagatingEffect::Probabilistic(0.0));
 }
 
@@ -85,9 +85,9 @@ fn test_evaluate_mixed_propagation() {
 
     // Case 1: All succeed, chain remains deterministically true.
     let effect_success = PropagatingEffect::Numerical(0.99);
-    let res_success = col
-        .evaluate_mixed_propagation(&effect_success, &AggregateLogic::All, 0.5)
-        .unwrap();
+    let res = col.evaluate_mixed_propagation(&effect_success, &AggregateLogic::All, 0.5);
+    assert!(res.is_ok());
+    let res_success = res.unwrap();
     assert_eq!(res_success, PropagatingEffect::Deterministic(true));
 
     // Case 2: One fails, chain becomes deterministically false.
@@ -107,7 +107,6 @@ fn test_explain() {
     assert!(res.is_ok());
 
     let res = col.explain();
-    dbg!(&res);
     assert!(res.is_ok());
     let actual = col.explain().unwrap();
 

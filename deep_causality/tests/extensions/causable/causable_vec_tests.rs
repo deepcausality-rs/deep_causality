@@ -42,16 +42,16 @@ fn test_evaluate_deterministic_propagation() {
 
     // Case 1: All succeed, chain should be deterministically true.
     let effect_success = PropagatingEffect::Numerical(0.99);
-    let res_success = col
-        .evaluate_deterministic_propagation(&effect_success, &AggregateLogic::All)
-        .unwrap();
+    let res = col.evaluate_deterministic_propagation(&effect_success, &AggregateLogic::All);
+    assert!(res.is_ok());
+    let res_success = res.unwrap();
     assert_eq!(res_success, PropagatingEffect::Deterministic(true));
 
     // Case 2: One fails, chain should be deterministically false.
     let effect_fail = PropagatingEffect::Numerical(0.1);
-    let res_fail = col
-        .evaluate_deterministic_propagation(&effect_fail, &AggregateLogic::All)
-        .unwrap();
+    let res = col.evaluate_deterministic_propagation(&effect_fail, &AggregateLogic::All);
+    assert!(res.is_ok());
+    let res_fail = res.unwrap();
     assert_eq!(res_fail, PropagatingEffect::Deterministic(false));
 }
 
@@ -62,17 +62,17 @@ fn test_evaluate_probabilistic_propagation() {
     // Case 1: All succeed (Deterministic(true) is treated as probability 1.0).
     // The cumulative probability should be 1.0.
     let effect_success = PropagatingEffect::Numerical(0.99);
-    let res_success = col
-        .evaluate_probabilistic_propagation(&effect_success, &AggregateLogic::All, 0.5)
-        .unwrap();
+    let res = col.evaluate_probabilistic_propagation(&effect_success, &AggregateLogic::All, 0.5);
+    assert!(res.is_ok());
+    let res_success = res.unwrap();
     assert_eq!(res_success, PropagatingEffect::Probabilistic(1.0));
 
     // Case 2: One fails (Deterministic(false) is treated as probability 0.0).
     // The chain should short-circuit and return a cumulative probability of 0.0.
     let effect_fail = PropagatingEffect::Numerical(0.1);
-    let res_fail = col
-        .evaluate_probabilistic_propagation(&effect_fail, &AggregateLogic::All, 0.5)
-        .unwrap();
+    let res = col.evaluate_probabilistic_propagation(&effect_fail, &AggregateLogic::All, 0.5);
+    assert!(res.is_ok());
+    let res_fail = res.unwrap();
     assert_eq!(res_fail, PropagatingEffect::Probabilistic(0.0));
 }
 
@@ -82,16 +82,16 @@ fn test_evaluate_mixed_propagation() {
 
     // Case 1: All succeed, chain remains deterministically true.
     let effect_success = PropagatingEffect::Numerical(0.99);
-    let res_success = col
-        .evaluate_mixed_propagation(&effect_success, &AggregateLogic::All, 0.5)
-        .unwrap();
+    let res = col.evaluate_mixed_propagation(&effect_success, &AggregateLogic::All, 0.5);
+    assert!(res.is_ok());
+    let res_success = res.unwrap();
     assert_eq!(res_success, PropagatingEffect::Deterministic(true));
 
     // Case 2: One fails, chain becomes deterministically false.
     let effect_fail = PropagatingEffect::Numerical(0.1);
-    let res_fail = col
-        .evaluate_mixed_propagation(&effect_fail, &AggregateLogic::All, 0.5)
-        .unwrap();
+    let res = col.evaluate_mixed_propagation(&effect_fail, &AggregateLogic::All, 0.5);
+    assert!(res.is_ok());
+    let res_fail = res.unwrap();
     assert_eq!(res_fail, PropagatingEffect::Deterministic(false));
 }
 
@@ -102,7 +102,9 @@ fn test_explain() {
 
     let single_explanation = "\n * Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: PropagatingEffect::Deterministic(true)\n";
     let expected = single_explanation.repeat(3);
-    let actual = col.explain().unwrap();
+    let res = col.explain();
+    assert!(res.is_ok());
+    let actual = res.unwrap();
     assert_eq!(expected, actual);
 }
 
@@ -139,6 +141,8 @@ fn test_evaluate_deterministic_propagation_error_non_deterministic_effect() {
 
     // Assert: This covers the error branch for non-deterministic effects.
     assert!(result.is_err());
+    let result = coll.evaluate_deterministic_propagation(&effect, &AggregateLogic::All);
+    assert!(result.is_err());
     let err_msg = result.unwrap_err().to_string();
     assert!(
         err_msg.contains(
@@ -164,12 +168,12 @@ fn test_evaluate_probabilistic_propagation_success() {
 
     // Act: Evaluate with probabilistic propagation.
     let effect = PropagatingEffect::Numerical(0.0);
-    let res = coll
-        .evaluate_probabilistic_propagation(&effect, &AggregateLogic::All, 0.5)
-        .unwrap();
+    let res = coll.evaluate_probabilistic_propagation(&effect, &AggregateLogic::All, 0.5);
+    assert!(res.is_ok());
+    let result = res.unwrap();
 
     // Assert: This covers the main logic branch, ensuring probabilities are multiplied.
-    assert_eq!(res, PropagatingEffect::Probabilistic(0.125));
+    assert_eq!(result, PropagatingEffect::Probabilistic(0.125));
 }
 
 #[test]

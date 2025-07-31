@@ -103,16 +103,16 @@ fn test_evaluate_deterministic_propagation() {
 
     // Case 1: All succeed, chain should be deterministically true.
     let effect_success = PropagatingEffect::Numerical(0.99);
-    let res_success = map
-        .evaluate_deterministic_propagation(&effect_success, &AggregateLogic::All)
-        .unwrap();
+    let res = map.evaluate_deterministic_propagation(&effect_success, &AggregateLogic::All);
+    assert!(res.is_ok());
+    let res_success = res.unwrap();
     assert_eq!(res_success, PropagatingEffect::Deterministic(true));
 
     // Case 2: One fails, chain should be deterministically false.
     let effect_fail = PropagatingEffect::Numerical(0.1);
-    let res_fail = map
-        .evaluate_deterministic_propagation(&effect_fail, &AggregateLogic::All)
-        .unwrap();
+    let res = map.evaluate_deterministic_propagation(&effect_fail, &AggregateLogic::All);
+    assert!(res.is_ok());
+    let res_fail = res.unwrap();
     assert_eq!(res_fail, PropagatingEffect::Deterministic(false));
 }
 
@@ -123,17 +123,17 @@ fn test_evaluate_probabilistic_propagation() {
     // Case 1: All succeed (Deterministic(true) is treated as probability 1.0).
     // The cumulative probability should be 1.0.
     let effect_success = PropagatingEffect::Numerical(0.99);
-    let res_success = map
-        .evaluate_probabilistic_propagation(&effect_success, &AggregateLogic::All, 0.5)
-        .unwrap();
+    let res = map.evaluate_probabilistic_propagation(&effect_success, &AggregateLogic::All, 0.5);
+    assert!(res.is_ok());
+    let res_success = res.unwrap();
     assert_eq!(res_success, PropagatingEffect::Probabilistic(1.0));
 
     // Case 2: One fails (Deterministic(false) is treated as probability 0.0).
     // The chain should short-circuit and return a cumulative probability of 0.0.
     let effect_fail = PropagatingEffect::Numerical(0.1);
-    let res_fail = map
-        .evaluate_probabilistic_propagation(&effect_fail, &AggregateLogic::All, 0.5)
-        .unwrap();
+    let res = map.evaluate_probabilistic_propagation(&effect_fail, &AggregateLogic::All, 0.5);
+    assert!(res.is_ok());
+    let res_fail = res.unwrap();
     assert_eq!(res_fail, PropagatingEffect::Probabilistic(0.0));
 }
 
@@ -143,9 +143,9 @@ fn test_evaluate_mixed_propagation() {
 
     // Case 1: All succeed, chain remains deterministically true.
     let effect_success = PropagatingEffect::Numerical(0.99);
-    let res_success = map
-        .evaluate_mixed_propagation(&effect_success, &AggregateLogic::All, 0.5)
-        .unwrap();
+    let res = map.evaluate_mixed_propagation(&effect_success, &AggregateLogic::All, 0.5);
+    assert!(res.is_ok());
+    let res_success = res.unwrap();
     // All mixed cased evaluate
     assert_eq!(res_success, PropagatingEffect::Deterministic(true));
 }
@@ -156,8 +156,8 @@ fn test_evaluate_mixed_propagation_err() {
 
     //
     let effect_fail = PropagatingEffect::Numerical(0.1);
-    let res_fail = map.evaluate_mixed_propagation(&effect_fail, &AggregateLogic::All, 0.5);
-    assert!(res_fail.is_err());
+    let res = map.evaluate_mixed_propagation(&effect_fail, &AggregateLogic::All, 0.5);
+    assert!(res.is_err());
 }
 
 #[test]
@@ -166,7 +166,9 @@ fn test_explain() {
     activate_all_causes(&map);
 
     let single_explanation = "Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: PropagatingEffect::Deterministic(true)";
-    let actual = map.explain().unwrap();
+    let res = map.explain();
+    assert!(res.is_ok());
+    let actual = res.unwrap();
 
     // HashMap iteration order is not guaranteed.
     // We check that the explanation for each of the 3 causes is present.
