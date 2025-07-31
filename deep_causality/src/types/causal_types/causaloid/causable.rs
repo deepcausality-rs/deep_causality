@@ -58,13 +58,9 @@ where
                 // Prioritizes Halting, then looks for the first Deterministic(true).
                 let mut has_true = false;
                 for cause in coll.iter() {
-                    match cause.evaluate(effect)? {
-                        PropagatingEffect::Halting => return Ok(PropagatingEffect::Halting),
-                        PropagatingEffect::Deterministic(true) => {
-                            has_true = true;
-                            break; // Short-circuit
-                        }
-                        _ => (), // Other effects are ignored for this aggregation
+                    if let PropagatingEffect::Deterministic(true) = cause.evaluate(effect)? {
+                        has_true = true;
+                        break; // Short-circuit
                     }
                 }
                 PropagatingEffect::Deterministic(has_true)

@@ -90,9 +90,6 @@ where
             let effect = cause.evaluate(effect)?;
 
             match effect {
-                // If any cause halts, the entire subgraph reasoning halts immediately.
-                PropagatingEffect::Halting => return Ok(PropagatingEffect::Halting),
-
                 // If the cause is deterministically false, we stop traversing this path,
                 // but the overall subgraph reasoning does not fail or halt.
                 PropagatingEffect::Deterministic(false) => continue,
@@ -161,16 +158,7 @@ where
                 CausalityError(format!("Failed to get causaloid at index {index}"))
             })?;
 
-            let effect = cause.evaluate(effect)?;
-
-            match effect {
-                // If any node on the path is false or halts, the entire path fails.
-                PropagatingEffect::Deterministic(false) | PropagatingEffect::Halting => {
-                    return Ok(effect);
-                }
-                // Otherwise, continue to the next node.
-                _ => continue,
-            }
+            let _ = cause.evaluate(effect)?;
         }
 
         // If the loop completes, all nodes on the path were successfully evaluated.

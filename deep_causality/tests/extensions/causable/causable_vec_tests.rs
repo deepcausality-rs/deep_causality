@@ -173,23 +173,6 @@ fn test_evaluate_probabilistic_propagation_success() {
 }
 
 #[test]
-fn test_evaluate_probabilistic_propagation_with_halting() {
-    // Setup: A collection with a probabilistic causaloid followed by a halting one.
-    let probabilistic_causaloid = test_utils::get_test_causaloid_probabilistic();
-    let halting_causaloid = test_utils::get_test_causaloid_halting();
-    let coll: Vec<BaseCausaloid> = vec![probabilistic_causaloid, halting_causaloid];
-
-    // Act: Evaluate with probabilistic propagation.
-    let effect = PropagatingEffect::Numerical(0.0);
-    let res = coll
-        .evaluate_probabilistic_propagation(&effect, &AggregateLogic::All)
-        .unwrap();
-
-    // Assert: This covers the Halting branch, which should take precedence.
-    assert_eq!(res, PropagatingEffect::Halting);
-}
-
-#[test]
 fn test_evaluate_probabilistic_propagation_error_contextual_link() {
     // Setup: A collection containing a ContextualLink causaloid, which is invalid for this function.
     let probabilistic_causaloid = test_utils::get_test_causaloid_probabilistic();

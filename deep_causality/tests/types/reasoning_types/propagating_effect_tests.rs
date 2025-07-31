@@ -45,12 +45,6 @@ fn test_is_contextual_link() {
 }
 
 #[test]
-fn test_is_halting() {
-    let effect = PropagatingEffect::Halting;
-    assert!(effect.is_halting());
-}
-
-#[test]
 fn test_as_bool() {
     let effect1 = PropagatingEffect::Deterministic(true);
     assert_eq!(effect1.as_bool(), Some(true));
@@ -108,9 +102,6 @@ fn test_display() {
         format!("{effect3}"),
         "PropagatingEffect::ContextualLink(1, 2)"
     );
-
-    let effect4 = PropagatingEffect::Halting;
-    assert_eq!(format!("{effect4}"), "PropagatingEffect::Halting");
 }
 
 #[test]
@@ -132,9 +123,6 @@ fn test_debug() {
         format!("{effect3:?}"),
         "PropagatingEffect::ContextualLink(1, 2)"
     );
-
-    let effect4 = PropagatingEffect::Halting;
-    assert_eq!(format!("{effect4:?}"), "PropagatingEffect::Halting");
 }
 
 #[test]
@@ -218,13 +206,6 @@ fn test_partial_eq() {
     let effect15 = PropagatingEffect::Graph(Arc::clone(&graph2)); // Different Arc, same content
     assert_eq!(effect13, effect14); // Should be equal due to Arc::ptr_eq
     assert_ne!(effect13, effect15); // Should be not equal due to Arc::ptr_eq
-
-    // Halting variant
-    let effect16 = PropagatingEffect::Halting;
-    let effect17 = PropagatingEffect::Halting;
-    let effect18 = PropagatingEffect::Deterministic(false);
-    assert_eq!(effect16, effect17);
-    assert_ne!(effect16, effect18);
 
     // RelayTo variant
     let effect19 = PropagatingEffect::RelayTo(1, Box::new(PropagatingEffect::Deterministic(true)));

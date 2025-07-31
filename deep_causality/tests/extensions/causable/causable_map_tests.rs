@@ -28,14 +28,6 @@ fn get_mixed_test_causality_map() -> TestHashMap {
     ])
 }
 
-fn get_mixed_test_halting_causality_map() -> TestHashMap {
-    HashMap::from([
-        (1, get_test_causaloid_deterministic_true()),
-        (2, get_test_causaloid_deterministic_true()),
-        (3, get_test_causaloid_halting()),
-    ])
-}
-
 fn get_mixed_test_ctx_link_causality_map() -> TestHashMap {
     HashMap::from([
         (1, get_test_causaloid_deterministic_true()),
@@ -148,18 +140,6 @@ fn test_evaluate_mixed_propagation() {
         .unwrap();
     // This is false b/c the AggregateLogic fails i.e. not all causes evaluate
     assert_eq!(res_success, PropagatingEffect::Probabilistic(0.0));
-}
-
-#[test]
-fn test_evaluate_mixed_propagation_halted() {
-    let map = get_mixed_test_halting_causality_map();
-
-    // Case 2: One fails, chain becomes deterministically false.
-    let effect_fail = PropagatingEffect::Numerical(0.1);
-    let res = map
-        .evaluate_mixed_propagation(&effect_fail, &AggregateLogic::All)
-        .unwrap();
-    assert_eq!(res, PropagatingEffect::Halting);
 }
 
 #[test]

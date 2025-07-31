@@ -75,16 +75,6 @@ pub fn get_test_causaloid_probabilistic() -> BaseCausaloid {
     Causaloid::new(5, causal_fn, description)
 }
 
-pub fn get_test_causaloid_halting() -> BaseCausaloid {
-    let description = "tests nothing; always returns Halting";
-
-    fn causal_fn(_effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
-        Ok(PropagatingEffect::Halting)
-    }
-
-    Causaloid::new(7, causal_fn, description)
-}
-
 pub fn get_test_causaloid_contextual_link() -> BaseCausaloid {
     let description = "tests nothing; always returns a contetual link";
 

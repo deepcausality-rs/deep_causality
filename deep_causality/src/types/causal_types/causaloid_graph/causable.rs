@@ -29,10 +29,6 @@ where
         // This will traverse and evaluate the entire graph from the root.
         let effect = self.evaluate_subgraph_from_cause(root_index, effect)?;
 
-        if matches!(effect, PropagatingEffect::Halting) {
-            return Ok(PropagatingEffect::Halting);
-        }
-
         Ok(effect)
     }
 

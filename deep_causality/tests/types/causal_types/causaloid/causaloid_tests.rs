@@ -291,23 +291,6 @@ fn test_debug() {
 }
 
 #[test]
-fn test_evaluate_collection_with_halting_effect() {
-    // Setup: A collection where a Halting causaloid appears before a 'true' one.
-    let halting_causaloid = test_utils::get_test_causaloid_halting();
-    let true_causaloid = test_utils::get_test_causaloid_deterministic_true();
-    let causal_coll = vec![halting_causaloid, true_causaloid];
-    let collection_causaloid =
-        Causaloid::from_causal_collection(100, Arc::new(causal_coll), "Halting Collection");
-
-    // Act
-    let effect = PropagatingEffect::Numerical(0.0);
-    let res = collection_causaloid.evaluate(&effect).unwrap();
-
-    // Assert: The Halting effect should short-circuit the evaluation.
-    assert_eq!(res, PropagatingEffect::Halting);
-}
-
-#[test]
 fn test_evaluate_collection_without_true_effect() {
     // Setup: A collection with only 'false' causaloids.
     let false_causaloid1 = test_utils::get_test_causaloid_deterministic_false();
