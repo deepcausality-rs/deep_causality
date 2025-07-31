@@ -104,14 +104,14 @@ fn test_evaluate_deterministic_propagation() {
     // Case 1: All succeed, chain should be deterministically true.
     let effect_success = PropagatingEffect::Numerical(0.99);
     let res_success = map
-        .evaluate_deterministic_propagation(&effect_success)
+        .evaluate_deterministic_propagation(&effect_success, &AggregateLogic::All)
         .unwrap();
     assert_eq!(res_success, PropagatingEffect::Deterministic(true));
 
     // Case 2: One fails, chain should be deterministically false.
     let effect_fail = PropagatingEffect::Numerical(0.1);
     let res_fail = map
-        .evaluate_deterministic_propagation(&effect_fail)
+        .evaluate_deterministic_propagation(&effect_fail, &AggregateLogic::All)
         .unwrap();
     assert_eq!(res_fail, PropagatingEffect::Deterministic(false));
 }
@@ -124,7 +124,7 @@ fn test_evaluate_probabilistic_propagation() {
     // The cumulative probability should be 1.0.
     let effect_success = PropagatingEffect::Numerical(0.99);
     let res_success = map
-        .evaluate_probabilistic_propagation(&effect_success)
+        .evaluate_probabilistic_propagation(&effect_success, &AggregateLogic::All)
         .unwrap();
     assert_eq!(res_success, PropagatingEffect::Probabilistic(1.0));
 
@@ -132,7 +132,7 @@ fn test_evaluate_probabilistic_propagation() {
     // The chain should short-circuit and return a cumulative probability of 0.0.
     let effect_fail = PropagatingEffect::Numerical(0.1);
     let res_fail = map
-        .evaluate_probabilistic_propagation(&effect_fail)
+        .evaluate_probabilistic_propagation(&effect_fail, &AggregateLogic::All)
         .unwrap();
     assert_eq!(res_fail, PropagatingEffect::Probabilistic(0.0));
 }
@@ -143,7 +143,10 @@ fn test_evaluate_mixed_propagation() {
 
     // Case 1: All succeed, chain remains deterministically true.
     let effect_success = PropagatingEffect::Numerical(0.99);
-    let res_success = map.evaluate_mixed_propagation(&effect_success).unwrap();
+    let res_success = map
+        .evaluate_mixed_propagation(&effect_success, &AggregateLogic::All)
+        .unwrap();
+    // This is false b/c the AggregateLogic fails i.e. not all causes evaluate
     assert_eq!(res_success, PropagatingEffect::Probabilistic(0.0));
 }
 
@@ -153,7 +156,9 @@ fn test_evaluate_mixed_propagation_halted() {
 
     // Case 2: One fails, chain becomes deterministically false.
     let effect_fail = PropagatingEffect::Numerical(0.1);
-    let res = map.evaluate_mixed_propagation(&effect_fail).unwrap();
+    let res = map
+        .evaluate_mixed_propagation(&effect_fail, &AggregateLogic::All)
+        .unwrap();
     assert_eq!(res, PropagatingEffect::Halting);
 }
 
@@ -163,7 +168,7 @@ fn test_evaluate_mixed_propagation_err() {
 
     //
     let effect_fail = PropagatingEffect::Numerical(0.1);
-    let res_fail = map.evaluate_mixed_propagation(&effect_fail);
+    let res_fail = map.evaluate_mixed_propagation(&effect_fail, &AggregateLogic::All);
     assert!(res_fail.is_err());
 }
 

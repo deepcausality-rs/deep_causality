@@ -2,13 +2,13 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalityError, Context, NumericalValue, PropagatingEffect};
+use crate::{AssumptionError, CausalityError, Context, PropagatingEffect};
 use std::sync::Arc;
 
 // Fn aliases for assumable, assumption, & assumption collection
 /// Function type for evaluating numerical values and returning a boolean result.
 /// This remains unchanged as it serves a different purpose outside the core causal reasoning.
-pub type EvalFn = fn(&[NumericalValue]) -> bool;
+pub type EvalFn = fn(&[PropagatingEffect]) -> Result<bool, AssumptionError>;
 
 /// The unified function signature for all singleton causaloids that do not require an external context.
 ///

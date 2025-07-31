@@ -70,3 +70,41 @@ pub fn expand_make_vec_to_vec() -> TokenStream {
     .parse()
     .unwrap()
 }
+
+// VecDeque can't be turned into a vector hence the custom implementation
+// https://github.com/rust-lang/rust/issues/23308
+// Also, make_contiguous requires self to be mutable, which would violate the API, hence the clone.
+// https://doc.rust-lang.org/std/collections/struct.VecDeque.html#method.make_contiguous
+pub fn expand_make_vec_deq_to_vec() -> TokenStream {
+    "fn to_vec(&self) -> Vec<T>
+    {
+        let mut v = Vec::with_capacity(self.len());
+        let mut deque = self.clone(); // clone to avoid mutating the original
+
+        for item in deque.make_contiguous().iter() {
+            v.push(item.clone());
+        }
+
+        v
+    }"
+    .parse()
+    .unwrap()
+}
+
+pub fn expand_find_from_map() -> TokenStream {
+    " fn get_item_by_id(&self, id: IdentificationValue) -> Option<&V>
+    {
+        self.values().find(|item| item.id() == id)
+    }"
+    .parse()
+    .unwrap()
+}
+
+pub fn expand_find_from_iter() -> TokenStream {
+    " fn get_item_by_id(&self, id: IdentificationValue) -> Option<&T>
+    {
+        self.iter().find(|item| item.id() == id)
+    }"
+    .parse()
+    .unwrap()
+}

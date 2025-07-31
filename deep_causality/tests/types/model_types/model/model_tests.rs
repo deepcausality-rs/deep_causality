@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::utils_test::test_utils::*;
+use deep_causality::utils_test::test_utils;
 use deep_causality::{Identifiable, Model};
 use std::sync::Arc;
 
@@ -13,8 +13,8 @@ fn test_new() {
     let author = "John Doe";
     let description = "This is a test model";
     let assumptions = None;
-    let causaloid = Arc::new(get_test_causaloid());
-    let context = Some(Arc::new(get_test_context()));
+    let causaloid = Arc::new(test_utils::get_test_causaloid());
+    let context = Some(Arc::new(test_utils::get_test_context()));
 
     let model = Model::new(id, author, description, assumptions, causaloid, context);
 
@@ -27,8 +27,8 @@ fn test_id() {
     let author = "John Doe";
     let description = "This is a test model";
     let assumptions = None;
-    let causaloid = Arc::new(get_test_causaloid());
-    let context = Some(Arc::new(get_test_context()));
+    let causaloid = Arc::new(test_utils::get_test_causaloid());
+    let context = Some(Arc::new(test_utils::get_test_context()));
 
     let model = Model::new(id, author, description, assumptions, causaloid, context);
 
@@ -41,8 +41,8 @@ fn test_author() {
     let author = "John Doe";
     let description = "This is a test model";
     let assumptions = None;
-    let causaloid = Arc::new(get_test_causaloid());
-    let context = Some(Arc::new(get_test_context()));
+    let causaloid = Arc::new(test_utils::get_test_causaloid());
+    let context = Some(Arc::new(test_utils::get_test_context()));
 
     let model = Model::new(id, author, description, assumptions, causaloid, context);
 
@@ -56,31 +56,14 @@ fn test_description() {
     let author = "John Doe";
     let description = "This is a test model";
     let assumptions = None;
-    let causaloid = Arc::new(get_test_causaloid());
-    let context = Some(Arc::new(get_test_context()));
+    let causaloid = Arc::new(test_utils::get_test_causaloid());
+    let context = Some(Arc::new(test_utils::get_test_context()));
 
     let model = Model::new(id, author, description, assumptions, causaloid, context);
 
     assert_eq!(model.id(), id);
     assert_eq!(model.author(), author);
     assert_eq!(model.description(), description);
-}
-
-#[test]
-fn test_assumptions() {
-    let id = 1;
-    let author = "John Doe";
-    let description = "This is a test model";
-    let assumptions = None;
-    let causaloid = Arc::new(get_test_causaloid());
-    let context = Some(Arc::new(get_test_context()));
-
-    let model = Model::new(id, author, description, assumptions, causaloid, context);
-
-    assert_eq!(model.id(), id);
-    assert_eq!(model.author(), author);
-    assert_eq!(model.description(), description);
-    assert!(model.assumptions().is_none());
 }
 
 #[test]
@@ -89,8 +72,8 @@ fn test_causaloid() {
     let author = "John Doe";
     let description = "This is a test model";
     let assumptions = None;
-    let causaloid = Arc::new(get_test_causaloid());
-    let context = Some(Arc::new(get_test_context()));
+    let causaloid = Arc::new(test_utils::get_test_causaloid());
+    let context = Some(Arc::new(test_utils::get_test_context()));
 
     let model = Model::new(
         id,
@@ -114,8 +97,8 @@ fn test_context() {
     let author = "John Doe";
     let description = "This is a test model";
     let assumptions = None;
-    let causaloid = Arc::new(get_test_causaloid());
-    let context = Some(Arc::new(get_test_context()));
+    let causaloid = Arc::new(test_utils::get_test_causaloid());
+    let context = Some(Arc::new(test_utils::get_test_context()));
 
     let model = Model::new(
         id,
@@ -133,4 +116,21 @@ fn test_context() {
     assert_eq!(*model.causaloid(), causaloid);
     assert!(model.context().is_some());
     assert_eq!(model.context().clone().unwrap().id(), id);
+}
+
+#[test]
+fn test_assumptions() {
+    let id = 1;
+    let author = "John Doe";
+    let description = "This is a test model";
+    let assumptions = None;
+    let causaloid = Arc::new(test_utils::get_test_causaloid());
+    let context = Some(Arc::new(test_utils::get_test_context()));
+
+    let model = Model::new(id, author, description, assumptions, causaloid, context);
+
+    assert_eq!(model.id(), id);
+    assert_eq!(model.author(), author);
+    assert_eq!(model.description(), description);
+    assert!(model.assumptions().is_none());
 }

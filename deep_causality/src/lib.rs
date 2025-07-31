@@ -74,6 +74,8 @@ pub use crate::traits::observable::ObservableReasoning;
 // Scalar Traits
 pub use crate::traits::scalar::scalar_projector::ScalarProjector;
 pub use crate::traits::scalar::scalar_value::ScalarValue;
+// Transferable Trait
+pub use crate::traits::transferable::Transferable;
 //
 // Types
 //
@@ -139,6 +141,7 @@ pub use crate::types::model_types::inference::Inference;
 pub use crate::types::model_types::model::Model;
 pub use crate::types::model_types::observation::Observation;
 // Reasoning types
+pub use crate::types::reasoning_types::aggregate_logic::AggregateLogic;
 pub use crate::types::reasoning_types::propagating_effect::PropagatingEffect;
 //
 //Symbolic types

@@ -3,7 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Causable, CausalityError, NumericalValue, PropagatingEffect};
+use crate::{
+    AggregateLogic, Causable, CausalityError, IdentificationValue, NumericalValue,
+    PropagatingEffect,
+};
 
 /// Provides default implementations for reasoning over collections of `Causable` items.
 ///
@@ -16,6 +19,7 @@ where
 {
     //
     // These methods must be implemented by the collection type.
+    // See deep_causality/src/extensions/causable/mod.rs
     //
 
     /// Returns the total number of `Causable` items in the collection.
@@ -30,6 +34,9 @@ where
     /// Returns a vector of references to all `Causable` items in the collection.
     /// This is the primary accessor used by the trait's default methods.
     fn get_all_items(&self) -> Vec<&T>;
+
+    /// Returns a reference to a `Causable` item by its ID, if found.
+    fn get_item_by_id(&self, id: IdentificationValue) -> Option<&T>;
 
     //
     // Default implementations for all other methods are provided below.
@@ -49,6 +56,7 @@ where
     fn evaluate_deterministic_propagation(
         &self,
         effect: &PropagatingEffect,
+        _logic: &AggregateLogic,
     ) -> Result<PropagatingEffect, CausalityError> {
         for cause in self.get_all_items() {
             let effect = cause.evaluate(effect)?;
@@ -90,6 +98,7 @@ where
     fn evaluate_probabilistic_propagation(
         &self,
         effect: &PropagatingEffect,
+        _logic: &AggregateLogic,
     ) -> Result<PropagatingEffect, CausalityError> {
         let mut cumulative_prob: NumericalValue = 1.0;
 
@@ -140,6 +149,7 @@ where
     fn evaluate_mixed_propagation(
         &self,
         effect: &PropagatingEffect,
+        _logic: &AggregateLogic,
     ) -> Result<PropagatingEffect, CausalityError> {
         // The chain starts as deterministically true. It can transition to probabilistic.
         let mut aggregated_effect = PropagatingEffect::Deterministic(true);

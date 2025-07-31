@@ -4,3 +4,6 @@
  */
 #[cfg(test)]
 mod propagating_effect_tests;
+
+#[cfg(test)]
+mod aggregate_logic_tests;

@@ -5,6 +5,7 @@
 mod getters;
 mod identifiable;
 mod model_builder_processor;
+mod transferable;
 
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
