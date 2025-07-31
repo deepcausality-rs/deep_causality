@@ -60,7 +60,7 @@ where
     ///
     /// # Errors
     /// Returns a `CausalityError` if any `Causable` item returns a non-deterministic effect.
-    fn evaluate_deterministic_propagation(
+    fn evaluate_deterministic(
         &self,
         effect: &PropagatingEffect,
         logic: &AggregateLogic,
@@ -84,7 +84,7 @@ where
     ///
     /// # Errors
     /// Returns a `CausalityError` if a `ContextualLink` is encountered.
-    fn evaluate_probabilistic_propagation(
+    fn evaluate_probabilistic(
         &self,
         effect: &PropagatingEffect,
         logic: &AggregateLogic,
@@ -115,7 +115,7 @@ where
     /// # Errors
     /// Returns a `CausalityError` if a `ContextualLink` is encountered, as it cannot be
     /// converted to a numerical probability.
-    fn evaluate_mixed_propagation(
+    fn evaluate_mixed(
         &self,
         effect: &PropagatingEffect,
         logic: &AggregateLogic,

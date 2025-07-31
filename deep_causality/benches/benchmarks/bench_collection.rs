@@ -20,7 +20,7 @@ fn small_causality_collection_benchmark(criterion: &mut Criterion) {
 
     criterion.bench_function("small_causality_collection_propagation", |bencher| {
         bencher.iter(|| {
-            coll.evaluate_deterministic_propagation(&evidence, &AggregateLogic::All)
+            coll.evaluate_deterministic(&evidence, &AggregateLogic::All)
                 .unwrap()
         })
     });
@@ -32,7 +32,7 @@ fn medium_causality_collection_benchmark(criterion: &mut Criterion) {
 
     criterion.bench_function("medium_causality_collection_propagation", |bencher| {
         bencher.iter(|| {
-            coll.evaluate_deterministic_propagation(&evidence, &AggregateLogic::All)
+            coll.evaluate_deterministic(&evidence, &AggregateLogic::All)
                 .unwrap()
         })
     });
@@ -44,7 +44,7 @@ fn large_causality_collection_benchmark(criterion: &mut Criterion) {
 
     criterion.bench_function("large_causality_collection_propagation", |bencher| {
         bencher.iter(|| {
-            coll.evaluate_deterministic_propagation(&evidence, &AggregateLogic::All)
+            coll.evaluate_deterministic(&evidence, &AggregateLogic::All)
                 .unwrap()
         })
     });
