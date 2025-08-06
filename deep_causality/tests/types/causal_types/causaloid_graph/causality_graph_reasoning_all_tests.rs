@@ -18,34 +18,46 @@ fn test_graph_evaluate() {
     assert!(g.contains_causaloid(root_index));
 
     // Add causaloid A
-    let causaloid_a = test_utils::get_test_causaloid_deterministic();
+    let causaloid_a = test_utils::get_test_causaloid_deterministic_input_output();
     let idx_a = g
         .add_causaloid(causaloid_a)
         .expect("Failed to add causaloid A");
+
+    // Link A to root
     g.add_edge(root_index, idx_a).expect("Failed to add edge");
 
     // Add causaloid B
-    let causaloid_b = test_utils::get_test_causaloid_deterministic();
+    let causaloid_b = test_utils::get_test_causaloid_deterministic_input_output();
     let idx_b = g
         .add_causaloid(causaloid_b)
         .expect("Failed to add causaloid B");
-    g.add_edge(root_index, idx_b).expect("Failed to add edge");
 
-    // Add causaloid C
-    let causaloid_c = test_utils::get_test_causaloid_deterministic();
-    let idx_c = g
-        .add_causaloid(causaloid_c)
-        .expect("Failed to add causaloid C");
-    g.add_edge(idx_a, idx_c).expect("Failed to add edge");
+    // Link A to B
+    g.add_edge(idx_a, idx_b).expect("Failed to add edge");
 
+    // Now, we have a graph like this:
+    // root -> A -> B
     g.freeze();
 
-    // Evaluate the graph using the Causable::evaluate method
+    // Create an initial effect to be applied to the root node
     let effect = PropagatingEffect::Numerical(0.99); // A value that will activate all nodes
-    let res = g.evaluate(&effect);
+    // Here we evaluate the effect on the root node only,
+    let res = g.evaluate_shortest_path_between_causes(root_index, root_index, &effect);
+    assert!(res.is_ok());
+    // The root node returns Deterministic(true) because its causal function evaluates to true w.r.t. to effect
+    assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(true));
 
-    // Assert that evaluation was successful and the effect is as expected.
-    // The graph's evaluate returns Deterministic(true) because the sink node C becomes active.
+    // Now, we evaluate the effect propagating from root to A
+    // Root evaluates from Numerical to true; and A evaluates from Boolean true to Boolean false
+    let res = g.evaluate_shortest_path_between_causes(root_index, idx_a, &effect);
+    assert!(res.is_ok());
+    assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(false));
+
+    // Now, we evaluate the effect propagating from  root -> A -> B
+    // Root evaluates from Numerical to true;
+    // A evaluates from Boolean true to Boolean false;
+    // B evaluates from Boolean false to Boolean true
+    let res = g.evaluate_shortest_path_between_causes(root_index, idx_b, &effect);
     assert!(res.is_ok());
     assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(true));
 }

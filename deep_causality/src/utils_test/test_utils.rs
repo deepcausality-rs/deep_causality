@@ -139,6 +139,29 @@ pub fn get_test_causaloid_deterministic() -> BaseCausaloid {
     Causaloid::new(id, causal_fn, description)
 }
 
+pub fn get_test_causaloid_deterministic_input_output() -> BaseCausaloid {
+    let id: IdentificationValue = 2;
+    let description = "Inverts any input";
+
+    fn causal_fn(effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
+        let obs =
+            match effect {
+                // If it's the Deterministic variant, extract the inner value.
+                PropagatingEffect::Deterministic(val) => *val,
+                // For any other type of effect, this function cannot proceed, so return an error.
+                _ => return Err(CausalityError(
+                    "Causal function expected Numerical effect but received a different variant."
+                        .into(),
+                )),
+            };
+
+        // Just invert the value.
+        Ok(PropagatingEffect::Deterministic(!obs))
+    }
+
+    Causaloid::new(id, causal_fn, description)
+}
+
 // BaseContext is a type alias for a basic context that can be used for testing
 // It matches the type signature of the base causaloid also uses in these tests.
 // See src/types/alias_types/csm_types for definition.
