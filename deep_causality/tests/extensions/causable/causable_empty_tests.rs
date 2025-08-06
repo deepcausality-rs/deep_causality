@@ -3,7 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality::{
-    AggregateLogic, BaseCausaloid, CausableCollectionReasoning, PropagatingEffect,
+    AggregateLogic, BaseCausaloid, CausableCollectionExplaining, CausableCollectionReasoning,
+    PropagatingEffect,
 };
 
 #[test]
@@ -11,6 +12,15 @@ fn test_get_all_items_empty() {
     let col: [BaseCausaloid; 0] = [];
     let exp_len = col.len();
     assert_eq!(exp_len, 0);
+}
+
+#[test]
+fn test_explain_deterministic_propagation_empty() {
+    let col: [BaseCausaloid; 0] = [];
+    let exp_len = col.len();
+    assert_eq!(exp_len, 0);
+    let res = col.explain();
+    assert!(res.is_err());
 }
 
 #[test]
