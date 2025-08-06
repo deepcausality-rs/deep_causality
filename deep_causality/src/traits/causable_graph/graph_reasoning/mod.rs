@@ -43,23 +43,25 @@ where
     /// Reasons over a subgraph by traversing all nodes reachable from a given start index.
     ///
     /// This method performs a Breadth-First Search (BFS) traversal of all descendants
-    /// of the `start_index`. It calls `evaluate` on each node and uses the resulting
-    /// `PropagatingEffect` to decide whether to continue the traversal down that path.
+    /// of the `start_index`. The `PropagatingEffect` is passed sequentially:
+    /// the output effect of a parent node becomes the input effect for its child node.
+    /// The traversal continues as long as no `CausalityError` is returned.
     ///
     /// # Arguments
     ///
     /// * `start_index` - The index of the node to start the traversal from.
-    /// * `effect` - The runtime effect to be passed to each node's evaluation function.
+    /// * `initial_effect` - The initial runtime effect to be passed to the starting node's evaluation function.
     ///
     /// # Returns
     ///
-    /// * `Ok(PropagatingEffect::Halting)` if any node in the traversal returns `Halting`.
-    /// * `Ok(PropagatingEffect::Deterministic(true))` if the traversal completes.
+    /// * `Ok(PropagatingEffect)`: The final `PropagatingEffect` from the last successfully evaluated node
+    ///   in the main traversal path. `Deterministic(false)` now propagates and does not implicitly halt propagation.
+    ///   Only a `Causaloid` returning a `CausalityError` will abort the traversal.
     /// * `Err(CausalityError)` if the graph is not frozen, a node is missing, or an evaluation fails.
     fn evaluate_subgraph_from_cause(
         &self,
         start_index: usize,
-        effect: &PropagatingEffect,
+        initial_effect: &PropagatingEffect,
     ) -> Result<PropagatingEffect, CausalityError> {
         if !self.is_frozen() {
             return Err(CausalityError(
@@ -73,68 +75,67 @@ where
             )));
         }
 
-        let mut queue = VecDeque::with_capacity(self.number_nodes());
+        // Queue stores (node_index, incoming_effect_for_this_node)
+        let mut queue = VecDeque::<(usize, PropagatingEffect)>::with_capacity(self.number_nodes());
         let mut visited = vec![false; self.number_nodes()];
 
-        queue.push_back(start_index);
+        // Initialize the queue with the starting node and the initial effect
+        queue.push_back((start_index, initial_effect.clone()));
         visited[start_index] = true;
 
-        while let Some(current_index) = queue.pop_front() {
+        // This will hold the effect of the last successfully processed node.
+        // It's initialized with the initial_effect, in case the start_index node
+        // itself prunes the path or is the only node.
+        let mut last_propagated_effect = initial_effect.clone();
+
+        while let Some((current_index, incoming_effect)) = queue.pop_front() {
             let cause = self.get_causaloid(current_index).ok_or_else(|| {
                 CausalityError(format!("Failed to get causaloid at index {current_index}"))
             })?;
 
-            // Evaluate the current cause using the new unified method.
-            // The same `effect` is passed to each node, and the node's CausalFn
-            // is responsible for extracting the data it needs from the effect map.
-            let effect = cause.evaluate(effect)?;
+            // Evaluate the current cause using the incoming_effect.
+            let result_effect = cause.evaluate(&incoming_effect)?;
 
-            match effect {
-                // If the cause is deterministically false, we stop traversing this path,
-                // but the overall subgraph reasoning does not fail or halt.
-                PropagatingEffect::Deterministic(false) => continue,
+            // Update the last_propagated_effect with the result of the current node's evaluation.
+            // This ensures the function returns the effect of the last node on the path.
+            last_propagated_effect = result_effect.clone();
 
-                // For any other propagating effect (true, probabilistic, etc.),
-                // we continue the traversal to its children.
-                _ => {
-                    // The cause is valid, so add its children to the queue.
-                    let children = self.get_graph().outbound_edges(current_index)?;
-                    for child_index in children {
-                        if !visited[child_index] {
-                            visited[child_index] = true;
-                            queue.push_back(child_index);
-                        }
-                    }
+            // Only a CausalityError returned from cause.evaluate() will abort the traversal.
+            let children = self.get_graph().outbound_edges(current_index)?;
+            for child_index in children {
+                if !visited[child_index] {
+                    visited[child_index] = true;
+                    // Pass the result_effect of the current node to its children.
+                    queue.push_back((child_index, result_effect.clone()));
                 }
             }
         }
 
-        // If the loop completes without halting, the reasoning is considered successful.
-        Ok(PropagatingEffect::Deterministic(true))
+        // If the loop completes, return the effect of the last node processed.
+        Ok(last_propagated_effect)
     }
 
     /// Reasons over the shortest path between a start and stop cause.
     ///
-    /// It evaluates each node along the path. If any node fails evaluation or returns
-    /// a non-propagating effect, the reasoning stops.
+    /// It evaluates each node sequentially along the path. The `PropagatingEffect` returned by
+    /// one causaloid becomes the input for the next causaloid in the path. If any node
+    /// fails evaluation or returns a non-propagating effect that prunes the path, the reasoning stops.
     ///
     /// # Arguments
     ///
     /// * `start_index` - The index of the start cause.
     /// * `stop_index` - The index of the stop cause.
-    /// * `effect` - The runtime effect to be passed to each node's evaluation function.
+    /// * `initial_effect` - The runtime effect to be passed as input to the first node's evaluation function.
     ///
     /// # Returns
     ///
-    /// * `Ok(PropagatingEffect::Halting)` if any node on the path returns `Halting`.
-    /// * `Ok(PropagatingEffect::Deterministic(false))` if any node returns `Deterministic(false)`.
-    /// * `Ok(PropagatingEffect::Deterministic(true))` if all nodes on the path propagate successfully.
+    /// * `Ok(PropagatingEffect)`: The final `PropagatingEffect` from the last evaluated node on the path.
     /// * `Err(CausalityError)` if the path cannot be found or an evaluation fails.
     fn evaluate_shortest_path_between_causes(
         &self,
         start_index: usize,
         stop_index: usize,
-        effect: &PropagatingEffect,
+        initial_effect: &PropagatingEffect,
     ) -> Result<PropagatingEffect, CausalityError> {
         if !self.is_frozen() {
             return Err(CausalityError(
@@ -147,21 +148,27 @@ where
             let cause = self.get_causaloid(start_index).ok_or_else(|| {
                 CausalityError(format!("Failed to get causaloid at index {start_index}"))
             })?;
-            return cause.evaluate(effect);
+            return cause.evaluate(initial_effect);
         }
 
         // get_shortest_path will handle checks for missing nodes.
         let path = self.get_shortest_path(start_index, stop_index)?;
+
+        let mut current_effect = initial_effect.clone();
 
         for index in path {
             let cause = self.get_causaloid(index).ok_or_else(|| {
                 CausalityError(format!("Failed to get causaloid at index {index}"))
             })?;
 
-            let _ = cause.evaluate(effect)?;
+            // Evaluate the current cause with the effect propagated from the previous node.
+            // Then, overwrite the current_effect with the result of the evaluation, which then
+            // serves as the input for the next node.
+            // Only a CausalityError returned from cause.evaluate() will abort the traversal.
+            current_effect = cause.evaluate(&current_effect)?;
         }
 
         // If the loop completes, all nodes on the path were successfully evaluated.
-        Ok(PropagatingEffect::Deterministic(true))
+        Ok(current_effect)
     }
 }
