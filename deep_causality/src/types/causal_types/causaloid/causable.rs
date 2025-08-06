@@ -5,8 +5,8 @@
 
 use crate::errors::CausalityError;
 use crate::{
-    Causable, CausableReasoning, Causaloid, CausaloidType, Datable, PropagatingEffect,
-    SpaceTemporal, Spatial, Symbolic, Temporal,
+    AggregateLogic, Causable, CausableCollectionExplaining, CausableCollectionReasoning, Causaloid,
+    CausaloidType, Datable, PropagatingEffect, SpaceTemporal, Spatial, Symbolic, Temporal,
 };
 
 #[allow(clippy::type_complexity)]
@@ -39,7 +39,7 @@ where
                     })?;
                     context_fn(effect, context)
                 } else {
-                    // Standard path
+                    // Standard causal function w/o context
                     let causal_fn = self.causal_fn.ok_or_else(|| {
                         CausalityError(format!("Causaloid {} is missing a causal_fn", self.id))
                     })?;
@@ -52,16 +52,7 @@ where
                     CausalityError("Causaloid::evaluate: causal collection is None".into())
                 })?;
 
-                // Default aggregation: "any true" logic.
-                // Prioritizes Halting, then looks for the first Deterministic(true).
-                let mut has_true = false;
-                for cause in coll.iter() {
-                    if let PropagatingEffect::Deterministic(true) = cause.evaluate(effect)? {
-                        has_true = true;
-                        break; // Short-circuit
-                    }
-                }
-                PropagatingEffect::Deterministic(has_true)
+                coll.evaluate_mixed(effect, &AggregateLogic::All, 0.5)?
             }
 
             CausaloidType::Graph => {

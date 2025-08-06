@@ -13,10 +13,37 @@ use deep_causality_macros::{
     make_vec_to_vec,
 };
 
-use crate::traits::causable::causable_reasoning::CausableReasoning;
-use crate::{Causable, IdentificationValue};
+use crate::{
+    Causable, CausableCollection, CausableCollectionAccessor, CausableCollectionExplaining,
+    CausableCollectionReasoning, IdentificationValue,
+};
 
-impl<K, V> CausableReasoning<V> for HashMap<K, V>
+//
+// HashMap<K, V>
+//
+impl<K, V> CausableCollection<V> for HashMap<K, V>
+where
+    K: Eq + Hash,
+    V: Causable + Clone,
+{
+}
+
+impl<K, V> CausableCollectionExplaining<V> for HashMap<K, V>
+where
+    K: Eq + Hash,
+    V: Causable + Clone,
+{
+}
+
+impl<K, V> CausableCollectionAccessor<V> for HashMap<K, V>
+where
+    K: Eq + Hash,
+    V: Causable + Clone,
+{
+    make_get_all_map_items!();
+}
+
+impl<K, V> CausableCollectionReasoning<V> for HashMap<K, V>
 where
     K: Eq + Hash,
     V: Causable + Clone,
@@ -24,11 +51,35 @@ where
     make_len!();
     make_is_empty!();
     make_map_to_vec!();
-    make_get_all_map_items!();
     make_find_from_map_values!();
 }
 
-impl<K, V> CausableReasoning<V> for BTreeMap<K, V>
+//
+// BTreeMap<K, V>
+//
+impl<K, V> CausableCollection<V> for BTreeMap<K, V>
+where
+    K: Eq + Hash,
+    V: Causable + Clone,
+{
+}
+
+impl<K, V> CausableCollectionExplaining<V> for BTreeMap<K, V>
+where
+    K: Eq + Hash,
+    V: Causable + Clone,
+{
+}
+
+impl<K, V> CausableCollectionAccessor<V> for BTreeMap<K, V>
+where
+    K: Eq + Hash,
+    V: Causable + Clone,
+{
+    make_get_all_map_items!();
+}
+
+impl<K, V> CausableCollectionReasoning<V> for BTreeMap<K, V>
 where
     K: Eq + Hash,
     V: Causable + Clone,
@@ -36,39 +87,77 @@ where
     make_len!();
     make_is_empty!();
     make_map_to_vec!();
-    make_get_all_map_items!();
     make_find_from_map_values!();
 }
 
-impl<T> CausableReasoning<T> for [T]
+//
+// [T]
+//
+impl<T> CausableCollection<T> for [T] where T: Causable + Clone {}
+
+impl<T> CausableCollectionExplaining<T> for [T] where T: Causable + Clone {}
+
+impl<T> CausableCollectionAccessor<T> for [T]
+where
+    T: Causable + Clone,
+{
+    make_get_all_items!();
+}
+
+impl<T> CausableCollectionReasoning<T> for [T]
 where
     T: Causable + Clone,
 {
     make_len!();
     make_is_empty!();
-    make_get_all_items!();
     make_array_to_vec!();
     make_find_from_iter_values!();
 }
 
-impl<T> CausableReasoning<T> for Vec<T>
+//
+//  Vec<T>
+//
+impl<T> CausableCollection<T> for Vec<T> where T: Causable + Clone {}
+
+impl<T> CausableCollectionExplaining<T> for Vec<T> where T: Causable + Clone {}
+
+impl<T> CausableCollectionAccessor<T> for Vec<T>
+where
+    T: Causable + Clone,
+{
+    make_get_all_items!();
+}
+
+impl<T> CausableCollectionReasoning<T> for Vec<T>
 where
     T: Causable + Clone,
 {
     make_len!();
     make_is_empty!();
     make_vec_to_vec!();
-    make_get_all_items!();
     make_find_from_iter_values!();
 }
 
-impl<T> CausableReasoning<T> for VecDeque<T>
+//
+//  VecDeque
+//
+impl<T> CausableCollection<T> for VecDeque<T> where T: Causable + Clone {}
+
+impl<T> CausableCollectionExplaining<T> for VecDeque<T> where T: Causable + Clone {}
+
+impl<T> CausableCollectionAccessor<T> for VecDeque<T>
+where
+    T: Causable + Clone,
+{
+    make_get_all_items!();
+}
+
+impl<T> CausableCollectionReasoning<T> for VecDeque<T>
 where
     T: Causable + Clone,
 {
     make_len!();
     make_is_empty!();
-    make_get_all_items!();
     make_vec_deq_to_vec!();
     make_find_from_iter_values!();
 }

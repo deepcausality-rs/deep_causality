@@ -26,7 +26,9 @@ pub enum PropagatingEffect {
     /// Represents the absence of a signal or evidence. Serves as the default.
     #[default]
     None,
-    /// Represents a simple boolean value. As an output, this is often a terminal effect.
+    /// Represents a simple boolean value. This effect propagates like any other,
+    /// and its interpretation (e.g., whether it prunes a traversal) is left to the
+    /// consuming logic or explicit error handling within Causaloids.
     Deterministic(bool),
     /// Represents a standard numerical value.
     Numerical(NumericalValue),

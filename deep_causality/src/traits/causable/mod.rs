@@ -4,11 +4,6 @@
  */
 use crate::{CausalityError, Identifiable, PropagatingEffect};
 
-pub mod causable_reasoning;
-mod causable_reasoning_deterministic;
-mod causable_reasoning_mixed;
-mod causable_reasoning_probabilistic;
-
 /// The Causable trait defines the core behavior for all causal elements.
 ///
 /// It requires implementing the Identifiable trait and provides a unified interface

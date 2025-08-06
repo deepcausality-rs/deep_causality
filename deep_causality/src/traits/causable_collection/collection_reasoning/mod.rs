@@ -2,13 +2,13 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+mod collection_reasoning_deterministic;
+mod collection_reasoning_mixed;
+mod collection_reasoning_probabilistic;
 
-use crate::traits::causable::{
-    causable_reasoning_deterministic, causable_reasoning_mixed, causable_reasoning_probabilistic,
-};
 use crate::{
-    AggregateLogic, Causable, CausalityError, IdentificationValue, NumericalValue,
-    PropagatingEffect,
+    AggregateLogic, Causable, CausableCollectionAccessor, CausalityError, IdentificationValue,
+    NumericalValue, PropagatingEffect,
 };
 
 /// Provides default implementations for reasoning over collections of `Causable` items.
@@ -16,7 +16,7 @@ use crate::{
 /// Any collection type that implements the basic accessor methods (`len`, `is_empty`,
 /// `to_vec`, `get_all_items`) will automatically gain a suite of useful default
 /// methods for inspecting the collective state of its `Causable` elements.
-pub trait CausableReasoning<T>
+pub trait CausableCollectionReasoning<T>: CausableCollectionAccessor<T>
 where
     T: Causable,
 {
@@ -33,10 +33,6 @@ where
 
     /// Creates a new vector containing the `Causable` items from the collection.
     fn to_vec(&self) -> Vec<T>;
-
-    /// Returns a vector of references to all `Causable` items in the collection.
-    /// This is the primary accessor used by the trait's default methods.
-    fn get_all_items(&self) -> Vec<&T>;
 
     /// Returns a reference to a `Causable` item by its ID, if found.
     fn get_item_by_id(&self, id: IdentificationValue) -> Option<&T>;
@@ -66,7 +62,7 @@ where
         logic: &AggregateLogic,
     ) -> Result<PropagatingEffect, CausalityError> {
         // Delegate to private impl in causable_reasoning_deterministic
-        causable_reasoning_deterministic::_evaluate_deterministic_logic(
+        collection_reasoning_deterministic::_evaluate_deterministic_logic(
             self.get_all_items(),
             effect,
             logic,
@@ -91,7 +87,7 @@ where
         threshold: NumericalValue,
     ) -> Result<PropagatingEffect, CausalityError> {
         // Delegate to private impl in causable_reasoning_probabilistic
-        causable_reasoning_probabilistic::_evaluate_probabilistic_logic(
+        collection_reasoning_probabilistic::_evaluate_probabilistic_logic(
             self.get_all_items(),
             effect,
             logic,
@@ -122,42 +118,11 @@ where
         threshold: NumericalValue,
     ) -> Result<PropagatingEffect, CausalityError> {
         // Delegate to private impl in causable_reasoning_mixed
-        causable_reasoning_mixed::_evaluate_mixed_logic(
+        collection_reasoning_mixed::_evaluate_mixed_logic(
             self.get_all_items(),
             effect,
             logic,
             threshold,
         )
-    }
-    /// Generates an explanation by concatenating the `explain()` text of all causes.
-    ///
-    /// Each explanation is formatted and separated by newlines.
-    /// It gracefully handles errors from individual `explain` calls by inserting
-    /// a placeholder error message.
-    fn explain(&self) -> Result<String, CausalityError> {
-        if self.is_empty() {
-            return Err(CausalityError::new(
-                "Causal Collection is empty".to_string(),
-            ));
-        }
-
-        let mut explanation = String::new();
-        for cause in self.get_all_items() {
-            let cause_explanation = match cause.explain() {
-                Ok(s) => s,
-                Err(e) => {
-                    return Err(CausalityError(format!(
-                        "[Error explaining cause {} ('{}')]",
-                        cause.id(),
-                        e
-                    )));
-                }
-            };
-
-            explanation.push('\n');
-            explanation.push_str(format!(" * {cause_explanation}").as_str());
-            explanation.push('\n');
-        }
-        Ok(explanation)
     }
 }

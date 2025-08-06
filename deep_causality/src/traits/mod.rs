@@ -6,6 +6,7 @@
 pub mod adjustable;
 pub mod assumable;
 pub mod causable;
+pub mod causable_collection;
 pub mod causable_graph;
 pub mod contextuable;
 pub mod contextuable_graph;

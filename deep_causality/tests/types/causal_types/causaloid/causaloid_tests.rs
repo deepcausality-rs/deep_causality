@@ -6,7 +6,9 @@
 use deep_causality::*;
 use std::sync::Arc;
 
-use deep_causality::utils_test::test_utils::get_base_context;
+use deep_causality::utils_test::test_utils::{
+    get_base_context, get_test_causaloid_deterministic_input_output,
+};
 use deep_causality::utils_test::*;
 
 // Helper function to unpack numerical evidence, used in test causal functions.
@@ -352,23 +354,25 @@ fn test_explain_collection_success() {
     assert!(explanation.contains("evaluated to: PropagatingEffect::Deterministic(true)"));
     assert!(explanation.contains("evaluated to: PropagatingEffect::Deterministic(false)"));
 }
+
 // This test covers an error path in explain() for a Collection Causaloid.
 #[test]
 fn test_explain_collection_with_sub_explain_error() {
     // Setup: A collection where one causaloid will not be evaluated due to short-circuiting.
-    let true_causaloid = test_utils::get_test_causaloid_deterministic_true();
+    let evaluated_causaloid = test_utils::get_test_causaloid_deterministic_true();
     let unevaluated_causaloid = test_utils::get_test_causaloid_deterministic(); // This one will remain unevaluated.
 
-    let causal_coll = vec![true_causaloid, unevaluated_causaloid];
+    // Act: Evaluate the collection. The evaluation will stop after the first `true` effect.
+    let effect = PropagatingEffect::Numerical(0.0);
+    evaluated_causaloid.evaluate(&effect).unwrap();
+
+    // collection_causaloid is only partially evaluated.
+    let causal_coll = vec![evaluated_causaloid, unevaluated_causaloid];
     let collection_causaloid = Causaloid::from_causal_collection(
         105,
         Arc::new(causal_coll),
         "Sub-explain Error Collection",
     );
-
-    // Act: Evaluate the collection. The evaluation will stop after the first `true` effect.
-    let effect = PropagatingEffect::Numerical(0.0);
-    collection_causaloid.evaluate(&effect).unwrap();
 
     // Now, call explain. This will fail because the second causaloid was never evaluated.
     let result = collection_causaloid.explain();
@@ -414,7 +418,18 @@ fn test_evaluate_singleton_with_context() {
 }
 
 #[test]
-fn test_evaluate_collection_ignores_other_effects() {
+fn test_evaluate_singleton_err() {
+    let causaloid: BaseCausaloid = get_test_causaloid_deterministic_input_output();
+
+    // The causal function expects a Deterministic effect, but we pass in a Probabilistic effect.
+    let effect = PropagatingEffect::Probabilistic(4.2);
+    // The result should be an error.
+    let res = causaloid.evaluate(&effect);
+    assert!(res.is_err());
+}
+
+#[test]
+fn test_evaluate_collection_other_effect_err() {
     // Setup: A collection with causaloids that have effects other than Deterministic or Halting.
     let probabilistic_causaloid = test_utils::get_test_causaloid_probabilistic();
     let contextual_link_causaloid = test_utils::get_test_causaloid_contextual_link();
@@ -430,9 +445,9 @@ fn test_evaluate_collection_ignores_other_effects() {
 
     // Act
     let effect = PropagatingEffect::Numerical(0.0);
-    let res = collection_causaloid.evaluate(&effect).unwrap();
+    let res = collection_causaloid.evaluate(&effect);
 
-    // Assert: The aggregation logic should ignore Probabilistic and ContextualLink,
-    // resulting in an overall effect of Deterministic(false).
-    assert_eq!(res, PropagatingEffect::Deterministic(false));
+    // Assert: The collection should return an error because
+    // it contains a causaloid with an effect other than Deterministic or Probabilistic.
+    assert!(res.is_err())
 }
