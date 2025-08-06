@@ -6,7 +6,9 @@
 use deep_causality::*;
 use std::sync::Arc;
 
-use deep_causality::utils_test::test_utils::get_base_context;
+use deep_causality::utils_test::test_utils::{
+    get_base_context, get_test_causaloid_deterministic_input_output,
+};
 use deep_causality::utils_test::*;
 
 // Helper function to unpack numerical evidence, used in test causal functions.
@@ -413,6 +415,17 @@ fn test_evaluate_singleton_with_context() {
     let effect_false = PropagatingEffect::Numerical(0.5);
     let res_false = causaloid.evaluate(&effect_false).unwrap();
     assert_eq!(res_false, PropagatingEffect::Deterministic(false));
+}
+
+#[test]
+fn test_evaluate_singleton_err() {
+    let causaloid: BaseCausaloid = get_test_causaloid_deterministic_input_output();
+
+    // The causal function expects a Deterministic effect, but we pass in a Probabilistic effect.
+    let effect = PropagatingEffect::Probabilistic(4.2);
+    // The result should be an error.
+    let res = causaloid.evaluate(&effect);
+    assert!(res.is_err());
 }
 
 #[test]

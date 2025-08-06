@@ -144,16 +144,15 @@ pub fn get_test_causaloid_deterministic_input_output() -> BaseCausaloid {
     let description = "Inverts any input";
 
     fn causal_fn(effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
-        let obs =
-            match effect {
-                // If it's the Deterministic variant, extract the inner value.
-                PropagatingEffect::Deterministic(val) => *val,
-                // For any other type of effect, this function cannot proceed, so return an error.
-                _ => return Err(CausalityError(
-                    "Causal function expected Numerical effect but received a different variant."
-                        .into(),
-                )),
-            };
+        let obs = match effect {
+            // If it's the Deterministic variant, extract the inner value.
+            PropagatingEffect::Deterministic(val) => *val,
+            // For any other type of effect, this function cannot proceed, so return an error.
+            _ => return Err(CausalityError(
+                "Causal function expected Deterministic effect but received a different variant."
+                    .into(),
+            )),
+        };
 
         // Just invert the value.
         Ok(PropagatingEffect::Deterministic(!obs))
