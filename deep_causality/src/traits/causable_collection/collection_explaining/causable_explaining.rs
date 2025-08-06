@@ -4,7 +4,7 @@
  */
 use crate::{Causable, CausalityError};
 
-pub(super) fn _explain<T: Causable>(causes: Vec<&T>) -> Result<String, CausalityError> {
+pub(in crate::traits) fn _explain<T: Causable>(causes: Vec<&T>) -> Result<String, CausalityError> {
     if causes.is_empty() {
         return Err(CausalityError::new(
             "Causal Collection is empty".to_string(),

@@ -5,8 +5,12 @@
 
 use crate::{AggregateLogic, Causable, CausalityError, NumericalValue, PropagatingEffect};
 
-/// Evaluates a collection of `Causable` items against a specific `AggregateLogic`,
-/// using a provided `threshold` to convert probabilistic effects into boolean values.
+/// Evaluates a collection of `Causable` items that may contain a mix of deterministic and
+/// probabilistic effects, aggregating them into a final deterministic outcome.
+///
+/// This is a private helper function that encapsulates the core reasoning logic,
+/// allowing the public-facing trait method to remain a simple delegation.
+/// It is optimized to short-circuit for performance where possible.
 ///
 /// # Arguments
 /// * `items` - A vector of references to `Causable` items.
@@ -16,10 +20,10 @@ use crate::{AggregateLogic, Causable, CausalityError, NumericalValue, Propagatin
 ///
 /// # Returns
 /// A `Result` containing the final `PropagatingEffect` outcome.
-/// For `AggregateLogic::All`, it returns `PropagatingEffect::Probabilistic`.
+/// For `AggregateLogic::All`, it returns `PropagatingEffect::Deterministic` after applying the threshold.
 /// For `Any`, `None`, and `Some(k)`, it returns `PropagatingEffect::Deterministic`.
 /// Returns a `CausalityError` if any item returns an unsupported effect type.
-pub(super) fn _evaluate_probabilistic_logic<T: Causable>(
+pub(in crate::traits) fn _evaluate_mixed_logic<T: Causable>(
     items: Vec<&T>,
     effect: &PropagatingEffect,
     logic: &AggregateLogic,
@@ -33,36 +37,38 @@ pub(super) fn _evaluate_probabilistic_logic<T: Causable>(
 
     match logic {
         AggregateLogic::All => {
-            // Preserve original behavior for All: multiply probabilities.
             let mut cumulative_prob: NumericalValue = 1.0;
             for cause in items {
-                let evaluated_effect = cause.evaluate(effect)?;
-                match evaluated_effect {
-                    PropagatingEffect::Probabilistic(p) | PropagatingEffect::Numerical(p) => {
-                        cumulative_prob *= p;
-                    }
+                let current_effect = cause.evaluate(effect)?;
+                let current_prob = match current_effect {
+                    PropagatingEffect::Deterministic(true) => 1.0,
+                    PropagatingEffect::Deterministic(false) => 0.0,
+                    PropagatingEffect::Probabilistic(p) => p,
+                    PropagatingEffect::Numerical(p) => p,
                     _ => {
                         return Err(CausalityError(format!(
-                            "evaluate_probabilistic_propagation encountered a non-probabilistic effect: {evaluated_effect:?}. Only probabilistic or numerical effects are allowed for AggregateLogic::All."
+                            "evaluate_mixed_propagation encountered an unsupported effect: {current_effect:?}. Only probabilistic, deterministic, or numerical effects are allowed."
                         )));
                     }
-                }
+                };
+                cumulative_prob *= current_prob;
             }
-            Ok(PropagatingEffect::Probabilistic(cumulative_prob))
+            Ok(PropagatingEffect::Deterministic(
+                cumulative_prob > threshold,
+            ))
         }
         _ => {
-            // For Any, None, Some(k): use threshold to convert to boolean and apply logic.
             let mut true_count = 0;
             for cause in items {
                 let evaluated_effect = cause.evaluate(effect)?;
                 let value = match evaluated_effect {
+                    PropagatingEffect::Deterministic(b) => b,
                     PropagatingEffect::Probabilistic(p) | PropagatingEffect::Numerical(p) => {
                         p > threshold
                     }
-                    PropagatingEffect::Deterministic(b) => b,
                     _ => {
                         return Err(CausalityError(format!(
-                            "evaluate_probabilistic_propagation encountered an unsupported effect: {evaluated_effect:?}. Only probabilistic, numerical, or deterministic effects are allowed for other AggregateLogic types."
+                            "evaluate_mixed_propagation encountered an unsupported effect: {evaluated_effect:?}. Only probabilistic, numerical, or deterministic effects are allowed."
                         )));
                     }
                 };

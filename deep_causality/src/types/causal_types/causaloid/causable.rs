@@ -5,7 +5,7 @@
 
 use crate::errors::CausalityError;
 use crate::{
-    Causable, CausableReasoning, Causaloid, CausaloidType, Datable, PropagatingEffect,
+    Causable, CausableCollectionExplaining, Causaloid, CausaloidType, Datable, PropagatingEffect,
     SpaceTemporal, Spatial, Symbolic, Temporal,
 };
 

@@ -35,7 +35,11 @@ pub use crate::traits::assumable::Assumable;
 pub use crate::traits::assumable::AssumableReasoning;
 // Causable Traits
 pub use crate::traits::causable::Causable;
-pub use traits::causable::causable_reasoning::CausableReasoning;
+// Causable Collection Traits
+pub use traits::causable_collection::CausableCollection;
+pub use traits::causable_collection::collection_accessor::CausableCollectionAccessor;
+pub use traits::causable_collection::collection_explaining::CausableCollectionExplaining;
+pub use traits::causable_collection::collection_reasoning::CausableCollectionReasoning;
 // Causable Graph Traits
 pub use crate::traits::causable_graph::graph::CausableGraph;
 pub use crate::traits::causable_graph::graph_explaining::CausableGraphExplaining;

@@ -2,7 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality::{AggregateLogic, BaseCausaloid, CausableReasoning, PropagatingEffect};
+use deep_causality::{
+    AggregateLogic, BaseCausaloid, CausableCollectionReasoning, PropagatingEffect,
+};
 
 #[test]
 fn test_get_all_items_empty() {
