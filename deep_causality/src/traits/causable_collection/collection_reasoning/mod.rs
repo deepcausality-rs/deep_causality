@@ -2,9 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-mod causable_reasoning_deterministic;
-mod causable_reasoning_mixed;
-mod causable_reasoning_probabilistic;
+mod collection_reasoning_deterministic;
+mod collection_reasoning_mixed;
+mod collection_reasoning_probabilistic;
 
 /*
  * SPDX-License-Identifier: MIT
@@ -67,7 +67,7 @@ where
         logic: &AggregateLogic,
     ) -> Result<PropagatingEffect, CausalityError> {
         // Delegate to private impl in causable_reasoning_deterministic
-        causable_reasoning_deterministic::_evaluate_deterministic_logic(
+        collection_reasoning_deterministic::_evaluate_deterministic_logic(
             self.get_all_items(),
             effect,
             logic,
@@ -92,7 +92,7 @@ where
         threshold: NumericalValue,
     ) -> Result<PropagatingEffect, CausalityError> {
         // Delegate to private impl in causable_reasoning_probabilistic
-        causable_reasoning_probabilistic::_evaluate_probabilistic_logic(
+        collection_reasoning_probabilistic::_evaluate_probabilistic_logic(
             self.get_all_items(),
             effect,
             logic,
@@ -123,7 +123,7 @@ where
         threshold: NumericalValue,
     ) -> Result<PropagatingEffect, CausalityError> {
         // Delegate to private impl in causable_reasoning_mixed
-        causable_reasoning_mixed::_evaluate_mixed_logic(
+        collection_reasoning_mixed::_evaluate_mixed_logic(
             self.get_all_items(),
             effect,
             logic,

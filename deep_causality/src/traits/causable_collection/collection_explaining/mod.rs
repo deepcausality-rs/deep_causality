@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-mod causable_explaining;
+mod collection_explaining_impl;
 
 use crate::{Causable, CausableCollectionAccessor, CausalityError};
 
@@ -17,6 +17,6 @@ where
     /// a placeholder error message.
     fn explain(&self) -> Result<String, CausalityError> {
         // Delegate to private impl in causable_reasoning_explain
-        causable_explaining::_explain(self.get_all_items())
+        collection_explaining_impl::_explain(self.get_all_items())
     }
 }
