@@ -12,8 +12,7 @@ use crate::types::context_node_types::data::Data;
 
 impl<T> Identifiable for Data<T>
 where
-    T: Default + Copy + Clone + Hash + Eq + PartialEq,
-{
+    T: Default + Copy + Clone + PartialEq{
     fn id(&self) -> u64 {
         self.id
     }
