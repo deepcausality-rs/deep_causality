@@ -43,6 +43,31 @@ where
     previous_index_map: HashMap<usize, usize>,
 }
 
+impl<D, S, T, ST, SYM, VS, VT> Clone for Context<D, S, T, ST, SYM, VS, VT>
+where
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            id: self.id,
+            name: self.name.clone(),
+            base_context: self.base_context.clone(),
+            id_to_index_map: self.id_to_index_map.clone(),
+            extra_contexts: self.extra_contexts.clone(),
+            number_of_extra_contexts: self.number_of_extra_contexts,
+            extra_context_id: self.extra_context_id,
+            current_index_map: self.current_index_map.clone(),
+            previous_index_map: self.previous_index_map.clone(),
+        }
+    }
+}
+
 impl<D, S, T, ST, SYM, VS, VT> Context<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,

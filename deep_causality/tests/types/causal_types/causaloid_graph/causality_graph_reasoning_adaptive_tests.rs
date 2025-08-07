@@ -203,10 +203,8 @@ fn test_evaluate_subgraph_from_cause_relay_to_non_existent_node() {
     // Causaloid A: Relays to a non-existent node (index 99)
     let non_existent_target_index = 124;
     let causaloid_a_id = 14;
-    let causaloid_a_description = format!(
-        "Causaloid A relays to non-existent node {}",
-        non_existent_target_index
-    );
+    let causaloid_a_description =
+        format!("Causaloid A relays to non-existent node {non_existent_target_index}");
     let causaloid_a_fn =
         |_effect: &PropagatingEffect| -> Result<PropagatingEffect, CausalityError> {
             Ok(PropagatingEffect::RelayTo(
@@ -230,8 +228,7 @@ fn test_evaluate_subgraph_from_cause_relay_to_non_existent_node() {
     assert_eq!(
         res.unwrap_err().to_string(),
         format!(
-            "CausalityError: RelayTo target causaloid with index {} not found in graph.",
-            non_existent_target_index
+            "CausalityError: RelayTo target causaloid with index {non_existent_target_index} not found in graph."
         )
     );
 }

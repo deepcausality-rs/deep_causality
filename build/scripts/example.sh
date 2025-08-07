@@ -18,7 +18,7 @@ echo "smoking: Simple causal model without  Context"
 echo "--------------------------------"
 echo ""
 
-select opt in  csm starter smoking quit;
+select opt in  csm starter smoking rcm quit;
 do
   case $opt in
 
@@ -40,6 +40,11 @@ do
       break
       ;;
 
+    rcm)
+      echo "Selected example: RCM (Rubin Causal Model)"
+       command cargo run --release --bin example-rcm
+      break
+      ;;
     quit)
       echo "Exiting!"
       exit 0

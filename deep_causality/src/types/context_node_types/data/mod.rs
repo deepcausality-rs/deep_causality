@@ -3,8 +3,6 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::hash::Hash;
-
 use deep_causality_macros::Constructor;
 
 use crate::Datable;
@@ -32,7 +30,7 @@ pub mod identifiable;
 #[derive(Constructor, Debug, Copy, Clone, PartialEq)]
 pub struct Data<T>
 where
-    T: Default + Copy + Clone+ PartialEq
+    T: Default + Copy + Clone + PartialEq,
 {
     id: u64,
     data: T,
@@ -44,7 +42,7 @@ where
 /// is expected, providing methods to get and set the inner data payload.
 impl<T> Datable for Data<T>
 where
-    T: Default + Copy + Clone + PartialEq
+    T: Default + Copy + Clone + PartialEq,
 {
     type Data = T;
 
