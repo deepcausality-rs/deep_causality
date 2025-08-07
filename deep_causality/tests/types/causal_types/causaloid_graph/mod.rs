@@ -12,6 +12,8 @@ mod causality_graph_freeze_tests;
 #[cfg(test)]
 mod causality_graph_nodes_tests;
 #[cfg(test)]
+mod causality_graph_reasoning_adaptive_tests;
+#[cfg(test)]
 mod causality_graph_reasoning_all_tests;
 #[cfg(test)]
 mod causality_graph_reasoning_imbalanced_tests;

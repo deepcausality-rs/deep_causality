@@ -41,8 +41,9 @@ pub enum PropagatingEffect {
     Map(HashMap<IdentificationValue, Box<PropagatingEffect>>),
     /// A graph of effects, for passing complex relational data.
     Graph(Arc<EffectGraph>),
-    /// A dispatch command that directs a reasoning engine to jump to a specific
-    /// next causaloid with the specified id (`usize`) and provide it with the encapsulated effect as its new input.
+    /// A dispatch command that directs the reasoning engine to dynamically jump to a specific
+    /// causaloid within the graph. The `usize` is the target causaloid's index, and the `Box<PropagatingEffect>`
+    /// is the effect to be passed as input to that target causaloid. This enables adaptive reasoning.
     RelayTo(usize, Box<PropagatingEffect>),
 }
 

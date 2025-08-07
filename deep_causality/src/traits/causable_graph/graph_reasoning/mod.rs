@@ -47,6 +47,20 @@ where
     /// the output effect of a parent node becomes the input effect for its child node.
     /// The traversal continues as long as no `CausalityError` is returned.
     ///
+    /// ## Adaptive Reasoning
+    ///
+    /// If a `Causaloid` returns a `PropagatingEffect::RelayTo(target_index, inner_effect)`,
+    /// the BFS traversal dynamically jumps to  `target_index`, and `inner_effect` becomes
+    /// the new input for the relayed path. This enables *adaptive reasoning* conditional to the deciding
+    /// causaloid. To illustrate adaptive reasoning, an example clinical patent risk model may operate
+    /// very differently for patients with normal blood pressure compared to high blood pressure patients.
+    /// Therefore, two highly specialized models are defined and a dedicated dispatch causaloid.
+    /// The dispatch causaloid analyses blood pressure and then, conditional on its finding, dispatches
+    /// further reasoning to the matching model i.e. a dedicated sub-graph. Ensure that all possible
+    /// values of  target_index exists in the graph before implementing adaptive reasoning.
+    /// For more details, see section 5.10.3 Adaptive Reasoning in The EPP reference paper:
+    /// https://github.com/deepcausality-rs/papers/blob/main/effect_propagation_process/epp.pdf
+    ///
     /// # Arguments
     ///
     /// * `start_index` - The index of the node to start the traversal from.
@@ -57,7 +71,7 @@ where
     /// * `Ok(PropagatingEffect)`: The final `PropagatingEffect` from the last successfully evaluated node
     ///   in the main traversal path. `Deterministic(false)` now propagates and does not implicitly halt propagation.
     ///   Only a `Causaloid` returning a `CausalityError` will abort the traversal.
-    /// * `Err(CausalityError)` if the graph is not frozen, a node is missing, or an evaluation fails.
+    /// * `Err(CausalityError)` if the graph is not frozen, a node is missing, a RelayTo target cannot be found or an evaluation fails.
     fn evaluate_subgraph_from_cause(
         &self,
         start_index: usize,
@@ -100,13 +114,41 @@ where
             // This ensures the function returns the effect of the last node on the path.
             last_propagated_effect = result_effect.clone();
 
-            // Only a CausalityError returned from cause.evaluate() will abort the traversal.
-            let children = self.get_graph().outbound_edges(current_index)?;
-            for child_index in children {
-                if !visited[child_index] {
-                    visited[child_index] = true;
-                    // Pass the result_effect of the current node to its children.
-                    queue.push_back((child_index, result_effect.clone()));
+            match result_effect {
+                // Adaptive reasoning:
+                // The Causaloid itself determines the next step in the reasoning process
+                // conditional on its reasoning outcome. Based on its own internal logic,
+                // a Causaloid then dynamically dispatches the flow of causality
+                // to another Causaloid in the graph, enabling adaptive reasoning.
+                PropagatingEffect::RelayTo(target_index, inner_effect) => {
+                    // If a RelayTo effect is returned, clear the queue and add the target_index
+                    // with the inner_effect as the new starting point for traversal.
+                    queue.clear();
+
+                    // Validate target_index before proceeding
+                    if !self.contains_causaloid(target_index) {
+                        return Err(CausalityError(format!(
+                            "RelayTo target causaloid with index {target_index} not found in graph."
+                        )));
+                    }
+
+                    if !visited[target_index] {
+                        visited[target_index] = true;
+                        queue.push_back((target_index, *inner_effect));
+                    }
+                    // Update last_propagated_effect to reflect the effect of the relayed node.
+                    // This is already handled by the line above: last_propagated_effect = result_effect.clone();
+                }
+                _ => {
+                    // Only a CausalityError returned from cause.evaluate() will abort the traversal.
+                    let children = self.get_graph().outbound_edges(current_index)?;
+                    for child_index in children {
+                        if !visited[child_index] {
+                            visited[child_index] = true;
+                            // Pass the result_effect of the current node to its children.
+                            queue.push_back((child_index, result_effect.clone()));
+                        }
+                    }
                 }
             }
         }
@@ -121,6 +163,15 @@ where
     /// one causaloid becomes the input for the next causaloid in the path. If any node
     /// fails evaluation or returns a non-propagating effect that prunes the path, the reasoning stops.
     ///
+    /// If a `Causaloid` returns a `PropagatingEffect::RelayTo(target_index, inner_effect)`,
+    /// the shortest path traversal is immediately interrupted, and the `RelayTo` effect
+    /// is returned to the caller, signaling a dynamic redirection. The runtime behavior differs
+    /// from `evaluate_subgraph_from_cause` because a shortest path is assumed to be a fixed path
+    /// and thus RelayTo is not supposed to happen in the middle of the path. Therefore, the
+    /// call-site must handle the occurrence i.e. when its a known final effect.
+    /// For more details, see section 5.10.3 Adaptive Reasoning in The EPP reference paper:
+    /// https://github.com/deepcausality-rs/papers/blob/main/effect_propagation_process/epp.pdf
+    ///
     /// # Arguments
     ///
     /// * `start_index` - The index of the start cause.
@@ -130,6 +181,7 @@ where
     /// # Returns
     ///
     /// * `Ok(PropagatingEffect)`: The final `PropagatingEffect` from the last evaluated node on the path.
+    ///   If a `RelayTo` effect is encountered, that effect is returned immediately.
     /// * `Err(CausalityError)` if the path cannot be found or an evaluation fails.
     fn evaluate_shortest_path_between_causes(
         &self,
@@ -164,8 +216,14 @@ where
             // Evaluate the current cause with the effect propagated from the previous node.
             // Then, overwrite the current_effect with the result of the evaluation, which then
             // serves as the input for the next node.
-            // Only a CausalityError returned from cause.evaluate() will abort the traversal.
+            // For normal traversal, a CausalityError returned from cause.evaluate() will abort the traversal.
             current_effect = cause.evaluate(&current_effect)?;
+
+            // If a RelayTo effect is returned, stop the shortest path traversal and return it
+            // because it breaks the assumption of a fixed shortest path.
+            if let PropagatingEffect::RelayTo(_, _) = current_effect {
+                return Ok(current_effect);
+            }
         }
 
         // If the loop completes, all nodes on the path were successfully evaluated.
