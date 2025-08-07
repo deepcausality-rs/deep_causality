@@ -71,7 +71,7 @@ where
     /// * `Ok(PropagatingEffect)`: The final `PropagatingEffect` from the last successfully evaluated node
     ///   in the main traversal path. `Deterministic(false)` now propagates and does not implicitly halt propagation.
     ///   Only a `Causaloid` returning a `CausalityError` will abort the traversal.
-    /// * `Err(CausalityError)` if the graph is not frozen, a node is missing, or an evaluation fails.
+    /// * `Err(CausalityError)` if the graph is not frozen, a node is missing, a RelayTo target cannot be found or an evaluation fails.
     fn evaluate_subgraph_from_cause(
         &self,
         start_index: usize,
@@ -124,6 +124,14 @@ where
                     // If a RelayTo effect is returned, clear the queue and add the target_index
                     // with the inner_effect as the new starting point for traversal.
                     queue.clear();
+
+                    // Validate target_index before proceeding
+                    if !self.contains_causaloid(target_index) {
+                        return Err(CausalityError(format!(
+                            "RelayTo target causaloid with index {target_index} not found in graph."
+                        )));
+                    }
+
                     if !visited[target_index] {
                         visited[target_index] = true;
                         queue.push_back((target_index, *inner_effect));

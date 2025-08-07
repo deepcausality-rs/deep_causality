@@ -1,3 +1,5 @@
+#![allow(clippy::too_many_arguments)]
+
 /*
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
@@ -22,7 +24,6 @@ fn test_evaluate_subgraph_from_cause_with_relay_to_simple() {
         |_effect: &PropagatingEffect| -> Result<PropagatingEffect, CausalityError> {
             Ok(PropagatingEffect::RelayTo(
                 3,
-                //
                 Box::new(PropagatingEffect::Deterministic(false)),
             ))
         };
@@ -187,5 +188,50 @@ fn test_evaluate_shortest_path_between_causes_with_relay_at_end() {
     assert_eq!(
         res.unwrap(),
         PropagatingEffect::RelayTo(0, Box::new(PropagatingEffect::Numerical(50.0)))
+    );
+}
+
+#[test]
+fn test_evaluate_subgraph_from_cause_relay_to_non_existent_node() {
+    // Graph: Root (0) -> A (1)
+    // A will relay to a non-existent node (e.g., index 99)
+    let mut g = CausaloidGraph::new(0);
+
+    let root_causaloid = test_utils::get_test_causaloid_deterministic_true();
+    let root_index = g.add_root_causaloid(root_causaloid).unwrap();
+
+    // Causaloid A: Relays to a non-existent node (index 99)
+    let non_existent_target_index = 124;
+    let causaloid_a_id = 14;
+    let causaloid_a_description = format!(
+        "Causaloid A relays to non-existent node {}",
+        non_existent_target_index
+    );
+    let causaloid_a_fn =
+        |_effect: &PropagatingEffect| -> Result<PropagatingEffect, CausalityError> {
+            Ok(PropagatingEffect::RelayTo(
+                124, // non_existent_target_index
+                Box::new(PropagatingEffect::Numerical(1.0)),
+            ))
+        };
+
+    let causaloid_a = Causaloid::new(causaloid_a_id, causaloid_a_fn, &causaloid_a_description);
+    let idx_a = g.add_causaloid(causaloid_a).unwrap();
+
+    // Link the graph: Root -> A
+    g.add_edge(root_index, idx_a).unwrap();
+
+    g.freeze();
+
+    let initial_effect = PropagatingEffect::Deterministic(true);
+    let res = g.evaluate_subgraph_from_cause(root_index, &initial_effect);
+
+    assert!(res.is_err());
+    assert_eq!(
+        res.unwrap_err().to_string(),
+        format!(
+            "CausalityError: RelayTo target causaloid with index {} not found in graph.",
+            non_existent_target_index
+        )
     );
 }
