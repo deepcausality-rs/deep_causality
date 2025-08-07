@@ -212,7 +212,7 @@ where
             current_effect = cause.evaluate(&current_effect)?;
 
             // If a RelayTo effect is returned, stop the shortest path traversal and return it
-            // because it braks the assumption of a fixed shortest path.
+            // because it breaks the assumption of a fixed shortest path.
             if let PropagatingEffect::RelayTo(_, _) = current_effect {
                 return Ok(current_effect);
             }
