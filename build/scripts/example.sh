@@ -18,13 +18,19 @@ echo "smoking: Simple causal model without  Context"
 echo "--------------------------------"
 echo ""
 
-select opt in  csm starter smoking rcm quit;
+select opt in  csm dbn starter smoking rcm quit;
 do
   case $opt in
 
     csm)
       echo "Selected example: CSM (Causal State Machine)"
       command cargo run --release --bin example-csm
+      break
+      ;;
+
+    dbn)
+      echo "Selected example: DBN (Dynamic Bayesian Network)"
+      command cargo run --release --bin example-dbn
       break
       ;;
 
