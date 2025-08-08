@@ -13,7 +13,7 @@ The examples are separated into three files, each corresponding to a rung on the
 From within the `examples/epp_scm` directory, run:
 
 ```bash
-cargo run
+cargo run --bin example-scm
 ```
 
 ---

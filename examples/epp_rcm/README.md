@@ -50,8 +50,6 @@ By evaluating the *same causal model* against these different contexts, `DeepCau
 *   The Individual Treatment Effect (ITE) is calculated as `Y(1) - Y(0)`.
 *   The result is printed, demonstrating the drug's predicted effect on the patient's blood pressure.
 
-
-
 ## Reference
 
 For more information on the EPP, please see chapter 5 in the EPP document:
