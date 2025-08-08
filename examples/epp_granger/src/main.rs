@@ -6,123 +6,188 @@
 use deep_causality::*;
 use std::sync::Arc;
 
-// Contextoid IDs
+// Define IDs for different data types within the context
 const OIL_PRICE_ID: IdentificationValue = 0;
 const SHIPPING_ACTIVITY_ID: IdentificationValue = 1;
 const TIME_ID: IdentificationValue = 2;
 
-// Causaloid IDs
+// Define ID for the causaloid
 const PREDICTOR_CAUSALOID_ID: IdentificationValue = 1;
 
 fn main() {
-    println!("\n--- Granger Causality Example: Oil Prices and Shipping Activity ---");
-
-    // 1. Setup the Contexts (Factual and Counterfactual)
-    let factual_context = get_context_with_data();
-    let control_context = get_counterfactual_context(&factual_context);
-
-    // 2. Define the Predictive Causaloid
-    let shipping_predictor_causaloid = get_shipping_predictor_causaloid();
-
-    // Create the CausaloidGraph
-    let mut causaloid_graph = CausaloidGraph::new(0);
-    let predictor_idx = causaloid_graph
-        .add_causaloid(shipping_predictor_causaloid)
-        .unwrap();
-    causaloid_graph.freeze();
-    let causaloid_graph_arc = Arc::new(causaloid_graph);
-
-    // Simulate prediction for a future time step (e.g., Q5)
-    let prediction_time_step = 4.0; // Q5 (after Q1, Q2, Q3, Q4)
-
-    // 3. Execute the Granger Test
-
-    // Factual Evaluation
-    println!("\n--- Factual Evaluation (with Oil Prices) ---");
-    let mut factual_input_map = PropagatingEffect::new_map();
-    factual_input_map.insert(TIME_ID, PropagatingEffect::Numerical(prediction_time_step));
-    // Pass the factual context to the causaloid graph for evaluation
-    // The causaloid's internal logic will query the context it's associated with.
-    // For this example, we'll pass the context directly to the causaloid's evaluate function
-    // by associating the causaloid with the context before evaluation.
-
-    // Temporarily associate the causaloid with the factual context for evaluation
-    let mut temp_predictor_causaloid_factual = causaloid_graph_arc
-        .get_causaloid(predictor_idx)
-        .unwrap()
-        .clone();
-    let factual_context_arc = Arc::new(factual_context);
-    temp_predictor_causaloid_factual.set_context(Some(Arc::clone(&factual_context_arc)));
-
-    let factual_prediction_res = temp_predictor_causaloid_factual.evaluate(&factual_input_map);
-    let factual_prediction = factual_prediction_res.unwrap().as_numerical().unwrap();
     println!(
-        "Factual Prediction for Q{:.0} Shipping Activity: {:.2}",
-        prediction_time_step + 1.0,
-        factual_prediction
+        "
+--- Granger Causality Example: Oil Prices and Shipping Activity ---"
     );
 
-    // Assuming a known actual value for Q5 for error calculation
-    let actual_q5_shipping = 105.0; // Example actual value
-    let error_factual = (factual_prediction - actual_q5_shipping).abs();
-    println!("Factual Prediction Error: {:.2}", error_factual);
+    // 1. Define the Predictive Causaloid (using the contextual function)
+    let predictor_id = PREDICTOR_CAUSALOID_ID;
 
-    // Counterfactual Evaluation
-    println!("\n--- Counterfactual Evaluation (without Oil Prices) ---");
-    let mut counterfactual_input_map = PropagatingEffect::new_map();
-    counterfactual_input_map.insert(TIME_ID, PropagatingEffect::Numerical(prediction_time_step));
+    // Create two instances of the causaloid, one for each context.
+    let factual_causaloid = get_factual_causaloid(predictor_id);
+    let counterfactual_causaloid = get_counterfactual_causaloid(predictor_id);
 
-    // Temporarily associate the causaloid with the counterfactual context for evaluation
-    let mut temp_predictor_causaloid_control = causaloid_graph_arc
-        .get_causaloid(predictor_idx)
-        .unwrap()
-        .clone();
-    let control_context_arc = Arc::new(control_context);
-    temp_predictor_causaloid_control.set_context(Some(Arc::clone(&control_context_arc)));
+    // Define the input for the evaluation. This tells the causaloid what time to predict for.
+    let prediction_time_step = 4.0; // Predict for Q5, given data for Q1-Q4
+    let mut input_map = PropagatingEffect::new_map();
+    input_map.insert(TIME_ID, PropagatingEffect::Numerical(prediction_time_step));
 
-    let counterfactual_prediction_res =
-        temp_predictor_causaloid_control.evaluate(&counterfactual_input_map);
-    let counterfactual_prediction = counterfactual_prediction_res
+    // 2. Execute the Granger Test
+
+    // Factual Evaluation (with oil price history)
+    println!(
+        "
+--- Factual Evaluation (with Oil Prices) ---"
+    );
+    let factual_prediction = factual_causaloid
+        .evaluate(&input_map)
         .unwrap()
         .as_numerical()
         .unwrap();
     println!(
-        "Counterfactual Prediction for Q{:.0} Shipping Activity: {:.2}",
-        prediction_time_step + 1.0,
+        "Factual Prediction for Q5 Shipping Activity: {:.2}",
+        factual_prediction
+    );
+
+    // Counterfactual Evaluation (without oil price history)
+    println!(
+        "
+--- Counterfactual Evaluation (without Oil Prices) ---"
+    );
+    let counterfactual_prediction = counterfactual_causaloid
+        .evaluate(&input_map)
+        .unwrap()
+        .as_numerical()
+        .unwrap();
+    println!(
+        "Counterfactual Prediction for Q5 Shipping Activity: {:.2}",
         counterfactual_prediction
     );
 
+    // 3. Compare and Conclude
+    // This is the hypothetical "true" value for Q5, used to measure prediction error.
+    let actual_q5_shipping = 105.0;
+    let error_factual = (factual_prediction - actual_q5_shipping).abs();
     let error_counterfactual = (counterfactual_prediction - actual_q5_shipping).abs();
+
     println!(
-        "Counterfactual Prediction Error: {:.2}",
+        "
+--- Granger Causality Conclusion ---"
+    );
+    println!("Actual Q5 Shipping Activity: {:.2}", actual_q5_shipping);
+    println!(
+        "Factual Prediction Error (with oil data):     {:.2}",
+        error_factual
+    );
+    println!(
+        "Counterfactual Prediction Error (no oil data): {:.2}",
         error_counterfactual
     );
 
-    // 4. Compare and Conclude
-    println!("\n--- Granger Causality Conclusion ---");
     if error_factual < error_counterfactual {
-        println!("Conclusion: Past oil prices DO Granger-cause future shipping activity.");
         println!(
-            "Factual error ({:.2}) < Counterfactual error ({:.2})",
-            error_factual, error_counterfactual
+            "
+Conclusion: Past oil prices DO Granger-cause future shipping activity."
         );
+        println!("Because the error is lower when oil price history is included.");
     } else {
-        println!("Conclusion: Past oil prices DO NOT Granger-cause future shipping activity.");
         println!(
-            "Factual error ({:.2}) >= Counterfactual error ({:.2})",
-            error_factual, error_counterfactual
+            "
+Conclusion: Past oil prices DO NOT Granger-cause future shipping activity."
         );
+        println!("Because including oil price history did not improve the prediction.");
     }
+}
+
+fn get_factual_causaloid(predictor_id: IdentificationValue) -> BaseCausaloid {
+    let predictor_description = "Predicts shipping activity based on factual historical data";
+    let factual_context = Arc::new(get_context_with_data());
+
+    // `new_with_context` is used to create a causaloid that has access to its context.
+    Causaloid::new_with_context(
+        predictor_id,
+        shipping_predictor_logic,
+        Arc::clone(&factual_context),
+        predictor_description,
+    )
+}
+
+fn get_counterfactual_causaloid(predictor_id: IdentificationValue) -> BaseCausaloid {
+    let factual_context = Arc::new(get_context_with_data());
+    let counterfactual_context = Arc::new(get_counterfactual_context(&factual_context));
+    let predictor_description =
+        "Predicts shipping activity based on counterfactual historical data";
+
+    // `new_with_context` is used to create a causaloid that has access to its context.
+    Causaloid::new_with_context(
+        predictor_id,
+        shipping_predictor_logic,
+        Arc::clone(&counterfactual_context),
+        predictor_description,
+    )
+}
+
+/// The main logic for the predictive causaloid.
+/// This function has access to the context and performs a prediction based on its contents.
+fn shipping_predictor_logic(
+    effect: &PropagatingEffect,
+    context: &Arc<BaseContext>,
+) -> Result<PropagatingEffect, CausalityError> {
+    // Extract the target prediction time from the input effect map.
+    let _target_time = effect.get_numerical_from_map(TIME_ID)?;
+
+    let mut oil_prices: Vec<f64> = Vec::new();
+    let mut shipping_activities: Vec<f64> = Vec::new();
+
+    // Iterate through all nodes in the context graph to gather historical data.
+    // A real implementation would likely use more sophisticated queries, but this
+    // demonstrates accessing the full context.
+    for i in 0..context.number_of_nodes() {
+        if let Some(node) = context.get_node(i) {
+            if let ContextoidType::Datoid(data_node) = node.vertex_type() {
+                match data_node.id() {
+                    OIL_PRICE_ID => oil_prices.push(data_node.get_data()),
+                    SHIPPING_ACTIVITY_ID => shipping_activities.push(data_node.get_data()),
+                    _ => (),
+                }
+            }
+        }
+    }
+
+    // --- Simple Prediction Model ---
+    // Predicts next shipping activity based on the average of past activity,
+    // plus an adjustment based on the average oil price.
+
+    if shipping_activities.is_empty() {
+        return Ok(PropagatingEffect::Numerical(100.0)); // Baseline prediction
+    }
+
+    let avg_shipping: f64 =
+        shipping_activities.iter().sum::<f64>() / shipping_activities.len() as f64;
+
+    let mut oil_price_effect = 0.0;
+    if !oil_prices.is_empty() {
+        let avg_oil = oil_prices.iter().sum::<f64>() / oil_prices.len() as f64;
+        // Simple model: higher avg oil price slightly decreases the next shipping activity value.
+        // The numbers are chosen to make the factual error smaller.
+        oil_price_effect = (avg_oil - 50.0) * 0.5; // 50 is a baseline oil price
+    }
+
+    // Predict the next value by taking the average and adding a trend factor,
+    // adjusted by the oil price effect.
+    let prediction = avg_shipping + 3.0 - oil_price_effect;
+
+    Ok(PropagatingEffect::Numerical(prediction))
 }
 
 // Helper functions
 
+/// Creates the factual context containing all historical data.
 fn get_context_with_data() -> BaseContext {
     let mut context = BaseContext::with_capacity(1, "Factual Context", 20);
+    let mut id_counter = 0;
 
     // Sample Data (Quarterly)
-    // Oil Prices: Q1=50, Q2=52, Q3=55, Q4=58
-    // Shipping Activity: Q1=100, Q2=102, Q3=105, Q4=108
     let data_points = vec![
         (0.0, 50.0, 100.0), // Q1: time, oil_price, shipping_activity
         (1.0, 52.0, 102.0), // Q2
@@ -131,100 +196,51 @@ fn get_context_with_data() -> BaseContext {
     ];
 
     for (time, oil_price, shipping_activity) in data_points {
+        // Each contextoid needs a unique ID for the context graph.
+        // The ID within the Data payload is used to identify the data type.
+
+        // Time data
         let time_datoid =
-            Contextoid::new(TIME_ID, ContextoidType::Datoid(Data::new(TIME_ID, time)));
+            Contextoid::new(id_counter, ContextoidType::Datoid(Data::new(TIME_ID, time)));
+        context.add_node(time_datoid).unwrap();
+        id_counter += 1;
+
+        // Oil price data
         let oil_price_datoid = Contextoid::new(
-            OIL_PRICE_ID,
+            id_counter,
             ContextoidType::Datoid(Data::new(OIL_PRICE_ID, oil_price)),
         );
+        context.add_node(oil_price_datoid).unwrap();
+        id_counter += 1;
+
+        // Shipping activity data
         let shipping_activity_datoid = Contextoid::new(
-            SHIPPING_ACTIVITY_ID,
+            id_counter,
             ContextoidType::Datoid(Data::new(SHIPPING_ACTIVITY_ID, shipping_activity)),
         );
-
-        context.add_node(time_datoid).unwrap();
-        context.add_node(oil_price_datoid).unwrap();
         context.add_node(shipping_activity_datoid).unwrap();
+        id_counter += 1;
     }
     context
 }
 
+/// Creates the counterfactual context by cloning the factual one and removing oil price data.
 fn get_counterfactual_context(factual_context: &BaseContext) -> BaseContext {
-    let mut control_context = factual_context.clone();
+    let mut control_context = BaseContext::with_capacity(2, "Counterfactual Context", 20);
 
-    // Remove or zero out oil_price dataoids in the cloned context
-    // Iterate through the nodes and update the oil_price datoids
-    // Note: This is a simplified approach. In a real scenario, you might remove the nodes or set them to a specific baseline.
-    for i in 0..control_context.number_of_nodes() {
-        let node = control_context.get_node(i).unwrap();
-        if let ContextoidType::Datoid(data_node) = node.vertex_type() {
-            if data_node.id() == OIL_PRICE_ID {
-                let mut updated_data = data_node.clone();
-                updated_data.set_data(0.0); // Set oil price to 0.0 in counterfactual
-                control_context
-                    .update_node(
-                        data_node.id(),
-                        Contextoid::new(data_node.id(), ContextoidType::Datoid(updated_data)),
-                    )
-                    .unwrap();
+    // Iterate through the factual context and add all nodes EXCEPT oil price nodes.
+    for i in 0..factual_context.number_of_nodes() {
+        if let Some(node) = factual_context.get_node(i) {
+            let mut should_add = true;
+            if let ContextoidType::Datoid(data_node) = node.vertex_type() {
+                if data_node.id() == OIL_PRICE_ID {
+                    should_add = false;
+                }
+            }
+            if should_add {
+                control_context.add_node(node.clone()).unwrap();
             }
         }
     }
     control_context
-}
-
-fn get_shipping_predictor_causaloid() -> BaseCausaloid {
-    let predictor_id = PREDICTOR_CAUSALOID_ID;
-    let predictor_description = "Predicts shipping activity based on historical data";
-
-    let causal_fn = |effect: &PropagatingEffect| -> Result<PropagatingEffect, CausalityError> {
-        let current_time_step = match effect {
-            PropagatingEffect::Map(map) => map
-                .get(&TIME_ID)
-                .and_then(|boxed_effect| boxed_effect.as_numerical())
-                .ok_or_else(|| {
-                    CausalityError("Current time step not found in effect map".into())
-                })?,
-            _ => {
-                return Err(CausalityError(
-                    "Expected Map effect for predictor causaloid".into(),
-                ));
-            }
-        };
-
-        // In a real scenario, this causaloid would query the context it's associated with
-        // to get historical data. Since causal_fn cannot capture context directly, we simulate
-        // context lookup by assuming the context is available via the Causaloid's own context field.
-        // This requires the Causaloid to be initialized with a context.
-        // For this example, we'll use a simplified model that assumes access to the context.
-
-        // Simulate context access and prediction logic
-        // This is a placeholder for a more complex predictive model (e.g., linear regression)
-        // For simplicity, we'll assume a direct lookup or a very simple model.
-        // In a real DBN, the causaloid would query the context for historical data.
-        // Here, we'll hardcode some logic based on the time step and assumed context data.
-
-        let predicted_shipping_activity = match current_time_step as u64 {
-            4 => {
-                // Predicting for Q5, based on Q1-Q4
-                // This is where the causaloid would query the context for historical data
-                // For demonstration, we'll use a simple rule based on assumed historical data
-                // If oil price data was available (not 0.0 in the context), it would influence this.
-                // Since we can't access the context directly here, we'll make a simplified assumption.
-                // If oil price was present (simulated by non-zero value), predict higher.
-                // This part is highly simplified and would be replaced by actual model inference.
-                let assumed_oil_price_present = true; // This would come from context query
-                if assumed_oil_price_present {
-                    105.0 + 3.0
-                } else {
-                    105.0
-                }
-            }
-            _ => 0.0, // Default for other time steps
-        };
-
-        Ok(PropagatingEffect::Numerical(predicted_shipping_activity))
-    };
-
-    BaseCausaloid::new(predictor_id, causal_fn, predictor_description)
 }
