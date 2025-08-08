@@ -4,7 +4,7 @@
  */
 
 // should prevent circular dependencies to / from prelude
-use crate::types::alias_types::alias_primitives::{FloatType, NumberType};
+use crate::types::alias_types::alias_primitives::FloatType;
 use crate::types::causal_types::causaloid::Causaloid;
 use crate::types::causal_types::causaloid_graph::CausaloidGraph;
 use crate::types::context_node_types::data::Data;
@@ -16,6 +16,7 @@ use crate::types::context_types::context_graph::Context;
 use crate::types::context_types::contextoid::Contextoid;
 use crate::types::model_types::model::Model;
 
+use crate::NumericalValue;
 use std::collections::HashMap;
 
 /// A type alias for the default `Model` configuration.
@@ -26,7 +27,7 @@ use std::collections::HashMap;
 ///
 /// Specifically, `BaseModel` is a `Model` parameterized as follows:
 ///
-/// - **`Data<NumberType>`**: Used for its data component. `NumberType` is a
+/// - **`Data<NumericalValue>`**: Used for its data component. `NumberType` is a
 ///   generic numeric type, typically an alias for a floating-point or integer,
 ///   allowing for flexible data representation within the model.
 /// - **`EuclideanSpace`**: Defines the spatial context. This implies that
@@ -49,7 +50,7 @@ use std::collections::HashMap;
 /// easily recognizable model structure for common causal reasoning and
 /// simulation scenarios.
 pub type BaseModel = Model<
-    Data<NumberType>,
+    Data<NumericalValue>,
     EuclideanSpace,
     EuclideanTime,
     EuclideanSpacetime,
@@ -68,7 +69,7 @@ pub type BaseModel = Model<
 /// Each `BaseCausaloid` is parameterized with the following concrete types,
 /// defining its default context and data handling:
 ///
-/// - **`Data<NumberType>`**: Represents the data component associated with the causaloid.
+/// - **`Data<NumericalValue>`**: Represents the data component associated with the causaloid.
 ///   `NumberType` is a generic numeric type, typically a floating-point or integer,
 ///   allowing for flexible data representation.
 /// - **`EuclideanSpace`**: Defines the spatial context of the causaloid within a
@@ -90,7 +91,7 @@ pub type BaseModel = Model<
 /// that are compatible with other "base" types like `BaseCausalGraph` and `BaseContext`,
 /// ensuring a consistent and easily understandable modeling environment.
 pub type BaseCausaloid = Causaloid<
-    Data<NumberType>,
+    Data<NumericalValue>,
     EuclideanSpace,
     EuclideanTime,
     EuclideanSpacetime,
@@ -110,7 +111,7 @@ pub type BaseCausaloid = Causaloid<
 /// Each `Causaloid` within this vector is parameterized with the following
 /// concrete types, defining its default context and data handling:
 ///
-/// - **`Data<NumberType>`**: Represents the data component associated with each causaloid.
+/// - **`Data<NumericalValue>`**: Represents the data component associated with each causaloid.
 ///   `NumberType` is a generic numeric type, typically a floating-point or integer,
 ///   allowing for flexible data representation.
 /// - **`EuclideanSpace`**: Defines the spatial context of the causaloids within a
@@ -135,7 +136,7 @@ pub type BaseCausaloid = Causaloid<
 /// representing a sequence of events or a set of related causal agents.
 pub type BaseCausaloidVec = Vec<
     Causaloid<
-        Data<NumberType>,
+        Data<NumericalValue>,
         EuclideanSpace,
         EuclideanTime,
         EuclideanSpacetime,
@@ -155,7 +156,7 @@ pub type BaseCausaloidVec = Vec<
 /// The `BaseCausaloid` type, which forms the value of this map, is parameterized
 /// with the following concrete types:
 ///
-/// - **`Data<NumberType>`**: Represents the data component associated with each causaloid.
+/// - **`Data<NumericalValue>`**: Represents the data component associated with each causaloid.
 ///   `NumberType` is a generic numeric type, typically a floating-point or integer.
 /// - **`EuclideanSpace`**: Defines the spatial context of the causaloids within a
 ///   standard Euclidean coordinate system.
@@ -175,7 +176,7 @@ pub type BaseCausaloidVec = Vec<
 pub type BaseCausalMap = HashMap<
     usize,
     Causaloid<
-        Data<NumberType>,
+        Data<NumericalValue>,
         EuclideanSpace,
         EuclideanTime,
         EuclideanSpacetime,
@@ -192,7 +193,7 @@ pub type BaseCausalMap = HashMap<
 ///
 /// Specifically, `BaseCausalGraph` is a `CausaloidGraph` parameterized by a `Causaloid`
 /// that uses the following concrete types for its generic parameters:
-/// - **`Data<NumberType>`**: Represents the data associated with each causaloid,
+/// - **`Data<NumericalValue>`**: Represents the data associated with each causaloid,
 ///   using a generic `NumberType` (typically a floating-point or integer type).
 /// - **`EuclideanSpace`**: Defines the spatial context of the causaloids within
 ///   a standard Euclidean coordinate system.
@@ -210,7 +211,7 @@ pub type BaseCausalMap = HashMap<
 /// and easily recognizable graph structure for common causal modeling scenarios.
 pub type BaseCausalGraph = CausaloidGraph<
     Causaloid<
-        Data<NumberType>,
+        Data<NumericalValue>,
         EuclideanSpace,
         EuclideanTime,
         EuclideanSpacetime,
@@ -229,7 +230,7 @@ pub type BaseCausalGraph = CausaloidGraph<
 /// It provides a convenient and readable shorthand for defining a `Context`
 /// that encapsulates:
 ///
-/// - **`Data<NumberType>`**: For handling general numerical data. `NumberType`
+/// - **`Data<NumericalValue>`**: For handling general numerical data. `NumberType`
 ///   is typically an alias for a floating-point or integer type, allowing for
 ///   flexible data representation within the context.
 /// - **`EuclideanSpace`**: Defines the spatial context using a standard
@@ -253,7 +254,7 @@ pub type BaseCausalGraph = CausaloidGraph<
 /// offering a consistent and easily recognizable context structure for
 /// general-purpose causal reasoning and data representation.
 pub type BaseContext = Context<
-    Data<NumberType>,
+    Data<NumericalValue>,
     EuclideanSpace,
     EuclideanTime,
     EuclideanSpacetime,
@@ -272,7 +273,7 @@ pub type BaseContext = Context<
 /// It provides a convenient and readable shorthand for defining a `Contextoid`
 /// that encapsulates one of the following contextual roles:
 ///
-/// - **`Data<NumberType>`**: For handling general numerical data (a `Datoid`). `NumberType`
+/// - **`Data<NumericalValue>`**: For handling general numerical data (a `Datoid`). `NumberType`
 ///   is typically an alias for a floating-point or integer type.
 /// - **`EuclideanSpace`**: Defines a spatial context using a standard
 ///   Euclidean coordinate system (a `Spaceoid`).
@@ -291,7 +292,7 @@ pub type BaseContext = Context<
 /// that are compatible with other "base" types like `BaseContext` and `BaseCausalGraph`,
 /// ensuring a consistent and easily understandable modeling environment.
 pub type BaseContextoid = Contextoid<
-    Data<NumberType>,
+    Data<NumericalValue>,
     EuclideanSpace,
     EuclideanTime,
     EuclideanSpacetime,

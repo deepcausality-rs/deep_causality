@@ -18,13 +18,25 @@ echo "smoking: Simple causal model without  Context"
 echo "--------------------------------"
 echo ""
 
-select opt in  csm starter smoking quit;
+select opt in  cate csm dbn granger starter scm rcm quit;
 do
   case $opt in
+
+    cate)
+      echo "Selected example: CATE (Conditional Average Treatment Effect)"
+      command cargo run --release --bin example-cate
+      break
+      ;;
 
     csm)
       echo "Selected example: CSM (Causal State Machine)"
       command cargo run --release --bin example-csm
+      break
+      ;;
+
+    dbn)
+      echo "Selected example: DBN (Dynamic Bayesian Network)"
+      command cargo run --release --bin example-dbn
       break
       ;;
 
@@ -34,12 +46,23 @@ do
       break
       ;;
 
-    smoking)
-      echo "Selected example: SMOKING (Smoking)"
-       command cargo run --release --bin example-smoking
+    scm)
+      echo "Selected example: scm (Structured Causal Model)"
+      command cargo run --release --bin example-scm
       break
       ;;
 
+    granger)
+      echo "Selected example: Granger (Granger causality)"
+      command cargo run --release --bin example-granger
+      break
+      ;;
+
+    rcm)
+      echo "Selected example: RCM (Rubin Causal Model)"
+       command cargo run --release --bin example-rcm
+      break
+      ;;
     quit)
       echo "Exiting!"
       exit 0

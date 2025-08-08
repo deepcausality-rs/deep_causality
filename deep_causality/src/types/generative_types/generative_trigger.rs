@@ -10,7 +10,7 @@ use std::hash::Hash;
 #[derive(Debug, Clone, PartialEq)]
 pub enum GenerativeTrigger<D>
 where
-    D: Default + Copy + Clone + Hash + Eq + PartialEq,
+    D: Default + Copy + Clone + PartialEq,
 {
     TimeElapsed(TimeKind),
     DataReceived(Data<D>),
@@ -19,7 +19,7 @@ where
 
 impl<D> GenerativeTrigger<D>
 where
-    D: Default + Copy + Clone + Hash + Eq + PartialEq,
+    D: Default + Copy + Clone + PartialEq,
 {
     /// Returns a reference to the `TimeKind` if the trigger is `TimeElapsed`.
     ///

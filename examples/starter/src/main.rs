@@ -54,18 +54,24 @@ fn get_test_causaloid(id: IdentificationValue) -> BaseCausaloid {
     // - It takes `&Evidence` as input.
     // - It returns `Result<PropagatingEffect, CausalityError>`.
     fn causal_fn(effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
-        // Safely extract the numerical value from the generic PropagatingEffect enum.
-        let obs = match effect {
-            PropagatingEffect::Numerical(val) => *val,
-            _ => return Err(CausalityError("Expected Numerical effect.".into())),
+        // This function now handles two types of incoming effects:
+        // 1. Numerical: Typically from an initial observation.
+        // 2. Deterministic: The boolean output from a preceding causaloid in the graph.
+        let is_active = match effect {
+            PropagatingEffect::Numerical(val) => {
+                if val.is_sign_negative() {
+                    return Err(CausalityError("Observation is negative".into()));
+                }
+                *val > 0.55 // Threshold check
+            }
+            PropagatingEffect::Deterministic(val) => *val, // Pass through the boolean effect
+            _ => {
+                // Any other effect type is considered invalid for this simple causaloid.
+                return Err(CausalityError(
+                    "Expected Numerical or Deterministic effect.".into(),
+                ));
+            }
         };
-
-        if obs.is_sign_negative() {
-            return Err(CausalityError("Observation is negative".into()));
-        }
-
-        let threshold: NumericalValue = 0.55;
-        let is_active = obs.ge(&threshold);
 
         // Return the result wrapped in the `PropagatingEffect` enum.
         Ok(PropagatingEffect::Deterministic(is_active))

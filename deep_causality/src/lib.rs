@@ -66,6 +66,9 @@ pub use crate::traits::generatable::generative_processor::GenerativeProcessor;
 // Identifiable Traits
 pub use crate::traits::identifiable::Identifiable;
 // Indexable Traits
+pub use crate::traits::indexable::data_index_current::CurrentDataIndex;
+pub use crate::traits::indexable::data_index_previous::PreviousDataIndex;
+pub use crate::traits::indexable::data_indexable::DataIndexable;
 pub use crate::traits::indexable::time_index_current::CurrentTimeIndex;
 pub use crate::traits::indexable::time_index_previous::PreviousTimeIndex;
 pub use crate::traits::indexable::time_indexable::TimeIndexable;

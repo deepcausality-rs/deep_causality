@@ -8,7 +8,7 @@ use deep_causality::*;
 #[test]
 fn test_new() {
     let id = 1;
-    let data = 42;
+    let data = 42.0;
 
     let d = Data::new(id, data);
     assert_eq!(d.id(), id);
@@ -20,8 +20,7 @@ fn test_new() {
 #[test]
 fn test_id() {
     let id = 1;
-    let data = 42;
-
+    let data = 42.0;
     let d = Data::new(id, data);
     assert_eq!(d.id(), id);
 
@@ -32,8 +31,7 @@ fn test_id() {
 #[test]
 fn test_to_string() {
     let id = 1;
-    let data = 42;
-
+    let data = 42.0;
     let d = Data::new(id, data);
     assert_eq!(d.id(), id);
 
@@ -41,7 +39,7 @@ fn test_to_string() {
 
     assert_eq!(contextoid.id(), id);
 
-    let expected = "Contextoid ID: 1 Type: Datoid: Dataoid: id: 1 data: 42".to_string();
+    let expected = "Contextoid ID: 1 Type: Datoid: Dataoid: id: 1 data: 42.0".to_string();
     let actual = contextoid.to_string();
     assert_eq!(actual, expected);
 }

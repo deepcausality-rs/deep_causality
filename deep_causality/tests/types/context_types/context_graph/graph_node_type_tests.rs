@@ -24,7 +24,7 @@ fn test_root_some() {
 #[test]
 fn test_root_none() {
     let id = 1;
-    let data = 42;
+    let data = 42.0;
     let d = Data::new(id, data);
     let node: BaseContextoid = Contextoid::new(id, ContextoidType::Datoid(d));
     assert!(node.vertex_type().root().is_none());
@@ -33,7 +33,7 @@ fn test_root_none() {
 #[test]
 fn test_dataoid_some() {
     let id = 1;
-    let data = 42;
+    let data = 42.0;
     let d = Data::new(id, data);
     let node: BaseContextoid = Contextoid::new(id, ContextoidType::Datoid(d));
     assert!(node.vertex_type().dataoid().is_some());
