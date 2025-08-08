@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+
 [package]
 name = "dcl_data_structures"
 version = "0.9.1"
