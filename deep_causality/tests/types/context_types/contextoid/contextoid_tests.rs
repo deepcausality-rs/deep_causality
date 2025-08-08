@@ -39,7 +39,7 @@ fn test_to_string() {
 
     assert_eq!(contextoid.id(), id);
 
-    let expected = "Contextoid ID: 1 Type: Datoid: Dataoid: id: 1 data: 42".to_string();
+    let expected = "Contextoid ID: 1 Type: Datoid: Dataoid: id: 1 data: 42.0".to_string();
     let actual = contextoid.to_string();
     assert_eq!(actual, expected);
 }
