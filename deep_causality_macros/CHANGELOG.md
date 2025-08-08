@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_macros-v0.8.0...deep_causality_macros-v0.8.1) - 2025-08-08
+
+### Other
+
+- Updated copyright in Cargo.toml fils
+- Updated CausableReasoning trait to handle RelayTo variant to dispatch to a different causaloid.
+
 ## [0.4.11](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_macros-v0.4.10...deep_causality_macros-v0.4.11) - 2025-05-16
 
 ### Other

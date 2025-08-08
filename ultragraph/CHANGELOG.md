@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.8.2](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.8.1...ultragraph-v0.8.2) - 2025-08-08
+
+### Other
+
+- Updated copyright in Cargo.toml fils
+- Updated dependencies in UltraGraph and for Bazel.
+- Updated UltraGraph README.md
+- Improved docstring
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
 ## [0.8.1](https://github.com/marvin-hansen/deep_causality/compare/ultragraph-v0.8.0...ultragraph-v0.8.1) - 2025-07-10
 
 ### Other
