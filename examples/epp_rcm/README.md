@@ -2,6 +2,14 @@
 
 This example demonstrates how to implement a simple Rubin Causal Model (RCM) scenario using the `DeepCausality` library. It showcases the Effect Propagation Process (EPP)'s capability for **Contextual Alternation** to directly compute potential outcomes and determine an individual treatment effect.
 
+## How to Run
+
+To run this example, navigate to the root of the `deep_causality` project and execute:
+
+```bash
+cargo run -p example-rcm
+```
+
 ## Background: The Rubin Causal Model and EPP
 
 The RCM defines a causal effect by comparing two "potential outcomes" for a single unit: the outcome if the unit receives a treatment (Y(1)) versus the outcome if it does not (Y(0)). The fundamental challenge is that only one of these outcomes can be observed in reality.
@@ -42,13 +50,7 @@ By evaluating the *same causal model* against these different contexts, `DeepCau
 *   The Individual Treatment Effect (ITE) is calculated as `Y(1) - Y(0)`.
 *   The result is printed, demonstrating the drug's predicted effect on the patient's blood pressure.
 
-## How to Run
 
-To run this example, navigate to the root of the `deep_causality` project and execute:
-
-```bash
-cargo run -p example-rcm
-```
 
 ## Reference
 
