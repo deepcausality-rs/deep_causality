@@ -3,7 +3,7 @@
 
 [package]
 name = "ultragraph"
-version = "0.8.1"
+version = "0.8.2"
 edition = "2021"
 rust-version = "1.80"
 repository = "https://github.com/deepcausality/deep_causality.rs"
@@ -19,7 +19,7 @@ exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE
 
 [dependencies.deep_causality_macros]
 path = "../deep_causality_macros"
-version = "0.8.0"
+version = "0.8.1"
 
 
 [dev-dependencies]
