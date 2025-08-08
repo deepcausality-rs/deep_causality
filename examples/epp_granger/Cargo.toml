@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+
+[package]
+name = "example-granger"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+publish = false
+
+[dependencies]
+deep_causality = { path = "../../deep_causality" }
