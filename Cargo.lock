@@ -215,7 +215,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality"
-version = "0.8.5"
+version = "0.8.1"
 dependencies = [
  "criterion",
  "dcl_data_structures",
