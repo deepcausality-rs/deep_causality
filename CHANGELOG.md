@@ -5,6 +5,78 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.8.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.8.1...deep_causality-v0.8.2) - 2025-08-08
+
+### Added
+
+- *(deep_causality)* Implemented Adaptive Reasoning #282
+- *(deep_causality)* Added Configurable Reasoning Modalities to Causal Collectins.
+- *(deep_causality)* Added Programmatic Verification of Model Assumptions #275
+- *(deep_causality)* Unified Evidence and PropagatingEffect into a Single Typ #273
+
+### Other
+
+- Rolled back manual version setting.
+- Bumped up deep_causality version for auto-release
+- Updated copyright in Cargo.toml fils
+- Added unit tests for graph indexable data in context graph.
+- added data indexable trait and default implementation for context graph.
+- Fixed failing test
+- Added code example for Rubin Causal Model.
+- Removed overly strict trait constraints from Dataoid/ Data context type.
+- Enhanced graph reasoning to handle `RelayTo` target validation. Updated error handling for non-existent nodes and added corresponding unit test.
+- Fixed typo
+- Added tests for adaptive reasoning.
+- Removed duplicate license header
+- Updated test utils to enhance error handling for non-deterministic effects; added unit test for erroneous singleton evaluation.
+- Added unit tests for deterministic propagation in empty causable collections, including explain method validation.
+- Updated tests for deterministic input-output causaloids. Updated test utils. Improved causality graph evaluation logical clarity.
+- Enhanced graph reasoning: introduced proper effect propagation logic and improved documentation clarity in causable graph methods.
+- Simplified evaluate in causable graph
+- Limited access scope for private helper method in causable collection
+- Refactored module names in causable_collection and causable_graph traits for improved clarity and consistency.
+- Removed dead code
+- Refactored CausableReasoning into modular CausableCollection traits. Enhanced structure and accessibility for causable collections.
+- Removed unused files
+- Improved code organization for CausableReasoning trait. Secured private impl's by limiting scope.
+- Improved test coverage; renamed for simpler name convention.
+- Added or improved test coverage for causable reasoning for all causable collections.
+- reworked evaluate_probabilistic_propagation and evaluate_mixed_propagation in causable_reasoning.rs
+- Working on evaluate_mixed_propagation
+- Removed halting variant from PropagatingEffect
+- Simplified causable_reasoning
+- Separated debug and display trait impl for Assumption type.
+- Finalized Programmatic Verification of Model Assumptions #275
+- Restored previous implementation of causable_reasoning.rs
+- Added empty test to Assumption vector.
+- Improved test coverage for Assumption.
+- Improved test coverage for Model.
+- Added tests for AggregateLogic
+- Improved AssumptionError and its testing.
+- Working on  Configurable Reasoning Modalitie #274
+- Updated CausableReasoning trait to handle RelayTo variant to dispatch to a different causaloid.
+- Increased test coverage of PropagatingEffect
+- Lints and formats
+- Increased test coverage of PropagatingEffect
+- Increased test coverage of PropagatingEffect
+- Updated benchmarks to use new PropagatingEffect.
+- Removed unused Evidence type.
+- Format and lints
+- Derived Default of PropagatingEffect instead of custom impl.
+- Bump criterion from 0.6.0 to 0.7.0
+- Linting and formatting.
+- Added black_box to evaluate_single_cause to ensure no fluke can ever happen.
+- Updated benchmark code with minor fix to evaluate_single_cause
+- Improved benchmark code.
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
 ## [0.8.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.7.5...deep_causality-v0.8.0) - 2025-07-08
 
 ### Added
