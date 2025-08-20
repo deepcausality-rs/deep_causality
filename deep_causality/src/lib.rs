@@ -154,6 +154,11 @@ pub use crate::types::reasoning_types::propagating_effect::PropagatingEffect;
 //Symbolic types
 pub use crate::types::symbolic_types::symbolic_representation::SymbolicRepresentation;
 pub use crate::types::symbolic_types::symbolic_result::SymbolicResult;
+//
+// Teloid types
+pub use crate::types::telos_types::tag_index::*;
+pub use crate::types::telos_types::teloid_modal::TeloidModal;
+
 // Utils
 //
 pub use crate::utils::time_utils::*;
