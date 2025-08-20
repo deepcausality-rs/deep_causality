@@ -74,7 +74,7 @@ impl TagIndex {
     /// tag_index.add(tag, id);
     /// ```
     pub fn add(&mut self, tag: TeloidTag, id: TeloidID) {
-        self.index.entry(tag).or_insert(Vec::new()).push(id);
+        self.index.entry(tag).or_default().push(id);
     }
 
     /// Retrieves a vector of `TeloidID`s associated with a given `TeloidTag`.
@@ -177,26 +177,10 @@ impl TagIndex {
     /// let tag = "test_tag";
     /// tag_index.add(tag.clone(), 1);
     ///
-    /// assert!(tag_index.check(tag));
+    /// assert!(tag_index.contains_key(tag));
     /// ```
-    pub fn check(&self, tag: TeloidTag) -> bool {
+    pub fn contains_key(&self, tag: TeloidTag) -> bool {
         self.index.contains_key(&tag)
-    }
-
-    /// Clears the index, removing all tags and IDs.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use deep_causality::{TagIndex, TeloidTag, TeloidID};
-    ///
-    /// let mut tag_index = TagIndex::new();
-    /// tag_index.add("test_tag", 1);
-    /// tag_index.clear();
-    /// assert_eq!(tag_index.len(), 0);
-    /// ```
-    pub fn clear(&mut self) {
-        self.index.clear();
     }
 
     /// Returns the number of tags in the index.
@@ -216,5 +200,41 @@ impl TagIndex {
     /// ```
     pub fn len(&self) -> usize {
         self.index.len()
+    }
+
+    /// Returns `true` if the index contains no elements.
+    ///
+    /// # Returns
+    ///
+    /// `true` if the index is empty, `false` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use deep_causality::TagIndex;
+    ///
+    /// let mut tag_index = TagIndex::new();
+    /// assert!(tag_index.is_empty());
+    /// tag_index.add("test_tag", 1);
+    /// assert!(!tag_index.is_empty());
+    /// ```
+    pub fn is_empty(&self) -> bool {
+        self.index.is_empty()
+    }
+
+    /// Clears the index, removing all tags and IDs.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use deep_causality::{TagIndex, TeloidTag, TeloidID};
+    ///
+    /// let mut tag_index = TagIndex::new();
+    /// tag_index.add("test_tag", 1);
+    /// tag_index.clear();
+    /// assert_eq!(tag_index.len(), 0);
+    /// ```
+    pub fn clear(&mut self) {
+        self.index.clear();
     }
 }

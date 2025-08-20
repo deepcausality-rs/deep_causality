@@ -85,7 +85,7 @@ fn test_remove() {
     // 3. Remove the last ID for a tag
     tag_index.remove(tag1, id2);
     // The key should still exist with an empty vec, as per implementation
-    assert!(tag_index.check(tag1));
+    assert!(tag_index.contains_key(tag1));
     assert_eq!(tag_index.get(tag1), Some(&vec![]));
 
     // 4. Remove an ID from a non-existent tag (corner case)
@@ -102,7 +102,7 @@ fn test_update() {
 
     // 1. Try to update a non-existent tag (edge case)
     tag_index.update(tag1, id1);
-    assert!(!tag_index.check(tag1));
+    assert!(!tag_index.contains_key(tag1));
     assert_eq!(tag_index.len(), 0);
 
     // 2. Add the tag first, then update
@@ -122,15 +122,15 @@ fn test_check() {
     let id1: TeloidID = 101;
 
     // 1. Check non-existent tag
-    assert!(!tag_index.check(tag1));
+    assert!(!tag_index.contains_key(tag1));
 
     // 2. Check after adding
     tag_index.add(tag1, id1);
-    assert!(tag_index.check(tag1));
+    assert!(tag_index.contains_key(tag1));
 
     // 3. Check after removing the only ID (key should still exist)
     tag_index.remove(tag1, id1);
-    assert!(tag_index.check(tag1));
+    assert!(tag_index.contains_key(tag1));
 }
 
 #[test]
@@ -144,7 +144,7 @@ fn test_clear() {
     // 1. Clear the index
     tag_index.clear();
     assert_eq!(tag_index.len(), 0);
-    assert!(!tag_index.check("tag1"));
+    assert!(!tag_index.contains_key("tag1"));
 
     // 2. Clear an already empty index (corner case)
     tag_index.clear();

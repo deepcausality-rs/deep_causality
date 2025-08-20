@@ -2,7 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-pub mod tag_index;
-pub mod teloid;
-pub mod teloid_modal;
-pub mod teloid_store;
+use crate::{Identifiable, Teloid};
+
+impl Identifiable for Teloid {
+    fn id(&self) -> u64 {
+        self.id
+    }
+}

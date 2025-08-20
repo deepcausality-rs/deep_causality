@@ -5,8 +5,9 @@
 
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TeloidModal {
+    #[default]
     Obligatory,
     Impermissible,
     Optional(i64), // Optional must be associated with a cost value.

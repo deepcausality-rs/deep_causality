@@ -28,10 +28,16 @@ fn test_display_format() {
 
     // Edge cases for i64
     let optional_max = TeloidModal::Optional(i64::MAX);
-    assert_eq!(format!("{}", optional_max), format!("Optional({})", i64::MAX));
+    assert_eq!(
+        format!("{}", optional_max),
+        format!("Optional({})", i64::MAX)
+    );
 
     let optional_min = TeloidModal::Optional(i64::MIN);
-    assert_eq!(format!("{}", optional_min), format!("Optional({})", i64::MIN));
+    assert_eq!(
+        format!("{}", optional_min),
+        format!("Optional({})", i64::MIN)
+    );
 }
 
 #[test]
@@ -80,24 +86,60 @@ fn test_partial_eq() {
 #[test]
 fn test_partial_ord() {
     // Test ordering between variants
-    assert_eq!(TeloidModal::Obligatory.partial_cmp(&TeloidModal::Impermissible), Some(Ordering::Less));
-    assert_eq!(TeloidModal::Impermissible.partial_cmp(&TeloidModal::Obligatory), Some(Ordering::Greater));
+    assert_eq!(
+        TeloidModal::Obligatory.partial_cmp(&TeloidModal::Impermissible),
+        Some(Ordering::Less)
+    );
+    assert_eq!(
+        TeloidModal::Impermissible.partial_cmp(&TeloidModal::Obligatory),
+        Some(Ordering::Greater)
+    );
 
-    assert_eq!(TeloidModal::Impermissible.partial_cmp(&TeloidModal::Optional(i64::MIN)), Some(Ordering::Less));
-    assert_eq!(TeloidModal::Optional(i64::MAX).partial_cmp(&TeloidModal::Impermissible), Some(Ordering::Greater));
+    assert_eq!(
+        TeloidModal::Impermissible.partial_cmp(&TeloidModal::Optional(i64::MIN)),
+        Some(Ordering::Less)
+    );
+    assert_eq!(
+        TeloidModal::Optional(i64::MAX).partial_cmp(&TeloidModal::Impermissible),
+        Some(Ordering::Greater)
+    );
 
-    assert_eq!(TeloidModal::Obligatory.partial_cmp(&TeloidModal::Optional(i64::MIN)), Some(Ordering::Less));
-    assert_eq!(TeloidModal::Optional(i64::MAX).partial_cmp(&TeloidModal::Obligatory), Some(Ordering::Greater));
+    assert_eq!(
+        TeloidModal::Obligatory.partial_cmp(&TeloidModal::Optional(i64::MIN)),
+        Some(Ordering::Less)
+    );
+    assert_eq!(
+        TeloidModal::Optional(i64::MAX).partial_cmp(&TeloidModal::Obligatory),
+        Some(Ordering::Greater)
+    );
 
     // Test ordering within Optional variant
-    assert_eq!(TeloidModal::Optional(10).partial_cmp(&TeloidModal::Optional(20)), Some(Ordering::Less));
-    assert_eq!(TeloidModal::Optional(20).partial_cmp(&TeloidModal::Optional(10)), Some(Ordering::Greater));
-    assert_eq!(TeloidModal::Optional(10).partial_cmp(&TeloidModal::Optional(10)), Some(Ordering::Equal));
-    assert_eq!(TeloidModal::Optional(-10).partial_cmp(&TeloidModal::Optional(10)), Some(Ordering::Less));
+    assert_eq!(
+        TeloidModal::Optional(10).partial_cmp(&TeloidModal::Optional(20)),
+        Some(Ordering::Less)
+    );
+    assert_eq!(
+        TeloidModal::Optional(20).partial_cmp(&TeloidModal::Optional(10)),
+        Some(Ordering::Greater)
+    );
+    assert_eq!(
+        TeloidModal::Optional(10).partial_cmp(&TeloidModal::Optional(10)),
+        Some(Ordering::Equal)
+    );
+    assert_eq!(
+        TeloidModal::Optional(-10).partial_cmp(&TeloidModal::Optional(10)),
+        Some(Ordering::Less)
+    );
 
     // Edge cases for i64
-    assert_eq!(TeloidModal::Optional(i64::MIN).partial_cmp(&TeloidModal::Optional(i64::MAX)), Some(Ordering::Less));
-    assert_eq!(TeloidModal::Optional(0).partial_cmp(&TeloidModal::Optional(1)), Some(Ordering::Less));
+    assert_eq!(
+        TeloidModal::Optional(i64::MIN).partial_cmp(&TeloidModal::Optional(i64::MAX)),
+        Some(Ordering::Less)
+    );
+    assert_eq!(
+        TeloidModal::Optional(0).partial_cmp(&TeloidModal::Optional(1)),
+        Some(Ordering::Less)
+    );
 }
 
 #[test]

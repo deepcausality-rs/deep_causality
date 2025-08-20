@@ -157,7 +157,9 @@ pub use crate::types::symbolic_types::symbolic_result::SymbolicResult;
 //
 // Teloid types
 pub use crate::types::telos_types::tag_index::*;
-pub use crate::types::telos_types::teloid_modal::TeloidModal;
+pub use crate::types::telos_types::teloid::*;
+pub use crate::types::telos_types::teloid_modal::*;
+pub use crate::types::telos_types::teloid_store::*;
 
 // Utils
 //
