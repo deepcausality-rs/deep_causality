@@ -159,7 +159,7 @@ pub use crate::types::symbolic_types::symbolic_result::SymbolicResult;
 pub use crate::types::telos_types::action_parameter_value::ActionParameterValue;
 pub use crate::types::telos_types::proposed_action::ProposedAction;
 pub use crate::types::telos_types::tag_index::TagIndex;
-pub use crate::types::telos_types::teloid::Teloid;
+pub use crate::types::telos_types::teloid::{Teloid, TeloidMetaData};
 pub use crate::types::telos_types::teloid_modal::TeloidModal;
 pub use crate::types::telos_types::teloid_store::TeloidStore;
 
