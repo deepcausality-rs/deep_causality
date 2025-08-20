@@ -156,10 +156,12 @@ pub use crate::types::symbolic_types::symbolic_representation::SymbolicRepresent
 pub use crate::types::symbolic_types::symbolic_result::SymbolicResult;
 //
 // Teloid types
-pub use crate::types::telos_types::tag_index::*;
-pub use crate::types::telos_types::teloid::*;
-pub use crate::types::telos_types::teloid_modal::*;
-pub use crate::types::telos_types::teloid_store::*;
+pub use crate::types::telos_types::action_parameter_value::ActionParameterValue;
+pub use crate::types::telos_types::proposed_action::ProposedAction;
+pub use crate::types::telos_types::tag_index::TagIndex;
+pub use crate::types::telos_types::teloid::Teloid;
+pub use crate::types::telos_types::teloid_modal::TeloidModal;
+pub use crate::types::telos_types::teloid_store::TeloidStore;
 
 // Utils
 //
