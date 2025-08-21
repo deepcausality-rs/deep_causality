@@ -17,7 +17,7 @@ mod graph_view;
 pub type UltraGraph<T> = UltraGraphContainer<T, ()>;
 pub type UltraGraphWeighted<T, W> = UltraGraphContainer<T, W>;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct UltraGraphContainer<N, W>
 where
     N: Clone,
