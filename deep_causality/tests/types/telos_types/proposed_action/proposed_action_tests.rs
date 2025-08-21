@@ -82,9 +82,7 @@ fn test_proposed_action_display() {
     );
     let action = ProposedAction::new(7, "set_mode".to_string(), params);
 
-    let expected_display = format!(
-        "ProposedAction {{ action_id: 7, action_name: set_mode, parameters: {{\"mode\": String(\"auto\")}} }}"
-    );
+    let expected_display = "ProposedAction { action_id: 7, action_name: set_mode, parameters: {\"mode\": String(\"auto\")} }".to_string();
     assert_eq!(format!("{}", action), expected_display);
 }
 
@@ -94,9 +92,7 @@ fn test_proposed_action_debug() {
     params.insert("value".to_string(), ActionParameterValue::Number(99.9));
     let action = ProposedAction::new(8, "read_sensor".to_string(), params);
 
-    let expected_debug = format!(
-        "ProposedAction {{ action_id: 8, action_name: \"read_sensor\", parameters: {{\"value\": Number(99.9)}} }}"
-    );
+    let expected_debug ="ProposedAction { action_id: 8, action_name: \"read_sensor\", parameters: {\"value\": Number(99.9)} }".to_string();
     assert_eq!(format!("{:?}", action), expected_debug);
 }
 

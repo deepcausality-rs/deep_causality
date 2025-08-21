@@ -92,10 +92,10 @@ fn test_teloid_getters() {
 
     assert_eq!(teloid.id(), 3);
     assert_eq!(teloid.action_identifier(), "action.get");
-    assert_eq!(
-        teloid.activation_predicate()(&get_dummy_context(), &get_dummy_action(0.0)),
-        true
-    );
+    assert!(teloid.activation_predicate()(
+        &get_dummy_context(),
+        &get_dummy_action(0.0)
+    ),);
     assert_eq!(teloid.modality(), TeloidModal::Optional(50));
     assert_eq!(teloid.timestamp(), 300);
     assert_eq!(teloid.specificity(), 30);

@@ -32,11 +32,11 @@ fn test_teloid_relation_default() {
 #[test]
 fn test_teloid_relation_clone() {
     let original = TeloidRelation::Inherits;
-    let cloned = original.clone();
+    let cloned = original;
     assert_eq!(original, cloned);
 
     let original = TeloidRelation::Defeats;
-    let cloned = original.clone();
+    let cloned = original;
     assert_eq!(original, cloned);
 }
 

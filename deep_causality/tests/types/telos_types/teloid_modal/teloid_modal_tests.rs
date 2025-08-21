@@ -44,21 +44,21 @@ fn test_display_format() {
 fn test_clone_and_copy() {
     // Test Obligatory
     let original_obligatory = TeloidModal::Obligatory;
-    let cloned_obligatory = original_obligatory.clone();
+    let cloned_obligatory = original_obligatory;
     let copied_obligatory = original_obligatory; // Test Copy trait
     assert_eq!(original_obligatory, cloned_obligatory);
     assert_eq!(original_obligatory, copied_obligatory);
 
     // Test Impermissible
     let original_impermissible = TeloidModal::Impermissible;
-    let cloned_impermissible = original_impermissible.clone();
+    let cloned_impermissible = original_impermissible;
     let copied_impermissible = original_impermissible;
     assert_eq!(original_impermissible, cloned_impermissible);
     assert_eq!(original_impermissible, copied_impermissible);
 
     // Test Optional
     let original_optional = TeloidModal::Optional(42);
-    let cloned_optional = original_optional.clone();
+    let cloned_optional = original_optional;
     let copied_optional = original_optional;
     assert_eq!(original_optional, cloned_optional);
     assert_eq!(original_optional, copied_optional);

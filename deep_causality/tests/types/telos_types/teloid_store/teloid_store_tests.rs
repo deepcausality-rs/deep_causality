@@ -30,7 +30,7 @@ fn create_test_teloid(
         action_id.to_string(),
         always_true_predicate,
         TeloidModal::Obligatory,
-        id as u64 * 100,
+        id * 100,
         id as u32 * 10,
         id as u32 * 5,
         vec![],
