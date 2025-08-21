@@ -282,8 +282,10 @@ fn test_evaluate_action_impermissible_wins() {
     let context = get_dummy_context();
     let verdict = ethos.evaluate_action(&action, &context).unwrap();
 
+    let mut just = verdict.justification().clone();
+    just.sort();
+    assert_eq!(just, vec![1, 2]);
     assert_eq!(verdict.outcome(), TeloidModal::Impermissible);
-    assert_eq!(verdict.justification(), &vec![1, 2]);
 }
 
 #[test]
@@ -430,5 +432,96 @@ fn test_inconclusive_verdict_no_active_norms() {
     assert!(matches!(
         result.unwrap_err(),
         DeonticError::InconclusiveVerdict
+    ));
+}
+
+#[test]
+fn test_explain_verdict_impermissible() {
+    let mut ethos = TestEthos::new()
+        .add_norm(
+            1,
+            "drive",
+            &["drive"],
+            check_speed_predicate,
+            TeloidModal::Impermissible,
+            1,
+            10,
+            1,
+        )
+        .unwrap();
+    ethos.verify_graph().unwrap();
+
+    let action = get_dummy_action("drive", 60.0);
+    let context = get_dummy_context();
+    let verdict = ethos.evaluate_action(&action, &context).unwrap();
+    let explanation = ethos.explain_verdict(&verdict).unwrap();
+
+    assert!(explanation.contains("The final verdict is Impermissible."));
+    assert!(explanation.contains("Norm 1: 'drive' (Impermissible, Specificity: 10, Timestamp: 1"));
+    assert!(explanation.contains("highest precedence"));
+}
+
+#[test]
+fn test_explain_verdict_obligatory() {
+    let mut ethos = TestEthos::new()
+        .add_norm(
+            1,
+            "drive",
+            &["drive"],
+            always_true_predicate,
+            TeloidModal::Obligatory,
+            1,
+            1,
+            1,
+        )
+        .unwrap();
+    ethos.verify_graph().unwrap();
+
+    let action = get_dummy_action("drive", 40.0);
+    let context = get_dummy_context();
+    let verdict = ethos.evaluate_action(&action, &context).unwrap();
+    let explanation = ethos.explain_verdict(&verdict).unwrap();
+
+    assert!(explanation.contains("The final verdict is Obligatory."));
+    assert!(explanation.contains("Norm 1: 'drive' (Obligatory, Specificity: 1, Timestamp: 1"));
+    assert!(explanation.contains("no impermissible norms were found"));
+}
+
+#[test]
+fn test_explain_verdict_optional() {
+    let mut ethos = TestEthos::new()
+        .add_norm(
+            1,
+            "drive",
+            &["drive"],
+            always_true_predicate,
+            TeloidModal::Optional(42),
+            1,
+            1,
+            1,
+        )
+        .unwrap();
+    ethos.verify_graph().unwrap();
+
+    let action = get_dummy_action("drive", 40.0);
+    let context = get_dummy_context();
+    let verdict = ethos.evaluate_action(&action, &context).unwrap();
+    let explanation = ethos.explain_verdict(&verdict).unwrap();
+
+    assert!(explanation.contains("The final verdict is Optional(42)."));
+    assert!(explanation.contains("Norm 1: 'drive' (Optional(42), Specificity: 1, Timestamp: 1"));
+    assert!(explanation.contains("only optional norms were active"));
+}
+
+#[test]
+fn test_explain_verdict_teloid_not_found() {
+    let ethos = TestEthos::new(); // Empty ethos
+    let bad_verdict = Verdict::new(TeloidModal::Obligatory, vec![999]); // Contains non-existent ID
+
+    let result = ethos.explain_verdict(&bad_verdict);
+    assert!(result.is_err());
+    assert!(matches!(
+        result.unwrap_err(),
+        DeonticError::TeloidNotFound { id: 999 }
     ));
 }

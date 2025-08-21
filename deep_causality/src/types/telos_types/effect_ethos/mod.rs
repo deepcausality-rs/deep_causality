@@ -4,6 +4,7 @@
  */
 
 mod api;
+mod deontic_explainable;
 mod deontic_inference;
 mod derive_verdict;
 mod freeze;

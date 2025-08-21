@@ -78,13 +78,19 @@ where
             })
             .sum();
 
-        if !norms.iter().all(|n| matches!(n.modality(), TeloidModal::Optional(_))) {
-             // This branch should ideally not be hit if the logic is sound,
-             // but as a safeguard, if we have a mix that doesn't include Impermissible or Obligatory,
-             // we default to the safest (inconclusive) verdict.
-             return Err(DeonticError::InconclusiveVerdict);
+        if !norms
+            .iter()
+            .all(|n| matches!(n.modality(), TeloidModal::Optional(_)))
+        {
+            // This branch should ideally not be hit if the logic is sound,
+            // but as a safeguard, if we have a mix that doesn't include Impermissible or Obligatory,
+            // we default to the safest (inconclusive) verdict.
+            return Err(DeonticError::InconclusiveVerdict);
         }
 
-        Ok(Verdict::new(TeloidModal::Optional(total_cost), all_norm_ids))
+        Ok(Verdict::new(
+            TeloidModal::Optional(total_cost),
+            all_norm_ids,
+        ))
     }
 }
