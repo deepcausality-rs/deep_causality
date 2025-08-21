@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
+use crate::{Datable, SpaceTemporal, Spatial, Symbolic, TeloidID, Temporal};
 use crate::{DeonticError, EffectEthos, Teloid, TeloidModal, Verdict};
 
 // Private helper methods for EffectEthos
@@ -45,55 +45,46 @@ where
             return Err(DeonticError::InconclusiveVerdict);
         }
 
-        // Check for any Impermissible norms first, as they have the highest precedence.
-        let impermissible_norms: Vec<_> = norms
-            .iter()
-            .filter(|n| n.modality() == TeloidModal::Impermissible)
-            .collect();
+        // Store all IDs for the final justification, regardless of modality.
+        let all_norm_ids: Vec<TeloidID> = norms.iter().map(|n| n.id()).collect();
 
-        if !impermissible_norms.is_empty() {
-            return Ok(Verdict::new(
-                TeloidModal::Impermissible,
-                impermissible_norms.iter().map(|n| n.id()).collect(),
-            ));
+        // Check for any Impermissible norms first, as they have the highest precedence.
+        let has_impermissible = norms
+            .iter()
+            .any(|n| n.modality() == TeloidModal::Impermissible);
+
+        if has_impermissible {
+            return Ok(Verdict::new(TeloidModal::Impermissible, all_norm_ids));
         }
 
         // Check for Obligatory norms next.
-        let obligatory_norms: Vec<_> = norms
+        let has_obligatory = norms
             .iter()
-            .filter(|n| n.modality() == TeloidModal::Obligatory)
-            .collect();
+            .any(|n| n.modality() == TeloidModal::Obligatory);
 
-        if !obligatory_norms.is_empty() {
-            return Ok(Verdict::new(
-                TeloidModal::Obligatory,
-                obligatory_norms.iter().map(|n| n.id()).collect(),
-            ));
+        if has_obligatory {
+            return Ok(Verdict::new(TeloidModal::Obligatory, all_norm_ids));
         }
 
         // Finally, handle Optional norms.
-        let optional_norms: Vec<_> = norms
+        let total_cost: i64 = norms
             .iter()
             .filter_map(|n| {
                 if let TeloidModal::Optional(cost) = n.modality() {
-                    Some((n.id(), cost))
+                    Some(cost)
                 } else {
                     None
                 }
             })
-            .collect();
+            .sum();
 
-        if !optional_norms.is_empty() {
-            let total_cost: i64 = optional_norms.iter().map(|(_, cost)| cost).sum();
-            // Here, a cost threshold could be applied. For now, we just return the collective optionality.
-
-            return Ok(Verdict::new(
-                TeloidModal::Optional(total_cost),
-                optional_norms.iter().map(|(id, _)| *id).collect(),
-            ));
+        if !norms.iter().all(|n| matches!(n.modality(), TeloidModal::Optional(_))) {
+             // This branch should ideally not be hit if the logic is sound,
+             // but as a safeguard, if we have a mix that doesn't include Impermissible or Obligatory,
+             // we default to the safest (inconclusive) verdict.
+             return Err(DeonticError::InconclusiveVerdict);
         }
 
-        // If we reach here, no norms with a clear modality were found.
-        Err(DeonticError::InconclusiveVerdict)
+        Ok(Verdict::new(TeloidModal::Optional(total_cost), all_norm_ids))
     }
 }

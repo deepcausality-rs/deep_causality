@@ -18,7 +18,7 @@ use ultragraph::GraphView;
 /// The `EffectEthos` provides a reasoning engine for deontic inference.
 /// It encapsulates all the necessary components to evaluate a proposed action
 /// against a set of teleological norms (Teloids).
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct EffectEthos<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,

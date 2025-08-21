@@ -13,7 +13,7 @@ use ultragraph::UltraGraphWeighted;
 /// This struct wraps `UltraGraphWeighted`, storing only `TeloidID`s in the nodes
 /// for memory efficiency. The edges are weighted with `TeloidRelation` to represent
 /// inheritance or defeasance between norms.
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct TeloidGraph {
     // The internal graph stores TeloidIDs in nodes and TeloidRelations on edges.
     pub(super) graph: UltraGraphWeighted<TeloidID, TeloidRelation>,
