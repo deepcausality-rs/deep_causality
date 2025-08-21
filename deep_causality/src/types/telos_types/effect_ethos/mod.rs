@@ -4,14 +4,16 @@
  */
 mod deontic_inference;
 mod derive_verdict;
+mod freeze;
+mod getters;
 mod resolve_conflicts;
 
-use ultragraph::{GraphMut, TopologicalGraphAlgorithms};
+mod verify;
 
 use crate::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
-use crate::{DeonticError, TagIndex, Teloid, TeloidGraph, TeloidStore};
+use crate::{TagIndex, TeloidGraph, TeloidStore};
 
-/// The `EffectEthos` framework provides a reasoning engine for deontic inference.
+/// The `EffectEthos` provides a reasoning engine for deontic inference.
 /// It encapsulates all the necessary components to evaluate a proposed action
 /// against a set of teleological norms (Teloids).
 #[derive(Clone, Default)]
@@ -54,46 +56,17 @@ where
         }
     }
 
-    /// A facade method to add a new norm to the ethos.
-    /// This is the primary way to build the norm base, ensuring consistency.
-    /// It adds the Teloid to the store, updates the tag index, and adds the
-    /// TeloidID to the graph, invalidating the verification status.
-    pub fn add_norm(&mut self, teloid: Teloid<D, S, T, ST, SYM, VS, VT>) {
-        let id = teloid.id();
-        let tags = teloid.tags().clone();
-
-        self.teloid_store.insert(teloid);
-        for tag in tags {
-            self.tag_index.add(tag, id);
+    /// Build an effect ethos  
+    pub fn from(
+        teloid_store: TeloidStore<D, S, T, ST, SYM, VS, VT>,
+        tag_index: TagIndex,
+        teloid_graph: TeloidGraph,
+    ) -> Self {
+        Self {
+            teloid_store,
+            tag_index,
+            teloid_graph,
+            is_verified: false,
         }
-        self.teloid_graph
-            .graph
-            .add_node(id)
-            .expect("Failed to add node");
-        self.is_verified = false; // A modification invalidates prior verification.
-    }
-
-    /// Verifies the integrity of the internal TeloidGraph, primarily checking for cycles.
-    /// This is a required step before evaluation can proceed.
-    pub fn verify_graph(&mut self) -> Result<(), DeonticError> {
-        self.teloid_graph.graph.freeze();
-        if self.teloid_graph.graph.has_cycle()? {
-            self.is_verified = false;
-            Err(DeonticError::GraphIsCyclic)
-        } else {
-            self.is_verified = true;
-            Ok(())
-        }
-    }
-
-    /// Freezes the internal graph for evaluation.
-    pub fn freeze(&mut self) {
-        self.teloid_graph.graph.freeze();
-    }
-
-    /// Unfreezes the internal graph for modification.
-    pub fn unfreeze(&mut self) {
-        self.teloid_graph.graph.unfreeze();
-        self.is_verified = false; // Modifications require re-verification.
     }
 }

@@ -3,10 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{TeloidGraph, TeloidID, TeloidRelation, TeloidableGraph};
-use ultragraph::{GraphError, GraphMut, GraphView};
+use crate::{DeonticError, TeloidGraph, TeloidID, TeloidRelation, Teloidable};
+use ultragraph::{GraphMut, GraphView};
 
-impl TeloidableGraph for TeloidGraph {
+impl Teloidable for TeloidGraph {
     /// Adds a new teloid (node) to the graph.
     ///
     /// # Arguments
@@ -17,8 +17,8 @@ impl TeloidableGraph for TeloidGraph {
     ///
     /// A `Result` which is `Ok(usize)` containing the index of the newly added teloid,
     /// or `Err(GraphError)` if the operation fails.
-    fn add_teloid(&mut self, id: TeloidID) -> Result<usize, GraphError> {
-        self.graph.add_node(id)
+    fn add_teloid(&mut self, id: TeloidID) -> Result<usize, DeonticError> {
+        self.graph.add_node(id).map_err(DeonticError::from)
     }
 
     /// Retrieves the `TeloidID` associated with a given node index.
@@ -63,9 +63,10 @@ impl TeloidableGraph for TeloidGraph {
         &mut self,
         parent_idx: usize,
         child_idx: usize,
-    ) -> Result<(), GraphError> {
+    ) -> Result<(), DeonticError> {
         self.graph
             .add_edge(parent_idx, child_idx, TeloidRelation::Inherits)
+            .map_err(DeonticError::from)
     }
 
     /// Adds a defeasance edge between a defeater teloid and a defeated teloid.
@@ -83,8 +84,9 @@ impl TeloidableGraph for TeloidGraph {
         &mut self,
         defeater_idx: usize,
         defeated_idx: usize,
-    ) -> Result<(), GraphError> {
+    ) -> Result<(), DeonticError> {
         self.graph
             .add_edge(defeater_idx, defeated_idx, TeloidRelation::Defeats)
+            .map_err(DeonticError::from)
     }
 }

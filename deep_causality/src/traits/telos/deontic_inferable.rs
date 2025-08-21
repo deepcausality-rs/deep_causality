@@ -10,7 +10,7 @@ use crate::{
 
 /// Defines the public API for a deontic reasoning engine.
 #[allow(clippy::type_complexity)]
-pub trait DeonticInference<D, S, T, ST, SYM, VS, VT>
+pub trait DeonticInferable<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,

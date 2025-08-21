@@ -7,7 +7,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 
 use ultragraph::{GraphTraversal, GraphView};
 
-use crate::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
+use crate::{Datable, SpaceTemporal, Spatial, Symbolic, TeloidStorable, Temporal};
 use crate::{DeonticError, EffectEthos, Teloid, TeloidID, TeloidRelation};
 #[allow(clippy::type_complexity)]
 impl<D, S, T, ST, SYM, VS, VT> EffectEthos<D, S, T, ST, SYM, VS, VT>

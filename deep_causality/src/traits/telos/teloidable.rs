@@ -3,13 +3,12 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::TeloidID;
-use ultragraph::GraphError;
+use crate::{DeonticError, TeloidID};
 
 /// Defines the domain-specific API for a graph of Teloids.
-pub trait TeloidableGraph {
+pub trait Teloidable {
     /// Adds a Teloid to the graph by its ID.
-    fn add_teloid(&mut self, id: TeloidID) -> Result<usize, GraphError>;
+    fn add_teloid(&mut self, id: TeloidID) -> Result<usize, DeonticError>;
 
     /// Gets the TeloidID of the node at a given index.
     fn get_teloid_id(&self, index: usize) -> Option<TeloidID>;
@@ -22,12 +21,12 @@ pub trait TeloidableGraph {
         &mut self,
         parent_idx: usize,
         child_idx: usize,
-    ) -> Result<(), GraphError>;
+    ) -> Result<(), DeonticError>;
 
     /// Adds a defeasance edge between two Teloid nodes.
     fn add_defeasance_edge(
         &mut self,
         defeater_idx: usize,
         defeated_idx: usize,
-    ) -> Result<(), GraphError>;
+    ) -> Result<(), DeonticError>;
 }

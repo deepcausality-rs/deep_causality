@@ -7,11 +7,13 @@ use std::collections::HashMap;
 
 use ultragraph::GraphView;
 
-use crate::{Context, DeonticError, EffectEthos, ProposedAction, Teloid, TeloidID, Verdict};
-use crate::{Datable, DeonticInference, SpaceTemporal, Spatial, Symbolic, Temporal};
+use crate::{
+    Context, DeonticError, EffectEthos, ProposedAction, Teloid, TeloidID, TeloidStorable, Verdict,
+};
+use crate::{Datable, DeonticInferable, SpaceTemporal, Spatial, Symbolic, Temporal};
 
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, SYM, VS, VT> DeonticInference<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, SYM, VS, VT> DeonticInferable<D, S, T, ST, SYM, VS, VT>
     for EffectEthos<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,

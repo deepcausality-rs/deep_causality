@@ -11,9 +11,19 @@ use ultragraph::GraphError;
 /// Errors related to the Deontic Inference process within the Effect Ethos.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DeonticError {
+    /// Failed to add a new teloid to the graph.
+    FailedToAddTeloid,
+
+    /// Failed to add edge to the graph.
+    FailedToAddEdge(usize, usize),
+
     /// An operation was attempted on a graph that was not frozen.
     /// Deontic inference requires a static, immutable graph.
     GraphNotFrozen,
+
+    /// An mutation operation was attempted on a graph that was frozen.
+    /// Mutation requires an unfrozen graph
+    GraphIsFrozen,
 
     /// The TeloidGraph is invalid because it contains a cycle, which would
     /// lead to infinite loops in reasoning.
@@ -49,6 +59,13 @@ impl fmt::Display for DeonticError {
                     "Deontic inference failed: The TeloidGraph must be frozen before evaluation."
                 )
             }
+            DeonticError::GraphIsFrozen => {
+                write!(
+                    f,
+                    "Deontic inference failed: The TeloidGraph is frozen and cannot be modified."
+                )
+            }
+
             DeonticError::GraphIsCyclic => {
                 write!(
                     f,
@@ -75,12 +92,29 @@ impl fmt::Display for DeonticError {
                     e
                 )
             }
+            DeonticError::FailedToAddTeloid => {
+                write!(f, "Failed to add a new teloid to the graph.")
+            }
+            DeonticError::FailedToAddEdge(source, target) => {
+                write!(
+                    f,
+                    "Edge from {source} to {target} could not be created; a node may not exist or the edge already exists."
+                )
+            }
         }
     }
 }
 
 impl From<GraphError> for DeonticError {
     fn from(err: GraphError) -> Self {
-        DeonticError::GraphError(err)
+        match err {
+            GraphError::GraphIsFrozen => DeonticError::GraphIsFrozen,
+            GraphError::GraphNotFrozen => DeonticError::GraphNotFrozen,
+            GraphError::GraphContainsCycle => DeonticError::GraphIsCyclic,
+            GraphError::EdgeCreationError { source, target } => {
+                DeonticError::FailedToAddEdge(source, target)
+            }
+            _ => DeonticError::GraphError(err),
+        }
     }
 }

@@ -82,8 +82,9 @@ pub use crate::traits::observable::ObservableReasoning;
 pub use crate::traits::scalar::scalar_projector::ScalarProjector;
 pub use crate::traits::scalar::scalar_value::ScalarValue;
 // Teloid Traits
-pub use crate::traits::telos::deontic_inference::DeonticInference;
-pub use crate::traits::telos::teloidable_graph::TeloidableGraph;
+pub use crate::traits::telos::deontic_inferable::DeonticInferable;
+pub use crate::traits::telos::teloid_storable::TeloidStorable;
+pub use crate::traits::telos::teloidable::Teloidable;
 // Transferable Trait
 pub use crate::traits::transferable::Transferable;
 //

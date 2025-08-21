@@ -2,7 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-mod teloidable_graph;
+mod graph;
+mod teloidable;
 
 use crate::{TeloidID, TeloidRelation};
 use ultragraph::UltraGraphWeighted;

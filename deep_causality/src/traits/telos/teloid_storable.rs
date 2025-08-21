@@ -2,20 +2,15 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use crate::{Datable, SpaceTemporal, Spatial, Symbolic, Teloid, TeloidID, Temporal};
 
-use crate::{
-    Datable, SpaceTemporal, Spatial, Symbolic, Teloid, TeloidID, TeloidStorable, TeloidStore,
-    Temporal,
-};
-
-impl<D, S, T, ST, SYM, VS, VT> TeloidStorable<D, S, T, ST, SYM, VS, VT>
-    for TeloidStore<D, S, T, ST, SYM, VS, VT>
+pub trait TeloidStorable<D, S, T, ST, SYM, VS, VT>
 where
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
+    D: Clone + Datable,
+    S: Clone + Spatial<VS>,
+    ST: Clone + SpaceTemporal<VS, VT>,
+    SYM: Clone + Symbolic,
+    T: Clone + Temporal<VT>,
     VS: Clone,
     VT: Clone,
 {
@@ -36,9 +31,7 @@ where
     fn insert(
         &mut self,
         teloid: Teloid<D, S, T, ST, SYM, VS, VT>,
-    ) -> Option<Teloid<D, S, T, ST, SYM, VS, VT>> {
-        self.index.insert(teloid.id(), teloid)
-    }
+    ) -> Option<Teloid<D, S, T, ST, SYM, VS, VT>>;
     /// Retrieves a reference to a `Teloid` from the store.
     ///
     /// # Arguments
@@ -49,9 +42,7 @@ where
     ///
     /// An `Option` containing a reference to the `Teloid` if it exists, otherwise `None`.
     ///
-    fn get(&self, id: &TeloidID) -> Option<&Teloid<D, S, T, ST, SYM, VS, VT>> {
-        self.index.get(id)
-    }
+    fn get(&self, id: &TeloidID) -> Option<&Teloid<D, S, T, ST, SYM, VS, VT>>;
     /// Removes a `Teloid` from the store, returning it.
     ///
     /// # Arguments
@@ -62,9 +53,7 @@ where
     ///
     /// An `Option` containing the removed `Teloid` if it existed, otherwise `None`.
     ///
-    fn remove(&mut self, id: &TeloidID) -> Option<Teloid<D, S, T, ST, SYM, VS, VT>> {
-        self.index.remove(id)
-    }
+    fn remove(&mut self, id: &TeloidID) -> Option<Teloid<D, S, T, ST, SYM, VS, VT>>;
     /// Updates a `Teloid` in the store. This is an alias for `insert`.
     ///
     /// If the store did not have this ID present, `None` is returned.
@@ -82,9 +71,7 @@ where
     fn update(
         &mut self,
         teloid: Teloid<D, S, T, ST, SYM, VS, VT>,
-    ) -> Option<Teloid<D, S, T, ST, SYM, VS, VT>> {
-        self.index.insert(teloid.id(), teloid)
-    }
+    ) -> Option<Teloid<D, S, T, ST, SYM, VS, VT>>;
     /// Checks if the store contains a `Teloid` with the specified ID.
     ///
     /// # Arguments
@@ -95,30 +82,22 @@ where
     ///
     /// `true` if the store contains the ID, otherwise `false`.
     ///
-    fn contains_key(&self, id: &TeloidID) -> bool {
-        self.index.contains_key(id)
-    }
+    fn contains_key(&self, id: &TeloidID) -> bool;
     /// Returns the number of `Teloid`s in the store.
     ///
     /// # Returns
     ///
     /// The number of `Teloid`s in the store.
     ///
-    fn len(&self) -> usize {
-        self.index.len()
-    }
+    fn len(&self) -> usize;
     /// Returns `true` if the store contains no `Teloid`s.
     ///
     /// # Returns
     ///
     /// `true` if the store is empty, otherwise `false`.
     ///
-    fn is_empty(&self) -> bool {
-        self.index.is_empty()
-    }
+    fn is_empty(&self) -> bool;
     /// Clears the store, removing all `Teloid`s.
     ///
-    fn clear(&mut self) {
-        self.index.clear()
-    }
+    fn clear(&mut self);
 }
