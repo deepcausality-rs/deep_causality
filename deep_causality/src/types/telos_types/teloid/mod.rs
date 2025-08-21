@@ -1,3 +1,4 @@
+mod display;
 mod getters;
 mod identifiable;
 mod part_eq;

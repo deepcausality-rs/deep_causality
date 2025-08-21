@@ -81,6 +81,9 @@ pub use crate::traits::observable::ObservableReasoning;
 // Scalar Traits
 pub use crate::traits::scalar::scalar_projector::ScalarProjector;
 pub use crate::traits::scalar::scalar_value::ScalarValue;
+// Teloid Traits
+pub use crate::traits::telos::deontic_inference::DeonticInference;
+pub use crate::traits::telos::teloidable_graph::TeloidableGraph;
 // Transferable Trait
 pub use crate::traits::transferable::Transferable;
 //
@@ -157,12 +160,15 @@ pub use crate::types::symbolic_types::symbolic_result::SymbolicResult;
 //
 // Teloid types
 pub use crate::types::telos_types::action_parameter_value::ActionParameterValue;
+pub use crate::types::telos_types::effect_ethos::EffectEthos;
 pub use crate::types::telos_types::proposed_action::ProposedAction;
 pub use crate::types::telos_types::tag_index::TagIndex;
 pub use crate::types::telos_types::teloid::{Teloid, TeloidMetaData};
+pub use crate::types::telos_types::teloid_graph::*;
 pub use crate::types::telos_types::teloid_modal::TeloidModal;
+pub use crate::types::telos_types::teloid_relation::TeloidRelation;
 pub use crate::types::telos_types::teloid_store::TeloidStore;
-
+pub use crate::types::telos_types::teloid_verdict::Verdict;
 // Utils
 //
 pub use crate::utils::time_utils::*;
