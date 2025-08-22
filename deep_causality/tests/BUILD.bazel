@@ -310,6 +310,22 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "telos_types_tests",
+    srcs = glob([
+        "types/telos_types/*/*_tests.rs",
+    ]),
+    tags = [
+        "telos_types_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//alias:deep_causality",
+    ],
+)
+
+rust_test_suite(
     name = "traits_tests",
     srcs = glob([
         "traits/generatable/generative_processor/*_tests.rs",

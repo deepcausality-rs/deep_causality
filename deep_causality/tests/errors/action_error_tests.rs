@@ -36,3 +36,10 @@ fn test_action_error_is_error() {
     let is_error: &dyn Error = &error;
     assert!(is_error.is::<ActionError>());
 }
+
+#[test]
+fn test_from_string() {
+    let error_message = "This is an error from a string";
+    let action_error: ActionError = String::from(error_message).into();
+    assert_eq!(action_error.0, error_message);
+}

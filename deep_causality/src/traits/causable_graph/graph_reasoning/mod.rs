@@ -59,7 +59,7 @@ where
     /// further reasoning to the matching model i.e. a dedicated sub-graph. Ensure that all possible
     /// values of  target_index exists in the graph before implementing adaptive reasoning.
     /// For more details, see section 5.10.3 Adaptive Reasoning in The EPP reference paper:
-    /// https://github.com/deepcausality-rs/papers/blob/main/effect_propagation_process/epp.pdf
+    /// <https://github.com/deepcausality-rs/papers/blob/main/effect_propagation_process/epp.pdf>
     ///
     /// # Arguments
     ///
@@ -170,7 +170,7 @@ where
     /// and thus RelayTo is not supposed to happen in the middle of the path. Therefore, the
     /// call-site must handle the occurrence i.e. when its a known final effect.
     /// For more details, see section 5.10.3 Adaptive Reasoning in The EPP reference paper:
-    /// https://github.com/deepcausality-rs/papers/blob/main/effect_propagation_process/epp.pdf
+    /// <https://github.com/deepcausality-rs/papers/blob/main/effect_propagation_process/epp.pdf>
     ///
     /// # Arguments
     ///

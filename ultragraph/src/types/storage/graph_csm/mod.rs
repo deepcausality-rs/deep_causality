@@ -11,7 +11,7 @@ mod graph_traversal;
 // The "Struct of Arrays" (SoA) representation for adjacencies.
 // This is now a first-class, albeit private, component of the CsmGraph.
 // It derives Default for convenience in constructors.
-#[derive(Default, Clone)]
+#[derive(Default, Debug, Clone)]
 pub(crate) struct CsrAdjacency<W>
 where
     W: Clone + Default,
@@ -21,7 +21,7 @@ where
     pub(crate) weights: Vec<W>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct CsmGraph<N, W>
 where
     N: Clone,

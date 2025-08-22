@@ -6,11 +6,11 @@
 use std::thread;
 use std::time::Duration;
 
-use deep_causality::{CSM, CausalState, PropagatingEffect};
-
 use crate::utils_actions::*;
 use crate::utils_data::{get_explosion_sensor_data, get_fire_sensor_data, get_smoke_sensor_data};
 use crate::utils_states::*;
+use deep_causality::types::csm_types::csm::CSM;
+use deep_causality::{CausalState, PropagatingEffect};
 
 const SMOKE_SENSOR: usize = 1;
 const FIRE_SENSOR: usize = 2;
@@ -35,7 +35,7 @@ pub fn run() {
 
     println!("Create Causal State Machine");
     let state_actions = &[(&smoke_cs, &smoke_ca), (&fire_cs, &fire_ca)];
-    let csm = CSM::new(state_actions);
+    let csm = CSM::new(state_actions, None);
 
     println!("Add a new sensor");
     csm.add_single_state(EXPLOSION_SENSOR, (explosion_cs, explosion_ca))

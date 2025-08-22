@@ -17,3 +17,9 @@ impl fmt::Display for ActionError {
         write!(f, "ActionError: {}", self.0)
     }
 }
+
+impl From<String> for ActionError {
+    fn from(s: String) -> Self {
+        ActionError(s)
+    }
+}

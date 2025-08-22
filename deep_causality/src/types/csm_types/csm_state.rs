@@ -6,9 +6,10 @@
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
-use crate::{Causable, CausalityError, Causaloid, Datable, PropagatingEffect, Symbolic};
+use crate::{Causable, CausalityError, Causaloid, Context, Datable, PropagatingEffect, Symbolic};
 use deep_causality_macros::{Constructor, Getters};
 use std::fmt::{Display, Formatter};
+use std::sync::Arc;
 
 /// A `CausalState` represents a state in a causal state machine (CSM) that can be evaluated
 /// based on causal conditions.
@@ -94,6 +95,11 @@ where
     ) -> Result<PropagatingEffect, CausalityError> {
         self.causaloid.evaluate(data)
     }
+
+    #[allow(clippy::type_complexity)]
+    pub fn context(&self) -> &Option<Arc<Context<D, S, T, ST, SYM, VS, VT>>> {
+        self.causaloid.context()
+    }
 }
 
 impl<D, S, T, ST, SYM, VS, VT> Display for CausalState<D, S, T, ST, SYM, VS, VT>
@@ -109,7 +115,7 @@ where
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "CausalState: \n id: {} version: {} \n data: {:?} causaloid: {}",
+            "CausalState: id: {} version: {} data: {{:?}} causaloid: {} {}",
             self.id, self.version, self.data, self.causaloid,
         )
     }

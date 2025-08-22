@@ -73,7 +73,7 @@ pub fn run_rung2_intervention() {
 
     // 3. Build Causal State Machine (CSM)
     let state_action_pair = &[(&high_cancer_risk_state, &prescribe_therapy_action)];
-    let csm = CSM::new(state_action_pair);
+    let csm = CSM::new(state_action_pair, None);
 
     // 4. Execute and Intervene
     // We need to evaluate the full causal chain first to get the final effect.

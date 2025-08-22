@@ -7,7 +7,7 @@
 
 use crate::{CsmGraph, DynamicGraph};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum GraphState<N, W>
 where
     N: Clone,
