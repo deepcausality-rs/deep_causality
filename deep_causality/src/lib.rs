@@ -93,11 +93,12 @@ pub use crate::traits::transferable::Transferable;
 //
 // Alias types
 pub use crate::types::alias_types::alias_base::*;
+pub use crate::types::alias_types::alias_csm::*;
 pub use crate::types::alias_types::alias_function::*;
 pub use crate::types::alias_types::alias_lock::*;
 pub use crate::types::alias_types::alias_primitives::*;
 pub use crate::types::alias_types::alias_uniform::*;
-pub use crate::types::alias_types::*;
+// pub use crate::types::alias_types::*;
 // Causal types
 pub use crate::types::causal_types::causal_type::CausaloidType;
 pub use crate::types::causal_types::causaloid::Causaloid;
@@ -141,9 +142,9 @@ pub use crate::types::context_node_types::time::time_kind::TimeKind;
 pub use crate::types::context_types::relation_kind::*;
 pub use crate::types::context_types::time_scale::TimeScale;
 // CSM types
-pub use crate::types::csm_types::CSM;
 pub use crate::types::csm_types::csm_action::CausalAction;
 pub use crate::types::csm_types::csm_state::CausalState;
+pub use types::csm_types::csm::CSM;
 // Generative types
 pub use crate::types::generative_types::generative_output::GenerativeOutput;
 pub use crate::types::generative_types::generative_trigger::GenerativeTrigger;

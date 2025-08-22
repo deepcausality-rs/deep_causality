@@ -96,9 +96,7 @@ fn test_to_string() {
     let data = PropagatingEffect::Numerical(0.23f64);
     let cs = CausalState::new(id, version, data, causaloid);
 
-    // The expected string needs to be updated to match the new Debug format of PropagatingEffect
-    // and the Display format of an unevaluated Causaloid.
-    let expected = "CausalState: \n id: 42 version: 1 \n data: PropagatingEffect::Numerical(0.23) causaloid: Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55".to_string();
+    let expected =  "CausalState: id: 42 version: 1 data: {:?} causaloid: PropagatingEffect::Numerical(0.23) Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55".to_string();
     let actual = cs.to_string();
     assert_eq!(actual, expected);
 }

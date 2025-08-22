@@ -37,6 +37,9 @@ pub enum DeonticError {
     /// a conclusive verdict.
     InconclusiveVerdict,
 
+    /// The CausalState is missing a context, which is required for deontic evaluation.
+    MissingContext,
+
     /// Wraps a lower-level error from the ultragraph crate.
     GraphError(GraphError),
 }
@@ -83,6 +86,12 @@ impl fmt::Display for DeonticError {
                 write!(
                     f,
                     "Deontic inference failed: The final set of active norms was inconclusive."
+                )
+            }
+            DeonticError::MissingContext => {
+                write!(
+                    f,
+                    "Deontic inference failed: The CausalState is missing a context."
                 )
             }
             DeonticError::GraphError(e) => {
