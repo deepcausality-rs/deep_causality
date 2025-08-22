@@ -10,8 +10,9 @@ use std::fmt::{Display, Formatter};
 #[derive(Debug)]
 pub enum CsmError {
     Action(ActionError),
-    Deontic(DeonticError),
     Causal(CausalityError),
+    Deontic(DeonticError),
+    Forbidden(String),
 }
 
 impl Error for CsmError {
@@ -20,6 +21,7 @@ impl Error for CsmError {
             CsmError::Action(e) => Some(e),
             CsmError::Deontic(e) => Some(e),
             CsmError::Causal(e) => Some(e),
+            CsmError::Forbidden(_) => None,
         }
     }
 }
@@ -30,6 +32,7 @@ impl Display for CsmError {
             CsmError::Action(e) => write!(f, "CSM Action Error: {e}"),
             CsmError::Deontic(e) => write!(f, "CSM Deontic Error: {e}"),
             CsmError::Causal(e) => write!(f, "CSM Causal Error: {e}"),
+            CsmError::Forbidden(s) => write!(f, "{s}"),
         }
     }
 }

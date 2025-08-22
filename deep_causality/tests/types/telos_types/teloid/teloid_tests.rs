@@ -28,7 +28,8 @@ fn get_dummy_context() -> BaseContext {
 fn get_dummy_action(speed: f64) -> ProposedAction {
     let mut params = HashMap::new();
     params.insert("speed".to_string(), ActionParameterValue::Number(speed));
-    ProposedAction::new(0, "test_action".to_string(), params)
+    let action_name = "TestSpeedAction".to_string();
+    ProposedAction::new(0, action_name, params)
 }
 
 #[test]

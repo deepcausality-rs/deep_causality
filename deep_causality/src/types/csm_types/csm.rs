@@ -4,8 +4,8 @@
  */
 
 use crate::{
-    ActionError, CSMMap, CausalAction, CausalState, CsmError, EffectEthos, PropagatingEffect,
-    ProposedAction, StateAction, TeloidModal, UpdateError,
+    ActionError, CSMMap, CausalAction, CausalState, CsmError, DeonticExplainable, EffectEthos,
+    PropagatingEffect, ProposedAction, StateAction, TeloidModal, TeloidTag, UpdateError,
 };
 use crate::{Datable, DeonticInferable, SpaceTemporal, Spatial, Symbolic, Temporal};
 use std::collections::HashMap;
@@ -57,7 +57,7 @@ where
     VT: Clone + Debug,
 {
     state_actions: Arc<RwLock<CSMMap<D, S, T, ST, SYM, VS, VT>>>,
-    effect_ethos: Option<EffectEthos<D, S, T, ST, SYM, VS, VT>>,
+    effect_ethos: Option<(EffectEthos<D, S, T, ST, SYM, VS, VT>, Vec<TeloidTag>)>,
 }
 
 #[allow(clippy::type_complexity)]
@@ -74,7 +74,7 @@ where
     /// Constructs a new CSM.
     pub fn new(
         state_actions: &[(&CausalState<D, S, T, ST, SYM, VS, VT>, &CausalAction)],
-        effect_ethos: Option<EffectEthos<D, S, T, ST, SYM, VS, VT>>,
+        effect_ethos: Option<(EffectEthos<D, S, T, ST, SYM, VS, VT>, &[TeloidTag])>,
     ) -> Self {
         let mut map = HashMap::with_capacity(state_actions.len());
 
@@ -82,15 +82,17 @@ where
             map.insert(*state.id(), ((*state).clone(), (*action).clone()));
         }
 
-        if let Some(ethos) = &effect_ethos {
+        if let Some((ethos, _)) = &effect_ethos {
             if !ethos.is_verified() {
                 panic!("EffectEthos must be verified before being used in a CSM.");
             }
         }
 
+        let ethos = effect_ethos.map(|(e, t)| (e, t.to_vec()));
+
         Self {
             state_actions: Arc::new(RwLock::new(map)),
-            effect_ethos,
+            effect_ethos: ethos,
         }
     }
 
@@ -157,12 +159,22 @@ where
 
         match &effect {
             PropagatingEffect::Deterministic(true) => {
-                if let Some(ethos) = &self.effect_ethos {
+                if let Some((ethos, tags)) = &self.effect_ethos {
                     if let Some(context) = state.context() {
-                        let proposed_action = self.create_proposed_action(state, &effect)?;
-                        let verdict = ethos.evaluate_action(&proposed_action, context)?;
+                        let action_name = format!(
+                            "proposed action for CSM State: {} version: {}",
+                            state.id(),
+                            state.version()
+                        );
 
-                        if verdict.outcome() != TeloidModal::Impermissible {
+                        let proposed_action =
+                            self.create_proposed_action(action_name, state, &effect)?;
+                        let verdict = ethos.evaluate_action(&proposed_action, context, tags)?;
+
+                        if verdict.outcome() == TeloidModal::Impermissible {
+                            let explanation = ethos.explain_verdict(&verdict)?;
+                            return Err(CsmError::Forbidden(explanation));
+                        } else {
                             action.fire()?;
                         }
                     } else {
@@ -228,12 +240,22 @@ where
 
             match &effect {
                 PropagatingEffect::Deterministic(true) => {
-                    if let Some(ethos) = &self.effect_ethos {
+                    if let Some((ethos, tags)) = &self.effect_ethos {
                         if let Some(context) = state.context() {
-                            let proposed_action = self.create_proposed_action(state, &effect)?;
-                            let verdict = ethos.evaluate_action(&proposed_action, context)?;
+                            let action_name = format!(
+                                "proposed action for CSM State: {} version: {}",
+                                state.id(),
+                                state.version()
+                            );
 
-                            if verdict.outcome() != TeloidModal::Impermissible {
+                            let proposed_action =
+                                self.create_proposed_action(action_name, state, &effect)?;
+                            let verdict = ethos.evaluate_action(&proposed_action, context, tags)?;
+
+                            if verdict.outcome() == TeloidModal::Impermissible {
+                                let explanation = ethos.explain_verdict(&verdict)?;
+                                return Err(CsmError::Forbidden(explanation));
+                            } else {
                                 action.fire()?;
                             }
                         } else {
@@ -243,7 +265,7 @@ where
                             )));
                         }
                     } else {
-                        action.fire()?;
+                        action.fire()?
                     }
                 }
                 PropagatingEffect::Deterministic(false) => {
@@ -283,16 +305,13 @@ where
 
     fn create_proposed_action(
         &self,
+        action_name: String,
         state: &CausalState<D, S, T, ST, SYM, VS, VT>,
         effect: &PropagatingEffect,
     ) -> Result<ProposedAction, CsmError> {
         let mut params = HashMap::new();
         params.insert("trigger_effect".to_string(), effect.clone().into());
 
-        Ok(ProposedAction::new(
-            *state.id() as u64,
-            state.causaloid().description().to_string(),
-            params,
-        ))
+        Ok(ProposedAction::new(*state.id() as u64, action_name, params))
     }
 }

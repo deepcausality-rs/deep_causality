@@ -37,6 +37,9 @@ pub enum DeonticError {
     /// a conclusive verdict.
     InconclusiveVerdict,
 
+    /// No applicable norms were found for a given action.
+    NoRelevantNormsFound,
+
     /// The CausalState is missing a context, which is required for deontic evaluation.
     MissingContext,
 
@@ -108,6 +111,12 @@ impl fmt::Display for DeonticError {
                 write!(
                     f,
                     "Edge from {source} to {target} could not be created; a node may not exist or the edge already exists."
+                )
+            }
+            DeonticError::NoRelevantNormsFound => {
+                write!(
+                    f,
+                    "No relevant norms found, so the action cannot be decided. Please check if you have added the correct tags."
                 )
             }
         }

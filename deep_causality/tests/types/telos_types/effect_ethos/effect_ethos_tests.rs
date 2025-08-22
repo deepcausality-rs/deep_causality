@@ -245,8 +245,9 @@ fn test_evaluate_action_fails_if_not_verified() {
 
     let action = get_dummy_action("drive", 40.0);
     let context = get_dummy_context();
+    let tags = ["drive"];
 
-    let result = ethos.evaluate_action(&action, &context);
+    let result = ethos.evaluate_action(&action, &context, &tags);
     assert!(result.is_err());
     assert!(matches!(result.unwrap_err(), DeonticError::GraphIsCyclic)); // is_verified is false, so it fails this check first
 }
@@ -280,7 +281,9 @@ fn test_evaluate_action_impermissible_wins() {
 
     let action = get_dummy_action("drive", 60.0); // speed > 50.0
     let context = get_dummy_context();
-    let verdict = ethos.evaluate_action(&action, &context).unwrap();
+    let tags = ["drive"];
+
+    let verdict = ethos.evaluate_action(&action, &context, &tags).unwrap();
 
     let mut just = verdict.justification().clone();
     just.sort();
@@ -320,7 +323,9 @@ fn test_evaluate_action_lex_posterior_wins() {
 
     let action = get_dummy_action("drive", 40.0);
     let context = get_dummy_context();
-    let verdict = ethos.evaluate_action(&action, &context).unwrap();
+    let tags = ["drive"];
+
+    let verdict = ethos.evaluate_action(&action, &context, &tags).unwrap();
 
     // Impermissible (newer) wins
     assert_eq!(verdict.outcome(), TeloidModal::Impermissible);
@@ -359,7 +364,9 @@ fn test_evaluate_action_lex_specialis_wins() {
 
     let action = get_dummy_action("drive", 40.0);
     let context = get_dummy_context();
-    let verdict = ethos.evaluate_action(&action, &context).unwrap();
+    let tags = ["drive"];
+
+    let verdict = ethos.evaluate_action(&action, &context, &tags).unwrap();
 
     // Impermissible (more specific) wins
     assert_eq!(verdict.outcome(), TeloidModal::Impermissible);
@@ -398,7 +405,9 @@ fn test_evaluate_action_with_inheritance() {
 
     let action = get_dummy_action("drive", 40.0);
     let context = get_dummy_context();
-    let verdict = ethos.evaluate_action(&action, &context).unwrap();
+    let tags = ["drive"];
+
+    let verdict = ethos.evaluate_action(&action, &context, &tags).unwrap();
 
     // Both are active, Obligatory has higher precedence than Optional
     assert_eq!(verdict.outcome(), TeloidModal::Obligatory);
@@ -426,7 +435,9 @@ fn test_inconclusive_verdict_no_active_norms() {
 
     let action = get_dummy_action("drive", 40.0);
     let context = get_dummy_context();
-    let result = ethos.evaluate_action(&action, &context);
+    let tags = ["drive"];
+
+    let result = ethos.evaluate_action(&action, &context, &tags);
 
     assert!(result.is_err());
     assert!(matches!(
@@ -453,7 +464,9 @@ fn test_explain_verdict_impermissible() {
 
     let action = get_dummy_action("drive", 60.0);
     let context = get_dummy_context();
-    let verdict = ethos.evaluate_action(&action, &context).unwrap();
+    let tags = ["drive"];
+
+    let verdict = ethos.evaluate_action(&action, &context, &tags).unwrap();
     let explanation = ethos.explain_verdict(&verdict).unwrap();
 
     assert!(explanation.contains("The final verdict is Impermissible."));
@@ -479,7 +492,9 @@ fn test_explain_verdict_obligatory() {
 
     let action = get_dummy_action("drive", 40.0);
     let context = get_dummy_context();
-    let verdict = ethos.evaluate_action(&action, &context).unwrap();
+    let tags = ["drive"];
+
+    let verdict = ethos.evaluate_action(&action, &context, &tags).unwrap();
     let explanation = ethos.explain_verdict(&verdict).unwrap();
 
     assert!(explanation.contains("The final verdict is Obligatory."));
@@ -505,7 +520,9 @@ fn test_explain_verdict_optional() {
 
     let action = get_dummy_action("drive", 40.0);
     let context = get_dummy_context();
-    let verdict = ethos.evaluate_action(&action, &context).unwrap();
+    let tags = ["drive"];
+
+    let verdict = ethos.evaluate_action(&action, &context, &tags).unwrap();
     let explanation = ethos.explain_verdict(&verdict).unwrap();
 
     assert!(explanation.contains("The final verdict is Optional(42)."));

@@ -106,7 +106,7 @@ fn test_missing_context() {
 #[test]
 fn test_graph_error() {
     let inner_error = GraphError::NodeNotFound(10);
-    let error = DeonticError::GraphError(inner_error.clone());
+    let error = DeonticError::GraphError(inner_error);
     assert_eq!(
         format!("{}", error),
         format!(
@@ -148,10 +148,10 @@ fn test_from_graph_error() {
 
     // Test other GraphError variants are wrapped
     let other_graph_error = GraphError::NodeNotFound(10);
-    let deontic_error: DeonticError = other_graph_error.clone().into();
+    let deontic_error: DeonticError = other_graph_error.into();
     assert_eq!(deontic_error, DeonticError::GraphError(other_graph_error));
 
     let another_graph_error = GraphError::NodeNotFound(20);
-    let deontic_error: DeonticError = another_graph_error.clone().into();
+    let deontic_error: DeonticError = another_graph_error.into();
     assert_eq!(deontic_error, DeonticError::GraphError(another_graph_error));
 }

@@ -3,12 +3,13 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use ultragraph::GraphView;
 
 use crate::{
-    Context, DeonticError, EffectEthos, ProposedAction, Teloid, TeloidID, TeloidStorable, Verdict,
+    Context, DeonticError, EffectEthos, ProposedAction, Teloid, TeloidID, TeloidStorable,
+    TeloidTag, Verdict,
 };
 use crate::{Datable, DeonticInferable, SpaceTemporal, Spatial, Symbolic, Temporal};
 
@@ -30,7 +31,7 @@ where
     /// 1. **Graph State Check**: Ensures the internal teloid graph is frozen and verified for acyclicity
     ///    to guarantee a stable and reliable evaluation.
     /// 2. **Filtering (Step 1)**: Identifies a candidate set of `Teloid`s (norms/beliefs) relevant to the
-    ///    `ProposedAction` using a tag index.
+    ///    `ProposedAction` using a list of tags.
     /// 3. **Activation (Step 2)**: Filters the candidate `Teloid`s based on their activation predicates,
     ///    which determine if a `Teloid` is applicable in the given `Context`.
     /// 4. **Belief Inference & Conflict Resolution (Steps 3 & 4)**: Resolves any conflicts among the
@@ -40,6 +41,7 @@ where
     /// # Arguments
     /// * `action` - A reference to the `ProposedAction` to be evaluated.
     /// * `context` - A reference to the `Context` providing environmental and situational data.
+    /// * `tags` - A slice of `TeloidTag`s used to retrieve relevant norms from the tag index.
     ///
     /// # Returns
     /// A `Result` which is:
@@ -50,6 +52,7 @@ where
         &self,
         action: &ProposedAction,
         context: &Context<D, S, T, ST, SYM, VS, VT>,
+        tags: &[TeloidTag],
     ) -> Result<Verdict, DeonticError> {
         // Mitigation for Risk A2: Explicitly check if the graph is frozen.
         if !self.teloid_graph.graph.is_frozen() {
@@ -62,10 +65,16 @@ where
             return Err(DeonticError::GraphIsCyclic);
         }
 
-        // Step 1: Filtering - Get a candidate set of Teloids using the tag index.
-        let Some(candidate_ids) = self.tag_index.get(action.action_name()) else {
-            // No relevant norms found, so the action is inconclusive by default.
-            return Err(DeonticError::InconclusiveVerdict);
+        // Step 1: Filtering - Get a candidate set of Teloids using the provided tags.
+        let candidate_ids: HashSet<TeloidID> = tags
+            .iter()
+            .flat_map(|tag| self.tag_index.get(tag).into_iter().flatten())
+            .copied()
+            .collect();
+
+        if candidate_ids.is_empty() {
+            // No relevant norms found, so the action cannot be decided.
+            return Err(DeonticError::NoRelevantNormsFound);
         };
 
         // Mitigation for Risk P1: Create a local cache for this evaluation.

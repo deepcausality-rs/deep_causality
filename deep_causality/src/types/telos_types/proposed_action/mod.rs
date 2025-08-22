@@ -19,8 +19,7 @@ use std::collections::HashMap;
 pub struct ProposedAction {
     /// A unique identifier for this action instance.
     action_id: u64,
-    /// A string identifying the class of action (e.g., "vehicle.drive").
-    /// This is used to filter for relevant Teloids.
+    /// A string description of the proposed action (e.g., "vehicle.drive").
     action_name: String,
     /// A map of specific parameters for this action instance.
     /// (e.g., {"speed": ActionParameterValue::Number(30.0)})

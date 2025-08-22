@@ -4,8 +4,8 @@
  */
 
 use crate::{
-    Context, Datable, DeonticError, ProposedAction, SpaceTemporal, Spatial, Symbolic, Temporal,
-    Verdict,
+    Context, Datable, DeonticError, ProposedAction, SpaceTemporal, Spatial, Symbolic, TeloidTag,
+    Temporal, Verdict,
 };
 
 /// Defines the public API for a deontic reasoning engine.
@@ -25,6 +25,7 @@ where
     /// # Arguments
     /// * `action` - A reference to the `ProposedAction` being evaluated.
     /// * `context` - A reference to the current `Context` providing the state of the world.
+    /// * `tags` - A slice of `TeloidTag`s used to retrieve relevant norms from the tag index.
     ///
     /// # Returns
     /// A `Result` containing either:
@@ -34,5 +35,6 @@ where
         &self,
         action: &ProposedAction,
         context: &Context<D, S, T, ST, SYM, VS, VT>,
+        tags: &[TeloidTag],
     ) -> Result<Verdict, DeonticError>;
 }
