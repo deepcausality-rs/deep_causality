@@ -5,6 +5,10 @@
 mod display;
 
 /// Defines the nature of a relationship between two Teloids in the TeloidGraph.
+///
+/// For more details, see section 5 (Causality as EPP) and 8 (Teleology) in The EPP reference paper:
+/// https://github.com/deepcausality-rs/papers/blob/main/effect_propagation_process/epp.pdf
+///
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Default)]
 pub enum TeloidRelation {
     /// Represents standard deontic inheritance, where a more general norm's

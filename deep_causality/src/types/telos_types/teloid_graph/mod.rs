@@ -13,6 +13,10 @@ use ultragraph::UltraGraphWeighted;
 /// This struct wraps `UltraGraphWeighted`, storing only `TeloidID`s in the nodes
 /// for memory efficiency. The edges are weighted with `TeloidRelation` to represent
 /// inheritance or defeasance between norms.
+///
+/// For more details, see section 5 (Causality as EPP) and 8 (Teleology) in The EPP reference paper:
+/// https://github.com/deepcausality-rs/papers/blob/main/effect_propagation_process/epp.pdf
+///
 #[derive(Clone, Debug, Default)]
 pub struct TeloidGraph {
     // The internal graph stores TeloidIDs in nodes and TeloidRelations on edges.

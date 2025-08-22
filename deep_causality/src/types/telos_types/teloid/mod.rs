@@ -105,6 +105,10 @@ where
     /// // The Teloid is now created and represents the rule "driving faster than 25mph is impermissible".
     /// // An evaluation engine would later use its `activation_predicate` to check it.
     /// ```
+    ///
+    /// For more details, see section 5 (Causality as EPP) and 8 (Teleology) in The EPP reference paper:
+    /// https://github.com/deepcausality-rs/papers/blob/main/effect_propagation_process/epp.pdf
+    ///
     #[allow(clippy::type_complexity)]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
