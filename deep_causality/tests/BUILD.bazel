@@ -312,7 +312,7 @@ rust_test_suite(
 rust_test_suite(
     name = "telos_types_tests",
     srcs = glob([
-        "types/telos_types/**/*_tests.rs",
+        "types/telos_types/*/*_tests.rs",
     ]),
     tags = [
         "telos_types_tests",
