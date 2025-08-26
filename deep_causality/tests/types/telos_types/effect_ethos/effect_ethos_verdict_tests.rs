@@ -3,7 +3,6 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::types::telos_types::effect_ethos::utils_tests;
-use crate::types::telos_types::effect_ethos::utils_tests::TestEthos;
 use deep_causality::{DeonticError, DeonticExplainable, DeonticInferable, TeloidModal, Verdict};
 
 #[test]
@@ -121,7 +120,7 @@ fn test_explain_verdict_optional() {
 
 #[test]
 fn test_explain_verdict_teloid_not_found() {
-    let ethos = TestEthos::new(); // Empty ethos
+    let ethos = utils_tests::TestEthos::new(); // Empty ethos
     let bad_verdict = Verdict::new(TeloidModal::Obligatory, vec![999]); // Contains non-existent ID
 
     let result = ethos.explain_verdict(&bad_verdict);

@@ -42,7 +42,7 @@ where
         norms: Vec<Teloid<D, S, T, ST, SYM, VS, VT>>,
     ) -> Result<Verdict, DeonticError> {
         if norms.is_empty() {
-            return Err(DeonticError::InconclusiveVerdict);
+            return Err(DeonticError::NoRelevantNormsFound);
         }
 
         // Store all IDs for the final justification, regardless of modality.
