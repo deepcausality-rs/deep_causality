@@ -3,10 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::traits::contextuable::space_temporal::SpaceTemporal;
-use crate::traits::contextuable::spatial::Spatial;
-use crate::traits::contextuable::temporal::Temporal;
-use crate::{Causable, CausalityError, Causaloid, Context, Datable, PropagatingEffect, Symbolic};
+use crate::{Causable, Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
+use crate::{CausalityError, Causaloid, Context, PropagatingEffect};
 use deep_causality_macros::{Constructor, Getters};
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;

@@ -3,11 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{
-    ActionError, CSMMap, CausalAction, CausalState, CsmError, DeonticExplainable, EffectEthos,
-    PropagatingEffect, ProposedAction, StateAction, TeloidModal, TeloidTag, UpdateError,
-};
-use crate::{Datable, DeonticInferable, SpaceTemporal, Spatial, Symbolic, Temporal};
+mod eval;
+
+use crate::{CSMMap, CausalAction, CausalState, EffectEthos, StateAction, TeloidTag, UpdateError};
+use crate::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
@@ -140,69 +139,6 @@ where
         Ok(())
     }
 
-    /// Evaluates a single causal state at the index position id.
-    /// If the state evaluates to `PropagatingEffect::Deterministic(true)`, the associated action is fired.
-    ///
-    /// # Errors
-    /// Returns `CsmError` if the state does not exist, evaluation fails, the effect is not
-    /// deterministic, or the action fails to fire.
-    pub fn eval_single_state(&self, id: usize, data: &PropagatingEffect) -> Result<(), CsmError> {
-        let binding = self.state_actions.read().unwrap();
-
-        let (state, action) = binding.get(&id).ok_or_else(|| {
-            CsmError::Action(
-                format!("State {id} does not exist. Add it first before evaluating.").into(),
-            )
-        })?;
-
-        let effect = state.eval_with_data(data)?;
-
-        match &effect {
-            PropagatingEffect::Deterministic(true) => {
-                if let Some((ethos, tags)) = &self.effect_ethos {
-                    if let Some(context) = state.context() {
-                        let action_name = format!(
-                            "proposed action for CSM State: {} version: {}",
-                            state.id(),
-                            state.version()
-                        );
-
-                        let proposed_action =
-                            self.create_proposed_action(action_name, state, &effect)?;
-                        let verdict = ethos.evaluate_action(&proposed_action, context, tags)?;
-
-                        if verdict.outcome() == TeloidModal::Impermissible {
-                            let explanation = ethos.explain_verdict(&verdict)?;
-                            return Err(CsmError::Forbidden(explanation));
-                        } else {
-                            action.fire()?;
-                        }
-                    } else {
-                        return Err(CsmError::Action(ActionError::new(
-                            "Cannot evaluate action with ethos because state context is missing."
-                                .into(),
-                        )));
-                    }
-                } else {
-                    action.fire()?;
-                }
-                Ok(())
-            }
-            PropagatingEffect::Deterministic(false) => {
-                // State evaluated to false, do nothing.
-                Ok(())
-            }
-            _ => {
-                // The effect was not deterministic, which is an invalid state for a CSM.
-                Err(CsmError::Action(ActionError(format!(
-                    "CSM[eval]: Invalid non-deterministic effect '{:?}' for state {}",
-                    effect,
-                    state.id()
-                ))))
-            }
-        }
-    }
-
     /// Updates a causal state with a new state at the index position idx.
     /// Returns UpdateError if the update operation failed.
     pub fn update_single_state(
@@ -226,65 +162,6 @@ where
         Ok(())
     }
 
-    /// Evaluates all causal states in the CSM using their internal data.
-    /// For each state that evaluates to `PropagatingEffect::Deterministic(true)`, the associated action is fired.
-    ///
-    /// # Errors
-    /// Returns `CsmError` if any state evaluation fails, produces a non-deterministic effect,
-    /// or any triggered action fails to fire.
-    pub fn eval_all_states(&self) -> Result<(), CsmError> {
-        let binding = self.state_actions.read().unwrap();
-
-        for (_id, (state, action)) in binding.iter() {
-            let effect = state.eval()?;
-
-            match &effect {
-                PropagatingEffect::Deterministic(true) => {
-                    if let Some((ethos, tags)) = &self.effect_ethos {
-                        if let Some(context) = state.context() {
-                            let action_name = format!(
-                                "proposed action for CSM State: {} version: {}",
-                                state.id(),
-                                state.version()
-                            );
-
-                            let proposed_action =
-                                self.create_proposed_action(action_name, state, &effect)?;
-                            let verdict = ethos.evaluate_action(&proposed_action, context, tags)?;
-
-                            if verdict.outcome() == TeloidModal::Impermissible {
-                                let explanation = ethos.explain_verdict(&verdict)?;
-                                return Err(CsmError::Forbidden(explanation));
-                            } else {
-                                action.fire()?;
-                            }
-                        } else {
-                            return Err(CsmError::Action(ActionError::new(
-                                "Cannot evaluate action with ethos because state context is missing."
-                                    .into(),
-                            )));
-                        }
-                    } else {
-                        action.fire()?
-                    }
-                }
-                PropagatingEffect::Deterministic(false) => {
-                    // State evaluated to false, do nothing, continue loop.
-                }
-                _ => {
-                    // The effect was not deterministic, which is an invalid state for a CSM.
-                    return Err(CsmError::Action(ActionError(format!(
-                        "CSM[eval]: Invalid non-deterministic effect '{:?}' for state {}",
-                        effect,
-                        state.id()
-                    ))));
-                }
-            }
-        }
-
-        Ok(())
-    }
-
     /// Updates all causal state with a new state collection.
     /// Note, this operation erases all previous states in the CSM by generating a new collection.
     /// Returns UpdateError if the update operation failed.
@@ -301,17 +178,5 @@ where
         // Replace the existing map with the newly generated one.
         *self.state_actions.write().unwrap() = state_map;
         Ok(())
-    }
-
-    fn create_proposed_action(
-        &self,
-        action_name: String,
-        state: &CausalState<D, S, T, ST, SYM, VS, VT>,
-        effect: &PropagatingEffect,
-    ) -> Result<ProposedAction, CsmError> {
-        let mut params = HashMap::new();
-        params.insert("trigger_effect".to_string(), effect.clone().into());
-
-        Ok(ProposedAction::new(*state.id() as u64, action_name, params))
     }
 }
