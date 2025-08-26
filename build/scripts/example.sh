@@ -18,7 +18,7 @@ echo "smoking: Simple causal model without  Context"
 echo "--------------------------------"
 echo ""
 
-select opt in  cate csm dbn granger starter scm rcm quit;
+select opt in  cate csm dbn ethos granger starter scm rcm quit;
 do
   case $opt in
 
@@ -37,6 +37,12 @@ do
     dbn)
       echo "Selected example: DBN (Dynamic Bayesian Network)"
       command cargo run --release --bin example-dbn
+      break
+      ;;
+
+    ethos)
+      echo "Selected example: ethos (CSM with Effect Ethos)"
+      command cargo run --release --bin example_effect_ethos
       break
       ;;
 

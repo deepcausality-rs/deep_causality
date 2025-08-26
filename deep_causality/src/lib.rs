@@ -81,6 +81,11 @@ pub use crate::traits::observable::ObservableReasoning;
 // Scalar Traits
 pub use crate::traits::scalar::scalar_projector::ScalarProjector;
 pub use crate::traits::scalar::scalar_value::ScalarValue;
+// Teloid Traits
+pub use crate::traits::telos::deontic_explainable::DeonticExplainable;
+pub use crate::traits::telos::deontic_inferable::DeonticInferable;
+pub use crate::traits::telos::teloid_storable::TeloidStorable;
+pub use crate::traits::telos::teloidable::Teloidable;
 // Transferable Trait
 pub use crate::traits::transferable::Transferable;
 //
@@ -88,11 +93,12 @@ pub use crate::traits::transferable::Transferable;
 //
 // Alias types
 pub use crate::types::alias_types::alias_base::*;
+pub use crate::types::alias_types::alias_csm::*;
 pub use crate::types::alias_types::alias_function::*;
 pub use crate::types::alias_types::alias_lock::*;
 pub use crate::types::alias_types::alias_primitives::*;
 pub use crate::types::alias_types::alias_uniform::*;
-pub use crate::types::alias_types::*;
+// pub use crate::types::alias_types::*;
 // Causal types
 pub use crate::types::causal_types::causal_type::CausaloidType;
 pub use crate::types::causal_types::causaloid::Causaloid;
@@ -136,7 +142,7 @@ pub use crate::types::context_node_types::time::time_kind::TimeKind;
 pub use crate::types::context_types::relation_kind::*;
 pub use crate::types::context_types::time_scale::TimeScale;
 // CSM types
-pub use crate::types::csm_types::CSM;
+pub use crate::types::csm_types::csm::CSM;
 pub use crate::types::csm_types::csm_action::CausalAction;
 pub use crate::types::csm_types::csm_state::CausalState;
 // Generative types
@@ -154,6 +160,18 @@ pub use crate::types::reasoning_types::propagating_effect::PropagatingEffect;
 //Symbolic types
 pub use crate::types::symbolic_types::symbolic_representation::SymbolicRepresentation;
 pub use crate::types::symbolic_types::symbolic_result::SymbolicResult;
+//
+// Teloid types
+pub use crate::types::telos_types::action_parameter_value::ActionParameterValue;
+pub use crate::types::telos_types::effect_ethos::EffectEthos;
+pub use crate::types::telos_types::proposed_action::ProposedAction;
+pub use crate::types::telos_types::tag_index::TagIndex;
+pub use crate::types::telos_types::teloid::{Teloid, TeloidMetaData};
+pub use crate::types::telos_types::teloid_graph::*;
+pub use crate::types::telos_types::teloid_modal::TeloidModal;
+pub use crate::types::telos_types::teloid_relation::TeloidRelation;
+pub use crate::types::telos_types::teloid_store::TeloidStore;
+pub use crate::types::telos_types::teloid_verdict::Verdict;
 // Utils
 //
 pub use crate::utils::time_utils::*;

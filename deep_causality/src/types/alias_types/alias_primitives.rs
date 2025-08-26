@@ -6,6 +6,8 @@
 /// The unique identifier for a Cause or Context in the Causality Graph
 pub type IdentificationValue = u64;
 
+pub type TeloidTag = &'static str;
+pub type TeloidID = u64;
 pub type ContextId = u64;
 pub type ContextoidId = u64;
 pub type CausaloidId = u64;

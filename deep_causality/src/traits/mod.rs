@@ -16,4 +16,5 @@ pub mod indexable;
 pub mod inferable;
 pub mod observable;
 pub mod scalar;
+pub mod telos;
 pub mod transferable;

@@ -2,8 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
 use crate::*;
+use std::sync::Arc;
 
 pub fn get_context() -> BaseContext {
     let id = 1;
@@ -137,6 +137,32 @@ pub fn get_test_causaloid_deterministic() -> BaseCausaloid {
     }
 
     Causaloid::new(id, causal_fn, description)
+}
+
+pub fn get_test_causaloid_deterministic_with_context(context: BaseContext) -> BaseCausaloid {
+    let id: IdentificationValue = 1;
+    let context = Arc::new(context);
+    let description = "Inverts any input";
+
+    fn causal_fn(
+        effect: &PropagatingEffect,
+        _context: &Arc<BaseContext>,
+    ) -> Result<PropagatingEffect, CausalityError> {
+        let obs = match effect {
+            // If it's the Deterministic variant, extract the inner value.
+            PropagatingEffect::Deterministic(val) => *val,
+            // For any other type of effect, this function cannot proceed, so return an error.
+            _ => return Err(CausalityError(
+                "Causal function expected Deterministic effect but received a different variant."
+                    .into(),
+            )),
+        };
+
+        // Just invert the value.
+        Ok(PropagatingEffect::Deterministic(!obs))
+    }
+
+    Causaloid::new_with_context(id, causal_fn, context, description)
 }
 
 pub fn get_test_causaloid_deterministic_input_output() -> BaseCausaloid {
