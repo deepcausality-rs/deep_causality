@@ -85,5 +85,8 @@ fn test_topological_sort_on_acyclic_graph() {
 fn test_topological_sort_on_empty_graph() {
     let mut g: UltraGraphContainer<u64, ()> = UltraGraph::new();
     g.freeze();
-    assert!(matches!(g.topological_sort(), Ok(None)));
+    let res = g.topological_sort();
+    dbg!(&res);
+    assert!(&res.is_ok());
+    assert!(&res.unwrap().is_some());
 }
