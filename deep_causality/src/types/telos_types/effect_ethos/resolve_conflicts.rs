@@ -53,10 +53,8 @@ where
         let mut inferred_beliefs: HashMap<TeloidID, Teloid<D, S, T, ST, SYM, VS, VT>> =
             HashMap::new();
 
-        let mut id_to_index: HashMap<TeloidID, usize> = HashMap::new();
-        for (i, &id) in self.teloid_graph.graph.get_all_nodes().iter().enumerate() {
-            id_to_index.insert(*id, i);
-        }
+        // Use the authoritative mapping maintained by EffectEthos
+        let id_to_index = &self.id_to_index_map;
 
         // Initialize the queue with the indices of the active teloids.
         for &teloid in active_teloids {
