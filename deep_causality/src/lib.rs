@@ -142,9 +142,9 @@ pub use crate::types::context_node_types::time::time_kind::TimeKind;
 pub use crate::types::context_types::relation_kind::*;
 pub use crate::types::context_types::time_scale::TimeScale;
 // CSM types
+pub use crate::types::csm_types::csm::CSM;
 pub use crate::types::csm_types::csm_action::CausalAction;
 pub use crate::types::csm_types::csm_state::CausalState;
-pub use types::csm_types::csm::CSM;
 // Generative types
 pub use crate::types::generative_types::generative_output::GenerativeOutput;
 pub use crate::types::generative_types::generative_trigger::GenerativeTrigger;

@@ -1,0 +1,176 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+use crate::types::csm_types::csm::csm_utils_test;
+use deep_causality::*;
+
+#[test]
+#[should_panic(expected = "EffectEthos must be verified before being used in a CSM.")]
+fn test_new_csm_with_unverified_ethos_panics() {
+    let state = CausalState::new(
+        1,
+        1,
+        PropagatingEffect::None,
+        csm_utils_test::get_test_causaloid(true),
+    );
+    let action = CausalAction::new(|| Ok(()), "", 1);
+    let ethos = csm_utils_test::get_effect_ethos(false, true); // Not verified
+
+    CSM::new(&[(&state, &action)], Some((ethos, &["test_tag"])));
+}
+
+#[test]
+fn test_eval_single_state_with_ethos_impermissible_verdict() {
+    let state = CausalState::new(
+        1,
+        1,
+        PropagatingEffect::None,
+        csm_utils_test::get_test_causaloid(true),
+    );
+    let action = csm_utils_test::get_test_action_with_tracker();
+    let ethos = csm_utils_test::get_effect_ethos(true, true); // Verified, Impermissible
+
+    let csm = CSM::new(&[(&state, &action)], Some((ethos, &["test_tag"])));
+    let res = csm.eval_single_state(1, &PropagatingEffect::Deterministic(true));
+    // dbg!(&res);
+
+    assert!(res.is_ok());
+}
+
+#[test]
+fn test_eval_single_state_with_ethos_permissible_verdict() {
+    let state = CausalState::new(
+        1,
+        1,
+        PropagatingEffect::None,
+        csm_utils_test::get_test_causaloid(true),
+    );
+    let action = csm_utils_test::get_test_action_with_tracker();
+    let ethos = csm_utils_test::get_effect_ethos(true, false); // Verified, Permissible
+
+    let csm = CSM::new(&[(&state, &action)], Some((ethos, &["test_tag"])));
+    let res = csm.eval_single_state(1, &PropagatingEffect::Deterministic(true));
+    // dbg!(&res);
+    assert!(res.is_ok());
+}
+
+#[test]
+fn test_eval_single_state_with_ethos_missing_context_errs() {
+    let state = CausalState::new(
+        1,
+        1,
+        PropagatingEffect::None,
+        csm_utils_test::get_test_causaloid(false),
+    ); // No context
+    let action = CausalAction::new(|| Ok(()), "", 1);
+    let ethos = csm_utils_test::get_effect_ethos(true, true);
+
+    let csm = CSM::new(&[(&state, &action)], Some((ethos, &["test_tag"])));
+    let res = csm.eval_single_state(1, &PropagatingEffect::None);
+
+    assert!(res.is_err());
+    if let Err(CsmError::Action(e)) = res {
+        assert_eq!(
+            e.to_string(),
+            "ActionError: Cannot evaluate action with ethos because state context is missing."
+        );
+    } else {
+        panic!("Expected CsmError::Action");
+    }
+}
+
+#[test]
+fn test_eval_all_states() {
+    let state = CausalState::new(
+        1,
+        1,
+        PropagatingEffect::Deterministic(true),
+        csm_utils_test::get_test_causaloid(true),
+    );
+    let action = csm_utils_test::get_test_action_with_tracker();
+    let ethos = csm_utils_test::get_effect_ethos(true, false); // Verified, Permissible
+
+    let csm = CSM::new(&[(&state, &action)], Some((ethos, &["test_tag"])));
+    let res = csm.eval_all_states();
+    dbg!(&res);
+    assert!(res.is_ok());
+}
+
+#[test]
+fn test_eval_all_state_with_ethos_permissible_verdict() {
+    let state = CausalState::new(
+        1,
+        1,
+        PropagatingEffect::Deterministic(true),
+        csm_utils_test::get_test_causaloid(true),
+    );
+    let action = csm_utils_test::get_test_action_with_tracker();
+    let ethos = csm_utils_test::get_effect_ethos(true, false); // Verified, Permissible
+
+    let csm = CSM::new(&[(&state, &action)], Some((ethos, &["test_tag"])));
+    let res = csm.eval_all_states();
+    // dbg!(&res);
+    assert!(res.is_ok());
+}
+
+#[test]
+fn test_eval_all_states_non_deterministic_error() {
+    // State 1: OK
+    let state_1 = CausalState::new(
+        1,
+        1,
+        PropagatingEffect::None,
+        csm_utils_test::get_test_causaloid(true),
+    ); // No context
+    let action_1 = csm_utils_test::get_test_action();
+
+    // State 2: Non-deterministic
+    let action_2 = csm_utils_test::get_test_action();
+    let causaloid_2 = csm_utils_test::get_test_causaloid(true);
+    let state_2 = CausalState::new(2, 2, PropagatingEffect::None, causaloid_2);
+
+    let ethos = csm_utils_test::get_effect_ethos(true, true);
+
+    let csm = CSM::new(
+        &[(&state_1, &action_1), (&state_2, &action_2)],
+        Some((ethos, &["test_tag"])),
+    );
+
+    let res = csm.eval_all_states();
+    dbg!(&res);
+
+    assert!(res.is_err());
+
+    let e = res.unwrap_err();
+    assert!(
+        e.to_string()
+            .contains("Causal function expected Deterministic effect")
+    );
+}
+
+#[test]
+fn test_eval_all_states_missing_context_error() {
+    let state = CausalState::new(
+        1,
+        1,
+        PropagatingEffect::Deterministic(true),
+        csm_utils_test::get_test_causaloid(false),
+    ); // No context
+    let action = CausalAction::new(|| Ok(()), "", 1);
+    let ethos = csm_utils_test::get_effect_ethos(true, true);
+
+    let csm = CSM::new(&[(&state, &action)], Some((ethos, &["test_tag"])));
+    let res = csm.eval_all_states();
+
+    assert!(res.is_err());
+    if let Err(CsmError::Action(e)) = res {
+        assert_eq!(
+            e.to_string(),
+            "ActionError: Cannot evaluate action with ethos because state context is missing."
+        );
+    } else {
+        panic!("Expected CsmError::Action");
+    }
+}
