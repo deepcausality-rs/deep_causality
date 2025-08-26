@@ -2,7 +2,6 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
 use crate::types::csm_types::csm::csm_utils_test;
 use deep_causality::*;
 
@@ -22,7 +21,7 @@ fn test_new_csm_with_unverified_ethos_panics() {
 }
 
 #[test]
-fn test_eval_single_state_with_ethos_impermissible_verdict() {
+fn test_eval_single_state_with_ethos_permitted_verdict() {
     let state = CausalState::new(
         1,
         1,
@@ -30,7 +29,7 @@ fn test_eval_single_state_with_ethos_impermissible_verdict() {
         csm_utils_test::get_test_causaloid(true),
     );
     let action = csm_utils_test::get_test_action_with_tracker();
-    let ethos = csm_utils_test::get_effect_ethos(true, true); // Verified, Impermissible
+    let ethos = csm_utils_test::get_effect_ethos(true, false); // Verified, Impermissible
 
     let csm = CSM::new(&[(&state, &action)], Some((ethos, &["test_tag"])));
     let res = csm.eval_single_state(1, &PropagatingEffect::Deterministic(true));
@@ -47,14 +46,37 @@ fn test_eval_single_state_with_ethos_permissible_verdict() {
         PropagatingEffect::None,
         csm_utils_test::get_test_causaloid(true),
     );
+    let impermissible = false;
     let action = csm_utils_test::get_test_action_with_tracker();
-    let ethos = csm_utils_test::get_effect_ethos(true, false); // Verified, Permissible
+    let ethos = csm_utils_test::get_effect_ethos(true, impermissible); // Verified, Permissible
 
     let csm = CSM::new(&[(&state, &action)], Some((ethos, &["test_tag"])));
     // we have to use Deterministic(false) b/c the causaloid inverts it to true, then the CSM evaluation starts.
     let res = csm.eval_single_state(1, &PropagatingEffect::Deterministic(false));
-    // dbg!(&res);
+    dbg!(&res);
     assert!(res.is_ok());
+}
+
+#[test]
+fn test_eval_single_state_with_ethos_impermissible_verdict() {
+    let state = CausalState::new(
+        1,
+        1,
+        PropagatingEffect::None,
+        csm_utils_test::get_test_causaloid(true),
+    );
+
+    let impermissible = true;
+    let action = csm_utils_test::get_test_action_with_tracker();
+    let ethos = csm_utils_test::get_effect_ethos(true, impermissible); // Verified, Permissible
+
+    let csm = CSM::new(&[(&state, &action)], Some((ethos, &["test_tag"])));
+    // we have to use Deterministic(false) b/c the causaloid inverts it to true, then the CSM evaluation starts.
+    let res = csm.eval_single_state(1, &PropagatingEffect::Deterministic(false));
+    dbg!(&res);
+    assert!(res.is_err());
+    let err = res.unwrap_err().to_string();
+    assert!(err.contains("Impermissible"));
 }
 
 #[test]
@@ -108,13 +130,37 @@ fn test_eval_all_state_with_ethos_permissible_verdict() {
         PropagatingEffect::Deterministic(false),
         csm_utils_test::get_test_causaloid(true),
     );
+
+    let impermissible = false;
     let action = csm_utils_test::get_test_action_with_tracker();
-    let ethos = csm_utils_test::get_effect_ethos(true, false); // Verified, Permissible
+    let ethos = csm_utils_test::get_effect_ethos(true, impermissible); // Verified, Permissible
 
     let csm = CSM::new(&[(&state, &action)], Some((ethos, &["test_tag"])));
     let res = csm.eval_all_states();
     // dbg!(&res);
     assert!(res.is_ok());
+}
+
+#[test]
+fn test_eval_all_state_with_ethos_impermissible_verdict() {
+    let state = CausalState::new(
+        1,
+        1,
+        // we have to use Deterministic(false) b/c the causaloid inverts it to true, then the CSM evaluation starts.
+        PropagatingEffect::Deterministic(false),
+        csm_utils_test::get_test_causaloid(true),
+    );
+
+    let impermissible = true;
+    let action = csm_utils_test::get_test_action_with_tracker();
+    let ethos = csm_utils_test::get_effect_ethos(true, impermissible); // Verified, Permissible
+
+    let csm = CSM::new(&[(&state, &action)], Some((ethos, &["test_tag"])));
+    let res = csm.eval_all_states();
+    // dbg!(&res);
+    assert!(res.is_err());
+    let e = res.unwrap_err();
+    assert!(e.to_string().contains("Impermissible"));
 }
 
 #[test]
