@@ -4,14 +4,14 @@
  */
 
 use crate::{TeloidID, TeloidTag};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 mod display;
 mod index;
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct TagIndex {
-    index: HashMap<TeloidTag, Vec<TeloidID>>,
+    index: HashMap<TeloidTag, HashSet<TeloidID>>,
 }
 
 impl TagIndex {

@@ -4,11 +4,13 @@
  */
 
 use crate::{TagIndex, TeloidID, TeloidTag};
+use std::collections::HashSet;
 
 impl TagIndex {
     /// Adds a `TeloidID` to the index for a given `TeloidTag`.
     ///
     /// If the tag does not exist in the index, it will be added.
+    /// If the ID already exists for the given tag, it will not be added again.
     ///
     /// # Arguments
     ///
@@ -24,12 +26,14 @@ impl TagIndex {
     /// let tag = "test_tag";
     /// let id = 1;
     /// tag_index.add(tag, id);
+    /// tag_index.add(tag, id); // Duplicates are ignored
+    /// assert_eq!(tag_index.get(tag).unwrap().len(), 1);
     /// ```
     pub fn add(&mut self, tag: TeloidTag, id: TeloidID) {
-        self.index.entry(tag).or_default().push(id);
+        self.index.entry(tag).or_default().insert(id);
     }
 
-    /// Retrieves a vector of `TeloidID`s associated with a given `TeloidTag`.
+    /// Retrieves a reference to the set of `TeloidID`s associated with a given `TeloidTag`.
     ///
     /// # Arguments
     ///
@@ -37,23 +41,27 @@ impl TagIndex {
     ///
     /// # Returns
     ///
-    /// An `Option` containing a reference to the vector of `TeloidID`s if the tag exists,
+    /// An `Option` containing a reference to the `HashSet` of `TeloidID`s if the tag exists,
     /// otherwise `None`.
     ///
     /// # Examples
     ///
     /// ```
     /// use deep_causality::{TagIndex, TeloidTag, TeloidID};
+    /// use std::collections::HashSet;
     ///
     /// let mut tag_index = TagIndex::new();
     /// let tag = "test_tag";
     /// let id = 1;
-    /// tag_index.add(tag.clone(), id);
+    /// tag_index.add(tag, id);
+    ///
+    /// let mut expected = HashSet::new();
+    /// expected.insert(1);
     ///
     /// let ids = tag_index.get(tag);
-    /// assert_eq!(ids, Some(&vec![1]));
+    /// assert_eq!(ids, Some(&expected));
     /// ```
-    pub fn get(&self, tag: &str) -> Option<&Vec<TeloidID>> {
+    pub fn get(&self, tag: &str) -> Option<&HashSet<TeloidID>> {
         self.index.get(tag)
     }
 
@@ -74,12 +82,16 @@ impl TagIndex {
     /// let mut tag_index = TagIndex::new();
     /// let tag = "test_tag";
     /// let id = 1;
-    /// tag_index.add(tag.clone(), id);
+    /// tag_index.add(tag, id);
     /// tag_index.remove(tag, id);
+    /// assert!(tag_index.get(tag).is_none() || tag_index.get(tag).unwrap().is_empty());
     /// ```
     pub fn remove(&mut self, tag: &str, id: TeloidID) {
-        if let Some(v) = self.index.get_mut(tag) {
-            v.retain(|x| *x != id);
+        if let Some(set) = self.index.get_mut(tag) {
+            set.remove(&id);
+            if set.is_empty() {
+                self.index.remove(tag);
+            }
         }
     }
 
@@ -101,12 +113,13 @@ impl TagIndex {
     /// let tag = "test_tag";
     /// let id1 = 1;
     /// let id2 = 2;
-    /// tag_index.add(tag.clone(), id1);
+    /// tag_index.add(tag, id1);
     /// tag_index.update(tag, id2);
+    /// assert_eq!(tag_index.get(tag).unwrap().len(), 2);
     /// ```
     pub fn update(&mut self, tag: &str, id: TeloidID) {
         if let Some(v) = self.index.get_mut(tag) {
-            v.push(id);
+            v.insert(id);
         }
     }
 
@@ -127,7 +140,7 @@ impl TagIndex {
     ///
     /// let mut tag_index = TagIndex::new();
     /// let tag = "test_tag";
-    /// tag_index.add(tag.clone(), 1);
+    /// tag_index.add(tag, 1);
     ///
     /// assert!(tag_index.contains_key(tag));
     /// ```
