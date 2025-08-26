@@ -173,4 +173,32 @@ fn test_len() {
     // Clearing changes len to 0
     tag_index.clear();
     assert_eq!(tag_index.len(), 0);
+    assert!(tag_index.is_empty());
+}
+#[test]
+fn test_display() {
+    let mut tag_index = TagIndex::new();
+
+    // 1. Test empty display
+    assert_eq!(format!("{}", tag_index), "TagIndex { size: 0 }");
+
+    // 2. Test display with one tag
+    tag_index.add("tag1", 101);
+    assert_eq!(format!("{}", tag_index), "TagIndex { size: 1 }");
+
+    // 3. Test display with a second tag
+    tag_index.add("tag2", 201);
+    assert_eq!(format!("{}", tag_index), "TagIndex { size: 2 }");
+}
+
+#[test]
+fn test_is_empty() {
+    let mut tag_index = TagIndex::new();
+    assert!(tag_index.is_empty());
+
+    tag_index.add("tag1", 101);
+    assert!(!tag_index.is_empty());
+
+    tag_index.clear();
+    assert!(tag_index.is_empty());
 }

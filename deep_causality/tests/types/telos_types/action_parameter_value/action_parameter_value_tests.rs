@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::ActionParameterValue;
+use deep_causality::{ActionParameterValue, PropagatingEffect};
 
 #[test]
 fn test_action_parameter_value_string() {
@@ -87,4 +87,31 @@ fn test_action_parameter_value_inequality_across_variants() {
     assert_ne!(val_num, val_bool);
 
     assert_ne!(val_int, val_bool);
+}
+
+#[test]
+fn test_from_propagating_effect() {
+    // Test Deterministic -> Boolean
+    let effect_det = PropagatingEffect::Deterministic(true);
+    let param_val: ActionParameterValue = effect_det.into();
+    assert_eq!(param_val, ActionParameterValue::Boolean(true));
+
+    // Test Numerical -> Number
+    let effect_num = PropagatingEffect::Numerical(42.5);
+    let param_val: ActionParameterValue = effect_num.into();
+    assert_eq!(param_val, ActionParameterValue::Number(42.5));
+
+    // Test Probabilistic -> Number
+    let effect_prob = PropagatingEffect::Probabilistic(0.75);
+    let param_val: ActionParameterValue = effect_prob.into();
+    assert_eq!(param_val, ActionParameterValue::Number(0.75));
+
+    // Test other variants (e.g., NoEffect) -> String
+    // This relies on the Debug representation of the enum variant.
+    let effect_other = PropagatingEffect::None;
+    let param_val: ActionParameterValue = effect_other.into();
+    assert_eq!(
+        param_val,
+        ActionParameterValue::String("PropagatingEffect::None".to_string())
+    );
 }

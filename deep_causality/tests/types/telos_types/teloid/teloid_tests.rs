@@ -3,7 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::{ActionParameterValue, BaseContext, ProposedAction, Teloid, TeloidModal};
+use deep_causality::{
+    ActionParameterValue, BaseContext, Identifiable, ProposedAction, Teloid, TeloidModal,
+};
 use std::collections::HashMap;
 
 // Mock activation predicate functions
@@ -212,4 +214,25 @@ fn test_teloid_activation_predicate_execution() {
         &context,
         &action_slow
     ));
+}
+
+#[test]
+fn test_teloid_identifiable_trait() {
+    let teloid = Teloid::new(
+        42,
+        "action.identifiable".to_string(),
+        always_true_predicate,
+        TeloidModal::Obligatory,
+        1,
+        1,
+        1,
+        vec!["id_tag"],
+        None,
+    );
+
+    // Explicitly test the Identifiable trait implementation
+    let identifiable: &dyn Identifiable = &teloid;
+    assert_eq!(identifiable.id(), 42);
+    // Also check the direct method call for consistency
+    assert_eq!(teloid.id(), 42);
 }

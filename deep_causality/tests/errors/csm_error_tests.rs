@@ -62,6 +62,21 @@ fn test_csm_error_from_causality_error() {
 }
 
 #[test]
+fn test_csm_error_forbidden() {
+    let explanation = "Action is forbidden because it violates a core principle.".to_string();
+    let csm_err = CsmError::Forbidden(explanation.clone());
+
+    // Test Display
+    assert_eq!(csm_err.to_string(), explanation);
+
+    // Test Debug
+    assert!(format!("{:?}", csm_err).contains(&format!("Forbidden(\"{}\")", explanation)));
+
+    // Test source - should be None for Forbidden
+    assert!(csm_err.source().is_none());
+}
+
+#[test]
 fn test_direct_construction() {
     // Test Action variant
     let action_err = ActionError("Direct action".to_string());

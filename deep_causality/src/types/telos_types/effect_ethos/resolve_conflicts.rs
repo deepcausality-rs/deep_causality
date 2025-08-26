@@ -100,9 +100,10 @@ where
                             .copied()
                             .ok_or(DeonticError::TeloidNotFound { id: 0 })?;
                         if let Some(defeater_teloid) = inferred_beliefs.get(&defeater_id) {
-                            // Apply Lex Specialis and Lex Posterior rules
+                            // Apply Lex Specialis, Lex Posterior, and Lex Superior rules
                             if defeater_teloid.specificity() > current_teloid.specificity()
                                 || defeater_teloid.timestamp() > current_teloid.timestamp()
+                                || defeater_teloid.priority() > current_teloid.priority()
                             {
                                 is_defeated = true;
                                 break;

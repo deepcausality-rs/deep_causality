@@ -92,6 +92,18 @@ fn test_inconclusive_verdict() {
 }
 
 #[test]
+fn test_no_relevant_norms_found() {
+    let error = DeonticError::NoRelevantNormsFound;
+    assert_eq!(
+        format!("{}", error),
+        "No relevant norms found, so the action cannot be decided. Please check if you have added the correct tags."
+    );
+    let cloned_error = error.clone();
+    assert_eq!(error, cloned_error);
+    assert!(error.source().is_none());
+}
+
+#[test]
 fn test_missing_context() {
     let error = DeonticError::MissingContext;
     assert_eq!(
