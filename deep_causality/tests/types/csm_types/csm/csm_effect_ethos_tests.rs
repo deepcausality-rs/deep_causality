@@ -34,7 +34,7 @@ fn test_eval_single_state_with_ethos_impermissible_verdict() {
 
     let csm = CSM::new(&[(&state, &action)], Some((ethos, &["test_tag"])));
     let res = csm.eval_single_state(1, &PropagatingEffect::Deterministic(true));
-    // dbg!(&res);
+    dbg!(&res);
 
     assert!(res.is_ok());
 }
@@ -51,7 +51,8 @@ fn test_eval_single_state_with_ethos_permissible_verdict() {
     let ethos = csm_utils_test::get_effect_ethos(true, false); // Verified, Permissible
 
     let csm = CSM::new(&[(&state, &action)], Some((ethos, &["test_tag"])));
-    let res = csm.eval_single_state(1, &PropagatingEffect::Deterministic(true));
+    // we have to use Deterministic(false) b/c the causaloid inverts it to true, then the CSM evaluation starts.
+    let res = csm.eval_single_state(1, &PropagatingEffect::Deterministic(false));
     // dbg!(&res);
     assert!(res.is_ok());
 }
@@ -103,7 +104,8 @@ fn test_eval_all_state_with_ethos_permissible_verdict() {
     let state = CausalState::new(
         1,
         1,
-        PropagatingEffect::Deterministic(true),
+        // we have to use Deterministic(false) b/c the causaloid inverts it to true, then the CSM evaluation starts.
+        PropagatingEffect::Deterministic(false),
         csm_utils_test::get_test_causaloid(true),
     );
     let action = csm_utils_test::get_test_action_with_tracker();
