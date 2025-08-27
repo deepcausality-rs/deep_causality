@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.8.2...deep_causality-v0.9.0) - 2025-08-27
+
+### Added
+
+- *(deep_causality)* Added new example for Effect Ethos with CSM.
+- *(deep_causality)* Integrated Effect Ethos with CSM
+- *(deep_causality)* Added explanation of the verdict to the effect ethos.
+- *(deep_causality)* Implement core Telos framework for deontic inference
+
+### Fixed
+
+- *(deep_causality)* fixed mapping maintained by EffectEthos
+- *(deep_causality)* fixed incorrect test.
+
+### Other
+
+- *(deep_causality)* updated TagIndex to use a HashSet to prevent duplicate tags.
+- *(deep_causality)* promoted CSM modules from files into directories.
+- *(deep_causality)* Improved test coverage
+- *(deep_causality)* Improved test coverage
+- *(deep_causality)* Improved test coverage
+- *(deep_causality)* Decluttered tests for EffectEthos
+- *(deep_causality)* Improved test coverage
+- Updated Bazel config.
+- Updated Docstring.
+- Formats and lints.
+- *(deep_causality)* Added more tests to test new EffectEthos.
+- Updated Effect Ethos type and added a new high level API
+- *(deep_causality)* Added tests for new effect ethos and teloid types.
+- Reworked Teloid, TeloidStore, and ProposedAction types
+- Implemented ActionParameterValue and ProposedAction type
+- Removed duplicate copyright note
+- Added TeloidStore
+- Added telos types tag_index and teloid_modal. Added unit tests. Updated primitive aliases. Updated Bazel test config.
+
 ## [0.8.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.8.1...deep_causality-v0.8.2) - 2025-08-08
 
 ### Added
