@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.3](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.8.2...ultragraph-v0.8.3) - 2025-08-27
+
+### Added
+
+- *(ultragraph)* Added debug impl to UltraGraph
+
+### Fixed
+
+- *(ultragraph)* fixed failing test.
+
+### Other
+
+- *(deep_causality)* Improved test coverage
+
 ## [0.8.2](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.8.1...ultragraph-v0.8.2) - 2025-08-08
 
 ### Other
