@@ -267,7 +267,9 @@ fn validate_and_process(
                 println!("   ✅ {}: μ={:.1}, σ={:.1}", id, mean, std_dev);
 
                 // Validate uncertainty bounds using implicit_conditional
-                let high_uncertainty_evidence = Uncertain::<f64>::point(uncertain_value.standard_deviation(100)?).greater_than(5.0);
+                let high_uncertainty_evidence =
+                    Uncertain::<f64>::point(uncertain_value.standard_deviation(100)?)
+                        .greater_than(5.0);
                 if high_uncertainty_evidence.implicit_conditional()? {
                     println!("      ⚠️  High uncertainty detected - consider sensor maintenance");
                 }
@@ -344,7 +346,10 @@ fn sensor_fusion_with_errors(
         weighted_sum += mean * weight;
         total_weight += weight;
 
-        println!("         {}: {:.1}°C ±{:.1} (weight: {:.2})", id, mean, std_dev, weight);
+        println!(
+            "         {}: {:.1}°C ±{:.1} (weight: {:.2})",
+            id, mean, std_dev, weight
+        );
     }
 
     let fused_temperature = weighted_sum / total_weight;
@@ -353,7 +358,10 @@ fn sensor_fusion_with_errors(
     // A more accurate fused uncertainty would require a dedicated statistical method.
     let fused_uncertainty = 1.0 / total_weight.sqrt(); // Simplified approximation
 
-    println!("      🎯 Fused temperature: {:.1}°C ±{:.1}", fused_temperature, fused_uncertainty);
+    println!(
+        "      🎯 Fused temperature: {:.1}°C ±{:.1}",
+        fused_temperature, fused_uncertainty
+    );
 
     // Detect sensor disagreement
     let temp_values: Vec<f64> = temp_sensors
@@ -418,9 +426,18 @@ fn detect_and_handle_anomalies(
 
 fn detect_anomaly(sensor_id: &str, value: f64, status: &SensorStatus) -> bool {
     let out_of_normal_range = match sensor_id {
-        id if id.starts_with("temp") => !Uncertain::<f64>::point(value).within_range(15.0, 35.0).implicit_conditional().unwrap(),
-        id if id.starts_with("pressure") => !Uncertain::<f64>::point(value).within_range(980.0, 1050.0).implicit_conditional().unwrap(),
-        id if id.starts_with("humidity") => !Uncertain::<f64>::point(value).within_range(20.0, 80.0).implicit_conditional().unwrap(),
+        id if id.starts_with("temp") => !Uncertain::<f64>::point(value)
+            .within_range(15.0, 35.0)
+            .implicit_conditional()
+            .unwrap(),
+        id if id.starts_with("pressure") => !Uncertain::<f64>::point(value)
+            .within_range(980.0, 1050.0)
+            .implicit_conditional()
+            .unwrap(),
+        id if id.starts_with("humidity") => !Uncertain::<f64>::point(value)
+            .within_range(20.0, 80.0)
+            .implicit_conditional()
+            .unwrap(),
         _ => false,
     };
 
@@ -452,24 +469,27 @@ fn demonstrate_fallback_strategies(
         println!("      🔄 No healthy temperature sensors - using historical model");
         let historical_temp = Uncertain::normal(22.0, 3.0);
         let mean = historical_temp.expected_value(100)?;
-        println!("         Historical estimate: {:.1}°C ±3.0 (high uncertainty)", mean);
+        println!(
+            "         Historical estimate: {:.1}°C ±3.0 (high uncertainty)",
+            mean
+        );
     }
 
     // Strategy 2: Cross-validation between sensor types
     println!("      🔄 Cross-validation between sensor types:");
 
-    if let (Some(pressure_reading), Some(temp_reading)) = (
-        sensors.get("pressure_1"),
-        sensors.get("temp_1"),
-    ) {
+    if let (Some(pressure_reading), Some(temp_reading)) =
+        (sensors.get("pressure_1"), sensors.get("temp_1"))
+    {
         if let (Some(pressure), Some(temp)) = (pressure_reading.value, temp_reading.value) {
             let expected_temp_from_pressure = estimate_temperature_from_pressure(pressure);
             let temp_diff = (temp - expected_temp_from_pressure).abs();
 
-            if Uncertain::<f64>::point(temp_diff).greater_than(10.0).implicit_conditional()? {
-                println!(
-                    "         ⚠️  Temperature-pressure correlation check failed"
-                );
+            if Uncertain::<f64>::point(temp_diff)
+                .greater_than(10.0)
+                .implicit_conditional()?
+            {
+                println!("         ⚠️  Temperature-pressure correlation check failed");
                 println!(
                     "         Expected temp: {:.1}°C, Measured: {:.1}°C",
                     expected_temp_from_pressure, temp
@@ -529,29 +549,50 @@ fn assess_system_reliability(
 
     println!("      📊 System availability: {:.1}%", system_availability);
     println!("      📊 System health: {:.1}%", system_health);
-    println!("      📊 Failed sensors: {:.0}/{:.0}", failed_sensors, total_sensors);
+    println!(
+        "      📊 Failed sensors: {:.0}/{:.0}",
+        failed_sensors, total_sensors
+    );
 
-    if Uncertain::<f64>::point(degraded_sensors).greater_than(0.0).implicit_conditional()? {
+    if Uncertain::<f64>::point(degraded_sensors)
+        .greater_than(0.0)
+        .implicit_conditional()?
+    {
         let maintenance_urgency = degraded_sensors / total_sensors * 100.0;
         println!(
             "      🔧 Maintenance needed for {:.0} sensors ({:.1}% of system)",
             degraded_sensors, maintenance_urgency
         );
 
-        if Uncertain::<f64>::point(maintenance_urgency).greater_than(30.0).implicit_conditional()? {
+        if Uncertain::<f64>::point(maintenance_urgency)
+            .greater_than(30.0)
+            .implicit_conditional()?
+        {
             println!("         🚨 HIGH PRIORITY: Schedule immediate maintenance");
-        } else if Uncertain::<f64>::point(maintenance_urgency).greater_than(15.0).implicit_conditional()? {
+        } else if Uncertain::<f64>::point(maintenance_urgency)
+            .greater_than(15.0)
+            .implicit_conditional()?
+        {
             println!("         ⚠️  MEDIUM PRIORITY: Schedule maintenance within week");
         } else {
             println!("         📅 LOW PRIORITY: Include in next routine maintenance");
         }
     }
 
-    let risk_level = if Uncertain::<f64>::point(system_health).less_than(50.0).implicit_conditional()? {
+    let risk_level = if Uncertain::<f64>::point(system_health)
+        .less_than(50.0)
+        .implicit_conditional()?
+    {
         "CRITICAL"
-    } else if Uncertain::<f64>::point(system_health).less_than(70.0).implicit_conditional()? {
+    } else if Uncertain::<f64>::point(system_health)
+        .less_than(70.0)
+        .implicit_conditional()?
+    {
         "HIGH"
-    } else if Uncertain::<f64>::point(system_health).less_than(85.0).implicit_conditional()? {
+    } else if Uncertain::<f64>::point(system_health)
+        .less_than(85.0)
+        .implicit_conditional()?
+    {
         "MEDIUM"
     } else {
         "LOW"
@@ -559,7 +600,10 @@ fn assess_system_reliability(
 
     println!("      🎯 Overall system risk: {}", risk_level);
 
-    if Uncertain::<f64>::point(system_health).less_than(70.0).implicit_conditional()? {
+    if Uncertain::<f64>::point(system_health)
+        .less_than(70.0)
+        .implicit_conditional()?
+    {
         println!("      💡 Recommendations:");
         println!("         - Implement redundant sensor deployment");
         println!("         - Increase monitoring frequency");

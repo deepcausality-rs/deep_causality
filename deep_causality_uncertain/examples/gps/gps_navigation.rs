@@ -91,7 +91,10 @@ fn main() -> Result<(), UncertainError> {
         alt_time.clone(),
     );
 
-    println!("\n   Chosen route time (conditional): {:.1} minutes", chosen_route_time.expected_value(1000)?);
+    println!(
+        "\n   Chosen route time (conditional): {:.1} minutes",
+        chosen_route_time.expected_value(1000)?
+    );
 
     if main_faster.implicit_conditional()? {
         println!("   ✅ Recommendation: Take main route (more likely faster)");
