@@ -4,8 +4,7 @@
  */
 
 use crate::types::computation::LogicalOperator;
-use crate::types::sampler::sampled_value::SampledValue;
-use crate::{ComputationNode, Sampler, UncertainError, UncertainGraph};
+use crate::{ComputationNode, SampledValue, Sampler, UncertainError, UncertainGraph};
 use rand::rng;
 use std::collections::HashMap;
 use ultragraph::{GraphTraversal, GraphView, TopologicalGraphAlgorithms};

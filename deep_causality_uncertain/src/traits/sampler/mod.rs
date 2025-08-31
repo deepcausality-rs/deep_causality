@@ -3,8 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::types::sampler::SampledValue;
-use crate::{UncertainError, UncertainGraph};
+use crate::{SampledValue, UncertainError, UncertainGraph};
 
 /// A trait for sampling strategies.
 pub trait Sampler {

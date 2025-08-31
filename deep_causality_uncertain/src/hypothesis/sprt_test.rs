@@ -26,6 +26,7 @@ pub fn evaluate_hypothesis(
     confidence: f64,
     epsilon: f64,
     max_samples: usize,
+    initial_sample_index: u64,
 ) -> Result<bool, UncertainError> {
     // Set alpha and beta for the test
     let alpha_error = 1.0 - confidence; // Type I error (false positive rate)
@@ -53,7 +54,8 @@ pub fn evaluate_hypothesis(
         } // Avoid infinite loop if max_samples is reached
 
         for _ in 0..current_batch_size {
-            let sample_result = uncertain_bool.sample()?; // Get a sample
+            let sample_result =
+                uncertain_bool.sample(initial_sample_index + samples_drawn as u64)?; // Get a sample
             if sample_result {
                 successes += 1;
             }
