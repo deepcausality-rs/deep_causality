@@ -3,8 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{SampledValue, get_global_cache};
-use crate::{Sampler, SequentialSampler, Uncertain, UncertainError};
+use crate::{
+    SampledValue, Sampler, SequentialSampler, Uncertain, UncertainError, get_global_cache,
+};
 use rand::{Rng, rng};
 
 // Sampling impl for Uncertain<f64>
@@ -27,7 +28,8 @@ impl Uncertain<f64> {
 
         // If not in cache, compute the value
         let sampler = SequentialSampler;
-        let computed_value = sampler.sample(self.graph.as_ref())?;
+        // Disambiguate between Sampler::sample and Rng::sample
+        let computed_value = Sampler::sample(&sampler, &self.root_node)?;
 
         // Store in cache and return
         cache.insert(key, computed_value);
@@ -69,7 +71,8 @@ impl Uncertain<bool> {
 
         // If not in cache, compute the value
         let sampler = SequentialSampler;
-        let computed_value = sampler.sample(self.graph.as_ref())?;
+        // Disambiguate between Sampler::sample and Rng::sample
+        let computed_value = Sampler::sample(&sampler, &self.root_node)?;
 
         // Store in cache and return
         cache.insert(key, computed_value);

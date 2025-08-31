@@ -17,19 +17,32 @@ pub enum ComputationNode {
 
     ArithmeticOp {
         op: ArithmeticOperator,
+        lhs: Box<ComputationNode>,
+        rhs: Box<ComputationNode>,
     },
     ComparisonOp {
         op: ComparisonOperator,
         threshold: f64,
+        operand: Box<ComputationNode>,
     },
     LogicalOp {
         op: LogicalOperator,
+        operands: Vec<Box<ComputationNode>>,
     },
     FunctionOp {
         func: Arc<dyn Fn(f64) -> f64 + Send + Sync>,
+        operand: Box<ComputationNode>,
     },
     FunctionOpBool {
         func: Arc<dyn Fn(f64) -> bool + Send + Sync>,
+        operand: Box<ComputationNode>,
     },
-    NegationOp,
+    NegationOp {
+        operand: Box<ComputationNode>,
+    },
+    ConditionalOp {
+        condition: Box<ComputationNode>,
+        if_true: Box<ComputationNode>,
+        if_false: Box<ComputationNode>,
+    },
 }

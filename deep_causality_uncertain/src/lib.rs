@@ -5,8 +5,6 @@
 
 //! Core components for the `deep_causality_uncertain` crate.
 
-mod alias;
-
 mod algos;
 mod errors;
 mod traits;
@@ -15,8 +13,6 @@ mod types;
 // Re-export key types for easier access.
 // Algorithms
 pub use algos::hypothesis::sprt_eval;
-// Alias
-pub use crate::alias::UncertainGraph;
 // Errors
 pub use crate::errors::UncertainError;
 // Traits
@@ -25,7 +21,6 @@ pub use crate::traits::sampler::Sampler;
 pub use crate::types::cache::{SampledValue, get_global_cache};
 pub use crate::types::computation::{
     ArithmeticOperator, ComparisonOperator, ComputationNode, LogicalOperator,
-    copy_graph_and_get_remapped_root, merge_graphs,
 };
 pub use crate::types::distribution::DistributionEnum;
 pub use crate::types::distribution_parameters::BernoulliParams;
