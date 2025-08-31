@@ -1,0 +1,25 @@
+[package]
+name = "deep_causality_uncertain"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+repository = "https://github.com/deepcausality/deep_causality.rs"
+authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
+license = "MIT"
+description = "A First-Order Type for Uncertain Programming for the DeepCausality project.'"
+documentation = "https://docs.rs/deep_causality"
+exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
+
+
+[dependencies]
+ultragraph = { path = "../ultragraph" }
+rand = "0.9"
+rand_distr = "0.5"
+rayon = { version = "1.11", optional = true }
+
+[features]
+default = []
+parallel = ["dep:rayon"]
+
+[package.metadata.docs.rs]
+all-features = true
