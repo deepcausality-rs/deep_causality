@@ -5,7 +5,7 @@
 
 use crate::{
     BernoulliParams, ComputationNode, DistributionEnum, NormalDistributionParams, UncertainError,
-    UncertainGraph, UniformDistributionParams, sprt_test,
+    UncertainGraph, UniformDistributionParams, sprt_eval,
 };
 use std::collections::HashMap;
 use std::marker::PhantomData;
@@ -121,6 +121,6 @@ impl Uncertain<bool> {
     pub fn to_bool(&self, confidence: f64) -> Result<bool, UncertainError> {
         // Default epsilon and max_samples for now. These could be configurable.
         // We pass sample_index 0 as the decision is based on the overall distribution, not a specific sample.
-        sprt_test::evaluate_hypothesis(self, 0.5, confidence, 0.05, 1000, 0)
+        sprt_eval::evaluate_hypothesis(self, 0.5, confidence, 0.05, 1000, 0)
     }
 }

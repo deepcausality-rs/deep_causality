@@ -3,8 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::types::computation::LogicalOperator;
-use crate::{ComputationNode, SampledValue, Sampler, UncertainError, UncertainGraph};
+use crate::{
+    ComputationNode, LogicalOperator, SampledValue, Sampler, UncertainError, UncertainGraph,
+};
 use rand::rng;
 use std::collections::HashMap;
 use ultragraph::{GraphTraversal, GraphView, TopologicalGraphAlgorithms};

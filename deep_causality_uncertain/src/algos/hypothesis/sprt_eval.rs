@@ -4,7 +4,6 @@
  */
 
 use crate::{Uncertain, UncertainError};
-// For float comparisons
 
 /// Implements the Sequential Probability Ratio Test (SPRT) to evaluate a hypothesis
 /// about an uncertain boolean value.

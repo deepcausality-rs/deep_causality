@@ -2,6 +2,4 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-pub mod uncertain_error;
-
-pub use uncertain_error::UncertainError;
+mod uncertain_error_tests;

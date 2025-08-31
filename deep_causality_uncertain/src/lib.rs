@@ -1,20 +1,25 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
 //! Core components for the `deep_causality_uncertain` crate.
 
 mod alias;
 
+mod algos;
 mod errors;
-mod hypothesis;
 mod traits;
 mod types;
 
 // Re-export key types for easier access.
+// Algorithms
+pub use algos::hypothesis::sprt_eval;
 // Alias
 pub use crate::alias::UncertainGraph;
 // Errors
-pub use crate::errors::uncertain_error::UncertainError;
-//hypothesis
-pub use crate::hypothesis::sprt_test;
-// traits
+pub use crate::errors::UncertainError;
+// Traits
 pub use crate::traits::sampler::Sampler;
 // types
 pub use crate::types::cache::{SampledValue, get_global_cache};
