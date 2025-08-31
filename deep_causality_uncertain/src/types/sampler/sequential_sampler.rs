@@ -71,6 +71,39 @@ impl Sampler for SequentialSampler {
                     };
                     SampledValue::Bool(result)
                 }
+
+                ComputationNode::FunctionOp { func } => {
+                    let inputs: Vec<f64> = g
+                        .inbound_edges(node_idx)?
+                        .map(|p_idx| match context[&p_idx] {
+                            SampledValue::Float(f) => f,
+                            _ => panic!("Type error: Function op requires float input"),
+                        })
+                        .collect();
+                    SampledValue::Float(func(inputs[0]))
+                }
+
+                ComputationNode::NegationOp => {
+                    let inputs: Vec<f64> = g
+                        .inbound_edges(node_idx)?
+                        .map(|p_idx| match context[&p_idx] {
+                            SampledValue::Float(f) => f,
+                            _ => panic!("Type error: Negation op requires float input"),
+                        })
+                        .collect();
+                    SampledValue::Float(-inputs[0])
+                }
+
+                ComputationNode::FunctionOpBool { func } => {
+                    let inputs: Vec<f64> = g
+                        .inbound_edges(node_idx)?
+                        .map(|p_idx| match context[&p_idx] {
+                            SampledValue::Float(f) => f,
+                            _ => panic!("Type error: FunctionOpBool requires float input"),
+                        })
+                        .collect();
+                    SampledValue::Bool(func(inputs[0]))
+                }
             };
             context.insert(node_idx, value);
         }

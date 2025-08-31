@@ -4,8 +4,8 @@
  */
 
 use crate::types::computation::ArithmeticOperator;
-use crate::{ComputationNode, Uncertain, merge_graphs};
-use std::ops::{Add, Div, Mul, Sub};
+use crate::{ComputationNode, Uncertain, copy_graph_and_get_remapped_root, merge_graphs};
+use std::ops::{Add, Div, Mul, Neg, Sub};
 use ultragraph::{GraphMut, UltraGraph};
 
 // Operator overloading is only implemented for f64 for now.
@@ -107,6 +107,26 @@ impl Div for Uncertain<f64> {
             .expect("Failed to add edge");
         new_graph
             .add_edge(rhs_root, op_idx, ())
+            .expect("Failed to add edge");
+
+        Self::from_graph(new_graph)
+    }
+}
+
+impl Neg for Uncertain<f64> {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        let (mut new_graph, self_root) =
+            copy_graph_and_get_remapped_root(self.graph.as_ref()).expect("Failed to copy graph");
+
+        let op_node = ComputationNode::NegationOp;
+        let op_idx = new_graph
+            .add_root_node(op_node)
+            .expect("Failed to add root node");
+
+        new_graph
+            .add_edge(self_root, op_idx, ())
             .expect("Failed to add edge");
 
         Self::from_graph(new_graph)

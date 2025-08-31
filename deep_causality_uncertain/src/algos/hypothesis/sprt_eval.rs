@@ -54,7 +54,7 @@ pub fn evaluate_hypothesis(
 
         for _ in 0..current_batch_size {
             let sample_result =
-                uncertain_bool.sample(initial_sample_index + samples_drawn as u64)?; // Get a sample
+                uncertain_bool.sample_with_index(initial_sample_index + samples_drawn as u64)?; // Get a sample
             if sample_result {
                 successes += 1;
             }

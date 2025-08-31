@@ -5,10 +5,11 @@
 
 use crate::{SampledValue, get_global_cache};
 use crate::{Sampler, SequentialSampler, Uncertain, UncertainError};
+use rand::{Rng, rng};
 
 // Sampling impl for Uncertain<f64>
 impl Uncertain<f64> {
-    pub fn sample(&self, sample_index: u64) -> Result<f64, UncertainError> {
+    pub fn sample_with_index(&self, sample_index: u64) -> Result<f64, UncertainError> {
         let cache = get_global_cache();
         let key = (self.id, sample_index);
 
@@ -38,14 +39,19 @@ impl Uncertain<f64> {
         }
     }
 
+    pub fn sample(&self) -> Result<f64, UncertainError> {
+        let sample_index = rng().random::<u64>();
+        self.sample_with_index(sample_index)
+    }
+
     pub fn take_samples(&self, n: usize) -> Result<Vec<f64>, UncertainError> {
-        (0..n).map(|i| self.sample(i as u64)).collect()
+        (0..n).map(|i| self.sample_with_index(i as u64)).collect()
     }
 }
 
 // Sampling impl for Uncertain<bool>
 impl Uncertain<bool> {
-    pub fn sample(&self, sample_index: u64) -> Result<bool, UncertainError> {
+    pub fn sample_with_index(&self, sample_index: u64) -> Result<bool, UncertainError> {
         let cache = get_global_cache();
         let key = (self.id, sample_index);
 
@@ -75,7 +81,12 @@ impl Uncertain<bool> {
         }
     }
 
+    pub fn sample(&self) -> Result<bool, UncertainError> {
+        let sample_index = rng().random::<u64>();
+        self.sample_with_index(sample_index)
+    }
+
     pub fn take_samples(&self, n: usize) -> Result<Vec<bool>, UncertainError> {
-        (0..n).map(|i| self.sample(i as u64)).collect()
+        (0..n).map(|i| self.sample_with_index(i as u64)).collect()
     }
 }

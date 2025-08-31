@@ -27,7 +27,7 @@ pub fn merge_graphs<T: Copy + Send + Sync + 'static>(
 
     // Clone nodes from LHS graph
     for (old_idx, node) in lhs.get_all_nodes().iter().enumerate() {
-        let new_idx = dest.add_node(**node)?;
+        let new_idx = dest.add_node((*node).clone())?;
         lhs_map.insert(old_idx, new_idx);
     }
 
@@ -44,7 +44,7 @@ pub fn merge_graphs<T: Copy + Send + Sync + 'static>(
 
     // Clone nodes from RHS graph
     for (old_idx, node) in rhs.get_all_nodes().iter().enumerate() {
-        let new_idx = dest.add_node(**node)?;
+        let new_idx = dest.add_node((*node).clone())?;
         rhs_map.insert(old_idx, new_idx);
     }
 
@@ -79,7 +79,7 @@ pub fn copy_graph_and_get_remapped_root(
 
     // Copy nodes and remap indices
     for (old_idx, node_data) in source_graph.get_all_nodes().iter().enumerate() {
-        let new_idx = new_graph.add_node(**node_data)?;
+        let new_idx = new_graph.add_node((*node_data).clone())?;
         node_map.insert(old_idx, new_idx);
     }
 
