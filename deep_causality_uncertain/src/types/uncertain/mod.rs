@@ -4,7 +4,7 @@
  */
 
 use crate::{
-    ComputationNode, DistributionEnum, NormalDistributionParams, UncertainGraph,
+    ComputationNode, Distribution, NormalDistributionParams, UncertainGraph,
     UniformDistributionParams,
 };
 use std::sync::Arc;
@@ -40,7 +40,7 @@ impl Uncertain {
     pub fn point(value: f64) -> Self {
         let mut g = UltraGraph::new();
         let node = ComputationNode::Leaf {
-            dist: DistributionEnum::Point(value),
+            dist: Distribution::Point(value),
         };
         g.add_root_node(node).unwrap();
         Self::from_graph(g)
@@ -51,7 +51,7 @@ impl Uncertain {
         let mut g = UltraGraph::new();
         let params = NormalDistributionParams { mean, std_dev };
         let node = ComputationNode::Leaf {
-            dist: DistributionEnum::Normal(params),
+            dist: Distribution::Normal(params),
         };
         g.add_root_node(node).unwrap();
         Self::from_graph(g)
@@ -62,7 +62,7 @@ impl Uncertain {
         let mut g = UltraGraph::new();
         let params = UniformDistributionParams { low, high };
         let node = ComputationNode::Leaf {
-            dist: DistributionEnum::Uniform(params),
+            dist: Distribution::Uniform(params),
         };
         g.add_root_node(node).unwrap();
         Self::from_graph(g)

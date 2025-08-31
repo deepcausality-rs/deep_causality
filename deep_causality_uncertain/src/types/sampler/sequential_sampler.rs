@@ -10,6 +10,13 @@ use rand::rng;
 use std::collections::HashMap;
 use ultragraph::{GraphTraversal, GraphView, TopologicalGraphAlgorithms};
 
+/// A value produced during a sample run. Can be a float or a boolean.
+#[derive(Debug, Clone, Copy)]
+enum SampledValue {
+    Float(f64),
+    Bool(bool),
+}
+
 /// A basic, single-threaded sampler.
 pub struct SequentialSampler;
 
@@ -17,42 +24,53 @@ impl Sampler for SequentialSampler {
     /// Evaluates the graph by performing a topological sort and then visiting each
     /// node in order, calculating its value based on its dependencies.
     fn sample(&self, graph: &UncertainGraph) -> Result<f64, UncertainError> {
-        // A mutable copy is needed to freeze for high-performance traversal.
         let mut g = graph.clone();
         if !g.is_frozen() {
             g.freeze();
         }
 
-        // The topological sort guarantees that we visit nodes only after their
-        // dependencies have been evaluated.
         let sorted_nodes = g.topological_sort().unwrap().unwrap();
 
-        // The context for this single sample run. It memoizes results to ensure
-        // that nodes used multiple times in a graph are sampled only once.
-        let mut context: HashMap<usize, f64> = HashMap::new();
+        // The context now holds `SampledValue` to support both floats and booleans.
+        let mut context: HashMap<usize, SampledValue> = HashMap::new();
         let mut rng = rng();
 
         for node_idx in sorted_nodes {
             let node = g.get_node(node_idx).unwrap();
             let value = match node {
-                ComputationNode::Leaf { dist } => dist.sample(&mut rng)?,
-                ComputationNode::BinaryOp { op } => {
-                    // Because of the topological sort, our inputs are guaranteed to be in the context.
+                ComputationNode::Leaf { dist } => SampledValue::Float(dist.sample(&mut rng)?),
+
+                ComputationNode::ArithmeticOp { op } => {
                     let inputs: Vec<f64> = g
                         .inbound_edges(node_idx)
                         .unwrap()
-                        .map(|parent_idx| context[&parent_idx])
+                        .map(|p_idx| match context[&p_idx] {
+                            SampledValue::Float(f) => f,
+                            _ => panic!("Type error: Arithmetic operation requires float inputs"),
+                        })
                         .collect();
+                    SampledValue::Float(op.apply(inputs[0], inputs[1]))
+                }
 
-                    // For this basic implementation, we assume binary operators have exactly two inputs.
-                    op.apply(inputs[0], inputs[1])
+                // The implementation for these operators will be completed in the next step
+                // as they require the Uncertain type to be generic over <T>.
+                ComputationNode::ComparisonOp { .. } => {
+                    unimplemented!("Comparison operators not yet implemented in sampler")
+                }
+
+                ComputationNode::LogicalOp { .. } => {
+                    unimplemented!("Logical operators not yet implemented in sampler")
                 }
             };
             context.insert(node_idx, value);
         }
 
-        // The final result is the value of the root node.
         let root_idx = g.get_root_index().expect("Graph has no root node");
-        Ok(context[&root_idx])
+        match context[&root_idx] {
+            SampledValue::Float(f) => Ok(f),
+            SampledValue::Bool(_) => Err(UncertainError::UnsupportedTypeError(
+                "Cannot sample a boolean value as f64. Use a conditional evaluation method instead.".to_string(),
+            )),
+        }
     }
 }

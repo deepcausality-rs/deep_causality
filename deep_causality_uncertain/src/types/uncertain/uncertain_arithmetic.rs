@@ -3,8 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{ComputationNode, Operator, Uncertain, merge_graphs};
-use std::ops::{Add, Mul};
+use crate::types::computation::ArithmeticOperator;
+use crate::{ComputationNode, Uncertain, merge_graphs};
+use std::ops::{Add, Div, Mul, Sub};
 use ultragraph::{GraphMut, UltraGraph};
 
 // Operator Overloading
@@ -13,15 +14,48 @@ impl Add for Uncertain {
 
     fn add(self, rhs: Self) -> Self::Output {
         let mut new_graph = UltraGraph::new();
-        let (lhs_root, rhs_root) = merge_graphs(&mut new_graph, &self.graph, &rhs.graph).expect("Failed to merge graphs");
+        let (lhs_root, rhs_root) =
+            merge_graphs(&mut new_graph, &self.graph, &rhs.graph).expect("Failed to merge graphs");
 
-        let op_node = ComputationNode::BinaryOp { op: Operator::Add };
-        // Create the new operator node and set it as the root in one step.
-        let op_idx = new_graph.add_root_node(op_node).expect("Failed to add root node");
+        let op_node = ComputationNode::ArithmeticOp {
+            op: ArithmeticOperator::Add,
+        };
+        let op_idx = new_graph
+            .add_root_node(op_node)
+            .expect("Failed to add root node");
 
-        // The old roots are now children of the new root.
-        new_graph.add_edge(lhs_root, op_idx, ()).expect("Failed to add edge");
-        new_graph.add_edge(rhs_root, op_idx, ()).expect("Failed to add edge");
+        new_graph
+            .add_edge(lhs_root, op_idx, ())
+            .expect("Failed to add edge");
+        new_graph
+            .add_edge(rhs_root, op_idx, ())
+            .expect("Failed to add edge");
+
+        Self::from_graph(new_graph)
+    }
+}
+
+impl Sub for Uncertain {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        let mut new_graph = UltraGraph::new();
+        let (lhs_root, rhs_root) =
+            merge_graphs(&mut new_graph, &self.graph, &rhs.graph).expect("Failed to merge graphs");
+
+        let op_node = ComputationNode::ArithmeticOp {
+            op: ArithmeticOperator::Sub,
+        };
+        let op_idx = new_graph
+            .add_root_node(op_node)
+            .expect("Failed to add root node");
+
+        new_graph
+            .add_edge(lhs_root, op_idx, ())
+            .expect("Failed to add edge");
+        new_graph
+            .add_edge(rhs_root, op_idx, ())
+            .expect("Failed to add edge");
 
         Self::from_graph(new_graph)
     }
@@ -35,13 +69,39 @@ impl Mul for Uncertain {
         let (lhs_root, rhs_root) =
             merge_graphs(&mut new_graph, &self.graph, &rhs.graph).expect("Failed to merge graphs");
 
-        let op_node = ComputationNode::BinaryOp { op: Operator::Mul };
-        // Create the new operator node and set it as the root in one step.
+        let op_node = ComputationNode::ArithmeticOp {
+            op: ArithmeticOperator::Mul,
+        };
         let op_idx = new_graph
             .add_root_node(op_node)
             .expect("Failed to add root node");
 
-        // The old roots are now children of the new root.
+        new_graph
+            .add_edge(lhs_root, op_idx, ())
+            .expect("Failed to add edge");
+        new_graph
+            .add_edge(rhs_root, op_idx, ())
+            .expect("Failed to add edge");
+
+        Self::from_graph(new_graph)
+    }
+}
+
+impl Div for Uncertain {
+    type Output = Self;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        let mut new_graph = UltraGraph::new();
+        let (lhs_root, rhs_root) =
+            merge_graphs(&mut new_graph, &self.graph, &rhs.graph).expect("Failed to merge graphs");
+
+        let op_node = ComputationNode::ArithmeticOp {
+            op: ArithmeticOperator::Div,
+        };
+        let op_idx = new_graph
+            .add_root_node(op_node)
+            .expect("Failed to add root node");
+
         new_graph
             .add_edge(lhs_root, op_idx, ())
             .expect("Failed to add edge");

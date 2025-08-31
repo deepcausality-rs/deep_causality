@@ -3,12 +3,12 @@
 use crate::errors::uncertain_error::UncertainError;
 use crate::{NormalDistributionParams, UniformDistributionParams};
 use rand::Rng;
-use rand_distr::{Distribution, Normal, Uniform};
+use rand_distr::{Distribution as RandDistribution, Normal, Uniform};
 
 /// Enum for all supported probability distributions.
 /// This enum dispatch approach avoids the performance overhead of `dyn Trait`.
 #[derive(Debug, Clone, Copy)]
-pub enum DistributionEnum {
+pub enum Distribution {
     /// A single, certain value.
     Point(f64),
     /// A Normal (Gaussian) distribution.
@@ -17,16 +17,16 @@ pub enum DistributionEnum {
     Uniform(UniformDistributionParams),
 }
 
-impl DistributionEnum {
+impl Distribution {
     /// Samples a single value from the distribution.
     pub fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Result<f64, UncertainError> {
         match self {
-            DistributionEnum::Point(v) => Ok(*v),
-            DistributionEnum::Normal(params) => {
+            Distribution::Point(v) => Ok(*v),
+            Distribution::Normal(params) => {
                 let normal = Normal::new(params.mean, params.std_dev)?;
                 Ok(normal.sample(rng))
             }
-            DistributionEnum::Uniform(params) => {
+            Distribution::Uniform(params) => {
                 let uniform = Uniform::new(params.low, params.high)?;
                 Ok(uniform.sample(rng))
             }

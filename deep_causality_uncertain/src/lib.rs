@@ -14,8 +14,10 @@ pub use crate::errors::uncertain_error::UncertainError;
 // traits
 pub use crate::traits::sampler::Sampler;
 // types
-pub use crate::types::computation::{ComputationNode, Operator, merge_graphs};
-pub use crate::types::distribution::DistributionEnum;
+pub use crate::types::computation::{
+    ArithmeticOperator, ComparisonOperator, ComputationNode, LogicalOperator, merge_graphs,
+};
+pub use crate::types::distribution::Distribution;
 pub use crate::types::distribution_parameters::NormalDistributionParams;
 pub use crate::types::distribution_parameters::UniformDistributionParams;
 

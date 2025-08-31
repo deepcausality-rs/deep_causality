@@ -8,4 +8,4 @@ mod computation_operator;
 
 pub use computation_graph::merge_graphs;
 pub use computation_node::ComputationNode;
-pub use computation_operator::Operator;
+pub use computation_operator::{ArithmeticOperator, ComparisonOperator, LogicalOperator};
