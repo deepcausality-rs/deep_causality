@@ -17,6 +17,15 @@ rand = "0.9"
 rand_distr = "0.5"
 rayon = { version = "1.11", optional = true }
 
+
+[[example]]
+name = "gps_navigation"
+path = "examples/gps/gps_navigation.rs"
+
+[[example]]
+name = "sensor_processing"
+path = "examples/sensor/sensor_processing.rs"
+
 [features]
 default = []
 parallel = ["dep:rayon"]
