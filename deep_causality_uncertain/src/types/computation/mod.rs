@@ -6,6 +6,6 @@ mod computation_graph;
 mod computation_node;
 mod computation_operator;
 
-pub use computation_graph::merge_graphs;
+pub use computation_graph::{copy_graph_and_get_remapped_root, merge_graphs};
 pub use computation_node::ComputationNode;
 pub use computation_operator::{ArithmeticOperator, ComparisonOperator, LogicalOperator};

@@ -8,14 +8,14 @@ use crate::{ComputationNode, Uncertain, merge_graphs};
 use std::ops::{Add, Div, Mul, Sub};
 use ultragraph::{GraphMut, UltraGraph};
 
-// Operator Overloading
-impl Add for Uncertain {
+// Operator overloading is only implemented for f64 for now.
+impl Add for Uncertain<f64> {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
         let mut new_graph = UltraGraph::new();
-        let (lhs_root, rhs_root) =
-            merge_graphs(&mut new_graph, &self.graph, &rhs.graph).expect("Failed to merge graphs");
+        let (lhs_root, rhs_root) = merge_graphs::<f64>(&mut new_graph, &self.graph, &rhs.graph)
+            .expect("Failed to merge graphs");
 
         let op_node = ComputationNode::ArithmeticOp {
             op: ArithmeticOperator::Add,
@@ -35,13 +35,13 @@ impl Add for Uncertain {
     }
 }
 
-impl Sub for Uncertain {
+impl Sub for Uncertain<f64> {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
         let mut new_graph = UltraGraph::new();
-        let (lhs_root, rhs_root) =
-            merge_graphs(&mut new_graph, &self.graph, &rhs.graph).expect("Failed to merge graphs");
+        let (lhs_root, rhs_root) = merge_graphs::<f64>(&mut new_graph, &self.graph, &rhs.graph)
+            .expect("Failed to merge graphs");
 
         let op_node = ComputationNode::ArithmeticOp {
             op: ArithmeticOperator::Sub,
@@ -61,13 +61,13 @@ impl Sub for Uncertain {
     }
 }
 
-impl Mul for Uncertain {
+impl Mul for Uncertain<f64> {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
         let mut new_graph = UltraGraph::new();
-        let (lhs_root, rhs_root) =
-            merge_graphs(&mut new_graph, &self.graph, &rhs.graph).expect("Failed to merge graphs");
+        let (lhs_root, rhs_root) = merge_graphs::<f64>(&mut new_graph, &self.graph, &rhs.graph)
+            .expect("Failed to merge graphs");
 
         let op_node = ComputationNode::ArithmeticOp {
             op: ArithmeticOperator::Mul,
@@ -87,13 +87,13 @@ impl Mul for Uncertain {
     }
 }
 
-impl Div for Uncertain {
+impl Div for Uncertain<f64> {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {
         let mut new_graph = UltraGraph::new();
-        let (lhs_root, rhs_root) =
-            merge_graphs(&mut new_graph, &self.graph, &rhs.graph).expect("Failed to merge graphs");
+        let (lhs_root, rhs_root) = merge_graphs::<f64>(&mut new_graph, &self.graph, &rhs.graph)
+            .expect("Failed to merge graphs");
 
         let op_node = ComputationNode::ArithmeticOp {
             op: ArithmeticOperator::Div,

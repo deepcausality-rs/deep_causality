@@ -14,10 +14,12 @@ pub enum UncertainError {
     ConfidenceError(String),
     /// An error indicating that an operation is not supported for a given type.
     UnsupportedTypeError(String),
-    /// An error occurred creating a Normal distribution, likely due to invalid parameters.
-    NormalError(String),
+    /// An error occurred creating a Bernoulli distribution, likely due to invalid parameters.
+    BernoulliDistributionError(String),
+    /// An error occurred creating a Normal , likely due to invalid parameters.
+    NormalDistributionError(String),
     /// An error occurred creating a Uniform distribution, likely due to invalid parameters.
-    UniformError(String),
+    UniformDistributionError(String),
     /// An error occurred during the sampling process.
     SamplingError(String),
 }
@@ -28,10 +30,24 @@ impl fmt::Display for UncertainError {
             UncertainError::GraphError(msg) => write!(f, "Graph construction error: {}", msg),
             UncertainError::ConfidenceError(msg) => write!(f, "Confidence error: {}", msg),
             UncertainError::UnsupportedTypeError(msg) => write!(f, "Unsupported type: {}", msg),
-            UncertainError::NormalError(msg) => write!(f, "Normal distribution error: {}", msg),
-            UncertainError::UniformError(msg) => write!(f, "Uniform distribution error: {}", msg),
+            UncertainError::BernoulliDistributionError(msg) => {
+                write!(f, "Bernoulli distribution error: {}", msg)
+            }
+
+            UncertainError::NormalDistributionError(msg) => {
+                write!(f, "Normal distribution error: {}", msg)
+            }
+            UncertainError::UniformDistributionError(msg) => {
+                write!(f, "Uniform distribution error: {}", msg)
+            }
             UncertainError::SamplingError(msg) => write!(f, "Sampling error: {}", msg),
         }
+    }
+}
+
+impl From<ultragraph::GraphError> for UncertainError {
+    fn from(err: ultragraph::GraphError) -> Self {
+        UncertainError::GraphError(err.to_string())
     }
 }
 
@@ -40,12 +56,18 @@ impl std::error::Error for UncertainError {}
 // Allow easy conversion from rand_distr errors into our custom error type.
 impl From<rand_distr::uniform::Error> for UncertainError {
     fn from(err: rand_distr::uniform::Error) -> Self {
-        UncertainError::UniformError(err.to_string())
+        UncertainError::UniformDistributionError(err.to_string())
+    }
+}
+
+impl From<rand_distr::BernoulliError> for UncertainError {
+    fn from(err: rand_distr::BernoulliError) -> Self {
+        UncertainError::BernoulliDistributionError(err.to_string())
     }
 }
 
 impl From<rand_distr::NormalError> for UncertainError {
     fn from(err: rand_distr::NormalError) -> Self {
-        UncertainError::NormalError(err.to_string())
+        UncertainError::NormalDistributionError(err.to_string())
     }
 }
