@@ -4,7 +4,7 @@
  */
 
 /// Defines binary comparison operations that take an f64 and return a bool.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialOrd, PartialEq)]
 pub enum ComparisonOperator {
     GreaterThan,
     LessThan,
@@ -18,7 +18,16 @@ impl ComparisonOperator {
             ComparisonOperator::GreaterThan => a > b,
             ComparisonOperator::LessThan => a < b,
             // Use a small epsilon for robust floating-point equality checks.
-            ComparisonOperator::EqualTo => (a - b).abs() < f64::EPSILON,
+            ComparisonOperator::EqualTo => {
+                if a.is_nan() || b.is_nan() {
+                    false // NaN is never equal to anything, including itself
+                } else if a.is_infinite() || b.is_infinite() {
+                    a == b // Handles Inf == Inf, Inf == -Inf, Inf == finite
+                } else {
+                    // Use a small epsilon for robust floating-point equality checks for finite numbers.
+                    (a - b).abs() < f64::EPSILON
+                }
+            }
         }
     }
 }

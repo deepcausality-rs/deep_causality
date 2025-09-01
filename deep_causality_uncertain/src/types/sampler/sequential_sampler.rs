@@ -3,9 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::types::computation::operator::logical_operator::LogicalOperator;
-use crate::{ComputationNode, SampledValue, Sampler, UncertainError};
-use rand::rng;
+use crate::{ComputationNode, LogicalOperator, SampledValue, Sampler, UncertainError};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -32,10 +30,8 @@ impl Sampler for SequentialSampler {
     /// - `Err(UncertainError)` if an error occurs during sampling (e.g., type mismatch, distribution error).
     fn sample(&self, root_node: &Arc<ComputationNode>) -> Result<SampledValue, UncertainError> {
         let mut context: HashMap<*const ComputationNode, SampledValue> = HashMap::new();
-        let mut rng = rng();
-
-        // Call the inherent method.
-        self.evaluate_node(root_node, &mut context, &mut rng)
+        // Call the internal method.
+        self.evaluate_node(root_node, &mut context, &mut rand::rng())
     }
 }
 

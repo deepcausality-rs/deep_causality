@@ -25,3 +25,12 @@ impl NormalDistributionParams {
         Self { mean, std_dev }
     }
 }
+impl std::fmt::Display for NormalDistributionParams {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "NormalDistributionParams {{ mean:  {:.4} , std_dev:  {:.4}  }}",
+            self.mean, self.std_dev
+        )
+    }
+}

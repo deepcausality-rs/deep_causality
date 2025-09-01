@@ -14,7 +14,6 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 mod uncertain_arithmetic;
 mod uncertain_comparison;
-mod uncertain_getters;
 mod uncertain_logic;
 mod uncertain_sampling;
 mod uncertain_statistics;
@@ -46,6 +45,12 @@ impl<T> Uncertain<T> {
             if_true: Box::new((*if_true.root_node).clone()),
             if_false: Box::new((*if_false.root_node).clone()),
         })
+    }
+}
+
+impl<T: Copy> Uncertain<T> {
+    pub fn id(&self) -> usize {
+        self.id
     }
 }
 

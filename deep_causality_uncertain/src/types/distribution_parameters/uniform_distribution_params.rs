@@ -25,3 +25,13 @@ impl UniformDistributionParams {
         Self { low, high }
     }
 }
+
+impl std::fmt::Display for UniformDistributionParams {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "UniformDistributionParams {{ low: {:.4} , high: {:.4} }}",
+            self.low, self.high
+        )
+    }
+}

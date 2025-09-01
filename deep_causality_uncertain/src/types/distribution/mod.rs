@@ -2,13 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
-use crate::errors::uncertain_error::UncertainError;
-use crate::types::distribution_parameters::{
-    BernoulliParams, NormalDistributionParams, UniformDistributionParams,
-};
+use crate::{BernoulliParams, NormalDistributionParams, UncertainError, UniformDistributionParams};
 use rand::Rng;
 use rand_distr::{Bernoulli, Distribution, Normal, Uniform};
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Copy)]
 pub enum DistributionEnum<T> {
@@ -66,6 +63,20 @@ impl DistributionEnum<bool> {
             _ => Err(UncertainError::UnsupportedTypeError(
                 "Distribution does not produce bool".to_string(),
             )),
+        }
+    }
+}
+
+impl<T> Display for DistributionEnum<T>
+where
+    T: Display,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DistributionEnum::Point(d) => write!(f, "Distribution: Point {{ D: {} }}", d),
+            DistributionEnum::Normal(d) => write!(f, "Distribution: Normal {{ D: {} }}", d),
+            DistributionEnum::Uniform(d) => write!(f, "Distribution: Uniform {{ D: {} }}", d),
+            DistributionEnum::Bernoulli(d) => write!(f, "Distribution: Bernoulli {{ D: {} }}", d),
         }
     }
 }

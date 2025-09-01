@@ -23,3 +23,9 @@ impl BernoulliParams {
         Self { p }
     }
 }
+
+impl std::fmt::Display for BernoulliParams {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "BernoulliParams {{ p: {:.2} }}", self.p)
+    }
+}

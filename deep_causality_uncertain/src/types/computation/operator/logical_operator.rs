@@ -6,7 +6,7 @@
 use std::fmt;
 
 /// Defines logical operations that take bool(s) and return a bool.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialOrd, PartialEq)]
 pub enum LogicalOperator {
     And, // true if and only if A and B are true
     Or,  // true if and only if A or B is true
