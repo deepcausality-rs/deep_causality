@@ -11,6 +11,16 @@ pub struct NormalDistributionParams {
 }
 
 impl NormalDistributionParams {
+    /// Creates a new `NormalDistributionParams` instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `mean` - The mean (μ) of the normal distribution.
+    /// * `std_dev` - The standard deviation (σ) of the normal distribution.
+    ///
+    /// # Returns
+    ///
+    /// A new `NormalDistributionParams` instance.
     pub fn new(mean: f64, std_dev: f64) -> Self {
         Self { mean, std_dev }
     }

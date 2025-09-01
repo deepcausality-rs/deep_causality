@@ -2,11 +2,16 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use deep_causality_uncertain::{Uncertain, UncertainError, sprt_eval, with_global_cache};
 
-use deep_causality_uncertain::{Uncertain, UncertainError, sprt_eval};
+// Helper to reset the global cache for isolated tests
+fn reset_global_cache() {
+    with_global_cache(|cache| cache.clear());
+}
 
 #[test]
 fn test_evaluate_hypothesis_always_true() {
+    reset_global_cache();
     // Create an Uncertain<bool> that always samples true
     let ub = Uncertain::<bool>::point(true);
     let result = sprt_eval::evaluate_hypothesis(&ub, 0.5, 0.95, 0.01, 100, 0).unwrap();
@@ -15,6 +20,7 @@ fn test_evaluate_hypothesis_always_true() {
 
 #[test]
 fn test_evaluate_hypothesis_always_false() {
+    reset_global_cache();
     // Create an Uncertain<bool> that always samples false
     let ub = Uncertain::<bool>::point(false);
     let result = sprt_eval::evaluate_hypothesis(&ub, 0.5, 0.95, 0.01, 100, 0).unwrap();
@@ -23,6 +29,7 @@ fn test_evaluate_hypothesis_always_false() {
 
 #[test]
 fn test_evaluate_hypothesis_fallback_true() {
+    reset_global_cache();
     // Samples are 60% true, threshold 0.5, but max_samples is too low for SPRT to conclude
     let ub = Uncertain::<bool>::bernoulli(0.6);
     let result = sprt_eval::evaluate_hypothesis(&ub, 0.5, 0.95, 0.01, 1000, 0).unwrap(); // Increased max_samples
@@ -31,6 +38,7 @@ fn test_evaluate_hypothesis_fallback_true() {
 
 #[test]
 fn test_evaluate_hypothesis_fallback_false() {
+    reset_global_cache();
     // Samples are 40% true, threshold 0.5, but max_samples is too low for SPRT to conclude
     let ub = Uncertain::<bool>::bernoulli(0.4);
     let result = sprt_eval::evaluate_hypothesis(&ub, 0.5, 0.95, 0.01, 1000, 0).unwrap(); // Increased max_samples
@@ -39,6 +47,7 @@ fn test_evaluate_hypothesis_fallback_false() {
 
 #[test]
 fn test_evaluate_hypothesis_error_propagation() {
+    reset_global_cache();
     // Test error propagation from sampling
     let invalid_bernoulli = Uncertain::<bool>::bernoulli(2.0); // Invalid p
     let result = sprt_eval::evaluate_hypothesis(&invalid_bernoulli, 0.5, 0.95, 0.01, 10, 0);
@@ -51,6 +60,7 @@ fn test_evaluate_hypothesis_error_propagation() {
 
 #[test]
 fn test_evaluate_hypothesis_threshold_boundaries() {
+    reset_global_cache();
     let ub_high = Uncertain::<bool>::point(true);
     let ub_low = Uncertain::<bool>::point(false);
 
@@ -67,6 +77,7 @@ fn test_evaluate_hypothesis_threshold_boundaries() {
 
 #[test]
 fn test_evaluate_hypothesis_epsilon_effect() {
+    reset_global_cache();
     // Test with a distribution that's exactly on the threshold
     let ub_50_50 = Uncertain::<bool>::bernoulli(0.5);
 
@@ -85,6 +96,7 @@ fn test_evaluate_hypothesis_epsilon_effect() {
 
 #[test]
 fn test_evaluate_hypothesis_confidence_effect() {
+    reset_global_cache();
     let ub_60 = Uncertain::<bool>::bernoulli(0.6);
 
     // High confidence requires more samples or stronger evidence
@@ -103,6 +115,7 @@ fn test_evaluate_hypothesis_confidence_effect() {
 
 #[test]
 fn test_evaluate_hypothesis_initial_sample_index() {
+    reset_global_cache();
     // Test that initial_sample_index is used correctly
     let ub_bernoulli = Uncertain::<bool>::bernoulli(0.8);
 

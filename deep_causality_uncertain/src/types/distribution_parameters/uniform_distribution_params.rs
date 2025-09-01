@@ -11,6 +11,16 @@ pub struct UniformDistributionParams {
 }
 
 impl UniformDistributionParams {
+    /// Creates a new `UniformDistributionParams` instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `low` - The lower bound of the uniform distribution.
+    /// * `high` - The upper bound of the uniform distribution.
+    ///
+    /// # Returns
+    ///
+    /// A new `UniformDistributionParams` instance.
     pub fn new(low: f64, high: f64) -> Self {
         Self { low, high }
     }

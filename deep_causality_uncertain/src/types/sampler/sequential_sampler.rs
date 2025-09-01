@@ -14,7 +14,21 @@ pub struct SequentialSampler;
 
 // Implementation of the Sampler trait.
 impl Sampler for SequentialSampler {
-    // Note: Removed 'pub' qualifier as it's not allowed in trait implementations.
+    /// Samples a value from the given root computation node.
+    ///
+    /// This method initiates the sampling process by evaluating the computation graph
+    /// starting from the `root_node`. It uses a `HashMap` for memoization to avoid
+    /// recomputing values for the same node multiple times within a single sample operation.
+    ///
+    /// # Arguments
+    ///
+    /// * `root_node` - An `Arc` to the root `ComputationNode` of the graph to be sampled.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// - `Ok(SampledValue)` containing the sampled value if the sampling is successful.
+    /// - `Err(UncertainError)` if an error occurs during sampling (e.g., type mismatch, distribution error).
     fn sample(&self, root_node: &Arc<ComputationNode>) -> Result<SampledValue, UncertainError> {
         let mut context: HashMap<*const ComputationNode, SampledValue> = HashMap::new();
         let mut rng = rng();
@@ -26,8 +40,28 @@ impl Sampler for SequentialSampler {
 
 #[allow(clippy::only_used_in_recursion)]
 impl SequentialSampler {
-    // Note: Moved evaluate_node here from the trait implementation.
-    // This function is now a private helper method for SequentialSampler.
+    // This function is a private helper method for SequentialSampler.
+    /// Recursively evaluates a computation node and its dependencies to produce a `SampledValue`.
+    ///
+    /// This is a private helper method used by the `sample` method. It performs a depth-first
+    /// traversal of the computation graph, evaluating each node based on its type and
+    /// its children's evaluated values. It uses a `context` `HashMap` for memoization
+    /// to store and retrieve already computed node values, preventing redundant calculations.
+    ///
+    /// # Arguments
+    ///
+    /// * `node` - A reference to the current `ComputationNode` to be evaluated.
+    /// * `context` - A mutable reference to a `HashMap` used for memoization. Keys are raw pointers
+    ///   to `ComputationNode`s, and values are their `SampledValue`s.
+    /// * `rng` - A mutable reference to a random number generator implementing the `rand::Rng` trait,
+    ///   used for sampling from distributions.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// - `Ok(SampledValue)` containing the evaluated value of the node.
+    /// - `Err(UncertainError)` if an error occurs during evaluation (e.g., type mismatch,
+    ///   distribution sampling error).
     fn evaluate_node(
         &self,
         node: &ComputationNode,

@@ -8,17 +8,15 @@
 mod algos;
 mod errors;
 mod traits;
-mod types;
+pub mod types;
 
-// Re-export key types for easier access.
-// Algorithms
-pub use algos::hypothesis::sprt_eval;
+// types
+pub use crate::algos::hypothesis::sprt_eval;
 // Errors
 pub use crate::errors::UncertainError;
 // Traits
 pub use crate::traits::sampler::Sampler;
-// types
-pub use crate::types::cache::{SampledValue, get_global_cache};
+pub use crate::types::cache::{GlobalSampleCache, SampledValue, with_global_cache};
 pub use crate::types::computation::{
     ArithmeticOperator, ComparisonOperator, ComputationNode, LogicalOperator,
 };
@@ -28,3 +26,6 @@ pub use crate::types::distribution_parameters::NormalDistributionParams;
 pub use crate::types::distribution_parameters::UniformDistributionParams;
 pub use crate::types::sampler::SequentialSampler;
 pub use crate::types::uncertain::Uncertain;
+// Test util
+#[cfg(test)]
+pub use crate::types::uncertain::reset_next_uncertain_id;

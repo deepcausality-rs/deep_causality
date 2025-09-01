@@ -3,8 +3,6 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Defines the probability distributions used as sources of uncertainty.
-
 use crate::errors::uncertain_error::UncertainError;
 use crate::types::distribution_parameters::{
     BernoulliParams, NormalDistributionParams, UniformDistributionParams,
@@ -12,7 +10,6 @@ use crate::types::distribution_parameters::{
 use rand::Rng;
 use rand_distr::{Bernoulli, Distribution, Normal, Uniform};
 
-/// Enum for all supported probability distributions, generic over the value it produces.
 #[derive(Debug, Clone, Copy)]
 pub enum DistributionEnum<T> {
     Point(T),
@@ -21,8 +18,16 @@ pub enum DistributionEnum<T> {
     Bernoulli(BernoulliParams),
 }
 
-// Implementation for distributions that produce f64.
 impl DistributionEnum<f64> {
+    /// Samples a value from the distribution for `f64` types.
+    ///
+    /// # Arguments
+    ///
+    /// * `rng` - A mutable reference to a random number generator.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the sampled `f64` value or an `UncertainError` if the distribution type is unsupported.
     pub fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Result<f64, UncertainError> {
         match self {
             DistributionEnum::Point(v) => Ok(*v),
@@ -41,8 +46,16 @@ impl DistributionEnum<f64> {
     }
 }
 
-// Implementation for distributions that produce bool.
 impl DistributionEnum<bool> {
+    /// Samples a value from the distribution for `bool` types.
+    ///
+    /// # Arguments
+    ///
+    /// * `rng` - A mutable reference to a random number generator.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the sampled `bool` value or an `UncertainError` if the distribution type is unsupported.
     pub fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Result<bool, UncertainError> {
         match self {
             DistributionEnum::Point(v) => Ok(*v),

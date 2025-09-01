@@ -8,3 +8,18 @@
 pub struct BernoulliParams {
     pub p: f64, // probability of success
 }
+
+impl BernoulliParams {
+    /// Creates a new `BernoulliParams` instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `p` - The probability of success (must be between 0.0 and 1.0, inclusive).
+    ///
+    /// # Returns
+    ///
+    /// A new `BernoulliParams` instance.
+    pub fn new(p: f64) -> Self {
+        Self { p }
+    }
+}

@@ -4,35 +4,22 @@
  */
 
 use crate::{
-    SampledValue, Sampler, SequentialSampler, Uncertain, UncertainError, get_global_cache,
+    SampledValue, Sampler, SequentialSampler, Uncertain, UncertainError, with_global_cache,
 };
 use rand::{Rng, rng};
 
 // Sampling impl for Uncertain<f64>
 impl Uncertain<f64> {
     pub fn sample_with_index(&self, sample_index: u64) -> Result<f64, UncertainError> {
-        let cache = get_global_cache();
         let key = (self.id, sample_index);
 
-        // Try to get from cache first
-        if let Some(value) = cache.get(&key) {
-            match value {
-                SampledValue::Float(f) => return Ok(f),
-                _ => {
-                    return Err(UncertainError::UnsupportedTypeError(
-                        "Cached value type mismatch: Expected f64".to_string(),
-                    ));
-                }
-            }
-        }
+        let computed_value = with_global_cache(|cache| {
+            cache.get_or_compute(key, || {
+                let sampler = SequentialSampler;
+                Sampler::sample(&sampler, &self.root_node)
+            })
+        })?;
 
-        // If not in cache, compute the value
-        let sampler = SequentialSampler;
-        // Disambiguate between Sampler::sample and Rng::sample
-        let computed_value = Sampler::sample(&sampler, &self.root_node)?;
-
-        // Store in cache and return
-        cache.insert(key, computed_value);
         match computed_value {
             SampledValue::Float(f) => Ok(f),
             _ => Err(UncertainError::UnsupportedTypeError(
@@ -54,28 +41,15 @@ impl Uncertain<f64> {
 // Sampling impl for Uncertain<bool>
 impl Uncertain<bool> {
     pub fn sample_with_index(&self, sample_index: u64) -> Result<bool, UncertainError> {
-        let cache = get_global_cache();
         let key = (self.id, sample_index);
 
-        // Try to get from cache first
-        if let Some(value) = cache.get(&key) {
-            match value {
-                SampledValue::Bool(b) => return Ok(b),
-                _ => {
-                    return Err(UncertainError::UnsupportedTypeError(
-                        "Cached value type mismatch: Expected bool".to_string(),
-                    ));
-                }
-            }
-        }
+        let computed_value = with_global_cache(|cache| {
+            cache.get_or_compute(key, || {
+                let sampler = SequentialSampler;
+                Sampler::sample(&sampler, &self.root_node)
+            })
+        })?;
 
-        // If not in cache, compute the value
-        let sampler = SequentialSampler;
-        // Disambiguate between Sampler::sample and Rng::sample
-        let computed_value = Sampler::sample(&sampler, &self.root_node)?;
-
-        // Store in cache and return
-        cache.insert(key, computed_value);
         match computed_value {
             SampledValue::Bool(b) => Ok(b),
             _ => Err(UncertainError::UnsupportedTypeError(
