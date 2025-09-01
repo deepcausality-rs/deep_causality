@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::types::computation::ArithmeticOperator;
+use crate::types::computation::operator::arithmetic_operator::ArithmeticOperator;
 use crate::{ComputationNode, Uncertain};
 use std::ops::{Add, Div, Mul, Neg, Sub};
 

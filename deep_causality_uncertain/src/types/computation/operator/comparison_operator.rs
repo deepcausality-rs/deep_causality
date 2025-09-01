@@ -3,26 +3,6 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-/// Defines binary arithmetic operations that take two f64 and return an f64.
-#[derive(Debug, Clone, Copy)]
-pub enum ArithmeticOperator {
-    Add,
-    Sub,
-    Mul,
-    Div,
-}
-
-impl ArithmeticOperator {
-    pub fn apply(&self, a: f64, b: f64) -> f64 {
-        match self {
-            ArithmeticOperator::Add => a + b,
-            ArithmeticOperator::Sub => a - b,
-            ArithmeticOperator::Mul => a * b,
-            ArithmeticOperator::Div => a / b,
-        }
-    }
-}
-
 /// Defines binary comparison operations that take an f64 and return a bool.
 #[derive(Debug, Clone, Copy)]
 pub enum ComparisonOperator {
@@ -42,11 +22,14 @@ impl ComparisonOperator {
         }
     }
 }
+use std::fmt;
 
-/// Defines logical operations that take bool(s) and return a bool.
-#[derive(Debug, Clone, Copy)]
-pub enum LogicalOperator {
-    And,
-    Or,
-    Not, // Note: `Not` is unary, which will be handled by the sampler logic.
+impl fmt::Display for ComparisonOperator {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ComparisonOperator::GreaterThan => write!(f, ">"),
+            ComparisonOperator::LessThan => write!(f, "<"),
+            ComparisonOperator::EqualTo => write!(f, "=="),
+        }
+    }
 }

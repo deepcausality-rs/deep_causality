@@ -17,6 +17,8 @@ rand = "0.9"
 rand_distr = "0.5"
 rayon = { version = "1.11", optional = true }
 
+[lib]
+test = true
 
 [[example]]
 name = "gps_navigation"

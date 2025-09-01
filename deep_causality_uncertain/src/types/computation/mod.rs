@@ -2,8 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-mod computation_node;
-mod computation_operator;
+pub mod node;
+pub mod operator;
 
-pub use computation_node::ComputationNode;
-pub use computation_operator::{ArithmeticOperator, ComparisonOperator, LogicalOperator};
+pub use node::ComputationNode;
+pub use operator::arithmetic_operator::ArithmeticOperator;
+pub use operator::comparison_operator::ComparisonOperator;
+pub use operator::logical_operator::LogicalOperator;

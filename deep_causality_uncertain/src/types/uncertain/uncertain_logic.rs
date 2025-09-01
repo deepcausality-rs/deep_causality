@@ -3,7 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::Uncertain;
-use crate::types::computation::{ComputationNode, LogicalOperator};
+use crate::types::computation::ComputationNode;
+use crate::types::computation::operator::logical_operator::LogicalOperator;
 use std::ops::{BitAnd, BitOr, Not};
 
 impl BitAnd for Uncertain<bool> {

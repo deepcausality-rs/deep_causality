@@ -49,25 +49,25 @@ impl GlobalSampleCache {
         key: SampleCacheKey,
         compute_fn: F,
     ) -> Result<SampledValue, crate::UncertainError>
-    where
-        F: FnOnce() -> Result<SampledValue, crate::UncertainError>,
+        where
+            F: FnOnce() -> Result<SampledValue, crate::UncertainError>,
     {
         // Try to get from cache first (read lock).
         if let Some(value) = self.get(&key) {
             return Ok(value);
-        }
+        };
 
-        // If not in cache, compute it.
-        let computed_value = compute_fn()?;
-
-        // Then, acquire a write lock to insert the new value.
+        // If not in the cache, acquire a write lock.
         let mut writer = self.data.write().expect("RwLock poisoned (write)");
 
-        // Double-check if another thread inserted it while we were computing.
+        // Double-check if another thread inserted the value while we were waiting for the lock.
+        // This avoids redundant computation.
         if let Some(value) = writer.get(&key) {
             return Ok(*value);
         }
 
+        // If the value is still not in the cache, compute it while holding the lock.
+        let computed_value = compute_fn()?;
         writer.insert(key, computed_value);
         Ok(computed_value)
     }

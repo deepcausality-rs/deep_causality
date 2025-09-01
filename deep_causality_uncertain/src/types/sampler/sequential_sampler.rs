@@ -3,7 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{ComputationNode, LogicalOperator, SampledValue, Sampler, UncertainError};
+use crate::types::computation::operator::logical_operator::LogicalOperator;
+use crate::{ComputationNode, SampledValue, Sampler, UncertainError};
 use rand::rng;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -117,6 +118,8 @@ impl SequentialSampler {
                     LogicalOperator::And => evaluated_operands[0] && evaluated_operands[1],
                     LogicalOperator::Or => evaluated_operands[0] || evaluated_operands[1],
                     LogicalOperator::Not => !evaluated_operands[0],
+                    LogicalOperator::NOR => !(evaluated_operands[0] || evaluated_operands[1]),
+                    LogicalOperator::XOR => evaluated_operands[0] ^ evaluated_operands[1],
                 };
                 SampledValue::Bool(result)
             }

@@ -2,10 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::types::computation::computation_operator::{
-    ArithmeticOperator, ComparisonOperator, LogicalOperator,
-};
-
+use crate::ArithmeticOperator;
+use crate::ComparisonOperator;
+use crate::LogicalOperator;
 use std::sync::Arc;
 
 /// Represents a node in the computation graph. This is now a single, non-generic enum.

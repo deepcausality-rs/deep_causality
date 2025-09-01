@@ -4,8 +4,9 @@
  */
 
 use crate::Uncertain;
-use crate::types::computation::{ArithmeticOperator, ComparisonOperator, ComputationNode};
-
+use crate::types::computation::ComputationNode;
+use crate::types::computation::operator::arithmetic_operator::ArithmeticOperator;
+use crate::types::computation::operator::comparison_operator::ComparisonOperator;
 // Note: We do not implement the standard `PartialOrd` and `PartialEq` traits
 // because their signatures return `bool`, which is misleading for uncertain values.
 // Instead, we provide methods that correctly return a new `Uncertain<bool>`.

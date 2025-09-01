@@ -20,27 +20,7 @@ mod uncertain_sampling;
 mod uncertain_statistics;
 
 // A single static counter for all Uncertain instances to generate unique IDs.
-#[cfg(not(test))]
 static NEXT_UNCERTAIN_ID: AtomicUsize = AtomicUsize::new(0);
-
-#[cfg(test)]
-thread_local! {
-    static NEXT_UNCERTAIN_ID: AtomicUsize = const { AtomicUsize::new(0) };
-}
-
-#[cfg(test)]
-pub fn reset_next_uncertain_id() {
-    #[cfg(not(test))]
-    {
-        // In production, we don't reset global counters.
-        panic!("reset_next_uncertain_id should never be called in production");
-    }
-    #[cfg(test)]
-    {
-        // For testing
-        NEXT_UNCERTAIN_ID.with(|id| id.store(0, Ordering::Relaxed));
-    }
-}
 
 /// A type representing a value with inherent uncertainty, modeled as a probability distribution.
 #[derive(Clone)]
@@ -54,16 +34,7 @@ impl<T> Uncertain<T> {
     /// Creates a new `Uncertain` value from a computation graph represented by a root node.
     fn from_root_node(root_node: ComputationNode) -> Self {
         Self {
-            id: {
-                #[cfg(not(test))]
-                {
-                    NEXT_UNCERTAIN_ID.fetch_add(1, Ordering::Relaxed)
-                }
-                #[cfg(test)]
-                {
-                    NEXT_UNCERTAIN_ID.with(|id| id.fetch_add(1, Ordering::Relaxed))
-                }
-            },
+            id: NEXT_UNCERTAIN_ID.fetch_add(1, Ordering::Relaxed),
             root_node: Arc::new(root_node),
             _phantom: PhantomData,
         }
@@ -122,9 +93,7 @@ impl Uncertain<bool> {
 
     pub fn bernoulli(p: f64) -> Self {
         let params = BernoulliParams { p };
-        Self::from_root_node(ComputationNode::LeafBool(DistributionEnum::Bernoulli(
-            params,
-        )))
+        Self::from_root_node(ComputationNode::LeafBool(DistributionEnum::Bernoulli(params)))
     }
 
     pub fn to_bool(&self, confidence: f64) -> Result<bool, UncertainError> {
