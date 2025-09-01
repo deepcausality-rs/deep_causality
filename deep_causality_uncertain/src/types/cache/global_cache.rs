@@ -49,8 +49,8 @@ impl GlobalSampleCache {
         key: SampleCacheKey,
         compute_fn: F,
     ) -> Result<SampledValue, crate::UncertainError>
-        where
-            F: FnOnce() -> Result<SampledValue, crate::UncertainError>,
+    where
+        F: FnOnce() -> Result<SampledValue, crate::UncertainError>,
     {
         // Try to get from cache first (read lock).
         if let Some(value) = self.get(&key) {

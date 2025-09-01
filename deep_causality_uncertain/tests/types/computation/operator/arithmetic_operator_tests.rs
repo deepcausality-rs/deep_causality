@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_uncertain::types::computation::ArithmeticOperator;
+use deep_causality_uncertain::ArithmeticOperator;
 
 #[test]
 fn test_arithmetic_operator_add() {

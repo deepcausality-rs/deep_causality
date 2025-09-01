@@ -93,7 +93,9 @@ impl Uncertain<bool> {
 
     pub fn bernoulli(p: f64) -> Self {
         let params = BernoulliParams { p };
-        Self::from_root_node(ComputationNode::LeafBool(DistributionEnum::Bernoulli(params)))
+        Self::from_root_node(ComputationNode::LeafBool(DistributionEnum::Bernoulli(
+            params,
+        )))
     }
 
     pub fn to_bool(&self, confidence: f64) -> Result<bool, UncertainError> {
