@@ -236,6 +236,7 @@ dependencies = [
 name = "deep_causality_uncertain"
 version = "0.1.0"
 dependencies = [
+ "criterion",
  "rand",
  "rand_distr",
  "rayon",
