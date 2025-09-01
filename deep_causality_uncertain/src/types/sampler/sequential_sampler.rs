@@ -100,22 +100,32 @@ impl SequentialSampler {
             }
 
             ComputationNode::LogicalOp { op, operands } => {
-                let evaluated_operands: Vec<bool> = operands
-                    .iter()
-                    .map(|operand_node| {
-                        match self.evaluate_node(operand_node, context, rng).unwrap() {
-                            SampledValue::Bool(b) => b,
-                            _ => panic!("Type error: Logical op requires boolean inputs"),
-                        }
-                    })
-                    .collect();
-
+                let mut vals = Vec::with_capacity(operands.len());
+                for operand_node in operands {
+                    match self.evaluate_node(operand_node, context, rng)? {
+                        SampledValue::Bool(b) => vals.push(b),
+                        _ => return Err(UncertainError::TypeError("Logical op requires boolean inputs".into())),
+                    }
+                }
                 let result = match op {
-                    LogicalOperator::And => evaluated_operands[0] && evaluated_operands[1],
-                    LogicalOperator::Or => evaluated_operands[0] || evaluated_operands[1],
-                    LogicalOperator::Not => !evaluated_operands[0],
-                    LogicalOperator::NOR => !(evaluated_operands[0] || evaluated_operands[1]),
-                    LogicalOperator::XOR => evaluated_operands[0] ^ evaluated_operands[1],
+                    LogicalOperator::Not => {
+                        if vals.len() != 1 {
+                            return Err(UncertainError::TypeError("NOT expects exactly 1 operand".into()));
+                        }
+                        !vals[0]
+                    }
+                    LogicalOperator::And | LogicalOperator::Or | LogicalOperator::NOR | LogicalOperator::XOR => {
+                        if vals.len() != 2 {
+                            return Err(UncertainError::TypeError("Binary logical op expects exactly 2 operands".into()));
+                        }
+                        match op {
+                            LogicalOperator::And => vals[0] && vals[1],
+                            LogicalOperator::Or => vals[0] || vals[1],
+                            LogicalOperator::NOR => !(vals[0] || vals[1]),
+                            LogicalOperator::XOR => vals[0] ^ vals[1],
+                            LogicalOperator::Not => unreachable!(),
+                        }
+                    }
                 };
                 SampledValue::Bool(result)
             }
