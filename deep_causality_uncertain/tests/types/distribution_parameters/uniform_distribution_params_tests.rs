@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_uncertain::types::distribution_parameters::UniformDistributionParams;
+use deep_causality_uncertain::UniformDistributionParams;
 
 #[test]
 fn test_uniform_distribution_params_new() {

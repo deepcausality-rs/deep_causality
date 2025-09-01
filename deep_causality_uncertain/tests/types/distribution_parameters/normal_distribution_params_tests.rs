@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_uncertain::types::distribution_parameters::NormalDistributionParams;
+use deep_causality_uncertain::NormalDistributionParams;
 
 #[test]
 fn test_normal_distribution_params_new() {

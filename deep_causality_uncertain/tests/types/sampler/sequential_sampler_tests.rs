@@ -5,7 +5,8 @@
 
 use deep_causality_uncertain::{
     ArithmeticOperator, BernoulliParams, ComparisonOperator, ComputationNode, DistributionEnum,
-    LogicalOperator, NormalDistributionParams, SampledValue, SequentialSampler, UncertainError,
+    LogicalOperator, NodeId, NormalDistributionParams, SampledValue, SequentialSampler,
+    UncertainError,
 };
 
 use deep_causality_uncertain::Sampler;
@@ -20,7 +21,10 @@ fn test_sequential_sampler_default() {
 #[test]
 fn test_sequential_sampler_leaf_f64() {
     let sampler = SequentialSampler;
-    let root_node = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(123.45)));
+    let root_node = Arc::new(ComputationNode::LeafF64 {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(123.45),
+    });
     let result = sampler.sample(&root_node).unwrap();
     assert_eq!(result, SampledValue::Float(123.45));
 }
@@ -28,7 +32,10 @@ fn test_sequential_sampler_leaf_f64() {
 #[test]
 fn test_sequential_sampler_leaf_bool() {
     let sampler = SequentialSampler;
-    let root_node = Arc::new(ComputationNode::LeafBool(DistributionEnum::Point(true)));
+    let root_node = Arc::new(ComputationNode::LeafBool {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(true),
+    });
     let result = sampler.sample(&root_node).unwrap();
     assert_eq!(result, SampledValue::Bool(true));
 }
@@ -36,9 +43,16 @@ fn test_sequential_sampler_leaf_bool() {
 #[test]
 fn test_sequential_sampler_arithmetic_op_add() {
     let sampler = SequentialSampler;
-    let lhs = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(10.0)));
-    let rhs = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(5.0)));
+    let lhs = Arc::new(ComputationNode::LeafF64 {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(10.0),
+    });
+    let rhs = Arc::new(ComputationNode::LeafF64 {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(5.0),
+    });
     let root_node = Arc::new(ComputationNode::ArithmeticOp {
+        node_id: NodeId::new(),
         op: ArithmeticOperator::Add,
         lhs: Box::new((*lhs).clone()),
         rhs: Box::new((*rhs).clone()),
@@ -48,24 +62,39 @@ fn test_sequential_sampler_arithmetic_op_add() {
 }
 
 #[test]
-#[should_panic(expected = "Type error: Arithmetic op requires float inputs")]
 fn test_sequential_sampler_arithmetic_op_type_error() {
     let sampler = SequentialSampler;
-    let lhs = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(10.0)));
-    let rhs = Arc::new(ComputationNode::LeafBool(DistributionEnum::Point(true))); // Type mismatch
+    let lhs = Arc::new(ComputationNode::LeafF64 {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(10.0),
+    });
+    let rhs = Arc::new(ComputationNode::LeafBool {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(true),
+    }); // Type mismatch
     let root_node = Arc::new(ComputationNode::ArithmeticOp {
+        node_id: NodeId::new(),
         op: ArithmeticOperator::Add,
         lhs: Box::new((*lhs).clone()),
         rhs: Box::new((*rhs).clone()),
     });
-    let _ = sampler.sample(&root_node).unwrap();
+    let res = sampler.sample(&root_node);
+    assert!(res.is_err());
+    match res.err().unwrap() {
+        UncertainError::UnsupportedTypeError(_) => (),
+        e => panic!("Expected UnsupportedTypeError, got {:?}", e),
+    }
 }
 
 #[test]
 fn test_sequential_sampler_comparison_op_greater_than() {
     let sampler = SequentialSampler;
-    let operand = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(10.0)));
+    let operand = Arc::new(ComputationNode::LeafF64 {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(10.0),
+    });
     let root_node = Arc::new(ComputationNode::ComparisonOp {
+        node_id: NodeId::new(),
         op: ComparisonOperator::GreaterThan,
         threshold: 5.0,
         operand: Box::new((*operand).clone()),
@@ -75,24 +104,39 @@ fn test_sequential_sampler_comparison_op_greater_than() {
 }
 
 #[test]
-#[should_panic(expected = "Type error: Comparison op requires float input")]
 fn test_sequential_sampler_comparison_op_type_error() {
     let sampler = SequentialSampler;
-    let operand = Arc::new(ComputationNode::LeafBool(DistributionEnum::Point(true))); // Type mismatch
+    let operand = Arc::new(ComputationNode::LeafBool {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(true),
+    }); // Type mismatch
     let root_node = Arc::new(ComputationNode::ComparisonOp {
+        node_id: NodeId::new(),
         op: ComparisonOperator::GreaterThan,
         threshold: 5.0,
         operand: Box::new((*operand).clone()),
     });
-    let _ = sampler.sample(&root_node).unwrap();
+    let res = sampler.sample(&root_node);
+    assert!(res.is_err());
+    match res.err().unwrap() {
+        UncertainError::UnsupportedTypeError(_) => (),
+        e => panic!("Expected UnsupportedTypeError, got {:?}", e),
+    }
 }
 
 #[test]
 fn test_sequential_sampler_logical_op_and() {
     let sampler = SequentialSampler;
-    let op1 = Arc::new(ComputationNode::LeafBool(DistributionEnum::Point(true)));
-    let op2 = Arc::new(ComputationNode::LeafBool(DistributionEnum::Point(false)));
+    let op1 = Arc::new(ComputationNode::LeafBool {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(true),
+    });
+    let op2 = Arc::new(ComputationNode::LeafBool {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(false),
+    });
     let root_node = Arc::new(ComputationNode::LogicalOp {
+        node_id: NodeId::new(),
         op: LogicalOperator::And,
         operands: vec![Box::new((*op1).clone()), Box::new((*op2).clone())],
     });
@@ -103,9 +147,16 @@ fn test_sequential_sampler_logical_op_and() {
 #[test]
 fn test_sequential_sampler_logical_op_type_error() {
     let sampler = SequentialSampler;
-    let op1 = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(1.0))); // Type mismatch
-    let op2 = Arc::new(ComputationNode::LeafBool(DistributionEnum::Point(true)));
+    let op1 = Arc::new(ComputationNode::LeafF64 {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(1.0),
+    }); // Type mismatch
+    let op2 = Arc::new(ComputationNode::LeafBool {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(true),
+    });
     let root_node = Arc::new(ComputationNode::LogicalOp {
+        node_id: NodeId::new(),
         op: LogicalOperator::And,
         operands: vec![Box::new((*op1).clone()), Box::new((*op2).clone())],
     });
@@ -114,16 +165,20 @@ fn test_sequential_sampler_logical_op_type_error() {
     assert!(res.is_err());
     match res.err().unwrap() {
         UncertainError::UnsupportedTypeError(_) => (),
-        _ => panic!("Expected UnsupportedTypeError"),
+        e => panic!("Expected UnsupportedTypeError, got {:?}", e),
     }
 }
 
 #[test]
 fn test_sequential_sampler_function_op() {
     let sampler = SequentialSampler;
-    let operand = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(5.0)));
+    let operand = Arc::new(ComputationNode::LeafF64 {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(5.0),
+    });
     let func = Arc::new(|x: f64| x * 2.0);
     let root_node = Arc::new(ComputationNode::FunctionOp {
+        node_id: NodeId::new(),
         func,
         operand: Box::new((*operand).clone()),
     });
@@ -132,23 +187,35 @@ fn test_sequential_sampler_function_op() {
 }
 
 #[test]
-#[should_panic(expected = "Type error: Function op requires float input")]
 fn test_sequential_sampler_function_op_type_error() {
     let sampler = SequentialSampler;
-    let operand = Arc::new(ComputationNode::LeafBool(DistributionEnum::Point(true))); // Type mismatch
+    let operand = Arc::new(ComputationNode::LeafBool {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(true),
+    }); // Type mismatch
     let func = Arc::new(|x: f64| x * 2.0);
     let root_node = Arc::new(ComputationNode::FunctionOp {
+        node_id: NodeId::new(),
         func,
         operand: Box::new((*operand).clone()),
     });
-    let _ = sampler.sample(&root_node).unwrap();
+    let res = sampler.sample(&root_node);
+    assert!(res.is_err());
+    match res.err().unwrap() {
+        UncertainError::UnsupportedTypeError(_) => (),
+        e => panic!("Expected UnsupportedTypeError, got {:?}", e),
+    }
 }
 
 #[test]
 fn test_sequential_sampler_negation_op() {
     let sampler = SequentialSampler;
-    let operand = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(5.0)));
+    let operand = Arc::new(ComputationNode::LeafF64 {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(5.0),
+    });
     let root_node = Arc::new(ComputationNode::NegationOp {
+        node_id: NodeId::new(),
         operand: Box::new((*operand).clone()),
     });
     let result = sampler.sample(&root_node).unwrap();
@@ -156,22 +223,34 @@ fn test_sequential_sampler_negation_op() {
 }
 
 #[test]
-#[should_panic(expected = "Type error: Negation op requires float input")]
 fn test_sequential_sampler_negation_op_type_error() {
     let sampler = SequentialSampler;
-    let operand = Arc::new(ComputationNode::LeafBool(DistributionEnum::Point(true))); // Type mismatch
+    let operand = Arc::new(ComputationNode::LeafBool {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(true),
+    }); // Type mismatch
     let root_node = Arc::new(ComputationNode::NegationOp {
+        node_id: NodeId::new(),
         operand: Box::new((*operand).clone()),
     });
-    let _ = sampler.sample(&root_node).unwrap();
+    let res = sampler.sample(&root_node);
+    assert!(res.is_err());
+    match res.err().unwrap() {
+        UncertainError::UnsupportedTypeError(_) => (),
+        e => panic!("Expected UnsupportedTypeError, got {:?}", e),
+    }
 }
 
 #[test]
 fn test_sequential_sampler_function_op_bool() {
     let sampler = SequentialSampler;
-    let operand = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(5.0)));
+    let operand = Arc::new(ComputationNode::LeafF64 {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(5.0),
+    });
     let func = Arc::new(|x: f64| x > 0.0);
     let root_node = Arc::new(ComputationNode::FunctionOpBool {
+        node_id: NodeId::new(),
         func,
         operand: Box::new((*operand).clone()),
     });
@@ -180,25 +259,43 @@ fn test_sequential_sampler_function_op_bool() {
 }
 
 #[test]
-#[should_panic(expected = "Type error: FunctionOpBool requires float input")]
 fn test_sequential_sampler_function_op_bool_type_error() {
     let sampler = SequentialSampler;
-    let operand = Arc::new(ComputationNode::LeafBool(DistributionEnum::Point(true))); // Type mismatch
+    let operand = Arc::new(ComputationNode::LeafBool {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(true),
+    }); // Type mismatch
     let func = Arc::new(|x: f64| x > 0.0);
     let root_node = Arc::new(ComputationNode::FunctionOpBool {
+        node_id: NodeId::new(),
         func,
         operand: Box::new((*operand).clone()),
     });
-    let _ = sampler.sample(&root_node).unwrap();
+    let res = sampler.sample(&root_node);
+    assert!(res.is_err());
+    match res.err().unwrap() {
+        UncertainError::UnsupportedTypeError(_) => (),
+        e => panic!("Expected UnsupportedTypeError, got {:?}", e),
+    }
 }
 
 #[test]
 fn test_sequential_sampler_conditional_op_true() {
     let sampler = SequentialSampler;
-    let condition = Arc::new(ComputationNode::LeafBool(DistributionEnum::Point(true)));
-    let if_true = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(10.0)));
-    let if_false = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(20.0)));
+    let condition = Arc::new(ComputationNode::LeafBool {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(true),
+    });
+    let if_true = Arc::new(ComputationNode::LeafF64 {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(10.0),
+    });
+    let if_false = Arc::new(ComputationNode::LeafF64 {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(20.0),
+    });
     let root_node = Arc::new(ComputationNode::ConditionalOp {
+        node_id: NodeId::new(),
         condition: Box::new((*condition).clone()),
         if_true: Box::new((*if_true).clone()),
         if_false: Box::new((*if_false).clone()),
@@ -210,10 +307,20 @@ fn test_sequential_sampler_conditional_op_true() {
 #[test]
 fn test_sequential_sampler_conditional_op_false() {
     let sampler = SequentialSampler;
-    let condition = Arc::new(ComputationNode::LeafBool(DistributionEnum::Point(false)));
-    let if_true = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(10.0)));
-    let if_false = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(20.0)));
+    let condition = Arc::new(ComputationNode::LeafBool {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(false),
+    });
+    let if_true = Arc::new(ComputationNode::LeafF64 {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(10.0),
+    });
+    let if_false = Arc::new(ComputationNode::LeafF64 {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(20.0),
+    });
     let root_node = Arc::new(ComputationNode::ConditionalOp {
+        node_id: NodeId::new(),
         condition: Box::new((*condition).clone()),
         if_true: Box::new((*if_true).clone()),
         if_false: Box::new((*if_false).clone()),
@@ -223,27 +330,43 @@ fn test_sequential_sampler_conditional_op_false() {
 }
 
 #[test]
-#[should_panic(expected = "Type error: Conditional condition must be boolean")]
 fn test_sequential_sampler_conditional_op_type_error() {
     let sampler = SequentialSampler;
-    let condition = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(1.0))); // Type mismatch
-    let if_true = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(10.0)));
-    let if_false = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(20.0)));
+    let condition = Arc::new(ComputationNode::LeafF64 {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(1.0),
+    }); // Type mismatch
+    let if_true = Arc::new(ComputationNode::LeafF64 {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(10.0),
+    });
+    let if_false = Arc::new(ComputationNode::LeafF64 {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(20.0),
+    });
     let root_node = Arc::new(ComputationNode::ConditionalOp {
+        node_id: NodeId::new(),
         condition: Box::new((*condition).clone()),
         if_true: Box::new((*if_true).clone()),
         if_false: Box::new((*if_false).clone()),
     });
-    let _ = sampler.sample(&root_node).unwrap();
+    let res = sampler.sample(&root_node);
+    assert!(res.is_err());
+    match res.err().unwrap() {
+        UncertainError::UnsupportedTypeError(_) => (),
+        e => panic!("Expected UnsupportedTypeError, got {:?}", e),
+    }
 }
 
 #[test]
 fn test_sequential_sampler_memoization() {
     let sampler = SequentialSampler;
-    let leaf = Arc::new(ComputationNode::LeafF64(DistributionEnum::Normal(
-        NormalDistributionParams::new(0.0, 0.0001),
-    ))); // Very small std_dev for near-constant value
+    let leaf = Arc::new(ComputationNode::LeafF64 {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Normal(NormalDistributionParams::new(0.0, 0.0001)),
+    }); // Very small std_dev for near-constant value
     let add_op = Arc::new(ComputationNode::ArithmeticOp {
+        node_id: NodeId::new(),
         op: ArithmeticOperator::Add,
         lhs: Box::new((*leaf).clone()),
         rhs: Box::new((*leaf).clone()), // Re-use the same leaf node
@@ -261,8 +384,12 @@ fn test_sequential_sampler_memoization() {
     // The `evaluate_node` function uses the context.
     // Let's create a graph where a node is referenced multiple times.
 
-    let leaf_node = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(5.0)));
+    let leaf_node = Arc::new(ComputationNode::LeafF64 {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(5.0),
+    });
     let node_a = Arc::new(ComputationNode::ArithmeticOp {
+        node_id: NodeId::new(),
         op: ArithmeticOperator::Add,
         lhs: Box::new((*leaf_node).clone()),
         rhs: Box::new((*leaf_node).clone()), // leaf_node used twice
@@ -288,13 +415,14 @@ fn test_sequential_sampler_memoization() {
 fn test_sequential_sampler_error_propagation_from_distribution() {
     let sampler = SequentialSampler;
     // Create a Bernoulli distribution with invalid 'p' to cause an error
-    let root_node = Arc::new(ComputationNode::LeafBool(DistributionEnum::Bernoulli(
-        BernoulliParams::new(2.0),
-    )));
+    let root_node = Arc::new(ComputationNode::LeafBool {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Bernoulli(BernoulliParams::new(2.0)),
+    });
     let result = sampler.sample(&root_node);
     assert!(result.is_err());
     match result.err().unwrap() {
         UncertainError::BernoulliDistributionError(_) => (),
-        _ => panic!("Expected BernoulliDistributionError"),
+        e => panic!("Expected BernoulliDistributionError, got {:?}", e),
     }
 }

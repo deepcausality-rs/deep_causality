@@ -2,9 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_uncertain::types::distribution::DistributionEnum;
-use deep_causality_uncertain::types::distribution_parameters::{
-    BernoulliParams, NormalDistributionParams, UniformDistributionParams,
+use deep_causality_uncertain::{
+    BernoulliParams, DistributionEnum, NormalDistributionParams, UniformDistributionParams,
 };
 use rand::rng;
 

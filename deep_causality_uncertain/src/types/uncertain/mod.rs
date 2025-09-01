@@ -12,6 +12,8 @@ use std::marker::PhantomData;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+use crate::types::computation::node::NodeId; // Added this import
+
 mod uncertain_arithmetic;
 mod uncertain_comparison;
 mod uncertain_logic;
@@ -41,6 +43,7 @@ impl<T> Uncertain<T> {
 
     pub fn conditional(condition: Uncertain<bool>, if_true: Self, if_false: Self) -> Self {
         Self::from_root_node(ComputationNode::ConditionalOp {
+            node_id: NodeId::new(), // Added node_id
             condition: Box::new((*condition.root_node).clone()),
             if_true: Box::new((*if_true.root_node).clone()),
             if_false: Box::new((*if_false.root_node).clone()),
@@ -57,17 +60,26 @@ impl<T: Copy> Uncertain<T> {
 // Constructors
 impl Uncertain<f64> {
     pub fn point(value: f64) -> Self {
-        Self::from_root_node(ComputationNode::LeafF64(DistributionEnum::Point(value)))
+        Self::from_root_node(ComputationNode::LeafF64 {
+            node_id: NodeId::new(), // Added node_id
+            dist: DistributionEnum::Point(value),
+        })
     }
 
     pub fn normal(mean: f64, std_dev: f64) -> Self {
         let params = NormalDistributionParams { mean, std_dev };
-        Self::from_root_node(ComputationNode::LeafF64(DistributionEnum::Normal(params)))
+        Self::from_root_node(ComputationNode::LeafF64 {
+            node_id: NodeId::new(), // Added node_id
+            dist: DistributionEnum::Normal(params),
+        })
     }
 
     pub fn uniform(low: f64, high: f64) -> Self {
         let params = UniformDistributionParams { low, high };
-        Self::from_root_node(ComputationNode::LeafF64(DistributionEnum::Uniform(params)))
+        Self::from_root_node(ComputationNode::LeafF64 {
+            node_id: NodeId::new(), // Added node_id
+            dist: DistributionEnum::Uniform(params),
+        })
     }
 
     pub fn map<F>(&self, func: F) -> Self
@@ -75,6 +87,7 @@ impl Uncertain<f64> {
         F: Fn(f64) -> f64 + Send + Sync + 'static,
     {
         Self::from_root_node(ComputationNode::FunctionOp {
+            node_id: NodeId::new(), // Added node_id
             func: Arc::new(func),
             operand: Box::new((*self.root_node).clone()),
         })
@@ -85,6 +98,7 @@ impl Uncertain<f64> {
         F: Fn(f64) -> bool + Send + Sync + 'static,
     {
         Uncertain::from_root_node(ComputationNode::FunctionOpBool {
+            node_id: NodeId::new(), // Added node_id
             func: Arc::new(func),
             operand: Box::new((*self.root_node).clone()),
         })
@@ -93,14 +107,18 @@ impl Uncertain<f64> {
 
 impl Uncertain<bool> {
     pub fn point(value: bool) -> Self {
-        Self::from_root_node(ComputationNode::LeafBool(DistributionEnum::Point(value)))
+        Self::from_root_node(ComputationNode::LeafBool {
+            node_id: NodeId::new(), // Added node_id
+            dist: DistributionEnum::Point(value),
+        })
     }
 
     pub fn bernoulli(p: f64) -> Self {
         let params = BernoulliParams { p };
-        Self::from_root_node(ComputationNode::LeafBool(DistributionEnum::Bernoulli(
-            params,
-        )))
+        Self::from_root_node(ComputationNode::LeafBool {
+            node_id: NodeId::new(), // Added node_id
+            dist: DistributionEnum::Bernoulli(params),
+        })
     }
 
     pub fn to_bool(&self, confidence: f64) -> Result<bool, UncertainError> {

@@ -5,7 +5,6 @@
 pub mod node;
 pub mod operator;
 
-pub use node::ComputationNode;
 pub use operator::arithmetic_operator::ArithmeticOperator;
 pub use operator::comparison_operator::ComparisonOperator;
 pub use operator::logical_operator::LogicalOperator;
