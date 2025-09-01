@@ -36,7 +36,7 @@ fn test_uniform_distribution_params_debug_clone_copy() {
     );
 
     // Test Clone
-    let cloned_params = params.clone();
+    let cloned_params = params;
     assert_eq!(cloned_params.low, params.low);
     assert_eq!(cloned_params.high, params.high);
 

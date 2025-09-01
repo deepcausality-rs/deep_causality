@@ -28,7 +28,7 @@ fn test_bernoulli_params_debug_clone_copy() {
     assert_eq!(format!("{:?}", params), "BernoulliParams { p: 0.75 }");
 
     // Test Clone
-    let cloned_params = params.clone();
+    let cloned_params = params;
     assert_eq!(cloned_params.p, params.p);
 
     // Test Copy (by assignment)

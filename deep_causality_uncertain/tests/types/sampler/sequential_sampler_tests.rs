@@ -13,14 +13,13 @@ use std::sync::Arc;
 
 #[test]
 fn test_sequential_sampler_default() {
-    let _sampler = SequentialSampler::default();
+    let _sampler = SequentialSampler;
     // Just ensure it can be created
-    assert!(true);
 }
 
 #[test]
 fn test_sequential_sampler_leaf_f64() {
-    let sampler = SequentialSampler::default();
+    let sampler = SequentialSampler;
     let root_node = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(123.45)));
     let result = sampler.sample(&root_node).unwrap();
     assert_eq!(result, SampledValue::Float(123.45));
@@ -28,7 +27,7 @@ fn test_sequential_sampler_leaf_f64() {
 
 #[test]
 fn test_sequential_sampler_leaf_bool() {
-    let sampler = SequentialSampler::default();
+    let sampler = SequentialSampler;
     let root_node = Arc::new(ComputationNode::LeafBool(DistributionEnum::Point(true)));
     let result = sampler.sample(&root_node).unwrap();
     assert_eq!(result, SampledValue::Bool(true));
@@ -36,7 +35,7 @@ fn test_sequential_sampler_leaf_bool() {
 
 #[test]
 fn test_sequential_sampler_arithmetic_op_add() {
-    let sampler = SequentialSampler::default();
+    let sampler = SequentialSampler;
     let lhs = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(10.0)));
     let rhs = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(5.0)));
     let root_node = Arc::new(ComputationNode::ArithmeticOp {
@@ -51,7 +50,7 @@ fn test_sequential_sampler_arithmetic_op_add() {
 #[test]
 #[should_panic(expected = "Type error: Arithmetic op requires float inputs")]
 fn test_sequential_sampler_arithmetic_op_type_error() {
-    let sampler = SequentialSampler::default();
+    let sampler = SequentialSampler;
     let lhs = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(10.0)));
     let rhs = Arc::new(ComputationNode::LeafBool(DistributionEnum::Point(true))); // Type mismatch
     let root_node = Arc::new(ComputationNode::ArithmeticOp {
@@ -64,7 +63,7 @@ fn test_sequential_sampler_arithmetic_op_type_error() {
 
 #[test]
 fn test_sequential_sampler_comparison_op_greater_than() {
-    let sampler = SequentialSampler::default();
+    let sampler = SequentialSampler;
     let operand = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(10.0)));
     let root_node = Arc::new(ComputationNode::ComparisonOp {
         op: ComparisonOperator::GreaterThan,
@@ -78,7 +77,7 @@ fn test_sequential_sampler_comparison_op_greater_than() {
 #[test]
 #[should_panic(expected = "Type error: Comparison op requires float input")]
 fn test_sequential_sampler_comparison_op_type_error() {
-    let sampler = SequentialSampler::default();
+    let sampler = SequentialSampler;
     let operand = Arc::new(ComputationNode::LeafBool(DistributionEnum::Point(true))); // Type mismatch
     let root_node = Arc::new(ComputationNode::ComparisonOp {
         op: ComparisonOperator::GreaterThan,
@@ -90,7 +89,7 @@ fn test_sequential_sampler_comparison_op_type_error() {
 
 #[test]
 fn test_sequential_sampler_logical_op_and() {
-    let sampler = SequentialSampler::default();
+    let sampler = SequentialSampler;
     let op1 = Arc::new(ComputationNode::LeafBool(DistributionEnum::Point(true)));
     let op2 = Arc::new(ComputationNode::LeafBool(DistributionEnum::Point(false)));
     let root_node = Arc::new(ComputationNode::LogicalOp {
@@ -104,7 +103,7 @@ fn test_sequential_sampler_logical_op_and() {
 #[test]
 #[should_panic(expected = "Type error: Logical op requires boolean inputs")]
 fn test_sequential_sampler_logical_op_type_error() {
-    let sampler = SequentialSampler::default();
+    let sampler = SequentialSampler;
     let op1 = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(1.0))); // Type mismatch
     let op2 = Arc::new(ComputationNode::LeafBool(DistributionEnum::Point(true)));
     let root_node = Arc::new(ComputationNode::LogicalOp {
@@ -116,7 +115,7 @@ fn test_sequential_sampler_logical_op_type_error() {
 
 #[test]
 fn test_sequential_sampler_function_op() {
-    let sampler = SequentialSampler::default();
+    let sampler = SequentialSampler;
     let operand = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(5.0)));
     let func = Arc::new(|x: f64| x * 2.0);
     let root_node = Arc::new(ComputationNode::FunctionOp {
@@ -130,7 +129,7 @@ fn test_sequential_sampler_function_op() {
 #[test]
 #[should_panic(expected = "Type error: Function op requires float input")]
 fn test_sequential_sampler_function_op_type_error() {
-    let sampler = SequentialSampler::default();
+    let sampler = SequentialSampler;
     let operand = Arc::new(ComputationNode::LeafBool(DistributionEnum::Point(true))); // Type mismatch
     let func = Arc::new(|x: f64| x * 2.0);
     let root_node = Arc::new(ComputationNode::FunctionOp {
@@ -142,7 +141,7 @@ fn test_sequential_sampler_function_op_type_error() {
 
 #[test]
 fn test_sequential_sampler_negation_op() {
-    let sampler = SequentialSampler::default();
+    let sampler = SequentialSampler;
     let operand = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(5.0)));
     let root_node = Arc::new(ComputationNode::NegationOp {
         operand: Box::new((*operand).clone()),
@@ -154,7 +153,7 @@ fn test_sequential_sampler_negation_op() {
 #[test]
 #[should_panic(expected = "Type error: Negation op requires float input")]
 fn test_sequential_sampler_negation_op_type_error() {
-    let sampler = SequentialSampler::default();
+    let sampler = SequentialSampler;
     let operand = Arc::new(ComputationNode::LeafBool(DistributionEnum::Point(true))); // Type mismatch
     let root_node = Arc::new(ComputationNode::NegationOp {
         operand: Box::new((*operand).clone()),
@@ -164,7 +163,7 @@ fn test_sequential_sampler_negation_op_type_error() {
 
 #[test]
 fn test_sequential_sampler_function_op_bool() {
-    let sampler = SequentialSampler::default();
+    let sampler = SequentialSampler;
     let operand = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(5.0)));
     let func = Arc::new(|x: f64| x > 0.0);
     let root_node = Arc::new(ComputationNode::FunctionOpBool {
@@ -178,7 +177,7 @@ fn test_sequential_sampler_function_op_bool() {
 #[test]
 #[should_panic(expected = "Type error: FunctionOpBool requires float input")]
 fn test_sequential_sampler_function_op_bool_type_error() {
-    let sampler = SequentialSampler::default();
+    let sampler = SequentialSampler;
     let operand = Arc::new(ComputationNode::LeafBool(DistributionEnum::Point(true))); // Type mismatch
     let func = Arc::new(|x: f64| x > 0.0);
     let root_node = Arc::new(ComputationNode::FunctionOpBool {
@@ -190,7 +189,7 @@ fn test_sequential_sampler_function_op_bool_type_error() {
 
 #[test]
 fn test_sequential_sampler_conditional_op_true() {
-    let sampler = SequentialSampler::default();
+    let sampler = SequentialSampler;
     let condition = Arc::new(ComputationNode::LeafBool(DistributionEnum::Point(true)));
     let if_true = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(10.0)));
     let if_false = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(20.0)));
@@ -205,7 +204,7 @@ fn test_sequential_sampler_conditional_op_true() {
 
 #[test]
 fn test_sequential_sampler_conditional_op_false() {
-    let sampler = SequentialSampler::default();
+    let sampler = SequentialSampler;
     let condition = Arc::new(ComputationNode::LeafBool(DistributionEnum::Point(false)));
     let if_true = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(10.0)));
     let if_false = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(20.0)));
@@ -221,7 +220,7 @@ fn test_sequential_sampler_conditional_op_false() {
 #[test]
 #[should_panic(expected = "Type error: Conditional condition must be boolean")]
 fn test_sequential_sampler_conditional_op_type_error() {
-    let sampler = SequentialSampler::default();
+    let sampler = SequentialSampler;
     let condition = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(1.0))); // Type mismatch
     let if_true = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(10.0)));
     let if_false = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(20.0)));
@@ -235,7 +234,7 @@ fn test_sequential_sampler_conditional_op_type_error() {
 
 #[test]
 fn test_sequential_sampler_memoization() {
-    let sampler = SequentialSampler::default();
+    let sampler = SequentialSampler;
     let leaf = Arc::new(ComputationNode::LeafF64(DistributionEnum::Normal(
         NormalDistributionParams::new(0.0, 0.0001),
     ))); // Very small std_dev for near-constant value
@@ -282,7 +281,7 @@ fn test_sequential_sampler_memoization() {
 
 #[test]
 fn test_sequential_sampler_error_propagation_from_distribution() {
-    let sampler = SequentialSampler::default();
+    let sampler = SequentialSampler;
     // Create a Bernoulli distribution with invalid 'p' to cause an error
     let root_node = Arc::new(ComputationNode::LeafBool(DistributionEnum::Bernoulli(
         BernoulliParams::new(2.0),

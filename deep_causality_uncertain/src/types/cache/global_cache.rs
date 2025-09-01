@@ -98,11 +98,11 @@ impl GlobalSampleCache {
 //
 /// Global static instance of the cache, initialized once.
 #[cfg(not(test))]
-static GLOBAL_SAMPLE_CACHE: OnceLock<GlobalSampleCache> = OnceLock::new();
+static GLOBAL_SAMPLE_CACHE: OnceLock<GlobalSampleCache> = const { OnceLock::new() };
 
 #[cfg(test)]
 thread_local! {
-    static GLOBAL_SAMPLE_CACHE: OnceLock<GlobalSampleCache> = OnceLock::new();
+    static GLOBAL_SAMPLE_CACHE: OnceLock<GlobalSampleCache> = const { OnceLock::new() };
 }
 
 /// Executes a closure with a reference to the global sample cache.

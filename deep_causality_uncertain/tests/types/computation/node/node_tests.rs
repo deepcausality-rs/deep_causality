@@ -28,7 +28,7 @@ fn test_computation_node_leaf_bool_construction_and_clone() {
     let cloned_node = node.clone();
 
     match cloned_node {
-        ComputationNode::LeafBool(DistributionEnum::Point(val)) => assert_eq!(val, true),
+        ComputationNode::LeafBool(DistributionEnum::Point(val)) => assert!(val),
         _ => panic!("Cloned node is not LeafBool(Point)"),
     }
 }
@@ -148,7 +148,7 @@ fn test_computation_node_function_op_bool_construction_and_clone() {
             operand: cloned_operand,
         } => {
             // Cannot directly compare Arc<dyn Fn>
-            assert_eq!(cloned_func(3.0), true); // Test the function still works
+            assert!(cloned_func(3.0)); // Test the function still works
             assert!(matches!(*cloned_operand, ComputationNode::LeafF64(_)));
         }
         _ => panic!("Cloned node is not FunctionOpBool"),

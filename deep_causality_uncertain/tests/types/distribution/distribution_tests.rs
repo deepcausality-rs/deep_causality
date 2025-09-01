@@ -33,10 +33,10 @@ fn test_distribution_enum_debug_clone_copy() {
     );
 
     // Test Clone
-    let cloned_point_f64 = point_f64.clone();
-    let cloned_normal = normal.clone();
-    let cloned_uniform = uniform.clone();
-    let cloned_bernoulli = bernoulli.clone();
+    let cloned_point_f64 = point_f64;
+    let cloned_normal = normal;
+    let cloned_uniform = uniform;
+    let cloned_bernoulli = bernoulli;
 
     assert!(matches!(cloned_point_f64, DistributionEnum::Point(1.0)));
     assert!(matches!(cloned_normal, DistributionEnum::Normal(_)));
@@ -84,7 +84,7 @@ fn test_distribution_enum_f64_sample_uniform() {
     let sample = dist.sample(&mut rng).unwrap();
     dbg!(&sample);
 
-    assert!(sample >= 0.0 && sample <= 1.0);
+    assert!((0.0..=1.0).contains(&sample));
 }
 
 #[test]
@@ -94,17 +94,17 @@ fn test_distribution_enum_bool_sample_point() {
     let sample = dist.sample(&mut rng).unwrap();
     dbg!(&sample);
 
-    assert_eq!(sample, true);
+    assert!(sample);
 }
 
+#[allow(clippy::bool_comparison)]
 #[test]
 fn test_distribution_enum_bool_sample_bernoulli() {
     let dist: DistributionEnum<bool> = DistributionEnum::Bernoulli(BernoulliParams::new(0.8));
     let mut rng = rng();
     let sample = dist.sample(&mut rng).unwrap();
-    // Cannot assert specific value due to randomness, but ensure it's a bool
     dbg!(&sample);
-
+    // Due to randomness, we can't assert exact equality, but they should both lean towards true
     assert!(sample == true || sample == false);
 }
 

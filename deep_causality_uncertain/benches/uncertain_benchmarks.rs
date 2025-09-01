@@ -1,5 +1,5 @@
-use criterion::{criterion_group, criterion_main, Criterion};
-use deep_causality_uncertain::{Uncertain, with_global_cache, SampledValue};
+use criterion::{Criterion, criterion_group, criterion_main};
+use deep_causality_uncertain::{SampledValue, Uncertain, with_global_cache};
 
 // --- Sampling Performance Benchmarks ---
 

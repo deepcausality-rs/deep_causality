@@ -60,7 +60,7 @@ fn test_comparison_operator_debug_clone_copy() {
     assert_eq!(format!("{:?}", op), "GreaterThan");
 
     // Test Clone
-    let cloned_op = op.clone();
+    let cloned_op = op;
     assert_eq!(cloned_op, op);
 
     // Test Copy (by assignment)

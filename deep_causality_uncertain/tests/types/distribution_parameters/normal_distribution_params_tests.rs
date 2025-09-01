@@ -31,7 +31,7 @@ fn test_normal_distribution_params_debug_clone_copy() {
     );
 
     // Test Clone
-    let cloned_params = params.clone();
+    let cloned_params = params;
     assert_eq!(cloned_params.mean, params.mean);
     assert_eq!(cloned_params.std_dev, params.std_dev);
 

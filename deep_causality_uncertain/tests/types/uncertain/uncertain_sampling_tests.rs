@@ -69,10 +69,10 @@ fn test_f64_take_zero_samples() {
 #[test]
 fn test_bool_sample_with_index_point() {
     let u_true = Uncertain::<bool>::point(true);
-    assert_eq!(u_true.sample_with_index(0).unwrap(), true);
+    assert!(u_true.sample_with_index(0).unwrap());
 
     let u_false = Uncertain::<bool>::point(false);
-    assert_eq!(u_false.sample_with_index(1).unwrap(), false);
+    assert!(!u_false.sample_with_index(1).unwrap());
 }
 
 #[test]
@@ -100,7 +100,7 @@ fn test_bool_sample_with_index_uses_cache() {
 fn test_bool_sample_with_random_index() {
     let u = Uncertain::<bool>::point(true);
     let result = u.sample();
-    assert_eq!(result.unwrap(), true);
+    assert!(result.unwrap());
 }
 
 #[test]

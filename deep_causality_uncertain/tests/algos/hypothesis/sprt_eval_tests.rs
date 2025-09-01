@@ -67,6 +67,7 @@ rusty_fork_test! {
         assert!(!sprt_eval::evaluate_hypothesis(&ub_low, 1.0, 0.95, 0.01, 10, 0).unwrap());
     }
 
+    #[allow(clippy::bool_comparison)]
     #[test]
     fn test_evaluate_hypothesis_epsilon_effect() {
         // Test with a distribution that's exactly on the threshold
@@ -103,6 +104,7 @@ rusty_fork_test! {
         assert!(result_low_conf, "Should conclude true with low confidence");
     }
 
+    #[allow(clippy::bool_comparison)]
     #[test]
     fn test_evaluate_hypothesis_initial_sample_index() {
         // Test that initial_sample_index is used correctly

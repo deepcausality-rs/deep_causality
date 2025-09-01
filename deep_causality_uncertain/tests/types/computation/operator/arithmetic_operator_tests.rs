@@ -48,9 +48,9 @@ fn test_arithmetic_operator_div() {
     assert_eq!(op.apply(6.0, -3.0), -2.0);
     assert_eq!(op.apply(-6.0, -3.0), 2.0);
     assert_eq!(op.apply(0.0, 5.0), 0.0);
-    assert_eq!(op.apply(5.0, 0.0).is_infinite(), true); // Division by zero is positive infinity
-    assert_eq!(op.apply(-5.0, 0.0).is_infinite(), true); // Division by zero is negative infinity
-    assert_eq!(op.apply(0.0, 0.0).is_nan(), true); // 0/0 is NaN
+    assert!(op.apply(5.0, 0.0).is_infinite()); // Division by zero is positive infinity
+    assert!(op.apply(-5.0, 0.0).is_infinite()); // Division by zero is negative infinity
+    assert!(op.apply(0.0, 0.0).is_nan()); // 0/0 is NaN
 }
 
 #[test]
@@ -69,7 +69,7 @@ fn test_arithmetic_operator_debug_clone_copy() {
     assert_eq!(format!("{:?}", op), "Add");
 
     // Test Clone
-    let cloned_op = op.clone();
+    let cloned_op = op;
     assert_eq!(cloned_op, op);
 
     // Test Copy (by assignment)

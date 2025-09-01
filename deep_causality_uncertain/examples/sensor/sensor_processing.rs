@@ -366,7 +366,7 @@ fn sensor_fusion_with_errors(
     // Detect sensor disagreement
     let temp_values: Vec<f64> = temp_sensors
         .iter()
-        .map(|(_, temp)| temp.expected_value(100).unwrap().clone())
+        .map(|(_, temp)| temp.expected_value(100).unwrap())
         .collect();
 
     if temp_values.len() > 1 {
