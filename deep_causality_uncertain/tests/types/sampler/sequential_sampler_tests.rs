@@ -101,7 +101,6 @@ fn test_sequential_sampler_logical_op_and() {
 }
 
 #[test]
-#[should_panic(expected = "Type error: Logical op requires boolean inputs")]
 fn test_sequential_sampler_logical_op_type_error() {
     let sampler = SequentialSampler;
     let op1 = Arc::new(ComputationNode::LeafF64(DistributionEnum::Point(1.0))); // Type mismatch
@@ -110,7 +109,13 @@ fn test_sequential_sampler_logical_op_type_error() {
         op: LogicalOperator::And,
         operands: vec![Box::new((*op1).clone()), Box::new((*op2).clone())],
     });
-    let _ = sampler.sample(&root_node).unwrap();
+    let res = sampler.sample(&root_node);
+    dbg!(&res);
+    assert!(res.is_err());
+    match res.err().unwrap() {
+        UncertainError::UnsupportedTypeError(_) => (),
+        _ => panic!("Expected UnsupportedTypeError"),
+    }
 }
 
 #[test]

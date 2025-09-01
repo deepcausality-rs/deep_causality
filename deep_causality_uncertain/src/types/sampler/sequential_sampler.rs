@@ -31,7 +31,8 @@ impl Sampler for SequentialSampler {
     fn sample(&self, root_node: &Arc<ComputationNode>) -> Result<SampledValue, UncertainError> {
         let mut context: HashMap<*const ComputationNode, SampledValue> = HashMap::new();
         // Call the internal method.
-        self.evaluate_node(root_node, &mut context, &mut rand::rng())
+        let mut rng = rand::rng();
+        self.evaluate_node(root_node, &mut context, &mut rng)
     }
 }
 
@@ -104,19 +105,30 @@ impl SequentialSampler {
                 for operand_node in operands {
                     match self.evaluate_node(operand_node, context, rng)? {
                         SampledValue::Bool(b) => vals.push(b),
-                        _ => return Err(UncertainError::TypeError("Logical op requires boolean inputs".into())),
+                        _ => {
+                            return Err(UncertainError::UnsupportedTypeError(
+                                "Logical op requires boolean inputs".into(),
+                            ));
+                        }
                     }
                 }
                 let result = match op {
                     LogicalOperator::Not => {
                         if vals.len() != 1 {
-                            return Err(UncertainError::TypeError("NOT expects exactly 1 operand".into()));
+                            return Err(UncertainError::UnsupportedTypeError(
+                                "NOT expects exactly 1 operand".into(),
+                            ));
                         }
                         !vals[0]
                     }
-                    LogicalOperator::And | LogicalOperator::Or | LogicalOperator::NOR | LogicalOperator::XOR => {
+                    LogicalOperator::And
+                    | LogicalOperator::Or
+                    | LogicalOperator::NOR
+                    | LogicalOperator::XOR => {
                         if vals.len() != 2 {
-                            return Err(UncertainError::TypeError("Binary logical op expects exactly 2 operands".into()));
+                            return Err(UncertainError::UnsupportedTypeError(
+                                "Binary logical op expects exactly 2 operands".into(),
+                            ));
                         }
                         match op {
                             LogicalOperator::And => vals[0] && vals[1],
