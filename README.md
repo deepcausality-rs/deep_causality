@@ -71,7 +71,7 @@ is hosted as a sandbox project in the [LF AI & Data Foundation](https://landscap
 4) DeepCausality simplifies modeling of complex tempo-spatial patterns and [non-Euclidean geometries](https://deepcausality.com/blog/announcement-non-euclidean).
 5) DeepCausality supports [adaptive reasoning](https://deepcausality.com/blog/announcement-adaptive-reasoning). 
 6) DeepCausality comes with Causal State Machine (CSM).
-7DeepCausality supports [programmable ethics via the EffectEthos](https://deepcausality.com/blog/announcement-effect-ethos).
+7) DeepCausality supports [programmable ethics via the EffectEthos](https://deepcausality.com/blog/announcement-effect-ethos).
 
 ## 📚 Docs
 
