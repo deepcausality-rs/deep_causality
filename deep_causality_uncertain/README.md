@@ -219,6 +219,15 @@ To run an example:
 cargo run --example gps_navigation -p deep_causality_uncertain
 ```
 
+## Acknowledgements
+
+This crate is inspired by the Blog post ["Uncertain⟨T⟩"](https://nshipster.com/uncertainty) by [@Mattt](https://github.com/mattt) and his Implementation of [Uncertain for Swift](https://github.com/mattt/Uncertain).
+Furthermore, prior art in the [uncertain crate](https://crates.io/crates/uncertain) and [uncertain-rs](https://crates.io/crates/uncertain-rs) crate inspired some of the implementation and examples. 
+
+The Uncertain⟨T⟩ type is based by the foundational research presented in:
+
+*   Bornholt, J., Mytkowicz, T., & McKinley, K. S. (2014). [**Uncertain<T>: A First-Order Type for Uncertain Data**.](https://www.microsoft.com/en-us/research/publication/uncertaint-a-first-order-type-for-uncertain-data-2) *Proceedings of the 19th International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS '14)*. ACM, New York, NY, USA, 123-136. ([Download Paper](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/asplos077-bornholtA.pdf))
+
 ## Contributing
 
 Contributions are welcome! Please refer to the [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelines.
@@ -227,8 +236,8 @@ Contributions are welcome! Please refer to the [CONTRIBUTING.md](../CONTRIBUTING
 
 This project is licensed under the MIT License. See the [LICENSE](../LICENSE) file for details.
 
-## Acknowledgements
+## 💻 Author
 
-This crate is inspired by the foundational research presented in:
-
-*   Bornholt, J., Mytkowicz, T., & McKinley, K. S. (2014). **Uncertain<T>: A First-Order Type for Uncertain Data**. *Proceedings of the 19th International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS '14)*. ACM, New York, NY, USA, 123-136.
+* [Marvin Hansen](https://github.com/marvin-hansen).
+* Github GPG key ID: 369D5A0B210D39BC
+* GPG Fingerprint: 4B18 F7B2 04B9 7A72 967E 663E 369D 5A0B 210D 39BC
