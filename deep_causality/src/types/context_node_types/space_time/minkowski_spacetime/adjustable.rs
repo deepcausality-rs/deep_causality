@@ -4,7 +4,7 @@
  */
 
 use crate::{Adjustable, AdjustmentError, MinkowskiSpacetime, UpdateError};
-use dcl_data_structures::prelude::{ArrayGrid, PointIndex};
+use deep_causality_data_structures::{ArrayGrid, PointIndex};
 
 impl Adjustable<f64> for MinkowskiSpacetime {
     fn update<const W: usize, const H: usize, const D: usize, const C: usize>(

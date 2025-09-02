@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+
+[package]
+name = "deep_causality_data_structures"
+version = "0.9.3"
+edition = "2021"
+rust-version = "1.80"
+repository = "https://github.com/deepcausality/deep_causality.rs"
+authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
+license = "MIT"
+description = "Data structures for for deep_causality crate."
+documentation = "https://docs.rs/deep_causality"
+categories = ["data-structures", "science"]
+keywords = ["data-structures", "sliding-window", "grid-array"]
+# Exclude all bazel files as these conflict with Bazel workspace when vendored.
+exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
+
+[[example]]
+name = "array_grid"
+path = "examples/array_grid/array_grid.rs"
+
+[[example]]
+name = "window_type_array_storage"
+path = "examples/window_type/array_storage.rs"
+
+#[[example]]
+#name = "window_type_unsafe_array_storage"
+#path = "examples/window_type/unsafe_array_storage.rs"
+
+[[example]]
+name = "window_type_vector_storage"
+path = "examples/window_type/vector_storage.rs"
+
+#[[example]]
+#name = "window_type_unsafe_vector_storage"
+#path = "examples/window_type/unsafe_vector_storage.rs"
+
+[features]
+default = []
+unsafe = [] # Enable unsafe implementations
+
+[dev-dependencies]
+criterion = { version = "0.7", features = ["html_reports"] }
+rand = { version = "0.9", features = ["small_rng"] }
+
+[[bench]]
+name = "bench_dcl_data_structures"
+harness = false

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use dcl_data_structures::prelude::ArrayGrid;
+use deep_causality_data_structures::ArrayGrid;
 
 use crate::errors::{AdjustmentError, UpdateError};
 

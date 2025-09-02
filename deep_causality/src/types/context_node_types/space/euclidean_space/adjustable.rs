@@ -5,8 +5,7 @@
 
 use crate::errors::{AdjustmentError, UpdateError};
 use crate::{Adjustable, EuclideanSpace};
-use dcl_data_structures::grid_type::ArrayGrid;
-use dcl_data_structures::prelude::PointIndex;
+use deep_causality_data_structures::{ArrayGrid, PointIndex};
 
 impl Adjustable<f64> for EuclideanSpace {
     fn update<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize, const TIME: usize>(

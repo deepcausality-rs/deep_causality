@@ -15,35 +15,3 @@ categories = ["data-structures", "science"]
 keywords = ["data-structures", "sliding-window", "grid-array"]
 # Exclude all bazel files as these conflict with Bazel workspace when vendored.
 exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
-
-[[example]]
-name = "array_grid"
-path = "examples/array_grid/array_grid.rs"
-
-[[example]]
-name = "window_type_array_storage"
-path = "examples/window_type/array_storage.rs"
-
-#[[example]]
-#name = "window_type_unsafe_array_storage"
-#path = "examples/window_type/unsafe_array_storage.rs"
-
-[[example]]
-name = "window_type_vector_storage"
-path = "examples/window_type/vector_storage.rs"
-
-#[[example]]
-#name = "window_type_unsafe_vector_storage"
-#path = "examples/window_type/unsafe_vector_storage.rs"
-
-[features]
-default = []
-unsafe = [] # Enable unsafe implementations
-
-[dev-dependencies]
-criterion = { version = "0.7", features = ["html_reports"] }
-rand = { version = "0.9", features = ["small_rng"] }
-
-[[bench]]
-name = "bench_dcl_data_structures"
-harness = false

@@ -2,9 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use dcl_data_structures::grid_type::{ArrayGrid, ArrayType};
-use dcl_data_structures::prelude::PointIndex;
 use deep_causality::{Adjustable, TangentSpacetime, Temporal};
+use deep_causality_data_structures::{ArrayGrid, ArrayType, PointIndex};
 
 #[test]
 fn test_tangent_spacetime_update_success() {

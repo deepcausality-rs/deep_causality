@@ -3,7 +3,7 @@
 
 [package]
 name = "deep_causality"
-version = "0.9.0"
+version = "0.9.1"
 edition = "2021"
 rust-version = "1.80"
 readme = "../deep_causality_uncertain/README.md"
@@ -19,19 +19,24 @@ authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
 
-[dependencies.dcl_data_structures]
-path = "../dcl_data_structures"
+[dependencies.deep_causality_data_structures]
+path = "../deep_causality_data_structures"
 version = "0.9"
 
 
 [dependencies.deep_causality_macros]
 path = "../deep_causality_macros"
-version = "0.8.2"
+version = "0.8"
+
+
+[dependencies.deep_causality_uncertain]
+path = "../deep_causality_uncertain"
+version = "0.1"
 
 
 [dependencies.ultragraph]
 path = "../ultragraph"
-version = "0.8.3"
+version = "0.8"
 
 
 [dev-dependencies]

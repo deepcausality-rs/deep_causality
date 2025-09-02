@@ -5,8 +5,7 @@
 
 use crate::errors::{AdjustmentError, UpdateError};
 use crate::{Adjustable, EcefSpace};
-use dcl_data_structures::grid_type::ArrayGrid;
-use dcl_data_structures::prelude::PointIndex;
+use deep_causality_data_structures::{ArrayGrid, PointIndex};
 use std::f64;
 
 impl Adjustable<f64> for EcefSpace {
