@@ -426,3 +426,143 @@ fn test_sequential_sampler_error_propagation_from_distribution() {
         e => panic!("Expected BernoulliDistributionError, got {:?}", e),
     }
 }
+
+#[test]
+fn test_sequential_sampler_logical_op_not_wrong_number_of_operands() {
+    let sampler = SequentialSampler;
+    let op1 = Arc::new(ComputationNode::LeafBool {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(true),
+    });
+    let op2 = Arc::new(ComputationNode::LeafBool {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(false),
+    });
+    let root_node = Arc::new(ComputationNode::LogicalOp {
+        node_id: NodeId::new(),
+        op: LogicalOperator::Not,
+        operands: vec![Box::new((*op1).clone()), Box::new((*op2).clone())], // Should be 1
+    });
+    let res = sampler.sample(&root_node);
+    assert!(res.is_err());
+    match res.err().unwrap() {
+        UncertainError::UnsupportedTypeError(msg) => {
+            assert_eq!(msg, "NOT expects exactly 1 operand");
+        }
+        e => panic!("Expected UnsupportedTypeError, got {:?}", e),
+    }
+}
+
+#[test]
+fn test_sequential_sampler_logical_op_not_with_zero_operands() {
+    let sampler = SequentialSampler;
+    let root_node = Arc::new(ComputationNode::LogicalOp {
+        node_id: NodeId::new(),
+        op: LogicalOperator::Not,
+        operands: vec![], // Zero operands
+    });
+    let res = sampler.sample(&root_node);
+    assert!(res.is_err());
+    match res.err().unwrap() {
+        UncertainError::UnsupportedTypeError(msg) => {
+            assert_eq!(msg, "NOT expects exactly 1 operand");
+        }
+        e => panic!("Expected UnsupportedTypeError, got {:?}", e),
+    }
+}
+
+#[test]
+fn test_sequential_sampler_logical_op_and_wrong_number_of_operands() {
+    let sampler = SequentialSampler;
+    let op1 = Arc::new(ComputationNode::LeafBool {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(true),
+    });
+    let root_node = Arc::new(ComputationNode::LogicalOp {
+        node_id: NodeId::new(),
+        op: LogicalOperator::And,
+        operands: vec![Box::new((*op1).clone())], // Should be 2
+    });
+    let res = sampler.sample(&root_node);
+    assert!(res.is_err());
+    match res.err().unwrap() {
+        UncertainError::UnsupportedTypeError(msg) => {
+            assert_eq!(msg, "Binary logical op expects exactly 2 operands");
+        }
+        e => panic!("Expected UnsupportedTypeError, got {:?}", e),
+    }
+}
+
+#[test]
+fn test_sequential_sampler_logical_op_or_with_three_operands() {
+    let sampler = SequentialSampler;
+    let op1 = Arc::new(ComputationNode::LeafBool {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(true),
+    });
+    let op2 = Arc::new(ComputationNode::LeafBool {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(false),
+    });
+    let op3 = Arc::new(ComputationNode::LeafBool {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(true),
+    });
+    let root_node = Arc::new(ComputationNode::LogicalOp {
+        node_id: NodeId::new(),
+        op: LogicalOperator::Or,
+        operands: vec![
+            Box::new((*op1).clone()),
+            Box::new((*op2).clone()),
+            Box::new((*op3).clone()),
+        ], // Three operands
+    });
+    let res = sampler.sample(&root_node);
+    assert!(res.is_err());
+    match res.err().unwrap() {
+        UncertainError::UnsupportedTypeError(msg) => {
+            assert_eq!(msg, "Binary logical op expects exactly 2 operands");
+        }
+        e => panic!("Expected UnsupportedTypeError, got {:?}", e),
+    }
+}
+
+#[test]
+fn test_sequential_sampler_logical_op_nor_true() {
+    let sampler = SequentialSampler;
+    let op1 = Arc::new(ComputationNode::LeafBool {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(false),
+    });
+    let op2 = Arc::new(ComputationNode::LeafBool {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(false),
+    });
+    let root_node = Arc::new(ComputationNode::LogicalOp {
+        node_id: NodeId::new(),
+        op: LogicalOperator::NOR,
+        operands: vec![Box::new((*op1).clone()), Box::new((*op2).clone())],
+    });
+    let result = sampler.sample(&root_node).unwrap();
+    assert_eq!(result, SampledValue::Bool(true));
+}
+
+#[test]
+fn test_sequential_sampler_logical_op_nor_false() {
+    let sampler = SequentialSampler;
+    let op1 = Arc::new(ComputationNode::LeafBool {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(true),
+    });
+    let op2 = Arc::new(ComputationNode::LeafBool {
+        node_id: NodeId::new(),
+        dist: DistributionEnum::Point(false),
+    });
+    let root_node = Arc::new(ComputationNode::LogicalOp {
+        node_id: NodeId::new(),
+        op: LogicalOperator::NOR,
+        operands: vec![Box::new((*op1).clone()), Box::new((*op2).clone())],
+    });
+    let result = sampler.sample(&root_node).unwrap();
+    assert_eq!(result, SampledValue::Bool(false));
+}

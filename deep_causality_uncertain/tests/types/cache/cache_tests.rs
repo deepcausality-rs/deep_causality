@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_uncertain::{SampledValue, Uncertain, with_global_cache};
+use deep_causality_uncertain::{GlobalSampleCache, SampledValue, Uncertain, with_global_cache};
 use rusty_fork::rusty_fork_test;
 
 rusty_fork_test! {
@@ -53,6 +53,21 @@ rusty_fork_test! {
         with_global_cache(|cache| {
             assert_eq!(cache.get(&key), None);
         });
+    }
+
+        #[test]
+    fn test_cache_default() {
+                let uncertain_obj = Uncertain::<f64>::point(1.0);
+        let key = (uncertain_obj.id(), 200);
+        let value = SampledValue::Float(123.45);
+
+        let cache = GlobalSampleCache::default();
+
+        cache.insert(key, value);
+        let v = cache.get(&key);
+        assert!(v.is_some());
+        let result = v.unwrap();
+        assert_eq!(result, value);
     }
 
     #[test]

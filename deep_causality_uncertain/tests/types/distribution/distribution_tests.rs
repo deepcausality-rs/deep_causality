@@ -3,7 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality_uncertain::{
-    BernoulliParams, DistributionEnum, NormalDistributionParams, UniformDistributionParams,
+    BernoulliParams, DistributionEnum, NormalDistributionParams, UncertainError,
+    UniformDistributionParams,
 };
 use rand::rng;
 
@@ -129,4 +130,49 @@ fn test_distribution_enum_display() {
         format!("{}", bernoulli),
         "Distribution: Bernoulli { D: BernoulliParams { p: 0.70 } }"
     );
+}
+
+#[test]
+fn test_sample_f64_unsupported_type_error() {
+    let mut rng = rng();
+    let bernoulli_dist: DistributionEnum<f64> =
+        DistributionEnum::Bernoulli(BernoulliParams { p: 0.5 });
+    let result = bernoulli_dist.sample(&mut rng);
+
+    dbg!(&result);
+
+    assert!(matches!(
+        result,
+        Err(UncertainError::UnsupportedTypeError(_))
+    ));
+}
+
+#[test]
+fn test_sample_bool_unsupported_type_error() {
+    let mut rng = rng();
+    let normal_dist: DistributionEnum<bool> = DistributionEnum::Normal(NormalDistributionParams {
+        mean: 0.0,
+        std_dev: 1.0,
+    });
+    let result = normal_dist.sample(&mut rng);
+
+    dbg!(&result);
+
+    assert!(matches!(
+        result,
+        Err(UncertainError::UnsupportedTypeError(_))
+    ));
+
+    let uniform_dist: DistributionEnum<bool> =
+        DistributionEnum::Uniform(UniformDistributionParams {
+            low: 0.0,
+            high: 1.0,
+        });
+    let result = uniform_dist.sample(&mut rng);
+    dbg!(&result);
+
+    assert!(matches!(
+        result,
+        Err(UncertainError::UnsupportedTypeError(_))
+    ));
 }

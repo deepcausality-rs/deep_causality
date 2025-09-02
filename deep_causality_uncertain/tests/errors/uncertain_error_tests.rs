@@ -4,11 +4,14 @@
  */
 
 use deep_causality_uncertain::UncertainError;
+// For testing From methods
+use rand_distr::uniform::Error as UniformError;
+use rand_distr::{BernoulliError, NormalError};
+// For testing From impl
+use rusty_fork::rusty_fork_test;
 use std::error::Error;
 // For the Error trait methods
 use ultragraph::GraphError;
-// For testing From impl
-use rusty_fork::rusty_fork_test;
 
 rusty_fork_test! {
     #[test]
@@ -82,4 +85,41 @@ rusty_fork_test! {
         );
         assert!(err.source().is_none());
     }
+
+    #[test]
+    fn test_from_uniform_error() {
+        let err = UniformError::EmptyRange;
+        let uncertain_error: UncertainError = err.into();
+        match uncertain_error {
+            UncertainError::UniformDistributionError(msg) => {
+                assert!(msg.contains("low > high (or equal if exclusive)"));
+            }
+            _ => panic!("Expected UniformDistributionError"),
+        }
+    }
+
+    #[test]
+    fn test_from_bernoulli_error() {
+        let err = BernoulliError::InvalidProbability;
+        let uncertain_error: UncertainError = err.into();
+        match uncertain_error {
+            UncertainError::BernoulliDistributionError(msg) => {
+                assert!(msg.contains("p is outside [0, 1] in Bernoulli distribution"));
+            }
+            _ => panic!("Expected BernoulliDistributionError"),
+        }
+    }
+
+    #[test]
+    fn test_from_normal_error() {
+        let err = NormalError::MeanTooSmall;
+        let uncertain_error: UncertainError = err.into();
+        match uncertain_error {
+            UncertainError::NormalDistributionError(msg) => {
+                assert!(msg.contains("mean < 0 or NaN in log-normal"));
+            }
+            _ => panic!("Expected NormalDistributionError"),
+        }
+    }
+
 }

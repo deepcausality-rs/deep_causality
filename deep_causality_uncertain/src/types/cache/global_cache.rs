@@ -119,9 +119,7 @@ where
     }
     #[cfg(test)]
     {
-        GLOBAL_SAMPLE_CACHE.with(|cache_once_lock| {
-            let cache = cache_once_lock.get_or_init(GlobalSampleCache::new);
-            closure(cache)
-        })
+        GLOBAL_SAMPLE_CACHE
+            .with(|cache_once_lock| closure(cache_once_lock.get_or_init(GlobalSampleCache::new)))
     }
 }
