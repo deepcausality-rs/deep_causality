@@ -57,19 +57,22 @@
 </div>
 
 
-DeepCausality is a hyper-geometric computational causality library that enables fast and deterministic context-aware
-causal reasoning over complex multi-stage causality models. Deep Causality adds only minimal overhead and thus is
-suitable for real-time applications without additional acceleration hardware. DeepCausality is hosted as a sandbox project in the [LF AI & Data Foundation](https://landscape.lfai.foundation/).
+DeepCausality is a hyper-geometric computational causality library that enables fast, context-aware, and statistically robust
+causal reasoning over complex multi-stage causality models, including those with inherent uncertainty. DeepCausality adds
+only minimal overhead and thus is suitable for real-time applications without additional acceleration hardware. DeepCausality
+is hosted as a sandbox project in the [LF AI & Data Foundation](https://landscape.lfai.foundation/).
 
-## 🤔 Why DeepCausality?
+## 🤩 Why DeepCausality?
 
-1) DeepCausality is written in Rust with safety, reliability, and performance in mind.
-2) DeepCausality provides recursive causal data structures that concisely express arbitrary complex causal
-   structures.
-3) DeepCausality enables context awareness across data-like, time-like, space-like, spacetime-like entities stored
-   within (multiple) context-hyper-graphs.
-4) DeepCausality simplifies modeling of complex tempo-spatial patterns.
-5) DeepCausality comes with Causal State Machine (CSM)
+1) DeepCausality is written in Rust with production-grade safety, reliability, and performance thanks to its [UltraGraph backend](https://deepcausality.com/blog/announcement-ultragraph-0-8).
+2) DeepCausality provides recursive causal data structures that concisely express [arbitrary complex causal structures](https://deepcausality.com/docs/concepts/#structural-conceptualization-of-causation).
+3) DeepCausality enables context awareness across complex data stored
+ in [multiple contexts](https://deepcausality.com/blog/announcement-multiple-contexts).
+4) DeepCausality simplifies modeling of complex tempo-spatial patterns and [non-Euclidean geometries](https://deepcausality.com/blog/announcement-non-euclidean).
+5) DeepCausality supports [adaptive reasoning](https://deepcausality.com/blog/announcement-adaptive-reasoning). 
+6) DeepCausality comes with Causal State Machine (CSM).
+7) DeepCausality supports type based uncertainty and statistical reasoning, enabling robust decision-making under uncertainty.
+8) DeepCausality supports [programmable ethics via the EffectEthos](https://deepcausality.com/blog/announcement-effect-ethos).
 
 ## 📚 Docs
 
@@ -77,6 +80,11 @@ suitable for real-time applications without additional acceleration hardware. De
 * [Documentation](https://deepcausality.com/docs/intro/)
 * [Changelog](CHANGELOG.md)
 * [Slides](docs/slides/LF_2023/DeepCausality.pdf)
+
+* [Introduction](https://deepcausality.com/docs/intro/)
+* [Architecture](https://deepcausality.com/docs/architecture/)
+* [Background](https://deepcausality.com/docs/background/)
+* [Concepts](https://deepcausality.com/docs/concepts/)
 
 ## 🌎 Community
 
@@ -92,7 +100,9 @@ In your project folder, just run in a terminal:
 cargo add deep_causality
 ```
 
-See the [starter example](https://deepcausality.com/getting-started/).
+* [Starter Example](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/starter)
+* [More Examples](examples)
+* [Tests](deep_causality/tests)
 
 ## How to run the example code
 
@@ -104,42 +114,12 @@ cd deep_causality
 make example
 ```
 
-You can also run the example code from the project root with cargo:
-
-```bash
-# make sure you're in the project root folder
-cd deep_causality
-
-# CSM (Causal State Machine)
-cargo run --release --bin example-csm
-
-# Smoking inference
-cargo run --release --bin example-smoking
-
-# Getting started example
-cargo run --release --bin starter
-```
-
 ## 📦 Sub-Crates
 
 * [Datastructures](https://github.com/deepcausality-rs/deep_causality/tree/main/dcl_data_structures/README.md)
 * [Ultragraph](https://github.com/deepcausality-rs/deep_causality/tree/main/ultragraph/README.md)
 * [Macros](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_macros/README.md)
-
-## ⭐ Usage
-
-Docs:
-
-* [Introduction](https://deepcausality.com/docs/intro/)
-* [Architecture](https://deepcausality.com/docs/architecture/)
-* [Background](https://deepcausality.com/docs/background/)
-* [Concepts](https://deepcausality.com/docs/concepts/)
-
-Code:
-
-* [Benchmarks](deep_causality/benches/benchmarks)
-* [Example code](examples)
-* [Tests](deep_causality/tests)
+* [Uncertainty](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_uncertain/README.md)
 
 ## 🛠️ Build & Test 
 
@@ -172,41 +152,8 @@ After all dependencies have been installed, the following commands are ready to 
 
 The scripts called by each make command are located in the [script folder.](build/scripts)
 
-##  Bazel
-
 In addition to Cargo and related tools, the entire mono-repo is configured to build and test with Bazel.
-Please [install bazelisk ](https://github.com/bazelbuild/bazelisk)as it is the only requirement to build the repo with Bazel.  
-
-To query available crate aliases with Bazel, run:
-
-
-To build all targets with Bazel, run:
-
-```bash 
-    bazel build //...
-```
-
-To build only a specific target and its dependencies, run 
-
-```bash 
-    bazel build //deep_causality/...
-```
-
-The format is build //crate_name/... with the three dots being a shorthand for "all targets"
-
-To test all targets with Bazel, run:
-
-```bash 
-    bazel test //...
-```
-
-To test only a specific target, run:
-
-```bash 
-    bazel test //deep_causality/...
-```
-
- For more details on working with Bazel, see the [Bazel](Bazel.md) document. 
+Please [install bazelisk ](https://github.com/bazelbuild/bazelisk)as it is the only requirement to build the repo with Bazel. For more details on working with Bazel, see the [Bazel](Bazel.md) document. 
 
 ## 👨‍💻👩‍💻 Contribution
 
@@ -239,7 +186,14 @@ The project took inspiration from several researchers and their projects in the 
   Research
 * [Causal ML](https://github.com/uber/causalml) at uber.
 
-Parts of the implementation are inspired by:
+DeepCausality implements the following research publications: 
+* ["Probability Theories with Dynamic
+  Causal Structure" ](docs/papers)- Lucian Hardy
+* ["A Defeasible Deontic Calculus for Resolving Norm Conflicts"](docs/papers/ddic.pdf) - Forbus et. al.
+* ["NWHy: A Framework for Hypergraph Analytics"](docs/papers/nwhy.pdf) -  Lumsdaine et. al.
+* ["Uncertain T: A First-Order Type for Uncertain Data" ](docs/papers/uncertain_t.pdf) - Bornholt et. al.
+
+Parts of the implementation are alos inspired by:
 
 * [Differentiable Types](https://github.com/tensorflow/swift/blob/main/docs/DifferentiableTypes.md)
 * [Extension Trait](http://xion.io/post/code/rust-extension-traits.html)
@@ -267,9 +221,3 @@ free [all-product license](https://www.jetbrains.com/all/) under
 its [open-source community support program](https://www.jetbrains.com/community/opensource/#support) to the
 DeepCausality project. The project team expresses its gratitude towards JetBrains generous contribution. Thank you for
 your commitment to OSS development!
-
-## 💻 Author
-
-* [Marvin Hansen](https://github.com/marvin-hansen).
-* Github GPG key ID: 369D5A0B210D39BC
-* GPG Fingerprint: 4B18 F7B2 04B9 7A72 967E 663E 369D 5A0B 210D 39BC
