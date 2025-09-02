@@ -57,19 +57,16 @@
 </div>
 
 
-DeepCausality is a hypergeometric computational causality library that enables fast, context-aware causal reasoning over
-complex multi-stage causality models.[1][2][3] DeepCausality pioneers uniform reasoning across deterministic and
+DeepCausality is a hypergeometric computational causality library that enables fast, context-aware causal reasoning over complex multi-stage causality models. DeepCausality pioneers uniform reasoning across deterministic and
 probabilistic modalities by implementing the unified effect propagation process.
 
 In the effect propagation process, cause, and effect are folded into one single entity, the causaloid, that takes
 a propagating effect as input and returns another propagating effect as its output. A causaloid models causal relations
-as a
-functional dependency of the previous propagating effect on the current propagating effect via a causal function. The
-key difference from conventional classical causality, which models a causal relationship as a temporal order in which
-the cause precedes the effect, comes down to two properties of the causal function. One, the functional dependency is
+as a functional dependency of the previous propagating effect on the current propagating effect via a causal function. The
+key difference from conventional classical causality, which models a causal relationship as a temporal order,
+comes down to two properties of the causal function. One, the functional dependency is
 independent of temporal order and therefore can handle non-Euclidean representation and relativistic effects. Second,
-the causal function is unconstrained and therefore can be deterministic, probabilistic, or even a non-deterministic form
-such as a neural net or a support vector machine. As long as the computed effect can be expressed as a propagating
+the causal function is unconstrained and therefore can be deterministic, probabilistic, a support vector machine or even a non-deterministic method such as a neural net. As long as the computed effect can be expressed as a propagating
 effect, the causal function is valid and can be stored in a Causaloid.
 
 A propagating effect can be a deterministic (causal), a probabilistic value, a probabilistic distribution, or an
