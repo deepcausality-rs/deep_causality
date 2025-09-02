@@ -8,6 +8,7 @@ members = [
     "deep_causality",
     "examples/*",
     "deep_causality_macros",
+    "deep_causality_uncertain",
 ]
 
 [workspace.dependencies]
