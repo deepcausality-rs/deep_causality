@@ -152,8 +152,7 @@ After all dependencies have been installed, the following commands are ready to 
 
 The scripts called by each make command are located in the [script folder.](build/scripts)
 
-In addition to Cargo and related tools, the entire mono-repo is configured to build and test with Bazel.
-Please [install bazelisk ](https://github.com/bazelbuild/bazelisk)as it is the only requirement to build the repo with Bazel. For more details on working with Bazel, see the [Bazel](Bazel.md) document. 
+In addition to Cargo and related tools, the entire mono-repo is configured to build and test with Bazel. Please [install bazelisk ](https://github.com/bazelbuild/bazelisk) as it is the only requirement to build the repo with Bazel. For more details on working with Bazel, see the [Bazel](Bazel.md) document. 
 
 ## 👨‍💻👩‍💻 Contribution
 
@@ -193,7 +192,7 @@ DeepCausality implements the following research publications:
 * ["NWHy: A Framework for Hypergraph Analytics"](docs/papers/nwhy.pdf) -  Lumsdaine et. al.
 * ["Uncertain T: A First-Order Type for Uncertain Data" ](docs/papers/uncertain_t.pdf) - Bornholt et. al.
 
-Parts of the implementation are alos inspired by:
+Parts of the implementation are also inspired by:
 
 * [Differentiable Types](https://github.com/tensorflow/swift/blob/main/docs/DifferentiableTypes.md)
 * [Extension Trait](http://xion.io/post/code/rust-extension-traits.html)
