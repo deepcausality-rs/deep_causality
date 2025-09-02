@@ -9,9 +9,7 @@ rust-version = "1.80"
 repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 license = "MIT"
-description = "Data structures for for deep_causality crate."
+description = "Moved to: https://crates.io/crates/deep_causality_data_structures"
 documentation = "https://docs.rs/deep_causality"
 categories = ["data-structures", "science"]
-keywords = ["data-structures", "sliding-window", "grid-array"]
-# Exclude all bazel files as these conflict with Bazel workspace when vendored.
-exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
+keywords = ["data-structures"]
