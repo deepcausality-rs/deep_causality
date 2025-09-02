@@ -15,7 +15,7 @@
 
 [codefactor-badge]: https://www.codefactor.io/repository/github/deepcausality-rs/deep_causality/badge
 
-[codefactor-url]: https://www.codefactor.io/repository/github/deepcausality-rs/deep_causality
+[codefactor-url]: https://www.codefactor.io/repository/github/deepcausality-rs/deep_causalityl
 
 [codecov-badge]: https://codecov.io/gh/deepcausality-rs/deep_causality/branch/main/graph/badge.svg?token=W9TA1VVJ7O
 
@@ -57,21 +57,73 @@
 </div>
 
 
-DeepCausality is a hyper-geometric computational causality library that enables fast, context-aware, and statistically robust
-causal reasoning over complex multi-stage causality models, including those with inherent uncertainty. DeepCausality adds
-only minimal overhead and thus is suitable for real-time applications without additional acceleration hardware. DeepCausality
-is hosted as a sandbox project in the [LF AI & Data Foundation](https://landscape.lfai.foundation/).
+DeepCausality is a hypergeometric computational causality library that enables fast, context-aware causal reasoning over
+complex multi-stage causality models.[1][2][3] DeepCausality pioneers uniform reasoning across deterministic and
+probabilistic modalities by implementing the unified effect propagation process.
+
+In the effect propagation process, cause, and effect are folded into one single entity, the causaloid, that takes
+a propagating effect as input and returns another propagating effect as its output. A causaloid models causal relations
+as a
+functional dependency of the previous propagating effect on the current propagating effect via a causal function. The
+key difference from conventional classical causality, which models a causal relationship as a temporal order in which
+the cause precedes the effect, comes down to two properties of the causal function. One, the functional dependency is
+independent of temporal order and therefore can handle non-Euclidean representation and relativistic effects. Second,
+the causal function is unconstrained and therefore can be deterministic, probabilistic, or even a non-deterministic form
+such as a neural net or a support vector machine. As long as the computed effect can be expressed as a propagating
+effect, the causal function is valid and can be stored in a Causaloid.
+
+A propagating effect can be a deterministic (causal), a probabilistic value, a probabilistic distribution, or an
+arbitrarily complex type stored as a contextual reference. DeepCausality provides reasoning for deterministic and
+probabilistic modalities, whereas reasoning over arbitrarily complex types requires custom implementation. To streamline
+data sharing, those complex types are stored and loaded from a context attached to the causal model.
+
+DeepCausality supports multiple contexts that can store complex spatio-temporal data as well as data distributions to
+account for uncertainty. The adjustable mechanism enables dynamic data updates, for example, from real-time data streams
+or sensor data. A hypergraph represents each context and thus enables flexible data relations, i.e., a point in
+spacetime may link to multiple sensor readings and a reference data distribution for each sensor to detect data
+anomalies. The context, therefore, supports sophisticated reasoning across advanced causal structures. Out of the box,
+DeepCausality supports multi-modal causal reasoning across singleton, causal collection, and causal hyper-graph
+structures. For causal collections, multiple modes of aggregation are supported, whereas the causal hypergraph
+implements the effect propagation process in which the reasoning engine traverses the graph, applies the previous
+propagating effect to the current causaloid, and then takes that propagating effect and applies it to the next causaloid
+until the graph traversal ends. To support flexible reasoning over geometric causal structures, DeepCausality supports
+common path algorithms, i.e., shortest path, start from a node, and path between two nodes.
+
+Once a final conclusion has been reached, the causal state machine enables the explicit linking between the conclusion
+and a specific action to be taken as a result. However, because dynamic reasoning over a dynamic context may not always
+result in a predictable outcome, DeepCausality has developed the EffectEthos, a programmable ethos, to encode contextual
+operational rules the causal state machine can check to ensure that a proposed action is safe and within the pre-defined
+rules. The effect ethos can access the same context as the causal model that has led to the insight that triggered a
+proposed action and can therefore retrieve relevant and timely data to decide whether the action should be taken. One
+key aspect of the effect ethos is its ability to resolve conflicting rules via an internal algorithm that gives
+precedent to a rule with higher priority, or a higher authority, to ensure the final rule set is correctly applied.
+Furthermore, a tagging system enables efficient re-use and selection of applicable rules.
+
+DeepCausality applies state-of-the-art performance optimization, such as its custom compact sparse representation (CSR)
+hypergraph implementation that delivers sub-second traversal time on graphs with ten million nodes or more. Furthermore,
+static dispatching in all critical hot paths ensures significant performance even on moderate hardware and thus is
+suitable for real-time applications without additional acceleration hardware.
+
+In terms of applications, DeepCausality enables a number of advanced use cases, such as real-time sensor fusion,
+real-time contextual risk monitoring, and contextual interaction i.e. in robotics safeguarded by its effect ethos.
+
+DeepCausality is hosted as a sandbox project in the [LF AI & Data Foundation](https://landscape.lfai.foundation/).
 
 ## 🤩 Why DeepCausality?
 
-1) DeepCausality is written in Rust with production-grade safety, reliability, and performance thanks to its [UltraGraph backend](https://deepcausality.com/blog/announcement-ultragraph-0-8).
-2) DeepCausality provides recursive causal data structures that concisely express [arbitrary complex causal structures](https://deepcausality.com/docs/concepts/#structural-conceptualization-of-causation).
-3) DeepCausality enables context awareness across complex data stored in [multiple contexts](https://deepcausality.com/blog/announcement-multiple-contexts).
+1) DeepCausality is written in Rust with production-grade safety, reliability, and performance thanks to
+   its [UltraGraph backend](https://deepcausality.com/blog/announcement-ultragraph-0-8).
+2) DeepCausality provides recursive causal data structures that concisely
+   express [arbitrary complex causal structures](https://deepcausality.com/docs/concepts/#structural-conceptualization-of-causation).
+3) DeepCausality enables context awareness across complex data stored
+   in [multiple contexts](https://deepcausality.com/blog/announcement-multiple-contexts).
 
-4) DeepCausality simplifies modeling of complex tempo-spatial patterns and [non-Euclidean geometries](https://deepcausality.com/blog/announcement-non-euclidean).
-5) DeepCausality supports [adaptive reasoning](https://deepcausality.com/blog/announcement-adaptive-reasoning). 
+4) DeepCausality simplifies modeling of complex tempo-spatial patterns
+   and [non-Euclidean geometries](https://deepcausality.com/blog/announcement-non-euclidean).
+5) DeepCausality supports [adaptive reasoning](https://deepcausality.com/blog/announcement-adaptive-reasoning).
 6) DeepCausality comes with Causal State Machine (CSM).
-7) DeepCausality supports [programmable ethics via the EffectEthos](https://deepcausality.com/blog/announcement-effect-ethos).
+7) DeepCausality
+   supports [programmable ethics via the EffectEthos](https://deepcausality.com/blog/announcement-effect-ethos).
 
 ## 📚 Docs
 
@@ -120,10 +172,10 @@ make example
 * [Macros](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_macros/README.md)
 * [Uncertainty](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_uncertain/README.md)
 
-## 🛠️ Build & Test 
+## 🛠️ Build & Test
 
 Cargo works as expected, but in addition to cargo, a makefile exists
-that abstracts over several additional tools you for linting and formatting. 
+that abstracts over several additional tools you for linting and formatting.
 To check and install missing tools, please run the following command:
 
 ```bash 
@@ -151,7 +203,9 @@ After all dependencies have been installed, the following commands are ready to 
 
 The scripts called by each make command are located in the [script folder.](build/scripts)
 
-In addition to Cargo and related tools, the entire mono-repo is configured to build and test with Bazel. Please [install bazelisk ](https://github.com/bazelbuild/bazelisk) as it is the only requirement to build the repo with Bazel. For more details on working with Bazel, see the [Bazel](Bazel.md) document. 
+In addition to Cargo and related tools, the entire mono-repo is configured to build and test with Bazel.
+Please [install bazelisk ](https://github.com/bazelbuild/bazelisk) as it is the only requirement to build the repo with
+Bazel. For more details on working with Bazel, see the [Bazel](Bazel.md) document.
 
 ## 👨‍💻👩‍💻 Contribution
 
@@ -163,6 +217,7 @@ Unless you explicitly state otherwise, any contribution intentionally submitted 
 shall be licensed under the MIT license without additional terms or conditions.
 
 For details:
+
 * [Charta](DeepCausalityProjectCharter.pdf)
 * [Code of Conduct](CODE_OF_CONDUCT.md)
 * [Contributing](CONTRIBUTING.md)
@@ -175,8 +230,8 @@ The project took inspiration from several researchers and their projects in the 
 
 * [Judea Pearl](http://bayes.cs.ucla.edu/jp_home.html) at UCLA
 * [Lucien Hardy](https://perimeterinstitute.ca/people/lucien-hardy) at the Perimeter Institute
-* [Kenneth O. Stanley](https://www.kenstanley.net/home) 
-* [Ilya Shpitser](https://www.cs.jhu.edu/~ilyas/) 
+* [Kenneth O. Stanley](https://www.kenstanley.net/home)
+* [Ilya Shpitser](https://www.cs.jhu.edu/~ilyas/)
 * [Miguel Hernan](https://www.hsph.harvard.edu/miguel-hernan/), [Causal Lab](https://causalab.sph.harvard.edu/) at
   Harvard University
 * [Elias Bareinboim](https://causalai.net/) at Columbia University
@@ -184,10 +239,11 @@ The project took inspiration from several researchers and their projects in the 
   Research
 * [Causal ML](https://github.com/uber/causalml) at uber.
 
-DeepCausality implements the following research publications: 
+DeepCausality implements the following research publications:
+
 * ["Probability Theories with Dynamic Causal Structure"](docs/papers)- Lucian Hardy
 * ["A Defeasible Deontic Calculus for Resolving Norm Conflicts"](docs/papers/ddic.pdf) - Forbus et. al.
-* ["NWHy: A Framework for Hypergraph Analytics"](docs/papers/nwhy.pdf) -  Lumsdaine et. al.
+* ["NWHy: A Framework for Hypergraph Analytics"](docs/papers/nwhy.pdf) - Lumsdaine et. al.
 * ["Uncertain T: A First-Order Type for Uncertain Data"](docs/papers/uncertain_t.pdf) - Bornholt et. al.
 
 Parts of the implementation are also inspired by:
