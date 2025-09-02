@@ -239,9 +239,7 @@ dependencies = [
  "criterion",
  "rand",
  "rand_distr",
- "rayon",
  "rusty-fork",
- "ultragraph",
 ]
 
 [[package]]

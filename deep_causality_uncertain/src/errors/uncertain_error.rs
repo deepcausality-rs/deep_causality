@@ -45,12 +45,6 @@ impl fmt::Display for UncertainError {
     }
 }
 
-impl From<ultragraph::GraphError> for UncertainError {
-    fn from(err: ultragraph::GraphError) -> Self {
-        UncertainError::GraphError(err.to_string())
-    }
-}
-
 impl std::error::Error for UncertainError {}
 
 // Allow easy conversion from rand_distr errors into our custom error type.
