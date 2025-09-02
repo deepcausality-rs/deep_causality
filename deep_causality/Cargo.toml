@@ -29,9 +29,9 @@ path = "../deep_causality_macros"
 version = "0.8"
 
 
-[dependencies.deep_causality_uncertain]
-path = "../deep_causality_uncertain"
-version = "0.1"
+#[dependencies.deep_causality_uncertain]
+#path = "../deep_causality_uncertain"
+#version = "0.1"
 
 
 [dependencies.ultragraph]
