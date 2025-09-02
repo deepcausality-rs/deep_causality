@@ -7,6 +7,7 @@ use crate::{ContextoidType, Datable, Identifiable, SpaceTemporal, Spatial, Symbo
 
 pub mod coordinate;
 pub mod datable;
+pub mod datable_uncertain;
 pub mod metric;
 pub mod metric_coordinate;
 pub mod metric_tensor;

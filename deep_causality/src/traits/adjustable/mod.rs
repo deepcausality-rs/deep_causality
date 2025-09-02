@@ -3,9 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_data_structures::ArrayGrid;
-
 use crate::errors::{AdjustmentError, UpdateError};
+use deep_causality_data_structures::ArrayGrid;
 
 pub trait Adjustable<T>
 where
@@ -30,6 +29,18 @@ where
         &mut self,
         _array_grid: &ArrayGrid<T, WIDTH, HEIGHT, DEPTH, TIME>,
     ) -> Result<(), AdjustmentError> {
+        Ok(())
+    }
+}
+
+pub trait UncertainAdjustable {
+    type Data;
+
+    fn update(&mut self, _uncertain: Self::Data) -> Result<(), AdjustmentError> {
+        Ok(())
+    }
+
+    fn adjust(&mut self, _uncertain: Self::Data) -> Result<(), AdjustmentError> {
         Ok(())
     }
 }

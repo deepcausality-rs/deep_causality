@@ -2,10 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
 use crate::Identifiable;
+use deep_causality_uncertain::Uncertain;
 
-/// Represents data-bearing entities in a context graph.
+/// Represents uncertain data entities in a context graph.
 ///
 /// This trait marks nodes that carry domain-specific data
 /// relevant to inference, observation, or explanation. It extends
@@ -15,15 +15,13 @@ use crate::Identifiable;
 /// in how data is modeled. You may wrap sensor input, encoded strings,
 /// discrete values, or even external references.
 ///
-pub trait Datable: Identifiable {
-    type Data;
-
+pub trait UncertainDatable<T>: Identifiable {
     /// Returns the contained data.
     ///
     /// If `Self::Data` is `Copy`, this will typically return a copy. Otherwise, it may
     /// return a clone or a new instance depending on the implementation.
-    fn get_data(&self) -> Self::Data;
+    fn get_data(&self) -> Uncertain<T>;
 
     /// Sets or updates the contained data with a new value.
-    fn set_data(&mut self, value: Self::Data);
+    fn set_data(&mut self, value: Uncertain<T>);
 }

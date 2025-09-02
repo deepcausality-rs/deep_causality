@@ -4,6 +4,7 @@
  */
 
 use crate::{CausalityError, ContextId, ContextoidId, IdentificationValue, NumericalValue};
+use deep_causality_uncertain::Uncertain;
 use std::collections::HashMap;
 use std::sync::Arc;
 use ultragraph::UltraGraph;
@@ -34,6 +35,9 @@ pub enum PropagatingEffect {
     Numerical(NumericalValue),
     /// Represents a quantitative outcome, such as a probability score or confidence level.
     Probabilistic(NumericalValue),
+    /// Represents a value with inherent uncertainty, modeled as a probability distribution.
+    UncertainBool(Uncertain<bool>),
+    UncertainFloat(Uncertain<f64>),
     /// A link to a complex, structured result in a Contextoid. As an output, this
     /// can be interpreted by a reasoning engine as a command to fetch data.
     ContextualLink(ContextId, ContextoidId),
@@ -64,6 +68,15 @@ impl PropagatingEffect {
     pub fn is_contextual_link(&self) -> bool {
         matches!(self, PropagatingEffect::ContextualLink(_, _))
     }
+
+    pub fn is_uncertain_bool(&self) -> bool {
+        matches!(self, PropagatingEffect::UncertainBool(_))
+    }
+
+    pub fn is_uncertain_float(&self) -> bool {
+        matches!(self, PropagatingEffect::UncertainFloat(_))
+    }
+
     pub fn is_map(&self) -> bool {
         matches!(self, PropagatingEffect::Map(_))
     }

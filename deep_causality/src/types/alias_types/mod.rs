@@ -16,4 +16,5 @@ pub mod alias_csm;
 pub mod alias_function;
 pub mod alias_lock;
 pub mod alias_primitives;
+pub mod alias_uncertain;
 pub mod alias_uniform;

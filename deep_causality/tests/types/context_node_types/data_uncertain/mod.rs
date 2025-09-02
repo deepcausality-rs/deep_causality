@@ -2,12 +2,5 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
-mod data;
-mod data_uncertain;
-mod root;
-mod space;
-mod space_time;
-mod symbol;
-mod symbol_spacetime;
-mod time;
+mod data_uncertain_bool;
+mod data_uncertain_f64;

@@ -29,7 +29,7 @@ pub use crate::errors::*;
 // Traits
 //
 // Adjustable Traits
-pub use crate::traits::adjustable::Adjustable;
+pub use crate::traits::adjustable::{Adjustable, UncertainAdjustable};
 // Assumeable Traits
 pub use crate::traits::assumable::Assumable;
 pub use crate::traits::assumable::AssumableReasoning;
@@ -49,6 +49,7 @@ pub use crate::traits::causable_graph::*;
 pub use crate::traits::contextuable::Contextuable;
 pub use crate::traits::contextuable::coordinate::Coordinate;
 pub use crate::traits::contextuable::datable::Datable;
+pub use crate::traits::contextuable::datable_uncertain::UncertainDatable;
 pub use crate::traits::contextuable::metric::Metric;
 pub use crate::traits::contextuable::metric_coordinate::MetricCoordinate;
 pub use crate::traits::contextuable::metric_tensor::MetricTensor4D;
@@ -97,8 +98,8 @@ pub use crate::types::alias_types::alias_csm::*;
 pub use crate::types::alias_types::alias_function::*;
 pub use crate::types::alias_types::alias_lock::*;
 pub use crate::types::alias_types::alias_primitives::*;
+pub use crate::types::alias_types::alias_uncertain::*;
 pub use crate::types::alias_types::alias_uniform::*;
-// pub use crate::types::alias_types::*;
 // Causal types
 pub use crate::types::causal_types::causal_type::CausaloidType;
 pub use crate::types::causal_types::causaloid::Causaloid;
@@ -111,6 +112,8 @@ pub use crate::types::context_types::contextoid::contextoid_type::*;
 pub use crate::types::context_types::contextoid::*;
 // Default context node types.
 pub use crate::types::context_node_types::data::Data;
+pub use crate::types::context_node_types::data_uncertain::data_uncertain_bool::UncertainBooleanData;
+pub use crate::types::context_node_types::data_uncertain::data_uncertain_f64::UncertainFloat64Data;
 pub use crate::types::context_node_types::root::Root;
 // Space context node types.
 pub use crate::types::context_node_types::space::ecef_space::EcefSpace;

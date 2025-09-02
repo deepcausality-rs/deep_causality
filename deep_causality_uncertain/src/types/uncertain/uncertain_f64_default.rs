@@ -2,12 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use crate::Uncertain;
 
-mod data;
-mod data_uncertain;
-mod root;
-mod space;
-mod space_time;
-mod symbol;
-mod symbol_spacetime;
-mod time;
+impl Default for Uncertain<f64> {
+    fn default() -> Self {
+        Self::point(0.0)
+    }
+}
