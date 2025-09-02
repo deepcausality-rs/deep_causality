@@ -10,8 +10,6 @@ use rand_distr::{BernoulliError, NormalError};
 // For testing From impl
 use rusty_fork::rusty_fork_test;
 use std::error::Error;
-// For the Error trait methods
-use ultragraph::GraphError;
 
 rusty_fork_test! {
     #[test]
@@ -72,17 +70,6 @@ rusty_fork_test! {
     fn test_sampling_error_display() {
         let err = UncertainError::SamplingError("test sampling error".to_string());
         assert_eq!(err.to_string(), "Sampling error: test sampling error");
-        assert!(err.source().is_none());
-    }
-
-    #[test]
-    fn test_from_ultragraph_error() {
-        let ug_err = GraphError::NodeNotFound(5);
-        let err: UncertainError = ug_err.into(); // Use into() for From conversion
-        assert_eq!(
-            err.to_string(),
-            "Graph construction error: Node with index 5 not found; it may be out of bounds or have been removed."
-        );
         assert!(err.source().is_none());
     }
 

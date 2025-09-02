@@ -12,10 +12,8 @@ exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE
 
 
 [dependencies]
-ultragraph = { path = "../ultragraph" }
 rand = "0.9"
 rand_distr = "0.5"
-rayon = { version = "1.11", optional = true }
 
 [lib]
 test = true
@@ -27,10 +25,6 @@ path = "examples/gps/gps_navigation.rs"
 [[example]]
 name = "sensor_processing"
 path = "examples/sensor/sensor_processing.rs"
-
-[features]
-default = []
-parallel = ["dep:rayon"]
 
 [package.metadata.docs.rs]
 all-features = true
