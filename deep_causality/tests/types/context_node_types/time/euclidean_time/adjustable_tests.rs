@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use dcl_data_structures::prelude::{ArrayGrid, ArrayType, PointIndex};
 use deep_causality::{Adjustable, EuclideanTime, Temporal, TimeScale};
+use deep_causality_data_structures::{ArrayGrid, ArrayType, PointIndex};
 
 #[test]
 fn test_update_success() {

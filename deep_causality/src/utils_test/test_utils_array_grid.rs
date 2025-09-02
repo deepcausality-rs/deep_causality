@@ -2,8 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use dcl_data_structures::grid_type::{ArrayGrid, ArrayType};
-use dcl_data_structures::prelude::PointIndex;
+use deep_causality_data_structures::{ArrayGrid, ArrayType, PointIndex};
 
 pub const HEIGHT: usize = 5;
 // set all unused dimensions to 0 to save some memory.

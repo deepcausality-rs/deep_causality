@@ -4,7 +4,7 @@
  */
 
 use crate::{Adjustable, AdjustmentError, TangentSpacetime, UpdateError};
-use dcl_data_structures::prelude::{ArrayGrid, PointIndex};
+use deep_causality_data_structures::{ArrayGrid, PointIndex};
 
 /// Updates the position of the TangentSpacetime node.
 /// The metric tensor is updated via the 'update_metric_tensor' method.
