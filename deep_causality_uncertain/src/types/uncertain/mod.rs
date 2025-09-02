@@ -24,7 +24,7 @@ mod uncertain_statistics;
 static NEXT_UNCERTAIN_ID: AtomicUsize = AtomicUsize::new(0);
 
 /// A type representing a value with inherent uncertainty, modeled as a probability distribution.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Uncertain<T> {
     id: usize,
     root_node: Arc<ComputationNode>,
