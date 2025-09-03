@@ -3,13 +3,11 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::ComputationNode;
+use crate::{ComputationNode, NodeId};
 
 use std::marker::PhantomData;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
-
-use crate::types::computation::node::NodeId; // Added this import
 
 mod uncertain_bool;
 mod uncertain_bool_default;
@@ -25,7 +23,7 @@ mod uncertain_statistics;
 static NEXT_UNCERTAIN_ID: AtomicUsize = AtomicUsize::new(0);
 
 /// A type representing a value with inherent uncertainty, modeled as a probability distribution.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Uncertain<T> {
     id: usize,
     root_node: Arc<ComputationNode>,

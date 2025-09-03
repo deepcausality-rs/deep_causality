@@ -3,10 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::types::computation::operator::comparison_operator::ComparisonOperator;
-use crate::{ArithmeticOperator, ComputationNode, Uncertain};
-
-use crate::types::computation::node::NodeId; // Added this import
+use crate::{ArithmeticOperator, ComparisonOperator, ComputationNode, NodeId, Uncertain};
 
 // Note: We do not implement the standard `PartialOrd` and `PartialEq` traits
 // because their signatures return `bool`, which is misleading for uncertain values.

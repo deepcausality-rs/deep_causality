@@ -3,9 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::ComputationNode;
-use crate::types::computation::node::NodeId;
-use crate::{LogicalOperator, SampledValue, Sampler, UncertainError};
+use crate::{ComputationNode, LogicalOperator, NodeId, SampledValue, Sampler, UncertainError};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -74,7 +72,7 @@ impl SequentialSampler {
             ComputationNode::ArithmeticOp { node_id, .. } => *node_id,
             ComputationNode::ComparisonOp { node_id, .. } => *node_id,
             ComputationNode::LogicalOp { node_id, .. } => *node_id,
-            ComputationNode::FunctionOp { node_id, .. } => *node_id,
+            ComputationNode::FunctionOpF64 { node_id, .. } => *node_id,
             ComputationNode::FunctionOpBool { node_id, .. } => *node_id,
             ComputationNode::NegationOp { node_id, .. } => *node_id,
             ComputationNode::ConditionalOp { node_id, .. } => *node_id,
@@ -154,7 +152,7 @@ impl SequentialSampler {
                 SampledValue::Bool(result)
             }
 
-            ComputationNode::FunctionOp { func, operand, .. } => { // Extract func, operand
+            ComputationNode::FunctionOpF64 { func, operand, .. } => { // Extract func, operand
                 let operand_val = self.evaluate_node(operand, context, rng)?;
                 match operand_val {
                     SampledValue::Float(o) => SampledValue::Float(func(o)),

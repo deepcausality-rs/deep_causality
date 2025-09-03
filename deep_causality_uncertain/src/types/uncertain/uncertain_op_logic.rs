@@ -3,11 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{LogicalOperator, Uncertain};
 use std::ops::{BitAnd, BitOr, BitXor, Not};
 
-use crate::ComputationNode; // Changed import
-use crate::types::computation::node::NodeId; // Added this import
+use crate::{ComputationNode, LogicalOperator, NodeId, Uncertain};
 
 impl BitAnd for Uncertain<bool> {
     type Output = Self;

@@ -3,11 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::types::computation::operator::arithmetic_operator::ArithmeticOperator;
-use crate::{ComputationNode, Uncertain};
+use crate::{ArithmeticOperator, ComputationNode, NodeId, Uncertain};
 use std::ops::{Add, Div, Mul, Neg, Sub};
-
-use crate::types::computation::node::NodeId; // Added this import
 
 // Operator overloading is only implemented for f64 for now.
 impl Add for Uncertain<f64> {

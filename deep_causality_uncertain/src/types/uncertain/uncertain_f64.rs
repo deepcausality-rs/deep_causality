@@ -37,7 +37,7 @@ impl Uncertain<f64> {
     where
         F: Fn(f64) -> f64 + Send + Sync + 'static,
     {
-        Self::from_root_node(ComputationNode::FunctionOp {
+        Self::from_root_node(ComputationNode::FunctionOpF64 {
             node_id: NodeId::new(), // Added node_id
             func: Arc::new(func),
             operand: Box::new((*self.root_node).clone()),

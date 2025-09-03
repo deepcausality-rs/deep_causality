@@ -50,7 +50,7 @@ impl Debug for ComputationNode {
                     node_id, op, operands
                 )
             }
-            ComputationNode::FunctionOp {
+            ComputationNode::FunctionOpF64 {
                 node_id,
                 func: _, // dyn Fn(f64) -> f64 does not implement Debug
                 operand,

@@ -151,7 +151,7 @@ fn test_computation_node_function_op_construction_and_clone() {
         dist: DistributionEnum::Point(5.0),
     }); // Updated
     let func = Arc::new(|x: f64| x * 2.0);
-    let node = ComputationNode::FunctionOp {
+    let node = ComputationNode::FunctionOpF64 {
         node_id: NodeId::new(), // Added node_id
         func: func.clone(),
         operand: operand.clone(),
@@ -159,7 +159,7 @@ fn test_computation_node_function_op_construction_and_clone() {
     let cloned_node = node.clone();
 
     match cloned_node {
-        ComputationNode::FunctionOp {
+        ComputationNode::FunctionOpF64 {
             node_id: _, // Added node_id
             func: cloned_func,
             operand: cloned_operand,

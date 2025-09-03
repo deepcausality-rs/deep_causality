@@ -177,7 +177,7 @@ fn test_sequential_sampler_function_op() {
         dist: DistributionEnum::Point(5.0),
     });
     let func = Arc::new(|x: f64| x * 2.0);
-    let root_node = Arc::new(ComputationNode::FunctionOp {
+    let root_node = Arc::new(ComputationNode::FunctionOpF64 {
         node_id: NodeId::new(),
         func,
         operand: Box::new((*operand).clone()),
@@ -194,7 +194,7 @@ fn test_sequential_sampler_function_op_type_error() {
         dist: DistributionEnum::Point(true),
     }); // Type mismatch
     let func = Arc::new(|x: f64| x * 2.0);
-    let root_node = Arc::new(ComputationNode::FunctionOp {
+    let root_node = Arc::new(ComputationNode::FunctionOpF64 {
         node_id: NodeId::new(),
         func,
         operand: Box::new((*operand).clone()),
