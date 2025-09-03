@@ -65,9 +65,6 @@ impl PropagatingEffect {
     pub fn is_probabilistic(&self) -> bool {
         matches!(self, PropagatingEffect::Probabilistic(_))
     }
-    pub fn is_contextual_link(&self) -> bool {
-        matches!(self, PropagatingEffect::ContextualLink(_, _))
-    }
 
     pub fn is_uncertain_bool(&self) -> bool {
         matches!(self, PropagatingEffect::UncertainBool(_))
@@ -75,6 +72,10 @@ impl PropagatingEffect {
 
     pub fn is_uncertain_float(&self) -> bool {
         matches!(self, PropagatingEffect::UncertainFloat(_))
+    }
+
+    pub fn is_contextual_link(&self) -> bool {
+        matches!(self, PropagatingEffect::ContextualLink(_, _))
     }
 
     pub fn is_map(&self) -> bool {
@@ -107,6 +108,20 @@ impl PropagatingEffect {
     pub fn as_probability(&self) -> Option<NumericalValue> {
         match self {
             PropagatingEffect::Probabilistic(p) => Some(*p),
+            _ => None,
+        }
+    }
+
+    pub fn as_uncertain_bool(&self) -> Option<Uncertain<bool>> {
+        match self {
+            PropagatingEffect::UncertainBool(b) => Some(b.clone()),
+            _ => None,
+        }
+    }
+
+    pub fn as_uncertain_float(&self) -> Option<Uncertain<f64>> {
+        match self {
+            PropagatingEffect::UncertainFloat(b) => Some(b.clone()),
             _ => None,
         }
     }
