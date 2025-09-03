@@ -77,6 +77,41 @@ fn test_evaluate_probabilistic_propagation() {
 }
 
 #[test]
+fn test_evaluate_uncertain_propagation() {
+    let col = test_utils::get_uncertain_bool_test_causality_vec();
+
+    // Case 1: All succeed.
+    let effect_success = PropagatingEffect::Numerical(0.99);
+    let res = col.evaluate_uncertain(&effect_success, &AggregateLogic::All, 0.5);
+    assert!(res.is_ok());
+    let res_success = res.unwrap();
+
+    let uncertain_bool = match res_success {
+        PropagatingEffect::UncertainBool(u) => u,
+        _ => panic!("Expected UncertainBool but got {:?}", res_success),
+    };
+
+    // Since all inputs are point(true), the result of AND should be deterministically true.
+    let final_bool = uncertain_bool.to_bool(0.5, 0.95, 0.05, 1).unwrap();
+    assert!(final_bool);
+
+    // Case 2: All fail.
+    let effect_fail = PropagatingEffect::Numerical(0.1);
+    let res = col.evaluate_uncertain(&effect_fail, &AggregateLogic::All, 0.5);
+    assert!(res.is_ok());
+    let res_fail = res.unwrap();
+
+    let uncertain_bool_fail = match res_fail {
+        PropagatingEffect::UncertainBool(u) => u,
+        _ => panic!("Expected UncertainBool but got {:?}", res_fail),
+    };
+
+    // Since all inputs are point(false), the result of AND should be deterministically false.
+    let final_bool_fail = uncertain_bool_fail.to_bool(0.5, 0.95, 0.05, 1).unwrap();
+    assert!(!final_bool_fail);
+}
+
+#[test]
 fn test_evaluate_mixed_propagation() {
     let col = test_utils::get_deterministic_test_causality_vec();
 

@@ -5,20 +5,6 @@
 
 use crate::{AggregateLogic, Causable, CausalityError, PropagatingEffect};
 
-/// Evaluates a collection of `Causable` items against a specific `AggregateLogic`.
-///
-/// This is a private helper function that encapsulates the core reasoning logic,
-/// allowing the public-facing trait method to remain a simple delegation.
-/// It is optimized to short-circuit for performance where possible.
-///
-/// # Arguments
-/// * `items` - A vector of references to `Causable` items.
-/// * `effect` - The `PropagatingEffect` to pass to each item's `evaluate` method.
-/// * `logic` - The aggregation logic to apply.
-///
-/// # Returns
-/// A `Result` containing the final `PropagatingEffect::Deterministic` outcome
-/// or a `CausalityError` if any item returns a non-deterministic effect.
 pub(in crate::traits) fn _evaluate_deterministic_logic<T: Causable>(
     items: Vec<&T>,
     effect: &PropagatingEffect,

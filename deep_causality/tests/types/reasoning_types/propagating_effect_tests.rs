@@ -156,17 +156,11 @@ fn test_display() {
 
     let point = Uncertain::<bool>::point(true);
     let effect4 = UncertainBool(point);
-    assert_eq!(
-        format!("{effect4}"),
-        "PropagatingEffect::UncertainBool(Uncertain { id: 21, root_node: LeafBool { node_id: NodeId(21), dist: Point(true) }, _phantom: PhantomData<bool> })"
-    );
+    assert!(format!("{effect4}").contains("Point(true)"));
 
     let point = Uncertain::<f64>::point(4.0f64);
     let effect5 = UncertainFloat(point);
-    assert_eq!(
-        format!("{effect5}"),
-        "PropagatingEffect::UncertainFloat(Uncertain { id: 22, root_node: LeafF64 { node_id: NodeId(22), dist: Point(4.0) }, _phantom: PhantomData<f64> })"
-    );
+    assert!(format!("{effect5}").contains("Point(4.0)"));
 }
 
 #[test]

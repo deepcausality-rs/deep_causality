@@ -5,20 +5,6 @@
 
 use crate::{AggregateLogic, Causable, CausalityError, NumericalValue, PropagatingEffect};
 
-/// Evaluates a collection of `Causable` items against a specific `AggregateLogic`,
-/// using a provided `threshold` to convert probabilistic effects into boolean values.
-///
-/// # Arguments
-/// * `items` - A vector of references to `Causable` items.
-/// * `effect` - The `PropagatingEffect` to pass to each item's `evaluate` method.
-/// * `logic` - The aggregation logic to apply.
-/// * `threshold` - The numerical threshold used to convert probabilistic effects to boolean.
-///
-/// # Returns
-/// A `Result` containing the final `PropagatingEffect` outcome.
-/// For `AggregateLogic::All`, it returns `PropagatingEffect::Probabilistic`.
-/// For `Any`, `None`, and `Some(k)`, it returns `PropagatingEffect::Deterministic`.
-/// Returns a `CausalityError` if any item returns an unsupported effect type.
 pub(in crate::traits) fn _evaluate_probabilistic_logic<T: Causable>(
     items: Vec<&T>,
     effect: &PropagatingEffect,
@@ -31,72 +17,41 @@ pub(in crate::traits) fn _evaluate_probabilistic_logic<T: Causable>(
         ));
     }
 
-    match logic {
-        AggregateLogic::All => {
-            // Preserve original behavior for All: multiply probabilities.
-            let mut cumulative_prob: NumericalValue = 1.0;
-            for cause in items {
-                let evaluated_effect = cause.evaluate(effect)?;
-                match evaluated_effect {
-                    PropagatingEffect::Probabilistic(p) | PropagatingEffect::Numerical(p) => {
-                        cumulative_prob *= p;
-                    }
-                    _ => {
-                        return Err(CausalityError(format!(
-                            "evaluate_probabilistic_propagation encountered a non-probabilistic effect: {evaluated_effect:?}. Only probabilistic or numerical effects are allowed for AggregateLogic::All."
-                        )));
-                    }
+    let mut probabilities = Vec::new();
+    let num_samples = 100; // Number of samples for estimation
+
+    for cause in items {
+        let evaluated_effect = cause.evaluate(effect)?;
+        let prob = match evaluated_effect {
+            PropagatingEffect::Deterministic(b) => {
+                if b {
+                    1.0
+                } else {
+                    0.0
                 }
             }
-            Ok(PropagatingEffect::Probabilistic(cumulative_prob))
-        }
-        _ => {
-            // For Any, None, Some(k): use threshold to convert to boolean and apply logic.
-            let mut true_count = 0;
-            for cause in items {
-                let evaluated_effect = cause.evaluate(effect)?;
-                let value = match evaluated_effect {
-                    PropagatingEffect::Probabilistic(p) | PropagatingEffect::Numerical(p) => {
-                        p > threshold
-                    }
-                    PropagatingEffect::Deterministic(b) => b,
-                    _ => {
-                        return Err(CausalityError(format!(
-                            "evaluate_probabilistic_propagation encountered an unsupported effect: {evaluated_effect:?}. Only probabilistic, numerical, or deterministic effects are allowed for other AggregateLogic types."
-                        )));
-                    }
-                };
-
-                match logic {
-                    AggregateLogic::Any => {
-                        if value {
-                            return Ok(PropagatingEffect::Deterministic(true));
-                        }
-                    }
-                    AggregateLogic::None => {
-                        if value {
-                            return Ok(PropagatingEffect::Deterministic(false));
-                        }
-                    }
-                    AggregateLogic::Some(k) => {
-                        if value {
-                            true_count += 1;
-                            if true_count >= *k {
-                                return Ok(PropagatingEffect::Deterministic(true));
-                            }
-                        }
-                    }
-                    _ => unreachable!(), // All is handled above.
-                }
+            PropagatingEffect::Probabilistic(p) => p,
+            PropagatingEffect::UncertainFloat(u) => {
+                u.estimate_probability_exceeds(threshold, num_samples)?
             }
-
-            let final_result = match logic {
-                AggregateLogic::Any => false,
-                AggregateLogic::None => true,
-                AggregateLogic::Some(k) => true_count >= *k,
-                _ => unreachable!(), // All is handled above.
-            };
-            Ok(PropagatingEffect::Deterministic(final_result))
-        }
+            PropagatingEffect::UncertainBool(u) => u.estimate_probability(num_samples)?,
+            _ => return Err(CausalityError::new("Invalid effect type".to_string())),
+        };
+        probabilities.push(prob);
     }
+
+    let final_prob = match logic {
+        AggregateLogic::All => probabilities.iter().product(),
+        AggregateLogic::Any => 1.0 - probabilities.iter().map(|p| 1.0 - p).product::<f64>(),
+        AggregateLogic::None => {
+            1.0 - (1.0 - probabilities.iter().map(|p| 1.0 - p).product::<f64>())
+        }
+        AggregateLogic::Some(k) => {
+            // This is a simplification. A full implementation would use binomial distribution.
+            let count = probabilities.iter().filter(|&&p| p > 0.5).count();
+            if count >= *k { 1.0 } else { 0.0 }
+        }
+    };
+
+    Ok(PropagatingEffect::Probabilistic(final_prob))
 }

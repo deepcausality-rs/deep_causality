@@ -206,14 +206,14 @@ fn test_probabilistic_propagation_any() {
     let res = col.evaluate_probabilistic(&effect_false, &AggregateLogic::Any, 0.5);
     assert!(res.is_ok());
     let result = res.unwrap();
-    assert_eq!(result, PropagatingEffect::Deterministic(false));
+    assert_eq!(result, PropagatingEffect::Probabilistic(0.0));
 
     // All true, Any should be true
     let col = get_test_causality_array_probabilistic();
     let res = col.evaluate_probabilistic(&effect_true, &AggregateLogic::Any, 0.5);
     assert!(res.is_ok());
     let result = res.unwrap();
-    assert_eq!(result, PropagatingEffect::Deterministic(true));
+    assert_eq!(result, PropagatingEffect::Probabilistic(1.0));
 
     // Mixed: one true, rest false, Any should be true
     let mut mixed_col = get_test_causality_array_probabilistic().to_vec();
@@ -221,7 +221,7 @@ fn test_probabilistic_propagation_any() {
     let res = mixed_col.evaluate_probabilistic(&effect_false, &AggregateLogic::Any, 0.5);
     assert!(res.is_ok());
     let result = res.unwrap();
-    assert_eq!(result, PropagatingEffect::Deterministic(true));
+    assert_eq!(result, PropagatingEffect::Probabilistic(1.0));
 }
 
 #[test]
@@ -234,14 +234,14 @@ fn test_probabilistic_propagation_none() {
     let res = col.evaluate_probabilistic(&effect_false, &AggregateLogic::None, 0.5);
     assert!(res.is_ok());
     let result = res.unwrap();
-    assert_eq!(result, PropagatingEffect::Deterministic(true));
+    assert_eq!(result, PropagatingEffect::Probabilistic(1.0));
 
     // All true, None should be false
     let col = get_test_causality_array_probabilistic();
     let res = col.evaluate_probabilistic(&effect_true, &AggregateLogic::None, 0.5);
     assert!(res.is_ok());
     let result = res.unwrap();
-    assert_eq!(result, PropagatingEffect::Deterministic(false));
+    assert_eq!(result, PropagatingEffect::Probabilistic(0.0));
 
     // Mixed: one true, rest false, None should be false
     let mut mixed_col = get_test_causality_array_probabilistic().to_vec();
@@ -249,7 +249,7 @@ fn test_probabilistic_propagation_none() {
     let res = mixed_col.evaluate_probabilistic(&effect_false, &AggregateLogic::None, 0.5);
     assert!(res.is_ok());
     let result = res.unwrap();
-    assert_eq!(result, PropagatingEffect::Deterministic(false));
+    assert_eq!(result, PropagatingEffect::Probabilistic(0.0));
 }
 
 #[test]
@@ -262,14 +262,14 @@ fn test_probabilistic_propagation_some() {
     let res = col.evaluate_probabilistic(&effect_true, &AggregateLogic::Some(5), 0.5);
     assert!(res.is_ok());
     let result = res.unwrap();
-    assert_eq!(result, PropagatingEffect::Deterministic(true));
+    assert_eq!(result, PropagatingEffect::Probabilistic(1.0));
 
     // All false, Some(1) should be false
     let col = get_test_causality_array_probabilistic();
     let res = col.evaluate_probabilistic(&effect_false, &AggregateLogic::Some(1), 0.5);
     assert!(res.is_ok());
     let result = res.unwrap();
-    assert_eq!(result, PropagatingEffect::Deterministic(false));
+    assert_eq!(result, PropagatingEffect::Probabilistic(0.0));
 
     // Mixed: 5 true, 5 false, Some(5) should be true
     let mut mixed_col = get_test_causality_array_probabilistic().to_vec();
@@ -279,13 +279,13 @@ fn test_probabilistic_propagation_some() {
     let res = mixed_col.evaluate_probabilistic(&effect_false, &AggregateLogic::Some(5), 0.5);
     assert!(res.is_ok());
     let result = res.unwrap();
-    assert_eq!(result, PropagatingEffect::Deterministic(true));
+    assert_eq!(result, PropagatingEffect::Probabilistic(1.0));
 
     // Mixed: 5 true, 5 false, Some(6) should be false
     let res = mixed_col.evaluate_probabilistic(&effect_false, &AggregateLogic::Some(6), 0.5);
     assert!(res.is_ok());
     let result = res.unwrap();
-    assert_eq!(result, PropagatingEffect::Deterministic(false));
+    assert_eq!(result, PropagatingEffect::Probabilistic(0.0));
 }
 
 // --- Tests for evaluate_mixed_propagation ---

@@ -3,6 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::*;
+use deep_causality_uncertain::Uncertain;
 use std::sync::Arc;
 
 pub fn get_context() -> BaseContext {
@@ -47,6 +48,13 @@ pub fn get_probabilistic_test_causality_vec() -> BaseCausaloidVec {
     Vec::from_iter([q1, q2, q3])
 }
 
+pub fn get_uncertain_bool_test_causality_vec() -> BaseCausaloidVec {
+    let q1 = get_test_causaloid_uncertain_bool();
+    let q2 = get_test_causaloid_uncertain_bool();
+    let q3 = get_test_causaloid_uncertain_bool();
+    Vec::from_iter([q1, q2, q3])
+}
+
 pub fn get_test_single_data(val: NumericalValue) -> PropagatingEffect {
     PropagatingEffect::Numerical(val)
 }
@@ -72,7 +80,7 @@ pub fn get_test_causaloid_deterministic_false() -> BaseCausaloid {
 }
 
 pub fn get_test_causaloid_contextual_link() -> BaseCausaloid {
-    let description = "tests nothing; always returns a contetual link";
+    let description = "tests nothing; always returns a contextual link";
 
     fn causal_fn(_effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
         Ok(PropagatingEffect::ContextualLink(0, 1))
@@ -110,6 +118,34 @@ pub fn get_test_causaloid_probabilistic() -> BaseCausaloid {
     }
 
     Causaloid::new(id, causal_fn, description)
+}
+
+pub fn get_test_causaloid_uncertain_bool() -> BaseCausaloid {
+    let description = "tests whether data exceeds threshold of 0.55 and returns uncertain bool";
+
+    fn causal_fn(effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
+        let obs =
+            match effect {
+                PropagatingEffect::Numerical(val) => *val,
+                _ => return Err(CausalityError(
+                    "Causal function expected Numerical effect but received a different variant."
+                        .into(),
+                )),
+            };
+
+        let threshold: NumericalValue = 0.55;
+        if obs > threshold {
+            Ok(PropagatingEffect::UncertainBool(Uncertain::<bool>::point(
+                true,
+            )))
+        } else {
+            Ok(PropagatingEffect::UncertainBool(Uncertain::<bool>::point(
+                false,
+            )))
+        }
+    }
+
+    Causaloid::new(3, causal_fn, description)
 }
 
 pub fn get_test_causaloid_deterministic() -> BaseCausaloid {

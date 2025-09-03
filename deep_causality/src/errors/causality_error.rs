@@ -5,6 +5,7 @@
 
 use crate::CausalityGraphError;
 use deep_causality_macros::Constructor;
+use deep_causality_uncertain::UncertainError;
 use std::error::Error;
 use std::fmt;
 use ultragraph::GraphError;
@@ -30,7 +31,12 @@ impl From<GraphError> for CausalityError {
 
 impl From<CausalityGraphError> for CausalityError {
     fn from(err: CausalityGraphError) -> Self {
-        // Convert the graph-specific error into our general causality error.
+        CausalityError(format!("{err}"))
+    }
+}
+
+impl From<UncertainError> for CausalityError {
+    fn from(err: UncertainError) -> Self {
         CausalityError(format!("{err}"))
     }
 }
