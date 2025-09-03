@@ -288,10 +288,10 @@ The project took inspiration from several researchers and their projects in the 
 
 DeepCausality implements the following research publications:
 
-* ["Probability Theories with Dynamic Causal Structure"](docs/papers)- Lucian Hardy
-* ["A Defeasible Deontic Calculus for Resolving Norm Conflicts"](docs/papers/ddic.pdf) - Forbus et. al.
-* ["NWHy: A Framework for Hypergraph Analytics"](docs/papers/nwhy.pdf) - Lumsdaine et. al.
-* ["Uncertain T: A First-Order Type for Uncertain Data"](docs/papers/uncertain_t.pdf) - Bornholt et. al.
+* ["Probability Theories with Dynamic Causal Structure"](docs/papers)
+* ["A Defeasible Deontic Calculus for Resolving Norm Conflicts"](docs/papers/ddic.pdf)
+* ["NWHy: A Framework for Hypergraph Analytics"](docs/papers/nwhy.pdf) 
+* ["Uncertain T: A First-Order Type for Uncertain Data"](docs/papers/uncertain_t.pdf) 
 
 Parts of the implementation are also inspired by:
 
