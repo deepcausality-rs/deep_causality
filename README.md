@@ -56,55 +56,101 @@
 
 </div>
 
+# Overview
 
-DeepCausality is a hypergeometric computational causality library that enables fast, context-aware causal reasoning over complex multi-stage causality models. DeepCausality pioneers uniform reasoning across deterministic and
+DeepCausality is a hypergeometric computational causality library that enables fast, context-aware causal reasoning
+over complex multi-stage causality models. DeepCausality pioneers uniform reasoning across deterministic and
 probabilistic modalities by implementing the unified effect propagation process.
 
-In the effect propagation process, cause, and effect are folded into one single entity, the causaloid, that takes
-a propagating effect as input and returns another propagating effect as its output. A causaloid models causal relations
-as a functional dependency of the previous propagating effect on the current propagating effect via a causal function. The
-key difference from conventional classical causality, which models a causal relationship as a temporal order,
-comes down to two properties of the causal function. One, the functional dependency is
-independent of temporal order and therefore can handle non-Euclidean representation and relativistic effects. Second,
-the causal function is unconstrained and therefore can be deterministic, probabilistic, a support vector machine or even a non-deterministic method such as a neural net. As long as the computed effect can be expressed as a propagating
-effect, the causal function is valid and can be stored in a Causaloid.
+### The "Classical" Way of Thinking About Causality
 
-A propagating effect can be a deterministic (causal), a probabilistic value, a probabilistic distribution, or an
-arbitrarily complex type stored as a contextual reference. DeepCausality provides reasoning for deterministic and
-probabilistic modalities, whereas reasoning over arbitrarily complex types requires custom implementation. To streamline
-data sharing, those complex types are stored and loaded from a context attached to the causal model.
+Imagine a simple thermostat.
 
-DeepCausality supports multiple contexts that can store complex spatio-temporal data as well as data distributions to
-account for uncertainty. The adjustable mechanism enables dynamic data updates, for example, from real-time data streams
-or sensor data. A hypergraph represents each context and thus enables flexible data relations, i.e., a point in
-spacetime may link to multiple sensor readings and a reference data distribution for each sensor to detect data
-anomalies. The context, therefore, supports sophisticated reasoning across advanced causal structures. Out of the box,
-DeepCausality supports multi-modal causal reasoning across singleton, causal collection, and causal hyper-graph
-structures. For causal collections, multiple modes of aggregation are supported, whereas the causal hypergraph
-implements the effect propagation process in which the reasoning engine traverses the graph, applies the previous
-propagating effect to the current causaloid, and then takes that propagating effect and applies it to the next causaloid
-until the graph traversal ends. To support flexible reasoning over geometric causal structures, DeepCausality supports
-common path algorithms, i.e., shortest path, start from a node, and path between two nodes.
+* **Cause:** The room temperature drops below 68 degrees Fahrenheit.
+* **Effect:** The furnace turns on.
 
-Once a final conclusion has been reached, the causal state machine enables the explicit linking between the conclusion
-and a specific action to be taken as a result. However, because dynamic reasoning over a dynamic context may not always
-result in a predictable outcome, DeepCausality has developed the EffectEthos, a programmable ethos, to encode contextual
-operational rules the causal state machine can check to ensure that a proposed action is safe and within the pre-defined
-rules. The effect ethos can access the same context as the causal model that has led to the insight that triggered a
-proposed action and can therefore retrieve relevant and timely data to decide whether the action should be taken. One
-key aspect of the effect ethos is its ability to resolve conflicting rules via an internal algorithm that gives
-precedent to a rule with higher priority, or a higher authority, to ensure the final rule set is correctly applied.
-Furthermore, a tagging system enables efficient re-use and selection of applicable rules.
+This is a typical classical causal model that works because it relies on three fundamental assumptions to be true:
 
-DeepCausality applies state-of-the-art performance optimization, such as its custom compact sparse representation (CSR)
-hypergraph implementation that delivers sub-second traversal time on graphs with ten million nodes or more. Furthermore,
-static dispatching in all critical hot paths ensures significant performance even on moderate hardware and thus is
-suitable for real-time applications without additional acceleration hardware.
+1. **Time is a straight line.** The temperature *always* drops *before* the furnace turns on. There's a clear "
+   happen-before" relationship.
+2. **The causal rules are fixed.** The law "if temp < 68, then turn on furnace" is static and unchanging. It will be the
+   same rule tomorrow as it is today.
+3. Context is assumed implicitly and captured in variables.
 
-In terms of applications, DeepCausality enables a number of advanced use cases, such as real-time sensor fusion,
-real-time contextual risk monitoring, and contextual interaction i.e. in robotics safeguarded by its effect ethos.
+All previous computational causality frameworks (like those pioneered by Judea Pearl) are built on these three powerful
+assumptions. They provide the foundation to discover and reason about these fixed causality in a world where time moves
+forward predictably, the rules remains the same, and adding some variables capture the implicit context.
 
-DeepCausality is hosted as a sandbox project in the [LF AI & Data Foundation](https://landscape.lfai.foundation/).
+### The Problem: A Dynamic World Breaks Classical Causality
+
+Next, imagine a more complex system, like a financial market or a fleet of autonomous wildfire-fighting drones and you
+see that reality operates differently:
+
+1. **Time is NOT a straight line.** In a trading system, events happen on nanosecond scales, but the market context
+   relies on different time scales i.e. the hourly high price, the previous days close price
+   or the daily trade volume. Time becomes multi-layered, multi-scaled and complex.
+
+2. **The rules can change .** This is the most important point. During a normal market day, "low interest rates cause
+   stock prices to rise." But during a market crash (a "regime shift"), that rule breaks down entirely, and a new rule
+   like "high fear causes all assets to fall" takes over. The causal relationships within a system have changed
+   dynamically.
+
+3. **Context changes dynamically.** The reason causal rules may change is because a system's context is changing
+   dynamically. For an autonomous drone relying on a GPS signal navigation might be valid, but the moment the drone
+   enters a drone, the GPS signal gets temporarily lost and with it the drones ability to navigate. Here, the context is
+   particularly important because the computer vision system almost certainly identified the tunnel entrance, but
+   without a workable context, the information cannot be used.
+
+DeepCausality was created from the ground up to model dynamic causality in a system where context changes continuously,
+multi-scaled time, and the causal rules themselves may change in response its changing context.
+
+### The Core Idea of DeepCausality: A Radical Simplification
+
+DeepCausality rethinks causality from the ground up based on single single foundation:
+
+**"Causality is a spacetime-agnostic functional dependency."**
+
+* **"Functional dependency":** This just means `Effect2 = function(Effect1)`. Instead of "cause and effect," think of a
+  chain reaction where one event triggers a causal function that produces the next event. The focus is on the *process*
+  of event propagation.
+* **"Spacetime-agnostic":** This is the radical part. Time and space are just another piece of contextual data that the
+  causal function might use.
+* **"Explicit Context":** Because the causal function is independent of spacetime, any time or space related data needs
+  to be provided via a context. A powerful hypergraph enables flexible context modelling and DeepCausality enables a model
+  to access and use multiple contexts. 
+
+The core of the idea is similar to a ripple in a pond. One ripple (an effect) propagates outward and creates the next
+ripple (another effect). DeepCausality is a framework for defining the rules of how those ripples spread. For more information 
+about the underlying effect propagation process, see the [Deep Dive document.](README_DEEP_DIVE.md). 
+
+### The Three Pillars of DeepCausality
+
+DeepCausality has three main components to make all this work:
+
+#### 1. The Causaloid:
+
+* **What it is:** A self-contained, single unit of causality.
+* **What it does:** It holds a single causal function (`E2 = f(E1)`). It receives an incoming effect, runs its causal
+  function, and emits a new, outgoing effect.
+
+#### 2. The Context:
+
+* **What it is:** The explicit environment where the Causaloids operate. It holds all the factual data.
+* **What it does:** The Context is a super-flexible data structure (a hypergraph) that holds all the facts about the
+  world: the current time, sensor readings, locations on a map, etc.
+
+#### 3. The Effect Ethos
+
+* **What it is:** A programmable ethos, to encode and verify operational rules
+* **What it does:** A Causaloid might reason, "Based on the data, the most logical action is X." But before action X can
+  be taken, the Effect Ethos steps in and checks against a set of rules. It answers the question "**Should this happen?
+  **"
+
+In summary, the EPP is a framework for building systems that can reason about cause and effect in complex, dynamic
+environments where the rules themselves can change. It achieves this by treating causality as a process of **effect
+propagation** between simple, composable **Causaloids** that operate on an explicit, flexible **Context**, all governed
+by a verifiable safety layer called the **Effect Ethos**. DeepCausality is hosted as a sandbox project in
+the [LF AI & Data Foundation](https://landscape.lfai.foundation/).
 
 ## 🤩 Why DeepCausality?
 
