@@ -69,13 +69,15 @@ Imagine a simple thermostat.
 * **Cause:** The room temperature drops below 68 degrees Fahrenheit.
 * **Effect:** The furnace turns on.
 
-This is a typical classical causal model that works because it relies on three fundamental assumptions to be true:
+A typical classical causal model works because it relies on three fundamental assumptions:
 
 1. **Time is a straight line.** The temperature *always* drops *before* the furnace turns on. There's a clear "
    happen-before" relationship.
 2. **The causal rules are fixed.** The law "if temp < 68, then turn on furnace" is static and unchanging. It will be the
    same rule tomorrow as it is today.
-3. Context is assumed implicitly and captured in variables.
+3. **Context is implicit** Context is assumed as the implicit background and therefore all data are
+   captured in variables relative to implicit context. Here, it is important that the data collection and the causal model
+   assume the same implicit background context otherwise errors are very hard to find. 
 
 All previous computational causality frameworks (like those pioneered by Judea Pearl) are built on these three powerful
 assumptions. They provide the foundation to discover and reason about these fixed causality in a world where time moves
@@ -116,12 +118,14 @@ DeepCausality rethinks causality from the ground up based on single single found
 * **"Spacetime-agnostic":** This is the radical part. Time and space are just another piece of contextual data that the
   causal function might use.
 * **"Explicit Context":** Because the causal function is independent of spacetime, any time or space related data needs
-  to be provided via a context. A powerful hypergraph enables flexible context modelling and DeepCausality enables a model
-  to access and use multiple contexts. 
+  to be provided via a context. A powerful hypergraph enables flexible context modelling and DeepCausality enables a
+  model
+  to access and use multiple contexts.
 
 The core of the idea is similar to a ripple in a pond. One ripple (an effect) propagates outward and creates the next
-ripple (another effect). DeepCausality is a framework for defining the rules of how those ripples spread. For more information 
-about the underlying effect propagation process, see the [Deep Dive document.](README_DEEP_DIVE.md). 
+ripple (another effect). DeepCausality is a framework for defining the rules of how those ripples spread. For more
+information
+about the underlying effect propagation process, see the [Deep Dive document.](README_DEEP_DIVE.md).
 
 ### The Three Pillars of DeepCausality
 
