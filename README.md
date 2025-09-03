@@ -115,8 +115,8 @@ DeepCausality rethinks causality from the ground up based on single single found
 * **"Functional dependency":** This just means `Effect2 = function(Effect1)`. Instead of "cause and effect," think of a
   chain reaction where one event triggers a causal function that produces the next event. The focus is on the *process*
   of event propagation.
-* **"Spacetime-agnostic":** This is the radical part. Time and space are just another piece of contextual data that the
-  causal function might use.
+* **"Spacetime-agnostic":** This is the radical part. Time and space are just another piece of contextual data for the
+  causal function.
 * **"Explicit Context":** Because the causal function is independent of spacetime, any time or space related data needs
   to be provided via a context. A powerful hypergraph enables flexible context modelling and DeepCausality enables a
   model
