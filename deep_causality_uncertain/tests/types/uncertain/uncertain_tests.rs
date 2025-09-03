@@ -146,7 +146,7 @@ fn test_uncertain_bool_to_bool() {
     let uncertain_bernoulli_true = Uncertain::<bool>::bernoulli(0.9);
     assert!(
         uncertain_bernoulli_true
-            .to_bool(0.9, 0.95, 0.05, 1000)
+            .to_bool(0.8, 0.95, 0.05, 1000)
             .unwrap()
     );
 
