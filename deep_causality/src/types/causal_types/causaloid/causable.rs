@@ -3,10 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::errors::CausalityError;
+use crate::{AggregateLogic, CausalityError, Causaloid, CausaloidType, PropagatingEffect};
 use crate::{
-    AggregateLogic, Causable, CausableCollectionExplaining, CausableCollectionReasoning, Causaloid,
-    CausaloidType, Datable, PropagatingEffect, SpaceTemporal, Spatial, Symbolic, Temporal,
+    Causable, CausableCollectionExplaining, CausableCollectionReasoning, Datable, SpaceTemporal,
+    Spatial, Symbolic, Temporal,
 };
 
 #[allow(clippy::type_complexity)]

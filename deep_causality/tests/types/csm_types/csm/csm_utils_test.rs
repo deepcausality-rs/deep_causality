@@ -60,7 +60,7 @@ pub(super) fn get_effect_ethos(verified: bool, impermissible: bool) -> BaseEffec
     };
 
     let mut ethos = EffectEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "Test Norm",
             &["test_tag"],

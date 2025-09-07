@@ -22,7 +22,7 @@ fn test_from_constructor() {
     // This tests the constructor's behavior and its assumption that the
     // provided components are consistent.
     let mut teloid_store = TeloidStore::new();
-    let teloid = Teloid::new(
+    let teloid = Teloid::new_deterministic(
         42,
         "test_norm".to_string(),
         utils_tests::always_true_predicate,

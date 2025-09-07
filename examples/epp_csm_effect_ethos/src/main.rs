@@ -40,7 +40,7 @@ fn get_effect_ethos() -> EffectEthos<
     FloatType,
 > {
     let mut ethos = EffectEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "High temp alert",
             &["temperature"],

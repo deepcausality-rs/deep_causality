@@ -9,7 +9,7 @@ use deep_causality::{DeonticError, TeloidModal};
 #[test]
 fn test_verify_graph_and_freeze() {
     let mut ethos = utils_tests::TestEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "drive",
             &[],
@@ -34,7 +34,7 @@ fn test_verify_graph_and_freeze() {
 #[test]
 fn test_verify_graph_fails_on_cycle() {
     let mut ethos = utils_tests::TestEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "a",
             &[],
@@ -45,7 +45,7 @@ fn test_verify_graph_fails_on_cycle() {
             1,
         )
         .unwrap()
-        .add_norm(
+        .add_deterministic_norm(
             2,
             "b",
             &[],

@@ -9,7 +9,7 @@ use deep_causality::{DeonticError, TeloidModal};
 #[test]
 fn test_linking_success() {
     let ethos_result = utils_tests::TestEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "drive",
             &[],
@@ -20,7 +20,7 @@ fn test_linking_success() {
             1,
         )
         .unwrap()
-        .add_norm(
+        .add_deterministic_norm(
             2,
             "drive",
             &[],
@@ -39,7 +39,7 @@ fn test_linking_success() {
 #[test]
 fn test_linking_fails_on_non_existent_id() {
     let ethos_result = utils_tests::TestEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "drive",
             &[],

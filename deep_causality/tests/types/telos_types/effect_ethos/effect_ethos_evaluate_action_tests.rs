@@ -10,7 +10,7 @@ use deep_causality::{DeonticError, DeonticInferable, TeloidModal};
 #[test]
 fn test_evaluate_action_fails_if_not_verified() {
     let mut ethos = utils_tests::TestEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "drive",
             &["drive"],
@@ -37,7 +37,7 @@ fn test_evaluate_action_fails_if_not_verified() {
 #[test]
 fn test_evaluate_action_fails_if_not_frozen() {
     let ethos = utils_tests::TestEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "drive",
             &["drive"],
@@ -63,7 +63,7 @@ fn test_evaluate_action_fails_if_not_frozen() {
 #[test]
 fn test_evaluate_action_impermissible_wins() {
     let mut ethos = utils_tests::TestEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "drive",
             &["drive"],
@@ -74,7 +74,7 @@ fn test_evaluate_action_impermissible_wins() {
             1,
         )
         .unwrap()
-        .add_norm(
+        .add_deterministic_norm(
             2,
             "drive",
             &["drive"],
@@ -103,7 +103,7 @@ fn test_evaluate_action_impermissible_wins() {
 fn test_evaluate_action_lex_posterior_wins() {
     // Newer norm (ID 2) should defeat older norm (ID 1)
     let mut ethos = utils_tests::TestEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "drive",
             &["drive"],
@@ -114,7 +114,7 @@ fn test_evaluate_action_lex_posterior_wins() {
             1,
         )
         .unwrap()
-        .add_norm(
+        .add_deterministic_norm(
             2,
             "drive",
             &["drive"],
@@ -144,7 +144,7 @@ fn test_evaluate_action_lex_posterior_wins() {
 fn test_evaluate_action_lex_specialis_wins() {
     // More specific norm (ID 2) should defeat general norm (ID 1)
     let mut ethos = utils_tests::TestEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "drive",
             &["drive"],
@@ -155,7 +155,7 @@ fn test_evaluate_action_lex_specialis_wins() {
             1,
         )
         .unwrap()
-        .add_norm(
+        .add_deterministic_norm(
             2,
             "drive",
             &["drive"],
@@ -185,7 +185,7 @@ fn test_evaluate_action_lex_specialis_wins() {
 fn test_evaluate_action_lex_superior_wins() {
     // Higher priority norm (ID 2) should defeat lower priority norm (ID 1)
     let mut ethos = utils_tests::TestEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "drive",
             &["drive"],
@@ -196,7 +196,7 @@ fn test_evaluate_action_lex_superior_wins() {
             1,   // priority
         )
         .unwrap()
-        .add_norm(
+        .add_deterministic_norm(
             2,
             "drive",
             &["drive"],
@@ -226,7 +226,7 @@ fn test_evaluate_action_lex_superior_wins() {
 fn test_evaluate_action_with_inheritance() {
     // General Obligation(1) -> Specific Optional(2)
     let mut ethos = utils_tests::TestEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "drive",
             &["drive"],
@@ -237,7 +237,7 @@ fn test_evaluate_action_with_inheritance() {
             1,
         )
         .unwrap()
-        .add_norm(
+        .add_deterministic_norm(
             2,
             "drive",
             &["drive"],
@@ -270,7 +270,7 @@ fn test_evaluate_action_with_inheritance() {
 fn test_evaluate_action_deep_inheritance() {
     // Test a chain of inheritance: 1 -> 2 -> 3
     let mut ethos = utils_tests::TestEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "drive",
             &["drive"], // This is the entry point
@@ -281,7 +281,7 @@ fn test_evaluate_action_deep_inheritance() {
             1,
         )
         .unwrap()
-        .add_norm(
+        .add_deterministic_norm(
             2,
             "drive",
             &[], // Not tagged, only reachable via inheritance
@@ -292,7 +292,7 @@ fn test_evaluate_action_deep_inheritance() {
             2,
         )
         .unwrap()
-        .add_norm(
+        .add_deterministic_norm(
             3,
             "drive",
             &[], // Not tagged, only reachable via inheritance
@@ -327,7 +327,7 @@ fn test_evaluate_action_deep_inheritance() {
 fn test_evaluate_action_inheritance_with_defeasance() {
     // Chain: 1 -> 2. Defeater: 3 defeats 2.
     let mut ethos = utils_tests::TestEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "drive",
             &["drive"],
@@ -338,7 +338,7 @@ fn test_evaluate_action_inheritance_with_defeasance() {
             1,
         )
         .unwrap()
-        .add_norm(
+        .add_deterministic_norm(
             2,
             "drive",
             &[],
@@ -349,7 +349,7 @@ fn test_evaluate_action_inheritance_with_defeasance() {
             1, // low specificity
         )
         .unwrap()
-        .add_norm(
+        .add_deterministic_norm(
             3,
             "drive",
             &["drive"],
@@ -383,7 +383,7 @@ fn test_evaluate_action_inheritance_with_defeasance() {
 #[test]
 fn test_evaluate_action_no_relevant_norms_found() {
     let mut ethos = TestEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "drive",
             &["drive"], // The only tag is "drive"

@@ -175,6 +175,7 @@ pub use crate::types::telos_types::teloid_modal::TeloidModal;
 pub use crate::types::telos_types::teloid_relation::TeloidRelation;
 pub use crate::types::telos_types::teloid_store::TeloidStore;
 pub use crate::types::telos_types::teloid_verdict::Verdict;
+pub use crate::types::telos_types::uncertain_parameter::UncertainParameter;
 // Utils
 //
 pub use crate::utils::time_utils::*;

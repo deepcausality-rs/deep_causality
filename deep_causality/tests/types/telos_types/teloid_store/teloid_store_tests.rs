@@ -25,7 +25,7 @@ fn create_test_teloid(
     FloatType,
     FloatType,
 > {
-    Teloid::new(
+    Teloid::new_deterministic(
         id,
         action_id.to_string(),
         always_true_predicate,

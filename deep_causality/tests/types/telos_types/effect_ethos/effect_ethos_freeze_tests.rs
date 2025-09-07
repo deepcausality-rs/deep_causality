@@ -10,7 +10,7 @@ use deep_causality::{DeonticError, TeloidModal};
 #[test]
 fn test_unfreeze() {
     let mut ethos = TestEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "a",
             &[],
@@ -38,7 +38,7 @@ fn test_unfreeze() {
 #[test]
 fn test_link_inheritance_fails_if_frozen() {
     let mut ethos = utils_tests::TestEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "a",
             &[],
@@ -49,7 +49,7 @@ fn test_link_inheritance_fails_if_frozen() {
             1,
         )
         .unwrap()
-        .add_norm(
+        .add_deterministic_norm(
             2,
             "b",
             &[],
@@ -72,7 +72,7 @@ fn test_link_inheritance_fails_if_frozen() {
 #[test]
 fn test_link_defeasance_fails_if_frozen() {
     let mut ethos = utils_tests::TestEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "a",
             &[],
@@ -83,7 +83,7 @@ fn test_link_defeasance_fails_if_frozen() {
             1,
         )
         .unwrap()
-        .add_norm(
+        .add_deterministic_norm(
             2,
             "b",
             &[],

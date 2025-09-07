@@ -8,7 +8,7 @@ use deep_causality::{DeonticError, DeonticExplainable, DeonticInferable, TeloidM
 #[test]
 fn test_inconclusive_verdict_no_active_norms() {
     let mut ethos = utils_tests::TestEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "drive",
             &["drive"],
@@ -37,7 +37,7 @@ fn test_inconclusive_verdict_no_active_norms() {
 #[test]
 fn test_explain_verdict_impermissible() {
     let mut ethos = utils_tests::TestEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "drive",
             &["drive"],
@@ -65,7 +65,7 @@ fn test_explain_verdict_impermissible() {
 #[test]
 fn test_explain_verdict_obligatory() {
     let mut ethos = utils_tests::TestEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "drive",
             &["drive"],
@@ -93,7 +93,7 @@ fn test_explain_verdict_obligatory() {
 #[test]
 fn test_explain_verdict_optional() {
     let mut ethos = utils_tests::TestEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "drive",
             &["drive"],

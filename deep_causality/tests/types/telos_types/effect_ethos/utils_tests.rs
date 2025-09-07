@@ -4,9 +4,10 @@
  */
 
 use deep_causality::{
-    ActionParameterValue, BaseContext, BaseSymbol, Data, EffectEthos, EuclideanSpace,
-    EuclideanSpacetime, EuclideanTime, FloatType, NumericalValue, ProposedAction,
+    ActionParameterValue, BaseContext, BaseSymbol, CausalityError, Data, EffectEthos,
+    EuclideanSpace, EuclideanSpacetime, EuclideanTime, FloatType, NumericalValue, ProposedAction,
 };
+use deep_causality_uncertain::Uncertain;
 use std::collections::HashMap;
 
 // HELPER FUNCTIONS
@@ -47,6 +48,14 @@ pub(in crate::types::telos_types::effect_ethos) fn check_speed_predicate(
     } else {
         false
     }
+}
+
+// Predicate that always returns Uncertain(true)
+pub(in crate::types::telos_types::effect_ethos) fn always_uncertain_predicate(
+    _context: &BaseContext,
+    _action: &ProposedAction,
+) -> Result<Uncertain<bool>, CausalityError> {
+    Ok(Uncertain::<bool>::point(true))
 }
 
 // Creates a dummy context for testing
