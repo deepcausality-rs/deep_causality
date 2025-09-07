@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Causaloid, PropagatingEffect};
+use crate::{Causaloid, PropagatingEffect, UncertainParameter};
 use crate::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
 mod display;
 mod eval;
@@ -24,7 +24,7 @@ mod getter;
 ///
 /// # Usage
 /// `CausalState` is typically used in conjunction with `CausalAction` in a state-action pair
-/// within a causal state machine (CSM). The CSM evaluates states and, when conditions are met,
+/// within a causal state machine (CSM). The CSM evaluates states, and when conditions are met,
 /// fires the associated actions.
 ///
 #[allow(clippy::type_complexity)]
@@ -47,6 +47,8 @@ where
     data: PropagatingEffect,
     /// Reference to a causaloid that defines when this state is active
     causaloid: Causaloid<D, S, T, ST, SYM, VS, VT>,
+    /// Optional parameters for evaluating uncertain effects.
+    uncertain_parameter: Option<UncertainParameter>,
 }
 
 impl<D, S, T, ST, SYM, VS, VT> CausalState<D, S, T, ST, SYM, VS, VT>
@@ -64,12 +66,14 @@ where
         version: usize,
         data: PropagatingEffect,
         causaloid: Causaloid<D, S, T, ST, SYM, VS, VT>,
+        uncertain_parameter: Option<UncertainParameter>,
     ) -> Self {
         Self {
             id,
             version,
             data,
             causaloid,
+            uncertain_parameter,
         }
     }
 }

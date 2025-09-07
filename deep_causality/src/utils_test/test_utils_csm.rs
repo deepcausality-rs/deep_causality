@@ -2,16 +2,12 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality::utils_test::test_utils;
-use deep_causality::{
-    ActionError, BaseCausaloid, BaseSymbol, CausalAction, CausalityError, Causaloid, Context, Data,
-    EffectEthos, EuclideanSpace, EuclideanSpacetime, EuclideanTime, FloatType, NumericalValue,
-    PropagatingEffect, TeloidModal,
-};
+use crate::utils_test::test_utils;
+use crate::*;
 use std::sync::{Arc, Mutex};
 
 // Type alias for the complex types to improve readability
-pub(super) type BaseEffectEthos = EffectEthos<
+pub type BaseEffectEthos = EffectEthos<
     Data<NumericalValue>,
     EuclideanSpace,
     EuclideanTime,
@@ -21,15 +17,15 @@ pub(super) type BaseEffectEthos = EffectEthos<
     FloatType,
 >;
 
-pub(super) fn state_action() -> Result<(), ActionError> {
+pub fn state_action() -> Result<(), ActionError> {
     Ok(())
 }
 
-pub(super) fn get_test_action() -> CausalAction {
+pub fn get_test_action() -> CausalAction {
     CausalAction::new(state_action, "Test action", 1)
 }
 
-pub(super) fn get_test_error_action() -> CausalAction {
+pub fn get_test_error_action() -> CausalAction {
     fn err_state_action() -> Result<(), ActionError> {
         Err(ActionError("Error".to_string()))
     }
@@ -38,21 +34,21 @@ pub(super) fn get_test_error_action() -> CausalAction {
 }
 
 // Causaloid that returns a non-deterministic effect
-pub(super) fn get_test_probabilistic_causaloid() -> BaseCausaloid {
+pub fn get_test_probabilistic_causaloid() -> BaseCausaloid {
     fn causal_fn(_: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
         Ok(PropagatingEffect::Probabilistic(0.5))
     }
     Causaloid::new(99, causal_fn, "Probabilistic Causaloid")
 }
 
-pub(super) fn get_test_error_causaloid() -> BaseCausaloid {
+pub fn get_test_error_causaloid() -> BaseCausaloid {
     fn causal_fn(_: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
         Err(CausalityError::new("Error".to_string()))
     }
     Causaloid::new(78, causal_fn, "Probabilistic Causaloid")
 }
 
-pub(super) fn get_effect_ethos(verified: bool, impermissible: bool) -> BaseEffectEthos {
+pub fn get_effect_ethos(verified: bool, impermissible: bool) -> BaseEffectEthos {
     let modality = if impermissible {
         TeloidModal::Impermissible
     } else {
@@ -79,7 +75,7 @@ pub(super) fn get_effect_ethos(verified: bool, impermissible: bool) -> BaseEffec
     ethos
 }
 
-pub(super) fn get_test_causaloid(with_context: bool) -> BaseCausaloid {
+pub fn get_test_causaloid(with_context: bool) -> BaseCausaloid {
     fn causal_fn(_effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
         Ok(PropagatingEffect::Deterministic(true))
     }
@@ -92,7 +88,7 @@ pub(super) fn get_test_causaloid(with_context: bool) -> BaseCausaloid {
     }
 }
 
-pub(super) fn get_test_action_with_tracker() -> CausalAction {
+pub fn get_test_action_with_tracker() -> CausalAction {
     fn action() -> Result<(), ActionError> {
         let tracker: Arc<Mutex<bool>> = Arc::new(Mutex::new(false));
         let mut lock = tracker.lock().unwrap();

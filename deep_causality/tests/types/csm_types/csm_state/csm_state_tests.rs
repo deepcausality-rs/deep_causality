@@ -22,7 +22,7 @@ fn test_new() {
     let version = 1;
     // CausalState now takes an PropagatingEffect enum.
     let data = PropagatingEffect::Numerical(0.23f64);
-    let cs = CausalState::new(id, version, data, causaloid);
+    let cs = CausalState::new(id, version, data, causaloid, None);
 
     assert_eq!(cs.id(), id);
     assert_eq!(cs.version(), version);
@@ -36,7 +36,7 @@ fn test_eval() {
 
     // Case 1: Evaluation results in Deterministic(false)
     let data_fail = PropagatingEffect::Numerical(0.23f64);
-    let cs1 = CausalState::new(id, version, data_fail, causaloid.clone());
+    let cs1 = CausalState::new(id, version, data_fail, causaloid.clone(), None);
 
     let res = cs1.eval();
     assert!(res.is_ok());
@@ -45,7 +45,7 @@ fn test_eval() {
 
     // Case 2: Evaluation results in Deterministic(true)
     let data_success = PropagatingEffect::Numerical(0.93f64);
-    let cs2 = CausalState::new(id, version, data_success, causaloid);
+    let cs2 = CausalState::new(id, version, data_success, causaloid, None);
 
     let res = cs2.eval();
     assert!(res.is_ok());
@@ -59,7 +59,7 @@ fn eval_with_data() {
     // The initial data in the state is often just a default.
     let initial_data = PropagatingEffect::None;
     let causaloid = test_utils::get_test_causaloid_deterministic();
-    let cs = CausalState::new(id, version, initial_data, causaloid);
+    let cs = CausalState::new(id, version, initial_data, causaloid, None);
 
     // Evaluating with internal data (None) should fail the causaloid's check.
     let res = cs.eval();
@@ -95,7 +95,7 @@ fn test_to_string() {
     let id = 42;
     let version = 1;
     let data = PropagatingEffect::Numerical(0.23f64);
-    let cs = CausalState::new(id, version, data, causaloid);
+    let cs = CausalState::new(id, version, data, causaloid, None);
 
     let expected =  "CausalState: id: 42 version: 1 data: {:?} causaloid: PropagatingEffect::Numerical(0.23) Causaloid id: 1 \n Causaloid type: Singleton \n description: tests whether data exceeds threshold of 0.55".to_string();
     let actual = cs.to_string();
@@ -113,7 +113,7 @@ fn test_context_getter() {
     let context_arc = Arc::new(context.clone());
     let causaloid_with_context = test_utils::get_test_causaloid_deterministic_with_context(context);
 
-    let cs_with_context = CausalState::new(id, version, data.clone(), causaloid_with_context);
+    let cs_with_context = CausalState::new(id, version, data.clone(), causaloid_with_context, None);
 
     let retrieved_context_opt = cs_with_context.context();
     assert!(retrieved_context_opt.is_some());
@@ -123,7 +123,7 @@ fn test_context_getter() {
 
     // Case 2: Causaloid has no context.
     let causaloid_no_context = test_utils::get_test_causaloid_deterministic();
-    let cs_no_context = CausalState::new(id, version, data, causaloid_no_context);
+    let cs_no_context = CausalState::new(id, version, data, causaloid_no_context, None);
 
     assert!(cs_no_context.context().is_none());
 }

@@ -11,4 +11,3 @@ mod csm_constructor_tests;
 mod csm_effect_ethos_tests;
 #[cfg(test)]
 mod csm_single_state_tests;
-mod csm_utils_test;

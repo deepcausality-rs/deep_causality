@@ -4,6 +4,7 @@
  */
 
 use crate::{ActionError, CausalityError, DeonticError};
+use deep_causality_uncertain::UncertainError;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
@@ -13,6 +14,7 @@ pub enum CsmError {
     Causal(CausalityError),
     Deontic(DeonticError),
     Forbidden(String),
+    Uncertain(String),
 }
 
 impl Error for CsmError {
@@ -22,6 +24,7 @@ impl Error for CsmError {
             CsmError::Deontic(e) => Some(e),
             CsmError::Causal(e) => Some(e),
             CsmError::Forbidden(_) => None,
+            CsmError::Uncertain(_) => None,
         }
     }
 }
@@ -33,6 +36,7 @@ impl Display for CsmError {
             CsmError::Deontic(e) => write!(f, "CSM Deontic Error: {e}"),
             CsmError::Causal(e) => write!(f, "CSM Causal Error: {e}"),
             CsmError::Forbidden(s) => write!(f, "{s}"),
+            CsmError::Uncertain(s) => write!(f, "{s}"),
         }
     }
 }
@@ -52,5 +56,11 @@ impl From<DeonticError> for CsmError {
 impl From<CausalityError> for CsmError {
     fn from(err: CausalityError) -> Self {
         CsmError::Causal(err)
+    }
+}
+
+impl From<UncertainError> for CsmError {
+    fn from(err: UncertainError) -> Self {
+        CsmError::Uncertain(err.to_string())
     }
 }

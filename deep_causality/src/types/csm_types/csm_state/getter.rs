@@ -5,7 +5,7 @@
 
 use crate::{
     CausalState, Causaloid, Context, Datable, PropagatingEffect, SpaceTemporal, Spatial, Symbolic,
-    Temporal,
+    Temporal, UncertainParameter,
 };
 use std::sync::Arc;
 
@@ -38,5 +38,9 @@ where
     #[allow(clippy::type_complexity)]
     pub fn context(&self) -> &Option<Arc<Context<D, S, T, ST, SYM, VS, VT>>> {
         self.causaloid.context()
+    }
+
+    pub fn uncertain_parameter(&self) -> &Option<UncertainParameter> {
+        &self.uncertain_parameter
     }
 }

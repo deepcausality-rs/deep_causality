@@ -148,6 +148,34 @@ pub fn get_test_causaloid_uncertain_bool() -> BaseCausaloid {
     Causaloid::new(3, causal_fn, description)
 }
 
+pub fn get_test_causaloid_uncertain_float() -> BaseCausaloid {
+    let description = "tests whether data exceeds threshold of 0.55 and returns uncertain bool";
+
+    fn causal_fn(effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
+        let obs =
+            match effect {
+                PropagatingEffect::Numerical(val) => *val,
+                _ => return Err(CausalityError(
+                    "Causal function expected Numerical effect but received a different variant."
+                        .into(),
+                )),
+            };
+
+        let threshold: NumericalValue = 0.55;
+        if obs > threshold {
+            Ok(PropagatingEffect::UncertainFloat(Uncertain::<f64>::point(
+                1.0f64,
+            )))
+        } else {
+            Ok(PropagatingEffect::UncertainFloat(Uncertain::<f64>::point(
+                0.0f64,
+            )))
+        }
+    }
+
+    Causaloid::new(3, causal_fn, description)
+}
+
 pub fn get_test_causaloid_deterministic() -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";

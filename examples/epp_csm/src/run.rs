@@ -22,15 +22,16 @@ pub fn run() {
     let default_data = PropagatingEffect::None;
 
     let smoke_causaloid = get_smoke_sensor_causaloid();
-    let smoke_cs = CausalState::new(SMOKE_SENSOR, 1, default_data.clone(), smoke_causaloid);
+    let smoke_cs = CausalState::new(SMOKE_SENSOR, 1, default_data.clone(), smoke_causaloid, None);
     let smoke_ca = get_smoke_alert_action();
 
     let fire_causaloid = get_fire_sensor_causaloid();
-    let fire_cs = CausalState::new(FIRE_SENSOR, 1, default_data.clone(), fire_causaloid);
+    let fire_cs = CausalState::new(FIRE_SENSOR, 1, default_data.clone(), fire_causaloid, None);
     let fire_ca = get_fire_alert_action();
 
     let explosion_causaloid = get_explosion_sensor_causaloid();
-    let explosion_cs = CausalState::new(EXPLOSION_SENSOR, 1, default_data, explosion_causaloid);
+    let explosion_cs =
+        CausalState::new(EXPLOSION_SENSOR, 1, default_data, explosion_causaloid, None);
     let explosion_ca = get_explosion_alert_action();
 
     println!("Create Causal State Machine");
