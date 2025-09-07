@@ -151,6 +151,6 @@ where
         let mut params = HashMap::new();
         params.insert("trigger_effect".to_string(), effect.clone().into());
 
-        Ok(ProposedAction::new(*state.id() as u64, action_name, params))
+        Ok(ProposedAction::new(state.id() as u64, action_name, params))
     }
 }

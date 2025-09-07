@@ -4,8 +4,11 @@
  */
 
 mod eval;
+mod state_add;
+mod state_remove;
+mod state_update;
 
-use crate::{CSMMap, CausalAction, CausalState, EffectEthos, StateAction, TeloidTag, UpdateError};
+use crate::{CSMMap, CausalAction, CausalState, EffectEthos, TeloidTag};
 use crate::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -78,7 +81,7 @@ where
         let mut map = HashMap::with_capacity(state_actions.len());
 
         for (state, action) in state_actions {
-            map.insert(*state.id(), ((*state).clone(), (*action).clone()));
+            map.insert(state.id(), ((*state).clone(), (*action).clone()));
         }
 
         if let Some((ethos, _)) = &effect_ethos {
@@ -103,80 +106,5 @@ where
     /// Returns true if the CSM contains no elements.
     pub fn is_empty(&self) -> bool {
         self.state_actions.read().unwrap().is_empty()
-    }
-    /// Inserts a new state action at the index position idx.
-    /// Returns UpdateError if the index already exists.
-    pub fn add_single_state(
-        &self,
-        idx: usize,
-        state_action: StateAction<D, S, T, ST, SYM, VS, VT>,
-    ) -> Result<(), UpdateError> {
-        // Check if the key exists, if so return error
-        if self.state_actions.read().unwrap().contains_key(&idx) {
-            return Err(UpdateError(format!("State {idx} already exists.")));
-        }
-
-        // Insert the new state/action at the idx position
-        self.state_actions
-            .write()
-            .unwrap()
-            .insert(idx, state_action);
-
-        Ok(())
-    }
-
-    /// Removes a state action at the index position id.
-    /// Returns UpdateError if the index does not exist.
-    pub fn remove_single_state(&self, id: usize) -> Result<(), UpdateError> {
-        let mut binding = self.state_actions.write().unwrap();
-
-        if binding.remove(&id).is_none() {
-            return Err(UpdateError(format!(
-                "State {id} does not exist and cannot be removed"
-            )));
-        }
-
-        Ok(())
-    }
-
-    /// Updates a causal state with a new state at the index position idx.
-    /// Returns UpdateError if the update operation failed.
-    pub fn update_single_state(
-        &self,
-        idx: usize,
-        state_action: StateAction<D, S, T, ST, SYM, VS, VT>,
-    ) -> Result<(), UpdateError> {
-        // Check if the key exists, if not return error
-        if !self.state_actions.read().unwrap().contains_key(&idx) {
-            return Err(UpdateError(format!(
-                "State {idx} does not exist. Add it first before updating."
-            )));
-        }
-
-        // Update state/action at the idx position
-        self.state_actions
-            .write()
-            .unwrap()
-            .insert(idx, state_action);
-
-        Ok(())
-    }
-
-    /// Updates all causal state with a new state collection.
-    /// Note, this operation erases all previous states in the CSM by generating a new collection.
-    /// Returns UpdateError if the update operation failed.
-    pub fn update_all_states(
-        &self,
-        state_actions: &[(&CausalState<D, S, T, ST, SYM, VS, VT>, &CausalAction)],
-    ) -> Result<(), UpdateError> {
-        let mut state_map = HashMap::with_capacity(state_actions.len());
-
-        for (state, action) in state_actions {
-            state_map.insert(*state.id(), ((*state).clone(), (*action).clone()));
-        }
-
-        // Replace the existing map with the newly generated one.
-        *self.state_actions.write().unwrap() = state_map;
-        Ok(())
     }
 }
