@@ -35,9 +35,9 @@ where
         let binding = self.state_actions.read().unwrap();
 
         let (state, action) = binding.get(&id).ok_or_else(|| {
-            CsmError::Action(ActionError(
-                format!("State {id} does not exist. Add it first before evaluating."),
-            ))
+            CsmError::Action(ActionError(format!(
+                "State {id} does not exist. Add it first before evaluating."
+            )))
         })?;
 
         let effect = state.eval_with_data(data)?;
