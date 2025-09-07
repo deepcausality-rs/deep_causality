@@ -16,6 +16,8 @@ impl PartialEq for PropagatingEffect {
             (Self::Map(l), Self::Map(r)) => l == r,
             (Self::Graph(l), Self::Graph(r)) => Arc::ptr_eq(l, r),
             (Self::RelayTo(l0, l1), Self::RelayTo(r0, r1)) => l0 == r0 && l1 == r1,
+            (Self::UncertainBool(l), Self::UncertainBool(r)) => l == r,
+            (Self::UncertainFloat(l), Self::UncertainFloat(r)) => l == r,
             _ => false,
         }
     }
