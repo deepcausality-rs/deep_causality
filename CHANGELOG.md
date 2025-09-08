@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.9.1...deep_causality-v0.10.0) - 2025-09-08
+
+### Added
+
+- *(deep_causality_macros)* removed overly complex constructure macro.
+- *(deep_causality)* Integrated Uncertain<T> into CSM (Causal State Machine)
+- *(deep_causality)* refactored CSM types and removed unnecessary macro usage.
+- *(deep_causality)* integrated Uncertain<T> into Deontic Reasoning and EffectEthos
+- *(deep_causality)* Updated PartialEq for PropagatingEffect
+- *(deep_causality)* Added reasoning over uncertainty i.e. probability distributions to causal collections.
+- *(deep_causality)* Add uncertain data types and tests to DeepCausality
+
+### Other
+
+- Increased test coverage across all crates.
+- Increased test coverage across all crates.
+- Updated project wide Bazel config.
+- Fixed formatting.
+- *(deep_causality)* Added tests for new variants of PropagatingEffect.
+
 ## [0.9.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.8.2...deep_causality-v0.9.0) - 2025-08-27
 
 ### Added
