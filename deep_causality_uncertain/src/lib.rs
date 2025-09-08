@@ -9,6 +9,7 @@ mod algos;
 mod errors;
 mod traits;
 mod types;
+pub mod utils_tests;
 
 // types
 pub use crate::algos::hypothesis::sprt_eval;

@@ -4,7 +4,7 @@
  */
 
 /// Struct to hold the parameters for a Uniform distribution.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct UniformDistributionParams {
     pub low: f64,
     pub high: f64,

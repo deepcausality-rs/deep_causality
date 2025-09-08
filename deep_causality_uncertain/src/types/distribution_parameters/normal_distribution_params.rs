@@ -4,7 +4,7 @@
  */
 
 /// Struct to hold the parameters for a Normal (Gaussian) distribution.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct NormalDistributionParams {
     pub mean: f64,
     pub std_dev: f64,
