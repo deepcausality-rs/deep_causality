@@ -3,7 +3,7 @@
 
 [package]
 name = "deep_causality"
-version = "0.9.1"
+version = "0.10.0"
 edition = "2021"
 rust-version = "1.80"
 readme = "../deep_causality_uncertain/README.md"
@@ -31,7 +31,7 @@ version = "0.8"
 
 [dependencies.deep_causality_uncertain]
 path = "../deep_causality_uncertain"
-version = "0.1"
+version = "0.2"
 
 
 [dependencies.ultragraph]

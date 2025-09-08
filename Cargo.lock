@@ -207,7 +207,7 @@ checksum = "43da5946c66ffcc7745f48db692ffbb10a83bfe0afd96235c5c2a4fb23994929"
 
 [[package]]
 name = "deep_causality"
-version = "0.9.1"
+version = "0.10.0"
 dependencies = [
  "criterion",
  "deep_causality_data_structures",
@@ -226,7 +226,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_macros"
-version = "0.8.2"
+version = "0.8.3"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -235,7 +235,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_uncertain"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "criterion",
  "rand",
@@ -872,7 +872,7 @@ dependencies = [
 
 [[package]]
 name = "ultragraph"
-version = "0.8.3"
+version = "0.8.4"
 dependencies = [
  "criterion",
  "rand",
