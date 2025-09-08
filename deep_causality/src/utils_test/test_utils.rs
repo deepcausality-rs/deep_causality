@@ -55,6 +55,13 @@ pub fn get_uncertain_bool_test_causality_vec() -> BaseCausaloidVec {
     Vec::from_iter([q1, q2, q3])
 }
 
+pub fn get_uncertain_float_test_causality_vec() -> BaseCausaloidVec {
+    let q1 = get_test_causaloid_uncertain_float();
+    let q2 = get_test_causaloid_uncertain_float();
+    let q3 = get_test_causaloid_uncertain_float();
+    Vec::from_iter([q1, q2, q3])
+}
+
 pub fn get_test_single_data(val: NumericalValue) -> PropagatingEffect {
     PropagatingEffect::Numerical(val)
 }

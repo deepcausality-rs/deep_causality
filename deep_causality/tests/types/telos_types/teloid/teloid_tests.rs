@@ -105,6 +105,8 @@ fn test_teloid_getters() {
     assert_eq!(teloid.priority(), 15);
     assert_eq!(teloid.tags(), &vec!["get_tag"]);
     assert!(teloid.metadata().is_none());
+    assert!(teloid.uncertain_activation_predicate().is_none());
+    assert!(teloid.uncertain_parameter().is_none());
 }
 
 #[test]

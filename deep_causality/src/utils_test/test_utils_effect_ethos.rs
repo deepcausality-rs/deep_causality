@@ -4,10 +4,9 @@
  */
 
 use crate::{
-    ActionParameterValue, BaseContext, BaseSymbol, CausalityError, Data, EffectEthos,
-    EuclideanSpace, EuclideanSpacetime, EuclideanTime, FloatType, NumericalValue, ProposedAction,
+    ActionParameterValue, BaseContext, BaseSymbol, Data, EffectEthos, EuclideanSpace,
+    EuclideanSpacetime, EuclideanTime, FloatType, NumericalValue, ProposedAction,
 };
-use deep_causality_uncertain::Uncertain;
 use std::collections::HashMap;
 
 // HELPER FUNCTIONS
@@ -39,14 +38,6 @@ pub fn check_speed_predicate(_context: &BaseContext, action: &ProposedAction) ->
     } else {
         false
     }
-}
-
-// Predicate that always returns Uncertain(true)
-pub fn always_uncertain_predicate(
-    _context: &BaseContext,
-    _action: &ProposedAction,
-) -> Result<Uncertain<bool>, CausalityError> {
-    Ok(Uncertain::<bool>::point(true))
 }
 
 // Creates a dummy context for testing

@@ -37,12 +37,16 @@ impl From<PropagatingEffect> for ActionParameterValue {
 impl Display for ActionParameterValue {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            ActionParameterValue::String(s) => write!(f, "{}", s),
-            ActionParameterValue::Number(n) => write!(f, "{}", n),
-            ActionParameterValue::Integer(i) => write!(f, "{}", i),
-            ActionParameterValue::Boolean(b) => write!(f, "{}", b),
+            ActionParameterValue::String(s) => write!(f, "ActionParameterValue::String: {}", s),
+            ActionParameterValue::Number(n) => write!(f, "ActionParameterValue::Number: {:.2}", n),
+            ActionParameterValue::Integer(i) => write!(f, "ActionParameterValue::Integer: {}", i),
+            ActionParameterValue::Boolean(b) => write!(f, "ActionParameterValue::Boolean: {}", b),
             ActionParameterValue::ContextualLink(context_id, contextoid_id) => {
-                write!(f, "ContextualLink({}, {})", context_id, contextoid_id)
+                write!(
+                    f,
+                    "ActionParameterValue::ContextualLink({}, {})",
+                    context_id, contextoid_id
+                )
             }
         }
     }

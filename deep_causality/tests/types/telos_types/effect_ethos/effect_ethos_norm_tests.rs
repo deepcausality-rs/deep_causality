@@ -4,7 +4,10 @@
  */
 
 use deep_causality::utils_test::test_utils_effect_ethos;
-use deep_causality::{DeonticError, TeloidModal, UncertainParameter};
+use deep_causality::{
+    BaseContext, CausalityError, DeonticError, ProposedAction, TeloidModal, UncertainParameter,
+};
+use deep_causality_uncertain::Uncertain;
 
 #[test]
 fn test_add_deterministic_norm_success() {
@@ -59,12 +62,19 @@ fn test_add_deterministic_norm_duplicate_id_fails() {
 
 #[test]
 fn test_add_uncertain_norm_success() {
+    fn always_uncertain_predicate(
+        _context: &BaseContext,
+        _action: &ProposedAction,
+    ) -> Result<Uncertain<bool>, CausalityError> {
+        Ok(Uncertain::<bool>::point(true))
+    }
+
     let ethos = test_utils_effect_ethos::TestEthos::new()
         .add_uncertain_norm(
             1,
             "drive",
             &["drive"],
-            test_utils_effect_ethos::always_uncertain_predicate,
+            always_uncertain_predicate,
             UncertainParameter::default(),
             TeloidModal::Obligatory,
             1,
@@ -79,12 +89,19 @@ fn test_add_uncertain_norm_success() {
 
 #[test]
 fn test_add_uncertain_norm_duplicate_id_fails() {
+    fn always_uncertain_predicate(
+        _context: &BaseContext,
+        _action: &ProposedAction,
+    ) -> Result<Uncertain<bool>, CausalityError> {
+        Ok(Uncertain::<bool>::point(true))
+    }
+
     let result = test_utils_effect_ethos::TestEthos::new()
         .add_uncertain_norm(
             1,
             "drive",
             &[],
-            test_utils_effect_ethos::always_uncertain_predicate,
+            always_uncertain_predicate,
             UncertainParameter::default(),
             TeloidModal::Obligatory,
             1,
@@ -96,7 +113,7 @@ fn test_add_uncertain_norm_duplicate_id_fails() {
             1,
             "drive",
             &[],
-            test_utils_effect_ethos::always_uncertain_predicate,
+            always_uncertain_predicate,
             UncertainParameter::default(),
             TeloidModal::Impermissible,
             2,

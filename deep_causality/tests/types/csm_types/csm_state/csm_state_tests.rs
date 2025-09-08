@@ -127,3 +127,47 @@ fn test_context_getter() {
 
     assert!(cs_no_context.context().is_none());
 }
+
+#[test]
+fn test_causaloid_getter() {
+    let id = 42;
+    let version = 1;
+    let data = PropagatingEffect::Numerical(0.23f64);
+
+    // Case 1: Causaloid has a context.
+    let context = BaseContext::with_capacity(101, "test_context", 1);
+    let causaloid_with_context = test_utils::get_test_causaloid_deterministic_with_context(context);
+
+    let cs = CausalState::new(
+        id,
+        version,
+        data.clone(),
+        causaloid_with_context.clone(),
+        None,
+    );
+
+    let get_causaloid = cs.causaloid();
+    assert_eq!(get_causaloid.id(), causaloid_with_context.id());
+}
+
+#[test]
+fn test_data_getter() {
+    let id = 42;
+    let version = 1;
+    let data = PropagatingEffect::Numerical(0.23f64);
+
+    // Case 1: Causaloid has a context.
+    let context = BaseContext::with_capacity(101, "test_context", 1);
+    let causaloid_with_context = test_utils::get_test_causaloid_deterministic_with_context(context);
+
+    let cs = CausalState::new(
+        id,
+        version,
+        data.clone(),
+        causaloid_with_context.clone(),
+        None,
+    );
+
+    let get_data = cs.data();
+    assert_eq!(get_data, &data);
+}

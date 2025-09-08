@@ -35,8 +35,8 @@ impl Display for CsmError {
             CsmError::Action(e) => write!(f, "CSM Action Error: {e}"),
             CsmError::Deontic(e) => write!(f, "CSM Deontic Error: {e}"),
             CsmError::Causal(e) => write!(f, "CSM Causal Error: {e}"),
-            CsmError::Forbidden(s) => write!(f, "{s}"),
-            CsmError::Uncertain(s) => write!(f, "{s}"),
+            CsmError::Forbidden(s) => write!(f, "CSM Forbidden: {s}"),
+            CsmError::Uncertain(s) => write!(f, "CSM Uncertain Error: {s}"),
         }
     }
 }

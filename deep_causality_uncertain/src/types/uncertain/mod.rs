@@ -16,6 +16,7 @@ mod uncertain_f64_default;
 mod uncertain_op_arithmetic;
 mod uncertain_op_comparison;
 mod uncertain_op_logic;
+mod uncertain_part_eq;
 mod uncertain_sampling;
 mod uncertain_statistics;
 
@@ -23,7 +24,7 @@ mod uncertain_statistics;
 static NEXT_UNCERTAIN_ID: AtomicUsize = AtomicUsize::new(0);
 
 /// A type representing a value with inherent uncertainty, modeled as a probability distribution.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct Uncertain<T> {
     id: usize,
     root_node: Arc<ComputationNode>,

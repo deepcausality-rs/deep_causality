@@ -123,6 +123,16 @@ fn test_as_uncertain_bool() {
 }
 
 #[test]
+fn test_as_uncertain_float() {
+    let point = Uncertain::<f64>::point(1.0f64);
+    let effect1 = UncertainFloat(point.clone());
+    assert_eq!(effect1.as_uncertain_float(), Some(point));
+
+    let effect2 = PropagatingEffect::Deterministic(true);
+    assert_eq!(effect2.as_uncertain_float(), None);
+}
+
+#[test]
 fn test_as_contextual_link() {
     let effect1 = PropagatingEffect::ContextualLink(1, 2);
     assert_eq!(effect1.as_contextual_link(), Some((1, 2)));
@@ -235,6 +245,18 @@ fn test_partial_eq() {
     let effect9 = PropagatingEffect::ContextualLink(2, 1);
     assert_eq!(effect7, effect8);
     assert_ne!(effect7, effect9);
+
+    let effect10 = UncertainBool(Uncertain::<bool>::point(false));
+    let effect11 = UncertainBool(Uncertain::<bool>::point(false));
+    let effect12 = UncertainBool(Uncertain::<bool>::point(true));
+    assert_eq!(effect10, effect11);
+    assert_ne!(effect10, effect12);
+
+    let effect13 = UncertainFloat(Uncertain::<f64>::point(1.0f64));
+    let effect14 = UncertainFloat(Uncertain::<f64>::point(1.0f64));
+    let effect15 = UncertainFloat(Uncertain::<f64>::point(0.0f64));
+    assert_eq!(effect13, effect14);
+    assert_ne!(effect13, effect15);
 
     // Map variant
     let mut map1 = HashMap::new();

@@ -4,6 +4,7 @@
  */
 
 use deep_causality::{CausalityError, CausalityGraphError};
+use deep_causality_uncertain::UncertainError;
 use std::error::Error;
 use ultragraph::GraphError;
 
@@ -57,5 +58,13 @@ fn test_from_causality_graph_error() {
     let causality_err = CausalityError::from(causal_graph_err);
     // Check that the Display output is formatted correctly.
     let expected_msg = "CausalityError: CausalityGraphError: test causal graph error";
+    assert_eq!(causality_err.to_string(), expected_msg);
+}
+
+#[test]
+fn test_from_uncertain_error() {
+    let uncertain_err = UncertainError::GraphError("test".to_string());
+    let causality_err = CausalityError::from(uncertain_err);
+    let expected_msg = "CausalityError: Graph construction error: test";
     assert_eq!(causality_err.to_string(), expected_msg);
 }

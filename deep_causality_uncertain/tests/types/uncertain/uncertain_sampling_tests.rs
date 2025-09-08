@@ -6,7 +6,6 @@ use deep_causality_uncertain::{SampledValue, Uncertain, with_global_cache};
 use rusty_fork::rusty_fork_test;
 
 rusty_fork_test! {
-
 //
 // Tests for Uncertain<f64>
 //
@@ -15,6 +14,20 @@ fn test_f64_sample_with_index_point() {
     let u = Uncertain::<f64>::point(42.0);
     let result = u.sample_with_index(0);
     assert_eq!(result.unwrap(), 42.0);
+}
+
+#[test]
+fn test_from_sample() {
+    let u = Uncertain::from_samples(&[1.0, 2.0, 3.0, 4.0, 5.0]);
+    let result = u.sample_with_index(0);
+    assert!(result.is_ok());
+}
+
+#[test]
+fn test_from_sample_empty() {
+    let u = Uncertain::from_samples(&[]);
+    let result = u.sample_with_index(0);
+    assert!(result.is_ok());
 }
 
 #[test]
@@ -60,6 +73,33 @@ fn test_f64_take_zero_samples() {
     let u = Uncertain::<f64>::point(88.0);
     let samples = u.take_samples(0).unwrap();
     assert!(samples.is_empty());
+}
+
+#[test]
+fn test_estimate_probability_exceeds_normal() {
+    let u = Uncertain::normal(0.0, 1.0); // Standard normal distribution
+    let threshold = 0.0;
+    let num_samples = 10000;
+    let prob = u
+        .estimate_probability_exceeds(threshold, num_samples)
+        .unwrap();
+    // For a standard normal distribution, P(X > 0) should be close to 0.5
+    assert!(
+        (prob - 0.5).abs() < 0.05,
+        "Expected probability near 0.5, got {}",
+        prob
+    );
+
+    let threshold_high = 2.0;
+    let prob_high = u
+        .estimate_probability_exceeds(threshold_high, num_samples)
+        .unwrap();
+    // For a standard normal distribution, P(X > 2) should be small (approx 0.0228)
+    assert!(
+        prob_high < 0.05,
+        "Expected probability less than 0.05, got {}",
+        prob_high
+    );
 }
 
 //

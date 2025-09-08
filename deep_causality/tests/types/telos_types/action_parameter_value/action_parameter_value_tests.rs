@@ -13,7 +13,10 @@ fn test_action_parameter_value_string() {
         val,
         ActionParameterValue::String("other_string".to_string())
     );
-    assert_eq!(format!("{}", val), "test_string");
+    assert_eq!(
+        format!("{}", val),
+        "ActionParameterValue::String: test_string"
+    );
     assert_eq!(format!("{:?}", val), "String(\"test_string\")");
 }
 
@@ -22,7 +25,7 @@ fn test_action_parameter_value_number() {
     let val = ActionParameterValue::Number(123.45);
     assert_eq!(val, ActionParameterValue::Number(123.45));
     assert_ne!(val, ActionParameterValue::Number(543.21));
-    assert_eq!(format!("{}", val), "123.45");
+    assert_eq!(format!("{}", val), "ActionParameterValue::Number: 123.45");
     assert_eq!(format!("{:?}", val), "Number(123.45)");
 
     // Corner cases for f64 equality
@@ -40,7 +43,7 @@ fn test_action_parameter_value_integer() {
     let val = ActionParameterValue::Integer(123);
     assert_eq!(val, ActionParameterValue::Integer(123));
     assert_ne!(val, ActionParameterValue::Integer(321));
-    assert_eq!(format!("{}", val), "123");
+    assert_eq!(format!("{}", val), "ActionParameterValue::Integer: 123");
     assert_eq!(format!("{:?}", val), "Integer(123)");
 }
 
@@ -49,7 +52,7 @@ fn test_action_parameter_value_boolean() {
     let val = ActionParameterValue::Boolean(true);
     assert_eq!(val, ActionParameterValue::Boolean(true));
     assert_ne!(val, ActionParameterValue::Boolean(false));
-    assert_eq!(format!("{}", val), "true");
+    assert_eq!(format!("{}", val), "ActionParameterValue::Boolean: true");
     assert_eq!(format!("{:?}", val), "Boolean(true)");
 }
 
@@ -106,6 +109,11 @@ fn test_from_propagating_effect() {
     let param_val: ActionParameterValue = effect_prob.into();
     assert_eq!(param_val, ActionParameterValue::Number(0.75));
 
+    // Test ContextualLink -> ContextualLink
+    let effect_prob = PropagatingEffect::ContextualLink(1, 2);
+    let param_val: ActionParameterValue = effect_prob.into();
+    assert_eq!(param_val, ActionParameterValue::ContextualLink(1, 2));
+
     // Test other variants (e.g., NoEffect) -> String
     // This relies on the Debug representation of the enum variant.
     let effect_other = PropagatingEffect::None;
@@ -114,4 +122,30 @@ fn test_from_propagating_effect() {
         param_val,
         ActionParameterValue::String("PropagatingEffect::None".to_string())
     );
+}
+#[test]
+fn test_display() {
+    let val_none = PropagatingEffect::None;
+    let expected = "PropagatingEffect::None".to_string();
+    assert_eq!(format!("{}", val_none), expected);
+
+    let val_str = ActionParameterValue::String("test".to_string());
+    let expected = "ActionParameterValue::String: test".to_string();
+    assert_eq!(format!("{}", val_str), expected);
+
+    let val_num = ActionParameterValue::Number(1.00);
+    let expected = "ActionParameterValue::Number: 1.00".to_string();
+    assert_eq!(format!("{}", val_num), expected);
+
+    let val_int = ActionParameterValue::Integer(1);
+    let expected = "ActionParameterValue::Integer: 1".to_string();
+    assert_eq!(format!("{}", val_int), expected);
+
+    let val_bool = ActionParameterValue::Boolean(true);
+    let expected = "ActionParameterValue::Boolean: true".to_string();
+    assert_eq!(format!("{}", val_bool), expected);
+
+    let val_ctx = ActionParameterValue::ContextualLink(1, 2);
+    let expected = "ActionParameterValue::ContextualLink(1, 2)".to_string();
+    assert_eq!(format!("{}", val_ctx), expected);
 }
