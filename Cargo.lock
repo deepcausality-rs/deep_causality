@@ -875,7 +875,6 @@ name = "ultragraph"
 version = "0.8.3"
 dependencies = [
  "criterion",
- "deep_causality_macros",
  "rand",
 ]
 
