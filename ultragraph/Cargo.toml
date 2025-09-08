@@ -17,11 +17,6 @@ keywords = ["data-structures"]
 exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
 
-[dependencies.deep_causality_macros]
-path = "../deep_causality_macros"
-version = "0.8.2"
-
-
 [dev-dependencies]
 criterion = { version = "0.7.0", features = ["html_reports"] }
 rand = { version = "0.9.2", features = ["small_rng"] }

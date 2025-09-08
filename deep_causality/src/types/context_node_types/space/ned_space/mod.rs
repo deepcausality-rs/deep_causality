@@ -3,8 +3,6 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_macros::Constructor;
-
 mod adjustable;
 mod coordinate;
 mod display;
@@ -64,7 +62,7 @@ mod spatial;
 /// - The "down" axis is **positive in the direction of gravity**. This is a key difference
 ///   from ENU (East-North-Up) or typical 3D Cartesian conventions.
 /// - This struct assumes **flat-Earth approximation** — for global modeling, use `GeoSpace` or `EcefSpace`.
-#[derive(Constructor, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct NedSpace {
     /// Unique numeric ID for this local NED context
     id: u64,
@@ -74,4 +72,15 @@ pub struct NedSpace {
     east: f64,
     /// Vertical distance down from the reference point (in meters, positive = downward)
     down: f64,
+}
+
+impl NedSpace {
+    pub fn new(id: u64, north: f64, east: f64, down: f64) -> Self {
+        Self {
+            id,
+            north,
+            east,
+            down,
+        }
+    }
 }

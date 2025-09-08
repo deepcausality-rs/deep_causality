@@ -11,7 +11,7 @@ mod display;
 /// impermissible, or optional, potentially with an associated cost.
 ///
 /// For more details, see section 5 (Causality as EPP) and 8 (Teleology) in The EPP reference paper:
-/// https://github.com/deepcausality-rs/papers/blob/main/effect_propagation_process/epp.pdf
+/// <https://github.com/deepcausality-rs/papers/blob/main/effect_propagation_process/epp.pdf>
 ///
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TeloidModal {

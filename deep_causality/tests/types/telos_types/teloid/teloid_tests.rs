@@ -36,7 +36,7 @@ fn get_dummy_action(speed: f64) -> ProposedAction {
 
 #[test]
 fn test_teloid_new() {
-    let teloid = Teloid::new(
+    let teloid = Teloid::new_deterministic(
         1,
         "action.test".to_string(),
         always_true_predicate,
@@ -63,7 +63,7 @@ fn test_teloid_new_with_metadata() {
     let mut metadata = HashMap::new();
     metadata.insert("author".to_string(), "test_author".to_string());
 
-    let teloid = Teloid::new(
+    let teloid = Teloid::new_deterministic(
         2,
         "action.meta".to_string(),
         always_true_predicate,
@@ -81,7 +81,7 @@ fn test_teloid_new_with_metadata() {
 
 #[test]
 fn test_teloid_getters() {
-    let teloid = Teloid::new(
+    let teloid = Teloid::new_deterministic(
         3,
         "action.get".to_string(),
         always_true_predicate,
@@ -95,7 +95,7 @@ fn test_teloid_getters() {
 
     assert_eq!(teloid.id(), 3);
     assert_eq!(teloid.action_identifier(), "action.get");
-    assert!(teloid.activation_predicate()(
+    assert!(teloid.activation_predicate().unwrap()(
         &get_dummy_context(),
         &get_dummy_action(0.0)
     ),);
@@ -105,11 +105,13 @@ fn test_teloid_getters() {
     assert_eq!(teloid.priority(), 15);
     assert_eq!(teloid.tags(), &vec!["get_tag"]);
     assert!(teloid.metadata().is_none());
+    assert!(teloid.uncertain_activation_predicate().is_none());
+    assert!(teloid.uncertain_parameter().is_none());
 }
 
 #[test]
 fn test_teloid_clone() {
-    let teloid = Teloid::new(
+    let teloid = Teloid::new_deterministic(
         4,
         "action.clone".to_string(),
         always_true_predicate,
@@ -133,7 +135,7 @@ fn test_teloid_clone() {
 
 #[test]
 fn test_teloid_equality() {
-    let teloid1 = Teloid::new(
+    let teloid1 = Teloid::new_deterministic(
         5,
         "action.eq".to_string(),
         always_true_predicate,
@@ -144,7 +146,7 @@ fn test_teloid_equality() {
         vec!["eq_tag"],
         None,
     );
-    let teloid2 = Teloid::new(
+    let teloid2 = Teloid::new_deterministic(
         5,
         "action.eq_diff".to_string(), // Different action_identifier
         check_speed_predicate,        // Different predicate
@@ -155,7 +157,7 @@ fn test_teloid_equality() {
         vec!["eq_tag_diff"],          // Different tags
         Some(HashMap::new()),         // Different metadata
     );
-    let teloid3 = Teloid::new(
+    let teloid3 = Teloid::new_deterministic(
         6,
         "action.eq".to_string(),
         always_true_predicate,
@@ -173,7 +175,7 @@ fn test_teloid_equality() {
 
 #[test]
 fn test_teloid_display() {
-    let teloid = Teloid::new(
+    let teloid = Teloid::new_deterministic(
         7,
         "action.display".to_string(),
         always_true_predicate,
@@ -194,7 +196,7 @@ fn test_teloid_activation_predicate_execution() {
     let action_fast = get_dummy_action(60.0);
     let action_slow = get_dummy_action(40.0);
 
-    let teloid_speed_check = Teloid::new(
+    let teloid_speed_check = Teloid::new_deterministic(
         9,
         "action.speed_check".to_string(),
         check_speed_predicate,
@@ -206,11 +208,11 @@ fn test_teloid_activation_predicate_execution() {
         None,
     );
 
-    assert!(teloid_speed_check.activation_predicate()(
+    assert!(teloid_speed_check.activation_predicate().unwrap()(
         &context,
         &action_fast
     ));
-    assert!(!teloid_speed_check.activation_predicate()(
+    assert!(!teloid_speed_check.activation_predicate().unwrap()(
         &context,
         &action_slow
     ));
@@ -218,7 +220,7 @@ fn test_teloid_activation_predicate_execution() {
 
 #[test]
 fn test_teloid_identifiable_trait() {
-    let teloid = Teloid::new(
+    let teloid = Teloid::new_deterministic(
         42,
         "action.identifiable".to_string(),
         always_true_predicate,

@@ -4,12 +4,12 @@
 [workspace]
 resolver = "2"
 members = [
-    "dcl_data_structures",
     "deep_causality",
-    "examples/*",
     "deep_causality_data_structures",
     "deep_causality_macros",
     "deep_causality_uncertain",
+    "examples/*",
+    "ultragraph",
 ]
 
 [workspace.dependencies]

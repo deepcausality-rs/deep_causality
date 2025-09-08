@@ -7,7 +7,7 @@ use rand::Rng;
 use rand_distr::{Bernoulli, Distribution, Normal, Uniform};
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DistributionEnum<T> {
     Point(T),
     Normal(NormalDistributionParams),

@@ -87,11 +87,37 @@ where
                 let teloid = self.teloid_store.get(id)?;
                 teloid_cache.insert(*id, teloid);
 
-                if (teloid.activation_predicate())(context, action) {
-                    Some(teloid)
+                let is_active = if let Some(predicate) = teloid.activation_predicate() {
+                    // Handle deterministic predicate
+                    predicate(context, action)
+                } else if let Some(uncertain_predicate) = teloid.uncertain_activation_predicate() {
+                    // Handle uncertain predicate
+                    match uncertain_predicate(context, action) {
+                        Ok(uncertain_bool) => {
+                            // An uncertain predicate MUST have parameters.
+                            if let Some(params) = teloid.uncertain_parameter() {
+                                uncertain_bool
+                                    .probability_exceeds(
+                                        params.threshold(),
+                                        params.confidence(),
+                                        params.epsilon(),
+                                        params.max_samples(),
+                                    )
+                                    .unwrap_or(false) // Treat test error as inactive
+                            } else {
+                                // This case should be logically impossible if constructors are used correctly.
+                                // Treat as inactive as a safeguard.
+                                false
+                            }
+                        }
+                        Err(_) => false, // If predicate function fails, treat as inactive
+                    }
                 } else {
-                    None
-                }
+                    // No predicate defined, treat as inactive
+                    false
+                };
+
+                if is_active { Some(teloid) } else { None }
             })
             .collect();
 

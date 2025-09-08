@@ -3,8 +3,6 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_macros::Constructor;
-
 mod adjustable;
 mod coordinate;
 mod display;
@@ -59,7 +57,7 @@ mod spatial;
 /// GeoSpace(id="1", lat=52.520008, lon=13.404954, alt=34m)
 /// Distance (approx): 878.84 km
 /// ```
-#[derive(Constructor, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct GeoSpace {
     /// Unique numeric ID for the spatial context
     id: u64,
@@ -69,4 +67,10 @@ pub struct GeoSpace {
     lon: f64,
     /// Altitude in meters above the WGS84 ellipsoid
     alt: f64,
+}
+
+impl GeoSpace {
+    pub fn new(id: u64, lat: f64, lon: f64, alt: f64) -> Self {
+        Self { id, lat, lon, alt }
+    }
 }

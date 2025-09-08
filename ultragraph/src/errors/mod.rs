@@ -8,12 +8,16 @@
 use std::error::Error;
 use std::fmt;
 
-use deep_causality_macros::Constructor;
-
 pub mod graph_error;
 
-#[derive(Constructor, Debug)]
+#[derive(Debug)]
 pub struct UltraGraphError(pub String);
+
+impl UltraGraphError {
+    pub fn new(field0: String) -> Self {
+        Self(field0)
+    }
+}
 
 impl Error for UltraGraphError {}
 

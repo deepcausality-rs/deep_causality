@@ -4,7 +4,7 @@
  */
 
 /// Struct to hold the parameters for a Bernoulli distribution.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct BernoulliParams {
     pub p: f64, // probability of success
 }

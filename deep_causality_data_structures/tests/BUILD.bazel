@@ -11,7 +11,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:dcl_data_structures",
+        "//alias:deep_causality_data_structures",
     ],
 )
 
@@ -26,6 +26,6 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:dcl_data_structures",
+        "//alias:deep_causality_data_structures",
     ],
 )

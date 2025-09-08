@@ -60,6 +60,7 @@ pub fn run_rung2_intervention() {
         1,                                      // version
         PropagatingEffect::Deterministic(true), // The data to evaluate against the causaloid
         final_risk_causaloid,
+        None,
     );
 
     let prescribe_therapy_action = CausalAction::new(

@@ -6,6 +6,7 @@
 use crate::{
     Context, Datable, DeonticError, EffectEthos, ProposedAction, SpaceTemporal, Spatial, Symbolic,
     Teloid, TeloidID, TeloidModal, TeloidStorable, TeloidTag, Teloidable, Temporal,
+    UncertainActivationPredicate, UncertainParameter,
 };
 use ultragraph::GraphMut;
 
@@ -20,7 +21,7 @@ where
     VS: Clone,
     VT: Clone,
 {
-    /// Adds a new norm to the ethos using a builder-style pattern.
+    /// Adds a new deterministic norm to the ethos using a builder-style pattern.
     ///
     /// This high-level method simplifies the process of adding norms by accepting
     /// all necessary components as arguments, constructing the `Teloid` internally,
@@ -40,7 +41,7 @@ where
     /// A `Result` containing `self` for method chaining, or a `DeonticError` if the
     /// `id` already exists.
     #[allow(clippy::too_many_arguments)]
-    pub fn add_norm(
+    pub fn add_deterministic_norm(
         mut self,
         id: TeloidID,
         action_identifier: &str,
@@ -55,10 +56,61 @@ where
             return Err(DeonticError::FailedToAddTeloid);
         }
 
-        let teloid = Teloid::new(
+        let teloid = Teloid::new_deterministic(
             id,
             action_identifier.to_string(),
             predicate,
+            modality,
+            timestamp,
+            specificity,
+            priority,
+            tags.to_vec(),
+            None, // Metadata can be added later if needed
+        );
+
+        let id = teloid.id();
+        let tags = teloid.tags().clone();
+
+        self.teloid_store.insert(teloid);
+        for tag in tags {
+            self.tag_index.add(tag, id);
+        }
+
+        let node_index = self
+            .teloid_graph
+            .graph
+            .add_node(id)
+            .expect("Failed to add node");
+
+        self.id_to_index_map.insert(id, node_index);
+        self.is_verified = false; // A modification invalidates prior verification.
+
+        Ok(self)
+    }
+
+    /// Adds a new uncertain norm to the ethos using a builder-style pattern.
+    #[allow(clippy::too_many_arguments)]
+    pub fn add_uncertain_norm(
+        mut self,
+        id: TeloidID,
+        action_identifier: &str,
+        tags: &[TeloidTag],
+        predicate: UncertainActivationPredicate<D, S, T, ST, SYM, VS, VT>,
+        predicate_parameter: UncertainParameter,
+        modality: TeloidModal,
+        timestamp: u64,
+        specificity: u32,
+        priority: u32,
+    ) -> Result<Self, DeonticError> {
+        if self.teloid_store.contains_key(&id) {
+            return Err(DeonticError::FailedToAddTeloid);
+        }
+
+        let teloid = Teloid::new_uncertain(
+            id,
+            action_identifier.to_string(),
+            predicate,
+            predicate_parameter,
             modality,
             timestamp,
             specificity,
@@ -108,7 +160,7 @@ where
     /// * `child_id` - The ID of the more specific norm that inherits from the parent.
     ///
     /// # Returns
-    /// A `Result` containing `self` for chaining, or a `DeonticError` if either ID
+    /// A `Result` containing `self` for method chaining, or a `DeonticError` if either ID
     /// is not found or the graph is frozen.
     pub fn link_inheritance(
         mut self,
@@ -143,7 +195,7 @@ where
     /// * `defeated_id` - The ID of the norm that can be defeated.
     ///
     /// # Returns
-    /// A `Result` containing `self` for chaining, or a `DeonticError` if either ID
+    /// A `Result` containing `self` for method chaining, or a `DeonticError` if either ID
     /// is not found or the graph is frozen.
     pub fn link_defeasance(
         mut self,

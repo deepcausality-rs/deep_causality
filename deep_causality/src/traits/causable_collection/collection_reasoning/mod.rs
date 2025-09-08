@@ -5,6 +5,7 @@
 mod collection_reasoning_deterministic;
 mod collection_reasoning_mixed;
 mod collection_reasoning_probabilistic;
+mod collection_reasoning_uncertain;
 
 use crate::{
     AggregateLogic, Causable, CausableCollectionAccessor, CausalityError, IdentificationValue,
@@ -88,6 +89,36 @@ where
     ) -> Result<PropagatingEffect, CausalityError> {
         // Delegate to private impl in causable_reasoning_probabilistic
         collection_reasoning_probabilistic::_evaluate_probabilistic_logic(
+            self.get_all_items(),
+            effect,
+            logic,
+            threshold,
+        )
+    }
+
+    /// Evaluates a linear chain of causes where each link is expected to be uncertain.
+    ///
+    /// This method aggregates the effects by combining their uncertainty values.
+    /// It handles deterministic effects by treating `true` as a certainty of 1.0 and `false` as 0.0.
+    ///
+    /// # Arguments
+    /// * `effect` - A single `PropagatingEffect` object that all causes will use.
+    /// * `logic` - The `AggregateLogic` (e.g., `All`, `Any`, `None`, `Some(k)`)
+    ///   that defines how the uncertainty results are combined.
+    /// * `threshold` - A `NumericalValue` used to convert the final aggregated uncertainty
+    ///   into a `Deterministic` outcome (e.g., if aggregated uncertainty > threshold, then true).
+    ///
+    /// # Errors
+    /// Returns a `CausalityError` if a `ContextualLink` is encountered, as it cannot be
+    /// converted to a numerical uncertainty.
+    fn evaluate_uncertain(
+        &self,
+        effect: &PropagatingEffect,
+        logic: &AggregateLogic,
+        threshold: NumericalValue,
+    ) -> Result<PropagatingEffect, CausalityError> {
+        // Delegate to private impl in causable_reasoning_mixed
+        collection_reasoning_uncertain::_evaluate_uncertain_logic(
             self.get_all_items(),
             effect,
             logic,

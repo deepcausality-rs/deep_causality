@@ -4,23 +4,22 @@
  */
 
 use proc_macro::TokenStream;
-
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{ToTokens, quote};
 use syn::{
-    Data, DataStruct, Fields, Ident, Token, Visibility,
     parse::{Parse, ParseStream},
-    parse_quote,
     punctuated::Punctuated,
+    *,
 };
 
-// Procedural Macros: A simple derive macro
-// Published 2021-02-20 on blog.turbo.fish
-// https://blog.turbo.fish/proc-macro-simple-derive/
+mod kw {
+    use syn::custom_keyword;
+    custom_keyword!(name);
+    custom_keyword!(vis);
+}
 
 pub fn expand_getters(input: TokenStream) -> syn::Result<TokenStream2> {
     let input: syn::DeriveInput = syn::parse(input).expect("Couldn't parse item");
-
     let fields = match input.data {
         Data::Struct(DataStruct {
             fields: Fields::Named(fields),
@@ -47,7 +46,6 @@ pub fn expand_getters(input: TokenStream) -> syn::Result<TokenStream2> {
                 .unwrap_or_else(|| f.ident.clone().expect("a named field"));
             let field_name = f.ident;
             let field_ty = f.ty;
-
             Ok(quote! {
                 #visibility fn #method_name(&self) -> &#field_ty {
                     &self.#field_name
@@ -55,10 +53,8 @@ pub fn expand_getters(input: TokenStream) -> syn::Result<TokenStream2> {
             })
         })
         .collect::<syn::Result<TokenStream2>>()?;
-
     let st_name = input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-
     Ok(quote! {
         #[automatically_derived]
         impl #impl_generics #st_name #ty_generics #where_clause {
@@ -86,7 +82,6 @@ impl GetterMetaData {
                 }
             }
         }
-
         Ok(Self {
             name: either(self.name, other.name)?,
             vis: either(self.vis, other.vis)?,
@@ -109,11 +104,4 @@ impl Parse for GetterMetaData {
             Err(lookahead.error())
         }
     }
-}
-
-mod kw {
-    use syn::custom_keyword;
-
-    custom_keyword!(name);
-    custom_keyword!(vis);
 }

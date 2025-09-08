@@ -5,8 +5,8 @@
 
 use deep_causality::*;
 
-use crate::types::csm_types::csm::csm_utils_test;
 use deep_causality::utils_test::test_utils;
+use deep_causality::utils_test::test_utils_csm;
 
 #[test]
 fn test_new() {
@@ -15,8 +15,8 @@ fn test_new() {
     let data = PropagatingEffect::Numerical(0.23f64);
     let causaloid = test_utils::get_test_causaloid_deterministic();
 
-    let cs = CausalState::new(id, version, data, causaloid);
-    let ca = csm_utils_test::get_test_action();
+    let cs = CausalState::new(id, version, data, causaloid, None);
+    let ca = test_utils_csm::get_test_action();
 
     let state_action = &[(&cs, &ca)];
     let csm = CSM::new(state_action, None);
@@ -31,8 +31,8 @@ fn test_is_empty() {
     let data = PropagatingEffect::Numerical(0.23f64);
     let causaloid = test_utils::get_test_causaloid_deterministic();
 
-    let cs = CausalState::new(id, version, data, causaloid);
-    let ca = csm_utils_test::get_test_action();
+    let cs = CausalState::new(id, version, data, causaloid, None);
+    let ca = test_utils_csm::get_test_action();
 
     let state_action = &[(&cs, &ca)];
     let csm = CSM::new(state_action, None);

@@ -3,11 +3,11 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Causable, Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
-use crate::{CausalityError, Causaloid, Context, PropagatingEffect};
-use deep_causality_macros::{Constructor, Getters};
-use std::fmt::{Display, Formatter};
-use std::sync::Arc;
+use crate::{Causaloid, PropagatingEffect, UncertainParameter};
+use crate::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
+mod display;
+mod eval;
+mod getter;
 
 /// A `CausalState` represents a state in a causal state machine (CSM) that can be evaluated
 /// based on causal conditions.
@@ -24,11 +24,11 @@ use std::sync::Arc;
 ///
 /// # Usage
 /// `CausalState` is typically used in conjunction with `CausalAction` in a state-action pair
-/// within a causal state machine (CSM). The CSM evaluates states and, when conditions are met,
+/// within a causal state machine (CSM). The CSM evaluates states, and when conditions are met,
 /// fires the associated actions.
 ///
 #[allow(clippy::type_complexity)]
-#[derive(Getters, Constructor, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct CausalState<D, S, T, ST, SYM, VS, VT>
 where
     D: Datable + Clone,
@@ -47,6 +47,8 @@ where
     data: PropagatingEffect,
     /// Reference to a causaloid that defines when this state is active
     causaloid: Causaloid<D, S, T, ST, SYM, VS, VT>,
+    /// Optional parameters for evaluating uncertain effects.
+    uncertain_parameter: Option<UncertainParameter>,
 }
 
 impl<D, S, T, ST, SYM, VS, VT> CausalState<D, S, T, ST, SYM, VS, VT>
@@ -59,62 +61,19 @@ where
     VS: Clone,
     VT: Clone,
 {
-    /// Evaluates the state using its internal data.
-    ///
-    /// This method uses the state's causaloid to determine if the state's conditions
-    /// are met based on the internal data value.
-    ///
-    /// # Returns
-    /// - `Ok(true)` if the state's conditions are met
-    /// - `Ok(false)` if the state's conditions are not met
-    /// - `Err(CausalityError)` if an error occurs during evaluation
-    ///
-    pub fn eval(&self) -> Result<PropagatingEffect, CausalityError> {
-        self.causaloid.evaluate(&self.data)
-    }
-
-    /// Evaluates the state using provided external data.
-    ///
-    /// This method uses the state's causaloid to determine if the state's conditions
-    /// are met based on the provided data value, rather than the internal data.
-    ///
-    /// # Parameters
-    /// - `data`: The numerical value to use for evaluation
-    ///
-    /// # Returns
-    /// - `Ok(true)` if the state's conditions are met with the provided data
-    /// - `Ok(false)` if the state's conditions are not met with the provided data
-    /// - `Err(CausalityError)` if an error occurs during evaluation
-    ///
-    /// ```texttext
-    pub fn eval_with_data(
-        &self,
-        data: &PropagatingEffect,
-    ) -> Result<PropagatingEffect, CausalityError> {
-        self.causaloid.evaluate(data)
-    }
-
-    #[allow(clippy::type_complexity)]
-    pub fn context(&self) -> &Option<Arc<Context<D, S, T, ST, SYM, VS, VT>>> {
-        self.causaloid.context()
-    }
-}
-
-impl<D, S, T, ST, SYM, VS, VT> Display for CausalState<D, S, T, ST, SYM, VS, VT>
-where
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
-{
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "CausalState: id: {} version: {} data: {{:?}} causaloid: {} {}",
-            self.id, self.version, self.data, self.causaloid,
-        )
+    pub fn new(
+        id: usize,
+        version: usize,
+        data: PropagatingEffect,
+        causaloid: Causaloid<D, S, T, ST, SYM, VS, VT>,
+        uncertain_parameter: Option<UncertainParameter>,
+    ) -> Self {
+        Self {
+            id,
+            version,
+            data,
+            causaloid,
+            uncertain_parameter,
+        }
     }
 }

@@ -133,7 +133,7 @@ fn main() -> Result<(), UncertainError> {
         fuel_within_safe_range.estimate_probability(1000)? * 100.0
     );
 
-    if enough_fuel.probability_exceeds(0.8, 0.95, 1000)? {
+    if enough_fuel.probability_exceeds(0.8, 0.95, 0.05, 1000)? {
         println!("   ✅ You likely have enough fuel for the trip!");
     } else {
         println!("   ⚠️  Consider refueling before the trip!");

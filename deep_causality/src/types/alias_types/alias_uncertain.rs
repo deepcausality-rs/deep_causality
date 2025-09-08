@@ -1,0 +1,17 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+use crate::{CausalityError, Context, ProposedAction};
+use deep_causality_uncertain::Uncertain;
+
+pub type UncertainBool = Uncertain<bool>;
+pub type UncertainF64 = Uncertain<f64>;
+
+// Type alias for the uncertain activation predicate function pointer.
+#[allow(clippy::type_complexity)]
+pub type UncertainActivationPredicate<D, S, T, ST, SYM, VS, VT> =
+    fn(
+        &Context<D, S, T, ST, SYM, VS, VT>,
+        &ProposedAction,
+    ) -> Result<Uncertain<bool>, CausalityError>;

@@ -5,9 +5,9 @@
 
 use crate::Identifiable;
 
-/// Represents data-bearing entities in a causal context graph.
+/// Represents data-bearing entities in a context graph.
 ///
-/// This trait marks nodes or values that carry domain-specific data
+/// This trait marks nodes that carry domain-specific data
 /// relevant to inference, observation, or explanation. It extends
 /// [`Identifiable`] to ensure that each instance has a unique identity.
 ///

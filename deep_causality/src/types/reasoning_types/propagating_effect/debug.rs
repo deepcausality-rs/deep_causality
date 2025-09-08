@@ -32,6 +32,12 @@ impl Debug for PropagatingEffect {
             PropagatingEffect::RelayTo(idx, effect) => {
                 write!(_f, "PropagatingEffect::RelayTo({idx}, {effect:?})")
             }
+            PropagatingEffect::UncertainBool(val) => {
+                write!(_f, "PropagatingEffect::UncertainBool({val:?})")
+            }
+            PropagatingEffect::UncertainFloat(val) => {
+                write!(_f, "PropagatingEffect::UncertainFloat({val:?})")
+            }
         }
     }
 }

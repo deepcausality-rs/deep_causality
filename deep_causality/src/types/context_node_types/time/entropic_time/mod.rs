@@ -10,7 +10,6 @@ mod scalar_projector;
 mod temporable;
 
 use crate::TimeKind;
-use deep_causality_macros::Constructor;
 
 /// A time model based on **entropy-driven progression**, suitable for
 /// emergent systems, self-organization, and irreversible state evolution.
@@ -38,7 +37,7 @@ use deep_causality_macros::Constructor;
 ///
 /// assert!(t1.time_unit() < t2.time_unit());
 /// ```
-#[derive(Constructor, Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct EntropicTime {
     /// Unique ID for this time instance
     id: u64,
@@ -46,6 +45,13 @@ pub struct EntropicTime {
     /// Irreversible "tick" counter driven by entropy or state progression
     entropy_tick: u64,
 }
+
+impl EntropicTime {
+    pub fn new(id: u64, entropy_tick: u64) -> Self {
+        Self { id, entropy_tick }
+    }
+}
+
 impl From<EntropicTime> for TimeKind {
     fn from(t: EntropicTime) -> Self {
         TimeKind::Entropic(t)

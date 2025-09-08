@@ -7,7 +7,7 @@ fn main() {
 
     // 1. Build a CausaloidGraph
     let causaloid = get_test_causaloid(Arc::clone(&context));
-    let state = CausalState::new(1, 1, PropagatingEffect::Numerical(0.0), causaloid);
+    let state = CausalState::new(1, 1, PropagatingEffect::Numerical(0.0), causaloid, None);
     let action = get_alert_action();
 
     // 2. Build an EffectEthos
@@ -40,7 +40,7 @@ fn get_effect_ethos() -> EffectEthos<
     FloatType,
 > {
     let mut ethos = EffectEthos::new()
-        .add_norm(
+        .add_deterministic_norm(
             1,
             "High temp alert",
             &["temperature"],

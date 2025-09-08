@@ -3,13 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_macros::Constructor;
-
-use crate::Datable;
-
 pub mod adjustable;
+mod datable;
 mod display;
-pub mod identifiable;
+mod identifiable;
 
 /// A generic container for a piece of data, associated with a unique identifier.
 ///
@@ -27,7 +24,7 @@ pub mod identifiable;
 /// * `T`: The type of the data payload. It must be a simple, copyable, and comparable
 ///   type, satisfying the `Default + Copy + Clone + Hash + Eq + PartialEq` bounds.
 ///
-#[derive(Constructor, Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Data<T>
 where
     T: Default + Copy + Clone + PartialEq,
@@ -36,21 +33,11 @@ where
     data: T,
 }
 
-/// Implements the `Datable` trait for `Data<T>`.
-///
-/// This allows `Data<T>` to be used in contexts where a generic data container
-/// is expected, providing methods to get and set the inner data payload.
-impl<T> Datable for Data<T>
+impl<T> Data<T>
 where
     T: Default + Copy + Clone + PartialEq,
 {
-    type Data = T;
-
-    fn get_data(&self) -> Self::Data {
-        self.data
-    }
-
-    fn set_data(&mut self, value: Self::Data) {
-        self.data = value;
+    pub fn new(id: u64, data: T) -> Self {
+        Self { id, data }
     }
 }

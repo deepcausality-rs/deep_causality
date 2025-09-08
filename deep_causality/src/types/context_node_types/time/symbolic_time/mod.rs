@@ -3,8 +3,6 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_macros::Constructor;
-
 mod display;
 mod identifiable;
 mod scalar_projector;
@@ -66,13 +64,17 @@ mod temporable;
 /// its semantic interpretation must be **context-dependent**.
 /// Do not rely solely on numeric ordering when symbolic intent (e.g., `Simultaneous`)
 /// should override raw comparisons.
-#[derive(Constructor, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct SymbolicTime {
     id: u64,
     time: SymbolicTimeUnit,
 }
 
 impl SymbolicTime {
+    pub fn new(id: u64, time: SymbolicTimeUnit) -> Self {
+        Self { id, time }
+    }
+
     pub fn time(&self) -> &SymbolicTimeUnit {
         &self.time
     }

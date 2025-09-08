@@ -2,9 +2,11 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_macros::{Constructor, Getters};
-
 use crate::ActionError;
+
+mod display;
+mod fire;
+mod getter;
 
 /// A `CausalAction` represents an executable action that can be triggered in response to causal conditions.
 ///
@@ -39,7 +41,7 @@ use crate::ActionError;
 /// }
 /// ```
 #[allow(clippy::type_complexity)]
-#[derive(Getters, Constructor, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct CausalAction {
     // The function to execute when the action is fired.
     // This function should return `Ok(())` on success or an `ActionError` on failure.
@@ -51,33 +53,15 @@ pub struct CausalAction {
 }
 
 impl CausalAction {
-    /// Executes the action function encapsulated by this `CausalAction`.
-    ///
-    /// This method is typically called by a causal state machine (CSM) when
-    /// the associated causal state's conditions are met.
-    ///
-    /// # Returns
-    /// - `Ok(())` if the action executes successfully
-    /// - `Err(ActionError)` if the action fails
-    ///
-    /// # Example
-    /// ```
-    /// use deep_causality::{ActionError, CausalAction};
-    ///
-    /// // Create a CausalAction
-    /// let action = CausalAction::new(
-    ///     || { println!("Action executed!"); Ok(()) },
-    ///     "Example action",
-    ///     1
-    /// );
-    ///
-    /// // Fire the action
-    /// match action.fire() {
-    ///     Ok(()) => println!("Action completed successfully"),
-    ///     Err(e) => println!("Action failed: {}", e),
-    /// }
-    /// ```
-    pub fn fire(&self) -> Result<(), ActionError> {
-        (self.action)()
+    pub fn new(
+        action: fn() -> Result<(), ActionError>,
+        descr: &'static str,
+        version: usize,
+    ) -> Self {
+        Self {
+            action,
+            descr,
+            version,
+        }
     }
 }

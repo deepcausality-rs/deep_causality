@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{ArithmeticOperator, ComparisonOperator, LogicalOperator, NodeId};
+use crate::{ArithmeticOperator, ComparisonOperator, DistributionEnum, LogicalOperator, NodeId};
 use std::sync::Arc;
 use std::sync::atomic::AtomicUsize;
 
@@ -15,11 +15,11 @@ pub enum ComputationNode {
     // Leaf nodes now contain the specific distribution type directly.
     LeafF64 {
         node_id: NodeId,
-        dist: crate::DistributionEnum<f64>,
+        dist: DistributionEnum<f64>,
     },
     LeafBool {
         node_id: NodeId,
-        dist: crate::DistributionEnum<bool>,
+        dist: DistributionEnum<bool>,
     },
 
     ArithmeticOp {
@@ -39,7 +39,7 @@ pub enum ComputationNode {
         op: LogicalOperator,
         operands: Vec<Box<ComputationNode>>,
     },
-    FunctionOp {
+    FunctionOpF64 {
         node_id: NodeId,
         func: Arc<dyn Fn(f64) -> f64 + Send + Sync>,
         operand: Box<ComputationNode>,

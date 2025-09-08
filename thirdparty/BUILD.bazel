@@ -28,6 +28,16 @@ crates_vendor(
         ),
         #
         # Regular dependencies
+        "rand": crate.spec(
+            default_features = True,
+            package = "rand",
+            version = "0.9",
+        ),
+        "rand_distr": crate.spec(
+            default_features = True,
+            package = "rand_distr",
+            version = "0.5",
+        ),
     },  # End packages
     repository_name = "deep_causality_vendored",
     tags = ["manual"],

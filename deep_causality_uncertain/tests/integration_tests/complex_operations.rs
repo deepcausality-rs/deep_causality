@@ -87,7 +87,7 @@ fn integration_test_decision_making_under_uncertainty(){
     // Decision 1: Use to_bool with high confidence.
     // For this scenario, input_a_doubled (mean 30) is generally greater than input_b (mean 25).
     // So, with high confidence, the condition should be true.
-    let decision_high_confidence = condition.to_bool(0.99).expect("Expected value calculation failed");
+    let decision_high_confidence = condition.to_bool(0.99, 0.95, 0.05, 1000).expect("Expected value calculation failed");
     assert!(decision_high_confidence);
 
     // Decision 2: Use probability_exceeds with a threshold.
@@ -105,7 +105,7 @@ fn integration_test_decision_making_under_uncertainty(){
 
     let condition_false = input_a_doubled.lt_uncertain(&input_c); // (A*2) < C (20-40 vs 50)
 
-    let decision_false_high_confidence = condition_false.to_bool(0.99).expect("Expected value calculation failed");
+    let decision_false_high_confidence = condition_false.to_bool(0.99, 0.95, 0.05, 1000).expect("Expected value calculation failed");
     assert!(decision_false_high_confidence);
 }
 }

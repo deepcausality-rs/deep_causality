@@ -2,12 +2,12 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::types::telos_types::effect_ethos::utils_tests;
+use deep_causality::utils_test::test_utils_effect_ethos;
 use deep_causality::*;
 
 #[test]
 fn test_new_and_is_verified() {
-    let ethos = utils_tests::TestEthos::new();
+    let ethos = test_utils_effect_ethos::TestEthos::new();
     assert!(!ethos.is_verified(), "A new ethos should not be verified");
     assert!(ethos.get_norm(1).is_none(), "A new ethos should be empty");
 }
@@ -22,10 +22,10 @@ fn test_from_constructor() {
     // This tests the constructor's behavior and its assumption that the
     // provided components are consistent.
     let mut teloid_store = TeloidStore::new();
-    let teloid = Teloid::new(
+    let teloid = Teloid::new_deterministic(
         42,
         "test_norm".to_string(),
-        utils_tests::always_true_predicate,
+        test_utils_effect_ethos::always_true_predicate,
         TeloidModal::Obligatory,
         1,
         1,
@@ -42,7 +42,7 @@ fn test_from_constructor() {
     let teloid_graph = TeloidGraph::new();
 
     // 2. Create an ethos from the components.
-    let mut ethos = utils_tests::TestEthos::from(teloid_store, tag_index, teloid_graph);
+    let mut ethos = test_utils_effect_ethos::TestEthos::from(teloid_store, tag_index, teloid_graph);
 
     // 3. Assert the initial state is as expected.
     assert!(ethos.get_norm(42).is_some(), "Norm should be in the store");
@@ -58,8 +58,8 @@ fn test_from_constructor() {
     // 5. Now, test the consequence of the inconsistent graph.
     // Evaluation should fail because the internal state was built from the
     // empty graph and thus doesn't contain a node for ID '42'.
-    let action = utils_tests::get_dummy_action("test_action", 0.0);
-    let context = utils_tests::get_dummy_context();
+    let action = test_utils_effect_ethos::get_dummy_action("test_action", 0.0);
+    let context = test_utils_effect_ethos::get_dummy_context();
     let tags = ["test_tag"];
     let result = ethos.evaluate_action(&action, &context, &tags);
 

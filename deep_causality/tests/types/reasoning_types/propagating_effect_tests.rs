@@ -3,7 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality::PropagatingEffect::{UncertainBool, UncertainFloat};
 use deep_causality::*;
+use deep_causality_uncertain::Uncertain;
 use std::collections::HashMap;
 use std::sync::Arc;
 use ultragraph::{GraphView, UltraGraph};
@@ -33,6 +35,26 @@ fn test_is_probabilistic() {
 }
 
 #[test]
+fn test_is_uncertain_bool() {
+    let point = Uncertain::<bool>::point(true);
+    let effect1 = UncertainBool(point);
+    assert!(effect1.is_uncertain_bool());
+
+    // Ensure its not float
+    assert!(!effect1.is_uncertain_float());
+}
+
+#[test]
+fn test_uncertain_float() {
+    let point = Uncertain::<f64>::point(4.0f64);
+    let effect1 = UncertainFloat(point);
+    assert!(effect1.is_uncertain_float());
+
+    // Ensure its not bool
+    assert!(!effect1.is_uncertain_bool());
+}
+
+#[test]
 fn test_is_contextual_link() {
     let effect1 = PropagatingEffect::Deterministic(true);
     assert!(!effect1.is_contextual_link());
@@ -55,8 +77,16 @@ fn test_as_bool() {
     let effect3 = PropagatingEffect::Probabilistic(0.5);
     assert_eq!(effect3.as_bool(), None);
 
-    let effect4 = PropagatingEffect::ContextualLink(1, 1);
+    let point = Uncertain::<bool>::point(true);
+    let effect4 = UncertainBool(point);
     assert_eq!(effect4.as_bool(), None);
+
+    let point = Uncertain::<f64>::point(4.0f64);
+    let effect5 = UncertainFloat(point);
+    assert_eq!(effect5.as_bool(), None);
+
+    let effect6 = PropagatingEffect::ContextualLink(1, 1);
+    assert_eq!(effect6.as_bool(), None);
 }
 
 #[test]
@@ -69,6 +99,37 @@ fn test_as_probability() {
 
     let effect3 = PropagatingEffect::ContextualLink(1, 1);
     assert_eq!(effect3.as_probability(), None);
+
+    let point = Uncertain::<bool>::point(true);
+    let effect4 = UncertainBool(point);
+    assert_eq!(effect4.as_probability(), None);
+
+    let point = Uncertain::<f64>::point(4.0f64);
+    let effect5 = UncertainFloat(point);
+    assert_eq!(effect5.as_probability(), None);
+}
+
+#[test]
+fn test_as_uncertain_bool() {
+    let point = Uncertain::<bool>::point(true);
+    let effect1 = UncertainBool(point.clone());
+    assert_eq!(effect1.as_uncertain_bool(), Some(point));
+
+    let effect2 = PropagatingEffect::Deterministic(true);
+    assert_eq!(effect2.as_uncertain_bool(), None);
+
+    let effect3 = PropagatingEffect::ContextualLink(1, 1);
+    assert_eq!(effect3.as_uncertain_bool(), None);
+}
+
+#[test]
+fn test_as_uncertain_float() {
+    let point = Uncertain::<f64>::point(1.0f64);
+    let effect1 = UncertainFloat(point.clone());
+    assert_eq!(effect1.as_uncertain_float(), Some(point));
+
+    let effect2 = PropagatingEffect::Deterministic(true);
+    assert_eq!(effect2.as_uncertain_float(), None);
 }
 
 #[test]
@@ -102,6 +163,14 @@ fn test_display() {
         format!("{effect3}"),
         "PropagatingEffect::ContextualLink(1, 2)"
     );
+
+    let point = Uncertain::<bool>::point(true);
+    let effect4 = UncertainBool(point);
+    assert!(format!("{effect4}").contains("Point(true)"));
+
+    let point = Uncertain::<f64>::point(4.0f64);
+    let effect5 = UncertainFloat(point);
+    assert!(format!("{effect5}").contains("Point(4.0)"));
 }
 
 #[test]
@@ -176,6 +245,18 @@ fn test_partial_eq() {
     let effect9 = PropagatingEffect::ContextualLink(2, 1);
     assert_eq!(effect7, effect8);
     assert_ne!(effect7, effect9);
+
+    let effect10 = UncertainBool(Uncertain::<bool>::point(false));
+    let effect11 = UncertainBool(Uncertain::<bool>::point(false));
+    let effect12 = UncertainBool(Uncertain::<bool>::point(true));
+    assert_eq!(effect10, effect11);
+    assert_ne!(effect10, effect12);
+
+    let effect13 = UncertainFloat(Uncertain::<f64>::point(1.0f64));
+    let effect14 = UncertainFloat(Uncertain::<f64>::point(1.0f64));
+    let effect15 = UncertainFloat(Uncertain::<f64>::point(0.0f64));
+    assert_eq!(effect13, effect14);
+    assert_ne!(effect13, effect15);
 
     // Map variant
     let mut map1 = HashMap::new();

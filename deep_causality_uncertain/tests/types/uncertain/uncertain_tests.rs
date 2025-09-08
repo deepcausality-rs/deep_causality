@@ -136,42 +136,58 @@ fn test_uncertain_bool_bernoulli_constructor() {
 fn test_uncertain_bool_to_bool() {
     // Clearly true
     let uncertain_true = Uncertain::<bool>::point(true);
-    assert!(uncertain_true.to_bool(0.99).unwrap());
+    assert!(uncertain_true.to_bool(0.99, 0.95, 0.05, 1000).unwrap());
 
     // Clearly false
     let uncertain_false = Uncertain::<bool>::point(false);
-    assert!(!uncertain_false.to_bool(0.99).unwrap());
+    assert!(!uncertain_false.to_bool(0.99, 0.95, 0.05, 1000).unwrap());
 
     // Bernoulli with high probability of true
     let uncertain_bernoulli_true = Uncertain::<bool>::bernoulli(0.9);
-    assert!(uncertain_bernoulli_true.to_bool(0.9).unwrap());
+    assert!(
+        uncertain_bernoulli_true
+            .to_bool(0.8, 0.95, 0.05, 1000)
+            .unwrap()
+    );
 
     // Bernoulli with high probability of false
     let uncertain_bernoulli_false = Uncertain::<bool>::bernoulli(0.1);
-    assert!(!uncertain_bernoulli_false.to_bool(0.9).unwrap());
+    assert!(
+        !uncertain_bernoulli_false
+            .to_bool(0.9, 0.95, 0.05, 1000)
+            .unwrap()
+    );
 }
 
 #[test]
 fn test_uncertain_bool_probability_exceeds() {
     // Test with threshold 0.5, confidence 0.9
     let uncertain_true = Uncertain::<bool>::point(true);
-    assert!(uncertain_true.probability_exceeds(0.5, 0.9, 100).unwrap());
+    assert!(
+        uncertain_true
+            .probability_exceeds(0.5, 0.9, 0.05, 100)
+            .unwrap()
+    );
 
     let uncertain_false = Uncertain::<bool>::point(false);
-    assert!(!uncertain_false.probability_exceeds(0.5, 0.9, 100).unwrap());
+    assert!(
+        !uncertain_false
+            .probability_exceeds(0.5, 0.9, 0.05, 100)
+            .unwrap()
+    );
 
     // Test with threshold 0.8, confidence 0.9
     let uncertain_bernoulli_high = Uncertain::<bool>::bernoulli(0.9);
     assert!(
         uncertain_bernoulli_high
-            .probability_exceeds(0.8, 0.9, 1000)
+            .probability_exceeds(0.8, 0.9, 0.05, 1000)
             .unwrap()
     );
 
     let uncertain_bernoulli_low = Uncertain::<bool>::bernoulli(0.7);
     assert!(
         !uncertain_bernoulli_low
-            .probability_exceeds(0.8, 0.9, 1000)
+            .probability_exceeds(0.8, 0.9, 0.05, 1000)
             .unwrap()
     );
 }

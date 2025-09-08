@@ -3,12 +3,17 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_macros::Constructor;
 use std::error::Error;
 use std::fmt;
 
-#[derive(Constructor, Debug)]
+#[derive(Debug)]
 pub struct ContextIndexError(pub String);
+
+impl ContextIndexError {
+    pub fn new(field0: String) -> Self {
+        Self(field0)
+    }
+}
 
 impl Error for ContextIndexError {}
 

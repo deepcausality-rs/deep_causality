@@ -3,11 +3,11 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::TeloidMetaData;
 use crate::{
     Context, Datable, ProposedAction, SpaceTemporal, Spatial, Symbolic, Teloid, TeloidID,
     TeloidModal, TeloidTag, Temporal,
 };
+use crate::{TeloidMetaData, UncertainActivationPredicate, UncertainParameter};
 
 impl<D, S, T, ST, SYM, VS, VT> Teloid<D, S, T, ST, SYM, VS, VT>
 where
@@ -37,20 +37,40 @@ where
         &self.action_identifier
     }
 
-    /// Returns the activation predicate function of the teloid.
-    ///
-    /// The activation predicate is a function that determines whether a teloid should be activated
-    /// based on the current context and a proposed action.
+    /// Returns the deterministic activation predicate function of the teloid, if it exists.
     ///
     /// # Returns
     ///
-    /// A function pointer `fn(&Context<D, S, T, ST, SYM, VS, VT>, &ProposedAction) -> bool`
+    /// An `Option` containing a function pointer `fn(&Context<D, S, T, ST, SYM, VS, VT>, &ProposedAction) -> bool`
     /// that represents the activation predicate.
     #[allow(clippy::type_complexity)]
     pub fn activation_predicate(
         &self,
-    ) -> fn(&Context<D, S, T, ST, SYM, VS, VT>, &ProposedAction) -> bool {
+    ) -> Option<fn(&Context<D, S, T, ST, SYM, VS, VT>, &ProposedAction) -> bool> {
         self.activation_predicate
+    }
+
+    /// Returns the uncertain activation predicate function of the teloid, if it exists.
+    ///
+    /// # Returns
+    ///
+    /// An `Option` containing a `UncertainActivationPredicate` function pointer.
+    #[allow(clippy::type_complexity)]
+    pub fn uncertain_activation_predicate(
+        &self,
+    ) -> Option<UncertainActivationPredicate<D, S, T, ST, SYM, VS, VT>> {
+        self.uncertain_activation_predicate
+    }
+
+    /// Returns the uncertain parameter of the teloid, if it exists.
+    ///
+    /// # Returns
+    ///
+    /// An `Option` containing an `UncertainParameter` struct.
+    /// Returns `None` if no uncertain parameter is present.
+    ///
+    pub fn uncertain_parameter(&self) -> Option<UncertainParameter> {
+        self.uncertain_parameter.clone()
     }
 
     /// Returns the modality of the teloid.
@@ -71,6 +91,13 @@ where
         self.timestamp
     }
 
+    /// Returns the specificity of the teloid.
+    ///
+    /// Specificity is a measure of how precise or detailed the teloid is.
+    /// Higher values indicate greater specificity.
+    ///
+    /// # Returns
+    /// A `u32` representing the teloid's specificity.
     pub fn specificity(&self) -> u32 {
         self.specificity
     }

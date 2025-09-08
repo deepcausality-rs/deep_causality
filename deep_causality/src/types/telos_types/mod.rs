@@ -12,3 +12,4 @@ pub mod teloid_modal;
 pub mod teloid_relation;
 pub mod teloid_store;
 pub mod teloid_verdict;
+pub mod uncertain_parameter;

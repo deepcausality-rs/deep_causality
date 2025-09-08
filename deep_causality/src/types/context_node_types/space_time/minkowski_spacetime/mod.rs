@@ -4,7 +4,6 @@
  */
 
 use crate::TimeScale;
-use deep_causality_macros::Constructor;
 
 mod adjustable;
 mod coordinate;
@@ -62,7 +61,7 @@ mod temporal;
 /// println!("s² = {}", s2);
 /// assert!(s2 < 0.0); // time-like interval
 /// ```
-#[derive(Constructor, Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct MinkowskiSpacetime {
     /// Unique numeric ID for this event
     id: u64,
@@ -75,4 +74,17 @@ pub struct MinkowskiSpacetime {
     /// time in SI time unit,
     t: f64,
     time_scale: TimeScale, // SI time unit
+}
+
+impl MinkowskiSpacetime {
+    pub fn new(id: u64, x: f64, y: f64, z: f64, t: f64, time_scale: TimeScale) -> Self {
+        Self {
+            id,
+            x,
+            y,
+            z,
+            t,
+            time_scale,
+        }
+    }
 }

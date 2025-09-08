@@ -36,3 +36,11 @@ criterion = { version = "0.7.0", features = ["html_reports"] }
 [[bench]]
 name = "uncertain_benchmarks"
 harness = false
+
+[[test]]
+name = "node_partial_eq_tests"
+path = "tests/types/computation/node/node_partial_eq_tests.rs"
+
+[[test]]
+name = "node_debug_tests"
+path = "tests/types/computation/node/node_debug_tests.rs"
