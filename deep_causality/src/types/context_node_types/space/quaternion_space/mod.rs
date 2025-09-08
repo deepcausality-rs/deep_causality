@@ -2,7 +2,6 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_macros::Constructor;
 
 mod adjustable;
 mod coordinate;
@@ -63,7 +62,7 @@ mod spatial;
 /// - All components are assumed to be in floating-point units (unitless)
 /// - Input quaternions should be normalized before use (||q|| = 1.0)
 /// - For multi-sensor fusion, make sure quaternions follow the same handedness convention (e.g., right-handed)
-#[derive(Constructor, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct QuaternionSpace {
     /// Unique identifier for this orientation context
     id: u64,
@@ -72,4 +71,10 @@ pub struct QuaternionSpace {
     x: f64,
     y: f64,
     z: f64,
+}
+
+impl QuaternionSpace {
+    pub fn new(id: u64, w: f64, x: f64, y: f64, z: f64) -> Self {
+        Self { id, w, x, y, z }
+    }
 }

@@ -5,8 +5,6 @@
 
 use std::fmt::Debug;
 
-use deep_causality_macros::Constructor;
-
 mod adjustable;
 mod coordinate;
 mod display;
@@ -44,10 +42,16 @@ mod spatial;
 /// assert_eq!(space_a.coordinate(1).unwrap(), &2.0);
 /// assert_eq!(space_a.distance(&space_b), 5.0);
 /// ```
-#[derive(Constructor, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct EuclideanSpace {
     id: u64,
     x: f64,
     y: f64,
     z: f64,
+}
+
+impl EuclideanSpace {
+    pub fn new(id: u64, x: f64, y: f64, z: f64) -> Self {
+        Self { id, x, y, z }
+    }
 }

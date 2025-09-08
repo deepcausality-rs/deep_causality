@@ -10,7 +10,6 @@ mod scalar_projector;
 mod temporable;
 
 use crate::{TimeKind, TimeScale};
-use deep_causality_macros::Constructor;
 
 /// A time model representing **Lorentzian (physical) time** in relativistic spacetimes.
 ///
@@ -61,7 +60,7 @@ use deep_causality_macros::Constructor;
 /// # See also
 /// - `EuclideanTime` for Wick-rotated quantum/statistical domains
 /// - `SymbolicTime` for logic-based systems
-#[derive(Constructor, Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct LorentzianTime {
     /// Unique numeric identifier for the time instance.
     id: u64,
@@ -71,6 +70,16 @@ pub struct LorentzianTime {
 
     /// Real-valued coordinate time in seconds or scaled units.
     time_unit: f64,
+}
+
+impl LorentzianTime {
+    pub fn new(id: u64, time_scale: TimeScale, time_unit: f64) -> Self {
+        Self {
+            id,
+            time_scale,
+            time_unit,
+        }
+    }
 }
 
 impl From<LorentzianTime> for TimeKind {

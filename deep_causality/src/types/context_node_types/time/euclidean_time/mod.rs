@@ -10,7 +10,6 @@ mod scalar_projector;
 mod temporable;
 
 use crate::{TimeKind, TimeScale};
-use deep_causality_macros::Constructor;
 
 /// A time model based on **Euclidean (imaginary) time**, primarily used in theoretical and computational physics.
 ///
@@ -65,7 +64,7 @@ use deep_causality_macros::Constructor;
 /// - `LorentzianTime` for real-time physical models
 /// - `ProperTime` for observer-dependent clock time
 /// - `SymbolicTime` for abstract, label-based event time
-#[derive(Constructor, Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct EuclideanTime {
     /// Unique numeric identifier for the time instance.
     id: u64,
@@ -75,6 +74,16 @@ pub struct EuclideanTime {
 
     /// The Euclidean (imaginary) time value, represented as a real number.
     time_unit: f64,
+}
+
+impl EuclideanTime {
+    pub fn new(id: u64, time_scale: TimeScale, time_unit: f64) -> Self {
+        Self {
+            id,
+            time_scale,
+            time_unit,
+        }
+    }
 }
 
 impl From<EuclideanTime> for TimeKind {

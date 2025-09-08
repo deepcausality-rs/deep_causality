@@ -5,13 +5,17 @@
 
 use std::fmt::{Display, Formatter};
 
-use deep_causality_macros::Constructor;
+use crate::Identifiable;
 
-use crate::traits::identifiable::Identifiable;
-
-#[derive(Constructor, Debug, Copy, Clone, Hash, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Root {
     id: u64,
+}
+
+impl Root {
+    pub fn new(id: u64) -> Self {
+        Self { id }
+    }
 }
 
 impl Identifiable for Root {

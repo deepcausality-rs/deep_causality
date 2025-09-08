@@ -3,17 +3,29 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_macros::Constructor;
-
 use crate::{IdentificationValue, NumericalValue};
 
 mod display;
 mod identifiable;
 mod observable;
 
-#[derive(Constructor, Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct Observation {
     id: IdentificationValue,
     observation: NumericalValue,
     observed_effect: NumericalValue,
+}
+
+impl Observation {
+    pub fn new(
+        id: IdentificationValue,
+        observation: NumericalValue,
+        observed_effect: NumericalValue,
+    ) -> Self {
+        Self {
+            id,
+            observation,
+            observed_effect,
+        }
+    }
 }

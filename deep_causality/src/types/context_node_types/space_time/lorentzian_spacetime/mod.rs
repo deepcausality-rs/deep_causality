@@ -14,7 +14,6 @@ mod spatial;
 mod temporal;
 
 use crate::TimeScale;
-use deep_causality_macros::Constructor;
 
 /// A 4-dimensional spacetime context based on Lorentzian geometry, as used in General Relativity.
 ///
@@ -64,7 +63,7 @@ use deep_causality_macros::Constructor;
 /// let interval = s1.interval_squared(&s2);
 /// println!("Minkowski interval²: {interval}");
 /// ```
-#[derive(Constructor, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct LorentzianSpacetime {
     id: u64,
     x: f64, // space in meters
@@ -72,4 +71,17 @@ pub struct LorentzianSpacetime {
     z: f64,
     t: f64,                // time in SI time unit
     time_scale: TimeScale, // SI time unit
+}
+
+impl LorentzianSpacetime {
+    pub fn new(id: u64, x: f64, y: f64, z: f64, t: f64, time_scale: TimeScale) -> Self {
+        Self {
+            id,
+            x,
+            y,
+            z,
+            t,
+            time_scale,
+        }
+    }
 }

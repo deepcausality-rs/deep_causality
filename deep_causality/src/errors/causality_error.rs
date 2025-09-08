@@ -4,14 +4,19 @@
  */
 
 use crate::CausalityGraphError;
-use deep_causality_macros::Constructor;
 use deep_causality_uncertain::UncertainError;
 use std::error::Error;
 use std::fmt;
 use ultragraph::GraphError;
 
-#[derive(Constructor, Debug)]
+#[derive(Debug)]
 pub struct CausalityError(pub String);
+
+impl CausalityError {
+    pub fn new(field0: String) -> Self {
+        Self(field0)
+    }
+}
 
 impl Error for CausalityError {}
 

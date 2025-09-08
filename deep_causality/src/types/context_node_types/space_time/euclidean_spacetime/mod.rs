@@ -14,7 +14,6 @@ mod spatial;
 mod temporal;
 
 use crate::TimeScale;
-use deep_causality_macros::Constructor;
 
 /// A concrete 3D + time context based on classical (Euclidean) geometry.
 ///
@@ -58,7 +57,7 @@ use deep_causality_macros::Constructor;
 /// assert_eq!(s1.dimension(), 4);
 /// assert_eq!(s2.coordinate(0).unwrap(), &3.0);
 /// ```
-#[derive(Constructor, Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct EuclideanSpacetime {
     /// Unique numeric ID for this context
     id: u64,
@@ -70,4 +69,17 @@ pub struct EuclideanSpacetime {
     t: f64, // time in SI time unit
     /// Time unit scale (used for interpretation, not math)
     time_scale: TimeScale,
+}
+
+impl EuclideanSpacetime {
+    pub fn new(id: u64, x: f64, y: f64, z: f64, t: f64, time_scale: TimeScale) -> Self {
+        Self {
+            id,
+            x,
+            y,
+            z,
+            t,
+            time_scale,
+        }
+    }
 }

@@ -4,13 +4,18 @@
  */
 
 use crate::{Identifiable, Symbolic, SymbolicRepresentation};
-use deep_causality_macros::Constructor;
 use std::fmt::Display;
 
-#[derive(Constructor, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct BaseSymbol {
     id: u64,
     repr: SymbolicRepresentation,
+}
+
+impl BaseSymbol {
+    pub fn new(id: u64, repr: SymbolicRepresentation) -> Self {
+        Self { id, repr }
+    }
 }
 
 impl Identifiable for BaseSymbol {
