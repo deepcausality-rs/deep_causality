@@ -37,3 +37,15 @@ fn test_fire() {
     assert_eq!(ca.descr(), "Test action that prints Hello State");
     assert_eq!(ca.version(), 1);
 }
+
+#[test]
+fn test_display() {
+    let func = hello_state;
+    let descr = "Test action that prints Hello State";
+    let version = 1;
+
+    let ca = CausalAction::new(func, descr, version);
+    let expected =
+        "CausalAction { descr: \"Test action that prints Hello State\", version: 1 }".to_string();
+    assert_eq!(ca.to_string(), expected);
+}

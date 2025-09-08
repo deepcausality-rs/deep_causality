@@ -5,7 +5,11 @@
 
 use deep_causality::utils_test::test_utils_effect_ethos;
 use deep_causality::utils_test::test_utils_effect_ethos::TestEthos;
-use deep_causality::{DeonticError, DeonticInferable, TeloidModal};
+use deep_causality::{
+    BaseContext, CausalityError, DeonticError, DeonticInferable, ProposedAction, TeloidModal,
+    UncertainParameter,
+};
+use deep_causality_uncertain::Uncertain;
 
 #[test]
 fn test_evaluate_action_fails_if_not_verified() {
@@ -58,6 +62,53 @@ fn test_evaluate_action_fails_if_not_frozen() {
     let result = ethos.evaluate_action(&action, &context, &tags);
     assert!(result.is_err());
     assert!(matches!(result.unwrap_err(), DeonticError::GraphNotFrozen));
+}
+
+#[test]
+fn test_evaluate_action_uncertain_impermissible_wins() {
+    fn always_false_uncertain_predicate(
+        _context: &BaseContext,
+        _action: &ProposedAction,
+    ) -> Result<Uncertain<bool>, CausalityError> {
+        Ok(Uncertain::<bool>::point(false))
+    }
+
+    let mut ethos = test_utils_effect_ethos::TestEthos::new()
+        .add_deterministic_norm(
+            1,
+            "drive",
+            &["drive"],
+            test_utils_effect_ethos::always_true_predicate,
+            TeloidModal::Impermissible,
+            1,
+            1,
+            1,
+        )
+        .unwrap()
+        .add_uncertain_norm(
+            2,
+            "drive",
+            &["drive"],
+            always_false_uncertain_predicate, // This will be active
+            UncertainParameter::default(),
+            TeloidModal::Optional(12),
+            2,
+            2,
+            2,
+        )
+        .unwrap();
+    ethos.verify_graph().unwrap();
+
+    let action = test_utils_effect_ethos::get_dummy_action("drive", 60.0); // speed > 50.0
+    let context = test_utils_effect_ethos::get_dummy_context();
+    let tags = ["drive"];
+
+    let verdict = ethos.evaluate_action(&action, &context, &tags).unwrap();
+
+    let mut just = verdict.justification().clone();
+    just.sort();
+    assert_eq!(just, vec![1]);
+    assert_eq!(verdict.outcome(), TeloidModal::Impermissible);
 }
 
 #[test]
