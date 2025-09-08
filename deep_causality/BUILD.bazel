@@ -16,7 +16,8 @@ rust_library(
     visibility = ["//visibility:public"],
     deps = [
         # Internal crates
-        "//alias:dcl_data_structures",
+        "//alias:deep_causality_data_structures",
+        "//alias:deep_causality_uncertain",
         "//alias:ultragraph",
     ],
 )

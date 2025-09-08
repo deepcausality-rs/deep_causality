@@ -21,7 +21,7 @@ use ultragraph::GraphView;
 /// against a set of teleological norms (Teloids).
 ///
 /// For more details, see section 5 (Causality as EPP) and 8 (Teleology) in The EPP reference paper:
-/// https://github.com/deepcausality-rs/papers/blob/main/effect_propagation_process/epp.pdf
+/// <https://github.com/deepcausality-rs/papers/blob/main/effect_propagation_process/epp.pdf>
 ///
 #[derive(Clone, Debug, Default)]
 pub struct EffectEthos<D, S, T, ST, SYM, VS, VT>

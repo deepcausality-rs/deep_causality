@@ -1,0 +1,33 @@
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_binary")
+
+rust_binary(
+    name = "example-dbn",
+    srcs = glob([
+        "src/**",
+    ]),
+    crate_root = "src/main.rs",
+    tags = [
+        "example",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Internal crates
+        "//alias:deep_causality",
+        # External crates
+        "//thirdparty/crates:rand",
+    ],
+)
+
+rust_doc(
+    name = "doc",
+    crate = ":example-dbn",
+    tags = ["doc"],
+    visibility = ["//visibility:public"],
+)
+
+rust_doc_test(
+    name = "doc_test",
+    crate = ":example-dbn",
+    tags = ["doc-test"],
+    visibility = ["//visibility:public"],
+)

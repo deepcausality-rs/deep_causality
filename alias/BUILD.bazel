@@ -2,18 +2,23 @@
 package(default_visibility = ["//visibility:public"])
 
 alias(
-    name = "dcl_data_structures",
-    actual = "//dcl_data_structures:dcl_data_structures",
-)
-
-alias(
     name = "deep_causality",
     actual = "//deep_causality:deep_causality",
 )
 
 alias(
+    name = "deep_causality_data_structures",
+    actual = "//deep_causality_data_structures:deep_causality_data_structures",
+)
+
+alias(
     name = "deep_causality_macros",
     actual = "//deep_causality_macros:deep_causality_macros",
+)
+
+alias(
+    name = "deep_causality_uncertain",
+    actual = "//deep_causality_uncertain:deep_causality_uncertain",
 )
 
 alias(

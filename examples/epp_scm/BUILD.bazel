@@ -1,0 +1,31 @@
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_binary")
+
+rust_binary(
+    name = "example-scm",
+    srcs = glob([
+        "src/**",
+    ]),
+    crate_root = "src/main.rs",
+    tags = [
+        "example",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Internal crates
+        "//alias:deep_causality",
+    ],
+)
+
+rust_doc(
+    name = "doc",
+    crate = ":example-scm",
+    tags = ["doc"],
+    visibility = ["//visibility:public"],
+)
+
+rust_doc_test(
+    name = "doc_test",
+    crate = ":example-scm",
+    tags = ["doc-test"],
+    visibility = ["//visibility:public"],
+)

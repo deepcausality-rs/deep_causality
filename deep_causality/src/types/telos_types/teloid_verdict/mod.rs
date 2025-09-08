@@ -11,7 +11,7 @@ mod getters;
 /// Represents the final, justified outcome of a deontic evaluation.
 ///
 /// For more details, see section 5 (Causality as EPP) and 8 (Teleology) in The EPP reference paper:
-/// https://github.com/deepcausality-rs/papers/blob/main/effect_propagation_process/epp.pdf
+/// <https://github.com/deepcausality-rs/papers/blob/main/effect_propagation_process/epp.pdf>
 ///
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Verdict {
