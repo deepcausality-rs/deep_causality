@@ -16,6 +16,7 @@ rust_test_suite(
     deps = [
         # Crate to test
         "//alias:deep_causality",
+        "//alias:deep_causality_uncertain",
         "//alias:ultragraph",
     ],
 )
@@ -475,6 +476,7 @@ rust_test_suite(
     deps = [
         # Crate to test
         "//alias:deep_causality",
+        "//alias:deep_causality_uncertain",
     ],
 )
 
