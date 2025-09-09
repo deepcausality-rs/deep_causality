@@ -60,7 +60,22 @@
 
 DeepCausality is a hypergeometric computational causality library that enables fast, context-aware causal reasoning
 over complex multi-stage causality models. DeepCausality pioneers uniform reasoning across deterministic and
-probabilistic modalities by implementing the unified effect propagation process.
+probabilistic modalities by implementing the unified effect propagation process. Computational causality differs from
+deep learnings (Ai) as it uses a different foundation. Deep learning at its core is excellent at pattern matching and
+recognition. Object detection in computer vision excels with deep learning, fraud detection on credit card transactions
+excels with deep learning and there are many more examples. Large Language Models (LLM's) like ChatGPT take the
+idea one step further and predict, for the most part, the next word in sentence with stunning accuracy. When the
+prediction is off, you experience what is widely known as hallucination. However, LLM's and deep
+learning are fundamentally correlation based methods meaning there is no foundational concept of space, time,
+context, or causality. Computational causality comes in handy when you need
+
+1) Deterministic reasoning. Same input, same output.
+2) Probabilistic reasoning. What are the odd that X is true? How confident can we be?
+3) Full explainable. You get a logical line of reasoning.
+
+These properties of causality are valuable in high stakes and regulated industries such as medicine, finance, robotics,
+avionics, and industry control systems. However, the classical methods of computational causality work in a particular
+way that is important to understand first.
 
 ### The "Classical" Way of Thinking About Causality
 
@@ -76,14 +91,14 @@ A typical classical causal model works because it relies on three fundamental as
 2. **The causal rules are fixed.** The law "if temp < 68, then turn on furnace" is static and unchanging. It will be the
    same rule tomorrow as it is today.
 3. **Context is implicit** Context is assumed as the implicit background and therefore all data are
-   captured in variables relative to implicit context. Here, it is important that the data collection and the causal model
-   assume the same implicit background context otherwise errors are very hard to find. 
+   captured in variables relative to implicit context.
 
-All previous computational causality frameworks (like those pioneered by Judea Pearl) are built on these three powerful
+Previous computational causality frameworks (like those pioneered by Judea Pearl) are built on these three powerful
 assumptions. They provide the foundation to discover and reason about these fixed causality in a world where time moves
-forward predictably, the rules remains the same, and adding some variables capture the implicit context.
+forward predictably, the rules remains the same, and adding some variables capture the implicit context. The problem,
+however, emerges when these assumptions are no longer true.
 
-### The Problem: A Dynamic World Breaks Classical Causality
+### The Problem: A Dynamic World Defies Classical Causality
 
 Next, imagine a more complex system, like a financial market or a fleet of autonomous wildfire-fighting drones and you
 see that reality operates differently:
@@ -99,14 +114,15 @@ see that reality operates differently:
 
 3. **Context changes dynamically.** The reason causal rules may change is because a system's context is changing
    dynamically. For an autonomous drone relying on a GPS signal navigation might be valid, but the moment the drone
-   enters a drone, the GPS signal gets temporarily lost and with it the drones ability to navigate. Here, the context is
-   particularly important because the computer vision system almost certainly identified the tunnel entrance, but
+   enters a tunnel, the GPS signal gets temporarily lost and with it the drones ability to navigate. This is known as a
+   regime shift and imposes fundamental challenge to all autonomous systems. Here, the context is particularly
+   important because the computer vision system almost certainly identified the tunnel entrance, but
    without a workable context, the information cannot be used.
 
-DeepCausality was created from the ground up to model dynamic causality in a system where context changes continuously,
-multi-scaled time, and the causal rules themselves may change in response its changing context.
+DeepCausality was created from the ground up for dynamic causality where context changes continuously and where
+the causal rules themselves may change in response to a changing context.
 
-### The Core Idea of DeepCausality: A Radical Simplification
+### The Core Idea of DeepCausality
 
 DeepCausality rethinks causality from the ground up based on single single foundation:
 
@@ -119,13 +135,11 @@ DeepCausality rethinks causality from the ground up based on single single found
   causal function.
 * **"Explicit Context":** Because the causal function is independent of spacetime, any time or space related data needs
   to be provided via a context. A powerful hypergraph enables flexible context modelling and DeepCausality enables a
-  model
-  to access and use multiple contexts.
+  model to access and use multiple contexts.
 
 The core of the idea is similar to a ripple in a pond. One ripple (an effect) propagates outward and creates the next
 ripple (another effect). DeepCausality is a framework for defining the rules of how those ripples spread. For more
-information
-about the underlying effect propagation process, see the [Deep Dive document.](README_DEEP_DIVE.md).
+information about the underlying effect propagation process, see the [Deep Dive document.](README_DEEP_DIVE.md).
 
 ### The Three Pillars of DeepCausality
 
@@ -150,8 +164,8 @@ DeepCausality has three main components to make all this work:
   be taken, the Effect Ethos steps in and checks against a set of rules. It answers the question "**Should this happen?
   **"
 
-In summary, the EPP is a framework for building systems that can reason about cause and effect in complex, dynamic
-environments where the rules themselves can change. It achieves this by treating causality as a process of **effect
+In summary, DeepCausality is a framework for building systems that can reason about cause and effect in complex, dynamic
+environments. It achieves this by treating causality as a process of **effect
 propagation** between simple, composable **Causaloids** that operate on an explicit, flexible **Context**, all governed
 by a verifiable safety layer called the **Effect Ethos**. DeepCausality is hosted as a sandbox project in
 the [LF AI & Data Foundation](https://landscape.lfai.foundation/).
@@ -290,8 +304,8 @@ DeepCausality implements the following research publications:
 
 * ["Probability Theories with Dynamic Causal Structure"](docs/papers)
 * ["A Defeasible Deontic Calculus for Resolving Norm Conflicts"](docs/papers/ddic.pdf)
-* ["NWHy: A Framework for Hypergraph Analytics"](docs/papers/nwhy.pdf) 
-* ["Uncertain T: A First-Order Type for Uncertain Data"](docs/papers/uncertain_t.pdf) 
+* ["NWHy: A Framework for Hypergraph Analytics"](docs/papers/nwhy.pdf)
+* ["Uncertain T: A First-Order Type for Uncertain Data"](docs/papers/uncertain_t.pdf)
 
 Parts of the implementation are also inspired by:
 
