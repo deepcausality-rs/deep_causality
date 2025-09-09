@@ -3,7 +3,7 @@
 
 [package]
 name = "deep_causality"
-version = "0.10.0"
+version = "0.10.1"
 edition = "2021"
 rust-version = "1.80"
 readme = "../deep_causality_uncertain/README.md"
