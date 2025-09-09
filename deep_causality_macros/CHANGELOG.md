@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_macros-v0.8.2...deep_causality_macros-v0.8.3) - 2025-09-08
+
+### Added
+
+- *(ultragraph)* removed unused dependencies. ultragraph has no zero build dependencies.
+- *(deep_causality_macros)* removed overly complex constructure macro.
+
 ## [0.8.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_macros-v0.8.1...deep_causality_macros-v0.8.2) - 2025-08-27
 
 ### Other
