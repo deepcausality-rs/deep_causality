@@ -1,7 +1,6 @@
-load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_proc_macro")
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library")
 
-# https://bazelbuild.github.io/rules_rust/rust.html#rust_proc_macro
-rust_proc_macro(
+rust_library(
     name = "deep_causality_macros",
     srcs = glob([
         "src/*.rs",
@@ -13,10 +12,6 @@ rust_proc_macro(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        # External crates
-        "//thirdparty/crates:proc-macro2",
-        "//thirdparty/crates:syn",
-        "//thirdparty/crates:quote",
     ],
 )
 

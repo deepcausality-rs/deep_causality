@@ -5,12 +5,12 @@ rust_test_suite(
     srcs = glob([
         "*_tests.rs",
     ]),
-    proc_macro_deps = [
-        # Crate to test
-        "//alias:deep_causality_macros",
-    ],
     tags = [
         "unit-test",
     ],
     visibility = ["//visibility:public"],
+    deps = [
+        # crate to test
+        "//deep_causality_macros",
+    ],
 )

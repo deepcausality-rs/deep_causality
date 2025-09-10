@@ -5,6 +5,3 @@
 
 #[cfg(test)]
 mod collections_tests;
-
-#[cfg(test)]
-mod getters_tests;
