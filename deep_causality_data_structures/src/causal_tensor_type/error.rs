@@ -12,6 +12,7 @@ pub enum CausalTensorError {
     AxisOutOfBounds,
     EmptyTensor,
     InvalidOperation,
+    UnorderableValue,
 }
 
 impl Error for CausalTensorError {}
@@ -31,6 +32,9 @@ impl std::fmt::Display for CausalTensorError {
             CausalTensorError::EmptyTensor => write!(f, "CausalTensorError: Empty tensor error"),
             CausalTensorError::InvalidOperation => {
                 write!(f, "CausalTensorError: Invalid operation error")
+            }
+            CausalTensorError::UnorderableValue => {
+                write!(f, "CausalTensorError: Unorderable value encountered")
             }
         }
     }

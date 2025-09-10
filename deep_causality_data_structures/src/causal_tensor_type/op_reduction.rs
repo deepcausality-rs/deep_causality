@@ -119,19 +119,21 @@ where
 
     pub(super) fn arg_sort_impl(&self) -> Result<Vec<usize>, CausalTensorError> {
         if self.num_dim() != 1 {
-            // This operation is only well-defined for 1D tensors in this context.
             return Err(CausalTensorError::DimensionMismatch);
+        }
+
+        // Pre-emptively check for non-comparable values like NaN.
+        // A value is not comparable if it is not equal to itself.
+        for x in &self.data {
+            if x.partial_cmp(x).is_none() {
+                return Err(CausalTensorError::UnorderableValue);
+            }
         }
 
         let mut indices: Vec<usize> = (0..self.len()).collect();
 
-        // Sort the indices based on the values they point to in the tensor's data.
-        // Use `partial_cmp` to handle potential non-total orderings (like for f64::NAN).
-        indices.sort_by(|&a, &b| {
-            self.data[a]
-                .partial_cmp(&self.data[b])
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
+        // It is now safe to unwrap, as we have checked for non-comparable values.
+        indices.sort_by(|&a, &b| self.data[a].partial_cmp(&self.data[b]).unwrap());
 
         Ok(indices)
     }

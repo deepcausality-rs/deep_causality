@@ -34,6 +34,11 @@ fn test_error_display_and_debug() {
             "CausalTensorError: Invalid operation error",
             "InvalidOperation",
         ),
+        (
+            CausalTensorError::UnorderableValue,
+            "CausalTensorError: Unorderable value encountered",
+            "UnorderableValue",
+        ),
     ];
 
     for (err, display_msg, debug_msg) in &test_cases {
@@ -64,6 +69,10 @@ fn test_error_equality() {
         CausalTensorError::EmptyTensor,
         CausalTensorError::InvalidOperation
     );
+    assert_ne!(
+        CausalTensorError::InvalidOperation,
+        CausalTensorError::UnorderableValue
+    );
 }
 
 #[test]
@@ -74,6 +83,7 @@ fn test_error_trait_source() {
         CausalTensorError::AxisOutOfBounds,
         CausalTensorError::EmptyTensor,
         CausalTensorError::InvalidOperation,
+        CausalTensorError::UnorderableValue,
     ];
 
     for err in &errors {

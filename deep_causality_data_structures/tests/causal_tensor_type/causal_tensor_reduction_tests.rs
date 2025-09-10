@@ -135,3 +135,11 @@ fn test_arg_sort_dimension_mismatch() {
     let result = tensor.arg_sort();
     assert_eq!(result, Err(CausalTensorError::DimensionMismatch));
 }
+
+#[test]
+fn test_arg_sort_unorderable_values() {
+    let data = vec![1.0, f64::NAN, 2.0];
+    let tensor = CausalTensor::new(data, vec![3]).unwrap();
+    let result = tensor.arg_sort();
+    assert_eq!(result, Err(CausalTensorError::UnorderableValue));
+}
