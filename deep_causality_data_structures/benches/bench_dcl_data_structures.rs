@@ -20,6 +20,7 @@ criterion_main! {
 // Run these benchmarks only when unsafe feature is enabled
 #[cfg(feature = "unsafe")]
 criterion_main! {
+    benchmarks::causal_tensor_type::bench_causal_tensor::causal_tensor_benches,
     // Standard benchmarks
     benchmarks::grid_type::bench_grid_array::array_grid,
     benchmarks::grid_type::bench_grid_array_unsafe::array_grid_unsafe,
