@@ -17,6 +17,10 @@ keywords = ["data-structures", "sliding-window", "grid-array"]
 exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
 [[example]]
+name = "causal_tensor"
+path = "examples/causal_tensor_type/causal_tensor.rs"
+
+[[example]]
 name = "array_grid"
 path = "examples/array_grid/array_grid.rs"
 

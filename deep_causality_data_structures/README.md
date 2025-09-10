@@ -34,13 +34,18 @@ Fixed-sized arrays allow for several compiler optimizations, including a cache-a
 runtime array boundary checks because all structural parameters are known upfront, providing a significant performance
 boost over tensors.
 
+The CausalTensor provides a flexible, multi-dimensional array (tensor) backed by a single, contiguous `Vec<T>`. 
+It is designed for efficient numerical computations, featuring a stride-based memory layout that supports broadcasting for
+element-wise binary operations. It offers a comprehensive API for shape manipulation, element access, and common
+reduction operations like `sum` and `mean`, making it a versatile tool for causal modeling and other data-intensive
+tasks.
+
 The sliding window implementation over-allocates to trade space (memory) for time complexity by delaying the rewind
 operation when hitting the end of the underlying data structure.
 Specifically, a sliding window of size N can hold, without any array copy, approximately C-1 elements,
 where C is the total capacity defined as NxM with N as the window size and M as a multiple.
 This crate has two implementations, one over vector and the second over a const generic array. The const generic
 implementation is significantly faster than the vector-based version.
-
 
 ## 🤔 Why?
 
@@ -55,52 +60,63 @@ implementation is significantly faster than the vector-based version.
 **Set value:**
 
 | Dimension | Safe Implementation | Unsafe Implementation | Improvement |
-|-----------|-------------------|---------------------|-------------|
-| 1D Grid   | 604.71 ps        | 271.38 ps          | 55.1%       |
-| 2D Grid   | 581.33 ps        | 417.39 ps          | 28.2%       |
-| 3D Grid   | 862.16 ps        | 577.04 ps          | 33.0%       |
-| 4D Grid   | 1.137 ns         | 812.62 ps          | 28.5%       |
+|-----------|---------------------|-----------------------|-------------|
+| 1D Grid   | 604.71 ps           | 271.38 ps             | 55.1%       |
+| 2D Grid   | 581.33 ps           | 417.39 ps             | 28.2%       |
+| 3D Grid   | 862.16 ps           | 577.04 ps             | 33.0%       |
+| 4D Grid   | 1.137 ns            | 812.62 ps             | 28.5%       |
 
 More details on performance can be found in the [Performance](README_ArrayGrid.md#performance) section
 of the [ArrayGrid document](README_ArrayGrid.md).
+
+### CausalTensor
+
+Benchmarks are for a 100x100 (10,000 element) tensor.
+
+| Operation                     | Time     | Notes                                       |
+|-------------------------------|----------|---------------------------------------------|
+| `tensor_get`                  | ~1.64 ns | Accessing a single element.                 |
+| `tensor_reshape`              | ~786 ns  | Metadata only, but clones data in the test. |
+| `tensor_scalar_add`           | ~2.69 µs | Element-wise addition with a scalar.        |
+| `tensor_tensor_add_broadcast` | ~37.7 µs | Element-wise addition with broadcasting.    |
+| `tensor_sum_full_reduction`   | ~6.86 µs | Summing all 10,000 elements of the tensor.  |
 
 ## Sliding Window
 
 **Single Push:**
 
-| Implementation      	| Single Push Time 	| Notes                                                	|
-|---------------------	|------------------	|------------------------------------------------------	|
-| ArrayStorage        	| ~2.08ns          	| Optimized for continuous access patterns             	|
-| VectorStorage       	| ~2.5ns           	| Good for dynamic sizing                              	|
-| UnsafeVectorStorage 	| ~2.3ns           	| Better performance than safe vector                  	|
-| UnsafeArrayStorage  	| ~1.9ns           	| Best performance for sequential and batch operations 	|
-
+| Implementation      	 | Single Push Time 	 | Notes                                                	 |
+|-----------------------|--------------------|--------------------------------------------------------|
+| ArrayStorage        	 | ~2.08ns          	 | Optimized for continuous access patterns             	 |
+| VectorStorage       	 | ~2.5ns           	 | Good for dynamic sizing                              	 |
+| UnsafeVectorStorage 	 | ~2.3ns           	 | Better performance than safe vector                  	 |
+| UnsafeArrayStorage  	 | ~1.9ns           	 | Best performance for sequential and batch operations 	 |
 
 **Sequential Operations:**
 
-| Implementation | Operation Time | Notes                    | 
-|----------------|----------------|--------------------------| 
-| UnsafeArrayStorage | ~550ps | Best cache utilization   | 
-| ArrayStorage | ~605ps | Excellent cache locality | 
-| UnsafeVectorStorage | ~750ps | Good for mixed workloads | 
-| VectorStorage | ~850ps | Most predictable         |
+| Implementation      | Operation Time | Notes                    | 
+|---------------------|----------------|--------------------------| 
+| UnsafeArrayStorage  | ~550ps         | Best cache utilization   | 
+| ArrayStorage        | ~605ps         | Excellent cache locality | 
+| UnsafeVectorStorage | ~750ps         | Good for mixed workloads | 
+| VectorStorage       | ~850ps         | Most predictable         |
 
 More details on performance can be found in the [Performance](README_SlidingWindow.md#performance) section
 of the [SlidingWindow document](README_SlidingWindow.md).
-
 
 ## 🚀 Install
 
 Just run:
 
 ```bash
-cargo add dcl_data_structures
+cargo add deep_causality_data_structures
 ```
 
 ## 📚 Docs
 
-* [API Docs](https://docs.rs/dcl_data_structures/0.4.3/dcl_data_structures/)
-
+* [API Docs](https://docs.rs/deep_causality_data_structures/latest/deep_causality_data_structures)
+* [ArrayGrid Summary](README_ArrayGrid.md)
+* [CausalTensor Summary](README_CausalTensor.md)
 * [SlidingWindow Summary](README_SlidingWindow)
 
 ## ⭐ Usage
@@ -111,7 +127,13 @@ cargo add dcl_data_structures
 * [Examples](examples/array_grid)
 * [Test](tests/grid_type)
 
-**SlidingWindow:**
+**CausalTensor:**
+* [Design & Details](README_CausalTensor.md)
+* [Benchmark](benches/benchmarks/causal_tensor_type)
+* [Examples](examples/causal_tensor_type)
+* [Test](tests/causal_tensor_type)
+
+* **SlidingWindow:**
 * [Design & Details](README_SlidingWindow.md)
 * [Benchmark](benches/benchmarks)
 * [Examples](examples/window_type)

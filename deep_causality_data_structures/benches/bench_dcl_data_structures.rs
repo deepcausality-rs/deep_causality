@@ -10,6 +10,7 @@ mod benchmarks;
 // Always run these benchmarks
 #[cfg(not(feature = "unsafe"))]
 criterion_main! {
+    benchmarks::causal_tensor_type::bench_causal_tensor::causal_tensor_benches,
     benchmarks::grid_type::bench_grid_array::array_grid,
     benchmarks::window_type::bench_window_arr::window_array_backed,
     benchmarks::window_type::bench_window_vec::window_vector_backed,
