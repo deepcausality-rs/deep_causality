@@ -101,6 +101,9 @@ fn test_mean_axes_out_of_bounds() {
     let tensor = CausalTensor::new(vec![1.0, 2.0], vec![2]).unwrap();
     let result = tensor.mean_axes(&[1]);
     assert_eq!(result, Err(CausalTensorError::AxisOutOfBounds));
+
+    let result_sum = tensor.sum_axes(&[1]);
+    assert_eq!(result_sum, Err(CausalTensorError::AxisOutOfBounds));
 }
 
 #[test]
