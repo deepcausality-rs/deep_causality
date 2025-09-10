@@ -26,15 +26,11 @@ where
         Some(flat_index)
     }
 
-    /// Calculates the flat index for a broadcasted tensor without allocation.
-    fn get_flat_index_broadcasted(&self, index: &[usize]) -> Option<usize> {
+    /// Calculates the flat index for a broadcasted tensor. Assumes inputs are valid.
+    fn get_flat_index_broadcasted(&self, index: &[usize]) -> usize {
         let mut flat_index = 0;
         let self_ndim = self.num_dim();
         let broadcast_ndim = index.len();
-
-        if self_ndim > broadcast_ndim {
-            return None; // Should not happen with current logic
-        }
         let ndim_diff = broadcast_ndim - self_ndim;
 
         for i in 0..self_ndim {
@@ -43,13 +39,11 @@ where
 
             if self.shape[i] == 1 {
                 dim_index = 0;
-            } else if dim_index >= self.shape[i] {
-                return None; // Out of bounds
             }
 
             flat_index += dim_index * self.strides[i];
         }
-        Some(flat_index)
+        flat_index
     }
 
     /// Helper to create a new tensor with a given shape and fill it with a value.
@@ -114,8 +108,8 @@ where
         let mut current_index = vec![0; res_ndim];
 
         for _ in 0..result_len {
-            let self_flat_idx = self.get_flat_index_broadcasted(&current_index).unwrap_or(0);
-            let rhs_flat_idx = rhs.get_flat_index_broadcasted(&current_index).unwrap_or(0);
+            let self_flat_idx = self.get_flat_index_broadcasted(&current_index);
+            let rhs_flat_idx = rhs.get_flat_index_broadcasted(&current_index);
 
             let self_val = self.data[self_flat_idx];
             let rhs_val = rhs.data[rhs_flat_idx];
