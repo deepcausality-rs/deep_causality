@@ -9,19 +9,8 @@ rust-version = "1.80"
 repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 license = "MIT"
-description = "Procedural macros that generate constructurs and getters."
+description = "Costum code generation macros for the DeepCausality crate."
 documentation = "https://docs.rs/deep_causality"
 exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
-[lib]
-proc-macro = true
-
-[features]
-
 [dependencies]
-proc-macro2 = {workspace = true}
-quote = {workspace = true}
-syn = {workspace = true}
-
-[package.metadata.docs.rs]
-all-features = true

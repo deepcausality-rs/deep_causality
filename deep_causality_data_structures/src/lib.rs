@@ -3,9 +3,14 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+pub mod causal_tensor_type;
 pub mod grid_type;
 pub mod window_type;
 
+// Causal sensor type
+pub use crate::causal_tensor_type::CausalTensor;
+pub use crate::causal_tensor_type::error::CausalTensorError;
+// Grid type
 pub use crate::grid_type::ArrayGrid;
 pub use crate::grid_type::ArrayType;
 pub use crate::grid_type::ArrayType::*;

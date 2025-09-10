@@ -12,7 +12,7 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         # Internal crates
-        "//alias:deep_causality",
+        "//deep_causality",
         # External crates
         "//thirdparty/crates:rand",
     ],

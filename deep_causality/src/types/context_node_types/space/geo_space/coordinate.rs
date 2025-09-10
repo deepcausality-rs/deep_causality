@@ -3,9 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::coord_match;
 use crate::errors::IndexError;
 use crate::{Coordinate, GeoSpace};
+use deep_causality_macros::coord_match;
 
 impl Coordinate<f64> for GeoSpace {
     fn dimension(&self) -> usize {

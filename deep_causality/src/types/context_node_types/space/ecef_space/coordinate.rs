@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::coord_match;
 use crate::{Coordinate, EcefSpace, IndexError};
+use deep_causality_macros::coord_match;
 
 impl Coordinate<f64> for EcefSpace {
     /// Returns the number of dimensions in the coordinate system (always 3).
