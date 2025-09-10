@@ -227,11 +227,6 @@ dependencies = [
 [[package]]
 name = "deep_causality_macros"
 version = "0.8.3"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
 
 [[package]]
 name = "deep_causality_uncertain"
