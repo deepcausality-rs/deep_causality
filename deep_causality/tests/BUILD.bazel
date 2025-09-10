@@ -15,9 +15,9 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
-        "//alias:deep_causality_uncertain",
-        "//alias:ultragraph",
+        "//deep_causality",
+        "//deep_causality_uncertain",
+        "//ultragraph",
     ],
 )
 
@@ -37,7 +37,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
+        "//deep_causality",
     ],
 )
 
@@ -57,7 +57,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
+        "//deep_causality",
     ],
 )
 
@@ -77,7 +77,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
+        "//deep_causality",
     ],
 )
 
@@ -93,8 +93,8 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
-        "//alias:ultragraph",
+        "//deep_causality",
+        "//ultragraph",
     ],
 )
 
@@ -110,8 +110,8 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
-        "//alias:ultragraph",
+        "//deep_causality",
+        "//ultragraph",
     ],
 )
 
@@ -131,7 +131,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
+        "//deep_causality",
     ],
 )
 
@@ -147,8 +147,8 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
-        "//alias:deep_causality_uncertain",
+        "//deep_causality",
+        "//deep_causality_uncertain",
     ],
 )
 
@@ -164,7 +164,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
+        "//deep_causality",
     ],
 )
 
@@ -181,8 +181,8 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
-        "//alias:deep_causality_data_structures",
+        "//deep_causality",
+        "//deep_causality_data_structures",
     ],
 )
 
@@ -199,8 +199,8 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
-        "//alias:deep_causality_data_structures",
+        "//deep_causality",
+        "//deep_causality_data_structures",
     ],
 )
 
@@ -217,7 +217,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
+        "//deep_causality",
     ],
 )
 
@@ -234,7 +234,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
+        "//deep_causality",
     ],
 )
 
@@ -251,8 +251,8 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
-        "//alias:deep_causality_data_structures",
+        "//deep_causality",
+        "//deep_causality_data_structures",
     ],
 )
 
@@ -272,7 +272,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
+        "//deep_causality",
     ],
 )
 
@@ -288,7 +288,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
+        "//deep_causality",
     ],
 )
 
@@ -304,7 +304,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
+        "//deep_causality",
     ],
 )
 
@@ -320,7 +320,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
+        "//deep_causality",
     ],
 )
 
@@ -340,8 +340,8 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
-        "//alias:deep_causality_uncertain",
+        "//deep_causality",
+        "//deep_causality_uncertain",
     ],
 )
 
@@ -357,7 +357,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
+        "//deep_causality",
     ],
 )
 
@@ -373,7 +373,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
+        "//deep_causality",
     ],
 )
 
@@ -393,7 +393,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
+        "//deep_causality",
     ],
 )
 
@@ -413,7 +413,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
+        "//deep_causality",
     ],
 )
 
@@ -433,9 +433,9 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
-        "//alias:deep_causality_uncertain",
-        "//alias:ultragraph",
+        "//deep_causality",
+        "//deep_causality_uncertain",
+        "//ultragraph",
     ],
 )
 
@@ -455,7 +455,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
+        "//deep_causality",
     ],
 )
 
@@ -475,8 +475,8 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
-        "//alias:deep_causality_uncertain",
+        "//deep_causality",
+        "//deep_causality_uncertain",
     ],
 )
 
@@ -497,6 +497,6 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:deep_causality",
+        "//deep_causality",
     ],
 )

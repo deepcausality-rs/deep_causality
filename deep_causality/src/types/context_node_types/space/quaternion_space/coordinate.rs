@@ -3,9 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::coord_match;
 use crate::errors::IndexError;
 use crate::{Coordinate, QuaternionSpace};
+use deep_causality_macros::coord_match;
 
 impl Coordinate<f64> for QuaternionSpace {
     /// Returns the number of dimensions in the coordinate system (always 4).

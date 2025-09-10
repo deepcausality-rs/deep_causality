@@ -12,7 +12,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:ultragraph",
+        "//ultragraph",
     ],
 )
 
@@ -28,6 +28,6 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
-        "//alias:ultragraph",
+        "//ultragraph",
     ],
 )

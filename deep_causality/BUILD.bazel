@@ -6,19 +6,16 @@ rust_library(
         "src/**",
     ]),
     crate_root = "src/lib.rs",
-    proc_macro_deps = [
-        # Crate to test
-        "//alias:deep_causality_macros",
-    ],
     tags = [
         "data_structures",
     ],
     visibility = ["//visibility:public"],
     deps = [
         # Internal crates
-        "//alias:deep_causality_data_structures",
-        "//alias:deep_causality_uncertain",
-        "//alias:ultragraph",
+        "//deep_causality_data_structures",
+        "//deep_causality_macros",
+        "//deep_causality_uncertain",
+        "//ultragraph",
     ],
 )
 
