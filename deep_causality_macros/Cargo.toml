@@ -13,4 +13,11 @@ description = "Costum code generation macros for the DeepCausality crate."
 documentation = "https://docs.rs/deep_causality"
 exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
+
+[features]
+
 [dependencies]
+
+
+[package.metadata.docs.rs]
+all-features = true
