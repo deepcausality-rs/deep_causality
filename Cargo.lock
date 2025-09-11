@@ -226,7 +226,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_macros"
-version = "0.8.3"
+version = "0.8.4"
 
 [[package]]
 name = "deep_causality_uncertain"
