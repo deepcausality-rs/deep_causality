@@ -2,24 +2,44 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::SurdResult;
 use crate::surd::surd_utils;
-use deep_causality_data_structures::{CausalTensor, CausalTensorError};
-use deep_causality_data_structures::{CausalTensorCollectionExt, CausalTensorLogMathExt};
+use crate::SurdResult;
+use deep_causality_data_structures::{
+    CausalTensor, CausalTensorCollectionExt, CausalTensorError, CausalTensorLogMathExt,
+};
 use std::collections::HashMap;
 
 /// Decomposes mutual information into its Synergistic, Unique, and Redundant components
 /// for each state of the target variable, based on the SURD-states algorithm.
 ///
-/// This is a high-performance Rust port of the SURD-State algorithm described by Martínez-Sánchez et al.
+/// This is a high-performance Rust port of the SURD-State algorithm described in the paper
+/// "Observational causality by states and interaction type for scientific discovery" (martínezsánchez2025).
 /// It prioritizes mathematical faithfulness to the original paper and performance.
+///
+/// The algorithm follows these main steps:
+/// 1.  **Pre-processing**: The input probability distribution is validated and normalized.
+/// 2.  **Information Leak Calculation**: The causality leak, representing the influence of unobserved
+///     variables, is calculated as `H(Q_f|Q) / H(Q_f)`.
+/// 3.  **Specific Mutual Information**: For every combination of source variables, the specific mutual
+///     information `i(Q_f=t; Q_i)` is calculated for each target state `t`. This is based on
+///     (martínezsánchez2025, Supplementary Material, Eq. S6).
+/// 4.  **Decomposition Loop**: For each target state `t`, the specific information values are sorted.
+///     This ordering is crucial for the decomposition. An information-theoretic exclusion principle
+///     is applied to prevent double-counting, as described in (martínezsánchez2025, Fig. S2).
+/// 5.  **State-Dependent Slice Calculation**: The sorted information values are differenced, and these
+///     increments are used to calculate the state-dependent causal maps for redundant, unique, and
+///     synergistic components. This step implements the core logic from (martínezsánchez2025,
+///     Supplementary Material, Eqs. S17, S22, S28), separating positive (causal) and negative (non-causal) contributions.
+/// 6.  **Aggregation**: The state-dependent maps are stacked, and the aggregate SURD values are
+///     calculated by summing the increments over all target states, consistent with (martínezsánchez2025, Eq. 7).
 ///
 /// # Arguments
 /// * `p_raw` - A `CausalTensor` representing the joint probability distribution.
 ///   The first dimension (axis 0) must correspond to the target variable.
 ///
 /// # Returns
-/// A `Result` containing a `SurdResult` struct with the full decomposition.
+/// A `Result` containing a `SurdResult` struct with the full decomposition, including
+/// separate causal (positive) and non-causal (negative) state-dependent maps.
 pub fn surd_states(p_raw: &CausalTensor<f64>) -> Result<SurdResult<f64>, CausalTensorError> {
     if p_raw.is_empty() {
         return Err(CausalTensorError::EmptyTensor);
@@ -78,9 +98,14 @@ pub fn surd_states(p_raw: &CausalTensor<f64>) -> Result<SurdResult<f64>, CausalT
     // --- 4. Initialize Result Containers ---
     let mut i_r = HashMap::new();
     let mut i_s = HashMap::new();
-    let mut temp_rd_states: HashMap<Vec<usize>, Vec<CausalTensor<f64>>> = HashMap::new();
-    let mut temp_un_states: HashMap<Vec<usize>, Vec<CausalTensor<f64>>> = HashMap::new();
-    let mut temp_sy_states: HashMap<Vec<usize>, Vec<CausalTensor<f64>>> = HashMap::new();
+
+    // Temporary storage for slices before stacking
+    let mut temp_causal_rd_states: HashMap<Vec<usize>, Vec<CausalTensor<f64>>> = HashMap::new();
+    let mut temp_causal_un_states: HashMap<Vec<usize>, Vec<CausalTensor<f64>>> = HashMap::new();
+    let mut temp_causal_sy_states: HashMap<Vec<usize>, Vec<CausalTensor<f64>>> = HashMap::new();
+    let mut temp_non_causal_rd_states: HashMap<Vec<usize>, Vec<CausalTensor<f64>>> = HashMap::new();
+    let mut temp_non_causal_un_states: HashMap<Vec<usize>, Vec<CausalTensor<f64>>> = HashMap::new();
+    let mut temp_non_causal_sy_states: HashMap<Vec<usize>, Vec<CausalTensor<f64>>> = HashMap::new();
 
     // --- 5. Main Loop: Decompose for each Target State `t` ---
     for t in 0..n_target_states {
@@ -129,23 +154,22 @@ pub fn surd_states(p_raw: &CausalTensor<f64>) -> Result<SurdResult<f64>, CausalT
             let info = di_values[i] * p_s.as_slice()[t];
             let n_vars_plus_zeros = n_vars + num_zeros;
 
-            // This is the core logic for dispatching state-dependent calculations.
-            // It correctly identifies the exact point in the sorted information
-            // hierarchy where a redundant, unique, or synergistic component is defined.
             if ll.len() == 1 {
-                // Calculate REDUNDANT information.
-                // It occurs when two variables are left in the `red_vars` pool.
                 if i == n_vars_plus_zeros.saturating_sub(2) {
                     let prev_ll = final_lab
                         .get(i.saturating_sub(1))
                         .ok_or(CausalTensorError::InvalidOperation)?;
-                    let rd_slice = calculate_state_slice(&p, ll, prev_ll, t)?;
-                    temp_rd_states
+                    let (causal_slice, non_causal_slice) =
+                        calculate_state_slice(&p, ll, prev_ll, t, &agent_indices)?;
+                    temp_causal_rd_states
                         .entry(red_vars.clone())
                         .or_default()
-                        .push(rd_slice);
+                        .push(causal_slice);
+                    temp_non_causal_rd_states
+                        .entry(red_vars.clone())
+                        .or_default()
+                        .push(non_causal_slice);
                 }
-                // Calculate UNIQUE information.
                 if i == n_vars_plus_zeros.saturating_sub(1) {
                     let prev_ll = final_lab
                         .get(i.saturating_sub(1))
@@ -154,25 +178,36 @@ pub fn surd_states(p_raw: &CausalTensor<f64>) -> Result<SurdResult<f64>, CausalT
                         .get(i.saturating_sub(1))
                         .map_or(true, |&d| d.abs() < 1e-10);
 
-                    let un_slice = if base_is_zero {
-                        // If the previous info increment was zero, the unique info is relative to the marginal.
-                        calculate_state_slice(&p, ll, &[], t)?
+                    let (causal_slice, non_causal_slice) = if base_is_zero {
+                        calculate_state_slice(&p, ll, &[], t, &agent_indices)?
                     } else {
-                        // Otherwise, it's relative to the previous component in the sort order.
-                        calculate_state_slice(&p, ll, prev_ll, t)?
+                        calculate_state_slice(&p, ll, prev_ll, t, &agent_indices)?
                     };
-                    temp_un_states.entry(ll.clone()).or_default().push(un_slice);
+                    temp_causal_un_states
+                        .entry(ll.clone())
+                        .or_default()
+                        .push(causal_slice);
+                    temp_non_causal_un_states
+                        .entry(ll.clone())
+                        .or_default()
+                        .push(non_causal_slice);
                 }
             } else if i >= n_vars_plus_zeros {
-                // Calculate SYNERGISTIC information.
                 let prev_ll = final_lab
                     .get(i.saturating_sub(1))
                     .ok_or(CausalTensorError::InvalidOperation)?;
-                let sy_slice = calculate_state_slice(&p, ll, prev_ll, t)?;
-                temp_sy_states.entry(ll.clone()).or_default().push(sy_slice);
+                let (causal_slice, non_causal_slice) =
+                    calculate_state_slice(&p, ll, prev_ll, t, &agent_indices)?;
+                temp_causal_sy_states
+                    .entry(ll.clone())
+                    .or_default()
+                    .push(causal_slice);
+                temp_non_causal_sy_states
+                    .entry(ll.clone())
+                    .or_default()
+                    .push(non_causal_slice);
             }
 
-            // Aggregate the total SURD values.
             if ll.len() == 1 {
                 *i_r.entry(red_vars.clone()).or_insert(0.0) += info;
                 red_vars.retain(|&v| v != ll[0]);
@@ -183,15 +218,34 @@ pub fn surd_states(p_raw: &CausalTensor<f64>) -> Result<SurdResult<f64>, CausalT
     }
 
     // --- 6. Finalize State-Dependent Maps by Stacking ---
-    let redundant_states = temp_rd_states
+    // Calculate causal maps
+    let causal_redundant_states = temp_causal_rd_states
         .into_iter()
         .map(|(k, slices)| Ok((k, slices.stack(0)?)))
         .collect::<Result<_, _>>()?;
-    let unique_states = temp_un_states
+
+    let causal_unique_states = temp_causal_un_states
         .into_iter()
         .map(|(k, slices)| Ok((k, slices.stack(0)?)))
         .collect::<Result<_, _>>()?;
-    let synergistic_states = temp_sy_states
+
+    let causal_synergistic_states = temp_causal_sy_states
+        .into_iter()
+        .map(|(k, slices)| Ok((k, slices.stack(0)?)))
+        .collect::<Result<_, _>>()?;
+
+    // Calculate non-causal maps
+    let non_causal_redundant_states = temp_non_causal_rd_states
+        .into_iter()
+        .map(|(k, slices)| Ok((k, slices.stack(0)?)))
+        .collect::<Result<_, _>>()?;
+
+    let non_causal_unique_states = temp_non_causal_un_states
+        .into_iter()
+        .map(|(k, slices)| Ok((k, slices.stack(0)?)))
+        .collect::<Result<_, _>>()?;
+
+    let non_causal_synergistic_states = temp_non_causal_sy_states
         .into_iter()
         .map(|(k, slices)| Ok((k, slices.stack(0)?)))
         .collect::<Result<_, _>>()?;
@@ -201,21 +255,38 @@ pub fn surd_states(p_raw: &CausalTensor<f64>) -> Result<SurdResult<f64>, CausalT
         i_s,
         mi,
         info_leak,
-        redundant_states,
-        unique_states,
-        synergistic_states,
+        causal_redundant_states,
+        causal_unique_states,
+        causal_synergistic_states,
+        non_causal_redundant_states,
+        non_causal_unique_states,
+        non_causal_synergistic_states,
     ))
 }
 
-/// Computes a state-dependent causal slice for a single target state `t`.
-/// This is a vectorized operation that avoids explicit loops over source states.
-/// /// This function computes `p(t, i, j) * log( p(t|i) / p(t|j) )` summed over non-essential axes.
+/// Computes the causal (positive) and non-causal (negative) state-dependent information slices.
+///
+/// This function implements the core calculation of the state-dependent decomposition. It computes
+/// the term `p(t, i, j) * log( p(t|i) / p(t|j) )` and separates the result into two tensors
+/// based on the sign of the log ratio. This corresponds to the state-dependent causal (`AC`) and
+/// non-causal (`AN`) components in (martínezsánchez2025, Supplementary Material, e.g., Eq. S22 & S24).
+///
+/// # Arguments
+/// * `p` - The full joint probability distribution tensor.
+/// * `current_vars` - The set of source variables for the current information term (e.g., `{i}`).
+/// * `prev_vars` - The set of source variables from the previous step in the sorted hierarchy (e.g., `{j}`).
+/// * `target_state_index` - The index `t` of the target variable's state.
+/// * `agent_indices` - A slice containing the indices of all source variables.
+///
+/// # Returns
+/// A tuple `(causal_slice, non_causal_slice)` containing the two resulting tensors.
 fn calculate_state_slice(
     p: &CausalTensor<f64>,
     current_vars: &[usize], // Corresponds to `ll` in Python (e.g., [1])
     prev_vars: &[usize],    // Corresponds to `lab[i-1]` (e.g., [2])
     target_state_index: usize,
-) -> Result<CausalTensor<f64>, CausalTensorError> {
+    agent_indices: &[usize],
+) -> Result<(CausalTensor<f64>, CausalTensor<f64>), CausalTensorError> {
     // 1. Get the slice corresponding to the current target state.
     let p_slice = p.slice(0, target_state_index)?;
 
@@ -224,39 +295,32 @@ fn calculate_state_slice(
     let prev_vars_mapped: Vec<usize> = prev_vars.iter().map(|&ax| ax - 1).collect();
     let all_vars_mapped: Vec<usize> = (0..p_slice.num_dim()).collect();
 
-    // p(t|i) - Probability of target given current variables
     let p_ti = p_slice.sum_axes(&surd_utils::set_difference(
         &all_vars_mapped,
         &current_vars_mapped,
     ))?;
-    let p_i = p_slice
-        .sum_axes(&all_vars_mapped)
+    let p_i = p
+        .sum_axes(&[0])
         .unwrap()
-        .sum_axes(&surd_utils::set_difference(
-            &all_vars_mapped,
-            &current_vars_mapped,
-        ))?;
+        .sum_axes(&surd_utils::set_difference(agent_indices, current_vars))?;
     let p_target_given_i = (p_ti / p_i)?;
 
-    // p(t|j) - Probability of target given previous variables in the sort order.
-    // If prev_vars is empty, this is the marginal p(t).
-    let p_target_given_j =
-        if prev_vars.is_empty() {
-            p_slice.sum_axes(&all_vars_mapped)?
-        } else {
-            let p_tj = p_slice.sum_axes(&surd_utils::set_difference(
-                &all_vars_mapped,
-                &prev_vars_mapped,
-            ))?;
-            let p_j = p_slice.sum_axes(&all_vars_mapped).unwrap().sum_axes(
-                &surd_utils::set_difference(&all_vars_mapped, &prev_vars_mapped),
-            )?;
-            (p_tj / p_j)?
-        };
+    let p_target_given_j = if prev_vars.is_empty() {
+        p.sum_axes(agent_indices)?
+    } else {
+        let p_tj = p_slice.sum_axes(&surd_utils::set_difference(
+            &all_vars_mapped,
+            &prev_vars_mapped,
+        ))?;
+        let p_j = p
+            .sum_axes(&[0])
+            .unwrap()
+            .sum_axes(&surd_utils::set_difference(agent_indices, prev_vars))?;
+        (p_tj / p_j)?
+    };
 
     let log_ratio = (p_target_given_i / p_target_given_j)?.log2()?;
 
-    // p(t,i,j) - Joint probability of target and all involved source variables
     let mut all_involved_vars = current_vars_mapped.to_vec();
     all_involved_vars.extend_from_slice(&prev_vars_mapped);
     all_involved_vars.sort();
@@ -264,6 +328,18 @@ fn calculate_state_slice(
     let axes_to_sum_out = surd_utils::set_difference(&all_vars_mapped, &all_involved_vars);
     let p_tij = p_slice.sum_axes(&axes_to_sum_out)?;
 
-    // The final state map is the product of the joint probability and the log ratio.
-    p_tij * log_ratio
+    // Separate into causal (>0) and non-causal (<0) components
+    let causal_log_ratio_data: Vec<f64> =
+        log_ratio.as_slice().iter().map(|&v| v.max(0.0)).collect();
+    let non_causal_log_ratio_data: Vec<f64> =
+        log_ratio.as_slice().iter().map(|&v| v.min(0.0)).collect();
+
+    let causal_log_ratio = CausalTensor::new(causal_log_ratio_data, log_ratio.shape().to_vec())?;
+    let non_causal_log_ratio =
+        CausalTensor::new(non_causal_log_ratio_data, log_ratio.shape().to_vec())?;
+
+    let causal_slice = (p_tij.clone() * causal_log_ratio)?;
+    let non_causal_slice = (p_tij * non_causal_log_ratio)?;
+
+    Ok((causal_slice, non_causal_slice))
 }
