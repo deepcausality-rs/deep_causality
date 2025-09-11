@@ -12,7 +12,7 @@ exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE
 
 
 [dependencies]
-rand = { workspace = true }
+rand = { version = "0.9" }
 rand_distr =  { workspace = true }
 
 [lib]
