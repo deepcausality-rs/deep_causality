@@ -12,9 +12,6 @@ members = [
     "ultragraph",
 ]
 
-[workspace.dependencies]
-rand = {version = "0.9"}
-rand_distr =  { version = "0.5" }
 
 # Optimize all crates
 [profile.release]
