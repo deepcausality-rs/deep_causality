@@ -9,7 +9,10 @@ impl<T> CausalTensor<T>
 where
     T: Copy + Default + PartialOrd,
 {
-    pub(super) fn reshape_impl(&self, new_shape: &[usize]) -> Result<Self, CausalTensorError> {
+    pub(in crate::causal_tensor_type) fn reshape_impl(
+        &self,
+        new_shape: &[usize],
+    ) -> Result<Self, CausalTensorError> {
         let new_len: usize = new_shape.iter().product();
         if new_len != self.len() {
             return Err(CausalTensorError::ShapeMismatch);
@@ -21,7 +24,7 @@ where
         ))
     }
 
-    pub(super) fn ravel_impl(mut self) -> Self {
+    pub(in crate::causal_tensor_type) fn ravel_impl(mut self) -> Self {
         let len = self.len();
         self.shape = vec![len];
         self.strides = vec![1];

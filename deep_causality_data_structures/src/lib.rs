@@ -9,7 +9,9 @@ pub mod window_type;
 
 // Causal sensor type
 pub use crate::causal_tensor_type::CausalTensor;
-pub use crate::causal_tensor_type::error::CausalTensorError;
+pub use causal_tensor_type::errors::causal_tensor_error::CausalTensorError;
+pub use causal_tensor_type::extensions::ext_collection::CausalTensorCollectionExt;
+pub use causal_tensor_type::extensions::ext_math_log::CausalTensorLogMathExt;
 // Grid type
 pub use crate::grid_type::ArrayGrid;
 pub use crate::grid_type::ArrayType;

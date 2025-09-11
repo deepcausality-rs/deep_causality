@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_data_structures::causal_tensor_type::error::CausalTensorError;
+use deep_causality_data_structures::CausalTensorError;
 use std::error::Error;
 
 #[test]

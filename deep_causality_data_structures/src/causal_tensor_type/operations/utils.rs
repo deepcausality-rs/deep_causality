@@ -11,7 +11,7 @@ where
 {
     /// Calculates the flat index into the `data` vector from a multi-dimensional index.
     /// This is the core of the stride-based memory layout.
-    pub(super) fn get_flat_index(&self, index: &[usize]) -> Option<usize> {
+    pub(in crate::causal_tensor_type) fn get_flat_index(&self, index: &[usize]) -> Option<usize> {
         if index.len() != self.num_dim() {
             return None;
         }
@@ -47,7 +47,7 @@ where
     }
 
     /// Helper to create a new tensor with a given shape and fill it with a value.
-    pub(super) fn full(shape: &[usize], value: T) -> Self
+    pub(in crate::causal_tensor_type) fn full(shape: &[usize], value: T) -> Self
     where
         T: Clone,
     {
@@ -58,7 +58,10 @@ where
 
     /// Internal constructor that calculates strides.
     /// Call only when shape is known to be valid.
-    pub(super) fn from_vec_and_shape_unchecked(data: Vec<T>, shape: &[usize]) -> Self {
+    pub(in crate::causal_tensor_type) fn from_vec_and_shape_unchecked(
+        data: Vec<T>,
+        shape: &[usize],
+    ) -> Self {
         let mut strides = vec![0; shape.len()];
         if !shape.is_empty() {
             let mut current_stride = 1;
@@ -75,7 +78,7 @@ where
     }
 
     /// An optimized helper for element-wise binary operations with broadcasting.
-    pub(super) fn binary_op<F, U>(
+    pub(in crate::causal_tensor_type) fn binary_op<F, U>(
         &self,
         rhs: &CausalTensor<U>,
         op: F,

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_data_structures::{CausalTensor, causal_tensor_type::error::CausalTensorError};
+use deep_causality_data_structures::{CausalTensor, CausalTensorError};
 
 #[test]
 fn test_add_tensors_same_shape() {
