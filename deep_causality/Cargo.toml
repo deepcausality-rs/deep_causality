@@ -31,7 +31,7 @@ version = "0.8.3"
 
 [dependencies.deep_causality_uncertain]
 path = "../deep_causality_uncertain"
-version = "0.2.1"
+version = "0.2.0"
 
 
 [dependencies.ultragraph]
