@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.4](https://github.com/marvin-hansen/deep_causality/compare/deep_causality_macros-v0.8.3...deep_causality_macros-v0.8.4) - 2025-09-11
+
+### Added
+
+- *(deep_causality_macros)* Increased test coverage.
+- *(deep_causality_macros)* removed getter macro. Added coord_match! macro. Rewrote all macros in the macro_rules syntax.
+
+### Other
+
+- trying to fix #315
+
 ## [0.8.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_macros-v0.8.2...deep_causality_macros-v0.8.3) - 2025-09-08
 
 ### Added

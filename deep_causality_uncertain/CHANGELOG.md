@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1](https://github.com/marvin-hansen/deep_causality/compare/deep_causality_uncertain-v0.2.0...deep_causality_uncertain-v0.2.1) - 2025-09-11
+
+### Other
+
+- trying to fix #315
+- trying to fix #315
+- trying to fix #315
+- trying to fix #315
+- trying to fix #315
+- trying to fix #315
+- trying to fix #315
+- Fixed dependencies in the Uncertain crate to resolve #315
+- Fixed global Cargo.toml to resolve #315
+- Fixed dependencies in the Uncertain crate to resolve #315
+- Updated project wide Bazel config, removed Bazel aliases, and updated project wide macro imports from the deep_causality_macro crate.
+
 ## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.1.0...deep_causality_uncertain-v0.2.0) - 2025-09-08
 
 ### Added
