@@ -6,7 +6,7 @@ name = "deep_causality"
 version = "0.11.0"
 edition = "2021"
 rust-version = "1.80"
-readme = "../deep_causality_uncertain/README.md"
+readme = "../README.md"
 license = "MIT"
 
 description = "Computational causality library. Provides causality graph, collections, context and causal reasoning."
