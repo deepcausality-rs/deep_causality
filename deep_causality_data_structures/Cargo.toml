@@ -16,9 +16,7 @@ keywords = ["data-structures", "sliding-window", "grid-array"]
 # Exclude all bazel files as these conflict with Bazel workspace when vendored.
 exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
-[[example]]
-name = "causal_tensor"
-path = "examples/causal_tensor_type/causal_tensor.rs"
+
 
 [[example]]
 name = "array_grid"
