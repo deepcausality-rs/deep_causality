@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_uncertain"
-version = "0.2.1"
+version = "0.2.0"
 edition = "2021"
 rust-version = "1.80"
 repository = "https://github.com/deepcausality/deep_causality.rs"
@@ -12,10 +12,8 @@ exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE
 
 
 [dependencies]
-# These deps can't be moved to the workspace CARGO.toml b/c
-# it would break the release-plz auto release bot.
-rand = {version = "0.9"}
-rand_distr =  { version = "0.5" }
+rand = "0.9"
+rand_distr = "0.5"
 
 [lib]
 test = true

@@ -14,8 +14,7 @@ members = [
 
 [workspace.dependencies]
 # ==============
-# Dependencies have to be in the sub-crates
-# otherwise the automated release process breaks.
+# External Dependencies Aliases
 # ==============
 
 
