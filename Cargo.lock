@@ -230,7 +230,7 @@ version = "0.8.3"
 
 [[package]]
 name = "deep_causality_uncertain"
-version = "0.2.1"
+version = "0.2.0"
 dependencies = [
  "criterion",
  "rand",
