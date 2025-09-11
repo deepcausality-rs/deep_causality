@@ -1,0 +1,24 @@
+[package]
+name = "deep_causality_algorithms"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+readme = "README.md"
+license = "MIT"
+
+description = "Computational causality algorithms and utils used in the DeepCausality project."
+documentation = "https://docs.rs/deep_causality"
+homepage = "https://deepcausality.com/"
+repository = "https://github.com/deepcausality/deep_causality.rs"
+keywords = ["surd", "causal-graph", "causal-reasoning", "algorithms"]
+categories = ["algorithms", "science", "aerospace", "finance", "mathematics"]
+authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
+exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
+
+
+[dependencies.deep_causality_data_structures]
+path = "../deep_causality_data_structures"
+version = "0.9"
+
+[dependencies]
+num-traits = "0.2.19"

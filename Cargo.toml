@@ -4,7 +4,7 @@
 [workspace]
 resolver = "2"
 members = [
-    "deep_causality",
+    "deep_causality", "deep_causality_algorithms",
     "deep_causality_data_structures",
     "deep_causality_macros",
     "deep_causality_uncertain",
