@@ -3,9 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality_data_structures::{CausalTensor, CausalTensorError};
-use num_traits::{Float, Zero};
 use std::cmp::Ordering;
-use std::ops::Sub;
 
 /// Computes the difference between adjacent elements of a slice.
 ///
@@ -13,14 +11,20 @@ use std::ops::Sub;
 /// elements, the output vector will have `N-1` elements. Returns an empty
 /// vector if the input has fewer than 2 elements.
 ///
-pub(super) fn diff<T>(slice: &[T]) -> Vec<T>
-where
-    T: Sub<T, Output = T> + Copy,
-{
-    if slice.len() < 2 {
-        return Vec::new();
+pub(super) fn diff(slice: &[f64]) -> Vec<f64> {
+    let mut result = Vec::new();
+    if slice.is_empty() {
+        return result;
     }
-    slice.windows(2).map(|w| w[1] - w[0]).collect()
+
+    // Python's np.diff(arr, prepend=0) effectively calculates diff on [0] + arr
+    // So the first element is slice[0] - 0
+    result.push(slice[0] - 0f64); // This is effectively slice[0]
+
+    for i in 1..slice.len() {
+        result.push(slice[i] - slice[i - 1]);
+    }
+    result
 }
 
 pub(super) fn arg_sort(slice: &[f64]) -> Vec<usize> {
@@ -57,7 +61,6 @@ pub(super) fn set_difference<T: PartialEq + Clone>(a: &[T], b: &[T]) -> Vec<T> {
 ///
 /// # Panics
 /// Panics if `r` is greater than the number of items in `pool`.
-///
 /// ```
 pub(super) fn combinations<T: Copy>(pool: &[T], r: usize) -> Vec<Vec<T>> {
     if r > pool.len() {
@@ -94,21 +97,27 @@ pub(super) fn combinations<T: Copy>(pool: &[T], r: usize) -> Vec<Vec<T>> {
 ///
 /// The input tensor `p` is assumed to be a joint probability distribution.
 /// This function computes the entropy of the marginal distribution over the specified `axes`.
-pub(super) fn entropy_nvars<T>(p: &CausalTensor<T>, axes: &[usize]) -> Result<T, CausalTensorError>
-where
-    T: Copy + Default + PartialOrd + Float + Zero,
-{
-    // Find the axes to sum out to get the marginal distribution
+pub fn entropy_nvars(p: &CausalTensor<f64>, axes: &[usize]) -> Result<f64, CausalTensorError> {
+    // Determine the axes to sum out to get the marginal distribution.
     let all_axes: Vec<_> = (0..p.num_dim()).collect();
     let axes_to_sum_out: Vec<_> = all_axes
         .into_iter()
         .filter(|ax| !axes.contains(ax))
         .collect();
 
-    let marginal = p.sum_axes(&axes_to_sum_out)?;
+    // If we are not summing over any axes, it means we want the entropy of the
+    // full joint distribution `p`. We must use `p` directly instead of calling
+    // `sum_axes(&[])`, which would incorrectly perform a full reduction.
+    let marginal = if axes_to_sum_out.is_empty() {
+        // PERF: We clone the tensor here to maintain a consistent type for `marginal`.
+        // A more advanced implementation might use references (`Cow`) to avoid this.
+        p.clone()
+    } else {
+        p.sum_axes(&axes_to_sum_out)?
+    };
 
-    let entropy = marginal.as_slice().iter().fold(T::zero(), |acc, &prob| {
-        if prob > T::zero() {
+    let entropy = marginal.as_slice().iter().fold(0.0, |acc, &prob| {
+        if prob > 0.0 {
             acc - prob * prob.log2()
         } else {
             acc
@@ -121,13 +130,12 @@ where
 /// Calculates the conditional Shannon entropy H(X | Y).
 ///
 /// Uses the formula: H(X | Y) = H(X, Y) - H(Y).
-pub(super) fn cond_entropy<T>(
-    p: &CausalTensor<T>,
+pub fn cond_entropy(
+    p: &CausalTensor<f64>,
     target_axes: &[usize],
     cond_axes: &[usize],
-) -> Result<T, CausalTensorError>
+) -> Result<f64, CausalTensorError>
 where
-    T: Copy + Default + PartialOrd + Float + Zero + Sub<T, Output = T>,
 {
     let mut joint_axes = target_axes.to_vec();
     joint_axes.extend_from_slice(cond_axes);
