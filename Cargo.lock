@@ -221,7 +221,7 @@ name = "deep_causality_algorithms"
 version = "0.1.0"
 dependencies = [
  "deep_causality_data_structures",
- "num-traits",
+ "rayon",
 ]
 
 [[package]]
@@ -229,6 +229,7 @@ name = "deep_causality_data_structures"
 version = "0.9.4"
 dependencies = [
  "criterion",
+ "num-traits",
  "rand",
 ]
 

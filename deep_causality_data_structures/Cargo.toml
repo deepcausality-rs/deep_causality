@@ -51,3 +51,5 @@ rand = { version = "0.9", features = ["small_rng"] }
 [[bench]]
 name = "bench_dcl_data_structures"
 harness = false
+[dependencies]
+num-traits = "0.2.19"

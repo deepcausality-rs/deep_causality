@@ -3,4 +3,4 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 pub mod ext_collection;
-pub mod ext_math_log;
+pub mod ext_math;

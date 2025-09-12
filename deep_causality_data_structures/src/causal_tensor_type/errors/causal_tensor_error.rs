@@ -13,6 +13,7 @@ pub enum CausalTensorError {
     EmptyTensor,
     InvalidOperation,
     UnorderableValue,
+    InvalidParameter(String),
 }
 
 impl Error for CausalTensorError {}
@@ -35,6 +36,9 @@ impl std::fmt::Display for CausalTensorError {
             }
             CausalTensorError::UnorderableValue => {
                 write!(f, "CausalTensorError: Unorderable value encountered")
+            }
+            CausalTensorError::InvalidParameter(s) => {
+                write!(f, "CausalTensorError: Invalid parameter: {}", s)
             }
         }
     }
