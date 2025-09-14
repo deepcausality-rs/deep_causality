@@ -342,14 +342,14 @@ fn analyze_single_target_state(
             let max_prev_level = i1_sorted
                 .iter()
                 .zip(&lens)
-                .filter(|(_, &len)| len == l)
+                .filter(|&(_, &len)| len == l)
                 .map(|(&val, _)| val)
                 .fold(f64::NEG_INFINITY, f64::max);
             if max_prev_level.is_finite() {
                 i1_sorted
                     .iter_mut()
                     .zip(&lens)
-                    .filter(|(_, &len)| len == l + 1)
+                    .filter(|&(_, &len)| len == l + 1)
                     .for_each(|(val, _)| {
                         if *val < max_prev_level {
                             *val = 0.0;
