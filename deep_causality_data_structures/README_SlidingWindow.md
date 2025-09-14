@@ -138,27 +138,21 @@ pub fn main(){
 
 | Implementation      	| Single Push Time 	| Notes                                                	|
 |----------------|----------------|--------------------------| 
-| UnsafeArrayStorage | ~1.9ns | Fastest overall | 
 | ArrayStorage | ~2.08ns | Good balance | 
-| UnsafeVectorStorage | ~2.3ns | Fast with dynamic sizing | 
 | VectorStorage | ~2.5ns | Most flexible |
 
 Batch Operations (100 elements)
 
 | Implementation      	| Batch Push Time 	 | Notes                                                	|
 |----------------|----------------|--------------------------| 
-| UnsafeArrayStorage | ~1.7ns            | Best for large batches | 
 | ArrayStorage | ~1.95ns           | Consistent performance |
-| UnsafeVectorStorage | ~2.1ns            | Good amortized time | 
 | VectorStorage | ~2.3ns            | Predictable scaling |
 
 Sequential Operations
 
 | Implementation | Operation Time | Notes                    | 
 |----------------|----------------|--------------------------| 
-| UnsafeArrayStorage | ~550ps | Best cache utilization   | 
 | ArrayStorage | ~605ps | Excellent cache locality | 
-| UnsafeVectorStorage | ~750ps | Good for mixed workloads | 
 | VectorStorage | ~850ps | Most predictable         |
 
 
@@ -175,11 +169,6 @@ Sequential Operations
 - Machine: MacBook Pro (T6031)
 
 # Implementation Details
-
-**Why UnsafeArrayStorage is Fastest**
-**Zero Bounds Checking**
-* Eliminates runtime bounds checks
-* Reduces CPU instruction count
 
 **Memory Layout**
 * Contiguous stack memory allocation
@@ -209,18 +198,6 @@ Sequential Operations
 * Dynamic sizing is required
 * Absolute maximum performance is needed
 
-### UnsafeArrayStorage
-✅ Use When:
-* Maximum performance is critical
-* Window size is known at compile time
-* Team has strong Rust expertise
-* Extensive testing is in place
-
-❌ Avoid When:
-* Safety is paramount
-* Team is new to Rust
-* Code needs to be easily maintainable
-
 ### VectorStorage
 ✅ Use When:
 * Dynamic sizing is needed
@@ -233,30 +210,12 @@ Sequential Operations
 * Performance is critical
 * Memory is constrained
 
-UnsafeVectorStorage
-
-✅ Use When:
-* Need dynamic sizing with better performance
-* Team can handle unsafe code
-* Memory overhead is acceptable
-* Mixed workload patterns
-
-❌ Avoid When:
-* Fixed size would suffice
-* Code safety is critical
-* Team lacks unsafe Rust experience
-
 
 ### Recommendation
 **Start with ArrayStorage**
 * Safe default choice
 * Good performance characteristics
 * Easy to maintain and debug
-
-**Consider UnsafeArrayStorage if:**
-* Profiling shows WindowStorage is a bottleneck
-* Team has unsafe Rust expertise
-* Comprehensive testing is in place
 
 **Use VectorStorage variants if:**
 Dynamic sizing is required

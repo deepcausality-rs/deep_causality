@@ -4,10 +4,6 @@
  */
 
 pub mod grid;
-#[cfg(not(feature = "unsafe"))]
-pub mod grid_safe;
-#[cfg(feature = "unsafe")]
-pub mod grid_unsafe;
 pub mod point;
 pub mod storage;
 pub mod storage_array_1d;
