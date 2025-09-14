@@ -28,17 +28,7 @@ pub trait One: Sized + Mul<Self, Output = Self> {
     }
 
     /// Returns `true` if `self` is equal to the multiplicative identity.
-    ///
-    /// For performance reasons, it's best to implement this manually.
-    /// After a semver bump, this method will be required, and the
-    /// `where Self: PartialEq` bound will be removed.
-    #[inline]
-    fn is_one(&self) -> bool
-    where
-        Self: PartialEq,
-    {
-        *self == Self::one()
-    }
+    fn is_one(&self) -> bool;
 }
 
 /// Defines an associated constant representing the multiplicative identity
