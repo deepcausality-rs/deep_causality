@@ -59,7 +59,7 @@ use rayon::prelude::*;
 /// # Examples
 ///
 /// ```
-/// use deep_causality_algorithms::{surd_states, MaxOrder};
+/// use deep_causality_algorithms::surd::{surd_states, MaxOrder};
 /// use deep_causality_data_structures::CausalTensor;
 ///
 /// // Create a joint probability distribution for a target and 2 source variables.
