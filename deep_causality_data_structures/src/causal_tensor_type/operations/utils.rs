@@ -93,8 +93,8 @@ where
         op: F,
     ) -> Result<Self, CausalTensorError>
     where
-        U: Copy + Default + PartialOrd + num_traits::Zero,
-        T: Copy + Default + PartialOrd + num_traits::Zero,
+        U: Copy + Default + PartialOrd,
+        T: Copy + Default + PartialOrd,
         F: Fn(T, U) -> Result<T, CausalTensorError>, // op now returns Result
     {
         // 1. Handle empty tensors

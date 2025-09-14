@@ -230,7 +230,6 @@ name = "deep_causality_data_structures"
 version = "0.9.4"
 dependencies = [
  "criterion",
- "num-traits",
  "rand",
 ]
 

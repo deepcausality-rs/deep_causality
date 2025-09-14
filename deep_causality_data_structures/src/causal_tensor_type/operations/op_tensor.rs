@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalTensor, CausalTensorError};
+use crate::{CausalTensor, CausalTensorError, Zero};
 use std::ops::{Add, Div, Mul, Sub};
 
 //
@@ -10,7 +10,7 @@ use std::ops::{Add, Div, Mul, Sub};
 //
 impl<T> Add for &CausalTensor<T>
 where
-    T: Copy + Default + PartialOrd + num_traits::Zero + Add<T, Output = T>,
+    T: Copy + Default + PartialOrd + Add<T, Output = T>,
 {
     type Output = Result<CausalTensor<T>, CausalTensorError>;
 
@@ -22,7 +22,7 @@ where
 // T + &T
 impl<T> Add<&CausalTensor<T>> for CausalTensor<T>
 where
-    T: Copy + Default + PartialOrd + num_traits::Zero + Add<T, Output = T>,
+    T: Copy + Default + PartialOrd + Add<T, Output = T>,
 {
     type Output = Result<CausalTensor<T>, CausalTensorError>;
 
@@ -34,7 +34,7 @@ where
 // &T + T
 impl<T> Add<CausalTensor<T>> for &CausalTensor<T>
 where
-    T: Copy + Default + PartialOrd + num_traits::Zero + Add<T, Output = T>,
+    T: Copy + Default + PartialOrd + Add<T, Output = T>,
 {
     type Output = Result<CausalTensor<T>, CausalTensorError>;
 
@@ -45,7 +45,7 @@ where
 
 impl<T> Add for CausalTensor<T>
 where
-    T: Copy + Default + PartialOrd + num_traits::Zero + Add<T, Output = T>,
+    T: Copy + Default + PartialOrd + Add<T, Output = T>,
 {
     type Output = Result<CausalTensor<T>, CausalTensorError>;
 
@@ -59,7 +59,7 @@ where
 //
 impl<T> Sub for &CausalTensor<T>
 where
-    T: Copy + Default + PartialOrd + num_traits::Zero + Sub<T, Output = T>,
+    T: Copy + Default + PartialOrd + Sub<T, Output = T>,
 {
     type Output = Result<CausalTensor<T>, CausalTensorError>;
 
@@ -71,7 +71,7 @@ where
 // T + &T
 impl<T> Sub<&CausalTensor<T>> for CausalTensor<T>
 where
-    T: Copy + Default + PartialOrd + num_traits::Zero + Sub<T, Output = T>,
+    T: Copy + Default + PartialOrd + Sub<T, Output = T>,
 {
     type Output = Result<CausalTensor<T>, CausalTensorError>;
 
@@ -83,7 +83,7 @@ where
 // &T + T
 impl<T> Sub<CausalTensor<T>> for &CausalTensor<T>
 where
-    T: Copy + Default + PartialOrd + num_traits::Zero + Sub<T, Output = T>,
+    T: Copy + Default + PartialOrd + Sub<T, Output = T>,
 {
     type Output = Result<CausalTensor<T>, CausalTensorError>;
 
@@ -94,7 +94,7 @@ where
 
 impl<T> Sub for CausalTensor<T>
 where
-    T: Copy + Default + PartialOrd + num_traits::Zero + Sub<T, Output = T>,
+    T: Copy + Default + PartialOrd + Sub<T, Output = T>,
 {
     type Output = Result<CausalTensor<T>, CausalTensorError>;
 
@@ -108,7 +108,7 @@ where
 //
 impl<T> Mul for &CausalTensor<T>
 where
-    T: Copy + Default + PartialOrd + num_traits::Zero + Mul<T, Output = T>,
+    T: Copy + Default + PartialOrd + Mul<T, Output = T>,
 {
     type Output = Result<CausalTensor<T>, CausalTensorError>;
 
@@ -120,7 +120,7 @@ where
 // T + &T
 impl<T> Mul<&CausalTensor<T>> for CausalTensor<T>
 where
-    T: Copy + Default + PartialOrd + num_traits::Zero + Mul<T, Output = T>,
+    T: Copy + Default + PartialOrd + Mul<T, Output = T>,
 {
     type Output = Result<CausalTensor<T>, CausalTensorError>;
 
@@ -132,7 +132,7 @@ where
 // &T + T
 impl<T> Mul<CausalTensor<T>> for &CausalTensor<T>
 where
-    T: Copy + Default + PartialOrd + num_traits::Zero + Mul<T, Output = T>,
+    T: Copy + Default + PartialOrd + Mul<T, Output = T>,
 {
     type Output = Result<CausalTensor<T>, CausalTensorError>;
 
@@ -143,7 +143,7 @@ where
 
 impl<T> Mul for CausalTensor<T>
 where
-    T: Copy + Default + PartialOrd + num_traits::Zero + Mul<T, Output = T>,
+    T: Copy + Default + PartialOrd + Mul<T, Output = T>,
 {
     type Output = Result<CausalTensor<T>, CausalTensorError>;
 
@@ -157,7 +157,7 @@ where
 //
 impl<T> Div for &CausalTensor<T>
 where
-    T: Copy + Default + PartialOrd + num_traits::Zero + Div<T, Output = T>,
+    T: Copy + Default + PartialOrd + Zero + Div<T, Output = T>,
 {
     type Output = Result<CausalTensor<T>, CausalTensorError>;
 
@@ -175,7 +175,7 @@ where
 // T + &T
 impl<T> Div<&CausalTensor<T>> for CausalTensor<T>
 where
-    T: Copy + Default + PartialOrd + num_traits::Zero + Div<T, Output = T>,
+    T: Copy + Default + PartialOrd + Zero + Div<T, Output = T>,
 {
     type Output = Result<CausalTensor<T>, CausalTensorError>;
 
@@ -187,7 +187,7 @@ where
 // &T + T
 impl<T> Div<CausalTensor<T>> for &CausalTensor<T>
 where
-    T: Copy + Default + PartialOrd + num_traits::Zero + Div<T, Output = T>,
+    T: Copy + Default + PartialOrd + Zero + Div<T, Output = T>,
 {
     type Output = Result<CausalTensor<T>, CausalTensorError>;
 
@@ -198,7 +198,7 @@ where
 
 impl<T> Div for CausalTensor<T>
 where
-    T: Copy + Default + PartialOrd + num_traits::Zero + Div<T, Output = T>,
+    T: Copy + Default + PartialOrd + Zero + Div<T, Output = T>,
 {
     type Output = Result<CausalTensor<T>, CausalTensorError>;
 
