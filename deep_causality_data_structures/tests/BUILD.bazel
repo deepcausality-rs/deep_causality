@@ -45,7 +45,6 @@ rust_test_suite(
     ],
 )
 
-
 rust_test_suite(
     name = "window_type_safe_tests",
     srcs = glob([

@@ -118,11 +118,7 @@ where
         writeln!(f, "Aggregate Synergistic Info: {:?}", self.synergistic_info)?;
         writeln!(f, "Aggregate Mutual Info: {:?}", self.mutual_info)?;
         writeln!(f, "Information Leak: {}", self.info_leak)?;
-        writeln!(
-            f,
-            "
---- State-Dependent Maps ---"
-        )?;
+        writeln!(f, "--- State-Dependent Maps ---")?;
         writeln!(
             f,
             "Causal Redundant States: {:?}",

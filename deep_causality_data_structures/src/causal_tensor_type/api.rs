@@ -11,6 +11,21 @@ where
 {
     // --- Getters ---
 
+    /// Returns a reference to the underlying `Vec<T>` that stores the tensor's data.
+    ///
+    /// The data is stored in row-major order.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use deep_causality_data_structures::CausalTensor;
+    ///
+    /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
+    /// assert_eq!(tensor.data(), &vec![1, 2, 3, 4, 5, 6]);
+    ///
+    /// let empty_tensor: CausalTensor<f64> = CausalTensor::new(vec![], vec![0]).unwrap();
+    /// assert!(empty_tensor.data().is_empty());
+    /// ```
     pub fn data(&self) -> &Vec<T> {
         &self.data
     }
@@ -29,10 +44,6 @@ where
     /// ```
     pub fn shape(&self) -> &[usize] {
         &self.shape
-    }
-
-    pub fn strides(&self) -> &Vec<usize> {
-        &self.strides
     }
 
     // --- Inspectors ---
