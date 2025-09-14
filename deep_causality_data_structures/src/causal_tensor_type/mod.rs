@@ -25,15 +25,22 @@ impl<T> CausalTensor<T>
 where
     T: Copy + Default + PartialOrd,
 {
-    /// Creates a new tensor from a flat vector and a logical shape.
+    /// Creates a new `CausalTensor` from a flat `Vec<T>` and a `shape` vector.
     ///
-    /// This is the primary, safe constructor. It takes ownership of the data and
-    /// calculates the correct strides internally, guaranteeing that the tensor
-    /// is always in a valid state.
+    /// This constructor validates that the total number of elements implied by the `shape`
+    /// matches the length of the provided `data` vector. It also internally calculates
+    /// the strides for efficient memory access based on the given `shape`.
     ///
-    /// # Errors
-    /// Returns `CausalTensorError::ShapeMismatch` if the number of elements in `data`
-    /// does not match the product of the dimensions in `shape`.
+    /// # Arguments
+    ///
+    /// * `data` - A `Vec<T>` containing the tensor's elements in row-major order.
+    /// * `shape` - A `Vec<usize>` defining the dimensions of the tensor.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// * `Ok(Self)` if the `data` length matches the `shape`'s total elements.
+    /// * `Err(CausalTensorError::ShapeMismatch)` if the lengths do not match.
     pub fn new(data: Vec<T>, shape: Vec<usize>) -> Result<Self, CausalTensorError> {
         let expected_len: usize = shape.iter().product();
         if data.len() != expected_len {

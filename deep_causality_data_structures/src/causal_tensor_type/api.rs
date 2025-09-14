@@ -9,6 +9,32 @@ impl<T> CausalTensor<T>
 where
     T: Copy + Default + PartialOrd,
 {
+    // --- Getters ---
+
+    pub fn data(&self) -> &Vec<T> {
+        &self.data
+    }
+
+    /// Returns a slice representing the shape (dimensions) of the tensor.
+    ///
+    /// The elements of the slice indicate the size of each dimension.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use deep_causality_data_structures::CausalTensor;
+    ///
+    /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
+    /// assert_eq!(tensor.shape(), &[2, 3]);
+    /// ```
+    pub fn shape(&self) -> &[usize] {
+        &self.shape
+    }
+
+    pub fn strides(&self) -> &Vec<usize> {
+        &self.strides
+    }
+
     // --- Inspectors ---
 
     /// Returns `true` if the tensor contains no elements.
@@ -26,22 +52,6 @@ where
     /// ```
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
-    }
-
-    /// Returns a slice representing the shape (dimensions) of the tensor.
-    ///
-    /// The elements of the slice indicate the size of each dimension.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use deep_causality_data_structures::CausalTensor;
-    ///
-    /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
-    /// assert_eq!(tensor.shape(), &[2, 3]);
-    /// ```
-    pub fn shape(&self) -> &[usize] {
-        &self.shape
     }
 
     /// Returns the number of dimensions (rank) of the tensor.

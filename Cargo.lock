@@ -210,6 +210,7 @@ name = "deep_causality"
 version = "0.11.1"
 dependencies = [
  "criterion",
+ "deep_causality_algorithms",
  "deep_causality_data_structures",
  "deep_causality_macros",
  "deep_causality_uncertain",
