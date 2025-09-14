@@ -1,6 +1,21 @@
 load("@rules_rust//rust:defs.bzl", "rust_test_suite")
 
 rust_test_suite(
+    name = "causal_tensor_type",
+    srcs = glob([
+        "causal_tensor_type/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_data_structures",
+    ],
+)
+
+rust_test_suite(
     name = "grid_type_tests",
     srcs = glob([
         "grid_type/*_tests.rs",
@@ -14,6 +29,22 @@ rust_test_suite(
         "//deep_causality_data_structures",
     ],
 )
+
+rust_test_suite(
+    name = "num_types",
+    srcs = glob([
+        "num_types/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_data_structures",
+    ],
+)
+
 
 rust_test_suite(
     name = "window_type_safe_tests",
