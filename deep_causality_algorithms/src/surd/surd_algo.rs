@@ -306,7 +306,6 @@ struct PerTargetStateResults {
     non_causal_sy_states: HashMap<Vec<usize>, CausalTensor<f64>>,
 }
 
-/// Performs the SURD analysis for a single target state `t`.
 #[allow(clippy::too_many_arguments)]
 fn analyze_single_target_state(
     t: usize,
@@ -316,7 +315,7 @@ fn analyze_single_target_state(
     p_s: &CausalTensor<f64>,
     p: &CausalTensor<f64>,
     agent_indices: &[usize],
-    k: usize,
+    _k: usize, // k is now implicitly handled by the length of combs
 ) -> Result<PerTargetStateResults, CausalTensorError> {
     let mut i_r = HashMap::new();
     let mut i_s = HashMap::new();
@@ -342,14 +341,14 @@ fn analyze_single_target_state(
             let max_prev_level = i1_sorted
                 .iter()
                 .zip(&lens)
-                .filter(|&(_, &len)| len == l)
+                .filter(|(_, &len)| len == l)
                 .map(|(&val, _)| val)
                 .fold(f64::NEG_INFINITY, f64::max);
             if max_prev_level.is_finite() {
                 i1_sorted
                     .iter_mut()
                     .zip(&lens)
-                    .filter(|&(_, &len)| len == l + 1)
+                    .filter(|(_, &len)| len == l + 1)
                     .for_each(|(val, _)| {
                         if *val < max_prev_level {
                             *val = 0.0;
@@ -364,84 +363,47 @@ fn analyze_single_target_state(
     let final_lab: Vec<Vec<usize>> = new_sorted_indices.iter().map(|&i| lab[i].clone()).collect();
     let di_values = surd_utils::diff(&final_i1);
 
-    let num_zeros = di_values.iter().filter(|&&d| d.abs() < 1e-14).count();
+    // Find the index of the last single-variable term with a significant info contribution.
+    let last_single_var_idx = final_lab
+        .iter()
+        .rposition(|lab| lab.len() == 1)
+        .unwrap_or(usize::MAX);
+
     let mut red_vars: Vec<usize> = (1..=n_vars).collect();
 
     for (i, ll) in final_lab.iter().enumerate() {
         let info = di_values[i] * p_s.as_slice()[t];
 
-        if k < n_vars {
-            // --- Partial Decomposition Logic ---
-            if info.abs() < 1e-14 {
-                continue;
-            }
-            let prev_ll: &[usize] = if i == 0 { &[] } else { &final_lab[i - 1] };
-            let (causal_slice, non_causal_slice) =
-                calculate_state_slice(p, ll, prev_ll, t, agent_indices, n_vars)?;
+        if info.abs() < 1e-14 {
+            continue;
+        }
 
-            match ll.len() {
-                1 => {
-                    causal_un_states.insert(ll.clone(), causal_slice);
-                    non_causal_un_states.insert(ll.clone(), non_causal_slice);
-                    *i_s.entry(ll.clone()).or_insert(0.0) += info; // Use i_s for unique in partial
-                }
-                _ => {
-                    causal_sy_states.insert(ll.clone(), causal_slice);
-                    non_causal_sy_states.insert(ll.clone(), non_causal_slice);
-                    *i_s.entry(ll.clone()).or_insert(0.0) += info;
-                }
-            }
-        } else {
-            // --- Full Decomposition Logic ---
-            let n_vars_plus_zeros = n_vars + num_zeros;
+        let prev_ll: &[usize] = if i == 0 { &[] } else { &final_lab[i - 1] };
+        let (causal_slice, non_causal_slice) =
+            calculate_state_slice(p, ll, prev_ll, t, agent_indices, n_vars)?;
 
-            // Redundant states
-            if ll.len() == 1 && i == n_vars_plus_zeros.saturating_sub(2) {
-                let prev_ll = final_lab
-                    .get(i.saturating_sub(1))
-                    .ok_or(CausalTensorError::InvalidOperation)?;
-                let (causal_slice, non_causal_slice) =
-                    calculate_state_slice(p, ll, prev_ll, t, agent_indices, n_vars)?;
+        if ll.len() > 1 {
+            // Synergistic states
+            causal_sy_states.insert(ll.clone(), causal_slice);
+            non_causal_sy_states.insert(ll.clone(), non_causal_slice);
+            *i_s.entry(ll.clone()).or_insert(0.0) += info;
+        } else if ll.len() == 1 {
+            // Unique vs Redundant states
+            if i == last_single_var_idx {
+                // This is the highest-ordered single-variable term, so it's UNIQUE.
+                causal_un_states.insert(ll.clone(), causal_slice);
+                non_causal_un_states.insert(ll.clone(), non_causal_slice);
+            } else {
+                // Lower-ordered single-variable terms contribute to REDUNDANCY.
+                // The original logic only stored one redundant slice, so we'll model that.
+                // This will capture the state map for the main redundant term.
                 causal_rd_states.insert(red_vars.clone(), causal_slice);
                 non_causal_rd_states.insert(red_vars.clone(), non_causal_slice);
             }
 
-            // Unique states
-            if ll.len() == 1 && i == n_vars_plus_zeros.saturating_sub(1) {
-                let prev_ll = final_lab
-                    .get(i.saturating_sub(1))
-                    .ok_or(CausalTensorError::InvalidOperation)?;
-                let base_is_zero = di_values
-                    .get(i.saturating_sub(1))
-                    .map_or(true, |&d| d.abs() < 1e-10);
-
-                let (causal_slice, non_causal_slice) = if base_is_zero {
-                    calculate_state_slice(p, ll, &[], t, agent_indices, n_vars)?
-                } else {
-                    calculate_state_slice(p, ll, prev_ll, t, agent_indices, n_vars)?
-                };
-                causal_un_states.insert(ll.clone(), causal_slice);
-                non_causal_un_states.insert(ll.clone(), non_causal_slice);
-            }
-
-            // Synergistic states
-            if ll.len() > 1 && i >= n_vars_plus_zeros {
-                let prev_ll = final_lab
-                    .get(i.saturating_sub(1))
-                    .ok_or(CausalTensorError::InvalidOperation)?;
-                let (causal_slice, non_causal_slice) =
-                    calculate_state_slice(p, ll, prev_ll, t, agent_indices, n_vars)?;
-                causal_sy_states.insert(ll.clone(), causal_slice);
-                non_causal_sy_states.insert(ll.clone(), non_causal_slice);
-            }
-
-            // This part is for aggregate I_R and I_S, and should be separate from state-dependent maps
-            if ll.len() == 1 {
-                *i_r.entry(red_vars.clone()).or_insert(0.0) += info;
-                red_vars.retain(|&v| v != ll[0]);
-            } else {
-                *i_s.entry(ll.clone()).or_insert(0.0) += info;
-            }
+            // Aggregate calculation for I_R
+            *i_r.entry(red_vars.clone()).or_insert(0.0) += info;
+            red_vars.retain(|&v| v != ll[0]);
         }
     }
 

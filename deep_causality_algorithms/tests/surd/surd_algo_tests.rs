@@ -85,9 +85,9 @@ fn test_partial_decomposition() {
     assert!(!has_order_3_synergy);
 }
 
-/// Test with a deterministic XOR-like distribution.
+/// Test with a deterministic XOR-like distribution to check synergistic states.
 #[test]
-fn test_deterministic_case_zero_leak() {
+fn test_deterministic_synergy_case() {
     let data = vec![
         0.25, 0.0, // T=0, S1=0
         0.0, 0.25, // T=0, S1=1
@@ -100,13 +100,56 @@ fn test_deterministic_case_zero_leak() {
     // Info leak should be 0
     assert!(result.info_leak().abs() < TOLERANCE);
 
-    // In a pure XOR, redundancy is 0.
-    let redundancy = result.redundant_info().get(&vec![1, 2]).unwrap();
+    // In a pure XOR, redundancy is 0. If the key is not found, it's implicitly zero.
+    let redundancy = result
+        .redundant_info()
+        .get(&vec![1, 2])
+        .copied()
+        .unwrap_or(0.0);
     assert!(redundancy.abs() < TOLERANCE);
 
     // All information is synergistic. I(T;S1,S2) = 1 bit.
     let synergy = result.synergistic_info().get(&vec![1, 2]).unwrap();
     assert!((synergy - 1.0).abs() < TOLERANCE);
+
+    // Check that the synergistic states map is populated and others are empty.
+    assert!(!result.causal_synergistic_states().is_empty());
+    assert!(result.causal_unique_states().is_empty());
+    assert!(result.causal_redundant_states().is_empty());
+}
+
+/// Test with a distribution where T=S1 to check unique states.
+#[test]
+fn test_unique_information_case() {
+    // T = S1, S2 is independent noise.
+    // P(T=0, S1=0, S2=0) = 0.25, P(T=0, S1=0, S2=1) = 0.25 -> P(T=0,S1=0)=0.5
+    // P(T=1, S1=1, S2=0) = 0.25, P(T=1, S1=1, S2=1) = 0.25 -> P(T=1,S1=1)=0.5
+    // All other joint probabilities are 0.
+    let data = vec![
+        0.25, 0.25, // T=0, S1=0
+        0.0, 0.0, // T=0, S1=1
+        0.0, 0.0, // T=1, S1=0
+        0.25, 0.25, // T=1, S1=1
+    ];
+    let p_raw = CausalTensor::new(data, vec![2, 2, 2]).unwrap();
+    let result = surd_states(&p_raw, MaxOrder::Max).unwrap();
+
+    // Info leak should be 0, as T is fully determined by S1.
+    assert!(result.info_leak().abs() < TOLERANCE);
+
+    // Check MI: I(T;S1) = 1 bit, I(T;S2) = 0 bits, I(T;S1,S2) = 1 bit.
+    let mi_s1 = result.mutual_info().get(&vec![1]).unwrap();
+    let mi_s2 = result.mutual_info().get(&vec![2]).unwrap();
+    assert!((mi_s1 - 1.0).abs() < TOLERANCE);
+    assert!(mi_s2.abs() < TOLERANCE);
+
+    // Check that the unique states map for S1 is populated.
+    assert!(!result.causal_unique_states().is_empty());
+    assert!(result.causal_unique_states().contains_key(&vec![1]));
+
+    // Check that other state maps are empty.
+    assert!(result.causal_synergistic_states().is_empty());
+    assert!(result.causal_redundant_states().is_empty());
 }
 
 /// Test with a distribution where T, S1, S2 are all independent.
