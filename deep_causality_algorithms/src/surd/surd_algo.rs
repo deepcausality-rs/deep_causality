@@ -5,7 +5,7 @@
 use crate::surd::surd_utils;
 use crate::surd::{MaxOrder, SurdResult};
 use deep_causality_data_structures::{
-    CausalTensor, CausalTensorCollectionExt, CausalTensorError, CausalTensorLogMathExt,
+    CausalTensor, CausalTensorCollectionExt, CausalTensorError, CausalTensorMathExt,
 };
 use std::collections::HashMap;
 

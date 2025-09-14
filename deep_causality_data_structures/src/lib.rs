@@ -12,7 +12,7 @@ pub mod window_type;
 pub use crate::causal_tensor_type::CausalTensor;
 pub use causal_tensor_type::errors::causal_tensor_error::CausalTensorError;
 pub use causal_tensor_type::extensions::ext_collection::CausalTensorCollectionExt;
-pub use causal_tensor_type::extensions::ext_math::CausalTensorLogMathExt;
+pub use causal_tensor_type::extensions::ext_math::CausalTensorMathExt;
 // Grid type
 pub use crate::grid_type::ArrayGrid;
 pub use crate::grid_type::ArrayType;

@@ -9,6 +9,7 @@ use std::error::Error;
 pub enum CausalTensorError {
     ShapeMismatch,
     DimensionMismatch,
+    DivisionByZero,
     AxisOutOfBounds,
     EmptyTensor,
     InvalidOperation,
@@ -39,6 +40,9 @@ impl std::fmt::Display for CausalTensorError {
             }
             CausalTensorError::InvalidParameter(s) => {
                 write!(f, "CausalTensorError: Invalid parameter: {}", s)
+            }
+            CausalTensorError::DivisionByZero => {
+                write!(f, "CausalTensorError: Division by zero error")
             }
         }
     }

@@ -9,8 +9,12 @@ mod causal_tensor_constructor_tests;
 mod causal_tensor_display_tests;
 #[cfg(test)]
 mod causal_tensor_error_tests;
+#[cfg(test)]
 mod causal_tensor_ext_collection_tests;
-mod causal_tensor_ext_math_log_tests;
+#[cfg(test)]
+mod causal_tensor_ext_math_f32_tests;
+#[cfg(test)]
+mod causal_tensor_ext_math_f64_tests;
 #[cfg(test)]
 mod causal_tensor_getters_tests;
 #[cfg(test)]

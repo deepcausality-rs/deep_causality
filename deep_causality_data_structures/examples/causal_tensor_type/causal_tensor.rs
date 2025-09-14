@@ -4,7 +4,7 @@
  */
 
 use deep_causality_data_structures::{
-    CausalTensor, CausalTensorCollectionExt, CausalTensorLogMathExt,
+    CausalTensor, CausalTensorCollectionExt, CausalTensorMathExt,
 };
 
 pub fn main() {

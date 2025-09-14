@@ -20,6 +20,11 @@ fn test_error_display_and_debug() {
             "DimensionMismatch",
         ),
         (
+            CausalTensorError::DivisionByZero,
+            "CausalTensorError: Division by zero error",
+            "DivisionByZero",
+        ),
+        (
             CausalTensorError::AxisOutOfBounds,
             "CausalTensorError: Axis out of bounds error",
             "AxisOutOfBounds",
@@ -59,6 +64,10 @@ fn test_error_equality() {
     );
     assert_ne!(
         CausalTensorError::DimensionMismatch,
+        CausalTensorError::DivisionByZero
+    );
+    assert_ne!(
+        CausalTensorError::DimensionMismatch,
         CausalTensorError::AxisOutOfBounds
     );
     assert_ne!(
@@ -80,6 +89,7 @@ fn test_error_trait_source() {
     let errors = [
         CausalTensorError::ShapeMismatch,
         CausalTensorError::DimensionMismatch,
+        CausalTensorError::DivisionByZero,
         CausalTensorError::AxisOutOfBounds,
         CausalTensorError::EmptyTensor,
         CausalTensorError::InvalidOperation,
