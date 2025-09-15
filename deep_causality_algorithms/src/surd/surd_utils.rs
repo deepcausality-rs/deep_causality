@@ -105,26 +105,29 @@ pub fn entropy_nvars(p: &CausalTensor<f64>, axes: &[usize]) -> Result<f64, Causa
         .filter(|ax| !axes.contains(ax))
         .collect();
 
-    // If we are not summing over any axes, it means we want the entropy of the
-    // full joint distribution `p`. We must use `p` directly instead of calling
-    // `sum_axes(&[])`, which would incorrectly perform a full reduction.
-    let marginal = if axes_to_sum_out.is_empty() {
-        // PERF: We clone the tensor here to maintain a consistent type for `marginal`.
-        // A more advanced implementation might use references (`Cow`) to avoid this.
-        p.clone()
+    if axes_to_sum_out.is_empty() {
+        // Optimization: If not summing over any axes, calculate entropy directly on the slice
+        // to avoid cloning the entire tensor.
+        let entropy = p.as_slice().iter().fold(0.0, |acc, &prob| {
+            if prob > 0.0 {
+                acc - prob * prob.log2()
+            } else {
+                acc
+            }
+        });
+        Ok(entropy)
     } else {
-        p.sum_axes(&axes_to_sum_out)?
-    };
-
-    let entropy = marginal.as_slice().iter().fold(0.0, |acc, &prob| {
-        if prob > 0.0 {
-            acc - prob * prob.log2()
-        } else {
-            acc
-        }
-    });
-
-    Ok(entropy)
+        // Calculate the marginal distribution by summing out the specified axes.
+        let marginal = p.sum_axes(&axes_to_sum_out)?;
+        let entropy = marginal.as_slice().iter().fold(0.0, |acc, &prob| {
+            if prob > 0.0 {
+                acc - prob * prob.log2()
+            } else {
+                acc
+            }
+        });
+        Ok(entropy)
+    }
 }
 
 /// Calculates the conditional Shannon entropy H(X | Y).

@@ -157,8 +157,18 @@ pub fn surd_states(
         // p(j | T) = p(T, j) / p(T)
         // let p_a_s = (&p_as / &p_s)?;
         let p_a_s = p_as.safe_div(&p_s)?;
-        // surd_log2 returns 0.0 for inputs as 0.0 thus preventing NaN and Inf.
-        let log_diff = (p_s_a.surd_log2()? - p_s.surd_log2()?)?;
+
+        // Reshape p_s to allow for correct broadcasting against p_s_a.
+        // The shape of p_s is [n_target_states], and p_s_a is [n_target_states, ...source_dims].
+        // We need to make p_s compatible for element-wise ops, so we give it trailing `1`s.
+        let mut broadcast_shape = vec![1; p_s_a.num_dim()];
+        if !broadcast_shape.is_empty() {
+            broadcast_shape[0] = p_s.shape()[0];
+        }
+        let p_s_reshaped = p_s.reshape(&broadcast_shape)?;
+
+        // surd_log2 returns 0.0 for inputs of 0.0, preventing NaN and Inf.
+        let log_diff = (p_s_a.surd_log2()? - p_s_reshaped.surd_log2()?)?;
         let specific_info_map = (&p_a_s * &log_diff)?;
 
         // Sum over agent dimensions corresponding to j_comb.
@@ -466,7 +476,7 @@ fn calculate_state_slice(
         surd_utils::set_difference(&source_axes, &current_vars_mapped_for_marginal);
     let p_i = p.sum_axes(&[0])?.sum_axes(&axes_to_sum_for_pi)?;
 
-    let p_target_given_i = (p_ti / p_i)?;
+    let p_target_given_i = p_ti.safe_div(&p_i)?;
 
     let p_target_given_j = if prev_vars.is_empty() {
         p.sum_axes(agent_indices)?
@@ -482,7 +492,7 @@ fn calculate_state_slice(
             surd_utils::set_difference(&source_axes, &prev_vars_mapped_for_marginal);
         let p_j = p.sum_axes(&[0])?.sum_axes(&axes_to_sum_for_pj)?;
 
-        (p_tj / p_j)?
+        p_tj.safe_div(&p_j)?
     };
 
     let log_ratio = (p_target_given_i / p_target_given_j)?.log2()?;
