@@ -45,5 +45,5 @@ criterion = { version = "0.7", features = ["html_reports"] }
 rand = { version = "0.9", features = ["small_rng"] }
 
 [[bench]]
-name = "bench_dcl_data_structures"
+name = "bench_data_structures"
 harness = false
