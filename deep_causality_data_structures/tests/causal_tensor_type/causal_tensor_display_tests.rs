@@ -65,12 +65,9 @@ fn test_display_complex_shape() {
     let data = (0..24).collect::<Vec<_>>();
     let tensor = CausalTensor::new(data, vec![2, 3, 4]).unwrap();
     let display_str = tensor.to_string();
-    // Strides for shape [2, 3, 4] are [12, 4, 1]
-    let data_str =
-        "[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]";
-    let expected = format!(
-        "CausalTensor {{ data: {}, shape: [2, 3, 4], strides: [12, 4, 1] }}",
-        data_str
-    );
-    assert_eq!(display_str, expected);
+
+    // The new Display impl truncates data longer than 10 items.
+    let expected_str = "CausalTensor { data: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, ...], shape: [2, 3, 4], strides: [12, 4, 1] }";
+
+    assert_eq!(display_str, expected_str);
 }
