@@ -4,9 +4,10 @@
  */
 use crate::surd::surd_utils;
 use crate::surd::{MaxOrder, SurdResult};
-use deep_causality_data_structures::{
-    CausalTensor, CausalTensorCollectionExt, CausalTensorError, CausalTensorMathExt,
-};
+use deep_causality_data_structures::CausalTensor;
+use deep_causality_data_structures::CausalTensorCollectionExt;
+use deep_causality_data_structures::CausalTensorError;
+use deep_causality_data_structures::CausalTensorMathExt;
 use std::collections::HashMap;
 
 #[cfg(feature = "parallel")]
