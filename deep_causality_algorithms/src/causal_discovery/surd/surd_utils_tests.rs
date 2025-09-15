@@ -6,7 +6,7 @@
 // surd_utils are private and thus cannot be tested in the test folder.
 // While a lot gets tested through the public API, these tests cover some rare corner cases.
 
-use crate::surd::surd_utils;
+use crate::causal_discovery::surd::surd_utils;
 
 #[test]
 fn test_diff_empty() {
