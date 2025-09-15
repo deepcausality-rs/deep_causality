@@ -5,17 +5,10 @@
 use crate::CausalTensorError;
 
 mod api;
-mod display;
-pub mod error;
-mod macros;
-mod op_arithmetic_scalar;
-mod op_reduction;
-mod op_shape;
-mod op_tensor;
-mod utils;
+pub mod errors;
+pub mod extensions;
+mod operations;
 
-/// A multi-dimensional array designed for causal computation.
-///
 /// `CausalTensor` is a low-dimensional (up to ~5-25 dimensions recommended) tensor
 /// backed by a single, contiguous `Vec<T>`. It uses a stride-based memory layout
 /// for efficient, cache-friendly access and manipulation.
@@ -30,15 +23,22 @@ impl<T> CausalTensor<T>
 where
     T: Copy + Default + PartialOrd,
 {
-    /// Creates a new tensor from a flat vector and a logical shape.
+    /// Creates a new `CausalTensor` from a flat `Vec<T>` and a `shape` vector.
     ///
-    /// This is the primary, safe constructor. It takes ownership of the data and
-    /// calculates the correct strides internally, guaranteeing that the tensor
-    /// is always in a valid state.
+    /// This constructor validates that the total number of elements implied by the `shape`
+    /// matches the length of the provided `data` vector. It also internally calculates
+    /// the strides for efficient memory access based on the given `shape`.
     ///
-    /// # Errors
-    /// Returns `CausalTensorError::ShapeMismatch` if the number of elements in `data`
-    /// does not match the product of the dimensions in `shape`.
+    /// # Arguments
+    ///
+    /// * `data` - A `Vec<T>` containing the tensor's elements in row-major order.
+    /// * `shape` - A `Vec<usize>` defining the dimensions of the tensor.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// * `Ok(Self)` if the `data` length matches the `shape`'s total elements.
+    /// * `Err(CausalTensorError::ShapeMismatch)` if the lengths do not match.
     pub fn new(data: Vec<T>, shape: Vec<usize>) -> Result<Self, CausalTensorError> {
         let expected_len: usize = shape.iter().product();
         if data.len() != expected_len {
@@ -61,5 +61,26 @@ where
             shape,
             strides,
         })
+    }
+}
+
+impl<T: std::fmt::Display> std::fmt::Display for CausalTensor<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "CausalTensor {{ data: [")?;
+        let max_items = 10;
+        for (i, item) in self.data.iter().take(max_items).enumerate() {
+            if i > 0 {
+                write!(f, ", ")?;
+            }
+            write!(f, "{}", item)?;
+        }
+        if self.data.len() > max_items {
+            write!(f, ", ...")?;
+        }
+        write!(
+            f,
+            "], shape: {:?}, strides: {:?} }}",
+            self.shape, self.strides
+        )
     }
 }

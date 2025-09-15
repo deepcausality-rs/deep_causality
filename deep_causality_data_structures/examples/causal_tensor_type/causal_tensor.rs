@@ -3,7 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_data_structures::CausalTensor;
+use deep_causality_data_structures::{
+    CausalTensor, CausalTensorCollectionExt, CausalTensorMathExt,
+};
 
 pub fn main() {
     println!("\n--- CausalTensor Example ---");
@@ -88,6 +90,55 @@ pub fn main() {
     let result = (&t1 + &t2).unwrap();
     println!("   Result (t1 + t2): {}", result);
     assert_eq!(result.as_slice(), &[11, 22, 33, 14, 25, 36]);
+
+    // 8. Logarithmic Functions. Import CausalTensorLogMathExt
+    // Tensors with floating-point data support element-wise logarithmic operations.
+    println!("\n8. Logarithmic Functions on a 2x3 tensor:");
+    let tensor_f64_log = CausalTensor::new(
+        vec![1.0, std::f64::consts::E, 10.0, 100.0, 4.0, 16.0],
+        vec![2, 3],
+    )
+    .unwrap();
+    println!("   Original Tensor: {}", tensor_f64_log);
+
+    let log_nat_tensor = tensor_f64_log.log_nat().unwrap();
+    println!("   Natural Log (ln): {}", log_nat_tensor);
+
+    let log2_tensor = tensor_f64_log.log2().unwrap();
+    println!("   Base 2 Log (log2): {}", log2_tensor);
+
+    let log10_tensor = tensor_f64_log.log10().unwrap();
+    println!("   Base 10 Log (log10): {}", log10_tensor);
+
+    // 9. Stacking Tensors. Import CausalTensorCollectionExt
+    // A slice of tensors can be stacked along a new axis.
+    println!("\n9. Stacking two 2-element vectors:");
+    let tensor_a = CausalTensor::<i32>::new(vec![1, 2], vec![2]).unwrap();
+    println!("   Tensor A: {}", tensor_a);
+    let tensor_b = CausalTensor::<i32>::new(vec![3, 4], vec![2]).unwrap();
+    println!("   Tensor B: {}", tensor_b);
+
+    let tensors_to_stack = [tensor_a, tensor_b];
+
+    // Stack along axis 0
+    let stacked_axis_0 = tensors_to_stack.stack(0).unwrap();
+    println!(
+        "   Stacked along axis 0 (new shape {{:?}}): {{}} {:?} {:?}",
+        stacked_axis_0.shape(),
+        stacked_axis_0
+    );
+    assert_eq!(stacked_axis_0.shape(), &[2, 2]);
+    assert_eq!(stacked_axis_0.as_slice(), &[1, 2, 3, 4]);
+
+    // Stack along axis 1
+    let stacked_axis_1 = tensors_to_stack.stack(1).unwrap();
+    println!(
+        "   Stacked along axis 1 (new shape {{:?}}): {{}} {:?} {:?}",
+        stacked_axis_1.shape(),
+        stacked_axis_1
+    );
+    assert_eq!(stacked_axis_1.shape(), &[2, 2]);
+    assert_eq!(stacked_axis_1.as_slice(), &[1, 3, 2, 4]);
 
     println!("\nAll examples executed successfully!");
 }

@@ -18,6 +18,9 @@ categories = ["data-structures", "science", "aerospace", "finance", "mathematics
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
+[dependencies.deep_causality_algorithms]
+path = "../deep_causality_algorithms"
+version = "0.1"
 
 [dependencies.deep_causality_data_structures]
 path = "../deep_causality_data_structures"

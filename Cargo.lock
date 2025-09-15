@@ -210,10 +210,19 @@ name = "deep_causality"
 version = "0.11.1"
 dependencies = [
  "criterion",
+ "deep_causality_algorithms",
  "deep_causality_data_structures",
  "deep_causality_macros",
  "deep_causality_uncertain",
  "ultragraph",
+]
+
+[[package]]
+name = "deep_causality_algorithms"
+version = "0.1.0"
+dependencies = [
+ "deep_causality_data_structures",
+ "rayon",
 ]
 
 [[package]]

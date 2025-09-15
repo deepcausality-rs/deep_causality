@@ -1,0 +1,31 @@
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library")
+
+rust_library(
+    name = "deep_causality_algorithms",
+    srcs = glob([
+        "src/**",
+    ]),
+    crate_root = "src/lib.rs",
+    tags = [
+        "data_structures",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Internal crates
+        "//deep_causality_data_structures",
+    ],
+)
+
+rust_doc(
+    name = "doc",
+    crate = ":deep_causality_algorithms",
+    tags = ["doc"],
+    visibility = ["//visibility:public"],
+)
+
+rust_doc_test(
+    name = "doc_test",
+    crate = ":deep_causality_algorithms",
+    tags = ["doc-test"],
+    visibility = ["//visibility:public"],
+)

@@ -51,7 +51,8 @@ implementation is significantly faster than the vector-based version.
 
 1) Zero dependencies.
 2) Zero cost abstraction.
-3) Zero unsafe by default. Unsafe implementations are available through the `unsafe` feature flag.
+3) Zero unsafe.
+4) Zero macros.
 
 # Performance:
 

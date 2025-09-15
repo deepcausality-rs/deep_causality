@@ -9,6 +9,43 @@ impl<T> CausalTensor<T>
 where
     T: Copy + Default + PartialOrd,
 {
+    // --- Getters ---
+
+    /// Returns a reference to the underlying `Vec<T>` that stores the tensor's data.
+    ///
+    /// The data is stored in row-major order.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use deep_causality_data_structures::CausalTensor;
+    ///
+    /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
+    /// assert_eq!(tensor.data(), &vec![1, 2, 3, 4, 5, 6]);
+    ///
+    /// let empty_tensor: CausalTensor<f64> = CausalTensor::new(vec![], vec![0]).unwrap();
+    /// assert!(empty_tensor.data().is_empty());
+    /// ```
+    pub fn data(&self) -> &Vec<T> {
+        &self.data
+    }
+
+    /// Returns a slice representing the shape (dimensions) of the tensor.
+    ///
+    /// The elements of the slice indicate the size of each dimension.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use deep_causality_data_structures::CausalTensor;
+    ///
+    /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
+    /// assert_eq!(tensor.shape(), &[2, 3]);
+    /// ```
+    pub fn shape(&self) -> &[usize] {
+        &self.shape
+    }
+
     // --- Inspectors ---
 
     /// Returns `true` if the tensor contains no elements.
@@ -26,22 +63,6 @@ where
     /// ```
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
-    }
-
-    /// Returns a slice representing the shape (dimensions) of the tensor.
-    ///
-    /// The elements of the slice indicate the size of each dimension.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use deep_causality_data_structures::CausalTensor;
-    ///
-    /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
-    /// assert_eq!(tensor.shape(), &[2, 3]);
-    /// ```
-    pub fn shape(&self) -> &[usize] {
-        &self.shape
     }
 
     /// Returns the number of dimensions (rank) of the tensor.
@@ -369,5 +390,52 @@ where
     /// ```
     pub fn arg_sort(&self) -> Result<Vec<usize>, CausalTensorError> {
         self.arg_sort_impl()
+    }
+
+    // --- View Operations ---
+
+    /// Creates a new tensor representing a slice of the original tensor along a specified axis.
+    ///
+    /// This operation extracts a sub-tensor where one dimension has been fixed to a specific index.
+    /// The rank (number of dimensions) of the resulting tensor will be one less than the original.
+    ///
+    /// **Note:** This is a data-copying operation. It creates a new `CausalTensor` with its
+    /// own allocated data. A future optimization could provide a zero-copy, lifetime-bound view.
+    ///
+    /// # Arguments
+    /// * `axis` - The axis to slice along (0-indexed).
+    /// * `index` - The index at which to slice the axis.
+    ///
+    /// # Returns
+    /// A `Result` containing the new, sliced `CausalTensor`, or a `CausalTensorError` if
+    /// the axis or index is out of bounds.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use deep_causality_data_structures::CausalTensor;
+    ///
+    /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
+    /// // Tensor:
+    /// // [[1, 2, 3],
+    /// //  [4, 5, 6]]
+    ///
+    /// // Slice along axis 0 at index 0 (first row)
+    /// let slice_row0 = tensor.slice(0, 0).unwrap();
+    /// assert_eq!(slice_row0.shape(), &[3]);
+    /// assert_eq!(slice_row0.as_slice(), &[1, 2, 3]);
+    ///
+    /// // Slice along axis 0 at index 1 (second row)
+    /// let slice_row1 = tensor.slice(0, 1).unwrap();
+    /// assert_eq!(slice_row1.shape(), &[3]);
+    /// assert_eq!(slice_row1.as_slice(), &[4, 5, 6]);
+    ///
+    /// // Slice along axis 1 at index 1 (second column)
+    /// let slice_col1 = tensor.slice(1, 1).unwrap();
+    /// assert_eq!(slice_col1.shape(), &[2]);
+    /// assert_eq!(slice_col1.as_slice(), &[2, 5]);
+    /// ```
+    pub fn slice(&self, axis: usize, index: usize) -> Result<CausalTensor<T>, CausalTensorError> {
+        self.slice_impl(axis, index)
     }
 }
