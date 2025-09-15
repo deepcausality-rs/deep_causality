@@ -123,27 +123,32 @@ where
             f,
             "Causal Redundant States: {:?}",
             self.causal_redundant_states.keys().collect::<Vec<_>>()
-        )?;
+        )
+        .expect("Failed to write causal_redundant_states to formatter");
         writeln!(
             f,
             "Causal Unique States: {:?}",
             self.causal_unique_states.keys().collect::<Vec<_>>()
-        )?;
+        )
+        .expect("Failed to write causal_unique_states to formatter");
         writeln!(
             f,
             "Causal Synergistic States: {:?}",
             self.causal_synergistic_states.keys().collect::<Vec<_>>()
-        )?;
+        )
+        .expect("Failed to write causal_synergistic_states to formatter");
         writeln!(
             f,
             "Non-Causal Redundant States: {:?}",
             self.non_causal_redundant_states.keys().collect::<Vec<_>>()
-        )?;
+        )
+        .expect("Failed to write non_causal_unique_states to formatter");
         writeln!(
             f,
             "Non-Causal Unique States: {:?}",
             self.non_causal_unique_states.keys().collect::<Vec<_>>()
-        )?;
+        )
+        .expect("Failed to write non_causal_unique_states to formatter");
         writeln!(
             f,
             "Non-Causal Synergistic States: {:?}",
