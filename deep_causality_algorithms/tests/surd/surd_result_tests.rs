@@ -202,3 +202,27 @@ fn test_debug_implementation() {
     assert!(debug_str.contains("non_causal_synergistic_states: {[6]: CausalTensor"));
     assert!(debug_str.contains("data: [6]"));
 }
+
+#[test]
+fn test_display_error_propagation() {
+    use std::fmt::{self, Write};
+
+    // A mock writer that is designed to fail on any write operation.
+    struct FailingWriter;
+
+    impl Write for FailingWriter {
+        fn write_str(&mut self, _s: &str) -> fmt::Result {
+            Err(fmt::Error)
+        }
+    }
+
+    let surd_result = create_test_surd_result();
+    let mut failing_writer = FailingWriter;
+
+    // Attempt to write the SurdResult to the failing writer.
+    // The `?` operator in the Display impl should propagate the error.
+    let result = write!(&mut failing_writer, "{}", surd_result);
+
+    // Assert that the write operation failed.
+    assert!(result.is_err());
+}
