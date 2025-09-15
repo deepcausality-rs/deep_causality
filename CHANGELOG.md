@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.11.1...deep_causality-v0.11.2) - 2025-09-15
+
+### Added
+
+- *(deep_causality_data_structures)* Added identity types. Removed num_traits dependency.
+
+### Other
+
+- *(deep_causality_algorithms)* Added test coverage for SURD algo.
+
 ## [0.11.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.11.0...deep_causality-v0.11.1) - 2025-09-11
 
 ### Added

@@ -21,6 +21,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_data_structures-v0.9.4...deep_causality_data_structures-v0.10.0) - 2025-09-15
+
+### Added
+
+- *(deep_causality_data_structures)* Improved docstrings.
+- *(deep_causality_data_structures)* Improved Display implementation of CausalTensor
+- *(deep_causality_data_structures)* Improved Display implementation of CausalTensor
+- *(deep_causality_data_structures)* Removed all remaining unsafe code.
+- *(deep_causality_data_structures)* Removed num_types macro
+- *(deep_causality_data_structures)* Updated Bazel config for tests
+- *(deep_causality_data_structures)* Added identity types. Removed num_traits dependency.
+- *(deep_causality_data_structures)* rewrote Tensor arithmetic, updated utils, and added
+- *(deep_causality_data_structures)* Updated CausalTensor and added new type extensions for CausalTensor.
+
+### Fixed
+
+- *(deep_causality_data_structures)* Removed all macros.
+- *(deep_causality_data_structures)* removed default impl of is_one in trait One.
+
+### Other
+
+- *(deep_causality_data_structures)* Improved test coverage.
+- *(deep_causality_data_structures)* Improved test coverage.
+- *(deep_causality_data_structures)* Improved test coverage.
+- Code formating and linting across the repo. Moved old and empty dcl crate into yanked folder.
+- *(deep_causality_data_structures)* Fix lint error.
+- *(deep_causality_data_structures)* Increased test coverage for CausalTensorMathExt
+- *(deep_causality_algorithms)* Added test coverage for SURD algo.
+
 ## [0.9.1](https://github.com/deepcausality-rs/deep_causality/compare/dcl_data_structures-v0.9.0...dcl_data_structures-v0.9.1) - 2025-07-08
 
 ### Other
