@@ -9,8 +9,6 @@ pub mod errors;
 pub mod extensions;
 mod operations;
 
-/// A multi-dimensional array designed for causal computation.
-///
 /// `CausalTensor` is a low-dimensional (up to ~5-25 dimensions recommended) tensor
 /// backed by a single, contiguous `Vec<T>`. It uses a stride-based memory layout
 /// for efficient, cache-friendly access and manipulation.
