@@ -3,7 +3,53 @@ load("@rules_rust//rust:defs.bzl", "rust_test_suite")
 rust_test_suite(
     name = "causal_tensor_type",
     srcs = glob([
+        "causal_tensor_type/error*_tests.rs",
         "causal_tensor_type/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_data_structures",
+    ],
+)
+
+rust_test_suite(
+    name = "causal_tensor_type_errors",
+    srcs = glob([
+        "causal_tensor_type/errors/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_data_structures",
+    ],
+)
+
+rust_test_suite(
+    name = "causal_tensor_type_ops",
+    srcs = glob([
+        "causal_tensor_type/operations/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_data_structures",
+    ],
+)
+
+rust_test_suite(
+    name = "causal_tensor_type_ext",
+    srcs = glob([
+        "causal_tensor_type/extensions/*_tests.rs",
     ]),
     tags = [
         "unit-test",
