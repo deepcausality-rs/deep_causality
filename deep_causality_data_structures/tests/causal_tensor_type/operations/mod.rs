@@ -3,10 +3,12 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 #[cfg(test)]
-mod causal_tensor_reduction_tests;
+mod op_scalar_tensor_tests;
 #[cfg(test)]
-mod causal_tensor_scalar_tests;
+mod op_tensor_reduction_tests;
 #[cfg(test)]
-mod causal_tensor_shape_tests;
+mod op_tensor_scalar_tests;
 #[cfg(test)]
-mod causal_tensor_tensor_ops_tests;
+mod op_tensor_shape_tests;
+#[cfg(test)]
+mod op_tensor_tensor_tests;
