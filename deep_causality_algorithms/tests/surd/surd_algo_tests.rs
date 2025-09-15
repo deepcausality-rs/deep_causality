@@ -152,6 +152,24 @@ fn test_unique_information_case() {
     assert!(result.causal_redundant_states().is_empty());
 }
 
+/// Test with a distribution where S1 and S2 provide redundant info about T.
+#[test]
+fn test_redundant_information_case() {
+    // T = S1, and S2 is a noisy copy of S1.
+    // This creates redundancy between S1 and S2.
+    let data = vec![
+        0.45, 0.05, 0.0, 0.0, // T=0, S1=0, S2=0/1 and T=0, S1=1, S2=0/1
+        0.0, 0.0, 0.05, 0.45, // T=1, S1=0, S2=0/1 and T=1, S1=1, S2=0/1
+    ];
+    let p_raw = CausalTensor::new(data, vec![2, 2, 2]).unwrap();
+    let result = surd_states(&p_raw, MaxOrder::Max).unwrap();
+
+    // Check that the redundant states map is now populated.
+    assert!(!result.causal_redundant_states().is_empty());
+    // Also check that non-causal redundant states are populated, covering the final loop.
+    assert!(!result.non_causal_redundant_states().is_empty());
+}
+
 /// Test with a distribution where T, S1, S2 are all independent.
 #[test]
 fn test_independent_case_full_leak() {

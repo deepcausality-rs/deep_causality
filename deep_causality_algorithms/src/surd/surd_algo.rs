@@ -382,25 +382,27 @@ fn analyze_single_target_state(
         let (causal_slice, non_causal_slice) =
             calculate_state_slice(p, ll, prev_ll, t, agent_indices, n_vars)?;
 
-        if ll.len() > 1 {
-            // Synergistic states
+        if ll.len() > 1
+        // Synergistic states
+        {
             causal_sy_states.insert(ll.clone(), causal_slice);
             non_causal_sy_states.insert(ll.clone(), non_causal_slice);
             *i_s.entry(ll.clone()).or_insert(0.0) += info;
         } else if ll.len() == 1 {
             // Unique vs Redundant states
-            if i == last_single_var_idx {
-                // This is the highest-ordered single-variable term, so it's UNIQUE.
+            if i == last_single_var_idx
+            // This is the highest-ordered single-variable term, so it's UNIQUE.
+            {
                 causal_un_states.insert(ll.clone(), causal_slice);
                 non_causal_un_states.insert(ll.clone(), non_causal_slice);
-            } else {
-                // Lower-ordered single-variable terms contribute to REDUNDANCY.
-                // The original logic only stored one redundant slice, so we'll model that.
-                // This will capture the state map for the main redundant term.
+            } else
+            // Lower-ordered single-variable terms contribute to REDUNDANCY.
+            // The original logic only stored one redundant slice, so we'll model that.
+            // This will capture the state map for the main redundant term.
+            {
                 causal_rd_states.insert(red_vars.clone(), causal_slice);
                 non_causal_rd_states.insert(red_vars.clone(), non_causal_slice);
             }
-
             // Aggregate calculation for I_R
             *i_r.entry(red_vars.clone()).or_insert(0.0) += info;
             red_vars.retain(|&v| v != ll[0]);
