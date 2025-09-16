@@ -12,7 +12,7 @@ exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE
 
 
 [dependencies]
-deep_causality_rand = { path = "../deep_causality_rand", features = ["os-random"] }
+deep_causality_rand = { path = "../deep_causality_rand"}
 
 [[example]]
 name = "gps_navigation"

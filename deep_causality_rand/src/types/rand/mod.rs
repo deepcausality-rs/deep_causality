@@ -4,4 +4,4 @@
  */
 #[cfg(feature = "os-random")]
 pub mod os_random_rng;
-pub mod siphash13_rng;
+pub mod std_rng;

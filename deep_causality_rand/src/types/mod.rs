@@ -10,4 +10,4 @@ pub(crate) mod rand;
 #[cfg(feature = "os-random")]
 pub use rand::os_random_rng::OsRandomRng;
 
-pub use rand::siphash13_rng::SipHash13Rng;
+pub use rand::std_rng::Xoshiro256;

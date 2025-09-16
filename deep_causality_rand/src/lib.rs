@@ -33,10 +33,37 @@ pub use crate::types::misc::iter::Iter;
 pub use crate::types::misc::map::Map;
 
 #[cfg(not(feature = "os-random"))]
-use crate::types::SipHash13Rng;
+use crate::types::Xoshiro256;
+#[cfg(not(feature = "os-random"))]
+use std::cell::RefCell;
 
 #[cfg(feature = "os-random")]
 use crate::types::rand::os_random_rng::OsRandomRng;
+
+#[cfg(not(feature = "os-random"))]
+thread_local! {
+    static THREAD_RNG: RefCell<Xoshiro256> = RefCell::new(Xoshiro256::new());
+}
+
+#[cfg(not(feature = "os-random"))]
+pub struct ThreadRng;
+
+#[cfg(not(feature = "os-random"))]
+impl RngCore for ThreadRng {
+    fn next_u32(&mut self) -> u32 {
+        THREAD_RNG.with(|rng| rng.borrow_mut().next_u32())
+    }
+    fn next_u64(&mut self) -> u64 {
+        THREAD_RNG.with(|rng| rng.borrow_mut().next_u64())
+    }
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        THREAD_RNG.with(|rng| rng.borrow_mut().fill_bytes(dest))
+    }
+}
+
+#[cfg(not(feature = "os-random"))]
+impl Rng for ThreadRng {}
+
 
 /// Returns a new random number generator.
 ///
@@ -49,6 +76,6 @@ pub fn rng() -> impl Rng {
     }
     #[cfg(not(feature = "os-random"))]
     {
-        SipHash13Rng::new()
+        ThreadRng
     }
 }
