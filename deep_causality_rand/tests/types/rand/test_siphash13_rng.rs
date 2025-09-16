@@ -3,9 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_rand::{Rng, RngCore};
-// Import Rng and RngCore
 use deep_causality_rand::types::SipHash13Rng;
+use deep_causality_rand::{Rng, RngCore};
 
 #[test]
 fn test_siphash13_rng_next_u64_produces_non_zero() {

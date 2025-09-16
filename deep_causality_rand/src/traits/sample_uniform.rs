@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Rng, SampleBorrow};
+use crate::{Rng, SampleBorrow, UniformDistributionError};
 
 pub trait SampleUniform: Sized {
     type Sampler: UniformSampler<X = Self>;
@@ -12,12 +12,12 @@ pub trait SampleUniform: Sized {
 pub trait UniformSampler: Sized {
     type X;
 
-    fn new<B1, B2>(low: B1, high: B2) -> Result<Self, crate::errors::rng_error::RngError>
+    fn new<B1, B2>(low: B1, high: B2) -> Result<Self, UniformDistributionError>
     where
         B1: SampleBorrow<Self::X> + Sized,
         B2: SampleBorrow<Self::X> + Sized;
 
-    fn new_inclusive<B1, B2>(low: B1, high: B2) -> Result<Self, crate::errors::rng_error::RngError>
+    fn new_inclusive<B1, B2>(low: B1, high: B2) -> Result<Self, UniformDistributionError>
     where
         B1: SampleBorrow<Self::X> + Sized,
         B2: SampleBorrow<Self::X> + Sized;
@@ -28,7 +28,7 @@ pub trait UniformSampler: Sized {
         low: B1,
         high: B2,
         rng: &mut R,
-    ) -> Result<Self::X, crate::errors::rng_error::RngError>
+    ) -> Result<Self::X, UniformDistributionError>
     where
         B1: SampleBorrow<Self::X> + Sized,
         B2: SampleBorrow<Self::X> + Sized,
@@ -41,7 +41,7 @@ pub trait UniformSampler: Sized {
         low: B1,
         high: B2,
         rng: &mut R,
-    ) -> Result<Self::X, crate::errors::rng_error::RngError>
+    ) -> Result<Self::X, UniformDistributionError>
     where
         B1: SampleBorrow<Self::X> + Sized,
         B2: SampleBorrow<Self::X> + Sized,

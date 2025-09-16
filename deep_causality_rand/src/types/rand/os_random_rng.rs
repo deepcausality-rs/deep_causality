@@ -12,7 +12,7 @@ use crate::traits::rng::Rng; // Import RngCore
 #[cfg(feature = "os-random")]
 use crate::traits::rng_core::RngCore;
 #[cfg(all(feature = "os-random", not(target_arch = "wasm32")))]
-use getrandom::{fill_uninit, u32 as getrandom_u32, u64 as getrandom_u64};
+use getrandom::{u32 as getrandom_u32, u64 as getrandom_u64};
 // Removed Error as GetRandomError
 
 #[cfg(feature = "os-random")]
@@ -57,23 +57,8 @@ impl RngCore for OsRandomRng {
         }
     }
 
-    fn fill_bytes(&mut self, dst: &mut [u8]) {
-        #[cfg(all(feature = "os-random", not(target_arch = "wasm32")))]
-        {
-            // Safety: The `fill_uninit` function guarantees that `dst` will be fully initialized.
-            // We are casting `&mut [u8]` to `&mut [MaybeUninit<u8>]` which is safe because
-            // `MaybeUninit<u8>` has the same layout as `u8`.
-            if let Err(e) =
-                fill_uninit(unsafe { &mut *(dst as *mut [_] as *mut [std::mem::MaybeUninit<u8>]) })
-            {
-                panic!("Failed to fill bytes from OS: {}", e);
-            }
-        }
-        #[cfg(any(not(feature = "os-random"), target_arch = "wasm32"))]
-        {
-            panic!("OsRandomRng::fill_bytes called without os-random feature or on wasm32 target");
-        }
-    }
+    // Removed fill_bytes implementation b/c its marked and safe and instead
+    // rely on default RngCore implementation
 }
 
 #[cfg(feature = "os-random")]

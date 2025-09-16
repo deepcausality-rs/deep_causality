@@ -4,7 +4,8 @@
  */
 
 pub mod distr;
-mod rand;
+pub(crate) mod misc;
+pub(crate) mod rand;
 
 #[cfg(feature = "os-random")]
 pub use rand::os_random_rng::OsRandomRng;

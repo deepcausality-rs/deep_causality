@@ -4,6 +4,7 @@
  */
 
 use crate::{ComputationNode, LogicalOperator, NodeId, SampledValue, Sampler, UncertainError};
+use deep_causality_rand::Rng;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -31,7 +32,7 @@ impl Sampler for SequentialSampler {
     fn sample(&self, root_node: &Arc<ComputationNode>) -> Result<SampledValue, UncertainError> {
         let mut context: HashMap<NodeId, SampledValue> = HashMap::new(); // Changed key type
         // Call the internal method.
-        self.evaluate_node(root_node, &mut context, &mut rand::rng()) // Changed rng
+        self.evaluate_node(root_node, &mut context, &mut deep_causality_rand::rng()) // Changed rng
     }
 }
 
@@ -63,7 +64,7 @@ impl SequentialSampler {
         &self,
         node: &ComputationNode,
         context: &mut HashMap<NodeId, SampledValue>, // Changed key type
-        rng: &mut impl rand::Rng,
+        rng: &mut impl Rng,
     ) -> Result<SampledValue, UncertainError> {
         // Extract node_id from the current node
         let current_node_id = match node {

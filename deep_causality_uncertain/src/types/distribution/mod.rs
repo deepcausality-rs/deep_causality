@@ -3,7 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{BernoulliParams, NormalDistributionParams, UncertainError, UniformDistributionParams};
-use rand_distr::{Bernoulli, Distribution, Normal, Uniform};
+use deep_causality_rand::{Bernoulli, Normal, Uniform};
+use deep_causality_rand::{Distribution, Rng};
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -24,7 +25,7 @@ impl DistributionEnum<f64> {
     /// # Returns
     ///
     /// A `Result` containing the sampled `f64` value or an `UncertainError` if the distribution type is unsupported.
-    pub fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> Result<f64, UncertainError> {
+    pub fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Result<f64, UncertainError> {
         match self {
             DistributionEnum::Point(v) => Ok(*v),
             DistributionEnum::Normal(params) => {
@@ -52,7 +53,7 @@ impl DistributionEnum<bool> {
     /// # Returns
     ///
     /// A `Result` containing the sampled `bool` value or an `UncertainError` if the distribution type is unsupported.
-    pub fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> Result<bool, UncertainError> {
+    pub fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Result<bool, UncertainError> {
         match self {
             DistributionEnum::Point(v) => Ok(*v),
             DistributionEnum::Bernoulli(params) => {

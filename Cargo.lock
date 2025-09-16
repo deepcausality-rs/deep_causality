@@ -242,6 +242,7 @@ name = "deep_causality_rand"
 version = "0.1.0"
 dependencies = [
  "getrandom",
+ "num-traits",
 ]
 
 [[package]]
@@ -249,7 +250,7 @@ name = "deep_causality_uncertain"
 version = "0.2.1"
 dependencies = [
  "criterion",
- "rand",
+ "deep_causality_rand",
  "rand_distr",
  "rusty-fork",
 ]

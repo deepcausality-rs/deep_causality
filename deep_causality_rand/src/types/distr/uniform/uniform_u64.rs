@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::RngError;
 use crate::{Rng, SampleBorrow, SampleRange, SampleUniform, UniformSampler};
+use crate::{RngError, UniformDistributionError};
 
 use std::ops::Range;
 
@@ -16,7 +16,7 @@ pub struct UniformU64 {
 impl UniformSampler for UniformU64 {
     type X = u64;
 
-    fn new<B1, B2>(low: B1, high: B2) -> Result<Self, RngError>
+    fn new<B1, B2>(low: B1, high: B2) -> Result<Self, UniformDistributionError>
     where
         B1: SampleBorrow<Self::X> + Sized,
         B2: SampleBorrow<Self::X> + Sized,
@@ -24,9 +24,7 @@ impl UniformSampler for UniformU64 {
         let low_val = *low.borrow();
         let high_val = *high.borrow();
         if low_val >= high_val {
-            return Err(RngError::OsRandomGenerator(
-                "Invalid range: low must be less than high".to_string(),
-            ));
+            return Err(UniformDistributionError::InvalidRange);
         }
         Ok(UniformU64 {
             low: low_val,
@@ -34,7 +32,7 @@ impl UniformSampler for UniformU64 {
         })
     }
 
-    fn new_inclusive<B1, B2>(low: B1, high: B2) -> Result<Self, RngError>
+    fn new_inclusive<B1, B2>(low: B1, high: B2) -> Result<Self, UniformDistributionError>
     where
         B1: SampleBorrow<Self::X> + Sized,
         B2: SampleBorrow<Self::X> + Sized,
@@ -42,9 +40,7 @@ impl UniformSampler for UniformU64 {
         let low_val = *low.borrow();
         let high_val = *high.borrow();
         if low_val >= high_val {
-            return Err(RngError::OsRandomGenerator(
-                "Invalid range: low must be less than high".to_string(),
-            ));
+            return Err(UniformDistributionError::InvalidRange);
         }
         Ok(UniformU64 {
             low: low_val,
@@ -62,10 +58,7 @@ impl SampleUniform for u64 {
 }
 
 impl SampleRange<u64> for Range<u64> {
-    fn sample_single<R: Rng + ?Sized>(
-        self,
-        rng: &mut R,
-    ) -> Result<u64, crate::errors::rng_error::RngError> {
+    fn sample_single<R: Rng + ?Sized>(self, rng: &mut R) -> Result<u64, RngError> {
         // Changed RngCore to Rng
         let uniform = UniformU64::new(self.start, self.end)?;
         Ok(uniform.sample(rng))

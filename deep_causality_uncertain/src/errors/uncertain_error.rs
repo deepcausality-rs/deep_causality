@@ -3,6 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_rand::{
+    BernoulliDistributionError, NormalDistributionError, UniformDistributionError,
+};
 use std::fmt;
 
 /// Custom error type for the `deep_causality_uncertain` crate.
@@ -48,20 +51,20 @@ impl fmt::Display for UncertainError {
 impl std::error::Error for UncertainError {}
 
 // Allow easy conversion from rand_distr errors into our custom error type.
-impl From<rand_distr::uniform::Error> for UncertainError {
-    fn from(err: rand_distr::uniform::Error) -> Self {
+impl From<UniformDistributionError> for UncertainError {
+    fn from(err: UniformDistributionError) -> Self {
         UncertainError::UniformDistributionError(err.to_string())
     }
 }
 
-impl From<rand_distr::BernoulliError> for UncertainError {
-    fn from(err: rand_distr::BernoulliError) -> Self {
+impl From<BernoulliDistributionError> for UncertainError {
+    fn from(err: BernoulliDistributionError) -> Self {
         UncertainError::BernoulliDistributionError(err.to_string())
     }
 }
 
-impl From<rand_distr::NormalError> for UncertainError {
-    fn from(err: rand_distr::NormalError) -> Self {
+impl From<NormalDistributionError> for UncertainError {
+    fn from(err: NormalDistributionError) -> Self {
         UncertainError::NormalDistributionError(err.to_string())
     }
 }

@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::RngError;
 use crate::{Rng, SampleBorrow, SampleRange, SampleUniform, UniformSampler};
+use crate::{RngError, UniformDistributionError};
 use std::ops::Range;
 
 pub struct UniformU32 {
@@ -15,7 +15,7 @@ pub struct UniformU32 {
 impl UniformSampler for UniformU32 {
     type X = u32;
 
-    fn new<B1, B2>(low: B1, high: B2) -> Result<Self, RngError>
+    fn new<B1, B2>(low: B1, high: B2) -> Result<Self, UniformDistributionError>
     where
         B1: SampleBorrow<Self::X> + Sized,
         B2: SampleBorrow<Self::X> + Sized,
@@ -23,9 +23,7 @@ impl UniformSampler for UniformU32 {
         let low_val = *low.borrow();
         let high_val = *high.borrow();
         if low_val >= high_val {
-            return Err(RngError::OsRandomGenerator(
-                "Invalid range: low must be less than high".to_string(),
-            ));
+            return Err(UniformDistributionError::InvalidRange);
         }
         Ok(UniformU32 {
             low: low_val,
@@ -33,7 +31,7 @@ impl UniformSampler for UniformU32 {
         })
     }
 
-    fn new_inclusive<B1, B2>(low: B1, high: B2) -> Result<Self, RngError>
+    fn new_inclusive<B1, B2>(low: B1, high: B2) -> Result<Self, UniformDistributionError>
     where
         B1: SampleBorrow<Self::X> + Sized,
         B2: SampleBorrow<Self::X> + Sized,
@@ -41,9 +39,7 @@ impl UniformSampler for UniformU32 {
         let low_val = *low.borrow();
         let high_val = *high.borrow();
         if low_val >= high_val {
-            return Err(RngError::OsRandomGenerator(
-                "Invalid range: low must be less than high".to_string(),
-            ));
+            return Err(UniformDistributionError::InvalidRange);
         }
         Ok(UniformU32 {
             low: low_val,
