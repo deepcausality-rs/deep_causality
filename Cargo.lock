@@ -238,6 +238,13 @@ name = "deep_causality_macros"
 version = "0.8.4"
 
 [[package]]
+name = "deep_causality_rand"
+version = "0.1.0"
+dependencies = [
+ "getrandom",
+]
+
+[[package]]
 name = "deep_causality_uncertain"
 version = "0.2.1"
 dependencies = [

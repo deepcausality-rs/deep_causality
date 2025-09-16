@@ -42,18 +42,18 @@
 
 ## Phase 3.1: Setup
 ## Phase 3.1: Setup
-- [ ] T001 Create `deep_causality_rand` Crate Structure: Create a new Rust library crate named `deep_causality_rand` in the monorepo. Create the initial `src/lib.rs` and the specified subfolders (`src/errors`, `src/traits`, `src/types`).
+- [x] T001 Create `deep_causality_rand` Crate Structure: Create a new Rust library crate named `deep_causality_rand` in the monorepo. Create the initial `src/lib.rs` and the specified subfolders (`src/errors`, `src/traits`, `src/types`).
     - Reference: `plan.md` (Summary, Technical Context, Project Structure), `data-model.md` (deep_causality_rand Crate)
-- [ ] T002 Configure `Cargo.toml` for `deep_causality_rand`: Set up basic crate metadata, ensure no external dependencies beyond `std`.
+- [x] T002 Configure `Cargo.toml` for `deep_causality_rand`: Set up basic crate metadata, ensure no external dependencies beyond `std`.
     - Reference: `plan.md` (Constraints), `data-model.md` (deep_causality_rand Crate)
     - File: `deep_causality_rand/Cargo.toml`
-- [ ] T003 Configure Linting and Formatting: Ensure `clippy` and `rustfmt` are configured for the new crate.
+- [x] T003 Configure Linting and Formatting: Ensure `clippy` and `rustfmt` are configured for the new crate.
     - Reference: Project conventions (from `GEMINI.md` context)
     - File: `deep_causality_rand/.clippy.toml`, `deep_causality_rand/rustfmt.toml` (or similar project-level configs)
-- [ ] T004 Define `RngError` Enum: Define the `RngError` enum in `deep_causality_rand/src/errors` with variants as needed, including `OsRandomGenerator(String)`.
+- [x] T004 Define `RngError` Enum: Define the `RngError` enum in `deep_causality_rand/src/errors` with variants as needed, including `OsRandomGenerator(String)`.
     - Reference: `002-replace-rng-currently/002-replace-rng-currently.md` (FR-012), `data-model.md` (RngError Enum)
     - File: `deep_causality_rand/src/errors/mod.rs`
-- [ ] T005 Develop Unit Tests for `RngError`: Write comprehensive unit tests for the `RngError` enum, ensuring all variants and error conversions are tested.
+- [x] T005 Develop Unit Tests for `RngError`: Write comprehensive unit tests for the `RngError` enum, ensuring all variants and error conversions are tested.
     - Reference: `002-replace-rng-currently/002-replace-rng-currently.md` (FR-013)
     - File: `deep_causality_rand/tests/errors/test_rng_error.rs`
 
