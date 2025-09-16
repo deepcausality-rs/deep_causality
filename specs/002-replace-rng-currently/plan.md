@@ -1,14 +1,14 @@
-# Implementation Plan: [FEATURE]
+# Implementation Plan: Replace RNG
 
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+**Branch**: `002-replace-rng-currently` | **Date**: Tuesday, September 16, 2025 | **Spec**: /Users/marvin/RustroverProjects/dcl/deep_causality/specs/002-replace-rng/002-replace-rng.md
+**Input**: Feature specification from `/Users/marvin/RustroverProjects/dcl/deep_causality/specs/002-replace-rng/002-replace-rng.md`
 
 ## Execution Flow (/plan command scope)
 ```
-1. Load feature spec from Input path
+1. Load feature spec from Input path (DONE)
    → If not found: ERROR "No feature spec at {path}"
-2. Fill Technical Context (scan for NEEDS CLARIFICATION)
+2. Fill Technical Context (scan for NEEDS CLARIFICATION) (DONE)
    → Detect Project Type from context (web=frontend+backend, mobile=app+api)
    → Set Structure Decision based on project type
 3. Evaluate Constitution Check section below
@@ -21,7 +21,7 @@
 6. Re-evaluate Constitution Check section
    → If new violations: Refactor design, return to Phase 1
    → Update Progress Tracking: Post-Design Constitution Check
-7. Plan Phase 2 → Describe task generation approach (DO NOT create tasks.md)
+7. Plan Phase 2 → Describe task generation approach (DO NOT create tasks.md) (DONE)
 8. STOP - Ready for /tasks command
 ```
 
@@ -30,51 +30,51 @@
 - Phase 3-4: Implementation execution (manual or via tools)
 
 ## Summary
-[Extract from feature spec: primary requirement + technical approach from research]
+Replace the `rand` crate in `deep_causality_uncertain` with a new internal crate `deep_causality_rand`. This new crate will provide random number generation with zero external dependencies (only `std`), zero unsafe code, and zero macros. It will use `SipHash13` by default and offer an `os-random` feature flag for OS-backed randomness via `getrandom`. The `Rng` trait and its dependencies will be moved into `deep_causality_rand`.
 
 ## Technical Context
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [single/web/mobile - determines source structure]  
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Language/Version**: Rust 1.75+
+**Primary Dependencies**: `std` library, `getrandom` (conditional via feature flag)
+**Storage**: N/A
+**Testing**: `cargo test` (with 100% coverage goal)
+**Target Platform**: Cross-platform (Rust's default targets)
+**Project Type**: Library
+**Performance Goals**: No specific performance goals or benchmarks.
+**Constraints**: Zero external dependencies (except `std`), zero unsafe code, zero macros.
+**Scale/Scope**: Internal library for `deep_causality_uncertain`.
 
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
 **Simplicity**:
-- Projects: [#] (max 3 - e.g., api, cli, tests)
-- Using framework directly? (no wrapper classes)
-- Single data model? (no DTOs unless serialization differs)
-- Avoiding patterns? (no Repository/UoW without proven need)
+- Projects: 1 (deep_causality_rand)
+- Using framework directly? Yes (std lib)
+- Single data model? Yes (RNG state)
+- Avoiding patterns? Yes (no complex patterns)
 
 **Architecture**:
-- EVERY feature as library? (no direct app code)
-- Libraries listed: [name + purpose for each]
-- CLI per library: [commands with --help/--version/--format]
-- Library docs: llms.txt format planned?
+- EVERY feature as library? Yes
+- Libraries listed: deep_causality_rand (RNG functionality), deep_causality_uncertain (consumes RNG)
+- CLI per library: N/A (RNG library)
+- Library docs: Standard Rust docstring documentation on all public methods.
 
 **Testing (NON-NEGOTIABLE)**:
-- RED-GREEN-Refactor cycle enforced? (test MUST fail first)
-- Git commits show tests before implementation?
-- Order: Contract→Integration→E2E→Unit strictly followed?
-- Real dependencies used? (actual DBs, not mocks)
-- Integration tests for: new libraries, contract changes, shared schemas?
-- FORBIDDEN: Implementation before test, skipping RED phase
+- RED-GREEN-Refactor cycle enforced? Yes (100% test coverage)
+- Git commits show tests before implementation? Yes (process detail)
+- Order: Contract→Integration→E2E→Unit strictly followed? Only unit testing with 100% branch coverage.
+- Real dependencies used? Yes (std, getrandom)
+- Integration tests for: new libraries, contract changes, shared schemas? Yes (deep_causality_uncertain will test deep_causality_rand)
+- FORBIDDEN: Implementation before test, skipping RED phase? Yes
 
 **Observability**:
-- Structured logging included?
-- Frontend logs → backend? (unified stream)
-- Error context sufficient?
+- Structured logging included? No logging.
+- Frontend logs → backend? N/A
+- Error context sufficient? Yes (custom `RngError` enum with variants and unit tests)
 
 **Versioning**:
-- Version number assigned? (MAJOR.MINOR.BUILD)
-- BUILD increments on every change?
-- Breaking changes handled? (parallel tests, migration plan)
+- Version number assigned? Yes (project-level)
+- BUILD increments on every change? Yes (project-level)
+- Breaking changes handled? Yes (relevant for Rng trait changes)
 
 ## Project Structure
 
@@ -93,7 +93,6 @@ specs/[###-feature]/
 ```
 # Option 1: Single project (DEFAULT)
 src/
-src/
 ├── errors/
 ├── traits/
 └── types/
@@ -102,24 +101,9 @@ tests/
 ├── errors/
 ├── traits/
 └── types/
-
-# Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
 ```
 
-**Structure Decision**: [DEFAULT to Option 1 unless Technical Context indicates web/mobile app]
+**Structure Decision**: Option 1: Single project (DEFAULT)
 
 ## Phase 0: Outline & Research
 1. **Extract unknowns from Technical Context** above:
@@ -201,6 +185,27 @@ frontend/
 **Phase 4**: Implementation (execute tasks.md following constitutional principles)  
 **Phase 5**: Validation (run tests, execute quickstart.md, performance validation)
 
+## Risk Analysis
+
+### Risk 1: Quality of `SipHash13` as a PRNG
+*   **Description**: Relying on `SipHash13` (intended as a hasher) for pseudo-random number generation might lead to statistical biases or insufficient randomness for certain applications, even if it's "sufficient for general-purpose use."
+*   **Mitigation**:
+    *   **Clear Documentation**: Clearly document the statistical properties and limitations of the `SipHash13`-based PRNG, advising users on its suitability for different use cases.
+    *   **Feature Flag for Stronger RNG**: The `os-random` feature flag, enabling `getrandom`, already provides a path for users requiring cryptographically secure or higher-quality randomness. Promote its use for sensitive applications.
+
+### Risk 2: Complexity of `Rng` Trait Migration
+*   **Description**: Moving the `Rng` trait and "all its depending traits" from `@ctx/rng_traits.rs` into `deep_causality_rand` might be more complex than anticipated, especially if there are many implicit dependencies or subtle behaviors.
+*   **Mitigation**:
+    *   **Dependency Analysis**: Before migration, perform a detailed analysis of the `Rng` trait and its ecosystem to identify all directly and indirectly dependent traits and types.
+    *   **Incremental Migration**: Migrate the trait and its dependencies incrementally, ensuring that each step maintains compilation and passes existing tests (if any).
+    *   **Dedicated Unit Tests**: Develop comprehensive unit tests for the `Rng` trait and its implementations within `deep_causality_rand` to ensure correct behavior after migration.
+
+### Risk 3: Integration Issues with `deep_causality_uncertain`
+*   **Description**: The migration of `deep_causality_uncertain` to use the new `deep_causality_rand` crate might introduce integration bugs or unexpected behavior.
+*   **Mitigation**:
+    *   **Comprehensive Integration Tests**: Ensure `deep_causality_uncertain` has a robust suite of integration tests that thoroughly exercise its use of the `Rng` trait.
+    *   **Feature Flag for Old RNG (Temporary)**: Consider a temporary feature flag in `deep_causality_uncertain` to easily switch between the old `rand` crate and `deep_causality_rand` during the migration and testing phase, allowing for quick comparisons and rollbacks.
+
 ## Complexity Tracking
 *Fill ONLY if Constitution Check has violations that must be justified*
 
@@ -214,18 +219,18 @@ frontend/
 *This checklist is updated during execution flow*
 
 **Phase Status**:
-- [ ] Phase 0: Research complete (/plan command)
-- [ ] Phase 1: Design complete (/plan command)
-- [ ] Phase 2: Task planning complete (/plan command - describe approach only)
-- [ ] Phase 3: Tasks generated (/tasks command)
+- [x] Phase 0: Research complete (/plan command)
+- [x] Phase 1: Design complete (/plan command)
+- [x] Phase 2: Task planning complete (/plan command - describe approach only)
+- [x] Phase 3: Tasks generated (/tasks command)
 - [ ] Phase 4: Implementation complete
 - [ ] Phase 5: Validation passed
 
 **Gate Status**:
-- [ ] Initial Constitution Check: PASS
-- [ ] Post-Design Constitution Check: PASS
-- [ ] All NEEDS CLARIFICATION resolved
-- [ ] Complexity deviations documented
+- [x] Initial Constitution Check: PASS
+- [x] Post-Design Constitution Check: PASS
+- [x] All NEEDS CLARIFICATION resolved
+- [x] Complexity deviations documented
 
 ---
 *Based on Constitution v2.1.1 - See `/memory/constitution.md`*
