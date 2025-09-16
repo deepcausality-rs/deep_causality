@@ -78,7 +78,7 @@ rusty_fork_test! {
         let uncertain_error: UncertainError = err.into();
         match uncertain_error {
             UncertainError::UniformDistributionError(msg) => {
-                assert!(msg.contains("low > high (or equal if exclusive)"));
+                assert!(msg.contains("Empty range in uniform distribution"));
             }
             _ => panic!("Expected UniformDistributionError"),
         }
