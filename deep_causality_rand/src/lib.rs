@@ -64,7 +64,6 @@ impl RngCore for ThreadRng {
 #[cfg(not(feature = "os-random"))]
 impl Rng for ThreadRng {}
 
-
 /// Returns a new random number generator.
 ///
 /// By default, this returns a `SipHash13Rng`. If the `os-random` feature is enabled,

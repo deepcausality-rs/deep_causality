@@ -2,8 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
 use crate::{Distribution, NormalDistributionError, Rng, StandardNormal};
-use num_traits::Float;
+use deep_causality_num::Float;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Normal<F>

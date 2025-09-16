@@ -14,20 +14,25 @@ exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE
 [dependencies]
 deep_causality_rand = { path = "../deep_causality_rand"}
 
+
 [[example]]
 name = "gps_navigation"
 path = "examples/gps/gps_navigation.rs"
+
 
 [[example]]
 name = "sensor_processing"
 path = "examples/sensor/sensor_processing.rs"
 
+
 [package.metadata.docs.rs]
 all-features = true
+
 
 [dev-dependencies]
 rusty-fork = "0.3.0"
 criterion = { version = "0.7.0", features = ["html_reports"] }
+
 
 [[bench]]
 name = "uncertain_benchmarks"

@@ -1,32 +1,17 @@
 [package]
-name = "deep_causality_rand"
+name = "deep_causality_num"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.80"
 repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 license = "MIT"
-description = "Random number utils for for deep_causality crate."
+description = "Number utils for for deep_causality crate."
 documentation = "https://docs.rs/deep_causality"
 categories = ["development-tools"]
-keywords = ["random-numbers"]
+keywords = ["number-utils", "traits"]
 # Exclude all bazel files as these conflict with Bazel workspace when vendored.
 exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
 
-[dependencies.deep_causality_num]
-path = "../deep_causality_num"
-version = "0.1"
-
-
-[features]
-os-random = ["getrandom"]
-
-
-[dependencies.getrandom]
-version = "0.3"
-optional = true
-
-
-[package.metadata.docs.rs]
-all-features = true
+[dependencies]

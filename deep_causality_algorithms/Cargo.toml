@@ -15,17 +15,26 @@ categories = ["algorithms", "science", "aerospace", "finance", "mathematics"]
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
+
 [[example]]
 name = "example_surd"
 path = "examples/example_surd.rs"
+
 
 [dependencies.deep_causality_data_structures]
 path = "../deep_causality_data_structures"
 version = "0.9.5"
 
-[dependencies]
-rayon = { version = "1.10", optional = true }
+
+[dependencies.rayon]
+version = "1.10"
+optional = true
+
 
 [features]
 default = []
 parallel = ["dep:rayon"]
+
+
+[package.metadata.docs.rs]
+all-features = true
