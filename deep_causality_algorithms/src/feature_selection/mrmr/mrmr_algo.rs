@@ -17,6 +17,15 @@ use std::collections::HashSet;
 ///
 /// Missing values in the input `CausalTensor` are handled by column-mean imputation prior to feature selection.
 ///
+/// # Note
+///
+/// If multiple features have the same maximum relevance score (for the first feature) or the
+/// same maximum mRMR score (for subsequent features), the selection order is not
+/// guaranteed due to the internal use of a `HashSet`. The feature that is encountered first
+/// during iteration will be chosen. That means, different runs may return a different set
+/// of features with identical scores. When that happens, increase the num_features parameter to
+/// capture more of those features and use subsequent processing i.e. with SURD to identify confounders.
+///
 /// # Arguments
 ///
 /// * `tensor` - A mutable reference to a 2-dimensional `CausalTensor<f64>` containing the features and the target variable.
