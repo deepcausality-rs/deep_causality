@@ -29,12 +29,12 @@ fn main() {
         .iter()
         .filter(|ctx| {
             for i in 0..ctx.number_of_nodes() {
-                if let Some(node) = ctx.get_node(i) {
-                    if let ContextoidType::Datoid(data_node) = node.vertex_type() {
-                        if data_node.id() == AGE_ID && data_node.get_data() > 65.0 {
-                            return true;
-                        }
-                    }
+                if let Some(node) = ctx.get_node(i)
+                    && let ContextoidType::Datoid(data_node) = node.vertex_type()
+                    && data_node.id() == AGE_ID
+                    && data_node.get_data() > 65.0
+                {
+                    return true;
                 }
             }
             false
@@ -127,13 +127,13 @@ fn drug_effect_logic(
 
     // Search the context for the DRUG_ADMINISTERED_ID flag.
     for i in 0..context.number_of_nodes() {
-        if let Some(node) = context.get_node(i) {
-            if let ContextoidType::Datoid(data_node) = node.vertex_type() {
-                if data_node.id() == DRUG_ADMINISTERED_ID && data_node.get_data() == 1.0 {
-                    drug_administered = true;
-                    break;
-                }
-            }
+        if let Some(node) = context.get_node(i)
+            && let ContextoidType::Datoid(data_node) = node.vertex_type()
+            && data_node.id() == DRUG_ADMINISTERED_ID
+            && data_node.get_data() == 1.0
+        {
+            drug_administered = true;
+            break;
         }
     }
 
@@ -189,12 +189,11 @@ fn create_patient_population() -> Vec<BaseContext> {
 /// Helper to extract the initial blood pressure from a patient's context.
 fn get_patient_bp(context: &BaseContext) -> Option<f64> {
     for i in 0..context.number_of_nodes() {
-        if let Some(node) = context.get_node(i) {
-            if let ContextoidType::Datoid(data_node) = node.vertex_type() {
-                if data_node.id() == INITIAL_BP_ID {
-                    return Some(data_node.get_data());
-                }
-            }
+        if let Some(node) = context.get_node(i)
+            && let ContextoidType::Datoid(data_node) = node.vertex_type()
+            && data_node.id() == INITIAL_BP_ID
+        {
+            return Some(data_node.get_data());
         }
     }
     None

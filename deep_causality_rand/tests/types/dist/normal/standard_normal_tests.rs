@@ -2,8 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use deep_causality_rand::Distribution;
 use deep_causality_rand::types::distr::normal::standard_normal::StandardNormal;
-use deep_causality_rand::{Distribution, rng};
 
 macro_rules! standard_normal_tests {
     ($float_type:ty, $tolerance:expr) => {
@@ -59,11 +59,13 @@ macro_rules! standard_normal_tests {
 
 mod f32_tests {
     use super::*;
+    use deep_causality_rand::rng;
     standard_normal_tests!(f32, 0.01);
 }
 
 mod f64_tests {
     use super::*;
+    use deep_causality_rand::rng;
     standard_normal_tests!(f64, 0.01);
 }
 

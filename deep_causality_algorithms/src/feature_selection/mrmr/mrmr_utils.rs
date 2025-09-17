@@ -144,21 +144,21 @@ pub(super) fn impute_missing_values(tensor: &mut CausalTensor<f64>) {
         let mut sum = 0.0;
         let mut count = 0;
         for row_idx in 0..n_rows {
-            if let Some(val) = tensor.get(&[row_idx, col_idx]) {
-                if !val.is_nan() {
-                    sum += *val;
-                    count += 1;
-                }
+            if let Some(val) = tensor.get(&[row_idx, col_idx])
+                && !val.is_nan()
+            {
+                sum += *val;
+                count += 1;
             }
         }
 
         let mean = if count > 0 { sum / count as f64 } else { 0.0 };
 
         for row_idx in 0..n_rows {
-            if let Some(val) = tensor.get_mut(&[row_idx, col_idx]) {
-                if val.is_nan() {
-                    *val = mean;
-                }
+            if let Some(val) = tensor.get_mut(&[row_idx, col_idx])
+                && val.is_nan()
+            {
+                *val = mean;
             }
         }
     }

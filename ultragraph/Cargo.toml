@@ -4,11 +4,12 @@
 [package]
 name = "ultragraph"
 version = "0.8.5"
-edition = "2024"
-rust-version = "1.88"
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
 repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
-license = "MIT"
 description = "Hypergraph data structure."
 documentation = "https://docs.rs/ultragraph"
 homepage = "https://github.com/deepcausality/deep_causality/tree/main/ultragraph"

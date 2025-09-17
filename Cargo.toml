@@ -15,6 +15,11 @@ members = [
     "ultragraph",
 ]
 
+[workspace.package]
+edition = "2024"
+rust-version = "1.89.0"
+license = "MIT"
+
 [workspace.dependencies]
 # Empty
 

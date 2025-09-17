@@ -1,10 +1,10 @@
 [package]
 name = "deep_causality_algorithms"
 version = "0.1.0"
-edition = "2024"
-rust-version = "1.88"
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
 readme = "README.md"
-license = "MIT"
 
 description = "Computational causality algorithms and utils used in the DeepCausality project."
 documentation = "https://docs.rs/deep_causality"
