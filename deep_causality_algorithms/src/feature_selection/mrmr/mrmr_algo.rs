@@ -105,34 +105,26 @@ pub fn select_features(
     let mut all_features: HashSet<usize> = (0..n_cols).collect();
     all_features.remove(&target_col);
 
-    if num_features > all_features.len() {
-        return Err(MrmrError::NotEnoughFeatures);
-    }
-
     let mut selected_features: Vec<usize> = Vec::with_capacity(num_features);
 
     // First feature selection based on relevance only
-    let mut first_feature: Option<usize> = None;
+    let mut first_feature = 0;
     let mut max_relevance = -1.0;
 
     for &feature_idx in &all_features {
         let relevance = mrmr_utils::f_statistic(tensor, feature_idx, target_col)?;
         if relevance > max_relevance {
             max_relevance = relevance;
-            first_feature = Some(feature_idx);
+            first_feature = feature_idx;
         }
     }
 
-    let first_feature_val = first_feature.ok_or_else(|| {
-        MrmrError::CalculationError("Could not determine the first best feature.".to_string())
-    })?;
-
-    selected_features.push(first_feature_val);
-    all_features.remove(&first_feature_val);
+    selected_features.push(first_feature);
+    all_features.remove(&first_feature);
 
     // Iterative selection of remaining features
     while selected_features.len() < num_features {
-        let mut best_feature: Option<usize> = None;
+        let mut best_feature = 0;
         let mut max_mrmr_score = -1.0;
 
         for &feature_idx in &all_features {
@@ -157,19 +149,12 @@ pub fn select_features(
 
             if mrmr_score > max_mrmr_score {
                 max_mrmr_score = mrmr_score;
-                best_feature = Some(feature_idx);
+                best_feature = feature_idx;
             }
         }
 
-        let best_feature_val = best_feature.ok_or_else(|| {
-            MrmrError::CalculationError(format!(
-                "Could not determine the next best feature after selecting {} features.",
-                selected_features.len()
-            ))
-        })?;
-
-        selected_features.push(best_feature_val);
-        all_features.remove(&best_feature_val);
+        selected_features.push(best_feature);
+        all_features.remove(&best_feature);
     }
 
     Ok(selected_features)
