@@ -23,10 +23,16 @@ fn test_invalid_range_display() {
 #[test]
 fn test_rng_error_debug() {
     let error_os = RngError::OsRandomGenerator("debug error".to_string());
-    assert_eq!(format!("{:?}", error_os), r#"OsRandomGenerator("debug error")"#);
+    assert_eq!(
+        format!("{:?}", error_os),
+        r#"OsRandomGenerator("debug error")"#
+    );
 
     let error_range = RngError::InvalidRange("debug range".to_string());
-    assert_eq!(format!("{:?}", error_range), r#"InvalidRange("debug range")"#);
+    assert_eq!(
+        format!("{:?}", error_range),
+        r#"InvalidRange("debug range")"#
+    );
 }
 
 #[test]
@@ -35,7 +41,10 @@ fn test_rng_error_from_uniform_distribution_error() {
     let rng_error: RngError = uniform_error.into();
 
     let expected_msg = "Invalid range: low must be less than high";
-    assert_eq!(format!("{}", rng_error), format!("Invalid range: {}", expected_msg));
+    assert_eq!(
+        format!("{}", rng_error),
+        format!("Invalid range: {}", expected_msg)
+    );
 
     if let RngError::InvalidRange(msg) = rng_error {
         assert_eq!(msg, expected_msg);

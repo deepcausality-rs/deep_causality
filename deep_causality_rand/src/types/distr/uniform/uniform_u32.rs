@@ -7,6 +7,7 @@ use crate::{Rng, SampleBorrow, SampleRange, SampleUniform, UniformSampler};
 use crate::{RngError, UniformDistributionError};
 use std::ops::Range;
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct UniformU32 {
     low: u32,
     high: u32,

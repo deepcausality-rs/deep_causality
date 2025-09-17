@@ -13,7 +13,6 @@ pub struct StandardNormal;
 impl Distribution<f32> for StandardNormal {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f32 {
-        // TODO: use optimal 32-bit implementation
         let x: f64 = self.sample(rng);
         x as f32
     }

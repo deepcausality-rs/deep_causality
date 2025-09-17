@@ -5,4 +5,4 @@
 #[cfg(test)]
 mod test_os_random_rng;
 #[cfg(test)]
-mod test_siphash13_rng;
+mod test_std_rng;

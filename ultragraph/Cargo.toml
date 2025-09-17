@@ -4,8 +4,8 @@
 [package]
 name = "ultragraph"
 version = "0.8.5"
-edition = "2021"
-rust-version = "1.80"
+edition = "2024"
+rust-version = "1.88"
 repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 license = "MIT"

@@ -8,6 +8,7 @@ use crate::{RngError, UniformDistributionError};
 
 use std::ops::Range;
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct UniformU64 {
     low: u64,
     high: u64,

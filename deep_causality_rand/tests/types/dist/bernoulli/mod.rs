@@ -3,6 +3,5 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-mod dist;
-mod misc;
-mod rand;
+#[cfg(test)]
+mod bernoulli_tests;

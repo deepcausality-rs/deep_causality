@@ -10,34 +10,27 @@ set -o pipefail
 
 # Check for outdated dependencies
 # https://github.com/kbknapp/cargo-outdated
-FEATURES=unsafe cargo outdated --workspace
+command cargo outdated --workspace --all-features
 
-FEATURES=unsafe cargo machete deep_causality deep_causality_algorithms deep_causality_rand deep_causality_num deep_causality_data_structures deep_causality_macros deep_causality_uncertain ultragraph
+command cargo machete deep_causality deep_causality_algorithms deep_causality_rand deep_causality_num deep_causality_data_structures deep_causality_macros deep_causality_uncertain ultragraph
 
 # Scan for unused dependencies
 # https://crates.io/crates/cargo-udeps
-FEATURES=unsafe cargo +nightly udeps --all-targets
-
+command cargo +nightly udeps --all-targets --all-features
 
 # Scan again to report all unfixed vulnerabilities
 # https://crates.io/crates/cargo-audit
-#FEATURES=unsafe cargo audit
-
+#command cargo audit --all-targets --all-features
 
 # Check a package and all of its dependencies for errors.
 # https://doc.rust-lang.org/cargo/FEATURES=unsafes/cargo-check.html
-FEATURES=unsafe cargo check --all-targets
-
-# Consider checking each crate for re-exporting external types
-# https://crates.io/crates/cargo-check-external-types
-# cargo +nightly check-external-types
-
+command cargo check --all-targets --all-features
 
 # Check for linter errors
 # https://github.com/rust-lang/rust-clippy
-FEATURES=unsafe cargo clippy --all-targets
+command cargo clippy --all-targets --all-features -- -D warnings
 
 
 # Check code formatting
 # https://github.com/rust-lang/rustfmt
-FEATURES=unsafe cargo fmt --all --check
+command cargo fmt --all --check

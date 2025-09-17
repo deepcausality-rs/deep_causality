@@ -4,7 +4,7 @@
  */
 
 pub mod distr;
-pub(crate) mod misc;
+pub mod misc;
 pub(crate) mod rand;
 
 #[cfg(feature = "os-random")]

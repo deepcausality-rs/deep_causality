@@ -42,7 +42,7 @@ fn test_uniform_distribution_error_debug() {
 fn test_uniform_distribution_error_clone_copy_eq() {
     let error1 = UniformDistributionError::NonFinite;
     let error2 = error1; // Test Copy
-    let error3 = error1.clone(); // Test Clone
+    let error3 = error1; // Test Clone
     assert_eq!(error1, error2);
     assert_eq!(error1, error3);
 

@@ -4,18 +4,18 @@
  */
 
 pub mod standard_uniform;
-mod uniform_float;
-pub mod uniform_u32;
-pub mod uniform_u64;
+mod uniform_f32;
+mod uniform_f64;
+mod uniform_u32;
+mod uniform_u64;
 
-/*
- * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
- */
 use crate::{
     Distribution, Rng, SampleBorrow, SampleUniform, UniformDistributionError, UniformSampler,
 };
+use deep_causality_num::Float;
+use std::fmt::Debug;
 
+#[derive(Debug, Copy, Clone)]
 pub struct Uniform<X: SampleUniform>(X::Sampler);
 
 impl<X: SampleUniform> Uniform<X> {
@@ -54,5 +54,71 @@ impl<X: SampleUniform> Uniform<X> {
 impl<X: SampleUniform> Distribution<X> for Uniform<X> {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> X {
         self.0.sample(rng)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct UniformFloat<F: Float> {
+    low: F,
+    scale: F,
+}
+
+// Helper trait to abstract the generation of a random float in [0, 1)
+pub(crate) trait RandFloat: Sized {
+    fn rand_float_gen<R: Rng + ?Sized>(rng: &mut R) -> Self;
+}
+
+impl<F> UniformSampler for UniformFloat<F>
+where
+    F: Float + RandFloat + Debug,
+{
+    type X = F;
+
+    fn new<B1, B2>(low_b: B1, high_b: B2) -> Result<Self, UniformDistributionError>
+    where
+        B1: SampleBorrow<Self::X> + Sized,
+        B2: SampleBorrow<Self::X> + Sized,
+    {
+        let low = *low_b.borrow();
+        let high = *high_b.borrow();
+        if !(low.is_finite() && high.is_finite()) {
+            return Err(UniformDistributionError::NonFinite);
+        }
+        if low >= high {
+            return Err(UniformDistributionError::EmptyRange);
+        }
+        let scale = high - low;
+        if !scale.is_finite() {
+            return Err(UniformDistributionError::NonFinite);
+        }
+        Ok(UniformFloat { low, scale })
+    }
+
+    fn new_inclusive<B1, B2>(low_b: B1, high_b: B2) -> Result<Self, UniformDistributionError>
+    where
+        B1: SampleBorrow<Self::X> + Sized,
+        B2: SampleBorrow<Self::X> + Sized,
+    {
+        let low = *low_b.borrow();
+        let high = *high_b.borrow();
+        if !(low.is_finite() && high.is_finite()) {
+            return Err(UniformDistributionError::NonFinite);
+        }
+        if low > high {
+            return Err(UniformDistributionError::EmptyRange);
+        }
+
+        let max_rand = F::one() - F::epsilon();
+        let scale = (high - low) / max_rand;
+        if !scale.is_finite() {
+            return Err(UniformDistributionError::NonFinite);
+        }
+
+        Ok(UniformFloat { low, scale })
+    }
+
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
+        let value0_1 = F::rand_float_gen(rng);
+        value0_1 * self.scale + self.low
     }
 }

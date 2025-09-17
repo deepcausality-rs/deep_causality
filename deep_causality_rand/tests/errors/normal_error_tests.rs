@@ -32,13 +32,13 @@ fn test_normal_distribution_error_debug() {
 fn test_normal_distribution_error_clone_copy_eq() {
     let error1 = NormalDistributionError::MeanTooSmall;
     let error2 = error1; // Test Copy
-    let error3 = error1.clone(); // Test Clone
+    let error3 = error1; // Test Clone
     assert_eq!(error1, error2);
     assert_eq!(error1, error3);
 
     let error4 = NormalDistributionError::BadVariance;
     let error5 = error4; // Test Copy
-    let error6 = error4.clone(); // Test Clone
+    let error6 = error4; // Test Clone
     assert_eq!(error4, error5);
     assert_eq!(error4, error6);
 
