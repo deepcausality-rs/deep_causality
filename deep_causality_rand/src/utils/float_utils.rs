@@ -28,7 +28,6 @@ pub(crate) trait FloatSIMDUtils {
     fn cast_from_int(i: Self::UInt) -> Self;
 }
 
-#[cfg(test)]
 pub(crate) trait FloatSIMDScalarUtils: FloatSIMDUtils {
     type Scalar;
 
@@ -39,6 +38,7 @@ pub(crate) trait FloatSIMDScalarUtils: FloatSIMDUtils {
 /// Implement functions on f32/f64 to give them APIs similar to SIMD types
 pub(crate) trait FloatAsSIMD: Sized {
     #[cfg(test)]
+    #[allow(dead_code)]
     const LEN: usize = 1;
 
     #[inline(always)]

@@ -624,25 +624,6 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
         utils_clamp::clamp(self, min, max)
     }
 
-    /// The positive difference of two numbers.
-    ///
-    /// * If `self <= other`: `0:0`
-    /// * Else: `self - other`
-    ///
-    /// ```
-    /// use deep_causality_num::Float;
-    ///
-    /// let x = 3.0;
-    /// let y = -3.0;
-    ///
-    /// let abs_difference_x = (x.abs_sub(1.0) - 2.0).abs();
-    /// let abs_difference_y = (y.abs_sub(1.0) - 0.0).abs();
-    ///
-    /// assert!(abs_difference_x < 1e-10);
-    /// assert!(abs_difference_y < 1e-10);
-    /// ```
-    fn abs_sub(self, other: Self) -> Self;
-
     /// Take the cubic root of a number.
     ///
     /// ```

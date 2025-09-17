@@ -16,8 +16,7 @@ use crate::utils::ziggurat_tables;
 /// * `F`: precomputed values of the PDF at the $x_i$, (i.e. $f(x_i)$)
 /// * `F_DIFF`: precomputed values of $f(x_i) - f(x_{i+1})$
 /// * `pdf`: the probability density function
-/// * `zero_case`: manual sampling from the tail when we chose the
-///    bottom box (i.e. i == 0)
+/// * `zero_case`: manual sampling from the tail when we chose the bottom box (i.e. i == 0)
 #[inline(always)] // Forced inlining improves the perf by 25-50%
 pub(crate) fn ziggurat<R: Rng + ?Sized, P, Z>(
     rng: &mut R,

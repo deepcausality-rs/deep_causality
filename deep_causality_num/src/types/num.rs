@@ -13,6 +13,7 @@ pub trait Num: PartialEq + Zero + One + NumOps {}
 /// the second operand by reference.
 ///
 /// This is automatically implemented for types which implement the operators.
+#[allow(dead_code)]
 pub trait NumRef: Num + for<'r> NumOps<&'r Self> {}
 impl<T> NumRef for T where T: Num + for<'r> NumOps<&'r T> {}
 
@@ -22,6 +23,7 @@ impl<T> NumRef for T where T: Num + for<'r> NumOps<&'r T> {}
 /// This is automatically implemented for all types which implement the operators. It covers
 /// every type implementing the operations though, regardless of it being a reference or
 /// related to `Num`.
+#[allow(dead_code)]
 pub trait RefNum<Base>: NumOps<Base, Base> + for<'r> NumOps<&'r Base, Base> {}
 impl<T, Base> RefNum<Base> for T where T: NumOps<Base, Base> + for<'r> NumOps<&'r Base, Base> {}
 
@@ -48,5 +50,6 @@ impl<T> NumAssign for T where T: Num + NumAssignOps {}
 /// taking the second operand by reference.
 ///
 /// This is automatically implemented for types which implement the operators.
+#[allow(dead_code)]
 pub trait NumAssignRef: NumAssign + for<'r> NumAssignOps<&'r Self> {}
 impl<T> NumAssignRef for T where T: NumAssign + for<'r> NumAssignOps<&'r T> {}

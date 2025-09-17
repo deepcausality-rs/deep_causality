@@ -3,6 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 pub mod float;
-mod float_impl;
+mod float_32_impl;
+mod float_64_impl;
 pub mod num;
 mod num_impl;

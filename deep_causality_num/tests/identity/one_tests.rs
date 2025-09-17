@@ -44,21 +44,28 @@ macro_rules! test_one_for_type {
     };
 }
 
-// Generate tests for all implemented types
-test_one_for_type!(usize, test_usize);
-test_one_for_type!(u8, test_u8);
-test_one_for_type!(u16, test_u16);
-test_one_for_type!(u32, test_u32);
-test_one_for_type!(u64, test_u64);
-test_one_for_type!(u128, test_u128);
+mod test_uint {
+    use super::*;
 
-test_one_for_type!(isize, test_isize);
-test_one_for_type!(i8, test_i8);
-test_one_for_type!(i16, test_i16);
-test_one_for_type!(i32, test_i32);
-test_one_for_type!(i64, test_i64);
-test_one_for_type!(i128, test_i128);
+    // Generate tests for all implemented types
+    test_one_for_type!(usize, test_usize);
+    test_one_for_type!(u8, test_u8);
+    test_one_for_type!(u16, test_u16);
+    test_one_for_type!(u32, test_u32);
+    test_one_for_type!(u64, test_u64);
+    test_one_for_type!(u128, test_u128);
+}
 
+mod test_int {
+    use super::*;
+
+    test_one_for_type!(isize, test_isize);
+    test_one_for_type!(i8, test_i8);
+    test_one_for_type!(i16, test_i16);
+    test_one_for_type!(i32, test_i32);
+    test_one_for_type!(i64, test_i64);
+    test_one_for_type!(i128, test_i128);
+}
 // Special handling for floats due to precision
 mod test_f32 {
     use super::*;

@@ -23,10 +23,10 @@ pub use crate::traits::sample_range::SampleRange;
 pub use crate::traits::sample_uniform::{SampleUniform, UniformSampler};
 // Types
 pub use crate::types::distr::bernoulli::Bernoulli;
-pub use crate::types::distr::normal::normal::Normal;
+pub use crate::types::distr::normal::Normal;
 pub use crate::types::distr::normal::standard_normal::StandardNormal;
+pub use crate::types::distr::uniform::Uniform;
 pub use crate::types::distr::uniform::standard_uniform::StandardUniform;
-pub use crate::types::distr::uniform::uniform::Uniform;
 pub use crate::types::distr::uniform::uniform_u32::UniformU32;
 pub use crate::types::distr::uniform::uniform_u64::UniformU64;
 pub use crate::types::misc::iter::Iter;

@@ -8,9 +8,11 @@ use crate::{Distribution, Rng, StandardUniform};
 use core::mem;
 
 #[derive(Clone, Copy, Debug, Default)]
+#[allow(dead_code)]
 pub struct OpenClosed01;
 
 #[derive(Clone, Copy, Debug, Default)]
+#[allow(dead_code)]
 pub struct Open01;
 
 // This trait is needed by both this lib and rand_distr hence is a hidden export

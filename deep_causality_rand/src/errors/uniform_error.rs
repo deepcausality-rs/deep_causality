@@ -9,9 +9,9 @@ use std::error::Error;
 pub enum UniformDistributionError {
     /// Input or range `high - low` is non-finite. Not relevant to integer types.
     NonFinite,
-    ///
+    /// Invalid range: low must be less than high
     InvalidRange,
-    ///
+    /// Empty range in uniform distribution
     EmptyRange,
 }
 
