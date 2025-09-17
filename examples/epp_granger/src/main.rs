@@ -143,13 +143,13 @@ fn shipping_predictor_logic(
     // A real implementation would likely use more sophisticated queries, but this
     // demonstrates accessing the full context.
     for i in 0..context.number_of_nodes() {
-        if let Some(node) = context.get_node(i) {
-            if let ContextoidType::Datoid(data_node) = node.vertex_type() {
-                match data_node.id() {
-                    OIL_PRICE_ID => oil_prices.push(data_node.get_data()),
-                    SHIPPING_ACTIVITY_ID => shipping_activities.push(data_node.get_data()),
-                    _ => (),
-                }
+        if let Some(node) = context.get_node(i)
+            && let ContextoidType::Datoid(data_node) = node.vertex_type()
+        {
+            match data_node.id() {
+                OIL_PRICE_ID => oil_prices.push(data_node.get_data()),
+                SHIPPING_ACTIVITY_ID => shipping_activities.push(data_node.get_data()),
+                _ => (),
             }
         }
     }
@@ -232,10 +232,10 @@ fn get_counterfactual_context(factual_context: &BaseContext) -> BaseContext {
     for i in 0..factual_context.number_of_nodes() {
         if let Some(node) = factual_context.get_node(i) {
             let mut should_add = true;
-            if let ContextoidType::Datoid(data_node) = node.vertex_type() {
-                if data_node.id() == OIL_PRICE_ID {
-                    should_add = false;
-                }
+            if let ContextoidType::Datoid(data_node) = node.vertex_type()
+                && data_node.id() == OIL_PRICE_ID
+            {
+                should_add = false;
             }
             if should_add {
                 control_context.add_node(node.clone()).unwrap();

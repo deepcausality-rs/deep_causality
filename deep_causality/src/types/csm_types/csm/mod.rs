@@ -84,10 +84,10 @@ where
             map.insert(state.id(), ((*state).clone(), (*action).clone()));
         }
 
-        if let Some((ethos, _)) = &effect_ethos {
-            if !ethos.is_verified() {
-                panic!("EffectEthos must be verified before being used in a CSM.");
-            }
+        if let Some((ethos, _)) = &effect_ethos
+            && !ethos.is_verified()
+        {
+            panic!("EffectEthos must be verified before being used in a CSM.");
         }
 
         let ethos = effect_ethos.map(|(e, t)| (e, t.to_vec()));

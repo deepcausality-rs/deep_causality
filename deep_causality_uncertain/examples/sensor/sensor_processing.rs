@@ -480,23 +480,22 @@ fn demonstrate_fallback_strategies(
 
     if let (Some(pressure_reading), Some(temp_reading)) =
         (sensors.get("pressure_1"), sensors.get("temp_1"))
+        && let (Some(pressure), Some(temp)) = (pressure_reading.value, temp_reading.value)
     {
-        if let (Some(pressure), Some(temp)) = (pressure_reading.value, temp_reading.value) {
-            let expected_temp_from_pressure = estimate_temperature_from_pressure(pressure);
-            let temp_diff = (temp - expected_temp_from_pressure).abs();
+        let expected_temp_from_pressure = estimate_temperature_from_pressure(pressure);
+        let temp_diff = (temp - expected_temp_from_pressure).abs();
 
-            if Uncertain::<f64>::point(temp_diff)
-                .greater_than(10.0)
-                .implicit_conditional()?
-            {
-                println!("         ⚠️  Temperature-pressure correlation check failed");
-                println!(
-                    "         Expected temp: {:.1}°C, Measured: {:.1}°C",
-                    expected_temp_from_pressure, temp
-                );
-            } else {
-                println!("         ✅ Temperature-pressure correlation validated");
-            }
+        if Uncertain::<f64>::point(temp_diff)
+            .greater_than(10.0)
+            .implicit_conditional()?
+        {
+            println!("         ⚠️  Temperature-pressure correlation check failed");
+            println!(
+                "         Expected temp: {:.1}°C, Measured: {:.1}°C",
+                expected_temp_from_pressure, temp
+            );
+        } else {
+            println!("         ✅ Temperature-pressure correlation validated");
         }
     }
 

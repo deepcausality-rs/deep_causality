@@ -150,10 +150,10 @@ where
                 return Ok(Some((path, dist)));
             }
 
-            if let Some(known_dist) = distances[u] {
-                if dist > known_dist {
-                    continue;
-                }
+            if let Some(known_dist) = distances[u]
+                && dist > known_dist
+            {
+                continue;
             }
 
             let start_offset = self.forward_edges.offsets[u];

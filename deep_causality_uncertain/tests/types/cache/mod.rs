@@ -4,4 +4,5 @@
  */
 #[cfg(test)]
 mod cache_tests;
+#[cfg(test)]
 mod sampled_value_tests;

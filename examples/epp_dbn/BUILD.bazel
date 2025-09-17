@@ -13,8 +13,7 @@ rust_binary(
     deps = [
         # Internal crates
         "//deep_causality",
-        # External crates
-        "//thirdparty/crates:rand",
+        "//deep_causality_rand",
     ],
 )
 

@@ -4,7 +4,7 @@
  */
 
 use deep_causality::*;
-use rand::Rng;
+use deep_causality_rand::Rng;
 use std::sync::{Arc, RwLock};
 use std::{thread, time::Duration};
 
@@ -66,7 +66,7 @@ fn main() {
         let rain_output_map = rain_res.unwrap();
         let prob_rain_today = rain_output_map.get_numerical_from_map(RAIN_ID).unwrap();
 
-        let mut rng = rand::rng();
+        let mut rng = deep_causality_rand::rng();
         let random_sample: f64 = rng.random(); // Generates a float between 0.0 and 1.0
 
         // println!("Random Sample: {}", random_sample);

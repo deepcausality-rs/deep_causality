@@ -1,0 +1,77 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+#[cfg(feature = "os-random")]
+use deep_causality_rand::types::OsRandomRng;
+#[cfg(feature = "os-random")]
+use deep_causality_rand::{Rng, RngCore};
+
+#[cfg(feature = "os-random")]
+#[test]
+fn test_os_random_rng_new_ok() {
+    let _rng = OsRandomRng::new().expect("Failed to create OsRandomRng");
+    // This test covers the Ok branch of OsRandomRng::new()
+}
+
+#[cfg(feature = "os-random")]
+#[test]
+fn test_os_random_rng_next_u32_produces_value() {
+    let mut rng = OsRandomRng::new().expect("Failed to create OsRandomRng");
+    let val = rng.next_u32();
+    // We cannot assert a specific value, but we can assert it's not zero (highly unlikely for a random u32)
+    // and that it doesn't panic.
+    assert_ne!(
+        val, 0,
+        "next_u32 should produce a non-zero value (highly probable)"
+    );
+}
+
+#[cfg(feature = "os-random")]
+#[test]
+fn test_os_random_rng_next_u64_produces_non_zero() {
+    let mut rng = OsRandomRng::new().expect("Failed to create OsRandomRng");
+    let val = rng.next_u64();
+    assert_ne!(val, 0, "next_u64 should produce a non-zero value");
+}
+
+#[cfg(feature = "os-random")]
+#[test]
+fn test_os_random_rng_gen_range_produces_value_in_range() {
+    let mut rng = OsRandomRng::new().expect("Failed to create OsRandomRng");
+    let range = 10u64..20u64; // Explicitly use u64
+    let val = rng.random_range(range.clone()); // Changed gen_range to random_range
+    assert!(
+        val >= range.start && val < range.end,
+        "gen_range should produce a value within the specified range"
+    );
+}
+
+#[cfg(feature = "os-random")]
+#[test]
+fn test_os_random_rng_next_u64_produces_different_values() {
+    let mut rng = OsRandomRng::new().expect("Failed to create OsRandomRng");
+    let val1 = rng.next_u64();
+    let val2 = rng.next_u64();
+    assert_ne!(
+        val1, val2,
+        "Consecutive calls to next_u64 should produce different values (highly probable)"
+    );
+}
+
+#[cfg(feature = "os-random")]
+#[test]
+#[should_panic(expected = "cannot sample empty range")]
+fn test_os_random_rng_gen_range_invalid_range_panics() {
+    let mut rng = OsRandomRng::new().expect("Failed to create OsRandomRng");
+    let _ = rng.random_range(10u64..10u64);
+}
+
+// Limitations:
+// 1. Testing the Err branches of getrandom_u32() and getrandom_u64() is not feasible
+//    in a standard unit test without mocking the underlying OS calls or getrandom crate.
+//    These branches would panic if the OS random source fails.
+// 2. Testing the panic branches for #[cfg(any(not(feature = "os-random"), target_arch = "wasm32"))]
+//    requires compiling the code with different feature flags or target architectures,
+//    which is outside the scope of this test file.

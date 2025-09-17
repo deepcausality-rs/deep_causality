@@ -3,11 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_rand::{
+    BernoulliDistributionError, NormalDistributionError, UniformDistributionError,
+};
 use deep_causality_uncertain::UncertainError;
-// For testing From methods
-use rand_distr::uniform::Error as UniformError;
-use rand_distr::{BernoulliError, NormalError};
-// For testing From impl
 use rusty_fork::rusty_fork_test;
 use std::error::Error;
 
@@ -75,11 +74,11 @@ rusty_fork_test! {
 
     #[test]
     fn test_from_uniform_error() {
-        let err = UniformError::EmptyRange;
+        let err = UniformDistributionError::EmptyRange;
         let uncertain_error: UncertainError = err.into();
         match uncertain_error {
             UncertainError::UniformDistributionError(msg) => {
-                assert!(msg.contains("low > high (or equal if exclusive)"));
+                assert!(msg.contains("Empty range in uniform distribution"));
             }
             _ => panic!("Expected UniformDistributionError"),
         }
@@ -87,7 +86,7 @@ rusty_fork_test! {
 
     #[test]
     fn test_from_bernoulli_error() {
-        let err = BernoulliError::InvalidProbability;
+        let err = BernoulliDistributionError::InvalidProbability;
         let uncertain_error: UncertainError = err.into();
         match uncertain_error {
             UncertainError::BernoulliDistributionError(msg) => {
@@ -99,7 +98,7 @@ rusty_fork_test! {
 
     #[test]
     fn test_from_normal_error() {
-        let err = NormalError::MeanTooSmall;
+        let err = NormalDistributionError::MeanTooSmall;
         let uncertain_error: UncertainError = err.into();
         match uncertain_error {
             UncertainError::NormalDistributionError(msg) => {

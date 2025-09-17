@@ -93,15 +93,15 @@ specs/[###-feature]/
 ```
 # Option 1: Single project (DEFAULT)
 src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+src/
+├── errors/
+├── traits/
+└── types/
 
 tests/
-├── contract/
-├── integration/
-└── unit/
+├── errors/
+├── traits/
+└── types/
 
 # Option 2: Web application (when "frontend" + "backend" detected)
 backend/
@@ -117,13 +117,6 @@ frontend/
 │   ├── pages/
 │   └── services/
 └── tests/
-
-# Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure]
 ```
 
 **Structure Decision**: [DEFAULT to Option 1 unless Technical Context indicates web/mobile app]

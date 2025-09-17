@@ -137,34 +137,28 @@ pub(super) fn f_statistic(
 /// NaN values are replaced with the mean of their respective columns.
 pub(super) fn impute_missing_values(tensor: &mut CausalTensor<f64>) {
     let shape = tensor.shape();
-    if shape.len() != 2 {
-        return; // Or handle error, but for now, just exit.
-    }
     let n_rows = shape[0];
     let n_cols = shape[1];
 
     for col_idx in 0..n_cols {
         let mut sum = 0.0;
         let mut count = 0;
-        let mut nan_indices = Vec::new();
-
         for row_idx in 0..n_rows {
-            if let Some(val) = tensor.get(&[row_idx, col_idx]) {
-                if val.is_nan() {
-                    nan_indices.push(row_idx);
-                } else {
-                    sum += *val;
-                    count += 1;
-                }
+            if let Some(val) = tensor.get(&[row_idx, col_idx])
+                && !val.is_nan()
+            {
+                sum += *val;
+                count += 1;
             }
         }
 
-        if !nan_indices.is_empty() {
-            let mean = if count > 0 { sum / count as f64 } else { 0.0 };
-            for row_idx in nan_indices {
-                if let Some(val) = tensor.get_mut(&[row_idx, col_idx]) {
-                    *val = mean;
-                }
+        let mean = if count > 0 { sum / count as f64 } else { 0.0 };
+
+        for row_idx in 0..n_rows {
+            if let Some(val) = tensor.get_mut(&[row_idx, col_idx])
+                && val.is_nan()
+            {
+                *val = mean;
             }
         }
     }
