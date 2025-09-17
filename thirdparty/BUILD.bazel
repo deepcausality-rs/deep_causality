@@ -12,32 +12,8 @@ crates_vendor(
             package = "proc-macro2",
             version = "1.0",
         ),
-        "syn": crate.spec(
-            default_features = True,
-            features = [
-                "full",
-                "extra-traits",
-            ],
-            package = "syn",
-            version = "2.0",
-        ),
-        "quote": crate.spec(
-            default_features = True,
-            package = "quote",
-            version = "1.0",
-        ),
         #
         # Regular dependencies
-        "rand": crate.spec(
-            default_features = True,
-            package = "rand",
-            version = "0.9",
-        ),
-        "rand_distr": crate.spec(
-            default_features = True,
-            package = "rand_distr",
-            version = "0.5",
-        ),
     },  # End packages
     repository_name = "deep_causality_vendored",
     tags = ["manual"],

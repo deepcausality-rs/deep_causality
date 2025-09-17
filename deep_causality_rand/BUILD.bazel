@@ -1,32 +1,30 @@
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_doc", "rust_doc_test")
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library")
 
-rust_binary(
-    name = "example-dbn",
+rust_library(
+    name = "deep_causality_rand",
     srcs = glob([
         "src/**",
     ]),
-    crate_root = "src/main.rs",
+    crate_root = "src/lib.rs",
     tags = [
-        "example",
+        "random_number_utils",
     ],
     visibility = ["//visibility:public"],
     deps = [
-        # Internal crates
-        "//deep_causality",
-        "//deep_causality_rand",
+        "//deep_causality_num",
     ],
 )
 
 rust_doc(
     name = "doc",
-    crate = ":example-dbn",
+    crate = ":deep_causality_rand",
     tags = ["doc"],
     visibility = ["//visibility:public"],
 )
 
 rust_doc_test(
     name = "doc_test",
-    crate = ":example-dbn",
+    crate = ":deep_causality_rand",
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
 )

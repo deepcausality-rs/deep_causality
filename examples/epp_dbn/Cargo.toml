@@ -10,4 +10,4 @@ publish = false
 
 [dependencies]
 deep_causality = { path = "../../deep_causality" }
-rand = "0.9"
+deep_causality_rand = { path = "../../deep_causality_rand" }
