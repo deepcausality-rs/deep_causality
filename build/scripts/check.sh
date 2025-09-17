@@ -12,7 +12,7 @@ set -o pipefail
 # https://github.com/kbknapp/cargo-outdated
 FEATURES=unsafe cargo outdated --workspace
 
-FEATURES=unsafe cargo machete deep_causality deep_causality_algorithms deep_causality_rand deep_causality_data_structures deep_causality_macros deep_causality_uncertain ultragraph
+FEATURES=unsafe cargo machete deep_causality deep_causality_algorithms deep_causality_rand deep_causality_num deep_causality_data_structures deep_causality_macros deep_causality_uncertain ultragraph
 
 # Scan for unused dependencies
 # https://crates.io/crates/cargo-udeps

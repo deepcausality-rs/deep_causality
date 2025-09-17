@@ -54,7 +54,7 @@ where
 
     /// Sample from a z-score
     #[inline]
-    pub fn from_zscore(&self, zscore: F) -> F {
+    pub fn sample_from_zscore(&self, zscore: F) -> F {
         self.mean + self.std_dev * zscore
     }
 
@@ -75,6 +75,6 @@ where
     StandardNormal: Distribution<F>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
-        self.from_zscore(rng.sample(StandardNormal))
+        self.sample_from_zscore(rng.sample(StandardNormal))
     }
 }
