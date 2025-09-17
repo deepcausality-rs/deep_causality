@@ -11,7 +11,7 @@ use std::cmp::Ordering;
 /// elements, the output vector will have `N-1` elements. Returns an empty
 /// vector if the input has fewer than 2 elements.
 ///
-pub(super) fn diff(slice: &[f64]) -> Vec<f64> {
+pub(crate) fn diff(slice: &[f64]) -> Vec<f64> {
     let mut result = Vec::new();
     if slice.is_empty() {
         return result;
@@ -27,7 +27,7 @@ pub(super) fn diff(slice: &[f64]) -> Vec<f64> {
     result
 }
 
-pub(super) fn arg_sort(slice: &[f64]) -> Vec<usize> {
+pub(crate) fn arg_sort(slice: &[f64]) -> Vec<usize> {
     // 1. Create a vector of the original indices: [0, 1, 2, ..., n-1]
     let mut indices: Vec<usize> = (0..slice.len()).collect();
 
@@ -48,7 +48,7 @@ pub(super) fn arg_sort(slice: &[f64]) -> Vec<usize> {
     indices
 }
 
-pub(super) fn set_difference<T: PartialEq + Clone>(a: &[T], b: &[T]) -> Vec<T> {
+pub(crate) fn set_difference<T: PartialEq + Clone>(a: &[T], b: &[T]) -> Vec<T> {
     a.iter()
         .filter(|&item| !b.contains(item))
         .cloned()
@@ -62,7 +62,7 @@ pub(super) fn set_difference<T: PartialEq + Clone>(a: &[T], b: &[T]) -> Vec<T> {
 /// # Panics
 /// Panics if `r` is greater than the number of items in `pool`.
 /// ```
-pub(super) fn combinations<T: Copy>(pool: &[T], r: usize) -> Vec<Vec<T>> {
+pub(crate) fn combinations<T: Copy>(pool: &[T], r: usize) -> Vec<Vec<T>> {
     if r > pool.len() {
         panic!("Cannot choose r elements from a pool smaller than r.");
     }

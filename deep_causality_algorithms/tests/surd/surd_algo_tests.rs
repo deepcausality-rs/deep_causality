@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_algorithms::surd::{MaxOrder, surd_states};
+use deep_causality_algorithms::causal_discovery::surd::{MaxOrder, surd_states};
 use deep_causality_data_structures::{CausalTensor, CausalTensorError};
 
 // A small tolerance for floating point comparisons.

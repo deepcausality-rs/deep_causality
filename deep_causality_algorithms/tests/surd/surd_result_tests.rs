@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_algorithms::surd::SurdResult;
+use deep_causality_algorithms::causal_discovery::surd::SurdResult;
 use deep_causality_data_structures::CausalTensor;
 use std::collections::HashMap;
 

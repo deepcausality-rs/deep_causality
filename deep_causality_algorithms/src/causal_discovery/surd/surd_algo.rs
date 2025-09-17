@@ -2,8 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::surd::surd_utils;
-use crate::surd::{MaxOrder, SurdResult};
+use crate::causal_discovery::surd::surd_utils;
+use crate::causal_discovery::surd::{MaxOrder, SurdResult};
 use deep_causality_data_structures::CausalTensor;
 use deep_causality_data_structures::CausalTensorCollectionExt;
 use deep_causality_data_structures::CausalTensorError;
@@ -60,7 +60,7 @@ use rayon::prelude::*;
 /// # Examples
 ///
 /// ```
-/// use deep_causality_algorithms::surd::{surd_states, MaxOrder};
+/// use deep_causality_algorithms::causal_discovery::surd::{surd_states, MaxOrder};
 /// use deep_causality_data_structures::CausalTensor;
 ///
 /// // Create a joint probability distribution for a target and 2 source variables.

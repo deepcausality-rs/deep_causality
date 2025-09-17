@@ -2,9 +2,13 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
+pub mod mrmr_algo;
+pub mod mrmr_error;
+pub mod mrmr_utils;
+
+pub use mrmr_algo::*;
+pub use mrmr_error::MrmrError;
+
 #[cfg(test)]
-mod surd_algo_tests;
-#[cfg(test)]
-mod surd_max_order_tests;
-#[cfg(test)]
-mod surd_result_tests;
+mod mrmr_utils_tests;

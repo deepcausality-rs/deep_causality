@@ -3,8 +3,5 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 #[cfg(test)]
-mod surd_algo_tests;
-#[cfg(test)]
-mod surd_max_order_tests;
-#[cfg(test)]
-mod surd_result_tests;
+mod mrmr_algo_tests;
+mod mrmr_error_tests;

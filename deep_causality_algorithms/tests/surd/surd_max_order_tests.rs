@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_algorithms::surd::MaxOrder;
+use deep_causality_algorithms::causal_discovery::surd::MaxOrder;
 use deep_causality_data_structures::CausalTensorError;
 use std::fmt::Write;
 
