@@ -5,6 +5,8 @@
 use crate::{NumOps, One, Zero};
 use std::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign};
 
+mod num_impl;
+
 /// The base trait for numeric types, covering `0` and `1` values,
 /// comparisons, basic numeric operations, and string conversion.
 pub trait Num: PartialEq + Zero + One + NumOps {}

@@ -176,6 +176,16 @@ mod f32_tests {
     test_float_method!(atanh_val, atanh, f32, 0.0, 0.0);
     test_float_method!(copysign_pos, copysign, f32, 1.0, 2.0, 1.0);
     test_float_method!(copysign_neg, copysign, f32, 1.0, -2.0, -1.0);
+    test_float_method!(clamp_val, clamp, f32, 1.5, 1.0, 2.0, 1.5);
+
+    #[test]
+    fn integer_decode_val() {
+        let v: f32 = 2.0;
+        let (mantissa, exponent, sign) = v.integer_decode();
+        assert_eq!(mantissa, 8388608);
+        assert_eq!(exponent, -22);
+        assert_eq!(sign, 1);
+    }
 }
 
 // Test for f64
@@ -310,4 +320,14 @@ mod f64_tests {
     test_float_method!(atanh_val, atanh, f64, 0.0, 0.0);
     test_float_method!(copysign_pos, copysign, f64, 1.0, 2.0, 1.0);
     test_float_method!(copysign_neg, copysign, f64, 1.0, -2.0, -1.0);
+    test_float_method!(clamp_val, clamp, f64, 1.5, 1.0, 2.0, 1.5);
+
+    #[test]
+    fn integer_decode_val() {
+        let v: f64 = 2.0;
+        let (mantissa, exponent, sign) = v.integer_decode();
+        assert_eq!(mantissa, 4503599627370496);
+        assert_eq!(exponent, -51);
+        assert_eq!(sign, 1);
+    }
 }

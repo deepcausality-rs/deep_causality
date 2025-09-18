@@ -7,6 +7,9 @@ use crate::{Num, NumCast};
 use std::num::FpCategory;
 use std::ops::Neg;
 
+mod float_32_impl;
+mod float_64_impl;
+
 pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     /// Returns the `NaN` value.
     ///

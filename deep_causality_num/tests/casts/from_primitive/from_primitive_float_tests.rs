@@ -5,34 +5,139 @@
 
 use deep_causality_num::FromPrimitive;
 
-macro_rules! test_from {
-    ($name:ident, $from_method:ident, $from_ty:ty, $to_ty:ty, $val:expr, $expected:expr) => {
+// Macro to test conversion from signed integers to float
+macro_rules! test_from_signed_primitive_to_float {
+    ($test_name:ident, $from_type:ty, $to_type:ty, $from_method:ident) => {
         #[test]
-        fn $name() {
-            let v: $from_ty = $val;
-            let expected: Option<$to_ty> = $expected;
-            let actual = <$to_ty>::$from_method(v);
-            assert_eq!(actual, expected);
+        fn $test_name() {
+            let zero: $from_type = 0;
+            assert_eq!(<$to_type>::$from_method(zero), Some(zero as $to_type));
+
+            let positive: $from_type = 42;
+            assert_eq!(
+                <$to_type>::$from_method(positive),
+                Some(positive as $to_type)
+            );
+
+            let negative: $from_type = -42;
+            assert_eq!(
+                <$to_type>::$from_method(negative),
+                Some(negative as $to_type)
+            );
+
+            let max_val: $from_type = <$from_type>::MAX;
+            assert_eq!(<$to_type>::$from_method(max_val), Some(max_val as $to_type));
+
+            let min_val: $from_type = <$from_type>::MIN;
+            assert_eq!(<$to_type>::$from_method(min_val), Some(min_val as $to_type));
         }
     };
 }
 
-mod from_f32_tests {
-    use super::*;
-    test_from!(to_i32, from_f32, f32, i32, 3.0, Some(3i32));
-    test_from!(to_i32_neg, from_f32, f32, i32, -3.0, Some(-3i32));
-    test_from!(to_u32, from_f32, f32, u32, 3.0, Some(3u32));
-    test_from!(to_u32_neg_fail, from_f32, f32, u32, -3.0, None);
-    test_from!(to_i8_overflow, from_f32, f32, i8, 300.0, None);
-    test_from!(to_f64, from_f32, f32, f64, 3.0, Some(3.0f32 as f64));
+// Macro to test conversion from unsigned integers to float
+macro_rules! test_from_unsigned_primitive_to_float {
+    ($test_name:ident, $from_type:ty, $to_type:ty, $from_method:ident) => {
+        #[test]
+        fn $test_name() {
+            let zero: $from_type = 0;
+            assert_eq!(<$to_type>::$from_method(zero), Some(zero as $to_type));
+
+            let positive: $from_type = 42;
+            assert_eq!(
+                <$to_type>::$from_method(positive),
+                Some(positive as $to_type)
+            );
+
+            let max_val: $from_type = <$from_type>::MAX;
+            assert_eq!(<$to_type>::$from_method(max_val), Some(max_val as $to_type));
+        }
+    };
 }
 
-mod from_f64_tests {
+// Macro to test conversion from float to float
+macro_rules! test_from_float_to_float {
+    ($test_name:ident, $from_type:ty, $to_type:ty, $from_method:ident) => {
+        #[test]
+        fn $test_name() {
+            let zero: $from_type = 0.0;
+            assert_eq!(<$to_type>::$from_method(zero), Some(zero as $to_type));
+
+            let positive: $from_type = 42.42;
+            assert_eq!(
+                <$to_type>::$from_method(positive),
+                Some(positive as $to_type)
+            );
+
+            let negative: $from_type = -42.42;
+            assert_eq!(
+                <$to_type>::$from_method(negative),
+                Some(negative as $to_type)
+            );
+
+            let max_val: $from_type = <$from_type>::MAX;
+            assert_eq!(<$to_type>::$from_method(max_val), Some(max_val as $to_type));
+
+            let min_val: $from_type = <$from_type>::MIN;
+            assert_eq!(<$to_type>::$from_method(min_val), Some(min_val as $to_type));
+
+            let infinity: $from_type = <$from_type>::INFINITY;
+            assert_eq!(
+                <$to_type>::$from_method(infinity),
+                Some(<$to_type>::INFINITY)
+            );
+
+            let neg_infinity: $from_type = <$from_type>::NEG_INFINITY;
+            assert_eq!(
+                <$to_type>::$from_method(neg_infinity),
+                Some(<$to_type>::NEG_INFINITY)
+            );
+
+            let nan: $from_type = <$from_type>::NAN;
+            let res = <$to_type>::$from_method(nan);
+            assert!(res.is_some());
+            assert!(res.unwrap().is_nan());
+        }
+    };
+}
+
+mod tests_for_f32 {
     use super::*;
-    test_from!(to_i64, from_f64, f64, i64, 3.0, Some(3i64));
-    test_from!(to_i64_neg, from_f64, f64, i64, -3.0, Some(-3i64));
-    test_from!(to_u64, from_f64, f64, u64, 3.0, Some(3u64));
-    test_from!(to_u64_neg_fail, from_f64, f64, u64, -3.0, None);
-    test_from!(to_i32_overflow, from_f64, f64, i32, 2147483648.0, None);
-    test_from!(to_f32, from_f64, f64, f32, 3.0, Some(3.0f64 as f32));
+
+    test_from_signed_primitive_to_float!(test_f32_from_isize, isize, f32, from_isize);
+    test_from_signed_primitive_to_float!(test_f32_from_i8, i8, f32, from_i8);
+    test_from_signed_primitive_to_float!(test_f32_from_i16, i16, f32, from_i16);
+    test_from_signed_primitive_to_float!(test_f32_from_i32, i32, f32, from_i32);
+    test_from_signed_primitive_to_float!(test_f32_from_i64, i64, f32, from_i64);
+    test_from_signed_primitive_to_float!(test_f32_from_i128, i128, f32, from_i128);
+
+    test_from_unsigned_primitive_to_float!(test_f32_from_usize, usize, f32, from_usize);
+    test_from_unsigned_primitive_to_float!(test_f32_from_u8, u8, f32, from_u8);
+    test_from_unsigned_primitive_to_float!(test_f32_from_u16, u16, f32, from_u16);
+    test_from_unsigned_primitive_to_float!(test_f32_from_u32, u32, f32, from_u32);
+    test_from_unsigned_primitive_to_float!(test_f32_from_u64, u64, f32, from_u64);
+    test_from_unsigned_primitive_to_float!(test_f32_from_u128, u128, f32, from_u128);
+
+    test_from_float_to_float!(test_f32_from_f32, f32, f32, from_f32);
+    test_from_float_to_float!(test_f32_from_f64, f64, f32, from_f64);
+}
+
+mod tests_for_f64 {
+    use super::*;
+
+    test_from_signed_primitive_to_float!(test_f64_from_isize, isize, f64, from_isize);
+    test_from_signed_primitive_to_float!(test_f64_from_i8, i8, f64, from_i8);
+    test_from_signed_primitive_to_float!(test_f64_from_i16, i16, f64, from_i16);
+    test_from_signed_primitive_to_float!(test_f64_from_i32, i32, f64, from_i32);
+    test_from_signed_primitive_to_float!(test_f64_from_i64, i64, f64, from_i64);
+    test_from_signed_primitive_to_float!(test_f64_from_i128, i128, f64, from_i128);
+
+    test_from_unsigned_primitive_to_float!(test_f64_from_usize, usize, f64, from_usize);
+    test_from_unsigned_primitive_to_float!(test_f64_from_u8, u8, f64, from_u8);
+    test_from_unsigned_primitive_to_float!(test_f64_from_u16, u16, f64, from_u16);
+    test_from_unsigned_primitive_to_float!(test_f64_from_u32, u32, f64, from_u32);
+    test_from_unsigned_primitive_to_float!(test_f64_from_u64, u64, f64, from_u64);
+    test_from_unsigned_primitive_to_float!(test_f64_from_u128, u128, f64, from_u128);
+
+    test_from_float_to_float!(test_f64_from_f32, f32, f64, from_f32);
+    test_from_float_to_float!(test_f64_from_f64, f64, f64, from_f64);
 }

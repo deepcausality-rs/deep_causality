@@ -51,7 +51,8 @@ rust_test_suite(
 rust_test_suite(
     name = "types",
     srcs = glob([
-        "types/*_tests.rs",
+        "types/float/*_tests.rs",
+        "types/num/*_tests.rs",
     ]),
     tags = [
         "unit-test",
