@@ -2,7 +2,6 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::utils::utils_clamp;
 use crate::{Num, NumCast};
 use std::num::FpCategory;
 use std::ops::Neg;
@@ -101,9 +100,7 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     ///
     /// The default implementation will panic if `f32::EPSILON` cannot
     /// be cast to `Self`.
-    fn epsilon() -> Self {
-        Self::from(f32::EPSILON).expect("Unable to cast from f32::EPSILON")
-    }
+    fn epsilon() -> Self;
 
     /// Returns the largest finite value that this type can represent.
     ///
@@ -214,11 +211,7 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     /// assert!(lower_than_min.is_subnormal());
     /// ```
     /// [subnormal]: https://en.wikipedia.org/wiki/Subnormal_number
-    #[inline]
-    fn is_subnormal(self) -> bool {
-        self.classify() == FpCategory::Subnormal
-    }
-
+    fn is_subnormal(self) -> bool;
     /// Returns the floating point category of the number. If only one property
     /// is going to be tested, it is generally faster to use the specific
     /// predicate instead.
@@ -561,12 +554,7 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     ///
     /// assert!(abs_difference < 1e-10);
     /// ```
-    #[inline]
-    fn to_degrees(self) -> Self {
-        let halfpi = Self::zero().acos();
-        let ninety = Self::from(90u8).unwrap();
-        self * ninety / halfpi
-    }
+    fn to_degrees(self) -> Self;
 
     /// Converts degrees to radians.
     ///
@@ -579,12 +567,7 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     ///
     /// assert!(abs_difference < 1e-10);
     /// ```
-    #[inline]
-    fn to_radians(self) -> Self {
-        let halfpi = Self::zero().acos();
-        let ninety = Self::from(90u8).unwrap();
-        self * halfpi / ninety
-    }
+    fn to_radians(self) -> Self;
 
     /// Returns the maximum of the two numbers.
     ///
@@ -623,9 +606,7 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     ///
     /// assert_eq!(x.clamp(y, z), 2.0);
     /// ```
-    fn clamp(self, min: Self, max: Self) -> Self {
-        utils_clamp::clamp(self, min, max)
-    }
+    fn clamp(self, min: Self, max: Self) -> Self;
 
     /// Take the cubic root of a number.
     ///
@@ -964,11 +945,5 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     ///
     /// assert!(f32::nan().copysign(1.0).is_nan());
     /// ```
-    fn copysign(self, sign: Self) -> Self {
-        if self.is_sign_negative() == sign.is_sign_negative() {
-            self
-        } else {
-            self.neg()
-        }
-    }
+    fn copysign(self, sign: Self) -> Self;
 }

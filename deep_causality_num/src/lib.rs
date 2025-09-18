@@ -2,7 +2,6 @@ mod cast;
 mod identity;
 mod ops;
 mod types;
-mod utils;
 
 pub use crate::cast::as_primitive::AsPrimitive;
 pub use crate::cast::from_primitive::FromPrimitive;

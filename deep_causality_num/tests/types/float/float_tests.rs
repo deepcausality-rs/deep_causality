@@ -5,40 +5,9 @@
 use deep_causality_num::Float;
 use std::num::FpCategory;
 
-macro_rules! test_float_method {
-    ($name:ident, $method:ident, $ty:ty, $val:expr, $expected:expr) => {
-        #[test]
-        fn $name() {
-            let v: $ty = $val;
-            let expected = $expected;
-            let actual = v.$method();
-            assert_eq!(actual, expected);
-        }
-    };
-    ($name:ident, $method:ident, $ty:ty, $val:expr, $arg:expr, $expected:expr) => {
-        #[test]
-        fn $name() {
-            let v: $ty = $val;
-            let arg: $ty = $arg;
-            let expected = $expected;
-            let actual = v.$method(arg);
-            assert_eq!(actual, expected);
-        }
-    };
-    ($name:ident, $method:ident, $ty:ty, $val:expr, $arg1:expr, $arg2:expr, $expected:expr) => {
-        #[test]
-        fn $name() {
-            let v: $ty = $val;
-            let arg1: $ty = $arg1;
-            let arg2: $ty = $arg2;
-            let expected = $expected;
-            let actual = v.$method(arg1, arg2);
-            assert_eq!(actual, expected);
-        }
-    };
-}
-
+//================================================================================
 // Test for f32
+//================================================================================
 mod f32_tests {
     use super::*;
 
@@ -77,118 +46,304 @@ mod f32_tests {
     }
 
     // Methods
-    test_float_method!(is_nan_true, is_nan, f32, f32::NAN, true);
-    test_float_method!(is_nan_false, is_nan, f32, 1.0, false);
-    test_float_method!(is_infinite_true, is_infinite, f32, f32::INFINITY, true);
-    test_float_method!(is_infinite_false, is_infinite, f32, 1.0, false);
-    test_float_method!(is_finite_true, is_finite, f32, 1.0, true);
-    test_float_method!(is_finite_false, is_finite, f32, f32::INFINITY, false);
-    test_float_method!(is_normal_true, is_normal, f32, 1.0, true);
-    test_float_method!(is_normal_false, is_normal, f32, 0.0, false);
-    test_float_method!(
-        is_subnormal_true,
-        is_subnormal,
-        f32,
-        f32::MIN_POSITIVE / 2.0,
-        true
-    );
-    test_float_method!(is_subnormal_false, is_subnormal, f32, 1.0, false);
-    test_float_method!(classify_normal, classify, f32, 1.0, FpCategory::Normal);
-    test_float_method!(
-        classify_infinite,
-        classify,
-        f32,
-        f32::INFINITY,
-        FpCategory::Infinite
-    );
-    test_float_method!(floor_val, floor, f32, 3.9, 3.0);
-    test_float_method!(ceil_val, ceil, f32, 3.1, 4.0);
-    test_float_method!(round_val, round, f32, 3.5, 4.0);
-    test_float_method!(trunc_val, trunc, f32, 3.9, 3.0);
-    test_float_method!(fract_val, fract, f32, 3.5, 0.5);
-    test_float_method!(abs_val, abs, f32, -3.0, 3.0);
-    test_float_method!(signum_pos, signum, f32, 3.0, 1.0);
-    test_float_method!(signum_neg, signum, f32, -3.0, -1.0);
-    test_float_method!(is_sign_positive_true, is_sign_positive, f32, 1.0, true);
-    test_float_method!(is_sign_positive_false, is_sign_positive, f32, -1.0, false);
-    test_float_method!(is_sign_negative_true, is_sign_negative, f32, -1.0, true);
-    test_float_method!(is_sign_negative_false, is_sign_negative, f32, 1.0, false);
-    test_float_method!(mul_add_val, mul_add, f32, 2.0, 3.0, 4.0, 10.0); // 2*3 + 4 = 10
-    test_float_method!(recip_val, recip, f32, 2.0, 0.5);
-
     #[test]
-    fn test_f32_powi_val() {
-        let v: f32 = 2.0;
-        let n: i32 = 3;
-        let expected: f32 = 8.0;
-        let actual = v.powi(n);
-        assert_eq!(actual, expected);
+    fn is_nan_true() {
+        assert!(f32::NAN.is_nan());
     }
-
-    test_float_method!(powf_val, powf, f32, 2.0, 3.0, 8.0); // 2^3.0 = 8.0
-    test_float_method!(sqrt_val, sqrt, f32, 4.0, 2.0);
-    test_float_method!(exp_val, exp, f32, 1.0, std::f32::consts::E);
-    test_float_method!(exp2_val, exp2, f32, 3.0, 8.0); // 2^3 = 8
+    #[test]
+    fn is_nan_false() {
+        assert!(!1.0f32.is_nan());
+    }
+    #[test]
+    fn is_infinite_true() {
+        assert!(f32::INFINITY.is_infinite());
+    }
+    #[test]
+    fn is_infinite_false() {
+        assert!(!1.0f32.is_infinite());
+    }
+    #[test]
+    fn is_finite_true() {
+        assert!(1.0f32.is_finite());
+    }
+    #[test]
+    fn is_finite_false() {
+        assert!(!f32::INFINITY.is_finite());
+    }
+    #[test]
+    fn is_normal_true() {
+        assert!(1.0f32.is_normal());
+    }
+    #[test]
+    fn is_normal_false() {
+        assert!(!0.0f32.is_normal());
+    }
+    #[test]
+    fn is_subnormal_true() {
+        assert!((f32::MIN_POSITIVE / 2.0).is_subnormal());
+    }
+    #[test]
+    fn is_subnormal_false() {
+        assert!(!1.0f32.is_subnormal());
+    }
+    #[test]
+    fn classify_normal() {
+        assert_eq!(1.0f32.classify(), FpCategory::Normal);
+    }
+    #[test]
+    fn classify_infinite() {
+        assert_eq!(f32::INFINITY.classify(), FpCategory::Infinite);
+    }
+    #[test]
+    fn floor_val() {
+        assert_eq!(3.9f32.floor(), 3.0);
+    }
+    #[test]
+    fn ceil_val() {
+        assert_eq!(3.1f32.ceil(), 4.0);
+    }
+    #[test]
+    fn round_val() {
+        assert_eq!(3.5f32.round(), 4.0);
+    }
+    #[test]
+    fn trunc_val() {
+        assert_eq!(3.9f32.trunc(), 3.0);
+    }
+    #[test]
+    fn fract_val() {
+        assert_eq!(3.5f32.fract(), 0.5);
+    }
+    #[test]
+    fn abs_val() {
+        assert_eq!((-3.0f32).abs(), 3.0);
+    }
+    #[test]
+    fn abs_nan() {
+        assert!(f32::NAN.abs().is_nan());
+    }
+    #[test]
+    fn signum_pos() {
+        assert_eq!(3.0f32.signum(), 1.0);
+    }
+    #[test]
+    fn signum_neg() {
+        assert_eq!(-3.0f32.signum(), -1.0);
+    }
+    #[test]
+    fn signum_zero() {
+        assert_eq!(0.0f32.signum(), 1.0);
+    }
+    #[test]
+    fn signum_nan() {
+        assert!(f32::NAN.signum().is_nan());
+    }
+    #[test]
+    fn is_sign_positive_true() {
+        assert!(1.0f32.is_sign_positive());
+    }
+    #[test]
+    fn is_sign_positive_false() {
+        assert!(!(-1.0f32).is_sign_positive());
+    }
+    #[test]
+    fn is_sign_negative_true() {
+        assert!((-1.0f32).is_sign_negative());
+    }
+    #[test]
+    fn is_sign_negative_false() {
+        assert!(!1.0f32.is_sign_negative());
+    }
+    #[test]
+    fn mul_add_val() {
+        assert_eq!(2.0f32.mul_add(3.0, 4.0), 10.0);
+    }
+    #[test]
+    fn recip_val() {
+        assert_eq!(2.0f32.recip(), 0.5);
+    }
+    #[test]
+    fn powi_val() {
+        assert_eq!(2.0f32.powi(3), 8.0);
+    }
+    #[test]
+    fn powf_val() {
+        assert_eq!(2.0f32.powf(3.0), 8.0);
+    }
+    #[test]
+    fn sqrt_val() {
+        assert_eq!(4.0f32.sqrt(), 2.0);
+    }
+    #[test]
+    fn sqrt_neg() {
+        assert!((-1.0f32).sqrt().is_nan());
+    }
+    #[test]
+    fn exp_val() {
+        assert_eq!(1.0f32.exp(), std::f32::consts::E);
+    }
+    #[test]
+    fn exp2_val() {
+        assert_eq!(3.0f32.exp2(), 8.0);
+    }
     #[test]
     fn ln_val() {
-        let v: f32 = std::f32::consts::E;
-        let expected = 1.0;
-        let actual = v.ln();
-        assert!((actual - expected).abs() < 1e-6);
+        assert!((std::f32::consts::E.ln() - 1.0).abs() < 1e-6);
     }
-    test_float_method!(log_val, log, f32, 10.0, 10.0, 1.0); // log10(10) = 1
-    test_float_method!(log2_val, log2, f32, 8.0, 3.0);
-    test_float_method!(log10_val, log10, f32, 100.0, 2.0);
-    test_float_method!(to_degrees_val, to_degrees, f32, std::f32::consts::PI, 180.0);
-    test_float_method!(to_radians_val, to_radians, f32, 180.0, std::f32::consts::PI);
-    test_float_method!(max_val, max, f32, 1.0, 2.0, 2.0);
-    test_float_method!(min_val, min, f32, 1.0, 2.0, 1.0);
-    test_float_method!(cbrt_val, cbrt, f32, 8.0, 2.0);
-    test_float_method!(hypot_val, hypot, f32, 3.0, 4.0, 5.0);
-    test_float_method!(sin_val, sin, f32, std::f32::consts::PI / 2.0, 1.0);
-    test_float_method!(cos_val, cos, f32, std::f32::consts::PI, -1.0);
-    test_float_method!(tan_val, tan, f32, std::f32::consts::PI / 4.0, 1.0);
+    #[test]
+    fn log_val() {
+        assert_eq!(10.0f32.log(10.0), 1.0);
+    }
+    #[test]
+    fn log2_val() {
+        assert_eq!(8.0f32.log2(), 3.0);
+    }
+    #[test]
+    fn log10_val() {
+        assert_eq!(100.0f32.log10(), 2.0);
+    }
+    #[test]
+    fn to_degrees_val() {
+        assert_eq!(std::f32::consts::PI.to_degrees(), 180.0);
+    }
+    #[test]
+    fn to_radians_val() {
+        assert_eq!(180.0f32.to_radians(), std::f32::consts::PI);
+    }
+    #[test]
+    fn max_val() {
+        assert_eq!(1.0f32.max(2.0), 2.0);
+    }
+    #[test]
+    fn min_val() {
+        assert_eq!(1.0f32.min(2.0), 1.0);
+    }
+    #[test]
+    fn clamp_val() {
+        assert_eq!(1.5f32.clamp(1.0, 2.0), 1.5);
+    }
+    #[test]
+    fn clamp_low() {
+        assert_eq!(0.5f32.clamp(1.0, 2.0), 1.0);
+    }
+    #[test]
+    fn clamp_high() {
+        assert_eq!(2.5f32.clamp(1.0, 2.0), 2.0);
+    }
+    #[test]
+    fn cbrt_val() {
+        assert_eq!(8.0f32.cbrt(), 2.0);
+    }
+    #[test]
+    fn hypot_val() {
+        assert_eq!(3.0f32.hypot(4.0), 5.0);
+    }
+    #[test]
+    fn sin_val() {
+        assert!(((std::f32::consts::PI / 2.0).sin() - 1.0).abs() < 1e-6);
+    }
+    #[test]
+    fn cos_val() {
+        assert!((std::f32::consts::PI.cos() - -1.0).abs() < 1e-6);
+    }
+    #[test]
+    fn tan_val() {
+        assert!(((std::f32::consts::PI / 4.0).tan() - 1.0).abs() < 1e-6);
+    }
     #[test]
     fn asin_val() {
-        let v: f32 = 1.0;
-        let expected = std::f32::consts::PI / 2.0;
-        let actual = v.asin();
-        assert!((actual - expected).abs() < 1e-6);
+        assert!((1.0f32.asin() - (std::f32::consts::PI / 2.0)).abs() < 1e-6);
     }
-    test_float_method!(acos_val, acos, f32, 0.0, std::f32::consts::PI / 2.0);
-    test_float_method!(atan_val, atan, f32, 1.0, std::f32::consts::PI / 4.0);
-    test_float_method!(atan2_val, atan2, f32, 1.0, 1.0, std::f32::consts::PI / 4.0);
+    #[test]
+    fn acos_val() {
+        assert!((0.0f32.acos() - (std::f32::consts::PI / 2.0)).abs() < 1e-6);
+    }
+    #[test]
+    fn atan_val() {
+        assert!((1.0f32.atan() - (std::f32::consts::PI / 4.0)).abs() < 1e-6);
+    }
+    #[test]
+    fn atan2_val() {
+        assert!((1.0f32.atan2(1.0) - (std::f32::consts::PI / 4.0)).abs() < 1e-6);
+    }
     #[test]
     fn sin_cos_val() {
-        let v: f32 = std::f32::consts::PI / 2.0;
-        let expected = (1.0, 0.0);
-        let actual = v.sin_cos();
-        assert!((actual.0 - expected.0).abs() < 1e-6);
-        assert!((actual.1 - expected.1).abs() < 1e-6);
+        let (s, c) = (std::f32::consts::PI / 2.0).sin_cos();
+        assert!((s - 1.0).abs() < 1e-6);
+        assert!((c - 0.0).abs() < 1e-6);
     }
-    test_float_method!(exp_m1_val, exp_m1, f32, 0.0, 0.0);
-    test_float_method!(ln_1p_val, ln_1p, f32, 0.0, 0.0);
-    test_float_method!(sinh_val, sinh, f32, 0.0, 0.0);
-    test_float_method!(cosh_val, cosh, f32, 0.0, 1.0);
-    test_float_method!(tanh_val, tanh, f32, 0.0, 0.0);
-    test_float_method!(asinh_val, asinh, f32, 0.0, 0.0);
-    test_float_method!(acosh_val, acosh, f32, 1.0, 0.0);
-    test_float_method!(atanh_val, atanh, f32, 0.0, 0.0);
-    test_float_method!(copysign_pos, copysign, f32, 1.0, 2.0, 1.0);
-    test_float_method!(copysign_neg, copysign, f32, 1.0, -2.0, -1.0);
-    test_float_method!(clamp_val, clamp, f32, 1.5, 1.0, 2.0, 1.5);
-
     #[test]
-    fn integer_decode_val() {
-        let v: f32 = 2.0;
-        let (mantissa, exponent, sign) = v.integer_decode();
+    fn exp_m1_val() {
+        assert_eq!(0.0f32.exp_m1(), 0.0);
+    }
+    #[test]
+    fn ln_1p_val() {
+        assert_eq!(0.0f32.ln_1p(), 0.0);
+    }
+    #[test]
+    fn sinh_val() {
+        assert_eq!(0.0f32.sinh(), 0.0);
+    }
+    #[test]
+    fn cosh_val() {
+        assert_eq!(0.0f32.cosh(), 1.0);
+    }
+    #[test]
+    fn tanh_val() {
+        assert_eq!(0.0f32.tanh(), 0.0);
+    }
+    #[test]
+    fn asinh_val() {
+        assert_eq!(0.0f32.asinh(), 0.0);
+    }
+    #[test]
+    fn acosh_val() {
+        assert_eq!(1.0f32.acosh(), 0.0);
+    }
+    #[test]
+    fn atanh_val() {
+        assert_eq!(0.0f32.atanh(), 0.0);
+    }
+    #[test]
+    fn copysign_pos() {
+        assert_eq!(1.0f32.copysign(2.0), 1.0);
+    }
+    #[test]
+    fn copysign_neg() {
+        assert_eq!(1.0f32.copysign(-2.0), -1.0);
+    }
+    #[test]
+    fn copysign_nan() {
+        assert!(f32::NAN.copysign(1.0).is_nan());
+        assert!(!f32::NAN.copysign(-1.0).is_sign_positive());
+    }
+    #[test]
+    fn integer_decode_normal() {
+        let (mantissa, exponent, sign) = 2.0f32.integer_decode();
+        assert_eq!(mantissa, 8388608);
+        assert_eq!(exponent, -22);
+        assert_eq!(sign, 1);
+    }
+    #[test]
+    fn integer_decode_zero() {
+        let (mantissa, exponent, sign) = 0.0f32.integer_decode();
+        assert_eq!(mantissa, 0);
+        assert_eq!(exponent, -150);
+        assert_eq!(sign, 1);
+    }
+    #[test]
+    fn integer_decode_subnormal() {
+        let num = 2.0f32;
+        let (mantissa, exponent, sign) = num.integer_decode();
         assert_eq!(mantissa, 8388608);
         assert_eq!(exponent, -22);
         assert_eq!(sign, 1);
     }
 }
 
+//================================================================================
 // Test for f64
+//================================================================================
 mod f64_tests {
     use super::*;
 
@@ -227,105 +382,295 @@ mod f64_tests {
     }
 
     // Methods
-    test_float_method!(is_nan_true, is_nan, f64, f64::NAN, true);
-    test_float_method!(is_nan_false, is_nan, f64, 1.0, false);
-    test_float_method!(is_infinite_true, is_infinite, f64, f64::INFINITY, true);
-    test_float_method!(is_infinite_false, is_infinite, f64, 1.0, false);
-    test_float_method!(is_finite_true, is_finite, f64, 1.0, true);
-    test_float_method!(is_finite_false, is_finite, f64, f64::INFINITY, false);
-    test_float_method!(is_normal_true, is_normal, f64, 1.0, true);
-    test_float_method!(is_normal_false, is_normal, f64, 0.0, false);
-    test_float_method!(
-        is_subnormal_true,
-        is_subnormal,
-        f64,
-        f64::MIN_POSITIVE / 2.0,
-        true
-    );
-    test_float_method!(is_subnormal_false, is_subnormal, f64, 1.0, false);
-    test_float_method!(classify_normal, classify, f64, 1.0, FpCategory::Normal);
-    test_float_method!(
-        classify_infinite,
-        classify,
-        f64,
-        f64::INFINITY,
-        FpCategory::Infinite
-    );
-    test_float_method!(floor_val, floor, f64, 3.9, 3.0);
-    test_float_method!(ceil_val, ceil, f64, 3.1, 4.0);
-    test_float_method!(round_val, round, f64, 3.5, 4.0);
-    test_float_method!(trunc_val, trunc, f64, 3.9, 3.0);
-    test_float_method!(fract_val, fract, f64, 3.5, 0.5);
-    test_float_method!(abs_val, abs, f64, -3.0, 3.0);
-    test_float_method!(signum_pos, signum, f64, 3.0, 1.0);
-    test_float_method!(signum_neg, signum, f64, -3.0, -1.0);
-    test_float_method!(is_sign_positive_true, is_sign_positive, f64, 1.0, true);
-    test_float_method!(is_sign_positive_false, is_sign_positive, f64, -1.0, false);
-    test_float_method!(is_sign_negative_true, is_sign_negative, f64, -1.0, true);
-    test_float_method!(is_sign_negative_false, is_sign_negative, f64, 1.0, false);
-    test_float_method!(mul_add_val, mul_add, f64, 2.0, 3.0, 4.0, 10.0);
-    test_float_method!(recip_val, recip, f64, 2.0, 0.5);
-
     #[test]
-    fn test_f64_powi_val() {
-        let v: f64 = 2.0;
-        let n: i32 = 3;
-        let expected: f64 = 8.0;
-        let actual = v.powi(n);
-        assert_eq!(actual, expected);
+    fn is_nan_true() {
+        assert!(f64::NAN.is_nan());
     }
-
-    test_float_method!(powf_val, powf, f64, 2.0, 3.0, 8.0);
-    test_float_method!(sqrt_val, sqrt, f64, 4.0, 2.0);
-    test_float_method!(exp_val, exp, f64, 1.0, std::f64::consts::E);
-    test_float_method!(exp2_val, exp2, f64, 3.0, 8.0);
-    test_float_method!(ln_val, ln, f64, std::f64::consts::E, 1.0);
-    test_float_method!(log_val, log, f64, 10.0, 10.0, 1.0);
-    test_float_method!(log2_val, log2, f64, 8.0, 3.0);
-    test_float_method!(log10_val, log10, f64, 100.0, 2.0);
-    test_float_method!(to_degrees_val, to_degrees, f64, std::f64::consts::PI, 180.0);
-    test_float_method!(to_radians_val, to_radians, f64, 180.0, std::f64::consts::PI);
-    test_float_method!(max_val, max, f64, 1.0, 2.0, 2.0);
-    test_float_method!(min_val, min, f64, 1.0, 2.0, 1.0);
-    test_float_method!(cbrt_val, cbrt, f64, 8.0, 2.0);
-    test_float_method!(hypot_val, hypot, f64, 3.0, 4.0, 5.0);
-    test_float_method!(sin_val, sin, f64, std::f64::consts::PI / 2.0, 1.0);
-    test_float_method!(cos_val, cos, f64, std::f64::consts::PI, -1.0);
+    #[test]
+    fn is_nan_false() {
+        assert!(!1.0f64.is_nan());
+    }
+    #[test]
+    fn is_infinite_true() {
+        assert!(f64::INFINITY.is_infinite());
+    }
+    #[test]
+    fn is_infinite_false() {
+        assert!(!1.0f64.is_infinite());
+    }
+    #[test]
+    fn is_finite_true() {
+        assert!(1.0f64.is_finite());
+    }
+    #[test]
+    fn is_finite_false() {
+        assert!(!f64::INFINITY.is_finite());
+    }
+    #[test]
+    fn is_normal_true() {
+        assert!(1.0f64.is_normal());
+    }
+    #[test]
+    fn is_normal_false() {
+        assert!(!0.0f64.is_normal());
+    }
+    #[test]
+    fn is_subnormal_true() {
+        assert!((f64::MIN_POSITIVE / 2.0).is_subnormal());
+    }
+    #[test]
+    fn is_subnormal_false() {
+        assert!(!1.0f64.is_subnormal());
+    }
+    #[test]
+    fn classify_normal() {
+        assert_eq!(1.0f64.classify(), FpCategory::Normal);
+    }
+    #[test]
+    fn classify_infinite() {
+        assert_eq!(f64::INFINITY.classify(), FpCategory::Infinite);
+    }
+    #[test]
+    fn floor_val() {
+        assert_eq!(3.9f64.floor(), 3.0);
+    }
+    #[test]
+    fn ceil_val() {
+        assert_eq!(3.1f64.ceil(), 4.0);
+    }
+    #[test]
+    fn round_val() {
+        assert_eq!(3.5f64.round(), 4.0);
+    }
+    #[test]
+    fn trunc_val() {
+        assert_eq!(3.9f64.trunc(), 3.0);
+    }
+    #[test]
+    fn fract_val() {
+        assert_eq!(3.5f64.fract(), 0.5);
+    }
+    #[test]
+    fn abs_val() {
+        assert_eq!((-3.0f64).abs(), 3.0);
+    }
+    #[test]
+    fn abs_nan() {
+        assert!(f64::NAN.abs().is_nan());
+    }
+    #[test]
+    fn signum_pos() {
+        assert_eq!(3.0f64.signum(), 1.0);
+    }
+    #[test]
+    fn signum_neg() {
+        assert_eq!(-3.0f64.signum(), -1.0);
+    }
+    #[test]
+    fn signum_zero() {
+        assert_eq!(0.0f64.signum(), 1.0);
+    }
+    #[test]
+    fn signum_nan() {
+        assert!(f64::NAN.signum().is_nan());
+    }
+    #[test]
+    fn is_sign_positive_true() {
+        assert!(1.0f64.is_sign_positive());
+    }
+    #[test]
+    fn is_sign_positive_false() {
+        assert!(!(-1.0f64).is_sign_positive());
+    }
+    #[test]
+    fn is_sign_negative_true() {
+        assert!((-1.0f64).is_sign_negative());
+    }
+    #[test]
+    fn is_sign_negative_false() {
+        assert!(!1.0f64.is_sign_negative());
+    }
+    #[test]
+    fn mul_add_val() {
+        assert_eq!(2.0f64.mul_add(3.0, 4.0), 10.0);
+    }
+    #[test]
+    fn recip_val() {
+        assert_eq!(2.0f64.recip(), 0.5);
+    }
+    #[test]
+    fn powi_val() {
+        assert_eq!(2.0f64.powi(3), 8.0);
+    }
+    #[test]
+    fn powf_val() {
+        assert_eq!(2.0f64.powf(3.0), 8.0);
+    }
+    #[test]
+    fn sqrt_val() {
+        assert_eq!(4.0f64.sqrt(), 2.0);
+    }
+    #[test]
+    fn sqrt_neg() {
+        assert!((-1.0f64).sqrt().is_nan());
+    }
+    #[test]
+    fn exp_val() {
+        assert_eq!(1.0f64.exp(), std::f64::consts::E);
+    }
+    #[test]
+    fn exp2_val() {
+        assert_eq!(3.0f64.exp2(), 8.0);
+    }
+    #[test]
+    fn ln_val() {
+        assert_eq!(std::f64::consts::E.ln(), 1.0);
+    }
+    #[test]
+    fn log_val() {
+        assert_eq!(10.0f64.log(10.0), 1.0);
+    }
+    #[test]
+    fn log2_val() {
+        assert_eq!(8.0f64.log2(), 3.0);
+    }
+    #[test]
+    fn log10_val() {
+        assert_eq!(100.0f64.log10(), 2.0);
+    }
+    #[test]
+    fn to_degrees_val() {
+        assert_eq!(std::f64::consts::PI.to_degrees(), 180.0);
+    }
+    #[test]
+    fn to_radians_val() {
+        assert_eq!(180.0f64.to_radians(), std::f64::consts::PI);
+    }
+    #[test]
+    fn max_val() {
+        assert_eq!(1.0f64.max(2.0), 2.0);
+    }
+    #[test]
+    fn min_val() {
+        assert_eq!(1.0f64.min(2.0), 1.0);
+    }
+    #[test]
+    fn clamp_val() {
+        assert_eq!(1.5f64.clamp(1.0, 2.0), 1.5);
+    }
+    #[test]
+    fn clamp_low() {
+        assert_eq!(0.5f64.clamp(1.0, 2.0), 1.0);
+    }
+    #[test]
+    fn clamp_high() {
+        assert_eq!(2.5f64.clamp(1.0, 2.0), 2.0);
+    }
+    #[test]
+    fn cbrt_val() {
+        assert_eq!(8.0f64.cbrt(), 2.0);
+    }
+    #[test]
+    fn hypot_val() {
+        assert_eq!(3.0f64.hypot(4.0), 5.0);
+    }
+    #[test]
+    fn sin_val() {
+        assert_eq!((std::f64::consts::PI / 2.0).sin(), 1.0);
+    }
+    #[test]
+    fn cos_val() {
+        assert_eq!(std::f64::consts::PI.cos(), -1.0);
+    }
     #[test]
     fn tan_val() {
-        let v: f64 = std::f64::consts::PI / 4.0;
-        let expected = 1.0;
-        let actual = v.tan();
-        assert!((actual - expected).abs() < 1e-15);
+        assert!(((std::f64::consts::PI / 4.0).tan() - 1.0).abs() < 1e-15);
     }
-    test_float_method!(asin_val, asin, f64, 1.0, std::f64::consts::PI / 2.0);
-    test_float_method!(acos_val, acos, f64, 0.0, std::f64::consts::PI / 2.0);
-    test_float_method!(atan_val, atan, f64, 1.0, std::f64::consts::PI / 4.0);
-    test_float_method!(atan2_val, atan2, f64, 1.0, 1.0, std::f64::consts::PI / 4.0);
+    #[test]
+    fn asin_val() {
+        assert_eq!(1.0f64.asin(), std::f64::consts::PI / 2.0);
+    }
+    #[test]
+    fn acos_val() {
+        assert_eq!(0.0f64.acos(), std::f64::consts::PI / 2.0);
+    }
+    #[test]
+    fn atan_val() {
+        assert_eq!(1.0f64.atan(), std::f64::consts::PI / 4.0);
+    }
+    #[test]
+    fn atan2_val() {
+        assert_eq!(1.0f64.atan2(1.0), std::f64::consts::PI / 4.0);
+    }
     #[test]
     fn sin_cos_val() {
-        let v: f64 = std::f64::consts::PI / 2.0;
-        let expected = (1.0, 0.0);
-        let actual = v.sin_cos();
-        assert!((actual.0 - expected.0).abs() < 1e-15);
-        assert!((actual.1 - expected.1).abs() < 1e-15);
+        let (s, c) = (std::f64::consts::PI / 2.0).sin_cos();
+        assert!((s - 1.0).abs() < 1e-15);
+        assert!((c - 0.0).abs() < 1e-15);
     }
-    test_float_method!(exp_m1_val, exp_m1, f64, 0.0, 0.0);
-    test_float_method!(ln_1p_val, ln_1p, f64, 0.0, 0.0);
-    test_float_method!(sinh_val, sinh, f64, 0.0, 0.0);
-    test_float_method!(cosh_val, cosh, f64, 0.0, 1.0);
-    test_float_method!(tanh_val, tanh, f64, 0.0, 0.0);
-    test_float_method!(asinh_val, asinh, f64, 0.0, 0.0);
-    test_float_method!(acosh_val, acosh, f64, 1.0, 0.0);
-    test_float_method!(atanh_val, atanh, f64, 0.0, 0.0);
-    test_float_method!(copysign_pos, copysign, f64, 1.0, 2.0, 1.0);
-    test_float_method!(copysign_neg, copysign, f64, 1.0, -2.0, -1.0);
-    test_float_method!(clamp_val, clamp, f64, 1.5, 1.0, 2.0, 1.5);
-
     #[test]
-    fn integer_decode_val() {
-        let v: f64 = 2.0;
-        let (mantissa, exponent, sign) = v.integer_decode();
+    fn exp_m1_val() {
+        assert_eq!(0.0f64.exp_m1(), 0.0);
+    }
+    #[test]
+    fn ln_1p_val() {
+        assert_eq!(0.0f64.ln_1p(), 0.0);
+    }
+    #[test]
+    fn sinh_val() {
+        assert_eq!(0.0f64.sinh(), 0.0);
+    }
+    #[test]
+    fn cosh_val() {
+        assert_eq!(0.0f64.cosh(), 1.0);
+    }
+    #[test]
+    fn tanh_val() {
+        assert_eq!(0.0f64.tanh(), 0.0);
+    }
+    #[test]
+    fn asinh_val() {
+        assert_eq!(0.0f64.asinh(), 0.0);
+    }
+    #[test]
+    fn acosh_val() {
+        assert_eq!(1.0f64.acosh(), 0.0);
+    }
+    #[test]
+    fn atanh_val() {
+        assert_eq!(0.0f64.atanh(), 0.0);
+    }
+    #[test]
+    fn copysign_pos() {
+        assert_eq!(1.0f64.copysign(2.0), 1.0);
+    }
+    #[test]
+    fn copysign_neg() {
+        assert_eq!(1.0f64.copysign(-2.0), -1.0);
+    }
+    #[test]
+    fn copysign_nan() {
+        assert!(f64::NAN.copysign(1.0).is_nan());
+        assert!(!f64::NAN.copysign(-1.0).is_sign_positive());
+    }
+    #[test]
+    fn integer_decode_normal() {
+        let (mantissa, exponent, sign) = 2.0f64.integer_decode();
+        assert_eq!(mantissa, 4503599627370496);
+        assert_eq!(exponent, -51);
+        assert_eq!(sign, 1);
+    }
+    #[test]
+    fn integer_decode_zero() {
+        let (mantissa, exponent, sign) = 0.0f64.integer_decode();
+        assert_eq!(mantissa, 0);
+        assert_eq!(exponent, -1075);
+        assert_eq!(sign, 1);
+    }
+    #[test]
+    fn integer_decode_subnormal() {
+        let num = 2.0f64;
+        let (mantissa, exponent, sign) = num.integer_decode();
         assert_eq!(mantissa, 4503599627370496);
         assert_eq!(exponent, -51);
         assert_eq!(sign, 1);
