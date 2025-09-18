@@ -49,10 +49,9 @@ implementation is significantly faster than the vector-based version.
 
 ## 🤔 Why?
 
-1) Zero dependencies.
-2) Zero cost abstraction.
-3) Zero unsafe.
-4) Zero macros.
+1) Zero cost abstraction.
+2) Zero unsafe.
+3) Zero macros.
 
 # Performance:
 

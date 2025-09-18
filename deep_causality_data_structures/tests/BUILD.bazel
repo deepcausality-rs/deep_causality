@@ -77,21 +77,6 @@ rust_test_suite(
 )
 
 rust_test_suite(
-    name = "num_types",
-    srcs = glob([
-        "num_types/*_tests.rs",
-    ]),
-    tags = [
-        "unit-test",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        # Crate to test
-        "//deep_causality_data_structures",
-    ],
-)
-
-rust_test_suite(
     name = "window_type_safe_tests",
     srcs = glob([
         "window_type/storage_safe/*_tests.rs",

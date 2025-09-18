@@ -1,0 +1,159 @@
+load("@rules_rust//rust:defs.bzl", "rust_test_suite")
+
+rust_test_suite(
+    name = "algos",
+    srcs = glob([
+        "algos/hypothesis/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_uncertain",
+        # External dependencies
+        "//thirdparty/crates:rusty-fork",
+    ],
+)
+
+rust_test_suite(
+    name = "errors",
+    srcs = glob([
+        "errors/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_uncertain",
+        # Internal dependencies
+        "//deep_causality_rand",
+        # External dependencies
+        "//thirdparty/crates:rusty-fork",
+    ],
+)
+
+rust_test_suite(
+    name = "integration_tests",
+    srcs = glob([
+        "integration_tests/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_uncertain",
+        # External dependencies
+        "//thirdparty/crates:rusty-fork",
+    ],
+)
+
+rust_test_suite(
+    name = "types_cache",
+    srcs = glob([
+        "types/cache/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_uncertain",
+        # External dependencies
+        "//thirdparty/crates:rusty-fork",
+    ],
+)
+
+rust_test_suite(
+    name = "types_computation",
+    srcs = glob([
+        "types/computation/node/*_tests.rs",
+        "types/computation/operator/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_uncertain",
+        # External dependencies
+        "//thirdparty/crates:rusty-fork",
+    ],
+)
+
+rust_test_suite(
+    name = "types_distribution",
+    srcs = glob([
+        "types/distribution/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_uncertain",
+        # Internal dependencies
+        "//deep_causality_rand",
+        # External dependencies
+        "//thirdparty/crates:rusty-fork",
+    ],
+)
+
+rust_test_suite(
+    name = "types_distribution_param",
+    srcs = glob([
+        "types/distribution_parameters/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_uncertain",
+        # External dependencies
+        "//thirdparty/crates:rusty-fork",
+    ],
+)
+
+rust_test_suite(
+    name = "types_sampler",
+    srcs = glob([
+        "types/sampler/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_uncertain",
+        # External dependencies
+        "//thirdparty/crates:rusty-fork",
+    ],
+)
+
+rust_test_suite(
+    name = "types_uncertain",
+    srcs = glob([
+        "types/uncertain/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_uncertain",
+        # External dependencies
+        "//thirdparty/crates:rusty-fork",
+    ],
+)

@@ -4,5 +4,5 @@
  */
 mod causal_tensor_type;
 mod grid_type;
-mod num_types;
+
 mod window_type;

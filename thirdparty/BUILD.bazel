@@ -7,10 +7,10 @@ crates_vendor(
     packages = {
         #
         # Proc macros dependencies
-        "proc-macro2": crate.spec(
+        "rusty-fork": crate.spec(
             default_features = True,
-            package = "proc-macro2",
-            version = "1.0",
+            package = "rusty-fork",
+            version = "0.3.0",
         ),
         #
         # Regular dependencies

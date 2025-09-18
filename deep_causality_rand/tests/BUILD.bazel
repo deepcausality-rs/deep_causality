@@ -1,0 +1,61 @@
+load("@rules_rust//rust:defs.bzl", "rust_test_suite")
+
+rust_test_suite(
+    name = "errors",
+    srcs = glob([
+        "errors/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_rand",
+    ],
+)
+
+rust_test_suite(
+    name = "types_dist",
+    srcs = glob([
+        "types/dist/*/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_rand",
+    ],
+)
+
+rust_test_suite(
+    name = "types_misc",
+    srcs = glob([
+        "types/misc/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_rand",
+    ],
+)
+
+rust_test_suite(
+    name = "types_rand",
+    srcs = glob([
+        "types/rand/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_rand",
+    ],
+)

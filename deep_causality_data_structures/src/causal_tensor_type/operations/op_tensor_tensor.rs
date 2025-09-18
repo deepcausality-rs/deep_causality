@@ -2,7 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalTensor, CausalTensorError, Zero};
+use crate::{CausalTensor, CausalTensorError};
+use deep_causality_num::Zero;
 use std::ops::{Add, Div, Mul, Sub};
 
 //

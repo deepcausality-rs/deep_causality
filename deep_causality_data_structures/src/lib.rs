@@ -5,7 +5,6 @@
 
 pub mod causal_tensor_type;
 pub mod grid_type;
-pub mod num_types;
 pub mod window_type;
 
 // Causal sensor type
@@ -27,6 +26,3 @@ pub use crate::window_type::SlidingWindow;
 pub use crate::window_type::storage::WindowStorage;
 pub use crate::window_type::storage_safe::storage_array::ArrayStorage;
 pub use crate::window_type::storage_safe::storage_vec::VectorStorage;
-// num types
-pub use crate::num_types::one::*;
-pub use crate::num_types::zero::*;

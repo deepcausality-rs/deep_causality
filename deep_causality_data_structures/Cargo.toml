@@ -34,6 +34,11 @@ name = "window_type_vector_storage"
 path = "examples/window_type/vector_storage.rs"
 
 
+[dependencies.deep_causality_num]
+path = "../deep_causality_num"
+version = "0.1"
+
+
 [dev-dependencies]
 criterion = { version = "0.7", features = ["html_reports"] }
 rand = { version = "0.9", features = ["small_rng"] }
