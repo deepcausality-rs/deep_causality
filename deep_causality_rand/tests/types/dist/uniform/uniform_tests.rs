@@ -68,6 +68,7 @@ macro_rules! uniform_int_tests {
     };
 }
 
+uniform_int_tests!(usize, usize_tests);
 uniform_int_tests!(u32, u32_tests);
 uniform_int_tests!(u64, u64_tests);
 
