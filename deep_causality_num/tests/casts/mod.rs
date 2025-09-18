@@ -13,4 +13,5 @@ mod num_cast_tests;
 #[cfg(test)]
 mod to_primitive_float_tests;
 #[cfg(test)]
-mod to_primitive_int_tests;
+mod to_primitive_int_isize_tests;
+mod to_primitive_int_usize_tests;
