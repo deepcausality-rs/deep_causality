@@ -13,11 +13,11 @@
 
 [crates-badge]: https://img.shields.io/badge/Crates.io-Latest-blue
 
-[crates-url]: https://crates.io/crates/dcl_data_structures
+[crates-url]: https://crates.io/crates/deep_causality_macros
 
 [docs-badge]: https://img.shields.io/badge/Docs.rs-Latest-blue
 
-[docs-url]: https://docs.rs/dcl_data_structures/latest/dcl_data_structures/
+[docs-url]: https://docs.rs/deep_causality_macros/latest/deep_causality_macros/
 
 [mit-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
