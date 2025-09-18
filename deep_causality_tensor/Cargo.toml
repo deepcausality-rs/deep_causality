@@ -1,0 +1,33 @@
+[package]
+name = "deep_causality_tensor"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/deepcausality/deep_causality.rs"
+authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
+description = "Tensor data structure for for deep_causality crate."
+documentation = "https://docs.rs/deep_causality"
+categories = ["data-structures", "science"]
+keywords = ["data-structures", "tensor"]
+# Exclude all bazel files as these conflict with Bazel workspace when vendored.
+exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
+
+
+[[example]]
+name = "causal_tensor"
+path = "examples/causal_tensor_type/causal_tensor.rs"
+
+
+[dependencies.deep_causality_num]
+path = "../deep_causality_num"
+version = "0.1"
+
+
+[dev-dependencies]
+criterion = { version = "0.7", features = ["html_reports"] }
+deep_causality_rand = { path = "../deep_causality_rand"}
+
+[[bench]]
+name = "bench_causal_tensor"
+harness = false

@@ -4,7 +4,7 @@
  */
 
 use deep_causality_algorithms::causal_discovery::surd::SurdResult;
-use deep_causality_data_structures::CausalTensor;
+use deep_causality_tensor::CausalTensor;
 use std::collections::HashMap;
 
 // Helper function to create a default SurdResult for testing

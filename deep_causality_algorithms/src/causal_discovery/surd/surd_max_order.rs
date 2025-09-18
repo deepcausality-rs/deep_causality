@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_data_structures::CausalTensorError;
+use deep_causality_tensor::CausalTensorError;
 use std::fmt::{Display, Formatter};
 
 /// Defines the maximum order of interactions to consider in the SURD analysis.

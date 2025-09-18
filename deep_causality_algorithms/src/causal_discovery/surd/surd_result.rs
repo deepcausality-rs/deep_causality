@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_data_structures::CausalTensor;
+use deep_causality_tensor::CausalTensor;
 use std::collections::HashMap;
 use std::fmt::Debug;
 

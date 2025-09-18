@@ -4,7 +4,7 @@
  */
 
 use deep_causality_algorithms::causal_discovery::surd::{MaxOrder, surd_states};
-use deep_causality_data_structures::CausalTensor;
+use deep_causality_tensor::CausalTensor;
 
 fn main() {
     let data_original = vec![

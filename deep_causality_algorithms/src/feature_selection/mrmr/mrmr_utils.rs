@@ -4,7 +4,7 @@
  */
 
 use crate::feature_selection::mrmr::mrmr_error::MrmrError;
-use deep_causality_data_structures::CausalTensor;
+use deep_causality_tensor::CausalTensor;
 
 /// Calculates the Pearson correlation coefficient between two columns of a `CausalTensor`.
 ///

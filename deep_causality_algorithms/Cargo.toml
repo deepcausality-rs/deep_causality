@@ -21,9 +21,9 @@ name = "example_surd"
 path = "examples/example_surd.rs"
 
 
-[dependencies.deep_causality_data_structures]
-path = "../deep_causality_data_structures"
-version = "0.9.5"
+[dependencies.deep_causality_tensor]
+path = "../deep_causality_tensor"
+version = "0.1.0"
 
 
 [dependencies.rayon]

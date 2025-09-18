@@ -10,6 +10,7 @@ members = [
     "deep_causality_macros",
     "deep_causality_num",
     "deep_causality_rand",
+    "deep_causality_tensor",
     "deep_causality_uncertain",
     "examples/*",
     "ultragraph",

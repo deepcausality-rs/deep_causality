@@ -210,7 +210,6 @@ name = "deep_causality"
 version = "0.11.2"
 dependencies = [
  "criterion",
- "deep_causality_algorithms",
  "deep_causality_data_structures",
  "deep_causality_macros",
  "deep_causality_uncertain",
@@ -221,7 +220,7 @@ dependencies = [
 name = "deep_causality_algorithms"
 version = "0.1.0"
 dependencies = [
- "deep_causality_data_structures",
+ "deep_causality_tensor",
  "rayon",
 ]
 
@@ -230,8 +229,7 @@ name = "deep_causality_data_structures"
 version = "0.9.5"
 dependencies = [
  "criterion",
- "deep_causality_num",
- "rand",
+ "deep_causality_rand",
 ]
 
 [[package]]
@@ -248,6 +246,15 @@ version = "0.1.0"
 dependencies = [
  "deep_causality_num",
  "getrandom",
+]
+
+[[package]]
+name = "deep_causality_tensor"
+version = "0.1.0"
+dependencies = [
+ "criterion",
+ "deep_causality_num",
+ "deep_causality_rand",
 ]
 
 [[package]]

@@ -6,9 +6,9 @@ name = "deep_causality_data_structures"
 version = "0.9.5"
 edition = { workspace = true }
 rust-version = { workspace = true }
+license = { workspace = true }
 repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
-license = { workspace = true }
 description = "Data structures for for deep_causality crate."
 documentation = "https://docs.rs/deep_causality"
 categories = ["data-structures", "science"]
@@ -16,10 +16,6 @@ keywords = ["data-structures", "sliding-window", "grid-array"]
 # Exclude all bazel files as these conflict with Bazel workspace when vendored.
 exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
-
-[[example]]
-name = "causal_tensor"
-path = "examples/causal_tensor_type/causal_tensor.rs"
 
 [[example]]
 name = "array_grid"
@@ -34,14 +30,9 @@ name = "window_type_vector_storage"
 path = "examples/window_type/vector_storage.rs"
 
 
-[dependencies.deep_causality_num]
-path = "../deep_causality_num"
-version = "0.1"
-
-
 [dev-dependencies]
 criterion = { version = "0.7", features = ["html_reports"] }
-rand = { version = "0.9", features = ["small_rng"] }
+deep_causality_rand = { path = "../deep_causality_rand"}
 
 
 [[bench]]

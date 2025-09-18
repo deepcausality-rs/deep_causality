@@ -5,7 +5,7 @@
 
 use criterion::{Criterion, criterion_group};
 use deep_causality_data_structures::{Array1D, Array2D, Array3D, Array4D, ArrayGrid, PointIndex};
-use rand::Rng;
+use deep_causality_rand::Rng;
 
 const WIDTH: usize = 10;
 const HEIGHT: usize = 10;
@@ -62,7 +62,7 @@ fn set_array_grid_4d_safe_benchmark(criterion: &mut Criterion) {
 }
 
 fn get_point_index() -> PointIndex {
-    let mut rng = rand::rng();
+    let mut rng = deep_causality_rand::rng();
     PointIndex::new4d(
         rng.random_range(0..WIDTH),
         rng.random_range(0..HEIGHT),
@@ -72,7 +72,7 @@ fn get_point_index() -> PointIndex {
 }
 
 fn get_value() -> usize {
-    let mut rng = rand::rng();
+    let mut rng = deep_causality_rand::rng();
     rng.random_range(0..100)
 }
 
