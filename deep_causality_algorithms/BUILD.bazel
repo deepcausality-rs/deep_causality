@@ -13,6 +13,7 @@ rust_library(
     deps = [
         # Internal crates
         "//deep_causality_data_structures",
+        "//deep_causality_tensor",
     ],
 )
 
