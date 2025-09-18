@@ -6,5 +6,4 @@
 mod float_32_tests;
 #[cfg(test)]
 mod float_64_tests;
-#[cfg(test)]
-mod float_tests;
+
