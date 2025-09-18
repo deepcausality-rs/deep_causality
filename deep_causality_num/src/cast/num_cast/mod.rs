@@ -4,6 +4,8 @@
  */
 use crate::ToPrimitive;
 
+mod num_cast_impl;
+
 /// An interface for casting between machine scalars.
 pub trait NumCast: Sized + ToPrimitive {
     /// Creates a number from another value that can be converted into

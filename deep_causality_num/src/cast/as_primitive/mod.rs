@@ -2,6 +2,11 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+mod as_primitive_bool_impl;
+mod as_primitive_char_impl;
+mod as_primitive_float_impl;
+mod as_primitive_isize_impl;
+mod as_primitive_usize_impl;
 
 /// A generic interface for casting between machine scalars with the
 /// `as` operator, which admits narrowing and precision loss.

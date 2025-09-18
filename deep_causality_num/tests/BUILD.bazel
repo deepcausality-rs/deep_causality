@@ -3,7 +3,10 @@ load("@rules_rust//rust:defs.bzl", "rust_test_suite")
 rust_test_suite(
     name = "casts",
     srcs = glob([
-        "casts/*_tests.rs",
+        "casts/as_primitive/*_tests.rs",
+        "casts/from_primitive/*_tests.rs",
+        "casts/num_cast/*_tests.rs",
+        "casts/to_primitive/*_tests.rs",
     ]),
     tags = [
         "unit-test",
