@@ -20,7 +20,7 @@ pub trait CausalTensorMathExt<T> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_data_structures::{CausalTensor, CausalTensorMathExt};
+    /// use deep_causality_tensor::{CausalTensor, CausalTensorMathExt};
     ///
     /// let tensor = CausalTensor::new(vec![1.0, std::f32::consts::E, 10.0], vec![3, 1]).unwrap();
     /// let result = tensor.log_nat().unwrap();
@@ -43,7 +43,7 @@ pub trait CausalTensorMathExt<T> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_data_structures::{CausalTensor, CausalTensorMathExt};
+    /// use deep_causality_tensor::{CausalTensor, CausalTensorMathExt};
     ///
     /// let tensor = CausalTensor::new(vec![1.0, 2.0, 4.0, 8.0], vec![4, 1]).unwrap();
     /// let result = tensor.log2().unwrap();
@@ -66,7 +66,7 @@ pub trait CausalTensorMathExt<T> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_data_structures::{CausalTensor, CausalTensorMathExt};
+    /// use deep_causality_tensor::{CausalTensor, CausalTensorMathExt};
     ///
     /// let tensor = CausalTensor::new(vec![1.0, 10.0, 100.0], vec![3, 1]).unwrap();
     /// let result = tensor.log10().unwrap();

@@ -22,7 +22,7 @@ tasks.
 `CausalTensor` is straightforward to use. You create it from a flat vector of data and a vector defining its shape.
 
 ```rust
-use deep_causality_data_structures::CausalTensor;
+use deep_causality_tensor::CausalTensor;
 
 fn main() {
     // 1. Create a 2x3 tensor.

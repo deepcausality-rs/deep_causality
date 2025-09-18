@@ -110,7 +110,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_data_structures::CausalTensor;
+    /// use deep_causality_tensor::CausalTensor;
     ///
     /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     /// assert_eq!(tensor.data(), &vec![1, 2, 3, 4, 5, 6]);
@@ -129,7 +129,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_data_structures::CausalTensor;
+    /// use deep_causality_tensor::CausalTensor;
     ///
     /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     /// assert_eq!(tensor.shape(), &[2, 3]);
@@ -145,7 +145,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_data_structures::CausalTensor;
+    /// use deep_causality_tensor::CausalTensor;
     ///
     /// let empty_tensor: CausalTensor<i32> = CausalTensor::new(vec![], vec![0]).unwrap();
     /// assert!(empty_tensor.is_empty());
@@ -164,7 +164,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_data_structures::CausalTensor;
+    /// use deep_causality_tensor::CausalTensor;
     ///
     /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     /// assert_eq!(tensor.num_dim(), 2);
@@ -183,7 +183,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_data_structures::CausalTensor;
+    /// use deep_causality_tensor::CausalTensor;
     ///
     /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     /// assert_eq!(tensor.len(), 6);
@@ -202,7 +202,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_data_structures::CausalTensor;
+    /// use deep_causality_tensor::CausalTensor;
     ///
     /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     /// assert_eq!(tensor.as_slice(), &[1, 2, 3, 4, 5, 6]);
@@ -224,7 +224,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_data_structures::CausalTensor;
+    /// use deep_causality_tensor::CausalTensor;
     ///
     /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     ///
@@ -256,7 +256,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_data_structures::CausalTensor;
+    /// use deep_causality_tensor::CausalTensor;
     ///
     /// let mut tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     ///
@@ -299,7 +299,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_data_structures::CausalTensor;
+    /// use deep_causality_tensor::CausalTensor;
     ///
     /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     ///
@@ -328,7 +328,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_data_structures::CausalTensor;
+    /// use deep_causality_tensor::CausalTensor;
     ///
     /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     /// let raveled_tensor = tensor.ravel();
@@ -364,7 +364,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_data_structures::CausalTensor;
+    /// use deep_causality_tensor::CausalTensor;
     ///
     /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     /// // Tensor:
@@ -422,7 +422,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_data_structures::CausalTensor;
+    /// use deep_causality_tensor::CausalTensor;
     ///
     /// let tensor = CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]).unwrap();
     /// // Tensor:
@@ -466,7 +466,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_data_structures::CausalTensor;
+    /// use deep_causality_tensor::CausalTensor;
     ///
     /// let tensor = CausalTensor::new(vec![3, 1, 4, 1, 5, 9, 2, 6], vec![8]).unwrap();
     /// let sorted_indices = tensor.arg_sort().unwrap();
@@ -505,7 +505,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_data_structures::CausalTensor;
+    /// use deep_causality_tensor::CausalTensor;
     ///
     /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     /// // Tensor:

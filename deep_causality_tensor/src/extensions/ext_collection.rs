@@ -28,7 +28,7 @@ pub trait CausalTensorCollectionExt<T> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_data_structures::{CausalTensor, CausalTensorCollectionExt};
+    /// use deep_causality_tensor::{CausalTensor, CausalTensorCollectionExt};
     /// let t1 = CausalTensor::new(vec![1, 2], vec![2]).unwrap();
     /// let t2 = CausalTensor::new(vec![3, 4], vec![2]).unwrap();
     /// let stacked_tensor = [t1, t2].stack(0).unwrap();
