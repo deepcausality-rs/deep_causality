@@ -22,6 +22,6 @@ impl Distribution<u32> for StandardUniform {
 
 impl Distribution<bool> for StandardUniform {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> bool {
-        rng.next_u64() % 2 == 0 // Simple boolean generation
+        rng.next_u64().is_multiple_of(2) // Simple boolean generation
     }
 }

@@ -450,14 +450,29 @@ mod u32_to_tests {
         u32::MIN,
         Some(u32::MIN as isize)
     );
+
+    #[cfg(target_pointer_width = "64")]
     test_to!(
-        to_isize_max,
+        to_isize_max_ok,
         to_isize,
         u32,
         isize,
         u32::MAX,
         Some(u32::MAX as isize)
     );
+
+    #[cfg(target_pointer_width = "32")]
+    test_to!(
+        to_isize_max_ok,
+        to_isize,
+        u32,
+        isize,
+        isize::MAX as u32,
+        Some(isize::MAX)
+    );
+
+    #[cfg(target_pointer_width = "32")]
+    test_to!(to_isize_fail_u32_max, to_isize, u32, isize, u32::MAX, None);
 
     test_to!(to_i8_ok, to_i8, u32, i8, 42, Some(42));
     test_to!(to_i8_fail_pos, to_i8, u32, i8, i8::MAX as u32 + 1, None);

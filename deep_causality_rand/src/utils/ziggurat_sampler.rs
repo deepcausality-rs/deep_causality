@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::Rng;
-use crate::utils::float::IntoFloat;
 use crate::utils::ziggurat_tables;
+use deep_causality_num::IntoFloat;
 
 /// Sample a random number using the Ziggurat method (specifically the
 /// ZIGNOR variant from Doornik 2005). Most of the arguments are

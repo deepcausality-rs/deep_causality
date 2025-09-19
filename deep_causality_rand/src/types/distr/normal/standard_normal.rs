@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::utils::float::Open01;
+use crate::Open01;
 use crate::utils::{ziggurat_sampler, ziggurat_tables};
 use crate::{Distribution, Rng};
 

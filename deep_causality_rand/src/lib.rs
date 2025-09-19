@@ -4,6 +4,7 @@
  */
 
 mod errors;
+mod extensions;
 mod traits;
 pub mod types;
 mod utils;
@@ -13,6 +14,8 @@ pub use crate::errors::bernoulli_error::BernoulliDistributionError;
 pub use crate::errors::normal_error::NormalDistributionError;
 pub use crate::errors::rng_error::RngError;
 pub use crate::errors::uniform_error::UniformDistributionError;
+// Extensions
+
 // Traits
 pub use crate::traits::distribution::Distribution;
 pub use crate::traits::fill::Fill;
@@ -29,6 +32,7 @@ pub use crate::types::distr::uniform::standard_uniform::StandardUniform;
 pub use crate::types::distr::uniform::{Uniform, UniformFloat};
 pub use crate::types::misc::iter::Iter;
 pub use crate::types::misc::map::Map;
+pub use crate::types::range::{Open01, OpenClosed01};
 
 #[cfg(not(feature = "os-random"))]
 use crate::types::Xoshiro256;

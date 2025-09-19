@@ -6,6 +6,7 @@
 pub mod distr;
 pub mod misc;
 pub(crate) mod rand;
+pub mod range;
 
 #[cfg(feature = "os-random")]
 pub use rand::os_random_rng::OsRandomRng;

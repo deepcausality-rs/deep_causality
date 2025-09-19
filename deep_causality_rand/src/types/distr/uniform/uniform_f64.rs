@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::types::distr::uniform::{RandFloat, UniformFloat};
-use crate::utils::float::IntoFloat;
 use crate::{Rng, SampleUniform};
+use deep_causality_num::IntoFloat;
 
 impl RandFloat for f64 {
     fn rand_float_gen<R: Rng + ?Sized>(rng: &mut R) -> f64 {
