@@ -4,7 +4,7 @@
  */
 
 use crate::{Distribution, Fill, RngCore, SampleRange, SampleUniform};
-use crate::{Iter, StandardUniform};
+use crate::{Iter, Map, StandardUniform};
 
 impl<T: Rng> Rng for &mut T {}
 
@@ -72,5 +72,17 @@ pub trait Rng: RngCore {
     #[track_caller]
     fn fill<T: Fill + ?Sized>(&mut self, dest: &mut T) {
         dest.fill(self)
+    }
+
+    fn map<T, S, F>(&mut self, func: F) -> Map<StandardUniform, F, T, S>
+    where
+        StandardUniform: Distribution<T>,
+        F: Fn(T) -> S,
+    {
+        Map {
+            distr: StandardUniform,
+            func,
+            phantom: core::marker::PhantomData,
+        }
     }
 }
