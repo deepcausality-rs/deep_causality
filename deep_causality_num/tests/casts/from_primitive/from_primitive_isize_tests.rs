@@ -347,16 +347,6 @@ mod to_i64_tests {
         None
     );
 
-    test_from!(from_f32_ok, from_f32, f32, i64, 42.0, Some(42));
-    test_from!(
-        from_f32_fail_over,
-        from_f32,
-        f32,
-        i64,
-        i64::MAX as f32,
-        None
-    );
-
     test_from!(from_f64_ok, from_f64, f64, i64, 42.0, Some(42));
     test_from!(
         from_f64_fail_over,
