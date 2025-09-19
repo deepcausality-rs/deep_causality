@@ -21,13 +21,13 @@ fn contextual_cancer_risk_logic(
 
     // Scan the context for relevant data.
     for i in 0..context.number_of_nodes() {
-        if let Some(node) = context.get_node(i) {
-            if let ContextoidType::Datoid(data_node) = node.vertex_type() {
-                match data_node.id() {
-                    TAR_ID => tar_level = data_node.get_data(),
-                    NICOTINE_ID => nicotine_level = data_node.get_data(),
-                    _ => (),
-                }
+        if let Some(node) = context.get_node(i)
+            && let ContextoidType::Datoid(data_node) = node.vertex_type()
+        {
+            match data_node.id() {
+                TAR_ID => tar_level = data_node.get_data(),
+                NICOTINE_ID => nicotine_level = data_node.get_data(),
+                _ => (),
             }
         }
     }

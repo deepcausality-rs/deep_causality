@@ -1,6 +1,8 @@
 .cargo
+.gemini
 .git
 .github
+.specify
 target
 target-bzl
 target-bzl/bin

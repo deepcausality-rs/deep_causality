@@ -8,4 +8,4 @@ set -o pipefail
 
 command cargo fix --lib --allow-dirty
 
-command cargo clippy --fix --allow-dirty
+command cargo clippy --fix --allow-dirty --all-targets --all-features -- -D warnings

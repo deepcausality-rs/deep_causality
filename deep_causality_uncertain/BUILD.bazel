@@ -11,9 +11,8 @@ rust_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        # External crates
-        "//thirdparty/crates:rand",
-        "//thirdparty/crates:rand_distr",
+        # Internal crates
+        "//deep_causality_rand",
     ],
 )
 

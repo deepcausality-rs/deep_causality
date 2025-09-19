@@ -4,10 +4,10 @@
 [package]
 name = "example-dbn"
 version = "0.1.0"
-edition = "2021"
-rust-version = "1.80"
+edition = { workspace = true }
+rust-version = { workspace = true }
 publish = false
 
 [dependencies]
 deep_causality = { path = "../../deep_causality" }
-rand = "0.9"
+deep_causality_rand = { path = "../../deep_causality_rand" }

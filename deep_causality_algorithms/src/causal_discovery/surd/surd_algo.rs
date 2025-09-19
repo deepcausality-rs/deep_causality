@@ -4,10 +4,10 @@
  */
 use crate::causal_discovery::surd::surd_utils;
 use crate::causal_discovery::surd::{MaxOrder, SurdResult};
-use deep_causality_data_structures::CausalTensor;
-use deep_causality_data_structures::CausalTensorCollectionExt;
-use deep_causality_data_structures::CausalTensorError;
-use deep_causality_data_structures::CausalTensorMathExt;
+use deep_causality_tensor::CausalTensor;
+use deep_causality_tensor::CausalTensorCollectionExt;
+use deep_causality_tensor::CausalTensorError;
+use deep_causality_tensor::CausalTensorMathExt;
 use std::collections::HashMap;
 
 #[cfg(feature = "parallel")]
@@ -61,7 +61,7 @@ use rayon::prelude::*;
 ///
 /// ```
 /// use deep_causality_algorithms::causal_discovery::surd::{surd_states, MaxOrder};
-/// use deep_causality_data_structures::CausalTensor;
+/// use deep_causality_tensor::CausalTensor;
 ///
 /// // Create a joint probability distribution for a target and 2 source variables.
 /// // Shape: [target_states, source1_states, source2_states] = [2, 2, 2]

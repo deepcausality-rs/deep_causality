@@ -87,25 +87,25 @@ where
             // Check for defeaters for the current node.
             let mut is_defeated = false;
             for defeater_idx in self.teloid_graph.graph.inbound_edges(current_idx)? {
-                if let Some(edges) = self.teloid_graph.graph.get_edges(defeater_idx) {
-                    if edges.iter().any(|(target, relation)| {
+                if let Some(edges) = self.teloid_graph.graph.get_edges(defeater_idx)
+                    && edges.iter().any(|(target, relation)| {
                         *target == current_idx && *relation == &TeloidRelation::Defeats
-                    }) {
-                        let defeater_id = self
-                            .teloid_graph
-                            .graph
-                            .get_node(defeater_idx)
-                            .copied()
-                            .ok_or(DeonticError::TeloidNotFound { id: 0 })?;
-                        if let Some(defeater_teloid) = inferred_beliefs.get(&defeater_id) {
-                            // Apply Lex Specialis, Lex Posterior, and Lex Superior rules
-                            if defeater_teloid.specificity() > current_teloid.specificity()
-                                || defeater_teloid.timestamp() > current_teloid.timestamp()
-                                || defeater_teloid.priority() > current_teloid.priority()
-                            {
-                                is_defeated = true;
-                                break;
-                            }
+                    })
+                {
+                    let defeater_id = self
+                        .teloid_graph
+                        .graph
+                        .get_node(defeater_idx)
+                        .copied()
+                        .ok_or(DeonticError::TeloidNotFound { id: 0 })?;
+                    if let Some(defeater_teloid) = inferred_beliefs.get(&defeater_id) {
+                        // Apply Lex Specialis, Lex Posterior, and Lex Superior rules
+                        if defeater_teloid.specificity() > current_teloid.specificity()
+                            || defeater_teloid.timestamp() > current_teloid.timestamp()
+                            || defeater_teloid.priority() > current_teloid.priority()
+                        {
+                            is_defeated = true;
+                            break;
                         }
                     }
                 }
@@ -118,25 +118,25 @@ where
 
             // If not defeated, continue traversal to inheriting children.
             for child_idx in self.teloid_graph.graph.outbound_edges(current_idx)? {
-                if let Some(edges) = self.teloid_graph.graph.get_edges(current_idx) {
-                    if edges.iter().any(|(target, relation)| {
+                if let Some(edges) = self.teloid_graph.graph.get_edges(current_idx)
+                    && edges.iter().any(|(target, relation)| {
                         *target == child_idx && *relation == &TeloidRelation::Inherits
-                    }) && visited.insert(child_idx)
-                    {
-                        let child_id = self
-                            .teloid_graph
-                            .graph
-                            .get_node(child_idx)
-                            .copied()
-                            .ok_or(DeonticError::TeloidNotFound { id: 0 })?;
-                        let child_teloid = self
-                            .teloid_store
-                            .get(&child_id)
-                            .ok_or(DeonticError::TeloidNotFound { id: child_id })?;
+                    })
+                    && visited.insert(child_idx)
+                {
+                    let child_id = self
+                        .teloid_graph
+                        .graph
+                        .get_node(child_idx)
+                        .copied()
+                        .ok_or(DeonticError::TeloidNotFound { id: 0 })?;
+                    let child_teloid = self
+                        .teloid_store
+                        .get(&child_id)
+                        .ok_or(DeonticError::TeloidNotFound { id: child_id })?;
 
-                        inferred_beliefs.insert(child_id, child_teloid.clone());
-                        queue.push_back(child_idx);
-                    }
+                    inferred_beliefs.insert(child_id, child_teloid.clone());
+                    queue.push_back(child_idx);
                 }
             }
         }

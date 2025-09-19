@@ -6,7 +6,7 @@
 use crate::{
     SampledValue, Sampler, SequentialSampler, Uncertain, UncertainError, with_global_cache,
 };
-use rand::Rng;
+use deep_causality_rand::Rng;
 
 // Sampling impl for Uncertain<f64>
 impl Uncertain<f64> {
@@ -29,7 +29,7 @@ impl Uncertain<f64> {
     }
 
     pub fn sample(&self) -> Result<f64, UncertainError> {
-        let sample_index = rand::rng().random::<u64>();
+        let sample_index = deep_causality_rand::rng().random::<u64>();
         self.sample_with_index(sample_index)
     }
 
@@ -59,7 +59,7 @@ impl Uncertain<bool> {
     }
 
     pub fn sample(&self) -> Result<bool, UncertainError> {
-        let sample_index = rand::rng().random::<u64>();
+        let sample_index = deep_causality_rand::rng().random::<u64>();
         self.sample_with_index(sample_index)
     }
 

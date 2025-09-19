@@ -2,4 +2,5 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-mod complex_operations;
+#[cfg(test)]
+mod complex_operations_tests;

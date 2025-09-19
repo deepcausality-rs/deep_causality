@@ -4,10 +4,10 @@
 [package]
 name = "deep_causality"
 version = "0.11.2"
-edition = "2021"
-rust-version = "1.80"
+edition = { workspace = true }
+rust-version = { workspace = true }
 readme = "../README.md"
-license = "MIT"
+license = { workspace = true }
 
 description = "Computational causality library. Provides causality graph, collections, context and causal reasoning."
 documentation = "https://docs.rs/deep_causality"
@@ -18,9 +18,6 @@ categories = ["data-structures", "science", "aerospace", "finance", "mathematics
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
-[dependencies.deep_causality_algorithms]
-path = "../deep_causality_algorithms"
-version = "0.1"
 
 [dependencies.deep_causality_data_structures]
 path = "../deep_causality_data_structures"

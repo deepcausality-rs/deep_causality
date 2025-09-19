@@ -4,7 +4,7 @@
  */
 use crate::feature_selection::mrmr::mrmr_error::MrmrError;
 use crate::mrmr::mrmr_utils;
-use deep_causality_data_structures::CausalTensor;
+use deep_causality_tensor::CausalTensor;
 
 #[test]
 fn test_pearson_correlation() {

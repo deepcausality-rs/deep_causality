@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{BernoulliParams, NormalDistributionParams, UncertainError, UniformDistributionParams};
-use rand_distr::{Bernoulli, Distribution, Normal, Uniform};
+use deep_causality_rand::{Bernoulli, Distribution, Normal, Rng, Uniform}; // Import all necessary traits and structs
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -24,15 +24,17 @@ impl DistributionEnum<f64> {
     /// # Returns
     ///
     /// A `Result` containing the sampled `f64` value or an `UncertainError` if the distribution type is unsupported.
-    pub fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> Result<f64, UncertainError> {
+    pub fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Result<f64, UncertainError> {
         match self {
             DistributionEnum::Point(v) => Ok(*v),
             DistributionEnum::Normal(params) => {
-                let normal = Normal::new(params.mean, params.std_dev)?;
+                let normal = Normal::new(params.mean, params.std_dev)
+                    .map_err(|e| UncertainError::NormalDistributionError(e.to_string()))?;
                 Ok(normal.sample(rng))
             }
             DistributionEnum::Uniform(params) => {
-                let uniform = Uniform::new(params.low, params.high)?;
+                let uniform = Uniform::new(params.low, params.high)
+                    .map_err(|e| UncertainError::UniformDistributionError(e.to_string()))?;
                 Ok(uniform.sample(rng))
             }
             _ => Err(UncertainError::UnsupportedTypeError(
@@ -52,11 +54,12 @@ impl DistributionEnum<bool> {
     /// # Returns
     ///
     /// A `Result` containing the sampled `bool` value or an `UncertainError` if the distribution type is unsupported.
-    pub fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> Result<bool, UncertainError> {
+    pub fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Result<bool, UncertainError> {
         match self {
             DistributionEnum::Point(v) => Ok(*v),
             DistributionEnum::Bernoulli(params) => {
-                let bernoulli = Bernoulli::new(params.p)?;
+                let bernoulli = Bernoulli::new(params.p)
+                    .map_err(|e| UncertainError::BernoulliDistributionError(e.to_string()))?;
                 Ok(bernoulli.sample(rng))
             }
             _ => Err(UncertainError::UnsupportedTypeError(

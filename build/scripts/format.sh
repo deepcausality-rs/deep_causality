@@ -14,6 +14,7 @@ buildifier -r deep_causality_algorithms/
 buildifier -r deep_causality_data_structures/
 buildifier -r deep_causality_uncertain/
 buildifier -r deep_causality_macros/
+buildifier -r deep_causality_rand/
 buildifier -r ultragraph/
 
 # Code formatting

@@ -4,11 +4,11 @@
 [package]
 name = "dcl_data_structures"
 version = "0.10.0"
-edition = "2021"
-rust-version = "1.80"
+edition = { workspace = true }
+rust-version = { workspace = true }
 repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
-license = "MIT"
+license = { workspace = true }
 description = "Moved to: https://crates.io/crates/deep_causality_data_structures"
 documentation = "https://docs.rs/deep_causality"
 categories = ["data-structures", "science"]

@@ -1,8 +1,8 @@
 [package]
 name = "example_effect_ethos"
 version = "0.1.0"
-edition = "2021"
-rust-version = "1.80"
+edition = { workspace = true }
+rust-version = { workspace = true }
 publish = false
 
 [dependencies]

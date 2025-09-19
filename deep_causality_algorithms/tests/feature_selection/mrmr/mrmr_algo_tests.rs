@@ -5,7 +5,7 @@
 
 use deep_causality_algorithms::feature_selection::mrmr;
 use deep_causality_algorithms::mrmr::MrmrError;
-use deep_causality_data_structures::CausalTensor;
+use deep_causality_tensor::CausalTensor;
 
 #[test]
 fn test_mrmr_select_features() {

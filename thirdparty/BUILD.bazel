@@ -7,37 +7,13 @@ crates_vendor(
     packages = {
         #
         # Proc macros dependencies
-        "proc-macro2": crate.spec(
+        "rusty-fork": crate.spec(
             default_features = True,
-            package = "proc-macro2",
-            version = "1.0",
-        ),
-        "syn": crate.spec(
-            default_features = True,
-            features = [
-                "full",
-                "extra-traits",
-            ],
-            package = "syn",
-            version = "2.0",
-        ),
-        "quote": crate.spec(
-            default_features = True,
-            package = "quote",
-            version = "1.0",
+            package = "rusty-fork",
+            version = "0.3.0",
         ),
         #
         # Regular dependencies
-        "rand": crate.spec(
-            default_features = True,
-            package = "rand",
-            version = "0.9",
-        ),
-        "rand_distr": crate.spec(
-            default_features = True,
-            package = "rand_distr",
-            version = "0.5",
-        ),
     },  # End packages
     repository_name = "deep_causality_vendored",
     tags = ["manual"],

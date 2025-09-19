@@ -31,61 +31,13 @@ filegroup(
 
 # Workspace Member Dependencies
 alias(
-    name = "proc-macro2-1.0.101",
-    actual = "//thirdparty/crates/proc-macro2-1.0.101:proc_macro2",
+    name = "rusty-fork-0.3.0",
+    actual = "//thirdparty/crates/rusty-fork-0.3.0:rusty_fork",
     tags = ["manual"],
 )
 
 alias(
-    name = "proc-macro2",
-    actual = "//thirdparty/crates/proc-macro2-1.0.101:proc_macro2",
-    tags = ["manual"],
-)
-
-alias(
-    name = "quote-1.0.40",
-    actual = "//thirdparty/crates/quote-1.0.40:quote",
-    tags = ["manual"],
-)
-
-alias(
-    name = "quote",
-    actual = "//thirdparty/crates/quote-1.0.40:quote",
-    tags = ["manual"],
-)
-
-alias(
-    name = "rand-0.9.2",
-    actual = "//thirdparty/crates/rand-0.9.2:rand",
-    tags = ["manual"],
-)
-
-alias(
-    name = "rand",
-    actual = "//thirdparty/crates/rand-0.9.2:rand",
-    tags = ["manual"],
-)
-
-alias(
-    name = "rand_distr-0.5.1",
-    actual = "//thirdparty/crates/rand_distr-0.5.1:rand_distr",
-    tags = ["manual"],
-)
-
-alias(
-    name = "rand_distr",
-    actual = "//thirdparty/crates/rand_distr-0.5.1:rand_distr",
-    tags = ["manual"],
-)
-
-alias(
-    name = "syn-2.0.106",
-    actual = "//thirdparty/crates/syn-2.0.106:syn",
-    tags = ["manual"],
-)
-
-alias(
-    name = "syn",
-    actual = "//thirdparty/crates/syn-2.0.106:syn",
+    name = "rusty-fork",
+    actual = "//thirdparty/crates/rusty-fork-0.3.0:rusty_fork",
     tags = ["manual"],
 )

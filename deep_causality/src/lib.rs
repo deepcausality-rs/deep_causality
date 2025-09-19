@@ -20,10 +20,6 @@ pub mod types;
 pub mod utils;
 pub mod utils_test;
 
-// Re-exports of depending crates
-pub use deep_causality_algorithms::causal_discovery::surd;
-pub use deep_causality_data_structures;
-
 //
 // Error types
 //

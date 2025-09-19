@@ -1,34 +1,38 @@
 [package]
 name = "deep_causality_uncertain"
 version = "0.2.1"
-edition = "2021"
-rust-version = "1.80"
+edition = { workspace = true }
+rust-version = { workspace = true }
 repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
-license = "MIT"
+license = { workspace = true }
 description = "A First-Order Type for Uncertain Programming for the DeepCausality project.'"
 documentation = "https://docs.rs/deep_causality"
 exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
 
 [dependencies]
-rand = { version = "0.9.2" }
-rand_distr =  { version = "0.5.1"}
+deep_causality_rand = { path = "../deep_causality_rand"}
+
 
 [[example]]
 name = "gps_navigation"
 path = "examples/gps/gps_navigation.rs"
 
+
 [[example]]
 name = "sensor_processing"
 path = "examples/sensor/sensor_processing.rs"
 
+
 [package.metadata.docs.rs]
 all-features = true
+
 
 [dev-dependencies]
 rusty-fork = "0.3.0"
 criterion = { version = "0.7.0", features = ["html_reports"] }
+
 
 [[bench]]
 name = "uncertain_benchmarks"

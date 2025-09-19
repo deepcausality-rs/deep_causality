@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_data_structures::{CausalTensor, CausalTensorError};
+use deep_causality_tensor::{CausalTensor, CausalTensorError};
 use std::cmp::Ordering;
 
 /// Computes the difference between adjacent elements of a slice.

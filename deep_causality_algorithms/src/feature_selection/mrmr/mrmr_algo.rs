@@ -5,7 +5,7 @@
 
 use crate::feature_selection::mrmr::mrmr_error::MrmrError;
 use crate::mrmr::mrmr_utils;
-use deep_causality_data_structures::CausalTensor;
+use deep_causality_tensor::CausalTensor;
 use std::collections::HashSet;
 
 /// Selects features using the mRMR (Maximum Relevance, Minimum Redundancy) algorithm.
@@ -51,7 +51,7 @@ use std::collections::HashSet;
 /// # Examples
 ///
 /// ```
-/// use deep_causality_data_structures::CausalTensor;
+/// use deep_causality_tensor::CausalTensor;
 /// use deep_causality_algorithms::mrmr::select_features;
 ///
 /// let data = vec![

@@ -64,3 +64,7 @@ start:
 .PHONY: test
 test:
 	@source build/scripts/test.sh
+
+.PHONY: vendor
+vendor:
+	@source build/scripts/vendor.sh

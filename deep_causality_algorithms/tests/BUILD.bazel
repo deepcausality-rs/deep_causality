@@ -1,6 +1,22 @@
 load("@rules_rust//rust:defs.bzl", "rust_test_suite")
 
 rust_test_suite(
+    name = "feature_selection",
+    srcs = glob([
+        "feature_selection/mrmr/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_algorithms",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_test_suite(
     name = "surd",
     srcs = glob([
         "surd/*_tests.rs",
@@ -12,6 +28,6 @@ rust_test_suite(
     deps = [
         # Crate to test
         "//deep_causality_algorithms",
-        "//deep_causality_data_structures",
+        "//deep_causality_tensor",
     ],
 )

@@ -34,11 +34,6 @@ Fixed-sized arrays allow for several compiler optimizations, including a cache-a
 runtime array boundary checks because all structural parameters are known upfront, providing a significant performance
 boost over tensors.
 
-The CausalTensor provides a flexible, multi-dimensional array (tensor) backed by a single, contiguous `Vec<T>`. 
-It is designed for efficient numerical computations, featuring a stride-based memory layout that supports broadcasting for
-element-wise binary operations. It offers a comprehensive API for shape manipulation, element access, and common
-reduction operations like `sum` and `mean`, making it a versatile tool for causal modeling and other data-intensive
-tasks.
 
 The sliding window implementation over-allocates to trade space (memory) for time complexity by delaying the rewind
 operation when hitting the end of the underlying data structure.
@@ -49,10 +44,10 @@ implementation is significantly faster than the vector-based version.
 
 ## 🤔 Why?
 
-1) Zero dependencies.
-2) Zero cost abstraction.
-3) Zero unsafe.
-4) Zero macros.
+1) Zero cost abstraction.
+2) Zero unsafe.
+3) Zero macros.
+4) Zero external dependencies.
 
 # Performance:
 
@@ -69,18 +64,6 @@ implementation is significantly faster than the vector-based version.
 
 More details on performance can be found in the [Performance](README_ArrayGrid.md#performance) section
 of the [ArrayGrid document](README_ArrayGrid.md).
-
-### CausalTensor
-
-Benchmarks are for a 100x100 (10,000 element) tensor.
-
-| Operation                     | Time     | Notes                                       |
-|-------------------------------|----------|---------------------------------------------|
-| `tensor_get`                  | ~1.64 ns | Accessing a single element.                 |
-| `tensor_reshape`              | ~786 ns  | Metadata only, but clones data in the test. |
-| `tensor_scalar_add`           | ~2.69 µs | Element-wise addition with a scalar.        |
-| `tensor_tensor_add_broadcast` | ~37.7 µs | Element-wise addition with broadcasting.    |
-| `tensor_sum_full_reduction`   | ~6.86 µs | Summing all 10,000 elements of the tensor.  |
 
 ## Sliding Window
 
@@ -117,7 +100,7 @@ cargo add deep_causality_data_structures
 
 * [API Docs](https://docs.rs/deep_causality_data_structures/latest/deep_causality_data_structures)
 * [ArrayGrid Summary](README_ArrayGrid.md)
-* [CausalTensor Summary](README_CausalTensor.md)
+* [CausalTensor Summary](../deep_causality_tensor/README.md)
 * [SlidingWindow Summary](README_SlidingWindow)
 
 ## ⭐ Usage
@@ -127,12 +110,6 @@ cargo add deep_causality_data_structures
 * [Benchmark](benches/benchmarks)
 * [Examples](examples/array_grid)
 * [Test](tests/grid_type)
-
-**CausalTensor:**
-* [Design & Details](README_CausalTensor.md)
-* [Benchmark](benches/benchmarks/causal_tensor_type)
-* [Examples](examples/causal_tensor_type)
-* [Test](tests/causal_tensor_type)
 
 * **SlidingWindow:**
 * [Design & Details](README_SlidingWindow.md)

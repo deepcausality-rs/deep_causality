@@ -7,7 +7,7 @@
 mod constructors_tests;
 #[cfg(test)]
 mod default_tests;
-
+#[cfg(test)]
 mod graph_algo_centrality_tests;
 #[cfg(test)]
 mod graph_algo_pathfinder_tests;
