@@ -6,7 +6,7 @@
 use crate::UniformDistributionError;
 use std::error::Error;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum RngError {
     OsRandomGenerator(String),
     InvalidRange(String),

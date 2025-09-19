@@ -64,6 +64,30 @@ macro_rules! uniform_int_tests {
                 let sample = Uniform::<$ty>::new(10, 20).unwrap().sample(&mut rng);
                 assert_eq!(sample, 10);
             }
+
+            #[test]
+            fn test_sample_single() {
+                let mut rng = MockIntRng { val: 5 };
+                let sample =
+                    <$ty as SampleUniform>::Sampler::sample_single(10, 20, &mut rng).unwrap();
+                assert!((10..20).contains(&sample));
+
+                let res = <$ty as SampleUniform>::Sampler::sample_single(20, 10, &mut rng);
+                assert_eq!(res.unwrap_err(), UniformDistributionError::InvalidRange);
+            }
+
+            #[test]
+            fn test_sample_single_inclusive() {
+                let mut rng = MockIntRng { val: 5 };
+                let sample =
+                    <$ty as SampleUniform>::Sampler::sample_single_inclusive(10, 20, &mut rng)
+                        .unwrap();
+                assert!((10..=20).contains(&sample));
+
+                let res =
+                    <$ty as SampleUniform>::Sampler::sample_single_inclusive(21, 20, &mut rng);
+                assert_eq!(res.unwrap_err(), UniformDistributionError::InvalidRange);
+            }
         }
     };
 }
@@ -119,6 +143,38 @@ macro_rules! uniform_float_tests {
                 let mean = sum / NUM_SAMPLES as f64;
                 let expected_mean = (low + high) as f64 / 2.0;
                 assert!((mean - expected_mean).abs() < $tolerance);
+            }
+
+            #[test]
+            fn test_sample_single() {
+                let mut rng = rng();
+                let low = 10.0;
+                let high = 20.0;
+                let sample =
+                    <$ty as SampleUniform>::Sampler::sample_single(low, high, &mut rng).unwrap();
+                assert!((low..high).contains(&sample));
+
+                let res = <$ty as SampleUniform>::Sampler::sample_single(20.0, 10.0, &mut rng);
+                assert_eq!(res.unwrap_err(), UniformDistributionError::EmptyRange);
+
+                let res =
+                    <$ty as SampleUniform>::Sampler::sample_single(10.0, <$ty>::INFINITY, &mut rng);
+                assert_eq!(res.unwrap_err(), UniformDistributionError::NonFinite);
+            }
+
+            #[test]
+            fn test_sample_single_inclusive() {
+                let mut rng = rng();
+                let low = 10.0;
+                let high = 20.0;
+                let sample =
+                    <$ty as SampleUniform>::Sampler::sample_single_inclusive(low, high, &mut rng)
+                        .unwrap();
+                assert!((low..=high).contains(&sample));
+
+                let res =
+                    <$ty as SampleUniform>::Sampler::sample_single_inclusive(21.0, 20.0, &mut rng);
+                assert_eq!(res.unwrap_err(), UniformDistributionError::EmptyRange);
             }
         }
     };
