@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use criterion::{BatchSize, Criterion, criterion_group};
-use rand::{Rng, rng};
+use deep_causality_rand::{Rng, rng};
 use std::hint::black_box;
 // Use modern rand imports
 use ultragraph::*;

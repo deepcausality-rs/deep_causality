@@ -6,15 +6,14 @@ name = "deep_causality_macros"
 version = "0.8.4"
 edition = { workspace = true }
 rust-version = { workspace = true }
+license = { workspace = true }
+
 repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
-license = { workspace = true }
 description = "Costum code generation macros for the DeepCausality crate."
 documentation = "https://docs.rs/deep_causality"
 exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
-
-[features]
 
 [dependencies]
 

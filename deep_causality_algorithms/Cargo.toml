@@ -33,6 +33,8 @@ optional = true
 
 [features]
 default = []
+# Enables parallel execution of the SURD algorithm by adding a dependency on Rayon.
+# Disabled by default.
 parallel = ["dep:rayon"]
 
 

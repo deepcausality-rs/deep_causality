@@ -3,9 +3,10 @@ name = "deep_causality_num"
 version = "0.1.0"
 edition = { workspace = true }
 rust-version = { workspace = true }
+license = { workspace = true }
+
 repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
-license = { workspace = true }
 description = "Number utils for for deep_causality crate."
 documentation = "https://docs.rs/deep_causality"
 categories = ["development-tools"]
