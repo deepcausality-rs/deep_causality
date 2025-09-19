@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_macros-v0.8.4...deep_causality_macros-v0.8.5) - 2025-09-19
+
+### Added
+
+- *(deep_causality_rand)* added README.md
+
+### Other
+
+- Lots of lints and formats. Updated MSRV to 1.89 and edition 2024 across the entire repo.
+- *(deep_causality_rand)* Increased test coverage.
+
 ## [0.8.4](https://github.com/marvin-hansen/deep_causality/compare/deep_causality_macros-v0.8.3...deep_causality_macros-v0.8.4) - 2025-09-11
 
 ### Added
