@@ -3,6 +3,10 @@
 The DeepCausality projected adopted spec driven development
 with [spec-kit](https://github.com/github/spec-kit?tab=readme-ov-file#-detailed-process).
 
+Important, the project conventions for the Ai agent are written down in the [Gemini.md](../GEMINI.md) file. For agents other then Gemini, you have to make a copy and rename the file to something your agent reads by default i.e. AGENT.md or similar. That way, your coding agent will use the right build and test tools by default and knows the structure of the repo. Alternatively, you can pre-load the agents context by simply typing `read @GEMINI.md`
+
+Next it is important that you have spec-kit installed on your machine. See the [spec-kit](https://github.com/github/spec-kit?tab=readme-ov-file#-detailed-process) repository for details.
+
 Once spec-kit is installed, the basic workflow is as following.
 
 0) Start your coding cli agent i.e. Gemini-CLI, Claude Code, copilot, or cursor.
@@ -15,6 +19,9 @@ Once spec-kit is installed, the basic workflow is as following.
 7) Interact with the agent to supervise the implementation.
 8) Verify and the implementation, test, and do code review
 9) Fill a PR and check CI status
+
+If you are unsure about a feature or implementation technique, you can ask the agent to do research for you. However,
+without a good starting source i.e. a blueprint, a technical blog post, or sample code, your millage and luck may vary.
 
 Plan validation significantly increases chances of a speedy implementation without the agent running in random loops.
 A sample prompt to ask the agent to validate the plan, form the spec-kit example:
