@@ -9,7 +9,7 @@ use crate::{Iter, Map};
 pub trait Distribution<T> {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T;
 
-    fn sample_iter<R>(self, rng: R) -> Iter<Self, R, T>
+    fn sample_iter<R>(self, rng: &mut R) -> Iter<Self, &mut R, T>
     where
         R: Rng,
         Self: Sized,

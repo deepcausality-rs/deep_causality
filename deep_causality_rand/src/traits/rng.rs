@@ -6,6 +6,8 @@
 use crate::{Distribution, Fill, RngCore, SampleRange, SampleUniform};
 use crate::{Iter, StandardUniform};
 
+impl<T: Rng> Rng for &mut T {}
+
 pub trait Rng: RngCore {
     #[inline]
     fn random<T>(&mut self) -> T
@@ -16,7 +18,7 @@ pub trait Rng: RngCore {
     }
 
     #[inline]
-    fn random_iter<T>(self) -> Iter<StandardUniform, Self, T>
+    fn random_iter<T>(&mut self) -> Iter<StandardUniform, &mut Self, T>
     where
         Self: Sized,
         StandardUniform: Distribution<T>,
@@ -59,7 +61,7 @@ pub trait Rng: RngCore {
         distr.sample(self)
     }
 
-    fn sample_iter<T, D>(self, distr: D) -> Iter<D, Self, T>
+    fn sample_iter<T, D>(&mut self, distr: D) -> Iter<D, &mut Self, T>
     where
         D: Distribution<T>,
         Self: Sized,

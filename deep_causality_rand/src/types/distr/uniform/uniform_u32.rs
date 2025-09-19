@@ -56,7 +56,6 @@ impl UniformSampler for UniformU32 {
 impl SampleUniform for u32 {
     type Sampler = UniformU32;
 }
-
 impl SampleRange<u32> for Range<u32> {
     fn sample_single<R: Rng + ?Sized>(self, rng: &mut R) -> Result<u32, RngError> {
         // Changed RngCore to Rng

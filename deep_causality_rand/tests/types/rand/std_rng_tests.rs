@@ -32,13 +32,32 @@ fn test_xoshiro256_next_u64_produces_non_zero() {
 }
 
 #[test]
-fn test_xoshiro256_gen_range_produces_value_in_range() {
+fn test_xoshiro256_random_range_produces_value_in_range() {
     let mut rng = Xoshiro256::new();
     let range = 10u64..20u64; // Explicitly use u64
-    let val = rng.random_range(range.clone()); // Changed gen_range to random_range
+    let val = rng.random_range(range.clone());
     assert!(
         val >= range.start && val < range.end,
-        "gen_range should produce a value within the specified range"
+        "random_range should produce a value within the specified range"
+    );
+}
+
+#[test]
+fn test_xoshiro256_random_range_single_value_range() {
+    let mut rng = Xoshiro256::new();
+    let range = 5u32..6u32;
+    let val = rng.random_range(range.clone());
+    assert_eq!(val, 5, "random_range for 5..6 should always return 5");
+}
+
+#[test]
+fn test_xoshiro256_random_range_zero_to_one() {
+    let mut rng = Xoshiro256::new();
+    let range = 0.0f64..1.0f64;
+    let val = rng.random_range(range.clone());
+    assert!(
+        val >= range.start && val < range.end,
+        "random_range for 0.0..1.0 should produce a value within the specified range"
     );
 }
 
@@ -55,7 +74,7 @@ fn test_xoshiro256_next_u64_produces_different_values() {
 
 #[test]
 #[should_panic(expected = "cannot sample empty range")]
-fn test_xoshiro256_gen_range_invalid_range_panics() {
+fn test_xoshiro256_random_range_empty_panics() {
     let mut rng = Xoshiro256::new();
     let _ = rng.random_range(10u64..10u64);
 }
@@ -69,6 +88,24 @@ fn test_xoshiro256_fill_bytes() {
     assert!(
         !buffer.iter().all(|&x| x == 0),
         "Buffer should not be all zeros"
+    );
+}
+
+#[test]
+fn test_xoshiro256_fill_bytes_different_sizes() {
+    let mut rng = Xoshiro256::new();
+    let mut buffer_small = [0u8; 4];
+    rng.fill_bytes(&mut buffer_small);
+    assert!(
+        !buffer_small.iter().all(|&x| x == 0),
+        "Small buffer should not be all zeros"
+    );
+
+    let mut buffer_large = [0u8; 100];
+    rng.fill_bytes(&mut buffer_large);
+    assert!(
+        !buffer_large.iter().all(|&x| x == 0),
+        "Large buffer should not be all zeros"
     );
 }
 
@@ -150,4 +187,43 @@ fn test_xoshiro256_random_ratio_edge_cases() {
         rng_panic.random_ratio(1, 0);
     }));
     assert!(result.is_err(), "Should panic for denominator == 0");
+}
+
+#[test]
+fn test_xoshiro256_random_u32() {
+    let mut rng = Xoshiro256::new();
+    let val: u32 = rng.random();
+    assert_ne!(val, 0, "random() for u32 should produce a non-zero value");
+}
+
+#[test]
+fn test_xoshiro256_random_f64() {
+    let mut rng = Xoshiro256::new();
+    let val: f64 = rng.random();
+    assert!(
+        (0.0..1.0).contains(&val),
+        "random() for f64 should produce a value in [0.0, 1.0)"
+    );
+}
+
+#[test]
+fn test_xoshiro256_sample_iter_u32() {
+    let mut rng = Xoshiro256::new();
+    let mut iter = rng.sample_iter::<u32, _>(deep_causality_rand::StandardUniform);
+    let val1 = iter.next().unwrap();
+    let val2 = iter.next().unwrap();
+    assert_ne!(val1, val2, "sample_iter should produce different values");
+}
+
+#[test]
+fn test_xoshiro256_sample_iter_f64() {
+    let mut rng = Xoshiro256::new();
+    let mut iter = rng.sample_iter::<f64, _>(deep_causality_rand::StandardUniform);
+    let val1 = iter.next().unwrap();
+    let val2 = iter.next().unwrap();
+    assert_ne!(val1, val2, "sample_iter should produce different values");
+    assert!(
+        (0.0..1.0).contains(&val1),
+        "sample_iter for f64 should produce a value in [0.0, 1.0)"
+    );
 }

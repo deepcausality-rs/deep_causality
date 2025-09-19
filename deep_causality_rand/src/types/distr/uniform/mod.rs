@@ -6,7 +6,7 @@
 pub mod standard_uniform;
 mod uniform_f32;
 mod uniform_f64;
-mod uniform_u32;
+pub mod uniform_u32;
 mod uniform_u64;
 mod uniform_usize;
 
