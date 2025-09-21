@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algorithms-v0.1.0...deep_causality_algorithms-v0.1.1) - 2025-09-21
+
+### Added
+
+- *(deep_causality_tensor)* Initial setup. Moved CausalTensor type from the data_structure crate into dedicated deep_causality_tensor crate.
+- *(deep_causality_num)* Initial implementation. Update of all downstream crates.
+- *(deep_causality_algorithms)* Implement mRMR (FCQ variant) feature selector
+
+### Fixed
+
+- *(deep_causality_algorithms)* Fixed Bazel build.
+
+### Other
+
+- Updated Cargo configuration and feature propagation across the entire repo.
+- Reworked and updated Bazel test config across all crates.
+- Merge branch '002-replace-rng-currently'
+- Lots of lints and formats. Updated MSRV to 1.89 and edition 2024 across the entire repo.
+- *(deep_causality_rand)* Increased test coverage.
+
 ## [0.1.0](https://github.com/marvin-hansen/deep_causality/releases/tag/deep_causality_algorithms-v0.1.0) - 2025-09-15
 
 ### Added

@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.2.1...deep_causality_uncertain-v0.2.2) - 2025-09-21
+
+### Added
+
+- *(deep_causality_num)* Initial implementation. Update of all downstream crates.
+- *(deep_causality_rand)* Fixed issue with std pseudo number generator. Updated upstream crate deep_causality_uncertain
+- *(deep_causality_uncertain)* Migrated random number generation to deep_causality_rand crate
+
+### Fixed
+
+- *(deep_causality_uncertain)* Minor test fix.
+- *(deep_causality_uncertain)* Minor linting and formatting
+
+### Other
+
+- Updated Cargo configuration and feature propagation across the entire repo.
+- Reworked and updated Bazel test config across all crates.
+- Lots of lints and formats. Updated MSRV to 1.89 and edition 2024 across the entire repo.
+- *(deep_causality_rand)* Increased test coverage.
+- Added or updated Bazel config for the newly added crates.
+- Updated build scripts
+
 ## [0.2.1](https://github.com/marvin-hansen/deep_causality/compare/deep_causality_uncertain-v0.2.0...deep_causality_uncertain-v0.2.1) - 2025-09-11
 
 ### Other
