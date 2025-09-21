@@ -7,6 +7,7 @@ version = "0.9.5"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
+
 repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 description = "Data structures for for deep_causality crate."
@@ -21,9 +22,11 @@ exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE
 name = "array_grid"
 path = "examples/array_grid/array_grid.rs"
 
+
 [[example]]
 name = "window_type_array_storage"
 path = "examples/window_type/array_storage.rs"
+
 
 [[example]]
 name = "window_type_vector_storage"

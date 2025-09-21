@@ -23,15 +23,12 @@ The project is a monorepo containing several sub-crates, including:
 * `examples`: A collection of example code.
 * `ultragraph`: A graph library used as a backend.
 
+
 ## Building and Running
 
 The project uses `make` to simplify the execution of common development tasks. The `makefile` in the root of the project
 defines the following commands:
 
-* `make build`: Builds the entire project. This is equivalent to running `cargo build`.
-* `make test`: Runs all tests across all crates. This is equivalent to running `cargo test`.
-* `make bench`: Runs all benchmarks across all crates.
-* `make example`: Runs the example code.
 * `make fix`: Fixes linting issues as reported by `clippy`.
 * `make format`: Formats all code according to the `cargo fmt` style.
 * `make check`: Checks the code base for security vulnerabilities.

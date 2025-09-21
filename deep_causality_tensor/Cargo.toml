@@ -4,6 +4,7 @@ version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
+
 repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 description = "Tensor data structure for for deep_causality crate."
@@ -27,6 +28,7 @@ version = "0.1"
 [dev-dependencies]
 criterion = { version = "0.7", features = ["html_reports"] }
 deep_causality_rand = { path = "../deep_causality_rand"}
+
 
 [[bench]]
 name = "bench_causal_tensor"
