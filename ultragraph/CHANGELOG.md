@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.6](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.8.5...ultragraph-v0.8.6) - 2025-09-21
+
+### Other
+
+- Updated Cargo configuration and feature propagation across the entire repo.
+- Lots of lints and formats. Updated MSRV to 1.89 and edition 2024 across the entire repo.
+- *(deep_causality_rand)* Increased test coverage.
+
 ## [0.8.4](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.8.3...ultragraph-v0.8.4) - 2025-09-08
 
 ### Added
