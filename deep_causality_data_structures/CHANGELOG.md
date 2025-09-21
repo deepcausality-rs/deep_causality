@@ -21,6 +21,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_data_structures-v0.9.5...deep_causality_data_structures-v0.10.0) - 2025-09-21
+
+### Added
+
+- *(deep_causality_tensor)* Initial setup. Moved CausalTensor type from the data_structure crate into dedicated deep_causality_tensor crate.
+- *(deep_causality_num)* Initial implementation. Update of all downstream crates.
+
+### Other
+
+- Updated Cargo configuration and feature propagation across the entire repo.
+- Reworked and updated Bazel test config across all crates.
+- Lots of lints and formats. Updated MSRV to 1.89 and edition 2024 across the entire repo.
+- *(deep_causality_rand)* Increased test coverage.
+
 ## [0.9.1](https://github.com/deepcausality-rs/deep_causality/compare/dcl_data_structures-v0.9.0...dcl_data_structures-v0.9.1) - 2025-07-08
 
 ### Other
