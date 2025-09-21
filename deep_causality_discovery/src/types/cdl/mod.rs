@@ -24,7 +24,7 @@ pub struct Finalized(ProcessFormattedResult);
 
 pub struct CDL<State> {
     state: State,
-    config: CdlConfig, // Added this field
+    config: CdlConfig,
 }
 
 // Initial state
@@ -49,11 +49,10 @@ impl CDL<NoData> {
         }
     }
 
-    pub fn start<L: ProcessDataLoader>(
-        self,
-        loader: L,
-        path: &str,
-    ) -> Result<CDL<WithData>, CdlError> {
+    pub fn start<L>(self, loader: L, path: &str) -> Result<CDL<WithData>, CdlError>
+    where
+        L: ProcessDataLoader,
+    {
         let loader_config = self
             .config
             .data_loader_config()
@@ -70,10 +69,10 @@ impl CDL<NoData> {
 
 // After data is loaded
 impl CDL<WithData> {
-    pub fn feat_select<S: FeatureSelector>(
-        self,
-        selector: S,
-    ) -> Result<CDL<WithFeatures>, CdlError> {
+    pub fn feat_select<S>(self, selector: S) -> Result<CDL<WithFeatures>, CdlError>
+    where
+        S: FeatureSelector,
+    {
         let feature_config = self
             .config
             .feature_selector_config()
@@ -90,10 +89,10 @@ impl CDL<WithData> {
 
 // After features are selected
 impl CDL<WithFeatures> {
-    pub fn causal_discovery<D: CausalDiscovery>(
-        self,
-        discovery: D,
-    ) -> Result<CDL<WithCausalResults>, CdlError> {
+    pub fn causal_discovery<D>(self, discovery: D) -> Result<CDL<WithCausalResults>, CdlError>
+    where
+        D: CausalDiscovery,
+    {
         let discovery_config = self
             .config
             .causal_discovery_config()
@@ -110,10 +109,10 @@ impl CDL<WithFeatures> {
 
 // After causal discovery is performed
 impl CDL<WithCausalResults> {
-    pub fn analyze<A: ProcessResultAnalyzer>(
-        self,
-        analyzer: A,
-    ) -> Result<CDL<WithAnalysis>, CdlError> {
+    pub fn analyze<A>(self, analyzer: A) -> Result<CDL<WithAnalysis>, CdlError>
+    where
+        A: ProcessResultAnalyzer,
+    {
         let analyze_config = self
             .config
             .analyze_config()
@@ -130,10 +129,10 @@ impl CDL<WithCausalResults> {
 
 // After results are analyzed
 impl CDL<WithAnalysis> {
-    pub fn finalize<F: ProcessResultFormatter>(
-        self,
-        formatter: F,
-    ) -> Result<CDL<Finalized>, CdlError> {
+    pub fn finalize<F>(self, formatter: F) -> Result<CDL<Finalized>, CdlError>
+    where
+        F: ProcessResultFormatter,
+    {
         let formatted_result = formatter.format(&self.state.0)?;
         Ok(CDL {
             state: Finalized(formatted_result),

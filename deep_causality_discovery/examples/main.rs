@@ -12,8 +12,7 @@ use deep_causality_discovery::{
 use std::fs::File;
 use std::io::Write;
 
-#[test]
-fn test_full_dsl_pipeline_csv() {
+fn main() {
     // 1. Prepare test data
     let file_path = get_test_csv_file_path();
     // 2. Get the CDL configuration
@@ -22,15 +21,15 @@ fn test_full_dsl_pipeline_csv() {
     // 3. Run the DSL pipeline
     let discovery_process = CDL::with_config(cdl_config)
         .start(CsvDataLoader, &file_path)
-        .expect("Failed to start load file to start CDL process")
+        .expect("Failed to load file to start CDL process")
         .feat_select(MrmrFeatureSelector)
-        .unwrap()
+        .expect("Failed to select features")
         .causal_discovery(SurdCausalDiscovery)
-        .unwrap()
+        .expect("CausalDiscovery failed")
         .analyze(SurdResultAnalyzer)
-        .unwrap()
+        .expect("Analysis failed")
         .finalize(ConsoleFormatter)
-        .unwrap()
+        .expect("Finalization failed")
         .build()
         .expect("Failed to build causal discovery process");
 

@@ -6,7 +6,6 @@
 mod errors;
 mod traits;
 mod types;
-mod utils;
 
 // Errors
 pub use crate::errors::{
