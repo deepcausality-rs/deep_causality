@@ -13,7 +13,6 @@ mod causal_tensor_getters_tests;
 mod causal_tensor_inspectors_tests;
 #[cfg(test)]
 mod causal_tensor_view_tests;
-
 #[cfg(test)]
 mod op_scalar_tensor_tests;
 #[cfg(test)]
