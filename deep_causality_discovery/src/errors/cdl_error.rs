@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
 use crate::errors::analyze_error::AnalyzeError;
 use crate::errors::causal_discovery_error::CausalDiscoveryError;
 use crate::errors::data_error::DataError;
@@ -22,11 +27,11 @@ pub enum CdlError {
 impl fmt::Display for CdlError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            CdlError::ReadDataError(e) => write!(f, "Data loading failed: {}", e),
-            CdlError::FeatSelectError(e) => write!(f, "Feature selection failed: {}", e),
-            CdlError::CausalDiscoveryError(e) => write!(f, "Causal discovery failed: {}", e),
-            CdlError::AnalyzeError(e) => write!(f, "Result analysis failed: {}", e),
-            CdlError::FinalizeError(e) => write!(f, "Finalization failed: {}", e),
+            CdlError::ReadDataError(e) => write!(f, "Step [Data Loading] failed: {}", e),
+            CdlError::FeatSelectError(e) => write!(f, "Step [Feature Selection] failed: {}", e),
+            CdlError::CausalDiscoveryError(e) => write!(f, "Step [Causal Discovery] failed: {}", e),
+            CdlError::AnalyzeError(e) => write!(f, "Step [Analysis] failed: {}", e),
+            CdlError::FinalizeError(e) => write!(f, "Step [Finalization] failed: {}", e),
             CdlError::MissingDataLoaderConfig => write!(
                 f,
                 "Missing data loader configuration. Please provide a DataLoaderConfig."

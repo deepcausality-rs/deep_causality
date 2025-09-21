@@ -33,6 +33,15 @@ defines the following commands:
 * `make format`: Formats all code according to the `cargo fmt` style.
 * `make check`: Checks the code base for security vulnerabilities.
 
+## Code conventions
+
+Field visibility:
+
+* Public types: All fields will be private, and access will be provided through
+  constructors, getters, and setters as appropriate.
+* Private or temporary types: Public fields may be used, provided they do not
+  leak outside their defined scope.
+
 ## Development Conventions
 
 

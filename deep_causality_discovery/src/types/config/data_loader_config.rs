@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
 use crate::types::config::csv_config::CsvConfig;
 use crate::types::config::parquet_config::ParquetConfig;
 use std::fmt;

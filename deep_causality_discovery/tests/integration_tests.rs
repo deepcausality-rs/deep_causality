@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_algorithms::surd;
+use deep_causality_algorithms::surd::MaxOrder;
 use deep_causality_discovery::{
     AnalyzeConfig, CDL, CausalDiscoveryConfig, CdlConfig, ConsoleFormatter, CsvConfig,
     CsvDataLoader, DataLoaderConfig, FeatureSelectorConfig, MrmrConfig, MrmrFeatureSelector,
@@ -13,7 +13,7 @@ use std::fs::File;
 use std::io::Write;
 
 #[test]
-fn test_full_dsl_pipeline_csv() -> Result<(), Box<dyn std::error::Error>> {
+fn test_full_dsl_pipeline_csv() {
     // 1. Prepare test data
     let file_path = get_test_csv_file_path();
     // 2. Get the CDL configuration
@@ -21,23 +21,33 @@ fn test_full_dsl_pipeline_csv() -> Result<(), Box<dyn std::error::Error>> {
 
     // 3. Run the DSL pipeline
     let discovery_process = CDL::with_config(cdl_config)
-        .start(CsvDataLoader, &file_path)?
-        .feat_select(MrmrFeatureSelector)?
-        .causal_discovery(SurdCausalDiscovery)?
-        .analyze(SurdResultAnalyzer)?
-        .finalize(ConsoleFormatter)?
+        .start(CsvDataLoader, &file_path)
+        .expect("Failed to start load file to start CDL process")
+        .feat_select(MrmrFeatureSelector)
+        .unwrap()
+        .causal_discovery(SurdCausalDiscovery)
+        .unwrap()
+        .analyze(SurdResultAnalyzer)
+        .unwrap()
+        .finalize(ConsoleFormatter)
+        .unwrap()
         .build()
         .expect("Failed to build causal discovery process");
 
     let result = discovery_process.run();
+    dbg!(&result);
 
-    // 4. Assert success
+    if let Err(e) = &result {
+        println!("Test failed with error: {}", e);
+    }
     assert!(result.is_ok());
 
-    // 5. Cleanup
-    std::fs::remove_file(file_path).unwrap();
+    // 5. Print the result
+    let res = result.unwrap();
+    println!("Result: {}", res);
 
-    Ok(())
+    // Cleanup
+    std::fs::remove_file(file_path).unwrap();
 }
 
 fn get_cdl_config() -> CdlConfig {
@@ -48,7 +58,8 @@ fn get_cdl_config() -> CdlConfig {
         .with_feature_selector_config(FeatureSelectorConfig::Mrmr(MrmrConfig::new(2, 3)))
         // Define the causal discovery as SURD and set its parameters
         .with_causal_discovery_config(CausalDiscoveryConfig::Surd(SurdConfig::new(
-            surd::MaxOrder::Max,
+            MaxOrder::Max,
+            3,
         )))
         // Define the analysis of the SURD results and set its parameters
         .with_analyze_config(AnalyzeConfig::new(0.1, 0.1, 0.1))
