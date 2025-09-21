@@ -87,7 +87,8 @@ pub trait CausalDiscovery {
 ### `ProcessResultAnalyzer`
 ```rust
 pub trait ProcessResultAnalyzer {
-    fn analyze(&self, surd_result: SurdResult) -> Result<ProcessAnalysis, AnalyzeError>;
+    type Config;
+    fn analyze(&self, surd_result: SurdResult, config: Self::Config) -> Result<ProcessAnalysis, AnalyzeError>;
 }
 ```
 
@@ -103,5 +104,7 @@ pub trait ProcessResultFormatter {
 - `DataLoaderConfig` (enum encapsulating `CsvConfig`, `ParquetConfig`)
 - `FeatureSelectorConfig` (enum encapsulating `MrmrConfig`)
 - `CausalDiscoveryConfig` (enum encapsulating `SurdConfig`)
+- `AnalyzeConfig` (struct encapsulating analysis thresholds)
 
 (Detailed fields for `MrmrConfig`, `SurdConfig`, `CsvConfig`, `ParquetConfig` are in `data-model.md`)
+e in `data-model.md`)

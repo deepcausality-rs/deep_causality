@@ -104,6 +104,7 @@ A user wants to perform causal discovery on their data, from loading to formatti
 - **FR-016**: The system MUST support modeling multiple causes using `Causaloid Collection` with `Aggregate Logic` (All, Any, Some(k)) based on SURD synergy, unique, or redundant influences.
 - **FR-017**: The system MUST define a comprehensive error handling mechanism using a `CqdError` enum, which encapsulates specific errors from each stage of the causal discovery process (data reading, feature selection, causal discovery, result analysis, and finalization). Each nested error enum MUST provide detailed error cases and meaningful display implementations.
 - **FR-018**: The system MUST enforce the semantic order of DSL steps at compile time using the Typestate Pattern, where each step returns a new type representing the valid subsequent states of the causal discovery process.
+- **FR-019**: The `deep_causality_discovery` crate MUST provide a `parallel` feature flag that enables the corresponding `parallel` feature in the `deep_causality_algorithms` dependency to allow for parallel execution of the SURD algorithm.
 
 ### Key Entities *(include if feature involves data)*
 - **CQD (Causal Qualities Discovery)**: The main type for orchestrating causal discovery workflows.
@@ -120,6 +121,7 @@ A user wants to perform causal discovery on their data, from loading to formatti
 - **Causaloid Collection**: A container for multiple `Causaloids` with aggregate logic.
 - **MrmrConfig**: Configuration for the mRMR algorithm, including `num_features` (desired number of features to select) and `target_col` (column index of the target variable).
 - **SurdConfig**: Configuration for the SURD algorithm, including `max_order` (maximum order of interactions to compute, represented by `MaxOrder` enum).
+- **AnalyzeConfig**: Configuration for the analysis heuristics, including thresholds for what constitutes "strong" synergistic, unique, or redundant influence (e.g., `synergy_threshold: f64`).
 - **CsvConfig**: Configuration for CSV data loading, including `has_headers` (boolean), `delimiter` (byte), `skip_rows` (usize), and optional `columns` (vector of strings) to select.
 - **ParquetConfig**: Configuration for Parquet data loading, including optional `columns` (vector of strings) to select and `batch_size` (usize) for reading.
 
@@ -215,6 +217,10 @@ These heuristics guide the `analyze` step in generating recommendations for buil
 - [ ] User scenarios defined
 - [ ] Requirements generated
 - [ ] Entities identified
+- [ ] Review checklist passed
+
+---
+s identified
 - [ ] Review checklist passed
 
 ---
