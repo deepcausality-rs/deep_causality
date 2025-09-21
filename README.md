@@ -81,7 +81,7 @@ DeepCausality comprises of three main components:
 
 DeepCausality is a framework for building systems that can reason about cause and effect in complex, dynamic environments. It achieves this by treating causality as a process of **effect propagation** between simple, composable **Causaloids** that operate on an explicit, flexible **Context**, all governed by a verifiable safety layer called the **Effect Ethos**. For a more detailed introduction, see the introduction to [DeepCausality document](README_INTRO.md). The DeepCausality project is hosted as a sandbox project in the [LF AI & Data Foundation](https://landscape.lfai.foundation/).
 
-## 🤩 Why DeepCausality?
+## Why DeepCausality?
 
 1) DeepCausality is written in Rust with production-grade safety, reliability, and performance thanks to
    its [UltraGraph backend](https://deepcausality.com/blog/announcement-ultragraph-0-8).
