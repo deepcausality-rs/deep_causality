@@ -7,6 +7,10 @@ use crate::types::config::csv_config::CsvConfig;
 use crate::types::config::parquet_config::ParquetConfig;
 use std::fmt;
 
+/// An enum representing the configuration for a specific data loader.
+///
+/// This allows the CDL pipeline to be configured for different data sources
+/// like CSV or Parquet files.
 #[derive(Debug, Clone)]
 pub enum DataLoaderConfig {
     Csv(CsvConfig),

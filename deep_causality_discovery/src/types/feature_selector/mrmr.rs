@@ -9,6 +9,7 @@ use crate::types::config::FeatureSelectorConfig;
 use deep_causality_algorithms::mrmr::select_features;
 use deep_causality_tensor::CausalTensor;
 
+/// A concrete implementation of the `FeatureSelector` trait that uses the MRMR algorithm.
 pub struct MrmrFeatureSelector;
 
 impl FeatureSelector for MrmrFeatureSelector {

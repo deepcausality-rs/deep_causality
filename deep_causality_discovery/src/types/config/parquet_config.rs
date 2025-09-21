@@ -5,6 +5,7 @@
 
 use std::fmt;
 
+/// Configuration for loading data from a Parquet file.
 #[derive(Debug, Clone)]
 pub struct ParquetConfig {
     columns: Option<Vec<String>>,
@@ -12,6 +13,7 @@ pub struct ParquetConfig {
 }
 
 impl ParquetConfig {
+    /// Creates a new `ParquetConfig`.
     pub fn new(columns: Option<Vec<String>>, batch_size: usize) -> Self {
         Self {
             columns,
@@ -19,10 +21,12 @@ impl ParquetConfig {
         }
     }
 
+    /// An optional list of column names to select. If `None`, all columns are loaded.
     pub fn columns(&self) -> &Option<Vec<String>> {
         &self.columns
     }
 
+    /// The number of rows to read at a time.
     pub fn batch_size(&self) -> usize {
         self.batch_size
     }

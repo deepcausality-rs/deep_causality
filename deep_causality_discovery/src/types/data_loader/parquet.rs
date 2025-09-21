@@ -12,6 +12,7 @@ use parquet::record::Field;
 use std::fs::File;
 use std::path::Path;
 
+/// A concrete implementation of `ProcessDataLoader` for reading data from Parquet files.
 pub struct ParquetDataLoader;
 
 impl ProcessDataLoader for ParquetDataLoader {

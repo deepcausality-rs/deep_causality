@@ -5,6 +5,7 @@
 
 use std::fmt;
 
+/// Configuration for the MRMR (Max-Relevance, Min-Redundancy) feature selector.
 #[derive(Debug, Clone)]
 pub struct MrmrConfig {
     num_features: usize,
@@ -12,6 +13,7 @@ pub struct MrmrConfig {
 }
 
 impl MrmrConfig {
+    /// Creates a new `MrmrConfig`.
     pub fn new(num_features: usize, target_col: usize) -> Self {
         Self {
             num_features,
@@ -19,10 +21,12 @@ impl MrmrConfig {
         }
     }
 
+    /// The number of features to select.
     pub fn num_features(&self) -> usize {
         self.num_features
     }
 
+    /// The index of the target column, which is always included in the selection.
     pub fn target_col(&self) -> usize {
         self.target_col
     }

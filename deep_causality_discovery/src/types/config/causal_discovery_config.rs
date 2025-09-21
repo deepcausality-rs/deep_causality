@@ -6,6 +6,10 @@
 use crate::types::config::surd_config::SurdConfig;
 use std::fmt;
 
+/// An enum representing the configuration for a specific causal discovery algorithm.
+///
+/// This allows the CDL pipeline to be configured for different discovery methods
+/// (e.g., SURD) by wrapping their specific configuration structs.
 #[derive(Debug, Clone)]
 pub enum CausalDiscoveryConfig {
     Surd(SurdConfig),

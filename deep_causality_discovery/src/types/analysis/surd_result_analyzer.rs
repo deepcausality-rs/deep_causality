@@ -6,6 +6,11 @@
 use crate::{AnalyzeConfig, AnalyzeError, ProcessAnalysis, ProcessResultAnalyzer};
 use deep_causality_algorithms::surd::SurdResult;
 
+/// An implementation of `ProcessResultAnalyzer` for `SurdResult`.
+///
+/// This analyzer interprets the raw numerical output of the SURD algorithm,
+/// comparing synergistic, unique, and redundant information values against
+/// configured thresholds to generate a human-readable analysis report.
 pub struct SurdResultAnalyzer;
 
 impl ProcessResultAnalyzer for SurdResultAnalyzer {

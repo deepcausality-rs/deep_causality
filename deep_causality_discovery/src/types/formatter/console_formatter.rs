@@ -8,6 +8,7 @@ use crate::traits::process_result::{
     ProcessAnalysis, ProcessFormattedResult, ProcessResultFormatter,
 };
 
+/// A concrete implementation of `ProcessResultFormatter` that formats an analysis for display in the console.
 pub struct ConsoleFormatter;
 
 impl ProcessResultFormatter for ConsoleFormatter {

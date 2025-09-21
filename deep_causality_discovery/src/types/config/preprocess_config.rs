@@ -18,6 +18,7 @@ pub enum ColumnSelector {
     ByName(Vec<String>), // Note: Requires header resolution
 }
 
+/// Configuration for a data discretization pre-processing step.
 #[derive(Debug, Clone)]
 pub struct PreprocessConfig {
     strategy: BinningStrategy,

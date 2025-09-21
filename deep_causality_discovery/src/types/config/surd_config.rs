@@ -6,6 +6,7 @@
 use deep_causality_algorithms::surd::MaxOrder;
 use std::fmt;
 
+/// Configuration for the SURD (Synergistic, Unique, Redundant Decomposition) algorithm.
 #[derive(Debug, Clone)]
 pub struct SurdConfig {
     max_order: MaxOrder,
@@ -13,6 +14,7 @@ pub struct SurdConfig {
 }
 
 impl SurdConfig {
+    /// Creates a new `SurdConfig`.
     pub fn new(max_order: MaxOrder, target_col: usize) -> Self {
         Self {
             max_order,
@@ -20,10 +22,12 @@ impl SurdConfig {
         }
     }
 
+    /// The maximum order of causal interactions to compute (e.g., pairwise, three-way).
     pub fn max_order(&self) -> MaxOrder {
         self.max_order
     }
 
+    /// The index of the target column for the causal analysis.
     pub fn target_col(&self) -> usize {
         self.target_col
     }

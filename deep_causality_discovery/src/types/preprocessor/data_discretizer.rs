@@ -8,6 +8,7 @@ use crate::traits::data_preprocessor::DataPreprocessor;
 use crate::types::config::{BinningStrategy, ColumnSelector, PreprocessConfig};
 use deep_causality_tensor::CausalTensor;
 
+/// A concrete implementation of `DataPreprocessor` that discretizes continuous data into bins.
 pub struct DataDiscretizer;
 
 impl DataPreprocessor for DataDiscretizer {

@@ -9,6 +9,7 @@ use crate::types::config::DataLoaderConfig;
 use deep_causality_tensor::CausalTensor;
 use std::fs::File;
 
+/// A concrete implementation of `ProcessDataLoader` for reading data from CSV files.
 pub struct CsvDataLoader;
 
 impl ProcessDataLoader for CsvDataLoader {

@@ -6,6 +6,10 @@
 use crate::types::config::mrmr_config::MrmrConfig;
 use std::fmt;
 
+/// An enum representing the configuration for a specific feature selection algorithm.
+///
+/// This allows the CDL pipeline to be configured for different feature selection
+/// methods like MRMR.
 #[derive(Debug, Clone)]
 pub enum FeatureSelectorConfig {
     Mrmr(MrmrConfig),

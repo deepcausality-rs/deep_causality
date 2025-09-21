@@ -8,6 +8,11 @@ use crate::{
 };
 use std::fmt;
 
+/// The master configuration struct for a CDL pipeline.
+///
+/// It holds optional configuration structs for each stage of the pipeline.
+/// The presence of a configuration determines whether a particular stage
+/// (like preprocessing or feature selection) is executed.
 #[derive(Debug, Clone, Default)]
 pub struct CdlConfig {
     data_loader_config: Option<DataLoaderConfig>,

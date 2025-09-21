@@ -9,6 +9,10 @@ use crate::types::config::CausalDiscoveryConfig;
 use deep_causality_algorithms::surd::{SurdResult, surd_states};
 use deep_causality_tensor::CausalTensor;
 
+/// A concrete implementation of the `CausalDiscovery` trait using the SURD algorithm.
+///
+/// This struct acts as a bridge between the CDL pipeline and the `surd_states`
+/// algorithms from the `deep_causality_algorithms` crate.
 pub struct SurdCausalDiscovery;
 
 impl CausalDiscovery for SurdCausalDiscovery {

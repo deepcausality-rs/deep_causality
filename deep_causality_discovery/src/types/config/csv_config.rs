@@ -5,6 +5,7 @@
 
 use std::fmt;
 
+/// Configuration for loading data from a CSV file.
 #[derive(Debug, Clone)]
 pub struct CsvConfig {
     has_headers: bool,
@@ -14,6 +15,7 @@ pub struct CsvConfig {
 }
 
 impl CsvConfig {
+    /// Creates a new `CsvConfig`.
     pub fn new(
         has_headers: bool,
         delimiter: u8,
@@ -28,18 +30,22 @@ impl CsvConfig {
         }
     }
 
+    /// Whether the CSV file has a header row.
     pub fn has_headers(&self) -> bool {
         self.has_headers
     }
 
+    /// The delimiter used to separate fields in the CSV file.
     pub fn delimiter(&self) -> u8 {
         self.delimiter
     }
 
+    /// The number of rows to skip at the beginning of the file.
     pub fn skip_rows(&self) -> usize {
         self.skip_rows
     }
 
+    /// An optional list of column names to select. If `None`, all columns are loaded.
     pub fn columns(&self) -> &Option<Vec<String>> {
         &self.columns
     }

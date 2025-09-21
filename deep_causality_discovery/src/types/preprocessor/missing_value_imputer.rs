@@ -6,6 +6,10 @@
 use crate::errors::PreprocessError;
 use deep_causality_tensor::CausalTensor;
 
+/// A pre-processor for handling missing numerical data in a `CausalTensor`.
+///
+/// This struct provides static methods to perform imputation. It is intended to be used
+/// within a CDL pipeline but can also be used as a standalone utility.
 pub struct MissingValueImputer;
 
 impl MissingValueImputer {
