@@ -16,6 +16,7 @@
 
 A Rust library for first-order uncertain data types, enabling robust computation and decision-making under uncertainty.
 
+
 ## Introduction
 
 In many modern applications, from sensor data processing and machine learning to probabilistic modeling, estimates are often treated as precise facts. This can lead to "uncertainty bugs" where random errors are ignored, computations compound these errors, and probabilistic data leads to misleading boolean decisions (false positives/negatives).

@@ -19,8 +19,9 @@ exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE
 os-random = ["deep_causality_rand/os-random"]
 
 
-[dependencies]
-deep_causality_rand = { path = "../deep_causality_rand"}
+[dependencies.deep_causality_rand]
+path = "../deep_causality_rand"
+version = "0.1"
 
 
 [[example]]
