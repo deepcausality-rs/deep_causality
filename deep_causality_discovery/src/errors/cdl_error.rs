@@ -3,16 +3,17 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::errors::analyze_error::AnalyzeError;
-use crate::errors::causal_discovery_error::CausalDiscoveryError;
-use crate::errors::data_error::DataError;
-use crate::errors::feature_select_error::FeatureSelectError;
-use crate::errors::finalize_error::FinalizeError;
+use crate::{
+    AnalyzeError, CausalDiscoveryError, DataError, FeatureSelectError, FinalizeError,
+    PreprocessError,
+};
+
 use std::fmt;
 
 #[derive(Debug)]
 pub enum CdlError {
     ReadDataError(DataError),
+    PreprocessError(PreprocessError),
     FeatSelectError(FeatureSelectError),
     CausalDiscoveryError(CausalDiscoveryError),
     AnalyzeError(AnalyzeError),
@@ -27,6 +28,7 @@ pub enum CdlError {
 impl fmt::Display for CdlError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            CdlError::PreprocessError(e) => write!(f, "Step [Preprocessing] failed: {}", e),
             CdlError::ReadDataError(e) => write!(f, "Step [Data Loading] failed: {}", e),
             CdlError::FeatSelectError(e) => write!(f, "Step [Feature Selection] failed: {}", e),
             CdlError::CausalDiscoveryError(e) => write!(f, "Step [Causal Discovery] failed: {}", e),
@@ -59,6 +61,7 @@ impl fmt::Display for CdlError {
 impl std::error::Error for CdlError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
+            CdlError::PreprocessError(e) => Some(e),
             CdlError::ReadDataError(e) => Some(e),
             CdlError::FeatSelectError(e) => Some(e),
             CdlError::CausalDiscoveryError(e) => Some(e),
@@ -96,5 +99,11 @@ impl From<AnalyzeError> for CdlError {
 impl From<FinalizeError> for CdlError {
     fn from(err: FinalizeError) -> CdlError {
         CdlError::FinalizeError(err)
+    }
+}
+
+impl From<PreprocessError> for CdlError {
+    fn from(err: PreprocessError) -> CdlError {
+        CdlError::PreprocessError(err)
     }
 }

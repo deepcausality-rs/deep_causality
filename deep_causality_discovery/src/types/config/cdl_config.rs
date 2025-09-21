@@ -3,12 +3,15 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{AnalyzeConfig, CausalDiscoveryConfig, DataLoaderConfig, FeatureSelectorConfig};
+use crate::{
+    AnalyzeConfig, CausalDiscoveryConfig, DataLoaderConfig, FeatureSelectorConfig, PreprocessConfig,
+};
 use std::fmt;
 
 #[derive(Debug, Clone, Default)]
 pub struct CdlConfig {
     data_loader_config: Option<DataLoaderConfig>,
+    preprocess_config: Option<PreprocessConfig>,
     feature_selector_config: Option<FeatureSelectorConfig>,
     causal_discovery_config: Option<CausalDiscoveryConfig>,
     analyze_config: Option<AnalyzeConfig>,
@@ -18,6 +21,7 @@ impl CdlConfig {
     pub fn new() -> Self {
         Self {
             data_loader_config: None,
+            preprocess_config: None,
             feature_selector_config: None,
             causal_discovery_config: None,
             analyze_config: None,
@@ -29,6 +33,11 @@ impl CdlConfig {
 impl CdlConfig {
     pub fn with_data_loader_config(mut self, config: DataLoaderConfig) -> Self {
         self.data_loader_config = Some(config);
+        self
+    }
+
+    pub fn with_preprocess_config(mut self, config: PreprocessConfig) -> Self {
+        self.preprocess_config = Some(config);
         self
     }
 
@@ -54,6 +63,10 @@ impl CdlConfig {
         &self.data_loader_config
     }
 
+    pub fn preprocess_config(&self) -> &Option<PreprocessConfig> {
+        &self.preprocess_config
+    }
+
     pub fn feature_selector_config(&self) -> &Option<FeatureSelectorConfig> {
         &self.feature_selector_config
     }
@@ -74,6 +87,13 @@ impl fmt::Display for CdlConfig {
             f,
             "    data_loader_config: {}",
             self.data_loader_config
+                .as_ref()
+                .map_or("None".to_string(), |c| c.to_string())
+        )?;
+        writeln!(
+            f,
+            "    preprocess_config: {}",
+            self.preprocess_config
                 .as_ref()
                 .map_or("None".to_string(), |c| c.to_string())
         )?;

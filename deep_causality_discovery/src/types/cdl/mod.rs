@@ -3,14 +3,11 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::errors::CdlError;
-use crate::traits::causal_discovery::CausalDiscovery;
-use crate::traits::feature_selector::FeatureSelector;
-use crate::traits::process_data_loader::ProcessDataLoader;
-use crate::traits::process_result::{
-    ProcessAnalysis, ProcessFormattedResult, ProcessResultAnalyzer, ProcessResultFormatter,
+use crate::{
+    CausalDiscovery, DataPreprocessor, FeatureSelector, ProcessDataLoader, ProcessResultAnalyzer,
+    ProcessResultFormatter,
 };
-use crate::types::config::CdlConfig;
+use crate::{CdlConfig, CdlError, ProcessAnalysis, ProcessFormattedResult};
 use deep_causality_algorithms::surd::SurdResult;
 use deep_causality_tensor::CausalTensor;
 
@@ -69,6 +66,21 @@ impl CDL<NoData> {
 
 // After data is loaded
 impl CDL<WithData> {
+    pub fn preprocess<P>(self, preprocessor: P) -> Result<CDL<WithData>, CdlError>
+    where
+        P: DataPreprocessor,
+    {
+        if let Some(config) = self.config.preprocess_config() {
+            let processed_tensor = preprocessor.process(self.state.0, config)?;
+            Ok(CDL {
+                state: WithData(processed_tensor),
+                config: self.config,
+            })
+        } else {
+            Ok(self)
+        }
+    }
+
     pub fn feat_select<S>(self, selector: S) -> Result<CDL<WithFeatures>, CdlError>
     where
         S: FeatureSelector,

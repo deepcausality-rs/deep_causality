@@ -9,6 +9,7 @@ pub mod cdl_error;
 pub mod data_error;
 pub mod feature_select_error;
 pub mod finalize_error;
+pub mod preprocess_error;
 
 pub use analyze_error::AnalyzeError;
 pub use causal_discovery_error::CausalDiscoveryError;
@@ -16,3 +17,4 @@ pub use cdl_error::CdlError;
 pub use data_error::DataError;
 pub use feature_select_error::FeatureSelectError;
 pub use finalize_error::FinalizeError;
+pub use preprocess_error::PreprocessError;
