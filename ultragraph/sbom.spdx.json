@@ -1,16 +1,16 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2025-09-22T05:57:25Z",
+    "created": "2025-09-22T06:19:52Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_num-db355e36-583f-4d51-b599-0454ca749c91",
+  "documentNamespace": "https://spdx.org/spdxdocs/ultragraph-a7b7df22-f3c8-4357-8268-d2eb2cb0d35d",
   "files": [
     {
-      "SPDXID": "SPDXRef-File-deep_causality_num",
+      "SPDXID": "SPDXRef-File-ultragraph",
       "checksums": [
         {
           "algorithm": "SHA1",
@@ -24,28 +24,29 @@
       ]
     }
   ],
-  "name": "deep_causality_num",
+  "name": "ultragraph",
   "packages": [
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.1",
-      "description": "Number utils for for deep_causality crate.",
+      "SPDXID": "SPDXRef-Package-ultragraph-0.8.6",
+      "description": "Hypergraph data structure.",
       "downloadLocation": "NONE",
+      "homepage": "https://github.com/deepcausality/deep_causality/tree/main/ultragraph",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
-      "name": "deep_causality_num",
-      "versionInfo": "0.1.1"
+      "name": "ultragraph",
+      "versionInfo": "0.8.6"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-File-deep_causality_num",
+      "relatedSpdxElement": "SPDXRef-File-ultragraph",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.1",
+      "relatedSpdxElement": "SPDXRef-Package-ultragraph-0.8.6",
       "relationshipType": "GENERATED_FROM",
-      "spdxElementId": "SPDXRef-File-deep_causality_num"
+      "spdxElementId": "SPDXRef-File-ultragraph"
     }
   ],
   "spdxVersion": "SPDX-2.3"

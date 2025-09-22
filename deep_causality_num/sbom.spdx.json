@@ -1,16 +1,16 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2025-09-22T05:57:26Z",
+    "created": "2025-09-22T06:19:51Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_tensor-0afe1aeb-80db-4943-acf5-bba6ed31d12b",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_num-5e5b4e43-c3e6-4817-a003-f1af1a543a1c",
   "files": [
     {
-      "SPDXID": "SPDXRef-File-deep_causality_tensor",
+      "SPDXID": "SPDXRef-File-deep_causality_num",
       "checksums": [
         {
           "algorithm": "SHA1",
@@ -24,17 +24,8 @@
       ]
     }
   ],
-  "name": "deep_causality_tensor",
+  "name": "deep_causality_num",
   "packages": [
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--tensor-0.1.1",
-      "description": "Tensor data structure for for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_tensor",
-      "versionInfo": "0.1.1"
-    },
     {
       "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.1",
       "description": "Number utils for for deep_causality crate.",
@@ -47,17 +38,12 @@
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.1.1",
-      "relationshipType": "GENERATED_FROM",
-      "spdxElementId": "SPDXRef-File-deep_causality_tensor"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.1",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.1.1"
+      "relationshipType": "GENERATED_FROM",
+      "spdxElementId": "SPDXRef-File-deep_causality_num"
     },
     {
-      "relatedSpdxElement": "SPDXRef-File-deep_causality_tensor",
+      "relatedSpdxElement": "SPDXRef-File-deep_causality_num",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
     }

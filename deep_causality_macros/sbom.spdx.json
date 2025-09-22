@@ -1,13 +1,13 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2025-09-22T05:57:25Z",
+    "created": "2025-09-22T06:19:51Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_macros-337f0807-e68f-4c97-a478-effe27a5472f",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_macros-e9bb15c7-4b2b-4ebd-ad31-715ddcd3e4f4",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_macros",
