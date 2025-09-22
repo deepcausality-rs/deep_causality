@@ -89,7 +89,7 @@ where
 //
 impl<K, V> InferableReasoning<V> for BTreeMap<K, V>
 where
-    K: Eq + Hash,
+    K: Ord,
     V: Inferable,
 {
     fn len(&self) -> usize {

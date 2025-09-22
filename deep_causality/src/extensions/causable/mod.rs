@@ -174,21 +174,21 @@ where
 //
 impl<K, V> CausableCollection<V> for BTreeMap<K, V>
 where
-    K: Eq + Hash,
+    K: Ord,
     V: Causable + Clone,
 {
 }
 
 impl<K, V> CausableCollectionExplaining<V> for BTreeMap<K, V>
 where
-    K: Eq + Hash,
+    K: Ord,
     V: Causable + Clone,
 {
 }
 
 impl<K, V> CausableCollectionAccessor<V> for BTreeMap<K, V>
 where
-    K: Eq + Hash,
+    K: Ord,
     V: Causable + Clone,
 {
     fn get_all_items(&self) -> Vec<&V> {
@@ -198,7 +198,7 @@ where
 
 impl<K, V> CausableCollectionReasoning<V> for BTreeMap<K, V>
 where
-    K: Eq + Hash,
+    K: Ord,
     V: Causable + Clone,
 {
     fn len(&self) -> usize {

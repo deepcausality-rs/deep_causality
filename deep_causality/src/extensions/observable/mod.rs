@@ -89,7 +89,7 @@ where
 //
 impl<K, V> ObservableReasoning<V> for BTreeMap<K, V>
 where
-    K: Eq + Hash,
+    K: Ord,
     V: Observable,
 {
     fn len(&self) -> usize {

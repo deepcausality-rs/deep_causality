@@ -87,7 +87,7 @@ where
 //
 impl<K, V> AssumableReasoning<V> for BTreeMap<K, V>
 where
-    K: Eq + Hash,
+    K: Ord,
     V: Assumable,
 {
     fn len(&self) -> usize {
