@@ -130,5 +130,5 @@ fn test_len() {
 #[test]
 fn test_is_empty() {
     let col = get_test_inf_vec_deque();
-    assert!(!col.is_empty());
+    assert!(!InferableReasoning::is_empty(&col));
 }

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::{NumericalValue, ObservableReasoning};
+use deep_causality::{NumericalValue, ObservableReasoning, Observation};
 
 use deep_causality::utils_test::test_utils::*;
 
@@ -11,6 +11,7 @@ use deep_causality::utils_test::test_utils::*;
 fn test_add() {
     let mut col = get_test_obs_vec();
     assert_eq!(5, col.len());
+    assert!(!col.is_empty());
 
     let o6 = get_test_observation();
     col.push(o6);
@@ -20,6 +21,8 @@ fn test_add() {
 #[test]
 fn test_number_observation() {
     let observations = get_test_obs_vec();
+    assert!(!observations.is_empty());
+
     let target_threshold = 10.0 as NumericalValue;
     let target_effect = 1.0 as NumericalValue;
     let total_observation = observations.number_observation(target_threshold, target_effect);
@@ -29,6 +32,8 @@ fn test_number_observation() {
 #[test]
 fn test_percent_observation() {
     let observations = get_test_obs_vec();
+    assert!(!observations.is_empty());
+
     let target_threshold = 10.0;
     let target_effect = 1.0;
     let percent_observation = observations.percent_observation(target_threshold, target_effect);
@@ -38,6 +43,8 @@ fn test_percent_observation() {
 #[test]
 fn test_number_non_observation() {
     let observations = get_test_obs_vec();
+    assert!(!observations.is_empty());
+
     let target_threshold = 10.0 as NumericalValue;
     let target_effect = 1.0 as NumericalValue;
     let total_non_observation =
@@ -48,6 +55,8 @@ fn test_number_non_observation() {
 #[test]
 fn test_percent_non_observation() {
     let observations = get_test_obs_vec();
+    assert!(!observations.is_empty());
+
     let target_threshold = 10.0;
     let target_effect = 1.0;
     let percent_non_observation =
@@ -58,8 +67,9 @@ fn test_percent_non_observation() {
 #[test]
 fn test_get_all_items() {
     let observations = get_test_obs_vec();
-    let all_items = observations.get_all_items();
+    assert!(!observations.is_empty());
 
+    let all_items = observations.get_all_items();
     let exp_len = observations.len();
     let act_len = all_items.len();
     assert_eq!(exp_len, act_len);
@@ -67,12 +77,17 @@ fn test_get_all_items() {
 
 #[test]
 fn test_len() {
-    let col = get_test_obs_vec();
-    assert_eq!(5, col.len());
+    let observations = get_test_obs_vec();
+    assert!(!ObservableReasoning::is_empty(&observations));
+
+    assert_eq!(5, ObservableReasoning::len(&observations));
 }
 
 #[test]
 fn test_is_empty() {
-    let col = get_test_obs_vec();
-    assert!(!col.is_empty());
+    let observations = get_test_obs_vec();
+    assert!(!ObservableReasoning::is_empty(&observations));
+
+    let empty: Vec<Observation> = Vec::new();
+    assert!(ObservableReasoning::is_empty(&empty));
 }
