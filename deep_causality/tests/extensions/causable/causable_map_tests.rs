@@ -176,15 +176,27 @@ fn test_explain() {
 }
 
 #[test]
+fn test_get_item_by_id() {
+    let map = get_deterministic_test_causality_map();
+    assert!(map.contains_key(&1));
+    assert!(map.contains_key(&2));
+    assert!(map.contains_key(&3));
+
+    assert!(map.get_item_by_id(1).is_some());
+}
+
+#[test]
 fn test_len() {
     let map = get_deterministic_test_causality_map();
     assert_eq!(3, map.len());
+    assert_eq!(CausableCollectionReasoning::len(&map), 3);
 }
 
 #[test]
 fn test_is_empty() {
     let map = get_deterministic_test_causality_map();
     assert!(!map.is_empty());
+    assert!(!CausableCollectionReasoning::is_empty(&map));
 }
 
 #[test]

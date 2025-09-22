@@ -50,15 +50,23 @@ fn test_explain() {
 }
 
 #[test]
+fn test_get_item_by_id() {
+    let col = test_utils::get_deterministic_test_causality_vec();
+    assert!(col.get_item_by_id(1).is_some());
+}
+
+#[test]
 fn test_len() {
     let col = test_utils::get_deterministic_test_causality_vec();
     assert_eq!(3, col.len());
+    assert_eq!(CausableCollectionReasoning::len(&col), 3);
 }
 
 #[test]
 fn test_is_empty() {
     let col = test_utils::get_deterministic_test_causality_vec();
     assert!(!col.is_empty());
+    assert!(!CausableCollectionReasoning::is_empty(&col));
 }
 
 #[test]

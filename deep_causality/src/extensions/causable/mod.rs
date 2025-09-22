@@ -37,7 +37,7 @@ where
     }
 
     fn is_empty(&self) -> bool {
-        <[T]>::is_empty(self)
+        self.len() == 0
     }
     fn to_vec(&self) -> Vec<T> {
         self.to_vec()

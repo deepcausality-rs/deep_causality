@@ -117,6 +117,12 @@ fn test_explain() {
 }
 
 #[test]
+fn test_get_item_by_id() {
+    let col = get_test_causality_array(true);
+    assert!(col.get_item_by_id(1).is_some());
+}
+
+#[test]
 fn test_len() {
     let col = get_test_causality_array(true);
     assert_eq!(10, col.len());
