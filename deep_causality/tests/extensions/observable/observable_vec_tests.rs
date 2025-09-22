@@ -91,5 +91,5 @@ fn test_is_empty() {
     assert!(!observations.is_empty());
 
     let empty: Vec<Observation> = Vec::new();
-    assert!(empty.is_empty());
+    assert!(ObservableReasoning::is_empty(&empty));
 }
