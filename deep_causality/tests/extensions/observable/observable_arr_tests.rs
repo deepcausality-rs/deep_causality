@@ -17,6 +17,8 @@ pub fn get_test_obs_arr() -> [Observation; 5] {
 #[test]
 fn test_number_observation() {
     let observations = get_test_obs_arr();
+    assert!(!observations.is_empty());
+
     let target_threshold = 10.0 as NumericalValue;
     let target_effect = 1.0 as NumericalValue;
     let total_observation = observations.number_observation(target_threshold, target_effect);
@@ -26,6 +28,8 @@ fn test_number_observation() {
 #[test]
 fn test_percent_observation() {
     let observations = get_test_obs_arr();
+    assert!(!observations.is_empty());
+
     let target_threshold = 10.0;
     let target_effect = 1.0;
     let percent_observation = observations.percent_observation(target_threshold, target_effect);
@@ -35,6 +39,8 @@ fn test_percent_observation() {
 #[test]
 fn test_number_non_observation() {
     let observations = get_test_obs_arr();
+    assert!(!observations.is_empty());
+
     let target_threshold = 10.0 as NumericalValue;
     let target_effect = 1.0 as NumericalValue;
     let total_non_observation =
@@ -45,6 +51,8 @@ fn test_number_non_observation() {
 #[test]
 fn test_percent_non_observation() {
     let observations = get_test_obs_arr();
+    assert!(!observations.is_empty());
+
     let target_threshold = 10.0;
     let target_effect = 1.0;
     let percent_non_observation =
@@ -55,6 +63,8 @@ fn test_percent_non_observation() {
 #[test]
 fn test_get_all_items() {
     let observations = get_test_obs_arr();
+    assert!(!observations.is_empty());
+
     let all_items = observations.get_all_items();
 
     let exp_len = observations.len();
@@ -65,6 +75,8 @@ fn test_get_all_items() {
 #[test]
 fn test_len() {
     let col = get_test_obs_arr();
+    assert!(!col.is_empty());
+
     assert_eq!(5, col.len());
 }
 
@@ -72,4 +84,7 @@ fn test_len() {
 fn test_is_empty() {
     let col = get_test_obs_arr();
     assert!(!col.is_empty());
+
+    let empty: [Observation; 0] = [];
+    assert!(ObservableReasoning::is_empty(&empty[..]));
 }

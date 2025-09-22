@@ -65,6 +65,10 @@ start:
 test:
 	@source build/scripts/test.sh
 
+.PHONY: sbom
+sbom:
+	 @source build/scripts/sbom.sh
+
 .PHONY: vendor
 vendor:
 	@source build/scripts/vendor.sh

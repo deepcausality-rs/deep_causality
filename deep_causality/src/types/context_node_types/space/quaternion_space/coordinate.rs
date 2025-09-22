@@ -5,7 +5,6 @@
 
 use crate::errors::IndexError;
 use crate::{Coordinate, QuaternionSpace};
-use deep_causality_macros::coord_match;
 
 impl Coordinate<f64> for QuaternionSpace {
     /// Returns the number of dimensions in the coordinate system (always 4).
@@ -25,11 +24,15 @@ impl Coordinate<f64> for QuaternionSpace {
     /// Returns `IndexError` if the index is out of bounds.
     ///
     fn coordinate(&self, index: usize) -> Result<&f64, IndexError> {
-        coord_match!(index,
-            0 => &self.w,
-            1 => &self.x,
-            2 => &self.y,
-            3 => &self.z,
-        )
+        match index {
+            0 => Ok(&self.w),
+            1 => Ok(&self.x),
+            2 => Ok(&self.y),
+            3 => Ok(&self.z),
+            _ => Err(IndexError(format!(
+                "Coordinate index out of bounds: {}",
+                index
+            ))),
+        }
     }
 }

@@ -20,17 +20,19 @@ fn get_test_obs_btree_map() -> BTreeMap<usize, Observation> {
 
 #[test]
 fn test_add() {
-    let mut col = get_test_obs_btree_map();
-    assert_eq!(5, col.len());
+    let mut observations = get_test_obs_btree_map();
+    assert_eq!(5, observations.len());
 
     let o6 = test_utils::get_test_observation();
-    col.insert(6, o6);
-    assert_eq!(6, col.len());
+    observations.insert(6, o6);
+    assert_eq!(6, observations.len());
 }
 
 #[test]
 fn test_number_observation() {
     let observations = get_test_obs_btree_map();
+    assert!(!observations.is_empty());
+
     let target_threshold = 10.0 as NumericalValue;
     let target_effect = 1.0 as NumericalValue;
     let total_observation = observations.number_observation(target_threshold, target_effect);
@@ -40,6 +42,8 @@ fn test_number_observation() {
 #[test]
 fn test_percent_observation() {
     let observations = get_test_obs_btree_map();
+    assert!(!observations.is_empty());
+
     let target_threshold = 10.0;
     let target_effect = 1.0;
     let percent_observation = observations.percent_observation(target_threshold, target_effect);
@@ -49,6 +53,8 @@ fn test_percent_observation() {
 #[test]
 fn test_number_non_observation() {
     let observations = get_test_obs_btree_map();
+    assert!(!observations.is_empty());
+
     let target_threshold = 10.0 as NumericalValue;
     let target_effect = 1.0 as NumericalValue;
     let total_non_observation =
@@ -59,6 +65,8 @@ fn test_number_non_observation() {
 #[test]
 fn test_percent_non_observation() {
     let observations = get_test_obs_btree_map();
+    assert!(!observations.is_empty());
+
     let target_threshold = 10.0;
     let target_effect = 1.0;
     let percent_non_observation =
@@ -69,6 +77,8 @@ fn test_percent_non_observation() {
 #[test]
 fn test_get_all_items() {
     let observations = get_test_obs_btree_map();
+    assert!(!observations.is_empty());
+
     let all_items = observations.get_all_items();
 
     let exp_len = observations.len();
@@ -78,12 +88,17 @@ fn test_get_all_items() {
 
 #[test]
 fn test_len() {
-    let col = get_test_obs_btree_map();
-    assert_eq!(5, col.len());
+    let observations = get_test_obs_btree_map();
+    assert!(!observations.is_empty());
+
+    assert_eq!(5, observations.len());
 }
 
 #[test]
 fn test_is_empty() {
-    let col = get_test_obs_btree_map();
-    assert!(!col.is_empty());
+    let observations = get_test_obs_btree_map();
+    assert!(!ObservableReasoning::is_empty(&observations));
+
+    let empty: BTreeMap<usize, Observation> = BTreeMap::new();
+    assert!(ObservableReasoning::is_empty(&empty));
 }

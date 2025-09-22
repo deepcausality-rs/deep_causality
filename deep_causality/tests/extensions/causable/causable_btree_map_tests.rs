@@ -53,9 +53,11 @@ fn test_contains() {
     let mut map = get_test_causality_btree_map_deterministic();
     assert_eq!(3, map.len());
     assert!(map.contains_key(&1));
+    assert!(map.get_item_by_id(1).is_some());
 
     let q = get_test_causaloid_deterministic();
     map.insert(4, q);
+
     assert_eq!(4, map.len());
     assert!(map.contains_key(&4));
 }
@@ -159,6 +161,7 @@ fn test_explain() {
 #[test]
 fn test_len() {
     let map = get_test_causality_btree_map_deterministic();
+    assert_eq!(CausableCollectionReasoning::len(&map), 3);
     assert_eq!(3, map.len());
 }
 
@@ -166,6 +169,9 @@ fn test_len() {
 fn test_is_empty() {
     let map = get_test_causality_btree_map_deterministic();
     assert!(!map.is_empty());
+
+    let empty: TestBTreeMap = BTreeMap::new();
+    assert!(CausableCollectionReasoning::is_empty(&empty))
 }
 
 #[test]

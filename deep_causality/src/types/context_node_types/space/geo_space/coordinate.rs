@@ -5,7 +5,6 @@
 
 use crate::errors::IndexError;
 use crate::{Coordinate, GeoSpace};
-use deep_causality_macros::coord_match;
 
 impl Coordinate<f64> for GeoSpace {
     fn dimension(&self) -> usize {
@@ -13,10 +12,14 @@ impl Coordinate<f64> for GeoSpace {
     }
 
     fn coordinate(&self, index: usize) -> Result<&f64, IndexError> {
-        coord_match!(index,
-            0 => &self.lat,
-            1 => &self.lon,
-            2 => &self.alt,
-        )
+        match index {
+            0 => Ok(&self.lat),
+            1 => Ok(&self.lon),
+            2 => Ok(&self.alt),
+            _ => Err(IndexError(format!(
+                "Coordinate index out of bounds: {}",
+                index
+            ))),
+        }
     }
 }

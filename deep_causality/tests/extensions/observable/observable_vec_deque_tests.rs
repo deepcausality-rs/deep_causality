@@ -84,6 +84,9 @@ fn test_len() {
 
 #[test]
 fn test_is_empty() {
-    let col = get_test_obs_vec_deque();
-    assert!(!col.is_empty());
+    let observations = get_test_obs_vec_deque();
+    assert!(!ObservableReasoning::is_empty(&observations));
+
+    let empty: VecDeque<Observation> = VecDeque::new();
+    assert!(ObservableReasoning::is_empty(&empty));
 }

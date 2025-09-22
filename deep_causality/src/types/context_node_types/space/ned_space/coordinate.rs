@@ -5,7 +5,6 @@
 
 use crate::errors::IndexError;
 use crate::{Coordinate, NedSpace};
-use deep_causality_macros::coord_match;
 
 impl Coordinate<f64> for NedSpace {
     /// Returns the number of dimensions in the coordinate system (always 3).
@@ -24,10 +23,14 @@ impl Coordinate<f64> for NedSpace {
     /// Returns `IndexError` if the index is out of bounds.
     ///
     fn coordinate(&self, index: usize) -> Result<&f64, IndexError> {
-        coord_match!(index,
-            0 => &self.north,
-            1 => &self.east,
-            2 => &self.down,
-        )
+        match index {
+            0 => Ok(&self.north),
+            1 => Ok(&self.east),
+            2 => Ok(&self.down),
+            _ => Err(IndexError(format!(
+                "Coordinate index out of bounds: {}",
+                index
+            ))),
+        }
     }
 }
