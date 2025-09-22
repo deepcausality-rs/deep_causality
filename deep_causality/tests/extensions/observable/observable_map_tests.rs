@@ -85,5 +85,5 @@ fn test_len() {
 #[test]
 fn test_is_empty() {
     let col = get_test_obs_map();
-    assert!(ObservableReasoning::is_empty(&col));
+    assert!(!ObservableReasoning::is_empty(&col));
 }
