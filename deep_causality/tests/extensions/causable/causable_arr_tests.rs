@@ -126,6 +126,9 @@ fn test_len() {
 fn test_is_empty() {
     let col = get_test_causality_array(true);
     assert!(!col.is_empty());
+
+    let empty: [BaseCausaloid; 0] = [];
+    assert!(CausableCollectionReasoning::is_empty(&empty[..]));
 }
 
 #[test]

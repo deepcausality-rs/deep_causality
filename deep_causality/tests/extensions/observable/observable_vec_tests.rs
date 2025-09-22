@@ -78,16 +78,18 @@ fn test_get_all_items() {
 #[test]
 fn test_len() {
     let observations = get_test_obs_vec();
-    assert!(!ObservableReasoning::is_empty(&observations));
+    assert!(!observations.is_empty());
 
-    assert_eq!(5, ObservableReasoning::len(&observations));
+    assert_eq!(5, observations.len());
 }
 
 #[test]
 fn test_is_empty() {
     let observations = get_test_obs_vec();
-    assert!(!ObservableReasoning::is_empty(&observations));
+    assert!(!observations.is_empty());
+
+    assert!(!observations.is_empty());
 
     let empty: Vec<Observation> = Vec::new();
-    assert!(ObservableReasoning::is_empty(&empty));
+    assert!(empty.is_empty());
 }

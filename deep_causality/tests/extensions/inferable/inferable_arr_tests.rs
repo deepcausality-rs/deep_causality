@@ -118,4 +118,7 @@ fn test_len() {
 fn test_is_empty() {
     let col = get_test_inf_arr();
     assert!(!col.is_empty());
+
+    let empty: [Inference; 0] = [];
+    assert!(InferableReasoning::is_empty(&empty[..]));
 }

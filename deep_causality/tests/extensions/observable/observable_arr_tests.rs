@@ -84,4 +84,7 @@ fn test_len() {
 fn test_is_empty() {
     let col = get_test_obs_arr();
     assert!(!col.is_empty());
+
+    let empty: [Observation; 0] = [];
+    assert!(ObservableReasoning::is_empty(&empty[..]));
 }
