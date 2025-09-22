@@ -21,7 +21,7 @@ where
     }
 
     fn is_empty(&self) -> bool {
-        <[T]>::is_empty(self)
+        self.len() == 0
     }
     fn get_all_items(&self) -> Vec<&T> {
         self.iter().collect()
