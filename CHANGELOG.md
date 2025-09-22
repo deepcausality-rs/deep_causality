@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.11.3...deep_causality-v0.11.4) - 2025-09-22
+
+### Fixed
+
+- *(deep_causality)* Fixed incorrect trait bound for BTreeMap
+- *(deep_causality)* Fixed incorrect test logic.
+- *(deep_causality)* Fixed historic bug in  type extensions.
+- *(deep_causality)* Removed last internal macros and removed dependency on deep_causality_macro crate.
+
+### Other
+
+- *(deep_causality)* Improved test coverage for extensions.
+- *(deep_causality)* Improved test coverage for extensions.
+- *(deep_causality)* Improved test coverage for extensions.
+- *(deep_causality)* Improved test coverage for extensions.
+- *(deep_causality)* Improved test coverage for extensions.
+- *(deep_causality)* Improved test coverage for extensions.
+- *(deep_causality)* Added more tests for extensions.
+- Updated SBOM script to generate hash signature together with the SBOM.
+
 ## [0.11.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.11.2...deep_causality-v0.11.3) - 2025-09-21
 
 ### Added
