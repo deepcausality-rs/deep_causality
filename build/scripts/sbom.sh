@@ -21,11 +21,11 @@ CRATES=(
 
 for CRATE_NAME in "${CRATES[@]}"; do
     echo "Generating SBOM for crate: $CRATE_NAME"
-    cargo sbom --cargo-package "$CRATE_NAME" --output-format=spdx_json_2_3 > "$CRATE_NAME"/sbom.spdx.json
-    shasum -a 256 "$CRATE_NAME"/sbom.spdx.json > "$CRATE_NAME"/sbom.spdx.json.sha
-    if [ $? -eq 0 ]; then
-        echo "Successfully generated SBOM for $CRATE_NAME"
-    else
+
+    if ! cargo sbom --cargo-package "$CRATE_NAME" --output-format=spdx_json_2_3 > "$CRATE_NAME"/sbom.spdx.json &&
+         sha256sum -a 256 "$CRATE_NAME"/sbom.spdx.json > "$CRATE_NAME"/sbom.spdx.json.sha;
+
+    then
         echo "Failed to generate SBOM for $CRATE_NAME"
     fi
 done

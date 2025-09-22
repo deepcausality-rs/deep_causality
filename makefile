@@ -68,7 +68,7 @@ test:
 
 .PHONY: sbom
 sbom:
-	@source build/scripts/sbom.sh
+	 @source build/scripts/sbom.sh
 
 .PHONY: vendor
 vendor:
