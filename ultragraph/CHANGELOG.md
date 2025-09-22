@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.7](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.8.6...ultragraph-v0.8.7) - 2025-09-22
+
+### Fixed
+
+- *(deep_causality)* Removed last internal macros and removed dependency on deep_causality_macro crate.
+
+### Other
+
+- Updated SBOM script to generate hash signature together with the SBOM.
+
 ## [0.8.6](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.8.5...ultragraph-v0.8.6) - 2025-09-21
 
 ### Other
