@@ -5,7 +5,6 @@
 
 use crate::errors::IndexError;
 use crate::{Coordinate, LorentzianSpacetime};
-use deep_causality_macros::coord_match;
 
 impl Coordinate<f64> for LorentzianSpacetime {
     /// Returns the number of dimensions in the coordinate system (always 4).l
@@ -25,11 +24,15 @@ impl Coordinate<f64> for LorentzianSpacetime {
     /// Returns `IndexError` if the index is out of bounds.
     ///
     fn coordinate(&self, index: usize) -> Result<&f64, IndexError> {
-        coord_match!(index,
-            0 => &self.x,
-            1 => &self.y,
-            2 => &self.z,
-            3 => &self.t,
-        )
+        match index {
+            0 => Ok(&self.x),
+            1 => Ok(&self.y),
+            2 => Ok(&self.z),
+            3 => Ok(&self.t),
+            _ => Err(IndexError(format!(
+                "Coordinate index out of bounds: {}",
+                index
+            ))),
+        }
     }
 }

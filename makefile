@@ -12,6 +12,7 @@ help:
 	@echo '    make format   	Formats call code according to cargo fmt style.'
 	@echo '    make install   	Tests and installs all make script dependencies.'
 	@echo '    make start   	Starts the dev day with updating rust, pulling from git remote, and build the project.'
+	@echo '    make sbom   	    Generates a SBOM for each crate of the project'
 	@echo '    make test   	Runs all tests across all crates.'
 
 # "---------------------------------------------------------"
@@ -64,6 +65,10 @@ start:
 .PHONY: test
 test:
 	@source build/scripts/test.sh
+
+.PHONY: sbom
+sbom:
+	@source build/scripts/sbom.sh
 
 .PHONY: vendor
 vendor:

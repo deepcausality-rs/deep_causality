@@ -7,12 +7,6 @@ use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::hash::Hash;
 
 // Extension trait http://xion.io/post/code/rust-extension-traits.html
-use deep_causality_macros::{
-    make_array_to_vec, make_find_from_iter_values, make_find_from_map_values, make_get_all_items,
-    make_get_all_map_items, make_is_empty, make_len, make_map_to_vec, make_vec_deq_to_vec,
-    make_vec_to_vec,
-};
-
 use crate::{
     Causable, CausableCollection, CausableCollectionAccessor, CausableCollectionExplaining,
     CausableCollectionReasoning, IdentificationValue,
@@ -40,7 +34,9 @@ where
     K: Eq + Hash,
     V: Causable + Clone,
 {
-    make_get_all_map_items!();
+    fn get_all_items(&self) -> Vec<&V> {
+        self.values().collect::<Vec<&V>>()
+    }
 }
 
 impl<K, V> CausableCollectionReasoning<V> for HashMap<K, V>
@@ -48,10 +44,18 @@ where
     K: Eq + Hash,
     V: Causable + Clone,
 {
-    make_len!();
-    make_is_empty!();
-    make_map_to_vec!();
-    make_find_from_map_values!();
+    fn len(&self) -> usize {
+        self.len()
+    }
+    fn is_empty(&self) -> bool {
+        self.is_empty()
+    }
+    fn to_vec(&self) -> Vec<V> {
+        self.values().cloned().collect()
+    }
+    fn get_item_by_id(&self, id: IdentificationValue) -> Option<&V> {
+        self.values().find(|item| item.id() == id)
+    }
 }
 
 //
@@ -76,7 +80,9 @@ where
     K: Eq + Hash,
     V: Causable + Clone,
 {
-    make_get_all_map_items!();
+    fn get_all_items(&self) -> Vec<&V> {
+        self.values().collect::<Vec<&V>>()
+    }
 }
 
 impl<K, V> CausableCollectionReasoning<V> for BTreeMap<K, V>
@@ -84,10 +90,18 @@ where
     K: Eq + Hash,
     V: Causable + Clone,
 {
-    make_len!();
-    make_is_empty!();
-    make_map_to_vec!();
-    make_find_from_map_values!();
+    fn len(&self) -> usize {
+        self.len()
+    }
+    fn is_empty(&self) -> bool {
+        self.is_empty()
+    }
+    fn to_vec(&self) -> Vec<V> {
+        self.values().cloned().collect()
+    }
+    fn get_item_by_id(&self, id: IdentificationValue) -> Option<&V> {
+        self.values().find(|item| item.id() == id)
+    }
 }
 
 //
@@ -101,17 +115,31 @@ impl<T> CausableCollectionAccessor<T> for [T]
 where
     T: Causable + Clone,
 {
-    make_get_all_items!();
+    fn get_all_items(&self) -> Vec<&T> {
+        let mut all: Vec<&T> = Vec::new();
+        for item in self {
+            all.push(item)
+        }
+        all
+    }
 }
 
 impl<T> CausableCollectionReasoning<T> for [T]
 where
     T: Causable + Clone,
 {
-    make_len!();
-    make_is_empty!();
-    make_array_to_vec!();
-    make_find_from_iter_values!();
+    fn len(&self) -> usize {
+        self.len()
+    }
+    fn is_empty(&self) -> bool {
+        self.is_empty()
+    }
+    fn to_vec(&self) -> Vec<T> {
+        self.to_vec()
+    }
+    fn get_item_by_id(&self, id: IdentificationValue) -> Option<&T> {
+        self.iter().find(|item| item.id() == id)
+    }
 }
 
 //
@@ -125,17 +153,31 @@ impl<T> CausableCollectionAccessor<T> for Vec<T>
 where
     T: Causable + Clone,
 {
-    make_get_all_items!();
+    fn get_all_items(&self) -> Vec<&T> {
+        let mut all: Vec<&T> = Vec::new();
+        for item in self {
+            all.push(item)
+        }
+        all
+    }
 }
 
 impl<T> CausableCollectionReasoning<T> for Vec<T>
 where
     T: Causable + Clone,
 {
-    make_len!();
-    make_is_empty!();
-    make_vec_to_vec!();
-    make_find_from_iter_values!();
+    fn len(&self) -> usize {
+        self.len()
+    }
+    fn is_empty(&self) -> bool {
+        self.is_empty()
+    }
+    fn to_vec(&self) -> Vec<T> {
+        self.clone()
+    }
+    fn get_item_by_id(&self, id: IdentificationValue) -> Option<&T> {
+        self.iter().find(|item| item.id() == id)
+    }
 }
 
 //
@@ -149,15 +191,36 @@ impl<T> CausableCollectionAccessor<T> for VecDeque<T>
 where
     T: Causable + Clone,
 {
-    make_get_all_items!();
+    fn get_all_items(&self) -> Vec<&T> {
+        let mut all: Vec<&T> = Vec::new();
+        for item in self {
+            all.push(item)
+        }
+        all
+    }
 }
 
 impl<T> CausableCollectionReasoning<T> for VecDeque<T>
 where
     T: Causable + Clone,
 {
-    make_len!();
-    make_is_empty!();
-    make_vec_deq_to_vec!();
-    make_find_from_iter_values!();
+    fn len(&self) -> usize {
+        self.len()
+    }
+    fn is_empty(&self) -> bool {
+        self.is_empty()
+    }
+    fn to_vec(&self) -> Vec<T> {
+        let mut v = Vec::with_capacity(self.len());
+        let mut deque = self.clone(); // clone to avoid mutating the original
+
+        for item in deque.make_contiguous().iter() {
+            v.push(item.clone());
+        }
+
+        v
+    }
+    fn get_item_by_id(&self, id: IdentificationValue) -> Option<&T> {
+        self.iter().find(|item| item.id() == id)
+    }
 }
