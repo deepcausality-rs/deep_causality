@@ -40,7 +40,11 @@ where
         self.len() == 0
     }
     fn to_vec(&self) -> Vec<T> {
-        self.to_vec()
+        let mut all: Vec<T> = Vec::new();
+        for item in self {
+            all.push(item.clone())
+        }
+        all
     }
     fn get_item_by_id(&self, id: IdentificationValue) -> Option<&T> {
         self.iter().find(|item| item.id() == id)
