@@ -16,13 +16,13 @@ fn test_display() {
     assert_eq!(err.to_string(), "Permission denied: restricted_file.txt");
 
     let csv_err = csv::Error::from(io::Error::other("test io error"));
-    let err = DataError::CsvError(csv_err);
+    let err = DataError::CsvError(csv_err.to_string());
     assert!(err.to_string().contains("CSV parsing error:"));
 
     // ParquetError is harder to construct directly without a real file operation.
     // We'll create a dummy one for testing purposes.
     let parquet_err = parquet::errors::ParquetError::General("dummy parquet error".to_string());
-    let err = DataError::ParquetError(parquet_err);
+    let err = DataError::ParquetError(parquet_err.to_string());
     assert!(err.to_string().contains("Parquet parsing error:"));
 }
 
@@ -38,14 +38,12 @@ fn test_source() {
     assert!(err.source().is_none());
 
     let csv_err = csv::Error::from(io::Error::other("test io error"));
-    let err = DataError::CsvError(csv_err);
-    assert!(err.source().is_some());
-    assert!(err.source().unwrap().is::<csv::Error>());
+    let err = DataError::CsvError(csv_err.to_string());
+    assert!(err.source().is_none());
 
     let parquet_err = parquet::errors::ParquetError::General("dummy parquet error".to_string());
-    let err = DataError::ParquetError(parquet_err);
-    assert!(err.source().is_some());
-    assert!(err.source().unwrap().is::<parquet::errors::ParquetError>());
+    let err = DataError::ParquetError(parquet_err.to_string());
+    assert!(err.source().is_none());
 }
 
 #[test]

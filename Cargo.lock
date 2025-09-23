@@ -492,6 +492,7 @@ dependencies = [
  "deep_causality_algorithms",
  "deep_causality_tensor",
  "parquet",
+ "tempfile",
 ]
 
 [[package]]

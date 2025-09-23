@@ -37,7 +37,7 @@ impl ProcessDataLoader for CsvDataLoader {
                 }
             }
 
-            let height = data.len() / width;
+            let height = if width == 0 { 0 } else { data.len() / width };
             CausalTensor::new(data, vec![height, width])
                 .map_err(|e| DataError::OsError(e.to_string()))
         } else {

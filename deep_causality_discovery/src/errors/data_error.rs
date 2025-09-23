@@ -5,13 +5,13 @@
 
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub enum DataError {
     FileNotFound(String),
     PermissionDenied(String),
     OsError(String),
-    CsvError(csv::Error),
-    ParquetError(parquet::errors::ParquetError),
+    CsvError(String),
+    ParquetError(String),
 }
 
 impl fmt::Display for DataError {
@@ -26,23 +26,15 @@ impl fmt::Display for DataError {
     }
 }
 
-impl std::error::Error for DataError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            DataError::CsvError(e) => Some(e),
-            DataError::ParquetError(e) => Some(e),
-            _ => None,
-        }
-    }
-}
+impl std::error::Error for DataError {}
 
 impl From<csv::Error> for DataError {
     fn from(err: csv::Error) -> DataError {
-        DataError::CsvError(err)
+        DataError::CsvError(err.to_string())
     }
 }
 impl From<parquet::errors::ParquetError> for DataError {
     fn from(err: parquet::errors::ParquetError) -> DataError {
-        DataError::ParquetError(err)
+        DataError::ParquetError(err.to_string())
     }
 }
