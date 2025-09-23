@@ -83,6 +83,8 @@ due to the particularities of modelling numerical properties in Rust.
 * All public errors, traits, and errors are exported from src/lib.rs
 * internal modules remain private at the root level.
 
+## Code import
+
 When importing from a crate, always import directly from the root level, for example:
 
 `use deep_causality_discovery::{ConsoleFormatter, ProcessAnalysis, ProcessResultFormatter};`
