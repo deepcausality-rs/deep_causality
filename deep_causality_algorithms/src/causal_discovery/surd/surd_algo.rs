@@ -16,6 +16,11 @@ use rayon::prelude::*;
 /// Decomposes mutual information into its Synergistic, Unique, and Redundant components
 /// for each state of the target variable, based on the SURD-states algorithm.
 ///
+/// The surd_states algorithm, being based on information theory, fundamentally operates on
+/// probability distributions of discrete random variables. If the input data is continuous, it
+/// must be discretized into bins to form the joint probability distribution that
+/// the algorithm consumes. You may  employed a uniform partition based method on the values on the data.
+///
 /// This is a high-performance Rust port of the SURD-State algorithm described in the paper
 /// "Observational causality by states and interaction type for scientific discovery" (martínezsánchez2025).
 /// It prioritizes mathematical faithfulness to the original paper and performance.
@@ -50,6 +55,7 @@ use rayon::prelude::*;
 ///
 /// # Arguments
 /// * `p_raw` - A `CausalTensor` representing the joint probability distribution.
+///   **Crucially, this must be a joint probability distribution of discrete, binned data.**
 ///   The first dimension (axis 0) must correspond to the target variable.
 /// * `max_order` - An enum specifying the maximum order of interactions to compute.
 ///

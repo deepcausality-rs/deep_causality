@@ -6,7 +6,7 @@
 use std::fmt;
 
 /// Errors that can occur during mRMR feature selection.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub enum MrmrError {
     /// Indicates that the input data (e.g., CausalTensor dimensions, number of features requested)
     /// is invalid or does not meet the algorithm's requirements.

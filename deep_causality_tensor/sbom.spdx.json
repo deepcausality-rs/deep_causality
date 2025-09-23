@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2025-09-22T06:19:51Z",
+    "created": "2025-09-23T07:36:09Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_tensor-b742ef6f-1f60-49a8-8819-f4e47e00a332",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_tensor-380f9ebf-3842-47e9-b292-d2b263d41af8",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_tensor",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "0fb7d9b565848919f2a4e467c22e12f61c68071e"
+          "checksumValue": "aa708c2d677910a36d1915d5c726b21e5df359eb"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -27,39 +27,39 @@
   "name": "deep_causality_tensor",
   "packages": [
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--tensor-0.1.1",
+      "SPDXID": "SPDXRef-Package-deep--causality--tensor-0.1.2",
       "description": "Tensor data structure for for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_tensor",
-      "versionInfo": "0.1.1"
+      "versionInfo": "0.1.2"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.1",
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.2",
       "description": "Number utils for for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_num",
-      "versionInfo": "0.1.1"
+      "versionInfo": "0.1.2"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.1.1",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.1.2",
       "relationshipType": "GENERATED_FROM",
       "spdxElementId": "SPDXRef-File-deep_causality_tensor"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.1",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.1.1"
     },
     {
       "relatedSpdxElement": "SPDXRef-File-deep_causality_tensor",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.2",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.1.2"
     }
   ],
   "spdxVersion": "SPDX-2.3"

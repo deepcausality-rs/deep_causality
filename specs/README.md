@@ -51,3 +51,8 @@ When these best practices are applied, it is very common for the agent to write 
 By experience, steps 1-7 usually run fairly straightforward, even for complex implementations, especially when the specs and plan document are very specific and detailed.
 
 Steps 8 and 9, especially code coverage, require follow-up interventions because most agents, even if told to test all methods and code branches, fail to do so on the first run. Nevertheless, most coding agents do correct missing code coverage during the follow-up. Since the DeepCausality project maintains a sustained code coverage rate of about 95% to 97%, QA and testing require the majority of time for any given feature.
+
+Resources:
+* https://github.blog/ai-and-ml/generative-ai/spec-driven-development-with-ai-get-started-with-a-new-open-source-toolkit
+* https://www.seangoedecke.com/ai-agents-and-code-review
+* https://youtu.be/xgnIBh25a5A?si=RmvKa7Eq0x5fqDkr

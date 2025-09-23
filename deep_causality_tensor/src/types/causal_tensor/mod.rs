@@ -24,6 +24,22 @@ pub(crate) mod utils;
 /// `CausalTensor` is a low-dimensional (up to ~5-25 dimensions recommended) tensor
 /// backed by a single, contiguous `Vec<T>`. It uses a stride-based memory layout
 /// for efficient, cache-friendly access and manipulation.
+///
+/// **Operation Semantics:**
+/// Operations on `CausalTensor` generally fall into two categories regarding data handling:
+///
+/// 1.  **Metadata-Only Operations (e.g., `reshape`, `permute_axes`, `ravel`):**
+///     These operations create a new `CausalTensor` instance but do *not* physically reorder
+///     or reallocate the underlying data in memory. Instead, they create a *cloned* copy of the
+///     original flat data and only modify the `shape` and `strides` metadata to provide a new
+///     logical view of the data. This makes them very efficient as they avoid large data movements.
+///
+/// 2.  **Data-Copying Operations (e.g., `slice`, binary operations like `add`, `sub`, `mul`, `div`,
+///     reduction operations like `sum_axes`, `mean_axes`):**
+///     These operations create a new `CausalTensor` instance with newly allocated data.
+///     The data is either a subset of the original, a transformation of the original, or a result
+///     of combining multiple tensors. These operations involve iterating through and copying/computing
+///     values into a new `Vec<T>`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct CausalTensor<T> {
     data: Vec<T>,
@@ -282,8 +298,10 @@ where
 
     /// Returns a new tensor with the same data but a different shape.
     ///
-    /// This is a metadata-only operation; it does not copy or reallocate the underlying data.
-    /// The total number of elements in the `new_shape` must be equal to the total number of
+    /// This is a metadata-only operation; it creates a new `CausalTensor` with a cloned copy
+    /// of the original flat data. The underlying data is *not* physically reordered or reallocated.
+    /// Only the `shape` and `strides` are recomputed to reflect the new logical view.
+    /// The total number of elements implied by the `new_shape` must be equal to the total number of
     /// elements in the original tensor (`self.len()`).
     ///
     /// # Arguments
@@ -529,5 +547,27 @@ where
     /// ```
     pub fn slice(&self, axis: usize, index: usize) -> Result<CausalTensor<T>, CausalTensorError> {
         self.slice_impl(axis, index)
+    }
+
+    /// Permutes the axes of the tensor according to the given new order.
+    ///
+    /// This is a metadata-only operation; it creates a new `CausalTensor` with a cloned copy
+    /// of the original flat data. The underlying data is *not* physically reordered or reallocated.
+    /// Only the `shape` and `strides` are recomputed to reflect the new logical axis order.
+    ///
+    /// # Arguments
+    ///
+    /// * `axes` - A slice of `usize` representing the new order of axes.
+    ///
+    /// The length of the `axes` parameter must be equal to the number of dimensions of the tensor,
+    /// and it must contain a permutation of `0..self.num_dim()`.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// - `Ok(Self)`: A new `CausalTensor` with permuted axes.
+    /// - `Err(CausalTensorError)`: If the `axes` are invalid (e.g., wrong length, not a permutation).
+    pub fn permute_axes(&self, axes: &[usize]) -> Result<Self, CausalTensorError> {
+        self.permute_axes_impl(axes)
     }
 }

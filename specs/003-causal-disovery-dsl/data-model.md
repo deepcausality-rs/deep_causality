@@ -56,6 +56,14 @@ This document outlines the key entities and their relationships for the Causal D
 - **Description**: Configuration for the SURD algorithm.
 - **Fields**: `max_order` (`MaxOrder` enum).
 
+### AnalyzeConfig
+- **Description**: Configuration for the analysis heuristics.
+- **Fields**: `synergy_threshold` (f64), `unique_threshold` (f64), `redundancy_threshold` (f64).
+
+### AnalyzeConfig
+- **Description**: Configuration for the analysis heuristics.
+- **Fields**: `synergy_threshold` (f64), `unique_threshold` (f64), `redundancy_threshold` (f64).
+
 ### CsvConfig
 - **Description**: Configuration for CSV data loading.
 - **Fields**: `has_headers` (boolean), `delimiter` (byte), `skip_rows` (usize), optional `columns` (vector of strings).
