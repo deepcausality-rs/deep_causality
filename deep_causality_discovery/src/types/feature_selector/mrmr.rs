@@ -3,11 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::errors::FeatureSelectError;
-use crate::traits::feature_selector::FeatureSelector;
-use crate::types::config::FeatureSelectorConfig;
+use crate::FeatureSelector;
+use crate::{FeatureSelectError, FeatureSelectorConfig};
 use deep_causality_algorithms::mrmr::select_features;
-use deep_causality_tensor::CausalTensor;
+use deep_causality_tensor::{CausalTensor, CausalTensorError};
 
 /// A concrete implementation of the `FeatureSelector` trait that uses the MRMR algorithm.
 pub struct MrmrFeatureSelector;
@@ -35,7 +34,10 @@ impl FeatureSelector for MrmrFeatureSelector {
 
         for i in 0..n_rows {
             for &col_idx in &selected_indices {
-                new_data.push(*tensor.get(&[i, col_idx]).unwrap());
+                let value = tensor.get(&[i, col_idx]).ok_or({
+                    FeatureSelectError::TensorError(CausalTensorError::AxisOutOfBounds)
+                })?;
+                new_data.push(*value);
             }
         }
 
