@@ -39,7 +39,7 @@ tempfile = "3.22.0"
 
 
 [dev-dependencies]
-tempfile = "3.22"
+tempfile = "3.23"
 
 
 [features]

@@ -5,6 +5,7 @@
 
 mod analysis;
 mod causal_discovery;
+mod cdl;
 pub mod config;
 mod data_loader;
 mod feature_selector;

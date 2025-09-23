@@ -5,7 +5,7 @@
 
 use std::fmt;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub enum PreprocessError {
     InvalidColumnIdentifier(String),
     BinningError(String),

@@ -3,8 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::FeatureSelectorConfig;
-use crate::errors::FeatureSelectError;
+use crate::{FeatureSelectError, FeatureSelectorConfig};
 use deep_causality_tensor::CausalTensor;
 
 /// Defines the contract for feature selection algorithms.

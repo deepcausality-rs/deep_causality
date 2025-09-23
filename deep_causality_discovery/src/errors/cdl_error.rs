@@ -10,7 +10,7 @@ use crate::{
 
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub enum CdlError {
     ReadDataError(DataError),
     PreprocessError(PreprocessError),

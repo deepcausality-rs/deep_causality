@@ -3,9 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::errors::CausalDiscoveryError;
-use crate::traits::causal_discovery::CausalDiscovery;
-use crate::types::config::CausalDiscoveryConfig;
+use crate::CausalDiscovery;
+use crate::{CausalDiscoveryConfig, CausalDiscoveryError};
 use deep_causality_algorithms::surd::{SurdResult, surd_states};
 use deep_causality_tensor::CausalTensor;
 

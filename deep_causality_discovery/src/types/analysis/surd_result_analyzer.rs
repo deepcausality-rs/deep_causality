@@ -3,7 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{AnalyzeConfig, AnalyzeError, ProcessAnalysis, ProcessResultAnalyzer};
+use crate::ProcessResultAnalyzer;
+use crate::{AnalyzeConfig, AnalyzeError, ProcessAnalysis};
 use deep_causality_algorithms::surd::SurdResult;
 
 /// An implementation of `ProcessResultAnalyzer` for `SurdResult`.

@@ -10,6 +10,7 @@ use std::fmt::Display;
 ///
 /// Each string typically represents a human-readable line of the analysis report,
 /// such as the interpretation of a specific causal influence.
+#[derive(Debug)]
 pub struct ProcessAnalysis(pub Vec<String>);
 
 /// A wrapper struct holding the final, formatted output of the CDL pipeline.

@@ -6,7 +6,7 @@
 use deep_causality_tensor::CausalTensorError;
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub enum AnalyzeError {
     EmptyResult,
     AnalysisFailed(String),

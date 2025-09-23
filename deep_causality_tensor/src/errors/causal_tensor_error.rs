@@ -5,7 +5,7 @@
 use std::error::Error;
 
 /// Errors that can occur during tensor operations.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub enum CausalTensorError {
     ShapeMismatch,
     DimensionMismatch,

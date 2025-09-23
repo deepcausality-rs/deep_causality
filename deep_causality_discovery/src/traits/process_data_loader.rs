@@ -3,8 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::DataLoaderConfig;
-use crate::errors::DataError;
+use crate::{DataError, DataLoaderConfig};
 use deep_causality_tensor::CausalTensor;
 
 /// Defines the contract for loading data from a source into a `CausalTensor`.

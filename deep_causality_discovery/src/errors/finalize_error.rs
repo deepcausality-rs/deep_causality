@@ -5,7 +5,7 @@
 
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub enum FinalizeError {
     FormattingError(String),
 }

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::types::config::mrmr_config::MrmrConfig;
+use crate::MrmrConfig;
 use std::fmt;
 
 /// An enum representing the configuration for a specific feature selection algorithm.

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::types::config::surd_config::SurdConfig;
+use crate::SurdConfig;
 use std::fmt;
 
 /// An enum representing the configuration for a specific causal discovery algorithm.
