@@ -107,6 +107,13 @@ fn bin_equal_frequency(data: &[f64], num_bins: usize) -> Result<Vec<f64>, Prepro
         return Ok(Vec::new());
     }
 
+    let min = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+    let max = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+    if (max - min).abs() < f64::EPSILON {
+        // All values are the same, assign them all to the first bin (0.0)
+        return Ok(vec![0.0; n]);
+    }
+
     let mut indices: Vec<usize> = (0..n).collect();
     // Sort indices based on the data values, handling potential NaNs
     indices.sort_by(|&a, &b| {
@@ -130,4 +137,40 @@ fn bin_equal_frequency(data: &[f64], num_bins: usize) -> Result<Vec<f64>, Prepro
     }
 
     Ok(binned_data)
+}
+
+#[cfg(test)]
+mod tests {
+    // Private helper test b/c bin_equal_frequency is shielded from the public API
+    // so that its error states cannot occur via the public API.
+    use super::{PreprocessError, bin_equal_frequency};
+
+    #[test]
+    fn test_bin_equal_frequency_empty_data() {
+        let data = vec![];
+        let num_bins = 2;
+        let result = bin_equal_frequency(&data, num_bins).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_bin_equal_frequency_less_than_two_bins() {
+        let data = vec![1.0, 2.0, 3.0];
+        let num_bins = 1;
+        let result = bin_equal_frequency(&data, num_bins);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            PreprocessError::ConfigError("Number of bins must be at least 2".to_string())
+        );
+    }
+
+    #[test]
+    fn test_bin_equal_frequency_all_same_value() {
+        let data = vec![5.0, 5.0, 5.0, 5.0];
+        let num_bins = 2;
+        let result = bin_equal_frequency(&data, num_bins).unwrap();
+        // All values are the same, so they should all fall into the first bin (0.0)
+        assert_eq!(result, vec![0.0, 0.0, 0.0, 0.0]);
+    }
 }

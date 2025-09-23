@@ -96,11 +96,28 @@ impl ProcessResultAnalyzer for SurdResultAnalyzer {
 // Helper function to format variable indices for display
 fn format_variables(vars: &[usize]) -> String {
     if vars.is_empty() {
-        "Target".to_string() // Should not happen for source variables
+        "Target Vars Empty".to_string() // Should not happen for source variables
     } else {
         vars.iter()
             .map(|&i| format!("S{}", i))
             .collect::<Vec<String>>()
             .join(", ")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::format_variables;
+
+    #[test]
+    fn test_format_variables_empty() {
+        assert_eq!(format_variables(&[]), "Target Vars Empty");
+    }
+
+    #[test]
+    fn test_format_variables_non_empty() {
+        assert_eq!(format_variables(&[0]), "S0");
+        assert_eq!(format_variables(&[0, 1]), "S0, S1");
+        assert_eq!(format_variables(&[2, 5, 1]), "S2, S5, S1");
     }
 }

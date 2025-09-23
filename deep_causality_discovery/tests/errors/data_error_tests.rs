@@ -15,6 +15,9 @@ fn test_display() {
     let err = DataError::PermissionDenied("restricted_file.txt".to_string());
     assert_eq!(err.to_string(), "Permission denied: restricted_file.txt");
 
+    let err = DataError::OsError("some os error".to_string());
+    assert_eq!(err.to_string(), "OS error: some os error");
+
     let csv_err = csv::Error::from(io::Error::other("test io error"));
     let err = DataError::CsvError(csv_err.to_string());
     assert!(err.to_string().contains("CSV parsing error:"));

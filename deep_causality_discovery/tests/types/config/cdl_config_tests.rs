@@ -147,3 +147,70 @@ fn test_debug() {
     assert!(debug.starts_with("CdlConfig"));
     assert!(debug.contains("data_loader_config: None"));
 }
+
+#[test]
+fn test_display_only_data_loader_config() {
+    let data_loader_config = DataLoaderConfig::Csv(CsvConfig::new(true, b',', 0, None));
+    let config = CdlConfig::new().with_data_loader_config(data_loader_config);
+    let display = format!("{}", config);
+    assert!(display.contains("data_loader_config: DataLoaderConfig::Csv(CsvConfig(headers: true, delimiter: ,, skip: 0, columns: None))"));
+    assert!(display.contains("preprocess_config: None"));
+    assert!(display.contains("feature_selector_config: None"));
+    assert!(display.contains("causal_discovery_config: None"));
+    assert!(display.contains("analyze_config: None"));
+}
+
+#[test]
+fn test_display_only_preprocess_config() {
+    let preprocess_config =
+        PreprocessConfig::new(BinningStrategy::EqualWidth, 10, ColumnSelector::All);
+    let config = CdlConfig::new().with_preprocess_config(preprocess_config);
+    let display = format!("{}", config);
+    assert!(display.contains("data_loader_config: None"));
+    assert!(display.contains(
+        "preprocess_config: PreprocessConfig(strategy: EqualWidth, num_bins: 10, columns: All)"
+    ));
+    assert!(display.contains("feature_selector_config: None"));
+    assert!(display.contains("causal_discovery_config: None"));
+    assert!(display.contains("analyze_config: None"));
+}
+
+#[test]
+fn test_display_only_feature_selector_config() {
+    let feature_selector_config = FeatureSelectorConfig::Mrmr(MrmrConfig::new(5, 0));
+    let config = CdlConfig::new().with_feature_selector_config(feature_selector_config);
+    let display = format!("{}", config);
+    assert!(display.contains("data_loader_config: None"));
+    assert!(display.contains("preprocess_config: None"));
+    assert!(display.contains("feature_selector_config: FeatureSelectorConfig::Mrmr(MrmrConfig(num_features: 5, target_col: 0))"));
+    assert!(display.contains("causal_discovery_config: None"));
+    assert!(display.contains("analyze_config: None"));
+}
+
+#[test]
+fn test_display_only_causal_discovery_config() {
+    let causal_discovery_config =
+        CausalDiscoveryConfig::Surd(SurdConfig::new(MaxOrder::Some(2), 0));
+    let config = CdlConfig::new().with_causal_discovery_config(causal_discovery_config);
+    let display = format!("{}", config);
+    assert!(display.contains("data_loader_config: None"));
+    assert!(display.contains("preprocess_config: None"));
+    assert!(display.contains("feature_selector_config: None"));
+    assert!(display.contains("causal_discovery_config: CausalDiscoveryConfig::Surd(SurdConfig(max_order: Some(2), target_col: 0))"));
+    assert!(display.contains("analyze_config: None"));
+}
+
+#[test]
+fn test_display_only_analyze_config() {
+    let analyze_config = AnalyzeConfig::new(0.1, 0.2, 0.3);
+    let config = CdlConfig::new().with_analyze_config(analyze_config);
+    let display = format!("{}", config);
+    assert!(display.contains("data_loader_config: None"));
+    assert!(display.contains("preprocess_config: None"));
+    assert!(display.contains("feature_selector_config: None"));
+    assert!(display.contains("causal_discovery_config: None"));
+    assert!(
+        display
+            .contains("analyze_config: AnalyzeConfig(synergy: 0.1, unique: 0.2, redundancy: 0.3)")
+    );
+}
