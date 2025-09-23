@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.2.2...deep_causality_uncertain-v0.2.3) - 2025-09-22
+
+### Fixed
+
+- *(deep_causality)* Removed last internal macros and removed dependency on deep_causality_macro crate.
+
+### Other
+
+- Updated SBOM script to generate hash signature together with the SBOM.
+
 ## [0.2.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.2.1...deep_causality_uncertain-v0.2.2) - 2025-09-21
 
 ### Added
