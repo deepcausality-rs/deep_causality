@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2025-09-22T06:19:51Z",
+    "created": "2025-09-23T07:36:08Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_algorithms-c072140d-053f-4188-b766-be4770999c5c",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_algorithms-ef13b9b1-ab54-4269-961e-f072452f8763",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_algorithms",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "0fb7d9b565848919f2a4e467c22e12f61c68071e"
+          "checksumValue": "aa708c2d677910a36d1915d5c726b21e5df359eb"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -26,15 +26,6 @@
   ],
   "name": "deep_causality_algorithms",
   "packages": [
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.1",
-      "description": "Number utils for for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_num",
-      "versionInfo": "0.1.1"
-    },
     {
       "SPDXID": "SPDXRef-Package-either-1.15.0",
       "description": "The enum `Either` with variants `Left` and `Right` is a general purpose sum type with two cases.\n",
@@ -52,37 +43,13 @@
       "versionInfo": "1.15.0"
     },
     {
-      "SPDXID": "SPDXRef-Package-rayon-core-1.13.0",
-      "description": "Core APIs for Rayon",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/rayon-core@1.13.0",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "rayon-core",
-      "versionInfo": "1.13.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-crossbeam-deque-0.8.6",
-      "description": "Concurrent work-stealing deque",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/crossbeam-deque@0.8.6",
-          "referenceType": "purl"
-        }
-      ],
-      "homepage": "https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-deque",
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "crossbeam-deque",
-      "versionInfo": "0.8.6"
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.2",
+      "description": "Number utils for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_num",
+      "versionInfo": "0.1.2"
     },
     {
       "SPDXID": "SPDXRef-Package-crossbeam-utils-0.8.21",
@@ -102,23 +69,29 @@
       "versionInfo": "0.8.21"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--algorithms-0.1.1",
-      "description": "Computational causality algorithms and utils used in the DeepCausality project.",
-      "downloadLocation": "NONE",
-      "homepage": "https://deepcausality.com/",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_algorithms",
-      "versionInfo": "0.1.1"
+      "SPDXID": "SPDXRef-Package-rayon-core-1.13.0",
+      "description": "Core APIs for Rayon",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/rayon-core@1.13.0",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "rayon-core",
+      "versionInfo": "1.13.0"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--tensor-0.1.1",
+      "SPDXID": "SPDXRef-Package-deep--causality--tensor-0.1.2",
       "description": "Tensor data structure for for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_tensor",
-      "versionInfo": "0.1.1"
+      "versionInfo": "0.1.2"
     },
     {
       "SPDXID": "SPDXRef-Package-rayon-1.11.0",
@@ -152,56 +125,38 @@
       "licenseDeclared": "MIT OR Apache-2.0",
       "name": "crossbeam-epoch",
       "versionInfo": "0.9.18"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-crossbeam-deque-0.8.6",
+      "description": "Concurrent work-stealing deque",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/crossbeam-deque@0.8.6",
+          "referenceType": "purl"
+        }
+      ],
+      "homepage": "https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-deque",
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "crossbeam-deque",
+      "versionInfo": "0.8.6"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--algorithms-0.1.2",
+      "description": "Computational causality algorithms and utils used in the DeepCausality project.",
+      "downloadLocation": "NONE",
+      "homepage": "https://deepcausality.com/",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_algorithms",
+      "versionInfo": "0.1.2"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-crossbeam-utils-0.8.21",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-rayon-core-1.13.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-crossbeam-deque-0.8.6",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-rayon-core-1.13.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-crossbeam-epoch-0.9.18",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-crossbeam-deque-0.8.6"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-rayon-1.11.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--algorithms-0.1.1"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.1",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.1.1"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-rayon-core-1.13.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-rayon-1.11.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-either-1.15.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-rayon-1.11.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.1.1",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--algorithms-0.1.1"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-crossbeam-utils-0.8.21",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-crossbeam-epoch-0.9.18"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algorithms-0.1.1",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algorithms-0.1.2",
       "relationshipType": "GENERATED_FROM",
       "spdxElementId": "SPDXRef-File-deep_causality_algorithms"
     },
@@ -209,6 +164,51 @@
       "relatedSpdxElement": "SPDXRef-Package-crossbeam-utils-0.8.21",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-crossbeam-deque-0.8.6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-crossbeam-epoch-0.9.18",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-crossbeam-deque-0.8.6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-crossbeam-deque-0.8.6",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-rayon-core-1.13.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.2",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.1.2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-rayon-1.11.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--algorithms-0.1.2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-either-1.15.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-rayon-1.11.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-crossbeam-utils-0.8.21",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-rayon-core-1.13.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-crossbeam-utils-0.8.21",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-crossbeam-epoch-0.9.18"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-rayon-core-1.13.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-rayon-1.11.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.1.2",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--algorithms-0.1.2"
     },
     {
       "relatedSpdxElement": "SPDXRef-File-deep_causality_algorithms",
