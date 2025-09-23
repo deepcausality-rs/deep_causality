@@ -1,0 +1,48 @@
+[package]
+name = "deep_causality_discovery"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+description = "Causality discovery DSL for the DeepCausality project."
+documentation = "https://docs.rs/deep_causality"
+homepage = "https://deepcausality.com/"
+repository = "https://github.com/deepcausality/deep_causality.rs"
+keywords = ["surd", "causal-discovery", "causal-reasoning", "algorithms"]
+categories = ["algorithms", "science", "aerospace", "finance", "mathematics"]
+authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
+exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
+
+
+[[example]]
+name = "example_discovery"
+path = "examples/main.rs"
+
+
+# Internal dependencies
+[dependencies.deep_causality_tensor]
+path = "../deep_causality_tensor"
+version = "0.1.0"
+
+
+[dependencies.deep_causality_algorithms]
+path = "../deep_causality_algorithms"
+version = "0.1.0"
+
+
+# External dependencies
+[dependencies]
+csv = "1.3"
+parquet = "56.1"
+tempfile = "3.22.0"
+
+
+[dev-dependencies]
+tempfile = "3.23"
+
+
+[features]
+default = []
+# Enables parallel execution of the SURD algorithm by passing the feature to the algorithms crate.
+parallel = ["deep_causality_algorithms/parallel"]

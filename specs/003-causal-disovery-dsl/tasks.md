@@ -104,9 +104,9 @@ Approximately 30-40 tasks, clearly numbered and with file paths.
 - **T021**: Implement `CQD<WithFeatures>` and its `causal_discovery()` method.
     - **File**: `deep_causality_discovery/src/cqd.rs`
     - **Depends on**: T020
-- **T022**: Implement `CQD<WithCausalResults>` and its `analyze()` method.
+- **T022**: Implement `CQD<WithCausalResults>` and its `analyze()` method, accepting an `AnalyzeConfig`.
     - **File**: `deep_causality_discovery/src/cqd.rs`
-    - **Depends on**: T021
+    - **Depends on**: T021, T013a
 - **T023**: Implement `CQD<WithAnalysis>` and its `finalize()` method.
     - **File**: `deep_causality_discovery/src/cqd.rs`
     - **Depends on**: T022
@@ -137,7 +137,7 @@ Approximately 30-40 tasks, clearly numbered and with file paths.
 - **T030**: Implement `ProcessAnalysis` struct.
     - **File**: `deep_causality_discovery/src/analysis.rs`
     - **Depends on**: T029
-- **T031**: Implement `ProcessResultAnalyzer` with SURD to Causaloid heuristics.
+- **T031**: Implement `ProcessResultAnalyzer` with SURD to Causaloid heuristics, using thresholds from `AnalyzeConfig`.
     - **File**: `deep_causality_discovery/src/analysis.rs`
     - **Depends on**: T030
 - **T032**: Implement `ProcessFormattedResult` struct.
@@ -209,3 +209,12 @@ Approximately 30-40 tasks, clearly numbered and with file paths.
 - **T051**: Review and refactor code for adherence to Rust best practices and project conventions.
     - **File**: `deep_causality_discovery/src/**/*.rs`
     - **Depends on**: T050
+refactor code for adherence to Rust best practices and project conventions.
+    - **File**: `deep_causality_discovery/src/**/*.rs`
+    - **Depends on**: T050
+ - **Depends on**: T050
+rence to Rust best practices and project conventions.
+    - **File**: `deep_causality_discovery/src/**/*.rs`
+    - **Depends on**: T050
+ - **Depends on**: T050
+ - **Depends on**: T050

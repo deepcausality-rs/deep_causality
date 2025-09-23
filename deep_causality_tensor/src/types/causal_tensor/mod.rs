@@ -530,4 +530,22 @@ where
     pub fn slice(&self, axis: usize, index: usize) -> Result<CausalTensor<T>, CausalTensorError> {
         self.slice_impl(axis, index)
     }
+
+    /// Permutes the axes of the tensor according to the given new order.
+    ///
+    /// # Arguments
+    ///
+    /// * `axes` - A slice of `usize` representing the new order of axes.
+    ///
+    /// The length of the `axes` parameter must be equal to the number of dimensions of the tensor,
+    /// and it must contain a permutation of `0..self.num_dim()`.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// - `Ok(Self)`: A new `CausalTensor` with permuted axes.
+    /// - `Err(CausalTensorError)`: If the `axes` are invalid (e.g., wrong length, not a permutation).
+    pub fn permute_axes(&self, axes: &[usize]) -> Result<Self, CausalTensorError> {
+        self.permute_axes_impl(axes)
+    }
 }
