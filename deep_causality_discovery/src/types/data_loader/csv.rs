@@ -15,7 +15,13 @@ pub struct CsvDataLoader;
 impl ProcessDataLoader for CsvDataLoader {
     fn load(&self, path: &str, config: &DataLoaderConfig) -> Result<CausalTensor<f64>, DataError> {
         if let DataLoaderConfig::Csv(csv_config) = config {
-            let file = File::open(path).map_err(|e| DataError::OsError(e.to_string()))?;
+            let file = File::open(path).map_err(|e| {
+                if e.kind() == std::io::ErrorKind::NotFound {
+                    DataError::FileNotFound(path.to_string())
+                } else {
+                    DataError::OsError(e.to_string())
+                }
+            })?;
             let mut rdr = csv::ReaderBuilder::new()
                 .has_headers(csv_config.has_headers())
                 .delimiter(csv_config.delimiter())

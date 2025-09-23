@@ -92,10 +92,10 @@ fn test_csv_data_loader_load_error_file_not_found() {
 
     let result = loader.load("non_existent_file.csv", &config);
     assert!(result.is_err());
-    if let Err(DataError::OsError(e)) = result {
-        assert!(e.contains("No such file or directory"));
+    if let Err(DataError::FileNotFound(path)) = result {
+        assert_eq!(path, "non_existent_file.csv");
     } else {
-        panic!("Expected OsError, got {:?}", result);
+        panic!("Expected FileNotFoundError, got {:?}", result);
     }
 }
 

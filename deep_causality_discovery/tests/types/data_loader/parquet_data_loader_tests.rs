@@ -53,8 +53,20 @@ fn create_test_parquet_file(
             ColumnWriter::Int32ColumnWriter(typed_writer) => {
                 let mut int_data = Vec::new();
                 for row in &data {
-                    if let Field::Int(i) = row[col_idx] {
-                        int_data.push(i);
+                    match row[col_idx] {
+                        Field::Int(i) => int_data.push(i),
+                        Field::Byte(b) => int_data.push(b as i32),
+                        Field::Short(s) => int_data.push(s as i32),
+                        Field::UByte(ub) => int_data.push(ub as i32),
+                        Field::UShort(us) => int_data.push(us as i32),
+                        Field::UInt(ui) => int_data.push(ui as i32),
+                        _ => {
+                            return Err(format!(
+                                "Unexpected Field type for INT32 column: {:?}",
+                                row[col_idx]
+                            )
+                            .into());
+                        }
                     }
                 }
                 let def_levels = vec![1i16; int_data.len()];
@@ -173,6 +185,31 @@ fn test_parquet_data_loader_load_success_various_types() {
                         .unwrap(),
                 ),
                 Arc::new(
+                    SchemaType::primitive_type_builder("col_byte", PhysicalType::INT32)
+                        .build()
+                        .unwrap(),
+                ),
+                Arc::new(
+                    SchemaType::primitive_type_builder("col_short", PhysicalType::INT32)
+                        .build()
+                        .unwrap(),
+                ),
+                Arc::new(
+                    SchemaType::primitive_type_builder("col_ubyte", PhysicalType::INT32)
+                        .build()
+                        .unwrap(),
+                ),
+                Arc::new(
+                    SchemaType::primitive_type_builder("col_ushort", PhysicalType::INT32)
+                        .build()
+                        .unwrap(),
+                ),
+                Arc::new(
+                    SchemaType::primitive_type_builder("col_uint", PhysicalType::INT32)
+                        .build()
+                        .unwrap(),
+                ),
+                Arc::new(
                     SchemaType::primitive_type_builder("col_float", PhysicalType::FLOAT)
                         .build()
                         .unwrap(),
@@ -192,6 +229,11 @@ fn test_parquet_data_loader_load_success_various_types() {
             Field::Bool(true),
             Field::Int(1),
             Field::Long(100),
+            Field::Byte(10),
+            Field::Short(20),
+            Field::UByte(30),
+            Field::UShort(40),
+            Field::UInt(50),
             Field::Float(1.1),
             Field::Double(10.1),
         ],
@@ -199,6 +241,11 @@ fn test_parquet_data_loader_load_success_various_types() {
             Field::Bool(false),
             Field::Int(2),
             Field::Long(200),
+            Field::Byte(11),
+            Field::Short(21),
+            Field::UByte(31),
+            Field::UShort(41),
+            Field::UInt(51),
             Field::Float(2.2),
             Field::Double(20.2),
         ],
@@ -206,6 +253,11 @@ fn test_parquet_data_loader_load_success_various_types() {
             Field::Bool(true),
             Field::Int(3),
             Field::Long(300),
+            Field::Byte(12),
+            Field::Short(22),
+            Field::UByte(32),
+            Field::UShort(42),
+            Field::UInt(52),
             Field::Float(3.3),
             Field::Double(30.3),
         ],
@@ -223,20 +275,35 @@ fn test_parquet_data_loader_load_success_various_types() {
         1.0,
         1.0,
         100.0,
+        10.0,
+        20.0,
+        30.0,
+        40.0,
+        50.0,
         1.1f32 as f64,
         10.1,
         0.0,
         2.0,
         200.0,
+        11.0,
+        21.0,
+        31.0,
+        41.0,
+        51.0,
         2.2f32 as f64,
         20.2,
         1.0,
         3.0,
         300.0,
+        12.0,
+        22.0,
+        32.0,
+        42.0,
+        52.0,
         3.3f32 as f64,
         30.3,
     ];
-    let expected_shape = vec![3, 5];
+    let expected_shape = vec![3, 10];
     let expected_tensor = CausalTensor::new(expected_data.clone(), expected_shape).unwrap();
 
     let epsilon = 1e-9; // Define a small tolerance for floating-point comparisons
