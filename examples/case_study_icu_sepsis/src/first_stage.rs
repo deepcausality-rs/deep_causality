@@ -22,6 +22,7 @@ fn load_and_analyze_data(data_path: &str) {
 
     let mut total_nan_count = 0;
     let mut unique_patient_ids = std::collections::HashSet::new();
+    let mut unique_patient_sepsis = std::collections::HashSet::new();
     let mut total_patient_ids = 0;
     let mut patient_42_records: Vec<Vec<String>> = Vec::new();
 
@@ -41,6 +42,17 @@ fn load_and_analyze_data(data_path: &str) {
                 if patient_id_array.is_valid(i) {
                     let patient_id = patient_id_array.value(i);
                     unique_patient_ids.insert(patient_id as u64);
+
+                    if let Some(sepsis_label_column) = batch.column_by_name("SepsisLabel") {
+                        let sepsis_label_array = sepsis_label_column
+                            .as_any()
+                            .downcast_ref::<Float64Array>()
+                            .expect("Failed to cast SepsisLabel column into Float64Array");
+
+                        if sepsis_label_array.is_valid(i) && sepsis_label_array.value(i) == 1.0 {
+                            unique_patient_sepsis.insert(patient_id as u64);
+                        }
+                    }
 
                     if patient_id == 42.0 {
                         let mut record_row: Vec<String> = Vec::new();
@@ -114,20 +126,28 @@ fn load_and_analyze_data(data_path: &str) {
         total_patient_ids
     );
     println!(
-        "Average number of data records per patient:: {}",
+        "Average number of data records per patient: {}",
         total_patient_ids / unique_patient_ids_count
+    );
+    println!(
+        "Total unique patients with SepsisLabel = 1: {}",
+        unique_patient_sepsis.len()
+    );
+    println!(
+        "Percentage of patients with SepsisLabel = 1: {:.2}%",
+        (unique_patient_sepsis.len() as f64 / unique_patient_ids_count as f64) * 100.0
     );
     println!();
 
-    println!("Records for Patient_ID 42:");
-    if patient_42_records.is_empty() {
-        println!("No records found for Patient_ID 42.");
-    } else {
-        for (record_index, record) in patient_42_records.iter().enumerate() {
-            println!("--- Record {} ---", record_index + 1);
-            for field_string in record {
-                println!("{}", field_string);
-            }
-        }
-    }
+    // println!("Records for Patient_ID 42:");
+    // if patient_42_records.is_empty() {
+    //     println!("No records found for Patient_ID 42.");
+    // } else {
+    //     for (record_index, record) in patient_42_records.iter().enumerate() {
+    //         println!("--- Record {} ---", record_index + 1);
+    //         for field_string in record {
+    //             println!("{}", field_string);
+    //         }
+    //     }
+    // }
 }
