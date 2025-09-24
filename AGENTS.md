@@ -38,7 +38,6 @@ defines the following commands:
 * `make build`: Builds the entire mono-repo
 * `make test`: Tests the entire mono-repo (Slow)
 * `make fix`: Fixes linting issues as reported by `clippy`.
-* `make fix`: Fixes linting issues as reported by `clippy`.
 * `make format`: Formats all code according to the `cargo fmt` style.
 * `make check`: Checks the code base for security vulnerabilities.
 
@@ -69,7 +68,7 @@ To rebuild and test the entire repo
 
 Each crate adheres to the following base structure
 
-src/errors/mod.r  # contains each error type in a separate file
+src/errors/mod.rs  # contains each error type in a separate file
 src/traits/mod.rs # contains each trait in a separate file
 src/type/mod.rs # contains each type in a separate file
 
@@ -95,7 +94,7 @@ a source file
 
 `src/errors/normal_error/normal_error.rs`
 
-is matched with the test file under the test folder:
+is matched with the test file under the tests folder:
 
 `test/errors/normal_error/normal_error_tests.rs`
 
