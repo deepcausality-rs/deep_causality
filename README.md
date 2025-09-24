@@ -58,7 +58,14 @@
 
 # Overview
 
-DeepCausality is a hypergeometric computational causality library that enables fast, context-aware causal reasoning over complex multi-stage causality models. DeepCausality pioneers uniform reasoning across deterministic and probabilistic modalities by implementing the effect propagation process. 
+DeepCausality is a hypergeometric computational causality library that enables fast, context-aware causal reasoning over
+complex multi-stage causality models. DeepCausality pioneers uniform reasoning across deterministic and probabilistic
+modalities across static and dynamic contextual causal models. DeepCausality comprises of three core pillars:
+The Context is an explicit and dynamic hypergraph that models the operational environment, supporting non-Euclidean and
+non-linear temporal structures. The Causaloid is a polymorphic, composable unit that can encapsulate a causal function.
+The Effect Ethos is a deontic guardrail that uses a defeasible calculus to ensure a system's actions remain verifiably
+aligned with its safety and mission objectives. The DeepCausality project is hosted as a sandbox project
+in the [Linux Foundation for Data & Ai](https://landscape.lfai.foundation/).
 
 ### The Three Pillars of DeepCausality
 
@@ -66,20 +73,34 @@ DeepCausality comprises of three main components:
 
 #### 1. The Causaloid:
 
-*   **What it is:** A self-contained, single unit of causality.
-*   **What it does:** It holds a single causal function (`E2 = f(E1)`). It receives an incoming effect, runs its causal function, and emits a new, outgoing effect.
+* **What it is:** A self-contained, single unit of causality.
+* **What it does:** It holds a single causal function that receives an incoming effect, runs its causal
+  function, and emits a new, outgoing effect.
 
 #### 2. The Context:
 
-*   **What it is:** The explicit environment where the Causaloids operate. It holds all the factual data.
-*   **What it does:** The Context is a super-flexible data structure (a hypergraph) that holds all the facts about the world: the current time, sensor readings, locations on a map, etc.
+* **What it is:** The explicit environment where the Causaloids operate. It holds all the factual data.
+* **What it does:** The Context is a super-flexible data structure (a hypergraph) that holds all the facts about the
+  world: the current time, sensor readings, locations on a map, etc.
 
 #### 3. The Effect Ethos
 
-*   **What it is:** A programmable ethos, to encode and verify operational rules.
-*   **What it does:** A Causaloid might reason, "Based on the data, the most logical action is X." But before action X can be taken, the Effect Ethos steps in and checks against a set of rules. It answers the question "**Should this happen?**"
+* **What it is:** A programmable ethos, to encode and verify operational rules.
+* **What it does:** A Causaloid might reason, "Based on the data, the most logical action is X." But before action X can
+  be taken, the Effect Ethos steps in and checks against a set of rules. It answers the question: "Should this happen?"
 
-DeepCausality is a framework for building systems that can reason about cause and effect in complex, dynamic environments. It achieves this by treating causality as a process of **effect propagation** between simple, composable **Causaloids** that operate on an explicit, flexible **Context**, all governed by a verifiable safety layer called the **Effect Ethos**. For a more detailed introduction, see the introduction to [DeepCausality document](README_INTRO.md). The DeepCausality project is hosted as a sandbox project in the [LF AI & Data Foundation](https://landscape.lfai.foundation/).
+DeepCausality is a framework for building systems that can reason about cause and effect in complex, dynamic
+environments. It achieves this by treating causality as a process of **effect propagation** between simple, composable *
+*Causaloids** that operate on an explicit, flexible **Context**, all governed by a verifiable safety layer called the *
+*Effect Ethos**. For an introduction to DeepCausality, see the [introduction document](README_INTRO.md) and
+the more detailed [deep dive.](README_DEEP_DIVE.md)
+
+## The Foundation of DeepCausality
+
+DeepCausality implements the Effect Propagation Process (EPP), which uses a single axiomatic foundation of causality as
+a functional dependency (`E2 = f(E1)`). From this single axiom, it derives the context to support Euclidean,
+non-Euclidean and non-linear, structures, the causaloid for handling static and dynamic causal structures, and the
+effect ethos. The full text of the EPP monograph is accessible via the the [publication repository](https://github.com/deepcausality-rs/papers).
 
 ## Why DeepCausality?
 
@@ -139,10 +160,17 @@ make example
 
 ## 📦 Sub-Crates
 
-* [Datastructures](https://github.com/deepcausality-rs/deep_causality/tree/main/dcl_data_structures/README.md)
-* [Ultragraph](https://github.com/deepcausality-rs/deep_causality/tree/main/ultragraph/README.md)
-* [Macros](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_macros/README.md)
-* [Uncertainty](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_uncertain/README.md)
+* `deep_causality`: The main DeepCausality library.
+* `deep_causality_algorithms`: Provides algorithms for the DeepCausality library.
+* `deep_causality_data_structures`: Provides data structures for the DeepCausality library.
+* `deep_causality_discovery`: A custom DSL for causal discovery.
+* `deep_causality_macros`: Provides macros for the DeepCausality library (_deprecated_).
+* `deep_causality_num`: Numerical traits and utils used across the other crates.
+* `deep_causality_rand`: Random number generator and statistical distributions used in deep_causality_tensor and other
+* `deep_causality_tensor`: A custom tensor type used in deep_causality_algorithms and deep_causality_discovery crates.
+* `deep_causality_uncertain`: Provides a custom crate for handling uncertainty.
+* `examples`: A collection of example code.
+* `ultragraph`: A hyper-graph library used as a backend in the deep_causality library.
 
 ## 🛠️ Build & Test
 
@@ -213,9 +241,10 @@ The project took inspiration from several researchers and their projects in the 
 
 DeepCausality implements the following research publications:
 
-* ["Probability Theories with Dynamic Causal Structure"](docs/papers)
 * ["A Defeasible Deontic Calculus for Resolving Norm Conflicts"](docs/papers/ddic.pdf)
 * ["NWHy: A Framework for Hypergraph Analytics"](docs/papers/nwhy.pdf)
+* ["Observational causality by states and interaction type for scientific discovery"](docs/papers/surd-state.pdf)
+* ["Probability Theories with Dynamic Causal Structure"](docs/papers/causaloid.pdf)
 * ["Uncertain T: A First-Order Type for Uncertain Data"](docs/papers/uncertain_t.pdf)
 
 Parts of the implementation are also inspired by:
@@ -242,5 +271,5 @@ the [security policy](https://github.com/deepcausality-rs/deep_causality/blob/ma
 [![JetBrains logo.](https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg)](https://jb.gg/OpenSource)
 
 [JetBrains](https://www.jetbrains.com/), the premier software development IDE provider, has granted a
-free [all-product license](https://www.jetbrains.com/all/) to the DeepCausality project. 
+free [all-product license](https://www.jetbrains.com/all/) to the DeepCausality project.
 The project team expresses its gratitude towards JetBrains generous support.
