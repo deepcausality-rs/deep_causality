@@ -25,7 +25,20 @@
 ```
 
 ## Summary
-The feature introduces a new type, `MaybeUncertain<T>`, to explicitly model values that are probabilistically present or absent. This addresses a key limitation of the existing `Uncertain<T>` type, which only models uncertainty of value, not presence. The technical approach is to create a new, self-contained type in the `deep_causality_uncertain` crate, ensuring no breaking changes to the existing API, as detailed in the verified specification.
+The feature introduces a new type, `MaybeUncertain<T>`, to explicitly model values that are probabilistically present or absent. This addresses a key limitation of the existing `Uncertain<T>` type, which only models uncertainty of value, not presence. The technical approach is to create a new, self-contained type in the `deep_causality_uncertain` crate that wraps the existing `Uncertain` type, ensuring no breaking changes to the existing API.
+
+## Data Structure
+As clarified, `MaybeUncertain<T>` is intended to codify the concept of `Uncertain<Option<T>>`. It will be implemented using a newtype pattern to provide a distinct API while leveraging the existing `Uncertain` computation graph.
+
+```rust
+pub struct MaybeUncertain<T>(Uncertain<Option<T>>);
+```
+
+This design has several advantages:
+- It directly models uncertainty over the presence of a value.
+- It reuses the entire `Uncertain<T>` machinery (computation graph, sampling, caching).
+- Constructors for `MaybeUncertain<T>` can be implemented by creating the appropriate `Uncertain<Option<T>>` graph. For example, `from_bernoulli_and_uncertain` can be implemented using `Uncertain::conditional`.
+- Operator overloading (`+`, `-`, etc.) can be implemented on the `MaybeUncertain<T>` wrapper, propagating `None` as required.
 
 ## Technical Context
 **Language/Version**: Rust 1.75
@@ -101,18 +114,19 @@ Completed. See `data-model.md`, `quickstart.md`, and `contracts/`.
 *This section describes what the /tasks command will do - DO NOT execute during /plan*
 
 **Task Generation Strategy**:
-- Generate tasks from the Functional Requirements in `spec.md`.
+- Generate tasks from the updated Functional Requirements in `spec.md`.
 - Each constructor and public method for `MaybeUncertain<T>` will have a corresponding task to write tests and then implement the function.
 - An integration task will be created to ensure `MaybeUncertain<T>` is properly exported and usable within the `deep_causality` crate.
 
 **Ordering Strategy**:
 - TDD order: Test tasks will be prioritized before implementation tasks.
-- 1. Implement the type definition and `new` constructor.
-- 2. Implement the `always_some` and `always_none` constructors.
+- 1. Implement the `MaybeUncertain<T>` struct definition.
+- 2. Implement the `from_value`, `from_uncertain`, and `always_none` constructors.
 - 3. Implement `from_bernoulli_and_uncertain`.
-- 4. Implement the `sample` method.
-- 5. Implement the `lift_to_uncertain` method.
-- 6. Implement operator overloading (optional).
+- 4. Implement the `is_some` and `is_none` methods.
+- 5. Implement the `sample` method.
+- 6. Implement the `lift_to_uncertain` method, including the new `UncertainError::PresenceError` variant.
+- 7. Implement operator overloading (e.g., `Add`, `Sub`).
 
 ## Progress Tracking
 *This checklist is updated during execution flow*
