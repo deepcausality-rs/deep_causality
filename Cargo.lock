@@ -254,8 +254,10 @@ checksum = "d71b6127be86fdcfddb610f7182ac57211d4b18a3e9c82eb2d17662f2227ad6a"
 name = "case_study_icu_sepsis"
 version = "0.1.0"
 dependencies = [
+ "arrow-array",
  "deep_causality",
  "deep_causality_discovery",
+ "parquet",
 ]
 
 [[package]]
@@ -504,7 +506,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_macros"
-version = "0.8.6"
+version = "0.8.7"
 
 [[package]]
 name = "deep_causality_num"
