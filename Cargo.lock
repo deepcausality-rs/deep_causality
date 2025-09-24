@@ -251,6 +251,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d71b6127be86fdcfddb610f7182ac57211d4b18a3e9c82eb2d17662f2227ad6a"
 
 [[package]]
+name = "case_study_icu_sepsis"
+version = "0.1.0"
+dependencies = [
+ "deep_causality",
+ "deep_causality_discovery",
+]
+
+[[package]]
 name = "cast"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
