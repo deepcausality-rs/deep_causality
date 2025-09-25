@@ -14,6 +14,22 @@ crates_vendor(
         ),
         #
         # Regular dependencies
+        # CXV and parquet are used in deep_causality_discovery for file loading
+        "csv": crate.spec(
+            default_features = False,
+            package = "csv",
+            version = "1.3",
+        ),
+        "parquet": crate.spec(
+            default_features = False,
+            package = "parquet",
+            version = "56",
+        ),
+        "tempfile": crate.spec(
+            default_features = False,
+            package = "tempfile",
+            version = "3",
+        ),
     },  # End packages
     repository_name = "deep_causality_vendored",
     tags = ["manual"],

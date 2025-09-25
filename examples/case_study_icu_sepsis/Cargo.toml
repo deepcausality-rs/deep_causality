@@ -13,5 +13,5 @@ deep_causality_discovery = { path = "../../deep_causality_discovery" }
 deep_causality = { path = "../../deep_causality" }
 
 # Exernal dependencies
-arrow-array = "56"
-parquet = "56"
+arrow-array = {version = "56", default-features = false}
+parquet = {version = "56", default-features = false, features = ["arrow"]}

@@ -1,7 +1,7 @@
 load("@rules_rust//rust:defs.bzl", "rust_test_suite")
 
 rust_test_suite(
-    name = "error*",
+    name = "errors",
     srcs = glob([
         "error/*_tests.rs",
     ]),
