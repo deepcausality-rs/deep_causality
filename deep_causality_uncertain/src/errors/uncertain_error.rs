@@ -25,6 +25,8 @@ pub enum UncertainError {
     UniformDistributionError(String),
     /// An error occurred during the sampling process.
     SamplingError(String),
+    /// An error indicating that a probabilistic value failed to meet the required confidence threshold to be considered definitively present.
+    PresenceError(String),
 }
 
 impl fmt::Display for UncertainError {
@@ -44,6 +46,7 @@ impl fmt::Display for UncertainError {
                 write!(f, "Uniform distribution error: {}", msg)
             }
             UncertainError::SamplingError(msg) => write!(f, "Sampling error: {}", msg),
+            UncertainError::PresenceError(msg) => write!(f, "Presence error: {}", msg),
         }
     }
 }

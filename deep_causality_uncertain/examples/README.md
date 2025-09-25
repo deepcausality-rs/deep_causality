@@ -39,3 +39,13 @@ To run this example:
 ```bash
 cargo run --example sensor_processing -p deep_causality_uncertain
 ```
+
+### 3. Aspirin Headache Trial Analysis (`clinical_trial.rs`)
+
+This example demonstrates how to use the `MaybeUncertain<T>` type to model and analyze data from a clinical trial, specifically focusing on the effectiveness of Aspirin in reducing headache pain. It showcases how to handle situations where the presence of data itself is uncertain, alongside the uncertainty of the data's value.
+
+To run this example:
+
+```bash
+cargo run --example clinical_trial -p deep_causality_uncertain
+```

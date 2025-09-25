@@ -234,3 +234,7 @@ cargo run --bin example-tokio
 
 This example illustrates how `DeepCausality` can be effectively used in an asynchronous environment for concurrent and
 scalable causal inference.
+
+## 📜 Licence
+
+All examples are licensed under the [MIT license](LICENSE).

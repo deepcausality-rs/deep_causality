@@ -26,6 +26,7 @@ In many modern applications, from sensor data processing and machine learning to
 ## Key Features
 
 *   **First-Order Uncertainty:** `Uncertain<T>` is a generic type that encapsulates a value along with its inherent uncertainty, modeled as a probability distribution.
+*   **Probabilistic Presence (`MaybeUncertain<T>`):** Introduces `MaybeUncertain<T>`, a specialized type for modeling values whose very presence is uncertain. This is crucial for scenarios with sparse or intermittently available data, allowing explicit reasoning about the probability of a value existing, in addition to its inherent uncertainty if present.
 *   **Rich Distribution Support:** Create uncertain values from various probability distributions, including:
     *   `Point(T)`: For precise, known values.
     *   `Normal(mean, std_dev)`: Gaussian distribution for continuous data with noise.
@@ -206,18 +207,57 @@ if system_healthy.implicit_conditional().unwrap() {
 }
 ```
 
+### Probabilistic Presence (`MaybeUncertain<T>`)
+
+Model values that might be present or absent with a certain probability.
+
+```rust
+use deep_causality_uncertain::{MaybeUncertain, Uncertain, UncertainError};
+
+// A value that is certainly present, but its value is uncertain
+let certain_but_uncertain = MaybeUncertain::<f64>::from_uncertain(Uncertain::normal(10.0, 2.0));
+println!("Sampled value (certainly present): {:?}", certain_but_uncertain.sample().unwrap());
+
+// A value that is certainly absent
+let certainly_absent = MaybeUncertain::<f64>::always_none();
+println!("Sampled value (certainly absent): {:?}", certainly_absent.sample().unwrap());
+
+// A value that is probabilistically present (e.g., 70% chance)
+let probabilistically_present = MaybeUncertain::<f64>::from_bernoulli_and_uncertain(0.7, Uncertain::normal(5.0, 1.0));
+println!("Sampled value (probabilistically present): {:?}", probabilistically_present.sample().unwrap());
+
+// Check probability of presence
+println!("Probability of being present: {:.1}%", probabilistically_present.is_some().estimate_probability(1000).unwrap() * 100.0);
+
+// Arithmetic operations propagate None
+let sum_with_absent = certain_but_uncertain.clone() + certainly_absent.clone();
+println!("Sum with absent value: {:?}", sum_with_absent.sample().unwrap());
+
+// Lift to Uncertain<T> if evidence of presence is sufficient
+match probabilistically_present.lift_to_uncertain(0.6, 0.95, 0.05, 1000) {
+    Ok(uncertain_value) => println!("Lifted to Uncertain<f64>: Expected value {:.2}", uncertain_value.expected_value(1000).unwrap()),
+    Err(e) => println!("Failed to lift: {}", e),
+}
+```
+
 ## More Examples
 
 For more complex and real-world scenarios, refer to the `examples` directory:
 
-*   **GPS Navigation (`gps_navigation.rs`)**: Simulates GPS readings, propagates uncertainty through distance and time calculations, and makes route decisions.
+*   **GPS Navigation (`example_gps_navigation.rs`)**: Simulates GPS readings, propagates uncertainty through distance and time calculations, and makes route decisions.
   
-* **Sensor Data Processing (`sensor_processing.rs`)**: Demonstrates robust sensor data processing with error handling, sensor fusion, and anomaly detection under uncertainty.
+*   **Sensor Data Processing (`example_sensor_processing.rs`)**: Demonstrates robust sensor data processing with error handling, sensor fusion, and anomaly detection under uncertainty.
+
+*   **Aspirin Headache Trial Analysis (`example_clinical_trial.rs`)**: Demonstrates using `MaybeUncertain<T>` to model clinical trial data with probabilistic presence, analyzing drug effectiveness under uncertainty.
 
 To run an example:
 
 ```bash
-cargo run --example gps_navigation -p deep_causality_uncertain
+cargo run --example example_gps_navigation 
+
+cargo run --example example_sensor_processing 
+
+cargo run --example example_clinical_trial 
 ```
 
 ## Acknowledgements

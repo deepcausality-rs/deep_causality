@@ -1,0 +1,17 @@
+[package]
+name = "case_study_icu_sepsis"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+
+[dependencies]
+# Internal dependencies
+deep_causality_discovery = { path = "../../deep_causality_discovery" }
+deep_causality = { path = "../../deep_causality" }
+
+# Exernal dependencies
+arrow-array = "56"
+parquet = "56"

@@ -27,3 +27,4 @@ pub use crate::types::distribution_parameters::NormalDistributionParams;
 pub use crate::types::distribution_parameters::UniformDistributionParams;
 pub use crate::types::sampler::SequentialSampler;
 pub use crate::types::uncertain::Uncertain;
+pub use crate::types::uncertain_maybe::MaybeUncertain;

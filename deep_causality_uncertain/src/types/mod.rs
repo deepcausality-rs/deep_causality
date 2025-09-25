@@ -8,3 +8,4 @@ pub mod distribution;
 pub mod distribution_parameters;
 pub mod sampler;
 pub mod uncertain;
+pub mod uncertain_maybe;
