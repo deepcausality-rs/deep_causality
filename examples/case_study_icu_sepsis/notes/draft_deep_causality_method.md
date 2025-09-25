@@ -3,6 +3,7 @@
 ## Data
 
 Data Records:
+
 * Total unique Patient_IDs: 40336
 * Total number of data records for all patients: 1552210
 * Average number of data records per patient: 38
@@ -10,6 +11,9 @@ Data Records:
 * Percentage of patients with SepsisLabel = 1: 7.27%
 
 ### Problem: Highly Imbalanced data.
+
+A 7.27% prevalence rate for sepsis is a highly imbalanced dataset. This is a well-known nightmare for conventional
+statistical and machine learning methods
 
 In a sepsis context, predicting "no sepsis" 92.73% of the time, when 7.27% of patients actually have sepsis,
 means you are missing over 7% of sepsis cases. This is an unacceptably high rate of false negatives, leading to
