@@ -25,6 +25,11 @@ version = "0.1"
 
 
 [[example]]
+name = "clinical_trial"
+path = "examples/clinical_trial/clinical_trial.rs"
+
+
+[[example]]
 name = "gps_navigation"
 path = "examples/gps/gps_navigation.rs"
 

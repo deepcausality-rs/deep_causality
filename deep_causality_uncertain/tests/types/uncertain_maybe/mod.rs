@@ -2,10 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-mod cache;
-mod computation;
-mod distribution;
-mod distribution_parameters;
-mod sampler;
-mod uncertain;
-mod uncertain_maybe;
+mod maybe_uncertain_arithmetic_tests;
+mod maybe_uncertain_lift_tests;
+#[cfg(test)]
+mod maybe_uncertain_tests;

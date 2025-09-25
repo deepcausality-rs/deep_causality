@@ -157,3 +157,20 @@ rust_test_suite(
         "//thirdparty/crates:rusty-fork",
     ],
 )
+
+rust_test_suite(
+    name = "types_maybe_uncertain",
+    srcs = glob([
+        "types/maybe_uncertain_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_uncertain",
+        # External dependencies
+        "//thirdparty/crates:rusty-fork",
+    ],
+)

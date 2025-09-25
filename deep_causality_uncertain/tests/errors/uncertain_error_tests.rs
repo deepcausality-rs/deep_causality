@@ -108,4 +108,11 @@ rusty_fork_test! {
         }
     }
 
+    #[test]
+    fn test_presence_error_display() {
+        let err = UncertainError::PresenceError("test presence error".to_string());
+        assert_eq!(err.to_string(), "Presence error: test presence error");
+        assert!(err.source().is_none());
+    }
+
 }
