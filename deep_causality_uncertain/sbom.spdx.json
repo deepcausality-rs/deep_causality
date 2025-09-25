@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2025-09-23T07:36:09Z",
+    "created": "2025-09-25T08:37:41Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_uncertain-8bacc591-8e15-4759-a3c5-f9f8459c005d",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_uncertain-f6147694-f02b-461d-b601-5fe635d56d49",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_uncertain",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "aa708c2d677910a36d1915d5c726b21e5df359eb"
+          "checksumValue": "8b4f6265dafc3ded58f148ce9a097f17a066811c"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -27,79 +27,20 @@
   "name": "deep_causality_uncertain",
   "packages": [
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--uncertain-0.2.3",
-      "description": "A First-Order Type for Uncertain Programming for the DeepCausality project.'",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_uncertain",
-      "versionInfo": "0.2.3"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-wasip2-1.0.1-plus-wasi-0.2.4",
-      "description": "WASIp2 API bindings for Rust",
+      "SPDXID": "SPDXRef-Package-getrandom-0.3.3",
+      "description": "A small cross-platform library for retrieving random data from system source",
       "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/wasip2@1.0.1%2Bwasi-0.2.4",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "Apache-2.0 OR Apache-2.0 OR MIT",
-      "licenseDeclared": "Apache-2.0 OR Apache-2.0 OR MIT",
-      "name": "wasip2",
-      "versionInfo": "1.0.1+wasi-0.2.4"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--rand-0.1.2",
-      "description": "Random number utils for for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_rand",
-      "versionInfo": "0.1.2"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-libc-0.2.175",
-      "description": "Raw FFI bindings to platform libraries like libc.",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/libc@0.2.175",
+          "referenceLocator": "pkg:cargo/getrandom@0.3.3",
           "referenceType": "purl"
         }
       ],
       "licenseConcluded": "MIT OR Apache-2.0",
       "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "libc",
-      "versionInfo": "0.2.175"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.2",
-      "description": "Number utils for for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_num",
-      "versionInfo": "0.1.2"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-cfg-if-1.0.3",
-      "description": "A macro to ergonomically define an item depending on a large number of #[cfg]\nparameters. Structured like an if-else chain, the first matching branch is the\nitem that gets emitted.\n",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/cfg-if@1.0.3",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "cfg-if",
-      "versionInfo": "1.0.3"
+      "name": "getrandom",
+      "versionInfo": "0.3.3"
     },
     {
       "SPDXID": "SPDXRef-Package-r-efi-5.3.0",
@@ -119,20 +60,20 @@
       "versionInfo": "5.3.0"
     },
     {
-      "SPDXID": "SPDXRef-Package-wasi-0.14.7-plus-wasi-0.2.4",
-      "description": "WASI API bindings for Rust",
+      "SPDXID": "SPDXRef-Package-libc-0.2.175",
+      "description": "Raw FFI bindings to platform libraries like libc.",
       "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/wasi@0.14.7%2Bwasi-0.2.4",
+          "referenceLocator": "pkg:cargo/libc@0.2.175",
           "referenceType": "purl"
         }
       ],
-      "licenseConcluded": "Apache-2.0 OR Apache-2.0 OR MIT",
-      "licenseDeclared": "Apache-2.0 OR Apache-2.0 OR MIT",
-      "name": "wasi",
-      "versionInfo": "0.14.7+wasi-0.2.4"
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "libc",
+      "versionInfo": "0.2.175"
     },
     {
       "SPDXID": "SPDXRef-Package-wit-bindgen-0.46.0",
@@ -152,40 +93,84 @@
       "versionInfo": "0.46.0"
     },
     {
-      "SPDXID": "SPDXRef-Package-getrandom-0.3.3",
-      "description": "A small cross-platform library for retrieving random data from system source",
+      "SPDXID": "SPDXRef-Package-wasi-0.14.7-plus-wasi-0.2.4",
+      "description": "WASI API bindings for Rust",
       "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/getrandom@0.3.3",
+          "referenceLocator": "pkg:cargo/wasi@0.14.7%2Bwasi-0.2.4",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "Apache-2.0 OR Apache-2.0 OR MIT",
+      "licenseDeclared": "Apache-2.0 OR Apache-2.0 OR MIT",
+      "name": "wasi",
+      "versionInfo": "0.14.7+wasi-0.2.4"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--rand-0.1.2",
+      "description": "Random number utils for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_rand",
+      "versionInfo": "0.1.2"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-cfg-if-1.0.3",
+      "description": "A macro to ergonomically define an item depending on a large number of #[cfg]\nparameters. Structured like an if-else chain, the first matching branch is the\nitem that gets emitted.\n",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/cfg-if@1.0.3",
           "referenceType": "purl"
         }
       ],
       "licenseConcluded": "MIT OR Apache-2.0",
       "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "getrandom",
-      "versionInfo": "0.3.3"
+      "name": "cfg-if",
+      "versionInfo": "1.0.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--uncertain-0.2.3",
+      "description": "A First-Order Type for Uncertain Programming for the DeepCausality project.'",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_uncertain",
+      "versionInfo": "0.2.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.2",
+      "description": "Number utils for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_num",
+      "versionInfo": "0.1.2"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-wasip2-1.0.1-plus-wasi-0.2.4",
+      "description": "WASIp2 API bindings for Rust",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/wasip2@1.0.1%2Bwasi-0.2.4",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "Apache-2.0 OR Apache-2.0 OR MIT",
+      "licenseDeclared": "Apache-2.0 OR Apache-2.0 OR MIT",
+      "name": "wasip2",
+      "versionInfo": "1.0.1+wasi-0.2.4"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-libc-0.2.175",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-getrandom-0.3.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-getrandom-0.3.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.2"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--rand-0.1.2",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--uncertain-0.2.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-cfg-if-1.0.3",
+      "relatedSpdxElement": "SPDXRef-Package-wasi-0.14.7-plus-wasi-0.2.4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-getrandom-0.3.3"
     },
@@ -195,9 +180,29 @@
       "spdxElementId": "SPDXRef-File-deep_causality_uncertain"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-cfg-if-1.0.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-getrandom-0.3.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-wit-bindgen-0.46.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-wasip2-1.0.1-plus-wasi-0.2.4"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-File-deep_causality_uncertain",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--rand-0.1.2",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--uncertain-0.2.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-libc-0.2.175",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-getrandom-0.3.3"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-r-efi-5.3.0",
@@ -205,24 +210,19 @@
       "spdxElementId": "SPDXRef-Package-getrandom-0.3.3"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-getrandom-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.2"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.2",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.2"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-wasi-0.14.7-plus-wasi-0.2.4",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-getrandom-0.3.3"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-wasip2-1.0.1-plus-wasi-0.2.4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-wasi-0.14.7-plus-wasi-0.2.4"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-wit-bindgen-0.46.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-wasip2-1.0.1-plus-wasi-0.2.4"
     }
   ],
   "spdxVersion": "SPDX-2.3"

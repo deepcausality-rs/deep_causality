@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2025-09-23T07:36:09Z",
+    "created": "2025-09-25T08:37:41Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/ultragraph-5a84dda5-5373-4879-a786-9f3e26cbe484",
+  "documentNamespace": "https://spdx.org/spdxdocs/ultragraph-eef25736-adb2-46ea-bcb6-33a8b5187f40",
   "files": [
     {
       "SPDXID": "SPDXRef-File-ultragraph",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "aa708c2d677910a36d1915d5c726b21e5df359eb"
+          "checksumValue": "8b4f6265dafc3ded58f148ce9a097f17a066811c"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -39,14 +39,14 @@
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-ultragraph-0.8.7",
-      "relationshipType": "GENERATED_FROM",
-      "spdxElementId": "SPDXRef-File-ultragraph"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-File-ultragraph",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ultragraph-0.8.7",
+      "relationshipType": "GENERATED_FROM",
+      "spdxElementId": "SPDXRef-File-ultragraph"
     }
   ],
   "spdxVersion": "SPDX-2.3"
