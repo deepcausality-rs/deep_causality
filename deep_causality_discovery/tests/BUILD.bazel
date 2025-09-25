@@ -1,0 +1,172 @@
+load("@rules_rust//rust:defs.bzl", "rust_test_suite")
+
+rust_test_suite(
+    name = "errors",
+    srcs = glob([
+        "errors/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_discovery",
+        # Internal dependencies
+        "//deep_causality_algorithms",
+        "//deep_causality_tensor",
+        # External dependencies
+        "//thirdparty/crates:csv",
+        "//thirdparty/crates:parquet",
+    ],
+)
+
+rust_test_suite(
+    name = "types_analysis",
+    srcs = glob([
+        "types/analysis/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_discovery",
+        # Internal dependencies
+        "//deep_causality_algorithms",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_test_suite(
+    name = "types_causal_discovery",
+    srcs = glob([
+        "types/causal_discovery/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_discovery",
+        # Internal dependencies
+        "//deep_causality_algorithms",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_test_suite(
+    name = "types_cdl",
+    srcs = glob([
+        "types/cdl/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_discovery",
+        # Internal dependencies
+        "//deep_causality_algorithms",
+        "//deep_causality_tensor",
+        # External dependencies
+        "//thirdparty/crates:tempfile",
+    ],
+)
+
+rust_test_suite(
+    name = "types_config",
+    srcs = glob([
+        "types/config/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_discovery",
+        # Internal dependencies
+        "//deep_causality_algorithms",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_test_suite(
+    name = "data_loader",
+    srcs = glob([
+        "types/data_loader/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_discovery",
+        # Internal dependencies
+        "//deep_causality_algorithms",
+        "//deep_causality_tensor",
+        # External dependencies
+        "//thirdparty/crates:csv",
+        "//thirdparty/crates:parquet",
+        "//thirdparty/crates:tempfile",
+    ],
+)
+
+rust_test_suite(
+    name = "types_feature_selector",
+    srcs = glob([
+        "types/feature_selector/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_discovery",
+        # Internal dependencies
+        "//deep_causality_algorithms",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_test_suite(
+    name = "types_formatter",
+    srcs = glob([
+        "types/formatter/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_discovery",
+        # Internal dependencies
+        "//deep_causality_algorithms",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_test_suite(
+    name = "types_preprocessor",
+    srcs = glob([
+        "types/preprocessor/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_discovery",
+        # Internal dependencies
+        "//deep_causality_algorithms",
+        "//deep_causality_tensor",
+    ],
+)
