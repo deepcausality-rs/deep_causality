@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.2.3...deep_causality_uncertain-v0.3.0) - 2025-09-25
+
+### Added
+
+- *(deep_causality_uncertain)* Updated Readme and examples.
+- *(deep_causality_uncertain)* introduce MaybeUncertain type for probabilistic presence
+
+### Other
+
+- Updated SBOM for all crates.
+- Minor lints and fixes. Trying cargo cache on build and test.
+- Updated SBOM for all crates.
+
 ## [0.2.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.2.2...deep_causality_uncertain-v0.2.3) - 2025-09-22
 
 ### Fixed

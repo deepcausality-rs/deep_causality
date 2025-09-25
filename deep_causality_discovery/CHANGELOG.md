@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_discovery-v0.1.0...deep_causality_discovery-v0.1.1) - 2025-09-25
+
+### Fixed
+
+- *(deep_causality_discovery)* bumped up versions of external deps.
+
+### Other
+
+- Updated SBOM for all crates.
+- Added Bazel config for deep_causality_discovery.
+
 ## [0.1.0](https://github.com/marvin-hansen/deep_causality/releases/tag/deep_causality_discovery-v0.1.0) - 2025-09-23
 
 ### Added
