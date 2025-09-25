@@ -161,7 +161,7 @@ rust_test_suite(
 rust_test_suite(
     name = "types_maybe_uncertain",
     srcs = glob([
-        "types/maybe_uncertain_tests.rs",
+        "types/uncertain_maybe/*_tests.rs",
     ]),
     tags = [
         "unit-test",

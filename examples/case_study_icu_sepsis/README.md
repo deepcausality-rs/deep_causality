@@ -1,5 +1,10 @@
 # Case Study: ICU Sepsis Prediction
 
+**WORK IN PROGRESS.** 
+* Incomplete
+* Things may change any given day
+* Insights and notes may get updated frequently. 
+
 This crate serves as a practical case study within the `deep_causality` Rust monorepo, demonstrating the application of the computational causality library to a real-world medical dataset. It focuses on the preliminary data analysis stage for predicting sepsis in Intensive Care Unit (ICU) patients.
 
 ## Dataset
