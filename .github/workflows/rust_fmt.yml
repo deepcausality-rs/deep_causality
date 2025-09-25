@@ -1,7 +1,7 @@
 #SPDX-License-Identifier: MIT
 #Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-name: Lint
+name: Fmt
 
 on: [ pull_request ]
 
@@ -9,16 +9,14 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  clippy:
-    name: cargo clippy
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions-rs/toolchain@v1
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --all-targets --all-features -- -D warnings
+      - name: Run cargo fmt --check
+        run: cargo fmt --all -- --check

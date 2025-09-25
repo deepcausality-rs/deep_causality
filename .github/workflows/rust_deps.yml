@@ -1,7 +1,7 @@
 #SPDX-License-Identifier: MIT
 #Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-name: Lint
+name: Unused Deps
 
 on: [ pull_request ]
 
@@ -9,8 +9,8 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  clippy:
-    name: cargo clippy
+  unused_dependencies:
+    name: cargo machete
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -18,7 +18,10 @@ jobs:
         with:
           toolchain: stable
           override: true
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-machete
       - uses: actions-rs/cargo@v1
         with:
-          command: clippy
-          args: --all-targets --all-features -- -D warnings
+          command: machete
+          args:  deep_causality deep_causality_algorithms deep_causality_discovery deep_causality_data_structures deep_causality_macros deep_causality_uncertain ultragraph
