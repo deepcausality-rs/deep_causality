@@ -6,12 +6,12 @@
 use deep_causality_algorithms::surd::{MaxOrder, SurdResult};
 use deep_causality_discovery::{
     AnalyzeConfig, AnalyzeError, CDL, CausalDiscoveryConfig, CausalDiscoveryError, CdlConfig,
-    CdlError, CsvConfig, DataError, DataLoaderConfig, FeatureSelectError, FeatureSelectorConfig,
-    FinalizeError, MrmrConfig, PreprocessConfig, PreprocessError, ProcessAnalysis,
-    ProcessFormattedResult, SurdConfig,
+    CdlError, CsvConfig, DataLoaderConfig, DataLoadingError, FeatureSelectError,
+    FeatureSelectorConfig, FinalizeError, MrmrConfig, PreprocessConfig, PreprocessError,
+    ProcessAnalysis, ProcessFormattedResult, SurdConfig,
 };
 use deep_causality_discovery::{
-    CausalDiscovery, DataPreprocessor, FeatureSelector, ProcessDataLoader, ProcessResultAnalyzer,
+    CausalDiscovery, DataLoader, DataPreprocessor, FeatureSelector, ProcessResultAnalyzer,
     ProcessResultFormatter,
 };
 use deep_causality_tensor::{CausalTensor, CausalTensorError};
@@ -23,16 +23,18 @@ use tempfile::NamedTempFile;
 struct MockDataLoader {
     success: bool,
 }
-impl ProcessDataLoader for MockDataLoader {
+impl DataLoader for MockDataLoader {
     fn load(
         &self,
         _path: &str,
         _config: &DataLoaderConfig,
-    ) -> Result<CausalTensor<f64>, DataError> {
+    ) -> Result<CausalTensor<f64>, DataLoadingError> {
         if self.success {
             Ok(CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2]).unwrap())
         } else {
-            Err(DataError::OsError("MockDataLoader failed".to_string()))
+            Err(DataLoadingError::OsError(
+                "MockDataLoader failed".to_string(),
+            ))
         }
     }
 }
@@ -209,7 +211,9 @@ fn test_cdl_start_error_loader_failure() {
     assert!(cdl.is_err());
     assert_eq!(
         cdl.unwrap_err(),
-        CdlError::ReadDataError(DataError::OsError("MockDataLoader failed".to_string()))
+        CdlError::ReadDataError(DataLoadingError::OsError(
+            "MockDataLoader failed".to_string()
+        ))
     );
 }
 

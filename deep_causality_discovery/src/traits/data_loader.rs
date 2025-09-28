@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{DataError, DataLoaderConfig};
+use crate::{DataLoaderConfig, DataLoadingError};
 use deep_causality_tensor::CausalTensor;
 
 /// Defines the contract for loading data from a source into a `CausalTensor`.
@@ -11,7 +11,7 @@ use deep_causality_tensor::CausalTensor;
 /// Implementors of this trait handle the specifics of reading different file formats
 /// (e.g., CSV, Parquet) and converting the tabular data into the tensor representation
 /// required by the CDL pipeline.
-pub trait ProcessDataLoader {
+pub trait DataLoader {
     /// Loads data from the specified path.
     ///
     /// # Arguments
@@ -29,5 +29,9 @@ pub trait ProcessDataLoader {
     ///
     /// Returns a `DataError` if loading fails, which can be due to the file not
     /// being found, permission issues, or parsing errors.
-    fn load(&self, path: &str, config: &DataLoaderConfig) -> Result<CausalTensor<f64>, DataError>;
+    fn load(
+        &self,
+        path: &str,
+        config: &DataLoaderConfig,
+    ) -> Result<CausalTensor<f64>, DataLoadingError>;
 }

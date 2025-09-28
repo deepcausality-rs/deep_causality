@@ -435,7 +435,6 @@ name = "deep_causality_algorithms"
 version = "0.1.4"
 dependencies = [
  "deep_causality_tensor",
- "deep_causality_uncertain",
  "rayon",
 ]
 

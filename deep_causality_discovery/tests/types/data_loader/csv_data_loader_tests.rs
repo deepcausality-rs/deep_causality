@@ -4,7 +4,7 @@
  */
 
 use deep_causality_discovery::{
-    CsvConfig, CsvDataLoader, DataError, DataLoaderConfig, ProcessDataLoader,
+    CsvConfig, CsvDataLoader, DataLoader, DataLoaderConfig, DataLoadingError,
 };
 use deep_causality_tensor::CausalTensor;
 use std::io::Write;
@@ -92,7 +92,7 @@ fn test_csv_data_loader_load_error_file_not_found() {
 
     let result = loader.load("non_existent_file.csv", &config);
     assert!(result.is_err());
-    if let Err(DataError::FileNotFound(path)) = result {
+    if let Err(DataLoadingError::FileNotFound(path)) = result {
         assert_eq!(path, "non_existent_file.csv");
     } else {
         panic!("Expected FileNotFoundError, got {:?}", result);
@@ -111,7 +111,7 @@ fn test_csv_data_loader_load_error_invalid_data_format() {
 
     let result = loader.load(path, &config);
     assert!(result.is_err());
-    if let Err(DataError::OsError(e)) = result {
+    if let Err(DataLoadingError::OsError(e)) = result {
         assert!(e.contains("invalid float literal"));
     } else {
         panic!("Expected OsError with parse error, got {:?}", result);
@@ -133,7 +133,7 @@ fn test_csv_data_loader_load_error_invalid_config_type() {
     assert!(result.is_err());
     assert_eq!(
         result.unwrap_err(),
-        DataError::OsError("Invalid config type for CsvDataLoader".to_string())
+        DataLoadingError::OsError("Invalid config type for CsvDataLoader".to_string())
     );
 }
 

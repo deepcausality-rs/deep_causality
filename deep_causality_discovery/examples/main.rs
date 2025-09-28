@@ -18,7 +18,7 @@ fn main() {
     // 2. Get the CDL configuration
     let cdl_config = get_cdl_config();
 
-    // 3. Run the DSL pipeline
+    // 3. Build the CDL pipeline
     let discovery_process = CDL::with_config(cdl_config)
         .start(CsvDataLoader, &file_path)
         .expect("Failed to load file to start CDL process")
@@ -33,6 +33,7 @@ fn main() {
         .build()
         .expect("Failed to build causal discovery process");
 
+    // 4. Run the CDL pipeline
     let result = discovery_process.run();
     dbg!(&result);
 

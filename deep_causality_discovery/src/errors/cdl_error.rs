@@ -4,15 +4,16 @@
  */
 
 use crate::{
-    AnalyzeError, CausalDiscoveryError, DataError, FeatureSelectError, FinalizeError,
-    PreprocessError,
+    AnalyzeError, CausalDiscoveryError, DataCleaningError, DataLoadingError, FeatureSelectError,
+    FinalizeError, PreprocessError,
 };
 
 use std::fmt;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub enum CdlError {
-    ReadDataError(DataError),
+    ReadDataError(DataLoadingError),
+    CleanDataError(DataCleaningError),
     PreprocessError(PreprocessError),
     FeatSelectError(FeatureSelectError),
     CausalDiscoveryError(CausalDiscoveryError),
@@ -54,6 +55,9 @@ impl fmt::Display for CdlError {
                 f,
                 "Missing finalization configuration. Please provide a FinalizeConfig."
             ),
+            CdlError::CleanDataError(e) => {
+                write!(f, "Step [Cleaning] failed: {}", e)
+            }
         }
     }
 }
@@ -72,13 +76,19 @@ impl std::error::Error for CdlError {
             CdlError::MissingCausalDiscoveryConfig => None,
             CdlError::MissingAnalyzeConfig => None,
             CdlError::MissingFinalizeConfig => None,
+            CdlError::CleanDataError(e) => Some(e),
         }
     }
 }
 
-impl From<DataError> for CdlError {
-    fn from(err: DataError) -> CdlError {
+impl From<DataLoadingError> for CdlError {
+    fn from(err: DataLoadingError) -> CdlError {
         CdlError::ReadDataError(err)
+    }
+}
+impl From<DataCleaningError> for CdlError {
+    fn from(err: DataCleaningError) -> CdlError {
+        CdlError::CleanDataError(err)
     }
 }
 impl From<FeatureSelectError> for CdlError {

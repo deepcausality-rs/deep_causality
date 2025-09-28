@@ -4,7 +4,7 @@
  */
 
 use crate::{
-    CausalDiscovery, DataPreprocessor, FeatureSelector, ProcessDataLoader, ProcessResultAnalyzer,
+    CausalDiscovery, DataLoader, DataPreprocessor, FeatureSelector, ProcessResultAnalyzer,
     ProcessResultFormatter,
 };
 use crate::{CdlConfig, CdlError, ProcessAnalysis, ProcessFormattedResult};
@@ -86,7 +86,7 @@ impl CDL<NoData> {
     /// A `CDL` instance in the `WithData` state, or a `CdlError` if loading fails.
     pub fn start<L>(self, loader: L, path: &str) -> Result<CDL<WithData>, CdlError>
     where
-        L: ProcessDataLoader,
+        L: DataLoader,
     {
         let loader_config = self
             .config

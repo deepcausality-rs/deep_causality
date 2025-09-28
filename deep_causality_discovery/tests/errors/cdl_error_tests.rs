@@ -4,8 +4,8 @@
  */
 
 use deep_causality_discovery::{
-    AnalyzeError, CausalDiscoveryError, CdlError, DataError, FeatureSelectError, FinalizeError,
-    PreprocessError,
+    AnalyzeError, CausalDiscoveryError, CdlError, DataLoadingError, FeatureSelectError,
+    FinalizeError, PreprocessError,
 };
 use deep_causality_tensor::CausalTensorError;
 use std::error::Error;
@@ -13,7 +13,7 @@ use std::error::Error;
 #[test]
 fn test_display() {
     // Variants wrapping other errors
-    let data_err = DataError::FileNotFound("path/to/file.csv".to_string());
+    let data_err = DataLoadingError::FileNotFound("path/to/file.csv".to_string());
     let err = CdlError::ReadDataError(data_err);
     assert_eq!(
         err.to_string(),
@@ -90,7 +90,7 @@ fn test_display() {
 #[test]
 fn test_source() {
     // Variants wrapping other errors
-    let data_err = DataError::FileNotFound("path".to_string());
+    let data_err = DataLoadingError::FileNotFound("path".to_string());
     let err = CdlError::ReadDataError(data_err);
     assert!(err.source().is_some());
     assert_eq!(
@@ -154,7 +154,7 @@ fn test_source() {
 #[test]
 fn test_from_impls() {
     // From<DataError>
-    let data_err = DataError::FileNotFound("path".to_string());
+    let data_err = DataLoadingError::FileNotFound("path".to_string());
     let err = CdlError::from(data_err);
     if let CdlError::ReadDataError(_) = err {
         // Test passed

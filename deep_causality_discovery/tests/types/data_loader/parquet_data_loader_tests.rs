@@ -4,7 +4,7 @@
  */
 
 use deep_causality_discovery::{
-    DataError, DataLoaderConfig, ParquetConfig, ParquetDataLoader, ProcessDataLoader,
+    DataLoader, DataLoaderConfig, DataLoadingError, ParquetConfig, ParquetDataLoader,
 };
 use std::fs;
 use std::path::Path;
@@ -136,7 +136,7 @@ fn test_parquet_data_loader_load_error_file_not_found() {
 
     let result = loader.load("non_existent_file.parquet", &config);
     assert!(result.is_err());
-    if let Err(DataError::OsError(e)) = result {
+    if let Err(DataLoadingError::OsError(e)) = result {
         assert!(e.contains("No such file or directory"));
     } else {
         panic!("Expected OsError, got {:?}", result);
@@ -157,7 +157,7 @@ fn test_parquet_data_loader_load_error_invalid_config_type() {
     assert!(result.is_err());
     assert_eq!(
         result.unwrap_err(),
-        DataError::OsError("Invalid config type for ParquetDataLoader".to_string())
+        DataLoadingError::OsError("Invalid config type for ParquetDataLoader".to_string())
     );
 }
 
@@ -386,7 +386,7 @@ fn test_parquet_data_loader_load_error_unsupported_type() {
 
     let result = loader.load(file_path.to_str().unwrap(), &config);
     assert!(result.is_err());
-    if let Err(DataError::OsError(e)) = result {
+    if let Err(DataLoadingError::OsError(e)) = result {
         assert!(e.contains("Unsupported data type in Parquet file"));
     } else {
         panic!(
