@@ -8,7 +8,7 @@ use std::ops::{Add, Div};
 
 impl<T> CausalTensor<T>
 where
-    T: Copy + Default + PartialOrd,
+    T: Clone + Default + PartialOrd,
 {
     pub(super) fn sum_axes_impl(&self, axes: &[usize]) -> Result<Self, CausalTensorError>
     where
@@ -23,7 +23,10 @@ where
 
         // Special case: sum all elements to a scalar tensor. This works for empty tensors too.
         if axes.is_empty() {
-            let total_sum = self.data.iter().fold(T::default(), |acc, &x| acc + x);
+            let total_sum = self
+                .data
+                .iter()
+                .fold(T::default(), |acc, x| acc + x.clone());
             // A scalar tensor has an empty shape `[]` but contains one data element.
             return CausalTensor::new(vec![total_sum], vec![]);
         }
@@ -54,7 +57,7 @@ where
         let mut current_index = vec![0; self.num_dim()];
         for i in 0..self.len() {
             // Get the value at the current flat index.
-            let value = self.data[i];
+            let value = self.data[i].clone();
 
             // Map the source index to the destination index by removing axis components.
             let mut result_index = Vec::new();
@@ -66,7 +69,7 @@ where
 
             // Add the value to the corresponding position in the result tensor.
             if let Some(res_val) = result_tensor.get_mut(&result_index) {
-                *res_val = *res_val + value;
+                *res_val = res_val.clone() + value;
             }
 
             // --- Increment the multi-dimensional index ---
@@ -112,7 +115,7 @@ where
         // Perform element-wise division of the sum tensor by the count.
         let count_t: T = (count as u32).into(); // A reasonable conversion path
         for item in &mut sum_tensor.data {
-            *item = *item / count_t;
+            *item = item.clone() / count_t.clone();
         }
 
         Ok(sum_tensor)

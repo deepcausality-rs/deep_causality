@@ -8,25 +8,8 @@ use crate::types::causal_tensor::CausalTensor;
 // Private helper methods
 impl<T> CausalTensor<T>
 where
-    T: Copy + Default + PartialOrd,
+    T: Clone + Default + PartialOrd,
 {
-    /// Calculates the flat index into the `data` vector from a multi-dimensional index.
-    /// This is the core of the stride-based memory layout.
-    pub(crate) fn get_flat_index(&self, index: &[usize]) -> Option<usize> {
-        if index.len() != self.num_dim() {
-            return None;
-        }
-
-        let mut flat_index = 0;
-        for (i, &dim_index) in index.iter().enumerate() {
-            if dim_index >= self.shape[i] {
-                return None; // Index is out of bounds for this dimension
-            }
-            flat_index += dim_index * self.strides[i];
-        }
-        Some(flat_index)
-    }
-
     /// Calculates the flat index for a broadcasted tensor. Assumes inputs are valid.
     pub(crate) fn get_flat_index_broadcasted(&self, result_index: &[usize]) -> usize {
         let mut flat_index = 0;
@@ -91,8 +74,8 @@ where
         op: F,
     ) -> Result<Self, CausalTensorError>
     where
-        U: Copy + Default + PartialOrd,
-        T: Copy + Default + PartialOrd,
+        U: Clone + Default + PartialOrd,
+        T: Clone + Default + PartialOrd,
         F: Fn(T, U) -> Result<T, CausalTensorError>, // op now returns Result
     {
         // 1. Handle empty tensors
@@ -145,8 +128,8 @@ where
             let self_flat_idx = self.get_flat_index_broadcasted(&current_index);
             let rhs_flat_idx = rhs.get_flat_index_broadcasted(&current_index);
 
-            let self_val = self.data[self_flat_idx];
-            let rhs_val = rhs.data[rhs_flat_idx];
+            let self_val = self.data[self_flat_idx].clone();
+            let rhs_val = rhs.data[rhs_flat_idx].clone();
 
             result_data.push(op(self_val, rhs_val)?); // Handle Result from op
 

@@ -7,7 +7,7 @@ use crate::types::causal_tensor::CausalTensor;
 
 impl<T> CausalTensor<T>
 where
-    T: Copy + Default + PartialOrd,
+    T: Clone + Default + PartialOrd,
 {
     pub(super) fn slice_impl(
         &self,
@@ -39,7 +39,7 @@ where
                 // ...get the value at that position and push it to our new data buffer.
                 // .unwrap() is safe because we are iterating within the bounds of self.len().
                 let flat_index = self.get_flat_index(&current_index).unwrap();
-                new_data.push(self.as_slice()[flat_index]);
+                new_data.push(self.as_slice()[flat_index].clone());
             }
 
             // Increment the multi-dimensional index to the next position.

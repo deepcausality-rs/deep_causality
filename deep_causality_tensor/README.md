@@ -66,13 +66,13 @@ fn main() {
 
 The following benchmarks were run on a `CausalTensor` of size 100x100 (10,000 `f64` elements).
 
-| Operation                     | Time      | Notes                                      |
-|-------------------------------|-----------|--------------------------------------------|
-| `tensor_get`                  | ~1.64 ns  | Accessing a single element.                |
-| `tensor_reshape`              | ~786 ns   | Metadata only, but clones data in the test.|
-| `tensor_scalar_add`           | ~2.69 µs  | Element-wise addition with a scalar.       |
-| `tensor_tensor_add_broadcast` | ~37.7 µs  | Element-wise addition with broadcasting.   |
-| `tensor_sum_full_reduction`   | ~6.86 µs  | Summing all 10,000 elements of the tensor. |
+| Operation                     | Time       | Notes                                      |
+|-------------------------------|------------|--------------------------------------------|
+| `tensor_get`                  | ~2.31 ns   | Accessing a single element.                |
+| `tensor_reshape`              | ~2.46 µs   | Metadata only, but clones data in the test.|
+| `tensor_scalar_add`           | ~4.95 µs   | Element-wise addition with a scalar.       |
+| `tensor_tensor_add_broadcast` | ~46.67 µs  | Element-wise addition with broadcasting.   |
+| `tensor_sum_full_reduction`   | ~10.56 µs  | Summing all 10,000 elements of the tensor. |
 
 ### Key Observations
 1.  **Element Access (`get`):** Access is extremely fast, demonstrating the efficiency of the stride-based index calculation.
@@ -107,20 +107,6 @@ The `CausalTensor` API is designed to be comprehensive and intuitive:
 -   **Shape Manipulation:** `reshape()`, `ravel()`
 -   **Reduction Operations:** `sum_axes()`, `mean_axes()`, `arg_sort()`
 -   **Arithmetic:** Overloaded `+`, `-`, `*`, `/` operators for both tensor-scalar and tensor-tensor operations.
-
-# Performance:
-
-
-Benchmarks are for a 100x100 (10,000 element) tensor.
-
-| Operation                     | Time     | Notes                                       |
-|-------------------------------|----------|---------------------------------------------|
-| `tensor_get`                  | ~1.64 ns | Accessing a single element.                 |
-| `tensor_reshape`              | ~786 ns  | Metadata only, but clones data in the test. |
-| `tensor_scalar_add`           | ~2.69 µs | Element-wise addition with a scalar.        |
-| `tensor_tensor_add_broadcast` | ~37.7 µs | Element-wise addition with broadcasting.    |
-| `tensor_sum_full_reduction`   | ~6.86 µs | Summing all 10,000 elements of the tensor.  |
-
 
 ## 👨‍💻👩‍💻 Contribution
 

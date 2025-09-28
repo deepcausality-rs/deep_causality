@@ -7,7 +7,7 @@ use crate::{CausalTensorCollectionExt, CausalTensorError};
 
 impl<T> CausalTensorCollectionExt<T> for [CausalTensor<T>]
 where
-    T: Copy + Default + PartialOrd,
+    T: Clone + Default + PartialOrd,
 {
     fn stack(&self, axis: usize) -> Result<CausalTensor<T>, CausalTensorError> {
         if self.is_empty() {
@@ -51,7 +51,7 @@ where
             let value = self[slice_index]
                 .get(&source_index)
                 .expect("Internal logic error: index should be valid");
-            result_data.push(*value);
+            result_data.push(value.clone());
 
             // Increment the multi-dimensional index for the next output element.
             for j in (0..result_shape.len()).rev() {
