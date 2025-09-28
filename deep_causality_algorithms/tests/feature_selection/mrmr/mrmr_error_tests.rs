@@ -51,3 +51,18 @@ fn test_calculation_error_partial_eq() {
     assert_eq!(error1, error2);
     assert_ne!(error1, error3);
 }
+
+#[test]
+fn test_uncertainty_error_display() {
+    let error = MrmrError::UncertaintyError("Failed to sample".to_string());
+    assert_eq!(format!("{}", error), "Uncertainty error: Failed to sample");
+}
+
+#[test]
+fn test_uncertainty_error_partial_eq() {
+    let error1 = MrmrError::UncertaintyError("Test error".to_string());
+    let error2 = MrmrError::UncertaintyError("Test error".to_string());
+    let error3 = MrmrError::UncertaintyError("Another error".to_string());
+    assert_eq!(error1, error2);
+    assert_ne!(error1, error3);
+}

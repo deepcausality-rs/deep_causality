@@ -9,6 +9,3 @@ pub mod mrmr_utils;
 
 pub use mrmr_algo::*;
 pub use mrmr_error::MrmrError;
-
-#[cfg(test)]
-mod mrmr_utils_tests;
