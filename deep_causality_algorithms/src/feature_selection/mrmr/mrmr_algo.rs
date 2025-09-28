@@ -52,7 +52,7 @@ use std::collections::HashSet;
 ///
 /// ```
 /// use deep_causality_tensor::CausalTensor;
-/// use deep_causality_algorithms::mrmr::select_features;
+/// use deep_causality_algorithms::mrmr::mrmr_features_selector;
 ///
 /// let data = vec![
 ///     1.0, 2.0, 3.0, 1.6,
@@ -63,13 +63,13 @@ use std::collections::HashSet;
 /// let mut tensor = CausalTensor::new(data, vec![4, 4]).unwrap();
 ///
 /// // Select 2 features, with the target variable in column 3.
-/// let selected_features = select_features(&mut tensor, 2, 3).unwrap();
+/// let selected_features = mrmr_features_selector(&mut tensor, 2, 3).unwrap();
 /// // The exact output may vary slightly based on floating-point precision and data, but for this example,
 /// // it typically selects features 2 and 0 (indices of the original columns).
 /// assert_eq!(selected_features.len(), 2);
 /// // assert_eq!(selected_features, vec![2, 0]); // Example expected output
 /// ```
-pub fn select_features(
+pub fn mrmr_features_selector(
     tensor: &mut CausalTensor<f64>,
     num_features: usize,
     target_col: usize,

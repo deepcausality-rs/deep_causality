@@ -14,7 +14,7 @@ fn test_mrmr_select_features() {
         1.0, 2.0, 3.0, 1.6, 2.0, 4.1, 6.0, 3.5, 3.0, 6.2, 9.0, 5.5, 4.0, 8.1, 12.0, 7.5,
     ];
     let mut tensor = CausalTensor::new(data, vec![4, 4]).unwrap();
-    let selected_features = mrmr::select_features(&mut tensor, 2, 3).unwrap();
+    let selected_features = mrmr::mrmr_features_selector(&mut tensor, 2, 3).unwrap();
 
     // Based on calculation, F2 is most relevant, then F0 is chosen due to lower redundancy.
     assert_eq!(selected_features, vec![2, 0]);
@@ -23,7 +23,7 @@ fn test_mrmr_select_features() {
 #[test]
 fn test_select_features_non_2d_tensor() {
     let mut tensor = CausalTensor::new(vec![1.0; 4], vec![4]).unwrap();
-    let result = mrmr::select_features(&mut tensor, 1, 0);
+    let result = mrmr::mrmr_features_selector(&mut tensor, 1, 0);
     assert!(matches!(result, Err(MrmrError::InvalidInput(_))));
     assert_eq!(
         result.unwrap_err().to_string(),
@@ -34,7 +34,7 @@ fn test_select_features_non_2d_tensor() {
 #[test]
 fn test_select_features_sample_too_small() {
     let mut tensor = CausalTensor::new(vec![1.0; 4], vec![2, 2]).unwrap(); // 2 rows < 3
-    let result = mrmr::select_features(&mut tensor, 1, 1);
+    let result = mrmr::mrmr_features_selector(&mut tensor, 1, 1);
     assert!(matches!(result, Err(MrmrError::SampleTooSmall(3))));
     assert_eq!(
         result.unwrap_err().to_string(),
@@ -45,7 +45,7 @@ fn test_select_features_sample_too_small() {
 #[test]
 fn test_select_features_invalid_num_features_zero() {
     let mut tensor = CausalTensor::new(vec![1.0; 9], vec![3, 3]).unwrap();
-    let result = mrmr::select_features(&mut tensor, 0, 2); // num_features = 0
+    let result = mrmr::mrmr_features_selector(&mut tensor, 0, 2); // num_features = 0
     assert!(matches!(result, Err(MrmrError::InvalidInput(_))));
     assert_eq!(
         result.unwrap_err().to_string(),
@@ -56,7 +56,7 @@ fn test_select_features_invalid_num_features_zero() {
 #[test]
 fn test_select_features_invalid_num_features_too_large() {
     let mut tensor = CausalTensor::new(vec![1.0; 9], vec![3, 3]).unwrap();
-    let result = mrmr::select_features(&mut tensor, 3, 2); // num_features = 3, n_cols = 3
+    let result = mrmr::mrmr_features_selector(&mut tensor, 3, 2); // num_features = 3, n_cols = 3
     assert!(matches!(result, Err(MrmrError::InvalidInput(_))));
     assert_eq!(
         result.unwrap_err().to_string(),
@@ -67,7 +67,7 @@ fn test_select_features_invalid_num_features_too_large() {
 #[test]
 fn test_select_features_target_col_out_of_bounds() {
     let mut tensor = CausalTensor::new(vec![1.0; 9], vec![3, 3]).unwrap();
-    let result = mrmr::select_features(&mut tensor, 1, 3); // target_col = 3, n_cols = 3
+    let result = mrmr::mrmr_features_selector(&mut tensor, 1, 3); // target_col = 3, n_cols = 3
     assert!(matches!(result, Err(MrmrError::InvalidInput(_))));
     assert_eq!(
         result.unwrap_err().to_string(),
@@ -84,7 +84,7 @@ fn test_select_features_zero_relevance_and_redundancy() {
     ];
     let mut tensor = CausalTensor::new(data, vec![4, 4]).unwrap();
     // Select 2 features, target is col 3
-    let selected_features = mrmr::select_features(&mut tensor, 2, 3).unwrap();
+    let selected_features = mrmr::mrmr_features_selector(&mut tensor, 2, 3).unwrap();
 
     // F0 is selected first (perfect relevance).
     // F2 has slightly lower relevance due to noise.
@@ -101,7 +101,7 @@ fn test_select_features_highly_relevant_no_redundancy() {
     ];
     let mut tensor = CausalTensor::new(data, vec![4, 4]).unwrap();
     // Select 2 features, target is col 3
-    let selected_features = mrmr::select_features(&mut tensor, 2, 3).unwrap();
+    let selected_features = mrmr::mrmr_features_selector(&mut tensor, 2, 3).unwrap();
 
     // F0 is selected first (highest relevance: F-stat approx 8.0).
     // F2 has slightly lower relevance (F-stat approx 7.6)

@@ -5,7 +5,7 @@
 
 use crate::FeatureSelector;
 use crate::{FeatureSelectError, FeatureSelectorConfig};
-use deep_causality_algorithms::mrmr::select_features;
+use deep_causality_algorithms::mrmr::mrmr_features_selector;
 use deep_causality_tensor::{CausalTensor, CausalTensorError};
 
 /// A concrete implementation of the `FeatureSelector` trait that uses the MRMR algorithm.
@@ -19,7 +19,7 @@ impl FeatureSelector for MrmrFeatureSelector {
     ) -> Result<CausalTensor<f64>, FeatureSelectError> {
         let FeatureSelectorConfig::Mrmr(mrmr_config) = config;
 
-        let selected_indices = select_features(
+        let selected_indices = mrmr_features_selector(
             &mut tensor,
             mrmr_config.num_features(),
             mrmr_config.target_col(),
