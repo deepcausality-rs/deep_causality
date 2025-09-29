@@ -38,11 +38,11 @@ fn test_builders_and_getters() {
     let analyze_config = AnalyzeConfig::new(0.1, 0.2, 0.3);
 
     let config = CdlConfig::new()
-        .with_data_loader_config(data_loader_config.clone())
+        .with_data_loader(data_loader_config.clone())
         .with_preprocess_config(preprocess_config.clone())
-        .with_feature_selector_config(feature_selector_config.clone())
-        .with_causal_discovery_config(causal_discovery_config.clone())
-        .with_analyze_config(analyze_config.clone());
+        .with_feature_selector(feature_selector_config.clone())
+        .with_causal_discovery(causal_discovery_config.clone())
+        .with_analysis(analyze_config.clone());
 
     assert!(config.data_loader_config().is_some());
     assert!(config.preprocess_config().is_some());
@@ -107,11 +107,11 @@ fn test_display_full() {
     let analyze_config = AnalyzeConfig::new(0.4, 0.5, 0.6);
 
     let config = CdlConfig::new()
-        .with_data_loader_config(data_loader_config)
+        .with_data_loader(data_loader_config)
         .with_preprocess_config(preprocess_config)
-        .with_feature_selector_config(feature_selector_config)
-        .with_causal_discovery_config(causal_discovery_config)
-        .with_analyze_config(analyze_config);
+        .with_feature_selector(feature_selector_config)
+        .with_causal_discovery(causal_discovery_config)
+        .with_analysis(analyze_config);
 
     let display = format!("{}", config);
     assert!(display.contains("DataLoaderConfig::Parquet"));
@@ -123,7 +123,7 @@ fn test_display_full() {
 
 #[test]
 fn test_clone() {
-    let config1 = CdlConfig::new().with_analyze_config(AnalyzeConfig::new(0.1, 0.2, 0.3));
+    let config1 = CdlConfig::new().with_analysis(AnalyzeConfig::new(0.1, 0.2, 0.3));
     let config2 = config1.clone();
     assert!(config2.analyze_config().is_some());
     assert_eq!(
@@ -151,7 +151,7 @@ fn test_debug() {
 #[test]
 fn test_display_only_data_loader_config() {
     let data_loader_config = DataLoaderConfig::Csv(CsvConfig::new(true, b',', 0, None));
-    let config = CdlConfig::new().with_data_loader_config(data_loader_config);
+    let config = CdlConfig::new().with_data_loader(data_loader_config);
     let display = format!("{}", config);
     assert!(display.contains("data_loader_config: DataLoaderConfig::Csv(CsvConfig(headers: true, delimiter: ,, skip: 0, columns: None))"));
     assert!(display.contains("preprocess_config: None"));
@@ -178,7 +178,7 @@ fn test_display_only_preprocess_config() {
 #[test]
 fn test_display_only_feature_selector_config() {
     let feature_selector_config = FeatureSelectorConfig::Mrmr(MrmrConfig::new(5, 0));
-    let config = CdlConfig::new().with_feature_selector_config(feature_selector_config);
+    let config = CdlConfig::new().with_feature_selector(feature_selector_config);
     let display = format!("{}", config);
     assert!(display.contains("data_loader_config: None"));
     assert!(display.contains("preprocess_config: None"));
@@ -191,7 +191,7 @@ fn test_display_only_feature_selector_config() {
 fn test_display_only_causal_discovery_config() {
     let causal_discovery_config =
         CausalDiscoveryConfig::Surd(SurdConfig::new(MaxOrder::Some(2), 0));
-    let config = CdlConfig::new().with_causal_discovery_config(causal_discovery_config);
+    let config = CdlConfig::new().with_causal_discovery(causal_discovery_config);
     let display = format!("{}", config);
     assert!(display.contains("data_loader_config: None"));
     assert!(display.contains("preprocess_config: None"));
@@ -203,7 +203,7 @@ fn test_display_only_causal_discovery_config() {
 #[test]
 fn test_display_only_analyze_config() {
     let analyze_config = AnalyzeConfig::new(0.1, 0.2, 0.3);
-    let config = CdlConfig::new().with_analyze_config(analyze_config);
+    let config = CdlConfig::new().with_analysis(analyze_config);
     let display = format!("{}", config);
     assert!(display.contains("data_loader_config: None"));
     assert!(display.contains("preprocess_config: None"));

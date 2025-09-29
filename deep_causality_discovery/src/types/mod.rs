@@ -6,7 +6,7 @@ pub mod analysis;
 pub mod causal_discovery;
 pub mod cdl;
 pub mod config;
-mod data_cleaner;
+pub mod data_cleaner;
 pub mod data_loader;
 pub mod data_preprocessor;
 pub mod feature_selector;

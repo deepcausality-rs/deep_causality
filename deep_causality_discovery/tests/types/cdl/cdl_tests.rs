@@ -161,7 +161,7 @@ fn test_cdl_new_and_default() {
 #[test]
 fn test_cdl_with_config() {
     let custom_config = CdlConfig::new()
-        .with_data_loader_config(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)));
+        .with_data_loader(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)));
     let cdl = CDL::with_config(custom_config.clone());
     assert!(cdl.config().data_loader_config().is_some());
     assert_eq!(
@@ -183,9 +183,9 @@ fn test_cdl_start_success() {
     let file = create_test_csv_file("1.0,2.0\n3.0,4.0");
     let file_path = file.path().to_str().unwrap();
     let config = CdlConfig::new()
-        .with_data_loader_config(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)));
+        .with_data_loader(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)));
     let cdl = CDL::with_config(config)
-        .start(MockDataLoader { success: true }, file_path)
+        .load_data(MockDataLoader { success: true }, file_path)
         .unwrap();
     // Check if state transitioned to WithData
     let _ = cdl.state();
@@ -196,7 +196,7 @@ fn test_cdl_start_error_missing_config() {
     let file = create_test_csv_file("1.0,2.0");
     let file_path = file.path().to_str().unwrap();
     let cdl = CDL::new(); // No data loader config
-    let result = cdl.start(MockDataLoader { success: true }, file_path);
+    let result = cdl.load_data(MockDataLoader { success: true }, file_path);
     assert!(result.is_err());
     assert_eq!(result.unwrap_err(), CdlError::MissingDataLoaderConfig);
 }
@@ -206,8 +206,8 @@ fn test_cdl_start_error_loader_failure() {
     let file = create_test_csv_file("1.0,2.0");
     let file_path = file.path().to_str().unwrap();
     let config = CdlConfig::new()
-        .with_data_loader_config(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)));
-    let cdl = CDL::with_config(config).start(MockDataLoader { success: false }, file_path);
+        .with_data_loader(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)));
+    let cdl = CDL::with_config(config).load_data(MockDataLoader { success: false }, file_path);
     assert!(cdl.is_err());
     assert_eq!(
         cdl.unwrap_err(),
@@ -224,14 +224,14 @@ fn test_cdl_preprocess_success() {
     let file = create_test_csv_file("1.0,2.0");
     let file_path = file.path().to_str().unwrap();
     let config = CdlConfig::new()
-        .with_data_loader_config(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
+        .with_data_loader(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
         .with_preprocess_config(PreprocessConfig::new(
             deep_causality_discovery::BinningStrategy::EqualWidth,
             2,
             deep_causality_discovery::ColumnSelector::All,
         ));
     let cdl = CDL::with_config(config)
-        .start(MockDataLoader { success: true }, file_path)
+        .load_data(MockDataLoader { success: true }, file_path)
         .unwrap();
     let cdl = cdl.preprocess(MockPreprocessor { success: true }).unwrap();
     // Check if state remained WithData
@@ -243,9 +243,9 @@ fn test_cdl_preprocess_skipped_no_config() {
     let file = create_test_csv_file("1.0,2.0");
     let file_path = file.path().to_str().unwrap();
     let config = CdlConfig::new()
-        .with_data_loader_config(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None))); // No preprocess config
+        .with_data_loader(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None))); // No preprocess config
     let cdl = CDL::with_config(config)
-        .start(MockDataLoader { success: true }, file_path)
+        .load_data(MockDataLoader { success: true }, file_path)
         .unwrap();
     let cdl = cdl.preprocess(MockPreprocessor { success: true }).unwrap();
     // Check if state remained WithData
@@ -257,14 +257,14 @@ fn test_cdl_preprocess_error_preprocessor_failure() {
     let file = create_test_csv_file("1.0,2.0");
     let file_path = file.path().to_str().unwrap();
     let config = CdlConfig::new()
-        .with_data_loader_config(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
+        .with_data_loader(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
         .with_preprocess_config(PreprocessConfig::new(
             deep_causality_discovery::BinningStrategy::EqualWidth,
             2,
             deep_causality_discovery::ColumnSelector::All,
         ));
     let cdl = CDL::with_config(config)
-        .start(MockDataLoader { success: true }, file_path)
+        .load_data(MockDataLoader { success: true }, file_path)
         .unwrap();
     let result = cdl.preprocess(MockPreprocessor { success: false });
     assert!(result.is_err());
@@ -281,13 +281,13 @@ fn test_cdl_feat_select_success() {
     let file = create_test_csv_file("1.0,2.0,3.0");
     let file_path = file.path().to_str().unwrap();
     let config = CdlConfig::new()
-        .with_data_loader_config(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
-        .with_feature_selector_config(FeatureSelectorConfig::Mrmr(MrmrConfig::new(1, 0)));
+        .with_data_loader(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
+        .with_feature_selector(FeatureSelectorConfig::Mrmr(MrmrConfig::new(1, 0)));
     let cdl = CDL::with_config(config)
-        .start(MockDataLoader { success: true }, file_path)
+        .load_data(MockDataLoader { success: true }, file_path)
         .unwrap();
     let cdl = cdl
-        .feat_select(MockFeatureSelector { success: true })
+        .feature_select(MockFeatureSelector { success: true })
         .unwrap();
     // Check if state transitioned to WithFeatures
     let _ = cdl.state();
@@ -298,11 +298,11 @@ fn test_cdl_feat_select_error_missing_config() {
     let file = create_test_csv_file("1.0,2.0");
     let file_path = file.path().to_str().unwrap();
     let config = CdlConfig::new()
-        .with_data_loader_config(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None))); // No feature selector config
+        .with_data_loader(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None))); // No feature selector config
     let cdl = CDL::with_config(config)
-        .start(MockDataLoader { success: true }, file_path)
+        .load_data(MockDataLoader { success: true }, file_path)
         .unwrap();
-    let result = cdl.feat_select(MockFeatureSelector { success: true });
+    let result = cdl.feature_select(MockFeatureSelector { success: true });
     assert!(result.is_err());
     assert_eq!(result.unwrap_err(), CdlError::MissingFeatureSelectorConfig);
 }
@@ -312,12 +312,12 @@ fn test_cdl_feat_select_error_selector_failure() {
     let file = create_test_csv_file("1.0,2.0");
     let file_path = file.path().to_str().unwrap();
     let config = CdlConfig::new()
-        .with_data_loader_config(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
-        .with_feature_selector_config(FeatureSelectorConfig::Mrmr(MrmrConfig::new(1, 0)));
+        .with_data_loader(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
+        .with_feature_selector(FeatureSelectorConfig::Mrmr(MrmrConfig::new(1, 0)));
     let cdl = CDL::with_config(config)
-        .start(MockDataLoader { success: true }, file_path)
+        .load_data(MockDataLoader { success: true }, file_path)
         .unwrap();
-    let result = cdl.feat_select(MockFeatureSelector { success: false });
+    let result = cdl.feature_select(MockFeatureSelector { success: false });
     assert!(result.is_err());
     assert_eq!(
         result.unwrap_err(),
@@ -332,17 +332,17 @@ fn test_cdl_causal_discovery_success() {
     let file = create_test_csv_file("1.0,2.0,3.0");
     let file_path = file.path().to_str().unwrap();
     let config = CdlConfig::new()
-        .with_data_loader_config(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
-        .with_feature_selector_config(FeatureSelectorConfig::Mrmr(MrmrConfig::new(1, 0)))
-        .with_causal_discovery_config(CausalDiscoveryConfig::Surd(SurdConfig::new(
+        .with_data_loader(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
+        .with_feature_selector(FeatureSelectorConfig::Mrmr(MrmrConfig::new(1, 0)))
+        .with_causal_discovery(CausalDiscoveryConfig::Surd(SurdConfig::new(
             MaxOrder::Max,
             0,
         )));
     let cdl = CDL::with_config(config)
-        .start(MockDataLoader { success: true }, file_path)
+        .load_data(MockDataLoader { success: true }, file_path)
         .unwrap();
     let cdl = cdl
-        .feat_select(MockFeatureSelector { success: true })
+        .feature_select(MockFeatureSelector { success: true })
         .unwrap();
     let cdl = cdl
         .causal_discovery(MockCausalDiscovery { success: true })
@@ -356,13 +356,13 @@ fn test_cdl_causal_discovery_error_missing_config() {
     let file = create_test_csv_file("1.0,2.0");
     let file_path = file.path().to_str().unwrap();
     let config = CdlConfig::new()
-        .with_data_loader_config(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
-        .with_feature_selector_config(FeatureSelectorConfig::Mrmr(MrmrConfig::new(1, 0))); // No causal discovery config
+        .with_data_loader(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
+        .with_feature_selector(FeatureSelectorConfig::Mrmr(MrmrConfig::new(1, 0))); // No causal discovery config
     let cdl = CDL::with_config(config)
-        .start(MockDataLoader { success: true }, file_path)
+        .load_data(MockDataLoader { success: true }, file_path)
         .unwrap();
     let cdl = cdl
-        .feat_select(MockFeatureSelector { success: true })
+        .feature_select(MockFeatureSelector { success: true })
         .unwrap();
     let result = cdl.causal_discovery(MockCausalDiscovery { success: true });
     assert!(result.is_err());
@@ -374,17 +374,17 @@ fn test_cdl_causal_discovery_error_discovery_failure() {
     let file = create_test_csv_file("1.0,2.0");
     let file_path = file.path().to_str().unwrap();
     let config = CdlConfig::new()
-        .with_data_loader_config(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
-        .with_feature_selector_config(FeatureSelectorConfig::Mrmr(MrmrConfig::new(1, 0)))
-        .with_causal_discovery_config(CausalDiscoveryConfig::Surd(SurdConfig::new(
+        .with_data_loader(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
+        .with_feature_selector(FeatureSelectorConfig::Mrmr(MrmrConfig::new(1, 0)))
+        .with_causal_discovery(CausalDiscoveryConfig::Surd(SurdConfig::new(
             MaxOrder::Max,
             0,
         )));
     let cdl = CDL::with_config(config)
-        .start(MockDataLoader { success: true }, file_path)
+        .load_data(MockDataLoader { success: true }, file_path)
         .unwrap();
     let cdl = cdl
-        .feat_select(MockFeatureSelector { success: true })
+        .feature_select(MockFeatureSelector { success: true })
         .unwrap();
     let result = cdl.causal_discovery(MockCausalDiscovery { success: false });
     assert!(result.is_err());
@@ -403,18 +403,18 @@ fn test_cdl_analyze_success() {
     let file = create_test_csv_file("1.0,2.0,3.0");
     let file_path = file.path().to_str().unwrap();
     let config = CdlConfig::new()
-        .with_data_loader_config(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
-        .with_feature_selector_config(FeatureSelectorConfig::Mrmr(MrmrConfig::new(1, 0)))
-        .with_causal_discovery_config(CausalDiscoveryConfig::Surd(SurdConfig::new(
+        .with_data_loader(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
+        .with_feature_selector(FeatureSelectorConfig::Mrmr(MrmrConfig::new(1, 0)))
+        .with_causal_discovery(CausalDiscoveryConfig::Surd(SurdConfig::new(
             MaxOrder::Max,
             0,
         )))
-        .with_analyze_config(AnalyzeConfig::new(0.1, 0.1, 0.1));
+        .with_analysis(AnalyzeConfig::new(0.1, 0.1, 0.1));
     let cdl = CDL::with_config(config)
-        .start(MockDataLoader { success: true }, file_path)
+        .load_data(MockDataLoader { success: true }, file_path)
         .unwrap();
     let cdl = cdl
-        .feat_select(MockFeatureSelector { success: true })
+        .feature_select(MockFeatureSelector { success: true })
         .unwrap();
     let cdl = cdl
         .causal_discovery(MockCausalDiscovery { success: true })
@@ -429,17 +429,17 @@ fn test_cdl_analyze_error_missing_config() {
     let file = create_test_csv_file("1.0,2.0");
     let file_path = file.path().to_str().unwrap();
     let config = CdlConfig::new()
-        .with_data_loader_config(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
-        .with_feature_selector_config(FeatureSelectorConfig::Mrmr(MrmrConfig::new(1, 0)))
-        .with_causal_discovery_config(CausalDiscoveryConfig::Surd(SurdConfig::new(
+        .with_data_loader(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
+        .with_feature_selector(FeatureSelectorConfig::Mrmr(MrmrConfig::new(1, 0)))
+        .with_causal_discovery(CausalDiscoveryConfig::Surd(SurdConfig::new(
             MaxOrder::Max,
             0,
         ))); // No analyze config
     let cdl = CDL::with_config(config)
-        .start(MockDataLoader { success: true }, file_path)
+        .load_data(MockDataLoader { success: true }, file_path)
         .unwrap();
     let cdl = cdl
-        .feat_select(MockFeatureSelector { success: true })
+        .feature_select(MockFeatureSelector { success: true })
         .unwrap();
     let cdl = cdl
         .causal_discovery(MockCausalDiscovery { success: true })
@@ -454,18 +454,18 @@ fn test_cdl_analyze_error_analyzer_failure() {
     let file = create_test_csv_file("1.0,2.0");
     let file_path = file.path().to_str().unwrap();
     let config = CdlConfig::new()
-        .with_data_loader_config(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
-        .with_feature_selector_config(FeatureSelectorConfig::Mrmr(MrmrConfig::new(1, 0)))
-        .with_causal_discovery_config(CausalDiscoveryConfig::Surd(SurdConfig::new(
+        .with_data_loader(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
+        .with_feature_selector(FeatureSelectorConfig::Mrmr(MrmrConfig::new(1, 0)))
+        .with_causal_discovery(CausalDiscoveryConfig::Surd(SurdConfig::new(
             MaxOrder::Max,
             0,
         )))
-        .with_analyze_config(AnalyzeConfig::new(0.1, 0.1, 0.1));
+        .with_analysis(AnalyzeConfig::new(0.1, 0.1, 0.1));
     let cdl = CDL::with_config(config)
-        .start(MockDataLoader { success: true }, file_path)
+        .load_data(MockDataLoader { success: true }, file_path)
         .unwrap();
     let cdl = cdl
-        .feat_select(MockFeatureSelector { success: true })
+        .feature_select(MockFeatureSelector { success: true })
         .unwrap();
     let cdl = cdl
         .causal_discovery(MockCausalDiscovery { success: true })
@@ -487,18 +487,18 @@ fn test_cdl_finalize_success() {
     let file = create_test_csv_file("1.0,2.0,3.0");
     let file_path = file.path().to_str().unwrap();
     let config = CdlConfig::new()
-        .with_data_loader_config(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
-        .with_feature_selector_config(FeatureSelectorConfig::Mrmr(MrmrConfig::new(1, 0)))
-        .with_causal_discovery_config(CausalDiscoveryConfig::Surd(SurdConfig::new(
+        .with_data_loader(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
+        .with_feature_selector(FeatureSelectorConfig::Mrmr(MrmrConfig::new(1, 0)))
+        .with_causal_discovery(CausalDiscoveryConfig::Surd(SurdConfig::new(
             MaxOrder::Max,
             0,
         )))
-        .with_analyze_config(AnalyzeConfig::new(0.1, 0.1, 0.1));
+        .with_analysis(AnalyzeConfig::new(0.1, 0.1, 0.1));
     let cdl = CDL::with_config(config)
-        .start(MockDataLoader { success: true }, file_path)
+        .load_data(MockDataLoader { success: true }, file_path)
         .unwrap();
     let cdl = cdl
-        .feat_select(MockFeatureSelector { success: true })
+        .feature_select(MockFeatureSelector { success: true })
         .unwrap();
     let cdl = cdl
         .causal_discovery(MockCausalDiscovery { success: true })
@@ -514,18 +514,18 @@ fn test_cdl_finalize_error_formatter_failure() {
     let file = create_test_csv_file("1.0,2.0");
     let file_path = file.path().to_str().unwrap();
     let config = CdlConfig::new()
-        .with_data_loader_config(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
-        .with_feature_selector_config(FeatureSelectorConfig::Mrmr(MrmrConfig::new(1, 0)))
-        .with_causal_discovery_config(CausalDiscoveryConfig::Surd(SurdConfig::new(
+        .with_data_loader(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
+        .with_feature_selector(FeatureSelectorConfig::Mrmr(MrmrConfig::new(1, 0)))
+        .with_causal_discovery(CausalDiscoveryConfig::Surd(SurdConfig::new(
             MaxOrder::Max,
             0,
         )))
-        .with_analyze_config(AnalyzeConfig::new(0.1, 0.1, 0.1));
+        .with_analysis(AnalyzeConfig::new(0.1, 0.1, 0.1));
     let cdl = CDL::with_config(config)
-        .start(MockDataLoader { success: true }, file_path)
+        .load_data(MockDataLoader { success: true }, file_path)
         .unwrap();
     let cdl = cdl
-        .feat_select(MockFeatureSelector { success: true })
+        .feature_select(MockFeatureSelector { success: true })
         .unwrap();
     let cdl = cdl
         .causal_discovery(MockCausalDiscovery { success: true })
@@ -548,18 +548,18 @@ fn test_cdl_build_and_run_success() {
     let file = create_test_csv_file("1.0,2.0,3.0");
     let file_path = file.path().to_str().unwrap();
     let config = CdlConfig::new()
-        .with_data_loader_config(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
-        .with_feature_selector_config(FeatureSelectorConfig::Mrmr(MrmrConfig::new(1, 0)))
-        .with_causal_discovery_config(CausalDiscoveryConfig::Surd(SurdConfig::new(
+        .with_data_loader(DataLoaderConfig::Csv(CsvConfig::new(false, b',', 0, None)))
+        .with_feature_selector(FeatureSelectorConfig::Mrmr(MrmrConfig::new(1, 0)))
+        .with_causal_discovery(CausalDiscoveryConfig::Surd(SurdConfig::new(
             MaxOrder::Max,
             0,
         )))
-        .with_analyze_config(AnalyzeConfig::new(0.1, 0.1, 0.1));
+        .with_analysis(AnalyzeConfig::new(0.1, 0.1, 0.1));
     let cdl = CDL::with_config(config)
-        .start(MockDataLoader { success: true }, file_path)
+        .load_data(MockDataLoader { success: true }, file_path)
         .unwrap();
     let cdl = cdl
-        .feat_select(MockFeatureSelector { success: true })
+        .feature_select(MockFeatureSelector { success: true })
         .unwrap();
     let cdl = cdl
         .causal_discovery(MockCausalDiscovery { success: true })

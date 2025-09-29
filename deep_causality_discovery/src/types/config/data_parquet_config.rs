@@ -20,7 +20,9 @@ impl ParquetConfig {
             batch_size,
         }
     }
+}
 
+impl ParquetConfig {
     /// An optional list of column names to select. If `None`, all columns are loaded.
     pub fn columns(&self) -> &Option<Vec<String>> {
         &self.columns

@@ -84,7 +84,7 @@ impl CDL<NoData> {
     ///
     /// # Returns
     /// A `CDL` instance in the `WithData` state, or a `CdlError` if loading fails.
-    pub fn start<L>(self, loader: L, path: &str) -> Result<CDL<WithData>, CdlError>
+    pub fn load_data<L>(self, loader: L, path: &str) -> Result<CDL<WithData>, CdlError>
     where
         L: DataLoader,
     {
@@ -136,7 +136,7 @@ impl CDL<WithData> {
     ///
     /// # Returns
     /// A `CDL` instance in the `WithFeatures` state, or a `CdlError` if selection fails.
-    pub fn feat_select<S>(self, selector: S) -> Result<CDL<WithFeatures>, CdlError>
+    pub fn feature_select<S>(self, selector: S) -> Result<CDL<WithFeatures>, CdlError>
     where
         S: FeatureSelector,
     {

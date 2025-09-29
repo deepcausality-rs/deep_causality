@@ -29,7 +29,20 @@ impl CsvConfig {
             columns,
         }
     }
+}
 
+impl Default for CsvConfig {
+    fn default() -> Self {
+        Self {
+            has_headers: true,
+            delimiter: b',',
+            skip_rows: 0,
+            columns: None,
+        }
+    }
+}
+
+impl CsvConfig {
     /// Whether the CSV file has a header row.
     pub fn has_headers(&self) -> bool {
         self.has_headers
