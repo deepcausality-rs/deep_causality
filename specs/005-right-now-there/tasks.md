@@ -58,27 +58,60 @@ This document outlines the tasks required to implement the `OptionNoneDataCleane
   - **Command**: `cargo test -p deep_causality_discovery --test mrmr_feature_selector_update_tests`
   - **Depends on**: T009, T010
 
+## Causal Discovery Update
+
+- **T012** [P]: Create a new test file for `CausalDiscovery` trait update in `deep_causality_discovery/tests/traits/causal_discovery_update_tests.rs`.
+  - **Description**: Write a test case that attempts to define a mock `CausalDiscovery` implementation that takes `CausalTensor<Option<f64>>` as input. This test should initially fail due to the trait signature mismatch.
+  - **File**: `deep_causality_discovery/tests/traits/causal_discovery_update_tests.rs`
+  - **Command**: `cargo test -p deep_causality_discovery --test causal_discovery_update_tests`
+
+- **T013**: Update the `CausalDiscovery` trait in `deep_causality_discovery/src/traits/causal_discovery.rs` to accept `CausalTensor<Option<f64>>` as input.
+  - **Description**: Modify the `discover` method signature in the `CausalDiscovery` trait.
+  - **File**: `deep_causality_discovery/src/traits/causal_discovery.rs`
+  - **Depends on**: T012 (test should now compile)
+
+- **T014** [P]: Run tests for `CausalDiscovery` trait update to ensure they pass.
+  - **Command**: `cargo test -p deep_causality_discovery --test causal_discovery_update_tests`
+  - **Depends on**: T012, T013
+
+- **T015**: Implement `surd_states_cdl` in `deep_causality_algorithms/src/surd/surd_algo_cdl.rs` to handle `CausalTensor<Option<f64>>`.
+  - **Description**: This function should perform SURD analysis on `CausalTensor<Option<f64>>` using pairwise deletion for `None` values, similar to `mrmr_features_selector_cdl`. This is a conceptual task as the actual implementation is outside `deep_causality_discovery`.
+  - **File**: `deep_causality_algorithms/src/surd/surd_algo_cdl.rs` (new file)
+  - **Depends on**: T014 (conceptual)
+
+- **T016**: Update `SurdCausalDiscovery` in `deep_causality_discovery/src/types/causal_discovery/surd.rs` to use `CausalTensor<Option<f64>>` as input and call `surd_states_cdl`.
+  - **Description**: Modify the `discover` method implementation in `SurdCausalDiscovery` to adapt to the new `CausalTensor<Option<f64>>` type and delegate to `surd_states_cdl`.
+  - **File**: `deep_causality_discovery/src/types/causal_discovery/surd.rs`
+  - **Depends on**: T013, T015 (conceptual)
+
+- **T017**: Update `CDL<WithFeatures>::causal_discovery` in `deep_causality_discovery/src/types/cdl/mod.rs` to pass `CausalTensor<Option<f64>>` to `discovery.discover`.
+  - **Description**: Modify the `causal_discovery` method in the `CDL` pipeline to pass the `CausalTensor<Option<f64>>` from `WithFeatures` state to the `discover` method.
+  - **File**: `deep_causality_discovery/src/types/cdl/mod.rs`
+  - **Depends on**: T016
+
 ## Integration and Polish
 
-- **T012** [P]: Create an integration test `deep_causality_discovery/tests/integration/quickstart_integration_tests.rs` that mirrors the `quickstart.md` flow.
-  - **Description**: This test should cover the full flow from raw `CausalTensor<f64>` to `OptionNoneDataCleaner` to `MrmrFeatureSelector` with `CausalTensor<Option<f64>>`.
+- **T018** [P]: Create an integration test `deep_causality_discovery/tests/integration/quickstart_integration_tests.rs` that mirrors the `quickstart.md` flow.
+  - **Description**: This test should cover the full flow from raw `CausalTensor<f64>` to `OptionNoneDataCleaner` to `MrmrFeatureSelector` with `CausalTensor<Option<f64>>` and then to `CausalDiscovery` with `CausalTensor<Option<f64>>`.
   - **File**: `deep_causality_discovery/tests/integration/quickstart_integration_tests.rs`
   - **Command**: `cargo test -p deep_causality_discovery --test quickstart_integration_tests`
-  - **Depends on**: T005, T011
+  - **Depends on**: T005, T011, T017
 
-- **T013**: Update documentation for `OptionNoneDataCleaner`, `DataCleaner` trait, `FeatureSelector` trait, and `MrmrFeatureSelector`.
+- **T019**: Update documentation for `OptionNoneDataCleaner`, `DataCleaner` trait, `FeatureSelector` trait, `MrmrFeatureSelector`, `CausalDiscovery` trait, and `SurdCausalDiscovery`.
   - **Description**: Ensure all relevant public APIs have up-to-date documentation reflecting the changes.
   - **Files**:
     - `deep_causality_discovery/src/types/data_cleaner/option_none.rs`
     - `deep_causality_discovery/src/traits/data_cleaner.rs`
     - `deep_causality_discovery/src/traits/feature_selector.rs`
     - `deep_causality_discovery/src/types/feature_selector/mrmr.rs`
+    - `deep_causality_discovery/src/traits/causal_discovery.rs`
+    - `deep_causality_discovery/src/types/causal_discovery/surd.rs`
 
-- **T014** [P]: Run `make format` and `make fix` to ensure code style and linting.
+- **T020** [P]: Run `make format` and `make fix` to ensure code style and linting.
   - **Command**: `make format && make fix`
 
-- **T015** [P]: Run all tests for `deep_causality_discovery` crate.
+- **T021** [P]: Run all tests for `deep_causality_discovery` crate.
   - **Command**: `cargo test -p deep_causality_discovery`
 
-- **T016** [P]: Run all tests for the entire mono-repo.
+- **T022** [P]: Run all tests for the entire mono-repo.
   - **Command**: `make test`
