@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::causal_discovery::surd::surd_utils;
-use crate::causal_discovery::surd::surd_utils_cdl;
+use crate::causal_discovery::surd::surd_utils::surd_utils_cdl;
 use crate::causal_discovery::surd::{MaxOrder, SurdResult};
 use deep_causality_tensor::{CausalTensor, CausalTensorCollectionExt, CausalTensorError};
 use std::collections::HashMap;
@@ -199,22 +199,18 @@ pub fn surd_states_cdl(
             surd_utils_cdl::sum_axes_option_f64(&p_sources, &noj_mapped)?
         };
 
-        // p(T | j) = p(T, j) / p(j)
-        let p_s_a = surd_utils_cdl::safe_div_cdl(&p_as, &p_j)?;
+        let p_j_broadcasted = surd_utils_cdl::broadcast_to_cdl(&p_j, p_as.shape())?;
+        let p_s_a = surd_utils_cdl::safe_div_cdl(&p_as, &p_j_broadcasted)?;
 
-        // p(j | T) = p(T, j) / p(T)
-        let p_a_s = surd_utils_cdl::safe_div_cdl(&p_as, &p_s)?;
+        let p_s_broadcasted_for_pas = surd_utils_cdl::broadcast_to_cdl(&p_s, p_as.shape())?;
+        let p_a_s = surd_utils_cdl::safe_div_cdl(&p_as, &p_s_broadcasted_for_pas)?;
 
-        // Reshape p_s to allow for correct broadcasting against p_s_a.
-        let mut broadcast_shape = vec![1; p_s_a.num_dim()];
-        if !broadcast_shape.is_empty() {
-            broadcast_shape[0] = p_s.shape()[0];
-        }
-        let p_s_reshaped = p_s.reshape(&broadcast_shape)?;
+        // Broadcast p_s to the shape of p_s_a for the log difference calculation.
+        let p_s_broadcasted_for_log = surd_utils_cdl::broadcast_to_cdl(&p_s, p_s_a.shape())?;
 
         let log_diff = surd_utils_cdl::sub_cdl(
             &surd_utils_cdl::surd_log2_cdl(&p_s_a)?,
-            &surd_utils_cdl::surd_log2_cdl(&p_s_reshaped)?,
+            &surd_utils_cdl::surd_log2_cdl(&p_s_broadcasted_for_log)?,
         )?;
         let specific_info_map = surd_utils_cdl::mul_cdl(&p_a_s, &log_diff)?;
 
@@ -245,13 +241,8 @@ pub fn surd_states_cdl(
                 .into_par_iter()
                 .map(|t| {
                     analyze_single_target_state_cdl(
-                        t,
-                        n_vars,
-                        &combs,
-                        &is_map,
-                        &p_s,
+                        t, n_vars, &combs, &is_map, &p_s,
                         &p, // Pass CausalTensor<Option<f64>>
-                        &agent_indices,
                         k,
                     )
                 })
@@ -262,13 +253,8 @@ pub fn surd_states_cdl(
             (0..n_target_states)
                 .map(|t| {
                     analyze_single_target_state_cdl(
-                        t,
-                        n_vars,
-                        &combs,
-                        &is_map,
-                        &p_s,
+                        t, n_vars, &combs, &is_map, &p_s,
                         &p, // Pass CausalTensor<Option<f64>>
-                        &agent_indices,
                         k,
                     )
                 })
@@ -365,7 +351,6 @@ struct PerTargetStateResults {
     non_causal_sy_states: HashMap<Vec<usize>, CausalTensor<f64>>,
 }
 
-#[allow(clippy::too_many_arguments)]
 fn analyze_single_target_state_cdl(
     t: usize,
     n_vars: usize,
@@ -373,7 +358,6 @@ fn analyze_single_target_state_cdl(
     is_map: &HashMap<Vec<usize>, CausalTensor<Option<f64>>>,
     p_s: &CausalTensor<Option<f64>>,
     p: &CausalTensor<Option<f64>>,
-    agent_indices: &[usize],
     _k: usize,
 ) -> Result<PerTargetStateResults, CausalTensorError> {
     let mut i_r = HashMap::new();
@@ -457,7 +441,7 @@ fn analyze_single_target_state_cdl(
 
         let prev_ll: &[usize] = if i == 0 { &[] } else { &final_lab[i - 1] };
         let (causal_slice, non_causal_slice) =
-            calculate_state_slice_cdl(p, ll, prev_ll, t, agent_indices, n_vars)?; // Call _cdl version
+            calculate_state_slice_cdl(p, ll, prev_ll, t, n_vars)?;
 
         if ll.len() > 1
         // Synergistic states
@@ -519,7 +503,6 @@ fn calculate_state_slice_cdl(
     current_vars: &[usize],
     prev_vars: &[usize],
     target_state_index: usize,
-    agent_indices: &[usize],
     n_vars: usize,
 ) -> Result<(CausalTensor<f64>, CausalTensor<f64>), CausalTensorError> {
     // 1. Get the slice corresponding to the current target state.
@@ -546,10 +529,21 @@ fn calculate_state_slice_cdl(
         &axes_to_sum_for_pi,
     )?;
 
+    if p_ti_option.shape() != p_i_option.shape() {
+        dbg!("if p_ti_option.shape() != p_i_option.shape() : Tensor ShapeMismatch");
+
+        return Err(CausalTensorError::ShapeMismatch);
+    }
     let p_target_given_i_option = surd_utils_cdl::safe_div_cdl(&p_ti_option, &p_i_option)?;
 
     let p_target_given_j_option = if prev_vars.is_empty() {
-        surd_utils_cdl::sum_axes_option_f64(p, agent_indices)?
+        // If prev_vars is empty, p_target_given_j should represent p(T=t).
+        // p_slice_option has shape [n_s1_states, n_s2_states, ...]
+        // Summing all axes of p_slice_option gives p(T=t) as a scalar tensor.
+        let p_t_scalar_option =
+            surd_utils_cdl::sum_axes_option_f64(&p_slice_option, &all_vars_mapped)?;
+        // This scalar tensor needs to be broadcast to match the shape of p_target_given_i_option.
+        surd_utils_cdl::broadcast_to_cdl(&p_t_scalar_option, p_target_given_i_option.shape())?
     } else {
         let p_tj_option = surd_utils_cdl::sum_axes_option_f64(
             &p_slice_option,
@@ -565,13 +559,12 @@ fn calculate_state_slice_cdl(
             &axes_to_sum_for_pj,
         )?;
 
+        if p_tj_option.shape() != p_j_option.shape() {
+            dbg!("if p_tj_option.shape() != p_j_option.shape() : Tensor ShapeMismatch");
+            return Err(CausalTensorError::ShapeMismatch);
+        }
         surd_utils_cdl::safe_div_cdl(&p_tj_option, &p_j_option)?
     };
-
-    let log_ratio_option = surd_utils_cdl::sub_cdl(
-        &surd_utils_cdl::surd_log2_cdl(&p_target_given_i_option)?,
-        &surd_utils_cdl::surd_log2_cdl(&p_target_given_j_option)?,
-    )?;
 
     let mut all_involved_vars = current_vars_mapped.to_vec();
     all_involved_vars.extend_from_slice(&prev_vars_mapped);
@@ -579,6 +572,19 @@ fn calculate_state_slice_cdl(
     all_involved_vars.dedup();
     let axes_to_sum_out = surd_utils_cdl::set_difference(&all_vars_mapped, &all_involved_vars);
     let p_tij_option = surd_utils_cdl::sum_axes_option_f64(&p_slice_option, &axes_to_sum_out)?;
+
+    // Broadcast p_target_given_i_option to the shape of p_tij_option
+    let p_target_given_i_broadcasted_option =
+        surd_utils_cdl::broadcast_to_cdl(&p_target_given_i_option, p_tij_option.shape())?;
+
+    // Broadcast p_target_given_j_option to the shape of p_tij_option
+    let p_target_given_j_broadcasted_option =
+        surd_utils_cdl::broadcast_to_cdl(&p_target_given_j_option, p_tij_option.shape())?;
+
+    let log_ratio_option = surd_utils_cdl::sub_cdl(
+        &surd_utils_cdl::surd_log2_cdl(&p_target_given_i_broadcasted_option)?,
+        &surd_utils_cdl::surd_log2_cdl(&p_target_given_j_broadcasted_option)?,
+    )?;
 
     // Separate into causal (>0) and non-causal (<0) components
     let causal_log_ratio_option_data: Vec<Option<f64>> = log_ratio_option

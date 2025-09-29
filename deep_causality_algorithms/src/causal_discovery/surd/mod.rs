@@ -4,14 +4,10 @@
  */
 pub mod surd_algo;
 mod surd_algo_cdl;
-pub mod surd_max_order;
-pub mod surd_result;
+mod surd_shared;
 pub(crate) mod surd_utils;
-pub(crate) mod surd_utils_cdl;
-#[cfg(test)]
-mod surd_utils_tests;
 
 pub use crate::causal_discovery::surd::surd_algo::surd_states;
 pub use crate::causal_discovery::surd::surd_algo_cdl::surd_states_cdl;
-pub use crate::causal_discovery::surd::surd_max_order::MaxOrder;
-pub use crate::causal_discovery::surd::surd_result::SurdResult;
+pub use surd_shared::surd_max_order::MaxOrder;
+pub use surd_shared::surd_result::SurdResult;

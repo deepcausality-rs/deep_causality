@@ -5,6 +5,10 @@
 use deep_causality_tensor::{CausalTensor, CausalTensorError};
 use std::cmp::Ordering;
 
+pub(crate) mod surd_utils_cdl;
+#[cfg(test)]
+mod surd_utils_tests;
+
 /// Computes the difference between adjacent elements of a slice.
 ///
 /// Returns a new `Vec` containing the differences. If the input slice has `N`

@@ -25,10 +25,11 @@ fn unravel_index_option(
     shape: &[usize],
 ) -> Result<Vec<usize>, CausalTensorError> {
     let mut coords = Vec::with_capacity(shape.len());
-    let mut temp_flat_index = flat_index;
+    let temp_flat_index = flat_index;
+    let mut current_product = 1;
     for &dim_size in shape.iter().rev() {
-        coords.push(temp_flat_index % dim_size);
-        temp_flat_index /= dim_size;
+        coords.push((temp_flat_index / current_product) % dim_size);
+        current_product *= dim_size;
     }
     coords.reverse();
     Ok(coords)
@@ -59,13 +60,11 @@ fn ravel_index_from_coords_option(
     }
 
     let mut flat_index = 0;
-    let mut multiplier = 1;
-    for i in (0..shape.len()).rev() {
+    for i in 0..coords.len() {
         if coords[i] >= shape[i] {
             return Err(CausalTensorError::AxisOutOfBounds);
         }
-        flat_index += coords[i] * multiplier;
-        multiplier *= shape[i];
+        flat_index = flat_index * shape[i] + coords[i];
     }
     Ok(flat_index)
 }
@@ -274,6 +273,7 @@ pub(crate) fn safe_div_cdl(
     denominator: &CausalTensor<Option<f64>>,
 ) -> Result<CausalTensor<Option<f64>>, CausalTensorError> {
     if numerator.shape() != denominator.shape() {
+        dbg!("safe_div_cdl: Input tensor ShapeMismatch");
         return Err(CausalTensorError::ShapeMismatch);
     }
 
@@ -366,6 +366,7 @@ pub(crate) fn mul_cdl(
     b: &CausalTensor<Option<f64>>,
 ) -> Result<CausalTensor<Option<f64>>, CausalTensorError> {
     if a.shape() != b.shape() {
+        dbg!("mul_cdl: Input tensor ShapeMismatch");
         return Err(CausalTensorError::ShapeMismatch);
     }
 
@@ -409,6 +410,7 @@ pub(crate) fn sub_cdl(
     b: &CausalTensor<Option<f64>>,
 ) -> Result<CausalTensor<Option<f64>>, CausalTensorError> {
     if a.shape() != b.shape() {
+        dbg!("sub_cdl: Input tensor ShapeMismatch");
         return Err(CausalTensorError::ShapeMismatch);
     }
 
@@ -445,4 +447,42 @@ pub(crate) fn set_difference<T: PartialEq + Clone>(a: &[T], b: &[T]) -> Vec<T> {
         .filter(|&item_a| !b.contains(item_a))
         .cloned()
         .collect()
+}
+
+pub(crate) fn broadcast_to_cdl(
+    tensor: &CausalTensor<Option<f64>>,
+    target_shape: &[usize],
+) -> Result<CausalTensor<Option<f64>>, CausalTensorError> {
+    let tensor_shape = tensor.shape();
+    let tensor_data = tensor.as_slice();
+
+    let target_ndim = target_shape.len();
+    let tensor_ndim = tensor_shape.len();
+
+    if tensor_ndim > target_ndim {
+        dbg!("broadcast_to_cdl: Input tensor ShapeMismatch");
+        return Err(CausalTensorError::ShapeMismatch);
+    }
+
+    let mut result_data = Vec::with_capacity(target_shape.iter().product());
+
+    for flat_idx_target in 0..target_shape.iter().product() {
+        let coords_target = unravel_index_option(flat_idx_target, target_shape)?;
+
+        let mut flat_idx_tensor = 0;
+        let mut multiplier = 1;
+        for i in (0..tensor_ndim).rev() {
+            let target_coord_idx = target_ndim - (tensor_ndim - i);
+            let tensor_dim = tensor_shape[i];
+            let target_coord = coords_target[target_coord_idx];
+
+            if tensor_dim != 1 {
+                flat_idx_tensor += (target_coord % tensor_dim) * multiplier;
+            }
+            multiplier *= tensor_dim;
+        }
+        result_data.push(tensor_data[flat_idx_tensor]);
+    }
+
+    CausalTensor::new(result_data, target_shape.to_vec())
 }
