@@ -30,7 +30,7 @@ pub trait FeatureSelector {
     /// the number of requested features is invalid.
     fn select(
         &self,
-        tensor: CausalTensor<f64>,
+        tensor: CausalTensor<Option<f64>>,
         config: &FeatureSelectorConfig,
-    ) -> Result<CausalTensor<f64>, FeatureSelectError>;
+    ) -> Result<CausalTensor<Option<f64>>, FeatureSelectError>;
 }

@@ -64,9 +64,9 @@ struct MockFeatureSelector {
 impl FeatureSelector for MockFeatureSelector {
     fn select(
         &self,
-        tensor: CausalTensor<f64>,
+        tensor: CausalTensor<Option<f64>>,
         _config: &FeatureSelectorConfig,
-    ) -> Result<CausalTensor<f64>, FeatureSelectError> {
+    ) -> Result<CausalTensor<Option<f64>>, FeatureSelectError> {
         if self.success {
             Ok(tensor)
         } else {
@@ -81,7 +81,7 @@ struct MockCausalDiscovery {
 impl CausalDiscovery for MockCausalDiscovery {
     fn discover(
         &self,
-        _tensor: CausalTensor<f64>,
+        _tensor: CausalTensor<Option<f64>>,
         _config: &CausalDiscoveryConfig,
     ) -> Result<SurdResult<f64>, CausalDiscoveryError> {
         if self.success {

@@ -4,8 +4,8 @@
  */
 
 use crate::{
-    CausalDiscovery, DataLoader, DataPreprocessor, FeatureSelector, ProcessResultAnalyzer,
-    ProcessResultFormatter,
+    CausalDiscovery, DataCleaner, DataLoader, DataPreprocessor, FeatureSelector,
+    OptionNoneDataCleaner, ProcessResultAnalyzer, ProcessResultFormatter,
 };
 use crate::{CdlConfig, CdlError, ProcessAnalysis, ProcessFormattedResult};
 use deep_causality_algorithms::surd::SurdResult;
@@ -20,7 +20,7 @@ pub struct NoData;
 pub struct WithData(CausalTensor<f64>);
 /// State after feature selection has been applied.
 #[derive(Debug)]
-pub struct WithFeatures(CausalTensor<f64>);
+pub struct WithFeatures(CausalTensor<Option<f64>>);
 /// State after a causal discovery algorithm has been run.
 #[derive(Debug)]
 pub struct WithCausalResults(SurdResult<f64>);
@@ -146,7 +146,11 @@ impl CDL<WithData> {
             .as_ref()
             .ok_or(CdlError::MissingFeatureSelectorConfig)?;
 
-        let selected_tensor = selector.select(self.state.0, feature_config)?;
+        // Clean the data first to convert CausalTensor<f64> to CausalTensor<Option<f64>>
+        let cleaner = OptionNoneDataCleaner;
+        let cleaned_tensor = cleaner.process(self.state.0)?;
+
+        let selected_tensor = selector.select(cleaned_tensor, feature_config)?;
         Ok(CDL {
             state: WithFeatures(selected_tensor),
             config: self.config,
@@ -232,9 +236,9 @@ impl CDL<WithAnalysis> {
 // After process is finalized
 impl CDL<Finalized> {
     /// Builds the final, executable runner for the pipeline.
-    pub fn build(self) -> Result<CQDRunner, CdlError> {
+    pub fn build(self) -> Result<CDLRunner, CdlError> {
         let CDL { state, config } = self; // Destructure self
-        Ok(CQDRunner {
+        Ok(CDLRunner {
             result: state.0,
             config, // Use the destructured config
         })
@@ -243,12 +247,12 @@ impl CDL<Finalized> {
 
 /// The final, executable runner for a configured CDL pipeline.
 #[derive(Debug)]
-pub struct CQDRunner {
+pub struct CDLRunner {
     result: ProcessFormattedResult,
     config: CdlConfig,
 }
 
-impl CQDRunner {
+impl CDLRunner {
     /// Runs the pipeline and returns the final formatted result.
     ///
     /// In a more complex application, this could trigger logging, saving to a database, etc.

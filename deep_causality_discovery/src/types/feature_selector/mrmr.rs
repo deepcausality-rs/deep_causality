@@ -5,7 +5,7 @@
 
 use crate::FeatureSelector;
 use crate::{FeatureSelectError, FeatureSelectorConfig};
-use deep_causality_algorithms::mrmr::mrmr_features_selector;
+use deep_causality_algorithms::mrmr::mrmr_features_selector_cdl;
 use deep_causality_tensor::{CausalTensor, CausalTensorError};
 
 /// A concrete implementation of the `FeatureSelector` trait that uses the MRMR algorithm.
@@ -14,19 +14,17 @@ pub struct MrmrFeatureSelector;
 impl FeatureSelector for MrmrFeatureSelector {
     fn select(
         &self,
-        mut tensor: CausalTensor<f64>,
+        tensor: CausalTensor<Option<f64>>,
         config: &FeatureSelectorConfig,
-    ) -> Result<CausalTensor<f64>, FeatureSelectError> {
+    ) -> Result<CausalTensor<Option<f64>>, FeatureSelectError> {
         let FeatureSelectorConfig::Mrmr(mrmr_config) = config;
 
-        let selected_indices = mrmr_features_selector(
-            &mut tensor,
+        let selected_indices = mrmr_features_selector_cdl(
+            &tensor,
             mrmr_config.num_features(),
             mrmr_config.target_col(),
         )?;
 
-        // This part is tricky. We need to create a new tensor with only the selected columns.
-        // CausalTensor does not have a `select_columns` method, so we have to do it manually.
         let shape = tensor.shape();
         let n_rows = shape[0];
         let mut new_data = Vec::with_capacity(n_rows * selected_indices.len());

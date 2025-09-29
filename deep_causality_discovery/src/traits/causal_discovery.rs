@@ -33,7 +33,7 @@ pub trait CausalDiscovery {
     /// incompatible tensor shapes or other algorithm-specific issues.
     fn discover(
         &self,
-        tensor: CausalTensor<f64>,
+        tensor: CausalTensor<Option<f64>>,
         config: &CausalDiscoveryConfig,
     ) -> Result<SurdResult<f64>, CausalDiscoveryError>;
 }
