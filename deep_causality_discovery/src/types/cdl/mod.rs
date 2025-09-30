@@ -3,13 +3,15 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{
-    CausalDiscovery, DataCleaner, DataLoader, DataPreprocessor, FeatureSelector,
-    OptionNoneDataCleaner, ProcessResultAnalyzer, ProcessResultFormatter,
-};
 use crate::{CdlConfig, CdlError, ProcessAnalysis, ProcessFormattedResult};
 use deep_causality_algorithms::surd::SurdResult;
 use deep_causality_tensor::CausalTensor;
+
+mod cdl_with_analysis;
+mod cdl_with_causal_results;
+mod cdl_with_data;
+mod cdl_with_features;
+mod cdl_with_no_data;
 
 // Typestate structs representing the pipeline's state.
 /// Initial state of the CDL pipeline, with no data loaded.
@@ -30,6 +32,12 @@ pub struct WithAnalysis(ProcessAnalysis);
 /// Final state after the analysis has been formatted into a final result.
 #[derive(Debug)]
 pub struct Finalized(ProcessFormattedResult);
+/// The final, executable runner for a configured CDL pipeline.
+#[derive(Debug)]
+pub struct CDLRunner {
+    result: ProcessFormattedResult,
+    config: CdlConfig,
+}
 
 /// The core builder for the Causal Discovery Language (CDL) pipeline.
 ///
@@ -52,186 +60,7 @@ impl<State> CDL<State> {
     }
 }
 
-// Initial state
-impl Default for CDL<NoData> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl CDL<NoData> {
-    /// Creates a new CDL pipeline builder in its initial state with a default configuration.
-    pub fn new() -> Self {
-        CDL {
-            state: NoData,
-            config: CdlConfig::new(),
-        }
-    }
-
-    /// Creates a new CDL pipeline builder in its initial state with a specific configuration.
-    pub fn with_config(config: CdlConfig) -> Self {
-        CDL {
-            state: NoData,
-            config,
-        }
-    }
-
-    /// Starts the pipeline by loading data from the given path.
-    ///
-    /// # Arguments
-    /// * `loader` - An implementation of `ProcessDataLoader` (e.g., `CsvDataLoader`).
-    /// * `path` - The path to the data source file.
-    ///
-    /// # Returns
-    /// A `CDL` instance in the `WithData` state, or a `CdlError` if loading fails.
-    pub fn load_data<L>(self, loader: L, path: &str) -> Result<CDL<WithData>, CdlError>
-    where
-        L: DataLoader,
-    {
-        let loader_config = self
-            .config
-            .data_loader_config()
-            .as_ref()
-            .ok_or(CdlError::MissingDataLoaderConfig)?;
-
-        let tensor = loader.load(path, loader_config)?;
-        Ok(CDL {
-            state: WithData(tensor),
-            config: self.config,
-        })
-    }
-}
-
-// After data is loaded
-impl CDL<WithData> {
-    /// An optional step to preprocess the loaded data.
-    ///
-    /// This method is a self-transition, returning the `CDL` in the same `WithData`
-    /// state, allowing it to be chained or skipped.
-    ///
-    /// # Arguments
-    /// * `preprocessor` - An implementation of `DataPreprocessor` (e.g., `DataDiscretizer`).
-    ///
-    /// # Returns
-    /// A `CDL` instance in the `WithData` state, or a `CdlError` if preprocessing fails.
-    pub fn preprocess<P>(self, preprocessor: P) -> Result<CDL<WithData>, CdlError>
-    where
-        P: DataPreprocessor,
-    {
-        if let Some(config) = self.config.preprocess_config() {
-            let processed_tensor = preprocessor.process(self.state.0, config)?;
-            Ok(CDL {
-                state: WithData(processed_tensor),
-                config: self.config,
-            })
-        } else {
-            Ok(self) // If no config is present, pass through without changes.
-        }
-    }
-
-    /// An optional step to select a subset of features from the data.
-    ///
-    /// # Arguments
-    /// * `selector` - An implementation of `FeatureSelector` (e.g., `MrmrFeatureSelector`).
-    ///
-    /// # Returns
-    /// A `CDL` instance in the `WithFeatures` state, or a `CdlError` if selection fails.
-    pub fn feature_select<S>(self, selector: S) -> Result<CDL<WithFeatures>, CdlError>
-    where
-        S: FeatureSelector,
-    {
-        let feature_config = self
-            .config
-            .feature_selector_config()
-            .as_ref()
-            .ok_or(CdlError::MissingFeatureSelectorConfig)?;
-
-        // Clean the data first to convert CausalTensor<f64> to CausalTensor<Option<f64>>
-        let cleaner = OptionNoneDataCleaner;
-        let cleaned_tensor = cleaner.process(self.state.0)?;
-
-        let selected_tensor = selector.select(cleaned_tensor, feature_config)?;
-        Ok(CDL {
-            state: WithFeatures(selected_tensor),
-            config: self.config,
-        })
-    }
-}
-
-// After features are selected
-impl CDL<WithFeatures> {
-    /// Runs a causal discovery algorithm on the feature-selected data.
-    ///
-    /// # Arguments
-    /// * `discovery` - An implementation of `CausalDiscovery` (e.g., `SurdCausalDiscovery`).
-    ///
-    /// # Returns
-    /// A `CDL` instance in the `WithCausalResults` state, or a `CdlError` if discovery fails.
-    pub fn causal_discovery<D>(self, discovery: D) -> Result<CDL<WithCausalResults>, CdlError>
-    where
-        D: CausalDiscovery,
-    {
-        let discovery_config = self
-            .config
-            .causal_discovery_config()
-            .as_ref()
-            .ok_or(CdlError::MissingCausalDiscoveryConfig)?;
-
-        let results = discovery.discover(self.state.0, discovery_config)?;
-        Ok(CDL {
-            state: WithCausalResults(results),
-            config: self.config,
-        })
-    }
-}
-
-// After causal discovery is performed
-impl CDL<WithCausalResults> {
-    /// Analyzes the raw results from the discovery algorithm.
-    ///
-    /// # Arguments
-    /// * `analyzer` - An implementation of `ProcessResultAnalyzer`.
-    ///
-    /// # Returns
-    /// A `CDL` instance in the `WithAnalysis` state, or a `CdlError` if analysis fails.
-    pub fn analyze<A>(self, analyzer: A) -> Result<CDL<WithAnalysis>, CdlError>
-    where
-        A: ProcessResultAnalyzer,
-    {
-        let analyze_config = self
-            .config
-            .analyze_config()
-            .as_ref()
-            .ok_or(CdlError::MissingAnalyzeConfig)?;
-
-        let analysis = analyzer.analyze(&self.state.0, analyze_config)?;
-        Ok(CDL {
-            state: WithAnalysis(analysis),
-            config: self.config,
-        })
-    }
-}
-
-// After results are analyzed
-impl CDL<WithAnalysis> {
-    /// Formats the analysis into a final, presentable result.
-    ///
-    /// # Arguments
-    /// * `formatter` - An implementation of `ProcessResultFormatter`.
-    ///
-    /// # Returns
-    /// A `CDL` instance in the `Finalized` state, or a `CdlError` if formatting fails.
-    pub fn finalize<F>(self, formatter: F) -> Result<CDL<Finalized>, CdlError>
-    where
-        F: ProcessResultFormatter,
-    {
-        let formatted_result = formatter.format(&self.state.0)?;
-        Ok(CDL {
-            state: Finalized(formatted_result),
-            config: self.config,
-        })
-    }
-}
+// See the various cdl_with files for all the type state implementations
 
 // After process is finalized
 impl CDL<Finalized> {
@@ -243,13 +72,6 @@ impl CDL<Finalized> {
             config, // Use the destructured config
         })
     }
-}
-
-/// The final, executable runner for a configured CDL pipeline.
-#[derive(Debug)]
-pub struct CDLRunner {
-    result: ProcessFormattedResult,
-    config: CdlConfig,
 }
 
 impl CDLRunner {

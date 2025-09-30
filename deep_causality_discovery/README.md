@@ -26,39 +26,70 @@ project. It offers a powerful, modular, and type-safe pipeline to move from raw 
 insights. By abstracting complex statistical and algorithmic steps, it enables users to define and execute causal
 discovery workflows with ease, ultimately informing the construction of causal models.
 
-## Key Features
+## Workflow 
 
-* **Modular Pipeline Design (CDL)**: The core of `deep_causality_discovery` is its Causal Discovery Language (CDL),
-  implemented as a typestate-driven builder pattern. This ensures that causal discovery workflows are constructed in a
-  valid sequence at compile-time, enhancing robustness and developer experience.
-* **Flexible Data Loading**: Supports loading tabular data from various sources, including CSV and Parquet files, into
-  the project's `CausalTensor` format, ready for analysis.
-* **Intelligent Feature Selection**: Integrates algorithms like Minimum Redundancy Maximum Relevance (MRMR) to identify
-  the most relevant features for a given target variable, reducing dimensionality and focusing causal analysis.
-* **Advanced Causal Discovery**: Leverages the high-performance `surd_states` algorithm from `deep_causality_algorithms`
-  to decompose causal influences into Synergistic, Unique, and Redundant components, providing a nuanced understanding
-  of multi-variable interactions.
-* **Actionable Causal Analysis**: Translates complex numerical results from causal discovery algorithms into
-  human-readable reports, offering recommendations for building `CausaloidGraph` structures and `Causaloid` logic within
-  the broader DeepCausality framework.
-* **Compile-Time Safety**: The typestate pattern guarantees that each step of the causal discovery pipeline is correctly
-  configured and executed, preventing common errors and ensuring a robust workflow.
+The core of the CDL is a builder pattern that uses Rust's typestate pattern.
+This means the pipeline's state is encoded in the type system, which guarantees
+at compile-time that the steps are executed in a valid sequence.
 
-## From Discovery to Model: Connecting CDL to DeepCausality
+The workflow consists of the following sequential stages:
 
-The `deep_causality_discovery` crate acts as a crucial bridge, transforming observational data into the foundational
-elements for building executable causal models with the DeepCausality library. The insights gained from the SURD-states
-algorithm directly inform the design of your `CausaloidGraph` and the internal logic of individual `Causaloid`s:
+1. Configuration (`CdlConfig`):
+  * The entire pipeline is configured using the CdlConfig struct.
+  * This struct uses a builder pattern (with_* methods) to set up
+    configurations for each stage, such as data loading, feature selection,
+    the discovery algorithm, and analysis thresholds.
 
-* **Structuring the `CausaloidGraph`**: Strong **unique** influences suggest direct causal links (
-  `Causaloid(Source) -> Causaloid(Target)`). Significant **synergistic** influences indicate that multiple sources are
-  jointly required to cause an effect, guiding the creation of many-to-one connections.
-* **Defining `Causaloid` Logic**: State-dependent maps from the SURD analysis provide precise conditional logic for a
-  `Causaloid`'s `causal_fn`, allowing you to programmatically capture how causal influences vary with system states.
-* **Modeling Multi-Causal Interactions**: The detection of synergistic, unique, and redundant influences directly
-  informs the choice of `AggregateLogic` within `CausaloidCollection`s. For instance, strong synergy might map to
-  `AggregateLogic::All` (conjunction), while unique or redundant influences could suggest `AggregateLogic::Any` (
-  disjunction).
+2. Initialization (`CDL<NoData>`):
+  * The pipeline starts in the NoData state, created via CDL::new() or
+    CDL::with_config(config).
+
+3. Data Loading (`load_data`):
+  * Transition: NoData -> WithData
+  * Action: Loads data from a source (e.g., CSV, Parquet) into a
+    CausalTensor<f64>.
+  * Implementations: CsvDataLoader, ParquetDataLoader.
+
+4. Data Cleaning & Feature Selection (`feature_select`):
+  * Transition: WithData -> WithFeatures
+  * Action: This is a mandatory step that prepares the data and selects the
+    most relevant features for analysis.
+    * First, it internally uses OptionNoneDataCleaner to convert the tensor
+      to CausalTensor<Option<f64>>, which handles missing or NaN values by
+      converting them to None. This is crucial for robust statistical
+      analysis in the subsequent steps.
+    * Then, it applies a feature selection algorithm to reduce
+      dimensionality.
+  * Implementation: MrmrFeatureSelector (Minimum Redundancy Maximum
+    Relevance).
+
+5. Causal Discovery (`causal_discovery`):
+  * Transition: WithFeatures -> WithCausalResults
+  * Action: Executes the core causal discovery algorithm on the selected
+    features.
+  * Implementation: SurdCausalDiscovery, which uses the surd_states_cdl
+    algorithm to decompose causal influences into Synergistic, Unique, and
+    Redundant (SURD) components. The output is a SurdResult<f64>.
+
+6. Analysis (`analyze`):
+  * Transition: WithCausalResults -> WithAnalysis
+  * Action: Interprets the raw numerical output from the discovery algorithm
+    into a human-readable analysis. It uses thresholds from AnalyzeConfig to
+    classify the strength of causal influences.
+  * Implementation: SurdResultAnalyzer, which generates a report with
+    recommendations (e.g., "Strong unique influence... Recommended: Direct
+    edge in CausaloidGraph").
+
+7. Finalization (`finalize`):
+  * Transition: WithAnalysis -> Finalized
+  * Action: Formats the analysis report into a final output string.
+  * Implementation: ConsoleFormatter, which prepares the text for printing.
+
+8. Execution (`build` and `run`):
+  * The build() method is called on a Finalized pipeline to create an
+    executable CDLRunner.
+  * The run() method on the CDLRunner executes the process and returns the
+    final ProcessFormattedResult.
 
 ## Installation
 
@@ -73,7 +104,6 @@ cargo add deep_causality_discovery
 Here's a basic example demonstrating how to use the CDL pipeline to discover causal relationships from a CSV file:
 
 ```rust
-use deep_causality_algorithms::surd::MaxOrder;
 use deep_causality_discovery::*;
 use std::fs::File;
 use std::io::Write;
@@ -90,24 +120,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut file = File::create(file_path)?;
     file.write_all(csv_data.as_bytes())?;
 
-    // 2. Configure the Causal Discovery Language (CDL) pipeline
+    // 2. Build the CDL configuration
     let cdl_config = CdlConfig::new()
-        // Data Loader: CSV with headers, comma delimiter, no skipped rows
-        .with_data_loader_config(DataLoaderConfig::Csv(CsvConfig::new(true, b',', 0, None)))
-        // Feature Selector: MRMR, select 2 features, target column index 3
-        .with_feature_selector_config(FeatureSelectorConfig::Mrmr(MrmrConfig::new(2, 3)))
-        // Causal Discovery: SURD, full decomposition (MaxOrder::Max), target column index 3
-        .with_causal_discovery_config(CausalDiscoveryConfig::Surd(SurdConfig::new(
-            MaxOrder::Max,
-            3,
-        )))
-        // Analysis: Define thresholds for interpreting synergistic, unique, and redundant influences
-        .with_analyze_config(AnalyzeConfig::new(0.1, 0.1, 0.1));
+        // Define the data loader as CSV file loader and the corresponding default CSV config
+        .with_data_loader(DataLoaderConfig::Csv(CsvConfig::default()))
+        // Define the feature selected as MRMR and set its parameters
+        .with_feature_selector(FeatureSelectorConfig::Mrmr(MrmrConfig::new(2, 3)))
+        // Define the causal discovery as SURD and set its parameters
+        .with_causal_discovery(CausalDiscoveryConfig::Surd(SurdConfig::new(Max, 3)))
+        // Define the analysis of the SURD results and set its parameters
+        .with_analysis(AnalyzeConfig::new(0.1, 0.1, 0.1));
 
     // 3. Build and run the CDL pipeline
     let discovery_process = CDL::with_config(cdl_config)
-        .start(CsvDataLoader, file_path)?
-        .feat_select(MrmrFeatureSelector)?
+        .load_data(CsvDataLoader, &file_path)?
+        .feature_select(MrmrFeatureSelector)?
         .causal_discovery(SurdCausalDiscovery)?
         .analyze(SurdResultAnalyzer)?
         .finalize(ConsoleFormatter)?
@@ -128,6 +155,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 The crate employs a comprehensive error handling strategy, defining specific error types for each stage of the CDL
 pipeline (e.g., `DataError`, `FeatureSelectError`, `CausalDiscoveryError`). This allows for precise identification and
 handling of issues, ensuring robust and reliable causal discovery workflows.
+
+## From Discovery to Model: Connecting CDL to DeepCausality
+
+The `deep_causality_discovery` crate acts as a crucial bridge, transforming observational data into the foundational
+elements for building executable causal models with the DeepCausality library. The insights gained from the SURD-states
+algorithm directly inform the design of your `CausaloidGraph` and the internal logic of individual `Causaloid`s:
+
+* **Structuring the `CausaloidGraph`**: Strong **unique** influences suggest direct causal links (
+  `Causaloid(Source) -> Causaloid(Target)`). Significant **synergistic** influences indicate that multiple sources are
+  jointly required to cause an effect, guiding the creation of many-to-one connections.
+* **Defining `Causaloid` Logic**: State-dependent maps from the SURD analysis provide precise conditional logic for a
+  `Causaloid`'s `causal_fn`, allowing you to programmatically capture how causal influences vary with system states.
+* **Modeling Multi-Causal Interactions**: The detection of synergistic, unique, and redundant influences directly
+  informs the choice of `AggregateLogic` within `CausaloidCollection`s. For instance, strong synergy might map to
+  `AggregateLogic::All` (conjunction), while unique or redundant influences could suggest `AggregateLogic::Any` (
+  disjunction).
 
 ## 👨‍💻👩‍💻 Contribution
 

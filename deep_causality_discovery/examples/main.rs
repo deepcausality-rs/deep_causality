@@ -2,11 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_algorithms::surd::MaxOrder::Max;
 use deep_causality_discovery::{
     AnalyzeConfig, CDL, CausalDiscoveryConfig, CdlConfig, ConsoleFormatter, CsvConfig,
-    CsvDataLoader, DataLoaderConfig, FeatureSelectorConfig, MrmrConfig, MrmrFeatureSelector,
-    SurdCausalDiscovery, SurdConfig, SurdResultAnalyzer,
+    CsvDataLoader, DataLoaderConfig, FeatureSelectorConfig, MaxOrder::Max, MrmrConfig,
+    MrmrFeatureSelector, SurdCausalDiscovery, SurdConfig, SurdResultAnalyzer,
 };
 use std::fs::File;
 use std::io::Write;

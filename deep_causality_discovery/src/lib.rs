@@ -7,6 +7,9 @@ mod errors;
 mod traits;
 mod types;
 
+// re-exports
+pub use deep_causality_algorithms::surd::MaxOrder;
+
 // Errors
 pub use crate::errors::{
     AnalyzeError, CausalDiscoveryError, CdlError, DataCleaningError, DataLoadingError,
