@@ -17,6 +17,11 @@ exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE
 
 
 [[example]]
+name = "example_mrmr"
+path = "examples/example_mrmr.rs"
+
+
+[[example]]
 name = "example_surd"
 path = "examples/example_surd.rs"
 
@@ -40,3 +45,10 @@ parallel = ["dep:rayon"]
 
 [package.metadata.docs.rs]
 all-features = true
+
+[dev-dependencies]
+criterion = { version = "0.7", features = ["html_reports"] }
+
+[[bench]]
+name = "mrmr_benchmark"
+harness = false

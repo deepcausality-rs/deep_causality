@@ -14,10 +14,22 @@ fn test_mrmr_select_features() {
         1.0, 2.0, 3.0, 1.6, 2.0, 4.1, 6.0, 3.5, 3.0, 6.2, 9.0, 5.5, 4.0, 8.1, 12.0, 7.5,
     ];
     let mut tensor = CausalTensor::new(data, vec![4, 4]).unwrap();
-    let selected_features = mrmr::mrmr_features_selector(&mut tensor, 2, 3).unwrap();
+    let selected_features_with_scores = mrmr::mrmr_features_selector(&mut tensor, 2, 3).unwrap();
+
+    // Extract indices for assertion
+    let selected_features: Vec<usize> = selected_features_with_scores
+        .iter()
+        .map(|(idx, _score)| *idx)
+        .collect();
 
     // Based on calculation, F2 is most relevant, then F0 is chosen due to lower redundancy.
     assert_eq!(selected_features, vec![2, 0]);
+
+    // Verify scores are valid numbers and normalized
+    for (_, score) in selected_features_with_scores {
+        assert!(score.is_finite());
+        assert!((0.0..=1.0).contains(&score));
+    }
 }
 
 #[test]
@@ -84,13 +96,10 @@ fn test_select_features_zero_relevance_and_redundancy() {
     ];
     let mut tensor = CausalTensor::new(data, vec![4, 4]).unwrap();
     // Select 2 features, target is col 3
-    let selected_features = mrmr::mrmr_features_selector(&mut tensor, 2, 3).unwrap();
+    let result = mrmr::mrmr_features_selector(&mut tensor, 2, 3);
 
-    // F0 is selected first (perfect relevance).
-    // F2 has slightly lower relevance due to noise.
-    // Then, F2 is chosen over F1 because F1 has a score of 0 (relevance=0, redundancy=0),
-    // while F2 has a positive score.
-    assert_eq!(selected_features, vec![0, 2]);
+    assert!(matches!(result, Err(MrmrError::FeatureScoreError(_))));
+    assert!(result.unwrap_err().to_string().contains("NaN"));
 }
 
 #[test]
@@ -101,15 +110,53 @@ fn test_select_features_highly_relevant_no_redundancy() {
     ];
     let mut tensor = CausalTensor::new(data, vec![4, 4]).unwrap();
     // Select 2 features, target is col 3
-    let selected_features = mrmr::mrmr_features_selector(&mut tensor, 2, 3).unwrap();
+    let result = mrmr::mrmr_features_selector(&mut tensor, 2, 3);
 
-    // F0 is selected first (highest relevance: F-stat approx 8.0).
-    // F2 has slightly lower relevance (F-stat approx 7.6)
-    // F1 has lowest relevance (F-stat approx 0.5)
-    //
-    // For the second feature:
-    // Candidate F1 has redundancy of 0 with F0, so its score is f64::MAX.
-    // Candidate F2 has redundancy of ~0.995 with F0, so its score is ~7.6.
-    // F1 is chosen.
-    assert_eq!(selected_features, vec![0, 1]);
+    assert!(matches!(result, Err(MrmrError::FeatureScoreError(_))));
+    assert!(result.unwrap_err().to_string().contains("infinite"));
+}
+
+#[test]
+fn test_select_features_nan_score_error() {
+    // Create a tensor where F0 and F1 have zero relevance to the target,
+    // and F1 has zero redundancy with F0.
+    // This should lead to relevance = 0.0 and redundancy = 0.0 for F1,
+    // causing mRMR score to be NaN (0.0 / 0.0).
+    let data = vec![
+        // F0,  F1,  F2,  Target
+        1.0, 1.0, 5.0, 1.0, // F0 and F1 are constant, F2 varies, Target varies
+        1.0, 1.0, 6.0, 2.0, 1.0, 1.0, 7.0, 3.0, 1.0, 1.0, 8.0, 4.0,
+    ];
+    let mut tensor = CausalTensor::new(data, vec![4, 4]).unwrap();
+
+    // Select 2 features, target is col 3.
+    // F0 will be selected first (relevance 0.0).
+    // Then F1 will have relevance 0.0 and redundancy 0.0 with F0.
+    let result = mrmr::mrmr_features_selector(&mut tensor, 2, 3);
+
+    assert!(matches!(result, Err(MrmrError::FeatureScoreError(_))));
+    assert!(result.unwrap_err().to_string().contains("NaN"));
+}
+
+#[test]
+fn test_select_features_infinite_score_error() {
+    // Create a tensor where a feature's F-statistic might become infinite
+    // This is harder to reliably trigger with simple data, but can happen if
+    // the 'within-group' variance is zero.
+    // For now, let's simulate a scenario where redundancy is 0 and relevance is high.
+    // The current algo handles this by returning f64::MAX, but the new spec says it should error.
+    let data = vec![
+        // F0 (high rel), F1 (low rel, orthogonal), F2 (high rel, redundant), Target
+        1.0, 1.0, 1.1, 3.0, 1.0, -1.0, 0.9, 1.0, -1.0, 1.0, -1.1, -1.0, -1.0, -1.0, -0.9, -3.0,
+    ];
+    let mut tensor = CausalTensor::new(data, vec![4, 4]).unwrap();
+
+    // Select 2 features, target is col 3.
+    // F0 is selected first.
+    // F1 is orthogonal to F0, so its redundancy with F0 is 0.
+    // If F1's relevance is high, its mRMR score would be infinite (relevance / 0).
+    let result = mrmr::mrmr_features_selector(&mut tensor, 2, 3);
+
+    assert!(matches!(result, Err(MrmrError::FeatureScoreError(_))));
+    assert!(result.unwrap_err().to_string().contains("infinite"));
 }

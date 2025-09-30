@@ -128,3 +128,35 @@ Information Leak: 0.998...
 * **Conclusion:** This is a feature, not a bug. The SURD-states algorithm has correctly analyzed a random system and
   concluded that there is no causality to be found. It is a powerful demonstration of the algorithm's ability to
   distinguish a true signal from noise.
+
+---
+
+### Example: Minimum Redundancy Maximum Relevance (mRMR) Feature Selection
+
+This example demonstrates the `mrmr_features_selector` algorithm, which selects a subset of features maximally relevant to a target variable and minimally redundant among themselves. Crucially, it now returns normalized importance scores (between 0 and 1) for each selected feature.
+
+## How to Run This Example
+
+To run the mRMR feature selection example, execute:
+
+```bash
+cargo run --example example_mrmr
+```
+
+## Understanding the Output
+
+The example will output a list of selected feature indices along with their normalized importance scores.
+
+```
+Selected features and their scores:
+- Feature Index: 0, Importance Score: 1.0000
+- Feature Index: 1, Importance Score: 0.0855
+```
+
+**Interpretation:**
+
+*   **Feature Index:** The original column index of the selected feature in the input tensor.
+*   **Importance Score:** A normalized value between 0.0 and 1.0, indicating the relative importance of the feature.
+    *   For the **first selected feature**, this score represents its relevance (F-statistic) to the target, normalized against the maximum score found.
+    *   For **subsequent features**, this score represents its mRMR value (`Relevance / Redundancy`), also normalized.
+*   A score of `1.0` indicates the most important feature (or one of the most important if multiple features share the top score). Lower scores indicate less importance in the context of the selected feature set.

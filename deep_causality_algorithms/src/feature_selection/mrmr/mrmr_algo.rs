@@ -17,6 +17,17 @@ use std::collections::HashSet;
 ///
 /// Missing values in the input `CausalTensor` are handled by column-mean imputation prior to feature selection.
 ///
+/// The algorithm iteratively selects features based on a score that balances relevance and redundancy.
+/// The scoring mechanism is as follows:
+/// 1. **First Feature**: The feature with the highest relevance (F-statistic) to the target variable is selected. Its score is this F-statistic.
+/// 2. **Subsequent Features**: For the remaining features, an mRMR score is calculated as `Relevance / Redundancy`. The feature with the highest mRMR score is chosen. Its score is this mRMR value.
+///
+/// The score is normalized as percentage within the range of 0...1.
+///
+/// Since the mRMR score is calculated as Relevance / Redundancy (both of which are non-negative),
+/// the final mRMR score itself will always positive It quantifies the strength of
+/// relevance and redundancy, not the direction of correlation between features.
+///
 /// # Note
 ///
 /// If multiple features have the same maximum relevance score (for the first feature) or the
@@ -37,7 +48,7 @@ use std::collections::HashSet;
 /// # Returns
 ///
 /// A `Result` containing:
-/// * `Ok(Vec<usize>)` - A vector of `usize` representing the indices of the selected features, ranked by their mRMR score.
+/// * `Ok(Vec<(usize, f64)>)` - A vector of `(feature_index, score)` tuples, representing the indices of the selected features and their corresponding mRMR scores, ranked by their selection order.
 /// * `Err(MrmrError)` - An error if the input is invalid, sample size is too small, or other calculation issues occur.
 ///
 /// # Errors
@@ -47,6 +58,7 @@ use std::collections::HashSet;
 /// * `MrmrError::SampleTooSmall` - If the number of rows in the tensor is less than 3, which is insufficient for F-statistic calculation.
 /// * `MrmrError::CalculationError` - For numerical issues during statistical calculations (e.g., in `pearson_correlation` or `f_statistic`).
 /// * `MrmrError::NotEnoughFeatures` - If the number of features requested is greater than the available features (excluding the target).
+/// * `MrmrError::FeatureScoreError` - If a calculated relevance, redundancy, or mRMR score is `NaN` or `Infinity`.
 ///
 /// # Examples
 ///
@@ -63,17 +75,18 @@ use std::collections::HashSet;
 /// let mut tensor = CausalTensor::new(data, vec![4, 4]).unwrap();
 ///
 /// // Select 2 features, with the target variable in column 3.
-/// let selected_features = mrmr_features_selector(&mut tensor, 2, 3).unwrap();
+/// let selected_features_with_scores = mrmr_features_selector(&mut tensor, 2, 3).unwrap();
 /// // The exact output may vary slightly based on floating-point precision and data, but for this example,
 /// // it typically selects features 2 and 0 (indices of the original columns).
-/// assert_eq!(selected_features.len(), 2);
-/// // assert_eq!(selected_features, vec![2, 0]); // Example expected output
+/// assert_eq!(selected_features_with_scores.len(), 2);
+/// // assert_eq!(selected_features_with_scores[0].0, 2); // Example expected output for index
+/// // assert!(selected_features_with_scores[0].1.is_finite()); // Example expected output for score
 /// ```
 pub fn mrmr_features_selector(
     tensor: &mut CausalTensor<f64>,
     num_features: usize,
     target_col: usize,
-) -> Result<Vec<usize>, MrmrError> {
+) -> Result<Vec<(usize, f64)>, MrmrError> {
     let shape = tensor.shape();
     if shape.len() != 2 {
         return Err(MrmrError::InvalidInput(
@@ -105,7 +118,7 @@ pub fn mrmr_features_selector(
     let mut all_features: HashSet<usize> = (0..n_cols).collect();
     all_features.remove(&target_col);
 
-    let mut selected_features: Vec<usize> = Vec::with_capacity(num_features);
+    let mut selected_features_with_scores: Vec<(usize, f64)> = Vec::with_capacity(num_features);
 
     // First feature selection based on relevance only
     let mut first_feature = 0;
@@ -113,49 +126,124 @@ pub fn mrmr_features_selector(
 
     for &feature_idx in &all_features {
         let relevance = mrmr_utils::f_statistic(tensor, feature_idx, target_col)?;
+        if !relevance.is_finite() {
+            return Err(MrmrError::FeatureScoreError(format!(
+                "Relevance score for feature {} is not finite: {}",
+                feature_idx, relevance
+            )));
+        }
         if relevance > max_relevance {
             max_relevance = relevance;
             first_feature = feature_idx;
         }
     }
 
-    selected_features.push(first_feature);
+    // Check if max_relevance is finite before pushing
+    if !max_relevance.is_finite() {
+        return Err(MrmrError::FeatureScoreError(format!(
+            "Initial max relevance score for feature {} is not finite: {}",
+            first_feature, max_relevance
+        )));
+    }
+    selected_features_with_scores.push((first_feature, max_relevance));
     all_features.remove(&first_feature);
 
     // Iterative selection of remaining features
-    while selected_features.len() < num_features {
+    while selected_features_with_scores.len() < num_features {
         let mut best_feature = 0;
         let mut max_mrmr_score = -1.0;
+        let mut best_feature_score = 0.0;
 
         for &feature_idx in &all_features {
             let relevance = mrmr_utils::f_statistic(tensor, feature_idx, target_col)?;
+            if !relevance.is_finite() {
+                return Err(MrmrError::FeatureScoreError(format!(
+                    "Relevance score for feature {} is not finite: {}",
+                    feature_idx, relevance
+                )));
+            }
 
             let mut redundancy = 0.0;
-            for &selected_idx in &selected_features {
-                redundancy +=
-                    mrmr_utils::pearson_correlation(tensor, feature_idx, selected_idx)?.abs();
+            let selected_indices: Vec<usize> = selected_features_with_scores
+                .iter()
+                .map(|(idx, _)| *idx)
+                .collect();
+
+            for &selected_idx in &selected_indices {
+                let correlation =
+                    mrmr_utils::pearson_correlation(tensor, feature_idx, selected_idx)?;
+                if !correlation.is_finite() {
+                    return Err(MrmrError::FeatureScoreError(format!(
+                        "Correlation for feature {} and selected feature {} is not finite: {}",
+                        feature_idx, selected_idx, correlation
+                    )));
+                }
+                redundancy += correlation.abs();
             }
-            redundancy /= selected_features.len() as f64;
+            redundancy /= selected_indices.len() as f64;
+
+            // Check redundancy for non-finite values before division
+            if !redundancy.is_finite() {
+                return Err(MrmrError::FeatureScoreError(format!(
+                    "Redundancy for feature {} is not finite: {}",
+                    feature_idx, redundancy
+                )));
+            }
 
             let mrmr_score = if redundancy == 0.0 {
                 if relevance == 0.0 {
-                    0.0 // Neither relevant nor redundant
+                    // According to spec, this should now be an error for NaN score (0/0)
+                    return Err(MrmrError::FeatureScoreError(format!(
+                        "mRMR score for feature {} is NaN (relevance {} / redundancy {}).",
+                        feature_idx, relevance, redundancy
+                    )));
                 } else {
-                    f64::MAX // Highly relevant, no redundancy
+                    // According to spec, this should now be an error for infinite score
+                    return Err(MrmrError::FeatureScoreError(format!(
+                        "mRMR score for feature {} is infinite (relevance {} / redundancy {}).",
+                        feature_idx, relevance, redundancy
+                    )));
                 }
             } else {
                 relevance / redundancy
             };
 
+            if !mrmr_score.is_finite() {
+                return Err(MrmrError::FeatureScoreError(format!(
+                    "mRMR score for feature {} is not finite: {}",
+                    feature_idx, mrmr_score
+                )));
+            }
+
             if mrmr_score > max_mrmr_score {
                 max_mrmr_score = mrmr_score;
                 best_feature = feature_idx;
+                best_feature_score = mrmr_score;
             }
         }
 
-        selected_features.push(best_feature);
+        // Check if best_feature_score is finite before pushing
+        if !best_feature_score.is_finite() {
+            return Err(MrmrError::FeatureScoreError(format!(
+                "Best mRMR score for feature {} is not finite: {}",
+                best_feature, best_feature_score
+            )));
+        }
+        selected_features_with_scores.push((best_feature, best_feature_score));
         all_features.remove(&best_feature);
     }
 
-    Ok(selected_features)
+    // Normalization step
+    let max_score = selected_features_with_scores
+        .iter()
+        .map(|(_, score)| *score)
+        .fold(f64::MIN, |acc, score| acc.max(score));
+
+    if max_score > 0.0 {
+        for (_, score) in &mut selected_features_with_scores {
+            *score /= max_score;
+        }
+    }
+
+    Ok(selected_features_with_scores)
 }

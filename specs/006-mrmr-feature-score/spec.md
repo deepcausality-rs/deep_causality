@@ -18,7 +18,7 @@
 As a data scientist, I want the MRMR feature selection algorithms (`mrmr_features_selector` and `mrmr_features_selector_cdl`) to return not only the selected feature indices but also their corresponding importance scores, so that I can understand the relative contribution of each feature.
 
 ### Acceptance Scenarios
-1. **Given** a dataset and a target variable, **When** I run an MRMR algorithm, **Then** the output MUST be a vector of `(feature_index, score)` tuples.
+1. **Given** a dataset and a target variable, **When** I run an MRMR algorithm, **Then** the output MUST be a vector of `(feature_index, score)` tuples, where `score` is normalized between 0.0 and 1.0.
 2. **Given** the selection process starts, **When** the first feature is chosen, **Then** its score MUST be its F-statistic (relevance). This is because redundancy, which measures similarity to already-selected features, cannot be calculated when the selected set is empty.
 3. **Given** one or more features have been selected, **When** a subsequent feature is chosen, **Then** its score MUST be the mRMR score (`F-statistic / Redundancy`), where Redundancy is calculated against the set of previously selected features.
 
@@ -37,6 +37,7 @@ As a data scientist, I want the MRMR feature selection algorithms (`mrmr_feature
 - **FR-006**: The new error variant MUST be tested in `mrmr_error_tests.rs`.
 - **FR-007**: Both `mrmr_features_selector` and `mrmr_features_selector_cdl` MUST return `MrmrError::FeatureScoreError` if a calculated redundancy score is zero, as this would lead to division by zero when calculating the mRMR score.
 - **FR-008**: If a calculated mRMR score results in `Infinity` or `NaN`, the algorithm MUST return a `MrmrError::FeatureScoreError` with a message detailing the invalid score and the feature index.
+- **FR-009**: The importance scores returned by `mrmr_features_selector` and `mrmr_features_selector_cdl` MUST be normalized to a range between 0.0 and 1.0 (inclusive).
 
 ### Non-Functional Requirements
 - **NFR-001**: The performance of the updated functions, including score calculation, should not degrade by more than 10% compared to the previous version.
@@ -46,9 +47,10 @@ As a data scientist, I want the MRMR feature selection algorithms (`mrmr_feature
 - **Feature Score Pair**: Represents a selected feature and its importance.
   - **Attributes**: 
     - `index`: `usize` - The column index of the feature.
-    - `score`: `f64` - The calculated importance score. For the first feature, this is the F-statistic. For subsequent features, it is the mRMR score.
-
----
+    - `score`: `f64` - The calculated importance score.
+- **Constraints**: 
+    - `score` must be a valid, finite `f64` number.
+    - `score` must be normalized between 0.0 and 1.0 (inclusive).
 
 ## Review & Acceptance Checklist
 *GATE: Automated checks run during main() execution*

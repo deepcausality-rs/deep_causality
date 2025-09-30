@@ -70,5 +70,8 @@ fn test_uncertainty_error_partial_eq() {
 #[test]
 fn test_feature_score_error_display() {
     let error = MrmrError::FeatureScoreError("Division by zero".to_string());
-    assert_eq!(format!("{}", error), "Feature score error: Division by zero");
+    assert_eq!(
+        format!("{}", error),
+        "Feature score error: Division by zero"
+    );
 }

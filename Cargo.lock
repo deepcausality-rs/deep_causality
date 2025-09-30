@@ -434,6 +434,7 @@ dependencies = [
 name = "deep_causality_algorithms"
 version = "0.1.4"
 dependencies = [
+ "criterion",
  "deep_causality_tensor",
  "rayon",
 ]

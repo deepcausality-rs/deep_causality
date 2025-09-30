@@ -32,8 +32,13 @@ fn test_mrmr_features_selector_cdl_basic() {
 
     // Select 2 features, with the target variable in column 3.
     let result = mrmr_features_selector_cdl(&tensor, 2, 3);
-    // dbg!(&result);
     assert!(result.is_ok());
+    let selected_features_with_scores = result.unwrap();
+    assert_eq!(selected_features_with_scores.len(), 2);
+    for (_, score) in &selected_features_with_scores {
+        assert!(score.is_finite());
+        assert!(*score >= 0.0 && *score <= 1.0);
+    }
 }
 
 #[test]
@@ -59,11 +64,20 @@ fn test_mrmr_features_selector_cdl_no_missing_values() {
     ];
     let tensor = CausalTensor::new(data, vec![4, 4]).unwrap();
 
-    let selected_features = mrmr_features_selector_cdl(&tensor, 2, 3).unwrap();
+    let selected_features_with_scores = mrmr_features_selector_cdl(&tensor, 2, 3).unwrap();
+    let selected_features: Vec<usize> = selected_features_with_scores
+        .iter()
+        .map(|(idx, _score)| *idx)
+        .collect();
 
     assert_eq!(selected_features.len(), 2);
     assert!(selected_features.contains(&2));
     assert!(selected_features.contains(&0) || selected_features.contains(&1));
+
+    for (_, score) in &selected_features_with_scores {
+        assert!(score.is_finite());
+        assert!(*score >= 0.0 && *score <= 1.0);
+    }
 }
 
 #[test]

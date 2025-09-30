@@ -31,7 +31,7 @@ impl FeatureSelector for MrmrFeatureSelector {
         let new_shape = vec![n_rows, selected_indices.len()];
 
         for i in 0..n_rows {
-            for &col_idx in &selected_indices {
+            for &(col_idx, _score) in &selected_indices {
                 let value = tensor.get(&[i, col_idx]).ok_or({
                     FeatureSelectError::TensorError(CausalTensorError::AxisOutOfBounds)
                 })?;

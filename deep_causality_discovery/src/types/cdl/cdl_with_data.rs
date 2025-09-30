@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CDL, CdlError, DataCleaner, DataPreprocessor, FeatureSelector, OptionNoneDataCleaner};
 use crate::types::cdl::{WithData, WithFeatures};
+use crate::{CDL, CdlError, DataCleaner, DataPreprocessor, FeatureSelector, OptionNoneDataCleaner};
 
 // After data is loaded
 impl CDL<WithData> {

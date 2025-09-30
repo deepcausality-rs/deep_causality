@@ -48,6 +48,7 @@ reveal the nature of multi-variable interactions.
   `CausalTensor<Option<f64>>`). This is crucial for real-world datasets where data incompleteness is common, allowing
   for meaningful causal insights even with partial information by ignoring `None` values in calculations and propagating
   uncertainty.
+* **Minimum Redundancy Maximum Relevance (mRMR) Feature Selection**: Implements the mRMR algorithm to select features that are maximally relevant to a target variable and minimally redundant among themselves. The algorithm now returns a ranked list of features along with their normalized importance scores (between 0.0 and 1.0), providing a clear indication of each feature's contribution.
 * **Performance Optimized**:
     * **Algorithmic Capping**: Use the `MaxOrder` enum to limit the analysis to a tractable number of interactions (
       e.g., pairwise), reducing complexity from exponential `O(2^N)` to polynomial `O(N^k)`.
@@ -128,24 +129,25 @@ println!("CDL Information Leak: {:.3}", full_result_cdl.info_leak());
 
 The mRMR algorithm is a powerful tool for selecting a subset of features that are maximally relevant to a target
 variable and minimally redundant among themselves. This helps in reducing dimensionality and focusing causal analysis on
-the most informative variables.
+the most informative variables. The implementation now returns a ranked list of features along with their normalized importance scores (between 0.0 and 1.0).
 
 ```rust
 use deep_causality_algorithms::mrmr::mrmr_features_selector;
-use deep_causality_data_structures::CausalTensor;
+use deep_causality_tensor::CausalTensor;
 
 let data = vec![
-    1.0, 2.0, 3.0, 1.6,
-    2.0, 4.1, 6.0, 3.5,
-    3.0, 6.2, 9.0, 5.5,
-    4.0, 8.1, 12.0, 7.5,
+    10.0, 12.0, 1.0, 11.0,
+    20.0, 21.0, 5.0, 22.0,
+    30.0, 33.0, 2.0, 31.0,
+    40.0, 40.0, 8.0, 43.0,
+    50.0, 55.0, 3.0, 52.0,
 ];
-let mut tensor = CausalTensor::new(data, vec![4, 4]).unwrap();
+let mut tensor = CausalTensor::new(data, vec![5, 4]).unwrap();
 
 // Select 2 features, with the target variable in column 3.
-let selected_features = mrmr_features_selector(&mut tensor, 2, 3).unwrap();
+let selected_features_with_scores = mrmr_features_selector(&mut tensor, 2, 3).unwrap();
 
-println!("Selected Features: {:?}", selected_features);
+println!("Selected Features and Scores: {:?}", selected_features_with_scores);
 ```
 
 ## From Discovery to Model: Connecting SURD to DeepCausality
