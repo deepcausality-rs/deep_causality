@@ -8,6 +8,7 @@ mod run;
 mod run_enum;
 mod stage_one;
 mod stage_two;
+// mod stage_zero;
 
 const DATA_PATH: &str = "examples/case_study_icu_sepsis/data/all/dataset.parquet";
 

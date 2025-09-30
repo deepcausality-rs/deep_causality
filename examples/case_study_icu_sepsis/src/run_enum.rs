@@ -21,7 +21,6 @@ impl Display for StageEnum {
     }
 }
 
-//  The tests only exists to silence clippy warnings on unused code / non constructed values
 #[cfg(test)]
 mod tests {
     use super::*;
