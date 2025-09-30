@@ -2,11 +2,15 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-mod first_stage;
+use crate::run_enum::StageEnum::*;
+
+mod run;
+mod run_enum;
+mod stage_one;
+mod stage_two;
 
 const DATA_PATH: &str = "examples/case_study_icu_sepsis/data/all/dataset.parquet";
 
 fn main() {
-    println!("Run first stage!");
-    first_stage::first_stage(DATA_PATH);
+    run::run(StageTwo, DATA_PATH)
 }

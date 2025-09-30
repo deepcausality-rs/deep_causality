@@ -4,6 +4,9 @@ This table provides a comprehensive overview of the clinical time series data us
 Cardiology Challenge 2019 Sepsis Prediction Task. The dataset contains 40 clinical variables per hourly time window for
 each patient, along with patient demographics and a sepsis label.
 
+The parquet file can be opened and inspected with https://parquetreader.com
+
+
 | Column Name        | Description                                                                                                                      | Category    |
 |:-------------------|:---------------------------------------------------------------------------------------------------------------------------------|:------------|
 | `Hour`             | The elapsed time in hours since ICU admission for a given patient.                                                               | Time Index  |

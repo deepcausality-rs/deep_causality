@@ -70,7 +70,10 @@ pub(super) fn pearson_correlation_cdl(
 
     if n < 2.0 {
         // Correlation is not well-defined for less than 2 samples.
-        return Err(MrmrError::SampleTooSmall(2));
+        return Err(MrmrError::FeatureScoreError(format!(
+            "Pearson correlation for columns {} and {} requires at least 2 valid samples, but found {}.",
+            col_a_idx, col_b_idx, n as usize
+        )));
     }
 
     let numerator = sum_prod - (sum_a * sum_b) / n;

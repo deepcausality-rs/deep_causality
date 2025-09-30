@@ -109,6 +109,15 @@ fn load_and_analyze_data(data_path: &str) {
         println!("Column: {}", field.name());
     }
     println!();
+    println!("Column Field IDs:");
+    for (i, field) in fields.iter().enumerate() {
+        println!(
+            "ID: {i} Column: {}, Type: {:?}",
+            field.name(),
+            field.data_type()
+        );
+    }
+    println!();
 
     if total_nan_count > 1 {
         println!(
@@ -139,15 +148,15 @@ fn load_and_analyze_data(data_path: &str) {
     );
     println!();
 
-    // println!("Records for Patient_ID 42:");
-    // if patient_42_records.is_empty() {
-    //     println!("No records found for Patient_ID 42.");
-    // } else {
-    //     for (record_index, record) in patient_42_records.iter().enumerate() {
-    //         println!("--- Record {} ---", record_index + 1);
-    //         for field_string in record {
-    //             println!("{}", field_string);
-    //         }
-    //     }
-    // }
+    println!("Records for Patient_ID 42:");
+    if patient_42_records.is_empty() {
+        println!("No records found for Patient_ID 42.");
+    } else {
+        for (record_index, record) in patient_42_records.iter().enumerate() {
+            println!("--- Record {} ---", record_index + 1);
+            for field_string in record {
+                println!("{}", field_string);
+            }
+        }
+    }
 }

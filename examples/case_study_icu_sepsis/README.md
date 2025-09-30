@@ -15,6 +15,8 @@ The case study utilizes a subset of the **PhysioNet Computing in Cardiology Chal
 *   **Conversion:** CSV to Parquet via [tablab.app](https://www.tablab.app/csv/to/parquet)
 *   **License:** The dataset is made available under the [ODC Open Database License (ODbL)](./data/doc/LICENSE.txt).
 
+The parquet file can be opened and inspected with https://parquetreader.com
+
 ## Data Schema
 
 The dataset comprises clinical time series data, including 40 clinical variables per hourly time window, patient demographics, and a sepsis label. Key columns include:
