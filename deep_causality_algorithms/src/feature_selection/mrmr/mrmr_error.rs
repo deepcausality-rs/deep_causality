@@ -22,6 +22,8 @@ pub enum MrmrError {
     SampleTooSmall(usize),
     /// For errors originating from `MaybeUncertain` operations.
     UncertaintyError(String),
+    /// Indicates an issue when calculating the feature score, such as division by zero.
+    FeatureScoreError(String),
 }
 
 impl fmt::Display for MrmrError {
@@ -36,6 +38,7 @@ impl fmt::Display for MrmrError {
                 n
             ),
             MrmrError::UncertaintyError(s) => write!(f, "Uncertainty error: {}", s),
+            MrmrError::FeatureScoreError(s) => write!(f, "Feature score error: {}", s),
         }
     }
 }
