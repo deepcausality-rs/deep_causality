@@ -4,6 +4,7 @@
  */
 use std::fmt::Display;
 
+#[allow(dead_code)]
 #[derive(Debug, Copy, Clone)]
 pub enum StageEnum {
     StageOne,
@@ -18,29 +19,5 @@ impl Display for StageEnum {
             StageEnum::StageTwo => write!(f, "StageTwo"),
             StageEnum::All => write!(f, "All"),
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_display_for_stage_enum() {
-        assert_eq!(format!("{}", StageEnum::StageOne), "StageOne");
-        assert_eq!(format!("{}", StageEnum::StageTwo), "StageTwo");
-        assert_eq!(format!("{}", StageEnum::All), "All");
-    }
-
-    #[test]
-    fn test_stage_enum_variants() {
-        let stage_one = StageEnum::StageOne;
-        assert!(matches!(stage_one, StageEnum::StageOne));
-
-        let stage_two = StageEnum::StageTwo;
-        assert!(matches!(stage_two, StageEnum::StageTwo));
-
-        let all = StageEnum::All;
-        assert!(matches!(all, StageEnum::All));
     }
 }

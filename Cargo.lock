@@ -260,7 +260,6 @@ dependencies = [
  "deep_causality_discovery",
  "deep_causality_tensor",
  "parquet",
- "parquet_derive",
 ]
 
 [[package]]
@@ -1083,18 +1082,6 @@ dependencies = [
  "thrift",
  "twox-hash",
  "zstd",
-]
-
-[[package]]
-name = "parquet_derive"
-version = "56.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a0a74d38e88e6cc7d59ec7613d8f53f7be94cd3fe58b298ae5be221a6f78bae0"
-dependencies = [
- "parquet",
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]

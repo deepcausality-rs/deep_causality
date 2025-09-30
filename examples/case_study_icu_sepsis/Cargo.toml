@@ -18,4 +18,3 @@ deep_causality = { path = "../../deep_causality" }
 # Exernal dependencies
 arrow-array = {version = "56", default-features = false}
 parquet = { version = "56" }
-parquet_derive = {version = "56", default-features = true}
