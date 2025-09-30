@@ -22,6 +22,11 @@ path = "examples/example_mrmr.rs"
 
 
 [[example]]
+name = "example_mrmr_cdl"
+path = "examples/example_mrmr_cdl.rs"
+
+
+[[example]]
 name = "example_surd"
 path = "examples/example_surd.rs"
 

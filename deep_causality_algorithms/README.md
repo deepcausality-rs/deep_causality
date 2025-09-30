@@ -150,6 +150,12 @@ let selected_features_with_scores = mrmr_features_selector(&mut tensor, 2, 3).un
 println!("Selected Features and Scores: {:?}", selected_features_with_scores);
 ```
 
+A higher mRMR score (and thus a higher normalized importance score)
+indicates that the feature is not only highly relevant to the target but also
+provides new, non-redundant information compared to the features already
+chosen. It's a measure of a feature's unique and strong contribution to
+predicting the target within the context of the selected feature set.
+
 ## From Discovery to Model: Connecting SURD to DeepCausality
 
 The `surd_states` algorithm serves as a bridge from observational data to executable causal models with the
