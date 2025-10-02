@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::errors::DataError;
-use crate::traits::process_data_loader::ProcessDataLoader;
+use crate::errors::DataLoadingError;
+use crate::traits::data_loader::DataLoader;
 use crate::types::config::DataLoaderConfig;
 use deep_causality_tensor::CausalTensor;
 use parquet::file::reader::{FileReader, SerializedFileReader};
@@ -15,11 +15,15 @@ use std::path::Path;
 /// A concrete implementation of `ProcessDataLoader` for reading data from Parquet files.
 pub struct ParquetDataLoader;
 
-impl ProcessDataLoader for ParquetDataLoader {
-    fn load(&self, path: &str, config: &DataLoaderConfig) -> Result<CausalTensor<f64>, DataError> {
+impl DataLoader for ParquetDataLoader {
+    fn load(
+        &self,
+        path: &str,
+        config: &DataLoaderConfig,
+    ) -> Result<CausalTensor<f64>, DataLoadingError> {
         if let DataLoaderConfig::Parquet(_parquet_config) = config {
-            let file =
-                File::open(Path::new(path)).map_err(|e| DataError::OsError(e.to_string()))?;
+            let file = File::open(Path::new(path))
+                .map_err(|e| DataLoadingError::OsError(e.to_string()))?;
             let reader = SerializedFileReader::new(file)?;
 
             let mut data = Vec::new();
@@ -56,7 +60,7 @@ impl ProcessDataLoader for ParquetDataLoader {
                     .collect();
 
                 if fields.iter().any(|v| v.is_nan()) {
-                    return Err(DataError::OsError(
+                    return Err(DataLoadingError::OsError(
                         "Unsupported data type in Parquet file".to_string(),
                     ));
                 }
@@ -64,7 +68,7 @@ impl ProcessDataLoader for ParquetDataLoader {
                 if width == 0 {
                     width = fields.len();
                 } else if width != fields.len() {
-                    return Err(DataError::OsError(
+                    return Err(DataLoadingError::OsError(
                         "Inconsistent number of columns in Parquet file".to_string(),
                     ));
                 }
@@ -73,14 +77,14 @@ impl ProcessDataLoader for ParquetDataLoader {
 
             if width == 0 {
                 return CausalTensor::new(Vec::new(), vec![0, 0])
-                    .map_err(|e| DataError::OsError(e.to_string()));
+                    .map_err(|e| DataLoadingError::OsError(e.to_string()));
             }
 
             let height = data.len() / width;
             CausalTensor::new(data, vec![height, width])
-                .map_err(|e| DataError::OsError(e.to_string()))
+                .map_err(|e| DataLoadingError::OsError(e.to_string()))
         } else {
-            Err(DataError::OsError(
+            Err(DataLoadingError::OsError(
                 "Invalid config type for ParquetDataLoader".to_string(),
             ))
         }

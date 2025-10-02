@@ -1,20 +1,42 @@
 # Specs
 
+Last updated: Sept/30 
+
 The DeepCausality project adopted spec-driven development with [spec-kit](https://github.com/github/spec-kit?tab=readme-ov-file#-detailed-process).
 
 It is important to note that the project conventions for the AI agent are documented in the [Gemini.md](../GEMINI.md) file. For agents other than Gemini, you must make a copy and rename the file to something your agent reads by default (e.g., AGENT.md or similar). That way, your coding agent will use the right build and test tools by default and will understand the structure of the repository. Alternatively, you can pre-load the agent's context by simply typing `read @GEMINI.md`.
 
 Next, it is important that you have spec-kit installed on your machine. See the [spec-kit](https://github.com/github/spec-kit?tab=readme-ov-file#-detailed-process) repository for details.
 
+If you have spec-kit already installed, but its over a week old, please run an update via:
+
+uvx --from git+https://github.com/github/spec-kit.git specify init .
+
+Notice the dot at the end? Its a short-hand for "here" assuming you are executing the command from your project root. 
+
+Before you go ahead with your project, ensure
+
+A) You have a sensible AGENTS.md file in place
+B) You have a project specific constitution in place.
+
+For A, visit https://agents.md, look at the examples, and build one. 
+In this repo, you find a sample AGENTS.md in the root folder and a 
+legacy Gemini.md with instructions of how to configure Gemini CLI to use the
+AGENTS.md file by default.
+
+For B, start your coding agent, and run the following command. 
+
+/constitution
+
 Once spec-kit is installed, the basic workflow is as follows:
 
 0) Start your coding CLI agent (e.g., Gemini-CLI, Claude Code, Copilot, or Cursor).
 1) Pre-load the agent's context with all relevant crates (e.g., type `read @deep_causality`).
 2) Type `/specify "your feature story"`. This creates a new branch and a spec file under `/specs`.
-3) Interact with the agent to edit the new `spec.md` file until it is complete and correct.
+3) Type `/clarify` to improve the `spec.md` file until it is complete.
 4) Type `/plan` to derive a plan from the spec document. Let your agent validate the plan.
 5) Type `/task` to derive a detailed task plan. Double-check, edit, and adjust.
-6) Type `implement specs/00x-my-feature/plan.md`.
+6) Type `/implement` to start the implementation.
 7) Interact with the agent to supervise the implementation.
 8) Verify the implementation, test, and conduct a code review.
 9) Submit a PR and check CI status.

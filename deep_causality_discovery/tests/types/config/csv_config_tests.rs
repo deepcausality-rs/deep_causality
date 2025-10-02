@@ -67,3 +67,12 @@ fn test_debug() {
     assert!(debug.contains("skip_rows: 0"));
     assert!(debug.contains("columns: None"));
 }
+
+#[test]
+fn test_default() {
+    let config = CsvConfig::default();
+    assert!(config.has_headers());
+    assert_eq!(config.delimiter(), b',');
+    assert_eq!(config.skip_rows(), 0);
+    assert_eq!(config.columns(), &None);
+}

@@ -73,7 +73,7 @@ dependencies = [
  "arrow-schema",
  "chrono",
  "half",
- "hashbrown 0.16.0",
+ "hashbrown",
  "num",
 ]
 
@@ -219,8 +219,8 @@ name = "case_study_icu_sepsis"
 version = "0.1.0"
 dependencies = [
  "arrow-array",
- "deep_causality",
- "deep_causality_discovery",
+ "deep_causality_algorithms",
+ "deep_causality_tensor",
  "parquet",
 ]
 
@@ -434,6 +434,8 @@ dependencies = [
 name = "deep_causality_algorithms"
 version = "0.1.4"
 dependencies = [
+ "criterion",
+ "deep_causality_num",
  "deep_causality_tensor",
  "rayon",
 ]
@@ -463,7 +465,7 @@ version = "0.8.8"
 
 [[package]]
 name = "deep_causality_num"
-version = "0.1.3"
+version = "0.1.4"
 
 [[package]]
 name = "deep_causality_rand"
@@ -639,12 +641,6 @@ dependencies = [
  "crunchy",
  "num-traits",
 ]
-
-[[package]]
-name = "hashbrown"
-version = "0.15.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9229cfe53dfd69f0609a49f65461bd93001ea1ef889cd5529dd176593f5338a1"
 
 [[package]]
 name = "hashbrown"
@@ -964,9 +960,9 @@ dependencies = [
 
 [[package]]
 name = "parquet"
-version = "56.1.0"
+version = "56.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "89b56b41d1bd36aae415e42f91cae70ee75cf6cba74416b14dce3e958d5990ec"
+checksum = "f0dbd48ad52d7dccf8ea1b90a3ddbfaea4f69878dd7683e51c507d4bc52b5b27"
 dependencies = [
  "ahash",
  "arrow-array",
@@ -980,7 +976,7 @@ dependencies = [
  "bytes",
  "chrono",
  "half",
- "hashbrown 0.15.5",
+ "hashbrown",
  "num",
  "num-bigint",
  "paste",

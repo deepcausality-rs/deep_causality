@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::errors::DataError;
-use crate::traits::process_data_loader::ProcessDataLoader;
+use crate::errors::DataLoadingError;
+use crate::traits::data_loader::DataLoader;
 use crate::types::config::DataLoaderConfig;
 use deep_causality_tensor::CausalTensor;
 use std::fs::File;
@@ -12,14 +12,18 @@ use std::fs::File;
 /// A concrete implementation of `ProcessDataLoader` for reading data from CSV files.
 pub struct CsvDataLoader;
 
-impl ProcessDataLoader for CsvDataLoader {
-    fn load(&self, path: &str, config: &DataLoaderConfig) -> Result<CausalTensor<f64>, DataError> {
+impl DataLoader for CsvDataLoader {
+    fn load(
+        &self,
+        path: &str,
+        config: &DataLoaderConfig,
+    ) -> Result<CausalTensor<f64>, DataLoadingError> {
         if let DataLoaderConfig::Csv(csv_config) = config {
             let file = File::open(path).map_err(|e| {
                 if e.kind() == std::io::ErrorKind::NotFound {
-                    DataError::FileNotFound(path.to_string())
+                    DataLoadingError::FileNotFound(path.to_string())
                 } else {
-                    DataError::OsError(e.to_string())
+                    DataLoadingError::OsError(e.to_string())
                 }
             })?;
             let mut rdr = csv::ReaderBuilder::new()
@@ -38,16 +42,16 @@ impl ProcessDataLoader for CsvDataLoader {
                     data.push(
                         field
                             .parse::<f64>()
-                            .map_err(|e| DataError::OsError(e.to_string()))?,
+                            .map_err(|e| DataLoadingError::OsError(e.to_string()))?,
                     );
                 }
             }
 
             let height = if width == 0 { 0 } else { data.len() / width };
             CausalTensor::new(data, vec![height, width])
-                .map_err(|e| DataError::OsError(e.to_string()))
+                .map_err(|e| DataLoadingError::OsError(e.to_string()))
         } else {
-            Err(DataError::OsError(
+            Err(DataLoadingError::OsError(
                 "Invalid config type for CsvDataLoader".to_string(),
             ))
         }

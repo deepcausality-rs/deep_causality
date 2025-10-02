@@ -12,7 +12,7 @@ fn test_pearson_correlation() {
     let shape = vec![2, 5];
     let tensor = CausalTensor::new(data, shape).unwrap();
 
-    let corr = mrmr_utils::pearson_correlation(&tensor, 0, 4).unwrap();
+    let (corr, _) = mrmr_utils::pearson_correlation(&tensor, 0, 4).unwrap();
     assert!((corr - (-1.0)).abs() < 1e-9);
 }
 
@@ -85,18 +85,30 @@ fn test_f_statistic_sample_too_small() {
 }
 
 #[test]
-fn test_impute_missing_values() {
-    let data = vec![1.0, 2.0, f64::NAN, 4.0, 3.0, 6.0];
-    let mut tensor = CausalTensor::new(data, vec![3, 2]).unwrap();
+fn test_f_statistic_non_2d_tensor() {
+    let data = vec![1.0, 2.0, 3.0, 4.0];
+    let shape = vec![4]; // 1D tensor
+    let tensor = CausalTensor::new(data, shape).unwrap();
 
-    mrmr_utils::impute_missing_values(&mut tensor);
+    let result = mrmr_utils::f_statistic(&tensor, 0, 1);
+    assert!(matches!(result, Err(MrmrError::InvalidInput(_))));
+    assert_eq!(
+        result.unwrap_err().to_string(),
+        "Invalid input: Input tensor must be 2-dimensional"
+    );
+}
 
-    // Mean of column 0 is (1.0 + 3.0) / 2 = 2.0
-    let imputed_val = tensor.get(&[1, 0]).unwrap();
-    assert_eq!(*imputed_val, 2.0);
+#[test]
+fn test_f_statistic_index_out_of_bounds() {
+    let data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+    let shape = vec![3, 2];
+    let tensor = CausalTensor::new(data, shape).unwrap();
 
-    // Ensure other values are unchanged
-    assert_eq!(*tensor.get(&[0, 0]).unwrap(), 1.0);
-    assert_eq!(*tensor.get(&[0, 1]).unwrap(), 2.0);
-    assert_eq!(*tensor.get(&[1, 1]).unwrap(), 4.0);
+    // col_b_idx is 2, which is out of bounds for a 2-column tensor.
+    let result = mrmr_utils::f_statistic(&tensor, 0, 2);
+    assert!(matches!(result, Err(MrmrError::InvalidInput(_))));
+    assert_eq!(
+        result.unwrap_err().to_string(),
+        "Invalid input: Column index out of bounds"
+    );
 }

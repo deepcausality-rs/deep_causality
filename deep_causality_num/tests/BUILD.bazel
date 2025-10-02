@@ -19,6 +19,22 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "float",
+    srcs = glob([
+        "float/*_tests.rs",
+        "types/num/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
     name = "identity",
     srcs = glob([
         "identity/*_tests.rs",
@@ -34,9 +50,9 @@ rust_test_suite(
 )
 
 rust_test_suite(
-    name = "ops",
+    name = "num",
     srcs = glob([
-        "ops/*_tests.rs",
+        "num/*_tests.rs",
     ]),
     tags = [
         "unit-test",
@@ -49,10 +65,9 @@ rust_test_suite(
 )
 
 rust_test_suite(
-    name = "types",
+    name = "ops",
     srcs = glob([
-        "types/float/*_tests.rs",
-        "types/num/*_tests.rs",
+        "ops/*_tests.rs",
     ]),
     tags = [
         "unit-test",

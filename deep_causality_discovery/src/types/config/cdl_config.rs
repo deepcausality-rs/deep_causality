@@ -36,7 +36,7 @@ impl CdlConfig {
 
 // Builders
 impl CdlConfig {
-    pub fn with_data_loader_config(mut self, config: DataLoaderConfig) -> Self {
+    pub fn with_data_loader(mut self, config: DataLoaderConfig) -> Self {
         self.data_loader_config = Some(config);
         self
     }
@@ -46,17 +46,17 @@ impl CdlConfig {
         self
     }
 
-    pub fn with_feature_selector_config(mut self, config: FeatureSelectorConfig) -> Self {
+    pub fn with_feature_selector(mut self, config: FeatureSelectorConfig) -> Self {
         self.feature_selector_config = Some(config);
         self
     }
 
-    pub fn with_causal_discovery_config(mut self, config: CausalDiscoveryConfig) -> Self {
+    pub fn with_causal_discovery(mut self, config: CausalDiscoveryConfig) -> Self {
         self.causal_discovery_config = Some(config);
         self
     }
 
-    pub fn with_analyze_config(mut self, config: AnalyzeConfig) -> Self {
+    pub fn with_analysis(mut self, config: AnalyzeConfig) -> Self {
         self.analyze_config = Some(config);
         self
     }

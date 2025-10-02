@@ -9,7 +9,7 @@ use crate::{Uncertain, UncertainError};
 
 /// A first-class type representing a value that is probabilistically present or absent.
 /// If the value is present, its own value is uncertain.
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct MaybeUncertain<T> {
     is_present: Uncertain<bool>,
     value: Uncertain<T>,

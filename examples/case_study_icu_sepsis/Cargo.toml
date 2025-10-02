@@ -9,9 +9,17 @@ publish = false
 
 [dependencies]
 # Internal dependencies
-deep_causality_discovery = { path = "../../deep_causality_discovery" }
-deep_causality = { path = "../../deep_causality" }
+# deep_causality = { path = "../../deep_causality" }
+#deep_causality_discovery = { path = "../../deep_causality_discovery" }
+deep_causality_algorithms = { path = "../../deep_causality_algorithms" }
+deep_causality_tensor = { path = "../../deep_causality_tensor" }
+
 
 # Exernal dependencies
-arrow-array = {version = "56", default-features = false}
-parquet = {version = "56", default-features = false, features = ["arrow"]}
+arrow-array = {version = "56.2", default-features = false}
+parquet = { version = "56.2" , default-features = false, features = ["arrow"]}
+
+[features]
+default = []
+# Enables parallel execution of the SURD algorithm by passing the feature to the algorithms crate.
+parallel = ["deep_causality_algorithms/parallel"]

@@ -20,6 +20,10 @@ pub enum MrmrError {
     /// Indicates that the sample size (number of rows in the CausalTensor) is too small for the
     /// statistical calculations (e.g., Pearson correlation requires at least 2 samples, F-statistic requires at least 3).
     SampleTooSmall(usize),
+    /// For errors originating from `MaybeUncertain` operations.
+    UncertaintyError(String),
+    /// Indicates an issue when calculating the feature score, such as division by zero.
+    FeatureScoreError(String),
 }
 
 impl fmt::Display for MrmrError {
@@ -33,6 +37,8 @@ impl fmt::Display for MrmrError {
                 "Sample size is too small. At least {} samples are required.",
                 n
             ),
+            MrmrError::UncertaintyError(s) => write!(f, "Uncertainty error: {}", s),
+            MrmrError::FeatureScoreError(s) => write!(f, "Feature score error: {}", s),
         }
     }
 }

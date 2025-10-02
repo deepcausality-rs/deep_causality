@@ -6,7 +6,6 @@
 use crate::CausalTensorError;
 use std::ops::{Add, Div};
 
-/// Defines operations between a scalar and a tensor (e.g., `scalar + tensor`).
 mod op_scalar_tensor;
 /// Defines tensor reduction operations (e.g., sum, mean).
 mod op_tensor_reduction;
@@ -47,11 +46,7 @@ pub struct CausalTensor<T> {
     strides: Vec<usize>,
 }
 
-impl<T> CausalTensor<T>
-where
-    T: Copy + Default + PartialOrd,
-{
-    /// Creates a new `CausalTensor` from a flat `Vec<T>` and a `shape` vector.
+impl<T> CausalTensor<T> {
     ///
     /// This constructor validates that the total number of elements implied by the `shape`
     /// matches the length of the provided `data` vector. It also internally calculates
@@ -90,34 +85,6 @@ where
             strides,
         })
     }
-}
-
-impl<T: std::fmt::Display> std::fmt::Display for CausalTensor<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "CausalTensor {{ data: [")?;
-        let max_items = 10;
-        for (i, item) in self.data.iter().take(max_items).enumerate() {
-            if i > 0 {
-                write!(f, ", ")?;
-            }
-            write!(f, "{}", item)?;
-        }
-        if self.data.len() > max_items {
-            write!(f, ", ...")?;
-        }
-        write!(
-            f,
-            "], shape: {:?}, strides: {:?} }}",
-            self.shape, self.strides
-        )
-    }
-}
-
-impl<T> CausalTensor<T>
-where
-    T: Copy + Default + PartialOrd,
-{
-    // --- Getters ---
 
     /// Returns a reference to the underlying `Vec<T>` that stores the tensor's data.
     ///
@@ -227,8 +194,6 @@ where
         &self.data
     }
 
-    // --- Getters ---
-
     /// Returns an optional reference to the element at the specified multi-dimensional index.
     ///
     /// Returns `None` if the provided `index` is out of bounds or has an incorrect number of dimensions.
@@ -294,6 +259,49 @@ where
         self.data.get_mut(flat_index)
     }
 
+    /// Calculates the flat index into the `data` vector from a multi-dimensional index.
+    /// This is the core of the stride-based memory layout.
+    pub(crate) fn get_flat_index(&self, index: &[usize]) -> Option<usize> {
+        if index.len() != self.num_dim() {
+            return None;
+        }
+
+        let mut flat_index = 0;
+        for (i, &dim_index) in index.iter().enumerate() {
+            if dim_index >= self.shape[i] {
+                return None; // Index is out of bounds for this dimension
+            }
+            flat_index += dim_index * self.strides[i];
+        }
+        Some(flat_index)
+    }
+}
+
+impl<T: std::fmt::Display> std::fmt::Display for CausalTensor<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "CausalTensor {{ data: [")?;
+        let max_items = 10;
+        for (i, item) in self.data.iter().take(max_items).enumerate() {
+            if i > 0 {
+                write!(f, ", ")?;
+            }
+            write!(f, "{}", item)?;
+        }
+        if self.data.len() > max_items {
+            write!(f, ", ...")?;
+        }
+        write!(
+            f,
+            "], shape: {:?}, strides: {:?} }}",
+            self.shape, self.strides
+        )
+    }
+}
+
+impl<T> CausalTensor<T>
+where
+    T: Clone + Default + PartialOrd,
+{
     // --- Shape Manipulation ---
 
     /// Returns a new tensor with the same data but a different shape.

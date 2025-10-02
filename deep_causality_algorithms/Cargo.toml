@@ -17,6 +17,16 @@ exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE
 
 
 [[example]]
+name = "example_mrmr"
+path = "examples/example_mrmr.rs"
+
+
+[[example]]
+name = "example_mrmr_cdl"
+path = "examples/example_mrmr_cdl.rs"
+
+
+[[example]]
 name = "example_surd"
 path = "examples/example_surd.rs"
 
@@ -26,8 +36,12 @@ path = "../deep_causality_tensor"
 version = "0.1.4"
 
 
+[dependencies.deep_causality_num]
+path = "../deep_causality_num"
+version = "0.1.4"
+
 [dependencies.rayon]
-version = "1.10"
+version = "1.11"
 optional = true
 
 
@@ -40,3 +54,10 @@ parallel = ["dep:rayon"]
 
 [package.metadata.docs.rs]
 all-features = true
+
+[dev-dependencies]
+criterion = { version = "0.7", features = ["html_reports"] }
+
+[[bench]]
+name = "mrmr_benchmark"
+harness = false

@@ -4,8 +4,8 @@
  */
 
 use deep_causality_discovery::{
-    AnalyzeError, CausalDiscoveryError, CdlError, DataError, FeatureSelectError, FinalizeError,
-    PreprocessError,
+    AnalyzeError, CausalDiscoveryError, CdlError, DataCleaningError, DataLoadingError,
+    FeatureSelectError, FinalizeError, PreprocessError,
 };
 use deep_causality_tensor::CausalTensorError;
 use std::error::Error;
@@ -13,7 +13,7 @@ use std::error::Error;
 #[test]
 fn test_display() {
     // Variants wrapping other errors
-    let data_err = DataError::FileNotFound("path/to/file.csv".to_string());
+    let data_err = DataLoadingError::FileNotFound("path/to/file.csv".to_string());
     let err = CdlError::ReadDataError(data_err);
     assert_eq!(
         err.to_string(),
@@ -55,6 +55,13 @@ fn test_display() {
         "Step [Finalization] failed: Formatting error: format failed"
     );
 
+    let clean_data_err = DataCleaningError::TensorError(CausalTensorError::InvalidOperation);
+    let err = CdlError::CleanDataError(clean_data_err);
+    assert_eq!(
+        err.to_string(),
+        "Step [Cleaning] failed: DataCleaningError: Tensor Error: CausalTensorError: Invalid operation error"
+    );
+
     // Missing config variants
     let err = CdlError::MissingDataLoaderConfig;
     assert_eq!(
@@ -90,7 +97,7 @@ fn test_display() {
 #[test]
 fn test_source() {
     // Variants wrapping other errors
-    let data_err = DataError::FileNotFound("path".to_string());
+    let data_err = DataLoadingError::FileNotFound("path".to_string());
     let err = CdlError::ReadDataError(data_err);
     assert!(err.source().is_some());
     assert_eq!(
@@ -138,6 +145,14 @@ fn test_source() {
         "Formatting error: format failed"
     );
 
+    let clean_data_err = DataCleaningError::TensorError(CausalTensorError::InvalidOperation);
+    let err = CdlError::CleanDataError(clean_data_err);
+    assert!(err.source().is_some());
+    assert_eq!(
+        err.source().unwrap().to_string(),
+        "DataCleaningError: Tensor Error: CausalTensorError: Invalid operation error"
+    );
+
     // Missing config variants (should return None)
     let err = CdlError::MissingDataLoaderConfig;
     assert!(err.source().is_none());
@@ -154,7 +169,7 @@ fn test_source() {
 #[test]
 fn test_from_impls() {
     // From<DataError>
-    let data_err = DataError::FileNotFound("path".to_string());
+    let data_err = DataLoadingError::FileNotFound("path".to_string());
     let err = CdlError::from(data_err);
     if let CdlError::ReadDataError(_) = err {
         // Test passed
@@ -208,5 +223,14 @@ fn test_from_impls() {
         // Test passed
     } else {
         panic!("Incorrect error variant for FinalizeError");
+    }
+
+    // From<DataCleaningError>
+    let clean_data_err = DataCleaningError::TensorError(CausalTensorError::InvalidOperation);
+    let err = CdlError::from(clean_data_err);
+    if let CdlError::CleanDataError(_) = err {
+        // Test passed
+    } else {
+        panic!("Incorrect error variant for DataCleaningError");
     }
 }
