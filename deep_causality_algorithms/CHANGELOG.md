@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algorithms-v0.1.4...deep_causality_algorithms-v0.2.0) - 2025-10-02
+
+### Added
+
+- *(deep_causality_algorithms)* Generic MRMR
+- *(deep_causality_algorithms)* Parallelize mRMR feature selection algo.
+- *(deep_causality_algorithms)* Added new example.
+- *(deep_causality_algorithms)* Added mrmr score to feature selection. documented in specs/006-mrmr-feature-score.
+- *(deep_causality_algorithms)* Updated MRMR Error with new variant for score calculation.
+- *(deep_causality_algorithms)* Added CDL variant of SURD state algo to handle None / NaN values in data
+- *(deep_causality_algorithms)* Added a CDL variant of the MRMR algorithm that uses CausalTensor<Option<f64>> with pairwise value selection to deal with missing data without introducing bias.
+- *(deep_causality_algorithms)* updated MRMRM Error
+
+### Fixed
+
+- *(deep_causality_algorithms)* renamed mrmr algo
+
+### Other
+
+- *(deep_causality_algorithms)* removed dead code and unreachable errors to increased test coverage.
+- *(deep_causality_algorithms)* increased test coverage.
+- Added specs for parallel implementation of mrmr algo
+- Added stage 2 to ICU sepsis case study
+- *(deep_causality_algorithms)* Updated README.md
+- *(deep_causality_algorithms)* Added test coverage for CDL SURD variant.
+
 ## [0.1.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algorithms-v0.1.3...deep_causality_algorithms-v0.1.4) - 2025-09-25
 
 ### Other

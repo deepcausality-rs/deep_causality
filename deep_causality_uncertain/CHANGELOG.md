@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.3.0...deep_causality_uncertain-v0.3.1) - 2025-10-02
+
+### Added
+
+- *(deep_causality_discovery)* working on data cleaning step during CDL
+
+### Other
+
+- *(deep_causality_uncertain)* removed flaky test assertion.
+
 ## [0.3.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.2.3...deep_causality_uncertain-v0.3.0) - 2025-09-25
 
 ### Added
