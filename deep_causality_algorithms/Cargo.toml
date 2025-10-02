@@ -37,7 +37,7 @@ version = "0.1.4"
 
 
 [dependencies.rayon]
-version = "1.10"
+version = "1.11"
 optional = true
 
 
