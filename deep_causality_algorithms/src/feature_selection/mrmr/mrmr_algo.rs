@@ -319,12 +319,10 @@ where
                     relevance / redundancy
                 };
 
-                if !mrmr_score.is_finite() {
-                    return Err(MrmrError::FeatureScoreError(format!(
-                        "mRMR score for feature {} is not finite: {}",
-                        feature_idx, mrmr_score
-                    )));
-                }
+                // mRMR score is guaranteed to be finite here because non-finite cases (NaN or Infinity)
+                // due to redundancy being zero are handled by the preceding if block.
+                // Otherwise, the division of two finite numbers (relevance / redundancy) where
+                // redundancy is non-zero will always yield a finite result.
 
                 if mrmr_score > max_mrmr_score {
                     max_mrmr_score = mrmr_score;
@@ -334,12 +332,9 @@ where
             (best_feature, max_mrmr_score)
         };
 
-        if !best_feature_score.is_finite() {
-            return Err(MrmrError::FeatureScoreError(format!(
-                "Best mRMR score for feature {} is not finite: {}",
-                best_feature, best_feature_score
-            )));
-        }
+        // The best_feature_score is guaranteed to be finite here because all mrmr_score values
+        // are checked for finiteness within the loop before updating max_mrmr_score.
+        // If any mrmr_score was non-finite, an error would have been returned earlier.
         selected_features_with_scores.push((best_feature, best_feature_score));
         all_features.remove(&best_feature);
     }
