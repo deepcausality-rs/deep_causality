@@ -4,7 +4,7 @@
  */
 use arrow_array::cast::__private::DataType;
 use arrow_array::{Array, Float64Array, Int64Array, RecordBatchReader, StringArray};
-use deep_causality_algorithms::mrmr::mrmr_features_selector_cdl;
+use deep_causality_algorithms::mrmr::mrmr_features_selector;
 use deep_causality_tensor::CausalTensor;
 use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
 use std::fs::File;
@@ -23,7 +23,7 @@ fn feature_select(data_path: &str) {
 
     // 2. Run the feature selector for CDL version
     let selected_features_with_scores =
-        mrmr_features_selector_cdl(&tensor, NUM_FEATURES, target_column).unwrap();
+        mrmr_features_selector(&tensor, NUM_FEATURES, target_column).unwrap();
 
     // 3. Interpret the results
     println!("Selected features and their normalized scores (CDL):");

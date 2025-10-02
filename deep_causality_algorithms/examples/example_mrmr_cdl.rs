@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_algorithms::mrmr::mrmr_features_selector_cdl;
+use deep_causality_algorithms::mrmr::mrmr_features_selector;
 use deep_causality_tensor::CausalTensor;
 
 fn main() {
@@ -33,12 +33,12 @@ fn main() {
     ];
     let tensor = CausalTensor::new(data, vec![5, 4]).unwrap();
 
-    // 2. Run the feature selector for CDL version
+    // 2. Run the feature selector
     // Select 2 features, with the target variable in column 3.
-    let selected_features_with_scores = mrmr_features_selector_cdl(&tensor, 3, 3).unwrap();
+    let selected_features_with_scores = mrmr_features_selector(&tensor, 3, 3).unwrap();
 
     // 3. Interpret the results
-    println!("Selected features and their normalized scores (CDL):");
+    println!("Selected features and their normalized scores (Generic MRMR):");
     for (index, score) in selected_features_with_scores {
         println!("- Feature Index: {}, Importance Score: {:.4}", index, score);
     }

@@ -12,7 +12,7 @@ fn test_pearson_correlation() {
     let shape = vec![2, 5];
     let tensor = CausalTensor::new(data, shape).unwrap();
 
-    let corr = mrmr_utils::pearson_correlation(&tensor, 0, 4).unwrap();
+    let (corr, _) = mrmr_utils::pearson_correlation(&tensor, 0, 4).unwrap();
     assert!((corr - (-1.0)).abs() < 1e-9);
 }
 
@@ -82,23 +82,6 @@ fn test_f_statistic_sample_too_small() {
         result.unwrap_err().to_string(),
         "Sample size is too small. At least 3 samples are required."
     );
-}
-
-#[test]
-fn test_impute_missing_values() {
-    let data = vec![1.0, 2.0, f64::NAN, 4.0, 3.0, 6.0];
-    let mut tensor = CausalTensor::new(data, vec![3, 2]).unwrap();
-
-    mrmr_utils::impute_missing_values(&mut tensor);
-
-    // Mean of column 0 is (1.0 + 3.0) / 2 = 2.0
-    let imputed_val = tensor.get(&[1, 0]).unwrap();
-    assert_eq!(*imputed_val, 2.0);
-
-    // Ensure other values are unchanged
-    assert_eq!(*tensor.get(&[0, 0]).unwrap(), 1.0);
-    assert_eq!(*tensor.get(&[0, 1]).unwrap(), 2.0);
-    assert_eq!(*tensor.get(&[1, 1]).unwrap(), 4.0);
 }
 
 #[test]

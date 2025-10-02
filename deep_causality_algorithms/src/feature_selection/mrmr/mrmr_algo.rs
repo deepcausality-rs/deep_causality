@@ -1,10 +1,6 @@
-/*
- * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
- */
-
 use crate::feature_selection::mrmr::mrmr_error::MrmrError;
 use crate::mrmr::mrmr_utils;
+use deep_causality_num::{Float, FloatOption};
 use deep_causality_tensor::CausalTensor;
 use std::collections::HashSet;
 
@@ -21,7 +17,8 @@ use rayon::prelude::*;
 /// When compiled with the `parallel` feature flag, the main feature selection loops are parallelized using `rayon`
 /// to accelerate computation on multi-core systems.
 ///
-/// Missing values in the input `CausalTensor` are handled by column-mean imputation prior to feature selection.
+/// Missing values in the input `CausalTensor` are handled by pairwise deletion. `NaN` values
+/// in float types and `None` values in `Option<float>` types are treated as missing.
 ///
 /// The algorithm iteratively selects features based on a score that balances relevance and redundancy.
 /// The scoring mechanism is as follows:
@@ -45,11 +42,9 @@ use rayon::prelude::*;
 ///
 /// # Arguments
 ///
-/// * `tensor` - A mutable reference to a 2-dimensional `CausalTensor<f64>` containing the features and the target variable.
+/// * `tensor` - A reference to a 2-dimensional `CausalTensor<T>` containing the features and the target variable.
 /// * `num_features` - The desired number of features to select.
 /// * `target_col` - The column index of the target variable within the `tensor`.
-///
-///  Missing values (NaN) in the input tensor will be imputed.
 ///
 /// # Returns
 ///
@@ -78,21 +73,25 @@ use rayon::prelude::*;
 ///     3.0, 6.2, 9.0, 5.5,
 ///     4.0, 8.1, 12.0, 7.5,
 /// ];
-/// let mut tensor = CausalTensor::new(data, vec![4, 4]).unwrap();
+/// let tensor = CausalTensor::new(data, vec![4, 4]).unwrap();
 ///
 /// // Select 2 features, with the target variable in column 3.
-/// let selected_features_with_scores = mrmr_features_selector(&mut tensor, 2, 3).unwrap();
+/// let selected_features_with_scores = mrmr_features_selector(&tensor, 2, 3).unwrap();
 /// // The exact output may vary slightly based on floating-point precision and data, but for this example,
 /// // it typically selects features 2 and 0 (indices of the original columns).
 /// assert_eq!(selected_features_with_scores.len(), 2);
 /// // assert_eq!(selected_features_with_scores[0].0, 2); // Example expected output for index
 /// // assert!(selected_features_with_scores[0].1.is_finite()); // Example expected output for score
 /// ```
-pub fn mrmr_features_selector(
-    tensor: &mut CausalTensor<f64>,
+pub fn mrmr_features_selector<T, F>(
+    tensor: &CausalTensor<T>,
     num_features: usize,
     target_col: usize,
-) -> Result<Vec<(usize, f64)>, MrmrError> {
+) -> Result<Vec<(usize, f64)>, MrmrError>
+where
+    T: FloatOption<F>,
+    F: Float,
+{
     let shape = tensor.shape();
     if shape.len() != 2 {
         return Err(MrmrError::InvalidInput(
@@ -118,8 +117,6 @@ pub fn mrmr_features_selector(
             "Target column index out of bounds".to_string(),
         ));
     }
-
-    mrmr_utils::impute_missing_values(tensor);
 
     let mut all_features: HashSet<usize> = (0..n_cols).collect();
     all_features.remove(&target_col);
@@ -207,8 +204,14 @@ pub fn mrmr_features_selector(
                     let redundancy: f64 = selected_indices
                         .par_iter()
                         .map(|&selected_idx| {
-                            mrmr_utils::pearson_correlation(tensor, feature_idx, selected_idx)
-                                .map(|v| v.abs())
+                            let (correlation, _) = mrmr_utils::pearson_correlation(tensor, feature_idx, selected_idx)?;
+                            if !correlation.is_finite() {
+                                return Err(MrmrError::FeatureScoreError(format!(
+                                    "Correlation for feature {} and selected feature {} is not finite: {}",
+                                    feature_idx, selected_idx, correlation
+                                )))
+                            }
+                            Ok(correlation.abs())
                         })
                         .sum::<Result<f64, _>>()?;
 
@@ -281,7 +284,7 @@ pub fn mrmr_features_selector(
                     .collect();
 
                 for &selected_idx in &selected_indices {
-                    let correlation =
+                    let (correlation, _) =
                         mrmr_utils::pearson_correlation(tensor, feature_idx, selected_idx)?;
                     if !correlation.is_finite() {
                         return Err(MrmrError::FeatureScoreError(format!(

@@ -36,6 +36,10 @@ path = "../deep_causality_tensor"
 version = "0.1.4"
 
 
+[dependencies.deep_causality_num]
+path = "../deep_causality_num"
+version = "0.1.4"
+
 [dependencies.rayon]
 version = "1.11"
 optional = true

@@ -4,7 +4,7 @@
  */
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use deep_causality_algorithms::mrmr::{mrmr_features_selector, mrmr_features_selector_cdl};
+use deep_causality_algorithms::mrmr::mrmr_features_selector;
 use deep_causality_tensor::CausalTensor;
 
 fn generate_test_tensor(rows: usize, cols: usize) -> CausalTensor<f64> {
@@ -38,9 +38,9 @@ fn mrmr_benchmark(c: &mut Criterion) {
 
     // Benchmark the standard implementation
     group.bench_function("mrmr_features_selector", |b| {
-        let mut tensor = generate_test_tensor(rows, cols);
+        let tensor = generate_test_tensor(rows, cols);
         b.iter(|| {
-            mrmr_features_selector(&mut tensor, num_features_to_select, target_col).unwrap();
+            mrmr_features_selector(&tensor, num_features_to_select, target_col).unwrap();
         });
     });
 
@@ -48,7 +48,7 @@ fn mrmr_benchmark(c: &mut Criterion) {
     group.bench_function("mrmr_features_selector_cdl", |b| {
         let tensor = generate_test_tensor_cdl(rows, cols);
         b.iter(|| {
-            mrmr_features_selector_cdl(&tensor, num_features_to_select, target_col).unwrap();
+            mrmr_features_selector(&tensor, num_features_to_select, target_col).unwrap();
         });
     });
 
