@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_discovery-v0.1.1...deep_causality_discovery-v0.2.0) - 2025-10-02
+
+### Added
+
+- *(deep_causality_algorithms)* Generic MRMR
+- *(deep_causality_algorithms)* Added mrmr score to feature selection. documented in specs/006-mrmr-feature-score.
+- *(deep_causality_discovery)* working on data cleaning step during CDL
+
+### Fixed
+
+- *(deep_causality_discovery)* refactored CDL module for improved modularity
+- *(deep_causality_algorithms)* renamed mrmr algo
+
+### Other
+
+- *(deep_causality_algorithms)* increased test coverage.
+- *(deep_causality_discovery)* Added or updates test coverage for DataCleaner and affected types.
+- Preparing DataCleaning stage in CDL.
+
 ## [0.1.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_discovery-v0.1.0...deep_causality_discovery-v0.1.1) - 2025-09-25
 
 ### Fixed
