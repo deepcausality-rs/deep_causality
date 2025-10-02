@@ -52,8 +52,7 @@ reveal the nature of multi-variable interactions.
 * **Performance Optimized**:
     * **Algorithmic Capping**: Use the `MaxOrder` enum to limit the analysis to a tractable number of interactions (
       e.g., pairwise), reducing complexity from exponential `O(2^N)` to polynomial `O(N^k)`.
-    * **Parallel Execution**: When compiled with the `parallel` feature flag, the main decomposition loop runs in
-      parallel across all available CPU cores using `rayon`.
+    * **Parallel Execution**: When compiled with the `parallel` feature flag, the main decomposition loop of the SURD algorithm and the feature selection loops of the mRMR algorithm run in parallel across all available CPU cores using `rayon`.
 
 ## Installation
 

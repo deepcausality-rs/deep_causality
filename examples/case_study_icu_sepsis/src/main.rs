@@ -6,8 +6,8 @@ use crate::run_enum::StageEnum::*;
 
 mod run;
 mod run_enum;
-mod stage_one;
-mod stage_two;
+mod stage_1_analyze_raw;
+mod stage_2_mrmr;
 // mod stage_zero;
 
 #[allow(dead_code)]

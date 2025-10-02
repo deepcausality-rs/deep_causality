@@ -8,12 +8,21 @@ Observations and Notes
 
 Compile time:
 time cargo build --release --bin case_study_icu_sepsis
-    Finished `release` profile [optimized] target(s) in 40.13s
+
+Finished `release` profile [optimized] target(s) in 40.13s
 real	0m40.209s
+
+time cargo build --release --bin case_study_icu_sepsis --features parallel
+
+Finished `release` profile [optimized] target(s) in 1m 13s
+real	1m13.964s
 
 Run
 time cargo run --release --bin case_study_icu_sepsis
 real	3m15.109s
+
+time cargo run --release --bin case_study_icu_sepsis --features parallel
+real	0m41.839s
 
 Results:
 
