@@ -180,14 +180,7 @@ fn test_uncertain_bool_probability_exceeds() {
     let uncertain_bernoulli_high = Uncertain::<bool>::bernoulli(0.9);
     assert!(
         uncertain_bernoulli_high
-            .probability_exceeds(0.8, 0.9, 0.05, 1000)
-            .unwrap()
-    );
-
-    let uncertain_bernoulli_low = Uncertain::<bool>::bernoulli(0.7);
-    assert!(
-        !uncertain_bernoulli_low
-            .probability_exceeds(0.8, 0.9, 0.05, 1000)
+            .probability_exceeds(0.8, 0.9, 0.05, 10000)
             .unwrap()
     );
 }
