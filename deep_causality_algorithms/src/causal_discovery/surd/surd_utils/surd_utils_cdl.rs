@@ -24,14 +24,13 @@ fn unravel_index_option(
     flat_index: usize,
     shape: &[usize],
 ) -> Result<Vec<usize>, CausalTensorError> {
-    let mut coords = Vec::with_capacity(shape.len());
-    let temp_flat_index = flat_index;
-    let mut current_product = 1;
-    for &dim_size in shape.iter().rev() {
-        coords.push((temp_flat_index / current_product) % dim_size);
-        current_product *= dim_size;
+    let mut coords = vec![0; shape.len()];
+    let mut remainder = flat_index;
+    for i in 0..shape.len() {
+        let stride: usize = shape[i + 1..].iter().product();
+        coords[i] = remainder / stride;
+        remainder %= stride;
     }
-    coords.reverse();
     Ok(coords)
 }
 
@@ -51,7 +50,7 @@ fn unravel_index_option(
 /// # Returns
 /// A `Result` containing a `usize` representing the linear index,
 /// or a `CausalTensorError` if the coordinates are out of bounds or dimensions mismatch.
-fn ravel_index_from_coords_option(
+pub(super) fn ravel_index_from_coords_option(
     coords: &[usize],
     shape: &[usize],
 ) -> Result<usize, CausalTensorError> {

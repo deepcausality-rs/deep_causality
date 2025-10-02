@@ -4,8 +4,8 @@
  */
 
 use deep_causality_discovery::{
-    AnalyzeError, CausalDiscoveryError, CdlError, DataLoadingError, FeatureSelectError,
-    FinalizeError, PreprocessError,
+    AnalyzeError, CausalDiscoveryError, CdlError, DataCleaningError, DataLoadingError,
+    FeatureSelectError, FinalizeError, PreprocessError,
 };
 use deep_causality_tensor::CausalTensorError;
 use std::error::Error;
@@ -53,6 +53,13 @@ fn test_display() {
     assert_eq!(
         err.to_string(),
         "Step [Finalization] failed: Formatting error: format failed"
+    );
+
+    let clean_data_err = DataCleaningError::TensorError(CausalTensorError::InvalidOperation);
+    let err = CdlError::CleanDataError(clean_data_err);
+    assert_eq!(
+        err.to_string(),
+        "Step [Cleaning] failed: DataCleaningError: Tensor Error: CausalTensorError: Invalid operation error"
     );
 
     // Missing config variants
@@ -138,6 +145,14 @@ fn test_source() {
         "Formatting error: format failed"
     );
 
+    let clean_data_err = DataCleaningError::TensorError(CausalTensorError::InvalidOperation);
+    let err = CdlError::CleanDataError(clean_data_err);
+    assert!(err.source().is_some());
+    assert_eq!(
+        err.source().unwrap().to_string(),
+        "DataCleaningError: Tensor Error: CausalTensorError: Invalid operation error"
+    );
+
     // Missing config variants (should return None)
     let err = CdlError::MissingDataLoaderConfig;
     assert!(err.source().is_none());
@@ -208,5 +223,14 @@ fn test_from_impls() {
         // Test passed
     } else {
         panic!("Incorrect error variant for FinalizeError");
+    }
+
+    // From<DataCleaningError>
+    let clean_data_err = DataCleaningError::TensorError(CausalTensorError::InvalidOperation);
+    let err = CdlError::from(clean_data_err);
+    if let CdlError::CleanDataError(_) = err {
+        // Test passed
+    } else {
+        panic!("Incorrect error variant for DataCleaningError");
     }
 }

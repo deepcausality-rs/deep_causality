@@ -30,7 +30,7 @@ pub(super) fn pearson_correlation_cdl(
     tensor: &CausalTensor<Option<f64>>,
     col_a_idx: usize,
     col_b_idx: usize,
-) -> Result<f64, MrmrError> {
+) -> Result<(f64, f64), MrmrError> {
     let shape = tensor.shape();
     if shape.len() != 2 {
         return Err(MrmrError::InvalidInput(
@@ -78,10 +78,10 @@ pub(super) fn pearson_correlation_cdl(
     let denominator_b = sum_sq_b - (sum_b * sum_b) / n;
 
     if denominator_a <= 0.0 || denominator_b <= 0.0 {
-        return Ok(0.0);
+        return Ok((0.0, n));
     }
 
-    Ok(numerator / (denominator_a.sqrt() * denominator_b.sqrt()))
+    Ok((numerator / (denominator_a.sqrt() * denominator_b.sqrt()), n))
 }
 
 /// Calculates the F-statistic between a feature and a target column.
@@ -106,31 +106,17 @@ pub(super) fn f_statistic_cdl(
     feature_idx: usize,
     target_idx: usize,
 ) -> Result<f64, MrmrError> {
-    // Note: The effective number of rows `n` is determined inside pearson_correlation_cdl.
-    // We need a preliminary check here to ensure there's enough data to even attempt the calculation.
-    if tensor.shape()[0] < 3 {
-        return Err(MrmrError::SampleTooSmall(3));
-    }
+    // The check for tensor.shape()[0] is implicitly handled by the sample size check on `n` below.
 
-    let r = pearson_correlation_cdl(tensor, feature_idx, target_idx)?;
-    let r2 = r.powi(2);
-
-    // The dynamic `n` from pearson_correlation is not available here.
-    // We must re-calculate it to ensure the F-statistic is accurate.
-    let mut n = 0.0;
-    for i in 0..tensor.shape()[0] {
-        let a_option = tensor.get(&[i, feature_idx]).unwrap();
-        let b_option = tensor.get(&[i, target_idx]).unwrap();
-
-        if a_option.is_some() && b_option.is_some() {
-            n += 1.0;
-        }
-    }
+    // Assuming `pearson_correlation_cdl` is modified to return `(f64, f64)` for (correlation, n)
+    let (r, n) = pearson_correlation_cdl(tensor, feature_idx, target_idx)?;
 
     if n < 3.0 {
         // F-statistic requires n-2 > 0.
         return Err(MrmrError::SampleTooSmall(3));
     }
+
+    let r2 = r.powi(2);
 
     if (1.0 - r2).abs() < 1e-9 {
         // Correlation is 1 or -1, implying infinite relevance.

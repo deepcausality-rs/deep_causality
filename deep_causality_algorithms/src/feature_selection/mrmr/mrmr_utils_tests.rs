@@ -100,3 +100,32 @@ fn test_impute_missing_values() {
     assert_eq!(*tensor.get(&[0, 1]).unwrap(), 2.0);
     assert_eq!(*tensor.get(&[1, 1]).unwrap(), 4.0);
 }
+
+#[test]
+fn test_f_statistic_non_2d_tensor() {
+    let data = vec![1.0, 2.0, 3.0, 4.0];
+    let shape = vec![4]; // 1D tensor
+    let tensor = CausalTensor::new(data, shape).unwrap();
+
+    let result = mrmr_utils::f_statistic(&tensor, 0, 1);
+    assert!(matches!(result, Err(MrmrError::InvalidInput(_))));
+    assert_eq!(
+        result.unwrap_err().to_string(),
+        "Invalid input: Input tensor must be 2-dimensional"
+    );
+}
+
+#[test]
+fn test_f_statistic_index_out_of_bounds() {
+    let data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+    let shape = vec![3, 2];
+    let tensor = CausalTensor::new(data, shape).unwrap();
+
+    // col_b_idx is 2, which is out of bounds for a 2-column tensor.
+    let result = mrmr_utils::f_statistic(&tensor, 0, 2);
+    assert!(matches!(result, Err(MrmrError::InvalidInput(_))));
+    assert_eq!(
+        result.unwrap_err().to_string(),
+        "Invalid input: Column index out of bounds"
+    );
+}

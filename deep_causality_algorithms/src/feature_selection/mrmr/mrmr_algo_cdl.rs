@@ -192,7 +192,7 @@ pub fn mrmr_features_selector_cdl(
                         .par_iter()
                         .map(|&selected_idx| {
                             mrmr_utils_cdl::pearson_correlation_cdl(tensor, feature_idx, selected_idx)
-                                .map(|v| v.abs())
+                                .map(|(corr, _)| corr.abs())
                         })
                         .sum::<Result<f64, _>>()?;
 
@@ -259,8 +259,8 @@ pub fn mrmr_features_selector_cdl(
 
                 for &selected_idx in &selected_indices {
                     redundancy +=
-                        mrmr_utils_cdl::pearson_correlation_cdl(tensor, feature_idx, selected_idx)?
-                            .abs();
+                        mrmr_utils_cdl::pearson_correlation_cdl(tensor, feature_idx, selected_idx)
+                            .map(|(corr, _)| corr.abs())?
                 }
                 redundancy /= selected_indices.len() as f64;
 
