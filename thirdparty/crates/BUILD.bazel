@@ -55,14 +55,14 @@ alias(
 )
 
 alias(
-    name = "rusty-fork-0.3.0",
-    actual = "//thirdparty/crates/rusty-fork-0.3.0:rusty_fork",
+    name = "rusty-fork-0.3.1",
+    actual = "//thirdparty/crates/rusty-fork-0.3.1:rusty_fork",
     tags = ["manual"],
 )
 
 alias(
     name = "rusty-fork",
-    actual = "//thirdparty/crates/rusty-fork-0.3.0:rusty_fork",
+    actual = "//thirdparty/crates/rusty-fork-0.3.1:rusty_fork",
     tags = ["manual"],
 )
 
