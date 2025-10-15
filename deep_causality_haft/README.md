@@ -93,6 +93,4 @@ The `Effect3` and `MonadEffect3` traits provide a powerful mechanism for buildin
 3.  **Compiler-Enforced Safety**: Because the effects are part of the type signature, the Rust compiler can statically verify that all effects are handled correctly. This prevents bugs and ensures that your pipeline code remains pure and focused on its core logic.
 4.  **Extensibility**: This pattern is extensible. If you need to manage more side-effects, you can introduce `HKT4` and `Effect4` traits to handle them, without having to rewrite your core pipeline logic.
 
-In essence, this crate provides the tools to build a small, powerful, and compile-time-checked effects library tailored perfectly for your application's needs, forming the foundation for building powerful, abstract, and reusable causal models in the `deep_causality` ecosystem.
-```
 
