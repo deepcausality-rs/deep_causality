@@ -79,6 +79,8 @@ fn main() {
     let res_err_mapped = ResultWitness::fmap(res_err, f);
     assert_eq!(res_err_mapped, Err("Error".to_string()));
 }
+```
+
 
 ## Type-Encoded Effect System
 
