@@ -44,7 +44,7 @@ all-features = true
 
 
 [dev-dependencies]
-rusty-fork = "0.3.0"
+rusty-fork = "0.3.1"
 criterion = { version = "0.7.0", features = ["html_reports"] }
 
 
