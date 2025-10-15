@@ -1,0 +1,37 @@
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library", "rust_test")
+
+rust_library(
+    name = "deep_causality_haft",
+    srcs = glob([
+        "src/**",
+    ]),
+    crate_root = "src/lib.rs",
+    tags = [
+        "utils",
+        "HKT",
+        "HAFT",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+
+    ],)
+
+rust_doc(
+    name = "doc",
+    crate = ":deep_causality_haft",
+    tags = ["doc"],
+    visibility = ["//visibility:public"],
+)
+
+rust_doc_test(
+    name = "doc_test",
+    crate = ":deep_causality_haft",
+    tags = ["doc-test"],
+    visibility = ["//visibility:public"],
+)
+
+rust_test(
+    name = "tests",
+    crate = ":deep_causality_haft",
+    srcs = glob(["tests/**"]),
+)

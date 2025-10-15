@@ -108,6 +108,8 @@ The reason is, Bazel cannot access util files from within the test folder, but i
 can access the full src folder during testing. As a result, test utils have to be fully
 tested to count towards the code coverage score.
 
+The usage of a prelude file is prohibited. 
+
 ## Code export
 
 * All public errors, traits, and errors are exported from src/lib.rs
