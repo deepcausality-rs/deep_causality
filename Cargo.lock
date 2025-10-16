@@ -392,7 +392,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality"
-version = "0.11.5"
+version = "0.11.6"
 dependencies = [
  "criterion",
  "deep_causality_data_structures",
@@ -460,7 +460,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_uncertain"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "criterion",
  "deep_causality_rand",
