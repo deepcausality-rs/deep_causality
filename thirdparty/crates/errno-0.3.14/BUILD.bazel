@@ -110,7 +110,7 @@ rust_library(
             "//thirdparty/crates/libc-0.2.176:libc",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:aarch64-pc-windows-msvc": [
-            "//thirdparty/crates/windows-sys-0.61.0:windows_sys",  # cfg(windows)
+            "//thirdparty/crates/windows-sys-0.61.2:windows_sys",  # cfg(windows)
         ],
         "@rules_rust//rust/platform:aarch64-unknown-fuchsia": [
             "//thirdparty/crates/libc-0.2.176:libc",  # cfg(unix)
@@ -140,7 +140,7 @@ rust_library(
             "//thirdparty/crates/libc-0.2.176:libc",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:i686-pc-windows-msvc": [
-            "//thirdparty/crates/windows-sys-0.61.0:windows_sys",  # cfg(windows)
+            "//thirdparty/crates/windows-sys-0.61.2:windows_sys",  # cfg(windows)
         ],
         "@rules_rust//rust/platform:i686-unknown-freebsd": [
             "//thirdparty/crates/libc-0.2.176:libc",  # cfg(unix)
@@ -179,7 +179,7 @@ rust_library(
             "//thirdparty/crates/libc-0.2.176:libc",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:x86_64-pc-windows-msvc": [
-            "//thirdparty/crates/windows-sys-0.61.0:windows_sys",  # cfg(windows)
+            "//thirdparty/crates/windows-sys-0.61.2:windows_sys",  # cfg(windows)
         ],
         "@rules_rust//rust/platform:x86_64-unknown-freebsd": [
             "//thirdparty/crates/libc-0.2.176:libc",  # cfg(unix)

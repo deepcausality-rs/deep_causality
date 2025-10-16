@@ -10,7 +10,7 @@ crates_vendor(
         "rusty-fork": crate.spec(
             default_features = True,
             package = "rusty-fork",
-            version = "0.3.0",
+            version = "0.3",
         ),
         #
         # Regular dependencies
