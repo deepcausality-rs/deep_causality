@@ -11,6 +11,7 @@
 ![Tests][test-url]
 [![OpenSSF Best Practices][ossf-badge]][ossf-url]
 [![codecov][codecov-badge]][codecov-url]
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fdeepcausality-rs%2Fdeep_causality.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fdeepcausality-rs%2Fdeep_causality?ref=badge_shield)
 
 
 [codefactor-badge]: https://www.codefactor.io/repository/github/deepcausality-rs/deep_causality/badge
@@ -260,6 +261,9 @@ the [Quanta Magazine](https://www.quantamagazine.org/).
 ## 📜 Licence
 
 This project is licensed under the [MIT license](LICENSE).
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fdeepcausality-rs%2Fdeep_causality.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fdeepcausality-rs%2Fdeep_causality?ref=badge_large)
 
 ## 👮️ Security
 
