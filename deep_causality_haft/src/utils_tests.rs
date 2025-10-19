@@ -3,7 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Effect3, Effect4, Effect5, Functor, Monad, MonadEffect3, MonadEffect4, MonadEffect5};
+use crate::{
+    Applicative, Effect3, Effect4, Effect5, Functor, Monad, MonadEffect3, MonadEffect4,
+    MonadEffect5,
+};
 use crate::{HKT, HKT3, HKT4, HKT5, Placeholder};
 
 // --- MonadEffect3 Setup ---
@@ -49,7 +52,7 @@ impl Functor<MyEffectHktWitness<String, String>> for MyEffectHktWitness<String, 
     }
 }
 
-impl Monad<MyEffectHktWitness<String, String>> for MyEffectHktWitness<String, String> {
+impl Applicative<MyEffectHktWitness<String, String>> for MyEffectHktWitness<String, String> {
     fn pure<T>(value: T) -> MyCustomEffectType<T, String, String> {
         MyCustomEffectType {
             value,
@@ -58,6 +61,40 @@ impl Monad<MyEffectHktWitness<String, String>> for MyEffectHktWitness<String, St
         }
     }
 
+    fn apply<A, B, Func>(
+        mut f_ab: MyCustomEffectType<Func, String, String>,
+        f_a: MyCustomEffectType<A, String, String>,
+    ) -> MyCustomEffectType<B, String, String>
+    where
+        Func: FnMut(A) -> B,
+    {
+        if f_ab.error.is_some() {
+            return MyCustomEffectType {
+                value: (f_ab.value)(f_a.value), // Dummy call to satisfy type, actual value discarded
+                error: f_ab.error,
+                warnings: f_ab.warnings,
+            };
+        }
+        if f_a.error.is_some() {
+            return MyCustomEffectType {
+                value: (f_ab.value)(f_a.value), // Dummy call to satisfy type, actual value discarded
+                error: f_a.error,
+                warnings: f_a.warnings,
+            };
+        }
+
+        let mut combined_warnings = f_ab.warnings;
+        combined_warnings.extend(f_a.warnings);
+
+        MyCustomEffectType {
+            value: (f_ab.value)(f_a.value),
+            error: None,
+            warnings: combined_warnings,
+        }
+    }
+}
+
+impl Monad<MyEffectHktWitness<String, String>> for MyEffectHktWitness<String, String> {
     fn bind<A, B, Func>(
         m_a: MyCustomEffectType<A, String, String>,
         f: Func,
@@ -188,7 +225,9 @@ impl Functor<MyEffectHktWitness4<String, String, u64>>
     }
 }
 
-impl Monad<MyEffectHktWitness4<String, String, u64>> for MyEffectHktWitness4<String, String, u64> {
+impl Applicative<MyEffectHktWitness4<String, String, u64>>
+    for MyEffectHktWitness4<String, String, u64>
+{
     fn pure<T>(value: T) -> MyCustomEffectType4<T, String, String, u64> {
         MyCustomEffectType4 {
             value,
@@ -198,6 +237,46 @@ impl Monad<MyEffectHktWitness4<String, String, u64>> for MyEffectHktWitness4<Str
         }
     }
 
+    fn apply<A, B, Func>(
+        mut f_ab: MyCustomEffectType4<Func, String, String, u64>,
+        f_a: MyCustomEffectType4<A, String, String, u64>,
+    ) -> MyCustomEffectType4<B, String, String, u64>
+    where
+        Func: FnMut(A) -> B,
+    {
+        if f_ab.f1.is_some() {
+            return MyCustomEffectType4 {
+                value: (f_ab.value)(f_a.value), // Dummy call to satisfy type
+                f1: f_ab.f1,
+                f2: f_ab.f2,
+                f3: f_ab.f3,
+            };
+        }
+        if f_a.f1.is_some() {
+            return MyCustomEffectType4 {
+                value: (f_ab.value)(f_a.value), // Dummy call to satisfy type
+                f1: f_a.f1,
+                f2: f_a.f2,
+                f3: f_a.f3,
+            };
+        }
+
+        let mut combined_f2 = f_ab.f2;
+        combined_f2.extend(f_a.f2);
+
+        let mut combined_f3 = f_ab.f3;
+        combined_f3.extend(f_a.f3);
+
+        MyCustomEffectType4 {
+            value: (f_ab.value)(f_a.value),
+            f1: None,
+            f2: combined_f2,
+            f3: combined_f3,
+        }
+    }
+}
+
+impl Monad<MyEffectHktWitness4<String, String, u64>> for MyEffectHktWitness4<String, String, u64> {
     fn bind<A, B, Func>(
         m_a: MyCustomEffectType4<A, String, String, u64>,
         f: Func,
@@ -343,7 +422,7 @@ impl Functor<MyEffectHktWitness5<String, String, u64, String>>
     }
 }
 
-impl Monad<MyEffectHktWitness5<String, String, u64, String>>
+impl Applicative<MyEffectHktWitness5<String, String, u64, String>>
     for MyEffectHktWitness5<String, String, u64, String>
 {
     fn pure<T>(value: T) -> MyCustomEffectType5<T, String, String, u64, String> {
@@ -356,6 +435,54 @@ impl Monad<MyEffectHktWitness5<String, String, u64, String>>
         }
     }
 
+    fn apply<A, B, Func>(
+        mut f_ab: MyCustomEffectType5<Func, String, String, u64, String>,
+        f_a: MyCustomEffectType5<A, String, String, u64, String>,
+    ) -> MyCustomEffectType5<B, String, String, u64, String>
+    where
+        Func: FnMut(A) -> B,
+    {
+        if f_ab.f1.is_some() {
+            return MyCustomEffectType5 {
+                value: (f_ab.value)(f_a.value), // Dummy call to satisfy type
+                f1: f_ab.f1,
+                f2: f_ab.f2,
+                f3: f_ab.f3,
+                f4: f_ab.f4,
+            };
+        }
+        if f_a.f1.is_some() {
+            return MyCustomEffectType5 {
+                value: (f_ab.value)(f_a.value), // Dummy call to satisfy type
+                f1: f_a.f1,
+                f2: f_a.f2,
+                f3: f_a.f3,
+                f4: f_a.f4,
+            };
+        }
+
+        let mut combined_f2 = f_ab.f2;
+        combined_f2.extend(f_a.f2);
+
+        let mut combined_f3 = f_ab.f3;
+        combined_f3.extend(f_a.f3);
+
+        let mut combined_f4 = f_ab.f4;
+        combined_f4.extend(f_a.f4);
+
+        MyCustomEffectType5 {
+            value: (f_ab.value)(f_a.value),
+            f1: None,
+            f2: combined_f2,
+            f3: combined_f3,
+            f4: combined_f4,
+        }
+    }
+}
+
+impl Monad<MyEffectHktWitness5<String, String, u64, String>>
+    for MyEffectHktWitness5<String, String, u64, String>
+{
     fn bind<A, B, Func>(
         m_a: MyCustomEffectType5<A, String, String, u64, String>,
         f: Func,

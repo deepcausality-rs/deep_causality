@@ -1,3 +1,4 @@
+mod applicative;
 mod effect;
 mod extensions;
 mod functor;
@@ -6,6 +7,7 @@ mod monad;
 mod monad_effect;
 pub mod utils_tests;
 
+pub use crate::applicative::Applicative;
 pub use crate::effect::{Effect3, Effect4, Effect5};
 pub use crate::extensions::hkt_option_ext::OptionWitness;
 pub use crate::extensions::hkt_result_ext::ResultWitness;

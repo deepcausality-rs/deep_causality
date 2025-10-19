@@ -2,7 +2,39 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_haft::{Functor, HKT, HKT2, Monad, ResultWitness};
+use deep_causality_haft::{Applicative, Functor, HKT, HKT2, Monad, ResultWitness};
+
+// --- Applicative Tests ---
+
+#[test]
+fn test_applicative_result_pure() {
+    let res: Result<i32, String> = ResultWitness::pure(10);
+    assert_eq!(res, Ok(10));
+}
+
+#[test]
+fn test_applicative_result_apply_ok() {
+    let f_add_one: Result<fn(i32) -> i32, String> = Ok(|x| x + 1);
+    let val: Result<i32, String> = Ok(10);
+    let result = ResultWitness::apply(f_add_one, val);
+    assert_eq!(result, Ok(11));
+}
+
+#[test]
+fn test_applicative_result_apply_err_func() {
+    let f_add_one: Result<fn(i32) -> i32, String> = Err("Function Error".to_string());
+    let val: Result<i32, String> = Ok(10);
+    let result = ResultWitness::apply(f_add_one, val);
+    assert_eq!(result, Err("Function Error".to_string()));
+}
+
+#[test]
+fn test_applicative_result_apply_err_val() {
+    let f_add_one: Result<fn(i32) -> i32, String> = Ok(|x| x + 1);
+    let val: Result<i32, String> = Err("Value Error".to_string());
+    let result = ResultWitness::apply(f_add_one, val);
+    assert_eq!(result, Err("Value Error".to_string()));
+}
 
 // --- HKT Tests ---
 

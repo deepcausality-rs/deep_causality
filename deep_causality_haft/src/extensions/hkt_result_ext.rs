@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Functor, HKT, HKT2, Monad, Placeholder};
+use crate::{Applicative, Functor, HKT, HKT2, Monad, Placeholder};
 
 // Witness for Result<T, E> where E is fixed
 pub struct ResultWitness<E>(Placeholder, E);
@@ -31,15 +31,37 @@ where
     }
 }
 
-// Implementation of Monad for ResultWitness
-impl<E> Monad<ResultWitness<E>> for ResultWitness<E>
+// Implementation of Applicative for ResultWitness
+impl<E> Applicative<ResultWitness<E>> for ResultWitness<E>
 where
-    E: 'static,
+    E: 'static + Clone,
 {
     fn pure<T>(value: T) -> <ResultWitness<E> as HKT2<E>>::Type<T> {
         Ok(value)
     }
 
+    fn apply<A, B, Func>(
+        f_ab: <ResultWitness<E> as HKT2<E>>::Type<Func>,
+        f_a: <ResultWitness<E> as HKT2<E>>::Type<A>,
+    ) -> <ResultWitness<E> as HKT2<E>>::Type<B>
+    where
+        Func: FnMut(A) -> B,
+    {
+        match f_ab {
+            Ok(mut f) => match f_a {
+                Ok(a) => Ok(f(a)),
+                Err(e) => Err(e),
+            },
+            Err(e) => Err(e),
+        }
+    }
+}
+
+// Implementation of Monad for ResultWitness
+impl<E> Monad<ResultWitness<E>> for ResultWitness<E>
+where
+    E: 'static + Clone,
+{
     fn bind<A, B, Func>(
         m_a: <ResultWitness<E> as HKT2<E>>::Type<A>,
         f: Func,

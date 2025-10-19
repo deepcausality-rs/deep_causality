@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Functor, HKT, Monad};
+use crate::{Applicative, Functor, HKT, Monad};
 
 // Witness for Vec<T>
 pub struct VecWitness;
@@ -22,12 +22,32 @@ impl Functor<VecWitness> for VecWitness {
     }
 }
 
-// Implementation of Monad for VecWitness
-impl Monad<VecWitness> for VecWitness {
+// Implementation of Applicative for VecWitness
+impl Applicative<VecWitness> for VecWitness {
     fn pure<T>(value: T) -> <VecWitness as HKT>::Type<T> {
         vec![value]
     }
 
+    fn apply<A, B, Func>(
+        f_ab: <VecWitness as HKT>::Type<Func>,
+        f_a: <VecWitness as HKT>::Type<A>,
+    ) -> <VecWitness as HKT>::Type<B>
+    where
+        Func: FnMut(A) -> B,
+        A: Clone,
+    {
+        f_ab.into_iter()
+            .flat_map(|mut f_val| {
+                f_a.iter()
+                    .map(move |a_val| f_val(a_val.clone()))
+                    .collect::<Vec<B>>()
+            }) // Clone a_val for FnMut
+            .collect()
+    }
+}
+
+// Implementation of Monad for VecWitness
+impl Monad<VecWitness> for VecWitness {
     fn bind<A, B, Func>(m_a: <VecWitness as HKT>::Type<A>, f: Func) -> <VecWitness as HKT>::Type<B>
     where
         Func: FnMut(A) -> <VecWitness as HKT>::Type<B>,

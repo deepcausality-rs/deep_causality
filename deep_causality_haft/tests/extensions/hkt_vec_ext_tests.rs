@@ -3,7 +3,40 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Functor, HKT, Monad, VecWitness};
+use deep_causality_haft::{Applicative, Functor, HKT, Monad, VecWitness};
+
+// --- Applicative Tests ---
+
+#[test]
+fn test_applicative_vec_pure() {
+    let vec = VecWitness::pure(10);
+    assert_eq!(vec, vec![10]);
+}
+
+#[test]
+fn test_applicative_vec_apply_non_empty() {
+    let f_funcs = vec![|x| x + 1, |x| x * 2];
+    let vals = vec![10, 20];
+    let result = VecWitness::apply(f_funcs, vals);
+    // Expected: [(10+1), (20+1), (10*2), (20*2)] = [11, 21, 20, 40]
+    assert_eq!(result, vec![11, 21, 20, 40]);
+}
+
+#[test]
+fn test_applicative_vec_apply_empty_func() {
+    let f_funcs: Vec<fn(i32) -> i32> = Vec::new();
+    let vals = vec![10, 20];
+    let result = VecWitness::apply(f_funcs, vals);
+    assert_eq!(result, Vec::<i32>::new());
+}
+
+#[test]
+fn test_applicative_vec_apply_empty_val() {
+    let f_funcs = vec![|x| x + 1, |x| x * 2];
+    let vals: Vec<i32> = Vec::new();
+    let result = VecWitness::apply(f_funcs, vals);
+    assert_eq!(result, Vec::<i32>::new());
+}
 
 // --- HKT Tests ---
 

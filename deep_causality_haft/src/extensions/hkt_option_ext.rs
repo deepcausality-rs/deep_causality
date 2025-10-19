@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Functor, HKT, Monad};
+use crate::{Applicative, Functor, HKT, Monad};
 
 // Witness for Option
 pub struct OptionWitness;
@@ -25,12 +25,25 @@ impl Functor<OptionWitness> for OptionWitness {
     }
 }
 
-// Implementation of Monad for OptionWitness
-impl Monad<OptionWitness> for OptionWitness {
+// Implementation of Applicative for OptionWitness
+impl Applicative<OptionWitness> for OptionWitness {
     fn pure<T>(value: T) -> <OptionWitness as HKT>::Type<T> {
         Some(value)
     }
 
+    fn apply<A, B, Func>(
+        f_ab: <OptionWitness as HKT>::Type<Func>,
+        f_a: <OptionWitness as HKT>::Type<A>,
+    ) -> <OptionWitness as HKT>::Type<B>
+    where
+        Func: FnMut(A) -> B,
+    {
+        f_ab.and_then(|f| f_a.map(f))
+    }
+}
+
+// Implementation of Monad for OptionWitness
+impl Monad<OptionWitness> for OptionWitness {
     fn bind<A, B, Func>(
         m_a: <OptionWitness as HKT>::Type<A>,
         f: Func,

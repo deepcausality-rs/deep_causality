@@ -58,18 +58,18 @@ where
 /// Monadic logic for the Arity 5 type after it has been partially applied.
 ///
 /// Generic over the Effect5 witness `E`.
-///
-#[allow(clippy::type_complexity)]
 pub trait MonadEffect5<E: Effect5>
 where
     E::HktWitness: Functor<E::HktWitness> + Sized,
 {
     /// Lifts a pure value into an Effect container.
+    #[allow(clippy::type_complexity)]
     fn pure<T>(
         value: T,
     ) -> <E::HktWitness as HKT5<E::Fixed1, E::Fixed2, E::Fixed3, E::Fixed4>>::Type<T>;
 
     /// The core sequencing operation
+    #[allow(clippy::type_complexity)]
     fn bind<T, U, Func>(
         effect: <E::HktWitness as HKT5<E::Fixed1, E::Fixed2, E::Fixed3, E::Fixed4>>::Type<T>,
         f: Func,
