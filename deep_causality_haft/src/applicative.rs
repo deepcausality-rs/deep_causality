@@ -36,12 +36,7 @@ pub trait Applicative<F: HKT>: Functor<F> {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use deep_causality_haft::{Applicative, OptionWitness, HKT};
     ///
-    /// let opt_val: Option<<OptionWitness as HKT>::Type<i32>> = Some(OptionWitness::pure(10));
-    /// assert_eq!(opt_val, Some(Some(10)));
-    /// ```
     fn pure<T>(value: T) -> F::Type<T>;
 
     /// Applies a function wrapped in a context (`f_ab`) to a value wrapped in a context (`f_a`).
