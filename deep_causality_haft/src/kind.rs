@@ -62,24 +62,16 @@ pub trait HKT3<F1, F2> {
     type Type<T>;
 }
 
+
 // ----------------------------------------------------
-// Manual HKT Implementations
+// HKT Trait for Arity 4: Kind *, *, *, * -> *
 // ----------------------------------------------------
 
-// Witness for Option
-pub struct OptionWitness;
-
-impl HKT for OptionWitness {
-    type Type<T> = Option<T>;
-}
-
-// Witness for Result<T, E> where E is fixed
-pub struct ResultWitness<E>(Placeholder, E);
-
-impl<E> HKT2<E> for ResultWitness<E> {
-    type Type<T> = Result<T, E>;
-}
-
-impl<E> HKT for ResultWitness<E> {
-    type Type<T> = Result<T, E>;
+/// Trait for an HKT with four type parameters.
+///
+/// It is generic over the first three type parameters to be "fixed" (`F1`, `F2`, `F3`).
+pub trait HKT4<F1, F2, F3> {
+    /// The GAT that represents the remaining type constructor.
+    /// The resulting kind is * -> * (one hole <T> remaining).
+    type Type<T>;
 }

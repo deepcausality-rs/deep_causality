@@ -3,9 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::fp::{Functor, Monad};
-use crate::kind::{HKT, OptionWitness};
-use crate::kind::{HKT2, ResultWitness};
+use crate::{Functor, Monad, HKT, HKT2, OptionWitness, ResultWitness};
 
 // Manual implementation of Functor for OptionWitness
 impl Functor<OptionWitness> for OptionWitness {

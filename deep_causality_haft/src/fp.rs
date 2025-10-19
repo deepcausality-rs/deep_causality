@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use super::kind::{HKT, HKT3};
+use super::kind::{HKT, HKT3, HKT4};
 
 // ----------------------------------------------------
 // Standard Functional Traits (Arity 1)
@@ -75,10 +75,43 @@ where
     ) -> <E::HktWitness as HKT3<E::Fixed1, E::Fixed2>>::Type<U>
     where
         Func: FnOnce(T) -> <E::HktWitness as HKT3<E::Fixed1, E::Fixed2>>::Type<U>;
+}
 
-    /// A specialized function to handle the accumulation of warnings/logs.
-    fn log<T>(
-        effect: <E::HktWitness as HKT3<E::Fixed1, E::Fixed2>>::Type<T>,
-        log: E::Fixed2,
-    ) -> <E::HktWitness as HKT3<E::Fixed1, E::Fixed2>>::Type<T>;
+// ----------------------------------------------------
+// Advanced Functional Traits (Arity 4)
+// ----------------------------------------------------
+
+/// Effect4: The Bridge Trait for Arity 4 Type Constructors.I
+pub trait Effect4 {
+    /// The fixed type for the first parameter.
+    type Fixed1;
+
+    /// The fixed type for the second parameter.
+    type Fixed2;
+
+    /// The fixed type for the third parameter.
+    type Fixed3;
+
+    /// The concrete witness type that implements HKT4 with the three fixed types.
+    /// It MUST implement HKT so we can pass it to Functor/Monad functions.
+    type HktWitness: HKT4<Self::Fixed1, Self::Fixed2, Self::Fixed3> + HKT;
+}
+
+/// Monadic logic for the Arity 4 type after it has been partially applied.
+///
+/// Generic over the Effect4 witness `E`.
+pub trait MonadEffect4<E: Effect4>
+where
+    E::HktWitness: Functor<E::HktWitness> + Sized,
+{
+    /// Lifts a pure value into the DSL's Effect container.
+    fn pure<T>(value: T) -> <E::HktWitness as HKT4<E::Fixed1, E::Fixed2, E::Fixed3>>::Type<T>;
+
+    /// The core sequencing operation
+    fn bind<T, U, Func>(
+        effect: <E::HktWitness as HKT4<E::Fixed1, E::Fixed2, E::Fixed3>>::Type<T>,
+        f: Func,
+    ) -> <E::HktWitness as HKT4<E::Fixed1, E::Fixed2, E::Fixed3>>::Type<U>
+    where
+        Func: FnOnce(T) -> <E::HktWitness as HKT4<E::Fixed1, E::Fixed2, E::Fixed3>>::Type<U>;
 }
