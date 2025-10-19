@@ -3,7 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality_haft::utils_tests::*;
-use deep_causality_haft::{Effect3, Effect4, MonadEffect3, MonadEffect4, HKT3, HKT4};
+use deep_causality_haft::{
+    Effect3, Effect4, Effect5, HKT3, HKT4, HKT5, MonadEffect3, MonadEffect4, MonadEffect5,
+};
 
 #[test]
 fn test_monad_effect3() {
@@ -118,6 +120,60 @@ fn test_monad_effect4() {
             f1: Some("Error Occurred".to_string()),
             f2: vec!["Log 1".to_string(), "Log 2".to_string()],
             f3: vec![100, 200, 300],
+        }
+    );
+}
+
+#[test]
+fn test_monad_effect5() {
+    type MyEffectType<T> = <<MyEffect5 as Effect5>::HktWitness as HKT5<
+        <MyEffect5 as Effect5>::Fixed1,
+        <MyEffect5 as Effect5>::Fixed2,
+        <MyEffect5 as Effect5>::Fixed3,
+        <MyEffect5 as Effect5>::Fixed4,
+    >>::Type<T>;
+
+    let initial_effect: MyEffectType<i32> = MyMonadEffect5::pure(10);
+    assert_eq!(
+        initial_effect,
+        MyCustomEffectType5 {
+            value: 10,
+            f1: None,
+            f2: vec![],
+            f3: vec![],
+            f4: vec![]
+        }
+    );
+
+    let f1 = |x| MyEffectType {
+        value: x * 2,
+        f1: None,
+        f2: vec!["Log 1".to_string()],
+        f3: vec![100],
+        f4: vec!["Trace 1".to_string()],
+    };
+
+    let effect1 = MyMonadEffect5::bind(initial_effect, f1);
+    assert_eq!(
+        effect1,
+        MyCustomEffectType5 {
+            value: 20,
+            f1: None,
+            f2: vec!["Log 1".to_string()],
+            f3: vec![100],
+            f4: vec!["Trace 1".to_string()]
+        }
+    );
+
+    let effect2 = MyMonadEffect5::log(effect1, "Trace 2".to_string());
+    assert_eq!(
+        effect2,
+        MyCustomEffectType5 {
+            value: 20,
+            f1: None,
+            f2: vec!["Log 1".to_string()],
+            f3: vec![100],
+            f4: vec!["Trace 1".to_string(), "Trace 2".to_string()]
         }
     );
 }

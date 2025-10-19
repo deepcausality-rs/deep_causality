@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{HKT, HKT2, HKT3, HKT4, Placeholder};
+use deep_causality_haft::{HKT, HKT2, HKT3, HKT4, HKT5, Placeholder};
 
 // --- HKT (Arity 1) Tests ---
 
@@ -108,7 +108,8 @@ impl<F1, F2, F3> HKT4<F1, F2, F3> for MyCustomTypeWitness4<F1, F2, F3> {
 
 #[test]
 fn test_hkt4_custom_type() {
-    type MyHkt4Type<T> = <MyCustomTypeWitness4<String, u32, bool> as HKT4<String, u32, bool>>::Type<T>;
+    type MyHkt4Type<T> =
+        <MyCustomTypeWitness4<String, u32, bool> as HKT4<String, u32, bool>>::Type<T>;
 
     let instance = MyHkt4Type {
         value: 40,
@@ -119,5 +120,42 @@ fn test_hkt4_custom_type() {
     assert_eq!(instance.value, 40);
     assert_eq!(instance._f1, "Fixed String".to_string());
     assert_eq!(instance._f2, 200u32);
-    assert_eq!(instance._f3, true);
+    assert!(instance._f3);
+}
+
+// --- HKT5 (Arity 5) Tests ---
+
+// A dummy type with five generic parameters to act as a witness
+struct MyCustomType5<T, F1, F2, F3, F4> {
+    value: T,
+    _f1: F1,
+    _f2: F2,
+    _f3: F3,
+    _f4: F4,
+}
+
+// Witness for MyCustomType5<T, F1, F2, F3, F4> where F1, F2, F3, and F4 are fixed
+struct MyCustomTypeWitness5<F1, F2, F3, F4>(Placeholder, F1, F2, F3, F4);
+
+impl<F1, F2, F3, F4> HKT5<F1, F2, F3, F4> for MyCustomTypeWitness5<F1, F2, F3, F4> {
+    type Type<T> = MyCustomType5<T, F1, F2, F3, F4>;
+}
+
+#[test]
+fn test_hkt5_custom_type() {
+    type MyHkt5Type<T> =
+        <MyCustomTypeWitness5<String, u32, bool, f64> as HKT5<String, u32, bool, f64>>::Type<T>;
+
+    let instance = MyHkt5Type {
+        value: 50,
+        _f1: "Fixed String".to_string(),
+        _f2: 300u32,
+        _f3: false,
+        _f4: 1.23,
+    };
+    assert_eq!(instance.value, 50);
+    assert_eq!(instance._f1, "Fixed String".to_string());
+    assert_eq!(instance._f2, 300u32);
+    assert!(!instance._f3);
+    assert_eq!(instance._f4, 1.23);
 }
