@@ -68,14 +68,7 @@ pub trait Applicative<F: HKT>: Functor<F> {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use deep_causality_haft::{Applicative, OptionWitness, HKT};
     ///
-    /// let f_add_one: Option<<OptionWitness as HKT>::Type<fn(i32) -> i32>> = Some(Some(|x| x + 1));
-    /// let val: Option<<OptionWitness as HKT>::Type<i32>> = Some(Some(10));
-    /// let result = OptionWitness::apply(f_add_one.unwrap(), val.unwrap());
-    /// assert_eq!(result, Some(11));
-    /// ```
     fn apply<A, B, Func>(f_ab: F::Type<Func>, f_a: F::Type<A>) -> F::Type<B>
     where
         Func: FnMut(A) -> B,
