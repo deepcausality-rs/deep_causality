@@ -166,6 +166,7 @@ make example
 * `deep_causality_algorithms`: Provides algorithms for the DeepCausality library.
 * `deep_causality_data_structures`: Provides data structures for the DeepCausality library.
 * `deep_causality_discovery`: A custom DSL for causal discovery.
+* `deep_causality_haft`: Higher-Order Abstract Functional Traits a.k.a HKT. 
 * `deep_causality_macros`: Provides macros for the DeepCausality library (_deprecated_).
 * `deep_causality_num`: Numerical traits and utils used across the other crates.
 * `deep_causality_rand`: Random number generator and statistical distributions used in deep_causality_tensor and other

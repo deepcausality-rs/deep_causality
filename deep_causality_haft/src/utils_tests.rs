@@ -1,7 +1,9 @@
-/*
- * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
- */
+//! This module provides utility types and implementations primarily used for testing
+//! and demonstrating the type-encoded effect system within `deep_causality_haft`.
+//!
+//! These types serve as concrete examples of how to implement the `EffectN` and
+//! `MonadEffectN` traits for various arities, showcasing error propagation, warning
+//! accumulation, and other side-effect handling.
 
 use crate::{
     Applicative, Effect3, Effect4, Effect5, Functor, Monad, MonadEffect3, MonadEffect4,
@@ -11,6 +13,10 @@ use crate::{HKT, HKT3, HKT4, HKT5, Placeholder};
 
 // --- MonadEffect3 Setup ---
 
+/// A custom effect type for arity 3, used in tests and examples.
+///
+/// This struct demonstrates how to combine a primary `value`, an optional `error`,
+/// and a list of `warnings` within a single effectful context.
 #[derive(Debug, PartialEq)]
 pub struct MyCustomEffectType<T, E, W> {
     pub value: T,
@@ -18,6 +24,10 @@ pub struct MyCustomEffectType<T, E, W> {
     pub warnings: Vec<W>,
 }
 
+/// HKT witness for `MyCustomEffectType` with two fixed parameters (Error `E` and Warning `W`).
+///
+/// This witness allows `MyCustomEffectType` to be used with `HKT` and `HKT3` traits,
+/// enabling its integration into the functional programming abstractions.
 pub struct MyEffectHktWitness<E, W>(Placeholder, E, W);
 
 impl<E, W> HKT for MyEffectHktWitness<E, W> {
@@ -28,6 +38,11 @@ impl<E, W> HKT3<E, W> for MyEffectHktWitness<E, W> {
     type Type<T> = MyCustomEffectType<T, E, W>;
 }
 
+/// A concrete implementation of `Effect3` for testing purposes.
+///
+/// This struct defines the fixed types for `Fixed1` (Error as `String`)
+/// and `Fixed2` (Warning as `String`), and specifies `MyEffectHktWitness`
+/// as its HKT witness.
 pub struct MyEffect;
 
 impl Effect3 for MyEffect {
@@ -117,6 +132,10 @@ impl Monad<MyEffectHktWitness<String, String>> for MyEffectHktWitness<String, St
     }
 }
 
+/// A concrete implementation of `MonadEffect3` for testing purposes.
+///
+/// This struct provides the `pure` and `bind` operations for `MyEffect`,
+/// demonstrating how monadic operations work with the arity 3 effect system.
 pub struct MyMonadEffect3;
 
 impl MonadEffect3<MyEffect> for MyMonadEffect3 {
@@ -151,10 +170,24 @@ impl MonadEffect3<MyEffect> for MyMonadEffect3 {
     }
 }
 
+/// A trait for adding log functionality to an arity 3 effect system.
+///
+/// This trait extends `MonadEffect3` by providing a `log` method,
+/// allowing for the accumulation of log messages (warnings) within the effect.
 pub trait LoggableEffect3<E: Effect3>: MonadEffect3<E>
 where
     E::HktWitness: Functor<E::HktWitness> + Sized,
 {
+    /// Adds a log message to the effect's warnings.
+    ///
+    /// # Arguments
+    ///
+    /// *   `effect`: The effect to add the log message to.
+    /// *   `log`: The log message to add.
+    ///
+    /// # Returns
+    ///
+    /// The modified effect with the log message appended.
     fn log<T>(
         effect: <E::HktWitness as HKT3<E::Fixed1, E::Fixed2>>::Type<T>,
         log: E::Fixed2,
@@ -179,6 +212,11 @@ impl LoggableEffect3<MyEffect> for MyMonadEffect3 {
 
 // --- MonadEffect4 Setup ---
 
+/// A custom effect type for arity 4, used in tests and examples.
+///
+/// This struct extends `MyCustomEffectType` by adding a third fixed field `f3`,
+/// demonstrating how to combine a primary `value`, an optional `f1` (error),
+/// a list of `f2` (logs), and a list of `f3` (counters) within a single effectful context.
 #[derive(Debug, PartialEq)]
 pub struct MyCustomEffectType4<T, F1, F2, F3> {
     pub value: T,
@@ -187,6 +225,9 @@ pub struct MyCustomEffectType4<T, F1, F2, F3> {
     pub f3: Vec<F3>,
 }
 
+/// HKT witness for `MyCustomEffectType4` with three fixed parameters (`F1`, `F2`, `F3`).
+///
+/// This witness allows `MyCustomEffectType4` to be used with `HKT` and `HKT4` traits.
 pub struct MyEffectHktWitness4<F1, F2, F3>(Placeholder, F1, F2, F3);
 
 impl<F1, F2, F3> HKT for MyEffectHktWitness4<F1, F2, F3> {
@@ -197,6 +238,11 @@ impl<F1, F2, F3> HKT4<F1, F2, F3> for MyEffectHktWitness4<F1, F2, F3> {
     type Type<T> = MyCustomEffectType4<T, F1, F2, F3>;
 }
 
+/// A concrete implementation of `Effect4` for testing purposes.
+///
+/// This struct defines the fixed types for `Fixed1` (Error as `String`),
+/// `Fixed2` (Log as `String`), and `Fixed3` (Counter as `u64`), and specifies
+/// `MyEffectHktWitness4` as its HKT witness.
 pub struct MyEffect4;
 
 impl Effect4 for MyEffect4 {
@@ -305,6 +351,10 @@ impl Monad<MyEffectHktWitness4<String, String, u64>> for MyEffectHktWitness4<Str
     }
 }
 
+/// A concrete implementation of `MonadEffect4` for testing purposes.
+///
+/// This struct provides the `pure` and `bind` operations for `MyEffect4`,
+/// demonstrating how monadic operations work with the arity 4 effect system.
 pub struct MyMonadEffect4;
 
 impl MonadEffect4<MyEffect4> for MyMonadEffect4 {
@@ -343,10 +393,24 @@ impl MonadEffect4<MyEffect4> for MyMonadEffect4 {
     }
 }
 
+/// A trait for adding log functionality to an arity 4 effect system.
+///
+/// This trait extends `MonadEffect4` by providing a `log` method,
+/// allowing for the accumulation of log messages (counters) within the effect.
 pub trait LoggableEffect4<E: Effect4>: MonadEffect4<E>
 where
     E::HktWitness: Functor<E::HktWitness> + Sized,
 {
+    /// Adds a log message (counter) to the effect's `f3` field.
+    ///
+    /// # Arguments
+    ///
+    /// *   `effect`: The effect to add the log message to.
+    /// *   `log`: The log message (counter value) to add.
+    ///
+    /// # Returns
+    ///
+    /// The modified effect with the log message appended.
     fn log<T>(
         effect: <E::HktWitness as HKT4<E::Fixed1, E::Fixed2, E::Fixed3>>::Type<T>,
         log: E::Fixed3,
@@ -373,6 +437,12 @@ impl LoggableEffect4<MyEffect4> for MyMonadEffect4 {
 
 // --- MonadEffect5 Setup ---
 
+/// A custom effect type for arity 5, used in tests and examples.
+///
+/// This struct extends `MyCustomEffectType4` by adding a fourth fixed field `f4`,
+/// demonstrating how to combine a primary `value`, an optional `f1` (error),
+/// a list of `f2` (logs), a list of `f3` (counters), and a list of `f4` (traces)
+/// within a single effectful context.
 #[derive(Debug, PartialEq)]
 pub struct MyCustomEffectType5<T, F1, F2, F3, F4> {
     pub value: T,
@@ -382,6 +452,9 @@ pub struct MyCustomEffectType5<T, F1, F2, F3, F4> {
     pub f4: Vec<F4>,
 }
 
+/// HKT witness for `MyCustomEffectType5` with four fixed parameters (`F1`, `F2`, `F3`, `F4`).
+///
+/// This witness allows `MyCustomEffectType5` to be used with `HKT` and `HKT5` traits.
 pub struct MyEffectHktWitness5<F1, F2, F3, F4>(Placeholder, F1, F2, F3, F4);
 
 impl<F1, F2, F3, F4> HKT for MyEffectHktWitness5<F1, F2, F3, F4> {
@@ -392,6 +465,11 @@ impl<F1, F2, F3, F4> HKT5<F1, F2, F3, F4> for MyEffectHktWitness5<F1, F2, F3, F4
     type Type<T> = MyCustomEffectType5<T, F1, F2, F3, F4>;
 }
 
+/// A concrete implementation of `Effect5` for testing purposes.
+///
+/// This struct defines the fixed types for `Fixed1` (Error as `String`),
+/// `Fixed2` (Log as `String`), `Fixed3` (Counter as `u64`), and `Fixed4` (Trace as `String`),
+/// and specifies `MyEffectHktWitness5` as its HKT witness.
 pub struct MyEffect5;
 
 impl Effect5 for MyEffect5 {
@@ -517,6 +595,10 @@ impl Monad<MyEffectHktWitness5<String, String, u64, String>>
     }
 }
 
+/// A concrete implementation of `MonadEffect5` for testing purposes.
+///
+/// This struct provides the `pure` and `bind` operations for `MyEffect5`,
+/// demonstrating how monadic operations work with the arity 5 effect system.
 pub struct MyMonadEffect5;
 
 impl MonadEffect5<MyEffect5> for MyMonadEffect5 {
@@ -559,10 +641,24 @@ impl MonadEffect5<MyEffect5> for MyMonadEffect5 {
     }
 }
 
+/// A trait for adding log functionality to an arity 5 effect system.
+///
+/// This trait extends `MonadEffect5` by providing a `log` method,
+/// allowing for the accumulation of trace messages within the effect.
 pub trait LoggableEffect5<E: Effect5>: MonadEffect5<E>
 where
     E::HktWitness: Functor<E::HktWitness> + Sized,
 {
+    /// Adds a log message (trace) to the effect's `f4` field.
+    ///
+    /// # Arguments
+    ///
+    /// *   `effect`: The effect to add the log message to.
+    /// *   `log`: The log message (trace string) to add.
+    ///
+    /// # Returns
+    ///
+    /// The modified effect with the log message appended.
     #[allow(clippy::type_complexity)]
     fn log<T>(
         effect: <E::HktWitness as HKT5<E::Fixed1, E::Fixed2, E::Fixed3, E::Fixed4>>::Type<T>,
