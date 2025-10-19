@@ -12,3 +12,5 @@ mod hkt_tests;
 mod monad_effect_tests;
 #[cfg(test)]
 mod monad_tests;
+#[cfg(test)]
+mod utils_tests;
