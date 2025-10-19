@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Functor, Monad, OptionWitness, ResultWitness};
+use deep_causality_haft::{Applicative, Functor, Monad, OptionWitness, ResultWitness};
 
 fn main() {
     println!("--- Option Example ---");

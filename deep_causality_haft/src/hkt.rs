@@ -3,6 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+// ----------------------------------------------------
+// Higher Kinded Types (HKT) Traits for Arity 1 - 5
+// ----------------------------------------------------
+
 /// A zero-sized type used purely as a marker/placeholder when implementing
 /// the HKT traits for concrete types.
 ///
@@ -63,23 +67,27 @@ pub trait HKT3<F1, F2> {
 }
 
 // ----------------------------------------------------
-// Manual HKT Implementations
+// HKT Trait for Arity 4: Kind *, *, *, * -> *
 // ----------------------------------------------------
 
-// Witness for Option
-pub struct OptionWitness;
-
-impl HKT for OptionWitness {
-    type Type<T> = Option<T>;
+/// Trait for an HKT with four type parameters.
+///
+/// It is generic over the first three type parameters to be "fixed" (`F1`, `F2`, `F3`).
+pub trait HKT4<F1, F2, F3> {
+    /// The GAT that represents the remaining type constructor.
+    /// The resulting kind is * -> * (one hole <T> remaining).
+    type Type<T>;
 }
 
-// Witness for Result<T, E> where E is fixed
-pub struct ResultWitness<E>(Placeholder, E);
+// ----------------------------------------------------
+// HKT Trait for Arity 5: Kind *, *, *, *, * -> *
+// ----------------------------------------------------
 
-impl<E> HKT2<E> for ResultWitness<E> {
-    type Type<T> = Result<T, E>;
-}
-
-impl<E> HKT for ResultWitness<E> {
-    type Type<T> = Result<T, E>;
+/// Trait for an HKT with five type parameters.
+///
+/// It is generic over the first four type parameters to be "fixed" (`F1`, `F2`, `F3`, `F4`).
+pub trait HKT5<F1, F2, F3, F4> {
+    /// The GAT that represents the remaining type constructor.
+    /// The resulting kind is * -> * (one hole <T> remaining).
+    type Type<T>;
 }

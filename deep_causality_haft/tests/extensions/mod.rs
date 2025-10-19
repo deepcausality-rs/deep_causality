@@ -2,15 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
-mod extensions;
 #[cfg(test)]
-mod foldable_tests;
+mod hkt_option_ext_tests;
 #[cfg(test)]
-mod hkt_tests;
+mod hkt_result_ext_tests;
 #[cfg(test)]
-mod monad_effect_tests;
-#[cfg(test)]
-mod monad_tests;
-#[cfg(test)]
-mod utils_tests;
+mod hkt_vec_ext_tests;
