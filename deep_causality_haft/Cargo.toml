@@ -24,6 +24,11 @@ path = "examples/simple_haft.rs"
 
 
 [[example]]
+name = "haft_functor_example"
+path = "examples/functor_haft.rs"
+
+
+[[example]]
 name = "haft_effect_system_example"
 path = "examples/effect_system_example.rs"
 

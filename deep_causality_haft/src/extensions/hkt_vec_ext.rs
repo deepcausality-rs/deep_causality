@@ -13,33 +13,6 @@ use crate::{Applicative, Foldable, Functor, HKT, Monad};
 /// on any type that has the "shape" of `Vec`, without knowing the inner type `T`.
 pub struct VecWitness;
 
-impl HKT for VecWitness {
-    /// Specifies that `VecWitness` represents the `Vec<T>` type constructor.
-    type Type<T> = Vec<T>;
-}
-
-// Implementation of Functor for VecWitness
-impl Functor<VecWitness> for VecWitness {
-    /// Implements the `fmap` operation for `Vec<T>`.
-    ///
-    /// Applies the function `f` to each element in the vector, producing a new vector.
-    ///
-    /// # Arguments
-    ///
-    /// *   `m_a`: The `Vec` to map over.
-    /// *   `f`: The function to apply to each element.
-    ///
-    /// # Returns
-    ///
-    /// A new `Vec` with the function applied to each of its elements.
-    fn fmap<A, B, Func>(m_a: <VecWitness as HKT>::Type<A>, f: Func) -> <VecWitness as HKT>::Type<B>
-    where
-        Func: FnMut(A) -> B,
-    {
-        m_a.into_iter().map(f).collect()
-    }
-}
-
 // Implementation of Applicative for VecWitness
 impl Applicative<VecWitness> for VecWitness {
     /// Lifts a pure value into a `Vec` containing only that value.
@@ -86,6 +59,28 @@ impl Applicative<VecWitness> for VecWitness {
     }
 }
 
+// Implementation of Functor for VecWitness
+impl Functor<VecWitness> for VecWitness {
+    /// Implements the `fmap` operation for `Vec<T>`.
+    ///
+    /// Applies the function `f` to each element in the vector, producing a new vector.
+    ///
+    /// # Arguments
+    ///
+    /// *   `m_a`: The `Vec` to map over.
+    /// *   `f`: The function to apply to each element.
+    ///
+    /// # Returns
+    ///
+    /// A new `Vec` with the function applied to each of its elements.
+    fn fmap<A, B, Func>(m_a: <VecWitness as HKT>::Type<A>, f: Func) -> <VecWitness as HKT>::Type<B>
+    where
+        Func: FnMut(A) -> B,
+    {
+        m_a.into_iter().map(f).collect()
+    }
+}
+
 // Implementation of Foldable for VecWitness
 impl Foldable<VecWitness> for VecWitness {
     /// Folds (reduces) a `Vec` into a single value.
@@ -109,6 +104,11 @@ impl Foldable<VecWitness> for VecWitness {
     {
         fa.into_iter().fold(init, f)
     }
+}
+
+impl HKT for VecWitness {
+    /// Specifies that `VecWitness` represents the `Vec<T>` type constructor.
+    type Type<T> = Vec<T>;
 }
 
 // Implementation of Monad for VecWitness

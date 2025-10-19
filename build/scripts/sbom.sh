@@ -12,6 +12,7 @@ CRATES=(
     "deep_causality_algorithms"
     "deep_causality_data_structures"
     "deep_causality_discovery"
+    "deep_causality_haft"
     "deep_causality_macros"
     "deep_causality_num"
     "deep_causality_rand"

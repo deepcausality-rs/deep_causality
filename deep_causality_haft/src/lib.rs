@@ -57,6 +57,14 @@ pub use crate::effect::Effect3;
 pub use crate::effect::Effect4;
 /// Re-exports the `Effect5` trait for arity-5 type-encoded effect systems.
 pub use crate::effect::Effect5;
+/// Re-exports `BTreeMapWitness`, the HKT witness for `BTreeMap<K, V>`.
+pub use crate::extensions::func_fold_b_tree_map_ext::BTreeMapWitness;
+/// Re-exports `HashMapWitness`, the HKT witness for `HashMap<K, V>`.
+pub use crate::extensions::func_fold_hash_map_ext::HashMapWitness;
+/// Re-exports `VecDequeWitness`, the HKT witness for `VecDeque<T>`.
+pub use crate::extensions::func_fold_vec_deque_ext::VecDequeWitness;
+/// Re-exports `BoxWitness`, the HKT witness for `Box<T>`.
+pub use crate::extensions::hkt_box_ext::BoxWitness;
 /// Re-exports `OptionWitness`, the HKT witness for `Option<T>`.
 pub use crate::extensions::hkt_option_ext::OptionWitness;
 /// Re-exports `ResultWitness`, the HKT witness for `Result<T, E>`.
