@@ -17,3 +17,13 @@ exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE
 
 [dependencies]
 
+
+[[example]]
+name = "haft_simple_example"
+path = "examples/simple_haft.rs"
+
+
+[[example]]
+name = "haft_effect_system_example"
+path = "examples/effect_system_example.rs"
+
