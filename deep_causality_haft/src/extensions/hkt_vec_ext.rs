@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Applicative, Functor, HKT, Monad};
+use crate::{Applicative, Foldable, Functor, HKT, Monad};
 
 // Witness for Vec<T>
 pub struct VecWitness;
@@ -43,6 +43,17 @@ impl Applicative<VecWitness> for VecWitness {
                     .collect::<Vec<B>>()
             }) // Clone a_val for FnMut
             .collect()
+    }
+}
+
+// Implementation of Foldable for VecWitness
+impl Foldable<VecWitness> for VecWitness {
+    fn fold<A, B, Func>(fa: <VecWitness as HKT>::Type<A>, init: B, f: Func) -> B
+    where
+        <VecWitness as HKT>::Type<A>: IntoIterator<Item = A>,
+        Func: FnMut(B, A) -> B,
+    {
+        fa.into_iter().fold(init, f)
     }
 }
 

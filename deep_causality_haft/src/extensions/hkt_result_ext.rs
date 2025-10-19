@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Applicative, Functor, HKT, HKT2, Monad, Placeholder};
+use crate::{Applicative, Foldable, Functor, HKT, HKT2, Monad, Placeholder};
 
 // Witness for Result<T, E> where E is fixed
 pub struct ResultWitness<E>(Placeholder, E);
@@ -53,6 +53,22 @@ where
                 Err(e) => Err(e),
             },
             Err(e) => Err(e),
+        }
+    }
+}
+
+// Implementation of Foldable for ResultWitness
+impl<E> Foldable<ResultWitness<E>> for ResultWitness<E>
+where
+    E: 'static,
+{
+    fn fold<A, B, Func>(fa: Result<A, E>, init: B, mut f: Func) -> B
+    where
+        Func: FnMut(B, A) -> B,
+    {
+        match fa {
+            Ok(a) => f(init, a),
+            Err(_) => init,
         }
     }
 }

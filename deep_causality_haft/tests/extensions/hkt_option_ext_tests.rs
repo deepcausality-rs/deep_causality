@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Applicative, Functor, HKT, Monad, OptionWitness};
+use deep_causality_haft::{Applicative, Foldable, Functor, HKT, Monad, OptionWitness};
 
 // --- Applicative Tests ---
 
@@ -35,6 +35,32 @@ fn test_applicative_option_apply_none_val() {
     let val: Option<i32> = None;
     let result = OptionWitness::apply(f_add_one, val);
     assert_eq!(result, None);
+}
+
+// --- Foldable Tests ---
+
+#[test]
+fn test_foldable_option_some() {
+    let opt = Some(5);
+    let result = OptionWitness::fold(opt, 0, |acc, x| acc + x);
+    assert_eq!(result, 5);
+}
+
+#[test]
+fn test_foldable_option_none() {
+    let opt: Option<i32> = None;
+    let result = OptionWitness::fold(opt, 0, |acc, x| acc + x);
+    assert_eq!(result, 0);
+}
+
+#[test]
+fn test_foldable_option_string_concat() {
+    let opt = Some("hello".to_string());
+    let result = OptionWitness::fold(opt, String::new(), |mut acc, x| {
+        acc.push_str(&x);
+        acc
+    });
+    assert_eq!(result, "hello");
 }
 
 // --- HKT Tests ---

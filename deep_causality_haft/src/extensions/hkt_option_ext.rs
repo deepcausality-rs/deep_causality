@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Applicative, Functor, HKT, Monad};
+use crate::{Applicative, Foldable, Functor, HKT, Monad};
 
 // Witness for Option
 pub struct OptionWitness;
@@ -39,6 +39,19 @@ impl Applicative<OptionWitness> for OptionWitness {
         Func: FnMut(A) -> B,
     {
         f_ab.and_then(|f| f_a.map(f))
+    }
+}
+
+// Implementation of Foldable for OptionWitness
+impl Foldable<OptionWitness> for OptionWitness {
+    fn fold<A, B, Func>(fa: Option<A>, init: B, mut f: Func) -> B
+    where
+        Func: FnMut(B, A) -> B,
+    {
+        match fa {
+            Some(a) => f(init, a),
+            None => init,
+        }
     }
 }
 

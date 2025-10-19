@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_haft::{Applicative, Functor, HKT, HKT2, Monad, ResultWitness};
+use deep_causality_haft::{Applicative, Foldable, Functor, HKT, HKT2, Monad, ResultWitness};
 
 // --- Applicative Tests ---
 
@@ -34,6 +34,32 @@ fn test_applicative_result_apply_err_val() {
     let val: Result<i32, String> = Err("Value Error".to_string());
     let result = ResultWitness::apply(f_add_one, val);
     assert_eq!(result, Err("Value Error".to_string()));
+}
+
+// --- Foldable Tests ---
+
+#[test]
+fn test_foldable_result_ok() {
+    let res: Result<i32, String> = Ok(5);
+    let result = ResultWitness::fold(res, 0, |acc, x| acc + x);
+    assert_eq!(result, 5);
+}
+
+#[test]
+fn test_foldable_result_err() {
+    let res: Result<i32, String> = Err("error".to_string());
+    let result = ResultWitness::fold(res, 0, |acc, x| acc + x);
+    assert_eq!(result, 0);
+}
+
+#[test]
+fn test_foldable_result_string_concat() {
+    let res: Result<String, String> = Ok("world".to_string());
+    let result = ResultWitness::fold(res, String::new(), |mut acc, x| {
+        acc.push_str(&x);
+        acc
+    });
+    assert_eq!(result, "world");
 }
 
 // --- HKT Tests ---

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Applicative, Functor, HKT, Monad, VecWitness};
+use deep_causality_haft::{Applicative, Foldable, Functor, HKT, Monad, VecWitness};
 
 // --- Applicative Tests ---
 
@@ -36,6 +36,32 @@ fn test_applicative_vec_apply_empty_val() {
     let vals: Vec<i32> = Vec::new();
     let result = VecWitness::apply(f_funcs, vals);
     assert_eq!(result, Vec::<i32>::new());
+}
+
+// --- Foldable Tests ---
+
+#[test]
+fn test_foldable_vec_non_empty() {
+    let vec = vec![1, 2, 3];
+    let result = VecWitness::fold(vec, 0, |acc, x| acc + x);
+    assert_eq!(result, 6);
+}
+
+#[test]
+fn test_foldable_vec_empty() {
+    let vec: Vec<i32> = Vec::new();
+    let result = VecWitness::fold(vec, 0, |acc, x| acc + x);
+    assert_eq!(result, 0);
+}
+
+#[test]
+fn test_foldable_vec_string_concat() {
+    let vec = vec!["hello".to_string(), " ".to_string(), "world".to_string()];
+    let result = VecWitness::fold(vec, String::new(), |mut acc, x| {
+        acc.push_str(&x);
+        acc
+    });
+    assert_eq!(result, "hello world");
 }
 
 // --- HKT Tests ---

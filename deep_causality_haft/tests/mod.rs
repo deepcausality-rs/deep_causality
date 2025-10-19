@@ -4,7 +4,8 @@
  */
 
 mod extensions;
-
+#[cfg(test)]
+mod foldable_tests;
 #[cfg(test)]
 mod hkt_tests;
 #[cfg(test)]
