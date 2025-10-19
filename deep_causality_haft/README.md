@@ -22,13 +22,14 @@ This crate provides the fundamental traits (`HKT`, `HKT2`, `HKT3`, `HKT4`, `HKT5
 ## Usage
 
 This crate uses a "witness" pattern to represent HKTs. For each type constructor (like `Option`), we define a
-zero-sized "witness" type (like `OptionWitness`) that implements the `HKT` trait. These witness types are zero-sized 
-and incur no runtime overhead, making them zero-cost abstractions. This crates also comes with default 
+zero-sized "witness" type (like `OptionWitness`) that implements the `HKT` trait. These witness types are zero-sized
+and incur no runtime overhead, making them zero-cost abstractions. This crates also comes with default
 witness pattern implementations for commonly used Rust types such as:
 
 * Option -> OptionWitness
 * Result -> ResultWitness
-* Vec<T> -> VecWitness
+* Box -> BoxWitness
+* Vec -> VecWitness
 
 Each of those withness types implements the following traits and methods:
 
@@ -36,6 +37,95 @@ Each of those withness types implements the following traits and methods:
 * Functor: `fmap<A, B, Func>(m_a: HKT, f: Func)`
 * Foldable: `fold<A, B, Func>(fa: HKT, init: B, f: Func)`
 * Monad: `bind<A, B, Func>(m_a:HKT, f: Func)`
+
+Witness types that only implement Functor and Fold:
+* BTreeMap -> BTreeMapWitness
+* HashMap -> HashMapWitness
+* VecDeque -> VecDequeWitness
+
+### Example: Using `Functor` and `HKT` in a generic function
+
+```rust
+use deep_causality_haft::*;
+
+fn double_value<F>(m_a: F::Type<i32>) -> F::Type<i32>
+where
+    F: Functor<F> + HKT 
+    {
+    F::fmap(m_a, |x| x * 2)
+}
+
+fn main() {
+    // Using double_value with Option
+    let opt = Some(5);
+    println!("Original Option: {:?}", opt);
+    let doubled_opt = double_value::<OptionWitness>(opt);
+    println!("Doubled Option: {:?}", doubled_opt);
+
+    // Using double_value with Result
+    let res = Ok(5);
+    println!("Original Result: {:?}", res);
+    let doubled_res = double_value::<ResultWitness<i32>>(res);
+    println!("Doubled Result: {:?}", doubled_res);
+
+    // Using double_value with Box
+    let b = Box::new(7);
+    println!("Original Box: {:?}", b);
+    let doubled_box = double_value::<BoxWitness>(b);
+    println!("Doubled Box: {:?}", doubled_box);
+
+    // Using double_value with Vec
+    let vec = vec![1, 2, 3];
+    println!("Original Vec: {:?}", vec);
+    let doubled_vec = double_value::<VecWitness>(vec);
+    println!("Doubled Vec: {:?}", doubled_vec);
+    
+    // Using double_value with VecDeque
+    let vec_dec = VecDeque::<i32>::from(vec![2, 4, 6]);
+    println!("Original VecDec: {:?}", vec_dec);
+    let doubled_vec_dec = double_value::<VecDequeWitness>(vec_dec);
+    println!("Doubled VecDec: {:?}", doubled_vec_dec);
+    assert_eq!(doubled_vec_dec, vec![4, 8, 12]);
+}
+```
+
+When you run [the example ](/deep_causality_haft/examples/functor_haft.rs)via:
+
+`cargo run  --example haft_functor_example`
+
+You will see:
+
+```text 
+Original Option: Some(5)
+Doubled Option: Some(10)
+Original Result: Ok(5)
+Doubled Result: Ok(10)
+Original Box: 7
+Doubled Box: 14
+Original Vec: [1, 2, 3]
+Doubled Vec: [2, 4, 6]
+Original VecDec: [2, 4, 6]
+Doubled VecDec: [4, 8, 12]
+```
+
+When combined with the deep_causality_num crate, you can abstract even further:
+
+```rust
+use deep_causality_haft::{Functor, HKT};
+use deep_causality_num::{Float, One}; 
+   
+fn double_float<F, T>(m_a: F::Type<T>) -> F::Type<T>
+   where
+     F: Functor<F> + HKT,
+     T: Float + One, // T must be a float and support multiplication
+     {
+     F::fmap(m_a, |x| x * (T::one() + T::one())) // Robust way to multiply by 2.0 for any Float
+}
+```
+
+This level of abstraction helps in domains like numerical computing where you often deal with various
+data structures holding different numeric types. It allows for highly expressive and maintainable code that preserves
+high performance characteristics.
 
 ### Example: Using `Functor` with `Option`
 
@@ -81,7 +171,8 @@ fn main() {
 ```
 
 ### Example: Using `Foldable` with `Vec`
-I 
+
+I
 Here's how you can use the `Foldable` trait with `Vec` via its witness type, `VecWitness`.
 
 ```rust
@@ -189,7 +280,7 @@ Sequenced outcome: 75
 The `Effect3`, `Effect4`, `Effect5` and `MonadEffect3`, `MonadEffect4`, `MonadEffect5` traits provide a powerful
 mechanism for building a **type-encoded effect system**. This allows you to manage side-effects (like errors and
 logging) in a structured, safe, and composable way, which is particularly useful for building complex data processing
-pipelines. It leverages Rust's powerful type system to ensure that these effects are explicitly handled 
+pipelines. It leverages Rust's powerful type system to ensure that these effects are explicitly handled
 and tracked throughout your program.
 
 Here's a breakdown of how it works:
