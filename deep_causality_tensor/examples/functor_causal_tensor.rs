@@ -19,20 +19,20 @@ fn main() {
     let opt = Some(5);
     println!("Original Option: {:?}", opt);
     let proc_opt = triple_value::<OptionWitness>(opt);
-    println!("Doubled Option: {:?}", proc_opt);
+    println!("Tripled Option: {:?}", proc_opt);
     assert_eq!(proc_opt, Some(15));
 
     // Using triple_value with Result
     let res = Ok(5);
     println!("Original Result: {:?}", res);
     let proc_res = triple_value::<ResultWitness<i32>>(res);
-    println!("Doubled Result: {:?}", proc_res);
+    println!("Tripled Result: {:?}", proc_res);
     assert_eq!(proc_res, Ok(15));
 
     // Using triple_value with CausalTensor
     let tensor = CausalTensor::new(vec![1, 2, 3], vec![3]).unwrap();
     println!("Original CausalTensor: {:?}", tensor);
     let proc_tensor = triple_value::<CausalTensorWitness>(tensor);
-    println!("Doubled CausalTensor: {:?}", proc_tensor);
+    println!("Tripled CausalTensor: {:?}", proc_tensor);
     assert_eq!(proc_tensor.data(), &[3, 6, 9]);
 }
