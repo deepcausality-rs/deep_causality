@@ -12,6 +12,7 @@ pub(crate) mod func_fold_b_tree_map_ext;
 pub(crate) mod func_fold_hash_map_ext;
 pub(crate) mod func_fold_vec_deque_ext;
 pub(crate) mod hkt_box_ext;
+pub(crate) mod hkt_linked_list_ext;
 pub(crate) mod hkt_option_ext;
 pub(crate) mod hkt_result_ext;
 pub(crate) mod hkt_vec_ext;
