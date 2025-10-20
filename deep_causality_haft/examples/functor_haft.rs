@@ -3,9 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality_haft::{
-    BoxWitness, Functor, HKT, OptionWitness, ResultWitness, VecDequeWitness, VecWitness,
+    BTreeMapWitness, BoxWitness, Functor, HKT, HashMapWitness, LinkedListWitness, OptionWitness,
+    ResultWitness, VecDequeWitness, VecWitness,
 };
-use std::collections::VecDeque;
+use std::collections::{BTreeMap, HashMap, LinkedList, VecDeque};
 
 // A generic function that doubles the value inside *any* Functor
 fn double_value<F>(m_a: F::Type<i32>) -> F::Type<i32>
@@ -39,6 +40,12 @@ fn main() {
     println!("Doubled Box: {:?}", doubled_box);
     assert_eq!(doubled_box, Box::new(14));
 
+    // Using double_value with LinkedList
+    let list = LinkedList::<i32>::from([1, 2, 3]);
+    println!("Original List: {:?}", list);
+    let double_list = double_value::<LinkedListWitness>(list);
+    println!("Doubled List: {:?}", double_list);
+
     // Using double_value with Vec
     let vec = vec![1, 2, 3];
     println!("Original Vec: {:?}", vec);
@@ -52,6 +59,24 @@ fn main() {
     let doubled_vec_dec = double_value::<VecDequeWitness>(vec_dec);
     println!("Doubled VecDec: {:?}", doubled_vec_dec);
     assert_eq!(doubled_vec_dec, vec![4, 8, 12]);
+
+    // Using double_value with HashMap
+    let mut map = HashMap::new();
+    map.insert(1, 2);
+    map.insert(2, 3);
+    map.insert(3, 4);
+    println!("Original HashMap: {:?}", map);
+    let double_map = double_value::<HashMapWitness<i32>>(map);
+    println!("Doubled HashMap: {:?}", double_map);
+
+    // Using double_value with BTreeMap
+    let mut b_tree_map = BTreeMap::new();
+    b_tree_map.insert(1, 6);
+    b_tree_map.insert(2, 8);
+    b_tree_map.insert(3, 10);
+    println!("Original BTreeMap: {:?}", b_tree_map);
+    let double_map_b_tree = double_value::<BTreeMapWitness<i32>>(b_tree_map);
+    println!("Doubled BTreeMap: {:?}", double_map_b_tree);
 
     println!("\nExample finished successfully!");
 }

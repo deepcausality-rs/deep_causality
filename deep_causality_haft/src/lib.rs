@@ -65,6 +65,8 @@ pub use crate::extensions::func_fold_hash_map_ext::HashMapWitness;
 pub use crate::extensions::func_fold_vec_deque_ext::VecDequeWitness;
 /// Re-exports `BoxWitness`, the HKT witness for `Box<T>`.
 pub use crate::extensions::hkt_box_ext::BoxWitness;
+/// Re-exports `LinkedListWitness`, the HKT witness for `LinkedList<T>`.
+pub use crate::extensions::hkt_linked_list_ext::LinkedListWitness;
 /// Re-exports `OptionWitness`, the HKT witness for `Option<T>`.
 pub use crate::extensions::hkt_option_ext::OptionWitness;
 /// Re-exports `ResultWitness`, the HKT witness for `Result<T, E>`.

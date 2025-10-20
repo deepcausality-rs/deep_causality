@@ -319,3 +319,21 @@ Here's a breakdown of how it works:
    function is declared to produce a certain type of effect, the compiler ensures that the effect is either explicitly
    handled or propagated. This prevents common bugs related to unhandled errors or forgotten logging, leading to more
    robust and predictable code.
+
+
+## 👨‍💻👩‍💻 Contribution
+
+Contributions are welcomed especially related to documentation, example code, and fixes.
+If unsure where to start, just open an issue and ask.
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in deep_causality by you,
+shall be licensed under the MIT licence, without any additional terms or conditions.
+
+## 📜 Licence
+
+This project is licensed under the [MIT license](LICENSE).
+
+## 👮️ Security
+
+For details about security, please read
+the [security policy](https://github.com/deepcausality-rs/deep_causality/blob/main/SECURITY.md).

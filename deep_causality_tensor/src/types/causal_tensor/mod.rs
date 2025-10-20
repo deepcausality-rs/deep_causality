@@ -41,7 +41,7 @@ pub(crate) mod utils;
 ///     values into a new `Vec<T>`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct CausalTensor<T> {
-    data: Vec<T>,
+    pub(crate) data: Vec<T>,
     shape: Vec<usize>,
     strides: Vec<usize>,
 }

@@ -14,8 +14,8 @@ tasks.
 
 * [Design & Details](../deep_causality_tensor/README.md)
 * [Benchmark](benches/benchmarks/causal_tensor_type)
-* [Examples](examples/causal_tensor_type)
-* [Test](tests/causal_tensor_type)
+* [Examples](../deep_causality_tensor/examples)
+* [Test](../deep_causality_tensor/tests)
 
 ## Usage
 
@@ -61,6 +61,67 @@ fn main() {
     println!("Sum of all elements: {}", sum);
 }
 ```
+
+## Functional Composition 
+
+Causal Tensor implements a Higher Kinded Type via the `deep_causality_haft` crate as Witness Type. When imported, the CausalTensorWitness type allows monadic composition and abstract type programming. For example, one can write generic functions that uniformly process tensors and other types:
+
+```rust
+use deep_causality_haft::{Functor, HKT, OptionWitness, ResultWitness};
+use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
+
+fn triple_value<F>(m_a: F::Type<i32>) -> F::Type<i32>
+where
+    F: Functor<F> + HKT,
+{
+    F::fmap(m_a, |x| x * 3)
+}
+
+fn main() {
+    println!("--- Functor Example: Tripling values in different containers ---");
+
+    // Using triple_value with Option
+    let opt = Some(5);
+    println!("Original Option: {:?}", opt);
+    let proc_opt = triple_value::<OptionWitness>(opt);
+    println!("Doubled Option: {:?}", proc_opt);
+    assert_eq!(proc_opt, Some(15));
+
+    // Using triple_value with Result
+    let res = Ok(5);
+    println!("Original Result: {:?}", res);
+    let proc_res = triple_value::<ResultWitness<i32>>(res);
+    println!("Doubled Result: {:?}", proc_res);
+    assert_eq!(proc_res, Ok(15));
+
+    // Using triple_value with CausalTensor
+    let tensor = CausalTensor::new(vec![1, 2, 3], vec![3]).unwrap();
+    println!("Original CausalTensor: {:?}", tensor);
+    let proc_tensor = triple_value::<CausalTensorWitness>(tensor);
+    println!("Doubled CausalTensor: {:?}", proc_tensor);
+    assert_eq!(proc_tensor.data(), &[3, 6, 9]);
+}
+```
+Functional composition of HKS tensors works best via an effect system that captures side effects and provides detailed errors and logs for each processing step. In the example below, Tensors are composed and the container MyMonadEffect3 capture the final tensor value, optional errors, and detailed logs from each processing step. 
+
+```rust
+    // ... Truncated  
+      
+    // 4. Chain Operations using Monad::bind
+    println!("Processing steps...");
+    let final_effect = MyMonadEffect3::bind(initial_effect, step1);
+    let final_effect = MyMonadEffect3::bind(final_effect, step2);
+    let final_effect = MyMonadEffect3::bind(final_effect, step3);
+
+    println!();
+    println!("--- Final Result ---");
+    println!("Final CausalTensor: {:?}", final_effect.value);
+    println!("Error: {:?}", final_effect.error);
+    println!("Logs: {:?}", final_effect.logs);
+```
+
+For complex data processing pipelines, these information are invaluable for debugging and optimization. Also, in case more detailed information are required i.e. processing time for each step, then an Effect Monad of arity 4 or 5 can be used to capture additional fields at each step.
+
 
 ## Performance
 

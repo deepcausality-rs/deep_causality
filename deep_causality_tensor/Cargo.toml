@@ -16,8 +16,25 @@ exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE
 
 
 [[example]]
+name = "applicative_causal_tensor"
+path = "examples/applicative_causal_tensor.rs"
+
+[[example]]
 name = "causal_tensor"
-path = "examples/causal_tensor_type/causal_tensor.rs"
+path = "examples/basic_causal_tensor.rs"
+
+[[example]]
+name = "effect_system_causal_tensor"
+path = "examples/effect_system_causal_tensor.rs"
+
+[[example]]
+name = "functor_causal_tensor"
+path = "examples/functor_causal_tensor.rs"
+
+
+[dependencies.deep_causality_haft]
+path = "../deep_causality_haft"
+version = "0.2"
 
 
 [dependencies.deep_causality_num]
