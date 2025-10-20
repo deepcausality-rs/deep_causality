@@ -37,6 +37,17 @@ fn test_applicative_causal_tensor_apply_scalar_func() {
     assert_eq!(result_tensor.shape(), &[3]);
 }
 
+#[test]
+fn test_applicative_causal_tensor_apply_non_scalar_func() {
+    // Create a non-scalar function tensor (e.g., a vector of functions)
+    let f_tensor = CausalTensor::new(vec![|x: i32| x * 2, |x: i32| x * 3], vec![2]).unwrap();
+    let a_tensor = CausalTensor::new(vec![1, 2, 3], vec![3]).unwrap();
+    let result_tensor = CausalTensorWitness::apply(f_tensor, a_tensor);
+    // Expect an empty tensor as per the updated implementation
+    assert!(result_tensor.is_empty());
+    assert_eq!(result_tensor.shape(), &[0]);
+}
+
 // --- Functor Tests ---
 
 #[test]

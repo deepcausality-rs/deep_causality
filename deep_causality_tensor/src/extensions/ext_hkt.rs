@@ -58,11 +58,11 @@ impl Applicative<CausalTensorWitness> for CausalTensorWitness {
             let new_data = f_a.data.into_iter().map(func).collect();
             CausalTensor::new(new_data, shape).expect("Shape should remain valid after apply")
         } else {
-            // For now, panic if f_ab is not a scalar function tensor.
+            // For now, return an empty tensor if f_ab is not a scalar function tensor.
             // A more complete implementation would involve broadcasting multiple functions to multiple values.
-            panic!(
-                "Applicative apply for CausalTensor with non-scalar function tensor is not yet implemented."
-            );
+            // Or, consider returning a Result<CausalTensor<B>, Error>.
+            CausalTensor::new(Vec::new(), vec![0])
+                .expect("Creating an empty tensor should not fail")
         }
     }
 }
@@ -135,13 +135,13 @@ impl Monad<CausalTensorWitness> for CausalTensorWitness {
     where
         Func: FnMut(A) -> CausalTensor<B>,
     {
-        let mut result_data = Vec::new();
-        for val_a in m_a.data.into_iter() {
-            let tensor_b = f(val_a);
-            result_data.extend(tensor_b.data.into_iter());
-        }
+        let result_data: Vec<B> = m_a
+            .data
+            .into_iter()
+            .flat_map(|val_a| f(val_a).data.into_iter())
+            .collect();
 
-        let result_len = result_data.len(); // Get length before moving result_data
+        let result_len = result_data.len();
         CausalTensor::new(result_data, vec![result_len])
             .expect("Concatenated tensor creation should not fail")
     }
