@@ -4,8 +4,6 @@
  */
 mod uncertain_maybe_bool;
 mod uncertain_maybe_f64;
-mod uncertain_maybe_lift;
-mod uncertain_maybe_op_arithmetic;
 
 use crate::Uncertain;
 

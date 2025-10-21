@@ -40,7 +40,7 @@ fn test_as_numerical() {
 
     let effect2 = PropagatingEffect::Deterministic(true);
     assert_eq!(effect2.as_numerical(), None);
-    
+
     let effect3 = PropagatingEffect::ContextualLink(1, 1);
     assert_eq!(effect3.as_numerical(), None);
 }

@@ -138,8 +138,6 @@ fn test_from_map() {
     }
 }
 
-
-
 #[test]
 fn test_new_graph() {
     let effect = PropagatingEffect::new_graph();
