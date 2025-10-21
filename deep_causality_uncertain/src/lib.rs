@@ -10,13 +10,17 @@ mod errors;
 mod traits;
 mod types;
 pub mod utils_tests;
+mod alias;
 
-// types
+// Algos
 pub use crate::algos::hypothesis::sprt_eval;
+// Alias
+pub use crate::alias::{MaybeUncertainBool, MaybeUncertainF64};
 // Errors
 pub use crate::errors::UncertainError;
 // Traits
 pub use crate::traits::sampler::Sampler;
+// Types
 pub use crate::types::cache::{GlobalSampleCache, SampledValue, with_global_cache};
 pub use crate::types::computation::node::ComputationNode;
 pub use crate::types::computation::node_id::NodeId;

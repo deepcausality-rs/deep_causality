@@ -3,15 +3,15 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_uncertain::MaybeUncertain;
+use deep_causality_uncertain::{MaybeUncertain, MaybeUncertainF64};
 use rusty_fork::rusty_fork_test;
 
 rusty_fork_test! {
 
     #[test]
     fn test_add_both_some() {
-        let a = MaybeUncertain::<f64>::from_value(3.0);
-        let b = MaybeUncertain::<f64>::from_value(4.0);
+        let a = MaybeUncertainF64::from_value(3.0);
+        let b = MaybeUncertainF64::from_value(4.0);
         let res = a + b;
         assert_eq!(res.sample().unwrap(), Some(7.0));
     }
