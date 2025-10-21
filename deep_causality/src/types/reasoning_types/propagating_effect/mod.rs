@@ -5,7 +5,9 @@
 
 use crate::{ContextId, ContextoidId, IdentificationValue, NumericalValue};
 use deep_causality_tensor::CausalTensor;
-use deep_causality_uncertain::{MaybeUncertain, Uncertain};
+use deep_causality_uncertain::{
+    MaybeUncertainBool, MaybeUncertainF64, UncertainBool, UncertainF64,
+};
 use std::collections::HashMap;
 use std::sync::Arc;
 use ultragraph::UltraGraph;
@@ -44,11 +46,11 @@ pub enum PropagatingEffect {
     /// you can apply monadic composition and monadic transformation to tensors.
     Tensor(CausalTensor<f64>),
     /// Represents a value with inherent uncertainty, modeled as a probability distribution.
-    UncertainBool(Uncertain<bool>),
-    UncertainFloat(Uncertain<f64>),
+    UncertainBool(UncertainBool),
+    UncertainFloat(UncertainF64),
     /// Represents a value that is probabilistic present or absent with uncertainty when present
-    MaybeUncertainBool(MaybeUncertain<bool>),
-    MaybeUncertainFloat(MaybeUncertain<f64>),
+    MaybeUncertainBool(MaybeUncertainBool),
+    MaybeUncertainFloat(MaybeUncertainF64),
     /// A link to a complex, structured result in a Contextoid. As an output, this
     /// can be interpreted by a reasoning engine as a command to fetch data.
     ContextualLink(ContextId, ContextoidId),

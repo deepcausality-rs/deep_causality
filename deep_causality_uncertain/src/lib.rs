@@ -6,16 +6,16 @@
 //! Core components for the `deep_causality_uncertain` crate.
 
 mod algos;
+mod alias;
 mod errors;
 mod traits;
 mod types;
 pub mod utils_tests;
-mod alias;
 
 // Algos
 pub use crate::algos::hypothesis::sprt_eval;
 // Alias
-pub use crate::alias::{MaybeUncertainBool, MaybeUncertainF64};
+pub use crate::alias::{MaybeUncertainBool, MaybeUncertainF64, UncertainBool, UncertainF64};
 // Errors
 pub use crate::errors::UncertainError;
 // Traits

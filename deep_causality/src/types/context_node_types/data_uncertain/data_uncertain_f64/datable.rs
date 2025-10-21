@@ -2,8 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
-use crate::{Datable, UncertainF64, UncertainFloat64Data};
+use crate::{Datable, UncertainFloat64Data};
+use deep_causality_uncertain::UncertainF64;
 
 /// Implements the `Datable` trait for `UncertainF64`.
 ///
