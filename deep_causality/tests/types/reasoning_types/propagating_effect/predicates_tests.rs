@@ -23,10 +23,13 @@ fn test_is_deterministic() {
 }
 
 #[test]
-fn test_is_probabilistic() {
-    let effect1 = PropagatingEffect::Deterministic(true);
-    assert!(!effect1.is_probabilistic());
+fn test_is_numerical() {
+    let effect1 = PropagatingEffect::from_numerical(0.5);
+    assert!(effect1.is_numerical());
+}
 
+#[test]
+fn test_is_probabilistic() {
     let effect2 = PropagatingEffect::Probabilistic(0.5);
     assert!(effect2.is_probabilistic());
 

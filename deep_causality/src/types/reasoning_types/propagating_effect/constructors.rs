@@ -3,7 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{ContextId, EffectGraph, IdentificationValue, NumericalValue, PropagatingEffect};
+use crate::{
+    ContextId, ContextoidId, EffectGraph, IdentificationValue, NumericalValue, PropagatingEffect,
+};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_uncertain::{
     MaybeUncertainBool, MaybeUncertainF64, UncertainBool, UncertainF64,
@@ -182,7 +184,7 @@ impl PropagatingEffect {
     ///
     /// # Arguments
     ///
-    /// * `maybe_maybe_uncertain` - A `MaybeUncertainF64` value representing the possibly uncertain float effect.
+    /// * `maybe_uncertain` - A `MaybeUncertainF64` value representing the possibly uncertain float effect.
     ///
     /// # Returns
     ///
@@ -198,16 +200,16 @@ impl PropagatingEffect {
     /// let effect = PropagatingEffect::from_maybe_uncertain_float(maybe_uncertain_float.clone());
     /// assert!(matches!(effect, PropagatingEffect::MaybeUncertainFloat(_)));
     /// ```
-    pub fn from_maybe_uncertain_float(maybe_maybe_uncertain: MaybeUncertainF64) -> Self {
-        Self::MaybeUncertainFloat(maybe_maybe_uncertain)
+    pub fn from_maybe_uncertain_float(maybe_uncertain: MaybeUncertainF64) -> Self {
+        Self::MaybeUncertainFloat(maybe_uncertain)
     }
 
     /// Creates a new `PropagatingEffect` of the `ContextualLink` variant.
     ///
     /// # Arguments
     ///
-    /// * `contextual_link` - The `ContextId` of the context.
-    /// * `link` - The `ContextoidId` of the linked contextoid.
+    /// * `context_id` - The `ContextId` of the context.
+    /// * `contextoid_id` - The `ContextoidId` of the linked contextoid.
     ///
     /// # Returns
     ///
@@ -224,8 +226,8 @@ impl PropagatingEffect {
     /// let effect = PropagatingEffect::from_contextual_link(context_id, contextoid_id);
     /// assert!(matches!(effect, PropagatingEffect::ContextualLink(_, _)));
     /// ```
-    pub fn from_contextual_link(contextual_link: ContextId, link: ContextId) -> Self {
-        Self::ContextualLink(contextual_link, link)
+    pub fn from_contextual_link(context_id: ContextId, contextoid_id: ContextoidId) -> Self {
+        Self::ContextualLink(context_id, contextoid_id)
     }
 
     /// Creates a new empty `PropagatingEffect` of the `Map` variant.

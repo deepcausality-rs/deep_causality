@@ -138,15 +138,14 @@ fn test_from_map() {
     }
 }
 
+
+
 #[test]
 fn test_new_graph() {
     let effect = PropagatingEffect::new_graph();
     assert!(matches!(effect, PropagatingEffect::Graph(_)));
     assert!(effect.is_graph());
-}
 
-#[test]
-fn test_from_graph() {
     let graph1 = Arc::new(UltraGraph::new());
     let graph2 = Arc::new(UltraGraph::new());
     let graph3 = Arc::new(UltraGraph::new());
@@ -168,6 +167,14 @@ fn test_from_graph() {
             graph1.number_edges()
         )
     );
+}
+
+#[test]
+fn test_from_graph() {
+    let graph1 = Arc::new(UltraGraph::new());
+
+    let effect1 = PropagatingEffect::from_graph(graph1);
+    assert!(matches!(effect1, PropagatingEffect::Graph(_)));
 }
 
 #[test]

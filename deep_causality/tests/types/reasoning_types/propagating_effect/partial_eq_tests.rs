@@ -1,11 +1,10 @@
-/*
- * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
- */
-
+use deep_causality::IdentificationValue;
 use deep_causality::PropagatingEffect;
-use deep_causality::PropagatingEffect::{UncertainBool, UncertainFloat};
-use deep_causality_uncertain::Uncertain;
+use deep_causality::PropagatingEffect::{
+    MaybeUncertainBool, MaybeUncertainFloat, UncertainBool, UncertainFloat,
+};
+use deep_causality_tensor::CausalTensor;
+use deep_causality_uncertain::{MaybeUncertain, Uncertain};
 use std::collections::HashMap;
 use std::sync::Arc;
 use ultragraph::UltraGraph;
@@ -47,6 +46,18 @@ fn test_partial_eq_probabilistic() {
 }
 
 #[test]
+fn test_partial_eq_tensor() {
+    let res = CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]);
+    assert!(res.is_ok());
+    let tensor = res.unwrap();
+
+    let effect1 = PropagatingEffect::Tensor(tensor.clone());
+    let effect2 = PropagatingEffect::Tensor(tensor);
+
+    assert_eq!(effect1, effect2);
+}
+
+#[test]
 fn test_partial_eq_contextual_link() {
     let effect7 = PropagatingEffect::ContextualLink(1, 2);
     let effect8 = PropagatingEffect::ContextualLink(1, 2);
@@ -74,20 +85,74 @@ fn test_partial_eq_uncertain_float() {
 }
 
 #[test]
+fn test_partial_eq_maybe_uncertain_bool() {
+    let point = MaybeUncertain::<bool>::from_value(true);
+
+    let effect = MaybeUncertainBool(point.clone());
+    assert!(effect.is_maybe_uncertain_bool());
+
+    let effect1 = MaybeUncertainBool(point.clone());
+    assert!(effect1.is_maybe_uncertain_bool());
+
+    let point = MaybeUncertain::<bool>::always_none();
+    let effect2 = MaybeUncertainBool(point);
+    assert!(effect2.is_maybe_uncertain_bool());
+
+    assert_eq!(effect, effect1);
+    assert_ne!(effect1, effect2);
+}
+
+#[test]
+fn test_partial_eq_maybe_uncertain_float() {
+    let point = MaybeUncertain::<f64>::from_value(4.0f64);
+
+    let effect = MaybeUncertainFloat(point.clone());
+    assert!(effect.is_maybe_uncertain_float());
+
+    let effect1 = MaybeUncertainFloat(point);
+    assert!(effect1.is_maybe_uncertain_float());
+
+    let point = MaybeUncertain::<f64>::always_none();
+    let effect2 = MaybeUncertainFloat(point);
+    assert!(effect2.is_maybe_uncertain_float());
+
+    assert_eq!(effect, effect1);
+    assert_ne!(effect1, effect2);
+}
+
+#[test]
 fn test_partial_eq_map() {
     let mut map1 = HashMap::new();
-    map1.insert(1, Box::new(PropagatingEffect::Numerical(1.0)));
-    map1.insert(2, Box::new(PropagatingEffect::Deterministic(true)));
+    map1.insert(
+        IdentificationValue::from(1u64),
+        Box::new(PropagatingEffect::Numerical(1.0)),
+    );
+    map1.insert(
+        IdentificationValue::from(2u64),
+        Box::new(PropagatingEffect::Deterministic(true)),
+    );
     let effect10 = PropagatingEffect::Map(map1.clone());
 
     let mut map2 = HashMap::new();
-    map2.insert(1, Box::new(PropagatingEffect::Numerical(1.0)));
-    map2.insert(2, Box::new(PropagatingEffect::Deterministic(true)));
+    map2.insert(
+        IdentificationValue::from(1u64),
+        Box::new(PropagatingEffect::Numerical(1.0)),
+    );
+    map2.insert(
+        IdentificationValue::from(2u64),
+        Box::new(PropagatingEffect::Deterministic(true)),
+    );
     let effect11 = PropagatingEffect::Map(map2.clone());
 
     let mut map3 = HashMap::new();
-    map3.insert(1, Box::new(PropagatingEffect::Numerical(1.0)));
-    map3.insert(3, Box::new(PropagatingEffect::Deterministic(false))); // Different key and value
+    map3.insert(
+        IdentificationValue::from(1u64),
+        Box::new(PropagatingEffect::Numerical(1.0)),
+    );
+    map3.insert(
+        IdentificationValue::from(3u64),
+        Box::new(PropagatingEffect::Deterministic(false)),
+    ); // Different key and value
     let effect12 = PropagatingEffect::Map(map3.clone());
 
     assert_eq!(effect10, effect11);

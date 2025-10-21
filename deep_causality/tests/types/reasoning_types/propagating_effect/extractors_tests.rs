@@ -34,6 +34,18 @@ fn test_as_bool() {
 }
 
 #[test]
+fn test_as_numerical() {
+    let effect1 = PropagatingEffect::from_numerical(0.5);
+    assert_eq!(effect1.as_numerical(), Some(0.5));
+
+    let effect2 = PropagatingEffect::Deterministic(true);
+    assert_eq!(effect2.as_numerical(), None);
+    
+    let effect3 = PropagatingEffect::ContextualLink(1, 1);
+    assert_eq!(effect3.as_numerical(), None);
+}
+
+#[test]
 fn test_as_probability() {
     let effect1 = PropagatingEffect::Probabilistic(0.5);
     assert_eq!(effect1.as_probability(), Some(0.5));

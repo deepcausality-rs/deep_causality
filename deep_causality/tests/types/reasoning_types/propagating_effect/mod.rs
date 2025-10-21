@@ -10,9 +10,9 @@ mod debug_tests;
 #[cfg(test)]
 mod display_tests;
 #[cfg(test)]
-mod extractors;
+mod extractors_tests;
 #[cfg(test)]
-mod extractors_map;
+mod extractors_map_tests;
 #[cfg(test)]
 mod partial_eq_tests;
 #[cfg(test)]
