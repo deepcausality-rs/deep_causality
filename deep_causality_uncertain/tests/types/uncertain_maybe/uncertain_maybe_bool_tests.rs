@@ -3,12 +3,12 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_uncertain::{MaybeUncertain, MaybeUncertainBool, Uncertain, UncertainError};
+use deep_causality_uncertain::{MaybeUncertain, Uncertain, UncertainError};
 
 #[test]
 fn test_from_uncertain() {
     let uncertain_true = Uncertain::<bool>::point(true);
-    let maybe_uncertain = MaybeUncertainBool::from_uncertain(uncertain_true.clone());
+    let maybe_uncertain = MaybeUncertain::<bool>::from_uncertain(uncertain_true.clone());
     assert!(
         maybe_uncertain
             .is_some()
@@ -17,7 +17,7 @@ fn test_from_uncertain() {
     );
 
     let uncertain_false = Uncertain::<bool>::point(false);
-    let maybe_uncertain = MaybeUncertainBool::from_uncertain(uncertain_false.clone());
+    let maybe_uncertain = MaybeUncertain::<bool>::from_uncertain(uncertain_false.clone());
     assert!(
         maybe_uncertain
             .is_some()
@@ -28,7 +28,7 @@ fn test_from_uncertain() {
 
 #[test]
 fn test_from_value() {
-    let maybe_uncertain_true = MaybeUncertainBool::from_value(true);
+    let maybe_uncertain_true = MaybeUncertain::<bool>::from_value(true);
     assert!(
         maybe_uncertain_true
             .is_some()
@@ -36,7 +36,7 @@ fn test_from_value() {
             .unwrap()
     );
 
-    let maybe_uncertain_false = MaybeUncertainBool::from_value(false);
+    let maybe_uncertain_false = MaybeUncertain::<bool>::from_value(false);
     assert!(
         maybe_uncertain_false
             .is_some()
@@ -61,7 +61,7 @@ fn test_always_none() {
 fn test_from_bernoulli_and_uncertain() {
     let present_value_dist = Uncertain::<bool>::point(true);
     let maybe_uncertain =
-        MaybeUncertainBool::from_bernoulli_and_uncertain(0.8, present_value_dist.clone());
+        MaybeUncertain::<bool>::from_bernoulli_and_uncertain(0.8, present_value_dist.clone());
     // is_present should be a Bernoulli distribution with p=0.8
     // We can't directly assert the distribution type, but we can sample it.
     // For 100% coverage, we need to ensure the bernoulli branch is taken.
@@ -76,7 +76,7 @@ fn test_from_bernoulli_and_uncertain() {
 
     let present_value_dist_false = Uncertain::<bool>::point(false);
     let maybe_uncertain_false =
-        MaybeUncertainBool::from_bernoulli_and_uncertain(0.2, present_value_dist_false.clone());
+        MaybeUncertain::<bool>::from_bernoulli_and_uncertain(0.2, present_value_dist_false.clone());
     let mut num_some_false = 0;
     for _ in 0..1000 {
         if maybe_uncertain_false.is_some().sample().unwrap() {
@@ -89,7 +89,7 @@ fn test_from_bernoulli_and_uncertain() {
 #[test]
 fn test_sample() -> Result<(), UncertainError> {
     // Test case 1: is_present is true, value is true
-    let maybe_uncertain_true = MaybeUncertainBool::from_value(true);
+    let maybe_uncertain_true = MaybeUncertain::<bool>::from_value(true);
     let mut num_true_samples = 0;
     let mut num_none_samples = 0;
     for _ in 0..1000 {
@@ -103,7 +103,7 @@ fn test_sample() -> Result<(), UncertainError> {
     assert_eq!(num_none_samples, 0);
 
     // Test case 2: is_present is true, value is false
-    let maybe_uncertain_false = MaybeUncertainBool::from_value(false);
+    let maybe_uncertain_false = MaybeUncertain::<bool>::from_value(false);
     num_true_samples = 0;
     num_none_samples = 0;
     for _ in 0..1000 {
@@ -132,7 +132,7 @@ fn test_sample() -> Result<(), UncertainError> {
     // Test case 4: is_present is bernoulli, value is true
     let present_value_dist = Uncertain::<bool>::point(true);
     let maybe_uncertain_bernoulli =
-        MaybeUncertainBool::from_bernoulli_and_uncertain(0.5, present_value_dist);
+        MaybeUncertain::<bool>::from_bernoulli_and_uncertain(0.5, present_value_dist);
     num_true_samples = 0;
     num_none_samples = 0;
     for _ in 0..1000 {
@@ -151,7 +151,7 @@ fn test_sample() -> Result<(), UncertainError> {
 #[test]
 fn test_is_some() {
     let uncertain_true = Uncertain::<bool>::point(true);
-    let maybe_uncertain = MaybeUncertainBool::from_uncertain(uncertain_true.clone());
+    let maybe_uncertain = MaybeUncertain::<bool>::from_uncertain(uncertain_true.clone());
     assert_eq!(maybe_uncertain.is_some(), uncertain_true);
 
     let maybe_uncertain_none = MaybeUncertain::<bool>::always_none();
@@ -166,7 +166,7 @@ fn test_is_some() {
 #[test]
 fn test_is_none() {
     let uncertain_true = Uncertain::<bool>::point(true);
-    let maybe_uncertain = MaybeUncertainBool::from_uncertain(uncertain_true.clone());
+    let maybe_uncertain = MaybeUncertain::<bool>::from_uncertain(uncertain_true.clone());
     assert!(
         !maybe_uncertain
             .is_none()
@@ -187,7 +187,7 @@ fn test_is_none() {
 fn test_lift_to_uncertain() -> Result<(), UncertainError> {
     // Test case 1: is_present is true, should lift successfully
     let uncertain_true_value = Uncertain::<bool>::point(true);
-    let maybe_uncertain_present = MaybeUncertainBool::from_value(true);
+    let maybe_uncertain_present = MaybeUncertain::<bool>::from_value(true);
     let lifted_uncertain = maybe_uncertain_present.lift_to_uncertain(0.5, 0.95, 0.05, 1000)?;
     assert_eq!(lifted_uncertain, uncertain_true_value);
 
@@ -199,14 +199,14 @@ fn test_lift_to_uncertain() -> Result<(), UncertainError> {
     // Test case 3: is_present is bernoulli, and passes threshold
     let present_value_dist = Uncertain::<bool>::point(true);
     let maybe_uncertain_bernoulli_pass =
-        MaybeUncertainBool::from_bernoulli_and_uncertain(0.9, present_value_dist.clone());
+        MaybeUncertain::<bool>::from_bernoulli_and_uncertain(0.9, present_value_dist.clone());
     let lifted_uncertain_bernoulli_pass =
         maybe_uncertain_bernoulli_pass.lift_to_uncertain(0.5, 0.95, 0.05, 1000)?;
     assert_eq!(lifted_uncertain_bernoulli_pass, present_value_dist);
 
     // Test case 4: is_present is bernoulli, and fails threshold
     let maybe_uncertain_bernoulli_fail =
-        MaybeUncertainBool::from_bernoulli_and_uncertain(0.1, present_value_dist);
+        MaybeUncertain::<bool>::from_bernoulli_and_uncertain(0.1, present_value_dist);
     let result_fail = maybe_uncertain_bernoulli_fail.lift_to_uncertain(0.5, 0.95, 0.05, 1000);
     assert!(matches!(result_fail, Err(UncertainError::PresenceError(_))));
 
