@@ -424,7 +424,8 @@ rust_test_suite(
 rust_test_suite(
     name = "reasoning_types_tests",
     srcs = glob([
-        "types/reasoning_types/*_tests.rs",
+        "types/reasoning_types/aggregate_logic/*_tests.rs",
+        "types/reasoning_types/propagating_effect/*_tests.rs",
     ]),
     tags = [
         "reasoning_types_tests",

@@ -157,6 +157,7 @@ pub use crate::types::model_types::model::Model;
 pub use crate::types::model_types::observation::Observation;
 // Reasoning types
 pub use crate::types::reasoning_types::aggregate_logic::AggregateLogic;
+pub use crate::types::reasoning_types::propagating_effect::EffectGraph;
 pub use crate::types::reasoning_types::propagating_effect::PropagatingEffect;
 //
 //Symbolic types

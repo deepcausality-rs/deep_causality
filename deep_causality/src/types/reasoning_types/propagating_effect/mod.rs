@@ -12,10 +12,11 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use ultragraph::UltraGraph;
 
+mod constructors;
 mod debug;
 mod display;
 mod extractors;
-mod map_extractors;
+mod extractors_map;
 mod partial_eq;
 mod predicates;
 
