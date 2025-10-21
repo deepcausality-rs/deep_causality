@@ -396,6 +396,7 @@ version = "0.11.6"
 dependencies = [
  "criterion",
  "deep_causality_data_structures",
+ "deep_causality_tensor",
  "deep_causality_uncertain",
  "ultragraph",
 ]

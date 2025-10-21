@@ -12,7 +12,7 @@ rusty_fork_test! {
     #[test]
     fn test_lift_to_uncertain_success() {
         let u = Uncertain::<f64>::point(42.0);
-        let mu = MaybeUncertain::from_bernoulli_and_uncertain(0.9, u);
+        let mu = MaybeUncertain::<f64>::from_bernoulli_and_uncertain(0.9, u);
         let result = mu.lift_to_uncertain(0.8, 0.95,0.05,100).unwrap();
         assert_eq!(result.sample().unwrap(), 42.0);
     }
@@ -20,7 +20,7 @@ rusty_fork_test! {
     #[test]
     fn test_lift_to_uncertain_failure() {
         let u = Uncertain::<f64>::point(42.0);
-        let mu = MaybeUncertain::from_bernoulli_and_uncertain(0.7, u);
+        let mu = MaybeUncertain::<f64>::from_bernoulli_and_uncertain(0.7, u);
         let result = mu.lift_to_uncertain(0.8, 0.95,0.05, 100);
         assert!(matches!(result, Err(UncertainError::PresenceError(_))));
     }

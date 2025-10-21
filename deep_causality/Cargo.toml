@@ -36,6 +36,11 @@ path = "../deep_causality_data_structures"
 version = "0.10"
 
 
+[dependencies.deep_causality_tensor]
+path = "../deep_causality_tensor"
+version = "0.1"
+
+
 [dependencies.ultragraph]
 path = "../ultragraph"
 version = "0.8"

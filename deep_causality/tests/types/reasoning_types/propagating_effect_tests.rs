@@ -3,9 +3,12 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::PropagatingEffect::{UncertainBool, UncertainFloat};
+use deep_causality::PropagatingEffect::{
+    MaybeUncertainBool, MaybeUncertainFloat, UncertainBool, UncertainFloat,
+};
 use deep_causality::*;
-use deep_causality_uncertain::Uncertain;
+use deep_causality_tensor::CausalTensor;
+use deep_causality_uncertain::{MaybeUncertain, Uncertain};
 use std::collections::HashMap;
 use std::sync::Arc;
 use ultragraph::{GraphView, UltraGraph};
@@ -35,6 +38,19 @@ fn test_is_probabilistic() {
 }
 
 #[test]
+fn test_is_tensor() {
+    let res = CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]);
+    assert!(res.is_ok());
+    let tensor = res.unwrap();
+
+    let effect1 = PropagatingEffect::Tensor(tensor);
+    assert!(effect1.is_tensor());
+
+    // Ensure its not float
+    assert!(!effect1.is_uncertain_float());
+}
+
+#[test]
 fn test_is_uncertain_bool() {
     let point = Uncertain::<bool>::point(true);
     let effect1 = UncertainBool(point);
@@ -51,6 +67,32 @@ fn test_uncertain_float() {
     assert!(effect1.is_uncertain_float());
 
     // Ensure its not bool
+    assert!(!effect1.is_uncertain_bool());
+}
+
+#[test]
+fn test_is_maybe_uncertain_bool() {
+    let point = MaybeUncertain::<bool>::from_value(true);
+    let effect1 = MaybeUncertainBool(point);
+    assert!(effect1.is_maybe_uncertain_bool());
+
+    let point = MaybeUncertain::<bool>::always_none();
+    let effect1 = MaybeUncertainBool(point);
+    assert!(effect1.is_maybe_uncertain_bool());
+
+    assert!(!effect1.is_maybe_uncertain_float());
+}
+
+#[test]
+fn test_is_maybe_uncertain_float() {
+    let point = MaybeUncertain::<f64>::from_value(4.0f64);
+    let effect1 = MaybeUncertainFloat(point);
+    assert!(effect1.is_maybe_uncertain_float());
+
+    let point = MaybeUncertain::<f64>::always_none();
+    let effect1 = MaybeUncertainFloat(point);
+    assert!(effect1.is_maybe_uncertain_float());
+
     assert!(!effect1.is_uncertain_bool());
 }
 
@@ -110,6 +152,20 @@ fn test_as_probability() {
 }
 
 #[test]
+fn test_as_tensor() {
+    let res = CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]);
+    assert!(res.is_ok());
+    let tensor = res.unwrap();
+
+    let effect1 = PropagatingEffect::Tensor(tensor.clone());
+    assert!(effect1.is_tensor());
+    assert_eq!(effect1.as_tensor(), Some(tensor));
+
+    let effect2 = PropagatingEffect::Deterministic(true);
+    assert_eq!(effect2.as_tensor(), None);
+}
+
+#[test]
 fn test_as_uncertain_bool() {
     let point = Uncertain::<bool>::point(true);
     let effect1 = UncertainBool(point.clone());
@@ -130,6 +186,28 @@ fn test_as_uncertain_float() {
 
     let effect2 = PropagatingEffect::Deterministic(true);
     assert_eq!(effect2.as_uncertain_float(), None);
+}
+
+#[test]
+fn test_as_maybe_uncertain_bool() {
+    let point = MaybeUncertain::<bool>::from_value(true);
+    let effect1 = MaybeUncertainBool(point.clone());
+    assert!(effect1.is_maybe_uncertain_bool());
+    assert_eq!(effect1.as_maybe_uncertain_bool(), Some(point));
+
+    let effect2 = PropagatingEffect::Deterministic(true);
+    assert_eq!(effect2.as_maybe_uncertain_bool(), None);
+}
+
+#[test]
+fn test_as_maybe_uncertain_float() {
+    let point = MaybeUncertain::<f64>::from_value(4.0f64);
+    let effect1 = MaybeUncertainFloat(point.clone());
+    assert!(effect1.is_maybe_uncertain_float());
+    assert_eq!(effect1.as_maybe_uncertain_float(), Some(point));
+
+    let effect2 = PropagatingEffect::Deterministic(true);
+    assert_eq!(effect2.as_maybe_uncertain_float(), None);
 }
 
 #[test]
@@ -171,27 +249,6 @@ fn test_display() {
     let point = Uncertain::<f64>::point(4.0f64);
     let effect5 = UncertainFloat(point);
     assert!(format!("{effect5}").contains("Point(4.0)"));
-}
-
-#[test]
-fn test_debug() {
-    let effect1 = PropagatingEffect::Deterministic(true);
-    assert_eq!(
-        format!("{effect1:?}"),
-        "PropagatingEffect::Deterministic(true)"
-    );
-
-    let effect2 = PropagatingEffect::Probabilistic(0.5);
-    assert_eq!(
-        format!("{effect2:?}"),
-        "PropagatingEffect::Probabilistic(0.5)"
-    );
-
-    let effect3 = PropagatingEffect::ContextualLink(1, 2);
-    assert_eq!(
-        format!("{effect3:?}"),
-        "PropagatingEffect::ContextualLink(1, 2)"
-    );
 }
 
 #[test]
@@ -456,4 +513,90 @@ fn test_default_variant() {
     let effect: PropagatingEffect = Default::default();
     assert!(effect.is_none());
     assert_eq!(effect, PropagatingEffect::None);
+}
+
+#[test]
+fn test_debug_trait() {
+    let effect = PropagatingEffect::None;
+    assert_eq!(format!("{:?}", effect), "PropagatingEffect::None");
+
+    let effect = PropagatingEffect::Deterministic(true);
+    assert_eq!(
+        format!("{:?}", effect),
+        "PropagatingEffect::Deterministic(true)"
+    );
+
+    let effect = PropagatingEffect::Numerical(42.42);
+    assert_eq!(
+        format!("{:?}", effect),
+        "PropagatingEffect::Numerical(42.42)"
+    );
+
+    let effect = PropagatingEffect::Probabilistic(0.5);
+    assert_eq!(
+        format!("{:?}", effect),
+        "PropagatingEffect::Probabilistic(0.5)"
+    );
+
+    let tensor = CausalTensor::new(vec![1.0, 2.0], vec![2]).unwrap();
+    let effect = PropagatingEffect::Tensor(tensor.clone());
+    assert_eq!(
+        format!("{:?}", effect),
+        format!("PropagatingEffect::Tensor({:?})", tensor)
+    );
+
+    let effect = PropagatingEffect::ContextualLink(1, 2);
+    assert_eq!(
+        format!("{:?}", effect),
+        "PropagatingEffect::ContextualLink(1, 2)"
+    );
+
+    let mut map = HashMap::new();
+    map.insert(1, Box::new(PropagatingEffect::Numerical(1.0)));
+    let effect = PropagatingEffect::Map(map.clone());
+    assert_eq!(
+        format!("{:?}", effect),
+        format!("PropagatingEffect::Map({:?})", map)
+    );
+
+    let inner_effect = Box::new(PropagatingEffect::Deterministic(true));
+    let effect = PropagatingEffect::RelayTo(1, inner_effect.clone());
+    assert_eq!(
+        format!("{:?}", effect),
+        format!("PropagatingEffect::RelayTo(1, {:?})", inner_effect)
+    );
+
+    let uncertain_bool = Uncertain::<bool>::point(true);
+    let effect = UncertainBool(uncertain_bool.clone());
+    assert_eq!(
+        format!("{:?}", effect),
+        format!("PropagatingEffect::UncertainBool({:?})", uncertain_bool)
+    );
+
+    let uncertain_float = Uncertain::<f64>::point(3.0);
+    let effect = UncertainFloat(uncertain_float.clone());
+    assert_eq!(
+        format!("{:?}", effect),
+        format!("PropagatingEffect::UncertainFloat({:?})", uncertain_float)
+    );
+
+    let maybe_uncertain_bool = MaybeUncertain::<bool>::from_value(true);
+    let effect = MaybeUncertainBool(maybe_uncertain_bool.clone());
+    assert_eq!(
+        format!("{:?}", effect),
+        format!(
+            "PropagatingEffect::MaybeUncertainBool({:?})",
+            maybe_uncertain_bool
+        )
+    );
+
+    let maybe_uncertain_float = MaybeUncertain::<f64>::from_value(2.71);
+    let effect = MaybeUncertainFloat(maybe_uncertain_float.clone());
+    assert_eq!(
+        format!("{:?}", effect),
+        format!(
+            "PropagatingEffect::MaybeUncertainFloat({:?})",
+            maybe_uncertain_float
+        )
+    );
 }

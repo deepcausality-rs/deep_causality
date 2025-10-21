@@ -3,15 +3,19 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CausalityError, ContextId, ContextoidId, IdentificationValue, NumericalValue};
-use deep_causality_uncertain::Uncertain;
+use crate::{ContextId, ContextoidId, IdentificationValue, NumericalValue};
+use deep_causality_tensor::CausalTensor;
+use deep_causality_uncertain::{MaybeUncertain, Uncertain};
 use std::collections::HashMap;
 use std::sync::Arc;
 use ultragraph::UltraGraph;
 
 mod debug;
 mod display;
+mod extractors;
+mod map_extractors;
 mod partial_eq;
+mod predicates;
 
 // The graph type alias, updated to be recursive on the new unified enum.
 pub type EffectGraph = UltraGraph<PropagatingEffect>;
@@ -35,9 +39,16 @@ pub enum PropagatingEffect {
     Numerical(NumericalValue),
     /// Represents a quantitative outcome, such as a probability score or confidence level.
     Probabilistic(NumericalValue),
+    /// Represents a Tensor via Causal Tensor.
+    /// Note, when you import the  CausalTensorWitness from the deep_causality_tensor crate,
+    /// you can apply monadic composition and monadic transformation to tensors.
+    Tensor(CausalTensor<f64>),
     /// Represents a value with inherent uncertainty, modeled as a probability distribution.
     UncertainBool(Uncertain<bool>),
     UncertainFloat(Uncertain<f64>),
+    /// Represents a value that is probabilistic present or absent with uncertainty when present
+    MaybeUncertainBool(MaybeUncertain<bool>),
+    MaybeUncertainFloat(MaybeUncertain<f64>),
     /// A link to a complex, structured result in a Contextoid. As an output, this
     /// can be interpreted by a reasoning engine as a command to fetch data.
     ContextualLink(ContextId, ContextoidId),
@@ -51,155 +62,4 @@ pub enum PropagatingEffect {
     RelayTo(usize, Box<PropagatingEffect>),
 }
 
-// Predicate methods
-impl PropagatingEffect {
-    pub fn is_none(&self) -> bool {
-        matches!(self, PropagatingEffect::None)
-    }
-    pub fn is_deterministic(&self) -> bool {
-        matches!(self, PropagatingEffect::Deterministic(_))
-    }
-    pub fn is_numerical(&self) -> bool {
-        matches!(self, PropagatingEffect::Numerical(_))
-    }
-    pub fn is_probabilistic(&self) -> bool {
-        matches!(self, PropagatingEffect::Probabilistic(_))
-    }
-
-    pub fn is_uncertain_bool(&self) -> bool {
-        matches!(self, PropagatingEffect::UncertainBool(_))
-    }
-
-    pub fn is_uncertain_float(&self) -> bool {
-        matches!(self, PropagatingEffect::UncertainFloat(_))
-    }
-
-    pub fn is_contextual_link(&self) -> bool {
-        matches!(self, PropagatingEffect::ContextualLink(_, _))
-    }
-
-    pub fn is_map(&self) -> bool {
-        matches!(self, PropagatingEffect::Map(_))
-    }
-    pub fn is_graph(&self) -> bool {
-        matches!(self, PropagatingEffect::Graph(_))
-    }
-    pub fn is_relay_to(&self) -> bool {
-        matches!(self, PropagatingEffect::RelayTo(_, _))
-    }
-}
-
-// Extractor methods
-impl PropagatingEffect {
-    pub fn as_bool(&self) -> Option<bool> {
-        match self {
-            PropagatingEffect::Deterministic(b) => Some(*b),
-            _ => None,
-        }
-    }
-
-    pub fn as_numerical(&self) -> Option<NumericalValue> {
-        match self {
-            PropagatingEffect::Numerical(p) => Some(*p),
-            _ => None,
-        }
-    }
-
-    pub fn as_probability(&self) -> Option<NumericalValue> {
-        match self {
-            PropagatingEffect::Probabilistic(p) => Some(*p),
-            _ => None,
-        }
-    }
-
-    pub fn as_uncertain_bool(&self) -> Option<Uncertain<bool>> {
-        match self {
-            PropagatingEffect::UncertainBool(b) => Some(b.clone()),
-            _ => None,
-        }
-    }
-
-    pub fn as_uncertain_float(&self) -> Option<Uncertain<f64>> {
-        match self {
-            PropagatingEffect::UncertainFloat(b) => Some(b.clone()),
-            _ => None,
-        }
-    }
-
-    pub fn as_contextual_link(&self) -> Option<(ContextId, ContextoidId)> {
-        match self {
-            PropagatingEffect::ContextualLink(context_id, contextoid_id) => {
-                Some((*context_id, *contextoid_id))
-            }
-            _ => None,
-        }
-    }
-}
-
-// Map-specific methods
-impl PropagatingEffect {
-    /// Creates a new empty Effect Map.
-    pub fn new_map() -> Self {
-        PropagatingEffect::Map(HashMap::new())
-    }
-
-    /// Inserts a key-value pair into an Effect Map.
-    /// Panics if the Effect is not a Map variant.
-    pub fn insert(&mut self, key: IdentificationValue, value: PropagatingEffect) {
-        if let PropagatingEffect::Map(map) = self {
-            map.insert(key, Box::new(value));
-        } else {
-            panic!("Cannot insert into PropagatingEffect that is not a Map variant");
-        }
-    }
-
-    /// Retrieves a numerical value from an Effect::Map by key.
-    pub fn get_numerical_from_map(
-        &self,
-        key: IdentificationValue,
-    ) -> Result<NumericalValue, CausalityError> {
-        if let PropagatingEffect::Map(map) = self {
-            match map.get(&key) {
-                Some(effect) => {
-                    if let PropagatingEffect::Numerical(val) = **effect {
-                        Ok(val)
-                    } else {
-                        Err(CausalityError(format!(
-                            "Effect for key '{key}' is not of type Numerical"
-                        )))
-                    }
-                }
-                None => Err(CausalityError(format!("No effect found for key '{key}'"))),
-            }
-        } else {
-            Err(CausalityError(
-                "Cannot get value by key from PropagatingEffect that is not a Map variant".into(),
-            ))
-        }
-    }
-
-    /// Retrieves a deterministic boolean value from an Effect::Map by key.
-    pub fn get_deterministic_from_map(
-        &self,
-        key: IdentificationValue,
-    ) -> Result<bool, CausalityError> {
-        if let PropagatingEffect::Map(map) = self {
-            match map.get(&key) {
-                Some(effect) => {
-                    if let PropagatingEffect::Deterministic(val) = **effect {
-                        Ok(val)
-                    } else {
-                        Err(CausalityError(format!(
-                            "Effect for key '{key}' is not of type Deterministic"
-                        )))
-                    }
-                }
-                None => Err(CausalityError(format!("No effect found for key '{key}'"))),
-            }
-        } else {
-            Err(CausalityError(
-                "Cannot get value by key from PropagatingEffect that is not a Map variant".into(),
-            ))
-        }
-    }
-}
+// Update predicates, extractors, and debug in case of changing field types.
