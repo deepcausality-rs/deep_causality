@@ -3,8 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::traits::assumable::AssumableReasoning;
-use deep_causality::{Assumption, PropagatingEffect};
+use deep_causality::{AssumableReasoning, Assumption, PropagatingEffect};
 
 use deep_causality::utils_test::test_utils::*;
 

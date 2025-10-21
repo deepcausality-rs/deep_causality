@@ -2,12 +2,12 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use deep_causality_uncertain::UncertainF64;
+
 mod adjustable;
 mod datable;
 mod display;
 mod identifiable;
-
-use crate::UncertainF64;
 
 #[derive(Debug, Clone)]
 pub struct UncertainFloat64Data {

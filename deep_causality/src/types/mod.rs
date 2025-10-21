@@ -3,7 +3,6 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-pub mod alias_types;
 pub mod causal_types;
 pub mod context_node_types;
 pub mod context_types;

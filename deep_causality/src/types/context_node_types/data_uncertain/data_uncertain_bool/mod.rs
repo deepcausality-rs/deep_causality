@@ -7,7 +7,7 @@ mod datable;
 mod display;
 mod identifiable;
 
-use crate::UncertainBool;
+use deep_causality_uncertain::UncertainBool;
 
 #[derive(Debug, Clone)]
 pub struct UncertainBooleanData {

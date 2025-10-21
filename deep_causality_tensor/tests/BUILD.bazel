@@ -12,6 +12,8 @@ rust_test_suite(
     deps = [
         # Crate to test
         "//deep_causality_tensor",
+        # Internal deps
+        "//deep_causality_haft",
     ],
 )
 
@@ -27,6 +29,8 @@ rust_test_suite(
     deps = [
         # Crate to test
         "//deep_causality_tensor",
+        # Internal deps
+        "//deep_causality_haft",
     ],
 )
 
@@ -42,5 +46,7 @@ rust_test_suite(
     deps = [
         # Crate to test
         "//deep_causality_tensor",
+        # Internal deps
+        "//deep_causality_haft",
     ],
 )

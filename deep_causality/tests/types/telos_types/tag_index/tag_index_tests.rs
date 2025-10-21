@@ -3,8 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::types::telos_types::tag_index::*;
-use deep_causality::{TeloidID, TeloidTag};
+use deep_causality::{TagIndex, TeloidID, TeloidTag};
 use std::collections::HashSet;
 
 #[test]

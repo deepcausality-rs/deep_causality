@@ -13,13 +13,24 @@
 //! * DeepCausality simplifies modeling of complex tempo-spatial patterns.
 //! * DeepCausality comes with Causal State Machine (CSM)
 //!
-pub mod errors;
-pub mod extensions;
-pub mod traits;
-pub mod types;
-pub mod utils;
+mod alias;
+mod errors;
+mod extensions;
+mod traits;
+mod types;
+mod utils;
 pub mod utils_test;
 
+//
+// Aliases
+//
+pub use crate::alias::alias_base::*;
+pub use crate::alias::alias_csm::*;
+pub use crate::alias::alias_function::*;
+pub use crate::alias::alias_lock::*;
+pub use crate::alias::alias_primitives::*;
+pub use crate::alias::alias_uncertain::*;
+pub use crate::alias::alias_uniform::*;
 //
 // Error types
 //
@@ -91,14 +102,6 @@ pub use crate::traits::transferable::Transferable;
 //
 // Types
 //
-// Alias types
-pub use crate::types::alias_types::alias_base::*;
-pub use crate::types::alias_types::alias_csm::*;
-pub use crate::types::alias_types::alias_function::*;
-pub use crate::types::alias_types::alias_lock::*;
-pub use crate::types::alias_types::alias_primitives::*;
-pub use crate::types::alias_types::alias_uncertain::*;
-pub use crate::types::alias_types::alias_uniform::*;
 // Causal types
 pub use crate::types::causal_types::causal_type::CausaloidType;
 pub use crate::types::causal_types::causaloid::Causaloid;
@@ -129,6 +132,7 @@ pub use crate::types::context_node_types::space_time::space_time_kind::SpaceTime
 pub use crate::types::context_node_types::space_time::tangent_spacetime::TangentSpacetime;
 // Symbolic context node types.
 pub use crate::types::context_node_types::symbol::base_symbol::BaseSymbol;
+pub use crate::types::context_node_types::symbol::symbol_kind::SymbolKind;
 // pub use crate::types::context_types::node_types::symbol::symbol_kind
 // Symbolic spacetime context node types.
 pub use crate::types::context_node_types::symbol_spacetime::causal_set_spacetime::CausalSetSpacetime;
@@ -157,6 +161,7 @@ pub use crate::types::model_types::model::Model;
 pub use crate::types::model_types::observation::Observation;
 // Reasoning types
 pub use crate::types::reasoning_types::aggregate_logic::AggregateLogic;
+pub use crate::types::reasoning_types::propagating_effect::EffectGraph;
 pub use crate::types::reasoning_types::propagating_effect::PropagatingEffect;
 //
 //Symbolic types
@@ -177,4 +182,5 @@ pub use crate::types::telos_types::teloid_verdict::Verdict;
 pub use crate::types::telos_types::uncertain_parameter::UncertainParameter;
 // Utils
 //
-pub use crate::utils::time_utils::*;
+pub use crate::utils::math_utils;
+pub use crate::utils::time_utils;

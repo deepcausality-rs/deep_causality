@@ -9,8 +9,7 @@ use std::time::Duration;
 use crate::utils_actions::*;
 use crate::utils_data::{get_explosion_sensor_data, get_fire_sensor_data, get_smoke_sensor_data};
 use crate::utils_states::*;
-use deep_causality::types::csm_types::csm::CSM;
-use deep_causality::{CausalState, PropagatingEffect};
+use deep_causality::{CSM, CausalState, PropagatingEffect};
 
 const SMOKE_SENSOR: usize = 1;
 const FIRE_SENSOR: usize = 2;

@@ -19,6 +19,9 @@ impl Debug for PropagatingEffect {
             PropagatingEffect::Probabilistic(val) => {
                 write!(_f, "PropagatingEffect::Probabilistic({val:?})")
             }
+            PropagatingEffect::Tensor(val) => {
+                write!(_f, "PropagatingEffect::Tensor({val:?})")
+            }
             PropagatingEffect::ContextualLink(id, val) => {
                 write!(_f, "PropagatingEffect::ContextualLink({id}, {val})")
             }
@@ -37,6 +40,13 @@ impl Debug for PropagatingEffect {
             }
             PropagatingEffect::UncertainFloat(val) => {
                 write!(_f, "PropagatingEffect::UncertainFloat({val:?})")
+            }
+            PropagatingEffect::MaybeUncertainBool(val) => {
+                write!(_f, "PropagatingEffect::MaybeUncertainBool({val:?})")
+            }
+
+            PropagatingEffect::MaybeUncertainFloat(val) => {
+                write!(_f, "PropagatingEffect::MaybeUncertainFloat({val:?})")
             }
         }
     }
