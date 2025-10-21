@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::types::telos_types::teloid_modal::TeloidModal;
+use deep_causality::TeloidModal;
 use std::cmp::Ordering;
 
 #[test]

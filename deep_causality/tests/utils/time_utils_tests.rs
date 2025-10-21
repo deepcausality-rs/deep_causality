@@ -3,11 +3,11 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::time_execution;
+use deep_causality::time_utils;
 
 #[test]
 fn test_time() {
-    time_execution(run, "run");
+    time_utils::time_execution(run, "run");
 }
 
 fn run() {

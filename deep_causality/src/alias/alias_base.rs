@@ -4,7 +4,7 @@
  */
 
 // should prevent circular dependencies to / from prelude
-use crate::types::alias_types::alias_primitives::FloatType;
+use crate::alias::alias_primitives::FloatType;
 use crate::types::causal_types::causaloid::Causaloid;
 use crate::types::causal_types::causaloid_graph::CausaloidGraph;
 use crate::types::context_node_types::data::Data;
