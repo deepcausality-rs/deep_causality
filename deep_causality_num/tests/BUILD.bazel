@@ -19,6 +19,21 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "complex",
+    srcs = glob([
+        "complex/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
     name = "float",
     srcs = glob([
         "float/*_tests.rs",
@@ -68,6 +83,21 @@ rust_test_suite(
     name = "ops",
     srcs = glob([
         "ops/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
+    name = "complex",
+    srcs = glob([
+        "complex/mod.rs",
     ]),
     tags = [
         "unit-test",
