@@ -57,7 +57,10 @@ fn test_debug_tensor() {
 fn test_debug_complex_tensor() {
     let complex_tensor = CausalTensor::new(vec![Complex::new(1.0, 2.0)], vec![1]).unwrap();
     let effect = PropagatingEffect::ComplexTensor(complex_tensor.clone());
-    assert_eq!(format!("{:?}", effect), "PropagatingEffect::ComplexTensor(CausalTensor { data: [Complex { re: 1.0, im: 2.0 }], shape: [1], strides: [1] })");
+    assert_eq!(
+        format!("{:?}", effect),
+        "PropagatingEffect::ComplexTensor(CausalTensor { data: [Complex { re: 1.0, im: 2.0 }], shape: [1], strides: [1] })"
+    );
 }
 
 #[test]
