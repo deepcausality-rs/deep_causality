@@ -5,8 +5,8 @@
 use crate::CausalTensor;
 use crate::CausalTensorError;
 
-/// An extension trait for collections of tensors.
-pub trait CausalTensorCollectionExt<T> {
+/// An extension trait for stacking a sequence of tensors.
+pub trait CausalTensorStackExt<T> {
     /// Stacks a sequence of tensors along a new axis to form a single, higher-dimensional tensor.
     ///
     /// This method takes a slice of `CausalTensor`s and combines them into a new `CausalTensor`
@@ -28,7 +28,7 @@ pub trait CausalTensorCollectionExt<T> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_tensor::{CausalTensor, CausalTensorCollectionExt};
+    /// use deep_causality_tensor::{CausalTensor, CausalTensorStackExt};
     /// let t1 = CausalTensor::new(vec![1, 2], vec![2]).unwrap();
     /// let t2 = CausalTensor::new(vec![3, 4], vec![2]).unwrap();
     /// let stacked_tensor = [t1, t2].stack(0).unwrap();

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_tensor::{CausalTensor, CausalTensorCollectionExt, CausalTensorError};
+use deep_causality_tensor::{CausalTensor, CausalTensorError, CausalTensorStackExt};
 
 #[test]
 fn test_stack_empty_slice() {

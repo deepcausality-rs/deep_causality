@@ -9,4 +9,3 @@ mod causal_tensor_ext_hkt_tests;
 mod causal_tensor_ext_math_f32_tests;
 #[cfg(test)]
 mod causal_tensor_ext_math_f64_tests;
-mod causal_tensor_ext_product_tests;
