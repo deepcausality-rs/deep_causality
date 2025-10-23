@@ -7,6 +7,7 @@ use crate::CausalTensorError;
 use std::ops::{Add, Div};
 
 mod op_scalar_tensor;
+mod op_tensor_product;
 /// Defines tensor reduction operations (e.g., sum, mean).
 mod op_tensor_reduction;
 /// Defines operations between a tensor and a scalar (e.g., `tensor + scalar`).

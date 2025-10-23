@@ -8,7 +8,7 @@ mod types;
 
 // Causal sensor type
 pub use crate::errors::causal_tensor_error::CausalTensorError;
-pub use crate::extensions::ext_collection::CausalTensorCollectionExt;
 pub use crate::extensions::ext_hkt::CausalTensorWitness;
 pub use crate::extensions::ext_math::CausalTensorMathExt;
+pub use crate::extensions::ext_stack::CausalTensorStackExt;
 pub use crate::types::causal_tensor::CausalTensor;

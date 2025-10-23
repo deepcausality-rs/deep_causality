@@ -1,9 +1,11 @@
 mod cast;
+mod complex;
 pub mod float;
 mod float_option;
 mod identity;
 pub mod num;
 mod ops;
+pub mod utils_tests;
 
 pub use crate::cast::as_primitive::AsPrimitive;
 pub use crate::cast::as_scalar::float_as_scalar_impl::FloatAsScalar;
@@ -12,6 +14,7 @@ pub use crate::cast::from_primitive::FromPrimitive;
 pub use crate::cast::num_cast::NumCast;
 pub use crate::cast::to_float::{FloatFromInt, IntoFloat};
 pub use crate::cast::to_primitive::ToPrimitive;
+pub use crate::complex::{Complex, ComplexNumber};
 pub use crate::float::Float;
 pub use crate::float_option::FloatOption;
 pub use crate::identity::one::{ConstOne, One};

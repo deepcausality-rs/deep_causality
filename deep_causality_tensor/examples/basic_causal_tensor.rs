@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_tensor::{CausalTensor, CausalTensorCollectionExt, CausalTensorMathExt};
+use deep_causality_tensor::{CausalTensor, CausalTensorMathExt, CausalTensorStackExt};
 
 pub fn main() {
     println!("\n--- CausalTensor Example ---");

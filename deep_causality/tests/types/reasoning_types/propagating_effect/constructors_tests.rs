@@ -4,6 +4,7 @@
  */
 
 use deep_causality::{IdentificationValue, PropagatingEffect};
+use deep_causality_num::Complex;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_uncertain::{
     MaybeUncertainBool, MaybeUncertainF64, UncertainBool, UncertainF64,
@@ -56,14 +57,26 @@ fn test_from_probabilistic() {
 }
 
 #[test]
-fn test_from_tensor() -> Result<(), Box<dyn std::error::Error>> {
-    let tensor = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3])?;
+fn test_from_tensor() {
+    let tensor = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).expect("Failed to create tensor");
     let effect = PropagatingEffect::from_tensor(tensor.clone());
     assert!(matches!(effect, PropagatingEffect::Tensor(_)));
     if let PropagatingEffect::Tensor(t) = effect {
         assert_eq!(t.data(), tensor.data());
     }
-    Ok(())
+}
+
+#[test]
+fn test_from_complex_tensor() {
+    let a = Complex::new(1.0, 3.0);
+    let b = Complex::new(2.0, 2.0);
+    let c = Complex::new(3.0, 1.0);
+
+    let complex_tensor =
+        CausalTensor::new(vec![a, b, c], vec![3]).expect("Failed to create complex tensor");
+
+    let effect = PropagatingEffect::from_complex_tensor(complex_tensor);
+    assert!(matches!(effect, PropagatingEffect::ComplexTensor(_)));
 }
 
 #[test]

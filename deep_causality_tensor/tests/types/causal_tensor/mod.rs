@@ -16,6 +16,8 @@ mod causal_tensor_view_tests;
 #[cfg(test)]
 mod op_scalar_tensor_tests;
 #[cfg(test)]
+mod op_tensor_product_tests;
+#[cfg(test)]
 mod op_tensor_reduction_tests;
 #[cfg(test)]
 mod op_tensor_scalar_tests;

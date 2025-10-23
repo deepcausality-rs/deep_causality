@@ -4,7 +4,8 @@
  */
 
 use crate::{
-    ContextId, ContextoidId, EffectGraph, IdentificationValue, NumericalValue, PropagatingEffect,
+    ComplexTensor, ContextId, ContextoidId, EffectGraph, IdentificationValue, NumericalValue,
+    PropagatingEffect,
 };
 use deep_causality_tensor::CausalTensor;
 use deep_causality_uncertain::{
@@ -106,6 +107,34 @@ impl PropagatingEffect {
     /// ```
     pub fn from_tensor(tensor: CausalTensor<f64>) -> Self {
         Self::Tensor(tensor)
+    }
+
+    /// Creates a new `PropagatingEffect` of the `ComplexTensor` variant.
+    ///
+    /// # Arguments
+    ///
+    /// * `complex_tensor` - A `ComplexTensor` representing the complex tensor effect.
+    ///
+    /// # Returns
+    ///
+    /// A `PropagatingEffect::ComplexTensor` instance.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use deep_causality::PropagatingEffect;
+    /// use deep_causality_num::Complex;
+    /// use deep_causality_tensor::CausalTensor;
+    ///
+    /// fn main() -> Result<(), Box<dyn std::error::Error>> {
+    ///     let complex_tensor = CausalTensor::new(vec![Complex::new(1.0, 2.0)], vec![1])?;
+    ///     let effect = PropagatingEffect::from_complex_tensor(complex_tensor.clone());
+    ///     assert!(matches!(effect, PropagatingEffect::ComplexTensor(_)));
+    ///     Ok(())
+    /// }
+    /// ```
+    pub fn from_complex_tensor(complex_tensor: ComplexTensor) -> Self {
+        Self::ComplexTensor(complex_tensor)
     }
 
     /// Creates a new `PropagatingEffect` of the `UncertainBool` variant.

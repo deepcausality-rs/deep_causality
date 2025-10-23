@@ -51,6 +51,19 @@ fn test_is_tensor() {
 }
 
 #[test]
+fn test_is_complex_tensor() {
+    use deep_causality_num::Complex;
+    let res = CausalTensor::new(vec![Complex::new(1.0, 2.0)], vec![1]);
+    assert!(res.is_ok());
+    let complex_tensor = res.unwrap();
+
+    let effect1 = PropagatingEffect::ComplexTensor(complex_tensor);
+    assert!(effect1.is_complex_tensor());
+
+    assert!(!effect1.is_tensor());
+}
+
+#[test]
 fn test_is_uncertain_bool() {
     let point = Uncertain::<bool>::point(true);
     let effect1 = UncertainBool(point);

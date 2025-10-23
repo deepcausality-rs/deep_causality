@@ -11,10 +11,11 @@
 //! * `alias_lock` - Defines synchronization and locking type aliases
 //! * `alias_primitives` - Contains aliases for primitive types
 //! * `alias_uniform` - Provides uniform type definitions used for consistency
-pub mod alias_base;
-pub mod alias_csm;
-pub mod alias_function;
-pub mod alias_lock;
-pub mod alias_primitives;
-pub mod alias_uncertain;
-pub mod alias_uniform;
+pub(crate) mod alias_base;
+pub(crate) mod alias_csm;
+pub(crate) mod alias_function;
+pub(crate) mod alias_lock;
+pub(crate) mod alias_primitives;
+pub(crate) mod alias_tensor;
+pub(crate) mod alias_uncertain;
+pub(crate) mod alias_uniform;
