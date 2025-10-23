@@ -11,7 +11,6 @@ mod constructors_tests;
 mod debug_tests;
 mod display_tests;
 mod float_tests;
-mod from_primitive_tests;
 mod from_primitives_tests;
 mod identity_tests;
 mod neg_tests;

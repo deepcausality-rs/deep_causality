@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::{Complex, Float, FromPrimitive};
+use deep_causality_num::{Complex, ComplexNumber, Float, FromPrimitive};
 
 #[test]
 fn test_from_isize_ok() {
@@ -19,6 +19,13 @@ fn test_from_isize_f32_precision_loss() {
     let c = Complex::<f32>::from_isize(isize::MAX).unwrap();
     assert_eq!(c.re, isize::MAX as f32);
     assert_eq!(c.im, 0.0f32);
+}
+
+#[test]
+fn test_from_primitive_f64() {
+    let c = Complex::<f64>::from_f64(1.5).unwrap();
+    assert_eq!(c.re(), 1.5);
+    assert_eq!(c.im(), 0.0);
 }
 
 #[test]
