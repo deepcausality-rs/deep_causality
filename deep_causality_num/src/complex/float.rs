@@ -132,12 +132,20 @@ where
 
     #[inline]
     fn is_sign_positive(self) -> bool {
-        self.re.is_sign_positive() && self.im.is_sign_positive()
+        if !self.re.is_zero() {
+            self.re.is_sign_positive()
+        } else {
+            self.im.is_sign_positive()
+        }
     }
 
     #[inline]
     fn is_sign_negative(self) -> bool {
-        self.re.is_sign_negative() && self.im.is_sign_negative()
+        if !self.re.is_zero() {
+            self.re.is_sign_negative()
+        } else {
+            self.im.is_sign_negative()
+        }
     }
 
     #[inline]
@@ -181,14 +189,36 @@ where
 
     #[inline]
     fn sqrt(self) -> Self {
-        // sqrt(z) = sqrt(norm) * (cos(arg/2) + i * sin(arg/2))
-        let r = self.norm();
-        let theta = self.arg();
-        let sqrt_r = r.sqrt();
-        Self::new(
-            sqrt_r * (theta / F::from(2.0).unwrap()).cos(),
-            sqrt_r * (theta / F::from(2.0).unwrap()).sin(),
-        )
+        // Numerically stable principal sqrt for complex numbers
+        // Reference: Higham, Accuracy and Stability of Numerical Algorithms
+        if self.is_zero() {
+            return Self::zero();
+        }
+        let re = self.re;
+        let im = self.im;
+        let norm = self.norm();
+        let half = F::from(0.5).unwrap();
+        let two = F::from(2.0).unwrap();
+
+        if re.is_sign_positive() || re.is_zero() {
+            // re >= 0
+            let re_sqrt = ((norm + re) * half).sqrt();
+            let im_sqrt = if re_sqrt.is_zero() {
+                F::zero()
+            } else {
+                im / (two * re_sqrt)
+            };
+            Self::new(re_sqrt, im_sqrt)
+        } else {
+            // re < 0
+            let im_sqrt = ((norm - re) * half).sqrt();
+            let re_sqrt = if im_sqrt.is_zero() {
+                F::zero()
+            } else {
+                im / (two * im_sqrt)
+            };
+            Self::new(re_sqrt, im_sqrt)
+        }
     }
 
     #[inline]

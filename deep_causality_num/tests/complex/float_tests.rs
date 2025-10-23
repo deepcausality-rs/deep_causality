@@ -171,9 +171,13 @@ fn test_float_is_sign_positive() {
     let c1 = Complex::new(1.0, 2.0);
     let c2 = Complex::new(-1.0, 2.0);
     let c3 = Complex::new(1.0, -2.0);
+    let c4 = Complex::new(0.0, 2.0);
+    let c5 = Complex::new(0.0, -2.0);
     assert!(c1.is_sign_positive());
     assert!(!c2.is_sign_positive());
-    assert!(!c3.is_sign_positive());
+    assert!(c3.is_sign_positive());
+    assert!(c4.is_sign_positive());
+    assert!(!c5.is_sign_positive());
 }
 
 #[test]
@@ -181,9 +185,13 @@ fn test_float_is_sign_negative() {
     let c1 = Complex::new(-1.0, -2.0);
     let c2 = Complex::new(1.0, -2.0);
     let c3 = Complex::new(-1.0, 2.0);
+    let c4 = Complex::new(0.0, 2.0);
+    let c5 = Complex::new(0.0, -2.0);
     assert!(c1.is_sign_negative());
     assert!(!c2.is_sign_negative());
-    assert!(!c3.is_sign_negative());
+    assert!(c3.is_sign_negative());
+    assert!(!c4.is_sign_negative());
+    assert!(c5.is_sign_negative());
 }
 
 #[test]

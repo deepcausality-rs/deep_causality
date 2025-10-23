@@ -11,6 +11,12 @@ where
 {
     #[inline]
     fn from<T: ToPrimitive>(n: T) -> Option<Self> {
-        F::from(n).map(|re| Self::new(re, F::zero()))
+        F::from(n).and_then(|re| {
+            if re.is_nan() {
+                None
+            } else {
+                Some(Self::new(re, F::zero()))
+            }
+        })
     }
 }
