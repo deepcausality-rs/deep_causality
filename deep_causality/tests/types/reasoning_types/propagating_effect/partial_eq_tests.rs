@@ -58,6 +58,22 @@ fn test_partial_eq_tensor() {
 }
 
 #[test]
+fn test_partial_eq_complex_tensor() {
+    use deep_causality_num::Complex;
+    let res = CausalTensor::new(
+        vec![Complex::new(1.0, 2.0), Complex::new(3.0, 4.0)],
+        vec![2],
+    );
+    assert!(res.is_ok());
+    let complex_tensor = res.unwrap();
+
+    let effect1 = PropagatingEffect::ComplexTensor(complex_tensor.clone());
+    let effect2 = PropagatingEffect::ComplexTensor(complex_tensor);
+
+    assert_eq!(effect1, effect2);
+}
+
+#[test]
 fn test_partial_eq_contextual_link() {
     let effect7 = PropagatingEffect::ContextualLink(1, 2);
     let effect8 = PropagatingEffect::ContextualLink(1, 2);

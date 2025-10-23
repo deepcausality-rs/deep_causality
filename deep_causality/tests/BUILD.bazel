@@ -435,6 +435,7 @@ rust_test_suite(
     deps = [
         # Crate to test
         "//deep_causality",
+        "//deep_causality_num",
         "//deep_causality_tensor",
         "//deep_causality_uncertain",
         "//ultragraph",

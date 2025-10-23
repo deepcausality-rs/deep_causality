@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{ContextId, ContextoidId, NumericalValue, PropagatingEffect};
+use crate::{ComplexTensor, ContextId, ContextoidId, NumericalValue, PropagatingEffect};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_uncertain::{MaybeUncertain, Uncertain};
 
@@ -112,6 +112,39 @@ impl PropagatingEffect {
     pub fn as_tensor(&self) -> Option<CausalTensor<f64>> {
         match self {
             PropagatingEffect::Tensor(p) => Some(p.clone()),
+            _ => None,
+        }
+    }
+
+    /// Attempts to extract a `ComplexTensor` from the `PropagatingEffect`.
+    ///
+    /// Returns `Some(ComplexTensor)` if the effect is of the `ComplexTensor` variant, otherwise returns `None`.
+    /// The tensor is cloned to avoid ownership issues.
+    ///
+    /// # Returns
+    ///
+    /// An `Option` containing the `ComplexTensor` if the effect is `ComplexTensor`, or `None`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use deep_causality::PropagatingEffect;
+    /// use deep_causality_num::Complex;
+    /// use deep_causality_tensor::CausalTensor;
+    ///
+    /// fn main() -> Result<(), Box<dyn std::error::Error>> {
+    ///     let complex_tensor = CausalTensor::new(vec![Complex::new(1.0, 2.0)], vec![1])?;
+    ///     let effect = PropagatingEffect::ComplexTensor(complex_tensor.clone());
+    ///     assert_eq!(effect.as_complex_tensor().map(|t| t.data().clone()), Some(vec![Complex::new(1.0, 2.0)]));
+    ///
+    ///     let effect = PropagatingEffect::Numerical(1.0);
+    ///     assert_eq!(effect.as_complex_tensor(), None);
+    ///     Ok(())
+    /// }
+    /// ```
+    pub fn as_complex_tensor(&self) -> Option<ComplexTensor> {
+        match self {
+            PropagatingEffect::ComplexTensor(p) => Some(p.clone()),
             _ => None,
         }
     }

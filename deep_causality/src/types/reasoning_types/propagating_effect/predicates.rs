@@ -22,6 +22,9 @@ impl PropagatingEffect {
     pub fn is_tensor(&self) -> bool {
         matches!(self, PropagatingEffect::Tensor(_))
     }
+    pub fn is_complex_tensor(&self) -> bool {
+        matches!(self, PropagatingEffect::ComplexTensor(_))
+    }
     pub fn is_uncertain_bool(&self) -> bool {
         matches!(self, PropagatingEffect::UncertainBool(_))
     }

@@ -29,6 +29,7 @@ pub use crate::alias::alias_csm::*;
 pub use crate::alias::alias_function::*;
 pub use crate::alias::alias_lock::*;
 pub use crate::alias::alias_primitives::*;
+pub use crate::alias::alias_tensor::*;
 pub use crate::alias::alias_uncertain::*;
 pub use crate::alias::alias_uniform::*;
 //

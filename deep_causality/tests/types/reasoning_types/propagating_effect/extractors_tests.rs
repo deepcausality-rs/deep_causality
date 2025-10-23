@@ -80,6 +80,24 @@ fn test_as_tensor() {
 }
 
 #[test]
+fn test_as_complex_tensor() {
+    use deep_causality_num::Complex;
+    let res = CausalTensor::new(
+        vec![Complex::new(1.0, 2.0), Complex::new(3.0, 4.0)],
+        vec![2],
+    );
+    assert!(res.is_ok());
+    let complex_tensor = res.unwrap();
+
+    let effect1 = PropagatingEffect::ComplexTensor(complex_tensor.clone());
+    assert!(effect1.is_complex_tensor());
+    assert_eq!(effect1.as_complex_tensor(), Some(complex_tensor));
+
+    let effect2 = PropagatingEffect::Deterministic(true);
+    assert_eq!(effect2.as_complex_tensor(), None);
+}
+
+#[test]
 fn test_as_uncertain_bool() {
     let point = Uncertain::<bool>::point(true);
     let effect1 = UncertainBool(point.clone());

@@ -22,6 +22,9 @@ impl Debug for PropagatingEffect {
             PropagatingEffect::Tensor(val) => {
                 write!(_f, "PropagatingEffect::Tensor({val:?})")
             }
+            PropagatingEffect::ComplexTensor(_) => {
+                write!(_f, "PropagatingEffect::ComplexTensor")
+            }
             PropagatingEffect::ContextualLink(id, val) => {
                 write!(_f, "PropagatingEffect::ContextualLink({id}, {val})")
             }

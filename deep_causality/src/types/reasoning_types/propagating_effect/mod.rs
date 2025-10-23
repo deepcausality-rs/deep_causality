@@ -4,6 +4,7 @@
  */
 
 use crate::{ContextId, ContextoidId, IdentificationValue, NumericalValue};
+use deep_causality_num::Complex;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_uncertain::{
     MaybeUncertainBool, MaybeUncertainF64, UncertainBool, UncertainF64,
@@ -46,8 +47,10 @@ pub enum PropagatingEffect {
     /// Note, when you import the  CausalTensorWitness from the deep_causality_tensor crate,
     /// you can apply monadic composition and monadic transformation to tensors.
     Tensor(CausalTensor<f64>),
-    //  /// Represents a Tensor over complex numbers via Causal Tensor.
-    //  ComplexTensor(CausalTensor<Complex<f64>>),
+    /// Represents a Tensor over complex numbers via Causal Tensor.
+    /// Note, when you import the  CausalTensorWitness from the deep_causality_tensor crate,
+    /// you can apply monadic composition and monadic transformation to complex tensors.
+    ComplexTensor(CausalTensor<Complex<f64>>),
     /// Represents a value with inherent uncertainty, modeled as a probability distribution.
     UncertainBool(UncertainBool),
     UncertainFloat(UncertainF64),

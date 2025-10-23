@@ -13,6 +13,7 @@ impl PartialEq for PropagatingEffect {
             (Self::Numerical(l), Self::Numerical(r)) => l == r,
             (Self::Probabilistic(l), Self::Probabilistic(r)) => l == r,
             (Self::Tensor(l), Self::Tensor(r)) => l == r,
+            (Self::ComplexTensor(l), Self::ComplexTensor(r)) => l == r,
             (Self::ContextualLink(l0, l1), Self::ContextualLink(r0, r1)) => l0 == r0 && l1 == r1,
             (Self::Map(l), Self::Map(r)) => l == r,
             (Self::Graph(l), Self::Graph(r)) => Arc::ptr_eq(l, r),
