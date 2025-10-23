@@ -39,6 +39,34 @@ fn test_float_neg_zero() {
 }
 
 #[test]
+fn test_float_min_value() {
+    let c = Complex::<f64>::min_value();
+    assert_eq!(c.re(), f64::MIN);
+    assert_eq!(c.im(), 0.0);
+}
+
+#[test]
+fn test_float_min_positive_value() {
+    let c = Complex::<f64>::min_positive_value();
+    assert_eq!(c.re(), f64::MIN_POSITIVE);
+    assert_eq!(c.im(), 0.0);
+}
+
+#[test]
+fn test_float_epsilon() {
+    let c = Complex::<f64>::epsilon();
+    assert_eq!(c.re(), f64::EPSILON);
+    assert_eq!(c.im(), 0.0);
+}
+
+#[test]
+fn test_float_max_value() {
+    let c = Complex::<f64>::max_value();
+    assert_eq!(c.re(), f64::MAX);
+    assert_eq!(c.im(), 0.0);
+}
+
+#[test]
 fn test_float_is_nan() {
     let c1 = Complex::new(1.0, f64::NAN);
     let c2 = Complex::new(f64::NAN, 2.0);

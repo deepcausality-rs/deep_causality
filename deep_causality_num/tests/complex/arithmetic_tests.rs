@@ -2,9 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
 use deep_causality_num::utils_tests::utils_complex_tests;
 use deep_causality_num::{Complex, ComplexNumber, Zero};
+use std::ops::Div;
 
 #[test]
 fn test_complex_add() {
@@ -78,6 +78,10 @@ fn test_complex_div_by_zero() {
     let c1 = Complex::new(1.0, 2.0);
     let c2 = Complex::<f64>::zero();
     let quot = c1 / c2;
+    assert!(quot.re().is_nan());
+    assert!(quot.im().is_nan());
+
+    let quot = c1.div(c2);
     assert!(quot.re().is_nan());
     assert!(quot.im().is_nan());
 }
