@@ -16,7 +16,7 @@ deep_causality_tensor = { path = "../../deep_causality_tensor" }
 
 
 # Exernal dependencies
-arrow-array = {version = "56", default-features = false}
+arrow-array = {version = "57", default-features = false}
 parquet = { version = "56" , default-features = false, features = ["arrow"]}
 
 [features]
