@@ -6,6 +6,7 @@ mod float_option;
 mod identity;
 pub mod num;
 mod ops;
+pub mod utils_tests;
 
 pub use crate::cast::as_primitive::AsPrimitive;
 pub use crate::cast::as_scalar::float_as_scalar_impl::FloatAsScalar;

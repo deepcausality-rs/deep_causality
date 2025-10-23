@@ -3,8 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Complex, ComplexNumber, Float};
+use crate::{Complex, ComplexNumber, Float, Num};
 use std::ops::{Add, Div, Mul, Rem, Sub};
+
+impl<F> Num for Complex<F> where F: Float {}
 
 // Implement Add trait
 impl<F> Add for Complex<F>
