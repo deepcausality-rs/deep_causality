@@ -435,8 +435,32 @@ fn test_float_sin_cos() {
 #[test]
 fn test_float_copysign() {
     let c1 = Complex::new(1.0, 2.0);
-    let c2 = Complex::new(-3.0, 4.0);
+    let c2 = Complex::new(-3.0, -4.0);
     let result = c1.copysign(c2);
     assert_eq!(result.re(), -1.0);
-    assert_eq!(result.im(), 2.0);
+    assert_eq!(result.im(), -2.0);
+
+    let c3 = Complex::new(-1.0, -2.0);
+    let c4 = Complex::new(3.0, 4.0);
+    let result2 = c3.copysign(c4);
+    assert_eq!(result2.re(), 1.0);
+    assert_eq!(result2.im(), 2.0);
+
+    let c5 = Complex::new(1.0, -2.0);
+    let c6 = Complex::new(-3.0, 4.0);
+    let result3 = c5.copysign(c6);
+    assert_eq!(result3.re(), -1.0);
+    assert_eq!(result3.im(), 2.0);
+
+    let c7 = Complex::new(0.0, 0.0);
+    let c8 = Complex::new(-1.0, -1.0);
+    let result4 = c7.copysign(c8);
+    assert_eq!(result4.re(), -0.0);
+    assert_eq!(result4.im(), -0.0);
+
+    let c9 = Complex::new(f64::nan(), 2.0);
+    let c10 = Complex::new(-1.0, -1.0);
+    let result5 = c9.copysign(c10);
+    assert!(result5.re().is_nan());
+    assert_eq!(result5.im(), -2.0);
 }

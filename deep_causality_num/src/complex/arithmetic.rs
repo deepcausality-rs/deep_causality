@@ -141,7 +141,17 @@ where
 
     #[inline]
     fn rem(self, rhs: Self) -> Self::Output {
-        Self::new(self.re % rhs.re, self.im % rhs.im)
+        let re = if rhs.re.is_zero() {
+            F::nan()
+        } else {
+            self.re % rhs.re
+        };
+        let im = if rhs.im.is_zero() {
+            F::nan()
+        } else {
+            self.im % rhs.im
+        };
+        Self::new(re, im)
     }
 }
 
@@ -154,6 +164,16 @@ where
 
     #[inline]
     fn rem(self, rhs: F) -> Self::Output {
-        Self::new(self.re % rhs, self.im % rhs)
+        let re = if rhs.is_zero() {
+            F::nan()
+        } else {
+            self.re % rhs
+        };
+        let im = if rhs.is_zero() {
+            F::nan()
+        } else {
+            self.im % rhs
+        };
+        Self::new(re, im)
     }
 }

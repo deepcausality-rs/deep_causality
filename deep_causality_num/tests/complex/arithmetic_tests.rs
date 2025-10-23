@@ -81,3 +81,55 @@ fn test_complex_div_by_zero() {
     assert!(quot.re().is_nan());
     assert!(quot.im().is_nan());
 }
+
+#[test]
+fn test_complex_rem_non_zero() {
+    let c1 = Complex::new(10.0f64, 5.0f64);
+    let c2 = Complex::new(3.0f64, 2.0f64);
+    let expected = Complex::new(10.0f64 % 3.0f64, 5.0f64 % 2.0f64);
+    assert_eq!(c1 % c2, expected);
+}
+
+#[test]
+fn test_complex_rem_zero_re_divisor() {
+    let c1 = Complex::new(10.0f64, 5.0f64);
+    let c2 = Complex::new(0.0f64, 2.0f64);
+    let result = c1 % c2;
+    assert!(result.re.is_nan());
+    assert_eq!(result.im, 5.0f64 % 2.0f64);
+}
+
+#[test]
+fn test_complex_rem_zero_im_divisor() {
+    let c1 = Complex::new(10.0f64, 5.0f64);
+    let c2 = Complex::new(3.0f64, 0.0f64);
+    let result = c1 % c2;
+    assert_eq!(result.re, 10.0f64 % 3.0f64);
+    assert!(result.im.is_nan());
+}
+
+#[test]
+fn test_complex_rem_zero_both_divisor() {
+    let c1 = Complex::new(10.0f64, 5.0f64);
+    let c2 = Complex::new(0.0f64, 0.0f64);
+    let result = c1 % c2;
+    assert!(result.re.is_nan());
+    assert!(result.im.is_nan());
+}
+
+#[test]
+fn test_complex_rem_scalar_non_zero() {
+    let c = Complex::new(10.0f64, 5.0f64);
+    let scalar = 3.0f64;
+    let expected = Complex::new(10.0f64 % 3.0f64, 5.0f64 % 3.0f64);
+    assert_eq!(c % scalar, expected);
+}
+
+#[test]
+fn test_complex_rem_scalar_zero() {
+    let c = Complex::new(10.0f64, 5.0f64);
+    let scalar = 0.0f64;
+    let result = c % scalar;
+    assert!(result.re.is_nan());
+    assert!(result.im.is_nan());
+}

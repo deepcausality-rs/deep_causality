@@ -392,6 +392,6 @@ where
 
     #[inline]
     fn copysign(self, sign: Self) -> Self {
-        Self::new(self.re.copysign(sign.re), self.im)
+        Self::new(self.re.copysign(sign.re), self.im.copysign(sign.im))
     }
 }

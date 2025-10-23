@@ -12,6 +12,7 @@ mod constructors;
 mod debug;
 mod display;
 mod float;
+mod from_primitives;
 mod identity;
 mod neg;
 mod num_cast;
