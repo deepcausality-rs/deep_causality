@@ -3,6 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::float::Float;
+use std::iter::{Product, Sum};
 use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
 
 mod arithmetic;
@@ -29,6 +30,8 @@ where
         + Div<Output = Self>
         + Rem<Output = Self>
         + Neg<Output = Self>
+        + Sum
+        + Product
         + PartialEq
         + Copy
         + Clone,

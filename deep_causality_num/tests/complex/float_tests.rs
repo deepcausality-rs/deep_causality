@@ -500,3 +500,52 @@ fn test_float_copysign() {
     assert!(result5.re().is_nan());
     assert_eq!(result5.im(), -2.0);
 }
+
+#[test]
+fn test_float_sqrt_zero_input() {
+    let c = Complex::new(0.0, 0.0);
+    let sqrt_c = c.sqrt();
+    utils_complex_tests::assert_complex_approx_eq(sqrt_c, Complex::new(0.0, 0.0), 1e-9);
+}
+
+#[test]
+fn test_float_sqrt_negative_real() {
+    let c = Complex::new(-1.0, 0.0); // sqrt(-1) = i
+    let sqrt_c = c.sqrt();
+    utils_complex_tests::assert_complex_approx_eq(sqrt_c, Complex::new(0.0, 1.0), 1e-9);
+}
+
+#[test]
+fn test_float_sqrt_negative_real_with_imaginary() {
+    let c = Complex::new(-3.0, 4.0); // sqrt(-3 + 4i) = 1 + 2i
+    let sqrt_c = c.sqrt();
+    utils_complex_tests::assert_complex_approx_eq(sqrt_c, Complex::new(1.0, 2.0), 1e-9);
+}
+
+#[test]
+fn test_float_sqrt_positive_real_zero_im_sqrt() {
+    // This case is when re_sqrt is zero, which happens when norm + re is zero.
+    // This implies re and norm are both zero, which means the complex number is zero.
+    // This is already covered by test_float_sqrt_zero_input.
+    // However, to explicitly test the branch `if re_sqrt.is_zero()`, we can use a very small number.
+    let c = Complex::new(f64::EPSILON, 0.0);
+    let sqrt_c = c.sqrt();
+    utils_complex_tests::assert_complex_approx_eq(
+        sqrt_c,
+        Complex::new(f64::EPSILON.sqrt(), 0.0),
+        1e-9,
+    );
+}
+
+#[test]
+fn test_float_sqrt_negative_real_zero_im_sqrt_branch() {
+    // This case is when im_sqrt is zero, which happens when norm - re is zero.
+    // This implies re is negative and im is zero.
+    let c = Complex::new(-f64::EPSILON, 0.0);
+    let sqrt_c = c.sqrt();
+    utils_complex_tests::assert_complex_approx_eq(
+        sqrt_c,
+        Complex::new(0.0, f64::EPSILON.sqrt()),
+        1e-9,
+    );
+}

@@ -4,9 +4,30 @@
  */
 
 use crate::{Complex, ComplexNumber, Float, Num};
+use std::iter::{Product, Sum};
 use std::ops::{Add, Div, Mul, Rem, Sub};
 
 impl<F> Num for Complex<F> where F: Float {}
+
+// Implement Sum trait
+impl<F> Sum for Complex<F>
+where
+    F: Float,
+{
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Self::new(F::zero(), F::zero()), |acc, x| acc + x)
+    }
+}
+
+// Implement Product trait
+impl<F> Product for Complex<F>
+where
+    F: Float,
+{
+    fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Self::new(F::one(), F::zero()), |acc, x| acc * x)
+    }
+}
 
 // Implement Add trait
 impl<F> Add for Complex<F>

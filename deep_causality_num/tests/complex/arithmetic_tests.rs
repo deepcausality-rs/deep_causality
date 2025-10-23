@@ -137,3 +137,43 @@ fn test_complex_rem_scalar_zero() {
     assert!(result.re.is_nan());
     assert!(result.im.is_nan());
 }
+
+#[test]
+fn test_complex_sum() {
+    let c1 = Complex::new(1.0, 2.0);
+    let c2 = Complex::new(3.0, 4.0);
+    let c3 = Complex::new(5.0, 6.0);
+    let v = vec![c1, c2, c3];
+    let sum: Complex<f64> = v.into_iter().sum();
+    assert_eq!(sum.re(), 9.0);
+    assert_eq!(sum.im(), 12.0);
+}
+
+#[test]
+fn test_complex_product() {
+    let c1 = Complex::new(1.0, 2.0);
+    let c2 = Complex::new(3.0, 4.0);
+    let c3 = Complex::new(5.0, 6.0);
+    let v = vec![c1, c2, c3];
+    let product: Complex<f64> = v.into_iter().product();
+    // (1+2i)(3+4i) = 3 + 4i + 6i - 8 = -5 + 10i
+    // (-5+10i)(5+6i) = -25 - 30i + 50i - 60 = -85 + 20i
+    assert_eq!(product.re(), -85.0);
+    assert_eq!(product.im(), 20.0);
+}
+
+#[test]
+fn test_complex_sum_empty() {
+    let v: Vec<Complex<f64>> = Vec::new();
+    let sum: Complex<f64> = v.into_iter().sum();
+    assert_eq!(sum.re(), 0.0);
+    assert_eq!(sum.im(), 0.0);
+}
+
+#[test]
+fn test_complex_product_empty() {
+    let v: Vec<Complex<f64>> = Vec::new();
+    let product: Complex<f64> = v.into_iter().product();
+    assert_eq!(product.re(), 1.0);
+    assert_eq!(product.im(), 0.0);
+}
