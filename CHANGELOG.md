@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.11.6...deep_causality-v0.12.0) - 2025-10-23
+
+### Added
+
+- *(deep_causality)* Added ComplexTensor to PropagatingEffect.
+- *(deep_causality_tensor)* Added TensorProduct
+- *(deep_causality)* Reorganized aliases. Improved public re-export. Fixed imports.
+- *(deep_causality)* Added constructors to propagating_effect. Added tests.
+- *(deep_causality)* Added MaybeUncertain and CausalTensor to PropagatingEffect. Updated tests.
+
+### Other
+
+- *(deep_causality_num)* minor fixes.
+- *(deep_causality_num)* minor fixes.
+- *(deep_causality_num)* increased test coverage.
+- *(deep_causality_uncertain)* Increased test coverage.
+- *(deep_causality)* Increased test coverage.
+- Added and updated type aliases.
+
 ## [0.11.6](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.11.5...deep_causality-v0.11.6) - 2025-10-19
 
 ### Other
