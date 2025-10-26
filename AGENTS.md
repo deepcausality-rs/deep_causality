@@ -72,9 +72,28 @@ src/errors/mod.rs  # contains each error type in a separate file
 src/traits/mod.rs # contains each trait in a separate file
 src/type/mod.rs # contains each type in a separate file
 
-As a rule, one type, one file. 
+## One type, one Rust module.
 
-Optional src folders
+For very small types (total implementation in less than 25 lines), the type is stored in file named as snail_case of the type name. For example:
+
+src/types/small_type.rs
+
+For more complex types, the type is stored a folder module for example,
+the type Uncertain is stored in:
+
+src/types/uncertain/mod.rs
+
+The mod.rs contains the type definition and constructors. 
+
+When the type implements multiple traits, each trait is stored within 
+a file named after the implementing trait or trait group. For example, 
+when implementing PartialEq and Debug for type Uncertain, these would be in 
+files:
+
+src/types/uncertain/uncertain_debug.rs
+src/types/uncertain/uncertain_part_eq.rs
+
+## Optional src folders
 src/extensions/mod.rs # contains type extensions i.e. a default impl for a trait
 src/utils/mod.rs # contains utils
 
