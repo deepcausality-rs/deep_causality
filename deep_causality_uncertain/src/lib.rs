@@ -11,6 +11,7 @@ mod errors;
 mod traits;
 mod types;
 pub mod utils_tests;
+mod extensions;
 
 // Algos
 pub use crate::algos::hypothesis::sprt_eval;
