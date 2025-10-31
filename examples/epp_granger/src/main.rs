@@ -4,7 +4,7 @@
  */
 
 use deep_causality::*;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 // Define IDs for different data types within the context
 const OIL_PRICE_ID: IdentificationValue = 0;
@@ -101,27 +101,29 @@ Conclusion: Past oil prices DO NOT Granger-cause future shipping activity."
 
 fn get_factual_causaloid(predictor_id: IdentificationValue) -> BaseCausaloid {
     let predictor_description = "Predicts shipping activity based on factual historical data";
-    let factual_context = Arc::new(get_context_with_data());
+    let factual_context = Arc::new(RwLock::new(get_context_with_data()));
 
     // `new_with_context` is used to create a causaloid that has access to its context.
     Causaloid::new_with_context(
         predictor_id,
-        shipping_predictor_logic,
+        shipping_predictor_logic as ContextualCausalFn<_, _, _, _, _, _, _>,
         Arc::clone(&factual_context),
         predictor_description,
     )
 }
 
 fn get_counterfactual_causaloid(predictor_id: IdentificationValue) -> BaseCausaloid {
-    let factual_context = Arc::new(get_context_with_data());
-    let counterfactual_context = Arc::new(get_counterfactual_context(&factual_context));
+    let factual_context = Arc::new(RwLock::new(get_context_with_data()));
+    let counterfactual_context = Arc::new(RwLock::new(get_counterfactual_context(
+        &factual_context.read().unwrap(),
+    )));
     let predictor_description =
         "Predicts shipping activity based on counterfactual historical data";
 
     // `new_with_context` is used to create a causaloid that has access to its context.
     Causaloid::new_with_context(
         predictor_id,
-        shipping_predictor_logic,
+        shipping_predictor_logic as ContextualCausalFn<_, _, _, _, _, _, _>,
         Arc::clone(&counterfactual_context),
         predictor_description,
     )
@@ -131,7 +133,7 @@ fn get_counterfactual_causaloid(predictor_id: IdentificationValue) -> BaseCausal
 /// This function has access to the context and performs a prediction based on its contents.
 fn shipping_predictor_logic(
     effect: &PropagatingEffect,
-    context: &Arc<BaseContext>,
+    context: &Arc<RwLock<BaseContext>>,
 ) -> Result<PropagatingEffect, CausalityError> {
     // Extract the target prediction time from the input effect map.
     let _target_time = effect.get_numerical_from_map(TIME_ID)?;
@@ -142,8 +144,9 @@ fn shipping_predictor_logic(
     // Iterate through all nodes in the context graph to gather historical data.
     // A real implementation would likely use more sophisticated queries, but this
     // demonstrates accessing the full context.
-    for i in 0..context.number_of_nodes() {
-        if let Some(node) = context.get_node(i)
+    let context_guard = context.read().unwrap();
+    for i in 0..context_guard.number_of_nodes() {
+        if let Some(node) = context_guard.get_node(i)
             && let ContextoidType::Datoid(data_node) = node.vertex_type()
         {
             match data_node.id() {

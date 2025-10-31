@@ -1,9 +1,9 @@
 use deep_causality::*;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 fn main() {
     // Create a context and wrap it in an Arc for shared ownership
-    let context = Arc::new(get_base_context());
+    let context = Arc::new(RwLock::new(get_base_context()));
 
     // 1. Build a CausaloidGraph
     let causaloid = get_test_causaloid(Arc::clone(&context));
@@ -55,13 +55,13 @@ fn get_effect_ethos() -> EffectEthos<
     ethos
 }
 
-fn get_test_causaloid(context: Arc<BaseContext>) -> BaseCausaloid {
+fn get_test_causaloid(context: Arc<RwLock<BaseContext>>) -> BaseCausaloid {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
 
     fn context_causal_fn(
         effect: &PropagatingEffect,
-        _context: &Arc<BaseContext>,
+        _context: &Arc<RwLock<BaseContext>>,
     ) -> Result<PropagatingEffect, CausalityError> {
         let obs = match effect {
             PropagatingEffect::Numerical(val) => *val,

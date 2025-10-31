@@ -4,7 +4,7 @@
  */
 
 use deep_causality::*;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 // Contextoid IDs
 const NICOTINE_ID: IdentificationValue = 1;
@@ -14,14 +14,16 @@ const TAR_ID: IdentificationValue = 2;
 /// It prioritizes checking for tar, then for smoking.
 fn contextual_cancer_risk_logic(
     _effect: &PropagatingEffect,
-    context: &Arc<BaseContext>,
+    context: &Arc<RwLock<BaseContext>>,
 ) -> Result<PropagatingEffect, CausalityError> {
     let mut tar_level = 0.0;
     let mut nicotine_level = 0.0;
 
+    let ctx = context.read().unwrap();
+
     // Scan the context for relevant data.
-    for i in 0..context.number_of_nodes() {
-        if let Some(node) = context.get_node(i)
+    for i in 0..ctx.number_of_nodes() {
+        if let Some(node) = ctx.get_node(i)
             && let ContextoidType::Datoid(data_node) = node.vertex_type()
         {
             match data_node.id() {
@@ -54,7 +56,7 @@ pub fn run_rung3_counterfactual() {
     let cancer_risk_causaloid = Causaloid::new_with_context(
         1,
         contextual_cancer_risk_logic,
-        Arc::new(BaseContext::with_capacity(0, "temp", 1)), // Temporary context, will be replaced
+        Arc::new(RwLock::new(BaseContext::with_capacity(0, "temp", 1))), // Temporary context, will be replaced
         "Contextual Cancer Risk",
     );
 
@@ -85,10 +87,10 @@ pub fn run_rung3_counterfactual() {
 
     // 4. Evaluate Both Scenarios
     let mut factual_causaloid = cancer_risk_causaloid.clone();
-    factual_causaloid.set_context(Some(Arc::new(factual_context)));
+    factual_causaloid.set_context(Some(Arc::new(RwLock::new(factual_context))));
 
     let mut counterfactual_causaloid = cancer_risk_causaloid.clone();
-    counterfactual_causaloid.set_context(Some(Arc::new(counterfactual_context)));
+    counterfactual_causaloid.set_context(Some(Arc::new(RwLock::new(counterfactual_context))));
 
     let factual_risk = factual_causaloid
         .evaluate(&PropagatingEffect::None)

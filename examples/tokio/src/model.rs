@@ -7,14 +7,14 @@ use deep_causality::{
     ContextoidType, ContextuableGraph, IdentificationValue, Model, NumericalValue,
     PropagatingEffect, Root,
 };
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 pub fn build_causal_model() -> BaseModel {
     let id = 1;
     let author = "Marvin Hansen <marvin.hansen@gmail.com>";
     let assumptions = None;
     let causaloid = Arc::new(get_test_causaloid());
-    let context = Some(Arc::new(get_test_context()));
+    let context = Some(Arc::new(RwLock::new(get_test_context())));
     let description = "This is a test causal model";
 
     Model::new(id, author, description, assumptions, causaloid, context)

@@ -14,10 +14,12 @@ fn test_space_time_kind_variants_and_traits() {
     let minkowski = MinkowskiSpacetime::new(3, 1.0, 2.0, 3.0, 4.0, TimeScale::Second);
     let tangent = TangentSpacetime::new(4, 1.0, 2.0, 3.0, 4.0, 1.0, 0.0, 0.0, 0.0);
 
-    let variants = [SpaceTimeKind::Euclidean(euclidean),
+    let variants = [
+        SpaceTimeKind::Euclidean(euclidean),
         SpaceTimeKind::Lorentzian(lorentzian),
         SpaceTimeKind::Minkowski(minkowski),
-        SpaceTimeKind::Tangent(tangent)];
+        SpaceTimeKind::Tangent(tangent),
+    ];
 
     for (i, variant) in variants.iter().enumerate() {
         // Identifiable
