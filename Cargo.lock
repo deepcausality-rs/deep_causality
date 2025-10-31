@@ -470,6 +470,7 @@ name = "deep_causality_uncertain"
 version = "0.3.2"
 dependencies = [
  "criterion",
+ "deep_causality_haft",
  "deep_causality_rand",
  "rusty-fork",
 ]

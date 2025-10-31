@@ -17,71 +17,71 @@ Tasks are generated based on the feature specification, data model, and quicksta
 
 ### Setup
 
-- **T001**: Ensure `deep_causality_uncertain` crate is set up for development.
+- [x] **T001**: Ensure `deep_causality_uncertain` crate is set up for development.
   - **Description**: Verify that the `deep_causality_uncertain` crate can be built and tested independently.
   - **File**: `deep_causality_uncertain/Cargo.toml`
 
 ### Core Trait Implementations
 
-- **T002 [P]**: Implement `UncertainWitness` struct.
+- [x] **T002 [P]**: Implement `UncertainWitness` struct.
   - **Description**: Create the zero-sized `UncertainWitness` struct. Refer to `data-model.md` for entity definition.
   - **File**: `deep_causality_uncertain/src/extensions/uncertain_witness.rs`
 
-- **T003 [P]**: Implement `MaybeUncertainWitness` struct.
+- [x] **T003 [P]**: Implement `MaybeUncertainWitness` struct.
   - **Description**: Create the zero-sized `MaybeUncertainWitness` struct. Refer to `data-model.md` for entity definition.
   - **File**: `deep_causality_uncertain/src/extensions/maybe_uncertain_witness.rs`
 
-- **T004 [P]**: Implement `HKT` trait for `UncertainWitness`.
+- [x] **T004 [P]**: Implement `HKT` trait for `UncertainWitness`.
   - **Description**: Implement the `HKT` trait from `deep_causality_haft` for `UncertainWitness`. Refer to `data-model.md` for trait definition.
   - **File**: `deep_causality_uncertain/src/extensions/uncertain_hkt.rs`
 
-- **T005 [P]**: Implement `HKT` trait for `MaybeUncertainWitness`.
+- [x] **T005 [P]**: Implement `HKT` trait for `MaybeUncertainWitness`.
   - **Description**: Implement the `HKT` trait from `deep_causality_haft` for `MaybeUncertainWitness`. Refer to `data-model.md` for trait definition.
   - **File**: `deep_causality_uncertain/src/extensions/maybe_uncertain_hkt.rs`
 
-- **T006 [P]**: Implement `Functor` trait for `UncertainWitness`.
+- [x] **T006 [P]**: Implement `Functor` trait for `UncertainWitness`.
   - **Description**: Implement the `Functor` trait from `deep_causality_haft` for `UncertainWitness`, including the `fmap` operation. Refer to `data-model.md` for trait definition and `quickstart.md` for Functor Transformation scenario.
   - **File**: `deep_causality_uncertain/src/extensions/uncertain_functor.rs`
 
-- **T007 [P]**: Implement `Functor` trait for `MaybeUncertainWitness`.
+- [x] **T007 [P]**: Implement `Functor` trait for `MaybeUncertainWitness`.
   - **Description**: Implement the `Functor` trait from `deep_causality_haft` for `MaybeUncertainWitness`, including the `fmap` operation. Refer to `data-model.md` for trait definition and `quickstart.md` for Functor Transformation scenario.
   - **File**: `deep_causality_uncertain/src/extensions/maybe_uncertain_functor.rs`
 
-- **T008 [P]**: Implement `Applicative` trait for `UncertainWitness`.
+- [x] **T008 [P]**: Implement `Applicative` trait for `UncertainWitness`.
   - **Description**: Implement the `Applicative` trait from `deep_causality_haft` for `UncertainWitness`, including `pure` and `apply` operations. Refer to `data-model.md` for trait definition and `quickstart.md` for Applicative Combination scenario.
   - **File**: `deep_causality_uncertain/src/extensions/uncertain_applicative.rs`
 
-- **T009 [P]**: Implement `Applicative` trait for `MaybeUncertainWitness`.
+- [x] **T009 [P]**: Implement `Applicative` trait for `MaybeUncertainWitness`.
   - **Description**: Implement the `Applicative` trait from `deep_causality_haft` for `MaybeUncertainWitness`, including `pure` and `apply` operations. Refer to `data-model.md` for trait definition and `quickstart.md` for Applicative Combination scenario.
   - **File**: `deep_causality_uncertain/src/extensions/maybe_uncertain_applicative.rs`
 
-- **T010 [P]**: Implement `Monad` trait for `UncertainWitness`.
+- [x] **T010 [P]**: Implement `Monad` trait for `UncertainWitness`.
   - **Description**: Implement the `Monad` trait from `deep_causality_haft` for `UncertainWitness`, including the `bind` operation. Refer to `data-model.md` for trait definition and `quickstart.md` for Monadic Chaining scenario.
   - **File**: `deep_causality_uncertain/src/extensions/uncertain_monad.rs`
 
-- **T011 [P]**: Implement `Monad` trait for `MaybeUncertainWitness`.
+- [x] **T011 [P]**: Implement `Monad` trait for `MaybeUncertainWitness`.
   - **Description**: Implement the `Monad` trait from `deep_causality_haft` for `MaybeUncertainWitness`, including the `bind` operation. Refer to `data-model.md` for trait definition and `quickstart.md` for Monadic Chaining scenario.
   - **File**: `deep_causality_uncertain/src/extensions/maybe_uncertain_monad.rs`
 
-- **T012 [P]**: Ensure `UncertainWitness` and `MaybeUncertainWitness` do NOT implement `Foldable` trait.
+- [x] **T012 [P]**: Ensure `UncertainWitness` and `MaybeUncertainWitness` do NOT implement `Foldable` trait.
   - **Description**: Verify that `Foldable` trait is not implemented for `UncertainWitness` and `MaybeUncertainWitness`. Refer to `data-model.md` for trait definition and `quickstart.md` for Foldable Restriction scenario.
   - **File**: `deep_causality_uncertain/src/extensions/mod.rs` (and `maybe_uncertain/mod.rs`)
 
 ### Test Implementations
 
-- **T013 [P]**: Write integration test for Functor Transformation scenario.
+- [x] **T013 [P]**: Write integration test for Functor Transformation scenario.
   - **Description**: Create an integration test to verify the `fmap` operation for `Uncertain<T>` and `MaybeUncertain<T>`. Refer to `quickstart.md` for the scenario details.
   - **File**: `deep_causality_uncertain/tests/hkt_integration_tests.rs`
 
-- **T014 [P]**: Write integration test for Applicative Combination scenario.
+- [x] **T014 [P]**: Write integration test for Applicative Combination scenario.
   - **Description**: Create an integration test to verify the `apply` operation for `Uncertain<T>` and `MaybeUncertain<T>`. Refer to `quickstart.md` for the scenario details.
   - **File**: `deep_causality_uncertain/tests/hkt_integration_tests.rs`
 
-- **T015 [P]**: Write integration test for Monadic Chaining scenario.
+- [x] **T015 [P]**: Write integration test for Monadic Chaining scenario.
   - **Description**: Create an integration test to verify the `bind` operation for `Uncertain<T>` and `MaybeUncertain<T>`. Refer to `quickstart.md` for the scenario details.
   - **File**: `deep_causality_uncertain/tests/hkt_integration_tests.rs`
 
-- **T016 [P]**: Write integration test for Foldable Restriction scenario.
+- [x] **T016 [P]**: Write integration test for Foldable Restriction scenario.
   - **Description**: Create an integration test to verify that `Foldable` operations are not available for `Uncertain<T>` and `MaybeUncertain<T>`. Refer to `quickstart.md` for the scenario details.
   - **File**: `deep_causality_uncertain/tests/hkt_integration_tests.rs`
 

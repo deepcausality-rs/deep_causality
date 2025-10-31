@@ -171,8 +171,8 @@ deep_causality_uncertain/
 ### Technical Risks
 
 - **R1: Complexity of HKT Implementation in Rust**
-  - **Description**: Implementing HKT traits (Functor, Applicative, Monad) in Rust can be complex due to Rust's type system limitations and the need for witness types.
-  - **Mitigation**: Leverage existing patterns and best practices from `deep_causality_haft` crate. Start with simpler traits (Functor) and progressively move to more complex ones (Monad). Conduct thorough code reviews.
+  - **Description**: Implementing HKT traits (Functor, Applicative, Monad) in Rust can be complex due to Rust's type system limitations and the need for witness types. Additionally, closures used in these implementations require `Send + Sync + 'static` bounds for thread safety and lifetime management, which adds to the complexity.
+  - **Mitigation**: Leverage existing patterns and best practices from `deep_causality_haft` crate. Start with simpler traits (Functor) and progressively move to more complex ones (Monad). Conduct thorough code reviews. Explicitly consider `Send + Sync + 'static` requirements during design and implementation of closures.
 
 - **R2: Performance Overhead of HKT Abstractions**
   - **Description**: While zero-cost abstractions are a goal, there's a risk that the HKT implementation might introduce unexpected performance overhead.
