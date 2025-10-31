@@ -16,7 +16,7 @@ use crate::{
     ModelBuildError, ModelValidationError, Symbolic,
 };
 use std::hash::Hash;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 #[allow(clippy::type_complexity)]
 #[derive(Debug)]
@@ -35,7 +35,7 @@ where
     description: String,
     assumptions: Option<Arc<Vec<Assumption>>>,
     causaloid: Arc<Causaloid<D, S, T, ST, SYM, VS, VT>>,
-    context: Option<Arc<Context<D, S, T, ST, SYM, VS, VT>>>,
+    context: Option<Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>,
 }
 
 #[allow(clippy::type_complexity)]
@@ -55,7 +55,7 @@ where
         description: &str,
         assumptions: Option<Arc<Vec<Assumption>>>,
         causaloid: Arc<Causaloid<D, S, T, ST, SYM, VS, VT>>,
-        context: Option<Arc<Context<D, S, T, ST, SYM, VS, VT>>>,
+        context: Option<Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>,
     ) -> Self {
         Self {
             id,
@@ -114,7 +114,7 @@ where
         // The context is also owned now.
         let final_context_arc = if let Some(context) = context_opt {
             // Create the Arc for the context.
-            let context_arc = Arc::new(context);
+            let context_arc = Arc::new(RwLock::new(context));
 
             final_causaloid.set_context(Some(Arc::clone(&context_arc)));
 

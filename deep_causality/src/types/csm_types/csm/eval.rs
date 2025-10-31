@@ -143,7 +143,8 @@ where
         if let Some((ethos, tags)) = &self.effect_ethos {
             if let Some(context) = state.context() {
                 let proposed_action = self.create_proposed_action(state, effect)?;
-                let verdict = ethos.evaluate_action(&proposed_action, context, tags)?;
+                let context_guard = context.read().unwrap();
+                let verdict = ethos.evaluate_action(&proposed_action, &context_guard, tags)?;
 
                 if verdict.outcome() == TeloidModal::Impermissible {
                     let explanation = ethos.explain_verdict(&verdict)?;
