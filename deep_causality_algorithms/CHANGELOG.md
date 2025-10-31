@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algorithms-v0.2.0...deep_causality_algorithms-v0.2.1) - 2025-10-31
+
+### Added
+
+- *(deep_causality_tensor)* Moved TensorProduct implementation from an extension into the CausalTensor  type.
+
 ## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algorithms-v0.1.4...deep_causality_algorithms-v0.2.0) - 2025-10-02
 
 ### Added

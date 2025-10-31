@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_haft-v0.2.0...deep_causality_haft-v0.2.1) - 2025-10-31
+
+### Added
+
+- *(deep_causality_tensor)* Added Higher Kinded Type extension.
+- *(deep_causality_haft)* Added more default witness types and updated example code.
+- *(deep_causality_haft)* Added more default witness types and updated example code.
+- *(deep_causality_haft)* Added SBOM and signature
+
+### Other
+
+- *(deep_causality_haft)* Updated README.md
+
 ## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_haft-v0.1.0...deep_causality_haft-v0.2.0) - 2025-10-19
 
 ### Added
