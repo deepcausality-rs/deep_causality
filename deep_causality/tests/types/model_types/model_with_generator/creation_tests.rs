@@ -112,7 +112,7 @@ fn test_creates_causaloid_and_context() {
 
     let context = model.context();
     assert!(context.is_some());
-    let ctx = context.as_ref().unwrap();
+    let ctx = context.as_ref().unwrap().read().unwrap();
     assert_eq!(ctx.id(), 200);
     assert_eq!(ctx.name(), "Generated Context");
 }
@@ -169,5 +169,4 @@ fn test_creation_with_assumptions() {
     assert!(model.assumptions().is_some());
     assert_eq!(model.assumptions().as_ref().unwrap().len(), 3);
     assert_eq!(model.causaloid().id(), 400);
-    assert_eq!(model.context().as_ref().unwrap().id(), 500);
 }

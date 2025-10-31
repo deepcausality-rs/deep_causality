@@ -6,7 +6,7 @@
 use crate::{
     Assumption, Causaloid, Context, Datable, Model, SpaceTemporal, Spatial, Symbolic, Temporal,
 };
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 #[allow(clippy::type_complexity)]
 impl<D, S, T, ST, SYM, VS, VT> Model<D, S, T, ST, SYM, VS, VT>
@@ -35,7 +35,7 @@ where
         &self.causaloid
     }
 
-    pub fn context(&self) -> &Option<Arc<Context<D, S, T, ST, SYM, VS, VT>>> {
+    pub fn context(&self) -> &Option<Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>> {
         &self.context
     }
 }

@@ -4,7 +4,7 @@
  */
 
 use deep_causality::*;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 // Define IDs for different data types within the context
 const AGE_ID: IdentificationValue = 1;
@@ -70,14 +70,14 @@ fn main() {
         let treatment_causaloid = Causaloid::new_with_context(
             DRUG_EFFECT_CAUSALOID_ID,
             drug_effect_logic,
-            Arc::new(treatment_context),
+            Arc::new(RwLock::new(treatment_context)),
             "Drug effect under treatment",
         );
 
         let control_causaloid = Causaloid::new_with_context(
             DRUG_EFFECT_CAUSALOID_ID,
             drug_effect_logic,
-            Arc::new(control_context),
+            Arc::new(RwLock::new(control_context)),
             "Drug effect under control",
         );
 
@@ -121,13 +121,15 @@ fn main() {
 /// This function checks the context to see if the drug was administered and returns the effect on blood pressure.
 fn drug_effect_logic(
     _effect: &PropagatingEffect, // We don't need the incoming effect for this simple model
-    context: &Arc<BaseContext>,
+    context: &Arc<RwLock<BaseContext>>,
 ) -> Result<PropagatingEffect, CausalityError> {
     let mut drug_administered = false;
 
+    let ctx = context.read().unwrap();
+
     // Search the context for the DRUG_ADMINISTERED_ID flag.
-    for i in 0..context.number_of_nodes() {
-        if let Some(node) = context.get_node(i)
+    for i in 0..ctx.number_of_nodes() {
+        if let Some(node) = ctx.get_node(i)
             && let ContextoidType::Datoid(data_node) = node.vertex_type()
             && data_node.id() == DRUG_ADMINISTERED_ID
             && data_node.get_data() == 1.0

@@ -117,7 +117,7 @@ fn test_context_getter() {
 
     let retrieved_context_opt = cs_with_context.context();
     assert!(retrieved_context_opt.is_some());
-    let retrieved_context = retrieved_context_opt.as_ref().unwrap();
+    let retrieved_context = retrieved_context_opt.as_ref().unwrap().read().unwrap();
     assert_eq!(retrieved_context.id(), context_arc.id());
     assert_eq!(retrieved_context.name(), context_arc.name());
 

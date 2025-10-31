@@ -7,7 +7,7 @@ use crate::{
     CausalState, Causaloid, Context, Datable, PropagatingEffect, SpaceTemporal, Spatial, Symbolic,
     Temporal, UncertainParameter,
 };
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 impl<D, S, T, ST, SYM, VS, VT> CausalState<D, S, T, ST, SYM, VS, VT>
 where
@@ -36,7 +36,7 @@ where
     }
 
     #[allow(clippy::type_complexity)]
-    pub fn context(&self) -> &Option<Arc<Context<D, S, T, ST, SYM, VS, VT>>> {
+    pub fn context(&self) -> &Option<Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>> {
         self.causaloid.context()
     }
 

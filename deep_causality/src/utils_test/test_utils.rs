@@ -4,7 +4,7 @@
  */
 use crate::*;
 use deep_causality_uncertain::Uncertain;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 pub fn get_context() -> BaseContext {
     let id = 1;
@@ -212,12 +212,12 @@ pub fn get_test_causaloid_deterministic() -> BaseCausaloid {
 
 pub fn get_test_causaloid_deterministic_with_context(context: BaseContext) -> BaseCausaloid {
     let id: IdentificationValue = 1;
-    let context = Arc::new(context);
+    let context = Arc::new(RwLock::new(context));
     let description = "Inverts any input";
 
     fn causal_fn(
         effect: &PropagatingEffect,
-        _context: &Arc<BaseContext>,
+        _context: &Arc<RwLock<BaseContext>>,
     ) -> Result<PropagatingEffect, CausalityError> {
         let obs = match effect {
             // If it's the Deterministic variant, extract the inner value.

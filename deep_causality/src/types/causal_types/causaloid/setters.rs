@@ -4,7 +4,7 @@
  */
 
 use crate::{Causaloid, Context, Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 // Constructors
 #[allow(clippy::type_complexity)]
@@ -18,7 +18,7 @@ where
     VS: Clone,
     VT: Clone,
 {
-    pub fn set_context(&mut self, context: Option<Arc<Context<D, S, T, ST, SYM, VS, VT>>>) {
+    pub fn set_context(&mut self, context: Option<Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>) {
         self.context = context;
     }
 }

@@ -200,7 +200,7 @@ fn test_deletes_contextoid() {
         model_result.err()
     );
     let model = model_result.unwrap();
-    let context = model.context().as_ref().unwrap();
+    let context = model.context().as_ref().unwrap().read().unwrap();
 
     // Started with 0, added 2, deleted 1. Should be 1 left.
     assert_eq!(context.number_of_nodes(), 1);
