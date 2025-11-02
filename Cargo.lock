@@ -396,7 +396,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality"
-version = "0.11.6"
+version = "0.11.7"
 dependencies = [
  "criterion",
  "deep_causality_data_structures",
@@ -408,7 +408,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_algorithms"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "criterion",
  "deep_causality_num",
@@ -430,7 +430,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_discovery"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "csv",
  "deep_causality_algorithms",
@@ -441,7 +441,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_haft"
-version = "0.2.0"
+version = "0.2.1"
 
 [[package]]
 name = "deep_causality_macros"
@@ -449,7 +449,7 @@ version = "0.8.8"
 
 [[package]]
 name = "deep_causality_num"
-version = "0.1.4"
+version = "0.1.5"
 
 [[package]]
 name = "deep_causality_rand"
@@ -461,7 +461,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_tensor"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "criterion",
  "deep_causality_haft",
@@ -471,7 +471,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_uncertain"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "criterion",
  "deep_causality_haft",
@@ -497,6 +497,13 @@ dependencies = [
 
 [[package]]
 name = "example-cate"
+version = "0.1.0"
+dependencies = [
+ "deep_causality",
+]
+
+[[package]]
+name = "example-context"
 version = "0.1.0"
 dependencies = [
  "deep_causality",

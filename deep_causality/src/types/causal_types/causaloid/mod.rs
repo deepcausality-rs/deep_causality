@@ -35,7 +35,7 @@ where
     causal_type: CausaloidType,
     causal_fn: Option<CausalFn>,
     context_causal_fn: Option<ContextualCausalFn<D, S, T, ST, SYM, VS, VT>>,
-    context: Option<Arc<Context<D, S, T, ST, SYM, VS, VT>>>,
+    context: Option<Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>,
     // The last calculated effect of this causaloid. It's an Option because a
     // causaloid may not have been evaluated yet.
     effect: ArcRWLock<Option<PropagatingEffect>>,
@@ -90,7 +90,7 @@ where
     pub fn new_with_context(
         id: IdentificationValue,
         context_causal_fn: ContextualCausalFn<D, S, T, ST, SYM, VS, VT>,
-        context: Arc<Context<D, S, T, ST, SYM, VS, VT>>,
+        context: Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>,
         description: &str,
     ) -> Self {
         Causaloid {
@@ -140,7 +140,7 @@ where
     pub fn from_causal_collection_with_context(
         id: IdentificationValue,
         causal_coll: Arc<Vec<Causaloid<D, S, T, ST, SYM, VS, VT>>>,
-        context: Arc<Context<D, S, T, ST, SYM, VS, VT>>,
+        context: Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>,
         description: &str,
     ) -> Self {
         Causaloid {
@@ -190,7 +190,7 @@ where
     pub fn from_causal_graph_with_context(
         id: IdentificationValue,
         causal_graph: Arc<CausaloidGraph<Causaloid<D, S, T, ST, SYM, VS, VT>>>,
-        context: Arc<Context<D, S, T, ST, SYM, VS, VT>>,
+        context: Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>,
         description: &str,
     ) -> Self {
         Causaloid {

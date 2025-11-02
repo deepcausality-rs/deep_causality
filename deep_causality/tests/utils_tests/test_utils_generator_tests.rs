@@ -6,7 +6,7 @@ use deep_causality::utils_test::test_utils_generator::{
     MockData, TestCausaloid, TestContext, TestContextoid, TestModel,
 };
 use deep_causality::{ContextoidType, Datable, Identifiable, PropagatingEffect, Root};
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 #[test]
 fn test_mock_data() {
@@ -67,7 +67,9 @@ fn test_test_model() {
         |_| Ok(PropagatingEffect::Deterministic(false)),
         "test",
     ));
-    let context = Some(Arc::new(TestContext::with_capacity(id, "", 12)));
+    let context = Some(Arc::new(RwLock::new(TestContext::with_capacity(
+        id, "", 12,
+    ))));
 
     let model = TestModel::new(id, author, description, assumptions, causaloid, context);
 

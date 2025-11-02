@@ -80,7 +80,7 @@ fn test_updates_context_name() {
 
     assert!(model_result.is_ok());
     let model = model_result.unwrap();
-    let context = model.context().as_ref().unwrap();
+    let context = model.context().as_ref().unwrap().read().unwrap();
     assert_eq!(context.id(), 10);
     assert_eq!(context.name(), "Updated Name");
 }
@@ -241,6 +241,6 @@ fn test_creates_extra_context() {
     );
     let model = model_result.unwrap();
 
-    let context = model.context().as_ref().unwrap();
+    let context = model.context().as_ref().unwrap().read().unwrap();
     assert!(context.extra_ctx_check_exists(99));
 }

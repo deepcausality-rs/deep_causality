@@ -4,7 +4,7 @@
  */
 use deep_causality::utils_test::test_utils;
 use deep_causality::{AssumptionError, Identifiable, Model, PropagatingEffect, Transferable};
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 #[test]
 fn test_assumptions_no_assumptions_err() {
@@ -13,7 +13,7 @@ fn test_assumptions_no_assumptions_err() {
     let description = "This is a test model";
     let assumptions = None;
     let causaloid = Arc::new(test_utils::get_test_causaloid_deterministic());
-    let context = Some(Arc::new(test_utils::get_test_context()));
+    let context = Some(Arc::new(RwLock::new(test_utils::get_test_context())));
 
     let model = Model::new(id, author, description, assumptions, causaloid, context);
 
@@ -42,7 +42,7 @@ fn test_assumptions_no_data_err() {
     let description = "This is a test model";
     let assumptions = Some(Arc::new(vec![test_utils::get_test_assumption()]));
     let causaloid = Arc::new(test_utils::get_test_causaloid_deterministic());
-    let context = Some(Arc::new(test_utils::get_test_context()));
+    let context = Some(Arc::new(RwLock::new(test_utils::get_test_context())));
 
     let model = Model::new(
         id,
@@ -108,7 +108,7 @@ fn test_verify_assumptions_failed() {
     let description = "This is a test model";
     let assumptions = Some(Arc::new(vec![test_utils::get_test_assumption_false()]));
     let causaloid = Arc::new(test_utils::get_test_causaloid_deterministic());
-    let context = Some(Arc::new(test_utils::get_test_context()));
+    let context = Some(Arc::new(RwLock::new(test_utils::get_test_context())));
 
     let model = Model::new(
         id,
@@ -141,7 +141,7 @@ fn test_verify_assumptions_success() {
     let description = "This is a test model";
     let assumptions = Some(Arc::new(vec![test_utils::get_test_assumption()]));
     let causaloid = Arc::new(test_utils::get_test_causaloid_deterministic());
-    let context = Some(Arc::new(test_utils::get_test_context()));
+    let context = Some(Arc::new(RwLock::new(test_utils::get_test_context())));
 
     let model = Model::new(
         id,

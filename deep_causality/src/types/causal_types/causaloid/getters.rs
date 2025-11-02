@@ -16,7 +16,7 @@ where
     VS: Clone,
     VT: Clone,
 {
-    pub fn context(&self) -> &Option<Arc<Context<D, S, T, ST, SYM, VS, VT>>> {
+    pub fn context(&self) -> &Option<Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>> {
         &self.context
     }
 
