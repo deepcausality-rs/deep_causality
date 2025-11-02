@@ -52,21 +52,26 @@ The original internal representation of `Uncertain<T>` relies on an `Arc<Computa
 -   **Generic Containment**: `ConstTree` can generically hold the probabilistic values of `Uncertain<T>`, facilitating `A -> B` type transformations.
 -   **Structured Composition**: The tree structure offers a clear and recursive mechanism for implementing `pure`, `apply`, and `bind` operations, enabling the composition and sequencing of uncertain computations.
 
-However, a critical obstacle remains: the `Functor`, `Applicative`, and `Monad` traits from `deep_causality_haft` define operations with generic type parameters `A` and `B` (e.g., `Func: FnMut(A) -> B`). For `Uncertain<T>`, where `T` represents a probability distribution, the types `A` and `B` cannot be arbitrary. Currently, `deep_causality_uncertain` primarily supports distributions over `f64` and `bool` (via `SampledValue`). Therefore, even with `ConstTree`, the HKT implementations will be inherently constrained: `A` and `B` must be types for which `Uncertain<T>` can meaningfully define and transform probability distributions. This means implementations will require specific trait bounds (e.g., `A: Into<SampledValue>`, `B: From<SampledValue>`) to ensure type compatibility with the underlying stochastic model, limiting the full generality implied by the `Haft` trait signatures.
+However, a critical obstacle remains: the `Functor`, `Applicative`, and `Monad` traits from `deep_causality_haft` define operations with generic type parameters `A` and `B` (e.g., `Func: FnMut(A) -> B`). For `Uncertain<T>`, where `T` represents a probability distribution, the types `A` and `B` cannot be arbitrary. They must be types for which `Uncertain<T>` can meaningfully define and transform probability distributions (i.e., `ProbabilisticType`). This inherent constraint conflicts with the unconstrained generic parameters of the `deep_causality_haft` HKT traits.
+
+To resolve this, `Uncertain<T>` will *not* directly implement the `deep_causality_haft` HKT traits. Instead, a set of *independent HKT-like traits* (`UncertainFunctor`, `UncertainApplicative`, `UncertainMonad`) will be defined. These independent traits will mirror the method signatures of their `deep_causality_haft` counterparts but will explicitly include the `ProbabilisticType` bounds on their generic type parameters (`A` and `B`). This allows `Uncertain<T>` to provide monadic functionality with the necessary type constraints, while still adhering to the HKT pattern.
 
 **Practical Solution for Monadic `Uncertain` and `MaybeUncertain`:**
 To bridge this gap and enable robust HKT implementations, the following architectural changes are proposed:
 1.  **Introduce `ProbabilisticType` Trait**: A new trait `ProbabilisticType` will be defined in `deep_causality_uncertain/src/traits/probabilistic_type.rs`. This trait will be implemented by types that `Uncertain<T>` can meaningfully operate on (initially `f64` and `bool`), providing methods for conversion to/from `SampledValue` and a `default_value`.
 2.  **Constrain `Uncertain<T>`**: The `Uncertain<T>` struct will be constrained with `T: ProbabilisticType`, ensuring type compatibility throughout its operations.
-3.  **Redesign `ConstTree` Node Content**: The `ConstTree` will no longer directly hold `T`. Instead, it will hold an enum, `UncertainNodeContent<T: ProbabilisticType>`, which can represent:
-    *   `Value(T)` (for leaf nodes/point distributions).
-    *   `Distribution(DistributionEnum<T>)` (for probabilistic leaf nodes).
-    *   `FunctionOp { func: Arc<dyn Fn(T) -> T + Send + Sync>, operand: Box<ConstTree<UncertainNodeContent<T>>> }` (for `fmap`-like operations).
-    *   `MonadicFunctionOp { func: Arc<dyn Fn(T) -> Uncertain<T> + Send + Sync>, operand: Box<ConstTree<UncertainNodeContent<T>>> }` (for `bind`-like operations).
-    *   Other symbolic operations (arithmetic, logical, conditional) generic over `T: ProbabilisticType`).
-    The `root_node` in `Uncertain<T>` will become `Arc<ConstTree<UncertainNodeContent<T>>>`.
+3.  **Redesign `ComputationNode` to `UncertainNodeContent` using `ConstTree`**: The existing `ComputationNode` enum will be **deleted and replaced**. The new internal representation for `Uncertain<T>`'s computation graph will be `ConstTree<UncertainNodeContent<T>>`.
+    *   `UncertainNodeContent<T>` will be a new enum (generic over `T: ProbabilisticType`) that represents the nodes in the computation graph. It will contain variants for:
+        *   `Value(SampledValue)` (for leaf nodes/point distributions).
+        *   `Distribution(DistributionEnum<T>)` (for probabilistic leaf nodes).
+        *   `PureOp { value: SampledValue }` (for `pure` operations).
+        *   `FmapOp { func: Arc<dyn SampledFmapFn>, operand: ConstTree<UncertainNodeContent<T>> }` (for `fmap`-like operations).
+            *   `ApplyOp { func: Arc<dyn SampledFmapFn>, arg: ConstTree<UncertainNodeContent<T>> }` (for `apply`-like operations).
+            *   `BindOp { func: Arc<dyn SampledBindFn>, operand: ConstTree<UncertainNodeContent<T>> }` (for `bind`-like operations).
+            *   Other symbolic operations (arithmetic, logical, conditional) will be adapted to use `SampledValue` and `ConstTree` operands.
+            *   `SampledFmapFn` and `SampledBindFn` traits (operating on `SampledValue`) will be defined to handle type erasure for closures.    *   The `root_node` in `Uncertain<T>` will become `ConstTree<UncertainNodeContent<T>>`.
 4.  **Rewrite Core Logic**: All `Uncertain<T>` constructors, operator overloads, and the `SequentialSampler`'s `evaluate_node` will be rewritten to build, traverse, and interpret this new `ConstTree<UncertainNodeContent<T>>` structure, leveraging `ProbabilisticType` for type conversions during sampling.
-5.  **Implement Haft Traits**: The `Functor`, `Applicative`, and `Monad` traits for `UncertainWitness` and `MaybeUncertainWitness` will be implemented by symbolically embedding the generic `Func` parameters within the `ConstTree`'s `UncertainNodeContent` and ensuring `A` and `B` adhere to `ProbabilisticType`.
+5.  **Implement HKT-like Traits**: `UncertainWitness` and `MaybeUncertainWitness` will **not** directly implement `deep_causality_haft`'s `Functor`, `Applicative`, and `Monad` traits. Instead, they will implement *independent HKT-like traits* (`UncertainFunctor`, `UncertainApplicative`, `UncertainMonad`) that mirror the `deep_causality_haft` signatures but explicitly include `ProbabilisticType` bounds on their methods. If `deep_causality_haft`'s traits are ever needed for `UncertainWitness` (e.g., for generic functions that expect *any* `Functor`), they would be implemented by **dispatching** to these independent traits, potentially with additional `where` clauses to ensure `A` and `B` adhere to `ProbabilisticType`.
 
 This comprehensive approach allows `Uncertain<T>` and `MaybeUncertain<T>` to become fully monadic by representing their computations as a symbolic `ConstTree` and explicitly managing type compatibility through `ProbabilisticType`, thus enabling their use as monadic subtypes within `Propagating Effect`.
 

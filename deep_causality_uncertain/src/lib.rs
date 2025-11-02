@@ -19,6 +19,8 @@ pub use crate::alias::{MaybeUncertainBool, MaybeUncertainF64, UncertainBool, Unc
 // Errors
 pub use crate::errors::UncertainError;
 // Traits
+pub use crate::traits::hkt::{UncertainApplicative, UncertainFunctor, UncertainMonad};
+pub use crate::traits::probabilistic_type::ProbabilisticType;
 pub use crate::traits::sampler::Sampler;
 // Types
 pub use crate::types::cache::{GlobalSampleCache, SampledValue, with_global_cache};
