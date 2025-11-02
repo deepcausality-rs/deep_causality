@@ -8,6 +8,7 @@
 mod algos;
 mod alias;
 mod errors;
+mod extensions;
 mod traits;
 mod types;
 pub mod utils_tests;
@@ -18,6 +19,9 @@ pub use crate::algos::hypothesis::sprt_eval;
 pub use crate::alias::{MaybeUncertainBool, MaybeUncertainF64, UncertainBool, UncertainF64};
 // Errors
 pub use crate::errors::UncertainError;
+// Extensions
+pub use crate::extensions::maybe_uncertain_hkt::MaybeUncertainWitness;
+pub use crate::extensions::uncertain_hkt::UncertainWitness;
 // Traits
 pub use crate::traits::sampler::Sampler;
 // Types
