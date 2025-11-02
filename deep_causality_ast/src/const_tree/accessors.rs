@@ -107,7 +107,7 @@ impl<T> ConstTree<T> {
     /// ```
     /// use deep_causality_ast::ConstTree;
     /// let tree = ConstTree::with_children(10, vec![ConstTree::new(20), ConstTree::new(30)]);
-    /// let found_node = tree.find(|v| **v > 25).unwrap();
+    /// let found_node = tree.find(|v| *v > 25).unwrap();
     /// assert_eq!(*found_node.value(), 30);
     /// ```
     pub fn find<P>(&self, predicate: P) -> Option<&ConstTree<T>>
@@ -128,7 +128,7 @@ impl<T> ConstTree<T> {
     /// ```
     /// use deep_causality_ast::ConstTree;
     /// let tree = ConstTree::with_children(10, vec![ConstTree::new(20), ConstTree::new(30)]);
-    /// let results: Vec<_> = tree.find_all(|v| **v > 15).map(|n| *n.value()).collect();
+    /// let results: Vec<_> = tree.find_all(|v| *v > 15).map(|n| *n.value()).collect();
     /// assert_eq!(results, vec![20, 30]);
     /// ```
     pub fn find_all<P>(&self, predicate: P) -> impl Iterator<Item = &ConstTree<T>>
