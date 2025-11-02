@@ -16,7 +16,6 @@ mod into_iter;
 mod iter;
 mod map;
 mod partial_eq;
-mod utils;
 
 // The internal, private representation of a single node in the tree.
 // Deriving Debug is useful for internal debugging.

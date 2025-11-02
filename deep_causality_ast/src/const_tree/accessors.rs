@@ -109,7 +109,7 @@ impl<T> ConstTree<T> {
     /// # Examples
     /// ```
     /// use deep_causality_ast::ConstTree;
-    /// let tree = ConstTree::with_children(10, vec![ConstTree::new(20), ConstTree::new(30)]);
+    /// let tree = ConstTree::with_children(10, vec![ConstTree::from(20), ConstTree::from(30)]);
     /// let found_node = tree.find(|v| *v > 25).unwrap();
     /// assert_eq!(*found_node.value(), 30);
     /// ```
