@@ -7,7 +7,23 @@ use std::sync::Arc;
 
 impl<T: Clone> ConstTree<ConstTree<T>> {
     /// Flattens a tree of trees into a single tree.
-    /// This is the `join` operation of a Monad.
+    ///
+    /// This is the `join` operation of a Monad. It takes a `ConstTree` where each node's
+    /// value is another `ConstTree`, and collapses it into a single `ConstTree`.
+    ///
+    /// # Examples
+    /// ```
+    /// use deep_causality_ast::ConstTree;
+    /// // Create a tree of trees: ConstTree<ConstTree<i32>>
+    /// let inner_tree = ConstTree::with_children(1, vec![ConstTree::new(2)]);
+    /// let tree_of_trees = ConstTree::new(inner_tree);
+    ///
+    /// let joined = tree_of_trees.join();
+    ///
+    /// assert_eq!(*joined.value(), 1);
+    /// assert_eq!(joined.children().len(), 1);
+    /// assert_eq!(*joined.children()[0].value(), 2);
+    /// ```
     pub fn join(self) -> ConstTree<T> {
         // The root of the outer tree has a value which is the inner tree.
         let inner_tree = self.value().clone();
@@ -25,8 +41,19 @@ impl<T: Clone> ConstTree<ConstTree<T>> {
 impl<T: Clone> ConstTree<T> {
     /// Consumes the tree and creates a new tree by applying a function to each value.
     ///
-    /// This is the consuming equivalent of `map`, analogous to `into_iter`.
-    /// This method is designed for compatibility with generic, consuming HKT traits.
+    /// This is the consuming equivalent of `map()`, analogous to `into_iter()`.
+    /// Because this method consumes the tree, it can yield owned values `T` to the closure.
+    ///
+    /// # Examples
+    /// ```
+    /// use deep_causality_ast::ConstTree;
+    /// let tree = ConstTree::with_children(1, vec![ConstTree::new(2)]);
+    /// // The original tree is moved here.
+    /// let mapped_tree = tree.into_map(|v| v.to_string());
+    ///
+    /// assert_eq!(*mapped_tree.value(), "1");
+    /// assert_eq!(*mapped_tree.children()[0].value(), "2");
+    /// ```
     pub fn into_map<F, U>(self, mut f: F) -> ConstTree<U>
     where
         F: FnMut(T) -> U,
@@ -57,8 +84,21 @@ impl<T: Clone> ConstTree<T> {
 }
 
 impl<T> ConstTree<T> {
-    /// Recursively creates a new tree by applying a function to each value.
-    /// This is the functional `map` operation, applied in pre-order.
+    /// Creates a new tree by applying a function to a reference of each value.
+    ///
+    /// This is a non-destructive operation that returns a new `ConstTree`.
+    /// The closure receives a reference `&T`.
+    ///
+    /// # Examples
+    /// ```
+    /// use deep_causality_ast::ConstTree;
+    /// let tree = ConstTree::with_children(1, vec![ConstTree::new(2)]);
+    /// let mapped_tree = tree.map(&mut |v| v * 2);
+    ///
+    /// assert_eq!(*tree.value(), 1); // Original is unchanged
+    /// assert_eq!(*mapped_tree.value(), 2);
+    /// assert_eq!(*mapped_tree.children()[0].value(), 4);
+    /// ```
     pub fn map<F, U>(&self, f: &mut F) -> ConstTree<U>
     where
         F: FnMut(&T) -> U,

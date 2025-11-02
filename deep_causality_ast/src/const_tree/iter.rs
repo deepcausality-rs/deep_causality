@@ -8,21 +8,56 @@ use std::collections::VecDeque;
 
 impl<T> ConstTree<T> {
     /// Returns an iterator that traverses the tree's values in pre-order (root, then children).
+    ///
+    /// # Examples
+    /// ```
+    /// use deep_causality_ast::ConstTree;
+    /// let tree = ConstTree::with_children(1, vec![ConstTree::new(2), ConstTree::new(3)]);
+    /// let values: Vec<_> = tree.iter_pre_order().copied().collect();
+    /// assert_eq!(values, vec![1, 2, 3]);
+    /// ```
     pub fn iter_pre_order(&self) -> PreOrderIter<'_, T> {
         PreOrderIter { stack: vec![self] }
     }
 
-    /// Returns an iterator that traverses the tree's nodes in pre-order.
+    /// Returns an iterator that traverses the tree's nodes (`ConstTree` handles) in pre-order.
+    ///
+    /// This is useful for finding nodes or performing operations on the tree structure itself.
+    ///
+    /// # Examples
+    /// ```
+    /// use deep_causality_ast::ConstTree;
+    /// let tree = ConstTree::with_children(1, vec![ConstTree::new(2)]);
+    /// let nodes: Vec<_> = tree.iter_nodes_pre_order().collect();
+    /// assert!(nodes[0].ptr_eq(&tree));
+    /// assert_eq!(*nodes[1].value(), 2);
+    /// ```
     pub fn iter_nodes_pre_order(&self) -> PreOrderNodeIter<'_, T> {
         PreOrderNodeIter { stack: vec![self] }
     }
 
     /// Returns an iterator that traverses the tree's values in post-order (children, then root).
+    ///
+    /// # Examples
+    /// ```
+    /// use deep_causality_ast::ConstTree;
+    /// let tree = ConstTree::with_children(1, vec![ConstTree::new(2), ConstTree::new(3)]);
+    /// let values: Vec<_> = tree.iter_post_order().copied().collect();
+    /// assert_eq!(values, vec![2, 3, 1]);
+    /// ```
     pub fn iter_post_order(&self) -> PostOrderIter<'_, T> {
         PostOrderIter::new(self)
     }
 
     /// Returns an iterator that traverses the tree's values in level-order (breadth-first).
+    ///
+    /// # Examples
+    /// ```
+    /// use deep_causality_ast::ConstTree;
+    /// let tree = ConstTree::with_children(1, vec![ConstTree::with_children(2, vec![ConstTree::new(4)]), ConstTree::new(3)]);
+    /// let values: Vec<_> = tree.iter_level_order().copied().collect();
+    /// assert_eq!(values, vec![1, 2, 3, 4]);
+    /// ```
     pub fn iter_level_order(&self) -> LevelOrderIter<'_, T> {
         let mut queue = VecDeque::new();
         queue.push_back(self);

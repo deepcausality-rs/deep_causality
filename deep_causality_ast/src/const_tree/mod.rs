@@ -92,7 +92,21 @@ impl<T> ConstTree<T> {
     }
 
     /// Returns a new `ConstTree` with the root value replaced.
-    /// The children of the new tree are shared with the original tree.
+    ///
+    /// This is a non-destructive, O(1) operation. The children of the new tree are
+    /// shared with the original tree, avoiding a deep copy.
+    ///
+    /// # Examples
+    /// ```
+    /// use deep_causality_ast::ConstTree;
+    /// let original = ConstTree::with_children(1, vec![ConstTree::new(2)]);
+    /// let with_new_value = original.with_value(99);
+    ///
+    /// assert_eq!(*original.value(), 1);
+    /// assert_eq!(*with_new_value.value(), 99);
+    /// // The children are shared between the two trees.
+    /// assert!(original.children()[0].ptr_eq(&with_new_value.children()[0]));
+    /// ```
     pub fn with_value(&self, new_value: T) -> Self {
         Self {
             node: Arc::new(Node {
