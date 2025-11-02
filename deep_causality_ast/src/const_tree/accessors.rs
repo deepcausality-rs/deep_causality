@@ -78,12 +78,8 @@ impl<T> ConstTree<T> {
         let mut max_depth = 0;
         let mut queue = VecDeque::new();
 
-        if !self.is_leaf() {
-            // Push the root node with depth 1 to start.
-            queue.push_back((self, 1));
-        } else {
-            return 1;
-        }
+        // Always start with the root node at depth 1.
+        queue.push_back((self, 1));
 
         while let Some((current_node, current_depth)) = queue.pop_front() {
             max_depth = max_depth.max(current_depth);
