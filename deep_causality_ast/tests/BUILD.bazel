@@ -1,9 +1,9 @@
 load("@rules_rust//rust:defs.bzl", "rust_test_suite")
 
 rust_test_suite(
-    name = "tests",
+    name = "const_tree",
     srcs = glob([
-        "*_tests.rs",
+        "const_tree/*_tests.rs",
     ]),
     tags = [
         "unit-test",

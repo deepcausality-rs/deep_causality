@@ -3,4 +3,5 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-mod const_tree;
+#[cfg(test)]
+mod const_tree_tests;
