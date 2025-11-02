@@ -54,6 +54,13 @@ impl<T> ConstTree<T> {
         self.node.children.get(index)
     }
 
+    /// Returns a unique identifier for the node pointed to by this `ConstTree`.
+    ///
+    /// The ID is the memory address of the underlying `Arc`'s allocation.
+    pub fn get_id(&self) -> usize {
+        Arc::as_ptr(&self.node) as usize
+    }
+
     /// Checks if the tree is a leaf node (i.e., has no children).
     pub fn is_leaf(&self) -> bool {
         self.node.children.is_empty()
