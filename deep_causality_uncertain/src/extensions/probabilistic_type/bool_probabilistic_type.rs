@@ -3,15 +3,16 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::ProbabilisticType;
-use crate::errors::UncertainError;
-use crate::types::cache::SampledValue;
+use crate::{FromSampledValue, IntoSampledValue, ProbabilisticType};
+use crate::{SampledValue, UncertainError};
 
-impl ProbabilisticType for bool {
-    fn to_sampled_value(&self) -> SampledValue {
+impl IntoSampledValue for bool {
+    fn into_sampled_value(&self) -> SampledValue {
         SampledValue::Bool(*self)
     }
+}
 
+impl FromSampledValue for bool {
     fn from_sampled_value(value: SampledValue) -> Result<Self, UncertainError> {
         match value {
             SampledValue::Bool(b) => Ok(b),
@@ -20,7 +21,9 @@ impl ProbabilisticType for bool {
             )),
         }
     }
+}
 
+impl ProbabilisticType for bool {
     fn default_value() -> Self {
         false
     }

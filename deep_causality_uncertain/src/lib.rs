@@ -8,6 +8,7 @@
 mod algos;
 mod alias;
 mod errors;
+mod extensions;
 mod traits;
 mod types;
 pub mod utils_tests;
@@ -18,9 +19,14 @@ pub use crate::algos::hypothesis::sprt_eval;
 pub use crate::alias::{MaybeUncertainBool, MaybeUncertainF64, UncertainBool, UncertainF64};
 // Errors
 pub use crate::errors::UncertainError;
+// Extensions
+pub use crate::extensions::hkt_maybe_uncertain::MaybeUncertainWitness;
+pub use crate::extensions::hkt_uncertain::UncertainWitness;
 // Traits
-pub use crate::traits::hkt::{UncertainApplicative, UncertainFunctor, UncertainMonad};
-pub use crate::traits::probabilistic_type::ProbabilisticType;
+pub use crate::traits::hkt::uncertain_applicative::UncertainApplicative;
+pub use crate::traits::hkt::uncertain_functor::UncertainFunctor;
+pub use crate::traits::hkt::uncertain_monad::UncertainMonad;
+pub use crate::traits::probabilistic::{FromSampledValue, IntoSampledValue, ProbabilisticType};
 pub use crate::traits::sampler::Sampler;
 // Types
 pub use crate::types::cache::{GlobalSampleCache, SampledValue, with_global_cache};

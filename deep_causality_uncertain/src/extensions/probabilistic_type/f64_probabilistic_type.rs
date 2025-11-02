@@ -3,15 +3,17 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::ProbabilisticType;
-use crate::errors::UncertainError;
-use crate::types::cache::SampledValue;
+use crate::{FromSampledValue, IntoSampledValue, ProbabilisticType};
+use crate::{SampledValue, UncertainError};
+use deep_causality_num::ToPrimitive;
 
-impl ProbabilisticType for f64 {
-    fn to_sampled_value(&self) -> SampledValue {
-        SampledValue::Float(*self)
+impl IntoSampledValue for f64 {
+    fn into_sampled_value(&self) -> SampledValue {
+        SampledValue::Float(self.to_f64().unwrap_or(f64::NAN))
     }
+}
 
+impl FromSampledValue for f64 {
     fn from_sampled_value(value: SampledValue) -> Result<Self, UncertainError> {
         match value {
             SampledValue::Float(f) => Ok(f),
@@ -20,8 +22,10 @@ impl ProbabilisticType for f64 {
             )),
         }
     }
+}
 
+impl ProbabilisticType for f64 {
     fn default_value() -> Self {
-        0.0
+        f64::default()
     }
 }
