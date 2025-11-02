@@ -1,32 +1,28 @@
 load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library")
 
+package(default_visibility = ["//visibility:public"])
+
 rust_library(
-    name = "deep_causality_uncertain",
-    srcs = glob([
-        "src/**",
-    ]),
+    name = "deep_causality_ast",
+    srcs = glob(["src/**/*.rs"]),
     crate_root = "src/lib.rs",
     tags = [
-        "uncertain",
+        "data_structures",
     ],
-    visibility = ["//visibility:public"],
     deps = [
-        # Internal crates
-        "//deep_causality_rand",
-        "//deep_causality_haft",
     ],
 )
 
 rust_doc(
     name = "doc",
-    crate = ":deep_causality_uncertain",
+    crate = ":deep_causality_ast",
     tags = ["doc"],
     visibility = ["//visibility:public"],
 )
 
 rust_doc_test(
     name = "doc_test",
-    crate = ":deep_causality_uncertain",
+    crate = ":deep_causality_ast",
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
 )

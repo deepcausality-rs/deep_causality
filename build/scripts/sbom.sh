@@ -10,6 +10,7 @@ set -o pipefail
 CRATES=(
     "deep_causality"
     "deep_causality_algorithms"
+    "deep_causality_ast"
     "deep_causality_data_structures"
     "deep_causality_discovery"
     "deep_causality_haft"
@@ -37,5 +38,3 @@ for CRATE_NAME in "${CRATES[@]}"; do
 done
 
 echo "SBOM generation complete."
-
-
