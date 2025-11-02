@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
 #![allow(dead_code)]
 #![allow(unused_imports)]
 
@@ -281,6 +286,16 @@ fn test_into_map() {
     // The clone is still valid and unchanged.
     assert_eq!(*tree_clone.value(), 10);
     assert_eq!(*tree_clone.children()[0].value(), 20);
+}
+
+#[test]
+fn test_consuming_iterator_ok_branch() {
+    let tree = ConstTree::with_children(1, vec![ConstTree::new(2), ConstTree::new(3)]);
+
+    // Call into_iter on the original tree, ensuring no other clones exist.
+    // This should trigger the Ok branch of Arc::try_unwrap for the root node.
+    let values: Vec<_> = tree.into_iter().collect();
+    assert_eq!(values, vec![1, 2, 3]);
 }
 
 #[test]

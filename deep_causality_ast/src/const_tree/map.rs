@@ -25,15 +25,19 @@ impl<T: Clone> ConstTree<ConstTree<T>> {
     /// assert_eq!(*joined.children()[0].value(), 2);
     /// ```
     pub fn join(self) -> ConstTree<T> {
-        // The root of the outer tree has a value which is the inner tree.
-        let inner_tree = self.value().clone();
+        // Consume the outer node when possible to avoid unnecessary clones.
+        let outer_node = Arc::try_unwrap(self.node).unwrap_or_else(|arc| (*arc).clone());
 
-        // The new children are the children of the inner tree,
-        // plus the result of recursively joining the children of the outer tree.
+        // Take the inner tree (value of the outer root).
+        let inner_tree = outer_node.value;
+
+        // Start with inner_tree's existing children.
         let mut new_children = inner_tree.children().to_vec();
-        let joined_outer_children = self.children().iter().map(|c| c.clone().join());
-        new_children.extend(joined_outer_children);
 
+        // Recursively join each outer child into a flat ConstTree<T>.
+        new_children.extend(outer_node.children.into_iter().map(|c| c.join()));
+
+        // Build the resulting tree using the inner root value.
         ConstTree::with_children(inner_tree.value().clone(), new_children)
     }
 }
