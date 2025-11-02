@@ -1,8 +1,21 @@
 # `deep_causality_ast`
 
-[![Crates.io](https://img.shields.io/crates/v/deep_causality_ast.svg)](https://crates.io/crates/deep_causality_ast)
-[![Docs.rs](https://docs.rs/deep_causality_ast/badge.svg)](https://docs.rs/deep_causality_ast)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Crates.io][crates-badge]][crates-url]
+[![Docs.rs][docs-badge]][docs-url]
+[![MIT licensed][mit-badge]][mit-url]
+![Tests][test-url]
+
+[crates-badge]: https://img.shields.io/badge/Crates.io-Latest-blue
+[crates-url]: https://crates.io/crates/deep_causality_ast
+
+[docs-badge]: https://img.shields.io/badge/Docs.rs-Latest-blue
+[docs-url]: https://docs.rs/deep_causality_ast/latest/deep_causality_ast/
+
+[mit-badge]: https://img.shields.io/badge/License-MIT-blue.svg
+[mit-url]: https://github.com/deepcausality-rs/deep_causality/blob/main/LICENSE
+
+[test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
+
 
 A persistent, immutable, thread-safe tree data structure for the `deep_causality` project.
 
