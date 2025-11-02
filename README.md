@@ -164,6 +164,7 @@ make example
 
 * `deep_causality`: The main DeepCausality library.
 * `deep_causality_algorithms`: Provides algorithms for the DeepCausality library.
+* `deep_causality_ast`: Provides utils to work on AST for the DeepCausality library.
 * `deep_causality_data_structures`: Provides data structures for the DeepCausality library.
 * `deep_causality_discovery`: A custom DSL for causal discovery.
 * `deep_causality_haft`: Higher-Order Abstract Functional Traits a.k.a HKT. 
