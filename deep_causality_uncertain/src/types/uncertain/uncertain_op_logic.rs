@@ -5,18 +5,14 @@
 
 use std::ops::{BitAnd, BitOr, BitXor, Not};
 
-use crate::{ComputationNode, LogicalOperator, NodeId, Uncertain};
+use crate::{LogicalOperator, Uncertain, UncertainNodeContent};
 
 impl BitAnd for Uncertain<bool> {
     type Output = Self;
     fn bitand(self, rhs: Self) -> Self::Output {
-        Self::from_root_node(ComputationNode::LogicalOp {
-            node_id: NodeId::new(), // Added node_id
+        Self::from_root_node(UncertainNodeContent::LogicalOp {
             op: LogicalOperator::And,
-            operands: vec![
-                Box::new((*self.root_node).clone()),
-                Box::new((*rhs.root_node).clone()),
-            ],
+            operands: vec![self.root_node.clone(), rhs.root_node.clone()],
         })
     }
 }
@@ -24,13 +20,9 @@ impl BitAnd for Uncertain<bool> {
 impl BitOr for Uncertain<bool> {
     type Output = Self;
     fn bitor(self, rhs: Self) -> Self::Output {
-        Self::from_root_node(ComputationNode::LogicalOp {
-            node_id: NodeId::new(), // Added node_id
+        Self::from_root_node(UncertainNodeContent::LogicalOp {
             op: LogicalOperator::Or,
-            operands: vec![
-                Box::new((*self.root_node).clone()),
-                Box::new((*rhs.root_node).clone()),
-            ],
+            operands: vec![self.root_node.clone(), rhs.root_node.clone()],
         })
     }
 }
@@ -38,10 +30,9 @@ impl BitOr for Uncertain<bool> {
 impl Not for Uncertain<bool> {
     type Output = Self;
     fn not(self) -> Self::Output {
-        Self::from_root_node(ComputationNode::LogicalOp {
-            node_id: NodeId::new(), // Added node_id
+        Self::from_root_node(UncertainNodeContent::LogicalOp {
             op: LogicalOperator::Not,
-            operands: vec![Box::new((*self.root_node).clone())],
+            operands: vec![self.root_node.clone()],
         })
     }
 }
@@ -50,13 +41,9 @@ impl BitXor for Uncertain<bool> {
     type Output = Self;
 
     fn bitxor(self, rhs: Self) -> Self::Output {
-        Self::from_root_node(ComputationNode::LogicalOp {
-            node_id: NodeId::new(), // Added node_id
+        Self::from_root_node(UncertainNodeContent::LogicalOp {
             op: LogicalOperator::XOR,
-            operands: vec![
-                Box::new((*self.root_node).clone()),
-                Box::new((*rhs.root_node).clone()),
-            ],
+            operands: vec![self.root_node.clone(), rhs.root_node.clone()],
         })
     }
 }

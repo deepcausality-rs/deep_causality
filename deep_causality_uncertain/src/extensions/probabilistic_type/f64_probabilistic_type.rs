@@ -8,7 +8,7 @@ use crate::{SampledValue, UncertainError};
 use deep_causality_num::ToPrimitive;
 
 impl IntoSampledValue for f64 {
-    fn into_sampled_value(&self) -> SampledValue {
+    fn into_sampled_value(self) -> SampledValue {
         SampledValue::Float(self.to_f64().unwrap_or(f64::NAN))
     }
 }

@@ -3,17 +3,20 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{ComputationNode, LogicalOperator, NodeId, SampledValue, Sampler, UncertainError};
+use crate::{
+    DistributionEnum, IntoSampledValue, LogicalOperator, ProbabilisticType, SampledValue, Sampler,
+    UncertainError, UncertainNodeContent,
+};
+use deep_causality_ast::ConstTree;
 use deep_causality_rand::Rng;
 use std::collections::HashMap;
-use std::sync::Arc;
 
 /// A basic, single-threaded sampler.
 #[derive(Default)]
 pub struct SequentialSampler;
 
 // Implementation of the Sampler trait.
-impl Sampler for SequentialSampler {
+impl<T: ProbabilisticType> Sampler<T> for SequentialSampler {
     /// Samples a value from the given root computation node.
     ///
     /// This method initiates the sampling process by evaluating the computation graph
@@ -29,16 +32,18 @@ impl Sampler for SequentialSampler {
     /// A `Result` which is:
     /// - `Ok(SampledValue)` containing the sampled value if the sampling is successful.
     /// - `Err(UncertainError)` if an error occurs during sampling (e.g., type mismatch, distribution error).
-    fn sample(&self, root_node: &Arc<ComputationNode>) -> Result<SampledValue, UncertainError> {
-        let mut context: HashMap<NodeId, SampledValue> = HashMap::new(); // Changed key type
-        // Call the internal method.
-        self.evaluate_node(root_node, &mut context, &mut deep_causality_rand::rng()) // Changed rng
+    fn sample(
+        &self,
+        root_node: &ConstTree<UncertainNodeContent>,
+    ) -> Result<SampledValue, UncertainError> {
+        let mut context: HashMap<usize, SampledValue> = HashMap::new();
+        self.evaluate_node(root_node, &mut context, &mut deep_causality_rand::rng())
     }
 }
 
 #[allow(clippy::only_used_in_recursion)]
 impl SequentialSampler {
-    // This function is a private helper method for SequentialSampler.
+    /// This function is a private helper method for SequentialSampler.
     /// Recursively evaluates a computation node and its dependencies to produce a `SampledValue`.
     ///
     /// This is a private helper method used by the `sample` method. It performs a depth-first
@@ -48,9 +53,9 @@ impl SequentialSampler {
     ///
     /// # Arguments
     ///
-    /// * `node` - A reference to the current `ComputationNode` to be evaluated.
-    /// * `context` - A mutable reference to a `HashMap` used for memoization. Keys are raw pointers
-    ///   to `ComputationNode`s, and values are their `SampledValue`s.
+    /// * `node` - A reference to the current `ConstTree<UncertainNodeContent<T>>` to be evaluated.
+    /// * `context` - A mutable reference to a `HashMap` used for memoization. Keys are `usize`
+    ///   from `ConstTree::get_id()`, and values are their `SampledValue`s.
     /// * `rng` - A mutable reference to a random number generator implementing the `rand::Rng` trait,
     ///   used for sampling from distributions.
     ///
@@ -62,56 +67,87 @@ impl SequentialSampler {
     ///   distribution sampling error).
     fn evaluate_node(
         &self,
-        node: &ComputationNode,
-        context: &mut HashMap<NodeId, SampledValue>, // Changed key type
+        node: &ConstTree<UncertainNodeContent>,
+        context: &mut HashMap<usize, SampledValue>,
         rng: &mut impl Rng,
     ) -> Result<SampledValue, UncertainError> {
-        // Extract node_id from the current node
-        let current_node_id = match node {
-            ComputationNode::LeafF64 { node_id, .. } => *node_id,
-            ComputationNode::LeafBool { node_id, .. } => *node_id,
-            ComputationNode::ArithmeticOp { node_id, .. } => *node_id,
-            ComputationNode::ComparisonOp { node_id, .. } => *node_id,
-            ComputationNode::LogicalOp { node_id, .. } => *node_id,
-            ComputationNode::FunctionOpF64 { node_id, .. } => *node_id,
-            ComputationNode::FunctionOpBool { node_id, .. } => *node_id,
-            ComputationNode::NegationOp { node_id, .. } => *node_id,
-            ComputationNode::ConditionalOp { node_id, .. } => *node_id,
-        };
+        let current_node_id = node.get_id();
 
         if let Some(value) = context.get(&current_node_id) {
-            // Use node_id
             return Ok(*value);
         }
 
-        let result = match node {
-            ComputationNode::LeafF64 { dist, .. } => SampledValue::Float(dist.sample(rng)?),
-            ComputationNode::LeafBool { dist, .. } => SampledValue::Bool(dist.sample(rng)?),
-
-            ComputationNode::ArithmeticOp { op, lhs, rhs, .. } => { // Extract op, lhs, rhs
+        let result = match node.value() {
+            UncertainNodeContent::Value(v) => (*v).into_sampled_value(),
+            UncertainNodeContent::DistributionF64(dist) => match dist {
+                DistributionEnum::Point(v) => (*v).into_sampled_value(),
+                DistributionEnum::Normal(params) => SampledValue::Float(
+                    (DistributionEnum::Normal(*params) as DistributionEnum<f64>).sample(rng)?,
+                ),
+                DistributionEnum::Uniform(params) => SampledValue::Float(
+                    (DistributionEnum::Uniform(*params) as DistributionEnum<f64>).sample(rng)?,
+                ),
+                _ => {
+                    return Err(UncertainError::UnsupportedTypeError(
+                        "Expected f64 distribution".into(),
+                    ));
+                }
+            },
+            UncertainNodeContent::DistributionBool(dist) => match dist {
+                DistributionEnum::Point(v) => (*v).into_sampled_value(),
+                DistributionEnum::Bernoulli(params) => SampledValue::Bool(
+                    (DistributionEnum::Bernoulli(*params) as DistributionEnum<bool>).sample(rng)?,
+                ),
+                _ => {
+                    return Err(UncertainError::UnsupportedTypeError(
+                        "Expected bool distribution".into(),
+                    ));
+                }
+            },
+            UncertainNodeContent::PureOp { value } => (*value).into_sampled_value(),
+            UncertainNodeContent::FmapOp { func, operand } => {
+                let operand_val = self.evaluate_node(operand, context, rng)?;
+                func.call(operand_val)
+            }
+            UncertainNodeContent::ApplyOp { func, arg } => {
+                let arg_val = self.evaluate_node(arg, context, rng)?;
+                func.call(arg_val)
+            }
+            UncertainNodeContent::BindOp { func, operand } => {
+                let operand_val = self.evaluate_node(operand, context, rng)?;
+                let new_tree = func.call(operand_val);
+                self.evaluate_node(&new_tree, context, rng)?
+            }
+            UncertainNodeContent::ArithmeticOp { op, lhs, rhs } => {
                 let lhs_val = self.evaluate_node(lhs, context, rng)?;
                 let rhs_val = self.evaluate_node(rhs, context, rng)?;
                 match (lhs_val, rhs_val) {
                     (SampledValue::Float(l), SampledValue::Float(r)) => {
                         SampledValue::Float(op.apply(l, r))
                     }
-                    _ => return Err(UncertainError::UnsupportedTypeError(
-                        "Arithmetic op requires float inputs".into(),
-                    )),
+                    _ => {
+                        return Err(UncertainError::UnsupportedTypeError(
+                            "Arithmetic op requires float inputs".into(),
+                        ));
+                    }
                 }
             }
-
-            ComputationNode::ComparisonOp { op, threshold, operand, .. } => { // Extract op, threshold, operand
+            UncertainNodeContent::ComparisonOp {
+                op,
+                threshold,
+                operand,
+            } => {
                 let operand_val = self.evaluate_node(operand, context, rng)?;
                 match operand_val {
                     SampledValue::Float(o) => SampledValue::Bool(op.apply(o, *threshold)),
-                    _ => return Err(UncertainError::UnsupportedTypeError(
-                        "Comparison op requires float input".into(),
-                    )),
+                    _ => {
+                        return Err(UncertainError::UnsupportedTypeError(
+                            "Comparison op requires float input".into(),
+                        ));
+                    }
                 }
             }
-
-            ComputationNode::LogicalOp { op, operands, .. } => { // Extract op, operands
+            UncertainNodeContent::LogicalOp { op, operands } => {
                 let mut vals = Vec::with_capacity(operands.len());
                 for operand_node in operands {
                     match self.evaluate_node(operand_node, context, rng)? {
@@ -152,48 +188,51 @@ impl SequentialSampler {
                 };
                 SampledValue::Bool(result)
             }
-
-            ComputationNode::FunctionOpF64 { func, operand, .. } => { // Extract func, operand
+            UncertainNodeContent::FunctionOpF64 { func, operand } => {
                 let operand_val = self.evaluate_node(operand, context, rng)?;
                 match operand_val {
                     SampledValue::Float(o) => SampledValue::Float(func(o)),
-                    _ => return Err(UncertainError::UnsupportedTypeError(
-                        "Function op requires float input".into(),
-                    )),
+                    _ => {
+                        return Err(UncertainError::UnsupportedTypeError(
+                            "Function op requires float input".into(),
+                        ));
+                    }
                 }
             }
-
-            ComputationNode::NegationOp { operand, .. } => { // Extract operand
+            UncertainNodeContent::NegationOp { operand } => {
                 let operand_val = self.evaluate_node(operand, context, rng)?;
                 match operand_val {
                     SampledValue::Float(o) => SampledValue::Float(-o),
-                    _ => return Err(UncertainError::UnsupportedTypeError(
-                        "Negation op requires float input".into(),
-                    )),
+                    _ => {
+                        return Err(UncertainError::UnsupportedTypeError(
+                            "Negation op requires float input".into(),
+                        ));
+                    }
                 }
             }
-
-            ComputationNode::FunctionOpBool { func, operand, .. } => { // Extract func, operand
+            UncertainNodeContent::FunctionOpBool { func, operand } => {
                 let operand_val = self.evaluate_node(operand, context, rng)?;
                 match operand_val {
                     SampledValue::Float(o) => SampledValue::Bool(func(o)),
-                    _ => return Err(UncertainError::UnsupportedTypeError(
-                        "FunctionOpBool requires float input".into(),
-                    )),
+                    _ => {
+                        return Err(UncertainError::UnsupportedTypeError(
+                            "FunctionOpBool requires float input".into(),
+                        ));
+                    }
                 }
             }
-
-            ComputationNode::ConditionalOp {
+            UncertainNodeContent::ConditionalOp {
                 condition,
                 if_true,
                 if_false,
-                .. // Extract condition, if_true, if_false
             } => {
                 let condition_val = match self.evaluate_node(condition, context, rng)? {
                     SampledValue::Bool(b) => b,
-                    _ => return Err(UncertainError::UnsupportedTypeError(
-                        "Conditional condition must be boolean".into(),
-                    )),
+                    _ => {
+                        return Err(UncertainError::UnsupportedTypeError(
+                            "Conditional condition must be boolean".into(),
+                        ));
+                    }
                 };
 
                 if condition_val {
@@ -204,7 +243,7 @@ impl SequentialSampler {
             }
         };
 
-        context.insert(current_node_id, result); // Use node_id
+        context.insert(current_node_id, result);
         Ok(result)
     }
 }

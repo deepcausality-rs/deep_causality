@@ -4,6 +4,8 @@
  */
 use std::fmt::{Display, Formatter};
 
+use crate::{FromSampledValue, IntoSampledValue, ProbabilisticType, UncertainError};
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 /// Represents a sampled value that can be either a floating-point number or a boolean.
 pub enum SampledValue {
@@ -30,5 +32,23 @@ impl Display for SampledValue {
             SampledValue::Float(value) => write!(f, "{}", value),
             SampledValue::Bool(value) => write!(f, "{}", value),
         }
+    }
+}
+
+impl IntoSampledValue for SampledValue {
+    fn into_sampled_value(self) -> SampledValue {
+        self
+    }
+}
+
+impl FromSampledValue for SampledValue {
+    fn from_sampled_value(value: SampledValue) -> Result<Self, UncertainError> {
+        Ok(value)
+    }
+}
+
+impl ProbabilisticType for SampledValue {
+    fn default_value() -> Self {
+        SampledValue::Float(0.0)
     }
 }

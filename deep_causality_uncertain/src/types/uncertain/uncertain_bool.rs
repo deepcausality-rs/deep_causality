@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{
-    BernoulliParams, ComputationNode, DistributionEnum, NodeId, Uncertain, UncertainError,
-    sprt_eval,
+    BernoulliParams, DistributionEnum, IntoSampledValue, Uncertain, UncertainError,
+    UncertainNodeContent, sprt_eval,
 };
 
 impl Uncertain<bool> {
@@ -13,10 +13,7 @@ impl Uncertain<bool> {
     /// # Arguments
     /// * `value` - The boolean value of the point distribution.
     pub fn point(value: bool) -> Self {
-        Self::from_root_node(ComputationNode::LeafBool {
-            node_id: NodeId::new(), // Added node_id
-            dist: DistributionEnum::Point(value),
-        })
+        Self::from_root_node(UncertainNodeContent::Value(value.into_sampled_value()))
     }
 
     /// Creates a new `Uncertain<bool>` instance representing a Bernoulli distribution.
@@ -25,10 +22,9 @@ impl Uncertain<bool> {
     /// * `p` - The probability of success (true) for the Bernoulli distribution.
     pub fn bernoulli(p: f64) -> Self {
         let params = BernoulliParams { p };
-        Self::from_root_node(ComputationNode::LeafBool {
-            node_id: NodeId::new(), // Added node_id
-            dist: DistributionEnum::Bernoulli(params),
-        })
+        Self::from_root_node(UncertainNodeContent::DistributionBool(
+            DistributionEnum::Bernoulli(params),
+        ))
     }
 
     /// Converts the uncertain boolean distribution to a single boolean value based on statistical hypothesis testing.

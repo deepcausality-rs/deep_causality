@@ -7,8 +7,8 @@ use crate::{FromSampledValue, IntoSampledValue, ProbabilisticType};
 use crate::{SampledValue, UncertainError};
 
 impl IntoSampledValue for bool {
-    fn into_sampled_value(&self) -> SampledValue {
-        SampledValue::Bool(*self)
+    fn into_sampled_value(self) -> SampledValue {
+        SampledValue::Bool(self)
     }
 }
 

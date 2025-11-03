@@ -2,11 +2,14 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{ComputationNode, SampledValue, UncertainError};
-use std::sync::Arc;
+use crate::{ProbabilisticType, SampledValue, UncertainError, UncertainNodeContent};
+use deep_causality_ast::ConstTree;
 
 /// A trait for sampling strategies.
-pub trait Sampler {
+pub trait Sampler<T: ProbabilisticType> {
     /// Generates a single sample from the computation graph.
-    fn sample(&self, root_node: &Arc<ComputationNode>) -> Result<SampledValue, UncertainError>;
+    fn sample(
+        &self,
+        root_node: &ConstTree<UncertainNodeContent>,
+    ) -> Result<SampledValue, UncertainError>;
 }

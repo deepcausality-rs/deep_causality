@@ -73,7 +73,6 @@ rust_test_suite(
 rust_test_suite(
     name = "types_computation",
     srcs = glob([
-        "types/computation/node/*_tests.rs",
         "types/computation/operator/*_tests.rs",
     ]),
     tags = [
@@ -136,6 +135,7 @@ rust_test_suite(
     deps = [
         # Crate to test
         "//deep_causality_uncertain",
+        "//deep_causality_ast",
         # External dependencies
         "//thirdparty/crates:rusty-fork",
     ],

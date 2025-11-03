@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::Identifiable;
-use deep_causality_uncertain::Uncertain;
+use deep_causality_uncertain::{ProbabilisticType, Uncertain};
 
 /// Represents uncertain data entities in a context graph.
 ///
@@ -15,7 +15,10 @@ use deep_causality_uncertain::Uncertain;
 /// in how data is modeled. You may wrap sensor input, encoded strings,
 /// discrete values, or even external references.
 ///
-pub trait UncertainDatable<T>: Identifiable {
+pub trait UncertainDatable<T>: Identifiable
+where
+    T: ProbabilisticType,
+{
     /// Returns the contained data.
     ///
     /// If `Self::Data` is `Copy`, this will typically return a copy. Otherwise, it may

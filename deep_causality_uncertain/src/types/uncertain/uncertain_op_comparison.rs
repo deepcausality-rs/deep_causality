@@ -3,7 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{ArithmeticOperator, ComparisonOperator, ComputationNode, NodeId, Uncertain};
+use crate::{ArithmeticOperator, ComparisonOperator, Uncertain, UncertainNodeContent};
+use deep_causality_ast::ConstTree;
 
 // Note: We do not implement the standard `PartialOrd` and `PartialEq` traits
 // because their signatures return `bool`, which is misleading for uncertain values.
@@ -11,70 +12,61 @@ use crate::{ArithmeticOperator, ComparisonOperator, ComputationNode, NodeId, Unc
 
 impl Uncertain<f64> {
     pub fn greater_than(&self, threshold: f64) -> Uncertain<bool> {
-        Uncertain::from_root_node(ComputationNode::ComparisonOp {
-            node_id: NodeId::new(), // Added node_id
+        Uncertain::from_root_node(UncertainNodeContent::ComparisonOp {
             op: ComparisonOperator::GreaterThan,
             threshold,
-            operand: Box::new((*self.root_node).clone()),
+            operand: self.root_node.clone(),
         })
     }
 
     pub fn less_than(&self, threshold: f64) -> Uncertain<bool> {
-        Uncertain::from_root_node(ComputationNode::ComparisonOp {
-            node_id: NodeId::new(), // Added node_id
+        Uncertain::from_root_node(UncertainNodeContent::ComparisonOp {
             op: ComparisonOperator::LessThan,
             threshold,
-            operand: Box::new((*self.root_node).clone()),
+            operand: self.root_node.clone(),
         })
     }
 
     pub fn equals(&self, threshold: f64) -> Uncertain<bool> {
-        Uncertain::from_root_node(ComputationNode::ComparisonOp {
-            node_id: NodeId::new(), // Added node_id
+        Uncertain::from_root_node(UncertainNodeContent::ComparisonOp {
             op: ComparisonOperator::EqualTo,
             threshold,
-            operand: Box::new((*self.root_node).clone()),
+            operand: self.root_node.clone(),
         })
     }
 
     pub fn gt_uncertain(&self, other: &Self) -> Uncertain<bool> {
-        Uncertain::from_root_node(ComputationNode::ComparisonOp {
-            node_id: NodeId::new(), // Added node_id
+        Uncertain::from_root_node(UncertainNodeContent::ComparisonOp {
             op: ComparisonOperator::GreaterThan,
             threshold: 0.0,
-            operand: Box::new(ComputationNode::ArithmeticOp {
-                node_id: NodeId::new(), // Added node_id
+            operand: ConstTree::new(UncertainNodeContent::ArithmeticOp {
                 op: ArithmeticOperator::Sub,
-                lhs: Box::new((*self.root_node).clone()),
-                rhs: Box::new((*other.root_node).clone()),
+                lhs: self.root_node.clone(),
+                rhs: other.root_node.clone(),
             }),
         })
     }
 
     pub fn lt_uncertain(&self, other: &Self) -> Uncertain<bool> {
-        Uncertain::from_root_node(ComputationNode::ComparisonOp {
-            node_id: NodeId::new(), // Added node_id
+        Uncertain::from_root_node(UncertainNodeContent::ComparisonOp {
             op: ComparisonOperator::LessThan,
             threshold: 0.0,
-            operand: Box::new(ComputationNode::ArithmeticOp {
-                node_id: NodeId::new(), // Added node_id
+            operand: ConstTree::new(UncertainNodeContent::ArithmeticOp {
                 op: ArithmeticOperator::Sub,
-                lhs: Box::new((*self.root_node).clone()),
-                rhs: Box::new((*other.root_node).clone()),
+                lhs: self.root_node.clone(),
+                rhs: other.root_node.clone(),
             }),
         })
     }
 
     pub fn eq_uncertain(&self, other: &Self) -> Uncertain<bool> {
-        Uncertain::from_root_node(ComputationNode::ComparisonOp {
-            node_id: NodeId::new(), // Added node_id
+        Uncertain::from_root_node(UncertainNodeContent::ComparisonOp {
             op: ComparisonOperator::EqualTo,
             threshold: 0.0,
-            operand: Box::new(ComputationNode::ArithmeticOp {
-                node_id: NodeId::new(), // Added node_id
+            operand: ConstTree::new(UncertainNodeContent::ArithmeticOp {
                 op: ArithmeticOperator::Sub,
-                lhs: Box::new((*self.root_node).clone()),
-                rhs: Box::new((*other.root_node).clone()),
+                lhs: self.root_node.clone(),
+                rhs: other.root_node.clone(),
             }),
         })
     }

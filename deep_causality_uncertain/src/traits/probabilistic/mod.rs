@@ -3,22 +3,6 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{SampledValue, UncertainError};
+mod probabilistic_type;
 
-pub trait IntoSampledValue {
-    /// Converts the type into an internal `SampledValue` representation.
-    fn into_sampled_value(&self) -> SampledValue;
-}
-
-pub trait FromSampledValue
-where
-    Self: Sized,
-{
-    /// Attempts to convert an internal `SampledValue` back into this type.
-    fn from_sampled_value(value: SampledValue) -> Result<Self, UncertainError>;
-}
-
-pub trait ProbabilisticType: IntoSampledValue + FromSampledValue {
-    /// Provides a default or zero-equivalent value for the type.
-    fn default_value() -> Self;
-}
+pub use probabilistic_type::{FromSampledValue, IntoSampledValue, ProbabilisticType};
