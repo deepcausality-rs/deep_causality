@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2025-10-19T11:04:44Z",
+    "created": "2025-11-03T05:27:31Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_haft-c76c6d4b-a5f0-4724-a125-702178a9fdcf",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_haft-0e6a4250-a560-44b4-b66f-73944b2d98f1",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_haft",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "724f6cd402d44c6a3b847754db183c203dc9cd52"
+          "checksumValue": "83f960491ec328db80c3735ce6e87f297ebc451a"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -27,18 +27,18 @@
   "name": "deep_causality_haft",
   "packages": [
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.2.0",
+      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.2.1",
       "description": "HKT traits for for the deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_haft",
-      "versionInfo": "0.2.0"
+      "versionInfo": "0.2.1"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.2.0",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.2.1",
       "relationshipType": "GENERATED_FROM",
       "spdxElementId": "SPDXRef-File-deep_causality_haft"
     },

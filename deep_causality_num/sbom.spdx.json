@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2025-09-25T08:37:41Z",
+    "created": "2025-11-03T05:27:31Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_num-3d847ce4-6465-4042-b55b-fbe80a90835e",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_num-622b5f3b-de4f-4799-863b-85d948a4fe81",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_num",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "8b4f6265dafc3ded58f148ce9a097f17a066811c"
+          "checksumValue": "83f960491ec328db80c3735ce6e87f297ebc451a"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -27,25 +27,25 @@
   "name": "deep_causality_num",
   "packages": [
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.2",
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.5",
       "description": "Number utils for for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_num",
-      "versionInfo": "0.1.2"
+      "versionInfo": "0.1.5"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.2",
-      "relationshipType": "GENERATED_FROM",
-      "spdxElementId": "SPDXRef-File-deep_causality_num"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-File-deep_causality_num",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.5",
+      "relationshipType": "GENERATED_FROM",
+      "spdxElementId": "SPDXRef-File-deep_causality_num"
     }
   ],
   "spdxVersion": "SPDX-2.3"

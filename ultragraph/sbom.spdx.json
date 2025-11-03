@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2025-09-25T08:37:41Z",
+    "created": "2025-11-03T05:27:31Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/ultragraph-eef25736-adb2-46ea-bcb6-33a8b5187f40",
+  "documentNamespace": "https://spdx.org/spdxdocs/ultragraph-e4683867-0a6d-438f-8dc5-e2013e2b7e90",
   "files": [
     {
       "SPDXID": "SPDXRef-File-ultragraph",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "8b4f6265dafc3ded58f148ce9a097f17a066811c"
+          "checksumValue": "83f960491ec328db80c3735ce6e87f297ebc451a"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -27,26 +27,26 @@
   "name": "ultragraph",
   "packages": [
     {
-      "SPDXID": "SPDXRef-Package-ultragraph-0.8.7",
+      "SPDXID": "SPDXRef-Package-ultragraph-0.8.8",
       "description": "Hypergraph data structure.",
       "downloadLocation": "NONE",
       "homepage": "https://github.com/deepcausality/deep_causality/tree/main/ultragraph",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "ultragraph",
-      "versionInfo": "0.8.7"
+      "versionInfo": "0.8.8"
     }
   ],
   "relationships": [
     {
+      "relatedSpdxElement": "SPDXRef-Package-ultragraph-0.8.8",
+      "relationshipType": "GENERATED_FROM",
+      "spdxElementId": "SPDXRef-File-ultragraph"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-File-ultragraph",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-ultragraph-0.8.7",
-      "relationshipType": "GENERATED_FROM",
-      "spdxElementId": "SPDXRef-File-ultragraph"
     }
   ],
   "spdxVersion": "SPDX-2.3"
