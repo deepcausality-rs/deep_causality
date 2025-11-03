@@ -54,6 +54,13 @@ impl<T> ConstTree<T> {
         self.node.children.get(index)
     }
 
+    /// Returns a unique identifier for the node pointed to by this `ConstTree`.
+    ///
+    /// The ID is the memory address of the underlying `Arc`'s allocation.
+    pub fn get_id(&self) -> usize {
+        Arc::as_ptr(&self.node) as usize
+    }
+
     /// Checks if the tree is a leaf node (i.e., has no children).
     pub fn is_leaf(&self) -> bool {
         self.node.children.is_empty()
@@ -102,7 +109,7 @@ impl<T> ConstTree<T> {
     /// # Examples
     /// ```
     /// use deep_causality_ast::ConstTree;
-    /// let tree = ConstTree::with_children(10, vec![ConstTree::new(20), ConstTree::new(30)]);
+    /// let tree = ConstTree::with_children(10, vec![ConstTree::from(20), ConstTree::from(30)]);
     /// let found_node = tree.find(|v| *v > 25).unwrap();
     /// assert_eq!(*found_node.value(), 30);
     /// ```

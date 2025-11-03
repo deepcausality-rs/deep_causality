@@ -2,9 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::Uncertain;
+use crate::{ProbabilisticType, Uncertain};
 
-impl<T> PartialEq for Uncertain<T> {
+impl<T: ProbabilisticType + PartialEq> PartialEq for Uncertain<T> {
     fn eq(&self, other: &Self) -> bool {
         // ID is generated so two Uncertain instances with the same root node will have
         // different ID's. Thus the comparison on the root node only

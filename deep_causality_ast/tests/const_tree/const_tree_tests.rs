@@ -7,7 +7,7 @@
 #![allow(unused_imports)]
 
 use deep_causality_ast::ConstTree;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::thread;
 
 #[test]
@@ -69,6 +69,30 @@ fn test_depth() {
     assert_eq!(leaf.depth(), 1);
     let empty_children_tree: ConstTree<i32> = ConstTree::with_children(0, vec![]);
     assert_eq!(empty_children_tree.depth(), 1);
+}
+
+#[test]
+fn test_get_id() {
+    let tree1 = ConstTree::new(10);
+    let tree2 = ConstTree::new(10); // Same value, different allocation
+    let tree1_clone = tree1.clone();
+
+    // IDs should be non-zero memory addresses
+    assert_ne!(tree1.get_id(), 0);
+    assert_ne!(tree2.get_id(), 0);
+
+    // A clone should have the same ID as the original
+    assert_eq!(tree1.get_id(), tree1_clone.get_id());
+
+    // Independently created trees should have different IDs
+    assert_ne!(tree1.get_id(), tree2.get_id());
+
+    // Verify that ptr_eq and get_id are consistent
+    assert!(tree1.ptr_eq(&tree1_clone));
+    assert_eq!(tree1.get_id(), tree1_clone.get_id());
+
+    assert!(!tree1.ptr_eq(&tree2));
+    assert_ne!(tree1.get_id(), tree2.get_id());
 }
 
 #[test]

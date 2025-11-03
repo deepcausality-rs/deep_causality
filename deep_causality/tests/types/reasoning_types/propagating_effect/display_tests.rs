@@ -29,9 +29,9 @@ fn test_display() {
 
     let point = Uncertain::<bool>::point(true);
     let effect4 = UncertainBool(point);
-    assert!(format!("{effect4}").contains("Point(true)"));
+    assert!(format!("{effect4}").contains("Value(Bool(true))"));
 
     let point = Uncertain::<f64>::point(4.0f64);
     let effect5 = UncertainFloat(point);
-    assert!(format!("{effect5}").contains("Point(4.0)"));
+    assert!(format!("{effect5}").contains("Value(Float(4.0))"));
 }

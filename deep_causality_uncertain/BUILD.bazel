@@ -13,7 +13,8 @@ rust_library(
     deps = [
         # Internal crates
         "//deep_causality_rand",
-        "//deep_causality_haft",
+        "//deep_causality_ast",
+        "//deep_causality_num",
     ],
 )
 

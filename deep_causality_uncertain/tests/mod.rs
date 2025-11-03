@@ -5,5 +5,6 @@
 
 mod algos;
 mod errors;
+mod extensions;
 mod integration_tests;
 mod types;

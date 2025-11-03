@@ -16,7 +16,7 @@ impl Uncertain<f64> {
         let computed_value = with_global_cache(|cache| {
             cache.get_or_compute(key, || {
                 let sampler = SequentialSampler;
-                Sampler::sample(&sampler, &self.root_node)
+                Sampler::<f64>::sample(&sampler, &self.root_node)
             })
         })?;
 
@@ -46,7 +46,7 @@ impl Uncertain<bool> {
         let computed_value = with_global_cache(|cache| {
             cache.get_or_compute(key, || {
                 let sampler = SequentialSampler;
-                Sampler::sample(&sampler, &self.root_node)
+                Sampler::<bool>::sample(&sampler, &self.root_node)
             })
         })?;
 
