@@ -179,5 +179,13 @@ Testing for the `Quaternion` implementation will strictly follow the conventions
 *   **Comprehensive Coverage**: Each method, trait implementation, and edge case (e.g., `NaN` inputs, zero divisors, identity values) will have dedicated unit tests to ensure correctness and adherence to mathematical properties.
 
 ## 12. Open Questions / Considerations
-*   **Testing**: Comprehensive unit tests will be required for all methods and trait implementations.
+*   **Testing**: Comprehensive unit tests will be required for all methods and trait 
+
+## implementation
+
+During the implementation, the following amendments to the specs had to be made: 
+
+*   **WHERE clause reduction**: The `WHERE` clause for `Quaternion` was reduced because the trait bounds of `PartialEq`, `Copy`, and `Clone` were conflicting with other trait bounds, thus they were removed from the explicit `Self` bounds.
+*   **Float trait implementation**: The `Float` trait implementation for `Quaternion` was removed as it was deemed untenable to be implemented directly against the quaternion type.
+*   **REM trait implementation**: The `Rem` trait implementation is not mathematically standard or feasible for quaternions.
 
