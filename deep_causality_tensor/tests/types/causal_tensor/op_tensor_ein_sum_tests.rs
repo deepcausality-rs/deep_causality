@@ -27,6 +27,23 @@ fn test_ein_sum_mat_mul() {
 }
 
 #[test]
+fn test_ein_sum_contraction() {
+    let lhs = utils_tests::matrix_tensor(vec![1.0, 2.0, 3.0, 4.0], 2, 2);
+    let rhs = utils_tests::matrix_tensor(vec![5.0, 6.0, 7.0, 8.0], 2, 2);
+    let expected = utils_tests::matrix_tensor(vec![19.0, 22.0, 43.0, 50.0], 2, 2);
+
+    let ast = EinSumAST::with_children(
+        EinSumOp::Contraction {
+            lhs_axes: vec![1],
+            rhs_axes: vec![0],
+        },
+        vec![EinSumOp::tensor_source(lhs), EinSumOp::tensor_source(rhs)],
+    );
+    let result = CausalTensor::ein_sum(&ast).unwrap();
+    assert_eq!(result, expected);
+}
+
+#[test]
 fn test_ein_sum_dot_prod() {
     let lhs = utils_tests::vector_tensor(vec![1.0, 2.0, 3.0]);
     let rhs = utils_tests::vector_tensor(vec![4.0, 5.0, 6.0]);
