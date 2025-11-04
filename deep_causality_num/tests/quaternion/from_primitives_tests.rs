@@ -85,7 +85,7 @@ fn assert_approx_eq(a: f64, b: f64, epsilon: f64) {
 #[test]
 fn test_from_f32() {
     let q = Quaternion::<f64>::from_f32(123.45).unwrap();
-    assert_approx_eq(q.w, 123.44999694824219, 1.0e-5);
+    assert_approx_eq(q.w, 123.45, 1.0e-5);
     assert_eq!(q.x, 0.0);
     assert_eq!(q.y, 0.0);
     assert_eq!(q.z, 0.0);

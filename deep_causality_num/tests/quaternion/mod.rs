@@ -15,4 +15,5 @@ mod num_cast_tests;
 mod num_tests;
 mod part_ord_tests;
 mod quaternion_number_tests;
+mod rotation_tests;
 mod to_primitive_tests;

@@ -18,6 +18,7 @@ mod num;
 mod num_cast;
 mod part_ord;
 mod quaternion_number;
+mod rotation;
 mod to_primitive;
 
 #[derive(Copy, Clone, PartialEq, Default)]

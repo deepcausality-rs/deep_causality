@@ -84,10 +84,10 @@ fn test_div_scalar() {
     assert_eq!(q / scalar, expected);
 
     let q_nan = Quaternion::new(1.0, 1.0, 1.0, 1.0);
-     let scalar_zero = 0.0;
-     let result = q_nan / scalar_zero;
+    let scalar_zero = 0.0;
+    let result = q_nan / scalar_zero;
     assert!(result.w.is_nan());
-     assert!(result.x.is_nan());
+    assert!(result.x.is_nan());
     assert!(result.y.is_nan());
     assert!(result.z.is_nan());
 }

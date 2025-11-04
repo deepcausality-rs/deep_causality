@@ -178,7 +178,6 @@ Testing for the `Quaternion` implementation will strictly follow the conventions
 
 *   **Comprehensive Coverage**: Each method, trait implementation, and edge case (e.g., `NaN` inputs, zero divisors, identity values) will have dedicated unit tests to ensure correctness and adherence to mathematical properties.
 
-## 12. Open Questions / Considerations                           
-+                                                                 
-+*   **Testing**: Comprehensive unit tests will be required for all methods and trait implementations.
+## 12. Open Questions / Considerations
+*   **Testing**: Comprehensive unit tests will be required for all methods and trait implementations.
 

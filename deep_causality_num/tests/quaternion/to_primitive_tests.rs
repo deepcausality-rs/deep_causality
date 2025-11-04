@@ -148,7 +148,7 @@ fn test_to_u128() {
 #[test]
 fn test_to_f32() {
     let q = Quaternion::new(123.45, 0.0, 0.0, 0.0);
-    assert_eq!(q.to_f32(), Some(123.45 as f32));
+    assert_eq!(q.to_f32(), Some(123.45_f32));
     let q_nan = Quaternion::new(f64::NAN, 0.0, 0.0, 0.0);
     assert!(q_nan.to_f32().unwrap().is_nan());
     let q_inf = Quaternion::new(f64::INFINITY, 0.0, 0.0, 0.0);
