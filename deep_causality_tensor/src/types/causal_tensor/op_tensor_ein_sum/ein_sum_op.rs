@@ -21,15 +21,20 @@ pub enum EinSumOp<T> {
         axes: Vec<usize>,
     },
 
-    // EXPLICIT EINSUM OPS (for usability)
-    MatMul,  // Standard matrix multiplication (rank-2 tensors)
-    DotProd, // Dot product (rank-1 tensors)
+    // EXPLICIT EIN_SUM OPS (for usability)
+    /// Standard matrix multiplication (rank-2 tensors)
+    MatMul,
+    /// Dot product (rank-1 tensors)
+    DotProd,
+    /// Trace over two specified axes
     Trace {
         axes1: usize,
         axes2: usize,
-    }, // Trace over two specified axes
-    TensorProduct, // Outer product
-    ElementWiseProduct, // Hadamard product
+    },
+    /// Outer product
+    TensorProduct,
+    /// Hadamard product
+    ElementWiseProduct,
     Transpose {
         new_order: Vec<usize>,
     },
@@ -37,7 +42,8 @@ pub enum EinSumOp<T> {
         axes1: usize,
         axes2: usize,
     },
-    BatchMatMul, // Batch matrix multiplication (rank-3 tensors)
+    /// Batch matrix multiplication (rank-3 tensors)
+    BatchMatMul,
 }
 
 // The EinSum AST

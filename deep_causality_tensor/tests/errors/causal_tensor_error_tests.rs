@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_tensor::CausalTensorError;
+use deep_causality_tensor::{CausalTensorError, EinSumValidationError};
 use std::error::Error;
 
 #[test]
@@ -44,6 +44,18 @@ fn test_error_display_and_debug() {
             "CausalTensorError: Unorderable value encountered",
             "UnorderableValue",
         ),
+        (
+            CausalTensorError::InvalidParameter("Invalid input".to_string()),
+            "CausalTensorError: Invalid parameter: Invalid input",
+            "InvalidParameter(\"Invalid input\")",
+        ),
+        (
+            CausalTensorError::EinSumError(EinSumValidationError::ShapeMismatch {
+                message: "Test EinSum Shape Mismatch".to_string(),
+            }),
+            "CausalTensorError: EinSumError: EinSumValidationError: Shape mismatch: Test EinSum Shape Mismatch",
+            "EinSumError(ShapeMismatch { message: \"Test EinSum Shape Mismatch\" })",
+        ),
     ];
 
     for (err, display_msg, debug_msg) in &test_cases {
@@ -82,6 +94,31 @@ fn test_error_equality() {
         CausalTensorError::InvalidOperation,
         CausalTensorError::UnorderableValue
     );
+    assert_eq!(
+        CausalTensorError::InvalidParameter("test".to_string()),
+        CausalTensorError::InvalidParameter("test".to_string())
+    );
+    assert_ne!(
+        CausalTensorError::InvalidParameter("test1".to_string()),
+        CausalTensorError::InvalidParameter("test2".to_string())
+    );
+    assert_eq!(
+        CausalTensorError::EinSumError(EinSumValidationError::ShapeMismatch {
+            message: "Test".to_string()
+        }),
+        CausalTensorError::EinSumError(EinSumValidationError::ShapeMismatch {
+            message: "Test".to_string()
+        })
+    );
+    assert_ne!(
+        CausalTensorError::EinSumError(EinSumValidationError::ShapeMismatch {
+            message: "Test1".to_string()
+        }),
+        CausalTensorError::EinSumError(EinSumValidationError::RankMismatch {
+            expected: 1,
+            found: 2
+        })
+    );
 }
 
 #[test]
@@ -94,6 +131,10 @@ fn test_error_trait_source() {
         CausalTensorError::EmptyTensor,
         CausalTensorError::InvalidOperation,
         CausalTensorError::UnorderableValue,
+        CausalTensorError::InvalidParameter("test".to_string()),
+        CausalTensorError::EinSumError(EinSumValidationError::ShapeMismatch {
+            message: "Test".to_string(),
+        }),
     ];
 
     for err in &errors {

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use super::ein_sum_validation_error::EinSumValidationError;
+use crate::EinSumValidationError;
 use std::error::Error;
 
 /// Errors that can occur during tensor operations.

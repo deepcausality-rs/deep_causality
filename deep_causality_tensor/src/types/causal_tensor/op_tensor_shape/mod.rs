@@ -45,10 +45,17 @@ where
         }
 
         let mut new_shape = Vec::with_capacity(self.num_dim());
-        let mut new_strides = Vec::with_capacity(self.num_dim());
         for &axis in axes {
             new_shape.push(self.shape[axis]);
-            new_strides.push(self.strides[axis]);
+        }
+
+        let mut new_strides = vec![0; new_shape.len()];
+        if !new_shape.is_empty() {
+            let mut current_stride = 1;
+            for i in (0..new_shape.len()).rev() {
+                new_strides[i] = current_stride;
+                current_stride *= new_shape[i];
+            }
         }
 
         // Create a new tensor with the same data but new shape and strides

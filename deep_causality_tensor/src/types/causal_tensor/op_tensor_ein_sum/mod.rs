@@ -5,9 +5,7 @@
 pub(crate) mod ein_sum_impl;
 pub(crate) mod ein_sum_op;
 
-use crate::errors::causal_tensor_error::CausalTensorError;
-use crate::types::causal_tensor::CausalTensor;
-use ein_sum_op::{EinSumAST, EinSumOp};
+use crate::{CausalTensor, CausalTensorError, EinSumAST, EinSumOp};
 use std::ops::{Add, Mul};
 
 impl<T> CausalTensor<T>
@@ -15,7 +13,7 @@ where
     T: Clone + Default + PartialOrd + Add<Output = T> + Mul<Output = T>,
 {
     /// Public API for Einstein summation.
-    pub fn einsum(ast: &EinSumAST<T>) -> Result<CausalTensor<T>, CausalTensorError> {
+    pub fn ein_sum(ast: &EinSumAST<T>) -> Result<CausalTensor<T>, CausalTensorError> {
         Self::execute_ein_sum(ast)
     }
 
@@ -40,7 +38,7 @@ where
             // Explicit Ops
             EinSumOp::MatMul => {
                 let (lhs, rhs) = Self::get_binary_operands(children)?;
-                Self::contract(&lhs, &rhs, &[1], &[0]) // Contract last axis of LHS with first of RHS
+                Self::mat_mul_2d(&lhs, &rhs)
             }
             EinSumOp::DotProd => {
                 let (lhs, rhs) = Self::get_binary_operands(children)?;
@@ -68,8 +66,7 @@ where
             }
             EinSumOp::BatchMatMul => {
                 let (lhs, rhs) = Self::get_binary_operands(children)?;
-                // Assuming batch dimension is the first (0)
-                Self::contract(&lhs, &rhs, &[2], &[1])
+                Self::batch_mat_mul(lhs, rhs)
             }
         }
     }

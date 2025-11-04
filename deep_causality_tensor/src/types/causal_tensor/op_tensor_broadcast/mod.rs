@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
 use crate::CausalTensorError;
 use crate::types::causal_tensor::CausalTensor;
 
@@ -10,61 +11,6 @@ impl<T> CausalTensor<T>
 where
     T: Clone + Default + PartialOrd,
 {
-    /// Calculates the flat index for a broadcasted tensor. Assumes inputs are valid.
-    pub(crate) fn get_flat_index_broadcasted(&self, result_index: &[usize]) -> usize {
-        let mut flat_index = 0;
-        let self_ndim = self.num_dim();
-        let result_ndim = result_index.len();
-
-        // Iterate through the dimensions of the result_index from right to left
-        for i in 1..=result_ndim {
-            let result_dim_val = result_index[result_ndim - i]; // Value in the result_index for this dimension
-
-            // Check if 'self' has a corresponding dimension at this position from the right
-            if i <= self_ndim {
-                let self_dim_idx = self_ndim - i; // Actual index into self.shape/strides
-
-                // If self's dimension is 1, it broadcasts, so its index contribution is 0
-                if self.shape[self_dim_idx] == 1 {
-                    // No change to flat_index
-                } else {
-                    flat_index += result_dim_val * self.strides[self_dim_idx];
-                }
-            }
-            // If i > self_ndim, it means this dimension was padded in 'self',
-            // so its contribution to flat_index is 0.
-        }
-        flat_index
-    }
-
-    /// Helper to create a new tensor with a given shape and fill it with a value.
-    pub(crate) fn full(shape: &[usize], value: T) -> Self
-    where
-        T: Clone,
-    {
-        let len = shape.iter().product();
-        let data = vec![value; len];
-        Self::from_vec_and_shape_unchecked(data, shape)
-    }
-
-    /// Internal constructor that calculates strides.
-    /// Call only when shape is known to be valid.
-    pub(super) fn from_vec_and_shape_unchecked(data: Vec<T>, shape: &[usize]) -> Self {
-        let mut strides = vec![0; shape.len()];
-        if !shape.is_empty() {
-            let mut current_stride = 1;
-            for i in (0..shape.len()).rev() {
-                strides[i] = current_stride;
-                current_stride *= shape[i];
-            }
-        }
-        Self {
-            data,
-            shape: shape.to_vec(),
-            strides,
-        }
-    }
-
     /// Helper for element-wise binary operations with broadcasting.
     /// This function determines the broadcasted shape, iterates through the result
     /// coordinates, and applies the given operation `op`.
@@ -144,5 +90,60 @@ where
         }
 
         CausalTensor::new(result_data, result_shape)
+    }
+
+    /// Calculates the flat index for a broadcasted tensor. Assumes inputs are valid.
+    pub(crate) fn get_flat_index_broadcasted(&self, result_index: &[usize]) -> usize {
+        let mut flat_index = 0;
+        let self_ndim = self.num_dim();
+        let result_ndim = result_index.len();
+
+        // Iterate through the dimensions of the result_index from right to left
+        for i in 1..=result_ndim {
+            let result_dim_val = result_index[result_ndim - i]; // Value in the result_index for this dimension
+
+            // Check if 'self' has a corresponding dimension at this position from the right
+            if i <= self_ndim {
+                let self_dim_idx = self_ndim - i; // Actual index into self.shape/strides
+
+                // If self's dimension is 1, it broadcasts, so its index contribution is 0
+                if self.shape[self_dim_idx] == 1 {
+                    // No change to flat_index
+                } else {
+                    flat_index += result_dim_val * self.strides[self_dim_idx];
+                }
+            }
+            // If i > self_ndim, it means this dimension was padded in 'self',
+            // so its contribution to flat_index is 0.
+        }
+        flat_index
+    }
+
+    /// Helper to create a new tensor with a given shape and fill it with a value.
+    pub(crate) fn full(shape: &[usize], value: T) -> Self
+    where
+        T: Clone,
+    {
+        let len = shape.iter().product();
+        let data = vec![value; len];
+        Self::from_vec_and_shape_unchecked(data, shape)
+    }
+
+    /// Internal constructor that calculates strides.
+    /// Call only when shape is known to be valid.
+    pub(super) fn from_vec_and_shape_unchecked(data: Vec<T>, shape: &[usize]) -> Self {
+        let mut strides = vec![0; shape.len()];
+        if !shape.is_empty() {
+            let mut current_stride = 1;
+            for i in (0..shape.len()).rev() {
+                strides[i] = current_stride;
+                current_stride *= shape[i];
+            }
+        }
+        Self {
+            data,
+            shape: shape.to_vec(),
+            strides,
+        }
     }
 }
