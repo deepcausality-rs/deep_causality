@@ -15,6 +15,8 @@ mod causal_tensor_inspectors_tests;
 mod causal_tensor_view_tests;
 #[cfg(test)]
 mod op_scalar_tensor_tests;
+mod op_tensor_ein_sum_ast_tests;
+mod op_tensor_ein_sum_tests;
 #[cfg(test)]
 mod op_tensor_product_tests;
 #[cfg(test)]

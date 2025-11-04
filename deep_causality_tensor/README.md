@@ -17,6 +17,31 @@ tasks.
 * [Examples](../deep_causality_tensor/examples)
 * [Test](../deep_causality_tensor/tests)
 
+## Examples
+
+To run the examples, use `cargo run --example <example_name>`.
+
+*   **Applicative Causal Tensor**
+    ```bash
+    cargo run --example applicative_causal_tensor
+    ```
+*   **Basic Causal Tensor**
+    ```bash
+    cargo run --example causal_tensor
+    ```
+*   **Effect System Causal Tensor**
+    ```bash
+    cargo run --example effect_system_causal_tensor
+    ```
+*   **Einstein Summation Causal Tensor**
+    ```bash
+    cargo run --example ein_sum_causal_tensor
+    ```
+*   **Functor Causal Tensor**
+    ```bash
+    cargo run --example functor_causal_tensor
+    ```
+
 ## Usage
 
 `CausalTensor` is straightforward to use. You create it from a flat vector of data and a vector defining its shape.
@@ -61,6 +86,51 @@ fn main() {
     println!("Sum of all elements: {}", sum);
 }
 ```
+
+## Einstein Sum (ein_sum)
+
+The `ein_sum` function provides a powerful and flexible way to perform various tensor operations, including matrix multiplication, dot products, and more, by constructing an Abstract Syntax Tree (AST) of operations.
+
+```rust
+use deep_causality_tensor::CausalTensor;
+use deep_causality_tensor::types::causal_tensor::op_tensor_ein_sum::EinSumOp;
+
+fn main() {
+    // Example: Matrix Multiplication using ein_sum
+    let lhs_data = vec![1.0, 2.0, 3.0, 4.0];
+    let lhs_tensor = CausalTensor::new(lhs_data, vec![2, 2]).unwrap();
+
+    let rhs_data = vec![5.0, 6.0, 7.0, 8.0];
+    let rhs_tensor = CausalTensor::new(rhs_data, vec![2, 2]).unwrap();
+
+    // Construct the AST for matrix multiplication
+    let mat_mul_ast = EinSumOp::mat_mul(lhs_tensor, rhs_tensor);
+
+    // Execute the Einstein summation
+    let result = CausalTensor::ein_sum(&mat_mul_ast).unwrap();
+
+    println!("Result of Matrix Multiplication:\n{:?}", result);
+    // Expected: CausalTensor { data: [19.0, 22.0, 43.0, 50.0], shape: [2, 2], strides: [2, 1] }
+    
+     // Example: Dot Product
+    let vec1_data = vec![1.0, 2.0, 3.0];
+    let vec1_shape = vec![3];
+    let vec1_tensor = CausalTensor::new(vec1_data, vec1_shape).unwrap();
+
+    let vec2_data = vec![4.0, 5.0, 6.0];
+    let vec2_shape = vec![3];
+    let vec2_tensor = CausalTensor::new(vec2_data, vec2_shape).unwrap();
+    
+    // Execute the Einstein summation for dot product 
+    let result_dot_prod = CausalTensor::ein_sum(&EinSumOp::dot_prod(
+        vec1_tensor.clone(),
+        vec2_tensor.clone(),
+    ))
+    .unwrap();
+    println!("Result of Dot Product:\n{:?}", result_dot_prod);
+}
+```
+
 
 ## Functional Composition 
 

@@ -7,6 +7,8 @@ use crate::CausalTensorError;
 use std::ops::{Add, Div};
 
 mod op_scalar_tensor;
+pub(crate) mod op_tensor_broadcast;
+pub mod op_tensor_ein_sum;
 mod op_tensor_product;
 /// Defines tensor reduction operations (e.g., sum, mean).
 mod op_tensor_reduction;
@@ -18,8 +20,6 @@ mod op_tensor_shape;
 mod op_tensor_tensor;
 /// Defines tensor view operations (e.g., slicing).
 mod op_view;
-/// Utility functions for tensor operations.
-pub(crate) mod utils;
 
 /// `CausalTensor` is a low-dimensional (up to ~5-25 dimensions recommended) tensor
 /// backed by a single, contiguous `Vec<T>`. It uses a stride-based memory layout

@@ -25,7 +25,7 @@ fn test_hkt_causal_tensor_witness() {
 fn test_applicative_causal_tensor_pure() {
     let tensor = CausalTensorWitness::pure(42);
     assert_eq!(tensor.as_slice(), &[42]);
-    assert_eq!(tensor.shape(), &[]); // Scalar tensor
+    assert_eq!(tensor.shape(), &[] as &[usize]); // Scalar tensor
 }
 
 #[test]

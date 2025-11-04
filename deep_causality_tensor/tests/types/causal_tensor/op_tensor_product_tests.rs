@@ -105,7 +105,7 @@ fn test_tensor_product_scalar_scalar() {
     let a = CausalTensor::new(vec![7], vec![]).unwrap();
     let b = CausalTensor::new(vec![3], vec![]).unwrap();
     let product = a.tensor_product(&b).unwrap();
-    assert_eq!(product.shape(), &[]);
+    assert_eq!(product.shape(), &[] as &[usize]);
     assert_eq!(product.as_slice(), &[21]);
 }
 

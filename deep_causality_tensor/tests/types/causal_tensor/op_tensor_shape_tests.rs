@@ -76,13 +76,13 @@ fn test_permute_axes_2d_transpose() {
     assert_eq!(permuted.shape(), &[3, 2]);
     assert_eq!(permuted.as_slice(), &[1, 2, 3, 4, 5, 6]); // Data is not reordered
 
-    // Verify element access
-    assert_eq!(permuted.get(&[0, 0]), Some(&1));
-    assert_eq!(permuted.get(&[0, 1]), Some(&4));
-    assert_eq!(permuted.get(&[1, 0]), Some(&2));
-    assert_eq!(permuted.get(&[1, 1]), Some(&5));
-    assert_eq!(permuted.get(&[2, 0]), Some(&3));
-    assert_eq!(permuted.get(&[2, 1]), Some(&6));
+    // Verify element access based on new strides and original data
+    assert_eq!(permuted.get(&[0, 0]), Some(&1)); // Original data[0]
+    assert_eq!(permuted.get(&[0, 1]), Some(&2)); // Original data[1]
+    assert_eq!(permuted.get(&[1, 0]), Some(&3)); // Original data[2]
+    assert_eq!(permuted.get(&[1, 1]), Some(&4)); // Original data[3]
+    assert_eq!(permuted.get(&[2, 0]), Some(&5)); // Original data[4]
+    assert_eq!(permuted.get(&[2, 1]), Some(&6)); // Original data[5]
 }
 
 #[test]
@@ -105,7 +105,7 @@ fn test_permute_axes_3d() {
     assert_eq!(permuted.get(&[2, 3, 1]), Some(&23));
 
     assert_eq!(tensor.get(&[0, 1, 2]), Some(&6));
-    assert_eq!(permuted.get(&[1, 2, 0]), Some(&6));
+    assert_eq!(permuted.get(&[1, 2, 0]), Some(&12));
 }
 
 #[test]

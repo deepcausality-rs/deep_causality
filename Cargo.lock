@@ -464,6 +464,7 @@ name = "deep_causality_tensor"
 version = "0.1.6"
 dependencies = [
  "criterion",
+ "deep_causality_ast",
  "deep_causality_haft",
  "deep_causality_num",
  "deep_causality_rand",
