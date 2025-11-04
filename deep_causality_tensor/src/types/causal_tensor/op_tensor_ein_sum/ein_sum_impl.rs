@@ -254,12 +254,21 @@ where
 
         let mut result_data = vec![T::default(); m * n];
 
+        let lhs_row_stride_i = lhs.strides[0];
+        let lhs_col_stride = lhs.strides[1];
+        let rhs_row_stride = rhs.strides[0];
+        let rhs_col_stride_j = rhs.strides[1];
+
         for i in 0..m {
+            let lhs_row_base = i * lhs_row_stride_i;
             for j in 0..n {
+                let rhs_col_base = j * rhs_col_stride_j;
                 let mut sum = T::default();
                 for l in 0..k {
-                    let lhs_val = lhs.get(&[i, l]).unwrap().clone();
-                    let rhs_val = rhs.get(&[l, j]).unwrap().clone();
+                    let lhs_idx = lhs_row_base + l * lhs_col_stride;
+                    let rhs_idx = l * rhs_row_stride + rhs_col_base;
+                    let lhs_val = lhs.data[lhs_idx].clone();
+                    let rhs_val = rhs.data[rhs_idx].clone();
                     sum = sum + lhs_val * rhs_val;
                 }
                 result_data[i * n + j] = sum;
