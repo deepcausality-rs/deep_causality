@@ -19,3 +19,7 @@ pub fn vector_tensor(data: Vec<f64>) -> CausalTensor<f64> {
 pub fn matrix_tensor(data: Vec<f64>, rows: usize, cols: usize) -> CausalTensor<f64> {
     CausalTensor::new(data, vec![rows, cols]).unwrap()
 }
+
+pub fn tensor_3d(data: Vec<f64>, dim0: usize, dim1: usize, dim2: usize) -> CausalTensor<f64> {
+    CausalTensor::new(data, vec![dim0, dim1, dim2]).unwrap()
+}
