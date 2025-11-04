@@ -352,12 +352,15 @@ where
             .collect();
 
         if new_shape.is_empty() {
+            // This is a 2D tensor trace, resulting in a scalar.
             let mut total_sum = T::default();
-            for i in 0..tensor.shape[axis1] {
-                let mut index = vec![0; tensor.num_dim()];
-                index[axis1] = i;
-                index[axis2] = i;
-                total_sum = total_sum + tensor.get(&index).unwrap().clone();
+            let dim = tensor.shape[axis1];
+            let stride1 = tensor.strides[axis1];
+            let stride2 = tensor.strides[axis2];
+
+            for i in 0..dim {
+                let flat_index = i * stride1 + i * stride2;
+                total_sum = total_sum + tensor.data[flat_index].clone();
             }
             return CausalTensor::new(vec![total_sum], vec![]);
         }
