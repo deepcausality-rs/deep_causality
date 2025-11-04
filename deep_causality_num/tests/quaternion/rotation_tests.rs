@@ -179,11 +179,11 @@ fn test_slerp_antipodal() {
     let q4 = Quaternion::new(0.0, 0.0, 0.0, -1.0); // -180 deg around Z
     let slerp_opposite = q3.slerp(&q4, 0.5);
 
-    // Should be identity or very close to it
-    assert!((slerp_opposite.w - 1.0).abs() < EPSILON);
+    // Should be q3 (0,0,0,1) after negation and linear interpolation
+    assert!((slerp_opposite.w - 0.0).abs() < EPSILON);
     assert!((slerp_opposite.x - 0.0).abs() < EPSILON);
     assert!((slerp_opposite.y - 0.0).abs() < EPSILON);
-    assert!((slerp_opposite.z - 0.0).abs() < EPSILON);
+    assert!((slerp_opposite.z - 1.0).abs() < EPSILON);
 }
 
 #[test]

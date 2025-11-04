@@ -191,7 +191,8 @@ impl<F: Float> Div<F> for Quaternion<F> {
             y: self.y * inv_scalar,
             z: self.z * inv_scalar,
         }
-    }}
+    }
+}
 
 // Rem (Placeholder for now, as quaternion remainder is not standard)
 impl<F: Float> Rem for Quaternion<F> {

@@ -134,25 +134,16 @@ where
 
         let mut dot = q1.dot(&q2);
 
-        // If the quaternions are very close (dot product near 1 or -1)
-        if dot.abs() > F::one() - F::epsilon() {
-            // If they are antipodal and t = 0.5, return identity
-            if dot < F::zero() && t == F::from(0.5).unwrap() {
-                return Quaternion::identity();
-            }
-            // Otherwise, they are either identical or antipodal but t is not 0.5.
-            // In either case, linear interpolation is a good approximation.
-            return (q1 * (F::one() - t) + q2 * t).normalize();
-        }
-
-        // If the dot product is negative, the quaternions are "opposite"
-        // and slerp will take the long way around.
         // We can negate one of the quaternions to take the short way.
         if dot < F::zero() {
             q2 = -q2;
             dot = -dot;
         }
 
+        // If the quaternions are very close, use linear interpolation to avoid division by zero.
+        if dot > F::one() - F::epsilon() {
+            return (q1 * (F::one() - t) + q2 * t).normalize();
+        }
         // Clamp dot to avoid NaN from acos due to floating point inaccuracies
         dot = dot.clamp(-F::one(), F::one());
         let theta = dot.acos();
