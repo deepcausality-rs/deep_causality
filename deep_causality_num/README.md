@@ -33,6 +33,11 @@ Custom numerical traits with default implementation for the [DeepCausality proje
 
 This crate provides a reduced custom implementation of the `rust-num` main traits with the following properties:
 
+### Implemented Types
+
+*   `Complex`
+*   `Quaternion`
+
 * Zero external dependencies
 * Zero unsafe
 * Minimal macros (only used for testing)
