@@ -13,11 +13,50 @@ where
     T: Clone + Default + PartialOrd + Add<Output = T> + Mul<Output = T>,
 {
     /// Public API for Einstein summation.
+    ///
+    /// This method serves as the entry point for performing Einstein summation operations
+    /// on `CausalTensor`s. It takes an `EinSumAST` (Abstract Syntax Tree) as input,
+    /// which defines the sequence of tensor operations to be executed.
+    ///
+    /// # Arguments
+    ///
+    /// * `ast` - A reference to the `EinSumAST` that describes the Einstein summation operation.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// - `Ok(CausalTensor<T>)` containing the result of the Einstein summation.
+    /// - `Err(CausalTensorError)` if any error occurs during the execution of the AST.
+    ///
+    /// # Errors
+    ///
+    /// Returns errors propagated from `execute_ein_sum`.
     pub fn ein_sum(ast: &EinSumAST<T>) -> Result<CausalTensor<T>, CausalTensorError> {
         Self::execute_ein_sum(ast)
     }
 
     /// Executes the Einstein summation by recursively traversing the AST.
+    ///
+    /// This private method interprets the `EinSumAST` nodes and dispatches to the
+    /// appropriate tensor operation functions (e.g., `contract`, `mat_mul_2d`, `trace`).
+    /// It handles both leaf nodes (TensorSource) and operational nodes with children.
+    ///
+    /// # Arguments
+    ///
+    /// * `ast` - A reference to the `EinSumAST` node currently being executed.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// - `Ok(CausalTensor<T>)` containing the result of the operation defined by the AST node.
+    /// - `Err(CausalTensorError)` if any error occurs during the execution of the current node
+    ///   or its children.
+    ///
+    /// # Errors
+    ///
+    /// Returns errors propagated from helper functions like `get_binary_operands`,
+    /// `get_unary_operand`, `contract`, `sum_axes`, `mat_mul_2d`, `tensor_product`,
+    /// `element_wise_mul`, `permute_axes`, `diagonal`, and `batch_mat_mul`.
     fn execute_ein_sum(ast: &EinSumAST<T>) -> Result<CausalTensor<T>, CausalTensorError> {
         let node = ast.value();
         let children = ast.children();

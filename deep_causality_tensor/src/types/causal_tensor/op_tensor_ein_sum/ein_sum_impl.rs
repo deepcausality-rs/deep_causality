@@ -11,7 +11,29 @@ impl<T> CausalTensor<T>
 where
     T: Clone + Default + PartialOrd + Add<Output = T> + Mul<Output = T>,
 {
-    /// Helper to get two operands from the AST children.
+    /// Extracts two operands from the provided Abstract Syntax Tree (AST) children.
+    ///
+    /// This helper function is used to retrieve the left-hand side (LHS) and right-hand side (RHS)
+    /// `CausalTensor` operands from a slice of `EinSumAST` nodes. It expects exactly two children
+    /// in the AST slice.
+    ///
+    /// # Arguments
+    ///
+    /// * `children` - A slice of `EinSumAST<T>` representing the children nodes of an AST operation.
+    ///                Expected to contain exactly two elements, each resolving to a `CausalTensor<T>`.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// - `Ok((CausalTensor<T>, CausalTensor<T>))` containing the LHS and RHS tensors if successful.
+    /// - `Err(CausalTensorError)` if the number of children is not two, or if `execute_ein_sum`
+    ///   fails for either child.
+    ///
+    /// # Errors
+    ///
+    /// Returns `CausalTensorError::EinSumError(EinSumValidationError::InvalidNumberOfChildren)`
+    /// if `children.len()` is not equal to 2.
+    /// Returns errors propagated from `CausalTensor::execute_ein_sum`.
     pub(super) fn get_binary_operands(
         children: &[EinSumAST<T>],
     ) -> Result<(CausalTensor<T>, CausalTensor<T>), CausalTensorError> {
@@ -28,7 +50,28 @@ where
         Ok((lhs, rhs))
     }
 
-    /// Helper to get a single operand from the AST children.
+    /// Extracts a single operand from the provided Abstract Syntax Tree (AST) children.
+    ///
+    /// This helper function is used to retrieve a single `CausalTensor` operand from a slice
+    /// of `EinSumAST` nodes. It expects exactly one child in the AST slice.
+    ///
+    /// # Arguments
+    ///
+    /// * `children` - A slice of `EinSumAST<T>` representing the children nodes of an AST operation.
+    ///                Expected to contain exactly one element, resolving to a `CausalTensor<T>`.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// - `Ok(CausalTensor<T>)` containing the single operand tensor if successful.
+    /// - `Err(CausalTensorError)` if the number of children is not one, or if `execute_ein_sum`
+    ///   fails for the child.
+    ///
+    /// # Errors
+    ///
+    /// Returns `CausalTensorError::EinSumError(EinSumValidationError::InvalidNumberOfChildren)`
+    /// if `children.len()` is not equal to 1.
+    /// Returns errors propagated from `CausalTensor::execute_ein_sum`.
     pub(super) fn get_unary_operand(
         children: &[EinSumAST<T>],
     ) -> Result<CausalTensor<T>, CausalTensorError> {
@@ -43,8 +86,32 @@ where
         CausalTensor::execute_ein_sum(&children[0])
     }
 
-    /// Private method for generic tensor contraction.
-    /// This optimized version uses permutation and reshaping to reduce contraction to matrix multiplication.
+    /// Performs a generic tensor contraction between two `CausalTensor`s.
+    ///
+    /// This method implements an optimized tensor contraction by leveraging permutation and
+    /// reshaping operations to reduce the problem to a standard 2D matrix multiplication.
+    /// It identifies common axes between the two tensors and sums over their products.
+    ///
+    /// # Arguments
+    ///
+    /// * `lhs` - The left-hand side `CausalTensor`.
+    /// * `rhs` - The right-hand side `CausalTensor`.
+    /// * `lhs_contract_axes` - A slice of `usize` indicating the axes of `lhs` to contract over.
+    /// * `rhs_contract_axes` - A slice of `usize` indicating the axes of `rhs` to contract over.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// - `Ok(CausalTensor<T>)` containing the result of the tensor contraction.
+    /// - `Err(CausalTensorError)` if validation fails or an underlying operation encounters an error.
+    ///
+    /// # Errors
+    ///
+    /// Returns `CausalTensorError::EinSumError` if:
+    /// - The number of `lhs_contract_axes` and `rhs_contract_axes` do not match.
+    /// - Any specified axis is out of bounds for its respective tensor.
+    /// - The dimensions of the contracted axes in `lhs` and `rhs` do not match.
+    /// - Errors are propagated from `permute_axes`, `reshape`, or `mat_mul_2d`.
     pub(super) fn contract(
         lhs: &CausalTensor<T>,
         rhs: &CausalTensor<T>,
@@ -126,7 +193,28 @@ where
         result_matrix.reshape(&final_shape)
     }
 
-    /// Private helper for 2D matrix multiplication.
+    /// Performs 2D matrix multiplication between two `CausalTensor`s.
+    ///
+    /// This private helper function computes the matrix product of two rank-2 tensors.
+    /// It validates that both input tensors are indeed 2D and that their inner dimensions
+    /// are compatible for multiplication (i.e., `lhs.cols == rhs.rows`).
+    ///
+    /// # Arguments
+    ///
+    /// * `lhs` - The left-hand side `CausalTensor` (matrix).
+    /// * `rhs` - The right-hand side `CausalTensor` (matrix).
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// - `Ok(CausalTensor<T>)` containing the resulting product matrix.
+    /// - `Err(CausalTensorError)` if validation fails.
+    ///
+    /// # Errors
+    ///
+    /// Returns `CausalTensorError::EinSumError` if:
+    /// - Either `lhs` or `rhs` is not a 2D tensor (rank mismatch).
+    /// - The inner dimensions of `lhs` and `rhs` do not match (shape mismatch).
     pub(super) fn mat_mul_2d(
         lhs: &CausalTensor<T>,
         rhs: &CausalTensor<T>,
@@ -179,7 +267,25 @@ where
         CausalTensor::new(result_data, vec![m, n])
     }
 
-    /// Private method for element-wise multiplication.
+    /// Performs element-wise multiplication (Hadamard product) between two `CausalTensor`s.
+    ///
+    /// This private method multiplies corresponding elements of two tensors. It leverages
+    /// the `broadcast_op` method to handle broadcasting rules if the tensor shapes are not identical.
+    ///
+    /// # Arguments
+    ///
+    /// * `lhs` - The left-hand side `CausalTensor`.
+    /// * `rhs` - The right-hand side `CausalTensor`.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// - `Ok(CausalTensor<T>)` containing the result of the element-wise multiplication.
+    /// - `Err(CausalTensorError)` if broadcasting fails or an element-wise operation encounters an error.
+    ///
+    /// # Errors
+    ///
+    /// Returns errors propagated from `CausalTensor::broadcast_op`.
     pub(super) fn element_wise_mul(
         lhs: &CausalTensor<T>,
         rhs: &CausalTensor<T>,
@@ -187,7 +293,31 @@ where
         lhs.broadcast_op(rhs, |a, b| Ok(a * b))
     }
 
-    /// Private method for tracing (summing over diagonal axes).
+    /// Computes the trace of a `CausalTensor` over two specified axes.
+    ///
+    /// The trace operation sums the elements along the diagonal of a 2D slice
+    /// defined by `axis1` and `axis2`. If the tensor has more than two dimensions,
+    /// this operation is applied to all 2D slices formed by the specified axes,
+    /// effectively reducing the tensor's rank by two.
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input `CausalTensor`.
+    /// * `axis1` - The first axis to trace over.
+    /// * `axis2` - The second axis to trace over.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// - `Ok(CausalTensor<T>)` containing the result of the trace operation.
+    /// - `Err(CausalTensorError)` if validation fails.
+    ///
+    /// # Errors
+    ///
+    /// Returns `CausalTensorError::EinSumError` if:
+    /// - `axis1` or `axis2` are out of bounds for the tensor's dimensions.
+    /// - `axis1` and `axis2` are identical.
+    /// - The dimensions of `axis1` and `axis2` are not equal (shape mismatch).
     pub(super) fn trace(
         tensor: &CausalTensor<T>,
         axis1: usize,
@@ -259,7 +389,30 @@ where
         Ok(result_tensor)
     }
 
-    /// Private method for extracting a diagonal.
+    /// Extracts the diagonal elements of a `CausalTensor` over two specified axes.
+    ///
+    /// This private method extracts the diagonal elements from 2D slices of the input tensor
+    /// defined by `axis1` and `axis2`. The resulting tensor will have a rank reduced by one
+    /// compared to the input tensor, with the new last dimension representing the diagonal.
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input `CausalTensor`.
+    /// * `axis1` - The first axis defining the 2D plane from which to extract the diagonal.
+    /// * `axis2` - The second axis defining the 2D plane from which to extract the diagonal.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// - `Ok(CausalTensor<T>)` containing the tensor with extracted diagonal elements.
+    /// - `Err(CausalTensorError)` if validation fails.
+    ///
+    /// # Errors
+    ///
+    /// Returns `CausalTensorError::EinSumError` if:
+    /// - `axis1` or `axis2` are out of bounds for the tensor's dimensions.
+    /// - `axis1` and `axis2` are identical.
+    /// - The dimensions of `axis1` and `axis2` are not equal (shape mismatch).
     pub(super) fn diagonal(
         tensor: &CausalTensor<T>,
         axis1: usize,
@@ -329,6 +482,29 @@ where
         CausalTensor::new(result_data, new_shape)
     }
 
+    /// Performs batch matrix multiplication between two `CausalTensor`s.
+    ///
+    /// This method expects both input tensors to have at least 3 dimensions, where the first
+    /// dimension represents the batch size. It performs a 2D matrix multiplication for each
+    /// corresponding pair of matrices within the batch and stacks the results.
+    ///
+    /// # Arguments
+    ///
+    /// * `lhs` - The left-hand side `CausalTensor` with a batch dimension.
+    /// * `rhs` - The right-hand side `CausalTensor` with a batch dimension.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// - `Ok(CausalTensor<T>)` containing the result of the batch matrix multiplication.
+    /// - `Err(CausalTensorError)` if validation fails or an underlying operation encounters an error.
+    ///
+    /// # Errors
+    ///
+    /// Returns `CausalTensorError::EinSumError` if:
+    /// - Either `lhs` or `rhs` has fewer than 3 dimensions (rank mismatch).
+    /// - The batch sizes of `lhs` and `rhs` do not match (shape mismatch).
+    /// - Errors are propagated from `slice`, `mat_mul_2d`, or `stack`.
     pub(super) fn batch_mat_mul(
         lhs: CausalTensor<T>,
         rhs: CausalTensor<T>,
