@@ -180,22 +180,18 @@ impl<F: Float> Div<F> for Quaternion<F> {
     /// let div_q = q.div(scalar);
     /// assert_eq!(div_q, Quaternion::new(1.0, 2.0, 3.0, 4.0));
     ///
-    /// let q_nan = Quaternion::<f64>::new(1.0, 1.0, 1.0, 1.0).div(0.0);
-    /// assert!(q_nan.w.is_nan());
+    /// let q_inf = Quaternion::<f64>::new(1.0, 1.0, 1.0, 1.0).div(0.0);
+    /// assert!(q_inf.w.is_infinite());
     /// ```
     fn div(self, scalar: F) -> Self {
-        if scalar.is_zero() {
-            Quaternion::new(F::nan(), F::nan(), F::nan(), F::nan())
-        } else {
-            Quaternion {
-                w: self.w / scalar,
-                x: self.x / scalar,
-                y: self.y / scalar,
-                z: self.z / scalar,
-            }
+        let inv_scalar = F::one() / scalar;
+        Quaternion {
+            w: self.w * inv_scalar,
+            x: self.x * inv_scalar,
+            y: self.y * inv_scalar,
+            z: self.z * inv_scalar,
         }
-    }
-}
+    }}
 
 // Rem (Placeholder for now, as quaternion remainder is not standard)
 impl<F: Float> Rem for Quaternion<F> {
