@@ -4,3 +4,4 @@
  */
 #[cfg(test)]
 mod causal_tensor_error_tests;
+mod ein_sum_validation_error_tests;

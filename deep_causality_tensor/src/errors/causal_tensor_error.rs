@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use super::ein_sum_validation_error::EinSumValidationError;
 use std::error::Error;
 
 /// Errors that can occur during tensor operations.
@@ -15,6 +16,8 @@ pub enum CausalTensorError {
     InvalidOperation,
     UnorderableValue,
     InvalidParameter(String),
+    /// Encapsulates errors specific to EinSum AST validation and execution.
+    EinSumError(EinSumValidationError),
 }
 
 impl Error for CausalTensorError {}
@@ -43,6 +46,9 @@ impl std::fmt::Display for CausalTensorError {
             }
             CausalTensorError::DivisionByZero => {
                 write!(f, "CausalTensorError: Division by zero error")
+            }
+            CausalTensorError::EinSumError(e) => {
+                write!(f, "CausalTensorError: EinSumError: {}", e)
             }
         }
     }

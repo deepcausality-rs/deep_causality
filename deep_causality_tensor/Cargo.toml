@@ -31,6 +31,9 @@ path = "examples/effect_system_causal_tensor.rs"
 name = "functor_causal_tensor"
 path = "examples/functor_causal_tensor.rs"
 
+[dependencies.deep_causality_ast]
+path = "../deep_causality_ast"
+version = "0.1"
 
 [dependencies.deep_causality_haft]
 path = "../deep_causality_haft"

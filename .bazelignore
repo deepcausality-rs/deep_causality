@@ -1,5 +1,6 @@
 .cargo
 .gemini
+.gemini_security
 .git
 .github
 .specify
