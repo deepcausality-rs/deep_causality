@@ -363,28 +363,43 @@ where
         }
 
         let mut result_tensor = CausalTensor::full(&new_shape, T::default());
-        let mut current_index = vec![0; tensor.num_dim()];
+        let diag_len = tensor.shape[axis1];
 
-        for i in 0..tensor.len() {
-            if current_index[axis1] == current_index[axis2] {
-                let result_index: Vec<usize> = current_index
-                    .iter()
-                    .enumerate()
-                    .filter(|&(i, _)| i != axis1 && i != axis2)
-                    .map(|(_, &val)| val)
-                    .collect();
+        let mut batch_axes = Vec::new();
+        for i in 0..tensor.num_dim() {
+            if i != axis1 && i != axis2 {
+                batch_axes.push(i);
+            }
+        }
 
-                if let Some(res_val) = result_tensor.get_mut(&result_index) {
-                    *res_val = res_val.clone() + tensor.data[i].clone();
+        let num_batch_elements: usize = batch_axes.iter().map(|&ax| tensor.shape[ax]).product();
+        let mut current_batch_indices = vec![0; batch_axes.len()];
+
+        for _ in 0..num_batch_elements {
+            let result_index = current_batch_indices.clone();
+            if let Some(res_val) = result_tensor.get_mut(&result_index) {
+                let mut batch_offset = 0;
+                for (k, &batch_axis) in batch_axes.iter().enumerate() {
+                    batch_offset += current_batch_indices[k] * tensor.strides[batch_axis];
                 }
+
+                let mut diag_sum = T::default();
+                for i in 0..diag_len {
+                    let flat_index = batch_offset + i * tensor.strides[axis1] + i * tensor.strides[axis2];
+                    diag_sum = diag_sum + tensor.data[flat_index].clone();
+                }
+                *res_val = diag_sum;
             }
 
-            for j in (0..tensor.num_dim()).rev() {
-                current_index[j] += 1;
-                if current_index[j] < tensor.shape[j] {
+            // Increment batch indices
+            let mut k = batch_axes.len();
+            while k > 0 {
+                k -= 1;
+                current_batch_indices[k] += 1;
+                if current_batch_indices[k] < tensor.shape[batch_axes[k]] {
                     break;
                 }
-                current_index[j] = 0;
+                current_batch_indices[k] = 0;
             }
         }
 
