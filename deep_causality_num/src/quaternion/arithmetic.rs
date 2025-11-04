@@ -205,8 +205,6 @@ impl<F: Float> Rem for Quaternion<F> {
     ///
     /// Quaternion remainder is not a standard mathematical operation.
     /// This implementation returns only self. The trait is required for the Num trait.
-    ///
-    /// ```
     fn rem(self, _other: Self) -> Self {
         // Quaternion remainder is not a standard operation.
         // Returning self for now, or could panic/return an error.
