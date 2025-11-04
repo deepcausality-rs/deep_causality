@@ -388,7 +388,8 @@ where
 
                 let mut diag_sum = T::default();
                 for i in 0..diag_len {
-                    let flat_index = batch_offset + i * tensor.strides[axis1] + i * tensor.strides[axis2];
+                    let flat_index =
+                        batch_offset + i * tensor.strides[axis1] + i * tensor.strides[axis2];
                     diag_sum = diag_sum + tensor.data[flat_index].clone();
                 }
                 *res_val = diag_sum;
