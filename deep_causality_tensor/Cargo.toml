@@ -28,6 +28,10 @@ name = "effect_system_causal_tensor"
 path = "examples/effect_system_causal_tensor.rs"
 
 [[example]]
+name = "ein_sum_causal_tensor"
+path = "examples/ein_sum_causal_tensor.rs"
+
+[[example]]
 name = "functor_causal_tensor"
 path = "examples/functor_causal_tensor.rs"
 

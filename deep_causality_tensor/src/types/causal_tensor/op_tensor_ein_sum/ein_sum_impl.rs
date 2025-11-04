@@ -20,7 +20,8 @@ where
     /// # Arguments
     ///
     /// * `children` - A slice of `EinSumAST<T>` representing the children nodes of an AST operation.
-    ///                Expected to contain exactly two elements, each resolving to a `CausalTensor<T>`.
+    ///
+    /// Expected to contain exactly two elements, each resolving to a `CausalTensor<T>`.
     ///
     /// # Returns
     ///
@@ -58,7 +59,8 @@ where
     /// # Arguments
     ///
     /// * `children` - A slice of `EinSumAST<T>` representing the children nodes of an AST operation.
-    ///                Expected to contain exactly one element, resolving to a `CausalTensor<T>`.
+    ///
+    /// Expected to contain exactly one element, resolving to a `CausalTensor<T>`.
     ///
     /// # Returns
     ///
