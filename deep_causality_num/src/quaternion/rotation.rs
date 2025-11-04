@@ -10,6 +10,28 @@ impl<F> Quaternion<F>
 where
     F: Float,
 {
+    /// Converts the quaternion to an axis-angle representation.
+    ///
+    /// Returns a tuple containing a 3-element array representing the rotation axis
+    /// and the rotation angle in radians.
+    ///
+    /// If the quaternion is an identity quaternion (or very close to it),
+    /// the angle will be 0 and the axis will be an arbitrary unit vector (e.g., `[1.0, 0.0, 0.0]`).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use deep_causality_num::Quaternion;
+    /// use std::f64::consts::FRAC_PI_2;
+    ///
+    /// let q = Quaternion::from_axis_angle([1.0, 0.0, 0.0], FRAC_PI_2);
+    /// let (axis, angle) = q.to_axis_angle();
+    ///
+    /// assert!((axis[0] - 1.0).abs() < 1e-9);
+    /// assert!((axis[1] - 0.0).abs() < 1e-9);
+    /// assert!((axis[2] - 0.0).abs() < 1e-9);
+    /// assert!((angle - FRAC_PI_2).abs() < 1e-9);
+    /// ```
     pub fn to_axis_angle(&self) -> (Vector3<F>, F) {
         let two = F::one() + F::one();
         let mut q = *self;
@@ -32,6 +54,29 @@ where
         }
     }
 
+    /// Converts the quaternion to a 3x3 rotation matrix.
+    ///
+    /// The resulting matrix can be used to rotate 3D vectors.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use deep_causality_num::Quaternion;
+    /// use std::f64::consts::FRAC_PI_2;
+    ///
+    /// // 90 degrees around the X-axis
+    /// let q = Quaternion::from_axis_angle([1.0, 0.0, 0.0], FRAC_PI_2);
+    /// let mat = q.to_rotation_matrix();
+    ///
+    /// // Expected rotation matrix for 90 degrees around X-axis
+    /// // [ 1,  0,  0 ]
+    /// // [ 0,  0, -1 ]
+    /// // [ 0,  1,  0 ]
+    /// assert!((mat[0][0] - 1.0).abs() < 1e-9);
+    /// assert!((mat[1][1] - 0.0).abs() < 1e-9);
+    /// assert!((mat[1][2] - (-1.0)).abs() < 1e-9);
+    /// assert!((mat[2][1] - 1.0).abs() < 1e-9);
+    /// ```
     pub fn to_rotation_matrix(&self) -> Matrix3<F> {
         let two = F::one() + F::one();
         let x2 = self.x * two;
@@ -55,6 +100,34 @@ where
         ]
     }
 
+    /// Performs spherical linear interpolation (SLERP) between two quaternions.
+    ///
+    /// SLERP interpolates along the shortest arc on the unit sphere between two quaternions.
+    /// The parameter `t` is typically in the range `[0, 1]`.
+    ///
+    /// # Arguments
+    ///
+    /// * `other` - The target quaternion for interpolation.
+    /// * `t` - The interpolation parameter, where `t=0` returns `self` and `t=1` returns `other`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use deep_causality_num::Quaternion;
+    /// use std::f64::consts::FRAC_PI_2;
+    ///
+    /// let q1 = Quaternion::<f64>::identity();
+    /// let q2 = Quaternion::from_axis_angle([1.0, 0.0, 0.0], FRAC_PI_2);
+    ///
+    /// // Interpolate halfway between q1 and q2
+    /// let slerp_q = q1.slerp(&q2, 0.5);
+    /// let expected_q = Quaternion::from_axis_angle([1.0, 0.0, 0.0], FRAC_PI_2 / 2.0);
+    ///
+    /// assert!((slerp_q.w - expected_q.w).abs() < 1e-9);
+    /// assert!((slerp_q.x - expected_q.x).abs() < 1e-9);
+    /// assert!((slerp_q.y - expected_q.y).abs() < 1e-9);
+    /// assert!((slerp_q.z - expected_q.z).abs() < 1e-9);
+    /// ```
     pub fn slerp(&self, other: &Self, t: F) -> Self {
         let q1 = *self;
         let mut q2 = *other;

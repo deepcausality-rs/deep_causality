@@ -21,6 +21,32 @@ mod quaternion_number;
 mod rotation;
 mod to_primitive;
 
+/// Represents a quaternion with a scalar part (`w`) and a vector part (`x`, `y`, `z`).
+///
+/// Quaternions are a number system that extends complex numbers and are commonly used
+/// in 3D graphics and physics for representing rotations.
+///
+/// The `Quaternion` struct is generic over a float type `F`, allowing it to work
+/// with different floating-point precisions (e.g., `f32` or `f64`).
+///
+/// # Fields
+///
+/// * `w`: The scalar component of the quaternion.
+/// * `x`: The `i` component of the vector part.
+/// * `y`: The `j` component of the vector part.
+/// * `z`: The `k` component of the vector part.
+///
+/// # Examples
+///
+/// ```
+/// use deep_causality_num::Quaternion;
+///
+/// let q1 = Quaternion::new(1.0, 2.0, 3.0, 4.0);
+/// let q2 = Quaternion { w: 5.0, x: 6.0, y: 7.0, z: 8.0 };
+///
+/// assert_eq!(q1.w, 1.0);
+/// assert_eq!(q2.x, 6.0);
+/// ```
 #[derive(Copy, Clone, PartialEq, Default)]
 pub struct Quaternion<F>
 where
