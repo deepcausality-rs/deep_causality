@@ -97,11 +97,14 @@ impl<F: Float> Mul for Quaternion<F> {
     /// assert_eq!(q_j * q_i, -q_k); // j * i = -k
     /// ```
     fn mul(self, other: Self) -> Self {
+        let (w1, x1, y1, z1) = (self.w, self.x, self.y, self.z);
+        let (w2, x2, y2, z2) = (other.w, other.x, other.y, other.z);
+
         Quaternion {
-            w: self.w * other.w - self.x * other.x - self.y * other.y - self.z * other.z,
-            x: self.w * other.x + self.x * other.w + self.y * other.z - self.z * other.y,
-            y: self.w * other.y - self.x * other.z + self.y * other.w + self.z * other.x,
-            z: self.w * other.z + self.x * other.y - self.y * other.x + self.z * other.w,
+            w: w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2,
+            x: w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,
+            y: w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2,
+            z: w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2,
         }
     }
 }
