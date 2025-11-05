@@ -128,22 +128,4 @@ where
         let data = vec![value; len];
         Self::from_vec_and_shape_unchecked(data, shape)
     }
-
-    /// Internal constructor that calculates strides.
-    /// Call only when shape is known to be valid.
-    pub(super) fn from_vec_and_shape_unchecked(data: Vec<T>, shape: &[usize]) -> Self {
-        let mut strides = vec![0; shape.len()];
-        if !shape.is_empty() {
-            let mut current_stride = 1;
-            for i in (0..shape.len()).rev() {
-                strides[i] = current_stride;
-                current_stride *= shape[i];
-            }
-        }
-        Self {
-            data,
-            shape: shape.to_vec(),
-            strides,
-        }
-    }
 }

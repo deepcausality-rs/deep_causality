@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-pub(crate) mod ein_sum_execution;
-mod ein_sum_impl;
-mod ein_sum_impl_tests;
-pub(crate) mod ein_sum_op;
+mod api_ein_sum;
+mod api_tensor_reduction;
+mod api_tensor_shape;
+mod api_tensor_view;
