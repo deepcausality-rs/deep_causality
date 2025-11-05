@@ -7,6 +7,7 @@ use crate::CausalTensorError;
 
 mod api;
 mod display;
+mod from;
 mod getters;
 mod op_scalar_tensor;
 pub mod op_tensor_broadcast;
