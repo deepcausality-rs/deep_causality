@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.3.3...deep_causality_uncertain-v0.3.4) - 2025-11-05
+
+### Added
+
+- *(deep_causality_uncertain)* Migrated internal compute graph to ConsTree from deep_causality_ast crate.
+- *(ast)* Add deep_causality_ast crate with persistent tree
+
+### Other
+
+- Updated SBOM for all crates.
+- *(deep_causality_uncertain)* Increased test coverage.
+- Trying a new approach for HKT traits and extensions for Uncertain type
+- Trying a new approach with HKT-like traits with type bounds.
+- Removed extensions from uncertain crate
+- Merge branch 'deepcausality-rs:main' into 008-hkt-uncertain-specs
+- ✦ feat(uncertain): Implement Higher-Kinded Types
+- Added specs for HKT uncertain types.
+
 ## [0.3.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.3.2...deep_causality_uncertain-v0.3.3) - 2025-10-31
 
 ### Added
