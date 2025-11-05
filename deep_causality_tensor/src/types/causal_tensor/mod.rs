@@ -22,7 +22,7 @@ mod op_tensor_shape;
 /// Defines operations between two tensors (e.g., `tensor_a + tensor_b`).
 mod op_tensor_tensor;
 /// Defines tensor view operations (e.g., slicing).
-mod op_view;
+mod op_tensor_view;
 
 /// `CausalTensor` is a low-dimensional (up to ~5-25 dimensions recommended) tensor
 /// backed by a single, contiguous `Vec<T>`. It uses a stride-based memory layout
