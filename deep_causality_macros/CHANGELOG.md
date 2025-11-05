@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.9](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_macros-v0.8.8...deep_causality_macros-v0.8.9) - 2025-11-05
+
+### Other
+
+- Updated SBOM for all crates.
+
 ## [0.8.8](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_macros-v0.8.7...deep_causality_macros-v0.8.8) - 2025-09-25
 
 ### Other
