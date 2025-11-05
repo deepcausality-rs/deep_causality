@@ -9,8 +9,6 @@ impl<T> CausalTensor<T>
 where
     T: Clone + Default + PartialOrd,
 {
-    // --- Reduction Operations ---
-
     /// Sums the elements along one or more specified axes.
     ///
     /// The dimensions corresponding to the `axes` provided will be removed from the

@@ -8,8 +8,6 @@ impl<T> CausalTensor<T>
 where
     T: Clone + Default + PartialOrd,
 {
-    // --- View Operations ---
-
     /// Creates a new tensor representing a slice of the original tensor along a specified axis.
     ///
     /// This operation extracts a sub-tensor where one dimension has been fixed to a specific index.

@@ -8,8 +8,6 @@ impl<T> CausalTensor<T>
 where
     T: Clone + Default + PartialOrd,
 {
-    // --- Shape Manipulation ---
-
     /// Returns a new tensor with the same data but a different shape.
     ///
     /// This is a metadata-only operation; it creates a new `CausalTensor` with a cloned copy
