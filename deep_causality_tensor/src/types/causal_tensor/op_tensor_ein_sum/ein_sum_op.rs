@@ -79,14 +79,14 @@ impl<T> EinSumOp<T> {
     /// # Returns
     ///
     /// An `EinSumAST<T>` node representing the contraction operation.
-    pub fn contraction(
-        lhs: CausalTensor<T>,
-        rhs: CausalTensor<T>,
+    pub fn contraction<L: Into<CausalTensor<T>>, R: Into<CausalTensor<T>>>(
+        lhs: L,
+        rhs: R,
         lhs_axes: Vec<usize>,
         rhs_axes: Vec<usize>,
     ) -> EinSumAST<T> {
-        let lhs_leaf = EinSumOp::tensor_source(lhs);
-        let rhs_leaf = EinSumOp::tensor_source(rhs);
+        let lhs_leaf = EinSumOp::tensor_source(lhs.into());
+        let rhs_leaf = EinSumOp::tensor_source(rhs.into());
         EinSumAST::with_children(
             EinSumOp::Contraction { lhs_axes, rhs_axes },
             vec![lhs_leaf, rhs_leaf],
@@ -105,8 +105,8 @@ impl<T> EinSumOp<T> {
     /// # Returns
     ///
     /// An `EinSumAST<T>` node representing the reduction operation.
-    pub fn reduction(operand: CausalTensor<T>, axes: Vec<usize>) -> EinSumAST<T> {
-        let operand_leaf = EinSumOp::tensor_source(operand);
+    pub fn reduction<O: Into<CausalTensor<T>>>(operand: O, axes: Vec<usize>) -> EinSumAST<T> {
+        let operand_leaf = EinSumOp::tensor_source(operand.into());
         EinSumAST::with_children(EinSumOp::Reduction { axes }, vec![operand_leaf])
     }
 
@@ -122,9 +122,12 @@ impl<T> EinSumOp<T> {
     /// # Returns
     ///
     /// An `EinSumAST<T>` node representing the matrix multiplication operation.
-    pub fn mat_mul(lhs: CausalTensor<T>, rhs: CausalTensor<T>) -> EinSumAST<T> {
-        let lhs_leaf = EinSumOp::tensor_source(lhs);
-        let rhs_leaf = EinSumOp::tensor_source(rhs);
+    pub fn mat_mul<L: Into<CausalTensor<T>>, R: Into<CausalTensor<T>>>(
+        lhs: L,
+        rhs: R,
+    ) -> EinSumAST<T> {
+        let lhs_leaf = EinSumOp::tensor_source(lhs.into());
+        let rhs_leaf = EinSumOp::tensor_source(rhs.into());
         EinSumAST::with_children(EinSumOp::MatMul, vec![lhs_leaf, rhs_leaf])
     }
 
@@ -140,9 +143,12 @@ impl<T> EinSumOp<T> {
     /// # Returns
     ///
     /// An `EinSumAST<T>` node representing the dot product operation.
-    pub fn dot_prod(lhs: CausalTensor<T>, rhs: CausalTensor<T>) -> EinSumAST<T> {
-        let lhs_leaf = EinSumOp::tensor_source(lhs);
-        let rhs_leaf = EinSumOp::tensor_source(rhs);
+    pub fn dot_prod<L: Into<CausalTensor<T>>, R: Into<CausalTensor<T>>>(
+        lhs: L,
+        rhs: R,
+    ) -> EinSumAST<T> {
+        let lhs_leaf = EinSumOp::tensor_source(lhs.into());
+        let rhs_leaf = EinSumOp::tensor_source(rhs.into());
         EinSumAST::with_children(EinSumOp::DotProd, vec![lhs_leaf, rhs_leaf])
     }
 
@@ -159,8 +165,8 @@ impl<T> EinSumOp<T> {
     /// # Returns
     ///
     /// An `EinSumAST<T>` node representing the trace operation.
-    pub fn trace(operand: CausalTensor<T>, axes1: usize, axes2: usize) -> EinSumAST<T> {
-        let operand_leaf = EinSumOp::tensor_source(operand);
+    pub fn trace<O: Into<CausalTensor<T>>>(operand: O, axes1: usize, axes2: usize) -> EinSumAST<T> {
+        let operand_leaf = EinSumOp::tensor_source(operand.into());
         EinSumAST::with_children(EinSumOp::Trace { axes1, axes2 }, vec![operand_leaf])
     }
 
@@ -176,9 +182,12 @@ impl<T> EinSumOp<T> {
     /// # Returns
     ///
     /// An `EinSumAST<T>` node representing the tensor product operation.
-    pub fn tensor_product(lhs: CausalTensor<T>, rhs: CausalTensor<T>) -> EinSumAST<T> {
-        let lhs_leaf = EinSumOp::tensor_source(lhs);
-        let rhs_leaf = EinSumOp::tensor_source(rhs);
+    pub fn tensor_product<L: Into<CausalTensor<T>>, R: Into<CausalTensor<T>>>(
+        lhs: L,
+        rhs: R,
+    ) -> EinSumAST<T> {
+        let lhs_leaf = EinSumOp::tensor_source(lhs.into());
+        let rhs_leaf = EinSumOp::tensor_source(rhs.into());
         EinSumAST::with_children(EinSumOp::TensorProduct, vec![lhs_leaf, rhs_leaf])
     }
 
@@ -194,9 +203,12 @@ impl<T> EinSumOp<T> {
     /// # Returns
     ///
     /// An `EinSumAST<T>` node representing the element-wise product operation.
-    pub fn element_wise_product(lhs: CausalTensor<T>, rhs: CausalTensor<T>) -> EinSumAST<T> {
-        let lhs_leaf = EinSumOp::tensor_source(lhs);
-        let rhs_leaf = EinSumOp::tensor_source(rhs);
+    pub fn element_wise_product<L: Into<CausalTensor<T>>, R: Into<CausalTensor<T>>>(
+        lhs: L,
+        rhs: R,
+    ) -> EinSumAST<T> {
+        let lhs_leaf = EinSumOp::tensor_source(lhs.into());
+        let rhs_leaf = EinSumOp::tensor_source(rhs.into());
         EinSumAST::with_children(EinSumOp::ElementWiseProduct, vec![lhs_leaf, rhs_leaf])
     }
 
@@ -212,8 +224,8 @@ impl<T> EinSumOp<T> {
     /// # Returns
     ///
     /// An `EinSumAST<T>` node representing the transpose operation.
-    pub fn transpose(operand: CausalTensor<T>, new_order: Vec<usize>) -> EinSumAST<T> {
-        let operand_leaf = EinSumOp::tensor_source(operand);
+    pub fn transpose<O: Into<CausalTensor<T>>>(operand: O, new_order: Vec<usize>) -> EinSumAST<T> {
+        let operand_leaf = EinSumOp::tensor_source(operand.into());
         EinSumAST::with_children(EinSumOp::Transpose { new_order }, vec![operand_leaf])
     }
 
@@ -230,12 +242,12 @@ impl<T> EinSumOp<T> {
     /// # Returns
     ///
     /// An `EinSumAST<T>` node representing the diagonal extraction operation.
-    pub fn diagonal_extraction(
-        operand: CausalTensor<T>,
+    pub fn diagonal_extraction<O: Into<CausalTensor<T>>>(
+        operand: O,
         axes1: usize,
         axes2: usize,
     ) -> EinSumAST<T> {
-        let operand_leaf = EinSumOp::tensor_source(operand);
+        let operand_leaf = EinSumOp::tensor_source(operand.into());
         EinSumAST::with_children(
             EinSumOp::DiagonalExtraction { axes1, axes2 },
             vec![operand_leaf],
@@ -254,9 +266,12 @@ impl<T> EinSumOp<T> {
     /// # Returns
     ///
     /// An `EinSumAST<T>` node representing the batch matrix multiplication operation.
-    pub fn batch_mat_mul(lhs: CausalTensor<T>, rhs: CausalTensor<T>) -> EinSumAST<T> {
-        let lhs_leaf = EinSumOp::tensor_source(lhs);
-        let rhs_leaf = EinSumOp::tensor_source(rhs);
+    pub fn batch_mat_mul<L: Into<CausalTensor<T>>, R: Into<CausalTensor<T>>>(
+        lhs: L,
+        rhs: R,
+    ) -> EinSumAST<T> {
+        let lhs_leaf = EinSumOp::tensor_source(lhs.into());
+        let rhs_leaf = EinSumOp::tensor_source(rhs.into());
         EinSumAST::with_children(EinSumOp::BatchMatMul, vec![lhs_leaf, rhs_leaf])
     }
 }

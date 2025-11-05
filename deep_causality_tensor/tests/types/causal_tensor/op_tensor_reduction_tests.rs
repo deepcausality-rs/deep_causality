@@ -26,7 +26,7 @@ fn test_sum_axes_2d() {
 fn test_sum_axes_full_reduction() {
     let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     let sum_all = tensor.sum_axes(&[]).unwrap();
-    assert_eq!(sum_all.shape(), &[]);
+    assert_eq!(sum_all.shape(), &[] as &[usize]);
     assert_eq!(sum_all.as_slice(), &[21]);
 }
 
@@ -60,7 +60,7 @@ fn test_sum_axes_empty_tensor() {
 
     // Full reduction of an empty tensor should result in a scalar 0
     let sum_all = tensor.sum_axes(&[]).unwrap();
-    assert_eq!(sum_all.shape(), &[]);
+    assert_eq!(sum_all.shape(), &[] as &[usize]);
     assert_eq!(sum_all.as_slice(), &[0]);
 }
 
@@ -92,7 +92,7 @@ fn test_mean_axes_2d() {
 fn test_mean_axes_full_reduction() {
     let tensor = CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]).unwrap();
     let mean_all = tensor.mean_axes(&[]).unwrap();
-    assert_eq!(mean_all.shape(), &[]);
+    assert_eq!(mean_all.shape(), &[] as &[usize]);
     assert_eq!(mean_all.as_slice(), &[3.5]);
 }
 

@@ -4,17 +4,15 @@
  */
 
 #[cfg(test)]
-mod causal_tensor_constructor_tests;
+mod constructor_tests;
 #[cfg(test)]
-mod causal_tensor_display_tests;
+mod display_tests;
+mod from_tests;
 #[cfg(test)]
-mod causal_tensor_getters_tests;
-#[cfg(test)]
-mod causal_tensor_inspectors_tests;
-#[cfg(test)]
-mod causal_tensor_view_tests;
+mod getters_tests;
 #[cfg(test)]
 mod op_scalar_tensor_tests;
+#[cfg(test)]
 mod op_tensor_ein_sum_ast_tests;
 mod op_tensor_ein_sum_tests;
 #[cfg(test)]
@@ -27,3 +25,5 @@ mod op_tensor_scalar_tests;
 mod op_tensor_shape_tests;
 #[cfg(test)]
 mod op_tensor_tensor_tests;
+#[cfg(test)]
+mod op_tensor_view_tests;

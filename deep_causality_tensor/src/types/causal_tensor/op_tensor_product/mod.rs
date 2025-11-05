@@ -9,7 +9,7 @@ impl<T> CausalTensor<T>
 where
     T: Clone + Default + PartialOrd + Mul<Output = T>,
 {
-    pub fn tensor_product(
+    pub(super) fn tensor_product_impl(
         &self,
         rhs: &CausalTensor<T>,
     ) -> Result<CausalTensor<T>, CausalTensorError> {

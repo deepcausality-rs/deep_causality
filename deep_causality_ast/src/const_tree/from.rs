@@ -11,3 +11,10 @@ impl<T> From<T> for ConstTree<T> {
         Self::new(value)
     }
 }
+// Egonomics for creating a leaf node from a reference,
+impl<T: Clone> From<&T> for ConstTree<T> {
+    /// Creates a new leaf `ConstTree` by cloning the provided value.
+    fn from(value: &T) -> Self {
+        Self::new(value.clone())
+    }
+}

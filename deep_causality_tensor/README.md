@@ -122,11 +122,7 @@ fn main() {
     let vec2_tensor = CausalTensor::new(vec2_data, vec2_shape).unwrap();
     
     // Execute the Einstein summation for dot product 
-    let result_dot_prod = CausalTensor::ein_sum(&EinSumOp::dot_prod(
-        vec1_tensor.clone(),
-        vec2_tensor.clone(),
-    ))
-    .unwrap();
+    let result_dot_prod = CausalTensor::ein_sum(&EinSumOp::dot_prod(vec1_tensor, vec2_tensor)).unwrap();
     println!("Result of Dot Product:\n{:?}", result_dot_prod);
 }
 ```

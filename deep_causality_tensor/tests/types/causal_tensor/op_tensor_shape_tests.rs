@@ -165,6 +165,6 @@ fn test_permute_axes_scalar() {
     let tensor = CausalTensor::new(vec![42], vec![]).unwrap();
     // Permuting a 0-dim tensor
     let permuted = tensor.permute_axes(&[]).unwrap();
-    assert_eq!(permuted.shape(), &[]);
+    assert_eq!(permuted.shape(), &[] as &[usize]);
     assert_eq!(permuted, tensor);
 }

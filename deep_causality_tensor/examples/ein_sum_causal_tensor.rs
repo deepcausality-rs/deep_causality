@@ -18,8 +18,7 @@ fn main() {
     println!("LHS Tensor:\n{:?}", lhs_tensor);
     println!("RHS Tensor:\n{:?}", rhs_tensor);
 
-    let result_mat_mul =
-        CausalTensor::ein_sum(&EinSumOp::mat_mul(lhs_tensor.clone(), rhs_tensor.clone())).unwrap();
+    let result_mat_mul = CausalTensor::ein_sum(&EinSumOp::mat_mul(lhs_tensor, rhs_tensor)).unwrap();
     println!("Result of Matrix Multiplication:\n{:?}", result_mat_mul);
     let expected_mat_mul = CausalTensor::new(vec![19.0, 22.0, 43.0, 50.0], vec![2, 2]).unwrap();
     assert_eq!(result_mat_mul, expected_mat_mul);
@@ -37,11 +36,8 @@ fn main() {
     println!("Vector 1:\n{:?}", vec1_tensor);
     println!("Vector 2:\n{:?}", vec2_tensor);
 
-    let result_dot_prod = CausalTensor::ein_sum(&EinSumOp::dot_prod(
-        vec1_tensor.clone(),
-        vec2_tensor.clone(),
-    ))
-    .unwrap();
+    let result_dot_prod =
+        CausalTensor::ein_sum(&EinSumOp::dot_prod(vec1_tensor, vec2_tensor)).unwrap();
     println!("Result of Dot Product:\n{:?}", result_dot_prod);
     let expected_dot_prod = CausalTensor::new(vec![32.0], vec![]).unwrap();
     assert_eq!(result_dot_prod, expected_dot_prod);
@@ -53,7 +49,7 @@ fn main() {
     let trace_tensor = CausalTensor::new(trace_data, trace_shape).unwrap();
 
     println!("Tensor for Trace:\n{:?}", trace_tensor);
-    let result_trace = CausalTensor::ein_sum(&EinSumOp::trace(trace_tensor.clone(), 0, 1)).unwrap();
+    let result_trace = CausalTensor::ein_sum(&EinSumOp::trace(trace_tensor, 0, 1)).unwrap();
     println!("Result of Trace (axes 0, 1):\n{:?}", result_trace);
     let expected_trace = CausalTensor::new(vec![5.0], vec![]).unwrap();
     assert_eq!(result_trace, expected_trace);
@@ -72,8 +68,8 @@ fn main() {
     println!("RHS Tensor for Element-wise Product:\n{:?}", ew_rhs_tensor);
 
     let result_ew_prod = CausalTensor::ein_sum(&EinSumOp::element_wise_product(
-        ew_lhs_tensor.clone(),
-        ew_rhs_tensor.clone(),
+        ew_lhs_tensor,
+        ew_rhs_tensor,
     ))
     .unwrap();
     println!("Result of Element-wise Product:\n{:?}", result_ew_prod);
@@ -100,11 +96,9 @@ fn main() {
     println!("LHS Tensor for Batch MatMul:\n{:?}", bmm_lhs_tensor);
     println!("RHS Tensor for Batch MatMul:\n{:?}", bmm_rhs_tensor);
 
-    let result_bmm = CausalTensor::ein_sum(&EinSumOp::batch_mat_mul(
-        bmm_lhs_tensor.clone(),
-        bmm_rhs_tensor.clone(),
-    ))
-    .unwrap();
+    let result_bmm =
+        CausalTensor::ein_sum(&EinSumOp::batch_mat_mul(bmm_lhs_tensor, bmm_rhs_tensor)).unwrap();
+
     println!("Result of Batch Matrix Multiplication:\n{:?}", result_bmm);
     let expected_bmm = CausalTensor::new(
         vec![
