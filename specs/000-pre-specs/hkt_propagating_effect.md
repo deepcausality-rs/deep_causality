@@ -86,7 +86,6 @@ pub struct PropagatingEffect<Value, Error, Log> {
     pub value: Value,
     pub error: Option<Error>,
     pub logs: Vec<Log>,
-    // Additional fixed effect fields (e.g., metrics, trace_id) could be added here.
 }
 
 // 4. A convenience type alias for the common PropagatingEffect in the system.
