@@ -21,7 +21,19 @@ fn test_ein_sum_mat_mul() {
     let rhs = utils_tests::matrix_tensor(vec![5.0, 6.0, 7.0, 8.0], 2, 2);
     let expected = utils_tests::matrix_tensor(vec![19.0, 22.0, 43.0, 50.0], 2, 2);
 
-    let ast = EinSumOp::mat_mul(lhs, rhs);
+    let ast = EinSumOp::<f64>::mat_mul(lhs, rhs);
+    let result = CausalTensor::ein_sum(&ast).unwrap();
+    assert_eq!(result, expected);
+}
+
+#[test]
+fn test_ein_sum_mat_mul_with_references() {
+    let lhs_owned = utils_tests::matrix_tensor(vec![1.0, 2.0, 3.0, 4.0], 2, 2);
+    let rhs_owned = utils_tests::matrix_tensor(vec![5.0, 6.0, 7.0, 8.0], 2, 2);
+    let expected = utils_tests::matrix_tensor(vec![19.0, 22.0, 43.0, 50.0], 2, 2);
+
+    // Pass references to the EinSumOp::mat_mul method
+    let ast = EinSumOp::<f64>::mat_mul(&lhs_owned, &rhs_owned);
     let result = CausalTensor::ein_sum(&ast).unwrap();
     assert_eq!(result, expected);
 }
@@ -59,7 +71,7 @@ fn test_ein_sum_trace() {
     let operand = utils_tests::matrix_tensor(vec![1.0, 2.0, 3.0, 4.0], 2, 2);
     let expected = utils_tests::scalar_tensor(5.0);
 
-    let ast = EinSumOp::trace(operand, 0, 1);
+    let ast = EinSumOp::<f64>::trace(operand, 0, 1);
     let result = CausalTensor::ein_sum(&ast).unwrap();
     assert_eq!(result, expected);
 }
@@ -142,7 +154,7 @@ fn test_ein_sum_error_propagation() {
     let lhs = utils_tests::vector_tensor(vec![1.0, 2.0]);
     let rhs = utils_tests::matrix_tensor(vec![5.0, 6.0, 7.0, 8.0], 2, 2);
 
-    let ast = EinSumOp::mat_mul(lhs, rhs);
+    let ast = EinSumOp::<f64>::mat_mul(lhs, rhs);
     let err = CausalTensor::ein_sum(&ast).unwrap_err();
     assert!(matches!(
         err,
@@ -154,7 +166,7 @@ fn test_ein_sum_error_propagation() {
 
     // Test Trace with invalid axes, expecting error from trace
     let operand = utils_tests::matrix_tensor(vec![1.0; 4], 2, 2);
-    let ast = EinSumOp::trace(operand, 0, 0);
+    let ast = EinSumOp::<f64>::trace(operand, 0, 0);
     let err = CausalTensor::ein_sum(&ast).unwrap_err();
     assert!(matches!(
         err,

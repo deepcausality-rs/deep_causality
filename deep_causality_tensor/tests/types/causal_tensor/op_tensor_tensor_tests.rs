@@ -183,7 +183,7 @@ fn test_binary_op_scalar_tensors() {
     let t1 = CausalTensor::new(vec![10.0], vec![]).unwrap();
     let t2 = CausalTensor::new(vec![2.0], vec![]).unwrap();
     let expected_data = vec![20.0];
-    let expected_shape = vec![];
+    let expected_shape: Vec<usize> = vec![];
 
     let result = (&t1 * &t2).unwrap();
     assert_eq!(result.as_slice(), expected_data.as_slice());

@@ -19,3 +19,10 @@ impl<'a, T: Clone> From<&'a T> for CausalTensor<T> {
             .expect("Failed to create scalar CausalTensor from &T")
     }
 }
+
+impl<'a, T: Clone> From<&'a CausalTensor<T>> for CausalTensor<T> {
+    /// Creates a new `CausalTensor` by cloning an existing `CausalTensor` reference.
+    fn from(item: &'a CausalTensor<T>) -> Self {
+        item.clone()
+    }
+}
