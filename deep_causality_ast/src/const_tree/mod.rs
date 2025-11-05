@@ -106,10 +106,10 @@ impl<T> ConstTree<T> {
     /// // The children are shared between the two trees.
     /// assert!(original.children()[0].ptr_eq(&with_new_value.children()[0]));
     /// ```
-    pub fn with_value(&self, new_value: T) -> Self {
+    pub fn with_value<V: Into<T>>(&self, new_value: V) -> Self {
         Self {
             node: Arc::new(Node {
-                value: new_value,
+                value: new_value.into(),
                 children: self.node.children.clone(),
             }),
         }
