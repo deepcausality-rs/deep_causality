@@ -36,13 +36,14 @@ where
     causal_fn: Option<CausalFn>,
     context_causal_fn: Option<ContextualCausalFn<D, S, T, ST, SYM, VS, VT>>,
     context: Option<Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>,
-    // The last calculated effect of this causaloid. It's an Option because a
-    // causaloid may not have been evaluated yet.
+    // To be removed.
     effect: ArcRWLock<Option<PropagatingEffect>>,
+    //
     causal_coll: Option<Arc<CausalVec<D, S, T, ST, SYM, VS, VT>>>,
     causal_graph: Option<Arc<CausalGraph<D, S, T, ST, SYM, VS, VT>>>,
     description: String,
     ty: PhantomData<(VS, VT)>,
+    _phantom: PhantomData<fn() -> StandardPropagatingEffect>,
 }
 
 // Constructors
@@ -76,6 +77,7 @@ where
             causal_graph: None,
             description: description.to_string(),
             ty: PhantomData,
+            _phantom: PhantomData,
         }
     }
 
@@ -104,6 +106,7 @@ where
             causal_graph: None,
             description: description.to_string(),
             ty: PhantomData,
+            _phantom: PhantomData,
         }
     }
 
@@ -130,6 +133,7 @@ where
             causal_graph: None,
             description: description.to_string(),
             ty: PhantomData,
+            _phantom: PhantomData,
         }
     }
 
@@ -154,6 +158,7 @@ where
             context: Some(context),
             context_causal_fn: None,
             ty: PhantomData,
+            _phantom: PhantomData,
         }
     }
 
@@ -180,6 +185,7 @@ where
             causal_graph: Some(causal_graph),
             description: description.to_string(),
             ty: PhantomData,
+            _phantom: PhantomData,
         }
     }
 
@@ -204,6 +210,7 @@ where
             context: Some(context),
             context_causal_fn: None,
             ty: PhantomData,
+            _phantom: PhantomData,
         }
     }
 }

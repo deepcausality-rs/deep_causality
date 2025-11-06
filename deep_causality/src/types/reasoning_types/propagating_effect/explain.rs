@@ -34,4 +34,3 @@ impl<Value: Debug, Error: Debug, Log: AsRef<str>> CausalPropagatingEffect<Value,
         explanation
     }
 }
-

@@ -11,7 +11,6 @@ use deep_causality_haft::MonadEffect3;
 ///
 /// It requires implementing the Identifiable trait.
 pub trait Causable: Identifiable {
-
     // Remove as evaluate will be done by MonadicCausable
     fn evaluate(&self, effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError>;
 
