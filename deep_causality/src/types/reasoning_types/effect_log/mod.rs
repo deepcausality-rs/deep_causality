@@ -6,4 +6,4 @@
 //! This module defines the EffectLog type.
 
 /// Represents a log of effects, typically a collection of strings describing events or outcomes.
-pub type EffectLog = Vec<String>;
+pub type CausalEffectLog = Vec<String>;

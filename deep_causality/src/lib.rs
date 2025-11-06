@@ -162,11 +162,16 @@ pub use crate::types::model_types::model::Model;
 pub use crate::types::model_types::observation::Observation;
 // Reasoning types
 pub use crate::types::reasoning_types::aggregate_logic::AggregateLogic;
-pub use crate::types::reasoning_types::causal_value::CausalValue;
-pub use crate::types::reasoning_types::effect_log::EffectLog;
+pub use crate::types::reasoning_types::effect_log::CausalEffectLog;
+pub use crate::types::reasoning_types::effect_value::EffectValue;
 pub use crate::types::reasoning_types::numeric_value::NumericValue;
-pub use crate::types::reasoning_types::propagating_effect::EffectGraph;
-pub use crate::types::reasoning_types::propagating_effect::PropagatingEffect;
+// Legacy types to be removed
+pub use crate::types::reasoning_types::propagating_effect::{EffectGraph, PropagatingEffect};
+// New types to be renamed
+pub use crate::types::reasoning_types::causal_monad::{CausalMonad, CausalEffectSystem};
+pub use crate::types::reasoning_types::propagating_effect::{
+    CausalPropagatingEffect, PropagatingEffectWitness, StandardPropagatingEffect,
+};
 //
 //Symbolic types
 pub use crate::types::symbolic_types::symbolic_representation::SymbolicRepresentation;
