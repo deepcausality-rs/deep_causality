@@ -24,6 +24,7 @@ mod extractors;
 mod extractors_map;
 mod partial_eq;
 mod predicates;
+mod explain;
 
 // The graph type alias, updated to be recursive on the new unified enum.
 pub type EffectGraph = UltraGraph<PropagatingEffect>;
