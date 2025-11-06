@@ -11,17 +11,11 @@ use std::fmt::Display;
 use crate::{Causable, CausalGraphIndexError, CausalityGraphError};
 use crate::{CausalMonad, MonadicCausable, MonadicCausableGraphReasoning, PropagatingEffect};
 
-// See default implementation in protocols/causaloid_graph/graph_explaining. Requires CausableGraph impl.
-impl<T> CausableGraphExplaining<T> for CausaloidGraph<T> where
-    T: Clone + Display + MonadicCausable<CausalMonad> + PartialEq
-{
-}
-
 impl<T> MonadicCausableGraphReasoning<T> for CausaloidGraph<T>
 where
     T: Clone + Display + MonadicCausable<CausalMonad> + PartialEq + Causable,
 {
-    fn evaluate_graph_monadic(&self, incoming_effect: PropagatingEffect) -> PropagatingEffect {
+    fn evaluate_graph(&self, incoming_effect: PropagatingEffect) -> PropagatingEffect {
         let mut effects: HashMap<IdentificationValue, Box<PropagatingEffect>> = HashMap::new();
         for node in self.graph.get_all_nodes() {
             effects.insert(

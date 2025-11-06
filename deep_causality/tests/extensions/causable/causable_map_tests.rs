@@ -47,7 +47,7 @@ fn get_mixed_test_ctx_link_causality_map() -> TestHashMap {
 // Helper to activate all causes in a collection for testing purposes.
 fn activate_all_causes(map: &TestHashMap) {
     // A value that ensures the default test causaloid (threshold 0.55) becomes active.
-    let effect = PropagatingEffect::Numerical(0.99);
+    let effect = PropagatingEffect::from_numerical(0.99);
     for cause in map.values() {
         // We call evaluate to set the internal state, but ignore the result for this setup.
         let _ = cause.evaluate(&effect);
@@ -102,18 +102,18 @@ fn test_evaluate_deterministic_propagation() {
     let map = get_deterministic_test_causality_map();
 
     // Case 1: All succeed, chain should be deterministically true.
-    let effect_success = PropagatingEffect::Numerical(0.99);
+    let effect_success = PropagatingEffect::from_numerical(0.99);
     let res = map.evaluate_deterministic(&effect_success, &AggregateLogic::All);
     assert!(res.is_ok());
     let res_success = res.unwrap();
-    assert_eq!(res_success, PropagatingEffect::Deterministic(true));
+    assert_eq!(res_success, PropagatingEffect::from_deterministic(true));
 
     // Case 2: One fails, chain should be deterministically false.
-    let effect_fail = PropagatingEffect::Numerical(0.1);
+    let effect_fail = PropagatingEffect::from_numerical(0.1);
     let res = map.evaluate_deterministic(&effect_fail, &AggregateLogic::All);
     assert!(res.is_ok());
     let res_fail = res.unwrap();
-    assert_eq!(res_fail, PropagatingEffect::Deterministic(false));
+    assert_eq!(res_fail, PropagatingEffect::from_deterministic(false));
 }
 
 #[test]
@@ -122,19 +122,19 @@ fn test_evaluate_probabilistic_propagation() {
 
     // Case 1: All succeed (Deterministic(true) is treated as probability 1.0).
     // The cumulative probability should be 1.0.
-    let effect_success = PropagatingEffect::Numerical(0.99);
+    let effect_success = PropagatingEffect::from_numerical(0.99);
     let res = map.evaluate_probabilistic(&effect_success, &AggregateLogic::All, 0.5);
     assert!(res.is_ok());
     let res_success = res.unwrap();
-    assert_eq!(res_success, PropagatingEffect::Probabilistic(1.0));
+    assert_eq!(res_success, PropagatingEffect::from_probabilistic(1.0));
 
     // Case 2: One fails (Deterministic(false) is treated as probability 0.0).
     // The chain should short-circuit and return a cumulative probability of 0.0.
-    let effect_fail = PropagatingEffect::Numerical(0.1);
+    let effect_fail = PropagatingEffect::from_numerical(0.1);
     let res = map.evaluate_probabilistic(&effect_fail, &AggregateLogic::All, 0.5);
     assert!(res.is_ok());
     let res_fail = res.unwrap();
-    assert_eq!(res_fail, PropagatingEffect::Probabilistic(0.0));
+    assert_eq!(res_fail, PropagatingEffect::from_probabilistic(0.0));
 }
 
 #[test]
@@ -142,12 +142,12 @@ fn test_evaluate_mixed_propagation() {
     let map = get_mixed_test_causality_map();
 
     // Case 1: All succeed, chain remains deterministically true.
-    let effect_success = PropagatingEffect::Numerical(0.99);
+    let effect_success = PropagatingEffect::from_numerical(0.99);
     let res = map.evaluate_mixed(&effect_success, &AggregateLogic::All, 0.5);
     assert!(res.is_ok());
     let res_success = res.unwrap();
     // All mixed cased evaluate
-    assert_eq!(res_success, PropagatingEffect::Deterministic(true));
+    assert_eq!(res_success, PropagatingEffect::from_deterministic(true));
 }
 
 #[test]
@@ -155,7 +155,7 @@ fn test_evaluate_mixed_propagation_err() {
     let map = get_mixed_test_ctx_link_causality_map();
 
     //
-    let effect_fail = PropagatingEffect::Numerical(0.1);
+    let effect_fail = PropagatingEffect::from_numerical(0.1);
     let res = map.evaluate_mixed(&effect_fail, &AggregateLogic::All, 0.5);
     assert!(res.is_err());
 }
@@ -165,7 +165,7 @@ fn test_explain() {
     let map = get_deterministic_test_causality_map();
     activate_all_causes(&map);
 
-    let single_explanation = "Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: PropagatingEffect::Deterministic(true)";
+    let single_explanation = "Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: PropagatingEffect::from_deterministic(true)";
     let res = map.explain();
     assert!(res.is_ok());
     let actual = res.unwrap();

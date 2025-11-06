@@ -3,22 +3,18 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{AggregateLogic, CausalMonad, CausalityError, MonadicCausable, NumericalValue, PropagatingEffect};
+use crate::{AggregateLogic, Causable, CausalityError, NumericalValue, PropagatingEffect};
 
-pub(in crate::traits) fn _evaluate_mixed_logic<T: MonadicCausable<CausalMonad>>(
+pub(in crate::traits) fn _evaluate_mixed_logic<T: Causable>(
     items: Vec<&T>,
     effect: &PropagatingEffect,
     logic: &AggregateLogic,
     threshold: NumericalValue,
-) -> PropagatingEffect {
+) -> Result<PropagatingEffect, CausalityError> {
     if items.is_empty() {
-        return PropagatingEffect {
-            value: crate::EffectValue::None,
-            error: Some(CausalityError(
-                "No Causaloids found to evaluate".to_string(),
-            )),
-            logs: effect.logs.clone(),
-        };
+        return Err(CausalityError(
+            "No Causaloids found to evaluate".to_string(),
+        ));
     }
 
     let mut bool_results = Vec::new();
@@ -27,49 +23,20 @@ pub(in crate::traits) fn _evaluate_mixed_logic<T: MonadicCausable<CausalMonad>>(
     let max_samples = 1000; // The maximum number of samples to take.
 
     for cause in items {
-        let evaluated_effect = cause.evaluate_monadic(effect.clone());
-
-        if let Some(err) = evaluated_effect.error {
-            return PropagatingEffect {
-                value: crate::EffectValue::None,
-                error: Some(err),
-                logs: evaluated_effect.logs,
-            };
-        }
-
-        let bool_val = match evaluated_effect.value {
-            crate::EffectValue::Deterministic(b) => b,
-            crate::EffectValue::Probabilistic(p) => p > threshold,
-            crate::EffectValue::UncertainFloat(u) => {
-                match u.greater_than(threshold).to_bool(
-                    threshold,
-                    confidence_level,
-                    epsilon,
-                    max_samples,
-                ) {
-                    Ok(b) => b,
-                    Err(e) => return PropagatingEffect {
-                        value: crate::EffectValue::None,
-                        error: Some(e),
-                        logs: evaluated_effect.logs,
-                    },
-                }
+        let evaluated_effect = cause.evaluate(effect)?;
+        let bool_val = match evaluated_effect {
+            PropagatingEffect::Deterministic(b) => b,
+            PropagatingEffect::Probabilistic(p) => p > threshold,
+            PropagatingEffect::UncertainFloat(u) => u.greater_than(threshold).to_bool(
+                threshold,
+                confidence_level,
+                epsilon,
+                max_samples,
+            )?,
+            PropagatingEffect::UncertainBool(u) => {
+                u.to_bool(threshold, confidence_level, epsilon, max_samples)?
             }
-            crate::EffectValue::UncertainBool(u) => {
-                match u.to_bool(threshold, confidence_level, epsilon, max_samples) {
-                    Ok(b) => b,
-                    Err(e) => return PropagatingEffect {
-                        value: crate::EffectValue::None,
-                        error: Some(e),
-                        logs: evaluated_effect.logs,
-                    },
-                }
-            }
-            _ => return PropagatingEffect {
-                value: crate::EffectValue::None,
-                error: Some(CausalityError::new("Invalid effect type".to_string())),
-                logs: evaluated_effect.logs,
-            },
+            _ => return Err(CausalityError::new("Invalid effect type".to_string())),
         };
         bool_results.push(bool_val);
     }
@@ -81,5 +48,5 @@ pub(in crate::traits) fn _evaluate_mixed_logic<T: MonadicCausable<CausalMonad>>(
         AggregateLogic::Some(k) => bool_results.iter().filter(|&&v| v).count() >= *k,
     };
 
-    PropagatingEffect::deterministic(final_result, effect.logs.clone())
+    Ok(PropagatingEffect::Deterministic(final_result))
 }

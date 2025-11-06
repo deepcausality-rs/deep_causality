@@ -6,10 +6,7 @@
 use std::fmt::Display;
 use ultragraph::UltraGraphWeighted;
 
-use crate::{
-    CausableGraph, CausableGraphExplaining, CausalGraph, CausalMonad, IdentificationValue,
-    MonadicCausable,
-};
+use crate::{CausableGraph, CausalGraph, CausalMonad, IdentificationValue, MonadicCausable};
 
 mod causable;
 mod causable_graph;

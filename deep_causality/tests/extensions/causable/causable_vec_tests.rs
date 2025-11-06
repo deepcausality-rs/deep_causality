@@ -9,7 +9,7 @@ use deep_causality::*;
 // Helper to activate all causes in a collection for testing purposes.
 fn activate_all_causes(col: &BaseCausaloidVec) {
     // A value that ensures the default test causaloid (threshold 0.55) becomes active.
-    let effect = PropagatingEffect::Numerical(0.99);
+    let effect = PropagatingEffect::from_numerical(0.99);
     for cause in col {
         // We call evaluate to set the internal state, but ignore the result for this setup.
         let _ = cause.evaluate(&effect);
@@ -41,7 +41,7 @@ fn test_explain() {
     let col = test_utils::get_deterministic_test_causality_vec();
     activate_all_causes(&col);
 
-    let single_explanation = "\n * Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: PropagatingEffect::Deterministic(true)\n";
+    let single_explanation = "\n * Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: PropagatingEffect::from_deterministic(true)\n";
     let expected = single_explanation.repeat(3);
     let res = col.explain();
     assert!(res.is_ok());
@@ -85,7 +85,7 @@ fn test_evaluate_deterministic_propagation_error_non_deterministic_effect() {
     let coll: Vec<BaseCausaloid> = vec![true_causaloid, probabilistic_causaloid];
 
     // Act: Evaluate with deterministic propagation, which expects only deterministic effects.
-    let effect = PropagatingEffect::Numerical(0.0);
+    let effect = PropagatingEffect::from_numerical(0.0);
     let result = coll.evaluate_deterministic(&effect, &AggregateLogic::All);
 
     // Assert: This covers the error branch for non-deterministic effects.
@@ -95,7 +95,7 @@ fn test_evaluate_deterministic_propagation_error_non_deterministic_effect() {
     let err_msg = result.unwrap_err().to_string();
     assert!(
         err_msg.contains(
-            "encountered a non-deterministic effect: PropagatingEffect::Probabilistic(0.0)"
+            "encountered a non-deterministic effect: PropagatingEffect::from_probabilistic(0.0)"
         )
     );
 }
@@ -104,25 +104,25 @@ fn test_evaluate_deterministic_propagation_error_non_deterministic_effect() {
 fn test_evaluate_probabilistic_propagation_success() {
     // Setup: Create two causaloids with specific probabilities to test multiplication.
     fn causal_fn_half(_: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
-        Ok(PropagatingEffect::Probabilistic(0.5))
+        Ok(PropagatingEffect::from_probabilistic(0.5))
     }
     let p1 = Causaloid::new(1, causal_fn_half, "p=0.5");
 
     fn causal_fn_quarter(_: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
-        Ok(PropagatingEffect::Probabilistic(0.25))
+        Ok(PropagatingEffect::from_probabilistic(0.25))
     }
     let p2 = Causaloid::new(2, causal_fn_quarter, "p=0.25");
 
     let coll: Vec<BaseCausaloid> = vec![p1, p2];
 
     // Act: Evaluate with probabilistic propagation.
-    let effect = PropagatingEffect::Numerical(0.0);
+    let effect = PropagatingEffect::from_numerical(0.0);
     let res = coll.evaluate_probabilistic(&effect, &AggregateLogic::All, 0.5);
     assert!(res.is_ok());
     let result = res.unwrap();
 
     // Assert: This covers the main logic branch, ensuring probabilities are multiplied.
-    assert_eq!(result, PropagatingEffect::Probabilistic(0.125));
+    assert_eq!(result, PropagatingEffect::from_probabilistic(0.125));
 }
 
 #[test]
@@ -133,7 +133,7 @@ fn test_evaluate_probabilistic_propagation_error_contextual_link() {
     let coll: Vec<BaseCausaloid> = vec![probabilistic_causaloid, contextual_link_causaloid];
 
     // Act: Evaluate with probabilistic propagation.
-    let effect = PropagatingEffect::Numerical(0.0);
+    let effect = PropagatingEffect::from_numerical(0.0);
     let result = coll.evaluate_probabilistic(&effect, &AggregateLogic::All, 0.5);
 
     // Assert: This covers the error branch for invalid ContextualLink effects.

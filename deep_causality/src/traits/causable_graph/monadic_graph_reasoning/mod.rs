@@ -22,5 +22,5 @@ where
     ///
     /// # Returns
     /// A `PropagatingEffect` representing the aggregated monadic effect of the graph.
-    fn evaluate_graph_monadic(&self, incoming_effect: PropagatingEffect) -> PropagatingEffect;
+    fn evaluate_graph(&self, incoming_effect: PropagatingEffect) -> PropagatingEffect;
 }

@@ -45,38 +45,33 @@ fn test_evaluate_deterministic_propagation() {
     let col = get_test_causality_array(true);
 
     // Case 1: All succeed, chain should be deterministically true.
-    let effect_success = PropagatingEffect::Numerical(0.99);
-    let res = col.evaluate_deterministic(&effect_success, &AggregateLogic::All);
-    assert!(res.is_ok());
-    let res_success = res.unwrap();
-    assert_eq!(res_success, PropagatingEffect::Deterministic(true));
+    let effect_success = PropagatingEffect::from_numerical(0.99);
+    let res_success = col.evaluate_collection(effect_success);
+    assert!(res_success.error.is_none());
+    assert_eq!(res_success.value, EffectValue::Deterministic(true));
 
     // Case 2: One fails, chain should be deterministically false.
-    let effect_fail = PropagatingEffect::Numerical(0.1);
-    let res = col.evaluate_deterministic(&effect_fail, &AggregateLogic::All);
-    assert!(res.is_ok());
-    let res_fail = res.unwrap();
-    assert_eq!(res_fail, PropagatingEffect::Deterministic(false));
+    let effect_fail = PropagatingEffect::from_numerical(0.1);
+    let res_fail = col.evaluate_collection_monadic(effect_fail);
+    assert!(res_fail.error.is_none());
+    assert_eq!(res_fail.value, EffectValue::Deterministic(false));
 }
 
 #[test]
 fn test_evaluate_probabilistic_propagation() {
     let col = get_test_causality_array(false);
 
-    let effect_success = PropagatingEffect::Probabilistic(0.99);
-    let res = col.evaluate_probabilistic(&effect_success, &AggregateLogic::All, 0.5);
-    assert!(res.is_ok());
-
-    let res_success = res.unwrap();
-    assert_eq!(res_success, PropagatingEffect::Probabilistic(1.0));
+    let effect_success = PropagatingEffect::from_probabilistic(0.99);
+    let res_success = col.evaluate_collection_monadic(effect_success);
+    assert!(res_success.error.is_none());
+    assert_eq!(res_success.value, EffectValue::Probabilistic(1.0));
 
     // Case 2: One fails (Deterministic(false) is treated as probability 0.0).
     // The chain should short-circuit and return a cumulative probability of 0.0.
-    let effect_fail = PropagatingEffect::Numerical(0.1);
-    let res = col.evaluate_probabilistic(&effect_fail, &AggregateLogic::All, 0.5);
-    assert!(res.is_ok());
-    let res_fail = res.unwrap();
-    assert_eq!(res_fail, PropagatingEffect::Probabilistic(0.0));
+    let effect_fail = PropagatingEffect::from_numerical(0.1);
+    let res_fail = col.evaluate_collection_monadic(effect_fail);
+    assert!(res_fail.error.is_none());
+    assert_eq!(res_fail.value, EffectValue::Probabilistic(0.0));
 }
 
 #[test]
@@ -84,33 +79,29 @@ fn test_evaluate_mixed_propagation() {
     let col = get_test_causality_array_mixed();
 
     // Case 1: All succeed, chain remains deterministically true.
-    let effect_success = PropagatingEffect::Numerical(0.99);
-    let res = col.evaluate_mixed(&effect_success, &AggregateLogic::All, 0.5);
-    assert!(res.is_ok());
-    let res_success = res.unwrap();
-    assert_eq!(res_success, PropagatingEffect::Deterministic(true));
+    let effect_success = PropagatingEffect::from_numerical(0.99);
+    let res_success = col.evaluate_collection_monadic(effect_success);
+    assert!(res_success.error.is_none());
+    assert_eq!(res_success.value, EffectValue::Deterministic(true));
 
     // Case 2: One fails, chain becomes deterministically false.
-    let effect_fail = PropagatingEffect::Numerical(0.1);
-    let res_fail = col
-        .evaluate_mixed(&effect_fail, &AggregateLogic::All, 0.5)
-        .unwrap();
-    assert_eq!(res_fail, PropagatingEffect::Deterministic(false));
+    let effect_fail = PropagatingEffect::from_numerical(0.1);
+    let res_fail = col.evaluate_collection_monadic(effect_fail);
+    assert!(res_fail.error.is_none());
+    assert_eq!(res_fail.value, EffectValue::Deterministic(false));
 }
 
 #[test]
 fn test_explain() {
     let col = get_test_causality_array(true);
 
-    let effect = PropagatingEffect::Numerical(0.99);
-    let res = col.evaluate_deterministic(&effect, &AggregateLogic::All);
-    assert!(res.is_ok());
+    let effect = PropagatingEffect::from_numerical(0.99);
+    let res = col.evaluate_collection_monadic(effect);
+    assert!(res.error.is_none());
 
-    let res = col.explain();
-    assert!(res.is_ok());
-    let actual = col.explain().unwrap();
+    let actual = res.explain();
 
-    let single_explanation = "\n * Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: PropagatingEffect::Deterministic(true)\n";
+    let single_explanation = "\n * Causaloid: 1 'tests whether data exceeds threshold of 0.55' evaluated to: EffectValue::Deterministic(true)\n";
     let expected = single_explanation.repeat(10);
 
     assert_eq!(expected, actual);
@@ -134,7 +125,7 @@ fn test_is_empty() {
     assert!(!col.is_empty());
 
     let empty: [BaseCausaloid; 0] = [];
-    assert!(CausableCollectionReasoning::is_empty(&empty[..]));
+    assert!(empty.is_empty());
 }
 
 #[test]

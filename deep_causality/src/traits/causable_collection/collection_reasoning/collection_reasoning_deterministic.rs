@@ -3,47 +3,31 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{AggregateLogic, CausalMonad, CausalityError, MonadicCausable, PropagatingEffect};
+use crate::{AggregateLogic, Causable, CausalityError, PropagatingEffect};
 
-pub(in crate::traits) fn _evaluate_deterministic_logic<T: MonadicCausable<CausalMonad>>(
+pub(in crate::traits) fn _evaluate_deterministic_logic<T: Causable>(
     items: Vec<&T>,
     effect: &PropagatingEffect,
     logic: &AggregateLogic,
-) -> PropagatingEffect {
+) -> Result<PropagatingEffect, CausalityError> {
     if items.is_empty() {
-        return PropagatingEffect {
-            value: crate::EffectValue::None,
-            error: Some(CausalityError(
-                "No Causaloids found to evaluate".to_string(),
-            )),
-            logs: effect.logs.clone(),
-        };
+        return Err(CausalityError(
+            "No Causaloids found to evaluate".to_string(),
+        ));
     }
 
     let mut true_count = 0;
 
     for cause in items {
-        let evaluated_effect = cause.evaluate_monadic(effect.clone());
+        let evaluated_effect = cause.evaluate(effect)?;
 
-        if let Some(err) = evaluated_effect.error {
-            return PropagatingEffect {
-                value: crate::EffectValue::None,
-                error: Some(err),
-                logs: evaluated_effect.logs,
-            };
-        }
-
-        let value = match evaluated_effect.value {
-            crate::EffectValue::Deterministic(v) => v,
+        let value = match evaluated_effect {
+            PropagatingEffect::Deterministic(v) => v,
             _ => {
                 // Strict contract: only deterministic effects are allowed.
-                return PropagatingEffect {
-                    value: crate::EffectValue::None,
-                    error: Some(CausalityError(format!(
-                        "evaluate_deterministic_propagation encountered a non-deterministic effect: {:?}. Only Deterministic effects are allowed.", evaluated_effect.value
-                    ))),
-                    logs: evaluated_effect.logs,
-                };
+                return Err(CausalityError(format!(
+                    "evaluate_deterministic_propagation encountered a non-deterministic effect: {evaluated_effect:?}. Only Deterministic effects are allowed."
+                )));
             }
         };
 
@@ -51,19 +35,19 @@ pub(in crate::traits) fn _evaluate_deterministic_logic<T: MonadicCausable<Causal
             AggregateLogic::All => {
                 if !value {
                     // Short-circuit on the first false.
-                    return PropagatingEffect::deterministic(false, evaluated_effect.logs);
+                    return Ok(PropagatingEffect::Deterministic(false));
                 }
             }
             AggregateLogic::Any => {
                 if value {
                     // Short-circuit on the first true.
-                    return PropagatingEffect::deterministic(true, evaluated_effect.logs);
+                    return Ok(PropagatingEffect::Deterministic(true));
                 }
             }
             AggregateLogic::None => {
                 if value {
                     // Short-circuit on the first true, as this violates the None condition.
-                    return PropagatingEffect::deterministic(false, evaluated_effect.logs);
+                    return Ok(PropagatingEffect::Deterministic(false));
                 }
             }
             AggregateLogic::Some(k) => {
@@ -71,7 +55,7 @@ pub(in crate::traits) fn _evaluate_deterministic_logic<T: MonadicCausable<Causal
                     true_count += 1;
                     if true_count >= *k {
                         // Short-circuit as soon as the threshold is met.
-                        return PropagatingEffect::deterministic(true, evaluated_effect.logs);
+                        return Ok(PropagatingEffect::Deterministic(true));
                     }
                 }
             }
@@ -86,9 +70,9 @@ pub(in crate::traits) fn _evaluate_deterministic_logic<T: MonadicCausable<Causal
         AggregateLogic::Any => false,
         // If we got here for None, it means no true values were found.
         AggregateLogic::None => true,
-        // If we got here for Some(k) and the loop completed, it means the threshold was never met.
-        AggregateLogic::Some(k) => true_count >= *k, // This will be false if not met.
+        // If we got here for Some(k), it means the threshold was never met.
+        AggregateLogic::Some(k) => true_count >= *k, // This will be false.
     };
 
-    PropagatingEffect::deterministic(final_result, effect.logs.clone())
+    Ok(PropagatingEffect::Deterministic(final_result))
 }

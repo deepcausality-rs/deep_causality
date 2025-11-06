@@ -29,7 +29,7 @@ fn test_evaluate_deterministic_propagation_empty() {
     let exp_len = col.len();
     assert_eq!(exp_len, 0);
 
-    let effect_fail = PropagatingEffect::Numerical(0.1);
+    let effect_fail = PropagatingEffect::from_numerical(0.1);
     let res = col.evaluate_deterministic(&effect_fail, &AggregateLogic::All);
     assert!(res.is_err());
 }
@@ -40,7 +40,7 @@ fn test_evaluate_probabilistic_propagation_empty() {
     let exp_len = col.len();
     assert_eq!(exp_len, 0);
 
-    let effect_fail = PropagatingEffect::Numerical(0.1);
+    let effect_fail = PropagatingEffect::from_numerical(0.1);
     let res = col.evaluate_probabilistic(&effect_fail, &AggregateLogic::All, 0.5);
     assert!(res.is_err());
 }
@@ -51,7 +51,7 @@ fn test_evaluate_probabilistic_mixed_empty() {
     let exp_len = col.len();
     assert_eq!(exp_len, 0);
 
-    let effect_fail = PropagatingEffect::Numerical(0.1);
+    let effect_fail = PropagatingEffect::from_numerical(0.1);
     let res = col.evaluate_mixed(&effect_fail, &AggregateLogic::All, 0.5);
     assert!(res.is_err());
 }

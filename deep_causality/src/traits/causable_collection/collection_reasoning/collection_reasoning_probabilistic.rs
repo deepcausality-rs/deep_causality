@@ -1,69 +1,41 @@
-use crate::{AggregateLogic, CausalMonad, CausalityError, MonadicCausable, NumericalValue, PropagatingEffect};
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
-pub(in crate::traits) fn _evaluate_probabilistic_logic<T: MonadicCausable<CausalMonad>>(
+use crate::{AggregateLogic, Causable, CausalityError, NumericalValue, PropagatingEffect};
+
+pub(in crate::traits) fn _evaluate_probabilistic_logic<T: Causable>(
     items: Vec<&T>,
     effect: &PropagatingEffect,
     logic: &AggregateLogic,
     threshold: NumericalValue,
-) -> PropagatingEffect {
+) -> Result<PropagatingEffect, CausalityError> {
     if items.is_empty() {
-        return PropagatingEffect {
-            value: crate::EffectValue::None,
-            error: Some(CausalityError(
-                "No Causaloids found to evaluate".to_string(),
-            )),
-            logs: effect.logs.clone(),
-        };
+        return Err(CausalityError(
+            "No Causaloids found to evaluate".to_string(),
+        ));
     }
 
     let mut probabilities = Vec::new();
     let num_samples = 100; // Number of samples for estimation
 
     for cause in items {
-        let evaluated_effect = cause.evaluate_monadic(effect.clone());
-
-        if let Some(err) = evaluated_effect.error {
-            return PropagatingEffect {
-                value: crate::EffectValue::None,
-                error: Some(err),
-                logs: evaluated_effect.logs,
-            };
-        }
-
-        let prob = match evaluated_effect.value {
-            crate::EffectValue::Deterministic(b) => {
+        let evaluated_effect = cause.evaluate(effect)?;
+        let prob = match evaluated_effect {
+            PropagatingEffect::Deterministic(b) => {
                 if b {
                     1.0
                 } else {
                     0.0
                 }
             }
-            crate::EffectValue::Probabilistic(p) => p,
-            crate::EffectValue::UncertainFloat(u) => {
-                match u.estimate_probability_exceeds(threshold, num_samples) {
-                    Ok(p) => p,
-                    Err(e) => return PropagatingEffect {
-                        value: crate::EffectValue::None,
-                        error: Some(e),
-                        logs: evaluated_effect.logs,
-                    },
-                }
+            PropagatingEffect::Probabilistic(p) => p,
+            PropagatingEffect::UncertainFloat(u) => {
+                u.estimate_probability_exceeds(threshold, num_samples)?
             }
-            crate::EffectValue::UncertainBool(u) => {
-                match u.estimate_probability(num_samples) {
-                    Ok(p) => p,
-                    Err(e) => return PropagatingEffect {
-                        value: crate::EffectValue::None,
-                        error: Some(e),
-                        logs: evaluated_effect.logs,
-                    },
-                }
-            },
-            _ => return PropagatingEffect {
-                value: crate::EffectValue::None,
-                error: Some(CausalityError::new("Invalid effect type".to_string())),
-                logs: evaluated_effect.logs,
-            },
+            PropagatingEffect::UncertainBool(u) => u.estimate_probability(num_samples)?,
+            _ => return Err(CausalityError::new("Invalid effect type".to_string())),
         };
         probabilities.push(prob);
     }
@@ -81,5 +53,5 @@ pub(in crate::traits) fn _evaluate_probabilistic_logic<T: MonadicCausable<Causal
         }
     };
 
-    PropagatingEffect::probabilistic(final_prob, effect.logs.clone())
+    Ok(PropagatingEffect::Probabilistic(final_prob))
 }
