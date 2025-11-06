@@ -4,7 +4,7 @@
  */
 
 use crate::{
-    AggregateLogic, Causable, CausableCollectionAccessor, CausalMonad, CausalityError,
+    AggregateLogic, Causable, CausableCollectionAccessor, CausalMonad,
     MonadicCausable, NumericalValue, PropagatingEffect,
 };
 

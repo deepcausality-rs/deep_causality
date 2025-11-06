@@ -8,8 +8,7 @@ use std::hash::Hash;
 
 // Extension trait http://xion.io/post/code/rust-extension-traits.html
 use crate::{
-    Causable, CausableCollectionAccessor, CausalMonad, IdentificationValue, MonadicCausable,
-    MonadicCausableCollection, PropagatingEffect,
+    Causable, CausableCollectionAccessor, CausalMonad, MonadicCausable, MonadicCausableCollection,
 };
 
 //
