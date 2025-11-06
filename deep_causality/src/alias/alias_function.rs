@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{
-    AssumptionError, EffectValue, CausalityError, Context, PropagatingEffect,
+    AssumptionError, CausalityError, Context, EffectValue, PropagatingEffect,
     StandardPropagatingEffect,
 };
 use std::sync::{Arc, RwLock};

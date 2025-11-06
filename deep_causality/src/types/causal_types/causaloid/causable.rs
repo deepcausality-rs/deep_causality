@@ -67,31 +67,13 @@ where
             }
         };
 
-        // Store the resulting effect for later inspection by is_active() and explain().
-        let mut effect_guard = self.effect.write().unwrap();
-        *effect_guard = Some(effect.clone());
-
         Ok(effect)
     }
 
     fn explain(&self) -> Result<String, CausalityError> {
         match self.causal_type {
-            CausaloidType::Singleton => {
-                let effect_guard = self.effect.read().unwrap();
-                if let Some(effect) = effect_guard.as_ref() {
-                    let reason = format!(
-                        "Causaloid: {} '{}' evaluated to: {:?}",
-                        self.id, self.description, effect
-                    );
-                    Ok(reason)
-                } else {
-                    let reason = format!(
-                        "Causaloid: {} has not been evaluated. Call evaluate() to get its effect.",
-                        self.id
-                    );
-                    Err(CausalityError(reason))
-                }
-            }
+            //  explain is going to be removed after the HKT refactoring. this the empty string.
+            CausaloidType::Singleton => Ok("".to_string()),
 
             CausaloidType::Collection => {
                 // Safely unwrap the collection or return a descriptive error.

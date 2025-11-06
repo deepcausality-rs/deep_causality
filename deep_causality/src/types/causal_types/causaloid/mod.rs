@@ -36,9 +36,6 @@ where
     causal_fn: Option<CausalFn>,
     context_causal_fn: Option<ContextualCausalFn<D, S, T, ST, SYM, VS, VT>>,
     context: Option<Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>,
-    // To be removed.
-    effect: ArcRWLock<Option<PropagatingEffect>>,
-    //
     causal_coll: Option<Arc<CausalVec<D, S, T, ST, SYM, VS, VT>>>,
     causal_graph: Option<Arc<CausalGraph<D, S, T, ST, SYM, VS, VT>>>,
     description: String,
@@ -69,7 +66,6 @@ where
         Causaloid {
             id,
             causal_type: CausaloidType::Singleton,
-            effect: Arc::new(RwLock::new(None)),
             causal_fn: Some(causal_fn),
             context_causal_fn: None,
             context: None,
@@ -98,7 +94,6 @@ where
         Causaloid {
             id,
             causal_type: CausaloidType::Singleton,
-            effect: Arc::new(RwLock::new(None)),
             causal_fn: None,
             context_causal_fn: Some(context_causal_fn),
             context: Some(context),
@@ -125,7 +120,6 @@ where
         Causaloid {
             id,
             causal_type: CausaloidType::Collection,
-            effect: Arc::new(RwLock::new(None)),
             causal_fn: None,
             context_causal_fn: None,
             context: None,
@@ -150,7 +144,6 @@ where
         Causaloid {
             id,
             causal_type: CausaloidType::Collection,
-            effect: Arc::new(RwLock::new(None)),
             causal_fn: None,
             causal_coll: Some(causal_coll),
             causal_graph: None,
@@ -177,7 +170,6 @@ where
         Causaloid {
             id,
             causal_type: CausaloidType::Graph,
-            effect: Arc::new(RwLock::new(None)),
             causal_fn: None,
             context_causal_fn: None,
             context: None,
@@ -206,7 +198,6 @@ where
             causal_coll: None,
             causal_graph: Some(causal_graph),
             description: description.to_string(),
-            effect: Arc::new(RwLock::new(None)),
             context: Some(context),
             context_causal_fn: None,
             ty: PhantomData,

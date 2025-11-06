@@ -4,8 +4,8 @@
  */
 
 use crate::{
-    CausalEffectLog, EffectValue, CausalityError, ContextId, ContextoidId,
-    IdentificationValue, NumericalValue,
+    CausalEffectLog, CausalityError, ContextId, ContextoidId, EffectValue, IdentificationValue,
+    NumericalValue,
 };
 use deep_causality_haft::{Applicative, Functor, HKT, HKT3, Monad, Placeholder};
 use deep_causality_num::Complex;

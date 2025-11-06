@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{EffectValue, ContextId, ContextoidId, IdentificationValue, NumericValue};
+use crate::{ContextId, ContextoidId, EffectValue, IdentificationValue, NumericValue};
 use deep_causality_num::{Complex, Quaternion};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_uncertain::{
