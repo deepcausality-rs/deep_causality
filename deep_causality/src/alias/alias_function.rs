@@ -2,7 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{AssumptionError, CausalityError, Context, PropagatingEffect};
+use crate::{
+    AssumptionError, CausalEffectValue, CausalityError, Context, PropagatingEffect,
+    StandardPropagatingEffect,
+};
 use std::sync::{Arc, RwLock};
 
 // Fn aliases for assumable, assumption, & assumption collection
@@ -23,6 +26,8 @@ pub type EvalFn = fn(&[PropagatingEffect]) -> Result<bool, AssumptionError>;
 /// A `Result` containing either a `PropagatingEffect` on success or a `CausalityError` on failure.
 pub type CausalFn = fn(effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError>;
 
+pub type NewCausalFn = fn(value: CausalEffectValue) -> StandardPropagatingEffect;
+
 /// The unified function signature for all singleton causaloids that require access to a shared, external context.
 ///
 /// It evaluates runtime evidence against its own static configuration and the shared context
@@ -41,3 +46,8 @@ pub type ContextualCausalFn<D, S, T, ST, SYM, VS, VT> =
         effect: &PropagatingEffect,
         context: &Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>,
     ) -> Result<PropagatingEffect, CausalityError>;
+
+pub type NewContextualCausalFn<D, S, T, ST, SYM, VS, VT> = fn(
+    effect: &CausalEffectValue,
+    context: &Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>,
+) -> StandardPropagatingEffect;

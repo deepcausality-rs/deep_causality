@@ -26,7 +26,7 @@ mod predicates;
 /// through the causal effect system. It supports primitive types, strings,
 /// and vectors of these types.
 #[derive(Debug, Default, Clone)]
-pub enum EffectValue {
+pub enum CausalEffectValue {
     /// Represents the absence of a signal or evidence. Serves as the default.
     #[default]
     None,
@@ -62,10 +62,10 @@ pub enum EffectValue {
     /// can be interpreted by a reasoning engine as a command to fetch data.
     ContextualLink(ContextId, ContextoidId),
     /// A collection of named values, allowing for complex, structured data passing.
-    Map(HashMap<IdentificationValue, Box<EffectValue>>),
+    Map(HashMap<IdentificationValue, Box<CausalEffectValue>>),
 
     /// A dispatch command that directs the reasoning engine to dynamically jump to a specific
     /// causaloid within the graph. The `usize` is the target causaloid's index, and the `Box<CausalValue>`
     /// is the effect to be passed as input to that target causaloid. This enables adaptive reasoning.
-    RelayTo(usize, Box<EffectValue>),
+    RelayTo(usize, Box<CausalEffectValue>),
 }

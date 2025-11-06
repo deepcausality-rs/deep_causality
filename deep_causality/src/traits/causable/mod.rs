@@ -2,7 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalityError, Identifiable, PropagatingEffect};
+use crate::{
+    CausalEffectSystem, CausalityError, Identifiable, PropagatingEffect, StandardPropagatingEffect,
+};
+use deep_causality_haft::MonadEffect3;
 
 /// The Causable trait defines the core behavior for all causal elements.
 ///
@@ -49,4 +52,17 @@ pub trait Causable: Identifiable {
     ///
     /// `true` if the implementor is a `Singleton` type, `false` otherwise.
     fn is_singleton(&self) -> bool;
+}
+
+pub trait MonadicCausable<P>
+where
+    P: MonadEffect3<CausalEffectSystem>,
+{
+    /// The core monadic bind operation.
+    /// Takes a Causaloid and a monadic context (the incoming effect)
+    /// and returns the new monadic context (the outgoing effect).
+    fn evaluate_monadic(
+        &self,
+        incoming_effect: StandardPropagatingEffect,
+    ) -> StandardPropagatingEffect;
 }

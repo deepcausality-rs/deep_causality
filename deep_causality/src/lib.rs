@@ -45,7 +45,7 @@ pub use crate::traits::adjustable::{Adjustable, UncertainAdjustable};
 pub use crate::traits::assumable::Assumable;
 pub use crate::traits::assumable::AssumableReasoning;
 // Causable Traits
-pub use crate::traits::causable::Causable;
+pub use crate::traits::causable::{Causable, MonadicCausable};
 // Causable Collection Traits
 pub use traits::causable_collection::CausableCollection;
 pub use traits::causable_collection::collection_accessor::CausableCollectionAccessor;
@@ -163,7 +163,7 @@ pub use crate::types::model_types::observation::Observation;
 // Reasoning types
 pub use crate::types::reasoning_types::aggregate_logic::AggregateLogic;
 pub use crate::types::reasoning_types::effect_log::CausalEffectLog;
-pub use crate::types::reasoning_types::effect_value::EffectValue;
+pub use crate::types::reasoning_types::effect_value::CausalEffectValue;
 pub use crate::types::reasoning_types::numeric_value::NumericValue;
 // Legacy types to be removed
 pub use crate::types::reasoning_types::propagating_effect::{EffectGraph, PropagatingEffect};

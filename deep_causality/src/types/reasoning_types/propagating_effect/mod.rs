@@ -4,8 +4,8 @@
  */
 
 use crate::{
-    CausalEffectLog, CausalityError, ContextId, ContextoidId, EffectValue, IdentificationValue,
-    NumericalValue,
+    CausalEffectLog, CausalEffectValue, CausalityError, ContextId, ContextoidId,
+    IdentificationValue, NumericalValue,
 };
 use deep_causality_haft::{Applicative, Functor, HKT, HKT3, Monad, Placeholder};
 use deep_causality_num::Complex;
@@ -84,7 +84,7 @@ pub struct CausalPropagatingEffect<Value, Error, Log> {
 }
 
 pub type StandardPropagatingEffect =
-    CausalPropagatingEffect<EffectValue, CausalityError, CausalEffectLog>;
+    CausalPropagatingEffect<CausalEffectValue, CausalityError, CausalEffectLog>;
 
 pub struct PropagatingEffectWitness<E, L>(Placeholder, E, L);
 

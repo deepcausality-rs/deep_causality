@@ -3,81 +3,81 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{EffectValue, NumericValue};
+use crate::{CausalEffectValue, NumericValue};
 use deep_causality_num::{Complex, Quaternion};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_uncertain::{
     MaybeUncertainBool, MaybeUncertainF64, UncertainBool, UncertainF64,
 };
 
-impl From<bool> for EffectValue {
+impl From<bool> for CausalEffectValue {
     fn from(b: bool) -> Self {
-        EffectValue::Deterministic(b)
+        CausalEffectValue::Deterministic(b)
     }
 }
 
-impl From<NumericValue> for EffectValue {
+impl From<NumericValue> for CausalEffectValue {
     fn from(n: NumericValue) -> Self {
-        EffectValue::Numeric(n)
+        CausalEffectValue::Numeric(n)
     }
 }
 
-impl From<f64> for EffectValue {
+impl From<f64> for CausalEffectValue {
     fn from(f: f64) -> Self {
-        EffectValue::Probabilistic(f)
+        CausalEffectValue::Probabilistic(f)
     }
 }
 
-impl From<CausalTensor<f64>> for EffectValue {
+impl From<CausalTensor<f64>> for CausalEffectValue {
     fn from(t: CausalTensor<f64>) -> Self {
-        EffectValue::Tensor(t)
+        CausalEffectValue::Tensor(t)
     }
 }
 
-impl From<Complex<f64>> for EffectValue {
+impl From<Complex<f64>> for CausalEffectValue {
     fn from(c: Complex<f64>) -> Self {
-        EffectValue::Complex(c)
+        CausalEffectValue::Complex(c)
     }
 }
 
-impl From<CausalTensor<Complex<f64>>> for EffectValue {
+impl From<CausalTensor<Complex<f64>>> for CausalEffectValue {
     fn from(t: CausalTensor<Complex<f64>>) -> Self {
-        EffectValue::ComplexTensor(t)
+        CausalEffectValue::ComplexTensor(t)
     }
 }
 
-impl From<Quaternion<f64>> for EffectValue {
+impl From<Quaternion<f64>> for CausalEffectValue {
     fn from(q: Quaternion<f64>) -> Self {
-        EffectValue::Quaternion(q)
+        CausalEffectValue::Quaternion(q)
     }
 }
 
-impl From<CausalTensor<Quaternion<f64>>> for EffectValue {
+impl From<CausalTensor<Quaternion<f64>>> for CausalEffectValue {
     fn from(t: CausalTensor<Quaternion<f64>>) -> Self {
-        EffectValue::QuaternionTensor(t)
+        CausalEffectValue::QuaternionTensor(t)
     }
 }
 
-impl From<UncertainBool> for EffectValue {
+impl From<UncertainBool> for CausalEffectValue {
     fn from(ub: UncertainBool) -> Self {
-        EffectValue::UncertainBool(ub)
+        CausalEffectValue::UncertainBool(ub)
     }
 }
 
-impl From<UncertainF64> for EffectValue {
+impl From<UncertainF64> for CausalEffectValue {
     fn from(uf: UncertainF64) -> Self {
-        EffectValue::UncertainFloat(uf)
+        CausalEffectValue::UncertainFloat(uf)
     }
 }
 
-impl From<MaybeUncertainBool> for EffectValue {
+impl From<MaybeUncertainBool> for CausalEffectValue {
     fn from(mub: MaybeUncertainBool) -> Self {
-        EffectValue::MaybeUncertainBool(mub)
+        CausalEffectValue::MaybeUncertainBool(mub)
     }
 }
 
-impl From<MaybeUncertainF64> for EffectValue {
+impl From<MaybeUncertainF64> for CausalEffectValue {
     fn from(muf: MaybeUncertainF64) -> Self {
-        EffectValue::MaybeUncertainFloat(muf)
+        CausalEffectValue::MaybeUncertainFloat(muf)
     }
 }
