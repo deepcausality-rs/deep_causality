@@ -168,7 +168,7 @@ pub use crate::types::reasoning_types::numeric_value::NumericValue;
 // Legacy types to be removed
 pub use crate::types::reasoning_types::propagating_effect::{EffectGraph, PropagatingEffect};
 // New types to be renamed
-pub use crate::types::reasoning_types::causal_monad::{CausalMonad, CausalEffectSystem};
+pub use crate::types::reasoning_types::causal_monad::{CausalEffectSystem, CausalMonad};
 pub use crate::types::reasoning_types::propagating_effect::{
     CausalPropagatingEffect, PropagatingEffectWitness, StandardPropagatingEffect,
 };
