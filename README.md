@@ -178,8 +178,21 @@ make example
 
 ## 🛠️ Build & Test
 
-Cargo works as expected, but in addition to cargo, a makefile exists
-that abstracts over several additional tools you for linting and formatting.
+Cargo works as expected for build, test, and examples. For best performance, 
+please build with the CPU profile that matches your platform target to enable various
+auto-SIMD optimizations. To do so, use the RUSTFLAGS as shown below:
+
+```bash 
+    RUSTFLAGS='-C target-cpu=native' cargo  build 
+```
+
+You get the list of all CPU targets supported by your Rust compiler by running:
+
+```bash 
+    rustc --print target-list
+```
+
+In addition to cargo, a makefile exists that abstracts over several additional tools you for linting and formatting.
 To check and install missing tools, please run the following command:
 
 ```bash 

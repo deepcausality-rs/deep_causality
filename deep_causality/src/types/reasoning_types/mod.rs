@@ -4,4 +4,7 @@
  */
 
 pub mod aggregate_logic;
+pub mod causal_value;
+pub mod effect_log;
+pub mod numeric_value;
 pub mod propagating_effect;
