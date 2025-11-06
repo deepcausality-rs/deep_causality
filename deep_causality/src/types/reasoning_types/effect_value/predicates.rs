@@ -2,70 +2,70 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::CausalEffectValue;
+use crate::EffectValue;
 
-impl CausalEffectValue {
+impl EffectValue {
     pub fn is_none(&self) -> bool {
-        matches!(self, CausalEffectValue::None)
+        matches!(self, EffectValue::None)
     }
 
     pub fn is_deterministic(&self) -> bool {
-        matches!(self, CausalEffectValue::Deterministic(_))
+        matches!(self, EffectValue::Deterministic(_))
     }
 
     pub fn is_numeric(&self) -> bool {
-        matches!(self, CausalEffectValue::Numeric(_))
+        matches!(self, EffectValue::Numeric(_))
     }
 
     pub fn is_probabilistic(&self) -> bool {
-        matches!(self, CausalEffectValue::Probabilistic(_))
+        matches!(self, EffectValue::Probabilistic(_))
     }
 
     pub fn is_tensor(&self) -> bool {
-        matches!(self, CausalEffectValue::Tensor(_))
+        matches!(self, EffectValue::Tensor(_))
     }
 
     pub fn is_complex(&self) -> bool {
-        matches!(self, CausalEffectValue::Complex(_))
+        matches!(self, EffectValue::Complex(_))
     }
 
     pub fn is_complex_tensor(&self) -> bool {
-        matches!(self, CausalEffectValue::ComplexTensor(_))
+        matches!(self, EffectValue::ComplexTensor(_))
     }
 
     pub fn is_quaternion(&self) -> bool {
-        matches!(self, CausalEffectValue::Quaternion(_))
+        matches!(self, EffectValue::Quaternion(_))
     }
 
     pub fn is_quaternion_tensor(&self) -> bool {
-        matches!(self, CausalEffectValue::QuaternionTensor(_))
+        matches!(self, EffectValue::QuaternionTensor(_))
     }
 
     pub fn is_uncertain_bool(&self) -> bool {
-        matches!(self, CausalEffectValue::UncertainBool(_))
+        matches!(self, EffectValue::UncertainBool(_))
     }
 
     pub fn is_uncertain_float(&self) -> bool {
-        matches!(self, CausalEffectValue::UncertainFloat(_))
+        matches!(self, EffectValue::UncertainFloat(_))
     }
 
     pub fn is_maybe_uncertain_bool(&self) -> bool {
-        matches!(self, CausalEffectValue::MaybeUncertainBool(_))
+        matches!(self, EffectValue::MaybeUncertainBool(_))
     }
 
     pub fn is_maybe_uncertain_float(&self) -> bool {
-        matches!(self, CausalEffectValue::MaybeUncertainFloat(_))
+        matches!(self, EffectValue::MaybeUncertainFloat(_))
     }
 
     pub fn is_contextual_link(&self) -> bool {
-        matches!(self, CausalEffectValue::ContextualLink(_, _))
+        matches!(self, EffectValue::ContextualLink(_, _))
     }
 
     pub fn is_map(&self) -> bool {
-        matches!(self, CausalEffectValue::Map(_))
+        matches!(self, EffectValue::Map(_))
     }
 
     pub fn is_relay_to(&self) -> bool {
-        matches!(self, CausalEffectValue::RelayTo(_, _))
+        matches!(self, EffectValue::RelayTo(_, _))
     }
 }

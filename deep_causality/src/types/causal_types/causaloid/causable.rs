@@ -3,10 +3,13 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{AggregateLogic, CausalityError, Causaloid, CausaloidType, PropagatingEffect};
 use crate::{
-    Causable, CausableCollectionExplaining, CausableCollectionReasoning, Datable, SpaceTemporal,
-    Spatial, Symbolic, Temporal,
+    AggregateLogic, CausalMonad, CausalityError, Causaloid, CausaloidType, EffectValue,
+    PropagatingEffect, StandardPropagatingEffect,
+};
+use crate::{
+    Causable, CausableCollectionExplaining, CausableCollectionReasoning, Datable, MonadicCausable,
+    SpaceTemporal, Spatial, Symbolic, Temporal,
 };
 
 #[allow(clippy::type_complexity)]
@@ -120,5 +123,61 @@ where
 
     fn is_singleton(&self) -> bool {
         matches!(self.causal_type, CausaloidType::Singleton)
+    }
+}
+
+#[allow(clippy::type_complexity)]
+impl<D, S, T, ST, SYM, VS, VT> MonadicCausable<CausalMonad> for Causaloid<D, S, T, ST, SYM, VS, VT>
+where
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
+{
+    fn evaluate_monadic(
+        &self,
+        incoming_effect: StandardPropagatingEffect,
+    ) -> StandardPropagatingEffect {
+        match self.causal_type {
+            CausaloidType::Singleton => {
+                // The causal_fn and context_causal_fn fields currently hold functions
+                // with the old signature (returning Result<PropagatingEffect, CausalityError>).
+                // They need to be updated to the new monadic signature (returning StandardPropagatingEffect).
+                // For now, we return an error indicating this incompatibility.
+                StandardPropagatingEffect {
+                    value: EffectValue::None,
+                    error: Some(CausalityError(
+                        "Causaloid's internal functions (causal_fn/context_causal_fn) are not yet updated to monadic signatures.".to_string(),
+                    )),
+                    logs: incoming_effect.logs,
+                }
+            }
+            CausaloidType::Collection => {
+                // Placeholder for monadic collection evaluation
+                // This will eventually call MonadicCausableCollection::evaluate_collection_monadic
+                StandardPropagatingEffect {
+                    value: EffectValue::None,
+                    error: Some(CausalityError(
+                        "Monadic collection evaluation not yet implemented for Causaloid."
+                            .to_string(),
+                    )),
+                    logs: incoming_effect.logs,
+                }
+            }
+            CausaloidType::Graph => {
+                // Placeholder for monadic graph evaluation
+                // This will eventually call MonadicCausableGraphReasoning::evaluate_graph_monadic
+                StandardPropagatingEffect {
+                    value: EffectValue::None,
+                    error: Some(CausalityError(
+                        "Monadic graph evaluation not yet implemented for Causaloid.".to_string(),
+                    )),
+                    logs: incoming_effect.logs,
+                }
+            }
+        }
     }
 }

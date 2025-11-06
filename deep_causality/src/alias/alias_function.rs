@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{
-    AssumptionError, CausalEffectValue, CausalityError, Context, PropagatingEffect,
+    AssumptionError, EffectValue, CausalityError, Context, PropagatingEffect,
     StandardPropagatingEffect,
 };
 use std::sync::{Arc, RwLock};
@@ -26,7 +26,7 @@ pub type EvalFn = fn(&[PropagatingEffect]) -> Result<bool, AssumptionError>;
 /// A `Result` containing either a `PropagatingEffect` on success or a `CausalityError` on failure.
 pub type CausalFn = fn(effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError>;
 
-pub type NewCausalFn = fn(value: CausalEffectValue) -> StandardPropagatingEffect;
+pub type NewCausalFn = fn(value: EffectValue) -> StandardPropagatingEffect;
 
 /// The unified function signature for all singleton causaloids that require access to a shared, external context.
 ///
@@ -48,6 +48,6 @@ pub type ContextualCausalFn<D, S, T, ST, SYM, VS, VT> =
     ) -> Result<PropagatingEffect, CausalityError>;
 
 pub type NewContextualCausalFn<D, S, T, ST, SYM, VS, VT> = fn(
-    effect: &CausalEffectValue,
+    effect: &EffectValue,
     context: &Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>,
 ) -> StandardPropagatingEffect;

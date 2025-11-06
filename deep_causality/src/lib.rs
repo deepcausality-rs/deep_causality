@@ -163,7 +163,7 @@ pub use crate::types::model_types::observation::Observation;
 // Reasoning types
 pub use crate::types::reasoning_types::aggregate_logic::AggregateLogic;
 pub use crate::types::reasoning_types::effect_log::CausalEffectLog;
-pub use crate::types::reasoning_types::effect_value::CausalEffectValue;
+pub use crate::types::reasoning_types::effect_value::EffectValue;
 pub use crate::types::reasoning_types::numeric_value::NumericValue;
 // Legacy types to be removed
 pub use crate::types::reasoning_types::propagating_effect::{EffectGraph, PropagatingEffect};
