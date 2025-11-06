@@ -43,7 +43,7 @@ mod op_tensor_view;
 ///     The data is either a subset of the original, a transformation of the original, or a result
 ///     of combining multiple tensors. These operations involve iterating through and copying/computing
 ///     values into a new `Vec<T>`.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct CausalTensor<T> {
     pub(crate) data: Vec<T>,
     shape: Vec<usize>,

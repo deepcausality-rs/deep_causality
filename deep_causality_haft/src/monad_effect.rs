@@ -62,7 +62,8 @@ where
         f: Func,
     ) -> <E::HktWitness as HKT3<E::Fixed1, E::Fixed2>>::Type<U>
     where
-        Func: FnMut(T) -> <E::HktWitness as HKT3<E::Fixed1, E::Fixed2>>::Type<U>;
+        Func: FnMut(T) -> <E::HktWitness as HKT3<E::Fixed1, E::Fixed2>>::Type<U>,
+        U: Default;
 }
 
 // ----------------------------------------------------
@@ -122,7 +123,8 @@ where
         f: Func,
     ) -> <E::HktWitness as HKT4<E::Fixed1, E::Fixed2, E::Fixed3>>::Type<U>
     where
-        Func: FnMut(T) -> <E::HktWitness as HKT4<E::Fixed1, E::Fixed2, E::Fixed3>>::Type<U>;
+        Func: FnMut(T) -> <E::HktWitness as HKT4<E::Fixed1, E::Fixed2, E::Fixed3>>::Type<U>,
+        U: Default;
 }
 
 // ----------------------------------------------------
@@ -189,5 +191,6 @@ where
         Func: FnMut(
             T,
         )
-            -> <E::HktWitness as HKT5<E::Fixed1, E::Fixed2, E::Fixed3, E::Fixed4>>::Type<U>;
+            -> <E::HktWitness as HKT5<E::Fixed1, E::Fixed2, E::Fixed3, E::Fixed4>>::Type<U>,
+        U: Default;
 }
