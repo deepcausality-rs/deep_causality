@@ -2,7 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{ContextId, ContextoidId, EffectValue, IdentificationValue, NumericValue};
+use crate::{
+    ContextId, ContextoidId, EffectValue, IdentificationValue, NumericValue, PropagatingEffect,
+};
 use deep_causality_num::{Complex, Quaternion};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_uncertain::{
@@ -18,9 +20,16 @@ impl EffectValue {
         }
     }
 
+    pub fn as_number(&self) -> Option<&NumericValue> {
+        match self {
+            EffectValue::Number(n) => Some(n),
+            _ => None,
+        }
+    }
+
     pub fn as_numerical(&self) -> Option<&NumericValue> {
         match self {
-            EffectValue::Numeric(n) => Some(n),
+            EffectValue::Number(n) => Some(n),
             _ => None,
         }
     }
@@ -102,14 +111,14 @@ impl EffectValue {
         }
     }
 
-    pub fn as_map(&self) -> Option<&HashMap<IdentificationValue, Box<EffectValue>>> {
+    pub fn as_map(&self) -> Option<&HashMap<IdentificationValue, Box<PropagatingEffect>>> {
         match self {
             EffectValue::Map(m) => Some(m),
             _ => None,
         }
     }
 
-    pub fn as_relay_to(&self) -> Option<(&usize, &EffectValue)> {
+    pub fn as_relay_to(&self) -> Option<(&usize, &PropagatingEffect)> {
         match self {
             EffectValue::RelayTo(target, effect) => Some((target, effect)),
             _ => None,

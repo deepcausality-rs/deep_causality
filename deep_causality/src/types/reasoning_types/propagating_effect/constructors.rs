@@ -2,17 +2,16 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
 use crate::{
-    ComplexTensor, ContextId, ContextoidId, EffectGraph, IdentificationValue, NumericalValue,
-    PropagatingEffect,
+    CausalityError, ComplexTensor, ContextId, ContextoidId, EffectValue, IdentificationValue,
+    NumericValue, NumericalValue, PropagatingEffect,
 };
+use deep_causality_num::{Complex, Quaternion};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_uncertain::{
     MaybeUncertainBool, MaybeUncertainF64, UncertainBool, UncertainF64,
 };
 use std::collections::HashMap;
-use std::sync::Arc;
 
 // Constructors
 impl PropagatingEffect {
@@ -35,7 +34,11 @@ impl PropagatingEffect {
     /// assert!(matches!(effect, PropagatingEffect::Deterministic(true)));
     /// ```
     pub fn from_deterministic(deterministic: bool) -> Self {
-        Self::Deterministic(deterministic)
+        Self {
+            value: EffectValue::Deterministic(deterministic),
+            error: None,
+            logs: Vec::new(),
+        }
     }
 
     /// Creates a new `PropagatingEffect` of the `Numerical` variant.
@@ -57,7 +60,19 @@ impl PropagatingEffect {
     /// assert!(matches!(effect, PropagatingEffect::Numerical(123.45)));
     /// ```
     pub fn from_numerical(numerical: NumericalValue) -> Self {
-        Self::Numerical(numerical)
+        Self {
+            value: EffectValue::Number(NumericValue::F64(numerical)),
+            error: None,
+            logs: Vec::new(),
+        }
+    }
+
+    pub fn from_numeric(numeric: NumericValue) -> Self {
+        Self {
+            value: EffectValue::Number(numeric),
+            error: None,
+            logs: Vec::new(),
+        }
     }
 
     /// Creates a new `PropagatingEffect` of the `Probabilistic` variant.
@@ -79,9 +94,12 @@ impl PropagatingEffect {
     /// assert!(matches!(effect, PropagatingEffect::Probabilistic(0.75)));
     /// ```
     pub fn from_probabilistic(numerical: NumericalValue) -> Self {
-        Self::Probabilistic(numerical)
+        Self {
+            value: EffectValue::Probabilistic(numerical),
+            error: None,
+            logs: Vec::new(),
+        }
     }
-
     /// Creates a new `PropagatingEffect` of the `Tensor` variant.
     ///
     /// # Arguments
@@ -106,7 +124,19 @@ impl PropagatingEffect {
     /// }
     /// ```
     pub fn from_tensor(tensor: CausalTensor<f64>) -> Self {
-        Self::Tensor(tensor)
+        Self {
+            value: EffectValue::Tensor(tensor),
+            error: None,
+            logs: Vec::new(),
+        }
+    }
+
+    pub fn from_complex(complex: Complex<f64>) -> Self {
+        Self {
+            value: EffectValue::Complex(complex),
+            error: None,
+            logs: Vec::new(),
+        }
     }
 
     /// Creates a new `PropagatingEffect` of the `ComplexTensor` variant.
@@ -134,7 +164,27 @@ impl PropagatingEffect {
     /// }
     /// ```
     pub fn from_complex_tensor(complex_tensor: ComplexTensor) -> Self {
-        Self::ComplexTensor(complex_tensor)
+        Self {
+            value: EffectValue::ComplexTensor(complex_tensor),
+            error: None,
+            logs: Vec::new(),
+        }
+    }
+
+    pub fn from_quaternion(quaternion: Quaternion<f64>) -> Self {
+        Self {
+            value: EffectValue::Quaternion(quaternion),
+            error: None,
+            logs: Vec::new(),
+        }
+    }
+
+    pub fn from_quaternion_tensor(quaternion_tensor: CausalTensor<Quaternion<f64>>) -> Self {
+        Self {
+            value: EffectValue::QuaternionTensor(quaternion_tensor),
+            error: None,
+            logs: Vec::new(),
+        }
     }
 
     /// Creates a new `PropagatingEffect` of the `UncertainBool` variant.
@@ -158,7 +208,11 @@ impl PropagatingEffect {
     /// assert!(matches!(effect, PropagatingEffect::UncertainBool(_)));
     /// ```
     pub fn from_uncertain_bool(uncertain: UncertainBool) -> Self {
-        Self::UncertainBool(uncertain)
+        Self {
+            value: EffectValue::UncertainBool(uncertain),
+            error: None,
+            logs: Vec::new(),
+        }
     }
 
     /// Creates a new `PropagatingEffect` of the `UncertainFloat` variant.
@@ -182,7 +236,11 @@ impl PropagatingEffect {
     /// assert!(matches!(effect, PropagatingEffect::UncertainFloat(_)));
     /// ```
     pub fn from_uncertain_float(uncertain: UncertainF64) -> Self {
-        Self::UncertainFloat(uncertain)
+        Self {
+            value: EffectValue::UncertainFloat(uncertain),
+            error: None,
+            logs: Vec::new(),
+        }
     }
 
     /// Creates a new `PropagatingEffect` of the `MaybeUncertainBool` variant.
@@ -205,8 +263,12 @@ impl PropagatingEffect {
     /// let effect = PropagatingEffect::from_maybe_uncertain_bool(maybe_uncertain_bool.clone());
     /// assert!(matches!(effect, PropagatingEffect::MaybeUncertainBool(_)));
     /// ```
-    pub fn from_maybe_uncertain_bool(maybe_uncertain: MaybeUncertainBool) -> Self {
-        Self::MaybeUncertainBool(maybe_uncertain)
+    pub fn from_maybe_uncertain_bool(maybe_uncertain_bool: MaybeUncertainBool) -> Self {
+        Self {
+            value: EffectValue::MaybeUncertainBool(maybe_uncertain_bool),
+            error: None,
+            logs: Vec::new(),
+        }
     }
 
     /// Creates a new `PropagatingEffect` of the `MaybeUncertainFloat` variant.
@@ -229,8 +291,12 @@ impl PropagatingEffect {
     /// let effect = PropagatingEffect::from_maybe_uncertain_float(maybe_uncertain_float.clone());
     /// assert!(matches!(effect, PropagatingEffect::MaybeUncertainFloat(_)));
     /// ```
-    pub fn from_maybe_uncertain_float(maybe_uncertain: MaybeUncertainF64) -> Self {
-        Self::MaybeUncertainFloat(maybe_uncertain)
+    pub fn from_maybe_uncertain_float(maybe_uncertain_float: MaybeUncertainF64) -> Self {
+        Self {
+            value: EffectValue::MaybeUncertainFloat(maybe_uncertain_float),
+            error: None,
+            logs: Vec::new(),
+        }
     }
 
     /// Creates a new `PropagatingEffect` of the `ContextualLink` variant.
@@ -256,29 +322,11 @@ impl PropagatingEffect {
     /// assert!(matches!(effect, PropagatingEffect::ContextualLink(_, _)));
     /// ```
     pub fn from_contextual_link(context_id: ContextId, contextoid_id: ContextoidId) -> Self {
-        Self::ContextualLink(context_id, contextoid_id)
-    }
-
-    /// Creates a new empty `PropagatingEffect` of the `Map` variant.
-    ///
-    /// # Returns
-    ///
-    /// An empty `PropagatingEffect::Map` instance.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use deep_causality::PropagatingEffect;
-    /// use std::collections::HashMap;
-    ///
-    /// let effect = PropagatingEffect::new_map();
-    /// assert!(matches!(effect, PropagatingEffect::Map(_)));
-    /// if let PropagatingEffect::Map(map) = effect {
-    ///     assert!(map.is_empty());
-    /// }
-    /// ```
-    pub fn new_map() -> Self {
-        Self::Map(HashMap::new())
+        Self {
+            value: EffectValue::ContextualLink(context_id, contextoid_id),
+            error: None,
+            logs: Vec::new(),
+        }
     }
 
     /// Creates a new `PropagatingEffect` of the `Map` variant from an existing `HashMap`.
@@ -291,63 +339,12 @@ impl PropagatingEffect {
     ///
     /// A `PropagatingEffect::Map` instance initialized with the given map.
     ///
-    /// # Examples
-    ///
-    /// ```
-    /// use deep_causality::PropagatingEffect;
-    /// use deep_causality::IdentificationValue;
-    /// use std::collections::HashMap;
-    ///
-    /// let mut initial_map = HashMap::new();
-    /// initial_map.insert(IdentificationValue::from(1u64), Box::new(PropagatingEffect::Numerical(1.0)));
-    /// let effect = PropagatingEffect::from_map(initial_map);
-    /// assert!(matches!(effect, PropagatingEffect::Map(_)));
-    /// ```
     pub fn from_map(map: HashMap<IdentificationValue, Box<PropagatingEffect>>) -> Self {
-        Self::Map(map)
-    }
-
-    /// Creates a new empty `PropagatingEffect` of the `Graph` variant.
-    ///
-    /// # Returns
-    ///
-    /// An empty `PropagatingEffect::Graph` instance wrapped in an `Arc`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use deep_causality::PropagatingEffect;
-    ///
-    /// let effect = PropagatingEffect::new_graph();
-    /// assert!(matches!(effect, PropagatingEffect::Graph(_)));
-    /// ```
-    pub fn new_graph() -> Self {
-        Self::Graph(Arc::new(EffectGraph::new()))
-    }
-
-    /// Creates a new `PropagatingEffect` of the `Graph` variant from an existing `EffectGraph`.
-    ///
-    /// # Arguments
-    ///
-    /// * `graph` - An `Arc` wrapped `EffectGraph`.
-    ///
-    /// # Returns
-    ///
-    /// A `PropagatingEffect::Graph` instance initialized with the given graph.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use deep_causality::{PropagatingEffect, EffectGraph};
-    /// use std::sync::Arc;
-    /// use ultragraph::UltraGraph;
-    ///
-    /// let graph = Arc::new(EffectGraph::new());
-    /// let effect = PropagatingEffect::from_graph(graph.clone());
-    /// assert!(matches!(effect, PropagatingEffect::Graph(_)));
-    /// ```
-    pub fn from_graph(graph: Arc<EffectGraph>) -> Self {
-        Self::Graph(graph)
+        Self {
+            value: EffectValue::Map(map),
+            error: None,
+            logs: Vec::new(),
+        }
     }
 
     /// Creates a new `PropagatingEffect` of the `RelayTo` variant.
@@ -364,16 +361,19 @@ impl PropagatingEffect {
     ///
     /// A `PropagatingEffect::RelayTo` instance.
     ///
-    /// # Examples
-    ///
-    /// ```
-    /// use deep_causality::PropagatingEffect;
-    ///
-    /// let effect_to_relay = Box::new(PropagatingEffect::Numerical(10.0));
-    /// let effect = PropagatingEffect::from_relay_to(5, effect_to_relay);
-    /// assert!(matches!(effect, PropagatingEffect::RelayTo(5, _)));
-    /// ```
     pub fn from_relay_to(id: usize, effect: Box<PropagatingEffect>) -> Self {
-        Self::RelayTo(id, effect)
+        Self {
+            value: EffectValue::RelayTo(id, effect),
+            error: None,
+            logs: Vec::new(),
+        }
+    }
+
+    pub fn from_error(err: CausalityError) -> Self {
+        Self {
+            value: EffectValue::None,
+            error: Some(err),
+            logs: Vec::new(),
+        }
     }
 }

@@ -4,12 +4,11 @@
  */
 
 use std::fmt::Display;
-use ultragraph::*;
+use ultragraph::UltraGraphWeighted;
 
-use crate::errors::{CausalGraphIndexError, CausalityGraphError};
 use crate::{
-    Causable, CausableGraph, CausableGraphExplaining, CausableGraphReasoning, CausalGraph,
-    IdentificationValue,
+    CausableGraph, CausableGraphExplaining, CausalGraph, CausalMonad, IdentificationValue,
+    MonadicCausable,
 };
 
 mod causable;
@@ -37,7 +36,7 @@ mod identifiable;
 #[derive(Clone)]
 pub struct CausaloidGraph<T>
 where
-    T: Causable + PartialEq + Clone + Display,
+    T: MonadicCausable<CausalMonad> + PartialEq + Clone + Display,
 {
     id: IdentificationValue,
     graph: CausalGraph<T>,
@@ -45,7 +44,7 @@ where
 
 impl<T> CausaloidGraph<T>
 where
-    T: Causable + PartialEq + Clone + Display,
+    T: MonadicCausable<CausalMonad> + PartialEq + Clone + Display,
 {
     /// Creates a new `CausaloidGraph` with a default capacity.
     ///

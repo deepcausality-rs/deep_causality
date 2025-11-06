@@ -13,8 +13,12 @@ impl EffectValue {
         matches!(self, EffectValue::Deterministic(_))
     }
 
+    pub fn is_number(&self) -> bool {
+        matches!(self, EffectValue::Number(_))
+    }
+
     pub fn is_numeric(&self) -> bool {
-        matches!(self, EffectValue::Numeric(_))
+        matches!(self, EffectValue::Numerical(_))
     }
 
     pub fn is_probabilistic(&self) -> bool {

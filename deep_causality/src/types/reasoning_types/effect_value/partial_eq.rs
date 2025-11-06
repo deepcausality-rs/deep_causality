@@ -10,7 +10,8 @@ impl PartialEq for EffectValue {
         match (self, other) {
             (EffectValue::None, EffectValue::None) => true,
             (EffectValue::Deterministic(l0), EffectValue::Deterministic(r0)) => l0 == r0,
-            (EffectValue::Numeric(l0), EffectValue::Numeric(r0)) => l0 == r0,
+            (EffectValue::Number(l0), EffectValue::Number(r0)) => l0 == r0,
+            (EffectValue::Numerical(l0), EffectValue::Numerical(r0)) => l0 == r0,
             (EffectValue::Probabilistic(l0), EffectValue::Probabilistic(r0)) => l0 == r0,
             (EffectValue::Tensor(l0), EffectValue::Tensor(r0)) => l0 == r0,
             (EffectValue::Complex(l0), EffectValue::Complex(r0)) => l0 == r0,

@@ -9,117 +9,95 @@ use std::hash::Hash;
 // Extension trait http://xion.io/post/code/rust-extension-traits.html
 use crate::{
     Causable, CausableCollection, CausableCollectionAccessor, CausableCollectionExplaining,
-    CausableCollectionReasoning, IdentificationValue,
+    CausalMonad, IdentificationValue, MonadicCausable, MonadicCausableCollection,
+    PropagatingEffect,
 };
 
 //
 // [T]
 //
-impl<T> CausableCollection<T> for [T] where T: Causable + Clone {}
+impl<T> CausableCollection<T> for [T] where T: MonadicCausable<CausalMonad> + Clone + Causable {}
 
-impl<T> CausableCollectionExplaining<T> for [T] where T: Causable + Clone {}
+impl<T> CausableCollectionExplaining<T> for [T] where
+    T: MonadicCausable<CausalMonad> + Causable + Clone
+{
+}
 
 impl<T> CausableCollectionAccessor<T> for [T]
 where
-    T: Causable + Clone,
+    T: MonadicCausable<CausalMonad> + Clone,
 {
     fn get_all_items(&self) -> Vec<&T> {
         self.iter().collect()
-    }
-}
-
-impl<T> CausableCollectionReasoning<T> for [T]
-where
-    T: Causable + Clone,
-{
-    fn len(&self) -> usize {
-        <[T]>::len(self)
-    }
-
-    fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-    fn to_vec(&self) -> Vec<T> {
-        self.to_vec()
-    }
-    fn get_item_by_id(&self, id: IdentificationValue) -> Option<&T> {
-        self.iter().find(|item| item.id() == id)
     }
 }
 
 //
 //  Vec<T>
 //
-impl<T> CausableCollection<T> for Vec<T> where T: Causable + Clone {}
+impl<T> CausableCollection<T> for Vec<T> where T: MonadicCausable<CausalMonad> + Causable + Clone {}
 
-impl<T> CausableCollectionExplaining<T> for Vec<T> where T: Causable + Clone {}
+impl<T> CausableCollectionExplaining<T> for Vec<T> where
+    T: MonadicCausable<CausalMonad> + Causable + Clone
+{
+}
 
 impl<T> CausableCollectionAccessor<T> for Vec<T>
 where
-    T: Causable + Clone,
+    T: MonadicCausable<CausalMonad> + Clone,
 {
     fn get_all_items(&self) -> Vec<&T> {
         self.iter().collect()
     }
 }
 
-impl<T> CausableCollectionReasoning<T> for Vec<T>
+impl<T> MonadicCausableCollection<T> for Vec<T>
 where
-    T: Causable + Clone,
+    T: MonadicCausable<CausalMonad> + Clone + Causable,
 {
     fn len(&self) -> usize {
-        Vec::len(self)
+        self.len()
     }
 
     fn is_empty(&self) -> bool {
-        Vec::is_empty(self)
+        self.is_empty()
     }
+
     fn to_vec(&self) -> Vec<T> {
         self.clone()
     }
-    fn get_item_by_id(&self, id: IdentificationValue) -> Option<&T> {
-        self.iter().find(|item| item.id() == id)
+
+    fn evaluate_collection_monadic(&self, incoming_effect: PropagatingEffect) -> PropagatingEffect {
+        let mut effects: HashMap<IdentificationValue, Box<PropagatingEffect>> = HashMap::new();
+        for item in self {
+            effects.insert(
+                item.id(),
+                Box::new(item.evaluate_monadic(incoming_effect.clone())),
+            );
+        }
+        PropagatingEffect::from_map(effects)
     }
 }
 
 //
 //  VecDeque
 //
-impl<T> CausableCollection<T> for VecDeque<T> where T: Causable + Clone {}
+impl<T> CausableCollection<T> for VecDeque<T> where
+    T: MonadicCausable<CausalMonad> + Causable + Clone
+{
+}
 
-impl<T> CausableCollectionExplaining<T> for VecDeque<T> where T: Causable + Clone {}
+impl<T> CausableCollectionExplaining<T> for VecDeque<T> where
+    T: MonadicCausable<CausalMonad> + Causable + Clone
+{
+}
 
 impl<T> CausableCollectionAccessor<T> for VecDeque<T>
 where
-    T: Causable + Clone,
+    T: MonadicCausable<CausalMonad> + Clone,
 {
     fn get_all_items(&self) -> Vec<&T> {
         self.iter().collect()
-    }
-}
-
-impl<T> CausableCollectionReasoning<T> for VecDeque<T>
-where
-    T: Causable + Clone,
-{
-    fn len(&self) -> usize {
-        VecDeque::len(self)
-    }
-    fn is_empty(&self) -> bool {
-        VecDeque::is_empty(self)
-    }
-    fn to_vec(&self) -> Vec<T> {
-        let mut v = Vec::with_capacity(self.len());
-        let mut deque = self.clone(); // clone to avoid mutating the original
-
-        for item in deque.make_contiguous().iter() {
-            v.push(item.clone());
-        }
-
-        v
-    }
-    fn get_item_by_id(&self, id: IdentificationValue) -> Option<&T> {
-        self.iter().find(|item| item.id() == id)
     }
 }
 
@@ -129,43 +107,24 @@ where
 impl<K, V> CausableCollection<V> for HashMap<K, V>
 where
     K: Eq + Hash,
-    V: Causable + Clone,
+    V: MonadicCausable<CausalMonad> + Causable + Clone,
 {
 }
 
 impl<K, V> CausableCollectionExplaining<V> for HashMap<K, V>
 where
     K: Eq + Hash,
-    V: Causable + Clone,
+    V: MonadicCausable<CausalMonad> + Causable + Clone,
 {
 }
 
 impl<K, V> CausableCollectionAccessor<V> for HashMap<K, V>
 where
     K: Eq + Hash,
-    V: Causable + Clone,
+    V: MonadicCausable<CausalMonad> + Clone,
 {
     fn get_all_items(&self) -> Vec<&V> {
         self.values().collect::<Vec<&V>>()
-    }
-}
-
-impl<K, V> CausableCollectionReasoning<V> for HashMap<K, V>
-where
-    K: Eq + Hash,
-    V: Causable + Clone,
-{
-    fn len(&self) -> usize {
-        HashMap::len(self)
-    }
-    fn is_empty(&self) -> bool {
-        HashMap::is_empty(self)
-    }
-    fn to_vec(&self) -> Vec<V> {
-        self.values().cloned().collect()
-    }
-    fn get_item_by_id(&self, id: IdentificationValue) -> Option<&V> {
-        self.values().find(|item| item.id() == id)
     }
 }
 
@@ -175,43 +134,23 @@ where
 impl<K, V> CausableCollection<V> for BTreeMap<K, V>
 where
     K: Ord,
-    V: Causable + Clone,
+    V: MonadicCausable<CausalMonad> + Causable + Clone,
 {
 }
 
 impl<K, V> CausableCollectionExplaining<V> for BTreeMap<K, V>
 where
     K: Ord,
-    V: Causable + Clone,
+    V: MonadicCausable<CausalMonad> + Clone,
 {
 }
 
 impl<K, V> CausableCollectionAccessor<V> for BTreeMap<K, V>
 where
     K: Ord,
-    V: Causable + Clone,
+    V: MonadicCausable<CausalMonad> + Clone,
 {
     fn get_all_items(&self) -> Vec<&V> {
         self.values().collect::<Vec<&V>>()
-    }
-}
-
-impl<K, V> CausableCollectionReasoning<V> for BTreeMap<K, V>
-where
-    K: Ord,
-    V: Causable + Clone,
-{
-    fn len(&self) -> usize {
-        BTreeMap::len(self)
-    }
-
-    fn is_empty(&self) -> bool {
-        BTreeMap::is_empty(self)
-    }
-    fn to_vec(&self) -> Vec<V> {
-        self.values().cloned().collect()
-    }
-    fn get_item_by_id(&self, id: IdentificationValue) -> Option<&V> {
-        self.values().find(|item| item.id() == id)
     }
 }

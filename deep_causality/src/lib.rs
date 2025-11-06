@@ -50,11 +50,13 @@ pub use crate::traits::causable::{Causable, MonadicCausable};
 pub use traits::causable_collection::CausableCollection;
 pub use traits::causable_collection::collection_accessor::CausableCollectionAccessor;
 pub use traits::causable_collection::collection_explaining::CausableCollectionExplaining;
-pub use traits::causable_collection::collection_reasoning::CausableCollectionReasoning;
+//pub use traits::causable_collection::collection_reasoning::CausableCollectionReasoning;
+pub use traits::causable_collection::monadic_collection_reasoning::MonadicCausableCollection;
 // Causable Graph Traits
 pub use crate::traits::causable_graph::graph::CausableGraph;
 pub use crate::traits::causable_graph::graph_explaining::CausableGraphExplaining;
-pub use crate::traits::causable_graph::graph_reasoning::CausableGraphReasoning;
+pub use crate::traits::causable_graph::monadic_graph_reasoning::MonadicCausableGraphReasoning;
+// pub use crate::traits::causable_graph::graph_reasoning::CausableGraphReasoning;
 pub use crate::traits::causable_graph::*;
 // contextuable Traits
 pub use crate::traits::contextuable::Contextuable;
@@ -165,12 +167,10 @@ pub use crate::types::reasoning_types::aggregate_logic::AggregateLogic;
 pub use crate::types::reasoning_types::effect_log::CausalEffectLog;
 pub use crate::types::reasoning_types::effect_value::EffectValue;
 pub use crate::types::reasoning_types::numeric_value::NumericValue;
-// Legacy types to be removed
-pub use crate::types::reasoning_types::propagating_effect::{EffectGraph, PropagatingEffect};
 // New types to be renamed
 pub use crate::types::reasoning_types::causal_monad::{CausalEffectSystem, CausalMonad};
 pub use crate::types::reasoning_types::propagating_effect::{
-    CausalPropagatingEffect, PropagatingEffectWitness, StandardPropagatingEffect,
+    CausalPropagatingEffect, PropagatingEffect, PropagatingEffectWitness,
 };
 //
 //Symbolic types

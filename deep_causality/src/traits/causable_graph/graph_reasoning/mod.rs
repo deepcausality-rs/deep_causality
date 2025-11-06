@@ -7,17 +7,17 @@ use std::collections::VecDeque;
 
 use ultragraph::*;
 
-use crate::{Causable, CausableGraph, CausalityError, PropagatingEffect};
+use crate::{CausableGraph, CausalMonad, CausalityError, MonadicCausable, PropagatingEffect};
 
 /// Describes signatures for causal reasoning and explaining
 /// in causality hyper graph.
 pub trait CausableGraphReasoning<T>: CausableGraph<T>
 where
-    T: Causable + PartialEq + Clone,
+    T: MonadicCausable<crate::CausalMonad> + PartialEq + Clone,
 {
     /// Evaluates a single, specific causaloid within the graph by its index.
     ///
-    /// This is a convenience method that locates the causaloid and calls its `evaluate` method.
+    /// This is a convenience method that locates the causaloid and calls its `evaluate_monadic` method.
     ///
     /// # Arguments
     ///
@@ -26,18 +26,23 @@ where
     ///
     /// # Returns
     ///
-    /// The `PropagatingEffect` from the evaluated causaloid, or a `CausalityError` if
+    /// The `PropagatingEffect` from the evaluated causaloid, or a `PropagatingEffect` with an error if
     /// the node is not found or the evaluation fails.
     fn evaluate_single_cause(
         &self,
         index: usize,
-        effect: &PropagatingEffect,
-    ) -> Result<PropagatingEffect, CausalityError> {
-        let cause = self.get_causaloid(index).ok_or_else(|| {
-            CausalityError(format!("Causaloid with index {index} not found in graph"))
-        })?;
+        effect: PropagatingEffect,
+    ) -> PropagatingEffect {
+        let cause = match self.get_causaloid(index) {
+            Some(c) => c,
+            None => return PropagatingEffect {
+                value: crate::EffectValue::None,
+                error: Some(CausalityError(format!("Causaloid with index {index} not found in graph"))),
+                logs: effect.logs,
+            },
+        };
 
-        cause.evaluate(effect)
+        cause.evaluate_monadic(effect)
     }
 
     /// Reasons over a subgraph by traversing all nodes reachable from a given start index.
@@ -75,18 +80,26 @@ where
     fn evaluate_subgraph_from_cause(
         &self,
         start_index: usize,
-        initial_effect: &PropagatingEffect,
-    ) -> Result<PropagatingEffect, CausalityError> {
+        initial_effect: PropagatingEffect,
+    ) -> PropagatingEffect {
         if !self.is_frozen() {
-            return Err(CausalityError(
-                "Graph is not frozen. Call freeze() first".into(),
-            ));
+            return PropagatingEffect {
+                value: crate::EffectValue::None,
+                error: Some(CausalityError(
+                    "Graph is not frozen. Call freeze() first".into(),
+                )),
+                logs: initial_effect.logs,
+            };
         }
 
         if !self.contains_causaloid(start_index) {
-            return Err(CausalityError(format!(
-                "Graph does not contain start causaloid with index {start_index}"
-            )));
+            return PropagatingEffect {
+                value: crate::EffectValue::None,
+                error: Some(CausalityError(format!(
+                    "Graph does not contain start causaloid with index {start_index}"
+                ))),
+                logs: initial_effect.logs,
+            };
         }
 
         // Queue stores (node_index, incoming_effect_for_this_node)
@@ -103,33 +116,50 @@ where
         let mut last_propagated_effect = initial_effect.clone();
 
         while let Some((current_index, incoming_effect)) = queue.pop_front() {
-            let cause = self.get_causaloid(current_index).ok_or_else(|| {
-                CausalityError(format!("Failed to get causaloid at index {current_index}"))
-            })?;
+            let cause = match self.get_causaloid(current_index) {
+                Some(c) => c,
+                None => return PropagatingEffect {
+                    value: crate::EffectValue::None,
+                    error: Some(CausalityError(format!("Failed to get causaloid at index {current_index}"))),
+                    logs: incoming_effect.logs,
+                },
+            };
 
             // Evaluate the current cause using the incoming_effect.
-            let result_effect = cause.evaluate(&incoming_effect)?;
+            let result_effect = cause.evaluate_monadic(incoming_effect);
+
+            if let Some(err) = result_effect.error {
+                return PropagatingEffect {
+                    value: crate::EffectValue::None,
+                    error: Some(err),
+                    logs: result_effect.logs,
+                };
+            }
 
             // Update the last_propagated_effect with the result of the current node's evaluation.
             // This ensures the function returns the effect of the last node on the path.
             last_propagated_effect = result_effect.clone();
 
-            match result_effect {
+            match result_effect.value {
                 // Adaptive reasoning:
                 // The Causaloid itself determines the next step in the reasoning process
                 // conditional on its reasoning outcome. Based on its own internal logic,
                 // a Causaloid then dynamically dispatches the flow of causality
                 // to another Causaloid in the graph, enabling adaptive reasoning.
-                PropagatingEffect::RelayTo(target_index, inner_effect) => {
+                crate::EffectValue::RelayTo(target_index, inner_effect) => {
                     // If a RelayTo effect is returned, clear the queue and add the target_index
                     // with the inner_effect as the new starting point for traversal.
                     queue.clear();
 
                     // Validate target_index before proceeding
                     if !self.contains_causaloid(target_index) {
-                        return Err(CausalityError(format!(
-                            "RelayTo target causaloid with index {target_index} not found in graph."
-                        )));
+                        return PropagatingEffect {
+                            value: crate::EffectValue::None,
+                            error: Some(CausalityError(format!(
+                                "RelayTo target causaloid with index {target_index} not found in graph."
+                            ))),
+                            logs: result_effect.logs,
+                        };
                     }
 
                     if !visited[target_index] {
@@ -141,7 +171,14 @@ where
                 }
                 _ => {
                     // Only a CausalityError returned from cause.evaluate() will abort the traversal.
-                    let children = self.get_graph().outbound_edges(current_index)?;
+                    let children = match self.get_graph().outbound_edges(current_index) {
+                        Ok(c) => c,
+                        Err(e) => return PropagatingEffect {
+                            value: crate::EffectValue::None,
+                            error: Some(CausalityError(format!("{e}"))),
+                            logs: result_effect.logs,
+                        },
+                    };
                     for child_index in children {
                         if !visited[child_index] {
                             visited[child_index] = true;
@@ -154,7 +191,7 @@ where
         }
 
         // If the loop completes, return the effect of the last node processed.
-        Ok(last_propagated_effect)
+        last_propagated_effect
     }
 
     /// Reasons over the shortest path between a start and stop cause.
@@ -187,46 +224,75 @@ where
         &self,
         start_index: usize,
         stop_index: usize,
-        initial_effect: &PropagatingEffect,
-    ) -> Result<PropagatingEffect, CausalityError> {
+        initial_effect: PropagatingEffect,
+    ) -> PropagatingEffect {
         if !self.is_frozen() {
-            return Err(CausalityError(
-                "Graph is not frozen. Call freeze() first".into(),
-            ));
+            return PropagatingEffect {
+                value: crate::EffectValue::None,
+                error: Some(CausalityError(
+                    "Graph is not frozen. Call freeze() first".into(),
+                )),
+                logs: initial_effect.logs,
+            };
         }
 
         // Handle the single-node case explicitly before calling the pathfinder.
         if start_index == stop_index {
-            let cause = self.get_causaloid(start_index).ok_or_else(|| {
-                CausalityError(format!("Failed to get causaloid at index {start_index}"))
-            })?;
-            return cause.evaluate(initial_effect);
+            let cause = match self.get_causaloid(start_index) {
+                Some(c) => c,
+                None => return PropagatingEffect {
+                    value: crate::EffectValue::None,
+                    error: Some(CausalityError(format!("Failed to get causaloid at index {start_index}"))),
+                    logs: initial_effect.logs,
+                },
+            };
+            return cause.evaluate_monadic(initial_effect);
         }
 
         // get_shortest_path will handle checks for missing nodes.
-        let path = self.get_shortest_path(start_index, stop_index)?;
+        let path = match self.get_shortest_path(start_index, stop_index) {
+            Ok(p) => p,
+            Err(e) => return PropagatingEffect {
+                value: crate::EffectValue::None,
+                error: Some(e),
+                logs: initial_effect.logs,
+            },
+        };
 
         let mut current_effect = initial_effect.clone();
 
         for index in path {
-            let cause = self.get_causaloid(index).ok_or_else(|| {
-                CausalityError(format!("Failed to get causaloid at index {index}"))
-            })?;
+            let cause = match self.get_causaloid(index) {
+                Some(c) => c,
+                None => return PropagatingEffect {
+                    value: crate::EffectValue::None,
+                    error: Some(CausalityError(format!("Failed to get causaloid at index {index}"))),
+                    logs: current_effect.logs,
+                },
+            };
 
             // Evaluate the current cause with the effect propagated from the previous node.
             // Then, overwrite the current_effect with the result of the evaluation, which then
             // serves as the input for the next node.
             // For normal traversal, a CausalityError returned from cause.evaluate() will abort the traversal.
-            current_effect = cause.evaluate(&current_effect)?;
+            current_effect = cause.evaluate_monadic(current_effect);
+
+            if let Some(err) = current_effect.error {
+                return PropagatingEffect {
+                    value: crate::EffectValue::None,
+                    error: Some(err),
+                    logs: current_effect.logs,
+                };
+            }
 
             // If a RelayTo effect is returned, stop the shortest path traversal and return it
             // because it breaks the assumption of a fixed shortest path.
-            if let PropagatingEffect::RelayTo(_, _) = current_effect {
-                return Ok(current_effect);
+            if let crate::EffectValue::RelayTo(_, _) = current_effect.value {
+                return current_effect;
             }
         }
 
         // If the loop completes, all nodes on the path were successfully evaluated.
-        Ok(current_effect)
+        current_effect
     }
 }

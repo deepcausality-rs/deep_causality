@@ -40,7 +40,7 @@ where
     causal_graph: Option<Arc<CausalGraph<D, S, T, ST, SYM, VS, VT>>>,
     description: String,
     ty: PhantomData<(VS, VT)>,
-    _phantom: PhantomData<fn() -> StandardPropagatingEffect>,
+    _phantom: PhantomData<fn() -> PropagatingEffect>,
 }
 
 // Constructors

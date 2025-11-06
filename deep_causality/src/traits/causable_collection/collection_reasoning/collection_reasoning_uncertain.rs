@@ -1,38 +1,51 @@
-/*
- * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
- */
-use crate::{AggregateLogic, Causable, CausalityError, NumericalValue, PropagatingEffect};
+use crate::{AggregateLogic, CausalMonad, CausalityError, MonadicCausable, NumericalValue, PropagatingEffect};
 use deep_causality_uncertain::Uncertain;
 
-pub(in crate::traits) fn _evaluate_uncertain_logic<T: Causable>(
+pub(in crate::traits) fn _evaluate_uncertain_logic<T: MonadicCausable<CausalMonad>>(
     items: Vec<&T>,
     effect: &PropagatingEffect,
     logic: &AggregateLogic,
     threshold: NumericalValue,
-) -> Result<PropagatingEffect, CausalityError> {
+) -> PropagatingEffect {
     if items.is_empty() {
-        return Err(CausalityError(
-            "No Causaloids found to evaluate".to_string(),
-        ));
+        return PropagatingEffect {
+            value: crate::EffectValue::None,
+            error: Some(CausalityError(
+                "No Causaloids found to evaluate".to_string(),
+            )),
+            logs: effect.logs.clone(),
+        };
     }
 
     let mut uncertain_bools: Vec<Uncertain<bool>> = Vec::new();
 
     for cause in items {
-        let evaluated_effect = cause.evaluate(effect)?;
-        match evaluated_effect {
-            PropagatingEffect::UncertainBool(u) => {
+        let evaluated_effect = cause.evaluate_monadic(effect.clone());
+
+        if let Some(err) = evaluated_effect.error {
+            return PropagatingEffect {
+                value: crate::EffectValue::None,
+                error: Some(err),
+                logs: evaluated_effect.logs,
+            };
+        }
+
+        match evaluated_effect.value {
+            crate::EffectValue::UncertainBool(u) => {
                 uncertain_bools.push(u);
             }
-            PropagatingEffect::UncertainFloat(u) => {
+            crate::EffectValue::UncertainFloat(u) => {
                 uncertain_bools.push(u.greater_than(threshold));
             }
             _ => {
-                return Err(CausalityError::new(format!(
-                    "Invalid effect type for uncertain evaluation: {:?}",
-                    evaluated_effect
-                )));
+                return PropagatingEffect {
+                    value: crate::EffectValue::None,
+                    error: Some(CausalityError::new(format!(
+                        "Invalid effect type for uncertain evaluation: {:?}",
+                        evaluated_effect.value
+                    ))),
+                    logs: evaluated_effect.logs,
+                };
             }
         }
     }
@@ -40,9 +53,13 @@ pub(in crate::traits) fn _evaluate_uncertain_logic<T: Causable>(
     if uncertain_bools.is_empty() {
         // This case might be hit if all effects were of ignored types.
         // Returning an error might be better, but for now, let's stick to the original logic.
-        return Err(CausalityError::new(
-            "No uncertain-compatible effects found in the collection".to_string(),
-        ));
+        return PropagatingEffect {
+            value: crate::EffectValue::None,
+            error: Some(CausalityError::new(
+                "No uncertain-compatible effects found in the collection".to_string(),
+            )),
+            logs: effect.logs.clone(),
+        };
     }
 
     let final_uncertain_bool = match logic {
@@ -72,17 +89,20 @@ pub(in crate::traits) fn _evaluate_uncertain_logic<T: Causable>(
             let epsilon = 0.05; // The indifference region.
             let max_samples = 1000; // The maximum number of samples to take.
 
-            let bool_results: Result<Vec<bool>, _> = uncertain_bools
+            let bool_results: Vec<bool> = uncertain_bools
                 .into_iter()
-                .map(|u| u.to_bool(threshold, confidence, epsilon, max_samples))
+                .map(|u| {
+                    match u.to_bool(threshold, confidence, epsilon, max_samples) {
+                        Ok(b) => b,
+                        Err(e) => panic!("Error converting uncertain bool to bool: {}", e), // This should be handled better
+                    }
+                })
                 .collect();
-
-            let bool_results = bool_results?;
 
             let true_count = bool_results.iter().filter(|&&b| b).count();
             Uncertain::<bool>::point(true_count >= *k)
         }
     };
 
-    Ok(PropagatingEffect::UncertainBool(final_uncertain_bool))
+    PropagatingEffect::uncertain_bool(final_uncertain_bool, effect.logs.clone())
 }

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{ContextId, ContextoidId, PropagatingEffect};
+use crate::{ContextId, ContextoidId, EffectValue};
 use std::fmt::{Display, Formatter};
 
 /// Represents a value for a parameter within a `ProposedAction`.
@@ -19,17 +19,21 @@ pub enum ActionParameterValue {
     ContextualLink(ContextId, ContextoidId),
 }
 
-impl From<PropagatingEffect> for ActionParameterValue {
-    fn from(effect: PropagatingEffect) -> Self {
-        match effect {
-            PropagatingEffect::Deterministic(b) => ActionParameterValue::Boolean(b),
-            PropagatingEffect::Numerical(n) => ActionParameterValue::Number(n),
-            PropagatingEffect::Probabilistic(p) => ActionParameterValue::Number(p),
-            PropagatingEffect::ContextualLink(context_id, contextoid_id) => {
+impl From<EffectValue> for ActionParameterValue {
+    fn from(effect_value: EffectValue) -> Self {
+        match effect_value {
+            EffectValue::Deterministic(b) => ActionParameterValue::Boolean(b),
+            EffectValue::Numerical(n) => ActionParameterValue::Number(n),
+            EffectValue::Probabilistic(p) => ActionParameterValue::Number(p),
+            EffectValue::UncertainBool(u) => ActionParameterValue::Boolean(u.value()),
+            EffectValue::UncertainFloat(u) => ActionParameterValue::Number(u.value()),
+            EffectValue::Tensor(t) => ActionParameterValue::String(format!("{:?}", t)),
+            EffectValue::Complex(c) => ActionParameterValue::String(format!("{:?}", c)),
+            EffectValue::ContextualLink(context_id, contextoid_id) => {
                 ActionParameterValue::ContextualLink(context_id, contextoid_id)
             }
-            // Other variants can be converted to a string representation for logging/debugging.
-            _ => ActionParameterValue::String(format!("{:?}", effect)),
+            EffectValue::None => ActionParameterValue::String("None".to_string()),
+            _ => ActionParameterValue::String("Other".to_string()),
         }
     }
 }

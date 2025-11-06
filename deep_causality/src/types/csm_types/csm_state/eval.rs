@@ -4,7 +4,7 @@
  */
 
 use crate::{
-    Causable, CausalState, CausalityError, Datable, PropagatingEffect, SpaceTemporal, Spatial,
+    CausalState, CsmError, Datable, MonadicCausable, PropagatingEffect, SpaceTemporal, Spatial,
     Symbolic, Temporal,
 };
 
@@ -28,8 +28,8 @@ where
     /// - `Ok(false)` if the state's conditions are not met
     /// - `Err(CausalityError)` if an error occurs during evaluation
     ///
-    pub fn eval(&self) -> Result<PropagatingEffect, CausalityError> {
-        self.causaloid.evaluate(&self.data)
+    pub fn eval(&self) -> Result<PropagatingEffect, CsmError> {
+        Ok(self.causaloid.evaluate_monadic(self.data.clone()))
     }
 
     /// Evaluates the state using provided external data.
@@ -46,10 +46,7 @@ where
     /// - `Err(CausalityError)` if an error occurs during evaluation
     ///
     /// ```texttext
-    pub fn eval_with_data(
-        &self,
-        data: &PropagatingEffect,
-    ) -> Result<PropagatingEffect, CausalityError> {
-        self.causaloid.evaluate(data)
+    pub fn eval_with_data(&self, data: PropagatingEffect) -> Result<PropagatingEffect, CsmError> {
+        Ok(self.causaloid.evaluate_monadic(data))
     }
 }

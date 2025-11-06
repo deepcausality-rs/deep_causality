@@ -2,21 +2,13 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{
-    CausalEffectSystem, CausalityError, Identifiable, PropagatingEffect, StandardPropagatingEffect,
-};
+use crate::{CausalEffectSystem, Identifiable, PropagatingEffect};
 use deep_causality_haft::MonadEffect3;
 
 /// The Causable trait defines the core behavior for all causal elements.
 ///
 /// It requires implementing the Identifiable trait.
 pub trait Causable: Identifiable {
-    // Remove as evaluate will be done by MonadicCausable
-    fn evaluate(&self, effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError>;
-
-    // Remove as explain is done by PropagatingEffect
-    fn explain(&self) -> Result<String, CausalityError>;
-
     /// Determines if the causaloid represents a single, indivisible causal unit.
     ///
     /// This method helps distinguish base-case causaloids from composite structures
@@ -35,8 +27,5 @@ where
     /// The core monadic bind operation.
     /// Takes a monadic context (the incoming effect), applies the embedded causal logic,
     /// and returns the new monadic context (the outgoing effect).
-    fn evaluate_monadic(
-        &self,
-        incoming_effect: StandardPropagatingEffect,
-    ) -> StandardPropagatingEffect;
+    fn evaluate_monadic(&self, incoming_effect: PropagatingEffect) -> PropagatingEffect;
 }

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{EffectValue, NumericValue};
+use crate::{EffectValue, NumericValue, NumericalValue};
 use deep_causality_num::{Complex, Quaternion};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_uncertain::{
@@ -18,13 +18,13 @@ impl From<bool> for EffectValue {
 
 impl From<NumericValue> for EffectValue {
     fn from(n: NumericValue) -> Self {
-        EffectValue::Numeric(n)
+        EffectValue::Number(n)
     }
 }
 
-impl From<f64> for EffectValue {
-    fn from(f: f64) -> Self {
-        EffectValue::Probabilistic(f)
+impl From<NumericalValue> for EffectValue {
+    fn from(value: NumericalValue) -> Self {
+        EffectValue::Numerical(value)
     }
 }
 

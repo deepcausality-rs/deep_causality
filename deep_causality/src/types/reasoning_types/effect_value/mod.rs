@@ -5,7 +5,7 @@
 
 //! This module defines the CausalValue enum.
 
-use crate::{ContextId, ContextoidId, IdentificationValue, NumericValue};
+use crate::{ContextId, ContextoidId, IdentificationValue, NumericValue, PropagatingEffect};
 use deep_causality_num::{Complex, Quaternion};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_uncertain::{
@@ -35,7 +35,9 @@ pub enum EffectValue {
     /// consuming logic or explicit error handling within Causaloids.
     Deterministic(bool),
     /// Represents a standard numeric value i.e. int, uint, float.
-    Numeric(NumericValue),
+    Number(NumericValue),
+    /// Represents a numerical measurement
+    Numerical(f64),
     /// Represents a quantitative outcome, such as a probability score or confidence level.
     Probabilistic(f64),
     /// Represents a Tensor via Causal Tensor.
@@ -62,10 +64,10 @@ pub enum EffectValue {
     /// can be interpreted by a reasoning engine as a command to fetch data.
     ContextualLink(ContextId, ContextoidId),
     /// A collection of named values, allowing for complex, structured data passing.
-    Map(HashMap<IdentificationValue, Box<EffectValue>>),
+    Map(HashMap<IdentificationValue, Box<PropagatingEffect>>),
 
     /// A dispatch command that directs the reasoning engine to dynamically jump to a specific
     /// causaloid within the graph. The `usize` is the target causaloid's index, and the `Box<CausalValue>`
     /// is the effect to be passed as input to that target causaloid. This enables adaptive reasoning.
-    RelayTo(usize, Box<EffectValue>),
+    RelayTo(usize, Box<PropagatingEffect>),
 }

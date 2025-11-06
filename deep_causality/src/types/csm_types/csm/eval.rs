@@ -4,8 +4,8 @@
  */
 use crate::{
     ActionError, CSM, CausalState, CausalityError, CsmError, Datable, DeonticExplainable,
-    DeonticInferable, PropagatingEffect, ProposedAction, SpaceTemporal, Spatial, Symbolic,
-    TeloidModal, Temporal,
+    DeonticInferable, EffectValue, PropagatingEffect, ProposedAction, SpaceTemporal, Spatial,
+    Symbolic, TeloidModal, Temporal,
 };
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -40,9 +40,9 @@ where
             )))
         })?;
 
-        let effect = state.eval_with_data(data)?;
+        let effect = state.eval_with_data(data.clone())?;
 
-        if effect.is_probabilistic() {
+        if effect.value.is_probabilistic() {
             return Err(CsmError::Causal(CausalityError(
                 "Probabilistic effect cannot trigger actions directly in single state evaluation."
                     .into(),
@@ -75,9 +75,9 @@ where
         action: &crate::CausalAction,
         effect: &PropagatingEffect,
     ) -> Result<(), CsmError> {
-        let is_active = match effect {
-            PropagatingEffect::Deterministic(val) => *val,
-            PropagatingEffect::UncertainBool(uncertain_bool) => {
+        let is_active = match &effect.value {
+            EffectValue::Deterministic(val) => val,
+            EffectValue::UncertainBool(uncertain_bool) => &{
                 let result = if let Some(params) = state.uncertain_parameter() {
                     uncertain_bool.probability_exceeds(
                         params.threshold(),
@@ -98,8 +98,8 @@ where
                         ))));
                     }
                 }
-            }
-            PropagatingEffect::UncertainFloat(uncertain_float) => {
+            },
+            EffectValue::UncertainFloat(uncertain_float) => &{
                 if let Some(params) = state.uncertain_parameter() {
                     let comparison_result = uncertain_float.greater_than(params.threshold());
                     match comparison_result.probability_exceeds(
@@ -121,12 +121,12 @@ where
                         "UncertainFloat effect requires UncertainParameter on CausalState".into(),
                     )));
                 }
-            }
+            },
             // Other effect types are considered inactive for triggering actions.
-            _ => false,
+            _ => &false,
         };
 
-        if is_active {
+        if *is_active {
             self.fire_action_with_ethos_check(state, action, effect)?;
         }
 
@@ -168,7 +168,7 @@ where
         effect: &PropagatingEffect,
     ) -> Result<ProposedAction, CsmError> {
         let mut params = HashMap::new();
-        params.insert("trigger_effect".to_string(), effect.clone().into());
+        params.insert("trigger_effect".to_string(), effect.value.clone().into());
         let action_name = format!(
             "proposed action for CSM State: {} version: {}",
             state.id(),

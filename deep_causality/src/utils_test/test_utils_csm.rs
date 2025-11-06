@@ -35,17 +35,17 @@ pub fn get_test_error_action() -> CausalAction {
 
 // Causaloid that returns a non-deterministic effect
 pub fn get_test_probabilistic_causaloid() -> BaseCausaloid {
-    fn causal_fn(_: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
-        Ok(PropagatingEffect::Probabilistic(0.5))
+    fn causal_fn(_: &PropagatingEffect) -> PropagatingEffect {
+        PropagatingEffect::from_probabilistic(0.5)
     }
-    Causaloid::new(99, causal_fn, "Probabilistic Causaloid")
+    Causaloid::new(99, causal_fn as CausalFn, "Probabilistic Causaloid")
 }
 
 pub fn get_test_error_causaloid() -> BaseCausaloid {
-    fn causal_fn(_: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
-        Err(CausalityError::new("Error".to_string()))
+    fn causal_fn(_: &PropagatingEffect) -> PropagatingEffect {
+        PropagatingEffect::from_error(CausalityError::new("Error".to_string()))
     }
-    Causaloid::new(78, causal_fn, "Probabilistic Causaloid")
+    Causaloid::new(78, causal_fn as CausalFn, "Probabilistic Causaloid")
 }
 
 pub fn get_effect_ethos(verified: bool, impermissible: bool) -> BaseEffectEthos {
@@ -76,15 +76,23 @@ pub fn get_effect_ethos(verified: bool, impermissible: bool) -> BaseEffectEthos 
 }
 
 pub fn get_test_causaloid(with_context: bool) -> BaseCausaloid {
-    fn causal_fn(_effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
-        Ok(PropagatingEffect::Deterministic(true))
+    fn causal_fn(_effect: &PropagatingEffect) -> PropagatingEffect {
+        PropagatingEffect::from_deterministic(true)
     }
 
     if with_context {
         let context = Context::with_capacity(1, "Test Context", 5);
-        test_utils::get_test_causaloid_deterministic_with_context(context)
+        test_utils::get_test_causaloid_deterministic_with_context::<
+            Data<NumericalValue>,
+            EuclideanSpace,
+            EuclideanTime,
+            EuclideanSpacetime,
+            BaseSymbol,
+            FloatType,
+            FloatType,
+        >(context)
     } else {
-        Causaloid::new(1, causal_fn, "Test Causaloid")
+        Causaloid::new(1, causal_fn as CausalFn, "Test Causaloid")
     }
 }
 

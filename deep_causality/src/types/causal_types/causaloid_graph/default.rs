@@ -2,13 +2,12 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use crate::{CausalMonad, CausaloidGraph, MonadicCausable};
 use std::fmt::Display;
-
-use crate::{Causable, CausaloidGraph};
 
 impl<T> Default for CausaloidGraph<T>
 where
-    T: Clone + Display + Causable + PartialEq,
+    T: MonadicCausable<CausalMonad> + PartialEq + Clone + Display,
 {
     fn default() -> Self {
         Self::new(0)
