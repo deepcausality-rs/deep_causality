@@ -70,7 +70,7 @@ where
                         ));
                     }
                 };
-                coll.evaluate_collection(&incoming_effect, &AggregateLogic::All, 0.80)
+                coll.evaluate_collection(incoming_effect, &AggregateLogic::All, Some(0.80))
             }
             CausaloidType::Graph => {
                 let graph = match self.causal_graph.as_ref() {
