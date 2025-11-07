@@ -170,14 +170,15 @@ pub fn get_test_causaloid_deterministic() -> BaseCausaloid {
     let description = "tests whether data exceeds threshold of 0.55";
 
     let causal_fn = |effect: EffectValue| -> PropagatingEffect {
-        let obs =
-            match effect {
-                EffectValue::Numerical(val) => val,
-                _ => return PropagatingEffect::from_error(CausalityError(
-                    "Causal function expected Numerical effect but received a different variant."
-                        .into(),
-                )),
-            };
+        let obs = match effect {
+            EffectValue::Number(NumericValue::F64(val)) => val,
+            EffectValue::Probabilistic(val) => val,
+            _ => {
+                return PropagatingEffect::from_error(CausalityError(
+                    "Causal function expected F64 or Probabilistic effect but received a different variant".into(),
+                ))
+            }
+        };
 
         let threshold: NumericalValue = 0.55;
         if !obs.ge(&threshold) {
@@ -187,7 +188,7 @@ pub fn get_test_causaloid_deterministic() -> BaseCausaloid {
         }
     };
 
-    Causaloid::new(id, causal_fn as CausalFn, description)
+    Causaloid::new(id, causal_fn, description)
 }
 
 pub fn get_test_causaloid_deterministic_with_context<D, S, T, ST, SYM, VS, VT>(

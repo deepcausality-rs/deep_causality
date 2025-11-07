@@ -4,7 +4,7 @@
  */
 
 mod errors;
-// mod extensions;
+mod extensions;
 // mod traits;
 // mod types;
 // mod utils;
