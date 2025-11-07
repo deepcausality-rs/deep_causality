@@ -40,7 +40,7 @@ where
             )))
         })?;
 
-        let effect = state.eval_with_data(data.clone())?;
+        let effect = state.eval_with_data(data)?;
 
         if effect.value.is_probabilistic() {
             return Err(CsmError::Causal(CausalityError(

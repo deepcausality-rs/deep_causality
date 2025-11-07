@@ -36,11 +36,11 @@ where
     VS: Clone,
     VT: Clone,
 {
-    fn evaluate_monadic(&self, incoming_effect: PropagatingEffect) -> PropagatingEffect {
+    fn evaluate(&self, incoming_effect: &PropagatingEffect) -> PropagatingEffect {
         match self.causal_type {
             // Logs are chained in CausalMonad::bind
             CausaloidType::Singleton => CausalMonad::bind(
-                incoming_effect,
+                incoming_effect.clone(),
                 |current_effect_value: crate::EffectValue| {
                     if let Some(context_fn) = self.context_causal_fn {
                         if let Some(context) = self.context.as_ref() {

@@ -16,37 +16,28 @@ fn small_causality_collection_benchmark(criterion: &mut Criterion) {
     // The `_data` is no longer needed as we pass a single evidence object.
     let (coll, _data) = utils_collection::get_small_collection_and_data();
     // All propagation methods now take a single `&Evidence`.
-    let evidence = PropagatingEffect::Numerical(0.99);
+    let evidence = PropagatingEffect::from_numerical(0.99);
 
     criterion.bench_function("small_causality_collection_propagation", |bencher| {
-        bencher.iter(|| {
-            coll.evaluate_deterministic(&evidence, &AggregateLogic::All)
-                .unwrap()
-        })
+        bencher.iter(|| coll.evaluate_deterministic(&evidence, &AggregateLogic::All))
     });
 }
 
 fn medium_causality_collection_benchmark(criterion: &mut Criterion) {
     let (coll, _data) = utils_collection::get_medium_collection_and_data();
-    let evidence = PropagatingEffect::Numerical(0.99);
+    let evidence = PropagatingEffect::from_numerical(0.99);
 
     criterion.bench_function("medium_causality_collection_propagation", |bencher| {
-        bencher.iter(|| {
-            coll.evaluate_deterministic(&evidence, &AggregateLogic::All)
-                .unwrap()
-        })
+        bencher.iter(|| coll.evaluate_deterministic(&evidence, &AggregateLogic::All))
     });
 }
 
 fn large_causality_collection_benchmark(criterion: &mut Criterion) {
     let (coll, _data) = utils_collection::get_large_collection_and_data();
-    let evidence = PropagatingEffect::Numerical(0.99);
+    let evidence = PropagatingEffect::from_numerical(0.99);
 
     criterion.bench_function("large_causality_collection_propagation", |bencher| {
-        bencher.iter(|| {
-            coll.evaluate_deterministic(&evidence, &AggregateLogic::All)
-                .unwrap()
-        })
+        bencher.iter(|| coll.evaluate_deterministic(&evidence, &AggregateLogic::All))
     });
 }
 

@@ -29,7 +29,7 @@ where
     /// - `Err(CausalityError)` if an error occurs during evaluation
     ///
     pub fn eval(&self) -> Result<PropagatingEffect, CsmError> {
-        Ok(self.causaloid.evaluate_monadic(self.data.clone()))
+        Ok(self.causaloid.evaluate(&self.data))
     }
 
     /// Evaluates the state using provided external data.
@@ -46,7 +46,7 @@ where
     /// - `Err(CausalityError)` if an error occurs during evaluation
     ///
     /// ```texttext
-    pub fn eval_with_data(&self, data: PropagatingEffect) -> Result<PropagatingEffect, CsmError> {
-        Ok(self.causaloid.evaluate_monadic(data))
+    pub fn eval_with_data(&self, data: &PropagatingEffect) -> Result<PropagatingEffect, CsmError> {
+        Ok(self.causaloid.evaluate(data))
     }
 }

@@ -22,23 +22,6 @@ where
     T: Causable,
 {
     //
-    // These methods must be implemented by the collection type.
-    // See deep_causality/src/extensions/causable/mod.rs
-    //
-
-    /// Returns the total number of `Causable` items in the collection.
-    fn len(&self) -> usize;
-
-    /// Checks if the collection of `Causable` items is empty.
-    fn is_empty(&self) -> bool;
-
-    /// Creates a new vector containing the `Causable` items from the collection.
-    fn to_vec(&self) -> Vec<T>;
-
-    /// Returns a reference to a `Causable` item by its ID, if found.
-    fn get_item_by_id(&self, id: IdentificationValue) -> Option<&T>;
-
-    //
     // Default implementations for all other methods are provided below.
     //
 

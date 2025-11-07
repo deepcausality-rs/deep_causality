@@ -5,7 +5,7 @@
 
 use criterion::{Criterion, criterion_group};
 
-use deep_causality::{Causable, PropagatingEffect};
+use deep_causality::{MonadicCausable, PropagatingEffect};
 
 use crate::benchmarks::utils_map;
 
@@ -20,8 +20,8 @@ fn small_causality_map_benchmark(criterion: &mut Criterion) {
             // Iterate over the map and evaluate each causaloid with its specific data.
             for (key, cause) in &map {
                 let value = data.get(key).expect("Data missing for key");
-                let evidence = PropagatingEffect::Numerical(*value);
-                cause.evaluate(&evidence).unwrap();
+                let evidence = PropagatingEffect::from_numerical(*value);
+                cause.evaluate(&evidence);
             }
         })
     });
@@ -33,8 +33,8 @@ fn medium_causality_map_benchmark(criterion: &mut Criterion) {
         bencher.iter(|| {
             for (key, cause) in &map {
                 let value = data.get(key).expect("Data missing for key");
-                let evidence = PropagatingEffect::Numerical(*value);
-                cause.evaluate(&evidence).unwrap();
+                let evidence = PropagatingEffect::from_numerical(*value);
+                cause.evaluate(&evidence);
             }
         })
     });
@@ -46,8 +46,8 @@ fn large_causality_map_benchmark(criterion: &mut Criterion) {
         bencher.iter(|| {
             for (key, cause) in &map {
                 let value = data.get(key).expect("Data missing for key");
-                let evidence = PropagatingEffect::Numerical(*value);
-                cause.evaluate(&evidence).unwrap();
+                let evidence = PropagatingEffect::from_numerical(*value);
+                cause.evaluate(&evidence);
             }
         })
     });

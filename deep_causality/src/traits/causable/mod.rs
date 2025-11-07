@@ -27,5 +27,5 @@ where
     /// The core monadic bind operation.
     /// Takes a monadic context (the incoming effect), applies the embedded causal logic,
     /// and returns the new monadic context (the outgoing effect).
-    fn evaluate_monadic(&self, incoming_effect: PropagatingEffect) -> PropagatingEffect;
+    fn evaluate(&self, incoming_effect: &PropagatingEffect) -> PropagatingEffect;
 }

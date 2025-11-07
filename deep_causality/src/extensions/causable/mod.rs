@@ -3,13 +3,14 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+// Extension trait http://xion.io/post/code/rust-extension-traits.html
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::hash::Hash;
 
-// Extension trait http://xion.io/post/code/rust-extension-traits.html
 use crate::{
-    Causable, CausableCollectionAccessor, CausalMonad, MonadicCausable, MonadicCausableCollection,
+    Causable, CausableCollectionAccessor, Identifiable, MonadicCausable, MonadicCausableCollection,
 };
+use crate::{CausalMonad, IdentificationValue};
 
 //
 // [T]
@@ -19,10 +20,26 @@ impl<T> MonadicCausableCollection<T> for [T] where T: MonadicCausable<CausalMona
 
 impl<T> CausableCollectionAccessor<T> for [T]
 where
-    T: MonadicCausable<CausalMonad> + Clone,
+    T: MonadicCausable<CausalMonad> + Clone + Identifiable,
 {
     fn get_all_items(&self) -> Vec<&T> {
         self.iter().collect()
+    }
+
+    fn len(&self) -> usize {
+        self.len()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.is_empty()
+    }
+
+    fn to_vec(&self) -> Vec<T> {
+        self.to_vec()
+    }
+
+    fn get_item_by_id(&self, id: IdentificationValue) -> Option<&T> {
+        self.iter().find(|&item| item.id() == id)
     }
 }
 
@@ -36,10 +53,26 @@ impl<T> MonadicCausableCollection<T> for VecDeque<T> where
 
 impl<T> CausableCollectionAccessor<T> for VecDeque<T>
 where
-    T: MonadicCausable<CausalMonad> + Clone,
+    T: MonadicCausable<CausalMonad> + Clone + Identifiable,
 {
     fn get_all_items(&self) -> Vec<&T> {
         self.iter().collect()
+    }
+
+    fn len(&self) -> usize {
+        self.len()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.is_empty()
+    }
+
+    fn to_vec(&self) -> Vec<T> {
+        self.iter().cloned().collect()
+    }
+
+    fn get_item_by_id(&self, id: IdentificationValue) -> Option<&T> {
+        self.iter().find(|&item| item.id() == id)
     }
 }
 
@@ -56,10 +89,26 @@ where
 impl<K, V> CausableCollectionAccessor<V> for HashMap<K, V>
 where
     K: Eq + Hash,
-    V: MonadicCausable<CausalMonad> + Clone,
+    V: MonadicCausable<CausalMonad> + Clone + Identifiable,
 {
     fn get_all_items(&self) -> Vec<&V> {
         self.values().collect::<Vec<&V>>()
+    }
+
+    fn len(&self) -> usize {
+        self.len()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.is_empty()
+    }
+
+    fn to_vec(&self) -> Vec<V> {
+        self.values().cloned().collect()
+    }
+
+    fn get_item_by_id(&self, id: IdentificationValue) -> Option<&V> {
+        self.values().find(|&item| item.id() == id)
     }
 }
 
@@ -76,9 +125,25 @@ where
 impl<K, V> CausableCollectionAccessor<V> for BTreeMap<K, V>
 where
     K: Ord,
-    V: MonadicCausable<CausalMonad> + Clone,
+    V: MonadicCausable<CausalMonad> + Causable + Clone + Identifiable,
 {
     fn get_all_items(&self) -> Vec<&V> {
         self.values().collect::<Vec<&V>>()
+    }
+
+    fn len(&self) -> usize {
+        self.len()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.is_empty()
+    }
+
+    fn to_vec(&self) -> Vec<V> {
+        self.values().cloned().collect()
+    }
+
+    fn get_item_by_id(&self, id: IdentificationValue) -> Option<&V> {
+        self.values().find(|&item| item.id() == id)
     }
 }

@@ -31,7 +31,7 @@ where
     ///
     /// The `PropagatingEffect` from the evaluated causaloid, or a `PropagatingEffect` containing
     /// a `CausalityError` if the node is not found or the evaluation fails.
-    fn evaluate_single_cause(&self, index: usize, effect: PropagatingEffect) -> PropagatingEffect {
+    fn evaluate_single_cause(&self, index: usize, effect: &PropagatingEffect) -> PropagatingEffect {
         let cause = match self.get_causaloid(index) {
             Some(c) => c,
             None => {
@@ -41,7 +41,7 @@ where
             }
         };
 
-        cause.evaluate_monadic(effect)
+        cause.evaluate(effect)
     }
 
     /// Reasons over a subgraph by traversing all nodes reachable from a given start index,
@@ -71,7 +71,7 @@ where
     fn evaluate_subgraph_from_cause(
         &self,
         start_index: usize,
-        initial_effect: PropagatingEffect,
+        initial_effect: &PropagatingEffect,
     ) -> PropagatingEffect {
         if !self.is_frozen() {
             return PropagatingEffect::from_error(CausalityError(
@@ -94,7 +94,7 @@ where
         visited[start_index] = true;
 
         // This will hold the effect of the last successfully processed node.
-        let mut last_propagated_effect = initial_effect;
+        let mut last_propagated_effect = initial_effect.clone();
 
         while let Some((current_index, incoming_effect)) = queue.pop_front() {
             let cause = match self.get_causaloid(current_index) {
@@ -107,7 +107,7 @@ where
             };
 
             // Evaluate the current cause using the incoming_effect.
-            let result_effect = cause.evaluate_monadic(incoming_effect);
+            let result_effect = cause.evaluate(&incoming_effect);
 
             // Update the last_propagated_effect with the result of the current node's evaluation.
             last_propagated_effect = result_effect.clone();
@@ -179,7 +179,7 @@ where
         &self,
         start_index: usize,
         stop_index: usize,
-        initial_effect: PropagatingEffect,
+        initial_effect: &PropagatingEffect,
     ) -> PropagatingEffect {
         if !self.is_frozen() {
             return PropagatingEffect::from_error(CausalityError(
@@ -197,7 +197,7 @@ where
                     )));
                 }
             };
-            return cause.evaluate_monadic(initial_effect);
+            return cause.evaluate(initial_effect);
         }
 
         let path = match self.get_shortest_path(start_index, stop_index) {
@@ -205,7 +205,7 @@ where
             Err(e) => return PropagatingEffect::from_error(e.into()),
         };
 
-        let mut current_effect = initial_effect;
+        let mut current_effect = initial_effect.clone();
 
         for index in path {
             let cause = match self.get_causaloid(index) {
@@ -218,7 +218,7 @@ where
             };
 
             // Evaluate the current cause with the effect propagated from the previous node.
-            current_effect = cause.evaluate_monadic(current_effect);
+            current_effect = cause.evaluate(&current_effect);
 
             // If an error occurred, propagate it and stop.
             if current_effect.is_err() {
