@@ -35,6 +35,6 @@ where
         logic: &AggregateLogic,
         threshold: NumericalValue,
     ) -> PropagatingEffect {
-        { unimplemented!() }
+        unimplemented!()
     }
 }
