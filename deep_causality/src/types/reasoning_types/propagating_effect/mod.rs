@@ -9,7 +9,7 @@ use deep_causality_haft::{Applicative, Functor, HKT, HKT3, Monad, Placeholder};
 mod constructors;
 mod display;
 mod explain;
-mod extractors;
+mod predicates;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct CausalPropagatingEffect<Value, Error, Log> {
