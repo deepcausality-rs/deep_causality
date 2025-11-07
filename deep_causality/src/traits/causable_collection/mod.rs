@@ -4,4 +4,4 @@
  */
 
 pub mod collection_accessor;
-pub mod monadic_collection_reasoning;
+pub mod collection_reasoning;

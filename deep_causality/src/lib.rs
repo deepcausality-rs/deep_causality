@@ -48,7 +48,7 @@ pub use crate::traits::assumable::AssumableReasoning;
 pub use crate::traits::causable::{Causable, MonadicCausable};
 // Causable Collection Traits
 pub use traits::causable_collection::collection_accessor::CausableCollectionAccessor;
-pub use traits::causable_collection::monadic_collection_reasoning::MonadicCausableCollection;
+pub use traits::causable_collection::collection_reasoning::MonadicCausableCollection;
 // Causable Graph Traits
 pub use crate::traits::causable_graph::graph::CausableGraph;
 pub use crate::traits::causable_graph::graph_reasoning::MonadicCausableGraphReasoning;
