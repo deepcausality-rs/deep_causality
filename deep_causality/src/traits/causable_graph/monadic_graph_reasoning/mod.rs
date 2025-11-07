@@ -4,10 +4,11 @@
  */
 
 use crate::{
-    Causable, CausableGraph, CausalMonad, CausalityError, Identifiable, MonadicCausable, PropagatingEffect, EffectValue,
+    Causable, CausableGraph, CausalMonad, CausalityError, EffectValue, Identifiable,
+    MonadicCausable, PropagatingEffect,
 };
 use std::collections::VecDeque;
-use ultragraph::{GraphTraversal};
+use ultragraph::GraphTraversal;
 
 /// Provides default implementations for monadic reasoning over `CausableGraph` items.
 ///
@@ -39,17 +40,13 @@ where
     ///
     /// The `PropagatingEffect` from the evaluated causaloid, or a `PropagatingEffect` containing
     /// a `CausalityError` if the node is not found or the evaluation fails.
-    fn evaluate_single_cause(
-        &self,
-        index: usize,
-        effect: PropagatingEffect,
-    ) -> PropagatingEffect {
+    fn evaluate_single_cause(&self, index: usize, effect: PropagatingEffect) -> PropagatingEffect {
         let cause = match self.get_causaloid(index) {
             Some(c) => c,
             None => {
                 return PropagatingEffect::from_error(CausalityError(format!(
                     "Causaloid with index {index} not found in graph"
-                )))
+                )));
             }
         };
 
@@ -114,7 +111,7 @@ where
                 None => {
                     return PropagatingEffect::from_error(CausalityError(format!(
                         "Failed to get causaloid at index {current_index}"
-                    )))
+                    )));
                 }
             };
 
@@ -151,7 +148,9 @@ where
                 _ => {
                     let children = match self.get_graph().outbound_edges(current_index) {
                         Ok(c) => c,
-                        Err(e) => return PropagatingEffect::from_error(CausalityError(format!("{e}"))),
+                        Err(e) => {
+                            return PropagatingEffect::from_error(CausalityError(format!("{e}")));
+                        }
                     };
                     for child_index in children {
                         if !visited[child_index] {
@@ -204,7 +203,7 @@ where
                 None => {
                     return PropagatingEffect::from_error(CausalityError(format!(
                         "Failed to get causaloid at index {start_index}"
-                    )))
+                    )));
                 }
             };
             return cause.evaluate_monadic(initial_effect);
@@ -223,7 +222,7 @@ where
                 None => {
                     return PropagatingEffect::from_error(CausalityError(format!(
                         "Failed to get causaloid at index {index}"
-                    )))
+                    )));
                 }
             };
 

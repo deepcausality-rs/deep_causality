@@ -2,17 +2,41 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalityError, CausalMonad, ComplexTensor, ContextId, ContextoidId, EffectValue, IdentificationValue, NumericValue, NumericalValue, PropagatingEffect};
+use crate::{
+    CausalMonad, CausalityError, ComplexTensor, ContextId, ContextoidId, EffectValue,
+    IdentificationValue, NumericValue, NumericalValue, PropagatingEffect,
+};
+use deep_causality_haft::MonadEffect3;
 use deep_causality_num::{Complex, Quaternion};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_uncertain::{
     MaybeUncertainBool, MaybeUncertainF64, UncertainBool, UncertainF64,
 };
 use std::collections::HashMap;
-use deep_causality_haft::MonadEffect3;
 
 // Constructors
 impl PropagatingEffect {
+    /// Creates a new `PropagatingEffect` from a given `EffectValue`.
+    ///
+    /// This is a generic constructor that wraps any `EffectValue` into a `PropagatingEffect`
+    /// with no error and no logs.
+    ///
+    /// # Arguments
+    ///
+    /// * `effect_value` - The `EffectValue` to wrap.
+    ///
+    /// # Returns
+    ///
+    /// A `PropagatingEffect` instance containing the given `EffectValue`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use deep_causality::{PropagatingEffect, EffectValue};
+    ///
+    /// let effect = PropagatingEffect::from_effect_value(EffectValue::Deterministic(true));
+    /// assert!(matches!(effect.value, EffectValue::Deterministic(true)));
+    /// ```
     pub fn from_effect_value(effect_value: EffectValue) -> Self {
         CausalMonad::pure(effect_value)
     }
@@ -61,6 +85,24 @@ impl PropagatingEffect {
         CausalMonad::pure(EffectValue::Number(NumericValue::F64(numerical)))
     }
 
+    /// Creates a new `PropagatingEffect` of the `Number` variant from a `NumericValue`.
+    ///
+    /// # Arguments
+    ///
+    /// * `numeric` - A `NumericValue` representing the numerical effect.
+    ///
+    /// # Returns
+    ///
+    /// A `PropagatingEffect` instance containing the `NumericValue`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use deep_causality::{PropagatingEffect, NumericValue};
+    ///
+    /// let effect = PropagatingEffect::from_numeric(NumericValue::F64(123.45));
+    /// assert!(matches!(effect.value, EffectValue::Number(NumericValue::F64(123.45))));
+    /// ```
     pub fn from_numeric(numeric: NumericValue) -> Self {
         CausalMonad::pure(EffectValue::Number(numeric))
     }
@@ -113,6 +155,26 @@ impl PropagatingEffect {
         CausalMonad::pure(EffectValue::Tensor(tensor))
     }
 
+    /// Creates a new `PropagatingEffect` of the `Complex` variant.
+    ///
+    /// # Arguments
+    ///
+    /// * `complex` - A `Complex<f64>` representing the complex number effect.
+    ///
+    /// # Returns
+    ///
+    /// A `PropagatingEffect` instance containing the `Complex<f64>`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use deep_causality::PropagatingEffect;
+    /// use deep_causality_num::Complex;
+    ///
+    /// let complex = Complex::new(1.0, 2.0);
+    /// let effect = PropagatingEffect::from_complex(complex);
+    /// assert!(matches!(effect.value, EffectValue::Complex(_)));
+    /// ```
     pub fn from_complex(complex: Complex<f64>) -> Self {
         CausalMonad::pure(EffectValue::Complex(complex))
     }
@@ -145,10 +207,54 @@ impl PropagatingEffect {
         CausalMonad::pure(EffectValue::ComplexTensor(complex_tensor))
     }
 
+    /// Creates a new `PropagatingEffect` of the `Quaternion` variant.
+    ///
+    /// # Arguments
+    ///
+    /// * `quaternion` - A `Quaternion<f64>` representing the quaternion effect.
+    ///
+    /// # Returns
+    ///
+    /// A `PropagatingEffect` instance containing the `Quaternion<f64>`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use deep_causality::PropagatingEffect;
+    /// use deep_causality_num::Quaternion;
+    ///
+    /// let quaternion = Quaternion::new(1.0, 2.0, 3.0, 4.0);
+    /// let effect = PropagatingEffect::from_quaternion(quaternion);
+    /// assert!(matches!(effect.value, EffectValue::Quaternion(_)));
+    /// ```
     pub fn from_quaternion(quaternion: Quaternion<f64>) -> Self {
         CausalMonad::pure(EffectValue::Quaternion(quaternion))
     }
 
+    /// Creates a new `PropagatingEffect` of the `QuaternionTensor` variant.
+    ///
+    /// # Arguments
+    ///
+    /// * `quaternion_tensor` - A `CausalTensor<Quaternion<f64>>` representing the quaternion tensor effect.
+    ///
+    /// # Returns
+    ///
+    /// A `PropagatingEffect` instance containing the `CausalTensor<Quaternion<f64>>`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use deep_causality::PropagatingEffect;
+    /// use deep_causality_num::Quaternion;
+    /// use deep_causality_tensor::CausalTensor;
+    ///
+    /// fn main() -> Result<(), Box<dyn std::error::Error>> {
+    ///     let quaternion_tensor = CausalTensor::new(vec![Quaternion::new(1.0, 2.0, 3.0, 4.0)], vec![1])?;
+    ///     let effect = PropagatingEffect::from_quaternion_tensor(quaternion_tensor.clone());
+    ///     assert!(matches!(effect.value, EffectValue::QuaternionTensor(_)));
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn from_quaternion_tensor(quaternion_tensor: CausalTensor<Quaternion<f64>>) -> Self {
         CausalMonad::pure(EffectValue::QuaternionTensor(quaternion_tensor))
     }
@@ -307,7 +413,28 @@ impl PropagatingEffect {
         CausalMonad::pure(EffectValue::RelayTo(id, effect))
     }
 
-    // Impure, thus explicitly constructed
+    /// Creates a new `PropagatingEffect` that explicitly contains an error.
+    ///
+    /// This constructor is used when an operation results in a `CausalityError`,
+    /// and the effect should propagate this error, short-circuiting further computations.
+    /// The `value` field is set to `EffectValue::None` in this case.
+    ///
+    /// # Arguments
+    ///
+    /// * `err` - The `CausalityError` to be encapsulated in the effect.
+    ///
+    /// # Returns
+    ///
+    /// A `PropagatingEffect` instance with the specified error.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use deep_causality::{PropagatingEffect, CausalityError};
+    ///
+    /// let error_effect = PropagatingEffect::from_error(CausalityError::new("Something went wrong"));
+    /// assert!(error_effect.is_err());
+    /// ```
     pub fn from_error(err: CausalityError) -> Self {
         Self {
             value: EffectValue::None,

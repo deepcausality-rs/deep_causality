@@ -4,8 +4,8 @@
  */
 
 use crate::{
-    AggregateLogic, Causable, CausableCollectionAccessor, CausalMonad,
-    MonadicCausable, NumericalValue, PropagatingEffect,
+    AggregateLogic, Causable, CausableCollectionAccessor, CausalMonad, MonadicCausable,
+    NumericalValue, PropagatingEffect,
 };
 
 /// Provides default implementations for monadic reasoning over collections of `MonadicCausable` items.
