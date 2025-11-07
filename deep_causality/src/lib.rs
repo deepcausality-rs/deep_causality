@@ -51,9 +51,7 @@ pub use traits::causable_collection::collection_accessor::CausableCollectionAcce
 pub use traits::causable_collection::monadic_collection_reasoning::MonadicCausableCollection;
 // Causable Graph Traits
 pub use crate::traits::causable_graph::graph::CausableGraph;
-
-pub use crate::traits::causable_graph::monadic_graph_reasoning::MonadicCausableGraphReasoning;
-// pub use crate::traits::causable_graph::graph_reasoning::CausableGraphReasoning;
+pub use crate::traits::causable_graph::graph_reasoning::MonadicCausableGraphReasoning;
 pub use crate::traits::causable_graph::*;
 // contextuable Traits
 pub use crate::traits::contextuable::Contextuable;

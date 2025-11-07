@@ -55,9 +55,10 @@ impl PropagatingEffect {
     ///
     /// ```
     /// use deep_causality::PropagatingEffect;
+    /// use deep_causality::EffectValue;
     ///
     /// let effect = PropagatingEffect::from_deterministic(true);
-    /// assert!(matches!(effect, PropagatingEffect::Deterministic(true)));
+    /// assert!(matches!(effect.value, EffectValue::Deterministic(true)));
     /// ```
     pub fn from_deterministic(deterministic: bool) -> Self {
         CausalMonad::pure(EffectValue::Deterministic(deterministic))
@@ -76,10 +77,10 @@ impl PropagatingEffect {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::PropagatingEffect;
+    /// use deep_causality::{PropagatingEffect, NumericValue, EffectValue};
     ///
     /// let effect = PropagatingEffect::from_numerical(123.45);
-    /// assert!(matches!(effect, PropagatingEffect::Numerical(123.45)));
+    /// assert!(matches!(effect.value, EffectValue::Number(NumericValue::F64(123.45))));
     /// ```
     pub fn from_numerical(numerical: NumericalValue) -> Self {
         CausalMonad::pure(EffectValue::Number(NumericValue::F64(numerical)))
@@ -98,7 +99,7 @@ impl PropagatingEffect {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::{PropagatingEffect, NumericValue};
+    /// use deep_causality::{PropagatingEffect, NumericValue, EffectValue};
     ///
     /// let effect = PropagatingEffect::from_numeric(NumericValue::F64(123.45));
     /// assert!(matches!(effect.value, EffectValue::Number(NumericValue::F64(123.45))));
@@ -120,10 +121,10 @@ impl PropagatingEffect {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::PropagatingEffect;
+    /// use deep_causality::{PropagatingEffect, EffectValue};
     ///
     /// let effect = PropagatingEffect::from_probabilistic(0.75);
-    /// assert!(matches!(effect, PropagatingEffect::Probabilistic(0.75)));
+    /// assert!(matches!(effect.value, EffectValue::Probabilistic(0.75)));
     /// ```
     pub fn from_probabilistic(numerical: NumericalValue) -> Self {
         CausalMonad::pure(EffectValue::Probabilistic(numerical))
@@ -141,13 +142,13 @@ impl PropagatingEffect {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::PropagatingEffect;
+    /// use deep_causality::{PropagatingEffect, EffectValue};
     /// use deep_causality_tensor::CausalTensor;
     ///
     /// fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     let tensor = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3])?;
     ///     let effect = PropagatingEffect::from_tensor(tensor.clone());
-    ///     assert!(matches!(effect, PropagatingEffect::Tensor(_)));
+    ///     assert!(matches!(effect.value, EffectValue::Tensor(_)));
     ///     Ok(())
     /// }
     /// ```
@@ -168,7 +169,7 @@ impl PropagatingEffect {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::PropagatingEffect;
+    /// use deep_causality::{PropagatingEffect, EffectValue};
     /// use deep_causality_num::Complex;
     ///
     /// let complex = Complex::new(1.0, 2.0);
@@ -192,14 +193,14 @@ impl PropagatingEffect {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::PropagatingEffect;
+    /// use deep_causality::{PropagatingEffect, EffectValue};
     /// use deep_causality_num::Complex;
     /// use deep_causality_tensor::CausalTensor;
     ///
     /// fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     let complex_tensor = CausalTensor::new(vec![Complex::new(1.0, 2.0)], vec![1])?;
     ///     let effect = PropagatingEffect::from_complex_tensor(complex_tensor.clone());
-    ///     assert!(matches!(effect, PropagatingEffect::ComplexTensor(_)));
+    ///     assert!(matches!(effect.value, EffectValue::ComplexTensor(_)));
     ///     Ok(())
     /// }
     /// ```
@@ -220,7 +221,7 @@ impl PropagatingEffect {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::PropagatingEffect;
+    /// use deep_causality::{PropagatingEffect, EffectValue};
     /// use deep_causality_num::Quaternion;
     ///
     /// let quaternion = Quaternion::new(1.0, 2.0, 3.0, 4.0);
@@ -244,7 +245,7 @@ impl PropagatingEffect {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::PropagatingEffect;
+    /// use deep_causality::{PropagatingEffect, EffectValue};
     /// use deep_causality_num::Quaternion;
     /// use deep_causality_tensor::CausalTensor;
     ///
@@ -272,12 +273,12 @@ impl PropagatingEffect {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::PropagatingEffect;
+    /// use deep_causality::{PropagatingEffect, EffectValue};
     /// use deep_causality_uncertain::UncertainBool;
     ///
     /// let uncertain_bool = UncertainBool::point(true);
     /// let effect = PropagatingEffect::from_uncertain_bool(uncertain_bool.clone());
-    /// assert!(matches!(effect, PropagatingEffect::UncertainBool(_)));
+    /// assert!(matches!(effect.value, EffectValue::UncertainBool(_)));
     /// ```
     pub fn from_uncertain_bool(uncertain: UncertainBool) -> Self {
         CausalMonad::pure(EffectValue::UncertainBool(uncertain))
@@ -296,12 +297,12 @@ impl PropagatingEffect {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::PropagatingEffect;
+    /// use deep_causality::{PropagatingEffect, EffectValue};
     /// use deep_causality_uncertain::UncertainF64;
     ///
     /// let uncertain_float = UncertainF64::point(1.0);
     /// let effect = PropagatingEffect::from_uncertain_float(uncertain_float.clone());
-    /// assert!(matches!(effect, PropagatingEffect::UncertainFloat(_)));
+    /// assert!(matches!(effect.value, EffectValue::UncertainFloat(_)));
     /// ```
     pub fn from_uncertain_float(uncertain: UncertainF64) -> Self {
         CausalMonad::pure(EffectValue::UncertainFloat(uncertain))
@@ -320,12 +321,12 @@ impl PropagatingEffect {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::PropagatingEffect;
+    /// use deep_causality::{PropagatingEffect, EffectValue};
     /// use deep_causality_uncertain::MaybeUncertainBool;
     ///
     /// let maybe_uncertain_bool = MaybeUncertainBool::from_value(true);
     /// let effect = PropagatingEffect::from_maybe_uncertain_bool(maybe_uncertain_bool.clone());
-    /// assert!(matches!(effect, PropagatingEffect::MaybeUncertainBool(_)));
+    /// assert!(matches!(effect.value, EffectValue::MaybeUncertainBool(_)));
     /// ```
     pub fn from_maybe_uncertain_bool(maybe_uncertain_bool: MaybeUncertainBool) -> Self {
         CausalMonad::pure(EffectValue::MaybeUncertainBool(maybe_uncertain_bool))
@@ -344,12 +345,12 @@ impl PropagatingEffect {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::PropagatingEffect;
+    /// use deep_causality::{PropagatingEffect, EffectValue};
     /// use deep_causality_uncertain::MaybeUncertainF64;
     ///
     /// let maybe_uncertain_float = MaybeUncertainF64::from_value(1.0);
     /// let effect = PropagatingEffect::from_maybe_uncertain_float(maybe_uncertain_float.clone());
-    /// assert!(matches!(effect, PropagatingEffect::MaybeUncertainFloat(_)));
+    /// assert!(matches!(effect.value, EffectValue::MaybeUncertainFloat(_)));
     /// ```
     pub fn from_maybe_uncertain_float(maybe_uncertain_float: MaybeUncertainF64) -> Self {
         CausalMonad::pure(EffectValue::MaybeUncertainFloat(maybe_uncertain_float))
@@ -369,13 +370,12 @@ impl PropagatingEffect {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::PropagatingEffect;
-    /// use deep_causality::{ContextId, ContextoidId};
+    /// use deep_causality::{PropagatingEffect, ContextId, ContextoidId, EffectValue};
     ///
     /// let context_id = 1u64;
     /// let contextoid_id = 2u64;
     /// let effect = PropagatingEffect::from_contextual_link(context_id, contextoid_id);
-    /// assert!(matches!(effect, PropagatingEffect::ContextualLink(_, _)));
+    /// assert!(matches!(effect.value, EffectValue::ContextualLink(_, _)));
     /// ```
     pub fn from_contextual_link(context_id: ContextId, contextoid_id: ContextoidId) -> Self {
         CausalMonad::pure(EffectValue::ContextualLink(context_id, contextoid_id))
@@ -432,7 +432,7 @@ impl PropagatingEffect {
     /// ```
     /// use deep_causality::{PropagatingEffect, CausalityError};
     ///
-    /// let error_effect = PropagatingEffect::from_error(CausalityError::new("Something went wrong"));
+    /// let error_effect = PropagatingEffect::from_error(CausalityError::new("Something went wrong".to_string()));
     /// assert!(error_effect.is_err());
     /// ```
     pub fn from_error(err: CausalityError) -> Self {

@@ -5,7 +5,7 @@
 use ultragraph::UltraGraphWeighted;
 
 pub mod graph;
-pub mod monadic_graph_reasoning;
+pub mod graph_reasoning;
 
 // Type alias is shared between trait and implementation
 pub(crate) type CausalGraph<T> = UltraGraphWeighted<T, u64>;

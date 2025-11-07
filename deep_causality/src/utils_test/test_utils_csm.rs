@@ -35,17 +35,17 @@ pub fn get_test_error_action() -> CausalAction {
 
 // Causaloid that returns a non-deterministic effect
 pub fn get_test_probabilistic_causaloid() -> BaseCausaloid {
-    fn causal_fn(_: &PropagatingEffect) -> PropagatingEffect {
+    fn causal_fn(_: EffectValue) -> PropagatingEffect {
         PropagatingEffect::from_probabilistic(0.5)
     }
-    Causaloid::new(99, causal_fn as CausalFn, "Probabilistic Causaloid")
+    Causaloid::new(99, causal_fn, "Probabilistic Causaloid")
 }
 
 pub fn get_test_error_causaloid() -> BaseCausaloid {
-    fn causal_fn(_: &PropagatingEffect) -> PropagatingEffect {
+    fn causal_fn(_: EffectValue) -> PropagatingEffect {
         PropagatingEffect::from_error(CausalityError::new("Error".to_string()))
     }
-    Causaloid::new(78, causal_fn as CausalFn, "Probabilistic Causaloid")
+    Causaloid::new(78, causal_fn, "Probabilistic Causaloid")
 }
 
 pub fn get_effect_ethos(verified: bool, impermissible: bool) -> BaseEffectEthos {
@@ -76,7 +76,7 @@ pub fn get_effect_ethos(verified: bool, impermissible: bool) -> BaseEffectEthos 
 }
 
 pub fn get_test_causaloid(with_context: bool) -> BaseCausaloid {
-    fn causal_fn(_effect: &PropagatingEffect) -> PropagatingEffect {
+    fn causal_fn(_effect: EffectValue) -> PropagatingEffect {
         PropagatingEffect::from_deterministic(true)
     }
 
@@ -92,7 +92,7 @@ pub fn get_test_causaloid(with_context: bool) -> BaseCausaloid {
             FloatType,
         >(context)
     } else {
-        Causaloid::new(1, causal_fn as CausalFn, "Test Causaloid")
+        Causaloid::new(1, causal_fn, "Test Causaloid")
     }
 }
 

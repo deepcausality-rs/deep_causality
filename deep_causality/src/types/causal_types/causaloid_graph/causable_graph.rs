@@ -2,29 +2,18 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use std::collections::HashMap;
 use ultragraph::{GraphMut, GraphView};
 
 use super::*;
 use std::fmt::Display;
 
 use crate::{Causable, CausalGraphIndexError, CausalityGraphError};
-use crate::{CausalMonad, MonadicCausable, MonadicCausableGraphReasoning, PropagatingEffect};
+use crate::{CausalMonad, MonadicCausable, MonadicCausableGraphReasoning};
 
-impl<T> MonadicCausableGraphReasoning<T> for CausaloidGraph<T>
-where
-    T: Clone + Display + MonadicCausable<CausalMonad> + PartialEq + Causable,
+// Marker trait to add default impl from
+impl<T> MonadicCausableGraphReasoning<T> for CausaloidGraph<T> where
+    T: Clone + Display + MonadicCausable<CausalMonad> + PartialEq + Causable
 {
-    fn evaluate_graph(&self, incoming_effect: PropagatingEffect) -> PropagatingEffect {
-        let mut effects: HashMap<IdentificationValue, Box<PropagatingEffect>> = HashMap::new();
-        for node in self.graph.get_all_nodes() {
-            effects.insert(
-                node.id(),
-                Box::new(node.evaluate_monadic(incoming_effect.clone())),
-            );
-        }
-        PropagatingEffect::from_map(effects)
-    }
 }
 
 #[allow(clippy::type_complexity)]
