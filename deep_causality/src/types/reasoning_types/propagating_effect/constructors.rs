@@ -2,19 +2,21 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{
-    CausalityError, ComplexTensor, ContextId, ContextoidId, EffectValue, IdentificationValue,
-    NumericValue, NumericalValue, PropagatingEffect,
-};
+use crate::{CausalityError, CausalMonad, ComplexTensor, ContextId, ContextoidId, EffectValue, IdentificationValue, NumericValue, NumericalValue, PropagatingEffect};
 use deep_causality_num::{Complex, Quaternion};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_uncertain::{
     MaybeUncertainBool, MaybeUncertainF64, UncertainBool, UncertainF64,
 };
 use std::collections::HashMap;
+use deep_causality_haft::MonadEffect3;
 
 // Constructors
 impl PropagatingEffect {
+    pub fn from_effect_value(effect_value: EffectValue) -> Self {
+        CausalMonad::pure(effect_value)
+    }
+
     /// Creates a new `PropagatingEffect` of the `Deterministic` variant.
     ///
     /// # Arguments
@@ -34,11 +36,7 @@ impl PropagatingEffect {
     /// assert!(matches!(effect, PropagatingEffect::Deterministic(true)));
     /// ```
     pub fn from_deterministic(deterministic: bool) -> Self {
-        Self {
-            value: EffectValue::Deterministic(deterministic),
-            error: None,
-            logs: Vec::new(),
-        }
+        CausalMonad::pure(EffectValue::Deterministic(deterministic))
     }
 
     /// Creates a new `PropagatingEffect` of the `Numerical` variant.
@@ -60,19 +58,11 @@ impl PropagatingEffect {
     /// assert!(matches!(effect, PropagatingEffect::Numerical(123.45)));
     /// ```
     pub fn from_numerical(numerical: NumericalValue) -> Self {
-        Self {
-            value: EffectValue::Number(NumericValue::F64(numerical)),
-            error: None,
-            logs: Vec::new(),
-        }
+        CausalMonad::pure(EffectValue::Number(NumericValue::F64(numerical)))
     }
 
     pub fn from_numeric(numeric: NumericValue) -> Self {
-        Self {
-            value: EffectValue::Number(numeric),
-            error: None,
-            logs: Vec::new(),
-        }
+        CausalMonad::pure(EffectValue::Number(numeric))
     }
 
     /// Creates a new `PropagatingEffect` of the `Probabilistic` variant.
@@ -94,11 +84,7 @@ impl PropagatingEffect {
     /// assert!(matches!(effect, PropagatingEffect::Probabilistic(0.75)));
     /// ```
     pub fn from_probabilistic(numerical: NumericalValue) -> Self {
-        Self {
-            value: EffectValue::Probabilistic(numerical),
-            error: None,
-            logs: Vec::new(),
-        }
+        CausalMonad::pure(EffectValue::Probabilistic(numerical))
     }
     /// Creates a new `PropagatingEffect` of the `Tensor` variant.
     ///
@@ -124,19 +110,11 @@ impl PropagatingEffect {
     /// }
     /// ```
     pub fn from_tensor(tensor: CausalTensor<f64>) -> Self {
-        Self {
-            value: EffectValue::Tensor(tensor),
-            error: None,
-            logs: Vec::new(),
-        }
+        CausalMonad::pure(EffectValue::Tensor(tensor))
     }
 
     pub fn from_complex(complex: Complex<f64>) -> Self {
-        Self {
-            value: EffectValue::Complex(complex),
-            error: None,
-            logs: Vec::new(),
-        }
+        CausalMonad::pure(EffectValue::Complex(complex))
     }
 
     /// Creates a new `PropagatingEffect` of the `ComplexTensor` variant.
@@ -164,27 +142,15 @@ impl PropagatingEffect {
     /// }
     /// ```
     pub fn from_complex_tensor(complex_tensor: ComplexTensor) -> Self {
-        Self {
-            value: EffectValue::ComplexTensor(complex_tensor),
-            error: None,
-            logs: Vec::new(),
-        }
+        CausalMonad::pure(EffectValue::ComplexTensor(complex_tensor))
     }
 
     pub fn from_quaternion(quaternion: Quaternion<f64>) -> Self {
-        Self {
-            value: EffectValue::Quaternion(quaternion),
-            error: None,
-            logs: Vec::new(),
-        }
+        CausalMonad::pure(EffectValue::Quaternion(quaternion))
     }
 
     pub fn from_quaternion_tensor(quaternion_tensor: CausalTensor<Quaternion<f64>>) -> Self {
-        Self {
-            value: EffectValue::QuaternionTensor(quaternion_tensor),
-            error: None,
-            logs: Vec::new(),
-        }
+        CausalMonad::pure(EffectValue::QuaternionTensor(quaternion_tensor))
     }
 
     /// Creates a new `PropagatingEffect` of the `UncertainBool` variant.
@@ -208,11 +174,7 @@ impl PropagatingEffect {
     /// assert!(matches!(effect, PropagatingEffect::UncertainBool(_)));
     /// ```
     pub fn from_uncertain_bool(uncertain: UncertainBool) -> Self {
-        Self {
-            value: EffectValue::UncertainBool(uncertain),
-            error: None,
-            logs: Vec::new(),
-        }
+        CausalMonad::pure(EffectValue::UncertainBool(uncertain))
     }
 
     /// Creates a new `PropagatingEffect` of the `UncertainFloat` variant.
@@ -236,11 +198,7 @@ impl PropagatingEffect {
     /// assert!(matches!(effect, PropagatingEffect::UncertainFloat(_)));
     /// ```
     pub fn from_uncertain_float(uncertain: UncertainF64) -> Self {
-        Self {
-            value: EffectValue::UncertainFloat(uncertain),
-            error: None,
-            logs: Vec::new(),
-        }
+        CausalMonad::pure(EffectValue::UncertainFloat(uncertain))
     }
 
     /// Creates a new `PropagatingEffect` of the `MaybeUncertainBool` variant.
@@ -264,11 +222,7 @@ impl PropagatingEffect {
     /// assert!(matches!(effect, PropagatingEffect::MaybeUncertainBool(_)));
     /// ```
     pub fn from_maybe_uncertain_bool(maybe_uncertain_bool: MaybeUncertainBool) -> Self {
-        Self {
-            value: EffectValue::MaybeUncertainBool(maybe_uncertain_bool),
-            error: None,
-            logs: Vec::new(),
-        }
+        CausalMonad::pure(EffectValue::MaybeUncertainBool(maybe_uncertain_bool))
     }
 
     /// Creates a new `PropagatingEffect` of the `MaybeUncertainFloat` variant.
@@ -292,11 +246,7 @@ impl PropagatingEffect {
     /// assert!(matches!(effect, PropagatingEffect::MaybeUncertainFloat(_)));
     /// ```
     pub fn from_maybe_uncertain_float(maybe_uncertain_float: MaybeUncertainF64) -> Self {
-        Self {
-            value: EffectValue::MaybeUncertainFloat(maybe_uncertain_float),
-            error: None,
-            logs: Vec::new(),
-        }
+        CausalMonad::pure(EffectValue::MaybeUncertainFloat(maybe_uncertain_float))
     }
 
     /// Creates a new `PropagatingEffect` of the `ContextualLink` variant.
@@ -322,11 +272,7 @@ impl PropagatingEffect {
     /// assert!(matches!(effect, PropagatingEffect::ContextualLink(_, _)));
     /// ```
     pub fn from_contextual_link(context_id: ContextId, contextoid_id: ContextoidId) -> Self {
-        Self {
-            value: EffectValue::ContextualLink(context_id, contextoid_id),
-            error: None,
-            logs: Vec::new(),
-        }
+        CausalMonad::pure(EffectValue::ContextualLink(context_id, contextoid_id))
     }
 
     /// Creates a new `PropagatingEffect` of the `Map` variant from an existing `HashMap`.
@@ -340,11 +286,7 @@ impl PropagatingEffect {
     /// A `PropagatingEffect::Map` instance initialized with the given map.
     ///
     pub fn from_map(map: HashMap<IdentificationValue, Box<PropagatingEffect>>) -> Self {
-        Self {
-            value: EffectValue::Map(map),
-            error: None,
-            logs: Vec::new(),
-        }
+        CausalMonad::pure(EffectValue::Map(map))
     }
 
     /// Creates a new `PropagatingEffect` of the `RelayTo` variant.
@@ -362,13 +304,10 @@ impl PropagatingEffect {
     /// A `PropagatingEffect::RelayTo` instance.
     ///
     pub fn from_relay_to(id: usize, effect: Box<PropagatingEffect>) -> Self {
-        Self {
-            value: EffectValue::RelayTo(id, effect),
-            error: None,
-            logs: Vec::new(),
-        }
+        CausalMonad::pure(EffectValue::RelayTo(id, effect))
     }
 
+    // Impure, thus explicitly constructed
     pub fn from_error(err: CausalityError) -> Self {
         Self {
             value: EffectValue::None,
