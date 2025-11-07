@@ -4,9 +4,9 @@
  */
 
 use crate::{
-    AggregateLogic, Causable, CausableGraph, CausalMonad, CausalityError, Causaloid, CausaloidType,
-    Datable, MonadicCausable, MonadicCausableCollection, MonadicCausableGraphReasoning,
-    PropagatingEffect, SpaceTemporal, Spatial, Symbolic, Temporal,
+    Causable, CausableGraph, CausalMonad, CausalityError, Causaloid, CausaloidType, Datable,
+    MonadicCausable, MonadicCausableCollection, MonadicCausableGraphReasoning, PropagatingEffect,
+    SpaceTemporal, Spatial, Symbolic, Temporal,
 };
 use deep_causality_haft::MonadEffect3;
 
@@ -70,7 +70,19 @@ where
                         ));
                     }
                 };
-                coll.evaluate_collection(incoming_effect, &AggregateLogic::All, Some(0.80))
+
+                let aggregate_logic = match self.coll_aggregate_logic{
+                    Some(c) => c,
+                    None =>{
+                        return PropagatingEffect::from_error(CausalityError(
+                            "Causaloid::evaluate_monadic: aggregate_logic for causal collection is None".into(),
+                        ))
+                    }
+                };
+
+                let threshold_value = self.coll_threshold_value;
+
+                coll.evaluate_collection(incoming_effect, &aggregate_logic, threshold_value)
             }
             CausaloidType::Graph => {
                 let graph = match self.causal_graph.as_ref() {
