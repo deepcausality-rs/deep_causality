@@ -29,9 +29,10 @@ This phase establishes the foundation for bridging the generic (compile-time) an
     *   **File**: `src/traits/propagating_value.rs`
     *   **Definition**: A new marker trait to signify that a type can be used as a value within the causal system.
     *   **Signature**: `pub trait PropagatingValue: Debug + Clone + Default + 'static {}` (Added `Clone`, `Default`, and `'static` bounds for practical use with `EffectValue` and `Any` in the registry).
+    *   **Implementation Note**: This trait was later renamed to `IntoEffectValue` due to a name clash with an existing type `IntoEffectValue`. The `Default` bound was also removed from the trait definition as it was not strictly necessary for its purpose, though it is mentioned in the documentation.
 
-2.  **Create `PropagatingEffect` Trait**:
-    *   **File**: `src/traits/propagating_effect.rs`
+2.  **Create `IntoEffectValue` Trait**:
+    *   **File**: `src/traits/into_effect_value.rs`
     *   **Definition**: This trait will define the contract for any type that can be losslessly converted to and from the `EffectValue` enum. This is the core mechanism for safe type conversion.
     *   **Signature**:
         ```rust
@@ -64,6 +65,7 @@ This phase applies the new traits to the core components of the reasoning engine
         ) -> Result<O, CausalityError>
             where I: PropagatingEffect, O: PropagatingEffect;
         ```
+    *   **Implementation Note**: The explicit `PropagatingEffect` trait bounds were removed from the `CausalFn` and `ContextualCausalFn` type alias definitions in the actual implementation. This is because such bounds are unenforcable on function aliases in Rust and would be removed by the linter. The necessary bounds are instead enforced on the `Causaloid` struct itself, which uses these function types.
 
 2.  **Make `Causaloid` Generic**:
     *   **File**: `src/types/causal_types/causaloid/mod.rs`
