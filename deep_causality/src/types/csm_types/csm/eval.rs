@@ -4,15 +4,17 @@
  */
 use crate::{
     ActionError, CSM, CausalState, CausalityError, CsmError, Datable, DeonticExplainable,
-    DeonticInferable, EffectValue, PropagatingEffect, ProposedAction, SpaceTemporal, Spatial,
-    Symbolic, TeloidModal, Temporal,
+    DeonticInferable, EffectValue, IntoEffectValue, PropagatingEffect, ProposedAction,
+    SpaceTemporal, Spatial, Symbolic, TeloidModal, Temporal,
 };
 use std::collections::HashMap;
 use std::fmt::Debug;
 
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, SYM, VS, VT> CSM<D, S, T, ST, SYM, VS, VT>
+impl<I, O, D, S, T, ST, SYM, VS, VT> CSM<I, O, D, S, T, ST, SYM, VS, VT>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Datable + Clone + Debug,
     S: Spatial<VS> + Clone + Debug,
     T: Temporal<VT> + Clone + Debug,
@@ -40,16 +42,14 @@ where
             )))
         })?;
 
-        let effect = state.eval_with_data(data)?;
-
-        if effect.value.is_probabilistic() {
+        if data.value.is_probabilistic() {
             return Err(CsmError::Causal(CausalityError(
                 "Probabilistic effect cannot trigger actions directly in single state evaluation."
                     .into(),
             )));
         }
 
-        self.evaluate_and_fire_action(state, action, &effect)
+        self.evaluate_and_fire_action(state, action, data)
     }
 
     /// Evaluates all causal states in the CSM using their internal data.
@@ -61,7 +61,7 @@ where
         let binding = self.state_actions.read().unwrap();
 
         for (_id, (state, action)) in binding.iter() {
-            let effect = state.eval()?;
+            let effect = state.eval(self.causaloid_registry.as_ref())?;
             self.evaluate_and_fire_action(state, action, &effect)?;
         }
 
@@ -71,7 +71,7 @@ where
     /// Centralized logic to evaluate an effect and fire an action if conditions are met.
     fn evaluate_and_fire_action(
         &self,
-        state: &CausalState<D, S, T, ST, SYM, VS, VT>,
+        state: &CausalState<I, O, D, S, T, ST, SYM, VS, VT>,
         action: &crate::CausalAction,
         effect: &PropagatingEffect,
     ) -> Result<(), CsmError> {
@@ -136,7 +136,7 @@ where
     /// Helper to perform the EffectEthos check and fire an action.
     fn fire_action_with_ethos_check(
         &self,
-        state: &CausalState<D, S, T, ST, SYM, VS, VT>,
+        state: &CausalState<I, O, D, S, T, ST, SYM, VS, VT>,
         action: &crate::CausalAction,
         effect: &PropagatingEffect,
     ) -> Result<(), CsmError> {
@@ -164,7 +164,7 @@ where
     /// Creates a `ProposedAction` from a `CausalState` and its triggering effect.
     fn create_proposed_action(
         &self,
-        state: &CausalState<D, S, T, ST, SYM, VS, VT>,
+        state: &CausalState<I, O, D, S, T, ST, SYM, VS, VT>,
         effect: &PropagatingEffect,
     ) -> Result<ProposedAction, CsmError> {
         let mut params = HashMap::new();

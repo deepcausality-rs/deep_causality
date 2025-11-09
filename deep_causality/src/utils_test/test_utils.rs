@@ -191,10 +191,12 @@ pub fn get_test_causaloid_deterministic() -> BaseCausaloid {
     Causaloid::new(id, causal_fn, description)
 }
 
-pub fn get_test_causaloid_deterministic_with_context<D, S, T, ST, SYM, VS, VT>(
+pub fn get_test_causaloid_deterministic_with_context<I, O, D, S, T, ST, SYM, VS, VT>(
     context: BaseContext,
-) -> BaseCausaloid
+) -> Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -208,17 +210,18 @@ where
     let description = "Inverts any input";
 
     let causal_fn =
-        |effect: EffectValue, _context: &Arc<RwLock<BaseContext>>| -> PropagatingEffect {
-            let obs = match effect {
-            EffectValue::Deterministic(val) => val,
-            _ => return PropagatingEffect::from_error(CausalityError(
-                "Causal function expected Deterministic effect but received a different variant."
-                    .into(),
-            )),
-        };
+        |effect: I, _context: &Arc<RwLock<BaseContext>>| -> Result<O, CausalityError> {
+            let obs = effect.into_effect_value();
+            let obs_bool = match obs {
+                EffectValue::Deterministic(val) => val,
+                _ => return Err(CausalityError(
+                    "Causal function expected Deterministic effect but received a different variant."
+                        .into(),
+                )),
+            };
 
             // Just invert the value.
-            PropagatingEffect::from_deterministic(!obs)
+            Ok(O::try_from_effect_value(EffectValue::Deterministic(!obs_bool))?)
         };
 
     Causaloid::new_with_context(id, causal_fn, context, description)

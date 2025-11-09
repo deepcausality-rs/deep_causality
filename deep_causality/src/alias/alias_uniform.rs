@@ -50,8 +50,17 @@ use std::collections::HashMap;
 /// respective `Kind` enums. It promotes code reusability and simplifies type
 /// declarations when the exact concrete type of a context component is not
 /// fixed but rather belongs to a set of predefined "kinds".
-pub type UniformModel =
-    Model<Data<NumberType>, SpaceKind, TimeKind, SpaceTimeKind, SymbolKind, FloatType, FloatType>;
+pub type UniformModel = Model<
+    bool,
+    bool,
+    Data<NumberType>,
+    SpaceKind,
+    TimeKind,
+    SpaceTimeKind,
+    SymbolKind,
+    FloatType,
+    FloatType,
+>;
 
 /// A type alias for a default, general-purpose `Causaloid` configuration that uses
 /// abstract "kind" enums for its spatial, temporal, and symbolic contexts.
@@ -97,6 +106,8 @@ pub type UniformModel =
 /// declarations when the exact concrete type of a context component is not
 /// fixed but rather belongs to a set of predefined "kinds".
 pub type UniformCausaloid = Causaloid<
+    bool,
+    bool,
     Data<NumberType>,
     SpaceKind,
     TimeKind,
@@ -138,6 +149,8 @@ pub type UniformCausaloid = Causaloid<
 /// especially when the specific underlying context types can vary.
 pub type UniformCausaloidVec = Vec<
     Causaloid<
+        bool,
+        bool,
         Data<NumberType>,
         SpaceKind,
         TimeKind,
@@ -192,6 +205,8 @@ pub type UniformCausaloidVec = Vec<
 pub type UniformCausalMap = HashMap<
     usize,
     Causaloid<
+        bool,
+        bool,
         Data<NumberType>,
         SpaceKind,
         TimeKind,
@@ -243,6 +258,8 @@ pub type UniformCausalMap = HashMap<
 /// component is not fixed but rather belongs to a set of predefined "kinds".
 pub type UniformCausalGraph = CausaloidGraph<
     Causaloid<
+        bool,
+        bool,
         Data<NumberType>,
         SpaceKind,
         TimeKind,

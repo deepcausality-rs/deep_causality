@@ -50,6 +50,8 @@ use std::collections::HashMap;
 /// easily recognizable model structure for common causal reasoning and
 /// simulation scenarios.
 pub type BaseModel = Model<
+    bool,
+    bool,
     Data<NumericalValue>,
     EuclideanSpace,
     EuclideanTime,
@@ -91,6 +93,8 @@ pub type BaseModel = Model<
 /// that are compatible with other "base" types like `BaseCausalGraph` and `BaseContext`,
 /// ensuring a consistent and easily understandable modeling environment.
 pub type BaseCausaloid = Causaloid<
+    bool,
+    bool,
     Data<NumericalValue>,
     EuclideanSpace,
     EuclideanTime,
@@ -136,6 +140,8 @@ pub type BaseCausaloid = Causaloid<
 /// representing a sequence of events or a set of related causal agents.
 pub type BaseCausaloidVec = Vec<
     Causaloid<
+        bool,
+        bool,
         Data<NumericalValue>,
         EuclideanSpace,
         EuclideanTime,
@@ -176,6 +182,8 @@ pub type BaseCausaloidVec = Vec<
 pub type BaseCausalMap = HashMap<
     usize,
     Causaloid<
+        bool,
+        bool,
         Data<NumericalValue>,
         EuclideanSpace,
         EuclideanTime,
@@ -211,6 +219,8 @@ pub type BaseCausalMap = HashMap<
 /// and easily recognizable graph structure for common causal modeling scenarios.
 pub type BaseCausalGraph = CausaloidGraph<
     Causaloid<
+        bool,
+        bool,
         Data<NumericalValue>,
         EuclideanSpace,
         EuclideanTime,

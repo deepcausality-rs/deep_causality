@@ -7,6 +7,7 @@ pub mod assumable;
 pub mod causable;
 pub mod inferable;
 pub mod observable;
+pub mod propagating_effect;
 // //! # Type Extensions for Standard Collections
 // //!
 // //! This module provides local trait implementations—referred to as *type extensions*—for external types,

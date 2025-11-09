@@ -4,23 +4,16 @@
  */
 use ultragraph::{GraphMut, GraphView};
 
-use super::*;
-use std::fmt::Display;
+use crate::*;
 
-use crate::{Causable, CausalGraphIndexError, CausalityGraphError};
-use crate::{CausalMonad, MonadicCausable, MonadicCausableGraphReasoning};
+use crate::MonadicCausableGraphReasoning;
+use crate::{CausalGraphIndexError, CausalityGraphError};
 
 // Marker trait to add default impl from
-impl<T> MonadicCausableGraphReasoning<T> for CausaloidGraph<T> where
-    T: Clone + Display + MonadicCausable<CausalMonad> + PartialEq + Causable
-{
-}
+impl MonadicCausableGraphReasoning for CausaloidGraph<CausaloidId> {}
 
 #[allow(clippy::type_complexity)]
-impl<T> CausableGraph<T> for CausaloidGraph<T>
-where
-    T: Clone + Display + MonadicCausable<CausalMonad> + PartialEq,
-{
+impl CausableGraph<CausaloidId> for CausaloidGraph<CausaloidId> {
     fn is_frozen(&self) -> bool {
         self.graph.is_frozen()
     }
@@ -33,11 +26,11 @@ where
         self.graph.unfreeze()
     }
 
-    fn get_graph(&self) -> &CausalGraph<T> {
+    fn get_graph(&self) -> &CausalGraph<CausaloidId> {
         &self.graph
     }
 
-    fn add_root_causaloid(&mut self, value: T) -> Result<usize, CausalityGraphError> {
+    fn add_root_causaloid(&mut self, value: CausaloidId) -> Result<usize, CausalityGraphError> {
         match self.graph.add_root_node(value) {
             Ok(index) => Ok(index),
             Err(e) => Err(CausalityGraphError(e.to_string())),
@@ -48,7 +41,7 @@ where
         self.graph.contains_root_node()
     }
 
-    fn get_root_causaloid(&self) -> Option<&T> {
+    fn get_root_causaloid(&self) -> Option<&CausaloidId> {
         self.graph.get_root_node()
     }
 
@@ -57,13 +50,12 @@ where
     }
 
     fn get_last_index(&self) -> Result<usize, CausalityGraphError> {
-        // Handle the Option from the underlying graph implementation with a precise error.
         self.graph.get_last_index().ok_or_else(|| {
             CausalityGraphError("Failed to get last index. Graph might be empty".to_string())
         })
     }
 
-    fn add_causaloid(&mut self, value: T) -> Result<usize, CausalityGraphError> {
+    fn add_causaloid(&mut self, value: CausaloidId) -> Result<usize, CausalityGraphError> {
         match self.graph.add_node(value) {
             Ok(index) => Ok(index),
             Err(e) => Err(CausalityGraphError(e.to_string())),
@@ -74,7 +66,7 @@ where
         self.graph.contains_node(index)
     }
 
-    fn get_causaloid(&self, index: usize) -> Option<&T> {
+    fn get_causaloid(&self, index: usize) -> Option<&CausaloidId> {
         self.graph.get_node(index)
     }
 

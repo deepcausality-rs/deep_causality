@@ -4,13 +4,16 @@
  */
 
 use crate::{
-    Assumption, Causaloid, Context, Datable, Model, SpaceTemporal, Spatial, Symbolic, Temporal,
+    Assumption, Causaloid, Context, Datable, IntoEffectValue, Model, SpaceTemporal, Spatial,
+    Symbolic, Temporal,
 };
 use std::sync::{Arc, RwLock};
 
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, SYM, VS, VT> Model<D, S, T, ST, SYM, VS, VT>
+impl<I, O, D, S, T, ST, SYM, VS, VT> Model<I, O, D, S, T, ST, SYM, VS, VT>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -31,7 +34,7 @@ where
         &self.assumptions
     }
 
-    pub fn causaloid(&self) -> &Arc<Causaloid<D, S, T, ST, SYM, VS, VT>> {
+    pub fn causaloid(&self) -> &Arc<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>> {
         &self.causaloid
     }
 

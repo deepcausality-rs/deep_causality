@@ -3,12 +3,16 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CSM, Datable, SpaceTemporal, Spatial, Symbolic, Temporal, UpdateError};
+use crate::{
+    CSM, Datable, IntoEffectValue, SpaceTemporal, Spatial, Symbolic, Temporal, UpdateError,
+};
 use std::fmt::Debug;
 
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, SYM, VS, VT> CSM<D, S, T, ST, SYM, VS, VT>
+impl<I, O, D, S, T, ST, SYM, VS, VT> CSM<I, O, D, S, T, ST, SYM, VS, VT>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Datable + Clone + Debug,
     S: Spatial<VS> + Clone + Debug,
     T: Temporal<VT> + Clone + Debug,

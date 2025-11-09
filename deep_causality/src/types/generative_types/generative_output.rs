@@ -4,7 +4,7 @@
  */
 use crate::{
     Causaloid, CausaloidId, ContextId, Contextoid, ContextoidId, Datable, Generatable,
-    SpaceTemporal, Spatial, Symbolic, Temporal,
+    IntoEffectValue, SpaceTemporal, Spatial, Symbolic, Temporal,
 };
 use std::hash::Hash;
 
@@ -31,8 +31,10 @@ use std::hash::Hash;
 /// * `G`: A user-defined enum that implements `Generatable`, allowing for custom evolutionary outputs.
 #[allow(clippy::type_complexity)]
 #[derive(Debug, Clone, PartialEq)]
-pub enum GenerativeOutput<D, S, T, ST, SYM, VS, VT, G>
+pub enum GenerativeOutput<I, O, D, S, T, ST, SYM, VS, VT, G>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Default + Datable + Copy + Clone + Hash + Eq + PartialEq,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -40,7 +42,7 @@ where
     SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
-    G: Generatable<D, S, T, ST, SYM, VS, VT, G> + Sized, // G is the user's enum
+    G: Generatable<I, O, D, S, T, ST, SYM, VS, VT, G> + Sized, // G is the user's enum
 {
     /// Represents no operation. This is useful for generative functions that may not
     /// always need to produce a state change.
@@ -51,14 +53,14 @@ where
         /// The ID to assign to the new `Causaloid`.
         CausaloidId,
         /// The `Causaloid` instance to create.
-        Causaloid<D, S, T, ST, SYM, VS, VT>,
+        Causaloid<I, O, D, S, T, ST, SYM, VS, VT>,
     ),
     /// Signals an update to an existing `Causaloid`.
     UpdateCausaloid(
         /// The ID of the `Causaloid` to update.
         CausaloidId,
         /// The new `Causaloid` data that will replace the existing one.
-        Causaloid<D, S, T, ST, SYM, VS, VT>,
+        Causaloid<I, O, D, S, T, ST, SYM, VS, VT>,
     ),
     /// Signals the removal of an existing `Causaloid` by its ID.
     DeleteCausaloid(
@@ -126,7 +128,7 @@ where
 
     /// A composite output that bundles multiple `GenerativeOutput` actions.
     /// This allows for complex, multi-step state transitions to be treated as a single unit.
-    Composite(Vec<GenerativeOutput<D, S, T, ST, SYM, VS, VT, G>>),
+    Composite(Vec<GenerativeOutput<I, O, D, S, T, ST, SYM, VS, VT, G>>),
 
     /// An extensible variant that wraps a user-defined generative type `G`.
     /// This allows the system to be extended with custom, domain-specific outputs

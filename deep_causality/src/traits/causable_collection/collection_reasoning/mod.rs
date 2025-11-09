@@ -4,8 +4,8 @@
  */
 
 use crate::{
-    AggregateLogic, Causable, CausableCollectionAccessor, CausalMonad, CausalityError, EffectValue,
-    MonadicCausable, NumericalValue, PropagatingEffect,
+    AggregateLogic, Causable, CausableCollectionAccessor, CausalMonad, CausalityError,
+    CausaloidRegistry, EffectValue, MonadicCausable, NumericalValue, PropagatingEffect,
 };
 use deep_causality_haft::MonadEffect3;
 
@@ -42,6 +42,7 @@ where
     ///
     fn evaluate_collection(
         &self,
+        registry: &CausaloidRegistry,
         incoming_effect: &PropagatingEffect,
         logic: &AggregateLogic,
         threshold_value: Option<NumericalValue>,
@@ -58,7 +59,7 @@ where
 
         let final_effect = items.into_iter().fold(initial_effect, |acc_effect, item| {
             CausalMonad::bind(acc_effect, |mut acc_values| {
-                let item_effect = item.evaluate(incoming_effect);
+                let item_effect = item.evaluate(registry, incoming_effect);
                 CausalMonad::bind(item_effect, |item_value| {
                     acc_values.push(item_value);
                     CausalMonad::pure(acc_values.clone())
@@ -78,13 +79,13 @@ where
 }
 
 /// Private module for aggregation helpers.
-mod private {
+pub(crate) mod private {
     use super::*;
     use deep_causality_uncertain::Uncertain;
 
     /// Main dispatcher function for aggregation.
     /// It inspects the collected effects and chooses the highest-fidelity aggregation strategy possible.
-    pub(super) fn aggregate_effects(
+    pub(crate) fn aggregate_effects(
         effects: Vec<EffectValue>,
         logic: &AggregateLogic,
         threshold_value: Option<NumericalValue>,

@@ -29,7 +29,9 @@ impl Datable for MockData {
 }
 
 // Type aliases for brevity in tests
-pub type TestCausaloid = Causaloid<
+pub type TestCausaloid<I, O> = Causaloid<
+    I,
+    O,
     MockData,
     EuclideanSpace,
     EuclideanTime,
@@ -59,7 +61,9 @@ pub type TestContextoid = Contextoid<
     FloatType,
 >;
 
-pub type TestModel = Model<
+pub type TestModel<I, O> = Model<
+    I,
+    O,
     MockData,
     EuclideanSpace,
     EuclideanTime,
@@ -70,8 +74,10 @@ pub type TestModel = Model<
 >;
 
 // A test processor to act as a destination for the generative output.
-pub struct TestProcessor<D, S, T, ST, SYM, VS, VT>
+pub struct TestProcessor<I, O, D, S, T, ST, SYM, VS, VT>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Default + Datable + Copy + Clone + Hash + Eq + PartialEq,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -80,12 +86,14 @@ where
     VS: Clone,
     VT: Clone,
 {
-    pub causaloid_dest: Option<Causaloid<D, S, T, ST, SYM, VS, VT>>,
+    pub causaloid_dest: Option<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>,
     pub context_dest: Option<Context<D, S, T, ST, SYM, VS, VT>>,
 }
 
-impl<D, S, T, ST, SYM, VS, VT> Default for TestProcessor<D, S, T, ST, SYM, VS, VT>
+impl<I, O, D, S, T, ST, SYM, VS, VT> Default for TestProcessor<I, O, D, S, T, ST, SYM, VS, VT>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Default + Datable + Copy + Clone + Hash + Eq + PartialEq,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -99,8 +107,10 @@ where
     }
 }
 
-impl<D, S, T, ST, SYM, VS, VT> TestProcessor<D, S, T, ST, SYM, VS, VT>
+impl<I, O, D, S, T, ST, SYM, VS, VT> TestProcessor<I, O, D, S, T, ST, SYM, VS, VT>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Default + Datable + Copy + Clone + Hash + Eq + PartialEq,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -118,9 +128,11 @@ where
 }
 
 // Implement the processor trait so it can be used to test generators.
-impl<D, S, T, ST, SYM, VS, VT, G> GenerativeProcessor<D, S, T, ST, SYM, VS, VT, G>
-    for TestProcessor<D, S, T, ST, SYM, VS, VT>
+impl<I, O, D, S, T, ST, SYM, VS, VT, G> GenerativeProcessor<I, O, D, S, T, ST, SYM, VS, VT, G>
+    for TestProcessor<I, O, D, S, T, ST, SYM, VS, VT>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Default + Datable + Copy + Clone + Hash + Eq + PartialEq,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -128,9 +140,9 @@ where
     SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
-    G: Generatable<D, S, T, ST, SYM, VS, VT, G>,
+    G: Generatable<I, O, D, S, T, ST, SYM, VS, VT, G>,
 {
-    fn get_causaloid_dest(&mut self) -> &mut Option<Causaloid<D, S, T, ST, SYM, VS, VT>> {
+    fn get_causaloid_dest(&mut self) -> &mut Option<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>> {
         &mut self.causaloid_dest
     }
 
@@ -140,7 +152,9 @@ where
 }
 
 // Type alias for brevity in tests
-pub type TestProcessorAlias = TestProcessor<
+pub type TestProcessorAlias<I, O> = TestProcessor<
+    I,
+    O,
     MockData,
     EuclideanSpace,
     EuclideanTime,
@@ -152,8 +166,10 @@ pub type TestProcessorAlias = TestProcessor<
 
 // Define a dummy generator for testing standalone outputs.
 pub struct DummyGenerator;
-impl
+impl<I, O>
     Generatable<
+        I,
+        O,
         MockData,
         EuclideanSpace,
         EuclideanTime,
@@ -163,6 +179,9 @@ impl
         FloatType,
         DummyGenerator,
     > for DummyGenerator
+where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
 {
     fn generate(
         &mut self,
@@ -178,6 +197,8 @@ impl
         >,
     ) -> Result<
         GenerativeOutput<
+            I,
+            O,
             MockData,
             EuclideanSpace,
             EuclideanTime,
@@ -205,7 +226,9 @@ mod tests {
         // Create a context of the correct type: TestContext (which is Context<MockData, ...>)
         let context: TestContext = TestContext::with_capacity(1, "Test Context", 10);
 
-        let result = generator.generate(&trigger, &context);
+        // DummyGenerator is now generic over I and O, so we need to specify them.
+        // For this test, we can use bool for both I and O, as it's a simple case.
+        let result = generator.generate::<bool, bool>(&trigger, &context);
         assert!(result.is_ok());
     }
 

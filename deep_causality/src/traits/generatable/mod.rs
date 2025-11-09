@@ -6,8 +6,8 @@ pub mod generative_processor;
 
 use crate::errors::ModelGenerativeError;
 use crate::{
-    Context, Datable, GenerativeOutput, GenerativeTrigger, SpaceTemporal, Spatial, Symbolic,
-    Temporal,
+    Context, Datable, GenerativeOutput, GenerativeTrigger, IntoEffectValue, SpaceTemporal, Spatial,
+    Symbolic, Temporal,
 };
 use std::hash::Hash;
 
@@ -54,8 +54,10 @@ use std::hash::Hash;
 ///     is crucial for the `GenerativeOutput::Evolve(G)` variant.
 ///
 #[allow(clippy::type_complexity)]
-pub trait Generatable<D, S, T, ST, SYM, VS, VT, G>
+pub trait Generatable<I, O, D, S, T, ST, SYM, VS, VT, G>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Default + Datable + Copy + Clone + Hash + Eq + PartialEq,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -63,7 +65,7 @@ where
     SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
-    G: Generatable<D, S, T, ST, SYM, VS, VT, G> + Sized,
+    G: Generatable<I, O, D, S, T, ST, SYM, VS, VT, G> + Sized,
 {
     /// Generates a `GenerativeOutput` command based on a trigger and the current context.
     ///
@@ -93,5 +95,5 @@ where
         &mut self,
         trigger: &GenerativeTrigger<D>,
         context: &Context<D, S, T, ST, SYM, VS, VT>,
-    ) -> Result<GenerativeOutput<D, S, T, ST, SYM, VS, VT, G>, ModelGenerativeError>;
+    ) -> Result<GenerativeOutput<I, O, D, S, T, ST, SYM, VS, VT, G>, ModelGenerativeError>;
 }

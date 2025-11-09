@@ -4,15 +4,17 @@
  */
 
 use crate::{
-    CSM, CausalAction, CausalState, Datable, SpaceTemporal, Spatial, StateAction, Symbolic,
-    Temporal, UpdateError,
+    CSM, CausalAction, CausalState, Datable, IntoEffectValue, SpaceTemporal, Spatial, StateAction,
+    Symbolic, Temporal, UpdateError,
 };
 use std::collections::HashMap;
 use std::fmt::Debug;
 
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, SYM, VS, VT> CSM<D, S, T, ST, SYM, VS, VT>
+impl<I, O, D, S, T, ST, SYM, VS, VT> CSM<I, O, D, S, T, ST, SYM, VS, VT>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Datable + Clone + Debug,
     S: Spatial<VS> + Clone + Debug,
     T: Temporal<VT> + Clone + Debug,
@@ -26,7 +28,7 @@ where
     pub fn update_single_state(
         &self,
         idx: usize,
-        state_action: StateAction<D, S, T, ST, SYM, VS, VT>,
+        state_action: StateAction<I, O, D, S, T, ST, SYM, VS, VT>,
     ) -> Result<(), UpdateError> {
         // Check if the key exists, if not return error
         if !self.state_actions.read().unwrap().contains_key(&idx) {
@@ -49,7 +51,7 @@ where
     /// Returns UpdateError if the update operation failed.
     pub fn update_all_states(
         &self,
-        state_actions: &[(&CausalState<D, S, T, ST, SYM, VS, VT>, &CausalAction)],
+        state_actions: &[(&CausalState<I, O, D, S, T, ST, SYM, VS, VT>, &CausalAction)],
     ) -> Result<(), UpdateError> {
         let mut state_map = HashMap::with_capacity(state_actions.len());
 

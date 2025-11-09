@@ -1,11 +1,10 @@
 use crate::errors::{CausalGraphIndexError, CausalityGraphError};
 use crate::traits::causable_graph::CausalGraph;
-use crate::{CausalMonad, MonadicCausable};
 use ultragraph::PathfindingGraphAlgorithms;
 
 pub trait CausableGraph<T>
 where
-    T: Clone + MonadicCausable<CausalMonad> + PartialEq,
+    T: Clone,
 {
     fn is_frozen(&self) -> bool;
 

@@ -4,8 +4,8 @@
  */
 
 use crate::{
-    Causaloid, Context, Datable, Generatable, GenerativeProcessor, SpaceTemporal, Spatial,
-    Symbolic, Temporal,
+    Causaloid, Context, Datable, Generatable, GenerativeProcessor, IntoEffectValue, SpaceTemporal,
+    Spatial, Symbolic, Temporal,
 };
 use std::hash::Hash;
 use std::marker::PhantomData;
@@ -13,8 +13,10 @@ use std::marker::PhantomData;
 /// A temporary state holder used during the `Model::with_generator` construction process.
 /// It implements the `GenerativeProcessor` trait to get the reusable logic.
 #[allow(clippy::type_complexity)]
-pub(crate) struct ModelBuilderProcessor<D, S, T, ST, SYM, VS, VT, G>
+pub(crate) struct ModelBuilderProcessor<I, O, D, S, T, ST, SYM, VS, VT, G>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Default + Datable + Copy + Clone + Hash + Eq + PartialEq,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -22,16 +24,18 @@ where
     SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
-    G: Generatable<D, S, T, ST, SYM, VS, VT, G>,
+    G: Generatable<I, O, D, S, T, ST, SYM, VS, VT, G>,
 {
-    causaloid: Option<Causaloid<D, S, T, ST, SYM, VS, VT>>,
+    causaloid: Option<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>,
     context: Option<Context<D, S, T, ST, SYM, VS, VT>>,
     ty: PhantomData<G>,
 }
 
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, SYM, VS, VT, G> ModelBuilderProcessor<D, S, T, ST, SYM, VS, VT, G>
+impl<I, O, D, S, T, ST, SYM, VS, VT, G> ModelBuilderProcessor<I, O, D, S, T, ST, SYM, VS, VT, G>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Default + Datable + Copy + Clone + Hash + Eq + PartialEq,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -39,7 +43,7 @@ where
     SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
-    G: Generatable<D, S, T, ST, SYM, VS, VT, G>,
+    G: Generatable<I, O, D, S, T, ST, SYM, VS, VT, G>,
 {
     pub fn new() -> Self {
         Self {
@@ -53,7 +57,7 @@ where
     pub fn into_results(
         self,
     ) -> (
-        Option<Causaloid<D, S, T, ST, SYM, VS, VT>>,
+        Option<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>,
         Option<Context<D, S, T, ST, SYM, VS, VT>>,
     ) {
         (self.causaloid, self.context)
@@ -62,9 +66,11 @@ where
 
 // Implement the trait for the builder struct.
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, SYM, VS, VT, G> GenerativeProcessor<D, S, T, ST, SYM, VS, VT, G>
-    for ModelBuilderProcessor<D, S, T, ST, SYM, VS, VT, G>
+impl<I, O, D, S, T, ST, SYM, VS, VT, G> GenerativeProcessor<I, O, D, S, T, ST, SYM, VS, VT, G>
+    for ModelBuilderProcessor<I, O, D, S, T, ST, SYM, VS, VT, G>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Default + Datable + Copy + Clone + Hash + Eq + PartialEq,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -72,10 +78,10 @@ where
     SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
-    G: Generatable<D, S, T, ST, SYM, VS, VT, G>,
+    G: Generatable<I, O, D, S, T, ST, SYM, VS, VT, G>,
 {
     // Fulfill the contract by providing access to our fields.
-    fn get_causaloid_dest(&mut self) -> &mut Option<Causaloid<D, S, T, ST, SYM, VS, VT>> {
+    fn get_causaloid_dest(&mut self) -> &mut Option<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>> {
         &mut self.causaloid
     }
 

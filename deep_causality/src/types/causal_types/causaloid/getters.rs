@@ -6,8 +6,10 @@
 use super::*;
 
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, SYM, VS, VT> Causaloid<D, S, T, ST, SYM, VS, VT>
+impl<I, O, D, S, T, ST, SYM, VS, VT> Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -20,11 +22,11 @@ where
         &self.context
     }
 
-    pub fn causal_collection(&self) -> &Option<Arc<CausalVec<D, S, T, ST, SYM, VS, VT>>> {
+    pub fn causal_collection(&self) -> &Option<Arc<Vec<CausaloidId>>> {
         &self.causal_coll
     }
 
-    pub fn causal_graph(&self) -> &Option<Arc<CausalGraph<D, S, T, ST, SYM, VS, VT>>> {
+    pub fn causal_graph(&self) -> &Option<Arc<CausaloidGraph<CausaloidId>>> {
         &self.causal_graph
     }
 

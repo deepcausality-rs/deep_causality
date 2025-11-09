@@ -15,14 +15,16 @@ mod identifiable;
 mod part_eq;
 mod setters;
 
-pub type CausalVec<D, S, T, ST, SYM, VS, VT> = Vec<Causaloid<D, S, T, ST, SYM, VS, VT>>;
-pub type CausalGraph<D, S, TM, ST, SYM, VS, VT> =
-    CausaloidGraph<Causaloid<D, S, TM, ST, SYM, VS, VT>>;
+pub type CausalVec<I, O, D, S, T, ST, SYM, VS, VT> = Vec<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>;
+pub type CausalGraph<I, O, D, S, T, ST, SYM, VS, VT> =
+    CausaloidGraph<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>;
 
 #[allow(clippy::type_complexity)]
 #[derive(Clone)]
-pub struct Causaloid<D, S, T, ST, SYM, VS, VT>
+pub struct Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -33,22 +35,24 @@ where
 {
     id: IdentificationValue,
     causal_type: CausaloidType,
-    causal_fn: Option<CausalFn>,
+    causal_fn: Option<CausalFn<I, O>>,
     coll_aggregate_logic: Option<AggregateLogic>,
     coll_threshold_value: Option<NumericalValue>,
-    context_causal_fn: Option<ContextualCausalFn<D, S, T, ST, SYM, VS, VT>>,
+    context_causal_fn: Option<ContextualCausalFn<I, O, D, S, T, ST, SYM, VS, VT>>,
     context: Option<Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>,
-    causal_coll: Option<Arc<CausalVec<D, S, T, ST, SYM, VS, VT>>>,
-    causal_graph: Option<Arc<CausalGraph<D, S, T, ST, SYM, VS, VT>>>,
+    causal_coll: Option<Arc<Vec<CausaloidId>>>,
+    causal_graph: Option<Arc<CausaloidGraph<CausaloidId>>>,
     description: String,
     ty: PhantomData<(VS, VT)>,
-    _phantom: PhantomData<fn() -> PropagatingEffect>,
+    _phantom: PhantomData<(I, O)>,
 }
 
 // Constructors
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, SYM, VS, VT> Causaloid<D, S, T, ST, SYM, VS, VT>
+impl<I, O, D, S, T, ST, SYM, VS, VT> Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -64,7 +68,7 @@ where
     /// * `id` - A unique identifier for the causaloid.
     /// * `causal_fn` - The stateless function that defines the causaloid's reasoning logic.
     /// * `description` - A human-readable description of the causaloid.
-    pub fn new(id: IdentificationValue, causal_fn: CausalFn, description: &str) -> Self {
+    pub fn new(id: IdentificationValue, causal_fn: CausalFn<I, O>, description: &str) -> Self {
         Causaloid {
             id,
             causal_type: CausaloidType::Singleton,
@@ -91,7 +95,7 @@ where
     /// * `description` - A human-readable description of the causaloid.
     pub fn new_with_context(
         id: IdentificationValue,
-        context_causal_fn: ContextualCausalFn<D, S, T, ST, SYM, VS, VT>,
+        context_causal_fn: ContextualCausalFn<I, O, D, S, T, ST, SYM, VS, VT>,
         context: Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>,
         description: &str,
     ) -> Self {
@@ -120,7 +124,7 @@ where
     /// about the correctness of the causal graph.
     pub fn from_causal_collection(
         id: IdentificationValue,
-        causal_coll: Arc<Vec<Causaloid<D, S, T, ST, SYM, VS, VT>>>,
+        causal_coll: Arc<Vec<CausaloidId>>,
         description: &str,
         aggregate_logic: AggregateLogic,
         threshold_value: NumericalValue,
@@ -147,7 +151,7 @@ where
     /// or embedded into a causal graph.
     pub fn from_causal_collection_with_context(
         id: IdentificationValue,
-        causal_coll: Arc<Vec<Causaloid<D, S, T, ST, SYM, VS, VT>>>,
+        causal_coll: Arc<Vec<CausaloidId>>,
         context: Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>,
         description: &str,
         aggregate_logic: AggregateLogic,
@@ -178,7 +182,7 @@ where
     /// about the correctness of the causal graph.
     pub fn from_causal_graph(
         id: IdentificationValue,
-        causal_graph: Arc<CausaloidGraph<Causaloid<D, S, T, ST, SYM, VS, VT>>>,
+        causal_graph: Arc<CausaloidGraph<CausaloidId>>,
         description: &str,
     ) -> Self {
         Causaloid {
@@ -203,7 +207,7 @@ where
     /// or embedded into another causal graph.
     pub fn from_causal_graph_with_context(
         id: IdentificationValue,
-        causal_graph: Arc<CausaloidGraph<Causaloid<D, S, T, ST, SYM, VS, VT>>>,
+        causal_graph: Arc<CausaloidGraph<CausaloidId>>,
         context: Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>,
         description: &str,
     ) -> Self {

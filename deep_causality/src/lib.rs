@@ -19,7 +19,7 @@ mod extensions;
 mod traits;
 mod types;
 mod utils;
-pub mod utils_test;
+// pub mod utils_test;
 
 //
 // Aliases
@@ -87,7 +87,10 @@ pub use crate::traits::inferable::InferableReasoning;
 // Observable Traits
 pub use crate::traits::observable::Observable;
 pub use crate::traits::observable::ObservableReasoning;
-// Scalar Traits
+// Propagating Traits
+pub use crate::traits::into_effect_value::IntoEffectValue;
+pub use crate::traits::propagating_value::PropagatingValue;
+// Scalar traits
 pub use crate::traits::scalar::scalar_projector::ScalarProjector;
 pub use crate::traits::scalar::scalar_value::ScalarValue;
 // Teloid Traits
@@ -104,6 +107,7 @@ pub use crate::traits::transferable::Transferable;
 pub use crate::types::causal_types::causal_type::CausaloidType;
 pub use crate::types::causal_types::causaloid::Causaloid;
 pub use crate::types::causal_types::causaloid_graph::CausaloidGraph;
+pub use crate::types::causal_types::causaloid_registry::CausaloidRegistry;
 pub use crate::types::causal_types::*;
 // Context types
 pub use crate::types::context_types::context_graph;
@@ -159,11 +163,10 @@ pub use crate::types::model_types::model::Model;
 pub use crate::types::model_types::observation::Observation;
 // Reasoning types
 pub use crate::types::reasoning_types::aggregate_logic::AggregateLogic;
+pub use crate::types::reasoning_types::causal_monad::{CausalEffectSystem, CausalMonad};
 pub use crate::types::reasoning_types::effect_log::CausalEffectLog;
 pub use crate::types::reasoning_types::effect_value::EffectValue;
 pub use crate::types::reasoning_types::numeric_value::NumericValue;
-// New types to be renamed
-pub use crate::types::reasoning_types::causal_monad::{CausalEffectSystem, CausalMonad};
 pub use crate::types::reasoning_types::propagating_effect::{
     CausalPropagatingEffect, PropagatingEffect, PropagatingEffectWitness,
 };

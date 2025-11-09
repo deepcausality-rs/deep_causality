@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Causaloid, PropagatingEffect, UncertainParameter};
+use crate::{Causaloid, IntoEffectValue, PropagatingEffect, UncertainParameter};
 use crate::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
 mod display;
 mod eval;
@@ -29,8 +29,10 @@ mod getter;
 ///
 #[allow(clippy::type_complexity)]
 #[derive(Clone, Debug)]
-pub struct CausalState<D, S, T, ST, SYM, VS, VT>
+pub struct CausalState<I, O, D, S, T, ST, SYM, VS, VT>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -46,13 +48,15 @@ where
     /// Numerical data used for state evaluation
     data: PropagatingEffect,
     /// Reference to a causaloid that defines when this state is active
-    causaloid: Causaloid<D, S, T, ST, SYM, VS, VT>,
+    causaloid: Causaloid<I, O, D, S, T, ST, SYM, VS, VT>,
     /// Optional parameters for evaluating uncertain effects.
     uncertain_parameter: Option<UncertainParameter>,
 }
 
-impl<D, S, T, ST, SYM, VS, VT> CausalState<D, S, T, ST, SYM, VS, VT>
+impl<I, O, D, S, T, ST, SYM, VS, VT> CausalState<I, O, D, S, T, ST, SYM, VS, VT>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -65,7 +69,7 @@ where
         id: usize,
         version: usize,
         data: PropagatingEffect,
-        causaloid: Causaloid<D, S, T, ST, SYM, VS, VT>,
+        causaloid: Causaloid<I, O, D, S, T, ST, SYM, VS, VT>,
         uncertain_parameter: Option<UncertainParameter>,
     ) -> Self {
         Self {

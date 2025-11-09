@@ -4,8 +4,7 @@
  */
 
 use crate::{
-    Causable, CausableGraph, CausalMonad, CausalityError, EffectValue, Identifiable,
-    MonadicCausable, PropagatingEffect,
+    CausableGraph, CausalityError, CausaloidId, CausaloidRegistry, EffectValue, PropagatingEffect,
 };
 use std::collections::VecDeque;
 use ultragraph::GraphTraversal;
@@ -14,16 +13,14 @@ use ultragraph::GraphTraversal;
 ///
 /// Any graph type that implements `CausableGraph<T>` where `T` is `MonadicCausable<CausalMonad>`
 /// will automatically gain a suite of useful default methods for monadic evaluation.
-pub trait MonadicCausableGraphReasoning<T>: CausableGraph<T>
-where
-    T: MonadicCausable<CausalMonad> + Causable + Identifiable + PartialEq + Clone,
-{
+pub trait MonadicCausableGraphReasoning: CausableGraph<CausaloidId> {
     /// Evaluates a single, specific causaloid within the graph by its index using a monadic approach.
     ///
     /// This is a convenience method that locates the causaloid and calls its `evaluate_monadic` method.
     ///
     /// # Arguments
     ///
+    /// * `registry` - The `CausaloidRegistry` to use for evaluating causaloids.
     /// * `index` - The index of the causaloid to evaluate.
     /// * `effect` - The runtime effect to be passed to the node's evaluation function.
     ///
@@ -31,9 +28,14 @@ where
     ///
     /// The `PropagatingEffect` from the evaluated causaloid, or a `PropagatingEffect` containing
     /// a `CausalityError` if the node is not found or the evaluation fails.
-    fn evaluate_single_cause(&self, index: usize, effect: &PropagatingEffect) -> PropagatingEffect {
-        let cause = match self.get_causaloid(index) {
-            Some(c) => c,
+    fn evaluate_single_cause(
+        &self,
+        registry: &CausaloidRegistry,
+        index: usize,
+        effect: &PropagatingEffect,
+    ) -> PropagatingEffect {
+        let causaloid_id = match self.get_causaloid(index) {
+            Some(id) => id,
             None => {
                 return PropagatingEffect::from_error(CausalityError(format!(
                     "Causaloid with index {index} not found in graph"
@@ -41,7 +43,7 @@ where
             }
         };
 
-        cause.evaluate(effect)
+        registry.evaluate(*causaloid_id, effect)
     }
 
     /// Reasons over a subgraph by traversing all nodes reachable from a given start index,
@@ -61,6 +63,7 @@ where
     ///
     /// # Arguments
     ///
+    /// * `registry` - The `CausaloidRegistry` to use for evaluating causaloids.
     /// * `start_index` - The index of the node to start the traversal from.
     /// * `initial_effect` - The initial runtime effect to be passed to the starting node's evaluation function.
     ///
@@ -70,6 +73,7 @@ where
     /// If an error occurs during evaluation, the returned `PropagatingEffect` will contain the error.
     fn evaluate_subgraph_from_cause(
         &self,
+        registry: &CausaloidRegistry,
         start_index: usize,
         initial_effect: &PropagatingEffect,
     ) -> PropagatingEffect {
@@ -97,8 +101,8 @@ where
         let mut last_propagated_effect = initial_effect.clone();
 
         while let Some((current_index, incoming_effect)) = queue.pop_front() {
-            let cause = match self.get_causaloid(current_index) {
-                Some(c) => c,
+            let causaloid_id = match self.get_causaloid(current_index) {
+                Some(id) => id,
                 None => {
                     return PropagatingEffect::from_error(CausalityError(format!(
                         "Failed to get causaloid at index {current_index}"
@@ -107,7 +111,7 @@ where
             };
 
             // Evaluate the current cause using the incoming_effect.
-            let result_effect = cause.evaluate(&incoming_effect);
+            let result_effect = registry.evaluate(*causaloid_id, &incoming_effect);
 
             // Update the last_propagated_effect with the result of the current node's evaluation.
             last_propagated_effect = result_effect.clone();
@@ -167,6 +171,7 @@ where
     ///
     /// # Arguments
     ///
+    /// * `registry` - The `CausaloidRegistry` to use for evaluating causaloids.
     /// * `start_index` - The index of the start cause.
     /// * `stop_index` - The index of the stop cause.
     /// * `initial_effect` - The runtime effect to be passed as input to the first node's evaluation function.
@@ -177,6 +182,7 @@ where
     /// If an error occurs or a `RelayTo` effect is encountered, that `PropagatingEffect` is returned immediately.
     fn evaluate_shortest_path_between_causes(
         &self,
+        registry: &CausaloidRegistry,
         start_index: usize,
         stop_index: usize,
         initial_effect: &PropagatingEffect,
@@ -189,15 +195,15 @@ where
 
         // Handle the single-node case explicitly before calling the pathfinder.
         if start_index == stop_index {
-            let cause = match self.get_causaloid(start_index) {
-                Some(c) => c,
+            let causaloid_id = match self.get_causaloid(start_index) {
+                Some(id) => id,
                 None => {
                     return PropagatingEffect::from_error(CausalityError(format!(
                         "Failed to get causaloid at index {start_index}"
                     )));
                 }
             };
-            return cause.evaluate(initial_effect);
+            return registry.evaluate(*causaloid_id, initial_effect);
         }
 
         let path = match self.get_shortest_path(start_index, stop_index) {
@@ -208,8 +214,8 @@ where
         let mut current_effect = initial_effect.clone();
 
         for index in path {
-            let cause = match self.get_causaloid(index) {
-                Some(c) => c,
+            let causaloid_id = match self.get_causaloid(index) {
+                Some(id) => id,
                 None => {
                     return PropagatingEffect::from_error(CausalityError(format!(
                         "Failed to get causaloid at index {index}"
@@ -218,7 +224,7 @@ where
             };
 
             // Evaluate the current cause with the effect propagated from the previous node.
-            current_effect = cause.evaluate(&current_effect);
+            current_effect = registry.evaluate(*causaloid_id, &current_effect);
 
             // If an error occurred, propagate it and stop.
             if current_effect.is_err() {

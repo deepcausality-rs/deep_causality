@@ -8,11 +8,15 @@
 //!
 
 use crate::types::model_types::model::Model;
-use crate::{Assumption, Datable, SpaceTemporal, Spatial, Symbolic, Temporal, Transferable};
+use crate::{
+    Assumption, Datable, IntoEffectValue, SpaceTemporal, Spatial, Symbolic, Temporal, Transferable,
+};
 use std::sync::Arc;
 
-impl<D, S, T, ST, SYM, VS, VT> Transferable for Model<D, S, T, ST, SYM, VS, VT>
+impl<I, O, D, S, T, ST, SYM, VS, VT> Transferable for Model<I, O, D, S, T, ST, SYM, VS, VT>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
