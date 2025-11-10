@@ -11,7 +11,7 @@ use crate::{CausalityError, EffectValue, PropagatingValue};
 ///
 /// This trait is the core mechanism for safe type conversion within the causal system,
 /// enabling a compile-time, generic-based approach for causal functions and causaloids.
-pub trait IntoEffectValue: PropagatingValue {
+pub trait IntoEffectValue: PropagatingValue + Clone {
     /// Converts the implementing type into an `EffectValue` enum variant.
     ///
     /// This conversion should be lossless, meaning all information from the original type

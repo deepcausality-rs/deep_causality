@@ -16,6 +16,79 @@ use std::fmt::Display;
 ///
 /// It uses `TypeId` to store homogeneous collections of `Causaloid<I, O>` and
 /// provides a hybrid static/dynamic dispatch mechanism for evaluation.
+///
+/// # Hybrid Dispatch and Extensibility
+///
+/// The causal engine is designed to be both fast for common types and extensible
+/// for user-defined types. This is achieved through a hybrid dispatch system
+/// centered on the `EffectValue` enum.
+///
+/// ## Static Dispatch for Built-in Types
+///
+/// For core data types like `bool`, `f64`, `CausalTensor`, etc., `EffectValue`
+/// provides specific enum variants (e.g., `EffectValue::Deterministic(bool)`).
+/// When the engine processes these variants, it benefits from fast, compile-time
+/// static dispatch. There is no runtime overhead, as the compiler knows the
+/// exact type and memory layout.
+///
+/// ## Dynamic Dispatch for External Types
+///
+/// To allow for user-defined types, `EffectValue` has an `External(Box<dyn PropagatingValue>)`
+/// variant. Any custom type that implements the `PropagatingValue` trait can be
+/// wrapped in this variant.
+///
+/// When the engine encounters an `External` variant, it uses dynamic dispatch
+/// via trait objects. This provides great flexibility but comes with a minor
+/// performance cost compared to static dispatch:
+///
+/// *   **Heap Allocation**: Wrapping the type in a `Box` requires heap allocation.
+/// *   **VTable Lookup**: Calling methods on the `dyn PropagatingValue` trait object
+///     involves an indirect function call through a virtual table.
+/// *   **Runtime Casting**: Retrieving the concrete type requires a safe, but
+///     runtime-checked, downcast.
+///
+/// This trade-off allows the system to maintain high performance for its core
+/// operations while providing a powerful mechanism for extension.
+///
+/// # Implementing `IntoEffectValue` for Custom Types
+///
+/// To make your own type compatible with the causal engine, you must implement
+/// the `IntoEffectValue` trait for it. Your type must also derive `Debug`, `Clone`,
+/// and `PartialEq`. The `PropagatingValue` trait will be implemented automatically
+/// for any type that meets these bounds.
+///
+/// Here is a template for implementing `IntoEffectValue`:
+///
+/// ```rust,ignore
+/// use deep_causality::{CausalityError, EffectValue, IntoEffectValue, PropagatingValue};
+///
+/// // Your custom struct.
+/// #[derive(Debug, Clone, PartialEq)]
+/// pub struct MyCustomType {
+///     pub value: i32,
+///     pub description: String,
+/// }
+///
+/// // Implementation to allow it to be used in the causal engine.
+/// impl IntoEffectValue for MyCustomType {
+///     fn into_effect_value(self) -> EffectValue {
+///         // Wrap the custom type in the External variant.
+///         EffectValue::External(Box::new(self))
+///     }
+///
+///     fn try_from_effect_value(ev: EffectValue) -> Result<Self, CausalityError> {
+///         // Use the helper function to safely downcast from an EffectValue.
+///         EffectValue::try_from_effect_value::<Self>(&ev)
+///             .map(|v| v.clone())
+///             .ok_or_else(|| {
+///                 CausalityError(format!(
+///                     "Failed to convert EffectValue to MyCustomType. Found wrong type: {:?}",
+///                     ev
+///                 ))
+///             })
+///     }
+/// }
+/// ```
 #[derive(Default)]
 pub struct CausaloidRegistry {
     /// Stores `Vec<Box<dyn MonadicCausable<CausalMonad> + Send + Sync>>` for different `Causaloid` types, indexed by `TypeId`.

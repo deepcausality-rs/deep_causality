@@ -2,18 +2,17 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use crate::IntoEffectValue;
 use crate::{CausalityError, EffectValue, NumericValue};
-use crate::{IntoEffectValue, PropagatingValue};
 use deep_causality_num::{Complex, Quaternion};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_uncertain::{
     MaybeUncertainBool, MaybeUncertainF64, UncertainBool, UncertainF64,
 };
-use std::fmt::Debug;
 
 // Blanket implementation for types that are Debug, Clone, Default, and 'static.
 // This ensures that any type meeting these basic requirements can be considered a PropagatingValue.
-impl<T: Debug + Clone + 'static> PropagatingValue for T {}
+// impl<T: Debug + Clone + 'static> PropagatingValue for T {}
 
 // Implementations for concrete types to be used as PropagatingEffect
 

@@ -31,9 +31,10 @@ impl Display for EffectValue {
                 write!(f, "ContextualLink(ContextoidId: {})", coid)
             }
             EffectValue::Map(m) => write!(f, "Map({:?})", m),
-            EffectValue::RelayTo(target, effect) => {
-                write!(f, "RelayTo(target: {}, effect: {:?})", target, effect)
+            EffectValue::RelayTo(target, value) => {
+                write!(f, "RelayTo(target: {}, value: {})", target, value)
             }
+            EffectValue::External(value) => write!(f, "External({:?})", value),
         }
     }
 }

@@ -4,10 +4,9 @@
  */
 
 use crate::{
-    CSM, CausalAction, CausalState, Datable, IntoEffectValue, SpaceTemporal, Spatial, StateAction,
-    Symbolic, Temporal, UpdateError,
+    CSM, CSMMap, CausalAction, CausalState, Datable, IntoEffectValue, SpaceTemporal, Spatial,
+    StateAction, Symbolic, Temporal, UpdateError,
 };
-use std::collections::HashMap;
 use std::fmt::Debug;
 
 #[allow(clippy::type_complexity)]
@@ -53,7 +52,7 @@ where
         &self,
         state_actions: &[(&CausalState<I, O, D, S, T, ST, SYM, VS, VT>, &CausalAction)],
     ) -> Result<(), UpdateError> {
-        let mut state_map = HashMap::with_capacity(state_actions.len());
+        let mut state_map = CSMMap::with_capacity(state_actions.len());
 
         for (state, action) in state_actions {
             state_map.insert(state.id(), ((*state).clone(), (*action).clone()));

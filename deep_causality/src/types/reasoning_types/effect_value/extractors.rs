@@ -2,7 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{ContextoidId, EffectValue, IdentificationValue, NumericValue, PropagatingEffect};
+use crate::{
+    ContextoidId, EffectValue, IdentificationValue, NumericValue, PropagatingEffect,
+    PropagatingValue,
+};
 use deep_causality_num::{Complex, Quaternion};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_uncertain::{
@@ -121,5 +124,18 @@ impl EffectValue {
             EffectValue::RelayTo(target, effect) => Some((target, effect)),
             _ => None,
         }
+    }
+
+    pub fn as_external(&self) -> Option<&dyn PropagatingValue> {
+        match self {
+            EffectValue::External(value) => Some(value.as_ref()),
+            _ => None,
+        }
+    }
+
+    pub fn try_from_effect_value<T: PropagatingValue>(effect: &EffectValue) -> Option<&T> {
+        effect
+            .as_external()
+            .and_then(|val| val.as_any().downcast_ref::<T>())
     }
 }

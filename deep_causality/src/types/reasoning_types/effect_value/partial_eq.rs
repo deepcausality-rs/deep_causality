@@ -27,6 +27,7 @@ impl PartialEq for EffectValue {
             (EffectValue::ContextualLink(l1), EffectValue::ContextualLink(r1)) => l1 == r1,
             (EffectValue::Map(l0), EffectValue::Map(r0)) => l0 == r0,
             (EffectValue::RelayTo(l0, l1), EffectValue::RelayTo(r0, r1)) => l0 == r0 && l1 == r1,
+            (EffectValue::External(l), EffectValue::External(r)) => l.dyn_eq(r.as_ref()),
             _ => false,
         }
     }

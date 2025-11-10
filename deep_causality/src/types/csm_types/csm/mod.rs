@@ -12,7 +12,6 @@ use crate::{
     CSMMap, CausalAction, CausalState, CausaloidRegistry, EffectEthos, IntoEffectValue, TeloidTag,
 };
 use crate::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
-use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
@@ -86,7 +85,7 @@ where
         effect_ethos: Option<(EffectEthos<D, S, T, ST, SYM, VS, VT>, &[TeloidTag])>,
         causaloid_registry: CausaloidRegistry,
     ) -> Self {
-        let mut map = HashMap::with_capacity(state_actions.len());
+        let mut map = CSMMap::with_capacity(state_actions.len());
 
         for (state, action) in state_actions {
             map.insert(state.id(), ((*state).clone(), (*action).clone()));

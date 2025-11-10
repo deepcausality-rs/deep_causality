@@ -72,4 +72,8 @@ impl EffectValue {
     pub fn is_relay_to(&self) -> bool {
         matches!(self, EffectValue::RelayTo(_, _))
     }
+
+    pub fn is_external(&self) -> bool {
+        matches!(self, EffectValue::External(_))
+    }
 }
