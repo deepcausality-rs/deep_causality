@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::types::reasoning_types::propagating_effect::PropagatingEffect;
-use crate::{AssumptionError, CausalityError, Context};
+use crate::{AssumptionError, CausalityError, Context, IntoEffectValue};
 use std::sync::{Arc, RwLock};
 
 // Fn aliases for assumable, assumption, & assumption collection
@@ -22,7 +22,9 @@ pub type EvalFn = fn(&[PropagatingEffect]) -> Result<bool, AssumptionError>;
 /// # Returns
 ///
 /// A `PropagatingEffect`
-pub type CausalFn<I, O> = fn(value: I) -> Result<O, CausalityError>;
+#[allow(type_alias_bounds)]
+pub type CausalFn<I: IntoEffectValue, O: IntoEffectValue> =
+    fn(value: I) -> Result<O, CausalityError>;
 
 /// The unified function signature for all singleton causaloids that require access to a shared, external context.
 ///
@@ -37,7 +39,9 @@ pub type CausalFn<I, O> = fn(value: I) -> Result<O, CausalityError>;
 /// # Returns
 ///
 /// A `PropagatingEffect`.
-pub type ContextualCausalFn<I, O, D, S, T, ST, SYM, VS, VT> = fn(
-    value: I,
-    context: &Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>,
-) -> Result<O, CausalityError>;
+#[allow(type_alias_bounds)]
+pub type ContextualCausalFn<I: IntoEffectValue, O: IntoEffectValue, D, S, T, ST, SYM, VS, VT> =
+    fn(
+        value: I,
+        context: &Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>,
+    ) -> Result<O, CausalityError>;

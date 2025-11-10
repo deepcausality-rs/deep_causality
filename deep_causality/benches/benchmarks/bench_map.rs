@@ -2,10 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
 use criterion::{Criterion, criterion_group};
-
-use deep_causality::{MonadicCausable, PropagatingEffect};
+use deep_causality::{CausaloidId, CausaloidRegistry, PropagatingEffect};
+use std::collections::HashMap;
 
 use crate::benchmarks::utils_map;
 
@@ -15,13 +14,19 @@ use crate::benchmarks::utils_map;
 
 fn small_causality_map_benchmark(criterion: &mut Criterion) {
     let (map, data) = utils_map::get_small_map_and_data();
+
+    let mut registry = CausaloidRegistry::new();
+    let registered_map: HashMap<usize, CausaloidId> = map
+        .into_iter()
+        .map(|(k, c)| (k, registry.register(c)))
+        .collect();
+
     criterion.bench_function("small_causality_map_independent_eval", |bencher| {
         bencher.iter(|| {
-            // Iterate over the map and evaluate each causaloid with its specific data.
-            for (key, cause) in &map {
+            for (key, causaloid_id) in &registered_map {
                 let value = data.get(key).expect("Data missing for key");
                 let evidence = PropagatingEffect::from_numerical(*value);
-                cause.evaluate(&evidence);
+                registry.evaluate(*causaloid_id, &evidence);
             }
         })
     });
@@ -29,12 +34,19 @@ fn small_causality_map_benchmark(criterion: &mut Criterion) {
 
 fn medium_causality_map_benchmark(criterion: &mut Criterion) {
     let (map, data) = utils_map::get_medium_map_and_data();
+
+    let mut registry = CausaloidRegistry::new();
+    let registered_map: HashMap<usize, CausaloidId> = map
+        .into_iter()
+        .map(|(k, c)| (k, registry.register(c)))
+        .collect();
+
     criterion.bench_function("medium_causality_map_independent_eval", |bencher| {
         bencher.iter(|| {
-            for (key, cause) in &map {
+            for (key, causaloid_id) in &registered_map {
                 let value = data.get(key).expect("Data missing for key");
                 let evidence = PropagatingEffect::from_numerical(*value);
-                cause.evaluate(&evidence);
+                registry.evaluate(*causaloid_id, &evidence);
             }
         })
     });
@@ -42,12 +54,19 @@ fn medium_causality_map_benchmark(criterion: &mut Criterion) {
 
 fn large_causality_map_benchmark(criterion: &mut Criterion) {
     let (map, data) = utils_map::get_large_map_and_data();
+
+    let mut registry = CausaloidRegistry::new();
+    let registered_map: HashMap<usize, CausaloidId> = map
+        .into_iter()
+        .map(|(k, c)| (k, registry.register(c)))
+        .collect();
+
     criterion.bench_function("large_causality_map_independent_eval", |bencher| {
         bencher.iter(|| {
-            for (key, cause) in &map {
+            for (key, causaloid_id) in &registered_map {
                 let value = data.get(key).expect("Data missing for key");
                 let evidence = PropagatingEffect::from_numerical(*value);
-                cause.evaluate(&evidence);
+                registry.evaluate(*causaloid_id, &evidence);
             }
         })
     });

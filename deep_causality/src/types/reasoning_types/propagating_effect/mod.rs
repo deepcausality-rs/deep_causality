@@ -2,7 +2,6 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
 use crate::{CausalEffectLog, CausalityError, EffectValue};
 use deep_causality_haft::{Applicative, Functor, HKT, HKT3, Monad, Placeholder};
 

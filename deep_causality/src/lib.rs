@@ -19,7 +19,7 @@ mod extensions;
 mod traits;
 mod types;
 mod utils;
-// pub mod utils_test;
+pub mod utils_test;
 
 //
 // Aliases

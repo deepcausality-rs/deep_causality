@@ -5,7 +5,7 @@
 
 use std::collections::HashMap;
 
-use deep_causality::{BaseCausalMap, NumericalValue};
+use deep_causality::{BenchmarkCausalMap, NumericalValue};
 
 use crate::benchmarks::utils_shared;
 
@@ -13,19 +13,19 @@ const SMALL: usize = 10;
 const MEDIUM: usize = 1_000;
 const LARGE: usize = 10_000;
 
-pub fn get_small_map_and_data() -> (BaseCausalMap, HashMap<usize, NumericalValue>) {
+pub fn get_small_map_and_data() -> (BenchmarkCausalMap, HashMap<usize, NumericalValue>) {
     (build_causality_map(SMALL), generate_data_map(SMALL))
 }
 
-pub fn get_medium_map_and_data() -> (BaseCausalMap, HashMap<usize, NumericalValue>) {
+pub fn get_medium_map_and_data() -> (BenchmarkCausalMap, HashMap<usize, NumericalValue>) {
     (build_causality_map(MEDIUM), generate_data_map(MEDIUM))
 }
 
-pub fn get_large_map_and_data() -> (BaseCausalMap, HashMap<usize, NumericalValue>) {
+pub fn get_large_map_and_data() -> (BenchmarkCausalMap, HashMap<usize, NumericalValue>) {
     (build_causality_map(LARGE), generate_data_map(LARGE))
 }
 
-fn build_causality_map(k: usize) -> BaseCausalMap {
+fn build_causality_map(k: usize) -> BenchmarkCausalMap {
     let mut map = HashMap::with_capacity(k);
     for i in 0..k {
         // All causaloids are functionally identical, which is fine for this benchmark.

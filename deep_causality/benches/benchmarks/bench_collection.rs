@@ -13,13 +13,16 @@ use crate::benchmarks::utils_collection;
 // Large = 10_000
 
 fn small_causality_collection_benchmark(criterion: &mut Criterion) {
-    // The `_data` is no longer needed as we pass a single evidence object.
     let (coll, _data) = utils_collection::get_small_collection_and_data();
-    // All propagation methods now take a single `&Evidence`.
     let evidence = PropagatingEffect::from_numerical(0.99);
 
+    let mut registry = CausaloidRegistry::new();
+    for causaloid in coll.iter() {
+        registry.register(causaloid.clone());
+    }
+
     criterion.bench_function("small_causality_collection_propagation", |bencher| {
-        bencher.iter(|| coll.evaluate_collection(&evidence, &AggregateLogic::All, None))
+        bencher.iter(|| coll.evaluate_collection(&registry, &evidence, &AggregateLogic::All, None))
     });
 }
 
@@ -27,8 +30,13 @@ fn medium_causality_collection_benchmark(criterion: &mut Criterion) {
     let (coll, _data) = utils_collection::get_medium_collection_and_data();
     let evidence = PropagatingEffect::from_numerical(0.99);
 
+    let mut registry = CausaloidRegistry::new();
+    for causaloid in coll.iter() {
+        registry.register(causaloid.clone());
+    }
+
     criterion.bench_function("medium_causality_collection_propagation", |bencher| {
-        bencher.iter(|| coll.evaluate_collection(&evidence, &AggregateLogic::All, None))
+        bencher.iter(|| coll.evaluate_collection(&registry, &evidence, &AggregateLogic::All, None))
     });
 }
 
@@ -36,8 +44,13 @@ fn large_causality_collection_benchmark(criterion: &mut Criterion) {
     let (coll, _data) = utils_collection::get_large_collection_and_data();
     let evidence = PropagatingEffect::from_numerical(0.99);
 
+    let mut registry = CausaloidRegistry::new();
+    for causaloid in coll.iter() {
+        registry.register(causaloid.clone());
+    }
+
     criterion.bench_function("large_causality_collection_propagation", |bencher| {
-        bencher.iter(|| coll.evaluate_collection(&evidence, &AggregateLogic::All, None))
+        bencher.iter(|| coll.evaluate_collection(&registry, &evidence, &AggregateLogic::All, None))
     });
 }
 

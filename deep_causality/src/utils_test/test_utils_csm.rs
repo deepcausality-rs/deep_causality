@@ -34,18 +34,18 @@ pub fn get_test_error_action() -> CausalAction {
 }
 
 // Causaloid that returns a non-deterministic effect
-pub fn get_test_probabilistic_causaloid() -> BaseCausaloid {
-    fn causal_fn(_: EffectValue) -> PropagatingEffect {
-        PropagatingEffect::from_probabilistic(0.5)
+pub fn get_test_probabilistic_causaloid() -> BaseCausaloid<f64, f64> {
+    fn causal_fn(_: f64) -> Result<f64, CausalityError> {
+        Ok(0.5)
     }
     Causaloid::new(99, causal_fn, "Probabilistic Causaloid")
 }
 
-pub fn get_test_error_causaloid() -> BaseCausaloid {
-    fn causal_fn(_: EffectValue) -> PropagatingEffect {
-        PropagatingEffect::from_error(CausalityError::new("Error".to_string()))
+pub fn get_test_error_causaloid() -> BaseCausaloid<bool, bool> {
+    fn causal_fn(_: bool) -> Result<bool, CausalityError> {
+        Err(CausalityError::new("Error".to_string()))
     }
-    Causaloid::new(78, causal_fn, "Probabilistic Causaloid")
+    Causaloid::new(78, causal_fn, "Error Causaloid")
 }
 
 pub fn get_effect_ethos(verified: bool, impermissible: bool) -> BaseEffectEthos {
@@ -75,22 +75,14 @@ pub fn get_effect_ethos(verified: bool, impermissible: bool) -> BaseEffectEthos 
     ethos
 }
 
-pub fn get_test_causaloid(with_context: bool) -> BaseCausaloid {
-    fn causal_fn(_effect: EffectValue) -> PropagatingEffect {
-        PropagatingEffect::from_deterministic(true)
+pub fn get_test_causaloid(with_context: bool) -> BaseCausaloid<bool, bool> {
+    fn causal_fn(_effect: bool) -> Result<bool, CausalityError> {
+        Ok(true)
     }
 
     if with_context {
-        let context = Context::with_capacity(1, "Test Context", 5);
-        test_utils::get_test_causaloid_deterministic_with_context::<
-            Data<NumericalValue>,
-            EuclideanSpace,
-            EuclideanTime,
-            EuclideanSpacetime,
-            BaseSymbol,
-            FloatType,
-            FloatType,
-        >(context)
+        let context = test_utils::get_context(); // Use the helper to get a base context
+        test_utils::get_test_causaloid_deterministic_with_context(context)
     } else {
         Causaloid::new(1, causal_fn, "Test Causaloid")
     }

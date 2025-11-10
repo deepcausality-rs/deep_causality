@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::*;
-use deep_causality_uncertain::Uncertain;
+use deep_causality_uncertain::{Uncertain, UncertainBool, UncertainF64};
 use std::sync::{Arc, RwLock};
 
 pub fn get_context() -> BaseContext {
@@ -35,27 +35,27 @@ pub fn get_test_inf_vec() -> Vec<Inference> {
     Vec::from_iter([i1, i2])
 }
 
-pub fn get_deterministic_test_causality_vec() -> BaseCausaloidVec {
+pub fn get_deterministic_test_causality_vec() -> BaseCausaloidVec<f64, bool> {
     let q1 = get_test_causaloid_deterministic();
     let q2 = get_test_causaloid_deterministic();
     let q3 = get_test_causaloid_deterministic();
     Vec::from_iter([q1, q2, q3])
 }
-pub fn get_probabilistic_test_causality_vec() -> BaseCausaloidVec {
+pub fn get_probabilistic_test_causality_vec() -> BaseCausaloidVec<f64, f64> {
     let q1 = get_test_causaloid_probabilistic();
     let q2 = get_test_causaloid_probabilistic();
     let q3 = get_test_causaloid_probabilistic();
     Vec::from_iter([q1, q2, q3])
 }
 
-pub fn get_uncertain_bool_test_causality_vec() -> BaseCausaloidVec {
+pub fn get_uncertain_bool_test_causality_vec() -> BaseCausaloidVec<f64, UncertainBool> {
     let q1 = get_test_causaloid_uncertain_bool();
     let q2 = get_test_causaloid_uncertain_bool();
     let q3 = get_test_causaloid_uncertain_bool();
     Vec::from_iter([q1, q2, q3])
 }
 
-pub fn get_uncertain_float_test_causality_vec() -> BaseCausaloidVec {
+pub fn get_uncertain_float_test_causality_vec() -> BaseCausaloidVec<f64, UncertainF64> {
     let q1 = get_test_causaloid_uncertain_float();
     let q2 = get_test_causaloid_uncertain_float();
     let q3 = get_test_causaloid_uncertain_float();
@@ -66,185 +66,124 @@ pub fn get_test_single_data(val: NumericalValue) -> PropagatingEffect {
     PropagatingEffect::from_numerical(val)
 }
 
-pub fn get_test_causaloid_deterministic_true() -> BaseCausaloid {
+pub fn get_test_causaloid_deterministic_true() -> BaseCausaloid<bool, bool> {
     let description = "tests nothing; always returns true";
-
-    let causal_fn =
-        |_: EffectValue| -> PropagatingEffect { PropagatingEffect::from_deterministic(true) };
-
-    Causaloid::new(3, causal_fn as CausalFn, description)
+    fn causal_fn(_: bool) -> Result<bool, CausalityError> {
+        Ok(true)
+    }
+    Causaloid::new(3, causal_fn, description)
 }
 
-pub fn get_test_causaloid_deterministic_false() -> BaseCausaloid {
+pub fn get_test_causaloid_deterministic_false() -> BaseCausaloid<bool, bool> {
     let description = "tests nothing; always returns true";
-
-    let causal_fn =
-        |_: EffectValue| -> PropagatingEffect { PropagatingEffect::from_deterministic(false) };
-
-    Causaloid::new(3, causal_fn as CausalFn, description)
+    fn causal_fn(_: bool) -> Result<bool, CausalityError> {
+        Ok(false)
+    }
+    Causaloid::new(3, causal_fn, description)
 }
 
-pub fn get_test_causaloid_contextual_link() -> BaseCausaloid {
-    let description = "tests nothing; always returns a contextual link";
-
-    let causal_fn =
-        |_: EffectValue| -> PropagatingEffect { PropagatingEffect::from_contextual_link(0, 1) };
-
-    Causaloid::new(9, causal_fn as CausalFn, description)
-}
-
-pub fn get_test_causaloid_probabilistic() -> BaseCausaloid {
+pub fn get_test_causaloid_probabilistic() -> BaseCausaloid<f64, f64> {
     let id: IdentificationValue = 3;
     let description = "tests whether data exceeds threshold of 0.55";
 
-    let causal_fn = |effect: EffectValue| -> PropagatingEffect {
-        let obs = match effect {
-            EffectValue::Probabilistic(val) => val,
-            _ => return PropagatingEffect::from_error(CausalityError(
-                "Causal function expected Probabilistic effect but received a different variant."
-                    .into(),
-            )),
-        };
-
+    fn causal_fn(obs: NumericalValue) -> Result<NumericalValue, CausalityError> {
         let threshold: NumericalValue = 0.55;
         if !obs.ge(&threshold) {
-            PropagatingEffect::from_probabilistic(0.0)
+            Ok(1.0)
         } else {
-            PropagatingEffect::from_probabilistic(1.0)
+            Ok(0.0)
         }
-    };
-
-    Causaloid::new(id, causal_fn as CausalFn, description)
-}
-
-pub fn get_test_causaloid_uncertain_bool() -> BaseCausaloid {
-    let description = "tests whether data exceeds threshold of 0.55 and returns uncertain bool";
-
-    let causal_fn = |effect: EffectValue| -> PropagatingEffect {
-        let obs =
-            match effect {
-                EffectValue::Numerical(val) => val,
-                _ => return PropagatingEffect::from_error(CausalityError(
-                    "Causal function expected Numerical effect but received a different variant."
-                        .into(),
-                )),
-            };
-
-        let threshold: NumericalValue = 0.55;
-        if obs > threshold {
-            PropagatingEffect::from_uncertain_bool(Uncertain::<bool>::point(true))
-        } else {
-            PropagatingEffect::from_uncertain_bool(Uncertain::<bool>::point(false))
-        }
-    };
-
-    Causaloid::new(3, causal_fn as CausalFn, description)
-}
-
-pub fn get_test_causaloid_uncertain_float() -> BaseCausaloid {
-    let description = "tests whether data exceeds threshold of 0.55 and returns uncertain bool";
-
-    let causal_fn = |effect: EffectValue| -> PropagatingEffect {
-        let obs =
-            match effect {
-                EffectValue::Numerical(val) => val,
-                _ => return PropagatingEffect::from_error(CausalityError(
-                    "Causal function expected Numerical effect but received a different variant."
-                        .into(),
-                )),
-            };
-
-        let threshold: NumericalValue = 0.55;
-        if obs > threshold {
-            PropagatingEffect::from_uncertain_float(Uncertain::<f64>::point(1.0f64))
-        } else {
-            PropagatingEffect::from_uncertain_float(Uncertain::<f64>::point(0.0f64))
-        }
-    };
-
-    Causaloid::new(3, causal_fn as CausalFn, description)
-}
-
-pub fn get_test_causaloid_deterministic() -> BaseCausaloid {
-    let id: IdentificationValue = 1;
-    let description = "tests whether data exceeds threshold of 0.55";
-
-    let causal_fn = |effect: EffectValue| -> PropagatingEffect {
-        let obs = match effect {
-            EffectValue::Number(NumericValue::F64(val)) => val,
-            EffectValue::Probabilistic(val) => val,
-            _ => {
-                return PropagatingEffect::from_error(CausalityError(
-                    "Causal function expected F64 or Probabilistic effect but received a different variant".into(),
-                ))
-            }
-        };
-
-        let threshold: NumericalValue = 0.55;
-        if !obs.ge(&threshold) {
-            PropagatingEffect::from_deterministic(false)
-        } else {
-            PropagatingEffect::from_deterministic(true)
-        }
-    };
+    }
 
     Causaloid::new(id, causal_fn, description)
 }
 
-pub fn get_test_causaloid_deterministic_with_context<I, O, D, S, T, ST, SYM, VS, VT>(
+pub fn get_test_causaloid_uncertain_bool() -> BaseCausaloid<f64, UncertainBool> {
+    let description = "tests whether data exceeds threshold of 0.55 and returns uncertain bool";
+
+    fn causal_fn(obs: NumericalValue) -> Result<UncertainBool, CausalityError> {
+        let threshold: NumericalValue = 0.55;
+
+        if obs > threshold {
+            Ok(Uncertain::<bool>::point(true))
+        } else {
+            Ok(Uncertain::<bool>::point(false))
+        }
+    }
+
+    Causaloid::new(3, causal_fn, description)
+}
+
+pub fn get_test_causaloid_uncertain_float() -> BaseCausaloid<f64, UncertainF64> {
+    let description = "tests whether data exceeds threshold of 0.55 and returns uncertain bool";
+    fn causal_fn(obs: NumericalValue) -> Result<UncertainF64, CausalityError> {
+        let threshold: NumericalValue = 0.55;
+        if obs > threshold {
+            Ok(Uncertain::<f64>::point(1.0f64))
+        } else {
+            Ok(Uncertain::<f64>::point(0.0f64))
+        }
+    }
+
+    Causaloid::new(3, causal_fn, description)
+}
+
+pub fn get_test_causaloid_deterministic() -> BaseCausaloid<f64, bool> {
+    let id: IdentificationValue = 1;
+    let description = "tests whether data exceeds threshold of 0.55";
+    fn causal_fn(obs: NumericalValue) -> Result<bool, CausalityError> {
+        let threshold: NumericalValue = 0.55;
+        if !obs.ge(&threshold) {
+            Ok(false)
+        } else {
+            Ok(true)
+        }
+    }
+
+    Causaloid::new(id, causal_fn, description)
+}
+
+pub fn get_test_causaloid_deterministic_with_context(
     context: BaseContext,
-) -> Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
-where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
-{
+) -> BaseCausaloid<bool, bool> {
     let id: IdentificationValue = 1;
     let context = Arc::new(RwLock::new(context));
     let description = "Inverts any input";
 
-    let causal_fn =
-        |effect: I, _context: &Arc<RwLock<BaseContext>>| -> Result<O, CausalityError> {
-            let obs = effect.into_effect_value();
-            let obs_bool = match obs {
-                EffectValue::Deterministic(val) => val,
-                _ => return Err(CausalityError(
-                    "Causal function expected Deterministic effect but received a different variant."
-                        .into(),
-                )),
-            };
+    fn causal_fn_deterministic_with_context(
+        effect: bool,
+        _context: &Arc<RwLock<BaseContext>>,
+    ) -> Result<bool, CausalityError> {
+        // The effect is already a bool, so no need for into_effect_value and match
+        Ok(!effect)
+    }
 
-            // Just invert the value.
-            Ok(O::try_from_effect_value(EffectValue::Deterministic(!obs_bool))?)
-        };
-
-    Causaloid::new_with_context(id, causal_fn, context, description)
+    Causaloid::new_with_context(
+        id,
+        causal_fn_deterministic_with_context,
+        context,
+        description,
+    )
 }
 
-pub fn get_test_causaloid_deterministic_input_output() -> BaseCausaloid {
+pub fn get_test_causaloid_deterministic_input_output() -> BaseCausaloid<bool, bool> {
     let id: IdentificationValue = 2;
     let description = "Inverts any input";
+    fn causal_fn(obs: bool) -> Result<bool, CausalityError> {
+        Ok(!obs)
+    }
+    Causaloid::new(id, causal_fn, description)
+}
 
-    let causal_fn = |effect: EffectValue| -> PropagatingEffect {
-        let obs = match effect {
-            EffectValue::Deterministic(val) => val,
-            _ => return PropagatingEffect::from_error(CausalityError(
-                "Causal function expected Deterministic effect but received a different variant."
-                    .into(),
-            )),
-        };
+pub fn get_test_error_causaloid() -> BaseCausaloid<bool, bool> {
+    let id: IdentificationValue = 1;
+    let description = "tests whether data exceeds threshold of 0.55";
 
-        // Just invert the value.
-        PropagatingEffect::from_deterministic(!obs)
-    };
+    fn causal_fn(_: bool) -> Result<bool, CausalityError> {
+        Err(CausalityError("Test error".into()))
+    }
 
-    Causaloid::new(id, causal_fn as CausalFn, description)
+    Causaloid::new(id, causal_fn, description)
 }
 
 // BaseContext is a type alias for a basic context that can be used for testing
@@ -263,17 +202,6 @@ pub fn get_base_context() -> BaseContext {
     assert_eq!(context.size(), 1);
 
     context
-}
-
-pub fn get_test_error_causaloid() -> BaseCausaloid {
-    let id: IdentificationValue = 1;
-    let description = "tests whether data exceeds threshold of 0.55";
-
-    let causal_fn = |_: EffectValue| -> PropagatingEffect {
-        PropagatingEffect::from_error(CausalityError("Test error".into()))
-    };
-
-    Causaloid::new(id, causal_fn as CausalFn, description)
 }
 
 pub fn get_test_context() -> BaseContext {
