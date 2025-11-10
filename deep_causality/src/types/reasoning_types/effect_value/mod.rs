@@ -5,7 +5,7 @@
 
 //! This module defines the CausalValue enum.
 
-use crate::{ContextId, ContextoidId, IdentificationValue, NumericValue, PropagatingEffect};
+use crate::{ContextoidId, IdentificationValue, NumericValue, PropagatingEffect};
 use deep_causality_num::{Complex, Quaternion};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_uncertain::{
@@ -62,7 +62,7 @@ pub enum EffectValue {
     MaybeUncertainFloat(MaybeUncertainF64),
     /// A link to a complex, structured result in a Contextoid. As an output, this
     /// can be interpreted by a reasoning engine as a command to fetch data.
-    ContextualLink(ContextId, ContextoidId),
+    ContextualLink(ContextoidId),
     /// A collection of named values, allowing for complex, structured data passing.
     Map(HashMap<IdentificationValue, Box<PropagatingEffect>>),
 

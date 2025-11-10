@@ -2,9 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{
-    ContextId, ContextoidId, EffectValue, IdentificationValue, NumericValue, PropagatingEffect,
-};
+use crate::{ContextoidId, EffectValue, IdentificationValue, NumericValue, PropagatingEffect};
 use deep_causality_num::{Complex, Quaternion};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_uncertain::{
@@ -104,9 +102,9 @@ impl EffectValue {
         }
     }
 
-    pub fn as_contextual_link(&self) -> Option<(&ContextId, &ContextoidId)> {
+    pub fn as_contextual_link(&self) -> Option<&ContextoidId> {
         match self {
-            EffectValue::ContextualLink(cid, coid) => Some((cid, coid)),
+            EffectValue::ContextualLink(coid) => Some(coid),
             _ => None,
         }
     }

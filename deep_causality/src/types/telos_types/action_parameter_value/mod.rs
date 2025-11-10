@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{ContextId, ContextoidId, EffectValue};
+use crate::{ContextoidId, EffectValue};
 use std::fmt::{Display, Formatter};
 
 /// Represents a value for a parameter within a `ProposedAction`.
@@ -16,7 +16,7 @@ pub enum ActionParameterValue {
     Boolean(bool),
     /// A link to a complex, structured result in a Contextoid. As an input, this
     /// can be interpreted as a command to fetch data from the context using the ID's.
-    ContextualLink(ContextId, ContextoidId),
+    ContextualLink(ContextoidId),
 }
 
 impl From<EffectValue> for ActionParameterValue {
@@ -29,8 +29,8 @@ impl From<EffectValue> for ActionParameterValue {
             EffectValue::UncertainFloat(u) => ActionParameterValue::Number(u.value()),
             EffectValue::Tensor(t) => ActionParameterValue::String(format!("{:?}", t)),
             EffectValue::Complex(c) => ActionParameterValue::String(format!("{:?}", c)),
-            EffectValue::ContextualLink(context_id, contextoid_id) => {
-                ActionParameterValue::ContextualLink(context_id, contextoid_id)
+            EffectValue::ContextualLink(contextoid_id) => {
+                ActionParameterValue::ContextualLink(contextoid_id)
             }
             EffectValue::None => ActionParameterValue::String("None".to_string()),
             _ => ActionParameterValue::String("Other".to_string()),
@@ -45,12 +45,8 @@ impl Display for ActionParameterValue {
             ActionParameterValue::Number(n) => write!(f, "ActionParameterValue::Number: {:.2}", n),
             ActionParameterValue::Integer(i) => write!(f, "ActionParameterValue::Integer: {}", i),
             ActionParameterValue::Boolean(b) => write!(f, "ActionParameterValue::Boolean: {}", b),
-            ActionParameterValue::ContextualLink(context_id, contextoid_id) => {
-                write!(
-                    f,
-                    "ActionParameterValue::ContextualLink({}, {})",
-                    context_id, contextoid_id
-                )
+            ActionParameterValue::ContextualLink(contextoid_id) => {
+                write!(f, "ActionParameterValue::ContextualLink({})", contextoid_id)
             }
         }
     }

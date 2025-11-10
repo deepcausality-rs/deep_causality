@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{
-    CausalMonad, CausalityError, ComplexTensor, ContextId, ContextoidId, EffectValue,
-    IdentificationValue, NumericValue, NumericalValue, PropagatingEffect,
+    CausalMonad, CausalityError, ComplexTensor, ContextoidId, EffectValue, IdentificationValue,
+    NumericValue, NumericalValue, PropagatingEffect,
 };
 use deep_causality_haft::MonadEffect3;
 use deep_causality_num::{Complex, Quaternion};
@@ -377,8 +377,8 @@ impl PropagatingEffect {
     /// let effect = PropagatingEffect::from_contextual_link(context_id, contextoid_id);
     /// assert!(matches!(effect.value, EffectValue::ContextualLink(_, _)));
     /// ```
-    pub fn from_contextual_link(context_id: ContextId, contextoid_id: ContextoidId) -> Self {
-        CausalMonad::pure(EffectValue::ContextualLink(context_id, contextoid_id))
+    pub fn from_contextual_link(contextoid_id: ContextoidId) -> Self {
+        CausalMonad::pure(EffectValue::ContextualLink(contextoid_id))
     }
 
     /// Creates a new `PropagatingEffect` of the `Map` variant from an existing `HashMap`.

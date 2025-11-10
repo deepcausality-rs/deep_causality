@@ -24,9 +24,7 @@ impl PartialEq for EffectValue {
             (EffectValue::MaybeUncertainFloat(l0), EffectValue::MaybeUncertainFloat(r0)) => {
                 l0 == r0
             }
-            (EffectValue::ContextualLink(l0, l1), EffectValue::ContextualLink(r0, r1)) => {
-                l0 == r0 && l1 == r1
-            }
+            (EffectValue::ContextualLink(l1), EffectValue::ContextualLink(r1)) => l1 == r1,
             (EffectValue::Map(l0), EffectValue::Map(r0)) => l0 == r0,
             (EffectValue::RelayTo(l0, l1), EffectValue::RelayTo(r0, r1)) => l0 == r0 && l1 == r1,
             _ => false,
