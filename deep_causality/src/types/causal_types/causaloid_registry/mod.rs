@@ -19,8 +19,8 @@ use std::fmt::Display;
 ///
 /// # Hybrid Dispatch and Extensibility
 ///
-/// The causal engine is designed to be both fast for common types and extensible
-/// for user-defined types. This is achieved through a hybrid dispatch system
+/// The causal engine is designed to be both fast for internal types and extensible
+/// for user-defined (external) types. This is achieved through a hybrid dispatch system
 /// centered on the `EffectValue` enum.
 ///
 /// ## Static Dispatch for Built-in Types

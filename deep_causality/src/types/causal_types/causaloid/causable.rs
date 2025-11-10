@@ -59,7 +59,7 @@ where
                     Ok(val) => val,
                     Err(e) => {
                         logs.push(vec![format!(
-                            "Causaloid {}: Input conversion failed: {}",
+                            "Causaloid {}: Input type conversion failed: {}",
                             self.id, e
                         )]);
                         return PropagatingEffect {

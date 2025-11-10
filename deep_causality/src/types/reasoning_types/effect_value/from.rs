@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{EffectValue, NumericValue, NumericalValue};
+use crate::{EffectValue, NumericValue, NumericalValue, PropagatingValue};
 use deep_causality_num::{Complex, Quaternion};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_uncertain::{
@@ -79,5 +79,11 @@ impl From<MaybeUncertainBool> for EffectValue {
 impl From<MaybeUncertainF64> for EffectValue {
     fn from(muf: MaybeUncertainF64) -> Self {
         EffectValue::MaybeUncertainFloat(muf)
+    }
+}
+
+impl From<Box<dyn PropagatingValue>> for EffectValue {
+    fn from(value: Box<dyn PropagatingValue>) -> Self {
+        EffectValue::External(value)
     }
 }
