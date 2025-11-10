@@ -25,8 +25,7 @@ mod predicates;
 /// This enum encapsulates various types of effect data that can be propagated
 /// through the causal effect system. It supports primitive types, strings,
 /// and vectors of these types.
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub enum EffectValue {
     /// Represents the absence of a signal or evidence. Serves as the default.
     #[default]
@@ -75,4 +74,3 @@ pub enum EffectValue {
     /// This enables the causal system to be extended with custom data types.
     External(Box<dyn PropagatingValue>),
 }
-

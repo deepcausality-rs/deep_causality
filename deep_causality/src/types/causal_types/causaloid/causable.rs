@@ -3,11 +3,12 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::traits::causable_collection::collection_reasoning::private;
+use crate::types::causal_types::causaloid::causable_utils;
 use crate::{
-    Causable, CausableGraph, CausalEffectLog, CausalMonad, CausalityError, Causaloid,
-    CausaloidRegistry, CausaloidType, Datable, EffectValue, IntoEffectValue, MonadicCausable,
+    Causable, CausableGraph, CausalMonad, CausalityError, Causaloid, CausaloidRegistry,
+    CausaloidType, Datable, EffectValue, IntoEffectValue, MonadicCausable,
     MonadicCausableGraphReasoning, PropagatingEffect, SpaceTemporal, Spatial, Symbolic, Temporal,
+    monadic_collection_utils,
 };
 
 impl<I, O, D, S, T, ST, SYM, VS, VT> Causable for Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
@@ -31,8 +32,8 @@ where
 impl<I, O, D, S, T, ST, SYM, VS, VT> MonadicCausable<CausalMonad>
     for Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
+    I: IntoEffectValue + Default,
+    O: IntoEffectValue + Default,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -41,96 +42,86 @@ where
     VS: Clone,
     VT: Clone,
 {
+    /// Evaluates the causaloid against a given incoming effect, producing a new effect.
+    ///
+    /// This function is the core of the causal reasoning engine for a single causaloid.
+    /// It dispatches the evaluation logic based on the `CausaloidType` (Singleton,
+    /// Collection, or Graph) and returns the resulting `PropagatingEffect`.
+    ///
+    /// # Arguments
+    ///
+    /// * `registry`: A reference to the `CausaloidRegistry` used to look up
+    ///   other causaloids during collection or graph evaluation.
+    /// * `incoming_effect`: The `PropagatingEffect` that triggers this evaluation.
+    ///
+    /// # Returns
+    ///
+    /// A new `PropagatingEffect` containing the value, error status, and full
+    /// log history of the computation.
+    ///
+    /// ## Log Provenance
+    ///
+    /// To meet the strict requirements of auditable and provable reasoning, this
+    /// implementation guarantees that the full, ordered history of operations is
+    /// preserved in the `logs` field of the returned `PropagatingEffect`. Existing
+    /// logs from the `incoming_effect` are always preserved and appended to.
+    ///
+    /// The mechanism differs slightly by type:
+    ///
+    /// - **`Singleton`:** Uses a monadic `bind` chain. Each step in the chain
+    ///   (input conversion, execution, output conversion) automatically and safely
+    ///   appends its logs to the accumulated logs of the previous step.
+    ///
+    /// - **`Collection`:** Sequentially evaluates each causaloid in the collection.
+    ///   The full `PropagatingEffect` (value and all logs) from one evaluation step
+    ///   is used as the complete input for the next, ensuring the log history
+    ///   grows correctly throughout the sequential chain.
+    ///
+    /// - **`Graph`:** First, it logs its own evaluation context. It then delegates to a
+    ///   recursive subgraph evaluation. Finally, it prepends its own context log to the
+    ///   complete log history returned by the subgraph, ensuring the parent-child
+    ///   reasoning hierarchy is captured in the final log.
+    ///
+    /// In all cases, if an error occurs, the evaluation short-circuits and returns
+    /// an effect containing the error and all logs accumulated up to the point of failure.
     fn evaluate(
         &self,
         registry: &CausaloidRegistry,
         incoming_effect: &PropagatingEffect,
     ) -> PropagatingEffect {
-        // Log the incoming effect
-        let mut logs: Vec<CausalEffectLog> = vec![vec![format!(
-            "Causaloid {}: Incoming effect: {:?}",
-            self.id, incoming_effect.value
-        )]];
-
         match self.causal_type {
             CausaloidType::Singleton => {
-                // 1. Convert incoming_effect.value to input type I
-                let input_value = match I::try_from_effect_value(incoming_effect.value.clone()) {
-                    Ok(val) => val,
-                    Err(e) => {
-                        logs.push(vec![format!(
-                            "Causaloid {}: Input type conversion failed: {}",
-                            self.id, e
-                        )]);
-                        return PropagatingEffect {
-                            value: EffectValue::None,
-                            error: Some(e),
-                            logs,
-                        };
-                    }
-                };
+                // 1. Get an owned copy of the effect.
+                let mut initial_monad = incoming_effect.clone();
 
-                let result_o = if let Some(context_fn) = self.context_causal_fn {
-                    if let Some(context) = self.context.as_ref() {
-                        context_fn(input_value, context)
-                    } else {
-                        let err_msg = "Causaloid::evaluate: context is None".into();
-                        return PropagatingEffect {
-                            value: EffectValue::None,
-                            error: Some(CausalityError(err_msg)),
-                            logs,
-                        };
-                    }
-                } else if let Some(causal_fn) = self.causal_fn {
-                    causal_fn(input_value)
-                } else {
-                    let err_msg = format!(
-                        "Causaloid {} is missing both causal_fn and context_causal_fn",
-                        self.id
-                    );
-                    logs.push(vec![err_msg.clone()]);
-                    return PropagatingEffect {
-                        value: EffectValue::None,
-                        error: Some(CausalityError(err_msg)),
-                        logs,
-                    };
-                };
+                // 2. Add the new, contextual log message while preserving the exiting logs.
+                initial_monad.logs.push(vec![format!(
+                    "Causaloid {}: Incoming effect: {:?}",
+                    self.id, incoming_effect.value
+                )]);
 
-                match result_o {
-                    Ok(output_value) => {
-                        let effect_value = output_value.into_effect_value();
-                        logs.push(vec![format!(
-                            "Causaloid {}: Output effect: {:?}",
-                            self.id, effect_value
-                        )]);
-                        PropagatingEffect {
-                            value: effect_value,
-                            error: None,
-                            logs,
-                        }
-                    }
-                    Err(e) => {
-                        logs.push(vec![format!(
-                            "Causaloid {}: Causal function failed: {}",
-                            self.id, e
-                        )]);
-                        PropagatingEffect {
-                            value: EffectValue::None,
-                            error: Some(e),
-                            logs,
-                        }
-                    }
-                }
+                // 3. Chain the operations and return the final monad.
+                initial_monad
+                    .bind(|effect_val| causable_utils::convert_input(effect_val, self.id))
+                    .bind(|input| causable_utils::execute_causal_logic(input, self))
+                    .bind(|output| causable_utils::convert_output(output, self.id))
             }
             CausaloidType::Collection => {
+                // 1. Get an owned copy of the effect and add the initial log.
+                let mut initial_monad = incoming_effect.clone();
+                initial_monad.logs.push(vec![format!(
+                    "Causaloid {}: Incoming effect for Collection: {:?}",
+                    self.id, incoming_effect.value
+                )]);
+
                 let coll_ids = match self.causal_coll.as_ref() {
                     Some(c) => c,
                     None => {
-                        let err_msg = "Causaloid::evaluate: causal_collectin is None".into();
+                        let err_msg = "Causaloid::evaluate: causal_collection is None".into();
                         return PropagatingEffect {
                             value: EffectValue::None,
                             error: Some(CausalityError(err_msg)),
-                            logs,
+                            logs: initial_monad.logs,
                         };
                     }
                 };
@@ -144,47 +135,57 @@ where
                         return PropagatingEffect {
                             value: EffectValue::None,
                             error: Some(CausalityError(err_msg)),
-                            logs,
+                            logs: initial_monad.logs,
                         };
                     }
                 };
 
-                let threshold_value = self.coll_threshold_value;
-
-                // Evaluate each causaloid in the collection using the registry
+                // Sequentially evaluate each causaloid, accumulating logs and chaining effects.
                 let mut effects_from_collection = Vec::new();
-                let mut current_input_effect = incoming_effect.clone();
+                // Start the chain with the initial effect, which contains the full log history up to this point.
+                let mut current_effect = initial_monad.clone();
 
                 for &causaloid_id in coll_ids.iter() {
-                    let mut result_effect = registry.evaluate(causaloid_id, &current_input_effect);
-                    logs.append(&mut result_effect.logs); // Merge logs
+                    // The evaluate function will return a new effect with the combined logs.
+                    let result_effect = registry.evaluate(causaloid_id, &current_effect);
+
+                    // Short-circuit on error. The result_effect already contains the full log history.
                     if result_effect.is_err() {
-                        result_effect.logs = logs; // Attach accumulated logs before returning error
                         return result_effect;
                     }
+
                     effects_from_collection.push(result_effect.value.clone());
-                    current_input_effect = result_effect; // Output of one is input to next
+                    // The full effect (value and logs) from this step becomes the input for the next.
+                    current_effect = result_effect;
                 }
 
-                // Aggregate the effects
-                match private::aggregate_effects(
+                // Aggregate the collected effect values.
+                match monadic_collection_utils::aggregate_effects(
                     effects_from_collection,
                     &aggregate_logic,
-                    threshold_value,
+                    self.coll_threshold_value,
                 ) {
                     Ok(aggregated_value) => PropagatingEffect {
                         value: aggregated_value,
                         error: None,
-                        logs,
+                        // Use the logs from the very last successful evaluation, which contains the full history.
+                        logs: current_effect.logs,
                     },
                     Err(e) => PropagatingEffect {
                         value: EffectValue::None,
                         error: Some(e),
-                        logs,
+                        logs: current_effect.logs,
                     },
                 }
             }
             CausaloidType::Graph => {
+                // 1. Get an owned copy of the effect and add the initial log for this graph-causaloid.
+                let mut initial_monad = incoming_effect.clone();
+                initial_monad.logs.push(vec![format!(
+                    "Causaloid {}: Incoming effect for Graph: {:?}",
+                    self.id, incoming_effect.value
+                )]);
+
                 let graph_ids = match self.causal_graph.as_ref() {
                     Some(g) => g,
                     None => {
@@ -192,12 +193,11 @@ where
                         return PropagatingEffect {
                             value: EffectValue::None,
                             error: Some(CausalityError(err_msg)),
-                            logs,
+                            logs: initial_monad.logs,
                         };
                     }
                 };
 
-                // Since the graph is guaranteed to have a single root, start evaluation there.
                 let root_index = match graph_ids.as_ref().get_root_index() {
                     Some(index) => index,
                     None => {
@@ -205,18 +205,22 @@ where
                         return PropagatingEffect {
                             value: EffectValue::None,
                             error: Some(CausalityError(err_msg)),
-                            logs,
+                            logs: initial_monad.logs,
                         };
                     }
                 };
 
-                // Delegate to the reasoning algorithm from the `MonadicCausableGraphReasoning` trait.
-                // This will traverse and evaluate the entire graph from the root using the registry.
-                let mut graph_effect =
+                // 2. Delegate to the subgraph reasoning algorithm.
+                // The recursive call will handle its own log appending based on its input.
+                let mut result_effect =
                     graph_ids.evaluate_subgraph_from_cause(registry, root_index, incoming_effect);
-                logs.append(&mut graph_effect.logs); // Merge logs
-                graph_effect.logs = logs; // Replace with merged logs
-                graph_effect
+
+                // 3. Prepend this causaloid's log entry to the results from the subgraph evaluation.
+                let mut final_logs = initial_monad.logs;
+                final_logs.append(&mut result_effect.logs);
+                result_effect.logs = final_logs;
+
+                result_effect
             }
         }
     }

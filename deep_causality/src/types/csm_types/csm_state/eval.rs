@@ -10,8 +10,8 @@ use crate::{
 
 impl<I, O, D, S, T, ST, SYM, VS, VT> CausalState<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
+    I: IntoEffectValue + Default,
+    O: IntoEffectValue + Default,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,

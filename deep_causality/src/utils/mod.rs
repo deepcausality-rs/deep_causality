@@ -4,4 +4,5 @@
  */
 
 pub mod math_utils;
+pub mod monadic_collection_utils;
 pub mod time_utils;

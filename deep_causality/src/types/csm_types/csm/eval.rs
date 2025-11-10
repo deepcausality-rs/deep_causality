@@ -13,8 +13,8 @@ use std::fmt::Debug;
 #[allow(clippy::type_complexity)]
 impl<I, O, D, S, T, ST, SYM, VS, VT> CSM<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
+    I: IntoEffectValue + Default,
+    O: IntoEffectValue + Default,
     D: Datable + Clone + Debug,
     S: Spatial<VS> + Clone + Debug,
     T: Temporal<VT> + Clone + Debug,

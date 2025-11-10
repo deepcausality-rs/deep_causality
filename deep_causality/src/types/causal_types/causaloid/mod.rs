@@ -9,6 +9,7 @@ use std::marker::PhantomData;
 use std::sync::{Arc, RwLock};
 
 mod causable;
+mod causable_utils;
 mod display;
 mod getters;
 mod identifiable;
