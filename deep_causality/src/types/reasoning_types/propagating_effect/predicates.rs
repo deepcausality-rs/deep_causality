@@ -2,9 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::CausalPropagatingEffect;
+use crate::{CausalEffectLog, CausalPropagatingEffect};
 
-impl<Value, Error, Log> CausalPropagatingEffect<Value, Error, Log> {
+impl<Value, Error> CausalPropagatingEffect<Value, Error, CausalEffectLog> {
     pub fn is_ok(&self) -> bool {
         self.error.is_none()
     }

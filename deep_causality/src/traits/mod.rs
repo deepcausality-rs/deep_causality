@@ -15,6 +15,7 @@ pub mod identifiable;
 pub mod indexable;
 pub mod inferable;
 pub mod into_effect_value;
+pub mod log_append;
 pub mod observable;
 pub mod propagating_value;
 pub mod scalar;

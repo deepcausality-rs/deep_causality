@@ -25,7 +25,7 @@ use deep_causality_haft::MonadEffect3;
 /// This effect only contains logs generated during this specific operation.
 /// It is the responsibility of the calling `bind` function to merge these logs
 /// with the preceding log history.
-pub(in crate::types::causal_types::causaloid) fn convert_input<I>(
+pub(super) fn convert_input<I>(
     effect_val: EffectValue,
     id: u64,
 ) -> CausalPropagatingEffect<I, CausalityError, CausalEffectLog>
@@ -34,14 +34,11 @@ where
 {
     match I::try_from_effect_value(effect_val) {
         Ok(val) => CausalMonad::pure(val),
-        Err(e) => {
-            let log = vec![format!("Causaloid {}: Input conversion failed: {}", id, e)];
-            CausalPropagatingEffect {
-                value: I::default(),
-                error: Some(e),
-                logs: vec![log],
-            }
-        }
+        Err(e) => CausalPropagatingEffect {
+            value: I::default(),
+            error: Some(e.clone()),
+            logs: format!("Causaloid {}: Input conversion failed: {}", id, e).into(),
+        },
     }
 }
 
@@ -62,17 +59,7 @@ where
 /// This effect only contains logs generated during this specific operation.
 /// It is the responsibility of the calling `bind` function to merge these logs
 /// with the preceding log history.
-pub(in crate::types::causal_types::causaloid) fn execute_causal_logic<
-    I,
-    O,
-    D,
-    S,
-    T,
-    ST,
-    SYM,
-    VS,
-    VT,
->(
+pub(super) fn execute_causal_logic<I, O, D, S, T, ST, SYM, VS, VT>(
     input: I,
     causaloid: &Causaloid<I, O, D, S, T, ST, SYM, VS, VT>,
 ) -> CausalPropagatingEffect<O, CausalityError, CausalEffectLog>
@@ -106,18 +93,19 @@ where
     };
 
     match result {
-        Ok(output) => CausalMonad::pure(output),
-        Err(e) => {
-            let log = vec![format!(
-                "Causaloid {}: Causal function failed: {}",
-                causaloid.id, e
-            )];
+        Ok(causal_fn_output) => {
+            // Create a new effect with the output value and the log from the causal function.
             CausalPropagatingEffect {
-                value: O::default(),
-                error: Some(e),
-                logs: vec![log],
+                value: causal_fn_output.output,
+                error: None,
+                logs: causal_fn_output.log,
             }
         }
+        Err(e) => CausalPropagatingEffect {
+            value: O::default(),
+            error: Some(e.clone()),
+            logs: format!("Causaloid {}: Causal function failed: {}", causaloid.id, e).into(),
+        },
     }
 }
 
@@ -137,7 +125,7 @@ where
 /// This effect contains the log message for this specific operation. It is the
 /// responsibility of the calling `bind` function to merge this log with the
 /// preceding log history.
-pub(in crate::types::causal_types::causaloid) fn convert_output<O>(
+pub(super) fn convert_output<O>(
     output: O,
     id: u64,
 ) -> CausalPropagatingEffect<EffectValue, CausalityError, CausalEffectLog>
@@ -145,12 +133,11 @@ where
     O: IntoEffectValue,
 {
     let effect_value = output.into_effect_value();
-    let log = vec![format!(
+
+    let mut monad = CausalMonad::pure(effect_value.clone());
+    monad.logs.add_entry(&format!(
         "Causaloid {}: Output effect: {:?}",
         id, effect_value
-    )];
-
-    let mut monad = CausalMonad::pure(effect_value);
-    monad.logs.push(log);
+    ));
     monad
 }

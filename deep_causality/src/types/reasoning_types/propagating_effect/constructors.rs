@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{
-    CausalMonad, CausalityError, ComplexTensor, ContextoidId, EffectValue, IdentificationValue,
-    NumericValue, NumericalValue, PropagatingEffect,
+    CausalEffectLog, CausalMonad, CausalityError, ComplexTensor, ContextoidId, EffectValue,
+    IdentificationValue, NumericValue, NumericalValue, PropagatingEffect,
 };
 use deep_causality_haft::MonadEffect3;
 use deep_causality_num::{Complex, Quaternion};
@@ -439,7 +439,7 @@ impl PropagatingEffect {
         Self {
             value: EffectValue::None,
             error: Some(err),
-            logs: Vec::new(),
+            logs: CausalEffectLog::new(),
         }
     }
 }

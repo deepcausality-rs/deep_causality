@@ -3,10 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::CausalPropagatingEffect;
+use crate::{CausalEffectLog, CausalPropagatingEffect};
 use std::fmt::Debug;
 
-impl<Value: Debug, Error: Debug, Log: AsRef<str>> CausalPropagatingEffect<Value, Error, Log> {
+impl<Value: Debug, Error: Debug> CausalPropagatingEffect<Value, Error, CausalEffectLog> {
     /// Generates a human-readable explanation of the causal computation's history.
     ///
     /// This method iterates over the accumulated logs, providing a comprehensive
@@ -26,9 +26,7 @@ impl<Value: Debug, Error: Debug, Log: AsRef<str>> CausalPropagatingEffect<Value,
 
         if !self.logs.is_empty() {
             explanation.push_str("--- Logs ---\n");
-            for log_entry in &self.logs {
-                explanation.push_str(&format!("{}\n", log_entry.as_ref()));
-            }
+            explanation.push_str(&format!("{}", self.logs));
         }
 
         explanation

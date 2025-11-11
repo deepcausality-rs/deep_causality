@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
 
+use crate::traits::log_append::LogAppend;
 use crate::{CausalEffectLog, CausalityError, EffectValue};
 use deep_causality_haft::{Applicative, Functor, HKT, HKT3, Monad, Placeholder};
 
@@ -13,7 +14,7 @@ mod predicates;
 pub struct CausalPropagatingEffect<Value, Error, Log> {
     pub value: Value,
     pub error: Option<Error>,
-    pub logs: Vec<Log>,
+    pub logs: Log,
 }
 
 impl<Value, Error, Log> CausalPropagatingEffect<Value, Error, Log>
@@ -48,6 +49,7 @@ where
     where
         F: FnOnce(Value) -> CausalPropagatingEffect<NewValue, Error, Log>,
         NewValue: Default,
+        Log: Default + Clone + LogAppend,
     {
         if let Some(error) = self.error {
             return CausalPropagatingEffect {
@@ -59,7 +61,7 @@ where
 
         let mut next_effect = f(self.value);
         let mut combined_logs = self.logs;
-        combined_logs.extend(next_effect.logs);
+        combined_logs.append(&mut next_effect.logs);
         next_effect.logs = combined_logs;
         next_effect
     }
@@ -97,23 +99,23 @@ where
     }
 }
 
-impl<E, L> Applicative<PropagatingEffectWitness<E, L>> for PropagatingEffectWitness<E, L>
+impl<E> Applicative<PropagatingEffectWitness<E, CausalEffectLog>>
+    for PropagatingEffectWitness<E, CausalEffectLog>
 where
     E: 'static + Clone,
-    L: 'static + Clone,
 {
-    fn pure<T>(value: T) -> <PropagatingEffectWitness<E, L> as HKT>::Type<T> {
+    fn pure<T>(value: T) -> <PropagatingEffectWitness<E, CausalEffectLog> as HKT>::Type<T> {
         CausalPropagatingEffect {
             value,
             error: None,
-            logs: Vec::new(),
+            logs: CausalEffectLog::new(),
         }
     }
 
     fn apply<A, B, Func>(
-        mut f_ab: <PropagatingEffectWitness<E, L> as HKT>::Type<Func>,
-        f_a: <PropagatingEffectWitness<E, L> as HKT>::Type<A>,
-    ) -> <PropagatingEffectWitness<E, L> as HKT>::Type<B>
+        mut f_ab: <PropagatingEffectWitness<E, CausalEffectLog> as HKT>::Type<Func>,
+        mut f_a: <PropagatingEffectWitness<E, CausalEffectLog> as HKT>::Type<A>,
+    ) -> <PropagatingEffectWitness<E, CausalEffectLog> as HKT>::Type<B>
     where
         Func: FnMut(A) -> B,
         A: Clone,
@@ -134,7 +136,7 @@ where
         }
 
         let mut combined_logs = f_ab.logs;
-        combined_logs.extend(f_a.logs);
+        combined_logs.append(&mut f_a.logs);
 
         CausalPropagatingEffect {
             value: (f_ab.value)(f_a.value),
@@ -144,17 +146,17 @@ where
     }
 }
 
-impl<E, L> Monad<PropagatingEffectWitness<E, L>> for PropagatingEffectWitness<E, L>
+impl<E> Monad<PropagatingEffectWitness<E, CausalEffectLog>>
+    for PropagatingEffectWitness<E, CausalEffectLog>
 where
     E: 'static + Clone,
-    L: 'static + Clone,
 {
     fn bind<A, B, Func>(
-        m_a: <PropagatingEffectWitness<E, L> as HKT>::Type<A>,
+        m_a: <PropagatingEffectWitness<E, CausalEffectLog> as HKT>::Type<A>,
         f: Func,
-    ) -> <PropagatingEffectWitness<E, L> as HKT>::Type<B>
+    ) -> <PropagatingEffectWitness<E, CausalEffectLog> as HKT>::Type<B>
     where
-        Func: FnOnce(A) -> <PropagatingEffectWitness<E, L> as HKT>::Type<B>,
+        Func: FnOnce(A) -> <PropagatingEffectWitness<E, CausalEffectLog> as HKT>::Type<B>,
     {
         if m_a.error.is_some() {
             return CausalPropagatingEffect {
@@ -165,7 +167,7 @@ where
         }
         let mut next_effect = f(m_a.value);
         let mut combined_logs = m_a.logs;
-        combined_logs.extend(next_effect.logs);
+        combined_logs.append(&mut next_effect.logs);
         next_effect.logs = combined_logs;
         next_effect
     }

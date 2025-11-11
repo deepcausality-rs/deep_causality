@@ -35,14 +35,15 @@ pub fn get_test_error_action() -> CausalAction {
 
 // Causaloid that returns a non-deterministic effect
 pub fn get_test_probabilistic_causaloid() -> BaseCausaloid<f64, f64> {
-    fn causal_fn(_: f64) -> Result<f64, CausalityError> {
-        Ok(0.5)
+    fn causal_fn(_: f64) -> Result<CausalFnOutput<f64>, CausalityError> {
+        let log = CausalEffectLog::new();
+        Ok(CausalFnOutput { output: 0.5, log })
     }
     Causaloid::new(99, causal_fn, "Probabilistic Causaloid")
 }
 
 pub fn get_test_error_causaloid() -> BaseCausaloid<bool, bool> {
-    fn causal_fn(_: bool) -> Result<bool, CausalityError> {
+    fn causal_fn(_: bool) -> Result<CausalFnOutput<bool>, CausalityError> {
         Err(CausalityError::new("Error".to_string()))
     }
     Causaloid::new(78, causal_fn, "Error Causaloid")
@@ -76,8 +77,10 @@ pub fn get_effect_ethos(verified: bool, impermissible: bool) -> BaseEffectEthos 
 }
 
 pub fn get_test_causaloid(with_context: bool) -> BaseCausaloid<bool, bool> {
-    fn causal_fn(_effect: bool) -> Result<bool, CausalityError> {
-        Ok(true)
+    fn causal_fn(_effect: bool) -> Result<CausalFnOutput<bool>, CausalityError> {
+        let mut log = CausalEffectLog::new();
+        log.add_entry("Just return true");
+        Ok(CausalFnOutput { output: true, log })
     }
 
     if with_context {

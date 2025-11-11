@@ -39,7 +39,7 @@ where
         CausalPropagatingEffect {
             value,
             error: None,
-            logs: Vec::new(),
+            logs: CausalEffectLog::new(),
         }
     }
 
@@ -72,7 +72,7 @@ where
 
         let mut next_effect = f(effect.value);
         let mut combined_logs = effect.logs;
-        combined_logs.extend(next_effect.logs);
+        combined_logs.append(&mut next_effect.logs);
         next_effect.logs = combined_logs;
         next_effect
     }

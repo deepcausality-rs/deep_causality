@@ -95,10 +95,10 @@ where
                 let mut initial_monad = incoming_effect.clone();
 
                 // 2. Add the new, contextual log message while preserving the exiting logs.
-                initial_monad.logs.push(vec![format!(
+                initial_monad.logs.add_entry(&format!(
                     "Causaloid {}: Incoming effect: {:?}",
                     self.id, incoming_effect.value
-                )]);
+                ));
 
                 // 3. Chain the operations and return the final monad.
                 initial_monad
@@ -109,10 +109,10 @@ where
             CausaloidType::Collection => {
                 // 1. Get an owned copy of the effect and add the initial log.
                 let mut initial_monad = incoming_effect.clone();
-                initial_monad.logs.push(vec![format!(
+                initial_monad.logs.add_entry(&format!(
                     "Causaloid {}: Incoming effect for Collection: {:?}",
                     self.id, incoming_effect.value
-                )]);
+                ));
 
                 let coll_ids = match self.causal_coll.as_ref() {
                     Some(c) => c,
@@ -181,10 +181,10 @@ where
             CausaloidType::Graph => {
                 // 1. Get an owned copy of the effect and add the initial log for this graph-causaloid.
                 let mut initial_monad = incoming_effect.clone();
-                initial_monad.logs.push(vec![format!(
+                initial_monad.logs.add_entry(&format!(
                     "Causaloid {}: Incoming effect for Graph: {:?}",
                     self.id, incoming_effect.value
-                )]);
+                ));
 
                 let graph_ids = match self.causal_graph.as_ref() {
                     Some(g) => g,
