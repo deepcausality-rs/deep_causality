@@ -10,85 +10,61 @@ use deep_causality::*;
 
 // Helper function to create a standard test array.
 // Causaloid doesn't implement Copy, hence the from_fn workaround for array initialization.
-pub fn get_test_causality_array(deterministic: bool) -> [BaseCausaloid; 10] {
-    if deterministic {
-        array::from_fn(|_| get_test_causaloid_deterministic())
-    } else {
-        array::from_fn(|_| get_test_causaloid_probabilistic())
-    }
+pub fn get_test_causality_array_bool_out() -> [BaseCausaloid<NumericalValue, bool>; 10] {
+    array::from_fn(|_| get_test_causaloid_deterministic())
 }
 
-pub fn get_test_causality_array_mixed() -> [BaseCausaloid; 20] {
-    let a1 = get_test_causality_array(true);
-    let a2 = get_test_causality_array(false);
-
-    // Combine a1 and a2
-    a1.into_iter()
-        .chain(a2)
-        .collect::<Vec<_>>()
-        .try_into()
-        .unwrap()
+pub fn get_test_causality_array_numerical_value_out()
+-> [BaseCausaloid<NumericalValue, NumericalValue>; 10] {
+    array::from_fn(|_| get_test_causaloid_probabilistic_bool_output())
 }
 
 #[test]
 fn test_evaluate_deterministic_propagation() {
-    let col = get_test_causality_array(true);
+    let col = get_test_causality_array_bool_out();
+    let registry = CausaloidRegistry::new(); // Create a registry
 
     // Case 1: All succeed, chain should be deterministically true.
     let effect_success = PropagatingEffect::from_numerical(0.99);
-    let res = col.evaluate_collection(&effect_success, &AggregateLogic::All, None);
-    assert!(res.is_ok());
-    assert_eq!(res, PropagatingEffect::from_deterministic(true));
+    let res = col.evaluate_collection(&registry, &effect_success, &AggregateLogic::All, None);
+    dbg!(&res);
+    assert!(!res.is_err()); // Check for no error
+    assert_eq!(res.value, EffectValue::Deterministic(true));
 
     // Case 2: One fails, chain should be deterministically false.
     let effect_fail = PropagatingEffect::from_numerical(0.1);
-    let res = col.evaluate_collection(&effect_fail, &AggregateLogic::All, Some(1.0));
-    assert!(res.is_ok());
-    // let res_fail = res.unwrap();
-    assert_eq!(res, PropagatingEffect::from_deterministic(false));
+    let res = col.evaluate_collection(&registry, &effect_fail, &AggregateLogic::All, Some(1.0));
+    assert!(!res.is_err()); // Check for no error
+    assert_eq!(res.value, EffectValue::Deterministic(false));
 
     // Case 3: An incorrect input effect would trigger an error.
-    let effect_fail = PropagatingEffect::from_contextual_link(1, 3);
-    let res = col.evaluate_collection(&effect_fail, &AggregateLogic::All, Some(1.0));
+    let effect_fail = PropagatingEffect::from_contextual_link(1); // Fixed argument count
+    let res = col.evaluate_collection(&registry, &effect_fail, &AggregateLogic::All, Some(1.0));
     assert!(res.is_err());
 }
 
 #[test]
 fn test_evaluate_probabilistic_propagation() {
-    let col = get_test_causality_array(false);
+    let col = get_test_causality_array_numerical_value_out();
+    let registry = CausaloidRegistry::new(); // Create a registry
 
-    let effect_success = PropagatingEffect::from_probabilistic(0.99);
-    let res = col.evaluate_collection(&effect_success, &AggregateLogic::All, Some(0.5));
-    assert!(res.is_ok());
-    assert_eq!(res, PropagatingEffect::from_probabilistic(1.0));
+    let effect_success = PropagatingEffect::from_numerical(0.99);
+    let res = col.evaluate_collection(&registry, &effect_success, &AggregateLogic::All, Some(0.5));
+    dbg!(&res);
+    assert!(!res.is_err()); // Check for no error
+    assert_eq!(res.value, EffectValue::Probabilistic(1.0));
 
     // Case 2: One fails (Deterministic(false) is treated as probability 0.0).
     // The chain should short-circuit and return a cumulative probability of 0.0.
     let effect_fail = PropagatingEffect::from_numerical(0.1);
-    let res = col.evaluate_collection(&effect_fail, &AggregateLogic::All, Some(0.5));
-    assert!(res.is_err());
-}
-
-#[test]
-fn test_evaluate_mixed_propagation() {
-    let col = get_test_causality_array_mixed();
-
-    // Case 1: All succeed, chain remains deterministically true.
-    let effect_success = PropagatingEffect::from_probabilistic(0.99);
-    let res = col.evaluate_collection(&effect_success, &AggregateLogic::All, Some(0.5));
-    assert!(res.is_ok());
-    let res_success = res.value;
-    assert_eq!(res_success, EffectValue::Probabilistic(1.0));
-
-    // Case 2: One fails, chain becomes deterministically false.
-    let effect_fail = PropagatingEffect::from_probabilistic(0.1);
-    let res_fail = col.evaluate_collection(&effect_fail, &AggregateLogic::All, Some(0.5));
-    assert_eq!(res_fail, PropagatingEffect::from_probabilistic(0.0));
+    let res = col.evaluate_collection(&registry, &effect_fail, &AggregateLogic::All, Some(0.5));
+    assert!(!res.is_err());
+    assert_eq!(res.value, EffectValue::Probabilistic(0.0));
 }
 
 #[test]
 fn test_get_all_items() {
-    let col = get_test_causality_array(true);
+    let col = get_test_causality_array_bool_out();
     let all_items = col.get_all_items();
 
     let exp_len = col.len();
@@ -98,18 +74,18 @@ fn test_get_all_items() {
 
 #[test]
 fn test_get_item_by_id() {
-    let col = get_test_causality_array(true);
+    let col = get_test_causality_array_bool_out();
     assert!(col.get_item_by_id(1).is_some());
 }
 
 #[test]
 fn test_len() {
-    let col = get_test_causality_array(true);
+    let col = get_test_causality_array_bool_out();
     assert_eq!(10, col.len());
 }
 
 #[test]
 fn test_to_vec() {
-    let col = get_test_causality_array(true);
+    let col = get_test_causality_array_bool_out();
     assert_eq!(10, col.to_vec().len());
 }

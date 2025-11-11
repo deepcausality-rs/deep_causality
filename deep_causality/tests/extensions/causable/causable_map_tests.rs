@@ -9,7 +9,7 @@ use deep_causality::utils_test::test_utils::*;
 use deep_causality::*;
 
 // Type alias for clarity in test functions.
-type TestHashMap = HashMap<i8, BaseCausaloid>;
+type TestHashMap = HashMap<i8, BaseCausaloid<f64, bool>>;
 
 // Helper function to create a standard test HashMap.
 fn get_deterministic_test_causality_map() -> TestHashMap {
@@ -20,7 +20,7 @@ fn get_deterministic_test_causality_map() -> TestHashMap {
     ])
 }
 
-fn get_probabilistic_test_causality_map() -> TestHashMap {
+fn get_probabilistic_test_causality_map() -> HashMap<i8, BaseCausaloid<f64, f64>> {
     HashMap::from([
         (1, get_test_causaloid_probabilistic()),
         (2, get_test_causaloid_probabilistic()),
@@ -28,7 +28,7 @@ fn get_probabilistic_test_causality_map() -> TestHashMap {
     ])
 }
 
-fn get_mixed_test_causality_map() -> TestHashMap {
+fn get_mixed_test_causality_map() -> HashMap<i8, BaseCausaloid<f64, bool>> {
     HashMap::from([
         (1, get_test_causaloid_deterministic_true()),
         (2, get_test_causaloid_probabilistic()),
@@ -36,7 +36,7 @@ fn get_mixed_test_causality_map() -> TestHashMap {
     ])
 }
 
-fn get_mixed_test_ctx_link_causality_map() -> TestHashMap {
+fn get_mixed_test_ctx_link_causality_map() -> HashMap<i8, BaseCausaloid<bool, bool>> {
     HashMap::from([
         (1, get_test_causaloid_deterministic_true()),
         (2, get_test_causaloid_deterministic_true()),
@@ -106,14 +106,14 @@ fn test_evaluate_deterministic_propagation() {
     let res = map.evaluate_deterministic(&effect_success, &AggregateLogic::All);
     assert!(res.is_ok());
     let res_success = res.unwrap();
-    assert_eq!(res_success, PropagatingEffect::from_deterministic(true));
+    assert_eq!(res_success.value, EffectValue::Deterministic(true));
 
     // Case 2: One fails, chain should be deterministically false.
     let effect_fail = PropagatingEffect::from_numerical(0.1);
     let res = map.evaluate_deterministic(&effect_fail, &AggregateLogic::All);
     assert!(res.is_ok());
     let res_fail = res.unwrap();
-    assert_eq!(res_fail, PropagatingEffect::from_deterministic(false));
+    assert_eq!(res_fail.value, EffectValue::Deterministic(false));
 }
 
 #[test]
@@ -126,7 +126,7 @@ fn test_evaluate_probabilistic_propagation() {
     let res = map.evaluate_probabilistic(&effect_success, &AggregateLogic::All, 0.5);
     assert!(res.is_ok());
     let res_success = res.unwrap();
-    assert_eq!(res_success, PropagatingEffect::from_probabilistic(1.0));
+    assert_eq!(res_success.value, EffectValue::Probabilistic(1.0));
 
     // Case 2: One fails (Deterministic(false) is treated as probability 0.0).
     // The chain should short-circuit and return a cumulative probability of 0.0.
@@ -134,7 +134,7 @@ fn test_evaluate_probabilistic_propagation() {
     let res = map.evaluate_probabilistic(&effect_fail, &AggregateLogic::All, 0.5);
     assert!(res.is_ok());
     let res_fail = res.unwrap();
-    assert_eq!(res_fail, PropagatingEffect::from_probabilistic(0.0));
+    assert_eq!(res_fail.value, EffectValue::Probabilistic(0.0));
 }
 
 #[test]
@@ -147,7 +147,7 @@ fn test_evaluate_mixed_propagation() {
     assert!(res.is_ok());
     let res_success = res.unwrap();
     // All mixed cased evaluate
-    assert_eq!(res_success, PropagatingEffect::from_deterministic(true));
+    assert_eq!(res_success.value, EffectValue::Deterministic(true));
 }
 
 #[test]

@@ -23,12 +23,13 @@ pub(crate) fn aggregate_effects(
         .iter()
         .any(|e| e.is_uncertain_bool() || e.is_uncertain_float());
     let has_probabilistic = effects.iter().any(|e| e.is_probabilistic());
+    let has_numerical = effects.iter().any(|e| e.is_numeric());
 
     if has_uncertain {
         // If any effect is Uncertain, use the uncertain aggregation strategy.
         aggregate_uncertain(&effects, logic, threshold_value)
-    } else if has_probabilistic {
-        // Else, if any is Probabilistic, use the probabilistic strategy.
+    } else if has_probabilistic || has_numerical {
+        // Else, if any is Probabilistic or Numerical, use the probabilistic strategy.
         aggregate_probabilistic(&effects, logic, threshold_value)
     } else {
         // Otherwise, use the strict deterministic strategy.
@@ -71,6 +72,7 @@ fn aggregate_probabilistic(
         .map(|e| match e {
             EffectValue::Deterministic(b) => Ok(if *b { 1.0 } else { 0.0 }),
             EffectValue::Probabilistic(p) => Ok(*p),
+            EffectValue::Numerical(n) => Ok(*n),
             EffectValue::UncertainBool(ub) => {
                 ub.estimate_probability(100).map_err(CausalityError::from)
             } // num_samples
