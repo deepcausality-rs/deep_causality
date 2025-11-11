@@ -22,7 +22,7 @@ fn test_bool_into_effect_value() {
 fn test_bool_try_from_effect_value_success() {
     let ev = EffectValue::Deterministic(false);
     let b: bool = <bool as IntoEffectValue>::try_from_effect_value(ev).unwrap();
-    assert_eq!(b, false);
+    assert!(!b);
 }
 
 #[test]
@@ -95,7 +95,7 @@ fn test_complex_f64_into_effect_value() {
 #[test]
 fn test_complex_f64_try_from_effect_value_success() {
     let c = Complex::new(3.0, 4.0);
-    let ev = EffectValue::Complex(c.clone());
+    let ev = EffectValue::Complex(c);
     let complex: Complex<f64> = IntoEffectValue::try_from_effect_value(ev).unwrap();
     assert_eq!(complex, c);
 }
@@ -143,7 +143,7 @@ fn test_quaternion_f64_into_effect_value() {
 #[test]
 fn test_quaternion_f64_try_from_effect_value_success() {
     let q = Quaternion::new(5.0, 6.0, 7.0, 8.0);
-    let ev = EffectValue::Quaternion(q.clone());
+    let ev = EffectValue::Quaternion(q);
     let quaternion: Quaternion<f64> = IntoEffectValue::try_from_effect_value(ev).unwrap();
     assert_eq!(quaternion, q);
 }
