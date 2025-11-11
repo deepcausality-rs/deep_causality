@@ -114,10 +114,12 @@ where
                     self.id, incoming_effect.value
                 ));
 
-                let coll_ids = match self.causal_coll.as_ref() {
+                let aggregate_logic = match self.coll_aggregate_logic {
                     Some(c) => c,
                     None => {
-                        let err_msg = "Causaloid::evaluate: causal_collection is None".into();
+                        let err_msg =
+                            "Causaloid::evaluate: aggregate_logic for causal collection is None"
+                                .into();
                         return PropagatingEffect {
                             value: EffectValue::None,
                             error: Some(CausalityError(err_msg)),
@@ -126,12 +128,10 @@ where
                     }
                 };
 
-                let aggregate_logic = match self.coll_aggregate_logic {
+                let coll_ids = match self.causal_coll.as_ref() {
                     Some(c) => c,
                     None => {
-                        let err_msg =
-                            "Causaloid::evaluate: aggregate_logic for causal collection is None"
-                                .into();
+                        let err_msg = "Causaloid::evaluate: causal_collection is None".into();
                         return PropagatingEffect {
                             value: EffectValue::None,
                             error: Some(CausalityError(err_msg)),
