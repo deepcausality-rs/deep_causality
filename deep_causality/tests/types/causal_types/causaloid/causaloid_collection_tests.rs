@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality::utils_test::test_utils;
-use deep_causality::utils_test::test_utils::{get_base_context, get_test_causaloid_deterministic};
+use deep_causality::utils_test::test_utils::get_base_context;
 use deep_causality::{
     AggregateLogic, BaseCausaloid, Causable, Causaloid, CausaloidId, CausaloidRegistry,
     EffectValue, Identifiable, IdentificationValue, MonadicCausable, PropagatingEffect,
@@ -58,13 +58,18 @@ fn test_from_causal_collection_with_context() {
 fn test_collection_causaloid_evaluation() {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
-    let causal_coll_base = test_utils::get_deterministic_test_causality_vec();
-    let causal_coll_ids: Vec<CausaloidId> = causal_coll_base.iter().map(|c| c.id()).collect();
+    let causaloid1 = test_utils::get_test_causaloid_deterministic_true();
+    let causaloid2 = test_utils::get_test_causaloid_deterministic_false();
+    let causaloid3 = test_utils::get_test_causaloid_deterministic_true();
 
     let mut registry = CausaloidRegistry::new();
-    registry.register(get_test_causaloid_deterministic(1));
+    let id1 = registry.register(causaloid1);
+    let id2 = registry.register(causaloid2);
+    let id3 = registry.register(causaloid3);
 
-    let causaloid: BaseCausaloid<f64, bool> = BaseCausaloid::from_causal_collection(
+    let causal_coll_ids: Vec<CausaloidId> = vec![id1, id2, id3];
+
+    let causaloid: BaseCausaloid<bool, bool> = BaseCausaloid::from_causal_collection(
         id,
         Arc::new(causal_coll_ids),
         description,
@@ -74,7 +79,7 @@ fn test_collection_causaloid_evaluation() {
     assert!(!causaloid.is_singleton());
 
     // Evaluate the collection-based causaloid.
-    let effect = PropagatingEffect::from_numerical(0.99);
+    let effect = PropagatingEffect::from_deterministic(true);
     let res = causaloid.evaluate(&registry, &effect);
     dbg!(&res);
 
@@ -91,15 +96,16 @@ fn test_explain_collection_success() {
     let true_causaloid = test_utils::get_test_causaloid_deterministic_true();
     let false_causaloid = test_utils::get_test_causaloid_deterministic_false();
     let mut registry = CausaloidRegistry::new();
-    registry.register(true_causaloid.clone());
-    registry.register(false_causaloid.clone());
 
-    // The `false` causaloid must come first to ensure the `evaluate` loop
-    // does not short-circuit before evaluating both.
-    let causal_coll_base = [false_causaloid, true_causaloid]; // <-- Swapped order
-    let causal_coll_ids: Vec<CausaloidId> = causal_coll_base.iter().map(|c| c.id()).collect();
+    // Register the causaloids and collect their IDs
+    let registered_false_causaloid_id = registry.register(false_causaloid);
+    let registered_true_causaloid_id = registry.register(true_causaloid);
 
-    let collection_causaloid: BaseCausaloid<f64, bool> = Causaloid::from_causal_collection(
+    let causal_coll_ids: Vec<CausaloidId> =
+        vec![registered_false_causaloid_id, registered_true_causaloid_id];
+
+    let collection_causaloid: BaseCausaloid<bool, bool> = Causaloid::from_causal_collection(
+        // Changed to bool, bool
         104,
         Arc::new(causal_coll_ids),
         "Explainable Collection",
@@ -108,7 +114,7 @@ fn test_explain_collection_success() {
     );
 
     // Act: Evaluate the collection. Now both members will be evaluated.
-    let effect = PropagatingEffect::from_numerical(0.0);
+    let effect = PropagatingEffect::from_deterministic(false); // Changed to bool
     let res = collection_causaloid.evaluate(&registry, &effect);
     dbg!(&res);
 
@@ -116,8 +122,8 @@ fn test_explain_collection_success() {
     let explanation = res.explain(); // Original, correct
 
     // Assert: The explanation should contain the results from both sub-causaloids.
-    assert!(explanation.contains("evaluated to: PropagatingEffect::Deterministic(true)"));
-    assert!(explanation.contains("evaluated to: PropagatingEffect::Deterministic(false)"));
+    assert!(explanation.contains("Output effect: Deterministic(true)")); // Changed assertion
+    assert!(explanation.contains("Output effect: Deterministic(false)")); // Changed assertion
 }
 
 #[test]
@@ -126,11 +132,17 @@ fn test_evaluate_collection_with_sub_evaluation_error() {
     let error_causaloid = test_utils::get_test_error_causaloid();
     let true_causaloid = test_utils::get_test_causaloid_deterministic_true();
 
-    // The error_causaloid must come first to ensure it gets evaluated.
-    let causal_coll_base = [error_causaloid, true_causaloid]; // <-- The order is swapped here.
-    let causal_coll_ids: Vec<CausaloidId> = causal_coll_base.iter().map(|c| c.id()).collect();
+    let mut registry = CausaloidRegistry::new();
+    // Register the causaloids and collect their IDs
+    let registered_error_causaloid_id = registry.register(error_causaloid);
+    let registered_true_causaloid_id = registry.register(true_causaloid);
 
-    let collection_causaloid: BaseCausaloid<f64, bool> = Causaloid::from_causal_collection(
+    // The error_causaloid must come first to ensure it gets evaluated.
+    let causal_coll_ids: Vec<CausaloidId> =
+        vec![registered_error_causaloid_id, registered_true_causaloid_id];
+
+    let collection_causaloid: BaseCausaloid<bool, bool> = Causaloid::from_causal_collection(
+        // Changed to bool, bool
         102,
         Arc::new(causal_coll_ids),
         "Error Collection",
@@ -139,8 +151,7 @@ fn test_evaluate_collection_with_sub_evaluation_error() {
     );
 
     // Act
-    let registry = CausaloidRegistry::new();
-    let effect = PropagatingEffect::from_numerical(0.0);
+    let effect = PropagatingEffect::from_deterministic(false); // Changed to bool
     let res = collection_causaloid.evaluate(&registry, &effect);
     dbg!(&res);
 
@@ -156,13 +167,18 @@ fn test_evaluate_collection_without_true_effect() {
     let false_causaloid1 = test_utils::get_test_causaloid_deterministic_false();
     let false_causaloid2 = test_utils::get_test_causaloid_deterministic_false();
     let mut registry = CausaloidRegistry::new();
-    registry.register(false_causaloid1.clone());
-    registry.register(false_causaloid2.clone());
 
-    let causal_coll_base = [false_causaloid1, false_causaloid2];
-    let causal_coll_ids: Vec<CausaloidId> = causal_coll_base.iter().map(|c| c.id()).collect();
+    // Register the causaloids and collect their IDs
+    let registered_false_causaloid1_id = registry.register(false_causaloid1);
+    let registered_false_causaloid2_id = registry.register(false_causaloid2);
 
-    let collection_causaloid: BaseCausaloid<f64, bool> = Causaloid::from_causal_collection(
+    let causal_coll_ids: Vec<CausaloidId> = vec![
+        registered_false_causaloid1_id,
+        registered_false_causaloid2_id,
+    ];
+
+    let collection_causaloid: BaseCausaloid<bool, bool> = Causaloid::from_causal_collection(
+        // Changed to bool, bool
         101,
         Arc::new(causal_coll_ids),
         "All False Collection",
@@ -171,7 +187,7 @@ fn test_evaluate_collection_without_true_effect() {
     );
 
     // Act
-    let effect = PropagatingEffect::from_numerical(0.0);
+    let effect = PropagatingEffect::from_deterministic(false); // Changed to bool
     let res = collection_causaloid.evaluate(&registry, &effect);
     dbg!(&res);
 
