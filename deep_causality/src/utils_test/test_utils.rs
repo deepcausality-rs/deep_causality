@@ -36,9 +36,9 @@ pub fn get_test_inf_vec() -> Vec<Inference> {
 }
 
 pub fn get_deterministic_test_causality_vec() -> BaseCausaloidVec<f64, bool> {
-    let q1 = get_test_causaloid_deterministic();
-    let q2 = get_test_causaloid_deterministic();
-    let q3 = get_test_causaloid_deterministic();
+    let q1 = get_test_causaloid_deterministic(1);
+    let q2 = get_test_causaloid_deterministic(2);
+    let q3 = get_test_causaloid_deterministic(3);
     Vec::from_iter([q1, q2, q3])
 }
 pub fn get_probabilistic_test_causality_vec() -> BaseCausaloidVec<f64, f64> {
@@ -139,8 +139,9 @@ pub fn get_test_causaloid_uncertain_float() -> BaseCausaloid<f64, UncertainF64> 
     Causaloid::new(3, causal_fn, description)
 }
 
-pub fn get_test_causaloid_deterministic() -> BaseCausaloid<NumericalValue, bool> {
-    let id: IdentificationValue = 1;
+pub fn get_test_causaloid_deterministic(
+    id: IdentificationValue,
+) -> BaseCausaloid<NumericalValue, bool> {
     let description = "tests whether data exceeds threshold of 0.55";
     fn causal_fn(obs: NumericalValue) -> Result<CausalFnOutput<bool>, CausalityError> {
         let threshold: NumericalValue = 0.55;
@@ -162,6 +163,23 @@ pub fn get_test_causaloid_probabilistic_bool_output() -> BaseCausaloid<Numerical
     fn causal_fn(obs: NumericalValue) -> Result<CausalFnOutput<f64>, CausalityError> {
         let threshold: NumericalValue = 0.55;
         let output = if obs.ge(&threshold) { 1.0 } else { 0.0 };
+        Ok(CausalFnOutput {
+            output,
+            log: CausalEffectLog::new(),
+        })
+    }
+
+    Causaloid::new(id, causal_fn, description)
+}
+
+pub fn get_test_causaloid_contextual_link(
+    id: IdentificationValue,
+) -> BaseCausaloid<NumericalValue, f64> {
+    let description = "tests whether data exceeds threshold of 0.55";
+
+    fn causal_fn(obs: NumericalValue) -> Result<CausalFnOutput<NumericalValue>, CausalityError> {
+        let threshold: NumericalValue = 0.55;
+        let output = if !obs.ge(&threshold) { 1.0 } else { 0.0 };
         Ok(CausalFnOutput {
             output,
             log: CausalEffectLog::new(),

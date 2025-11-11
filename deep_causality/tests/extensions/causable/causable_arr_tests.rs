@@ -11,7 +11,7 @@ use deep_causality::*;
 // Helper function to create a standard test array.
 // Causaloid doesn't implement Copy, hence the from_fn workaround for array initialization.
 pub fn get_test_causality_array_bool_out() -> [BaseCausaloid<NumericalValue, bool>; 10] {
-    array::from_fn(|_| get_test_causaloid_deterministic())
+    array::from_fn(|i| get_test_causaloid_deterministic(i as u64))
 }
 
 pub fn get_test_causality_array_numerical_value_out()
