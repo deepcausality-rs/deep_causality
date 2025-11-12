@@ -31,7 +31,11 @@ where
     /// - `Err(CausalityError)` if an error occurs during evaluation
     ///
     pub fn eval(&self) -> Result<PropagatingEffect, CsmError> {
-        Ok(self.causaloid.evaluate(&self.data))
+        let res = self.causaloid.evaluate(&self.data);
+        match res.is_ok() {
+            true => Ok(res),
+            false => Err(CsmError::Causal(res.error.unwrap())),
+        }
     }
 
     /// Evaluates the state using provided external data.
