@@ -8,6 +8,8 @@ pub enum MyCustomGenerativeAction {
 
 impl
     Generatable<
+        bool, // I
+        bool, // O
         MockData,
         EuclideanSpace,
         EuclideanTime,
@@ -32,6 +34,8 @@ impl
         >,
     ) -> Result<
         GenerativeOutput<
+            bool, // I
+            bool, // O
             MockData,
             EuclideanSpace,
             EuclideanTime,
@@ -48,6 +52,8 @@ impl
 }
 
 type TestGenerativeOutput = GenerativeOutput<
+    bool, // I
+    bool, // O
     MockData,
     EuclideanSpace,
     EuclideanTime,
@@ -59,6 +65,8 @@ type TestGenerativeOutput = GenerativeOutput<
 >;
 
 type TestCausaloid = Causaloid<
+    bool, // I
+    bool, // O
     MockData,
     EuclideanSpace,
     EuclideanTime,
@@ -78,43 +86,15 @@ type TestContextoid = Contextoid<
     FloatType,
 >;
 
+fn test_causal_fn(value: bool) -> Result<CausalFnOutput<bool>, CausalityError> {
+    Ok(CausalFnOutput::new(value, CausalEffectLog::default()))
+}
+
 pub fn get_test_causaloid() -> TestCausaloid {
     let id: IdentificationValue = 1;
-    let description = "tests whether data exceeds threshold of 0.55";
+    let description = "A simple causal function that returns its boolean input.";
 
-    fn causal_fn(effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
-        let obs =
-            match effect {
-                // If it's the Numerical variant, extract the inner value.
-                PropagatingEffect::Numerical(val) => *val,
-                // For any other type of effect, this function cannot proceed, so return an error.
-                _ => return Err(CausalityError(
-                    "Causal function expected Numerical effect but received a different variant."
-                        .into(),
-                )),
-            };
-
-        if obs.is_nan() {
-            return Err(CausalityError("Observation is NULL/NAN".into()));
-        }
-
-        if obs.is_infinite() {
-            return Err(CausalityError("Observation is infinite".into()));
-        }
-
-        if obs.is_sign_negative() {
-            return Err(CausalityError("Observation is negative".into()));
-        }
-
-        let threshold: NumericalValue = 0.55;
-        if !obs.ge(&threshold) {
-            Ok(PropagatingEffect::Deterministic(false))
-        } else {
-            Ok(PropagatingEffect::Deterministic(true))
-        }
-    }
-
-    Causaloid::new(id, causal_fn, description)
+    TestCausaloid::new(id, test_causal_fn, description)
 }
 
 #[test]
