@@ -10,4 +10,4 @@ mod generative_types;
 mod model_types;
 mod reasoning_types;
 mod symbolic_types;
-// mod telos_types;
+mod telos_types;

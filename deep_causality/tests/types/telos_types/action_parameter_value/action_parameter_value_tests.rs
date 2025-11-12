@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::{ActionParameterValue, PropagatingEffect};
+use deep_causality::ActionParameterValue;
 
 #[test]
 fn test_action_parameter_value_string() {
@@ -93,42 +93,7 @@ fn test_action_parameter_value_inequality_across_variants() {
 }
 
 #[test]
-fn test_from_propagating_effect() {
-    // Test Deterministic -> Boolean
-    let effect_det = PropagatingEffect::Deterministic(true);
-    let param_val: ActionParameterValue = effect_det.into();
-    assert_eq!(param_val, ActionParameterValue::Boolean(true));
-
-    // Test Numerical -> Number
-    let effect_num = PropagatingEffect::Numerical(42.5);
-    let param_val: ActionParameterValue = effect_num.into();
-    assert_eq!(param_val, ActionParameterValue::Number(42.5));
-
-    // Test Probabilistic -> Number
-    let effect_prob = PropagatingEffect::Probabilistic(0.75);
-    let param_val: ActionParameterValue = effect_prob.into();
-    assert_eq!(param_val, ActionParameterValue::Number(0.75));
-
-    // Test ContextualLink -> ContextualLink
-    let effect_prob = PropagatingEffect::ContextualLink(1, 2);
-    let param_val: ActionParameterValue = effect_prob.into();
-    assert_eq!(param_val, ActionParameterValue::ContextualLink(1, 2));
-
-    // Test other variants (e.g., NoEffect) -> String
-    // This relies on the Debug representation of the enum variant.
-    let effect_other = PropagatingEffect::None;
-    let param_val: ActionParameterValue = effect_other.into();
-    assert_eq!(
-        param_val,
-        ActionParameterValue::String("PropagatingEffect::None".to_string())
-    );
-}
-#[test]
 fn test_display() {
-    let val_none = PropagatingEffect::None;
-    let expected = "PropagatingEffect::None".to_string();
-    assert_eq!(format!("{}", val_none), expected);
-
     let val_str = ActionParameterValue::String("test".to_string());
     let expected = "ActionParameterValue::String: test".to_string();
     assert_eq!(format!("{}", val_str), expected);
@@ -145,7 +110,7 @@ fn test_display() {
     let expected = "ActionParameterValue::Boolean: true".to_string();
     assert_eq!(format!("{}", val_bool), expected);
 
-    let val_ctx = ActionParameterValue::ContextualLink(1, 2);
-    let expected = "ActionParameterValue::ContextualLink(1, 2)".to_string();
+    let val_ctx = ActionParameterValue::ContextualLink(1);
+    let expected = "ActionParameterValue::ContextualLink(1)".to_string();
     assert_eq!(format!("{}", val_ctx), expected);
 }
