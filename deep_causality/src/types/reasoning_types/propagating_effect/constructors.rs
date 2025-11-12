@@ -440,4 +440,12 @@ impl PropagatingEffect {
             logs: CausalEffectLog::new(),
         }
     }
+
+    pub fn none() -> Self {
+        Self {
+            value: EffectValue::None,
+            error: None,
+            logs: CausalEffectLog::new(),
+        }
+    }
 }

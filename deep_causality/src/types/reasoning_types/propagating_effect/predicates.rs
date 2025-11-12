@@ -13,6 +13,10 @@ impl<Value, Error> CausalPropagatingEffect<Value, Error, CausalEffectLog> {
         self.error.is_some()
     }
 
+    pub fn is_error(&self) -> bool {
+        self.error.is_some()
+    }
+
     pub fn has_log(&self) -> bool {
         !self.logs.is_empty()
     }
