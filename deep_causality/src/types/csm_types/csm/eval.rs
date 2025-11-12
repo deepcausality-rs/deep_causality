@@ -42,14 +42,19 @@ where
             )))
         })?;
 
-        if data.value.is_probabilistic() {
+        let effect = state.eval_with_data(data)?; // Use eval_with_data for single state evaluation
+        if effect.is_err() {
+            return Err(CsmError::Causal(effect.error.unwrap()));
+        }
+
+        if effect.value.is_probabilistic() {
             return Err(CsmError::Causal(CausalityError(
                 "Probabilistic effect cannot trigger actions directly in single state evaluation."
                     .into(),
             )));
         }
 
-        self.evaluate_and_fire_action(state, action, data)
+        self.evaluate_and_fire_action(state, action, &effect)
     }
 
     /// Evaluates all causal states in the CSM using their internal data.
@@ -62,6 +67,9 @@ where
 
         for (_id, (state, action)) in binding.iter() {
             let effect = state.eval()?;
+            if effect.is_err() {
+                return Err(CsmError::Causal(effect.error.unwrap()));
+            }
             self.evaluate_and_fire_action(state, action, &effect)?;
         }
 

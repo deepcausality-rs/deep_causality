@@ -12,8 +12,8 @@ use deep_causality::utils_test::test_utils_csm;
 fn test_new() {
     let id = 42;
     let version = 1;
-    let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid_deterministic();
+    let data = PropagatingEffect::from_numerical(0.23f64);
+    let causaloid = test_utils::get_test_causaloid_deterministic(23);
 
     let cs = CausalState::new(id, version, data, causaloid, None);
     let ca = test_utils_csm::get_test_action();
@@ -28,8 +28,8 @@ fn test_new() {
 fn test_is_empty() {
     let id = 42;
     let version = 1;
-    let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid_deterministic();
+    let data = PropagatingEffect::from_numerical(0.23f64);
+    let causaloid = test_utils::get_test_causaloid_deterministic(23);
 
     let cs = CausalState::new(id, version, data, causaloid, None);
     let ca = test_utils_csm::get_test_action();

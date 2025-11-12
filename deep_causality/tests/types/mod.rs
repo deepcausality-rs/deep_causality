@@ -5,7 +5,7 @@
 mod causal_types;
 mod context_node_types;
 mod context_types;
-// mod csm_types;
+mod csm_types;
 mod generative_types;
 mod model_types;
 mod reasoning_types;
