@@ -6,11 +6,17 @@
 use deep_causality::utils_test::test_utils_generator::*;
 use deep_causality::*;
 
+fn test_fn(value: bool) -> Result<CausalFnOutput<bool>, CausalityError> {
+    Ok(CausalFnOutput::new(value, CausalEffectLog::default()))
+}
+
 #[test]
 fn test_updates_context_name() {
     struct UpdateContextNameGenerator;
     impl
         Generatable<
+            bool,
+            bool,
             MockData,
             EuclideanSpace,
             EuclideanTime,
@@ -35,6 +41,8 @@ fn test_updates_context_name() {
             >,
         ) -> Result<
             GenerativeOutput<
+                bool,
+                bool,
                 MockData,
                 EuclideanSpace,
                 EuclideanTime,
@@ -46,11 +54,7 @@ fn test_updates_context_name() {
             >,
             ModelGenerativeError,
         > {
-            let causaloid = TestCausaloid::new(
-                1,
-                |_| Ok(PropagatingEffect::Deterministic(false)),
-                "causaloid",
-            );
+            let causaloid = TestCausaloid::<bool, bool>::new(1, test_fn, "causaloid");
             let create_causaloid = GenerativeOutput::CreateCausaloid(1, causaloid);
             let create_context = GenerativeOutput::CreateBaseContext {
                 id: 10,
@@ -69,7 +73,7 @@ fn test_updates_context_name() {
         }
     }
 
-    let model_result = TestModel::with_generator(
+    let model_result = TestModel::<bool, bool>::with_generator(
         1,
         "author",
         "desc",
@@ -90,6 +94,8 @@ fn test_deletes_context() {
     struct DeleteContextGenerator;
     impl
         Generatable<
+            bool,
+            bool,
             MockData,
             EuclideanSpace,
             EuclideanTime,
@@ -114,6 +120,8 @@ fn test_deletes_context() {
             >,
         ) -> Result<
             GenerativeOutput<
+                bool,
+                bool,
                 MockData,
                 EuclideanSpace,
                 EuclideanTime,
@@ -125,11 +133,7 @@ fn test_deletes_context() {
             >,
             ModelGenerativeError,
         > {
-            let causaloid = TestCausaloid::new(
-                1,
-                |_| Ok(PropagatingEffect::Deterministic(false)),
-                "causaloid",
-            );
+            let causaloid = TestCausaloid::<bool, bool>::new(1, test_fn, "causaloid");
             let create_causaloid = GenerativeOutput::CreateCausaloid(1, causaloid);
             let create_context = GenerativeOutput::CreateBaseContext {
                 id: 10,
@@ -145,7 +149,7 @@ fn test_deletes_context() {
         }
     }
 
-    let model_result = TestModel::with_generator(
+    let model_result = TestModel::<bool, bool>::with_generator(
         1,
         "author",
         "desc",
@@ -164,6 +168,8 @@ fn test_creates_extra_context() {
     struct ExtraContextGenerator;
     impl
         Generatable<
+            bool,
+            bool,
             MockData,
             EuclideanSpace,
             EuclideanTime,
@@ -188,6 +194,8 @@ fn test_creates_extra_context() {
             >,
         ) -> Result<
             GenerativeOutput<
+                bool,
+                bool,
                 MockData,
                 EuclideanSpace,
                 EuclideanTime,
@@ -199,11 +207,7 @@ fn test_creates_extra_context() {
             >,
             ModelGenerativeError,
         > {
-            let causaloid = TestCausaloid::new(
-                1,
-                |_| Ok(PropagatingEffect::Deterministic(false)),
-                "causaloid",
-            );
+            let causaloid = TestCausaloid::<bool, bool>::new(1, test_fn, "causaloid");
             let create_causaloid = GenerativeOutput::CreateCausaloid(1, causaloid);
 
             let create_base = GenerativeOutput::CreateBaseContext {
@@ -225,7 +229,7 @@ fn test_creates_extra_context() {
         }
     }
 
-    let model_result = TestModel::with_generator(
+    let model_result = TestModel::<bool, bool>::with_generator(
         1,
         "author",
         "desc",

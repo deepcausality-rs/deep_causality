@@ -6,11 +6,17 @@
 use deep_causality::utils_test::test_utils_generator::*;
 use deep_causality::*;
 
+fn test_fn(value: bool) -> Result<CausalFnOutput<bool>, CausalityError> {
+    Ok(CausalFnOutput::new(value, CausalEffectLog::default()))
+}
+
 #[test]
 fn test_updates_contextoid() {
     struct UpdateContextoidGenerator;
     impl
         Generatable<
+            bool,
+            bool,
             MockData,
             EuclideanSpace,
             EuclideanTime,
@@ -35,6 +41,8 @@ fn test_updates_contextoid() {
             >,
         ) -> Result<
             GenerativeOutput<
+                bool,
+                bool,
                 MockData,
                 EuclideanSpace,
                 EuclideanTime,
@@ -46,11 +54,7 @@ fn test_updates_contextoid() {
             >,
             ModelGenerativeError,
         > {
-            let causaloid = TestCausaloid::new(
-                1,
-                |_| Ok(PropagatingEffect::Deterministic(false)),
-                "causaloid",
-            );
+            let causaloid = TestCausaloid::<bool, bool>::new(1, test_fn, "causaloid");
             let create_causaloid = GenerativeOutput::CreateCausaloid(1, causaloid);
             let create_context = GenerativeOutput::CreateBaseContext {
                 id: 10,
@@ -85,7 +89,7 @@ fn test_updates_contextoid() {
         }
     }
 
-    let model_result = TestModel::with_generator(
+    let model_result = TestModel::<bool, bool>::with_generator(
         1,
         "author",
         "desc",
@@ -109,6 +113,8 @@ fn test_deletes_contextoid() {
     struct DeleteContextoidGenerator;
     impl
         Generatable<
+            bool,
+            bool,
             MockData,
             EuclideanSpace,
             EuclideanTime,
@@ -133,6 +139,8 @@ fn test_deletes_contextoid() {
             >,
         ) -> Result<
             GenerativeOutput<
+                bool,
+                bool,
                 MockData,
                 EuclideanSpace,
                 EuclideanTime,
@@ -144,11 +152,7 @@ fn test_deletes_contextoid() {
             >,
             ModelGenerativeError,
         > {
-            let causaloid = TestCausaloid::new(
-                1,
-                |_| Ok(PropagatingEffect::Deterministic(false)),
-                "causaloid",
-            );
+            let causaloid = TestCausaloid::<bool, bool>::new(1, test_fn, "causaloid");
             let create_causaloid = GenerativeOutput::CreateCausaloid(1, causaloid);
             let create_context = GenerativeOutput::CreateBaseContext {
                 id: 10,
@@ -185,7 +189,7 @@ fn test_deletes_contextoid() {
         }
     }
 
-    let model_result = TestModel::with_generator(
+    let model_result = TestModel::<bool, bool>::with_generator(
         1,
         "author",
         "desc",

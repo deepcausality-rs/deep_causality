@@ -6,11 +6,17 @@
 use deep_causality::utils_test::test_utils_generator::*;
 use deep_causality::*;
 
+fn test_fn(value: bool) -> Result<CausalFnOutput<bool>, CausalityError> {
+    Ok(CausalFnOutput::new(value, CausalEffectLog::default()))
+}
+
 #[test]
 fn test_fails_on_add_contextoid_to_nonexistent_context() {
     struct BadContextoidGenerator;
     impl
         Generatable<
+            bool,
+            bool,
             MockData,
             EuclideanSpace,
             EuclideanTime,
@@ -35,6 +41,8 @@ fn test_fails_on_add_contextoid_to_nonexistent_context() {
             >,
         ) -> Result<
             GenerativeOutput<
+                bool,
+                bool,
                 MockData,
                 EuclideanSpace,
                 EuclideanTime,
@@ -46,11 +54,7 @@ fn test_fails_on_add_contextoid_to_nonexistent_context() {
             >,
             ModelGenerativeError,
         > {
-            let causaloid = TestCausaloid::new(
-                1000,
-                |_| Ok(PropagatingEffect::Deterministic(false)),
-                "causaloid",
-            );
+            let causaloid = TestCausaloid::<bool, bool>::new(1000, test_fn, "causaloid");
             let bad_contextoid = TestContextoid::new(1001, ContextoidType::Root(Root::new(101)));
             let add_contextoid_output = GenerativeOutput::AddContextoidToContext {
                 context_id: 999, // Non-existent context ID
@@ -64,7 +68,7 @@ fn test_fails_on_add_contextoid_to_nonexistent_context() {
         }
     }
 
-    let model_result = TestModel::with_generator(
+    let model_result = TestModel::<bool, bool>::with_generator(
         6,
         "author",
         "desc",
@@ -85,6 +89,8 @@ fn test_fails_on_multiple_root_causaloids() {
     struct MultiCausaloidGenerator;
     impl
         Generatable<
+            bool,
+            bool,
             MockData,
             EuclideanSpace,
             EuclideanTime,
@@ -109,6 +115,8 @@ fn test_fails_on_multiple_root_causaloids() {
             >,
         ) -> Result<
             GenerativeOutput<
+                bool,
+                bool,
                 MockData,
                 EuclideanSpace,
                 EuclideanTime,
@@ -120,11 +128,9 @@ fn test_fails_on_multiple_root_causaloids() {
             >,
             ModelGenerativeError,
         > {
-            fn mock_fn(_: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
-                Ok(PropagatingEffect::Deterministic(false))
-            }
-            let causaloid1 = TestCausaloid::new(100, mock_fn, "First");
-            let causaloid2 = TestCausaloid::new(200, mock_fn, "Second");
+            // Use the common test_fn defined above
+            let causaloid1 = TestCausaloid::<bool, bool>::new(100, test_fn, "First");
+            let causaloid2 = TestCausaloid::<bool, bool>::new(200, test_fn, "Second");
 
             Ok(GenerativeOutput::Composite(vec![
                 GenerativeOutput::CreateCausaloid(100, causaloid1),
@@ -133,7 +139,7 @@ fn test_fails_on_multiple_root_causaloids() {
         }
     }
 
-    let model_result = TestModel::with_generator(
+    let model_result = TestModel::<bool, bool>::with_generator(
         7,
         "author",
         "desc",
@@ -154,6 +160,8 @@ fn test_fails_on_update_nonexistent_causaloid() {
     struct UpdateOnlyGenerator;
     impl
         Generatable<
+            bool,
+            bool,
             MockData,
             EuclideanSpace,
             EuclideanTime,
@@ -178,6 +186,8 @@ fn test_fails_on_update_nonexistent_causaloid() {
             >,
         ) -> Result<
             GenerativeOutput<
+                bool,
+                bool,
                 MockData,
                 EuclideanSpace,
                 EuclideanTime,
@@ -189,16 +199,12 @@ fn test_fails_on_update_nonexistent_causaloid() {
             >,
             ModelGenerativeError,
         > {
-            let updated_causaloid = TestCausaloid::new(
-                123,
-                |_| Ok(PropagatingEffect::Deterministic(false)),
-                "Updated",
-            );
+            let updated_causaloid = TestCausaloid::<bool, bool>::new(123, test_fn, "Updated");
             Ok(GenerativeOutput::UpdateCausaloid(123, updated_causaloid))
         }
     }
 
-    let model_result = TestModel::with_generator(
+    let model_result = TestModel::<bool, bool>::with_generator(
         8,
         "author",
         "desc",
@@ -221,6 +227,8 @@ fn test_fails_on_delete_nonexistent_contextoid() {
     struct BadDeleteGenerator;
     impl
         Generatable<
+            bool,
+            bool,
             MockData,
             EuclideanSpace,
             EuclideanTime,
@@ -245,6 +253,8 @@ fn test_fails_on_delete_nonexistent_contextoid() {
             >,
         ) -> Result<
             GenerativeOutput<
+                bool,
+                bool,
                 MockData,
                 EuclideanSpace,
                 EuclideanTime,
@@ -256,11 +266,7 @@ fn test_fails_on_delete_nonexistent_contextoid() {
             >,
             ModelGenerativeError,
         > {
-            let causaloid = TestCausaloid::new(
-                1,
-                |_| Ok(PropagatingEffect::Deterministic(false)),
-                "causaloid",
-            );
+            let causaloid = TestCausaloid::<bool, bool>::new(1, test_fn, "causaloid");
             let create_causaloid = GenerativeOutput::CreateCausaloid(1, causaloid);
             let create_context = GenerativeOutput::CreateBaseContext {
                 id: 10,
@@ -281,7 +287,7 @@ fn test_fails_on_delete_nonexistent_contextoid() {
         }
     }
 
-    let model_result = TestModel::with_generator(
+    let model_result = TestModel::<bool, bool>::with_generator(
         1,
         "author",
         "desc",

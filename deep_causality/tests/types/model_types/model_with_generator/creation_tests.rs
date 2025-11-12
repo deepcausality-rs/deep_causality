@@ -16,8 +16,14 @@ struct CreationGenerator {
     return_context: bool,
 }
 
+fn mock_causal_fn(value: bool) -> Result<CausalFnOutput<bool>, CausalityError> {
+    Ok(CausalFnOutput::new(value, CausalEffectLog::default()))
+}
+
 impl
     Generatable<
+        bool,
+        bool,
         MockData,
         EuclideanSpace,
         EuclideanTime,
@@ -42,6 +48,8 @@ impl
         >,
     ) -> Result<
         GenerativeOutput<
+            bool,
+            bool,
             MockData,
             EuclideanSpace,
             EuclideanTime,
@@ -54,10 +62,7 @@ impl
         ModelGenerativeError,
     > {
         let id = self.causaloid_id_to_create;
-        fn mock_causal_fn(_: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
-            Ok(PropagatingEffect::Deterministic(false))
-        }
-        let causaloid = TestCausaloid::new(id, mock_causal_fn, "TestCausaloid");
+        let causaloid = TestCausaloid::<bool, bool>::new(id, mock_causal_fn, "TestCausaloid");
         let create_causaloid_output =
             GenerativeOutput::CreateCausaloid(self.causaloid_id_to_create, causaloid);
 
@@ -91,7 +96,7 @@ fn test_creates_causaloid_and_context() {
         return_context: true,
     };
 
-    let model_result = TestModel::with_generator(
+    let model_result = TestModel::<bool, bool>::with_generator(
         model_id,
         author,
         description,
@@ -125,7 +130,7 @@ fn test_creates_causaloid_without_context() {
         return_context: false,
     };
 
-    let model_result = TestModel::with_generator(
+    let model_result = TestModel::<bool, bool>::with_generator(
         2,
         "author",
         "desc",
@@ -154,7 +159,7 @@ fn test_creation_with_assumptions() {
         return_context: true,
     };
 
-    let model_result = TestModel::with_generator(
+    let model_result = TestModel::<bool, bool>::with_generator(
         5,
         "author",
         "desc",
