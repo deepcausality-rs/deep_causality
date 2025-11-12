@@ -41,7 +41,7 @@ fn test_eval() {
     let res = cs1.eval();
     assert!(res.is_ok());
     // The result is a PropagatingEffect, not a bool.
-    assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(false));
+    assert_eq!(res.unwrap(), PropagatingEffect::from_deterministic(false));
 
     // Case 2: Evaluation results in Deterministic(true)
     let data_success = PropagatingEffect::from_numerical(0.93f64);
@@ -49,7 +49,7 @@ fn test_eval() {
 
     let res = cs2.eval();
     assert!(res.is_ok());
-    assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(true));
+    assert_eq!(res.unwrap(), PropagatingEffect::from_deterministic(true));
 }
 
 #[test]
@@ -57,7 +57,7 @@ fn eval_with_data() {
     let id = 42;
     let version = 1;
     // The initial data in the state is often just a default.
-    let initial_data = PropagatingEffect::None;
+    let initial_data = PropagatingEffect::none();
     let causaloid = test_utils::get_test_causaloid_deterministic(23);
     let cs = CausalState::new(id, version, initial_data, causaloid, None);
 
@@ -73,13 +73,13 @@ fn eval_with_data() {
     let external_data_fail = PropagatingEffect::from_numerical(0.11f64);
     let res = cs.eval_with_data(&external_data_fail);
     assert!(res.is_ok());
-    assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(false));
+    assert_eq!(res.unwrap(), PropagatingEffect::from_deterministic(false));
 
     // Case 2: Succeeds evaluation
     let external_data_success = PropagatingEffect::from_numerical(0.89f64);
     let res = cs.eval_with_data(&external_data_success);
     assert!(res.is_ok());
-    assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(true));
+    assert_eq!(res.unwrap(), PropagatingEffect::from_deterministic(true));
 }
 
 #[test]

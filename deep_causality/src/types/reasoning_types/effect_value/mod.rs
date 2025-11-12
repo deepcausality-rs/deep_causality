@@ -5,10 +5,7 @@
 
 //! This module defines the CausalValue enum.
 
-use crate::{
-    ContextoidId, IdentificationValue, NumericValue, PropagatingEffect,
-    PropagatingValue,
-};
+use crate::{ContextoidId, IdentificationValue, NumericValue, PropagatingEffect, PropagatingValue};
 use deep_causality_num::{Complex, Quaternion};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_uncertain::{
