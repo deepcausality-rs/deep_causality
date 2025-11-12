@@ -16,6 +16,12 @@ pub struct CausalFnOutput<O: IntoEffectValue> {
     pub log: CausalEffectLog,
 }
 
+impl<O: IntoEffectValue> CausalFnOutput<O> {
+    pub fn new(output: O, log: CausalEffectLog) -> Self {
+        Self { output, log }
+    }
+}
+
 /// The unified function signature for all singleton causaloids that do not require an external context.
 ///
 /// This function is a core part of the reasoning engine.
