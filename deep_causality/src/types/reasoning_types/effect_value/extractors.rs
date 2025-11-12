@@ -28,9 +28,9 @@ impl EffectValue {
         }
     }
 
-    pub fn as_numerical(&self) -> Option<&NumericValue> {
+    pub fn as_numerical(&self) -> Option<&f64> {
         match self {
-            EffectValue::Number(n) => Some(n),
+            EffectValue::Numerical(n) => Some(n),
             _ => None,
         }
     }

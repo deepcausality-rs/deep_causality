@@ -89,6 +89,7 @@ pub use crate::traits::observable::Observable;
 pub use crate::traits::observable::ObservableReasoning;
 // Propagating Traits
 pub use crate::traits::into_effect_value::IntoEffectValue;
+pub use crate::traits::log_append::LogAppend;
 pub use crate::traits::propagating_value::PropagatingValue;
 // Scalar traits
 pub use crate::traits::scalar::scalar_projector::ScalarProjector;

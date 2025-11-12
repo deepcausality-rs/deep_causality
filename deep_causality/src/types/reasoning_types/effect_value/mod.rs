@@ -65,7 +65,6 @@ pub enum EffectValue {
     ContextualLink(ContextoidId),
     /// A collection of named values, allowing for complex, structured data passing.
     Map(HashMap<IdentificationValue, Box<PropagatingEffect>>),
-
     /// A dispatch command that directs the reasoning engine to dynamically jump to a specific
     /// causaloid within the graph. The `usize` is the target causaloid's index, and the `Box<CausalValue>`
     /// is the effect to be passed as input to that target causaloid. This enables adaptive reasoning.

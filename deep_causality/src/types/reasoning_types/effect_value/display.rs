@@ -11,7 +11,7 @@ impl Display for EffectValue {
         match self {
             EffectValue::None => write!(f, "None"),
             EffectValue::Deterministic(b) => write!(f, "Deterministic({})", b),
-            EffectValue::Number(n) => write!(f, "Numerical({})", n),
+            EffectValue::Number(n) => write!(f, "Number({})", n),
             EffectValue::Numerical(b) => write!(f, "Numerical({})", b),
             EffectValue::Probabilistic(n) => write!(f, "Probabilistic({})", n),
             EffectValue::Tensor(t) => write!(f, "Tensor({:?})", t),

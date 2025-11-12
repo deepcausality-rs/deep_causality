@@ -47,9 +47,3 @@ impl Clone for Box<dyn PropagatingValue> {
         self.clone_box()
     }
 }
-
-impl PartialEq for dyn PropagatingValue {
-    fn eq(&self, other: &Self) -> bool {
-        self.dyn_eq(other)
-    }
-}
