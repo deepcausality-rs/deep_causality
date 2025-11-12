@@ -5,8 +5,7 @@
 
 use crate::{
     AggregateLogic, Causable, CausableCollectionAccessor, CausalMonad, CausalityError,
-    CausaloidRegistry, MonadicCausable, NumericalValue, PropagatingEffect,
-    monadic_collection_utils,
+    MonadicCausable, NumericalValue, PropagatingEffect, monadic_collection_utils,
 };
 use deep_causality_haft::*;
 
@@ -43,7 +42,6 @@ where
     ///
     fn evaluate_collection(
         &self,
-        registry: &CausaloidRegistry,
         incoming_effect: &PropagatingEffect,
         logic: &AggregateLogic,
         threshold_value: Option<NumericalValue>,
@@ -54,13 +52,12 @@ where
             let err = CausalityError("Cannot evaluate an empty collection".to_string());
             return PropagatingEffect::from_error(err);
         }
-
         // 1. Monadic fold to collect all effects.
         let initial_effect = CausalMonad::pure(Vec::new());
 
         let final_effect = items.into_iter().fold(initial_effect, |acc_effect, item| {
             CausalMonad::bind(acc_effect, |mut acc_values| {
-                let item_effect = item.evaluate(registry, incoming_effect);
+                let item_effect = item.evaluate(incoming_effect);
                 CausalMonad::bind(item_effect, |item_value| {
                     acc_values.push(item_value);
                     CausalMonad::pure(acc_values.clone())

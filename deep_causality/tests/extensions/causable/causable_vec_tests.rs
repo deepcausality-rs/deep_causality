@@ -30,9 +30,8 @@ fn test_get_all_items() {
 #[test]
 fn test_explain() {
     let col = test_utils::get_deterministic_test_causality_vec();
-    let registry = CausaloidRegistry::new();
     let effect_success = PropagatingEffect::from_numerical(0.99);
-    let res = col.evaluate_collection(&registry, &effect_success, &AggregateLogic::All, None);
+    let res = col.evaluate_collection(&effect_success, &AggregateLogic::All, None);
 
     assert!(!res.is_err());
     let actual_explanation = res.explain();
@@ -101,11 +100,10 @@ fn test_evaluate_probabilistic_propagation_success() {
     let p2 = Causaloid::new(2, causal_fn_quarter, "p=0.25");
 
     let coll: Vec<BaseCausaloid<NumericalValue, f64>> = vec![p1, p2];
-    let registry = CausaloidRegistry::new();
 
     // Act: Evaluate with probabilistic propagation.
     let effect = PropagatingEffect::from_numerical(0.0);
-    let res = coll.evaluate_collection(&registry, &effect, &AggregateLogic::All, Some(0.5));
+    let res = coll.evaluate_collection(&effect, &AggregateLogic::All, Some(0.5));
     assert!(!res.is_err());
     let result = res.value;
 

@@ -22,34 +22,32 @@ pub fn get_test_causality_array_numerical_value_out()
 #[test]
 fn test_evaluate_deterministic_propagation() {
     let col = get_test_causality_array_bool_out();
-    let registry = CausaloidRegistry::new(); // Create a registry
 
     // Case 1: All succeed, chain should be deterministically true.
     let effect_success = PropagatingEffect::from_numerical(0.99);
-    let res = col.evaluate_collection(&registry, &effect_success, &AggregateLogic::All, None);
+    let res = col.evaluate_collection(&effect_success, &AggregateLogic::All, None);
     dbg!(&res);
     assert!(!res.is_err()); // Check for no error
     assert_eq!(res.value, EffectValue::Deterministic(true));
 
     // Case 2: One fails, chain should be deterministically false.
     let effect_fail = PropagatingEffect::from_numerical(0.1);
-    let res = col.evaluate_collection(&registry, &effect_fail, &AggregateLogic::All, Some(1.0));
+    let res = col.evaluate_collection(&effect_fail, &AggregateLogic::All, Some(1.0));
     assert!(!res.is_err()); // Check for no error
     assert_eq!(res.value, EffectValue::Deterministic(false));
 
     // Case 3: An incorrect input effect would trigger an error.
     let effect_fail = PropagatingEffect::from_contextual_link(1); // Fixed argument count
-    let res = col.evaluate_collection(&registry, &effect_fail, &AggregateLogic::All, Some(1.0));
+    let res = col.evaluate_collection(&effect_fail, &AggregateLogic::All, Some(1.0));
     assert!(res.is_err());
 }
 
 #[test]
 fn test_evaluate_probabilistic_propagation() {
     let col = get_test_causality_array_numerical_value_out();
-    let registry = CausaloidRegistry::new(); // Create a registry
 
     let effect_success = PropagatingEffect::from_numerical(0.99);
-    let res = col.evaluate_collection(&registry, &effect_success, &AggregateLogic::All, Some(0.5));
+    let res = col.evaluate_collection(&effect_success, &AggregateLogic::All, Some(0.5));
     dbg!(&res);
     assert!(!res.is_err()); // Check for no error
     assert_eq!(res.value, EffectValue::Probabilistic(1.0));
@@ -57,7 +55,7 @@ fn test_evaluate_probabilistic_propagation() {
     // Case 2: One fails (Deterministic(false) is treated as probability 0.0).
     // The chain should short-circuit and return a cumulative probability of 0.0.
     let effect_fail = PropagatingEffect::from_numerical(0.1);
-    let res = col.evaluate_collection(&registry, &effect_fail, &AggregateLogic::All, Some(0.5));
+    let res = col.evaluate_collection(&effect_fail, &AggregateLogic::All, Some(0.5));
     assert!(!res.is_err());
     assert_eq!(res.value, EffectValue::Probabilistic(0.0));
 }

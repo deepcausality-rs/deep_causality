@@ -61,7 +61,7 @@ where
         let binding = self.state_actions.read().unwrap();
 
         for (_id, (state, action)) in binding.iter() {
-            let effect = state.eval(self.causaloid_registry.as_ref())?;
+            let effect = state.eval()?;
             self.evaluate_and_fire_action(state, action, &effect)?;
         }
 

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality::utils_test::test_utils;
-use deep_causality::{CausaloidRegistry, MonadicCausable, PropagatingEffect};
+use deep_causality::{MonadicCausable, PropagatingEffect};
 
 #[test]
 fn test_debug() {
@@ -16,9 +16,8 @@ fn test_debug() {
     assert_eq!(actual_unevaluated, expected_unevaluated);
 
     // Evaluate to active
-    let registry = CausaloidRegistry::new();
     let effect = PropagatingEffect::from_numerical(0.99);
-    causaloid.evaluate(&registry, &effect);
+    causaloid.evaluate(&effect);
     let expected_active = "Causaloid id: 1 
  Causaloid type: Singleton 
  description: tests whether data exceeds threshold of 0.55";
@@ -37,9 +36,8 @@ fn test_to_string() {
     assert_eq!(actual_unevaluated, expected_unevaluated);
 
     // Evaluate to active
-    let registry = CausaloidRegistry::new();
     let effect = PropagatingEffect::from_numerical(0.99);
-    causaloid.evaluate(&registry, &effect);
+    causaloid.evaluate(&effect);
     let expected_active = "Causaloid id: 1 
  Causaloid type: Singleton 
  description: tests whether data exceeds threshold of 0.55";

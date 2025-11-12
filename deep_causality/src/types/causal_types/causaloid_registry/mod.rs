@@ -178,7 +178,7 @@ impl CausaloidRegistry {
 
         if let Some(typed_vec) = self.storage.get(type_id) {
             if let Some(causaloid_trait_object) = typed_vec.get(*index) {
-                causaloid_trait_object.evaluate(self, effect)
+                causaloid_trait_object.evaluate(effect)
             } else {
                 PropagatingEffect::from_error(CausalityError(format!(
                     "Causaloid with ID {} found in lookup, but index {} is out of bounds for its type vector.",

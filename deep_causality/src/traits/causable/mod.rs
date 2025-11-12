@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalEffectSystem, CausaloidRegistry, Identifiable, PropagatingEffect};
+use crate::{CausalEffectSystem, Identifiable, PropagatingEffect};
 use deep_causality_haft::MonadEffect3;
 
 /// The Causable trait defines the core behavior for all causal elements.
@@ -27,9 +27,5 @@ where
     /// The core monadic bind operation.
     /// Takes a monadic context (the incoming effect), applies the embedded causal logic,
     /// and returns the new monadic context (the outgoing effect).
-    fn evaluate(
-        &self,
-        registry: &CausaloidRegistry,
-        incoming_effect: &PropagatingEffect,
-    ) -> PropagatingEffect;
+    fn evaluate(&self, incoming_effect: &PropagatingEffect) -> PropagatingEffect;
 }

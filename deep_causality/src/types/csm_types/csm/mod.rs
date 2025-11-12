@@ -8,9 +8,7 @@ mod state_add;
 mod state_remove;
 mod state_update;
 
-use crate::{
-    CSMMap, CausalAction, CausalState, CausaloidRegistry, EffectEthos, IntoEffectValue, TeloidTag,
-};
+use crate::{CSMMap, CausalAction, CausalState, EffectEthos, IntoEffectValue, TeloidTag};
 use crate::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
@@ -63,7 +61,6 @@ where
 {
     state_actions: Arc<RwLock<CSMMap<I, O, D, S, T, ST, SYM, VS, VT>>>,
     effect_ethos: Option<(EffectEthos<D, S, T, ST, SYM, VS, VT>, Vec<TeloidTag>)>,
-    causaloid_registry: Arc<CausaloidRegistry>,
 }
 
 #[allow(clippy::type_complexity)]
@@ -83,7 +80,6 @@ where
     pub fn new(
         state_actions: &[(&CausalState<I, O, D, S, T, ST, SYM, VS, VT>, &CausalAction)],
         effect_ethos: Option<(EffectEthos<D, S, T, ST, SYM, VS, VT>, &[TeloidTag])>,
-        causaloid_registry: CausaloidRegistry,
     ) -> Self {
         let mut map = CSMMap::with_capacity(state_actions.len());
 
@@ -102,7 +98,6 @@ where
         Self {
             state_actions: Arc::new(RwLock::new(map)),
             effect_ethos: ethos,
-            causaloid_registry: Arc::new(causaloid_registry),
         }
     }
 

@@ -5,10 +5,9 @@
 
 use crate::types::causal_types::causaloid::causable_utils;
 use crate::{
-    Causable, CausableGraph, CausalMonad, CausalityError, Causaloid, CausaloidRegistry,
-    CausaloidType, Datable, EffectValue, IntoEffectValue, MonadicCausable,
-    MonadicCausableGraphReasoning, PropagatingEffect, SpaceTemporal, Spatial, Symbolic, Temporal,
-    monadic_collection_utils,
+    Causable, CausableGraph, CausalMonad, CausalityError, Causaloid, CausaloidType, Datable,
+    EffectValue, IntoEffectValue, MonadicCausable, MonadicCausableGraphReasoning,
+    PropagatingEffect, SpaceTemporal, Spatial, Symbolic, Temporal, monadic_collection_utils,
 };
 
 impl<I, O, D, S, T, ST, SYM, VS, VT> Causable for Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
@@ -84,11 +83,7 @@ where
     ///
     /// In all cases, if an error occurs, the evaluation short-circuits and returns
     /// an effect containing the error and all logs accumulated up to the point of failure.
-    fn evaluate(
-        &self,
-        registry: &CausaloidRegistry,
-        incoming_effect: &PropagatingEffect,
-    ) -> PropagatingEffect {
+    fn evaluate(&self, incoming_effect: &PropagatingEffect) -> PropagatingEffect {
         match self.causal_type {
             CausaloidType::Singleton => {
                 // 1. Get an owned copy of the effect.
@@ -132,6 +127,19 @@ where
                     Some(c) => c,
                     None => {
                         let err_msg = "Causaloid::evaluate: causal_collection is None".into();
+                        return PropagatingEffect {
+                            value: EffectValue::None,
+                            error: Some(CausalityError(err_msg)),
+                            logs: initial_monad.logs,
+                        };
+                    }
+                };
+
+                let registry = match &self.causal_registry {
+                    Some(r) => r,
+                    None => {
+                        let err_msg =
+                            "Causaloid::evaluate/collection: causal_registry is None".into();
                         return PropagatingEffect {
                             value: EffectValue::None,
                             error: Some(CausalityError(err_msg)),
@@ -202,6 +210,18 @@ where
                     Some(index) => index,
                     None => {
                         let err_msg = "Cannot evaluate graph: Root node not found.".into();
+                        return PropagatingEffect {
+                            value: EffectValue::None,
+                            error: Some(CausalityError(err_msg)),
+                            logs: initial_monad.logs,
+                        };
+                    }
+                };
+
+                let registry = match &self.causal_registry {
+                    Some(r) => r,
+                    None => {
+                        let err_msg = "Causaloid::evaluate/graph: causal_registry is None".into();
                         return PropagatingEffect {
                             value: EffectValue::None,
                             error: Some(CausalityError(err_msg)),
