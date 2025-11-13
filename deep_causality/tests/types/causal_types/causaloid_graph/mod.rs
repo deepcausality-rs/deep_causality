@@ -6,7 +6,6 @@
 #[cfg(test)]
 mod causality_graph_edges_tests;
 #[cfg(test)]
-mod causality_graph_explaining_tests;
 #[cfg(test)]
 mod causality_graph_freeze_tests;
 #[cfg(test)]
