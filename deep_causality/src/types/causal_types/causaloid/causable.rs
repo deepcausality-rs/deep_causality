@@ -6,8 +6,8 @@
 use crate::types::causal_types::causaloid::causable_utils;
 use crate::{
     Causable, CausableGraph, CausalMonad, CausalityError, Causaloid, CausaloidType, Datable,
-    EffectValue, IntoEffectValue, MonadicCausable, MonadicCausableGraphReasoning,
-    PropagatingEffect, SpaceTemporal, Spatial, Symbolic, Temporal, monadic_collection_utils,
+    EffectValue, IntoEffectValue, MonadicCausable, MonadicCausableCollection,
+    MonadicCausableGraphReasoning, PropagatingEffect, SpaceTemporal, Spatial, Symbolic, Temporal,
 };
 
 impl<I, O, D, S, T, ST, SYM, VS, VT> Causable for Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
@@ -113,8 +113,8 @@ where
                     }
                 };
 
-                let coll_ids = match self.causal_coll.as_ref() {
-                    Some(c) => c,
+                let causal_collection = match self.causal_coll.as_ref() {
+                    Some(coll_arc) => coll_arc.as_ref(), // Get &Vec<Self>
                     None => {
                         let err_msg = "Causaloid::evaluate: causal_collection is None".into();
                         return PropagatingEffect {
@@ -125,56 +125,12 @@ where
                     }
                 };
 
-                let registry = match &self.causal_registry {
-                    Some(r) => r,
-                    None => {
-                        let err_msg =
-                            "Causaloid::evaluate/collection: causal_registry is None".into();
-                        return PropagatingEffect {
-                            value: EffectValue::None,
-                            error: Some(CausalityError(err_msg)),
-                            logs: initial_monad.logs,
-                        };
-                    }
-                };
-
-                // Sequentially evaluate each causaloid, accumulating logs and chaining effects.
-                let mut effects_from_collection = Vec::new();
-                // Start the chain with the initial effect, which contains the full log history up to this point.
-                let mut current_effect = initial_monad.clone();
-
-                for &causaloid_id in coll_ids.iter() {
-                    // The evaluate function will return a new effect with the combined logs.
-                    let result_effect = registry.evaluate(causaloid_id, &current_effect);
-
-                    // Short-circuit on error. The result_effect already contains the full log history.
-                    if result_effect.is_err() {
-                        return result_effect;
-                    }
-
-                    effects_from_collection.push(result_effect.value.clone());
-                    // The full effect (value and logs) from this step becomes the input for the next.
-                    current_effect = result_effect;
-                }
-
-                // Aggregate the collected effect values.
-                match monadic_collection_utils::aggregate_effects(
-                    effects_from_collection,
+                // Call the trait method. `causal_collection` now directly implements MonadicCausableCollection.
+                causal_collection.evaluate_collection(
+                    incoming_effect,
                     &aggregate_logic,
                     self.coll_threshold_value,
-                ) {
-                    Ok(aggregated_value) => PropagatingEffect {
-                        value: aggregated_value,
-                        error: None,
-                        // Use the logs from the very last successful evaluation, which contains the full history.
-                        logs: current_effect.logs,
-                    },
-                    Err(e) => PropagatingEffect {
-                        value: EffectValue::None,
-                        error: Some(e),
-                        logs: current_effect.logs,
-                    },
-                }
+                )
             }
             CausaloidType::Graph => {
                 // 1. Get an owned copy of the effect and add the initial log for this graph-causaloid.
@@ -184,7 +140,7 @@ where
                     self.id, incoming_effect.value
                 ));
 
-                let graph_ids = match self.causal_graph.as_ref() {
+                let causal_graph = match self.causal_graph.as_ref() {
                     Some(g) => g,
                     None => {
                         let err_msg = "Causaloid::evaluate: Causal graph is None".into();
@@ -196,7 +152,7 @@ where
                     }
                 };
 
-                let root_index = match graph_ids.as_ref().get_root_index() {
+                let root_index = match causal_graph.as_ref().get_root_index() {
                     Some(index) => index,
                     None => {
                         let err_msg = "Cannot evaluate graph: Root node not found.".into();
@@ -208,22 +164,10 @@ where
                     }
                 };
 
-                let registry = match &self.causal_registry {
-                    Some(r) => r,
-                    None => {
-                        let err_msg = "Causaloid::evaluate/graph: causal_registry is None".into();
-                        return PropagatingEffect {
-                            value: EffectValue::None,
-                            error: Some(CausalityError(err_msg)),
-                            logs: initial_monad.logs,
-                        };
-                    }
-                };
-
                 // 2. Delegate to the subgraph reasoning algorithm.
                 // The recursive call will handle its own log appending based on its input.
                 let mut result_effect =
-                    graph_ids.evaluate_subgraph_from_cause(registry, root_index, incoming_effect);
+                    causal_graph.evaluate_subgraph_from_cause(root_index, incoming_effect);
 
                 // 3. Prepend this causaloid's log entry to the results from the subgraph evaluation.
                 let mut final_logs = initial_monad.logs;

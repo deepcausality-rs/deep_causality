@@ -170,9 +170,6 @@ pub use crate::types::reasoning_types::numeric_value::NumericValue;
 pub use crate::types::reasoning_types::propagating_effect::{
     CausalPropagatingEffect, PropagatingEffect, PropagatingEffectWitness,
 };
-// Registry types
-pub use crate::types::registry_types::causaloid_registry::CausaloidRegistry;
-
 //
 //Symbolic types
 pub use crate::types::symbolic_types::symbolic_representation::SymbolicRepresentation;

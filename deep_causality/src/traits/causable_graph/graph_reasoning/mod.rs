@@ -3,9 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{
-    CausableGraph, CausalityError, CausaloidId, CausaloidRegistry, EffectValue, PropagatingEffect,
-};
+use crate::*;
 use std::collections::VecDeque;
 use ultragraph::GraphTraversal;
 
@@ -13,14 +11,26 @@ use ultragraph::GraphTraversal;
 ///
 /// Any graph type that implements `CausableGraph<T>` where `T` is `MonadicCausable<CausalMonad>`
 /// will automatically gain a suite of useful default methods for monadic evaluation.
-pub trait MonadicCausableGraphReasoning: CausableGraph<CausaloidId> {
+pub trait MonadicCausableGraphReasoning<I, O, D, S, T, ST, SYM, VS, VT>:
+    CausableGraph<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>
+where
+    I: IntoEffectValue + Default,
+    O: IntoEffectValue + Default,
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
+    Causaloid<I, O, D, S, T, ST, SYM, VS, VT>: MonadicCausable<CausalMonad>,
+{
     /// Evaluates a single, specific causaloid within the graph by its index using a monadic approach.
     ///
     /// This is a convenience method that locates the causaloid and calls its `evaluate_monadic` method.
     ///
     /// # Arguments
     ///
-    /// * `registry` - The `CausaloidRegistry` to use for evaluating causaloids.
     /// * `index` - The index of the causaloid to evaluate.
     /// * `effect` - The runtime effect to be passed to the node's evaluation function.
     ///
@@ -28,20 +38,15 @@ pub trait MonadicCausableGraphReasoning: CausableGraph<CausaloidId> {
     ///
     /// The `PropagatingEffect` from the evaluated causaloid, or a `PropagatingEffect` containing
     /// a `CausalityError` if the node is not found or the evaluation fails.
-    fn evaluate_single_cause(
-        &self,
-        registry: &CausaloidRegistry,
-        index: usize,
-        effect: &PropagatingEffect,
-    ) -> PropagatingEffect {
+    fn evaluate_single_cause(&self, index: usize, effect: &PropagatingEffect) -> PropagatingEffect {
         if !self.is_frozen() {
             return PropagatingEffect::from_error(CausalityError(
                 "Graph is not frozen. Call freeze() first".into(),
             ));
         }
 
-        let causaloid_id = match self.get_causaloid(index) {
-            Some(id) => id,
+        let causaloid = match self.get_causaloid(index) {
+            Some(c) => c,
             None => {
                 return PropagatingEffect::from_error(CausalityError(format!(
                     "Causaloid with index {index} not found in graph"
@@ -49,7 +54,7 @@ pub trait MonadicCausableGraphReasoning: CausableGraph<CausaloidId> {
             }
         };
 
-        registry.evaluate(*causaloid_id, effect)
+        causaloid.evaluate(effect)
     }
 
     /// Reasons over a subgraph by traversing all nodes reachable from a given start index,
@@ -79,7 +84,6 @@ pub trait MonadicCausableGraphReasoning: CausableGraph<CausaloidId> {
     /// If an error occurs during evaluation, the returned `PropagatingEffect` will contain the error.
     fn evaluate_subgraph_from_cause(
         &self,
-        registry: &CausaloidRegistry,
         start_index: usize,
         initial_effect: &PropagatingEffect,
     ) -> PropagatingEffect {
@@ -107,8 +111,8 @@ pub trait MonadicCausableGraphReasoning: CausableGraph<CausaloidId> {
         let mut last_propagated_effect = initial_effect.clone();
 
         while let Some((current_index, incoming_effect)) = queue.pop_front() {
-            let causaloid_id = match self.get_causaloid(current_index) {
-                Some(id) => id,
+            let causaloid = match self.get_causaloid(current_index) {
+                Some(c) => c,
                 None => {
                     return PropagatingEffect::from_error(CausalityError(format!(
                         "Failed to get causaloid at index {current_index}"
@@ -117,7 +121,7 @@ pub trait MonadicCausableGraphReasoning: CausableGraph<CausaloidId> {
             };
 
             // Evaluate the current cause using the incoming_effect.
-            let result_effect = registry.evaluate(*causaloid_id, &incoming_effect);
+            let result_effect = causaloid.evaluate(&incoming_effect);
 
             // Update the last_propagated_effect with the result of the current node's evaluation.
             last_propagated_effect = result_effect.clone();
@@ -167,7 +171,6 @@ pub trait MonadicCausableGraphReasoning: CausableGraph<CausaloidId> {
         // If the loop completes, return the effect of the last node processed.
         last_propagated_effect
     }
-
     /// Reasons over the shortest path between a start and stop cause using a monadic approach.
     ///
     /// It evaluates each node sequentially along the path. The `PropagatingEffect` returned by
@@ -188,7 +191,6 @@ pub trait MonadicCausableGraphReasoning: CausableGraph<CausaloidId> {
     /// If an error occurs or a `RelayTo` effect is encountered, that `PropagatingEffect` is returned immediately.
     fn evaluate_shortest_path_between_causes(
         &self,
-        registry: &CausaloidRegistry,
         start_index: usize,
         stop_index: usize,
         initial_effect: &PropagatingEffect,
@@ -201,15 +203,15 @@ pub trait MonadicCausableGraphReasoning: CausableGraph<CausaloidId> {
 
         // Handle the single-node case explicitly before calling the pathfinder.
         if start_index == stop_index {
-            let causaloid_id = match self.get_causaloid(start_index) {
-                Some(id) => id,
+            let causaloid = match self.get_causaloid(start_index) {
+                Some(c) => c,
                 None => {
                     return PropagatingEffect::from_error(CausalityError(format!(
                         "Failed to get causaloid at index {start_index}"
                     )));
                 }
             };
-            return registry.evaluate(*causaloid_id, initial_effect);
+            return causaloid.evaluate(initial_effect);
         }
 
         let path = match self.get_shortest_path(start_index, stop_index) {
@@ -220,8 +222,8 @@ pub trait MonadicCausableGraphReasoning: CausableGraph<CausaloidId> {
         let mut current_effect = initial_effect.clone();
 
         for index in path {
-            let causaloid_id = match self.get_causaloid(index) {
-                Some(id) => id,
+            let causaloid = match self.get_causaloid(index) {
+                Some(c) => c,
                 None => {
                     return PropagatingEffect::from_error(CausalityError(format!(
                         "Failed to get causaloid at index {index}"
@@ -230,7 +232,7 @@ pub trait MonadicCausableGraphReasoning: CausableGraph<CausaloidId> {
             };
 
             // Evaluate the current cause with the effect propagated from the previous node.
-            current_effect = registry.evaluate(*causaloid_id, &current_effect);
+            current_effect = causaloid.evaluate(&current_effect);
 
             // If an error occurred, propagate it and stop.
             if current_effect.is_err() {

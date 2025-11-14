@@ -13,94 +13,79 @@ const MEDIUM: usize = 1_000;
 const LARGE: usize = 10_000;
 
 fn small_linear_graph_benchmark(criterion: &mut Criterion) {
-    let (g, registry) = test_utils_graph::build_linear_graph(SMALL);
+    let g = test_utils_graph::build_linear_graph(SMALL);
     let evidence = PropagatingEffect::from_numerical(0.99);
     let root_index = g.get_root_index().unwrap();
 
     criterion.bench_function(
         "small_linear_graph_evaluate_subgraph_from_root",
-        |bencher| bencher.iter(|| g.evaluate_subgraph_from_cause(&registry, root_index, &evidence)),
+        |bencher| bencher.iter(|| g.evaluate_subgraph_from_cause(root_index, &evidence)),
     );
 
     let start_index = g.number_nodes() / 2;
     let stop_index = g.number_nodes() - 1;
 
     criterion.bench_function("small_linear_graph_evaluate_shortest_path", |bencher| {
-        bencher.iter(|| {
-            g.evaluate_shortest_path_between_causes(&registry, start_index, stop_index, &evidence)
-        })
+        bencher.iter(|| g.evaluate_shortest_path_between_causes(start_index, stop_index, &evidence))
     });
 
     let single_cause_index = g.number_nodes() / 2;
     criterion.bench_function("small_linear_graph_evaluate_single_cause", |bencher| {
         bencher.iter(|| {
-            // Perform the graph lookup
-            let causaloid_id = g.get_causaloid(single_cause_index).unwrap();
-            // Then perform the evaluation
             // Also black_box the result to ensure this code is never considered "dead" or unused.
-            black_box(registry.evaluate(*causaloid_id, &evidence));
+            black_box(g.evaluate_single_cause(single_cause_index, &evidence));
         })
     });
 }
 
 fn medium_linear_graph_benchmark(criterion: &mut Criterion) {
-    let (g, registry) = test_utils_graph::build_linear_graph(MEDIUM);
+    let g = test_utils_graph::build_linear_graph(MEDIUM);
     let evidence = PropagatingEffect::from_numerical(0.99);
     let root_index = g.get_root_index().unwrap();
 
     criterion.bench_function(
         "medium_linear_graph_evaluate_subgraph_from_root",
-        |bencher| bencher.iter(|| g.evaluate_subgraph_from_cause(&registry, root_index, &evidence)),
+        |bencher| bencher.iter(|| g.evaluate_subgraph_from_cause(root_index, &evidence)),
     );
 
     let start_index = g.number_nodes() / 2;
     let stop_index = g.number_nodes() - 1;
 
     criterion.bench_function("medium_linear_graph_evaluate_shortest_path", |bencher| {
-        bencher.iter(|| {
-            g.evaluate_shortest_path_between_causes(&registry, start_index, stop_index, &evidence)
-        })
+        bencher.iter(|| g.evaluate_shortest_path_between_causes(start_index, stop_index, &evidence))
     });
 
     let single_cause_index = g.number_nodes() / 2;
     criterion.bench_function("medium_linear_graph_evaluate_single_cause", |bencher| {
         bencher.iter(|| {
-            // Perform the graph lookup
-            let causaloid_id = g.get_causaloid(single_cause_index).unwrap();
-            // Then perform the evaluation
             // Also black_box the result to ensure this code is never considered "dead" or unused.
-            black_box(registry.evaluate(*causaloid_id, &evidence));
+            black_box(g.evaluate_single_cause(single_cause_index, &evidence));
         })
     });
 }
 
 fn large_linear_graph_benchmark(criterion: &mut Criterion) {
-    let (g, registry) = test_utils_graph::build_linear_graph(LARGE);
+    let g = test_utils_graph::build_linear_graph(LARGE);
     let evidence = PropagatingEffect::from_numerical(0.99);
     let root_index = g.get_root_index().unwrap();
 
     criterion.bench_function(
         "large_linear_graph_evaluate_subgraph_from_root",
-        |bencher| bencher.iter(|| g.evaluate_subgraph_from_cause(&registry, root_index, &evidence)),
+        |bencher| bencher.iter(|| g.evaluate_subgraph_from_cause(root_index, &evidence)),
     );
 
     let start_index = g.number_nodes() / 2;
     let stop_index = g.number_nodes() - 1;
 
     criterion.bench_function("large_linear_graph_evaluate_shortest_path", |bencher| {
-        bencher.iter(|| {
-            g.evaluate_shortest_path_between_causes(&registry, start_index, stop_index, &evidence)
-        })
+        bencher.iter(|| g.evaluate_shortest_path_between_causes(start_index, stop_index, &evidence))
     });
 
     let single_cause_index = g.number_nodes() / 2;
     criterion.bench_function("large_linear_graph_evaluate_single_cause", |bencher| {
         bencher.iter(|| {
-            // Perform the graph lookup
-            let causaloid_id = g.get_causaloid(single_cause_index).unwrap();
-            // Then perform the evaluation
             // Also black_box the result to ensure this code is never considered "dead" or unused.
-            black_box(registry.evaluate(*causaloid_id, &evidence));
+            black_box(g.evaluate_single_cause(single_cause_index, &evidence));
         })
     });
 }

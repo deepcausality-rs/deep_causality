@@ -41,9 +41,8 @@ where
     coll_threshold_value: Option<NumericalValue>,
     context_causal_fn: Option<ContextualCausalFn<I, O, D, S, T, ST, SYM, VS, VT>>,
     context: Option<Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>,
-    causal_coll: Option<Arc<Vec<CausaloidId>>>,
-    causal_graph: Option<Arc<CausaloidGraph<CausaloidId>>>,
-    causal_registry: Option<Arc<CausaloidRegistry>>,
+    causal_coll: Option<Arc<Vec<Self>>>,
+    causal_graph: Option<Arc<CausaloidGraph<Self>>>,
     description: String,
     ty: PhantomData<(VS, VT)>,
     _phantom: PhantomData<(I, O)>,
@@ -79,7 +78,6 @@ where
             context: None,
             coll_aggregate_logic: None,
             coll_threshold_value: None,
-            causal_registry: None,
             causal_coll: None,
             causal_graph: None,
             description: description.to_string(),
@@ -110,7 +108,6 @@ where
             context: Some(context),
             coll_aggregate_logic: None,
             coll_threshold_value: None,
-            causal_registry: None,
             causal_coll: None,
             causal_graph: None,
             description: description.to_string(),
@@ -159,39 +156,6 @@ where
         VT: Send + Sync + 'static,
         Causaloid<I, O, D, S, T, ST, SYM, VS, VT>: MonadicCausable<CausalMonad>,
     {
-        let mut registry = CausaloidRegistry::new();
-        let mut registered_ids = Vec::with_capacity(causal_coll.len());
-
-        causal_coll.as_slice().iter().for_each(|c| {
-            let id = registry.register(c.clone());
-            registered_ids.push(id);
-        });
-
-        Causaloid {
-            id,
-            causal_type: CausaloidType::Collection,
-            causal_fn: None,
-            context_causal_fn: None,
-            context: None,
-            coll_aggregate_logic: Some(aggregate_logic),
-            coll_threshold_value: Some(threshold_value),
-            causal_coll: Some(Arc::new(registered_ids)),
-            causal_graph: None,
-            causal_registry: Some(Arc::new(registry)),
-            description: description.to_string(),
-            ty: PhantomData,
-            _phantom: PhantomData,
-        }
-    }
-
-    pub fn from_causal_collection_with_registry(
-        id: IdentificationValue,
-        causal_coll: Arc<Vec<CausaloidId>>,
-        description: &str,
-        aggregate_logic: AggregateLogic,
-        threshold_value: NumericalValue,
-        registry: Arc<CausaloidRegistry>,
-    ) -> Self {
         Causaloid {
             id,
             causal_type: CausaloidType::Collection,
@@ -202,7 +166,6 @@ where
             coll_threshold_value: Some(threshold_value),
             causal_coll: Some(causal_coll),
             causal_graph: None,
-            causal_registry: Some(registry),
             description: description.to_string(),
             ty: PhantomData,
             _phantom: PhantomData,
@@ -233,40 +196,6 @@ where
         VT: Send + Sync + 'static,
         Causaloid<I, O, D, S, T, ST, SYM, VS, VT>: MonadicCausable<CausalMonad>,
     {
-        let mut registry = CausaloidRegistry::new();
-        let mut registered_ids = Vec::with_capacity(causal_coll.len());
-
-        causal_coll.as_slice().iter().for_each(|c| {
-            let id = registry.register(c.clone());
-            registered_ids.push(id);
-        });
-
-        Causaloid {
-            id,
-            causal_type: CausaloidType::Collection,
-            causal_fn: None,
-            coll_aggregate_logic: Some(aggregate_logic),
-            coll_threshold_value: Some(threshold_value),
-            causal_coll: Some(Arc::new(registered_ids)),
-            causal_graph: None,
-            causal_registry: Some(Arc::new(registry)),
-            description: description.to_string(),
-            context: Some(context),
-            context_causal_fn: None,
-            ty: PhantomData,
-            _phantom: PhantomData,
-        }
-    }
-
-    pub fn from_causal_collection_with_context_and_registry(
-        id: IdentificationValue,
-        causal_coll: Arc<Vec<CausaloidId>>,
-        context: Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>,
-        description: &str,
-        aggregate_logic: AggregateLogic,
-        threshold_value: NumericalValue,
-        registry: Arc<CausaloidRegistry>,
-    ) -> Self {
         Causaloid {
             id,
             causal_type: CausaloidType::Collection,
@@ -274,7 +203,6 @@ where
             coll_aggregate_logic: Some(aggregate_logic),
             coll_threshold_value: Some(threshold_value),
             causal_coll: Some(causal_coll),
-            causal_registry: Some(registry),
             causal_graph: None,
             description: description.to_string(),
             context: Some(context),
@@ -284,35 +212,32 @@ where
         }
     }
 
-    pub fn from_causal_graph_with_registry(
+    pub fn from_causal_graph(
         id: IdentificationValue,
         description: &str,
-        causal_graph: Arc<CausaloidGraph<CausaloidId>>,
-        registry: Arc<CausaloidRegistry>,
+        causal_graph: Arc<CausaloidGraph<Self>>,
     ) -> Self {
         Causaloid {
             id,
             causal_type: CausaloidType::Graph,
             causal_fn: None,
-            context_causal_fn: None,
-            context: None,
+            causal_coll: None,
             coll_aggregate_logic: None,
             coll_threshold_value: None,
-            causal_coll: None,
             causal_graph: Some(causal_graph),
-            causal_registry: Some(registry),
             description: description.to_string(),
+            context: None,
+            context_causal_fn: None,
             ty: PhantomData,
             _phantom: PhantomData,
         }
     }
 
-    pub fn from_causal_graph_with_context_and_registry(
+    pub fn from_causal_graph_with_context(
         id: IdentificationValue,
         description: &str,
-        causal_graph: Arc<CausaloidGraph<CausaloidId>>,
+        causal_graph: Arc<CausaloidGraph<Self>>,
         context: Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>,
-        registry: Arc<CausaloidRegistry>,
     ) -> Self {
         Causaloid {
             id,
@@ -322,7 +247,6 @@ where
             coll_aggregate_logic: None,
             coll_threshold_value: None,
             causal_graph: Some(causal_graph),
-            causal_registry: Some(registry),
             description: description.to_string(),
             context: Some(context),
             context_causal_fn: None,

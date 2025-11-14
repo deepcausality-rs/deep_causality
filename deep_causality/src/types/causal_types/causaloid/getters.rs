@@ -22,11 +22,11 @@ where
         &self.context
     }
 
-    pub fn causal_collection(&self) -> &Option<Arc<Vec<CausaloidId>>> {
+    pub fn causal_collection(&self) -> &Option<Arc<Vec<Self>>> {
         &self.causal_coll
     }
 
-    pub fn causal_graph(&self) -> &Option<Arc<CausaloidGraph<CausaloidId>>> {
+    pub fn causal_graph(&self) -> &Option<Arc<CausaloidGraph<Self>>> {
         &self.causal_graph
     }
 
