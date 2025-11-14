@@ -22,7 +22,6 @@ fn test_new() {
         }
         let threshold: NumericalValue = 0.75;
         let is_active = obs.ge(&threshold);
-
         let mut log = CausalEffectLog::new();
         log.add_entry("Causal function executed successfully");
 

@@ -284,31 +284,6 @@ where
         }
     }
 
-    // pub fn from_causal_graph(
-    //     id: IdentificationValue,
-    //     causal_graph: Arc<CausaloidGraph<CausaloidId>>,
-    //     description: &str,
-    // ) -> Self {
-    //
-    //     let registry = Arc::new(CausaloidRegistry::new());
-    //
-    //     Causaloid {
-    //         id,
-    //         causal_type: CausaloidType::Graph,
-    //         causal_fn: None,
-    //         context_causal_fn: None,
-    //         context: None,
-    //         coll_aggregate_logic: None,
-    //         coll_threshold_value: None,
-    //         causal_coll: None,
-    //         causal_graph: Some(causal_graph),
-    //         causal_registry: Some(registry),
-    //         description: description.to_string(),
-    //         ty: PhantomData,
-    //         _phantom: PhantomData,
-    //     }
-    // }
-
     pub fn from_causal_graph_with_registry(
         id: IdentificationValue,
         causal_graph: Arc<CausaloidGraph<CausaloidId>>,
@@ -331,31 +306,6 @@ where
             _phantom: PhantomData,
         }
     }
-
-    // pub fn from_causal_graph_with_context(
-    //     id: IdentificationValue,
-    //     causal_graph: Arc<CausaloidGraph<CausaloidId>>,
-    //     context: Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>,
-    //     description: &str,
-    // ) -> Self {
-    //     let registry = Arc::new(CausaloidRegistry::new());
-    //
-    //     Causaloid {
-    //         id,
-    //         causal_type: CausaloidType::Graph,
-    //         causal_fn: None,
-    //         causal_coll: None,
-    //         coll_aggregate_logic: None,
-    //         coll_threshold_value: None,
-    //         causal_graph: Some(causal_graph),
-    //         causal_registry: Some(registry),
-    //         description: description.to_string(),
-    //         context: Some(context),
-    //         context_causal_fn: None,
-    //         ty: PhantomData,
-    //         _phantom: PhantomData,
-    //     }
-    // }
 
     pub fn from_causal_graph_with_context_and_registry(
         id: IdentificationValue,

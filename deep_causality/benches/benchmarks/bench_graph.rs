@@ -5,16 +5,15 @@
 use criterion::{Criterion, criterion_group};
 use std::hint::black_box;
 
+use deep_causality::utils_test::test_utils_graph;
 use deep_causality::*;
-
-use crate::benchmarks::utils_linear_graph;
 
 const SMALL: usize = 10;
 const MEDIUM: usize = 1_000;
 const LARGE: usize = 10_000;
 
 fn small_linear_graph_benchmark(criterion: &mut Criterion) {
-    let (g, registry) = utils_linear_graph::build_linear_graph(SMALL);
+    let (g, registry) = test_utils_graph::build_linear_graph(SMALL);
     let evidence = PropagatingEffect::from_numerical(0.99);
     let root_index = g.get_root_index().unwrap();
 
@@ -45,7 +44,7 @@ fn small_linear_graph_benchmark(criterion: &mut Criterion) {
 }
 
 fn medium_linear_graph_benchmark(criterion: &mut Criterion) {
-    let (g, registry) = utils_linear_graph::build_linear_graph(MEDIUM);
+    let (g, registry) = test_utils_graph::build_linear_graph(MEDIUM);
     let evidence = PropagatingEffect::from_numerical(0.99);
     let root_index = g.get_root_index().unwrap();
 
@@ -76,7 +75,7 @@ fn medium_linear_graph_benchmark(criterion: &mut Criterion) {
 }
 
 fn large_linear_graph_benchmark(criterion: &mut Criterion) {
-    let (g, registry) = utils_linear_graph::build_linear_graph(LARGE);
+    let (g, registry) = test_utils_graph::build_linear_graph(LARGE);
     let evidence = PropagatingEffect::from_numerical(0.99);
     let root_index = g.get_root_index().unwrap();
 

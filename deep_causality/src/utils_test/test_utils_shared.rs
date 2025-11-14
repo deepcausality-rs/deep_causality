@@ -3,9 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::CausalityError;
-use deep_causality::{
-    BaseCausaloid, CausalEffectLog, CausalFnOutput, Causaloid, IdentificationValue, NumericalValue,
+use crate::{
+    BaseCausaloid, CausalEffectLog, CausalFnOutput, CausalityError, Causaloid, IdentificationValue,
+    NumericalValue,
 };
 
 pub fn get_test_causaloid() -> BaseCausaloid<f64, bool> {

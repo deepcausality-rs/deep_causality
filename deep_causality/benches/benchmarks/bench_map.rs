@@ -3,17 +3,15 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use criterion::{Criterion, criterion_group};
+use deep_causality::utils_test::test_utils_map;
 use deep_causality::{CausaloidId, CausaloidRegistry, PropagatingEffect};
 use std::collections::HashMap;
-
-use crate::benchmarks::utils_map;
-
 // Small = 10
 // Medium = 1_000
 // Large = 10_000
 
 fn small_causality_map_benchmark(criterion: &mut Criterion) {
-    let (map, data) = utils_map::get_small_map_and_data();
+    let (map, data) = test_utils_map::get_small_map_and_data();
 
     let mut registry = CausaloidRegistry::new();
     let registered_map: HashMap<usize, CausaloidId> = map
@@ -33,7 +31,7 @@ fn small_causality_map_benchmark(criterion: &mut Criterion) {
 }
 
 fn medium_causality_map_benchmark(criterion: &mut Criterion) {
-    let (map, data) = utils_map::get_medium_map_and_data();
+    let (map, data) = test_utils_map::get_medium_map_and_data();
 
     let mut registry = CausaloidRegistry::new();
     let registered_map: HashMap<usize, CausaloidId> = map
@@ -53,7 +51,7 @@ fn medium_causality_map_benchmark(criterion: &mut Criterion) {
 }
 
 fn large_causality_map_benchmark(criterion: &mut Criterion) {
-    let (map, data) = utils_map::get_large_map_and_data();
+    let (map, data) = test_utils_map::get_large_map_and_data();
 
     let mut registry = CausaloidRegistry::new();
     let registered_map: HashMap<usize, CausaloidId> = map

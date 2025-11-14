@@ -5,13 +5,12 @@
 
 use criterion::{Criterion, criterion_group};
 
+use deep_causality::utils_test::test_utils_graph;
 use deep_causality::*;
-
-use crate::benchmarks::utils_linear_graph;
 
 fn small_multi_layer_graph_benchmark(criterion: &mut Criterion) {
     // The data array is no longer used; we use a single Evidence object.
-    let (g, registry, _data) = utils_linear_graph::get_small_multi_cause_graph_and_data();
+    let (g, registry, _data) = test_utils_graph::get_small_multi_cause_graph_and_data();
     let evidence = PropagatingEffect::from_numerical(0.99);
 
     let root_index = g.get_root_index().expect("Graph has no root");

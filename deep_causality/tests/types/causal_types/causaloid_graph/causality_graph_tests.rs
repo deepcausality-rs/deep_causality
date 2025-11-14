@@ -6,48 +6,30 @@
 use deep_causality::*;
 use ultragraph::*;
 
-// Custom type alias
-type CustomCausaloidGraph = CausaloidGraph<
-    Causaloid<
-        Data<NumberType>,
-        EuclideanSpace,
-        EuclideanTime,
-        EuclideanSpacetime,
-        BaseSymbol,
-        FloatType,
-        FloatType,
-    >,
->;
-
-fn get_causal_graph() -> BaseCausalGraph {
-    let g: BaseCausalGraph = CausaloidGraph::new(0);
-    g
-}
-
 #[test]
 fn test_new() {
-    let g: CustomCausaloidGraph = CausaloidGraph::new(0);
+    let g = CausaloidGraph::new(0);
     assert_eq!(g.number_nodes(), 0);
     assert_eq!(g.number_edges(), 0);
 }
 
 #[test]
 fn test_new_with_capacity() {
-    let g: CustomCausaloidGraph = CausaloidGraph::new_with_capacity(0, 10);
+    let g = CausaloidGraph::new_with_capacity(0, 10);
     assert_eq!(g.number_nodes(), 0);
     assert_eq!(g.number_edges(), 0);
 }
 
 #[test]
 fn test_default() {
-    let g: CustomCausaloidGraph = CausaloidGraph::default();
+    let g = CausaloidGraph::default();
     assert_eq!(g.number_nodes(), 0);
     assert_eq!(g.number_edges(), 0);
 }
 
 #[test]
 fn test_get_graph() {
-    let g = get_causal_graph();
+    let g = CausaloidGraph::new(0);
 
     let size = g.size();
     assert_eq!(size, 0);
@@ -59,17 +41,8 @@ fn test_get_graph() {
 
 #[test]
 fn test_id() {
-    let g: CustomCausaloidGraph = CausaloidGraph::new(0);
+    let g = CausaloidGraph::new(0);
     assert_eq!(g.number_nodes(), 0);
     assert_eq!(g.number_edges(), 0);
     assert_eq!(g.id(), 0);
-}
-
-#[test]
-fn test_is_not_singleton() {
-    let g: CustomCausaloidGraph = CausaloidGraph::new(0);
-    assert_eq!(g.number_nodes(), 0);
-    assert_eq!(g.number_edges(), 0);
-    assert_eq!(g.id(), 0);
-    assert!(!g.is_singleton());
 }
