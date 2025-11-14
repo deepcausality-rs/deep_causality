@@ -5,5 +5,5 @@
 
 mod causal_type;
 mod causaloid;
+mod causaloid_graph;
 mod causaloid_registry;
-// mod causaloid_graph;

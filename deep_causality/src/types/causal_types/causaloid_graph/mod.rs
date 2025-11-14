@@ -7,7 +7,6 @@ use ultragraph::UltraGraphWeighted;
 
 use crate::{CausalGraph, IdentificationValue};
 
-mod causable;
 mod causable_graph;
 mod default;
 mod identifiable;
