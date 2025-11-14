@@ -2,16 +2,13 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality::utils_test::test_utils_graph;
+use deep_causality::utils_test::{test_utils, test_utils_graph};
 use deep_causality::*;
 
 #[test]
-fn test_graph_evaluate() {
+fn test_graph_evaluate_success() {
     let (g, registry) = test_utils_graph::build_multi_cause_graph();
-
     let root_index = 0;
-    let idx_a = 1;
-    let idx_b = 2;
 
     // Create an initial effect to be applied to the root node
     let effect = PropagatingEffect::from_numerical(0.99); // A value that will activate all nodes
@@ -20,48 +17,85 @@ fn test_graph_evaluate() {
     // dbg!(&res);
     assert!(res.is_ok());
     // The root node returns Deterministic(true) because its causal function evaluates to true w.r.t. to effect
-
-    // Now, we evaluate the effect propagating from root to A
-    // Root evaluates from Numerical to true; and A evaluates from Boolean true to Boolean false
-    let res = g.evaluate_shortest_path_between_causes(&registry, root_index, idx_a, &effect);
-    dbg!(&res);
-    assert!(res.is_ok());
-
-    // Now, we evaluate the effect propagating from  root -> A -> B
-    // Root evaluates from Numerical to true;
-    // A evaluates from Boolean true to Boolean false;
-    // B evaluates from Boolean false to Boolean true
-    let res = g.evaluate_shortest_path_between_causes(&registry, root_index, idx_b, &effect);
-    dbg!(&res);
-    assert!(res.is_ok());
 }
 
-// #[test]
-// fn test_graph_evaluate_error_conditions() {
-//     // Test case 1: Graph has no root
-//     let g: BaseCausalGraph = CausaloidGraph::new(0);
-//     assert!(g.is_empty());
-//     assert!(!g.contains_root_causaloid());
-//
-//     let effect = PropagatingEffect::Numerical(0.99);
-//     let res = g.evaluate(&effect);
-//     assert!(res.is_err());
-//     assert_eq!(
-//         res.unwrap_err().to_string(),
-//         "CausalityError: Cannot evaluate graph: Root node not found."
-//     );
-//
-//     // Test case 2: Graph is not frozen
-//     let mut g = CausaloidGraph::new(0);
-//     let root_causaloid = test_utils::get_test_causaloid_deterministic();
-//     g.add_root_causaloid(root_causaloid).unwrap();
-//     // DO NOT call g.freeze()
-//
-//     let res = g.evaluate(&effect);
-//     assert!(res.is_err());
-//     // The error comes from `evaluate_subgraph_from_cause` which is called by `evaluate`
-//     assert_eq!(
-//         res.unwrap_err().to_string(),
-//         "CausalityError: Graph is not frozen. Call freeze() first"
-//     );
-// }
+#[test]
+fn test_graph_evaluate_error_root_not_found() {
+    // Test case 1: Graph has no root
+    let mut g = CausaloidGraph::<CausaloidId>::new(0 as IdentificationValue);
+    let registry = CausaloidRegistry::new();
+
+    assert!(g.is_empty());
+    assert!(!g.contains_root_causaloid());
+    g.freeze();
+    assert!(g.is_frozen());
+
+    let root_index = 0;
+    let effect = PropagatingEffect::from_numerical(0.99);
+    let res = g.evaluate_single_cause(&registry, root_index, &effect);
+    dbg!(&res);
+
+    assert!(res.is_err());
+    assert!(
+        res.error
+            .unwrap()
+            .0
+            .contains("Causaloid with index 0 not found in graph"),
+    );
+}
+
+#[test]
+fn test_graph_evaluate_error_not_frozen() {
+    let mut g = CausaloidGraph::<CausaloidId>::new(0 as IdentificationValue);
+    let mut registry = CausaloidRegistry::new();
+
+    assert!(g.is_empty());
+    assert!(!g.contains_root_causaloid());
+
+    let root_causaloid = test_utils::get_test_causaloid_deterministic(0);
+    let root_id = registry.register(root_causaloid);
+    g.add_root_causaloid(root_id).unwrap();
+    // DO NOT call g.freeze()
+    assert!(!g.is_frozen());
+
+    let effect = PropagatingEffect::from_numerical(0.99);
+    let res = g.evaluate_subgraph_from_cause(&registry, root_id as usize, &effect);
+    dbg!(&res);
+
+    assert!(res.is_err());
+    assert!(
+        res.error
+            .unwrap()
+            .0
+            .contains("Graph is not frozen. Call freeze() first"),
+    );
+}
+
+#[test]
+fn test_graph_evaluate_error_no_start_index() {
+    let mut g = CausaloidGraph::<CausaloidId>::new(0 as IdentificationValue);
+    let mut registry = CausaloidRegistry::new();
+
+    assert!(g.is_empty());
+    assert!(!g.contains_root_causaloid());
+
+    let root_causaloid = test_utils::get_test_causaloid_deterministic(0);
+    let root_id = registry.register(root_causaloid);
+    g.add_root_causaloid(root_id).unwrap();
+    g.freeze();
+    assert!(g.is_frozen());
+
+    let false_start_idx = 890;
+
+    let effect = PropagatingEffect::from_numerical(0.99);
+    let res = g.evaluate_subgraph_from_cause(&registry, false_start_idx, &effect);
+    dbg!(&res);
+
+    assert!(res.is_err());
+    assert!(
+        res.error
+            .unwrap()
+            .0
+            .contains("Graph does not contain start causaloid with index"),
+    );
+}

@@ -34,6 +34,12 @@ pub trait MonadicCausableGraphReasoning: CausableGraph<CausaloidId> {
         index: usize,
         effect: &PropagatingEffect,
     ) -> PropagatingEffect {
+        if !self.is_frozen() {
+            return PropagatingEffect::from_error(CausalityError(
+                "Graph is not frozen. Call freeze() first".into(),
+            ));
+        }
+
         let causaloid_id = match self.get_causaloid(index) {
             Some(id) => id,
             None => {
