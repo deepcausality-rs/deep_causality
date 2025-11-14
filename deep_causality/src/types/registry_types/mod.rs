@@ -4,4 +4,3 @@
  */
 
 pub mod causaloid_registry;
-pub mod registered_causaloid;

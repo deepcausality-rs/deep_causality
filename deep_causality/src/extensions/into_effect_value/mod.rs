@@ -16,6 +16,19 @@ use deep_causality_uncertain::{
 
 // Implementations for concrete types to be used as PropagatingEffect
 
+impl IntoEffectValue for EffectValue {
+    fn into_effect_value(self) -> EffectValue {
+        self
+    }
+
+    fn try_from_effect_value(ev: EffectValue) -> Result<Self, CausalityError>
+    where
+        Self: Sized,
+    {
+        Ok(ev)
+    }
+}
+
 // bool
 impl IntoEffectValue for bool {
     fn into_effect_value(self) -> EffectValue {

@@ -172,7 +172,6 @@ pub use crate::types::reasoning_types::propagating_effect::{
 };
 // Registry types
 pub use crate::types::registry_types::causaloid_registry::CausaloidRegistry;
-pub use crate::types::registry_types::registered_causaloid::RegisteredCausaloid;
 
 //
 //Symbolic types
