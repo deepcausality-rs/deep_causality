@@ -14,7 +14,7 @@ fn test_add_root_causaloid() {
     let root_causaloid = test_utils::get_test_causaloid_deterministic(0);
 
     let root_index = g
-        .add_root_causaloid(root_causaloid.id())
+        .add_root_causaloid(root_causaloid)
         .expect("Failed to add root index");
     let contains_root = g.contains_causaloid(root_index);
     assert!(contains_root);
@@ -26,12 +26,12 @@ fn test_add_root_causaloid_err() {
     let root_causaloid = test_utils::get_test_causaloid_deterministic(0);
 
     let root_index = g
-        .add_root_causaloid(root_causaloid.id())
+        .add_root_causaloid(root_causaloid.clone())
         .expect("Failed to add root index");
     let contains_root = g.contains_causaloid(root_index);
     assert!(contains_root);
 
-    let res = g.add_root_causaloid(root_causaloid.id());
+    let res = g.add_root_causaloid(root_causaloid);
     assert!(res.is_err());
 }
 
@@ -41,14 +41,14 @@ fn test_get_root_causaloid() {
     let root_causaloid = test_utils::get_test_causaloid_deterministic(0);
 
     let root_index = g
-        .add_root_causaloid(root_causaloid.id())
+        .add_root_causaloid(root_causaloid)
         .expect("Failed to add root index");
     let contains_root = g.contains_causaloid(root_index);
     assert!(contains_root);
 
-    let id = g.get_root_causaloid().unwrap();
+    let id = g.get_root_causaloid().unwrap().id();
 
-    assert_eq!(*id, 0);
+    assert_eq!(id, 0);
 }
 
 #[test]
@@ -57,7 +57,7 @@ fn test_get_root_index() {
     let root_causaloid = test_utils::get_test_causaloid_deterministic(0);
 
     let root_index = g
-        .add_root_causaloid(root_causaloid.id())
+        .add_root_causaloid(root_causaloid)
         .expect("Failed to add root index");
     let contains_root = g.contains_causaloid(root_index);
     assert!(contains_root);
@@ -76,7 +76,7 @@ fn test_get_last_index() {
     let root_causaloid = test_utils::get_test_causaloid_deterministic(0);
 
     let root_index = g
-        .add_root_causaloid(root_causaloid.id())
+        .add_root_causaloid(root_causaloid)
         .expect("Failed to add root index");
     let contains_root = g.contains_causaloid(root_index);
     assert!(contains_root);
@@ -99,9 +99,7 @@ fn test_add_causaloid() {
     let mut g = CausaloidGraph::new(0);
     let causaloid = test_utils::get_test_causaloid_deterministic(1);
 
-    let index = g
-        .add_causaloid(causaloid.id())
-        .expect("Failed to add causaloid");
+    let index = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     let contains = g.contains_causaloid(index);
     assert!(contains);
 }
@@ -111,9 +109,7 @@ fn test_contains_causaloid() {
     let mut g = CausaloidGraph::new(0);
     let causaloid = test_utils::get_test_causaloid_deterministic(1);
 
-    let index = g
-        .add_causaloid(causaloid.id())
-        .expect("Failed to add causaloid");
+    let index = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     let contains = g.contains_causaloid(index);
     assert!(contains);
 }
@@ -123,15 +119,11 @@ fn test_get_causaloid() {
     let mut g = CausaloidGraph::new(0);
     let causaloid = test_utils::get_test_causaloid_deterministic(1);
 
-    let index = g
-        .add_causaloid(causaloid.id())
-        .expect("Failed to add causaloid");
+    let index = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     let contains = g.contains_causaloid(index);
     assert!(contains);
 
-    let causaloid = g.get_causaloid(index).unwrap();
-
-    let id = *causaloid;
+    let id = g.get_causaloid(index).unwrap().id();
 
     assert_eq!(id, 1);
 }
@@ -141,15 +133,11 @@ fn test_remove_causaloid() {
     let mut g = CausaloidGraph::new(0);
     let causaloid = test_utils::get_test_causaloid_deterministic(1);
 
-    let index = g
-        .add_causaloid(causaloid.id())
-        .expect("Failed to add causaloid");
+    let index = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     let contains = g.contains_causaloid(index);
     assert!(contains);
 
-    let causaloid = g.get_causaloid(index).unwrap();
-
-    let id = *causaloid;
+    let id = g.get_causaloid(index).unwrap().id();
     assert_eq!(id, 1);
 
     let res = g.remove_causaloid(index);
@@ -161,7 +149,7 @@ fn test_remove_causaloid() {
 
 #[test]
 fn test_get_graph() {
-    let g = CausaloidGraph::new(0);
+    let g: CausaloidGraph<BaseCausaloid<NumericalValue, bool>> = CausaloidGraph::new(0);
 
     let size = g.size();
     assert_eq!(size, 0);

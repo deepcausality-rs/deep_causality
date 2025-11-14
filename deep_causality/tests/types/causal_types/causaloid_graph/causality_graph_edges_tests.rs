@@ -10,14 +10,15 @@ use deep_causality::utils_test::test_utils;
 
 #[test]
 fn test_new() {
-    let g = CausaloidGraph::new(0);
+    let g: CausaloidGraph<BaseCausaloid<NumericalValue, bool>> = CausaloidGraph::new(0);
     assert_eq!(g.number_nodes(), 0);
     assert_eq!(g.number_edges(), 0);
 }
 
 #[test]
 fn test_new_with_capacity() {
-    let g = CausaloidGraph::new_with_capacity(0, 10);
+    let g: CausaloidGraph<BaseCausaloid<NumericalValue, bool>> =
+        CausaloidGraph::new_with_capacity(0, 10);
     assert_eq!(g.number_nodes(), 0);
     assert_eq!(g.number_edges(), 0);
 }
@@ -25,26 +26,25 @@ fn test_new_with_capacity() {
 #[test]
 fn test_default() {
     let g = CausaloidGraph::default();
-    assert_eq!(g.number_nodes(), 0);
-    assert_eq!(g.number_edges(), 0);
+    assert_eq!(g.id(), 0);
 }
 
 #[test]
 fn test_add_edge() {
-    let mut registry = CausaloidRegistry::new();
     let causaloid_a = test_utils::get_test_causaloid_deterministic(1);
     let causaloid_b = test_utils::get_test_causaloid_deterministic(2);
 
-    let id_a = registry.register(causaloid_a);
-    let id_b = registry.register(causaloid_b);
+    let mut g: CausaloidGraph<BaseCausaloid<NumericalValue, bool>> = CausaloidGraph::new(0);
 
-    let mut g = CausaloidGraph::new(0);
-
-    let idx_a = g.add_causaloid(id_a).expect("Failed to add causaloid");
+    let idx_a = g
+        .add_causaloid(causaloid_a)
+        .expect("Failed to add causaloid");
     let contains_a = g.contains_causaloid(idx_a);
     assert!(contains_a);
 
-    let idx_b = g.add_causaloid(id_b).expect("Failed to add causaloid");
+    let idx_b = g
+        .add_causaloid(causaloid_b)
+        .expect("Failed to add causaloid");
     let contains_b = g.contains_causaloid(idx_b);
     assert!(contains_b);
 
@@ -57,20 +57,20 @@ fn test_add_edge() {
 
 #[test]
 fn test_add_edg_with_weight() {
-    let mut registry = CausaloidRegistry::new();
     let causaloid_a = test_utils::get_test_causaloid_deterministic(1);
     let causaloid_b = test_utils::get_test_causaloid_deterministic(2);
 
-    let id_a = registry.register(causaloid_a);
-    let id_b = registry.register(causaloid_b);
+    let mut g: CausaloidGraph<BaseCausaloid<NumericalValue, bool>> = CausaloidGraph::new(0);
 
-    let mut g = CausaloidGraph::new(0);
-
-    let idx_a = g.add_causaloid(id_a).expect("Failed to add causaloid");
+    let idx_a = g
+        .add_causaloid(causaloid_a)
+        .expect("Failed to add causaloid");
     let contains_a = g.contains_causaloid(idx_a);
     assert!(contains_a);
 
-    let idx_b = g.add_causaloid(id_b).expect("Failed to add causaloid");
+    let idx_b = g
+        .add_causaloid(causaloid_b)
+        .expect("Failed to add causaloid");
     let contains_b = g.contains_causaloid(idx_b);
     assert!(contains_b);
 
@@ -84,20 +84,19 @@ fn test_add_edg_with_weight() {
 
 #[test]
 fn test_remove_edge() {
-    let mut registry = CausaloidRegistry::new();
     let causaloid_a = test_utils::get_test_causaloid_deterministic(1);
     let causaloid_b = test_utils::get_test_causaloid_deterministic(2);
+    let mut g: CausaloidGraph<BaseCausaloid<NumericalValue, bool>> = CausaloidGraph::new(0);
 
-    let id_a = registry.register(causaloid_a);
-    let id_b = registry.register(causaloid_b);
-
-    let mut g = CausaloidGraph::new(0);
-
-    let idx_a = g.add_causaloid(id_a).expect("Failed to add causaloid");
+    let idx_a = g
+        .add_causaloid(causaloid_a)
+        .expect("Failed to add causaloid");
     let contains_a = g.contains_causaloid(idx_a);
     assert!(contains_a);
 
-    let idx_b = g.add_causaloid(id_b).expect("Failed to add causaloid");
+    let idx_b = g
+        .add_causaloid(causaloid_b)
+        .expect("Failed to add causaloid");
     let contains_b = g.contains_causaloid(idx_b);
     assert!(contains_b);
 
@@ -116,7 +115,7 @@ fn test_remove_edge() {
 
 #[test]
 fn test_get_graph() {
-    let g = CausaloidGraph::new(0);
+    let g: CausaloidGraph<BaseCausaloid<NumericalValue, bool>> = CausaloidGraph::new(0);
 
     let size = g.size();
     assert_eq!(size, 0);
