@@ -136,7 +136,7 @@ where
 
     let mut monad = CausalMonad::pure(effect_value.clone());
     monad.logs.add_entry(&format!(
-        "Causaloid {}: Output effect: {:?}",
+        "Causaloid {}: Outgoing effect: {:?}",
         id, effect_value
     ));
     monad

@@ -52,6 +52,29 @@ impl IntoEffectValue for f64 {
     }
 }
 
+impl IntoEffectValue for u64 {
+    fn into_effect_value(self) -> EffectValue {
+        EffectValue::Number(NumericValue::U64(self))
+    }
+
+    fn try_from_effect_value(ev: EffectValue) -> Result<Self, CausalityError>
+    where
+        Self: Sized,
+    {
+        if let EffectValue::Number(val) = ev {
+            match val {
+                NumericValue::U64(val) => Ok(val),
+                _ => Err(CausalityError(format!(
+                    "Expected U64(u64), found {:?}",
+                    val
+                ))),
+            }
+        } else {
+            Err(CausalityError(format!("Expected U64(u64), found {:?}", ev)))
+        }
+    }
+}
+
 // NumericValue
 impl IntoEffectValue for NumericValue {
     fn into_effect_value(self) -> EffectValue {

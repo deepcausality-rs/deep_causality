@@ -63,8 +63,6 @@ pub enum EffectValue {
     /// A link to a complex, structured result in a Contextoid. As an output, this
     /// can be interpreted by a reasoning engine as a command to fetch data.
     ContextualLink(ContextoidId),
-    /// A collection of named values, allowing for complex, structured data passing.
-    Map(HashMap<IdentificationValue, Box<PropagatingEffect>>),
     /// A dispatch command that directs the reasoning engine to dynamically jump to a specific
     /// causaloid within the graph. The `usize` is the target causaloid's index, and the `Box<CausalValue>`
     /// is the effect to be passed as input to that target causaloid. This enables adaptive reasoning.
@@ -72,4 +70,7 @@ pub enum EffectValue {
     /// A container for any external, user-defined type that implements the `PropagatingValue` trait.
     /// This enables the causal system to be extended with custom data types.
     External(Box<dyn PropagatingValue>),
+
+    /// A collection of named values, allowing for complex, structured data passing.
+    Map(HashMap<IdentificationValue, Box<PropagatingEffect>>),
 }

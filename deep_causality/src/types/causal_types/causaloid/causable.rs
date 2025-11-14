@@ -87,16 +87,16 @@ where
         match self.causal_type {
             CausaloidType::Singleton => {
                 // 1. Get an owned copy of the effect.
-                let mut initial_monad = incoming_effect.clone();
+                let mut effect = incoming_effect.clone();
 
                 // 2. Add the new, contextual log message while preserving the exiting logs.
-                initial_monad.logs.add_entry(&format!(
+                effect.logs.add_entry(&format!(
                     "Causaloid {}: Incoming effect: {:?}",
                     self.id, incoming_effect.value
                 ));
 
                 // 3. Chain the operations and return the final monad.
-                initial_monad
+                effect
                     .bind(|effect_val| causable_utils::convert_input(effect_val, self.id))
                     .bind(|input| causable_utils::execute_causal_logic(input, self))
                     .bind(|output| causable_utils::convert_output(output, self.id))

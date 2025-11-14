@@ -157,7 +157,7 @@ where
         SYM: Symbolic + Clone + Send + Sync + 'static,
         VS: Send + Sync + 'static,
         VT: Send + Sync + 'static,
-        Causaloid<I, O, D, S, T, ST, SYM, VS, VT>: MonadicCausable<CausalMonad>,
+        Causaloid<I, O, D, S, T, ST, SYM, VS, VT>: MonadicCausable<CausalMonad> ,
     {
         let mut registry = CausaloidRegistry::new();
         let mut registered_ids = Vec::with_capacity(causal_coll.len());
@@ -286,8 +286,8 @@ where
 
     pub fn from_causal_graph_with_registry(
         id: IdentificationValue,
-        causal_graph: Arc<CausaloidGraph<CausaloidId>>,
         description: &str,
+        causal_graph: Arc<CausaloidGraph<CausaloidId>>,
         registry: Arc<CausaloidRegistry>,
     ) -> Self {
         Causaloid {
@@ -309,9 +309,9 @@ where
 
     pub fn from_causal_graph_with_context_and_registry(
         id: IdentificationValue,
+        description: &str,
         causal_graph: Arc<CausaloidGraph<CausaloidId>>,
         context: Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>,
-        description: &str,
         registry: Arc<CausaloidRegistry>,
     ) -> Self {
         Causaloid {

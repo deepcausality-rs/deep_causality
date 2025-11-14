@@ -108,7 +108,6 @@ pub use crate::traits::transferable::Transferable;
 pub use crate::types::causal_types::causal_type::CausaloidType;
 pub use crate::types::causal_types::causaloid::Causaloid;
 pub use crate::types::causal_types::causaloid_graph::CausaloidGraph;
-pub use crate::types::causal_types::causaloid_registry::CausaloidRegistry;
 pub use crate::types::causal_types::*;
 // Context types
 pub use crate::types::context_types::context_graph;
@@ -171,6 +170,10 @@ pub use crate::types::reasoning_types::numeric_value::NumericValue;
 pub use crate::types::reasoning_types::propagating_effect::{
     CausalPropagatingEffect, PropagatingEffect, PropagatingEffectWitness,
 };
+// Registry types
+pub use crate::types::registry_types::causaloid_registry::CausaloidRegistry;
+pub use crate::types::registry_types::registered_causaloid::RegisteredCausaloid;
+
 //
 //Symbolic types
 pub use crate::types::symbolic_types::symbolic_representation::SymbolicRepresentation;

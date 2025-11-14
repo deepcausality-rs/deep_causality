@@ -8,8 +8,7 @@ use crate::{
     NumericalValue,
 };
 
-pub fn get_test_causaloid() -> BaseCausaloid<f64, bool> {
-    let id: IdentificationValue = 1;
+pub fn get_test_causaloid(id: IdentificationValue) -> BaseCausaloid<f64, bool> {
     let description = "tests whether data exceeds threshold of 0.55";
 
     fn causal_fn(evidence: f64) -> Result<CausalFnOutput<bool>, CausalityError> {

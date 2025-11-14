@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::BaseCausaloidVec;
 use crate::utils_test::test_utils_shared;
+use crate::{BaseCausaloidVec, IdentificationValue};
 
 const SMALL: usize = 10;
 const MEDIUM: usize = 1_000;
@@ -34,8 +34,10 @@ pub fn get_large_collection_and_data() -> (BaseCausaloidVec<f64, bool>, [f64; LA
 fn build_causaloid_collection(k: usize) -> BaseCausaloidVec<f64, bool> {
     let mut v = Vec::with_capacity(k);
 
-    for _ in 0..k {
-        v.push(test_utils_shared::get_test_causaloid());
+    for i in 0..k {
+        v.push(test_utils_shared::get_test_causaloid(
+            i as IdentificationValue,
+        ));
     }
 
     v

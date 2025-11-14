@@ -38,7 +38,7 @@ fn test_add_entry() {
     // To verify the content, we can use the Display trait implementation
     let log_str = log.to_string();
     assert!(log_str.contains(msg));
-    assert!(log_str.contains("ts_ms:"));
+    assert!(log_str.contains("ts_micros:"));
 }
 
 #[test]
@@ -148,7 +148,7 @@ fn test_display_non_empty() {
     // Check that there are two timestamp lines
     let lines_with_ts: Vec<_> = log_str
         .lines()
-        .filter(|line| line.contains("ts_ms:"))
+        .filter(|line| line.contains("ts_micros:"))
         .collect();
     assert_eq!(lines_with_ts.len(), 2);
 }

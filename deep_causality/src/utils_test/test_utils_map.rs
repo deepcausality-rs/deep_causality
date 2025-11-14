@@ -6,7 +6,7 @@
 use std::collections::HashMap;
 
 use crate::utils_test::test_utils_shared;
-use crate::{BenchmarkCausalMap, NumericalValue};
+use crate::{BenchmarkCausalMap, IdentificationValue, NumericalValue};
 
 const SMALL: usize = 10;
 const MEDIUM: usize = 1_000;
@@ -29,7 +29,10 @@ fn build_causality_map(k: usize) -> BenchmarkCausalMap {
     for i in 0..k {
         // All causaloids are functionally identical, which is fine for this benchmark.
         // The differentiation comes from the data passed during evaluation via the map key.
-        map.insert(i, test_utils_shared::get_test_causaloid());
+        map.insert(
+            i,
+            test_utils_shared::get_test_causaloid(i as IdentificationValue),
+        );
     }
     map
 }

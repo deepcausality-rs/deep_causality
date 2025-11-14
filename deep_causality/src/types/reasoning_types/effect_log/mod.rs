@@ -47,7 +47,7 @@ impl CausalEffectLog {
         let timestamp_ms = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
-            .as_millis();
+            .as_micros();
 
         self.entries.push(LogEntry {
             timestamp_ms,
@@ -101,7 +101,7 @@ impl Display for CausalEffectLog {
 
         writeln!(f, "CausalEffectLog ({} entries):", self.entries.len())?;
         for entry in &self.entries {
-            writeln!(f, "[ts_ms: {}] {}", entry.timestamp_ms, entry.message)?;
+            writeln!(f, "[ts_micros: {}] {}", entry.timestamp_ms, entry.message)?;
         }
         Ok(())
     }
