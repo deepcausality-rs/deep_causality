@@ -85,22 +85,12 @@ where
     /// an effect containing the error and all logs accumulated up to the point of failure.
     fn evaluate(&self, incoming_effect: &PropagatingEffect) -> PropagatingEffect {
         match self.causal_type {
-            CausaloidType::Singleton => {
-                // 1. Get an owned copy of the effect.
-                let mut effect = incoming_effect.clone();
+            CausaloidType::Singleton => incoming_effect
+                .clone()
+                .bind(|effect_val| causable_utils::convert_input(effect_val, self.id))
+                .bind(|input| causable_utils::execute_causal_logic(input, self))
+                .bind(|output| causable_utils::convert_output(output, self.id)),
 
-                // 2. Add the new, contextual log message while preserving the exiting logs.
-                effect.logs.add_entry(&format!(
-                    "Causaloid {}: Incoming effect: {:?}",
-                    self.id, incoming_effect.value
-                ));
-
-                // 3. Chain the operations and return the final monad.
-                effect
-                    .bind(|effect_val| causable_utils::convert_input(effect_val, self.id))
-                    .bind(|input| causable_utils::execute_causal_logic(input, self))
-                    .bind(|output| causable_utils::convert_output(output, self.id))
-            }
             CausaloidType::Collection => {
                 // 1. Get an owned copy of the effect and add the initial log.
                 let mut initial_monad = incoming_effect.clone();

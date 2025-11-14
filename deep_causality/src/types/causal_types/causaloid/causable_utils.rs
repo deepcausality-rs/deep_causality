@@ -32,13 +32,26 @@ pub(super) fn convert_input<I>(
 where
     I: IntoEffectValue + Default,
 {
+    let mut logs = CausalEffectLog::new();
+    logs.add_entry(&format!(
+        "Causaloid {}: Incoming effect: {:?}",
+        id, effect_val
+    ));
+
     match I::try_from_effect_value(effect_val) {
-        Ok(val) => CausalMonad::pure(val),
-        Err(e) => CausalPropagatingEffect {
-            value: I::default(),
-            error: Some(e.clone()),
-            logs: format!("Causaloid {}: Input conversion failed: {}", id, e).into(),
-        },
+        Ok(val) => {
+            let mut monad = CausalMonad::pure(val);
+            monad.logs = logs;
+            monad
+        }
+        Err(e) => {
+            logs.add_entry(&format!("Causaloid {}: Input conversion failed: {}", id, e));
+            CausalPropagatingEffect {
+                value: I::default(),
+                error: Some(e.clone()),
+                logs,
+            }
+        }
     }
 }
 

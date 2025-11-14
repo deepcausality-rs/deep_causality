@@ -157,7 +157,7 @@ where
         SYM: Symbolic + Clone + Send + Sync + 'static,
         VS: Send + Sync + 'static,
         VT: Send + Sync + 'static,
-        Causaloid<I, O, D, S, T, ST, SYM, VS, VT>: MonadicCausable<CausalMonad> ,
+        Causaloid<I, O, D, S, T, ST, SYM, VS, VT>: MonadicCausable<CausalMonad>,
     {
         let mut registry = CausaloidRegistry::new();
         let mut registered_ids = Vec::with_capacity(causal_coll.len());
