@@ -99,20 +99,6 @@ where
                     self.id, incoming_effect.value
                 ));
 
-                let aggregate_logic = match self.coll_aggregate_logic {
-                    Some(c) => c,
-                    None => {
-                        let err_msg =
-                            "Causaloid::evaluate: aggregate_logic for causal collection is None"
-                                .into();
-                        return PropagatingEffect {
-                            value: EffectValue::None,
-                            error: Some(CausalityError(err_msg)),
-                            logs: initial_monad.logs,
-                        };
-                    }
-                };
-
                 let causal_collection = match self.causal_coll.as_ref() {
                     Some(coll_arc) => coll_arc.as_ref(), // Get &Vec<Self>
                     None => {
@@ -128,7 +114,8 @@ where
                 // Call the trait method. `causal_collection` now directly implements MonadicCausableCollection.
                 causal_collection.evaluate_collection(
                     incoming_effect,
-                    &aggregate_logic,
+                    // unwrap is save b/c a collection is always initialized with an aggregate_logic
+                    &self.coll_aggregate_logic.unwrap(),
                     self.coll_threshold_value,
                 )
             }
