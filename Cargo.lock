@@ -274,7 +274,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality"
-version = "0.11.7"
+version = "0.11.8"
 dependencies = [
  "criterion",
  "deep_causality_data_structures",
@@ -287,7 +287,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_algorithms"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "criterion",
  "deep_causality_num",
@@ -297,11 +297,11 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_ast"
-version = "0.1.0"
+version = "0.1.1"
 
 [[package]]
 name = "deep_causality_data_structures"
-version = "0.10.2"
+version = "0.10.3"
 dependencies = [
  "criterion",
  "deep_causality_rand",
@@ -309,7 +309,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_discovery"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "csv",
  "deep_causality_algorithms",
@@ -320,19 +320,19 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_haft"
-version = "0.2.1"
+version = "0.2.2"
 
 [[package]]
 name = "deep_causality_macros"
-version = "0.8.8"
+version = "0.8.9"
 
 [[package]]
 name = "deep_causality_num"
-version = "0.1.5"
+version = "0.1.6"
 
 [[package]]
 name = "deep_causality_rand"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "deep_causality_num",
  "getrandom 0.3.4",
@@ -340,7 +340,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_tensor"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "criterion",
  "deep_causality_ast",
@@ -351,7 +351,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_uncertain"
-version = "0.3.3"
+version = "0.3.4"
 dependencies = [
  "criterion",
  "deep_causality_ast",
@@ -865,7 +865,7 @@ checksum = "9ea3136b675547379c4bd395ca6b938e5ad3c3d20fad76e7fe85f9e0d011419c"
 
 [[package]]
 name = "ultragraph"
-version = "0.8.8"
+version = "0.8.9"
 dependencies = [
  "criterion",
  "deep_causality_rand",

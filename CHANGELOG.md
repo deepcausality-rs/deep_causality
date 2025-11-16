@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.8](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.11.7...deep_causality-v0.11.8) - 2025-11-05
+
+### Added
+
+- *(deep_causality_uncertain)* Migrated internal compute graph to ConsTree from deep_causality_ast crate.
+- *(ast)* Add deep_causality_ast crate with persistent tree
+
+### Other
+
+- Updated SBOM for all crates.
+- Merge branch 'deepcausality-rs:main' into 008-hkt-uncertain-specs
+- updated AGENTS.md and README.md
+
 ## [0.11.7](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.11.6...deep_causality-v0.11.7) - 2025-10-31
 
 ### Added
