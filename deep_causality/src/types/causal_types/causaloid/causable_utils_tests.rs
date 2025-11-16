@@ -45,7 +45,7 @@ fn test_convert_input_success() {
     let result = convert_input::<bool>(effect_val, id);
 
     assert!(result.is_ok());
-    assert_eq!(result.value, true);
+    assert!(result.value);
     assert!(!result.logs.is_empty());
     let log_str = result.logs.to_string();
     assert!(log_str.contains("Causaloid 1: Incoming effect: Deterministic(true)"));
