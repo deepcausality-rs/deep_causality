@@ -33,7 +33,7 @@ impl From<EffectValue> for ActionParameterValue {
                 ActionParameterValue::ContextualLink(contextoid_id)
             }
             EffectValue::None => ActionParameterValue::String("None".to_string()),
-            _ => ActionParameterValue::String("Other".to_string()),
+            _ => ActionParameterValue::String("Unsupported EffectValue".to_string()),
         }
     }
 }

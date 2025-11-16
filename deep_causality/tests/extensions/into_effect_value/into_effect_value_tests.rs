@@ -35,6 +35,22 @@ fn test_bool_try_from_effect_value_error() {
     );
 }
 
+#[test]
+fn test_bool_dyn_eq() {
+    let a = true;
+    let av: EffectValue = a.into_effect_value();
+
+    let b = true;
+    let bv: EffectValue = b.into_effect_value();
+
+    assert_eq!(av, bv);
+
+    let c = false;
+    let cv: EffectValue = c.into_effect_value();
+    assert_ne!(av, cv);
+    assert_ne!(bv, cv);
+}
+
 // Test for f64
 #[test]
 fn test_f64_into_effect_value() {

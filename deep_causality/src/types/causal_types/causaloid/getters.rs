@@ -33,8 +33,4 @@ where
     pub fn description(&self) -> &str {
         &self.description
     }
-
-    pub fn causal_fn(&self) -> &Option<CausalFn<I, O>> {
-        &self.causal_fn
-    }
 }

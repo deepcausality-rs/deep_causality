@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::{ActionParameterValue, EffectValue};
+use deep_causality::{ActionParameterValue, EffectValue, PropagatingEffect};
 use deep_causality_num::Complex;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_uncertain::{UncertainBool, UncertainF64};
@@ -194,5 +194,14 @@ fn test_from_effect_value() {
     assert_eq!(
         action_param_val,
         ActionParameterValue::String("None".to_string())
+    );
+
+    // Unsupported
+    let propagating_effect_val = PropagatingEffect::from_deterministic(true);
+    let effect_val = EffectValue::RelayTo(32, Box::new(propagating_effect_val));
+    let action_param_val: ActionParameterValue = effect_val.into();
+    assert_eq!(
+        action_param_val,
+        ActionParameterValue::String("Unsupported EffectValue".to_string())
     );
 }

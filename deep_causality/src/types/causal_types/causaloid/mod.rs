@@ -26,6 +26,8 @@ use std::sync::{Arc, RwLock};
 
 mod causable;
 mod causable_utils;
+#[cfg(test)]
+mod causable_utils_tests;
 mod display;
 mod getters;
 mod identifiable;
