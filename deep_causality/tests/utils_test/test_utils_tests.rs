@@ -4,9 +4,7 @@
  */
 use deep_causality::Identifiable;
 use deep_causality::utils_test::test_utils::*;
-use deep_causality::{
-    MonadicCausable, PropagatingEffect,
-};
+use deep_causality::{MonadicCausable, PropagatingEffect};
 
 #[test]
 fn test_get_deterministic_test_causality_vec() {
