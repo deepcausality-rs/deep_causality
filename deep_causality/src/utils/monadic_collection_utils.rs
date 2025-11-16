@@ -7,7 +7,7 @@ use deep_causality_uncertain::Uncertain;
 
 /// Main dispatcher function for aggregation.
 /// It inspects the collected effects and chooses the highest-fidelity aggregation strategy possible.
-pub(crate) fn aggregate_effects(
+pub fn aggregate_effects(
     effects: Vec<EffectValue>,
     logic: &AggregateLogic,
     threshold_value: Option<NumericalValue>,
@@ -39,7 +39,7 @@ pub(crate) fn aggregate_effects(
 
 /// Strategy 1: Deterministic Aggregation.
 /// Mirrors the legacy `_evaluate_deterministic_logic`.
-fn aggregate_deterministic(
+pub(super) fn aggregate_deterministic(
     effects: &[EffectValue],
     logic: &AggregateLogic,
 ) -> Result<EffectValue, CausalityError> {
@@ -60,7 +60,7 @@ fn aggregate_deterministic(
 
 /// Strategy 2: Probabilistic Aggregation.
 /// Mirrors the legacy `_evaluate_probabilistic_logic`.
-fn aggregate_probabilistic(
+pub(super) fn aggregate_probabilistic(
     effects: &[EffectValue],
     logic: &AggregateLogic,
     threshold_opt: Option<NumericalValue>,
@@ -101,10 +101,10 @@ fn aggregate_probabilistic(
 
 /// Strategy 3: Uncertain Aggregation.
 /// Mirrors the legacy `_evaluate_uncertain_logic`.
-fn aggregate_uncertain(
+pub fn aggregate_uncertain(
     effects: &[EffectValue],
     logic: &AggregateLogic,
-    threshold_opt: Option<NumericalValue>,
+    threshold_opt: Option<f64>,
 ) -> Result<EffectValue, CausalityError> {
     let threshold = threshold_opt.ok_or_else(|| {
         CausalityError("Threshold is required for uncertain aggregation".to_string())
