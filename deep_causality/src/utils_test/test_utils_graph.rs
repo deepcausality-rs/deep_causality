@@ -87,7 +87,11 @@ pub fn build_multi_cause_graph() -> CausaloidGraph<BaseCausaloid<f64, f64>> {
         .expect("Failed to add edge between C and B");
 
     // Now, we have a graph like this:
-    // root -> A -> B  -> C
+    //  root(0)
+    //  /  \
+    //A(1) B(2)
+    //  \ /
+    //  C(3)
     g.freeze();
 
     g

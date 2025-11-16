@@ -80,7 +80,8 @@ impl PropagatingEffect {
     /// use deep_causality::{PropagatingEffect, NumericValue, EffectValue};
     ///
     /// let effect = PropagatingEffect::from_numerical(123.45);
-    /// assert!(matches!(effect.value, EffectValue::Numerical(123.45)));    /// ```
+    /// assert!(matches!(effect.value, EffectValue::Numerical(123.45)));
+    /// ```
     pub fn from_numerical(numerical: NumericalValue) -> Self {
         CausalMonad::pure(EffectValue::Numerical(numerical))
     }
@@ -369,12 +370,11 @@ impl PropagatingEffect {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::{PropagatingEffect, ContextId, ContextoidId, EffectValue};
+    /// use deep_causality::{PropagatingEffect, EffectValue};
     ///
-    /// let context_id = 1u64;
-    /// let contextoid_id = 2u64;
-    /// let effect = PropagatingEffect::from_contextual_link(contextoid_id);
-    /// assert!(matches!(effect.value, EffectValue::ContextualLink(_)));    /// ```
+    /// let effect = PropagatingEffect::from_contextual_link(42);
+    /// assert!(matches!(effect.value, EffectValue::ContextualLink(_)));
+    /// ```
     pub fn from_contextual_link(contextoid_id: ContextoidId) -> Self {
         CausalMonad::pure(EffectValue::ContextualLink(contextoid_id))
     }
