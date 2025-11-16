@@ -3,7 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::ActionParameterValue;
+use deep_causality::{ActionParameterValue, EffectValue};
+use deep_causality_num::Complex;
+use deep_causality_tensor::CausalTensor;
+use deep_causality_uncertain::{UncertainBool, UncertainF64};
 
 #[test]
 fn test_action_parameter_value_string() {
@@ -57,6 +60,18 @@ fn test_action_parameter_value_boolean() {
 }
 
 #[test]
+fn test_action_parameter_value_contextual_link() {
+    let val = ActionParameterValue::ContextualLink(1);
+    assert_eq!(val, ActionParameterValue::ContextualLink(1));
+    assert_ne!(val, ActionParameterValue::ContextualLink(2));
+    assert_eq!(
+        format!("{}", val),
+        "ActionParameterValue::ContextualLink(1)"
+    );
+    assert_eq!(format!("{:?}", val), "ContextualLink(1)");
+}
+
+#[test]
 fn test_action_parameter_value_clone() {
     let val_str = ActionParameterValue::String("clone_me".to_string());
     let cloned_str = val_str.clone();
@@ -73,6 +88,10 @@ fn test_action_parameter_value_clone() {
     let val_bool = ActionParameterValue::Boolean(true);
     let cloned_bool = val_bool.clone();
     assert_eq!(val_bool, cloned_bool);
+
+    let val_ctx = ActionParameterValue::ContextualLink(1);
+    let cloned_ctx = val_ctx.clone();
+    assert_eq!(val_ctx, cloned_ctx);
 }
 
 #[test]
@@ -81,15 +100,21 @@ fn test_action_parameter_value_inequality_across_variants() {
     let val_num = ActionParameterValue::Number(1.0);
     let val_int = ActionParameterValue::Integer(1);
     let val_bool = ActionParameterValue::Boolean(true);
+    let val_ctx = ActionParameterValue::ContextualLink(1);
 
     assert_ne!(val_str, val_num);
     assert_ne!(val_str, val_int);
     assert_ne!(val_str, val_bool);
+    assert_ne!(val_str, val_ctx);
 
     assert_ne!(val_num, val_int);
     assert_ne!(val_num, val_bool);
+    assert_ne!(val_num, val_ctx);
 
     assert_ne!(val_int, val_bool);
+    assert_ne!(val_int, val_ctx);
+
+    assert_ne!(val_bool, val_ctx);
 }
 
 #[test]
@@ -113,4 +138,61 @@ fn test_display() {
     let val_ctx = ActionParameterValue::ContextualLink(1);
     let expected = "ActionParameterValue::ContextualLink(1)".to_string();
     assert_eq!(format!("{}", val_ctx), expected);
+}
+
+#[test]
+fn test_from_effect_value() {
+    // Deterministic
+    let effect_val = EffectValue::Deterministic(true);
+    let action_param_val: ActionParameterValue = effect_val.into();
+    assert_eq!(action_param_val, ActionParameterValue::Boolean(true));
+
+    // Numerical
+    let effect_val = EffectValue::Numerical(123.45);
+    let action_param_val: ActionParameterValue = effect_val.into();
+    assert_eq!(action_param_val, ActionParameterValue::Number(123.45));
+
+    // Probabilistic
+    let effect_val = EffectValue::Probabilistic(0.75);
+    let action_param_val: ActionParameterValue = effect_val.into();
+    assert_eq!(action_param_val, ActionParameterValue::Number(0.75));
+
+    // UncertainBool
+    let effect_val = EffectValue::UncertainBool(UncertainBool::point(true));
+    let action_param_val: ActionParameterValue = effect_val.into();
+    assert_eq!(action_param_val, ActionParameterValue::Boolean(true));
+
+    // UncertainFloat
+    let effect_val = EffectValue::UncertainFloat(UncertainF64::point(10.5));
+    let action_param_val: ActionParameterValue = effect_val.into();
+    assert_eq!(action_param_val, ActionParameterValue::Number(10.5));
+
+    // CausalTensor
+    let effect_val = EffectValue::Tensor(CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap());
+    let action_param_val: ActionParameterValue = effect_val.into();
+    assert!(matches!(action_param_val, ActionParameterValue::String(_)));
+    if let ActionParameterValue::String(s) = action_param_val {
+        assert!(s.contains("Tensor"));
+    }
+
+    // Complex
+    let effect_val = EffectValue::Complex(Complex::new(1.0, 2.0));
+    let action_param_val: ActionParameterValue = effect_val.into();
+    assert!(matches!(action_param_val, ActionParameterValue::String(_)));
+    if let ActionParameterValue::String(s) = action_param_val {
+        assert!(s.contains("Complex"));
+    }
+
+    // ContextualLink
+    let effect_val = EffectValue::ContextualLink(42);
+    let action_param_val: ActionParameterValue = effect_val.into();
+    assert_eq!(action_param_val, ActionParameterValue::ContextualLink(42));
+
+    // None
+    let effect_val = EffectValue::None;
+    let action_param_val: ActionParameterValue = effect_val.into();
+    assert_eq!(
+        action_param_val,
+        ActionParameterValue::String("None".to_string())
+    );
 }

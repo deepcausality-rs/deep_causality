@@ -171,24 +171,6 @@ pub fn get_test_causaloid_probabilistic_bool_output() -> BaseCausaloid<Numerical
 
     Causaloid::new(id, causal_fn, description)
 }
-
-pub fn get_test_causaloid_contextual_link(
-    id: IdentificationValue,
-) -> BaseCausaloid<NumericalValue, f64> {
-    let description = "tests whether data exceeds threshold of 0.55";
-
-    fn causal_fn(obs: NumericalValue) -> Result<CausalFnOutput<NumericalValue>, CausalityError> {
-        let threshold: NumericalValue = 0.55;
-        let output = if !obs.ge(&threshold) { 1.0 } else { 0.0 };
-        Ok(CausalFnOutput {
-            output,
-            log: CausalEffectLog::new(),
-        })
-    }
-
-    Causaloid::new(id, causal_fn, description)
-}
-
 pub fn get_test_causaloid_deterministic_with_context(
     context: BaseContext,
 ) -> BaseCausaloid<bool, bool> {

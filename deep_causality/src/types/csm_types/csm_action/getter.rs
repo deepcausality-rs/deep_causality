@@ -10,8 +10,8 @@ impl CausalAction {
         self.action
     }
 
-    pub fn descr(&self) -> &'static str {
-        self.descr
+    pub fn description(&self) -> &'static str {
+        self.description
     }
 
     pub fn version(&self) -> usize {

@@ -10,7 +10,7 @@ impl std::fmt::Display for CausalAction {
         write!(
             f,
             "CausalAction {{ descr: \"{}\", version: {} }}",
-            self.descr, self.version
+            self.description, self.version
         )
     }
 }

@@ -99,7 +99,7 @@ pub fn get_small_multi_layer_cause_graph_and_data()
     (build_multi_layer_cause_graph(), generate_sample_data())
 }
 
-fn build_multi_layer_cause_graph() -> CausaloidGraph<BaseCausaloid<f64, f64>> {
+pub fn build_multi_layer_cause_graph() -> CausaloidGraph<BaseCausaloid<f64, f64>> {
     // Builds a multi-layer cause graph:
     //    root
     //  /   |  \
@@ -185,7 +185,7 @@ pub fn get_left_imbalanced_cause_graph() -> (CausaloidGraph<BaseCausaloid<f64, f
     (build_left_imbalanced_cause_graph(), generate_sample_data())
 }
 
-fn build_left_imbalanced_cause_graph() -> CausaloidGraph<BaseCausaloid<f64, f64>> {
+pub fn build_left_imbalanced_cause_graph() -> CausaloidGraph<BaseCausaloid<f64, f64>> {
     // Builds a multi-layer cause graph:
     //    root
     //  /   |  \
@@ -251,7 +251,7 @@ pub fn get_right_imbalanced_cause_graph() -> (CausaloidGraph<BaseCausaloid<f64, 
     (build_right_imbalanced_cause_graph(), generate_sample_data())
 }
 
-fn build_right_imbalanced_cause_graph() -> CausaloidGraph<BaseCausaloid<f64, f64>> {
+pub fn build_right_imbalanced_cause_graph() -> CausaloidGraph<BaseCausaloid<f64, f64>> {
     // Builds a multi-layer cause graph:
     //    root
     //  /   |  \

@@ -47,7 +47,7 @@ pub struct CausalAction {
     // This function should return `Ok(())` on success or an `ActionError` on failure.
     action: fn() -> Result<(), ActionError>,
     // A description of what the action does.
-    descr: &'static str,
+    description: &'static str,
     // The version number of the action, useful for tracking changes or updates.
     version: usize,
 }
@@ -55,12 +55,12 @@ pub struct CausalAction {
 impl CausalAction {
     pub fn new(
         action: fn() -> Result<(), ActionError>,
-        descr: &'static str,
+        description: &'static str,
         version: usize,
     ) -> Self {
         Self {
             action,
-            descr,
+            description,
             version,
         }
     }
