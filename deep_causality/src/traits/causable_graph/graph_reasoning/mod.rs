@@ -142,21 +142,31 @@ where
 
                     // Validate target_index before proceeding
                     if !self.contains_causaloid(target_index) {
-                        return PropagatingEffect::from_error(CausalityError(format!(
+                        let mut err_effect = last_propagated_effect.clone();
+
+                        err_effect.error = Some(CausalityError(format!(
                             "RelayTo target causaloid with index {target_index} not found in graph."
                         )));
+                        return err_effect;
                     }
 
                     if !visited[target_index] {
                         visited[target_index] = true;
-                        queue.push_back((target_index, *inner_effect));
+                        // carry over logs into the relayed inner effect
+                        let mut relayed = (*inner_effect).clone();
+                        relayed
+                            .logs
+                            .append(&mut last_propagated_effect.clone().logs);
+                        queue.push_back((target_index, relayed));
                     }
                 }
                 _ => {
                     let children = match self.get_graph().outbound_edges(current_index) {
                         Ok(c) => c,
                         Err(e) => {
-                            return PropagatingEffect::from_error(CausalityError(format!("{e}")));
+                            let mut err_effect = last_propagated_effect.clone();
+                            err_effect.error = Some(CausalityError(format!("{e}")));
+                            return err_effect;
                         }
                     };
                     for child_index in children {

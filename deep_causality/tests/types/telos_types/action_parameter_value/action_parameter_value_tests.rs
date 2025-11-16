@@ -61,14 +61,14 @@ fn test_action_parameter_value_boolean() {
 
 #[test]
 fn test_action_parameter_value_contextual_link() {
-    let val = ActionParameterValue::ContextualLink(1);
-    assert_eq!(val, ActionParameterValue::ContextualLink(1));
-    assert_ne!(val, ActionParameterValue::ContextualLink(2));
+    let val = ActionParameterValue::ContextualLink(1, 1);
+    assert_eq!(val, ActionParameterValue::ContextualLink(1, 1));
+    assert_ne!(val, ActionParameterValue::ContextualLink(2, 2));
     assert_eq!(
         format!("{}", val),
-        "ActionParameterValue::ContextualLink(1)"
+        "ActionParameterValue::ContextualLink(1, 1)"
     );
-    assert_eq!(format!("{:?}", val), "ContextualLink(1)");
+    assert_eq!(format!("{:?}", val), "ContextualLink(1, 1)");
 }
 
 #[test]
@@ -89,7 +89,7 @@ fn test_action_parameter_value_clone() {
     let cloned_bool = val_bool.clone();
     assert_eq!(val_bool, cloned_bool);
 
-    let val_ctx = ActionParameterValue::ContextualLink(1);
+    let val_ctx = ActionParameterValue::ContextualLink(1, 1);
     let cloned_ctx = val_ctx.clone();
     assert_eq!(val_ctx, cloned_ctx);
 }
@@ -100,7 +100,7 @@ fn test_action_parameter_value_inequality_across_variants() {
     let val_num = ActionParameterValue::Number(1.0);
     let val_int = ActionParameterValue::Integer(1);
     let val_bool = ActionParameterValue::Boolean(true);
-    let val_ctx = ActionParameterValue::ContextualLink(1);
+    let val_ctx = ActionParameterValue::ContextualLink(1, 1);
 
     assert_ne!(val_str, val_num);
     assert_ne!(val_str, val_int);
@@ -135,8 +135,8 @@ fn test_display() {
     let expected = "ActionParameterValue::Boolean: true".to_string();
     assert_eq!(format!("{}", val_bool), expected);
 
-    let val_ctx = ActionParameterValue::ContextualLink(1);
-    let expected = "ActionParameterValue::ContextualLink(1)".to_string();
+    let val_ctx = ActionParameterValue::ContextualLink(1, 1);
+    let expected = "ActionParameterValue::ContextualLink(1, 1)".to_string();
     assert_eq!(format!("{}", val_ctx), expected);
 }
 
@@ -184,9 +184,12 @@ fn test_from_effect_value() {
     }
 
     // ContextualLink
-    let effect_val = EffectValue::ContextualLink(42);
+    let effect_val = EffectValue::ContextualLink(42, 42);
     let action_param_val: ActionParameterValue = effect_val.into();
-    assert_eq!(action_param_val, ActionParameterValue::ContextualLink(42));
+    assert_eq!(
+        action_param_val,
+        ActionParameterValue::ContextualLink(42, 42)
+    );
 
     // None
     let effect_val = EffectValue::None;

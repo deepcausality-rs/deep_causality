@@ -137,8 +137,8 @@ fn test_from_maybe_uncertain_float() {
 
 #[test]
 fn test_from_contextual_link() {
-    let effect = PropagatingEffect::from_contextual_link(42);
-    assert!(matches!(effect.value, EffectValue::ContextualLink(42)));
+    let effect = PropagatingEffect::from_contextual_link(42, 42);
+    assert!(matches!(effect.value, EffectValue::ContextualLink(42, 42)));
     assert!(effect.is_ok());
     assert!(!effect.has_log());
 }

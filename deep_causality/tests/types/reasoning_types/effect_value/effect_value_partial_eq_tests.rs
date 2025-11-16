@@ -183,12 +183,12 @@ fn test_eq_maybe_uncertain_float() {
 #[test]
 fn test_eq_contextual_link() {
     assert_eq!(
-        EffectValue::ContextualLink(42),
-        EffectValue::ContextualLink(42)
+        EffectValue::ContextualLink(42, 42),
+        EffectValue::ContextualLink(42, 42)
     );
     assert_ne!(
-        EffectValue::ContextualLink(42),
-        EffectValue::ContextualLink(43)
+        EffectValue::ContextualLink(42, 42),
+        EffectValue::ContextualLink(43, 43)
     );
 }
 

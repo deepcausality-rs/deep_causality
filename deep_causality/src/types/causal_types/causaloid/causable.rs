@@ -127,7 +127,7 @@ where
 
                 // Ensure the causal collection exists.
                 let causal_collection = match self.causal_coll.as_ref() {
-                    Some(coll_arc) => coll_arc.as_ref(), // Get &Vec<Self>
+                    Some(coll_arc) => coll_arc.as_ref(),
                     None => {
                         let err_msg = "Causaloid::evaluate: causal_collection is None".into();
                         return PropagatingEffect {
@@ -142,7 +142,7 @@ where
                 // This handles the sequential evaluation of causaloids within the collection,
                 // aggregating logs and propagating errors.
                 causal_collection.evaluate_collection(
-                    incoming_effect,
+                    &initial_monad,
                     // unwrap is safe here because a collection is always initialized with an aggregate_logic
                     &self.coll_aggregate_logic.unwrap(),
                     self.coll_threshold_value,

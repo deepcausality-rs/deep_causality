@@ -37,7 +37,7 @@ fn test_evaluate_deterministic_propagation() {
     assert_eq!(res.value, EffectValue::Deterministic(false));
 
     // Case 3: An incorrect input effect would trigger an error.
-    let effect_fail = PropagatingEffect::from_contextual_link(1); // Fixed argument count
+    let effect_fail = PropagatingEffect::from_contextual_link(1, 1); // Fixed argument count
     let res = col.evaluate_collection(&effect_fail, &AggregateLogic::All, Some(1.0));
     assert!(res.is_err());
 }

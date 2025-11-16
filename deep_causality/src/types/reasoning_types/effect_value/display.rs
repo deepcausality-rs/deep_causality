@@ -30,7 +30,7 @@ impl Display for EffectValue {
             EffectValue::ContextualLink(context_id, contextoid_id) => {
                 write!(
                     f,
-                    "ContextualLink(Context ID: {}, Contextoid Id: {})",
+                    "ContextualLink(ContextoidId: {}, ContextoidId: {})",
                     context_id, contextoid_id
                 )
             }

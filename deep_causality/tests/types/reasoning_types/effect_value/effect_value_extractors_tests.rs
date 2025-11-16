@@ -145,8 +145,8 @@ fn test_as_maybe_uncertain_float() {
 #[test]
 fn test_as_contextual_link() {
     let id = 42;
-    let effect = EffectValue::ContextualLink(id);
-    assert_eq!(effect.as_contextual_link(), Some(&id));
+    let effect = EffectValue::ContextualLink(id, id);
+    assert_eq!(effect.as_contextual_link(), Some((&id, &id)));
     let non_effect = EffectValue::None;
     assert_eq!(non_effect.as_contextual_link(), None);
 }

@@ -48,7 +48,7 @@ impl Display for ActionParameterValue {
             ActionParameterValue::ContextualLink(context_id, contextoid_id) => {
                 write!(
                     f,
-                    "ActionParameterValue::ContextualLink(Context ID: {}, Contextoid Id: {})",
+                    "ActionParameterValue::ContextualLink({}, {})",
                     context_id, contextoid_id
                 )
             }

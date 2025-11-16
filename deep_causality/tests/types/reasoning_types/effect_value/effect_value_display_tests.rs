@@ -126,8 +126,11 @@ fn test_display_maybe_uncertain_float() {
 
 #[test]
 fn test_display_contextual_link() {
-    let value = EffectValue::ContextualLink(42);
-    assert_eq!(value.to_string(), "ContextualLink(ContextoidId: 42)");
+    let value = EffectValue::ContextualLink(42, 42);
+    assert_eq!(
+        value.to_string(),
+        "ContextualLink(ContextoidId: 42, ContextoidId: 42)"
+    );
 }
 
 #[test]
