@@ -138,13 +138,24 @@ where
                     }
                 };
 
+                // Ensure the aggregatin logic exists.
+                let agg_logic = match self.coll_aggregate_logic.as_ref() {
+                    Some(l) => l,
+                    None => {
+                        return PropagatingEffect {
+                            value: EffectValue::None,
+                            error: Some(CausalityError(
+                                "Causaloid::evaluate: coll_aggregate_logic is None".into(),
+                            )),
+                            logs: initial_monad.logs,
+                        };
+                    }
+                };
+
                 // Delegate the evaluation to the `MonadicCausableCollection` trait implementation.
-                // This handles the sequential evaluation of causaloids within the collection,
-                // aggregating logs and propagating errors.
                 causal_collection.evaluate_collection(
-                    &initial_monad,
-                    // unwrap is safe here because a collection is always initialized with an aggregate_logic
-                    &self.coll_aggregate_logic.unwrap(),
+                    incoming_effect,
+                    agg_logic,
                     self.coll_threshold_value,
                 )
             }
