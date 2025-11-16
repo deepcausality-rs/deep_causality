@@ -35,7 +35,7 @@ where
     }
 
     fn to_vec(&self) -> Vec<T> {
-        self.iter().cloned().collect()
+        self.to_vec()
     }
 
     fn get_item_by_id(&self, id: IdentificationValue) -> Option<&T> {
