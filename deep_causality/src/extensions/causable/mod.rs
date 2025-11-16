@@ -27,11 +27,11 @@ where
     }
 
     fn len(&self) -> usize {
-        self.len()
+        <[T]>::len(self)
     }
 
     fn is_empty(&self) -> bool {
-        self.is_empty()
+        self.len() == 0
     }
 
     fn to_vec(&self) -> Vec<T> {
@@ -60,11 +60,11 @@ where
     }
 
     fn len(&self) -> usize {
-        self.len()
+        VecDeque::len(self)
     }
 
     fn is_empty(&self) -> bool {
-        self.is_empty()
+        VecDeque::is_empty(self)
     }
 
     fn to_vec(&self) -> Vec<T> {
@@ -96,11 +96,11 @@ where
     }
 
     fn len(&self) -> usize {
-        self.len()
+        HashMap::len(self)
     }
 
     fn is_empty(&self) -> bool {
-        self.is_empty()
+        HashMap::is_empty(self)
     }
 
     fn to_vec(&self) -> Vec<V> {
@@ -132,11 +132,11 @@ where
     }
 
     fn len(&self) -> usize {
-        self.len()
+        BTreeMap::len(self)
     }
 
     fn is_empty(&self) -> bool {
-        self.is_empty()
+        BTreeMap::is_empty(self)
     }
 
     fn to_vec(&self) -> Vec<V> {
