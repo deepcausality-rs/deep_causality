@@ -137,6 +137,8 @@ where
                     // If a RelayTo effect is returned, clear the queue and add the target_index
                     // with the inner_effect as the new starting point for traversal.
                     queue.clear();
+                    // Also clear visited to allow re-visiting nodes in the new path.
+                    visited.fill(false);
 
                     // Validate target_index before proceeding
                     if !self.contains_causaloid(target_index) {

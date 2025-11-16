@@ -52,7 +52,7 @@ pub(super) fn aggregate_deterministic(
     let final_bool = match logic {
         AggregateLogic::All => bools.iter().all(|&b| b),
         AggregateLogic::Any => bools.iter().any(|&b| b),
-        AggregateLogic::None => !bools.iter().any(|&b| b),
+        AggregateLogic::None => bools.iter().all(|&b| !b),
         AggregateLogic::Some(k) => bools.iter().filter(|&&b| b).count() >= *k,
     };
     Ok(EffectValue::Deterministic(final_bool))

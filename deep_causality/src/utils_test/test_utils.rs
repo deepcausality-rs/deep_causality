@@ -91,7 +91,7 @@ pub fn get_test_causaloid_probabilistic() -> BaseCausaloid<NumericalValue, f64> 
 
     fn causal_fn(obs: NumericalValue) -> Result<CausalFnOutput<NumericalValue>, CausalityError> {
         let threshold: NumericalValue = 0.55;
-        let output = if !obs.ge(&threshold) { 1.0 } else { 0.0 };
+        let output = if obs.ge(&threshold) { 1.0 } else { 0.0 };
         Ok(CausalFnOutput {
             output,
             log: CausalEffectLog::new(),

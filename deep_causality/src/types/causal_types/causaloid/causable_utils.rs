@@ -48,7 +48,7 @@ where
             logs.add_entry(&format!("Causaloid {}: Input conversion failed: {}", id, e));
             CausalPropagatingEffect {
                 value: I::default(),
-                error: Some(e.clone()),
+                error: Some(e),
                 logs,
             }
         }

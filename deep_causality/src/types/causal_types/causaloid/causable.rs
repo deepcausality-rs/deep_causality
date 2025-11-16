@@ -184,18 +184,8 @@ where
                 };
 
                 // 2. Delegate to the subgraph reasoning algorithm.
-                // This recursive call will handle its own log appending based on its input.
-                let mut result_effect =
-                    causal_graph.evaluate_subgraph_from_cause(root_index, incoming_effect);
-
-                // 3. Prepend this causaloid's initial log entry to the results from the
-                //    subgraph evaluation. This ensures that the parent-child reasoning
-                //    hierarchy is accurately captured in the final log history.
-                let mut final_logs = initial_monad.logs;
-                final_logs.append(&mut result_effect.logs);
-                result_effect.logs = final_logs;
-
-                result_effect
+                // Pass the initial_monad (with the added log) to the recursive call.
+                causal_graph.evaluate_subgraph_from_cause(root_index, &initial_monad)
             }
         }
     }
