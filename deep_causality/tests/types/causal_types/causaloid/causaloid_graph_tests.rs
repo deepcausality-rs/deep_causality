@@ -11,7 +11,7 @@ use std::sync::{Arc, RwLock};
 fn test_from_causal_graph() {
     let g = test_utils_graph::build_multi_cause_graph();
 
-    let causaloid: BaseCausaloid<f64, bool> =
+    let causaloid: BaseCausaloid<f64, f64> =
         Causaloid::from_causal_graph(0, "Test Causality graph ", Arc::new(g));
     assert!(!causaloid.is_singleton());
     assert!(causaloid.context().is_none());
@@ -24,7 +24,7 @@ fn test_from_causal_graph_with_context() {
     let causal_graph = test_utils_graph::build_multi_cause_graph();
     let context = test_utils::get_base_context();
 
-    let causaloid: BaseCausaloid<f64, bool> = Causaloid::from_causal_graph_with_context(
+    let causaloid: BaseCausaloid<f64, f64> = Causaloid::from_causal_graph_with_context(
         id,
         description,
         Arc::new(causal_graph),
