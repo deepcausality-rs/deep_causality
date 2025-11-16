@@ -30,20 +30,21 @@ os-random = ["deep_causality_uncertain/os-random"]
 path = "../deep_causality_uncertain"
 version = "0.3"
 
-
 [dependencies.deep_causality_data_structures]
 path = "../deep_causality_data_structures"
 version = "0.10"
 
-
-[dependencies.deep_causality_tensor]
-path = "../deep_causality_tensor"
-version = "0.1"
+[dependencies.deep_causality_haft]
+path = "../deep_causality_haft"
+version = "0.2"
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
 version = "0.1"
 
+[dependencies.deep_causality_tensor]
+path = "../deep_causality_tensor"
+version = "0.1"
 
 [dependencies.ultragraph]
 path = "../ultragraph"

@@ -7,8 +7,8 @@
 
 use crate::{
     Causaloid, Context, ContextId, ContextuableGraph, Datable, ExtendableContextuableGraph,
-    Generatable, GenerativeOutput, Identifiable, ModelValidationError, SpaceTemporal, Spatial,
-    Symbolic, Temporal,
+    Generatable, GenerativeOutput, Identifiable, IntoEffectValue, ModelValidationError,
+    SpaceTemporal, Spatial, Symbolic, Temporal,
 };
 use std::hash::Hash;
 
@@ -18,8 +18,10 @@ use std::hash::Hash;
 /// and Context) and provides a default implementation for the processing logic itself,
 /// making it highly reusable.
 #[allow(clippy::type_complexity)]
-pub trait GenerativeProcessor<D, S, T, ST, SYM, VS, VT, G>
+pub trait GenerativeProcessor<I, O, D, S, T, ST, SYM, VS, VT, G>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Default + Datable + Copy + Clone + Hash + Eq + PartialEq,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -27,11 +29,11 @@ where
     SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
-    G: Generatable<D, S, T, ST, SYM, VS, VT, G>,
+    G: Generatable<I, O, D, S, T, ST, SYM, VS, VT, G>,
 {
     /// Provides mutable access to the destination for the generated Causaloid.
     /// This is a required method for the trait implementor.
-    fn get_causaloid_dest(&mut self) -> &mut Option<Causaloid<D, S, T, ST, SYM, VS, VT>>;
+    fn get_causaloid_dest(&mut self) -> &mut Option<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>;
 
     /// Provides mutable access to the destination for the generated Context.
     /// This is a required method for the trait implementor.
@@ -63,7 +65,7 @@ where
     /// to any type that implements this trait.
     fn process_output(
         &mut self,
-        output: GenerativeOutput<D, S, T, ST, SYM, VS, VT, G>,
+        output: GenerativeOutput<I, O, D, S, T, ST, SYM, VS, VT, G>,
     ) -> Result<(), ModelValidationError> {
         match output {
             GenerativeOutput::NoOp => Ok(()),

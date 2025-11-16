@@ -5,7 +5,6 @@
 use ultragraph::UltraGraphWeighted;
 
 pub mod graph;
-pub mod graph_explaining;
 pub mod graph_reasoning;
 
 // Type alias is shared between trait and implementation

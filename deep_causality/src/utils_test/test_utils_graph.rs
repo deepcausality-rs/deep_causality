@@ -3,49 +3,28 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::*;
+use crate::utils_test::test_utils;
+use crate::{BaseCausaloid, CausableGraph, CausaloidGraph, IdentificationValue};
 
-const SMALL: usize = 9;
-fn get_test_causaloid() -> BaseCausaloid {
-    let id: IdentificationValue = 1;
-    let description = "tests whether data exceeds threshold of 0.55";
-    fn causal_fn(effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError> {
-        let obs = match effect {
-            // If it's the Numerical variant, extract the inner value.
-            PropagatingEffect::Numerical(val) => *val,
-            _ => 99.0, // For any other type of effect
-        };
-        let threshold: NumericalValue = 0.55;
-        if !obs.ge(&threshold) {
-            Ok(PropagatingEffect::Deterministic(false))
-        } else {
-            Ok(PropagatingEffect::Deterministic(true))
-        }
-    }
-
-    Causaloid::new(id, causal_fn, description)
+// Generates a fixed sized array with sample data
+pub fn generate_sample_data<const N: usize>() -> [f64; N] {
+    [0.99; N]
 }
 
-pub fn get_small_linear_graph_and_data() -> (BaseCausalGraph, [f64; SMALL + 1]) {
-    // Builds a linear graph: root -> a -> b -> c
-    (build_linear_graph(SMALL), generate_sample_data())
-}
+pub fn build_linear_graph(k: usize) -> CausaloidGraph<BaseCausaloid<f64, f64>> {
+    let mut g = CausaloidGraph::<BaseCausaloid<f64, f64>>::new(0 as IdentificationValue);
 
-pub fn build_linear_graph(k: usize) -> BaseCausalGraph {
-    // Builds a linear graph: root -> a -> b -> c
-    let mut g = CausaloidGraph::new(0);
+    let root_causaloid = test_utils::get_test_causaloid_num_input_output(0);
+    let root_index = g
+        .add_root_causaloid(root_causaloid)
+        .expect("Failed to add root causaloid");
 
-    let root_causaloid = get_test_causaloid();
-    let root_index = g.add_root_causaloid(root_causaloid);
+    let mut previous_idx = root_index;
 
-    let mut previous_idx = root_index.expect("Failed to add root causaloid");
-
-    for _ in 0..k + 1 {
-        // add a new causaloid and set current idx to it
-        let causaloid = get_test_causaloid();
+    for i in 1..k {
+        let causaloid = test_utils::get_test_causaloid_num_input_output(i as IdentificationValue);
         let current_idx = g.add_causaloid(causaloid).expect("Failed to add causaloid");
 
-        // link current causaloid to previos causaloid
         g.add_edge(previous_idx, current_idx)
             .expect("Failed to add edge");
 
@@ -57,37 +36,38 @@ pub fn build_linear_graph(k: usize) -> BaseCausalGraph {
     g
 }
 
-pub fn get_small_multi_cause_graph_and_data() -> (BaseCausalGraph, [f64; 4 + 1]) {
-    // Builds a multi-layer cause graph:
-    (build_multi_cause_graph(), generate_sample_data())
+pub fn get_small_multi_cause_graph_and_data() -> (CausaloidGraph<BaseCausaloid<f64, f64>>, [f64; 4])
+{
+    let g = build_multi_cause_graph();
+    (g, test_utils::generate_sample_data())
 }
 
-fn build_multi_cause_graph() -> BaseCausalGraph {
-    // Builds a multi cause graph:
-    //  root
-    //  / \
-    //  A B
+pub fn build_multi_cause_graph() -> CausaloidGraph<BaseCausaloid<f64, f64>> {
+    // Builds a multi cause graph
+    //  root(0)
+    //  /  \
+    //A(1) B(2)
     //  \ /
-    //   C
+    //  C(3)
 
-    let mut g = CausaloidGraph::new(0);
+    let mut g = CausaloidGraph::<BaseCausaloid<f64, f64>>::new(0 as IdentificationValue);
 
     // Add root causaloid
-    let root_causaloid = get_test_causaloid();
+    let root_causaloid = test_utils::get_test_causaloid_num_input_output(0);
     let root_index = g
         .add_root_causaloid(root_causaloid)
         .expect("Failed to add root causaloid");
 
     // Add causaloid A
-    let causaloid = get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_num_input_output(1);
     let idx_a = g.add_causaloid(causaloid).expect("Failed to add causaloid");
 
-    // Link causaloid A to root causaloid
+    // Link causaloid root to A causaloid
     g.add_edge(root_index, idx_a)
         .expect("Failed to add edge between root and A");
 
     // Add causaloid B
-    let causaloid = get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_num_input_output(2);
     let idx_b = g.add_causaloid(causaloid).expect("Failed to add causaloid");
 
     // Link causaloid B to root causaloid
@@ -95,28 +75,35 @@ fn build_multi_cause_graph() -> BaseCausalGraph {
         .expect("Failed to add edge between root and B");
 
     // Add causaloid C
-    let causaloid = get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_num_input_output(3);
     let idx_c = g.add_causaloid(causaloid).expect("Failed to add causaloid");
 
-    // Link causaloid C to A
+    // Link causaloid A to C
     g.add_edge(idx_a, idx_c)
         .expect("Failed to add edge between A and C");
 
-    // Link causaloid C to B
+    // Link causaloid B to C
     g.add_edge(idx_b, idx_c)
         .expect("Failed to add edge between C and B");
 
+    // Now, we have a graph like this:
+    //  root(0)
+    //  /  \
+    //A(1) B(2)
+    //  \ /
+    //  C(3)
     g.freeze();
 
     g
 }
 
-pub fn get_small_multi_layer_cause_graph_and_data() -> (BaseCausalGraph, [f64; 8 + 1]) {
+pub fn get_small_multi_layer_cause_graph_and_data()
+-> (CausaloidGraph<BaseCausaloid<f64, f64>>, [f64; 8 + 1]) {
     // Builds a multi-layer cause graph:
     (build_multi_layer_cause_graph(), generate_sample_data())
 }
 
-fn build_multi_layer_cause_graph() -> BaseCausalGraph {
+pub fn build_multi_layer_cause_graph() -> CausaloidGraph<BaseCausaloid<f64, f64>> {
     // Builds a multi-layer cause graph:
     //    root
     //  /   |  \
@@ -127,7 +114,7 @@ fn build_multi_layer_cause_graph() -> BaseCausalGraph {
     let mut g = CausaloidGraph::new(0);
 
     // Add root causaloid
-    let root_causaloid = get_test_causaloid();
+    let root_causaloid = test_utils::get_test_causaloid_num_input_output(0);
     let root_index = g
         .add_root_causaloid(root_causaloid)
         .expect("Failed to add root causaloid");
@@ -135,21 +122,21 @@ fn build_multi_layer_cause_graph() -> BaseCausalGraph {
     // ### First layer ### //
 
     // Add causaloid A
-    let causaloid = get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_num_input_output(1);
     let idx_a = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     // Link causaloid A to root causaloid
     g.add_edge(root_index, idx_a)
         .expect("Failed to add edge between root and A");
 
     // Add causaloid B
-    let causaloid = get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_num_input_output(2);
     let idx_b = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     // Link causaloid B to root causaloid
     g.add_edge(root_index, idx_b)
         .expect("Failed to add edge between root and B");
 
     // Add causaloid C
-    let causaloid = get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_num_input_output(3);
     let idx_c = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     // Link causaloid C  to root causaloid
     g.add_edge(root_index, idx_c)
@@ -158,14 +145,14 @@ fn build_multi_layer_cause_graph() -> BaseCausalGraph {
     // ### Second layer ### //
 
     // Add causaloid D
-    let causaloid = get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_num_input_output(4);
     let idx_d = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     // Link causaloid D  to A
     g.add_edge(idx_a, idx_d)
         .expect("Failed to add edge between D and A");
 
     // Add causaloid E
-    let causaloid = get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_num_input_output(5);
     let idx_e = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     // Link causaloid E  to A
     g.add_edge(idx_a, idx_e)
@@ -175,7 +162,7 @@ fn build_multi_layer_cause_graph() -> BaseCausalGraph {
         .expect("Failed to add edge between B and E");
 
     // Add causaloid F
-    let causaloid = get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_num_input_output(6);
     let idx_f = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     // Link causaloid F  to B
     g.add_edge(idx_b, idx_f)
@@ -185,7 +172,7 @@ fn build_multi_layer_cause_graph() -> BaseCausalGraph {
         .expect("Failed to add edge between C and F");
 
     // Add causaloid G
-    let causaloid = get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_num_input_output(7);
     let idx_g = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     // Link causaloid G  to C
     g.add_edge(idx_c, idx_g)
@@ -196,12 +183,13 @@ fn build_multi_layer_cause_graph() -> BaseCausalGraph {
     g
 }
 
-pub fn get_left_imbalanced_cause_graph() -> (BaseCausalGraph, [f64; 6 + 1]) {
+pub fn get_left_imbalanced_cause_graph() -> (CausaloidGraph<BaseCausaloid<f64, f64>>, [f64; 6 + 1])
+{
     // Builds a multi-layer cause graph:
     (build_left_imbalanced_cause_graph(), generate_sample_data())
 }
 
-fn build_left_imbalanced_cause_graph() -> BaseCausalGraph {
+pub fn build_left_imbalanced_cause_graph() -> CausaloidGraph<BaseCausaloid<f64, f64>> {
     // Builds a multi-layer cause graph:
     //    root
     //  /   |  \
@@ -212,7 +200,7 @@ fn build_left_imbalanced_cause_graph() -> BaseCausalGraph {
     let mut g = CausaloidGraph::new(0);
 
     // Add root causaloid
-    let root_causaloid = get_test_causaloid();
+    let root_causaloid = test_utils::get_test_causaloid_num_input_output(0);
     let root_index = g
         .add_root_causaloid(root_causaloid)
         .expect("Failed to add root causaloid");
@@ -220,21 +208,21 @@ fn build_left_imbalanced_cause_graph() -> BaseCausalGraph {
     // ### First layer ### //
 
     // Add causaloid A
-    let causaloid = get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_num_input_output(1);
     let idx_a = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     // Link causaloid A to root causaloid
     g.add_edge(root_index, idx_a)
         .expect("Failed to add edge between root and A");
 
     // Add causaloid B
-    let causaloid = get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_num_input_output(2);
     let idx_b = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     // Link causaloid B to root causaloid
     g.add_edge(root_index, idx_b)
         .expect("Failed to add edge between root and B");
 
     // Add causaloid C
-    let causaloid = get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_num_input_output(3);
     let idx_c = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     // Link causaloid C  to root causaloid
     g.add_edge(root_index, idx_c)
@@ -243,14 +231,14 @@ fn build_left_imbalanced_cause_graph() -> BaseCausalGraph {
     // ### Second layer ### //
 
     // Add causaloid D
-    let causaloid = get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_num_input_output(4);
     let idx_d = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     // Link causaloid D  to A
     g.add_edge(idx_a, idx_d)
         .expect("Failed to add edge between A and E");
 
     // Add causaloid E
-    let causaloid = get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_num_input_output(5);
     let idx_e = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     // Link causaloid E  to A
     g.add_edge(idx_a, idx_e)
@@ -261,12 +249,13 @@ fn build_left_imbalanced_cause_graph() -> BaseCausalGraph {
     g
 }
 
-pub fn get_right_imbalanced_cause_graph() -> (BaseCausalGraph, [f64; 6 + 1]) {
+pub fn get_right_imbalanced_cause_graph() -> (CausaloidGraph<BaseCausaloid<f64, f64>>, [f64; 6 + 1])
+{
     // Builds a multi-layer cause graph:
     (build_right_imbalanced_cause_graph(), generate_sample_data())
 }
 
-fn build_right_imbalanced_cause_graph() -> BaseCausalGraph {
+pub fn build_right_imbalanced_cause_graph() -> CausaloidGraph<BaseCausaloid<f64, f64>> {
     // Builds a multi-layer cause graph:
     //    root
     //  /   |  \
@@ -277,7 +266,7 @@ fn build_right_imbalanced_cause_graph() -> BaseCausalGraph {
     let mut g = CausaloidGraph::new(0);
 
     // Add root causaloid
-    let root_causaloid = get_test_causaloid();
+    let root_causaloid = test_utils::get_test_causaloid_num_input_output(0);
     let root_index = g
         .add_root_causaloid(root_causaloid)
         .expect("Failed to add root causaloid");
@@ -285,21 +274,21 @@ fn build_right_imbalanced_cause_graph() -> BaseCausalGraph {
     // ### First layer ### //
 
     // Add causaloid A
-    let causaloid = get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_num_input_output(1);
     let idx_a = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     // Link causaloid A to root causaloid
     g.add_edge(root_index, idx_a)
         .expect("Failed to add edge between rootCause and A");
 
     // Add causaloid B
-    let causaloid = get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_num_input_output(2);
     let idx_b = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     // Link causaloid B to root causaloid
     g.add_edge(root_index, idx_b)
         .expect("Failed to add edge between rootCause and B");
 
     // Add causaloid C
-    let causaloid = get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_num_input_output(3);
     let idx_c = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     // Link causaloid C  to root causaloid
     g.add_edge(root_index, idx_c)
@@ -308,14 +297,14 @@ fn build_right_imbalanced_cause_graph() -> BaseCausalGraph {
     // ### Second layer ### //
 
     // Add causaloid D
-    let causaloid = get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_num_input_output(4);
     let idx_d = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     // Link causaloid D  to C
     g.add_edge(idx_c, idx_d)
         .expect("Failed to add edge between D to C");
 
     // Add causaloid E
-    let causaloid = get_test_causaloid();
+    let causaloid = test_utils::get_test_causaloid_num_input_output(5);
     let idx_e = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     // Link causaloid E  to C
     g.add_edge(idx_c, idx_e)
@@ -324,9 +313,4 @@ fn build_right_imbalanced_cause_graph() -> BaseCausalGraph {
     g.freeze();
 
     g
-}
-
-// Generates a fixed sized array with sample data
-pub fn generate_sample_data<const N: usize>() -> [f64; N] {
-    [0.99; N]
 }

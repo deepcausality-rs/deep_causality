@@ -13,15 +13,17 @@ use crate::traits::contextuable::temporal::Temporal;
 use crate::types::model_types::model::model_builder_processor::ModelBuilderProcessor;
 use crate::{
     Assumption, Causaloid, Context, Datable, Generatable, GenerativeProcessor, GenerativeTrigger,
-    ModelBuildError, ModelValidationError, Symbolic,
+    IntoEffectValue, ModelBuildError, ModelValidationError, Symbolic,
 };
 use std::hash::Hash;
 use std::sync::{Arc, RwLock};
 
 #[allow(clippy::type_complexity)]
 #[derive(Debug)]
-pub struct Model<D, S, T, ST, SYM, VS, VT>
+pub struct Model<I, O, D, S, T, ST, SYM, VS, VT>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -34,13 +36,15 @@ where
     author: String,
     description: String,
     assumptions: Option<Arc<Vec<Assumption>>>,
-    causaloid: Arc<Causaloid<D, S, T, ST, SYM, VS, VT>>,
+    causaloid: Arc<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>,
     context: Option<Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>,
 }
 
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, SYM, VS, VT> Model<D, S, T, ST, SYM, VS, VT>
+impl<I, O, D, S, T, ST, SYM, VS, VT> Model<I, O, D, S, T, ST, SYM, VS, VT>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -54,7 +58,7 @@ where
         author: &str,
         description: &str,
         assumptions: Option<Arc<Vec<Assumption>>>,
-        causaloid: Arc<Causaloid<D, S, T, ST, SYM, VS, VT>>,
+        causaloid: Arc<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>,
         context: Option<Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>,
     ) -> Self {
         Self {
@@ -69,8 +73,10 @@ where
 }
 
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, SYM, VS, VT> Model<D, S, T, ST, SYM, VS, VT>
+impl<I, O, D, S, T, ST, SYM, VS, VT> Model<I, O, D, S, T, ST, SYM, VS, VT>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Default + Datable + Copy + Clone + Hash + Eq + PartialEq,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -80,10 +86,7 @@ where
     VT: Clone,
 {
     /// Creates a new `Model` by running a one-shot generation process.
-    ///
-    /// This constructor uses a `GenerativeProcessor` internally to build the Causaloid
-    /// and Context from the generator's output.
-    #[allow(clippy::type_complexity)]
+    // ...
     pub fn with_generator<G>(
         id: u64,
         author: &str,
@@ -93,7 +96,7 @@ where
         trigger: &GenerativeTrigger<D>,
     ) -> Result<Self, ModelBuildError>
     where
-        G: Generatable<D, S, T, ST, SYM, VS, VT, G>,
+        G: Generatable<I, O, D, S, T, ST, SYM, VS, VT, G>,
     {
         let initial_contexts = Context::with_capacity(0, "Base context", 120); // Empty world view for build
         let output = generator.generate(trigger, &initial_contexts)?;

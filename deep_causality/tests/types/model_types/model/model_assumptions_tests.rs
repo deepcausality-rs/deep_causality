@@ -12,7 +12,7 @@ fn test_assumptions_no_assumptions_err() {
     let author = "John Doe";
     let description = "This is a test model";
     let assumptions = None;
-    let causaloid = Arc::new(test_utils::get_test_causaloid_deterministic());
+    let causaloid = Arc::new(test_utils::get_test_causaloid_deterministic(32));
     let context = Some(Arc::new(RwLock::new(test_utils::get_test_context())));
 
     let model = Model::new(id, author, description, assumptions, causaloid, context);
@@ -24,7 +24,7 @@ fn test_assumptions_no_assumptions_err() {
 
     let data: Vec<PropagatingEffect> = test_utils::get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::Numerical(x))
+        .map(|&x| PropagatingEffect::from_numerical(x))
         .collect();
 
     // AssumptionError::NoAssumptionsDefined
@@ -41,7 +41,7 @@ fn test_assumptions_no_data_err() {
     let author = "John Doe";
     let description = "This is a test model";
     let assumptions = Some(Arc::new(vec![test_utils::get_test_assumption()]));
-    let causaloid = Arc::new(test_utils::get_test_causaloid_deterministic());
+    let causaloid = Arc::new(test_utils::get_test_causaloid_deterministic(23));
     let context = Some(Arc::new(RwLock::new(test_utils::get_test_context())));
 
     let model = Model::new(
@@ -73,7 +73,7 @@ fn test_assumptions_assumption_err() {
     let author = "John Doe";
     let description = "This is a test model";
     let assumptions = Some(Arc::new(vec![test_utils::get_test_assumption_error()]));
-    let causaloid = Arc::new(test_utils::get_test_causaloid_deterministic());
+    let causaloid = Arc::new(test_utils::get_test_causaloid_deterministic(54));
     let context = None;
 
     let model = Model::new(
@@ -93,7 +93,7 @@ fn test_assumptions_assumption_err() {
 
     let data: Vec<PropagatingEffect> = test_utils::get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::Numerical(x))
+        .map(|&x| PropagatingEffect::from_numerical(x))
         .collect();
 
     // Err(AssumptionFailed("Test error"),
@@ -107,7 +107,7 @@ fn test_verify_assumptions_failed() {
     let author = "John Doe";
     let description = "This is a test model";
     let assumptions = Some(Arc::new(vec![test_utils::get_test_assumption_false()]));
-    let causaloid = Arc::new(test_utils::get_test_causaloid_deterministic());
+    let causaloid = Arc::new(test_utils::get_test_causaloid_deterministic(12));
     let context = Some(Arc::new(RwLock::new(test_utils::get_test_context())));
 
     let model = Model::new(
@@ -127,7 +127,7 @@ fn test_verify_assumptions_failed() {
 
     let data: Vec<PropagatingEffect> = test_utils::get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::Numerical(x))
+        .map(|&x| PropagatingEffect::from_numerical(x))
         .collect();
 
     //  AssumptionError::AssumptionFailed("Assumption: id: 2, description: Test assumption that is always false, assumption_tested: true, assumption_valid: false")
@@ -140,7 +140,7 @@ fn test_verify_assumptions_success() {
     let author = "John Doe";
     let description = "This is a test model";
     let assumptions = Some(Arc::new(vec![test_utils::get_test_assumption()]));
-    let causaloid = Arc::new(test_utils::get_test_causaloid_deterministic());
+    let causaloid = Arc::new(test_utils::get_test_causaloid_deterministic(53));
     let context = Some(Arc::new(RwLock::new(test_utils::get_test_context())));
 
     let model = Model::new(
@@ -160,7 +160,7 @@ fn test_verify_assumptions_success() {
 
     let data: Vec<PropagatingEffect> = test_utils::get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::Numerical(x))
+        .map(|&x| PropagatingEffect::from_numerical(x))
         .collect();
 
     let res = model.verify_assumptions(&data);

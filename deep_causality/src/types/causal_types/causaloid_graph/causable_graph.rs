@@ -2,24 +2,45 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use super::*;
+use ultragraph::{GraphMut, GraphView};
 
-// See default implementation in protocols/causaloid_graph/graph_explaining. Requires CausableGraph impl.
-impl<T> CausableGraphExplaining<T> for CausaloidGraph<T> where
-    T: Clone + Display + Causable + PartialEq
-{
-}
+use crate::*;
 
-// See default implementation in protocols/causaloid_graph/graph_explaining. Requires CausableGraph impl.
-impl<T> CausableGraphReasoning<T> for CausaloidGraph<T> where
-    T: Clone + Display + Causable + PartialEq
+use crate::MonadicCausableGraphReasoning;
+use crate::{CausalGraphIndexError, CausalityGraphError};
+
+// Marker trait to add default impl from
+#[allow(clippy::type_complexity)]
+impl<I, O, D, S, T, ST, SYM, VS, VT> MonadicCausableGraphReasoning<I, O, D, S, T, ST, SYM, VS, VT>
+    for CausaloidGraph<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>
+where
+    I: IntoEffectValue + Default,
+    O: IntoEffectValue + Default,
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
+    Causaloid<I, O, D, S, T, ST, SYM, VS, VT>: MonadicCausable<CausalMonad>,
 {
 }
 
 #[allow(clippy::type_complexity)]
-impl<T> CausableGraph<T> for CausaloidGraph<T>
+impl<I, O, D, S, T, ST, SYM, VS, VT> CausableGraph<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>
+    for CausaloidGraph<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>
 where
-    T: Clone + Display + Causable + PartialEq,
+    I: IntoEffectValue + Default,
+    O: IntoEffectValue + Default,
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
+    Causaloid<I, O, D, S, T, ST, SYM, VS, VT>: MonadicCausable<CausalMonad>,
 {
     fn is_frozen(&self) -> bool {
         self.graph.is_frozen()
@@ -33,11 +54,14 @@ where
         self.graph.unfreeze()
     }
 
-    fn get_graph(&self) -> &CausalGraph<T> {
+    fn get_graph(&self) -> &CausalGraph<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>> {
         &self.graph
     }
 
-    fn add_root_causaloid(&mut self, value: T) -> Result<usize, CausalityGraphError> {
+    fn add_root_causaloid(
+        &mut self,
+        value: Causaloid<I, O, D, S, T, ST, SYM, VS, VT>,
+    ) -> Result<usize, CausalityGraphError> {
         match self.graph.add_root_node(value) {
             Ok(index) => Ok(index),
             Err(e) => Err(CausalityGraphError(e.to_string())),
@@ -48,7 +72,7 @@ where
         self.graph.contains_root_node()
     }
 
-    fn get_root_causaloid(&self) -> Option<&T> {
+    fn get_root_causaloid(&self) -> Option<&Causaloid<I, O, D, S, T, ST, SYM, VS, VT>> {
         self.graph.get_root_node()
     }
 
@@ -57,13 +81,15 @@ where
     }
 
     fn get_last_index(&self) -> Result<usize, CausalityGraphError> {
-        // Handle the Option from the underlying graph implementation with a precise error.
         self.graph.get_last_index().ok_or_else(|| {
             CausalityGraphError("Failed to get last index. Graph might be empty".to_string())
         })
     }
 
-    fn add_causaloid(&mut self, value: T) -> Result<usize, CausalityGraphError> {
+    fn add_causaloid(
+        &mut self,
+        value: Causaloid<I, O, D, S, T, ST, SYM, VS, VT>,
+    ) -> Result<usize, CausalityGraphError> {
         match self.graph.add_node(value) {
             Ok(index) => Ok(index),
             Err(e) => Err(CausalityGraphError(e.to_string())),
@@ -74,7 +100,7 @@ where
         self.graph.contains_node(index)
     }
 
-    fn get_causaloid(&self, index: usize) -> Option<&T> {
+    fn get_causaloid(&self, index: usize) -> Option<&Causaloid<I, O, D, S, T, ST, SYM, VS, VT>> {
         self.graph.get_node(index)
     }
 

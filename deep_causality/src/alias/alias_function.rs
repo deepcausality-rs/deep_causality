@@ -2,13 +2,25 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{AssumptionError, CausalityError, Context, PropagatingEffect};
+use crate::types::reasoning_types::propagating_effect::PropagatingEffect;
+use crate::{AssumptionError, CausalEffectLog, CausalityError, Context, IntoEffectValue};
 use std::sync::{Arc, RwLock};
 
 // Fn aliases for assumable, assumption, & assumption collection
 /// Function type for evaluating numerical values and returning a boolean result.
 /// This remains unchanged as it serves a different purpose outside the core causal reasoning.
 pub type EvalFn = fn(&[PropagatingEffect]) -> Result<bool, AssumptionError>;
+
+pub struct CausalFnOutput<O: IntoEffectValue> {
+    pub output: O,
+    pub log: CausalEffectLog,
+}
+
+impl<O: IntoEffectValue> CausalFnOutput<O> {
+    pub fn new(output: O, log: CausalEffectLog) -> Self {
+        Self { output, log }
+    }
+}
 
 /// The unified function signature for all singleton causaloids that do not require an external context.
 ///
@@ -20,8 +32,10 @@ pub type EvalFn = fn(&[PropagatingEffect]) -> Result<bool, AssumptionError>;
 ///
 /// # Returns
 ///
-/// A `Result` containing either a `PropagatingEffect` on success or a `CausalityError` on failure.
-pub type CausalFn = fn(effect: &PropagatingEffect) -> Result<PropagatingEffect, CausalityError>;
+/// A `PropagatingEffect`
+#[allow(type_alias_bounds)]
+pub type CausalFn<I: IntoEffectValue, O: IntoEffectValue> =
+    fn(value: I) -> Result<CausalFnOutput<O>, CausalityError>;
 
 /// The unified function signature for all singleton causaloids that require access to a shared, external context.
 ///
@@ -35,9 +49,10 @@ pub type CausalFn = fn(effect: &PropagatingEffect) -> Result<PropagatingEffect, 
 ///
 /// # Returns
 ///
-/// A `Result` containing either a `PropagatingEffect` on success or a `CausalityError` on failure.
-pub type ContextualCausalFn<D, S, T, ST, SYM, VS, VT> =
+/// A `PropagatingEffect`.
+#[allow(type_alias_bounds)]
+pub type ContextualCausalFn<I: IntoEffectValue, O: IntoEffectValue, D, S, T, ST, SYM, VS, VT> =
     fn(
-        effect: &PropagatingEffect,
+        value: I,
         context: &Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>,
-    ) -> Result<PropagatingEffect, CausalityError>;
+    ) -> Result<CausalFnOutput<O>, CausalityError>;

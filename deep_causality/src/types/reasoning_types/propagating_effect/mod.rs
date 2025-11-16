@@ -1,73 +1,73 @@
-/*
- * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
- */
+// SPDX-License-Identifier: MIT
+// Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
 
-use crate::{ContextId, ContextoidId, IdentificationValue, NumericalValue};
-use deep_causality_num::Complex;
-use deep_causality_tensor::CausalTensor;
-use deep_causality_uncertain::{
-    MaybeUncertainBool, MaybeUncertainF64, UncertainBool, UncertainF64,
-};
-use std::collections::HashMap;
-use std::sync::Arc;
-use ultragraph::UltraGraph;
+use crate::traits::log_append::LogAppend;
+use crate::{CausalEffectLog, CausalityError, EffectValue};
+use deep_causality_haft::Placeholder;
 
 mod constructors;
-mod debug;
 mod display;
-mod extractors;
-mod extractors_map;
-mod partial_eq;
+mod explain;
+mod hkt;
 mod predicates;
 
-// The graph type alias, updated to be recursive on the new unified enum.
-pub type EffectGraph = UltraGraph<PropagatingEffect>;
-
-/// Unified data and control-flow container for causal reasoning.
-///
-/// This enum serves as both the input (evidence) and output (effect) for a causaloid,
-/// creating a single, uniform signal that flows through the causal graph. Its variants
-/// can represent simple data, complex structures, terminal states, or explicit
-/// commands for the reasoning engine.
-#[derive(Clone, Default)]
-pub enum PropagatingEffect {
-    /// Represents the absence of a signal or evidence. Serves as the default.
-    #[default]
-    None,
-    /// Represents a simple boolean value. This effect propagates like any other,
-    /// and its interpretation (e.g., whether it prunes a traversal) is left to the
-    /// consuming logic or explicit error handling within Causaloids.
-    Deterministic(bool),
-    /// Represents a standard numerical value.
-    Numerical(NumericalValue),
-    /// Represents a quantitative outcome, such as a probability score or confidence level.
-    Probabilistic(NumericalValue),
-    /// Represents a Tensor via Causal Tensor.
-    /// Note, when you import the  CausalTensorWitness from the deep_causality_tensor crate,
-    /// you can apply monadic composition and monadic transformation to tensors.
-    Tensor(CausalTensor<f64>),
-    /// Represents a Tensor over complex numbers via Causal Tensor.
-    /// Note, when you import the  CausalTensorWitness from the deep_causality_tensor crate,
-    /// you can apply monadic composition and monadic transformation to complex tensors.
-    ComplexTensor(CausalTensor<Complex<f64>>),
-    /// Represents a value with inherent uncertainty, modeled as a probability distribution.
-    UncertainBool(UncertainBool),
-    UncertainFloat(UncertainF64),
-    /// Represents a value that is probabilistic present or absent with uncertainty when present
-    MaybeUncertainBool(MaybeUncertainBool),
-    MaybeUncertainFloat(MaybeUncertainF64),
-    /// A link to a complex, structured result in a Contextoid. As an output, this
-    /// can be interpreted by a reasoning engine as a command to fetch data.
-    ContextualLink(ContextId, ContextoidId),
-    /// A collection of named values, allowing for complex, structured data passing.
-    Map(HashMap<IdentificationValue, Box<PropagatingEffect>>),
-    /// A graph of effects, for passing complex relational data.
-    Graph(Arc<EffectGraph>),
-    /// A dispatch command that directs the reasoning engine to dynamically jump to a specific
-    /// causaloid within the graph. The `usize` is the target causaloid's index, and the `Box<PropagatingEffect>`
-    /// is the effect to be passed as input to that target causaloid. This enables adaptive reasoning.
-    RelayTo(usize, Box<PropagatingEffect>),
+#[derive(Debug, PartialEq, Clone)]
+pub struct CausalPropagatingEffect<Value, Error, Log> {
+    pub value: Value,
+    pub error: Option<Error>,
+    pub logs: Log,
 }
 
-// Update predicates, extractors, and debug in case of changing field types.
+impl<Value, Error, Log> CausalPropagatingEffect<Value, Error, Log>
+where
+    Error: Clone,
+    Log: Clone,
+{
+    /// Enables fluent, chainable monadic operations on a `CausalPropagatingEffect`.
+    ///
+    /// This method takes ownership of the current effect and a function that transforms
+    /// the inner value. It automatically handles error short-circuiting and log aggregation.
+    ///
+    /// # Arguments
+    /// * `f`: A function that takes the current inner `Value` and returns a new
+    ///   `CausalPropagatingEffect` with a potentially different inner `NewValue`.
+    ///
+    /// # Returns
+    /// A new `CausalPropagatingEffect` that is the result of the sequenced operation.
+    ///
+    /// # Log Provenance
+    /// This `bind` method is central to ensuring log provenance across monadic operations.
+    /// It guarantees that the log history is always preserved and appended to, never overwritten.
+    ///
+    /// - If the current effect contains an error, its logs are passed through unchanged
+    ///   to the returned effect, and the provided function `f` is not executed.
+    /// - If there is no error, `bind` first captures the accumulated logs from the current effect.
+    ///   It then executes the provided function `f`, which returns a new `CausalPropagatingEffect`
+    ///   containing logs specific to its operation.
+    /// - Finally, `bind` extends the accumulated logs from the current effect with the logs
+    ///   generated by `f`, ensuring a complete and ordered history is carried forward.
+    pub fn bind<F, NewValue>(self, f: F) -> CausalPropagatingEffect<NewValue, Error, Log>
+    where
+        F: FnOnce(Value) -> CausalPropagatingEffect<NewValue, Error, Log>,
+        NewValue: Default,
+        Log: Default + Clone + LogAppend,
+    {
+        if let Some(error) = self.error {
+            return CausalPropagatingEffect {
+                value: NewValue::default(),
+                error: Some(error),
+                logs: self.logs,
+            };
+        }
+
+        let mut next_effect = f(self.value);
+        let mut combined_logs = self.logs;
+        combined_logs.append(&mut next_effect.logs);
+        next_effect.logs = combined_logs;
+        next_effect
+    }
+}
+
+pub type PropagatingEffect = CausalPropagatingEffect<EffectValue, CausalityError, CausalEffectLog>;
+
+pub struct PropagatingEffectWitness<E, L>(Placeholder, E, L);

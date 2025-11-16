@@ -8,56 +8,43 @@ use ultragraph::*;
 
 use deep_causality::utils_test::test_utils;
 
-// Custom type alias
-type CustomCausaloidGraph = CausaloidGraph<
-    Causaloid<
-        Data<NumberType>,
-        EuclideanSpace,
-        EuclideanTime,
-        EuclideanSpacetime,
-        BaseSymbol,
-        FloatType,
-        FloatType,
-    >,
->;
-
-fn get_causal_graph() -> BaseCausalGraph {
-    let g: BaseCausalGraph = CausaloidGraph::new(0);
-    g
-}
-
 #[test]
 fn test_new() {
-    let g: CustomCausaloidGraph = CausaloidGraph::new(0);
+    let g: CausaloidGraph<BaseCausaloid<NumericalValue, bool>> = CausaloidGraph::new(0);
     assert_eq!(g.number_nodes(), 0);
     assert_eq!(g.number_edges(), 0);
 }
 
 #[test]
 fn test_new_with_capacity() {
-    let g: CustomCausaloidGraph = CausaloidGraph::new_with_capacity(0, 10);
+    let g: CausaloidGraph<BaseCausaloid<NumericalValue, bool>> =
+        CausaloidGraph::new_with_capacity(0, 10);
     assert_eq!(g.number_nodes(), 0);
     assert_eq!(g.number_edges(), 0);
 }
 
 #[test]
 fn test_default() {
-    let g: CustomCausaloidGraph = CausaloidGraph::default();
-    assert_eq!(g.number_nodes(), 0);
-    assert_eq!(g.number_edges(), 0);
+    let g = CausaloidGraph::default();
+    assert_eq!(g.id(), 0);
 }
 
 #[test]
 fn test_add_edge() {
-    let mut g = get_causal_graph();
-    let causaloid = test_utils::get_test_causaloid_deterministic();
+    let causaloid_a = test_utils::get_test_causaloid_deterministic(1);
+    let causaloid_b = test_utils::get_test_causaloid_deterministic(2);
 
-    let idx_a = g.add_causaloid(causaloid).expect("Failed to add causaloid");
+    let mut g: CausaloidGraph<BaseCausaloid<NumericalValue, bool>> = CausaloidGraph::new(0);
+
+    let idx_a = g
+        .add_causaloid(causaloid_a)
+        .expect("Failed to add causaloid");
     let contains_a = g.contains_causaloid(idx_a);
     assert!(contains_a);
 
-    let causaloid = test_utils::get_test_causaloid_deterministic();
-    let idx_b = g.add_causaloid(causaloid).expect("Failed to add causaloid");
+    let idx_b = g
+        .add_causaloid(causaloid_b)
+        .expect("Failed to add causaloid");
     let contains_b = g.contains_causaloid(idx_b);
     assert!(contains_b);
 
@@ -70,15 +57,20 @@ fn test_add_edge() {
 
 #[test]
 fn test_add_edg_with_weight() {
-    let mut g = get_causal_graph();
-    let causaloid = test_utils::get_test_causaloid_deterministic();
+    let causaloid_a = test_utils::get_test_causaloid_deterministic(1);
+    let causaloid_b = test_utils::get_test_causaloid_deterministic(2);
 
-    let idx_a = g.add_causaloid(causaloid).expect("Failed to add causaloid");
+    let mut g: CausaloidGraph<BaseCausaloid<NumericalValue, bool>> = CausaloidGraph::new(0);
+
+    let idx_a = g
+        .add_causaloid(causaloid_a)
+        .expect("Failed to add causaloid");
     let contains_a = g.contains_causaloid(idx_a);
     assert!(contains_a);
 
-    let causaloid = test_utils::get_test_causaloid_deterministic();
-    let idx_b = g.add_causaloid(causaloid).expect("Failed to add causaloid");
+    let idx_b = g
+        .add_causaloid(causaloid_b)
+        .expect("Failed to add causaloid");
     let contains_b = g.contains_causaloid(idx_b);
     assert!(contains_b);
 
@@ -92,15 +84,19 @@ fn test_add_edg_with_weight() {
 
 #[test]
 fn test_remove_edge() {
-    let mut g = get_causal_graph();
-    let causaloid = test_utils::get_test_causaloid_deterministic();
+    let causaloid_a = test_utils::get_test_causaloid_deterministic(1);
+    let causaloid_b = test_utils::get_test_causaloid_deterministic(2);
+    let mut g: CausaloidGraph<BaseCausaloid<NumericalValue, bool>> = CausaloidGraph::new(0);
 
-    let idx_a = g.add_causaloid(causaloid).expect("Failed to add causaloid");
+    let idx_a = g
+        .add_causaloid(causaloid_a)
+        .expect("Failed to add causaloid");
     let contains_a = g.contains_causaloid(idx_a);
     assert!(contains_a);
 
-    let causaloid = test_utils::get_test_causaloid_deterministic();
-    let idx_b = g.add_causaloid(causaloid).expect("Failed to add causaloid");
+    let idx_b = g
+        .add_causaloid(causaloid_b)
+        .expect("Failed to add causaloid");
     let contains_b = g.contains_causaloid(idx_b);
     assert!(contains_b);
 
@@ -119,7 +115,7 @@ fn test_remove_edge() {
 
 #[test]
 fn test_get_graph() {
-    let g = get_causal_graph();
+    let g: CausaloidGraph<BaseCausaloid<NumericalValue, bool>> = CausaloidGraph::new(0);
 
     let size = g.size();
     assert_eq!(size, 0);

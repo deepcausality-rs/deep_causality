@@ -1,43 +1,10 @@
-/*
- * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
- */
-
-use ultragraph::*;
-
-use crate::Causable;
 use crate::errors::{CausalGraphIndexError, CausalityGraphError};
 use crate::traits::causable_graph::CausalGraph;
+use ultragraph::PathfindingGraphAlgorithms;
 
-/// The CausableGraph trait defines the core interface for a causal graph.
-///
-/// It builds on the CausalGraph data structure.
-///
-/// Provides methods for:
-///
-/// - Adding a root node
-/// - Adding/removing nodes
-/// - Adding/removing edges
-/// - Accessing nodes/edges
-/// - Getting graph metrics like size and active nodes
-///
-/// The get_graph() method returns the underlying CausalGraph instance.
-/// This enables default implementations for reasoning and explaining.
-///
-/// Also includes a default implementation of shortest_path() using the
-/// underlying CausalGraph.
-///
-/// Nodes are indexed by usize.
-///
-/// Edges are added by specifying the node indices.
-///
-/// Nodes must be unique. Edges can be duplicated.
-///
-/// Errors on invalid node/edge indices.
-///
 pub trait CausableGraph<T>
 where
-    T: Clone + Causable + PartialEq,
+    T: Clone,
 {
     fn is_frozen(&self) -> bool;
 

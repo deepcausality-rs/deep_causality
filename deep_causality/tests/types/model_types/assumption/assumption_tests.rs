@@ -16,7 +16,7 @@ fn test_assumption_tested() {
 
     let data: Vec<PropagatingEffect> = test_utils::get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::Numerical(x))
+        .map(|&x| PropagatingEffect::from_numerical(x))
         .collect();
 
     let res = assumption.verify_assumption(&data);
@@ -38,7 +38,7 @@ fn test_verify_assumption_success() {
 
     let data: Vec<PropagatingEffect> = test_utils::get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::Numerical(x))
+        .map(|&x| PropagatingEffect::from_numerical(x))
         .collect();
 
     let res = assumption.verify_assumption(&data);
@@ -63,7 +63,7 @@ fn test_assumption_valid() {
 
     let data: Vec<PropagatingEffect> = test_utils::get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::Numerical(x))
+        .map(|&x| PropagatingEffect::from_numerical(x))
         .collect();
 
     let res = assumption.verify_assumption(&data);
@@ -136,7 +136,7 @@ fn test_assumption_debug() {
     // 2. Verify the assumption to change its internal state
     let data: Vec<PropagatingEffect> = test_utils::get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::Numerical(x))
+        .map(|&x| PropagatingEffect::from_numerical(x))
         .collect();
     assumption.verify_assumption(&data).unwrap(); // This sets tested and valid to true
 

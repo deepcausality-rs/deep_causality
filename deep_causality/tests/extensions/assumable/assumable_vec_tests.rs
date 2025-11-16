@@ -39,7 +39,7 @@ fn test_all_assumptions_tested() {
 
     let data: Vec<PropagatingEffect> = get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::Numerical(x))
+        .map(|&x| PropagatingEffect::from_numerical(x))
         .collect();
     col.verify_all_assumptions(&data).unwrap();
 
@@ -60,7 +60,7 @@ fn test_all_assumptions_valid() {
 
     let data: Vec<PropagatingEffect> = get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::Numerical(x))
+        .map(|&x| PropagatingEffect::from_numerical(x))
         .collect();
     col.verify_all_assumptions(&data).unwrap();
     let all_tested = col.all_assumptions_tested();
@@ -86,7 +86,7 @@ fn test_percent_assumption_valid() {
 
     let data: Vec<PropagatingEffect> = get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::Numerical(x))
+        .map(|&x| PropagatingEffect::from_numerical(x))
         .collect();
     col.verify_all_assumptions(&data).unwrap();
     let all_tested = col.all_assumptions_tested();
@@ -115,7 +115,7 @@ fn test_get_all_invalid_assumptions() {
 
     let data: Vec<PropagatingEffect> = get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::Numerical(x))
+        .map(|&x| PropagatingEffect::from_numerical(x))
         .collect();
     col.verify_all_assumptions(&data).unwrap();
     let all_tested = col.all_assumptions_tested();
@@ -141,7 +141,7 @@ fn test_get_all_valid_assumptions() {
 
     let data: Vec<PropagatingEffect> = get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::Numerical(x))
+        .map(|&x| PropagatingEffect::from_numerical(x))
         .collect();
     col.verify_all_assumptions(&data).unwrap();
 
@@ -168,7 +168,7 @@ fn test_get_all_tested_assumptions() {
 
     let data: Vec<PropagatingEffect> = get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::Numerical(x))
+        .map(|&x| PropagatingEffect::from_numerical(x))
         .collect();
     col.verify_all_assumptions(&data).unwrap();
 
@@ -198,7 +198,7 @@ fn test_get_all_untested_assumptions() {
 
     let data: Vec<PropagatingEffect> = get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::Numerical(x))
+        .map(|&x| PropagatingEffect::from_numerical(x))
         .collect();
     col.verify_all_assumptions(&data).unwrap();
 
@@ -225,7 +225,7 @@ fn test_verify_all_assumptions() {
 
     let data: Vec<PropagatingEffect> = get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::Numerical(x))
+        .map(|&x| PropagatingEffect::from_numerical(x))
         .collect();
     col.verify_all_assumptions(&data).unwrap();
 

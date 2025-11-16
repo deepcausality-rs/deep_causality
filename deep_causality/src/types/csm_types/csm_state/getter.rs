@@ -4,13 +4,15 @@
  */
 
 use crate::{
-    CausalState, Causaloid, Context, Datable, PropagatingEffect, SpaceTemporal, Spatial, Symbolic,
-    Temporal, UncertainParameter,
+    CausalState, Causaloid, Context, Datable, IntoEffectValue, PropagatingEffect, SpaceTemporal,
+    Spatial, Symbolic, Temporal, UncertainParameter,
 };
 use std::sync::{Arc, RwLock};
 
-impl<D, S, T, ST, SYM, VS, VT> CausalState<D, S, T, ST, SYM, VS, VT>
+impl<I, O, D, S, T, ST, SYM, VS, VT> CausalState<I, O, D, S, T, ST, SYM, VS, VT>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -31,7 +33,7 @@ where
         &self.data
     }
 
-    pub fn causaloid(&self) -> &Causaloid<D, S, T, ST, SYM, VS, VT> {
+    pub fn causaloid(&self) -> &Causaloid<I, O, D, S, T, ST, SYM, VS, VT> {
         &self.causaloid
     }
 

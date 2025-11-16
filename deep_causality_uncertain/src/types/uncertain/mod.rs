@@ -50,4 +50,11 @@ impl<T: ProbabilisticType + Copy> Uncertain<T> {
     pub fn id(&self) -> usize {
         self.id
     }
+
+    pub fn value(&self) -> T {
+        match self.root_node.value() {
+            UncertainNodeContent::Value(v) => T::from_sampled_value(*v).unwrap(),
+            _ => T::default_value(),
+        }
+    }
 }

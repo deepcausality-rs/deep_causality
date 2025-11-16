@@ -4,12 +4,14 @@
  */
 
 use crate::{
-    Causable, CausalState, CausalityError, Datable, PropagatingEffect, SpaceTemporal, Spatial,
-    Symbolic, Temporal,
+    CausalState, CsmError, Datable, IntoEffectValue, MonadicCausable, PropagatingEffect,
+    SpaceTemporal, Spatial, Symbolic, Temporal,
 };
 
-impl<D, S, T, ST, SYM, VS, VT> CausalState<D, S, T, ST, SYM, VS, VT>
+impl<I, O, D, S, T, ST, SYM, VS, VT> CausalState<I, O, D, S, T, ST, SYM, VS, VT>
 where
+    I: IntoEffectValue + Default,
+    O: IntoEffectValue + Default,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -28,8 +30,12 @@ where
     /// - `Ok(false)` if the state's conditions are not met
     /// - `Err(CausalityError)` if an error occurs during evaluation
     ///
-    pub fn eval(&self) -> Result<PropagatingEffect, CausalityError> {
-        self.causaloid.evaluate(&self.data)
+    pub fn eval(&self) -> Result<PropagatingEffect, CsmError> {
+        let res = self.causaloid.evaluate(&self.data);
+        match res.is_ok() {
+            true => Ok(res),
+            false => Err(CsmError::Causal(res.error.unwrap())),
+        }
     }
 
     /// Evaluates the state using provided external data.
@@ -46,10 +52,7 @@ where
     /// - `Err(CausalityError)` if an error occurs during evaluation
     ///
     /// ```texttext
-    pub fn eval_with_data(
-        &self,
-        data: &PropagatingEffect,
-    ) -> Result<PropagatingEffect, CausalityError> {
-        self.causaloid.evaluate(data)
+    pub fn eval_with_data(&self, data: &PropagatingEffect) -> Result<PropagatingEffect, CsmError> {
+        Ok(self.causaloid.evaluate(data))
     }
 }

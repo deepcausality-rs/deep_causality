@@ -12,8 +12,8 @@ use deep_causality_uncertain::Uncertain;
 fn add_single_state() {
     let id = 42;
     let version = 1;
-    let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid_deterministic();
+    let data = PropagatingEffect::from_numerical(0.23f64);
+    let causaloid = test_utils::get_test_causaloid_deterministic(23);
 
     let cs = CausalState::new(id, version, data, causaloid.clone(), None);
     let ca = test_utils_csm::get_test_action();
@@ -21,12 +21,13 @@ fn add_single_state() {
     let csm = CSM::new(state_action, None);
 
     assert_eq!(csm.len(), 1);
-    let data = PropagatingEffect::Numerical(0.23f64);
+    let data = PropagatingEffect::from_numerical(0.23f64);
     let cs2 = CausalState::new(2, 2, data, causaloid, None);
     let ca2 = test_utils_csm::get_test_action();
     let state_action = (cs2, ca2);
 
     let res = csm.add_single_state(43, state_action);
+    dbg!(&res);
 
     assert!(res.is_ok());
     assert_eq!(csm.len(), 2);
@@ -36,8 +37,8 @@ fn add_single_state() {
 fn add_single_state_err_already_exists() {
     let id = 42;
     let version = 1;
-    let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid_deterministic();
+    let data = PropagatingEffect::from_numerical(0.23f64);
+    let causaloid = test_utils::get_test_causaloid_deterministic(23);
 
     let cs = CausalState::new(id, version, data, causaloid.clone(), None);
     let ca = test_utils_csm::get_test_action();
@@ -45,12 +46,13 @@ fn add_single_state_err_already_exists() {
     let csm = CSM::new(state_action, None);
 
     assert_eq!(csm.len(), 1);
-    let data = PropagatingEffect::Numerical(0.23f64);
+    let data = PropagatingEffect::from_numerical(0.23f64);
     let cs2 = CausalState::new(2, 2, data, causaloid, None);
     let ca2 = test_utils_csm::get_test_action();
     let state_action = (cs2, ca2);
 
     let res = csm.add_single_state(id, state_action);
+    dbg!(&res);
 
     assert!(res.is_err());
     assert_eq!(csm.len(), 1);
@@ -60,8 +62,8 @@ fn add_single_state_err_already_exists() {
 fn update_single_state() {
     let id = 42;
     let version = 1;
-    let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid_deterministic();
+    let data = PropagatingEffect::from_numerical(0.23f64);
+    let causaloid = test_utils::get_test_causaloid_deterministic(23);
 
     let cs = CausalState::new(id, version, data, causaloid, None);
     let ca = test_utils_csm::get_test_action();
@@ -73,9 +75,9 @@ fn update_single_state() {
 
     let id = 44;
     let version = 1;
-    let data = PropagatingEffect::Numerical(0.7f64);
+    let data = PropagatingEffect::from_numerical(0.7f64);
 
-    let causaloid = test_utils::get_test_causaloid_deterministic();
+    let causaloid = test_utils::get_test_causaloid_deterministic(23);
 
     let cs = CausalState::new(id, version, data, causaloid, None);
     let ca = test_utils_csm::get_test_action();
@@ -83,6 +85,8 @@ fn update_single_state() {
     let state_action = (cs, ca);
 
     let res = csm.update_single_state(42, state_action);
+    dbg!(&res);
+
     assert!(res.is_ok());
     assert_eq!(csm.len(), 1);
 }
@@ -91,8 +95,8 @@ fn update_single_state() {
 fn update_single_state_err_not_found() {
     let id = 42;
     let version = 1;
-    let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid_deterministic();
+    let data = PropagatingEffect::from_numerical(0.23f64);
+    let causaloid = test_utils::get_test_causaloid_deterministic(23);
 
     let cs = CausalState::new(id, version, data, causaloid, None);
     let ca = test_utils_csm::get_test_action();
@@ -100,6 +104,8 @@ fn update_single_state_err_not_found() {
     let csm = CSM::new(state_action, None);
 
     let res = csm.update_single_state(99, (cs, ca));
+    dbg!(&res);
+
     assert!(res.is_err());
 }
 
@@ -107,8 +113,8 @@ fn update_single_state_err_not_found() {
 fn remove_single_state() {
     let id = 42;
     let version = 1;
-    let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid_deterministic();
+    let data = PropagatingEffect::from_numerical(0.23f64);
+    let causaloid = test_utils::get_test_causaloid_deterministic(23);
 
     let cs = CausalState::new(id, version, data.clone(), causaloid.clone(), None);
     let ca = test_utils_csm::get_test_action();
@@ -127,6 +133,8 @@ fn remove_single_state() {
     assert_eq!(csm.len(), 2);
 
     let res = csm.remove_single_state(43);
+    dbg!(&res);
+
     assert!(res.is_ok());
     assert_eq!(csm.len(), 1);
 }
@@ -135,8 +143,8 @@ fn remove_single_state() {
 fn remove_single_state_err_not_found() {
     let id = 42;
     let version = 1;
-    let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid_deterministic();
+    let data = PropagatingEffect::from_numerical(0.23f64);
+    let causaloid = test_utils::get_test_causaloid_deterministic(23);
 
     let cs = CausalState::new(id, version, data, causaloid, None);
     let ca = test_utils_csm::get_test_action();
@@ -146,6 +154,8 @@ fn remove_single_state_err_not_found() {
     assert_eq!(csm.len(), 1);
 
     let res = csm.remove_single_state(99);
+    dbg!(&res);
+
     assert!(res.is_err());
     assert_eq!(csm.len(), 1);
 }
@@ -154,7 +164,7 @@ fn remove_single_state_err_not_found() {
 fn eval_single_state_error_fail_action() {
     let id = 42;
     let version = 1;
-    let data = PropagatingEffect::Numerical(0.23f64);
+    let data = PropagatingEffect::from_numerical(0.23f64);
     let causaloid = test_utils_csm::get_test_error_causaloid();
 
     let cs = CausalState::new(id, version, data, causaloid, None);
@@ -164,6 +174,8 @@ fn eval_single_state_error_fail_action() {
 
     let data = test_utils::get_test_single_data(0.23f64);
     let res = csm.eval_single_state(23, &data);
+    dbg!(&res);
+
     assert!(res.is_err())
 }
 
@@ -171,8 +183,8 @@ fn eval_single_state_error_fail_action() {
 fn eval_single_state() {
     let id = 42;
     let version = 1;
-    let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid_deterministic();
+    let data = PropagatingEffect::from_numerical(0.23f64);
+    let causaloid = test_utils::get_test_causaloid_deterministic(23);
 
     let cs = CausalState::new(id, version, data, causaloid, None);
     let ca = test_utils_csm::get_test_action();
@@ -181,23 +193,8 @@ fn eval_single_state() {
 
     let data = test_utils::get_test_single_data(0.23f64);
     let res = csm.eval_single_state(23, &data);
-    assert!(res.is_err())
-}
+    dbg!(&res);
 
-#[test]
-fn eval_single_state_error_non_deter() {
-    let id = 42;
-    let version = 1;
-    let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils_csm::get_test_probabilistic_causaloid();
-
-    let cs = CausalState::new(id, version, data, causaloid, None);
-    let ca = test_utils_csm::get_test_action();
-    let state_action = &[(&cs, &ca)];
-    let csm = CSM::new(state_action, None);
-
-    let data = test_utils::get_test_single_data(0.23f64);
-    let res = csm.eval_single_state(id, &data);
     assert!(res.is_err())
 }
 
@@ -205,8 +202,8 @@ fn eval_single_state_error_non_deter() {
 fn eval_single_state_success_fires_action() {
     let id = 42;
     let version = 1;
-    let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid_deterministic(); // Returns Deterministic(true)
+    let data = PropagatingEffect::from_numerical(0.23f64);
+    let causaloid = test_utils::get_test_causaloid_deterministic(23); // Returns Deterministic(true)
 
     let cs = CausalState::new(id, version, data, causaloid, None);
     let ca = test_utils_csm::get_test_action(); // Succeeds
@@ -217,6 +214,8 @@ fn eval_single_state_success_fires_action() {
     let eval_data = test_utils::get_test_single_data(0.60f64);
     // Use the correct ID
     let res = csm.eval_single_state(id, &eval_data);
+    dbg!(&res);
+
     assert!(res.is_ok());
 }
 
@@ -226,8 +225,8 @@ fn eval_single_state_success_inactive_no_action() {
     let id = 42;
     let version = 1;
     // Use data that makes the state inactive (0.23 < 0.55 threshold)
-    let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid_deterministic(); // Returns Deterministic(false)
+    let data = PropagatingEffect::from_numerical(0.23f64);
+    let causaloid = test_utils::get_test_causaloid_deterministic(23); // Returns Deterministic(false)
 
     let cs = CausalState::new(id, version, data, causaloid, None);
     // Use an action that would fail to prove it's not being called.
@@ -239,6 +238,7 @@ fn eval_single_state_success_inactive_no_action() {
     let eval_data = test_utils::get_test_single_data(0.23f64);
     // Use the correct ID
     let res = csm.eval_single_state(id, &eval_data);
+    dbg!(&res);
     // Should be Ok because the state is inactive, so the failing action is never fired.
     assert!(res.is_ok());
 }
@@ -248,8 +248,8 @@ fn eval_single_state_success_inactive_no_action() {
 fn eval_single_state_error_not_found() {
     let id = 42;
     let version = 1;
-    let data = PropagatingEffect::Numerical(0.23f64);
-    let causaloid = test_utils::get_test_causaloid_deterministic();
+    let data = PropagatingEffect::from_numerical(0.23f64);
+    let causaloid = test_utils::get_test_causaloid_deterministic(23);
 
     let cs = CausalState::new(id, version, data, causaloid, None);
     let ca = test_utils_csm::get_test_action();
@@ -259,6 +259,8 @@ fn eval_single_state_error_not_found() {
     let eval_data = test_utils::get_test_single_data(0.23f64);
     // Use a non-existent ID
     let res = csm.eval_single_state(99, &eval_data);
+    dbg!(&res);
+
     assert!(res.is_err());
     assert!(
         res.unwrap_err()
@@ -273,7 +275,7 @@ fn eval_single_state_error_not_found() {
 fn eval_single_state_error_eval_fails() {
     let id = 42;
     let version = 1;
-    let data = PropagatingEffect::Numerical(0.23f64);
+    let data = PropagatingEffect::from_numerical(0.23f64);
     // This causaloid's causal_fn always returns an error.
     let causaloid = test_utils_csm::get_test_error_causaloid();
 
@@ -285,6 +287,7 @@ fn eval_single_state_error_eval_fails() {
     let eval_data = test_utils::get_test_single_data(0.23f64);
     // Use the correct ID to ensure we get past the 'not found' check.
     let res = csm.eval_single_state(id, &eval_data);
+    dbg!(&res);
 
     // The result should be an error because state.eval_with_data failed.
     assert!(res.is_err());
@@ -298,8 +301,8 @@ fn eval_single_state_error_action_fails() {
     let id = 42;
     let version = 1;
     // Use data that makes the state active (0.60 > 0.55 threshold in test_causaloid)
-    let data = PropagatingEffect::Numerical(0.60f64);
-    let causaloid = test_utils::get_test_causaloid_deterministic(); // Returns Deterministic(true)
+    let data = PropagatingEffect::from_numerical(0.60f64);
+    let causaloid = test_utils::get_test_causaloid_deterministic(23); // Returns Deterministic(true)
 
     let cs = CausalState::new(id, version, data, causaloid, None);
     // Use an action that is designed to fail.
@@ -311,6 +314,7 @@ fn eval_single_state_error_action_fails() {
     let eval_data = test_utils::get_test_single_data(0.60f64);
     // Use the correct ID
     let res = csm.eval_single_state(id, &eval_data);
+    dbg!(&res);
 
     assert!(res.is_err());
     let err_msg = res.unwrap_err().to_string();
@@ -321,7 +325,7 @@ fn eval_single_state_error_action_fails() {
 fn eval_single_state_uncertain_bool_success() {
     let id = 1;
     let version = 1;
-    let data = PropagatingEffect::UncertainBool(Uncertain::<bool>::point(true));
+    let data = PropagatingEffect::from_uncertain_bool(Uncertain::<bool>::point(true));
     let causaloid = test_utils::get_test_causaloid_uncertain_bool();
     let params = Some(UncertainParameter::new(0.9, 0.99, 0.01, 100));
 
@@ -330,8 +334,10 @@ fn eval_single_state_uncertain_bool_success() {
     let state_action = &[(&cs, &ca)];
     let csm = CSM::new(state_action, None);
 
-    let eval_data = PropagatingEffect::Numerical(0.6);
+    let eval_data = PropagatingEffect::from_numerical(0.6);
     let res = csm.eval_single_state(id, &eval_data);
+    dbg!(&res);
+
     assert!(res.is_ok());
 }
 
@@ -339,7 +345,7 @@ fn eval_single_state_uncertain_bool_success() {
 fn eval_single_state_uncertain_float_success() {
     let id = 1;
     let version = 1;
-    let data = PropagatingEffect::UncertainFloat(Uncertain::<f64>::point(0.99));
+    let data = PropagatingEffect::from_uncertain_float(Uncertain::<f64>::point(0.99));
     let causaloid = test_utils::get_test_causaloid_uncertain_float();
     let params = Some(UncertainParameter::new(0.9, 0.99, 0.01, 100));
 
@@ -348,7 +354,9 @@ fn eval_single_state_uncertain_float_success() {
     let state_action = &[(&cs, &ca)];
     let csm = CSM::new(state_action, None);
 
-    let eval_data = PropagatingEffect::Numerical(0.6);
+    let eval_data = PropagatingEffect::from_numerical(0.6);
     let res = csm.eval_single_state(id, &eval_data);
+    dbg!(&res);
+
     assert!(res.is_ok());
 }

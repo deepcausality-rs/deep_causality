@@ -8,9 +8,8 @@ mod state_add;
 mod state_remove;
 mod state_update;
 
-use crate::{CSMMap, CausalAction, CausalState, EffectEthos, TeloidTag};
+use crate::{CSMMap, CausalAction, CausalState, EffectEthos, IntoEffectValue, TeloidTag};
 use crate::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
-use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
@@ -48,8 +47,10 @@ use std::sync::{Arc, RwLock};
 ///
 /// See the example in `examples/csm/src/main.rs` for a practical implementation.
 #[allow(clippy::type_complexity)]
-pub struct CSM<D, S, T, ST, SYM, VS, VT>
+pub struct CSM<I, O, D, S, T, ST, SYM, VS, VT>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Datable + Clone,
     S: Spatial<VS> + Clone + Debug,
     T: Temporal<VT> + Clone + Debug,
@@ -58,13 +59,15 @@ where
     VS: Clone + Debug,
     VT: Clone + Debug,
 {
-    state_actions: Arc<RwLock<CSMMap<D, S, T, ST, SYM, VS, VT>>>,
+    state_actions: Arc<RwLock<CSMMap<I, O, D, S, T, ST, SYM, VS, VT>>>,
     effect_ethos: Option<(EffectEthos<D, S, T, ST, SYM, VS, VT>, Vec<TeloidTag>)>,
 }
 
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, SYM, VS, VT> CSM<D, S, T, ST, SYM, VS, VT>
+impl<I, O, D, S, T, ST, SYM, VS, VT> CSM<I, O, D, S, T, ST, SYM, VS, VT>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Datable + Clone + Debug,
     S: Spatial<VS> + Clone + Debug,
     T: Temporal<VT> + Clone + Debug,
@@ -75,10 +78,10 @@ where
 {
     /// Constructs a new CSM.
     pub fn new(
-        state_actions: &[(&CausalState<D, S, T, ST, SYM, VS, VT>, &CausalAction)],
+        state_actions: &[(&CausalState<I, O, D, S, T, ST, SYM, VS, VT>, &CausalAction)],
         effect_ethos: Option<(EffectEthos<D, S, T, ST, SYM, VS, VT>, &[TeloidTag])>,
     ) -> Self {
-        let mut map = HashMap::with_capacity(state_actions.len());
+        let mut map = CSMMap::with_capacity(state_actions.len());
 
         for (state, action) in state_actions {
             map.insert(state.id(), ((*state).clone(), (*action).clone()));

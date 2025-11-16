@@ -23,7 +23,7 @@ fn get_test_action() -> CausalAction {
 fn test_new() {
     let ca = get_test_action();
 
-    assert_eq!(ca.descr(), "Test action that prints Hello State");
+    assert_eq!(ca.description(), "Test action that prints Hello State");
     assert_eq!(ca.version(), 1);
 }
 
@@ -34,7 +34,7 @@ fn test_fire() {
     let res = ca.fire();
 
     assert!(res.is_ok());
-    assert_eq!(ca.descr(), "Test action that prints Hello State");
+    assert_eq!(ca.description(), "Test action that prints Hello State");
     assert_eq!(ca.version(), 1);
 }
 

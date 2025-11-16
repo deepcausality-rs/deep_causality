@@ -3,12 +3,17 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CSM, Datable, SpaceTemporal, Spatial, StateAction, Symbolic, Temporal, UpdateError};
+use crate::{
+    CSM, Datable, IntoEffectValue, SpaceTemporal, Spatial, StateAction, Symbolic, Temporal,
+    UpdateError,
+};
 use std::fmt::Debug;
 
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, SYM, VS, VT> CSM<D, S, T, ST, SYM, VS, VT>
+impl<I, O, D, S, T, ST, SYM, VS, VT> CSM<I, O, D, S, T, ST, SYM, VS, VT>
 where
+    I: IntoEffectValue,
+    O: IntoEffectValue,
     D: Datable + Clone + Debug,
     S: Spatial<VS> + Clone + Debug,
     T: Temporal<VT> + Clone + Debug,
@@ -22,7 +27,7 @@ where
     pub fn add_single_state(
         &self,
         idx: usize,
-        state_action: StateAction<D, S, T, ST, SYM, VS, VT>,
+        state_action: StateAction<I, O, D, S, T, ST, SYM, VS, VT>,
     ) -> Result<(), UpdateError> {
         // Check if the key exists, if so return error
         if self.state_actions.read().unwrap().contains_key(&idx) {

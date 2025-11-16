@@ -6,4 +6,5 @@
 mod assumable;
 mod causable;
 mod inferable;
+mod into_effect_value;
 mod observable;

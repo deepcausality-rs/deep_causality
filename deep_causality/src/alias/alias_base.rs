@@ -3,20 +3,11 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-// should prevent circular dependencies to / from prelude
-use crate::alias::alias_primitives::FloatType;
-use crate::types::causal_types::causaloid::Causaloid;
-use crate::types::causal_types::causaloid_graph::CausaloidGraph;
-use crate::types::context_node_types::data::Data;
-use crate::types::context_node_types::space::euclidean_space::EuclideanSpace;
-use crate::types::context_node_types::space_time::euclidean_spacetime::EuclideanSpacetime;
-use crate::types::context_node_types::symbol::base_symbol::BaseSymbol;
-use crate::types::context_node_types::time::euclidean_time::EuclideanTime;
-use crate::types::context_types::context_graph::Context;
-use crate::types::context_types::contextoid::Contextoid;
-use crate::types::model_types::model::Model;
-
-use crate::{NumericalValue, TeloidStore};
+use crate::{
+    BaseSymbol, Causaloid, CausaloidGraph, Context, Contextoid, Data, EuclideanSpace,
+    EuclideanSpacetime, EuclideanTime, FloatType, IntoEffectValue, Model, NumericalValue,
+    TeloidStore,
+};
 use std::collections::HashMap;
 
 /// A type alias for the default `Model` configuration.
@@ -50,6 +41,8 @@ use std::collections::HashMap;
 /// easily recognizable model structure for common causal reasoning and
 /// simulation scenarios.
 pub type BaseModel = Model<
+    bool,
+    bool,
     Data<NumericalValue>,
     EuclideanSpace,
     EuclideanTime,
@@ -90,7 +83,10 @@ pub type BaseModel = Model<
 /// This `BaseCausaloid` is the standard choice for creating individual causal nodes
 /// that are compatible with other "base" types like `BaseCausalGraph` and `BaseContext`,
 /// ensuring a consistent and easily understandable modeling environment.
-pub type BaseCausaloid = Causaloid<
+#[allow(type_alias_bounds)]
+pub type BaseCausaloid<I: IntoEffectValue, O: IntoEffectValue> = Causaloid<
+    I,
+    O,
     Data<NumericalValue>,
     EuclideanSpace,
     EuclideanTime,
@@ -134,8 +130,11 @@ pub type BaseCausaloid = Causaloid<
 /// collections of causal entities. It offers a consistent and easily recognizable
 /// way to organize causaloids for common causal modeling scenarios, such as
 /// representing a sequence of events or a set of related causal agents.
-pub type BaseCausaloidVec = Vec<
+#[allow(type_alias_bounds)]
+pub type BaseCausaloidVec<I: IntoEffectValue, O: IntoEffectValue> = Vec<
     Causaloid<
+        I,
+        O,
         Data<NumericalValue>,
         EuclideanSpace,
         EuclideanTime,
@@ -176,6 +175,8 @@ pub type BaseCausaloidVec = Vec<
 pub type BaseCausalMap = HashMap<
     usize,
     Causaloid<
+        bool,
+        bool,
         Data<NumericalValue>,
         EuclideanSpace,
         EuclideanTime,
@@ -185,6 +186,8 @@ pub type BaseCausalMap = HashMap<
         FloatType,
     >,
 >;
+
+pub type BenchmarkCausalMap = HashMap<usize, BaseCausaloid<f64, bool>>;
 
 /// A type alias for a `CausaloidGraph` composed of `BaseCausaloid` instances.
 ///
@@ -211,6 +214,8 @@ pub type BaseCausalMap = HashMap<
 /// and easily recognizable graph structure for common causal modeling scenarios.
 pub type BaseCausalGraph = CausaloidGraph<
     Causaloid<
+        bool,
+        bool,
         Data<NumericalValue>,
         EuclideanSpace,
         EuclideanTime,

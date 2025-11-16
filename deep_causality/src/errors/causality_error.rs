@@ -9,7 +9,7 @@ use std::error::Error;
 use std::fmt;
 use ultragraph::GraphError;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub struct CausalityError(pub String);
 
 impl CausalityError {

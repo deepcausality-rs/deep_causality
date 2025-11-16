@@ -3,16 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::fmt::Display;
-use ultragraph::*;
+use ultragraph::UltraGraphWeighted;
 
-use crate::errors::{CausalGraphIndexError, CausalityGraphError};
-use crate::{
-    Causable, CausableGraph, CausableGraphExplaining, CausableGraphReasoning, CausalGraph,
-    IdentificationValue,
-};
+use crate::{CausalGraph, IdentificationValue};
 
-mod causable;
 mod causable_graph;
 mod default;
 mod identifiable;
@@ -35,18 +29,12 @@ mod identifiable;
 ///   data, and `Display` for explanations. A common `T` is the `Causaloid` struct.
 ///
 #[derive(Clone)]
-pub struct CausaloidGraph<T>
-where
-    T: Causable + PartialEq + Clone + Display,
-{
+pub struct CausaloidGraph<T: Clone> {
     id: IdentificationValue,
     graph: CausalGraph<T>,
 }
 
-impl<T> CausaloidGraph<T>
-where
-    T: Causable + PartialEq + Clone + Display,
-{
+impl<T: Clone> CausaloidGraph<T> {
     /// Creates a new `CausaloidGraph` with a default capacity.
     ///
     /// This constructor initializes the graph with a default capacity of 500 nodes.

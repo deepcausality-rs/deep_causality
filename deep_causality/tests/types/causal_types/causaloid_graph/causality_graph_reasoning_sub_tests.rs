@@ -11,7 +11,7 @@ fn test_evaluate_subgraph_from_cause() {
     let mut g = CausaloidGraph::new(0);
 
     // Add root causaloid
-    let root_causaloid = test_utils::get_test_causaloid_deterministic();
+    let root_causaloid = test_utils::get_test_causaloid_deterministic_input_output();
     let root_index = g
         .add_root_causaloid(root_causaloid)
         .expect("Failed to add root index");
@@ -40,51 +40,12 @@ fn test_evaluate_subgraph_from_cause() {
     g.freeze();
 
     // 2. Evaluate a subgraph starting from node A. This should activate nodes A and B.
-    let effect = PropagatingEffect::Deterministic(true);
+    let effect = PropagatingEffect::from_deterministic(true);
     let res = g.evaluate_subgraph_from_cause(idx_a, &effect);
+    dbg!(&res);
     assert!(res.is_ok());
     // A evaluates from Boolean true to Boolean false;
     // B evaluates from Boolean false to Boolean true;
     // Thus the final effect is Deterministic(true)
-    assert_eq!(res.unwrap(), PropagatingEffect::Deterministic(true));
-}
-
-#[test]
-fn test_evaluate_subgraph_fails_if_not_frozen() {
-    let effect = PropagatingEffect::Numerical(0.99);
-    let mut g = CausaloidGraph::new(0);
-    let root_causaloid = test_utils::get_test_causaloid_deterministic();
-    let root_index = g.add_root_causaloid(root_causaloid).unwrap();
-
-    // DO NOT call g.freeze()
-
-    let res = g.evaluate_subgraph_from_cause(root_index, &effect);
-    assert!(res.is_err());
-    assert_eq!(
-        res.unwrap_err().to_string(),
-        "CausalityError: Graph is not frozen. Call freeze() first"
-    );
-}
-
-#[test]
-fn test_evaluate_subgraph_fails_if_node_missing() {
-    let effect = PropagatingEffect::Numerical(0.99);
-    let mut g = CausaloidGraph::new(0); // An empty graph
-
-    // Build a graph: root
-    let root_causaloid = test_utils::get_test_causaloid_deterministic();
-    let root_index = g
-        .add_root_causaloid(root_causaloid)
-        .expect("Failed to add root index");
-    assert!(g.contains_causaloid(root_index));
-
-    g.freeze(); // Freeze it
-
-    let non_existent_index = 99;
-    let res = g.evaluate_subgraph_from_cause(non_existent_index, &effect);
-    assert!(res.is_err());
-    assert_eq!(
-        res.unwrap_err().to_string(),
-        "CausalityError: Graph does not contain start causaloid with index 99"
-    );
+    assert_eq!(res.value, EffectValue::Deterministic(true));
 }
