@@ -18,12 +18,10 @@ mod causality_graph_reasoning_linear_tests;
 #[cfg(test)]
 mod causality_graph_reasoning_multi_tests;
 #[cfg(test)]
+mod causality_graph_reasoning_shortest_tests;
+#[cfg(test)]
 mod causality_graph_reasoning_single_tests;
-
-// #[cfg(test)]
-// mod causality_graph_reasoning_shortest_tests;
-// #[cfg(test)]
-// mod causality_graph_reasoning_sub_tests;
-
+#[cfg(test)]
+mod causality_graph_reasoning_sub_tests;
 #[cfg(test)]
 mod causality_graph_tests;
