@@ -27,8 +27,12 @@ impl Display for EffectValue {
             EffectValue::MaybeUncertainFloat(muf) => {
                 write!(f, "MaybeUncertainFloat({:?})", muf)
             }
-            EffectValue::ContextualLink(coid) => {
-                write!(f, "ContextualLink(ContextoidId: {})", coid)
+            EffectValue::ContextualLink(context_id, contextoid_id) => {
+                write!(
+                    f,
+                    "ContextualLink(Context ID: {}, Contextoid Id: {})",
+                    context_id, contextoid_id
+                )
             }
             EffectValue::Map(m) => write!(f, "Map({:?})", m),
             EffectValue::RelayTo(target, value) => {

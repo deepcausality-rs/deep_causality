@@ -62,7 +62,7 @@ impl EffectValue {
     }
 
     pub fn is_contextual_link(&self) -> bool {
-        matches!(self, EffectValue::ContextualLink(_))
+        matches!(self, EffectValue::ContextualLink(_, _))
     }
 
     pub fn is_map(&self) -> bool {

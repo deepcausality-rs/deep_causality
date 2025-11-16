@@ -372,11 +372,11 @@ impl PropagatingEffect {
     /// ```
     /// use deep_causality::{PropagatingEffect, EffectValue};
     ///
-    /// let effect = PropagatingEffect::from_contextual_link(42);
-    /// assert!(matches!(effect.value, EffectValue::ContextualLink(_)));
+    /// let effect = PropagatingEffect::from_contextual_link(23, 42);
+    /// assert!(matches!(effect.value, EffectValue::ContextualLink(_,_)));
     /// ```
-    pub fn from_contextual_link(contextoid_id: ContextoidId) -> Self {
-        CausalMonad::pure(EffectValue::ContextualLink(contextoid_id))
+    pub fn from_contextual_link(context_id: ContextoidId, contextoid_id: ContextoidId) -> Self {
+        CausalMonad::pure(EffectValue::ContextualLink(context_id, contextoid_id))
     }
 
     /// Creates a new `PropagatingEffect` of the `Map` variant from an existing `HashMap`.

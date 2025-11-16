@@ -62,7 +62,7 @@ pub enum EffectValue {
     MaybeUncertainFloat(MaybeUncertainF64),
     /// A link to a complex, structured result in a Contextoid. As an output, this
     /// can be interpreted by a reasoning engine as a command to fetch data.
-    ContextualLink(ContextoidId),
+    ContextualLink(ContextoidId, ContextoidId),
     /// A dispatch command that directs the reasoning engine to dynamically jump to a specific
     /// causaloid within the graph. The `usize` is the target causaloid's index, and the `Box<CausalValue>`
     /// is the effect to be passed as input to that target causaloid. This enables adaptive reasoning.

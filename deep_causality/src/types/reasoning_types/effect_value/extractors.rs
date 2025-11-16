@@ -105,9 +105,11 @@ impl EffectValue {
         }
     }
 
-    pub fn as_contextual_link(&self) -> Option<&ContextoidId> {
+    pub fn as_contextual_link(&self) -> Option<(&ContextoidId, &ContextoidId)> {
         match self {
-            EffectValue::ContextualLink(coid) => Some(coid),
+            EffectValue::ContextualLink(context_id, contextoid_id) => {
+                Some((context_id, contextoid_id))
+            }
             _ => None,
         }
     }
