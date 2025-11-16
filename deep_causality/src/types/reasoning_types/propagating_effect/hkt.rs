@@ -145,13 +145,17 @@ where
         Func: FnMut(A) -> B,
         A: Clone,
     {
+        // Always combine logs from both effects.
+        let mut combined_logs = f_ab.logs;
+        combined_logs.append(&mut f_a.logs);
+
         // If the function effect has an error, propagate it.
         // The value is still computed, but the error takes precedence.
         if f_ab.error.is_some() {
             return CausalPropagatingEffect {
                 value: (f_ab.value)(f_a.value),
                 error: f_ab.error,
-                logs: f_ab.logs,
+                logs: combined_logs,
             };
         }
         // If the value effect has an error, propagate it.
@@ -160,12 +164,9 @@ where
             return CausalPropagatingEffect {
                 value: (f_ab.value)(f_a.value),
                 error: f_a.error,
-                logs: f_a.logs,
+                logs: combined_logs,
             };
         }
-
-        let mut combined_logs = f_ab.logs;
-        combined_logs.append(&mut f_a.logs);
 
         CausalPropagatingEffect {
             value: (f_ab.value)(f_a.value),
