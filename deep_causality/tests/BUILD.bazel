@@ -38,6 +38,10 @@ rust_test_suite(
     deps = [
         # Crate to test
         "//deep_causality",
+        # Dependencies
+        "//deep_causality_num",
+        "//deep_causality_uncertain",
+        "//deep_causality_tensor",
     ],
 )
 
@@ -45,21 +49,7 @@ rust_test_suite(
 # TRAIT TESTS
 ###############################################################################
 
-rust_test_suite(
-    name = "traits_tests",
-    srcs = glob([
-        "traits/generatable/generative_processor/*_tests.rs",
-    ]),
-    tags = [
-        "traits_tests",
-        "unit-test",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        # Crate to test
-        "//deep_causality",
-    ],
-)
+
 
 ###############################################################################
 # TYPES/ CAUSAL TESTS
@@ -424,8 +414,7 @@ rust_test_suite(
 rust_test_suite(
     name = "reasoning_types_tests",
     srcs = glob([
-        "types/reasoning_types/aggregate_logic/*_tests.rs",
-        "types/reasoning_types/propagating_effect/*_tests.rs",
+        "types/reasoning_types/*/*_tests.rs",
     ]),
     tags = [
         "reasoning_types_tests",
@@ -436,6 +425,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality",
         "//deep_causality_num",
+        "//deep_causality_haft",
         "//deep_causality_tensor",
         "//deep_causality_uncertain",
         "//ultragraph",
@@ -491,7 +481,6 @@ rust_test_suite(
     name = "utils_tests",
     srcs = glob([
         "utils/*_tests.rs",
-        "utils_tests/*_tests.rs",
     ]),
     tags = [
         "unit-test",

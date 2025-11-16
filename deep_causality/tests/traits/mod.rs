@@ -4,4 +4,3 @@
  */
 
 
-mod generatable;
