@@ -24,6 +24,7 @@ members = [
     "examples/epp_dbn",
     "examples/epp_csm_effect_ethos",
     "examples/epp_csm",
+    "examples/epp_context",
 ]
 
 [workspace.package]
