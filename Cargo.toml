@@ -16,12 +16,13 @@ members = [
     "deep_causality_tensor",
     "deep_causality_uncertain",
     "examples/tokio",
+    "examples/starter",
     "ultragraph",
 ]
 
 [workspace.package]
 edition = "2024"
-rust-version = "1.89.0"
+rust-version = "1.90.0"
 license = "MIT"
 
 [workspace.dependencies]
