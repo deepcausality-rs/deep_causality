@@ -23,6 +23,7 @@ members = [
     "examples/epp_granger",
     "examples/epp_dbn",
     "examples/epp_csm_effect_ethos",
+    "examples/epp_csm",
 ]
 
 [workspace.package]
