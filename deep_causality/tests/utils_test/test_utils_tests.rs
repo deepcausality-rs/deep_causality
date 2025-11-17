@@ -76,10 +76,12 @@ fn test_get_test_causaloid_positive_above_threshold() {
             .to_string()
             .contains(&format!("Evidence {} >= threshold 0.55: true", evidence))
     );
-    assert!(result_effect.logs.to_string().contains(&format!(
-        "Causaloid {}: Outgoing effect: Deterministic(true)",
-        id
-    )));
+    assert!(
+        result_effect
+            .logs
+            .to_string()
+            .contains(&format!("Causaloid {}: Outgoing effect: Boolean(true)", id))
+    );
 }
 
 #[test]
@@ -110,7 +112,7 @@ fn test_get_test_causaloid_positive_below_threshold() {
             .contains(&format!("Evidence {} >= threshold 0.55: false", evidence))
     );
     assert!(result_effect.logs.to_string().contains(&format!(
-        "Causaloid {}: Outgoing effect: Deterministic(false)",
+        "Causaloid {}: Outgoing effect: Boolean(false)",
         id
     )));
 }
@@ -169,8 +171,10 @@ fn test_get_test_causaloid_edge_threshold() {
             .to_string()
             .contains(&format!("Evidence {} >= threshold 0.55: true", evidence))
     );
-    assert!(result_effect.logs.to_string().contains(&format!(
-        "Causaloid {}: Outgoing effect: Deterministic(true)",
-        id
-    )));
+    assert!(
+        result_effect
+            .logs
+            .to_string()
+            .contains(&format!("Causaloid {}: Outgoing effect: Boolean(true)", id))
+    );
 }

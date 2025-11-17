@@ -46,6 +46,6 @@ fn test_evaluate_subgraph_from_cause() {
     assert!(res.is_ok());
     // A evaluates from Boolean true to Boolean false;
     // B evaluates from Boolean false to Boolean true;
-    // Thus the final effect is Deterministic(true)
+    // Thus the final effect is Boolean(true)
     assert_eq!(res.value, EffectValue::Boolean(true));
 }

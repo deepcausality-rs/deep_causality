@@ -16,7 +16,9 @@ pub struct EventHandler {
 
 impl EventHandler {
     pub fn new(model: BaseModelTokio) -> Self {
-        Self { model: Arc::new(RwLock::new(model)) }
+        Self {
+            model: Arc::new(RwLock::new(model)),
+        }
     }
 }
 

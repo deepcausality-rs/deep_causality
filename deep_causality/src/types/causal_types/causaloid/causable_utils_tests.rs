@@ -48,7 +48,7 @@ fn test_convert_input_success() {
     assert!(result.value);
     assert!(!result.logs.is_empty());
     let log_str = result.logs.to_string();
-    assert!(log_str.contains("Causaloid 1: Incoming effect: Deterministic(true)"));
+    assert!(log_str.contains("Causaloid 1: Incoming effect: Boolean(true)"));
 }
 
 #[test]
@@ -237,5 +237,5 @@ fn test_convert_output_bool() {
     assert_eq!(result.value, EffectValue::Boolean(true));
     assert!(!result.logs.is_empty());
     let log_str = result.logs.to_string();
-    assert!(log_str.contains("Causaloid 6: Outgoing effect: Deterministic(true)"));
+    assert!(log_str.contains("Causaloid 6: Outgoing effect: Boolean(true)"));
 }

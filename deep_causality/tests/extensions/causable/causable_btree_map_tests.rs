@@ -95,14 +95,14 @@ fn test_evaluate_deterministic_propagation() {
 fn test_evaluate_probabilistic_propagation() {
     let map = get_test_causality_btree_map_probabilistic();
 
-    // Case 1: All succeed (Deterministic(true) is treated as probability 1.0).
+    // Case 1: All succeed (Boolean(true) is treated as probability 1.0).
     // The cumulative probability should be 1.0.
     let effect_success = PropagatingEffect::from_numerical(0.99);
     let res = map.evaluate_collection(&effect_success, &AggregateLogic::All, Some(0.5));
     assert!(!res.is_err());
     assert_eq!(res.value, EffectValue::Probabilistic(1.0));
 
-    // Case 2: One fails (Deterministic(false) is treated as probability 0.0).
+    // Case 2: One fails (Boolean(false) is treated as probability 0.0).
     // The chain should short-circuit and return a cumulative probability of 0.0.
     let effect_fail = PropagatingEffect::from_numerical(0.1);
     let res = map.evaluate_collection(&effect_fail, &AggregateLogic::All, Some(0.5));

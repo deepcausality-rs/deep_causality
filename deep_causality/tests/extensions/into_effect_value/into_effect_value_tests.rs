@@ -72,7 +72,7 @@ fn test_f64_try_from_effect_value_error() {
     let err = <f64 as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
         err.to_string()
-            .contains("Expected Numerical(f64), found Deterministic(true)")
+            .contains("Expected Numerical(f64), found Boolean(true)")
     );
 }
 
@@ -107,7 +107,7 @@ fn test_u64_try_from_effect_value_error_wrong_effect_value_type() {
     let err = <u64 as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
         err.to_string()
-            .contains("Expected EffectValue::Number(NumericValue::U64), found Deterministic(true)")
+            .contains("Expected EffectValue::Number(NumericValue::U64), found Boolean(true)")
     );
 }
 
@@ -132,7 +132,7 @@ fn test_numeric_value_try_from_effect_value_error() {
     let err = <NumericValue as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
         err.to_string()
-            .contains("Expected Number(NumericValue), found Deterministic(true)")
+            .contains("Expected Number(NumericValue), found Boolean(true)")
     );
 }
 
@@ -161,7 +161,7 @@ fn test_causal_tensor_f64_try_from_effect_value_error() {
     let err = <CausalTensor<f64> as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
         err.to_string()
-            .contains("Expected Tensor(CausalTensor<f64>), found Deterministic(true)")
+            .contains("Expected Tensor(CausalTensor<f64>), found Boolean(true)")
     );
 }
 
@@ -187,7 +187,7 @@ fn test_complex_f64_try_from_effect_value_error() {
     let err = <Complex<f64> as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
         err.to_string()
-            .contains("Expected Complex(Complex<f64>), found Deterministic(true)")
+            .contains("Expected Complex(Complex<f64>), found Boolean(true)")
     );
 }
 
@@ -226,9 +226,8 @@ fn test_causal_tensor_complex_f64_try_from_effect_value_error() {
     let err =
         <CausalTensor<Complex<f64>> as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
-        err.to_string().contains(
-            "Expected ComplexTensor(CausalTensor<Complex<f64>>), found Deterministic(true)"
-        )
+        err.to_string()
+            .contains("Expected ComplexTensor(CausalTensor<Complex<f64>>), found Boolean(true)")
     );
 }
 
@@ -257,7 +256,7 @@ fn test_quaternion_f64_try_from_effect_value_error() {
     let err = <Quaternion<f64> as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
         err.to_string()
-            .contains("Expected Quaternion(Quaternion<f64>), found Deterministic(true)")
+            .contains("Expected Quaternion(Quaternion<f64>), found Boolean(true)")
     );
 }
 
@@ -287,9 +286,11 @@ fn test_causal_tensor_quaternion_f64_try_from_effect_value_error() {
     let ev = EffectValue::Boolean(true);
     let err =
         <CausalTensor<Quaternion<f64>> as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
-    assert!(err.to_string().contains(
-        "Expected QuaternionTensor(CausalTensor<Quaternion<f64>>), found Deterministic(true)"
-    ));
+    assert!(
+        err.to_string().contains(
+            "Expected QuaternionTensor(CausalTensor<Quaternion<f64>>), found Boolean(true)"
+        )
+    );
 }
 
 // Test for UncertainBool
@@ -317,7 +318,7 @@ fn test_uncertain_bool_try_from_effect_value_error() {
     let err = <UncertainBool as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
         err.to_string()
-            .contains("Expected UncertainBool(UncertainBool), found Deterministic(true)")
+            .contains("Expected UncertainBool(UncertainBool), found Boolean(true)")
     );
 }
 
@@ -346,7 +347,7 @@ fn test_uncertain_f64_try_from_effect_value_error() {
     let err = <UncertainF64 as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
         err.to_string()
-            .contains("Expected UncertainFloat(UncertainF64), found Deterministic(true)")
+            .contains("Expected UncertainFloat(UncertainF64), found Boolean(true)")
     );
 }
 
@@ -376,7 +377,7 @@ fn test_maybe_uncertain_bool_try_from_effect_value_error() {
     let err = <MaybeUncertainBool as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
         err.to_string()
-            .contains("Expected MaybeUncertainBool(MaybeUncertainBool), found Deterministic(true)")
+            .contains("Expected MaybeUncertainBool(MaybeUncertainBool), found Boolean(true)")
     );
 }
 
@@ -406,7 +407,7 @@ fn test_maybe_uncertain_f64_try_from_effect_value_error() {
     let err = <MaybeUncertainF64 as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
         err.to_string()
-            .contains("Expected MaybeUncertainFloat(MaybeUncertainF64), found Deterministic(true)")
+            .contains("Expected MaybeUncertainFloat(MaybeUncertainF64), found Boolean(true)")
     );
 }
 
@@ -431,7 +432,7 @@ fn test_unit_try_from_effect_value_error() {
     let err = <() as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
         err.to_string()
-            .contains("Expected None, found Deterministic(true)")
+            .contains("Expected None, found Boolean(true)")
     );
 }
 

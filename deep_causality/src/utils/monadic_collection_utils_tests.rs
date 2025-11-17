@@ -315,9 +315,7 @@ fn test_aggregate_uncertain_no_uncertain_compatible_effects() {
     assert!(result.is_err());
     assert_eq!(
         result.unwrap_err(),
-        CausalityError(
-            "Unsupported type for uncertain aggregation: Deterministic(true)".to_string()
-        )
+        CausalityError("Unsupported type for uncertain aggregation: Boolean(true)".to_string())
     );
 }
 
@@ -437,11 +435,10 @@ fn test_aggregate_uncertain_empty_u_bools_after_filtering() {
     let logic = AggregateLogic::All;
     let threshold = Some(0.5f64);
     let result = aggregate_uncertain(&effects, &logic, threshold);
+    dbg!(&result);
     assert!(result.is_err());
     assert_eq!(
         result.unwrap_err(),
-        CausalityError(
-            "Unsupported type for uncertain aggregation: Deterministic(true)".to_string()
-        )
+        CausalityError("Unsupported type for uncertain aggregation: Boolean(true)".to_string())
     );
 }

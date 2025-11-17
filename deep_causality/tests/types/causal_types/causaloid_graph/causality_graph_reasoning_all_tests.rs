@@ -16,7 +16,7 @@ fn test_graph_evaluate_success() {
     let res = g.evaluate_shortest_path_between_causes(root_index, root_index, &effect);
     // dbg!(&res);
     assert!(res.is_ok());
-    // The root node returns Deterministic(true) because its causal function evaluates to true w.r.t. to effect
+    // The root node returns Boolean(true) because its causal function evaluates to true w.r.t. to effect
 }
 
 #[test]

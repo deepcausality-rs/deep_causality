@@ -33,7 +33,7 @@ fn test_display_none() {
 #[test]
 fn test_display_deterministic() {
     let value = EffectValue::Boolean(true);
-    assert_eq!(value.to_string(), "Deterministic(true)");
+    assert_eq!(value.to_string(), "Boolean(true)");
 }
 
 #[test]

@@ -28,18 +28,18 @@ pub fn get_test_causaloid() -> BaseCausaloid<NumericalValue, bool> {
     // The signature: CausalFn<I: IntoEffectValue, O: IntoEffectValue> = fn(value: I) -> Result<CausalFnOutput<O>, CausalityError>
     // IntoEffectValue is implemented by default for all primitive types and by all complex types supported
     // by PropagatingEffect. Notice, when you call causaloid.evaluate(&PropagatingEffect), the PropagatingEffect
-    // converts automatically into the matching NumericalValue via the IntoEffectValue default implementation. 
+    // converts automatically into the matching NumericalValue via the IntoEffectValue default implementation.
     fn causal_fn(obs: NumericalValue) -> Result<CausalFnOutput<bool>, CausalityError> {
         // the log is part of the CausalFnOutput.
         // When multiple causaloid are called in sequence, the logs are appended to the resulting
-        // propagating effect meaning the final result carries a full immutable history how it was produced. 
+        // propagating effect meaning the final result carries a full immutable history how it was produced.
         let mut log = CausalEffectLog::new();
         if obs.is_sign_negative() {
-            // At any point, you can short circuit and return an error, 
+            // At any point, you can short circuit and return an error,
             return Err(CausalityError("Observation is negative".into()));
         }
 
-        // Logic can be arbitrary as long as it produces the annotated return type. 
+        // Logic can be arbitrary as long as it produces the annotated return type.
         let threshold: NumericalValue = 0.75;
         let is_active = obs.ge(&threshold);
         log.add_entry(&format!(
@@ -47,9 +47,9 @@ pub fn get_test_causaloid() -> BaseCausaloid<NumericalValue, bool> {
             obs, threshold, is_active
         ));
 
-        // Log each relevant step 
+        // Log each relevant step
         log.add_entry("Ccausal function executed successfully");
-        // Return the final result and its log. 
+        // Return the final result and its log.
         Ok(CausalFnOutput::new(is_active, log))
     }
 

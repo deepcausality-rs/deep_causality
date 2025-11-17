@@ -52,7 +52,7 @@ fn test_evaluate_probabilistic_propagation() {
     assert!(!res.is_err()); // Check for no error
     assert_eq!(res.value, EffectValue::Probabilistic(1.0));
 
-    // Case 2: One fails (Deterministic(false) is treated as probability 0.0).
+    // Case 2: One fails (Boolean(false) is treated as probability 0.0).
     // The chain should short-circuit and return a cumulative probability of 0.0.
     let effect_fail = PropagatingEffect::from_numerical(0.1);
     let res = col.evaluate_collection(&effect_fail, &AggregateLogic::All, Some(0.5));

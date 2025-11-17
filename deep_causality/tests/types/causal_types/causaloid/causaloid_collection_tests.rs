@@ -109,8 +109,8 @@ fn test_explain_collection_success() {
     let explanation = res.explain(); // Original, correct
 
     // Assert: The explanation should contain the results from both sub-causaloids.
-    assert!(explanation.contains("Outgoing effect: Deterministic(true)")); // Changed assertion
-    assert!(explanation.contains("Outgoing effect: Deterministic(false)")); // Changed assertion
+    assert!(explanation.contains("Outgoing effect: Boolean(true)")); // Changed assertion
+    assert!(explanation.contains("Outgoing effect: Boolean(false)")); // Changed assertion
 }
 
 #[test]

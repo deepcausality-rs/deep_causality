@@ -54,7 +54,7 @@ fn test_eval_single_state_with_ethos_permissible_verdict() {
     let ethos = test_utils_csm::get_effect_ethos(true, impermissible); // Verified, Permissible
 
     let csm = CSM::new(&[(&state, &action)], Some((ethos, &["test_tag"])));
-    // we have to use Deterministic(false) b/c the causaloid inverts it to true, then the CSM evaluation starts.
+    // we have to use Boolean(false) b/c the causaloid inverts it to true, then the CSM evaluation starts.
     let res = csm.eval_single_state(1, &PropagatingEffect::from_boolean(false));
     dbg!(&res);
     assert!(res.is_ok());
@@ -75,7 +75,7 @@ fn test_eval_single_state_with_ethos_impermissible_verdict() {
     let ethos = test_utils_csm::get_effect_ethos(true, impermissible); // Verified, Permissible
 
     let csm = CSM::new(&[(&state, &action)], Some((ethos, &["test_tag"])));
-    // we have to use Deterministic(false) b/c the causaloid inverts it to true, then the CSM evaluation starts.
+    // we have to use Boolean(false) b/c the causaloid inverts it to true, then the CSM evaluation starts.
     let res = csm.eval_single_state(1, &PropagatingEffect::from_boolean(false));
     dbg!(&res);
     assert!(res.is_err());
@@ -126,7 +126,7 @@ fn test_eval_all_state_with_ethos_permissible_verdict() {
     let state = CausalState::new(
         1,
         1,
-        // we have to use Deterministic(false) b/c the causaloid inverts it to true, then the CSM evaluation starts.
+        // we have to use Boolean(false) b/c the causaloid inverts it to true, then the CSM evaluation starts.
         PropagatingEffect::from_boolean(false),
         test_utils_csm::get_test_causaloid(true),
         None,
@@ -147,7 +147,7 @@ fn test_eval_all_state_with_ethos_impermissible_verdict() {
     let state = CausalState::new(
         1,
         1,
-        // we have to use Deterministic(false) b/c the causaloid inverts it to true, then the CSM evaluation starts.
+        // we have to use Boolean(false) b/c the causaloid inverts it to true, then the CSM evaluation starts.
         PropagatingEffect::from_boolean(false),
         test_utils_csm::get_test_causaloid(true),
         None,
