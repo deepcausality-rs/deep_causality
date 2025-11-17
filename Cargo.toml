@@ -17,6 +17,7 @@ members = [
     "deep_causality_uncertain",
     "examples/tokio",
     "examples/starter",
+    "examples/epp_rcm",
     "ultragraph",
 ]
 

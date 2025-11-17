@@ -68,7 +68,7 @@ pub fn get_test_causaloid(
         ));
 
         // Log each relevant step
-        log.add_entry("Ccausal function executed successfully");
+        log.add_entry("Causal function executed successfully");
         // Return the final result and its log.
         Ok(CausalFnOutput::new(is_active, log))
     }
