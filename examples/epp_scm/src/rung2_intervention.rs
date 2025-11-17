@@ -3,62 +3,24 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::model;
 use deep_causality::*;
-
-fn get_smoking_causaloid() -> BaseCausaloid {
-    Causaloid::new(
-        1,
-        |effect| {
-            let nicotine_level = effect.as_numerical().unwrap_or(0.0);
-            Ok(PropagatingEffect::Deterministic(nicotine_level > 0.6))
-        },
-        "Smoking Status",
-    )
-}
-
-fn get_tar_causaloid() -> BaseCausaloid {
-    Causaloid::new(
-        2,
-        |effect| {
-            let is_smoking = effect.as_bool().unwrap_or(false);
-            Ok(PropagatingEffect::Deterministic(is_smoking))
-        },
-        "Tar in Lungs",
-    )
-}
-
-fn get_cancer_risk_causaloid() -> BaseCausaloid {
-    Causaloid::new(
-        3,
-        |effect| {
-            let has_tar = effect.as_bool().unwrap_or(false);
-            Ok(PropagatingEffect::Deterministic(has_tar))
-        },
-        "Cancer Risk",
-    )
-}
 
 pub fn run_rung2_intervention() {
     println!("--- Rung 2: Intervention ---");
     println!("Demonstrating an intervention: If high cancer risk is detected, prescribe therapy.");
 
     // 1. Setup Causal Model (same as Rung 1)
-    let mut graph = CausaloidGraph::new(1);
-    let smoke_idx = graph.add_causaloid(get_smoking_causaloid()).unwrap();
-    let tar_idx = graph.add_causaloid(get_tar_causaloid()).unwrap();
-    let cancer_idx = graph.add_causaloid(get_cancer_risk_causaloid()).unwrap();
-    graph.add_edge(smoke_idx, tar_idx).unwrap();
-    graph.add_edge(tar_idx, cancer_idx).unwrap();
-    graph.freeze();
+    let (graph, smoke_idx, cancer_idx) = model::get_causaloid_graph();
 
     // The causaloid representing the final effect we want to act upon.
     let final_risk_causaloid = graph.get_causaloid(cancer_idx).unwrap().clone();
 
     // 2. Define State and Action
     let high_cancer_risk_state = CausalState::new(
-        10,                                     // state ID
-        1,                                      // version
-        PropagatingEffect::Deterministic(true), // The data to evaluate against the causaloid
+        10,                                    // state ID
+        1,                                     // version
+        PropagatingEffect::from_boolean(true), // The data to evaluate against the causaloid
         final_risk_causaloid,
         None,
     );
@@ -78,10 +40,10 @@ pub fn run_rung2_intervention() {
 
     // 4. Execute and Intervene
     // We need to evaluate the full causal chain first to get the final effect.
-    let initial_effect = PropagatingEffect::Numerical(0.8);
-    let final_effect = graph
-        .evaluate_shortest_path_between_causes(smoke_idx, cancer_idx, &initial_effect)
-        .unwrap();
+    let initial_effect = PropagatingEffect::from_numerical(0.8);
+    let final_effect =
+        graph.evaluate_shortest_path_between_causes(smoke_idx, cancer_idx, &initial_effect);
+    assert!(final_effect.is_ok());
 
     // Now, use the final effect as input to the CSM.
     // The CSM will check if the `high_cancer_risk_state` is met by this effect.
