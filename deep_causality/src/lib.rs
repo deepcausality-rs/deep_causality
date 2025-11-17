@@ -105,7 +105,6 @@ pub use crate::traits::transferable::Transferable;
 // Types
 //
 // Causal types
-pub use crate::types::causal_types::causal_monad::{CausalEffectSystem, CausalMonad};
 pub use crate::types::causal_types::causal_type::CausaloidType;
 pub use crate::types::causal_types::causaloid::Causaloid;
 pub use crate::types::causal_types::causaloid_graph::CausaloidGraph;
@@ -162,6 +161,9 @@ pub use crate::types::model_types::assumption::Assumption;
 pub use crate::types::model_types::inference::Inference;
 pub use crate::types::model_types::model::Model;
 pub use crate::types::model_types::observation::Observation;
+// Monad types
+pub use crate::types::monad_types::causal_effect_system::CausalEffectSystem;
+pub use crate::types::monad_types::causal_monad::CausalMonad;
 // Reasoning types
 pub use crate::types::reasoning_types::aggregate_logic::AggregateLogic;
 pub use crate::types::reasoning_types::effect_log::CausalEffectLog;
