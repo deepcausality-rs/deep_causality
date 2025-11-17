@@ -84,7 +84,7 @@ where
         effect: &PropagatingEffect,
     ) -> Result<(), CsmError> {
         let is_active = match &effect.value {
-            EffectValue::Deterministic(val) => val,
+            EffectValue::Boolean(val) => val,
             EffectValue::UncertainBool(uncertain_bool) => &{
                 let result = if let Some(params) = state.uncertain_parameter() {
                     uncertain_bool.probability_exceeds(

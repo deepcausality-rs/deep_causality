@@ -76,12 +76,12 @@ fn test_collection_causaloid_evaluation() {
     assert!(causaloid.context().is_none());
 
     // Evaluate the collection-based causaloid.
-    let effect = PropagatingEffect::from_deterministic(true);
+    let effect = PropagatingEffect::from_boolean(true);
     let res = causaloid.evaluate(&effect);
     dbg!(&res);
 
     // The default aggregation for a collection is "true".
-    assert_eq!(res.value, EffectValue::Deterministic(true));
+    assert_eq!(res.value, EffectValue::Boolean(true));
 }
 
 #[test]
@@ -101,7 +101,7 @@ fn test_explain_collection_success() {
     );
 
     // Act: Evaluate the collection. Now both members will be evaluated.
-    let effect = PropagatingEffect::from_deterministic(false); // Changed to bool
+    let effect = PropagatingEffect::from_boolean(false); // Changed to bool
     let res = collection_causaloid.evaluate(&effect);
     dbg!(&res);
 
@@ -109,8 +109,8 @@ fn test_explain_collection_success() {
     let explanation = res.explain(); // Original, correct
 
     // Assert: The explanation should contain the results from both sub-causaloids.
-    assert!(explanation.contains("Outgoing effect: Deterministic(true)")); // Changed assertion
-    assert!(explanation.contains("Outgoing effect: Deterministic(false)")); // Changed assertion
+    assert!(explanation.contains("Outgoing effect: Boolean(true)")); // Changed assertion
+    assert!(explanation.contains("Outgoing effect: Boolean(false)")); // Changed assertion
 }
 
 #[test]
@@ -130,7 +130,7 @@ fn test_evaluate_collection_with_sub_evaluation_error() {
     );
 
     // Act
-    let effect = PropagatingEffect::from_deterministic(false); // Changed to bool
+    let effect = PropagatingEffect::from_boolean(false); // Changed to bool
     let res = collection_causaloid.evaluate(&effect);
     dbg!(&res);
 
@@ -157,10 +157,10 @@ fn test_evaluate_collection_without_true_effect() {
     );
 
     // Act
-    let effect = PropagatingEffect::from_deterministic(false); // Changed to bool
+    let effect = PropagatingEffect::from_boolean(false); // Changed to bool
     let res = collection_causaloid.evaluate(&effect);
     dbg!(&res);
 
     // Assert: Since no causaloid is true, the aggregated effect should be false.
-    assert_eq!(res.value, EffectValue::Deterministic(false));
+    assert_eq!(res.value, EffectValue::Boolean(false));
 }

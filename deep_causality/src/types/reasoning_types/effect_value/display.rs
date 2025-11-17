@@ -10,7 +10,7 @@ impl Display for EffectValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             EffectValue::None => write!(f, "None"),
-            EffectValue::Deterministic(b) => write!(f, "Deterministic({})", b),
+            EffectValue::Boolean(b) => write!(f, "Boolean({})", b),
             EffectValue::Number(n) => write!(f, "Number({})", n),
             EffectValue::Numerical(b) => write!(f, "Numerical({})", b),
             EffectValue::Probabilistic(n) => write!(f, "Probabilistic({})", n),

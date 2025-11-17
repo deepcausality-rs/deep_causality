@@ -34,7 +34,7 @@ fn test_eval() {
     let version = 1;
     let causaloid = test_utils::get_test_causaloid_deterministic(1);
 
-    // Case 1: Evaluation results in Deterministic(false)
+    // Case 1: Evaluation results in Boolean(false)
     let data_fail = PropagatingEffect::from_numerical(0.23f64);
     let cs1 = CausalState::new(id, version, data_fail, causaloid.clone(), None);
 
@@ -45,7 +45,7 @@ fn test_eval() {
     assert!(res.value.is_deterministic());
     assert!(!res.value.as_bool().unwrap());
 
-    // Case 2: Evaluation results in Deterministic(true)
+    // Case 2: Evaluation results in Boolean(true)
     let data_success = PropagatingEffect::from_numerical(0.93f64);
     let cs2 = CausalState::new(id, version, data_success, causaloid, None);
 

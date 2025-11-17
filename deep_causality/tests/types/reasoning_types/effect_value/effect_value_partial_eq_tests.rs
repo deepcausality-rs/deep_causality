@@ -24,19 +24,13 @@ impl Display for MyExternalType {
 #[test]
 fn test_eq_none() {
     assert_eq!(EffectValue::None, EffectValue::None);
-    assert_ne!(EffectValue::None, EffectValue::Deterministic(true));
+    assert_ne!(EffectValue::None, EffectValue::Boolean(true));
 }
 
 #[test]
 fn test_eq_deterministic() {
-    assert_eq!(
-        EffectValue::Deterministic(true),
-        EffectValue::Deterministic(true)
-    );
-    assert_ne!(
-        EffectValue::Deterministic(true),
-        EffectValue::Deterministic(false)
-    );
+    assert_eq!(EffectValue::Boolean(true), EffectValue::Boolean(true));
+    assert_ne!(EffectValue::Boolean(true), EffectValue::Boolean(false));
 }
 
 #[test]
@@ -195,9 +189,9 @@ fn test_eq_contextual_link() {
 #[test]
 fn test_eq_map() {
     let mut map1 = HashMap::new();
-    map1.insert(1, Box::new(PropagatingEffect::from_deterministic(true)));
+    map1.insert(1, Box::new(PropagatingEffect::from_boolean(true)));
     let mut map2 = HashMap::new();
-    map2.insert(2, Box::new(PropagatingEffect::from_deterministic(false)));
+    map2.insert(2, Box::new(PropagatingEffect::from_boolean(false)));
 
     assert_eq!(
         EffectValue::Map(map1.clone()),
@@ -208,8 +202,8 @@ fn test_eq_map() {
 
 #[test]
 fn test_eq_relay_to() {
-    let effect1 = Box::new(PropagatingEffect::from_deterministic(true));
-    let effect2 = Box::new(PropagatingEffect::from_deterministic(false));
+    let effect1 = Box::new(PropagatingEffect::from_boolean(true));
+    let effect2 = Box::new(PropagatingEffect::from_boolean(false));
 
     assert_eq!(
         EffectValue::RelayTo(1, effect1.clone()),

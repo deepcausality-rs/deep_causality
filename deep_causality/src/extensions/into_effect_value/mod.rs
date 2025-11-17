@@ -32,11 +32,11 @@ impl IntoEffectValue for EffectValue {
 // bool
 impl IntoEffectValue for bool {
     fn into_effect_value(self) -> EffectValue {
-        EffectValue::Deterministic(self)
+        EffectValue::Boolean(self)
     }
 
     fn try_from_effect_value(ev: EffectValue) -> Result<Self, CausalityError> {
-        if let EffectValue::Deterministic(b) = ev {
+        if let EffectValue::Boolean(b) = ev {
             Ok(b)
         } else {
             Err(CausalityError(format!(

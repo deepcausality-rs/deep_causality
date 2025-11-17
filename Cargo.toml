@@ -15,13 +15,24 @@ members = [
     "deep_causality_rand",
     "deep_causality_tensor",
     "deep_causality_uncertain",
-#    "examples/tokio",
     "ultragraph",
+    # Examples
+    "examples/case_study_icu_sepsis",
+    "examples/epp_cate",
+    "examples/epp_context",
+    "examples/epp_csm",
+    "examples/epp_csm_effect_ethos",
+    "examples/epp_dbn",
+    "examples/epp_granger",
+    "examples/epp_rcm",
+    "examples/epp_scm",
+    "examples/starter",
+    "examples/tokio",
 ]
 
 [workspace.package]
 edition = "2024"
-rust-version = "1.89.0"
+rust-version = "1.90.0"
 license = "MIT"
 
 [workspace.dependencies]

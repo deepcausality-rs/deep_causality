@@ -32,8 +32,8 @@ fn test_display_none() {
 
 #[test]
 fn test_display_deterministic() {
-    let value = EffectValue::Deterministic(true);
-    assert_eq!(value.to_string(), "Deterministic(true)");
+    let value = EffectValue::Boolean(true);
+    assert_eq!(value.to_string(), "Boolean(true)");
 }
 
 #[test]
@@ -136,14 +136,14 @@ fn test_display_contextual_link() {
 #[test]
 fn test_display_map() {
     let mut map = HashMap::new();
-    map.insert(1, Box::new(PropagatingEffect::from_deterministic(true)));
+    map.insert(1, Box::new(PropagatingEffect::from_boolean(true)));
     let value = EffectValue::Map(map.clone());
     assert_eq!(value.to_string(), format!("Map({:?})", map));
 }
 
 #[test]
 fn test_display_relay_to() {
-    let effect = Box::new(PropagatingEffect::from_deterministic(true));
+    let effect = Box::new(PropagatingEffect::from_boolean(true));
     let value = EffectValue::RelayTo(12, effect.clone());
     assert_eq!(
         value.to_string(),

@@ -8,7 +8,7 @@ use deep_causality::{CausalEffectLog, CausalityError, PropagatingEffect};
 #[test]
 fn test_display_delegates_to_debug() {
     // 1. Test with a simple value and no error/log.
-    let effect_simple = PropagatingEffect::from_deterministic(true);
+    let effect_simple = PropagatingEffect::from_boolean(true);
     let display_simple = format!("{}", effect_simple);
     let debug_simple = format!("{:?}", effect_simple);
     assert_eq!(display_simple, debug_simple);
@@ -21,7 +21,7 @@ fn test_display_delegates_to_debug() {
     assert_eq!(display_with_error, debug_with_error);
 
     // 3. Test with a value and a log.
-    let mut effect_with_log = PropagatingEffect::from_deterministic(false);
+    let mut effect_with_log = PropagatingEffect::from_boolean(false);
     let mut log = CausalEffectLog::new();
     log.add_entry("Test log entry");
     effect_with_log.logs = log;

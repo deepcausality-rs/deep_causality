@@ -28,13 +28,13 @@ fn test_evaluate_deterministic_propagation() {
     let res = col.evaluate_collection(&effect_success, &AggregateLogic::All, None);
     dbg!(&res);
     assert!(!res.is_err()); // Check for no error
-    assert_eq!(res.value, EffectValue::Deterministic(true));
+    assert_eq!(res.value, EffectValue::Boolean(true));
 
     // Case 2: One fails, chain should be deterministically false.
     let effect_fail = PropagatingEffect::from_numerical(0.1);
     let res = col.evaluate_collection(&effect_fail, &AggregateLogic::All, Some(1.0));
     assert!(!res.is_err()); // Check for no error
-    assert_eq!(res.value, EffectValue::Deterministic(false));
+    assert_eq!(res.value, EffectValue::Boolean(false));
 
     // Case 3: An incorrect input effect would trigger an error.
     let effect_fail = PropagatingEffect::from_contextual_link(1, 1); // Fixed argument count
@@ -52,7 +52,7 @@ fn test_evaluate_probabilistic_propagation() {
     assert!(!res.is_err()); // Check for no error
     assert_eq!(res.value, EffectValue::Probabilistic(1.0));
 
-    // Case 2: One fails (Deterministic(false) is treated as probability 0.0).
+    // Case 2: One fails (Boolean(false) is treated as probability 0.0).
     // The chain should short-circuit and return a cumulative probability of 0.0.
     let effect_fail = PropagatingEffect::from_numerical(0.1);
     let res = col.evaluate_collection(&effect_fail, &AggregateLogic::All, Some(0.5));

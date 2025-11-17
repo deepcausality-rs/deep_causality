@@ -9,7 +9,7 @@ impl PartialEq for EffectValue {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (EffectValue::None, EffectValue::None) => true,
-            (EffectValue::Deterministic(l0), EffectValue::Deterministic(r0)) => l0 == r0,
+            (EffectValue::Boolean(l0), EffectValue::Boolean(r0)) => l0 == r0,
             (EffectValue::Number(l0), EffectValue::Number(r0)) => l0 == r0,
             (EffectValue::Numerical(l0), EffectValue::Numerical(r0)) => l0 == r0,
             (EffectValue::Probabilistic(l0), EffectValue::Probabilistic(r0)) => l0 == r0,

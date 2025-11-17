@@ -44,7 +44,7 @@ pub(super) fn aggregate_deterministic(
     logic: &AggregateLogic,
 ) -> Result<EffectValue, CausalityError> {
     let bools: Result<Vec<bool>, _> = effects.iter().map(|e| match e {
-            EffectValue::Deterministic(b) => Ok(*b),
+            EffectValue::Boolean(b) => Ok(*b),
             _ => Err(CausalityError(format!("Deterministic aggregation requires all effects to be Deterministic, but found {:?}", e))),
         }).collect();
 
@@ -55,7 +55,7 @@ pub(super) fn aggregate_deterministic(
         AggregateLogic::None => bools.iter().all(|&b| !b),
         AggregateLogic::Some(k) => bools.iter().filter(|&&b| b).count() >= *k,
     };
-    Ok(EffectValue::Deterministic(final_bool))
+    Ok(EffectValue::Boolean(final_bool))
 }
 
 /// Strategy 2: Probabilistic Aggregation.
@@ -70,7 +70,7 @@ pub(super) fn aggregate_probabilistic(
     let probes: Result<Vec<f64>, _> = effects
         .iter()
         .map(|e| match e {
-            EffectValue::Deterministic(b) => Ok(if *b { 1.0 } else { 0.0 }),
+            EffectValue::Boolean(b) => Ok(if *b { 1.0 } else { 0.0 }),
             EffectValue::Probabilistic(p) => Ok(*p),
             EffectValue::Numerical(n) => Ok(*n),
             EffectValue::UncertainBool(ub) => {

@@ -5,7 +5,7 @@
 
 use deep_causality::{ActionError, CausalAction};
 
-pub fn get_smoke_alert_action() -> CausalAction {
+pub(crate) fn get_smoke_alert_action() -> CausalAction {
     let func = raise_smoke_alert;
     let descr = "Action that triggers the smoke alert";
     let version = 1;
@@ -18,7 +18,7 @@ pub fn get_smoke_alert_action() -> CausalAction {
     CausalAction::new(func, descr, version)
 }
 
-pub fn get_fire_alert_action() -> CausalAction {
+pub(crate) fn get_fire_alert_action() -> CausalAction {
     let func = raise_fire_alert;
     let descr = "Action that triggers the fire alert";
     let version = 1;
@@ -31,7 +31,7 @@ pub fn get_fire_alert_action() -> CausalAction {
     CausalAction::new(func, descr, version)
 }
 
-pub fn get_explosion_alert_action() -> CausalAction {
+pub(crate) fn get_explosion_alert_action() -> CausalAction {
     let func = raise_explosion_alert;
     let descr = "Action that triggers the explosion alert";
     let version = 1;

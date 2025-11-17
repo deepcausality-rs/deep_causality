@@ -7,11 +7,11 @@ use deep_causality::{CausalEffectLog, CausalityError, PropagatingEffect};
 
 #[test]
 fn test_explain_value_only() {
-    let effect = PropagatingEffect::from_deterministic(true);
+    let effect = PropagatingEffect::from_boolean(true);
     let explanation = effect.explain();
     dbg!(&explanation);
 
-    assert!(explanation.starts_with("Final Value: Deterministic(true)"));
+    assert!(explanation.starts_with("Final Value: Boolean(true)"));
     assert!(!explanation.contains("Error:"));
     assert!(!explanation.contains("--- Logs ---"));
 }
@@ -30,14 +30,14 @@ fn test_explain_with_error() {
 
 #[test]
 fn test_explain_with_log() {
-    let mut effect = PropagatingEffect::from_deterministic(false);
+    let mut effect = PropagatingEffect::from_boolean(false);
     let mut log = CausalEffectLog::new();
     log.add_entry("Test log entry");
     effect.logs = log;
     let explanation = effect.explain();
     dbg!(&explanation);
 
-    assert!(explanation.starts_with("Final Value: Deterministic(false)"));
+    assert!(explanation.starts_with("Final Value: Boolean(false)"));
     assert!(!explanation.contains("Error:"));
     assert!(explanation.contains("--- Logs ---"));
     assert!(explanation.contains("Test log entry"));

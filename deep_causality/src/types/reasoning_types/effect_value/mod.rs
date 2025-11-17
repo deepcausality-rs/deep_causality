@@ -33,7 +33,7 @@ pub enum EffectValue {
     /// Represents a simple boolean value. This effect propagates like any other,
     /// and its interpretation (e.g., whether it prunes a traversal) is left to the
     /// consuming logic or explicit error handling within Causaloids.
-    Deterministic(bool),
+    Boolean(bool),
     /// Represents a standard numeric value i.e. int, uint, float.
     Number(NumericValue),
     /// Represents a numerical measurement
@@ -67,10 +67,10 @@ pub enum EffectValue {
     /// causaloid within the graph. The `usize` is the target causaloid's index, and the `Box<CausalValue>`
     /// is the effect to be passed as input to that target causaloid. This enables adaptive reasoning.
     RelayTo(usize, Box<PropagatingEffect>),
+    /// A collection of named values, allowing for complex, structured data passing.
+    Map(HashMap<IdentificationValue, Box<PropagatingEffect>>),
+
     /// A container for any external, user-defined type that implements the `PropagatingValue` trait.
     /// This enables the causal system to be extended with custom data types.
     External(Box<dyn PropagatingValue>),
-
-    /// A collection of named values, allowing for complex, structured data passing.
-    Map(HashMap<IdentificationValue, Box<PropagatingEffect>>),
 }

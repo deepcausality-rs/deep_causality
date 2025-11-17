@@ -143,7 +143,7 @@ fn test_display() {
 #[test]
 fn test_from_effect_value() {
     // Deterministic
-    let effect_val = EffectValue::Deterministic(true);
+    let effect_val = EffectValue::Boolean(true);
     let action_param_val: ActionParameterValue = effect_val.into();
     assert_eq!(action_param_val, ActionParameterValue::Boolean(true));
 
@@ -200,7 +200,7 @@ fn test_from_effect_value() {
     );
 
     // Unsupported
-    let propagating_effect_val = PropagatingEffect::from_deterministic(true);
+    let propagating_effect_val = PropagatingEffect::from_boolean(true);
     let effect_val = EffectValue::RelayTo(32, Box::new(propagating_effect_val));
     let action_param_val: ActionParameterValue = effect_val.into();
     assert_eq!(
