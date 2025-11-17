@@ -24,7 +24,7 @@ impl Display for MyExternalType {
 fn test_from_bool() {
     let val = true;
     let effect: EffectValue = val.into();
-    assert_eq!(effect, EffectValue::Deterministic(true));
+    assert_eq!(effect, EffectValue::Boolean(true));
 }
 
 #[test]

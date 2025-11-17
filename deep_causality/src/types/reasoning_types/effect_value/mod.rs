@@ -33,7 +33,7 @@ pub enum EffectValue {
     /// Represents a simple boolean value. This effect propagates like any other,
     /// and its interpretation (e.g., whether it prunes a traversal) is left to the
     /// consuming logic or explicit error handling within Causaloids.
-    Deterministic(bool),
+    Boolean(bool),
     /// Represents a standard numeric value i.e. int, uint, float.
     Number(NumericValue),
     /// Represents a numerical measurement

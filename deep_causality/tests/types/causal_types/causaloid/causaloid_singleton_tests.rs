@@ -107,7 +107,7 @@ fn test_evaluate_singleton() {
     assert!(res.is_ok());
 
     let actual = res.value;
-    let expected = EffectValue::Deterministic(true);
+    let expected = EffectValue::Boolean(true);
     assert_eq!(actual, expected);
 }
 
@@ -145,12 +145,12 @@ fn test_evaluate_singleton_with_context() {
     // Evaluate with evidence that should result in true (1.5 >= 1.0)
     let effect_true = PropagatingEffect::from_numerical(1.5);
     let res_true = causaloid.evaluate(&effect_true);
-    assert_eq!(res_true.value, EffectValue::Deterministic(true));
+    assert_eq!(res_true.value, EffectValue::Boolean(true));
 
     // Evaluate with evidence that should result in false (0.5 < 1.0)
     let effect_false = PropagatingEffect::from_numerical(0.5);
     let res_false = causaloid.evaluate(&effect_false);
-    assert_eq!(res_false.value, EffectValue::Deterministic(false));
+    assert_eq!(res_false.value, EffectValue::Boolean(false));
 }
 
 #[test]

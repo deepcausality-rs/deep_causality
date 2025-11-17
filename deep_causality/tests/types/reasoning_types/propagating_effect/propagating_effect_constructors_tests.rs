@@ -13,16 +13,16 @@ use std::collections::HashMap;
 
 #[test]
 fn test_from_effect_value() {
-    let effect = PropagatingEffect::from_effect_value(EffectValue::Deterministic(true));
-    assert!(matches!(effect.value, EffectValue::Deterministic(true)));
+    let effect = PropagatingEffect::from_effect_value(EffectValue::Boolean(true));
+    assert!(matches!(effect.value, EffectValue::Boolean(true)));
     assert!(effect.is_ok());
     assert!(!effect.has_log());
 }
 
 #[test]
 fn test_from_deterministic() {
-    let effect = PropagatingEffect::from_deterministic(true);
-    assert!(matches!(effect.value, EffectValue::Deterministic(true)));
+    let effect = PropagatingEffect::from_boolean(true);
+    assert!(matches!(effect.value, EffectValue::Boolean(true)));
     assert!(effect.is_ok());
     assert!(!effect.has_log());
 }
@@ -154,7 +154,7 @@ fn test_from_map() {
 
 #[test]
 fn test_from_relay_to() {
-    let inner_effect = Box::new(PropagatingEffect::from_deterministic(true));
+    let inner_effect = Box::new(PropagatingEffect::from_boolean(true));
     let effect = PropagatingEffect::from_relay_to(1, inner_effect);
     assert!(matches!(effect.value, EffectValue::RelayTo(1, _)));
     assert!(effect.is_ok());

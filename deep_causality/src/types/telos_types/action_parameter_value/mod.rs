@@ -22,7 +22,7 @@ pub enum ActionParameterValue {
 impl From<EffectValue> for ActionParameterValue {
     fn from(effect_value: EffectValue) -> Self {
         match effect_value {
-            EffectValue::Deterministic(b) => ActionParameterValue::Boolean(b),
+            EffectValue::Boolean(b) => ActionParameterValue::Boolean(b),
             EffectValue::Numerical(n) => ActionParameterValue::Number(n),
             EffectValue::Probabilistic(p) => ActionParameterValue::Number(p),
             EffectValue::UncertainBool(u) => ActionParameterValue::Boolean(u.value()),

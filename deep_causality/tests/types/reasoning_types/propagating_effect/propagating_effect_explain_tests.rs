@@ -7,7 +7,7 @@ use deep_causality::{CausalEffectLog, CausalityError, PropagatingEffect};
 
 #[test]
 fn test_explain_value_only() {
-    let effect = PropagatingEffect::from_deterministic(true);
+    let effect = PropagatingEffect::from_boolean(true);
     let explanation = effect.explain();
     dbg!(&explanation);
 
@@ -30,7 +30,7 @@ fn test_explain_with_error() {
 
 #[test]
 fn test_explain_with_log() {
-    let mut effect = PropagatingEffect::from_deterministic(false);
+    let mut effect = PropagatingEffect::from_boolean(false);
     let mut log = CausalEffectLog::new();
     log.add_entry("Test log entry");
     effect.logs = log;

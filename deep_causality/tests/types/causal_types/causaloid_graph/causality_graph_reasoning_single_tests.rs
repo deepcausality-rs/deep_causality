@@ -18,7 +18,7 @@ fn test_evaluate_single_cause_success() {
     let res = g.evaluate_single_cause(index, &effect);
     dbg!(&res);
     assert!(res.is_ok());
-    assert_eq!(res.value, EffectValue::Deterministic(true));
+    assert_eq!(res.value, EffectValue::Boolean(true));
 }
 
 #[test]
@@ -51,7 +51,7 @@ fn test_evaluate_single_eval_error() {
         .expect("Failed to add causaloid");
     g.freeze(); // Reasoning requires a frozen graph
 
-    let effect = PropagatingEffect::from_deterministic(false);
+    let effect = PropagatingEffect::from_boolean(false);
     let res = g.evaluate_single_cause(index, &effect);
     dbg!(&res);
 

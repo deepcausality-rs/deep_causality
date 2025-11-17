@@ -12,7 +12,7 @@ use deep_causality_uncertain::{
 
 impl From<bool> for EffectValue {
     fn from(b: bool) -> Self {
-        EffectValue::Deterministic(b)
+        EffectValue::Boolean(b)
     }
 }
 

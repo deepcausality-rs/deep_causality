@@ -15,12 +15,12 @@ use deep_causality_uncertain::{
 fn test_bool_into_effect_value() {
     let b = true;
     let ev: EffectValue = b.into_effect_value();
-    assert_eq!(ev, EffectValue::Deterministic(true));
+    assert_eq!(ev, EffectValue::Boolean(true));
 }
 
 #[test]
 fn test_bool_try_from_effect_value_success() {
-    let ev = EffectValue::Deterministic(false);
+    let ev = EffectValue::Boolean(false);
     let b: bool = <bool as IntoEffectValue>::try_from_effect_value(ev).unwrap();
     assert!(!b);
 }
@@ -68,7 +68,7 @@ fn test_f64_try_from_effect_value_success() {
 
 #[test]
 fn test_f64_try_from_effect_value_error() {
-    let ev = EffectValue::Deterministic(true);
+    let ev = EffectValue::Boolean(true);
     let err = <f64 as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
         err.to_string()
@@ -103,7 +103,7 @@ fn test_u64_try_from_effect_value_error_wrong_numeric_type() {
 
 #[test]
 fn test_u64_try_from_effect_value_error_wrong_effect_value_type() {
-    let ev = EffectValue::Deterministic(true);
+    let ev = EffectValue::Boolean(true);
     let err = <u64 as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
         err.to_string()
@@ -128,7 +128,7 @@ fn test_numeric_value_try_from_effect_value_success() {
 
 #[test]
 fn test_numeric_value_try_from_effect_value_error() {
-    let ev = EffectValue::Deterministic(true);
+    let ev = EffectValue::Boolean(true);
     let err = <NumericValue as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
         err.to_string()
@@ -157,7 +157,7 @@ fn test_causal_tensor_f64_try_from_effect_value_success() {
 
 #[test]
 fn test_causal_tensor_f64_try_from_effect_value_error() {
-    let ev = EffectValue::Deterministic(true);
+    let ev = EffectValue::Boolean(true);
     let err = <CausalTensor<f64> as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
         err.to_string()
@@ -183,7 +183,7 @@ fn test_complex_f64_try_from_effect_value_success() {
 
 #[test]
 fn test_complex_f64_try_from_effect_value_error() {
-    let ev = EffectValue::Deterministic(true);
+    let ev = EffectValue::Boolean(true);
     let err = <Complex<f64> as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
         err.to_string()
@@ -222,7 +222,7 @@ fn test_causal_tensor_complex_f64_try_from_effect_value_success() {
 
 #[test]
 fn test_causal_tensor_complex_f64_try_from_effect_value_error() {
-    let ev = EffectValue::Deterministic(true);
+    let ev = EffectValue::Boolean(true);
     let err =
         <CausalTensor<Complex<f64>> as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
@@ -253,7 +253,7 @@ fn test_quaternion_f64_try_from_effect_value_success() {
 
 #[test]
 fn test_quaternion_f64_try_from_effect_value_error() {
-    let ev = EffectValue::Deterministic(true);
+    let ev = EffectValue::Boolean(true);
     let err = <Quaternion<f64> as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
         err.to_string()
@@ -284,7 +284,7 @@ fn test_causal_tensor_quaternion_f64_try_from_effect_value_success() {
 
 #[test]
 fn test_causal_tensor_quaternion_f64_try_from_effect_value_error() {
-    let ev = EffectValue::Deterministic(true);
+    let ev = EffectValue::Boolean(true);
     let err =
         <CausalTensor<Quaternion<f64>> as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(err.to_string().contains(
@@ -313,7 +313,7 @@ fn test_uncertain_bool_try_from_effect_value_success() {
 
 #[test]
 fn test_uncertain_bool_try_from_effect_value_error() {
-    let ev = EffectValue::Deterministic(true);
+    let ev = EffectValue::Boolean(true);
     let err = <UncertainBool as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
         err.to_string()
@@ -342,7 +342,7 @@ fn test_uncertain_f64_try_from_effect_value_success() {
 
 #[test]
 fn test_uncertain_f64_try_from_effect_value_error() {
-    let ev = EffectValue::Deterministic(true);
+    let ev = EffectValue::Boolean(true);
     let err = <UncertainF64 as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
         err.to_string()
@@ -372,7 +372,7 @@ fn test_maybe_uncertain_bool_try_from_effect_value_success() {
 
 #[test]
 fn test_maybe_uncertain_bool_try_from_effect_value_error() {
-    let ev = EffectValue::Deterministic(true);
+    let ev = EffectValue::Boolean(true);
     let err = <MaybeUncertainBool as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
         err.to_string()
@@ -402,7 +402,7 @@ fn test_maybe_uncertain_f64_try_from_effect_value_success() {
 
 #[test]
 fn test_maybe_uncertain_f64_try_from_effect_value_error() {
-    let ev = EffectValue::Deterministic(true);
+    let ev = EffectValue::Boolean(true);
     let err = <MaybeUncertainF64 as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
         err.to_string()
@@ -427,7 +427,7 @@ fn test_unit_try_from_effect_value_success() {
 
 #[test]
 fn test_unit_try_from_effect_value_error() {
-    let ev = EffectValue::Deterministic(true);
+    let ev = EffectValue::Boolean(true);
     let err = <() as IntoEffectValue>::try_from_effect_value(ev).unwrap_err();
     assert!(
         err.to_string()
@@ -438,7 +438,7 @@ fn test_unit_try_from_effect_value_error() {
 // Test for EffectValue
 #[test]
 fn test_effect_value_into_effect_value() {
-    let ev_original = EffectValue::Deterministic(true);
+    let ev_original = EffectValue::Boolean(true);
     let ev_converted: EffectValue = ev_original.clone().into_effect_value();
     assert_eq!(ev_converted, ev_original);
 }

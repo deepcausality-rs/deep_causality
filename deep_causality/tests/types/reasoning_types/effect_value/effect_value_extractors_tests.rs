@@ -34,7 +34,7 @@ macro_rules! test_extractor {
     };
 }
 
-test_extractor!(test_as_bool, Deterministic, true, as_bool, true);
+test_extractor!(test_as_bool, Boolean, true, as_bool, true);
 test_extractor!(
     test_as_probabilistic,
     Probabilistic,
@@ -154,7 +154,7 @@ fn test_as_contextual_link() {
 #[test]
 fn test_as_map() {
     let mut map = HashMap::new();
-    map.insert(1, Box::new(PropagatingEffect::from_deterministic(true)));
+    map.insert(1, Box::new(PropagatingEffect::from_boolean(true)));
     let effect = EffectValue::Map(map.clone());
     assert_eq!(effect.as_map(), Some(&map));
     let non_effect = EffectValue::None;
@@ -164,7 +164,7 @@ fn test_as_map() {
 #[test]
 fn test_as_relay_to() {
     let target = 42;
-    let inner_effect = PropagatingEffect::from_deterministic(true);
+    let inner_effect = PropagatingEffect::from_boolean(true);
     let effect = EffectValue::RelayTo(target, Box::new(inner_effect.clone()));
     assert_eq!(effect.as_relay_to(), Some((&target, &inner_effect)));
     let non_effect = EffectValue::None;

@@ -16,7 +16,7 @@ use std::collections::HashMap;
 impl EffectValue {
     pub fn as_bool(&self) -> Option<bool> {
         match self {
-            EffectValue::Deterministic(b) => Some(*b),
+            EffectValue::Boolean(b) => Some(*b),
             _ => None,
         }
     }

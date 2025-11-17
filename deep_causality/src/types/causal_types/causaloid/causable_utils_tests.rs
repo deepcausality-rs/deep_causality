@@ -40,7 +40,7 @@ fn test_context_causal_fn(
 
 #[test]
 fn test_convert_input_success() {
-    let effect_val = EffectValue::Deterministic(true);
+    let effect_val = EffectValue::Boolean(true);
     let id = 1;
     let result = convert_input::<bool>(effect_val, id);
 
@@ -234,7 +234,7 @@ fn test_convert_output_bool() {
     let result = convert_output(output_val, id);
 
     assert!(result.is_ok());
-    assert_eq!(result.value, EffectValue::Deterministic(true));
+    assert_eq!(result.value, EffectValue::Boolean(true));
     assert!(!result.logs.is_empty());
     let log_str = result.logs.to_string();
     assert!(log_str.contains("Causaloid 6: Outgoing effect: Deterministic(true)"));

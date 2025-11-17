@@ -10,7 +10,7 @@ impl EffectValue {
     }
 
     pub fn is_deterministic(&self) -> bool {
-        matches!(self, EffectValue::Deterministic(_))
+        matches!(self, EffectValue::Boolean(_))
     }
 
     pub fn is_number(&self) -> bool {

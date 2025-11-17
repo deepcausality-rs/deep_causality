@@ -30,7 +30,7 @@ fn test_is_none() {
 
 #[test]
 fn test_is_deterministic() {
-    let effect = EffectValue::Deterministic(true);
+    let effect = EffectValue::Boolean(true);
     assert!(effect.is_deterministic());
     assert!(!effect.is_none());
 }
@@ -138,7 +138,7 @@ fn test_is_contextual_link() {
 #[test]
 fn test_is_map() {
     let mut map = HashMap::new();
-    map.insert(1, Box::new(PropagatingEffect::from_deterministic(true)));
+    map.insert(1, Box::new(PropagatingEffect::from_boolean(true)));
     let effect = EffectValue::Map(map);
     assert!(effect.is_map());
     assert!(!effect.is_none());
@@ -146,7 +146,7 @@ fn test_is_map() {
 
 #[test]
 fn test_is_relay_to() {
-    let effect = EffectValue::RelayTo(12, Box::new(PropagatingEffect::from_deterministic(true)));
+    let effect = EffectValue::RelayTo(12, Box::new(PropagatingEffect::from_boolean(true)));
     assert!(effect.is_relay_to());
     assert!(!effect.is_none());
 }

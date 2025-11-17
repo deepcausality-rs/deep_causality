@@ -27,7 +27,7 @@ fn test_aggregate_effects_empty_collection() {
 fn test_aggregate_effects_uncertain_strategy() {
     let effects = vec![
         EffectValue::UncertainBool(UncertainBool::point(true)),
-        EffectValue::Deterministic(false),
+        EffectValue::Boolean(false),
     ];
     let logic = AggregateLogic::Any;
     let threshold = Some(0.5f64);
@@ -38,10 +38,7 @@ fn test_aggregate_effects_uncertain_strategy() {
 
 #[test]
 fn test_aggregate_effects_probabilistic_strategy() {
-    let effects = vec![
-        EffectValue::Probabilistic(0.8),
-        EffectValue::Deterministic(true),
-    ];
+    let effects = vec![EffectValue::Probabilistic(0.8), EffectValue::Boolean(true)];
     let logic = AggregateLogic::All;
     let threshold = Some(0.5f64);
     let result = aggregate_effects(effects, &logic, threshold).unwrap();
@@ -50,10 +47,7 @@ fn test_aggregate_effects_probabilistic_strategy() {
 
 #[test]
 fn test_aggregate_effects_numerical_strategy() {
-    let effects = vec![
-        EffectValue::Numerical(0.7),
-        EffectValue::Deterministic(true),
-    ];
+    let effects = vec![EffectValue::Numerical(0.7), EffectValue::Boolean(true)];
     let logic = AggregateLogic::All;
     let threshold = Some(0.5f64);
     let result = aggregate_effects(effects, &logic, threshold).unwrap();
@@ -62,115 +56,91 @@ fn test_aggregate_effects_numerical_strategy() {
 
 #[test]
 fn test_aggregate_effects_deterministic_strategy() {
-    let effects = vec![
-        EffectValue::Deterministic(true),
-        EffectValue::Deterministic(false),
-    ];
+    let effects = vec![EffectValue::Boolean(true), EffectValue::Boolean(false)];
     let logic = AggregateLogic::Any;
     let threshold = Some(0.5f64);
     let result = aggregate_effects(effects, &logic, threshold).unwrap();
-    assert!(matches!(result, EffectValue::Deterministic(_)));
-    assert_eq!(result, EffectValue::Deterministic(true));
+    assert!(matches!(result, EffectValue::Boolean(_)));
+    assert_eq!(result, EffectValue::Boolean(true));
 }
 
 // --- Deterministic Aggregation Tests ---
 
 #[test]
 fn test_aggregate_deterministic_all_true() {
-    let effects = vec![
-        EffectValue::Deterministic(true),
-        EffectValue::Deterministic(true),
-    ];
+    let effects = vec![EffectValue::Boolean(true), EffectValue::Boolean(true)];
     let logic = AggregateLogic::All;
     let result = aggregate_deterministic(&effects, &logic).unwrap();
-    assert_eq!(result, EffectValue::Deterministic(true));
+    assert_eq!(result, EffectValue::Boolean(true));
 }
 
 #[test]
 fn test_aggregate_deterministic_all_false() {
-    let effects = vec![
-        EffectValue::Deterministic(true),
-        EffectValue::Deterministic(false),
-    ];
+    let effects = vec![EffectValue::Boolean(true), EffectValue::Boolean(false)];
     let logic = AggregateLogic::All;
     let result = aggregate_deterministic(&effects, &logic).unwrap();
-    assert_eq!(result, EffectValue::Deterministic(false));
+    assert_eq!(result, EffectValue::Boolean(false));
 }
 
 #[test]
 fn test_aggregate_deterministic_any_true() {
-    let effects = vec![
-        EffectValue::Deterministic(false),
-        EffectValue::Deterministic(true),
-    ];
+    let effects = vec![EffectValue::Boolean(false), EffectValue::Boolean(true)];
     let logic = AggregateLogic::Any;
     let result = aggregate_deterministic(&effects, &logic).unwrap();
-    assert_eq!(result, EffectValue::Deterministic(true));
+    assert_eq!(result, EffectValue::Boolean(true));
 }
 
 #[test]
 fn test_aggregate_deterministic_any_false() {
-    let effects = vec![
-        EffectValue::Deterministic(false),
-        EffectValue::Deterministic(false),
-    ];
+    let effects = vec![EffectValue::Boolean(false), EffectValue::Boolean(false)];
     let logic = AggregateLogic::Any;
     let result = aggregate_deterministic(&effects, &logic).unwrap();
-    assert_eq!(result, EffectValue::Deterministic(false));
+    assert_eq!(result, EffectValue::Boolean(false));
 }
 
 #[test]
 fn test_aggregate_deterministic_none_true() {
-    let effects = vec![
-        EffectValue::Deterministic(false),
-        EffectValue::Deterministic(false),
-    ];
+    let effects = vec![EffectValue::Boolean(false), EffectValue::Boolean(false)];
     let logic = AggregateLogic::None;
     let result = aggregate_deterministic(&effects, &logic).unwrap();
-    assert_eq!(result, EffectValue::Deterministic(true));
+    assert_eq!(result, EffectValue::Boolean(true));
 }
 
 #[test]
 fn test_aggregate_deterministic_none_false() {
-    let effects = vec![
-        EffectValue::Deterministic(true),
-        EffectValue::Deterministic(false),
-    ];
+    let effects = vec![EffectValue::Boolean(true), EffectValue::Boolean(false)];
     let logic = AggregateLogic::None;
     let result = aggregate_deterministic(&effects, &logic).unwrap();
-    assert_eq!(result, EffectValue::Deterministic(false));
+    assert_eq!(result, EffectValue::Boolean(false));
 }
 
 #[test]
 fn test_aggregate_deterministic_some_true() {
     let effects = vec![
-        EffectValue::Deterministic(true),
-        EffectValue::Deterministic(false),
-        EffectValue::Deterministic(true),
+        EffectValue::Boolean(true),
+        EffectValue::Boolean(false),
+        EffectValue::Boolean(true),
     ];
     let logic = AggregateLogic::Some(2);
     let result = aggregate_deterministic(&effects, &logic).unwrap();
-    assert_eq!(result, EffectValue::Deterministic(true));
+    assert_eq!(result, EffectValue::Boolean(true));
 }
 
 #[test]
 fn test_aggregate_deterministic_some_false() {
     let effects = vec![
-        EffectValue::Deterministic(true),
-        EffectValue::Deterministic(false),
-        EffectValue::Deterministic(false),
+        EffectValue::Boolean(true),
+        EffectValue::Boolean(false),
+        EffectValue::Boolean(false),
     ];
     let logic = AggregateLogic::Some(2);
     let result = aggregate_deterministic(&effects, &logic).unwrap();
-    assert_eq!(result, EffectValue::Deterministic(false));
+    assert_eq!(result, EffectValue::Boolean(false));
 }
 
 #[test]
 fn test_aggregate_deterministic_error_unsupported_type() {
-    let effects = vec![
-        EffectValue::Deterministic(true),
-        EffectValue::Probabilistic(0.5),
-    ];
+    let effects = vec![EffectValue::Boolean(true), EffectValue::Probabilistic(0.5)];
     let logic = AggregateLogic::All;
     let result = aggregate_deterministic(&effects, &logic);
     assert!(result.is_err());
@@ -248,10 +218,7 @@ fn test_aggregate_probabilistic_some_false() {
 
 #[test]
 fn test_aggregate_probabilistic_with_deterministic() {
-    let effects = vec![
-        EffectValue::Deterministic(true),
-        EffectValue::Probabilistic(0.5),
-    ];
+    let effects = vec![EffectValue::Boolean(true), EffectValue::Probabilistic(0.5)];
     let logic = AggregateLogic::All;
     let threshold = Some(0.5f64);
     let result = aggregate_probabilistic(&effects, &logic, threshold).unwrap();
@@ -341,7 +308,7 @@ fn test_aggregate_uncertain_missing_threshold() {
 
 #[test]
 fn test_aggregate_uncertain_no_uncertain_compatible_effects() {
-    let effects = vec![EffectValue::Deterministic(true)];
+    let effects = vec![EffectValue::Boolean(true)];
     let logic = AggregateLogic::All;
     let threshold = Some(0.5f64);
     let result = aggregate_uncertain(&effects, &logic, threshold);
@@ -466,10 +433,7 @@ fn test_aggregate_uncertain_error_unsupported_type() {
 
 #[test]
 fn test_aggregate_uncertain_empty_u_bools_after_filtering() {
-    let effects = vec![
-        EffectValue::Deterministic(true),
-        EffectValue::Numerical(1.0),
-    ];
+    let effects = vec![EffectValue::Boolean(true), EffectValue::Numerical(1.0)];
     let logic = AggregateLogic::All;
     let threshold = Some(0.5f64);
     let result = aggregate_uncertain(&effects, &logic, threshold);

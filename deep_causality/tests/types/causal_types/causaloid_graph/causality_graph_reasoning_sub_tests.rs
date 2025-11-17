@@ -40,12 +40,12 @@ fn test_evaluate_subgraph_from_cause() {
     g.freeze();
 
     // 2. Evaluate a subgraph starting from node A. This should activate nodes A and B.
-    let effect = PropagatingEffect::from_deterministic(true);
+    let effect = PropagatingEffect::from_boolean(true);
     let res = g.evaluate_subgraph_from_cause(idx_a, &effect);
     dbg!(&res);
     assert!(res.is_ok());
     // A evaluates from Boolean true to Boolean false;
     // B evaluates from Boolean false to Boolean true;
     // Thus the final effect is Deterministic(true)
-    assert_eq!(res.value, EffectValue::Deterministic(true));
+    assert_eq!(res.value, EffectValue::Boolean(true));
 }

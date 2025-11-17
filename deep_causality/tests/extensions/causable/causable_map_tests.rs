@@ -79,13 +79,13 @@ fn test_evaluate_deterministic_propagation() {
     let effect_success = PropagatingEffect::from_numerical(0.99);
     let res = map.evaluate_collection(&effect_success, &AggregateLogic::All, None);
     assert!(!res.is_err());
-    assert_eq!(res.value, EffectValue::Deterministic(true));
+    assert_eq!(res.value, EffectValue::Boolean(true));
 
     // Case 2: One fails, chain should be deterministically false.
     let effect_fail = PropagatingEffect::from_numerical(0.1);
     let res = map.evaluate_collection(&effect_fail, &AggregateLogic::All, None);
     assert!(!res.is_err());
-    assert_eq!(res.value, EffectValue::Deterministic(false));
+    assert_eq!(res.value, EffectValue::Boolean(false));
 }
 
 #[test]

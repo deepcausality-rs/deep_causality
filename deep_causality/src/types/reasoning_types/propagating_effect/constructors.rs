@@ -34,8 +34,8 @@ impl PropagatingEffect {
     /// ```
     /// use deep_causality::{PropagatingEffect, EffectValue};
     ///
-    /// let effect = PropagatingEffect::from_effect_value(EffectValue::Deterministic(true));
-    /// assert!(matches!(effect.value, EffectValue::Deterministic(true)));
+    /// let effect = PropagatingEffect::from_effect_value(EffectValue::Boolean(true));
+    /// assert!(matches!(effect.value, EffectValue::Boolean(true)));
     /// ```
     pub fn from_effect_value(effect_value: EffectValue) -> Self {
         CausalMonad::pure(effect_value)
@@ -57,11 +57,11 @@ impl PropagatingEffect {
     /// use deep_causality::PropagatingEffect;
     /// use deep_causality::EffectValue;
     ///
-    /// let effect = PropagatingEffect::from_deterministic(true);
-    /// assert!(matches!(effect.value, EffectValue::Deterministic(true)));
+    /// let effect = PropagatingEffect::from_boolean(true);
+    /// assert!(matches!(effect.value, EffectValue::Boolean(true)));
     /// ```
-    pub fn from_deterministic(deterministic: bool) -> Self {
-        CausalMonad::pure(EffectValue::Deterministic(deterministic))
+    pub fn from_boolean(boolean: bool) -> Self {
+        CausalMonad::pure(EffectValue::Boolean(boolean))
     }
 
     /// Creates a new `PropagatingEffect` of the `Numerical` variant.
