@@ -83,18 +83,17 @@ fn main() {
 
         // --- Evaluate Potential Outcomes ---
         // The input effect is the patient's initial BP.
-        let input_effect = PropagatingEffect::Numerical(initial_bp);
+        let input_effect = PropagatingEffect::from_numerical(initial_bp);
 
-        let y1_effect = treatment_causaloid
-            .evaluate(&input_effect)
-            .unwrap()
-            .as_numerical()
-            .unwrap();
-        let y0_effect = control_causaloid
-            .evaluate(&input_effect)
-            .unwrap()
-            .as_numerical()
-            .unwrap();
+        let y1_res = treatment_causaloid.evaluate(&input_effect);
+        assert!(y1_res.is_ok());
+
+        let y1_effect = y1_res.value.as_numerical().unwrap();
+
+        let y0_res = control_causaloid.evaluate(&input_effect);
+        assert!(y0_res.is_ok());
+
+        let y0_effect = y0_res.value.as_numerical().unwrap();
 
         let y1 = initial_bp + y1_effect; // Potential outcome if treated
         let y0 = initial_bp + y0_effect; // Potential outcome if not treated
@@ -120,9 +119,10 @@ fn main() {
 /// The causal logic for the drug's effect.
 /// This function checks the context to see if the drug was administered and returns the effect on blood pressure.
 fn drug_effect_logic(
-    _effect: &PropagatingEffect, // We don't need the incoming effect for this simple model
+    _effect: EffectValue, // We don't need the incoming effect for this simple model
     context: &Arc<RwLock<BaseContext>>,
-) -> Result<PropagatingEffect, CausalityError> {
+) -> Result<CausalFnOutput<NumericalValue>, CausalityError> {
+    let log = CausalEffectLog::new();
     let mut drug_administered = false;
 
     let ctx = context.read().unwrap();
@@ -141,10 +141,10 @@ fn drug_effect_logic(
 
     if drug_administered {
         // If the drug was given, it causes a 10-point drop in blood pressure.
-        Ok(PropagatingEffect::Numerical(-10.0))
+        Ok(CausalFnOutput::new(-10.0, log))
     } else {
         // If no drug was given, there is no effect.
-        Ok(PropagatingEffect::Numerical(0.0))
+        Ok(CausalFnOutput::new(0.0, log))
     }
 }
 

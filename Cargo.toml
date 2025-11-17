@@ -17,14 +17,15 @@ members = [
     "deep_causality_uncertain",
     "ultragraph",
     # Examples
-    "examples/tokio",
-    "examples/starter",
-    "examples/epp_rcm",
-    "examples/epp_granger",
-    "examples/epp_dbn",
-    "examples/epp_csm_effect_ethos",
-    "examples/epp_csm",
+    "examples/epp_cate",
     "examples/epp_context",
+    "examples/epp_csm",
+    "examples/epp_csm_effect_ethos",
+    "examples/epp_dbn",
+    "examples/epp_granger",
+    "examples/epp_rcm",
+    "examples/starter",
+    "examples/tokio",
 ]
 
 [workspace.package]
