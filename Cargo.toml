@@ -19,6 +19,7 @@ members = [
     "examples/starter",
     "examples/epp_rcm",
     "examples/epp_granger",
+    "examples/epp_dbn",
     "ultragraph",
 ]
 
