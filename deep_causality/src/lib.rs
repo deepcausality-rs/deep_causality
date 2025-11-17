@@ -84,6 +84,8 @@ pub use crate::traits::indexable::time_indexable::TimeIndexable;
 // Inferable Traits
 pub use crate::traits::inferable::Inferable;
 pub use crate::traits::inferable::InferableReasoning;
+// Intervenable Trait
+pub use crate::traits::intervenable::Intervenable;
 // Observable Traits
 pub use crate::traits::observable::Observable;
 pub use crate::traits::observable::ObservableReasoning;

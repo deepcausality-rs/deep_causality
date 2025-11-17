@@ -40,6 +40,7 @@
 //! This design ensures that complex causal reasoning flows can be expressed clearly,
 //! with built-in error handling and comprehensive logging, adhering to functional
 //! programming principles within a performant Rust environment.
+use crate::traits::intervenable::Intervenable;
 use crate::{CausalEffectLog, CausalEffectSystem, CausalPropagatingEffect};
 use deep_causality_haft::{Effect3, Functor, HKT3, MonadEffect3};
 
@@ -135,5 +136,38 @@ where
         combined_logs.append(&mut next_effect.logs);
         next_effect.logs = combined_logs;
         next_effect
+    }
+}
+
+impl Intervenable<CausalEffectSystem> for CausalMonad {
+    fn intervene<T>(
+        effect: CausalPropagatingEffect<
+            T,
+            <CausalEffectSystem as Effect3>::Fixed1,
+            <CausalEffectSystem as Effect3>::Fixed2,
+        >,
+        new_value: T,
+    ) -> CausalPropagatingEffect<
+        T,
+        <CausalEffectSystem as Effect3>::Fixed1,
+        <CausalEffectSystem as Effect3>::Fixed2,
+    >
+    where
+        T: std::fmt::Debug, // Add Debug bound to log the new value
+    {
+        // 1. Preserve the incoming logs and add a new entry for the intervention.
+        let mut new_logs = effect.logs;
+        let log_message = format!("Intervention: Value replaced with {:?}", new_value);
+        new_logs.add_entry(&log_message);
+
+        // 2. Construct the new effect.
+        CausalPropagatingEffect {
+            // The value is replaced with the intervention value.
+            value: new_value,
+            // The error state is preserved.
+            error: effect.error,
+            // The updated logs are carried forward.
+            logs: new_logs,
+        }
     }
 }
