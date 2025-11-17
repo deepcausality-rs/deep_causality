@@ -63,9 +63,10 @@ fn get_drug_effect_causaloid() -> RRMCausaloid {
                 (is_drug_administered, initial_bp)
             }
             _ => {
-                return Err(CausalityError(
-                    format!("Expected Map EffectValue as input, but got {}", &effect),
-                ));
+                return Err(CausalityError(format!(
+                    "Expected Map EffectValue as input, but got {}",
+                    &effect
+                )));
             }
         };
 
@@ -138,9 +139,10 @@ fn get_final_bp_causaloid() -> RRMCausaloid {
                     )
                 })?,
             _ => {
-                return Err(CausalityError(
-                    format!("Expected Map EffectValue as input, but got {}", &effect),
-                ));
+                return Err(CausalityError(format!(
+                    "Expected Map EffectValue as input, but got {}",
+                    &effect
+                )));
             }
         };
         log.add_entry(format!("Drug effect is: {}", initial_bp).as_str());

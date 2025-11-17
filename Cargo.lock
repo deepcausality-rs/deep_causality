@@ -377,6 +377,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "example-granger"
+version = "0.1.0"
+dependencies = [
+ "deep_causality",
+]
+
+[[package]]
 name = "example-rcm"
 version = "0.1.0"
 dependencies = [

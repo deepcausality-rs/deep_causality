@@ -18,6 +18,7 @@ members = [
     "examples/tokio",
     "examples/starter",
     "examples/epp_rcm",
+    "examples/epp_granger",
     "ultragraph",
 ]
 
