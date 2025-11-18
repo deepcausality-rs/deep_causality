@@ -21,7 +21,7 @@ pub fn smoking_logic(nicotine_obs: EffectValue) -> PropagatingEffect {
     CausalPropagatingEffect::from_effect_value_with_log(EffectValue::Boolean(high_nicotine), log)
 }
 
-// f(Smoking, U_tar) -> Tar
+// f(Smoking) -> Tar
 pub fn tar_logic(is_smoking: EffectValue) -> PropagatingEffect {
     let mut log = CausalEffectLog::new();
     let has_tar = is_smoking.as_bool().unwrap_or(false);

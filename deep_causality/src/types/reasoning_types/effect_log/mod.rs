@@ -61,6 +61,11 @@ impl CausalEffectLog {
         self.entries.append(&mut other.entries);
     }
 
+    /// Returns the number of entries in the log.
+    pub fn len(&self) -> usize {
+        self.entries.len()
+    }
+
     /// Returns true if the log contains no entries.
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()

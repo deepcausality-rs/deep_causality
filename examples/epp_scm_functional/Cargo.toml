@@ -2,7 +2,7 @@
 # Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
 
 [package]
-name = "epp_scm_functional"
+name = "example-scm-functional"
 version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
