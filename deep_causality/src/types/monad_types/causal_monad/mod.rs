@@ -20,14 +20,6 @@
 //! - **Type-safe**: Leveraging Rust's type system to enforce correct usage and
 //!   prevent common pitfalls in complex data flows.
 //!
-//! ## Key Components
-//!
-//! - [`CausalEffectSystem`]: A marker struct that defines the fixed types for the
-//!   monad's error and log components, making it a concrete instance of an `Effect3`
-//!   from the `deep_causality_haft` crate.
-//! - [`CausalMonad`]: The concrete implementation of `MonadEffect3` for the
-//!   `CausalEffectSystem`, providing the `pure` and `bind` operations.
-//!
 //! ## Monadic Operations
 //!
 //! The monadic pattern, as implemented here, provides two fundamental operations:
@@ -48,34 +40,9 @@
 //! This design ensures that complex causal reasoning flows can be expressed clearly,
 //! with built-in error handling and comprehensive logging, adhering to functional
 //! programming principles within a performant Rust environment.
-use crate::{CausalEffectLog, CausalPropagatingEffect, CausalityError, PropagatingEffectWitness};
+use crate::traits::intervenable::Intervenable;
+use crate::{CausalEffectLog, CausalEffectSystem, CausalPropagatingEffect};
 use deep_causality_haft::{Effect3, Functor, HKT3, MonadEffect3};
-
-/// `CausalEffectSystem` is a marker struct that serves as a concrete instance of the
-/// `Effect3` trait from the `deep_causality_haft` crate.
-///
-/// It explicitly defines the fixed types for the error and log components that will be
-/// carried alongside the primary value within the monadic context. This allows the
-/// `CausalMonad` to operate on a consistent structure for error propagation and logging.
-///
-/// By implementing `Effect3`, `CausalEffectSystem` declares:
-/// - `Fixed1 = CausalityError`: The type used for representing errors in the causal system.
-///   When an operation fails, a `CausalityError` is propagated.
-/// - `Fixed2 = CausalEffectLog`: The type used for accumulating a history of operations.
-///   Every step in a monadic chain can add entries to this log.
-/// - `HktWitness = PropagatingEffectWitness<Self::Fixed1, Self::Fixed2>`: A phantom type
-///   that links this system to the `CausalPropagatingEffect` structure, which is the
-///   actual container for the value, error, and logs.
-///
-/// This setup is crucial for enabling the Higher-Kinded Type (HKT) pattern, allowing
-/// generic monadic operations over `CausalPropagatingEffect` instances.
-pub struct CausalEffectSystem;
-
-impl Effect3 for CausalEffectSystem {
-    type Fixed1 = CausalityError;
-    type Fixed2 = CausalEffectLog;
-    type HktWitness = PropagatingEffectWitness<Self::Fixed1, Self::Fixed2>;
-}
 
 /// `CausalMonad` is the concrete implementation of the `MonadEffect3` trait for the
 /// `CausalEffectSystem`. It provides the fundamental `pure` and `bind` operations
@@ -169,5 +136,38 @@ where
         combined_logs.append(&mut next_effect.logs);
         next_effect.logs = combined_logs;
         next_effect
+    }
+}
+
+impl Intervenable<CausalEffectSystem> for CausalMonad {
+    fn intervene<T>(
+        effect: CausalPropagatingEffect<
+            T,
+            <CausalEffectSystem as Effect3>::Fixed1,
+            <CausalEffectSystem as Effect3>::Fixed2,
+        >,
+        new_value: T,
+    ) -> CausalPropagatingEffect<
+        T,
+        <CausalEffectSystem as Effect3>::Fixed1,
+        <CausalEffectSystem as Effect3>::Fixed2,
+    >
+    where
+        T: std::fmt::Debug, // Add Debug bound to log the new value
+    {
+        // 1. Preserve the incoming logs and add a new entry for the intervention.
+        let mut new_logs = effect.logs;
+        let log_message = format!("Intervention: Value replaced with {:?}", new_value);
+        new_logs.add_entry(&log_message);
+
+        // 2. Construct the new effect.
+        CausalPropagatingEffect {
+            // The value is replaced with the intervention value.
+            value: new_value,
+            // The error state is preserved.
+            error: effect.error,
+            // The updated logs are carried forward.
+            logs: new_logs,
+        }
     }
 }

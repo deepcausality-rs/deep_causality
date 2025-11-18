@@ -549,6 +549,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "example-scm-functional"
+version = "0.1.0"
+dependencies = [
+ "deep_causality",
+ "deep_causality_haft",
+]
+
+[[package]]
 name = "example-starter"
 version = "0.1.0"
 dependencies = [

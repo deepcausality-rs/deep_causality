@@ -40,7 +40,7 @@ pub(crate) fn get_smoking_causaloid() -> BaseCausaloid<EffectValue, EffectValue>
         let mut log = CausalEffectLog::new();
         let nicotine_level = effect.as_numerical().unwrap_or(&0.0);
         let threshold: NumericalValue = 0.6;
-        let high_nicotine_level = nicotine_level > &0.6;
+        let high_nicotine_level = nicotine_level > &threshold;
         log.add_entry(&format!(
             "Nicotine level {} is higher than threshold {}: {}",
             effect, threshold, high_nicotine_level

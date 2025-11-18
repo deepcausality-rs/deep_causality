@@ -10,3 +10,4 @@ pub mod test_utils_csm;
 pub mod test_utils_effect_ethos;
 pub mod test_utils_graph;
 pub mod test_utils_map;
+pub mod test_utils_monad;

@@ -16,6 +16,62 @@ use std::collections::HashMap;
 
 // Constructors
 impl PropagatingEffect {
+    /// Creates a new `PropagatingEffect` that explicitly contains an error.
+    ///
+    /// This constructor is used when an operation results in a `CausalityError`,
+    /// and the effect should propagate this error, short-circuiting further computations.
+    /// The `value` field is set to `EffectValue::None` in this case.
+    ///
+    /// # Arguments
+    ///
+    /// * `err` - The `CausalityError` to be encapsulated in the effect.
+    ///
+    /// # Returns
+    ///
+    /// A `PropagatingEffect` instance with the specified error.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use deep_causality::{PropagatingEffect, CausalityError};
+    ///
+    /// let error_effect = PropagatingEffect::from_error(CausalityError::new("Something went wrong".to_string()));
+    /// assert!(error_effect.is_err());
+    /// ```
+    pub fn from_error(err: CausalityError) -> Self {
+        Self {
+            value: EffectValue::None,
+            error: Some(err),
+            logs: CausalEffectLog::new(),
+        }
+    }
+
+    /// Creates a new `PropagatingEffect` with `EffectValue::None`, no error, and no logs.
+    ///
+    /// This is useful for representing an effect that carries no specific value or outcome,
+    /// and is not associated with any error or log entries.
+    ///
+    /// # Returns
+    ///
+    /// A `PropagatingEffect` instance with `EffectValue::None`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use deep_causality::{PropagatingEffect, EffectValue};
+    ///
+    /// let none_effect = PropagatingEffect::none();
+    /// assert!(matches!(none_effect.value, EffectValue::None));
+    /// assert!(!none_effect.is_err());
+    /// ```
+    pub fn none() -> Self {
+        Self {
+            value: EffectValue::None,
+            error: None,
+            logs: CausalEffectLog::new(),
+        }
+    }
+
     /// Creates a new `PropagatingEffect` from a given `EffectValue`.
     ///
     /// This is a generic constructor that wraps any `EffectValue` into a `PropagatingEffect`
@@ -39,6 +95,38 @@ impl PropagatingEffect {
     /// ```
     pub fn from_effect_value(effect_value: EffectValue) -> Self {
         CausalMonad::pure(effect_value)
+    }
+
+    /// Creates a new `PropagatingEffect` from a given `EffectValue` and `CausalEffectLog`.
+    ///
+    /// This constructor allows initializing a `PropagatingEffect` with both a value
+    /// and associated logs, but no error.
+    ///
+    /// # Arguments
+    ///
+    /// * `value` - The `EffectValue` to wrap.
+    /// * `logs` - The `CausalEffectLog` containing any causal effect logs.
+    ///
+    /// # Returns
+    ///
+    /// A `PropagatingEffect` instance containing the given `EffectValue` and logs.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use deep_causality::{PropagatingEffect, EffectValue, CausalEffectLog};
+    ///
+    /// let logs = CausalEffectLog::new();
+    /// let effect = PropagatingEffect::from_effect_value_with_log(EffectValue::Boolean(true), logs);
+    /// assert!(matches!(effect.value, EffectValue::Boolean(true)));
+    /// assert!(!effect.is_err());
+    /// ```
+    pub fn from_effect_value_with_log(value: EffectValue, logs: CausalEffectLog) -> Self {
+        PropagatingEffect {
+            value,
+            error: None,
+            logs,
+        }
     }
 
     /// Creates a new `PropagatingEffect` of the `Deterministic` variant.
@@ -409,43 +497,5 @@ impl PropagatingEffect {
     ///
     pub fn from_relay_to(id: usize, effect: Box<PropagatingEffect>) -> Self {
         CausalMonad::pure(EffectValue::RelayTo(id, effect))
-    }
-
-    /// Creates a new `PropagatingEffect` that explicitly contains an error.
-    ///
-    /// This constructor is used when an operation results in a `CausalityError`,
-    /// and the effect should propagate this error, short-circuiting further computations.
-    /// The `value` field is set to `EffectValue::None` in this case.
-    ///
-    /// # Arguments
-    ///
-    /// * `err` - The `CausalityError` to be encapsulated in the effect.
-    ///
-    /// # Returns
-    ///
-    /// A `PropagatingEffect` instance with the specified error.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use deep_causality::{PropagatingEffect, CausalityError};
-    ///
-    /// let error_effect = PropagatingEffect::from_error(CausalityError::new("Something went wrong".to_string()));
-    /// assert!(error_effect.is_err());
-    /// ```
-    pub fn from_error(err: CausalityError) -> Self {
-        Self {
-            value: EffectValue::None,
-            error: Some(err),
-            logs: CausalEffectLog::new(),
-        }
-    }
-
-    pub fn none() -> Self {
-        Self {
-            value: EffectValue::None,
-            error: None,
-            logs: CausalEffectLog::new(),
-        }
     }
 }

@@ -14,6 +14,7 @@ pub mod generatable;
 pub mod identifiable;
 pub mod indexable;
 pub mod inferable;
+pub mod intervenable;
 pub mod into_effect_value;
 pub mod log_append;
 pub mod observable;
