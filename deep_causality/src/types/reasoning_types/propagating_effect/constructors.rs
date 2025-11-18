@@ -41,6 +41,14 @@ impl PropagatingEffect {
         CausalMonad::pure(effect_value)
     }
 
+    pub fn from_effect_value_with_log(value: EffectValue, logs: CausalEffectLog) -> Self {
+        PropagatingEffect {
+            value,
+            error: None,
+            logs,
+        }
+    }
+
     /// Creates a new `PropagatingEffect` of the `Deterministic` variant.
     ///
     /// # Arguments

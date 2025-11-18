@@ -2,7 +2,7 @@
 // Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
 
 use crate::traits::log_append::LogAppend;
-use crate::{CausalEffectLog, CausalityError, EffectValue};
+use crate::{CausalEffectLog, CausalMonad, CausalityError, EffectValue, Intervenable};
 use deep_causality_haft::Placeholder;
 
 mod constructors;
@@ -69,5 +69,28 @@ where
 }
 
 pub type PropagatingEffect = CausalPropagatingEffect<EffectValue, CausalityError, CausalEffectLog>;
+
+impl PropagatingEffect {
+    /// Enables a fluent, chainable intervention in a monadic causal chain.
+    ///
+    /// This method takes ownership of the current effect and a new value,
+    /// creating a counterfactual by replacing the effect's value while preserving
+    /// its context (errors and logs).
+    ///
+    /// # Arguments
+    /// * `new_value`: The new `EffectValue` to force into the causal chain.
+    ///
+    /// # Returns
+    /// A new `PropagatingEffect` with the value replaced, ready for the
+    /// next step in the chain.
+    ///
+    /// # Log Provenance
+    /// This method guarantees that the intervention is logged. It calls the underlying
+    /// `CausalMonad::intervene` implementation, which is responsible for adding a
+    /// specific log entry for the intervention before passing the effect along.
+    pub fn intervene(self, new_value: EffectValue) -> Self {
+        CausalMonad::intervene(self, new_value)
+    }
+}
 
 pub struct PropagatingEffectWitness<E, L>(Placeholder, E, L);
