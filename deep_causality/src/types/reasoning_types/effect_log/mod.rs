@@ -44,13 +44,13 @@ impl CausalEffectLog {
     /// # Arguments
     /// * `message` - The log message string slice.
     pub fn add_entry(&mut self, message: &str) {
-        let timestamp_ms = SystemTime::now()
+        let timestamp_micros = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
             .as_micros();
 
         self.entries.push(LogEntry {
-            timestamp_ms,
+            timestamp_ms: timestamp_micros,
             message: message.to_string(),
         });
     }

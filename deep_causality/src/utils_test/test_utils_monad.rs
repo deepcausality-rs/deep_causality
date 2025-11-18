@@ -4,30 +4,41 @@
  */
 use crate::{
     CausalEffectLog, CausalPropagatingEffect, CausalityError, EffectValue, NumericalValue,
+    PropagatingEffect,
 };
 
-// Helper functions from the test file, adapted for benchmarking
-pub fn smoking_logic(
-    nicotine_obs: EffectValue,
-) -> CausalPropagatingEffect<EffectValue, CausalityError, CausalEffectLog> {
+// f(U_smoking) -> Smoking
+pub fn smoking_logic(nicotine_obs: EffectValue) -> PropagatingEffect {
     let mut log = CausalEffectLog::new();
-    let nicotine_level = nicotine_obs.as_numerical().unwrap_or(&0.0);
-    let threshold: NumericalValue = 0.6;
-    let high_nicotine = nicotine_level > &threshold;
-    log.add_entry(&format!(
-        "Nicotine level {} is higher than threshold {}: {}",
-        nicotine_obs, threshold, high_nicotine
-    ));
-    CausalPropagatingEffect::from_effect_value_with_log(EffectValue::Boolean(high_nicotine), log)
+    // Propagates an error if nicotine_obs is not a Numerical value.
+    if let Some(nicotine_level) = nicotine_obs.as_numerical() {
+        let threshold: NumericalValue = 0.6;
+        let high_nicotine = nicotine_level > &threshold;
+        log.add_entry(&format!(
+            "Nicotine level {} is higher than threshold {}: {}",
+            nicotine_obs, threshold, high_nicotine
+        ));
+        CausalPropagatingEffect::from_effect_value_with_log(
+            EffectValue::Boolean(high_nicotine),
+            log,
+        )
+    } else {
+        PropagatingEffect::from_error(CausalityError::new(
+            "Expected Numerical value for smoking_logic".to_string(),
+        ))
+    }
 }
 
-pub fn tar_logic(
-    is_smoking: EffectValue,
-) -> CausalPropagatingEffect<EffectValue, CausalityError, CausalEffectLog> {
+// f(Smoking) -> Tar
+pub fn tar_logic(is_smoking: EffectValue) -> PropagatingEffect {
     let mut log = CausalEffectLog::new();
-    let has_tar = is_smoking.as_bool().unwrap_or(false);
-    log.add_entry(&format!("Has tar in lung {}", has_tar));
-    CausalPropagatingEffect::from_effect_value_with_log(EffectValue::Boolean(has_tar), log)
+    if let Some(has_tar) = is_smoking.as_bool() {
+        log.add_entry(&format!("Has tar in lung {}", has_tar));
+        CausalPropagatingEffect::from_effect_value_with_log(EffectValue::Boolean(has_tar), log)
+    } else {
+        let err = CausalityError::new("Expected Boolean value for tar_logic".to_string());
+        PropagatingEffect::from_error(err)
+    }
 }
 
 pub fn error_logic(
