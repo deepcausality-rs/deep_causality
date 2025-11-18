@@ -129,11 +129,14 @@ impl Monad<OptionWitness> for OptionWitness {
     /// A new `Option` representing the chained computation.
     fn bind<A, B, Func>(
         m_a: <OptionWitness as HKT>::Type<A>,
-        f: Func,
+        mut f: Func,
     ) -> <OptionWitness as HKT>::Type<B>
     where
-        Func: FnOnce(A) -> <OptionWitness as HKT>::Type<B>,
+        Func: FnMut(A) -> <OptionWitness as HKT>::Type<B>,
     {
-        m_a.and_then(f)
+        match m_a {
+            Some(a) => f(a),
+            None => None,
+        }
     }
 }
