@@ -42,17 +42,13 @@ pub fn tar_logic(is_smoking: EffectValue) -> PropagatingEffect {
 }
 
 pub fn error_logic(
-    input: EffectValue,
+    _input: EffectValue,
 ) -> CausalPropagatingEffect<EffectValue, CausalityError, CausalEffectLog> {
     let mut log = CausalEffectLog::new();
     log.add_entry("Error logic applied");
-    if input.as_bool().unwrap_or(false) {
-        CausalPropagatingEffect {
-            value: EffectValue::None,
-            error: Some(CausalityError::new("Simulated error".to_string())),
-            logs: log,
-        }
-    } else {
-        CausalPropagatingEffect::from_effect_value_with_log(input, log)
+    CausalPropagatingEffect {
+        value: EffectValue::None,
+        error: Some(CausalityError::new("Simulated error".to_string())),
+        logs: log,
     }
 }

@@ -139,3 +139,31 @@ fn test_bind_with_default_value_on_error() {
             .contains("Error logic applied")
     );
 }
+
+#[test]
+fn test_smoking_logic_error_handling() {
+    let non_numerical_input = EffectValue::Boolean(true); // Incorrect input type
+    let result_effect = smoking_logic(non_numerical_input);
+
+    assert!(result_effect.is_error());
+    assert_eq!(
+        result_effect.error.unwrap().0,
+        "Expected Numerical value for smoking_logic"
+    );
+    assert!(matches!(result_effect.value, EffectValue::None));
+    assert!(result_effect.logs.is_empty());
+}
+
+#[test]
+fn test_tar_logic_error_handling() {
+    let non_boolean_input = EffectValue::Numerical(0.5); // Incorrect input type
+    let result_effect = tar_logic(non_boolean_input);
+
+    assert!(result_effect.is_error());
+    assert_eq!(
+        result_effect.error.unwrap().0,
+        "Expected Boolean value for tar_logic"
+    );
+    assert!(matches!(result_effect.value, EffectValue::None));
+    assert!(result_effect.logs.is_empty());
+}
