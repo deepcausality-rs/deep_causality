@@ -51,7 +51,6 @@ where
     /// - `Ok(false)` if the state's conditions are not met with the provided data
     /// - `Err(CausalityError)` if an error occurs during evaluation
     ///
-    /// ```
     pub fn eval_with_data(&self, data: &PropagatingEffect) -> Result<PropagatingEffect, CsmError> {
         Ok(self.causaloid.evaluate(data))
     }

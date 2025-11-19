@@ -1,0 +1,33 @@
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library", "rust_test")
+
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+rust_library(
+    name = "deep_causality_multivector",
+    srcs = glob([
+        "src/**/*.rs",
+    ]),
+    crate_root = "src/lib.rs",
+    tags = [
+        "data_structures",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_num",
+        "//deep_causality_haft",
+    ],
+)
+
+rust_doc(
+    name = "doc",
+    crate = ":deep_causality_multivector",
+    tags = ["doc"],
+    visibility = ["//visibility:public"],
+)
+
+rust_doc_test(
+    name = "doc_test",
+    crate = ":deep_causality_multivector",
+    tags = ["doc-test"],
+    visibility = ["//visibility:public"],
+)

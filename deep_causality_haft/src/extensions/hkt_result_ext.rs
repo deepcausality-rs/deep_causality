@@ -152,11 +152,14 @@ where
     /// A new `Result` representing the chained computation.
     fn bind<A, B, Func>(
         m_a: <ResultWitness<E> as HKT2<E>>::Type<A>,
-        f: Func,
+        mut f: Func,
     ) -> <ResultWitness<E> as HKT2<E>>::Type<B>
     where
-        Func: FnOnce(A) -> <ResultWitness<E> as HKT2<E>>::Type<B>,
+        Func: FnMut(A) -> <ResultWitness<E> as HKT2<E>>::Type<B>,
     {
-        m_a.and_then(f)
+        match m_a {
+            Ok(a) => f(a),
+            Err(e) => Err(e),
+        }
     }
 }

@@ -86,5 +86,5 @@ This monadic approach provides a robust, transparent, and composable Causal Alge
 
 From the root of the `deep_causality` repository, run:
 ```bash
-cargo run -p epp_scm_functional
+cargo run -p example-scm-functional
 ```
