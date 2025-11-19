@@ -79,10 +79,6 @@ impl Monad<CausalMultiVectorWitness> for CausalMultiVectorWitness {
     where
         Func: FnMut(A) -> CausalMultiVector<B>,
     {
-        if m_a.data.is_empty() {
-            return CausalMultiVector::new(vec![], Metric::Euclidean(0)).unwrap();
-        }
-
         let mut result_data = Vec::new();
         let mut resulting_metric = Metric::Euclidean(0);
         let mut first_run = true;

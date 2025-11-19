@@ -40,6 +40,14 @@ fn test_pseudoscalar() {
 }
 
 #[test]
+fn test_get() {
+    let m = Metric::Euclidean(2);
+    let mv: CausalMultiVector<f64> = CausalMultiVector::pseudoscalar(m);
+    assert_eq!(mv.get(3), Some(&1.0)); // Index 3 is e1^e2 (11 binary)
+    assert_eq!(mv.get(0), Some(&0.0));
+}
+
+#[test]
 fn test_add_sub() {
     let m = Metric::Euclidean(2);
     let v1 = CausalMultiVector::new(vec![1.0, 2.0, 3.0, 4.0], m).unwrap();
