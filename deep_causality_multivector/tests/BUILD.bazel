@@ -1,0 +1,51 @@
+load("@rules_rust//rust:defs.bzl", "rust_test_suite")
+
+rust_test_suite(
+    name = "errors",
+    srcs = glob([
+        "errors/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_multivector",
+    ],
+)
+
+rust_test_suite(
+    name = "extensions",
+    srcs = glob([
+        "extensions/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_multivector",
+        # Deps
+        "//deep_causality_haft",
+    ],
+)
+
+rust_test_suite(
+    name = "types",
+    srcs = glob([
+        "types/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_multivector",
+        # Deps
+        "//deep_causality_haft",
+        "//deep_causality_num",
+    ],
+)

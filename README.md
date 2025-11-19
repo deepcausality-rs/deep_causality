@@ -258,6 +258,7 @@ The project took inspiration from several researchers and their projects in the 
 
 DeepCausality implements the following research publications:
 
+* ["An Algebraic Roadmap of Particle Theories"](docs/papers/algebraic_physics.pdf) 
 * ["A Defeasible Deontic Calculus for Resolving Norm Conflicts"](docs/papers/ddic.pdf)
 * ["NWHy: A Framework for Hypergraph Analytics"](docs/papers/nwhy.pdf)
 * ["Observational causality by states and interaction type for scientific discovery"](docs/papers/surd-state.pdf)

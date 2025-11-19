@@ -449,6 +449,15 @@ name = "deep_causality_macros"
 version = "0.8.9"
 
 [[package]]
+name = "deep_causality_multivector"
+version = "0.1.0"
+dependencies = [
+ "criterion",
+ "deep_causality_haft",
+ "deep_causality_num",
+]
+
+[[package]]
 name = "deep_causality_num"
 version = "0.1.6"
 
