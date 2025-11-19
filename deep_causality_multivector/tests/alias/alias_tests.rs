@@ -33,14 +33,14 @@ fn test_pga3d_translator() {
     // Scalar (0) -> 1.0
     assert_eq!(t.data[0], 1.0);
 
-    // e01 (3) -> 0.5 * 2.0 = 1.0
-    assert_eq!(t.data[3], 1.0);
+    // e01 (3) -> -0.5 * 2.0 = -1.0
+    assert_eq!(t.data[3], -1.0);
 
-    // e02 (5) -> 0.5 * 4.0 = 2.0
-    assert_eq!(t.data[5], 2.0);
+    // e02 (5) -> -0.5 * 4.0 = -2.0
+    assert_eq!(t.data[5], -2.0);
 
-    // e03 (9) -> 0.5 * 6.0 = 3.0
-    assert_eq!(t.data[9], 3.0);
+    // e03 (9) -> -0.5 * 6.0 = -3.0
+    assert_eq!(t.data[9], -3.0);
 }
 
 #[test]

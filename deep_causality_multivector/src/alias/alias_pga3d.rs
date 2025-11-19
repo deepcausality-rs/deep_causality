@@ -55,13 +55,13 @@ impl PGA3DMultiVector {
         data[0] = 1.0;
 
         // e01 (binary 0011 = 3)
-        data[3] = 0.5 * x;
+        data[3] = -0.5 * x;
 
         // e02 (binary 0101 = 5)
-        data[5] = 0.5 * y;
+        data[5] = -0.5 * y;
 
         // e03 (binary 1001 = 9)
-        data[9] = 0.5 * z;
+        data[9] = -0.5 * z;
 
         Self::new(data, Metric::PGA(4)).unwrap()
     }

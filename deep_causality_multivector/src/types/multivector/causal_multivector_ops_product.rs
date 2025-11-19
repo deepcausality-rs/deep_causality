@@ -38,15 +38,22 @@ where
 
                 // Outer product is non-zero only if blades are disjoint
                 if (i & j) == 0 {
-                    let (sign, result_idx) = Self::calculate_basis_product(i, j, &self.metric);
-
-                    if sign != 0 {
-                        let val = self.data[i] * rhs.data[j];
-                        if sign > 0 {
-                            result_data[result_idx] += val;
-                        } else {
-                            result_data[result_idx] -= val;
+                    // Calculate sign from swaps only, not the full geometric product.
+                    let mut swaps = 0;
+                    for k in 0..dim {
+                        if (j >> k) & 1 == 1 {
+                            swaps += (i >> (k + 1)).count_ones();
                         }
+                    }
+                    let sign = if swaps % 2 == 0 { 1 } else { -1 };
+
+                    let result_idx = i | j; // For disjoint sets, XOR is equivalent to OR
+                    let val = self.data[i] * rhs.data[j];
+
+                    if sign > 0 {
+                        result_data[result_idx] += val;
+                    } else {
+                        result_data[result_idx] -= val;
                     }
                 }
             }
