@@ -130,11 +130,29 @@ impl Metric {
         match (self, other) {
             (Euclidean(a), Euclidean(b)) => Euclidean(a + b),
             (NonEuclidean(a), NonEuclidean(b)) => NonEuclidean(a + b),
-            // Mixing signatures or using Minkowski defaults to a Generic construction
-            // where we append the B dimensions after A.
+            // For any other combination, construct a generic metric.
             _ => {
-                // Returning Euclidean sum as a safe default for "Generic" size growth:
-                Euclidean(dim_a + dim_b)
+                let mut p = 0;
+                let mut q = 0;
+                let mut r = 0;
+
+                for i in 0..dim_a {
+                    match self.sign_of_sq(i) {
+                        1 => p += 1,
+                        -1 => q += 1,
+                        0 => r += 1,
+                        _ => {}
+                    }
+                }
+                for i in 0..dim_b {
+                    match other.sign_of_sq(i) {
+                        1 => p += 1,
+                        -1 => q += 1,
+                        0 => r += 1,
+                        _ => {}
+                    }
+                }
+                Generic { p, q, r }
             }
         }
     }

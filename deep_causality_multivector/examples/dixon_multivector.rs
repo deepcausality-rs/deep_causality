@@ -8,9 +8,7 @@ use deep_causality_num::Complex;
 
 fn main() {
     println!("=== Dixon Algebra (Cl_C(6)) Example ===");
-    println!(
-        "This algebra operates on Octonions in particle physics models (e.g. C. Furey)."
-    );
+    println!("This algebra operates on Octonions in particle physics models (e.g. C. Furey).");
 
     // 1. Create the Zero Vector in Cl_C(6)
     // The dimension is 2^6 = 64.

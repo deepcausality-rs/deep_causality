@@ -2,10 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use std::hint::black_box;
 use criterion::{Criterion, criterion_group, criterion_main};
 use deep_causality_multivector::PGA3DMultiVector;
 use deep_causality_multivector::{CausalMultiVector, Metric};
+use std::hint::black_box;
 
 fn bench_geometric_product_euclidean_2d(c: &mut Criterion) {
     let m = Metric::Euclidean(2);

@@ -117,13 +117,12 @@ where
         let mut sign = 1;
 
         // 1. Calculate Sign from Swaps (Canonical Reordering)
-        let a_temp = a_map;
         let mut swaps = 0;
         let dim = metric.dimension();
 
         for i in 0..dim {
             if (b_map >> i) & 1 == 1 {
-                let higher_bits_in_a = (a_temp >> (i + 1)).count_ones();
+                let higher_bits_in_a = (a_map >> (i + 1)).count_ones();
                 swaps += higher_bits_in_a;
             }
         }

@@ -4,7 +4,7 @@
  */
 
 use deep_causality_haft::{Applicative, Functor, Monad};
-use deep_causality_multivector::{CausalMultiVector, Metric, CausalMultiVectorWitness};
+use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorWitness, Metric};
 
 fn main() {
     println!("=== Higher-Kinded Types (HKT) with CausalMultiVector ===");

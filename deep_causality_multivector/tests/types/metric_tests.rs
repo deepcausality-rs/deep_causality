@@ -76,8 +76,8 @@ fn test_metric_tensor_product() {
     let m4 = Metric::NonEuclidean(2);
     assert_eq!(m3.tensor_product(&m4), Metric::NonEuclidean(4));
 
-    // Mixed -> Euclidean sum fallback
-    assert_eq!(m1.tensor_product(&m3), Metric::Euclidean(4));
+    // Mixed -> Generic metric with accurate signature
+    assert_eq!(m1.tensor_product(&m3), Metric::Generic { p: 2, q: 2, r: 0 });
 }
 #[test]
 fn test_metric_display() {
