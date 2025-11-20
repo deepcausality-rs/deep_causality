@@ -64,7 +64,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use deep_causality_num::Quaternion;
+/// use deep_causality_num::{Quaternion, QuaternionNumber};
 ///
 /// let q1 = Quaternion::new(1.0, 2.0, 3.0, 4.0);
 /// let q2 = Quaternion { w: 5.0, x: 6.0, y: 7.0, z: 8.0 };

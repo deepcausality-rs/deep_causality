@@ -13,7 +13,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_num::Quaternion;
+    /// use deep_causality_num::{Quaternion, QuaternionNumber};
     ///
     /// let q = Quaternion::new(1.0, 2.0, 3.0, 4.0);
     /// let conj_q : Quaternion<f64>  = q.conjugate();
@@ -37,7 +37,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_num::Quaternion;
+    /// use deep_causality_num::{Quaternion, QuaternionNumber};
     ///
     /// let q = Quaternion::new(1.0, 2.0, 3.0, 4.0);
     /// assert_eq!(q.norm_sqr(), 1.0*1.0 + 2.0*2.0 + 3.0*3.0 + 4.0*4.0);
@@ -53,7 +53,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_num::Quaternion;
+    /// use deep_causality_num::{Quaternion, QuaternionNumber};
     ///
     /// let q = Quaternion::<f64>::new(1.0, 2.0, 3.0, 4.0);
     /// assert_eq!(q.norm(), (1.0f64*1.0f64 + 2.0f64*2.0f64 + 3.0f64*3.0f64 + 4.0f64*4.0f64).sqrt());
@@ -70,7 +70,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_num::Quaternion;
+    /// use deep_causality_num::{Quaternion, QuaternionNumber};
     ///
     /// let q = Quaternion::<f64>::new(1.0, 2.0, 3.0, 4.0);
     /// let normalized_q = q.normalize();
@@ -92,7 +92,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_num::Quaternion;
+    /// use deep_causality_num::{Quaternion, QuaternionNumber};
     ///
     /// let q = Quaternion::new(1.0, 2.0, 3.0, 4.0);
     /// let inv_q = q.inverse();
@@ -129,7 +129,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_num::Quaternion;
+    /// use deep_causality_num::{Quaternion, QuaternionNumber};
     ///
     /// let q1 = Quaternion::new(1.0, 2.0, 3.0, 4.0);
     /// let q2 = Quaternion::new(5.0, 6.0, 7.0, 8.0);
@@ -150,7 +150,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_num::Quaternion;
+    /// use deep_causality_num::{Quaternion, QuaternionNumber};
     /// use std::f64::consts::FRAC_PI_2;
     ///
     /// let q = Quaternion::from_axis_angle([1.0, 0.0, 0.0], FRAC_PI_2);
@@ -190,7 +190,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_num::Quaternion;
+    /// use deep_causality_num::{Quaternion, QuaternionNumber};
     /// use std::f64::consts::FRAC_PI_2;
     ///
     /// // 90 degrees around the X-axis
@@ -242,7 +242,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_num::Quaternion;
+    /// use deep_causality_num::{Quaternion, QuaternionNumber};
     /// use std::f64::consts::FRAC_PI_2;
     ///
     /// let q1 = Quaternion::<f64>::identity();
