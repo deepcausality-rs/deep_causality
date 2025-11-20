@@ -64,16 +64,12 @@ fn test_real_cga_vector() {
     let data = vec![0.0; 32];
     let cga = RealMultiVector::new_cga_vector(data.clone());
 
-    // Metric: Custom { dim: 5, neg_mask: 16, zero_mask: 0 }
+    // Metric (+ + + + -) = Generic { p: 4, q: 1, r: 0 }
     match cga.metric {
-        Metric::Custom {
-            dim,
-            neg_mask,
-            zero_mask,
-        } => {
-            assert_eq!(dim, 5);
-            assert_eq!(neg_mask, 16);
-            assert_eq!(zero_mask, 0);
+        Metric::Generic { p, q, r } => {
+            assert_eq!(p, 4);
+            assert_eq!(q, 1);
+            assert_eq!(r, 0);
         }
         _ => panic!("Expected Custom metric for CGA"),
     }

@@ -12,7 +12,7 @@ fn test_dixon_algebra() {
     let data = vec![Complex::new(0.0, 0.0); 256];
     let d = DixonAlgebra::new_dixon_algebra_left(data);
 
-    assert_eq!(d.metric.dimension(), 6);
+    assert_eq!(d.metric.dimension(), 8);
     match d.metric {
         Metric::NonEuclidean(8) => {}
         _ => panic!("Dixon Algebra should be Euclidean(6)"),
