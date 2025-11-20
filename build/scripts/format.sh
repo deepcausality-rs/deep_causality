@@ -15,6 +15,7 @@ buildifier -r deep_causality_data_structures/
 buildifier -r deep_causality_discovery/
 buildifier -r deep_causality_haft/
 buildifier -r deep_causality_macros/
+buildifier -r deep_causality_multivector/
 buildifier -r deep_causality_num/
 buildifier -r deep_causality_rand/
 buildifier -r deep_causality_tensor/

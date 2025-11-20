@@ -9,31 +9,37 @@
 use crate::{Metric, PGA3DMultiVector};
 
 impl PGA3DMultiVector {
-    /// Creates a point in 3D PGA.
+    /// Creates a point in 3D Projective Geometric Algebra (PGA).
     ///
-    /// Points are represented as tri-vectors (dual representation):
-    /// $$ P = x (e_0 \wedge e_3 \wedge e_2) + y (e_0 \wedge e_1 \wedge e_3) + z (e_0 \wedge e_2 \wedge e_1) + (e_1 \wedge e_2 \wedge e_3) $$
+    /// The point $\mathbf{P}=(x, y, z, w)$ is represented as a tri-vector (dual basis).
     ///
-    /// Indices (assuming e0=bit0, e1=bit1, e2=bit2, e3=bit3):
-    /// * e123 (14): 1.0
-    /// * e032 (13): x
-    /// * e013 (11): y
-    /// * e021 (7): z
+    /// $$\mathbf{P} = x \mathbf{e}_{032} + y \mathbf{e}_{013} + z \mathbf{e}_{021} + w \mathbf{e}_{123}$$
+    ///
+    /// For a homogeneous point at $(x, y, z)$ (i.e., $w=1$), the internal data mapping is:
+    ///
+    /// | Component | Mathematical Blade | Canonical Blade (Index) | Coefficient |
+    /// | :--- | :--- | :--- | :--- |
+    /// | $w$ | $\mathbf{e}_{123}$ | $\mathbf{e}_{123}$ (Index 14) | $1.0$ |
+    /// | $x$ | $\mathbf{e}_{032}$ | $-\mathbf{e}_{023}$ (Index 13) | $-x$ |
+    /// | $y$ | $\mathbf{e}_{013}$ | $\mathbf{e}_{013}$ (Index 11) | $y$ |
+    /// | $z$ | $\mathbf{e}_{021}$ | $-\mathbf{e}_{012}$ (Index 7) | $-z$ |
+    ///
+    /// *Note: The signs for $x$ and $z$ are flipped to align $\mathbf{e}_{032}$ and $\mathbf{e}_{021}$
+    /// with the canonical basis ordering assumed by the multivector indices.*
     pub fn new_point(x: f64, y: f64, z: f64) -> Self {
         let mut data = vec![0.0; 16];
 
-        // e123 (1110 binary = 14) -> 1.0 (Homogeneous coordinate w=1)
+        // w * e123 (Index 14)
         data[14] = 1.0;
 
-        // e032 = e0^e3^e2.
-        // e0=1, e3=8, e2=4. 1|8|4 = 13.
-        // Sign check: e0e3e2 = -e0e2e3.
-        // Standard formula often just assigns coefficient to the blade.
-        // Let's assume the standard dual basis mapping:
-        // P = x*e032 + y*e013 + z*e021 + e123
-        data[13] = x;
+        // x * e032 -> x * (-e023) -> -x (Index 13)
+        data[13] = -x;
+
+        // y * e013 -> y (Index 11)
         data[11] = y;
-        data[7] = z;
+
+        // z * e021 -> z * (-e012) -> -z (Index 7)
+        data[7] = -z;
 
         Self::new(data, Metric::PGA(4)).unwrap()
     }

@@ -1,7 +1,5 @@
 load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library", "rust_test")
 
-load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
-
 rust_library(
     name = "deep_causality_multivector",
     srcs = glob([
@@ -13,8 +11,8 @@ rust_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_num",
         "//deep_causality_haft",
+        "//deep_causality_num",
     ],
 )
 

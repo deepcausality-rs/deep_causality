@@ -15,12 +15,12 @@ fn test_pga3d_new_point() {
     // Check coefficients
     // e123 (14) -> 1.0
     assert_eq!(p.data[14], 1.0);
-    // e032 (13) -> 1.0
-    assert_eq!(p.data[13], 1.0);
+    // e032 (13) -> -1.0
+    assert_eq!(p.data[13], -1.0);
     // e013 (11) -> 2.0
     assert_eq!(p.data[11], 2.0);
-    // e021 (7) -> 3.0
-    assert_eq!(p.data[7], 3.0);
+    // e021 (7) -> -3.0
+    assert_eq!(p.data[7], -3.0);
 }
 
 #[test]
