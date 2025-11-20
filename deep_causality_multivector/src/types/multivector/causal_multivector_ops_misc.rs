@@ -108,4 +108,26 @@ impl<T> CausalMultiVector<T> {
         let pseudo_inv = pseudo.inverse()?;
         Ok(self.clone() * pseudo_inv)
     }
+
+    /// Cyclically shifts the basis coefficients.
+    /// This effectively changes the "viewpoint" of the algebra,
+    /// making the coefficient at `index` the new scalar (index 0).
+    ///
+    /// Used for Comonadic 'extend' operations.
+    pub fn basis_shift(&self, index: usize) -> Self
+    where
+        T: Clone,
+    {
+        let mut new_data = self.data.clone();
+        let len = new_data.len();
+
+        // Robust rotation handling
+        let shift = index % len;
+        new_data.rotate_left(shift);
+
+        Self {
+            data: new_data,
+            metric: self.metric,
+        }
+    }
 }

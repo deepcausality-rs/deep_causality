@@ -120,10 +120,22 @@ impl BoundedComonad<CausalMultiVectorWitness> for CausalMultiVectorWitness {
         A: Zero + Copy + Clone,
         B: Zero + Copy + Clone,
     {
-        // Apply 'f' to the original context 'fa' to get a single value 'B'.
-        // Wrap this 'B' into a new scalar CausalMultiVector,
-        // preserving the original metric signature for consistency.
-        let result_b = f(fa);
-        CausalMultiVector::scalar(result_b, fa.metric)
+        {
+            // Functional transformation:
+            // 1. Iterate 0..size
+            // 2. Map index -> Shifted View -> Result
+            // 3. Collect into Vec
+            let new_data: Vec<B> = (0..fa.data.len())
+                .map(|i| {
+                    // Create the permuted view (Context Shift)
+                    let permuted_view = fa.basis_shift(i);
+                    // Since map is sequential, it is safe to call mutable f
+                    f(&permuted_view)
+                })
+                .collect();
+
+            // 3. Return MultiVector of same metric as the original MultiVector
+            CausalMultiVector::new(new_data, fa.metric).expect("Metric mismatch")
+        }
     }
 }
