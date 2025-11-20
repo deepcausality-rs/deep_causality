@@ -7,6 +7,19 @@ use crate::complex::octonion_number::Octonion;
 use crate::float::Float;
 use std::cmp::Ordering;
 
+impl<F: Float> PartialEq<Self> for Octonion<F> {
+    fn eq(&self, other: &Self) -> bool {
+        self.s == other.s
+            && self.e1 == other.e1
+            && self.e2 == other.e2
+            && self.e3 == other.e3
+            && self.e4 == other.e4
+            && self.e5 == other.e5
+            && self.e6 == other.e6
+            && self.e7 == other.e7
+    }
+}
+
 // PartialOrd
 impl<F: Float> PartialOrd for Octonion<F> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {

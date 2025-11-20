@@ -5,8 +5,9 @@
 
 //! This module defines the Octonion struct and its core implementations.
 
-use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
 use crate::{Float, Num};
+use std::iter::{Product, Sum};
+use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
 
 mod arithmetic;
 mod arithmetic_assign;
@@ -31,6 +32,8 @@ where
         + Div<Output = Self>
         + Rem<Output = Self>
         + Neg<Output = Self>
+        + Sum
+        + Product
         + PartialEq
         + Copy
         + Clone,
@@ -43,16 +46,10 @@ where
     fn dot(&self, other: &Self) -> F;
 }
 
-#[derive(Copy, Clone, PartialEq, Default)]
+#[derive(Copy, Clone, Default)]
 pub struct Octonion<F>
 where
     F: Float,
-    Self: Add<Output = Self>
-        + Sub<Output = Self>
-        + Mul<Output = Self>
-        + Div<Output = Self>
-        + Neg<Output = Self>
-        + Rem<Output = Self>,
 {
     pub s: F,  // Scalar part
     pub e1: F, // Vector part 1

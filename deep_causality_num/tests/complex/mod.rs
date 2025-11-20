@@ -3,5 +3,5 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 mod complex_number;
-mod quaternion_number;
 mod octonion_number;
+mod quaternion_number;

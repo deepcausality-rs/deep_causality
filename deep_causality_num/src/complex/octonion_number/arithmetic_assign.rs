@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::ops::{AddAssign, DivAssign, MulAssign, SubAssign};
+use std::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign};
 
 use crate::complex::octonion_number::Octonion;
 use crate::float::Float;
@@ -37,15 +37,59 @@ impl<F: Float + SubAssign> SubAssign for Octonion<F> {
 }
 
 // MulAssign
-impl<F: Float + MulAssign> MulAssign for Octonion<F> {
+impl<F: Float> MulAssign for Octonion<F> {
     fn mul_assign(&mut self, other: Self) {
         *self = *self * other;
     }
 }
 
 // DivAssign
-impl<F: Float + DivAssign> DivAssign for Octonion<F> {
+impl<F: Float> DivAssign for Octonion<F> {
     fn div_assign(&mut self, other: Self) {
         *self = *self / other;
+    }
+}
+
+// RemAssign
+impl<F: Float> RemAssign for Octonion<F> {
+    fn rem_assign(&mut self, _other: Self) {
+        // Remainder for octonions is not a standard mathematical operation.
+        // Current implementation does nothing.
+    }
+}
+
+// MulAssign (scalar)
+impl<F: Float + MulAssign> MulAssign<F> for Octonion<F> {
+    fn mul_assign(&mut self, scalar: F) {
+        self.s *= scalar;
+        self.e1 *= scalar;
+        self.e2 *= scalar;
+        self.e3 *= scalar;
+        self.e4 *= scalar;
+        self.e5 *= scalar;
+        self.e6 *= scalar;
+        self.e7 *= scalar;
+    }
+}
+
+// DivAssign (scalar)
+impl<F: Float + DivAssign> DivAssign<F> for Octonion<F> {
+    fn div_assign(&mut self, scalar: F) {
+        self.s /= scalar;
+        self.e1 /= scalar;
+        self.e2 /= scalar;
+        self.e3 /= scalar;
+        self.e4 /= scalar;
+        self.e5 /= scalar;
+        self.e6 /= scalar;
+        self.e7 /= scalar;
+    }
+}
+
+// RemAssign (scalar)
+impl<F: Float> RemAssign<F> for Octonion<F> {
+    fn rem_assign(&mut self, _scalar: F) {
+        // Remainder for octonions is not a standard mathematical operation.
+        // Current implementation does nothing.
     }
 }
