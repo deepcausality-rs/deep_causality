@@ -14,7 +14,7 @@ fn main() {
     // The dimension is 2^6 = 64.
     // Coefficients are Complex64.
     let data = vec![Complex::new(0.0, 0.0); 64];
-    let d = DixonAlgebra::new_dixon_algebra(data);
+    let d = DixonAlgebra::new_dixon_algebra_left(data);
 
     println!("\nAlgebra Properties:");
     println!("  Metric: {}", d.metric);
@@ -27,11 +27,11 @@ fn main() {
 
     let mut e1_data = vec![Complex::new(0.0, 0.0); 64];
     e1_data[1] = Complex::new(1.0, 0.0);
-    let e1 = DixonAlgebra::new_dixon_algebra(e1_data);
+    let e1 = DixonAlgebra::new_dixon_algebra_left(e1_data);
 
     let mut e2_data = vec![Complex::new(0.0, 0.0); 64];
     e2_data[2] = Complex::new(1.0, 0.0);
-    let e2 = DixonAlgebra::new_dixon_algebra(e2_data);
+    let e2 = DixonAlgebra::new_dixon_algebra_left(e2_data);
 
     println!("\nBasis Vectors:");
     println!("  e1 coeff at index 1: {}", e1.data[1]);

@@ -37,10 +37,25 @@ fn test_real_aps_vector() {
 }
 
 #[test]
-fn test_real_spacetime_vector() {
+fn test_real_spacetime_algebra_1_3() {
     let data = vec![0.0; 16];
-    let sta = RealMultiVector::new_spacetime_vector(data.clone());
+    let sta = RealMultiVector::new_spacetime_algebra_1_3(data.clone());
     assert_eq!(sta.metric, Metric::Minkowski(4));
+    assert_eq!(sta.data.len(), 16);
+}
+
+#[test]
+fn test_real_spacetime_algebra_3_1() {
+    let data = vec![0.0; 16];
+    let sta = RealMultiVector::new_spacetime_algebra_3_1(data.clone());
+    assert_eq!(
+        sta.metric,
+        Metric::Custom {
+            dim: 4,
+            neg_mask: 1,
+            zero_mask: 0,
+        }
+    );
     assert_eq!(sta.data.len(), 16);
 }
 

@@ -9,12 +9,12 @@ use deep_causality_num::Complex;
 #[test]
 fn test_dixon_algebra() {
     // Dixon Algebra is Cl_C(6) -> 64 dimensions (complex)
-    let data = vec![Complex::new(0.0, 0.0); 64];
-    let d = DixonAlgebra::new_dixon_algebra(data);
+    let data = vec![Complex::new(0.0, 0.0); 256];
+    let d = DixonAlgebra::new_dixon_algebra_left(data);
 
     assert_eq!(d.metric.dimension(), 6);
     match d.metric {
-        Metric::Euclidean(6) => {}
+        Metric::NonEuclidean(8) => {}
         _ => panic!("Dixon Algebra should be Euclidean(6)"),
     }
 }
@@ -47,11 +47,16 @@ fn test_octonion_operator() {
 
     assert_eq!(oo.metric.dimension(), 6);
     match oo.metric {
-        Metric::Euclidean(6) => {}
-        _ => panic!("Octonion Operator should be Euclidean(6)"),
+        Metric::NonEuclidean(6) => {}
+        _ => panic!("Octonion Operator should be NonEuclidean(6)"),
     }
     assert_eq!(oo.data.len(), 64);
 }
+
+// #[test]
+// fn new_quaternion_operator() {
+//
+// }
 
 #[test]
 fn test_gut_algebra() {
@@ -61,8 +66,8 @@ fn test_gut_algebra() {
 
     assert_eq!(gut.metric.dimension(), 10);
     match gut.metric {
-        Metric::Euclidean(10) => {}
-        _ => panic!("GUT Algebra should be Euclidean(10)"),
+        Metric::NonEuclidean(10) => {}
+        _ => panic!("GUT Algebra should be NonEuclidean(10)"),
     }
     assert_eq!(gut.data.len(), 1024);
 }
