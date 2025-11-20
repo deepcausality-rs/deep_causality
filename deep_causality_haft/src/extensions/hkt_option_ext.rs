@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Applicative, Foldable, Functor, HKT, Monad};
+use crate::{Applicative, Foldable, Functor, HKT, Monad, Traversable};
 
 /// `OptionWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
 /// for the `Option<T>` type constructor. It allows `Option` to be used with generic
@@ -137,6 +137,22 @@ impl Monad<OptionWitness> for OptionWitness {
         match m_a {
             Some(a) => f(a),
             None => None,
+        }
+    }
+}
+
+// Implementation of Traversable for OptionWitness
+impl Traversable<OptionWitness> for OptionWitness {
+    fn sequence<A, M>(
+        fa: <OptionWitness as HKT>::Type<M::Type<A>>,
+    ) -> <M as HKT>::Type<<OptionWitness as HKT>::Type<A>>
+    where
+        M: Applicative<M> + HKT,
+        A: Clone,
+    {
+        match fa {
+            Some(m_a) => M::fmap(m_a, |a_val: A| Some(a_val)),
+            None => M::pure(None),
         }
     }
 }

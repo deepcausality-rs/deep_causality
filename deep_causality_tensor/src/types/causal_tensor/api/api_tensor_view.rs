@@ -6,7 +6,7 @@ use crate::{CausalTensor, CausalTensorError};
 
 impl<T> CausalTensor<T>
 where
-    T: Clone + Default + PartialOrd,
+    T: Clone,
 {
     /// Creates a new tensor representing a slice of the original tensor along a specified axis.
     ///
@@ -73,5 +73,25 @@ where
     /// - `Err(CausalTensorError)`: If the `axes` are invalid (e.g., wrong length, not a permutation).
     pub fn permute_axes(&self, axes: &[usize]) -> Result<Self, CausalTensorError> {
         self.permute_axes_impl(axes)
+    }
+
+    /// Creates a new tensor that is cyclically shifted (rolled) so that the
+    /// element at `flat_index` moves to position 0.
+    ///
+    /// This is essential for Comonadic `extend` operations, allowing a local
+    /// physics function to always treat the "current" pixel/particle as the
+    /// origin (index 0) of the coordinate system.
+    ///
+    /// # Arguments
+    /// * `flat_index` - The flat index in the data vector that should become the new origin.
+    ///
+    /// # Returns
+    /// A new `CausalTensor` with the same shape, but rotated data.
+    ///
+    /// # Physics Note
+    /// This implements Periodic Boundary Conditions (Topology of a Torus).
+    /// If you shift off the edge, you wrap around to the other side.
+    pub fn shifted_view(&self, flat_index: usize) -> Self {
+        self.shifted_view_impl(flat_index)
     }
 }

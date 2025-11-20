@@ -2,12 +2,11 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::CausalTensorError;
-use crate::types::causal_tensor::CausalTensor;
+use crate::{CausalTensor, CausalTensorError};
 
 impl<T> CausalTensor<T>
 where
-    T: Clone + Default + PartialOrd,
+    T: Clone,
 {
     pub(super) fn slice_impl(
         &self,
@@ -54,5 +53,29 @@ where
 
         // --- 4. Construct and return the new tensor ---
         CausalTensor::new(new_data, new_shape)
+    }
+
+    pub(super) fn shifted_view_impl(&self, flat_index: usize) -> Self
+    where
+        T: Clone,
+    {
+        let len = self.data.len();
+        let shift = flat_index % len; // Safety check
+
+        // 1. Clone the data (Since we are currently owning)
+        let mut new_data = self.data.clone();
+
+        // 2. Rotate the vector
+        // Rust's native rotate_left handles the wrapping logic efficiently.
+        // [A, B, C, D].rotate_left(1) -> [B, C, D, A]
+        // Now index 0 holds 'B', which was previously at index 1.
+        new_data.rotate_left(shift);
+
+        // 3. Return new Tensor (Shape and Strides remain identical)
+        Self {
+            data: new_data,
+            shape: self.shape.clone(),
+            strides: self.strides.clone(),
+        }
     }
 }

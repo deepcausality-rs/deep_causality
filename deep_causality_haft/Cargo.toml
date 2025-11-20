@@ -15,20 +15,26 @@ keywords = ["HKT", "traits"]
 exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
 
-[dependencies]
-
-
-[[example]]
-name = "haft_simple_example"
-path = "examples/simple_haft.rs"
-
+[dependencies.deep_causality_num]
+path = "../deep_causality_num"
+version = "0.1"
 
 [[example]]
-name = "haft_functor_example"
-path = "examples/functor_haft.rs"
-
+name = "haft_comonad_example"
+path = "examples/comonad_haft.rs"
 
 [[example]]
 name = "haft_effect_system_example"
 path = "examples/effect_system_example.rs"
 
+[[example]]
+name = "haft_simple_example"
+path = "examples/simple_haft.rs"
+
+[[example]]
+name = "haft_functor_example"
+path = "examples/functor_haft.rs"
+
+[[example]]
+name = "haft_traversable_example"
+path = "examples/traversable_haft.rs"

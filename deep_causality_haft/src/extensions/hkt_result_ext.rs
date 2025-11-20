@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Applicative, Foldable, Functor, HKT, HKT2, Monad, Placeholder};
+use crate::{Applicative, Foldable, Functor, HKT, HKT2, Monad, Placeholder, Traversable};
 
 /// `ResultWitness<E>` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
 /// for the `Result<T, E>` type constructor, where the error type `E` is fixed.
@@ -160,6 +160,25 @@ where
         match m_a {
             Ok(a) => f(a),
             Err(e) => Err(e),
+        }
+    }
+}
+
+// Implementation of Traversable for ResultWitness
+impl<E> Traversable<ResultWitness<E>> for ResultWitness<E>
+where
+    E: 'static + Clone, // E needs to be clonable for Err propagation
+{
+    fn sequence<A, M>(
+        fa: <ResultWitness<E> as HKT2<E>>::Type<M::Type<A>>,
+    ) -> <M as HKT>::Type<<ResultWitness<E> as HKT2<E>>::Type<A>>
+    where
+        M: Applicative<M> + HKT,
+        A: Clone,
+    {
+        match fa {
+            Ok(m_a) => M::fmap(m_a, |a_val: A| Ok(a_val)),
+            Err(e) => M::pure(Err(e.clone())),
         }
     }
 }

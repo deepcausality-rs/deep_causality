@@ -3,7 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Applicative, Foldable, Functor, HKT, Monad, OptionWitness};
+use deep_causality_haft::{
+    Applicative, Foldable, Functor, HKT, Monad, OptionWitness, ResultWitness, Traversable,
+};
 
 // --- Applicative Tests ---
 
@@ -108,4 +110,43 @@ fn test_monad_option() {
 
     let pure_val = OptionWitness::pure(100);
     assert_eq!(pure_val, Some(100));
+}
+
+// --- Traversable Tests ---
+
+#[test]
+fn test_traversable_option_sequence_option() {
+    type InnerMonad = OptionWitness;
+    let opt_opt_i: Option<Option<i32>> = Some(Some(5));
+    let sequenced: Option<Option<i32>> = OptionWitness::sequence::<i32, InnerMonad>(opt_opt_i);
+    assert_eq!(sequenced, Some(Some(5)));
+
+    let opt_none_i: Option<Option<i32>> = Some(None);
+    let sequenced_none: Option<Option<i32>> =
+        OptionWitness::sequence::<i32, InnerMonad>(opt_none_i);
+    assert_eq!(sequenced_none, None);
+
+    let none_opt_i: Option<Option<i32>> = None;
+    let sequenced_outer_none: Option<Option<i32>> =
+        OptionWitness::sequence::<i32, InnerMonad>(none_opt_i);
+    assert_eq!(sequenced_outer_none, Some(None));
+}
+
+#[test]
+fn test_traversable_option_sequence_result() {
+    type InnerMonad<E> = ResultWitness<E>;
+    let opt_res_i: Option<Result<i32, String>> = Some(Ok(5));
+    let sequenced: Result<Option<i32>, String> =
+        OptionWitness::sequence::<i32, InnerMonad<String>>(opt_res_i);
+    assert_eq!(sequenced, Ok(Some(5)));
+
+    let opt_res_err: Option<Result<i32, String>> = Some(Err("Error!".to_string()));
+    let sequenced_err: Result<Option<i32>, String> =
+        OptionWitness::sequence::<i32, InnerMonad<String>>(opt_res_err);
+    assert_eq!(sequenced_err, Err("Error!".to_string()));
+
+    let none_res_i: Option<Result<i32, String>> = None;
+    let sequenced_outer_none_res: Result<Option<i32>, String> =
+        OptionWitness::sequence::<i32, InnerMonad<String>>(none_res_i);
+    assert_eq!(sequenced_outer_none_res, Ok(None));
 }

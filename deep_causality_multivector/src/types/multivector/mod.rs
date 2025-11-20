@@ -5,7 +5,7 @@
 
 use crate::CausalMultiVectorError;
 use crate::types::metric::Metric;
-use deep_causality_num::Num;
+use deep_causality_num::{Num, Zero};
 
 mod causal_multivector_ops_arithmetic;
 mod causal_multivector_ops_misc;
@@ -21,8 +21,18 @@ mod causal_multivector_ops_product;
 /// Indexing is based on bitmaps: index 3 (binary 011) corresponds to the basis blade $e_1 \wedge e_2$.
 #[derive(Debug, Clone, PartialEq)]
 pub struct CausalMultiVector<T> {
-    pub data: Vec<T>,
-    pub metric: Metric,
+    pub(crate) data: Vec<T>,
+    pub(crate) metric: Metric,
+}
+
+impl<T> CausalMultiVector<T> {
+    pub fn data(&self) -> &Vec<T> {
+        &self.data
+    }
+
+    pub fn metric(&self) -> Metric {
+        self.metric
+    }
 }
 
 impl<T> CausalMultiVector<T> {
@@ -63,7 +73,7 @@ impl<T> CausalMultiVector<T> {
     /// * `metric` - The metric signature.
     pub fn scalar(val: T, metric: Metric) -> Self
     where
-        T: Num + Copy + Clone,
+        T: Zero + Copy + Clone,
     {
         let size = 1 << metric.dimension();
         let mut data = vec![T::zero(); size];

@@ -17,9 +17,9 @@ fn main() {
     let d = DixonAlgebra::new_dixon_algebra_left(data);
 
     println!("\nAlgebra Properties:");
-    println!("  Metric: {}", d.metric);
-    println!("  Dimension (N): {}", d.metric.dimension());
-    println!("  Total Coefficients: {}", d.data.len());
+    println!("  Metric: {}", d.metric());
+    println!("  Dimension (N): {}", d.metric().dimension());
+    println!("  Total Coefficients: {}", d.data().len());
 
     // 2. Construct Basis Vectors e1 and e2
     // e1 corresponds to index 2^0 = 1
@@ -34,8 +34,8 @@ fn main() {
     let e2 = DixonAlgebra::new_dixon_algebra_left(e2_data);
 
     println!("\nBasis Vectors:");
-    println!("  e1 coeff at index 1: {}", e1.data[1]);
-    println!("  e2 coeff at index 2: {}", e2.data[2]);
+    println!("  e1 coeff at index 1: {}", e1.data()[1]);
+    println!("  e2 coeff at index 2: {}", e2.data()[2]);
 
     // 3. Verify Anti-Commutation: e1 * e2 = - e2 * e1
     let e1e2 = e1.clone() * e2.clone();
@@ -45,18 +45,18 @@ fn main() {
     // e2e1 should have coefficient -1.0 at index 3
 
     println!("\nGeometric Product:");
-    println!("  e1 * e2 (index 3): {}", e1e2.data[3]);
-    println!("  e2 * e1 (index 3): {}", e2e1.data[3]);
+    println!("  e1 * e2 (index 3): {}", e1e2.data()[3]);
+    println!("  e2 * e1 (index 3): {}", e2e1.data()[3]);
 
     let sum = e1e2.clone() + e2e1.clone();
-    println!("  (e1 * e2) + (e2 * e1) (should be 0): {}", sum.data[3]);
+    println!("  (e1 * e2) + (e2 * e1) (should be 0): {}", sum.data()[3]);
 
     // 4. Complex Coefficients
     // Let's multiply e1 by i
     let i = Complex::new(0.0, 1.0);
     let ie1 = e1.clone() * i;
     println!("\nComplex Scalar Multiplication:");
-    println!("  i * e1 (index 1): {}", ie1.data[1]);
+    println!("  i * e1 (index 1): {}", ie1.data()[1]);
 
     // 5. Squared Magnitude
     // In Euclidean metric, e1*e1 = 1.

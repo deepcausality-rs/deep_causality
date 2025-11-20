@@ -4,7 +4,8 @@
  */
 
 use crate::{CausalMultiVector, Metric};
-use deep_causality_haft::{Applicative, Functor, HKT, Monad};
+use deep_causality_haft::{Applicative, BoundedComonad, Functor, HKT, Monad};
+use deep_causality_num::Zero;
 
 pub struct CausalMultiVectorWitness;
 
@@ -98,6 +99,43 @@ impl Monad<CausalMultiVectorWitness> for CausalMultiVectorWitness {
         CausalMultiVector {
             data: result_data,
             metric: resulting_metric,
+        }
+    }
+}
+
+// Implementation of CoMonad for CausalMultiVectorWitness
+impl BoundedComonad<CausalMultiVectorWitness> for CausalMultiVectorWitness {
+    fn extract<A>(fa: &CausalMultiVector<A>) -> A
+    where
+        A: Clone,
+    {
+        // The scalar part (coefficient of the 1 basis blade, data[0]) is the natural focus.
+        // CausalMultiVector guarantees data is never empty.
+        fa.data[0].clone()
+    }
+
+    fn extend<A, B, Func>(fa: &CausalMultiVector<A>, mut f: Func) -> CausalMultiVector<B>
+    where
+        Func: FnMut(&CausalMultiVector<A>) -> B,
+        A: Zero + Copy + Clone,
+        B: Zero + Copy + Clone,
+    {
+        {
+            // Functional transformation:
+            // 1. Iterate 0..size
+            // 2. Map index -> Shifted View -> Result
+            // 3. Collect into Vec
+            let new_data: Vec<B> = (0..fa.data.len())
+                .map(|i| {
+                    // Create the permuted view (Context Shift)
+                    let permuted_view = fa.basis_shift(i);
+                    // Since map is sequential, it is safe to call mutable f
+                    f(&permuted_view)
+                })
+                .collect();
+
+            // 3. Return MultiVector of same metric as the original MultiVector
+            CausalMultiVector::new(new_data, fa.metric).expect("Metric mismatch")
         }
     }
 }
