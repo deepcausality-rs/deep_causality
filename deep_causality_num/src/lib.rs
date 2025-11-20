@@ -17,6 +17,7 @@ pub use crate::cast::num_cast::NumCast;
 pub use crate::cast::to_float::{FloatFromInt, IntoFloat};
 pub use crate::cast::to_primitive::ToPrimitive;
 pub use crate::complex::complex_number::{Complex, ComplexNumber};
+pub use crate::complex::octonion_number::{Octonion, OctonionNumber};
 pub use crate::complex::quaternion_number::{Quaternion, QuaternionNumber};
 
 pub use crate::float::Float;

@@ -13,8 +13,8 @@ use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
 
 mod arithmetic;
 mod arithmetic_assign;
-mod complex_number_impl;
 mod as_primitive;
+mod complex_number_impl;
 mod constructors;
 mod debug;
 mod display;

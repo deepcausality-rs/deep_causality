@@ -31,11 +31,12 @@ Custom numerical traits with default implementation for the [DeepCausality proje
 
 **For projects other than DeepCausality, please use the excellent [rust-num](https://github.com/rust-num/num-traits) crate directly, as this crate is very minimalistic and lacks many common features.**
 
-This crate provides a reduced custom implementation of the `rust-num` main traits with the following properties:
+This crate provides a reduced custom implementation of the `rust-num` main traits.
 
 ### Implemented Types
 
 *   `Complex`
+*   `Octonion`
 *   `Quaternion`
 
 * Zero external dependencies
