@@ -30,6 +30,10 @@ os-random = ["deep_causality_uncertain/os-random"]
 path = "../deep_causality_uncertain"
 version = "0.3"
 
+[dependencies.deep_causality_ast]
+path = "../deep_causality_ast"
+version = "0.1"
+
 [dependencies.deep_causality_data_structures]
 path = "../deep_causality_data_structures"
 version = "0.10"

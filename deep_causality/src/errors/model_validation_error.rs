@@ -27,6 +27,9 @@ pub enum ModelValidationError {
 
     // General Errors
     UnsupportedOperation { operation: String },
+    UpdateNodeError { err: String },
+    RemoveNodeError { err: String },
+    InterpreterError { reason: String },
 }
 
 impl Error for ModelValidationError {}
@@ -72,6 +75,15 @@ impl fmt::Display for ModelValidationError {
 
             ModelValidationError::UnsupportedOperation { operation } => {
                 write!(f, "Unsupported operation: {operation}")
+            }
+            ModelValidationError::UpdateNodeError { err } => {
+                write!(f, "Error updating node: {err}")
+            }
+            ModelValidationError::RemoveNodeError { err } => {
+                write!(f, "Error removing node: {err}")
+            }
+            ModelValidationError::InterpreterError { reason } => {
+                write!(f, "Interpreter error: {reason}")
             }
             ModelValidationError::AddContextoidError { err } => {
                 write!(f, "Error adding Contextoid: {err}")
