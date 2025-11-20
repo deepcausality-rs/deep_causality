@@ -4,18 +4,12 @@
  */
 mod getters;
 mod identifiable;
-mod model_builder_processor;
 mod transferable;
 
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
-use crate::types::model_types::model::model_builder_processor::ModelBuilderProcessor;
-use crate::{
-    Assumption, Causaloid, Context, Datable, Generatable, GenerativeProcessor, GenerativeTrigger,
-    IntoEffectValue, ModelBuildError, ModelValidationError, Symbolic,
-};
-use std::hash::Hash;
+use crate::{Assumption, Causaloid, Context, Datable, Identifiable, IntoEffectValue, Symbolic};
 use std::sync::{Arc, RwLock};
 
 #[allow(clippy::type_complexity)]
@@ -77,7 +71,7 @@ impl<I, O, D, S, T, ST, SYM, VS, VT> Model<I, O, D, S, T, ST, SYM, VS, VT>
 where
     I: IntoEffectValue,
     O: IntoEffectValue,
-    D: Default + Datable + Copy + Clone + Hash + Eq + PartialEq,
+    D: Datable + Copy + Clone + PartialEq,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
@@ -85,57 +79,100 @@ where
     VS: Clone,
     VT: Clone,
 {
-    /// Creates a new `Model` by running a one-shot generation process.
-    // ...
-    pub fn with_generator<G>(
-        id: u64,
-        author: &str,
-        description: &str,
-        assumptions: Option<Arc<Vec<Assumption>>>,
-        mut generator: G,
-        trigger: &GenerativeTrigger<D>,
-    ) -> Result<Self, ModelBuildError>
+    /// Evolves the model by applying a sequence of operations defined in an `OpTree`.
+    ///
+    /// This method uses the HKT-based `Interpreter` to execute the operations
+    /// and returns a new `Model` instance reflecting the changes, along with a log of modifications.
+    pub fn evolve(
+        &self,
+        op_tree: &crate::OpTree<I, O, D, S, T, ST, SYM, VS, VT>,
+    ) -> Result<(Self, crate::ModificationLog), crate::ModelValidationError>
     where
-        G: Generatable<I, O, D, S, T, ST, SYM, VS, VT, G>,
+        D: Copy + PartialEq + std::fmt::Debug,
+        S: std::fmt::Debug,
+        T: std::fmt::Debug,
+        ST: std::fmt::Debug,
+        SYM: std::fmt::Debug,
+        VS: std::fmt::Debug,
+        VT: std::fmt::Debug,
     {
-        let initial_contexts = Context::with_capacity(0, "Base context", 120); // Empty world view for build
-        let output = generator.generate(trigger, &initial_contexts)?;
+        // 1. Initialize the interpreter state with the current model's components.
+        //    We clone the Arc-wrapped components to share them with the new state.
+        //    The interpreter will handle cloning the inner data if necessary for modifications.
+        let mut state = crate::CausalSystemState::new();
 
-        // 1. Create the processor.
-        let mut processor = ModelBuilderProcessor::new();
+        // Populate state with current context if it exists
+        if let Some(ctx_arc) = &self.context {
+            // We need to lock to get the ID.
+            // Note: In a real scenario, we might want to deep clone the context
+            // if we want full immutability history, but here we are evolving *this* model.
+            // However, the Interpreter expects to *own* the data it modifies or at least
+            // have mutable access.
+            // For this implementation, we will assume the Interpreter works on the *same*
+            // underlying data structures (interior mutability via RwLock) or creates new ones.
+            //
+            // The `CausalSystemState` uses `HashMap`s. We need to map the current model's
+            // context into the state.
+            let ctx =
+                ctx_arc
+                    .read()
+                    .map_err(|_| crate::ModelValidationError::InterpreterError {
+                        reason: "Failed to read context lock".to_string(),
+                    })?;
+            state.contexts.insert(ctx.id(), ctx.clone());
+        }
 
-        // 2. Use the reusable trait method to process the output.
-        processor.process_output(output)?;
+        // Populate state with current causaloid
+        state
+            .causaloids
+            .insert(self.causaloid.id(), (*self.causaloid).clone());
 
-        // 3. Consume the processor to take ownership of the results.
-        let (causaloid_opt, context_opt) = processor.into_results();
+        // 2. Create the Interpreter.
+        let interpreter = crate::Interpreter::new();
 
-        // 4. Validate and extract the results.
-        let mut final_causaloid =
-            causaloid_opt.ok_or(ModelValidationError::MissingCreateCausaloid)?;
+        // 3. Execute the OpTree.
+        let effect = interpreter.execute(op_tree, state);
 
-        // The context is also owned now.
-        let final_context_arc = if let Some(context) = context_opt {
-            // Create the Arc for the context.
-            let context_arc = Arc::new(RwLock::new(context));
+        let final_state = effect.value.ok_or_else(|| {
+            effect
+                .error
+                .unwrap_or(crate::ModelValidationError::InterpreterError {
+                    reason: "Unknown error during execution".to_string(),
+                })
+        })?;
 
-            final_causaloid.set_context(Some(Arc::clone(&context_arc)));
+        let logs = effect.logs;
 
-            // Return the Arc for the model's own field.
-            Some(context_arc)
+        // 4. Reconstruct the Model from the final state.
+        //    We need to retrieve the (potentially modified) causaloid and context.
+        //    Since the ID of the model's main components might not have changed,
+        //    we look them up by the original IDs.
+
+        let new_causaloid = final_state
+            .causaloids
+            .get(&self.causaloid.id())
+            .cloned()
+            .ok_or_else(|| crate::ModelValidationError::InterpreterError {
+                reason: "Main causaloid lost during evolution".to_string(),
+            })?;
+
+        let new_context = if let Some(old_ctx) = &self.context {
+            let old_id = old_ctx.read().unwrap().id();
+            final_state.contexts.get(&old_id).cloned()
         } else {
             None
         };
 
-        // 5. Construct the model.
-        // All types now match correctly because we have owned values to wrap in Arcs.
-        Ok(Self::new(
-            id,
-            author,
-            description,
-            assumptions,
-            Arc::new(final_causaloid),
-            final_context_arc,
+        Ok((
+            Self::new(
+                self.id,
+                &self.author,
+                &self.description,
+                self.assumptions.clone(),
+                Arc::new(new_causaloid),
+                new_context.map(|c| Arc::new(RwLock::new(c))),
+            ),
+            logs,
         ))
     }
 }
