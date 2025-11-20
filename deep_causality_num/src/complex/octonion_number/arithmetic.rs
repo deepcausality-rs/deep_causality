@@ -10,7 +10,29 @@ use crate::complex::octonion_number::{Octonion, OctonionNumber};
 use crate::float::Float;
 use crate::{One, Zero};
 
-// Add
+/// Implements the addition operator (`+`) for two `Octonion` numbers.
+///
+/// Octonion addition is performed component-wise:
+/// `(s₁ + v₁) + (s₂ + v₂) = (s₁ + s₂) + (v₁ + v₂)`
+///
+/// # Arguments
+/// * `self` - The left-hand side `Octonion`.
+/// * `rhs` - The right-hand side `Octonion`.
+///
+/// # Returns
+/// A new `Octonion` representing the sum of `self` and `rhs`.
+///
+/// # Examples
+/// ```
+/// use deep_causality_num::Octonion;
+///
+/// let o1 = Octonion::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);
+/// let o2 = Octonion::new(9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
+/// let sum = o1 + o2;
+/// assert_eq!(sum.s, 10.0);
+/// assert_eq!(sum.e1, 12.0);
+/// // ... and so on for other components
+/// ```
 impl<F: Float> Add for Octonion<F> {
     type Output = Self;
     fn add(self, rhs: Self) -> Self::Output {
@@ -27,7 +49,29 @@ impl<F: Float> Add for Octonion<F> {
     }
 }
 
-// Sub
+/// Implements the subtraction operator (`-`) for two `Octonion` numbers.
+///
+/// Octonion subtraction is performed component-wise:
+/// `(s₁ + v₁) - (s₂ + v₂) = (s₁ - s₂) + (v₁ - v₂)`
+///
+/// # Arguments
+/// * `self` - The left-hand side `Octonion`.
+/// * `rhs` - The right-hand side `Octonion`.
+///
+/// # Returns
+/// A new `Octonion` representing the difference between `self` and `rhs`.
+///
+/// # Examples
+/// ```
+/// use deep_causality_num::Octonion;
+///
+/// let o1 = Octonion::new(9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
+/// let o2 = Octonion::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);
+/// let diff = o1 - o2;
+/// assert_eq!(diff.s, 8.0);
+/// assert_eq!(diff.e1, 8.0);
+/// // ... and so on for other components
+/// ```
 impl<F: Float> Sub for Octonion<F> {
     type Output = Self;
     fn sub(self, rhs: Self) -> Self::Output {
@@ -44,7 +88,39 @@ impl<F: Float> Sub for Octonion<F> {
     }
 }
 
-// Mul (Octonion Product)
+/// Implements the multiplication operator (`*`) for two `Octonion` numbers.
+///
+/// Octonion multiplication is non-commutative and non-associative, following
+/// the rules of the Cayley-Dickson construction. The product is calculated
+/// based on the Fano plane relationships between the imaginary units.
+///
+/// The formula for the product of two octonions `(s₁, e₁, e₂, e₃, e₄, e₅, e₆, e₇)`
+/// and `(s₂, f₁, f₂, f₃, f₄, f₅, f₆, f₇)` is complex and involves all components.
+///
+/// # Arguments
+/// * `self` - The left-hand side `Octonion`.
+/// * `rhs` - The right-hand side `Octonion`.
+///
+/// # Returns
+/// A new `Octonion` representing the product of `self` and `rhs`.
+///
+/// # Examples
+/// ```
+/// use deep_causality_num::Octonion;
+/// use deep_causality_num::Zero;
+///
+/// let e1 = Octonion::new(0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+/// let e2 = Octonion::new(0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+/// let e3 = Octonion::new(0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0);
+///
+/// // Example of non-commutative multiplication
+/// assert_eq!(e1 * e2, e3);
+/// assert_eq!(e2 * e1, -e3);
+///
+/// // Example of an imaginary unit squared
+/// let neg_one = Octonion::new(-1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+/// assert_eq!(e1 * e1, neg_one);
+/// ```
 impl<F: Float> Mul for Octonion<F> {
     type Output = Self;
     fn mul(self, rhs: Self) -> Self::Output {
@@ -104,7 +180,29 @@ impl<F: Float> Mul for Octonion<F> {
     }
 }
 
-// Mul (Scalar)
+/// Implements scalar multiplication for an `Octonion` by a scalar of type `F`.
+///
+/// Each component of the octonion is multiplied by the scalar value.
+/// `o * scalar = (s * scalar, e₁ * scalar, ..., e₇ * scalar)`
+///
+/// # Arguments
+/// * `self` - The `Octonion` to be multiplied.
+/// * `scalar` - The scalar value of type `F`.
+///
+/// # Returns
+/// A new `Octonion` representing the product of `self` and `scalar`.
+///
+/// # Examples
+/// ```
+/// use deep_causality_num::Octonion;
+///
+/// let o = Octonion::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);
+/// let scalar = 2.0;
+/// let prod = o * scalar;
+/// assert_eq!(prod.s, 2.0);
+/// assert_eq!(prod.e1, 4.0);
+/// // ... and so on for other components
+/// ```
 impl<F: Float> Mul<F> for Octonion<F> {
     type Output = Self;
     fn mul(self, scalar: F) -> Self {
@@ -121,7 +219,45 @@ impl<F: Float> Mul<F> for Octonion<F> {
     }
 }
 
-// Div
+/// Implements the division operator (`/`) for two `Octonion` numbers.
+///
+/// Octonion division is defined as multiplication by the inverse of the divisor:
+/// `self / other = self * other.inverse()`.
+///
+/// Due to the non-associativity of octonions, there are distinct left and right
+/// division operations. This implementation performs right division (equivalent to
+/// `self * other⁻¹`).
+///
+/// # Arguments
+/// * `self` - The dividend `Octonion`.
+/// * `other` - The divisor `Octonion`.
+///
+/// # Returns
+/// A new `Octonion` representing the quotient of `self` divided by `other`.
+/// If `other` is a zero octonion, the result will have NaN components.
+///
+/// # Notes
+/// The `clippy::suspicious_arithmetic_impl` lint is allowed here because the
+/// implementation delegates to `Mul` and `inverse()`, which correctly handles
+/// the complex nature of octonion division.
+///
+/// # Examples
+/// ```
+/// use deep_causality_num::Octonion;
+/// use deep_causality_num::{One, Zero};
+///
+/// let o1 = Octonion::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);
+/// let o_one = Octonion::one(); // Identity octonion (1 + 0e1 + ...)
+/// let result = o1 / o_one;
+/// assert_eq!(result, o1);
+///
+/// // Division of imaginary units
+/// let e1 = Octonion::new(0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+/// let e2 = Octonion::new(0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+/// let e3 = Octonion::new(0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0);
+/// let neg_e3 = -e3;
+/// assert_eq!(e1 / e2, neg_e3);
+/// ```
 #[allow(clippy::suspicious_arithmetic_impl)]
 impl<F: Float> Div for Octonion<F> {
     type Output = Self;
@@ -130,7 +266,30 @@ impl<F: Float> Div for Octonion<F> {
     }
 }
 
-// Div (Scalar)
+/// Implements scalar division for an `Octonion` by a scalar of type `F`.
+///
+/// Each component of the octonion is divided by the scalar value.
+/// `o / scalar = (s / scalar, e₁ / scalar, ..., e₇ / scalar)`
+///
+/// # Arguments
+/// * `self` - The `Octonion` to be divided.
+/// * `scalar` - The scalar value of type `F`.
+///
+/// # Returns
+/// A new `Octonion` representing the quotient of `self` divided by `scalar`.
+/// If `scalar` is zero, the result will have infinite or NaN components.
+///
+/// # Examples
+/// ```
+/// use deep_causality_num::Octonion;
+///
+/// let o = Octonion::new(2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0);
+/// let scalar = 2.0;
+/// let quot = o / scalar;
+/// assert_eq!(quot.s, 1.0);
+/// assert_eq!(quot.e1, 2.0);
+/// // ... and so on for other components
+/// ```
 impl<F: Float> Div<F> for Octonion<F> {
     type Output = Self;
     fn div(self, scalar: F) -> Self {
@@ -139,7 +298,34 @@ impl<F: Float> Div<F> for Octonion<F> {
     }
 }
 
-// Rem
+/// Implements the remainder operator (`%`) for two `Octonion` numbers.
+///
+/// For octonions, the remainder operation is not a standard mathematical concept
+/// in the same way it is for integers or real numbers.
+/// This implementation provides a placeholder behavior.
+///
+/// # Arguments
+/// * `self` - The left-hand side `Octonion`.
+/// * `_other` - The right-hand side `Octonion` (ignored in this placeholder).
+///
+/// # Returns
+/// Currently returns `self` as a placeholder behavior.
+///
+/// # Notes
+/// This implementation is a placeholder. Future versions might provide a more
+/// mathematically meaningful "remainder" or "modulo" operation if such a
+/// definition becomes established or necessary within the context of octonions.
+///
+/// # Examples
+/// ```
+/// use deep_causality_num::Octonion;
+///
+/// let o1 = Octonion::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);
+/// let o2 = Octonion::new(9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
+/// let rem = o1 % o2;
+/// // Placeholder behavior: returns the left-hand side operand.
+/// assert_eq!(rem, o1);
+/// ```
 impl<F: Float> Rem for Octonion<F> {
     type Output = Self;
     fn rem(self, _other: Self) -> Self {
@@ -147,14 +333,71 @@ impl<F: Float> Rem for Octonion<F> {
     }
 }
 
-// Sum
+/// Implements the `Sum` trait for `Octonion`, allowing an iterator of octonions to be summed.
+///
+/// The sum is performed by iteratively adding each octonion in the iterator.
+///
+/// # Arguments
+/// * `iter` - An iterator that yields `Octonion<F>` values.
+///
+/// # Returns
+/// A single `Octonion` representing the sum of all octonions in the iterator.
+/// If the iterator is empty, it returns the zero octonion.
+///
+/// # Examples
+/// ```
+/// use deep_causality_num::Octonion;
+/// use deep_causality_num::Zero;
+///
+/// let o1 = Octonion::new(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+/// let o2 = Octonion::new(2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0);
+/// let o3 = Octonion::new(3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0);
+/// let octonions = vec![o1, o2, o3];
+/// let sum: Octonion<f64> = octonions.into_iter().sum();
+/// assert_eq!(sum.s, 6.0);
+/// assert_eq!(sum.e1, 6.0);
+///
+/// let empty_vec: Vec<Octonion<f64>> = Vec::new();
+/// let empty_sum: Octonion<f64> = empty_vec.into_iter().sum();
+/// assert_eq!(empty_sum, Octonion::zero());
+/// ```
 impl<F: Float> Sum for Octonion<F> {
     fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
         iter.fold(Octonion::zero(), |acc, x| acc + x)
     }
 }
 
-// Product
+/// Implements the `Product` trait for `Octonion`, allowing an iterator of octonions to be multiplied.
+///
+/// The product is performed by iteratively multiplying each octonion in the iterator.
+/// Due to non-associativity, the order of multiplication matters. This implementation
+/// performs sequential left-to-right multiplication.
+///
+/// # Arguments
+/// * `iter` - An iterator that yields `Octonion<F>` values.
+///
+/// # Returns
+/// A single `Octonion` representing the product of all octonions in the iterator.
+/// If the iterator is empty, it returns the identity octonion (1).
+///
+/// # Examples
+/// ```
+/// use deep_causality_num::Octonion;
+/// use deep_causality_num::One;
+///
+/// let o_one = Octonion::one();
+/// let e1 = Octonion::new(0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+/// let e2 = Octonion::new(0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+/// let e3 = Octonion::new(0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0);
+///
+/// let octonions = vec![o_one, e1, e2];
+/// let product: Octonion<f64> = octonions.into_iter().product();
+/// assert_eq!(product, e3); // (1 * e1) * e2 = e1 * e2 = e3
+///
+/// let empty_vec: Vec<Octonion<f64>> = Vec::new();
+/// let empty_product: Octonion<f64> = empty_vec.into_iter().product();
+/// assert_eq!(empty_product, Octonion::one());
+/// ```
 impl<F: Float> Product for Octonion<F> {
     fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
         iter.fold(Octonion::one(), |acc, x| acc * x)

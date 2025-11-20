@@ -7,7 +7,34 @@ use crate::complex::octonion_number::Octonion;
 use crate::float::Float;
 use std::fmt::Display;
 
-// Display
+/// Implements the `Display` trait for `Octonion`.
+///
+/// This allows `Octonion` instances to be formatted using the `{}` display formatter.
+/// It provides a human-readable algebraic representation of the octonion,
+/// e.g., `1 + 2e₁ + 3e₂ + ...`.
+///
+/// If all components are zero, it displays "0".
+///
+/// # Arguments
+/// * `self` - The `Octonion` instance to format.
+/// * `f` - The formatter to write to.
+///
+/// # Returns
+/// A `std::fmt::Result` indicating success or failure of the formatting operation.
+///
+/// # Examples
+/// ```
+/// use deep_causality_num::Octonion;
+///
+/// let o1 = Octonion::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);
+/// println!("{}", o1); // Example output: 1 + 2e₁ + 3e₂ + 4e₃ + 5e₄ + 6e₅ + 7e₆ + 8e₇
+///
+/// let o2 = Octonion::new(0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+/// println!("{}", o2); // Example output: -1e₁
+///
+/// let o3 = Octonion::new(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+/// println!("{}", o3); // Output: 0
+/// ```
 impl<F: Float + Display> Display for Octonion<F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut is_first_term = true;
