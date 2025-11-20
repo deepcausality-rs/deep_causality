@@ -257,19 +257,33 @@ impl Interpreter {
                 let mut new_state = state.clone();
                 let mut logs = ModificationLog::new();
 
-                new_state.causaloids.insert(*id, causaloid.clone());
+                if new_state.causaloids.contains_key(id) {
+                    logs.add_entry(ModificationLogEntry::new(
+                        "CreateCausaloid".to_string(),
+                        id.to_string(),
+                        OpStatus::Failure,
+                        format!("Causaloid with ID {} already exists.", id),
+                    ));
+                    GraphGeneratableEffect {
+                        value: Some(state), // Return original state
+                        error: Some(ModelValidationError::DuplicateCausaloidID { id: *id }),
+                        logs,
+                    }
+                } else {
+                    new_state.causaloids.insert(*id, causaloid.clone());
 
-                logs.add_entry(ModificationLogEntry::new(
-                    "CreateCausaloid",
-                    id.to_string(),
-                    OpStatus::Success,
-                    "Causaloid created/set.",
-                ));
+                    logs.add_entry(ModificationLogEntry::new(
+                        "CreateCausaloid".to_string(),
+                        id.to_string(),
+                        OpStatus::Success,
+                        "Causaloid created.".to_string(),
+                    ));
 
-                GraphGeneratableEffect {
-                    value: Some(new_state),
-                    error: None,
-                    logs,
+                    GraphGeneratableEffect {
+                        value: Some(new_state),
+                        error: None,
+                        logs,
+                    }
                 }
             }
 

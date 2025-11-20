@@ -170,10 +170,9 @@ impl<E: Clone, L: Clone + Default + LogAppend> Applicative<GraphGeneratableEffec
             }
         } else {
             // Should not happen if error is None, but technically possible if we have a state with no value and no error?
-            // Let's treat it as an error or just None.
             GraphGeneratableEffect {
                 value: None,
-                error: None, // Or some generic error?
+                error: None,
                 logs: combined_logs,
             }
         }

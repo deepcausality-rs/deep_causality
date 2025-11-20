@@ -157,7 +157,12 @@ where
             })?;
 
         let new_context = if let Some(old_ctx) = &self.context {
-            let old_id = old_ctx.read().unwrap().id();
+            let old_id = old_ctx
+                .read()
+                .map_err(|_| crate::ModelValidationError::InterpreterError {
+                    reason: "Context read lock poisoned".to_string(),
+                })?
+                .id();
             final_state.contexts.get(&old_id).cloned()
         } else {
             None
