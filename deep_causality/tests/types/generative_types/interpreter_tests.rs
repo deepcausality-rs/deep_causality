@@ -320,9 +320,14 @@ fn test_walk_create_context_duplicate_id() {
 #[test]
 fn test_walk_create_extra_context_success() {
     let interpreter = Interpreter::new();
-    let initial_state = initial_test_state();
+    let mut initial_state = initial_test_state();
+    // Add parent context
+    initial_state
+        .contexts
+        .insert(0, create_dummy_context(0, "Parent", 10));
+
     let op_node = OpTree::new(Operation::CreateExtraContext {
-        context_id: 0, // Placeholder, usually a base context ID
+        context_id: 0,
         extra_context_id: 1,
         capacity: 10,
     });
@@ -337,7 +342,7 @@ fn test_walk_create_extra_context_success() {
         "CreateExtraContext".to_string()
     );
     assert_eq!(result.logs.entries[0].status, OpStatus::Success);
-    assert_eq!(result.value.as_ref().unwrap().contexts.len(), 1);
+    assert_eq!(result.value.as_ref().unwrap().contexts.len(), 2);
     assert!(result.value.as_ref().unwrap().contexts.contains_key(&1));
 }
 
@@ -345,6 +350,10 @@ fn test_walk_create_extra_context_success() {
 fn test_walk_create_extra_context_duplicate_id() {
     let interpreter = Interpreter::new();
     let mut initial_state = initial_test_state();
+    // Add parent context
+    initial_state
+        .contexts
+        .insert(0, create_dummy_context(0, "Parent", 10));
     initial_state
         .contexts
         .insert(1, create_dummy_context(1, "ExistingExtra", 10));
@@ -370,9 +379,8 @@ fn test_walk_create_extra_context_duplicate_id() {
     );
     assert_eq!(result.logs.entries[0].status, OpStatus::Failure);
     // Ensure state is unchanged
-    assert_eq!(result.value.as_ref().unwrap().contexts.len(), 1);
+    assert_eq!(result.value.as_ref().unwrap().contexts.len(), 2);
 }
-
 // Test Operation::UpdateContext
 #[test]
 fn test_walk_update_context_success_with_name() {
@@ -892,4 +900,33 @@ fn test_walk_sequence_log_aggregation() {
             .iter()
             .any(|e| e.operation_name == "CreateContext" && e.target_id == "10")
     );
+}
+
+#[test]
+fn test_walk_create_extra_context_parent_not_found() {
+    let interpreter = Interpreter::new();
+    let initial_state = initial_test_state();
+
+    let op_node = OpTree::new(Operation::CreateExtraContext {
+        context_id: 999, // Non-existent parent context
+        extra_context_id: 1,
+        capacity: 10,
+    });
+
+    let result = interpreter.execute(&op_node, initial_state.clone());
+
+    assert!(result.value.is_some()); // Returns original state
+    assert!(result.error.is_some());
+    assert!(matches!(
+        result.error.unwrap(),
+        ModelValidationError::TargetContextNotFound { id: 999 }
+    ));
+    assert_eq!(result.logs.len(), 1);
+    assert_eq!(
+        result.logs.entries[0].operation_name,
+        "CreateExtraContext".to_string()
+    );
+    assert_eq!(result.logs.entries[0].status, OpStatus::Failure);
+    // Ensure state is unchanged
+    assert_eq!(initial_state.contexts.len(), 0);
 }

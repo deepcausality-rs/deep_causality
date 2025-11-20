@@ -372,14 +372,29 @@ impl Interpreter {
             }
 
             Operation::CreateExtraContext {
-                context_id: _, // Unused?
+                context_id,
                 extra_context_id,
                 capacity,
             } => {
                 let mut new_state = state.clone();
                 let mut logs = ModificationLog::new();
 
-                if new_state.contexts.contains_key(extra_context_id) {
+                // Validate parent context existence
+                if !new_state.contexts.contains_key(context_id) {
+                    logs.add_entry(ModificationLogEntry::new(
+                        "CreateExtraContext",
+                        context_id.to_string(),
+                        OpStatus::Failure,
+                        "Parent context not found.",
+                    ));
+                    GraphGeneratableEffect {
+                        value: Some(state),
+                        error: Some(ModelValidationError::TargetContextNotFound {
+                            id: *context_id,
+                        }),
+                        logs,
+                    }
+                } else if new_state.contexts.contains_key(extra_context_id) {
                     logs.add_entry(ModificationLogEntry::new(
                         "CreateExtraContext",
                         extra_context_id.to_string(),
@@ -413,7 +428,6 @@ impl Interpreter {
                     }
                 }
             }
-
             Operation::UpdateContext { id, new_name } => {
                 let mut new_state = state.clone();
                 let mut logs = ModificationLog::new();
