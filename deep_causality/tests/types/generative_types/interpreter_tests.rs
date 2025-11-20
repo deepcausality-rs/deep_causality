@@ -566,7 +566,7 @@ fn test_walk_add_contextoid_context_not_found() {
         result.error.unwrap(),
         ModelValidationError::TargetContextNotFound { id: 1 }
     ));
-    assert_eq!(result.logs.len(), 0); // No logs added in interpreter when context not found
+    assert_eq!(result.logs.len(), 1);
     // Ensure state is unchanged
     assert_eq!(initial_state.contexts.len(), 0);
 }

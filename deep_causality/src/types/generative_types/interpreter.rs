@@ -260,6 +260,12 @@ impl Interpreter {
                         }
                     }
                 } else {
+                    logs.add_entry(ModificationLogEntry::new(
+                        "AddContextoidToContext",
+                        context_id.to_string(),
+                        OpStatus::Failure,
+                        "Target context not found.",
+                    ));
                     GraphGeneratableEffect {
                         value: Some(state),
                         error: Some(ModelValidationError::TargetContextNotFound {
