@@ -5,11 +5,27 @@
 use deep_causality_multivector::{Metric, RealMultiVector};
 
 #[test]
+fn test_real_euclidean_algrebra() {
+    let e = RealMultiVector::new_euclidean(vec![1.0, 2.0], 1);
+    // Metric: NonEuclidean(1) -> e1^2 = -1
+    assert_eq!(e.metric, Metric::Euclidean(1));
+    assert_eq!(e.data, vec![1.0, 2.0]);
+}
+
+#[test]
 fn test_real_complex_number() {
     let c = RealMultiVector::new_complex_number(1.0, 2.0);
     // Metric: NonEuclidean(1) -> e1^2 = -1
     assert_eq!(c.metric, Metric::NonEuclidean(1));
     assert_eq!(c.data, vec![1.0, 2.0]);
+}
+
+#[test]
+fn test_real_split_complex() {
+    let sc = RealMultiVector::new_split_complex(1.0, 2.0);
+    // Metric: Euclidean(1) -> e1^2 = +1
+    assert_eq!(sc.metric, Metric::Euclidean(1));
+    assert_eq!(sc.data, vec![1.0, 2.0]);
 }
 
 #[test]
@@ -21,11 +37,11 @@ fn test_real_quaternion() {
 }
 
 #[test]
-fn test_real_split_complex() {
-    let sc = RealMultiVector::new_split_complex(1.0, 2.0);
-    // Metric: Euclidean(1) -> e1^2 = +1
-    assert_eq!(sc.metric, Metric::Euclidean(1));
-    assert_eq!(sc.data, vec![1.0, 2.0]);
+fn test_real_split_quaternion() {
+    let q = RealMultiVector::new_split_quaternion(1.0, 2.0, 3.0, 4.0);
+    // Metric: NonEuclidean(2) -> e1^2 = -1, e2^2 = -1
+    assert_eq!(q.metric, Metric::Euclidean(2));
+    assert_eq!(q.data, vec![1.0, 2.0, 3.0, 4.0]);
 }
 
 #[test]
