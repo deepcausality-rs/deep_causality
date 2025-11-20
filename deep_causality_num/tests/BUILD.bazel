@@ -21,7 +21,8 @@ rust_test_suite(
 rust_test_suite(
     name = "complex",
     srcs = glob([
-        "complex/*_tests.rs",
+        "complex/complex_number/*_tests.rs",
+        "complex/quaternion_number/*_tests.rs",
     ]),
     tags = [
         "unit-test",
@@ -83,21 +84,6 @@ rust_test_suite(
     name = "ops",
     srcs = glob([
         "ops/*_tests.rs",
-    ]),
-    tags = [
-        "unit-test",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        # Crate to test
-        "//deep_causality_num",
-    ],
-)
-
-rust_test_suite(
-    name = "quaternion",
-    srcs = glob([
-        "quaternion/*_tests.rs",
     ]),
     tags = [
         "unit-test",

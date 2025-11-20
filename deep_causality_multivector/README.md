@@ -58,9 +58,9 @@ Type: `RealMultiVector`
 | **Quaternions**               | $Cl(0, 2)$ | | `RealMultiVector::new_quaternion` |
 | **Split Quaternions**         | $Cl(2, 0)$ | | `RealMultiVector::new_split_quaternion` |
 | **Pauli (APS)**               | $Cl(3, 0)$ | | `RealMultiVector::new_aps_vector` |
-| **Spacetime (STA)**           | $Cl(1, 3)$ | Physics (+ - - -) | `new_spacetime_algebra_1_3` |
-| **Spacetime (STA)**           | $Cl(3, 1)$ | Math/GR (- + + +) | `new_spacetime_algebra_3_1` |
-| **Conformal (CGA)**           | $Cl(4, 1)$ | | `new_cga_vector` |
+| **Spacetime (STA)**           | $Cl(1, 3)$ | Physics (+ - - -) | `RealMultiVector::new_spacetime_algebra_1_3` |
+| **Spacetime (STA)**           | $Cl(3, 1)$ | Math/GR (- + + +) | `RealMultiVector::new_spacetime_algebra_3_1` |
+| **Conformal (CGA)**           | $Cl(4, 1)$ | | `RealMultiVector::new_cga_vector` |
 
 
 ### 3D Projective Geometric Algebra

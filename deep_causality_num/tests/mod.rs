@@ -9,4 +9,3 @@ mod float_option;
 mod identity;
 mod num;
 mod ops;
-mod quaternion;
