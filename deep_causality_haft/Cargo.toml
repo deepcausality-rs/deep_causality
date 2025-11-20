@@ -15,8 +15,9 @@ keywords = ["HKT", "traits"]
 exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
 
-[dependencies]
-
+[dependencies.deep_causality_num]
+path = "../deep_causality_num"
+version = "0.1"
 
 [[example]]
 name = "haft_comonad_example"

@@ -102,7 +102,7 @@ pub use crate::hkt::Placeholder;
 /// Re-exports the `Applicative` trait for applying functions within a context.
 pub use crate::applicative::Applicative;
 /// Re-exports the `Comonad` trait
-pub use crate::comonad::CoMonad;
+pub use crate::comonad::{BoundedComonad, CoMonad};
 /// Re-exports the `Foldable` trait for reducing data structures.
 pub use crate::foldable::Foldable;
 /// Re-exports the `Functor` trait for mapping over type constructors.

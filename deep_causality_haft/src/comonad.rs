@@ -3,6 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{Functor, HKT};
+use deep_causality_num::Zero;
 
 /// The `CoMonad` trait represents a comonadic context, which is the dual of a `Monad`.
 ///
@@ -120,4 +121,19 @@ pub trait CoMonad<F: HKT>: Functor<F> {
     fn extend<A, B, Func>(fa: &F::Type<A>, f: Func) -> F::Type<B>
     where
         Func: FnMut(&F::Type<A>) -> B;
+}
+
+/// A Comonad that requires its contents to satisfy algebraic bounds.
+/// Essential for structures like MultiVectors that need a 'Zero' to represent
+/// a  Physical Field Operator.
+pub trait BoundedComonad<F: HKT>: Functor<F> {
+    fn extract<A>(fa: &F::Type<A>) -> A
+    where
+        A: Clone; // Extract usually requires Clone
+
+    fn extend<A, B, Func>(fa: &F::Type<A>, f: Func) -> F::Type<B>
+    where
+        Func: FnMut(&F::Type<A>) -> B,
+        A: Zero + Copy + Clone,
+        B: Zero + Copy + Clone;
 }
