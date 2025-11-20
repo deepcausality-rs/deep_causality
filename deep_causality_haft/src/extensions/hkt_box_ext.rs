@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Applicative, Foldable, Functor, HKT, Monad};
+use crate::{Applicative, CoMonad, Foldable, Functor, HKT, Monad};
 use std::boxed::Box;
 
 /// `BoxWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
@@ -127,5 +127,22 @@ impl Monad<BoxWitness> for BoxWitness {
         Func: FnMut(A) -> <BoxWitness as HKT>::Type<B>,
     {
         f(*m_a)
+    }
+}
+
+// Implementation of CoMonad for BoxWitness
+impl CoMonad<BoxWitness> for BoxWitness {
+    fn extract<A>(fa: &<Self as HKT>::Type<A>) -> A
+    where
+        A: Clone,
+    {
+        *fa.clone()
+    }
+
+    fn extend<A, B, Func>(fa: &<Self as HKT>::Type<A>, mut f: Func) -> <Self as HKT>::Type<B>
+    where
+        Func: FnMut(&<Self as HKT>::Type<A>) -> B,
+    {
+        Box::new(f(fa))
     }
 }

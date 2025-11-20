@@ -2,8 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+#[allow(clippy::borrowed_box)]
 
-use deep_causality_haft::{Applicative, BoxWitness, Foldable, Functor, HKT, Monad};
+use deep_causality_haft::{Applicative, BoxWitness, CoMonad, Foldable, Functor, HKT, Monad};
 
 // --- HKT Tests ---
 
@@ -59,4 +60,27 @@ fn test_monad_box() {
 
     let pure_val = BoxWitness::pure(100);
     assert_eq!(pure_val, Box::new(100));
+}
+
+// --- CoMonad Tests ---
+
+#[test]
+fn test_comonad_box_extract() {
+    let box_val = Box::new(10);
+    let extracted = BoxWitness::extract(&box_val);
+    assert_eq!(extracted, 10);
+}
+
+#[test]
+fn test_comonad_box_extend() {
+    let box_val = Box::new(5);
+    // Function to calculate the squared value of the inner content
+    let f = |b: &Box<i32>| (**b) * (**b);
+    let extended = BoxWitness::extend(&box_val, f);
+    assert_eq!(extended, Box::new(25));
+
+    // Function to get a string representation
+    let f_str = |b: &Box<i32>| format!("Value: {}", **b);
+    let extended_str = BoxWitness::extend(&box_val, f_str);
+    assert_eq!(extended_str, Box::new("Value: 5".to_string()));
 }

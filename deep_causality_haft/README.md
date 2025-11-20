@@ -17,7 +17,7 @@ works with any type constructor that can be mapped over (a `Functor`), without c
 or something else.
 
 This crate provides the fundamental traits (`HKT`, `HKT2`, `HKT3`, `HKT4`, `HKT5`) and functional traits (`Functor`,
-`Applicative`, `Monad`, `Foldable`) to enable this pattern.
+`Applicative`, `Monad`, `Foldable`, `Traversable`) to enable this pattern.
 
 ## Usage
 

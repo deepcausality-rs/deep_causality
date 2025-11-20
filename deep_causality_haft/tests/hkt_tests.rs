@@ -8,49 +8,49 @@ use deep_causality_haft::{HKT, HKT2, HKT3, HKT4, HKT5, Placeholder};
 // --- HKT (Arity 1) Tests ---
 
 // Witness for Option
-struct OptionWitness;
+struct TestOptionWitness;
 
-impl HKT for OptionWitness {
+impl HKT for TestOptionWitness {
     type Type<T> = Option<T>;
 }
 
 #[test]
 fn test_hkt_option() {
-    let value: <OptionWitness as HKT>::Type<i32> = Some(10);
+    let value: <TestOptionWitness as HKT>::Type<i32> = Some(10);
     assert_eq!(value, Some(10));
 
-    let none_value: <OptionWitness as HKT>::Type<i32> = None;
+    let none_value: <TestOptionWitness as HKT>::Type<i32> = None;
     assert_eq!(none_value, None);
 }
 
 // Witness for Vec
-struct VecWitness;
+struct TestVecWitness;
 
-impl HKT for VecWitness {
+impl HKT for TestVecWitness {
     type Type<T> = Vec<T>;
 }
 
 #[test]
 fn test_hkt_vec() {
-    let value: <VecWitness as HKT>::Type<i32> = vec![1, 2, 3];
+    let value: <TestVecWitness as HKT>::Type<i32> = vec![1, 2, 3];
     assert_eq!(value, vec![1, 2, 3]);
 
-    let empty_value: <VecWitness as HKT>::Type<i32> = Vec::new();
+    let empty_value: <TestVecWitness as HKT>::Type<i32> = Vec::new();
     assert_eq!(empty_value, Vec::<i32>::new());
 }
 
 // --- HKT2 (Arity 2) Tests ---
 
 // Witness for Result<T, E> where E is fixed
-struct ResultWitness<E>(Placeholder, E);
+struct TestResultWitness<E>(Placeholder, E);
 
-impl<E> HKT2<E> for ResultWitness<E> {
+impl<E> HKT2<E> for TestResultWitness<E> {
     type Type<T> = Result<T, E>;
 }
 
 #[test]
 fn test_hkt2_result() {
-    type MyResult<T> = <ResultWitness<String> as HKT2<String>>::Type<T>;
+    type MyResult<T> = <TestResultWitness<String> as HKT2<String>>::Type<T>;
 
     let ok_value: MyResult<i32> = Ok(20);
     assert_eq!(ok_value, Ok(20));

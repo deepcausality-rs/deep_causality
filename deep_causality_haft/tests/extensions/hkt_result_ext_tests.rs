@@ -2,7 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_haft::{Applicative, Foldable, Functor, HKT, HKT2, Monad, ResultWitness};
+use deep_causality_haft::{
+    Applicative, Foldable, Functor, HKT, HKT2, Monad, OptionWitness, ResultWitness, Traversable,
+};
 
 // --- Applicative Tests ---
 
@@ -120,4 +122,45 @@ fn test_monad_result() {
 
     let pure_val: Result<i32, String> = ResultWitness::pure(100);
     assert_eq!(pure_val, Ok(100));
+}
+
+// --- Traversable Tests ---
+
+#[test]
+fn test_traversable_result_sequence_option() {
+    type InnerMonad = OptionWitness;
+    let res_opt_i: Result<Option<i32>, String> = Ok(Some(5));
+    let sequenced: Option<Result<i32, String>> =
+        ResultWitness::sequence::<i32, InnerMonad>(res_opt_i);
+    assert_eq!(sequenced, Some(Ok(5)));
+
+    let res_none_i: Result<Option<i32>, String> = Ok(None);
+    let sequenced_none: Option<Result<i32, String>> =
+        ResultWitness::sequence::<i32, InnerMonad>(res_none_i);
+    assert_eq!(sequenced_none, None);
+
+    let res_err_opt: Result<Option<i32>, String> = Err("Outer Error!".to_string());
+    let sequenced_err: Option<Result<i32, String>> =
+        ResultWitness::sequence::<i32, InnerMonad>(res_err_opt);
+    assert_eq!(sequenced_err, Some(Err("Outer Error!".to_string())));
+}
+
+#[test]
+fn test_traversable_result_sequence_result() {
+    type InnerMonad<E> = ResultWitness<E>;
+    let res_res_i: Result<Result<i32, String>, String> = Ok(Ok(5));
+    let sequenced: Result<Result<i32, String>, String> =
+        ResultWitness::sequence::<i32, InnerMonad<String>>(res_res_i);
+    assert_eq!(sequenced, Ok(Ok(5)));
+
+    let res_res_inner_err: Result<Result<i32, String>, String> =
+        Ok(Err("Inner Error!".to_string()));
+    let sequenced_inner_err: Result<Result<i32, String>, String> =
+        ResultWitness::sequence::<i32, InnerMonad<String>>(res_res_inner_err);
+    assert_eq!(sequenced_inner_err, Err("Inner Error!".to_string()));
+
+    let res_res_outer_err: Result<Result<i32, String>, String> = Err("Outer Error!".to_string());
+    let sequenced_outer_err: Result<Result<i32, String>, String> =
+        ResultWitness::sequence::<i32, InnerMonad<String>>(res_res_outer_err);
+    assert_eq!(sequenced_outer_err, Ok(Err("Outer Error!".to_string())));
 }

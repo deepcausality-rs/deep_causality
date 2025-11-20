@@ -40,6 +40,7 @@
 //! to other Rust projects requiring advanced functional programming patterns and effect management.
 //!
 mod applicative;
+mod comonad;
 mod effect;
 mod extensions;
 mod foldable;
@@ -47,16 +48,10 @@ mod functor;
 mod hkt;
 mod monad;
 mod monad_effect;
+mod traversable;
 pub mod utils_tests;
 
-/// Re-exports the `Applicative` trait for applying functions within a context.
-pub use crate::applicative::Applicative;
-/// Re-exports the `Effect3` trait for arity-3 type-encoded effect systems.
-pub use crate::effect::Effect3;
-/// Re-exports the `Effect4` trait for arity-4 type-encoded effect systems.
-pub use crate::effect::Effect4;
-/// Re-exports the `Effect5` trait for arity-5 type-encoded effect systems.
-pub use crate::effect::Effect5;
+// Functional extensions for std types
 /// Re-exports `BTreeMapWitness`, the HKT witness for `BTreeMap<K, V>`.
 pub use crate::extensions::func_fold_b_tree_map_ext::BTreeMapWitness;
 /// Re-exports `HashMapWitness`, the HKT witness for `HashMap<K, V>`.
@@ -73,10 +68,23 @@ pub use crate::extensions::hkt_option_ext::OptionWitness;
 pub use crate::extensions::hkt_result_ext::ResultWitness;
 /// Re-exports `VecWitness`, the HKT witness for `Vec<T>`.
 pub use crate::extensions::hkt_vec_ext::VecWitness;
-/// Re-exports the `Foldable` trait for reducing data structures.
-pub use crate::foldable::Foldable;
-/// Re-exports the `Functor` trait for mapping over type constructors.
-pub use crate::functor::Functor;
+
+// Effects for Arity 3 - 5
+/// Re-exports the `Effect3` trait for arity-3 type-encoded effect systems.
+pub use crate::effect::Effect3;
+/// Re-exports the `Effect4` trait for arity-4 type-encoded effect systems.
+pub use crate::effect::Effect4;
+/// Re-exports the `Effect5` trait for arity-5 type-encoded effect systems.
+pub use crate::effect::Effect5;
+// Monad Effects
+/// Re-exports the `MonadEffect3` trait for monadic operations in arity-3 effect systems.
+pub use crate::monad_effect::MonadEffect3;
+/// Re-exports the `MonadEffect4` trait for monadic operations in arity-4 effect systems.
+pub use crate::monad_effect::MonadEffect4;
+/// Re-exports the `MonadEffect5` trait for monadic operations in arity-5 effect systems.
+pub use crate::monad_effect::MonadEffect5;
+
+// HKT Trait for Arity 1 - 5
 /// Re-exports the core `HKT` trait for arity-1 Higher-Kinded Types.
 pub use crate::hkt::HKT;
 /// Re-exports the `HKT2` trait for arity-2 Higher-Kinded Types.
@@ -89,11 +97,17 @@ pub use crate::hkt::HKT4;
 pub use crate::hkt::HKT5;
 /// Re-exports `Placeholder`, a zero-sized type used in HKT witness implementations.
 pub use crate::hkt::Placeholder;
+
+// Functional traits
+/// Re-exports the `Applicative` trait for applying functions within a context.
+pub use crate::applicative::Applicative;
+/// Re-exports the `Comonad` trait
+pub use crate::comonad::CoMonad;
+/// Re-exports the `Foldable` trait for reducing data structures.
+pub use crate::foldable::Foldable;
+/// Re-exports the `Functor` trait for mapping over type constructors.
+pub use crate::functor::Functor;
 /// Re-exports the `Monad` trait for sequencing effectful computations.
 pub use crate::monad::Monad;
-/// Re-exports the `MonadEffect3` trait for monadic operations in arity-3 effect systems.
-pub use crate::monad_effect::MonadEffect3;
-/// Re-exports the `MonadEffect4` trait for monadic operations in arity-4 effect systems.
-pub use crate::monad_effect::MonadEffect4;
-/// Re-exports the `MonadEffect5` trait for monadic operations in arity-5 effect systems.
-pub use crate::monad_effect::MonadEffect5;
+/// Re-exports the `Traversable` trait to flip generic structures inside out.
+pub use crate::traversable::Traversable;

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Applicative, Foldable, Functor, HKT, Monad};
+use crate::{Applicative, Foldable, Functor, HKT, Monad, Traversable};
 
 /// `VecWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
 /// for the `Vec<T>` type constructor. It allows `Vec` to be used with generic
@@ -132,5 +132,33 @@ impl Monad<VecWitness> for VecWitness {
         Func: FnMut(A) -> <VecWitness as HKT>::Type<B>,
     {
         m_a.into_iter().flat_map(f).collect()
+    }
+}
+
+// Implementation of Traversable for VecWitness
+impl Traversable<VecWitness> for VecWitness {
+    fn sequence<A, M>(
+        fa: <VecWitness as HKT>::Type<M::Type<A>>,
+    ) -> <M as HKT>::Type<<VecWitness as HKT>::Type<A>>
+    where
+        M: Applicative<M> + HKT,
+        A: Clone,
+    {
+        fa.into_iter()
+            .fold(M::pure(Vec::new()), |m_acc_vec, m_item| {
+                M::apply(
+                    M::apply(
+                        M::pure(|acc_vec: Vec<A>| {
+                            move |current_item: A| {
+                                let mut new_vec = acc_vec.clone();
+                                new_vec.push(current_item);
+                                new_vec
+                            }
+                        }),
+                        m_acc_vec,
+                    ),
+                    m_item,
+                )
+            })
     }
 }
