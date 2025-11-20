@@ -382,6 +382,9 @@ rust_test_suite(
     deps = [
         # Crate to test
         "//deep_causality",
+        # Deps
+        "//deep_causality_ast",
+        "//deep_causality_haft",
     ],
 )
 
