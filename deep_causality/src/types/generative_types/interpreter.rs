@@ -30,8 +30,8 @@
 
 use crate::{
     AuditableGraphGenerator, Causaloid, Context, GraphGeneratableEffect,
-    GraphGeneratableEffectSystem, ModelValidationError, ModificationLog, ModificationLogEntry,
-    OpStatus, OpTree, Operation,
+    GraphGeneratableEffectSystem, Identifiable, ModelValidationError, ModificationLog,
+    ModificationLogEntry, OpStatus, OpTree, Operation,
 };
 
 use crate::{
@@ -187,7 +187,7 @@ impl Interpreter {
                     ));
 
                     GraphGeneratableEffect {
-                        value: Some(state), // Return original state
+                        value: Some(state),
                         error: Some(ModelValidationError::DuplicateContextId { id: *id }),
                         logs,
                     }
@@ -219,32 +219,49 @@ impl Interpreter {
                 let mut logs = ModificationLog::new();
 
                 if let Some(context) = new_state.contexts.get_mut(context_id) {
-                    // Use ContextuableGraph trait method
-                    match context.add_node(contextoid.clone()) {
-                        Ok(_) => {
-                            logs.add_entry(ModificationLogEntry::new(
-                                "AddContextoidToContext",
-                                context_id.to_string(),
-                                OpStatus::Success,
-                                "Contextoid added.",
-                            ));
-                            GraphGeneratableEffect {
-                                value: Some(new_state),
-                                error: None,
-                                logs,
-                            }
-                        }
-                        Err(e) => GraphGeneratableEffect {
-                            value: None,
+                    if context.get_node_index_by_id(contextoid.id()).is_some() {
+                        logs.add_entry(ModificationLogEntry::new(
+                            "AddContextoidToContext",
+                            contextoid.id().to_string(),
+                            OpStatus::Failure,
+                            "Contextoid already exists.",
+                        ));
+
+                        GraphGeneratableEffect {
+                            value: Some(state),
                             error: Some(ModelValidationError::AddContextoidError {
-                                err: e.to_string(),
+                                err: "Duplicate contextoid ID".to_string(),
                             }),
                             logs,
-                        },
+                        }
+                    } else {
+                        // Use ContextuableGraph trait method
+                        match context.add_node(contextoid.clone()) {
+                            Ok(_) => {
+                                logs.add_entry(ModificationLogEntry::new(
+                                    "AddContextoidToContext",
+                                    context_id.to_string(),
+                                    OpStatus::Success,
+                                    "Contextoid added.",
+                                ));
+                                GraphGeneratableEffect {
+                                    value: Some(new_state),
+                                    error: None,
+                                    logs,
+                                }
+                            }
+                            Err(e) => GraphGeneratableEffect {
+                                value: Some(state),
+                                error: Some(ModelValidationError::AddContextoidError {
+                                    err: e.to_string(),
+                                }),
+                                logs,
+                            },
+                        }
                     }
                 } else {
                     GraphGeneratableEffect {
-                        value: None,
+                        value: Some(state),
                         error: Some(ModelValidationError::TargetContextNotFound {
                             id: *context_id,
                         }),
@@ -265,7 +282,7 @@ impl Interpreter {
                         format!("Causaloid with ID {} already exists.", id),
                     ));
                     GraphGeneratableEffect {
-                        value: Some(state), // Return original state
+                        value: Some(state),
                         error: Some(ModelValidationError::DuplicateCausaloidID { id: *id }),
                         logs,
                     }
@@ -312,7 +329,7 @@ impl Interpreter {
                         format!("Causaloid with ID {} not found", id),
                     ));
                     GraphGeneratableEffect {
-                        value: Some(state), // Return original state on failure
+                        value: Some(state),
                         error: Some(ModelValidationError::UpdateNodeError {
                             err: format!("Causaloid with ID {} not found", id),
                         }),
@@ -345,7 +362,7 @@ impl Interpreter {
                         format!("Causaloid with ID {} not found.", id),
                     ));
                     GraphGeneratableEffect {
-                        value: Some(state), // Return original state on failure
+                        value: Some(state),
                         error: Some(ModelValidationError::RemoveNodeError {
                             err: format!("Causaloid with ID {} not found.", id),
                         }),
@@ -426,7 +443,7 @@ impl Interpreter {
                         format!("Context with ID {} not found", id),
                     ));
                     GraphGeneratableEffect {
-                        value: None,
+                        value: Some(state),
                         error: Some(ModelValidationError::TargetContextNotFound { id: *id }),
                         logs,
                     }
@@ -457,7 +474,7 @@ impl Interpreter {
                         format!("Context with ID {} not found", id),
                     ));
                     GraphGeneratableEffect {
-                        value: None,
+                        value: Some(state),
                         error: Some(ModelValidationError::TargetContextNotFound { id: *id }),
                         logs,
                     }
@@ -495,7 +512,7 @@ impl Interpreter {
                                 format!("Failed to update contextoid: {}", e),
                             ));
                             GraphGeneratableEffect {
-                                value: None,
+                                value: Some(state),
                                 error: Some(ModelValidationError::UpdateNodeError {
                                     err: e.to_string(),
                                 }),
@@ -511,7 +528,7 @@ impl Interpreter {
                         "Target context not found.",
                     ));
                     GraphGeneratableEffect {
-                        value: None,
+                        value: Some(state),
                         error: Some(ModelValidationError::TargetContextNotFound {
                             id: *context_id,
                         }),
@@ -550,7 +567,7 @@ impl Interpreter {
                                 format!("Failed to delete contextoid: {}", e),
                             ));
                             GraphGeneratableEffect {
-                                value: None,
+                                value: Some(state),
                                 error: Some(ModelValidationError::RemoveNodeError {
                                     err: e.to_string(),
                                 }),
@@ -566,7 +583,7 @@ impl Interpreter {
                         "Target context not found.",
                     ));
                     GraphGeneratableEffect {
-                        value: None,
+                        value: Some(state),
                         error: Some(ModelValidationError::TargetContextNotFound {
                             id: *context_id,
                         }),
