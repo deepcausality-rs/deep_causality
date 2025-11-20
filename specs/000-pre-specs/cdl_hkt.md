@@ -18,6 +18,8 @@ The `deep_causality_haft` crate offers the following foundational traits:
 *   **Functor**: Defines the `fmap` operation, which applies a function to the value *inside* a container, preserving its structure.
 *   **Applicative**: Extends `Functor` by providing `pure` (to lift a pure value into a container) and `apply` (to apply a function *within* a container to a value *within* a container).
 *   **Monad**: Extends `Applicative` with a `bind` operation. `bind` is the core sequencing primitive; it takes a container of a value and a function that returns another container, flattening the nested containers. This is crucial for chaining computations that might have side-effects.
+*   **CoMonad**: The dual of a `Monad`. It provides `extract` to get the value at the focus of the context, and `extend` to derive a new comonadic context by applying a function that observes the original context. Useful for inspecting and transforming contexts based on their content.
+*   **Traversable**: Enables "sequencing" a structure of monadic values (`F<M<A>>`) into a monadic value of a structure (`M<F<A>>`). This is powerful for orchestrating multiple effectful computations, allowing uniform error propagation and result collection across a collection.
 *   **Type-Encoded Effect Systems (`EffectN`, `MonadEffectN`)**: These traits are designed to define custom "effect monads" that can explicitly track multiple types of side-effects (e.g., errors, warnings, logs, metrics) alongside a primary value, all within the type system. An `EffectN` trait defines the fixed types for `N-1` effect channels, and `MonadEffectN` provides `pure` and `bind` implementations for that specific effect system.
 
 ## 3. Proposed Architecture: The `CdlEffect` Monad
@@ -285,11 +287,30 @@ Each existing CDL stage would be modified to return a `CdlEffect` instance, enca
 *   **Improved Diagnostics**: Users receive a comprehensive report at the end, detailing not only the final result (or the primary fatal error) but also a full history of all warnings encountered, ordered by the stage they occurred in.
 *   **Greater Flexibility**: The `CdlEffect` can be extended to include other effect channels (e.g., performance metrics, audit trails) without fundamentally altering the pipeline's structure.
 
-## 7. Future Considerations
+## 7. Future Considerations and Advanced Usage
 
-This architectural shift paves the way for advanced features:
+### 7.1. Orchestrating Multiple Pipelines with `Traversable`
+
+The `Traversable` trait offers a powerful mechanism for managing collections of `CdlEffect` instances. If we have multiple independent causal discovery pipelines (e.g., for different datasets or configurations), each yielding a `CdlEffect<ProcessFormattedResult>`, `Traversable` can be used to aggregate their results.
+
+For example, given a `Vec<CdlEffect<ProcessFormattedResult>>`, applying `Traversable::sequence` (via `VecWitness`) could transform this into `CdlEffect<Vec<ProcessFormattedResult>>`. This means:
+*   If any individual `CdlEffect` in the vector contains a fatal error, the resulting `CdlEffect<Vec<ProcessFormattedResult>>` will contain that fatal error (the first one encountered).
+*   All warnings from all individual `CdlEffect`s (whether they succeeded or failed) will be accumulated into the final `CdlEffect`'s `CdlWarningLog`.
+*   If all individual `CdlEffect`s succeed, the final `CdlEffect` will contain a `Vec<ProcessFormattedResult>` along with all accumulated warnings.
+
+This provides a unified and type-safe way to manage error propagation and warning collection across batch processing or parallel execution of CDL tasks.
+
+### 7.2. Inspecting and Deriving from `CdlEffect` with `CoMonad`
+
+The `CoMonad` trait, with its `extract` and `extend` operations, offers capabilities for observing and deriving new contexts from a `CdlEffect`.
+
+*   **`extract`**: After a pipeline has run and produced a `CdlEffect<ProcessFormattedResult>`, `extract` could be used to directly retrieve the `ProcessFormattedResult` (if present) for immediate use, while the full `CdlEffect` (with errors and warnings) remains available for inspection.
+*   **`extend`**: This allows creating new `CdlEffect` instances (e.g., an `CdlEffect<SummaryReport>`) by observing a completed `CdlEffect<ProcessFormattedResult>`. The observation function could analyze the `ProcessFormattedResult` along with its associated warnings and errors to generate a high-level summary or derive a new pipeline configuration. This could be particularly useful for adaptive systems that react to the outcomes of previous analyses.
+
+### 7.3. General Considerations
+
 *   **Customizable Error/Warning Policies**: Users could configure whether a certain type of warning should be elevated to an error, or if certain errors are degradable to warnings.
-*   **Parallel Processing Integration**: Monadic structures can often integrate well with parallel execution strategies, where effects from different branches are merged.
+*   **Parallel Processing Integration**: Monadic and traversable structures are well-suited for integration with asynchronous and parallel execution strategies, further leveraging Rust's concurrency features.
 *   **Advanced Reporting**: A dedicated `CdlReport` type could be created from the final `CdlEffect` to provide structured access to all accumulated information.
 
-By adopting an HKT-based, monadic approach, the CDL can become a more powerful, flexible, and transparent framework for causal discovery.
+By adopting an HKT-based, monadic approach with the added power of `Traversable` and `CoMonad`, the CDL can become a more powerful, flexible, and transparent framework for causal discovery.
