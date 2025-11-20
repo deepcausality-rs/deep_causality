@@ -53,10 +53,27 @@ fn test_octonion_operator() {
     assert_eq!(oo.data.len(), 64);
 }
 
-// #[test]
-// fn new_quaternion_operator() {
-//
-// }
+#[test]
+fn test_quaternion_operator() {
+    // Quaternion Operator is Cl_C(4) -> 16 dimensions (complex)
+    let dim = 4;
+    let size = 1 << dim;
+    // Assuming DixonAlgebra is an alias for ComplexMultiVector
+    let data = vec![Complex::new(0.0, 0.0); size];
+    let qo = DixonAlgebra::new_quaternion_operator(data);
+
+    // 1. Check Dimension
+    assert_eq!(qo.metric.dimension(), dim);
+
+    // 2. Check Metric Signature
+    match qo.metric {
+        Metric::NonEuclidean(4) => {}
+        _ => panic!("Quaternion Operator should be NonEuclidean(4)"),
+    }
+
+    // 3. Check Data Length (2^4 = 16)
+    assert_eq!(qo.data.len(), size);
+}
 
 #[test]
 fn test_gut_algebra() {
