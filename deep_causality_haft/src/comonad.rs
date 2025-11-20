@@ -20,11 +20,6 @@ use crate::{Functor, HKT};
 ///
 /// # Intuition & Analogy
 ///
-/// Imagine a `CoMonad` as a computational "world" or "environment" that you can look into.
-/// - `extract` is like opening the door and looking at what's immediately in front of you.
-/// - `extend` is like describing all possible future worlds you could be in, based on observing
-///   the current world.
-///
 /// A common analogy is a spreadsheet cell:
 /// - `extract` gets the value of the current cell.
 /// - `extend` allows you to fill a new spreadsheet with the results of formulas applied

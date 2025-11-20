@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Applicative, Foldable, Functor, HKT, Monad};
+use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Monad};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 
 // --- HKT Tests ---
@@ -137,4 +137,48 @@ fn test_monad_causal_tensor_bind_to_empty() {
     let bound_tensor = CausalTensorWitness::bind(tensor, f);
     assert!(bound_tensor.is_empty());
     assert_eq!(bound_tensor.shape(), &[0]);
+}
+
+// ---CoMonad Tests ---
+
+#[test]
+fn test_comonad_causal_tensor_extract_scalar() {
+    let scalar_tensor = CausalTensor::new(vec![10.0], vec![]).unwrap();
+    let extracted = CausalTensorWitness::extract(&scalar_tensor);
+    assert_eq!(extracted, 10.0);
+}
+
+#[test]
+#[should_panic(expected = "CoMonad::extract cannot be called on an empty CausalTensor.")]
+fn test_comonad_causal_tensor_extract_empty_panics() {
+    let empty_tensor: CausalTensor<f64> = CausalTensor::new(vec![], vec![0]).unwrap();
+    CausalTensorWitness::extract(&empty_tensor);
+}
+
+#[test]
+fn test_comonad_causal_tensor_extract_non_scalar_first_element() {
+    let vector_tensor = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
+    let extracted = CausalTensorWitness::extract(&vector_tensor);
+    // Arbitrary choice, should extract the first element
+    assert_eq!(extracted, 1.0);
+}
+
+#[test]
+fn test_comonad_causal_tensor_extend_scalar() {
+    let scalar_tensor = CausalTensor::new(vec![5.0], vec![]).unwrap();
+    // Function that observes the context (the scalar tensor) and returns a new value
+    let f = |ct: &CausalTensor<f64>| ct.data()[0] * 2.0;
+    let extended = CausalTensorWitness::extend(&scalar_tensor, f);
+    assert_eq!(extended, CausalTensor::new(vec![10.0], vec![]).unwrap());
+}
+
+#[test]
+fn test_comonad_causal_tensor_extend_non_scalar() {
+    let vector_tensor = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
+    // Function that observes the context (the vector tensor) and returns a summary value
+    // Requires T: Add for sum()
+    let f = |ct: &CausalTensor<f64>| ct.data().iter().cloned().sum::<f64>(); // Added .cloned() for sum
+    let extended = CausalTensorWitness::extend(&vector_tensor, f);
+    // The result should be a scalar tensor containing the sum of the vector elements
+    assert_eq!(extended, CausalTensor::new(vec![6.0], vec![]).unwrap());
 }

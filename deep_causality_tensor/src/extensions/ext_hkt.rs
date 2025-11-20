@@ -4,7 +4,7 @@
  */
 
 use crate::CausalTensor;
-use deep_causality_haft::{Applicative, Foldable, Functor, HKT, Monad};
+use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Monad};
 
 /// `CausalTensorWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
 /// for the `CausalTensor<T>` type constructor. It allows `CausalTensor` to be used with generic
@@ -144,5 +144,45 @@ impl Monad<CausalTensorWitness> for CausalTensorWitness {
         let result_len = result_data.len();
         CausalTensor::new(result_data, vec![result_len])
             .expect("Concatenated tensor creation should not fail")
+    }
+}
+
+// Implementation of CoMonad for CausalTensorWitness
+impl CoMonad<CausalTensorWitness> for CausalTensorWitness {
+    fn extract<A>(fa: &CausalTensor<A>) -> A
+    where
+        A: Clone,
+    {
+        // 'extract' is typically defined for contexts with a single, clear focus.
+        // For CausalTensor, this is most naturally a scalar tensor (0-dimensional).
+        // If the tensor is a scalar and non-empty, its single value is the focus.
+        if fa.num_dim() == 0 && !fa.is_empty() {
+            fa.data[0].clone()
+        } else if fa.is_empty() {
+            // As CoMonad::extract must return an 'A' and cannot fail,
+            // this indicates a conceptual mismatch between CoMonad and potentially
+            // empty/multi-element CausalTensors.
+            // Panicking here reflects that an 'A' cannot be extracted from an empty context.
+            panic!("CoMonad::extract cannot be called on an empty CausalTensor.");
+        } else {
+            // For non-scalar tensors (e.g., vectors, matrices), a single 'focus'
+            // is not inherently defined. Choosing the first element is an arbitrary
+            // decision required to satisfy the CoMonad trait signature.
+            // Users should ideally ensure that CausalTensors treated as CoMonads
+            // are scalar for meaningful 'extract' operations.
+            fa.data[0].clone()
+        }
+    }
+
+    fn extend<A, B, Func>(fa: &CausalTensor<A>, mut f: Func) -> CausalTensor<B>
+    where
+        Func: FnMut(&CausalTensor<A>) -> B,
+    {
+        // 'extend' creates a new comonadic context. For CausalTensor,
+        // applying 'f' to the current context 'fa' yields a single value 'B'.
+        // This 'B' is then wrapped into a new scalar CausalTensor<B>,
+        // representing the "extended" context.
+        let result_b = f(fa);
+        CausalTensor::new(vec![result_b], vec![]).expect("Scalar tensor creation should not fail")
     }
 }
