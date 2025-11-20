@@ -92,3 +92,30 @@ fn test_unsupported_operation() {
     assert_eq!(format!("{err}"), "Unsupported operation: test");
     assert!(err.source().is_none());
 }
+
+#[test]
+fn test_update_node_error() {
+    let err = ModelValidationError::UpdateNodeError {
+        err: "failed to update".to_string(),
+    };
+    assert_eq!(format!("{err}"), "Error updating node: failed to update");
+    assert!(err.source().is_none());
+}
+
+#[test]
+fn test_remove_node_error() {
+    let err = ModelValidationError::RemoveNodeError {
+        err: "failed to remove".to_string(),
+    };
+    assert_eq!(format!("{err}"), "Error removing node: failed to remove");
+    assert!(err.source().is_none());
+}
+
+#[test]
+fn test_interpreter_error() {
+    let err = ModelValidationError::InterpreterError {
+        reason: "invalid syntax".to_string(),
+    };
+    assert_eq!(format!("{err}"), "Interpreter error: invalid syntax");
+    assert!(err.source().is_none());
+}

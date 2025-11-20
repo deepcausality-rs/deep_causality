@@ -194,7 +194,10 @@ fn test_operation_clone() {
 
 #[test]
 fn test_op_tree_single_node() {
+    #[allow(clippy::type_complexity)]
+
     let op = Operation::<(), (), TestData, TestSpace, TestTime, TestSpacetime, TestSymbol, f64, f64>::DeleteContext(1);
+    #[allow(clippy::type_complexity)]
     let tree: ConstTree<
         Operation<(), (), TestData, TestSpace, TestTime, TestSpacetime, TestSymbol, f64, f64>,
     > = ConstTree::new(op);

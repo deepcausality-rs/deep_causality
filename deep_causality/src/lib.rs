@@ -144,7 +144,7 @@ pub use crate::types::csm_types::csm_action::CausalAction;
 pub use crate::types::csm_types::csm_state::CausalState;
 // Generative types
 pub use crate::types::generative_types::effect_system::{
-    AuditableGraphGenerator, GraphGeneratableEffectSafe, GraphGeneratableEffectSystem,
+    AuditableGraphGenerator, GraphGeneratableEffect, GraphGeneratableEffectSystem,
     GraphGeneratableEffectWitness,
 };
 pub use crate::types::generative_types::interpreter::{CausalSystemState, Interpreter};

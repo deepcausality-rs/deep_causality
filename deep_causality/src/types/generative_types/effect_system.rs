@@ -18,7 +18,7 @@
 //!
 //! ## Key Types
 //!
-//! - [`GraphGeneratableEffectSafe<T, E, L>`]: The core effect type wrapping values, errors, and logs
+//! - [`GraphGeneratableEffect<T, E, L>`]: The core effect type wrapping values, errors, and logs
 //! - [`ModificationLog`]: Container for audit trail entries
 //! - [`ModificationLogEntry`]: Individual log entry with timestamp, operation details, and metadata
 //! - [`OpStatus`]: Operation status (Success/Failure)
@@ -37,7 +37,7 @@
 //! use deep_causality::types::generative_types::effect_system::*;
 //!
 //! // Create a successful effect
-//! let effect = GraphGeneratableEffectSafe {
+//! let effect = GraphGeneratableEffect {
 //!     value: Some(my_state),
 //!     error: None,
 //!     logs: ModificationLog::new(),
@@ -75,7 +75,7 @@ pub struct GraphGeneratableEffectWitness<E, L>(Placeholder, E, L);
 /// error states without requiring `T: Default`. When an error occurs during
 /// a monadic operation, the value becomes `None` and the error is captured.
 #[derive(Debug, Clone)]
-pub struct GraphGeneratableEffectSafe<T, E, L> {
+pub struct GraphGeneratableEffect<T, E, L> {
     /// The computation result, or `None` if an error occurred
     pub value: Option<T>,
     /// Any error that occurred during computation
@@ -85,11 +85,11 @@ pub struct GraphGeneratableEffectSafe<T, E, L> {
 }
 
 impl<E, L> HKT for GraphGeneratableEffectWitness<E, L> {
-    type Type<T> = GraphGeneratableEffectSafe<T, E, L>;
+    type Type<T> = GraphGeneratableEffect<T, E, L>;
 }
 
 impl<E, L> HKT3<E, L> for GraphGeneratableEffectWitness<E, L> {
-    type Type<T> = GraphGeneratableEffectSafe<T, E, L>;
+    type Type<T> = GraphGeneratableEffect<T, E, L>;
 }
 
 impl<E: Clone, L: Clone> Functor<GraphGeneratableEffectWitness<E, L>>
@@ -100,14 +100,20 @@ impl<E: Clone, L: Clone> Functor<GraphGeneratableEffectWitness<E, L>>
         Func: FnMut(A) -> B,
     {
         let mut func = f;
-        if let Some(val) = m_a.value {
-            GraphGeneratableEffectSafe {
+        if m_a.error.is_some() {
+            GraphGeneratableEffect {
+                value: None,
+                error: m_a.error,
+                logs: m_a.logs,
+            }
+        } else if let Some(val) = m_a.value {
+            GraphGeneratableEffect {
                 value: Some(func(val)),
                 error: m_a.error,
                 logs: m_a.logs,
             }
         } else {
-            GraphGeneratableEffectSafe {
+            GraphGeneratableEffect {
                 value: None,
                 error: m_a.error,
                 logs: m_a.logs,
@@ -120,7 +126,7 @@ impl<E: Clone, L: Clone + Default + LogAppend> Applicative<GraphGeneratableEffec
     for GraphGeneratableEffectWitness<E, L>
 {
     fn pure<T>(value: T) -> <Self as HKT>::Type<T> {
-        GraphGeneratableEffectSafe {
+        GraphGeneratableEffect {
             value: Some(value),
             error: None,
             logs: L::default(),
@@ -140,7 +146,7 @@ impl<E: Clone, L: Clone + Default + LogAppend> Applicative<GraphGeneratableEffec
         combined_logs.append(&mut m_a_logs);
 
         if let Some(err) = f_ab.error {
-            return GraphGeneratableEffectSafe {
+            return GraphGeneratableEffect {
                 value: None,
                 error: Some(err),
                 logs: combined_logs,
@@ -148,7 +154,7 @@ impl<E: Clone, L: Clone + Default + LogAppend> Applicative<GraphGeneratableEffec
         }
 
         if let Some(err) = m_a.error {
-            return GraphGeneratableEffectSafe {
+            return GraphGeneratableEffect {
                 value: None,
                 error: Some(err),
                 logs: combined_logs,
@@ -157,7 +163,7 @@ impl<E: Clone, L: Clone + Default + LogAppend> Applicative<GraphGeneratableEffec
 
         // Both must have values
         if let (Some(mut func), Some(val)) = (f_ab.value, m_a.value) {
-            GraphGeneratableEffectSafe {
+            GraphGeneratableEffect {
                 value: Some(func(val)),
                 error: None,
                 logs: combined_logs,
@@ -165,7 +171,7 @@ impl<E: Clone, L: Clone + Default + LogAppend> Applicative<GraphGeneratableEffec
         } else {
             // Should not happen if error is None, but technically possible if we have a state with no value and no error?
             // Let's treat it as an error or just None.
-            GraphGeneratableEffectSafe {
+            GraphGeneratableEffect {
                 value: None,
                 error: None, // Or some generic error?
                 logs: combined_logs,
@@ -182,7 +188,7 @@ impl<E: Clone, L: Clone + Default + LogAppend> Monad<GraphGeneratableEffectWitne
         Func: FnMut(A) -> <Self as HKT>::Type<B>,
     {
         if let Some(err) = m_a.error {
-            return GraphGeneratableEffectSafe {
+            return GraphGeneratableEffect {
                 value: None,
                 error: Some(err),
                 logs: m_a.logs,
@@ -193,14 +199,14 @@ impl<E: Clone, L: Clone + Default + LogAppend> Monad<GraphGeneratableEffectWitne
             let mut m_b = f(val);
             let mut new_logs = m_a.logs;
             new_logs.append(&mut m_b.logs);
-            GraphGeneratableEffectSafe {
+            GraphGeneratableEffect {
                 value: m_b.value,
                 error: m_b.error,
                 logs: new_logs,
             }
         } else {
             // No value, no error?
-            GraphGeneratableEffectSafe {
+            GraphGeneratableEffect {
                 value: None,
                 error: None,
                 logs: m_a.logs,

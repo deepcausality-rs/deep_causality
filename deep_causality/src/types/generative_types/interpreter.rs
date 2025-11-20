@@ -29,7 +29,7 @@
 //! 4. **Error Propagation**: Errors short-circuit execution and are captured in the effect
 
 use crate::{
-    AuditableGraphGenerator, Causaloid, Context, GraphGeneratableEffectSafe,
+    AuditableGraphGenerator, Causaloid, Context, GraphGeneratableEffect,
     GraphGeneratableEffectSystem, ModelValidationError, ModificationLog, ModificationLogEntry,
     OpStatus, OpTree, Operation,
 };
@@ -186,7 +186,7 @@ impl Interpreter {
                         format!("Context with ID {} already exists.", id),
                     ));
 
-                    GraphGeneratableEffectSafe {
+                    GraphGeneratableEffect {
                         value: Some(state), // Return original state
                         error: Some(ModelValidationError::DuplicateContextId { id: *id }),
                         logs,
@@ -203,7 +203,7 @@ impl Interpreter {
                         format!("Context '{}' created.", name),
                     ));
 
-                    GraphGeneratableEffectSafe {
+                    GraphGeneratableEffect {
                         value: Some(new_state),
                         error: None,
                         logs,
@@ -228,13 +228,13 @@ impl Interpreter {
                                 OpStatus::Success,
                                 "Contextoid added.",
                             ));
-                            GraphGeneratableEffectSafe {
+                            GraphGeneratableEffect {
                                 value: Some(new_state),
                                 error: None,
                                 logs,
                             }
                         }
-                        Err(e) => GraphGeneratableEffectSafe {
+                        Err(e) => GraphGeneratableEffect {
                             value: None,
                             error: Some(ModelValidationError::AddContextoidError {
                                 err: e.to_string(),
@@ -243,7 +243,7 @@ impl Interpreter {
                         },
                     }
                 } else {
-                    GraphGeneratableEffectSafe {
+                    GraphGeneratableEffect {
                         value: None,
                         error: Some(ModelValidationError::TargetContextNotFound {
                             id: *context_id,
@@ -266,7 +266,7 @@ impl Interpreter {
                     "Causaloid created/set.",
                 ));
 
-                GraphGeneratableEffectSafe {
+                GraphGeneratableEffect {
                     value: Some(new_state),
                     error: None,
                     logs,
@@ -285,7 +285,7 @@ impl Interpreter {
                         OpStatus::Success,
                         "Causaloid updated.",
                     ));
-                    GraphGeneratableEffectSafe {
+                    GraphGeneratableEffect {
                         value: Some(new_state),
                         error: None,
                         logs,
@@ -297,7 +297,7 @@ impl Interpreter {
                         OpStatus::Failure,
                         format!("Causaloid with ID {} not found", id),
                     ));
-                    GraphGeneratableEffectSafe {
+                    GraphGeneratableEffect {
                         value: Some(state), // Return original state on failure
                         error: Some(ModelValidationError::UpdateNodeError {
                             err: format!("Causaloid with ID {} not found", id),
@@ -318,7 +318,7 @@ impl Interpreter {
                         OpStatus::Success,
                         "Causaloid deleted.",
                     ));
-                    GraphGeneratableEffectSafe {
+                    GraphGeneratableEffect {
                         value: Some(new_state),
                         error: None,
                         logs,
@@ -330,7 +330,7 @@ impl Interpreter {
                         OpStatus::Failure,
                         format!("Causaloid with ID {} not found.", id),
                     ));
-                    GraphGeneratableEffectSafe {
+                    GraphGeneratableEffect {
                         value: Some(state), // Return original state on failure
                         error: Some(ModelValidationError::RemoveNodeError {
                             err: format!("Causaloid with ID {} not found.", id),
@@ -355,7 +355,7 @@ impl Interpreter {
                         OpStatus::Failure,
                         format!("Context with ID {} already exists.", extra_context_id),
                     ));
-                    GraphGeneratableEffectSafe {
+                    GraphGeneratableEffect {
                         value: Some(state),
                         error: Some(ModelValidationError::DuplicateContextId {
                             id: *extra_context_id,
@@ -375,7 +375,7 @@ impl Interpreter {
                         format!("Extra context {} created.", extra_context_id),
                     ));
 
-                    GraphGeneratableEffectSafe {
+                    GraphGeneratableEffect {
                         value: Some(new_state),
                         error: None,
                         logs,
@@ -399,7 +399,7 @@ impl Interpreter {
                         "Context updated.",
                     ));
 
-                    GraphGeneratableEffectSafe {
+                    GraphGeneratableEffect {
                         value: Some(new_state),
                         error: None,
                         logs,
@@ -411,7 +411,7 @@ impl Interpreter {
                         OpStatus::Failure,
                         format!("Context with ID {} not found", id),
                     ));
-                    GraphGeneratableEffectSafe {
+                    GraphGeneratableEffect {
                         value: None,
                         error: Some(ModelValidationError::TargetContextNotFound { id: *id }),
                         logs,
@@ -430,7 +430,7 @@ impl Interpreter {
                         OpStatus::Success,
                         "Context deleted.",
                     ));
-                    GraphGeneratableEffectSafe {
+                    GraphGeneratableEffect {
                         value: Some(new_state),
                         error: None,
                         logs,
@@ -442,7 +442,7 @@ impl Interpreter {
                         OpStatus::Failure,
                         format!("Context with ID {} not found", id),
                     ));
-                    GraphGeneratableEffectSafe {
+                    GraphGeneratableEffect {
                         value: None,
                         error: Some(ModelValidationError::TargetContextNotFound { id: *id }),
                         logs,
@@ -467,7 +467,7 @@ impl Interpreter {
                                 OpStatus::Success,
                                 "Contextoid updated.",
                             ));
-                            GraphGeneratableEffectSafe {
+                            GraphGeneratableEffect {
                                 value: Some(new_state),
                                 error: None,
                                 logs,
@@ -480,7 +480,7 @@ impl Interpreter {
                                 OpStatus::Failure,
                                 format!("Failed to update contextoid: {}", e),
                             ));
-                            GraphGeneratableEffectSafe {
+                            GraphGeneratableEffect {
                                 value: None,
                                 error: Some(ModelValidationError::UpdateNodeError {
                                     err: e.to_string(),
@@ -496,7 +496,7 @@ impl Interpreter {
                         OpStatus::Failure,
                         "Target context not found.",
                     ));
-                    GraphGeneratableEffectSafe {
+                    GraphGeneratableEffect {
                         value: None,
                         error: Some(ModelValidationError::TargetContextNotFound {
                             id: *context_id,
@@ -522,7 +522,7 @@ impl Interpreter {
                                 OpStatus::Success,
                                 "Contextoid deleted.",
                             ));
-                            GraphGeneratableEffectSafe {
+                            GraphGeneratableEffect {
                                 value: Some(new_state),
                                 error: None,
                                 logs,
@@ -535,7 +535,7 @@ impl Interpreter {
                                 OpStatus::Failure,
                                 format!("Failed to delete contextoid: {}", e),
                             ));
-                            GraphGeneratableEffectSafe {
+                            GraphGeneratableEffect {
                                 value: None,
                                 error: Some(ModelValidationError::RemoveNodeError {
                                     err: e.to_string(),
@@ -551,7 +551,7 @@ impl Interpreter {
                         OpStatus::Failure,
                         "Target context not found.",
                     ));
-                    GraphGeneratableEffectSafe {
+                    GraphGeneratableEffect {
                         value: None,
                         error: Some(ModelValidationError::TargetContextNotFound {
                             id: *context_id,
