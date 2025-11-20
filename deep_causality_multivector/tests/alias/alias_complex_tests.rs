@@ -12,8 +12,8 @@ fn test_dixon_algebra() {
     let data = vec![Complex::new(0.0, 0.0); 256];
     let d = DixonAlgebra::new_dixon_algebra_left(data);
 
-    assert_eq!(d.metric.dimension(), 8);
-    match d.metric {
+    assert_eq!(d.metric().dimension(), 8);
+    match d.metric() {
         Metric::NonEuclidean(8) => {}
         _ => panic!("Dixon Algebra should be Euclidean(6)"),
     }
@@ -30,13 +30,13 @@ fn test_complex_pauli() {
     ];
     let cp = DixonAlgebra::new_complex_pauli(data.clone());
 
-    assert_eq!(cp.metric.dimension(), 2);
-    match cp.metric {
+    assert_eq!(cp.metric().dimension(), 2);
+    match cp.metric() {
         Metric::Euclidean(2) => {}
         _ => panic!("Complex Pauli Algebra should be Euclidean(2)"),
     }
-    assert_eq!(cp.data.len(), 4);
-    assert_eq!(cp.data, data);
+    assert_eq!(cp.data().len(), 4);
+    assert_eq!(cp.data(), &data);
 }
 
 #[test]
@@ -45,12 +45,12 @@ fn test_octonion_operator() {
     let data = vec![Complex::new(0.0, 0.0); 64];
     let oo = DixonAlgebra::new_octonion_operator(data);
 
-    assert_eq!(oo.metric.dimension(), 6);
-    match oo.metric {
+    assert_eq!(oo.metric().dimension(), 6);
+    match oo.metric() {
         Metric::NonEuclidean(6) => {}
         _ => panic!("Octonion Operator should be NonEuclidean(6)"),
     }
-    assert_eq!(oo.data.len(), 64);
+    assert_eq!(oo.data().len(), 64);
 }
 
 #[test]
@@ -63,16 +63,16 @@ fn test_quaternion_operator() {
     let qo = DixonAlgebra::new_quaternion_operator(data);
 
     // 1. Check Dimension
-    assert_eq!(qo.metric.dimension(), dim);
+    assert_eq!(qo.metric().dimension(), dim);
 
     // 2. Check Metric Signature
-    match qo.metric {
+    match qo.metric() {
         Metric::NonEuclidean(4) => {}
         _ => panic!("Quaternion Operator should be NonEuclidean(4)"),
     }
 
     // 3. Check Data Length (2^4 = 16)
-    assert_eq!(qo.data.len(), size);
+    assert_eq!(qo.data().len(), size);
 }
 
 #[test]
@@ -81,10 +81,10 @@ fn test_gut_algebra() {
     let data = vec![Complex::new(0.0, 0.0); 1024];
     let gut = DixonAlgebra::new_gut_algebra(data);
 
-    assert_eq!(gut.metric.dimension(), 10);
-    match gut.metric {
+    assert_eq!(gut.metric().dimension(), 10);
+    match gut.metric() {
         Metric::NonEuclidean(10) => {}
         _ => panic!("GUT Algebra should be NonEuclidean(10)"),
     }
-    assert_eq!(gut.data.len(), 1024);
+    assert_eq!(gut.data().len(), 1024);
 }

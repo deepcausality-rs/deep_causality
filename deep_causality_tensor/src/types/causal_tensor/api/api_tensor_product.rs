@@ -7,7 +7,7 @@ use std::ops::Mul;
 
 impl<T> CausalTensor<T>
 where
-    T: Clone + Default + PartialOrd + Mul<Output = T>,
+    T: Clone + Mul<Output = T>,
 {
     /// Computes the tensor product (also known as the outer product) of two `CausalTensor`s.
     ///

@@ -4,7 +4,8 @@
  */
 
 use crate::{CausalMultiVector, Metric};
-use deep_causality_haft::{Applicative, Functor, HKT, Monad};
+use deep_causality_haft::{Applicative, BoundedComonad, Functor, HKT, Monad};
+use deep_causality_num::Zero;
 
 pub struct CausalMultiVectorWitness;
 
@@ -99,5 +100,30 @@ impl Monad<CausalMultiVectorWitness> for CausalMultiVectorWitness {
             data: result_data,
             metric: resulting_metric,
         }
+    }
+}
+
+// Implementation of CoMonad for CausalMultiVectorWitness
+impl BoundedComonad<CausalMultiVectorWitness> for CausalMultiVectorWitness {
+    fn extract<A>(fa: &CausalMultiVector<A>) -> A
+    where
+        A: Clone,
+    {
+        // The scalar part (coefficient of the 1 basis blade, data[0]) is the natural focus.
+        // CausalMultiVector guarantees data is never empty.
+        fa.data[0].clone()
+    }
+
+    fn extend<A, B, Func>(fa: &CausalMultiVector<A>, mut f: Func) -> CausalMultiVector<B>
+    where
+        Func: FnMut(&CausalMultiVector<A>) -> B,
+        A: Zero + Copy + Clone,
+        B: Zero + Copy + Clone,
+    {
+        // Apply 'f' to the original context 'fa' to get a single value 'B'.
+        // Wrap this 'B' into a new scalar CausalMultiVector,
+        // preserving the original metric signature for consistency.
+        let result_b = f(fa);
+        CausalMultiVector::scalar(result_b, fa.metric)
     }
 }

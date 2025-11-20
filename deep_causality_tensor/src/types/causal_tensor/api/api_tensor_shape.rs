@@ -6,7 +6,7 @@ use crate::{CausalTensor, CausalTensorError};
 
 impl<T> CausalTensor<T>
 where
-    T: Clone + Default + PartialOrd,
+    T: Clone,
 {
     /// Returns a new tensor with the same data but a different shape.
     ///

@@ -8,7 +8,7 @@ use crate::types::causal_tensor::CausalTensor;
 
 impl<T> CausalTensor<T>
 where
-    T: Clone + Default + PartialOrd,
+    T: Clone,
 {
     pub(super) fn reshape_impl(&self, new_shape: &[usize]) -> Result<Self, CausalTensorError> {
         let new_len: usize = new_shape.iter().product();

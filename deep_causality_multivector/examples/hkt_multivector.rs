@@ -13,12 +13,12 @@ fn main() {
     println!("\n--- Functor (Map) ---");
     let m = Metric::Euclidean(2);
     let v = CausalMultiVector::new(vec![1.0, 2.0, 3.0, 4.0], m).unwrap();
-    println!("Original Vector: {:?}", v.data);
+    println!("Original Vector: {:?}", v.data());
 
     // Scale by 2.0 using fmap
     let scaled = CausalMultiVectorWitness::fmap(v.clone(), |x| x * 2.0);
-    println!("Scaled Vector (x2): {:?}", scaled.data);
-    assert_eq!(scaled.data, vec![2.0, 4.0, 6.0, 8.0]);
+    println!("Scaled Vector (x2): {:?}", scaled.data());
+    assert_eq!(scaled.data(), &vec![2.0, 4.0, 6.0, 8.0]);
 
     // 2. Applicative: Broadcasting a function
     println!("\n--- Applicative (Apply/Broadcast) ---");
@@ -27,8 +27,8 @@ fn main() {
 
     // Apply it to our vector
     let shifted = CausalMultiVectorWitness::apply(pure_fn, v.clone());
-    println!("Shifted Vector (+10): {:?}", shifted.data);
-    assert_eq!(shifted.data, vec![11.0, 12.0, 13.0, 14.0]);
+    println!("Shifted Vector (+10): {:?}", shifted.data());
+    assert_eq!(shifted.data(), &vec![11.0, 12.0, 13.0, 14.0]);
 
     // 3. Monad: Tensor Product via Bind
     println!("\n--- Monad (Bind / Tensor Product) ---");
@@ -37,7 +37,7 @@ fn main() {
     // Start with a 1D Euclidean vector (size 2: scalar, e1)
     let m1 = Metric::Euclidean(1);
     let v1 = CausalMultiVector::new(vec![1.0, 2.0], m1).unwrap();
-    println!("Vector A (1D): {:?}", v1.data);
+    println!("Vector A (1D): {:?}", v1.data());
 
     // Bind function: For each coefficient in A, create a new 1D vector.
     // This effectively creates a 2D structure (size 4).
@@ -51,14 +51,14 @@ fn main() {
 
     println!(
         "Resulting Vector (Tensor Product): {:?}",
-        tensor_product.data
+        tensor_product.data()
     );
-    println!("Resulting Metric: {}", tensor_product.metric);
+    println!("Resulting Metric: {}", tensor_product.metric());
 
     // Expected: [1.0, -1.0, 2.0, -2.0]
     // Metric should be Euclidean(2) (1 + 1)
-    assert_eq!(tensor_product.data, vec![1.0, -1.0, 2.0, -2.0]);
-    assert_eq!(tensor_product.metric.dimension(), 2);
+    assert_eq!(tensor_product.data(), &vec![1.0, -1.0, 2.0, -2.0]);
+    assert_eq!(tensor_product.metric().dimension(), 2);
 
     println!("\nAll HKT examples executed successfully.");
 }

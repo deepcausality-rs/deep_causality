@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Monad};
+use deep_causality_haft::{Applicative, BoundedComonad, Foldable, Functor, HKT, Monad};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 
 // --- HKT Tests ---
@@ -180,5 +180,33 @@ fn test_comonad_causal_tensor_extend_non_scalar() {
     let f = |ct: &CausalTensor<f64>| ct.data().iter().cloned().sum::<f64>(); // Added .cloned() for sum
     let extended = CausalTensorWitness::extend(&vector_tensor, f);
     // The result should be a scalar tensor containing the sum of the vector elements
-    assert_eq!(extended, CausalTensor::new(vec![6.0], vec![]).unwrap());
+    assert_eq!(
+        extended,
+        CausalTensor::new(vec![6.0, 6.0, 6.0], vec![3]).unwrap()
+    );
+}
+
+#[test]
+fn test_comonad_causal_tensor_extend_topology_check() {
+    let vector_tensor = CausalTensor::new(vec![10.0, 20.0, 30.0], vec![3]).unwrap();
+
+    // The Law: "My value plus the value of the element to my right"
+    // This relies on the Shifted View putting 'Me' at 0 and 'Neighbor' at 1.
+    let f = |ct: &CausalTensor<f64>| {
+        let me = ct.data()[0];
+        // If strictly 1D, neighbor is at 1.
+        // Ideally verify size > 1 to avoid panic, but for test we know input is len 3.
+        let neighbor = ct.data()[1];
+        me + neighbor
+    };
+
+    let extended = CausalTensorWitness::extend(&vector_tensor, f);
+
+    // Expected: [10+20, 20+30, 30+10] -> [30, 50, 40]
+    let expected = CausalTensor::new(vec![30.0, 50.0, 40.0], vec![3]).unwrap();
+
+    assert_eq!(
+        extended, expected,
+        "Topology check failed: Shift/Wrap-around logic is incorrect"
+    );
 }

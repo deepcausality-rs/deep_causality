@@ -7,7 +7,7 @@ use std::ops::Mul;
 
 impl<T> CausalTensor<T>
 where
-    T: Clone + Default + PartialOrd + Mul<Output = T>,
+    T: Clone + Mul<Output = T>,
 {
     pub(super) fn tensor_product_impl(
         &self,

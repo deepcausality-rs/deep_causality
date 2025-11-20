@@ -4,7 +4,8 @@
  */
 
 use crate::CausalTensor;
-use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Monad};
+use deep_causality_haft::{Applicative, BoundedComonad, Foldable, Functor, HKT, Monad};
+use deep_causality_num::Zero;
 
 /// `CausalTensorWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
 /// for the `CausalTensor<T>` type constructor. It allows `CausalTensor` to be used with generic
@@ -148,7 +149,7 @@ impl Monad<CausalTensorWitness> for CausalTensorWitness {
 }
 
 // Implementation of CoMonad for CausalTensorWitness
-impl CoMonad<CausalTensorWitness> for CausalTensorWitness {
+impl BoundedComonad<CausalTensorWitness> for CausalTensorWitness {
     fn extract<A>(fa: &CausalTensor<A>) -> A
     where
         A: Clone,
@@ -177,12 +178,17 @@ impl CoMonad<CausalTensorWitness> for CausalTensorWitness {
     fn extend<A, B, Func>(fa: &CausalTensor<A>, mut f: Func) -> CausalTensor<B>
     where
         Func: FnMut(&CausalTensor<A>) -> B,
+        A: Zero + Copy + Clone,
+        B: Zero + Copy + Clone,
     {
-        // 'extend' creates a new comonadic context. For CausalTensor,
-        // applying 'f' to the current context 'fa' yields a single value 'B'.
-        // This 'B' is then wrapped into a new scalar CausalTensor<B>,
-        // representing the "extended" context.
-        let result_b = f(fa);
-        CausalTensor::new(vec![result_b], vec![]).expect("Scalar tensor creation should not fail")
+        let new_data: Vec<B> = (0..fa.data.len())
+            .map(|i| {
+                // The Logic: Create the view, apply the function
+                let focused_view = fa.shifted_view(i);
+                f(&focused_view)
+            })
+            .collect();
+
+        CausalTensor::new(new_data, fa.shape().to_vec()).expect("Shape mismatch")
     }
 }
