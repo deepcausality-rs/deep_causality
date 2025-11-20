@@ -133,12 +133,16 @@ where
         // 3. Execute the OpTree.
         let effect = interpreter.execute(op_tree, state);
 
+        if let Some(err) = effect.error {
+            return Err(err);
+        }
+
         let final_state = effect.value.ok_or_else(|| {
-            effect
-                .error
-                .unwrap_or(crate::ModelValidationError::InterpreterError {
-                    reason: "Unknown error during execution".to_string(),
-                })
+            // This case should ideally not be reached if error is always Some on failure.
+            crate::ModelValidationError::InterpreterError {
+                reason: "Unknown error: execution failed but no specific error was provided"
+                    .to_string(),
+            }
         })?;
 
         let logs = effect.logs;

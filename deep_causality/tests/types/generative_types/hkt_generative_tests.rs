@@ -5,7 +5,8 @@
 
 use deep_causality::{
     BaseSymbol, CausalEffectLog, CausalFnOutput, Causaloid, Context, Data, EffectValue,
-    EuclideanSpace, EuclideanSpacetime, EuclideanTime, Model, OpStatus, Operation,
+    EuclideanSpace, EuclideanSpacetime, EuclideanTime, Model, ModelValidationError, OpStatus,
+    Operation,
 };
 
 use deep_causality_ast::ConstTree;
@@ -137,4 +138,80 @@ fn test_hkt_generative_system_evolve() {
             .iter()
             .any(|e| e.operation_name == "UpdateCausaloid" && e.status == OpStatus::Success)
     );
+}
+
+#[test]
+fn test_evolve_error_causaloid_lost() {
+    // 1. Create a base model
+    let causaloid = Arc::new(Causaloid::new(
+        1,
+        |_input: EffectValue| {
+            Ok(CausalFnOutput::new(
+                EffectValue::from(0.0),
+                CausalEffectLog::default(),
+            ))
+        },
+        "Base Causaloid",
+    ));
+    let model = TestModel::new(1, "Author", "Description", None, causaloid, None);
+
+    // 2. Define an OpTree that deletes the main causaloid
+    let op = TestOperation::DeleteCausaloid(1);
+    let op_tree = ConstTree::new(op);
+
+    // 3. Evolve
+    let result = model.evolve(&op_tree);
+
+    // 4. Assertions
+    assert!(result.is_err(), "Evolve should fail");
+    let err = result.err().unwrap();
+    assert!(matches!(err, ModelValidationError::InterpreterError { .. }));
+    if let ModelValidationError::InterpreterError { reason } = err {
+        assert_eq!(reason, "Main causaloid lost during evolution");
+    }
+}
+
+#[test]
+fn test_evolve_error_from_interpreter() {
+    // 1. Create a base model with a context
+    let causaloid = Arc::new(Causaloid::new(
+        1,
+        |_input: EffectValue| {
+            Ok(CausalFnOutput::new(
+                EffectValue::from(0.0),
+                CausalEffectLog::default(),
+            ))
+        },
+        "Base Causaloid",
+    ));
+    let context = Context::with_capacity(100, "BaseContext", 10);
+    let context_arc = Arc::new(std::sync::RwLock::new(context));
+    let model = TestModel::new(
+        1,
+        "Author",
+        "Description",
+        None,
+        causaloid,
+        Some(context_arc),
+    );
+
+    // 2. Define an OpTree that will cause an error in the interpreter
+    // (e.g., creating a duplicate context)
+    let op = TestOperation::CreateContext {
+        id: 100, // Duplicate ID
+        name: "Duplicate Context".to_string(),
+        capacity: 5,
+    };
+    let op_tree = ConstTree::new(op);
+
+    // 3. Evolve
+    let result = model.evolve(&op_tree);
+
+    // 4. Assertions
+    assert!(result.is_err(), "Evolve should fail");
+    let err = result.err().unwrap();
+    assert!(matches!(
+        err,
+        ModelValidationError::DuplicateContextId { .. }
+    ));
 }
