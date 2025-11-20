@@ -4,3 +4,4 @@
  */
 mod complex_number;
 mod quaternion_number;
+mod octonion_number;

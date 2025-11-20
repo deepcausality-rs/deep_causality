@@ -6,8 +6,7 @@
 //! This module defines the Octonion struct and its core implementations.
 
 use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
-
-use crate::*;
+use crate::{Float, Num};
 
 mod arithmetic;
 mod arithmetic_assign;
