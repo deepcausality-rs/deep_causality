@@ -147,7 +147,7 @@ cargo add deep_causality
 ```
 
 * [Starter Example](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/starter)
-* [More Examples](examples)
+* [More Examples](examples/README.md)
 * [Tests](deep_causality/tests)
 
 ## How to run the example code
@@ -163,18 +163,17 @@ make example
 ## 📦 Sub-Crates
 
 * `deep_causality`: The main DeepCausality library.
-* `deep_causality_algorithms`: Provides algorithms for the DeepCausality library.
-* `deep_causality_ast`: Provides utils to work on AST for the DeepCausality library.
-* `deep_causality_data_structures`: Provides data structures for the DeepCausality library.
-* `deep_causality_discovery`: A custom DSL for causal discovery.
-* `deep_causality_haft`: Higher-Order Abstract Functional Traits a.k.a HKT. 
-* `deep_causality_macros`: Provides macros for the DeepCausality library (_deprecated_).
-* `deep_causality_num`: Numerical traits and utils used across the other crates.
-* `deep_causality_rand`: Random number generator and statistical distributions used in deep_causality_tensor and other
-* `deep_causality_tensor`: A custom tensor type used in deep_causality_algorithms and deep_causality_discovery crates.
-* `deep_causality_uncertain`: Provides a custom crate for handling uncertainty.
-* `examples`: A collection of example code.
-* `ultragraph`: A hyper-graph library used as a backend in the deep_causality library.
+* `deep_causality_algorithms`: [Algorithms for causal discovery and feature selection.](deep_causality_algorithms/README.md)
+* `deep_causality_ast`: [A generic abstract syntax tree (AST).](deep_causality_ast/README.md)
+* `deep_causality_data_structures`: [Data structures for the DeepCausality library.](deep_causality_data_structures/README.md)
+* `deep_causality_discovery`: [A custom DSL for causal discovery.](deep_causality_discovery/README.md)
+* `deep_causality_haft`: [Higher-Order Abstract Functional Traits a.k.a HKT.](deep_causality_haft/README.md) 
+* `deep_causality_multivector`: [A dynamic, universal Clifford Algebra.](deep_causality_multivector/README.md)
+* `deep_causality_num`: [Generic numerical traits and numbers.](deep_causality_num/README.md)
+* `deep_causality_rand`: [Random number generator and statistical distributions.](deep_causality_rand/README.md)
+* `deep_causality_tensor`: [A custom tensor type with ein_sum arithmetic.](deep_causality_tensor/README.md)
+* `deep_causality_uncertain`: [Uncertain<T> and MaybeUncertain<T> types.](deep_causality_uncertain/README.md)
+* `ultragraph`: [A custom hyper-graph library used as a backend in the deep_causality library.](ultragraph/README.md)
 
 ## 🛠️ Build & Test
 
