@@ -170,17 +170,17 @@ where
             q = -q;
         }
 
-        let angle = two * q.w.acos();
-
-        let s = (F::one() - q.w * q.w).sqrt();
-        if s < F::epsilon() {
-            // Angle is 0 or 2PI, axis is arbitrary (or undefined).
-            // For 0 angle, return identity axis. For 2PI, it's also identity.
-            ([F::one(), F::zero(), F::zero()], F::zero())
-        } else {
-            let inv_s = F::one() / s;
-            ([q.x * inv_s, q.y * inv_s, q.z * inv_s], angle)
+        // If quaternion is close to identity, angle is zero.
+        if q.w > F::one() - F::epsilon() {
+            return ([F::one(), F::zero(), F::zero()], F::zero());
         }
+
+        let angle = two * q.w.acos();
+        let s = (F::one() - q.w * q.w).sqrt();
+
+        // s is guaranteed to be non-trivial here due to the check above.
+        let inv_s = F::one() / s;
+        ([q.x * inv_s, q.y * inv_s, q.z * inv_s], angle)
     }
 
     /// Converts the quaternion to a 3x3 rotation matrix.
