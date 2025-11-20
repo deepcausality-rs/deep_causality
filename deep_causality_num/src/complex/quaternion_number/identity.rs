@@ -1,7 +1,7 @@
+use crate::complex::quaternion_number::Quaternion;
 use crate::float::Float;
 use crate::identity::one::{ConstOne, One};
 use crate::identity::zero::{ConstZero, Zero};
-use crate::quaternion::Quaternion;
 
 // Zero
 impl<F: Float> Zero for Quaternion<F> {

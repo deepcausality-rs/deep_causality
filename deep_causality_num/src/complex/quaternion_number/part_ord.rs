@@ -1,5 +1,5 @@
+use crate::complex::quaternion_number::Quaternion;
 use crate::float::Float;
-use crate::quaternion::Quaternion;
 use std::cmp::Ordering;
 
 // PartialOrd

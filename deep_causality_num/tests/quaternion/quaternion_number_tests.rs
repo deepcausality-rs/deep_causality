@@ -1,5 +1,5 @@
-use deep_causality_num::Float;
 use deep_causality_num::Quaternion;
+use deep_causality_num::{Float, QuaternionNumber};
 
 #[test]
 fn test_conjugate() {

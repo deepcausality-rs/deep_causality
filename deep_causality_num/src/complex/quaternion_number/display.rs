@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
+use crate::complex::quaternion_number::Quaternion;
 use crate::float::Float;
-use crate::quaternion::Quaternion;
 
 // Display
 impl<F: Float + Display> Display for Quaternion<F> {

@@ -1,6 +1,6 @@
 use crate::alias::Vector3;
+use crate::complex::quaternion_number::Quaternion;
 use crate::float::Float;
-use crate::quaternion::Quaternion;
 
 impl<F> Quaternion<F>
 where

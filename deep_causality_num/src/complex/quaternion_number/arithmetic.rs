@@ -1,8 +1,8 @@
 use std::iter::{Product, Sum};
 use std::ops::{Add, Div, Mul, Rem, Sub};
 
-use crate::Quaternion;
 use crate::{Float, One, Zero};
+use crate::{Quaternion, QuaternionNumber};
 
 // Add
 impl<F: Float> Add for Quaternion<F> {

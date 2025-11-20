@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
+use crate::complex::quaternion_number::Quaternion;
 use crate::float::Float;
-use crate::quaternion::Quaternion;
 
 // Debug
 impl<F: Float + Debug> Debug for Quaternion<F> {

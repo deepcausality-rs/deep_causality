@@ -1,6 +1,6 @@
+use crate::Quaternion;
 use crate::ToPrimitive;
 use crate::float::Float;
-use crate::quaternion::Quaternion;
 
 impl<F: Float> ToPrimitive for Quaternion<F> {
     /// Converts the scalar part (`w`) of the quaternion to an `isize`.

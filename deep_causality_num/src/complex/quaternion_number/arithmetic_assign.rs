@@ -1,7 +1,7 @@
 use std::ops::{AddAssign, DivAssign, MulAssign, SubAssign};
 
+use crate::complex::quaternion_number::Quaternion;
 use crate::float::Float;
-use crate::quaternion::Quaternion;
 
 // AddAssign
 impl<F: Float + AddAssign> AddAssign for Quaternion<F> {

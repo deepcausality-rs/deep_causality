@@ -4,6 +4,7 @@ use std::iter::{Product, Sum};
 use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
 
 pub use crate::float::Float;
+use crate::{Matrix3, Num, Vector3};
 
 mod arithmetic;
 mod arithmetic_assign;
@@ -14,12 +15,36 @@ mod display;
 mod from_primitives;
 mod identity;
 mod neg;
-mod num;
 mod num_cast;
 mod part_ord;
-mod quaternion_number;
-mod rotation;
+mod quaternion_number_impl;
 mod to_primitive;
+
+pub trait QuaternionNumber<F>: Num + Sized
+where
+    F: Float,
+    Self: Add<Output = Self>
+        + Sub<Output = Self>
+        + Mul<Output = Self>
+        + Div<Output = Self>
+        + Rem<Output = Self>
+        + Neg<Output = Self>
+        + Sum
+        + Product
+        + PartialEq
+        + Copy
+        + Clone,
+{
+    fn conjugate(&self) -> Self;
+    fn norm_sqr(&self) -> F;
+    fn norm(&self) -> F;
+    fn normalize(&self) -> Self;
+    fn inverse(&self) -> Self;
+    fn dot(&self, other: &Self) -> F;
+    fn to_axis_angle(&self) -> (Vector3<F>, F);
+    fn to_rotation_matrix(&self) -> Matrix3<F>;
+    fn slerp(&self, other: &Self, t: F) -> Self;
+}
 
 /// Represents a quaternion with a scalar part (`w`) and a vector part (`x`, `y`, `z`).
 ///
@@ -65,3 +90,6 @@ where
     pub y: F, // Vector part j
     pub z: F, // Vector part k
 }
+
+// Marker trait to ensure all Num requirements are implemented.
+impl<F: Float> Num for Quaternion<F> {}
