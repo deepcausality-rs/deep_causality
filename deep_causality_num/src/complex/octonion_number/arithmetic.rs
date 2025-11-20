@@ -6,9 +6,7 @@
 use std::iter::{Product, Sum};
 use std::ops::{Add, Div, Mul, Rem, Sub};
 
-use crate::complex::octonion_number::{Octonion, OctonionNumber};
-use crate::float::Float;
-use crate::{One, Zero};
+use crate::{Float, Octonion, OctonionNumber, One, Zero};
 
 /// Implements the addition operator (`+`) for two `Octonion` numbers.
 ///
@@ -151,29 +149,32 @@ impl<F: Float> Mul for Octonion<F> {
             + self.e5 * rhs.e6
             - self.e6 * rhs.e5;
 
-        let e4_res = self.s * rhs.e4 + self.e4 * rhs.s + self.e5 * rhs.e1 - self.e1 * rhs.e5
-            + self.e6 * rhs.e2
-            - self.e2 * rhs.e6
-            + self.e7 * rhs.e3
-            - self.e3 * rhs.e7;
+        let e4_res = self.s * rhs.e4 + self.e4 * rhs.s - self.e1 * rhs.e5
+            + self.e5 * rhs.e1
+            + self.e2 * rhs.e6
+            - self.e6 * rhs.e2
+            - self.e3 * rhs.e7
+            + self.e7 * rhs.e3;
 
-        let e5_res = self.s * rhs.e5 + self.e5 * rhs.s + self.e1 * rhs.e4 - self.e4 * rhs.e1
-            + self.e7 * rhs.e2
+        let e5_res = self.s * rhs.e5 + self.e5 * rhs.s + self.e1 * rhs.e4
+            - self.e4 * rhs.e1
             - self.e2 * rhs.e7
+            + self.e7 * rhs.e2
             + self.e3 * rhs.e6
             - self.e6 * rhs.e3;
 
         let e6_res = self.s * rhs.e6 + self.e6 * rhs.s + self.e1 * rhs.e7 - self.e7 * rhs.e1
             + self.e2 * rhs.e4
             - self.e4 * rhs.e2
-            + self.e3 * rhs.e5
-            - self.e5 * rhs.e3;
+            - self.e3 * rhs.e5
+            + self.e5 * rhs.e3;
 
-        let e7_res = self.s * rhs.e7 + self.e7 * rhs.s + self.e2 * rhs.e5 - self.e5 * rhs.e2
+        let e7_res = self.s * rhs.e7 + self.e7 * rhs.s - self.e1 * rhs.e6
+            + self.e6 * rhs.e1
+            + self.e2 * rhs.e5
+            - self.e5 * rhs.e2
             + self.e3 * rhs.e4
-            - self.e4 * rhs.e3
-            + self.e1 * rhs.e6
-            - self.e6 * rhs.e1;
+            - self.e4 * rhs.e3;
         Self::new(
             s_res, e1_res, e2_res, e3_res, e4_res, e5_res, e6_res, e7_res,
         )
