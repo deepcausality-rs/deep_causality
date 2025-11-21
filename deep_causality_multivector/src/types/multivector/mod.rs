@@ -58,6 +58,10 @@ impl<T> CausalMultiVector<T> {
         Ok(Self { data, metric })
     }
 
+    pub fn unchecked(data: Vec<T>, metric: Metric) -> Self {
+        Self { data, metric }
+    }
+
     /// Gets a specific component by basis blade bitmap.
     ///
     /// # Arguments

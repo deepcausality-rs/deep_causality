@@ -70,6 +70,18 @@ pub trait MultiVector<T> {
 
     // --- Products ---
 
+    /// Computes the Geometric Product $AB$.
+    ///
+    /// This is the fundamental operation of Clifford Algebra, combining
+    /// the inner (contraction) and outer (expansion) products.
+    ///
+    /// $$ AB = A \cdot B + A \wedge B $$
+    ///
+    /// It is associative and distributive over addition.
+    fn geometric_product(&self, rhs: &Self) -> Self
+    where
+        T: Num + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>;
+
     /// Computes the outer product (wedge product) $A \wedge B$.
     ///
     /// The outer product of two multivectors of grades $r$ and $s$ is the grade $r+s$ part of their geometric product.

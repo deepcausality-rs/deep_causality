@@ -2,7 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Complex64, ComplexMultiVector, Metric};
+use crate::{ComplexMultiVector, Metric};
+use deep_causality_num::Complex64;
 
 impl ComplexMultiVector {
     /// Cl_C(2): Complex Quaternions / Pauli Algebra over C

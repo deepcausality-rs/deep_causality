@@ -3,6 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-#[cfg(test)]
-pub mod hkt;
-mod quantum;
+mod quantum_gates;
+mod quantum_ops;
+
+pub use quantum_gates::QuantumGates;
+pub use quantum_ops::QuantumOps;

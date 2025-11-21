@@ -10,10 +10,11 @@ pub mod traits;
 pub mod types;
 
 pub use crate::alias::{
-    Complex64, ComplexMultiVector, DixonAlgebra, PGA3DMultiVector, RealMultiVector,
+    ComplexMultiVector, DixonAlgebra, HilbertState, PGA3DMultiVector, RealMultiVector,
 };
 pub use crate::errors::causal_multivector_error::CausalMultiVectorError;
 pub use crate::extensions::hkt::CausalMultiVectorWitness;
+pub use crate::extensions::quantum::{QuantumGates, QuantumOps};
 pub use crate::traits::multi_vector::MultiVector;
 pub use crate::types::metric::Metric;
 pub use crate::types::multivector::CausalMultiVector;
