@@ -18,7 +18,7 @@ fn main() {
 
     // Case A: Stationary Plasma Fusion
     // Modeled using Classical Euclidean Geometry (Standard Engineering)
-    println!(">> SCENARIO A: Low-Energy Plasma Fusion (Classical Euclidean Metric)");
+    println!(">> SCENARIO A: Stationary Plasma Fusion (Classical Euclidean Metric)");
     calculate_confinement_force(
         Metric::Euclidean(3),
         0, // Current flowing Toroidally (X-axis)
