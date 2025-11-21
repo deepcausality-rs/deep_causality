@@ -459,7 +459,7 @@ dependencies = [
  "criterion",
  "deep_causality_haft",
  "deep_causality_num",
- "num-traits",
+ "deep_causality_tensor",
 ]
 
 [[package]]

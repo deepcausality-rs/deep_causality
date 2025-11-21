@@ -88,7 +88,6 @@ fn calculate_spacetime_metric() -> CausalTensor<f64> {
 fn calculate_einstein_tensor(g_uv: &CausalTensor<f64>) -> CausalTensor<f64> {
     // Assume a scalar curvature R driven by mass
     let curvature = 0.1;
-    let r_scalar = <CausalTensorWitness as Applicative<CausalTensorWitness>>::pure(curvature);
 
     // G_uv ~ R * g_uv (Simplified EFE LHS)
     // Use HKT to scale the metric
