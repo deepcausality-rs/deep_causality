@@ -54,4 +54,56 @@ impl<T> CausalMultiVector<T> {
         // 3. Result Index is XOR
         (sign, a_map ^ b_map)
     }
+
+    /// An optimized version of basis_product that uses a pre-computed metric cache
+    /// to avoid repeated Enum matching / branching inside the hot loop.
+    #[inline(always)]
+    pub(super) fn basis_product_cached(
+        a_map: usize,
+        b_map: usize,
+        _dim: usize,
+        metric_signs: &[i8],
+    ) -> (i8, usize) {
+        let mut sign: i8 = 1;
+
+        // 1. Canonical Reordering (Swaps)
+        // Optimization: We can iterate only the bits of B.
+        // Ideally this would use popcount intrinsics, but loop is robust.
+        let mut b_temp = b_map;
+        let mut bit_idx = 0;
+
+        while b_temp > 0 {
+            if (b_temp & 1) == 1 {
+                // If bit k is set in B, count how many bits in A are HIGHER than k.
+                // (a_map >> (bit_idx + 1)) removes bits <= k.
+                let higher_bits = (a_map >> (bit_idx + 1)).count_ones();
+                if !higher_bits.is_multiple_of(2) {
+                    sign = -sign;
+                }
+            }
+            b_temp >>= 1;
+            bit_idx += 1;
+        }
+
+        // 2. Metric Squaring
+        // Bits present in BOTH are squared.
+        let mut overlap = a_map & b_map;
+        let mut bit_idx = 0;
+
+        while overlap > 0 {
+            if (overlap & 1) == 1 {
+                let s = metric_signs[bit_idx];
+                if s == 0 {
+                    return (0, 0);
+                } // Degenerate
+                if s < 0 {
+                    sign = -sign;
+                }
+            }
+            overlap >>= 1;
+            bit_idx += 1;
+        }
+
+        (sign, a_map ^ b_map)
+    }
 }

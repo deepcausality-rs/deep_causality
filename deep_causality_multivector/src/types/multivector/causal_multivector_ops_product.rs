@@ -8,15 +8,15 @@ use deep_causality_num::Num;
 use std::ops::{AddAssign, Neg, SubAssign};
 
 impl<T> CausalMultiVector<T> {
-    /// Implements the Geometric Product of two multivectors.
-    /// $$ AB = \sum_{I,J} a_I b_J (e_I e_J) $$
-    ///
-    /// The product $e_I e_J$ is calculated using `calculate_basis_product`, handling sign changes from reordering and the metric signature.
+    // Threshold:
+    // Dim 6 = 64 components -> 4096 iterations (Dense is likely still faster than Allocator)
+    // Dim 7 = 128 components -> 16,384 iterations (Sparse starts winning)
+    const SPARSE_THRESHOLD: usize = 6;
+
     pub(super) fn geometric_product_impl(&self, rhs: &Self) -> Self
     where
         T: Num + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
     {
-        // 1. Safety Check: Algebras must match (e.g., cannot multiply Cl(3) by Cl(1,3))
         if self.metric != rhs.metric {
             panic!(
                 "Geometric Product Metric mismatch: {:?} vs {:?}",
@@ -25,40 +25,114 @@ impl<T> CausalMultiVector<T> {
         }
 
         let dim = self.metric.dimension();
-        let count = 1 << dim; // 2^N elements
 
-        // Initialize result accumulator
+        // Dispatch based on dimension threshold
+        if dim <= Self::SPARSE_THRESHOLD {
+            self.geometric_product_dense(rhs, dim)
+        } else {
+            self.geometric_product_sparse(rhs, dim)
+        }
+    }
+
+    // --- OPTIMIZED FOR LOW DIMENSION (No Aux Allocations) ---
+    #[inline(always)]
+    fn geometric_product_dense(&self, rhs: &Self, dim: usize) -> Self
+    where
+        T: Num + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
+    {
+        let count = 1 << dim;
         let mut result_data = vec![T::zero(); count];
 
-        // 2. The Double Loop (O(4^N))
-        // For every component in A...
         for i in 0..count {
             if self.data[i].is_zero() {
                 continue;
             }
 
-            // For every component in B...
             for j in 0..count {
                 if rhs.data[j].is_zero() {
                     continue;
                 }
 
-                // 3. Calculate the Basis Product: e_i * e_j
-                // This helper (defined previously) handles:
-                // - The Metric signature (e.g., e_1*e_1 = -1 in AntiEuclidean)
-                // - The Swaps required to reorder (e_2*e_1 = -e_1*e_2)
-                // - Degenerate dimensions (PGA) returning 0
                 let (sign, result_idx) = Self::basis_product(i, j, &self.metric);
 
-                // If sign is 0 (degenerate/annihilated), skip.
                 if sign == 0 {
                     continue;
                 }
 
-                // 4. Multiply Coefficients
                 let val = self.data[i] * rhs.data[j];
 
-                // 5. Accumulate with correct sign
+                // BRANCHLESS OPTIMIZATION:
+                // Instead of if/else, we multiply by the sign.
+                let sign_multiplier = if sign > 0 { T::one() } else { -T::one() };
+
+                // CPU executes this as a single Multiply-Add stream
+                result_data[result_idx] += val * sign_multiplier;
+            }
+        }
+
+        Self {
+            data: result_data,
+            metric: self.metric,
+        }
+    }
+
+    // --- OPTIMIZED FOR HIGH DIMENSION (Sparsity & Caching) ---
+    fn geometric_product_sparse(&self, rhs: &Self, dim: usize) -> Self
+    where
+        T: Num + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
+    {
+        let count = 1 << dim;
+        let mut result_data = vec![T::zero(); count];
+
+        // 1. Metric Caching
+        let metric_cache: Vec<i8> = (0..dim).map(|k| self.metric.sign_of_sq(k) as i8).collect();
+
+        // 2. Sparsity Scan
+        // Collect indices to avoid iterating over zeros (which is 99% of Cl(10))
+        let mut lhs_indices = Vec::with_capacity(self.data.len() / 4); // Heuristic cap
+        for (i, val) in self.data.iter().enumerate() {
+            if !val.is_zero() {
+                lhs_indices.push(i);
+            }
+        }
+
+        if lhs_indices.is_empty() {
+            return Self {
+                data: result_data,
+                metric: self.metric,
+            };
+        }
+
+        let mut rhs_indices = Vec::with_capacity(rhs.data.len() / 4);
+        for (j, val) in rhs.data.iter().enumerate() {
+            if !val.is_zero() {
+                rhs_indices.push(j);
+            }
+        }
+
+        if rhs_indices.is_empty() {
+            return Self {
+                data: result_data,
+                metric: self.metric,
+            };
+        }
+
+        // 3. Sparse Loop
+        for &i in &lhs_indices {
+            let lhs_val = self.data[i];
+
+            for &j in &rhs_indices {
+                let rhs_val = rhs.data[j];
+
+                // Use cached helper
+                let (sign, result_idx) = Self::basis_product_cached(i, j, dim, &metric_cache);
+
+                if sign == 0 {
+                    continue;
+                }
+
+                let val = lhs_val * rhs_val;
+
                 if sign > 0 {
                     result_data[result_idx] += val;
                 } else {
