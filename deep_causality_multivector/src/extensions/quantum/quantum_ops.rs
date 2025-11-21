@@ -105,7 +105,7 @@ impl QuantumOps for HilbertState {
     /// 1.  `op.geometric_product(ket)`: Applies the operator $\hat{O}$ to the ket $|\psi\rangle$,
     ///     resulting in an intermediate state $|\phi\rangle = \hat{O}|\psi\rangle$.
     /// 2.  `bra.mv().geometric_product(&phi)`: Takes the inner product $\langle \psi | \phi \rangle$.
-    /// Finally, the scalar (grade 0) component of the result is extracted.
+    /// 3.  Finally, the scalar (grade 0) component of the result is extracted.
     fn expectation_value(&self, operator: &Self) -> Complex64 {
         let bra = self.dag();
         let ket = self.mv();

@@ -201,7 +201,8 @@ impl QuantumGates for HilbertState {
     /// 2.  The angle `theta` is set to `FRAC_PI_4` ($\pi/4$).
     /// 3.  The terms `cos(theta) * I` and `-i * sin(theta) * Z` are calculated.
     /// 4.  These two multivectors are added to form the final S-gate operator.
-    /// The state is constructed using `new_spin10()`.
+    ///
+    /// The new state is constructed using `new_spin10()`.
     fn gate_s() -> Self {
         let i_gate = Self::gate_identity();
         let z_gate = Self::gate_z();
@@ -238,7 +239,8 @@ impl QuantumGates for HilbertState {
     /// 2.  The angle `theta` is set to `FRAC_PI_8` ($\pi/8$).
     /// 3.  The terms `cos(theta) * I` and `-i * sin(theta) * Z` are calculated.
     /// 4.  These two multivectors are added to form the final T-gate operator.
-    /// The state is constructed using `new_spin10()`.
+    ///
+    /// The new state is constructed using `new_spin10()`.
     fn gate_t() -> Self {
         let i_gate = Self::gate_identity();
         let z_gate = Self::gate_z();
