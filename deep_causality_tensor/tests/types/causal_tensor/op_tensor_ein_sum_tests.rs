@@ -4,7 +4,8 @@
  */
 
 use deep_causality_tensor::{
-    CausalTensor, CausalTensorError, EinSumAST, EinSumOp, EinSumValidationError, utils_tests,
+    CausalTensor, CausalTensorError, EinSumAST, EinSumOp, EinSumValidationError, Tensor,
+    utils_tests,
 };
 
 #[test]

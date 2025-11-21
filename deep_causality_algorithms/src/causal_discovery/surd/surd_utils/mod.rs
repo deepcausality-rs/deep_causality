@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_tensor::{CausalTensor, CausalTensorError};
+use deep_causality_tensor::{CausalTensor, CausalTensorError, Tensor};
 use std::cmp::Ordering;
 
 pub(crate) mod surd_utils_cdl;

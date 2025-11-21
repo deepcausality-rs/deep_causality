@@ -4,7 +4,7 @@
  */
 use criterion::{Criterion, criterion_group};
 use deep_causality_rand::Rng;
-use deep_causality_tensor::CausalTensor;
+use deep_causality_tensor::{CausalTensor, Tensor};
 use std::hint::black_box;
 
 // Define some constants for tensor sizes

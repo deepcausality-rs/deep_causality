@@ -5,7 +5,7 @@
 use crate::causal_discovery::surd::surd_utils;
 use crate::causal_discovery::surd::surd_utils::surd_utils_cdl;
 use crate::causal_discovery::surd::{MaxOrder, SurdResult};
-use deep_causality_tensor::{CausalTensor, CausalTensorError, CausalTensorStackExt};
+use deep_causality_tensor::{CausalTensor, CausalTensorError, CausalTensorStackExt, Tensor};
 use std::collections::HashMap;
 
 #[cfg(feature = "parallel")]

@@ -2,10 +2,11 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalTensor, CausalTensorError, EinSumAST, Tensor};
+
+use crate::{CausalTensor, CausalTensorError, EinSumAST};
 use std::ops::{Add, Div, Mul};
 
-impl<T> Tensor<T> for CausalTensor<T> {
+pub trait Tensor<T> {
     /// Public API for Einstein summation.
     ///
     /// This method serves as the entry point for performing Einstein summation operations
@@ -27,10 +28,7 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// Returns errors propagated from `execute_ein_sum`.
     fn ein_sum(ast: &EinSumAST<T>) -> Result<CausalTensor<T>, CausalTensorError>
     where
-        T: Clone + Default + PartialOrd + Add<Output = T> + Mul<Output = T>,
-    {
-        Self::execute_ein_sum(ast)
-    }
+        T: Clone + Default + PartialOrd + Add<Output = T> + Mul<Output = T>;
     /// Computes the tensor product (also known as the outer product) of two `CausalTensor`s.
     ///
     /// The tensor product combines two tensors into a new tensor whose rank is the sum of
@@ -82,10 +80,7 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// ```
     fn tensor_product(&self, rhs: &CausalTensor<T>) -> Result<CausalTensor<T>, CausalTensorError>
     where
-        T: Clone + Mul<Output = T>,
-    {
-        self.tensor_product_impl(rhs)
-    }
+        T: Clone + Mul<Output = T>;
     /// Sums the elements along one or more specified axes.
     ///
     /// The dimensions corresponding to the `axes` provided will be removed from the
@@ -139,9 +134,7 @@ impl<T> Tensor<T> for CausalTensor<T> {
     where
         T: Clone + Default + PartialOrd,
         T: Add<T, Output = T>,
-    {
-        self.sum_axes_impl(axes)
-    }
+        Self: Sized;
     /// Calculates the mean (average) of the elements along one or more specified axes.
     ///
     /// The dimensions corresponding to the `axes` provided will be removed from the
@@ -193,9 +186,7 @@ impl<T> Tensor<T> for CausalTensor<T> {
     where
         T: Clone + Default + PartialOrd,
         T: Div<T, Output = T> + From<u32> + Add<T, Output = T>,
-    {
-        self.mean_axes_impl(axes)
-    }
+        Self: Sized;
     /// Computes the indices that would sort a 1-dimensional tensor (vector).
     ///
     /// This method is only valid for tensors with `ndim() == 1`. It returns a vector
@@ -227,10 +218,7 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// ```
     fn arg_sort(&self) -> Result<Vec<usize>, CausalTensorError>
     where
-        T: Clone + Default + PartialOrd,
-    {
-        self.arg_sort_impl()
-    }
+        T: Clone + Default + PartialOrd;
     /// Returns a new tensor with the same data but a different shape.
     ///
     /// This is a metadata-only operation; it creates a new `CausalTensor` with a cloned copy
@@ -272,9 +260,7 @@ impl<T> Tensor<T> for CausalTensor<T> {
     fn reshape(&self, new_shape: &[usize]) -> Result<Self, CausalTensorError>
     where
         T: Clone,
-    {
-        self.reshape_impl(new_shape)
-    }
+        Self: Sized;
     /// Flattens the tensor into a 1-dimensional tensor (vector).
     ///
     /// This is a metadata-only operation; it does not copy or reallocate the underlying data.
@@ -292,10 +278,7 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// ```
     fn ravel(self) -> Self
     where
-        T: Clone,
-    {
-        self.ravel_impl()
-    }
+        T: Clone;
     /// Creates a new tensor representing a slice of the original tensor along a specified axis.
     ///
     /// This operation extracts a sub-tensor where one dimension has been fixed to a specific index.
@@ -339,10 +322,7 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// ```
     fn slice(&self, axis: usize, index: usize) -> Result<CausalTensor<T>, CausalTensorError>
     where
-        T: Clone,
-    {
-        self.slice_impl(axis, index)
-    }
+        T: Clone;
     /// Permutes the axes of the tensor according to the given new order.
     ///
     /// This is a metadata-only operation; it creates a new `CausalTensor` with a cloned copy
@@ -364,9 +344,7 @@ impl<T> Tensor<T> for CausalTensor<T> {
     fn permute_axes(&self, axes: &[usize]) -> Result<Self, CausalTensorError>
     where
         T: Clone,
-    {
-        self.permute_axes_impl(axes)
-    }
+        Self: Sized;
     /// Creates a new tensor that is cyclically shifted (rolled) so that the
     /// element at `flat_index` moves to position 0.
     ///
@@ -385,8 +363,5 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// If you shift off the edge, you wrap around to the other side.
     fn shifted_view(&self, flat_index: usize) -> Self
     where
-        T: Clone,
-    {
-        self.shifted_view_impl(flat_index)
-    }
+        T: Clone;
 }
