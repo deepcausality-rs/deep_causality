@@ -169,3 +169,6 @@ where
     pub re: F,
     pub im: F,
 }
+
+pub type Complex32 = Complex<f32>;
+pub type Complex64 = Complex<f64>;

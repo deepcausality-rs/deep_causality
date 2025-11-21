@@ -4,4 +4,5 @@
  */
 
 #[cfg(test)]
-pub mod hkt_tests;
+pub mod hkt;
+mod quantum;

@@ -29,32 +29,54 @@ exclude = [
 path = "../deep_causality_haft"
 version = "0.2"
 
+
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
 version = "0.1"
 
+
+[dependencies.deep_causality_tensor]
+path = "../deep_causality_tensor"
+version = "0.1"
+
+
 [dev-dependencies]
 criterion = "0.7"
+
 
 [[bench]]
 name = "multivector_bench"
 harness = false
 
+
 [[example]]
 name = "basic_multivector_example"
 path = "examples/basic_multivector.rs"
 
+[[example]]
+name = "clifford_mhd_mulitvector_example"
+path = "examples/clifford_mhd_mulitvector.rs"
+
+[[example]]
+name = "dixon_multivector_example"
+path = "examples/dixon_multivector.rs"
+
+[[example]]
+name = "grmhd_multivector_example"
+path = "examples/grmhd_integration.rs"
+
+[[example]]
+name = "hilbert_multivector_example"
+path = "examples/hilbert_multivector.rs"
 
 [[example]]
 name = "hkt_multivector_example"
 path = "examples/hkt_multivector.rs"
-
 
 [[example]]
 name = "pga3d_multivector_example"
 path = "examples/pga3d_multivector.rs"
 
 
-[[example]]
-name = "dixon_multivector_example"
-path = "examples/dixon_multivector.rs"
+
+[dependencies]

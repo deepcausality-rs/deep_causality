@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::CausalTensor;
+use crate::{CausalTensor, Tensor};
 use deep_causality_haft::{Applicative, BoundedComonad, Foldable, Functor, HKT, Monad};
 use deep_causality_num::Zero;
 

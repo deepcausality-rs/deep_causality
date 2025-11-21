@@ -7,9 +7,11 @@ use crate::CausalMultiVectorError;
 use crate::types::metric::Metric;
 use deep_causality_num::{Num, Zero};
 
-mod causal_multivector_ops_arithmetic;
-mod causal_multivector_ops_misc;
-mod causal_multivector_ops_product;
+mod api;
+mod causal_multivector_ops_arithmetic_impl;
+mod causal_multivector_ops_misc_impl;
+mod causal_multivector_ops_product_impl;
+mod utils;
 
 /// A MultiVector in a Clifford Algebra $Cl(p, q, r)$.
 ///
@@ -54,6 +56,10 @@ impl<T> CausalMultiVector<T> {
             ));
         }
         Ok(Self { data, metric })
+    }
+
+    pub fn unchecked(data: Vec<T>, metric: Metric) -> Self {
+        Self { data, metric }
     }
 
     /// Gets a specific component by basis blade bitmap.

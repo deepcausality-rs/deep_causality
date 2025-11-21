@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_tensor::{CausalTensor, EinSumOp};
+use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 
 fn main() {
     // Example 1: Matrix Multiplication

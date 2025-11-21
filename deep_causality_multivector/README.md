@@ -63,6 +63,24 @@ Type: `RealMultiVector`
 | **Conformal (CGA)**           | $Cl(4, 1)$ | | `RealMultiVector::new_cga_vector` |
 
 
+### Quantum State Vector (HilbertState)
+
+The `HilbertState` type represents a quantum state vector (ket) $|\psi\rangle$ within a Clifford Algebra.
+It acts as a strong type for elements of a minimal left ideal of the algebra, which serves as the Hilbert space.
+
+*   **Coefficients**: Always `Complex<f64>`.
+*   **Metric**: Fixed at construction, typically `Cl(0,10)` (NonEuclidean, 10D) for the Grand Unified Algebra ($\mathfrak{spin}(10)$).
+
+This ensures type safety and prevents mixed-algebra operations, crucial for consistent quantum mechanical calculations within the algebraic framework.
+
+Type: `HilbertState` (Alias for `CausalMultiVector<Complex<f64>>` with specific constructors)
+
+| Alias (Contextual Name) | Canonical Signature | Constructor / Alias |
+|:--------------------------------------------|:--------------------|:-----------------------------------------------------|
+| **Quantum State Vector** | $Cl(0, 10)$ | `HilbertState::new_spin10` (enforces $Cl(0,10)$) |
+| **Generic Qubit/State** | Arbitrary | `HilbertState::new` (allows any Metric) |
+
+
 ### 3D Projective Geometric Algebra
 
 Type: PGA3DMultiVector
@@ -185,19 +203,76 @@ fn main() {
     //...
     // See examples/hkt_usage.rs for full demonstration
 }
-
 ```
+
+### Quantum Operations
+
+This crate provides `QuantumGates` (for creating common unitary operators) and `QuantumOps` (for fundamental quantum mechanical operations) via the `HilbertState` type.
+
+```rust
+use deep_causality_multivector::{HilbertState, QuantumGates, QuantumOps};
+use deep_causality_num::Complex64;
+
+fn main() {
+    println!("--- Quantum Operations Example ---");
+
+    // 1. Create an initial state (analogous to |0>)
+    let zero_state = HilbertState::gate_identity();
+    println!("Initial state (scalar part): {:.4?}", zero_state.mv().data()[0]);
+
+    // 2. Apply a Hadamard Gate to create a superposition state
+    let h_gate = HilbertState::gate_hadamard();
+    let plus_state = HilbertState::from(
+        h_gate.into_inner().geometric_product(zero_state.as_inner())
+    );
+    println!("Superposition state (scalar part): {:.4?}", plus_state.mv().data()[0]);
+    // Note: Due to the Cl(0,10) mapping, this scalar might be 0,
+    // actual components will be in e1 and e12 terms of the multivector.
+
+    // 3. Calculate inner product (e.g., <+|+>)
+    let norm_squared = plus_state.bracket(&plus_state);
+    println!("Inner product <+|+>: {:.4?} (Should ideally be 1.0 for normalized state)", norm_squared);
+    // Note: For certain GA mappings, this might not be 1.0 directly
+    // for states that are not minimal left ideals.
+
+    // 4. Normalize the initial state
+    let unnormalized_scalar = Complex64::new(2.0, 0.0);
+    let mut unnormalized_data = vec![Complex64::zero(); 1024]; // Size for Cl(0,10)
+    unnormalized_data[0] = unnormalized_scalar;
+    let unnormalized_state = HilbertState::new_spin10(unnormalized_data).unwrap();
+    println!("Unnormalized state (scalar part): {:.4?}", unnormalized_state.mv().data()[0]);
+
+    let normalized_state = unnormalized_state.normalize();
+    println!("Normalized state (scalar part): {:.4?}", normalized_state.mv().data()[0]);
+    println!("Inner product of normalized state with itself: {:.4?}", normalized_state.bracket(&normalized_state));
+}
+```
+
+## Examples
+
+| File Name                   | Used Algebra                                           | Description                                                                                                                                              |
+| :-------------------------- | :----------------------------------------------------- |:---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `basic_multivector.rs`      | `CausalMultiVector` (`Euclidean(2)`)                  | Demonstrates basic geometric algebra operations (geometric, outer, inner product, inverse) in a 2D Euclidean space.                                      |
+| `clifford_mhd_mulitvector.rs` | `CausalMultiVector` (`Euclidean(3)`, `Minkowski(4)`) | Simulates Lorentz force in plasma fusio  using both Euclidean and Minkowski metrics for metric-agnostic calculations.                                    |
+| `dixon_multivector.rs`      | `DixonAlgebra` (Cl_C(6))                               | Demonstrates operations within the Dixon Algebra, including basis vector construction, geometric products, and complex scalar multiplication.            |
+| `hilbert_multivector.rs`    | `HilbertState` (Cl(0,10))                              | Demonstrates quantum gates (Pauli-X, Hadamard) and operations (Hermitian conjugate, inner product, expectation value, normalization) using HilbertState. |
+| `hkt_multivector.rs`        | `CausalMultiVector` (`Euclidean`)                      | Demonstrates Higher-Kinded Types (HKT) including Functor, Applicative, and Monad implemented for `CausalMultiVector`.                                    |
+| `pga3d_multivector.rs`      | `PGA3DMultiVector` (3D PGA)                            | Demonstrates 3D Projective Geometric Algebra (PGA) by creating a point, a translator (motor), and applying transformations.                              |
 
 ## Benchmarks
 
 Performance measured on Apple M3 Max.
 
-| Operation | Metric | Time |
+| Operation | Metric | Time (Median) |
 | :--- | :--- | :--- |
-| **Geometric Product** | Euclidean 2D | ~119 ns |
-| **Geometric Product** | PGA 3D | ~110 ns |
-| **Addition** | Euclidean 3D | ~57 ns |
-| **Reversion** | PGA 3D | ~56 ns |
+| **Geometric Product** | Euclidean 2D | ~89.6 ns |
+| **Geometric Product** | PGA 3D | ~87.5 ns |
+| **Addition** | Euclidean 3D | ~39.1 ns |
+| **Reversion** | PGA 3D | ~37.3 ns |
+| **Quantum Ops: dag()** | Cl(0,10) | ~1.42 µs |
+| **Quantum Ops: bracket()** | Cl(0,10) | ~2.65 µs |
+| **Quantum Ops: expectation_value()** | Cl(0,10) | ~3.77 µs |
+| **Quantum Ops: normalize()** | Cl(0,10) | ~3.03 µs |
 
 To run benchmarks:
 ```bash
