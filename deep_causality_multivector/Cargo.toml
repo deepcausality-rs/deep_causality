@@ -29,20 +29,29 @@ exclude = [
 path = "../deep_causality_haft"
 version = "0.2"
 
+
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
 version = "0.1"
 
+
 [dev-dependencies]
 criterion = "0.7"
+
 
 [[bench]]
 name = "multivector_bench"
 harness = false
 
+
 [[example]]
 name = "basic_multivector_example"
 path = "examples/basic_multivector.rs"
+
+
+[[example]]
+name = "hilbert_multivector_example"
+path = "examples/hilbert_multivector.rs"
 
 
 [[example]]
