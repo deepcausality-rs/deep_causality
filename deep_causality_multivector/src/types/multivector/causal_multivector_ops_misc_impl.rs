@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalMultiVector, CausalMultiVectorError};
+use crate::{CausalMultiVector, CausalMultiVectorError, MultiVector};
 use deep_causality_num::Num;
 use std::ops::{AddAssign, Neg, SubAssign};
 
@@ -10,7 +10,7 @@ impl<T> CausalMultiVector<T> {
     /// Projects the multivector onto a specific grade $k$.
     ///
     /// $$ \langle A \rangle_k = \sum_{I : |I|=k} a_I e_I $$
-    pub fn grade_projection(&self, k: u32) -> Self
+    pub(super) fn grade_projection_impl(&self, k: u32) -> Self
     where
         T: Num + Copy + Clone,
     {
@@ -25,12 +25,11 @@ impl<T> CausalMultiVector<T> {
             metric: self.metric,
         }
     }
-
     /// Computes the reverse of the multivector, denoted $\tilde{A}$ or $A^\dagger$.
     ///
     /// Reverses the order of vectors in each basis blade.
     /// $$ \tilde{A} = \sum_{k=0}^N (-1)^{k(k-1)/2} \langle A \rangle_k $$
-    pub fn reversion(&self) -> Self
+    pub(super) fn reversion_impl(&self) -> Self
     where
         T: Num + Copy + Clone + Neg<Output = T>,
     {
@@ -49,11 +48,10 @@ impl<T> CausalMultiVector<T> {
             metric: self.metric,
         }
     }
-
     /// Computes the squared magnitude (squared norm) of the multivector.
     ///
     /// $$ ||A||^2 = \langle A \tilde{A} \rangle_0 $$
-    pub fn squared_magnitude(&self) -> T
+    pub(super) fn squared_magnitude_impl(&self) -> T
     where
         T: Num + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
     {
@@ -63,13 +61,12 @@ impl<T> CausalMultiVector<T> {
         let product = self.clone() * reverse;
         product.data[0] // Scalar part
     }
-
     /// Computes the inverse of the multivector $A^{-1}$.
     ///
     /// $$ A^{-1} = \frac{\tilde{A}}{A \tilde{A}} $$
     ///
     /// Only valid if $A \tilde{A}$ is a non-zero scalar (Versor).
-    pub fn inverse(&self) -> Result<Self, CausalMultiVectorError>
+    pub(super) fn inverse_impl(&self) -> Result<Self, CausalMultiVectorError>
     where
         T: Num
             + Copy
@@ -88,12 +85,11 @@ impl<T> CausalMultiVector<T> {
         let reverse = self.reversion();
         Ok(reverse / sq_mag)
     }
-
     /// Computes the dual of the multivector $A^*$.
     ///
     /// $$ A^* = A I^{-1} $$
     /// where $I$ is the pseudoscalar.
-    pub fn dual(&self) -> Result<Self, CausalMultiVectorError>
+    pub(super) fn dual_impl(&self) -> Result<Self, CausalMultiVectorError>
     where
         T: Num
             + Copy
@@ -114,7 +110,7 @@ impl<T> CausalMultiVector<T> {
     /// making the coefficient at `index` the new scalar (index 0).
     ///
     /// Used for Comonadic 'extend' operations.
-    pub fn basis_shift(&self, index: usize) -> Self
+    pub(super) fn basis_shift_impl(&self, index: usize) -> Self
     where
         T: Clone,
     {

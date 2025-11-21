@@ -14,5 +14,6 @@ pub use crate::alias::{
 };
 pub use crate::errors::causal_multivector_error::CausalMultiVectorError;
 pub use crate::extensions::hkt::CausalMultiVectorWitness;
+pub use crate::traits::multi_vector::MultiVector;
 pub use crate::types::metric::Metric;
 pub use crate::types::multivector::CausalMultiVector;

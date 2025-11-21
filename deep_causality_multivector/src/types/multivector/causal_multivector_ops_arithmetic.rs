@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::CausalMultiVector;
+use crate::{CausalMultiVector, MultiVector};
 use deep_causality_num::Num;
 use std::ops::{Add, AddAssign, Div, Mul, Sub, SubAssign};
 
@@ -127,7 +127,7 @@ where
                 }
 
                 // Use the helper defined in the struct impl
-                let (sign, result_idx) = Self::calculate_basis_product(i, j, &self.metric);
+                let (sign, result_idx) = Self::basis_product(i, j, &self.metric);
 
                 if sign != 0 {
                     let val = self.data[i] * rhs.data[j];

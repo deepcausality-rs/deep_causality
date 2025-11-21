@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_multivector::{CausalMultiVector, Metric};
+use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("--- CausalMultiVector Basic Usage ---");

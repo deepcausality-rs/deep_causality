@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_multivector::CausalMultiVector;
 use deep_causality_multivector::types::metric::Metric;
+use deep_causality_multivector::{CausalMultiVector, MultiVector};
 
 #[test]
 fn test_new_valid() {

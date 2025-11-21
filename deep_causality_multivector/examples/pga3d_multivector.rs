@@ -3,6 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_multivector::MultiVector;
 use deep_causality_multivector::alias::PGA3DMultiVector;
 
 fn main() {

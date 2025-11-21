@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use criterion::{Criterion, criterion_group, criterion_main};
-use deep_causality_multivector::PGA3DMultiVector;
 use deep_causality_multivector::{CausalMultiVector, Metric};
+use deep_causality_multivector::{MultiVector, PGA3DMultiVector};
 use std::hint::black_box;
 
 fn bench_geometric_product_euclidean_2d(c: &mut Criterion) {

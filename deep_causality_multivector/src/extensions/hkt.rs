@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CausalMultiVector, Metric};
+use crate::{CausalMultiVector, Metric, MultiVector};
 use deep_causality_haft::{Applicative, BoundedComonad, Functor, HKT, Monad};
 use deep_causality_num::Zero;
 

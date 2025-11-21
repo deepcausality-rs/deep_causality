@@ -4,21 +4,21 @@
  */
 
 use super::CausalMultiVector;
-use crate::Metric;
+use crate::{Metric, MultiVector};
 use deep_causality_num::Num;
 use std::ops::{AddAssign, SubAssign};
 
-impl<T> CausalMultiVector<T>
-where
-    T: Num + Copy + Clone + AddAssign + SubAssign,
-{
+impl<T> CausalMultiVector<T> {
     /// Computes the outer product (wedge product) $A \wedge B$.
     ///
     /// The outer product of two multivectors of grades $r$ and $s$ is the grade $r+s$ part of their geometric product.
     /// $$ A \wedge B = \langle AB \rangle_{r+s} $$
     ///
     /// For basis blades $e_I$ and $e_J$, $e_I \wedge e_J$ is non-zero only if $I \cap J = \emptyset$.
-    pub fn outer_product(&self, rhs: &Self) -> Self {
+    pub(super) fn outer_product_impl(&self, rhs: &Self) -> Self
+    where
+        T: Num + Copy + Clone + AddAssign + SubAssign,
+    {
         if self.metric != rhs.metric {
             panic!("Metric mismatch");
         }
@@ -63,14 +63,16 @@ where
             metric: self.metric,
         }
     }
-
     /// Computes the inner product (left contraction) $A \cdot B$ (or $A \rfloor B$).
     ///
     /// The inner product of a grade $r$ multivector $A$ and a grade $s$ multivector $B$ is the grade $s-r$ part of their geometric product.
     /// $$ A \cdot B = \langle AB \rangle_{s-r} $$
     ///
     /// For basis blades $e_I$ and $e_J$, $e_I \cdot e_J$ is non-zero only if $I \subseteq J$.
-    pub fn inner_product(&self, rhs: &Self) -> Self {
+    pub(super) fn inner_product_impl(&self, rhs: &Self) -> Self
+    where
+        T: Num + Copy + Clone + AddAssign + SubAssign,
+    {
         if self.metric != rhs.metric {
             panic!("Metric mismatch");
         }
@@ -90,7 +92,7 @@ where
 
                 // Left contraction requires I subset J
                 if (i & j) == i {
-                    let (sign, result_idx) = Self::calculate_basis_product(i, j, &self.metric);
+                    let (sign, result_idx) = Self::basis_product(i, j, &self.metric);
 
                     if sign != 0 {
                         let val = self.data[i] * rhs.data[j];
@@ -108,7 +110,6 @@ where
             metric: self.metric,
         }
     }
-
     /// Helper function to calculate the sign and index of the geometric product of two basis blades.
     ///
     /// Given two basis blades $e_A$ and $e_B$ (represented by bitmaps `a_map` and `b_map`),
@@ -120,7 +121,10 @@ where
     /// 2. Metric signature (squaring of basis vectors).
     ///
     /// If any basis vector in the intersection squares to 0 (degenerate metric), the result is 0.
-    pub fn calculate_basis_product(a_map: usize, b_map: usize, metric: &Metric) -> (i32, usize) {
+    pub(super) fn basis_product_impl(a_map: usize, b_map: usize, metric: &Metric) -> (i32, usize)
+    where
+        T: Num + Copy + Clone + AddAssign + SubAssign,
+    {
         let mut sign = 1;
 
         // 1. Calculate Sign from Swaps (Canonical Reordering)

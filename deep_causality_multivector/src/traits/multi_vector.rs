@@ -1,0 +1,104 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+// multi_vector
+
+use crate::{CausalMultiVectorError, Metric};
+use deep_causality_num::Num;
+use std::ops::{AddAssign, Neg, SubAssign};
+
+pub trait MultiVector<T> {
+    /// Projects the multivector onto a specific grade $k$.
+    ///
+    /// $$ \langle A \rangle_k = \sum_{I : |I|=k} a_I e_I $$
+    fn grade_projection(&self, k: u32) -> Self
+    where
+        T: Num + Copy + Clone;
+    /// Computes the reverse of the multivector, denoted $\tilde{A}$ or $A^\dagger$.
+    ///
+    /// Reverses the order of vectors in each basis blade.
+    /// $$ \tilde{A} = \sum_{k=0}^N (-1)^{k(k-1)/2} \langle A \rangle_k $$
+    fn reversion(&self) -> Self
+    where
+        T: Num + Copy + Clone + Neg<Output = T>;
+    /// Computes the squared magnitude (squared norm) of the multivector.
+    ///
+    /// $$ ||A||^2 = \langle A \tilde{A} \rangle_0 $$
+    fn squared_magnitude(&self) -> T
+    where
+        T: Num + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>;
+    /// Computes the inverse of the multivector $A^{-1}$.
+    ///
+    /// $$ A^{-1} = \frac{\tilde{A}}{A \tilde{A}} $$
+    ///
+    /// Only valid if $A \tilde{A}$ is a non-zero scalar (Versor).
+    fn inverse(&self) -> Result<Self, CausalMultiVectorError>
+    where
+        T: Num
+            + Copy
+            + Clone
+            + AddAssign
+            + SubAssign
+            + Neg<Output = T>
+            + std::ops::Div<Output = T>
+            + PartialEq,
+        Self: Sized;
+    /// Computes the dual of the multivector $A^*$.
+    ///
+    /// $$ A^* = A I^{-1} $$
+    /// where $I$ is the pseudoscalar.
+    fn dual(&self) -> Result<Self, CausalMultiVectorError>
+    where
+        T: Num
+            + Copy
+            + Clone
+            + AddAssign
+            + SubAssign
+            + Neg<Output = T>
+            + std::ops::Div<Output = T>
+            + PartialEq,
+        Self: Sized;
+    /// Cyclically shifts the basis coefficients.
+    /// This effectively changes the "viewpoint" of the algebra,
+    /// making the coefficient at `index` the new scalar (index 0).
+    ///
+    /// Used for Comonadic 'extend' operations.
+    fn basis_shift(&self, index: usize) -> Self
+    where
+        T: Clone;
+
+    /// Computes the outer product (wedge product) $A \wedge B$.
+    ///
+    /// The outer product of two multivectors of grades $r$ and $s$ is the grade $r+s$ part of their geometric product.
+    /// $$ A \wedge B = \langle AB \rangle_{r+s} $$
+    ///
+    /// For basis blades $e_I$ and $e_J$, $e_I \wedge e_J$ is non-zero only if $I \cap J = \emptyset$.
+    fn outer_product(&self, rhs: &Self) -> Self
+    where
+        T: Num + Copy + Clone + AddAssign + SubAssign;
+    /// Computes the inner product (left contraction) $A \cdot B$ (or $A \rfloor B$).
+    ///
+    /// The inner product of a grade $r$ multivector $A$ and a grade $s$ multivector $B$ is the grade $s-r$ part of their geometric product.
+    /// $$ A \cdot B = \langle AB \rangle_{s-r} $$
+    ///
+    /// For basis blades $e_I$ and $e_J$, $e_I \cdot e_J$ is non-zero only if $I \subseteq J$.
+    fn inner_product(&self, rhs: &Self) -> Self
+    where
+        T: Num + Copy + Clone + AddAssign + SubAssign;
+    /// Helper function to calculate the sign and index of the geometric product of two basis blades.
+    ///
+    /// Given two basis blades $e_A$ and $e_B$ (represented by bitmaps `a_map` and `b_map`),
+    /// this function computes the resulting basis blade $e_C$ (bitmap `result_map`) and the sign $s$ such that:
+    /// $$ e_A e_B = s e_C $$
+    ///
+    /// The sign accounts for:
+    /// 1. Canonical reordering (swaps).
+    /// 2. Metric signature (squaring of basis vectors).
+    ///
+    /// If any basis vector in the intersection squares to 0 (degenerate metric), the result is 0.
+    fn basis_product(a_map: usize, b_map: usize, metric: &Metric) -> (i32, usize)
+    where
+        T: Num + Copy + Clone + AddAssign + SubAssign;
+}

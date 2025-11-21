@@ -37,7 +37,7 @@ pub struct CdlWarningLog {
     pub entries: Vec<CdlWarning>, // Assuming CdlWarning is a simple enum or struct
 }
 
-impl LogAppend for CdlWarningLog {
+impl CdlWarningLog {
     fn append(&mut self, other: &mut Self) {
         self.entries.extend(other.entries.drain(..));
     }
