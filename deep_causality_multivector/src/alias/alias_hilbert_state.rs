@@ -73,13 +73,6 @@ impl std::ops::Add for HilbertState {
 impl std::ops::Mul<Complex<f64>> for HilbertState {
     type Output = Self;
     fn mul(self, rhs: Complex<f64>) -> Self::Output {
-        // Use the scalar constructor logic or map
-        let new_data = self.mv.data.into_iter().map(|c| c * rhs).collect();
-        Self {
-            mv: CausalMultiVector {
-                data: new_data,
-                metric: self.mv.metric,
-            },
-        }
+        Self { mv: self.mv * rhs }
     }
 }

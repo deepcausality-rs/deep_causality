@@ -141,15 +141,11 @@ impl QuantumGates for HilbertState {
     /// Finally, it scales this product by `-i` to match the definition $Z = -iXY$.
     /// The state is constructed using `new_spin10()`.
     fn gate_z() -> Self {
-        let x = Self::gate_x();
-        let y = Self::gate_y();
-
-        let xy = x.as_inner() * y.as_inner(); // Geometric product: (i e1) * (i e2) = -e12
-        let minus_i = Complex64::new(0.0, -1.0); // -i
-
-        let z_mv = xy * minus_i; // Scalar multiplication: -e12 * (-i) = i e12
-
-        Self::new_spin10(z_mv.data).unwrap()
+        // Z = i*e12. The basis blade e12 corresponds to the bitmap 0b11, which is index 3.
+        let mut data = vec![Complex64::zero(); 1024];
+        let i = Complex64::new(0.0, 1.0);
+        data[3] = i; // Index 3 corresponds to e12
+        Self::new_spin10(data).unwrap()
     }
 
     /// Hadamard Gate (H).
