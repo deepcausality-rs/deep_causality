@@ -248,6 +248,17 @@ fn main() {
 }
 ```
 
+## Examples
+
+| File Name                   | Used Algebra                                           | Description                                                                                                                                              |
+| :-------------------------- | :----------------------------------------------------- |:---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `basic_multivector.rs`      | `CausalMultiVector` (`Euclidean(2)`)                  | Demonstrates basic geometric algebra operations (geometric, outer, inner product, inverse) in a 2D Euclidean space.                                      |
+| `clifford_mhd_mulitvector.rs` | `CausalMultiVector` (`Euclidean(3)`, `Minkowski(4)`) | Simulates Lorentz force in plasma fusio  using both Euclidean and Minkowski metrics for metric-agnostic calculations.                                    |
+| `dixon_multivector.rs`      | `DixonAlgebra` (Cl_C(6))                               | Demonstrates operations within the Dixon Algebra, including basis vector construction, geometric products, and complex scalar multiplication.            |
+| `hilbert_multivector.rs`    | `HilbertState` (Cl(0,10))                              | Demonstrates quantum gates (Pauli-X, Hadamard) and operations (Hermitian conjugate, inner product, expectation value, normalization) using HilbertState. |
+| `hkt_multivector.rs`        | `CausalMultiVector` (`Euclidean`)                      | Demonstrates Higher-Kinded Types (HKT) including Functor, Applicative, and Monad implemented for `CausalMultiVector`.                                    |
+| `pga3d_multivector.rs`      | `PGA3DMultiVector` (3D PGA)                            | Demonstrates 3D Projective Geometric Algebra (PGA) by creating a point, a translator (motor), and applying transformations.                              |
+
 ## Benchmarks
 
 Performance measured on Apple M3 Max.
