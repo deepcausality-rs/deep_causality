@@ -114,16 +114,9 @@ impl<T> CausalMultiVector<T> {
     where
         T: Clone,
     {
-        let len = self.data.len();
-        if len == 0 {
-            return Self {
-                data: self.data.clone(),
-                metric: self.metric,
-            };
-        }
+        // Null check is no needed since length is guaranteed to be >0
         let mut new_data = self.data.clone();
-
-        let shift = index % len;
+        let shift = index % self.data.len();
         new_data.rotate_left(shift);
 
         Self {
