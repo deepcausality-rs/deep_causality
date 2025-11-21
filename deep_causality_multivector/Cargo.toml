@@ -48,22 +48,24 @@ harness = false
 name = "basic_multivector_example"
 path = "examples/basic_multivector.rs"
 
+[[example]]
+name = "clifford_mhd_mulitvector_example"
+path = "examples/clifford_mhd_mulitvector.rs"
 
 [[example]]
 name = "hilbert_multivector_example"
 path = "examples/hilbert_multivector.rs"
 
-
 [[example]]
 name = "hkt_multivector_example"
 path = "examples/hkt_multivector.rs"
-
 
 [[example]]
 name = "pga3d_multivector_example"
 path = "examples/pga3d_multivector.rs"
 
-
 [[example]]
 name = "dixon_multivector_example"
 path = "examples/dixon_multivector.rs"
+[dependencies]
+num-traits = "0.2.19"
