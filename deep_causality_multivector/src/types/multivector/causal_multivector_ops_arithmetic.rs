@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalMultiVector, MultiVector};
+use crate::CausalMultiVector;
 use deep_causality_num::Num;
 use std::ops::{Add, AddAssign, Div, Mul, Sub, SubAssign};
 

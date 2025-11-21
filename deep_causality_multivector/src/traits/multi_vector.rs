@@ -5,17 +5,22 @@
 
 // multi_vector
 
-use crate::{CausalMultiVectorError, Metric};
+use crate::CausalMultiVectorError;
 use deep_causality_num::Num;
 use std::ops::{AddAssign, Neg, SubAssign};
 
 pub trait MultiVector<T> {
+    // --- Fundamental Projections ---
+
     /// Projects the multivector onto a specific grade $k$.
     ///
     /// $$ \langle A \rangle_k = \sum_{I : |I|=k} a_I e_I $$
     fn grade_projection(&self, k: u32) -> Self
     where
         T: Num + Copy + Clone;
+
+    // --- Geometric Operations ---
+
     /// Computes the reverse of the multivector, denoted $\tilde{A}$ or $A^\dagger$.
     ///
     /// Reverses the order of vectors in each basis blade.
@@ -23,12 +28,14 @@ pub trait MultiVector<T> {
     fn reversion(&self) -> Self
     where
         T: Num + Copy + Clone + Neg<Output = T>;
+
     /// Computes the squared magnitude (squared norm) of the multivector.
     ///
     /// $$ ||A||^2 = \langle A \tilde{A} \rangle_0 $$
     fn squared_magnitude(&self) -> T
     where
         T: Num + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>;
+
     /// Computes the inverse of the multivector $A^{-1}$.
     ///
     /// $$ A^{-1} = \frac{\tilde{A}}{A \tilde{A}} $$
@@ -60,14 +67,8 @@ pub trait MultiVector<T> {
             + std::ops::Div<Output = T>
             + PartialEq,
         Self: Sized;
-    /// Cyclically shifts the basis coefficients.
-    /// This effectively changes the "viewpoint" of the algebra,
-    /// making the coefficient at `index` the new scalar (index 0).
-    ///
-    /// Used for Comonadic 'extend' operations.
-    fn basis_shift(&self, index: usize) -> Self
-    where
-        T: Clone;
+
+    // --- Products ---
 
     /// Computes the outer product (wedge product) $A \wedge B$.
     ///
@@ -87,18 +88,33 @@ pub trait MultiVector<T> {
     fn inner_product(&self, rhs: &Self) -> Self
     where
         T: Num + Copy + Clone + AddAssign + SubAssign;
-    /// Helper function to calculate the sign and index of the geometric product of two basis blades.
+
+    /// Computes the Lie Bracket commutator $[A, B] = AB - BA$.
     ///
-    /// Given two basis blades $e_A$ and $e_B$ (represented by bitmaps `a_map` and `b_map`),
-    /// this function computes the resulting basis blade $e_C$ (bitmap `result_map`) and the sign $s$ such that:
-    /// $$ e_A e_B = s e_C $$
-    ///
-    /// The sign accounts for:
-    /// 1. Canonical reordering (swaps).
-    /// 2. Metric signature (squaring of basis vectors).
-    ///
-    /// If any basis vector in the intersection squares to 0 (degenerate metric), the result is 0.
-    fn basis_product(a_map: usize, b_map: usize, metric: &Metric) -> (i32, usize)
+    /// This is the standard definition for Lie Algebras (Particle Physics).
+    /// For orthogonal basis vectors: $[e_1, e_2] = 2e_{12}$.
+    fn commutator_lie(&self, rhs: &Self) -> Self
     where
-        T: Num + Copy + Clone + AddAssign + SubAssign;
+        T: Num + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>;
+
+    /// Computes the Geometric Algebra commutator product $A \times B = \frac{1}{2}(AB - BA)$.
+    ///
+    /// This projects the result onto the subspace orthogonal to the inputs.
+    /// For orthogonal basis vectors: $e_1 \times e_2 = e_{12}$.
+    ///
+    /// **Requirement:** Type `T` must support division by 2 (e.g. `1 + 1`).
+    fn commutator_geometric(&self, rhs: &Self) -> Self
+    where
+        T: Num + Copy + Clone + AddAssign + SubAssign + Neg<Output = T> + std::ops::Div<Output = T>;
+
+    // --- CoMonadic Ops ---
+
+    /// Cyclically shifts the basis coefficients.
+    /// This effectively changes the "viewpoint" of the algebra,
+    /// making the coefficient at `index` the new scalar (index 0).
+    ///
+    /// Used for Comonadic 'extend' operations.
+    fn basis_shift(&self, index: usize) -> Self
+    where
+        T: Clone;
 }

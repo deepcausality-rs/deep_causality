@@ -11,6 +11,7 @@ mod api;
 mod causal_multivector_ops_arithmetic;
 mod causal_multivector_ops_misc_impl;
 mod causal_multivector_ops_product;
+mod utils;
 
 /// A MultiVector in a Clifford Algebra $Cl(p, q, r)$.
 ///

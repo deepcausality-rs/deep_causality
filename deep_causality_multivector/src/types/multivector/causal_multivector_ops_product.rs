@@ -4,9 +4,8 @@
  */
 
 use super::CausalMultiVector;
-use crate::{Metric, MultiVector};
 use deep_causality_num::Num;
-use std::ops::{AddAssign, SubAssign};
+use std::ops::{AddAssign, Neg, SubAssign};
 
 impl<T> CausalMultiVector<T> {
     /// Computes the outer product (wedge product) $A \wedge B$.
@@ -110,56 +109,88 @@ impl<T> CausalMultiVector<T> {
             metric: self.metric,
         }
     }
-    /// Helper function to calculate the sign and index of the geometric product of two basis blades.
-    ///
-    /// Given two basis blades $e_A$ and $e_B$ (represented by bitmaps `a_map` and `b_map`),
-    /// this function computes the resulting basis blade $e_C$ (bitmap `result_map`) and the sign $s$ such that:
-    /// $$ e_A e_B = s e_C $$
-    ///
-    /// The sign accounts for:
-    /// 1. Canonical reordering (swaps).
-    /// 2. Metric signature (squaring of basis vectors).
-    ///
-    /// If any basis vector in the intersection squares to 0 (degenerate metric), the result is 0.
-    pub(super) fn basis_product_impl(a_map: usize, b_map: usize, metric: &Metric) -> (i32, usize)
+
+    pub(super) fn commutator_lie_impl(&self, rhs: &Self) -> Self
     where
-        T: Num + Copy + Clone + AddAssign + SubAssign,
+        T: Num + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
     {
-        let mut sign = 1;
+        if self.metric != rhs.metric {
+            panic!("Metric mismatch");
+        }
 
-        // 1. Calculate Sign from Swaps (Canonical Reordering)
-        let mut swaps = 0;
-        let dim = metric.dimension();
+        let dim = self.metric.dimension();
+        let count = 1 << dim;
+        let mut result_data = vec![T::zero(); count];
 
-        for i in 0..dim {
-            if (b_map >> i) & 1 == 1 {
-                let higher_bits_in_a = (a_map >> (i + 1)).count_ones();
-                swaps += higher_bits_in_a;
+        for i in 0..count {
+            if self.data[i].is_zero() {
+                continue;
             }
-        }
-        if swaps % 2 != 0 {
-            sign *= -1;
-        }
-
-        // 2. Calculate Sign from Metric (Squaring generators)
-        let intersection = a_map & b_map;
-        for i in 0..dim {
-            if (intersection >> i) & 1 == 1 {
-                let sq_sign = metric.sign_of_sq(i);
-
-                // If any generator in the intersection squares to 0,
-                // the whole term is annihilated.
-                if sq_sign == 0 {
-                    return (0, 0);
+            for j in 0..count {
+                if rhs.data[j].is_zero() {
+                    continue;
                 }
 
-                sign *= sq_sign;
+                // 1. Calculate Directions
+                let (sign_ab, k) = Self::basis_product(i, j, &self.metric);
+                if sign_ab == 0 {
+                    continue;
+                } // Handle degenerate metric
+
+                let (sign_ba, _) = Self::basis_product(j, i, &self.metric);
+
+                // 2. [A, B] = AB - BA
+                // If signs differ, we have non-zero commutator
+                if sign_ab != sign_ba {
+                    let val = self.data[i] * rhs.data[j];
+
+                    // Result is 2 * sign_ab * val
+                    // We use (val + val) to double it efficiently
+                    let double_val = val + val;
+
+                    if sign_ab > 0 {
+                        result_data[k] += double_val;
+                    } else {
+                        result_data[k] -= double_val;
+                    }
+                }
             }
         }
 
-        // 3. Resulting Bitmap (XOR)
-        let result_map = a_map ^ b_map;
+        Self {
+            data: result_data,
+            metric: self.metric,
+        }
+    }
 
-        (sign, result_map)
+    // The scaled logic 0.5 * (AB - BA)
+    pub(super) fn commutator_geometric_impl(&self, rhs: &Self) -> Self
+    where
+        T: Num + Copy + Clone + AddAssign + SubAssign + Neg<Output = T> + std::ops::Div<Output = T>,
+    {
+        // 1. Calculate the raw Lie bracket (AB - BA)
+        let lie_bracket = self.commutator_lie_impl(rhs);
+
+        // 2. Define "2" using the generic One trait
+        // This works for f64 (1.0+1.0=2.0), Complex (1+i0 + 1+i0 = 2+i0), etc.
+        let two = T::one() + T::one();
+
+        // 3. Check for division by zero (e.g. in Boolean algebra 1+1=0, or GF(2))
+        if two.is_zero() {
+            // In a field where 1+1=0 (Characteristic 2), division by 2 is undefined.
+            // For Physics (R/C), this branch is never taken.
+            // You might panic or return the Lie bracket depending on philosophy.
+            panic!(
+                "Cannot compute Geometric Commutator (scale by 1/2) in a field with characteristic 2"
+            );
+        }
+
+        // 4. Scale the result
+        let scaled_data = lie_bracket.data.into_iter().map(|val| val / two).collect();
+
+        Self {
+            data: scaled_data,
+            metric: lie_bracket.metric,
+        }
     }
 }
