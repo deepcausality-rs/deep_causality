@@ -41,38 +41,19 @@ jobs:
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
 
-#      - name: Install cargo-sbom
-#        run: cargo install cargo-sbom
-#
-#      - name: Generate SBOM
-#        run: |
-#          set -euo pipefail
-#          cargo sbom --cargo-package "${{ matrix.crate }}" --output-format=spdx_json_2_3 > "${{ matrix.crate }}-sbom.spdx.json"
+      - name: Install cargo-sbom
+        run: cargo install cargo-sbom
 
-  generate-sbom:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Create syft config
+      - name: Generate SBOM
         run: |
-          cat > .syft.yaml <<EOF
-          exclude:
-            - "**/vendor/**"
-            - "**/target/**"
-            - "**/.git/**"
-            - "**/build/**"
-            - "**/release/**"
-          EOF
+          set -euo pipefail
+          cargo sbom --cargo-package "${{ matrix.crate }}" --output-format=spdx_json_2_3 > "${{ matrix.crate }}-sbom.spdx.json"
 
-      - name: Generate SPDX SBOM (syft)
-        uses: anchore/sbom-action@v0
+      - name: Attest
+        uses: actions/attest-sbom@v3
         with:
-          path: "${{ matrix.crate }}"
-          format: spdx-json
-          output-file: "${{ matrix.crate }}-sbom.spdx.json"
-          config: .syft.yaml
-          upload-release-assets: ${{ github.event_name == 'release' }}
+          subject-path: "${{ matrix.crate }}"
+          sbom-path: '${{ matrix.crate }}-sbom.spdx.json'
 
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@v4
