@@ -43,6 +43,8 @@ jobs:
           path: ./${{ matrix.crate }}
           format: 'spdx-json'
           output-file: '${{ matrix.crate }}-sbom.spdx.json'
+          upload-artifact: false
+          upload-release-assets: false
 
       - name: Attest SBOM
         uses: actions/attest-sbom@v3
