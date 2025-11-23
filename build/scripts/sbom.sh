@@ -31,7 +31,7 @@ for CRATE_NAME in "${CRATES[@]}"; do
         echo "Failed to generate SBOM for $CRATE_NAME"
     fi
 
-     if ! sha256sum "$CRATE_NAME"/sbom.spdx.json > "$CRATE_NAME"/"$CRATE_NAME"_sbom.spdx.json.sha
+     if ! sha256sum "$CRATE_NAME"/"$CRATE_NAME"_sbom.spdx.json > "$CRATE_NAME"/"$CRATE_NAME"_sbom.spdx.json.sha
      then
         echo "Failed to generate HASH over SBOM for $CRATE_NAME"
      fi
