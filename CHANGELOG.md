@@ -7,6 +7,122 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.9](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.11.8...deep_causality-v0.11.9) - 2025-11-23
+
+### Added
+
+- *(deep_causality)* Complete HKT generative system with automatic audit logging.
+- *(deep_causality_multivector)* Added implementation of multivector crate.
+- *(deep_causality)* Added new example of Structural Causal Model with Monadic Composition
+- *(deep_causality)* Added new intervenable trait and a default impl for CausalMonad.
+- *(deep_causality)* Refactored all monadic types into a dedicated module
+- *(deep_causality)* Updated Bazel test config deps.
+- *(deep_causality)* Updated EPP context example to new API.
+- *(deep_causality)* Updated RCM example to new API.
+- *(deep_causality)* Renamed EffectValue::Deterministic to EffectValue::Boolean
+- *(deep_causality)* Updated Tokio example to new API.
+- *(deep_causality)* refactored EffectValue
+- *(deep_causality)* Minor refactoring
+- *(deep_causality)* Simplified causable implementation for Causaloid.
+- *(deep_causality)* Removed Registry as it was a design mistake that prevented HKT's over collections and introduced dynamic trait objects.
+- *(deep_causality)* Updated Causable implementation.
+- *(deep_causality)* Simplified causaloid from_causal_collection API. Updated relared tests and benchmarks.
+- *(deep_causality)* Added structured causal function logging.
+- *(deep_causality)* Introduce fluent monadic API and guarantee lo
+- *(deep_causality)* Added External variant to the EffectValue to support external types as propagating value.
+- *(deep_causality)* Updated ContextualLink variant of EffectValue
+- *(deep_causality)* renamed files
+- *(deep_causality)* Partial rewrite towards type based effect programming.
+- *(deep_causality)* Updated Causaloid to better handle default reasoning of collections.
+- *(deep_causality)* Code cleanup.
+- *(deep_causality)* Migrated causal collection reasoning towards monadic composition.
+- *(deep_causality)* Prepared migation of causal collection reasoning.
+- *(deep_causality)* Prepared migation of causal collection reasoning.
+- *(deep_causality)* Updated MonadicCausableGraphReasoning to use proper causal reasoning. Removed mock implementation. Updated Causable impl for Causaloid to use monadic bind.
+- *(deep_causality)* made PropagatingEffect use CausalMonad pure.
+- *(deep_causality)* reworking causal reasoning.
+- *(deep_causality)* Refactor PropagatingEffect and Causaloid.
+- *(deep_causality)* Prepared HKT migration
+- *(deep_causality)* Removed effect field from Causaloid
+- *(deep_causality)* Implemented MonadicCausable for Causaloid
+- *(deep_causality)* Added explain to new PropagatingEffect.
+- *(deep_causality)* Added MonadicCausable trait and new function aliases
+- *(deep_causality)* Added CausalMonad, CausalEffectSystem types.
+- *(deep_causality)* Added CausalMonad, CausalEffectSystem types.
+- *(deep_causality)* Added new types: causal_value,  effect_log, and numeric_value.
+
+### Other
+
+- Updated pre-specs and updated Bazel config
+- Updted README.md
+- *(deep_causality)* Increased test coverage and applied lints.
+- *(deep_causality)* Increased test coverage.
+- *(deep_causality)* Increased test coverage.
+- *(deep_causality)* Increased test coverage.
+- *(deep_causality)* Minor lints and code tweaks.
+- *(deep_causality)* Increased test coverage.
+- *(deep_causality)* Increased test coverage.
+- *(deep_causality)* Lints and formatting.
+- *(deep_causality)* Lints and formatting. Improved error handling.
+- *(deep_causality)* Added benchmarks for Causal Monad.
+- *(deep_causality)* Added tests for Causal Monad.
+- *(deep_causality)* Added tests for Causal Monad.
+- *(deep_causality)* Minor lint.
+- *(deep_causality)* Increased test coverage. Fixed tests affected by updated EffectValue.
+- *(deep_causality)* Minor lint.
+- *(deep_causality)* Minor lint.
+- *(deep_causality)* Minor lints.
+- *(deep_causality)* Minor lint.
+- *(deep_causality)* Increased test coverage. Minor fixes and lints.
+- Code formatting.
+- *(deep_causality)* Increased test coverage.
+- *(deep_causality)* Increased test coverage.
+- Code formatting.
+- *(deep_causality)* Increased test coverage.
+- *(deep_causality)* Increased test coverage.
+- *(deep_causality)* Increased test coverage.
+- Code formatting.
+- Merge branch 'deepcausality-rs:main' into main
+- *(deep_causality)* Removed generative tests for the time being. Updated Bazel test config.
+- *(deep_causality)* Updated more tests to new API and re-write missing tests.
+- *(deep_causality)* Updated more tests to new API and re-write missing tests.
+- *(deep_causality)* Updated more tests to new API and re-write missing tests.
+- *(deep_causality)* Updated more tests to new API and re-write missing tests.
+- *(deep_causality)* Added or updated documentation for new monadic types.
+- *(deep_causality)* Updated more tests to new API and re-write missing tests.
+- *(deep_causality)* Updated more tests to new API and re-write missing tests.
+- *(deep_causality)* Updated more tests to new API and re-write missing tests.
+- *(deep_causality)* Updated more tests to new API and re-write missing tests. Re-organized test utils.
+- *(deep_causality)* Updated more tests to new API and re-write missing tests. Re-organized test utils.
+- *(deep_causality)* Updated more tests to new API and re-write missing tests. Re-organized test utils.
+- *(deep_causality)* Updated more tests to new API and re-write missing tests.
+- Added new pre-specs for Multivector and Octonion
+- *(deep_causality)* Updated more tests to new API and re-write missing tests.
+- *(deep_causality)* Updated more tests to new API and re-write missing tests.
+- *(deep_causality)* Updated more tests to new API and re-write missing tests.
+- *(deep_causality)* Updated more tests to new API and re-write missing tests.
+- *(deep_causality)* Updated more tests to new API and re-write missing tests.
+- *(deep_causality)* Updated more tests to new API and re-write missing tests.
+- *(deep_causality)* Updated more tests to new API and re-write missing tests.
+- *(deep_causality)* Updated more tests to new API and re-write missing tests.
+- *(deep_causality)* Updated more tests to new API.
+- *(deep_causality)* Updated more tests to new API.
+- *(deep_causality)* Updated causaloids tests to the new API
+- *(deep_causality)* Updated causaloids tests to the new API
+- *(deep_causality)* Updated utils tests to the new API
+- *(deep_causality)* Updated more tests to the new API
+- *(deep_causality)* Updated extension test to the new API
+- *(deep_causality)* Updated the first extension test to the new API
+- *(deep_causality)* Updated docstring and logs
+- *(deep_causality)* Updated test utils and benchmark to new API.
+- *(deep_causality)* Migrated tests of causal collection reasoning to use new API.
+- *(deep_causality)* Improved docstring
+- Migrated graph reasoning methods to monadic trait.
+- Prepared migration of graph causal reasoning to monadic equivalent.
+- *(deep_causality)* working on restoring tests for causal collection extensions.
+- Added PhantomData to Causaloid
+- updated re-export via lib.rs
+
 ## [0.11.8](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.11.7...deep_causality-v0.11.8) - 2025-11-05
 
 ### Added
