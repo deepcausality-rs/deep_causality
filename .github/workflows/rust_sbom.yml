@@ -42,17 +42,17 @@ jobs:
         run: cargo install cargo-sbom
 
       - name: Generate SBOM
-        run: cargo sbom --package ${{ matrix.crate }} --output-format spdx_json_2_3 > ${{ matrix.crate }}-sbom.spdx.json
+        run: cargo sbom --cargo-package ${{ matrix.crate }} --output-format=spdx_json_2_3 > ${{ matrix.crate }}/${{ matrix.crate }}_sbom.spdx.json
 
       - name: Attest SBOM
         uses: actions/attest@v1
         with:
           subject-path: ./${{ matrix.crate }}
           predicate-type: spdxjson
-          predicate-path: '${{ matrix.crate }}-sbom.spdx.json'
+          predicate-path: '${{ matrix.crate }}/${{ matrix.crate }}_sbom.spdx.json'
 
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.crate }}-sbom
-          path: '${{ matrix.crate }}-sbom.spdx.json'
+          path: '${{ matrix.crate }}/${{ matrix.crate }}_sbom.spdx.json'
