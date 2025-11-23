@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
-      contents: read
+      contents: write
       attestations: write
 
     strategy:
@@ -49,14 +49,16 @@ jobs:
           set -euo pipefail
           cargo sbom --cargo-package "${{ matrix.crate }}" --output-format=spdx_json_2_3 > "${{ matrix.crate }}-sbom.spdx.json"
 
-      - name: Attest
-        uses: actions/attest-sbom@v3
-        with:
-          subject-path: "${{ matrix.crate }}"
-          sbom-path: '${{ matrix.crate }}-sbom.spdx.json'
+#     Attestion currently fails with Error: missing "id-token" permission. Please add "permissions: id-token: write" to your workflow.
+#     Despite having "id-token" permission set.
+#      - name: Attest
+#        uses: actions/attest-sbom@v3
+#        with:
+#          subject-path: "${{ matrix.crate }}"
+#          sbom-path: '${{ matrix.crate }}-sbom.spdx.json'
 
-      - name: Upload SBOM artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload SBOM to Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
         with:
-          name: ${{ matrix.crate }}-sbom
-          path: '${{ matrix.crate }}-sbom.spdx.json'
+          files: ${{ matrix.crate }}-sbom.spdx.json
