@@ -47,15 +47,8 @@ jobs:
       - name: Generate SBOM
         run: |
           set -euo pipefail
-          cargo sbom --package "${{ matrix.crate }}" --output-format spdx_json_2_3 --output "${{ matrix.crate }}-sbom.spdx.json"
+          cargo sbom --cargo-package "${{ matrix.crate }}" --output-format spdx_json_2_3 --output "${{ matrix.crate }}-sbom.spdx.json"
           test -s "${{ matrix.crate }}-sbom.spdx.json"
-
-      - name: Attest SBOM
-        uses: actions/attest@v1
-        with:
-          subject-path: ./${{ matrix.crate }}
-          predicate-type: spdxjson
-          predicate-path: '${{ matrix.crate }}-sbom.spdx.json'
 
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@v4
