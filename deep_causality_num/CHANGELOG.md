@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.1.6...deep_causality_num-v0.1.7) - 2025-11-23
+
+### Added
+
+- *(deep_causality_multivector)* Added quantum gate and operation extension.
+- *(deep_causality_num)* Added documentation to Octonion implementation.
+- *(deep_causality_num)* Added Octonion implementation.
+- *(deep_causality_num)* Fixed doct tests
+- *(deep_causality_num)* Reorganized internal source code.
+
+### Other
+
+- *(deep_causality_num)* Minor lint
+- *(deep_causality_num)* Minor lint
+- *(deep_causality_num)* Added test coverage for Octonion numbers.
+- *(deep_causality_num)* Added test utils for Octonion testing
+
 ## [0.1.6](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.1.5...deep_causality_num-v0.1.6) - 2025-11-05
 
 ### Added

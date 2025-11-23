@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.1.7...deep_causality_tensor-v0.1.8) - 2025-11-23
+
+### Added
+
+- *(deep_causality_multivector)* Added General Relativistic Magnetohydrodynamics example
+- *(deep_causality_tensor)* refactored public Tensor API as a trait.
+- *(deep_causality_multivector)* Added BoundedComonad impl as type extension.
+- *(deep_causality_tensor)* Implemented CoMonad for Causaltensor
+- *(deep_causality_haft)* Introduced Default trait bound to MonadEffect types to simplify error case handling. Update downstream deps.
+- *(deep_causality_tensor)* Reformatted ein_sum example.
+
+### Other
+
+- Merge branch 'deepcausality-rs:main' into main
+
 ## [0.1.7](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.1.6...deep_causality_tensor-v0.1.7) - 2025-11-05
 
 ### Added

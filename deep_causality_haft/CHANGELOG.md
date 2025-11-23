@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_haft-v0.2.2...deep_causality_haft-v0.2.3) - 2025-11-23
+
+### Added
+
+- *(deep_causality_haft)* Added BoundedComonad for usage with MultiVector.
+- *(deep_causality_tensor)* Implemented CoMonad for Causaltensor
+- *(deep_causality_haft)* Added CoMonad and Traversable trait for HKT. Added default implementations for some std types. Added examples, tests and documentation.
+- *(deep_causality_haft)* Introduced Default trait bound to MonadEffect types to simplify error case handling. Update downstream deps.
+
+### Fixed
+
+- *(deep_causality_haft)* Fixed trait bound inconsistency in default impl for Option and Result.
+
+### Other
+
+- Updated Bazael config
+- Merge branch 'deepcausality-rs:main' into main
+
 ## [0.2.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_haft-v0.2.1...deep_causality_haft-v0.2.2) - 2025-11-05
 
 ### Other

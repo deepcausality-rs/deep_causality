@@ -3,7 +3,7 @@
 
 [package]
 name = "deep_causality"
-version = "0.11.8"
+version = "0.11.9"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
