@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_uncertain"
-version = "0.3.4"
+version = "0.3.5"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
