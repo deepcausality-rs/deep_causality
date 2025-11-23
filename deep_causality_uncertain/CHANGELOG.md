@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.6](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.3.5...deep_causality_uncertain-v0.3.6) - 2025-11-23
+
+### Other
+
+- Merge branch 'deepcausality-rs:main' into main
+
+### Removed
+
+- removed all manually generated SBOM files
+
 ## [0.3.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.3.4...deep_causality_uncertain-v0.3.5) - 2025-11-23
 
 ### Added

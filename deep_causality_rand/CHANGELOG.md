@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_rand-v0.1.4...deep_causality_rand-v0.1.5) - 2025-11-23
+
+### Removed
+
+- removed all manually generated SBOM files
+
 ## [0.1.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_rand-v0.1.3...deep_causality_rand-v0.1.4) - 2025-11-05
 
 ### Other
