@@ -7,11 +7,6 @@ on:
     types: [published]
   workflow_dispatch:
 
-permissions:
-  id-token: write
-  contents: read
-  attestations: write
-
 jobs:
   generate-and-attest:
     name: SBOM for ${{ matrix.crate }}
