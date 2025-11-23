@@ -38,20 +38,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install cargo-sbom
+        run: cargo install cargo-sbom
+
       - name: Generate SBOM
-        uses: anchore/sbom-action@v0
-        with:
-          path: ./${{ matrix.crate }}
-          format: 'spdx-json'
-          output-file: '${{ matrix.crate }}-sbom.spdx.json'
-          upload-artifact: false
-          upload-release-assets: false
+        run: cargo sbom --package ${{ matrix.crate }} --output-format spdx_json_2_3 > ${{ matrix.crate }}-sbom.spdx.json
 
       - name: Attest SBOM
-        uses: actions/attest-sbom@v3
+        uses: actions/attest@v1
         with:
           subject-path: ./${{ matrix.crate }}
-          sbom-path: '${{ matrix.crate }}-sbom.spdx.json'
+          predicate-type: spdxjson
+          predicate-path: '${{ matrix.crate }}-sbom.spdx.json'
 
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@v4
