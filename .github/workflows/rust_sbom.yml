@@ -11,10 +11,7 @@ jobs:
   generate-and-attest:
     name: SBOM for ${{ matrix.crate }}
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-      attestations: write
+
 
     strategy:
       fail-fast: false
@@ -46,6 +43,10 @@ jobs:
 
       - name: Attest SBOM
         uses: actions/attest@v1
+        permissions:
+          id-token: write
+          contents: read
+          attestations: write
         with:
           subject-path: ./${{ matrix.crate }}
           predicate-type: spdxjson
