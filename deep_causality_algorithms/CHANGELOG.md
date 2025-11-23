@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algorithms-v0.2.2...deep_causality_algorithms-v0.2.3) - 2025-11-23
+
+### Added
+
+- *(deep_causality_tensor)* refactored public Tensor API as a trait.
+
 ## [0.2.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algorithms-v0.2.1...deep_causality_algorithms-v0.2.2) - 2025-11-05
 
 ### Other
