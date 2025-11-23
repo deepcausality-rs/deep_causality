@@ -11,7 +11,10 @@ jobs:
   generate-and-attest:
     name: SBOM for ${{ matrix.crate }}
     runs-on: ubuntu-latest
-
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
 
     strategy:
       fail-fast: false
@@ -35,25 +38,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Install cargo-sbom
         run: cargo install cargo-sbom
 
       - name: Generate SBOM
-        run: cargo sbom --cargo-package ${{ matrix.crate }} --output-format=spdx_json_2_3 > ${{ matrix.crate }}/${{ matrix.crate }}_sbom.spdx.json
+        run: |
+          set -euo pipefail
+          cargo sbom --package "${{ matrix.crate }}" --output-format spdx_json_2_3 --output "${{ matrix.crate }}-sbom.spdx.json"
+          test -s "${{ matrix.crate }}-sbom.spdx.json"
 
       - name: Attest SBOM
         uses: actions/attest@v1
-        permissions:
-          id-token: write
-          contents: read
-          attestations: write
         with:
           subject-path: ./${{ matrix.crate }}
           predicate-type: spdxjson
-          predicate-path: '${{ matrix.crate }}/${{ matrix.crate }}_sbom.spdx.json'
+          predicate-path: '${{ matrix.crate }}-sbom.spdx.json'
 
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.crate }}-sbom
-          path: '${{ matrix.crate }}/${{ matrix.crate }}_sbom.spdx.json'
+          path: '${{ matrix.crate }}-sbom.spdx.json'
