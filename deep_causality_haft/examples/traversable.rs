@@ -9,12 +9,6 @@ use deep_causality_haft::{OptionWitness, ResultWitness, Traversable, VecWitness}
 // Domain Logic: Batch Operations
 // ============================================================================
 
-#[derive(Debug, Clone, PartialEq)]
-struct User {
-    id: u32,
-    name: String,
-}
-
 fn main() {
     println!("=== DeepCausality HKT: Batch Aggregation (Traversable) ===\n");
 
@@ -108,4 +102,10 @@ fn main() {
 
     println!("Block Validation (Invalid): {:?}", block_invalid);
     assert_eq!(block_invalid, Err("Negative amount: -50".to_string()));
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct User {
+    id: u32,
+    name: String,
 }

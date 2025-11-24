@@ -9,13 +9,6 @@ use deep_causality_haft::{BoxWitness, CoMonad, HKT};
 // Domain Logic: System Evolution
 // ============================================================================
 
-#[derive(Debug, Clone, PartialEq)]
-struct SystemState {
-    temperature: f64,
-    pressure: f64,
-    step: u32,
-}
-
 fn main() {
     println!("=== DeepCausality HKT: Contextual Computation (Comonad) ===\n");
 
@@ -95,4 +88,11 @@ fn main() {
     assert_eq!(*alert_t0, "CRITICAL"); // 100.0
     assert_eq!(*alert_t1, "CRITICAL"); // 90.0
     assert_eq!(*alert_t2, "WARNING"); // 81.0
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct SystemState {
+    temperature: f64,
+    pressure: f64,
+    step: u32,
 }

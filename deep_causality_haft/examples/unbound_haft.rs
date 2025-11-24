@@ -7,10 +7,6 @@ use deep_causality_haft::{
     Bifunctor, HKT2Unbound, Profunctor, Promonad, ResultUnboundWitness, Tuple3Witness,
 };
 
-// ============================================================================
-// Main Example
-// ============================================================================
-
 fn main() {
     println!("=== DeepCausality HKT: Cybernetic Sensor Fusion ===\n");
 

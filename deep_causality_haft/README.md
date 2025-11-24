@@ -89,7 +89,7 @@ fn main() {
 }
 ```
 
-When you run [the example ](/deep_causality_haft/examples/functor_haft.rs)via:
+When you run [the example ](/functor.rs)via:
 
 `cargo run  --example haft_functor_example`
 
@@ -256,7 +256,7 @@ use deep_causality_haft::{Effect5, MonadEffect5, HKT5};
     println!("Sequenced outcome: {:?}", current_effect.value);
 ```
 
-When you run [the example ](/effect_system.rs)via:
+When you run the example via:
 
 `cargo run  --example haft_effect_system_example`
 

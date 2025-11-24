@@ -10,33 +10,8 @@ use deep_causality_haft::{OptionWitness, ResultUnboundWitness, ResultWitness};
 // Domain Types: Configuration System
 // ============================================================================
 
-#[derive(Debug, Clone, PartialEq)]
-struct RawConfig {
-    host: String,
-    port: String,
-    timeout_ms: Option<u64>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-struct ValidatedConfig {
-    host: String,
-    port: u16,
-    timeout_ms: u64,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-enum ConfigError {
-    IoError(String),
-    ParseError(String),
-    ValidationError(String),
-}
-
-// ============================================================================
-// Main Example
-// ============================================================================
-
 fn main() {
-    println!("=== DeepCausality HKT: Configuration Loading Pipeline ===\n");
+    println!("=== DeepCausality HKT: Monad Pattern (Configuration Pipeline) ===\n");
 
     // ------------------------------------------------------------------------
     // Step 1: The "Happy Path" Pipeline (Monad)
@@ -150,4 +125,26 @@ fn main() {
 
     println!("UI Result Code: {:?}", ui_result);
     assert_eq!(ui_result, Err("ERR_IO"));
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct RawConfig {
+    host: String,
+    port: String,
+    timeout_ms: Option<u64>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct ValidatedConfig {
+    host: String,
+    port: u16,
+    timeout_ms: u64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[allow(clippy::enum_variant_names)]
+enum ConfigError {
+    IoError(String),
+    ParseError(String),
+    ValidationError(String),
 }
