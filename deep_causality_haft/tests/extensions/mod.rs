@@ -19,3 +19,8 @@ mod hkt_option_ext_tests;
 mod hkt_result_ext_tests;
 #[cfg(test)]
 mod hkt_vec_ext_tests;
+
+#[cfg(test)]
+mod bifunctor_result_tests;
+#[cfg(test)]
+mod tuple_ext_tests;

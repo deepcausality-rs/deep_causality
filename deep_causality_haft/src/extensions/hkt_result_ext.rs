@@ -182,3 +182,30 @@ where
         }
     }
 }
+
+// -----------------------------------------------------------------------------
+// Unbound HKT Extensions (Arity 2)
+// -----------------------------------------------------------------------------
+
+use crate::{Bifunctor, HKT2Unbound};
+
+/// `ResultUnboundWitness` is a zero-sized type that acts as a witness for the
+/// `Result<A, B>` type constructor where *both* parameters are unbound.
+pub struct ResultUnboundWitness;
+
+impl HKT2Unbound for ResultUnboundWitness {
+    type Type<A, B> = Result<A, B>;
+}
+
+impl Bifunctor<ResultUnboundWitness> for ResultUnboundWitness {
+    fn bimap<A, B, C, D, F1, F2>(fab: Result<A, B>, mut f1: F1, mut f2: F2) -> Result<C, D>
+    where
+        F1: FnMut(A) -> C,
+        F2: FnMut(B) -> D,
+    {
+        match fab {
+            Ok(a) => Ok(f1(a)),
+            Err(b) => Err(f2(b)),
+        }
+    }
+}

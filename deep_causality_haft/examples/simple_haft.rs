@@ -3,7 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Applicative, Functor, Monad, OptionWitness, ResultWitness};
+use deep_causality_haft::{Applicative, Bifunctor, Functor, Monad};
+use deep_causality_haft::{OptionWitness, ResultUnboundWitness, ResultWitness};
 
 fn main() {
     println!("--- Option Example ---");
@@ -50,4 +51,22 @@ fn main() {
     let pure_val_res: MyResult<i32> = ResultWitness::pure(200);
     println!("pure(200) = {:?}", pure_val_res);
     assert_eq!(pure_val_res, Ok(200));
+
+    println!("\n--- Unbound HKT Example (Bifunctor) ---");
+    // Bifunctor allows mapping BOTH the success (Ok) and failure (Err) types simultaneously.
+    // This is impossible with standard Functor which only maps the 'Ok' value.
+
+    let res_ok: Result<i32, &str> = Ok(10);
+    let res_err: Result<i32, &str> = Err("error");
+
+    // Map Ok: i32 -> f64 (x * 2.5)
+    // Map Err: &str -> usize (len)
+    let mapped_ok = ResultUnboundWitness::bimap(res_ok, |x| x as f64 * 2.5, |e| e.len());
+    let mapped_err = ResultUnboundWitness::bimap(res_err, |x| x as f64 * 2.5, |e| e.len());
+
+    println!("bimap(Ok(10)) -> {:?}", mapped_ok);
+    assert_eq!(mapped_ok, Ok(25.0));
+
+    println!("bimap(Err(\"error\")) -> {:?}", mapped_err);
+    assert_eq!(mapped_err, Err(5));
 }

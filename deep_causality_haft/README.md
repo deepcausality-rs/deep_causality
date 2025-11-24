@@ -321,6 +321,53 @@ Here's a breakdown of how it works:
    robust and predictable code.
 
 
+## Unbound HKTs & Functional Traits (Arity 2-5)
+
+This crate also supports "Unbound" Higher-Kinded Types, where all generic parameters are free to vary. This enables advanced functional patterns from Category Theory that are crucial for complex systems modeling.
+
+### Unbound HKT Traits
+
+*   **`HKT2Unbound` - `HKT5Unbound`**: Base traits for multi-arity type constructors (e.g., `Result<A, B>`, `(A, B, C)`).
+*   **`Bifunctor`**: Maps over both types of a binary constructor simultaneously.
+    *   *Usage*: Evolving a coupled system (e.g., `(Metric, Plasma)`) where both components change type.
+*   **`Profunctor`**: Contravariant input, Covariant output.
+    *   *Usage*: Adapters, Optics, and State Machines where you pre-process input and post-process output.
+*   **`Adjunction`**: Defines a dual relationship between two functors ($L \dashv R$).
+    *   *Usage*: Conservation laws, optimization (Primal/Dual), and Galois connections.
+*   **`ParametricMonad`**: A Monad where the state type changes (Indexed Monad).
+    *   *Usage*: Modeling state transitions (e.g., `Solid -> Liquid -> Gas`) or protocol state machines.
+*   **`Promonad`**: Models interaction or fusion of contexts.
+    *   *Usage*: Tensor products, force calculations (merging fields), and quantum entanglement.
+*   **`RiemannMap`**: Models curvature and scattering (Arity 4).
+    *   *Usage*: General Relativity (Curvature Tensor), Particle Physics (Scattering Matrices).
+*   **`CyberneticLoop`**: Models a complete feedback control loop (Arity 5).
+    *   *Usage*: Autonomous agents (OODA Loop), Control Theory, and Error Correction.
+
+### Example: Bifunctor
+
+```rust
+use deep_causality_haft::{Bifunctor, HKT2Unbound};
+
+struct ResultWitness;
+impl HKT2Unbound for ResultWitness {
+    type Type<A, B> = Result<A, B>;
+}
+
+impl Bifunctor<ResultWitness> for ResultWitness {
+    fn bimap<A, B, C, D, F1, F2>(fab: Result<A, B>, mut f1: F1, mut f2: F2) -> Result<C, D>
+    where F1: FnMut(A) -> C, F2: FnMut(B) -> D {
+        match fab {
+            Ok(a) => Ok(f1(a)),
+            Err(b) => Err(f2(b)),
+        }
+    }
+}
+
+// Usage
+let res: Result<i32, &str> = Ok(10);
+let new_res = ResultWitness::bimap(res, |x| x * 2.0, |e| e.len()); // Result<f64, usize>
+```
+
 ## 👨‍💻👩‍💻 Contribution
 
 Contributions are welcomed especially related to documentation, example code, and fixes.

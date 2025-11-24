@@ -38,3 +38,7 @@ path = "examples/functor_haft.rs"
 [[example]]
 name = "haft_traversable_example"
 path = "examples/traversable_haft.rs"
+
+[[example]]
+name = "haft_unbound_example"
+path = "examples/unbound_haft.rs"

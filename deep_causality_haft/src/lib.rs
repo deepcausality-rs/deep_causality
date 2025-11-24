@@ -51,6 +51,26 @@ mod monad_effect;
 mod traversable;
 pub mod utils_tests;
 
+// New HKT N-Arity Modules
+mod adjunction;
+mod bifunctor;
+mod cybernetic_loop;
+mod hkt_unbound;
+mod parametric_monad;
+mod profunctor;
+mod promonad;
+mod riemann_map;
+
+// Re-exports for HKT N-Arity Traits
+pub use crate::adjunction::Adjunction;
+pub use crate::bifunctor::Bifunctor;
+pub use crate::cybernetic_loop::CyberneticLoop;
+pub use crate::hkt_unbound::{HKT2Unbound, HKT3Unbound, HKT4Unbound, HKT5Unbound};
+pub use crate::parametric_monad::ParametricMonad;
+pub use crate::profunctor::Profunctor;
+pub use crate::promonad::Promonad;
+pub use crate::riemann_map::RiemannMap;
+
 // Functional extensions for std types
 /// Re-exports `BTreeMapWitness`, the HKT witness for `BTreeMap<K, V>`.
 pub use crate::extensions::func_fold_b_tree_map_ext::BTreeMapWitness;
@@ -64,8 +84,14 @@ pub use crate::extensions::hkt_box_ext::BoxWitness;
 pub use crate::extensions::hkt_linked_list_ext::LinkedListWitness;
 /// Re-exports `OptionWitness`, the HKT witness for `Option<T>`.
 pub use crate::extensions::hkt_option_ext::OptionWitness;
+/// Re-exports `ResultUnboundWitness`, the HKT witness for `Result<A, B>`.
+pub use crate::extensions::hkt_result_ext::ResultUnboundWitness;
 /// Re-exports `ResultWitness`, the HKT witness for `Result<T, E>`.
 pub use crate::extensions::hkt_result_ext::ResultWitness;
+/// Re-exports `Tuple2Witness`, the HKT witness for `(A, B)`.
+pub use crate::extensions::hkt_tuple_ext::Tuple2Witness;
+/// Re-exports `Tuple3Witness`, the HKT witness for `(A, B, C)`.
+pub use crate::extensions::hkt_tuple_ext::Tuple3Witness;
 /// Re-exports `VecWitness`, the HKT witness for `Vec<T>`.
 pub use crate::extensions::hkt_vec_ext::VecWitness;
 
