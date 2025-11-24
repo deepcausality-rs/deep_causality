@@ -2,92 +2,110 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_haft::{HKT, OptionWitness, ResultWitness, Traversable, VecWitness};
+
+use deep_causality_haft::{OptionWitness, ResultWitness, Traversable, VecWitness};
+
+// ============================================================================
+// Domain Logic: Batch Operations
+// ============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+struct User {
+    id: u32,
+    name: String,
+}
 
 fn main() {
-    println!("--- Traversable Example: Vec<Option<A>> to Option<Vec<A>> ---");
+    println!("=== DeepCausality HKT: Batch Aggregation (Traversable) ===\n");
 
-    // Case 1: All inner Options are Some
-    let vec_opt_all_some = vec![Some(1), Some(2), Some(3)];
-    println!("\nOriginal Vec<Option<i32>>: {:?}", vec_opt_all_some);
+    // ------------------------------------------------------------------------
+    // Concept: Traversable (Flipping Structure)
+    //
+    // ENGINEERING VALUE:
+    // When processing a batch of items, you often end up with a "List of Results"
+    // (Vec<Result<T, E>>).
+    //
+    // However, for an atomic operation, you often want a "Result of a List"
+    // (Result<Vec<T>, E>). i.e., "Give me all the data, or fail if any is missing."
+    //
+    // `sequence` performs this transformation automatically. It implements the
+    // "Fail-Fast" pattern for batch processing.
+    // ------------------------------------------------------------------------
 
-    type OptionAsMonad = OptionWitness; // M is OptionWitness
-    let sequenced_option_all_some: <OptionAsMonad as HKT>::Type<<VecWitness as HKT>::Type<i32>> =
-        VecWitness::sequence::<i32, OptionAsMonad>(vec_opt_all_some);
-    println!(
-        "Sequenced Option<Vec<i32>>: {:?}",
-        sequenced_option_all_some
-    );
-    assert_eq!(sequenced_option_all_some, Some(vec![1, 2, 3]));
+    println!("--- 1. Atomic Batch Retrieval (All or Nothing) ---");
 
-    // Case 2: One inner Option is None
-    let vec_opt_with_none = vec![Some(1), None, Some(3)];
-    println!("\nOriginal Vec<Option<i32>>: {:?}", vec_opt_with_none);
-    let sequenced_option_with_none: <OptionAsMonad as HKT>::Type<<VecWitness as HKT>::Type<i32>> =
-        VecWitness::sequence::<i32, OptionAsMonad>(vec_opt_with_none);
-    println!(
-        "Sequenced Option<Vec<i32>>: {:?}",
-        sequenced_option_with_none
-    );
-    assert_eq!(sequenced_option_with_none, None);
+    // Scenario: Fetching Users by ID.
+    // Some IDs exist, some might not.
+    let fetch_user = |id: u32| -> Option<User> {
+        if id == 404 {
+            None // User not found
+        } else {
+            Some(User {
+                id,
+                name: format!("User_{}", id),
+            })
+        }
+    };
 
-    // Case 3: Empty vector
-    let empty_vec_opt: Vec<Option<i32>> = vec![];
-    println!("\nOriginal empty Vec<Option<i32>>: {:?}", empty_vec_opt);
-    let sequenced_empty_option: <OptionAsMonad as HKT>::Type<<VecWitness as HKT>::Type<i32>> =
-        VecWitness::sequence::<i32, OptionAsMonad>(empty_vec_opt);
-    println!(
-        "Sequenced empty Option<Vec<i32>>: {:?}",
-        sequenced_empty_option
-    );
-    assert_eq!(sequenced_empty_option, Some(vec![]));
+    // Case A: All users exist
+    let batch_ids_ok = vec![1, 2, 3];
+    // Map fetch over IDs -> Vec<Option<User>>
+    let results_ok: Vec<Option<User>> = batch_ids_ok.into_iter().map(fetch_user).collect();
+    println!("Raw Results (OK): {:?}", results_ok);
 
-    println!("\n--- Traversable Example: Vec<Result<A, E>> to Result<Vec<A>, E> ---");
+    // Sequence: Vec<Option<User>> -> Option<Vec<User>>
+    type OptionMonad = OptionWitness;
+    let atomic_batch_ok: Option<Vec<User>> = VecWitness::sequence::<User, OptionMonad>(results_ok);
 
-    // Case 1: All inner Results are Ok
-    let vec_res_all_ok: Vec<Result<i32, String>> = vec![Ok(1), Ok(2), Ok(3)];
-    println!("\nOriginal Vec<Result<i32, String>>: {:?}", vec_res_all_ok);
+    println!("Atomic Batch (OK): {:#?}", atomic_batch_ok);
+    assert!(atomic_batch_ok.is_some());
 
-    type ResultAsMonad = ResultWitness<String>; // M is ResultWitness<String>
-    let sequenced_result_all_ok: <ResultAsMonad as HKT>::Type<<VecWitness as HKT>::Type<i32>> =
-        VecWitness::sequence::<i32, ResultAsMonad>(vec_res_all_ok);
-    println!(
-        "Sequenced Result<Vec<i32>, String>: {:?}",
-        sequenced_result_all_ok
-    );
-    assert_eq!(sequenced_result_all_ok, Ok(vec![1, 2, 3]));
+    // Case B: One user is missing
+    let batch_ids_missing = vec![1, 404, 3];
+    let results_missing: Vec<Option<User>> =
+        batch_ids_missing.into_iter().map(fetch_user).collect();
+    println!("\nRaw Results (Missing): {:?}", results_missing);
 
-    // Case 2: One inner Result is Err
-    let vec_res_with_err: Vec<Result<i32, String>> =
-        vec![Ok(1), Err("Error occurred!".to_string()), Ok(3)];
-    println!(
-        "\nOriginal Vec<Result<i32, String>>: {:?}",
-        vec_res_with_err
-    );
-    let sequenced_result_with_err: <ResultAsMonad as HKT>::Type<<VecWitness as HKT>::Type<i32>> =
-        VecWitness::sequence::<i32, ResultAsMonad>(vec_res_with_err);
-    println!(
-        "Sequenced Result<Vec<i32>, String>: {:?}",
-        sequenced_result_with_err
-    );
-    assert_eq!(
-        sequenced_result_with_err,
-        Err("Error occurred!".to_string())
-    );
+    // Sequence: One None causes the whole batch to be None
+    let atomic_batch_missing: Option<Vec<User>> =
+        VecWitness::sequence::<User, OptionMonad>(results_missing);
 
-    // Case 3: Empty vector
-    let empty_vec_res: Vec<Result<i32, String>> = vec![];
-    println!(
-        "\nOriginal empty Vec<Result<i32, String>>: {:?}",
-        empty_vec_res
-    );
-    let sequenced_empty_result: <ResultAsMonad as HKT>::Type<<VecWitness as HKT>::Type<i32>> =
-        VecWitness::sequence::<i32, ResultAsMonad>(empty_vec_res);
-    println!(
-        "Sequenced empty Result<Vec<i32>, String>: {:?}",
-        sequenced_empty_result
-    );
-    assert_eq!(sequenced_empty_result, Ok(vec![]));
+    println!("Atomic Batch (Missing): {:?}", atomic_batch_missing);
+    assert_eq!(atomic_batch_missing, None);
 
-    println!("\nTraversable Example finished successfully!");
+    println!("\n--- 2. Fail-Fast Validation (Result) ---");
+
+    // Scenario: Validating a list of transactions.
+    // If ANY transaction is invalid, the whole block is rejected.
+    let validate_tx = |amount: i32| -> Result<i32, String> {
+        if amount < 0 {
+            Err(format!("Negative amount: {}", amount))
+        } else {
+            Ok(amount)
+        }
+    };
+
+    // Case A: All valid
+    let tx_batch_ok = vec![100, 200, 50];
+    let validation_results_ok: Vec<Result<i32, String>> =
+        tx_batch_ok.into_iter().map(validate_tx).collect();
+
+    type ResultMonad = ResultWitness<String>;
+    let block_ok: Result<Vec<i32>, String> =
+        VecWitness::sequence::<i32, ResultMonad>(validation_results_ok);
+
+    println!("Block Validation (OK): {:?}", block_ok);
+    assert!(block_ok.is_ok());
+
+    // Case B: One invalid
+    let tx_batch_invalid = vec![100, -50, 200];
+    let validation_results_invalid: Vec<Result<i32, String>> =
+        tx_batch_invalid.into_iter().map(validate_tx).collect();
+
+    // Sequence: The first Err aborts the sequence and is returned
+    let block_invalid: Result<Vec<i32>, String> =
+        VecWitness::sequence::<i32, ResultMonad>(validation_results_invalid);
+
+    println!("Block Validation (Invalid): {:?}", block_invalid);
+    assert_eq!(block_invalid, Err("Negative amount: -50".to_string()));
 }

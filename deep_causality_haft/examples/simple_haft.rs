@@ -3,70 +3,151 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Applicative, Bifunctor, Functor, Monad};
+use deep_causality_haft::{Bifunctor, Functor, Monad};
 use deep_causality_haft::{OptionWitness, ResultUnboundWitness, ResultWitness};
 
+// ============================================================================
+// Domain Types: Configuration System
+// ============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+struct RawConfig {
+    host: String,
+    port: String,
+    timeout_ms: Option<u64>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct ValidatedConfig {
+    host: String,
+    port: u16,
+    timeout_ms: u64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+enum ConfigError {
+    IoError(String),
+    ParseError(String),
+    ValidationError(String),
+}
+
+// ============================================================================
+// Main Example
+// ============================================================================
+
 fn main() {
-    println!("--- Option Example ---");
+    println!("=== DeepCausality HKT: Configuration Loading Pipeline ===\n");
 
-    let opt_a = Some(5);
-    let f_map = |x| x * 2;
-    let opt_b = OptionWitness::fmap(opt_a, f_map);
-    println!("fmap(Some(5), |x| x * 2) = {:?}", opt_b);
-    assert_eq!(opt_b, Some(10));
+    // ------------------------------------------------------------------------
+    // Step 1: The "Happy Path" Pipeline (Monad)
+    //
+    // ENGINEERING VALUE:
+    // Loading configuration involves multiple dependent steps that can fail:
+    // Read File -> Parse JSON -> Validate Fields.
+    //
+    // Using the Monad pattern (`bind`), we chain these steps into a linear pipeline.
+    // If ANY step fails, the error propagates automatically, skipping subsequent steps.
+    // This eliminates nested `if let Ok(...)` or `match` hell.
+    // ------------------------------------------------------------------------
+    println!("--- 1. Monadic Pipeline: Load -> Parse -> Validate ---");
 
-    let f_bind = |x| Some(x + 1);
-    let opt_c = OptionWitness::bind(opt_b, f_bind);
-    println!("bind(Some(10), |x| Some(x + 1)) = {:?}", opt_c);
-    assert_eq!(opt_c, Some(11));
+    // Mock: Simulate reading a file
+    let read_config_file = || -> Result<String, ConfigError> {
+        Ok("host=localhost;port=8080;timeout=5000".to_string())
+    };
 
-    let pure_val_opt = OptionWitness::pure(100);
-    println!("pure(100) = {:?}", pure_val_opt);
-    assert_eq!(pure_val_opt, Some(100));
+    // Step 1: Parse (String -> RawConfig)
+    let parse_config = |content: String| -> Result<RawConfig, ConfigError> {
+        // Mock parsing logic
+        if content.contains("host=") {
+            Ok(RawConfig {
+                host: "localhost".to_string(),
+                port: "8080".to_string(),
+                timeout_ms: Some(5000),
+            })
+        } else {
+            Err(ConfigError::ParseError("Invalid format".to_string()))
+        }
+    };
 
-    println!("\n--- Result Example ---");
+    // Step 2: Validate (RawConfig -> ValidatedConfig)
+    let validate_config = |raw: RawConfig| -> Result<ValidatedConfig, ConfigError> {
+        let port = raw
+            .port
+            .parse::<u16>()
+            .map_err(|_| ConfigError::ValidationError("Invalid port".to_string()))?;
 
-    type MyResult<T> = Result<T, String>;
+        if port < 1024 {
+            return Err(ConfigError::ValidationError(
+                "Port must be > 1024".to_string(),
+            ));
+        }
 
-    let res_a: MyResult<i32> = Ok(10);
-    let f_map_res = |x: i32| x.to_string();
-    let res_b = ResultWitness::fmap(res_a, f_map_res);
-    println!("fmap(Ok(10), |x| x.to_string()) = {:?}", res_b);
-    assert_eq!(res_b, Ok("10".to_string()));
+        Ok(ValidatedConfig {
+            host: raw.host,
+            port,
+            timeout_ms: raw.timeout_ms.unwrap_or(3000), // Default timeout
+        })
+    };
 
-    let f_bind_res = |s: String| Ok(s.len());
-    let res_c = ResultWitness::bind(res_b, f_bind_res);
-    println!("bind(Ok(\"10\"), |s| Ok(s.len())) = {:?}", res_c);
-    assert_eq!(res_c, Ok(2));
+    // EXECUTE PIPELINE
+    // Note: We use ResultWitness to treat Result as a Monad
+    let result = ResultWitness::bind(read_config_file(), |content| {
+        ResultWitness::bind(parse_config(content), validate_config)
+    });
 
-    let res_err: MyResult<i32> = Err("An error occurred".to_string());
-    let res_err_mapped = ResultWitness::fmap(res_err.clone(), f_map_res);
-    println!("fmap(Err(...), |x| x.to_string()) = {:?}", res_err_mapped);
-    assert_eq!(res_err_mapped, Err("An error occurred".to_string()));
+    match result {
+        Ok(config) => println!("✅ Configuration Loaded: {:#?}", config),
+        Err(e) => println!("❌ Configuration Failed: {:?}", e),
+    }
 
-    let res_err_bound = ResultWitness::bind(res_err, |x| Ok(x + 1));
-    println!("bind(Err(...), |x| Ok(x + 1)) = {:?}", res_err_bound);
-    assert_eq!(res_err_bound, Err("An error occurred".to_string()));
+    // ------------------------------------------------------------------------
+    // Step 2: Optional Values (Functor & Applicative)
+    //
+    // ENGINEERING VALUE:
+    // Configuration often has optional fields. You want to apply transformations
+    // (like converting units) ONLY if the value exists, without unwrapping.
+    //
+    // Functor (`fmap`) lets you modify the value inside `Option` safely.
+    // ------------------------------------------------------------------------
+    println!("\n--- 2. Optional Fields: Safe Transformation ---");
 
-    let pure_val_res: MyResult<i32> = ResultWitness::pure(200);
-    println!("pure(200) = {:?}", pure_val_res);
-    assert_eq!(pure_val_res, Ok(200));
+    let raw_timeout = Some(5000_u64); // 5000ms
 
-    println!("\n--- Unbound HKT Example (Bifunctor) ---");
-    // Bifunctor allows mapping BOTH the success (Ok) and failure (Err) types simultaneously.
-    // This is impossible with standard Functor which only maps the 'Ok' value.
+    // Transformation: Convert ms to seconds
+    let to_seconds = |ms: u64| ms as f64 / 1000.0;
 
-    let res_ok: Result<i32, &str> = Ok(10);
-    let res_err: Result<i32, &str> = Err("error");
+    // Apply transformation safely
+    let timeout_secs = OptionWitness::fmap(raw_timeout, to_seconds);
 
-    // Map Ok: i32 -> f64 (x * 2.5)
-    // Map Err: &str -> usize (len)
-    let mapped_ok = ResultUnboundWitness::bimap(res_ok, |x| x as f64 * 2.5, |e| e.len());
-    let mapped_err = ResultUnboundWitness::bimap(res_err, |x| x as f64 * 2.5, |e| e.len());
+    println!("Raw Timeout (ms): {:?}", raw_timeout);
+    println!("Processed Timeout (s): {:?}", timeout_secs);
+    assert_eq!(timeout_secs, Some(5.0));
 
-    println!("bimap(Ok(10)) -> {:?}", mapped_ok);
-    assert_eq!(mapped_ok, Ok(25.0));
+    // ------------------------------------------------------------------------
+    // Step 3: Error Recovery (Bifunctor)
+    //
+    // ENGINEERING VALUE:
+    // Sometimes you want to recover from errors or normalize them for the UI.
+    // Bifunctor lets you map the Error channel independently of the Success channel.
+    // ------------------------------------------------------------------------
+    println!("\n--- 3. Error Handling: Normalization ---");
 
-    println!("bimap(Err(\"error\")) -> {:?}", mapped_err);
-    assert_eq!(mapped_err, Err(5));
+    let failed_load: Result<ValidatedConfig, ConfigError> =
+        Err(ConfigError::IoError("File not found".to_string()));
+
+    // Map Success: Keep as is
+    // Map Error: Convert to a user-friendly string code
+    let ui_result = ResultUnboundWitness::bimap(
+        failed_load,
+        |c| c, // Identity for success
+        |e| match e {
+            ConfigError::IoError(_) => "ERR_IO",
+            ConfigError::ParseError(_) => "ERR_PARSE",
+            ConfigError::ValidationError(_) => "ERR_VALIDATION",
+        },
+    );
+
+    println!("UI Result Code: {:?}", ui_result);
+    assert_eq!(ui_result, Err("ERR_IO"));
 }

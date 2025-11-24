@@ -2,53 +2,97 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
 use deep_causality_haft::{BoxWitness, CoMonad, HKT};
 
+// ============================================================================
+// Domain Logic: System Evolution
+// ============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+struct SystemState {
+    temperature: f64,
+    pressure: f64,
+    step: u32,
+}
+
 fn main() {
-    println!("--- CoMonad Example: BoxWitness ---");
+    println!("=== DeepCausality HKT: Contextual Computation (Comonad) ===\n");
 
-    // 1. Example for `extract`
-    let box_int = Box::new(42);
-    println!("\nOriginal Box: {:?}", box_int);
+    // ------------------------------------------------------------------------
+    // Concept: Comonad (The "Viewer" Pattern)
+    //
+    // ENGINEERING VALUE:
+    // While Monads are about "Sequencing" (A -> M<B>), Comonads are about
+    // "Contextual Computation" (W<A> -> B).
+    //
+    // You have a value in a context (e.g., a System Snapshot).
+    // You want to compute a new value based on that *entire* context.
+    // `extend` allows you to chain these context-aware computations.
+    //
+    // Scenario: Simulating a physical system cooling down.
+    // Each step depends on the *current state* of the system.
+    // ------------------------------------------------------------------------
 
-    let extracted_value = BoxWitness::extract(&box_int);
-    println!("Extracted value: {}", extracted_value);
-    assert_eq!(extracted_value, 42);
+    // Initial State: Hot and High Pressure
+    let initial_state = Box::new(SystemState {
+        temperature: 100.0,
+        pressure: 50.0,
+        step: 0,
+    });
+    println!("T0: Initial State: {:?}", initial_state);
 
-    let box_string = Box::new("hello".to_string());
-    println!("\nOriginal Box: {:?}", box_string);
-    let extracted_string = BoxWitness::extract(&box_string);
-    println!("Extracted string: {}", extracted_string);
-    assert_eq!(extracted_string, "hello".to_string());
+    // 1. EXTRACT: Get the current value out of the context
+    // Useful when you just need to read the sensor.
+    let current_temp = BoxWitness::extract(&initial_state).temperature;
+    println!("    Current Temp: {:.2}", current_temp);
 
-    // 2. Example for `extend`
-    let box_val = Box::new(5);
-    println!("\nOriginal Box for extend: {:?}", box_val);
+    // 2. EXTEND: Evolve the system
+    // We define a "Physics Rule": The system cools down and pressure drops.
+    // This function takes the *entire* previous context (Box<State>) to compute the new State.
+    let evolve_system = |w: &<BoxWitness as HKT>::Type<SystemState>| {
+        let prev = &**w; // Access the value inside the context
+        SystemState {
+            temperature: prev.temperature * 0.90, // Cools by 10%
+            pressure: prev.pressure * 0.95,       // Pressure drops by 5%
+            step: prev.step + 1,
+        }
+    };
 
-    // Define a function that operates on the Box context
-    // This function calculates the square of the value inside the box
-    let f_square = |b: &<BoxWitness as HKT>::Type<i32>| (**b) * (**b);
-    let extended_square = BoxWitness::extend(&box_val, f_square);
-    println!("Extended (square): {:?}", extended_square);
-    assert_eq!(extended_square, Box::new(25));
+    // Apply the rule to get T1
+    let state_t1 = BoxWitness::extend(&initial_state, evolve_system);
+    println!("T1: Evolved State: {:?}", state_t1);
 
-    // Another example for extend: convert to string representation within the Box context
-    let f_to_string = |b: &<BoxWitness as HKT>::Type<i32>| format!("Value is: {}", **b);
-    let extended_string_box = BoxWitness::extend(&box_val, f_to_string);
-    println!("Extended (to string): {:?}", extended_string_box);
-    assert_eq!(extended_string_box, Box::new("Value is: 5".to_string()));
+    // Apply the rule again to get T2
+    // Note how we chain the evolution.
+    let state_t2 = BoxWitness::extend(&state_t1, evolve_system);
+    println!("T2: Evolved State: {:?}", state_t2);
 
-    // Chaining extend operations
-    let box_start = Box::new(2);
-    println!("\nChaining extend: Initial Box: {:?}", box_start);
+    // 3. EXTEND: Context-Aware Analysis
+    // We can also use `extend` to compute *derived* metrics that depend on the context.
+    // Example: Calculate an "Alert Level" based on the state.
+    let analyze_alert = |w: &<BoxWitness as HKT>::Type<SystemState>| {
+        let state = &**w;
+        if state.temperature > 85.0 {
+            "CRITICAL"
+        } else if state.temperature > 50.0 {
+            "WARNING"
+        } else {
+            "NORMAL"
+        }
+    };
 
-    let extended_add_one = BoxWitness::extend(&box_start, |b| **b + 1);
-    println!("Extended (add one): {:?}", extended_add_one);
-    assert_eq!(extended_add_one, Box::new(3));
+    // This transforms Box<SystemState> -> Box<&str> (The Alert Context)
+    let alert_t0 = BoxWitness::extend(&initial_state, analyze_alert);
+    let alert_t1 = BoxWitness::extend(&state_t1, analyze_alert);
+    let alert_t2 = BoxWitness::extend(&state_t2, analyze_alert);
 
-    let extended_times_ten = BoxWitness::extend(&extended_add_one, |b| **b * 10);
-    println!("Extended (times ten): {:?}", extended_times_ten);
-    assert_eq!(extended_times_ten, Box::new(30));
+    println!("\n--- System Alert Log ---");
+    println!("T0 Alert: {:?}", alert_t0);
+    println!("T1 Alert: {:?}", alert_t1);
+    println!("T2 Alert: {:?}", alert_t2);
 
-    println!("\nCoMonad Example finished successfully!");
+    assert_eq!(*alert_t0, "CRITICAL"); // 100.0
+    assert_eq!(*alert_t1, "CRITICAL"); // 90.0
+    assert_eq!(*alert_t2, "WARNING"); // 81.0
 }

@@ -256,7 +256,7 @@ use deep_causality_haft::{Effect5, MonadEffect5, HKT5};
     println!("Sequenced outcome: {:?}", current_effect.value);
 ```
 
-When you run [the example ](/deep_causality_haft/examples/effect_system_example.rs)via:
+When you run [the example ](/effect_system.rs)via:
 
 `cargo run  --example haft_effect_system_example`
 

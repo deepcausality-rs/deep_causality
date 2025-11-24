@@ -2,81 +2,105 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
 use deep_causality_haft::{
     BTreeMapWitness, BoxWitness, Functor, HKT, HashMapWitness, LinkedListWitness, OptionWitness,
     ResultWitness, VecDequeWitness, VecWitness,
 };
 use std::collections::{BTreeMap, HashMap, LinkedList, VecDeque};
 
-// A generic function that doubles the value inside *any* Functor
-fn double_value<F>(m_a: F::Type<i32>) -> F::Type<i32>
+// ============================================================================
+// Domain Logic: Data Anonymization
+// ============================================================================
+
+// A generic function that applies a transformation to ANY container that implements Functor.
+//
+// ENGINEERING VALUE:
+// In a large system, data is stored in various structures (Vec, HashMap, Option, etc.).
+// You often need to apply the SAME business logic (e.g., "Anonymize PII") to all of them.
+//
+// Instead of writing `anonymize_vec`, `anonymize_map`, `anonymize_option`, you write
+// ONE generic function `process_batch` that works on ALL of them.
+// This drastically reduces code duplication and ensures consistent behavior.
+fn process_batch<F, T, U>(container: F::Type<T>, transform: impl Fn(T) -> U) -> F::Type<U>
 where
     F: Functor<F> + HKT,
 {
-    F::fmap(m_a, |x| x * 2)
+    F::fmap(container, transform)
 }
 
 fn main() {
-    println!("--- Functor Example: Doubling values in different containers ---");
+    println!("=== DeepCausality HKT: Batch Data Processing ===\n");
 
-    // Using double_value with Option
-    let opt = Some(5);
-    println!("Original Option: {:?}", opt);
-    let doubled_opt = double_value::<OptionWitness>(opt);
-    println!("Doubled Option: {:?}", doubled_opt);
-    assert_eq!(doubled_opt, Some(10));
+    // The Transformation: Masking sensitive IDs
+    // Logic: If ID > 1000, mask it. Otherwise keep it.
+    let anonymize_id = |id: i32| -> String {
+        if id > 1000 {
+            "****".to_string()
+        } else {
+            id.to_string()
+        }
+    };
 
-    // Using double_value with Result
-    let res = Ok(5);
-    println!("Original Result: {:?}", res);
-    let doubled_res = double_value::<ResultWitness<i32>>(res);
-    println!("Doubled Result: {:?}", doubled_res);
-    assert_eq!(doubled_res, Ok(10));
+    println!("--- 1. Processing Linear Collections (Vec, List, Deque) ---");
 
-    // Using double_value with Box
-    let b = Box::new(7);
-    println!("Original Box: {:?}", b);
-    let doubled_box = double_value::<BoxWitness>(b);
-    println!("Doubled Box: {:?}", doubled_box);
-    assert_eq!(doubled_box, Box::new(14));
+    // Scenario: User IDs stored in a simple list
+    let user_ids_vec = vec![101, 5000, 42, 9999];
+    println!("Original Vec: {:?}", user_ids_vec);
 
-    // Using double_value with LinkedList
-    let list = LinkedList::<i32>::from([1, 2, 3]);
-    println!("Original List: {:?}", list);
-    let double_list = double_value::<LinkedListWitness>(list);
-    println!("Doubled List: {:?}", double_list);
+    // Apply transformation using the generic processor
+    let masked_vec = process_batch::<VecWitness, _, _>(user_ids_vec, anonymize_id);
+    println!("Masked Vec:   {:?}", masked_vec);
+    assert_eq!(masked_vec, vec!["101", "****", "42", "****"]);
 
-    // Using double_value with Vec
-    let vec = vec![1, 2, 3];
-    println!("Original Vec: {:?}", vec);
-    let doubled_vec = double_value::<VecWitness>(vec);
-    println!("Doubled Vec: {:?}", doubled_vec);
-    assert_eq!(doubled_vec, vec![2, 4, 6]);
+    // Works identically for LinkedList
+    let user_ids_list = LinkedList::from([101, 5000]);
+    let masked_list = process_batch::<LinkedListWitness, _, _>(user_ids_list, anonymize_id);
+    println!("Masked List:  {:?}", masked_list);
 
-    // Using double_value with VecDeque
-    let vec_dec = VecDeque::<i32>::from(vec![2, 4, 6]);
-    println!("Original VecDec: {:?}", vec_dec);
-    let doubled_vec_dec = double_value::<VecDequeWitness>(vec_dec);
-    println!("Doubled VecDec: {:?}", doubled_vec_dec);
-    assert_eq!(doubled_vec_dec, vec![4, 8, 12]);
+    // Works identically for VecDeque
+    let user_ids_deque = VecDeque::from([9999, 42]);
+    let masked_deque = process_batch::<VecDequeWitness, _, _>(user_ids_deque, anonymize_id);
+    println!("Masked Deque: {:?}", masked_deque);
 
-    // Using double_value with HashMap
-    let mut map = HashMap::new();
-    map.insert(1, 2);
-    map.insert(2, 3);
-    map.insert(3, 4);
-    println!("Original HashMap: {:?}", map);
-    let double_map = double_value::<HashMapWitness<i32>>(map);
-    println!("Doubled HashMap: {:?}", double_map);
+    println!("\n--- 2. Processing Key-Value Stores (HashMap, BTreeMap) ---");
 
-    // Using double_value with BTreeMap
-    let mut b_tree_map = BTreeMap::new();
-    b_tree_map.insert(1, 6);
-    b_tree_map.insert(2, 8);
-    b_tree_map.insert(3, 10);
-    println!("Original BTreeMap: {:?}", b_tree_map);
-    let double_map_b_tree = double_value::<BTreeMapWitness<i32>>(b_tree_map);
-    println!("Doubled BTreeMap: {:?}", double_map_b_tree);
+    // Scenario: User IDs indexed by Session ID
+    // Note: Functor for Map types typically maps over the VALUE, preserving the KEY.
+    let mut session_map = HashMap::new();
+    session_map.insert("session_1", 101);
+    session_map.insert("session_2", 5000);
 
-    println!("\nExample finished successfully!");
+    println!("Original HashMap: {:?}", session_map);
+
+    let masked_map = process_batch::<HashMapWitness<&str>, _, _>(session_map, anonymize_id);
+    println!("Masked HashMap:   {:?}", masked_map);
+
+    // Works identically for BTreeMap
+    let mut ordered_map = BTreeMap::new();
+    ordered_map.insert(1, 5000);
+    ordered_map.insert(2, 101);
+
+    let masked_btree = process_batch::<BTreeMapWitness<i32>, _, _>(ordered_map, anonymize_id);
+    println!("Masked BTreeMap:  {:?}", masked_btree);
+
+    println!("\n--- 3. Processing Contexts (Option, Result, Box) ---");
+
+    // Scenario: A single User ID that might be missing (Option)
+    let maybe_user = Some(5000);
+    let masked_opt = process_batch::<OptionWitness, _, _>(maybe_user, anonymize_id);
+    println!("Masked Option: {:?}", masked_opt);
+    assert_eq!(masked_opt, Some("****".to_string()));
+
+    // Scenario: A User ID fetch result
+    let fetch_result: Result<i32, &str> = Ok(5000);
+    let masked_res = process_batch::<ResultWitness<&str>, _, _>(fetch_result, anonymize_id);
+    println!("Masked Result: {:?}", masked_res);
+    assert_eq!(masked_res, Ok("****".to_string()));
+
+    // Scenario: A heap-allocated ID
+    let boxed_id = Box::new(5000);
+    let masked_box = process_batch::<BoxWitness, _, _>(boxed_id, anonymize_id);
+    println!("Masked Box:    {:?}", masked_box);
+    assert_eq!(masked_box, Box::new("****".to_string()));
 }

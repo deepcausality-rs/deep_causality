@@ -25,7 +25,7 @@ path = "examples/comonad_haft.rs"
 
 [[example]]
 name = "haft_effect_system_example"
-path = "examples/effect_system_example.rs"
+path = "examples/effect_system.rs"
 
 [[example]]
 name = "haft_simple_example"
