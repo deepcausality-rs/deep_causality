@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::hkt_unbound::HKT2Unbound;
+use crate::HKT2Unbound;
 
 /// The `Profunctor` trait represents a type constructor that is contravariant in its first argument
 /// and covariant in its second argument.

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::hkt_unbound::HKT2Unbound;
+use crate::HKT2Unbound;
 
 /// The `Bifunctor` trait allows mapping over both arguments of a type constructor `F<A, B>`.
 ///

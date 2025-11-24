@@ -1,0 +1,13 @@
+pub mod adjunction;
+pub mod applicative;
+pub mod bifunctor;
+pub mod comonad;
+pub mod cybernetic_loop;
+pub mod foldable;
+pub mod functor;
+pub mod monad;
+pub mod parametric_monad;
+pub mod profunctor;
+pub mod promonad;
+pub mod riemann_map;
+pub mod traversable;

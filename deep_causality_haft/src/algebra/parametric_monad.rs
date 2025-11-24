@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::hkt_unbound::HKT3Unbound;
+use crate::HKT3Unbound;
 
 /// The `ParametricMonad` (or Indexed Monad) trait allows for monadic computations where the
 /// type of the underlying state can change at each step.

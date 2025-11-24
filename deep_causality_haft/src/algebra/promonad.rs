@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::hkt_unbound::HKT3Unbound;
+use crate::HKT3Unbound;
 
 /// The `Promonad` trait models the "fusion" or "interaction" of two contexts to produce a third.
 ///

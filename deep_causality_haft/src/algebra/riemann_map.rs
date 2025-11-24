@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::hkt_unbound::HKT4Unbound;
+use crate::HKT4Unbound;
 
 /// The `RiemannMap` trait models high-arity geometric interactions, specifically the
 /// Riemann Curvature Tensor and Scattering Matrices.

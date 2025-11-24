@@ -89,7 +89,7 @@ fn main() {
 }
 ```
 
-When you run [the example ](/functor.rs)via:
+When you run the example via:
 
 `cargo run  --example haft_functor_example`
 

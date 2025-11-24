@@ -20,17 +20,10 @@
 //!
 //! # Modules
 //!
-//! *   `applicative`: Defines the `Applicative` trait.
-//! *   `effect`: Defines traits (`Effect3`, `Effect4`, `Effect5`) for partially applying HKTs
-//!     to build type-encoded effect systems.
-//! *   `extensions`: Provides concrete HKT witness implementations for standard Rust types
-//!     like `Option`, `Result`, and `Vec`.
-//! *   `foldable`: Defines the `Foldable` trait.
-//! *   `functor`: Defines the `Functor` trait.
-//! *   `hkt`: Defines the core `HKT` traits (`HKT`, `HKT2`, `HKT3`, `HKT4`, `HKT5`) and `Placeholder`.
-//! *   `monad`: Defines the `Monad` trait.
-//! *   `monad_effect`: Defines traits (`MonadEffect3`, `MonadEffect4`, `MonadEffect5`)
-//!     for monadic operations within type-encoded effect systems.
+//! *   `core`: Core HKT definitions and machinery.
+//! *   `algebra`: Algebraic traits (Functor, Monad, etc.).
+//! *   `effect_system`: Type-encoded effect system traits.
+//! *   `extensions`: Concrete HKT witness implementations for standard Rust types.
 //! *   `utils_tests`: Internal utilities and test-specific effect types.
 //!
 //! # Usage
@@ -39,101 +32,48 @@
 //! to build its core abstractions. However, the traits and concepts can be generally applied
 //! to other Rust projects requiring advanced functional programming patterns and effect management.
 //!
-mod applicative;
-mod comonad;
-mod effect;
-mod extensions;
-mod foldable;
-mod functor;
-mod hkt;
-mod monad;
-mod monad_effect;
-mod traversable;
+
+// Module Declarations
+pub(crate) mod algebra;
+pub(crate) mod core;
+pub(crate) mod effect_system;
+pub(crate) mod extensions;
 pub mod utils_tests;
 
-// New HKT N-Arity Modules
-mod adjunction;
-mod bifunctor;
-mod cybernetic_loop;
-mod hkt_unbound;
-mod parametric_monad;
-mod profunctor;
-mod promonad;
-mod riemann_map;
+// ============================================================================
+// Re-exports
+// ============================================================================
 
-// Re-exports for HKT N-Arity Traits
-pub use crate::adjunction::Adjunction;
-pub use crate::bifunctor::Bifunctor;
-pub use crate::cybernetic_loop::CyberneticLoop;
-pub use crate::hkt_unbound::{HKT2Unbound, HKT3Unbound, HKT4Unbound, HKT5Unbound};
-pub use crate::parametric_monad::ParametricMonad;
-pub use crate::profunctor::Profunctor;
-pub use crate::promonad::Promonad;
-pub use crate::riemann_map::RiemannMap;
+// Core HKT Traits
+pub use crate::core::hkt::{HKT, HKT2, HKT3, HKT4, HKT5, Placeholder};
+pub use crate::core::hkt_unbound::{HKT2Unbound, HKT3Unbound, HKT4Unbound, HKT5Unbound};
 
-// Functional extensions for std types
-/// Re-exports `BTreeMapWitness`, the HKT witness for `BTreeMap<K, V>`.
+// Algebraic Traits
+pub use crate::algebra::adjunction::Adjunction;
+pub use crate::algebra::applicative::Applicative;
+pub use crate::algebra::bifunctor::Bifunctor;
+pub use crate::algebra::comonad::{BoundedComonad, CoMonad};
+pub use crate::algebra::cybernetic_loop::CyberneticLoop;
+pub use crate::algebra::foldable::Foldable;
+pub use crate::algebra::functor::Functor;
+pub use crate::algebra::monad::Monad;
+pub use crate::algebra::parametric_monad::ParametricMonad;
+pub use crate::algebra::profunctor::Profunctor;
+pub use crate::algebra::promonad::Promonad;
+pub use crate::algebra::riemann_map::RiemannMap;
+pub use crate::algebra::traversable::Traversable;
+
+// Effect System Traits
+pub use crate::effect_system::effect::{Effect3, Effect4, Effect5};
+pub use crate::effect_system::monad_effect::{MonadEffect3, MonadEffect4, MonadEffect5};
+
+// Functional Extensions (Witnesses Types)
 pub use crate::extensions::func_fold_b_tree_map_ext::BTreeMapWitness;
-/// Re-exports `HashMapWitness`, the HKT witness for `HashMap<K, V>`.
 pub use crate::extensions::func_fold_hash_map_ext::HashMapWitness;
-/// Re-exports `VecDequeWitness`, the HKT witness for `VecDeque<T>`.
 pub use crate::extensions::func_fold_vec_deque_ext::VecDequeWitness;
-/// Re-exports `BoxWitness`, the HKT witness for `Box<T>`.
 pub use crate::extensions::hkt_box_ext::BoxWitness;
-/// Re-exports `LinkedListWitness`, the HKT witness for `LinkedList<T>`.
 pub use crate::extensions::hkt_linked_list_ext::LinkedListWitness;
-/// Re-exports `OptionWitness`, the HKT witness for `Option<T>`.
 pub use crate::extensions::hkt_option_ext::OptionWitness;
-/// Re-exports `ResultUnboundWitness`, the HKT witness for `Result<A, B>`.
-pub use crate::extensions::hkt_result_ext::ResultUnboundWitness;
-/// Re-exports `ResultWitness`, the HKT witness for `Result<T, E>`.
-pub use crate::extensions::hkt_result_ext::ResultWitness;
-/// Re-exports `Tuple2Witness`, the HKT witness for `(A, B)`.
-pub use crate::extensions::hkt_tuple_ext::Tuple2Witness;
-/// Re-exports `Tuple3Witness`, the HKT witness for `(A, B, C)`.
-pub use crate::extensions::hkt_tuple_ext::Tuple3Witness;
-/// Re-exports `VecWitness`, the HKT witness for `Vec<T>`.
+pub use crate::extensions::hkt_result_ext::{ResultUnboundWitness, ResultWitness};
+pub use crate::extensions::hkt_tuple_ext::{Tuple2Witness, Tuple3Witness};
 pub use crate::extensions::hkt_vec_ext::VecWitness;
-
-// Effects for Arity 3 - 5
-/// Re-exports the `Effect3` trait for arity-3 type-encoded effect systems.
-pub use crate::effect::Effect3;
-/// Re-exports the `Effect4` trait for arity-4 type-encoded effect systems.
-pub use crate::effect::Effect4;
-/// Re-exports the `Effect5` trait for arity-5 type-encoded effect systems.
-pub use crate::effect::Effect5;
-// Monad Effects
-/// Re-exports the `MonadEffect3` trait for monadic operations in arity-3 effect systems.
-pub use crate::monad_effect::MonadEffect3;
-/// Re-exports the `MonadEffect4` trait for monadic operations in arity-4 effect systems.
-pub use crate::monad_effect::MonadEffect4;
-/// Re-exports the `MonadEffect5` trait for monadic operations in arity-5 effect systems.
-pub use crate::monad_effect::MonadEffect5;
-
-// HKT Trait for Arity 1 - 5
-/// Re-exports the core `HKT` trait for arity-1 Higher-Kinded Types.
-pub use crate::hkt::HKT;
-/// Re-exports the `HKT2` trait for arity-2 Higher-Kinded Types.
-pub use crate::hkt::HKT2;
-/// Re-exports the `HKT3` trait for arity-3 Higher-Kinded Types.
-pub use crate::hkt::HKT3;
-/// Re-exports the `HKT4` trait for arity-4 Higher-Kinded Types.
-pub use crate::hkt::HKT4;
-/// Re-exports the `HKT5` trait for arity-5 Higher-Kinded Types.
-pub use crate::hkt::HKT5;
-/// Re-exports `Placeholder`, a zero-sized type used in HKT witness implementations.
-pub use crate::hkt::Placeholder;
-
-// Functional traits
-/// Re-exports the `Applicative` trait for applying functions within a context.
-pub use crate::applicative::Applicative;
-/// Re-exports the `Comonad` trait
-pub use crate::comonad::{BoundedComonad, CoMonad};
-/// Re-exports the `Foldable` trait for reducing data structures.
-pub use crate::foldable::Foldable;
-/// Re-exports the `Functor` trait for mapping over type constructors.
-pub use crate::functor::Functor;
-/// Re-exports the `Monad` trait for sequencing effectful computations.
-pub use crate::monad::Monad;
-/// Re-exports the `Traversable` trait to flip generic structures inside out.
-pub use crate::traversable::Traversable;

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::hkt_unbound::HKT5Unbound;
+use crate::HKT5Unbound;
 
 /// The `CyberneticLoop` trait models a complete feedback control system involving 5 distinct components.
 ///
