@@ -6,13 +6,23 @@ rust-version = { workspace = true }
 license = { workspace = true }
 
 repository = "https://github.com/deepcausality/deep_causality.rs"
-authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
+authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
 description = "HKT traits for for the deep_causality crate."
 documentation = "https://docs.rs/deep_causality"
 categories = ["development-tools"]
 keywords = ["HKT", "traits"]
 # Exclude all bazel files as these conflict with Bazel workspace when vendored.
-exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
+exclude = [
+    "*.bazel",
+    "*/*.bazel",
+    "*.bazel.*",
+    "BUILD",
+    "BUILD.bazel",
+    "MODULE.bazel",
+    ".bazelignore",
+    ".bazelrc",
+    "tests/**/*",
+]
 
 
 [dependencies.deep_causality_num]
@@ -20,21 +30,49 @@ path = "../deep_causality_num"
 version = "0.1"
 
 [[example]]
-name = "haft_comonad_example"
-path = "examples/comonad_haft.rs"
+name = "haft_applicative"
+path = "examples/applicative.rs"
+
+[[example]]
+name = "haft_foldable"
+path = "examples/foldable.rs"
+
+[[example]]
+name = "haft_monad"
+path = "examples/monad.rs"
+
+[[example]]
+name = "haft_functor"
+path = "examples/functor.rs"
+
+[[example]]
+name = "haft_comonad"
+path = "examples/comonad.rs"
+
+[[example]]
+name = "haft_traversable"
+path = "examples/traversable.rs"
+
+[[example]]
+name = "haft_adjunction"
+path = "examples/adjunction.rs"
+
+[[example]]
+name = "haft_parametric_monad"
+path = "examples/parametric_monad.rs"
+
+[[example]]
+name = "haft_bifunctor"
+path = "examples/bifunctor.rs"
+
+[[example]]
+name = "haft_profunctor"
+path = "examples/profunctor.rs"
 
 [[example]]
 name = "haft_effect_system_example"
-path = "examples/effect_system_example.rs"
+path = "examples/effect_system.rs"
 
 [[example]]
-name = "haft_simple_example"
-path = "examples/simple_haft.rs"
-
-[[example]]
-name = "haft_functor_example"
-path = "examples/functor_haft.rs"
-
-[[example]]
-name = "haft_traversable_example"
-path = "examples/traversable_haft.rs"
+name = "haft_unbound_example"
+path = "examples/unbound_haft.rs"
