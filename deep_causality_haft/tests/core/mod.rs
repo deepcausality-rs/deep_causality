@@ -3,7 +3,5 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-mod algebra;
-mod core;
-mod effect_system;
-mod extensions;
+mod hkt_tests;
+mod hkt_unbound_tests;

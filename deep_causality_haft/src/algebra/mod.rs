@@ -41,8 +41,8 @@
 //! To use these traits, you typically need a type that implements the corresponding HKT witness (from `core` or `extensions`).
 //!
 //! ```rust
-//! use deep_causality_haft::algebra::functor::Functor;
-//! use deep_causality_haft::extensions::hkt_vec_ext::VecWitness;
+//! use deep_causality_haft::Functor;
+//! use deep_causality_haft::VecWitness;
 //!
 //! let v = vec![1, 2, 3];
 //! let v_mapped = VecWitness::fmap(v, |x| x * 2);

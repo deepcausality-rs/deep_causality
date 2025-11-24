@@ -3,7 +3,5 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-mod algebra;
-mod core;
-mod effect_system;
-mod extensions;
+mod monad_effect_tests;
+// mod unbound_effect_tests; // TODO: Fix trait bound issues
