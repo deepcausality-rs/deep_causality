@@ -46,7 +46,9 @@ pub mod utils_tests;
 
 // Core HKT Traits
 pub use crate::core::hkt::{HKT, HKT2, HKT3, HKT4, HKT5, Placeholder};
-pub use crate::core::hkt_unbound::{HKT2Unbound, HKT3Unbound, HKT4Unbound, HKT5Unbound};
+pub use crate::core::hkt_unbound::{
+    HKT2Unbound, HKT3Unbound, HKT4Unbound, HKT5Unbound, HKT6Unbound,
+};
 
 // Algebraic Traits
 pub use crate::algebra::adjunction::Adjunction;
@@ -65,7 +67,11 @@ pub use crate::algebra::traversable::Traversable;
 
 // Effect System Traits
 pub use crate::effect_system::effect::{Effect3, Effect4, Effect5};
+pub use crate::effect_system::effect_unbound::{Effect3Unbound, Effect4Unbound, Effect5Unbound};
 pub use crate::effect_system::monad_effect::{MonadEffect3, MonadEffect4, MonadEffect5};
+pub use crate::effect_system::monad_effect_unbound::{
+    MonadEffect3Unbound, MonadEffect4Unbound, MonadEffect5Unbound,
+};
 
 // Functional Extensions (Witnesses Types)
 pub use crate::extensions::func_fold_b_tree_map_ext::BTreeMapWitness;

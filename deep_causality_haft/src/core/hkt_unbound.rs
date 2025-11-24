@@ -60,3 +60,15 @@ pub trait HKT4Unbound {
 pub trait HKT5Unbound {
     type Type<A, B, C, D, E>;
 }
+
+/// Trait for a Higher-Kinded Type (HKT) with six unbound generic parameters (Arity 6).
+///
+/// # Category Theory
+/// Corresponds to a **Hexafunctor**.
+///
+/// # Examples
+/// * `(A, B, C, D, E, F)` (Sextuple)
+/// * `Effect5Unbound<Fixed1, Fixed2, Fixed3, S_in, S_out, A>`
+pub trait HKT6Unbound {
+    type Type<A, B, C, D, E, F>;
+}
