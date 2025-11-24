@@ -4,4 +4,4 @@
  */
 
 mod monad_effect_tests;
-// mod unbound_effect_tests; // TODO: Fix trait bound issues
+
