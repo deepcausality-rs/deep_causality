@@ -22,6 +22,22 @@ pub struct CsrMatrix<T> {
 }
 
 impl<T> CsrMatrix<T> {
+    /// Creates a new, empty `CsrMatrix`.
+    ///
+    /// The matrix will have zero rows and columns and no stored elements.
+    /// Its shape will be `(0, 0)`.
+    ///
+    /// # Returns
+    /// A new, empty `CsrMatrix`.
+    ///
+    /// # Examples
+    /// ```
+    /// use deep_causality_sparse::CsrMatrix;
+    ///
+    /// let matrix: CsrMatrix<f64> = CsrMatrix::new();
+    /// assert_eq!(matrix.shape(), (0, 0));
+    /// assert!(matrix.values().is_empty());
+    /// ```
     pub fn new() -> Self {
         Self {
             row_indices: Vec::new(),
@@ -31,6 +47,30 @@ impl<T> CsrMatrix<T> {
         }
     }
 
+    /// Creates a new `CsrMatrix` with pre-allocated capacity for its internal vectors.
+    ///
+    /// This can improve performance by reducing reallocations when a large number of
+    /// elements are expected to be added to the matrix after creation.
+    /// The matrix is initially logically empty (all zeros) with the specified `shape`.
+    ///
+    /// # Arguments
+    /// * `rows` - The number of rows the matrix will have.
+    /// * `cols` - The number of columns the matrix will have.
+    /// * `capacity` - The estimated number of non-zero elements the matrix will store.
+    ///
+    /// # Returns
+    /// A new `CsrMatrix` with the specified shape and allocated capacity.
+    ///
+    /// # Examples
+    /// ```
+    /// use deep_causality_sparse::CsrMatrix;
+    ///
+    /// let matrix: CsrMatrix<f64> = CsrMatrix::with_capacity(5, 5, 10);
+    /// assert_eq!(matrix.shape(), (5, 5));
+    /// assert!(matrix.values().capacity() >= 10);
+    /// assert_eq!(matrix.row_indices().len(), 6); // rows + 1
+    /// assert!(matrix.col_indices().is_empty());
+    /// ```
     pub fn with_capacity(rows: usize, cols: usize, capacity: usize) -> Self {
         Self {
             row_indices: vec![0; rows + 1],
@@ -53,6 +93,13 @@ where
         + Default,
 {
     /// Creates a new `CsrMatrix` from a list of `(row, col, value)` triplets.
+    ///
+    /// The `from_triplets` function constructs a sparse matrix \( A \) of size \( m \times n \)
+    /// (where \( m \) is `rows` and \( n \) is `cols`) from a list of \( (r, c, v) \) triplets.
+    /// Each triplet represents a non-zero element \( A_{rc} = v \).
+    /// If multiple triplets specify the same \( (r, c) \) position, their values are summed:
+    /// \( A_{rc} = \sum v_i \) for all \( v_i \) at \( (r, c) \).
+    /// Triplets whose summed value is zero are discarded.
     ///
     /// The triplets are sorted, and duplicate `(row, col)` entries have their
     /// values summed.

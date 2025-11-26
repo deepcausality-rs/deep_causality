@@ -10,7 +10,6 @@ use std::fmt;
 pub enum SparseMatrixError {
     ShapeMismatch((usize, usize), (usize, usize)),
     DimensionMismatch(usize, usize),
-    NotImplemented,
     IndexOutOfBounds(usize, usize),
     EmptyMatrix,
 }
@@ -31,9 +30,6 @@ impl fmt::Display for SparseMatrixError {
                     "Dimension mismatch: Incompatible dimensions for matrix multiplication. Left columns: {}, Right rows: {}",
                     left_cols, right_rows
                 )
-            }
-            SparseMatrixError::NotImplemented => {
-                write!(f, "Operation not yet implemented for sparse matrices.")
             }
             SparseMatrixError::IndexOutOfBounds(index, size) => {
                 write!(
