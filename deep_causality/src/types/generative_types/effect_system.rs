@@ -47,8 +47,10 @@
 //! let result = effect.map(|state| transform(state));
 //! ```
 
-use crate::{LogAppend, ModelValidationError, ModificationLog};
-use deep_causality_haft::{Applicative, Effect3, Functor, HKT, HKT3, Monad, Placeholder};
+use crate::{ModelValidationError, ModificationLog};
+use deep_causality_haft::{
+    Applicative, Effect3, Functor, HKT, HKT3, LogAppend, Monad, Placeholder,
+};
 
 /// HKT witness type for the graph generatable effect system.
 ///
