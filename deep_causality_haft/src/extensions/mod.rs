@@ -43,12 +43,18 @@
 //! ## Tuples
 //! *   [`Tuple2Witness`](hkt_tuple_ext::Tuple2Witness): For `(A, B)`.
 //! *   [`Tuple3Witness`](hkt_tuple_ext::Tuple3Witness): For `(A, B, C)`.
+#[cfg(feature = "alloc")]
 pub mod func_fold_b_tree_map_ext;
+#[cfg(feature = "std")]
 pub mod func_fold_hash_map_ext;
+#[cfg(feature = "alloc")]
 pub mod func_fold_vec_deque_ext;
+#[cfg(feature = "alloc")]
 pub mod hkt_box_ext;
+#[cfg(feature = "alloc")]
 pub mod hkt_linked_list_ext;
 pub mod hkt_option_ext;
 pub mod hkt_result_ext;
 pub mod hkt_tuple_ext;
+#[cfg(feature = "alloc")]
 pub mod hkt_vec_ext;

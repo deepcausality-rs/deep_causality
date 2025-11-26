@@ -4,7 +4,7 @@
  */
 
 use crate::{Foldable, Functor, HKT};
-use std::collections::VecDeque;
+use alloc::collections::VecDeque;
 
 /// `VecDequeWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
 /// for the `VecDeque<T>` type constructor. It allows `VecDeque` to be used with generic

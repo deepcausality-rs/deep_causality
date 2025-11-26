@@ -4,7 +4,7 @@
  */
 
 use crate::{Applicative, CoMonad, Foldable, Functor, HKT, Monad};
-use std::boxed::Box;
+use alloc::boxed::Box;
 
 /// `BoxWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
 /// for the `Box<T>` type constructor. It allows `Box` to be used with generic

@@ -4,7 +4,7 @@
  */
 
 use crate::{Applicative, Foldable, Functor, HKT, Monad};
-use std::collections::LinkedList;
+use alloc::collections::LinkedList;
 
 /// `LinkedListWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
 /// for the `LinkedList<T>` type constructor. It allows `LinkedList` to be used with generic

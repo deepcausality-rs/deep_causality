@@ -4,7 +4,7 @@
  */
 
 use crate::{Foldable, Functor, HKT, HKT2, Placeholder};
-use std::collections::BTreeMap;
+use alloc::collections::BTreeMap;
 
 /// `BTreeMapWitness<K>` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
 /// for the `BTreeMap<K, V>` type constructor, where the key type `K` is fixed.
