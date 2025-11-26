@@ -98,10 +98,10 @@ rust_library(
     }),
     version = "56.2.0",
     deps = [
-        "//thirdparty/crates/bytes-1.10.1:bytes",
+        "//thirdparty/crates/bytes-1.11.0:bytes",
         "//thirdparty/crates/chrono-0.4.42:chrono",
-        "//thirdparty/crates/half-2.6.0:half",
-        "//thirdparty/crates/hashbrown-0.16.0:hashbrown",
+        "//thirdparty/crates/half-2.7.1:half",
+        "//thirdparty/crates/hashbrown-0.16.1:hashbrown",
         "//thirdparty/crates/num-0.4.3:num",
         "//thirdparty/crates/num-bigint-0.4.6:num_bigint",
         "//thirdparty/crates/thrift-0.17.0:thrift",

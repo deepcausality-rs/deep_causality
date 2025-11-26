@@ -262,106 +262,106 @@ rust_library(
     version = "0.8.12",
     deps = [
         "//thirdparty/crates/ahash-0.8.12:build_script_build",
-        "//thirdparty/crates/cfg-if-1.0.3:cfg_if",
-        "//thirdparty/crates/zerocopy-0.8.27:zerocopy",
+        "//thirdparty/crates/cfg-if-1.0.4:cfg_if",
+        "//thirdparty/crates/zerocopy-0.8.30:zerocopy",
     ] + select({
         "@rules_rust//rust/platform:aarch64-apple-darwin": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # aarch64-apple-darwin
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # aarch64-apple-darwin
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:aarch64-apple-ios": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # aarch64-apple-ios
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # aarch64-apple-ios
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:aarch64-apple-ios-sim": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # aarch64-apple-ios-sim
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # aarch64-apple-ios-sim
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:aarch64-linux-android": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # aarch64-linux-android
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # aarch64-linux-android
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:aarch64-pc-windows-msvc": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # aarch64-pc-windows-msvc
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # aarch64-pc-windows-msvc
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:aarch64-unknown-fuchsia": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # aarch64-unknown-fuchsia
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # aarch64-unknown-fuchsia
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:aarch64-unknown-linux-gnu": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # aarch64-unknown-linux-gnu
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # aarch64-unknown-linux-gnu
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:aarch64-unknown-nixos-gnu": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # aarch64-unknown-linux-gnu, aarch64-unknown-nixos-gnu
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # aarch64-unknown-linux-gnu, aarch64-unknown-nixos-gnu
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:aarch64-unknown-nto-qnx710": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # aarch64-unknown-nto-qnx710
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # aarch64-unknown-nto-qnx710
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:aarch64-unknown-uefi": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # aarch64-unknown-uefi
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # aarch64-unknown-uefi
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:arm-unknown-linux-gnueabi": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # arm-unknown-linux-gnueabi
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # arm-unknown-linux-gnueabi
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:armv7-linux-androideabi": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # armv7-linux-androideabi
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # armv7-linux-androideabi
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:armv7-unknown-linux-gnueabi": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # armv7-unknown-linux-gnueabi
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # armv7-unknown-linux-gnueabi
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:i686-apple-darwin": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # i686-apple-darwin
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # i686-apple-darwin
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:i686-linux-android": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # i686-linux-android
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # i686-linux-android
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:i686-pc-windows-msvc": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # i686-pc-windows-msvc
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # i686-pc-windows-msvc
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:i686-unknown-freebsd": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # i686-unknown-freebsd
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # i686-unknown-freebsd
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:i686-unknown-linux-gnu": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # i686-unknown-linux-gnu
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # i686-unknown-linux-gnu
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:powerpc-unknown-linux-gnu": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # powerpc-unknown-linux-gnu
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # powerpc-unknown-linux-gnu
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:riscv32imc-unknown-none-elf": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # riscv32imc-unknown-none-elf
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # riscv32imc-unknown-none-elf
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:riscv64gc-unknown-linux-gnu": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # riscv64gc-unknown-linux-gnu
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # riscv64gc-unknown-linux-gnu
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:riscv64gc-unknown-none-elf": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # riscv64gc-unknown-none-elf
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # riscv64gc-unknown-none-elf
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:s390x-unknown-linux-gnu": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # s390x-unknown-linux-gnu
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # s390x-unknown-linux-gnu
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:thumbv7em-none-eabi": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # thumbv7em-none-eabi
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # thumbv7em-none-eabi
         ],
         "@rules_rust//rust/platform:thumbv8m.main-none-eabi": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # thumbv8m.main-none-eabi
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # thumbv8m.main-none-eabi
         ],
         "@rules_rust//rust/platform:wasm32-unknown-emscripten": [
             "//thirdparty/crates/const-random-0.1.18:const_random",  # wasm32-unknown-emscripten
@@ -384,43 +384,43 @@ rust_library(
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:x86_64-apple-darwin": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # x86_64-apple-darwin
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # x86_64-apple-darwin
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:x86_64-apple-ios": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # x86_64-apple-ios
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # x86_64-apple-ios
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:x86_64-linux-android": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # x86_64-linux-android
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # x86_64-linux-android
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:x86_64-pc-windows-msvc": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # x86_64-pc-windows-msvc
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # x86_64-pc-windows-msvc
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:x86_64-unknown-freebsd": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # x86_64-unknown-freebsd
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # x86_64-unknown-freebsd
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:x86_64-unknown-fuchsia": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # x86_64-unknown-fuchsia
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # x86_64-unknown-fuchsia
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:x86_64-unknown-linux-gnu": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # x86_64-unknown-linux-gnu
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # x86_64-unknown-linux-gnu
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:x86_64-unknown-nixos-gnu": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # x86_64-unknown-linux-gnu, x86_64-unknown-nixos-gnu
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # x86_64-unknown-linux-gnu, x86_64-unknown-nixos-gnu
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:x86_64-unknown-none": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # x86_64-unknown-none
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # x86_64-unknown-none
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "@rules_rust//rust/platform:x86_64-unknown-uefi": [
-            "//thirdparty/crates/getrandom-0.3.3:getrandom",  # x86_64-unknown-uefi
+            "//thirdparty/crates/getrandom-0.3.4:getrandom",  # x86_64-unknown-uefi
             "//thirdparty/crates/once_cell-1.21.3:once_cell",  # cfg(not(all(target_arch = "arm", target_os = "none")))
         ],
         "//conditions:default": [],

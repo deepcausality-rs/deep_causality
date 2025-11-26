@@ -25,6 +25,11 @@ crates_vendor(
             package = "parquet",
             version = "56",
         ),
+        "libm": crate.spec(
+            default_features = True,
+            package = "libm",
+            version = "0.2",
+        ),
         "tempfile": crate.spec(
             default_features = False,
             package = "tempfile",

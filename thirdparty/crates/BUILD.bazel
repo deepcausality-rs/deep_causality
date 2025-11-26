@@ -31,14 +31,26 @@ filegroup(
 
 # Workspace Member Dependencies
 alias(
-    name = "csv-1.3.1",
-    actual = "//thirdparty/crates/csv-1.3.1:csv",
+    name = "csv-1.4.0",
+    actual = "//thirdparty/crates/csv-1.4.0:csv",
     tags = ["manual"],
 )
 
 alias(
     name = "csv",
-    actual = "//thirdparty/crates/csv-1.3.1:csv",
+    actual = "//thirdparty/crates/csv-1.4.0:csv",
+    tags = ["manual"],
+)
+
+alias(
+    name = "libm-0.2.15",
+    actual = "//thirdparty/crates/libm-0.2.15:libm",
+    tags = ["manual"],
+)
+
+alias(
+    name = "libm",
+    actual = "//thirdparty/crates/libm-0.2.15:libm",
     tags = ["manual"],
 )
 

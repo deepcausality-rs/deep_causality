@@ -125,9 +125,9 @@ rust_library(
             "//thirdparty/crates/windows-core-0.62.2:windows_core",  # cfg(target_os = "windows")
         ],
         "@rules_rust//rust/platform:wasm32-unknown-unknown": [
-            "//thirdparty/crates/js-sys-0.3.81:js_sys",  # cfg(all(target_arch = "wasm32", target_os = "unknown"))
+            "//thirdparty/crates/js-sys-0.3.82:js_sys",  # cfg(all(target_arch = "wasm32", target_os = "unknown"))
             "//thirdparty/crates/log-0.4.28:log",  # cfg(all(target_arch = "wasm32", target_os = "unknown"))
-            "//thirdparty/crates/wasm-bindgen-0.2.104:wasm_bindgen",  # cfg(all(target_arch = "wasm32", target_os = "unknown"))
+            "//thirdparty/crates/wasm-bindgen-0.2.105:wasm_bindgen",  # cfg(all(target_arch = "wasm32", target_os = "unknown"))
         ],
         "@rules_rust//rust/platform:x86_64-apple-darwin": [
             "//thirdparty/crates/core-foundation-sys-0.8.7:core_foundation_sys",  # cfg(target_vendor = "apple")
