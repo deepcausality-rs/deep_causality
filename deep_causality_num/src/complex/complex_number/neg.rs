@@ -4,7 +4,7 @@
  */
 
 use crate::{Complex, Float};
-use std::ops::Neg;
+use core::ops::Neg;
 
 // Implement Neg trait
 impl<F> Neg for Complex<F>

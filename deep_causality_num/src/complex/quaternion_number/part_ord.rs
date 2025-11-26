@@ -1,6 +1,6 @@
-use crate::complex::quaternion_number::Quaternion;
-use crate::float::Float;
-use std::cmp::Ordering;
+use crate::Float;
+use crate::Quaternion;
+use core::cmp::Ordering;
 
 // PartialOrd
 impl<F: Float> PartialOrd for Quaternion<F> {
@@ -17,7 +17,7 @@ impl<F: Float> PartialOrd for Quaternion<F> {
     ///
     /// ```
     /// use deep_causality_num::Quaternion;
-    /// use std::cmp::Ordering;
+    /// use core::cmp::Ordering;
     ///
     /// let q1 = Quaternion::new(1.0, 2.0, 3.0, 4.0);
     /// let q2 = Quaternion::new(1.0, 2.0, 3.0, 5.0);

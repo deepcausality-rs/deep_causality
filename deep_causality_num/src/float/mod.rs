@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{Num, NumCast};
-use std::num::FpCategory;
-use std::ops::Neg;
+use core::num::FpCategory;
+use core::ops::Neg;
 
 mod float_32_impl;
 mod float_64_impl;
@@ -24,7 +24,7 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     ///
     /// ```
     /// use deep_causality_num::Float;
-    /// use std::f32;
+    /// use core::f32;
     ///
     /// let infinity: f32 = Float::infinity();
     ///
@@ -37,7 +37,7 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     ///
     /// ```
     /// use deep_causality_num::Float;
-    /// use std::f32;
+    /// use core::f32;
     ///
     /// let neg_infinity: f32 = Float::neg_infinity();
     ///
@@ -65,7 +65,7 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     ///
     /// ```
     /// use deep_causality_num::Float;
-    /// use std::f64;
+    /// use core::f64;
     ///
     /// let x: f64 = Float::min_value();
     ///
@@ -77,7 +77,7 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     ///
     /// ```
     /// use deep_causality_num::Float;
-    /// use std::f64;
+    /// use core::f64;
     ///
     /// let x: f64 = Float::min_positive_value();
     ///
@@ -89,7 +89,7 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     ///
     /// ```
     /// use deep_causality_num::Float;
-    /// use std::f64;
+    /// use core::f64;
     ///
     /// let x: f64 = Float::epsilon();
     ///
@@ -106,7 +106,7 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     ///
     /// ```
     /// use deep_causality_num::Float;
-    /// use std::f64;
+    /// use core::f64;
     ///
     /// let x: f64 = Float::max_value();
     /// assert_eq!(x, f64::MAX);
@@ -117,7 +117,7 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     ///
     /// ```
     /// use deep_causality_num::Float;
-    /// use std::f64;
+    /// use core::f64;
     ///
     /// let nan = f64::NAN;
     /// let f = 7.0;
@@ -132,7 +132,7 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     ///
     /// ```
     /// use deep_causality_num::Float;
-    /// use std::f32;
+    /// use core::f32;
     ///
     /// let f = 7.0f32;
     /// let inf: f32 = Float::infinity();
@@ -151,7 +151,7 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     ///
     /// ```
     /// use deep_causality_num::Float;
-    /// use std::f32;
+    /// use core::f32;
     ///
     /// let f = 7.0f32;
     /// let inf: f32 = Float::infinity();
@@ -171,7 +171,7 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     ///
     /// ```
     /// use deep_causality_num::Float;
-    /// use std::f32;
+    /// use core::f32;
     ///
     /// let min = f32::MIN_POSITIVE; // 1.17549435e-38f32
     /// let max = f32::MAX;
@@ -194,7 +194,7 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     ///
     /// ```
     /// use deep_causality_num::Float;
-    /// use std::f64;
+    /// use core::f64;
     ///
     /// let min = f64::MIN_POSITIVE; // 2.2250738585072014e-308_f64
     /// let max = f64::MAX;
@@ -218,8 +218,8 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     ///
     /// ```
     /// use deep_causality_num::Float;
-    /// use std::num::FpCategory;
-    /// use std::f32;
+    /// use core::num::FpCategory;
+    /// use core::f32;
     ///
     /// let num = 12.4f32;
     /// let inf = f32::INFINITY;
@@ -302,7 +302,7 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     ///
     /// ```
     /// use deep_causality_num::Float;
-    /// use std::f64;
+    /// use core::f64;
     ///
     /// let x = 3.5;
     /// let y = -3.5;
@@ -361,7 +361,7 @@ pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     ///
     /// ```
     /// use deep_causality_num::Float;
-    /// use std::f64;
+    /// use core::f64;
     ///
     /// let nan: f64 = f64::NAN;
     /// let neg_nan: f64 = -f64::NAN;

@@ -1,3 +1,5 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
 mod alias;
 mod cast;
 mod complex;
@@ -16,12 +18,17 @@ pub use crate::cast::from_primitive::FromPrimitive;
 pub use crate::cast::num_cast::NumCast;
 pub use crate::cast::to_float::{FloatFromInt, IntoFloat};
 pub use crate::cast::to_primitive::ToPrimitive;
+
+//  Complex number types
 pub use crate::complex::complex_number::{Complex, Complex32, Complex64, ComplexNumber};
 pub use crate::complex::octonion_number::{Octonion, OctonionNumber};
 pub use crate::complex::quaternion_number::{Quaternion, QuaternionNumber};
 
+// Float number types
 pub use crate::float::Float;
 pub use crate::float_option::FloatOption;
+
+//  General numeric traits
 pub use crate::identity::one::{ConstOne, One};
 pub use crate::identity::zero::{ConstZero, Zero};
 pub use crate::num::Num;

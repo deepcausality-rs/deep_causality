@@ -5,7 +5,7 @@
 
 use crate::complex::octonion_number::Octonion;
 use crate::float::Float;
-use std::fmt::Display;
+use core::fmt::Display;
 
 /// Implements the `Display` trait for `Octonion`.
 ///
@@ -36,7 +36,7 @@ use std::fmt::Display;
 /// println!("{}", o3); // Output: 0
 /// ```
 impl<F: Float + Display> Display for Octonion<F> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let mut is_first_term = true;
 
         if !self.s.is_zero() {

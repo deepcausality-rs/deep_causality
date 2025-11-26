@@ -2,9 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use core::ops::Div;
 use deep_causality_num::utils_tests::utils_octonion_tests;
 use deep_causality_num::{Float, Octonion, Zero};
-use std::ops::Div;
 
 // Test addition
 #[test]

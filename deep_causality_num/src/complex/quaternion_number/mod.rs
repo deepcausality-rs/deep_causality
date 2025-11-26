@@ -1,7 +1,7 @@
 //! This module defines the Quaternion struct and its core implementations.
 
-use std::iter::{Product, Sum};
-use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
+use core::iter::{Product, Sum};
+use core::ops::{Add, Div, Mul, Neg, Rem, Sub};
 
 pub use crate::float::Float;
 use crate::{Matrix3, Num, Vector3};

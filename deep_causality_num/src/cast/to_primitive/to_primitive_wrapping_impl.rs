@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::ToPrimitive;
-use std::num::Wrapping;
+use core::num::Wrapping;
 
 impl<T: ToPrimitive> ToPrimitive for Wrapping<T> {
     #[inline]

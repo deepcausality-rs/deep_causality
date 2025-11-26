@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign};
+use core::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign};
 
 use crate::complex::octonion_number::Octonion;
 use crate::float::Float;

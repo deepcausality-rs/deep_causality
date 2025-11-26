@@ -1,5 +1,5 @@
-use std::iter::{Product, Sum};
-use std::ops::{Add, Div, Mul, Rem, Sub};
+use core::iter::{Product, Sum};
+use core::ops::{Add, Div, Mul, Rem, Sub};
 
 use crate::{Float, One, Zero};
 use crate::{Quaternion, QuaternionNumber};

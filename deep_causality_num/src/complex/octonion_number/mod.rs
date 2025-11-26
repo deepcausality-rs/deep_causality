@@ -75,8 +75,8 @@
 //! ```
 
 use crate::{Float, Num};
-use std::iter::{Product, Sum};
-use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
+use core::iter::{Product, Sum};
+use core::ops::{Add, Div, Mul, Neg, Rem, Sub};
 
 mod arithmetic;
 mod arithmetic_assign;

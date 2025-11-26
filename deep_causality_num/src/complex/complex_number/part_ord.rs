@@ -9,10 +9,10 @@ impl<F> PartialOrd for Complex<F>
 where
     F: Float + PartialOrd,
 {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
         match self.norm().partial_cmp(&other.norm()) {
-            Some(std::cmp::Ordering::Equal) => match self.re.partial_cmp(&other.re) {
-                Some(std::cmp::Ordering::Equal) => self.im.partial_cmp(&other.im),
+            Some(core::cmp::Ordering::Equal) => match self.re.partial_cmp(&other.re) {
+                Some(core::cmp::Ordering::Equal) => self.im.partial_cmp(&other.im),
                 other => other,
             },
             other => other,

@@ -4,7 +4,7 @@
  */
 
 use crate::{Complex, ComplexNumber, Float};
-use std::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign};
+use core::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign};
 
 // Implement AddAssign trait
 impl<F> AddAssign for Complex<F>

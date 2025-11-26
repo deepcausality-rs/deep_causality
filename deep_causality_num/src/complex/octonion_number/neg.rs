@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::ops::Neg;
+use core::ops::Neg;
 
 use crate::complex::octonion_number::Octonion;
 use crate::float::Float;

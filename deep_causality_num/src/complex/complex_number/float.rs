@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{Complex, ComplexNumber, Float, FromPrimitive, One, Zero};
-use std::num::FpCategory;
+use core::num::FpCategory;
 
 impl<F> Float for Complex<F>
 where

@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::iter::{Product, Sum};
-use std::ops::{Add, Div, Mul, Rem, Sub};
+use core::iter::{Product, Sum};
+use core::ops::{Add, Div, Mul, Rem, Sub};
 
 use crate::{Float, Octonion, OctonionNumber, One, Zero};
 

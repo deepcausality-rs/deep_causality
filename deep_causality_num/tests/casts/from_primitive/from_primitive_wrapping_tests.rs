@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use core::num::Wrapping;
 use deep_causality_num::FromPrimitive;
-use std::num::Wrapping;
 
 macro_rules! test_from {
     ($name:ident, $from_method:ident, $from_ty:ty, $to_ty:ty, $val:expr, $expected:expr) => {

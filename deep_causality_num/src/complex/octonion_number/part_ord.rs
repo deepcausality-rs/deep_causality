@@ -5,7 +5,7 @@
 
 use crate::complex::octonion_number::Octonion;
 use crate::float::Float;
-use std::cmp::Ordering;
+use core::cmp::Ordering;
 
 /// Implements the `PartialEq` trait for `Octonion`.
 ///
@@ -67,7 +67,7 @@ impl<F: Float> PartialEq<Self> for Octonion<F> {
 /// # Examples
 /// ```
 /// use deep_causality_num::Octonion;
-/// use std::cmp::Ordering;
+/// use core::cmp::Ordering;
 ///
 /// let o1 = Octonion::new(1.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 /// let o2 = Octonion::new(1.0, 3.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);

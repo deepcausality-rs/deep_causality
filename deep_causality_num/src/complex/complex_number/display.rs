@@ -4,13 +4,13 @@
  */
 
 use crate::{Complex, Float};
-use std::fmt::{Debug, Display, Formatter};
+use core::fmt::{Debug, Display, Formatter};
 
 impl<F> Display for Complex<F>
 where
     F: Float + Display + Debug,
 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         if self.im >= F::zero() {
             write!(f, "{}+{}i", self.re, self.im)
         } else {

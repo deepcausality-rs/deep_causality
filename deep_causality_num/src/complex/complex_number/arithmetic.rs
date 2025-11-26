@@ -4,8 +4,8 @@
  */
 
 use crate::{Complex, ComplexNumber, Float, Num};
-use std::iter::{Product, Sum};
-use std::ops::{Add, Div, Mul, Rem, Sub};
+use core::iter::{Product, Sum};
+use core::ops::{Add, Div, Mul, Rem, Sub};
 
 impl<F> Num for Complex<F> where F: Float {}
 

@@ -1,11 +1,9 @@
-use std::fmt::Debug;
-
-use crate::complex::quaternion_number::Quaternion;
-use crate::float::Float;
+use crate::{Float, Quaternion};
+use core::fmt::Debug;
 
 // Debug
 impl<F: Float + Debug> Debug for Quaternion<F> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("Quaternion")
             .field("w", &self.w)
             .field("x", &self.x)

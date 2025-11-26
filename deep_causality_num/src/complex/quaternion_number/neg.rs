@@ -1,7 +1,7 @@
-use std::ops::Neg;
+use core::ops::Neg;
 
-use crate::complex::quaternion_number::Quaternion;
-use crate::float::Float;
+use crate::Float;
+use crate::Quaternion;
 
 // Neg
 impl<F: Float> Neg for Quaternion<F> {

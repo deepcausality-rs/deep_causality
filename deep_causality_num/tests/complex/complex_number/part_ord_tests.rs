@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use core::cmp::Ordering;
 use deep_causality_num::{Complex, Float};
-use std::cmp::Ordering;
 
 #[test]
 fn test_partial_ord_equal() {

@@ -1,4 +1,4 @@
-use std::ops::{AddAssign, DivAssign, MulAssign, SubAssign};
+use core::ops::{AddAssign, DivAssign, MulAssign, SubAssign};
 
 use crate::complex::quaternion_number::Quaternion;
 use crate::float::Float;
@@ -11,7 +11,7 @@ impl<F: Float + AddAssign> AddAssign for Quaternion<F> {
     ///
     /// ```
     /// use deep_causality_num::Quaternion;
-    /// use std::ops::AddAssign;
+    /// use core::ops::AddAssign;
     ///
     /// let mut q1 = Quaternion::new(1.0, 2.0, 3.0, 4.0);
     /// let q2 = Quaternion::new(5.0, 6.0, 7.0, 8.0);
@@ -34,7 +34,7 @@ impl<F: Float + SubAssign> SubAssign for Quaternion<F> {
     ///
     /// ```
     /// use deep_causality_num::Quaternion;
-    /// use std::ops::SubAssign;
+    /// use core::ops::SubAssign;
     ///
     /// let mut q1 = Quaternion::new(5.0, 6.0, 7.0, 8.0);
     /// let q2 = Quaternion::new(1.0, 2.0, 3.0, 4.0);
@@ -57,7 +57,7 @@ impl<F: Float + MulAssign> MulAssign for Quaternion<F> {
     ///
     /// ```
     /// use deep_causality_num::Quaternion;
-    /// use std::ops::MulAssign;
+    /// use core::ops::MulAssign;
     ///
     /// let mut q1 = Quaternion::new(1.0, 0.0, 0.0, 0.0); // Identity
     /// let q2 = Quaternion::new(0.0, 1.0, 0.0, 0.0); // i
@@ -77,7 +77,7 @@ impl<F: Float + DivAssign> DivAssign for Quaternion<F> {
     ///
     /// ```
     /// use deep_causality_num::Quaternion;
-    /// use std::ops::DivAssign;
+    /// use core::ops::DivAssign;
     ///
     /// let mut q1 = Quaternion::new(2.0, 4.0, 6.0, 8.0);
     /// let q2 = Quaternion::new(2.0, 0.0, 0.0, 0.0);

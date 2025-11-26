@@ -1,11 +1,9 @@
-use std::fmt::Display;
-
-use crate::complex::quaternion_number::Quaternion;
-use crate::float::Float;
+use crate::{Float, Quaternion};
+use core::fmt::Display;
 
 // Display
 impl<F: Float + Display> Display for Quaternion<F> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}", self.w)?;
         write!(
             f,
