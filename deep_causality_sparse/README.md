@@ -44,8 +44,6 @@ Here are some basic examples demonstrating the core functionalities of `deep_cau
 
 ```rust
 use deep_causality_sparse::CsrMatrix;
-use deep_causality_sparse::SparseMatrixError;
-use deep_causality_num::Zero; // Required for T::zero()
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Demonstrating basic CsrMatrix operations:");
