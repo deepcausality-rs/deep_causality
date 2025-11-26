@@ -423,6 +423,13 @@ name = "deep_causality_ast"
 version = "0.1.2"
 
 [[package]]
+name = "deep_causality_core"
+version = "0.0.1"
+dependencies = [
+ "deep_causality_haft",
+]
+
+[[package]]
 name = "deep_causality_data_structures"
 version = "0.10.4"
 dependencies = [

@@ -1,0 +1,38 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+use crate::CausalPropagatingEffect;
+use crate::traits::causal_log_contract::CausalLogContract;
+use alloc::string::String;
+use core::fmt::{Debug, Display};
+
+impl<Value: Debug, Error: Debug, Log: Debug + Display + CausalLogContract>
+    CausalPropagatingEffect<Value, Error, Log>
+{
+    /// Generates a human-readable explanation of the causal computation's history.
+    ///
+    /// This method iterates over the accumulated logs, providing a comprehensive
+    /// history of the computation, including the final value and any errors.
+    ///
+    /// # Returns
+    ///
+    /// A `String` containing the formatted explanation.
+    pub fn explain(&self) -> String {
+        let mut explanation = String::new();
+
+        explanation.push_str(&format!("Final Value: {:?}\n", self.value));
+
+        if let Some(ref error) = self.error {
+            explanation.push_str(&format!("Error: {:?}\n", error));
+        }
+
+        if !self.logs.is_empty() {
+            explanation.push_str("--- Logs ---\n");
+            explanation.push_str(&format!("{}", self.logs));
+        }
+
+        explanation
+    }
+}
