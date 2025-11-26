@@ -43,6 +43,75 @@ This crate provides a reduced custom implementation of the `rust-num` main trait
 * Zero unsafe
 * Minimal macros (only used for testing)
 
+## non-std support
+
+The `deep_causality_num` crate provides support for `no-std` environments. This is particularly useful for embedded systems or other contexts where the standard library is not available. Note, the std feature is enabled by default thus you need to opt-into non-std via feature flags. 
+
+To use this crate in a `no-std` environment, you need to disable the default `std` feature and, if your application requires floating-point operations, enable the `libm_math` feature. The `libm_math` feature integrates the `libm` crate, which provides software implementations of floating-point math functions for `no-std`.
+
+### Cargo Build and Test for `no-std`
+
+**1. Building for `no-std` with Floating-Point Math:**
+
+To build the crate for `no-std` while including floating-point math support (via `libm`), use the following command:
+
+```bash
+cargo build --no-default-features --features libm_math -p deep_causality_num
+```
+
+**2. Testing for `no-std` with Floating-Point Math:**
+
+To run tests in a `no-std` environment with floating-point math support, use:
+
+```bash
+cargo test --no-default-features --features libm_math -p deep_causality_num
+```
+
+There might be minor floating precision differences between std and non-std implementations that cause some tests to fail. If you encounter these, please submit a PR with a fix. 
+
+**3. Building for `no-std` without Floating-Point Math (if not needed):**
+
+If your `no-std` application does not require floating-point operations, 
+you can build without the `libm_math` feature:
+
+```bash
+cargo build --no-default-features -p deep_causality_num
+```
+
+**4. Testing for `no-std` without Floating-Point Math (if not needed):**
+
+Similarly, to test without floating-point math functions:
+
+```bash
+cargo test --no-default-features -p deep_causality_num
+```
+
+However, this will cause about 138 tests because to fail since these tests are not configured for conditional test run because non-std without floating-point math is considered a corner case. If you need better support for this particular scenario, please open an issue.
+
+### Bazel Build
+
+For regular (std) builds, run:
+
+```bash
+   bazel build //deep_causality_num/...
+```
+ and
+
+```bash
+   bazel test //deep_causality_num/...
+```
+
+for tests. When you want to build for non-std, use
+
+```bash
+   bazel build --@rules_rust//rust/settings:no_std=alloc //deep_causality_num/...
+```
+and
+
+```bash
+   bazel test --@rules_rust//rust/settings:no_std=alloc //deep_causality_num/...
+```
+
 ## License
 
 This project is licensed under the [MIT license](LICENSE).
