@@ -15,11 +15,6 @@ keywords = ["data-structures", "sliding-window", "grid-array"]
 exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
 
-
-[dependencies.deep_causality_haft]
-path = "../deep_causality_haft"
-version = "0.2"
-
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
 version = "0.1"
