@@ -129,19 +129,19 @@ fn test_vec_mult_success() {
     // A = [[1.0, 0.0, 2.0], [0.0, 3.0, 0.0]]
 
     let x = vec![1.0, 2.0, 3.0];
-    let y = a.vec_mult(&x);
+    let y = a.vec_mult(&x).unwrap();
     // y = Ax = [(1.0*1.0 + 0.0*2.0 + 2.0*3.0), (0.0*1.0 + 3.0*2.0 + 0.0*3.0)] = [7.0, 6.0]
 
     assert_eq!(y, vec![7.0, 6.0]);
 }
 
-// #[test]
-// #[should_panic]
-// fn test_vec_mult_panic_dimension_mismatch() {
-//     let a = CsrMatrix::from_triplets(2, 3, &[(0, 0, 1.0)]).unwrap();
-//     let x = vec![1.0, 2.0]; // Incorrect length
-//     a.vec_mult(&x); // Should panic
-// }
+#[test]
+fn test_vec_mult_dimension_mismatch_error() {
+    let a = CsrMatrix::from_triplets(2, 3, &[(0, 0, 1.0)]).unwrap();
+    let x_invalid = vec![1.0, 2.0]; // Incorrect length
+    let err = a.vec_mult(&x_invalid).unwrap_err();
+    assert!(matches!(err, SparseMatrixError::DimensionMismatch(3, 2)));
+}
 
 #[test]
 fn test_mat_mult_success() {

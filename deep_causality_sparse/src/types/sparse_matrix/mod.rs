@@ -3,7 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+mod api;
 mod default;
+mod display;
 mod getters;
 mod ops;
 

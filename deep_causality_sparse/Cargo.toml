@@ -18,3 +18,7 @@ exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
 version = "0.1"
+
+[[example]]
+name = "basic_matrix_ops"
+path = "examples/basic_matrix_ops.rs"

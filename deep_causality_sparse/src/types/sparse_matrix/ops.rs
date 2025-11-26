@@ -5,7 +5,7 @@
 
 use crate::CsrMatrix;
 use crate::errors::SparseMatrixError;
-use deep_causality_num::{One, Zero};
+use deep_causality_num::Zero;
 use std::ops::{Mul, Sub};
 
 impl<T> CsrMatrix<T>
@@ -50,7 +50,7 @@ where
     /// assert_eq!(c.get_value_at(1, 0), 4.0);
     /// assert_eq!(c.get_value_at(1, 1), 2.0);
     /// ```
-    pub fn add_matrix(&self, other: &Self) -> Result<Self, SparseMatrixError> {
+    pub(crate) fn add_matrix_impl(&self, other: &Self) -> Result<Self, SparseMatrixError> {
         if self.shape != other.shape {
             return Err(SparseMatrixError::ShapeMismatch(self.shape, other.shape));
         }
@@ -127,6 +127,74 @@ where
             shape: (rows, cols),
         })
     }
+
+    /// Computes the transpose of the matrix: \( B = A^T \).
+    ///
+    /// Given a matrix \( A \) of shape \( m \times n \), its transpose \( B \) is a matrix
+    /// of shape \( n \times m \), where the rows of \( A \) become the columns of \( B \)
+    /// and the columns of \( A \) become the rows of \( B \). Formally,
+    /// \( B_{ij} = A_{ji} \).
+    ///
+    /// Returns a new `CsrMatrix` representing the transpose.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use deep_causality_sparse::CsrMatrix;
+    /// use deep_causality_num::Zero;
+    ///
+    /// let a = CsrMatrix::from_triplets(2, 3, &[(0, 0, 1.0), (0, 2, 2.0), (1, 1, 3.0)]).unwrap();
+    /// // A (2x3) = [[1.0, 0.0, 2.0], [0.0, 3.0, 0.0]]
+    ///
+    /// let a_t = a.transpose();
+    /// // A^T (3x2) = [[1.0, 0.0], [0.0, 3.0], [2.0, 0.0]]
+    ///
+    /// assert_eq!(a_t.shape(), (3, 2));
+    /// assert_eq!(a_t.get_value_at(0, 0), 1.0);
+    /// assert_eq!(a_t.get_value_at(1, 1), 3.0);
+    /// assert_eq!(a_t.get_value_at(2, 0), 2.0);
+    /// ```
+    pub(crate) fn transpose_impl(&self) -> Self {
+        let (rows, cols) = self.shape;
+        let num_elements = self.values.len();
+
+        let mut b_col_indices = vec![0; num_elements];
+        let mut b_values = vec![T::default(); num_elements]; // Use T::default() here
+        let mut b_row_ptrs = vec![0; cols + 1];
+
+        // Count elements per column in original matrix (which will be rows in transpose)
+        for &col_idx in self.col_indices.iter() {
+            b_row_ptrs[col_idx + 1] += 1;
+        }
+
+        // Cumulative sum to get row pointers for transpose
+        for i in 0..cols {
+            b_row_ptrs[i + 1] += b_row_ptrs[i];
+        }
+
+        // Fill col_indices and values for transpose
+        let mut current_pos = b_row_ptrs.clone(); // Use as write pointers for each row
+        for i in 0..rows {
+            let start = self.row_indices[i];
+            let end = self.row_indices[i + 1];
+
+            for k in start..end {
+                let col = self.col_indices[k];
+                let val = self.values[k];
+
+                b_col_indices[current_pos[col]] = i; // Original row becomes new column
+                b_values[current_pos[col]] = val;
+                current_pos[col] += 1;
+            }
+        }
+
+        Self {
+            row_indices: b_row_ptrs,
+            col_indices: b_col_indices,
+            values: b_values,
+            shape: (cols, rows), // Transposed shape
+        }
+    }
 }
 
 impl<T> CsrMatrix<T>
@@ -171,7 +239,7 @@ where
     /// assert_eq!(c.get_value_at(1, 0), 0.0);
     /// assert_eq!(c.get_value_at(1, 1), 2.0);
     /// ```
-    pub fn sub_matrix(&self, other: &Self) -> Result<Self, SparseMatrixError> {
+    pub(crate) fn sub_matrix_impl(&self, other: &Self) -> Result<Self, SparseMatrixError> {
         if self.shape != other.shape {
             return Err(SparseMatrixError::ShapeMismatch(self.shape, other.shape));
         }
@@ -281,7 +349,7 @@ where
     /// assert_eq!(c.get_value_at(0, 0), 3.0);
     /// assert_eq!(c.get_value_at(1, 1), 6.0);
     /// ```
-    pub fn scalar_mult(&self, scalar: T) -> Self {
+    pub(crate) fn scalar_mult_impl(&self, scalar: T) -> Self {
         let new_values: Vec<T> = self.values.iter().map(|&val| val * scalar).collect();
         Self {
             row_indices: self.row_indices.clone(),
@@ -302,10 +370,11 @@ where
     /// * `x` - The vector to multiply by. It is expected to have a length equal to the number of columns in the matrix.
     ///
     /// # Returns
-    /// A `Vec<T>` representing the resulting vector.
+    /// A `Result<Vec<T>, SparseMatrixError>` representing the resulting vector, or an error.
     ///
-    /// # Panics
-    /// Panics if the length of `x` does not match the number of columns in the matrix.
+    /// # Errors
+    /// Returns `SparseMatrixError::DimensionMismatch` if the length of `x` does not match
+    /// the number of columns in the matrix (`self.shape.1`).
     ///
     /// # Examples
     /// ```
@@ -317,12 +386,21 @@ where
     ///
     /// let x = vec![1.0, 2.0, 3.0];
     ///
-    /// let y = a.vec_mult(&x);
+    /// let y = a.vec_mult(&x).unwrap();
     /// // y = Ax = [(1.0*1.0 + 0.0*2.0 + 2.0*3.0), (0.0*1.0 + 3.0*2.0 + 0.0*3.0)] = [7.0, 6.0]
     ///
     /// assert_eq!(y, vec![7.0, 6.0]);
+    ///
+    /// // Example of error handling
+    /// let x_invalid = vec![1.0, 2.0]; // Incorrect length
+    /// let err = a.vec_mult(&x_invalid).unwrap_err();
+    /// assert!(matches!(err, deep_causality_sparse::SparseMatrixError::DimensionMismatch(3, 2)));
     /// ```
-    pub fn vec_mult(&self, x: &[T]) -> Vec<T> {
+    pub(crate) fn vec_mult_impl(&self, x: &[T]) -> Result<Vec<T>, SparseMatrixError> {
+        if x.len() != self.shape.1 {
+            return Err(SparseMatrixError::DimensionMismatch(self.shape.1, x.len()));
+        }
+
         let rows = self.shape.0;
         let mut y = Vec::with_capacity(rows);
 
@@ -335,12 +413,13 @@ where
             // This loop is highly vectorizable due to SoA layout
             for j in start..end {
                 let col = self.col_indices[j];
+                // Since we've already checked x.len() == self.shape.1, x[col] is guaranteed to be in bounds.
                 let val = self.values[j];
                 sum = sum + (val * x[col]);
             }
             y.push(sum);
         }
-        y
+        Ok(y)
     }
 
     /// Performs matrix multiplication: \( C = A \cdot B \).
@@ -383,7 +462,7 @@ where
     /// assert_eq!(c.get_value_at(1, 0), 0.0);
     /// assert_eq!(c.get_value_at(1, 1), 15.0);
     /// ```
-    pub fn mat_mult(&self, other: &Self) -> Result<Self, SparseMatrixError> {
+    pub(crate) fn mat_mult_impl(&self, other: &Self) -> Result<Self, SparseMatrixError> {
         if self.shape.1 != other.shape.0 {
             return Err(SparseMatrixError::DimensionMismatch(
                 self.shape.1,
@@ -458,78 +537,5 @@ where
             values: new_values,
             shape: (rows, cols),
         })
-    }
-}
-
-impl<T> CsrMatrix<T>
-where
-    T: Copy + Zero + One + PartialEq + Default,
-{
-    /// Computes the transpose of the matrix: \( B = A^T \).
-    ///
-    /// Given a matrix \( A \) of shape \( m \times n \), its transpose \( B \) is a matrix
-    /// of shape \( n \times m \), where the rows of \( A \) become the columns of \( B \)
-    /// and the columns of \( A \) become the rows of \( B \). Formally,
-    /// \( B_{ij} = A_{ji} \).
-    ///
-    /// Returns a new `CsrMatrix` representing the transpose.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use deep_causality_sparse::CsrMatrix;
-    /// use deep_causality_num::Zero;
-    ///
-    /// let a = CsrMatrix::from_triplets(2, 3, &[(0, 0, 1.0), (0, 2, 2.0), (1, 1, 3.0)]).unwrap();
-    /// // A (2x3) = [[1.0, 0.0, 2.0], [0.0, 3.0, 0.0]]
-    ///
-    /// let a_t = a.transpose();
-    /// // A^T (3x2) = [[1.0, 0.0], [0.0, 3.0], [2.0, 0.0]]
-    ///
-    /// assert_eq!(a_t.shape(), (3, 2));
-    /// assert_eq!(a_t.get_value_at(0, 0), 1.0);
-    /// assert_eq!(a_t.get_value_at(1, 1), 3.0);
-    /// assert_eq!(a_t.get_value_at(2, 0), 2.0);
-    /// ```
-    pub fn transpose(&self) -> Self {
-        let (rows, cols) = self.shape;
-        let num_elements = self.values.len();
-
-        let mut b_col_indices = vec![0; num_elements];
-        let mut b_values = vec![T::default(); num_elements]; // Use T::default() here
-        let mut b_row_ptrs = vec![0; cols + 1];
-
-        // Count elements per column in original matrix (which will be rows in transpose)
-        for &col_idx in self.col_indices.iter() {
-            b_row_ptrs[col_idx + 1] += 1;
-        }
-
-        // Cumulative sum to get row pointers for transpose
-        for i in 0..cols {
-            b_row_ptrs[i + 1] += b_row_ptrs[i];
-        }
-
-        // Fill col_indices and values for transpose
-        let mut current_pos = b_row_ptrs.clone(); // Use as write pointers for each row
-        for i in 0..rows {
-            let start = self.row_indices[i];
-            let end = self.row_indices[i + 1];
-
-            for k in start..end {
-                let col = self.col_indices[k];
-                let val = self.values[k];
-
-                b_col_indices[current_pos[col]] = i; // Original row becomes new column
-                b_values[current_pos[col]] = val;
-                current_pos[col] += 1;
-            }
-        }
-
-        Self {
-            row_indices: b_row_ptrs,
-            col_indices: b_col_indices,
-            values: b_values,
-            shape: (cols, rows), // Transposed shape
-        }
     }
 }

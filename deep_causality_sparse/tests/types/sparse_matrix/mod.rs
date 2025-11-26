@@ -5,8 +5,9 @@
 #[cfg(test)]
 mod default_tests;
 #[cfg(test)]
+mod display_tests;
+#[cfg(test)]
 mod getters_tests;
-
 #[cfg(test)]
 mod mod_tests;
 #[cfg(test)]
