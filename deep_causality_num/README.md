@@ -28,7 +28,7 @@
 Custom numerical traits with default implementation and types for
 the [DeepCausality project](http://www.deepcausality.com) based on
 the [rust-num](https://github.com/rust-num/num-traits) crate. This custom implementation is free of macros,
-free of unsafe, and compiles for std, non-std, and non-std without float support.
+free of unsafe code, free of external dependencies, and compiles for std, non-std, and non-std without float support.
 This crate supports all three complex number systems: Complex, Octonion, and Quaternion, 
 which makes it suitable for scientific computing.
 
@@ -66,10 +66,6 @@ This crate implements all three complex numerical types:
 * `Complex`
 * `Octonion`
 * `Quaternion`
-
-* Zero external dependencies
-* Zero unsafe
-* Minimal macros (only used for testing)
 
 ## non-std support
 
