@@ -5,7 +5,6 @@
 
 mod default;
 mod getters;
-mod iterators;
 mod ops;
 
 use crate::SparseMatrixError;

@@ -22,9 +22,9 @@ impl<T> CsrMatrix<T> {
     /// let matrix: CsrMatrix<f64> = CsrMatrix::from_triplets(
     ///     2, 3, &[(0, 0, 1.0), (0, 2, 2.0), (1, 1, 3.0)]
     /// ).unwrap();
-    /// assert_eq!(matrix.row_ptrs(), &vec![0, 2, 3]);
+    /// assert_eq!(matrix.row_indices(), &vec![0, 2, 3]);
     /// ```
-    pub fn row_ptrs(&self) -> &Vec<usize> {
+    pub fn row_indices(&self) -> &Vec<usize> {
         &self.row_indices
     }
 
