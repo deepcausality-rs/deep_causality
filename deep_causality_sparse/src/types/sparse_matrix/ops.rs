@@ -159,7 +159,7 @@ where
         let num_elements = self.values.len();
 
         let mut b_col_indices = vec![0; num_elements];
-        let mut b_values = vec![T::default(); num_elements]; // Use T::default() here
+        let mut b_values = vec![T::zero(); num_elements]; // Use T::zero() here
         let mut b_row_ptrs = vec![0; cols + 1];
 
         // Count elements per column in original matrix (which will be rows in transpose)

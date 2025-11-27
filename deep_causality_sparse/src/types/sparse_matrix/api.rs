@@ -173,10 +173,11 @@ where
     /// * `x` - The vector to multiply by. It is expected to have a length equal to the number of columns in the matrix.
     ///
     /// # Returns
-    /// A `Vec<T>` representing the resulting vector.
+    /// A `Result<Vec<T>, SparseMatrixError>` representing the resulting vector, or an error.
     ///
-    /// # Panics
-    /// Panics if the length of `x` does not match the number of columns in the matrix.
+    /// # Errors
+    /// Returns `SparseMatrixError::DimensionMismatch` if the length of `x` does not match
+    /// the number of columns in the matrix (`self.shape.1`).
     ///
     /// # Examples
     /// ```

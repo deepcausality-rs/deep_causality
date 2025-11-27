@@ -170,7 +170,7 @@ where
         // 3. Aggregate duplicates and build final lists
         let mut final_col_indices = Vec::new();
         let mut final_values = Vec::new();
-        let mut row_ptr_counts = vec![0; rows + 1]; // To count non-zeros per row temporarily
+        let mut nnz_per_row = vec![0; rows]; // To count non-zeros per row temporarily
 
         if processed_triplets.is_empty() {
             return Ok(Self {
@@ -196,14 +196,14 @@ where
                 // Only add if the summed value is not zero
                 final_col_indices.push(c);
                 final_values.push(v);
-                row_ptr_counts[r + 1] += 1; // Count non-zero in this row
+                nnz_per_row[r] += 1; // Count non-zero in this row
             }
         }
 
         // Convert counts to cumulative sum for row_indices
         let mut actual_row_indices = vec![0; rows + 1];
         for i in 0..rows {
-            actual_row_indices[i + 1] = actual_row_indices[i] + row_ptr_counts[i + 1];
+            actual_row_indices[i + 1] = actual_row_indices[i] + nnz_per_row[i];
         }
 
         Ok(Self {
