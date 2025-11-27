@@ -54,6 +54,9 @@ where
     fn counit<B>(lrb: L::Type<R::Type<B>>) -> B;
 }
 
+use deep_causality_num::Zero;
+use std::ops::{Add, Mul};
+
 /// The `BoundedAdjunction` trait defines a pair of adjoint functors $L$ (Left) and $R$ (Right)
 /// that require a runtime `Context` to operate.
 ///
@@ -70,7 +73,7 @@ where
     fn left_adjunct<A, B, F>(ctx: &Context, a: A, f: F) -> R::Type<B>
     where
         F: Fn(L::Type<A>) -> B,
-        A: Clone,
+        A: Clone + Zero + Copy + PartialEq,
         B: Clone;
 
     /// The Right Adjunct: $(A \to R(B)) \to (L(A) \to B)$
@@ -78,19 +81,19 @@ where
     /// using the provided context.
     fn right_adjunct<A, B, F>(ctx: &Context, la: L::Type<A>, f: F) -> B
     where
-        F: Fn(A) -> R::Type<B>,
-        A: Clone,
-        B: Clone;
+        F: FnMut(A) -> R::Type<B>,
+        A: Clone + Zero,
+        B: Clone + Zero + Add<Output = B> + Mul<Output = B>;
 
     /// The Unit of the Adjunction: $A \to R(L(A))$
     /// Embeds a value into the Right-Left context, using the provided context.
     fn unit<A>(ctx: &Context, a: A) -> R::Type<L::Type<A>>
     where
-        A: Clone;
+        A: Clone + Zero + Copy + PartialEq;
 
     /// The Counit of the Adjunction: $L(R(B)) \to B$
     /// Collapses the Left-Right context back to a value, using the provided context.
     fn counit<B>(ctx: &Context, lrb: L::Type<R::Type<B>>) -> B
     where
-        B: Clone;
+        B: Clone + Zero + Add<Output = B> + Mul<Output = B>;
 }

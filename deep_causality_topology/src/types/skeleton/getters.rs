@@ -1,0 +1,17 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+use alloc::vec::Vec;
+use crate::{Simplex, Skeleton};
+
+impl Skeleton {
+    pub fn dim(&self) -> usize {
+        self.dim
+    }
+
+    pub fn simplices(&self) -> &Vec<Simplex> {
+        &self.simplices
+    }
+}

@@ -196,6 +196,7 @@ impl BoundedComonad<CausalTensorWitness> for CausalTensorWitness {
 // Implementation of BoundedAdjunction for CausalTensorWitness
 // Context is Vec<usize> (Shape), as we need it to construct new Tensors in 'unit'.
 use deep_causality_haft::BoundedAdjunction;
+use std::ops::{Add, Mul};
 
 impl BoundedAdjunction<CausalTensorWitness, CausalTensorWitness, Vec<usize>>
     for CausalTensorWitness
@@ -203,7 +204,7 @@ impl BoundedAdjunction<CausalTensorWitness, CausalTensorWitness, Vec<usize>>
     fn left_adjunct<A, B, F>(ctx: &Vec<usize>, a: A, f: F) -> CausalTensor<B>
     where
         F: Fn(CausalTensor<A>) -> B,
-        A: Clone,
+        A: Clone + Zero + Copy + PartialEq,
         B: Clone,
     {
         // 1. Create unit: A -> Tensor<Tensor<A>>
@@ -215,9 +216,9 @@ impl BoundedAdjunction<CausalTensorWitness, CausalTensorWitness, Vec<usize>>
 
     fn right_adjunct<A, B, F>(ctx: &Vec<usize>, la: CausalTensor<A>, f: F) -> B
     where
-        F: Fn(A) -> CausalTensor<B>,
-        A: Clone,
-        B: Clone,
+        F: FnMut(A) -> CausalTensor<B>,
+        A: Clone + Zero,
+        B: Clone + Zero + Add<Output = B> + Mul<Output = B>,
     {
         let mapped = <Self as Functor<Self>>::fmap(la, f);
         Self::counit(ctx, mapped)
@@ -225,7 +226,7 @@ impl BoundedAdjunction<CausalTensorWitness, CausalTensorWitness, Vec<usize>>
 
     fn unit<A>(ctx: &Vec<usize>, a: A) -> CausalTensor<CausalTensor<A>>
     where
-        A: Clone,
+        A: Clone + Zero + Copy + PartialEq,
     {
         // Create inner tensor
         if !ctx.is_empty() {
@@ -242,7 +243,7 @@ impl BoundedAdjunction<CausalTensorWitness, CausalTensorWitness, Vec<usize>>
 
     fn counit<B>(_ctx: &Vec<usize>, lrb: CausalTensor<CausalTensor<B>>) -> B
     where
-        B: Clone,
+        B: Clone + Zero + Add<Output = B> + Mul<Output = B>,
     {
         // Flatten and Extract
         let flattened = <Self as Monad<Self>>::bind(lrb, |x| x);
