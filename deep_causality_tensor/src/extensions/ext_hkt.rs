@@ -192,3 +192,61 @@ impl BoundedComonad<CausalTensorWitness> for CausalTensorWitness {
         CausalTensor::new(new_data, fa.shape().to_vec()).expect("Shape mismatch")
     }
 }
+
+// Implementation of BoundedAdjunction for CausalTensorWitness
+// Context is Vec<usize> (Shape), as we need it to construct new Tensors in 'unit'.
+use deep_causality_haft::BoundedAdjunction;
+
+impl BoundedAdjunction<CausalTensorWitness, CausalTensorWitness, Vec<usize>>
+    for CausalTensorWitness
+{
+    fn left_adjunct<A, B, F>(ctx: &Vec<usize>, a: A, f: F) -> CausalTensor<B>
+    where
+        F: Fn(CausalTensor<A>) -> B,
+        A: Clone,
+        B: Clone,
+    {
+        // 1. Create unit: A -> Tensor<Tensor<A>>
+        let t_t_a = Self::unit(ctx, a);
+
+        // 2. Map f: Tensor<A> -> B over Tensor<Tensor<A>> to get Tensor<B>
+        <Self as Functor<Self>>::fmap(t_t_a, f)
+    }
+
+    fn right_adjunct<A, B, F>(ctx: &Vec<usize>, la: CausalTensor<A>, f: F) -> B
+    where
+        F: Fn(A) -> CausalTensor<B>,
+        A: Clone,
+        B: Clone,
+    {
+        let mapped = <Self as Functor<Self>>::fmap(la, f);
+        Self::counit(ctx, mapped)
+    }
+
+    fn unit<A>(ctx: &Vec<usize>, a: A) -> CausalTensor<CausalTensor<A>>
+    where
+        A: Clone,
+    {
+        // Create inner tensor
+        let volume: usize = ctx.iter().product();
+        if volume != 1 && !ctx.is_empty() {
+            panic!(
+                "BoundedAdjunction::unit for CausalTensor requires shape volume 1 (Scalar). Provided shape: {:?}",
+                ctx
+            );
+        }
+        let inner = CausalTensor::new(vec![a], ctx.clone()).expect("Inner tensor creation failed");
+
+        // Wrap in outer tensor (scalar wrapper)
+        CausalTensor::new(vec![inner], vec![]).expect("Outer tensor creation failed")
+    }
+
+    fn counit<B>(_ctx: &Vec<usize>, lrb: CausalTensor<CausalTensor<B>>) -> B
+    where
+        B: Clone,
+    {
+        // Flatten and Extract
+        let flattened = <Self as Monad<Self>>::bind(lrb, |x| x);
+        <Self as BoundedComonad<Self>>::extract(&flattened)
+    }
+}

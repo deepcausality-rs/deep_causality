@@ -53,3 +53,44 @@ where
     /// Collapses the Left-Right context back to a value.
     fn counit<B>(lrb: L::Type<R::Type<B>>) -> B;
 }
+
+/// The `BoundedAdjunction` trait defines a pair of adjoint functors $L$ (Left) and $R$ (Right)
+/// that require a runtime `Context` to operate.
+///
+/// This is useful when the functors depend on an environment (like a Metric, Shape, or Topology)
+/// that cannot be fully captured in the static type system.
+pub trait BoundedAdjunction<L, R, Context>
+where
+    L: HKT,
+    R: HKT,
+{
+    /// The Left Adjunct: $(L(A) \to B) \to (A \to R(B))$
+    /// Transforms a function on the "Left" structure to a function on the "Right" structure,
+    /// using the provided context.
+    fn left_adjunct<A, B, F>(ctx: &Context, a: A, f: F) -> R::Type<B>
+    where
+        F: Fn(L::Type<A>) -> B,
+        A: Clone,
+        B: Clone;
+
+    /// The Right Adjunct: $(A \to R(B)) \to (L(A) \to B)$
+    /// Transforms a function on the "Right" structure to a function on the "Left" structure,
+    /// using the provided context.
+    fn right_adjunct<A, B, F>(ctx: &Context, la: L::Type<A>, f: F) -> B
+    where
+        F: Fn(A) -> R::Type<B>,
+        A: Clone,
+        B: Clone;
+
+    /// The Unit of the Adjunction: $A \to R(L(A))$
+    /// Embeds a value into the Right-Left context, using the provided context.
+    fn unit<A>(ctx: &Context, a: A) -> R::Type<L::Type<A>>
+    where
+        A: Clone;
+
+    /// The Counit of the Adjunction: $L(R(B)) \to B$
+    /// Collapses the Left-Right context back to a value, using the provided context.
+    fn counit<B>(ctx: &Context, lrb: L::Type<R::Type<B>>) -> B
+    where
+        B: Clone;
+}

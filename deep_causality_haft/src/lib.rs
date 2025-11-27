@@ -60,7 +60,7 @@ pub use crate::core::hkt_unbound::{
 };
 
 // Algebraic Traits
-pub use crate::algebra::adjunction::Adjunction;
+pub use crate::algebra::adjunction::{Adjunction, BoundedAdjunction};
 pub use crate::algebra::applicative::Applicative;
 pub use crate::algebra::bifunctor::Bifunctor;
 pub use crate::algebra::comonad::{BoundedComonad, CoMonad};
