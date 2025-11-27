@@ -13,7 +13,7 @@ use crate::SparseMatrixError;
 use deep_causality_num::Zero;
 
 /// A Compressed Sparse Row Matrix.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct CsrMatrix<T> {
     pub(crate) row_indices: Vec<usize>,
     pub(crate) col_indices: Vec<usize>,

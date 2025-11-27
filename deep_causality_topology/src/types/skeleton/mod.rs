@@ -10,6 +10,8 @@ use crate::types::simplex::Simplex;
 use alloc::vec::Vec;
 
 /// A collection of all simplices of dimension K.
+#[derive(Debug, Clone, PartialEq)]
+
 pub struct Skeleton {
     pub(crate) dim: usize,
     /// Canonical list of simplices. The index in this vector is the "Global ID".

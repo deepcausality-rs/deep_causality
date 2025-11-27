@@ -33,3 +33,4 @@ pub use crate::types::simplex::Simplex;
 pub use crate::types::simplicial_complex::SimplicialComplex;
 pub use crate::types::skeleton::Skeleton;
 pub use crate::types::topology::Topology;
+pub use crate::types::manifold::Manifold;
