@@ -16,6 +16,10 @@ pub struct ReggeGeometry {
 }
 
 impl ReggeGeometry {
+    pub fn new(edge_lengths: CausalTensor<f64>) -> Self {
+        ReggeGeometry { edge_lengths }
+    }
+
     /// Computes the Riemannian Metric for a specific simplex.
     /// Used to initialize CausalMultiVector with correct signature.
     pub fn metric_at(&self, complex: &SimplicialComplex, grade: usize, index: usize) -> Metric {

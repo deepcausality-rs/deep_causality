@@ -34,8 +34,8 @@ impl<T> ManifoldTopology for Manifold<T> {
                 let start = row_indices[r];
                 let end = row_indices[r + 1];
                 let mut sum: i8 = 0;
-                for i in start..end {
-                    sum += values[i];
+                for &val in &values[start..end] {
+                    sum += val;
                 }
 
                 // Sum must be 0 (internal) or 1/-1 (boundary).

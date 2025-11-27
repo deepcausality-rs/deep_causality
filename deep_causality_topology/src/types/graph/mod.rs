@@ -39,7 +39,11 @@ where
     T: Default + Copy + Clone + PartialEq + Zero,
 {
     /// Creates a new empty `Graph` with a specified number of vertices.
-    pub fn new(num_vertices: usize, data: CausalTensor<T>, cursor: usize) -> Result<Self, TopologyError> {
+    pub fn new(
+        num_vertices: usize,
+        data: CausalTensor<T>,
+        cursor: usize,
+    ) -> Result<Self, TopologyError> {
         if num_vertices == 0 {
             return Err(TopologyError::InvalidInput(
                 "Graph must have at least one vertex".to_string(),
@@ -117,7 +121,7 @@ where
         Ok(self
             .adjacencies
             .get(&u)
-            .map_or(false, |neighbors| neighbors.contains(&v)))
+            .is_some_and(|neighbors| neighbors.contains(&v)))
     }
 
     /// Returns a reference to the neighbors of a given vertex.

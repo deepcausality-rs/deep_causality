@@ -5,10 +5,10 @@
 
 //! Test utilities for deep_causality_topology tests
 
+use crate::{Simplex, SimplicialComplex, Skeleton};
 use deep_causality_num::Zero;
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
-use crate::{Simplex, SimplicialComplex, Skeleton};
 
 /// Creates a simple triangle (2-simplex) simplicial complex
 /// Vertices: 0, 1, 2
@@ -59,13 +59,15 @@ pub fn create_triangle_complex() -> SimplicialComplex {
     )
     .unwrap();
 
-    let mut boundary_ops = vec![];
-    boundary_ops.push(d1);
-    boundary_ops.push(d2);
+    let boundary_ops = vec![d1, d2];
 
-    let mut coboundary_ops = vec![];
+    let coboundary_ops = vec![];
 
-    SimplicialComplex::new(vec![skeleton_0, skeleton_1, skeleton_2], boundary_ops, coboundary_ops)
+    SimplicialComplex::new(
+        vec![skeleton_0, skeleton_1, skeleton_2],
+        boundary_ops,
+        coboundary_ops,
+    )
 }
 
 /// Creates a tensor with default values for testing

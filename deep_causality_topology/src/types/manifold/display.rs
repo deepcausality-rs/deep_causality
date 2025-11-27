@@ -12,7 +12,11 @@ impl<T> fmt::Display for Manifold<T> {
             f,
             "Manifold {{ dimension: {}, simplices: {} }}",
             self.complex.skeletons.last().map(|s| s.dim).unwrap_or(0),
-            self.complex.skeletons.iter().map(|s| s.simplices.len()).sum::<usize>()
+            self.complex
+                .skeletons
+                .iter()
+                .map(|s| s.simplices.len())
+                .sum::<usize>()
         )
     }
 }

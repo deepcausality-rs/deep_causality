@@ -72,7 +72,7 @@ where
         // For validation, we need to use ManifoldTopology methods
         // Create a temporary manifold with default data to access trait methods
         // This is a bit circular, but necessary for validation
-        
+
         // Basic check: complex must have at least one skeleton
         if complex.skeletons.is_empty() {
             return false;
@@ -80,7 +80,11 @@ where
 
         // For a proper manifold, we need non-trivial structure
         // At minimum, need vertices (0-skeleton)
-        let num_vertices = complex.skeletons.first().map(|s| s.simplices.len()).unwrap_or(0);
+        let num_vertices = complex
+            .skeletons
+            .first()
+            .map(|s| s.simplices.len())
+            .unwrap_or(0);
         if num_vertices == 0 {
             return false;
         }

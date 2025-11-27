@@ -1,10 +1,6 @@
-/*
- * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
- */
-
 use crate::{Chain, SimplicialComplex};
 use alloc::vec::Vec;
+use core::fmt::Debug;
 use deep_causality_num::Num;
 use deep_causality_sparse::CsrMatrix;
 
@@ -13,15 +9,15 @@ impl SimplicialComplex {
     /// Maps a k-chain to a (k-1)-chain.
     pub fn boundary<T>(&self, chain: &Chain<T>) -> Chain<T>
     where
-        T: Copy + Num + Default + From<i8>,
+        T: Copy + Num + Default + From<i8> + Debug,
     {
         if chain.grade == 0 {
             panic!("Cannot take boundary of 0-chain");
         }
 
-        let boundary_op = &self.boundary_operators[chain.grade]; // This is N_{k-1} x N_k
+        // This is N_{k-1} x N_k
+        let boundary_op = &self.boundary_operators[chain.grade - 1];
         let k_minus_1_size = self.skeletons[chain.grade - 1].simplices.len();
-
         let mut new_triplets = Vec::new();
 
         // Manual mat-vec mul: v_out = M * v_in
@@ -54,6 +50,8 @@ impl SimplicialComplex {
         }
 
         let new_weights = CsrMatrix::from_triplets(1, k_minus_1_size, &new_triplets).unwrap();
+
+        eprintln!("DEBUG: new_weights= {:?}", &new_weights); // New debug print
 
         Chain {
             complex: chain.complex.clone(),
