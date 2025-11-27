@@ -10,8 +10,7 @@ mod getters;
 mod ops;
 
 use crate::SparseMatrixError;
-use deep_causality_num::{One, Zero};
-use std::ops::{Add, Mul, Sub};
+use deep_causality_num::Zero;
 
 /// A Compressed Sparse Row Matrix.
 #[derive(Clone, Debug)]
@@ -83,15 +82,7 @@ impl<T> CsrMatrix<T> {
 }
 impl<T> CsrMatrix<T>
 where
-    T: Copy
-        + Clone
-        + Mul<Output = T>
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Zero
-        + One
-        + PartialEq
-        + Default,
+    T: Copy + Zero + PartialEq,
 {
     /// Creates a new `CsrMatrix` from a list of `(row, col, value)` triplets.
     ///

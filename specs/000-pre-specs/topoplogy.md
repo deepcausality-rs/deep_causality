@@ -13,7 +13,7 @@
 deep_causality_haft = { path = "../haft" }        # Traits: BoundedComonad, Adjunction
 deep_causality_tensor = { path = "../tensor" }    # Data Storage
 deep_causality_multivector = { path = "../multivector" } # Metric/Algebra
-deep_causality_data_structures = { path = "../deep_causality_data_structures" }    # CSR Matrices
+deep_causality_sparse = { path = "../deep_causality_sparse" }    # CSR Matrices
 ```
 
 ---

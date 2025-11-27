@@ -319,7 +319,7 @@ where
 
 impl<T> CsrMatrix<T>
 where
-    T: Copy + Mul<Output = T> + Zero + PartialEq + Default,
+    T: Copy + Clone + Mul<Output = T> + Zero + PartialEq + Default,
 {
     /// Performs scalar multiplication: \( B = s \cdot A \).
     ///
