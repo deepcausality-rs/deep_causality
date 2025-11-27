@@ -5,6 +5,7 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 extern crate alloc;
+extern crate core;
 
 mod errors;
 mod extensions;
@@ -15,6 +16,7 @@ mod types;
 pub use crate::errors::topology_error::TopologyError;
 
 // Re-export extensions
+pub use extensions::hkt_hypergraph::HypergraphWitness;
 pub use extensions::hkt_manifold::ManifoldWitness;
 pub use extensions::hkt_point_cloud::PointCloudWitness;
 pub use extensions::hkt_witness::CausalTopologyWitness;
@@ -28,6 +30,7 @@ pub use crate::traits::simplicial_topology::SimplicialTopology;
 
 // Re-export types
 pub use crate::types::chain::Chain;
+pub use crate::types::hypergraph::Hypergraph;
 pub use crate::types::manifold::Manifold;
 pub use crate::types::point_cloud::PointCloud;
 pub use crate::types::regge_geometry::ReggeGeometry;

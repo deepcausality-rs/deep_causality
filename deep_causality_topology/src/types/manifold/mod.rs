@@ -6,6 +6,7 @@ use deep_causality_tensor::CausalTensor;
 
 mod base_topology;
 mod clone;
+mod display;
 mod getters;
 mod manifold_topology;
 mod simplicial_topology;

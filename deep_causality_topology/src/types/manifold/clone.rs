@@ -11,8 +11,7 @@ where
 {
     /// Creates a shallow clone of the Manifold.
     pub fn clone_shallow(&self) -> Self
-where
-    {
+where {
         Manifold {
             complex: self.complex.clone(),
             data: self.data.clone(),

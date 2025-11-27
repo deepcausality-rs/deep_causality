@@ -69,7 +69,11 @@ impl<T> ManifoldTopology for Manifold<T> {
             .first()
             .map(|s| s.simplices.len())
             .unwrap_or(0);
-        let sphere_chi = 1 + if (max_dim - 1).is_multiple_of(2) { 1 } else { -1 };
+        let sphere_chi = 1 + if (max_dim - 1).is_multiple_of(2) {
+            1
+        } else {
+            -1
+        };
         let disk_chi = 1;
 
         for v_idx in 0..num_vertices {
