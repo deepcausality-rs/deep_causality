@@ -16,6 +16,7 @@ mod types;
 pub use crate::errors::topology_error::TopologyError;
 
 // Re-export extensions
+pub use extensions::hkt_graph::GraphWitness;
 pub use extensions::hkt_hypergraph::HypergraphWitness;
 pub use extensions::hkt_manifold::ManifoldWitness;
 pub use extensions::hkt_point_cloud::PointCloudWitness;
@@ -30,6 +31,7 @@ pub use crate::traits::simplicial_topology::SimplicialTopology;
 
 // Re-export types
 pub use crate::types::chain::Chain;
+pub use crate::types::graph::Graph;
 pub use crate::types::hypergraph::Hypergraph;
 pub use crate::types::manifold::Manifold;
 pub use crate::types::point_cloud::PointCloud;
