@@ -3,13 +3,16 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::Manifold;
-use core::fmt::{Display, Formatter};
+use core::fmt;
+use core::fmt::Formatter;
 
-impl<T> Display for Manifold<T>
-where
-    T: Display,
-{
+impl<T> fmt::Display for Manifold<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
-        todo!()
+        write!(
+            f,
+            "Manifold {{ dimension: {}, simplices: {} }}",
+            self.complex.skeletons.last().map(|s| s.dim).unwrap_or(0),
+            self.complex.skeletons.iter().map(|s| s.simplices.len()).sum::<usize>()
+        )
     }
 }

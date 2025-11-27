@@ -1,6 +1,6 @@
 use alloc::string::ToString;
 
-use crate::{SimplicialComplex, TopologyError};
+use crate::{ManifoldTopology, SimplicialComplex, TopologyError};
 use deep_causality_num::Zero;
 use deep_causality_tensor::CausalTensor;
 
@@ -67,8 +67,48 @@ where
     }
 
     /// Internal helper function to determine if a `SimplicialComplex` is a manifold.
-    fn check_is_manifold(_complex: &SimplicialComplex) -> bool {
-        // Placeholder for actual manifold validation logic.
+    /// Uses the ManifoldTopology trait methods to perform validation.
+    fn check_is_manifold(complex: &SimplicialComplex) -> bool {
+        // For validation, we need to use ManifoldTopology methods
+        // Create a temporary manifold with default data to access trait methods
+        // This is a bit circular, but necessary for validation
+        
+        // Basic check: complex must have at least one skeleton
+        if complex.skeletons.is_empty() {
+            return false;
+        }
+
+        // For a proper manifold, we need non-trivial structure
+        // At minimum, need vertices (0-skeleton)
+        let num_vertices = complex.skeletons.first().map(|s| s.simplices.len()).unwrap_or(0);
+        if num_vertices == 0 {
+            return false;
+        }
+
+        // Create temporary data for validation (just checking structure, not data)
+        let temp_data = match CausalTensor::new(vec![0i8; num_vertices], vec![num_vertices]) {
+            Ok(d) => d,
+            Err(_) => return false,
+        };
+
+        // Create temp manifold to access trait methods
+        let temp_manifold = Manifold {
+            complex: complex.clone(),
+            data: temp_data,
+            cursor: 0,
+        };
+
+        // A manifold must be oriented
+        if !temp_manifold.is_oriented() {
+            return false;
+        }
+
+        // A manifold must satisfy the link condition
+        if !temp_manifold.satisfies_link_condition() {
+            return false;
+        }
+
+        // All checks passed
         true
     }
 }
