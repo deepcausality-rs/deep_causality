@@ -5,15 +5,11 @@
 
 use crate::{BaseTopology, Manifold};
 
-impl BaseTopology for Manifold {
+impl<T> BaseTopology for Manifold<T> {
     fn dimension(&self) -> usize {
         // The dimension of the complex is the dimension of the highest-dimensional skeleton.
         // We assume skeletons are ordered by dimension.
-        self.complex
-            .skeletons
-            .last()
-            .map(|s| s.dim)
-            .unwrap_or(0)
+        self.complex.skeletons.last().map(|s| s.dim).unwrap_or(0)
     }
 
     fn len(&self) -> usize {
@@ -27,6 +23,10 @@ impl BaseTopology for Manifold {
 
     fn num_elements_at_grade(&self, grade: usize) -> Option<usize> {
         // We assume skeletons[grade] corresponds to the skeleton of that dimension.
-        self.complex.skeletons.iter().find(|s| s.dim == grade).map(|s| s.simplices.len())
+        self.complex
+            .skeletons
+            .iter()
+            .find(|s| s.dim == grade)
+            .map(|s| s.simplices.len())
     }
 }

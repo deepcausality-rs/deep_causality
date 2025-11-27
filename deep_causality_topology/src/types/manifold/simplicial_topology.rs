@@ -1,12 +1,6 @@
-/*
- * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
- */
-
 use crate::{Manifold, Simplex, SimplicialTopology, TopologyError};
 
-
-impl SimplicialTopology for Manifold {
+impl<T> SimplicialTopology for Manifold<T> {
     fn max_simplex_dimension(&self) -> usize {
         self.complex
             .skeletons

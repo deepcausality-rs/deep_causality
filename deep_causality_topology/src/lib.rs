@@ -15,6 +15,7 @@ mod types;
 pub use crate::errors::topology_error::TopologyError;
 
 // Re-export extensions
+pub use extensions::hkt_manifold::ManifoldWitness;
 pub use extensions::hkt_point_cloud::PointCloudWitness;
 pub use extensions::hkt_witness::CausalTopologyWitness;
 
@@ -27,10 +28,10 @@ pub use crate::traits::simplicial_topology::SimplicialTopology;
 
 // Re-export types
 pub use crate::types::chain::Chain;
+pub use crate::types::manifold::Manifold;
 pub use crate::types::point_cloud::PointCloud;
 pub use crate::types::regge_geometry::ReggeGeometry;
 pub use crate::types::simplex::Simplex;
 pub use crate::types::simplicial_complex::SimplicialComplex;
 pub use crate::types::skeleton::Skeleton;
 pub use crate::types::topology::Topology;
-pub use crate::types::manifold::Manifold;

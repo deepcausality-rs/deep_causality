@@ -5,7 +5,7 @@
 
 use crate::{Manifold, ManifoldTopology, SimplicialTopology};
 
-impl ManifoldTopology for Manifold {
+impl<T> ManifoldTopology for Manifold<T> {
     fn is_oriented(&self) -> bool {
         // Check consistency of orientation using boundary operators.
         // For the highest dimension n, the boundary of every n-simplex is a sum of (n-1)-simplices.
@@ -63,8 +63,13 @@ impl ManifoldTopology for Manifold {
             return true; // 0-manifold (points) satisfies link condition trivially?
         }
 
-        let num_vertices = self.complex.skeletons.first().map(|s| s.simplices.len()).unwrap_or(0);
-        let sphere_chi = 1 + if (max_dim - 1) % 2 == 0 { 1 } else { -1 };
+        let num_vertices = self
+            .complex
+            .skeletons
+            .first()
+            .map(|s| s.simplices.len())
+            .unwrap_or(0);
+        let sphere_chi = 1 + if (max_dim - 1).is_multiple_of(2) { 1 } else { -1 };
         let disk_chi = 1;
 
         for v_idx in 0..num_vertices {
@@ -73,7 +78,9 @@ impl ManifoldTopology for Manifold {
             // Iterate over all skeletons to find simplices containing v_idx
             for skeleton in &self.complex.skeletons {
                 let dim = skeleton.dim;
-                if dim == 0 { continue; } // Vertices don't contribute to their own link's chi in this formula
+                if dim == 0 {
+                    continue;
+                } // Vertices don't contribute to their own link's chi in this formula
 
                 for simplex in &skeleton.simplices {
                     // Check if simplex contains vertex v_idx

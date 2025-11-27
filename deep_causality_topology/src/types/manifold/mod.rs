@@ -5,6 +5,8 @@ use deep_causality_num::Zero;
 use deep_causality_tensor::CausalTensor;
 
 mod base_topology;
+mod clone;
+mod getters;
 mod manifold_topology;
 mod simplicial_topology;
 
@@ -31,7 +33,11 @@ where
     /// # Errors
     /// Returns `Err(TopologyError::ManifoldError)` if the input `SimplicialComplex`
     /// does not meet the requirements to be classified as a manifold.
-    pub fn new(complex: SimplicialComplex, data: CausalTensor<T>, cursor: usize) -> Result<Self, TopologyError> {
+    pub fn new(
+        complex: SimplicialComplex,
+        data: CausalTensor<T>,
+        cursor: usize,
+    ) -> Result<Self, TopologyError> {
         // Validation: Check data size matches complex
         let expected_size = complex.skeletons.iter().map(|s| s.simplices.len()).sum();
         if data.len() != expected_size {
@@ -45,41 +51,23 @@ where
                 "Initial cursor out of bounds for Manifold".to_string(),
             ));
         }
-        
+
         if !Self::check_is_manifold(&complex) {
-             return Err(TopologyError::ManifoldError(
+            return Err(TopologyError::ManifoldError(
                 "SimplicialComplex does not satisfy manifold properties".to_string(),
             ));
         }
 
-        Ok(Self { complex, data, cursor })
+        Ok(Self {
+            complex,
+            data,
+            cursor,
+        })
     }
 
     /// Internal helper function to determine if a `SimplicialComplex` is a manifold.
     fn check_is_manifold(_complex: &SimplicialComplex) -> bool {
         // Placeholder for actual manifold validation logic.
-        true 
-    }
-
-    /// Provides access to the underlying `SimplicialComplex`.
-    pub fn complex(&self) -> &SimplicialComplex {
-        &self.complex
-    }
-
-    /// Returns the current cursor position.
-    pub fn cursor(&self) -> usize {
-        self.cursor
-    }
-
-    /// Creates a shallow clone of the Manifold.
-    pub fn clone_shallow(&self) -> Self
-    where
-        T: Clone,
-    {
-        Manifold {
-            complex: self.complex.clone(),
-            data: self.data.clone(),
-            cursor: 0,
-        }
+        true
     }
 }
