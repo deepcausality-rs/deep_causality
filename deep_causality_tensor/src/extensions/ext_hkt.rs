@@ -228,10 +228,9 @@ impl BoundedAdjunction<CausalTensorWitness, CausalTensorWitness, Vec<usize>>
         A: Clone,
     {
         // Create inner tensor
-        let volume: usize = ctx.iter().product();
-        if volume != 1 && !ctx.is_empty() {
+        if !ctx.is_empty() {
             panic!(
-                "BoundedAdjunction::unit for CausalTensor requires shape volume 1 (Scalar). Provided shape: {:?}",
+                "BoundedAdjunction::unit for CausalTensor requires an empty shape vector (Scalar). Provided shape: {:?}",
                 ctx
             );
         }
