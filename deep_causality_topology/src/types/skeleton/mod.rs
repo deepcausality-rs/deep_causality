@@ -1,3 +1,11 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+mod display;
+mod getters;
+
 use crate::types::simplex::Simplex;
 use alloc::vec::Vec;
 
@@ -11,16 +19,6 @@ pub struct Skeleton {
 impl Skeleton {
     pub fn new(dim: usize, simplices: Vec<Simplex>) -> Self {
         Self { dim, simplices }
-    }
-}
-
-impl Skeleton {
-    pub fn dim(&self) -> usize {
-        self.dim
-    }
-
-    pub fn simplices(&self) -> &Vec<Simplex> {
-        &self.simplices
     }
 }
 

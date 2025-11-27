@@ -1,4 +1,9 @@
-#![no_std]
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+#![cfg_attr(not(feature = "std"), no_std)]
 extern crate alloc;
 
 mod errors;
@@ -6,15 +11,25 @@ mod extensions;
 mod traits;
 mod types;
 
+// Re-export errors
+pub use crate::errors::topology_error::TopologyError;
+
 // Re-export extensions
-pub use extensions::bounded_adjunction::CausalTopologyWitness as BoundedAdjacencyWitness;
-pub use extensions::bounded_adjunction::ChainWitness;
-pub use extensions::bounded_comonad::CausalTopologyWitness as BoundedComonadWitness;
+pub use extensions::hkt_point_cloud::PointCloudWitness;
+pub use extensions::hkt_witness::CausalTopologyWitness;
+
+// Re-export traits
+pub use crate::traits::base_topology::BaseTopology;
+pub use crate::traits::graph_topology::GraphTopology;
+pub use crate::traits::hypergraph_topology::HypergraphTopology;
+pub use crate::traits::manifold_topology::ManifoldTopology;
+pub use crate::traits::simplicial_topology::SimplicialTopology;
 
 // Re-export types
-pub use types::chain::Chain;
-pub use types::regge_geometry::ReggeGeometry;
-pub use types::simplex::Simplex;
-pub use types::simplicial_complex::SimplicialComplex;
-pub use types::skeleton::Skeleton;
-pub use types::topology::Topology;
+pub use crate::types::chain::Chain;
+pub use crate::types::point_cloud::PointCloud;
+pub use crate::types::regge_geometry::ReggeGeometry;
+pub use crate::types::simplex::Simplex;
+pub use crate::types::simplicial_complex::SimplicialComplex;
+pub use crate::types::skeleton::Skeleton;
+pub use crate::types::topology::Topology;

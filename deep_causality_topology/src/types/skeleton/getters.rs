@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use alloc::vec::Vec;
 use crate::{Simplex, Skeleton};
+use alloc::vec::Vec;
 
 impl Skeleton {
     pub fn dim(&self) -> usize {
