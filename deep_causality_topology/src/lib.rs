@@ -12,6 +12,9 @@ mod extensions;
 mod traits;
 mod types;
 
+#[cfg(test)]
+pub mod utils_tests;
+
 // Re-export errors
 pub use crate::errors::topology_error::TopologyError;
 
