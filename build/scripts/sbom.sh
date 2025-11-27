@@ -18,6 +18,7 @@ CRATES=(
     "deep_causality_multivector"
     "deep_causality_num"
     "deep_causality_rand"
+    "deep_causality_sparse"
     "deep_causality_tensor"
     "deep_causality_uncertain"
     "ultragraph"

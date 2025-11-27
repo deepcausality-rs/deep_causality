@@ -18,6 +18,7 @@ buildifier -r deep_causality_macros/
 buildifier -r deep_causality_multivector/
 buildifier -r deep_causality_num/
 buildifier -r deep_causality_rand/
+buildifier -r deep_causality_sparse/
 buildifier -r deep_causality_tensor/
 buildifier -r deep_causality_uncertain/
 buildifier -r examples/
