@@ -18,11 +18,12 @@ pub mod utils_tests;
 pub use crate::errors::topology_error::TopologyError;
 
 // Re-export extensions
-pub use extensions::hkt_graph::GraphWitness;
-pub use extensions::hkt_hypergraph::HypergraphWitness;
-pub use extensions::hkt_manifold::ManifoldWitness;
-pub use extensions::hkt_point_cloud::PointCloudWitness;
-pub use extensions::hkt_witness::CausalTopologyWitness;
+pub use crate::extensions::hkt_graph::GraphWitness;
+pub use crate::extensions::hkt_hypergraph::HypergraphWitness;
+pub use crate::extensions::hkt_manifold::ManifoldWitness;
+pub use crate::extensions::hkt_point_cloud::PointCloudWitness;
+pub use crate::extensions::hkt_simplicial_complex::ChainWitness;
+pub use crate::extensions::hkt_topology::TopologyWitness;
 
 // Re-export traits
 pub use crate::traits::base_topology::BaseTopology;
