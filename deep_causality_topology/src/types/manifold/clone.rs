@@ -10,8 +10,7 @@ where
     T: Clone,
 {
     /// Creates a shallow clone of the Manifold.
-    pub fn clone_shallow(&self) -> Self
-where {
+    pub fn clone_shallow(&self) -> Self {
         Manifold {
             complex: self.complex.clone(),
             data: self.data.clone(),

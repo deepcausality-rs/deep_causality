@@ -51,8 +51,6 @@ impl SimplicialComplex {
 
         let new_weights = CsrMatrix::from_triplets(1, k_minus_1_size, &new_triplets).unwrap();
 
-        eprintln!("DEBUG: new_weights= {:?}", &new_weights); // New debug print
-
         Chain {
             complex: chain.complex.clone(),
             grade: chain.grade - 1,

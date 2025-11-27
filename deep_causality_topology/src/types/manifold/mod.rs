@@ -1,6 +1,6 @@
 use alloc::string::ToString;
 
-use crate::{ManifoldTopology, SimplicialComplex, TopologyError};
+use crate::{SimplicialComplex, TopologyError};
 use deep_causality_num::Zero;
 use deep_causality_tensor::CausalTensor;
 
@@ -8,6 +8,7 @@ mod base_topology;
 mod clone;
 mod display;
 mod getters;
+mod manifold_checks;
 mod manifold_topology;
 mod simplicial_topology;
 
@@ -69,10 +70,6 @@ where
     /// Internal helper function to determine if a `SimplicialComplex` is a manifold.
     /// Uses the ManifoldTopology trait methods to perform validation.
     fn check_is_manifold(complex: &SimplicialComplex) -> bool {
-        // For validation, we need to use ManifoldTopology methods
-        // Create a temporary manifold with default data to access trait methods
-        // This is a bit circular, but necessary for validation
-
         // Basic check: complex must have at least one skeleton
         if complex.skeletons.is_empty() {
             return false;
@@ -89,26 +86,13 @@ where
             return false;
         }
 
-        // Create temporary data for validation (just checking structure, not data)
-        let temp_data = match CausalTensor::new(vec![0i8; num_vertices], vec![num_vertices]) {
-            Ok(d) => d,
-            Err(_) => return false,
-        };
-
-        // Create temp manifold to access trait methods
-        let temp_manifold = Manifold {
-            complex: complex.clone(),
-            data: temp_data,
-            cursor: 0,
-        };
-
         // A manifold must be oriented
-        if !temp_manifold.is_oriented() {
+        if !manifold_checks::is_oriented(complex) {
             return false;
         }
 
         // A manifold must satisfy the link condition
-        if !temp_manifold.satisfies_link_condition() {
+        if !manifold_checks::satisfies_link_condition(complex) {
             return false;
         }
 

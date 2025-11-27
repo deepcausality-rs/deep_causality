@@ -107,7 +107,7 @@ impl<T> PointCloud<T> {
                 // Try to extend it with every possible vertex
                 for (v_candidate, adj_row_for_v_candidate) in adj_matrix.iter().enumerate() {
                     // Check if v_candidate is already part of the prev_simplex
-                    if prev_simplex.vertices().contains(&v_candidate) {
+                    if prev_simplex.contains_vertex(&v_candidate) {
                         continue;
                     }
 
@@ -163,8 +163,12 @@ impl<T> PointCloud<T> {
             for (col_idx, s_k) in skeletons[k_dim].simplices().iter().enumerate() {
                 // For each (k-1)-face of the k-simplex
                 for i in 0..=k_dim {
-                    let mut face_vertices = s_k.vertices().clone();
-                    face_vertices.remove(i); // Remove the i-th vertex to form a face
+                    let mut face_vertices = Vec::with_capacity(k_dim); // (k+1) - 1 = k
+                    for (idx, &v) in s_k.vertices().iter().enumerate() {
+                        if idx != i {
+                            face_vertices.push(v);
+                        }
+                    }
 
                     let face_simplex = Simplex::new(face_vertices);
 

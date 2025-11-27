@@ -20,9 +20,12 @@ impl Simplex {
     pub fn new(vertices: Vec<usize>) -> Self {
         Self { vertices }
     }
-}
 
-impl Simplex {
+    /// Checks if a vertex is part of the simplex using binary search.
+    pub fn contains_vertex(&self, vertex: &usize) -> bool {
+        self.vertices.binary_search(vertex).is_ok()
+    }
+
     /// Returns a sub-simplex defined by the given range of vertices.
     pub fn subsimplex<R>(&self, range: R) -> Self
     where
