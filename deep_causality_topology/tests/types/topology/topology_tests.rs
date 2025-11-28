@@ -113,6 +113,40 @@ fn test_topology_cup_product_dim_exceeds() {
 }
 
 #[test]
+#[should_panic(expected = "Data missing for front face")]
+fn test_topology_cup_product_missing_data_self() {
+    let complex = Arc::new(create_triangle_complex());
+
+    // 0-form with insufficient data (only 1 value, but 3 vertices needed)
+    let data0 = CausalTensor::new(vec![1.0], vec![1]).unwrap();
+    let topo0 = Topology::new(complex.clone(), 0, data0, 0);
+
+    // 1-form with correct data
+    let data1 = CausalTensor::new(vec![0.5, 1.5, 2.5], vec![3]).unwrap();
+    let topo1 = Topology::new(complex.clone(), 1, data1, 0);
+
+    // Should panic when accessing data for vertex 1 or 2
+    topo0.cup_product(&topo1);
+}
+
+#[test]
+#[should_panic(expected = "Data missing for back face")]
+fn test_topology_cup_product_missing_data_other() {
+    let complex = Arc::new(create_triangle_complex());
+
+    // 0-form with correct data
+    let data0 = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
+    let topo0 = Topology::new(complex.clone(), 0, data0, 0);
+
+    // 1-form with insufficient data (only 1 value, but 3 edges needed)
+    let data1 = CausalTensor::new(vec![0.5], vec![1]).unwrap();
+    let topo1 = Topology::new(complex.clone(), 1, data1, 0);
+
+    // Should panic when accessing data for edge 1 or 2
+    topo0.cup_product(&topo1);
+}
+
+#[test]
 fn test_topology_display() {
     let complex = Arc::new(create_triangle_complex());
     let grade = 0;
