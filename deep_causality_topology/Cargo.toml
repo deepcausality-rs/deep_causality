@@ -26,3 +26,19 @@ deep_causality_num = { path = "../deep_causality_num" }
 [lib]
 name = "deep_causality_topology"
 path = "src/lib.rs"
+
+[[example]]
+name = "basic_graph"
+path = "examples/basic_graph.rs"
+
+[[example]]
+name = "manifold_analysis"
+path = "examples/manifold_analysis.rs"
+
+[[example]]
+name = "point_cloud_triangulation"
+path = "examples/point_cloud_triangulation.rs"
+
+[[example]]
+name = "hkt_graph_convolution"
+path = "examples/hkt_graph_convolution.rs"
