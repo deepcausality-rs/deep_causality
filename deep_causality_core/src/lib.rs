@@ -14,21 +14,22 @@ mod traits;
 mod types;
 
 // Re-export alias types
-pub use alias::*;
+pub use crate::alias::*;
 
 // Re-export error types
-pub use errors::*;
+pub use crate::errors::*;
 
 // Re-export traits
-pub use traits::intervenable::*;
-pub use traits::propagating_value::*;
+pub use crate::traits::intervenable::*;
+pub use crate::traits::propagating_value::*;
 
 // Re-export types
-pub use types::effect_log::log_effect::EffectLog;
-pub use types::effect_log::*;
-pub use types::effect_value::*;
-pub use types::monad_types::causal_effect_system::CausalEffectSystem;
-pub use types::monad_types::causal_monad::CausalMonad;
-pub use types::monad_types::*;
-pub use types::numeric_value::*;
-pub use types::propagating_effect::*;
+pub use crate::types::causal_effect_system::CausalEffectSystem;
+pub use crate::types::causal_monad::CausalMonad;
+pub use crate::types::effect_log::log_effect::EffectLog;
+pub use crate::types::effect_value::EffectValue;
+pub use crate::types::numeric_value::NumericValue;
+pub use crate::types::propagating_effect::hkt::PropagatingEffectWitness;
+pub use crate::types::propagating_effect::{CausalPropagatingEffect, PropagatingEffect};
+pub use crate::types::propagating_process::hkt::PropagatingProcessWitness;
+pub use crate::types::propagating_process::{CausalProcessEffect, ProcessEffect};

@@ -1,4 +1,4 @@
-use crate::types::monad_types::causal_monad::CausalMonad;
+use crate::types::causal_monad::CausalMonad;
 use crate::{
     CausalPropagatingEffect, CausalityError, ContextoidId, EffectLog, EffectValue,
     IdentificationValue, NumericValue, PropagatingEffect,

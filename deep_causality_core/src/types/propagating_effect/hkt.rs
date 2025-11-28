@@ -10,10 +10,14 @@
 //! This allows for chaining operations, transforming values, and handling errors and logs
 //! in a structured and composable manner, similar to how monads and functors work in other languages.
 //!
-//! The `PropagatingEffectWitness` acts as a marker type to associate the `CausalPropagatingEffect`
-//! with these HKT traits, facilitating generic programming over different causal effect types.
-use crate::{CausalPropagatingEffect, EffectLog, EffectValue, PropagatingEffectWitness};
-use deep_causality_haft::{Applicative, Functor, HKT, HKT3, LogAppend, Monad};
+
+use crate::{CausalPropagatingEffect, EffectLog, EffectValue};
+use deep_causality_haft::{Applicative, Functor, HKT, HKT3, LogAppend, Monad, Placeholder};
+use std::marker::PhantomData;
+
+/// The `PropagatingEffectWitness` acts as a marker type to associate the `CausalPropagatingEffect`
+/// with these HKT traits, facilitating generic programming over different causal effect types.
+pub struct PropagatingEffectWitness<E, L>(Placeholder, PhantomData<E>, PhantomData<L>);
 
 /// Implements the `HKT` trait for `PropagatingEffectWitness`.
 ///
@@ -130,13 +134,13 @@ where
     /// # Example
     /// ```
     /// use deep_causality_haft::{Applicative, HKT};
-    /// use deep_causality_core::{CausalPropagatingEffect, PropagatingEffectWitness, EffectLog,EffectValue};
+    /// use deep_causality_core::{CausalPropagatingEffect, PropagatingProcessWitness, EffectLog,EffectValue};
     ///
     /// let add_one = |x: i32| x + 1;
-    /// let effect_func = PropagatingEffectWitness::<&'static str, EffectLog>::pure(add_one);
-    /// let effect_val = PropagatingEffectWitness::<&'static str, EffectLog>::pure(5);
+    /// let effect_func = PropagatingProcessWitness::<&'static str, EffectLog>::pure(add_one);
+    /// let effect_val = PropagatingProcessWitness::<&'static str, EffectLog>::pure(5);
     ///
-    /// let result_effect = PropagatingEffectWitness::apply(effect_func, effect_val);
+    /// let result_effect = PropagatingProcessWitness::apply(effect_func, effect_val);
     /// assert_eq!(result_effect.value, EffectValue::Value(6));
     /// assert!(result_effect.error.is_none());
     /// ```

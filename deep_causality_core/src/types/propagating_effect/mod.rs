@@ -4,15 +4,14 @@
 use crate::EffectLog;
 use crate::errors::CausalityError;
 use crate::traits::intervenable::Intervenable;
+use crate::types::causal_monad::CausalMonad;
 use crate::types::effect_value::EffectValue;
-use crate::types::monad_types::causal_monad::CausalMonad;
-use core::marker::PhantomData;
-use deep_causality_haft::{LogAppend, Placeholder};
+use deep_causality_haft::LogAppend;
 
 mod constructors;
 mod display;
 mod explain;
-mod hkt;
+pub mod hkt;
 mod predicates;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -99,5 +98,3 @@ where
         CausalMonad::intervene(self, new_value)
     }
 }
-
-pub struct PropagatingEffectWitness<E, L>(Placeholder, PhantomData<E>, PhantomData<L>);
