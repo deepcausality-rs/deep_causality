@@ -1,6 +1,6 @@
 use crate::types::monad_types::causal_monad::CausalMonad;
 use crate::{
-    CausalEffectLog, CausalPropagatingEffect, CausalityError, ContextoidId, EffectValue,
+    EffectLog, CausalPropagatingEffect, CausalityError, ContextoidId, EffectValue,
     IdentificationValue, NumericValue, PropagatingEffect,
 };
 #[cfg(feature = "alloc")]
@@ -35,7 +35,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_core::{CausalPropagatingEffect, CausalityError, CausalEffectLog};
+    /// use deep_causality_core::{CausalPropagatingEffect, CausalityError, EffectLog};
     /// use core::fmt::Debug;
     ///
     /// #[derive(Default, Clone, Debug)]
@@ -44,16 +44,16 @@ where
     ///    fn append(&mut self, other: &mut Self) {}
     /// }
     ///
-    /// let error_effect = CausalPropagatingEffect::<(), CausalityError, CausalEffectLog>::from_error(CausalityError::new("Something went wrong".to_string()));
+    /// let error_effect = CausalPropagatingEffect::<(), CausalityError, EffectLog>::from_error(CausalityError::new("Something went wrong".to_string()));
     /// assert!(error_effect.is_err());
     /// ```
     pub fn from_error(
         err: CausalityError,
-    ) -> CausalPropagatingEffect<Value, CausalityError, CausalEffectLog> {
+    ) -> CausalPropagatingEffect<Value, CausalityError, EffectLog> {
         CausalPropagatingEffect {
             value: EffectValue::None,
             error: Some(err),
-            logs: CausalEffectLog::new(),
+            logs: EffectLog::new(),
         }
     }
 
@@ -69,7 +69,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue, CausalityError, CausalEffectLog};
+    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue, CausalityError, EffectLog};
     /// use core::fmt::Debug;
     ///
     /// #[derive(Default, Clone, Debug)]
@@ -78,15 +78,15 @@ where
     ///    fn append(&mut self, other: &mut Self) {}
     /// }
     ///
-    /// let none_effect = CausalPropagatingEffect::<(), CausalityError, CausalEffectLog>::none();
+    /// let none_effect = CausalPropagatingEffect::<(), CausalityError, EffectLog>::none();
     /// assert!(matches!(none_effect.value, EffectValue::None));
     /// assert!(!none_effect.is_err());
     /// ```
-    pub fn none() -> CausalPropagatingEffect<Value, CausalityError, CausalEffectLog> {
+    pub fn none() -> CausalPropagatingEffect<Value, CausalityError, EffectLog> {
         CausalPropagatingEffect {
             value: EffectValue::None,
             error: None,
-            logs: CausalEffectLog::new(),
+            logs: EffectLog::new(),
         }
     }
 
@@ -106,18 +106,18 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue, CausalityError, CausalEffectLog};
+    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue, CausalityError, EffectLog};
     ///
-    /// let effect = CausalPropagatingEffect::<bool, CausalityError, CausalEffectLog>::from_effect_value(EffectValue::Value(true));
+    /// let effect = CausalPropagatingEffect::<bool, CausalityError, EffectLog>::from_effect_value(EffectValue::Value(true));
     /// assert!(matches!(effect.value, EffectValue::Value(true)));
     /// ```
     pub fn from_effect_value(
         effect_value: EffectValue<Value>,
-    ) -> CausalPropagatingEffect<Value, CausalityError, CausalEffectLog> {
+    ) -> CausalPropagatingEffect<Value, CausalityError, EffectLog> {
         CausalPropagatingEffect {
             value: effect_value,
             error: None,
-            logs: CausalEffectLog::new(),
+            logs: EffectLog::new(),
         }
     }
 
@@ -138,17 +138,17 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue, CausalEffectLog, CausalityError};
+    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue,  CausalityError};
     ///
-    /// let logs = CausalEffectLog::new();
-    /// let effect = CausalPropagatingEffect::<bool, CausalityError, CausalEffectLog>::from_effect_value_with_log(EffectValue::Value(true), logs);
+    /// let logs = EffectLog::new();
+    /// let effect = CausalPropagatingEffect::<bool, CausalityError, EffectLog>::from_effect_value_with_log(EffectValue::Value(true), logs);
     /// assert!(matches!(effect.value, EffectValue::Value(true)));
     /// assert!(!effect.is_err());
     /// ```
     pub fn from_effect_value_with_log(
         value: EffectValue<Value>,
-        logs: CausalEffectLog,
-    ) -> CausalPropagatingEffect<Value, CausalityError, CausalEffectLog> {
+        logs: EffectLog,
+    ) -> CausalPropagatingEffect<Value, CausalityError, EffectLog> {
         CausalPropagatingEffect {
             value,
             error: None,
@@ -169,26 +169,26 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue, CausalityError, CausalEffectLog, IdentificationValue};
+    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue, CausalityError, EffectLog, IdentificationValue};
     /// use std::boxed::Box;
     /// use std::collections::HashMap;
     ///
     /// let mut map = HashMap::new();
     /// map.insert(1, Box::new(CausalPropagatingEffect::from_boolean(true)));
-    /// let effect = CausalPropagatingEffect::<bool, CausalityError, CausalEffectLog>::from_map(map);
+    /// let effect = CausalPropagatingEffect::<bool, CausalityError, EffectLog>::from_map(map);
     /// assert!(matches!(effect.value, EffectValue::Map(_)));
     /// ```
     #[cfg(feature = "std")]
     pub fn from_map(
         map: HashMap<
             IdentificationValue,
-            Box<PropagatingEffect<Value, CausalityError, CausalEffectLog>>,
+            Box<PropagatingEffect<Value, CausalityError, EffectLog>>,
         >,
-    ) -> CausalPropagatingEffect<Value, CausalityError, CausalEffectLog> {
+    ) -> CausalPropagatingEffect<Value, CausalityError, EffectLog> {
         CausalPropagatingEffect {
             value: EffectValue::Map(map),
             error: None,
-            logs: CausalEffectLog::new(),
+            logs: EffectLog::new(),
         }
     }
 
@@ -209,26 +209,26 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue, CausalityError, CausalEffectLog};
+    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue, CausalityError, EffectLog};
     /// use std::boxed::Box;
     ///
     /// let effect_to_relay = CausalPropagatingEffect::from_boolean(false);
-    /// let effect = CausalPropagatingEffect::<bool, CausalityError, CausalEffectLog>::from_relay_to(1, Box::new(effect_to_relay));
+    /// let effect = CausalPropagatingEffect::<bool, CausalityError, EffectLog>::from_relay_to(1, Box::new(effect_to_relay));
     /// assert!(matches!(effect.value, EffectValue::RelayTo(_, _)));
     /// ```
     pub fn from_relay_to(
         id: usize,
-        effect: Box<PropagatingEffect<Value, CausalityError, CausalEffectLog>>,
-    ) -> CausalPropagatingEffect<Value, CausalityError, CausalEffectLog> {
+        effect: Box<PropagatingEffect<Value, CausalityError, EffectLog>>,
+    ) -> CausalPropagatingEffect<Value, CausalityError, EffectLog> {
         CausalPropagatingEffect {
             value: EffectValue::RelayTo(id, effect),
             error: None,
-            logs: CausalEffectLog::new(),
+            logs: EffectLog::new(),
         }
     }
 }
 
-impl CausalPropagatingEffect<bool, CausalityError, CausalEffectLog> {
+impl CausalPropagatingEffect<bool, CausalityError, EffectLog> {
     /// Creates a new `CausalPropagatingEffect` of type `bool`.
     ///
     /// # Arguments
@@ -242,7 +242,7 @@ impl CausalPropagatingEffect<bool, CausalityError, CausalEffectLog> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue, CausalityError, CausalEffectLog};
+    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue, CausalityError, EffectLog};
     ///
     /// let effect = CausalPropagatingEffect::from_boolean(true);
     /// assert!(matches!(effect.value, EffectValue::Value(true)));
@@ -252,7 +252,7 @@ impl CausalPropagatingEffect<bool, CausalityError, CausalEffectLog> {
     }
 }
 
-impl CausalPropagatingEffect<f64, CausalityError, CausalEffectLog> {
+impl CausalPropagatingEffect<f64, CausalityError, EffectLog> {
     /// Creates a new `CausalPropagatingEffect` of type `f64`.
     ///
     /// # Arguments
@@ -266,7 +266,7 @@ impl CausalPropagatingEffect<f64, CausalityError, CausalEffectLog> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue, CausalityError, CausalEffectLog};
+    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue, CausalityError, EffectLog};
     ///
     /// let effect = CausalPropagatingEffect::from_f64(123.45);
     /// assert!(matches!(effect.value, EffectValue::Value(123.45)));
@@ -276,7 +276,7 @@ impl CausalPropagatingEffect<f64, CausalityError, CausalEffectLog> {
     }
 }
 
-impl CausalPropagatingEffect<NumericValue, CausalityError, CausalEffectLog> {
+impl CausalPropagatingEffect<NumericValue, CausalityError, EffectLog> {
     /// Creates a new `CausalPropagatingEffect` from a `NumericValue`.
     ///
     /// # Arguments
@@ -290,7 +290,7 @@ impl CausalPropagatingEffect<NumericValue, CausalityError, CausalEffectLog> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_core::{CausalPropagatingEffect, NumericValue, EffectValue, CausalityError, CausalEffectLog};
+    /// use deep_causality_core::{CausalPropagatingEffect, NumericValue, EffectValue, CausalityError, EffectLog};
     ///
     /// let effect = CausalPropagatingEffect::from_numeric(NumericValue::F64(123.45));
     /// assert!(matches!(effect.value, EffectValue::Value(NumericValue::F64(123.45))));
@@ -313,7 +313,7 @@ impl CausalPropagatingEffect<NumericValue, CausalityError, CausalEffectLog> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue, CausalityError, CausalEffectLog};
+    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue, CausalityError, EffectLog};
     ///
     /// let effect = CausalPropagatingEffect::from_contextual_link(23, 42);
     /// assert!(matches!(effect.value, EffectValue::ContextualLink(_,_)));
@@ -322,7 +322,7 @@ impl CausalPropagatingEffect<NumericValue, CausalityError, CausalEffectLog> {
         CausalPropagatingEffect {
             value: EffectValue::ContextualLink(context_id, contextoid_id),
             error: None,
-            logs: CausalEffectLog::new(),
+            logs: EffectLog::new(),
         }
     }
 }

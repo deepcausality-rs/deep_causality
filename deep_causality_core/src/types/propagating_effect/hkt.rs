@@ -12,8 +12,8 @@
 //!
 //! The `PropagatingEffectWitness` acts as a marker type to associate the `CausalPropagatingEffect`
 //! with these HKT traits, facilitating generic programming over different causal effect types.
-use crate::{CausalEffectLog, CausalPropagatingEffect, EffectValue, PropagatingEffectWitness};
-use deep_causality_haft::{Applicative, Functor, HKT, HKT3, Monad};
+use crate::{EffectLog, CausalPropagatingEffect, EffectValue, PropagatingEffectWitness};
+use deep_causality_haft::{Applicative, Functor, HKT, HKT3, Monad, LogAppend};
 
 /// Implements the `HKT` trait for `PropagatingEffectWitness`.
 ///
@@ -80,8 +80,8 @@ where
 /// pure values into the `CausalPropagatingEffect` context (`pure`) and to apply
 /// a function wrapped in `CausalPropagatingEffect` to a value wrapped in `CausalPropagatingEffect` (`apply`).
 /// This allows for combining independent `CausalPropagatingEffect`s.
-impl<E> Applicative<PropagatingEffectWitness<E, CausalEffectLog>>
-    for PropagatingEffectWitness<E, CausalEffectLog>
+impl<E> Applicative<PropagatingEffectWitness<E, EffectLog>>
+    for PropagatingEffectWitness<E, EffectLog>
 where
     E: 'static + Clone,
 {
@@ -96,11 +96,11 @@ where
     /// # Returns
     /// A `CausalPropagatingEffect` containing the lifted value.
     ///
-    fn pure<T>(value: T) -> <PropagatingEffectWitness<E, CausalEffectLog> as HKT>::Type<T> {
+    fn pure<T>(value: T) -> <PropagatingEffectWitness<E, EffectLog> as HKT>::Type<T> {
         CausalPropagatingEffect {
             value: EffectValue::Value(value),
             error: None,
-            logs: CausalEffectLog::new(),
+            logs: EffectLog::new(),
         }
     }
 
@@ -130,20 +130,20 @@ where
     /// # Example
     /// ```
     /// use deep_causality_haft::{Applicative, HKT};
-    /// use deep_causality_core::{CausalPropagatingEffect, PropagatingEffectWitness, CausalEffectLog,EffectValue};
+    /// use deep_causality_core::{CausalPropagatingEffect, PropagatingEffectWitness, EffectLog,EffectValue};
     ///
     /// let add_one = |x: i32| x + 1;
-    /// let effect_func = PropagatingEffectWitness::<&'static str, CausalEffectLog>::pure(add_one);
-    /// let effect_val = PropagatingEffectWitness::<&'static str, CausalEffectLog>::pure(5);
+    /// let effect_func = PropagatingEffectWitness::<&'static str, EffectLog>::pure(add_one);
+    /// let effect_val = PropagatingEffectWitness::<&'static str, EffectLog>::pure(5);
     ///
     /// let result_effect = PropagatingEffectWitness::apply(effect_func, effect_val);
     /// assert_eq!(result_effect.value, EffectValue::Value(6));
     /// assert!(result_effect.error.is_none());
     /// ```
     fn apply<A, B, Func>(
-        f_ab: <PropagatingEffectWitness<E, CausalEffectLog> as HKT>::Type<Func>,
-        mut f_a: <PropagatingEffectWitness<E, CausalEffectLog> as HKT>::Type<A>,
-    ) -> <PropagatingEffectWitness<E, CausalEffectLog> as HKT>::Type<B>
+        f_ab: <PropagatingEffectWitness<E, EffectLog> as HKT>::Type<Func>,
+        mut f_a: <PropagatingEffectWitness<E, EffectLog> as HKT>::Type<A>,
+    ) -> <PropagatingEffectWitness<E, EffectLog> as HKT>::Type<B>
     where
         Func: FnMut(A) -> B,
         A: Clone,
@@ -199,8 +199,8 @@ where
 /// computations that produce `CausalPropagatingEffect`s. It allows for chaining
 /// operations where each subsequent operation might depend on the result of the
 /// previous one, while correctly handling errors and aggregating logs.
-impl<E> Monad<PropagatingEffectWitness<E, CausalEffectLog>>
-    for PropagatingEffectWitness<E, CausalEffectLog>
+impl<E> Monad<PropagatingEffectWitness<E, EffectLog>>
+    for PropagatingEffectWitness<E, EffectLog>
 where
     E: 'static + Clone,
 {
@@ -227,11 +227,11 @@ where
     /// A new `CausalPropagatingEffect` representing the sequenced computation,
     /// with errors propagated and logs aggregated.
     fn bind<A, B, Func>(
-        m_a: <PropagatingEffectWitness<E, CausalEffectLog> as HKT>::Type<A>,
+        m_a: <PropagatingEffectWitness<E, EffectLog> as HKT>::Type<A>,
         f: Func,
-    ) -> <PropagatingEffectWitness<E, CausalEffectLog> as HKT>::Type<B>
+    ) -> <PropagatingEffectWitness<E, EffectLog> as HKT>::Type<B>
     where
-        Func: FnOnce(A) -> <PropagatingEffectWitness<E, CausalEffectLog> as HKT>::Type<B>,
+        Func: FnOnce(A) -> <PropagatingEffectWitness<E, EffectLog> as HKT>::Type<B>,
     {
         // If there's an error in the initial effect, short-circuit and propagate it.
         // The function `f` is still called to get a default value for `B`,

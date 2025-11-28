@@ -41,8 +41,8 @@
 //! with built-in error handling and comprehensive logging, adhering to functional
 //! programming principles within a performant Rust environment.
 use crate::Intervenable;
-use crate::{CausalEffectLog, CausalEffectSystem, CausalPropagatingEffect, EffectValue};
-use deep_causality_haft::{Effect3, Functor, HKT3, MonadEffect3};
+use crate::{EffectLog, CausalEffectSystem, CausalPropagatingEffect, EffectValue};
+use deep_causality_haft::{Effect3, Functor, HKT3, MonadEffect3, LogAppend, LogAddEntry};
 
 /// `CausalMonad` is the concrete implementation of the `MonadEffect3` trait for the
 /// `CausalEffectSystem`. It provides the fundamental `pure` and `bind` operations
@@ -100,7 +100,7 @@ where
         CausalPropagatingEffect {
             value: EffectValue::Value(value),
             error: None,
-            logs: CausalEffectLog::new(),
+            logs: EffectLog::new(),
         }
     }
 

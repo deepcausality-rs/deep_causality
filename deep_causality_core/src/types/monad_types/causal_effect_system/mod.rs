@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalEffectLog, CausalityError, PropagatingEffectWitness};
+use crate::{EffectLog, CausalityError, PropagatingEffectWitness};
 use deep_causality_haft::Effect3;
 
 /// `CausalEffectSystem` is a marker struct that serves as a concrete instance of the
@@ -27,6 +27,6 @@ pub struct CausalEffectSystem;
 
 impl Effect3 for CausalEffectSystem {
     type Fixed1 = CausalityError;
-    type Fixed2 = CausalEffectLog;
+    type Fixed2 = EffectLog;
     type HktWitness = PropagatingEffectWitness<Self::Fixed1, Self::Fixed2>;
 }

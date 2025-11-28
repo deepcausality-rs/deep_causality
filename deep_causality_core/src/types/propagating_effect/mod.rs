@@ -3,11 +3,11 @@
 
 use crate::errors::CausalityError;
 use crate::traits::intervenable::Intervenable;
-use crate::types::effect_log::CausalEffectLog;
 use crate::types::effect_value::EffectValue;
 use crate::types::monad_types::causal_monad::CausalMonad;
 use core::marker::PhantomData;
 use deep_causality_haft::{LogAppend, Placeholder};
+use crate::EffectLog;
 
 mod constructors;
 mod display;
@@ -74,7 +74,7 @@ where
 
 pub type PropagatingEffect<T, E, L> = CausalPropagatingEffect<T, E, L>;
 
-impl<Value> PropagatingEffect<Value, CausalityError, CausalEffectLog>
+impl<Value> PropagatingEffect<Value, CausalityError, EffectLog>
 where
     Value: Clone + core::fmt::Debug,
 {

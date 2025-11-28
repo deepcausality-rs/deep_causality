@@ -9,7 +9,7 @@ use crate::PropagatingEffect;
 use crate::alias::{ContextoidId, IdentificationValue};
 use crate::errors::CausalityError;
 use crate::traits::propagating_value::PropagatingValue;
-use crate::types::effect_log::CausalEffectLog;
+use crate::EffectLog;
 
 #[cfg(feature = "std")]
 use std::collections::HashMap;
@@ -42,11 +42,11 @@ pub enum EffectValue<T> {
     /// is the effect to be passed as input to that target causaloid. This enables adaptive reasoning.
     RelayTo(
         usize,
-        Box<PropagatingEffect<T, CausalityError, CausalEffectLog>>,
+        Box<PropagatingEffect<T, CausalityError, EffectLog>>,
     ),
     /// A collection of named values, allowing for complex, structured data passing.
     #[cfg(feature = "std")]
-    Map(HashMap<IdentificationValue, Box<PropagatingEffect<T, CausalityError, CausalEffectLog>>>),
+    Map(HashMap<IdentificationValue, Box<PropagatingEffect<T, CausalityError, EffectLog>>>),
     /// A container for any external, user-defined type that implements the `PropagatingValue` trait.
     /// This enables the causal system to be extended with custom data types.
     External(Box<dyn PropagatingValue>),

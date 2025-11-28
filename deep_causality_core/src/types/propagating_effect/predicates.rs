@@ -2,12 +2,12 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use deep_causality_haft::LogSize;
 use crate::CausalPropagatingEffect;
-use crate::traits::causal_log_contract::CausalLogContract;
 
 impl<Value, Error, Log> CausalPropagatingEffect<Value, Error, Log>
-where
-    Log: CausalLogContract,
+where 
+    Log: LogSize,
 {
     pub fn is_ok(&self) -> bool {
         self.error.is_none()
