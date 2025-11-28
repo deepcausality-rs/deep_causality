@@ -6,7 +6,7 @@
 use alloc::string::String;
 use core::fmt::{Debug, Display, Formatter};
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct CausalityError(pub String);
 
 impl CausalityError {

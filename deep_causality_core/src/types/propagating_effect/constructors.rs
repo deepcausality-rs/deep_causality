@@ -3,7 +3,9 @@ use crate::{
     CausalEffectLog, CausalPropagatingEffect, CausalityError, ContextoidId, EffectValue,
     IdentificationValue, NumericValue, PropagatingEffect,
 };
+#[cfg(feature = "alloc")]
 use alloc::boxed::Box;
+
 use core::fmt::Debug;
 use deep_causality_haft::MonadEffect3;
 #[cfg(feature = "std")]
@@ -33,7 +35,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::{CausalPropagatingEffect, CausalityError, CausalEffectLog};
+    /// use deep_causality_core::{CausalPropagatingEffect, CausalityError, CausalEffectLog};
     /// use core::fmt::Debug;
     ///
     /// #[derive(Default, Clone, Debug)]
@@ -67,7 +69,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::{CausalPropagatingEffect, EffectValue, CausalityError, CausalEffectLog};
+    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue, CausalityError, CausalEffectLog};
     /// use core::fmt::Debug;
     ///
     /// #[derive(Default, Clone, Debug)]
@@ -104,7 +106,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::{CausalPropagatingEffect, EffectValue, CausalityError, CausalEffectLog};
+    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue, CausalityError, CausalEffectLog};
     ///
     /// let effect = CausalPropagatingEffect::<bool, CausalityError, CausalEffectLog>::from_effect_value(EffectValue::Value(true));
     /// assert!(matches!(effect.value, EffectValue::Value(true)));
@@ -136,7 +138,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::{CausalPropagatingEffect, EffectValue, CausalEffectLog, CausalityError};
+    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue, CausalEffectLog, CausalityError};
     ///
     /// let logs = CausalEffectLog::new();
     /// let effect = CausalPropagatingEffect::<bool, CausalityError, CausalEffectLog>::from_effect_value_with_log(EffectValue::Value(true), logs);
@@ -167,13 +169,13 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::{CausalPropagatingEffect, EffectValue, CausalityError, CausalEffectLog, IdentificationValue};
-    /// use alloc::boxed::Box;
+    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue, CausalityError, CausalEffectLog, IdentificationValue};
+    /// use std::boxed::Box;
     /// use std::collections::HashMap;
     ///
     /// let mut map = HashMap::new();
     /// map.insert(1, Box::new(CausalPropagatingEffect::from_boolean(true)));
-    /// let effect = CausalPropagatingEffect::<(), CausalityError, CausalEffectLog>::from_map(map);
+    /// let effect = CausalPropagatingEffect::<bool, CausalityError, CausalEffectLog>::from_map(map);
     /// assert!(matches!(effect.value, EffectValue::Map(_)));
     /// ```
     #[cfg(feature = "std")]
@@ -207,11 +209,11 @@ where
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::{CausalPropagatingEffect, EffectValue, CausalityError, CausalEffectLog};
-    /// use alloc::boxed::Box;
+    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue, CausalityError, CausalEffectLog};
+    /// use std::boxed::Box;
     ///
     /// let effect_to_relay = CausalPropagatingEffect::from_boolean(false);
-    /// let effect = CausalPropagatingEffect::<(), CausalityError, CausalEffectLog>::from_relay_to(1, Box::new(effect_to_relay));
+    /// let effect = CausalPropagatingEffect::<bool, CausalityError, CausalEffectLog>::from_relay_to(1, Box::new(effect_to_relay));
     /// assert!(matches!(effect.value, EffectValue::RelayTo(_, _)));
     /// ```
     pub fn from_relay_to(
@@ -240,7 +242,7 @@ impl CausalPropagatingEffect<bool, CausalityError, CausalEffectLog> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::{CausalPropagatingEffect, EffectValue, CausalityError, CausalEffectLog};
+    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue, CausalityError, CausalEffectLog};
     ///
     /// let effect = CausalPropagatingEffect::from_boolean(true);
     /// assert!(matches!(effect.value, EffectValue::Value(true)));
@@ -264,7 +266,7 @@ impl CausalPropagatingEffect<f64, CausalityError, CausalEffectLog> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::{CausalPropagatingEffect, EffectValue, CausalityError, CausalEffectLog};
+    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue, CausalityError, CausalEffectLog};
     ///
     /// let effect = CausalPropagatingEffect::from_f64(123.45);
     /// assert!(matches!(effect.value, EffectValue::Value(123.45)));
@@ -288,7 +290,7 @@ impl CausalPropagatingEffect<NumericValue, CausalityError, CausalEffectLog> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::{CausalPropagatingEffect, NumericValue, EffectValue, CausalityError, CausalEffectLog};
+    /// use deep_causality_core::{CausalPropagatingEffect, NumericValue, EffectValue, CausalityError, CausalEffectLog};
     ///
     /// let effect = CausalPropagatingEffect::from_numeric(NumericValue::F64(123.45));
     /// assert!(matches!(effect.value, EffectValue::Value(NumericValue::F64(123.45))));
@@ -311,9 +313,9 @@ impl CausalPropagatingEffect<NumericValue, CausalityError, CausalEffectLog> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality::{CausalPropagatingEffect, EffectValue, CausalityError, CausalEffectLog};
+    /// use deep_causality_core::{CausalPropagatingEffect, EffectValue, CausalityError, CausalEffectLog};
     ///
-    /// let effect = CausalPropagatingEffect::<(), CausalityError, CausalEffectLog>::from_contextual_link(23, 42);
+    /// let effect = CausalPropagatingEffect::from_contextual_link(23, 42);
     /// assert!(matches!(effect.value, EffectValue::ContextualLink(_,_)));
     /// ```
     pub fn from_contextual_link(context_id: ContextoidId, contextoid_id: ContextoidId) -> Self {

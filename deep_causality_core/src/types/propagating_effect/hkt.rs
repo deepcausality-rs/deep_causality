@@ -130,14 +130,14 @@ where
     /// # Example
     /// ```
     /// use deep_causality_haft::{Applicative, HKT};
-    /// use deep_causality::{CausalPropagatingEffect, PropagatingEffectWitness, CausalEffectLog};
+    /// use deep_causality_core::{CausalPropagatingEffect, PropagatingEffectWitness, CausalEffectLog,EffectValue};
     ///
     /// let add_one = |x: i32| x + 1;
     /// let effect_func = PropagatingEffectWitness::<&'static str, CausalEffectLog>::pure(add_one);
     /// let effect_val = PropagatingEffectWitness::<&'static str, CausalEffectLog>::pure(5);
     ///
     /// let result_effect = PropagatingEffectWitness::apply(effect_func, effect_val);
-    /// assert_eq!(result_effect.value, 6);
+    /// assert_eq!(result_effect.value, EffectValue::Value(6));
     /// assert!(result_effect.error.is_none());
     /// ```
     fn apply<A, B, Func>(

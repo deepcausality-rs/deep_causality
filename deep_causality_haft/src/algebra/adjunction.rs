@@ -5,6 +5,9 @@
 
 use crate::HKT;
 
+use core::ops::{Add, Mul};
+use deep_causality_num::Zero;
+
 /// The `Adjunction` trait defines a pair of adjoint functors $L$ (Left) and $R$ (Right).
 ///
 /// # Category Theory
@@ -53,9 +56,6 @@ where
     /// Collapses the Left-Right context back to a value.
     fn counit<B>(lrb: L::Type<R::Type<B>>) -> B;
 }
-
-use deep_causality_num::Zero;
-use std::ops::{Add, Mul};
 
 /// The `BoundedAdjunction` trait defines a pair of adjoint functors $L$ (Left) and $R$ (Right)
 /// that require a runtime `Context` to operate.
