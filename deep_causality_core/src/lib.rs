@@ -17,7 +17,7 @@ mod types;
 pub use crate::alias::*;
 
 // Re-export error types
-pub use crate::errors::*;
+pub use crate::errors::causality_error::CausalityError;
 
 // Re-export traits
 pub use crate::traits::intervenable::*;

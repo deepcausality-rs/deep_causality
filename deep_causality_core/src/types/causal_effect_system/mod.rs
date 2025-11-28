@@ -2,7 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalityError, EffectLog, PropagatingEffectWitness};
+use crate::errors::causality_error::CausalityError;
+use crate::{EffectLog, PropagatingEffectWitness};
 use deep_causality_haft::Effect3;
 
 /// `CausalEffectSystem` is a marker struct that serves as a concrete instance of the

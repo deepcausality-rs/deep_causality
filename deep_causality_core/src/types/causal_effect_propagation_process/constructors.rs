@@ -3,7 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CausalEffectPropagationProcess, CausalMonad, CausalityError, EffectLog, EffectValue};
+use crate::errors::causality_error::CausalityError;
+use crate::{CausalEffectPropagationProcess, CausalMonad, EffectLog, EffectValue};
 use core::fmt::Debug;
 use deep_causality_haft::MonadEffect5;
 

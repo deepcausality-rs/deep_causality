@@ -41,9 +41,10 @@
 //! with built-in error handling and comprehensive logging, adhering to functional
 //! programming principles within a performant Rust environment.
 
+use crate::errors::causality_error::CausalityError;
 use crate::traits::intervenable::Intervenable;
 use crate::types::causal_system::CausalSystem;
-use crate::{CausalEffectPropagationProcess, CausalityError, EffectLog, EffectValue};
+use crate::{CausalEffectPropagationProcess, EffectLog, EffectValue};
 use deep_causality_haft::{Effect5, Functor, LogAddEntry, LogAppend, MonadEffect5};
 use std::marker::PhantomData;
 
