@@ -18,7 +18,6 @@ impl<T: PartialEq> PartialEq for EffectValue<T> {
             }
             #[cfg(feature = "std")]
             (EffectValue::Map(_), EffectValue::Map(_)) => false, // Maps are not comparable
-            (EffectValue::External(_), EffectValue::External(_)) => false, // External values are not comparable
             _ => false,
         }
     }

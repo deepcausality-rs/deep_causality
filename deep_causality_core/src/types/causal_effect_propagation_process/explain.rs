@@ -3,13 +3,13 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::CausalPropagatingEffect;
+use crate::types::causal_effect_propagation_process::CausalEffectPropagationProcess;
 use alloc::string::String;
 use core::fmt::{Debug, Display};
 use deep_causality_haft::LogSize;
 
 impl<Value: Debug, Error: Debug, Log: Debug + Display + LogSize>
-    CausalPropagatingEffect<Value, Error, Log>
+    CausalEffectPropagationProcess<Value, (), (), Error, Log>
 {
     /// Generates a human-readable explanation of the causal computation's history.
     ///

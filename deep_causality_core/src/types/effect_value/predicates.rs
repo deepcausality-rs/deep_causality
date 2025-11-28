@@ -27,10 +27,6 @@ impl<T> EffectValue<T> {
         matches!(self, EffectValue::Map(_))
     }
 
-    pub fn is_external(&self) -> bool {
-        matches!(self, EffectValue::External(_))
-    }
-
     pub fn as_value(&self) -> Option<&T> {
         match self {
             EffectValue::Value(v) => Some(v),

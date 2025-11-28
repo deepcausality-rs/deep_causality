@@ -1,9 +1,10 @@
-use deep_causality_haft::{Effect3, HKT3};
+use deep_causality_haft::{Effect5, HKT5};
 
 /// Defines the `intervene` operation for a monadic effect system.
 /// This trait is intended for causal reasoning systems where counterfactuals
 /// are modeled by forcing a value at a specific point in a computation chain.
-pub trait Intervenable<E: Effect3>
+#[allow(clippy::type_complexity)]
+pub trait Intervenable<E: Effect5>
 where
     E::HktWitness: Sized,
 {
@@ -18,9 +19,9 @@ where
     /// - **Log History**: The logs from the incoming `effect` are preserved, and a
     ///   new entry is added to signify that an intervention occurred.
     fn intervene<T>(
-        effect: <E::HktWitness as HKT3<E::Fixed1, E::Fixed2>>::Type<T>,
+        effect: <E::HktWitness as HKT5<E::Fixed1, E::Fixed2, E::Fixed3, E::Fixed4>>::Type<T>,
         new_value: T,
-    ) -> <E::HktWitness as HKT3<E::Fixed1, E::Fixed2>>::Type<T>
+    ) -> <E::HktWitness as HKT5<E::Fixed1, E::Fixed2, E::Fixed3, E::Fixed4>>::Type<T>
     where
         T: std::fmt::Debug;
 }

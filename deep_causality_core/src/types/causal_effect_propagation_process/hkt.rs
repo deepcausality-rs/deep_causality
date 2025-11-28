@@ -3,29 +3,44 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{EffectLog, EffectValue, PropagatingProcess};
-use deep_causality_haft::{Applicative, Functor, HKT, LogAppend, Monad, Placeholder};
+use crate::{CausalEffectPropagationProcess, EffectValue};
+use deep_causality_haft::{Applicative, Functor, HKT, HKT5, LogAppend, Monad, Placeholder};
 use std::marker::PhantomData;
 
-pub struct PropagatingProcessWitness<S, C>(Placeholder, PhantomData<S>, PhantomData<C>);
+pub struct CausalEffectPropagationProcessWitness<S, C, E, L>(
+    Placeholder,
+    PhantomData<S>,
+    PhantomData<C>,
+    PhantomData<E>,
+    PhantomData<L>,
+);
 
-impl<S, C> HKT for PropagatingProcessWitness<S, C> {
-    type Type<T> = PropagatingProcess<T, S, C>;
+// Impl for arity-5 fixed-effect HKT
+impl<S, C, E, L> HKT5<S, C, E, L> for CausalEffectPropagationProcessWitness<S, C, E, L> {
+    type Type<Value> = CausalEffectPropagationProcess<Value, S, C, E, L>;
 }
 
-impl<S, C> Functor<PropagatingProcessWitness<S, C>> for PropagatingProcessWitness<S, C>
+// Impl for arity-1 HKT, required by Functor/Monad bounds on Effect5
+impl<S, C, E, L> HKT for CausalEffectPropagationProcessWitness<S, C, E, L> {
+    type Type<Value> = CausalEffectPropagationProcess<Value, S, C, E, L>;
+}
+
+impl<S, C, E, L> Functor<CausalEffectPropagationProcessWitness<S, C, E, L>>
+    for CausalEffectPropagationProcessWitness<S, C, E, L>
 where
     S: Clone,
     C: Clone,
+    E: Clone,
+    L: Clone,
 {
     fn fmap<A, B, Func>(
-        m_a: <PropagatingProcessWitness<S, C> as HKT>::Type<A>,
+        m_a: <CausalEffectPropagationProcessWitness<S, C, E, L> as HKT>::Type<A>,
         f: Func,
-    ) -> <PropagatingProcessWitness<S, C> as HKT>::Type<B>
+    ) -> <CausalEffectPropagationProcessWitness<S, C, E, L> as HKT>::Type<B>
     where
         Func: FnOnce(A) -> B,
     {
-        PropagatingProcess {
+        CausalEffectPropagationProcess {
             value: EffectValue::Value(f(m_a
                 .value
                 .into_value()
@@ -38,18 +53,21 @@ where
     }
 }
 
-impl<S, C> Applicative<PropagatingProcessWitness<S, C>> for PropagatingProcessWitness<S, C>
+impl<S, C, E, L> Applicative<CausalEffectPropagationProcessWitness<S, C, E, L>>
+    for CausalEffectPropagationProcessWitness<S, C, E, L>
 where
     S: Clone + Default,
     C: Clone,
+    E: Clone,
+    L: LogAppend + Clone + Default,
 {
     fn pure<T>(value: T) -> <Self as HKT>::Type<T> {
-        PropagatingProcess {
+        CausalEffectPropagationProcess {
             value: EffectValue::Value(value),
             state: S::default(),
             context: None,
             error: None,
-            logs: EffectLog::default(),
+            logs: L::default(),
         }
     }
 
@@ -70,7 +88,7 @@ where
             f_a.value.into_value().expect("Value expected in apply"),
         );
 
-        PropagatingProcess {
+        CausalEffectPropagationProcess {
             value: EffectValue::Value(value),
             state: f_ab.state, // State from the function context is carried over
             context: f_ab.context.or(f_a.context),
@@ -80,17 +98,20 @@ where
     }
 }
 
-impl<S, C> Monad<PropagatingProcessWitness<S, C>> for PropagatingProcessWitness<S, C>
+impl<S, C, E, L> Monad<CausalEffectPropagationProcessWitness<S, C, E, L>>
+    for CausalEffectPropagationProcessWitness<S, C, E, L>
 where
     S: Clone + Default,
     C: Clone,
+    E: Clone,
+    L: LogAppend + Clone + Default,
 {
     fn bind<A, B, Func>(m_a: <Self as HKT>::Type<A>, mut f: Func) -> <Self as HKT>::Type<B>
     where
         Func: FnMut(A) -> <Self as HKT>::Type<B>,
     {
         if let Some(error) = m_a.error {
-            return PropagatingProcess {
+            return CausalEffectPropagationProcess {
                 value: EffectValue::None, // No B can be produced
                 state: m_a.state,
                 context: m_a.context,
@@ -106,7 +127,7 @@ where
         let mut combined_logs = m_a.logs;
         combined_logs.append(&mut next_effect.logs);
 
-        PropagatingProcess {
+        CausalEffectPropagationProcess {
             value: next_effect.value,
             state: m_a.state,     // State is passed through, not updated by f
             context: m_a.context, // Context is passed through

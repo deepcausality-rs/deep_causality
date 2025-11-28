@@ -3,57 +3,58 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! This module provides Higher-Kinded Type (HKT) implementations for `CausalPropagatingEffect`.
+//! This module provides Higher-Kinded Type (HKT) implementations for `PropagatingEffect`.
 //!
 //! By implementing `HKT`, `Functor`, `Applicative`, and `Monad` traits from the `deep_causality_haft` crate,
-//! this module enables `CausalPropagatingEffect` to be used in a functional programming style.
+//! this module enables `PropagatingEffect` to be used in a functional programming style.
 //! This allows for chaining operations, transforming values, and handling errors and logs
 //! in a structured and composable manner, similar to how monads and functors work in other languages.
 //!
 
-use crate::{CausalPropagatingEffect, EffectLog, EffectValue};
+use crate::types::causal_effect_propagation_process::CausalEffectPropagationProcess;
+use crate::{EffectLog, EffectValue};
 use deep_causality_haft::{Applicative, Functor, HKT, HKT3, LogAppend, Monad, Placeholder};
 use std::marker::PhantomData;
 
-/// The `PropagatingEffectWitness` acts as a marker type to associate the `CausalPropagatingEffect`
+/// The `PropagatingEffectWitness` acts as a marker type to associate the `PropagatingEffect`
 /// with these HKT traits, facilitating generic programming over different causal effect types.
 pub struct PropagatingEffectWitness<E, L>(Placeholder, PhantomData<E>, PhantomData<L>);
 
 /// Implements the `HKT` trait for `PropagatingEffectWitness`.
 ///
 /// `PropagatingEffectWitness<E, L>` serves as a "witness" or "tag" type that
-/// associates the `CausalPropagatingEffect<T, E, L>` with the Higher-Kinded Type
-/// abstraction. This allows `CausalPropagatingEffect` to be treated generically
+/// associates the `CausalEffectPropagationProcess<T, (), (), E, L>` with the Higher-Kinded Type
+/// abstraction. This allows `PropagatingEffect` to be treated generically
 /// by traits like `Functor`, `Applicative`, and `Monad`.
 ///
-/// The `Type<T>` associated type specifies that `CausalPropagatingEffect<T, E, L>`
+/// The `Type<T>` associated type specifies that `CausalEffectPropagationProcess<T, (), (), E, L>`
 /// is the concrete type that this HKT represents, where `T` is the inner value type,
 /// `E` is the error type, and `L` is the log type.
 impl<E, L> HKT for PropagatingEffectWitness<E, L> {
-    type Type<T> = CausalPropagatingEffect<T, E, L>;
+    type Type<T> = CausalEffectPropagationProcess<T, (), (), E, L>;
 }
 
 /// Implements the `HKT3` trait for `PropagatingEffectWitness`.
 ///
 /// Similar to `HKT`, this implementation specifically caters to types that have
 /// three type parameters, where `E` and `L` are fixed, and `T` is the varying parameter.
-/// This provides a more specific HKT abstraction for `CausalPropagatingEffect`.
+/// This provides a more specific HKT abstraction for `PropagatingEffect`.
 impl<E, L> HKT3<E, L> for PropagatingEffectWitness<E, L> {
-    type Type<T> = CausalPropagatingEffect<T, E, L>;
+    type Type<T> = CausalEffectPropagationProcess<T, (), (), E, L>;
 }
 
 /// Implements the `Functor` trait for `PropagatingEffectWitness`.
 ///
 /// The `Functor` trait provides the `fmap` method, which allows transforming
-/// the inner value of a `CausalPropagatingEffect` without changing its structure,
+/// the inner value of a `PropagatingEffect` without changing its structure,
 /// error state, or associated logs.
 ///
 /// # Arguments
-/// * `m_a` - A `CausalPropagatingEffect` instance containing a value of type `A`.
+/// * `m_a` - A `PropagatingEffect` instance containing a value of type `A`.
 /// * `f` - A function that takes a value of type `A` and returns a value of type `B`.
 ///
 /// # Returns
-/// A new `CausalPropagatingEffect` instance with the transformed value of type `B`,
+/// A new `PropagatingEffect` instance with the transformed value of type `B`,
 /// preserving the original error and logs.
 impl<E, L> Functor<PropagatingEffectWitness<E, L>> for PropagatingEffectWitness<E, L>
 where
@@ -67,11 +68,13 @@ where
     where
         Func: FnOnce(A) -> B,
     {
-        CausalPropagatingEffect {
+        CausalEffectPropagationProcess {
             value: EffectValue::Value(f(m_a
                 .value
                 .into_value()
                 .expect("Functor fmap on a non-error effect should contain a value"))),
+            state: (),
+            context: None,
             error: m_a.error,
             logs: m_a.logs,
         }
@@ -81,69 +84,65 @@ where
 /// Implements the `Applicative` trait for `PropagatingEffectWitness`.
 ///
 /// The `Applicative` trait extends `Functor` by providing methods to lift
-/// pure values into the `CausalPropagatingEffect` context (`pure`) and to apply
-/// a function wrapped in `CausalPropagatingEffect` to a value wrapped in `CausalPropagatingEffect` (`apply`).
-/// This allows for combining independent `CausalPropagatingEffect`s.
+/// pure values into the `PropagatingEffect` context (`pure`) and to apply
+/// a function wrapped in `PropagatingEffect` to a value wrapped in `PropagatingEffect` (`apply`).
+/// This allows for combining independent `PropagatingEffect`s.
 impl<E> Applicative<PropagatingEffectWitness<E, EffectLog>>
     for PropagatingEffectWitness<E, EffectLog>
 where
     E: 'static + Clone,
 {
-    /// Lifts a pure value into a `CausalPropagatingEffect` context.
+    /// Lifts a pure value into a `PropagatingEffect` context.
     ///
-    /// Creates a new `CausalPropagatingEffect` with the given `value`,
+    /// Creates a new `PropagatingEffect` with the given `value`,
     /// an empty error state (`None`), and an empty `CausalEffectLog`.
     ///
     /// # Arguments
     /// * `value` - The value to lift.
     ///
     /// # Returns
-    /// A `CausalPropagatingEffect` containing the lifted value.
+    /// A `PropagatingEffect` containing the lifted value.
     ///
+    /// # Example
+    /// ```
+    /// use deep_causality_haft::{Applicative, HKT};
+    /// use deep_causality_core::{PropagatingEffect, PropagatingEffectWitness, EffectLog, EffectValue};
+    ///
+    /// let effect = PropagatingEffectWitness::<&'static str, EffectLog>::pure(5);
+    /// assert!(matches!(effect.value, EffectValue::Value(5)));
+    /// ```
     fn pure<T>(value: T) -> <PropagatingEffectWitness<E, EffectLog> as HKT>::Type<T> {
-        CausalPropagatingEffect {
+        CausalEffectPropagationProcess {
             value: EffectValue::Value(value),
+            state: (),
+            context: None,
             error: None,
             logs: EffectLog::new(),
         }
     }
 
-    /// Applies a function wrapped in a `CausalPropagatingEffect` to a value
-    /// wrapped in a `CausalPropagatingEffect`.
+    /// Applies a function wrapped in a `PropagatingEffect` to a value
+    /// wrapped in a `PropagatingEffect`.
     ///
-    /// This method combines two `CausalPropagatingEffect` instances: one holding
+    /// This method combines two `PropagatingEffect` instances: one holding
     /// a function (`f_ab`) and another holding a value (`f_a`).
     ///
     /// # Error Handling
     /// If either `f_ab` or `f_a` contains an error, that error is propagated
-    /// to the resulting `CausalPropagatingEffect`. The function application
+    /// to the resulting `PropagatingEffect`. The function application
     /// still occurs, but the error state is preserved.
     ///
     /// # Log Aggregation
     /// The logs from both `f_ab` and `f_a` are combined (appended) into the
-    /// resulting `CausalPropagatingEffect`'s logs.
+    /// resulting `PropagatingEffect`'s logs.
     ///
     /// # Arguments
-    /// * `f_ab` - A `CausalPropagatingEffect` containing a function `Func: FnMut(A) -> B`.
-    /// * `f_a` - A `CausalPropagatingEffect` containing a value of type `A`.
+    /// * `f_ab` - A `PropagatingEffect` containing a function `Func: FnMut(A) -> B`.
+    /// * `f_a` - A `PropagatingEffect` containing a value of type `A`.
     ///
     /// # Returns
-    /// A new `CausalPropagatingEffect` with the result of the function application,
+    /// A new `PropagatingEffect` with the result of the function application,
     /// propagated errors, and combined logs.
-    ///
-    /// # Example
-    /// ```
-    /// use deep_causality_haft::{Applicative, HKT};
-    /// use deep_causality_core::{CausalPropagatingEffect, PropagatingProcessWitness, EffectLog,EffectValue};
-    ///
-    /// let add_one = |x: i32| x + 1;
-    /// let effect_func = PropagatingProcessWitness::<&'static str, EffectLog>::pure(add_one);
-    /// let effect_val = PropagatingProcessWitness::<&'static str, EffectLog>::pure(5);
-    ///
-    /// let result_effect = PropagatingProcessWitness::apply(effect_func, effect_val);
-    /// assert_eq!(result_effect.value, EffectValue::Value(6));
-    /// assert!(result_effect.error.is_none());
-    /// ```
     fn apply<A, B, Func>(
         f_ab: <PropagatingEffectWitness<E, EffectLog> as HKT>::Type<Func>,
         mut f_a: <PropagatingEffectWitness<E, EffectLog> as HKT>::Type<A>,
@@ -159,12 +158,14 @@ where
         // If the function effect has an error, propagate it.
         // The value is still computed, but the error takes precedence.
         if f_ab.error.is_some() {
-            return CausalPropagatingEffect {
+            return CausalEffectPropagationProcess {
                 value: EffectValue::Value((f_ab.value.into_value().expect(
                     "Applicative apply (function) on a non-error effect should contain a value",
                 ))(f_a.value.into_value().expect(
                     "Applicative apply (value) on a non-error effect should contain a value",
                 ))),
+                state: (),
+                context: None,
                 error: f_ab.error,
                 logs: combined_logs,
             };
@@ -172,18 +173,20 @@ where
         // If the value effect has an error, propagate it.
         // The value is still computed, but the error takes precedence.
         if f_a.error.is_some() {
-            return CausalPropagatingEffect {
+            return CausalEffectPropagationProcess {
                 value: EffectValue::Value((f_ab.value.into_value().expect(
                     "Applicative apply (function) on a non-error effect should contain a value",
                 ))(f_a.value.into_value().expect(
                     "Applicative apply (value) on a non-error effect should contain a value",
                 ))),
+                state: (),
+                context: None,
                 error: f_a.error,
                 logs: combined_logs,
             };
         }
 
-        CausalPropagatingEffect {
+        CausalEffectPropagationProcess {
             value: EffectValue::Value((f_ab.value.into_value().expect(
                 "Applicative apply (function) on a non-error effect should contain a value",
             ))(
@@ -191,6 +194,8 @@ where
                     "Applicative apply (value) on a non-error effect should contain a value",
                 ),
             )),
+            state: (),
+            context: None,
             error: None,
             logs: combined_logs,
         }
@@ -200,7 +205,7 @@ where
 /// Implements the `Monad` trait for `PropagatingEffectWitness`.
 ///
 /// The `Monad` trait provides the `bind` method, which is crucial for sequencing
-/// computations that produce `CausalPropagatingEffect`s. It allows for chaining
+/// computations that produce `PropagatingEffect`s. It allows for chaining
 /// operations where each subsequent operation might depend on the result of the
 /// previous one, while correctly handling errors and aggregating logs.
 impl<E> Monad<PropagatingEffectWitness<E, EffectLog>> for PropagatingEffectWitness<E, EffectLog>
@@ -208,12 +213,12 @@ where
     E: 'static + Clone,
 {
     /// Sequences a computation by applying a function that returns another
-    /// `CausalPropagatingEffect`.
+    /// `PropagatingEffect`.
     ///
     /// # Error Handling (Short-circuiting)
-    /// If the initial `CausalPropagatingEffect` (`m_a`) contains an error,
+    /// If the initial `PropagatingEffect` (`m_a`) contains an error,
     /// the `bind` operation short-circuits. The function `f` is not applied,
-    /// and a new `CausalPropagatingEffect` is returned immediately with the
+    /// and a new `PropagatingEffect` is returned immediately with the
     /// original error and logs. This ensures that subsequent computations
     /// are not performed if an error has already occurred.
     ///
@@ -223,11 +228,11 @@ where
     /// combined (appended) with the logs from `next_effect`.
     ///
     /// # Arguments
-    /// * `m_a` - The initial `CausalPropagatingEffect` instance.
-    /// * `f` - A function that takes the inner value of `m_a` and returns a new `CausalPropagatingEffect`.
+    /// * `m_a` - The initial `PropagatingEffect` instance.
+    /// * `f` - A function that takes the inner value of `m_a` and returns a new `PropagatingEffect`.
     ///
     /// # Returns
-    /// A new `CausalPropagatingEffect` representing the sequenced computation,
+    /// A new `PropagatingEffect` representing the sequenced computation,
     /// with errors propagated and logs aggregated.
     fn bind<A, B, Func>(
         m_a: <PropagatingEffectWitness<E, EffectLog> as HKT>::Type<A>,
@@ -240,8 +245,10 @@ where
         // The function `f` is still called to get a default value for `B`,
         // but the error and logs from `m_a` are preserved.
         if m_a.error.is_some() {
-            return CausalPropagatingEffect {
+            return CausalEffectPropagationProcess {
                 value: EffectValue::Value(f(m_a.value.into_value().expect("Monad bind on a non-error effect should contain a value")).value.into_value().expect("Monad bind (resulting effect) on a non-error effect should contain a value")), // Call f to get a default value for B, but its error/logs are ignored.
+                state: (),
+                context: None,
                 error: m_a.error,
                 logs: m_a.logs,
             };

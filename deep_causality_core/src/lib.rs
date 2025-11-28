@@ -21,15 +21,15 @@ pub use crate::errors::*;
 
 // Re-export traits
 pub use crate::traits::intervenable::*;
-pub use crate::traits::propagating_value::*;
 
 // Re-export types
+pub use crate::types::causal_effect_propagation_process::CausalEffectPropagationProcess;
 pub use crate::types::causal_effect_system::CausalEffectSystem;
 pub use crate::types::causal_monad::CausalMonad;
 pub use crate::types::effect_log::log_effect::EffectLog;
 pub use crate::types::effect_value::EffectValue;
 pub use crate::types::numeric_value::NumericValue;
+pub use crate::types::propagating_effect::PropagatingEffect;
 pub use crate::types::propagating_effect::hkt::PropagatingEffectWitness;
-pub use crate::types::propagating_effect::{CausalPropagatingEffect, PropagatingEffect};
+pub use crate::types::propagating_process::PropagatingProcess;
 pub use crate::types::propagating_process::hkt::PropagatingProcessWitness;
-pub use crate::types::propagating_process::{CausalProcessEffect, ProcessEffect};

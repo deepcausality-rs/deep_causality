@@ -18,7 +18,6 @@ impl<T: Display> Display for EffectValue<T> {
             EffectValue::RelayTo(target, _) => write!(f, "RelayTo({})", target),
             #[cfg(feature = "std")]
             EffectValue::Map(_) => write!(f, "Map(...)"),
-            EffectValue::External(_) => write!(f, "External(...)"),
         }
     }
 }
