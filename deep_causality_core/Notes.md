@@ -1,6 +1,4 @@
-# Deep Causality Core: Type System Analysis Report
-
-## Executive Summary
+# Deep Causality Core: Type System Analysis 
 
 This report provides a comprehensive analysis of the core type system in `deep_causality_core`, focusing on the monadic architecture for causal effect propagation. The system implements a Higher-Kinded Type (HKT) based design using arity-5 fixed-effect monads to handle stateful, context-aware causal computations with robust error handling and comprehensive logging.
 
