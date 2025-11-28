@@ -17,7 +17,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 /// This struct provides a high-level API for logging and ensures that all
 /// log entries are automatically timestamped. It hides the internal storage
 /// details to provide a clean and robust interface.
-#[derive(Debug, Default, Clone,Eq,  PartialEq)]
+#[derive(Debug, Default, Clone, Eq, PartialEq)]
 pub struct EffectLog {
     entries: Vec<LogEntry>,
 }
@@ -108,7 +108,7 @@ impl Display for EffectLog {
 
         writeln!(f, "EffectLog ({} entries):", self.entries.len())?;
         for entry in &self.entries {
-            writeln!(f, "[{}", entry.to_string())?;
+            writeln!(f, "[{}", entry)?;
         }
         Ok(())
     }

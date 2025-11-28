@@ -12,8 +12,8 @@
 //!
 //! The `PropagatingEffectWitness` acts as a marker type to associate the `CausalPropagatingEffect`
 //! with these HKT traits, facilitating generic programming over different causal effect types.
-use crate::{EffectLog, CausalPropagatingEffect, EffectValue, PropagatingEffectWitness};
-use deep_causality_haft::{Applicative, Functor, HKT, HKT3, Monad, LogAppend};
+use crate::{CausalPropagatingEffect, EffectLog, EffectValue, PropagatingEffectWitness};
+use deep_causality_haft::{Applicative, Functor, HKT, HKT3, LogAppend, Monad};
 
 /// Implements the `HKT` trait for `PropagatingEffectWitness`.
 ///
@@ -199,8 +199,7 @@ where
 /// computations that produce `CausalPropagatingEffect`s. It allows for chaining
 /// operations where each subsequent operation might depend on the result of the
 /// previous one, while correctly handling errors and aggregating logs.
-impl<E> Monad<PropagatingEffectWitness<E, EffectLog>>
-    for PropagatingEffectWitness<E, EffectLog>
+impl<E> Monad<PropagatingEffectWitness<E, EffectLog>> for PropagatingEffectWitness<E, EffectLog>
 where
     E: 'static + Clone,
 {

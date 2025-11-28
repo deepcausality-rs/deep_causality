@@ -13,7 +13,10 @@ pub(in crate::types) struct LogEntry {
 
 impl LogEntry {
     pub fn new(timestamp_ms: u128, message: String) -> Self {
-        Self { timestamp_ms, message }
+        Self {
+            timestamp_ms,
+            message,
+        }
     }
 }
 
@@ -27,8 +30,8 @@ impl LogEntry {
     }
 }
 
-impl Display for LogEntry{
+impl Display for LogEntry {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        format!("[{:0>6}] {}", self.timestamp_ms(), self.message).fmt(f)
+        format!("[{:0>6}] {}", self.timestamp_ms(), self.message()).fmt(f)
     }
 }

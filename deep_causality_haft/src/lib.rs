@@ -76,7 +76,7 @@ pub use crate::algebra::traversable::Traversable;
 
 // Effect System Traits
 pub use crate::effect_system::effect::{Effect3, Effect4, Effect5};
-pub use crate::effect_system::effect_log::{LogEffect, LogAddEntry, LogAppend, LogSize};
+pub use crate::effect_system::effect_log::{LogAddEntry, LogAppend, LogEffect, LogSize};
 pub use crate::effect_system::effect_unbound::{Effect3Unbound, Effect4Unbound, Effect5Unbound};
 pub use crate::effect_system::monad_effect::{MonadEffect3, MonadEffect4, MonadEffect5};
 pub use crate::effect_system::monad_effect_unbound::{

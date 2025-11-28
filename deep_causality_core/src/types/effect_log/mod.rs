@@ -5,8 +5,6 @@
 
 //! This module defines the CausalEffectLog type.
 
-
-pub mod log_entry;
 pub mod log_effect;
+pub mod log_entry;
 pub mod log_process;
-

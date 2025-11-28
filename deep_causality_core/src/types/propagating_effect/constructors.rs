@@ -1,6 +1,6 @@
 use crate::types::monad_types::causal_monad::CausalMonad;
 use crate::{
-    EffectLog, CausalPropagatingEffect, CausalityError, ContextoidId, EffectValue,
+    CausalPropagatingEffect, CausalityError, ContextoidId, EffectLog, EffectValue,
     IdentificationValue, NumericValue, PropagatingEffect,
 };
 #[cfg(feature = "alloc")]
@@ -180,10 +180,7 @@ where
     /// ```
     #[cfg(feature = "std")]
     pub fn from_map(
-        map: HashMap<
-            IdentificationValue,
-            Box<PropagatingEffect<Value, CausalityError, EffectLog>>,
-        >,
+        map: HashMap<IdentificationValue, Box<PropagatingEffect<Value, CausalityError, EffectLog>>>,
     ) -> CausalPropagatingEffect<Value, CausalityError, EffectLog> {
         CausalPropagatingEffect {
             value: EffectValue::Map(map),

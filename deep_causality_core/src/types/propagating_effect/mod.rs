@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
 
+use crate::EffectLog;
 use crate::errors::CausalityError;
 use crate::traits::intervenable::Intervenable;
 use crate::types::effect_value::EffectValue;
 use crate::types::monad_types::causal_monad::CausalMonad;
 use core::marker::PhantomData;
 use deep_causality_haft::{LogAppend, Placeholder};
-use crate::EffectLog;
 
 mod constructors;
 mod display;

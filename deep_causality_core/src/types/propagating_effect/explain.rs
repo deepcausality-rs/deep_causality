@@ -8,7 +8,7 @@ use alloc::string::String;
 use core::fmt::{Debug, Display};
 use deep_causality_haft::LogSize;
 
-impl<Value: Debug, Error: Debug, Log: Debug + Display+LogSize>
+impl<Value: Debug, Error: Debug, Log: Debug + Display + LogSize>
     CausalPropagatingEffect<Value, Error, Log>
 {
     /// Generates a human-readable explanation of the causal computation's history.
