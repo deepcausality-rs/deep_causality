@@ -6,8 +6,8 @@
 // multi_vector
 
 use crate::CausalMultiVectorError;
-use deep_causality_num::RealField;
-use std::ops::{AddAssign, Neg, SubAssign};
+use core::ops::{AddAssign, Neg, SubAssign};
+use deep_causality_num::Field;
 
 pub trait MultiVector<T> {
     // --- Fundamental Projections ---
@@ -17,7 +17,7 @@ pub trait MultiVector<T> {
     /// $$ \langle A \rangle_k = \sum_{I : |I|=k} a_I e_I $$
     fn grade_projection(&self, k: u32) -> Self
     where
-        T: RealField + Copy + Clone;
+        T: Field + Copy + Clone;
 
     // --- Geometric Operations ---
 
@@ -27,14 +27,14 @@ pub trait MultiVector<T> {
     /// $$ \tilde{A} = \sum_{k=0}^N (-1)^{k(k-1)/2} \langle A \rangle_k $$
     fn reversion(&self) -> Self
     where
-        T: RealField + Copy + Clone + Neg<Output = T>;
+        T: Field + Copy + Clone + Neg<Output = T>;
 
     /// Computes the squared magnitude (squared norm) of the multivector.
     ///
     /// $$ ||A||^2 = \langle A \tilde{A} \rangle_0 $$
     fn squared_magnitude(&self) -> T
     where
-        T: RealField + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>;
+        T: Field + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>;
 
     /// Computes the inverse of the multivector $A^{-1}$.
     ///
@@ -43,13 +43,13 @@ pub trait MultiVector<T> {
     /// Only valid if $A \tilde{A}$ is a non-zero scalar (Versor).
     fn inverse(&self) -> Result<Self, CausalMultiVectorError>
     where
-        T: RealField
+        T: Field
             + Copy
             + Clone
             + AddAssign
             + SubAssign
             + Neg<Output = T>
-            + std::ops::Div<Output = T>
+            + core::ops::Div<Output = T>
             + PartialEq,
         Self: Sized;
     /// Computes the dual of the multivector $A^*$.
@@ -58,13 +58,13 @@ pub trait MultiVector<T> {
     /// where $I$ is the pseudoscalar.
     fn dual(&self) -> Result<Self, CausalMultiVectorError>
     where
-        T: RealField
+        T: Field
             + Copy
             + Clone
             + AddAssign
             + SubAssign
             + Neg<Output = T>
-            + std::ops::Div<Output = T>
+            + core::ops::Div<Output = T>
             + PartialEq,
         Self: Sized;
 
@@ -80,7 +80,7 @@ pub trait MultiVector<T> {
     /// It is associative and distributive over addition.
     fn geometric_product(&self, rhs: &Self) -> Self
     where
-        T: RealField + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>;
+        T: Field + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>;
 
     /// Computes the outer product (wedge product) $A \wedge B$.
     ///
@@ -90,7 +90,7 @@ pub trait MultiVector<T> {
     /// For basis blades $e_I$ and $e_J$, $e_I \wedge e_J$ is non-zero only if $I \cap J = \emptyset$.
     fn outer_product(&self, rhs: &Self) -> Self
     where
-        T: RealField + Copy + Clone + AddAssign + SubAssign;
+        T: Field + Copy + Clone + AddAssign + SubAssign;
     /// Computes the inner product (left contraction) $A \cdot B$ (or $A \rfloor B$).
     ///
     /// The inner product of a grade $r$ multivector $A$ and a grade $s$ multivector $B$ is the grade $s-r$ part of their geometric product.
@@ -99,7 +99,7 @@ pub trait MultiVector<T> {
     /// For basis blades $e_I$ and $e_J$, $e_I \cdot e_J$ is non-zero only if $I \subseteq J$.
     fn inner_product(&self, rhs: &Self) -> Self
     where
-        T: RealField + Copy + Clone + AddAssign + SubAssign;
+        T: Field + Copy + Clone + AddAssign + SubAssign;
 
     /// Computes the Lie Bracket commutator $[A, B] = AB - BA$.
     ///
@@ -107,7 +107,7 @@ pub trait MultiVector<T> {
     /// For orthogonal basis vectors: $[e_1, e_2] = 2e_{12}$.
     fn commutator_lie(&self, rhs: &Self) -> Self
     where
-        T: RealField + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>;
+        T: Field + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>;
 
     /// Computes the Geometric Algebra commutator product $A \times B = \frac{1}{2}(AB - BA)$.
     ///
@@ -117,13 +117,13 @@ pub trait MultiVector<T> {
     /// **Requirement:** Type `T` must support division by 2 (e.g. `1 + 1`).
     fn commutator_geometric(&self, rhs: &Self) -> Self
     where
-        T: RealField
+        T: Field
             + Copy
             + Clone
             + AddAssign
             + SubAssign
             + Neg<Output = T>
-            + std::ops::Div<Output = T>;
+            + core::ops::Div<Output = T>;
 
     // --- CoMonadic Ops ---
 

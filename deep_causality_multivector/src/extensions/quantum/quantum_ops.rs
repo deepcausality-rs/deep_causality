@@ -48,7 +48,7 @@ impl QuantumOps for HilbertState {
 
         // 2. Complex Conjugation of coefficients
         for c in reversed.data.iter_mut() {
-            *c = c.conj();
+            *c = c.conjugate();
         }
 
         Self::from(reversed)

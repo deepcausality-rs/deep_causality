@@ -59,7 +59,7 @@ impl HilbertState {
 }
 
 // Allow adding two Quantum States: |psi> + |phi> (Superposition)
-impl std::ops::Add for HilbertState {
+impl core::ops::Add for HilbertState {
     type Output = Self;
     fn add(self, rhs: Self) -> Self::Output {
         // Delegate to underlying MultiVector addition
@@ -70,7 +70,7 @@ impl std::ops::Add for HilbertState {
 }
 
 // Allow scaling a State: c * |psi>
-impl std::ops::Mul<Complex<f64>> for HilbertState {
+impl core::ops::Mul<Complex<f64>> for HilbertState {
     type Output = Self;
     fn mul(self, rhs: Complex<f64>) -> Self::Output {
         Self { mv: self.mv * rhs }

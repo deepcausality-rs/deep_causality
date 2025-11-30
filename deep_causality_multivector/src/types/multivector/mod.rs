@@ -5,12 +5,13 @@
 
 use crate::CausalMultiVectorError;
 use crate::types::metric::Metric;
-use deep_causality_num::{Num, RealField, Zero};
+use deep_causality_num::{Field, Zero};
 
 mod api;
 mod causal_multivector_ops_arithmetic_impl;
 mod causal_multivector_ops_misc_impl;
 mod causal_multivector_ops_product_impl;
+mod identity;
 mod utils;
 
 /// A MultiVector in a Clifford Algebra $Cl(p, q, r)$.
@@ -93,7 +94,7 @@ impl<T> CausalMultiVector<T> {
     /// $$ I = e_1 \wedge e_2 \wedge \dots \wedge e_N $$
     pub fn pseudoscalar(metric: Metric) -> Self
     where
-        T: RealField + Copy + Clone,
+        T: Field + Copy + Clone,
     {
         let dim = metric.dimension();
         let size = 1 << dim;

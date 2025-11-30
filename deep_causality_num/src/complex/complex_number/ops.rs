@@ -119,6 +119,9 @@ impl<T: RealField> MulAssign<T> for Complex<T> {
 // Div
 impl<T: RealField> Div for Complex<T> {
     type Output = Self;
+    // Suppress False Positive lint
+    // https://rust-lang.github.io/rust-clippy/rust-1.91.0/index.html#suspicious_arithmetic_impl
+    #[allow(clippy::suspicious_arithmetic_impl)]
     #[inline]
     fn div(self, rhs: Self) -> Self::Output {
         self * rhs.inverse()
@@ -127,9 +130,11 @@ impl<T: RealField> Div for Complex<T> {
 
 // DivAssign
 impl<T: RealField> DivAssign for Complex<T> {
+    // Suppress False Positive lint
+    #[allow(clippy::suspicious_op_assign_impl)]
     #[inline]
     fn div_assign(&mut self, rhs: Self) {
-        *self = *self * rhs.inverse();
+        *self *= rhs.inverse();
     }
 }
 

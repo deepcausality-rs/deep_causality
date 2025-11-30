@@ -4,7 +4,7 @@
  */
 
 use deep_causality_multivector::{HilbertState, Metric, QuantumGates, QuantumOps};
-use deep_causality_num::{Complex64, ComplexNumber, One, Zero};
+use deep_causality_num::{Complex64, One, Zero};
 
 const DIM: usize = 10; // For Cl(0,10)
 const SIZE: usize = 1 << DIM; // 1024
@@ -50,7 +50,7 @@ fn test_dag_scalar_state() {
 
     let dag_state = state.dag();
     let mut expected_data = vec![Complex64::zero(); SIZE];
-    expected_data[0] = scalar_val.conj(); // Scalar part is just complex conjugated
+    expected_data[0] = scalar_val.conjugate(); // Scalar part is just complex conjugated
 
     assert_complex_vec_approx_eq(dag_state.mv().data(), &expected_data, EPSILON);
     assert_eq!(dag_state.mv().metric(), Metric::NonEuclidean(DIM));

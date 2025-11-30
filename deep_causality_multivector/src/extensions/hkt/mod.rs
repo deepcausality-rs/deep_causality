@@ -142,8 +142,8 @@ impl BoundedComonad<CausalMultiVectorWitness> for CausalMultiVectorWitness {
 
 // Implementation of BoundedAdjunction for CausalMultiVectorWitness
 // Context is Metric, as we need it to construct new MultiVectors in 'unit'.
+use core::ops::{Add, Mul};
 use deep_causality_haft::BoundedAdjunction;
-use std::ops::{Add, Mul};
 
 impl BoundedAdjunction<CausalMultiVectorWitness, CausalMultiVectorWitness, Metric>
     for CausalMultiVectorWitness

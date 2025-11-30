@@ -7,14 +7,14 @@ use alloc::vec;
 use alloc::vec::Vec;
 use core::ops::{AddAssign, Neg, SubAssign};
 use deep_causality_multivector::MultiVector;
-use deep_causality_num::Num;
+use deep_causality_num::Field;
 use deep_causality_tensor::CausalTensor;
 
 use crate::Topology;
 
 impl<T> Topology<T>
 where
-    T: MultiVector<T> + Clone + Num + Copy + AddAssign + SubAssign + Neg<Output = T>,
+    T: MultiVector<T> + Clone + Field + Copy + AddAssign + SubAssign + Neg<Output = T>,
 {
     /// The Cup Product: (k-form) U (l-form) -> (k+l)-form
     /// Used for Generative Quantum Gates: S = exp(a U a)
