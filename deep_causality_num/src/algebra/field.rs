@@ -67,7 +67,12 @@ impl<T> Field for T
 where
     T: CommutativeRing + Div<Output = Self> + DivAssign,
 {
+    #[inline]
     fn inverse(&self) -> Self {
-        todo!()
+        // The inverse is defined as Identity / Value.
+        // We utilize the Div trait which is required by Field.
+        // We clone self because Div takes operands by value (T / T).
+        // For Copy types like f64/Complex, clone() is a no-op copy.
+        T::one() / self.clone()
     }
 }
