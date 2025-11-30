@@ -4,7 +4,7 @@
  */
 
 use crate::{HilbertState, MultiVector};
-use deep_causality_num::{Complex, Complex64, ComplexNumber, Zero};
+use deep_causality_num::{Complex, Complex64, Zero};
 
 /// Operations specific to Quantum Mechanics / Hilbert Spaces.
 /// These correspond to Bra-Ket notation operations.

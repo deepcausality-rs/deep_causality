@@ -45,10 +45,10 @@ pub trait Algebra<R: Ring>: Module<R> + Mul<Output = Self> + MulAssign + One {
     ///
     /// # Example
     /// ```
-    /// use deep_causality_num::{Algebra, AssociateRing, DivisionAlgebra, Field, RealField};
+    /// use deep_causality_num::{Algebra, AssociativeRing, DivisionAlgebra, Field, RealField};
     /// let x = 2.0f64;
     /// // For real numbers, sqr() is the standard square.
-    /// assert_eq!(x.sqr(), 4.0);
+    /// assert_eq!(<f64 as Algebra<f64>>::sqr(&x), 4.0);
     /// ```
     fn sqr(&self) -> Self {
         self.clone() * self.clone()

@@ -5,7 +5,7 @@
 
 use crate::CausalMultiVectorError;
 use crate::types::metric::Metric;
-use deep_causality_num::{Num, Zero};
+use deep_causality_num::{Num, RealField, Zero};
 
 mod api;
 mod causal_multivector_ops_arithmetic_impl;
@@ -93,7 +93,7 @@ impl<T> CausalMultiVector<T> {
     /// $$ I = e_1 \wedge e_2 \wedge \dots \wedge e_N $$
     pub fn pseudoscalar(metric: Metric) -> Self
     where
-        T: Num + Copy + Clone,
+        T: RealField + Copy + Clone,
     {
         let dim = metric.dimension();
         let size = 1 << dim;

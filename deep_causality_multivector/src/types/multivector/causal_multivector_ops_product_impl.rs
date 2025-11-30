@@ -4,7 +4,7 @@
  */
 
 use super::CausalMultiVector;
-use deep_causality_num::Num;
+use deep_causality_num::{Num, RealField};
 use std::ops::{AddAssign, Neg, SubAssign};
 
 impl<T> CausalMultiVector<T> {
@@ -15,7 +15,7 @@ impl<T> CausalMultiVector<T> {
 
     pub(super) fn geometric_product_impl(&self, rhs: &Self) -> Self
     where
-        T: Num + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
+        T: RealField + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
     {
         if self.metric != rhs.metric {
             panic!(
@@ -38,7 +38,7 @@ impl<T> CausalMultiVector<T> {
     #[inline(always)]
     fn geometric_product_dense(&self, rhs: &Self, dim: usize) -> Self
     where
-        T: Num + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
+        T: RealField + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
     {
         let count = 1 << dim;
         let mut result_data = vec![T::zero(); count];
@@ -79,7 +79,7 @@ impl<T> CausalMultiVector<T> {
     // --- OPTIMIZED FOR HIGH DIMENSION (Sparsity & Caching) ---
     fn geometric_product_sparse(&self, rhs: &Self, dim: usize) -> Self
     where
-        T: Num + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
+        T: RealField + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
     {
         let count = 1 << dim;
         let mut result_data = vec![T::zero(); count];
@@ -155,7 +155,7 @@ impl<T> CausalMultiVector<T> {
     /// For basis blades $e_I$ and $e_J$, $e_I \wedge e_J$ is non-zero only if $I \cap J = \emptyset$.
     pub(super) fn outer_product_impl(&self, rhs: &Self) -> Self
     where
-        T: Num + Copy + Clone + AddAssign + SubAssign,
+        T: RealField + Copy + Clone + AddAssign + SubAssign,
     {
         if self.metric != rhs.metric {
             panic!("Metric mismatch");
@@ -209,7 +209,7 @@ impl<T> CausalMultiVector<T> {
     /// For basis blades $e_I$ and $e_J$, $e_I \cdot e_J$ is non-zero only if $I \subseteq J$.
     pub(super) fn inner_product_impl(&self, rhs: &Self) -> Self
     where
-        T: Num + Copy + Clone + AddAssign + SubAssign,
+        T: RealField + Copy + Clone + AddAssign + SubAssign,
     {
         if self.metric != rhs.metric {
             panic!("Metric mismatch");
@@ -251,7 +251,7 @@ impl<T> CausalMultiVector<T> {
 
     pub(super) fn commutator_lie_impl(&self, rhs: &Self) -> Self
     where
-        T: Num + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
+        T: RealField + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
     {
         if self.metric != rhs.metric {
             panic!("Metric mismatch");
@@ -305,7 +305,13 @@ impl<T> CausalMultiVector<T> {
     // The scaled logic 0.5 * (AB - BA)
     pub(super) fn commutator_geometric_impl(&self, rhs: &Self) -> Self
     where
-        T: Num + Copy + Clone + AddAssign + SubAssign + Neg<Output = T> + std::ops::Div<Output = T>,
+        T: RealField
+            + Copy
+            + Clone
+            + AddAssign
+            + SubAssign
+            + Neg<Output = T>
+            + std::ops::Div<Output = T>,
     {
         // 1. Calculate the raw Lie bracket (AB - BA)
         let lie_bracket = self.commutator_lie_impl(rhs);

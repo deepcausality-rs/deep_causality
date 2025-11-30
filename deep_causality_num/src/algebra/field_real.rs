@@ -15,7 +15,17 @@ use core::ops::{AddAssign, DivAssign, MulAssign, Neg, SubAssign};
 /// This trait abstracts over concrete floating-point types like `f32` and `f64`,
 /// and could be implemented for other types like dual numbers (for automatic
 /// differentiation) or custom fixed-point types.
-pub trait RealField: Field + PartialOrd + Neg<Output = Self> + Copy + Clone + AddAssign + SubAssign + MulAssign + DivAssign {
+pub trait RealField:
+    Field
+    + PartialOrd
+    + Neg<Output = Self>
+    + Copy
+    + Clone
+    + AddAssign
+    + SubAssign
+    + MulAssign
+    + DivAssign
+{
     /// Returns the `NaN` value.
     fn nan() -> Self;
 
@@ -32,7 +42,8 @@ pub trait RealField: Field + PartialOrd + Neg<Output = Self> + Copy + Clone + Ad
     /// # Example
     /// ```
     /// use deep_causality_num::RealField;
-    /// assert_eq!(-4.0f64.abs(), 4.0);
+    /// let x = -4.0f64;
+    /// assert_eq!(x.abs(), 4.0);
     /// ```
     fn abs(self) -> Self;
 

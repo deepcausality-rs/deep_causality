@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Complex, RealField, One, Zero};
+use crate::{Complex, One, RealField, Zero};
 
 impl<T: RealField> Complex<T> {
     /// Creates a new complex number from its real and imaginary parts.
@@ -84,11 +84,7 @@ impl<T: RealField> Complex<T> {
             n_abs /= 2;
         }
 
-        if n < 0 {
-            res.inverse()
-        } else {
-            res
-        }
+        if n < 0 { res.inverse() } else { res }
     }
 
     /// Raises a complex number to a real (scalar) power.

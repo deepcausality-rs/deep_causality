@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::{Complex, ComplexNumber, One, Zero};
+use deep_causality_num::{Complex, One, Zero};
 
 #[test]
 fn test_complex_zero() {

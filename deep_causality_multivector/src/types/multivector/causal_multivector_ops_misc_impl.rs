@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{CausalMultiVector, CausalMultiVectorError, MultiVector};
-use deep_causality_num::Num;
+use deep_causality_num::RealField;
 use std::ops::{AddAssign, Neg, SubAssign};
 
 impl<T> CausalMultiVector<T> {
@@ -12,7 +12,7 @@ impl<T> CausalMultiVector<T> {
     /// $$ \langle A \rangle_k = \sum_{I : |I|=k} a_I e_I $$
     pub(super) fn grade_projection_impl(&self, k: u32) -> Self
     where
-        T: Num + Copy + Clone,
+        T: RealField + Copy + Clone,
     {
         let mut result_data = vec![T::zero(); self.data.len()];
         for (i, val) in self.data.iter().enumerate() {
@@ -31,7 +31,7 @@ impl<T> CausalMultiVector<T> {
     /// $$ \tilde{A} = \sum_{k=0}^N (-1)^{k(k-1)/2} \langle A \rangle_k $$
     pub(super) fn reversion_impl(&self) -> Self
     where
-        T: Num + Copy + Clone + Neg<Output = T>,
+        T: RealField + Copy + Clone + Neg<Output = T>,
     {
         let mut result_data = vec![T::zero(); self.data.len()];
         for (i, val) in self.data.iter().enumerate() {
@@ -53,7 +53,7 @@ impl<T> CausalMultiVector<T> {
     /// $$ ||A||^2 = \langle A \tilde{A} \rangle_0 $$
     pub(super) fn squared_magnitude_impl(&self) -> T
     where
-        T: Num + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
+        T: RealField + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
     {
         let reverse = self.reversion();
         // We can optimize by only calculating the scalar part of the product
@@ -68,7 +68,7 @@ impl<T> CausalMultiVector<T> {
     /// Only valid if $A \tilde{A}$ is a non-zero scalar (Versor).
     pub(super) fn inverse_impl(&self) -> Result<Self, CausalMultiVectorError>
     where
-        T: Num
+        T: RealField
             + Copy
             + Clone
             + AddAssign
@@ -91,7 +91,7 @@ impl<T> CausalMultiVector<T> {
     /// where $I$ is the pseudoscalar.
     pub(super) fn dual_impl(&self) -> Result<Self, CausalMultiVectorError>
     where
-        T: Num
+        T: RealField
             + Copy
             + Clone
             + AddAssign

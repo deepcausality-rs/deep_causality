@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{CausalMultiVector, MultiVector};
-use deep_causality_num::{Num, Zero};
+use deep_causality_num::{Num, RealField, Zero};
 use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub, SubAssign};
 
 /// Implements component-wise addition of multivectors.
@@ -100,7 +100,7 @@ where
 
 impl<T> Mul for CausalMultiVector<T>
 where
-    T: Num + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
+    T: RealField + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
 {
     type Output = Self;
 
@@ -111,7 +111,7 @@ where
 
 impl<'b, T> Mul<&'b CausalMultiVector<T>> for &CausalMultiVector<T>
 where
-    T: Num + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
+    T: RealField + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
 {
     type Output = CausalMultiVector<T>;
 

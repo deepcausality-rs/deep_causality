@@ -10,7 +10,7 @@ impl<T: RealField + Display> Display for Complex<T> {
         if self.im >= T::zero() {
             write!(f, "{}+{}i", self.re, self.im)
         } else {
-            write!(f, "{}{}i", self.re, self.im)
+            write!(f, "{}{:.1}i", self.re, self.im)
         }
     }
 }

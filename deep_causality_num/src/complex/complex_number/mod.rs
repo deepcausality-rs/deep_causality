@@ -5,13 +5,13 @@
 
 use crate::RealField;
 
-mod ops;
 mod algebra;
 mod cast;
 mod complex_impl;
 mod fmt;
 mod identity;
 mod iter;
+mod ops;
 
 /// Represents a complex number with real and imaginary parts.
 ///

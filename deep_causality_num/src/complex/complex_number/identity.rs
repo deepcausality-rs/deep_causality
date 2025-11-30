@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Complex, ConstOne, ConstZero, RealField, One, Zero};
+use crate::{Complex, ConstOne, ConstZero, One, RealField, Zero};
 
 // Implement Zero trait
 impl<T> Zero for Complex<T>
