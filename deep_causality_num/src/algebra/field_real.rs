@@ -4,6 +4,7 @@
  */
 use crate::{AbelianGroup, CommutativeRing, DivisionAlgebra, Field};
 use core::cmp::PartialOrd;
+use core::ops::{AddAssign, DivAssign, MulAssign, Neg, SubAssign};
 
 /// Represents an ordered `Field` with additional operations for calculus and analysis.
 ///
@@ -14,7 +15,10 @@ use core::cmp::PartialOrd;
 /// This trait abstracts over concrete floating-point types like `f32` and `f64`,
 /// and could be implemented for other types like dual numbers (for automatic
 /// differentiation) or custom fixed-point types.
-pub trait RealField: Field + PartialOrd {
+pub trait RealField: Field + PartialOrd + Neg<Output = Self> + Copy + Clone + AddAssign + SubAssign + MulAssign + DivAssign {
+    /// Returns the `NaN` value.
+    fn nan() -> Self;
+
     /// Computes the principal square root of a number.
     /// For negative numbers, it returns `NaN`.
     /// # Example
@@ -118,6 +122,12 @@ pub trait RealField: Field + PartialOrd {
     /// ```
     fn tan(self) -> Self;
 
+    /// Computes the hyperbolic sine of a number.
+    fn sinh(self) -> Self;
+
+    /// Computes the hyperbolic cosine of a number.
+    fn cosh(self) -> Self;
+
     /// Computes the hyperbolic tangent of a number.
     /// # Example
     /// ```
@@ -197,6 +207,9 @@ impl DivisionAlgebra<f64> for f64 {
     }
 }
 impl RealField for f32 {
+    fn nan() -> Self {
+        f32::NAN
+    }
     fn sqrt(self) -> Self {
         self.sqrt()
     }
@@ -232,6 +245,12 @@ impl RealField for f32 {
     }
     fn tan(self) -> Self {
         self.tan()
+    }
+    fn sinh(self) -> Self {
+        self.sinh()
+    }
+    fn cosh(self) -> Self {
+        self.cosh()
     }
     fn tanh(self) -> Self {
         self.tanh()
@@ -248,6 +267,9 @@ impl RealField for f32 {
 }
 
 impl RealField for f64 {
+    fn nan() -> Self {
+        f64::NAN
+    }
     fn sqrt(self) -> Self {
         self.sqrt()
     }
@@ -283,6 +305,12 @@ impl RealField for f64 {
     }
     fn tan(self) -> Self {
         self.tan()
+    }
+    fn sinh(self) -> Self {
+        self.sinh()
+    }
+    fn cosh(self) -> Self {
+        self.cosh()
     }
     fn tanh(self) -> Self {
         self.tanh()
