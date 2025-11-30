@@ -26,9 +26,14 @@ exclude = [
 default = ["std"]
 std = ["alloc"]
 alloc = []
+strict-zst = []
 
 [dependencies]
 # deep_causality_num = { path = "../deep_causality_num", version = "0.1", default-features = false }
 deep_causality_haft = { path = "../deep_causality_haft", version = "0.2", default-features = false, features = [
     "alloc",
 ] }
+
+[[example]]
+name = "control_flow_builder"
+path = "examples/control_flow_builder.rs"

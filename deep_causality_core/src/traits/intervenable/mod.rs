@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
 use deep_causality_haft::{Effect5, HKT5};
 
 /// Defines the `intervene` operation for a monadic effect system.

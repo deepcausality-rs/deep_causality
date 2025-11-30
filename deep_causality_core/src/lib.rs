@@ -23,6 +23,14 @@ pub use crate::errors::causality_error::CausalityError;
 pub use crate::traits::intervenable::*;
 
 // Re-export types
+// Builder
+pub use crate::types::builder::causal_protocol::{CausalProtocol, FromProtocol, ToProtocol};
+pub use crate::types::builder::control_flow_builder::ControlFlowBuilder;
+pub use crate::types::builder::executable_edge::ExecutableEdge;
+pub use crate::types::builder::executable_graph::ExecutableGraph;
+pub use crate::types::builder::executable_node::ExecutableNode;
+pub use crate::types::builder::execution_graph_error::GraphError;
+//
 pub use crate::types::causal_effect_propagation_process::CausalEffectPropagationProcess;
 pub use crate::types::causal_effect_system::CausalEffectSystem;
 pub use crate::types::causal_monad::CausalMonad;
