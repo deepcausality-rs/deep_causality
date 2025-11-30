@@ -161,14 +161,18 @@ pub trait RealField:
     /// Returns the constant π.
     fn pi() -> Self;
 
-    /// Returns the constant e, the base of the natural logarithm.
+    /// Returns the Euler number e, the base of the natural logarithm.
     fn e() -> Self;
+
+    /// Machine epsilon.
+    /// Used for comparison comparisons to zero.
+    fn epsilon() -> Self; // 1.19e-7 (f32) or 2.22e-16 (f64)
 }
 
 impl AbelianGroup for f32 {}
-impl CommutativeRing for f32 {}
-
 impl AbelianGroup for f64 {}
+
+impl CommutativeRing for f32 {}
 impl CommutativeRing for f64 {}
 
 // Division Algebra (Specific Implementation) ---
@@ -275,6 +279,9 @@ impl RealField for f32 {
     fn e() -> Self {
         std::f32::consts::E
     }
+    fn epsilon() -> Self {
+        f32::EPSILON
+    }
 }
 
 impl RealField for f64 {
@@ -334,5 +341,8 @@ impl RealField for f64 {
     }
     fn e() -> Self {
         std::f64::consts::E
+    }
+    fn epsilon() -> Self {
+        f64::EPSILON
     }
 }

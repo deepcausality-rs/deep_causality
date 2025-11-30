@@ -8,9 +8,11 @@ use crate::types::metric::Metric;
 use deep_causality_num::{Field, Zero};
 
 mod api;
+mod causal_multivector_algebra;
 mod causal_multivector_ops_arithmetic_impl;
 mod causal_multivector_ops_misc_impl;
 mod causal_multivector_ops_product_impl;
+mod getters;
 mod identity;
 mod utils;
 
@@ -26,16 +28,6 @@ mod utils;
 pub struct CausalMultiVector<T> {
     pub(crate) data: Vec<T>,
     pub(crate) metric: Metric,
-}
-
-impl<T> CausalMultiVector<T> {
-    pub fn data(&self) -> &Vec<T> {
-        &self.data
-    }
-
-    pub fn metric(&self) -> Metric {
-        self.metric
-    }
 }
 
 impl<T> CausalMultiVector<T> {

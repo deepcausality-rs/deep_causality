@@ -8,7 +8,7 @@ use crate::RealField;
 mod algebra;
 mod cast;
 mod complex_impl;
-mod fmt;
+mod display;
 mod identity;
 mod iter;
 mod ops;
