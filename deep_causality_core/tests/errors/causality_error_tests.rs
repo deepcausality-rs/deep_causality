@@ -3,53 +3,47 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_core::CausalityError;
+use deep_causality_core::{CausalityError, CausalityErrorEnum};
 use std::collections::HashSet;
 use std::fmt::Write;
 
 #[test]
 fn test_new() {
-    let msg = "Test error message".to_string();
-    let error = CausalityError::new(msg.clone());
-    assert_eq!(error.0, msg);
+    let error_enum = CausalityErrorEnum::Unspecified;
+    let error = CausalityError::new(error_enum);
+    assert_eq!(error.0, error_enum);
 }
 
 #[test]
 fn test_display() {
-    let msg = "Test error message".to_string();
-    let error = CausalityError::new(msg.clone());
+    let error_enum = CausalityErrorEnum::InternalLogicError;
+    let error = CausalityError::new(error_enum);
     let mut output = String::new();
     write!(&mut output, "{}", error).unwrap();
-    assert_eq!(output, msg);
+    assert_eq!(output, "InternalLogicError");
 }
 
 #[test]
 fn test_debug() {
-    let msg = "Test error message".to_string();
-    let error = CausalityError::new(msg.clone());
+    let error_enum = CausalityErrorEnum::TypeConversionError;
+    let error = CausalityError::new(error_enum);
     let debug_str = format!("{:?}", error);
-    assert!(debug_str.contains(&msg));
+    assert!(debug_str.contains("TypeConversionError"));
     assert!(debug_str.starts_with("CausalityError"));
 }
 
 #[test]
 fn test_clone() {
-    let msg = "Test error message".to_string();
-    let error1 = CausalityError::new(msg);
-    let error2 = error1.clone();
+    let error1 = CausalityError::new(CausalityErrorEnum::Unspecified);
+    let error2 = error1;
     assert_eq!(error1, error2);
 }
 
 #[test]
 fn test_partial_eq() {
-    let msg1 = "Test error message".to_string();
-    let error1 = CausalityError::new(msg1);
-
-    let msg2 = "Another error message".to_string();
-    let error2 = CausalityError::new(msg2);
-
-    let msg3 = "Test error message".to_string();
-    let error3 = CausalityError::new(msg3);
+    let error1 = CausalityError::new(CausalityErrorEnum::Unspecified);
+    let error2 = CausalityError::new(CausalityErrorEnum::InternalLogicError);
+    let error3 = CausalityError::new(CausalityErrorEnum::Unspecified);
 
     assert_ne!(error1, error2);
     assert_eq!(error1, error3);
@@ -58,16 +52,13 @@ fn test_partial_eq() {
 #[test]
 fn test_default() {
     let error: CausalityError = Default::default();
-    assert_eq!(error.0, "");
+    assert_eq!(error.0, CausalityErrorEnum::default());
 }
 
 #[test]
 fn test_hash() {
-    let msg1 = "Test error message".to_string();
-    let error1 = CausalityError::new(msg1);
-
-    let msg2 = "Test error message".to_string();
-    let error2 = CausalityError::new(msg2);
+    let error1 = CausalityError::new(CausalityErrorEnum::Unspecified);
+    let error2 = CausalityError::new(CausalityErrorEnum::Unspecified);
 
     let mut set = HashSet::new();
     set.insert(error1);
@@ -75,8 +66,7 @@ fn test_hash() {
     assert!(!set.insert(error2));
     assert_eq!(set.len(), 1);
 
-    let msg3 = "Another message".to_string();
-    let error3 = CausalityError::new(msg3);
+    let error3 = CausalityError::new(CausalityErrorEnum::InternalLogicError);
     assert!(set.insert(error3));
     assert_eq!(set.len(), 2);
 }
@@ -84,7 +74,6 @@ fn test_hash() {
 #[cfg(feature = "std")]
 #[test]
 fn test_std_error_trait() {
-    let msg = "Test error".to_string();
-    let error = CausalityError::new(msg);
+    let error = CausalityError::new(CausalityErrorEnum::Unspecified);
     let _err: Box<dyn std::error::Error> = Box::new(error);
 }

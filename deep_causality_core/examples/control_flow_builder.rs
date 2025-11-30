@@ -5,7 +5,7 @@
 
 extern crate alloc;
 use deep_causality_core::ControlFlowBuilder;
-use deep_causality_core::{CausalProtocol, FromProtocol, ToProtocol};
+use deep_causality_core::{ControlFlowProtocol, FromProtocol, ToProtocol};
 
 // Strict Function 1: Sensor reading
 // Input: bool - sets the sensor active
@@ -85,16 +85,14 @@ pub enum PhysicsProtocol {
     Signal(bool),
     Tensor(Vec<f64>), // Simplified for demo
     Scalar(f64),
-    Error(String),
+    Error(&'static str),
 }
 
-impl CausalProtocol for PhysicsProtocol {
-    fn error<E: core::fmt::Display>(msg: &E) -> Self {
-        // In a real embedded system, we might log this to a ring buffer.
-        // For the example, we can still allocate if we want, or store a static string.
-        // Here we just format it to show it works, but the trait signature allows zero-alloc.
-        use alloc::format;
-        Self::Error(format!("{}", msg))
+impl ControlFlowProtocol for PhysicsProtocol {
+    fn error<E: core::fmt::Debug>(_e: E) -> Self {
+        // In a real system, one might log the debug representation of `e`
+        // before returning a static error. Here, we just return the variant.
+        Self::Error("Protocol Mismatch")
     }
 }
 

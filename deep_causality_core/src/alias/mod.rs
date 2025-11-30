@@ -16,7 +16,6 @@ pub type CausaloidId = u64;
 
 #[cfg(feature = "alloc")]
 /// A string value that provides a human-readable description of a Cause or Context
-/// A string value that provides a human-readable description of a Cause or Context
 pub type DescriptionValue = String;
 /// A floating point value that represents a numerical measure
 pub type NumericalValue = f64;

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::CausalProtocol;
+use crate::ControlFlowProtocol;
 use crate::ExecutableNode;
 use crate::types::builder::execution_graph_error::GraphError;
 #[cfg(feature = "alloc")]
@@ -18,7 +18,7 @@ pub struct ExecutableGraph<P> {
     pub(crate) adjacency: Vec<Vec<usize>>,
 }
 
-impl<P: CausalProtocol> ExecutableGraph<P> {
+impl<P: ControlFlowProtocol> ExecutableGraph<P> {
     /// Executes the graph with an initial input using an iterative BFS approach.
     ///
     /// # Arguments
@@ -74,7 +74,7 @@ impl<P: CausalProtocol> ExecutableGraph<P> {
     }
 }
 
-impl<P: CausalProtocol> ExecutableGraph<P> {
+impl<P: ControlFlowProtocol> ExecutableGraph<P> {
     pub fn nodes(&self) -> &Vec<ExecutableNode<P>> {
         &self.nodes
     }

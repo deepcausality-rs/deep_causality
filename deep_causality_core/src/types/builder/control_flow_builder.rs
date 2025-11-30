@@ -4,7 +4,7 @@
  */
 
 use crate::types::builder::executable_node_type::NodeType;
-use crate::{CausalProtocol, FromProtocol, ToProtocol};
+use crate::{ControlFlowProtocol, FromProtocol, ToProtocol};
 use crate::{ExecutableEdge, ExecutableGraph, ExecutableNode};
 
 #[cfg(all(feature = "alloc", not(feature = "strict-zst")))]
@@ -17,7 +17,7 @@ pub struct ControlFlowBuilder<P> {
     edges: Vec<ExecutableEdge>,
 }
 
-impl<P: CausalProtocol> ControlFlowBuilder<P> {
+impl<P: ControlFlowProtocol> ControlFlowBuilder<P> {
     pub fn new() -> Self {
         Self {
             nodes: Vec::new(),
@@ -60,7 +60,7 @@ impl<P: CausalProtocol> ControlFlowBuilder<P> {
             // This avoids Box<dyn Fn> and closures, using only a plain function pointer.
             fn adapter_wrapper<P, I, O, F>(input_enum: P) -> P
             where
-                P: CausalProtocol,
+                P: ControlFlowProtocol,
                 I: FromProtocol<P>,
                 O: ToProtocol<P>,
                 F: Fn(I) -> O + Copy + Send + Sync + 'static,
@@ -76,7 +76,7 @@ impl<P: CausalProtocol> ControlFlowBuilder<P> {
                     }
                     Err(e) => {
                         // Note: We cannot capture 'id' in a plain function pointer.
-                        P::error(&e)
+                        P::error(e)
                     }
                 }
             }
@@ -109,7 +109,7 @@ impl<P: CausalProtocol> ControlFlowBuilder<P> {
                         // We can capture ID here, but to keep it zero-alloc we pass the error directly.
                         // If we want to include ID, we'd need a stack-based formatter or similar,
                         // but for now we prioritize zero-alloc.
-                        P::error(&e)
+                        P::error(e)
                     }
                 }
             };
@@ -153,7 +153,7 @@ impl<P: CausalProtocol> ControlFlowBuilder<P> {
     }
 }
 
-impl<P: CausalProtocol> Default for ControlFlowBuilder<P> {
+impl<P: ControlFlowProtocol> Default for ControlFlowBuilder<P> {
     fn default() -> Self {
         Self::new()
     }

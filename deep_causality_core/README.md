@@ -21,7 +21,46 @@
 
 **Core types and abstractions for the [DeepCausality project](http://www.deepcausality.com).**
 
-This crate provides the foundational building blocks for causal reasoning, effect propagation, and mission-critical control flow construction. It is designed for high-assurance systems, supporting `no_std`, zero-allocation execution, and formal certification requirements.
+This crate provides the foundational building blocks for causal reasoning, effect propagation, and mission-critical control flow construction. It is designed for high-assurance systems, supporting `no_std`, zero-allocation execution, and embedded requirements.
+
+### Architecture
+
+`deep_causality_core` provides two distinct, powerful abstractions for structuring complex logic. They can be used
+independently.
+
+#### 1. The `ControlFlowBuilder`: For Correct-by-Construction Systems
+
+*   **What It Is**: A tool for defining a **static, compile-time verified** execution graph. Nodes are functions, and
+    edges are data flows between them.
+*   **Key Feature**: **Safety**. The Rust compiler ensures you can only connect an output of type `T` to an input of type
+    `T`. This eliminates an entire class of runtime integration errors.
+*   **Best For**:
+    *   **Safety-Critical & Embedded Systems**: With the `strict-zst` feature, it guarantees zero heap allocations and no
+        dynamic dispatch in the execution path, making it suitable for environments requiring formal verification and WCET
+        analysis (Worst-Case Execution Time).
+    *   **ETL Pipelines**: Defining fixed data transformation pipelines where the flow is static and reliability is
+        paramount.
+*   **Independence**: It has **no dependency** on the monadic effect system. It is a standalone tool for building robust,
+    static graphs.
+
+#### 2. The Monadic Effect System: For Dynamic Causal Reasoning
+
+*   **What It Is**: A flexible, functional foundation for modeling processes using monadic types like
+    `PropagatingEffect` (stateless) and `PropagatingProcess` (stateful).
+*   **Key Feature**: **Flexibility & Composability**. It allows for dynamic chaining of operations (`bind`), state
+    propagation, context-awareness, and causal interventions.
+*   **Best For**:
+    *   The foundation of the main `deep_causality` library.
+    *   Complex simulations where state and context evolve.
+    *   Systems that need to reason about and dynamically respond to events.
+*   **Relationship**: This system is the foundation that enables the advanced causal reasoning capabilities of the wider
+    DeepCausality ecosystem.
+
+**How to Choose**:
+
+*   If you need to a **fixed, static, and ultra-reliable data-flow graph** and cannot tolerate runtime errors or allocations, use the **`ControlFlowBuilder`**.
+*   If you are building a system that requires **dynamic, stateful, and context-aware reasoning**, use the **Monadic
+    Effect System**. For more advanced reasoning capabilities refer to the main `deep_causality` crate.
 
 ## Core Capabilities
 
@@ -48,7 +87,7 @@ This crate is designed to scale from research prototypes to certified flight con
 | **`alloc`** | Yes | Enables heap allocation (`Vec`, `Box`). | **Embedded Linux / RTOS**. Required for dynamic graph construction. Most embedded systems use this. |
 | **`strict-zst`** | **No** | **Certification Mode**. Enforces Zero-Sized Types. | **Safety-Critical / Hard Real-Time**. See below. |
 
-### The `strict-zst` Feature (Certification Mode)
+### The `strict-zst` Feature
 
 When `strict-zst` is enabled, the `ControlFlowBuilder` enforces that all user-provided logic must be **Zero-Sized Types (ZSTs)** (i.e., static function items).
 
@@ -65,10 +104,11 @@ When `strict-zst` is enabled, the `ControlFlowBuilder` enforces that all user-pr
 
 ## Usage Examples
 
+
 ### Control Flow Builder (Mission Critical)
 
 ```rust
-use deep_causality_core::{ControlFlowBuilder, CausalProtocol, FromProtocol, ToProtocol};
+use deep_causality_core::{ControlFlowBuilder, ControlFlowProtocol, FromProtocol, ToProtocol};
 use std::collections::VecDeque;
 
 // 1. Define your Domain Protocol
@@ -77,7 +117,7 @@ enum MyProtocol {
     Signal(bool),
     Command(u8),
 }
-// ... impl CausalProtocol, FromProtocol, ToProtocol ...
+// ... impl ControlFlowProtocol, FromProtocol, ToProtocol ...
 
 fn sensor_read(input: bool) -> u8 {
     if input { 100 } else { 0 }

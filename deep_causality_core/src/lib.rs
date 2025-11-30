@@ -17,14 +17,14 @@ mod types;
 pub use crate::alias::*;
 
 // Re-export error types
-pub use crate::errors::causality_error::CausalityError;
+pub use crate::errors::causality_error::{CausalityError, CausalityErrorEnum};
 
 // Re-export traits
+pub use crate::traits::control_flow_protocol::{ControlFlowProtocol, FromProtocol, ToProtocol};
 pub use crate::traits::intervenable::*;
 
 // Re-export types
 // Builder
-pub use crate::types::builder::causal_protocol::{CausalProtocol, FromProtocol, ToProtocol};
 pub use crate::types::builder::control_flow_builder::ControlFlowBuilder;
 pub use crate::types::builder::executable_edge::ExecutableEdge;
 pub use crate::types::builder::executable_graph::ExecutableGraph;
@@ -37,7 +37,7 @@ pub use crate::types::causal_monad::CausalMonad;
 pub use crate::types::effect_log::log_effect::EffectLog;
 pub use crate::types::effect_value::EffectValue;
 pub use crate::types::numeric_value::NumericValue;
-pub use crate::types::propagating_effect::PropagatingEffect;
 pub use crate::types::propagating_effect::hkt::PropagatingEffectWitness;
-pub use crate::types::propagating_process::PropagatingProcess;
+pub use crate::types::propagating_effect::PropagatingEffect;
 pub use crate::types::propagating_process::hkt::PropagatingProcessWitness;
+pub use crate::types::propagating_process::PropagatingProcess;

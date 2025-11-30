@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{EffectLog, EffectValue, PropagatingProcess};
+use crate::{CausalityError, CausalityErrorEnum, EffectLog, EffectValue, PropagatingProcess};
 use deep_causality_haft::{Applicative, Functor, HKT, LogAppend, Monad, Placeholder};
 use std::marker::PhantomData;
 
@@ -25,15 +25,31 @@ where
     where
         Func: FnOnce(A) -> B,
     {
-        PropagatingProcess {
-            value: EffectValue::Value(f(m_a
-                .value
-                .into_value()
-                .expect("Functor fmap on a non-error process should contain a value"))),
-            state: m_a.state,
-            context: m_a.context,
-            error: m_a.error,
-            logs: m_a.logs,
+        if m_a.error.is_some() {
+            return PropagatingProcess {
+                value: EffectValue::None,
+                state: m_a.state,
+                context: m_a.context,
+                error: m_a.error,
+                logs: m_a.logs,
+            };
+        }
+
+        match m_a.value.into_value() {
+            Some(a) => PropagatingProcess {
+                value: EffectValue::Value(f(a)),
+                state: m_a.state,
+                context: m_a.context,
+                error: m_a.error,
+                logs: m_a.logs,
+            },
+            None => PropagatingProcess {
+                value: EffectValue::None,
+                state: m_a.state,
+                context: m_a.context,
+                error: Some(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
+                logs: m_a.logs,
+            },
         }
     }
 }
@@ -65,17 +81,31 @@ where
         combined_logs.append(&mut f_a.logs);
 
         let error = f_ab.error.or(f_a.error);
+        if error.is_some() {
+            return PropagatingProcess {
+                value: EffectValue::None,
+                state: f_ab.state, // State from the function context is carried over
+                context: f_ab.context.or(f_a.context),
+                error,
+                logs: combined_logs,
+            };
+        }
 
-        let value = (f_ab.value.into_value().expect("Value expected in apply"))(
-            f_a.value.into_value().expect("Value expected in apply"),
-        );
-
-        PropagatingProcess {
-            value: EffectValue::Value(value),
-            state: f_ab.state, // State from the function context is carried over
-            context: f_ab.context.or(f_a.context),
-            error,
-            logs: combined_logs,
+        match (f_ab.value.into_value(), f_a.value.into_value()) {
+            (Some(mut f), Some(a)) => PropagatingProcess {
+                value: EffectValue::Value(f(a)),
+                state: f_ab.state, // State from the function context is carried over
+                context: f_ab.context.or(f_a.context),
+                error,
+                logs: combined_logs,
+            },
+            _ => PropagatingProcess {
+                value: EffectValue::None,
+                state: f_ab.state, // State from the function context is carried over
+                context: f_ab.context.or(f_a.context),
+                error: Some(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
+                logs: combined_logs,
+            },
         }
     }
 }
@@ -99,7 +129,18 @@ where
             };
         }
 
-        let a = m_a.value.into_value().expect("Value expected in bind");
+        let a = match m_a.value.into_value() {
+            Some(val) => val,
+            None => {
+                return PropagatingProcess {
+                    value: EffectValue::None,
+                    state: m_a.state,
+                    context: m_a.context,
+                    error: Some(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
+                    logs: m_a.logs,
+                };
+            }
+        };
 
         let mut next_effect = f(a);
 

@@ -5,12 +5,12 @@
 
 use core::fmt::{Display, Formatter};
 
-#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
-pub struct CausalityError(pub String);
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct CausalityError(pub CausalityErrorEnum);
 
 impl CausalityError {
-    pub fn new(message: String) -> Self {
-        CausalityError(message)
+    pub fn new(error_enum: CausalityErrorEnum) -> Self {
+        CausalityError(error_enum)
     }
 }
 
@@ -19,6 +19,25 @@ impl std::error::Error for CausalityError {}
 
 impl Display for CausalityError {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
-        write!(f, "{}", self.0)
+        // Delegate to the debug representation of the inner enum.
+        write!(f, "{:?}", self.0)
     }
+}
+
+
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub enum CausalityErrorEnum {
+    // Generic Errors
+    #[default]
+    Unspecified = 0,
+    InternalLogicError = 1,  // For logic paths that should be unreachable
+    TypeConversionError = 2, // For failures in `FromProtocol`
+
+    // Graph Execution Errors
+    StartNodeOutOfBounds = 10,
+    MaxStepsExceeded = 11,
+    GraphExecutionProducedNoResult = 12,
+    // Add other specific errors as they are identified
 }

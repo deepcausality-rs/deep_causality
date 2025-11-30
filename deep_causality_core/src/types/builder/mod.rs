@@ -3,7 +3,6 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-pub mod causal_protocol;
 pub mod control_flow_builder;
 pub mod executable_edge;
 pub mod executable_graph;

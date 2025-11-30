@@ -44,7 +44,7 @@
 use crate::errors::causality_error::CausalityError;
 use crate::traits::intervenable::Intervenable;
 use crate::types::causal_system::CausalSystem;
-use crate::{CausalEffectPropagationProcess, EffectLog, EffectValue};
+use crate::{CausalEffectPropagationProcess, CausalityErrorEnum, EffectLog, EffectValue};
 use deep_causality_haft::{Effect5, Functor, LogAddEntry, LogAppend, MonadEffect5};
 use std::marker::PhantomData;
 
@@ -91,10 +91,18 @@ where
             };
         }
 
-        let value = process
-            .value
-            .into_value()
-            .expect("Bind on non-error process");
+        let value = match process.value.into_value() {
+            Some(v) => v,
+            None => {
+                return CausalEffectPropagationProcess {
+                    value: EffectValue::Value(U::default()),
+                    state: process.state,
+                    context: process.context,
+                    error: Some(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
+                    logs: process.logs,
+                };
+            }
+        };
         let mut next_process = f(value);
 
         next_process.state = process.state;
@@ -116,14 +124,10 @@ where
     fn intervene<T>(
         effect: CausalEffectPropagationProcess<T, S, C, CausalityError, EffectLog>,
         new_value: T,
-    ) -> CausalEffectPropagationProcess<T, S, C, CausalityError, EffectLog>
-    where
-        T: std::fmt::Debug,
-    {
+    ) -> CausalEffectPropagationProcess<T, S, C, CausalityError, EffectLog> {
         // 1. Preserve the incoming logs and add a new entry for the intervention.
         let mut new_logs = effect.logs;
-        let log_message = format!("Intervention: Value replaced with {:?}", new_value);
-        new_logs.add_entry(&log_message);
+        new_logs.add_entry("Intervention occurred");
 
         // 2. Construct the new effect.
         CausalEffectPropagationProcess {

@@ -29,7 +29,6 @@ alloc = []
 strict-zst = []
 
 [dependencies]
-# deep_causality_num = { path = "../deep_causality_num", version = "0.1", default-features = false }
 deep_causality_haft = { path = "../deep_causality_haft", version = "0.2", default-features = false, features = [
     "alloc",
 ] }
@@ -37,3 +36,8 @@ deep_causality_haft = { path = "../deep_causality_haft", version = "0.2", defaul
 [[example]]
 name = "control_flow_builder"
 path = "examples/control_flow_builder.rs"
+
+[[example]]
+name = "control_flow_strict_zst"
+path = "examples/control_flow_strict_zst.rs"
+required-features = ["strict-zst"]
