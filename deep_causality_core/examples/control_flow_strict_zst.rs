@@ -7,7 +7,7 @@
 extern crate alloc;
 
 use alloc::collections::VecDeque;
-use deep_causality_core::{ControlFlowProtocol, ControlFlowBuilder, FromProtocol, ToProtocol};
+use deep_causality_core::{ControlFlowBuilder, ControlFlowProtocol, FromProtocol, ToProtocol};
 
 // Define the logic functions using the new explicit types.
 

@@ -1,5 +1,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
+extern crate core;
 
+mod algebra;
 mod alias;
 mod cast;
 mod complex;
@@ -10,7 +12,25 @@ pub mod num;
 mod ops;
 pub mod utils_tests;
 
+// Alias types 
 pub use crate::alias::{Matrix3, Vector3};
+
+// Algebra types
+pub use crate::algebra::algebra_associative::AssociativeAlgebra;
+pub use crate::algebra::algebra_div::DivisionAlgebra;
+pub use crate::algebra::field::Field;
+pub use crate::algebra::field_real::RealField;
+pub use crate::algebra::group::Group;
+pub use crate::algebra::group_abelian::AbelianGroup;
+pub use crate::algebra::group_add::AddGroup;
+pub use crate::algebra::group_div::DivGroup;
+pub use crate::algebra::group_mul::MulGroup;
+pub use crate::algebra::module::Module;
+pub use crate::algebra::monoid::{AddMonoid, MulMonoid};
+pub use crate::algebra::ring::Ring;
+pub use crate::algebra::ring_associative::AssociativeRing;
+
+// Casts
 pub use crate::cast::as_primitive::AsPrimitive;
 pub use crate::cast::as_scalar::float_as_scalar_impl::FloatAsScalar;
 pub use crate::cast::as_scalar::int_as_scalar_impl::IntAsScalar;

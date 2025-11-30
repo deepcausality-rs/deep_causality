@@ -24,8 +24,6 @@ impl Display for CausalityError {
     }
 }
 
-
-
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum CausalityErrorEnum {

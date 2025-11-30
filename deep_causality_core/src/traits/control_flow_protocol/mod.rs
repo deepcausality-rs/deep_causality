@@ -3,7 +3,6 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-
 use core::fmt::Debug;
 
 /// The fundamental contract for data flowing through the system.
