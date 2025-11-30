@@ -12,11 +12,13 @@ pub mod num;
 mod ops;
 pub mod utils_tests;
 
-// Alias types 
+// Alias types
 pub use crate::alias::{Matrix3, Vector3};
 
 // Algebra types
-pub use crate::algebra::algebra_associative::AssociativeAlgebra;
+pub use crate::algebra::algebra_assoc::AssociativeAlgebra;
+pub use crate::algebra::algebra_assoc_div::AssociativeDivisionAlgebra;
+pub use crate::algebra::algebra_base::Algebra;
 pub use crate::algebra::algebra_div::DivisionAlgebra;
 pub use crate::algebra::field::Field;
 pub use crate::algebra::field_real::RealField;

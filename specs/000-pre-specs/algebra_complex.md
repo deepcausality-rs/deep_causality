@@ -15,34 +15,29 @@ This document outlines the plan to define new algebraic traits (`DivisionAlgebra
 
 ### Phase 1: Trait Definitions
 
-1.  **Define `AssociativeRing` Trait**
+### Phase 1: Trait Definitions and Refactoring
+
+1.  **Verify/Update `AssociativeRing` Trait**
     *   **File:** `deep_causality_num/src/algebra/ring_associative.rs`
-    *   **Purpose:** To define properties of a ring where multiplication is associative.
-    *   **Dependencies:** Will likely extend the existing `Ring` trait (if one exists, otherwise define `Ring` first) and `core::ops::{Add, Mul, Sub, AddAssign, MulAssign, SubAssign}`.
-    *   **Key Methods/Bounds:**
-        *   Inherit `Add`, `Mul`, `Sub` (from `Ring`).
-        *   Require `AddAssign`, `MulAssign`, `SubAssign`.
-        *   Potentially add `one()` and `zero()` for identity elements.
-        *   Formalize associativity for multiplication: `(a * b) * c == a * (b * c)`.
+    *   **Status:** Already exists.
+    *   **Action:** Verify it inherits from `Ring` and is correctly documented.
 
-2.  **Define `AssociativeAlgebra` Trait**
+2.  **Verify/Update `AssociativeAlgebra` Trait**
     *   **File:** `deep_causality_num/src/algebra/algebra_associative.rs`
-    *   **Purpose:** To define properties of an associative algebra over a `Field` (scalar multiplication).
-    *   **Dependencies:** Will extend `AssociativeRing` and potentially `Module` (if an existing module trait is suitable, otherwise define one).
-    *   **Key Methods/Bounds:**
-        *   Inherit `AssociativeRing` properties.
-        *   Require scalar multiplication (e.g., `Mul<Scalar, Output = Self>`).
-        *   Define bounds for the `Scalar` type (e.g., `Field` or `RealField`).
+    *   **Status:** Already exists.
+    *   **Action:** Verify it inherits from `AssociativeRing` and `Module`.
 
-3.  **Define `DivisionAlgebra` Trait**
-    *   **File:** `deep_causality_num/src/algebra/algebra_division.rs`
-    *   **Purpose:** To define properties of an algebra where every non-zero element has a multiplicative inverse.
-    *   **Dependencies:** Will extend `AssociativeAlgebra` and `core::ops::Div`.
-    *   **Key Methods/Bounds:**
-        *   Inherit `AssociativeAlgebra` properties.
-        *   Require an `inverse()` method that returns `Option<Self>` or `Self` (handling zero division).
-        *   Formalize division property: `a * a.inverse() == One`.
-        *   The scalar field for the algebra must itself be a `Field`.
+3.  **Refactor `DivisionAlgebra` Trait (Generalization)**
+    *   **File:** `deep_causality_num/src/algebra/algebra_div.rs`
+    *   **Current State:** Inherits from `AssociativeAlgebra` + `MulGroup`. This is too restrictive for Octonions (non-associative).
+    *   **Action:** Refactor to inherit from `Algebra` (general, non-associative) + `Div` + `One` + `Zero`.
+    *   **Key Methods:** `inverse()`.
+
+4.  **Define `AssociativeDivisionAlgebra` Trait**
+    *   **File:** `deep_causality_num/src/algebra/algebra_ass_div.rs` (new file)
+    *   **Purpose:** To represent division algebras that are also associative (e.g., Quaternions).
+    *   **Dependencies:** Inherits from `DivisionAlgebra` + `AssociativeAlgebra`.
+    *   **Key Methods:** None (marker trait combining properties).
 
 ### Phase 2: Refactor Octonion for `DivisionAlgebra`
 
@@ -66,6 +61,11 @@ This document outlines the plan to define new algebraic traits (`DivisionAlgebra
 2.  **Implement `AssociativeAlgebra` for `Quaternion<F>`:**
     *   **File:** `deep_causality_num/src/complex/quaternion_number/quaternion_algebra_impl.rs`
     *   **Implementation:** Implement the `AssociativeAlgebra` trait, leveraging the `AssociativeRing` and scalar multiplication.
+    *   **Bounds:** Ensure `F` implements `RealField`.
+
+3.  **Implement `AssociativeDivisionAlgebra` for `Quaternion<F>`:**
+    *   **File:** `deep_causality_num/src/complex/quaternion_number/quaternion_algebra_impl.rs`
+    *   **Implementation:** Implement the `AssociativeDivisionAlgebra` trait.
     *   **Bounds:** Ensure `F` implements `RealField`.
 
 ### Phase 4: Refactor Complex for `Field`

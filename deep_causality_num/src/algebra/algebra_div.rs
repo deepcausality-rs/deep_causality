@@ -3,24 +3,22 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{AssociativeAlgebra, Field, MulGroup};
+use crate::{Algebra, Field, One, Zero};
+use std::ops::{Div, DivAssign};
 
-/// A Division Algebra is an `AssociativeAlgebra` where every non-zero element
+/// A Division Algebra is an `Algebra` where every non-zero element
 /// has a multiplicative inverse.
 ///
 /// This implies that division by any non-zero element is well-defined.
+/// It does *not* require associativity (e.g., Octonions).
 ///
 /// ## Requirements:
-/// 1. `Self` forms an `AssociativeAlgebra` over a `Field` (its scalar field).
-/// 2. `Self` forms a `MulGroup`, which guarantees a multiplicative inverse
-///    for non-zero elements.
-/// 3. Division (`/`) operation is available and consistent with the inverse.
-pub trait DivisionAlgebra<R: Field>: AssociativeAlgebra<R> + MulGroup {}
-
-// Blanket implementation for any type that satisfies the bounds
-impl<T, R> DivisionAlgebra<R> for T
-where
-    T: AssociativeAlgebra<R> + MulGroup,
-    R: Field,
+/// 1. `Self` forms an `Algebra` over a `Field`.
+/// 2. `Self` has a multiplicative identity (`One`).
+/// 3. Every non-zero element has an inverse.
+pub trait DivisionAlgebra<R: Field>:
+    Algebra<R> + Div<Output = Self> + DivAssign + One + Zero + Clone
 {
+    /// Returns the multiplicative inverse of `self`.
+    fn inverse(&self) -> Self;
 }

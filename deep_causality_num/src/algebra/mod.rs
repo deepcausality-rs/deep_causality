@@ -3,7 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-pub mod algebra_associative;
+pub mod algebra_assoc;
+pub mod algebra_assoc_div;
+pub mod algebra_base;
 pub mod algebra_div;
 pub mod field;
 pub mod field_real;
