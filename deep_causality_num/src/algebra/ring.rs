@@ -5,22 +5,38 @@
 
 use crate::{AbelianGroup, MulMonoid};
 
+/// Represents a **Ring** in abstract algebra.
 ///
-/// A Ring is a set equipped with Addition (+) and Multiplication (*).
+/// A ring is an algebraic structure with two binary operations, addition and
+/// multiplication, that is more general than a `Field` because it does not
+/// require multiplicative inverses for all non-zero elements.
 ///
-/// ## Structure:
-/// 1. Addition forms an Abelian Group (Commutative, Inverse, Identity 0).
-/// 2. Multiplication forms a Monoid (Associative, Identity 1).
-/// 3. Multiplication distributes over Addition: a*(b+c) = a*b + a*c.
+/// # Mathematical Definition
 ///
-/// ## Requirements:
-/// 1. Addition is an Abelian Group.
-/// 2. Multiplication is a Monoid (Associative).
-/// 3. Distributivity holds (implied).
+/// A set `R` is a ring if it satisfies the following laws:
+///
+/// 1.  **Under Addition:** `R` forms an `AbelianGroup`.
+///     - Addition is associative: `(a + b) + c = a + (b + c)`
+///     - Addition is commutative: `a + b = b + a`
+///     - There is an additive identity `0`: `a + 0 = a`
+///     - Every element `a` has an additive inverse `-a`: `a + (-a) = 0`
+///
+/// 2.  **Under Multiplication:** `R` forms a `MulMonoid`.
+///     - Multiplication is associative: `(a * b) * c = a * (b * c)`
+///     - There is a multiplicative identity `1`: `a * 1 = a`
+///
+/// 3.  **Distributivity:** Multiplication distributes over addition.
+///     - `a * (b + c) = (a * b) + (a * c)` (Left distributivity)
+///     - `(a + b) * c = (a * c) + (b * c)` (Right distributivity)
+///
+/// This trait combines `AbelianGroup` and `MulMonoid` to enforce these properties.
+/// The distributivity law is implicitly assumed to be upheld by the `Add` and
+/// `Mul` implementations.
 pub trait Ring: AbelianGroup + MulMonoid {
-    // No new methods needed.
-    // It just guarantees you can use +, -, *, 0, 1.
+    // This is a marker trait that combines other traits.
+    // It guarantees that a type supports `+`, `-`, `*`, `0`, and `1`
+    // with the expected algebraic properties of a ring.
 }
 
-// Blanket Implementation for all types that implement Add, Sub, Mul, MulAssign, and One
+// Blanket Implementation
 impl<T> Ring for T where T: AbelianGroup + MulMonoid {}

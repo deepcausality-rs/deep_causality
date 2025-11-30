@@ -31,6 +31,7 @@ pub use crate::algebra::module::Module;
 pub use crate::algebra::monoid::{AddMonoid, MulMonoid};
 pub use crate::algebra::ring::Ring;
 pub use crate::algebra::ring_associative::AssociativeRing;
+pub use crate::algebra::ring_com::CommutativeRing;
 
 // Casts
 pub use crate::cast::as_primitive::AsPrimitive;

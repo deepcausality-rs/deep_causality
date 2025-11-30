@@ -3,23 +3,27 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{AssociativeRing, Field, Module};
+use crate::{Algebra, AssociativeRing, Field, Module, Ring};
 
-/// An Associative Algebra is an `AssociativeRing` that is also a `Module`
-/// over a `Field` (its scalar field), such that scalar multiplication
-/// is compatible with the ring multiplication.
+/// A marker trait for an **Associative Algebra**.
 ///
-/// This trait serves as a semantic marker for types that explicitly represent
-/// a **Unital** Associative Algebra (since `Ring` requires `One`).
+/// This trait identifies an `Algebra` where the multiplication operation is
+/// associative. Since the `Ring` trait (required by `Algebra`) already enforces
+/// associativity via `MulMonoid`, this trait serves as a semantic marker to
+/// distinguish from non-associative algebras like Octonions.
 ///
-/// ## Requirements:
-/// 1. `Self` forms an `AssociativeRing`.
-/// 2. `Self` forms a `Module` over a scalar `Field`.
-/// 3. Compatibility of operations:
-///    * `r * (a * b) = (r * a) * b = a * (r * b)` for scalar `r` and elements `a, b`.
-///    * The `Module` trait's `Mul<R, Output=Self>` and `MulAssign<R>` already
-///      imply the necessary compatibility with scalar multiplication.
-pub trait AssociativeAlgebra<R: Field>: AssociativeRing + Module<R> {}
+/// # Mathematical Definition
+///
+/// An associative algebra `A` is an algebra that is also an `AssociativeRing`.
+/// This means it satisfies the law:
+///
+/// `(x * y) * z = x * (y * z)` for all `x, y, z` in `A`.
+///
+/// ## Examples
+///
+/// - **Associative:** Real numbers, Complex numbers, Quaternions.
+/// - **Non-Associative:** Octonions.
+pub trait AssociativeAlgebra<R: Ring>: Algebra<R> + Ring {}
 
 // Blanket implementation for any type that satisfies the bounds
 impl<T, R> AssociativeAlgebra<R> for T

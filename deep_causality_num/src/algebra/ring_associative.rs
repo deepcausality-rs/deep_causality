@@ -5,16 +5,24 @@
 
 use crate::Ring;
 
-/// An Associative Ring is a Ring where multiplication is associative.
+/// A marker trait for an **Associative Ring**.
 ///
-/// Since the `MulMonoid` trait (which `Ring` transitively requires) already
-/// enforces associativity of multiplication, this trait serves primarily
-/// as a semantic marker for types that explicitly represent an associative ring.
+/// A ring is associative if its multiplication operation is associative.
 ///
-/// Laws (inherited from Ring and MulMonoid):
-/// 1. Addition forms an Abelian Group.
-/// 2. Multiplication forms an Associative Monoid.
-/// 3. Distributivity holds (multiplication distributes over addition).
+/// # Note on Implementation
+///
+/// The base `Ring` trait in this crate requires `MulMonoid`, which in turn
+/// requires multiplication to be associative. Therefore, any type that
+/// implements `Ring` is already an associative ring.
+///
+/// This trait serves as a semantic marker to make the associative property
+/// explicit at the type level, distinguishing it from potential future
+/// non-associative ring structures.
+///
+/// # Mathematical Definition
+///
+/// An associative ring is a `Ring` that satisfies the law:
+/// - `(a * b) * c = a * (b * c)` for all `a, b, c` in the ring.
 pub trait AssociativeRing: Ring {}
 
 // Blanket Implementation for all types that implement Ring
