@@ -26,7 +26,7 @@ use crate::{AssociativeAlgebra, DivisionAlgebra, Field};
 /// but are not associative.
 pub trait AssociativeDivisionAlgebra<R: Field>: DivisionAlgebra<R> + AssociativeAlgebra<R> {}
 
-// Blanket implementation for AssociativeDivisionAlgebra
+// Blanket implementation
 impl<T, R> AssociativeDivisionAlgebra<R> for T
 where
     T: DivisionAlgebra<R> + AssociativeAlgebra<R>,

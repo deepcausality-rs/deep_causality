@@ -3,14 +3,17 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Algebra, AssociativeRing, Field, Module, Ring};
+use crate::{Algebra, AssociativeRing, Ring};
 
 /// A marker trait for an **Associative Algebra**.
 ///
 /// This trait identifies an `Algebra` where the multiplication operation is
-/// associative. Since the `Ring` trait (required by `Algebra`) already enforces
-/// associativity via `MulMonoid`, this trait serves as a semantic marker to
-/// distinguish from non-associative algebras like Octonions.
+/// associative. Since the `AssociativeRing` trait (required by this trait's
+/// mathematical definition and implied by the explicit `Associative` marker
+/// trait for implementors) guarantees associativity of multiplication,
+/// this trait explicitly signals that property.
+///
+/// It is distinct from non-associative algebras like Octonions.
 ///
 /// # Mathematical Definition
 ///
@@ -23,12 +26,12 @@ use crate::{Algebra, AssociativeRing, Field, Module, Ring};
 ///
 /// - **Associative:** Real numbers, Complex numbers, Quaternions.
 /// - **Non-Associative:** Octonions.
-pub trait AssociativeAlgebra<R: Ring>: Algebra<R> + Ring {}
+pub trait AssociativeAlgebra<R: Ring>: Algebra<R> + AssociativeRing {}
 
-// Blanket implementation for any type that satisfies the bounds
+// Blanket implementation
 impl<T, R> AssociativeAlgebra<R> for T
 where
-    T: AssociativeRing + Module<R>,
-    R: Field,
+    T: Algebra<R> + Ring, // Ring implies Associative
+    R: Ring,
 {
 }

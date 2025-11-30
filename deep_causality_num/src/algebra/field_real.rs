@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{AbelianGroup, CommutativeRing, DivisionAlgebra, Field};
+use crate::{AbelianGroup, DivisionAlgebra, Field};
 use core::cmp::PartialOrd;
 use core::ops::{AddAssign, DivAssign, MulAssign, Neg, SubAssign};
 
@@ -172,8 +172,7 @@ pub trait RealField:
 impl AbelianGroup for f32 {}
 impl AbelianGroup for f64 {}
 
-impl CommutativeRing for f32 {}
-impl CommutativeRing for f64 {}
+// CommutativeRing is derived automatically
 
 // Division Algebra (Specific Implementation) ---
 // There is no blanket for this, so we implement it manually.

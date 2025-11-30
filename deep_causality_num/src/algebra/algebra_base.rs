@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Module, One, Ring};
+use crate::{Distributive, Module, One, Ring};
 use std::ops::{Mul, MulAssign};
 
 /// Represents a Unital Algebra over a `Ring`.
@@ -34,22 +34,19 @@ use std::ops::{Mul, MulAssign};
 /// ## Note:
 /// This trait does *not* require the algebra to be associative. For that, see
 /// the `AssociativeAlgebra` trait.
-pub trait Algebra<R: Ring>: Module<R> + Mul<Output = Self> + MulAssign + One {
-    /// Computes the square of an element.
-    ///
-    /// This is a convenience method equivalent to `self * self`.
-    ///
-    /// # Returns
-    ///
-    /// The result of multiplying `self` by itself.
-    ///
-    /// # Example
-    /// ```
-    /// use deep_causality_num::{Algebra, AssociativeRing, DivisionAlgebra, Field, RealField};
-    /// let x = 2.0f64;
-    /// // For real numbers, sqr() is the standard square.
-    /// assert_eq!(<f64 as Algebra<f64>>::sqr(&x), 4.0);
-    /// ```
+/// An Algebra over a Ring R.
+///
+/// Mathematical Definition: A Vector Space (Module) equipped with a
+/// bilinear product.
+///
+/// Constraints:
+/// 1. It is a Module (AddGroup + Scaling).
+/// 2. It is Unital (Has One).
+/// 3. It is Distributive (a(b+c) = ab + ac).
+/// 4. It is NOT necessarily Associative (Octonions allowed).
+pub trait Algebra<R: Ring>:
+    Module<R> + Mul<Output = Self> + MulAssign + One + Distributive
+{
     fn sqr(&self) -> Self {
         self.clone() * self.clone()
     }
@@ -58,7 +55,7 @@ pub trait Algebra<R: Ring>: Module<R> + Mul<Output = Self> + MulAssign + One {
 // Blanket implementation
 impl<T, R> Algebra<R> for T
 where
-    T: Module<R> + Mul<Output = Self> + MulAssign + One,
+    T: Module<R> + Mul<Output = Self> + MulAssign + One + Distributive,
     R: Ring,
 {
 }

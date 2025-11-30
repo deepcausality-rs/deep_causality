@@ -23,7 +23,10 @@ use deep_causality_num::{AbelianGroup, AssociativeRing, Field, Module, RealField
 //     *   **Implements:** `AbelianGroup` + `Copy`.
 //     *   **Does NOT Implement:** `AssociativeRing` (Non-associative).
 //     *   **Path:** Uses **Tier 1**. `add`, `sub` work.
-//     *   **Safety:** `geometric_product` is **Compile-Time Blocked**. You cannot accidentally multiply Octonion-MultiVectors (which would be mathematically undefined in standard Clifford terms). This is correct behavior.
+//     *   **Safety:** `geometric_product` is **Compile-Time Blocked**.
+//
+// You cannot accidentally multiply Octonion-MultiVectors (which would be undefined in standard Clifford terms).
+// This is correct behavior.
 //
 // 4.  **Tensors (`CausalTensor<T>`):**
 //     *   **Path:** `CausalMultiVector<f64>` implements `AssociativeRing` (via Tier 3/4).

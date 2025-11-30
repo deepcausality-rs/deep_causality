@@ -2,8 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{One, Zero};
-use core::ops::{Add, AddAssign, Mul, MulAssign};
+use crate::{Associative, MulMagma, One, Zero};
+use core::ops::{Add, AddAssign};
 
 /// Represents an **Additive Monoid**.
 ///
@@ -42,7 +42,7 @@ impl<T> AddMonoid for T where T: Add<Output = Self> + AddAssign + Zero + Clone {
 ///     `a * 1 = 1 * a = a` for all `a` in `S`. (Provided by the `One` trait).
 ///
 /// The `Clone` and `MulAssign` bounds are included for practical purposes.
-pub trait MulMonoid: Mul<Output = Self> + MulAssign + One + Clone {}
+pub trait MulMonoid: MulMagma + One + Associative {}
 
 // Blanket Implementation for all types that implement Mul, MulAssign, and One
-impl<T> MulMonoid for T where T: Mul<Output = Self> + MulAssign + One + Clone {}
+impl<T> MulMonoid for T where T: MulMagma + One + Associative {}

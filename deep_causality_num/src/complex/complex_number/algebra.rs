@@ -2,14 +2,20 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{AbelianGroup, CommutativeRing, Complex, DivisionAlgebra, MulGroup, RealField};
+use crate::{
+    AbelianGroup, Associative, Commutative, Complex, Distributive, DivisionAlgebra, MulGroup,
+    RealField,
+};
 
 // Marker Trait Implementations
+impl<T: RealField> Associative for Complex<T> {}
+impl<T: RealField> Commutative for Complex<T> {}
+impl<T: RealField> Distributive for Complex<T> {}
+
 impl<T: RealField> AbelianGroup for Complex<T> {}
-impl<T: RealField> CommutativeRing for Complex<T> {}
 
 // The blanket impls for AssociativeRing, Field, and AssociativeDivisionAlgebra
-// will apply automatically as Complex<T> now satisfies their supertraits.
+// will apply automatically as Complex<T> now satisfies their super-traits.
 
 // Required by Field -> CommutativeRing -> Ring -> MulMonoid -> MulGroup
 // This delegates to the safe, inherent `inverse` method via the `Div` trait.

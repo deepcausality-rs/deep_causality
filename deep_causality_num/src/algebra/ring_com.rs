@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::Ring;
+use crate::{Commutative, Ring};
 
 /// A marker trait for a **Commutative Ring**.
 ///
@@ -26,4 +26,6 @@ use crate::Ring;
 /// This property is particularly important for constructs like matrix algebra,
 /// where certain properties (e.g., of the determinant) depend on the underlying
 /// ring being commutative.
-pub trait CommutativeRing: Ring {}
+pub trait CommutativeRing: Ring + Commutative {}
+
+impl<T> CommutativeRing for T where T: Ring + Commutative {}

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{AbelianGroup, MulMonoid};
+use crate::{AbelianGroup, Distributive, MulMonoid};
 
 /// Represents a **Ring** in abstract algebra.
 ///
@@ -32,11 +32,10 @@ use crate::{AbelianGroup, MulMonoid};
 /// This trait combines `AbelianGroup` and `MulMonoid` to enforce these properties.
 /// The distributivity law is implicitly assumed to be upheld by the `Add` and
 /// `Mul` implementations.
-pub trait Ring: AbelianGroup + MulMonoid {
-    // This is a marker trait that combines other traits.
-    // It guarantees that a type supports `+`, `-`, `*`, `0`, and `1`
-    // with the expected algebraic properties of a ring.
-}
+pub trait Ring: AbelianGroup + MulMonoid + Distributive {}
+// This is a marker trait that combines other traits.
+// It guarantees that a type supports `+`, `-`, `*`, `0`, and `1`
+// with the expected algebraic properties of a ring.
 
 // Blanket Implementation
-impl<T> Ring for T where T: AbelianGroup + MulMonoid {}
+impl<T> Ring for T where T: AbelianGroup + MulMonoid + Distributive {}
