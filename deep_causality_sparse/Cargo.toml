@@ -22,3 +22,11 @@ version = "0.1"
 [[example]]
 name = "basic_matrix_ops"
 path = "examples/basic_matrix_ops.rs"
+
+[dev-dependencies]
+criterion = { version = "0.8" }
+deep_causality_rand = { path = "../deep_causality_rand"}
+
+[[bench]]
+name = "csr_matrix_benchmarks"
+harness = false
