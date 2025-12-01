@@ -8,6 +8,7 @@ mod default;
 mod display;
 mod getters;
 mod ops;
+mod algebra;
 
 use crate::SparseMatrixError;
 use deep_causality_num::Zero;
