@@ -3,10 +3,81 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::{Octonion, One, RealField, Zero};
 use core::iter::{Product, Sum};
-use core::ops::{Add, Div, Mul, Rem, Sub};
+use core::ops::{Add, Div, Mul, Sub};
+use std::ops::{AddAssign, DivAssign, MulAssign, SubAssign};
 
-use crate::{Float, Octonion, OctonionNumber, One, Zero};
+/// Implements the `Sum` trait for `Octonion`, allowing an iterator of octonions to be summed.
+///
+/// The sum is performed by iteratively adding each octonion in the iterator.
+///
+/// # Arguments
+/// * `iter` - An iterator that yields `Octonion<F>` values.
+///
+/// # Returns
+/// A single `Octonion` representing the sum of all octonions in the iterator.
+/// If the iterator is empty, it returns the zero octonion.
+///
+/// # Examples
+/// ```
+/// use deep_causality_num::Octonion;
+/// use deep_causality_num::Zero;
+///
+/// let o1 = Octonion::new(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+/// let o2 = Octonion::new(2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0);
+/// let o3 = Octonion::new(3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0);
+/// let octonions = vec![o1, o2, o3];
+/// let sum: Octonion<f64> = octonions.into_iter().sum();
+/// assert_eq!(sum.s, 6.0);
+/// assert_eq!(sum.e1, 6.0);
+///
+/// let empty_vec: Vec<Octonion<f64>> = Vec::new();
+/// let empty_sum: Octonion<f64> = empty_vec.into_iter().sum();
+/// assert_eq!(empty_sum, Octonion::zero());
+/// ```
+impl<F: RealField> Sum for Octonion<F> {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Octonion::zero(), |acc, x| acc + x)
+    }
+}
+
+/// Implements the `Product` trait for `Octonion`, allowing an iterator of octonions to be multiplied.
+///
+/// The product is performed by iteratively multiplying each octonion in the iterator.
+/// Due to non-associativity, the order of multiplication matters. This implementation
+/// performs sequential left-to-right multiplication.
+///
+/// # Arguments
+/// * `iter` - An iterator that yields `Octonion<F>` values.
+///
+/// # Returns
+/// A single `Octonion` representing the product of all octonions in the iterator.
+/// If the iterator is empty, it returns the identity octonion (1).
+///
+/// # Examples
+/// ```
+/// use deep_causality_num::Octonion;
+/// use deep_causality_num::One;
+///
+/// let o_one = Octonion::one();
+/// let e1 = Octonion::new(0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+/// let e2 = Octonion::new(0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+/// let e3 = Octonion::new(0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0);
+///
+/// let octonions = vec![o_one, e1, e2];
+/// let product: Octonion<f64> = octonions.into_iter().product();
+/// assert_eq!(product, e3); // (1 * e1) * e2 = e1 * e2 = e3
+///
+/// let empty_vec: Vec<Octonion<f64>> = Vec::new();
+/// let empty_product: Octonion<f64> = empty_vec.into_iter().product();
+/// assert_eq!(empty_product, Octonion::one());
+/// ```
+impl<F: RealField> Product for Octonion<F> {
+    fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Octonion::one(), |acc, x| acc * x)
+    }
+}
 
 /// Implements the addition operator (`+`) for two `Octonion` numbers.
 ///
@@ -31,7 +102,7 @@ use crate::{Float, Octonion, OctonionNumber, One, Zero};
 /// assert_eq!(sum.e1, 12.0);
 /// // ... and so on for other components
 /// ```
-impl<F: Float> Add for Octonion<F> {
+impl<F: RealField> Add for Octonion<F> {
     type Output = Self;
     fn add(self, rhs: Self) -> Self::Output {
         Self {
@@ -44,6 +115,38 @@ impl<F: Float> Add for Octonion<F> {
             e6: self.e6 + rhs.e6,
             e7: self.e7 + rhs.e7,
         }
+    }
+}
+
+/// Implements the addition assignment operator (`+=`) for two `Octonion` numbers.
+///
+/// Each component of `self` is added to the corresponding component of `other`.
+/// `self = self + other`
+///
+/// # Arguments
+/// * `self` - The left-hand side `Octonion` to be modified.
+/// * `other` - The right-hand side `Octonion` to add.
+///
+/// # Examples
+/// ```
+/// use deep_causality_num::Octonion;
+///
+/// let mut o1 = Octonion::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);
+/// let o2 = Octonion::new(9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
+/// o1 += o2;
+/// assert_eq!(o1.s, 10.0);
+/// assert_eq!(o1.e1, 12.0);
+/// ```
+impl<F: RealField> AddAssign for Octonion<F> {
+    fn add_assign(&mut self, other: Self) {
+        self.s += other.s;
+        self.e1 += other.e1;
+        self.e2 += other.e2;
+        self.e3 += other.e3;
+        self.e4 += other.e4;
+        self.e5 += other.e5;
+        self.e6 += other.e6;
+        self.e7 += other.e7;
     }
 }
 
@@ -70,7 +173,7 @@ impl<F: Float> Add for Octonion<F> {
 /// assert_eq!(diff.e1, 8.0);
 /// // ... and so on for other components
 /// ```
-impl<F: Float> Sub for Octonion<F> {
+impl<F: RealField> Sub for Octonion<F> {
     type Output = Self;
     fn sub(self, rhs: Self) -> Self::Output {
         Self {
@@ -83,6 +186,38 @@ impl<F: Float> Sub for Octonion<F> {
             e6: self.e6 - rhs.e6,
             e7: self.e7 - rhs.e7,
         }
+    }
+}
+
+/// Implements the subtraction assignment operator (`-=`) for two `Octonion` numbers.
+///
+/// Each component of `other` is subtracted from the corresponding component of `self`.
+/// `self = self - other`
+///
+/// # Arguments
+/// * `self` - The left-hand side `Octonion` to be modified.
+/// * `other` - The right-hand side `Octonion` to subtract.
+///
+/// # Examples
+/// ```
+/// use deep_causality_num::Octonion;
+///
+/// let mut o1 = Octonion::new(9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
+/// let o2 = Octonion::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);
+/// o1 -= o2;
+/// assert_eq!(o1.s, 8.0);
+/// assert_eq!(o1.e1, 8.0);
+/// ```
+impl<F: RealField> SubAssign for Octonion<F> {
+    fn sub_assign(&mut self, other: Self) {
+        self.s -= other.s;
+        self.e1 -= other.e1;
+        self.e2 -= other.e2;
+        self.e3 -= other.e3;
+        self.e4 -= other.e4;
+        self.e5 -= other.e5;
+        self.e6 -= other.e6;
+        self.e7 -= other.e7;
     }
 }
 
@@ -119,7 +254,7 @@ impl<F: Float> Sub for Octonion<F> {
 /// let neg_one = Octonion::new(-1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 /// assert_eq!(e1 * e1, neg_one);
 /// ```
-impl<F: Float> Mul for Octonion<F> {
+impl<F: RealField> Mul for Octonion<F> {
     type Output = Self;
     fn mul(self, rhs: Self) -> Self::Output {
         let s_res = self.s * rhs.s
@@ -181,6 +316,30 @@ impl<F: Float> Mul for Octonion<F> {
     }
 }
 
+/// Implements the multiplication assignment operator (`*=`) for an `Octonion` and another `Octonion`.
+///
+/// `self = self * other`
+///
+/// # Arguments
+/// * `self` - The left-hand side `Octonion` to be modified.
+/// * `other` - The right-hand side `Octonion` to multiply by.
+///
+/// # Examples
+/// ```
+/// use deep_causality_num::Octonion;
+/// use deep_causality_num::Zero;
+///
+/// let mut o = Octonion::new(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // 1
+/// let e1 = Octonion::new(0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+/// o *= e1; // o becomes e1
+/// assert_eq!(o, e1);
+/// ```
+impl<F: RealField> MulAssign for Octonion<F> {
+    fn mul_assign(&mut self, other: Self) {
+        *self = *self * other;
+    }
+}
+
 /// Implements scalar multiplication for an `Octonion` by a scalar of type `F`.
 ///
 /// Each component of the octonion is multiplied by the scalar value.
@@ -204,7 +363,7 @@ impl<F: Float> Mul for Octonion<F> {
 /// assert_eq!(prod.e1, 4.0);
 /// // ... and so on for other components
 /// ```
-impl<F: Float> Mul<F> for Octonion<F> {
+impl<F: RealField> Mul<F> for Octonion<F> {
     type Output = Self;
     fn mul(self, scalar: F) -> Self {
         Octonion {
@@ -217,6 +376,38 @@ impl<F: Float> Mul<F> for Octonion<F> {
             e6: self.e6 * scalar,
             e7: self.e7 * scalar,
         }
+    }
+}
+
+/// Implements scalar multiplication assignment (`*=`) for an `Octonion` by a scalar of type `F`.
+///
+/// Each component of `self` is multiplied by the `scalar` value.
+/// `self = self * scalar`
+///
+/// # Arguments
+/// * `self` - The `Octonion` to be modified.
+/// * `scalar` - The scalar value of type `F`.
+///
+/// # Examples
+/// ```
+/// use deep_causality_num::Octonion;
+///
+/// let mut o = Octonion::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);
+/// let scalar = 2.0;
+/// o *= scalar;
+/// assert_eq!(o.s, 2.0);
+/// assert_eq!(o.e1, 4.0);
+/// ```
+impl<F: RealField> MulAssign<F> for Octonion<F> {
+    fn mul_assign(&mut self, scalar: F) {
+        self.s *= scalar;
+        self.e1 *= scalar;
+        self.e2 *= scalar;
+        self.e3 *= scalar;
+        self.e4 *= scalar;
+        self.e5 *= scalar;
+        self.e6 *= scalar;
+        self.e7 *= scalar;
     }
 }
 
@@ -260,10 +451,35 @@ impl<F: Float> Mul<F> for Octonion<F> {
 /// assert_eq!(e1 / e2, neg_e3);
 /// ```
 #[allow(clippy::suspicious_arithmetic_impl)]
-impl<F: Float> Div for Octonion<F> {
+impl<F: RealField> Div for Octonion<F> {
     type Output = Self;
     fn div(self, other: Self) -> Self {
         self * other.inverse()
+    }
+}
+
+/// Implements the division assignment operator (`/=`) for an `Octonion` and another `Octonion`.
+///
+/// `self = self / other` (right division)
+///
+/// # Arguments
+/// * `self` - The left-hand side `Octonion` to be modified.
+/// * `other` - The right-hand side `Octonion` to divide by.
+///
+/// # Examples
+/// ```
+/// use deep_causality_num::Octonion;
+/// use deep_causality_num::{One, Zero};
+///
+/// let mut o = Octonion::one(); // 1
+/// let e1 = Octonion::new(0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+/// let neg_e1 = -e1;
+/// o /= e1; // o becomes 1 / e1 = -e1
+/// assert_eq!(o, neg_e1);
+/// ```
+impl<F: RealField> DivAssign for Octonion<F> {
+    fn div_assign(&mut self, other: Self) {
+        *self = *self / other;
     }
 }
 
@@ -291,7 +507,7 @@ impl<F: Float> Div for Octonion<F> {
 /// assert_eq!(quot.e1, 2.0);
 /// // ... and so on for other components
 /// ```
-impl<F: Float> Div<F> for Octonion<F> {
+impl<F: RealField> Div<F> for Octonion<F> {
     type Output = Self;
     fn div(self, scalar: F) -> Self {
         let inv_scalar = F::one() / scalar;
@@ -299,108 +515,34 @@ impl<F: Float> Div<F> for Octonion<F> {
     }
 }
 
-/// Implements the remainder operator (`%`) for two `Octonion` numbers.
+/// Implements scalar division assignment (`/=`) for an `Octonion` by a scalar of type `F`.
 ///
-/// For octonions, the remainder operation is not a standard mathematical concept
-/// in the same way it is for integers or real numbers.
-/// This implementation provides a placeholder behavior.
+/// Each component of `self` is divided by the `scalar` value.
+/// `self = self / scalar`
 ///
 /// # Arguments
-/// * `self` - The left-hand side `Octonion`.
-/// * `_other` - The right-hand side `Octonion` (ignored in this placeholder).
-///
-/// # Returns
-/// Currently returns `self` as a placeholder behavior.
-///
-/// # Notes
-/// This implementation is a placeholder. Future versions might provide a more
-/// mathematically meaningful "remainder" or "modulo" operation if such a
-/// definition becomes established or necessary within the context of octonions.
+/// * `self` - The `Octonion` to be modified.
+/// * `scalar` - The scalar value of type `F`.
 ///
 /// # Examples
 /// ```
 /// use deep_causality_num::Octonion;
 ///
-/// let o1 = Octonion::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);
-/// let o2 = Octonion::new(9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
-/// let rem = o1 % o2;
-/// // Placeholder behavior: returns the left-hand side operand.
-/// assert_eq!(rem, o1);
+/// let mut o = Octonion::new(2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0);
+/// let scalar = 2.0;
+/// o /= scalar;
+/// assert_eq!(o.s, 1.0);
+/// assert_eq!(o.e1, 2.0);
 /// ```
-impl<F: Float> Rem for Octonion<F> {
-    type Output = Self;
-    fn rem(self, _other: Self) -> Self {
-        self // Placeholder
-    }
-}
-
-/// Implements the `Sum` trait for `Octonion`, allowing an iterator of octonions to be summed.
-///
-/// The sum is performed by iteratively adding each octonion in the iterator.
-///
-/// # Arguments
-/// * `iter` - An iterator that yields `Octonion<F>` values.
-///
-/// # Returns
-/// A single `Octonion` representing the sum of all octonions in the iterator.
-/// If the iterator is empty, it returns the zero octonion.
-///
-/// # Examples
-/// ```
-/// use deep_causality_num::Octonion;
-/// use deep_causality_num::Zero;
-///
-/// let o1 = Octonion::new(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
-/// let o2 = Octonion::new(2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0);
-/// let o3 = Octonion::new(3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0);
-/// let octonions = vec![o1, o2, o3];
-/// let sum: Octonion<f64> = octonions.into_iter().sum();
-/// assert_eq!(sum.s, 6.0);
-/// assert_eq!(sum.e1, 6.0);
-///
-/// let empty_vec: Vec<Octonion<f64>> = Vec::new();
-/// let empty_sum: Octonion<f64> = empty_vec.into_iter().sum();
-/// assert_eq!(empty_sum, Octonion::zero());
-/// ```
-impl<F: Float> Sum for Octonion<F> {
-    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
-        iter.fold(Octonion::zero(), |acc, x| acc + x)
-    }
-}
-
-/// Implements the `Product` trait for `Octonion`, allowing an iterator of octonions to be multiplied.
-///
-/// The product is performed by iteratively multiplying each octonion in the iterator.
-/// Due to non-associativity, the order of multiplication matters. This implementation
-/// performs sequential left-to-right multiplication.
-///
-/// # Arguments
-/// * `iter` - An iterator that yields `Octonion<F>` values.
-///
-/// # Returns
-/// A single `Octonion` representing the product of all octonions in the iterator.
-/// If the iterator is empty, it returns the identity octonion (1).
-///
-/// # Examples
-/// ```
-/// use deep_causality_num::Octonion;
-/// use deep_causality_num::One;
-///
-/// let o_one = Octonion::one();
-/// let e1 = Octonion::new(0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-/// let e2 = Octonion::new(0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-/// let e3 = Octonion::new(0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0);
-///
-/// let octonions = vec![o_one, e1, e2];
-/// let product: Octonion<f64> = octonions.into_iter().product();
-/// assert_eq!(product, e3); // (1 * e1) * e2 = e1 * e2 = e3
-///
-/// let empty_vec: Vec<Octonion<f64>> = Vec::new();
-/// let empty_product: Octonion<f64> = empty_vec.into_iter().product();
-/// assert_eq!(empty_product, Octonion::one());
-/// ```
-impl<F: Float> Product for Octonion<F> {
-    fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
-        iter.fold(Octonion::one(), |acc, x| acc * x)
+impl<F: RealField> DivAssign<F> for Octonion<F> {
+    fn div_assign(&mut self, scalar: F) {
+        self.s /= scalar;
+        self.e1 /= scalar;
+        self.e2 /= scalar;
+        self.e3 /= scalar;
+        self.e4 /= scalar;
+        self.e5 /= scalar;
+        self.e6 /= scalar;
+        self.e7 /= scalar;
     }
 }

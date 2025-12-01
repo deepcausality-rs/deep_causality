@@ -145,16 +145,6 @@ fn test_octonion_div_by_zero() {
     assert!(quot.e7.is_nan());
 }
 
-// Test remainder (placeholder implementation)
-#[test]
-fn test_octonion_rem() {
-    let o1 = Octonion::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);
-    let o2 = Octonion::new(9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
-    // Remainder for octonions is not a standard mathematical operation.
-    // The current implementation returns self.
-    utils_octonion_tests::assert_octonion_approx_eq(o1 % o2, o1, 1e-9);
-}
-
 // Test sum of an iterator
 #[test]
 fn test_octonion_sum() {

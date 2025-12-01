@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::RealField;
 use crate::complex::octonion_number::Octonion;
-use crate::float::Float;
 use core::fmt::Debug;
 
 /// Implements the `Debug` trait for `Octonion`.
@@ -37,7 +37,7 @@ use core::fmt::Debug;
 /// // }
 /// println!("{:?}", o);
 /// ```
-impl<F: Float + Debug> Debug for Octonion<F> {
+impl<F: RealField + Debug> Debug for Octonion<F> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("Octonion")
             .field("s", &self.s)

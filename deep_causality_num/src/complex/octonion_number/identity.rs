@@ -3,13 +3,13 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::RealField;
 use crate::complex::octonion_number::Octonion;
-use crate::float::Float;
 use crate::identity::one::{ConstOne, One};
 use crate::identity::zero::{ConstZero, Zero};
 
 /// Implements the `Zero` trait for `Octonion`.
-impl<F: Float> Zero for Octonion<F> {
+impl<F: RealField> Zero for Octonion<F> {
     /// Returns the additive identity octonion (0 + 0e₁ + ... + 0e₇).
     ///
     /// # Returns
@@ -69,7 +69,7 @@ impl<F: Float> Zero for Octonion<F> {
 /// Implements the `ConstZero` trait for `Octonion`.
 ///
 /// Provides a compile-time constant for the zero octonion.
-impl<F: Float + ConstZero> ConstZero for Octonion<F> {
+impl<F: RealField + ConstZero> ConstZero for Octonion<F> {
     /// A constant representing the zero octonion.
     ///
     /// # Examples
@@ -93,7 +93,7 @@ impl<F: Float + ConstZero> ConstZero for Octonion<F> {
 }
 
 /// Implements the `One` trait for `Octonion`.
-impl<F: Float> One for Octonion<F> {
+impl<F: RealField> One for Octonion<F> {
     /// Returns the multiplicative identity octonion (1 + 0e₁ + ... + 0e₇).
     ///
     /// # Returns
@@ -156,7 +156,7 @@ impl<F: Float> One for Octonion<F> {
 /// Implements the `ConstOne` trait for `Octonion`.
 ///
 /// Provides a compile-time constant for the identity octonion.
-impl<F: Float + ConstOne + ConstZero> ConstOne for Octonion<F> {
+impl<F: RealField + ConstOne + ConstZero> ConstOne for Octonion<F> {
     /// A constant representing the identity octonion.
     ///
     /// # Examples

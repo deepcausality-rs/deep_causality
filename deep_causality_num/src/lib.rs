@@ -46,7 +46,7 @@ pub use crate::cast::to_primitive::ToPrimitive;
 
 //  Complex number types
 pub use crate::complex::complex_number::{Complex, Complex32, Complex64};
-pub use crate::complex::octonion_number::{Octonion, OctonionNumber};
+pub use crate::complex::octonion_number::{Octonion, Octonion32, Octonion64};
 pub use crate::complex::quaternion_number::{Quaternion, Quaternion32, Quaternion64};
 
 // Float number types

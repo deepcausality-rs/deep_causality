@@ -3,13 +3,12 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::complex::octonion_number::{Octonion, OctonionNumber};
+use crate::Octonion;
+use crate::RealField;
 
-use crate::float::Float;
-
-impl<F> OctonionNumber<F> for Octonion<F>
+impl<F> Octonion<F>
 where
-    F: Float,
+    F: RealField,
 {
     /// Computes the conjugate of the octonion.
     ///
@@ -21,7 +20,7 @@ where
     ///
     /// # Examples
     /// ```
-    /// use deep_causality_num::{Octonion, OctonionNumber};
+    /// use deep_causality_num::Octonion;
     ///
     /// let o = Octonion::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);
     /// let conj_o = o.conjugate();
@@ -29,7 +28,7 @@ where
     /// assert_eq!(conj_o.e1, -2.0);
     /// assert_eq!(conj_o.e7, -8.0);
     /// ```
-    fn conjugate(&self) -> Self {
+    pub fn conjugate(&self) -> Self {
         Self {
             s: self.s,
             e1: -self.e1,
@@ -52,12 +51,12 @@ where
     ///
     /// # Examples
     /// ```
-    /// use deep_causality_num::{Octonion, OctonionNumber};
+    /// use deep_causality_num::Octonion;
     ///
     /// let o = Octonion::new(1.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     /// assert_eq!(o.norm_sqr(), 5.0); // 1*1 + 2*2 = 5
     /// ```
-    fn norm_sqr(&self) -> F {
+    pub fn norm_sqr(&self) -> F {
         self.s * self.s
             + self.e1 * self.e1
             + self.e2 * self.e2
@@ -78,12 +77,12 @@ where
     ///
     /// # Examples
     /// ```
-    /// use deep_causality_num::{Octonion, OctonionNumber};
+    /// use deep_causality_num::Octonion;
     ///
     /// let o = Octonion::new(3.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     /// assert_eq!(o.norm(), 5.0); // sqrt(3*3 + 4*4) = sqrt(9 + 16) = sqrt(25) = 5
     /// ```
-    fn norm(&self) -> F {
+    pub fn norm(&self) -> F {
         self.norm_sqr().sqrt()
     }
 
@@ -98,18 +97,18 @@ where
     ///
     /// # Examples
     /// ```
-    /// use deep_causality_num::{Octonion, OctonionNumber, Zero};
+    /// use deep_causality_num::{Octonion, Octonion64, Zero};
     ///
-    /// let o = Octonion::new(3.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    /// let o = Octonion64::new(3.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     /// let unit_o = o.normalize();
-    /// assert!((unit_o.norm() - 1.0) < 1e-9);
+    /// assert!((unit_o.norm() - 1.0).abs() < 1e-9);
     /// assert_eq!(unit_o.s, 0.6000000000000001); // 3/5
     /// assert_eq!(unit_o.e1, 0.8); // 4/5
     ///
     /// let zero_o = Octonion::<f64>::zero();
     /// assert_eq!(zero_o.normalize(), zero_o);
     /// ```
-    fn normalize(&self) -> Self {
+    pub fn normalize(&self) -> Self {
         let n = self.norm();
         if n.is_zero() { *self } else { *self / n }
     }
@@ -124,7 +123,7 @@ where
     ///
     /// # Examples
     /// ```
-    /// use deep_causality_num::{Octonion, OctonionNumber, Zero, One};
+    /// use deep_causality_num::{One, Octonion, Zero};
     ///
     /// let o = Octonion::new(1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // 1 + e1
     /// let inverse_o = o.inverse();
@@ -139,7 +138,7 @@ where
     /// let inv_zero = zero_o.inverse();
     /// assert!(inv_zero.s.is_nan());
     /// ```
-    fn inverse(&self) -> Self {
+    pub fn inverse(&self) -> Self {
         let n_sqr = self.norm_sqr();
         if n_sqr.is_zero() {
             let nan = F::nan();
@@ -162,13 +161,13 @@ where
     ///
     /// # Examples
     /// ```
-    /// use deep_causality_num::{Octonion, OctonionNumber};
+    /// use deep_causality_num::Octonion;
     ///
     /// let o1 = Octonion::new(1.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     /// let o2 = Octonion::new(3.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     /// assert_eq!(o1.dot(&o2), 1.0 * 3.0 + 2.0 * 4.0); // 3 + 8 = 11
     /// ```
-    fn dot(&self, other: &Self) -> F {
+    pub fn dot(&self, other: &Self) -> F {
         self.s * other.s
             + self.e1 * other.e1
             + self.e2 * other.e2
