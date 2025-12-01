@@ -27,5 +27,6 @@ mod num_cast_tests;
 mod octonion_number_tests;
 #[cfg(test)]
 mod part_ord_tests;
+mod rotation_tests;
 #[cfg(test)]
 mod to_primitive_tests;

@@ -3,6 +3,25 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+///
+/// The algebraic traits form a hierarchy:
+///
+/// Magma (Mul/Add operation)
+///   ↓
+/// Monoid (Magma + Identity)
+///   ↓
+/// Group (Monoid + Inverse)
+///   ↓
+/// AbelianGroup (Group + Commutative)
+///   ↓
+/// Ring (AbelianGroup + MulMonoid + Distributive)
+///   ↓
+/// CommutativeRing (Ring + Commutative Mul)
+///   ↓
+/// Field (CommutativeRing + Multiplicative Inverse)
+///   ↓
+/// RealField (Field + Ordering + Transcendentals)
+///
 pub mod algebra_assoc;
 pub mod algebra_assoc_div;
 pub mod algebra_base;

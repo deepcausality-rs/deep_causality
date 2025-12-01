@@ -27,5 +27,6 @@ mod identity_tests;
 mod neg_tests;
 #[cfg(test)]
 mod num_cast_tests;
+mod rotation_tests;
 #[cfg(test)]
 mod to_primitive_tests;

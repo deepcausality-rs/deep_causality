@@ -2,9 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
-use deep_causality_num::Quaternion;
 use deep_causality_num::RealField;
+use deep_causality_num::{Quaternion, Rotation};
+use std::f64::consts::{FRAC_PI_2, PI};
 
 const EPSILON: f64 = 1e-9;
 
@@ -196,4 +196,172 @@ fn test_slerp_nearly_identical() {
     assert!((slerp_close.x - q1.x).abs() < EPSILON);
     assert!((slerp_close.y - q1.y).abs() < EPSILON);
     assert!((slerp_close.z - q1.z).abs() < EPSILON);
+}
+
+// Tests for rotate_x
+#[test]
+fn test_rotate_x_identity_90() {
+    let q_identity = Quaternion::<f64>::identity();
+    let rotated_q = q_identity.rotate_x(FRAC_PI_2); // Rotate 90 degrees around X
+
+    // Expected: Quaternion representing 90 deg rotation around X
+    let expected_q = Quaternion::from_axis_angle([1.0, 0.0, 0.0], FRAC_PI_2);
+
+    assert!((rotated_q.w - expected_q.w).abs() < EPSILON);
+    assert!((rotated_q.x - expected_q.x).abs() < EPSILON);
+    assert!((rotated_q.y - expected_q.y).abs() < EPSILON);
+    assert!((rotated_q.z - expected_q.z).abs() < EPSILON);
+}
+
+#[test]
+fn test_rotate_x_identity_180() {
+    let q_identity = Quaternion::<f64>::identity();
+    let rotated_q = q_identity.rotate_x(PI); // Rotate 180 degrees around X
+
+    // Expected: Quaternion representing 180 deg rotation around X
+    let expected_q = Quaternion::from_axis_angle([1.0, 0.0, 0.0], PI);
+
+    assert!((rotated_q.w - expected_q.w).abs() < EPSILON);
+    assert!((rotated_q.x - expected_q.x).abs() < EPSILON);
+    assert!((rotated_q.y - expected_q.y).abs() < EPSILON);
+    assert!((rotated_q.z - expected_q.z).abs() < EPSILON);
+}
+
+#[test]
+fn test_rotate_x_initial_y_90_then_x_90() {
+    // Initial quaternion: 90 degrees around Y
+    let initial_q = Quaternion::from_axis_angle([0.0, 1.0, 0.0], FRAC_PI_2);
+    let rotated_q = initial_q.rotate_x(FRAC_PI_2); // Rotate an additional 90 degrees around X
+
+    // Expected: The resulting quaternion from composing these rotations.
+    // Order matters: first Y, then X.
+    // Equivalent to (Qx * Qy) where Qx is 90 deg around X and Qy is 90 deg around Y.
+    let q_x = Quaternion::from_axis_angle([1.0, 0.0, 0.0], FRAC_PI_2);
+    let expected_q = q_x * initial_q;
+
+    assert!((rotated_q.w - expected_q.w).abs() < EPSILON);
+    assert!((rotated_q.x - expected_q.x).abs() < EPSILON);
+    assert!((rotated_q.y - expected_q.y).abs() < EPSILON);
+    assert!((rotated_q.z - expected_q.z).abs() < EPSILON);
+}
+
+// Tests for rotate_y
+#[test]
+fn test_rotate_y_identity_90() {
+    let q_identity = Quaternion::<f64>::identity();
+    let rotated_q = q_identity.rotate_y(FRAC_PI_2); // Rotate 90 degrees around Y
+
+    // Expected: Quaternion representing 90 deg rotation around Y
+    let expected_q = Quaternion::from_axis_angle([0.0, 1.0, 0.0], FRAC_PI_2);
+
+    assert!((rotated_q.w - expected_q.w).abs() < EPSILON);
+    assert!((rotated_q.x - expected_q.x).abs() < EPSILON);
+    assert!((rotated_q.y - expected_q.y).abs() < EPSILON);
+    assert!((rotated_q.z - expected_q.z).abs() < EPSILON);
+}
+
+#[test]
+fn test_rotate_y_identity_180() {
+    let q_identity = Quaternion::<f64>::identity();
+    let rotated_q = q_identity.rotate_y(PI); // Rotate 180 degrees around Y
+
+    // Expected: Quaternion representing 180 deg rotation around Y
+    let expected_q = Quaternion::from_axis_angle([0.0, 1.0, 0.0], PI);
+
+    assert!((rotated_q.w - expected_q.w).abs() < EPSILON);
+    assert!((rotated_q.x - expected_q.x).abs() < EPSILON);
+    assert!((rotated_q.y - expected_q.y).abs() < EPSILON);
+    assert!((rotated_q.z - expected_q.z).abs() < EPSILON);
+}
+
+#[test]
+fn test_rotate_y_initial_x_90_then_y_90() {
+    // Initial quaternion: 90 degrees around X
+    let initial_q = Quaternion::from_axis_angle([1.0, 0.0, 0.0], FRAC_PI_2);
+    let rotated_q = initial_q.rotate_y(FRAC_PI_2); // Rotate an additional 90 degrees around Y
+
+    // Expected: The resulting quaternion from composing these rotations.
+    // Equivalent to (Qy * Qx) where Qy is 90 deg around Y and Qx is 90 deg around X.
+    let q_y = Quaternion::from_axis_angle([0.0, 1.0, 0.0], FRAC_PI_2);
+    let expected_q = q_y * initial_q;
+
+    assert!((rotated_q.w - expected_q.w).abs() < EPSILON);
+    assert!((rotated_q.x - expected_q.x).abs() < EPSILON);
+    assert!((rotated_q.y - expected_q.y).abs() < EPSILON);
+    assert!((rotated_q.z - expected_q.z).abs() < EPSILON);
+}
+
+// Tests for rotate_z
+#[test]
+fn test_rotate_z_identity_90() {
+    let q_identity = Quaternion::<f64>::identity();
+    let rotated_q = q_identity.rotate_z(FRAC_PI_2); // Rotate 90 degrees around Z
+
+    // Expected: Quaternion representing 90 deg rotation around Z
+    let expected_q = Quaternion::from_axis_angle([0.0, 0.0, 1.0], FRAC_PI_2);
+
+    assert!((rotated_q.w - expected_q.w).abs() < EPSILON);
+    assert!((rotated_q.x - expected_q.x).abs() < EPSILON);
+    assert!((rotated_q.y - expected_q.y).abs() < EPSILON);
+    assert!((rotated_q.z - expected_q.z).abs() < EPSILON);
+}
+
+#[test]
+fn test_rotate_z_identity_180() {
+    let q_identity = Quaternion::<f64>::identity();
+    let rotated_q = q_identity.rotate_z(PI); // Rotate 180 degrees around Z
+
+    // Expected: Quaternion representing 180 deg rotation around Z
+    let expected_q = Quaternion::from_axis_angle([0.0, 0.0, 1.0], PI);
+
+    assert!((rotated_q.w - expected_q.w).abs() < EPSILON);
+    assert!((rotated_q.x - expected_q.x).abs() < EPSILON);
+    assert!((rotated_q.y - expected_q.y).abs() < EPSILON);
+    assert!((rotated_q.z - expected_q.z).abs() < EPSILON);
+}
+
+#[test]
+fn test_rotate_z_initial_x_90_then_z_90() {
+    // Initial quaternion: 90 degrees around X
+    let initial_q = Quaternion::from_axis_angle([1.0, 0.0, 0.0], FRAC_PI_2);
+    let rotated_q = initial_q.rotate_z(FRAC_PI_2); // Rotate an additional 90 degrees around Z
+
+    // Expected: The resulting quaternion from composing these rotations.
+    // Equivalent to (Qz * Qx) where Qz is 90 deg around Z and Qx is 90 deg around X.
+    let q_z = Quaternion::from_axis_angle([0.0, 0.0, 1.0], FRAC_PI_2);
+    let expected_q = q_z * initial_q;
+
+    assert!((rotated_q.w - expected_q.w).abs() < EPSILON);
+    assert!((rotated_q.x - expected_q.x).abs() < EPSILON);
+    assert!((rotated_q.y - expected_q.y).abs() < EPSILON);
+    assert!((rotated_q.z - expected_q.z).abs() < EPSILON);
+}
+
+// Tests for global_phase
+#[test]
+fn test_global_phase_returns_self() {
+    let q = Quaternion::new(1.0, 2.0, 3.0, 4.0);
+    let angle = PI / 3.0; // Arbitrary angle
+
+    let result_q = q.global_phase(angle);
+
+    // Expect the original quaternion back
+    assert!((result_q.w - q.w).abs() < EPSILON);
+    assert!((result_q.x - q.x).abs() < EPSILON);
+    assert!((result_q.y - q.y).abs() < EPSILON);
+    assert!((result_q.z - q.z).abs() < EPSILON);
+}
+
+#[test]
+fn test_global_phase_identity() {
+    let q_identity = Quaternion::<f64>::identity();
+    let angle = PI / 4.0;
+
+    let result_q = q_identity.global_phase(angle);
+
+    // Expect the original identity quaternion back
+    assert!((result_q.w - q_identity.w).abs() < EPSILON);
+    assert!((result_q.x - q_identity.x).abs() < EPSILON);
+    assert!((result_q.y - q_identity.y).abs() < EPSILON);
+    assert!((result_q.z - q_identity.z).abs() < EPSILON);
 }

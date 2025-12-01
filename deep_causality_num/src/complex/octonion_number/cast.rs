@@ -61,11 +61,11 @@ impl<T: RealField + NumCast> NumCast for Octonion<T> {
     /// ```
     /// use deep_causality_num::{Octonion, NumCast};
     ///
-    /// let o: Option<Octonion<f64>> = Octonion::from(10);
+    /// let o: Option<Octonion<f64>> = <Octonion<_> as NumCast>::from(10);
     /// assert!(o.is_some());
     /// assert_eq!(o.unwrap().s, 10.0);
     ///
-    /// let o_float: Option<Octonion<f32>> = Octonion::from(3.14f64);
+    /// let o_float: Option<Octonion<f32>> = <Octonion<_> as NumCast>::from(3.14f64);
     /// assert!(o_float.is_some());
     /// assert_eq!(o_float.unwrap().s, 3.14f32);
     /// ```
@@ -380,7 +380,7 @@ impl<T: RealField + FromPrimitive> FromPrimitive for Octonion<T> {
     ///
     /// let o: Option<Octonion<f64>> = Octonion::from_f32(3.14f32);
     /// assert!(o.is_some());
-    /// assert_eq!(o.unwrap().s, 3.14f64);
+    /// assert_eq!(o.unwrap().s, 3.14f32 as f64);
     /// ```
     fn from_f32(n: f32) -> Option<Self> {
         T::from_f32(n).map(Self::from_real)
