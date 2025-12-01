@@ -39,7 +39,6 @@
 //! The `Octonion` struct is a generic representation, parameterized by a floating-point type `F`.
 //! It holds eight components: `s` (scalar) and `e1` through `e7` (imaginary units).
 //!
-
 use crate::RealField;
 
 mod algebra;
@@ -79,13 +78,13 @@ where
     F: RealField,
 {
     pub s: F,  // Scalar part
-    pub e1: F, // Vector part 1
-    pub e2: F, // Vector part 2
-    pub e3: F, // Vector part 3
-    pub e4: F, // Vector part 4
-    pub e5: F, // Vector part 5
-    pub e6: F, // Vector part 6
-    pub e7: F, // Vector part 7
+    pub e1: F, // Imaginary unit 1
+    pub e2: F, // Imaginary unit 2
+    pub e3: F, // Imaginary unit 3
+    pub e4: F, // Imaginary unit 4
+    pub e5: F, // Imaginary unit 5
+    pub e6: F, // Imaginary unit 6
+    pub e7: F, // Imaginary unit 7
 }
 
 pub type Octonion32 = Octonion<f32>;
@@ -131,6 +130,27 @@ where
             e7,
         }
     }
+    /// Creates a new `Octonion` from a single real (scalar) value.
+    ///
+    /// The real value populates the scalar part (`s`) of the octonion, and all
+    /// imaginary parts (`e1` through `e7`) are set to zero.
+    ///
+    /// # Arguments
+    /// * `re` - The real scalar value.
+    ///
+    /// # Returns
+    /// A new `Octonion` instance representing a real number.
+    ///
+    /// # Examples
+    /// ```
+    /// use deep_causality_num::Octonion;
+    /// use deep_causality_num::Zero;
+    ///
+    /// let o = Octonion::from_real(5.0);
+    /// assert_eq!(o.s, 5.0);
+    /// assert!(o.e1.is_zero());
+    /// assert!(o.e7.is_zero());
+    /// ```
     pub fn from_real(re: F) -> Self {
         Self {
             s: re,
