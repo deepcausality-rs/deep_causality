@@ -19,7 +19,7 @@ The `CsrMatrix<T>` in `deep_causality_sparse/src/types/sparse_matrix/` currently
 - ✅ `vec_mult(&self, x: &[T]) -> Result<Vec<T>, SparseMatrixError>`
 
 **Missing**:
-- ❌ `Zero`, `One` trait implementations
+- ✅ `Zero`, `One` trait implementations
 - ❌ `AbelianGroup`, `AddGroup` trait implementations
 - ❌ `Module<S>` trait implementation
 - ❌ `Ring` trait implementations
@@ -47,21 +47,21 @@ To implement **homological algebra** operations on chains:
 
 ## Design Challenges
 
-### Challenge 1: Shape-Dependent Zero
+### Challenge 1: Shape-Dependent Zero and One
 
-**Problem**: `CsrMatrix` needs shape information to create a zero matrix, but the `Zero` trait requires `fn zero() -> Self` with no parameters.
+**Problem**: `CsrMatrix` needs shape information to create a zero matrix or an identity matrix of a specific size, but the `Zero` and `One` traits require `fn zero() -> Self` and `fn one() -> Self` with no parameters.
 
 **Solution Options**:
-1. **Skip `Zero` trait** (RECOMMENDED): Provide `CsrMatrix::zero(rows, cols)` method instead
-2. Implement `Zero` to return `(0, 0)` empty matrix (loses shape information)
-3. Add a type-level shape parameter (too complex)
+1.  **Implement `Zero` and `One` for scalar matrices** (RECOMMENDED): Define `Zero::zero()` to return an empty `(0,0)` matrix (a scalar zero) and `One::one()` to return a `(1,1)` matrix with `T::one()` at `(0,0)` (a scalar one). Provide `CsrMatrix::zero(rows, cols)` and `CsrMatrix::one(size)` as separate, shape-dependent constructors.
+2.  Implement `Zero` to return `(0, 0)` empty matrix (loses shape information)
+3.  Add a type-level shape parameter (too complex)
 
-**Decision**: Use Option 1 - provide `zero(rows, cols)` method, skip `Zero` trait.
+**Decision**: Use Option 1 - implement `Zero` and `One` for scalar matrices, and retain shape-dependent constructors. This aligns with `CausalTensor`'s approach.
 
 **Rationale**:
-- `Chain<T>` knows the shape (from `complex.skeletons[grade].simplices.len()`)
-- Other types (Tensor, MultiVector) also faced this and used shape-dependent constructors
-- Mathematical correctness: zero matrix is shape-dependent
+-   This allows `CsrMatrix` to formally satisfy `deep_causality_num::Zero` and `deep_causality_num::One`, enabling blanket implementations for `AddGroup`, `AbelianGroup`, `MulMonoid`, `Ring`, and `Module`.
+-   Shape-dependent constructors (`CsrMatrix::zero(rows, cols)` and `CsrMatrix::one(size)`) still provide the necessary functionality for matrices of specific dimensions.
+-   Consistent with `CausalTensor`'s handling of scalar zeros and ones.
 
 ### Challenge 2: Result vs. Panic
 
@@ -350,27 +350,65 @@ where
 
 ```rust
 use crate::CsrMatrix;
-use deep_causality_num::{AbelianGroup, AddGroup, Zero, One};
+use deep_causality_num::{AbelianGroup, AddGroup, Zero, One, Module, Ring};
 
-// NOTE: Do NOT implement Zero trait (shape-dependent)
-// Use CsrMatrix::zero(rows, cols) instead
+// Implements Zero trait for CsrMatrix.
+// Returns an empty (0,0) matrix, representing a scalar zero.
+impl<T> Zero for CsrMatrix<T>
+where
+    T: Zero + Copy + Default + PartialEq,
+{
+    fn zero() -> Self {
+        // Scalar zero matrix is an empty matrix with no rows/cols
+        Self {
+            row_indices: vec![0],
+            col_indices: Vec::new(),
+            values: Vec::new(),
+            shape: (0, 0),
+        }
+    }
 
+    fn is_zero(&self) -> bool {
+        self.values.iter().all(|x| x.is_zero()) && self.values.is_empty()
+    }
+}
+
+// Implements One trait for CsrMatrix.
+// Returns a (1,1) identity matrix, representing a scalar one.
+impl<T> One for CsrMatrix<T>
+where
+    T: One + Copy + Default + PartialEq,
+{
+    fn one() -> Self {
+        // Scalar one matrix is a 1x1 identity matrix
+        Self {
+            row_indices: vec![0, 1],
+            col_indices: vec![0],
+            values: vec![T::one()],
+            shape: (1, 1),
+        }
+    }
+
+    fn is_one(&self) -> bool {
+        self.shape == (1, 1) && self.values.len() == 1 && self.values[0].is_one()
+    }
+}
+
+// AbelianGroup is automatically implemented via blanket impl in deep_causality_num
+// because CsrMatrix implements AddGroup (which requires Zero), Add, Sub, Neg, Clone.
 impl<T> AbelianGroup for CsrMatrix<T>
 where
     T: AbelianGroup + Copy + std::ops::Neg<Output = T>,
 {
-    // Marker trait, automatically satisfied
+    // Marker trait, no methods needed here.
 }
 
 // AddGroup is automatically implemented via blanket impl in deep_causality_num
-// because CsrMatrix implements Add, Sub, Neg, Clone
-
-// NOTE: Do NOT implement One trait (size-dependent for identity matrix)
-// Use CsrMatrix::one(size) instead for square identity matrices
+// because CsrMatrix implements Add, Sub, Zero, Clone.
 
 // Module is automatically implemented via blanket impl in deep_causality_num
-// when CsrMatrix<T> implements AbelianGroup and Mul<S>
-```
+// when CsrMatrix<T> implements AbelianGroup and Mul<S>.
+
 
 ## Implementation Phases
 

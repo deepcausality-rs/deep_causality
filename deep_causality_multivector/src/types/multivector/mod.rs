@@ -11,7 +11,6 @@ mod algebra;
 mod api;
 mod arithmetic;
 mod getters;
-mod identity;
 mod ops_misc_impl;
 mod ops_product_impl;
 mod utils;

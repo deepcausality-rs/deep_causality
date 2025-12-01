@@ -3,12 +3,14 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+mod algebra;
 mod api;
+mod arithmetic;
 mod default;
 mod display;
 mod getters;
+mod identity;
 mod ops;
-mod algebra;
 
 use crate::SparseMatrixError;
 use deep_causality_num::Zero;
