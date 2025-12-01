@@ -9,6 +9,7 @@ mod display;
 mod identity;
 mod neg;
 mod ops;
+mod rotation;
 
 #[derive(Copy, Clone, PartialEq, PartialOrd, Default, Debug)]
 pub struct Quaternion<F> {

@@ -3,7 +3,7 @@
 /// | Type | `Distributive` | `Associative` | `Commutative` | Trait |
 /// | :--- | :---: | :---: | :---: | :--- |
 /// | **Octonion** | ✅ | ❌ | ❌ | `DivisionAlgebra` |
-/// 
+///
 /// This file is responsible for binding the `Octonion` type to the algebraic
 /// hierarchy defined in the `deep_causality_num/src/algebra/` module.
 /// It explicitly states the algebraic properties of octonions, such as being

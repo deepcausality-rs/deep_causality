@@ -34,6 +34,7 @@ pub use crate::algebra::monoid::{AddMonoid, MulMonoid};
 pub use crate::algebra::ring::Ring;
 pub use crate::algebra::ring_associative::AssociativeRing;
 pub use crate::algebra::ring_com::CommutativeRing;
+pub use crate::algebra::rotation::Rotation;
 
 // Casts
 pub use crate::cast::as_primitive::AsPrimitive;

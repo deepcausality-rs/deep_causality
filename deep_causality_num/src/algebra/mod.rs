@@ -21,3 +21,4 @@ pub mod monoid;
 pub mod ring;
 pub mod ring_associative;
 pub mod ring_com;
+pub(crate) mod rotation;
