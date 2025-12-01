@@ -5,7 +5,7 @@
 
 use crate::CsrMatrix;
 use deep_causality_num::{AbelianGroup, Ring};
-use std::ops::{Add, Mul, Neg, Sub};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 // ============================================================================
 // Add Implementations (4 variants for all ownership combinations)
@@ -52,6 +52,28 @@ where
     type Output = CsrMatrix<T>;
     fn add(self, rhs: CsrMatrix<T>) -> CsrMatrix<T> {
         CsrMatrix::add(self, &rhs)
+    }
+}
+
+// ============================================================================
+// AddAssign Implementations
+// ============================================================================
+
+impl<T> AddAssign for CsrMatrix<T>
+where
+    T: AbelianGroup + Copy + std::ops::Neg<Output = T> + Default + PartialEq,
+{
+    fn add_assign(&mut self, rhs: Self) {
+        *self = CsrMatrix::add(self, &rhs);
+    }
+}
+
+impl<T> AddAssign<&CsrMatrix<T>> for CsrMatrix<T>
+where
+    T: AbelianGroup + Copy + std::ops::Neg<Output = T> + Default + PartialEq,
+{
+    fn add_assign(&mut self, rhs: &Self) {
+        *self = CsrMatrix::add(self, rhs);
     }
 }
 
@@ -124,6 +146,38 @@ where
 }
 
 // ============================================================================
+// SubAssign Implementations
+// ============================================================================
+
+impl<T> SubAssign for CsrMatrix<T>
+where
+    T: AbelianGroup
+        + Copy
+        + std::ops::Sub<Output = T>
+        + std::ops::Neg<Output = T>
+        + Default
+        + PartialEq,
+{
+    fn sub_assign(&mut self, rhs: Self) {
+        *self = CsrMatrix::sub(self, &rhs);
+    }
+}
+
+impl<T> SubAssign<&CsrMatrix<T>> for CsrMatrix<T>
+where
+    T: AbelianGroup
+        + Copy
+        + std::ops::Sub<Output = T>
+        + std::ops::Neg<Output = T>
+        + Default
+        + PartialEq,
+{
+    fn sub_assign(&mut self, rhs: &Self) {
+        *self = CsrMatrix::sub(self, rhs);
+    }
+}
+
+// ============================================================================
 // Neg Implementations (2 variants for owned and borrowed)
 // ============================================================================
 
@@ -150,13 +204,13 @@ where
 }
 
 // ============================================================================
-// Mul Implementations (4 variants for matrix multiplication)
+// Neg Implementations (2 variants for owned and borrowed)
 // ============================================================================
 
 // owned + owned
 impl<T> Mul for CsrMatrix<T>
 where
-    T: Ring + Copy + Default + PartialEq, // Added Default + PartialEq
+    T: Ring + Copy + Default + PartialEq + std::ops::AddAssign, // Added Default + PartialEq and AddAssign
 {
     type Output = Self;
     fn mul(self, rhs: Self) -> Self {
@@ -167,7 +221,7 @@ where
 // ref + ref
 impl<T> Mul for &CsrMatrix<T>
 where
-    T: Ring + Copy + Default + PartialEq, // Added Default + PartialEq
+    T: Ring + Copy + Default + PartialEq + std::ops::AddAssign, // Added Default + PartialEq and AddAssign
 {
     type Output = CsrMatrix<T>;
     fn mul(self, rhs: Self) -> CsrMatrix<T> {
@@ -178,7 +232,7 @@ where
 // owned + ref
 impl<T> Mul<&CsrMatrix<T>> for CsrMatrix<T>
 where
-    T: Ring + Copy + Default + PartialEq, // Added Default + PartialEq
+    T: Ring + Copy + Default + PartialEq + std::ops::AddAssign, // Added Default + PartialEq and AddAssign
 {
     type Output = Self;
     fn mul(self, rhs: &Self) -> Self {
@@ -189,10 +243,32 @@ where
 // ref + owned
 impl<T> Mul<CsrMatrix<T>> for &CsrMatrix<T>
 where
-    T: Ring + Copy + Default + PartialEq, // Added Default + PartialEq
+    T: Ring + Copy + Default + PartialEq + std::ops::AddAssign, // Added Default + PartialEq and AddAssign
 {
     type Output = CsrMatrix<T>;
     fn mul(self, rhs: CsrMatrix<T>) -> CsrMatrix<T> {
         CsrMatrix::mul(self, &rhs)
+    }
+}
+
+// ============================================================================
+// MulAssign Implementations
+// ============================================================================
+
+impl<T> MulAssign for CsrMatrix<T>
+where
+    T: Ring + Copy + Default + PartialEq + std::ops::AddAssign,
+{
+    fn mul_assign(&mut self, rhs: Self) {
+        *self = CsrMatrix::mul(self, &rhs);
+    }
+}
+
+impl<T> MulAssign<&CsrMatrix<T>> for CsrMatrix<T>
+where
+    T: Ring + Copy + Default + PartialEq + std::ops::AddAssign,
+{
+    fn mul_assign(&mut self, rhs: &Self) {
+        *self = CsrMatrix::mul(self, rhs);
     }
 }

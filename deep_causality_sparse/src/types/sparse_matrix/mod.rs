@@ -6,7 +6,6 @@
 mod algebra;
 mod api;
 mod arithmetic;
-mod default;
 mod display;
 mod getters;
 mod identity;
@@ -22,6 +21,12 @@ pub struct CsrMatrix<T> {
     pub(crate) col_indices: Vec<usize>,
     pub(crate) values: Vec<T>,
     pub(crate) shape: (usize, usize), // (Rows, Cols)
+}
+
+impl<T> Default for CsrMatrix<T> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<T> CsrMatrix<T> {

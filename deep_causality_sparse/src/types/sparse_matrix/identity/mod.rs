@@ -37,7 +37,7 @@ impl<T> One for CsrMatrix<T>
 where
     // These bounds are needed for CsrMatrix<T> to satisfy Mul<Self> required by One.
     // T itself needs to be Ring for CsrMatrix's Mul impl.
-    T: One + Copy + Default + PartialEq + Ring,
+    T: One + Copy + Default + PartialEq + Ring + std::ops::AddAssign,
 {
     fn one() -> Self {
         // Scalar one matrix is a 1x1 identity matrix

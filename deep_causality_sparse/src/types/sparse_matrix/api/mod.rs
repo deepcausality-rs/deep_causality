@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{CsrMatrix, SparseMatrixError};
-use deep_causality_num::Zero;
+use deep_causality_num::{One, Zero};
 use std::ops::{Mul, Sub};
 
 impl<T> CsrMatrix<T>
@@ -129,7 +129,7 @@ where
 
 impl<T> CsrMatrix<T>
 where
-    T: Copy + Mul<Output = T> + Zero + PartialEq + Default,
+    T: Copy + Mul<Output = T> + Zero + PartialEq + Default + One,
 {
     /// Performs scalar multiplication: \( B = s \cdot A \).
     ///
