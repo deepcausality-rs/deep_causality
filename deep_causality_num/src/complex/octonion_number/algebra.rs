@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
 /// Implements various algebraic traits for `Octonion<T>`.
 ///
 /// | Type | `Distributive` | `Associative` | `Commutative` | Trait |
