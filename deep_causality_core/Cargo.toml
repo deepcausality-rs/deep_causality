@@ -21,6 +21,8 @@ exclude = [
     ".bazelrc",
     "tests/**/*",
 ]
+# Temporary on hold until integration into main crate
+publish = false
 
 [features]
 default = ["std"]

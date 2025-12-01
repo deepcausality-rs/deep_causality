@@ -456,7 +456,7 @@ dependencies = [
 name = "deep_causality"
 version = "0.11.10"
 dependencies = [
- "criterion 0.7.0",
+ "criterion 0.8.0",
  "deep_causality_ast",
  "deep_causality_data_structures",
  "deep_causality_haft",
@@ -470,7 +470,7 @@ dependencies = [
 name = "deep_causality_algorithms"
 version = "0.2.4"
 dependencies = [
- "criterion 0.7.0",
+ "criterion 0.8.0",
  "deep_causality_num",
  "deep_causality_tensor",
  "rayon",
@@ -491,7 +491,7 @@ dependencies = [
 name = "deep_causality_data_structures"
 version = "0.10.4"
 dependencies = [
- "criterion 0.7.0",
+ "criterion 0.8.0",
  "deep_causality_rand",
 ]
 
@@ -521,7 +521,7 @@ version = "0.8.10"
 name = "deep_causality_multivector"
 version = "0.1.2"
 dependencies = [
- "criterion 0.7.0",
+ "criterion 0.8.0",
  "deep_causality_haft",
  "deep_causality_num",
  "deep_causality_tensor",
@@ -546,7 +546,9 @@ dependencies = [
 name = "deep_causality_sparse"
 version = "0.1.0"
 dependencies = [
+ "criterion 0.8.0",
  "deep_causality_num",
+ "deep_causality_rand",
 ]
 
 [[package]]
@@ -575,7 +577,7 @@ dependencies = [
 name = "deep_causality_uncertain"
 version = "0.3.6"
 dependencies = [
- "criterion 0.7.0",
+ "criterion 0.8.0",
  "deep_causality_ast",
  "deep_causality_num",
  "deep_causality_rand",
