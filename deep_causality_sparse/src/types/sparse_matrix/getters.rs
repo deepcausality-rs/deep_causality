@@ -110,13 +110,11 @@ impl<T> CsrMatrix<T> {
         let start = self.row_indices[row_idx];
         let end = self.row_indices[row_idx + 1];
 
-        // Perform a binary search or linear scan for the column index in the current row
-        // Given that sparse rows can be short, linear scan is often fine.
-        for i in start..end {
-            if self.col_indices[i] == col_idx {
-                return self.values[i];
-            }
+        // Perform a binary search for the column index in the current row
+        let slice = &self.col_indices[start..end];
+        match slice.binary_search(&col_idx) {
+            Ok(idx_in_slice) => self.values[start + idx_in_slice],
+            Err(_) => T::zero(),
         }
-        T::zero()
     }
 }

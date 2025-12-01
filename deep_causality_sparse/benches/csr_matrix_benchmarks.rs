@@ -1,6 +1,6 @@
-use criterion::{criterion_group, criterion_main, Criterion};
-use deep_causality_sparse::CsrMatrix;
+use criterion::{Criterion, criterion_group, criterion_main};
 use deep_causality_rand::Rng;
+use deep_causality_sparse::CsrMatrix;
 
 // Helper to generate a random sparse matrix
 fn generate_random_sparse_matrix(
@@ -70,7 +70,10 @@ fn bench_get_value_at(c: &mut Criterion) {
             let target_col = rng.random_range(0..*size);
 
             group.bench_with_input(
-                format!("{}x{} density {} at ({}, {})", size, size, density, target_row, target_col),
+                format!(
+                    "{}x{} density {} at ({}, {})",
+                    size, size, density, target_row, target_col
+                ),
                 &matrix,
                 |b, mat| {
                     b.iter(|| mat.get_value_at(target_row, target_col));
@@ -151,10 +154,12 @@ fn bench_vec_mult(c: &mut Criterion) {
     for size in [100, 500, 1000].iter() {
         for density in [0.01, 0.05].iter() {
             let matrix = generate_random_sparse_matrix(*size, *size, *density, &mut rng);
-            let vector: Vec<f64> = (0..*size).map(|_| {
-                let val: f64 = rng.random_range(-10.0..10.0);
-                val
-            }).collect();
+            let vector: Vec<f64> = (0..*size)
+                .map(|_| {
+                    let val: f64 = rng.random_range(-10.0..10.0);
+                    val
+                })
+                .collect();
 
             group.bench_with_input(
                 format!("{}x{} density {}", size, size, density),
@@ -172,8 +177,10 @@ fn bench_mat_mult(c: &mut Criterion) {
     let mut group = c.benchmark_group("CsrMatrix::mat_mult");
     let mut rng = deep_causality_rand::rng();
 
-    for size in [50, 100, 200].iter() { // Smaller sizes for mat_mult due to complexity
-        for density in [0.01, 0.02].iter() { // Lower densities
+    for size in [50, 100, 200].iter() {
+        // Smaller sizes for mat_mult due to complexity
+        for density in [0.01, 0.02].iter() {
+            // Lower densities
             let m1 = generate_random_sparse_matrix(*size, *size, *density, &mut rng);
             let m2 = generate_random_sparse_matrix(*size, *size, *density, &mut rng);
 
@@ -194,7 +201,7 @@ fn bench_transpose(c: &mut Criterion) {
     let mut rng = deep_causality_rand::rng();
 
     for size in [100, 500, 1000].iter() {
-        for density in [0.01, 0.05, 0.1].iter() {
+        for density in [0.01, 0.05].iter() {
             let matrix = generate_random_sparse_matrix(*size, *size, *density, &mut rng);
 
             group.bench_with_input(
@@ -209,6 +216,15 @@ fn bench_transpose(c: &mut Criterion) {
     group.finish();
 }
 
-
-criterion_group!(benches, bench_from_triplets, bench_get_value_at, bench_add_matrix, bench_sub_matrix, bench_scalar_mult, bench_vec_mult, bench_mat_mult, bench_transpose);
+criterion_group!(
+    benches,
+    bench_from_triplets,
+    bench_get_value_at,
+    bench_add_matrix,
+    bench_sub_matrix,
+    bench_scalar_mult,
+    bench_vec_mult,
+    bench_mat_mult,
+    bench_transpose
+);
 criterion_main!(benches);
