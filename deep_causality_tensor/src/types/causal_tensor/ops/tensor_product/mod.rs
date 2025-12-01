@@ -9,7 +9,7 @@ impl<T> CausalTensor<T>
 where
     T: Clone + Mul<Output = T>,
 {
-    pub(super) fn tensor_product_impl(
+    pub(in crate::types::causal_tensor) fn tensor_product_impl(
         &self,
         rhs: &CausalTensor<T>,
     ) -> Result<CausalTensor<T>, CausalTensorError> {

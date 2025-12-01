@@ -36,7 +36,7 @@ where
     /// Returns `CausalTensorError::EinSumError(EinSumValidationError::InvalidNumberOfChildren)`
     /// if `children.len()` is not equal to 2.
     /// Returns errors propagated from `CausalTensor::execute_ein_sum`.
-    pub(super) fn get_binary_operands(
+    pub(in crate::types::causal_tensor) fn get_binary_operands(
         children: &[EinSumAST<T>],
     ) -> Result<(CausalTensor<T>, CausalTensor<T>), CausalTensorError> {
         if children.len() != 2 {
@@ -75,7 +75,7 @@ where
     /// Returns `CausalTensorError::EinSumError(EinSumValidationError::InvalidNumberOfChildren)`
     /// if `children.len()` is not equal to 1.
     /// Returns errors propagated from `CausalTensor::execute_ein_sum`.
-    pub(super) fn get_unary_operand(
+    pub(in crate::types::causal_tensor) fn get_unary_operand(
         children: &[EinSumAST<T>],
     ) -> Result<CausalTensor<T>, CausalTensorError> {
         if children.len() != 1 {
@@ -115,7 +115,7 @@ where
     /// - Any specified axis is out of bounds for its respective tensor.
     /// - The dimensions of the contracted axes in `lhs` and `rhs` do not match.
     /// - Errors are propagated from `permute_axes`, `reshape`, or `mat_mul_2d`.
-    pub(super) fn contract(
+    pub(in crate::types::causal_tensor) fn contract(
         lhs: &CausalTensor<T>,
         rhs: &CausalTensor<T>,
         lhs_contract_axes: &[usize],
@@ -218,7 +218,7 @@ where
     /// Returns `CausalTensorError::EinSumError` if:
     /// - Either `lhs` or `rhs` is not a 2D tensor (rank mismatch).
     /// - The inner dimensions of `lhs` and `rhs` do not match (shape mismatch).
-    pub(super) fn mat_mul_2d(
+    pub(in crate::types::causal_tensor) fn mat_mul_2d(
         lhs: &CausalTensor<T>,
         rhs: &CausalTensor<T>,
     ) -> Result<CausalTensor<T>, CausalTensorError> {
@@ -298,7 +298,7 @@ where
     /// # Errors
     ///
     /// Returns errors propagated from `CausalTensor::broadcast_op`.
-    pub(super) fn element_wise_mul(
+    pub(in crate::types::causal_tensor) fn element_wise_mul(
         lhs: &CausalTensor<T>,
         rhs: &CausalTensor<T>,
     ) -> Result<CausalTensor<T>, CausalTensorError> {
@@ -330,7 +330,7 @@ where
     /// - `axis1` or `axis2` are out of bounds for the tensor's dimensions.
     /// - `axis1` and `axis2` are identical.
     /// - The dimensions of `axis1` and `axis2` are not equal (shape mismatch).
-    pub(super) fn trace(
+    pub(in crate::types::causal_tensor) fn trace(
         tensor: &CausalTensor<T>,
         axis1: usize,
         axis2: usize,
@@ -444,7 +444,7 @@ where
     /// - `axis1` or `axis2` are out of bounds for the tensor's dimensions.
     /// - `axis1` and `axis2` are identical.
     /// - The dimensions of `axis1` and `axis2` are not equal (shape mismatch).
-    pub(super) fn diagonal(
+    pub(in crate::types::causal_tensor) fn diagonal(
         tensor: &CausalTensor<T>,
         axis1: usize,
         axis2: usize,
@@ -536,7 +536,7 @@ where
     /// - Either `lhs` or `rhs` has fewer than 3 dimensions (rank mismatch).
     /// - The batch sizes of `lhs` and `rhs` do not match (shape mismatch).
     /// - Errors are propagated from `slice`, `mat_mul_2d`, or `stack`.
-    pub(super) fn batch_mat_mul(
+    pub(in crate::types::causal_tensor) fn batch_mat_mul(
         lhs: CausalTensor<T>,
         rhs: CausalTensor<T>,
     ) -> Result<CausalTensor<T>, CausalTensorError> {

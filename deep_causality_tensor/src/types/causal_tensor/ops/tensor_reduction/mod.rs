@@ -10,7 +10,10 @@ impl<T> CausalTensor<T>
 where
     T: Clone + Default + PartialOrd,
 {
-    pub(super) fn sum_axes_impl(&self, axes: &[usize]) -> Result<Self, CausalTensorError>
+    pub(in crate::types::causal_tensor) fn sum_axes_impl(
+        &self,
+        axes: &[usize],
+    ) -> Result<Self, CausalTensorError>
     where
         T: Add<T, Output = T>,
     {
@@ -86,7 +89,10 @@ where
         Ok(result_tensor)
     }
 
-    pub(super) fn mean_axes_impl(&self, axes: &[usize]) -> Result<Self, CausalTensorError>
+    pub(in crate::types::causal_tensor) fn mean_axes_impl(
+        &self,
+        axes: &[usize],
+    ) -> Result<Self, CausalTensorError>
     where
         T: Div<T, Output = T> + From<u32> + Add<T, Output = T>,
     {
@@ -121,7 +127,9 @@ where
         Ok(sum_tensor)
     }
 
-    pub(super) fn arg_sort_impl(&self) -> Result<Vec<usize>, CausalTensorError> {
+    pub(in crate::types::causal_tensor) fn arg_sort_impl(
+        &self,
+    ) -> Result<Vec<usize>, CausalTensorError> {
         if self.num_dim() != 1 {
             return Err(CausalTensorError::DimensionMismatch);
         }

@@ -14,10 +14,11 @@ impl<T> Add for &CausalTensor<T>
 where
     T: Clone + Default + PartialOrd + Add<T, Output = T>,
 {
-    type Output = Result<CausalTensor<T>, CausalTensorError>;
+    type Output = CausalTensor<T>;
 
     fn add(self, rhs: &CausalTensor<T>) -> Self::Output {
         self.broadcast_op(rhs, |a, b| Ok(a + b))
+            .expect("Broadcast failed in Add")
     }
 }
 
@@ -26,7 +27,7 @@ impl<T> Add<&CausalTensor<T>> for CausalTensor<T>
 where
     T: Clone + Default + PartialOrd + Add<T, Output = T>,
 {
-    type Output = Result<CausalTensor<T>, CausalTensorError>;
+    type Output = CausalTensor<T>;
 
     fn add(self, rhs: &CausalTensor<T>) -> Self::Output {
         (&self).add(rhs)
@@ -38,7 +39,7 @@ impl<T> Add<CausalTensor<T>> for &CausalTensor<T>
 where
     T: Clone + Default + PartialOrd + Add<T, Output = T>,
 {
-    type Output = Result<CausalTensor<T>, CausalTensorError>;
+    type Output = CausalTensor<T>;
 
     fn add(self, rhs: CausalTensor<T>) -> Self::Output {
         self.add(&rhs)
@@ -49,7 +50,7 @@ impl<T> Add for CausalTensor<T>
 where
     T: Clone + Default + PartialOrd + Add<T, Output = T>,
 {
-    type Output = Result<CausalTensor<T>, CausalTensorError>;
+    type Output = CausalTensor<T>;
 
     fn add(self, rhs: CausalTensor<T>) -> Self::Output {
         (&self).add(&rhs)
@@ -63,10 +64,11 @@ impl<T> Sub for &CausalTensor<T>
 where
     T: Clone + Default + PartialOrd + Sub<T, Output = T>,
 {
-    type Output = Result<CausalTensor<T>, CausalTensorError>;
+    type Output = CausalTensor<T>;
 
     fn sub(self, rhs: &CausalTensor<T>) -> Self::Output {
         self.broadcast_op(rhs, |a, b| Ok(a - b))
+            .expect("Broadcast failed in Sub")
     }
 }
 
@@ -75,7 +77,7 @@ impl<T> Sub<&CausalTensor<T>> for CausalTensor<T>
 where
     T: Clone + Default + PartialOrd + Sub<T, Output = T>,
 {
-    type Output = Result<CausalTensor<T>, CausalTensorError>;
+    type Output = CausalTensor<T>;
 
     fn sub(self, rhs: &CausalTensor<T>) -> Self::Output {
         (&self).sub(rhs)
@@ -87,7 +89,7 @@ impl<T> Sub<CausalTensor<T>> for &CausalTensor<T>
 where
     T: Clone + Default + PartialOrd + Sub<T, Output = T>,
 {
-    type Output = Result<CausalTensor<T>, CausalTensorError>;
+    type Output = CausalTensor<T>;
 
     fn sub(self, rhs: CausalTensor<T>) -> Self::Output {
         self.sub(&rhs)
@@ -98,7 +100,7 @@ impl<T> Sub for CausalTensor<T>
 where
     T: Clone + Default + PartialOrd + Sub<T, Output = T>,
 {
-    type Output = Result<CausalTensor<T>, CausalTensorError>;
+    type Output = CausalTensor<T>;
 
     fn sub(self, rhs: CausalTensor<T>) -> Self::Output {
         (&self).sub(&rhs)
@@ -112,10 +114,11 @@ impl<T> Mul for &CausalTensor<T>
 where
     T: Clone + Default + PartialOrd + Mul<T, Output = T>,
 {
-    type Output = Result<CausalTensor<T>, CausalTensorError>;
+    type Output = CausalTensor<T>;
 
     fn mul(self, rhs: &CausalTensor<T>) -> Self::Output {
         self.broadcast_op(rhs, |a, b| Ok(a * b))
+            .expect("Broadcast failed in Mul")
     }
 }
 
@@ -124,7 +127,7 @@ impl<T> Mul<&CausalTensor<T>> for CausalTensor<T>
 where
     T: Clone + Default + PartialOrd + Mul<T, Output = T>,
 {
-    type Output = Result<CausalTensor<T>, CausalTensorError>;
+    type Output = CausalTensor<T>;
 
     fn mul(self, rhs: &CausalTensor<T>) -> Self::Output {
         (&self).mul(rhs)
@@ -136,7 +139,7 @@ impl<T> Mul<CausalTensor<T>> for &CausalTensor<T>
 where
     T: Clone + Default + PartialOrd + Mul<T, Output = T>,
 {
-    type Output = Result<CausalTensor<T>, CausalTensorError>;
+    type Output = CausalTensor<T>;
 
     fn mul(self, rhs: CausalTensor<T>) -> Self::Output {
         self.mul(&rhs)
@@ -147,7 +150,7 @@ impl<T> Mul for CausalTensor<T>
 where
     T: Clone + Default + PartialOrd + Mul<T, Output = T>,
 {
-    type Output = Result<CausalTensor<T>, CausalTensorError>;
+    type Output = CausalTensor<T>;
 
     fn mul(self, rhs: CausalTensor<T>) -> Self::Output {
         (&self).mul(&rhs)
@@ -161,7 +164,7 @@ impl<T> Div for &CausalTensor<T>
 where
     T: Clone + Default + PartialOrd + Zero + Div<T, Output = T>,
 {
-    type Output = Result<CausalTensor<T>, CausalTensorError>;
+    type Output = CausalTensor<T>;
 
     fn div(self, rhs: &CausalTensor<T>) -> Self::Output {
         self.broadcast_op(rhs, |a, b| {
@@ -171,6 +174,7 @@ where
                 Ok(a / b)
             }
         })
+        .expect("Broadcast failed or division by zero in Div")
     }
 }
 
@@ -179,7 +183,7 @@ impl<T> Div<&CausalTensor<T>> for CausalTensor<T>
 where
     T: Clone + Default + PartialOrd + Zero + Div<T, Output = T>,
 {
-    type Output = Result<CausalTensor<T>, CausalTensorError>;
+    type Output = CausalTensor<T>;
 
     fn div(self, rhs: &CausalTensor<T>) -> Self::Output {
         (&self).div(rhs)
@@ -191,7 +195,7 @@ impl<T> Div<CausalTensor<T>> for &CausalTensor<T>
 where
     T: Clone + Default + PartialOrd + Zero + Div<T, Output = T>,
 {
-    type Output = Result<CausalTensor<T>, CausalTensorError>;
+    type Output = CausalTensor<T>;
 
     fn div(self, rhs: CausalTensor<T>) -> Self::Output {
         self.div(&rhs)
@@ -202,7 +206,7 @@ impl<T> Div for CausalTensor<T>
 where
     T: Clone + Default + PartialOrd + Zero + Div<T, Output = T>,
 {
-    type Output = Result<CausalTensor<T>, CausalTensorError>;
+    type Output = CausalTensor<T>;
 
     fn div(self, rhs: CausalTensor<T>) -> Self::Output {
         (&self).div(&rhs)

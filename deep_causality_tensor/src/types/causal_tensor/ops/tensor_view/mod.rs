@@ -8,7 +8,7 @@ impl<T> CausalTensor<T>
 where
     T: Clone,
 {
-    pub(super) fn slice_impl(
+    pub(in crate::types::causal_tensor) fn slice_impl(
         &self,
         axis: usize,
         index: usize,
@@ -55,7 +55,7 @@ where
         CausalTensor::new(new_data, new_shape)
     }
 
-    pub(super) fn shifted_view_impl(&self, flat_index: usize) -> Self
+    pub(in crate::types::causal_tensor) fn shifted_view_impl(&self, flat_index: usize) -> Self
     where
         T: Clone,
     {

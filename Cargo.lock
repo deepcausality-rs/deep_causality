@@ -26,6 +26,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "alloca"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e5a7d05ea6aea7e9e64d25b9156ba2fee3fdd659e34e41063cd2fc7cd020d7f4"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "android_system_properties"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -333,10 +342,35 @@ dependencies = [
  "cast",
  "ciborium",
  "clap",
- "criterion-plot",
+ "criterion-plot 0.6.0",
  "itertools",
  "num-traits",
  "oorandom",
+ "plotters",
+ "rayon",
+ "regex",
+ "serde",
+ "serde_json",
+ "tinytemplate",
+ "walkdir",
+]
+
+[[package]]
+name = "criterion"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a0dfe5e9e71bdcf4e4954f7d14da74d1cdb92a3a07686452d1509652684b1aab"
+dependencies = [
+ "alloca",
+ "anes",
+ "cast",
+ "ciborium",
+ "clap",
+ "criterion-plot 0.8.0",
+ "itertools",
+ "num-traits",
+ "oorandom",
+ "page_size",
  "plotters",
  "rayon",
  "regex",
@@ -351,6 +385,16 @@ name = "criterion-plot"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b1bcc0dc7dfae599d84ad0b1a55f80cde8af3725da8313b528da95ef783e338"
+dependencies = [
+ "cast",
+ "itertools",
+]
+
+[[package]]
+name = "criterion-plot"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5de36c2bee19fba779808f92bf5d9b0fa5a40095c277aba10c458a12b35d21d6"
 dependencies = [
  "cast",
  "itertools",
@@ -412,7 +456,7 @@ dependencies = [
 name = "deep_causality"
 version = "0.11.10"
 dependencies = [
- "criterion",
+ "criterion 0.7.0",
  "deep_causality_ast",
  "deep_causality_data_structures",
  "deep_causality_haft",
@@ -426,7 +470,7 @@ dependencies = [
 name = "deep_causality_algorithms"
 version = "0.2.4"
 dependencies = [
- "criterion",
+ "criterion 0.7.0",
  "deep_causality_num",
  "deep_causality_tensor",
  "rayon",
@@ -447,7 +491,7 @@ dependencies = [
 name = "deep_causality_data_structures"
 version = "0.10.4"
 dependencies = [
- "criterion",
+ "criterion 0.7.0",
  "deep_causality_rand",
 ]
 
@@ -477,7 +521,7 @@ version = "0.8.10"
 name = "deep_causality_multivector"
 version = "0.1.2"
 dependencies = [
- "criterion",
+ "criterion 0.7.0",
  "deep_causality_haft",
  "deep_causality_num",
  "deep_causality_tensor",
@@ -509,7 +553,7 @@ dependencies = [
 name = "deep_causality_tensor"
 version = "0.1.9"
 dependencies = [
- "criterion",
+ "criterion 0.8.0",
  "deep_causality_ast",
  "deep_causality_haft",
  "deep_causality_num",
@@ -531,7 +575,7 @@ dependencies = [
 name = "deep_causality_uncertain"
 version = "0.3.6"
 dependencies = [
- "criterion",
+ "criterion 0.7.0",
  "deep_causality_ast",
  "deep_causality_num",
  "deep_causality_rand",
@@ -921,6 +965,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68f19d67e5a2795c94e73e0bb1cc1a7edeb2e28efd39e2e1c9b7a40c1108b11c"
 dependencies = [
  "num-traits",
+]
+
+[[package]]
+name = "page_size"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "30d5b2194ed13191c1999ae0704b7839fb18384fa22e49b57eeaa97d79ce40da"
+dependencies = [
+ "libc",
+ "winapi",
 ]
 
 [[package]]
@@ -1341,7 +1395,7 @@ checksum = "9ea3136b675547379c4bd395ca6b938e5ad3c3d20fad76e7fe85f9e0d011419c"
 name = "ultragraph"
 version = "0.8.10"
 dependencies = [
- "criterion",
+ "criterion 0.7.0",
  "deep_causality_rand",
 ]
 
@@ -1461,6 +1515,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "winapi"
+version = "0.3.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c839a674fcd7a98952e593242ea400abe93992746761e38641405d28b00f419"
+dependencies = [
+ "winapi-i686-pc-windows-gnu",
+ "winapi-x86_64-pc-windows-gnu",
+]
+
+[[package]]
+name = "winapi-i686-pc-windows-gnu"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ac3b87c63620426dd9b991e5ce0329eff545bccbbb34f3be09ff6fb6ab51b7b6"
+
+[[package]]
 name = "winapi-util"
 version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1468,6 +1538,12 @@ checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
  "windows-sys 0.61.0",
 ]
+
+[[package]]
+name = "winapi-x86_64-pc-windows-gnu"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 
 [[package]]
 name = "windows-core"

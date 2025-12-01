@@ -175,8 +175,8 @@ pub fn surd_states(
         let p_s_reshaped = p_s.reshape(&broadcast_shape)?;
 
         // surd_log2 returns 0.0 for inputs of 0.0, preventing NaN and Inf.
-        let log_diff = (p_s_a.surd_log2()? - p_s_reshaped.surd_log2()?)?;
-        let specific_info_map = (&p_a_s * &log_diff)?;
+        let log_diff = p_s_a.surd_log2()? - p_s_reshaped.surd_log2()?;
+        let specific_info_map = &p_a_s * &log_diff;
 
         // Sum over agent dimensions corresponding to j_comb.
         // The specific_info_map has shape [n_target_states, agent_dim1, agent_dim2, ...]
@@ -192,7 +192,7 @@ pub fn surd_states(
 
     let mi: HashMap<Vec<usize>, f64> = is_map
         .iter()
-        .map(|(k, v)| Ok((k.clone(), (v * &p_s)?.as_slice().iter().sum())))
+        .map(|(k, v)| Ok((k.clone(), (v * &p_s).as_slice().iter().sum())))
         .collect::<Result<_, CausalTensorError>>()?;
 
     // --- 4. Main Decomposition Loop ---
@@ -502,7 +502,7 @@ fn calculate_state_slice(
         p_tj.safe_div(&p_j)?
     };
 
-    let log_ratio = (p_target_given_i / p_target_given_j)?.log2()?;
+    let log_ratio = (p_target_given_i / p_target_given_j).log2()?;
 
     let mut all_involved_vars = current_vars_mapped.to_vec();
     all_involved_vars.extend_from_slice(&prev_vars_mapped);
@@ -521,8 +521,8 @@ fn calculate_state_slice(
     let non_causal_log_ratio =
         CausalTensor::new(non_causal_log_ratio_data, log_ratio.shape().to_vec())?;
 
-    let causal_slice = (&p_tij * &causal_log_ratio)?;
-    let non_causal_slice = (&p_tij * &non_causal_log_ratio)?;
+    let causal_slice = &p_tij * &causal_log_ratio;
+    let non_causal_slice = &p_tij * &non_causal_log_ratio;
 
     Ok((causal_slice, non_causal_slice))
 }

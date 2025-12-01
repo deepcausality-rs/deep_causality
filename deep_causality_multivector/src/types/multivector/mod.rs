@@ -9,9 +9,9 @@ use deep_causality_num::{Field, Zero};
 
 mod algebra;
 mod api;
+mod arithmetic;
 mod getters;
 mod identity;
-mod ops_arithmetic_impl;
 mod ops_misc_impl;
 mod ops_product_impl;
 mod utils;
