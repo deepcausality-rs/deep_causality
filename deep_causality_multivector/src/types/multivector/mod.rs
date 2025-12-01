@@ -7,13 +7,13 @@ use crate::CausalMultiVectorError;
 use crate::types::metric::Metric;
 use deep_causality_num::{Field, Zero};
 
+mod algebra;
 mod api;
-mod causal_multivector_algebra;
-mod causal_multivector_ops_arithmetic_impl;
-mod causal_multivector_ops_misc_impl;
-mod causal_multivector_ops_product_impl;
 mod getters;
 mod identity;
+mod ops_arithmetic_impl;
+mod ops_misc_impl;
+mod ops_product_impl;
 mod utils;
 
 /// A MultiVector in a Clifford Algebra $Cl(p, q, r)$.
