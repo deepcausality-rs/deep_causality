@@ -93,14 +93,6 @@ fn test_div_scalar() {
 }
 
 #[test]
-fn test_rem() {
-    let q1 = Quaternion::new(1.0, 2.0, 3.0, 4.0);
-    let q2 = Quaternion::new(5.0, 6.0, 7.0, 8.0);
-    // Remainder for quaternions is not standard. The current implementation of Rem<Quaternion> for Quaternion returns self.
-    assert_eq!(q1 % q2, q1);
-}
-
-#[test]
 fn test_sum() {
     let q1 = Quaternion::new(1.0, 2.0, 3.0, 4.0);
     let q2 = Quaternion::new(5.0, 6.0, 7.0, 8.0);

@@ -2,165 +2,161 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Complex, RealField};
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use crate::{Complex, One, RealField, Zero};
 
-// Add
-impl<T: RealField> Add for Complex<T> {
-    type Output = Self;
+impl<T: RealField> Complex<T> {
+    /// Computes the squared norm (magnitude squared) of the complex number.
     #[inline]
-    fn add(self, rhs: Self) -> Self::Output {
-        Self::new(self.re + rhs.re, self.im + rhs.im)
+    pub fn norm_sqr(&self) -> T {
+        self.re * self.re + self.im * self.im
     }
-}
 
-// AddAssign
-impl<T: RealField> AddAssign for Complex<T> {
+    /// Computes the norm (magnitude or absolute value) of the complex number.
     #[inline]
-    fn add_assign(&mut self, rhs: Self) {
-        self.re += rhs.re;
-        self.im += rhs.im;
+    pub fn norm(&self) -> T {
+        self.norm_sqr().sqrt()
     }
-}
 
-// Scalar Add
-impl<T: RealField> Add<T> for Complex<T> {
-    type Output = Self;
+    /// Computes the argument (phase angle) of the complex number in radians.
     #[inline]
-    fn add(self, rhs: T) -> Self::Output {
-        Self::new(self.re + rhs, self.im)
+    pub fn arg(&self) -> T {
+        self.im.atan2(self.re)
     }
-}
 
-// Scalar AddAssign
-impl<T: RealField> AddAssign<T> for Complex<T> {
+    /// Computes the complex conjugate of the complex number.
     #[inline]
-    fn add_assign(&mut self, rhs: T) {
-        self.re += rhs;
+    pub fn conjugate(&self) -> Self {
+        Self::new(self.re, -self.im)
     }
-}
 
-// Sub
-impl<T: RealField> Sub for Complex<T> {
-    type Output = Self;
+    /// Computes the multiplicative inverse of an element.
     #[inline]
-    fn sub(self, rhs: Self) -> Self::Output {
-        Self::new(self.re - rhs.re, self.im - rhs.im)
+    pub fn inverse(&self) -> Self {
+        if self.is_zero() {
+            return Self::new(T::nan(), T::nan());
+        }
+        let inv_norm_sq = self.norm_sqr().inverse();
+        Self {
+            re: self.re * inv_norm_sq,
+            im: -self.im * inv_norm_sq,
+        }
     }
-}
 
-// SubAssign
-impl<T: RealField> SubAssign for Complex<T> {
+    /// Raises to an integer power.
     #[inline]
-    fn sub_assign(&mut self, rhs: Self) {
-        self.re -= rhs.re;
-        self.im -= rhs.im;
+    pub fn powi(&self, n: i32) -> Self {
+        if n == 0 {
+            return Self::one();
+        }
+        let mut res = Self::one();
+        let mut base = *self;
+        let mut n_abs = n.abs();
+
+        while n_abs > 0 {
+            if n_abs % 2 == 1 {
+                res *= base;
+            }
+            base = base * base;
+            n_abs /= 2;
+        }
+
+        if n < 0 { res.inverse() } else { res }
     }
-}
 
-// Scalar Sub
-impl<T: RealField> Sub<T> for Complex<T> {
-    type Output = Self;
+    /// Raises a to a real (scalar) power.
     #[inline]
-    fn sub(self, rhs: T) -> Self::Output {
-        Self::new(self.re - rhs, self.im)
+    pub fn powf(&self, n: T) -> Self {
+        // (r * (cos(t) + i*sin(t)))^n = r^n * (cos(n*t) + i*sin(n*t))
+        let r_pow_n = self.norm().powf(n);
+        let n_theta = self.arg() * n;
+        Self::new(r_pow_n * n_theta.cos(), r_pow_n * n_theta.sin())
     }
-}
 
-// Scalar SubAssign
-impl<T: RealField> SubAssign<T> for Complex<T> {
+    /// Raises to a complex power.
     #[inline]
-    fn sub_assign(&mut self, rhs: T) {
-        self.re -= rhs;
+    pub fn powc(&self, n: Self) -> Self {
+        // z^w = exp(w * ln(z))
+        (n * self.ln()).exp()
     }
-}
 
-// Mul
-impl<T: RealField> Mul for Complex<T> {
-    type Output = Self;
+    /// Computes the principal square root of a complex number.
     #[inline]
-    fn mul(self, rhs: Self) -> Self::Output {
+    pub fn sqrt(self) -> Self {
+        if self.is_zero() {
+            return Self::zero();
+        }
+        let norm = self.norm();
+        let half = T::one() / (T::one() + T::one());
+        let re_sqrt = ((norm + self.re) * half).sqrt();
+        let im_sqrt = ((norm - self.re) * half).sqrt();
+
+        if self.im >= T::zero() {
+            Self::new(re_sqrt, im_sqrt)
+        } else {
+            Self::new(re_sqrt, -im_sqrt)
+        }
+    }
+
+    /// Computes `e^(self)`, where `e` is the base of the natural logarithm.
+    #[inline]
+    pub fn exp(self) -> Self {
+        // e^(a + bi) = e^a * (cos(b) + i * sin(b))
+        let exp_re = self.re.exp();
+        Self::new(exp_re * self.im.cos(), exp_re * self.im.sin())
+    }
+
+    /// Computes the natural logarithm of a complex number.
+    #[inline]
+    pub fn ln(self) -> Self {
+        // ln(z) = ln(|z|) + i * arg(z)
+        Self::new(self.norm().ln(), self.arg())
+    }
+
+    /// Computes the sine of a complex number.
+    #[inline]
+    pub fn sin(self) -> Self {
         Self::new(
-            self.re * rhs.re - self.im * rhs.im,
-            self.re * rhs.im + self.im * rhs.re,
+            self.re.sin() * self.im.cosh(),
+            self.re.cos() * self.im.sinh(),
         )
     }
-}
 
-// MulAssign
-impl<T: RealField> MulAssign for Complex<T> {
+    /// Computes the cosine of a complex number.
     #[inline]
-    fn mul_assign(&mut self, rhs: Self) {
-        let re = self.re * rhs.re - self.im * rhs.im;
-        let im = self.re * rhs.im + self.im * rhs.re;
-        self.re = re;
-        self.im = im;
+    pub fn cos(self) -> Self {
+        Self::new(
+            self.re.cos() * self.im.cosh(),
+            -self.re.sin() * self.im.sinh(),
+        )
     }
-}
 
-// Scalar Mul
-impl<T: RealField> Mul<T> for Complex<T> {
-    type Output = Self;
+    /// Computes the tangent of a complex number.
     #[inline]
-    fn mul(self, rhs: T) -> Self::Output {
-        Self::new(self.re * rhs, self.im * rhs)
+    pub fn tan(self) -> Self {
+        self.sin() / self.cos()
     }
-}
 
-// Scalar MulAssign
-impl<T: RealField> MulAssign<T> for Complex<T> {
+    /// Computes the hyperbolic sine of a complex number.
     #[inline]
-    fn mul_assign(&mut self, rhs: T) {
-        self.re *= rhs;
-        self.im *= rhs;
+    pub fn sinh(self) -> Self {
+        Self::new(
+            self.re.sinh() * self.im.cos(),
+            self.re.cosh() * self.im.sin(),
+        )
     }
-}
 
-// Div
-impl<T: RealField> Div for Complex<T> {
-    type Output = Self;
-    // Suppress False Positive lint
-    // https://rust-lang.github.io/rust-clippy/rust-1.91.0/index.html#suspicious_arithmetic_impl
-    #[allow(clippy::suspicious_arithmetic_impl)]
+    /// Computes the hyperbolic cosine of a complex number.
     #[inline]
-    fn div(self, rhs: Self) -> Self::Output {
-        self * rhs.inverse()
+    pub fn cosh(self) -> Self {
+        Self::new(
+            self.re.cosh() * self.im.cos(),
+            self.re.sinh() * self.im.sin(),
+        )
     }
-}
 
-// DivAssign
-impl<T: RealField> DivAssign for Complex<T> {
-    // Suppress False Positive lint
-    #[allow(clippy::suspicious_op_assign_impl)]
+    /// Computes the hyperbolic tangent of a complex number.
     #[inline]
-    fn div_assign(&mut self, rhs: Self) {
-        *self *= rhs.inverse();
-    }
-}
-
-// Scalar Div
-impl<T: RealField> Div<T> for Complex<T> {
-    type Output = Self;
-    #[inline]
-    fn div(self, rhs: T) -> Self::Output {
-        Self::new(self.re / rhs, self.im / rhs)
-    }
-}
-
-// Scalar DivAssign
-impl<T: RealField> DivAssign<T> for Complex<T> {
-    #[inline]
-    fn div_assign(&mut self, rhs: T) {
-        self.re /= rhs;
-        self.im /= rhs;
-    }
-}
-
-// Neg
-impl<T: RealField> Neg for Complex<T> {
-    type Output = Self;
-    #[inline]
-    fn neg(self) -> Self::Output {
-        Self::new(-self.re, -self.im)
+    pub fn tanh(self) -> Self {
+        self.sinh() / self.cosh()
     }
 }

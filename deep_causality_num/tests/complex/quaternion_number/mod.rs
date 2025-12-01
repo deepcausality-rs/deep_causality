@@ -23,8 +23,7 @@ mod identity_tests;
 mod neg_tests;
 #[cfg(test)]
 mod num_cast_tests;
-#[cfg(test)]
-mod num_tests;
+
 #[cfg(test)]
 mod part_ord_tests;
 #[cfg(test)]

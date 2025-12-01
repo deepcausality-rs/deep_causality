@@ -7,7 +7,11 @@ use crate::{
     RealField,
 };
 
-// Marker Trait Implementations
+// | Type | `Distributive` | `Associative` | `Commutative` | Trait |
+// | :--- | :---: | :---: | :---: | :--- |
+// | **Complex** | ✅ | ✅ | ✅ | `Field` |
+
+// Marker Traits
 impl<T: RealField> Associative for Complex<T> {}
 impl<T: RealField> Commutative for Complex<T> {}
 impl<T: RealField> Distributive for Complex<T> {}

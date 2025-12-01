@@ -1,8 +1,8 @@
-use crate::{Float, Quaternion};
+use crate::{Quaternion, RealField};
 use core::fmt::Display;
 
 // Display
-impl<F: Float + Display> Display for Quaternion<F> {
+impl<F: RealField + Display> Display for Quaternion<F> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}", self.w)?;
         write!(

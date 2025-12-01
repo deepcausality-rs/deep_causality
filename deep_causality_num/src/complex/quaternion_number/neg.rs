@@ -1,10 +1,12 @@
 use core::ops::Neg;
 
-use crate::Float;
-use crate::Quaternion;
+use crate::{Quaternion, RealField};
 
 // Neg
-impl<F: Float> Neg for Quaternion<F> {
+impl<F> Neg for Quaternion<F>
+where
+    F: RealField,
+{
     type Output = Self;
 
     /// Returns the negation of the quaternion.

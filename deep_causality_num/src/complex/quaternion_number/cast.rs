@@ -1,8 +1,79 @@
-use crate::Quaternion;
-use crate::ToPrimitive;
-use crate::float::Float;
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
-impl<F: Float> ToPrimitive for Quaternion<F> {
+use crate::Quaternion;
+use crate::{AsPrimitive, Field, FromPrimitive, NumCast, RealField, ToPrimitive};
+
+// AsPrimitive
+impl<F: Field, T> AsPrimitive<T> for Quaternion<F>
+where
+    F: AsPrimitive<T>,
+    T: 'static + Copy + NumCast,
+{
+    #[inline]
+    fn as_(self) -> T {
+        self.w.as_() // Only the scalar part is converted
+    }
+}
+
+// NumCast
+impl<F: RealField + NumCast> NumCast for Quaternion<F> {
+    #[inline]
+    fn from<T: ToPrimitive>(n: T) -> Option<Self> {
+        F::from(n).map(|f| Quaternion::new(f, F::zero(), F::zero(), F::zero()))
+    }
+}
+
+// FromPrimitive
+impl<T: RealField + FromPrimitive> FromPrimitive for Quaternion<T> {
+    fn from_isize(n: isize) -> Option<Self> {
+        T::from_isize(n).map(Self::from_real)
+    }
+    fn from_i8(n: i8) -> Option<Self> {
+        T::from_i8(n).map(Self::from_real)
+    }
+    fn from_i16(n: i16) -> Option<Self> {
+        T::from_i16(n).map(Self::from_real)
+    }
+    fn from_i32(n: i32) -> Option<Self> {
+        T::from_i32(n).map(Self::from_real)
+    }
+    fn from_i64(n: i64) -> Option<Self> {
+        T::from_i64(n).map(Self::from_real)
+    }
+    fn from_i128(n: i128) -> Option<Self> {
+        T::from_i128(n).map(Self::from_real)
+    }
+    fn from_usize(n: usize) -> Option<Self> {
+        T::from_usize(n).map(Self::from_real)
+    }
+    fn from_u8(n: u8) -> Option<Self> {
+        T::from_u8(n).map(Self::from_real)
+    }
+    fn from_u16(n: u16) -> Option<Self> {
+        T::from_u16(n).map(Self::from_real)
+    }
+    fn from_u32(n: u32) -> Option<Self> {
+        T::from_u32(n).map(Self::from_real)
+    }
+    fn from_u64(n: u64) -> Option<Self> {
+        T::from_u64(n).map(Self::from_real)
+    }
+    fn from_u128(n: u128) -> Option<Self> {
+        T::from_u128(n).map(Self::from_real)
+    }
+    fn from_f32(n: f32) -> Option<Self> {
+        T::from_f32(n).map(Self::from_real)
+    }
+    fn from_f64(n: f64) -> Option<Self> {
+        T::from_f64(n).map(Self::from_real)
+    }
+}
+
+// ToPrimitive
+impl<F: RealField + ToPrimitive> ToPrimitive for Quaternion<F> {
     /// Converts the scalar part (`w`) of the quaternion to an `isize`.
     /// Returns `None` if the conversion is not possible (e.g., `NaN`, `Infinity`, or out of range).
     ///

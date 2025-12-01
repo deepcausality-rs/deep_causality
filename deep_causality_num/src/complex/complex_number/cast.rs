@@ -4,6 +4,26 @@
  */
 use crate::{AsPrimitive, Complex, FromPrimitive, NumCast, RealField, ToPrimitive};
 
+// AsPrimitive
+impl<T, U> AsPrimitive<U> for Complex<T>
+where
+    T: RealField + AsPrimitive<U> + 'static,
+    U: 'static + Copy,
+{
+    #[inline]
+    fn as_(self) -> U {
+        self.re.as_()
+    }
+}
+
+// NumCast
+impl<T: RealField + NumCast> NumCast for Complex<T> {
+    #[inline]
+    fn from<N: ToPrimitive>(n: N) -> Option<Self> {
+        T::from(n).map(Self::from_real)
+    }
+}
+
 // FromPrimitive
 impl<T: RealField + FromPrimitive> FromPrimitive for Complex<T> {
     fn from_isize(n: isize) -> Option<Self> {
@@ -93,25 +113,5 @@ impl<T: RealField + ToPrimitive> ToPrimitive for Complex<T> {
     }
     fn to_f64(&self) -> Option<f64> {
         self.re.to_f64()
-    }
-}
-
-// AsPrimitive
-impl<T, U> AsPrimitive<U> for Complex<T>
-where
-    T: RealField + AsPrimitive<U> + 'static,
-    U: 'static + Copy,
-{
-    #[inline]
-    fn as_(self) -> U {
-        self.re.as_()
-    }
-}
-
-// NumCast
-impl<T: RealField + NumCast> NumCast for Complex<T> {
-    #[inline]
-    fn from<N: ToPrimitive>(n: N) -> Option<Self> {
-        T::from(n).map(Self::from_real)
     }
 }

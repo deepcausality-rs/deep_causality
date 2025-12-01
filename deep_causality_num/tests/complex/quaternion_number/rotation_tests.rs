@@ -4,7 +4,7 @@
  */
 
 use deep_causality_num::Quaternion;
-use deep_causality_num::{Float, QuaternionNumber};
+use deep_causality_num::RealField;
 
 const EPSILON: f64 = 1e-9;
 

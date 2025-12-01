@@ -6,11 +6,10 @@
 use crate::RealField;
 
 mod algebra;
+mod arithmetic;
 mod cast;
-mod complex_impl;
 mod display;
 mod identity;
-mod iter;
 mod ops;
 
 /// Represents a complex number with real and imaginary parts.
@@ -46,3 +45,31 @@ pub struct Complex<T: RealField> {
 
 pub type Complex32 = Complex<f32>;
 pub type Complex64 = Complex<f64>;
+
+impl<T: RealField> Complex<T> {
+    /// Creates a new complex number from its real and imaginary parts.
+    #[inline]
+    pub fn new(re: T, im: T) -> Self {
+        Self { re, im }
+    }
+
+    /// Creates a new complex number from a real number.
+    #[inline]
+    pub fn from_real(re: T) -> Self {
+        Self { re, im: T::zero() }
+    }
+}
+
+impl<T: RealField> Complex<T> {
+    /// Returns the real part of the complex number.
+    #[inline]
+    pub fn re(&self) -> T {
+        self.re
+    }
+
+    /// Returns the imaginary part of the complex number.
+    #[inline]
+    pub fn im(&self) -> T {
+        self.im
+    }
+}

@@ -29,6 +29,8 @@ pub trait RealField:
     /// Returns the `NaN` value.
     fn nan() -> Self;
 
+    fn clamp(self, min: Self, max: Self) -> Self;
+
     /// Computes the principal square root of a number.
     /// For negative numbers, it returns `NaN`.
     /// # Example
@@ -123,6 +125,8 @@ pub trait RealField:
     /// assert!((consts::PI.cos() - (-1.0)).abs() < 1e-9);
     /// ```
     fn cos(self) -> Self;
+
+    fn acos(self) -> Self;
 
     /// Computes the tangent of a number (in radians).
     /// # Example
@@ -224,6 +228,11 @@ impl RealField for f32 {
     fn nan() -> Self {
         f32::NAN
     }
+
+    fn clamp(self, min: Self, max: Self) -> Self {
+        self.clamp(min, max)
+    }
+
     fn sqrt(self) -> Self {
         self.sqrt()
     }
@@ -256,6 +265,9 @@ impl RealField for f32 {
     }
     fn cos(self) -> Self {
         self.cos()
+    }
+    fn acos(self) -> Self {
+        self.acos()
     }
     fn tan(self) -> Self {
         self.tan()
@@ -287,6 +299,11 @@ impl RealField for f64 {
     fn nan() -> Self {
         f64::NAN
     }
+
+    fn clamp(self, min: Self, max: Self) -> Self {
+        self.clamp(min, max)
+    }
+
     fn sqrt(self) -> Self {
         self.sqrt()
     }
@@ -319,6 +336,9 @@ impl RealField for f64 {
     }
     fn cos(self) -> Self {
         self.cos()
+    }
+    fn acos(self) -> Self {
+        self.acos()
     }
     fn tan(self) -> Self {
         self.tan()
