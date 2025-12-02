@@ -7,6 +7,8 @@ use crate::types::simplicial_complex::SimplicialComplex;
 use alloc::sync::Arc;
 use deep_causality_sparse::CsrMatrix;
 
+mod algebra;
+mod arithmetic;
 mod display;
 mod getters;
 

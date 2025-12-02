@@ -221,7 +221,12 @@ where
             shape: (rows, cols),
         })
     }
+}
 
+impl<T> CsrMatrix<T>
+where
+    T: Copy + PartialEq + std::ops::Add<Output = T>,
+{
     /// Creates a new `CsrMatrix` from a list of `(row, col, value)` triplets, using an explicit zero value.
     ///
     /// This method is similar to `from_triplets`, but instead of using `T::zero()`, it uses the provided

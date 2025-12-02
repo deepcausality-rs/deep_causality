@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
 use deep_causality_multivector::Metric;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::utils_tests::create_triangle_complex;

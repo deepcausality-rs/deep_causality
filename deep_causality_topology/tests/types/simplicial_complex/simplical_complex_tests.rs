@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_topology::utils_tests::{create_line_complex, create_triangle_complex};
 use deep_causality_topology::{Chain, Simplex, SimplicialComplex, Skeleton};

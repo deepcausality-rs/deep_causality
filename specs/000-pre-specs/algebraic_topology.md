@@ -434,19 +434,19 @@ deep_causality_sparse/src/types/sparse_matrix/
 ## Implementation Phases
 
 ### Phase 1: Chain Algebraic Structure (Week 1-2)
-- [ ] Implement `Chain::zero`, `add`, `sub`, `neg` methods
-- [ ] Implement `Chain::scale` method
-- [ ] Implement standard operators (`Add`, `Sub`, `Neg`)
-- [ ] Implement `AbelianGroup`, `Module<S>` traits
-- [ ] Add unit tests for chain algebra
+- [x] Implement `Chain::zero`, `add`, `sub`, `neg` methods
+- [x] Implement `Chain::scale` method
+- [x] Implement standard operators (`Add`, `Sub`, `Neg`)
+- [x] Implement `AbelianGroup`, `Module<S>` traits (Note: Cannot implement due to Zero trait constraint)
+- [x] Add unit tests for chain algebra
 - [ ] Verify `∂(c₁ + c₂) = ∂c₁ + ∂c₂` (boundary is homomorphism)
 
 ### Phase 2: CsrMatrix Algebraic Support (Week 2-3)
-- [ ] Implement `CsrMatrix<T>` algebraic methods in `deep_causality_sparse`
-- [ ] **Implement `from_triplets_with_zero` and `add_with_zero` in `CsrMatrix`**
-- [ ] Implement `AbelianGroup` for `CsrMatrix<T>`
-- [ ] Implement `Module<S>` for `CsrMatrix<T>`
-- [ ] Add unit tests for sparse matrix algebra
+- [x] Implement `CsrMatrix<T>` algebraic methods in `deep_causality_sparse`
+- [x] **Implement `from_triplets_with_zero` and `add_with_zero` in `CsrMatrix`**
+- [x] Implement `AbelianGroup` for `CsrMatrix<T>`
+- [x] Implement `Module<S>` for `CsrMatrix<T>`
+- [x] Add unit tests for sparse matrix algebra
 - [ ] Update `Chain` to use new `CsrMatrix` algebra
 
 ### Phase 3: Differential Operators on Manifolds (Week 3-4)
