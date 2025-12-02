@@ -11,8 +11,9 @@
 //! in a structured and composable manner, similar to how monads and functors work in other languages.
 //!
 
-use crate::types::causal_effect_propagation_process::CausalEffectPropagationProcess;
-use crate::{CausalityError, CausalityErrorEnum, EffectLog, EffectValue};
+use crate::{
+    CausalEffectPropagationProcess, CausalityError, CausalityErrorEnum, EffectLog, EffectValue,
+};
 use deep_causality_haft::{Applicative, Functor, HKT, HKT3, LogAppend, Monad, Placeholder};
 use std::marker::PhantomData;
 

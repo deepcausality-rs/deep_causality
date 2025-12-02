@@ -26,14 +26,12 @@ publish = false
 
 [features]
 default = ["std"]
-std = ["alloc"]
+std = ["alloc", "deep_causality_haft/std"]
 alloc = []
 strict-zst = []
 
 [dependencies]
-deep_causality_haft = { path = "../deep_causality_haft", version = "0.2", default-features = false, features = [
-    "alloc",
-] }
+deep_causality_haft = { path = "../deep_causality_haft", version = "0.2"}
 
 [[example]]
 name = "control_flow_builder"

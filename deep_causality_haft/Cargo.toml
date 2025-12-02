@@ -27,7 +27,7 @@ exclude = [
 
 [features]
 default = ["std"]
-std = ["alloc"]
+std = ["alloc", "deep_causality_num/std"]
 alloc = []
 
 [dependencies.deep_causality_num]

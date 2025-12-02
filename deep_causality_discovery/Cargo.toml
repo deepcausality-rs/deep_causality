@@ -35,7 +35,6 @@ version = "0.2"
 [dependencies]
 csv = {version = "1.4", default-features = false}
 parquet = {version = "57.1", default-features = false}
-# rayon = {version = "1.11", optional = true}
 
 
 [dev-dependencies]
