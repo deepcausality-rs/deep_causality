@@ -139,7 +139,7 @@ impl<T: RealField> Div for Complex<T> {
     #[allow(clippy::suspicious_arithmetic_impl)]
     #[inline]
     fn div(self, rhs: Self) -> Self {
-        self * rhs.inverse()
+        self * rhs._inverse_impl()
     }
 }
 
@@ -149,7 +149,7 @@ impl<T: RealField> DivAssign for Complex<T> {
     #[allow(clippy::suspicious_op_assign_impl)]
     #[inline]
     fn div_assign(&mut self, rhs: Self) {
-        *self *= rhs.inverse();
+        *self *= rhs._inverse_impl();
     }
 }
 

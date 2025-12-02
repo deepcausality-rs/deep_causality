@@ -5,7 +5,7 @@
 
 use core::f64::consts::{E, PI};
 use deep_causality_num::utils_tests::utils_complex_tests;
-use deep_causality_num::{Complex, RealField, Zero};
+use deep_causality_num::{Complex, Field, RealField, Zero};
 
 // --- Inherent Complex<T> method tests (formerly in float_tests.rs) ---
 

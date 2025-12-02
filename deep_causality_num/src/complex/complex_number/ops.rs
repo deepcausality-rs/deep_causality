@@ -2,15 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Complex, One, RealField, Zero};
+use crate::{Complex, DivisionAlgebra, One, RealField, Zero};
 
 impl<T: RealField> Complex<T> {
-    /// Computes the squared norm (magnitude squared) of the complex number.
-    #[inline]
-    pub fn norm_sqr(&self) -> T {
-        self.re * self.re + self.im * self.im
-    }
-
     /// Computes the norm (magnitude or absolute value) of the complex number.
     #[inline]
     pub fn norm(&self) -> T {
@@ -21,25 +15,6 @@ impl<T: RealField> Complex<T> {
     #[inline]
     pub fn arg(&self) -> T {
         self.im.atan2(self.re)
-    }
-
-    /// Computes the complex conjugate of the complex number.
-    #[inline]
-    pub fn conjugate(&self) -> Self {
-        Self::new(self.re, -self.im)
-    }
-
-    /// Computes the multiplicative inverse of an element.
-    #[inline]
-    pub fn inverse(&self) -> Self {
-        if self.is_zero() {
-            return Self::new(T::nan(), T::nan());
-        }
-        let inv_norm_sq = self.norm_sqr().inverse();
-        Self {
-            re: self.re * inv_norm_sq,
-            im: -self.im * inv_norm_sq,
-        }
     }
 
     /// Raises to an integer power.
@@ -60,7 +35,7 @@ impl<T: RealField> Complex<T> {
             n_abs /= 2;
         }
 
-        if n < 0 { res.inverse() } else { res }
+        if n < 0 { self._inverse_impl() } else { res }
     }
 
     /// Raises a to a real (scalar) power.

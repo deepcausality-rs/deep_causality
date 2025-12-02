@@ -4,7 +4,7 @@
  */
 
 use deep_causality_num::utils_tests::utils_octonion_tests;
-use deep_causality_num::{Float, Octonion};
+use deep_causality_num::{DivisionAlgebra, Float, Octonion};
 
 #[test]
 fn test_octonion_conjugate() {

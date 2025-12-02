@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Octonion, RealField, Rotation};
+use crate::{DivisionAlgebra, Octonion, RealField, Rotation};
 
 impl<T: RealField> Rotation<T> for Octonion<T> {
     /// Rotates the Octonion around the $e_1$ axis.

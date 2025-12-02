@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::{Complex, Complex32, Complex64};
+use deep_causality_num::{Complex, Complex32, Complex64, DivisionAlgebra};
 
 // Helper for float comparison
 const EPSILON: f64 = 1e-9;

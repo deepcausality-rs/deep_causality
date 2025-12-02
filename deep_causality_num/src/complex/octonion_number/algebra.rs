@@ -44,38 +44,114 @@ impl<T: RealField> AbelianGroup for Octonion<T> {}
 impl<T: RealField> DivisionAlgebra<T> for Octonion<T> {
     /// Computes the conjugate of the octonion.
     ///
-    /// The conjugate of an octonion `s + v` is `s - v`, where `s` is the scalar part
-    /// and `v` is the vector part. All imaginary components are negated.
+    /// The conjugate of an octonion `s + e₁i + ... + e₇p` is `s - e₁i - ... - e₇p`.
+    /// The scalar part remains unchanged, while all imaginary parts are negated.
     ///
     /// # Returns
     /// A new octonion representing the conjugate of `self`.
+    ///
+    /// # Examples
+    /// ```
+    /// use deep_causality_num::{Octonion, DivisionAlgebra};
+    ///
+    /// let o = Octonion::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);
+    /// let conj_o = o.conjugate();
+    /// assert_eq!(conj_o.s, 1.0);
+    /// assert_eq!(conj_o.e1, -2.0);
+    /// assert_eq!(conj_o.e7, -8.0);
+    /// ```
     fn conjugate(&self) -> Self {
-        self.conjugate()
+        self._conjugate_impl()
     }
 
-    /// Computes the squared norm (magnitude squared) of the octonion.
+    /// Computes the square of the norm (magnitude) of the octonion.
     ///
-    /// The squared norm is the sum of the squares of all eight components:
+    /// The norm squared is calculated as the sum of the squares of all its components:
     /// `s² + e₁² + e₂² + e₃² + e₄² + e₅² + e₆² + e₇²`.
     ///
     /// # Returns
-    /// The scalar value `T` representing the squared norm.
+    /// The scalar value `F` representing the squared norm.
+    ///
+    /// # Examples
+    /// ```
+    /// use deep_causality_num::{Octonion, DivisionAlgebra};
+    ///
+    /// let o = Octonion::new(1.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    /// assert_eq!(o.norm_sqr(), 5.0); // 1*1 + 2*2 = 5
+    /// ```
     fn norm_sqr(&self) -> T {
-        self.norm_sqr()
+        self._norm_sqr_impl()
     }
 
-    /// Computes the multiplicative inverse of the octonion.
+    /// Computes the inverse of the octonion.
     ///
-    /// For a non-zero octonion `o`, its inverse `o⁻¹` is defined as
-    /// `conjugate(o) / norm_sqr(o)`.
+    /// The inverse `o⁻¹` of an octonion `o` is defined as `conjugate(o) / norm_sqr(o)`.
     ///
     /// # Returns
-    /// A new octonion representing the inverse of `self`.
+    /// A new `Octonion` representing the inverse of `self`. If `norm_sqr()` is zero,
+    /// an octonion with `NaN` components is returned to indicate an undefined inverse.
+    ///
+    /// # Examples
+    /// ```
+    /// use deep_causality_num::{One, Octonion, Zero, DivisionAlgebra};
+    ///
+    /// let o = Octonion::new(1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // 1 + e1
+    /// let inverse_o = o.inverse();
+    /// // (1 + e1) * (0.5 - 0.5e1) = 0.5 - 0.5e1 + 0.5e1 - 0.5e1*e1 = 0.5 + 0.5 = 1
+    /// let expected_inverse = Octonion::new(0.5, -0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    ///
+    /// // Use approximate equality due to floating point arithmetic
+    /// assert!((inverse_o.s - expected_inverse.s) < 1e-9);
+    /// assert!((inverse_o.e1 - expected_inverse.e1) < 1e-9);
+    ///
+    /// let zero_o = Octonion::<f64>::zero();
+    /// let inv_zero = zero_o.inverse();
+    /// assert!(inv_zero.s.is_nan());
+    /// ```
     fn inverse(&self) -> Self {
-        self.inverse()
+        self._inverse_impl()
     }
 }
 
 // Octonions do not form a multiplicative group because multiplication is not associative.
 // However, non-zero octonions do have multiplicative inverses.
 // The `MulGroup` trait requires associativity, so it is not implemented.
+
+impl<T> Octonion<T>
+where
+    T: RealField,
+{
+    pub(crate) fn _norm_sqr_impl(&self) -> T {
+        self.s * self.s
+            + self.e1 * self.e1
+            + self.e2 * self.e2
+            + self.e3 * self.e3
+            + self.e4 * self.e4
+            + self.e5 * self.e5
+            + self.e6 * self.e6
+            + self.e7 * self.e7
+    }
+
+    pub(crate) fn _conjugate_impl(&self) -> Self {
+        Self {
+            s: self.s,
+            e1: -self.e1,
+            e2: -self.e2,
+            e3: -self.e3,
+            e4: -self.e4,
+            e5: -self.e5,
+            e6: -self.e6,
+            e7: -self.e7,
+        }
+    }
+
+    pub(crate) fn _inverse_impl(&self) -> Self {
+        let n_sqr = self.norm_sqr();
+        if n_sqr.is_zero() {
+            let nan = T::nan();
+            Self::new(nan, nan, nan, nan, nan, nan, nan, nan)
+        } else {
+            self.conjugate() / n_sqr
+        }
+    }
+}

@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use core::f64::consts::PI;
-use deep_causality_num::Complex;
 use deep_causality_num::utils_tests::utils_complex_tests;
+use deep_causality_num::{Complex, DivisionAlgebra};
 
 #[test]
 fn test_complex_norm_sqr() {

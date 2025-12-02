@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Octonion, One, RealField, Zero};
+use crate::{DivisionAlgebra, Octonion, One, RealField, Zero};
 use core::iter::{Product, Sum};
 use core::ops::{Add, Div, Mul, Sub};
 use core::ops::{AddAssign, DivAssign, MulAssign, SubAssign};

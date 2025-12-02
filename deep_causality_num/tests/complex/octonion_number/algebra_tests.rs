@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::Octonion;
 use deep_causality_num::Zero;
+use deep_causality_num::{DivisionAlgebra, Octonion, Octonion64};
 
 // Helper for float comparison
 const EPSILON: f64 = 1e-9;
@@ -78,8 +78,10 @@ fn test_division_algebra_norm_sqr_zero() {
 // Test cases for DivisionAlgebra::inverse
 #[test]
 fn test_division_algebra_inverse_general() {
-    let o = Octonion::new(1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // 1 + e1
-    let inverse_o: Octonion<f64> = o.inverse();
+    use deep_causality_num::DivisionAlgebra;
+
+    let o = Octonion64::new(1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // 1 + e1
+    let inverse_o = o.inverse();
     // conjugate is (1 - e1), norm_sqr is 2.0
     // Expected: 0.5 - 0.5e1
     let expected_inverse = Octonion::new(0.5, -0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);

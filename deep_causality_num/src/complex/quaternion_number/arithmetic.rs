@@ -117,7 +117,7 @@ impl<F: RealField> Div for Quaternion<F> {
     type Output = Self;
 
     fn div(self, other: Self) -> Self {
-        self * other.inverse()
+        self * other._inverse_impl()
     }
 }
 

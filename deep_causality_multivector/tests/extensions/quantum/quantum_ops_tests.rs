@@ -4,7 +4,7 @@
  */
 
 use deep_causality_multivector::{HilbertState, Metric, QuantumGates, QuantumOps};
-use deep_causality_num::{Complex64, One, Zero};
+use deep_causality_num::{Complex64, DivisionAlgebra, One, Zero};
 
 const DIM: usize = 10; // For Cl(0,10)
 const SIZE: usize = 1 << DIM; // 1024
