@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::types::simplicial_complex::SimplicialComplex;
+use crate::SimplicialComplex;
 use alloc::sync::Arc;
 use deep_causality_tensor::CausalTensor;
 
@@ -14,7 +14,7 @@ mod getters;
 
 /// Represents a discrete field defined on the k-skeleton.
 /// (e.g., Temperature on Vertices, Magnetic Flux on Faces).
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Topology<T> {
     /// Shared reference to the underlying mesh
     pub(crate) complex: Arc<SimplicialComplex>,

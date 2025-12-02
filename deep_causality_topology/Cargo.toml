@@ -51,6 +51,3 @@ path = "examples/chain_algebra.rs"
 name = "differential_field"
 path = "examples/differential_field.rs"
 
-[[example]]
-name = "hodge_theory"
-path = "examples/hodge_theory.rs"

@@ -3,6 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{CausalTensor, CausalTensorError, EinSumAST, Tensor};
+use deep_causality_num::{RealField, Zero};
+use std::iter::Sum;
 use std::ops::{Add, Div, Mul};
 
 impl<T> Tensor<T> for CausalTensor<T> {
@@ -86,6 +88,33 @@ impl<T> Tensor<T> for CausalTensor<T> {
     {
         self.tensor_product_impl(rhs)
     }
+
+    /// Computes the L2 Norm (Euclidean Norm) of the tensor.
+    ///
+    /// $$ ||A||_2 = \sqrt{ \sum |x_i|^2 } $$
+    ///
+    /// This effectively flattens the tensor and calculates the vector magnitude.
+    /// Useful for checking convergence (e.g., is the Laplacian zero?).
+    fn norm_l2(&self) -> T
+    where
+        T: RealField + Default + Zero + Sum + Copy,
+    {
+        self.norm_l2_impl()
+    }
+
+    /// Computes the Squared L2 Norm.
+    ///
+    /// $$ ||A||^2 = \sum |x_i|^2 $$
+    ///
+    /// Faster than `norm_l2` because it avoids the square root.
+    /// Preferred for threshold checks (e.g. `if norm_sq < epsilon * epsilon`).
+    fn norm_sq(&self) -> T
+    where
+        T: RealField + Default + Zero + Sum + Copy + Mul,
+    {
+        self.norm_sq_impl()
+    }
+
     /// Sums the elements along one or more specified axes.
     ///
     /// The dimensions corresponding to the `axes` provided will be removed from the

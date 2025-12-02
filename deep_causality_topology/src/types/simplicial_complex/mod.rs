@@ -14,7 +14,7 @@ mod getters;
 mod ops_boundary;
 mod simplicial_topology;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct SimplicialComplex {
     /// Storage of geometric entities (Points, Lines, Triangles...)
     pub(crate) skeletons: Vec<Skeleton>,

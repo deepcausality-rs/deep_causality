@@ -5,22 +5,23 @@
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud};
 
-// ------------------------------------------------------------------------
-// ENGINEERING VALUE:
-// Many physical processes (diffusion, fluid flow, electromagnetism) are described
-// by partial differential equations (PDEs). When data lives on a complex,
-// non-grid-like structure (like a sensor network or a 3D model), we need
-// tools from differential geometry to solve these equations.
-//
-// This example demonstrates how to solve the Heat Equation (∂u/∂t = -Δu) on a
-// discrete manifold. The Laplacian operator (Δ) measures the local curvature
-// of a field and drives the diffusion process.
-//
-// This allows us to simulate how a quantity (like heat or information) spreads
-// across a complex topology.
-// ------------------------------------------------------------------------
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Differential Field Example: Heat Equation ===\n");
+
+    // ------------------------------------------------------------------------
+    // ENGINEERING VALUE:
+    // Many physical processes (diffusion, fluid flow, electromagnetism) are described
+    // by partial differential equations (PDEs). When data lives on a complex,
+    // non-grid-like structure (like a sensor network or a 3D model), we need
+    // tools from differential geometry to solve these equations.
+    //
+    // This example demonstrates how to solve the Heat Equation (∂u/∂t = -Δu) on a
+    // discrete manifold. The Laplacian operator (Δ) measures the local curvature
+    // of a field and drives the diffusion process.
+    //
+    // This allows us to simulate how a quantity (like heat or information) spreads
+    // across a complex topology.
+    // ------------------------------------------------------------------------
 
     // 1. Setup (Triangle)
     let points = CausalTensor::new(

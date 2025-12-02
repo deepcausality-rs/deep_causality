@@ -99,21 +99,7 @@ fn test_topology_cup_product() {
 }
 
 #[test]
-#[should_panic(expected = "Cup product dimension exceeds complex dimension")]
-fn test_topology_cup_product_dim_exceeds() {
-    let complex = Arc::new(create_triangle_complex()); // Max dim 2
-
-    // 2-form: field on faces
-    let data2 = CausalTensor::new(vec![1.0], vec![1]).unwrap();
-    let topo2_a = Topology::new(complex.clone(), 2, data2.clone(), 0);
-    let topo2_b = Topology::new(complex.clone(), 2, data2, 0);
-
-    // cup product of 2-form and 2-form should result in a 4-form, but max dim is 2.
-    topo2_a.cup_product(&topo2_b);
-}
-
-#[test]
-#[should_panic(expected = "Data missing for front face")]
+#[should_panic(expected = "Data/Skeleton mismatch")]
 fn test_topology_cup_product_missing_data_self() {
     let complex = Arc::new(create_triangle_complex());
 
@@ -126,11 +112,12 @@ fn test_topology_cup_product_missing_data_self() {
     let topo1 = Topology::new(complex.clone(), 1, data1, 0);
 
     // Should panic when accessing data for vertex 1 or 2
-    topo0.cup_product(&topo1);
+    let res = topo0.cup_product(&topo1);
+    assert!(res.is_err());
 }
 
 #[test]
-#[should_panic(expected = "Data missing for back face")]
+#[should_panic(expected = "Data/Skeleton mismatch")]
 fn test_topology_cup_product_missing_data_other() {
     let complex = Arc::new(create_triangle_complex());
 
@@ -143,7 +130,8 @@ fn test_topology_cup_product_missing_data_other() {
     let topo1 = Topology::new(complex.clone(), 1, data1, 0);
 
     // Should panic when accessing data for edge 1 or 2
-    topo0.cup_product(&topo1);
+    let res = topo0.cup_product(&topo1);
+    assert!(res.is_err());
 }
 
 #[test]

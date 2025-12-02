@@ -4,12 +4,30 @@
  */
 use crate::Tensor;
 use crate::{CausalTensor, CausalTensorError};
-use std::ops::{Add, Div};
+use deep_causality_num::{RealField, Zero};
+use std::iter::Sum;
+use std::ops::{Add, Div, Mul};
 
 impl<T> CausalTensor<T>
 where
     T: Clone + Default + PartialOrd,
 {
+    pub(in crate::types::causal_tensor) fn norm_l2_impl(&self) -> T
+    where
+        T: RealField + Zero + Sum + Copy,
+    {
+        let sum_sq: T = self.data.iter().map(|&x| x * x).sum();
+
+        sum_sq.sqrt()
+    }
+
+    pub(in crate::types::causal_tensor) fn norm_sq_impl(&self) -> T
+    where
+        T: RealField + Zero + Sum + Copy + Mul,
+    {
+        self.data.iter().map(|&x| x * x).sum()
+    }
+
     pub(in crate::types::causal_tensor) fn sum_axes_impl(
         &self,
         axes: &[usize],
