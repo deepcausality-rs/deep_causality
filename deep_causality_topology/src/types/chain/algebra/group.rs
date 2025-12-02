@@ -11,7 +11,7 @@ use deep_causality_sparse::CsrMatrix;
 
 impl<T> Chain<T>
 where
-    T: AbelianGroup + Copy + PartialEq + Default + std::ops::Neg<Output = T>,
+    T: AbelianGroup + Copy + PartialEq + Default + core::ops::Neg<Output = T>,
 {
     /// Creates a zero chain for a given complex and grade.
     ///
@@ -83,7 +83,7 @@ impl<T> Chain<T> {
 
 impl<T> Chain<T>
 where
-    T: Copy + PartialEq + std::ops::Add<Output = T>,
+    T: Copy + PartialEq + core::ops::Add<Output = T>,
 {
     /// Adds two chains with an explicit zero value for contextual sparsity.
     ///

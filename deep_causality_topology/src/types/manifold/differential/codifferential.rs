@@ -3,9 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{Manifold, SimplicialTopology};
+use core::ops::Mul;
 use deep_causality_num::{Field, FromPrimitive, Zero};
 use deep_causality_tensor::CausalTensor;
-use std::ops::Mul;
 
 impl<T> Manifold<T>
 where
@@ -13,7 +13,7 @@ where
         + Copy
         + FromPrimitive
         + Mul<f64, Output = T>
-        + std::ops::Neg<Output = T>
+        + core::ops::Neg<Output = T>
         + Default
         + PartialEq
         + Zero

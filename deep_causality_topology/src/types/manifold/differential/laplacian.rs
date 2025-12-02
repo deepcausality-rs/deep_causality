@@ -7,8 +7,8 @@ where
     T: Field
         + Copy
         + FromPrimitive
-        + std::ops::Mul<f64, Output = T>
-        + std::ops::Neg<Output = T>
+        + core::ops::Mul<f64, Output = T>
+        + core::ops::Neg<Output = T>
         + Default
         + PartialEq
         + Zero

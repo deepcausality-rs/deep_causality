@@ -4,8 +4,8 @@
  */
 
 use crate::types::chain::Chain;
+use core::ops::{Add, Mul, Neg, Sub};
 use deep_causality_num::{AbelianGroup, Module, Ring};
-use std::ops::{Add, Mul, Neg, Sub};
 
 // ============================================================================
 // Add

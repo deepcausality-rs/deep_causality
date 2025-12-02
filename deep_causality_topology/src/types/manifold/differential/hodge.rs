@@ -14,8 +14,8 @@ where
         + Copy
         + FromPrimitive
         + Mul<f64, Output = T>
-        + std::ops::Neg<Output = T>
-        + std::fmt::Debug,
+        + core::ops::Neg<Output = T>
+        + core::fmt::Debug,
 {
     /// Computes the Hodge star operator on a k-form.
     ///

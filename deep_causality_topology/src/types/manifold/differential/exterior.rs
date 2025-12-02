@@ -9,7 +9,7 @@ use deep_causality_tensor::CausalTensor;
 
 impl<T> Manifold<T>
 where
-    T: Field + Copy + std::ops::Neg<Output = T> + std::fmt::Debug,
+    T: Field + Copy + core::ops::Neg<Output = T> + core::fmt::Debug,
 {
     /// Computes the exterior derivative of a k-form.
     ///

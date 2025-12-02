@@ -2,13 +2,13 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use core::ops::Mul;
 use deep_causality_num::Field;
-use std::ops::Mul;
 
 /// Helper to apply a sparse matrix operator to a vector
 pub(super) fn apply_operator<T>(matrix: &deep_causality_sparse::CsrMatrix<i8>, data: &[T]) -> Vec<T>
 where
-    T: Field + Copy + std::ops::Neg<Output = T>,
+    T: Field + Copy + core::ops::Neg<Output = T>,
 {
     let (rows, cols) = matrix.shape();
 
