@@ -3,6 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+mod algebra_tests;
 #[cfg(test)]
 mod arithmetic_assign_tests;
 #[cfg(test)]
@@ -23,7 +24,8 @@ mod identity_tests;
 mod neg_tests;
 #[cfg(test)]
 mod num_cast_tests;
-
+#[cfg(test)]
+mod ops_tests;
 #[cfg(test)]
 mod part_ord_tests;
 #[cfg(test)]
