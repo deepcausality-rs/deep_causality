@@ -1,5 +1,5 @@
 use deep_causality_num::{One, Zero};
-use deep_causality_sparse::CsrMatrix; // Removed AbelianGroup
+use deep_causality_sparse::CsrMatrix;
 
 #[test]
 fn test_zero_matrix() {
@@ -88,4 +88,70 @@ fn test_scalar_one_trait() {
 
     let m = CsrMatrix::from_triplets(2, 2, &[(0, 0, 1.0)]).unwrap();
     assert!(!m.is_one());
+}
+
+#[test]
+fn test_from_triplets_with_zero() {
+    // Use 1.0 as "zero" - elements with value 1.0 should be excluded
+    let triplets = vec![
+        (0, 0, 1.0), // Should be excluded
+        (0, 1, 2.0), // Should be included
+        (1, 0, 3.0), // Should be included
+        (1, 1, 1.0), // Should be excluded
+    ];
+
+    let matrix = CsrMatrix::from_triplets_with_zero(2, 2, &triplets, 1.0).unwrap();
+
+    assert_eq!(matrix.shape(), (2, 2));
+    assert_eq!(matrix.values(), &vec![2.0, 3.0]);
+    assert_eq!(matrix.col_indices(), &vec![1, 0]);
+    // Row indices:
+    // Row 0: 1 element (2.0 at col 1) -> starts at 0, ends at 1
+    // Row 1: 1 element (3.0 at col 0) -> starts at 1, ends at 2
+    assert_eq!(matrix.row_indices(), &vec![0, 1, 2]);
+}
+
+#[test]
+fn test_add_with_zero() {
+    // Use 0.0 as zero for standard addition check
+    let a = CsrMatrix::from_triplets(2, 2, &[(0, 0, 1.0), (1, 1, 2.0)]).unwrap();
+    let b = CsrMatrix::from_triplets(2, 2, &[(0, 0, 2.0), (1, 1, 3.0)]).unwrap();
+
+    // 1.0 + 2.0 = 3.0
+    // 2.0 + 3.0 = 5.0
+    let c = a.add_with_zero(&b, 0.0).unwrap();
+
+    assert_eq!(c.values(), &vec![3.0, 5.0]);
+
+    // Test cancellation with explicit zero
+    // A = [1.0, 0.0]
+    // B = [-1.0, 0.0]
+    // Sum = [0.0, 0.0] -> Empty if zero is 0.0
+    let a2 = CsrMatrix::from_triplets(2, 2, &[(0, 0, 1.0)]).unwrap();
+    let b2 = CsrMatrix::from_triplets(2, 2, &[(0, 0, -1.0)]).unwrap();
+    let c2 = a2.add_with_zero(&b2, 0.0).unwrap();
+    assert!(c2.values().is_empty());
+
+    // Test with non-standard zero
+    // Treat 3.0 as zero.
+    // A = [1.0, 2.0]
+    // B = [2.0, 1.0]
+    // Sum = [3.0, 3.0] -> Both should be filtered out if zero is 3.0
+    let a3 = CsrMatrix::from_triplets_with_zero(1, 2, &[(0, 0, 1.0), (0, 1, 2.0)], 0.0).unwrap();
+    let b3 = CsrMatrix::from_triplets_with_zero(1, 2, &[(0, 0, 2.0), (0, 1, 1.0)], 0.0).unwrap();
+    let c3 = a3.add_with_zero(&b3, 3.0).unwrap();
+    assert!(c3.values().is_empty());
+}
+
+#[test]
+fn test_module_trait() {
+    let matrix = CsrMatrix::from_triplets(2, 2, &[(0, 0, 1.0), (1, 1, 2.0)]).unwrap();
+
+    // Scale by 2.0
+    let scaled = matrix.scale(2.0);
+
+    assert_eq!(scaled.values(), &vec![2.0, 4.0]);
+
+    // Verify it's a new matrix
+    assert_ne!(matrix.values(), scaled.values());
 }

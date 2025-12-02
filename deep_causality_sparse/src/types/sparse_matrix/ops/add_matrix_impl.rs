@@ -49,6 +49,17 @@ impl<T> CsrMatrix<T> {
     where
         T: Copy + Zero + std::ops::Add<Output = T> + PartialEq,
     {
+        self.add_matrix_with_zero_impl(other, T::zero())
+    }
+
+    pub(crate) fn add_matrix_with_zero_impl(
+        &self,
+        other: &Self,
+        zero: T,
+    ) -> Result<Self, SparseMatrixError>
+    where
+        T: Copy + std::ops::Add<Output = T> + PartialEq,
+    {
         if self.shape != other.shape {
             return Err(SparseMatrixError::ShapeMismatch(self.shape, other.shape));
         }
@@ -86,14 +97,14 @@ impl<T> CsrMatrix<T> {
 
                 if col_a < col_b {
                     let val = self.values[ptr_a];
-                    if val != T::zero() {
+                    if val != zero {
                         new_col_indices.push(col_a);
                         new_values.push(val);
                     }
                     ptr_a += 1;
                 } else if col_b < col_a {
                     let val = other.values[ptr_b];
-                    if val != T::zero() {
+                    if val != zero {
                         new_col_indices.push(col_b);
                         new_values.push(val);
                     }
@@ -101,7 +112,7 @@ impl<T> CsrMatrix<T> {
                 } else {
                     // Columns match: Sum them
                     let val = self.values[ptr_a] + other.values[ptr_b];
-                    if val != T::zero() {
+                    if val != zero {
                         new_col_indices.push(col_a);
                         new_values.push(val);
                     }
@@ -114,7 +125,7 @@ impl<T> CsrMatrix<T> {
             // Only one of these two while loops will actually run.
             while ptr_a < end_a {
                 let val = self.values[ptr_a];
-                if val != T::zero() {
+                if val != zero {
                     new_col_indices.push(self.col_indices[ptr_a]);
                     new_values.push(val);
                 }
@@ -124,7 +135,7 @@ impl<T> CsrMatrix<T> {
             // PHASE 3: Flush remaining elements from B
             while ptr_b < end_b {
                 let val = other.values[ptr_b];
-                if val != T::zero() {
+                if val != zero {
                     new_col_indices.push(other.col_indices[ptr_b]);
                     new_values.push(val);
                 }

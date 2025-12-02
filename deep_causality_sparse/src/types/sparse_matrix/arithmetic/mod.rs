@@ -272,3 +272,58 @@ where
         *self = CsrMatrix::mul(self, rhs);
     }
 }
+
+// ============================================================================
+// Scalar Mul Implementations (Module support)
+// ============================================================================
+
+// CsrMatrix<T> * S -> CsrMatrix<T>
+impl<T, S> Mul<S> for CsrMatrix<T>
+where
+    T: Copy + Mul<S, Output = T>,
+    S: Copy + Ring, // Ring bound usually implies Copy, but explicit is fine
+{
+    type Output = CsrMatrix<T>;
+
+    fn mul(self, scalar: S) -> CsrMatrix<T> {
+        let new_values: Vec<T> = self.values.iter().map(|&v| v * scalar).collect();
+        CsrMatrix {
+            row_indices: self.row_indices,
+            col_indices: self.col_indices,
+            values: new_values,
+            shape: self.shape,
+        }
+    }
+}
+
+// &CsrMatrix<T> * S -> CsrMatrix<T>
+impl<T, S> Mul<S> for &CsrMatrix<T>
+where
+    T: Copy + Mul<S, Output = T>,
+    S: Copy + Ring,
+{
+    type Output = CsrMatrix<T>;
+
+    fn mul(self, scalar: S) -> CsrMatrix<T> {
+        let new_values: Vec<T> = self.values.iter().map(|&v| v * scalar).collect();
+        CsrMatrix {
+            row_indices: self.row_indices.clone(),
+            col_indices: self.col_indices.clone(),
+            values: new_values,
+            shape: self.shape,
+        }
+    }
+}
+
+// CsrMatrix<T> *= S
+impl<T, S> MulAssign<S> for CsrMatrix<T>
+where
+    T: Copy + MulAssign<S>,
+    S: Copy + Ring,
+{
+    fn mul_assign(&mut self, scalar: S) {
+        for val in &mut self.values {
+            *val *= scalar;
+        }
+    }
+}

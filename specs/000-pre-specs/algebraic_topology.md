@@ -164,6 +164,7 @@ The "indirect" implementation strategy used for `CausalTensor` and `CausalMultiV
    - `group.rs`: Implement `zero`, `add`, `sub`, `neg`
    - `module.rs`: Implement `scale`
    - `traits.rs`: Implement `AbelianGroup`, `Module<S>`
+   - **Context Handling**: Ensure methods support explicit zero values for types like `CausalMultiVector` that don't implement `Zero`.
 
 2. **Method Implementations** (`group.rs`):
 ```rust
@@ -173,7 +174,11 @@ where
 {
     pub fn zero(complex: Arc<SimplicialComplex>, grade: usize) -> Self {
         let size = complex.skeletons[grade].simplices.len();
-        let weights = CsrMatrix::zero(1, size); // 1 row, size cols
+        // Uses CsrMatrix::zero if T: Zero, or requires explicit zero construction
+        // Note: If T does not implement Zero, we need a way to pass the zero value or use a default.
+        // For now, we assume T: Zero for the default zero() constructor, 
+        // but allow manual construction for non-Zero types.
+        let weights = CsrMatrix::zero(1, size); 
         Self { complex, grade, weights }
     }
 
@@ -297,7 +302,7 @@ where
 
 ### Priority 3: Enhanced CsrMatrix Algebraic Support
 
-**Rationale**: `CsrMatrix<T>` (used in `Chain.weights`) needs  algebraic trait implementations.
+**Rationale**: `CsrMatrix<T>` (used in `Chain.weights`) needs algebraic trait implementations. Crucially, it must support types that do not implement `Zero` (like `CausalMultiVector`) to enable seamless composition.
 
 **Implementation**:
 
@@ -308,7 +313,33 @@ where
    - `deep_causality_sparse/src/types/sparse_matrix/algebra/`
    - Implement `AbelianGroup`, `Module<S>` for `CsrMatrix<T>`
 
-2. **Example** (`group.rs`):
+2. **Implement Contextual Sparsity**:
+   - Add methods to `CsrMatrix` that accept an explicit `zero` value.
+   - This allows `Chain<CausalMultiVector>` to work by passing a zero multivector (constructed with metric).
+
+```rust
+impl<T> CsrMatrix<T>
+where
+    T: Copy + PartialEq, // Removed Zero bound
+{
+    /// Creates a matrix from triplets with an explicit zero value.
+    pub fn from_triplets_with_zero(
+        rows: usize, 
+        cols: usize, 
+        triplets: &[(usize, usize, T)], 
+        zero: T
+    ) -> Result<Self, SparseMatrixError> {
+        // ... implementation using `zero` instead of `T::zero()` ...
+    }
+
+    /// Adds two matrices with an explicit zero value for sparsity checks.
+    pub fn add_with_zero(&self, rhs: &Self, zero: T) -> Self {
+        // ... implementation checking `val == zero` ...
+    }
+}
+```
+
+3. **Example** (`group.rs`):
 ```rust
 impl<T> CsrMatrix<T>
 where
@@ -319,10 +350,7 @@ where
     }
 
     pub fn add(&self, rhs: &Self) -> Self {
-        // Sparse matrix addition
-        assert_eq!(self.rows, rhs.rows);
-        assert_eq!(self.cols, rhs.cols);
-        // Merge non-zero entries
+        // Standard addition assuming T: Zero if needed, or using algebraic properties
         // ...
     }
 }
@@ -349,6 +377,22 @@ where
 3. **Example**: `deep_causality_topology/examples/hodge_theory.rs`
    - Demonstrate Hodge decomposition
    - Use `Field` trait for harmonic forms
+
+## Challenges & Solutions
+
+### The "Zero" Trait Conflict
+
+**Problem**: 
+- `CsrMatrix` typically requires `T: Zero` to identify sparse elements.
+- `CausalMultiVector` **cannot** implement `Zero` because constructing a zero vector requires a `Metric` (runtime context).
+- Therefore, `Chain<CausalMultiVector>` is impossible with standard `CsrMatrix` traits.
+
+**Solution: Contextual Sparsity**
+1. **Enhance `CsrMatrix`**: Add `*_with_zero` methods (e.g., `add_with_zero`, `from_triplets_with_zero`) that take an explicit zero value.
+2. **Update `Chain`**: 
+   - For `T: Zero`, use standard methods.
+   - For `T` without `Zero`, `Chain` must be constructed with a "zero context" or the user must manage the sparsity manually.
+   - *Recommendation*: `Chain` methods should accept an optional context or zero value for advanced types.
 
 ## Proposed Changes
 
@@ -384,7 +428,7 @@ deep_causality_sparse/src/types/sparse_matrix/
 │   ├── group.rs     [NEW] - zero, add, sub, neg
 │   ├── module.rs    [NEW] - scale
 │   └── traits.rs    [NEW] - AbelianGroup, Module
-└── mod.rs           [MODIFY]
+└── mod.rs           [MODIFY] - Add `*_with_zero` methods
 ```
 
 ## Implementation Phases
@@ -399,6 +443,7 @@ deep_causality_sparse/src/types/sparse_matrix/
 
 ### Phase 2: CsrMatrix Algebraic Support (Week 2-3)
 - [ ] Implement `CsrMatrix<T>` algebraic methods in `deep_causality_sparse`
+- [ ] **Implement `from_triplets_with_zero` and `add_with_zero` in `CsrMatrix`**
 - [ ] Implement `AbelianGroup` for `CsrMatrix<T>`
 - [ ] Implement `Module<S>` for `CsrMatrix<T>`
 - [ ] Add unit tests for sparse matrix algebra
@@ -442,7 +487,7 @@ deep_causality_sparse/src/types/sparse_matrix/
 
 3. **Composition Tests** (`deep_causality_topology/tests/composition_tests.rs`):
    - Test `Chain<CausalTensor<f64>>`
-   - Test `Chain<CausalMultiVector<f64>>`
+   - **Test `Chain<CausalMultiVector<f64>>` (using contextual sparsity)**
    - Test `Manifold` with `CausalMultiVector` fields
 
 ### Manual Verification
@@ -458,7 +503,7 @@ deep_causality_sparse/src/types/sparse_matrix/
 
 ### Updated Crates
 - `deep_causality_topology` (primary implementation)
-- `deep_causality_sparse` (algebraic support for `CsrMatrix`)
+- `deep_causality_sparse` (algebraic support for `CsrMatrix` + **Contextual Sparsity**)
 
 ## Benefits
 
@@ -469,6 +514,7 @@ let chain: Chain<Complex<f64>> = /* ... */;
 let superposition = chain1 + chain2;
 
 // Chain with MultiVector coefficients (geometric algebra on chains)
+// Requires explicit zero handling or context
 let chain: Chain<CausalMultiVector<f64>> = /* ... */;
 ```
 
@@ -513,4 +559,4 @@ This plan implements algebraic traits on `Chain<T>` as the primary target, enabl
 - Differential geometry (fields on manifolds with `Field` trait)
 - Physics simulations (PDEs on triangulated domains)
 
-The implementation follows the proven "indirect" pattern from `CausalTensor` and `CausalMultiVector`, ensuring type-safe composition while maintaining mathematical correctness.
+The implementation follows the proven "indirect" pattern from `CausalTensor` and `CausalMultiVector`, ensuring type-safe composition while maintaining mathematical correctness. It also addresses the critical "Zero trait" limitation by introducing contextual sparsity in `CsrMatrix`.
