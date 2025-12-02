@@ -31,7 +31,7 @@ impl<T: RealField> DivisionAlgebra<T> for Quaternion<T> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_num::Quaternion;
+    /// use deep_causality_num::{Quaternion, DivisionAlgebra};
     ///
     /// let q = Quaternion::new(1.0, 2.0, 3.0, 4.0);
     /// let conj_q : Quaternion<f64>  = q.conjugate();
@@ -50,7 +50,7 @@ impl<T: RealField> DivisionAlgebra<T> for Quaternion<T> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_num::Quaternion;
+    /// use deep_causality_num::{Quaternion, DivisionAlgebra};
     ///
     /// let q = Quaternion::new(1.0, 2.0, 3.0, 4.0);
     /// assert_eq!(q.norm_sqr(), 1.0*1.0 + 2.0*2.0 + 3.0*3.0 + 4.0*4.0);
@@ -67,7 +67,7 @@ impl<T: RealField> DivisionAlgebra<T> for Quaternion<T> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_num::Quaternion;
+    /// use deep_causality_num::{Quaternion, DivisionAlgebra};
     ///
     /// let q = Quaternion::new(1.0, 2.0, 3.0, 4.0);
     /// let inv_q = q.inverse();
@@ -85,29 +85,5 @@ impl<T: RealField> DivisionAlgebra<T> for Quaternion<T> {
     /// ```
     fn inverse(&self) -> Self {
         self._inverse_impl()
-    }
-}
-
-impl<T: RealField> Quaternion<T> {
-    pub(crate) fn _conjugate_impl(&self) -> Self {
-        Quaternion {
-            w: self.w,
-            x: -self.x,
-            y: -self.y,
-            z: -self.z,
-        }
-    }
-
-    pub(crate) fn _norm_sqr_impl(&self) -> T {
-        self.w * self.w + self.x * self.x + self.y * self.y + self.z * self.z
-    }
-
-    pub(crate) fn _inverse_impl(&self) -> Self {
-        let n_sqr = self._norm_sqr_impl();
-        if n_sqr.is_zero() {
-            Quaternion::new(T::nan(), T::nan(), T::nan(), T::nan())
-        } else {
-            self._conjugate_impl() / n_sqr
-        }
     }
 }

@@ -54,6 +54,7 @@ mod display;
 mod identity;
 mod neg;
 mod ops;
+mod ops_shared;
 mod rotation;
 
 /// Represents an octonion number with a scalar part and seven imaginary parts.

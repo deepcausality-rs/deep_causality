@@ -11,6 +11,7 @@ mod cast;
 mod display;
 mod identity;
 mod ops;
+mod ops_shared;
 mod rotation;
 
 /// Represents a complex number with real and imaginary parts.

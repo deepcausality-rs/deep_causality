@@ -14,6 +14,7 @@ mod display;
 mod identity;
 mod neg;
 mod ops;
+mod ops_shared;
 mod rotation;
 
 #[derive(Copy, Clone, PartialEq, PartialOrd, Default, Debug)]
