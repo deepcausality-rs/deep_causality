@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{Complex, RealField};
-use std::iter::{Product, Sum};
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use core::iter::{Product, Sum};
+use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 // Implement Sum trait
 impl<T: RealField> Sum for Complex<T> {
@@ -24,7 +24,7 @@ impl<T: RealField> Product for Complex<T> {
 impl<T: RealField> Add for Complex<T> {
     type Output = Self;
     #[inline]
-    fn add(self, rhs: Self) -> Self::Output {
+    fn add(self, rhs: Self) -> Self {
         Self::new(self.re + rhs.re, self.im + rhs.im)
     }
 }
@@ -42,7 +42,7 @@ impl<T: RealField> AddAssign for Complex<T> {
 impl<T: RealField> Add<T> for Complex<T> {
     type Output = Self;
     #[inline]
-    fn add(self, rhs: T) -> Self::Output {
+    fn add(self, rhs: T) -> Self {
         Self::new(self.re + rhs, self.im)
     }
 }
@@ -59,7 +59,7 @@ impl<T: RealField> AddAssign<T> for Complex<T> {
 impl<T: RealField> Sub for Complex<T> {
     type Output = Self;
     #[inline]
-    fn sub(self, rhs: Self) -> Self::Output {
+    fn sub(self, rhs: Self) -> Self {
         Self::new(self.re - rhs.re, self.im - rhs.im)
     }
 }
@@ -77,7 +77,7 @@ impl<T: RealField> SubAssign for Complex<T> {
 impl<T: RealField> Sub<T> for Complex<T> {
     type Output = Self;
     #[inline]
-    fn sub(self, rhs: T) -> Self::Output {
+    fn sub(self, rhs: T) -> Self {
         Self::new(self.re - rhs, self.im)
     }
 }
@@ -94,7 +94,7 @@ impl<T: RealField> SubAssign<T> for Complex<T> {
 impl<T: RealField> Mul for Complex<T> {
     type Output = Self;
     #[inline]
-    fn mul(self, rhs: Self) -> Self::Output {
+    fn mul(self, rhs: Self) -> Self {
         Self::new(
             self.re * rhs.re - self.im * rhs.im,
             self.re * rhs.im + self.im * rhs.re,
@@ -117,7 +117,7 @@ impl<T: RealField> MulAssign for Complex<T> {
 impl<T: RealField> Mul<T> for Complex<T> {
     type Output = Self;
     #[inline]
-    fn mul(self, rhs: T) -> Self::Output {
+    fn mul(self, rhs: T) -> Self {
         Self::new(self.re * rhs, self.im * rhs)
     }
 }
@@ -138,7 +138,7 @@ impl<T: RealField> Div for Complex<T> {
     // https://rust-lang.github.io/rust-clippy/rust-1.91.0/index.html#suspicious_arithmetic_impl
     #[allow(clippy::suspicious_arithmetic_impl)]
     #[inline]
-    fn div(self, rhs: Self) -> Self::Output {
+    fn div(self, rhs: Self) -> Self {
         self * rhs.inverse()
     }
 }
@@ -157,7 +157,7 @@ impl<T: RealField> DivAssign for Complex<T> {
 impl<T: RealField> Div<T> for Complex<T> {
     type Output = Self;
     #[inline]
-    fn div(self, rhs: T) -> Self::Output {
+    fn div(self, rhs: T) -> Self {
         Self::new(self.re / rhs, self.im / rhs)
     }
 }
@@ -175,7 +175,7 @@ impl<T: RealField> DivAssign<T> for Complex<T> {
 impl<T: RealField> Neg for Complex<T> {
     type Output = Self;
     #[inline]
-    fn neg(self) -> Self::Output {
+    fn neg(self) -> Self {
         Self::new(-self.re, -self.im)
     }
 }

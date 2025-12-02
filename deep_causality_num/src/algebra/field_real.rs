@@ -224,143 +224,549 @@ impl DivisionAlgebra<f64> for f64 {
         1.0 / *self
     }
 }
+
 impl RealField for f32 {
+    #[inline]
     fn nan() -> Self {
         f32::NAN
     }
 
+    #[inline]
     fn clamp(self, min: Self, max: Self) -> Self {
-        self.clamp(min, max)
+        f32::clamp(self, min, max)
     }
 
-    fn sqrt(self) -> Self {
-        self.sqrt()
-    }
+    #[inline]
     fn abs(self) -> Self {
         self.abs()
     }
+
+    #[inline]
+    fn sqrt(self) -> Self {
+        #[cfg(feature = "std")]
+        return self.sqrt();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::sqrtf(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for sqrt");
+            f32::NAN
+        }
+    }
+
+    #[inline]
     fn floor(self) -> Self {
-        self.floor()
+        #[cfg(feature = "std")]
+        return self.floor();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::floorf(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for floor");
+            f32::NAN
+        }
     }
+
+    #[inline]
     fn ceil(self) -> Self {
-        self.ceil()
+        #[cfg(feature = "std")]
+        return self.ceil();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::ceilf(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for ceil");
+            f32::NAN
+        }
     }
+
+    #[inline]
     fn round(self) -> Self {
-        self.round()
+        #[cfg(feature = "std")]
+        return self.round();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::roundf(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for round");
+            f32::NAN
+        }
     }
+
+    #[inline]
     fn exp(self) -> Self {
-        self.exp()
+        #[cfg(feature = "std")]
+        return self.exp();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::expf(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for exp");
+            f32::NAN
+        }
     }
+
+    #[inline]
     fn ln(self) -> Self {
-        self.ln()
+        #[cfg(feature = "std")]
+        return self.ln();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::logf(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for ln");
+            f32::NAN
+        }
     }
+
+    #[inline]
     fn log(self, base: Self) -> Self {
-        self.log(base)
+        #[cfg(feature = "std")]
+        return self.log(base);
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::logf(self) / libm::logf(base);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for log");
+            f32::NAN
+        }
     }
+
+    #[inline]
     fn powf(self, n: Self) -> Self {
-        self.powf(n)
+        #[cfg(feature = "std")]
+        return self.powf(n);
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::powf(self, n);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for powf");
+            f32::NAN
+        }
     }
+
+    #[inline]
     fn sin(self) -> Self {
-        self.sin()
+        #[cfg(feature = "std")]
+        return self.sin();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::sinf(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for sin");
+            f32::NAN
+        }
     }
+
+    #[inline]
     fn cos(self) -> Self {
-        self.cos()
+        #[cfg(feature = "std")]
+        return self.cos();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::cosf(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for cos");
+            f32::NAN
+        }
     }
+
+    #[inline]
     fn acos(self) -> Self {
-        self.acos()
+        #[cfg(feature = "std")]
+        return self.acos();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::acosf(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for acos");
+            f32::NAN
+        }
     }
+
+    #[inline]
     fn tan(self) -> Self {
-        self.tan()
+        #[cfg(feature = "std")]
+        return self.tan();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::tanf(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for tan");
+            f32::NAN
+        }
     }
+
+    #[inline]
     fn sinh(self) -> Self {
-        self.sinh()
+        #[cfg(feature = "std")]
+        return self.sinh();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::sinhf(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for sinh");
+            f32::NAN
+        }
     }
+
+    #[inline]
     fn cosh(self) -> Self {
-        self.cosh()
+        #[cfg(feature = "std")]
+        return self.cosh();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::coshf(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for cosh");
+            f32::NAN
+        }
     }
+
+    #[inline]
     fn tanh(self) -> Self {
-        self.tanh()
+        #[cfg(feature = "std")]
+        return self.tanh();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::tanhf(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for tanh");
+            f32::NAN
+        }
     }
+
+    #[inline]
     fn atan2(self, other: Self) -> Self {
-        self.atan2(other)
+        #[cfg(feature = "std")]
+        return self.atan2(other);
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::atan2f(self, other);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for atan2");
+            f32::NAN
+        }
     }
+
+    #[inline]
     fn pi() -> Self {
-        std::f32::consts::PI
+        core::f32::consts::PI
     }
+
+    #[inline]
     fn e() -> Self {
-        std::f32::consts::E
+        core::f32::consts::E
     }
+
+    #[inline]
     fn epsilon() -> Self {
         f32::EPSILON
     }
 }
 
+// -----------------------------------------------------------------------------
+// f64 Implementation
+// -----------------------------------------------------------------------------
 impl RealField for f64 {
+    #[inline]
     fn nan() -> Self {
         f64::NAN
     }
 
+    #[inline]
     fn clamp(self, min: Self, max: Self) -> Self {
-        self.clamp(min, max)
+        f64::clamp(self, min, max)
     }
 
-    fn sqrt(self) -> Self {
-        self.sqrt()
-    }
+    #[inline]
     fn abs(self) -> Self {
         self.abs()
     }
+
+    #[inline]
+    fn sqrt(self) -> Self {
+        #[cfg(feature = "std")]
+        return self.sqrt();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::sqrt(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required");
+            f64::NAN
+        }
+    }
+
+    #[inline]
     fn floor(self) -> Self {
-        self.floor()
+        #[cfg(feature = "std")]
+        return self.floor();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::floor(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required");
+            f64::NAN
+        }
     }
+
+    #[inline]
     fn ceil(self) -> Self {
-        self.ceil()
+        #[cfg(feature = "std")]
+        return self.ceil();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::ceil(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required");
+            f64::NAN
+        }
     }
+
+    #[inline]
     fn round(self) -> Self {
-        self.round()
+        #[cfg(feature = "std")]
+        return self.round();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::round(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required");
+            f64::NAN
+        }
     }
+
+    #[inline]
     fn exp(self) -> Self {
-        self.exp()
+        #[cfg(feature = "std")]
+        return self.exp();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::exp(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required");
+            f64::NAN
+        }
     }
+
+    #[inline]
     fn ln(self) -> Self {
-        self.ln()
+        #[cfg(feature = "std")]
+        return self.ln();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::log(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required");
+            f64::NAN
+        }
     }
+
+    #[inline]
     fn log(self, base: Self) -> Self {
-        self.log(base)
+        #[cfg(feature = "std")]
+        return self.log(base);
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::log(self) / libm::log(base);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required");
+            f64::NAN
+        }
     }
+
+    #[inline]
     fn powf(self, n: Self) -> Self {
-        self.powf(n)
+        #[cfg(feature = "std")]
+        return self.powf(n);
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::pow(self, n);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required");
+            f64::NAN
+        }
     }
+
+    #[inline]
     fn sin(self) -> Self {
-        self.sin()
+        #[cfg(feature = "std")]
+        return self.sin();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::sin(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required");
+            f64::NAN
+        }
     }
+
+    #[inline]
     fn cos(self) -> Self {
-        self.cos()
+        #[cfg(feature = "std")]
+        return self.cos();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::cos(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required");
+            f64::NAN
+        }
     }
+
+    #[inline]
     fn acos(self) -> Self {
-        self.acos()
+        #[cfg(feature = "std")]
+        return self.acos();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::acos(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required");
+            f64::NAN
+        }
     }
+
+    #[inline]
     fn tan(self) -> Self {
-        self.tan()
+        #[cfg(feature = "std")]
+        return self.tan();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::tan(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required");
+            f64::NAN
+        }
     }
+
+    #[inline]
     fn sinh(self) -> Self {
-        self.sinh()
+        #[cfg(feature = "std")]
+        return self.sinh();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::sinh(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required");
+            f64::NAN
+        }
     }
+
+    #[inline]
     fn cosh(self) -> Self {
-        self.cosh()
+        #[cfg(feature = "std")]
+        return self.cosh();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::cosh(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required");
+            f64::NAN
+        }
     }
+
+    #[inline]
     fn tanh(self) -> Self {
-        self.tanh()
+        #[cfg(feature = "std")]
+        return self.tanh();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::tanh(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required");
+            f64::NAN
+        }
     }
+
+    #[inline]
     fn atan2(self, other: Self) -> Self {
-        self.atan2(other)
+        #[cfg(feature = "std")]
+        return self.atan2(other);
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::atan2(self, other);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required");
+            f64::NAN
+        }
     }
+
+    #[inline]
     fn pi() -> Self {
-        std::f64::consts::PI
+        core::f64::consts::PI
     }
+
+    #[inline]
     fn e() -> Self {
-        std::f64::consts::E
+        core::f64::consts::E
     }
+
+    #[inline]
     fn epsilon() -> Self {
         f64::EPSILON
     }

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{Complex, RealField};
-use std::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter};
 
 impl<T: RealField + Display> Display for Complex<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {

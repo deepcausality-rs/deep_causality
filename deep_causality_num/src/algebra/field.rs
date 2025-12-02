@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::CommutativeRing;
-use std::ops::{Div, DivAssign};
+use core::ops::{Div, DivAssign};
 
 /// Represents a **Field** in abstract algebra.
 ///

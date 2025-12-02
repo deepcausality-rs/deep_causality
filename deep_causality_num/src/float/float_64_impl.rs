@@ -3,8 +3,11 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Float, One, Zero};
+use crate::Float;
 use core::num::FpCategory;
+
+#[cfg(all(not(feature = "std"), feature = "libm_math"))]
+use libm;
 
 fn integer_decode_f64(f: f64) -> (u64, i16, i8) {
     let bits: u64 = f.to_bits();
@@ -80,60 +83,80 @@ impl Float for f64 {
     fn classify(self) -> FpCategory {
         f64::classify(self)
     }
+
     #[inline]
     fn floor(self) -> Self {
-        let f = self.fract();
-        if f.is_nan() || f.is_zero() {
-            self
-        } else if self < Self::zero() {
-            self - f - Self::one()
-        } else {
-            self - f
+        #[cfg(feature = "std")]
+        return self.floor();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::floor(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for floor");
+            f64::NAN
         }
     }
 
     #[inline]
     fn ceil(self) -> Self {
-        let f = self.fract();
-        if f.is_nan() || f.is_zero() {
-            self
-        } else if self > Self::zero() {
-            self - f + Self::one()
-        } else {
-            self - f
+        #[cfg(feature = "std")]
+        return self.ceil();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::ceil(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for ceil");
+            f64::NAN
         }
     }
 
     #[inline]
     fn round(self) -> Self {
-        (self + self.signum() * 0.5).trunc()
+        #[cfg(feature = "std")]
+        return self.round();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::round(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for round");
+            f64::NAN
+        }
     }
 
     #[inline]
     fn trunc(self) -> Self {
-        if self > 0.0 {
-            self.floor()
-        } else {
-            self.ceil()
+        #[cfg(feature = "std")]
+        return self.trunc();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::trunc(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for trunc");
+            f64::NAN
         }
     }
 
-    #[cfg(feature = "std")]
     #[inline]
     fn fract(self) -> Self {
-        <f64>::fract(self)
-    }
+        #[cfg(feature = "std")]
+        return self.fract();
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn fract(self) -> Self {
-        self - libm::trunc(self)
-    }
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return self - libm::trunc(self);
 
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn fract(self) -> Self {
-        panic!("Floating point function 'fract' not available in no-std without libm_math feature")
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for fract");
+            f64::NAN
+        }
     }
 
     #[inline]
@@ -156,24 +179,19 @@ impl Float for f64 {
         f64::is_sign_negative(self)
     }
 
-    #[cfg(feature = "std")]
     #[inline]
     fn mul_add(self, a: Self, b: Self) -> Self {
-        <f64>::mul_add(self, a, b)
-    }
+        #[cfg(feature = "std")]
+        return self.mul_add(a, b);
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn mul_add(self, a: Self, b: Self) -> Self {
-        libm::fma(self, a, b)
-    }
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::fma(self, a, b);
 
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn mul_add(self, _a: Self, _b: Self) -> Self {
-        panic!(
-            "Floating point function 'mul_add' not available in no-std without libm_math feature"
-        )
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for mul_add");
+            f64::NAN
+        }
     }
 
     #[inline]
@@ -181,166 +199,139 @@ impl Float for f64 {
         f64::recip(self)
     }
 
-    #[cfg(feature = "std")]
     #[inline]
     fn powi(self, n: i32) -> Self {
-        <f64>::powi(self, n)
+        #[cfg(feature = "std")]
+        return self.powi(n);
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::pow(self, n as f64);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for powi");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn powi(self, n: i32) -> Self {
-        libm::pow(self, n as f64)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn powi(self, _n: i32) -> Self {
-        panic!("Floating point function 'powi' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn powf(self, n: Self) -> Self {
-        <f64>::powf(self, n)
+        #[cfg(feature = "std")]
+        return self.powf(n);
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::pow(self, n);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for powf");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn powf(self, n: Self) -> Self {
-        libm::pow(self, n)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn powf(self, _n: Self) -> Self {
-        panic!("Floating point function 'powf' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn sqrt(self) -> Self {
-        <f64>::sqrt(self)
+        #[cfg(feature = "std")]
+        return self.sqrt();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::sqrt(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for sqrt");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn sqrt(self) -> Self {
-        libm::sqrt(self)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn sqrt(self) -> Self {
-        panic!("Floating point function 'sqrt' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn exp(self) -> Self {
-        <f64>::exp(self)
+        #[cfg(feature = "std")]
+        return self.exp();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::exp(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for exp");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn exp(self) -> Self {
-        libm::exp(self)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn exp(self) -> Self {
-        panic!("Floating point function 'exp' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn exp2(self) -> Self {
-        <f64>::exp2(self)
+        #[cfg(feature = "std")]
+        return self.exp2();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::exp2(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for exp2");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn exp2(self) -> Self {
-        libm::exp2(self)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn exp2(self) -> Self {
-        panic!("Floating point function 'exp2' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn ln(self) -> Self {
-        <f64>::ln(self)
+        #[cfg(feature = "std")]
+        return self.ln();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::log(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for ln");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn ln(self) -> Self {
-        libm::log(self)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn ln(self) -> Self {
-        panic!("Floating point function 'ln' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn log(self, base: Self) -> Self {
-        <f64>::log(self, base)
+        #[cfg(feature = "std")]
+        return self.log(base);
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::log(self) / libm::log(base);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for log");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn log(self, base: Self) -> Self {
-        libm::log(self) / libm::log(base)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn log(self, _base: Self) -> Self {
-        panic!("Floating point function 'log' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn log2(self) -> Self {
-        <f64>::log2(self)
+        #[cfg(feature = "std")]
+        return self.log2();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::log2(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for log2");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn log2(self) -> Self {
-        libm::log2(self)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn log2(self) -> Self {
-        panic!("Floating point function 'log2' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn log10(self) -> Self {
-        <f64>::log10(self)
-    }
+        #[cfg(feature = "std")]
+        return self.log10();
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn log10(self) -> Self {
-        libm::log10(self)
-    }
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::log10(self);
 
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn log10(self) -> Self {
-        panic!("Floating point function 'log10' not available in no-std without libm_math feature")
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for log10");
+            f64::NAN
+        }
     }
 
     #[inline]
@@ -368,330 +359,274 @@ impl Float for f64 {
         f64::clamp(self, min, max)
     }
 
-    #[cfg(feature = "std")]
     #[inline]
     fn cbrt(self) -> Self {
-        <f64>::cbrt(self)
+        #[cfg(feature = "std")]
+        return self.cbrt();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::cbrt(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for cbrt");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn cbrt(self) -> Self {
-        libm::cbrt(self)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn cbrt(self) -> Self {
-        panic!("Floating point function 'cbrt' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn hypot(self, other: Self) -> Self {
-        <f64>::hypot(self, other)
+        #[cfg(feature = "std")]
+        return self.hypot(other);
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::hypot(self, other);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for hypot");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn hypot(self, other: Self) -> Self {
-        libm::hypot(self, other)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn hypot(self, _other: Self) -> Self {
-        panic!("Floating point function 'hypot' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn sin(self) -> Self {
-        <f64>::sin(self)
+        #[cfg(feature = "std")]
+        return self.sin();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::sin(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for sin");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn sin(self) -> Self {
-        libm::sin(self)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn sin(self) -> Self {
-        panic!("Floating point function 'sin' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn cos(self) -> Self {
-        <f64>::cos(self)
+        #[cfg(feature = "std")]
+        return self.cos();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::cos(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for cos");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn cos(self) -> Self {
-        libm::cos(self)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn cos(self) -> Self {
-        panic!("Floating point function 'cos' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn tan(self) -> Self {
-        <f64>::tan(self)
+        #[cfg(feature = "std")]
+        return self.tan();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::tan(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for tan");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn tan(self) -> Self {
-        libm::tan(self)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn tan(self) -> Self {
-        panic!("Floating point function 'tan' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn asin(self) -> Self {
-        <f64>::asin(self)
+        #[cfg(feature = "std")]
+        return self.asin();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::asin(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for asin");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn asin(self) -> Self {
-        libm::asin(self)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn asin(self) -> Self {
-        panic!("Floating point function 'asin' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn acos(self) -> Self {
-        <f64>::acos(self)
+        #[cfg(feature = "std")]
+        return self.acos();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::acos(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for acos");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn acos(self) -> Self {
-        libm::acos(self)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn acos(self) -> Self {
-        panic!("Floating point function 'acos' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn atan(self) -> Self {
-        <f64>::atan(self)
+        #[cfg(feature = "std")]
+        return self.atan();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::atan(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for atan");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn atan(self) -> Self {
-        libm::atan(self)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn atan(self) -> Self {
-        panic!("Floating point function 'atan' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn atan2(self, other: Self) -> Self {
-        <f64>::atan2(self, other)
+        #[cfg(feature = "std")]
+        return self.atan2(other);
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::atan2(self, other);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for atan2");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn atan2(self, other: Self) -> Self {
-        libm::atan2(self, other)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn atan2(self, _other: Self) -> Self {
-        panic!("Floating point function 'atan2' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn sin_cos(self) -> (Self, Self) {
-        <f64>::sin_cos(self)
+        #[cfg(feature = "std")]
+        return self.sin_cos();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return (libm::sin(self), libm::cos(self));
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for sin_cos");
+            (f64::NAN, f64::NAN)
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn sin_cos(self) -> (Self, Self) {
-        (libm::sin(self), libm::cos(self))
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn sin_cos(self) -> (Self, Self) {
-        panic!(
-            "Floating point function 'sin_cos' not available in no-std without libm_math feature"
-        )
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn exp_m1(self) -> Self {
-        <f64>::exp_m1(self)
+        #[cfg(feature = "std")]
+        return self.exp_m1();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::expm1(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for exp_m1");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn exp_m1(self) -> Self {
-        libm::expm1(self)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn exp_m1(self) -> Self {
-        panic!("Floating point function 'exp_m1' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn ln_1p(self) -> Self {
-        <f64>::ln_1p(self)
+        #[cfg(feature = "std")]
+        return self.ln_1p();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::log1p(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for ln_1p");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn ln_1p(self) -> Self {
-        libm::log1p(self)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn ln_1p(self) -> Self {
-        panic!("Floating point function 'ln_1p' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn sinh(self) -> Self {
-        <f64>::sinh(self)
+        #[cfg(feature = "std")]
+        return self.sinh();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::sinh(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for sinh");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn sinh(self) -> Self {
-        libm::sinh(self)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn sinh(self) -> Self {
-        panic!("Floating point function 'sinh' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn cosh(self) -> Self {
-        <f64>::cosh(self)
+        #[cfg(feature = "std")]
+        return self.cosh();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::cosh(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for cosh");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn cosh(self) -> Self {
-        libm::cosh(self)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn cosh(self) -> Self {
-        panic!("Floating point function 'cosh' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn tanh(self) -> Self {
-        <f64>::tanh(self)
+        #[cfg(feature = "std")]
+        return self.tanh();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::tanh(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for tanh");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn tanh(self) -> Self {
-        libm::tanh(self)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn tanh(self) -> Self {
-        panic!("Floating point function 'tanh' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn asinh(self) -> Self {
-        <f64>::asinh(self)
+        #[cfg(feature = "std")]
+        return self.asinh();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::asinh(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for asinh");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn asinh(self) -> Self {
-        libm::asinh(self)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn asinh(self) -> Self {
-        panic!("Floating point function 'asinh' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn acosh(self) -> Self {
-        <f64>::acosh(self)
+        #[cfg(feature = "std")]
+        return self.acosh();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::acosh(self);
+
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for acosh");
+            f64::NAN
+        }
     }
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn acosh(self) -> Self {
-        libm::acosh(self)
-    }
-
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn acosh(self) -> Self {
-        panic!("Floating point function 'acosh' not available in no-std without libm_math feature")
-    }
-
-    #[cfg(feature = "std")]
     #[inline]
     fn atanh(self) -> Self {
-        <f64>::atanh(self)
-    }
+        #[cfg(feature = "std")]
+        return self.atanh();
 
-    #[cfg(all(not(feature = "std"), feature = "libm_math"))]
-    #[inline]
-    fn atanh(self) -> Self {
-        libm::atanh(self)
-    }
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::atanh(self);
 
-    #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-    #[inline]
-    fn atanh(self) -> Self {
-        panic!("Floating point function 'atanh' not available in no-std without libm_math feature")
+        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
+        {
+            compile_error!("'std' or 'libm_math' feature required for atanh");
+            f64::NAN
+        }
     }
 
     #[inline]

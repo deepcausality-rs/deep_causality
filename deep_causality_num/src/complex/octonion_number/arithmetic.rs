@@ -6,7 +6,7 @@
 use crate::{Octonion, One, RealField, Zero};
 use core::iter::{Product, Sum};
 use core::ops::{Add, Div, Mul, Sub};
-use std::ops::{AddAssign, DivAssign, MulAssign, SubAssign};
+use core::ops::{AddAssign, DivAssign, MulAssign, SubAssign};
 
 /// Implements the `Sum` trait for `Octonion`, allowing an iterator of octonions to be summed.
 ///

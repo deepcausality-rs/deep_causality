@@ -4,7 +4,7 @@
  */
 
 use crate::{Distributive, Module, One, Ring};
-use std::ops::{Mul, MulAssign};
+use core::ops::{Mul, MulAssign};
 
 /// Represents a Unital Algebra over a `Ring`.
 ///

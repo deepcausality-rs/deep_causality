@@ -18,8 +18,8 @@ exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE
 [features]
 default = ["std"] # Keep std by default for convenience, can be turned off
 std = [] # Explicitly enable std
+no-std = ["libm_math"]
 libm_math = ["dep:libm"] # Feature to enable libm for no-std floating point math
 
 [dependencies]
-# No external dependencies by default
 libm = { version = "0.2", optional = true } # Add libm as an optional dependency
