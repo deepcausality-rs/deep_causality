@@ -30,6 +30,10 @@ pub struct SimplicialComplex {
     /// coboundary[k] is a matrix of size (N_{k+1} x N_k).
     /// Used to find "Who contains me?" efficiently.
     pub(crate) coboundary_operators: Vec<CsrMatrix<i8>>,
+    /// The Hodge Star Operators (⋆).
+    /// `hodge_star_operators[k]` is a matrix mapping k-forms to (n-k)-forms.
+    /// Its dimensions are `(N_{n-k} x N_k)`.
+    pub(crate) hodge_star_operators: Vec<CsrMatrix<f64>>,
 }
 
 impl SimplicialComplex {
@@ -37,11 +41,13 @@ impl SimplicialComplex {
         skeletons: Vec<Skeleton>,
         boundary_operators: Vec<CsrMatrix<i8>>,
         coboundary_operators: Vec<CsrMatrix<i8>>,
+        hodge_star_operators: Vec<CsrMatrix<f64>>,
     ) -> Self {
         Self {
             skeletons,
             boundary_operators,
             coboundary_operators,
+            hodge_star_operators,
         }
     }
 }

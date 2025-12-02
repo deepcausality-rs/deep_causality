@@ -5,13 +5,15 @@
 
 use alloc::string::ToString;
 
-use crate::{SimplicialComplex, TopologyError};
+use crate::{ReggeGeometry, SimplicialComplex, TopologyError};
 use deep_causality_num::Zero;
 use deep_causality_tensor::CausalTensor;
 
 mod base_topology;
 mod clone;
+mod differential;
 mod display;
+mod geometry;
 mod getters;
 mod manifold_checks;
 mod manifold_topology;
@@ -26,6 +28,8 @@ pub struct Manifold<T> {
     pub(crate) complex: SimplicialComplex,
     /// The data associated with the manifold (e.g., scalar field values on simplices)
     pub(crate) data: CausalTensor<T>,
+    /// The metric information of the manifold, containing edge lengths.
+    pub(crate) metric: Option<ReggeGeometry>,
     /// The Focus (Cursor) for Comonadic extraction
     pub(crate) cursor: usize,
 }
@@ -68,6 +72,55 @@ where
         Ok(Self {
             complex,
             data,
+            metric: None,
+            cursor,
+        })
+    }
+
+    pub fn with_metric(
+        complex: SimplicialComplex,
+        data: CausalTensor<T>,
+        metric: Option<ReggeGeometry>,
+        cursor: usize,
+    ) -> Result<Self, TopologyError> {
+        // Validation: Check data size matches complex
+        let expected_size = complex.skeletons.iter().map(|s| s.simplices.len()).sum();
+        if data.len() != expected_size {
+            return Err(TopologyError::InvalidInput(
+                "Data size must match total number of simplices in complex".to_string(),
+            ));
+        }
+
+        if let Some(ref regge) = metric {
+            if let Some(skeleton_1) = complex.skeletons.get(1) {
+                if skeleton_1.simplices.len() != regge.edge_lengths.len() {
+                    return Err(TopologyError::InvalidInput(
+                        "Metric edge_lengths size must match number of 1-simplices".to_string(),
+                    ));
+                }
+            } else if !regge.edge_lengths.is_empty() {
+                return Err(TopologyError::InvalidInput(
+                    "Metric provided but complex has no 1-simplices".to_string(),
+                ));
+            }
+        }
+
+        if cursor >= data.len() {
+            return Err(TopologyError::IndexOutOfBounds(
+                "Initial cursor out of bounds for Manifold".to_string(),
+            ));
+        }
+
+        if !Self::check_is_manifold(&complex) {
+            return Err(TopologyError::ManifoldError(
+                "SimplicialComplex does not satisfy manifold properties".to_string(),
+            ));
+        }
+
+        Ok(Self {
+            complex,
+            data,
+            metric,
             cursor,
         })
     }

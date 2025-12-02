@@ -3,5 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-mod differential_tests;
-mod manifold_tests;
+mod exterior;
+mod hodge;
+mod laplacian;
+mod utils;

@@ -52,6 +52,7 @@ fn create_test_complex() -> Arc<SimplicialComplex> {
         skeletons,
         boundary_ops,
         coboundary_ops,
+        Vec::new(),
     ))
 }
 

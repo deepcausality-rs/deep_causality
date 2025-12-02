@@ -8,6 +8,7 @@ use alloc::string::ToString;
 use alloc::vec;
 use alloc::vec::Vec;
 use deep_causality_sparse::CsrMatrix;
+use deep_causality_tensor::CausalTensor;
 
 // Helper function to calculate Euclidean distance between two points
 fn euclidean_distance(p1_slice: &[f64], p2_slice: &[f64]) -> f64 {
@@ -17,6 +18,95 @@ fn euclidean_distance(p1_slice: &[f64], p2_slice: &[f64]) -> f64 {
         .map(|(&x1, &x2)| (x1 - x2).powi(2))
         .sum::<f64>()
         .sqrt()
+}
+
+// Helper to compute the Gram determinant for a simplex.
+fn gram_determinant(
+    simplex: &Simplex,
+    points_data: &[f64],
+    point_dim: usize,
+) -> Result<f64, TopologyError> {
+    let k = simplex.vertices.len() - 1;
+    if k == 0 {
+        return Ok(1.0);
+    }
+
+    let v0_index = simplex.vertices[0];
+    let v0_slice = &points_data[v0_index * point_dim..(v0_index + 1) * point_dim];
+
+    let mut gram_matrix_data = vec![0.0; k * k];
+
+    for i in 1..=k {
+        for j in 1..=k {
+            let vi_index = simplex.vertices[i];
+            let vj_index = simplex.vertices[j];
+            let vi_slice = &points_data[vi_index * point_dim..(vi_index + 1) * point_dim];
+            let vj_slice = &points_data[vj_index * point_dim..(vj_index + 1) * point_dim];
+
+            let mut dot_product = 0.0;
+            for d in 0..point_dim {
+                dot_product += (vi_slice[d] - v0_slice[d]) * (vj_slice[d] - v0_slice[d]);
+            }
+            gram_matrix_data[(i - 1) * k + (j - 1)] = dot_product;
+        }
+    }
+
+    let gram_tensor = CausalTensor::new(gram_matrix_data, vec![k, k])
+        .map_err(|e| TopologyError::TensorError(e.to_string()))?;
+
+    // This is a placeholder for a determinant function on CausalTensor.
+    // Since CausalTensor does not have a public determinant method,
+    // we assume one exists for the purpose of this implementation.
+    // A proper implementation would require adding a determinant method to CausalTensor
+    // or using a library like `nalgebra`. For now, we'll use a simplified placeholder.
+    // Let's implement a basic determinant calculation here.
+    fn determinant(matrix: &CausalTensor<f64>) -> f64 {
+        let shape = matrix.shape();
+        let n = shape[0];
+        if n == 1 {
+            return matrix.as_slice()[0];
+        }
+        if n == 2 {
+            let m = matrix.as_slice();
+            return m[0] * m[3] - m[1] * m[2];
+        }
+        // Using Laplace expansion - inefficient but works for small matrices.
+        let mut det = 0.0;
+        for j1 in 0..n {
+            let sign = if j1 % 2 == 0 { 1.0 } else { -1.0 };
+            let mut sub_matrix_data = Vec::with_capacity((n - 1) * (n - 1));
+            for i in 1..n {
+                for j in 0..n {
+                    if j != j1 {
+                        sub_matrix_data.push(matrix.as_slice()[i * n + j]);
+                    }
+                }
+            }
+            let sub_matrix = CausalTensor::new(sub_matrix_data, vec![n - 1, n - 1]).unwrap();
+            det += sign * matrix.as_slice()[j1] * determinant(&sub_matrix);
+        }
+        det
+    }
+
+    Ok(determinant(&gram_tensor))
+}
+
+// Helper to compute the squared volume of a simplex.
+fn simplex_volume_squared(
+    simplex: &Simplex,
+    points_data: &[f64],
+    point_dim: usize,
+) -> Result<f64, TopologyError> {
+    let k = simplex.vertices.len() - 1;
+    if k == 0 {
+        return Ok(1.0); // Volume of a point is 1
+    }
+
+    let det_g = gram_determinant(simplex, points_data, point_dim)?;
+    let k_factorial: f64 = (1..=k).map(|i| i as f64).product();
+
+    let vol_sq = det_g / (k_factorial * k_factorial);
+    Ok(if vol_sq < 0.0 { 0.0 } else { vol_sq })
 }
 
 impl<T> PointCloud<T> {
@@ -201,10 +291,42 @@ impl<T> PointCloud<T> {
         coboundary_operators
             .push(CsrMatrix::from_triplets(0, skeletons[max_dim].simplices.len(), &[]).unwrap());
 
+        // HODGE STAR OPERATORS
+        let n_dim = max_dim;
+        let mut hodge_star_operators = Vec::with_capacity(n_dim + 1);
+
+        for k_dim in 0..=n_dim {
+            let dual_k_dim = n_dim - k_dim;
+            let k_skeleton = &skeletons[k_dim];
+            let dual_k_skeleton = &skeletons[dual_k_dim];
+            let k_count = k_skeleton.simplices.len();
+            let dual_k_count = dual_k_skeleton.simplices.len();
+
+            let mut triplets: Vec<(usize, usize, f64)> = Vec::new();
+
+            // We implement a diagonal Hodge star. This is a simplification that assumes a
+            // one-to-one correspondence between primal and dual simplices, which holds true
+            // in many regular cases but not for general complexes.
+            let num_diagonal_entries = k_count.min(dual_k_count);
+
+            for i in 0..num_diagonal_entries {
+                let simplex = &k_skeleton.simplices[i];
+                let vol_sq = simplex_volume_squared(simplex, points_data, point_dim)?;
+                let vol = vol_sq.sqrt();
+                let hodge_val = if vol > 1e-9 { 1.0 / vol } else { 0.0 };
+                triplets.push((i, i, hodge_val));
+            }
+
+            let hodge_matrix = CsrMatrix::from_triplets(dual_k_count, k_count, &triplets)
+                .map_err(|e| TopologyError::GenericError(e.to_string()))?;
+            hodge_star_operators.push(hodge_matrix);
+        }
+
         Ok(SimplicialComplex::new(
             skeletons,
             boundary_operators,
             coboundary_operators,
+            hodge_star_operators,
         ))
     }
 }

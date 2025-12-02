@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Manifold, SimplicialComplex};
+use crate::{Manifold, ReggeGeometry, SimplicialComplex};
 use deep_causality_tensor::CausalTensor;
 
 impl<T> Manifold<T> {
@@ -13,6 +13,10 @@ impl<T> Manifold<T> {
 
     pub fn data(&self) -> &CausalTensor<T> {
         &self.data
+    }
+
+    pub fn metric(&self) -> Option<&ReggeGeometry> {
+        self.metric.as_ref()
     }
 
     pub fn cursor(&self) -> usize {

@@ -24,6 +24,7 @@ impl Functor<ManifoldWitness> for ManifoldWitness {
         Manifold {
             complex: fa.complex,
             data: new_data,
+            metric: None,
             cursor: fa.cursor,
         }
     }
@@ -64,6 +65,7 @@ impl BoundedComonad<ManifoldWitness> for ManifoldWitness {
         Manifold {
             complex: fa.complex.clone(),
             data: new_data,
+            metric: None,
             cursor: 0,
         }
     }

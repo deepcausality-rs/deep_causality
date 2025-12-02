@@ -10,6 +10,7 @@ use deep_causality_tensor::CausalTensor;
 
 use crate::{Simplex, SimplicialComplex};
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct ReggeGeometry {
     // Lengths of the 1-simplices (Edges)
     pub(crate) edge_lengths: CausalTensor<f64>,

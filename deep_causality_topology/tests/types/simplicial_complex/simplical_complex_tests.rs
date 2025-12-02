@@ -78,6 +78,7 @@ fn test_simplicial_complex_coboundary_d0() {
         std::vec![skeleton_0, skeleton_1],
         std::vec![b1],
         std::vec![c0], // Only c0
+        std::vec![],
     ));
 
     // 0-chain: 1.0 * (0)

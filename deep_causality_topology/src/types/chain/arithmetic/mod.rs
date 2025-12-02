@@ -18,7 +18,7 @@ where
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self {
-        (&self).add(&rhs)
+        Chain::add(&self, &rhs)
     }
 }
 
@@ -29,7 +29,7 @@ where
     type Output = Chain<T>;
 
     fn add(self, rhs: Self) -> Chain<T> {
-        self.add(rhs)
+        Chain::add(self, rhs)
     }
 }
 
@@ -44,7 +44,7 @@ where
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self {
-        (&self).sub(&rhs)
+        Chain::sub(&self, &rhs)
     }
 }
 
@@ -55,7 +55,7 @@ where
     type Output = Chain<T>;
 
     fn sub(self, rhs: Self) -> Chain<T> {
-        self.sub(rhs)
+        Chain::sub(self, rhs)
     }
 }
 
@@ -70,7 +70,7 @@ where
     type Output = Self;
 
     fn neg(self) -> Self {
-        (&self).neg()
+        Chain::neg(&self)
     }
 }
 
@@ -81,7 +81,7 @@ where
     type Output = Chain<T>;
 
     fn neg(self) -> Chain<T> {
-        self.neg()
+        Chain::neg(self)
     }
 }
 

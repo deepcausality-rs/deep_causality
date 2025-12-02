@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let d1 = CsrMatrix::from_triplets(2, 1, &[(0, 0, -1i8), (1, 0, 1i8)])?;
 
     // 3. Create Simplicial Complex
-    let complex = SimplicialComplex::new(vec![skeleton_0, skeleton_1], vec![d1], vec![]);
+    let complex = SimplicialComplex::new(vec![skeleton_0, skeleton_1], vec![d1], vec![], vec![]);
 
     // 4. Create Manifold
     // Data for 3 simplices (2 vertices + 1 edge)

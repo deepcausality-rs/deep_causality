@@ -19,4 +19,8 @@ impl SimplicialComplex {
     pub fn coboundary_operators(&self) -> &Vec<CsrMatrix<i8>> {
         &self.coboundary_operators
     }
+
+    pub fn hodge_star_operators(&self) -> &Vec<CsrMatrix<f64>> {
+        &self.hodge_star_operators
+    }
 }

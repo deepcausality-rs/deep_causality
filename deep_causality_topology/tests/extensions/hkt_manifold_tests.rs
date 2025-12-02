@@ -18,7 +18,7 @@ fn create_line_manifold() -> Manifold<f64> {
 
     let d1 = CsrMatrix::from_triplets(2, 1, &[(1, 0, 1i8), (0, 0, -1)]).unwrap();
 
-    let complex = SimplicialComplex::new(vec![skeleton_0, skeleton_1], vec![d1], vec![]);
+    let complex = SimplicialComplex::new(vec![skeleton_0, skeleton_1], vec![d1], vec![], vec![]);
 
     // Data on 0-simplices (vertices) and 1-simplices (edges)
     // Total simplices = 2 + 1 = 3

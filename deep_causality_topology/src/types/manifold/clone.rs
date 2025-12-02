@@ -14,6 +14,7 @@ where
         Manifold {
             complex: self.complex.clone(),
             data: self.data.clone(),
+            metric: self.metric.clone(),
             cursor: 0,
         }
     }

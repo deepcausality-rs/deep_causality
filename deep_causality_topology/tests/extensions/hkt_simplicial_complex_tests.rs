@@ -20,7 +20,7 @@ fn create_simple_complex() -> Arc<SimplicialComplex> {
     // We only need 0-skeleton for the current HKT implementation of unit/left_adjunct
     // as it defaults to 0-skeleton in the code I read.
 
-    Arc::new(SimplicialComplex::new(vec![skeleton_0], vec![], vec![]))
+    Arc::new(SimplicialComplex::new(vec![skeleton_0], vec![], vec![], vec![]))
 }
 
 #[test]

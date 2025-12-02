@@ -55,6 +55,7 @@ fn test_regge_geometry_metric_at_invalid_edge_panic() {
         vec![skeleton_0, skeleton_1, skeleton_2],
         vec![], // Empty boundary ops
         vec![], // Empty coboundary ops
+        vec![],
     );
 
     let edge_lengths =

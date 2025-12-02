@@ -67,6 +67,7 @@ pub fn create_triangle_complex() -> SimplicialComplex {
         vec![skeleton_0, skeleton_1, skeleton_2],
         boundary_ops,
         coboundary_ops,
+        Vec::new(),
     )
 }
 
@@ -88,5 +89,5 @@ pub fn create_line_complex() -> SimplicialComplex {
 
     let d1 = CsrMatrix::from_triplets(2, 1, &[(1, 0, 1i8), (0, 0, -1)]).unwrap();
 
-    SimplicialComplex::new(vec![skeleton_0, skeleton_1], vec![d1], vec![])
+    SimplicialComplex::new(vec![skeleton_0, skeleton_1], vec![d1], vec![], Vec::new())
 }

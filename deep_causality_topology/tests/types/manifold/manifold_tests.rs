@@ -48,6 +48,7 @@ fn create_triangle_complex() -> SimplicialComplex {
         vec![skeleton_0, skeleton_1, skeleton_2],
         vec![d1, d2],
         vec![],
+        vec![],
     )
 }
 
@@ -60,7 +61,7 @@ fn create_line_complex() -> SimplicialComplex {
 
     let d1 = CsrMatrix::from_triplets(2, 1, &[(1, 0, 1i8), (0, 0, -1)]).unwrap();
 
-    SimplicialComplex::new(vec![skeleton_0, skeleton_1], vec![d1], vec![])
+    SimplicialComplex::new(vec![skeleton_0, skeleton_1], vec![d1], vec![], vec![])
 }
 
 #[test]
@@ -147,7 +148,7 @@ fn test_manifold_euler_characteristic() {
 
 #[test]
 fn test_manifold_validation_empty_complex() {
-    let complex = SimplicialComplex::new(vec![], vec![], vec![]);
+    let complex = SimplicialComplex::new(vec![], vec![], vec![], vec![]);
     // Empty complex has no simplices, so can't create proper data
     // Constructor should fail on empty skeletons
     let data = CausalTensor::new(vec![1.0], vec![1]).unwrap();
