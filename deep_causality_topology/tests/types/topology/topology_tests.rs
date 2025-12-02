@@ -65,7 +65,7 @@ fn test_topology_cup_product() {
     let topo1 = Topology::new(complex.clone(), 1, data1, 0);
 
     // cup product of 0-form and 1-form should result in a 1-form
-    let cup_product_result = topo0.cup_product(&topo1);
+    let cup_product_result = topo0.cup_product(&topo1).unwrap();
 
     assert_eq!(cup_product_result.grade(), 1);
     assert_eq!(

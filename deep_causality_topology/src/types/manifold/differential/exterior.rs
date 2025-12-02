@@ -9,7 +9,7 @@ use deep_causality_tensor::CausalTensor;
 
 impl<T> Manifold<T>
 where
-    T: Field + Copy + core::ops::Neg<Output = T> + core::fmt::Debug,
+    T: Field + Copy + Default + PartialEq + core::ops::Neg<Output = T> + core::fmt::Debug,
 {
     /// Computes the exterior derivative of a k-form.
     ///
@@ -31,44 +31,30 @@ where
     /// For discrete differential forms on simplicial complexes,
     /// the exterior derivative is represented by the coboundary operator.
     pub fn exterior_derivative(&self, k: usize) -> CausalTensor<T> {
-        // For a discrete simplicial complex, the exterior derivative is
-        // represented by the coboundary operator (transpose of boundary operator)
-
-        // Check if we have a coboundary operator for this dimension
+        // The exterior derivative d_k is represented by the coboundary operator C_k = B_{k+1}^T.
         if k >= self.complex.coboundary_operators.len() {
-            // If k is at max dimension, derivative is zero
-            return CausalTensor::new(vec![], vec![0]).expect("Failed to create empty tensor");
+            // d of the highest dimension is zero
+            return CausalTensor::new(vec![], vec![0]).expect("Tensor alloc failed");
         }
 
         let coboundary = &self.complex.coboundary_operators[k];
+        let k_form_data = self.get_k_form_data(k);
 
-        // Extract the k-forms from data
-        // For simplicity, assume data is ordered by skeleton (0-simplices, 1-simplices, ...)
-        let mut offset = 0;
-        for i in 0..k {
-            if i < self.complex.skeletons.len() {
-                offset += self.complex.skeletons[i].simplices.len();
-            }
+        // Operation: C_k * omega_k
+        let result = super::utils::apply_operator(coboundary, &k_form_data);
+
+        // Result size matches the number of (k+1)-simplices
+        let next_dim_size = self.complex.skeletons()[k + 1].simplices().len();
+
+        // Safety check
+        if result.len() != next_dim_size {
+            // This handles the case where the sparse matrix might have implicit dimensions
+            // essentially padding/truncating to the correct skeleton size.
+            let mut corrected = result;
+            corrected.resize(next_dim_size, T::zero());
+            return CausalTensor::new(corrected, vec![next_dim_size]).unwrap();
         }
 
-        let k_form_size = if k < self.complex.skeletons.len() {
-            self.complex.skeletons[k].simplices.len()
-        } else {
-            0
-        };
-
-        // Extract k-form coefficients
-        let k_form_data: Vec<T> = if offset + k_form_size <= self.data().len() {
-            self.data().as_slice()[offset..offset + k_form_size].to_vec()
-        } else {
-            vec![]
-        };
-
-        // Apply coboundary operator
-        // coboundary * k_form_data gives (k+1)-form
-        let result = super::utils::apply_operator(coboundary, &k_form_data);
-        let result_len = result.len();
-
-        CausalTensor::new(result, vec![result_len]).expect("Failed to create result tensor")
+        CausalTensor::new(result, vec![next_dim_size]).expect("Tensor alloc failed")
     }
 }

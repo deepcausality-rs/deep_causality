@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Manifold, SimplicialTopology};
+use crate::Manifold;
 use core::ops::Mul;
 use deep_causality_num::{Field, FromPrimitive, Zero};
 use deep_causality_tensor::CausalTensor;
@@ -19,123 +19,87 @@ where
         + Zero
         + std::fmt::Debug,
 {
-    /// Computes the codifferential `δ` of a k-form.
+    /// Computes the codifferential `δ` (delta) of a k-form.
     ///
-    /// The codifferential is the adjoint of the exterior derivative `d` with respect
-    /// to the L2 inner product, and is defined as:
+    /// The codifferential is the adjoint of `d` with respect to the inner product defined by the Mass Matrices (Hodge Stars).
     ///
-    /// δ = (-1)^(n(k-1)+1) * ⋆d⋆
+    /// Formula: δ_k = M_{k-1}^{-1} * B_k * M_k
     ///
-    /// where `n` is the dimension of the manifold and `k` is the degree of the form.
-    /// It maps k-forms to (k-1)-forms.
+    /// * `M_k`: Mass Matrix for k-forms (Diagonal, stored in hodge_star_operators).
+    /// * `B_k`: Boundary Operator mapping k -> k-1.
+    /// * `M_{k-1}^{-1}`: Inverse Mass Matrix for (k-1)-forms.
+    ///
+    /// # Arguments
+    /// * `k` - The degree of the form (must be > 0).
+    ///
+    /// # Returns
+    /// A `CausalTensor` representing the (k-1)-form.
     pub fn codifferential(&self, k: usize) -> CausalTensor<T> {
         if k == 0 {
-            // Codifferential of a 0-form is always the zero (-1)-form (empty tensor).
+            // delta of a 0-form is zero
             return CausalTensor::new(vec![], vec![0]).unwrap();
         }
 
-        let n = self.complex.max_simplex_dimension();
+        // 1. Get Data: omega_k
+        let k_form_data = self.get_k_form_data(k);
 
-        // If k > n, the space of k-forms is trivial, return empty (k-1)-form
-        if k > n {
-            return CausalTensor::new(vec![], vec![0]).unwrap();
-        }
+        // 2. Get Operators
+        // M_k (Mass Matrix for k-simplices)
+        let mass_k = &self.complex.hodge_star_operators[k];
 
-        // 1. Apply first Hodge star: k-form -> (n-k)-form
-        let star_form = self.hodge_star(k);
+        // B_k (Boundary Operator: k -> k-1)
+        // Note: boundary_operators[k] maps k-simplices (cols) to k-1 simplices (rows)
+        let boundary_k = &self.complex.boundary_operators[k];
 
-        // 2. Apply exterior derivative: (n-k)-form -> (n-k+1)-form
-        // We need a temporary manifold to do this.
-        let mut temp_data = vec![T::zero(); self.data().len()];
+        // M_{k-1} (Mass Matrix for k-1 simplices)
+        // We need the inverse of this. Since we store it as a diagonal CsrMatrix,
+        // we can compute the inverse values element-wise.
+        let mass_k_minus_1 = &self.complex.hodge_star_operators[k - 1];
 
-        // Calculate offset for (n-k)-skeleton
-        let dual_k = n.saturating_sub(k);
-        let mut offset = 0;
-        for i in 0..dual_k {
-            if i >= self.complex.skeletons().len() {
-                break;
+        // 3. Compute: y = M_k * omega_k
+        // Element-wise multiplication since M_k is diagonal
+        let weighted_form = super::utils::apply_f64_operator(mass_k, &k_form_data);
+
+        // 4. Compute: z = B_k * y
+        // Sparse matrix multiplication
+        let integrated_form = super::utils::apply_operator(boundary_k, &weighted_form);
+
+        // 5. Compute: res = M_{k-1}^{-1} * z
+        // Apply inverse weights.
+        let prev_dim_size = self.complex.skeletons()[k - 1].simplices().len();
+        let mut result_data = Vec::with_capacity(prev_dim_size);
+
+        // We assume mass_k_minus_1 is strictly diagonal and aligned with the skeleton.
+        // In CsrMatrix, diagonal means row_indices[i]..row_indices[i+1] contains col=i.
+        // We iterate manually to be safe and efficient.
+
+        // Fallback map if matrix is sparse/missing entries
+        // In a full implementation, we'd use a dedicated DiagonalMatrix type.
+        // Here we parse the CSR structure.
+        for i in 0..prev_dim_size {
+            let numerator = integrated_form.get(i).copied().unwrap_or(T::zero());
+
+            // Find diagonal value M_{ii}
+            let mut mass_val = 0.0;
+            let start = mass_k_minus_1.row_indices()[i];
+            let end = mass_k_minus_1.row_indices()[i + 1];
+
+            for idx in start..end {
+                if mass_k_minus_1.col_indices()[idx] == i {
+                    mass_val = mass_k_minus_1.values()[idx];
+                    break;
+                }
             }
-            offset += self.complex.skeletons()[i].simplices().len();
-        }
 
-        // Check that we have the skeleton we need
-        if dual_k >= self.complex.skeletons().len() {
-            // No such skeleton, return empty
-            let result_size = if k > 0 && k.saturating_sub(1) < self.complex.skeletons().len() {
-                self.complex.skeletons()[k.saturating_sub(1)]
-                    .simplices()
-                    .len()
+            // Apply Inverse Mass: 1 / M_{ii}
+            // If Mass is 0 (degenerate), we effectively zero out the result to avoid NaN.
+            if mass_val.abs() > 1e-12 {
+                result_data.push(numerator * (1.0 / mass_val));
             } else {
-                0
-            };
-            return CausalTensor::new(vec![T::zero(); result_size], vec![result_size]).unwrap();
-        }
-
-        let dual_form_size = self.complex.skeletons()[dual_k].simplices().len();
-        if offset + dual_form_size <= temp_data.len() {
-            temp_data[offset..offset + dual_form_size].copy_from_slice(star_form.as_slice());
-        }
-
-        let temp_manifold = Manifold::new(
-            self.complex.clone(),
-            CausalTensor::new(temp_data, vec![self.data().len()]).unwrap(),
-            0,
-        )
-        .unwrap();
-        let d_star_form = temp_manifold.exterior_derivative(dual_k);
-
-        // 3. Apply second Hodge star: (n-k+1)-form -> (k-1)-form
-        let mut temp_data2 = vec![T::zero(); self.data().len()];
-
-        let dual_k_plus_1 = dual_k.saturating_add(1);
-        let mut offset2 = 0;
-        for i in 0..dual_k_plus_1 {
-            if i >= self.complex.skeletons().len() {
-                break;
+                result_data.push(T::zero());
             }
-            offset2 += self.complex.skeletons()[i].simplices().len();
         }
 
-        // Check that we have the skeleton we need
-        if dual_k_plus_1 >= self.complex.skeletons().len() {
-            // No such skeleton, return empty
-            let result_size = if k > 0 && k.saturating_sub(1) < self.complex.skeletons().len() {
-                self.complex.skeletons()[k.saturating_sub(1)]
-                    .simplices()
-                    .len()
-            } else {
-                0
-            };
-            return CausalTensor::new(vec![T::zero(); result_size], vec![result_size]).unwrap();
-        }
-
-        let d_dual_form_size = self.complex.skeletons()[dual_k_plus_1].simplices().len();
-        if offset2 + d_dual_form_size <= temp_data2.len() {
-            temp_data2[offset2..offset2 + d_dual_form_size].copy_from_slice(d_star_form.as_slice());
-        }
-
-        let temp_manifold2 = Manifold::new(
-            self.complex.clone(),
-            CausalTensor::new(temp_data2, vec![self.data().len()]).unwrap(),
-            0,
-        )
-        .unwrap();
-        let star_d_star_form = temp_manifold2.hodge_star(dual_k_plus_1);
-
-        // 4. Apply sign correction
-        let sign = if n.saturating_sub(k).saturating_add(1).is_multiple_of(2) {
-            // Sign is for (-1)^(n*k - k + n + 1) which is (n*k - k + n + 1)%2
-            1.0
-        } else {
-            -1.0
-        };
-
-        let result_data: Vec<T> = star_d_star_form
-            .as_slice()
-            .iter()
-            .map(|&val| val * sign)
-            .collect();
-
-        CausalTensor::new(result_data, vec![star_d_star_form.len()]).unwrap()
+        CausalTensor::new(result_data, vec![prev_dim_size]).unwrap()
     }
 }

@@ -20,69 +20,56 @@ where
     /// where `d` is the exterior derivative and `δ` is the codifferential.
     /// It maps k-forms to k-forms.
     pub fn laplacian(&self, k: usize) -> CausalTensor<T> {
-        // 1. Compute δ(d(ω)) - this always exists
-        let d_omega = self.exterior_derivative(k); // (k+1)-form
+        let n = self.complex.max_simplex_dimension();
+        let current_dim_size = self.complex.skeletons()[k].simplices().len();
 
-        let delta_d_omega = {
-            let mut data = vec![T::zero(); self.data().len()];
-            let mut offset = 0;
-            for i in 0..(k + 1) {
-                offset += self.complex.skeletons()[i].simplices().len();
-            }
-            data[offset..offset + d_omega.len()].copy_from_slice(d_omega.as_slice());
-            let m = Manifold::new(
-                self.complex().clone(),
-                CausalTensor::new(data, self.data().shape().to_vec()).unwrap(),
-                0,
-            )
-            .unwrap();
-            m.codifferential(k + 1)
+        // 1. Term A: d(δ(ω))
+        let term_a = if k > 0 {
+            // Compute delta (k -> k-1)
+            let delta = self.codifferential(k);
+
+            // We must wrap this result in a temporary Manifold to apply 'd'.
+            // Construct a manifold with data only in the (k-1) slot.
+            let temp_manifold = self.create_temp_manifold(k - 1, delta);
+
+            // Compute d (k-1 -> k)
+            temp_manifold.exterior_derivative(k - 1)
+        } else {
+            // If k=0, delta is 0, so d(delta) is 0
+            CausalTensor::new(vec![T::zero(); current_dim_size], vec![current_dim_size]).unwrap()
         };
 
-        // 2. Compute d(δ(ω)) - only if k > 0
-        if k == 0 {
-            // For 0-forms, Δ = δd only
-            return delta_d_omega;
-        }
+        // 2. Term B: δ(d(ω))
+        let term_b = if k < n {
+            // Compute d (k -> k+1)
+            let d = self.exterior_derivative(k);
 
-        let delta_omega = self.codifferential(k); // (k-1)-form
-        let d_delta_omega = {
-            let mut data = vec![T::zero(); self.data().len()];
-            let mut offset = 0;
-            for i in 0..(k - 1) {
-                offset += self.complex.skeletons()[i].simplices().len();
-            }
-            data[offset..offset + delta_omega.len()].copy_from_slice(delta_omega.as_slice());
-            let m = Manifold::new(
-                self.complex().clone(),
-                CausalTensor::new(data, self.data().shape().to_vec()).unwrap(),
-                0,
-            )
-            .unwrap();
-            m.exterior_derivative(k - 1) // k-form
+            // Wrap in temp manifold
+            let temp_manifold = self.create_temp_manifold(k + 1, d);
+
+            // Compute delta (k+1 -> k)
+            temp_manifold.codifferential(k + 1)
+        } else {
+            CausalTensor::new(vec![T::zero(); current_dim_size], vec![current_dim_size]).unwrap()
         };
 
-        // 3. Sum the two k-forms
-        let mut result_data = d_delta_omega.as_slice().to_vec();
-        let delta_d_slice = delta_d_omega.as_slice();
+        // 3. Sum: A + B
+        // Note: Standard Laplacian definition is often - (d delta + delta d) depending on convention.
+        // We return the positive operator (d delta + delta d). The user should subtract it (Heat Eq: dt = -Laplacian).
 
-        // Ensure both forms have the same length before summing
-        if result_data.len() != delta_d_slice.len() {
-            panic!(
-                "Laplacian components have mismatched lengths: d_delta_omega_len={}, delta_d_omega_len={}",
-                result_data.len(),
-                delta_d_slice.len()
-            );
+        let mut result_data = Vec::with_capacity(current_dim_size);
+        let slice_a = term_a.as_slice();
+        let slice_b = term_b.as_slice();
+
+        // Safety padding if tensors differ in size (should not happen in valid complex)
+        let len = slice_a.len().max(slice_b.len());
+
+        for i in 0..len {
+            let a = slice_a.get(i).copied().unwrap_or(T::zero());
+            let b = slice_b.get(i).copied().unwrap_or(T::zero());
+            result_data.push(a + b);
         }
 
-        for (r, &d) in result_data.iter_mut().zip(delta_d_slice.iter()) {
-            *r = *r + d;
-        }
-
-        CausalTensor::new(
-            result_data,
-            vec![self.complex.skeletons()[k].simplices().len()],
-        )
-        .unwrap()
+        CausalTensor::new(result_data, vec![current_dim_size]).unwrap()
     }
 }

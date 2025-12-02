@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{SimplicialComplex, SimplicialTopology};
+use crate::SimplicialComplex;
 
 pub(crate) fn is_oriented(complex: &SimplicialComplex) -> bool {
     let max_dim = complex.max_simplex_dimension();

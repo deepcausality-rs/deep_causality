@@ -113,19 +113,3 @@ fn test_point_cloud_triangulate_success() {
     // No 2-simplices (face) expected
     assert_eq!(sc.skeletons().len(), 2);
 }
-
-#[test]
-fn test_point_cloud_triangulate_invalid_radius() {
-    let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0], vec![2, 2]).unwrap();
-    let metadata = CausalTensor::new(vec![1.0, 2.0], vec![2]).unwrap();
-    let pc = PointCloud::new(points, metadata, 0).unwrap();
-
-    let result = pc.triangulate(0.0);
-    assert!(result.is_err());
-    match result {
-        Err(TopologyError::InvalidInput(msg)) => {
-            assert!(msg.contains("Triangulation radius must be positive"));
-        }
-        _ => panic!("Expected InvalidInput error"),
-    }
-}

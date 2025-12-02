@@ -466,7 +466,6 @@ deep_causality_sparse/src/types/sparse_matrix/
 ### Phase 5: Advanced Applications
 - [ ] Implement cup product for cohomology (`H^k × H^l → H^{k+l}`)
 - [ ] Implement Poincaré duality
-- [ ] Create `heat_manifold.rs` example heat equation on manifolds
 - [ ] Create `gravitational_wave.rs` example for gravitational wave equation. 
 
 ## Verification Plan

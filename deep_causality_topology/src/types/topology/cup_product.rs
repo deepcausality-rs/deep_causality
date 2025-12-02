@@ -5,77 +5,124 @@
 
 use alloc::vec;
 use alloc::vec::Vec;
-use core::ops::{AddAssign, Neg, SubAssign};
-use deep_causality_multivector::MultiVector;
-use deep_causality_num::Field;
+use deep_causality_num::{Field, Zero};
 use deep_causality_tensor::CausalTensor;
+use std::ops::Mul;
 
-use crate::Topology;
+use crate::{Simplex, Topology, TopologyError};
 
 impl<T> Topology<T>
 where
-    T: MultiVector<T> + Clone + Field + Copy + AddAssign + SubAssign + Neg<Output = T>,
+    T: Field + Copy + Clone + Zero + Mul<Output = T> + std::fmt::Debug,
 {
-    /// The Cup Product: (k-form) U (l-form) -> (k+l)-form
-    /// Used for Generative Quantum Gates: S = exp(a U a)
-    pub fn cup_product(&self, other: &Topology<T>) -> Topology<T> {
-        let k = self.grade;
-        let l = other.grade;
-        let dim = k + l;
+    /// Computes the Cup Product `α ⌣ β` of a p-cochain and a q-cochain.
+    ///
+    /// The result is a (p+q)-cochain.
+    ///
+    /// # Mathematical Definition (Alexander-Whitney)
+    /// For a (p+q)-simplex `σ = [v_0, ..., v_{p+q}]`, the cup product is:
+    ///
+    /// (α ⌣ β)(σ) = α([v_0, ..., v_p]) * β([v_p, ..., v_{p+q}])
+    ///
+    /// * `α` evaluates on the **Front Face** (first p+1 vertices).
+    /// * `β` evaluates on the **Back Face** (last q+1 vertices).
+    ///
+    /// # Arguments
+    /// * `other`: The q-cochain `β`. `self` is the p-cochain `α`.
+    ///
+    /// # Returns
+    /// A new `CausalTopology` of grade `p+q`.
+    pub fn cup_product(&self, other: &Topology<T>) -> Result<Topology<T>, TopologyError> {
+        // 1. Determine Grades
+        let p = self.grade;
+        let q = other.grade;
+        let r = p + q;
 
-        // Ensure target dimension exists
-        if dim >= self.complex.skeletons.len() {
-            panic!("Cup product dimension exceeds complex dimension");
+        // 2. Validation
+        // Ensure both fields live on the same Complex
+        if !std::sync::Arc::ptr_eq(&self.complex, &other.complex) {
+            return Err(TopologyError::GenericError("Complex Mismatch".into()));
         }
 
-        let target_skeleton = &self.complex.skeletons[dim];
-        let mut result_data = Vec::with_capacity(target_skeleton.simplices.len());
+        // If grade exceeds manifold dimension, the result is zero.
+        if r > self.complex.max_simplex_dimension() {
+            // Return a zero field of grade r (if valid grade) or empty
+            // Here we assume r is valid or return empty.
+            let zero_len = if r < self.complex.skeletons().len() {
+                self.complex.skeletons()[r].simplices().len()
+            } else {
+                0
+            };
 
-        // Iterate over all (k+l)-simplices
-        for simplex in &target_skeleton.simplices {
-            // 1. Alexander-Whitney Approximation
-            // Split vertices [0...n] into Front [0...k] and Back [k...n]
-            // The vertices are sorted, so this corresponds to the standard AW map.
-
-            // Front face: vertices 0 to k
-            let front_face = simplex.subsimplex(0..=k);
-
-            // Back face: vertices k to k+l (which is dim)
-            let back_face = simplex.subsimplex(k..=dim);
-
-            // 2. Look up values
-            // We must find the global index of these faces to retrieve data from the topologies.
-            let front_idx = self.complex.skeletons[k]
-                .get_index(&front_face)
-                .expect("Front face not found in skeleton");
-            let back_idx = self.complex.skeletons[l]
-                .get_index(&back_face)
-                .expect("Back face not found in skeleton");
-
-            // Use as_slice() to get data
-            let v1 = self
-                .data
-                .as_slice()
-                .get(front_idx)
-                .expect("Data missing for front face");
-            let v2 = other
-                .data
-                .as_slice()
-                .get(back_idx)
-                .expect("Data missing for back face");
-
-            // 3. Geometric Product
-            // The cup product on forms corresponds to the geometric product of multivectors
-            // in the discrete setting (under certain metric assumptions).
-            result_data.push(v1.geometric_product(v2));
+            return Ok(Topology {
+                complex: self.complex.clone(),
+                grade: r,
+                data: CausalTensor::new(vec![T::zero(); zero_len], vec![zero_len]).unwrap(),
+                cursor: 0,
+            });
         }
 
-        // Return new topology
-        Topology {
+        // 3. Get Skeletons
+        let p_skeleton = &self.complex.skeletons()[p];
+        let q_skeleton = &self.complex.skeletons()[q];
+        let target_skeleton = &self.complex.skeletons()[r];
+
+        let target_count = target_skeleton.simplices().len();
+        let mut result_values = Vec::with_capacity(target_count);
+
+        // 4. Iterate over every simplex in the target dimension (p+q)
+        for simplex in target_skeleton.simplices() {
+            // The vertices are assumed to be sorted by the Skeleton construction.
+            // vertices: [v0, v1, ..., vp, ..., v(p+q)]
+            let verts = simplex.vertices();
+
+            // Extract Faces based on Alexander-Whitney diagonal
+            // Front Face (alpha): 0..=p
+            let front_verts = verts[0..=p].to_vec();
+            let front_simplex = Simplex::new(front_verts);
+
+            // Back Face (beta): p..=r
+            let back_verts = verts[p..=r].to_vec();
+            let back_simplex = Simplex::new(back_verts);
+
+            // 5. Lookup Indices
+            // We need the index of these faces in their respective skeletons
+            // to retrieve the data from the CausalTensor.
+            let idx_alpha = p_skeleton
+                .get_index(&front_simplex)
+                .ok_or(TopologyError::SimplexNotFound)?;
+
+            let idx_beta = q_skeleton
+                .get_index(&back_simplex)
+                .ok_or(TopologyError::SimplexNotFound)?;
+
+            // 6. Fetch Values
+            // self.data is a CausalTensor.
+            let val_alpha = self
+                .data
+                .as_slice()
+                .get(idx_alpha)
+                .expect("Data/Skeleton mismatch");
+
+            let val_beta = other
+                .data
+                .as_slice()
+                .get(idx_beta)
+                .expect("Data/Skeleton mismatch");
+
+            // 7. Multiply (Geometric Product / Ring Product)
+            // (α ⌣ β)(σ) = α(front) * β(back)
+            let product = *val_alpha * *val_beta;
+
+            result_values.push(product);
+        }
+
+        // 8. Construct Result
+        Ok(Topology {
             complex: self.complex.clone(),
-            grade: dim,
-            data: CausalTensor::new(result_data, vec![target_skeleton.simplices.len()]).unwrap(),
+            grade: r,
+            data: CausalTensor::new(result_values, vec![target_count]).unwrap(),
             cursor: 0,
-        }
+        })
     }
 }
