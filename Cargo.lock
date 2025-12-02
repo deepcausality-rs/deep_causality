@@ -334,29 +334,6 @@ checksum = "773648b94d0e5d620f64f280777445740e61fe701025087ec8b57f45c791888b"
 
 [[package]]
 name = "criterion"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1c047a62b0cc3e145fa84415a3191f628e980b194c2755aa12300a4e6cbd928"
-dependencies = [
- "anes",
- "cast",
- "ciborium",
- "clap",
- "criterion-plot 0.6.0",
- "itertools",
- "num-traits",
- "oorandom",
- "plotters",
- "rayon",
- "regex",
- "serde",
- "serde_json",
- "tinytemplate",
- "walkdir",
-]
-
-[[package]]
-name = "criterion"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a0dfe5e9e71bdcf4e4954f7d14da74d1cdb92a3a07686452d1509652684b1aab"
@@ -366,7 +343,7 @@ dependencies = [
  "cast",
  "ciborium",
  "clap",
- "criterion-plot 0.8.0",
+ "criterion-plot",
  "itertools",
  "num-traits",
  "oorandom",
@@ -378,16 +355,6 @@ dependencies = [
  "serde_json",
  "tinytemplate",
  "walkdir",
-]
-
-[[package]]
-name = "criterion-plot"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b1bcc0dc7dfae599d84ad0b1a55f80cde8af3725da8313b528da95ef783e338"
-dependencies = [
- "cast",
- "itertools",
 ]
 
 [[package]]
@@ -456,7 +423,7 @@ dependencies = [
 name = "deep_causality"
 version = "0.11.10"
 dependencies = [
- "criterion 0.8.0",
+ "criterion",
  "deep_causality_ast",
  "deep_causality_data_structures",
  "deep_causality_haft",
@@ -470,7 +437,7 @@ dependencies = [
 name = "deep_causality_algorithms"
 version = "0.2.4"
 dependencies = [
- "criterion 0.8.0",
+ "criterion",
  "deep_causality_num",
  "deep_causality_tensor",
  "rayon",
@@ -491,7 +458,7 @@ dependencies = [
 name = "deep_causality_data_structures"
 version = "0.10.4"
 dependencies = [
- "criterion 0.8.0",
+ "criterion",
  "deep_causality_rand",
 ]
 
@@ -521,7 +488,7 @@ version = "0.8.10"
 name = "deep_causality_multivector"
 version = "0.1.2"
 dependencies = [
- "criterion 0.8.0",
+ "criterion",
  "deep_causality_haft",
  "deep_causality_num",
  "deep_causality_tensor",
@@ -546,7 +513,7 @@ dependencies = [
 name = "deep_causality_sparse"
 version = "0.1.0"
 dependencies = [
- "criterion 0.8.0",
+ "criterion",
  "deep_causality_num",
  "deep_causality_rand",
 ]
@@ -555,7 +522,7 @@ dependencies = [
 name = "deep_causality_tensor"
 version = "0.1.9"
 dependencies = [
- "criterion 0.8.0",
+ "criterion",
  "deep_causality_ast",
  "deep_causality_haft",
  "deep_causality_num",
@@ -577,7 +544,7 @@ dependencies = [
 name = "deep_causality_uncertain"
 version = "0.3.6"
 dependencies = [
- "criterion 0.8.0",
+ "criterion",
  "deep_causality_ast",
  "deep_causality_num",
  "deep_causality_rand",
@@ -1397,7 +1364,7 @@ checksum = "9ea3136b675547379c4bd395ca6b938e5ad3c3d20fad76e7fe85f9e0d011419c"
 name = "ultragraph"
 version = "0.8.10"
 dependencies = [
- "criterion 0.7.0",
+ "criterion",
  "deep_causality_rand",
 ]
 

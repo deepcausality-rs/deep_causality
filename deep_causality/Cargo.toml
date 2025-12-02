@@ -56,7 +56,7 @@ version = "0.8"
 
 
 [dev-dependencies]
-criterion = { version = "0.8.0", features = ["html_reports"] }
+criterion = { version = "0.8.0" }
 
 
 [[bench]]
