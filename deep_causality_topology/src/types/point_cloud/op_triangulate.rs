@@ -314,11 +314,24 @@ impl<T> PointCloud<T> {
                 let vol_sq = simplex_volume_squared(simplex, points_data, point_dim)?;
                 let vol = vol_sq.sqrt();
                 let hodge_val = if vol > 1e-9 { 1.0 / vol } else { 0.0 };
+
+                #[cfg(debug_assertions)]
+                println!(
+                    "  Triangulate: k_dim={}, simplex={:?}, vol_sq={}, vol={}, hodge_val={}",
+                    k_dim, simplex, vol_sq, vol, hodge_val
+                );
+
                 triplets.push((i, i, hodge_val));
             }
+            #[cfg(debug_assertions)]
+            println!(
+                "  CsrMatrix::from_triplets: dual_k_count={}, k_count {:?} triplets: {:?}",
+                dual_k_count, k_count, &triplets
+            );
 
             let hodge_matrix = CsrMatrix::from_triplets(dual_k_count, k_count, &triplets)
                 .map_err(|e| TopologyError::GenericError(e.to_string()))?;
+
             hodge_star_operators.push(hodge_matrix);
         }
 

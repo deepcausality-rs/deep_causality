@@ -2,15 +2,20 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use core::ops::Mul;
 use crate::Manifold;
+use crate::SimplicialTopology;
+use core::ops::Mul;
 use deep_causality_num::{Field, FromPrimitive};
 use deep_causality_tensor::CausalTensor;
-use crate::SimplicialTopology;
 
 impl<T> Manifold<T>
 where
-    T: Field + Copy + FromPrimitive + Mul<f64, Output = T> + std::ops::Neg<Output = T>,
+    T: Field
+        + Copy
+        + FromPrimitive
+        + Mul<f64, Output = T>
+        + std::ops::Neg<Output = T>
+        + std::fmt::Debug,
 {
     /// Computes the Hodge star operator on a k-form.
     ///
@@ -29,8 +34,7 @@ where
 
         if k > n {
             // Cannot compute Hodge star if k is out of bounds. The space of forms is trivial.
-            return CausalTensor::new(vec![], vec![0])
-                .expect("Failed to create empty tensor");
+            return CausalTensor::new(vec![], vec![0]).expect("Failed to create empty tensor");
         }
 
         // Get the pre-computed Hodge star operator
@@ -39,12 +43,12 @@ where
         // Extract the k-form coefficients from the manifold's flat data tensor.
         let mut offset = 0;
         for i in 0..k {
-            offset += self.complex.skeletons[i].simplices.len();
+            offset += self.complex.skeletons()[i].simplices().len();
         }
 
-        let k_skeleton = &self.complex.skeletons[k];
-        let k_count = k_skeleton.simplices.len();
-        let k_form_data = &self.data.as_slice()[offset..offset + k_count];
+        let k_skeleton = &self.complex.skeletons()[k];
+        let k_count = k_skeleton.simplices().len();
+        let k_form_data = &self.data().as_slice()[offset..offset + k_count];
 
         // Apply the Hodge star operator
         let result_data = super::utils::apply_f64_operator(hodge_operator, k_form_data);

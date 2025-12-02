@@ -1,45 +1,88 @@
 use crate::Manifold;
-use deep_causality_num::Field;
+use deep_causality_num::{Field, FromPrimitive, Zero};
 use deep_causality_tensor::CausalTensor;
 
 impl<T> Manifold<T>
 where
-    T: Field + Copy + std::ops::Neg<Output = T>,
+    T: Field
+        + Copy
+        + FromPrimitive
+        + std::ops::Mul<f64, Output = T>
+        + std::ops::Neg<Output = T>
+        + Default
+        + PartialEq
+        + Zero
+        + std::fmt::Debug,
 {
-    /// Computes the Laplace-Beltrami operator on a scalar field (0-form).
+    /// Computes the Hodge-Laplacian operator `Δ` on a k-form.
     ///
-    /// For discrete 0-forms on a simplicial complex, this is defined as `Δf = δ₁d₀f`,
-    /// where `d₀` is the exterior derivative (coboundary) and `δ₁` is the codifferential (boundary).
-    /// This corresponds to the graph Laplacian `L = B₁ᵀB₁` where B₁ is the incidence matrix.
-    ///
-    /// # Returns
-    /// A new tensor representing `Δf` where f is the scalar field in `self.data`.
-    pub fn laplacian(&self) -> CausalTensor<T> {
-        // For k=0 (scalar fields on vertices), the discrete Laplacian is Δ₀ = δ₁d₀.
-        // d₀ is the coboundary operator on 0-forms, which is `coboundary_operators[0]`.
-        // δ₁ is the boundary operator on 1-forms, which is `boundary_operators[1]`.
+    /// The Laplacian is defined as: Δ = dδ + δd
+    /// where `d` is the exterior derivative and `δ` is the codifferential.
+    /// It maps k-forms to k-forms.
+    pub fn laplacian(&self, k: usize) -> CausalTensor<T> {
+        // 1. Compute δ(d(ω)) - this always exists
+        let d_omega = self.exterior_derivative(k); // (k+1)-form
 
-        if self.complex.boundary_operators().len() < 2
-            || self.complex.coboundary_operators().is_empty()
-        {
-            // Not enough operators to compute Laplacian (e.g., no edges).
-            let vertex_count = self.complex.skeletons().get(0).map_or(0, |s| s.simplices.len());
-            return CausalTensor::new(vec![T::zero(); vertex_count], vec![vertex_count])
-                .expect("Failed to create zero Laplacian");
+        let delta_d_omega = {
+            let mut data = vec![T::zero(); self.data().len()];
+            let mut offset = 0;
+            for i in 0..(k + 1) {
+                offset += self.complex.skeletons()[i].simplices().len();
+            }
+            data[offset..offset + d_omega.len()].copy_from_slice(d_omega.as_slice());
+            let m = Manifold::new(
+                self.complex().clone(),
+                CausalTensor::new(data, self.data().shape().to_vec()).unwrap(),
+                0,
+            )
+            .unwrap();
+            m.codifferential(k + 1)
+        };
+
+        // 2. Compute d(δ(ω)) - only if k > 0
+        if k == 0 {
+            // For 0-forms, Δ = δd only
+            return delta_d_omega;
         }
 
-        // 1. Apply d₀ to the 0-form f to get the 1-form df.
-        // exterior_derivative(0) applies coboundary_operators[0].
-        let df = self.exterior_derivative(0);
+        let delta_omega = self.codifferential(k); // (k-1)-form
+        let d_delta_omega = {
+            let mut data = vec![T::zero(); self.data().len()];
+            let mut offset = 0;
+            for i in 0..(k - 1) {
+                offset += self.complex.skeletons()[i].simplices().len();
+            }
+            data[offset..offset + delta_omega.len()].copy_from_slice(delta_omega.as_slice());
+            let m = Manifold::new(
+                self.complex().clone(),
+                CausalTensor::new(data, self.data().shape().to_vec()).unwrap(),
+                0,
+            )
+            .unwrap();
+            m.exterior_derivative(k - 1) // k-form
+        };
 
-        // 2. Apply δ₁ to the 1-form df.
-        // This corresponds to applying the boundary_operators[1] matrix.
-        let boundary_1 = &self.complex.boundary_operators()[1];
-        let laplacian_f = super::utils::apply_operator(boundary_1, df.as_slice());
+        // 3. Sum the two k-forms
+        let mut result_data = d_delta_omega.as_slice().to_vec();
+        let delta_d_slice = delta_d_omega.as_slice();
 
-        let vertex_count = self.complex.skeletons().get(0).map_or(0, |s| s.simplices.len());
+        // Ensure both forms have the same length before summing
+        if result_data.len() != delta_d_slice.len() {
+            panic!(
+                "Laplacian components have mismatched lengths: d_delta_omega_len={}, delta_d_omega_len={}",
+                result_data.len(),
+                delta_d_slice.len()
+            );
+        }
 
-        CausalTensor::new(laplacian_f, vec![vertex_count])
-            .expect("Failed to create Laplacian tensor")
+        for (r, &d) in result_data.iter_mut().zip(delta_d_slice.iter()) {
+            *r = *r + d;
+        }
+
+        CausalTensor::new(
+            result_data,
+            vec![self.complex.skeletons()[k].simplices().len()],
+        )
+        .unwrap()
     }
 }

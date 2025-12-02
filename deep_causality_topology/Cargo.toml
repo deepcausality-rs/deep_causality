@@ -42,3 +42,15 @@ path = "examples/point_cloud_triangulation.rs"
 [[example]]
 name = "hkt_graph_convolution"
 path = "examples/hkt_graph_convolution.rs"
+
+[[example]]
+name = "chain_algebra"
+path = "examples/chain_algebra.rs"
+
+[[example]]
+name = "differential_field"
+path = "examples/differential_field.rs"
+
+[[example]]
+name = "hodge_theory"
+path = "examples/hodge_theory.rs"

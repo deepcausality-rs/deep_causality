@@ -8,6 +8,7 @@ mod algebra_tests;
 mod default_tests;
 #[cfg(test)]
 mod display_tests;
+mod from_triplets_tests;
 #[cfg(test)]
 mod getters_tests;
 #[cfg(test)]

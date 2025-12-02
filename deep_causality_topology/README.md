@@ -18,6 +18,10 @@ It bridges the gap between discrete data (graphs, point clouds) and continuous g
     *   **Vietoris-Rips Triangulation**: Convert point clouds into simplicial complexes at a given scale.
     *   **Euler Characteristic**: Compute topological invariants ($\chi$) to classify shapes (e.g., healthy vs. pathological tissue).
     *   **Boundary/Coboundary Operators**: Sparse matrix operators for algebraic topology computations.
+*   **Algebraic Topology & Differential Geometry**:
+    *   **Chain Algebra**: Perform algebraic operations on chains (formal sums of simplices) and verify fundamental topological theorems like `∂∂=0`.
+    *   **Differential Operators**: Compute the exterior derivative (`d`), Hodge star (`⋆`), codifferential (`δ`), and Hodge-Laplacian (`Δ`) on discrete differential forms.
+    *   **Hodge Theory**: Detect topological features like holes and voids by finding harmonic forms (solutions to `Δω = 0`).
 *   **Higher-Kinded Types (HKT)**:
     *   Implements `Functor`, `BoundedComonad` (Extract/Extend), and `BoundedAdjunction` (Unit/Counit) via `deep_causality_haft`.
     *   Enables functional geometric patterns like "neighborhood extraction" (Comonad) and "geometric realization" (Adjunction).
@@ -96,6 +100,24 @@ if chi <= 0 {
 }
 ```
 
+### 4. Differential Geometry (Heat Equation)
+
+Simulate physical processes like diffusion on complex geometries using the Hodge-Laplacian.
+
+```rust
+use deep_causality_topology::{Manifold, PointCloud};
+// ... (Setup manifold from a PointCloud) ...
+
+// Set initial heat distribution (a 0-form)
+// ...
+
+// Time-step the heat equation: ∂u/∂t = -Δu
+for _ in 0..num_steps {
+    let laplacian = manifold.laplacian(0);
+    // ... update data using: new_data = current_data - dt * laplacian
+}
+```
+
 ## Higher-Kinded Types (HKT)
 
 This crate leverages `deep_causality_haft` to provide functional geometric abstractions.
@@ -115,6 +137,9 @@ This crate leverages `deep_causality_haft` to provide functional geometric abstr
 | `basic_graph.rs` | Graph construction & traversal | Foundation for large-scale causal network modeling. |
 | `manifold_analysis.rs` | 1-Manifold validation & Euler Char. | Ensuring geometric validity for differential operators. |
 | `point_cloud_triangulation.rs` | MRI Tissue Segmentation | Bridging raw sensor data with topological reasoning for diagnosis. |
+| `chain_algebra.rs` | Chain complex algebra & `∂∂=0` | Foundational verification for homological algebra. |
+| `differential_field.rs` | Solving the Heat Equation on a manifold | Simulating physical diffusion processes on complex shapes. |
+| `hodge_theory.rs` | Finding harmonic forms to detect holes | Advanced topological feature detection using the Hodge-Laplacian. |
 
 To run examples:
 ```bash
