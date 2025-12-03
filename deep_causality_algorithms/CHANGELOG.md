@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algorithms-v0.2.4...deep_causality_algorithms-v0.2.5) - 2025-12-03
+
+### Added
+
+- *(deep_causality_tensor)* Added full set of new algebraic trait system to CausalTensor.
+
+### Other
+
+- Regenerated SBOM.
+- Updated dev dependencies across the repo.
+- Updated Dev dependencies.
+- Merge branch 'deepcausality-rs:main' into main
+- Merge remote-tracking branch 'origin/main'
+- Restored manually generated SBOM to restore Dependency and licence scan.
+
 ## [0.2.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algorithms-v0.2.3...deep_causality_algorithms-v0.2.4) - 2025-11-23
 
 ### Other

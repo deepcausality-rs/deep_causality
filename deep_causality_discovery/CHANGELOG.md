@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.6](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_discovery-v0.2.5...deep_causality_discovery-v0.2.6) - 2025-12-03
+
+### Added
+
+- *(deep_causality_core)* Added test coverage
+
+### Other
+
+- Regenerated SBOM.
+- Updated external deps in discovery crate and ICU example.
+- Merge branch 'deepcausality-rs:main' into main
+- Merge remote-tracking branch 'origin/main'
+- Restored manually generated SBOM to restore Dependency and licence scan.
+
 ## [0.2.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_discovery-v0.2.4...deep_causality_discovery-v0.2.5) - 2025-11-23
 
 ### Other

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.11.10...deep_causality-v0.12.0) - 2025-12-03
+
+### Added
+
+- *(deep_causality_sparse)* Fixing auto-release
+- *(deep_causality_sparse)* Implemented initial CsrMatrix types.
+- *(deep_causality)* Moved LogAppend trait into haft crate.
+
+### Other
+
+- Regenerated SBOM.
+- Updated dev dependencies across the repo.
+- Updated Dev dependencies.
+- Merge branch 'deepcausality-rs:main' into main
+- Merge remote-tracking branch 'origin/main'
+- Restored manually generated SBOM to restore Dependency and licence scan.
+
 ## [0.11.10](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.11.9...deep_causality-v0.11.10) - 2025-11-23
 
 ### Other

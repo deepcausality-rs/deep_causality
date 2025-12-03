@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.11](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_macros-v0.8.10...deep_causality_macros-v0.8.11) - 2025-12-03
+
+### Other
+
+- Merge branch 'deepcausality-rs:main' into main
+- Restored manually generated SBOM to restore Dependency and licence scan.
+
 ## [0.8.10](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_macros-v0.8.9...deep_causality_macros-v0.8.10) - 2025-11-23
 
 ### Removed

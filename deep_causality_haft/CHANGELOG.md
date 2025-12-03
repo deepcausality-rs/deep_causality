@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_haft-v0.2.4...deep_causality_haft-v0.2.5) - 2025-12-03
+
+### Added
+
+- *(deep_causality_sparse)* Fixing auto-release
+- *(deep_causality_core)* Added test coverage
+- *(deep_causality_topology)* Initial implementation of topology data structures.
+- *(deep_causality)* Moved LogAppend trait into haft crate.
+- *(deep_causality_haft)* Updated Readme with details on non-std builds.
+- *(deep_causality_haft)* Added support for non-std.
+- *(deep_causality_haft)* Added module documentation
+- *(deep_causality_haft)* Refactored source code structure of the HAFT crate.
+- *(deep_causality_haft)* Added new examples for the HAFT crate.
+- *(deep_causality_haft)* Improved existing examples for the HAFT crate.
+- *(deep_causality_haft)* Implement Unbound HKTs, N-Arity traits, and
+
+### Other
+
+- Regenerated SBOM.
+- *(deep_causality_core)* Lints and formatting.
+- *(deep_causality_core)* Reworked Effect Log.
+- *(deep_causality_core)* Fixed doctests.
+- *(deep_causality_haft)* Added BoundedAdjunction trait.
+- *(deep_causality_haft)* Updated Bazel config
+- *(deep_causality_haft)* Code formatting.
+- *(deep_causality_haft)* Removed flaky tests
+- *(deep_causality_haft)* Added and update test suite to cover all newly added types and traits.
+- Merge branch 'deepcausality-rs:main' into main
+- Merge remote-tracking branch 'origin/main'
+- Restored manually generated SBOM to restore Dependency and licence scan.
+
 ## [0.2.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_haft-v0.2.3...deep_causality_haft-v0.2.4) - 2025-11-23
 
 ### Other

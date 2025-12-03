@@ -3,7 +3,7 @@
 
 [package]
 name = "deep_causality_macros"
-version = "0.8.10"
+version = "0.8.11"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }

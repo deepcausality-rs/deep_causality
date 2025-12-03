@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_rand"
-version = "0.1.5"
+version = "0.1.6"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -16,7 +16,7 @@ exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
-version = "0.1.8"
+version = "0.2.0"
 
 
 [features]

@@ -21,6 +21,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_data_structures-v0.10.4...deep_causality_data_structures-v0.10.5) - 2025-12-03
+
+### Added
+
+- *(deep_causality_sparse)* Implemented initial CsrMatrix types.
+
+### Other
+
+- Regenerated SBOM.
+- Updated dev dependencies across the repo.
+- Updated Dev dependencies.
+- Merge branch 'deepcausality-rs:main' into main
+- Restored manually generated SBOM to restore Dependency and licence scan.
+
 ## [0.10.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_data_structures-v0.10.3...deep_causality_data_structures-v0.10.4) - 2025-11-23
 
 ### Removed
