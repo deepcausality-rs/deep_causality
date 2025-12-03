@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::CommutativeRing;
+use crate::{CommutativeRing, InvMonoid};
 use core::ops::{Div, DivAssign};
 
 /// Represents a **Field** in abstract algebra.
@@ -25,7 +25,7 @@ use core::ops::{Div, DivAssign};
 ///
 /// 2.  **Multiplicative Inverse:**
 ///     - For every element `a` not equal to `0`, there exists an element `a⁻¹`
-///       such that `a * a⁻¹ = 1`.
+///       such that `a * a⁻¹ = 1`. (Provided by the `InvMonoid` trait)
 ///
 /// ## Examples
 /// - Real numbers (`f32`, `f64`)
@@ -35,44 +35,7 @@ use core::ops::{Div, DivAssign};
 /// ## Counter-examples
 /// - Integers (`i32`, `i64`): Lack multiplicative inverses for most elements.
 /// - Quaternions (`Quaternion<T>`): Multiplication is not commutative.
-pub trait Field: CommutativeRing + Div<Output = Self> + DivAssign {
-    /// Computes the multiplicative inverse of an element.
-    ///
-    /// For a non-zero element `a`, its inverse `a⁻¹` is the unique element
-    /// such that `a * a⁻¹ = 1`.
-    ///
-    /// # Justification for Deviation
-    ///
-    /// In pure mathematics, the zero element of a field does not have a
-    /// multiplicative inverse. However, for floating-point types like `f32` and
-    /// `f64`, division by zero is a well-defined operation that results in
-    /// `Infinity` or `NaN`. To maintain consistency with standard floating-point
-    /// behavior, implementations of this method for such types should return
-    /// `Infinity` or `NaN` when `self` is zero, rather than panicking.
-    ///
-    /// # Example
-    /// ```
-    /// use deep_causality_num::{Field, RealField};
-    /// let x = 2.0f64;
-    /// let inv_x = x.inverse();
-    /// assert_eq!(x * inv_x, 1.0);
-    ///
-    /// let z = 0.0f64;
-    /// assert!(z.inverse().is_infinite());
-    /// ```
-    fn inverse(&self) -> Self;
-}
+pub trait Field: CommutativeRing + InvMonoid + Div<Output = Self> + DivAssign {}
+
 // Blanket Implementation
-impl<T> Field for T
-where
-    T: CommutativeRing + Div<Output = Self> + DivAssign,
-{
-    #[inline]
-    fn inverse(&self) -> Self {
-        // The inverse is defined as Identity / Value.
-        // We utilize the Div trait which is required by Field.
-        // We clone self because Div takes operands by value (T / T).
-        // For Copy types like f64/Complex, clone() is a no-op copy.
-        T::one() / self.clone()
-    }
-}
+impl<T> Field for T where T: CommutativeRing + InvMonoid + Div<Output = Self> + DivAssign {}

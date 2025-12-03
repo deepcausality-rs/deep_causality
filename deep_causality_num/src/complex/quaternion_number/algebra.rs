@@ -2,9 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{
-    AbelianGroup, Associative, Distributive, DivisionAlgebra, MulGroup, Quaternion, RealField,
-};
+use crate::{AbelianGroup, Associative, Distributive, DivisionAlgebra, Quaternion, RealField};
 
 // | Type | `Distributive` | `Associative` | `Commutative` | Trait |
 // | :--- | :---: | :---: | :---: | :--- |
@@ -15,13 +13,6 @@ impl<T: RealField> Associative for Quaternion<T> {}
 impl<T: RealField> Distributive for Quaternion<T> {}
 
 impl<T: RealField> AbelianGroup for Quaternion<T> {}
-
-// Required by Field -> CommutativeRing -> Ring -> MulMonoid -> MulGroup
-impl<T: RealField> MulGroup for Quaternion<T> {
-    fn inverse(&self) -> Self {
-        self._inverse_impl()
-    }
-}
 
 impl<T: RealField> DivisionAlgebra<T> for Quaternion<T> {
     /// Returns the conjugate of the quaternion.
