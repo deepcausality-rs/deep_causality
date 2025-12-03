@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2025-11-27T02:16:45Z",
+    "created": "2025-12-03T03:23:43Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_sparse-0f343af4-e69f-4d4e-8445-9a41bf4e3c38",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_sparse-1c76f59d-cfa8-4061-88dd-0b15d0ebcf24",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_sparse",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "512df280913692e20ad76ed93e868e9fc6e84a01"
+          "checksumValue": "71ed1fe493c0c6d11fa333372fe6ce6b1fe3d2f0"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -27,13 +27,13 @@
   "name": "deep_causality_sparse",
   "packages": [
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.8",
-      "description": "Number utils for for deep_causality crate.",
+      "SPDXID": "SPDXRef-Package-deep--causality--sparse-0.1.0",
+      "description": "Spare matrix data structure for for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
-      "name": "deep_causality_num",
-      "versionInfo": "0.1.8"
+      "name": "deep_causality_sparse",
+      "versionInfo": "0.1.0"
     },
     {
       "SPDXID": "SPDXRef-Package-libm-0.2.15",
@@ -52,35 +52,35 @@
       "versionInfo": "0.2.15"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--sparse-0.1.0",
-      "description": "Spare matrix data structure for for deep_causality crate.",
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.8",
+      "description": "Number utils for for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
-      "name": "deep_causality_sparse",
-      "versionInfo": "0.1.0"
+      "name": "deep_causality_num",
+      "versionInfo": "0.1.8"
     }
   ],
   "relationships": [
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.8",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.1.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.15",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.1.8"
-    },
     {
       "relatedSpdxElement": "SPDXRef-File-deep_causality_sparse",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.8",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.1.0"
+    },
+    {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--sparse-0.1.0",
       "relationshipType": "GENERATED_FROM",
       "spdxElementId": "SPDXRef-File-deep_causality_sparse"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.15",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.1.8"
     }
   ],
   "spdxVersion": "SPDX-2.3"
