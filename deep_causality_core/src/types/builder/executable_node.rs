@@ -36,22 +36,6 @@ impl<P> ExecutableNode<P> {
     }
 }
 
-impl<P> ExecutableNode<P> {
-    pub fn id(&self) -> usize {
-        self.id
-    }
-
-    #[cfg(feature = "strict-zst")]
-    pub fn func(&self) -> fn(P) -> P {
-        self.func
-    }
-
-    #[cfg(not(feature = "strict-zst"))]
-    pub fn func(&self) -> &(dyn Fn(P) -> P + Send + Sync) {
-        &self.func
-    }
-}
-
 impl<P> Display for ExecutableNode<P> {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         write!(f, "ExecutableNode(id: {})", self.id)
