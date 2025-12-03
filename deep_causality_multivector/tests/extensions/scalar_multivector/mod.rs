@@ -2,8 +2,5 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
-#[cfg(test)]
-pub mod hkt;
-mod quantum;
-mod scalar_multivector;
+mod scalar_multivector_f32_tests;
+mod scalar_multivector_f64_tests;

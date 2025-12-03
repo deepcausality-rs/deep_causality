@@ -3,6 +3,13 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+/// The MultiVector implementation for f64 and f32 (scalars) exists to allow
+/// these numerical types to conform to the MultiVector trait. This
+/// enables generic code that operates on any type implementing MultiVector
+/// to also handle scalars seamlessly, treating them as multivectors of grade 0.
+/// These type extensions are crucial for maintaining type consistency and
+///   enabling polymorphic operations across different multivector types,
+///   including the fundamental scalar elements.
 use crate::{CausalMultiVectorError, MultiVector};
 
 // =========================================================

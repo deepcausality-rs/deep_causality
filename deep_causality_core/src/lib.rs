@@ -21,7 +21,7 @@ pub use crate::errors::causality_error::{CausalityError, CausalityErrorEnum};
 
 // Re-export traits
 pub use crate::traits::control_flow_protocol::{ControlFlowProtocol, FromProtocol, ToProtocol};
-pub use crate::traits::intervenable::*;
+pub use crate::traits::intervenable::Intervenable;
 
 // Re-export types
 // Builder
