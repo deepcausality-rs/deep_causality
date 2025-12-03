@@ -38,7 +38,10 @@ fn test_display_u64() {
 #[test]
 fn test_display_u128() {
     let val = NumericValue::U128(123456789012345678901234567890123456789);
-    assert_eq!(format!("{}", val), "U128(123456789012345678901234567890123456789)");
+    assert_eq!(
+        format!("{}", val),
+        "U128(123456789012345678901234567890123456789)"
+    );
 }
 
 #[test]
@@ -68,13 +71,16 @@ fn test_display_i64() {
 #[test]
 fn test_display_i128() {
     let val = NumericValue::I128(-123456789012345678901234567890123456789);
-    assert_eq!(format!("{}", val), "I128(-123456789012345678901234567890123456789)");
+    assert_eq!(
+        format!("{}", val),
+        "I128(-123456789012345678901234567890123456789)"
+    );
 }
 
 #[test]
 fn test_display_f32() {
-    let val = NumericValue::F32(3.14f32);
-    assert_eq!(format!("{}", val), "F32(3.14)");
+    let val = NumericValue::F32(3.57);
+    assert_eq!(format!("{}", val), "F32(3.57)");
 }
 
 #[test]
