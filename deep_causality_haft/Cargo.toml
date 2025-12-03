@@ -32,7 +32,7 @@ alloc = []
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
-version = "0.1"
+version = "0.1.8"
 default-features = false
 
 [[example]]
