@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_num::RealField;
+use deep_causality_num::{DivisionAlgebra, RealField};
 
 #[test]
 fn test_nan() {
@@ -93,6 +93,24 @@ fn test_atan2() {
     let y = 1.0_f32;
     let x = 2.0_f32;
     assert!((RealField::atan2(y, x) - y.atan2(x)).abs() < 1e-6);
+}
+
+#[test]
+fn test_division_algebra_f32() {
+    let x = 2.0_f32;
+    let y = 0.0_f32;
+
+    // conjugate
+    assert_eq!(x.conjugate(), x);
+    assert_eq!(y.conjugate(), y);
+
+    // norm_sqr
+    assert_eq!(x.norm_sqr(), x * x);
+    assert_eq!(y.norm_sqr(), y * y);
+
+    // inverse
+    assert_eq!(x.inverse(), 1.0 / x);
+    assert!(y.inverse().is_infinite());
 }
 
 #[test]
