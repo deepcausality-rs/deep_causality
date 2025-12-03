@@ -14,6 +14,9 @@ keywords = ["data-structures", "sliding-window", "grid-array"]
 # Exclude all bazel files as these conflict with Bazel workspace when vendored.
 exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
 
+[features]
+default = ["std"]
+std = ["deep_causality_num/std"]
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
