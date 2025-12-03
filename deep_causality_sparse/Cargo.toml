@@ -16,10 +16,11 @@ exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE
 
 [features]
 default = ["std"]
-std = ["deep_causality_num/std"]
+std = ["deep_causality_num/default"]
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
+features = ["default"]
 version = "0.1"
 
 [[example]]
