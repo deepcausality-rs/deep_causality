@@ -2,7 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::LogAppend;
+
+use deep_causality_haft::LogAppend;
 use std::collections::HashMap;
 
 /// Status of an operation execution.

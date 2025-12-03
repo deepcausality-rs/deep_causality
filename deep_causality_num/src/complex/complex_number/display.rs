@@ -2,19 +2,15 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use crate::{Complex, RealField};
+use core::fmt::{Display, Formatter};
 
-use crate::{Complex, Float};
-use std::fmt::{Debug, Display, Formatter};
-
-impl<F> Display for Complex<F>
-where
-    F: Float + Display + Debug,
-{
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        if self.im >= F::zero() {
+impl<T: RealField + Display> Display for Complex<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        if self.im >= T::zero() {
             write!(f, "{}+{}i", self.re, self.im)
         } else {
-            write!(f, "{}{:?}i", self.re, self.im)
+            write!(f, "{}{:.1}i", self.re, self.im)
         }
     }
 }

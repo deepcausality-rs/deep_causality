@@ -85,7 +85,7 @@ pub fn main() {
     println!("   Tensor 2 (to be broadcasted): {}", t2);
 
     // Tensor ops can be by value, by ref, or any combination i.e. &t1 + t2
-    let result = (&t1 + &t2).unwrap();
+    let result = &t1 + &t2;
     println!("   Result (t1 + t2): {}", result);
     assert_eq!(result.as_slice(), &[11, 22, 33, 14, 25, 36]);
 

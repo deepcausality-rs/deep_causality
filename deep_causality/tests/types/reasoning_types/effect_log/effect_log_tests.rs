@@ -4,7 +4,7 @@
  */
 
 use deep_causality::CausalEffectLog;
-use deep_causality::LogAppend;
+use deep_causality_haft::LogAppend;
 use std::thread;
 use std::time::Duration;
 

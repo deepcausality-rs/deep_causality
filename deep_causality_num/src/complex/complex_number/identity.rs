@@ -3,16 +3,16 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Complex, ConstOne, ConstZero, Float, One, Zero};
+use crate::{Complex, ConstOne, ConstZero, One, RealField, Zero};
 
 // Implement Zero trait
-impl<F> Zero for Complex<F>
+impl<T> Zero for Complex<T>
 where
-    F: Float,
+    T: RealField,
 {
     #[inline]
     fn zero() -> Self {
-        Self::new(F::zero(), F::zero())
+        Self::new(T::zero(), T::zero())
     }
 
     #[inline]
@@ -21,24 +21,24 @@ where
     }
 }
 
-impl<F> ConstZero for Complex<F>
+impl<T> ConstZero for Complex<T>
 where
-    F: Float + ConstZero,
+    T: RealField + ConstZero,
 {
     const ZERO: Self = Self {
-        re: F::ZERO,
-        im: F::ZERO,
+        re: T::ZERO,
+        im: T::ZERO,
     };
 }
 
 // Implement One trait
-impl<F> One for Complex<F>
+impl<T> One for Complex<T>
 where
-    F: Float + One,
+    T: RealField,
 {
     #[inline]
     fn one() -> Self {
-        Self::new(F::one(), F::zero())
+        Self::new(T::one(), T::zero())
     }
 
     #[inline]
@@ -47,12 +47,12 @@ where
     }
 }
 
-impl<F> ConstOne for Complex<F>
+impl<T> ConstOne for Complex<T>
 where
-    F: Float + ConstOne + ConstZero,
+    T: RealField + ConstOne + ConstZero,
 {
     const ONE: Self = Self {
-        re: F::ONE,
-        im: F::ZERO,
+        re: T::ONE,
+        im: T::ZERO,
     };
 }

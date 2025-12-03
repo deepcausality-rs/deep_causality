@@ -14,6 +14,7 @@ Maintainers are actively supporting the project and have made substantial contri
 They have admin access to the repo and provide support reviewing issues and pull requests.
 
 - [marvin-hansen](https://github.com/marvin-hansen) Marvin Hansen
+- [mfreeman451](https://github.com/mfreeman451) Michael Freeman
 
 Contributors  (sorted alphabetically)
 -------------------------------------

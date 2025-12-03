@@ -2,8 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use core::num::FpCategory;
 use deep_causality_num::Float;
-use std::num::FpCategory;
 
 // Here we have to explicit cast into the trait type by using <f32 as Float> and Float::
 // to prevent the Rust compiler to optimize away the trait dispatch for most methods.

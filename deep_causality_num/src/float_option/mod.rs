@@ -4,7 +4,7 @@
  */
 
 use crate::Float;
-use std::fmt::Debug;
+use core::fmt::Debug;
 
 /// A trait to abstract over float types (`f32`, `f64`) and their `Option` variants.
 ///

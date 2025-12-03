@@ -11,6 +11,7 @@ CRATES=(
     "deep_causality"
     "deep_causality_algorithms"
     "deep_causality_ast"
+    "deep_causality_core"
     "deep_causality_data_structures"
     "deep_causality_discovery"
     "deep_causality_haft"
@@ -18,7 +19,9 @@ CRATES=(
     "deep_causality_multivector"
     "deep_causality_num"
     "deep_causality_rand"
+    "deep_causality_sparse"
     "deep_causality_tensor"
+    "deep_causality_topology"
     "deep_causality_uncertain"
     "ultragraph"
 )

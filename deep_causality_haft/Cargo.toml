@@ -25,9 +25,15 @@ exclude = [
 ]
 
 
+[features]
+default = ["std"]
+std = ["alloc", "deep_causality_num/std"]
+alloc = []
+
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
 version = "0.1"
+default-features = false
 
 [[example]]
 name = "haft_applicative"

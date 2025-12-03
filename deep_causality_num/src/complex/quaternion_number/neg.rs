@@ -1,10 +1,17 @@
-use std::ops::Neg;
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
-use crate::complex::quaternion_number::Quaternion;
-use crate::float::Float;
+use core::ops::Neg;
+
+use crate::{Quaternion, RealField};
 
 // Neg
-impl<F: Float> Neg for Quaternion<F> {
+impl<F> Neg for Quaternion<F>
+where
+    F: RealField,
+{
     type Output = Self;
 
     /// Returns the negation of the quaternion.

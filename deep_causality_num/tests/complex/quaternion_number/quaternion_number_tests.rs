@@ -1,5 +1,10 @@
-use deep_causality_num::Quaternion;
-use deep_causality_num::{Float, QuaternionNumber};
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+use deep_causality_num::RealField;
+use deep_causality_num::{DivisionAlgebra, Quaternion};
 
 #[test]
 fn test_conjugate() {
@@ -42,7 +47,7 @@ fn test_normalize() {
 
 #[test]
 fn test_inverse() {
-    let q = Quaternion::new(1.0, 2.0, 3.0, 4.0);
+    let q: Quaternion<f64> = Quaternion::new(1.0, 2.0, 3.0, 4.0);
     let norm_sqr = q.norm_sqr();
     let expected = Quaternion::new(
         1.0 / norm_sqr,
@@ -58,7 +63,7 @@ fn test_inverse() {
     assert!((result.z - expected.z).abs() < EPSILON);
 
     // Test inverse of zero quaternion
-    let zero_q = Quaternion::new(0.0, 0.0, 0.0, 0.0);
+    let zero_q: Quaternion<f64> = Quaternion::new(0.0, 0.0, 0.0, 0.0);
     let inv_zero_q = zero_q.inverse();
     assert!(inv_zero_q.w.is_nan());
     assert!(inv_zero_q.x.is_nan());

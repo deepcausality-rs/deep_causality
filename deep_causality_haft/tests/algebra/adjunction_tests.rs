@@ -16,14 +16,6 @@ impl HKT for IdentityWitness {
 struct IdentityAdjunction;
 
 impl Adjunction<IdentityWitness, IdentityWitness> for IdentityAdjunction {
-    fn unit<A>(a: A) -> Identity<Identity<A>> {
-        Identity(Identity(a))
-    }
-
-    fn counit<A>(fa: Identity<Identity<A>>) -> A {
-        fa.0.0
-    }
-
     fn left_adjunct<A, B, F>(_a: A, _f: F) -> Identity<B>
     where
         F: Fn(Identity<A>) -> B,
@@ -38,6 +30,14 @@ impl Adjunction<IdentityWitness, IdentityWitness> for IdentityAdjunction {
     {
         // Simplified - not fully implemented for test
         panic!("Not implemented for test")
+    }
+
+    fn unit<A>(a: A) -> Identity<Identity<A>> {
+        Identity(Identity(a))
+    }
+
+    fn counit<A>(fa: Identity<Identity<A>>) -> A {
+        fa.0.0
     }
 }
 

@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
 //! The `deep_causality_haft` crate provides foundational traits and utilities for
 //! implementing Higher-Kinded Types (HKTs) and functional programming patterns
 //! (Functor, Applicative, Monad, Foldable) in Rust.
@@ -32,6 +37,10 @@
 //! to build its core abstractions. However, the traits and concepts can be generally applied
 //! to other Rust projects requiring advanced functional programming patterns and effect management.
 //!
+#![cfg_attr(not(feature = "std"), no_std)]
+
+#[cfg(feature = "alloc")]
+extern crate alloc;
 
 // Module Declarations
 pub(crate) mod algebra;
@@ -51,7 +60,7 @@ pub use crate::core::hkt_unbound::{
 };
 
 // Algebraic Traits
-pub use crate::algebra::adjunction::Adjunction;
+pub use crate::algebra::adjunction::{Adjunction, BoundedAdjunction};
 pub use crate::algebra::applicative::Applicative;
 pub use crate::algebra::bifunctor::Bifunctor;
 pub use crate::algebra::comonad::{BoundedComonad, CoMonad};
@@ -67,6 +76,7 @@ pub use crate::algebra::traversable::Traversable;
 
 // Effect System Traits
 pub use crate::effect_system::effect::{Effect3, Effect4, Effect5};
+pub use crate::effect_system::effect_log::{LogAddEntry, LogAppend, LogEffect, LogSize};
 pub use crate::effect_system::effect_unbound::{Effect3Unbound, Effect4Unbound, Effect5Unbound};
 pub use crate::effect_system::monad_effect::{MonadEffect3, MonadEffect4, MonadEffect5};
 pub use crate::effect_system::monad_effect_unbound::{
@@ -74,12 +84,18 @@ pub use crate::effect_system::monad_effect_unbound::{
 };
 
 // Functional Extensions (Witnesses Types)
+#[cfg(feature = "alloc")]
 pub use crate::extensions::func_fold_b_tree_map_ext::BTreeMapWitness;
+#[cfg(feature = "std")]
 pub use crate::extensions::func_fold_hash_map_ext::HashMapWitness;
+#[cfg(feature = "alloc")]
 pub use crate::extensions::func_fold_vec_deque_ext::VecDequeWitness;
+#[cfg(feature = "alloc")]
 pub use crate::extensions::hkt_box_ext::BoxWitness;
+#[cfg(feature = "alloc")]
 pub use crate::extensions::hkt_linked_list_ext::LinkedListWitness;
 pub use crate::extensions::hkt_option_ext::OptionWitness;
 pub use crate::extensions::hkt_result_ext::{ResultUnboundWitness, ResultWitness};
 pub use crate::extensions::hkt_tuple_ext::{Tuple2Witness, Tuple3Witness};
+#[cfg(feature = "alloc")]
 pub use crate::extensions::hkt_vec_ext::VecWitness;

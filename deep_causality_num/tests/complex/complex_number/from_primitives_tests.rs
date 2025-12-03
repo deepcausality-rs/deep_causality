@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::{Complex, ComplexNumber, Float, FromPrimitive};
+use deep_causality_num::{Complex, Float, FromPrimitive};
 
 #[test]
 fn test_from_isize_ok() {

@@ -4,6 +4,7 @@
  */
 
 use deep_causality::{ModificationLog, ModificationLogEntry, OpStatus};
+use deep_causality_haft::LogAppend;
 use std::collections::HashMap;
 
 #[test]
@@ -199,8 +200,6 @@ fn test_modification_log_iter() {
 
 #[test]
 fn test_modification_log_append() {
-    use deep_causality::LogAppend;
-
     let mut log1 = ModificationLog::new();
     log1.add_entry(ModificationLogEntry::new(
         "Op1",

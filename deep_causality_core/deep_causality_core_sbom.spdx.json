@@ -1,0 +1,101 @@
+{
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "creationInfo": {
+    "created": "2025-12-03T03:23:43Z",
+    "creators": [
+      "Tool: cargo-sbom-v0.10.0"
+    ]
+  },
+  "dataLicense": "CC0-1.0",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_core-8596cff8-0f84-4e38-b90e-1bf376befbb7",
+  "files": [
+    {
+      "SPDXID": "SPDXRef-File-deep_causality_core",
+      "checksums": [
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "71ed1fe493c0c6d11fa333372fe6ce6b1fe3d2f0"
+        }
+      ],
+      "fileName": "./Cargo.lock",
+      "fileTypes": [
+        "SOURCE",
+        "TEXT"
+      ]
+    }
+  ],
+  "name": "deep_causality_core",
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--core-0.0.1",
+      "description": "Core types for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_core",
+      "versionInfo": "0.0.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.8",
+      "description": "Number utils for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_num",
+      "versionInfo": "0.1.8"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.2.4",
+      "description": "HKT traits for for the deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_haft",
+      "versionInfo": "0.2.4"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-libm-0.2.15",
+      "description": "libm in pure Rust",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/libm@0.2.15",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "libm",
+      "versionInfo": "0.2.15"
+    }
+  ],
+  "relationships": [
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.8",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--haft-0.2.4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.15",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.1.8"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.2.4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--core-0.0.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--core-0.0.1",
+      "relationshipType": "GENERATED_FROM",
+      "spdxElementId": "SPDXRef-File-deep_causality_core"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-File-deep_causality_core",
+      "relationshipType": "DESCRIBES",
+      "spdxElementId": "SPDXRef-DOCUMENT"
+    }
+  ],
+  "spdxVersion": "SPDX-2.3"
+}

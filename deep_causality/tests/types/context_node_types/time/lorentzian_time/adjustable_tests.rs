@@ -3,8 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality::*;
-use deep_causality_data_structures::PointIndex;
-use deep_causality_data_structures::grid_type::{ArrayGrid, ArrayType};
+use deep_causality_data_structures::{ArrayGrid, ArrayType, PointIndex};
 
 #[test]
 fn test_update() {

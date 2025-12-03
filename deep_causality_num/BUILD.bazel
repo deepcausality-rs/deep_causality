@@ -5,12 +5,17 @@ rust_library(
     srcs = glob([
         "src/**",
     ]),
+    crate_features = [
+        "std",
+        "libm_math",
+    ],  # List of features to enable
     crate_root = "src/lib.rs",
     tags = [
         "numerical_utils",
     ],
     visibility = ["//visibility:public"],
     deps = [
+        # No external dependencies needed for std build
     ],
 )
 

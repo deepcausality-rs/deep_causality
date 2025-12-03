@@ -4,6 +4,8 @@
  */
 
 use crate::{Applicative, Foldable, Functor, HKT, Monad, Traversable};
+use alloc::vec;
+use alloc::vec::Vec;
 
 /// `VecWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
 /// for the `Vec<T>` type constructor. It allows `Vec` to be used with generic

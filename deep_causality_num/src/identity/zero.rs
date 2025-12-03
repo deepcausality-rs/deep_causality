@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use std::ops::Add;
+use core::ops::Add;
 
 /// Defines an additive identity element for `Self`.
 ///

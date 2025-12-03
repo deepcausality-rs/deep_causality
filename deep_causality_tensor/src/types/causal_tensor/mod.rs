@@ -5,24 +5,15 @@
 
 use crate::CausalTensorError;
 
+mod algebra;
 mod api;
+mod arithmetic;
 mod display;
 mod from;
 mod getters;
-mod op_scalar_tensor;
-pub mod op_tensor_broadcast;
-pub mod op_tensor_ein_sum;
-mod op_tensor_product;
-/// Defines tensor reduction operations (e.g., sum, mean).
-mod op_tensor_reduction;
-/// Defines operations between a tensor and a scalar (e.g., `tensor + scalar`).
-mod op_tensor_scalar;
-/// Defines tensor shape manipulation operations (e.g., reshape, ravel).
-mod op_tensor_shape;
-/// Defines operations between two tensors (e.g., `tensor_a + tensor_b`).
-mod op_tensor_tensor;
-/// Defines tensor view operations (e.g., slicing).
-mod op_tensor_view;
+mod ops;
+
+pub use ops::tensor_ein_sum::ein_sum_op::{EinSumAST, EinSumOp};
 
 /// `CausalTensor` is a low-dimensional (up to ~5-25 dimensions recommended) tensor
 /// backed by a single, contiguous `Vec<T>`. It uses a stride-based memory layout

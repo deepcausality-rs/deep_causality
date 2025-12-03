@@ -15,12 +15,12 @@ documentation = "https://docs.rs/ultragraph"
 homepage = "https://github.com/deepcausality/deep_causality/tree/main/ultragraph"
 categories = ["data-structures"]
 keywords = ["data-structures"]
-exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
+exclude = ["*.bazel", "*/*.bazel", "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore", ".bazelrc", "tests/**/*"]
 
 
 [dev-dependencies]
-criterion = { version = "0.7.0", features = ["html_reports"] }
-deep_causality_rand = { path = "../deep_causality_rand"}
+criterion = { version = "0.8.0" }
+deep_causality_rand = { path = "../deep_causality_rand" }
 
 
 [[bench]]

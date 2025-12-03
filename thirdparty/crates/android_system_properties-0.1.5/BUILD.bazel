@@ -94,6 +94,6 @@ rust_library(
     }),
     version = "0.1.5",
     deps = [
-        "//thirdparty/crates/libc-0.2.176:libc",
+        "//thirdparty/crates/libc-0.2.177:libc",
     ],
 )

@@ -1,11 +1,14 @@
-use std::fmt::Display;
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
-use crate::complex::quaternion_number::Quaternion;
-use crate::float::Float;
+use crate::{Quaternion, RealField};
+use core::fmt::Display;
 
 // Display
-impl<F: Float + Display> Display for Quaternion<F> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl<F: RealField + Display> Display for Quaternion<F> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}", self.w)?;
         write!(
             f,

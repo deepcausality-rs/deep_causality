@@ -9,7 +9,7 @@ use std::fmt;
 /// The main error type for CausalMultiVector operations.
 ///
 /// This struct wraps `CausalMultiVectorErrorInner` to provide a stable API while allowing internal evolution.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct CausalMultiVectorError {
     inner: CausalMultiVectorErrorInner,
 }

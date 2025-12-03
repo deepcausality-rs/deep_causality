@@ -94,7 +94,7 @@ fn main() {
     // Step 4c: G_uv = R_uv + term_2
     // We use the standard `Add` implementation for tensor-tensor addition.
     // This combines the HKT-transformed term with the original Ricci tensor.
-    let g_tensor = (&r_uv + &term_2).expect("Failed to calculate G_uv");
+    let g_tensor = &r_uv + &term_2;
 
     print_tensor("Einstein Tensor (G_uv)", &g_tensor);
 
@@ -112,7 +112,7 @@ fn main() {
     );
 
     // LHS = G_uv + Lambda * g_uv
-    let lhs = (&g_tensor + &lambda_term).expect("Failed to add lambda term");
+    let lhs = &g_tensor + &lambda_term;
 
     print_tensor("LHS (G_uv + Λ * g_uv)", &lhs);
 

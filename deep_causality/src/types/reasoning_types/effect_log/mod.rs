@@ -5,7 +5,7 @@
 
 //! This module defines the CausalEffectLog type.
 
-use crate::traits::log_append::LogAppend;
+use deep_causality_haft::LogAppend;
 use std::fmt::{Display, Formatter};
 use std::time::{SystemTime, UNIX_EPOCH};
 

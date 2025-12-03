@@ -4,7 +4,10 @@
  */
 
 use crate::Float;
-use std::num::FpCategory;
+use core::num::FpCategory;
+
+#[cfg(all(not(feature = "std"), feature = "libm_math"))]
+use libm;
 
 // F32 Helper functions for integer_decode
 fn integer_decode_f32(f: f32) -> (u64, i16, i8) {
@@ -81,182 +84,359 @@ impl Float for f32 {
     fn classify(self) -> FpCategory {
         f32::classify(self)
     }
+
     #[inline]
     fn floor(self) -> Self {
-        f32::floor(self)
+        #[cfg(feature = "std")]
+        return self.floor();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::floorf(self);
     }
+
     #[inline]
     fn ceil(self) -> Self {
-        f32::ceil(self)
+        #[cfg(feature = "std")]
+        return self.ceil();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::ceilf(self);
     }
+
     #[inline]
     fn round(self) -> Self {
-        f32::round(self)
+        #[cfg(feature = "std")]
+        return self.round();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::roundf(self);
     }
+
     #[inline]
     fn trunc(self) -> Self {
-        f32::trunc(self)
+        #[cfg(feature = "std")]
+        return self.trunc();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::truncf(self);
     }
+
     #[inline]
     fn fract(self) -> Self {
-        f32::fract(self)
+        #[cfg(feature = "std")]
+        return self.fract();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return self - libm::truncf(self);
     }
+
     #[inline]
     fn abs(self) -> Self {
         f32::abs(self)
     }
+
     #[inline]
     fn signum(self) -> Self {
         f32::signum(self)
     }
+
     #[inline]
     fn is_sign_positive(self) -> bool {
         f32::is_sign_positive(self)
     }
+
     #[inline]
     fn is_sign_negative(self) -> bool {
         f32::is_sign_negative(self)
     }
+
     #[inline]
     fn mul_add(self, a: Self, b: Self) -> Self {
-        f32::mul_add(self, a, b)
+        #[cfg(feature = "std")]
+        return self.mul_add(a, b);
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::fmaf(self, a, b);
     }
+
     #[inline]
     fn recip(self) -> Self {
         f32::recip(self)
     }
+
     #[inline]
     fn powi(self, n: i32) -> Self {
-        f32::powi(self, n)
+        #[cfg(feature = "std")]
+        return self.powi(n);
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::powf(self, n as f32);
     }
+
     #[inline]
     fn powf(self, n: Self) -> Self {
-        f32::powf(self, n)
+        #[cfg(feature = "std")]
+        return self.powf(n);
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::powf(self, n);
     }
+
     #[inline]
     fn sqrt(self) -> Self {
-        f32::sqrt(self)
+        #[cfg(feature = "std")]
+        return self.sqrt();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::sqrtf(self);
     }
+
     #[inline]
     fn exp(self) -> Self {
-        f32::exp(self)
+        #[cfg(feature = "std")]
+        return self.exp();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::expf(self);
     }
+
     #[inline]
     fn exp2(self) -> Self {
-        f32::exp2(self)
+        #[cfg(feature = "std")]
+        return self.exp2();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::exp2f(self);
     }
+
     #[inline]
     fn ln(self) -> Self {
-        f32::ln(self)
+        #[cfg(feature = "std")]
+        return self.ln();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::logf(self);
     }
+
     #[inline]
     fn log(self, base: Self) -> Self {
-        f32::log(self, base)
+        #[cfg(feature = "std")]
+        return self.log(base);
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::logf(self) / libm::logf(base);
     }
+
     #[inline]
     fn log2(self) -> Self {
-        f32::log2(self)
+        #[cfg(feature = "std")]
+        return self.log2();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::log2f(self);
     }
+
     #[inline]
     fn log10(self) -> Self {
-        f32::log10(self)
+        #[cfg(feature = "std")]
+        return self.log10();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::log10f(self);
     }
+
     #[inline]
     fn to_degrees(self) -> Self {
         f32::to_degrees(self)
     }
+
     #[inline]
     fn to_radians(self) -> Self {
         f32::to_radians(self)
     }
+
     #[inline]
     fn max(self, other: Self) -> Self {
         f32::max(self, other)
     }
+
     #[inline]
     fn min(self, other: Self) -> Self {
         f32::min(self, other)
     }
+
     #[inline]
     fn clamp(self, min: Self, max: Self) -> Self {
         f32::clamp(self, min, max)
     }
+
     #[inline]
     fn cbrt(self) -> Self {
-        f32::cbrt(self)
+        #[cfg(feature = "std")]
+        return self.cbrt();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::cbrtf(self);
     }
+
     #[inline]
     fn hypot(self, other: Self) -> Self {
-        f32::hypot(self, other)
+        #[cfg(feature = "std")]
+        return self.hypot(other);
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::hypotf(self, other);
     }
+
     #[inline]
     fn sin(self) -> Self {
-        f32::sin(self)
+        #[cfg(feature = "std")]
+        return self.sin();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::sinf(self);
     }
+
     #[inline]
     fn cos(self) -> Self {
-        f32::cos(self)
+        #[cfg(feature = "std")]
+        return self.cos();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::cosf(self);
     }
+
     #[inline]
     fn tan(self) -> Self {
-        f32::tan(self)
+        #[cfg(feature = "std")]
+        return self.tan();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::tanf(self);
     }
+
     #[inline]
     fn asin(self) -> Self {
-        f32::asin(self)
+        #[cfg(feature = "std")]
+        return self.asin();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::asinf(self);
     }
+
     #[inline]
     fn acos(self) -> Self {
-        f32::acos(self)
+        #[cfg(feature = "std")]
+        return self.acos();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::acosf(self);
     }
+
     #[inline]
     fn atan(self) -> Self {
-        f32::atan(self)
+        #[cfg(feature = "std")]
+        return self.atan();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::atanf(self);
     }
+
     #[inline]
     fn atan2(self, other: Self) -> Self {
-        f32::atan2(self, other)
+        #[cfg(feature = "std")]
+        return self.atan2(other);
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::atan2f(self, other);
     }
+
     #[inline]
     fn sin_cos(self) -> (Self, Self) {
-        f32::sin_cos(self)
+        #[cfg(feature = "std")]
+        return self.sin_cos();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return (libm::sinf(self), libm::cosf(self));
     }
+
     #[inline]
     fn exp_m1(self) -> Self {
-        f32::exp_m1(self)
+        #[cfg(feature = "std")]
+        return self.exp_m1();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::expm1f(self);
     }
+
     #[inline]
     fn ln_1p(self) -> Self {
-        f32::ln_1p(self)
+        #[cfg(feature = "std")]
+        return self.ln_1p();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::log1pf(self);
     }
+
     #[inline]
     fn sinh(self) -> Self {
-        f32::sinh(self)
+        #[cfg(feature = "std")]
+        return self.sinh();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::sinhf(self);
     }
+
     #[inline]
     fn cosh(self) -> Self {
-        f32::cosh(self)
+        #[cfg(feature = "std")]
+        return self.cosh();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::coshf(self);
     }
+
     #[inline]
     fn tanh(self) -> Self {
-        f32::tanh(self)
+        #[cfg(feature = "std")]
+        return self.tanh();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::tanhf(self);
     }
+
     #[inline]
     fn asinh(self) -> Self {
-        f32::asinh(self)
+        #[cfg(feature = "std")]
+        return self.asinh();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::asinhf(self);
     }
+
     #[inline]
     fn acosh(self) -> Self {
-        f32::acosh(self)
+        #[cfg(feature = "std")]
+        return self.acosh();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::acoshf(self);
     }
+
     #[inline]
     fn atanh(self) -> Self {
-        f32::atanh(self)
+        #[cfg(feature = "std")]
+        return self.atanh();
+
+        #[cfg(all(not(feature = "std"), feature = "libm_math"))]
+        return libm::atanhf(self);
     }
+
     #[inline]
     fn integer_decode(self) -> (u64, i16, i8) {
         integer_decode_f32(self)
     }
+
     #[inline]
     fn copysign(self, sign: Self) -> Self {
         f32::copysign(self, sign)

@@ -368,6 +368,70 @@ let res: Result<i32, &str> = Ok(10);
 let new_res = ResultWitness::bimap(res, |x| x * 2.0, |e| e.len()); // Result<f64, usize>
 ```
 
+## non-std support
+
+The `deep_causality_haft` crate provides support for `no-std` environments. This is particularly useful for embedded systems or other contexts where the standard library is not available. Note, the `std` feature is enabled by default thus you need to opt-into non-std via feature flags.
+
+To use this crate in a `no-std` environment, you need to disable the default `std` feature. You can optionally enable the `alloc` feature if you have an allocator available, which enables support for dynamic collections like `Vec`, `Box`, `BTreeMap`, etc.
+
+### Cargo Build and Test for `no-std`
+
+**1. Building for `no-std` with Allocator:**
+
+To build the crate for `no-std` while including support for dynamic collections (via `alloc`), use the following command:
+
+```bash
+cargo build --no-default-features --features alloc -p deep_causality_haft
+```
+
+**2. Testing for `no-std` with Allocator:**
+
+To run tests in a `no-std` environment with allocator support, use:
+
+```bash
+cargo test --no-default-features --features alloc -p deep_causality_haft
+```
+
+**3. Building for `no-std` without Allocator (Core/Algebra only):**
+
+If your `no-std` application does not have an allocator, you can build without the `alloc` feature. This restricts the crate to core HKT traits and algebraic structures that don't require dynamic memory.
+
+```bash
+cargo build --no-default-features -p deep_causality_haft
+```
+
+**4. Testing for `no-std` without Allocator:**
+
+```bash
+cargo test --no-default-features -p deep_causality_haft
+```
+
+### Bazel Build
+
+For regular (std) builds, run:
+
+```bash
+   bazel build //deep_causality_haft/...
+```
+
+and
+
+```bash
+   bazel test //deep_causality_haft/...
+```
+
+for tests. When you want to build for non-std, use
+
+```bash
+   bazel build --@rules_rust//rust/settings:no_std=alloc //deep_causality_haft/...
+```
+
+and
+
+```bash
+   bazel test --@rules_rust//rust/settings:no_std=alloc //deep_causality_haft/...
+```
+
 ## 👨‍💻👩‍💻 Contribution
 
 Contributions are welcomed especially related to documentation, example code, and fixes.

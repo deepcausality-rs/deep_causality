@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_num::{Complex, ComplexNumber};
+use deep_causality_num::Complex;
 
 #[test]
 fn test_complex_neg() {

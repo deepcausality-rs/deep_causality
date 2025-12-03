@@ -1,0 +1,53 @@
+[package]
+name = "deep_causality_topology"
+version = "0.1.0"
+edition = "2021"
+authors = ["The DeepCausality Authors and Contributors"]
+description = "Topological data structures for the DeepCausality project"
+license = "MIT"
+repository = "https://github.com/deepcausality-rs/deep_causality"
+documentation = "https://docs.rs/deep_causality_topology"
+readme = "README.md"
+keywords = ["causality", "topology", "complex", "differential", "geometry"]
+categories = ["science", "mathematics"]
+
+[features]
+default = ["std"] # Keep std by default for convenience, can be turned off
+std = ["alloc"]   # Explicitly enable std
+alloc = []
+
+[dependencies]
+deep_causality_haft = { path = "../deep_causality_haft" }
+deep_causality_tensor = { path = "../deep_causality_tensor" }
+deep_causality_multivector = { path = "../deep_causality_multivector" }
+deep_causality_sparse = { path = "../deep_causality_sparse" }
+deep_causality_num = { path = "../deep_causality_num" }
+
+[lib]
+name = "deep_causality_topology"
+path = "src/lib.rs"
+
+[[example]]
+name = "basic_graph"
+path = "examples/basic_graph.rs"
+
+[[example]]
+name = "manifold_analysis"
+path = "examples/manifold_analysis.rs"
+
+[[example]]
+name = "point_cloud_triangulation"
+path = "examples/point_cloud_triangulation.rs"
+
+[[example]]
+name = "hkt_graph_convolution"
+path = "examples/hkt_graph_convolution.rs"
+
+[[example]]
+name = "chain_algebra"
+path = "examples/chain_algebra.rs"
+
+[[example]]
+name = "differential_field"
+path = "examples/differential_field.rs"
+

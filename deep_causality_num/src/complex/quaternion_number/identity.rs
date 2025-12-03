@@ -1,10 +1,16 @@
-use crate::complex::quaternion_number::Quaternion;
-use crate::float::Float;
-use crate::identity::one::{ConstOne, One};
-use crate::identity::zero::{ConstZero, Zero};
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+use crate::Quaternion;
+use crate::{ConstOne, ConstZero, One, RealField, Zero};
 
 // Zero
-impl<F: Float> Zero for Quaternion<F> {
+impl<F> Zero for Quaternion<F>
+where
+    F: RealField,
+{
     /// Returns the additive identity quaternion (0 + 0i + 0j + 0k).
     ///
     /// # Examples
@@ -38,7 +44,10 @@ impl<F: Float> Zero for Quaternion<F> {
 }
 
 // ConstZero
-impl<F: Float + ConstZero> ConstZero for Quaternion<F> {
+impl<F> ConstZero for Quaternion<F>
+where
+    F: RealField + ConstZero,
+{
     const ZERO: Self = Quaternion {
         w: F::ZERO,
         x: F::ZERO,
@@ -48,7 +57,10 @@ impl<F: Float + ConstZero> ConstZero for Quaternion<F> {
 }
 
 // One
-impl<F: Float> One for Quaternion<F> {
+impl<F> One for Quaternion<F>
+where
+    F: RealField,
+{
     /// Returns the multiplicative identity quaternion (1 + 0i + 0j + 0k).
     ///
     /// # Examples
@@ -82,7 +94,10 @@ impl<F: Float> One for Quaternion<F> {
 }
 
 // ConstOne
-impl<F: Float + ConstOne + ConstZero> ConstOne for Quaternion<F> {
+impl<F> ConstOne for Quaternion<F>
+where
+    F: RealField + ConstOne + ConstZero,
+{
     const ONE: Self = Quaternion {
         w: F::ONE,
         x: F::ZERO,

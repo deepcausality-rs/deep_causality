@@ -62,21 +62,6 @@ fn test_octonion_div_assign() {
     utils_octonion_tests::assert_octonion_approx_eq(o, o_e3, 1e-9);
 }
 
-// Test RemAssign (placeholder implementation)
-#[test]
-fn test_octonion_rem_assign() {
-    let mut o1 = Octonion::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);
-    let o2 = Octonion::new(9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
-    // Remainder for octonions is not a standard mathematical operation.
-    // The current implementation returns self.
-    o1 %= o2;
-    utils_octonion_tests::assert_octonion_approx_eq(
-        o1,
-        Octonion::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0),
-        1e-9,
-    );
-}
-
 // Test MulAssign scalar
 #[test]
 fn test_octonion_mul_assign_scalar() {
@@ -99,20 +84,6 @@ fn test_octonion_div_assign_scalar() {
     utils_octonion_tests::assert_octonion_approx_eq(
         o,
         Octonion::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0),
-        1e-9,
-    );
-}
-
-// Test RemAssign scalar (placeholder)
-#[test]
-fn test_octonion_rem_assign_scalar() {
-    let mut o = Octonion::new(10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0);
-    let scalar = 3.0;
-    // Current Rem implementation does nothing, so o should remain unchanged
-    o %= scalar;
-    utils_octonion_tests::assert_octonion_approx_eq(
-        o,
-        Octonion::new(10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0),
         1e-9,
     );
 }

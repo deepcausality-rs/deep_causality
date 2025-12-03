@@ -9,7 +9,7 @@ repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 description = "A First-Order Type for Uncertain Programming for the DeepCausality project.'"
 documentation = "https://docs.rs/deep_causality"
-exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
+exclude = ["*.bazel", "*/*.bazel", "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore", ".bazelrc", "tests/**/*"]
 
 
 [features]
@@ -52,7 +52,7 @@ version = "0.1"
 
 [dev-dependencies]
 rusty-fork = "0.3.1"
-criterion = { version = "0.7.0", features = ["html_reports"] }
+criterion = { version = "0.8.0" }
 
 
 [[bench]]

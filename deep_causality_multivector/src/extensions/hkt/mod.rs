@@ -139,3 +139,61 @@ impl BoundedComonad<CausalMultiVectorWitness> for CausalMultiVectorWitness {
         }
     }
 }
+
+// Implementation of BoundedAdjunction for CausalMultiVectorWitness
+// Context is Metric, as we need it to construct new MultiVectors in 'unit'.
+use core::ops::{Add, Mul};
+use deep_causality_haft::BoundedAdjunction;
+
+impl BoundedAdjunction<CausalMultiVectorWitness, CausalMultiVectorWitness, Metric>
+    for CausalMultiVectorWitness
+{
+    fn left_adjunct<A, B, F>(ctx: &Metric, a: A, f: F) -> CausalMultiVector<B>
+    where
+        F: Fn(CausalMultiVector<A>) -> B,
+        A: Clone + Zero + Copy + PartialEq,
+        B: Clone,
+    {
+        // 1. Create unit: A -> MV<MV<A>>
+        let mv_mv_a = Self::unit(ctx, a);
+
+        // 2. Map f: MV<A> -> B over MV<MV<A>> to get MV<B>
+        <Self as Functor<Self>>::fmap(mv_mv_a, f)
+    }
+
+    fn right_adjunct<A, B, F>(ctx: &Metric, la: CausalMultiVector<A>, f: F) -> B
+    where
+        F: FnMut(A) -> CausalMultiVector<B>,
+        A: Clone + Zero,
+        B: Clone + Zero + Add<Output = B> + Mul<Output = B>,
+    {
+        let mapped = <Self as Functor<Self>>::fmap(la, f);
+        Self::counit(ctx, mapped)
+    }
+
+    fn unit<A>(ctx: &Metric, a: A) -> CausalMultiVector<CausalMultiVector<A>>
+    where
+        A: Clone + Zero + Copy + PartialEq,
+    {
+        // Create inner MV
+        let inner = CausalMultiVector {
+            data: vec![a],
+            metric: *ctx,
+        };
+
+        // Wrap in outer MV (scalar wrapper, metric 0)
+        CausalMultiVector {
+            data: vec![inner],
+            metric: Metric::Euclidean(0),
+        }
+    }
+
+    fn counit<B>(_ctx: &Metric, lrb: CausalMultiVector<CausalMultiVector<B>>) -> B
+    where
+        B: Clone + Zero + Add<Output = B> + Mul<Output = B>,
+    {
+        // Flatten and Extract
+        let flattened = <Self as Monad<Self>>::bind(lrb, |x| x);
+        <Self as BoundedComonad<Self>>::extract(&flattened)
+    }
+}

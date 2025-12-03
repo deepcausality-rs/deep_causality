@@ -3,7 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Applicative, BoundedComonad, Foldable, Functor, HKT, Monad};
+use deep_causality_haft::{
+    Applicative, BoundedAdjunction, BoundedComonad, Foldable, Functor, HKT, Monad,
+};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 
 // --- HKT Tests ---
@@ -209,4 +211,69 @@ fn test_comonad_causal_tensor_extend_topology_check() {
         extended, expected,
         "Topology check failed: Shift/Wrap-around logic is incorrect"
     );
+}
+
+// --- BoundedAdjunction Tests ---
+
+#[test]
+fn test_bounded_adjunction_causal_tensor_unit_scalar() {
+    let ctx = vec![]; // Scalar shape context
+    let a = 42;
+    let t_t_a = CausalTensorWitness::unit(&ctx, a);
+
+    // Expected: CausalTensor<CausalTensor<i32>> where inner is CausalTensor<i32> scalar
+    // and outer is CausalTensor<CausalTensor<i32>> scalar.
+    assert_eq!(t_t_a.num_dim(), 0); // Outer is scalar
+    assert_eq!(t_t_a.len(), 1);
+
+    let inner_tensor = &t_t_a.data()[0];
+    assert_eq!(inner_tensor.num_dim(), 0); // Inner is scalar
+    assert_eq!(inner_tensor.as_slice(), &[42]);
+}
+
+#[test]
+#[should_panic(
+    expected = "BoundedAdjunction::unit for CausalTensor requires an empty shape vector (Scalar). Provided shape: [1]"
+)]
+fn test_bounded_adjunction_causal_tensor_unit_non_scalar_panics() {
+    let ctx = vec![1]; // Non-scalar shape context (volume is 1, but it's not empty, which means it's a vector of length 1)
+    let a = 42;
+    CausalTensorWitness::unit(&ctx, a);
+}
+
+#[test]
+fn test_bounded_adjunction_causal_tensor_counit() {
+    let ctx = vec![]; // Context doesn't matter for counit, but pass it anyway.
+    let inner_tensor = CausalTensor::new(vec![100], vec![]).unwrap();
+    let lrb = CausalTensor::new(vec![inner_tensor], vec![]).unwrap(); // CausalTensor<CausalTensor<i32>>
+
+    let b = CausalTensorWitness::counit(&ctx, lrb);
+    assert_eq!(b, 100);
+}
+
+#[test]
+fn test_bounded_adjunction_causal_tensor_left_adjunct() {
+    let ctx = vec![]; // Scalar context for 'unit' within left_adjunct
+    let a = 5;
+    // f: CausalTensor<A> -> B
+    let f = |ct_a: CausalTensor<i32>| ct_a.as_slice()[0] * 2; // Assumes scalar input tensor
+
+    let result_tensor = CausalTensorWitness::left_adjunct(&ctx, a, f);
+
+    // Expected: CausalTensor<B> (a scalar tensor containing 10)
+    assert_eq!(result_tensor.num_dim(), 0);
+    assert_eq!(result_tensor.as_slice(), &[10]);
+}
+
+#[test]
+fn test_bounded_adjunction_causal_tensor_right_adjunct() {
+    let ctx = vec![]; // Context for 'counit' within right_adjunct
+    let la = CausalTensor::new(vec![3], vec![]).unwrap(); // L(A) = CausalTensor<A>
+    // f: A -> CausalTensor<B>
+    let f = |val_a: i32| CausalTensor::new(vec![val_a + 7], vec![]).unwrap(); // Returns scalar tensor
+
+    let b = CausalTensorWitness::right_adjunct(&ctx, la, f);
+
+    // Expected: B (the extracted value from the resulting CausalTensor<B>)
+    assert_eq!(b, 10);
 }

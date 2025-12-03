@@ -4,6 +4,8 @@
  */
 
 #[cfg(test)]
+mod algebra_tests;
+#[cfg(test)]
 mod arithmetic_assign_tests;
 #[cfg(test)]
 mod arithmetic_tests;
@@ -27,5 +29,6 @@ mod num_cast_tests;
 mod octonion_number_tests;
 #[cfg(test)]
 mod part_ord_tests;
+mod rotation_tests;
 #[cfg(test)]
 mod to_primitive_tests;

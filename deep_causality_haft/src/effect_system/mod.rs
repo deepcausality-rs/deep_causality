@@ -42,6 +42,7 @@
 //! *   [`monad_effect_unbound`]: Monadic operations for Parametric Effects (`pure`, `ibind`).
 
 pub mod effect;
+pub mod effect_log;
 pub mod effect_unbound;
 pub mod monad_effect;
 pub mod monad_effect_unbound;

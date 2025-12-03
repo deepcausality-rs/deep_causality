@@ -1,9 +1,19 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
 //! This module provides utility types and implementations primarily used for testing
 //! and demonstrating the type-encoded effect system within `deep_causality_haft`.
 //!
 //! These types serve as concrete examples of how to implement the `EffectN` and
 //! `MonadEffectN` traits for various arities, showcasing error propagation, warning
 //! accumulation, and other side-effect handling.
+
+#![cfg(feature = "alloc")]
+
+use alloc::string::String;
+use alloc::vec::Vec;
 
 use crate::{
     Applicative, Effect3, Effect4, Effect5, Functor, Monad, MonadEffect3, MonadEffect4,

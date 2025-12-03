@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::{Complex, ComplexNumber, NumCast};
+use deep_causality_num::{Complex, NumCast};
 
 #[test]
 fn test_num_cast_f64() {

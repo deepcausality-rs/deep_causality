@@ -2,9 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use core::f64::consts::PI;
 use deep_causality_num::utils_tests::utils_complex_tests;
-use deep_causality_num::{Complex, ComplexNumber};
-use std::f64::consts::PI;
+use deep_causality_num::{Complex, DivisionAlgebra};
 
 #[test]
 fn test_complex_norm_sqr() {
@@ -25,9 +25,9 @@ fn test_complex_arg() {
 }
 
 #[test]
-fn test_complex_conj() {
+fn test_complex_conjugate() {
     let c = Complex::new(1.0, 2.0);
-    let conj_c = c.conj();
+    let conj_c = c.conjugate();
     assert_eq!(conj_c.re(), 1.0);
     assert_eq!(conj_c.im(), -2.0);
 }

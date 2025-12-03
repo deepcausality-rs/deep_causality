@@ -3,10 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::ops::Neg;
+use core::ops::Neg;
 
+use crate::RealField;
 use crate::complex::octonion_number::Octonion;
-use crate::float::Float;
 
 /// Implements the unary negation operator (`-`) for `Octonion` numbers.
 ///
@@ -30,7 +30,7 @@ use crate::float::Float;
 /// assert_eq!(neg_o.e2, -3.0);
 /// // ... and so on for other components
 /// ```
-impl<F: Float> Neg for Octonion<F> {
+impl<F: RealField> Neg for Octonion<F> {
     type Output = Self;
     fn neg(self) -> Self {
         Octonion {

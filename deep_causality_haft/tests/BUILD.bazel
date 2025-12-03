@@ -1,6 +1,51 @@
 load("@rules_rust//rust:defs.bzl", "rust_test_suite")
 
 rust_test_suite(
+    name = "algebra",
+    srcs = glob([
+        "algebra/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_haft",
+    ],
+)
+
+rust_test_suite(
+    name = "core",
+    srcs = glob([
+        "core/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_haft",
+    ],
+)
+
+rust_test_suite(
+    name = "effect_system",
+    srcs = glob([
+        "effect_system/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_haft",
+    ],
+)
+
+rust_test_suite(
     name = "extensions",
     srcs = glob([
         "extensions/*_tests.rs",
@@ -16,7 +61,7 @@ rust_test_suite(
 )
 
 rust_test_suite(
-    name = "tests",
+    name = "utils",
     srcs = glob([
         "*_tests.rs",
     ]),

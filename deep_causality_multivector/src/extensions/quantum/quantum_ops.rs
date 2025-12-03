@@ -4,7 +4,7 @@
  */
 
 use crate::{HilbertState, MultiVector};
-use deep_causality_num::{Complex, Complex64, ComplexNumber, Zero};
+use deep_causality_num::{Complex, Complex64, DivisionAlgebra, Zero};
 
 /// Operations specific to Quantum Mechanics / Hilbert Spaces.
 /// These correspond to Bra-Ket notation operations.
@@ -48,7 +48,7 @@ impl QuantumOps for HilbertState {
 
         // 2. Complex Conjugation of coefficients
         for c in reversed.data.iter_mut() {
-            *c = c.conj();
+            *c = c.conjugate();
         }
 
         Self::from(reversed)

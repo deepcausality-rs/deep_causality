@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
 use deep_causality_num::Float;
 use deep_causality_num::Quaternion;
 
@@ -90,14 +95,6 @@ fn test_div_scalar() {
     assert!(result.x.is_infinite());
     assert!(result.y.is_infinite());
     assert!(result.z.is_infinite());
-}
-
-#[test]
-fn test_rem() {
-    let q1 = Quaternion::new(1.0, 2.0, 3.0, 4.0);
-    let q2 = Quaternion::new(5.0, 6.0, 7.0, 8.0);
-    // Remainder for quaternions is not standard. The current implementation of Rem<Quaternion> for Quaternion returns self.
-    assert_eq!(q1 % q2, q1);
 }
 
 #[test]

@@ -6,3 +6,4 @@
 #[cfg(test)]
 pub mod hkt;
 mod quantum;
+mod scalar_multivector;

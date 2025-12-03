@@ -1,5 +1,10 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+use core::cmp::Ordering;
 use deep_causality_num::Quaternion;
-use std::cmp::Ordering;
 
 #[test]
 fn test_partial_ord_equal() {

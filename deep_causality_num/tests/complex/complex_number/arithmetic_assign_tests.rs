@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality_num::utils_tests::utils_complex_tests;
-use deep_causality_num::{Complex, ComplexNumber, Float};
+use deep_causality_num::{Complex, RealField};
 
 #[test]
 fn test_complex_add_assign() {
@@ -102,37 +102,4 @@ fn test_complex_div_assign_scalar_nan() {
     c /= scalar;
     assert!(c.re().is_nan());
     assert!(c.im().is_nan());
-}
-
-#[test]
-fn test_complex_rem() {
-    let c1 = Complex::new(5.0, 5.0);
-    let c2 = Complex::new(2.0, 3.0);
-    let rem = c1 % c2;
-    assert_eq!(rem.re(), 1.0);
-    assert_eq!(rem.im(), 2.0);
-}
-
-#[test]
-fn test_complex_rem_scalar() {
-    let c = Complex::new(5.0, 5.0);
-    let rem = c % 2.0;
-    assert_eq!(rem.re(), 1.0);
-    assert_eq!(rem.im(), 1.0);
-}
-
-#[test]
-fn test_complex_rem_assign() {
-    let mut c = Complex::new(5.0, 5.0);
-    c %= Complex::new(2.0, 3.0);
-    assert_eq!(c.re(), 1.0);
-    assert_eq!(c.im(), 2.0);
-}
-
-#[test]
-fn test_complex_rem_assign_scalar() {
-    let mut c = Complex::new(5.0, 5.0);
-    c %= 2.0;
-    assert_eq!(c.re(), 1.0);
-    assert_eq!(c.im(), 1.0);
 }

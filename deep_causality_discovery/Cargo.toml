@@ -23,19 +23,18 @@ path = "examples/main.rs"
 # Internal dependencies
 [dependencies.deep_causality_tensor]
 path = "../deep_causality_tensor"
-version = "0.1.9"
+version = "0.1"
 
 
 [dependencies.deep_causality_algorithms]
 path = "../deep_causality_algorithms"
-version = "0.2.4"
+version = "0.2"
 
 
 # External dependencies
 [dependencies]
 csv = {version = "1.4", default-features = false}
-parquet = {version = "57", default-features = false}
-# rayon = {version = "1.11", optional = true}
+parquet = {version = "57.1", default-features = false}
 
 
 [dev-dependencies]

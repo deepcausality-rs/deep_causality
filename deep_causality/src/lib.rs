@@ -75,7 +75,6 @@ pub use crate::traits::inferable::InferableReasoning;
 pub use crate::traits::intervenable::Intervenable;
 // Propagating Traits
 pub use crate::traits::into_effect_value::IntoEffectValue;
-pub use crate::traits::log_append::LogAppend;
 // Observable Traits
 pub use crate::traits::observable::Observable;
 pub use crate::traits::observable::ObservableReasoning;

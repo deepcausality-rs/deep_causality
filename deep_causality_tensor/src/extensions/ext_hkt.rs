@@ -192,3 +192,61 @@ impl BoundedComonad<CausalTensorWitness> for CausalTensorWitness {
         CausalTensor::new(new_data, fa.shape().to_vec()).expect("Shape mismatch")
     }
 }
+
+// Implementation of BoundedAdjunction for CausalTensorWitness
+// Context is Vec<usize> (Shape), as we need it to construct new Tensors in 'unit'.
+use deep_causality_haft::BoundedAdjunction;
+use std::ops::{Add, Mul};
+
+impl BoundedAdjunction<CausalTensorWitness, CausalTensorWitness, Vec<usize>>
+    for CausalTensorWitness
+{
+    fn left_adjunct<A, B, F>(ctx: &Vec<usize>, a: A, f: F) -> CausalTensor<B>
+    where
+        F: Fn(CausalTensor<A>) -> B,
+        A: Clone + Zero + Copy + PartialEq,
+        B: Clone,
+    {
+        // 1. Create unit: A -> Tensor<Tensor<A>>
+        let t_t_a = Self::unit(ctx, a);
+
+        // 2. Map f: Tensor<A> -> B over Tensor<Tensor<A>> to get Tensor<B>
+        <Self as Functor<Self>>::fmap(t_t_a, f)
+    }
+
+    fn right_adjunct<A, B, F>(ctx: &Vec<usize>, la: CausalTensor<A>, f: F) -> B
+    where
+        F: FnMut(A) -> CausalTensor<B>,
+        A: Clone + Zero,
+        B: Clone + Zero + Add<Output = B> + Mul<Output = B>,
+    {
+        let mapped = <Self as Functor<Self>>::fmap(la, f);
+        Self::counit(ctx, mapped)
+    }
+
+    fn unit<A>(ctx: &Vec<usize>, a: A) -> CausalTensor<CausalTensor<A>>
+    where
+        A: Clone + Zero + Copy + PartialEq,
+    {
+        // Create inner tensor
+        if !ctx.is_empty() {
+            panic!(
+                "BoundedAdjunction::unit for CausalTensor requires an empty shape vector (Scalar). Provided shape: {:?}",
+                ctx
+            );
+        }
+        let inner = CausalTensor::new(vec![a], ctx.clone()).expect("Inner tensor creation failed");
+
+        // Wrap in outer tensor (scalar wrapper)
+        CausalTensor::new(vec![inner], vec![]).expect("Outer tensor creation failed")
+    }
+
+    fn counit<B>(_ctx: &Vec<usize>, lrb: CausalTensor<CausalTensor<B>>) -> B
+    where
+        B: Clone + Zero + Add<Output = B> + Mul<Output = B>,
+    {
+        // Flatten and Extract
+        let flattened = <Self as Monad<Self>>::bind(lrb, |x| x);
+        <Self as BoundedComonad<Self>>::extract(&flattened)
+    }
+}
