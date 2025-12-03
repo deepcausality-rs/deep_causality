@@ -10,6 +10,8 @@ use crate::{ExecutableEdge, ExecutableGraph, ExecutableNode};
 #[cfg(all(feature = "alloc", not(feature = "strict-zst")))]
 use alloc::boxed::Box;
 #[cfg(feature = "alloc")]
+use alloc::vec;
+#[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
 pub struct ControlFlowBuilder<P> {

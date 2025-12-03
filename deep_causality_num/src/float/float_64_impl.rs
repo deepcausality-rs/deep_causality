@@ -91,12 +91,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::floor(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for floor");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -106,12 +100,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::ceil(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for ceil");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -121,12 +109,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::round(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for round");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -136,12 +118,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::trunc(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for trunc");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -151,12 +127,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return self - libm::trunc(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for fract");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -186,12 +156,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::fma(self, a, b);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for mul_add");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -206,12 +170,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::pow(self, n as f64);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for powi");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -221,12 +179,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::pow(self, n);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for powf");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -236,12 +188,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::sqrt(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for sqrt");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -251,12 +197,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::exp(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for exp");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -266,12 +206,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::exp2(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for exp2");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -281,12 +215,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::log(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for ln");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -296,12 +224,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::log(self) / libm::log(base);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for log");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -311,12 +233,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::log2(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for log2");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -326,12 +242,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::log10(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for log10");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -366,12 +276,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::cbrt(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for cbrt");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -381,12 +285,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::hypot(self, other);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for hypot");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -396,12 +294,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::sin(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for sin");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -411,12 +303,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::cos(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for cos");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -426,12 +312,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::tan(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for tan");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -441,12 +321,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::asin(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for asin");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -456,12 +330,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::acos(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for acos");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -471,12 +339,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::atan(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for atan");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -486,12 +348,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::atan2(self, other);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for atan2");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -501,12 +357,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return (libm::sin(self), libm::cos(self));
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for sin_cos");
-            (f64::NAN, f64::NAN)
-        }
     }
 
     #[inline]
@@ -516,12 +366,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::expm1(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for exp_m1");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -531,12 +375,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::log1p(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for ln_1p");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -546,12 +384,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::sinh(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for sinh");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -561,12 +393,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::cosh(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for cosh");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -576,12 +402,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::tanh(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for tanh");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -591,12 +411,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::asinh(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for asinh");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -606,12 +420,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::acosh(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for acosh");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -621,12 +429,6 @@ impl Float for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::atanh(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for atanh");
-            f64::NAN
-        }
     }
 
     #[inline]

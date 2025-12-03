@@ -7,7 +7,6 @@ rust_library(
     ]),
     crate_features = [
         "std",
-        "non-std",
         "libm_math",
     ],  # List of features to enable
     crate_root = "src/lib.rs",
@@ -16,9 +15,7 @@ rust_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        # External dependency required only for non-std build.
-        # Somehow bazel doesn't know the concept of feature dependent deps..
-        "//thirdparty/crates:libm",
+        # No external dependencies needed for std build
     ],
 )
 

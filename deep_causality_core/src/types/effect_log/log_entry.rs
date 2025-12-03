@@ -2,6 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+#[cfg(feature = "alloc")]
+use alloc::format;
+#[cfg(feature = "alloc")]
+use alloc::string::String;
 use core::fmt::Display;
 
 // Internal struct, not exposed in the public API.
@@ -31,7 +35,7 @@ impl LogEntry {
 }
 
 impl Display for LogEntry {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         format!("[{:0>6}] {}", self.timestamp_ms(), self.message()).fmt(f)
     }
 }

@@ -2,7 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-#[cfg(all(feature = "alloc", not(feature = "strict-zst")))]
+#[cfg(feature = "alloc")]
+use alloc::format;
+#[cfg(feature = "alloc")]
 use alloc::string::String;
 
 use crate::CausalEffectPropagationProcess;

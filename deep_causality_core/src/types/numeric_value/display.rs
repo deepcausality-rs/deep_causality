@@ -7,7 +7,7 @@ use crate::NumericValue;
 use core::fmt::{Display, Formatter};
 
 impl Display for NumericValue {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match self {
             NumericValue::None => write!(f, "None"),
             NumericValue::U8(n) => write!(f, "U8({})", n),

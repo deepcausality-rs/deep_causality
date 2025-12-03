@@ -10,10 +10,10 @@ use deep_causality_haft::{LogAddEntry, LogAppend, LogEffect, LogSize};
 #[cfg(feature = "std")]
 use std::time::{SystemTime, UNIX_EPOCH};
 
-#[cfg(all(feature = "alloc", not(feature = "strict-zst")))]
+#[cfg(feature = "alloc")]
 use alloc::string::{String, ToString};
 
-#[cfg(all(feature = "alloc", not(feature = "strict-zst")))]
+#[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
 /// Represents an encapsulated, timestamped log of causal evaluation events.

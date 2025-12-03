@@ -248,12 +248,6 @@ impl RealField for f32 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::sqrtf(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for sqrt");
-            f32::NAN
-        }
     }
 
     #[inline]
@@ -263,12 +257,6 @@ impl RealField for f32 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::floorf(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for floor");
-            f32::NAN
-        }
     }
 
     #[inline]
@@ -278,12 +266,6 @@ impl RealField for f32 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::ceilf(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for ceil");
-            f32::NAN
-        }
     }
 
     #[inline]
@@ -293,12 +275,6 @@ impl RealField for f32 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::roundf(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for round");
-            f32::NAN
-        }
     }
 
     #[inline]
@@ -308,12 +284,6 @@ impl RealField for f32 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::expf(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for exp");
-            f32::NAN
-        }
     }
 
     #[inline]
@@ -323,12 +293,6 @@ impl RealField for f32 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::logf(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for ln");
-            f32::NAN
-        }
     }
 
     #[inline]
@@ -338,12 +302,6 @@ impl RealField for f32 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::logf(self) / libm::logf(base);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for log");
-            f32::NAN
-        }
     }
 
     #[inline]
@@ -353,12 +311,6 @@ impl RealField for f32 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::powf(self, n);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for powf");
-            f32::NAN
-        }
     }
 
     #[inline]
@@ -368,12 +320,6 @@ impl RealField for f32 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::sinf(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for sin");
-            f32::NAN
-        }
     }
 
     #[inline]
@@ -383,12 +329,6 @@ impl RealField for f32 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::cosf(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for cos");
-            f32::NAN
-        }
     }
 
     #[inline]
@@ -398,12 +338,6 @@ impl RealField for f32 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::acosf(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for acos");
-            f32::NAN
-        }
     }
 
     #[inline]
@@ -413,12 +347,6 @@ impl RealField for f32 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::tanf(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for tan");
-            f32::NAN
-        }
     }
 
     #[inline]
@@ -428,12 +356,6 @@ impl RealField for f32 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::sinhf(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for sinh");
-            f32::NAN
-        }
     }
 
     #[inline]
@@ -443,12 +365,6 @@ impl RealField for f32 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::coshf(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for cosh");
-            f32::NAN
-        }
     }
 
     #[inline]
@@ -458,12 +374,6 @@ impl RealField for f32 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::tanhf(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for tanh");
-            f32::NAN
-        }
     }
 
     #[inline]
@@ -473,12 +383,6 @@ impl RealField for f32 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::atan2f(self, other);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required for atan2");
-            f32::NAN
-        }
     }
 
     #[inline]
@@ -523,12 +427,6 @@ impl RealField for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::sqrt(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -538,12 +436,6 @@ impl RealField for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::floor(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -553,12 +445,6 @@ impl RealField for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::ceil(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -568,12 +454,6 @@ impl RealField for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::round(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -583,12 +463,6 @@ impl RealField for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::exp(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -598,12 +472,6 @@ impl RealField for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::log(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -613,12 +481,6 @@ impl RealField for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::log(self) / libm::log(base);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -628,12 +490,6 @@ impl RealField for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::pow(self, n);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -643,12 +499,6 @@ impl RealField for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::sin(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -658,12 +508,6 @@ impl RealField for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::cos(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -673,12 +517,6 @@ impl RealField for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::acos(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -688,12 +526,6 @@ impl RealField for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::tan(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -703,12 +535,6 @@ impl RealField for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::sinh(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -718,12 +544,6 @@ impl RealField for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::cosh(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -733,12 +553,6 @@ impl RealField for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::tanh(self);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required");
-            f64::NAN
-        }
     }
 
     #[inline]
@@ -748,12 +562,6 @@ impl RealField for f64 {
 
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         return libm::atan2(self, other);
-
-        #[cfg(all(not(feature = "std"), not(feature = "libm_math")))]
-        {
-            compile_error!("'std' or 'libm_math' feature required");
-            f64::NAN
-        }
     }
 
     #[inline]
