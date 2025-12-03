@@ -16,7 +16,7 @@ exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
-version = "0.1"
+version = "0.1.8"
 
 
 [features]

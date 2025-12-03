@@ -32,7 +32,7 @@ version = "0.2"
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
-version = "0.1"
+version = "0.1.8"
 
 
 [dependencies.deep_causality_tensor]
