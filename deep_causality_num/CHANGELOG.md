@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.9](https://github.com/marvin-hansen/deep_causality/compare/deep_causality_num-v0.1.8...deep_causality_num-v0.1.9) - 2025-12-03
+
+### Added
+
+- *(deep_causality_sparse)* Fixed feature flag pass through for Bazel config.
+- *(deep_causality_num)* Simplified Algebra bounds of complex number systems.
+- *(deep_causality_num)* Increased test coverage.
+- *(deep_causality_num)* code refactoring
+- *(deep_causality_num)* Increased test coverage.
+- *(deep_causality_num)* Increased test coverage.
+- *(deep_causality_num)* Turned runtime checks of feat flags into compiler errors.
+- *(deep_causality_num)* Updated copyright note across the entire crate.
+- *(deep_causality_num)* Added native rotation to Complex, Quaternion, and Octonions
+- *(deep_causality_num)* Documented Octonion Number type with proper algebraic traits. Updated tests.
+- *(deep_causality_num)* Re-implemented Octonion Number type with proper algebraic traits. Updated tests.
+- *(deep_causality_num)* Re-implemented Quaternion Number type with proper algebraic traits. Updated tests.
+- *(deep_causality_num)* Added market traits for Associative, Distributive, and Commutative. Updated algebra traits accordingly and fixed downstream.
+- *(deep_causality_multivector)* Added full set of new algebraic trait system to CausalMultiVector.
+- *(deep_causality_multivector)* Ported CausalMultiVector to use Field instead of the broader Num trait to ensure correct math.
+- *(deep_causality_num)* Update all tests for Complex Number type with proper algebraic traits.
+- *(deep_causality_num)* Re-implemented Complex Number type with proper algebraic traits.
+- *(deep_causality_num)* Added missing default impl for inverse in Field trait.
+- *(deep_causality_num)* Updated algebraic traits and added comprehensive documentation.
+- *(deep_causality_num)* Updated algebraic traits.
+- *(deep_causality_num)* Added algebraic trait bounds.
+- *(deep_causality_num)* Updated Readme with information for non-std builds.
+- *(deep_causality_num)* Updated Readme with information for non-std builds.
+- *(deep_causality_num)* Updated Readme with information for non-std builds.
+- *(deep_causality_num)* Added support for non-std.
+
+### Other
+
+- Regenerated SBOM.
+- Fixed Bazel build config.
+- *(deep_causality_num)* Increased test coverage.
+- Updated all vendored deps for Bazel.
+- Merge branch 'deepcausality-rs:main' into main
+- Merge remote-tracking branch 'origin/main'
+- Restored manually generated SBOM to restore Dependency and licence scan.
+
 ## [0.1.8](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.1.7...deep_causality_num-v0.1.8) - 2025-11-23
 
 ### Other
