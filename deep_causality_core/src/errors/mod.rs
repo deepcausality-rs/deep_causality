@@ -4,3 +4,4 @@
  */
 
 pub mod causality_error;
+pub mod graph_error;

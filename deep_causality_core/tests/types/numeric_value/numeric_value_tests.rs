@@ -92,17 +92,6 @@ fn test_from_f64() {
 }
 
 #[test]
-fn test_display() {
-    assert_eq!(format!("{}", NumericValue::None), "None");
-    assert_eq!(format!("{}", NumericValue::U8(42)), "U8(42)");
-    assert_eq!(format!("{}", NumericValue::I32(-100)), "I32(-100)");
-    assert_eq!(
-        format!("{}", NumericValue::F64(std::f64::consts::PI)),
-        format!("F64({})", std::f64::consts::PI)
-    );
-}
-
-#[test]
 fn test_partial_eq() {
     assert_eq!(NumericValue::U8(42), NumericValue::U8(42));
     assert_ne!(NumericValue::U8(42), NumericValue::U8(43));

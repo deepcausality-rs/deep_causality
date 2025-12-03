@@ -5,7 +5,7 @@
 
 use crate::ControlFlowProtocol;
 use crate::ExecutableNode;
-use crate::types::builder::execution_graph_error::GraphError;
+use crate::errors::graph_error::GraphError;
 #[cfg(feature = "alloc")]
 use alloc::collections::VecDeque;
 #[cfg(feature = "alloc")]

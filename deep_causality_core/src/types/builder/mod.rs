@@ -8,4 +8,3 @@ pub mod executable_edge;
 pub mod executable_graph;
 pub mod executable_node;
 pub mod executable_node_type;
-pub mod execution_graph_error;
