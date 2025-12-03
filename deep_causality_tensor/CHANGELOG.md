@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.10](https://github.com/marvin-hansen/deep_causality/compare/deep_causality_tensor-v0.1.9...deep_causality_tensor-v0.1.10) - 2025-12-03
+
+### Added
+
+- *(deep_causality_sparse)* Fixing auto-release
+- *(deep_causality_tensor)* Added full set of new algebraic trait system to CausalTensor.
+- *(deep_causality_topology)* Initial implementation of topology data structures.
+
+### Other
+
+- Regenerated SBOM.
+- Updated dev dependencies across the repo.
+- *(deep_causality_topology)* Fixed discrete differential geometry examples.
+- *(deep_causality_tensor)* Added implementation of BoundedAdjunction trait as type extension.
+- *(deep_causality_haft)* Added BoundedAdjunction trait.
+- Merge branch 'deepcausality-rs:main' into main
+- Merge remote-tracking branch 'origin/main'
+- Restored manually generated SBOM to restore Dependency and licence scan.
+
 ## [0.1.9](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.1.8...deep_causality_tensor-v0.1.9) - 2025-11-23
 
 ### Other

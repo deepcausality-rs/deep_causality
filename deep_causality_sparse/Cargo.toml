@@ -20,7 +20,7 @@ std = ["deep_causality_num/default"]
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
-version = "0.1.8"
+version = "0.1.9"
 default-features = false
 
 [[example]]
