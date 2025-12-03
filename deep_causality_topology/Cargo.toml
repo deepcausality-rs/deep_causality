@@ -13,19 +13,37 @@ categories = ["science", "mathematics"]
 
 [features]
 default = ["std"] # Keep std by default for convenience, can be turned off
-std = ["alloc"]   # Explicitly enable std
+std = ["alloc", "deep_causality_num/default", "deep_causality_sparse/default"] # Explicitly enable std
 alloc = []
 
-[dependencies]
-deep_causality_haft = { path = "../deep_causality_haft" }
-deep_causality_tensor = { path = "../deep_causality_tensor" }
-deep_causality_multivector = { path = "../deep_causality_multivector" }
-deep_causality_sparse = { path = "../deep_causality_sparse" }
-deep_causality_num = { path = "../deep_causality_num" }
 
 [lib]
 name = "deep_causality_topology"
 path = "src/lib.rs"
+
+
+[dependencies.deep_causality_num]
+path = "../deep_causality_num"
+version = "0.1.9"
+default-features = false
+
+[dependencies.deep_causality_sparse]
+path = "../deep_causality_sparse"
+version = "0.1.0"
+default-features = false
+
+[dependencies.deep_causality_haft]
+path = "../deep_causality_haft"
+version = "0.2.4"
+
+[dependencies.deep_causality_tensor]
+path = "../deep_causality_tensor"
+version = "0.1.9"
+
+[dependencies.deep_causality_multivector]
+path = "../deep_causality_multivector"
+version = "0.1.3"
+
 
 [[example]]
 name = "basic_graph"
