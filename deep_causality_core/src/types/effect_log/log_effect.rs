@@ -3,14 +3,18 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use alloc::string::{String, ToString};
-use alloc::vec::Vec;
+use crate::types::effect_log::log_entry::LogEntry;
 use core::fmt::{Debug, Display, Formatter};
 use deep_causality_haft::{LogAddEntry, LogAppend, LogEffect, LogSize};
 
-use crate::types::effect_log::log_entry::LogEntry;
 #[cfg(feature = "std")]
 use std::time::{SystemTime, UNIX_EPOCH};
+
+#[cfg(all(feature = "alloc", not(feature = "strict-zst")))]
+use alloc::string::{String, ToString};
+
+#[cfg(all(feature = "alloc", not(feature = "strict-zst")))]
+use alloc::vec::Vec;
 
 /// Represents an encapsulated, timestamped log of causal evaluation events.
 ///

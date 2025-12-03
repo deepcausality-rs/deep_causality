@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 /// A "Ghost Handle" representing a node in the graph.
 /// The `In` and `Out` types are phantom; they carry no runtime weight

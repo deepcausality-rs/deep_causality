@@ -5,14 +5,13 @@
 
 //! This module defines the CausalValue enum.
 
-use crate::PropagatingEffect;
-use crate::alias::{ContextoidId, IdentificationValue};
-// use crate::traits::propagating_value::PropagatingValue;
+use crate::{ContextoidId, IdentificationValue, PropagatingEffect};
 
+#[cfg(all(feature = "alloc", not(feature = "strict-zst")))]
+use alloc::boxed::Box;
 #[cfg(feature = "std")]
 use std::collections::HashMap;
 
-use alloc::boxed::Box;
 use core::fmt::Debug;
 
 mod display;

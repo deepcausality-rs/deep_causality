@@ -27,5 +27,7 @@ rust_test_suite(
     deps = [
         # Crate to test
         "//deep_causality_sparse",
+        # Deps
+        "//deep_causality_num",
     ],
 )

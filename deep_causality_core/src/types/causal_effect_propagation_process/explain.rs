@@ -2,9 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
-use crate::types::causal_effect_propagation_process::CausalEffectPropagationProcess;
+#[cfg(all(feature = "alloc", not(feature = "strict-zst")))]
 use alloc::string::String;
+
+use crate::CausalEffectPropagationProcess;
 use core::fmt::{Debug, Display};
 use deep_causality_haft::LogSize;
 

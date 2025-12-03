@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::types::numeric_value::NumericValue;
+use crate::NumericValue;
 use core::fmt::{Display, Formatter};
 
 impl Display for NumericValue {

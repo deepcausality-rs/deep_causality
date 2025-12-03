@@ -6,8 +6,8 @@
 use crate::EffectLog;
 use crate::errors::causality_error::CausalityError;
 use crate::types::causal_effect_propagation_process::hkt::CausalEffectPropagationProcessWitness;
+use core::marker::PhantomData;
 use deep_causality_haft::Effect5;
-use std::marker::PhantomData;
 
 pub struct CausalSystem<S, C>(PhantomData<(S, C)>);
 

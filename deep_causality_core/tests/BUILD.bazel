@@ -9,9 +9,151 @@ rust_test_suite(
         "unit-test",
     ],
     visibility = ["//visibility:public"],
+    crate_features = ["std"],
     deps = [
         # Crate to test
         "//deep_causality_core",
         # Internal dependencies
+    ],
+)
+
+rust_test_suite(
+    name = "types_effect_value",
+    srcs = glob([
+        "types/effect_value/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    crate_features = ["std"],
+    deps = [
+        "//deep_causality_core",
+    ],
+)
+
+rust_test_suite(
+    name = "types_effect_log",
+    srcs = glob([
+        "types/effect_log/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    crate_features = ["std"],
+    deps = [
+        "//deep_causality_core",
+        "//deep_causality_haft",
+    ],
+)
+
+rust_test_suite(
+    name = "types_causal_effect_system",
+    srcs = glob([
+        "types/causal_effect_system/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    crate_features = ["std"],
+    deps = [
+        "//deep_causality_core",
+        "//deep_causality_haft",
+    ],
+)
+
+rust_test_suite(
+    name = "types_causal_effect_propagation_process",
+    srcs = glob([
+        "types/causal_effect_propagation_process/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    crate_features = ["std"],
+    deps = [
+        "//deep_causality_core",
+        "//deep_causality_haft",
+    ],
+)
+
+rust_test_suite(
+    name = "types_causal_monad",
+    srcs = glob([
+        "types/causal_monad/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    crate_features = ["std"],
+    deps = [
+        "//deep_causality_core",
+        "//deep_causality_haft",
+    ],
+)
+
+rust_test_suite(
+    name = "types_numeric_value",
+    srcs = glob([
+        "types/numeric_value/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    crate_features = ["std"],
+    deps = [
+        "//deep_causality_core",
+    ],
+)
+
+rust_test_suite(
+    name = "types_propagating_effect",
+    srcs = glob([
+        "types/propagating_effect/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    crate_features = ["std"],
+    deps = [
+        "//deep_causality_core",
+        "//deep_causality_haft",
+    ],
+)
+
+rust_test_suite(
+    name = "types_builder",
+    srcs = glob([
+        "types/builder/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    crate_features = ["std"],
+    deps = [
+        "//deep_causality_core",
+    ],
+)
+
+rust_test_suite(
+    name = "types_propagating_process",
+    srcs = glob([
+        "types/propagating_process/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    crate_features = ["std"],
+    deps = [
+        "//deep_causality_core",
+        "//deep_causality_haft",
     ],
 )

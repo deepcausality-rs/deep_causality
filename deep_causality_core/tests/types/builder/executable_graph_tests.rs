@@ -2,11 +2,11 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use std::collections::VecDeque;
 
 use deep_causality_core::ControlFlowBuilder;
 use deep_causality_core::GraphError;
 use deep_causality_core::{ControlFlowProtocol, FromProtocol, ToProtocol};
-use std::collections::VecDeque;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TestProtocol {
@@ -15,7 +15,7 @@ pub enum TestProtocol {
 }
 
 impl ControlFlowProtocol for TestProtocol {
-    fn error<E: std::fmt::Debug>(msg: E) -> Self {
+    fn error<E: core::fmt::Debug>(msg: E) -> Self {
         TestProtocol::Error(format!("{:?}", msg))
     }
 }

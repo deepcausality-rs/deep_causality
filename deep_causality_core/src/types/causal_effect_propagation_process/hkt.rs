@@ -4,8 +4,8 @@
  */
 
 use crate::{CausalEffectPropagationProcess, EffectValue};
+use core::marker::PhantomData;
 use deep_causality_haft::{Applicative, Functor, HKT, HKT5, LogAppend, Monad, Placeholder};
-use std::marker::PhantomData;
 
 pub struct CausalEffectPropagationProcessWitness<S, C, E, L>(
     Placeholder,

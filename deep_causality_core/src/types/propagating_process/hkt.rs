@@ -4,8 +4,8 @@
  */
 
 use crate::{CausalityError, CausalityErrorEnum, EffectLog, EffectValue, PropagatingProcess};
+use core::marker::PhantomData;
 use deep_causality_haft::{Applicative, Functor, HKT, LogAppend, Monad, Placeholder};
-use std::marker::PhantomData;
 
 pub struct PropagatingProcessWitness<S, C>(Placeholder, PhantomData<S>, PhantomData<C>);
 
