@@ -35,6 +35,33 @@ where
     }
 }
 
+// Support: Reference addition ( &A + &B )
+// This allows x.as_inner() + z.as_inner() to work without manual cloning everywhere
+impl<'b, T> Add<&'b CausalMultiVector<T>> for &CausalMultiVector<T>
+where
+    T: Copy + Add<Output = T> + Zero,
+{
+    type Output = CausalMultiVector<T>;
+
+    fn add(self, rhs: &'b CausalMultiVector<T>) -> Self::Output {
+        if self.metric != rhs.metric {
+            panic!("Metric mismatch in addition");
+        }
+        // Zip and add
+        let new_data = self
+            .data
+            .iter()
+            .zip(rhs.data.iter())
+            .map(|(a, b)| *a + *b)
+            .collect();
+
+        CausalMultiVector {
+            data: new_data,
+            metric: self.metric,
+        }
+    }
+}
+
 /// Implements component-wise subtraction of multivectors.
 /// $$ A - B = \sum_{I} (a_I - b_I) e_I $$
 impl<T> Sub for CausalMultiVector<T>
@@ -64,6 +91,32 @@ where
     }
 }
 
+// Support: Reference subtraction ( &A - &B )
+impl<'b, T> Sub<&'b CausalMultiVector<T>> for &CausalMultiVector<T>
+where
+    T: Copy + Sub<Output = T> + Zero,
+{
+    type Output = CausalMultiVector<T>;
+
+    fn sub(self, rhs: &'b CausalMultiVector<T>) -> Self::Output {
+        if self.metric != rhs.metric {
+            panic!("Metric mismatch in subtraction");
+        }
+        // Zip and subtract
+        let new_data = self
+            .data
+            .iter()
+            .zip(rhs.data.iter())
+            .map(|(a, b)| *a - *b)
+            .collect();
+
+        CausalMultiVector {
+            data: new_data,
+            metric: self.metric,
+        }
+    }
+}
+
 /// Implements scalar multiplication.
 /// $$ A s = \sum_{I} (a_I s) e_I $$
 impl<T> Mul<T> for CausalMultiVector<T>
@@ -81,17 +134,16 @@ where
     }
 }
 
-/// Implements scalar division.
-/// $$ A / s = \sum_{I} (a_I / s) e_I $$
-impl<T> Div<T> for CausalMultiVector<T>
+// Support: Reference scalar multiplication ( &A * scalar )
+impl<T> Mul<T> for &CausalMultiVector<T>
 where
-    T: Div<Output = T> + Copy + Clone,
+    T: Copy + Mul<Output = T>,
 {
-    type Output = Self;
+    type Output = CausalMultiVector<T>;
 
-    fn div(self, rhs: T) -> Self::Output {
-        let data = self.data.iter().map(|a| *a / rhs).collect();
-        Self {
+    fn mul(self, rhs: T) -> Self::Output {
+        let data = self.data.iter().map(|a| *a * rhs).collect();
+        CausalMultiVector {
             data,
             metric: self.metric,
         }
@@ -120,28 +172,34 @@ where
     }
 }
 
-// Support: Reference addition ( &A + &B )
-// This allows x.as_inner() + z.as_inner() to work without manual cloning everywhere
-impl<'b, T> Add<&'b CausalMultiVector<T>> for &CausalMultiVector<T>
+/// Implements scalar division.
+/// $$ A / s = \sum_{I} (a_I / s) e_I $$
+impl<T> Div<T> for CausalMultiVector<T>
 where
-    T: Copy + Add<Output = T> + Zero,
+    T: Div<Output = T> + Copy + Clone,
+{
+    type Output = Self;
+
+    fn div(self, rhs: T) -> Self::Output {
+        let data = self.data.iter().map(|a| *a / rhs).collect();
+        Self {
+            data,
+            metric: self.metric,
+        }
+    }
+}
+
+// Support: Reference scalar division ( &A / scalar )
+impl<T> Div<T> for &CausalMultiVector<T>
+where
+    T: Copy + Div<Output = T>,
 {
     type Output = CausalMultiVector<T>;
 
-    fn add(self, rhs: &'b CausalMultiVector<T>) -> Self::Output {
-        if self.metric != rhs.metric {
-            panic!("Metric mismatch in addition");
-        }
-        // Zip and add
-        let new_data = self
-            .data
-            .iter()
-            .zip(rhs.data.iter())
-            .map(|(a, b)| *a + *b)
-            .collect();
-
+    fn div(self, rhs: T) -> Self::Output {
+        let data = self.data.iter().map(|a| *a / rhs).collect();
         CausalMultiVector {
-            data: new_data,
+            data,
             metric: self.metric,
         }
     }

@@ -74,6 +74,14 @@ name = "hkt_multivector_example"
 path = "examples/hkt_multivector.rs"
 
 [[example]]
+name = "hopf_multivector_example"
+path = "examples/hopf_fibration_multivector.rs"
+
+[[example]]
+name = "maxwell_multivector_example"
+path = "examples/maxwell_multivector.rs"
+
+[[example]]
 name = "pga3d_multivector_example"
 path = "examples/pga3d_multivector.rs"
 

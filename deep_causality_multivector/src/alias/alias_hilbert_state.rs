@@ -2,9 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
 use crate::{CausalMultiVector, CausalMultiVectorError, Metric};
 use deep_causality_num::Complex;
+use std::fmt::{Display, Formatter};
 
 /// A strong type representing a Quantum State Vector (Ket) |ψ>.
 ///
@@ -38,7 +38,7 @@ impl HilbertState {
         Self { mv }
     }
 
-    pub fn from(mv: CausalMultiVector<Complex<f64>>) -> Self {
+    pub fn from_multivector(mv: CausalMultiVector<Complex<f64>>) -> Self {
         Self { mv }
     }
 
@@ -74,5 +74,11 @@ impl core::ops::Mul<Complex<f64>> for HilbertState {
     type Output = Self;
     fn mul(self, rhs: Complex<f64>) -> Self::Output {
         Self { mv: self.mv * rhs }
+    }
+}
+
+impl Display for HilbertState {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self.mv)
     }
 }

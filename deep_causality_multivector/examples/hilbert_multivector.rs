@@ -43,7 +43,7 @@ fn main() {
         .clone()
         .into_inner()
         .geometric_product(zero_state.as_inner());
-    let one_state = HilbertState::from(one_state); // Convert back to HilbertState
+    let one_state = HilbertState::from_multivector(one_state); // Convert back to HilbertState
     println!("  Applied Pauli-X to 'zero_state' -> 'one_state':");
     println!(
         "    Scalar part (data[0]): {:.4} + {:.4}i",
@@ -65,7 +65,7 @@ fn main() {
         .clone()
         .into_inner()
         .geometric_product(zero_state.as_inner());
-    let plus_state = HilbertState::from(plus_state);
+    let plus_state = HilbertState::from_multivector(plus_state);
     println!("  Applied Hadamard to 'zero_state' -> 'plus_state':");
     println!(
         "    Scalar part (data[0]): {:.4} + {:.4}i",
