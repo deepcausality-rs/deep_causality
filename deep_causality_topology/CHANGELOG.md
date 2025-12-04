@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.1.0...deep_causality_topology-v0.1.1) - 2025-12-04
+
+### Other
+
+- updated the following local packages: deep_causality_tensor, deep_causality_multivector
+
 ## [0.1.0](https://github.com/marvin-hansen/deep_causality/releases/tag/deep_causality_topology-v0.1.0) - 2025-12-03
 
 ### Added
