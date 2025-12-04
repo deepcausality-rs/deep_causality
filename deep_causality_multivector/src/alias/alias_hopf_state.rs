@@ -207,6 +207,6 @@ impl TryFrom<HopfState> for HilbertState {
 
 impl Display for HopfState {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "HopfState({:?})", self.0)
     }
 }
