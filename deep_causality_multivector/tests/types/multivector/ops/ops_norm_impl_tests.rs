@@ -73,7 +73,7 @@ fn test_complex_normalize_l2() {
     let norm: f32 = normalized_mv.norm_l2();
     assert!((norm - 1.0).abs() < 1e-9, "Norm is {}", norm);
 
-    let norm_sqrt_50 = 50.0f32 .sqrt();
+    let norm_sqrt_50 = 50.0f32.sqrt();
     let expected_data = [
         Complex::new(3.0 / norm_sqrt_50, 4.0 / norm_sqrt_50),
         Complex::new(0.0, 0.0),
