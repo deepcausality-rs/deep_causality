@@ -39,6 +39,7 @@ where
             return Err(CausalTensorError::DimensionMismatch);
         }
 
+        // Validate axes uniqueness and bounds
         let mut seen_axes = vec![false; self.num_dim()];
         for &axis in axes {
             if axis >= self.num_dim() || seen_axes[axis] {
@@ -50,20 +51,14 @@ where
         }
 
         let mut new_shape = Vec::with_capacity(self.num_dim());
+        let mut new_strides = Vec::with_capacity(self.num_dim());
+
         for &axis in axes {
             new_shape.push(self.shape[axis]);
+            // This creates a correct strided view of the original data.
+            new_strides.push(self.strides[axis]);
         }
 
-        let mut new_strides = vec![0; new_shape.len()];
-        if !new_shape.is_empty() {
-            let mut current_stride = 1;
-            for i in (0..new_shape.len()).rev() {
-                new_strides[i] = current_stride;
-                current_stride *= new_shape[i];
-            }
-        }
-
-        // Create a new tensor with the same data but new shape and strides
         Ok(Self {
             data: self.data.clone(),
             shape: new_shape,

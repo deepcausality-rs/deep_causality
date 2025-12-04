@@ -15,168 +15,161 @@ where
     assert!(diff < epsilon, "{} is not approximately equal to {}", a, b);
 }
 
-// New tests for Cholesky Decomposition
-#[test]
-fn test_cholesky_decomposition_2x2_ok() {
-    // Symmetric positive-definite matrix
-    // A = [[4, 2], [2, 10]]
-    let matrix = CausalTensor::new(vec![4.0, 2.0, 2.0, 10.0], vec![2, 2]).unwrap();
-    let l = matrix.cholesky_decomposition().unwrap();
-
-    // Expected L = [[2, 0], [1, 3]]
-    let expected_l_data = [2.0, 0.0, 1.0, 3.0];
-    assert_eq!(l.shape(), &[2, 2]);
-    for (i, &val) in expected_l_data.iter().enumerate() {
-        assert_approx_eq(l.as_slice()[i], val, 1e-9);
+// Helper for comparing tensor floats with a tolerance
+fn assert_tensor_approx_eq(a: &CausalTensor<f64>, b: &CausalTensor<f64>, epsilon: f64) {
+    assert_eq!(a.shape(), b.shape(), "Tensor shapes do not match");
+    for (val_a, val_b) in a.as_slice().iter().zip(b.as_slice().iter()) {
+        assert_approx_eq(*val_a, *val_b, epsilon);
     }
 }
 
 #[test]
-fn test_cholesky_decomposition_3x3_ok() {
-    // Symmetric positive-definite matrix
-    // A = [[25, 15, -5], [15, 18, 0], [-5, 0, 11]]
-    let matrix = CausalTensor::new(
-        vec![
-            25.0, 15.0, -5.0, //
-            15.0, 18.0, 0.0, //
-            -5.0, 0.0, 11.0, //
-        ],
-        vec![3, 3],
-    )
-    .unwrap();
-    let l = matrix.cholesky_decomposition().unwrap();
+fn test_cholesky_decomposition_success() {
+    let data = vec![25.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, 11.0];
+    let a = CausalTensor::new(data, vec![3, 3]).unwrap();
 
-    // Expected L = [[5, 0, 0], [3, 3, 0], [-1, 1, 3]]
-    let expected_l_data = vec![
-        5.0, 0.0, 0.0, //
-        3.0, 3.0, 0.0, //
-        -1.0, 1.0, 3.0, //
-    ];
-    assert_eq!(l.shape(), &[3, 3]);
-    for (i, &val) in expected_l_data.iter().enumerate() {
-        assert_approx_eq(l.as_slice()[i], val, 1e-9);
-    }
+    let expected_l_data = vec![5.0, 0.0, 0.0, 3.0, 3.0, 0.0, -1.0, 1.0, 3.0];
+    let expected_l = CausalTensor::new(expected_l_data, vec![3, 3]).unwrap();
+
+    let l = a.cholesky_decomposition().unwrap();
+    assert_tensor_approx_eq(&l, &expected_l, 1e-9);
 }
 
 #[test]
-fn test_cholesky_decomposition_non_2d_tensor_error() {
-    let tensor_1d = CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![4]).unwrap(); // 1D tensor
-    let err = tensor_1d.cholesky_decomposition().unwrap_err();
-    assert_eq!(err, CausalTensorError::DimensionMismatch);
+fn test_cholesky_decomposition_not_positive_definite() {
+    // This matrix has eigenvalues 3 and -1, so it's not positive-definite
+    let data = vec![1.0, 2.0, 2.0, 1.0];
+    let a = CausalTensor::new(data, vec![2, 2]).unwrap();
 
-    let tensor_3d = CausalTensor::new(vec![1.0; 8], vec![2, 2, 2]).unwrap(); // 3D tensor
-    let err_3d = tensor_3d.cholesky_decomposition().unwrap_err();
-    assert_eq!(err_3d, CausalTensorError::DimensionMismatch);
+    let result = a.cholesky_decomposition();
+    assert!(matches!(result, Err(CausalTensorError::SingularMatrix)));
 }
 
 #[test]
-fn test_cholesky_decomposition_non_square_matrix_error() {
-    let tensor = CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]).unwrap();
-    let err = tensor.cholesky_decomposition().unwrap_err();
-    assert_eq!(err, CausalTensorError::ShapeMismatch);
+fn test_cholesky_decomposition_non_square() {
+    let data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+    let a = CausalTensor::new(data, vec![2, 3]).unwrap();
+
+    let result = a.cholesky_decomposition();
+    assert!(matches!(result, Err(CausalTensorError::ShapeMismatch)));
 }
 
 #[test]
-fn test_cholesky_decomposition_singular_matrix_error() {
-    // Not positive-definite, will result in sqrt of negative or zero diagonal element
-    let singular_matrix_1 = CausalTensor::new(vec![1.0, 1.0, 1.0, 1.0], vec![2, 2]).unwrap(); // Det = 0
-    let err_1 = singular_matrix_1.cholesky_decomposition().unwrap_err();
-    assert_eq!(err_1, CausalTensorError::SingularMatrix);
+fn test_cholesky_decomposition_non_2d() {
+    let data = vec![1.0, 2.0, 3.0, 4.0];
+    let a = CausalTensor::new(data, vec![4]).unwrap(); // 1D tensor
 
-    let singular_matrix_2 = CausalTensor::new(vec![1.0, 2.0, 2.0, 3.0], vec![2, 2]).unwrap(); // Not positive definite, det = -1
-    let err_2 = singular_matrix_2.cholesky_decomposition().unwrap_err();
-    assert_eq!(err_2, CausalTensorError::SingularMatrix);
-
-    let singular_matrix_3 = CausalTensor::new(vec![0.0, 0.0, 0.0, 0.0], vec![2, 2]).unwrap(); // All zeros
-    let err_3 = singular_matrix_3.cholesky_decomposition().unwrap_err();
-    assert_eq!(err_3, CausalTensorError::SingularMatrix);
+    let result = a.cholesky_decomposition();
+    assert!(matches!(result, Err(CausalTensorError::DimensionMismatch)));
 }
 
-// New tests for Solve Least Squares with Cholesky
 #[test]
-fn test_solve_least_squares_cholsky_2x1_ok() {
-    // Simple case: A = [[1], [2]], b = [[3], [4]]
-    // A^T A = [1 2] * [[1], [2]] = [5]
-    // A^T b = [1 2] * [[3], [4]] = [11]
-    // 5x = 11 => x = 2.2
-    let a = CausalTensor::new(vec![1.0, 2.0], vec![2, 1]).unwrap();
-    let b = CausalTensor::new(vec![3.0, 4.0], vec![2, 1]).unwrap();
+fn test_solve_least_squares_cholsky_success() {
+    // Example from linear regression: y = 1.3*x + 0.8
+    // for points (0,1), (1,2), (2,3), (3,5)
+    let a_data = vec![0.0, 1.0, 1.0, 1.0, 2.0, 1.0, 3.0, 1.0];
+    let a = CausalTensor::new(a_data, vec![4, 2]).unwrap();
+
+    let b_data = vec![1.0, 2.0, 3.0, 5.0];
+    let b = CausalTensor::new(b_data, vec![4, 1]).unwrap();
+
+    // The known solution
+    let expected_x_data = vec![1.3, 0.8];
+    let expected_x = CausalTensor::new(expected_x_data, vec![2, 1]).unwrap();
+
     let x = CausalTensor::solve_least_squares_cholsky(&a, &b).unwrap();
-    assert_eq!(x.shape(), &[1, 1]);
-    assert_approx_eq(x.as_slice()[0], 2.2, 1e-9);
+
+    assert_tensor_approx_eq(&x, &expected_x, 1e-9);
 }
 
 #[test]
-fn test_solve_least_squares_cholsky_2x2_ok() {
-    // A = [[1, 1], [1, 2]], b = [[3], [4]]
-    // (A^T A)x = A^T b
-    // A^T A = [[2, 3], [3, 5]]
-    // A^T b = [[7], [11]]
-    // Solution x = [[2], [1]]
-    let a = CausalTensor::new(vec![1.0, 1.0, 1.0, 2.0], vec![2, 2]).unwrap();
-    let b = CausalTensor::new(vec![3.0, 4.0], vec![2, 1]).unwrap();
-    let x = CausalTensor::solve_least_squares_cholsky(&a, &b).unwrap();
-    assert_eq!(x.shape(), &[2, 1]);
-    assert_approx_eq(x.as_slice()[0], 2.0, 1e-9);
-    assert_approx_eq(x.as_slice()[1], 1.0, 1e-9);
+fn test_solve_least_squares_cholsky_non_2d_a() {
+    let a_data = vec![1.0, 2.0, 3.0, 4.0];
+    let a = CausalTensor::new(a_data, vec![4]).unwrap(); // 1D
+
+    let b_data = vec![1.0, 2.0, 3.0, 4.0];
+    let b = CausalTensor::new(b_data, vec![4, 1]).unwrap();
+
+    let result = CausalTensor::solve_least_squares_cholsky(&a, &b);
+    assert!(matches!(result, Err(CausalTensorError::DimensionMismatch)));
 }
 
 #[test]
-fn test_solve_least_squares_cholsky_3x2_ok() {
-    // Overdetermined system
-    // A = [[1, 0], [0, 1], [1, 1]], b = [[1], [2], [3]]
-    // Solution x = [[0.5], [2.5]]
-    let a = CausalTensor::new(vec![1.0, 0.0, 0.0, 1.0, 1.0, 1.0], vec![3, 2]).unwrap();
-    let b = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]).unwrap();
-    let x = CausalTensor::solve_least_squares_cholsky(&a, &b).unwrap();
-    assert_eq!(x.shape(), &[2, 1]);
-    assert_approx_eq(x.as_slice()[0], 0.5, 1e-9);
-    assert_approx_eq(x.as_slice()[1], 2.5, 1e-9);
+fn test_solve_least_squares_cholsky_non_2d_b() {
+    let a_data = vec![1.0, 2.0, 3.0, 4.0];
+    let a = CausalTensor::new(a_data, vec![2, 2]).unwrap();
+
+    let b_data = vec![1.0, 2.0];
+    let b = CausalTensor::new(b_data, vec![2]).unwrap(); // 1D
+
+    let result = CausalTensor::solve_least_squares_cholsky(&a, &b);
+    assert!(matches!(result, Err(CausalTensorError::DimensionMismatch)));
 }
 
 #[test]
-fn test_solve_least_squares_cholsky_a_non_2d_error() {
-    let a_1d = CausalTensor::new(vec![1.0, 2.0], vec![2]).unwrap();
-    let b = CausalTensor::new(vec![1.0, 2.0], vec![2, 1]).unwrap();
-    let err = CausalTensor::solve_least_squares_cholsky(&a_1d, &b).unwrap_err();
-    assert_eq!(err, CausalTensorError::DimensionMismatch);
+fn test_solve_least_squares_cholsky_shape_mismatch_rows() {
+    // a has 4 rows, b has 3 rows
+    let a_data = vec![0.0, 1.0, 1.0, 1.0, 2.0, 1.0, 3.0, 1.0];
+    let a = CausalTensor::new(a_data, vec![4, 2]).unwrap();
 
-    let a_3d = CausalTensor::new(vec![1.0; 8], vec![2, 2, 2]).unwrap();
-    let err_3d = CausalTensor::solve_least_squares_cholsky(&a_3d, &b).unwrap_err();
-    assert_eq!(err_3d, CausalTensorError::DimensionMismatch);
+    let b_data = vec![1.0, 2.0, 3.0];
+    let b = CausalTensor::new(b_data, vec![3, 1]).unwrap();
+
+    let result = CausalTensor::solve_least_squares_cholsky(&a, &b);
+    assert!(matches!(result, Err(CausalTensorError::ShapeMismatch)));
 }
 
 #[test]
-fn test_solve_least_squares_cholsky_b_non_2d_error() {
-    let a = CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2]).unwrap();
-    let b_1d = CausalTensor::new(vec![1.0, 2.0], vec![2]).unwrap();
-    let err = CausalTensor::solve_least_squares_cholsky(&a, &b_1d).unwrap_err();
-    assert_eq!(err, CausalTensorError::DimensionMismatch);
+fn test_solve_least_squares_cholsky_b_not_column_vector() {
+    // b is 4x2 instead of 4x1
+    let a_data = vec![0.0, 1.0, 1.0, 1.0, 2.0, 1.0, 3.0, 1.0];
+    let a = CausalTensor::new(a_data, vec![4, 2]).unwrap();
 
-    let b_3d = CausalTensor::new(vec![1.0; 8], vec![2, 2, 2]).unwrap();
-    let err_3d = CausalTensor::solve_least_squares_cholsky(&a, &b_3d).unwrap_err();
-    assert_eq!(err_3d, CausalTensorError::DimensionMismatch);
+    let b_data = vec![1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 5.0, 5.0];
+    let b = CausalTensor::new(b_data, vec![4, 2]).unwrap();
+
+    let result = CausalTensor::solve_least_squares_cholsky(&a, &b);
+    assert!(matches!(result, Err(CausalTensorError::ShapeMismatch)));
 }
 
 #[test]
-fn test_solve_least_squares_cholsky_b_shape_mismatch_error() {
-    let a = CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2]).unwrap();
-    // b is not a column vector
-    let b_row = CausalTensor::new(vec![1.0, 2.0], vec![1, 2]).unwrap();
-    let err_row = CausalTensor::solve_least_squares_cholsky(&a, &b_row).unwrap_err();
-    assert_eq!(err_row, CausalTensorError::ShapeMismatch);
+fn test_solve_least_squares_cholsky_singular_matrix() {
+    // Columns of A are linearly dependent, so A^T A will be singular
+    let a_data = vec![1.0, 2.0, 1.0, 2.0, 1.0, 2.0];
+    let a = CausalTensor::new(a_data, vec![3, 2]).unwrap();
 
-    // b has wrong number of rows
-    let b_wrong_rows = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]).unwrap();
-    let err_wrong_rows = CausalTensor::solve_least_squares_cholsky(&a, &b_wrong_rows).unwrap_err();
-    assert_eq!(err_wrong_rows, CausalTensorError::ShapeMismatch);
+    let b_data = vec![3.0, 3.0, 3.0];
+    let b = CausalTensor::new(b_data, vec![3, 1]).unwrap();
+
+    // A^T A = [[3, 6], [6, 12]], which is singular.
+    let result = CausalTensor::solve_least_squares_cholsky(&a, &b);
+    assert!(matches!(result, Err(CausalTensorError::SingularMatrix)));
 }
 
 #[test]
-fn test_solve_least_squares_cholsky_singular_matrix_error() {
-    // A^T A will be singular
-    let a = CausalTensor::new(vec![1.0, 1.0, 1.0, 1.0], vec![2, 2]).unwrap(); // Results in A^T A = [[2,2],[2,2]] (singular)
-    let b = CausalTensor::new(vec![1.0, 2.0], vec![2, 1]).unwrap();
-    let err = CausalTensor::solve_least_squares_cholsky(&a, &b).unwrap_err();
-    assert_eq!(err, CausalTensorError::SingularMatrix);
+fn test_cholesky_decomposition_another_success() {
+    // Another valid positive-definite matrix
+    let data = vec![4.0, 12.0, -16.0, 12.0, 37.0, -43.0, -16.0, -43.0, 98.0];
+    let a = CausalTensor::new(data, vec![3, 3]).unwrap();
+
+    let expected_l_data = vec![2.0, 0.0, 0.0, 6.0, 1.0, 0.0, -8.0, 5.0, 3.0];
+    let expected_l = CausalTensor::new(expected_l_data, vec![3, 3]).unwrap();
+
+    let l = a.cholesky_decomposition().unwrap();
+    assert_tensor_approx_eq(&l, &expected_l, 1e-9);
+}
+
+#[test]
+fn test_cholesky_decomposition_1x1_success() {
+    let a = CausalTensor::new(vec![25.0], vec![1, 1]).unwrap();
+    let expected_l = CausalTensor::new(vec![5.0], vec![1, 1]).unwrap();
+    let l = a.cholesky_decomposition().unwrap();
+    assert_tensor_approx_eq(&l, &expected_l, 1e-9);
+}
+
+#[test]
+fn test_cholesky_decomposition_1x1_not_positive() {
+    let a = CausalTensor::new(vec![-25.0], vec![1, 1]).unwrap();
+    let result = a.cholesky_decomposition();
+    assert!(matches!(result, Err(CausalTensorError::SingularMatrix)));
 }

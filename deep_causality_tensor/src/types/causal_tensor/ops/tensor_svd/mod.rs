@@ -24,7 +24,16 @@ impl<T: Default> CausalTensor<T> {
         }
 
         // 1. Calculate A^T
-        let a_t = a.permute_axes(&[1, 0])?; // Transpose A
+        // NOTE: We cannot use permute_axes here because mat_mul_2d likely expects
+        // contiguous memory and does not handle strided views correctly.
+        // We perform a manual physical transpose.
+        let mut a_t_data = Vec::with_capacity(n * m);
+        for i in 0..n {
+            for j in 0..m {
+                a_t_data.push(*a.get_ref(j, i)?);
+            }
+        }
+        let a_t = CausalTensor::from_vec_and_shape_unchecked(a_t_data, &[n, m]);
 
         // 2. Calculate M = A^T A
         let m_matrix = CausalTensor::mat_mul_2d(&a_t, a)?;
@@ -33,7 +42,7 @@ impl<T: Default> CausalTensor<T> {
         let y_vector = CausalTensor::mat_mul_2d(&a_t, b)?;
 
         // 4. Cholesky decomposition of M: M = LL^T
-        let l_matrix = m_matrix.cholesky_decomposition_impl()?; // Need to make this call
+        let l_matrix = m_matrix.cholesky_decomposition_impl()?;
 
         // 5. Solve Lz = y for z (forward substitution)
         let z_data = vec![T::zero(); n];
@@ -49,6 +58,7 @@ impl<T: Default> CausalTensor<T> {
         }
 
         // 6. Solve L^T x = z for x (backward substitution)
+        // Here we CAN use permute_axes because we access elements via get_ref, which respects strides.
         let l_t_matrix = l_matrix.permute_axes(&[1, 0])?; // L^T
 
         let x_data = vec![T::zero(); n];
@@ -95,14 +105,11 @@ impl<T: Default> CausalTensor<T> {
                 if i == j {
                     // Diagonal elements
                     let val = *self.get_ref(i, i)? - sum;
-                    if val < T::zero() {
+                    if val <= T::zero() {
                         // Check for positive definiteness
                         return Err(CausalTensorError::SingularMatrix); // Not positive definite
                     }
                     let sqrt_val = val.sqrt(); // Need a sqrt method on T
-                    if sqrt_val.is_zero() {
-                        return Err(CausalTensorError::SingularMatrix); // Near singular
-                    }
                     l_matrix.set(i, j, sqrt_val)?;
                 } else {
                     // Off-diagonal elements

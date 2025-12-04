@@ -30,7 +30,7 @@ impl<T> CausalTensor<T> {
             if val.is_zero() {
                 return Err(CausalTensorError::SingularMatrix);
             }
-            return Self::new(vec![T::one() / val], vec![1]); // Should not fail for 1x1
+            return Self::new(vec![T::one() / val], vec![1, 1]); // Should not fail for 1x1
         }
 
         // Create an augmented matrix [A | I]
