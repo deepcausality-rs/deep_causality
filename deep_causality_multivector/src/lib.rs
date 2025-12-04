@@ -10,7 +10,7 @@ pub mod traits;
 pub mod types;
 
 pub use crate::alias::{
-    ComplexMultiVector, DixonAlgebra, HilbertState, PGA3DMultiVector, RealMultiVector,
+    ComplexMultiVector, DixonAlgebra, HilbertState, HopfState, PGA3DMultiVector, RealMultiVector,
 };
 pub use crate::errors::causal_multivector_error::CausalMultiVectorError;
 pub use crate::extensions::hkt::CausalMultiVectorWitness;

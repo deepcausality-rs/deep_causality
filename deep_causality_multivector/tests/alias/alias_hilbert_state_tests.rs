@@ -70,7 +70,7 @@ fn test_from_multivector() {
     let dim = 2;
     let metric = Metric::Euclidean(dim);
     let mv = create_test_multivector(dim, metric);
-    let state = HilbertState::from(mv.clone());
+    let state = HilbertState::from_multivector(mv.clone());
     assert_eq!(state.mv().data(), mv.data());
     assert_eq!(state.mv().metric(), mv.metric());
 }
@@ -80,7 +80,7 @@ fn test_into_inner() {
     let dim = 2;
     let metric = Metric::Euclidean(dim);
     let mv = create_test_multivector(dim, metric);
-    let state = HilbertState::from(mv.clone());
+    let state = HilbertState::from_multivector(mv.clone());
     let inner_mv = state.into_inner();
     assert_eq!(inner_mv.data(), mv.data());
     assert_eq!(inner_mv.metric(), mv.metric());
@@ -91,7 +91,7 @@ fn test_as_inner() {
     let dim = 2;
     let metric = Metric::Euclidean(dim);
     let mv = create_test_multivector(dim, metric);
-    let state = HilbertState::from(mv.clone());
+    let state = HilbertState::from_multivector(mv.clone());
     let inner_mv_ref = state.as_inner();
     assert_eq!(inner_mv_ref.data(), mv.data());
     assert_eq!(inner_mv_ref.metric(), mv.metric());
@@ -102,7 +102,7 @@ fn test_mv() {
     let dim = 2;
     let metric = Metric::Euclidean(dim);
     let mv = create_test_multivector(dim, metric);
-    let state = HilbertState::from(mv.clone());
+    let state = HilbertState::from_multivector(mv.clone());
     let mv_ref = state.mv();
     assert_eq!(mv_ref.data(), mv.data());
     assert_eq!(mv_ref.metric(), mv.metric());
@@ -174,4 +174,20 @@ fn test_mul_complex_scalar() {
     let expected_data_complex: Vec<Complex<f64>> =
         data_complex.iter().map(|&c| c * scalar_complex).collect();
     assert_eq!(result_state_complex.mv().data(), &expected_data_complex);
+}
+
+#[test]
+fn test_display() {
+    let dim = 1; // Use a small dimension for display test
+    let size = 1 << dim; // 2 elements
+    let data = vec![Complex::new(1.0, 2.0); size];
+    let metric = Metric::NonEuclidean(dim); // Or Euclidean, doesn't matter for display
+    let state = HilbertState::new(data.clone(), metric).unwrap();
+
+    let actual = state.to_string();
+    let expected = format!(
+        "CausalMultiVector {{ data: {:?}, metric: {} }}",
+        &data, metric
+    );
+    assert_eq!(actual, expected);
 }

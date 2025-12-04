@@ -51,7 +51,7 @@ impl QuantumOps for HilbertState {
             *c = c.conjugate();
         }
 
-        Self::from(reversed)
+        Self::from_multivector(reversed)
     }
 
     /// The Inner Product: $\langle \psi | \phi \rangle$.

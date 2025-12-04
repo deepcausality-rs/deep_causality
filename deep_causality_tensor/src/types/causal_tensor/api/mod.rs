@@ -3,9 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{CausalTensor, CausalTensorError, EinSumAST, Tensor};
-use deep_causality_num::{RealField, Zero};
-use std::iter::Sum;
-use std::ops::{Add, Div, Mul};
+use core::iter::Sum;
+use core::ops::{Add, Div, Mul};
+use deep_causality_num::{One, RealField, Zero};
+// Added One // Added Sub, Neg
 
 impl<T> Tensor<T> for CausalTensor<T> {
     /// Public API for Einstein summation.
@@ -417,5 +418,150 @@ impl<T> Tensor<T> for CausalTensor<T> {
         T: Clone,
     {
         self.shifted_view_impl(flat_index)
+    }
+
+    /// Computes the inverse of a square matrix using Gaussian elimination (Gauss-Jordan method).
+    ///
+    /// For a square matrix $A$, its inverse $A^{-1}$ is a matrix such that when $A$ is multiplied
+    /// by $A^{-1}$ (in either order), the result is the identity matrix $I$. That is,
+    /// $A A^{-1} = A^{-1} A = I$.
+    ///
+    /// This method uses the Gauss-Jordan elimination technique by augmenting the input matrix `A`
+    /// with an identity matrix $I$ to form $[A | I]$. Row operations are then performed to transform
+    /// the left side ($A$) into the identity matrix, resulting in the inverse matrix on the right side:
+    /// $[A | I] \rightarrow [I | A^{-1}]$. Partial pivoting is used to enhance numerical stability.
+    ///
+    /// # Usage
+    ///
+    /// Matrix inversion is fundamental for:
+    /// - Solving systems of linear equations: If $Ax = b$, then $x = A^{-1}b$.
+    /// - Inverting linear transformations.
+    /// - Various applications in optimization and numerical analysis.
+    ///
+    /// # Constraints
+    ///
+    /// - The tensor must be a 2D square matrix (i.e., `num_dim() == 2` and `shape[0] == shape[1]`).
+    /// - The matrix must be non-singular (invertible). A singular matrix does not have an inverse.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// - `Ok(Self)`: A new `CausalTensor` representing the inverse matrix.
+    /// - `Err(CausalTensorError)`: If the tensor is not a square matrix, is not 2-dimensional,
+    ///   or is singular.
+    ///
+    /// # Errors
+    ///
+    /// - `CausalTensorError::DimensionMismatch`: If the tensor is not 2-dimensional.
+    /// - `CausalTensorError::ShapeMismatch`: If the tensor is not a square matrix.
+    /// - `CausalTensorError::SingularMatrix`: If the matrix is singular and cannot be inverted.
+    /// - `CausalTensorError::DivisionByZero`: If a pivot element is zero during elimination.
+    fn inverse(&self) -> Result<Self, CausalTensorError>
+    where
+        T: Clone + RealField + Zero + One + Sum + PartialEq,
+    {
+        self.inverse_impl()
+    }
+
+    /// Computes the Cholesky decomposition of a symmetric, positive-definite matrix.
+    ///
+    /// For a symmetric, positive-definite matrix $A$, its Cholesky decomposition is
+    /// $A = L L^T$, where $L$ is a lower triangular matrix with positive diagonal entries,
+    /// and $L^T$ is its transpose.
+    ///
+    /// The algorithm proceeds by calculating elements of $L$ column by column:
+    /// - Diagonal elements: $L_{ii} = \sqrt{A_{ii} - \sum_{k=0}^{i-1} L_{ik}^2}$
+    /// - Off-diagonal elements: $L_{ji} = \frac{1}{L_{ii}} (A_{ji} - \sum_{k=0}^{i-1} L_{jk} L_{ik})$ for $j > i$
+    ///
+    /// # Usage
+    ///
+    /// Cholesky decomposition is a cornerstone in numerical linear algebra, used for:
+    /// - Solving systems of linear equations more efficiently than general methods (e.g., Gaussian elimination)
+    ///   when the matrix is symmetric positive-definite.
+    /// - Efficiently solving Least Squares problems (as implemented in `solve_least_squares_cholsky_impl`).
+    /// - Monte Carlo simulations to generate correlated random variables.
+    /// - Kalman filtering and other state estimation problems.
+    ///
+    /// # Constraints
+    ///
+    /// - The input `CausalTensor` must represent a 2D square matrix.
+    /// - The matrix must be symmetric and positive-definite. If it is not positive-definite,
+    ///   the decomposition will fail (e.g., attempt to take the square root of a negative number,
+    ///   or encounter a zero on the diagonal).
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// - `Ok(Self)`: A new `CausalTensor` representing the lower triangular Cholesky factor $L$.
+    /// - `Err(CausalTensorError)`: If input dimensions are invalid, or if the matrix is not
+    ///   symmetric positive-definite.
+    ///
+    /// # Errors
+    ///
+    /// - `CausalTensorError::DimensionMismatch`: If the tensor is not 2-dimensional.
+    /// - `CausalTensorError::ShapeMismatch`: If the tensor is not a square matrix.
+    /// - `CausalTensorError::SingularMatrix`: If the matrix is not positive-definite (e.g., a diagonal
+    ///   element becomes zero or negative during computation).
+    fn cholesky_decomposition(&self) -> Result<Self, CausalTensorError>
+    where
+        T: Default + Clone + RealField + Zero + One + PartialEq,
+    {
+        self.cholesky_decomposition_impl()
+    }
+
+    /// Solves the Least Squares problem for $Ax = b$ using Cholesky decomposition.
+    ///
+    /// Given a system of linear equations $Ax = b$, where $A$ is an $m \times n$ design matrix
+    /// and $b$ is an $m \times 1$ observation vector, this method finds the vector $x$ (parameters)
+    /// that minimizes the squared Euclidean norm of the residual $||Ax - b||^2$.
+    ///
+    /// The solution $x$ is obtained by solving the normal equations: $A^T A x = A^T b$.
+    /// Let $M = A^T A$ and $y = A^T b$. The normal equations become $Mx = y$.
+    ///
+    /// The process involves:
+    /// 1. Computing $M = A^T A$ and $y = A^T b$.
+    /// 2. Performing Cholesky decomposition on $M$: $M = L L^T$, where $L$ is a lower triangular matrix.
+    /// 3. Solving $Lz = y$ for $z$ using forward substitution.
+    /// 4. Solving $L^T x = z$ for $x$ using backward substitution.
+    ///
+    /// This method is numerically stable and efficient for well-conditioned systems.
+    ///
+    /// # Usage
+    ///
+    /// This solver is commonly used in:
+    /// - Linear Regression analysis to find the best-fit parameters.
+    /// - Data fitting and curve fitting.
+    /// - Various optimization and statistical modeling problems.
+    ///
+    /// # Arguments
+    ///
+    /// * `a` - The design matrix $A$ (m x n `CausalTensor`).
+    /// * `b` - The observation vector $b$ (m x 1 `CausalTensor`).
+    ///
+    /// # Constraints
+    ///
+    /// - The design matrix $A$ should have full column rank for a unique solution.
+    /// - The matrix $A^T A$ must be symmetric and positive-definite for Cholesky decomposition to succeed.
+    /// - The observation vector $b$ must be a column vector with a number of rows compatible with $A$.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// - `Ok(Self)`: A new `CausalTensor` representing the solution vector $x$ (n x 1).
+    /// - `Err(CausalTensorError)`: If input dimensions are invalid, or if $A^T A$ is singular.
+    ///
+    /// # Errors
+    ///
+    /// - `CausalTensorError::DimensionMismatch`: If `a` or `b` are not 2-dimensional, or `b` is not a column vector.
+    /// - `CausalTensorError::ShapeMismatch`: If `b`'s rows do not match `a`'s rows.
+    /// - `CausalTensorError::SingularMatrix`: If the $A^T A$ matrix is singular, implying no unique solution.
+    fn solve_least_squares_cholsky(
+        a: &Self, // Design matrix (m x n)
+        b: &Self, // Observation vector (m x 1)
+    ) -> Result<Self, CausalTensorError>
+    where
+        T: Default + Clone + RealField + Zero + One + PartialEq,
+    {
+        Self::solve_least_squares_cholsky_impl(a, b)
     }
 }

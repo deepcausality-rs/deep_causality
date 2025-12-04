@@ -40,6 +40,16 @@ fn test_error_display_and_debug() {
             "InvalidOperation",
         ),
         (
+            CausalTensorError::SingularMatrix,
+            "CausalTensorError: Singular matrix error - inverse does not exist",
+            "SingularMatrix",
+        ),
+        (
+            CausalTensorError::IndexOutOfBounds,
+            "CausalTensorError: Index out of bounds error",
+            "IndexOutOfBounds",
+        ),
+        (
             CausalTensorError::UnorderableValue,
             "CausalTensorError: Unorderable value encountered",
             "UnorderableValue",
