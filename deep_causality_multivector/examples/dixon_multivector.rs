@@ -6,6 +6,18 @@
 use deep_causality_multivector::{DixonAlgebra, MultiVector};
 use deep_causality_num::Complex;
 
+// -----------------------------------------------------------------------------------------
+// ENGINEERING VALUE:
+// High-energy particle physics (Standard Model) relies on complex symmetries (SU(3)xSU(2)xU(1)).
+// Dixon Algebra (Cl_C(6)) provides a mathematical structure that naturally encodes these
+// symmetries using Octonions and Complex numbers.
+//
+// This example demonstrates how to construct and manipulate these high-dimensional
+// algebraic structures. This capability is essential for researchers modeling
+// Quantum Field Theory (QFT) or exploring Beyond Standard Model (BSM) physics
+// within a computational framework.
+// -----------------------------------------------------------------------------------------
+
 fn main() {
     println!("=== Dixon Algebra (Cl_C(6)) Example ===");
     println!("This algebra operates on Octonions in particle physics models (e.g. C. Furey).");

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_multivector::types::metric::Metric;
+use deep_causality_multivector::Metric;
 
 #[test]
 fn test_metric_dimension() {

@@ -6,6 +6,20 @@ use deep_causality_multivector::{HopfState, MultiVector};
 use deep_causality_num::Complex;
 use std::f64::consts;
 
+// -----------------------------------------------------------------------------------------
+// ENGINEERING VALUE:
+// Visualizing and analyzing high-dimensional data (like 4D Quaternion states or Quantum Spinors)
+// is difficult. The Hopf Fibration provides a map from the 3-sphere (S3) to the 2-sphere (S2),
+// allowing us to project complex states onto a visible surface (the Bloch Sphere).
+//
+// This example demonstrates:
+// 1. Encoding a Quantum State (Spinor) in a MultiVector.
+// 2. Applying a "Fiber Shift" (Global Phase change), which is invisible in the projection.
+// 3. Projecting the state to 3D space for analysis.
+//
+// This is valuable for Topological Data Analysis (TDA) and debugging quantum control systems.
+// -----------------------------------------------------------------------------------------
+
 fn main() {
     println!("--- HOPF FIBRATION DEMO ---");
 

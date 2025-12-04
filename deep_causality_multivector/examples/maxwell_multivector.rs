@@ -4,26 +4,26 @@
  */
 use deep_causality_multivector::{CausalMultiVector, Metric};
 
-// This example simulates a pulse moving through a 4D spacetime grid and extracts the physical fields from the potential.
-// In standard engineering (C++/Matlab), engineers treat the Electric Field and Magnetic Field
-// as separate vectors. They have to manually ensure they remain orthogonal and consistent.
+// -----------------------------------------------------------------------------------------
+// ENGINEERING VALUE:
+// In standard engineering, Electric (E) and Magnetic (B) fields are treated as separate vectors,
+// requiring manual consistency checks. In Geometric Algebra, they are unified into a single
+// Electromagnetic Field Bivector (F) derived from a Vector Potential (A).
 //
-// In DeepCausality (Geometric Algebra), you simulate neither.
-// Instead, you simulate the Four-Potential as a Spacetime Vector.
-// Here, you  You calculate only the Potential and then apply the Geometric Derivative
-// * The Bivector part of the result automatically becomes the Electromagnetic Field
-// * The Scalar part of the result is the Divergence, the Lorenz Gauge Check.
-//   If the Scalar part is zero, you have proven the Lorenz Gauge.
-//   This allows real-time verification that the simulation remains physical correct,
-//   which is critical for high-fidelity Radar and Antenna design.
+// This example demonstrates:
+// 1. Simulating the 4-Vector Potential (A) directly.
+// 2. Deriving the EM Field (F = dA) using the Geometric Gradient.
+// 3. Automatically verifying the Lorenz Gauge (Divergence = 0).
 //
-// Applications:
-//
-// **5G/6G Antenna Design (Phased Arrays)**
+// **Application: 5G/6G Antenna Design (Phased Arrays)**
 // A "Phased Array" (Beamforming) relies on precise timing of the potential $A$ across thousands of antenna elements.
 // *   **DeepCausality:** You can simulate the **Interference Pattern** of the Vector Potential directly on the `CausalComplex` mesh of the antenna.
 // *   **Performance:** Calculating $A$ (4 scalars) is 50% faster than calculating $E, B$ (6 scalars), and the result is numerically more stable (no divergence cleaning).
 //
+// This approach is critical for high-fidelity Radar and Antenna design (Phased Arrays),
+// where phase consistency and gauge invariance are paramount.
+// -----------------------------------------------------------------------------------------
+
 fn main() {
     println!("--- MAXWELL'S UNIFICATION: The Geometric Gradient ---");
     println!("Goal: Derive E and B fields from a single Vector Potential A.");
@@ -69,7 +69,6 @@ fn main() {
     // Strictly, the Gradient is a vector operator.
     // We represent the *Action* of the gradient on the field.
     // D = gamma^u d_u
-
     let gradient_d = CausalMultiVector::new(d_data, metric).unwrap();
 
     // 4. Derive the electromagnetic field

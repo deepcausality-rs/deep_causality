@@ -3,8 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_multivector::errors::causal_multivector_error::CausalMultiVectorError;
-use deep_causality_multivector::types::metric::Metric;
+use deep_causality_multivector::{CausalMultiVectorError, Metric};
 
 #[test]
 fn test_dimension_mismatch_display() {

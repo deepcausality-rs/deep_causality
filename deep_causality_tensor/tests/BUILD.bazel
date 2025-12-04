@@ -48,5 +48,6 @@ rust_test_suite(
         "//deep_causality_tensor",
         # Internal deps
         "//deep_causality_haft",
+        "//deep_causality_num",
     ],
 )

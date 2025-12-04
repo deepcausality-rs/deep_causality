@@ -40,9 +40,13 @@ path = "../deep_causality_tensor"
 version = "0.1"
 
 
-[dev-dependencies]
-criterion = {version = "0.8"}
+[dependencies.deep_causality_core]
+path = "../deep_causality_core"
+version = "0.0.1"
 
+
+[dev-dependencies]
+criterion = { version = "0.8" }
 
 [[bench]]
 name = "multivector_bench"
@@ -84,7 +88,3 @@ path = "examples/maxwell_multivector.rs"
 [[example]]
 name = "pga3d_multivector_example"
 path = "examples/pga3d_multivector.rs"
-
-
-
-[dependencies]
