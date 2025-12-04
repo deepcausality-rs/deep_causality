@@ -64,7 +64,7 @@ impl<T> CausalTensor<T> {
                 }
             }
 
-            if max_val.is_zero() {
+            if max_val < T::epsilon() {
                 return Err(CausalTensorError::SingularMatrix); // Corrected error type
             }
 
