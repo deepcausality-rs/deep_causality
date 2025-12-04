@@ -4,7 +4,7 @@
  */
 
 use deep_causality_multivector::MultiVector;
-use deep_causality_multivector::alias::PGA3DMultiVector;
+use deep_causality_multivector::PGA3DMultiVector;
 
 // -----------------------------------------------------------------------------------------
 // ENGINEERING VALUE:

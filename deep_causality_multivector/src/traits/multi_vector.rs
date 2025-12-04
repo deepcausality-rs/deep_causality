@@ -8,6 +8,7 @@
 use crate::CausalMultiVectorError;
 use core::ops::{AddAssign, Neg, SubAssign};
 use deep_causality_num::Field;
+// Added Complex, DivisionAlgebra
 
 pub trait MultiVector<T> {
     // --- Fundamental Projections ---

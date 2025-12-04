@@ -5,7 +5,7 @@
 
 use deep_causality_core::CausalMonad;
 use deep_causality_haft::MonadEffect5;
-use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
+use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector, MultiVectorL2Norm};
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 
 // ======================================================================================
@@ -155,14 +155,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 let rotor_update = one + half_omega_dt;
                 let current_orientation = prev_state.orientation.clone().unwrap();
-                let predicted_orientation = current_orientation * rotor_update;
-                // Normalize rotor
-                // R * ~R = 1
-                // For now, let's just assume it stays close to unit or implement normalization if API supports it.
-                // CausalMultiVector doesn't `normalize()` exposed in the basic API I saw,
-                // but we can compute norm and scale.
-                // let norm = predicted_orientation.norm_l2(); // This returns a scalar (Tensor or float?)
-                // Let's skip normalization for this simple example or assume small steps.
+                let predicted_orientation = (current_orientation * rotor_update).normalize_l2();
 
                 // --- Step B: Adaptive Gravity Observer (RLS / Kalman Filter) ---
                 //
