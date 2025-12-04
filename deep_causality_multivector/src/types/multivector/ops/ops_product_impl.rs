@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use super::CausalMultiVector;
+use crate::CausalMultiVector;
 use core::ops::{AddAssign, Neg, SubAssign};
 use deep_causality_num::Field;
 
@@ -13,7 +13,7 @@ impl<T> CausalMultiVector<T> {
     // Dim 7 = 128 components -> 16,384 iterations (Sparse starts winning)
     const SPARSE_THRESHOLD: usize = 6;
 
-    pub(super) fn geometric_product_impl(&self, rhs: &Self) -> Self
+    pub(in crate::types::multivector) fn geometric_product_impl(&self, rhs: &Self) -> Self
     where
         T: Field + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
     {
@@ -153,7 +153,7 @@ impl<T> CausalMultiVector<T> {
     /// $$ A \wedge B = \langle AB \rangle_{r+s} $$
     ///
     /// For basis blades $e_I$ and $e_J$, $e_I \wedge e_J$ is non-zero only if $I \cap J = \emptyset$.
-    pub(super) fn outer_product_impl(&self, rhs: &Self) -> Self
+    pub(in crate::types::multivector) fn outer_product_impl(&self, rhs: &Self) -> Self
     where
         T: Field + Copy + Clone + AddAssign + SubAssign,
     {
@@ -207,7 +207,7 @@ impl<T> CausalMultiVector<T> {
     /// $$ A \cdot B = \langle AB \rangle_{s-r} $$
     ///
     /// For basis blades $e_I$ and $e_J$, $e_I \cdot e_J$ is non-zero only if $I \subseteq J$.
-    pub(super) fn inner_product_impl(&self, rhs: &Self) -> Self
+    pub(in crate::types::multivector) fn inner_product_impl(&self, rhs: &Self) -> Self
     where
         T: Field + Copy + Clone + AddAssign + SubAssign,
     {
@@ -249,7 +249,7 @@ impl<T> CausalMultiVector<T> {
         }
     }
 
-    pub(super) fn commutator_lie_impl(&self, rhs: &Self) -> Self
+    pub(in crate::types::multivector) fn commutator_lie_impl(&self, rhs: &Self) -> Self
     where
         T: Field + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
     {
@@ -303,7 +303,7 @@ impl<T> CausalMultiVector<T> {
     }
 
     // The scaled logic 0.5 * (AB - BA)
-    pub(super) fn commutator_geometric_impl(&self, rhs: &Self) -> Self
+    pub(in crate::types::multivector) fn commutator_geometric_impl(&self, rhs: &Self) -> Self
     where
         T: Field
             + Copy

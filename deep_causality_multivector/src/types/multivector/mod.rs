@@ -10,9 +10,7 @@ use deep_causality_num::{Field, Zero};
 mod algebra;
 mod api;
 mod arithmetic;
-mod getters;
-mod ops_misc_impl;
-mod ops_product_impl;
+mod ops;
 mod utils;
 
 /// A MultiVector in a Clifford Algebra $Cl(p, q, r)$.
@@ -93,5 +91,13 @@ impl<T> CausalMultiVector<T> {
         // The pseudoscalar is at the last index (all bits 1)
         data[size - 1] = T::one();
         Self { data, metric }
+    }
+
+    pub fn data(&self) -> &Vec<T> {
+        &self.data
+    }
+
+    pub fn metric(&self) -> Metric {
+        self.metric
     }
 }

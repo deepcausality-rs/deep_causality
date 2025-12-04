@@ -10,7 +10,7 @@ impl<T> CausalMultiVector<T> {
     /// Projects the multivector onto a specific grade $k$.
     ///
     /// $$ \langle A \rangle_k = \sum_{I : |I|=k} a_I e_I $$
-    pub(super) fn grade_projection_impl(&self, k: u32) -> Self
+    pub(in crate::types::multivector) fn grade_projection_impl(&self, k: u32) -> Self
     where
         T: Field + Copy,
     {
@@ -29,7 +29,7 @@ impl<T> CausalMultiVector<T> {
     ///
     /// Reverses the order of vectors in each basis blade.
     /// $$ \tilde{A} = \sum_{k=0}^N (-1)^{k(k-1)/2} \langle A \rangle_k $$
-    pub(super) fn reversion_impl(&self) -> Self
+    pub(in crate::types::multivector) fn reversion_impl(&self) -> Self
     where
         T: Field + Copy + Clone + Neg<Output = T>,
     {
@@ -51,7 +51,7 @@ impl<T> CausalMultiVector<T> {
     /// Computes the squared magnitude (squared norm) of the multivector.
     ///
     /// $$ ||A||^2 = \langle A \tilde{A} \rangle_0 $$
-    pub(super) fn squared_magnitude_impl(&self) -> T
+    pub(in crate::types::multivector) fn squared_magnitude_impl(&self) -> T
     where
         T: Field + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
     {
@@ -66,7 +66,7 @@ impl<T> CausalMultiVector<T> {
     /// $$ A^{-1} = \frac{\tilde{A}}{A \tilde{A}} $$
     ///
     /// Only valid if $A \tilde{A}$ is a non-zero scalar (Versor).
-    pub(super) fn inverse_impl(&self) -> Result<Self, CausalMultiVectorError>
+    pub(in crate::types::multivector) fn inverse_impl(&self) -> Result<Self, CausalMultiVectorError>
     where
         T: Field
             + Copy
@@ -89,7 +89,7 @@ impl<T> CausalMultiVector<T> {
     ///
     /// $$ A^* = A I^{-1} $$
     /// where $I$ is the pseudoscalar.
-    pub(super) fn dual_impl(&self) -> Result<Self, CausalMultiVectorError>
+    pub(in crate::types::multivector) fn dual_impl(&self) -> Result<Self, CausalMultiVectorError>
     where
         T: Field
             + Copy
@@ -112,7 +112,7 @@ impl<T> CausalMultiVector<T> {
     /// making the coefficient at `index` the new scalar (index 0).
     ///
     /// Used for Comonadic 'extend' operations.
-    pub(super) fn basis_shift_impl(&self, index: usize) -> Self
+    pub(in crate::types::multivector) fn basis_shift_impl(&self, index: usize) -> Self
     where
         T: Clone,
     {
