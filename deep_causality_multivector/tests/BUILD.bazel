@@ -33,9 +33,44 @@ rust_test_suite(
 )
 
 rust_test_suite(
-    name = "types",
+    name = "traits",
     srcs = glob([
-        "types/*_tests.rs",
+        "traits/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_multivector",
+        # Deps
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
+    name = "types/metric",
+    srcs = glob([
+        "types/metric/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_multivector",
+    ],
+)
+
+rust_test_suite(
+    name = "types/multivector",
+    srcs = glob([
+        "types/multivector/algebra/*_tests.rs",
+        "types/multivector/arithmetic/*_tests.rs",
+        "types/multivector/ops/*_tests.rs",
+        "types/multivector/*_tests.rs",
     ]),
     tags = [
         "unit-test",

@@ -6,6 +6,4 @@
 #[cfg(test)]
 mod ops_misc_impl_tests;
 #[cfg(test)]
-mod ops_norm_impl_tests;
-#[cfg(test)]
 mod ops_product_impl_tests;
