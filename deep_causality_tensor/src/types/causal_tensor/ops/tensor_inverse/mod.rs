@@ -52,51 +52,56 @@ impl<T> CausalTensor<T> {
 
         // Gaussian Elimination
         for i in 0..n {
-            // Find pivot (row with largest absolute value in current column)
+            // Estimate scale using max absolute value in column i
             let mut pivot_row = i;
             let mut max_val = T::zero();
-
             for r in i..n {
-                let current_val = augmented_matrix.get_ref(r, i)?.abs(); // Use get and ?
+                let current_val = augmented_matrix.get_ref(r, i)?.abs();
                 if current_val > max_val {
                     max_val = current_val;
                     pivot_row = r;
                 }
             }
-
-            if max_val < T::epsilon() {
-                return Err(CausalTensorError::SingularMatrix); // Corrected error type
+            // Use relative threshold: tol = epsilon * max(1, max_val)
+            let one = T::one();
+            let tol = T::epsilon() * if max_val > one { max_val } else { one };
+            if max_val <= tol {
+                return Err(CausalTensorError::SingularMatrix);
             }
 
             // Swap pivot row with current row if necessary
             if pivot_row != i {
                 for c in 0..2 * n {
-                    let val1 = *augmented_matrix.get_ref(i, c)?; // Use get and ?
-                    let val2 = *augmented_matrix.get_ref(pivot_row, c)?; // Use get and ?
-                    augmented_matrix.set(i, c, val2)?; // Use set and ?
-                    augmented_matrix.set(pivot_row, c, val1)?; // Use set and ?
+                    let a = *augmented_matrix.get_ref(i, c)?;
+                    let b = *augmented_matrix.get_ref(pivot_row, c)?;
+                    augmented_matrix.set(i, c, b)?;
+                    augmented_matrix.set(pivot_row, c, a)?;
                 }
             }
 
-            // Normalize pivot row
-            let pivot_val = *augmented_matrix.get_ref(i, i)?; // Use get and ?
-            if pivot_val.is_zero() {
-                return Err(CausalTensorError::DivisionByZero); // Added check for division by zero
+            // Normalize pivot row across ALL columns to make pivot exactly 1
+            let pivot_val = *augmented_matrix.get_ref(i, i)?;
+            if pivot_val.abs() < T::epsilon() {
+                return Err(CausalTensorError::DivisionByZero);
             }
-            for c in i..2 * n {
-                let val = *augmented_matrix.get_ref(i, c)?; // Use get and ?
-                augmented_matrix.set(i, c, val / pivot_val)?; // Use set and ?
+            for c in 0..2 * n {
+                let val = *augmented_matrix.get_ref(i, c)?;
+                augmented_matrix.set(i, c, val / pivot_val)?;
             }
 
             // Eliminate other rows
             for r in 0..n {
-                if r != i {
-                    let factor = *augmented_matrix.get_ref(r, i)?; // Use get and ?
-                    for c in i..2 * n {
-                        let val_r_c = *augmented_matrix.get_ref(r, c)?; // Use get and ?
-                        let val_i_c = *augmented_matrix.get_ref(i, c)?; // Use get and ?
-                        augmented_matrix.set(r, c, val_r_c - factor * val_i_c)?; // Use set and ?
-                    }
+                if r == i {
+                    continue;
+                }
+                let factor = *augmented_matrix.get_ref(r, i)?;
+                if factor.abs() < T::epsilon() {
+                    continue;
+                }
+                for c in 0..2 * n {
+                    let v_rc = *augmented_matrix.get_ref(r, c)?;
+                    let v_ic = *augmented_matrix.get_ref(i, c)?;
+                    augmented_matrix.set(r, c, v_rc - factor * v_ic)?;
                 }
             }
         }
