@@ -160,14 +160,14 @@ fn test_new_hilbert_state_error_dimension_mismatch() {
 }
 
 #[test]
-fn test_from_hopf_state_to_hilbert_state() {
+fn test_try_from_hopf_state_to_hilbert_state() {
     // Create a HopfState corresponding to a known Spinor
     // R = 1/sqrt(2) + 1/sqrt(2) e23
     let s = 1.0 / (2.0f64).sqrt();
     let data = vec![s, 0.0, 0.0, 0.0, 0.0, 0.0, s, 0.0];
     let hopf_state = HopfState::new(data).unwrap();
 
-    let hilbert_state = HilbertState::from(hopf_state);
+    let hilbert_state = HilbertState::try_from(hopf_state).unwrap();
 
     // Expected HilbertState: alpha = Complex(s, 0), beta = Complex(s, 0)
     let expected_s = Complex::new(1.0 / (2.0f64).sqrt(), 0.0);

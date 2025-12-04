@@ -176,8 +176,10 @@ impl TryFrom<&HilbertState> for HopfState {
 ///
 /// Maps a geometric orientation back into Quantum Hilbert Space.
 /// Useful for initializing a Qubit based on a geometric rotation.
-impl From<HopfState> for HilbertState {
-    fn from(hopf: HopfState) -> Self {
+impl TryFrom<HopfState> for HilbertState {
+    type Error = CausalMultiVectorError;
+
+    fn try_from(hopf: HopfState) -> Result<Self, Self::Error> {
         // 1. Access the real Cl(3) coefficients
         let d = hopf.as_inner().data();
 
@@ -199,7 +201,7 @@ impl From<HopfState> for HilbertState {
         q_data[0] = alpha;
         q_data[1] = beta;
 
-        HilbertState::new_spin10(q_data).unwrap()
+        HilbertState::new_spin10(q_data)
     }
 }
 
