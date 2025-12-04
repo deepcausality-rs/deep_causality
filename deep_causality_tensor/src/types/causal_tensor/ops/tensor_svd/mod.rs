@@ -23,17 +23,8 @@ impl<T: Default> CausalTensor<T> {
             return Err(CausalTensorError::ShapeMismatch); // b must be a column vector
         }
 
-        // 1. Calculate A^T
-        // NOTE: We cannot use permute_axes here because mat_mul_2d likely expects
-        // contiguous memory and does not handle strided views correctly.
-        // We perform a manual physical transpose.
-        let mut a_t_data = Vec::with_capacity(n * m);
-        for i in 0..n {
-            for j in 0..m {
-                a_t_data.push(*a.get_ref(j, i)?);
-            }
-        }
-        let a_t = CausalTensor::from_vec_and_shape_unchecked(a_t_data, &[n, m]);
+        // 1. Calculate A^T using a strided view via permute_axes
+        let a_t = a.permute_axes(&[1, 0])?;
 
         // 2. Calculate M = A^T A
         let m_matrix = CausalTensor::mat_mul_2d(&a_t, a)?;
