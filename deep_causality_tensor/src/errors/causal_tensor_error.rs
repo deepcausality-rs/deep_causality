@@ -16,6 +16,8 @@ pub enum CausalTensorError {
     InvalidOperation,
     UnorderableValue,
     InvalidParameter(String),
+    SingularMatrix,   // Added for matrix inversion errors
+    IndexOutOfBounds, // Added for out-of-bounds access errors
     /// Encapsulates errors specific to EinSum AST validation and execution.
     EinSumError(EinSumValidationError),
 }
@@ -46,6 +48,15 @@ impl std::fmt::Display for CausalTensorError {
             }
             CausalTensorError::DivisionByZero => {
                 write!(f, "CausalTensorError: Division by zero error")
+            }
+            CausalTensorError::SingularMatrix => {
+                write!(
+                    f,
+                    "CausalTensorError: Singular matrix error - inverse does not exist"
+                )
+            }
+            CausalTensorError::IndexOutOfBounds => {
+                write!(f, "CausalTensorError: Index out of bounds error")
             }
             CausalTensorError::EinSumError(e) => {
                 write!(f, "CausalTensorError: EinSumError: {}", e)
