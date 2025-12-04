@@ -6,6 +6,18 @@
 use deep_causality_multivector::{HilbertState, MultiVector, QuantumGates, QuantumOps};
 use deep_causality_num::{Complex64, Zero};
 
+// -----------------------------------------------------------------------------------------
+// ENGINEERING VALUE:
+// Quantum Computing simulations often require complex linear algebra libraries.
+// Geometric Algebra (specifically Spacetime Algebra or high-dimensional Clifford Algebra)
+// provides a natural isomorphism to Quantum Mechanics (Spinors ~ Rotors).
+//
+// This example demonstrates simulating Quantum Gates (Pauli-X, Hadamard, etc.) and
+// States (Qubits) using `HilbertState` (a wrapper around MultiVector).
+// This approach allows researchers to verify quantum algorithms using geometric intuition
+// and ensures unitary evolution is preserved by the algebraic structure.
+// -----------------------------------------------------------------------------------------
+
 // Helper to print a complex number with proper formatting
 fn print_complex(label: &str, c: Complex64) {
     println!("{}: {:.4} + {:.4}i", label, c.re, c.im);

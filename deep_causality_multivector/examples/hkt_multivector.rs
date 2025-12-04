@@ -6,6 +6,21 @@
 use deep_causality_haft::{Applicative, Functor, Monad};
 use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorWitness, Metric};
 
+// -----------------------------------------------------------------------------------------
+// ENGINEERING VALUE:
+// Modern software engineering relies on composable abstractions. Higher-Kinded Types (HKT)
+// allow us to define generic operations (Map, Apply, Bind) that work across different
+// data structures (Vectors, Tensors, Trees).
+//
+// This example demonstrates how `CausalMultiVector` implements functional patterns:
+// - Functor: Safely transform coefficients without changing geometry.
+// - Applicative: Broadcast functions across vector structures.
+// - Monad: Chain operations that can change the dimensionality (e.g., Tensor Products).
+//
+// This enables "Algebraic Programming" where complex physics pipelines are built from
+// small, verifiable, and reusable functional blocks.
+// -----------------------------------------------------------------------------------------
+
 fn main() {
     println!("=== Higher-Kinded Types (HKT) with CausalMultiVector ===");
 

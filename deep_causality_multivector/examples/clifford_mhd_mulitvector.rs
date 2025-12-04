@@ -5,6 +5,18 @@
 
 use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
 
+// -----------------------------------------------------------------------------------------
+// ENGINEERING VALUE:
+// Plasma Physics and Fusion research often involve switching between Classical (Euclidean)
+// and Relativistic (Minkowski) regimes. Errors in metric signatures can lead to
+// catastrophic simulation failures (e.g., calculating force in the wrong direction).
+//
+// This example demonstrates "Metric Agnosticism":
+// The same code `F = J . B` correctly calculates the Lorentz Force in BOTH regimes.
+// The `CausalMultiVector` type handles the underlying metric algebra (spacetime signature),
+// ensuring physical correctness and safety at the type level.
+// -----------------------------------------------------------------------------------------
+
 fn main() {
     println!("--- PLASMA FUSION SIMULATION: Reactor Confinement Check ---");
     println!("Context: A Stationary Tokamak Reactor (e.g., ITER).");

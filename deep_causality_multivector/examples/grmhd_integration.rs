@@ -7,6 +7,21 @@ use deep_causality_haft::Applicative;
 use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 
+// -----------------------------------------------------------------------------------------
+// ENGINEERING VALUE:
+// Simulating extreme environments (Black Holes, Neutron Stars) requires coupling
+// General Relativity (Gravity/Curvature) with Magnetohydrodynamics (Plasma/EM Fields).
+//
+// This example demonstrates a "Multi-Physics Monad" approach:
+// 1. GR Solver (Tensor): Computes spacetime curvature.
+// 2. Coupling Layer: Dynamically selects the appropriate Metric (Euclidean vs Minkowski)
+//    based on the local curvature intensity.
+// 3. MHD Solver (MultiVector): Computes plasma forces using the selected metric.
+//
+// This architecture ensures that the simulation adapts its mathematical foundation
+// to the physical conditions, preventing validity errors in extreme regimes.
+// -----------------------------------------------------------------------------------------
+
 // --- THE COUPLING ---
 
 fn main() {

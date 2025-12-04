@@ -5,6 +5,20 @@
 
 use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
 
+// -----------------------------------------------------------------------------------------
+// ENGINEERING VALUE:
+// Geometric Algebra (GA) unifies multiple mathematical systems (Complex Numbers, Quaternions,
+// Vector Algebra) into a single, consistent framework.
+//
+// This example demonstrates the core operations:
+// - Geometric Product: Combines rotation and scaling.
+// - Outer Product (Wedge): Represents spanned areas/volumes (subspaces).
+// - Inner Product (Dot): Represents projection and metric contraction.
+//
+// By using GA, engineers can write code that is more geometric, intuitive, and less prone
+// to coordinate-system errors common in linear algebra.
+// -----------------------------------------------------------------------------------------
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("--- CausalMultiVector Basic Usage ---");
 

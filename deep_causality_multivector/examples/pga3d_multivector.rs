@@ -6,6 +6,20 @@
 use deep_causality_multivector::MultiVector;
 use deep_causality_multivector::alias::PGA3DMultiVector;
 
+// -----------------------------------------------------------------------------------------
+// ENGINEERING VALUE:
+// Projective Geometric Algebra (PGA) is the modern standard for Computer Graphics and Robotics.
+// Unlike standard Linear Algebra, PGA represents points, lines, and planes uniformly and
+// handles rigid body motions (translations + rotations) using a single "Motor" algebra.
+//
+// This example demonstrates:
+// 1. Representing Points as dual tri-vectors.
+// 2. Creating a Translator (Motor) for movement.
+// 3. Applying the transformation efficiently.
+//
+// This simplifies kinematic chains in robotics and collision detection in physics engines.
+// -----------------------------------------------------------------------------------------
+
 fn main() {
     println!("=== 3D Projective Geometric Algebra (PGA) Example ===");
 
