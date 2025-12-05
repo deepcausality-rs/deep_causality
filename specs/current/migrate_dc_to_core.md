@@ -23,6 +23,19 @@ To simplify its use, `deep_causality_core` provides two key type aliases:
 -   **`PropagatingProcess<T, S, C>`**: A **stateful** and **context-aware** specialization for complex, history-dependent computations.
     -   `type PropagatingProcess<T, S, C> = CausalEffectPropagationProcess<T, S, C, CausalityError, EffectLog>;`
 
+### Decision Guide: Which Type to Use?
+
+| Feature Needed | Use `PropagatingEffect<T>` | Use `PropagatingProcess<T, S, C>` |
+| :--- | :---: | :---: |
+| **State Persistence** | No | **Yes** |
+| **Context Access** | No | **Yes** |
+| **Pure Transformation** | **Yes** | No |
+| **History Dependence** | No | **Yes** |
+| **Complexity** | Low | High |
+
+-   **Choose `PropagatingEffect`** if your function is a pure transformation (e.g., `f(x) -> y`) that doesn't need to know about the past or the environment.
+-   **Choose `PropagatingProcess`** if your function needs to accumulate data over time (State) or read from a configuration (Context).
+
  
 
 ## 2. Migration of `PropagatingEffect` and `EffectValue`
@@ -246,6 +259,20 @@ fn evaluate(&self, effect: &PropagatingEffect<f64>) -> PropagatingProcess<bool, 
 
 This explicit model makes the data flow clear, eliminates locking, and makes individual causal functions much easier to test in isolation.
 
+### Best Practices for State Management
+
+To mitigate the risk of incorrect state management (Risk 1.1):
+
+1.  **Immutable-First Approach**: Treat state as immutable where possible. Prefer functions that take state by value and return a new, updated state instance rather than mutating it in place.
+2.  **State Design**: Keep state structs simple. If complex nested data is required, ensure clear ownership rules.
+
+### Performance Considerations
+
+To mitigate the risk of performance degradation (Risk 1.2):
+
+1.  **Use `Arc` for Large Data**: The monadic `bind` passes State and Context by value, which involves cloning. If your `State` or `Context` structs are large (e.g., contain large vectors or maps), wrap the heavy parts in an `Arc` (e.g., `Arc<Vec<LargeData>>`). This ensures that cloning the struct is cheap (pointer copy) rather than expensive (deep copy).
+2.  **Zero-Cost Abstractions**: Remember that the `bind` calls themselves are zero-cost abstractions in release builds. The primary cost comes from data copying, which `Arc` mitigates.
+
 
 ## 5. Impact on Hypergraph and Recursive Structures
 
@@ -395,6 +422,21 @@ assert!(final_effect.is_ok());
 assert_eq!(final_effect.value, EffectValue::Value(78));
 println!("---
 Success Explanation  {}", final_effect.explain());
+
+> [!WARNING]
+> **Production Safety**: The examples above use `unwrap()` (e.g., `v.into_value().unwrap()`) for brevity and demonstration. **NEVER use `unwrap()` in production code.** It will panic if the value is `None` (which happens on error). Always handle the `None` case gracefully, typically by propagating the error.
+
+#### Production-Ready Example (No `unwrap`)
+
+```rust
+let safe_effect = initial_effect
+    .bind(|v| {
+        match v.into_value() {
+            Some(val) => validate_reading(val),
+            None => PropagatingEffect::from_error(CausalityError::new(CausalityErrorEnum::ValueNotAvailable))
+        }
+    });
+```
 
 // Case 2: Error propagation
 let error_effect = CausalMonad::pure(-0.5);
@@ -559,7 +601,14 @@ fn test_process_observation_logic() {
 
 Adhering to these testing principles will ensure the migration is not only a structural improvement but also a significant step up in the system's overall robustness and reliability.
 
- 
+### Strict Testing Policy
+
+To mitigate the risk of insufficient testing (Risk 3.3):
+
+1.  **No New Untested Code**: No migrated code should be merged without full test coverage for its logic, including error paths.
+2.  **CI/CD Enforcement**: Code coverage tools (e.g., `cargo-tarpaulin`) will be used in CI. Builds should fail if coverage drops below the threshold.
+3.  **Review Requirement**: Code reviewers must explicitly verify that all branches and error cases are covered by tests.
+
 ## 8. Summary of Key Changes
 
 | Old Concept (`deep_causality`) | New Concept (`deep_causality_core`) | Key Action |
@@ -572,3 +621,165 @@ Adhering to these testing principles will ensure the migration is not only a str
 | `context` as `Arc<RwLock<T>>` | `context` as a type parameter `C` | Context is now a first-class citizen of the monad. |
 
 This migration modernizes the `deep_causality` crate, aligning it with a more robust and extensible foundation for complex causal reasoning. By making state and context explicit parts of the computation, the new system enhances clarity, testability, and correctness.
+
+## 9. Project Configuration
+
+To ensure a consistent migration (Risk 3.1):
+
+1.  **Update `Cargo.toml`**: Add `deep_causality_core` as a dependency.
+2.  **Centralized Type Aliases**: Update `lib.rs` to export the new types. Ensure that `Base*` and `Uniform*` type aliases point to `deep_causality_core` types to enforce consistency across the crate.
+3.  **Compiler Enforcement**: Remove `use` statements for old types as soon as a module is migrated to let the compiler flag remaining usages.
+
+## 10. Affected Files
+
+The following files will be directly affected by this migration. This list is not exhaustive but covers the core components that require immediate attention.
+
+| File Path | Action | Description |
+| :--- | :---: | :--- |
+| `deep_causality/Cargo.toml` | **UPDATE** | Add `deep_causality_core` dependency. |
+| `deep_causality/src/lib.rs` | **UPDATE** | Export new types, remove old modules. |
+| `deep_causality/src/types/reasoning_types/propagating_effect/mod.rs` | **DELETE** | Replaced by `deep_causality_core::PropagatingEffect`. |
+| `deep_causality/src/types/reasoning_types/effect_value/mod.rs` | **DELETE** | Replaced by `deep_causality_core::EffectValue`. |
+| `deep_causality/src/types/reasoning_types/effect_log/mod.rs` | **DELETE** | Replaced by `deep_causality_core::EffectLog`. |
+| `deep_causality/src/types/reasoning_types/mod.rs` | **UPDATE** | Remove module declarations for deleted files. |
+| `deep_causality/src/types/monad_types/causal_monad/mod.rs` | **DELETE** | Replaced by `deep_causality_core::CausalMonad`. |
+| `deep_causality/src/types/causal_types/causaloid/mod.rs` | **UPDATE** | Refactor `causal_fn` signature and `evaluate` method. |
+| `deep_causality/src/traits/into_effect_value/mod.rs` | **DELETE** | Trait is obsolete in the generic system. |
+| `deep_causality/src/errors/causality_error.rs` | **UPDATE** | Alias to `deep_causality_core::CausalityError` or refactor to wrap it. |
+| `deep_causality/src/types/telos_types/` (all files) | **UPDATE** | Refactor to use generic `PropagatingEffect<T>`. |
+| `deep_causality/src/types/csm_types/` (all files) | **UPDATE** | Refactor Causal State Machine to use `PropagatingProcess`. |
+
+## 11. Feasibility and Blockers
+
+## 11. Feasibility and Blockers
+
+### Feasibility Assessment
+The migration is **High Feasibility**. The core types are already implemented and tested in `deep_causality_core`. The work is primarily refactoring the consumer crate (`deep_causality`) to adopt these new types. The mapping between old and new concepts is clear.
+
+### Resolved Blockers
+
+1.  **Complex Type Migration (`Teloid`, `CSM`)**:
+    *   **Resolution**: Heterogeneous collections are **not required**. `CSM` and `Teloid` collections will be grouped by their input/output types (e.g., `CSM<f64, bool>`). This removes the need for a complex `Any` wrapper or a large `EffectValue` enum.
+
+2.  **Error Handling Integration**:
+    *   **Resolution**: `deep_causality_core::CausalityError` will be the unified error type. It will be extended to support custom error messages, allowing existing specific errors to be mapped into it.
+
+## 12. Detailed Refactoring Guides
+
+### 12.1 Error Handling Migration
+
+The goal is to unify all errors under `deep_causality_core::CausalityError`.
+
+**Step 1: Extend `CausalityErrorEnum` in Core**
+Update `deep_causality_core/src/errors/causality_error.rs` to include a `Custom` variant for legacy string-based errors and specific variants for major categories.
+
+```rust
+// deep_causality_core/src/errors/causality_error.rs
+#[derive(Debug, Clone, PartialEq, Eq, Hash)] // Removed Copy to allow String
+pub enum CausalityErrorEnum {
+    // ... existing variants
+    #[default]
+    Unspecified = 0,
+    
+    // New variants for migration
+    Custom(String), 
+    ActionError(String),
+    DeonticError(String),
+    ModelError(String),
+}
+```
+
+**Step 2: Update `deep_causality` Error Types**
+In the `deep_causality` crate, implement `Into<deep_causality_core::CausalityError>` for local errors.
+
+```rust
+// deep_causality/src/errors/action_error.rs
+impl From<ActionError> for deep_causality_core::CausalityError {
+    fn from(err: ActionError) -> Self {
+        Self::new(CausalityErrorEnum::ActionError(err.to_string()))
+    }
+}
+```
+
+**Step 3: Replace Local `CausalityError`**
+Replace `deep_causality::errors::CausalityError` with a type alias or direct usage of the core error.
+
+### 12.2 Refactoring Teloid and CSM
+
+Since heterogeneous collections are not required, we can leverage Rust's generics fully.
+
+#### Refactoring `Teloid`
+`Teloid` will remain generic over the Context types. The predicate function signature will be updated to return `PropagatingEffect<bool>` to participate in the monadic chain.
+
+```rust
+pub struct Teloid<D, S, T, ST, SYM, VS, VT> {
+    // ...
+    // Update: Return PropagatingEffect<bool> instead of bool
+    activation_predicate: Option<fn(&Context<...>, &ProposedAction) -> PropagatingEffect<bool>>,
+    // ...
+}
+```
+
+#### Refactoring `CSM`
+`CSM` is already generic over `I` (Input) and `O` (Output). We will remove the `IntoEffectValue` bounds and use `I` and `O` directly.
+
+```rust
+// Remove IntoEffectValue bounds
+pub struct CSM<I, O, D, S, T, ST, SYM, VS, VT> 
+where 
+    I: Clone, // Simple bounds
+    O: Clone,
+{
+    // State actions now map specific types I -> O
+    state_actions: Arc<RwLock<CSMMap<I, O, ...>>>, 
+    // ...
+}
+```
+
+### 12.3 Converting Causal Functions to Causaloids
+
+To convert a regular, core-compatible causal function into a `Causaloid`, we use a wrapper pattern. The logic exists once in the function; the `Causaloid` simply wraps it.
+
+**The Pattern:**
+
+1.  **Define the Core Function**: Write your logic as a pure function returning `PropagatingEffect<T>`.
+2.  **Wrap in Causaloid**: Use the `Causaloid` struct to wrap this function.
+
+```rust
+// 1. The Core Logic (Reusable, Testable)
+fn my_core_logic(input: f64) -> PropagatingEffect<bool> {
+    if input > 10.0 {
+        CausalMonad::pure(true)
+    } else {
+        CausalMonad::pure(false)
+    }
+}
+
+// 2. The Wrapper (If Causaloid is needed for the graph)
+// Assuming Causaloid definition is updated to generic Causaloid<I, O>
+let my_causaloid = Causaloid::new(
+    |input: f64| my_core_logic(input) // Wrap the function
+);
+
+// Or if Causaloid expects a specific signature:
+impl Causaloid<f64, bool> {
+    pub fn from_fn(f: fn(f64) -> PropagatingEffect<bool>) -> Self {
+        // ... construction logic
+    }
+}
+```
+
+**Critical Rule**: Do not duplicate logic inside the `Causaloid` constructor. Always define the logic as a standalone function first, then wrap it. This ensures the logic is testable independent of the `Causaloid` infrastructure.
+
+### 12.4 Functional Traits Usage
+
+The migration involves two distinct `bind` methods. It is crucial to use the correct one based on your needs.
+
+| Method | Source | Signature | Use Case |
+| :--- | :--- | :--- | :--- |
+| `bind` | `MonadEffect5` (Trait) | `fn(T) -> Effect<U>` | **Stateless** propagation. Use this for `PropagatingEffect` chains where state is not needed. |
+| `bind` | `PropagatingProcess` (Inherent) | `fn(Value, State, Option<Context>) -> Process` | **Stateful** propagation. Use this for `PropagatingProcess` chains to access and update state/context. |
+
+**Note**: The compiler will usually infer the correct method based on the closure arguments you provide (1 arg vs 3 args).
+
+*   **`CausalMonad::pure`**: Always use this to lift a value into the monadic context. It initializes state to `Default`.
