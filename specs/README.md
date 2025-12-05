@@ -7,9 +7,7 @@ experience with spec-kit. In general, the process follows a shift left paradigm 
 spec development revision and improvement before any code will be written, with the understanding that a lot of
 implementation problems can be prevented with proper specification and requirement design.
 
-## Feature Life cycle
-
-SDLC Process:
+## SDLC Process:
 
 1) Draft specs
 2) Review and verify specs
@@ -19,7 +17,7 @@ SDLC Process:
 
 Spec document progression
 
-All sec documents are written in standard Markdown.
+All spec documents are written in standard Markdown.
 
 A) Place draft into folder /sepcs/current
 B) Decide feasibility.
@@ -45,7 +43,7 @@ follow the three-step approach that has been proven effective over time:
    code.
 
 Note: some agents have a hard time sticking to the conventions formulated in the AGENTS.md file. If you observe your
-agent deviating from the AGENTS.md file, just add to the prompt to read the agents.md file and stick to the conventions
+agent deviating from the AGENTS.md file, just add to the prompt to read the AGENTS.md file and stick to the conventions
 formulated in it. It does reduce code review and refactoring time after the implementation.
 
 2. State the problem as independent of any particular solution or architecture as possible unless it needs to be
@@ -75,8 +73,22 @@ instead of requiring significant refactoring later on and that saves a meaningfu
 For complex features, it is sensible to spread out the spec development over a number of days and aggregate external
 feedbacks from other engineers or people involved in the project. In general, the revision and improvement process of
 the spec document is where the vast majority of effort and brainpower will be applied predominantly to ensure that the
-agent has a most complete, comprehensive, and effective blueprint to implement. By experience, most of the coding agents
-based on advanced LLM models do a significant better job with a detailed, specific, and comprehensive spec document.
+agent has a most complete, comprehensive, and effective blueprint to implement.
+
+For complex features, prompt the agent to conduct risk analysis over the entire spec document, identify all relevant
+risks, and write a comprehensive risk mitigation strategy for each identified risk. During the review, it is important
+go re-rank the risks based on actual priority relative to the project scope. Furthermore, the risk mitigation strategy
+needs particularly careful review and might receive some revisions to ensure that non-obvious risks are carefully
+handled by the agent during the implementation stage. There is a very high correlation between implementation success
+and risk mitigation in the specification document.
+
+It is also a good best practice for complex features to ask the agent to add a list of all
+affected files and how they're affected, for instance newly added, edited, updated or deleted and combine that with the
+actual path of the real file. That way, agents tend to struggle less with finding files they are supposed to edit,
+create, or delete.
+
+By experience, most of the coding agents do a significant better job with a detailed, specific, comprehensive and
+de-risked spec document.
 
 ### Implement specs
 
@@ -106,7 +118,7 @@ The most common follow-up after fully autonomous agent implementations usually b
    verify complex formulas.
 
 When the previous spec document was drafted comprehensively with clear testing instructions, in general, the agent hits
-an 80-90% test coverage after the first try. And again, the quality and comprehensiveness of the spec document
+an 80-90% test coverage after the first iteration. And again, the quality and comprehensiveness of the spec document
 correlates one-to-one with the anticipated test coverage after the implementation.
 
 Before filling a PR, ensure the following checks pass without any warnings:
