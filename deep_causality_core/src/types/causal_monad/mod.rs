@@ -55,6 +55,7 @@ use deep_causality_haft::{Effect5, Functor, LogAddEntry, LogAppend, MonadEffect5
 ///
 /// This monad is designed to manage the flow of `CausalEffectPropagationProcess`s, ensuring
 /// that errors are handled gracefully and a comprehensive log of operations is maintained.
+#[derive(Debug, Clone, Default)]
 pub struct CausalMonad<S = (), C = ()>(PhantomData<(S, C)>);
 
 impl<S, C> MonadEffect5<CausalSystem<S, C>> for CausalMonad<S, C>

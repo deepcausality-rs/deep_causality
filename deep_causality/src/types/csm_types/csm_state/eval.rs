@@ -2,23 +2,24 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
 use crate::{
-    CausalState, CsmError, Datable, IntoEffectValue, MonadicCausable, PropagatingEffect,
+    CausalState, Causaloid, CsmError, CsmEvaluable, Datable, MonadicCausable, PropagatingEffect,
     SpaceTemporal, Spatial, Symbolic, Temporal,
 };
+use std::fmt::Debug;
 
 impl<I, O, D, S, T, ST, SYM, VS, VT> CausalState<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: IntoEffectValue + Default,
-    O: IntoEffectValue + Default,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    I: Default + Clone,
+    O: CsmEvaluable + Default + Debug + Clone,
+    D: Datable + Clone + Debug,
+    S: Spatial<VS> + Clone + Debug,
+    T: Temporal<VT> + Clone + Debug,
+    ST: SpaceTemporal<VS, VT> + Clone + Debug,
+    SYM: Symbolic + Clone + Debug,
+    VS: Clone + Debug,
+    VT: Clone + Debug,
+    Causaloid<I, O, D, S, T, ST, SYM, VS, VT>: MonadicCausable<I, O>,
 {
     /// Evaluates the state using its internal data.
     ///
@@ -26,11 +27,10 @@ where
     /// are met based on the internal data value.
     ///
     /// # Returns
-    /// - `Ok(true)` if the state's conditions are met
-    /// - `Ok(false)` if the state's conditions are not met
-    /// - `Err(CausalityError)` if an error occurs during evaluation
+    /// - `Ok(PropagatingEffect<O>)` if evaluation succeeds
+    /// - `Err(CsmError)` if an error occurs during evaluation
     ///
-    pub fn eval(&self) -> Result<PropagatingEffect, CsmError> {
+    pub fn eval(&self) -> Result<PropagatingEffect<O>, CsmError> {
         let res = self.causaloid.evaluate(&self.data);
         match res.is_ok() {
             true => Ok(res),
@@ -47,11 +47,13 @@ where
     /// - `data`: The numerical value to use for evaluation
     ///
     /// # Returns
-    /// - `Ok(true)` if the state's conditions are met with the provided data
-    /// - `Ok(false)` if the state's conditions are not met with the provided data
-    /// - `Err(CausalityError)` if an error occurs during evaluation
+    /// - `Ok(PropagatingEffect<O>)` if evaluation succeeds
+    /// - `Err(CsmError)` if an error occurs during evaluation
     ///
-    pub fn eval_with_data(&self, data: &PropagatingEffect) -> Result<PropagatingEffect, CsmError> {
+    pub fn eval_with_data(
+        &self,
+        data: &PropagatingEffect<I>,
+    ) -> Result<PropagatingEffect<O>, CsmError> {
         Ok(self.causaloid.evaluate(data))
     }
 }

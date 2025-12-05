@@ -3,12 +3,14 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+mod csm_evaluable;
 mod eval;
 mod state_add;
 mod state_remove;
 mod state_update;
+pub use csm_evaluable::CsmEvaluable;
 
-use crate::{CSMMap, CausalAction, CausalState, EffectEthos, IntoEffectValue, TeloidTag};
+use crate::{CSMMap, CausalAction, CausalState};
 use crate::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
@@ -49,8 +51,8 @@ use std::sync::{Arc, RwLock};
 #[allow(clippy::type_complexity)]
 pub struct CSM<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
+    I: Default + Clone,
+    O: CsmEvaluable + Default + Debug + Clone,
     D: Datable + Clone,
     S: Spatial<VS> + Clone + Debug,
     T: Temporal<VT> + Clone + Debug,
@@ -60,14 +62,13 @@ where
     VT: Clone + Debug,
 {
     state_actions: Arc<RwLock<CSMMap<I, O, D, S, T, ST, SYM, VS, VT>>>,
-    effect_ethos: Option<(EffectEthos<D, S, T, ST, SYM, VS, VT>, Vec<TeloidTag>)>,
 }
 
 #[allow(clippy::type_complexity)]
 impl<I, O, D, S, T, ST, SYM, VS, VT> CSM<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
+    I: Default + Clone,
+    O: CsmEvaluable + Default + Debug + Clone,
     D: Datable + Clone + Debug,
     S: Spatial<VS> + Clone + Debug,
     T: Temporal<VT> + Clone + Debug,
@@ -79,7 +80,6 @@ where
     /// Constructs a new CSM.
     pub fn new(
         state_actions: &[(&CausalState<I, O, D, S, T, ST, SYM, VS, VT>, &CausalAction)],
-        effect_ethos: Option<(EffectEthos<D, S, T, ST, SYM, VS, VT>, &[TeloidTag])>,
     ) -> Self {
         let mut map = CSMMap::with_capacity(state_actions.len());
 
@@ -87,17 +87,8 @@ where
             map.insert(state.id(), ((*state).clone(), (*action).clone()));
         }
 
-        if let Some((ethos, _)) = &effect_ethos
-            && !ethos.is_verified()
-        {
-            panic!("EffectEthos must be verified before being used in a CSM.");
-        }
-
-        let ethos = effect_ethos.map(|(e, t)| (e, t.to_vec()));
-
         Self {
             state_actions: Arc::new(RwLock::new(map)),
-            effect_ethos: ethos,
         }
     }
 

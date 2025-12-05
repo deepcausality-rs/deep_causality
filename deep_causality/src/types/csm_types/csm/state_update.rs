@@ -4,7 +4,7 @@
  */
 
 use crate::{
-    CSM, CSMMap, CausalAction, CausalState, Datable, IntoEffectValue, SpaceTemporal, Spatial,
+    CSM, CSMMap, CausalAction, CausalState, CsmEvaluable, Datable, SpaceTemporal, Spatial,
     StateAction, Symbolic, Temporal, UpdateError,
 };
 use std::fmt::Debug;
@@ -12,8 +12,8 @@ use std::fmt::Debug;
 #[allow(clippy::type_complexity)]
 impl<I, O, D, S, T, ST, SYM, VS, VT> CSM<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
+    I: Default + Clone,
+    O: CsmEvaluable + Default + Debug + Clone,
     D: Datable + Clone + Debug,
     S: Spatial<VS> + Clone + Debug,
     T: Temporal<VT> + Clone + Debug,

@@ -14,20 +14,17 @@
 //! The module also provides various constructors to facilitate the creation of
 //! different types of `Causaloid` instances, tailored to specific causal modeling needs.
 use crate::{
-    AggregateLogic, CausalFn, CausalMonad, CausaloidGraph, CausaloidType, Context,
-    ContextualCausalFn, IdentificationValue, NumericalValue,
+    AggregateLogic, CausalFn, CausaloidGraph, CausaloidType, Context, ContextualCausalFn,
+    IdentificationValue, NumericalValue,
 };
-use crate::{
-    Datable, IntoEffectValue, MonadicCausable, SpaceTemporal, Spatial, Symbolic, Temporal,
-};
+use crate::{Datable, MonadicCausable, SpaceTemporal, Spatial, Symbolic, Temporal};
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
 use std::sync::{Arc, RwLock};
 
 mod causable;
 mod causable_utils;
-#[cfg(test)]
-mod causable_utils_tests;
+
 mod display;
 mod getters;
 mod identifiable;
@@ -60,8 +57,8 @@ pub type CausalGraph<I, O, D, S, T, ST, SYM, VS, VT> =
 /// as well as various context-related types (`D`, `S`, `T`, `ST`, `SYM`, `VS`, `VT`).
 ///
 /// # Type Parameters
-/// - `I`: The type of the input effect value, must implement `IntoEffectValue`.
-/// - `O`: The type of the output effect value, must implement `IntoEffectValue`.
+/// - `I`: The type of the input effect value.
+/// - `O`: The type of the output effect value.
 /// - `D`: The type for data context, must implement `Datable` and `Clone`.
 /// - `S`: The type for spatial context, must implement `Spatial<VS>` and `Clone`.
 /// - `T`: The type for temporal context, must implement `Temporal<VT>` and `Clone`.
@@ -70,11 +67,11 @@ pub type CausalGraph<I, O, D, S, T, ST, SYM, VS, VT> =
 /// - `VS`: The value type for spatial data, must implement `Clone`.
 /// - `VT`: The value type for temporal data, must implement `Clone`.
 #[allow(clippy::type_complexity)]
-#[derive(Clone)]
+#[allow(clippy::type_complexity)]
 pub struct Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
+    I: Default,
+    O: Default,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -82,6 +79,7 @@ where
     SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
+    O: std::fmt::Debug,
 {
     /// A unique identifier for this `Causaloid`.
     id: IdentificationValue,
@@ -113,8 +111,8 @@ where
 #[allow(clippy::type_complexity)]
 impl<I, O, D, S, T, ST, SYM, VS, VT> Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: IntoEffectValue + Default,
-    O: IntoEffectValue + Default,
+    I: Default,
+    O: Default + Debug,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -193,8 +191,8 @@ where
 #[allow(clippy::type_complexity)]
 impl<I, O, D, S, T, ST, SYM, VS, VT> Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: IntoEffectValue + Default,
-    O: IntoEffectValue + Default,
+    I: Default,
+    O: Default + Debug,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -241,7 +239,7 @@ where
         SYM: Symbolic + Clone + Send + Sync + 'static,
         VS: Send + Sync + 'static,
         VT: Send + Sync + 'static,
-        Causaloid<I, O, D, S, T, ST, SYM, VS, VT>: MonadicCausable<CausalMonad>,
+        Causaloid<I, O, D, S, T, ST, SYM, VS, VT>: MonadicCausable<I, O>,
     {
         Causaloid {
             id,
@@ -299,7 +297,7 @@ where
         SYM: Symbolic + Clone + Send + Sync + 'static,
         VS: Send + Sync + 'static,
         VT: Send + Sync + 'static,
-        Causaloid<I, O, D, S, T, ST, SYM, VS, VT>: MonadicCausable<CausalMonad>,
+        Causaloid<I, O, D, S, T, ST, SYM, VS, VT>: MonadicCausable<I, O>,
     {
         Causaloid {
             id,
@@ -385,6 +383,36 @@ where
             description: description.to_string(),
             context: Some(context),
             context_causal_fn: None,
+            ty: PhantomData,
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl<I, O, D, S, T, ST, SYM, VS, VT> Clone for Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
+where
+    I: Default,
+    O: Default + Debug,
+    D: Datable + Clone,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            id: self.id,
+            causal_type: self.causal_type,
+            causal_fn: self.causal_fn.clone(),
+            coll_aggregate_logic: self.coll_aggregate_logic,
+            coll_threshold_value: self.coll_threshold_value,
+            context_causal_fn: self.context_causal_fn.clone(),
+            context: self.context.clone(),
+            causal_coll: self.causal_coll.clone(),
+            causal_graph: self.causal_graph.clone(),
+            description: self.description.clone(),
             ty: PhantomData,
             _phantom: PhantomData,
         }

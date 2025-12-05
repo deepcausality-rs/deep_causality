@@ -57,10 +57,11 @@
 //!    detailed logs via the HKT effect system.
 
 use crate::{
-    Causaloid, CausaloidId, ContextId, Contextoid, ContextoidId, Datable, IntoEffectValue,
-    SpaceTemporal, Spatial, Symbolic, Temporal,
+    Causaloid, CausaloidId, ContextId, Contextoid, ContextoidId, Datable, SpaceTemporal, Spatial,
+    Symbolic, Temporal,
 };
 use deep_causality_ast::ConstTree;
+use std::fmt::Debug;
 
 /// Represents all possible operations that can be applied to a causal model.
 ///
@@ -81,8 +82,8 @@ use deep_causality_ast::ConstTree;
 #[derive(Debug, Clone, PartialEq)]
 pub enum Operation<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
+    I: Default,
+    O: Default + Debug,
     D: Datable + Copy + Clone + PartialEq,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,

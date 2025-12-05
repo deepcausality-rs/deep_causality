@@ -1,0 +1,34 @@
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library", "rust_test")
+
+rust_library(
+    name = "deep_causality_ethos",
+    srcs = glob([
+        "src/**",
+    ]),
+    crate_features = [
+        "std",
+    ],
+    crate_root = "src/lib.rs",
+    tags = [
+        "deep_causality_ethos",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality",
+        "//ultragraph",
+    ],
+)
+
+rust_doc(
+    name = "doc",
+    crate = ":deep_causality_ethos",
+    tags = ["doc"],
+    visibility = ["//visibility:public"],
+)
+
+rust_doc_test(
+    name = "doc_test",
+    crate = ":deep_causality_ethos",
+    tags = ["doc-test"],
+    visibility = ["//visibility:public"],
+)

@@ -2,23 +2,29 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
 use crate::{
     AggregateLogic, Causable, CausableCollectionAccessor, CausalMonad, CausalityError,
     MonadicCausable, NumericalValue, PropagatingEffect, monadic_collection_utils,
 };
+use deep_causality_core::{CausalityErrorEnum, EffectValue};
 use deep_causality_haft::*;
 
-pub trait MonadicCausableCollection<T>: CausableCollectionAccessor<T>
+pub trait MonadicCausableCollection<I, O, T>: CausableCollectionAccessor<I, O, T>
 where
-    T: MonadicCausable<CausalMonad> + Causable,
+    T: MonadicCausable<I, O> + Causable,
+    O: monadic_collection_utils::Aggregatable
+        + Clone
+        + Default
+        + Send
+        + Sync
+        + 'static
+        + std::fmt::Debug,
 {
     /// Evaluates a collection of `MonadicCausable` items, aggregating their monadic effects.
     ///
     /// This method provides a single, unified entry point for reasoning over a collection of causable items.
     /// It monadically evaluates each item and then uses a type-aware aggregation strategy to combine
-    /// the results, preserving as much information as possible (e.g., returning a `Probabilistic` effect
-    /// if the collection contains probabilities, rather than collapsing it to a boolean).
+    /// the results.
     ///
     /// # Arguments
     ///
@@ -30,47 +36,81 @@ where
     /// # Returns
     ///
     /// A `PropagatingEffect` representing the aggregated monadic effect of the collection.
-    /// The `EffectValue` inside will be of the "highest" type found during aggregation
-    /// (e.g., `UncertainBool` > `Probabilistic` > `Deterministic`).
     ///
     /// # Errors
     ///
     /// Returns a `PropagatingEffect` containing a `CausalityError` if:
     /// * The collection is empty.
-    /// * An item's `reason` method returns an error.
-    /// * The collected effects are of incompatible types for the chosen aggregation strategy.
-    ///
+    /// * An item's `evaluate` method returns an error.
     fn evaluate_collection(
         &self,
-        incoming_effect: &PropagatingEffect,
+        incoming_effect: &PropagatingEffect<I>,
         logic: &AggregateLogic,
         threshold_value: Option<NumericalValue>,
-    ) -> PropagatingEffect {
+    ) -> PropagatingEffect<O> {
         let items = self.get_all_items();
 
         if items.is_empty() {
-            let err = CausalityError("Cannot evaluate an empty collection".to_string());
+            let err = CausalityError(CausalityErrorEnum::Custom(
+                "Cannot evaluate an empty collection".to_string(),
+            ));
             return PropagatingEffect::from_error(err);
         }
         // 1. Monadic fold to collect all effects.
-        let initial_effect = CausalMonad::pure(Vec::new());
+        // We start with a pure effect containing an empty vector of EffectValue<O>.
+        let initial_effect: PropagatingEffect<Vec<EffectValue<O>>> = CausalMonad::pure(Vec::new());
 
         let final_effect = items.into_iter().fold(initial_effect, |acc_effect, item| {
-            CausalMonad::bind(acc_effect, |mut acc_values| {
-                let item_effect = item.evaluate(incoming_effect);
-                CausalMonad::bind(item_effect, |item_value| {
+            acc_effect.bind(|acc_values_effect_value, _, _| {
+                // acc_values_effect_value is EffectValue<Vec<EffectValue<O>>>
+                // We need to extract the Vec from it
+                let mut acc_values = acc_values_effect_value
+                    .into_value()
+                    .unwrap_or_else(|| Vec::new());
+                let item_effect = item.evaluate(incoming_effect); // item_effect is PropagatingEffect<O>
+                // Use bind to extract the value and transform the result
+                item_effect.bind(|item_value, _, _| {
+                    // item_value is EffectValue<O>
                     acc_values.push(item_value);
-                    CausalMonad::pure(acc_values.clone())
+                    CausalMonad::pure(acc_values)
                 })
             })
         });
 
         // 2. Bind the final aggregation logic.
-        CausalMonad::bind(final_effect, |effect_values| {
+        final_effect.bind(|effect_values_effect_value, _, _| {
+            // effect_values_effect_value is EffectValue<Vec<EffectValue<O>>>
+            // We need to extract the Vec from it
+            let effect_values = match effect_values_effect_value.into_value() {
+                Some(v) => v,
+                None => {
+                    let err = CausalityError(CausalityErrorEnum::Custom(
+                        "No effect values collected".to_string(),
+                    ));
+                    return PropagatingEffect::from_error(err);
+                }
+            };
             // 3. Delegate to the robust aggregation helper.
-            match monadic_collection_utils::aggregate_effects(effect_values, logic, threshold_value)
-            {
-                Ok(aggregated_value) => CausalMonad::pure(aggregated_value),
+            match monadic_collection_utils::aggregate_effects(
+                &effect_values,
+                logic,
+                threshold_value,
+            ) {
+                Ok(aggregated_value) => {
+                    // aggregated_value is EffectValue<O>.
+                    // We need to return PropagatingEffect<O>.
+                    // If aggregated_value is Value(v), we return pure(v).
+                    match aggregated_value {
+                        EffectValue::Value(v) => CausalMonad::pure(v),
+                        _ => {
+                            // This case shouldn't happen for aggregation result usually.
+                            // We can construct PropagatingEffect with this value.
+                            let mut eff = CausalMonad::pure(O::default());
+                            eff.value = aggregated_value;
+                            eff
+                        }
+                    }
+                }
                 Err(e) => PropagatingEffect::from_error(e),
             }
         })

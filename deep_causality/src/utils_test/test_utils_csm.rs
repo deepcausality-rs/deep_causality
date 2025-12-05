@@ -4,18 +4,10 @@
  */
 use crate::utils_test::test_utils;
 use crate::*;
+use deep_causality_haft::{LogAddEntry, MonadEffect5};
 use std::sync::{Arc, Mutex};
 
-// Type alias for the complex types to improve readability
-pub type BaseEffectEthos = EffectEthos<
-    Data<NumericalValue>,
-    EuclideanSpace,
-    EuclideanTime,
-    EuclideanSpacetime,
-    BaseSymbol,
-    FloatType,
-    FloatType,
->;
+// EffectEthos type has been moved to deep_causality_ethos crate
 
 pub fn state_action() -> Result<(), ActionError> {
     Ok(())
@@ -35,53 +27,34 @@ pub fn get_test_error_action() -> CausalAction {
 
 // Causaloid that returns a non-deterministic effect
 pub fn get_test_probabilistic_causaloid() -> BaseCausaloid<f64, f64> {
-    fn causal_fn(_: f64) -> Result<CausalFnOutput<f64>, CausalityError> {
+    let causal_fn = Arc::new(|_: f64| -> PropagatingEffect<f64> {
         let log = CausalEffectLog::new();
-        Ok(CausalFnOutput { output: 0.5, log })
-    }
+        let mut effect = CausalMonad::pure(0.5);
+        effect.logs = log;
+        effect
+    });
     Causaloid::new(99, causal_fn, "Probabilistic Causaloid")
 }
 
 pub fn get_test_error_causaloid() -> BaseCausaloid<bool, bool> {
-    fn causal_fn(_: bool) -> Result<CausalFnOutput<bool>, CausalityError> {
-        Err(CausalityError::new("Error".to_string()))
-    }
+    let causal_fn = Arc::new(|_: bool| -> PropagatingEffect<bool> {
+        PropagatingEffect::from_error(CausalityError::new(CausalityErrorEnum::Custom(
+            "Error".to_string(),
+        )))
+    });
     Causaloid::new(78, causal_fn, "Error Causaloid")
 }
 
-pub fn get_effect_ethos(verified: bool, impermissible: bool) -> BaseEffectEthos {
-    let modality = if impermissible {
-        TeloidModal::Impermissible
-    } else {
-        TeloidModal::Obligatory
-    };
-
-    let mut ethos = EffectEthos::new()
-        .add_deterministic_norm(
-            1,
-            "Test Norm",
-            &["test_tag"],
-            |_context, _action| true, // Always active
-            modality,
-            1,
-            1,
-            1,
-        )
-        .unwrap();
-
-    if verified {
-        ethos.verify_graph().unwrap();
-    }
-
-    ethos
-}
+// get_effect_ethos function has been removed since EffectEthos moved to deep_causality_ethos crate
 
 pub fn get_test_causaloid(with_context: bool) -> BaseCausaloid<bool, bool> {
-    fn causal_fn(_effect: bool) -> Result<CausalFnOutput<bool>, CausalityError> {
+    let causal_fn = Arc::new(|_effect: bool| -> PropagatingEffect<bool> {
         let mut log = CausalEffectLog::new();
         log.add_entry("Just return true");
-        Ok(CausalFnOutput { output: true, log })
-    }
+        let mut effect = CausalMonad::pure(true);
+        effect.logs = log;
+        effect
+    });
 
     if with_context {
         let context = test_utils::get_context(); // Use the helper to get a base context

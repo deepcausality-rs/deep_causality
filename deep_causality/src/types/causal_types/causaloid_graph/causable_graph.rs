@@ -10,12 +10,12 @@ use crate::MonadicCausableGraphReasoning;
 use crate::{CausalGraphIndexError, CausalityGraphError};
 
 // Marker trait to add default impl from
+// Marker trait to add default impl from
 #[allow(clippy::type_complexity)]
-impl<I, O, D, S, T, ST, SYM, VS, VT> MonadicCausableGraphReasoning<I, O, D, S, T, ST, SYM, VS, VT>
-    for CausaloidGraph<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>
+impl<V, D, S, T, ST, SYM, VS, VT> MonadicCausableGraphReasoning<V, D, S, T, ST, SYM, VS, VT>
+    for CausaloidGraph<Causaloid<V, V, D, S, T, ST, SYM, VS, VT>>
 where
-    I: IntoEffectValue + Default,
-    O: IntoEffectValue + Default,
+    V: Default + Clone + std::fmt::Debug + Send + Sync + 'static,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -23,7 +23,7 @@ where
     SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
-    Causaloid<I, O, D, S, T, ST, SYM, VS, VT>: MonadicCausable<CausalMonad>,
+    Causaloid<V, V, D, S, T, ST, SYM, VS, VT>: MonadicCausable<V, V>,
 {
 }
 
@@ -31,8 +31,8 @@ where
 impl<I, O, D, S, T, ST, SYM, VS, VT> CausableGraph<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>
     for CausaloidGraph<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>
 where
-    I: IntoEffectValue + Default,
-    O: IntoEffectValue + Default,
+    I: Default,
+    O: Default + Clone + std::fmt::Debug + Send + Sync + 'static,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -40,7 +40,7 @@ where
     SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
-    Causaloid<I, O, D, S, T, ST, SYM, VS, VT>: MonadicCausable<CausalMonad>,
+    Causaloid<I, O, D, S, T, ST, SYM, VS, VT>: MonadicCausable<I, O>,
 {
     fn is_frozen(&self) -> bool {
         self.graph.is_frozen()

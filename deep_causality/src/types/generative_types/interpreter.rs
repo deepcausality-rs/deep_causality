@@ -34,11 +34,10 @@ use crate::{
     ModificationLogEntry, OpStatus, OpTree, Operation,
 };
 
-use crate::{
-    ContextuableGraph, Datable, IntoEffectValue, SpaceTemporal, Spatial, Symbolic, Temporal,
-};
+use crate::{ContextuableGraph, Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
 use deep_causality_haft::{Applicative, Effect3, Monad};
 use std::collections::HashMap;
+use std::fmt::Debug;
 
 /// Mutable state container for the causal system.
 ///
@@ -49,12 +48,11 @@ use std::collections::HashMap;
 /// # Type Parameters
 ///
 /// All type parameters match those of the `Operation` enum and causal model types.
-#[derive(Clone, Default, Debug)]
 #[allow(clippy::type_complexity)]
 pub struct CausalSystemState<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
+    I: Default,
+    O: Default + Debug,
     D: Datable + Copy + Clone + PartialEq,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -69,8 +67,8 @@ where
 
 impl<I, O, D, S, T, ST, SYM, VS, VT> CausalSystemState<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
+    I: Default,
+    O: Default + Debug,
     D: Datable + Copy + Clone + PartialEq,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -84,6 +82,64 @@ where
             causaloids: HashMap::new(),
             contexts: HashMap::new(),
         }
+    }
+}
+
+impl<I, O, D, S, T, ST, SYM, VS, VT> Clone for CausalSystemState<I, O, D, S, T, ST, SYM, VS, VT>
+where
+    I: Default,
+    O: Default + Debug,
+    D: Datable + Copy + Clone + PartialEq,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            causaloids: self.causaloids.clone(),
+            contexts: self.contexts.clone(),
+        }
+    }
+}
+
+impl<I, O, D, S, T, ST, SYM, VS, VT> Default for CausalSystemState<I, O, D, S, T, ST, SYM, VS, VT>
+where
+    I: Default,
+    O: Default + Debug,
+    D: Datable + Copy + Clone + PartialEq,
+    S: Spatial<VS> + Clone,
+    T: Temporal<VT> + Clone,
+    ST: SpaceTemporal<VS, VT> + Clone,
+    SYM: Symbolic + Clone,
+    VS: Clone,
+    VT: Clone,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<I, O, D, S, T, ST, SYM, VS, VT> std::fmt::Debug
+    for CausalSystemState<I, O, D, S, T, ST, SYM, VS, VT>
+where
+    I: Default,
+    O: Default + Debug,
+    D: Datable + Copy + Clone + PartialEq + std::fmt::Debug,
+    S: Spatial<VS> + Clone + std::fmt::Debug,
+    T: Temporal<VT> + Clone + std::fmt::Debug,
+    ST: SpaceTemporal<VS, VT> + Clone + std::fmt::Debug,
+    SYM: Symbolic + Clone + std::fmt::Debug,
+    VS: Clone + std::fmt::Debug,
+    VT: Clone + std::fmt::Debug,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CausalSystemState")
+            .field("causaloids", &self.causaloids)
+            .field("contexts", &self.contexts)
+            .finish()
     }
 }
 
@@ -123,8 +179,8 @@ impl Interpreter {
         initial_state: CausalSystemState<I, O, D, S, T, ST, SYM, VS, VT>,
     ) -> AuditableGraphGenerator<CausalSystemState<I, O, D, S, T, ST, SYM, VS, VT>>
     where
-        I: IntoEffectValue,
-        O: IntoEffectValue,
+        I: Default,
+        O: Default + Debug,
         D: Datable + Copy + Clone + PartialEq + std::fmt::Debug,
         S: Spatial<VS> + Clone + std::fmt::Debug,
         T: Temporal<VT> + Clone + std::fmt::Debug,
@@ -148,8 +204,8 @@ impl Interpreter {
         state: CausalSystemState<I, O, D, S, T, ST, SYM, VS, VT>,
     ) -> AuditableGraphGenerator<CausalSystemState<I, O, D, S, T, ST, SYM, VS, VT>>
     where
-        I: IntoEffectValue,
-        O: IntoEffectValue,
+        I: Default,
+        O: Default + Debug,
         D: Datable + Copy + Clone + PartialEq + std::fmt::Debug,
         S: Spatial<VS> + Clone + std::fmt::Debug,
         T: Temporal<VT> + Clone + std::fmt::Debug,

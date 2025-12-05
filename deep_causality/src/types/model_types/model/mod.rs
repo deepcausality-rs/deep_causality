@@ -9,15 +9,16 @@ mod transferable;
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
-use crate::{Assumption, Causaloid, Context, Datable, Identifiable, IntoEffectValue, Symbolic};
+use crate::{Assumption, Causaloid, Context, Datable, Identifiable, Symbolic};
+use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
 #[allow(clippy::type_complexity)]
 #[derive(Debug)]
 pub struct Model<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
+    I: Default,
+    O: Default + Debug,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -37,8 +38,8 @@ where
 #[allow(clippy::type_complexity)]
 impl<I, O, D, S, T, ST, SYM, VS, VT> Model<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
+    I: Default,
+    O: Default + Debug,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -69,8 +70,8 @@ where
 #[allow(clippy::type_complexity)]
 impl<I, O, D, S, T, ST, SYM, VS, VT> Model<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
+    I: Default,
+    O: Default + Debug,
     D: Datable + Copy + Clone + PartialEq,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,

@@ -8,12 +8,13 @@
 //!
 //! It details the evaluation logic for different types of `Causaloid`s (Singleton, Collection, Graph),
 //! ensuring proper error propagation and comprehensive log provenance through monadic operations.
+
 use crate::types::causal_types::causaloid::causable_utils;
 use crate::{
-    Causable, CausableGraph, CausalMonad, CausalityError, Causaloid, CausaloidType, Datable,
-    EffectValue, IntoEffectValue, MonadicCausable, MonadicCausableCollection,
-    MonadicCausableGraphReasoning, PropagatingEffect, SpaceTemporal, Spatial, Symbolic, Temporal,
+    Causable, CausalityError, Causaloid, CausaloidType, Datable, MonadicCausable,
+    PropagatingEffect, SpaceTemporal, Spatial, Symbolic, Temporal,
 };
+use std::fmt::Debug;
 
 /// Implements the `Causable` trait for `Causaloid`.
 ///
@@ -22,8 +23,8 @@ use crate::{
 /// how to determine if a causaloid represents a single, atomic causal unit.
 impl<I, O, D, S, T, ST, SYM, VS, VT> Causable for Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
+    I: Default,
+    O: Default + Debug,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -48,13 +49,16 @@ where
 ///
 /// This implementation provides the core evaluation logic for `Causaloid`s,
 /// leveraging monadic principles to handle the flow of effects, errors, and logs.
-/// The evaluation strategy varies based on the `CausaloidType` (Singleton, Collection, or Graph).
+///
+/// **Note**: This base implementation only supports `CausaloidType::Singleton`.
+/// For `Collection` and `Graph` evaluation with aggregation support, use the
+/// specialized constructors that ensure proper trait bounds are met.
 #[allow(clippy::type_complexity)]
-impl<I, O, D, S, T, ST, SYM, VS, VT> MonadicCausable<CausalMonad>
+impl<I, O, D, S, T, ST, SYM, VS, VT> MonadicCausable<I, O>
     for Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: IntoEffectValue + Default,
-    O: IntoEffectValue + Default,
+    I: Default + Clone,
+    O: Default + Clone + Debug,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -66,8 +70,11 @@ where
     /// Evaluates the causal effect of this `Causaloid` given an `incoming_effect`.
     ///
     /// The evaluation process is monadic, ensuring that errors are propagated
-    /// and a comprehensive log of operations is maintained. The specific
-    /// evaluation strategy depends on the `CausaloidType`.
+    /// and a comprehensive log of operations is maintained.
+    ///
+    /// **Important**: This base implementation only supports `Singleton` causaloids.
+    /// For `Collection` and `Graph` types, specialized evaluation methods with
+    /// proper trait bounds should be used.
     ///
     /// # Arguments
     /// * `incoming_effect` - The `PropagatingEffect` representing the input to this causaloid.
@@ -75,128 +82,45 @@ where
     /// # Returns
     /// A `PropagatingEffect` containing the result of the causal evaluation,
     /// any errors encountered, and a complete log of the operations performed.
-    ///
-    /// # Log Provenance
-    ///
-    /// To meet the strict requirements of auditable and provable reasoning, this
-    /// implementation guarantees that the full, ordered history of operations is
-    /// preserved in the `logs` field of the returned `PropagatingEffect`. Existing
-    /// logs from the `incoming_effect` are always preserved and appended to.
-    ///
-    /// The mechanism differs slightly by type:
-    ///
-    /// - **`Singleton`:** Uses a monadic `bind` chain. Each step in the chain
-    ///   (input conversion, execution, output conversion) automatically and safely
-    ///   appends its logs to the accumulated logs of the previous step.
-    ///
-    /// - **`Collection`:** Sequentially evaluates each causaloid in the collection.
-    ///   The full `PropagatingEffect` (value and all logs) from one evaluation step
-    ///   is used as the complete input for the next, ensuring the log history
-    ///   grows correctly throughout the sequential chain.
-    ///
-    /// - **`Graph`:** First, it logs its own evaluation context. It then delegates to a
-    ///   recursive subgraph evaluation. Finally, it prepends its own context log to the
-    ///   complete log history returned by the subgraph, ensuring the parent-child
-    ///   reasoning hierarchy is captured in the final log.
-    ///
-    /// In all cases, if an error occurs, the evaluation short-circuits and returns
-    /// an effect containing the error and all logs accumulated up to the point of failure.
-    fn evaluate(&self, incoming_effect: &PropagatingEffect) -> PropagatingEffect {
+    fn evaluate(&self, incoming_effect: &PropagatingEffect<I>) -> PropagatingEffect<O> {
         match self.causal_type {
             CausaloidType::Singleton => {
                 // For a Singleton, the evaluation is a monadic chain of operations:
-                // 1. Convert the incoming effect's value to the causaloid's input type.
-                // 2. Execute the causal logic with the converted input.
-                // 3. Convert the output of the causal logic to the desired effect value.
+                // 1. Execute the causal logic with the input.
                 // The `bind` operations ensure that logs are aggregated and errors short-circuit.
                 incoming_effect
                     .clone()
-                    .bind(|effect_val| causable_utils::convert_input(effect_val, self.id))
-                    .bind(|input| causable_utils::execute_causal_logic(input, self))
-                    .bind(|output| causable_utils::convert_output(output, self.id))
+                    .bind(|effect_value, _, _| match effect_value.into_value() {
+                        Some(input) => causable_utils::execute_causal_logic(input, self),
+                        None => PropagatingEffect::from_error(CausalityError(
+                            deep_causality_core::CausalityErrorEnum::Custom(
+                                "Cannot evaluate: input value is None".into(),
+                            ),
+                        )),
+                    })
             }
 
             CausaloidType::Collection => {
-                // 1. Get an owned copy of the effect and add an initial log entry
-                //    to mark the start of this collection causaloid's evaluation.
-                let mut initial_monad = incoming_effect.clone();
-                initial_monad.logs.add_entry(&format!(
-                    "Causaloid {}: Incoming effect for Collection: {:?}",
-                    self.id, incoming_effect.value
-                ));
-
-                // Ensure the causal collection exists.
-                let causal_collection = match self.causal_coll.as_ref() {
-                    Some(coll_arc) => coll_arc.as_ref(),
-                    None => {
-                        let err_msg = "Causaloid::evaluate: causal_collection is None".into();
-                        return PropagatingEffect {
-                            value: EffectValue::None,
-                            error: Some(CausalityError(err_msg)),
-                            logs: initial_monad.logs,
-                        };
-                    }
-                };
-
-                // Ensure the aggregatin logic exists.
-                let agg_logic = match self.coll_aggregate_logic.as_ref() {
-                    Some(l) => l,
-                    None => {
-                        return PropagatingEffect {
-                            value: EffectValue::None,
-                            error: Some(CausalityError(
-                                "Causaloid::evaluate: coll_aggregate_logic is None".into(),
-                            )),
-                            logs: initial_monad.logs,
-                        };
-                    }
-                };
-
-                // Delegate the evaluation to the `MonadicCausableCollection` trait implementation.
-                causal_collection.evaluate_collection(
-                    incoming_effect,
-                    agg_logic,
-                    self.coll_threshold_value,
-                )
+                // Collection evaluation requires O: Aggregatable + Send + Sync + Debug + 'static.
+                // This base implementation returns an error; use specialized methods for collections.
+                PropagatingEffect::from_error(CausalityError(
+                    deep_causality_core::CausalityErrorEnum::Custom(
+                        "Collection evaluation requires specialized trait bounds (Aggregatable). \
+                         Use evaluate_collection method on the causal_coll directly."
+                            .into(),
+                    ),
+                ))
             }
             CausaloidType::Graph => {
-                // 1. Get an owned copy of the effect and add an initial log entry
-                //    to mark the start of this graph causaloid's evaluation.
-                let mut initial_monad = incoming_effect.clone();
-                initial_monad.logs.add_entry(&format!(
-                    "Causaloid {}: Incoming effect for Graph: {:?}",
-                    self.id, incoming_effect.value
-                ));
-
-                // Ensure the causal graph exists.
-                let causal_graph = match self.causal_graph.as_ref() {
-                    Some(g) => g,
-                    None => {
-                        let err_msg = "Causaloid::evaluate: Causal graph is None".into();
-                        return PropagatingEffect {
-                            value: EffectValue::None,
-                            error: Some(CausalityError(err_msg)),
-                            logs: initial_monad.logs,
-                        };
-                    }
-                };
-
-                // Determine the root node of the graph for evaluation.
-                let root_index = match causal_graph.as_ref().get_root_index() {
-                    Some(index) => index,
-                    None => {
-                        let err_msg = "Cannot evaluate graph: Root node not found.".into();
-                        return PropagatingEffect {
-                            value: EffectValue::None,
-                            error: Some(CausalityError(err_msg)),
-                            logs: initial_monad.logs,
-                        };
-                    }
-                };
-
-                // 2. Delegate to the subgraph reasoning algorithm.
-                // Pass the initial_monad (with the added log) to the recursive call.
-                causal_graph.evaluate_subgraph_from_cause(root_index, &initial_monad)
+                // Graph evaluation requires specialized trait bounds.
+                // This base implementation returns an error; use specialized methods for graphs.
+                PropagatingEffect::from_error(CausalityError(
+                    deep_causality_core::CausalityErrorEnum::Custom(
+                        "Graph evaluation requires specialized trait bounds. \
+                         Use evaluate_subgraph_from_cause on the causal_graph directly."
+                            .into(),
+                    ),
+                ))
             }
         }
     }

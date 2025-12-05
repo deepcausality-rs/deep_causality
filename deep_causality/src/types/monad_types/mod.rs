@@ -3,4 +3,3 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 pub mod causal_effect_system;
-pub mod causal_monad;

@@ -2,17 +2,17 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
 use crate::{
-    CausalState, Causaloid, Context, Datable, IntoEffectValue, PropagatingEffect, SpaceTemporal,
-    Spatial, Symbolic, Temporal, UncertainParameter,
+    CausalState, Causaloid, Context, Datable, PropagatingEffect, SpaceTemporal, Spatial, Symbolic,
+    Temporal, UncertainParameter,
 };
+use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
 impl<I, O, D, S, T, ST, SYM, VS, VT> CausalState<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
+    I: Default,
+    O: Default + Debug,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -29,7 +29,7 @@ where
         self.version
     }
 
-    pub fn data(&self) -> &PropagatingEffect {
+    pub fn data(&self) -> &PropagatingEffect<I> {
         &self.data
     }
 

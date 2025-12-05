@@ -2,9 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
-use crate::{Causaloid, IntoEffectValue, PropagatingEffect, UncertainParameter};
+use crate::{Causaloid, PropagatingEffect, UncertainParameter};
 use crate::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
+use std::fmt::Debug;
 mod display;
 mod eval;
 mod getter;
@@ -31,8 +31,8 @@ mod getter;
 #[derive(Clone, Debug)]
 pub struct CausalState<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
+    I: Default,
+    O: Default + Debug,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -46,7 +46,7 @@ where
     /// Version number for tracking changes to the state
     version: usize,
     /// Numerical data used for state evaluation
-    data: PropagatingEffect,
+    data: PropagatingEffect<I>,
     /// Reference to a causaloid that defines when this state is active
     causaloid: Causaloid<I, O, D, S, T, ST, SYM, VS, VT>,
     /// Optional parameters for evaluating uncertain effects.
@@ -55,8 +55,8 @@ where
 
 impl<I, O, D, S, T, ST, SYM, VS, VT> CausalState<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
+    I: Default,
+    O: Default + Debug,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
@@ -68,7 +68,7 @@ where
     pub fn new(
         id: usize,
         version: usize,
-        data: PropagatingEffect,
+        data: PropagatingEffect<I>,
         causaloid: Causaloid<I, O, D, S, T, ST, SYM, VS, VT>,
         uncertain_parameter: Option<UncertainParameter>,
     ) -> Self {

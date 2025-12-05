@@ -73,8 +73,6 @@ pub use crate::traits::inferable::Inferable;
 pub use crate::traits::inferable::InferableReasoning;
 // Intervenable Trait
 pub use crate::traits::intervenable::Intervenable;
-// Propagating Traits
-pub use crate::traits::into_effect_value::IntoEffectValue;
 // Observable Traits
 pub use crate::traits::observable::Observable;
 pub use crate::traits::observable::ObservableReasoning;
@@ -82,11 +80,6 @@ pub use crate::traits::propagating_value::PropagatingValue;
 // Scalar traits
 pub use crate::traits::scalar::scalar_projector::ScalarProjector;
 pub use crate::traits::scalar::scalar_value::ScalarValue;
-// Teloid Traits
-pub use crate::traits::telos::deontic_explainable::DeonticExplainable;
-pub use crate::traits::telos::deontic_inferable::DeonticInferable;
-pub use crate::traits::telos::teloid_storable::TeloidStorable;
-pub use crate::traits::telos::teloidable::Teloidable;
 // Transferable Trait
 pub use crate::traits::transferable::Transferable;
 //
@@ -139,7 +132,11 @@ pub use crate::types::context_types::relation_kind::*;
 pub use crate::types::context_types::time_scale::TimeScale;
 // CSM types
 pub use crate::types::csm_types::csm::CSM;
+pub use crate::types::csm_types::csm::CsmEvaluable;
 pub use crate::types::csm_types::csm_action::CausalAction;
+pub use crate::types::csm_types::csm_parameter::action_parameter_value::ActionParameterValue;
+pub use crate::types::csm_types::csm_parameter::proposed_action::ProposedAction;
+pub use crate::types::csm_types::csm_parameter::uncertain_parameter::UncertainParameter;
 pub use crate::types::csm_types::csm_state::CausalState;
 // Generative types
 pub use crate::types::generative_types::effect_system::{
@@ -158,32 +155,29 @@ pub use crate::types::model_types::model::Model;
 pub use crate::types::model_types::observation::Observation;
 // Monad types
 pub use crate::types::monad_types::causal_effect_system::CausalEffectSystem;
-pub use crate::types::monad_types::causal_monad::CausalMonad;
+
 // Reasoning types
 pub use crate::types::reasoning_types::aggregate_logic::AggregateLogic;
-pub use crate::types::reasoning_types::effect_log::CausalEffectLog;
-pub use crate::types::reasoning_types::effect_value::EffectValue;
 pub use crate::types::reasoning_types::numeric_value::NumericValue;
-pub use crate::types::reasoning_types::propagating_effect::{
-    CausalPropagatingEffect, PropagatingEffect, PropagatingEffectWitness,
+
+// Core Types (New & Replacements)
+pub use deep_causality_core::{
+    CausalEffectPropagationProcess,
+    CausalMonad,
+    CausalityError, // Core error
+    CausalityErrorEnum,
+    EffectLog,
+    EffectLog as CausalEffectLog, // Alias for backward compatibility
+    EffectValue,
+    PropagatingEffect,
+    PropagatingProcess,
 };
 //
 //Symbolic types
 pub use crate::types::symbolic_types::symbolic_representation::SymbolicRepresentation;
 pub use crate::types::symbolic_types::symbolic_result::SymbolicResult;
 //
-// Teloid types
-pub use crate::types::telos_types::action_parameter_value::ActionParameterValue;
-pub use crate::types::telos_types::effect_ethos::EffectEthos;
-pub use crate::types::telos_types::proposed_action::ProposedAction;
-pub use crate::types::telos_types::tag_index::TagIndex;
-pub use crate::types::telos_types::teloid::{Teloid, TeloidMetaData};
-pub use crate::types::telos_types::teloid_graph::*;
-pub use crate::types::telos_types::teloid_modal::TeloidModal;
-pub use crate::types::telos_types::teloid_relation::TeloidRelation;
-pub use crate::types::telos_types::teloid_store::TeloidStore;
-pub use crate::types::telos_types::teloid_verdict::Verdict;
-pub use crate::types::telos_types::uncertain_parameter::UncertainParameter;
+
 // Utils
 //
 pub use crate::utils::math_utils;
@@ -192,3 +186,6 @@ pub use crate::utils::time_utils;
 // Causable Collection Traits
 pub use traits::causable_collection::collection_accessor::CausableCollectionAccessor;
 pub use traits::causable_collection::collection_reasoning::monadic_collection::MonadicCausableCollection;
+
+// Uncertainty types
+pub use deep_causality_uncertain::Uncertain;

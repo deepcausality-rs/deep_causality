@@ -45,3 +45,11 @@ impl From<UncertainError> for CausalityError {
         CausalityError(format!("{err}"))
     }
 }
+
+impl From<CausalityError> for deep_causality_core::CausalityError {
+    fn from(err: CausalityError) -> Self {
+        deep_causality_core::CausalityError::new(deep_causality_core::CausalityErrorEnum::Custom(
+            err.0,
+        ))
+    }
+}

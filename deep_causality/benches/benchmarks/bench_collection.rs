@@ -13,7 +13,7 @@ use deep_causality::*;
 
 fn small_causality_collection_benchmark(criterion: &mut Criterion) {
     let (coll, _data) = test_utils_collection::get_small_collection_and_data();
-    let evidence = PropagatingEffect::from_numerical(0.99);
+    let evidence = PropagatingEffect::from_effect_value(EffectValue::Value(0.99));
 
     criterion.bench_function("small_causality_collection_propagation", |bencher| {
         bencher.iter(|| coll.evaluate_collection(&evidence, &AggregateLogic::All, None))
@@ -22,7 +22,7 @@ fn small_causality_collection_benchmark(criterion: &mut Criterion) {
 
 fn medium_causality_collection_benchmark(criterion: &mut Criterion) {
     let (coll, _data) = test_utils_collection::get_medium_collection_and_data();
-    let evidence = PropagatingEffect::from_numerical(0.99);
+    let evidence = PropagatingEffect::from_effect_value(EffectValue::Value(0.99));
 
     criterion.bench_function("medium_causality_collection_propagation", |bencher| {
         bencher.iter(|| coll.evaluate_collection(&evidence, &AggregateLogic::All, None))
@@ -31,7 +31,7 @@ fn medium_causality_collection_benchmark(criterion: &mut Criterion) {
 
 fn large_causality_collection_benchmark(criterion: &mut Criterion) {
     let (coll, _data) = test_utils_collection::get_large_collection_and_data();
-    let evidence = PropagatingEffect::from_numerical(0.99);
+    let evidence = PropagatingEffect::from_effect_value(EffectValue::Value(0.99));
 
     criterion.bench_function("large_causality_collection_propagation", |bencher| {
         bencher.iter(|| coll.evaluate_collection(&evidence, &AggregateLogic::All, None))

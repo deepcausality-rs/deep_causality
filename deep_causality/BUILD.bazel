@@ -5,6 +5,9 @@ rust_library(
     srcs = glob([
         "src/**",
     ]),
+    crate_features = [
+        "std",  # Required for core
+    ],
     crate_root = "src/lib.rs",
     tags = [
         "data_structures",
@@ -14,10 +17,9 @@ rust_library(
         # Internal crates
         "//deep_causality_algorithms",
         "//deep_causality_ast",
+        "//deep_causality_core",
         "//deep_causality_data_structures",
         "//deep_causality_haft",
-        "//deep_causality_num",
-        "//deep_causality_tensor",
         "//deep_causality_uncertain",
         "//ultragraph",
     ],

@@ -2,18 +2,17 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
 use crate::{
-    Assumption, Causaloid, Context, Datable, IntoEffectValue, Model, SpaceTemporal, Spatial,
-    Symbolic, Temporal,
+    Assumption, Causaloid, Context, Datable, Model, SpaceTemporal, Spatial, Symbolic, Temporal,
 };
+use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
 #[allow(clippy::type_complexity)]
 impl<I, O, D, S, T, ST, SYM, VS, VT> Model<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
+    I: Default,
+    O: Default + Debug,
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,

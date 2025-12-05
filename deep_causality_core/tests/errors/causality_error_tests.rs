@@ -10,7 +10,7 @@ use std::fmt::Write;
 #[test]
 fn test_new() {
     let error_enum = CausalityErrorEnum::Unspecified;
-    let error = CausalityError::new(error_enum);
+    let error = CausalityError::new(error_enum.clone());
     assert_eq!(error.0, error_enum);
 }
 
@@ -35,7 +35,7 @@ fn test_debug() {
 #[test]
 fn test_clone() {
     let error1 = CausalityError::new(CausalityErrorEnum::Unspecified);
-    let error2 = error1;
+    let error2 = error1.clone();
     assert_eq!(error1, error2);
 }
 
