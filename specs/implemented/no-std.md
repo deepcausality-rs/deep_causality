@@ -1,5 +1,11 @@
 # Pathway to `no-std`: A Feasibility Report
 
+## UPDATE
+
+Dec/5 2025
+
+Following an in-depth assessment, it was decided to split the deep_causality crate into a core crate and the remaining main crate. Subsequently, the core crate and its dependencies were refactored to be no-std, whereas the deep_causality crate was preserved as is because of its complex data structures.
+
 ## 1. Executive Summary
 
 This report assesses the feasibility of porting the `deep_causality` ecosystem to a `no-std` + `alloc` environment,

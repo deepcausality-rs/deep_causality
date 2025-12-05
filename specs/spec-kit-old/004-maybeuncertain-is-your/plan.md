@@ -1,6 +1,6 @@
 # Implementation Plan: MaybeUncertain<T>
 
-**Branch**: `004-maybeuncertain-is-your` | **Date**: 2025-09-24 | **Spec**: [spec.md](./spec.md)
+**Branch**: `004-maybeuncertain-is-your` | **Date**: 2025-09-24 | **Spec**: [spec.md](spec.md)
 **Input**: Feature specification from `/specs/004-maybeuncertain-is-your/spec.md`
 
 ## Execution Flow (/plan command scope)
