@@ -40,7 +40,6 @@ mod getter;
 ///     CausalAction::new(func, descr, version)
 /// }
 /// ```
-#[allow(clippy::type_complexity)]
 #[derive(Clone, Debug)]
 pub struct CausalAction {
     // The function to execute when the action is fired.

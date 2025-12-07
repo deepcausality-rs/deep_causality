@@ -8,6 +8,7 @@ use crate::{
     SpaceTimeKind, TimeKind,
 };
 use std::collections::HashMap;
+use std::sync::{Arc, RwLock};
 
 /// A type alias for a default, general-purpose `Model` configuration that uses
 /// abstract "kind" enums for its spatial, temporal, and symbolic contexts.
@@ -50,17 +51,7 @@ use std::collections::HashMap;
 /// respective `Kind` enums. It promotes code reusability and simplifies type
 /// declarations when the exact concrete type of a context component is not
 /// fixed but rather belongs to a set of predefined "kinds".
-pub type UniformModel = Model<
-    bool,
-    bool,
-    Data<NumberType>,
-    SpaceKind,
-    TimeKind,
-    SpaceTimeKind,
-    SymbolKind,
-    FloatType,
-    FloatType,
->;
+pub type UniformModel = Model<bool, bool, UniformContext>;
 
 /// A type alias for a default, general-purpose `Causaloid` configuration that uses
 /// abstract "kind" enums for its spatial, temporal, and symbolic contexts.
@@ -105,8 +96,7 @@ pub type UniformModel = Model<
 /// respective `Kind` enums. It promotes code reusability and simplifies type
 /// declarations when the exact concrete type of a context component is not
 /// fixed but rather belongs to a set of predefined "kinds".
-pub type UniformCausaloid =
-    Causaloid<bool, bool, (), std::sync::Arc<std::sync::RwLock<UniformContext>>>;
+pub type UniformCausaloid = Causaloid<bool, bool, (), RwLock<UniformContext>>;
 
 /// A type alias for a `Vec` (vector) containing `UniformCausaloid` instances.
 ///
@@ -138,8 +128,7 @@ pub type UniformCausaloid =
 /// consistent structure for managing ordered collections of causal entities. It
 /// simplifies the representation of sequential events or related causal agents,
 /// especially when the specific underlying context types can vary.
-pub type UniformCausaloidVec =
-    Vec<Causaloid<bool, bool, (), std::sync::Arc<std::sync::RwLock<UniformContext>>>>;
+pub type UniformCausaloidVec = Vec<Causaloid<bool, bool, (), RwLock<UniformContext>>>;
 
 /// A type alias for a `HashMap` that stores `UniformCausaloid` instances, typically indexed by their unique identifiers.
 ///
@@ -182,8 +171,7 @@ pub type UniformCausaloidVec =
 /// within a map structure. It promotes code reusability and simplifies type
 /// declarations when the exact concrete type of a context component is not
 /// fixed but rather belongs to a set of predefined "kinds".
-pub type UniformCausalMap =
-    HashMap<usize, Causaloid<bool, bool, (), std::sync::Arc<std::sync::RwLock<UniformContext>>>>;
+pub type UniformCausalMap = HashMap<usize, Causaloid<bool, bool, (), Arc<RwLock<UniformContext>>>>;
 
 /// A type alias for a `CausaloidGraph` composed of `UniformCausaloid` instances.
 ///
@@ -225,7 +213,7 @@ pub type UniformCausalMap =
 /// and simplifies type declarations when the exact concrete type of a context
 /// component is not fixed but rather belongs to a set of predefined "kinds".
 pub type UniformCausalGraph =
-    CausaloidGraph<Causaloid<bool, bool, (), std::sync::Arc<std::sync::RwLock<UniformContext>>>>;
+    CausaloidGraph<Causaloid<bool, bool, (), Arc<RwLock<UniformContext>>>>;
 
 /// A type alias for a default, general-purpose `Context` configuration that uses
 /// abstract "kind" enums for its spatial, temporal, and symbolic contexts.

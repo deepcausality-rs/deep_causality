@@ -56,10 +56,7 @@
 //! 4. **Auditability**: When executed by the `Interpreter`, operations produce
 //!    detailed logs via the HKT effect system.
 
-use crate::{
-    Causaloid, CausaloidId, Context, ContextId, Contextoid, ContextoidId, Datable, SpaceTemporal,
-    Spatial, Symbolic, Temporal,
-};
+use crate::{Causaloid, CausaloidId, ContextId, ContextoidId};
 use deep_causality_ast::ConstTree;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
@@ -73,45 +70,29 @@ use std::sync::{Arc, RwLock};
 ///
 /// - `I`: Input effect value type
 /// - `O`: Output effect value type
-/// - `D`: Datable type for data nodes
-/// - `S`: Spatial type
-/// - `T`: Temporal type
-/// - `ST`: SpaceTemporal type
-/// - `SYM`: Symbolic type
-/// - `VS`: Value type for spatial dimensions
-/// - `VT`: Value type for temporal dimension
+/// - `C`: Context type (e.g., `Context`)
+/// - `N`: Node type (e.g., `Contextoid`)
 #[derive(Clone, Debug)]
-pub enum Operation<I, O, D, S, T, ST, SYM, VS, VT>
+pub enum Operation<I, O, C, N>
 where
     I: Default + Clone,
     O: Default + Clone + Debug,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    C: Clone,
+    N: Clone,
 {
     /// Creates a new causaloid with the specified ID.
     ///
     /// # Fields
     /// - `CausaloidId`: Unique identifier for the causaloid
     /// - `Causaloid`: The causaloid instance to create
-    CreateCausaloid(
-        CausaloidId,
-        Causaloid<I, O, (), Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>,
-    ),
+    CreateCausaloid(CausaloidId, Causaloid<I, O, (), Arc<RwLock<C>>>),
 
     /// Updates an existing causaloid, replacing it with a new instance.
     ///
     /// # Fields
     /// - `CausaloidId`: ID of the causaloid to update
     /// - `Causaloid`: New causaloid instance
-    UpdateCausaloid(
-        CausaloidId,
-        Causaloid<I, O, (), Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>,
-    ),
+    UpdateCausaloid(CausaloidId, Causaloid<I, O, (), Arc<RwLock<C>>>),
 
     /// Deletes a causaloid by its ID.
     ///
@@ -159,33 +140,33 @@ where
     /// - `ContextId`: ID of the context to delete
     DeleteContext(ContextId),
 
-    /// Adds a contextoid node to a context's graph.
+    /// Adds a node (contextoid) to a context's graph.
     ///
     /// # Fields
     /// - `context_id`: ID of the target context
-    /// - `contextoid`: The contextoid to add
+    /// - `contextoid`: The node to add
     AddContextoidToContext {
         context_id: ContextId,
-        contextoid: Contextoid<D, S, T, ST, SYM, VS, VT>,
+        contextoid: N,
     },
 
-    /// Updates an existing contextoid within a context.
+    /// Updates an existing node (contextoid) within a context.
     ///
     /// # Fields
     /// - `context_id`: ID of the containing context
-    /// - `existing_contextoid`: ID of the contextoid to replace
-    /// - `new_contextoid`: New contextoid instance
+    /// - `existing_contextoid`: ID of the node to replace
+    /// - `new_contextoid`: New node instance
     UpdateContextoidInContext {
         context_id: ContextId,
         existing_contextoid: ContextoidId,
-        new_contextoid: Contextoid<D, S, T, ST, SYM, VS, VT>,
+        new_contextoid: N,
     },
 
-    /// Deletes a contextoid from a context's graph.
+    /// Deletes a node (contextoid) from a context's graph.
     ///
     /// # Fields
     /// - `context_id`: ID of the containing context
-    /// - `contextoid_id`: ID of the contextoid to delete
+    /// - `contextoid_id`: ID of the node to delete
     DeleteContextoidFromContext {
         context_id: ContextId,
         contextoid_id: ContextoidId,
@@ -205,5 +186,4 @@ where
 ///
 /// An `OpTree` is a `ConstTree` of `Operation` nodes, representing a hierarchical
 /// structure of operations to be executed by the [`Interpreter`](crate::Interpreter).
-pub type OpTree<I, O, D, S, T, ST, SYM, VS, VT> =
-    ConstTree<Operation<I, O, D, S, T, ST, SYM, VS, VT>>;
+pub type OpTree<I, O, C, N> = ConstTree<Operation<I, O, C, N>>;

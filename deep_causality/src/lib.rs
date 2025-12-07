@@ -83,6 +83,7 @@ pub use crate::traits::transferable::Transferable;
 // Types
 //
 // Causal types
+pub use crate::types::causal_types::aggregate_logic::AggregateLogic;
 pub use crate::types::causal_types::causal_type::CausaloidType;
 pub use crate::types::causal_types::causaloid::Causaloid;
 pub use crate::types::causal_types::causaloid_graph::CausaloidGraph;
@@ -151,10 +152,6 @@ pub use crate::types::model_types::inference::Inference;
 pub use crate::types::model_types::model::Model;
 pub use crate::types::model_types::observation::Observation;
 
-// Reasoning types
-pub use crate::types::reasoning_types::aggregate_logic::AggregateLogic;
-pub use crate::types::reasoning_types::numeric_value::NumericValue;
-
 // Core Types (New & Replacements)
 pub use deep_causality_core::{
     CausalEffectPropagationProcess,
@@ -163,6 +160,7 @@ pub use deep_causality_core::{
     CausalityErrorEnum,
     EffectLog,
     EffectValue,
+    NumericValue,
     PropagatingEffect,
     PropagatingProcess,
 };

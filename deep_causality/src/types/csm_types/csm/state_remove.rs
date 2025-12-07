@@ -3,21 +3,14 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CSM, CsmEvaluable, Datable, SpaceTemporal, Spatial, Symbolic, Temporal, UpdateError};
+use crate::{CSM, CsmEvaluable, UpdateError};
 use std::fmt::Debug;
 
-#[allow(clippy::type_complexity)]
-impl<I, O, D, S, T, ST, SYM, VS, VT> CSM<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, C> CSM<I, O, C>
 where
     I: Default + Clone,
     O: CsmEvaluable + Default + Debug + Clone,
-    D: Datable + Clone + Debug,
-    S: Spatial<VS> + Clone + Debug,
-    T: Temporal<VT> + Clone + Debug,
-    ST: SpaceTemporal<VS, VT> + Clone + Debug,
-    SYM: Symbolic + Clone + Debug,
-    VS: Clone + Debug,
-    VT: Clone + Debug,
+    C: Clone,
 {
     /// Removes a state action at the index position id.
     /// Returns UpdateError if the index does not exist.

@@ -5,23 +5,16 @@
 use crate::errors::CsmError;
 use crate::traits::causable::MonadicCausable;
 use crate::types::csm_types::csm::CsmEvaluable;
-use crate::{CausalState, Causaloid, Context, Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
+use crate::{CausalState, Causaloid};
 use deep_causality_core::PropagatingEffect;
 use std::fmt::Debug;
-use std::sync::{Arc, RwLock};
 
-impl<I, O, D, S, T, ST, SYM, VS, VT> CausalState<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, C> CausalState<I, O, C>
 where
     I: Default + Clone + Debug + Send + Sync,
     O: CsmEvaluable + Default + Debug + Clone + Send + Sync,
-    D: Datable + Clone + Debug + Send + Sync,
-    S: Spatial<VS> + Clone + Debug + Send + Sync,
-    T: Temporal<VT> + Clone + Debug + Send + Sync,
-    ST: SpaceTemporal<VS, VT> + Clone + Debug + Send + Sync,
-    SYM: Symbolic + Clone + Debug + Send + Sync,
-    VS: Clone + Send + Sync,
-    VT: Clone + Send + Sync,
-    Causaloid<I, O, (), Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>: MonadicCausable<I, O>,
+    C: Clone + Send + Sync,
+    Causaloid<I, O, (), C>: MonadicCausable<I, O>,
 {
     /// Evaluates the state using its internal data.
     ///

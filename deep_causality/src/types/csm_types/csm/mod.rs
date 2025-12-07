@@ -11,7 +11,6 @@ mod state_update;
 pub use csm_evaluable::CsmEvaluable;
 
 use crate::{CSMMap, CausalAction, CausalState};
-use crate::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
@@ -48,39 +47,23 @@ use std::sync::{Arc, RwLock};
 /// 4. Feeding data into the CSM for evaluation
 ///
 /// See the example in `examples/csm/src/main.rs` for a practical implementation.
-#[allow(clippy::type_complexity)]
-pub struct CSM<I, O, D, S, T, ST, SYM, VS, VT>
+pub struct CSM<I, O, C>
 where
     I: Default + Clone,
     O: CsmEvaluable + Default + Debug + Clone,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone + Debug,
-    T: Temporal<VT> + Clone + Debug,
-    ST: SpaceTemporal<VS, VT> + Clone + Debug,
-    SYM: Symbolic + Clone + Debug,
-    VS: Clone + Debug,
-    VT: Clone + Debug,
+    C: Clone,
 {
-    state_actions: Arc<RwLock<CSMMap<I, O, D, S, T, ST, SYM, VS, VT>>>,
+    state_actions: Arc<RwLock<CSMMap<I, O, C>>>,
 }
 
-#[allow(clippy::type_complexity)]
-impl<I, O, D, S, T, ST, SYM, VS, VT> CSM<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, C> CSM<I, O, C>
 where
     I: Default + Clone,
     O: CsmEvaluable + Default + Debug + Clone,
-    D: Datable + Clone + Debug,
-    S: Spatial<VS> + Clone + Debug,
-    T: Temporal<VT> + Clone + Debug,
-    ST: SpaceTemporal<VS, VT> + Clone + Debug,
-    SYM: Symbolic + Clone + Debug,
-    VS: Clone + Debug,
-    VT: Clone + Debug,
+    C: Clone,
 {
     /// Constructs a new CSM.
-    pub fn new(
-        state_actions: &[(&CausalState<I, O, D, S, T, ST, SYM, VS, VT>, &CausalAction)],
-    ) -> Self {
+    pub fn new(state_actions: &[(&CausalState<I, O, C>, &CausalAction)]) -> Self {
         let mut map = CSMMap::with_capacity(state_actions.len());
 
         for (state, action) in state_actions {

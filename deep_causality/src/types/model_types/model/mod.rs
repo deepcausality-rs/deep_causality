@@ -9,23 +9,16 @@ mod transferable;
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
-use crate::{Assumption, Causaloid, Context, Datable, Identifiable, Symbolic};
+use crate::{Assumption, Causaloid, Context, Contextoid, Datable, Identifiable, Symbolic};
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
-#[allow(clippy::type_complexity)]
 #[derive(Debug)]
-pub struct Model<I, O, D, S, T, ST, SYM, VS, VT>
+pub struct Model<I, O, C>
 where
     I: Default,
     O: Default + Debug,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    C: Clone,
 {
     id: u64,
     author: String,
@@ -36,30 +29,23 @@ where
     /// The `Causaloid` is the core component that defines the causal reasoning mechanism
     /// of the model. It can be a singleton, a collection, or a complex graph of
     /// causal relationships.
-    causaloid: Arc<Causaloid<I, O, (), Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>>,
-    context: Option<Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>,
+    causaloid: Arc<Causaloid<I, O, (), Arc<RwLock<C>>>>,
+    context: Option<Arc<RwLock<C>>>,
 }
 
-#[allow(clippy::type_complexity)]
-impl<I, O, D, S, T, ST, SYM, VS, VT> Model<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, C> Model<I, O, C>
 where
     I: Default,
     O: Default + Debug,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    C: Clone,
 {
     pub fn new(
         id: u64,
         author: &str,
         description: &str,
         assumptions: Option<Arc<Vec<Assumption>>>,
-        causaloid: Arc<Causaloid<I, O, (), Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>>,
-        context: Option<Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>,
+        causaloid: Arc<Causaloid<I, O, (), Arc<RwLock<C>>>>,
+        context: Option<Arc<RwLock<C>>>,
     ) -> Self {
         Self {
             id,
@@ -73,17 +59,17 @@ where
 }
 
 #[allow(clippy::type_complexity)]
-impl<I, O, D, S, T, ST, SYM, VS, VT> Model<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, D, S, T, ST, SYM, VS, VT> Model<I, O, Context<D, S, T, ST, SYM, VS, VT>>
 where
     I: Default + Clone,
     O: Default + Debug + Clone,
-    D: Datable + Copy + Clone + PartialEq,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    D: Datable + Copy + Clone + PartialEq + std::fmt::Debug,
+    S: Spatial<VS> + Clone + std::fmt::Debug,
+    T: Temporal<VT> + Clone + std::fmt::Debug,
+    ST: SpaceTemporal<VS, VT> + Clone + std::fmt::Debug,
+    SYM: Symbolic + Clone + std::fmt::Debug,
+    VS: Clone + std::fmt::Debug,
+    VT: Clone + std::fmt::Debug,
 {
     /// Evolves the model by applying a sequence of operations defined in an `OpTree`.
     ///
@@ -91,40 +77,25 @@ where
     /// and returns a new `Model` instance reflecting the changes, along with a log of modifications.
     pub fn evolve(
         &self,
-        op_tree: &crate::OpTree<I, O, D, S, T, ST, SYM, VS, VT>,
-    ) -> Result<(Self, crate::ModificationLog), crate::ModelValidationError>
-    where
-        D: Copy + PartialEq + std::fmt::Debug,
-        S: std::fmt::Debug,
-        T: std::fmt::Debug,
-        ST: std::fmt::Debug,
-        SYM: std::fmt::Debug,
-        VS: std::fmt::Debug,
-        VT: std::fmt::Debug,
-    {
+        op_tree: &crate::OpTree<
+            I,
+            O,
+            Context<D, S, T, ST, SYM, VS, VT>,
+            Contextoid<D, S, T, ST, SYM, VS, VT>,
+        >,
+    ) -> Result<(Self, crate::ModificationLog), crate::ModelValidationError> {
         // 1. Initialize the interpreter state with the current model's components.
-        //    We clone the Arc-wrapped components to share them with the new state.
-        //    The interpreter will handle cloning the inner data if necessary for modifications.
         let mut state = crate::CausalSystemState::new();
 
         // Populate state with current context if it exists
         if let Some(ctx_arc) = &self.context {
-            // We need to lock to get the ID.
-            // Note: In a real scenario, we might want to deep clone the context
-            // if we want full immutability history, but here we are evolving *this* model.
-            // However, the Interpreter expects to *own* the data it modifies or at least
-            // have mutable access.
-            // For this implementation, we will assume the Interpreter works on the *same*
-            // underlying data structures (interior mutability via RwLock) or creates new ones.
-            //
-            // The `CausalSystemState` uses `HashMap`s. We need to map the current model's
-            // context into the state.
             let ctx =
                 ctx_arc
                     .read()
                     .map_err(|_| crate::ModelValidationError::InterpreterError {
                         reason: "Failed to read context lock".to_string(),
                     })?;
+
             state.contexts.insert(ctx.id(), ctx.clone());
         }
 
@@ -143,21 +114,17 @@ where
             return Err(err);
         }
 
-        let final_state = effect.value.ok_or_else(|| {
-            // This case should ideally not be reached if error is always Some on failure.
-            crate::ModelValidationError::InterpreterError {
-                reason: "Unknown error: execution failed but no specific error was provided"
-                    .to_string(),
-            }
-        })?;
+        let final_state =
+            effect
+                .value
+                .ok_or_else(|| crate::ModelValidationError::InterpreterError {
+                    reason: "Unknown error: execution failed but no specific error was provided"
+                        .to_string(),
+                })?;
 
         let logs = effect.logs;
 
         // 4. Reconstruct the Model from the final state.
-        //    We need to retrieve the (potentially modified) causaloid and context.
-        //    Since the ID of the model's main components might not have changed,
-        //    we look them up by the original IDs.
-
         let new_causaloid = final_state
             .causaloids
             .get(&self.causaloid.id())

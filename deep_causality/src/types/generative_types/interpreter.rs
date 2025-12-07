@@ -29,7 +29,7 @@
 //! 4. **Error Propagation**: Errors short-circuit execution and are captured in the effect
 
 use crate::{
-    AuditableGraphGenerator, Causaloid, Context, GraphGeneratableEffect,
+    AuditableGraphGenerator, Causaloid, Context, Contextoid, GraphGeneratableEffect,
     GraphGeneratableEffectSystem, Identifiable, ModelValidationError, ModificationLog,
     ModificationLogEntry, OpStatus, OpTree, Operation,
 };
@@ -48,36 +48,25 @@ use std::sync::{Arc, RwLock};
 ///
 /// # Type Parameters
 ///
-/// All type parameters match those of the `Operation` enum and causal model types.
+/// - `I`: Input generic
+/// - `O`: Output generic
+/// - `C`: Context generic
 #[allow(clippy::type_complexity)]
-pub struct CausalSystemState<I, O, D, S, T, ST, SYM, VS, VT>
+pub struct CausalSystemState<I, O, C>
 where
     I: Default,
     O: Default + Debug,
-    D: Datable + Copy + Clone + PartialEq,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    C: Clone,
 {
-    pub causaloids:
-        HashMap<u64, Causaloid<I, O, (), Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>>,
-    pub contexts: HashMap<u64, Context<D, S, T, ST, SYM, VS, VT>>,
+    pub causaloids: HashMap<u64, Causaloid<I, O, (), Arc<RwLock<C>>>>,
+    pub contexts: HashMap<u64, C>,
 }
 
-impl<I, O, D, S, T, ST, SYM, VS, VT> CausalSystemState<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, C> CausalSystemState<I, O, C>
 where
     I: Default,
     O: Default + Debug,
-    D: Datable + Copy + Clone + PartialEq,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    C: Clone,
 {
     pub fn new() -> Self {
         Self {
@@ -87,17 +76,11 @@ where
     }
 }
 
-impl<I, O, D, S, T, ST, SYM, VS, VT> Clone for CausalSystemState<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, C> Clone for CausalSystemState<I, O, C>
 where
     I: Default,
     O: Default + Debug,
-    D: Datable + Copy + Clone + PartialEq,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    C: Clone,
 {
     fn clone(&self) -> Self {
         Self {
@@ -107,35 +90,22 @@ where
     }
 }
 
-impl<I, O, D, S, T, ST, SYM, VS, VT> Default for CausalSystemState<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, C> Default for CausalSystemState<I, O, C>
 where
     I: Default,
     O: Default + Debug,
-    D: Datable + Copy + Clone + PartialEq,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    C: Clone,
 {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<I, O, D, S, T, ST, SYM, VS, VT> std::fmt::Debug
-    for CausalSystemState<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, C> std::fmt::Debug for CausalSystemState<I, O, C>
 where
     I: Default,
     O: Default + Debug,
-    D: Datable + Copy + Clone + PartialEq + std::fmt::Debug,
-    S: Spatial<VS> + Clone + std::fmt::Debug,
-    T: Temporal<VT> + Clone + std::fmt::Debug,
-    ST: SpaceTemporal<VS, VT> + Clone + std::fmt::Debug,
-    SYM: Symbolic + Clone + std::fmt::Debug,
-    VS: Clone + std::fmt::Debug,
-    VT: Clone + std::fmt::Debug,
+    C: Clone + std::fmt::Debug,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("CausalSystemState")
@@ -175,11 +145,17 @@ impl Interpreter {
     /// - Any error that prevented execution
     /// - Complete audit log of all operations
     #[allow(clippy::type_complexity)]
+    #[allow(clippy::type_complexity)]
     pub fn execute<I, O, D, S, T, ST, SYM, VS, VT>(
         &self,
-        tree: &OpTree<I, O, D, S, T, ST, SYM, VS, VT>,
-        initial_state: CausalSystemState<I, O, D, S, T, ST, SYM, VS, VT>,
-    ) -> AuditableGraphGenerator<CausalSystemState<I, O, D, S, T, ST, SYM, VS, VT>>
+        tree: &OpTree<
+            I,
+            O,
+            Context<D, S, T, ST, SYM, VS, VT>,
+            Contextoid<D, S, T, ST, SYM, VS, VT>,
+        >,
+        initial_state: CausalSystemState<I, O, Context<D, S, T, ST, SYM, VS, VT>>,
+    ) -> AuditableGraphGenerator<CausalSystemState<I, O, Context<D, S, T, ST, SYM, VS, VT>>>
     where
         I: Default + Clone,
         O: Default + Debug + Clone,
@@ -202,9 +178,14 @@ impl Interpreter {
     #[allow(clippy::type_complexity)]
     fn walk<I, O, D, S, T, ST, SYM, VS, VT>(
         &self,
-        op_node: &OpTree<I, O, D, S, T, ST, SYM, VS, VT>,
-        state: CausalSystemState<I, O, D, S, T, ST, SYM, VS, VT>,
-    ) -> AuditableGraphGenerator<CausalSystemState<I, O, D, S, T, ST, SYM, VS, VT>>
+        op_node: &OpTree<
+            I,
+            O,
+            Context<D, S, T, ST, SYM, VS, VT>,
+            Contextoid<D, S, T, ST, SYM, VS, VT>,
+        >,
+        state: CausalSystemState<I, O, Context<D, S, T, ST, SYM, VS, VT>>,
+    ) -> AuditableGraphGenerator<CausalSystemState<I, O, Context<D, S, T, ST, SYM, VS, VT>>>
     where
         I: Default + Clone,
         O: Default + Debug + Clone,

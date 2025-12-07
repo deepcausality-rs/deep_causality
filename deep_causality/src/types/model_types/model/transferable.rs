@@ -7,27 +7,19 @@
 //! Implementation of the Transferable trait for the Model struct.
 //!
 
-use crate::types::model_types::model::Model;
-use crate::{Assumption, Datable, SpaceTemporal, Spatial, Symbolic, Temporal, Transferable};
+use crate::{Assumption, Model, Transferable};
 use std::fmt::Debug;
 use std::sync::Arc;
 
-impl<I, O, D, S, T, ST, SYM, VS, VT> Transferable for Model<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, C> Transferable for Model<I, O, C>
 where
     I: Default,
     O: Default + Debug,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    C: Clone,
 {
     fn get_assumptions(&self) -> &Option<Arc<Vec<Assumption>>> {
         &self.assumptions
     }
-
     // verify_assumptions is derived from the Transferable trait. Overwrite for customization.
     // fn verify_assumptions(&self, effect: &[PropagatingEffect]) -> Result<bool, AssumptionError> {}
 }

@@ -3,23 +3,15 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{
-    ActionError, CSM, CausalState, CsmError, CsmEvaluable, Datable, EffectValue, PropagatingEffect,
-    SpaceTemporal, Spatial, Symbolic, Temporal,
+    ActionError, CSM, CausalState, CsmError, CsmEvaluable, EffectValue, PropagatingEffect,
 };
 use std::fmt::Debug;
 
-#[allow(clippy::type_complexity)]
-impl<I, O, D, S, T, ST, SYM, VS, VT> CSM<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, C> CSM<I, O, C>
 where
     I: Default + Clone + Debug + Send + Sync + 'static,
     O: CsmEvaluable + Default + Debug + Clone + Send + Sync + 'static,
-    D: Datable + Clone + Debug + Send + Sync + 'static,
-    S: Spatial<VS> + Clone + Debug + Send + Sync + 'static,
-    T: Temporal<VT> + Clone + Debug + Send + Sync + 'static,
-    ST: SpaceTemporal<VS, VT> + Clone + Debug + Send + Sync + 'static,
-    SYM: Symbolic + Clone + Debug + Send + Sync + 'static,
-    VS: Clone + Debug + Send + Sync + 'static,
-    VT: Clone + Debug + Send + Sync + 'static,
+    C: Clone + Debug + Send + Sync + 'static,
 {
     /// Evaluates a single causal state at the index position id.
     /// If the state evaluates to an active effect, the associated action is fired.
@@ -77,7 +69,7 @@ where
     /// Centralized logic to evaluate an effect and fire an action if conditions are met.
     fn evaluate_and_fire_action(
         &self,
-        state: &CausalState<I, O, D, S, T, ST, SYM, VS, VT>,
+        state: &CausalState<I, O, C>,
         action: &crate::CausalAction,
         effect: &PropagatingEffect<O>,
     ) -> Result<(), CsmError> {
@@ -99,7 +91,7 @@ where
     /// Helper to fire an action.
     fn fire_action_with_ethos_check(
         &self,
-        _state: &CausalState<I, O, D, S, T, ST, SYM, VS, VT>,
+        _state: &CausalState<I, O, C>,
         action: &crate::CausalAction,
         _effect: &PropagatingEffect<O>,
     ) -> Result<(), CsmError> {

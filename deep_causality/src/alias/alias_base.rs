@@ -40,17 +40,7 @@ use std::sync::{Arc, RwLock};
 /// Euclidean and numerical context is sufficient, offering a consistent and
 /// easily recognizable model structure for common causal reasoning and
 /// simulation scenarios.
-pub type BaseModel = Model<
-    bool,
-    bool,
-    Data<NumericalValue>,
-    EuclideanSpace,
-    EuclideanTime,
-    EuclideanSpacetime,
-    BaseSymbol,
-    FloatType,
-    FloatType,
->;
+pub type BaseModel = Model<bool, bool, BaseContext>;
 
 /// A type alias for a default, general-purpose `Causaloid` configuration.
 ///

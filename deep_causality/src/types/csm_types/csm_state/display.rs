@@ -3,20 +3,14 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CausalState, Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
+use crate::CausalState;
 use std::fmt::{Debug, Display, Formatter};
 
-impl<I, O, D, S, T, ST, SYM, VS, VT> Display for CausalState<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, C> Display for CausalState<I, O, C>
 where
     I: Debug + Default,
     O: Default + Debug,
-    D: Datable + Clone + Debug,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    C: Clone,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
