@@ -70,17 +70,19 @@ pub fn get_test_single_data(val: NumericalValue) -> PropagatingEffect<NumericalV
 
 pub fn get_test_causaloid_deterministic_true() -> BaseCausaloid<bool, bool> {
     let description = "tests nothing; always returns true";
-    let causal_fn = Arc::new(|_: bool| -> PropagatingEffect<bool> {
+    fn causal_fn(_: bool) -> PropagatingEffect<bool> {
         let mut effect = CausalMonad::pure(true);
         effect.logs.add_entry("Just return true");
         effect
-    });
+    }
     Causaloid::new(3, causal_fn, description)
 }
 
 pub fn get_test_causaloid_deterministic_false() -> BaseCausaloid<bool, bool> {
     let description = "tests nothing; always returns true";
-    let causal_fn = Arc::new(|_: bool| -> PropagatingEffect<bool> { CausalMonad::pure(false) });
+    fn causal_fn(_: bool) -> PropagatingEffect<bool> {
+        CausalMonad::pure(false)
+    }
     Causaloid::new(3, causal_fn, description)
 }
 
@@ -88,11 +90,11 @@ pub fn get_test_causaloid_probabilistic() -> BaseCausaloid<NumericalValue, f64> 
     let id: IdentificationValue = 3;
     let description = "tests whether data exceeds threshold of 0.55";
 
-    let causal_fn = Arc::new(|obs: NumericalValue| -> PropagatingEffect<NumericalValue> {
+    fn causal_fn(obs: NumericalValue) -> PropagatingEffect<NumericalValue> {
         let threshold: NumericalValue = 0.55;
         let output = if obs.ge(&threshold) { 1.0 } else { 0.0 };
         CausalMonad::pure(output)
-    });
+    }
 
     Causaloid::new(id, causal_fn, description)
 }
@@ -100,7 +102,7 @@ pub fn get_test_causaloid_probabilistic() -> BaseCausaloid<NumericalValue, f64> 
 pub fn get_test_causaloid_uncertain_bool() -> BaseCausaloid<f64, UncertainBool> {
     let description = "tests whether data exceeds threshold of 0.55 and returns uncertain bool";
 
-    let causal_fn = Arc::new(|obs: NumericalValue| -> PropagatingEffect<UncertainBool> {
+    fn causal_fn(obs: NumericalValue) -> PropagatingEffect<UncertainBool> {
         let threshold: NumericalValue = 0.55;
 
         let output = if obs > threshold {
@@ -109,14 +111,14 @@ pub fn get_test_causaloid_uncertain_bool() -> BaseCausaloid<f64, UncertainBool> 
             Uncertain::<bool>::point(false)
         };
         CausalMonad::pure(output)
-    });
+    }
 
     Causaloid::new(3, causal_fn, description)
 }
 
 pub fn get_test_causaloid_uncertain_float() -> BaseCausaloid<f64, UncertainF64> {
     let description = "tests whether data exceeds threshold of 0.55 and returns uncertain bool";
-    let causal_fn = Arc::new(|obs: NumericalValue| -> PropagatingEffect<UncertainF64> {
+    fn causal_fn(obs: NumericalValue) -> PropagatingEffect<UncertainF64> {
         let threshold: NumericalValue = 0.55;
         let output = if obs > threshold {
             Uncertain::<f64>::point(1.0f64)
@@ -124,7 +126,7 @@ pub fn get_test_causaloid_uncertain_float() -> BaseCausaloid<f64, UncertainF64> 
             Uncertain::<f64>::point(0.0f64)
         };
         CausalMonad::pure(output)
-    });
+    }
 
     Causaloid::new(3, causal_fn, description)
 }
@@ -133,11 +135,11 @@ pub fn get_test_causaloid_deterministic(
     id: IdentificationValue,
 ) -> BaseCausaloid<NumericalValue, bool> {
     let description = "tests whether data exceeds threshold of 0.55";
-    let causal_fn = Arc::new(|obs: NumericalValue| -> PropagatingEffect<bool> {
+    fn causal_fn(obs: NumericalValue) -> PropagatingEffect<bool> {
         let threshold: NumericalValue = 0.55;
         let output = obs.ge(&threshold);
         CausalMonad::pure(output)
-    });
+    }
 
     Causaloid::new(id, causal_fn, description)
 }
@@ -147,11 +149,11 @@ pub fn get_test_causaloid_probabilistic_bool_output() -> BaseCausaloid<Numerical
     let description =
         "tests whether data exceeds threshold of 0.55 and returns bool probabilistically";
 
-    let causal_fn = Arc::new(|obs: NumericalValue| -> PropagatingEffect<f64> {
+    fn causal_fn(obs: NumericalValue) -> PropagatingEffect<f64> {
         let threshold: NumericalValue = 0.55;
         let output = if obs.ge(&threshold) { 1.0 } else { 0.0 };
         CausalMonad::pure(output)
-    });
+    }
 
     Causaloid::new(id, causal_fn, description)
 }
@@ -162,12 +164,13 @@ pub fn get_test_causaloid_deterministic_with_context(
     let context = Arc::new(RwLock::new(context));
     let description = "Inverts any input";
 
-    let causal_fn_deterministic_with_context = Arc::new(
-        |effect: bool, _context: &Arc<RwLock<BaseContext>>| -> PropagatingEffect<bool> {
-            // The effect is already a bool, so no need for into_effect_value and match
-            CausalMonad::pure(!effect)
-        },
-    );
+    fn causal_fn_deterministic_with_context(
+        effect: bool,
+        _context: &Arc<RwLock<BaseContext>>,
+    ) -> PropagatingEffect<bool> {
+        // The effect is already a bool, so no need for into_effect_value and match
+        CausalMonad::pure(!effect)
+    }
 
     Causaloid::new_with_context(
         id,
@@ -180,7 +183,9 @@ pub fn get_test_causaloid_deterministic_with_context(
 pub fn get_test_causaloid_deterministic_input_output() -> BaseCausaloid<bool, bool> {
     let id: IdentificationValue = 2;
     let description = "Inverts any input";
-    let causal_fn = Arc::new(|obs: bool| -> PropagatingEffect<bool> { CausalMonad::pure(!obs) });
+    fn causal_fn(obs: bool) -> PropagatingEffect<bool> {
+        CausalMonad::pure(!obs)
+    }
     Causaloid::new(id, causal_fn, description)
 }
 
@@ -188,11 +193,11 @@ pub fn get_test_error_causaloid() -> BaseCausaloid<bool, bool> {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
 
-    let causal_fn = Arc::new(|_: bool| -> PropagatingEffect<bool> {
+    fn causal_fn(_: bool) -> PropagatingEffect<bool> {
         PropagatingEffect::from_error(CausalityError::new(CausalityErrorEnum::Custom(
             "Test error".into(),
         )))
-    });
+    }
 
     Causaloid::new(id, causal_fn, description)
 }
@@ -300,7 +305,7 @@ pub fn get_test_num_array() -> [NumericalValue; 10] {
 pub fn get_test_causaloid(id: IdentificationValue) -> BaseCausaloid<f64, bool> {
     let description = "tests whether data exceeds threshold of 0.55";
 
-    let causal_fn = Arc::new(|evidence: f64| -> PropagatingEffect<bool> {
+    fn causal_fn(evidence: f64) -> PropagatingEffect<bool> {
         let mut log = EffectLog::new();
         log.add_entry(&format!("Processing evidence: {}", evidence));
 
@@ -323,7 +328,7 @@ pub fn get_test_causaloid(id: IdentificationValue) -> BaseCausaloid<f64, bool> {
         let mut effect = CausalMonad::pure(is_active);
         effect.logs = log;
         effect
-    });
+    }
 
     Causaloid::new(id, causal_fn, description)
 }
@@ -331,7 +336,7 @@ pub fn get_test_causaloid(id: IdentificationValue) -> BaseCausaloid<f64, bool> {
 pub fn get_test_causaloid_num_input_output(id: IdentificationValue) -> BaseCausaloid<f64, f64> {
     let description = "tests whether data exceeds threshold of 0.55";
 
-    let causal_fn = Arc::new(|evidence: f64| -> PropagatingEffect<f64> {
+    fn causal_fn(evidence: f64) -> PropagatingEffect<f64> {
         let mut log = EffectLog::new();
         log.add_entry(&format!("Processing evidence: {}", evidence));
 
@@ -354,7 +359,7 @@ pub fn get_test_causaloid_num_input_output(id: IdentificationValue) -> BaseCausa
         let mut effect = CausalMonad::pure(is_active);
         effect.logs = log;
         effect
-    });
+    }
 
     Causaloid::new(id, causal_fn, description)
 }

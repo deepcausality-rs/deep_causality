@@ -404,10 +404,10 @@ where
         Self {
             id: self.id,
             causal_type: self.causal_type,
-            causal_fn: self.causal_fn.clone(),
+            causal_fn: self.causal_fn,
             coll_aggregate_logic: self.coll_aggregate_logic,
             coll_threshold_value: self.coll_threshold_value,
-            context_causal_fn: self.context_causal_fn.clone(),
+            context_causal_fn: self.context_causal_fn,
             context: self.context.clone(),
             causal_coll: self.causal_coll.clone(),
             causal_graph: self.causal_graph.clone(),

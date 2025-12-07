@@ -27,39 +27,38 @@ pub fn get_test_error_action() -> CausalAction {
 
 // Causaloid that returns a non-deterministic effect
 pub fn get_test_probabilistic_causaloid() -> BaseCausaloid<f64, f64> {
-    let causal_fn = Arc::new(|_: f64| -> PropagatingEffect<f64> {
+    fn causal_fn(_: f64) -> PropagatingEffect<f64> {
         let log = EffectLog::new();
         let mut effect = CausalMonad::pure(0.5);
         effect.logs = log;
         effect
-    });
+    }
     Causaloid::new(99, causal_fn, "Probabilistic Causaloid")
 }
 
 pub fn get_test_error_causaloid() -> BaseCausaloid<bool, bool> {
-    let causal_fn = Arc::new(|_: bool| -> PropagatingEffect<bool> {
+    fn causal_fn(_: bool) -> PropagatingEffect<bool> {
         PropagatingEffect::from_error(CausalityError::new(CausalityErrorEnum::Custom(
             "Error".to_string(),
         )))
-    });
+    }
     Causaloid::new(78, causal_fn, "Error Causaloid")
 }
 
 // get_effect_ethos function has been removed since EffectEthos moved to deep_causality_ethos crate
 
 pub fn get_test_causaloid(with_context: bool) -> BaseCausaloid<bool, bool> {
-    let causal_fn = Arc::new(|_effect: bool| -> PropagatingEffect<bool> {
-        let mut log = EffectLog::new();
-        log.add_entry("Just return true");
-        let mut effect = CausalMonad::pure(true);
-        effect.logs = log;
-        effect
-    });
-
     if with_context {
         let context = test_utils::get_context(); // Use the helper to get a base context
         test_utils::get_test_causaloid_deterministic_with_context(context)
     } else {
+        fn causal_fn(_effect: bool) -> PropagatingEffect<bool> {
+            let mut log = EffectLog::new();
+            log.add_entry("Just return true");
+            let mut effect = CausalMonad::pure(true);
+            effect.logs = log;
+            effect
+        }
         Causaloid::new(1, causal_fn, "Test Causaloid")
     }
 }

@@ -22,7 +22,7 @@ pub type EvalFn = fn(&[PropagatingEffect<f64>]) -> Result<bool, AssumptionError>
 /// # Returns
 ///
 /// A `PropagatingEffect`
-pub type CausalFn<I, O> = Arc<dyn Fn(I) -> PropagatingEffect<O> + Send + Sync>;
+pub type CausalFn<I, O> = fn(I) -> PropagatingEffect<O>;
 
 /// The unified function signature for all singleton causaloids that require access to a shared, external context.
 ///
@@ -37,8 +37,5 @@ pub type CausalFn<I, O> = Arc<dyn Fn(I) -> PropagatingEffect<O> + Send + Sync>;
 /// # Returns
 ///
 /// A `PropagatingEffect`.
-pub type ContextualCausalFn<I, O, D, S, T, ST, SYM, VS, VT> = Arc<
-    dyn Fn(I, &Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>) -> PropagatingEffect<O>
-        + Send
-        + Sync,
->;
+pub type ContextualCausalFn<I, O, D, S, T, ST, SYM, VS, VT> =
+    fn(I, &Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>) -> PropagatingEffect<O>;
