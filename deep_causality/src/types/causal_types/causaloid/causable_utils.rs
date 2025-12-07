@@ -1,5 +1,6 @@
-use crate::{CausalityError, Causaloid, Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
-use deep_causality_core::PropagatingEffect;
+use crate::{CausalityError, Causaloid};
+use deep_causality_core::{EffectValue, PropagatingEffect};
+use std::fmt::Debug;
 
 /// Represents the execution step in a `Causaloid::Singleton` monadic chain.
 ///
@@ -13,24 +14,40 @@ use deep_causality_core::PropagatingEffect;
 /// # Returns
 /// A `PropagatingEffect` containing either the resulting output
 /// value of type `O` or an error.
-pub(super) fn execute_causal_logic<I, O, D, S, T, ST, SYM, VS, VT>(
+pub(super) fn execute_causal_logic<I, O, PS, C>(
     input: I,
-    causaloid: &Causaloid<I, O, D, S, T, ST, SYM, VS, VT>,
+    causaloid: &Causaloid<I, O, PS, C>,
 ) -> PropagatingEffect<O>
 where
-    I: Default,
-    O: Default + Clone + std::fmt::Debug,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    I: Default + Clone,
+    O: Default + Clone + Debug,
+    PS: Default + Clone,
+    C: Clone,
 {
     if let Some(context_fn) = &causaloid.context_causal_fn {
         if let Some(context) = causaloid.context.as_ref() {
-            context_fn(input, context)
+            // context_fn signature: fn(EffectValue<I>, PS, Option<C>) -> PropagatingProcess<O, PS, C>
+            // We invoke it with default state and the context.
+            // The result is PropagatingProcess<O, PS, C>.
+            // We need to convert it to PropagatingEffect<O>.
+
+            let ev = EffectValue::from(input);
+            let process = context_fn(ev, PS::default(), Some(context.clone()));
+
+            // PropagatingProcess is CausalEffectPropagationProcess<O, PS, C>.
+            // We extract the value and return it as PropagatingEffect (stateless).
+            // This effectively discards the state and context updates for this trait method,
+            // which aligns with MonadicCausable<I, O> signature.
+
+            // Safely extract value potentially containing error
+            match process.value.into_value() {
+                Some(val) => PropagatingEffect::pure(val),
+                None => PropagatingEffect::from_error(CausalityError(
+                    deep_causality_core::CausalityErrorEnum::Custom(
+                        "execute_causal_logic: context_fn returned None value".into(),
+                    ),
+                )),
+            }
         } else {
             PropagatingEffect::from_error(CausalityError(
                 deep_causality_core::CausalityErrorEnum::Custom(

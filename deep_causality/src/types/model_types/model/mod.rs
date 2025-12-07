@@ -31,7 +31,12 @@ where
     author: String,
     description: String,
     assumptions: Option<Arc<Vec<Assumption>>>,
-    causaloid: Arc<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>,
+    /// The root causaloid of the model, encapsulating the main causal logic.
+    ///
+    /// The `Causaloid` is the core component that defines the causal reasoning mechanism
+    /// of the model. It can be a singleton, a collection, or a complex graph of
+    /// causal relationships.
+    causaloid: Arc<Causaloid<I, O, (), Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>>,
     context: Option<Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>,
 }
 
@@ -53,7 +58,7 @@ where
         author: &str,
         description: &str,
         assumptions: Option<Arc<Vec<Assumption>>>,
-        causaloid: Arc<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>,
+        causaloid: Arc<Causaloid<I, O, (), Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>>,
         context: Option<Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>,
     ) -> Self {
         Self {
@@ -70,8 +75,8 @@ where
 #[allow(clippy::type_complexity)]
 impl<I, O, D, S, T, ST, SYM, VS, VT> Model<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: Default,
-    O: Default + Debug,
+    I: Default + Clone,
+    O: Default + Debug + Clone,
     D: Datable + Copy + Clone + PartialEq,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,

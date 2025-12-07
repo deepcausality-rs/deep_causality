@@ -8,6 +8,7 @@ use crate::{
     EuclideanSpacetime, EuclideanTime, FloatType, Model, NumericalValue,
 };
 use std::collections::HashMap;
+use std::sync::{Arc, RwLock};
 
 /// A type alias for the default `Model` configuration.
 ///
@@ -83,17 +84,7 @@ pub type BaseModel = Model<
 /// that are compatible with other "base" types like `BaseCausalGraph` and `BaseContext`,
 /// ensuring a consistent and easily understandable modeling environment.
 #[allow(type_alias_bounds)]
-pub type BaseCausaloid<I, O> = Causaloid<
-    I,
-    O,
-    Data<NumericalValue>,
-    EuclideanSpace,
-    EuclideanTime,
-    EuclideanSpacetime,
-    BaseSymbol,
-    FloatType,
-    FloatType,
->;
+pub type BaseCausaloid<I, O> = Causaloid<I, O, (), Arc<RwLock<BaseContext>>>;
 
 /// A type alias for a `Vec` (vector) containing `BaseCausaloid` instances.
 ///
@@ -130,19 +121,7 @@ pub type BaseCausaloid<I, O> = Causaloid<
 /// way to organize causaloids for common causal modeling scenarios, such as
 /// representing a sequence of events or a set of related causal agents.
 #[allow(type_alias_bounds)]
-pub type BaseCausaloidVec<I, O> = Vec<
-    Causaloid<
-        I,
-        O,
-        Data<NumericalValue>,
-        EuclideanSpace,
-        EuclideanTime,
-        EuclideanSpacetime,
-        BaseSymbol,
-        FloatType,
-        FloatType,
-    >,
->;
+pub type BaseCausaloidVec<I, O> = Vec<Causaloid<I, O, (), Arc<RwLock<BaseContext>>>>;
 
 /// A type alias for a `HashMap` that stores `BaseCausaloid` instances, typically indexed by their unique identifiers.
 ///
@@ -171,20 +150,7 @@ pub type BaseCausaloidVec<I, O> = Vec<
 /// Euclidean and numerical context is sufficient for defining and managing causal
 /// entities within a map structure. It offers a consistent and easily recognizable
 /// way to organize causaloids for common causal modeling scenarios.
-pub type BaseCausalMap = HashMap<
-    usize,
-    Causaloid<
-        bool,
-        bool,
-        Data<NumericalValue>,
-        EuclideanSpace,
-        EuclideanTime,
-        EuclideanSpacetime,
-        BaseSymbol,
-        FloatType,
-        FloatType,
-    >,
->;
+pub type BaseCausalMap = HashMap<usize, Causaloid<bool, bool, (), Arc<RwLock<BaseContext>>>>;
 
 pub type BenchmarkCausalMap = HashMap<usize, BaseCausaloid<f64, bool>>;
 
@@ -211,19 +177,7 @@ pub type BenchmarkCausalMap = HashMap<usize, BaseCausaloid<f64, bool>>;
 /// This `BaseCausalGraph` is designed for general-purpose use cases where a
 /// standard Euclidean and numerical context is sufficient, offering a consistent
 /// and easily recognizable graph structure for common causal modeling scenarios.
-pub type BaseCausalGraph = CausaloidGraph<
-    Causaloid<
-        bool,
-        bool,
-        Data<NumericalValue>,
-        EuclideanSpace,
-        EuclideanTime,
-        EuclideanSpacetime,
-        BaseSymbol,
-        FloatType,
-        FloatType,
-    >,
->;
+pub type BaseCausalGraph = CausaloidGraph<Causaloid<bool, bool, (), Arc<RwLock<BaseContext>>>>;
 
 /// A type alias for a default, general-purpose `Context` configuration.
 ///

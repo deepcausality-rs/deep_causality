@@ -11,15 +11,15 @@ use std::fmt::Debug;
 #[allow(clippy::type_complexity)]
 impl<I, O, D, S, T, ST, SYM, VS, VT> CSM<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: Default + Clone,
-    O: CsmEvaluable + Default + Debug + Clone,
-    D: Datable + Clone + Debug,
-    S: Spatial<VS> + Clone + Debug,
-    T: Temporal<VT> + Clone + Debug,
-    ST: SpaceTemporal<VS, VT> + Clone + Debug,
-    SYM: Symbolic + Clone + Debug,
-    VS: Clone + Debug,
-    VT: Clone + Debug,
+    I: Default + Clone + Debug + Send + Sync + 'static,
+    O: CsmEvaluable + Default + Debug + Clone + Send + Sync + 'static,
+    D: Datable + Clone + Debug + Send + Sync + 'static,
+    S: Spatial<VS> + Clone + Debug + Send + Sync + 'static,
+    T: Temporal<VT> + Clone + Debug + Send + Sync + 'static,
+    ST: SpaceTemporal<VS, VT> + Clone + Debug + Send + Sync + 'static,
+    SYM: Symbolic + Clone + Debug + Send + Sync + 'static,
+    VS: Clone + Debug + Send + Sync + 'static,
+    VT: Clone + Debug + Send + Sync + 'static,
 {
     /// Evaluates a single causal state at the index position id.
     /// If the state evaluates to an active effect, the associated action is fired.

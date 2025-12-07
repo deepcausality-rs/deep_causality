@@ -57,11 +57,12 @@
 //!    detailed logs via the HKT effect system.
 
 use crate::{
-    Causaloid, CausaloidId, ContextId, Contextoid, ContextoidId, Datable, SpaceTemporal, Spatial,
-    Symbolic, Temporal,
+    Causaloid, CausaloidId, Context, ContextId, Contextoid, ContextoidId, Datable, SpaceTemporal,
+    Spatial, Symbolic, Temporal,
 };
 use deep_causality_ast::ConstTree;
 use std::fmt::Debug;
+use std::sync::{Arc, RwLock};
 
 /// Represents all possible operations that can be applied to a causal model.
 ///
@@ -79,12 +80,12 @@ use std::fmt::Debug;
 /// - `SYM`: Symbolic type
 /// - `VS`: Value type for spatial dimensions
 /// - `VT`: Value type for temporal dimension
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, Debug)]
 pub enum Operation<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: Default,
-    O: Default + Debug,
-    D: Datable + Copy + Clone + PartialEq,
+    I: Default + Clone,
+    O: Default + Clone + Debug,
+    D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
@@ -97,14 +98,20 @@ where
     /// # Fields
     /// - `CausaloidId`: Unique identifier for the causaloid
     /// - `Causaloid`: The causaloid instance to create
-    CreateCausaloid(CausaloidId, Causaloid<I, O, D, S, T, ST, SYM, VS, VT>),
+    CreateCausaloid(
+        CausaloidId,
+        Causaloid<I, O, (), Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>,
+    ),
 
     /// Updates an existing causaloid, replacing it with a new instance.
     ///
     /// # Fields
     /// - `CausaloidId`: ID of the causaloid to update
     /// - `Causaloid`: New causaloid instance
-    UpdateCausaloid(CausaloidId, Causaloid<I, O, D, S, T, ST, SYM, VS, VT>),
+    UpdateCausaloid(
+        CausaloidId,
+        Causaloid<I, O, (), Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>,
+    ),
 
     /// Deletes a causaloid by its ID.
     ///

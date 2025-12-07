@@ -33,7 +33,12 @@ where
         &self.assumptions
     }
 
-    pub fn causaloid(&self) -> &Arc<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>> {
+    /// Returns a reference to the root `Causaloid` of the model.
+    ///
+    /// The `Causaloid` encapsulates the core causal logic of the model.
+    pub fn causaloid(
+        &self,
+    ) -> &Arc<Causaloid<I, O, (), Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>> {
         &self.causaloid
     }
 

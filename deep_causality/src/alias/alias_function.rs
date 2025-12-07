@@ -2,9 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{AssumptionError, Context};
-use deep_causality_core::PropagatingEffect;
-use std::sync::{Arc, RwLock};
+use crate::AssumptionError;
+use deep_causality_core::{EffectValue, PropagatingEffect, PropagatingProcess};
 
 // Fn aliases for assumable, assumption, & assumption collection
 /// Function type for evaluating numerical values and returning a boolean result.
@@ -37,5 +36,5 @@ pub type CausalFn<I, O> = fn(I) -> PropagatingEffect<O>;
 /// # Returns
 ///
 /// A `PropagatingEffect`.
-pub type ContextualCausalFn<I, O, D, S, T, ST, SYM, VS, VT> =
-    fn(I, &Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>) -> PropagatingEffect<O>;
+pub type ContextualCausalFn<I, O, S, C> =
+    fn(EffectValue<I>, S, Option<C>) -> PropagatingProcess<O, S, C>;

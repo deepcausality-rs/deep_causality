@@ -11,8 +11,7 @@
 
 use crate::types::causal_types::causaloid::causable_utils;
 use crate::{
-    Causable, CausalityError, Causaloid, CausaloidType, Datable, MonadicCausable,
-    PropagatingEffect, SpaceTemporal, Spatial, Symbolic, Temporal,
+    Causable, CausalityError, Causaloid, CausaloidType, MonadicCausable, PropagatingEffect,
 };
 use std::fmt::Debug;
 
@@ -21,17 +20,12 @@ use std::fmt::Debug;
 /// This trait provides fundamental properties and methods for any entity that can
 /// participate in a causal relationship. For `Causaloid`, it primarily defines
 /// how to determine if a causaloid represents a single, atomic causal unit.
-impl<I, O, D, S, T, ST, SYM, VS, VT> Causable for Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, PS, C> Causable for Causaloid<I, O, PS, C>
 where
     I: Default,
     O: Default + Debug,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    PS: Default + Clone,
+    C: Clone,
 {
     /// Checks if the `Causaloid` is of type `Singleton`.
     ///
@@ -54,18 +48,12 @@ where
 /// For `Collection` and `Graph` evaluation with aggregation support, use the
 /// specialized constructors that ensure proper trait bounds are met.
 #[allow(clippy::type_complexity)]
-impl<I, O, D, S, T, ST, SYM, VS, VT> MonadicCausable<I, O>
-    for Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, PS, C> MonadicCausable<I, O> for Causaloid<I, O, PS, C>
 where
-    I: Default + Clone,
-    O: Default + Clone + Debug,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    I: Default + Clone + Send + Sync + 'static,
+    O: Default + Debug + Clone + Send + Sync + 'static,
+    PS: Default + Clone + Send + Sync + 'static,
+    C: Clone + Send + Sync + 'static,
 {
     /// Evaluates the causal effect of this `Causaloid` given an `incoming_effect`.
     ///

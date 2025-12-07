@@ -33,13 +33,17 @@ where
         &self.data
     }
 
-    pub fn causaloid(&self) -> &Causaloid<I, O, D, S, T, ST, SYM, VS, VT> {
+    pub fn causaloid(
+        &self,
+    ) -> &Causaloid<I, O, (), Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>> {
         &self.causaloid
     }
 
     #[allow(clippy::type_complexity)]
-    pub fn context(&self) -> &Option<Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>> {
-        self.causaloid.context()
+    pub fn context(&self) -> &Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>> {
+        self.causaloid
+            .context()
+            .expect("Context is required for CausalState but was None")
     }
 
     pub fn uncertain_parameter(&self) -> &Option<UncertainParameter> {

@@ -165,16 +165,38 @@ pub fn get_test_causaloid_deterministic_with_context(
     let description = "Inverts any input";
 
     fn causal_fn_deterministic_with_context(
-        effect: bool,
-        _context: &Arc<RwLock<BaseContext>>,
-    ) -> PropagatingEffect<bool> {
-        // The effect is already a bool, so no need for into_effect_value and match
-        CausalMonad::pure(!effect)
-    }
+        obs: EffectValue<bool>,
+        _state: (),
+        context: Option<Arc<RwLock<BaseContext>>>,
+    ) -> PropagatingProcess<bool, (), Arc<RwLock<BaseContext>>> {
+        if context.is_none() {
+            return PropagatingProcess::from_error(CausalityError(CausalityErrorEnum::Custom(
+                "Context is missing".into(),
+            )));
+        }
 
+        let input_val = obs.into_value().unwrap_or(false);
+
+        // Cloning the Arc to keep a reference, then locking
+        let ctx_ref = context.as_ref().unwrap().clone();
+        let ctx = ctx_ref.read().expect("Failed to read context");
+
+        let current_id = ctx.id();
+        // Assuming context ID 1 is "true" logic
+        if current_id == 1 {
+            PropagatingProcess::pure(input_val)
+        } else {
+            PropagatingProcess::pure(!input_val)
+        }
+    }
     Causaloid::new_with_context(
         id,
-        causal_fn_deterministic_with_context,
+        causal_fn_deterministic_with_context
+            as fn(
+                EffectValue<bool>,
+                (),
+                Option<Arc<RwLock<BaseContext>>>,
+            ) -> PropagatingProcess<bool, (), Arc<RwLock<BaseContext>>>,
         context,
         description,
     )

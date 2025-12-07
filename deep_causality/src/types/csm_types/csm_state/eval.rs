@@ -2,24 +2,26 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{
-    CausalState, Causaloid, CsmError, CsmEvaluable, Datable, MonadicCausable, PropagatingEffect,
-    SpaceTemporal, Spatial, Symbolic, Temporal,
-};
+use crate::errors::CsmError;
+use crate::traits::causable::MonadicCausable;
+use crate::types::csm_types::csm::CsmEvaluable;
+use crate::{CausalState, Causaloid, Context, Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
+use deep_causality_core::PropagatingEffect;
 use std::fmt::Debug;
+use std::sync::{Arc, RwLock};
 
 impl<I, O, D, S, T, ST, SYM, VS, VT> CausalState<I, O, D, S, T, ST, SYM, VS, VT>
 where
-    I: Default + Clone,
-    O: CsmEvaluable + Default + Debug + Clone,
-    D: Datable + Clone + Debug,
-    S: Spatial<VS> + Clone + Debug,
-    T: Temporal<VT> + Clone + Debug,
-    ST: SpaceTemporal<VS, VT> + Clone + Debug,
-    SYM: Symbolic + Clone + Debug,
-    VS: Clone + Debug,
-    VT: Clone + Debug,
-    Causaloid<I, O, D, S, T, ST, SYM, VS, VT>: MonadicCausable<I, O>,
+    I: Default + Clone + Debug + Send + Sync,
+    O: CsmEvaluable + Default + Debug + Clone + Send + Sync,
+    D: Datable + Clone + Debug + Send + Sync,
+    S: Spatial<VS> + Clone + Debug + Send + Sync,
+    T: Temporal<VT> + Clone + Debug + Send + Sync,
+    ST: SpaceTemporal<VS, VT> + Clone + Debug + Send + Sync,
+    SYM: Symbolic + Clone + Debug + Send + Sync,
+    VS: Clone + Send + Sync,
+    VT: Clone + Send + Sync,
+    Causaloid<I, O, (), Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>: MonadicCausable<I, O>,
 {
     /// Evaluates the state using its internal data.
     ///
@@ -28,14 +30,10 @@ where
     ///
     /// # Returns
     /// - `Ok(PropagatingEffect<O>)` if evaluation succeeds
-    /// - `Err(CsmError)` if an error occurs during evaluation
+    /// - `Err(CausalStateError)` if an error occurs during evaluation
     ///
     pub fn eval(&self) -> Result<PropagatingEffect<O>, CsmError> {
-        let res = self.causaloid.evaluate(&self.data);
-        match res.is_ok() {
-            true => Ok(res),
-            false => Err(CsmError::Causal(res.error.unwrap())),
-        }
+        Ok(self.causaloid.evaluate(&self.data))
     }
 
     /// Evaluates the state using provided external data.

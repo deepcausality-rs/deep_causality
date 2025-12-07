@@ -38,6 +38,7 @@ use crate::{ContextuableGraph, Datable, SpaceTemporal, Spatial, Symbolic, Tempor
 use deep_causality_haft::{Applicative, Effect3, Monad};
 use std::collections::HashMap;
 use std::fmt::Debug;
+use std::sync::{Arc, RwLock};
 
 /// Mutable state container for the causal system.
 ///
@@ -61,7 +62,8 @@ where
     VS: Clone,
     VT: Clone,
 {
-    pub causaloids: HashMap<u64, Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>,
+    pub causaloids:
+        HashMap<u64, Causaloid<I, O, (), Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>>,
     pub contexts: HashMap<u64, Context<D, S, T, ST, SYM, VS, VT>>,
 }
 
@@ -179,8 +181,8 @@ impl Interpreter {
         initial_state: CausalSystemState<I, O, D, S, T, ST, SYM, VS, VT>,
     ) -> AuditableGraphGenerator<CausalSystemState<I, O, D, S, T, ST, SYM, VS, VT>>
     where
-        I: Default,
-        O: Default + Debug,
+        I: Default + Clone,
+        O: Default + Debug + Clone,
         D: Datable + Copy + Clone + PartialEq + std::fmt::Debug,
         S: Spatial<VS> + Clone + std::fmt::Debug,
         T: Temporal<VT> + Clone + std::fmt::Debug,
@@ -204,8 +206,8 @@ impl Interpreter {
         state: CausalSystemState<I, O, D, S, T, ST, SYM, VS, VT>,
     ) -> AuditableGraphGenerator<CausalSystemState<I, O, D, S, T, ST, SYM, VS, VT>>
     where
-        I: Default,
-        O: Default + Debug,
+        I: Default + Clone,
+        O: Default + Debug + Clone,
         D: Datable + Copy + Clone + PartialEq + std::fmt::Debug,
         S: Spatial<VS> + Clone + std::fmt::Debug,
         T: Temporal<VT> + Clone + std::fmt::Debug,

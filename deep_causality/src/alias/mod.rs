@@ -14,7 +14,6 @@
 pub(crate) mod alias_base;
 pub(crate) mod alias_csm;
 pub(crate) mod alias_function;
-pub(crate) mod alias_lock;
 pub(crate) mod alias_primitives;
 pub(crate) mod alias_uncertain;
 pub(crate) mod alias_uniform;
@@ -22,7 +21,6 @@ pub(crate) mod alias_uniform;
 pub use crate::alias::alias_base::*;
 pub use crate::alias::alias_csm::*;
 pub use crate::alias::alias_function::*;
-pub use crate::alias::alias_lock::*;
 pub use crate::alias::alias_primitives::*;
 pub use crate::alias::alias_uncertain::*;
 pub use crate::alias::alias_uniform::*;

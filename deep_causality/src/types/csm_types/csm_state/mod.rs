@@ -2,9 +2,11 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Causaloid, PropagatingEffect, UncertainParameter};
+use crate::{Causaloid, Context, PropagatingEffect, UncertainParameter};
 use crate::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
 use std::fmt::Debug;
+use std::marker::PhantomData;
+use std::sync::{Arc, RwLock};
 mod display;
 mod eval;
 mod getter;
@@ -47,10 +49,17 @@ where
     version: usize,
     /// Numerical data used for state evaluation
     data: PropagatingEffect<I>,
-    /// Reference to a causaloid that defines when this state is active
-    causaloid: Causaloid<I, O, D, S, T, ST, SYM, VS, VT>,
+    /// The `Causaloid` managed by this state.
+    ///
+    /// This represents the active causal unit (logic) currently associated with
+    /// the state machine's execution context.
+    causaloid: Causaloid<I, O, (), Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>,
     /// Optional parameters for evaluating uncertain effects.
     uncertain_parameter: Option<UncertainParameter>,
+    /// PhantomData to hold the types `VS` and `VT` used in the `Context`.
+    ty: PhantomData<(VS, VT)>,
+    /// PhantomData to hold the type `SYM` used in the `Context`.
+    p_sym: PhantomData<SYM>,
 }
 
 impl<I, O, D, S, T, ST, SYM, VS, VT> CausalState<I, O, D, S, T, ST, SYM, VS, VT>
@@ -69,7 +78,7 @@ where
         id: usize,
         version: usize,
         data: PropagatingEffect<I>,
-        causaloid: Causaloid<I, O, D, S, T, ST, SYM, VS, VT>,
+        causaloid: Causaloid<I, O, (), Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>,
         uncertain_parameter: Option<UncertainParameter>,
     ) -> Self {
         Self {
@@ -78,6 +87,8 @@ where
             data,
             causaloid,
             uncertain_parameter,
+            ty: PhantomData,
+            p_sym: PhantomData,
         }
     }
 }

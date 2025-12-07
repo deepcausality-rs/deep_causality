@@ -16,18 +16,12 @@ use ultragraph::GraphTraversal;
 ///
 /// Any graph type that implements `CausableGraph<T>` where `T` is `MonadicCausable<V, V>`
 /// will automatically gain a suite of useful default methods for monadic evaluation.
-pub trait MonadicCausableGraphReasoning<V, D, S, T, ST, SYM, VS, VT>:
-    CausableGraph<Causaloid<V, V, D, S, T, ST, SYM, VS, VT>>
+pub trait MonadicCausableGraphReasoning<V, PS, C>: CausableGraph<Causaloid<V, V, PS, C>>
 where
     V: Default + Clone + Send + Sync + 'static + std::fmt::Debug,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
-    Causaloid<V, V, D, S, T, ST, SYM, VS, VT>: MonadicCausable<V, V>,
+    PS: Default + Clone + Send + Sync + 'static,
+    C: Clone + Send + Sync + 'static,
+    Causaloid<V, V, PS, C>: MonadicCausable<V, V>,
 {
     /// Evaluates a single, specific causaloid within the graph by its index using a monadic approach.
     ///
