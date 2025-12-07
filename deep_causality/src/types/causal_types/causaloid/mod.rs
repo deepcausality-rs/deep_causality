@@ -67,7 +67,6 @@ pub type CausalGraph<I, O, D, S, T, ST, SYM, VS, VT> =
 /// - `VS`: The value type for spatial data, must implement `Clone`.
 /// - `VT`: The value type for temporal data, must implement `Clone`.
 #[allow(clippy::type_complexity)]
-#[allow(clippy::type_complexity)]
 pub struct Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
 where
     I: Default,

@@ -66,7 +66,7 @@ where
                 // We need to extract the Vec from it
                 let mut acc_values = acc_values_effect_value
                     .into_value()
-                    .unwrap_or_else(|| Vec::new());
+                    .unwrap_or_else(Vec::new);
                 let item_effect = item.evaluate(incoming_effect); // item_effect is PropagatingEffect<O>
                 // Use bind to extract the value and transform the result
                 item_effect.bind(|item_value, _, _| {
