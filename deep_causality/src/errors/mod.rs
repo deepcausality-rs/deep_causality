@@ -15,7 +15,7 @@ mod csm_error;
 mod index_error;
 mod model_build_error;
 mod model_generation_error;
-pub mod model_validation_error;
+mod model_validation_error;
 mod update_error;
 
 pub use action_error::*;

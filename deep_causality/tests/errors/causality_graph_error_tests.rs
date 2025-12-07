@@ -61,7 +61,9 @@ fn test_from_graph_error_conversion() {
 #[test]
 fn test_from_causality_error_conversion() {
     // 1. Arrange: Create an instance of the source error type.
-    let source_error = CausalityError::new("inner error".to_string());
+    let source_error = CausalityError::new(deep_causality::CausalityErrorEnum::Custom(
+        "inner error".to_string(),
+    ));
     // The `From` impl uses the `Display` format of the source error.
     let expected_message = source_error.to_string();
 
