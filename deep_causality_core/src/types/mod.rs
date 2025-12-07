@@ -10,6 +10,5 @@ pub mod causal_monad;
 pub mod causal_system;
 pub mod effect_log;
 pub mod effect_value;
-pub mod numeric_value;
 pub mod propagating_effect;
 pub mod propagating_process;

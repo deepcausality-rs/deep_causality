@@ -160,7 +160,6 @@ pub use deep_causality_core::{
     CausalityErrorEnum,
     EffectLog,
     EffectValue,
-    NumericValue,
     PropagatingEffect,
     PropagatingProcess,
 };

@@ -38,7 +38,6 @@ pub use crate::types::causal_effect_system::CausalEffectSystem;
 pub use crate::types::causal_monad::CausalMonad;
 pub use crate::types::effect_log::log_effect::EffectLog;
 pub use crate::types::effect_value::EffectValue;
-pub use crate::types::numeric_value::NumericValue;
 pub use crate::types::propagating_effect::PropagatingEffect;
 pub use crate::types::propagating_effect::hkt::PropagatingEffectWitness;
 pub use crate::types::propagating_process::PropagatingProcess;
