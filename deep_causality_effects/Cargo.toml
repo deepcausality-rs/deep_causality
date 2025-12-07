@@ -1,0 +1,20 @@
+[package]
+name = "deep_causality_effects"
+version = "0.0.1"
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+readme = "README.md"
+description = "Effect types for deep_causality heterogeneous graphs and causal collections."
+repository = "https://github.com/deepcausality/deep_causality.rs"
+keywords = ["causality", "effects", "heterogeneous"]
+authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
+
+[dependencies]
+deep_causality_tensor = { path = "../deep_causality_tensor", version = "0.1" }
+deep_causality_multivector = { path = "../deep_causality_multivector", version = "0.1" }
+deep_causality_topology = { path = "../deep_causality_topology", version = "0.1" }
+
+
+[dev-dependencies]
+criterion = { version = "0.8.0" }
