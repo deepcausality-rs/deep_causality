@@ -2,10 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
 use crate::{SimplicialComplex, Topology};
-use alloc::sync::Arc;
 use deep_causality_tensor::CausalTensor;
+use std::sync::Arc;
 
 impl<T> Topology<T> {
     pub fn complex(&self) -> &Arc<SimplicialComplex> {

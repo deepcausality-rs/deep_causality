@@ -11,12 +11,6 @@ readme = "README.md"
 keywords = ["causality", "topology", "complex", "differential", "geometry"]
 categories = ["science", "mathematics"]
 
-[features]
-default = ["std"] # Keep std by default for convenience, can be turned off
-std = ["alloc", "deep_causality_num/default", "deep_causality_sparse/default"] # Explicitly enable std
-alloc = []
-
-
 [lib]
 name = "deep_causality_topology"
 path = "src/lib.rs"

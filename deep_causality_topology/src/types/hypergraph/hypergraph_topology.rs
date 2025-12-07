@@ -4,7 +4,6 @@
  */
 
 use crate::{Hypergraph, HypergraphTopology, TopologyError};
-use alloc::vec::Vec;
 
 impl<T> HypergraphTopology for Hypergraph<T> {
     fn num_hyperedges(&self) -> usize {

@@ -3,8 +3,6 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use alloc::vec;
-use alloc::vec::Vec;
 use deep_causality_multivector::Metric;
 use deep_causality_tensor::CausalTensor;
 

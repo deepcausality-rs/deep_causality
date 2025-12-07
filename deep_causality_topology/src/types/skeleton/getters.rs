@@ -4,7 +4,6 @@
  */
 
 use crate::{Simplex, Skeleton};
-use alloc::vec::Vec;
 
 impl Skeleton {
     pub fn dim(&self) -> usize {

@@ -2,11 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
 use crate::Graph;
-use alloc::collections::BTreeMap;
-use alloc::vec::Vec;
 use deep_causality_tensor::CausalTensor;
+use std::collections::BTreeMap;
 
 impl<T> Graph<T> {
     /// Returns the number of vertices in the graph.

@@ -4,7 +4,6 @@
  */
 
 use crate::{Simplex, SimplicialComplex, SimplicialTopology, TopologyError};
-
 impl SimplicialTopology for SimplicialComplex {
     fn max_simplex_dimension(&self) -> usize {
         self.skeletons.iter().map(|s| s.dim).max().unwrap_or(0)

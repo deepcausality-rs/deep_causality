@@ -4,7 +4,6 @@
  */
 
 use crate::{Graph, GraphTopology, TopologyError};
-use alloc::vec::Vec;
 
 impl<T> GraphTopology for Graph<T> {
     fn num_nodes(&self) -> usize {

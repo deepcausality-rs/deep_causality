@@ -2,12 +2,11 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
 use crate::types::chain::Chain;
 use crate::types::simplicial_complex::SimplicialComplex;
-use alloc::sync::Arc;
 use deep_causality_num::AbelianGroup;
 use deep_causality_sparse::CsrMatrix;
+use std::sync::Arc;
 
 impl<T> Chain<T>
 where

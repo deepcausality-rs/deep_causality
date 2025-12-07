@@ -1,0 +1,213 @@
+load("@rules_rust//rust:defs.bzl", "rust_test_suite")
+
+rust_test_suite(
+    name = "errors",
+    srcs = glob([
+        "errors/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_topology",
+        # Internal deps
+        "//deep_causality_tensor",
+        "//deep_causality_multivector",
+    ],
+)
+
+rust_test_suite(
+    name = "extensions",
+    srcs = glob([
+        "extensions/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_topology",
+        # Internal deps
+        "//deep_causality_haft",
+        "//deep_causality_sparse",
+        "//deep_causality_tensor",
+
+    ],
+)
+
+rust_test_suite(
+    name = "types/chain",
+    srcs = glob([
+        "types/chain/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_topology",
+        # Internal deps
+        "//deep_causality_sparse",
+    ],
+)
+
+rust_test_suite(
+    name = "types/graph",
+    srcs = glob([
+        "types/graph/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_topology",
+        # Internal deps
+        "//deep_causality_sparse",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_test_suite(
+    name = "types/hypergraph",
+    srcs = glob([
+        "types/hypergraph/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_topology",
+        # Internal deps
+        "//deep_causality_sparse",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_test_suite(
+    name = "types/manifold",
+    srcs = glob([
+        "types/manifold/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_topology",
+        # Internal deps
+        "//deep_causality_sparse",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_test_suite(
+    name = "types/point_cloud",
+    srcs = glob([
+        "types/point_cloud/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_topology",
+        # Internal deps
+        "//deep_causality_tensor",
+    ],
+)
+
+
+rust_test_suite(
+    name = "types/regge_geometry",
+    srcs = glob([
+        "types/regge_geometry/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_topology",
+        # Internal deps
+        "//deep_causality_sparse",
+        "//deep_causality_tensor",
+        "//deep_causality_multivector",
+    ],
+)
+
+rust_test_suite(
+    name = "types/simplex",
+    srcs = glob([
+        "types/simplex/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_topology",
+        # Internal deps
+    ],
+)
+
+rust_test_suite(
+    name = "types/simplicial_complex",
+    srcs = glob([
+        "types/simplicial_complex/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_topology",
+        # Internal deps
+        "//deep_causality_sparse",
+    ],
+)
+
+rust_test_suite(
+    name = "types/skeleton",
+    srcs = glob([
+        "types/skeleton/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_topology",
+        # Internal deps
+    ],
+)
+
+rust_test_suite(
+    name = "types/topology",
+    srcs = glob([
+        "types/topology/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_topology",
+        # Internal deps
+        "//deep_causality_tensor",
+        ],
+)

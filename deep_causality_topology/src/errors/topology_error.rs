@@ -3,9 +3,6 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-#![allow(unused_imports)]
-
-use alloc::string::{String, ToString};
 use core::fmt;
 use deep_causality_multivector::CausalMultiVectorError;
 use deep_causality_tensor::CausalTensorError;
@@ -59,20 +56,14 @@ impl fmt::Display for TopologyError {
     }
 }
 
-// Optional: Enable std::error::Error trait when 'std' feature is available
-#[cfg(feature = "std")]
 impl std::error::Error for TopologyError {}
 
-// Helper for converting from deep_causality_tensor::CausalTensorError
-#[cfg(feature = "std")]
 impl From<CausalTensorError> for TopologyError {
     fn from(err: CausalTensorError) -> Self {
         TopologyError::TensorError(err.to_string())
     }
 }
 
-// Helper for converting from deep_causality_multivector::CausalMultiVectorError
-#[cfg(feature = "std")]
 impl From<CausalMultiVectorError> for TopologyError {
     fn from(err: CausalMultiVectorError) -> Self {
         TopologyError::MultivectorError(err.to_string())

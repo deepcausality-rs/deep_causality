@@ -4,9 +4,9 @@
  */
 
 use crate::SimplicialComplex;
-use alloc::sync::Arc;
 use core::fmt::{Debug, Display, Formatter};
 use deep_causality_sparse::CsrMatrix;
+use std::sync::Arc;
 
 mod algebra;
 mod arithmetic;

@@ -4,8 +4,7 @@
  */
 
 use crate::Simplex;
-use alloc::string::{String, ToString};
-use alloc::vec::Vec;
+
 use core::fmt::{Display, Formatter};
 
 impl Display for Simplex {

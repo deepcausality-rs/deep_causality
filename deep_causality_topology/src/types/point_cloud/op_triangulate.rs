@@ -3,10 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{PointCloud, Simplex, SimplicialComplex, Skeleton, TopologyError};
-use alloc::collections::BTreeSet;
-use alloc::vec;
-use alloc::vec::Vec;
 use deep_causality_sparse::CsrMatrix;
+use std::collections::BTreeSet;
 
 // Helper function to calculate Euclidean distance between two points
 fn euclidean_distance(p1: &[f64], p2: &[f64]) -> f64 {

@@ -3,16 +3,13 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use alloc::sync::Arc;
-use alloc::vec;
-use alloc::vec::Vec;
-use core::ops::{Add, Mul};
-
 use crate::{Chain, SimplicialComplex, Topology, TopologyWitness};
+use core::ops::{Add, Mul};
 use deep_causality_haft::{BoundedAdjunction, HKT};
 use deep_causality_num::Zero;
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
+use std::sync::Arc;
 
 pub struct ChainWitness;
 
