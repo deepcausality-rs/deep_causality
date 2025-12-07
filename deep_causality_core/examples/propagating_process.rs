@@ -22,6 +22,20 @@ struct Config {
 fn main() {
     println!("--- PropagatingProcess Example ---");
 
+    // --------------------------------------------------------------------------------------------
+    // ENGINEERING VALUE: Stateful System Modeling
+    //
+    // Real-world systems are rarely stateless. Decisions depend on history (Markovian properties)
+    // and context (Configuration).
+    //
+    // `PropagatingProcess` extends the `Effect` concept to include:
+    // 1. **State (S)**: Mutable memory that evolves with the process (e.g., counters, history).
+    // 2. **Context (C)**: Read-only reference data available to all nodes (e.g., config).
+    //
+    // This encapsulates "Business Transaction" logic into a single, movable unit that carries
+    // its own history and configuration, making it easy to serialize, replay, or debug.
+    // --------------------------------------------------------------------------------------------
+
     // 1. Start with a stateless effect
     let initial_effect = PropagatingEffectWitness::pure(10);
 

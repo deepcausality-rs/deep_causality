@@ -21,7 +21,14 @@ use alloc::vec::Vec;
 /// This struct provides a high-level API for logging and ensures that all
 /// log entries are automatically timestamped. It hides the internal storage
 /// details to provide a clean and robust interface.
-#[derive(Debug, Default, Clone, Eq, PartialEq)]
+/// An append-only audit log for causal operations.
+///
+/// `EffectLog` maintains a chronological record of all significant events, computations,
+/// and interventions that occur during a causal process. This is crucial for:
+/// *   **Explainability**: Tracing back *why* a certain result was reached.
+/// *   **Auditability**: Providing a tamper-evident record of decisions suitable for compliance.
+/// *   **Debugging**: Understanding the flow of complex graphs.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct EffectLog {
     entries: Vec<LogEntry>,
 }

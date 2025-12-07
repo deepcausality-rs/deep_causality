@@ -6,7 +6,12 @@
 use core::fmt::Debug;
 
 /// The fundamental contract for data flowing through the system.
-/// Users implement this on their own Enum to define their domain.
+///
+/// Users implement this on their own Enum to define their domain-specific data types.
+/// This trait ensures that any data passed through the causal graph satisfies basic
+/// requirements like threading support (`Send + Sync`), debugging, and cloning.
+///
+/// Use this to define the "Protocol" (the vocabulary) of your causal system.
 pub trait ControlFlowProtocol: Clone + Debug + Send + Sync + 'static {
     /// A standard way to represent a protocol-level error.
     fn error<E: Debug>(e: E) -> Self;

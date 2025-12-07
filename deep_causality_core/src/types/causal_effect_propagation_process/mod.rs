@@ -9,14 +9,41 @@ use deep_causality_haft::{LogAppend, MonadEffect5};
 mod display;
 mod explain;
 pub mod hkt;
+mod intervenable;
 mod predicates;
 
+/// The fundamental unit of causal computation in DeepCausality.
+///
+/// `CausalEffectPropagationProcess` encapsulates the state of a computation moving through a causal
+/// graph. It unifies value propagation, state management, context awareness, error handling, and
+/// comprehensive logging into a single, monadic structure.
+///
+/// # Concepts
+///
+/// *   **Value**: The primary data being transformed (e.g., a signal, a decision).
+/// *   **State**: Persistent data that evolves as the process moves through the graph (Markovian state).
+/// *   **Context**: Read-only configuration or environment data available to all steps.
+/// *   **Error**: A failure state that short-circuits further computation but preserves logs.
+/// *   **Logs**: An append-only history of every step, essential for auditability and explainability.
+///
+/// # Rationale
+///
+/// In complex causal reasoning, it is not enough to just know the final result. We must know *how*
+/// that result was reached, what invalid states were encountered, and what context was active.
+/// This struct implements the [Monad](https://en.wikipedia.org/wiki/Monad_(functional_programming)) pattern
+/// to handle these concerns automatically, allowing users to focus on the domain logic ("Business Logic")
+/// rather than plumbing (error checking, logging).
 #[derive(Debug, PartialEq, Clone)]
 pub struct CausalEffectPropagationProcess<Value, State, Context, Error, Log> {
+    /// The current value of the computation.
     pub value: EffectValue<Value>,
+    /// The current state of the process (e.g., accumulated risk, counters).
     pub state: State,
+    /// The optional execution context (e.g., global config, reference data).
     pub context: Option<Context>,
+    /// The current error state. If `Some`, new `bind` operations will skip execution.
     pub error: Option<Error>,
+    /// The audit log containing the history of operations.
     pub logs: Log,
 }
 

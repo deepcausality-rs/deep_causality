@@ -18,6 +18,23 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "traits",
+    srcs = glob([
+        "traits/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    crate_features = ["std", "alloc"],
+    deps = [
+        # Crate to test
+        "//deep_causality_core",
+        # Internal dependencies
+    ],
+)
+
+rust_test_suite(
     name = "types_effect_value",
     srcs = glob([
         "types/effect_value/*_tests.rs",

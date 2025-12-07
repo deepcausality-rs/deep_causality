@@ -8,6 +8,19 @@ use deep_causality_core::ControlFlowBuilder;
 use deep_causality_core::{ControlFlowProtocol, FromProtocol, ToProtocol};
 
 // Strict Function 1: Sensor reading
+//
+// ------------------------------------------------------------------------------------------------
+// ENGINEERING VALUE: Type-Safe Graph Construction
+//
+// DeepCausality ensures that your data flow is valid *at compile time*.
+//
+// The `ControlFlowBuilder` allows you to:
+// 1. Define nodes with strict function signatures.
+// 2. Connect them only if types match (Verified by the Protocol Enum).
+// 3. Catch invalid connections (e.g., bool -> Vec<f64>) either via Compiler (if using stricter APIs)
+//    or Builders internal checks.
+// ------------------------------------------------------------------------------------------------
+
 // Input: bool - sets the sensor active
 // Output: Vec<f64>
 fn read_sensor(active: bool) -> Vec<f64> {

@@ -62,7 +62,7 @@ fn test_bind_error() {
 fn test_intervene() {
     let initial = CausalMonad::<i32, String>::pure(10);
 
-    let intervened = CausalMonad::<i32, String>::intervene(initial, 99);
+    let intervened = initial.intervene(99);
 
     if let EffectValue::Value(v) = intervened.value {
         assert_eq!(v, 99);

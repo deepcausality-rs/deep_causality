@@ -41,13 +41,12 @@
 //! with built-in error handling and comprehensive logging, adhering to functional
 //! programming principles within a performant Rust environment.
 
-use crate::Intervenable;
 use crate::types::causal_system::CausalSystem;
 use crate::{
     CausalEffectPropagationProcess, CausalityError, CausalityErrorEnum, EffectLog, EffectValue,
 };
 use core::marker::PhantomData;
-use deep_causality_haft::{Effect5, Functor, LogAddEntry, LogAppend, MonadEffect5};
+use deep_causality_haft::{Effect5, Functor, LogAppend, MonadEffect5};
 
 /// `CausalMonad` is the concrete implementation of the `MonadEffect5` trait for the
 /// `CausalSystem`. It provides the fundamental `pure` and `bind` operations
@@ -115,34 +114,5 @@ where
         next_process.logs = combined_logs;
 
         next_process
-    }
-}
-
-impl<S, C> Intervenable<CausalSystem<S, C>> for CausalMonad<S, C>
-where
-    S: Clone + Default,
-    C: Clone,
-{
-    fn intervene<T>(
-        effect: CausalEffectPropagationProcess<T, S, C, CausalityError, EffectLog>,
-        new_value: T,
-    ) -> CausalEffectPropagationProcess<T, S, C, CausalityError, EffectLog> {
-        // 1. Preserve the incoming logs and add a new entry for the intervention.
-        let mut new_logs = effect.logs;
-        new_logs.add_entry("Intervention occurred");
-
-        // 2. Construct the new effect.
-        CausalEffectPropagationProcess {
-            // The value is replaced with the intervention value.
-            value: EffectValue::Value(new_value),
-            // The state is preserved.
-            state: effect.state,
-            // The context is preserved.
-            context: effect.context,
-            // The error state is preserved.
-            error: effect.error,
-            // The updated logs are carried forward.
-            logs: new_logs,
-        }
     }
 }
