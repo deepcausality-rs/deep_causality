@@ -71,12 +71,9 @@ pub use crate::traits::indexable::time_indexable::TimeIndexable;
 // Inferable Traits
 pub use crate::traits::inferable::Inferable;
 pub use crate::traits::inferable::InferableReasoning;
-// Intervenable Trait
-pub use crate::traits::intervenable::Intervenable;
 // Observable Traits
 pub use crate::traits::observable::Observable;
 pub use crate::traits::observable::ObservableReasoning;
-pub use crate::traits::propagating_value::PropagatingValue;
 // Scalar traits
 pub use crate::traits::scalar::scalar_projector::ScalarProjector;
 pub use crate::traits::scalar::scalar_value::ScalarValue;
@@ -153,8 +150,6 @@ pub use crate::types::model_types::assumption::Assumption;
 pub use crate::types::model_types::inference::Inference;
 pub use crate::types::model_types::model::Model;
 pub use crate::types::model_types::observation::Observation;
-// Monad types
-pub use crate::types::monad_types::causal_effect_system::CausalEffectSystem;
 
 // Reasoning types
 pub use crate::types::reasoning_types::aggregate_logic::AggregateLogic;
@@ -167,7 +162,6 @@ pub use deep_causality_core::{
     CausalityError, // Core error
     CausalityErrorEnum,
     EffectLog,
-    EffectLog as CausalEffectLog, // Alias for backward compatibility
     EffectValue,
     PropagatingEffect,
     PropagatingProcess,

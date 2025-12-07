@@ -28,7 +28,7 @@ pub fn get_test_error_action() -> CausalAction {
 // Causaloid that returns a non-deterministic effect
 pub fn get_test_probabilistic_causaloid() -> BaseCausaloid<f64, f64> {
     let causal_fn = Arc::new(|_: f64| -> PropagatingEffect<f64> {
-        let log = CausalEffectLog::new();
+        let log = EffectLog::new();
         let mut effect = CausalMonad::pure(0.5);
         effect.logs = log;
         effect
@@ -49,7 +49,7 @@ pub fn get_test_error_causaloid() -> BaseCausaloid<bool, bool> {
 
 pub fn get_test_causaloid(with_context: bool) -> BaseCausaloid<bool, bool> {
     let causal_fn = Arc::new(|_effect: bool| -> PropagatingEffect<bool> {
-        let mut log = CausalEffectLog::new();
+        let mut log = EffectLog::new();
         log.add_entry("Just return true");
         let mut effect = CausalMonad::pure(true);
         effect.logs = log;

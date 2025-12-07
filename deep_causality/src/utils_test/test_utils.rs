@@ -301,7 +301,7 @@ pub fn get_test_causaloid(id: IdentificationValue) -> BaseCausaloid<f64, bool> {
     let description = "tests whether data exceeds threshold of 0.55";
 
     let causal_fn = Arc::new(|evidence: f64| -> PropagatingEffect<bool> {
-        let mut log = CausalEffectLog::new();
+        let mut log = EffectLog::new();
         log.add_entry(&format!("Processing evidence: {}", evidence));
 
         if evidence.is_sign_negative() {
@@ -332,7 +332,7 @@ pub fn get_test_causaloid_num_input_output(id: IdentificationValue) -> BaseCausa
     let description = "tests whether data exceeds threshold of 0.55";
 
     let causal_fn = Arc::new(|evidence: f64| -> PropagatingEffect<f64> {
-        let mut log = CausalEffectLog::new();
+        let mut log = EffectLog::new();
         log.add_entry(&format!("Processing evidence: {}", evidence));
 
         if evidence.is_sign_negative() {

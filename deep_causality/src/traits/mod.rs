@@ -13,8 +13,6 @@ pub mod contextuable_graph;
 pub mod identifiable;
 pub mod indexable;
 pub mod inferable;
-pub mod intervenable;
 pub mod observable;
-pub mod propagating_value;
 pub mod scalar;
 pub mod transferable;

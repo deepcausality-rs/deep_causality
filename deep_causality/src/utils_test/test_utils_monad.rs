@@ -2,10 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
 use crate::{
-    CausalEffectLog, CausalMonad, CausalityError, CausalityErrorEnum, EffectValue,
-    PropagatingEffect,
+    CausalMonad, CausalityError, CausalityErrorEnum, EffectLog, EffectValue, PropagatingEffect,
 };
 use deep_causality_haft::{LogAddEntry, MonadEffect5};
 
@@ -17,7 +15,7 @@ pub fn smoking_logic(
     _state: (),
     _ctx: Option<()>,
 ) -> PropagatingEffect<bool> {
-    let mut log = CausalEffectLog::new();
+    let mut log = EffectLog::new();
     let nicotine_val = nicotine_obs.into_value().unwrap_or(0.0);
     let threshold = 0.6;
     let high_nicotine = nicotine_val > threshold;
@@ -39,7 +37,7 @@ pub fn tar_logic(
     _state: (),
     _ctx: Option<()>,
 ) -> PropagatingEffect<bool> {
-    let mut log = CausalEffectLog::new();
+    let mut log = EffectLog::new();
     let smoking = is_smoking.into_value().unwrap_or(false);
     log.add_entry(&format!("Has tar in lung {}", smoking));
 
@@ -53,7 +51,7 @@ pub fn error_logic(
     _state: (),
     _ctx: Option<()>,
 ) -> PropagatingEffect<bool> {
-    let mut log = CausalEffectLog::new();
+    let mut log = EffectLog::new();
     log.add_entry("Error logic applied");
 
     let mut effect = PropagatingEffect::from_error(CausalityError::new(
