@@ -204,3 +204,60 @@ where
         }
     }
 }
+
+impl<Value, State, Context, Log>
+    CausalEffectPropagationProcess<Value, State, Context, CausalityError, Log>
+where
+    Log: LogAppend + Default,
+    State: Clone,
+    Context: Clone,
+{
+    /// Chains a computation while automatically unwrapping the inner `EffectValue`.
+    ///
+    /// If the `EffectValue` is `None`, this method short-circuits with a `CausalityError`
+    /// containing the provided `err_msg`. This simplifies the common pattern of:
+    /// `bind -> match effect_value { Some(v) => f(v), None => Error }`
+    pub fn bind_or_error<F, NewValue>(
+        self,
+        f: F,
+        err_msg: &str,
+    ) -> CausalEffectPropagationProcess<NewValue, State, Context, CausalityError, Log>
+    where
+        F: FnOnce(
+            Value,
+            State,
+            Option<Context>,
+        )
+            -> CausalEffectPropagationProcess<NewValue, State, Context, CausalityError, Log>,
+        NewValue: Default,
+    {
+        if let Some(error) = self.error {
+            return CausalEffectPropagationProcess {
+                value: EffectValue::default(),
+                state: self.state,
+                context: self.context,
+                error: Some(error),
+                logs: self.logs,
+            };
+        }
+
+        match self.value.into_value() {
+            Some(v) => {
+                let mut next_process = f(v, self.state, self.context);
+                let mut combined_logs = self.logs;
+                combined_logs.append(&mut next_process.logs);
+                next_process.logs = combined_logs;
+                next_process
+            }
+            None => CausalEffectPropagationProcess {
+                value: EffectValue::default(),
+                state: self.state,
+                context: self.context,
+                error: Some(CausalityError(crate::CausalityErrorEnum::Custom(
+                    err_msg.into(),
+                ))),
+                logs: self.logs,
+            },
+        }
+    }
+}
