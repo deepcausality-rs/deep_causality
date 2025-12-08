@@ -171,11 +171,8 @@ where
                         visited[target_idx] = true;
                         // carry over logs into the relayed inner effect
                         // inner_effect is Box<PropagatingEffect<V>>? Or just PropagatingEffect<V>?
-                        // Assuming EffectValue::RelayTo(usize, Box<PropagatingEffect<V>>)
                         let mut relayed = *inner_effect.clone(); // Deref box
-                        relayed
-                            .logs
-                            .append(&mut last_propagated_effect.clone().logs);
+                        relayed.logs.append(&mut last_propagated_effect.logs);
                         queue.push_back((target_idx, relayed));
                     }
                 }

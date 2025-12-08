@@ -35,20 +35,21 @@ where
             let ev = EffectValue::from(input);
             let process = context_fn(ev, PS::default(), Some(context.clone()));
 
-            // PropagatingProcess is CausalEffectPropagationProcess<O, PS, C>.
-            // We extract the value and return it as PropagatingEffect (stateless).
-            // This effectively discards the state and context updates for this trait method,
-            // which aligns with MonadicCausable<I, O> signature.
-
-            // Safely extract value potentially containing error
-            match process.value.into_value() {
+            // Convert PropagatingProcess to PropagatingEffect, preserving logs.
+            let mut effect = match process.value.into_value() {
                 Some(val) => PropagatingEffect::pure(val),
-                None => PropagatingEffect::from_error(CausalityError(
-                    deep_causality_core::CausalityErrorEnum::Custom(
-                        "execute_causal_logic: context_fn returned None value".into(),
-                    ),
-                )),
-            }
+                None => {
+                    let error = process.error.unwrap_or_else(|| {
+                        CausalityError(deep_causality_core::CausalityErrorEnum::Custom(
+                            "execute_causal_logic: context_fn returned None value and no error"
+                                .into(),
+                        ))
+                    });
+                    PropagatingEffect::from_error(error)
+                }
+            };
+            effect.logs = process.logs;
+            effect
         } else {
             PropagatingEffect::from_error(CausalityError(
                 deep_causality_core::CausalityErrorEnum::Custom(
