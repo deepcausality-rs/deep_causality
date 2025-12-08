@@ -12,6 +12,7 @@ buildifier -r MODULE.bazel BUILD.bazel thirdparty/BUILD.bazel
 buildifier -r deep_causality/
 buildifier -r deep_causality_algorithms/
 buildifier -r deep_causality_data_structures/
+buildifier -r deep_causality_effects/
 buildifier -r deep_causality_discovery/
 buildifier -r deep_causality_haft/
 buildifier -r deep_causality_macros/
