@@ -29,7 +29,6 @@ mod display;
 mod getters;
 mod identifiable;
 mod part_eq;
-mod setters;
 
 /// Type alias for a vector of `Causaloid`s.
 ///

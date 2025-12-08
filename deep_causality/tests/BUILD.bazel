@@ -473,6 +473,7 @@ rust_test_suite(
     deps = [
         # Crate to test
         "//deep_causality",
+        # Internal dependencies
         "//deep_causality_num",
         "//deep_causality_tensor",
         "//deep_causality_uncertain",
@@ -497,5 +498,9 @@ rust_test_suite(
     deps = [
         # Crate to test
         "//deep_causality",
+        # Internal dependencies
+        "//deep_causality_core",
+        "//deep_causality_haft",
+        "//deep_causality_uncertain",
     ],
 )
