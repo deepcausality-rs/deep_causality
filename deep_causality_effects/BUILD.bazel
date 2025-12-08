@@ -11,8 +11,8 @@ rust_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_tensor",
         "//deep_causality_multivector",
+        "//deep_causality_tensor",
         "//deep_causality_topology",
     ],
 )

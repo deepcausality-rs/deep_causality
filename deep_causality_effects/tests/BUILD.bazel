@@ -1,7 +1,5 @@
 load("@rules_rust//rust:defs.bzl", "rust_test_suite")
 
-
-
 rust_test_suite(
     name = "types/effect_data",
     srcs = glob([
