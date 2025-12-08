@@ -94,7 +94,7 @@ fn main() {
 }
 ```
 
-#### Custom Types (Escape Hatch)
+#### Custom Types 
 
 For types not natively covered, use the `Custom` variant:
 

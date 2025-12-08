@@ -172,11 +172,31 @@ where
         }
     }
 
+    pub fn from_value(value: Value) -> Self {
+        Self {
+            value: EffectValue::Value(value),
+            state: State::default(),
+            context: None,
+            error: None,
+            logs: EffectLog::new(),
+        }
+    }
+
     /// Creates a new process from a given `EffectValue` and `EffectLog`.
     /// The state is set to default.
     pub fn from_effect_value_with_log(value: EffectValue<Value>, logs: EffectLog) -> Self {
         Self {
             value,
+            state: State::default(),
+            context: None,
+            error: None,
+            logs,
+        }
+    }
+
+    pub fn from_value_with_log(value: Value, logs: EffectLog) -> Self {
+        Self {
+            value: EffectValue::Value(value),
             state: State::default(),
             context: None,
             error: None,

@@ -4,10 +4,10 @@ module(name = "deep_causality")
 # Bazel Dependencies
 # https://registry.bazel.build/
 ###############################################################################
-bazel_dep(name = "aspect_bazel_lib", version = "2.16.0")
+bazel_dep(name = "aspect_bazel_lib", version = "2.22.0")
 bazel_dep(name = "bazel_skylib", version = "1.8.2")
 bazel_dep(name = "platforms", version = "1.0.0")
-bazel_dep(name = "rules_rust", version = "0.67.0")
+bazel_dep(name = "rules_rust", version = "0.68.0")
 
 ###############################################################################
 # Rust toolchain

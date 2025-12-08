@@ -5,7 +5,7 @@
 
 use std::collections::VecDeque;
 
-use deep_causality::{AssumableReasoning, Assumption, PropagatingEffect};
+use deep_causality::{AssumableReasoning, Assumption, NumericalValue, PropagatingEffect};
 
 use deep_causality::utils_test::test_utils::*;
 
@@ -31,9 +31,9 @@ fn test_all_assumptions_tested() {
     let all_tested = col.all_assumptions_tested();
     assert!(!all_tested);
 
-    let data: Vec<PropagatingEffect> = get_test_num_array()
+    let data: Vec<PropagatingEffect<NumericalValue>> = get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::from_numerical(x))
+        .map(|&x| PropagatingEffect::from_value(x))
         .collect();
     col.verify_all_assumptions(&data).unwrap();
 
@@ -52,9 +52,9 @@ fn test_all_assumptions_valid() {
     let all_valid = col.all_assumptions_valid();
     assert!(!all_valid);
 
-    let data: Vec<PropagatingEffect> = get_test_num_array()
+    let data: Vec<PropagatingEffect<NumericalValue>> = get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::from_numerical(x))
+        .map(|&x| PropagatingEffect::from_value(x))
         .collect();
     col.verify_all_assumptions(&data).unwrap();
     let all_tested = col.all_assumptions_tested();
@@ -78,9 +78,9 @@ fn test_percent_assumption_valid() {
     let all_valid_percent = col.percent_assumption_valid().unwrap();
     assert_eq!(all_valid_percent, 0.0);
 
-    let data: Vec<PropagatingEffect> = get_test_num_array()
+    let data: Vec<PropagatingEffect<NumericalValue>> = get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::from_numerical(x))
+        .map(|&x| PropagatingEffect::from_value(x))
         .collect();
     col.verify_all_assumptions(&data).unwrap();
     let all_tested = col.all_assumptions_tested();
@@ -107,9 +107,9 @@ fn test_get_all_invalid_assumptions() {
     let all_valid_percent = col.percent_assumption_valid().unwrap();
     assert_eq!(all_valid_percent, 0.0);
 
-    let data: Vec<PropagatingEffect> = get_test_num_array()
+    let data: Vec<PropagatingEffect<NumericalValue>> = get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::from_numerical(x))
+        .map(|&x| PropagatingEffect::from_value(x))
         .collect();
 
     col.verify_all_assumptions(&data).unwrap();
@@ -134,9 +134,9 @@ fn test_get_all_valid_assumptions() {
     let all_valid_percent = col.percent_assumption_valid().unwrap();
     assert_eq!(all_valid_percent, 0.0);
 
-    let data: Vec<PropagatingEffect> = get_test_num_array()
+    let data: Vec<PropagatingEffect<NumericalValue>> = get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::from_numerical(x))
+        .map(|&x| PropagatingEffect::from_value(x))
         .collect();
     col.verify_all_assumptions(&data).unwrap();
 
@@ -161,9 +161,9 @@ fn test_get_all_tested_assumptions() {
     let all_valid_percent = col.percent_assumption_valid().unwrap();
     assert_eq!(all_valid_percent, 0.0);
 
-    let data: Vec<PropagatingEffect> = get_test_num_array()
+    let data: Vec<PropagatingEffect<NumericalValue>> = get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::from_numerical(x))
+        .map(|&x| PropagatingEffect::from_value(x))
         .collect();
     col.verify_all_assumptions(&data).unwrap();
 
@@ -191,9 +191,9 @@ fn test_get_all_untested_assumptions() {
     let all_valid_percent = col.percent_assumption_valid().unwrap();
     assert_eq!(all_valid_percent, 0.0);
 
-    let data: Vec<PropagatingEffect> = get_test_num_array()
+    let data: Vec<PropagatingEffect<NumericalValue>> = get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::from_numerical(x))
+        .map(|&x| PropagatingEffect::from_value(x))
         .collect();
     col.verify_all_assumptions(&data).unwrap();
 
@@ -218,9 +218,9 @@ fn test_verify_all_assumptions() {
     let all_valid_percent = col.percent_assumption_valid().unwrap();
     assert_eq!(all_valid_percent, 0.0);
 
-    let data: Vec<PropagatingEffect> = get_test_num_array()
+    let data: Vec<PropagatingEffect<NumericalValue>> = get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::from_numerical(x))
+        .map(|&x| PropagatingEffect::from_value(x))
         .collect();
     col.verify_all_assumptions(&data).unwrap();
 

@@ -39,7 +39,7 @@ fn test_all_assumptions_tested() {
 
     let data: Vec<PropagatingEffect<f64>> = get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::pure(x))
+        .map(|&x| PropagatingEffect::from_value(x))
         .collect();
     col.verify_all_assumptions(&data).unwrap();
 
@@ -60,7 +60,7 @@ fn test_all_assumptions_valid() {
 
     let data: Vec<PropagatingEffect<f64>> = get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::pure(x))
+        .map(|&x| PropagatingEffect::from_value(x))
         .collect();
     col.verify_all_assumptions(&data).unwrap();
     let all_tested = col.all_assumptions_tested();
@@ -86,7 +86,7 @@ fn test_percent_assumption_valid() {
 
     let data: Vec<PropagatingEffect<f64>> = get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::pure(x))
+        .map(|&x| PropagatingEffect::from_value(x))
         .collect();
     col.verify_all_assumptions(&data).unwrap();
     let all_tested = col.all_assumptions_tested();
@@ -115,7 +115,7 @@ fn test_get_all_invalid_assumptions() {
 
     let data: Vec<PropagatingEffect<f64>> = get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::pure(x))
+        .map(|&x| PropagatingEffect::from_value(x))
         .collect();
     col.verify_all_assumptions(&data).unwrap();
     let all_tested = col.all_assumptions_tested();

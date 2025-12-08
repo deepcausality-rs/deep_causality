@@ -5,7 +5,7 @@
 
 mod errors;
 mod extensions;
-// mod traits;
+mod traits;
 // mod types;
 // mod utils;
 // mod utils_test;
