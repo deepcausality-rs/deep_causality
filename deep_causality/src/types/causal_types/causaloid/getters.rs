@@ -33,7 +33,7 @@ where
         self.context.as_ref()
     }
 
-    pub fn causal_coll(&self) -> Option<&Arc<Vec<Causaloid<I, O, PS, C>>>> {
+    pub fn causal_collection(&self) -> Option<&Arc<Vec<Causaloid<I, O, PS, C>>>> {
         self.causal_coll.as_ref()
     }
 

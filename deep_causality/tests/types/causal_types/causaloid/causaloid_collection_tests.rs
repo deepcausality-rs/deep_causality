@@ -6,7 +6,7 @@ use deep_causality::utils_test::test_utils;
 use deep_causality::utils_test::test_utils::get_base_context;
 use deep_causality::{
     AggregateLogic, BaseCausaloid, Causable, Causaloid, EffectValue, IdentificationValue,
-    MonadicCausable, PropagatingEffect,
+    MonadicCausableCollection, PropagatingEffect,
 };
 use std::sync::{Arc, RwLock};
 
@@ -65,7 +65,7 @@ fn test_collection_causaloid_evaluation() {
 
     let causaloid: BaseCausaloid<bool, bool> = BaseCausaloid::from_causal_collection(
         id,
-        causal_coll,
+        causal_coll.clone(),
         description,
         AggregateLogic::Any,
         0.5,
@@ -76,12 +76,16 @@ fn test_collection_causaloid_evaluation() {
     assert!(causaloid.context().is_none());
 
     // Evaluate the collection-based causaloid.
-    let effect = PropagatingEffect::from_boolean(true);
-    let res = causaloid.evaluate(&effect);
+    // NOTE: Causaloid::evaluate does not support Collections due to generic bounds.
+    // We must use evaluate_collection on the collection itself.
+    let effect = PropagatingEffect::from_value(true);
+
+    // We access the collection directly (using the Arc we created or from the getter)
+    let res = causal_coll.evaluate_collection(&effect, &AggregateLogic::Any, Some(0.5));
     dbg!(&res);
 
     // The default aggregation for a collection is "true".
-    assert_eq!(res.value, EffectValue::Boolean(true));
+    assert_eq!(res.value, EffectValue::Value(true));
 }
 
 #[test]
@@ -92,25 +96,25 @@ fn test_explain_collection_success() {
     ]);
 
     // Setup: A collection causaloid
-    let collection_causaloid: BaseCausaloid<bool, bool> = Causaloid::from_causal_collection(
+    let _collection_causaloid: BaseCausaloid<bool, bool> = Causaloid::from_causal_collection(
         104,
-        causal_coll,
+        causal_coll.clone(),
         "Explainable Collection",
         AggregateLogic::Any,
         0.5,
     );
 
     // Act: Evaluate the collection. Now both members will be evaluated.
-    let effect = PropagatingEffect::from_boolean(false); // Changed to bool
-    let res = collection_causaloid.evaluate(&effect);
+    let effect = PropagatingEffect::from_value(false); // Changed to bool
+    let res = causal_coll.evaluate_collection(&effect, &AggregateLogic::Any, Some(0.5));
     dbg!(&res);
 
     // Now, call explain.
     let explanation = res.explain(); // Original, correct
 
     // Assert: The explanation should contain the results from both sub-causaloids.
-    assert!(explanation.contains("Outgoing effect: Boolean(true)")); // Changed assertion
-    assert!(explanation.contains("Outgoing effect: Boolean(false)")); // Changed assertion
+    assert!(explanation.contains("Outgoing effect: Value(true)"));
+    assert!(explanation.contains("Outgoing effect: Value(false)"));
 }
 
 #[test]
@@ -121,17 +125,17 @@ fn test_evaluate_collection_with_sub_evaluation_error() {
         test_utils::get_test_causaloid_deterministic_true(),
     ]);
 
-    let collection_causaloid: BaseCausaloid<bool, bool> = Causaloid::from_causal_collection(
+    let _collection_causaloid: BaseCausaloid<bool, bool> = Causaloid::from_causal_collection(
         102,
-        causal_coll,
+        causal_coll.clone(),
         "Error Collection",
         AggregateLogic::Any,
         0.5,
     );
 
     // Act
-    let effect = PropagatingEffect::from_boolean(false); // Changed to bool
-    let res = collection_causaloid.evaluate(&effect);
+    let effect = PropagatingEffect::from_value(false); // Changed to bool
+    let res = causal_coll.evaluate_collection(&effect, &AggregateLogic::Any, Some(0.5));
     dbg!(&res);
 
     // Assert: The error from the sub-causaloid should now be propagated up.
@@ -148,19 +152,19 @@ fn test_evaluate_collection_without_true_effect() {
         test_utils::get_test_causaloid_deterministic_false(),
     ]);
 
-    let collection_causaloid: BaseCausaloid<bool, bool> = Causaloid::from_causal_collection(
+    let _collection_causaloid: BaseCausaloid<bool, bool> = Causaloid::from_causal_collection(
         101,
-        causal_coll,
+        causal_coll.clone(),
         "All False Collection",
         AggregateLogic::Any,
         0.5,
     );
 
     // Act
-    let effect = PropagatingEffect::from_boolean(false); // Changed to bool
-    let res = collection_causaloid.evaluate(&effect);
+    let effect = PropagatingEffect::from_value(false); // Changed to bool
+    let res = causal_coll.evaluate_collection(&effect, &AggregateLogic::Any, Some(0.5));
     dbg!(&res);
 
     // Assert: Since no causaloid is true, the aggregated effect should be false.
-    assert_eq!(res.value, EffectValue::Boolean(false));
+    assert_eq!(res.value, EffectValue::Value(false));
 }

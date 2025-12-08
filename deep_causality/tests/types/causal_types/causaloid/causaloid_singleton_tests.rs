@@ -4,28 +4,34 @@
  */
 
 use deep_causality::*;
+use deep_causality_core::CausalityErrorEnum;
+use deep_causality_haft::MonadEffect5;
 use std::sync::{Arc, RwLock};
 
-use deep_causality::utils_test::test_utils::{
-    get_base_context, get_test_causaloid_deterministic_input_output,
-};
+use deep_causality::utils_test::test_utils::get_base_context;
 use deep_causality::utils_test::*;
+use deep_causality_haft::LogAddEntry;
 
 #[test]
 fn test_new() {
     let id: IdentificationValue = 1;
     let description = "tests whether data exceeds threshold of 0.55";
 
-    fn causal_fn(obs: NumericalValue) -> Result<CausalFnOutput<bool>, CausalityError> {
+    fn causal_fn(obs: NumericalValue) -> PropagatingEffect<bool> {
         if obs.is_nan() {
-            return Err(CausalityError("Observation is NULL/NAN".into()));
+            return PropagatingEffect::from_error(CausalityError::new(CausalityErrorEnum::Custom(
+                "Observation is NAN".into(),
+            )));
         }
+
         let threshold: NumericalValue = 0.75;
         let is_active = obs.ge(&threshold);
-        let mut log = CausalEffectLog::new();
+        let mut log = EffectLog::new();
         log.add_entry("Causal function executed successfully");
 
-        Ok(CausalFnOutput::new(is_active, log))
+        let mut effect = CausalMonad::pure(is_active);
+        effect.logs = log;
+        effect
     }
 
     let causaloid = BaseCausaloid::<NumericalValue, bool>::new(id, causal_fn, description);
@@ -43,34 +49,51 @@ fn test_new_with_context() {
     let context = get_base_context();
 
     fn contextual_causal_fn(
-        obs: NumericalValue,
-        ctx: &Arc<RwLock<BaseContext>>,
-    ) -> Result<CausalFnOutput<bool>, CausalityError> {
-        if obs.is_nan() {
-            return Err(CausalityError("Observation is NULL/NAN".into()));
+        obs: EffectValue<NumericalValue>,
+        _state: (),
+        ctx: Option<Arc<RwLock<BaseContext>>>,
+    ) -> PropagatingProcess<bool, (), Arc<RwLock<BaseContext>>> {
+        let val = obs.into_value();
+        if val.is_none() {
+            // In PropagatingProcess, we return error wrapped in the struct
+            return PropagatingProcess::from_error(CausalityError::new(
+                CausalityErrorEnum::Custom("Observation is NULL".into()),
+            ));
+        }
+        let obs_val = val.unwrap();
+        if obs_val.is_nan() {
+            return PropagatingProcess::from_error(CausalityError::new(
+                CausalityErrorEnum::Custom("Observation is NULL/NAN".into()),
+            ));
+        }
+
+        if ctx.is_none() {
+            return PropagatingProcess::from_error(CausalityError::new(
+                CausalityErrorEnum::Custom("Context is missing".into()),
+            ));
         }
 
         // get context lock:
-        let ctx = ctx.read().unwrap();
+        let ctx_arc = ctx.unwrap();
+        let ctx_lock = ctx_arc.read().unwrap();
 
         // get contextoid by ID
-        let contextoid = ctx.get_node(0).expect("Could not find contextoid");
+        // Note: get_base_context adds root node with ID 1 at index 0.
+        // But ctx.get_node(index) gets by index.
+        let contextoid = ctx_lock.get_node(0).expect("Could not find contextoid");
 
         // extract data from the contextoid
         let val = contextoid.id() as f64;
 
-        // run any arithmetic with the data from the contextoid
-        let is_active = if val == 1.0 {
-            true
-        } else {
-            // relate the observation (obs) to the data (val) from the contextoid
-            obs.ge(&val)
-        };
+        // relate the observation (obs) to the data (val) from the contextoid
+        let is_active = obs_val.ge(&val);
 
-        let mut log = CausalEffectLog::new();
+        let mut log = EffectLog::new();
         log.add_entry("Contextual causal function executed successfully");
 
-        Ok(CausalFnOutput::new(is_active, log))
+        let mut process = PropagatingProcess::pure(is_active);
+        process.logs = log;
+        process
     }
 
     let causaloid = BaseCausaloid::<NumericalValue, bool>::new_with_context(
@@ -102,12 +125,12 @@ fn test_explain() {
 fn test_evaluate_singleton() {
     let causaloid = test_utils::get_test_causaloid_deterministic(23);
 
-    let effect = PropagatingEffect::from_numerical(0.78);
+    let effect = PropagatingEffect::from_value(0.78);
     let res = causaloid.evaluate(&effect);
     assert!(res.is_ok());
 
     let actual = res.value;
-    let expected = EffectValue::Boolean(true);
+    let expected = EffectValue::Value(true);
     assert_eq!(actual, expected);
 }
 
@@ -118,21 +141,30 @@ fn test_evaluate_singleton_with_context() {
     let context = get_base_context();
 
     fn contextual_causal_fn(
-        obs: NumericalValue,
-        ctx: &Arc<RwLock<BaseContext>>,
-    ) -> Result<CausalFnOutput<bool>, CausalityError> {
+        obs: EffectValue<NumericalValue>,
+        _state: (),
+        ctx: Option<Arc<RwLock<BaseContext>>>,
+    ) -> PropagatingProcess<bool, (), Arc<RwLock<BaseContext>>> {
+        let val = obs.into_value();
+        // Error handling omitted for brevity in this specific test logic, similar to before
+        let obs_val = val.unwrap();
+
         // get context lock:
-        let ctx = ctx.read().unwrap();
+        let ctx_arc = ctx.unwrap();
+        let ctx_lock = ctx_arc.read().unwrap();
         // Get contextoid by ID. In get_base_context, the node at index 0 has ID 1.
-        let contextoid = ctx.get_node(0).expect("Could not find contextoid");
+        let contextoid = ctx_lock.get_node(0).expect("Could not find contextoid");
         // Extract a value from the contextoid.
         let val = contextoid.id() as f64; // This will be 1.0
         // Relate the observation (obs) to the data (val) from the contextoid.
-        let is_active = obs.ge(&val);
+        let is_active = obs_val.ge(&val);
 
-        let mut log = CausalEffectLog::new();
+        let mut log = EffectLog::new();
         log.add_entry("Contextual causal function executed successfully");
-        Ok(CausalFnOutput::new(is_active, log))
+
+        let mut process = PropagatingProcess::pure(is_active);
+        process.logs = log;
+        process
     }
 
     let causaloid = BaseCausaloid::<NumericalValue, bool>::new_with_context(
@@ -143,23 +175,14 @@ fn test_evaluate_singleton_with_context() {
     );
 
     // Evaluate with evidence that should result in true (1.5 >= 1.0)
-    let effect_true = PropagatingEffect::from_numerical(1.5);
+    let effect_true = PropagatingEffect::from_value(1.5);
     let res_true = causaloid.evaluate(&effect_true);
-    assert_eq!(res_true.value, EffectValue::Boolean(true));
+    assert_eq!(res_true.value, EffectValue::Value(true));
 
     // Evaluate with evidence that should result in false (0.5 < 1.0)
-    let effect_false = PropagatingEffect::from_numerical(0.5);
+    let effect_false = PropagatingEffect::from_value(0.5);
     let res_false = causaloid.evaluate(&effect_false);
-    assert_eq!(res_false.value, EffectValue::Boolean(false));
+    assert_eq!(res_false.value, EffectValue::Value(false));
 }
 
-#[test]
-fn test_evaluate_singleton_err() {
-    let causaloid: BaseCausaloid<bool, bool> = get_test_causaloid_deterministic_input_output();
-
-    // The causal function expects a Boolean effect, but we pass in a Numerical effect.
-    let effect = PropagatingEffect::from_numerical(0.5);
-    // The result should be an error.
-    let res = causaloid.evaluate(&effect);
-    assert!(res.is_err());
-}
+// Removed test_evaluate_singleton_err as it was testing compile-time type mismatch with runtime logic.

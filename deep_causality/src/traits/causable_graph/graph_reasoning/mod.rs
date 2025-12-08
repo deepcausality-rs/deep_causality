@@ -6,6 +6,7 @@
 use crate::*;
 use deep_causality_haft::LogAppend;
 use std::collections::VecDeque;
+use std::fmt::Debug;
 use ultragraph::GraphTraversal;
 
 /// Provides default implementations for monadic reasoning over `CausableGraph` items.
@@ -18,7 +19,7 @@ use ultragraph::GraphTraversal;
 /// will automatically gain a suite of useful default methods for monadic evaluation.
 pub trait MonadicCausableGraphReasoning<V, PS, C>: CausableGraph<Causaloid<V, V, PS, C>>
 where
-    V: Default + Clone + Send + Sync + 'static + std::fmt::Debug,
+    V: Default + Clone + Send + Sync + 'static + Debug,
     PS: Default + Clone + Send + Sync + 'static,
     C: Clone + Send + Sync + 'static,
     Causaloid<V, V, PS, C>: MonadicCausable<V, V>,
