@@ -1,240 +1,193 @@
 # DeepCausality Examples Overview
 
-This directory contains a collection of examples demonstrating various features and applications of the `DeepCausality`
-library. Each example showcases how to model and reason about causal relationships in different scenarios.
+This directory contains examples demonstrating various features and applications of the DeepCausality library. Each example showcases how to model and reason about causal relationships using the Effect Propagation Process (EPP) and PropagatingEffect monads.
 
-## Table of Contents
+## Example Categories
 
-- [EPP Example: Conditional Average Treatment Effect (CATE)](#epp-example-conditional-average-treatment-effect-cate)
-- [EPP Example: Causal State Machine (CSM)](#epp-example-causal-state-machine-csm)
-- [EPP Example: Causal State Machine with Effect Ethos](#epp-example-causal-state-machine-with-effect-ethos)
-- [EPP Example: Dynamic Bayesian Network (DBN)](#epp-example-dynamic-bayesian-network-dbn)
-- [EPP Example: Granger Causality](#epp-example-granger-causality)
-- [EPP Example: Rubin Causal Model (RCM)](#epp-example-rubin-causal-model-rcm)
-- [EPP Example: Pearl's Ladder of Causation](#epp-example-pearls-ladder-of-causation)
-- [Starter Example](#starter-example)
-- [Tokio Integration Example](#tokio-integration-example)
+| Category | Description |
+|----------|-------------|
+| [Classical Causality](#classical-causality-examples) | Traditional causal inference methods (CATE, DBN, Granger, RCM, SCM) |
+| [CSM Examples](#csm-examples) | Causal State Machine patterns |
+| [Core Examples](#core-examples) | PropagatingEffect and PropagatingProcess fundamentals |
+| [Physics Examples](#physics-examples) | Multi-physics simulations with Geometric Algebra |
+| [Starter Example](#starter-example) | Basic introduction to DeepCausality |
+| [Tokio Example](#tokio-example) | Async integration with tokio runtime |
 
 ---
 
-## EPP Example: Conditional Average Treatment Effect (CATE)
+## Classical Causality Examples
 
-**Location:** `examples/epp_cate`
+**Location:** `examples/classical_causality_examples`
 
-This example demonstrates how the `DeepCausality` library, which implements the Effect Propagation Process (EPP), can
-model and calculate the Conditional Average Treatment Effect (CATE). It answers the question: "What is the average
-effect of a new medication on blood pressure, specifically for the subgroup of patients over the age of 65?"
+### CATE (Conditional Average Treatment Effect)
 
-**Key Concepts:**
-
-- **Rubin Causal Model (RCM)**: Showcases potential outcomes and contextual reasoning.
-- **Contextual Alternation**: Simulating parallel realities (treatment vs. control) by modifying context.
-- **Causal Logic (`Causaloid`)**: Encapsulating the drug's effect.
-- **Population & Subgroup Selection**: Filtering `BaseContext` instances.
-
-**How to Run:**
-From within the `examples/epp_cate` directory:
+Models the average effect of a treatment on a specific subgroup using contextual alternation.
 
 ```bash
-cargo run --bin example-cate
+cargo run -p classical_causality_examples --example cate_example
 ```
 
-This example highlights a core strength of the EPP: the explicit separation of causal logic from the state of the world,
-enabling powerful counterfactual reasoning.
+### DBN (Dynamic Bayesian Network)
 
-## EPP Example: Causal State Machine (CSM)
-
-**Location:** `examples/epp_csm`
-
-This example demonstrates how the `DeepCausality` library can be used to build a Causal State Machine (CSM). It models a
-simple industrial monitoring system with three sensors (smoke, fire, explosion) that trigger corresponding actions.
-
-**Key Concepts:**
-
-- **Pearl's Rung 2 (Intervention)**: Provides a formal bridge between causal reasoning and deterministic intervention.
-- **`Causaloid`s**: Encapsulate sensor trigger conditions.
-- **`CausalState`s**: Represent individual sensors.
-- **`CausalAction`s**: Define interventions to be executed.
-- **`CSM`**: Orchestrates the evaluation and action-firing process.
-
-**How to Run:**
-From within the `examples/epp_csm` directory:
+Models temporal causal processes with the "Umbrella World" scenario.
 
 ```bash
-cargo run --bin example-csm
+cargo run -p classical_causality_examples --example dbn_example
 ```
 
-The CSM acts as a powerful bridge between the abstract world of causal reasoning and the concrete world of action and
-intervention.
+### Granger Causality
 
-## EPP Example: Causal State Machine with Effect Ethos
-
-**Location:** `examples/epp_csm_effect_ethos`
-
-This example demonstrates the integration of a **Causal State Machine (CSM)** with an **Effect Ethos** to add a layer of
-deontic (normative) reasoning to a reactive system. It models a temperature monitoring system where alerts are subject
-to predefined norms.
-
-**Key Concepts:**
-
-- **`CausalState` & `CausalAction`**: Standard CSM components.
-- **`EffectEthos`**: A deontic reasoning engine that evaluates `ProposedAction`s against norms.
-- **`Teloid` (Norm)**: A single rule within the ethos (e.g., making an alert impermissible).
-
-**How to Run:**
-From the root of the `deep_causality` project:
+Tests whether past changes in one variable predict future changes in another.
 
 ```bash
-cargo run --release --bin example_effect_ethos
+cargo run -p classical_causality_examples --example granger_example
 ```
 
-The `EffectEthos` successfully intercepts and blocks actions that would otherwise be executed, providing a powerful
-mechanism for building safer and more robust systems.
+### RCM (Rubin Causal Model)
 
-## EPP Example: Dynamic Bayesian Network (DBN)
-
-**Location:** `examples/epp_dbn`
-
-This example demonstrates how `DeepCausality` can model a simple Dynamic Bayesian Network (DBN), specifically the "
-Umbrella World" scenario. It showcases the library's ability to model temporal causal processes.
-
-**Key Concepts:**
-
-- **Temporal Causal Processes**: Modeling processes over discrete time slices.
-- **Dynamic Context**: Representing the timeline as a single, dynamic `Context`.
-- **`Causaloid`s**: Encapsulating conditional probability tables (CPTs) for state variables.
-- **`CausaloidGraph`**: Modeling causal dependencies.
-
-**How to Run:**
-From within the `examples/epp_dbn` directory:
+Demonstrates potential outcomes and Individual Treatment Effect calculation.
 
 ```bash
-cargo run --bin example-dbn
+cargo run -p classical_causality_examples --example rcm_example
 ```
 
-The EPP provides a flexible alternative to traditional DBNs by externalizing time into a dynamic `Context`, simplifying
-the modeling of complex temporal dependencies.
+### SCM (Pearl's Ladder of Causation)
 
-## EPP Example: Granger Causality
-
-**Location:** `examples/epp_granger`
-
-This example demonstrates how `DeepCausality` can model a Granger Causality test. It answers: "Do past changes in oil
-prices Granger-cause future changes in shipping activity?"
-
-**Key Concepts:**
-
-- **Counterfactual Reasoning**: Comparing predictive accuracy under different contexts.
-- **Factual vs. Counterfactual Contexts**: Creating alternate realities (with/without oil price history).
-- **`Causaloid`**: Encapsulating the predictive model.
-
-**How to Run:**
-From within the `examples/epp_granger` directory:
+Models all three rungs of Pearl's Ladder: Association, Intervention, and Counterfactuals.
 
 ```bash
-cargo run --bin example-granger
+cargo run -p classical_causality_examples --example scm_example
 ```
 
-The EPP's explicit separation of causal logic from the state of the world makes it trivial to perform the powerful
-counterfactual reasoning required for a Granger Causality test.
+---
 
-## EPP Example: Rubin Causal Model (RCM)
+## CSM Examples
 
-**Location:** `examples/epp_rcm`
+**Location:** `examples/csm_examples`
 
-This example demonstrates how to implement a simple Rubin Causal Model (RCM) scenario using `DeepCausality`. It
-showcases **Contextual Alternation** to directly compute potential outcomes and determine an Individual Treatment
-Effect (ITE).
+### CSM Basic
 
-**Key Concepts:**
-
-- **RCM**: Comparing potential outcomes (Y(1) vs. Y(0)).
-- **Contextual Alternation**: Simulating hypothetical scenarios by modifying contexts.
-- **`CausaloidGraph`**: Representing the flow of causal calculation.
-
-**How to Run:**
-From the root of the `deep_causality` project:
+Simple industrial monitoring system with sensors and actions.
 
 ```bash
-cargo run -p example-rcm
+cargo run -p csm_examples --example csm_example
 ```
 
-The EPP's separation of the causal model from its context enables the computational simulation of both potential
-outcomes, directly addressing the RCM's fundamental challenge.
+### CSM with Context
 
-## EPP Example: Pearl's Ladder of Causation
-
-**Location:** `examples/epp_scm`
-
-This example demonstrates how `DeepCausality` models the three rungs of Judea Pearl's Ladder of Causation, each
-representing a different level of causal reasoning.
-
-**Key Concepts:**
-
-- **Rung 1: Association (`rung1_association.rs`)**: Demonstrates observational inference (`P(Y|X)`) via `CausaloidGraph`
-  evaluation.
-- **Rung 2: Intervention (`rung2_intervention.rs`)**: Demonstrates taking an action (`P(Y|do(X))`) using the Causal
-  State Machine (CSM).
-- **Rung 3: Counterfactuals (`rung3_counterfactual.rs`)**: Demonstrates reasoning about alternate possibilities via
-  Contextual Alternation.
-
-**How to Run:**
-From within the `examples/epp_scm` directory:
+Contextual causaloids with shared mutable state via `Arc<RwLock<BaseContext>>`.
 
 ```bash
-cargo run --bin example-scm
+cargo run -p csm_examples --example csm_context_example
 ```
 
-The EPP's architecture provides a robust framework for addressing each rung of Pearl's Ladder of Causation.
+### CSM with Effect Ethos
+
+Integrates deontic reasoning with CSM for normative action evaluation.
+
+```bash
+cargo run -p csm_examples --example csm_effect_ethos_example
+```
+
+---
+
+## Core Examples
+
+**Location:** `examples/core_examples`
+
+Fundamental examples demonstrating the monadic API.
+
+### PropagatingEffect Examples
+
+Basic monadic composition with value, error, and log propagation.
+
+```bash
+cargo run -p core_examples --example propagating_effect_example
+cargo run -p core_examples --example propagating_effect_counterfactual_example
+```
+
+### PropagatingProcess Examples
+
+Stateful monadic composition with state and context.
+
+```bash
+cargo run -p core_examples --example propagating_process_example
+cargo run -p core_examples --example propagating_process_counterfactual
+```
+
+### Control Flow Examples
+
+Builder patterns and strict ZST control flow.
+
+```bash
+cargo run -p core_examples --example control_flow_builder
+cargo run -p core_examples --example control_flow_strict_zst
+```
+
+---
+
+## Physics Examples
+
+**Location:** `examples/physics_examples`
+
+Multi-physics simulations using Geometric Algebra and Tensor operations.
+
+### Maxwell's Unification
+
+E and B field derivation from Vector Potential using Geometric Algebra.
+
+```bash
+cargo run -p physics_examples --example maxwell_example
+```
+
+### GRMHD (General Relativistic Magnetohydrodynamics)
+
+Couples Tensor (GR) with MultiVector (MHD) for extreme environment simulation.
+
+```bash
+cargo run -p physics_examples --example grmhd_example
+```
+
+### Geometric Tilt Estimator
+
+IMU sensor fusion with Adaptive Kalman Filter and Geometric Algebra rotors.
+
+```bash
+cargo run -p physics_examples --example geometric_tilt_example
+```
+
+---
 
 ## Starter Example
 
-**Location:** `examples/starter`
+**Location:** `examples/starter_example`
 
-This is a basic example demonstrating fundamental `DeepCausality` concepts. It shows how to build a causal graph,
-perform full and partial reasoning, and explain reasoning paths.
-
-**Key Concepts:**
-
-- **`CausaloidGraph`**: Building and freezing a causal graph.
-- **`PropagatingEffect`**: Unified data and control-flow container.
-- **Reasoning**: `evaluate_subgraph_from_cause`, `evaluate_shortest_path_between_causes`.
-- **Explanation**: `explain_shortest_path_between_causes`.
-
-**How to Run:**
-From within the `examples/starter` directory:
+Basic introduction demonstrating:
+- Building and freezing a `CausaloidGraph`
+- Using `PropagatingEffect` for data/control flow
+- Graph evaluation and path explanation
 
 ```bash
-cargo run --bin example-starter
+cargo run -p starter_example --example starter_example
 ```
 
-This example serves as an excellent starting point for understanding the core functionalities of the `DeepCausality`
-library.
+---
 
-## Tokio Integration Example
+## Tokio Example
 
-**Location:** `examples/tokio`
+**Location:** `examples/tokio_example`
 
-This example demonstrates how to integrate `DeepCausality` with the `tokio` asynchronous runtime for performing
-background inference.
-
-**Key Concepts:**
-
-- **Asynchronous Processing**: Using `tokio` for concurrent operations.
-- **`EventHandler`**: Managing inference tasks.
-- **`BaseModel`**: Encapsulating the causal model.
-- **Concurrency Primitives**: `Arc<RwLock>` for shared ownership.
-
-**How to Run:**
-From within the `examples/tokio` directory:
+Demonstrates integration with the tokio async runtime:
+- Asynchronous causal inference
+- `EventHandler` pattern
+- `Arc<RwLock>` for shared state
 
 ```bash
-cargo run --bin example-tokio
+cargo run -p tokio_example --example tokio_example
 ```
 
-This example illustrates how `DeepCausality` can be effectively used in an asynchronous environment for concurrent and
-scalable causal inference.
+---
 
-## 📜 Licence
+## 📜 License
 
 All examples are licensed under the [MIT license](LICENSE).
