@@ -10,8 +10,6 @@ mod causality_graph_freeze_tests;
 #[cfg(test)]
 mod causality_graph_nodes_tests;
 #[cfg(test)]
-mod causality_graph_reasoning_all_tests;
-#[cfg(test)]
 mod causality_graph_reasoning_imbalanced_tests;
 #[cfg(test)]
 mod causality_graph_reasoning_linear_tests;
@@ -23,5 +21,7 @@ mod causality_graph_reasoning_shortest_tests;
 mod causality_graph_reasoning_single_tests;
 #[cfg(test)]
 mod causality_graph_reasoning_sub_tests;
+#[cfg(test)]
+mod causality_graph_reasoning_tests;
 #[cfg(test)]
 mod causality_graph_tests;

@@ -5,6 +5,7 @@
 
 pub mod assumable;
 pub mod causable;
+mod evaluable;
 pub mod inferable;
 pub mod observable;
 // //! # Type Extensions for Standard Collections

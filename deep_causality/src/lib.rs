@@ -59,6 +59,8 @@ pub use crate::traits::contextuable::Contextuable;
 // Contextuable Graph Traits
 pub use crate::traits::contextuable_graph::ContextuableGraph;
 pub use crate::traits::contextuable_graph::ExtendableContextuableGraph;
+// CSM traits
+pub use crate::traits::csm_evaluable::CsmEvaluable;
 // Identifiable Traits
 pub use crate::traits::identifiable::Identifiable;
 // Indexable Traits
@@ -130,7 +132,6 @@ pub use crate::types::context_types::relation_kind::*;
 pub use crate::types::context_types::time_scale::TimeScale;
 // CSM types
 pub use crate::types::csm_types::csm::CSM;
-pub use crate::types::csm_types::csm::CsmEvaluable;
 pub use crate::types::csm_types::csm_action::CausalAction;
 pub use crate::types::csm_types::csm_parameter::action_parameter_value::ActionParameterValue;
 pub use crate::types::csm_types::csm_parameter::proposed_action::ProposedAction;

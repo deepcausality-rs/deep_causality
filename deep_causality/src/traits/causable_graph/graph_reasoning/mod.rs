@@ -43,21 +43,17 @@ where
         effect: &PropagatingEffect<V>,
     ) -> PropagatingEffect<V> {
         if !self.is_frozen() {
-            return PropagatingEffect::from_error(CausalityError(
-                deep_causality_core::CausalityErrorEnum::Custom(
-                    "Graph is not frozen. Call freeze() first".into(),
-                ),
-            ));
+            return PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(
+                "Graph is not frozen. Call freeze() first".into(),
+            )));
         }
 
         let causaloid = match self.get_causaloid(index) {
             Some(c) => c,
             None => {
-                return PropagatingEffect::from_error(CausalityError(
-                    deep_causality_core::CausalityErrorEnum::Custom(format!(
-                        "Causaloid with index {index} not found in graph"
-                    )),
-                ));
+                return PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(
+                    format!("Causaloid with index {index} not found in graph"),
+                )));
             }
         };
 
@@ -94,19 +90,15 @@ where
         initial_effect: &PropagatingEffect<V>,
     ) -> PropagatingEffect<V> {
         if !self.is_frozen() {
-            return PropagatingEffect::from_error(CausalityError(
-                deep_causality_core::CausalityErrorEnum::Custom(
-                    "Graph is not frozen. Call freeze() first".into(),
-                ),
-            ));
+            return PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(
+                "Graph is not frozen. Call freeze() first".into(),
+            )));
         }
 
         if !self.contains_causaloid(start_index) {
-            return PropagatingEffect::from_error(CausalityError(
-                deep_causality_core::CausalityErrorEnum::Custom(format!(
-                    "Graph does not contain start causaloid with index {start_index}"
-                )),
-            ));
+            return PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(
+                format!("Graph does not contain start causaloid with index {start_index}"),
+            )));
         }
 
         // Queue stores (node_index, incoming_effect_for_this_node)
@@ -126,7 +118,7 @@ where
                 Some(c) => c,
                 None => {
                     return PropagatingEffect::from_error(CausalityError(
-                        deep_causality_core::CausalityErrorEnum::Custom(format!(
+                        CausalityErrorEnum::Custom(format!(
                             "Failed to get causaloid at index {current_index}"
                         )),
                     ));
@@ -159,11 +151,11 @@ where
                     if !self.contains_causaloid(target_idx) {
                         let mut err_effect = last_propagated_effect.clone();
 
-                        err_effect.error = Some(CausalityError(
-                            deep_causality_core::CausalityErrorEnum::Custom(format!(
+                        err_effect.error = Some(CausalityError(CausalityErrorEnum::Custom(
+                            format!(
                                 "RelayTo target causaloid with index {target_idx} not found in graph."
-                            )),
-                        ));
+                            ),
+                        )));
                         return err_effect;
                     }
 
@@ -181,9 +173,8 @@ where
                         Ok(c) => c,
                         Err(e) => {
                             let mut err_effect = last_propagated_effect.clone();
-                            err_effect.error = Some(CausalityError(
-                                deep_causality_core::CausalityErrorEnum::Custom(format!("{e}")),
-                            ));
+                            err_effect.error =
+                                Some(CausalityError(CausalityErrorEnum::Custom(format!("{e}"))));
                             return err_effect;
                         }
                     };
@@ -225,11 +216,9 @@ where
         initial_effect: &PropagatingEffect<V>,
     ) -> PropagatingEffect<V> {
         if !self.is_frozen() {
-            return PropagatingEffect::from_error(CausalityError(
-                deep_causality_core::CausalityErrorEnum::Custom(
-                    "Graph is not frozen. Call freeze() first".into(),
-                ),
-            ));
+            return PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(
+                "Graph is not frozen. Call freeze() first".into(),
+            )));
         }
 
         // Handle the single-node case explicitly before calling the pathfinder.
@@ -238,7 +227,7 @@ where
                 Some(c) => c,
                 None => {
                     return PropagatingEffect::from_error(CausalityError(
-                        deep_causality_core::CausalityErrorEnum::Custom(format!(
+                        CausalityErrorEnum::Custom(format!(
                             "Failed to get causaloid at index {start_index}"
                         )),
                     ));
@@ -263,7 +252,7 @@ where
                 Some(c) => c,
                 None => {
                     return PropagatingEffect::from_error(CausalityError(
-                        deep_causality_core::CausalityErrorEnum::Custom(format!(
+                        CausalityErrorEnum::Custom(format!(
                             "Failed to get causaloid at index {index}"
                         )),
                     ));

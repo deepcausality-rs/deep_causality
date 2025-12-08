@@ -3,13 +3,12 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-mod csm_evaluable;
 mod eval;
 mod state_add;
 mod state_remove;
 mod state_update;
-pub use csm_evaluable::CsmEvaluable;
 
+use crate::CsmEvaluable;
 use crate::{CSMMap, CausalAction, CausalState};
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};

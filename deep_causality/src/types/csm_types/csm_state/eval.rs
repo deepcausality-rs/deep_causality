@@ -2,10 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::errors::CsmError;
-use crate::traits::causable::MonadicCausable;
-use crate::types::csm_types::csm::CsmEvaluable;
-use crate::{CausalState, Causaloid};
+use crate::{CausalState, Causaloid, CsmError};
+use crate::{CsmEvaluable, MonadicCausable};
 use deep_causality_core::PropagatingEffect;
 use std::fmt::Debug;
 

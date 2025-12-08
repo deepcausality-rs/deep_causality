@@ -10,6 +10,7 @@ pub mod causable_collection;
 pub mod causable_graph;
 pub mod contextuable;
 pub mod contextuable_graph;
+pub mod csm_evaluable;
 pub mod identifiable;
 pub mod indexable;
 pub mod inferable;

@@ -5,5 +5,6 @@
 
 mod assumable;
 mod causable;
+mod evaluable;
 mod inferable;
 mod observable;

@@ -78,7 +78,7 @@ impl Aggregatable for f64 {
         let final_prob = match logic {
             AggregateLogic::All => probs.iter().product(),
             AggregateLogic::Any => 1.0 - probs.iter().map(|p| 1.0 - p).product::<f64>(),
-            AggregateLogic::None => 1.0 - (1.0 - probs.iter().map(|p| 1.0 - p).product::<f64>()),
+            AggregateLogic::None => probs.iter().map(|p| 1.0 - p).product::<f64>(),
             AggregateLogic::Some(k) => {
                 let count = probs.iter().filter(|&&p| p > 0.5).count();
                 if count >= *k { 1.0 } else { 0.0 }
