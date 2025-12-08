@@ -89,11 +89,9 @@ where
                         |input, _, _| causable_utils::execute_causal_logic(input, self),
                         "Cannot evaluate: input value after logging is None",
                     )
-                    .bind(|output_effect_val, _, _| {
-                        match output_effect_val {
-                            EffectValue::Value(v) => causable_utils::log_output(v, self.id),
-                            _ => PropagatingEffect::from_effect_value(output_effect_val),
-                        }
+                    .bind(|output_effect_val, _, _| match output_effect_val {
+                        EffectValue::Value(v) => causable_utils::log_output(v, self.id),
+                        _ => PropagatingEffect::from_effect_value(output_effect_val),
                     })
             }
 
