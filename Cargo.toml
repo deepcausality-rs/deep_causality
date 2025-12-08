@@ -27,6 +27,7 @@ members = [
     "examples/classical_causality_examples",
     "examples/core_examples",
     "examples/csm_examples",
+    "examples/physics_examples",
     "examples/starter_example",
     "examples/tokio_example",
 ]

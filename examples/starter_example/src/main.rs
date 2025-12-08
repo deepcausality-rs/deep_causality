@@ -1,16 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
- *
- * SCM Example using only deep_causality_core
- *
- * This example demonstrates Pearl's Ladder of Causation:
- * - Rung 1: Association (Seeing) - "What is?"
- * - Rung 2: Intervention (Doing) - "What if I do X?"
- * - Rung 3: Counterfactual (Imagining) - "What if I had done X instead?"
- *
- * Domain: Smoking and Cancer Risk
- * Causal Model: Smoking -> Tar -> Cancer
  */
 use deep_causality_core::PropagatingEffect;
 
