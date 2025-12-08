@@ -46,15 +46,15 @@ do
       break
       ;;
 
-    starter)
-      echo "Selected example: Starter (Starter)"
-      command cargo run --release --bin example-starter
-      break
-      ;;
-
     scm)
       echo "Selected example: scm (Structured Causal Model)"
       command cargo run --release --bin example-scm
+      break
+      ;;
+
+    starter)
+      echo "Selected example: Starter (Starter)"
+      command cargo run --release --bin starter_example
       break
       ;;
 
@@ -69,6 +69,7 @@ do
        command cargo run --release --bin example-rcm
       break
       ;;
+
     quit)
       echo "Exiting!"
       exit 0

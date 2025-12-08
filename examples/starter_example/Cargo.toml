@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+
+[package]
+name = "starter_example"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+
+[dependencies]
+deep_causality_core =  { path = "../../deep_causality_core" }

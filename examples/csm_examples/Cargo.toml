@@ -1,0 +1,27 @@
+[package]
+name = "csm_examples"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+path = "no_lib.rs"
+
+[dependencies]
+deep_causality =  { path = "../../deep_causality" }
+deep_causality_ethos =  { path = "../../deep_causality_ethos" }
+
+[[example]]
+name = "csm_example"
+path = "examples/csm_basic/main.rs"
+
+[[example]]
+name = "csm_context_example"
+path = "examples/csm_context/main.rs"
+
+
+[[example]]
+name = "csm_effect_ethos_example"
+path = "examples/csm_effect_ethos/main.rs"
