@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::TeloidID;
+use crate::TeloidID;
 use std::error::Error;
 use std::fmt;
 use ultragraph::GraphError;
@@ -134,13 +134,5 @@ impl From<GraphError> for DeonticError {
             }
             _ => DeonticError::GraphError(err),
         }
-    }
-}
-
-impl From<DeonticError> for deep_causality::CausalityError {
-    fn from(err: DeonticError) -> Self {
-        deep_causality::CausalityError::new(deep_causality::CausalityErrorEnum::DeonticError(
-            err.to_string(),
-        ))
     }
 }
