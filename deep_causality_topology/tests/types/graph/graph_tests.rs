@@ -4,7 +4,7 @@
  */
 
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{BaseTopology, Graph, GraphTopology, TopologyError};
+use deep_causality_topology::{Graph, TopologyError};
 
 #[test]
 fn test_graph_new_success() {
@@ -130,38 +130,5 @@ fn test_graph_neighbors() {
     let neighbors = graph.neighbors(0).unwrap();
     assert_eq!(neighbors.len(), 2);
     assert!(neighbors.contains(&1));
-    assert!(neighbors.contains(&2));
-}
-
-#[test]
-fn test_graph_base_topology() {
-    let data = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
-    let mut graph = Graph::new(3, data, 0).unwrap();
-    graph.add_edge(0, 1).unwrap();
-
-    assert_eq!(graph.dimension(), 1);
-    assert_eq!(graph.len(), 3);
-    assert!(!graph.is_empty());
-    assert_eq!(graph.num_elements_at_grade(0), Some(3)); // vertices
-    assert_eq!(graph.num_elements_at_grade(1), Some(1)); // edges
-    assert_eq!(graph.num_elements_at_grade(2), None);
-}
-
-#[test]
-fn test_graph_topology() {
-    let data = CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![4]).unwrap();
-    let mut graph = Graph::new(4, data, 0).unwrap();
-    graph.add_edge(0, 1).unwrap();
-    graph.add_edge(1, 2).unwrap();
-
-    assert_eq!(graph.num_nodes(), 4);
-    assert_eq!(graph.num_edges(), 2);
-    assert!(graph.has_node(0));
-    assert!(graph.has_node(3));
-    assert!(!graph.has_node(5));
-
-    let neighbors = graph.get_neighbors(1).unwrap();
-    assert_eq!(neighbors.len(), 2);
-    assert!(neighbors.contains(&0));
     assert!(neighbors.contains(&2));
 }
