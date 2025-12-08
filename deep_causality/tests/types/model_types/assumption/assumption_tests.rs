@@ -3,7 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::{Assumable, DescriptionValue, Identifiable, PropagatingEffect};
+use deep_causality::{
+    Assumable, DescriptionValue, Identifiable, NumericalValue, PropagatingEffect,
+};
 
 use deep_causality::utils_test::test_utils;
 
@@ -14,9 +16,9 @@ fn test_assumption_tested() {
     let tested = assumption.assumption_tested();
     assert!(!tested);
 
-    let data: Vec<PropagatingEffect> = test_utils::get_test_num_array()
+    let data: Vec<PropagatingEffect<NumericalValue>> = test_utils::get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::from_numerical(x))
+        .map(|&x| PropagatingEffect::from_value(x))
         .collect();
 
     let res = assumption.verify_assumption(&data);
@@ -36,9 +38,9 @@ fn test_verify_assumption_success() {
     let valid = assumption.assumption_tested();
     assert!(!valid);
 
-    let data: Vec<PropagatingEffect> = test_utils::get_test_num_array()
+    let data: Vec<PropagatingEffect<NumericalValue>> = test_utils::get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::from_numerical(x))
+        .map(|&x| PropagatingEffect::from_value(x))
         .collect();
 
     let res = assumption.verify_assumption(&data);
@@ -61,9 +63,9 @@ fn test_assumption_valid() {
     let valid = assumption.assumption_tested();
     assert!(!valid);
 
-    let data: Vec<PropagatingEffect> = test_utils::get_test_num_array()
+    let data: Vec<PropagatingEffect<NumericalValue>> = test_utils::get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::from_numerical(x))
+        .map(|&x| PropagatingEffect::from_value(x))
         .collect();
 
     let res = assumption.verify_assumption(&data);
@@ -134,9 +136,9 @@ fn test_assumption_debug() {
     assert_eq!(format!("{assumption:?}"), expected_initial);
 
     // 2. Verify the assumption to change its internal state
-    let data: Vec<PropagatingEffect> = test_utils::get_test_num_array()
+    let data: Vec<PropagatingEffect<NumericalValue>> = test_utils::get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::from_numerical(x))
+        .map(|&x| PropagatingEffect::from_value(x))
         .collect();
     assumption.verify_assumption(&data).unwrap(); // This sets tested and valid to true
 

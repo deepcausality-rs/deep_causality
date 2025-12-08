@@ -47,7 +47,7 @@ where
     causaloid: Causaloid<I, O, (), C>,
     /// Optional parameters for evaluating uncertain effects.
     uncertain_parameter: Option<UncertainParameter>,
-    /// PhantomData to hold the type `C`.
+    /// PhantomData to bind generic type `C`.
     _phantom: PhantomData<C>,
 }
 

@@ -6,3 +6,4 @@
 mod causal_type;
 mod causaloid;
 mod causaloid_graph;
+mod aggregate_logic;

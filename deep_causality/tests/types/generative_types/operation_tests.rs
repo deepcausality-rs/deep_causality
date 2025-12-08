@@ -4,279 +4,283 @@
  */
 
 use deep_causality::{
-    BaseSymbol, Data, EuclideanSpace, EuclideanSpacetime, EuclideanTime, Operation,
+    BaseContext, BaseContextoid, Causaloid, ContextoidType, Data, Identifiable, OpTree, Operation,
 };
-use deep_causality_ast::ConstTree;
+use std::sync::{Arc, RwLock};
 
-// Type aliases for testing
-type TestData = Data<f64>;
-type TestSpace = EuclideanSpace;
-type TestTime = EuclideanTime;
-type TestSpacetime = EuclideanSpacetime;
-type TestSymbol = BaseSymbol;
+// Type aliases for testing to reduce verbosity
+type TestInput = i32;
+type TestOutput = i32;
+// Using BaseContext and BaseContextoid as suggested
+type TestContext = BaseContext;
+type TestNode = BaseContextoid;
+
+// Helper function for Causaloid. Must be a fn pointer, not a closure.
+fn dummy_causal_fn(_: TestInput) -> deep_causality::PropagatingEffect<TestOutput> {
+    deep_causality::PropagatingEffect::from_value(1)
+}
+
+// Helper to create a dummy Causaloid
+fn create_dummy_causaloid(
+    id: u64,
+) -> Causaloid<TestInput, TestOutput, (), Arc<RwLock<TestContext>>> {
+    Causaloid::new(id, dummy_causal_fn, "test_causaloid")
+}
+
+// Helper to create a dummy Contextoid
+fn create_dummy_contextoid(id: u64) -> TestNode {
+    TestNode::new(id, ContextoidType::Datoid(Data::new(id, 0.0)))
+}
 
 #[test]
-fn test_operation_create_context() {
-    let op = Operation::<
-        (),
-        (),
-        TestData,
-        TestSpace,
-        TestTime,
-        TestSpacetime,
-        TestSymbol,
-        f64,
-        f64,
-    >::CreateContext {
-        id: 1,
-        name: "test_context".to_string(),
-        capacity: 10,
-    };
+fn test_causaloid_operations() {
+    let id = 1;
+    let causaloid = create_dummy_causaloid(id);
 
-    match op {
-        Operation::CreateContext { id, name, capacity } => {
-            assert_eq!(id, 1);
-            assert_eq!(name, "test_context");
-            assert_eq!(capacity, 10);
+    // Test CreateCausaloid
+    let create_op: Operation<TestInput, TestOutput, TestContext, TestNode> =
+        Operation::CreateCausaloid(id, causaloid.clone());
+
+    match &create_op {
+        Operation::CreateCausaloid(cid, c) => {
+            assert_eq!(*cid, id);
+            assert_eq!(c.id(), id);
         }
-        _ => panic!("Wrong operation variant"),
+        _ => panic!("Expected CreateCausaloid"),
+    }
+
+    // Test UpdateCausaloid
+    let update_op: Operation<TestInput, TestOutput, TestContext, TestNode> =
+        Operation::UpdateCausaloid(id, causaloid.clone());
+
+    match &update_op {
+        Operation::UpdateCausaloid(cid, c) => {
+            assert_eq!(*cid, id);
+            assert_eq!(c.id(), id);
+        }
+        _ => panic!("Expected UpdateCausaloid"),
+    }
+
+    // Test DeleteCausaloid
+    let delete_op: Operation<TestInput, TestOutput, TestContext, TestNode> =
+        Operation::DeleteCausaloid(id);
+
+    match &delete_op {
+        Operation::DeleteCausaloid(cid) => {
+            assert_eq!(*cid, id);
+        }
+        _ => panic!("Expected DeleteCausaloid"),
     }
 }
 
 #[test]
-fn test_operation_create_extra_context() {
-    let op = Operation::<
-        (),
-        (),
-        TestData,
-        TestSpace,
-        TestTime,
-        TestSpacetime,
-        TestSymbol,
-        f64,
-        f64,
-    >::CreateExtraContext {
-        context_id: 1,
-        extra_context_id: 2,
-        capacity: 5,
-    };
+fn test_context_operations() {
+    let ctx_id = 100;
+    let name = "MainContext".to_string();
+    let capacity = 10;
 
-    match op {
+    // Test CreateContext
+    let create_ctx_op: Operation<TestInput, TestOutput, TestContext, TestNode> =
+        Operation::CreateContext {
+            id: ctx_id,
+            name: name.clone(),
+            capacity,
+        };
+
+    match &create_ctx_op {
+        Operation::CreateContext {
+            id,
+            name: n,
+            capacity: c,
+        } => {
+            assert_eq!(*id, ctx_id);
+            assert_eq!(n, &name);
+            assert_eq!(*c, capacity);
+        }
+        _ => panic!("Expected CreateContext"),
+    }
+
+    // Test CreateExtraContext
+    let extra_id = 101;
+    let extra_op: Operation<TestInput, TestOutput, TestContext, TestNode> =
+        Operation::CreateExtraContext {
+            context_id: ctx_id,
+            extra_context_id: extra_id,
+            capacity,
+        };
+
+    match &extra_op {
         Operation::CreateExtraContext {
             context_id,
             extra_context_id,
-            capacity,
+            capacity: c,
         } => {
-            assert_eq!(context_id, 1);
-            assert_eq!(extra_context_id, 2);
-            assert_eq!(capacity, 5);
+            assert_eq!(*context_id, ctx_id);
+            assert_eq!(*extra_context_id, extra_id);
+            assert_eq!(*c, capacity);
         }
-        _ => panic!("Wrong operation variant"),
+        _ => panic!("Expected CreateExtraContext"),
     }
-}
 
-#[test]
-fn test_operation_update_context() {
-    let op = Operation::<
-        (),
-        (),
-        TestData,
-        TestSpace,
-        TestTime,
-        TestSpacetime,
-        TestSymbol,
-        f64,
-        f64,
-    >::UpdateContext {
-        id: 1,
-        new_name: Some("updated_name".to_string()),
-    };
+    // Test UpdateContext
+    let new_name = "UpdatedContext".to_string();
+    let update_ctx_op: Operation<TestInput, TestOutput, TestContext, TestNode> =
+        Operation::UpdateContext {
+            id: ctx_id,
+            new_name: Some(new_name.clone()),
+        };
 
-    match op {
-        Operation::UpdateContext { id, new_name } => {
-            assert_eq!(id, 1);
-            assert_eq!(new_name, Some("updated_name".to_string()));
+    match &update_ctx_op {
+        Operation::UpdateContext { id, new_name: n } => {
+            assert_eq!(*id, ctx_id);
+            assert_eq!(n.as_ref().unwrap(), &new_name);
         }
-        _ => panic!("Wrong operation variant"),
+        _ => panic!("Expected UpdateContext"),
     }
-}
 
-#[test]
-fn test_operation_update_context_no_name() {
-    let op = Operation::<
-        (),
-        (),
-        TestData,
-        TestSpace,
-        TestTime,
-        TestSpacetime,
-        TestSymbol,
-        f64,
-        f64,
-    >::UpdateContext {
-        id: 1,
-        new_name: None,
-    };
+    // Test DeleteContext
+    let delete_ctx_op: Operation<TestInput, TestOutput, TestContext, TestNode> =
+        Operation::DeleteContext(ctx_id);
 
-    match op {
-        Operation::UpdateContext { id, new_name } => {
-            assert_eq!(id, 1);
-            assert!(new_name.is_none());
-        }
-        _ => panic!("Wrong operation variant"),
-    }
-}
-
-#[test]
-fn test_operation_delete_context() {
-    let op = Operation::<(), (), TestData, TestSpace, TestTime, TestSpacetime, TestSymbol, f64, f64>::DeleteContext(42);
-
-    match op {
+    match &delete_ctx_op {
         Operation::DeleteContext(id) => {
-            assert_eq!(id, 42);
+            assert_eq!(*id, ctx_id);
         }
-        _ => panic!("Wrong operation variant"),
+        _ => panic!("Expected DeleteContext"),
     }
 }
 
 #[test]
-fn test_operation_delete_causaloid() {
-    let op = Operation::<(), (), TestData, TestSpace, TestTime, TestSpacetime, TestSymbol, f64, f64>::DeleteCausaloid(99);
+fn test_contextoid_operations() {
+    let ctx_id = 200;
+    let node_id = 1;
 
-    match op {
-        Operation::DeleteCausaloid(id) => {
-            assert_eq!(id, 99);
+    let node_data = create_dummy_contextoid(node_id);
+    let new_node_data = create_dummy_contextoid(node_id); // Same ID, but implicitly "new" instance
+
+    // Test AddContextoidToContext
+    let add_op: Operation<TestInput, TestOutput, TestContext, TestNode> =
+        Operation::AddContextoidToContext {
+            context_id: ctx_id,
+            contextoid: node_data.clone(),
+        };
+
+    match &add_op {
+        Operation::AddContextoidToContext {
+            context_id,
+            contextoid,
+        } => {
+            assert_eq!(*context_id, ctx_id);
+            assert_eq!(contextoid.id(), node_id);
         }
-        _ => panic!("Wrong operation variant"),
+        _ => panic!("Expected AddContextoidToContext"),
+    }
+
+    // Test UpdateContextoidInContext
+    let update_op: Operation<TestInput, TestOutput, TestContext, TestNode> =
+        Operation::UpdateContextoidInContext {
+            context_id: ctx_id,
+            existing_contextoid: node_id,
+            new_contextoid: new_node_data.clone(),
+        };
+
+    match &update_op {
+        Operation::UpdateContextoidInContext {
+            context_id,
+            existing_contextoid,
+            new_contextoid,
+        } => {
+            assert_eq!(*context_id, ctx_id);
+            assert_eq!(*existing_contextoid, node_id);
+            assert_eq!(new_contextoid.id(), node_id);
+        }
+        _ => panic!("Expected UpdateContextoidInContext"),
+    }
+
+    // Test DeleteContextoidFromContext
+    let delete_op: Operation<TestInput, TestOutput, TestContext, TestNode> =
+        Operation::DeleteContextoidFromContext {
+            context_id: ctx_id,
+            contextoid_id: node_id,
+        };
+
+    match &delete_op {
+        Operation::DeleteContextoidFromContext {
+            context_id,
+            contextoid_id,
+        } => {
+            assert_eq!(*context_id, ctx_id);
+            assert_eq!(*contextoid_id, node_id);
+        }
+        _ => panic!("Expected DeleteContextoidFromContext"),
     }
 }
 
 #[test]
-fn test_operation_clone() {
-    let op1 = Operation::<
-        (),
-        (),
-        TestData,
-        TestSpace,
-        TestTime,
-        TestSpacetime,
-        TestSymbol,
-        f64,
-        f64,
-    >::CreateContext {
-        id: 1,
-        name: "test".to_string(),
-        capacity: 10,
-    };
+fn test_control_flow_operations() {
+    // Test Sequence
+    let seq_op: Operation<TestInput, TestOutput, TestContext, TestNode> = Operation::Sequence;
+    match seq_op {
+        Operation::Sequence => (),
+        _ => panic!("Expected Sequence"),
+    }
 
-    let op2 = op1.clone();
-
-    match (op1, op2) {
-        (
-            Operation::CreateContext {
-                id: id1,
-                name: name1,
-                capacity: cap1,
-            },
-            Operation::CreateContext {
-                id: id2,
-                name: name2,
-                capacity: cap2,
-            },
-        ) => {
-            assert_eq!(id1, id2);
-            assert_eq!(name1, name2);
-            assert_eq!(cap1, cap2);
-        }
-        _ => panic!("Clone failed"),
+    // Test NoOp
+    let no_op: Operation<TestInput, TestOutput, TestContext, TestNode> = Operation::NoOp;
+    match no_op {
+        Operation::NoOp => (),
+        _ => panic!("Expected NoOp"),
     }
 }
 
 #[test]
-fn test_op_tree_single_node() {
-    #[allow(clippy::type_complexity)]
+fn test_optree_structure() {
+    let id = 1;
+    let causaloid = create_dummy_causaloid(id);
+    let create_op =
+        Operation::<TestInput, TestOutput, TestContext, TestNode>::CreateCausaloid(id, causaloid);
+    let no_op = Operation::<TestInput, TestOutput, TestContext, TestNode>::NoOp;
 
-    let op = Operation::<(), (), TestData, TestSpace, TestTime, TestSpacetime, TestSymbol, f64, f64>::DeleteContext(1);
-    #[allow(clippy::type_complexity)]
-    let tree: ConstTree<
-        Operation<(), (), TestData, TestSpace, TestTime, TestSpacetime, TestSymbol, f64, f64>,
-    > = ConstTree::new(op);
+    // Build a simple tree: Sequence -> [CreateCausaloid, NoOp]
+    let leaf1 = OpTree::new(create_op);
+    let leaf2 = OpTree::new(no_op);
 
-    assert_eq!(tree.children().len(), 0);
+    // Using Sequence as the root operation value
+    let mut root = OpTree::new(Operation::Sequence);
+
+    // Construct tree using add_child instead of push
+    root = root.add_child(leaf1);
+    root = root.add_child(leaf2);
+
+    // ConstTree::len(self) doesn't exist? Wait, usually AST nodes have ways to count.
+    // However, I can check children().len()
+
+    assert_eq!(root.children().len(), 2);
+    assert!(matches!(root.value(), Operation::Sequence));
+
+    // Check children
+    let children = root.children();
+    let child1 = &children[0];
+    let child2 = &children[1];
+
+    assert!(matches!(child1.value(), Operation::CreateCausaloid(..)));
+    assert!(matches!(child2.value(), Operation::NoOp));
 }
 
 #[test]
-fn test_op_tree_with_children() {
-    let root_op = Operation::<
-        (),
-        (),
-        TestData,
-        TestSpace,
-        TestTime,
-        TestSpacetime,
-        TestSymbol,
-        f64,
-        f64,
-    >::CreateContext {
-        id: 1,
-        name: "root".to_string(),
-        capacity: 10,
-    };
+fn test_debug_and_clone() {
+    let op = Operation::<TestInput, TestOutput, TestContext, TestNode>::NoOp;
 
-    let child_op1 = Operation::<
-        (),
-        (),
-        TestData,
-        TestSpace,
-        TestTime,
-        TestSpacetime,
-        TestSymbol,
-        f64,
-        f64,
-    >::CreateContext {
-        id: 2,
-        name: "child1".to_string(),
-        capacity: 5,
-    };
+    // Test Clone
+    let op_clone = op.clone();
+    assert!(matches!(op_clone, Operation::NoOp));
 
-    let child_op2 = Operation::<
-        (),
-        (),
-        TestData,
-        TestSpace,
-        TestTime,
-        TestSpacetime,
-        TestSymbol,
-        f64,
-        f64,
-    >::DeleteContext(3);
-
-    let child_tree1 = ConstTree::new(child_op1);
-    let child_tree2 = ConstTree::new(child_op2);
-
-    let tree = ConstTree::with_children(root_op, vec![child_tree1, child_tree2]);
-
-    assert_eq!(tree.children().len(), 2);
-}
-
-#[test]
-fn test_operation_debug_format() {
-    let op = Operation::<
-        (),
-        (),
-        TestData,
-        TestSpace,
-        TestTime,
-        TestSpacetime,
-        TestSymbol,
-        f64,
-        f64,
-    >::CreateContext {
-        id: 1,
-        name: "test".to_string(),
-        capacity: 10,
-    };
-
+    // Test Debug
     let debug_str = format!("{:?}", op);
-    assert!(debug_str.contains("CreateContext"));
+    assert_eq!(debug_str, "NoOp");
+
+    let ctx_op = Operation::<TestInput, TestOutput, TestContext, TestNode>::DeleteContext(123);
+    let debug_ctx = format!("{:?}", ctx_op);
+    assert!(debug_ctx.contains("DeleteContext"));
+    assert!(debug_ctx.contains("123"));
 }

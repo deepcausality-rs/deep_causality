@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality::utils_test::test_utils;
-use deep_causality::{AssumptionError, Identifiable, Model, PropagatingEffect, Transferable};
+use deep_causality::{AssumptionError, Model, NumericalValue, PropagatingEffect, Transferable};
 use std::sync::{Arc, RwLock};
 
 #[test]
@@ -22,9 +22,9 @@ fn test_assumptions_no_assumptions_err() {
     assert_eq!(model.description(), description);
     assert!(model.assumptions().is_none());
 
-    let data: Vec<PropagatingEffect> = test_utils::get_test_num_array()
+    let data: Vec<PropagatingEffect<NumericalValue>> = test_utils::get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::from_numerical(x))
+        .map(|&x| PropagatingEffect::from_value(x))
         .collect();
 
     // AssumptionError::NoAssumptionsDefined
@@ -91,9 +91,9 @@ fn test_assumptions_assumption_err() {
     assert!(model.assumptions().is_some());
     assert_eq!(*model.causaloid(), causaloid);
 
-    let data: Vec<PropagatingEffect> = test_utils::get_test_num_array()
+    let data: Vec<PropagatingEffect<NumericalValue>> = test_utils::get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::from_numerical(x))
+        .map(|&x| PropagatingEffect::from_value(x))
         .collect();
 
     // Err(AssumptionFailed("Test error"),
@@ -125,9 +125,9 @@ fn test_verify_assumptions_failed() {
     assert!(model.assumptions().is_some());
     assert_eq!(*model.causaloid(), causaloid);
 
-    let data: Vec<PropagatingEffect> = test_utils::get_test_num_array()
+    let data: Vec<PropagatingEffect<NumericalValue>> = test_utils::get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::from_numerical(x))
+        .map(|&x| PropagatingEffect::from_value(x))
         .collect();
 
     //  AssumptionError::AssumptionFailed("Assumption: id: 2, description: Test assumption that is always false, assumption_tested: true, assumption_valid: false")
@@ -158,9 +158,9 @@ fn test_verify_assumptions_success() {
     assert!(model.assumptions().is_some());
     assert_eq!(*model.causaloid(), causaloid);
 
-    let data: Vec<PropagatingEffect> = test_utils::get_test_num_array()
+    let data: Vec<PropagatingEffect<NumericalValue>> = test_utils::get_test_num_array()
         .iter()
-        .map(|&x| PropagatingEffect::from_numerical(x))
+        .map(|&x| PropagatingEffect::from_value(x))
         .collect();
 
     let res = model.verify_assumptions(&data);

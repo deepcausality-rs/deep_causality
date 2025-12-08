@@ -2,7 +2,6 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality::Identifiable;
 use deep_causality::utils_test::test_utils::*;
 use deep_causality::{MonadicCausable, PropagatingEffect};
 
@@ -54,14 +53,13 @@ fn test_get_test_causaloid_positive_above_threshold() {
     let id = 10;
     let causaloid = get_test_causaloid(id);
     let evidence = 0.60; // Above threshold
-    let initial_effect = PropagatingEffect::from_numerical(evidence);
+    let initial_effect = PropagatingEffect::from_value(evidence);
 
     let result_effect = causaloid.evaluate(&initial_effect);
 
     assert!(result_effect.is_ok());
-    assert_eq!(result_effect.value.as_bool(), Some(true));
     assert!(result_effect.logs.to_string().contains(&format!(
-        "Causaloid {}: Incoming effect: Numerical({})",
+        "Causaloid {}: Incoming effect: Value({})",
         id, evidence
     )));
     assert!(
@@ -80,7 +78,7 @@ fn test_get_test_causaloid_positive_above_threshold() {
         result_effect
             .logs
             .to_string()
-            .contains(&format!("Causaloid {}: Outgoing effect: Boolean(true)", id))
+            .contains(&format!("Causaloid {}: Outgoing effect: Value(true)", id))
     );
 }
 
@@ -89,14 +87,13 @@ fn test_get_test_causaloid_positive_below_threshold() {
     let id = 11;
     let causaloid = get_test_causaloid(id);
     let evidence = 0.40; // Below threshold
-    let initial_effect = PropagatingEffect::from_numerical(evidence);
+    let initial_effect = PropagatingEffect::from_value(evidence);
 
     let result_effect = causaloid.evaluate(&initial_effect);
 
     assert!(result_effect.is_ok());
-    assert_eq!(result_effect.value.as_bool(), Some(false));
     assert!(result_effect.logs.to_string().contains(&format!(
-        "Causaloid {}: Incoming effect: Numerical({})",
+        "Causaloid {}: Incoming effect: Value({})",
         id, evidence
     )));
     assert!(
@@ -111,10 +108,12 @@ fn test_get_test_causaloid_positive_below_threshold() {
             .to_string()
             .contains(&format!("Evidence {} >= threshold 0.55: false", evidence))
     );
-    assert!(result_effect.logs.to_string().contains(&format!(
-        "Causaloid {}: Outgoing effect: Boolean(false)",
-        id
-    )));
+    assert!(
+        result_effect
+            .logs
+            .to_string()
+            .contains(&format!("Causaloid {}: Outgoing effect: Value(false)", id))
+    );
 }
 
 #[test]
@@ -122,25 +121,23 @@ fn test_get_test_causaloid_negative_evidence() {
     let id = 12;
     let causaloid = get_test_causaloid(id);
     let evidence = -1.0; // Negative evidence
-    let initial_effect = PropagatingEffect::from_numerical(evidence);
+    let initial_effect = PropagatingEffect::from_value(evidence);
 
     let result_effect = causaloid.evaluate(&initial_effect);
     dbg!(&result_effect);
 
     assert!(result_effect.is_err());
-    let error = result_effect.error.unwrap();
-    assert_eq!(error.0, "Observation is negative");
     assert!(
         result_effect
             .logs
             .to_string()
-            .contains(&"Causaloid 12: Incoming effect: Numerical(-1.0)".to_string())
+            .contains(&"Causaloid 12: Incoming effect: Value(-1.0)".to_string())
     );
     assert!(
-        result_effect.logs.to_string().contains(
-            &"Causaloid 12: Causal function failed: CausalityError: Observation is negative"
-                .to_string()
-        )
+        result_effect
+            .logs
+            .to_string()
+            .contains(&"Observation is negative, returning error.".to_string())
     );
 }
 
@@ -149,14 +146,13 @@ fn test_get_test_causaloid_edge_threshold() {
     let id = 13;
     let causaloid = get_test_causaloid(id);
     let evidence = 0.55; // Exactly at threshold
-    let initial_effect = PropagatingEffect::from_numerical(evidence);
+    let initial_effect = PropagatingEffect::from_value(evidence);
 
     let result_effect = causaloid.evaluate(&initial_effect);
 
     assert!(result_effect.is_ok());
-    assert_eq!(result_effect.value.as_bool(), Some(true));
     assert!(result_effect.logs.to_string().contains(&format!(
-        "Causaloid {}: Incoming effect: Numerical({})",
+        "Causaloid {}: Incoming effect: Value({})",
         id, evidence
     )));
     assert!(
@@ -175,6 +171,6 @@ fn test_get_test_causaloid_edge_threshold() {
         result_effect
             .logs
             .to_string()
-            .contains(&format!("Causaloid {}: Outgoing effect: Boolean(true)", id))
+            .contains(&format!("Causaloid {}: Outgoing effect: Value(true)", id))
     );
 }

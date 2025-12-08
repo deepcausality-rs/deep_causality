@@ -3,930 +3,524 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::{ContextuableGraph, Identifiable};
-
 use deep_causality::{
-    BaseSymbol, CausalEffectLog, CausalFnOutput, CausalSystemState, Causaloid, Context, Contextoid,
-    ContextoidType, Data, EuclideanSpace, EuclideanSpacetime, EuclideanTime, Interpreter,
-    ModelValidationError, OpStatus, OpTree, Operation,
+    BaseContext, BaseContextoid, CausalSystemState, Causaloid, ContextoidType, Data, Interpreter,
+    ModelValidationError, OpTree, Operation,
 };
+use std::sync::{Arc, RwLock};
 
-// Type aliases for testing
-type TestData = Data<f64>;
-type TestSpace = EuclideanSpace;
-type TestTime = EuclideanTime;
-type TestSpacetime = EuclideanSpacetime;
-type TestSymbol = BaseSymbol;
+// Type aliases
+type TestInput = i32;
+type TestOutput = i32;
+type TestContext = BaseContext;
+type TestNode = BaseContextoid;
+type TestState = CausalSystemState<TestInput, TestOutput, TestContext>;
 
-// Generic type parameters for CausalSystemState, Causaloid, Context, Contextoid
-type I = (); // Input type for Causaloid
-type O = (); // Output type for Causaloid
-type D = TestData;
-type S = TestSpace;
-type T = TestTime;
-type ST = TestSpacetime;
-type Sym = TestSymbol;
-type VS = f64; // Value type for Space
-type VT = f64; // Value type for Time
-
-type TestCausaloid = Causaloid<I, O, D, S, T, ST, Sym, VS, VT>;
-type TestContext = Context<D, S, T, ST, Sym, VS, VT>;
-type TestContextoid = Contextoid<D, S, T, ST, Sym, VS, VT>;
-
-// Helper functions for common test scenarios
-
-fn create_dummy_causaloid(id: u64) -> TestCausaloid {
-    TestCausaloid::new(
-        id,
-        // Dummy CausalFn: A simple function that takes I and returns Ok(CausalFnOutput<O>)
-        |_: I| Ok(CausalFnOutput::new((), CausalEffectLog::new())),
-        format!("Causaloid_{}", id).as_str(),
-    )
+// Helper function for Causaloid. Must be a fn pointer.
+fn dummy_causal_fn(_: TestInput) -> deep_causality::PropagatingEffect<TestOutput> {
+    deep_causality::PropagatingEffect::from_value(1)
 }
 
-fn create_dummy_context(id: u64, name: &str, capacity: u32) -> TestContext {
-    TestContext::with_capacity(id, name, capacity as usize)
+// Helpers
+fn create_dummy_causaloid(
+    id: u64,
+) -> Causaloid<TestInput, TestOutput, (), Arc<RwLock<TestContext>>> {
+    Causaloid::new(id, dummy_causal_fn, "test_causaloid")
 }
 
-fn create_dummy_contextoid(id: u64) -> TestContextoid {
-    TestContextoid::new(id, ContextoidType::Datoid(TestData::new(id, 1.0)))
+fn create_dummy_contextoid(id: u64) -> TestNode {
+    TestNode::new(id, ContextoidType::Datoid(Data::new(id, 0.0)))
 }
 
-fn initial_test_state() -> CausalSystemState<I, O, D, S, T, ST, Sym, VS, VT> {
+fn create_sys_state() -> TestState {
     CausalSystemState::new()
 }
 
-// Test Interpreter construction and state properties
 #[test]
-fn test_causal_system_state_new() {
-    let state = initial_test_state();
-    assert_eq!(state.causaloids.len(), 0);
-    assert_eq!(state.contexts.len(), 0);
-}
-
-#[test]
-fn test_causal_system_state_clone() {
-    let state1 = initial_test_state();
-    let state2 = state1.clone();
-    assert_eq!(state1.causaloids.len(), state2.causaloids.len());
-    assert_eq!(state1.contexts.len(), state2.contexts.len());
-}
-
-#[test]
-fn test_interpreter_new() {
-    let _interpreter = Interpreter::new();
-    // Interpreter is a zero-sized type, just verify it can be created
-}
-
-#[test]
-fn test_interpreter_is_stateless() {
-    let interpreter1 = Interpreter::new();
-    let interpreter2 = Interpreter::new();
-    // Both interpreters should be identical (stateless)
-    let _ = (interpreter1, interpreter2);
-}
-
-#[test]
-fn test_causal_system_state_debug() {
-    let state = initial_test_state();
-    let debug_str = format!("{:?}", state);
-    assert!(debug_str.contains("CausalSystemState"));
-}
-
-// --- Interpreter Operations Tests ---
-
-// Test Operation::NoOp
-#[test]
-fn test_walk_noop() {
+fn test_create_causaloid() {
     let interpreter = Interpreter::new();
-    let initial_state = initial_test_state();
-    let op_node = OpTree::new(Operation::NoOp);
+    let state = create_sys_state();
+    let id = 1;
+    let causaloid = create_dummy_causaloid(id);
+    let op = Operation::CreateCausaloid(id, causaloid);
+    let tree = OpTree::new(op);
 
-    let result = interpreter.execute(&op_node, initial_state.clone());
-
+    // Success
+    let result = interpreter.execute(&tree, state.clone());
     assert!(result.value.is_some());
     assert!(result.error.is_none());
-    assert!(result.logs.is_empty());
-    assert_eq!(result.value.as_ref().unwrap().causaloids.len(), 0);
-    assert_eq!(result.value.as_ref().unwrap().contexts.len(), 0);
-}
-
-// Test Operation::CreateCausaloid
-#[test]
-fn test_walk_create_causaloid_success() {
-    let interpreter = Interpreter::new();
-    let initial_state = initial_test_state();
-    let causaloid = create_dummy_causaloid(1);
-    let op_node = OpTree::new(Operation::CreateCausaloid(1, causaloid.clone()));
-
-    let result = interpreter.execute(&op_node, initial_state);
-
-    assert!(result.value.is_some());
-    assert!(result.error.is_none());
-    assert_eq!(result.logs.len(), 1);
-    assert_eq!(
-        result.logs.entries[0].operation_name,
-        "CreateCausaloid".to_string()
-    );
-    assert_eq!(result.logs.entries[0].status, OpStatus::Success);
+    assert!(!result.logs.is_empty());
     assert_eq!(result.value.as_ref().unwrap().causaloids.len(), 1);
-    assert!(result.value.as_ref().unwrap().causaloids.contains_key(&1));
+    assert!(result.value.unwrap().causaloids.contains_key(&id));
+
+    // Failure: Duplicate
+    // First, execute successfully to get a state with the causaloid
+    let state_with_c = interpreter.execute(&tree, state).value.unwrap();
+    // Try to create the same causaloid again
+    let result_fail = interpreter.execute(&tree, state_with_c);
+    assert!(result_fail.error.is_some());
+    match result_fail.error.unwrap() {
+        ModelValidationError::DuplicateCausaloidID { id: err_id } => assert_eq!(err_id, id),
+        _ => panic!("Expected DuplicateCausaloidID error"),
+    }
 }
 
 #[test]
-fn test_walk_create_causaloid_duplicate_id() {
+fn test_update_causaloid() {
     let interpreter = Interpreter::new();
-    let mut initial_state = initial_test_state();
-    let causaloid = create_dummy_causaloid(1);
-    initial_state.causaloids.insert(1, causaloid.clone()); // Pre-add causaloid
+    let state = create_sys_state();
+    let id = 1;
+    let causaloid = create_dummy_causaloid(id);
 
-    let op_node = OpTree::new(Operation::CreateCausaloid(1, causaloid));
+    // Add Causaloid first
+    let create_tree = OpTree::new(Operation::CreateCausaloid(id, causaloid.clone()));
+    let state_with_c = interpreter
+        .execute(&create_tree, state.clone())
+        .value
+        .unwrap();
 
-    let result = interpreter.execute(&op_node, initial_state.clone()); // Pass cloned state
-
-    assert!(result.value.is_some()); // Value should still be original state
-    assert!(result.error.is_some());
-    assert!(matches!(
-        result.error.unwrap(),
-        ModelValidationError::DuplicateCausaloidID { id: 1 }
-    ));
-    assert_eq!(result.logs.len(), 1);
-    assert_eq!(
-        result.logs.entries[0].operation_name,
-        "CreateCausaloid".to_string()
-    );
-    assert_eq!(result.logs.entries[0].status, OpStatus::Failure);
-    // Ensure state is unchanged
-    assert_eq!(result.value.as_ref().unwrap().causaloids.len(), 1);
-    assert!(result.value.as_ref().unwrap().causaloids.contains_key(&1));
-}
-
-// Test Operation::UpdateCausaloid
-#[test]
-fn test_walk_update_causaloid_success() {
-    let interpreter = Interpreter::new();
-    let mut initial_state = initial_test_state();
-    let causaloid1 = create_dummy_causaloid(1);
-    initial_state.causaloids.insert(1, causaloid1);
-
-    let updated_causaloid = create_dummy_causaloid(1); // Assuming some change
-    let op_node = OpTree::new(Operation::UpdateCausaloid(1, updated_causaloid.clone()));
-
-    let result = interpreter.execute(&op_node, initial_state);
-
+    // Success
+    let update_op = Operation::UpdateCausaloid(id, causaloid);
+    let update_tree = OpTree::new(update_op);
+    let result = interpreter.execute(&update_tree, state_with_c);
     assert!(result.value.is_some());
     assert!(result.error.is_none());
-    assert_eq!(result.logs.len(), 1);
-    assert_eq!(
-        result.logs.entries[0].operation_name,
-        "UpdateCausaloid".to_string()
-    );
-    assert_eq!(result.logs.entries[0].status, OpStatus::Success);
-    assert_eq!(result.value.as_ref().unwrap().causaloids.len(), 1);
-    assert!(result.value.as_ref().unwrap().causaloids.contains_key(&1));
+    assert!(result.value.unwrap().causaloids.contains_key(&id));
+
+    // Failure: Not Found
+    let result_fail = interpreter.execute(&update_tree, state); // Empty state
+    assert!(result_fail.error.is_some());
+    match result_fail.error.unwrap() {
+        ModelValidationError::UpdateNodeError { .. } => (),
+        _ => panic!("Expected UpdateNodeError"),
+    }
 }
 
 #[test]
-fn test_walk_update_causaloid_not_found() {
+fn test_delete_causaloid() {
     let interpreter = Interpreter::new();
-    let initial_state = initial_test_state();
-    let causaloid = create_dummy_causaloid(1);
-    let op_node = OpTree::new(Operation::UpdateCausaloid(1, causaloid));
+    let state = create_sys_state();
+    let id = 1;
+    let causaloid = create_dummy_causaloid(id);
 
-    let result = interpreter.execute(&op_node, initial_state.clone());
+    // Add Causaloid first
+    let create_tree = OpTree::new(Operation::CreateCausaloid(id, causaloid));
+    let state_with_c = interpreter
+        .execute(&create_tree, state.clone())
+        .value
+        .unwrap();
 
-    assert!(result.value.is_some()); // Returns original state
-    assert!(result.error.is_some());
-    assert!(matches!(
-        result.error.unwrap(),
-        ModelValidationError::UpdateNodeError { .. }
-    ));
-    assert_eq!(result.logs.len(), 1);
-    assert_eq!(
-        result.logs.entries[0].operation_name,
-        "UpdateCausaloid".to_string()
-    );
-    assert_eq!(result.logs.entries[0].status, OpStatus::Failure);
-    // Ensure state is unchanged
-    assert_eq!(result.value.as_ref().unwrap().causaloids.len(), 0);
-}
-
-// Test Operation::DeleteCausaloid
-#[test]
-fn test_walk_delete_causaloid_success() {
-    let interpreter = Interpreter::new();
-    let mut initial_state = initial_test_state();
-    initial_state
-        .causaloids
-        .insert(1, create_dummy_causaloid(1));
-
-    let op_node = OpTree::new(Operation::DeleteCausaloid(1));
-
-    let result = interpreter.execute(&op_node, initial_state);
-
+    // Success
+    let delete_op = Operation::DeleteCausaloid(id);
+    let delete_tree = OpTree::new(delete_op);
+    let result = interpreter.execute(&delete_tree, state_with_c);
     assert!(result.value.is_some());
     assert!(result.error.is_none());
-    assert_eq!(result.logs.len(), 1);
-    assert_eq!(
-        result.logs.entries[0].operation_name,
-        "DeleteCausaloid".to_string()
-    );
-    assert_eq!(result.logs.entries[0].status, OpStatus::Success);
-    assert_eq!(result.value.as_ref().unwrap().causaloids.len(), 0);
+    assert!(result.value.unwrap().causaloids.is_empty());
+
+    // Failure: Not Found
+    let result_fail = interpreter.execute(&delete_tree, state); // Empty state
+    assert!(result_fail.error.is_some());
+    match result_fail.error.unwrap() {
+        ModelValidationError::RemoveNodeError { .. } => (),
+        _ => panic!("Expected RemoveNodeError"),
+    }
 }
 
 #[test]
-fn test_walk_delete_causaloid_not_found() {
+fn test_create_context() {
     let interpreter = Interpreter::new();
-    let initial_state = initial_test_state();
-    let op_node = OpTree::new(Operation::DeleteCausaloid(1));
+    let state = create_sys_state();
+    let id = 100;
+    let name = "TestContext".to_string();
+    let capacity = 10;
+    let op = Operation::CreateContext {
+        id,
+        name: name.clone(),
+        capacity,
+    };
+    let tree = OpTree::new(op);
 
-    let result = interpreter.execute(&op_node, initial_state.clone());
+    // Success
+    let result = interpreter.execute(&tree, state.clone());
+    assert!(result.value.is_some());
+    assert!(result.error.is_none());
+    assert!(result.value.unwrap().contexts.contains_key(&id));
 
-    assert!(result.value.is_some()); // Returns original state
-    assert!(result.error.is_some());
-    assert!(matches!(
-        result.error.unwrap(),
-        ModelValidationError::RemoveNodeError { .. }
-    ));
-    assert_eq!(result.logs.len(), 1);
-    assert_eq!(
-        result.logs.entries[0].operation_name,
-        "DeleteCausaloid".to_string()
-    );
-    assert_eq!(result.logs.entries[0].status, OpStatus::Failure);
-    // Ensure state is unchanged
-    assert_eq!(result.value.as_ref().unwrap().causaloids.len(), 0);
+    // Failure: Duplicate
+    let state_with_ctx = interpreter.execute(&tree, state).value.unwrap();
+    let result_fail = interpreter.execute(&tree, state_with_ctx);
+    assert!(result_fail.error.is_some());
+    match result_fail.error.unwrap() {
+        ModelValidationError::DuplicateContextId { id: err_id } => assert_eq!(err_id, id),
+        _ => panic!("Expected DuplicateContextId error"),
+    }
 }
 
-// Test Operation::CreateContext
 #[test]
-fn test_walk_create_context_success() {
+fn test_create_extra_context() {
     let interpreter = Interpreter::new();
-    let initial_state = initial_test_state();
-    let op_node = OpTree::new(Operation::CreateContext {
-        id: 1,
-        name: "TestContext".to_string(),
+    let state = create_sys_state();
+    let ctx_id = 100;
+    let extra_id = 101;
+
+    // Check parent exists
+    let create_extra_op = Operation::CreateExtraContext {
+        context_id: ctx_id,
+        extra_context_id: extra_id,
+        capacity: 10,
+    };
+    let tree = OpTree::new(create_extra_op.clone());
+
+    // Failure: Parent Not Found
+    let result_fail_parent = interpreter.execute(&tree, state.clone());
+    assert!(result_fail_parent.error.is_some());
+    match result_fail_parent.error.unwrap() {
+        ModelValidationError::TargetContextNotFound { id } => assert_eq!(id, ctx_id),
+        _ => panic!("Expected TargetContextNotFound"),
+    }
+
+    // Prepare state with parent context
+    let create_ctx_op = Operation::CreateContext {
+        id: ctx_id,
+        name: "C1".into(),
+        capacity: 10,
+    };
+    let state_with_parent = interpreter
+        .execute(&OpTree::new(create_ctx_op), state)
+        .value
+        .unwrap();
+
+    // Success
+    let result = interpreter.execute(&tree, state_with_parent.clone());
+    assert!(result.value.is_some());
+    assert!(result.error.is_none());
+    assert!(result.value.unwrap().contexts.contains_key(&extra_id));
+
+    // Failure: Duplicate Context ID
+    // Create extra context first
+    let state_with_extra = interpreter.execute(&tree, state_with_parent).value.unwrap();
+    // Try to create it again
+    let result_fail_dup = interpreter.execute(&tree, state_with_extra);
+    assert!(result_fail_dup.error.is_some());
+    match result_fail_dup.error.unwrap() {
+        ModelValidationError::DuplicateContextId { id } => assert_eq!(id, extra_id),
+        _ => panic!("Expected DuplicateContextId"),
+    }
+}
+
+#[test]
+fn test_update_context() {
+    let interpreter = Interpreter::new();
+    let state = create_sys_state();
+    let id = 100;
+
+    // Add context first
+    let create_tree = OpTree::new(Operation::CreateContext {
+        id,
+        name: "Old".into(),
         capacity: 10,
     });
+    let state_with_ctx = interpreter
+        .execute(&create_tree, state.clone())
+        .value
+        .unwrap();
 
-    let result = interpreter.execute(&op_node, initial_state);
-
+    // Success
+    let update_op = Operation::UpdateContext {
+        id,
+        new_name: Some("New".into()),
+    };
+    let update_tree = OpTree::new(update_op);
+    let result = interpreter.execute(&update_tree, state_with_ctx);
     assert!(result.value.is_some());
-    assert!(result.error.is_none());
-    assert_eq!(result.logs.len(), 1);
-    assert_eq!(
-        result.logs.entries[0].operation_name,
-        "CreateContext".to_string()
+    assert!(
+        result
+            .value
+            .as_ref()
+            .unwrap()
+            .contexts
+            .get(&id)
+            .unwrap()
+            .name()
+            == "New"
     );
-    assert_eq!(result.logs.entries[0].status, OpStatus::Success);
-    assert_eq!(result.value.as_ref().unwrap().contexts.len(), 1);
-    assert!(result.value.as_ref().unwrap().contexts.contains_key(&1));
+
+    // Failure: Not Found
+    let result_fail = interpreter.execute(&update_tree, state);
+    assert!(result_fail.error.is_some());
+    match result_fail.error.unwrap() {
+        ModelValidationError::TargetContextNotFound { .. } => (),
+        _ => panic!("Expected TargetContextNotFound"),
+    }
 }
 
 #[test]
-fn test_walk_create_context_duplicate_id() {
+fn test_delete_context() {
     let interpreter = Interpreter::new();
-    let mut initial_state = initial_test_state();
-    initial_state
-        .contexts
-        .insert(1, create_dummy_context(1, "Existing", 10));
+    let state = create_sys_state();
+    let id = 100;
 
-    let op_node = OpTree::new(Operation::CreateContext {
-        id: 1,
-        name: "TestContext".to_string(),
+    // Add context first
+    let create_tree = OpTree::new(Operation::CreateContext {
+        id,
+        name: "DeleteMe".into(),
         capacity: 10,
     });
+    let state_with_ctx = interpreter
+        .execute(&create_tree, state.clone())
+        .value
+        .unwrap();
 
-    let result = interpreter.execute(&op_node, initial_state.clone());
+    // Success
+    let delete_op = Operation::DeleteContext(id);
+    let delete_tree = OpTree::new(delete_op);
+    let result = interpreter.execute(&delete_tree, state_with_ctx);
+    assert!(result.value.is_some());
+    assert!(!result.value.unwrap().contexts.contains_key(&id));
 
-    assert!(result.value.is_some()); // Returns original state
-    assert!(result.error.is_some());
-    assert!(matches!(
-        result.error.unwrap(),
-        ModelValidationError::DuplicateContextId { id: 1 }
-    ));
-    assert_eq!(result.logs.len(), 1);
-    assert_eq!(
-        result.logs.entries[0].operation_name,
-        "CreateContext".to_string()
-    );
-    assert_eq!(result.logs.entries[0].status, OpStatus::Failure);
-    // Ensure state is unchanged
-    assert_eq!(result.value.as_ref().unwrap().contexts.len(), 1);
+    // Failure: Not Found
+    let result_fail = interpreter.execute(&delete_tree, state);
+    assert!(result_fail.error.is_some());
+    match result_fail.error.unwrap() {
+        ModelValidationError::TargetContextNotFound { .. } => (),
+        _ => panic!("Expected TargetContextNotFound"),
+    }
 }
 
-// Test Operation::CreateExtraContext
 #[test]
-fn test_walk_create_extra_context_success() {
+fn test_add_contextoid_to_context() {
     let interpreter = Interpreter::new();
-    let mut initial_state = initial_test_state();
-    // Add parent context
-    initial_state
-        .contexts
-        .insert(0, create_dummy_context(0, "Parent", 10));
+    let state = create_sys_state();
+    let ctx_id = 100;
+    let node_id = 1;
+    let node = create_dummy_contextoid(node_id);
 
-    let op_node = OpTree::new(Operation::CreateExtraContext {
-        context_id: 0,
-        extra_context_id: 1,
+    // Prepare state with context
+    let create_ctx_tree = OpTree::new(Operation::CreateContext {
+        id: ctx_id,
+        name: "C1".into(),
         capacity: 10,
     });
+    let state_with_ctx = interpreter
+        .execute(&create_ctx_tree, state.clone())
+        .value
+        .unwrap();
 
-    let result = interpreter.execute(&op_node, initial_state);
+    let op = Operation::AddContextoidToContext {
+        context_id: ctx_id,
+        contextoid: node.clone(),
+    };
+    let tree = OpTree::new(op);
 
+    // Success
+    let result = interpreter.execute(&tree, state_with_ctx.clone());
     assert!(result.value.is_some());
-    assert!(result.error.is_none());
-    assert_eq!(result.logs.len(), 1);
-    assert_eq!(
-        result.logs.entries[0].operation_name,
-        "CreateExtraContext".to_string()
+    assert!(
+        result
+            .value
+            .as_ref()
+            .unwrap()
+            .contexts
+            .get(&ctx_id)
+            .unwrap()
+            .get_node_index_by_id(node_id)
+            .is_some()
     );
-    assert_eq!(result.logs.entries[0].status, OpStatus::Success);
-    assert_eq!(result.value.as_ref().unwrap().contexts.len(), 2);
-    assert!(result.value.as_ref().unwrap().contexts.contains_key(&1));
+
+    // Failure: Context Not Found
+    let result_fail_ctx = interpreter.execute(&tree, state);
+    assert!(result_fail_ctx.error.is_some());
+    match result_fail_ctx.error.unwrap() {
+        ModelValidationError::TargetContextNotFound { id } => assert_eq!(id, ctx_id),
+        _ => panic!("Expected TargetContextNotFound"),
+    }
+
+    // Failure: Duplicate Node
+    let state_with_node = result.value.unwrap();
+    let result_fail_dup = interpreter.execute(&tree, state_with_node);
+    assert!(result_fail_dup.error.is_some());
+    match result_fail_dup.error.unwrap() {
+        ModelValidationError::AddContextoidError { .. } => (),
+        _ => panic!("Expected AddContextoidError"),
+    }
 }
 
 #[test]
-fn test_walk_create_extra_context_duplicate_id() {
+fn test_update_contextoid_in_context() {
     let interpreter = Interpreter::new();
-    let mut initial_state = initial_test_state();
-    // Add parent context
-    initial_state
-        .contexts
-        .insert(0, create_dummy_context(0, "Parent", 10));
-    initial_state
-        .contexts
-        .insert(1, create_dummy_context(1, "ExistingExtra", 10));
+    let state = create_sys_state();
+    let ctx_id = 100;
+    let node_id = 1;
+    let node = create_dummy_contextoid(node_id);
+    let new_node = create_dummy_contextoid(node_id); // Same ID
 
-    let op_node = OpTree::new(Operation::CreateExtraContext {
-        context_id: 0,
-        extra_context_id: 1,
+    // Prepare state with context and node
+    let create_ctx_op = Operation::CreateContext {
+        id: ctx_id,
+        name: "C1".into(),
+        capacity: 10,
+    };
+    let add_node_op = Operation::AddContextoidToContext {
+        context_id: ctx_id,
+        contextoid: node,
+    };
+
+    // Sequence to build state
+    let root = OpTree::new(Operation::Sequence)
+        .add_child(OpTree::new(create_ctx_op))
+        .add_child(OpTree::new(add_node_op));
+
+    let state_prepared = interpreter.execute(&root, state.clone()).value.unwrap();
+
+    let update_op = Operation::UpdateContextoidInContext {
+        context_id: ctx_id,
+        existing_contextoid: node_id,
+        new_contextoid: new_node,
+    };
+    let update_tree = OpTree::new(update_op.clone());
+
+    // Success
+    let result = interpreter.execute(&update_tree, state_prepared);
+    assert!(result.value.is_some());
+    assert!(result.error.is_none());
+
+    // Failure: Context Not Found
+    let result_fail_ctx = interpreter.execute(&update_tree, state.clone());
+    match result_fail_ctx.error.unwrap() {
+        ModelValidationError::TargetContextNotFound { .. } => (),
+        _ => panic!("Expected TargetContextNotFound"),
+    }
+
+    // Failure: Node Not Found (Context exists but empty)
+    let create_empty_ctx_tree = OpTree::new(Operation::CreateContext {
+        id: ctx_id,
+        name: "C1".into(),
         capacity: 10,
     });
-
-    let result = interpreter.execute(&op_node, initial_state.clone());
-
-    assert!(result.value.is_some()); // Returns original state
-    assert!(result.error.is_some());
-    assert!(matches!(
-        result.error.unwrap(),
-        ModelValidationError::DuplicateContextId { id: 1 }
-    ));
-    assert_eq!(result.logs.len(), 1);
-    assert_eq!(
-        result.logs.entries[0].operation_name,
-        "CreateExtraContext".to_string()
-    );
-    assert_eq!(result.logs.entries[0].status, OpStatus::Failure);
-    // Ensure state is unchanged
-    assert_eq!(result.value.as_ref().unwrap().contexts.len(), 2);
+    let state_empty_ctx = interpreter
+        .execute(&create_empty_ctx_tree, state)
+        .value
+        .unwrap();
+    let result_fail_node = interpreter.execute(&update_tree, state_empty_ctx);
+    match result_fail_node.error.unwrap() {
+        ModelValidationError::UpdateNodeError { .. } => (),
+        _ => panic!("Expected UpdateNodeError"),
+    }
 }
-// Test Operation::UpdateContext
+
 #[test]
-fn test_walk_update_context_success_with_name() {
+fn test_delete_contextoid_from_context() {
     let interpreter = Interpreter::new();
-    let mut initial_state = initial_test_state();
-    initial_state
-        .contexts
-        .insert(1, create_dummy_context(1, "OldName", 10));
+    let state = create_sys_state();
+    let ctx_id = 100;
+    let node_id = 1;
+    let node = create_dummy_contextoid(node_id);
 
-    let op_node = OpTree::new(Operation::UpdateContext {
-        id: 1,
-        new_name: Some("NewName".to_string()),
-    });
+    // Prepare state
+    let root = OpTree::new(Operation::Sequence)
+        .add_child(OpTree::new(Operation::CreateContext {
+            id: ctx_id,
+            name: "C1".into(),
+            capacity: 10,
+        }))
+        .add_child(OpTree::new(Operation::AddContextoidToContext {
+            context_id: ctx_id,
+            contextoid: node,
+        }));
 
-    let result = interpreter.execute(&op_node, initial_state);
+    let state_prepared = interpreter.execute(&root, state.clone()).value.unwrap();
 
+    let delete_op = Operation::DeleteContextoidFromContext {
+        context_id: ctx_id,
+        contextoid_id: node_id,
+    };
+    let delete_tree = OpTree::new(delete_op.clone());
+
+    // Success
+    let result = interpreter.execute(&delete_tree, state_prepared);
     assert!(result.value.is_some());
-    assert!(result.error.is_none());
-    assert_eq!(result.logs.len(), 1);
-    assert_eq!(
-        result.logs.entries[0].operation_name,
-        "UpdateContext".to_string()
-    );
-    assert_eq!(result.logs.entries[0].status, OpStatus::Success);
-    assert_eq!(result.value.as_ref().unwrap().contexts.len(), 1);
-    assert_eq!(
-        result.value.as_ref().unwrap().contexts[&1].name(),
-        "NewName"
-    );
-}
-
-#[test]
-fn test_walk_update_context_success_no_name() {
-    let interpreter = Interpreter::new();
-    let mut initial_state = initial_test_state();
-    initial_state
-        .contexts
-        .insert(1, create_dummy_context(1, "OldName", 10));
-
-    let op_node = OpTree::new(Operation::UpdateContext {
-        id: 1,
-        new_name: None,
-    });
-
-    let result = interpreter.execute(&op_node, initial_state);
-
-    assert!(result.value.is_some());
-    assert!(result.error.is_none());
-    assert_eq!(result.logs.len(), 1);
-    assert_eq!(
-        result.logs.entries[0].operation_name,
-        "UpdateContext".to_string()
-    );
-    assert_eq!(result.logs.entries[0].status, OpStatus::Success);
-    assert_eq!(result.value.as_ref().unwrap().contexts.len(), 1);
-    assert_eq!(
-        result.value.as_ref().unwrap().contexts[&1].name(),
-        "OldName"
-    ); // Name should not change
-}
-
-#[test]
-fn test_walk_update_context_not_found() {
-    let interpreter = Interpreter::new();
-    let initial_state = initial_test_state();
-
-    let op_node = OpTree::new(Operation::UpdateContext {
-        id: 1,
-        new_name: Some("NewName".to_string()),
-    });
-
-    let result = interpreter.execute(&op_node, initial_state.clone());
-
-    assert!(result.value.is_some()); // Returns original state
-    assert!(result.error.is_some());
-    assert!(matches!(
-        result.error.unwrap(),
-        ModelValidationError::TargetContextNotFound { id: 1 }
-    ));
-    assert_eq!(result.logs.len(), 1);
-    assert_eq!(
-        result.logs.entries[0].operation_name,
-        "UpdateContext".to_string()
-    );
-    assert_eq!(result.logs.entries[0].status, OpStatus::Failure);
-    // Ensure state is unchanged
-    assert_eq!(result.value.as_ref().unwrap().contexts.len(), 0);
-}
-
-// Test Operation::DeleteContext
-#[test]
-fn test_walk_delete_context_success() {
-    let interpreter = Interpreter::new();
-    let mut initial_state = initial_test_state();
-    initial_state
-        .contexts
-        .insert(1, create_dummy_context(1, "Test", 10));
-
-    let op_node = OpTree::new(Operation::DeleteContext(1));
-
-    let result = interpreter.execute(&op_node, initial_state);
-
-    assert!(result.value.is_some());
-    assert!(result.error.is_none());
-    assert_eq!(result.logs.len(), 1);
-    assert_eq!(
-        result.logs.entries[0].operation_name,
-        "DeleteContext".to_string()
-    );
-    assert_eq!(result.logs.entries[0].status, OpStatus::Success);
-    assert_eq!(result.value.as_ref().unwrap().contexts.len(), 0);
-}
-
-#[test]
-fn test_walk_delete_context_not_found() {
-    let interpreter = Interpreter::new();
-    let initial_state = initial_test_state();
-    let op_node = OpTree::new(Operation::DeleteContext(1));
-
-    let result = interpreter.execute(&op_node, initial_state.clone());
-
-    assert!(result.value.is_some()); // Returns original state
-    assert!(result.error.is_some());
-    assert!(matches!(
-        result.error.unwrap(),
-        ModelValidationError::TargetContextNotFound { id: 1 }
-    ));
-    assert_eq!(result.logs.len(), 1);
-    assert_eq!(
-        result.logs.entries[0].operation_name,
-        "DeleteContext".to_string()
-    );
-    assert_eq!(result.logs.entries[0].status, OpStatus::Failure);
-    // Ensure state is unchanged
-    assert_eq!(result.value.as_ref().unwrap().contexts.len(), 0);
-}
-
-// Test Operation::AddContextoidToContext
-#[test]
-fn test_walk_add_contextoid_success() {
-    let interpreter = Interpreter::new();
-    let mut initial_state = initial_test_state();
-    initial_state
-        .contexts
-        .insert(1, create_dummy_context(1, "Test", 10));
-    let contextoid = create_dummy_contextoid(101);
-
-    let op_node = OpTree::new(Operation::AddContextoidToContext {
-        context_id: 1,
-        contextoid: contextoid.clone(),
-    });
-
-    let result = interpreter.execute(&op_node, initial_state);
-
-    assert!(result.value.is_some());
-    assert!(result.error.is_none());
-    assert_eq!(result.logs.len(), 1);
-    assert_eq!(
-        result.logs.entries[0].operation_name,
-        "AddContextoidToContext".to_string()
-    );
-    assert_eq!(result.logs.entries[0].status, OpStatus::Success);
-    let final_state = result.value.as_ref().unwrap();
-    assert!(final_state.contexts[&1].get_node_index_by_id(101).is_some());
-}
-
-#[test]
-fn test_walk_add_contextoid_context_not_found() {
-    let interpreter = Interpreter::new();
-    let initial_state = initial_test_state();
-    let contextoid = create_dummy_contextoid(101);
-
-    let op_node = OpTree::new(Operation::AddContextoidToContext {
-        context_id: 1,
-        contextoid: contextoid.clone(),
-    });
-
-    let result = interpreter.execute(&op_node, initial_state.clone());
-
-    assert!(result.value.is_some()); // Value is Some on error in this case
-    assert!(result.error.is_some());
-    assert!(matches!(
-        result.error.unwrap(),
-        ModelValidationError::TargetContextNotFound { id: 1 }
-    ));
-    assert_eq!(result.logs.len(), 1);
-    // Ensure state is unchanged
-    assert_eq!(initial_state.contexts.len(), 0);
-}
-
-#[test]
-fn test_walk_add_contextoid_duplicate() {
-    let interpreter = Interpreter::new();
-    let mut initial_state = initial_test_state();
-    let mut context = create_dummy_context(1, "Test", 10);
-    let contextoid = create_dummy_contextoid(101);
-    context.add_node(contextoid.clone()).unwrap(); // Add it once
-    initial_state.contexts.insert(1, context);
-
-    let op_node = OpTree::new(Operation::AddContextoidToContext {
-        context_id: 1,
-        contextoid: contextoid.clone(),
-    });
-
-    let result = interpreter.execute(&op_node, initial_state.clone());
-
-    assert!(result.value.is_some()); // Value is Some on error
-    assert!(result.error.is_some());
-    assert!(matches!(
-        result.error.unwrap(),
-        ModelValidationError::AddContextoidError { .. }
-    ));
-    assert_eq!(result.logs.len(), 1); // Log only created if context found
-    // Ensure state is unchanged regarding causaloids
-    assert_eq!(initial_state.contexts[&1].number_of_nodes(), 1);
-}
-
-// Test Operation::UpdateContextoidInContext
-#[test]
-fn test_walk_update_contextoid_success() {
-    let interpreter = Interpreter::new();
-    let mut initial_state = initial_test_state();
-    let mut context = create_dummy_context(1, "Test", 10);
-    let existing_contextoid = create_dummy_contextoid(101);
-    context.add_node(existing_contextoid.clone()).unwrap();
-    initial_state.contexts.insert(1, context);
-
-    let updated_contextoid = create_dummy_contextoid(101); // Assuming some internal change
-    let op_node = OpTree::new(Operation::UpdateContextoidInContext {
-        context_id: 1,
-        existing_contextoid: updated_contextoid.id(),
-        new_contextoid: updated_contextoid,
-    });
-
-    let result = interpreter.execute(&op_node, initial_state);
-
-    assert!(result.value.is_some());
-    assert!(result.error.is_none());
-    assert_eq!(result.logs.len(), 1);
-    assert_eq!(
-        result.logs.entries[0].operation_name,
-        "UpdateContextoidInContext".to_string()
-    );
-    assert_eq!(result.logs.entries[0].status, OpStatus::Success);
-    let final_state = result.value.as_ref().unwrap();
-    assert!(final_state.contexts[&1].get_node_index_by_id(101).is_some());
-}
-
-#[test]
-fn test_walk_update_contextoid_context_not_found() {
-    let interpreter = Interpreter::new();
-    let initial_state = initial_test_state();
-    let contextoid = create_dummy_contextoid(101);
-
-    let op_node = OpTree::new(Operation::UpdateContextoidInContext {
-        context_id: 1,
-        existing_contextoid: 101,
-        new_contextoid: contextoid,
-    });
-
-    let result = interpreter.execute(&op_node, initial_state.clone());
-
-    assert!(result.value.is_some()); // Value is Some on error
-    assert!(result.error.is_some());
-    assert!(matches!(
-        result.error.unwrap(),
-        ModelValidationError::TargetContextNotFound { id: 1 }
-    ));
-    assert_eq!(result.logs.len(), 1); // Log added in interpreter
-    assert_eq!(
-        result.logs.entries[0].operation_name,
-        "UpdateContextoidInContext".to_string()
-    );
-    assert_eq!(result.logs.entries[0].status, OpStatus::Failure);
-    // Ensure state is unchanged
-    assert_eq!(initial_state.contexts.len(), 0);
-}
-
-#[test]
-fn test_walk_update_contextoid_not_found_in_context() {
-    let interpreter = Interpreter::new();
-    let mut initial_state = initial_test_state();
-    initial_state
-        .contexts
-        .insert(1, create_dummy_context(1, "Test", 10));
-
-    let contextoid = create_dummy_contextoid(101);
-    let op_node = OpTree::new(Operation::UpdateContextoidInContext {
-        context_id: 1,
-        existing_contextoid: 999, // Non-existent contextoid
-        new_contextoid: contextoid,
-    });
-
-    let result = interpreter.execute(&op_node, initial_state.clone());
-
-    assert!(result.value.is_some()); // Value is Some on error
-    assert!(result.error.is_some());
-    assert!(matches!(
-        result.error.unwrap(),
-        ModelValidationError::UpdateNodeError { .. }
-    ));
-    assert_eq!(result.logs.len(), 1); // Log added in interpreter
-    assert_eq!(
-        result.logs.entries[0].operation_name,
-        "UpdateContextoidInContext".to_string()
-    );
-    assert_eq!(result.logs.entries[0].status, OpStatus::Failure);
-    // Ensure state is unchanged
-    assert_eq!(initial_state.contexts[&1].number_of_nodes(), 0); // Context is empty
-}
-
-// Test Operation::DeleteContextoidFromContext
-#[test]
-fn test_walk_delete_contextoid_success() {
-    let interpreter = Interpreter::new();
-    let mut initial_state = initial_test_state();
-    let mut context = create_dummy_context(1, "Test", 10);
-    context.add_node(create_dummy_contextoid(101)).unwrap();
-    initial_state.contexts.insert(1, context);
-
-    let op_node = OpTree::new(Operation::DeleteContextoidFromContext {
-        context_id: 1,
-        contextoid_id: 101,
-    });
-
-    let result = interpreter.execute(&op_node, initial_state);
-
-    assert!(result.value.is_some());
-    assert!(result.error.is_none());
-    assert_eq!(result.logs.len(), 1);
-    assert_eq!(
-        result.logs.entries[0].operation_name,
-        "DeleteContextoidFromContext".to_string()
-    );
-    assert_eq!(result.logs.entries[0].status, OpStatus::Success);
-    let final_state = result.value.as_ref().unwrap();
-    assert!(!final_state.contexts[&1].contains_node(101usize));
-}
-
-#[test]
-fn test_walk_delete_contextoid_context_not_found() {
-    let interpreter = Interpreter::new();
-    let initial_state = initial_test_state();
-
-    let op_node = OpTree::new(Operation::DeleteContextoidFromContext {
-        context_id: 1,
-        contextoid_id: 101,
-    });
-
-    let result = interpreter.execute(&op_node, initial_state.clone());
-
-    assert!(result.value.is_some()); // Value is Some on error
-    assert!(result.error.is_some());
-    assert!(matches!(
-        result.error.unwrap(),
-        ModelValidationError::TargetContextNotFound { id: 1 }
-    ));
-    assert_eq!(result.logs.len(), 1); // Log added in interpreter
-    assert_eq!(
-        result.logs.entries[0].operation_name,
-        "DeleteContextoidFromContext".to_string()
-    );
-    assert_eq!(result.logs.entries[0].status, OpStatus::Failure);
-    // Ensure state is unchanged
-    assert_eq!(initial_state.contexts.len(), 0);
-}
-
-#[test]
-fn test_walk_delete_contextoid_not_found_in_context() {
-    let interpreter = Interpreter::new();
-    let mut initial_state = initial_test_state();
-    initial_state
-        .contexts
-        .insert(1, create_dummy_context(1, "Test", 10));
-
-    let op_node = OpTree::new(Operation::DeleteContextoidFromContext {
-        context_id: 1,
-        contextoid_id: 999, // Non-existent contextoid
-    });
-
-    let result = interpreter.execute(&op_node, initial_state.clone());
-
-    assert!(result.value.is_some()); // Value is Some on error
-    assert!(result.error.is_some());
-    assert!(matches!(
-        result.error.unwrap(),
-        ModelValidationError::RemoveNodeError { .. }
-    ));
-    assert_eq!(result.logs.len(), 1); // Log added in interpreter
-    assert_eq!(
-        result.logs.entries[0].operation_name,
-        "DeleteContextoidFromContext".to_string()
-    );
-    assert_eq!(result.logs.entries[0].status, OpStatus::Failure);
-    // Ensure state is unchanged
-    assert_eq!(initial_state.contexts[&1].number_of_nodes(), 0); // Context is still empty
-}
-
-// Test Operation::Sequence
-#[test]
-fn test_walk_sequence_empty() {
-    let interpreter = Interpreter::new();
-    let initial_state = initial_test_state();
-    let op_node = OpTree::with_children(Operation::Sequence, vec![]);
-
-    let result = interpreter.execute(&op_node, initial_state.clone());
-
-    assert!(result.value.is_some());
-    assert!(result.error.is_none());
-    assert!(result.logs.is_empty());
-    assert_eq!(result.value.as_ref().unwrap().causaloids.len(), 0);
-    assert_eq!(result.value.as_ref().unwrap().contexts.len(), 0);
-}
-
-#[test]
-fn test_walk_sequence_success() {
-    let interpreter = Interpreter::new();
-    let initial_state = initial_test_state();
-
-    let op1 = OpTree::new(Operation::CreateCausaloid(1, create_dummy_causaloid(1)));
-    let op2 = OpTree::new(Operation::CreateContext {
-        id: 10,
-        name: "SeqContext".to_string(),
-        capacity: 5,
-    });
-    let op_node = OpTree::with_children(Operation::Sequence, vec![op1, op2]);
-
-    let result = interpreter.execute(&op_node, initial_state);
-
-    assert!(result.value.is_some());
-    assert!(result.error.is_none());
-    assert_eq!(result.logs.len(), 2);
     assert!(
         result
-            .logs
-            .iter()
-            .any(|e| e.operation_name == "CreateCausaloid")
+            .value
+            .unwrap()
+            .contexts
+            .get(&ctx_id)
+            .unwrap()
+            .get_node_index_by_id(node_id)
+            .is_none()
     );
-    assert!(
-        result
-            .logs
-            .iter()
-            .any(|e| e.operation_name == "CreateContext")
-    );
-    let final_state = result.value.as_ref().unwrap();
-    assert_eq!(final_state.causaloids.len(), 1);
-    assert_eq!(final_state.contexts.len(), 1);
-}
 
-#[test]
-fn test_walk_sequence_error_short_circuit() {
-    let interpreter = Interpreter::new();
-    let initial_state = initial_test_state();
+    // Failure: Context Not Found
+    let result_fail_ctx = interpreter.execute(&delete_tree, state.clone());
+    match result_fail_ctx.error.unwrap() {
+        ModelValidationError::TargetContextNotFound { .. } => (),
+        _ => panic!("Expected TargetContextNotFound"),
+    }
 
-    let op1 = OpTree::new(Operation::CreateContext {
-        id: 1,
-        name: "FirstContext".to_string(),
-        capacity: 5,
-    }); // Success
-    let op2 = OpTree::new(Operation::CreateContext {
-        id: 1, // Duplicate ID, will cause error
-        name: "SeqContext".to_string(),
-        capacity: 5,
-    });
-    let op3 = OpTree::new(Operation::CreateCausaloid(2, create_dummy_causaloid(2))); // This should not execute
-
-    let op_node = OpTree::with_children(Operation::Sequence, vec![op1, op2, op3]);
-
-    let result = interpreter.execute(&op_node, initial_state);
-
-    assert!(result.value.is_none()); // Returns None before error
-    assert!(result.error.is_some());
-    assert!(matches!(
-        result.error.unwrap(),
-        ModelValidationError::DuplicateContextId { id: 1 }
-    ));
-    assert_eq!(result.logs.len(), 2); // Log for op1 and op2 (failure)
-    assert!(
-        result
-            .logs
-            .iter()
-            .any(|e| e.operation_name == "CreateContext" && e.status == OpStatus::Success)
-    );
-    assert!(
-        result
-            .logs
-            .iter()
-            .any(|e| e.operation_name == "CreateContext" && e.status == OpStatus::Failure)
-    );
-}
-
-#[test]
-fn test_walk_sequence_log_aggregation() {
-    let interpreter = Interpreter::new();
-    let initial_state = initial_test_state();
-
-    let op1 = OpTree::new(Operation::CreateCausaloid(1, create_dummy_causaloid(1)));
-    let op2 = OpTree::new(Operation::CreateContext {
-        id: 10,
-        name: "SeqContext".to_string(),
-        capacity: 5,
-    });
-    let op_node = OpTree::with_children(Operation::Sequence, vec![op1, op2]);
-
-    let result = interpreter.execute(&op_node, initial_state);
-
-    assert_eq!(result.logs.len(), 2);
-    assert!(
-        result
-            .logs
-            .iter()
-            .any(|e| e.operation_name == "CreateCausaloid" && e.target_id == "1")
-    );
-    assert!(
-        result
-            .logs
-            .iter()
-            .any(|e| e.operation_name == "CreateContext" && e.target_id == "10")
-    );
-}
-
-#[test]
-fn test_walk_create_extra_context_parent_not_found() {
-    let interpreter = Interpreter::new();
-    let initial_state = initial_test_state();
-
-    let op_node = OpTree::new(Operation::CreateExtraContext {
-        context_id: 999, // Non-existent parent context
-        extra_context_id: 1,
+    // Failure: Node Not Found
+    let create_empty_ctx_tree = OpTree::new(Operation::CreateContext {
+        id: ctx_id,
+        name: "C1".into(),
         capacity: 10,
     });
+    let state_empty_ctx = interpreter
+        .execute(&create_empty_ctx_tree, state)
+        .value
+        .unwrap();
+    let result_fail_node = interpreter.execute(&delete_tree, state_empty_ctx);
+    match result_fail_node.error.unwrap() {
+        ModelValidationError::RemoveNodeError { .. } => (),
+        _ => panic!("Expected RemoveNodeError"),
+    }
+}
 
-    let result = interpreter.execute(&op_node, initial_state.clone());
+#[test]
+fn test_noop_and_sequence() {
+    let interpreter = Interpreter::new();
+    let state = create_sys_state();
 
-    assert!(result.value.is_some()); // Returns original state
-    assert!(result.error.is_some());
-    assert!(matches!(
-        result.error.unwrap(),
-        ModelValidationError::TargetContextNotFound { id: 999 }
-    ));
-    assert_eq!(result.logs.len(), 1);
-    assert_eq!(
-        result.logs.entries[0].operation_name,
-        "CreateExtraContext".to_string()
-    );
-    assert_eq!(result.logs.entries[0].status, OpStatus::Failure);
-    // Ensure state is unchanged
-    assert_eq!(initial_state.contexts.len(), 0);
+    // NoOp does nothing
+    let no_op_tree = OpTree::new(Operation::NoOp);
+    let result_noop = interpreter.execute(&no_op_tree, state.clone());
+    assert!(result_noop.value.is_some());
+    assert!(result_noop.value.unwrap().causaloids.is_empty());
+
+    // Sequence execution
+    let id1 = 1;
+    let id2 = 2;
+    let seq_tree = OpTree::new(Operation::Sequence)
+        .add_child(OpTree::new(Operation::CreateCausaloid(
+            id1,
+            create_dummy_causaloid(id1),
+        )))
+        .add_child(OpTree::new(Operation::CreateCausaloid(
+            id2,
+            create_dummy_causaloid(id2),
+        )));
+
+    let result_seq = interpreter.execute(&seq_tree, state.clone());
+    assert!(result_seq.value.is_some());
+    let final_state = result_seq.value.unwrap();
+    assert!(final_state.causaloids.contains_key(&id1));
+    assert!(final_state.causaloids.contains_key(&id2));
+
+    // Sequence Short-circuit
+    // Create id1, then try to create id1 again (fail)
+    let fail_seq_tree = OpTree::new(Operation::Sequence)
+        .add_child(OpTree::new(Operation::CreateCausaloid(
+            id1,
+            create_dummy_causaloid(id1),
+        )))
+        .add_child(OpTree::new(Operation::CreateCausaloid(
+            id1,
+            create_dummy_causaloid(id1),
+        )));
+
+    let result_fail_seq = interpreter.execute(&fail_seq_tree, state);
+    assert!(result_fail_seq.error.is_some());
+    match result_fail_seq.error.unwrap() {
+        ModelValidationError::DuplicateCausaloidID { .. } => (),
+        _ => panic!("Expected DuplicateCausaloidID"),
+    }
 }

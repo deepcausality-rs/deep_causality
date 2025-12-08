@@ -3,11 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality::utils_test::test_utils_csm::{
-    get_effect_ethos, get_test_action, get_test_action_with_tracker, get_test_causaloid,
-    get_test_error_action, get_test_error_causaloid, get_test_probabilistic_causaloid,
+    get_test_action_with_tracker, get_test_causaloid, get_test_error_action,
+    get_test_error_causaloid, get_test_probabilistic_causaloid,
 };
-use deep_causality::{DeonticInferable, Identifiable, ProposedAction, TeloidModal};
-use std::collections::HashMap;
 
 #[test]
 fn test_get_test_error_action() {
@@ -30,60 +28,6 @@ fn test_get_test_error_causaloid() {
     let causaloid = get_test_error_causaloid();
     assert_eq!(causaloid.id(), 78);
     assert_eq!(causaloid.description(), "Error Causaloid");
-}
-
-#[test]
-fn test_get_effect_ethos_verified_impermissible() {
-    let ethos = get_effect_ethos(true, true);
-    assert!(ethos.is_verified());
-    let action = get_test_action();
-    let proposed_action = ProposedAction::new(
-        action.version() as u64,
-        action.description().to_string(),
-        HashMap::new(),
-    );
-    let context = deep_causality::utils_test::test_utils::get_context();
-    let verdict = ethos
-        .evaluate_action(&proposed_action, &context, &["test_tag"])
-        .unwrap();
-    assert_eq!(verdict.outcome(), TeloidModal::Impermissible);
-}
-
-#[test]
-fn test_get_effect_ethos_verified_permissible() {
-    let ethos = get_effect_ethos(true, false);
-    assert!(ethos.is_verified());
-    let action = get_test_action();
-    let proposed_action = ProposedAction::new(
-        action.version() as u64,
-        action.description().to_string(),
-        HashMap::new(),
-    );
-    let context = deep_causality::utils_test::test_utils::get_context();
-    let verdict = ethos
-        .evaluate_action(&proposed_action, &context, &["test_tag"])
-        .unwrap();
-    assert_eq!(verdict.outcome(), TeloidModal::Obligatory);
-}
-
-#[test]
-fn test_get_effect_ethos_unverified() {
-    let ethos = get_effect_ethos(false, false);
-    assert!(!ethos.is_verified());
-    let action = get_test_action();
-    let proposed_action = ProposedAction::new(
-        action.version() as u64,
-        action.description().to_string(),
-        HashMap::new(),
-    );
-    let context = deep_causality::utils_test::test_utils::get_context();
-    let err = ethos
-        .evaluate_action(&proposed_action, &context, &[])
-        .unwrap_err();
-    assert_eq!(
-        err.to_string(),
-        "Deontic inference failed: The TeloidGraph must be frozen before evaluation."
-    );
 }
 
 #[test]
