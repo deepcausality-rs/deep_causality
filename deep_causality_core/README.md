@@ -210,10 +210,6 @@ let effect = PropagatingEffectWitness::pure(10);
 let counterfactual = effect.intervene(42);
 ```
 
-See the examples for more details:
-*   [Stateless Intervention](examples/propagating_effect_counterfactual.rs)
-*   [Stateful Intervention](examples/propagating_process_counterfactual.rs)
-
 ## non-std Support
 
 To use this crate in a bare-metal `no_std` environment:

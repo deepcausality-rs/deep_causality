@@ -21,6 +21,14 @@ mod types;
 mod utils;
 pub mod utils_test;
 
+// Re-Export Core Types
+pub use deep_causality_core::{
+    CausalEffectPropagationProcess, CausalMonad, CausalityError, CausalityErrorEnum, EffectLog,
+    EffectValue, PropagatingEffect, PropagatingProcess,
+};
+
+pub use deep_causality_haft::{LogAddEntry, LogAppend, LogEffect, LogSize};
+
 //
 // Aliases
 //
@@ -153,17 +161,6 @@ pub use crate::types::model_types::inference::Inference;
 pub use crate::types::model_types::model::Model;
 pub use crate::types::model_types::observation::Observation;
 
-// Core Types (New & Replacements)
-pub use deep_causality_core::{
-    CausalEffectPropagationProcess,
-    CausalMonad,
-    CausalityError, // Core error
-    CausalityErrorEnum,
-    EffectLog,
-    EffectValue,
-    PropagatingEffect,
-    PropagatingProcess,
-};
 //
 //Symbolic types
 pub use crate::types::symbolic_types::symbolic_representation::SymbolicRepresentation;

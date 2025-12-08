@@ -1,0 +1,39 @@
+[package]
+name = "core_examples"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+path = "no_lib.rs"
+
+[dependencies]
+deep_causality_core =  { path = "../../deep_causality_core" }
+deep_causality_haft = { path = "../../deep_causality_haft" }
+
+[[example]]
+name = "control_flow_builder"
+path = "examples/control_flow_builder.rs"
+
+[[example]]
+name = "control_flow_strict_zst"
+path = "examples/control_flow_strict_zst.rs"
+required-features = ["strict-zst"]
+
+[[example]]
+name = "propagating_effect_example"
+path = "examples/propagating_effect.rs"
+
+[[example]]
+name = "propagating_effect_counterfactual_example"
+path = "examples/propagating_effect_counterfactual.rs"
+
+[[example]]
+name = "propagating_process_example"
+path = "examples/propagating_process.rs"
+
+[[example]]
+name = "propagating_process_counterfactual"
+path = "examples/propagating_process_counterfactual.rs"

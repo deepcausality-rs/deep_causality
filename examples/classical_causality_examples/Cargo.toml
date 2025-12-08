@@ -1,0 +1,36 @@
+[package]
+name = "classical_causality_examples"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+path = "no_lib.rs"
+
+[dependencies]
+deep_causality =  { path = "../../deep_causality" }
+deep_causality_core =  { path = "../../deep_causality_core" }
+deep_causality_rand =  { path = "../../deep_causality_rand" }
+
+
+[[example]]
+name = "cate_example"
+path = "examples/cate/main.rs"
+
+[[example]]
+name = "dbn_example"
+path = "examples/dbn/main.rs"
+
+[[example]]
+name = "granger_example"
+path = "examples/granger/main.rs"
+
+[[example]]
+name = "rcm_example"
+path = "examples/rcm/main.rs"
+
+[[example]]
+name = "scm_example"
+path = "examples/scm/main.rs"

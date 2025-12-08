@@ -1,0 +1,30 @@
+[package]
+name = "physics_examples"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+path = "no_lib.rs"
+
+
+[dependencies]
+deep_causality =  { path = "../../deep_causality" }
+deep_causality_haft  =  { path = "../../deep_causality_haft" }
+deep_causality_multivector  =  { path = "../../deep_causality_multivector" }
+deep_causality_tensor  =  { path = "../../deep_causality_tensor" }
+
+
+[[example]]
+name = "maxwell_example"
+path = "examples/maxwell_example/main.rs"
+
+[[example]]
+name = "grmhd_example"
+path = "examples/grmhd_example/main.rs"
+
+[[example]]
+name = "geometric_tilt_example"
+path = "examples/geometric_tilt_example/main.rs"
