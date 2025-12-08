@@ -4,7 +4,6 @@
  */
 
 use crate::Graph;
-use alloc::vec::Vec;
 use deep_causality_haft::{BoundedComonad, Functor, HKT};
 use deep_causality_num::Zero;
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};

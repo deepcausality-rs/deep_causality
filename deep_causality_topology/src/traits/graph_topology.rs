@@ -11,7 +11,6 @@
 
 use crate::BaseTopology;
 use crate::TopologyError;
-use alloc::vec::Vec;
 
 /// A trait for topological structures that exhibit graph-like properties.
 ///

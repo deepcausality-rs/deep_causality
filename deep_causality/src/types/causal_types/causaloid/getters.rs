@@ -6,31 +6,50 @@
 use super::*;
 
 #[allow(clippy::type_complexity)]
-impl<I, O, D, S, T, ST, SYM, VS, VT> Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, PS, C> Causaloid<I, O, PS, C>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    I: Default,
+    O: Default + Debug,
+    PS: Default + Clone,
+    C: Clone,
 {
-    pub fn context(&self) -> &Option<Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>> {
-        &self.context
+    pub fn id(&self) -> IdentificationValue {
+        self.id
     }
 
-    pub fn causal_collection(&self) -> &Option<Arc<Vec<Self>>> {
-        &self.causal_coll
+    pub fn causal_type(&self) -> &CausaloidType {
+        &self.causal_type
     }
 
-    pub fn causal_graph(&self) -> &Option<Arc<CausaloidGraph<Self>>> {
-        &self.causal_graph
+    pub fn causal_fn(&self) -> Option<&CausalFn<I, O>> {
+        self.causal_fn.as_ref()
+    }
+
+    pub fn context_causal_fn(&self) -> Option<&ContextualCausalFn<I, O, PS, C>> {
+        self.context_causal_fn.as_ref()
+    }
+
+    pub fn context(&self) -> Option<&C> {
+        self.context.as_ref()
+    }
+
+    pub fn causal_collection(&self) -> Option<&Arc<Vec<Causaloid<I, O, PS, C>>>> {
+        self.causal_coll.as_ref()
+    }
+
+    pub fn causal_graph(&self) -> Option<&Arc<CausaloidGraph<Causaloid<I, O, PS, C>>>> {
+        self.causal_graph.as_ref()
     }
 
     pub fn description(&self) -> &str {
         &self.description
+    }
+
+    pub fn coll_aggregate_logic(&self) -> Option<&AggregateLogic> {
+        self.coll_aggregate_logic.as_ref()
+    }
+
+    pub fn coll_threshold_value(&self) -> Option<&NumericalValue> {
+        self.coll_threshold_value.as_ref()
     }
 }

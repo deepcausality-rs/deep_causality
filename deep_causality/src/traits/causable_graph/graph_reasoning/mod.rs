@@ -4,30 +4,29 @@
  */
 
 use crate::*;
+use deep_causality_haft::LogAppend;
 use std::collections::VecDeque;
+use std::fmt::Debug;
 use ultragraph::GraphTraversal;
 
 /// Provides default implementations for monadic reasoning over `CausableGraph` items.
 ///
 /// Any graph type that implements `CausableGraph<T>` where `T` is `MonadicCausable<CausalMonad>`
 /// will automatically gain a suite of useful default methods for monadic evaluation.
-pub trait MonadicCausableGraphReasoning<I, O, D, S, T, ST, SYM, VS, VT>:
-    CausableGraph<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>
+/// Provides default implementations for monadic reasoning over `CausableGraph` items.
+///
+/// Any graph type that implements `CausableGraph<T>` where `T` is `MonadicCausable<V, V>`
+/// will automatically gain a suite of useful default methods for monadic evaluation.
+pub trait MonadicCausableGraphReasoning<V, PS, C>: CausableGraph<Causaloid<V, V, PS, C>>
 where
-    I: IntoEffectValue + Default,
-    O: IntoEffectValue + Default,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
-    Causaloid<I, O, D, S, T, ST, SYM, VS, VT>: MonadicCausable<CausalMonad>,
+    V: Default + Clone + Send + Sync + 'static + Debug,
+    PS: Default + Clone + Send + Sync + 'static,
+    C: Clone + Send + Sync + 'static,
+    Causaloid<V, V, PS, C>: MonadicCausable<V, V>,
 {
     /// Evaluates a single, specific causaloid within the graph by its index using a monadic approach.
     ///
-    /// This is a convenience method that locates the causaloid and calls its `evaluate_monadic` method.
+    /// This is a convenience method that locates the causaloid and calls its `evaluate` method.
     ///
     /// # Arguments
     ///
@@ -38,18 +37,22 @@ where
     ///
     /// The `PropagatingEffect` from the evaluated causaloid, or a `PropagatingEffect` containing
     /// a `CausalityError` if the node is not found or the evaluation fails.
-    fn evaluate_single_cause(&self, index: usize, effect: &PropagatingEffect) -> PropagatingEffect {
+    fn evaluate_single_cause(
+        &self,
+        index: usize,
+        effect: &PropagatingEffect<V>,
+    ) -> PropagatingEffect<V> {
         if !self.is_frozen() {
-            return PropagatingEffect::from_error(CausalityError(
+            return PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(
                 "Graph is not frozen. Call freeze() first".into(),
-            ));
+            )));
         }
 
         let causaloid = match self.get_causaloid(index) {
             Some(c) => c,
             None => {
-                return PropagatingEffect::from_error(CausalityError(format!(
-                    "Causaloid with index {index} not found in graph"
+                return PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(
+                    format!("Causaloid with index {index} not found in graph"),
                 )));
             }
         };
@@ -74,7 +77,6 @@ where
     ///
     /// # Arguments
     ///
-    /// * `registry` - The `CausaloidRegistry` to use for evaluating causaloids.
     /// * `start_index` - The index of the node to start the traversal from.
     /// * `initial_effect` - The initial runtime effect to be passed to the starting node's evaluation function.
     ///
@@ -85,22 +87,23 @@ where
     fn evaluate_subgraph_from_cause(
         &self,
         start_index: usize,
-        initial_effect: &PropagatingEffect,
-    ) -> PropagatingEffect {
+        initial_effect: &PropagatingEffect<V>,
+    ) -> PropagatingEffect<V> {
         if !self.is_frozen() {
-            return PropagatingEffect::from_error(CausalityError(
+            return PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(
                 "Graph is not frozen. Call freeze() first".into(),
-            ));
+            )));
         }
 
         if !self.contains_causaloid(start_index) {
-            return PropagatingEffect::from_error(CausalityError(format!(
-                "Graph does not contain start causaloid with index {start_index}"
+            return PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(
+                format!("Graph does not contain start causaloid with index {start_index}"),
             )));
         }
 
         // Queue stores (node_index, incoming_effect_for_this_node)
-        let mut queue = VecDeque::<(usize, PropagatingEffect)>::with_capacity(self.number_nodes());
+        let mut queue =
+            VecDeque::<(usize, PropagatingEffect<V>)>::with_capacity(self.number_nodes());
         let mut visited = vec![false; self.number_nodes()];
 
         // Initialize the queue with the starting node and the initial effect
@@ -114,9 +117,11 @@ where
             let causaloid = match self.get_causaloid(current_index) {
                 Some(c) => c,
                 None => {
-                    return PropagatingEffect::from_error(CausalityError(format!(
-                        "Failed to get causaloid at index {current_index}"
-                    )));
+                    return PropagatingEffect::from_error(CausalityError(
+                        CausalityErrorEnum::Custom(format!(
+                            "Failed to get causaloid at index {current_index}"
+                        )),
+                    ));
                 }
             };
 
@@ -131,41 +136,39 @@ where
                 return result_effect;
             }
 
-            match result_effect.value {
+            match &result_effect.value {
                 // Adaptive reasoning:
                 EffectValue::RelayTo(target_index, inner_effect) => {
-                    // If a RelayTo effect is returned, clear the queue and add the target_index
-                    // with the inner_effect as the new starting point for traversal.
-                    queue.clear();
-                    // Also clear visited to allow re-visiting nodes in the new path.
+                    // Reset traversal state to follow the relayed path exclusively.
                     visited.fill(false);
+                    queue.clear();
 
-                    // Validate target_index before proceeding
-                    if !self.contains_causaloid(target_index) {
+                    let target_idx = *target_index;
+
+                    if !self.contains_causaloid(target_idx) {
                         let mut err_effect = last_propagated_effect.clone();
 
-                        err_effect.error = Some(CausalityError(format!(
-                            "RelayTo target causaloid with index {target_index} not found in graph."
+                        err_effect.error = Some(CausalityError(CausalityErrorEnum::Custom(
+                            format!(
+                                "RelayTo target causaloid with index {target_idx} not found in graph."
+                            ),
                         )));
                         return err_effect;
                     }
 
-                    if !visited[target_index] {
-                        visited[target_index] = true;
-                        // carry over logs into the relayed inner effect
-                        let mut relayed = (*inner_effect).clone();
-                        relayed
-                            .logs
-                            .append(&mut last_propagated_effect.clone().logs);
-                        queue.push_back((target_index, relayed));
-                    }
+                    visited[target_idx] = true;
+
+                    let mut relayed = *inner_effect.clone();
+                    relayed.logs.append(&mut last_propagated_effect.logs);
+                    queue.push_back((target_idx, relayed));
                 }
                 _ => {
                     let children = match self.get_graph().outbound_edges(current_index) {
                         Ok(c) => c,
                         Err(e) => {
                             let mut err_effect = last_propagated_effect.clone();
-                            err_effect.error = Some(CausalityError(format!("{e}")));
+                            err_effect.error =
+                                Some(CausalityError(CausalityErrorEnum::Custom(format!("{e}"))));
                             return err_effect;
                         }
                     };
@@ -192,7 +195,6 @@ where
     ///
     /// # Arguments
     ///
-    /// * `registry` - The `CausaloidRegistry` to use for evaluating causaloids.
     /// * `start_index` - The index of the start cause.
     /// * `stop_index` - The index of the stop cause.
     /// * `initial_effect` - The runtime effect to be passed as input to the first node's evaluation function.
@@ -205,12 +207,12 @@ where
         &self,
         start_index: usize,
         stop_index: usize,
-        initial_effect: &PropagatingEffect,
-    ) -> PropagatingEffect {
+        initial_effect: &PropagatingEffect<V>,
+    ) -> PropagatingEffect<V> {
         if !self.is_frozen() {
-            return PropagatingEffect::from_error(CausalityError(
+            return PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(
                 "Graph is not frozen. Call freeze() first".into(),
-            ));
+            )));
         }
 
         // Handle the single-node case explicitly before calling the pathfinder.
@@ -218,9 +220,11 @@ where
             let causaloid = match self.get_causaloid(start_index) {
                 Some(c) => c,
                 None => {
-                    return PropagatingEffect::from_error(CausalityError(format!(
-                        "Failed to get causaloid at index {start_index}"
-                    )));
+                    return PropagatingEffect::from_error(CausalityError(
+                        CausalityErrorEnum::Custom(format!(
+                            "Failed to get causaloid at index {start_index}"
+                        )),
+                    ));
                 }
             };
             return causaloid.evaluate(initial_effect);
@@ -228,7 +232,11 @@ where
 
         let path = match self.get_shortest_path(start_index, stop_index) {
             Ok(p) => p,
-            Err(e) => return PropagatingEffect::from_error(e.into()),
+            Err(e) => {
+                return PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(
+                    format!("{:?}", e),
+                )));
+            }
         };
 
         let mut current_effect = initial_effect.clone();
@@ -237,9 +245,11 @@ where
             let causaloid = match self.get_causaloid(index) {
                 Some(c) => c,
                 None => {
-                    return PropagatingEffect::from_error(CausalityError(format!(
-                        "Failed to get causaloid at index {index}"
-                    )));
+                    return PropagatingEffect::from_error(CausalityError(
+                        CausalityErrorEnum::Custom(format!(
+                            "Failed to get causaloid at index {index}"
+                        )),
+                    ));
                 }
             };
 

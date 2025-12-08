@@ -41,3 +41,19 @@ path = "examples/control_flow_builder.rs"
 name = "control_flow_strict_zst"
 path = "examples/control_flow_strict_zst.rs"
 required-features = ["strict-zst"]
+
+[[example]]
+name = "propagating_effect_example"
+path = "examples/propagating_effect.rs"
+
+[[example]]
+name = "propagating_effect_counterfactual_example"
+path = "examples/propagating_effect_counterfactual.rs"
+
+[[example]]
+name = "propagating_process_example"
+path = "examples/propagating_process.rs"
+
+[[example]]
+name = "propagating_process_counterfactual"
+path = "examples/propagating_process_counterfactual.rs"

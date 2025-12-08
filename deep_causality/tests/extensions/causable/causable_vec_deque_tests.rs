@@ -51,16 +51,16 @@ fn test_evaluate_deterministic_propagation() {
     let col = get_deterministic_test_causality_vec_deque();
 
     // Case 1: All succeed, chain should be deterministically true.
-    let effect_success = PropagatingEffect::from_numerical(0.99);
+    let effect_success = PropagatingEffect::from_value(0.99);
     let res = col.evaluate_collection(&effect_success, &AggregateLogic::All, None);
     assert!(!res.is_err());
-    assert_eq!(res.value, EffectValue::Boolean(true));
+    assert_eq!(res.value, EffectValue::Value(true));
 
     // Case 2: One fails, chain should be deterministically false.
-    let effect_fail = PropagatingEffect::from_numerical(0.1);
+    let effect_fail = PropagatingEffect::from_value(0.1);
     let res = col.evaluate_collection(&effect_fail, &AggregateLogic::All, None);
     assert!(!res.is_err());
-    assert_eq!(res.value, EffectValue::Boolean(false));
+    assert_eq!(res.value, EffectValue::Value(false));
 }
 
 #[test]
@@ -69,23 +69,23 @@ fn test_evaluate_probabilistic_propagation() {
 
     // Case 1: All succeed (Boolean(true) is treated as probability 1.0).
     // The cumulative probability should be 1.0.
-    let effect_success = PropagatingEffect::from_numerical(0.99);
+    let effect_success = PropagatingEffect::from_value(0.99);
     let res = col.evaluate_collection(&effect_success, &AggregateLogic::All, Some(0.5));
     assert!(!res.is_err());
-    assert_eq!(res.value, EffectValue::Probabilistic(1.0));
+    assert_eq!(res.value, EffectValue::Value(1.0));
 
     // Case 2: One fails (Boolean(false) is treated as probability 0.0).
     // The chain should short-circuit and return a cumulative probability of 0.0.
-    let effect_fail = PropagatingEffect::from_numerical(0.1);
+    let effect_fail = PropagatingEffect::from_value(0.1);
     let res = col.evaluate_collection(&effect_fail, &AggregateLogic::All, Some(0.5));
     assert!(!res.is_err());
-    assert_eq!(res.value, EffectValue::Probabilistic(0.0));
+    assert_eq!(res.value, EffectValue::Value(0.0));
 }
 
 #[test]
 fn test_explain() {
     let col = get_deterministic_test_causality_vec_deque();
-    let effect_success = PropagatingEffect::from_numerical(0.99);
+    let effect_success = PropagatingEffect::from_value(0.99);
     let res = col.evaluate_collection(&effect_success, &AggregateLogic::All, None);
 
     assert!(!res.is_err());
@@ -98,8 +98,8 @@ fn test_explain() {
 
     // For each causaloid (id 1, 2, 3)
     for i in 1..=3 {
-        let incoming_log = format!("Causaloid {}: Incoming effect: Numerical(0.99)", i);
-        let output_log = format!("Causaloid {}: Outgoing effect: Boolean(true)", i);
+        let incoming_log = format!("Causaloid {}: Incoming effect: Value(0.99)", i);
+        let output_log = format!("Causaloid {}: Outgoing effect: Value(true)", i);
         assert!(actual_explanation.contains(&incoming_log));
         assert!(actual_explanation.contains(&output_log));
     }

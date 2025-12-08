@@ -4,43 +4,27 @@
  */
 use ultragraph::{GraphMut, GraphView};
 
-use crate::*;
+use crate::{CausableGraph, MonadicCausable, MonadicCausableGraphReasoning};
+use crate::{CausalGraphIndexError, CausalityGraphError, Causaloid, CausaloidGraph};
+use std::fmt::Debug;
 
-use crate::MonadicCausableGraphReasoning;
-use crate::{CausalGraphIndexError, CausalityGraphError};
-
-// Marker trait to add default impl from
-#[allow(clippy::type_complexity)]
-impl<I, O, D, S, T, ST, SYM, VS, VT> MonadicCausableGraphReasoning<I, O, D, S, T, ST, SYM, VS, VT>
-    for CausaloidGraph<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>
+// Marker trait to add default impl from MonadicCausableGraphReasoning
+impl<V, PS, C> MonadicCausableGraphReasoning<V, PS, C> for CausaloidGraph<Causaloid<V, V, PS, C>>
 where
-    I: IntoEffectValue + Default,
-    O: IntoEffectValue + Default,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
-    Causaloid<I, O, D, S, T, ST, SYM, VS, VT>: MonadicCausable<CausalMonad>,
+    V: Default + Clone + Send + Sync + 'static + Debug,
+    PS: Default + Clone + Send + Sync + 'static,
+    C: Clone + Send + Sync + 'static,
+    Causaloid<V, V, PS, C>: MonadicCausable<V, V>,
 {
 }
 
-#[allow(clippy::type_complexity)]
-impl<I, O, D, S, T, ST, SYM, VS, VT> CausableGraph<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>
-    for CausaloidGraph<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>
+impl<I, O, PS, C> CausableGraph<Causaloid<I, O, PS, C>> for CausaloidGraph<Causaloid<I, O, PS, C>>
 where
-    I: IntoEffectValue + Default,
-    O: IntoEffectValue + Default,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
-    Causaloid<I, O, D, S, T, ST, SYM, VS, VT>: MonadicCausable<CausalMonad>,
+    I: Default + Send + Sync + 'static,
+    O: Default + Debug + Send + Sync + 'static,
+    PS: Default + Clone + Send + Sync + 'static,
+    C: Clone + Send + Sync + 'static,
+    Causaloid<I, O, PS, C>: MonadicCausable<I, O>,
 {
     fn is_frozen(&self) -> bool {
         self.graph.is_frozen()
@@ -54,13 +38,13 @@ where
         self.graph.unfreeze()
     }
 
-    fn get_graph(&self) -> &CausalGraph<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>> {
+    fn get_graph(&self) -> &crate::traits::causable_graph::CausalGraph<Causaloid<I, O, PS, C>> {
         &self.graph
     }
 
     fn add_root_causaloid(
         &mut self,
-        value: Causaloid<I, O, D, S, T, ST, SYM, VS, VT>,
+        value: Causaloid<I, O, PS, C>,
     ) -> Result<usize, CausalityGraphError> {
         match self.graph.add_root_node(value) {
             Ok(index) => Ok(index),
@@ -72,7 +56,7 @@ where
         self.graph.contains_root_node()
     }
 
-    fn get_root_causaloid(&self) -> Option<&Causaloid<I, O, D, S, T, ST, SYM, VS, VT>> {
+    fn get_root_causaloid(&self) -> Option<&Causaloid<I, O, PS, C>> {
         self.graph.get_root_node()
     }
 
@@ -88,7 +72,7 @@ where
 
     fn add_causaloid(
         &mut self,
-        value: Causaloid<I, O, D, S, T, ST, SYM, VS, VT>,
+        value: Causaloid<I, O, PS, C>,
     ) -> Result<usize, CausalityGraphError> {
         match self.graph.add_node(value) {
             Ok(index) => Ok(index),
@@ -100,7 +84,7 @@ where
         self.graph.contains_node(index)
     }
 
-    fn get_causaloid(&self, index: usize) -> Option<&Causaloid<I, O, D, S, T, ST, SYM, VS, VT>> {
+    fn get_causaloid(&self, index: usize) -> Option<&Causaloid<I, O, PS, C>> {
         self.graph.get_node(index)
     }
 

@@ -3,9 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::Manifold;
-use core::ops::Mul;
 use deep_causality_num::{Field, FromPrimitive, Zero};
 use deep_causality_tensor::CausalTensor;
+use std::fmt::Debug;
+use std::ops::Mul;
 
 impl<T> Manifold<T>
 where
@@ -17,7 +18,7 @@ where
         + Default
         + PartialEq
         + Zero
-        + std::fmt::Debug,
+        + Debug,
 {
     /// Computes the codifferential `δ` (delta) of a k-form.
     ///

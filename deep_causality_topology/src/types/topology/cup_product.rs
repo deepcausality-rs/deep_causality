@@ -3,17 +3,16 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use alloc::vec;
-use alloc::vec::Vec;
+use crate::{Simplex, Topology, TopologyError};
+use core::fmt::Debug;
+use core::ops::Mul;
 use deep_causality_num::{Field, Zero};
 use deep_causality_tensor::CausalTensor;
-use std::ops::Mul;
-
-use crate::{Simplex, Topology, TopologyError};
+use std::sync::Arc;
 
 impl<T> Topology<T>
 where
-    T: Field + Copy + Clone + Zero + Mul<Output = T> + std::fmt::Debug,
+    T: Field + Copy + Clone + Zero + Mul<Output = T> + Debug,
 {
     /// Computes the Cup Product `α ⌣ β` of a p-cochain and a q-cochain.
     ///
@@ -40,7 +39,7 @@ where
 
         // 2. Validation
         // Ensure both fields live on the same Complex
-        if !std::sync::Arc::ptr_eq(&self.complex, &other.complex) {
+        if !Arc::ptr_eq(&self.complex, &other.complex) {
             return Err(TopologyError::GenericError("Complex Mismatch".into()));
         }
 

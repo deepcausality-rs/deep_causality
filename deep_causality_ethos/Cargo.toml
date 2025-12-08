@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+
+[package]
+name = "deep_causality_ethos"
+version = "0.1.0"
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+readme = "../README.md"
+
+description = "Programmable ethics for DeepCausality."
+documentation = "https://docs.rs/deep_causality"
+homepage = "https://deepcausality.com/about/"
+repository = "https://github.com/deepcausality/deep_causality.rs"
+keywords = ["causality", "causal-graph", "causal-reasoning", "graph"]
+authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
+categories = [
+    "data-structures",
+    "science",
+    "aerospace",
+    "finance",
+    "mathematics",
+]
+exclude = [
+    "*.bazel",
+    "*/*.bazel",
+    "*.bazel.*",
+    "BUILD",
+    "BUILD.bazel",
+    "MODULE.bazel",
+    ".bazelignore",
+    ".bazelrc",
+    "tests/**/*",
+]
+
+
+[dependencies.deep_causality]
+path = "../deep_causality"
+version = "0.11"
+
+[dependencies.ultragraph]
+path = "../ultragraph"
+version = "0.8"
+

@@ -10,6 +10,20 @@ use alloc::collections::VecDeque;
 use deep_causality_core::{ControlFlowBuilder, ControlFlowProtocol, FromProtocol, ToProtocol};
 
 // Define the logic functions using the new explicit types.
+//
+// ------------------------------------------------------------------------------------------------
+// ENGINEERING VALUE: Zero-Overhead Safety for Embedded Systems
+//
+// In safety-critical or embedded contexts (RTOS, aerospace), you cannot afford runtime overhead
+// like heavy boxing, dynamic dispatch, or complex heap allocations. You also need strict guarantees
+// that semantic types don't mix (e.g., don't interpret "Altitude" as "Speed").
+//
+// This example demonstrates:
+// 1. **Zero-Sized Types (ZSTs)**: State transitions and protocols will be removed by the compiler.
+// 2. **Static Dispatch**: All logic is known at compile time.
+// 3. **No_Std**: Compatible with bare-metal environments.
+// 4. **NewType Pattern**: `AttitudeReading` vs `ControlSurfaceUpdate` prevents logic errors.
+// ------------------------------------------------------------------------------------------------
 
 // Reads from a sensor.
 fn read_attitude_sensor(request: bool) -> AttitudeReading {

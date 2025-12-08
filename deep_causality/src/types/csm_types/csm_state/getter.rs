@@ -2,24 +2,14 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use crate::{CausalState, Causaloid, PropagatingEffect, UncertainParameter};
+use std::fmt::Debug;
 
-use crate::{
-    CausalState, Causaloid, Context, Datable, IntoEffectValue, PropagatingEffect, SpaceTemporal,
-    Spatial, Symbolic, Temporal, UncertainParameter,
-};
-use std::sync::{Arc, RwLock};
-
-impl<I, O, D, S, T, ST, SYM, VS, VT> CausalState<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, C> CausalState<I, O, C>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    I: Default,
+    O: Default + Debug,
+    C: Clone,
 {
     pub fn id(&self) -> usize {
         self.id
@@ -29,17 +19,19 @@ where
         self.version
     }
 
-    pub fn data(&self) -> &PropagatingEffect {
+    pub fn data(&self) -> &PropagatingEffect<I> {
         &self.data
     }
 
-    pub fn causaloid(&self) -> &Causaloid<I, O, D, S, T, ST, SYM, VS, VT> {
+    pub fn causaloid(&self) -> &Causaloid<I, O, (), C> {
         &self.causaloid
     }
 
-    #[allow(clippy::type_complexity)]
-    pub fn context(&self) -> &Option<Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>> {
-        self.causaloid.context()
+    pub fn context(&self) -> &C {
+        self.causaloid
+            .context()
+            .as_ref()
+            .expect("Context is required for CausalState but was None")
     }
 
     pub fn uncertain_parameter(&self) -> &Option<UncertainParameter> {

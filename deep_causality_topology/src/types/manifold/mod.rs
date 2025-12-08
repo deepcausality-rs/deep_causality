@@ -2,22 +2,18 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
-use alloc::string::ToString;
-
 use crate::{ReggeGeometry, SimplicialComplex, TopologyError};
+use core::fmt;
 use deep_causality_num::Zero;
 use deep_causality_tensor::CausalTensor;
+use std::fmt::Formatter;
 
 mod base_topology;
-mod clone;
 mod differential;
-mod display;
 mod geometry;
-mod getters;
-mod manifold_checks;
 mod manifold_topology;
 mod simplicial_topology;
+mod utils;
 
 /// A newtype wrapper around `SimplicialComplex` that represents a Manifold.
 /// Its construction enforces geometric properties essential for physics simulations.
@@ -145,16 +141,64 @@ where
         }
 
         // A manifold must be oriented
-        if !manifold_checks::is_oriented(complex) {
+        if !utils::is_oriented(complex) {
             return false;
         }
 
         // A manifold must satisfy the link condition
-        if !manifold_checks::satisfies_link_condition(complex) {
+        if !utils::satisfies_link_condition(complex) {
             return false;
         }
 
         // All checks passed
         true
+    }
+}
+
+impl<T> Manifold<T>
+where
+    T: Clone,
+{
+    /// Creates a shallow clone of the Manifold.
+    pub fn clone_shallow(&self) -> Self {
+        Manifold {
+            complex: self.complex.clone(),
+            data: self.data.clone(),
+            metric: self.metric.clone(),
+            cursor: 0,
+        }
+    }
+}
+
+impl<T> fmt::Display for Manifold<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        write!(
+            f,
+            "Manifold {{ dimension: {}, simplices: {} }}",
+            self.complex.skeletons.last().map(|s| s.dim).unwrap_or(0),
+            self.complex
+                .skeletons
+                .iter()
+                .map(|s| s.simplices.len())
+                .sum::<usize>()
+        )
+    }
+}
+
+impl<T> Manifold<T> {
+    pub fn complex(&self) -> &SimplicialComplex {
+        &self.complex
+    }
+
+    pub fn data(&self) -> &CausalTensor<T> {
+        &self.data
+    }
+
+    pub fn metric(&self) -> Option<&ReggeGeometry> {
+        self.metric.as_ref()
+    }
+
+    pub fn cursor(&self) -> usize {
+        self.cursor
     }
 }

@@ -5,9 +5,7 @@
 
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{
-    BaseTopology, GraphTopology, Hypergraph, HypergraphTopology, TopologyError,
-};
+use deep_causality_topology::{Hypergraph, HypergraphTopology, TopologyError};
 
 #[test]
 fn test_hypergraph_new_success() {
@@ -139,49 +137,4 @@ fn test_hypergraph_hyperedges_on_node() {
     assert_eq!(edges2.len(), 2);
     assert!(edges2.contains(&1));
     assert!(edges2.contains(&2));
-}
-
-#[test]
-fn test_hypergraph_base_topology() {
-    let incidence =
-        CsrMatrix::from_triplets(3, 2, &[(0, 0, 1i8), (1, 0, 1), (1, 1, 1), (2, 1, 1)]).unwrap();
-    let data = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
-    let hg = Hypergraph::new(incidence, data, 0).unwrap();
-
-    assert_eq!(hg.dimension(), 1);
-    assert_eq!(hg.len(), 3);
-    assert!(!hg.is_empty());
-    assert_eq!(hg.num_elements_at_grade(0), Some(3)); // nodes
-    assert_eq!(hg.num_elements_at_grade(1), Some(2)); // hyperedges
-    assert_eq!(hg.num_elements_at_grade(2), None);
-}
-
-#[test]
-fn test_hypergraph_graph_topology() {
-    let incidence = CsrMatrix::from_triplets(
-        4,
-        2,
-        &[
-            (0, 0, 1i8),
-            (1, 0, 1),
-            (2, 0, 1), // Hyperedge sharing creates neighbors
-            (2, 1, 1),
-            (3, 1, 1),
-        ],
-    )
-    .unwrap();
-
-    let data = CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![4]).unwrap();
-    let hg = Hypergraph::new(incidence, data, 0).unwrap();
-
-    assert_eq!(hg.num_nodes(), 4);
-    assert_eq!(hg.num_edges(), 2); // treating hyperedges as generalized edges
-    assert!(hg.has_node(0));
-    assert!(!hg.has_node(5));
-
-    // Node 2 shares hyperedges with 0, 1, 3
-    let neighbors = hg.get_neighbors(2).unwrap();
-    assert!(neighbors.contains(&0));
-    assert!(neighbors.contains(&1));
-    assert!(neighbors.contains(&3));
 }

@@ -4,7 +4,6 @@
  */
 
 use crate::{SimplicialComplex, Skeleton};
-use alloc::vec::Vec;
 use deep_causality_sparse::CsrMatrix;
 
 impl SimplicialComplex {

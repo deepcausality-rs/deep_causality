@@ -21,8 +21,7 @@ mod causality_graph_error_tests;
 mod context_index_error_tests;
 #[cfg(test)]
 mod csm_error_tests;
-#[cfg(test)]
-mod deontic_error_tests;
+
 #[cfg(test)]
 mod index_error_tests;
 #[cfg(test)]

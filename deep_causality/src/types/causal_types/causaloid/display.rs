@@ -6,51 +6,36 @@
 use super::*;
 
 #[allow(clippy::type_complexity)]
-impl<I, O, D, S, T, ST, SYM, VS, VT> Display for Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, PS, C> Display for Causaloid<I, O, PS, C>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    I: Default,
+    O: Default + Debug,
+    PS: Default + Clone,
+    C: Clone,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.fmt_causaloid(f)
     }
 }
 
-impl<I, O, D, S, T, ST, SYM, VS, VT> Debug for Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, PS, C> Debug for Causaloid<I, O, PS, C>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    I: Default,
+    O: Default + Debug,
+    PS: Default + Clone,
+    C: Clone,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.fmt_causaloid(f)
     }
 }
 
-impl<I, O, D, S, T, ST, SYM, VS, VT> Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, PS, C> Causaloid<I, O, PS, C>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    I: Default,
+    O: Default + Debug,
+    PS: Default + Clone,
+    C: Clone,
 {
     fn fmt_causaloid(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(

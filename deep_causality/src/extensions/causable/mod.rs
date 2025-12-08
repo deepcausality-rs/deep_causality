@@ -5,22 +5,33 @@
 
 // Extension trait http://xion.io/post/code/rust-extension-traits.html
 use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::fmt::Debug;
 use std::hash::Hash;
 
+use crate::IdentificationValue;
 use crate::{
     Causable, CausableCollectionAccessor, Identifiable, MonadicCausable, MonadicCausableCollection,
 };
-use crate::{CausalMonad, IdentificationValue};
 
 //
 // [T]
 //
-impl<T> MonadicCausableCollection<T> for [T] where T: MonadicCausable<CausalMonad> + Clone + Causable
-{}
-
-impl<T> CausableCollectionAccessor<T> for [T]
+impl<I, O, T> MonadicCausableCollection<I, O, T> for [T]
 where
-    T: MonadicCausable<CausalMonad> + Clone + Identifiable,
+    T: MonadicCausable<I, O> + Clone + Causable,
+    O: crate::utils::monadic_collection_utils::Aggregatable
+        + Clone
+        + Default
+        + Send
+        + Sync
+        + 'static
+        + Debug,
+{
+}
+
+impl<I, O, T> CausableCollectionAccessor<I, O, T> for [T]
+where
+    T: MonadicCausable<I, O> + Clone + Identifiable,
 {
     fn get_all_items(&self) -> Vec<&T> {
         self.iter().collect()
@@ -46,14 +57,22 @@ where
 //
 //  VecDeque
 //
-impl<T> MonadicCausableCollection<T> for VecDeque<T> where
-    T: MonadicCausable<CausalMonad> + Causable + Clone
+impl<I, O, T> MonadicCausableCollection<I, O, T> for VecDeque<T>
+where
+    T: MonadicCausable<I, O> + Causable + Clone,
+    O: crate::utils::monadic_collection_utils::Aggregatable
+        + Clone
+        + Default
+        + Send
+        + Sync
+        + 'static
+        + Debug,
 {
 }
 
-impl<T> CausableCollectionAccessor<T> for VecDeque<T>
+impl<I, O, T> CausableCollectionAccessor<I, O, T> for VecDeque<T>
 where
-    T: MonadicCausable<CausalMonad> + Clone + Identifiable,
+    T: MonadicCausable<I, O> + Clone + Identifiable,
 {
     fn get_all_items(&self) -> Vec<&T> {
         self.iter().collect()
@@ -79,17 +98,24 @@ where
 //
 // HashMap<K, V>
 //
-impl<K, V> MonadicCausableCollection<V> for HashMap<K, V>
+impl<I, O, K, V> MonadicCausableCollection<I, O, V> for HashMap<K, V>
 where
     K: Eq + Hash,
-    V: MonadicCausable<CausalMonad> + Causable + Clone,
+    V: MonadicCausable<I, O> + Causable + Clone,
+    O: crate::utils::monadic_collection_utils::Aggregatable
+        + Clone
+        + Default
+        + Send
+        + Sync
+        + 'static
+        + Debug,
 {
 }
 
-impl<K, V> CausableCollectionAccessor<V> for HashMap<K, V>
+impl<I, O, K, V> CausableCollectionAccessor<I, O, V> for HashMap<K, V>
 where
     K: Eq + Hash,
-    V: MonadicCausable<CausalMonad> + Clone + Identifiable,
+    V: MonadicCausable<I, O> + Clone + Identifiable,
 {
     fn get_all_items(&self) -> Vec<&V> {
         self.values().collect::<Vec<&V>>()
@@ -115,17 +141,24 @@ where
 //
 // BTreeMap<K, V>
 //
-impl<K, V> MonadicCausableCollection<V> for BTreeMap<K, V>
+impl<I, O, K, V> MonadicCausableCollection<I, O, V> for BTreeMap<K, V>
 where
     K: Ord,
-    V: MonadicCausable<CausalMonad> + Causable + Clone,
+    V: MonadicCausable<I, O> + Causable + Clone,
+    O: crate::utils::monadic_collection_utils::Aggregatable
+        + Clone
+        + Default
+        + Send
+        + Sync
+        + 'static
+        + Debug,
 {
 }
 
-impl<K, V> CausableCollectionAccessor<V> for BTreeMap<K, V>
+impl<I, O, K, V> CausableCollectionAccessor<I, O, V> for BTreeMap<K, V>
 where
     K: Ord,
-    V: MonadicCausable<CausalMonad> + Causable + Clone + Identifiable,
+    V: MonadicCausable<I, O> + Causable + Clone + Identifiable,
 {
     fn get_all_items(&self) -> Vec<&V> {
         self.values().collect::<Vec<&V>>()

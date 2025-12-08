@@ -13,39 +13,34 @@
 //!
 //! The module also provides various constructors to facilitate the creation of
 //! different types of `Causaloid` instances, tailored to specific causal modeling needs.
+use crate::MonadicCausable;
 use crate::{
-    AggregateLogic, CausalFn, CausalMonad, CausaloidGraph, CausaloidType, Context,
-    ContextualCausalFn, IdentificationValue, NumericalValue,
-};
-use crate::{
-    Datable, IntoEffectValue, MonadicCausable, SpaceTemporal, Spatial, Symbolic, Temporal,
+    AggregateLogic, CausalFn, CausaloidGraph, CausaloidType, ContextualCausalFn,
+    IdentificationValue, NumericalValue,
 };
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 
 mod causable;
 mod causable_utils;
-#[cfg(test)]
-mod causable_utils_tests;
+
 mod display;
 mod getters;
 mod identifiable;
 mod part_eq;
-mod setters;
 
 /// Type alias for a vector of `Causaloid`s.
 ///
 /// This is typically used to represent a linear collection of causaloids,
 /// which can then be encapsulated within a parent `Causaloid` of type `Collection`.
-pub type CausalVec<I, O, D, S, T, ST, SYM, VS, VT> = Vec<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>;
+pub type CausalVec<I, O, STATE, CTX> = Vec<Causaloid<I, O, STATE, CTX>>;
 
 /// Type alias for a graph of `Causaloid`s.
 ///
 /// This represents a more complex, interconnected structure of causaloids,
 /// which can be encapsulated within a parent `Causaloid` of type `Graph`.
-pub type CausalGraph<I, O, D, S, T, ST, SYM, VS, VT> =
-    CausaloidGraph<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>;
+pub type CausalGraph<I, O, STATE, CTX> = CausaloidGraph<Causaloid<I, O, STATE, CTX>>;
 
 /// `Causaloid` is the fundamental building block for causal models in DeepCausality.
 ///
@@ -56,32 +51,19 @@ pub type CausalGraph<I, O, D, S, T, ST, SYM, VS, VT> =
 /// - A collection of other `Causaloid`s (`CausaloidType::Collection`).
 /// - A directed acyclic graph (DAG) of other `Causaloid`s (`CausaloidType::Graph`).
 ///
-/// `Causaloid`s are generic over their input (`I`) and output (`O`) effect values,
-/// as well as various context-related types (`D`, `S`, `T`, `ST`, `SYM`, `VS`, `VT`).
+/// `Causaloid`s are generic over their input (`I`), output (`O`), state (`STATE`), and context (`CTX`).
 ///
 /// # Type Parameters
-/// - `I`: The type of the input effect value, must implement `IntoEffectValue`.
-/// - `O`: The type of the output effect value, must implement `IntoEffectValue`.
-/// - `D`: The type for data context, must implement `Datable` and `Clone`.
-/// - `S`: The type for spatial context, must implement `Spatial<VS>` and `Clone`.
-/// - `T`: The type for temporal context, must implement `Temporal<VT>` and `Clone`.
-/// - `ST`: The type for spatiotemporal context, must implement `SpaceTemporal<VS, VT>` and `Clone`.
-/// - `SYM`: The type for symbolic context, must implement `Symbolic` and `Clone`.
-/// - `VS`: The value type for spatial data, must implement `Clone`.
-/// - `VT`: The value type for temporal data, must implement `Clone`.
-#[allow(clippy::type_complexity)]
-#[derive(Clone)]
-pub struct Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
+/// - `I`: The type of the input effect value.
+/// - `O`: The type of the output effect value.
+/// - `STATE`: The type for state management (e.g., internal state or aggregation state).
+/// - `CTX`: The type for context, providing access to external data or environment.
+pub struct Causaloid<I, O, STATE, CTX>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    I: Default,
+    O: Default + Debug,
+    STATE: Default + Clone,
+    CTX: Clone,
 {
     /// A unique identifier for this `Causaloid`.
     id: IdentificationValue,
@@ -94,34 +76,26 @@ where
     /// An optional threshold value for `Collection` type causaloids.
     coll_threshold_value: Option<NumericalValue>,
     /// An optional context-aware causal function, used when `causal_type` is `Singleton`.
-    context_causal_fn: Option<ContextualCausalFn<I, O, D, S, T, ST, SYM, VS, VT>>,
+    context_causal_fn: Option<ContextualCausalFn<I, O, STATE, CTX>>,
     /// An optional shared context object, used by context-aware causaloids.
-    context: Option<Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>>,
+    context: Option<CTX>,
     /// An optional collection of child `Causaloid`s, used when `causal_type` is `Collection`.
     causal_coll: Option<Arc<Vec<Self>>>,
     /// An optional causal graph of child `Causaloid`s, used when `causal_type` is `Graph`.
     causal_graph: Option<Arc<CausaloidGraph<Self>>>,
     /// A human-readable description of the `Causaloid`.
     description: String,
-    /// PhantomData to mark the usage of `VS` and `VT` type parameters.
-    ty: PhantomData<(VS, VT)>,
-    /// PhantomData to mark the usage of `I` and `O` type parameters.
-    _phantom: PhantomData<(I, O)>,
+    /// PhantomData to mark the usage of `I`, `O`, `STATE`, and `C` type parameters.
+    _phantom: PhantomData<(I, O, STATE, CTX)>,
 }
 
 // Constructors
-#[allow(clippy::type_complexity)]
-impl<I, O, D, S, T, ST, SYM, VS, VT> Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, STATE, CTX> Causaloid<I, O, STATE, CTX>
 where
-    I: IntoEffectValue + Default,
-    O: IntoEffectValue + Default,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    I: Default,
+    O: Default + Debug,
+    STATE: Default + Clone,
+    CTX: Clone,
 {
     /// Creates a new singleton `Causaloid` with a stateless causal function.
     ///
@@ -148,7 +122,6 @@ where
             causal_coll: None,
             causal_graph: None,
             description: description.to_string(),
-            ty: PhantomData,
             _phantom: PhantomData,
         }
     }
@@ -162,15 +135,15 @@ where
     ///
     /// * `id` - A unique identifier for the causaloid.
     /// * `context_causal_fn` - The context-aware stateless function for reasoning.
-    /// * `context` - A shared `Arc<RwLock<Context>>` object accessible by the function.
+    /// * `context` - A shared context object accessible by the function.
     /// * `description` - A human-readable description of the causaloid.
     ///
     /// # Returns
     /// A new `Causaloid` instance of `CausaloidType::Singleton` with an associated context.
     pub fn new_with_context(
         id: IdentificationValue,
-        context_causal_fn: ContextualCausalFn<I, O, D, S, T, ST, SYM, VS, VT>,
-        context: Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>,
+        context_causal_fn: ContextualCausalFn<I, O, STATE, CTX>,
+        context: CTX,
         description: &str,
     ) -> Self {
         Causaloid {
@@ -184,24 +157,17 @@ where
             causal_coll: None,
             causal_graph: None,
             description: description.to_string(),
-            ty: PhantomData,
             _phantom: PhantomData,
         }
     }
 }
 
-#[allow(clippy::type_complexity)]
-impl<I, O, D, S, T, ST, SYM, VS, VT> Causaloid<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, STATE, CTX> Causaloid<I, O, STATE, CTX>
 where
-    I: IntoEffectValue + Default,
-    O: IntoEffectValue + Default,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    I: Default,
+    O: Default + Debug,
+    STATE: Default + Clone,
+    CTX: Clone,
 {
     /// Creates a new `Causaloid` that encapsulates a linear collection of other `Causaloid`s.
     ///
@@ -226,7 +192,7 @@ where
     /// A new `Causaloid` instance of `CausaloidType::Collection`.
     pub fn from_causal_collection(
         id: IdentificationValue,
-        causal_coll: Arc<Vec<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>>,
+        causal_coll: Arc<Vec<Causaloid<I, O, STATE, CTX>>>,
         description: &str,
         aggregate_logic: AggregateLogic,
         threshold_value: NumericalValue,
@@ -234,14 +200,9 @@ where
     where
         I: Send + Sync + 'static,
         O: Send + Sync + 'static,
-        D: Send + Sync + 'static,
-        S: Spatial<VS> + Clone + Send + Sync + 'static,
-        T: Temporal<VT> + Clone + Send + Sync + 'static,
-        ST: SpaceTemporal<VS, VT> + Clone + Send + Sync + 'static,
-        SYM: Symbolic + Clone + Send + Sync + 'static,
-        VS: Send + Sync + 'static,
-        VT: Send + Sync + 'static,
-        Causaloid<I, O, D, S, T, ST, SYM, VS, VT>: MonadicCausable<CausalMonad>,
+        STATE: Send + Sync + 'static,
+        CTX: Send + Sync + 'static,
+        Causaloid<I, O, STATE, CTX>: MonadicCausable<I, O>,
     {
         Causaloid {
             id,
@@ -254,7 +215,6 @@ where
             causal_coll: Some(causal_coll),
             causal_graph: None,
             description: description.to_string(),
-            ty: PhantomData,
             _phantom: PhantomData,
         }
     }
@@ -269,7 +229,7 @@ where
     ///
     /// * `id` - A unique identifier for the causaloid.
     /// * `causal_coll` - An `Arc` to a vector of child `Causaloid`s forming the collection.
-    /// * `context` - A shared `Arc<RwLock<Context>>` object accessible by the collection's logic.
+    /// * `context` - A shared context object accessible by the collection's logic.
     /// * `description` - A human-readable description of the causaloid.
     /// * `aggregate_logic` - The logic used to aggregate the results of the child causaloids.
     /// * `threshold_value` - A numerical threshold relevant to the aggregation logic.
@@ -283,8 +243,8 @@ where
     /// A new `Causaloid` instance of `CausaloidType::Collection` with an associated context.
     pub fn from_causal_collection_with_context(
         id: IdentificationValue,
-        causal_coll: Arc<Vec<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>>>,
-        context: Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>,
+        causal_coll: Arc<Vec<Causaloid<I, O, STATE, CTX>>>,
+        context: CTX,
         description: &str,
         aggregate_logic: AggregateLogic,
         threshold_value: NumericalValue,
@@ -292,14 +252,9 @@ where
     where
         I: Send + Sync + 'static,
         O: Send + Sync + 'static,
-        D: Send + Sync + 'static,
-        S: Spatial<VS> + Clone + Send + Sync + 'static,
-        T: Temporal<VT> + Clone + Send + Sync + 'static,
-        ST: SpaceTemporal<VS, VT> + Clone + Send + Sync + 'static,
-        SYM: Symbolic + Clone + Send + Sync + 'static,
-        VS: Send + Sync + 'static,
-        VT: Send + Sync + 'static,
-        Causaloid<I, O, D, S, T, ST, SYM, VS, VT>: MonadicCausable<CausalMonad>,
+        STATE: Send + Sync + 'static,
+        CTX: Send + Sync + 'static,
+        Causaloid<I, O, STATE, CTX>: MonadicCausable<I, O>,
     {
         Causaloid {
             id,
@@ -312,7 +267,6 @@ where
             description: description.to_string(),
             context: Some(context),
             context_causal_fn: None,
-            ty: PhantomData,
             _phantom: PhantomData,
         }
     }
@@ -347,7 +301,6 @@ where
             description: description.to_string(),
             context: None,
             context_causal_fn: None,
-            ty: PhantomData,
             _phantom: PhantomData,
         }
     }
@@ -364,7 +317,7 @@ where
     /// * `id` - A unique identifier for the causaloid.
     /// * `description` - A human-readable description of the causaloid.
     /// * `causal_graph` - An `Arc` to a `CausaloidGraph` containing the interconnected child `Causaloid`s.
-    /// * `context` - A shared `Arc<RwLock<Context>>` object accessible by the graph's logic.
+    /// * `context` - A shared context object accessible by the graph's logic.
     ///
     /// # Returns
     /// A new `Causaloid` instance of `CausaloidType::Graph` with an associated context.
@@ -372,7 +325,7 @@ where
         id: IdentificationValue,
         description: &str,
         causal_graph: Arc<CausaloidGraph<Self>>,
-        context: Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>,
+        context: CTX,
     ) -> Self {
         Causaloid {
             id,
@@ -385,7 +338,30 @@ where
             description: description.to_string(),
             context: Some(context),
             context_causal_fn: None,
-            ty: PhantomData,
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl<I, O, STATE, CTX> Clone for Causaloid<I, O, STATE, CTX>
+where
+    I: Default,
+    O: Default + Debug,
+    STATE: Default + Clone,
+    CTX: Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            id: self.id,
+            causal_type: self.causal_type,
+            causal_fn: self.causal_fn,
+            coll_aggregate_logic: self.coll_aggregate_logic,
+            coll_threshold_value: self.coll_threshold_value,
+            context_causal_fn: self.context_causal_fn,
+            context: self.context.clone(),
+            causal_coll: self.causal_coll.clone(),
+            causal_graph: self.causal_graph.clone(),
+            description: self.description.clone(),
             _phantom: PhantomData,
         }
     }

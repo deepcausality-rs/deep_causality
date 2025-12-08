@@ -8,8 +8,8 @@ mod state_add;
 mod state_remove;
 mod state_update;
 
-use crate::{CSMMap, CausalAction, CausalState, EffectEthos, IntoEffectValue, TeloidTag};
-use crate::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
+use crate::CsmEvaluable;
+use crate::{CSMMap, CausalAction, CausalState};
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
@@ -46,58 +46,31 @@ use std::sync::{Arc, RwLock};
 /// 4. Feeding data into the CSM for evaluation
 ///
 /// See the example in `examples/csm/src/main.rs` for a practical implementation.
-#[allow(clippy::type_complexity)]
-pub struct CSM<I, O, D, S, T, ST, SYM, VS, VT>
+pub struct CSM<I, O, C>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone + Debug,
-    T: Temporal<VT> + Clone + Debug,
-    ST: SpaceTemporal<VS, VT> + Clone + Debug,
-    SYM: Symbolic + Clone + Debug,
-    VS: Clone + Debug,
-    VT: Clone + Debug,
+    I: Default + Clone,
+    O: CsmEvaluable + Default + Debug + Clone,
+    C: Clone,
 {
-    state_actions: Arc<RwLock<CSMMap<I, O, D, S, T, ST, SYM, VS, VT>>>,
-    effect_ethos: Option<(EffectEthos<D, S, T, ST, SYM, VS, VT>, Vec<TeloidTag>)>,
+    state_actions: Arc<RwLock<CSMMap<I, O, C>>>,
 }
 
-#[allow(clippy::type_complexity)]
-impl<I, O, D, S, T, ST, SYM, VS, VT> CSM<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, C> CSM<I, O, C>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
-    D: Datable + Clone + Debug,
-    S: Spatial<VS> + Clone + Debug,
-    T: Temporal<VT> + Clone + Debug,
-    ST: SpaceTemporal<VS, VT> + Clone + Debug,
-    SYM: Symbolic + Clone + Debug,
-    VS: Clone + Debug,
-    VT: Clone + Debug,
+    I: Default + Clone,
+    O: CsmEvaluable + Default + Debug + Clone,
+    C: Clone,
 {
     /// Constructs a new CSM.
-    pub fn new(
-        state_actions: &[(&CausalState<I, O, D, S, T, ST, SYM, VS, VT>, &CausalAction)],
-        effect_ethos: Option<(EffectEthos<D, S, T, ST, SYM, VS, VT>, &[TeloidTag])>,
-    ) -> Self {
+    pub fn new(state_actions: &[(&CausalState<I, O, C>, &CausalAction)]) -> Self {
         let mut map = CSMMap::with_capacity(state_actions.len());
 
         for (state, action) in state_actions {
             map.insert(state.id(), ((*state).clone(), (*action).clone()));
         }
 
-        if let Some((ethos, _)) = &effect_ethos
-            && !ethos.is_verified()
-        {
-            panic!("EffectEthos must be verified before being used in a CSM.");
-        }
-
-        let ethos = effect_ethos.map(|(e, t)| (e, t.to_vec()));
-
         Self {
             state_actions: Arc::new(RwLock::new(map)),
-            effect_ethos: ethos,
         }
     }
 

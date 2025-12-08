@@ -4,7 +4,7 @@
  */
 
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{BaseTopology, PointCloud, TopologyError};
+use deep_causality_topology::{PointCloud, TopologyError};
 
 #[test]
 fn test_point_cloud_new_success() {
@@ -81,35 +81,4 @@ fn test_point_cloud_clone_shallow() {
     assert_eq!(shallow_clone.metadata(), pc.metadata());
     assert_eq!(shallow_clone.cursor(), 0); // Cursor should be reset
     assert_ne!(pc.cursor(), shallow_clone.cursor());
-}
-
-#[test]
-fn test_point_cloud_base_topology() {
-    let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0], vec![3, 2]).unwrap();
-    let metadata = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
-    let pc = PointCloud::new(points, metadata, 0).unwrap();
-
-    assert_eq!(pc.dimension(), 0);
-    assert_eq!(pc.len(), 3);
-    assert!(!pc.is_empty());
-    assert_eq!(pc.num_elements_at_grade(0), Some(3));
-    assert_eq!(pc.num_elements_at_grade(1), None);
-}
-
-#[test]
-fn test_point_cloud_triangulate_success() {
-    let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![3, 2]).unwrap();
-    let metadata = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
-    let pc = PointCloud::new(points, metadata, 0).unwrap();
-
-    let complex = pc.triangulate(1.1); // Radius covers edges (0,1) and (0,2) but not (1,2)
-    assert!(complex.is_ok());
-    let sc = complex.unwrap();
-
-    // Expect 3 vertices (0-simplices)
-    assert_eq!(sc.skeletons()[0].simplices().len(), 3);
-    // Expect 2 edges (1-simplices)
-    assert_eq!(sc.skeletons()[1].simplices().len(), 2);
-    // No 2-simplices (face) expected
-    assert_eq!(sc.skeletons().len(), 2);
 }

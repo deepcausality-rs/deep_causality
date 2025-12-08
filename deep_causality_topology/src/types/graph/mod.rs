@@ -2,14 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
-use alloc::collections::BTreeMap;
-use alloc::string::ToString;
-use alloc::vec::Vec;
-
 use crate::TopologyError;
 use deep_causality_num::Zero;
 use deep_causality_tensor::CausalTensor;
+use std::collections::BTreeMap;
 
 mod base_topology;
 mod clone;

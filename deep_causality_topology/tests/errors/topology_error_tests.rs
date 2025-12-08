@@ -2,7 +2,6 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
 use deep_causality_multivector::CausalMultiVectorError;
 use deep_causality_tensor::CausalTensorError;
 use deep_causality_topology::TopologyError;
@@ -106,7 +105,6 @@ fn test_topology_error_generic_error() {
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn test_topology_error_from_causal_tensor_error() {
     let tensor_err = CausalTensorError::InvalidParameter("Bad shape".to_string());
     let topology_err: TopologyError = tensor_err.into();
@@ -117,7 +115,6 @@ fn test_topology_error_from_causal_tensor_error() {
 }
 
 #[test]
-#[cfg(feature = "std")]
 fn test_topology_error_from_causal_multivector_error() {
     let multivector_err = CausalMultiVectorError::dimension_mismatch(3, 2);
     let topology_err: TopologyError = multivector_err.into();

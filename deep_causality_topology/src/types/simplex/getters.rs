@@ -4,7 +4,6 @@
  */
 
 use crate::Simplex;
-use alloc::vec::Vec;
 
 impl Simplex {
     pub fn vertices(&self) -> &Vec<usize> {

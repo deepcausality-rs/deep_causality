@@ -4,7 +4,6 @@
  */
 
 use crate::{Chain, SimplicialComplex};
-use alloc::vec::Vec;
 use core::fmt::Debug;
 use deep_causality_num::Num;
 use deep_causality_sparse::CsrMatrix;

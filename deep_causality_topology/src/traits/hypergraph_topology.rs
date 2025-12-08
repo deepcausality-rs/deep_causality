@@ -11,7 +11,6 @@
 
 use crate::GraphTopology;
 use crate::TopologyError;
-use alloc::vec::Vec;
 
 /// A trait for topological structures that exhibit hypergraph-like properties.
 ///

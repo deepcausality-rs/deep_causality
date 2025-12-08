@@ -9,7 +9,7 @@ use alloc::string::String;
 use core::fmt::Display;
 
 // Internal struct, not exposed in the public API.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(in crate::types) struct LogEntry {
     timestamp_ms: u128,
     message: String,

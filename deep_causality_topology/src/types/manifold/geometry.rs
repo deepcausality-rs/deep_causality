@@ -4,8 +4,6 @@
  */
 
 use crate::{Manifold, Simplex, TopologyError};
-use alloc::vec;
-use alloc::vec::Vec;
 use deep_causality_tensor::{CausalTensor, CausalTensorError};
 
 impl<T> Manifold<T> {

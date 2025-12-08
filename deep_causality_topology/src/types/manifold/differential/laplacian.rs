@@ -1,4 +1,6 @@
 use crate::Manifold;
+
+use core::fmt::Debug;
 use deep_causality_num::{Field, FromPrimitive, Zero};
 use deep_causality_tensor::CausalTensor;
 
@@ -12,7 +14,7 @@ where
         + Default
         + PartialEq
         + Zero
-        + std::fmt::Debug,
+        + Debug,
 {
     /// Computes the Hodge-Laplacian operator `Δ` on a k-form.
     ///

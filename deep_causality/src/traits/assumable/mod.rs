@@ -27,7 +27,7 @@ pub trait Assumable: Identifiable {
     fn description(&self) -> DescriptionValue;
     fn assumption_tested(&self) -> bool;
     fn assumption_valid(&self) -> bool;
-    fn verify_assumption(&self, data: &[PropagatingEffect]) -> Result<bool, AssumptionError>;
+    fn verify_assumption(&self, data: &[PropagatingEffect<f64>]) -> Result<bool, AssumptionError>;
 }
 
 /// The AssumableReasoning trait provides default implementations for common
@@ -145,7 +145,10 @@ where
     ///
     /// Returns an `AssumptionError` if any of the assumption functions fail during execution.
     ///
-    fn verify_all_assumptions(&self, data: &[PropagatingEffect]) -> Result<(), AssumptionError> {
+    fn verify_all_assumptions(
+        &self,
+        data: &[PropagatingEffect<f64>],
+    ) -> Result<(), AssumptionError> {
         for a in self.get_all_items() {
             // We are interested in the side effect of updating the assumption state,
             // but we must handle the potential error.

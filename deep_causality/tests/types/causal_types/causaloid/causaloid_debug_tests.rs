@@ -16,7 +16,7 @@ fn test_debug() {
     assert_eq!(actual_unevaluated, expected_unevaluated);
 
     // Evaluate to active
-    let effect = PropagatingEffect::from_numerical(0.99);
+    let effect = PropagatingEffect::from_value(0.99);
     causaloid.evaluate(&effect);
     let expected_active = "Causaloid id: 1 
  Causaloid type: Singleton 
@@ -36,7 +36,7 @@ fn test_to_string() {
     assert_eq!(actual_unevaluated, expected_unevaluated);
 
     // Evaluate to active
-    let effect = PropagatingEffect::from_numerical(0.99);
+    let effect = PropagatingEffect::from_value(0.99);
     causaloid.evaluate(&effect);
     let expected_active = "Causaloid id: 1 
  Causaloid type: Singleton 

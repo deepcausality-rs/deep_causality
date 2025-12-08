@@ -2,14 +2,14 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
 use crate::types::manifold::Manifold;
+use core::fmt::Debug;
 use deep_causality_num::Field;
 use deep_causality_tensor::CausalTensor;
 
 impl<T> Manifold<T>
 where
-    T: Field + Copy + Default + PartialEq + core::ops::Neg<Output = T> + core::fmt::Debug,
+    T: Field + Copy + Default + PartialEq + core::ops::Neg<Output = T> + Debug,
 {
     /// Computes the exterior derivative of a k-form.
     ///

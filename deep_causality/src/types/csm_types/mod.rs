@@ -5,4 +5,5 @@
 
 pub mod csm;
 pub mod csm_action;
+pub mod csm_parameter;
 pub mod csm_state;

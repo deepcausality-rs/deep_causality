@@ -9,6 +9,10 @@
 use crate::{Assumable, Assumption, AssumptionError, PropagatingEffect};
 use std::sync::Arc;
 
+/// Trait for types that can verify their assumptions against propagating effects.
+///
+/// Assumptions are verified using `PropagatingEffect<bool>` where the boolean
+/// represents whether an assumption holds or not.
 pub trait Transferable {
     fn get_assumptions(&self) -> &Option<Arc<Vec<Assumption>>>;
 
@@ -30,7 +34,7 @@ pub trait Transferable {
     /// * `Err(AssumptionError::NoDataToTestDefined)` if the effect slice is empty.
     /// * `Err(AssumptionError::EvaluationError(...))` if an error occurs during evaluation.
     ///
-    fn verify_assumptions(&self, effect: &[PropagatingEffect]) -> Result<(), AssumptionError> {
+    fn verify_assumptions(&self, effect: &[PropagatingEffect<f64>]) -> Result<(), AssumptionError> {
         if effect.is_empty() {
             return Err(AssumptionError::NoDataToTestDefined);
         }

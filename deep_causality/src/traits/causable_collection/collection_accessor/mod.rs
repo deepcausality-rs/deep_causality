@@ -2,11 +2,14 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalMonad, IdentificationValue, MonadicCausable};
+use crate::{IdentificationValue, MonadicCausable};
 
-pub trait CausableCollectionAccessor<T>
+/// A trait for accessing items in a collection of causable elements.
+/// The trait is generic over `I` (input type), `O` (output type), and `T` (element type).
+/// `T` must implement `MonadicCausable<I, O>`.
+pub trait CausableCollectionAccessor<I, O, T>
 where
-    T: MonadicCausable<CausalMonad>,
+    T: MonadicCausable<I, O>,
 {
     //
     // All these methods must be implemented by the collection type.

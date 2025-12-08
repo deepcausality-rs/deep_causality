@@ -5,10 +5,10 @@
 
 use crate::{
     BaseSymbol, Causaloid, CausaloidGraph, Context, Contextoid, Data, EuclideanSpace,
-    EuclideanSpacetime, EuclideanTime, FloatType, IntoEffectValue, Model, NumericalValue,
-    TeloidStore,
+    EuclideanSpacetime, EuclideanTime, FloatType, Model, NumericalValue,
 };
 use std::collections::HashMap;
+use std::sync::{Arc, RwLock};
 
 /// A type alias for the default `Model` configuration.
 ///
@@ -40,17 +40,7 @@ use std::collections::HashMap;
 /// Euclidean and numerical context is sufficient, offering a consistent and
 /// easily recognizable model structure for common causal reasoning and
 /// simulation scenarios.
-pub type BaseModel = Model<
-    bool,
-    bool,
-    Data<NumericalValue>,
-    EuclideanSpace,
-    EuclideanTime,
-    EuclideanSpacetime,
-    BaseSymbol,
-    FloatType,
-    FloatType,
->;
+pub type BaseModel = Model<bool, bool, BaseContext>;
 
 /// A type alias for a default, general-purpose `Causaloid` configuration.
 ///
@@ -84,17 +74,7 @@ pub type BaseModel = Model<
 /// that are compatible with other "base" types like `BaseCausalGraph` and `BaseContext`,
 /// ensuring a consistent and easily understandable modeling environment.
 #[allow(type_alias_bounds)]
-pub type BaseCausaloid<I: IntoEffectValue, O: IntoEffectValue> = Causaloid<
-    I,
-    O,
-    Data<NumericalValue>,
-    EuclideanSpace,
-    EuclideanTime,
-    EuclideanSpacetime,
-    BaseSymbol,
-    FloatType,
-    FloatType,
->;
+pub type BaseCausaloid<I, O> = Causaloid<I, O, (), Arc<RwLock<BaseContext>>>;
 
 /// A type alias for a `Vec` (vector) containing `BaseCausaloid` instances.
 ///
@@ -131,19 +111,7 @@ pub type BaseCausaloid<I: IntoEffectValue, O: IntoEffectValue> = Causaloid<
 /// way to organize causaloids for common causal modeling scenarios, such as
 /// representing a sequence of events or a set of related causal agents.
 #[allow(type_alias_bounds)]
-pub type BaseCausaloidVec<I: IntoEffectValue, O: IntoEffectValue> = Vec<
-    Causaloid<
-        I,
-        O,
-        Data<NumericalValue>,
-        EuclideanSpace,
-        EuclideanTime,
-        EuclideanSpacetime,
-        BaseSymbol,
-        FloatType,
-        FloatType,
-    >,
->;
+pub type BaseCausaloidVec<I, O> = Vec<Causaloid<I, O, (), Arc<RwLock<BaseContext>>>>;
 
 /// A type alias for a `HashMap` that stores `BaseCausaloid` instances, typically indexed by their unique identifiers.
 ///
@@ -172,20 +140,7 @@ pub type BaseCausaloidVec<I: IntoEffectValue, O: IntoEffectValue> = Vec<
 /// Euclidean and numerical context is sufficient for defining and managing causal
 /// entities within a map structure. It offers a consistent and easily recognizable
 /// way to organize causaloids for common causal modeling scenarios.
-pub type BaseCausalMap = HashMap<
-    usize,
-    Causaloid<
-        bool,
-        bool,
-        Data<NumericalValue>,
-        EuclideanSpace,
-        EuclideanTime,
-        EuclideanSpacetime,
-        BaseSymbol,
-        FloatType,
-        FloatType,
-    >,
->;
+pub type BaseCausalMap = HashMap<usize, Causaloid<bool, bool, (), Arc<RwLock<BaseContext>>>>;
 
 pub type BenchmarkCausalMap = HashMap<usize, BaseCausaloid<f64, bool>>;
 
@@ -212,19 +167,7 @@ pub type BenchmarkCausalMap = HashMap<usize, BaseCausaloid<f64, bool>>;
 /// This `BaseCausalGraph` is designed for general-purpose use cases where a
 /// standard Euclidean and numerical context is sufficient, offering a consistent
 /// and easily recognizable graph structure for common causal modeling scenarios.
-pub type BaseCausalGraph = CausaloidGraph<
-    Causaloid<
-        bool,
-        bool,
-        Data<NumericalValue>,
-        EuclideanSpace,
-        EuclideanTime,
-        EuclideanSpacetime,
-        BaseSymbol,
-        FloatType,
-        FloatType,
-    >,
->;
+pub type BaseCausalGraph = CausaloidGraph<Causaloid<bool, bool, (), Arc<RwLock<BaseContext>>>>;
 
 /// A type alias for a default, general-purpose `Context` configuration.
 ///
@@ -297,51 +240,6 @@ pub type BaseContext = Context<
 /// that are compatible with other "base" types like `BaseContext` and `BaseCausalGraph`,
 /// ensuring a consistent and easily understandable modeling environment.
 pub type BaseContextoid = Contextoid<
-    Data<NumericalValue>,
-    EuclideanSpace,
-    EuclideanTime,
-    EuclideanSpacetime,
-    BaseSymbol,
-    FloatType,
-    FloatType,
->;
-
-/// A type alias for a default, general-purpose `TeloidStore` configuration.
-///
-/// This `BaseTeloidStore` alias represents a `TeloidStore` instance—a specialized
-/// data structure for managing and querying teloids (temporal causal units)—
-/// configured with a standard set of generic parameters. It is designed for
-/// common causal modeling scenarios that operate within a Euclidean and numerical
-/// framework.
-///
-/// It provides a convenient and readable shorthand for defining a `TeloidStore`
-/// that encapsulates:
-///
-/// - **`Data<NumericalValue>`**: For handling general numerical data associated with teloids.
-///   `NumberType` is typically an alias for a floating-point or integer type,
-///   allowing for flexible data representation.
-/// - **`EuclideanSpace`**: Defines the spatial context of the teloids using a standard
-///   Euclidean coordinate system. This implies that spatial relationships
-///   within this store adhere to Euclidean geometry.
-/// - **`EuclideanTime`**: Specifies the temporal context, utilizing a
-///   Euclidean representation of time. This typically refers to a continuous,
-///   linear progression of time.
-/// - **`EuclideanSpacetime`**: Combines the Euclidean spatial and temporal
-///   contexts into a unified spacetime representation, where both space and
-///   time are treated with Euclidean properties.
-/// - **`BaseSymbol`**: Provides a basic symbolic representation for teloids
-///   within the store, useful for labeling, identification, or abstract
-///   reasoning.
-/// - **`FloatType` (x2)**: Two `FloatType` parameters, which are typically
-///   used for internal calculations, scalar values, metrics, or other generic
-///   numerical requirements within the `TeloidStore` structure, such as probabilities,
-///   weights, or magnitudes.
-///
-/// This `BaseTeloidStore` is designed to be a sensible default for many applications,
-/// offering a consistent and easily recognizable structure for managing and
-/// querying temporal causal data in general-purpose causal reasoning and
-/// simulation scenarios.
-pub type BaseTeloidStore = TeloidStore<
     Data<NumericalValue>,
     EuclideanSpace,
     EuclideanTime,

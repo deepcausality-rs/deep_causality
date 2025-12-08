@@ -3,18 +3,15 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::Manifold;
+use core::fmt::Debug;
 use core::ops::Mul;
+use core::ops::Neg;
 use deep_causality_num::{Field, FromPrimitive};
 use deep_causality_tensor::CausalTensor;
 
 impl<T> Manifold<T>
 where
-    T: Field
-        + Copy
-        + FromPrimitive
-        + Mul<f64, Output = T>
-        + core::ops::Neg<Output = T>
-        + core::fmt::Debug,
+    T: Field + Copy + FromPrimitive + Mul<f64, Output = T> + Neg<Output = T> + Debug,
 {
     /// Computes the Hodge star operator on a k-form.
     ///

@@ -7,7 +7,6 @@ mod display;
 mod getters;
 
 use crate::types::simplex::Simplex;
-use alloc::vec::Vec;
 
 /// A collection of all simplices of dimension K.
 #[derive(Debug, Clone, PartialEq)]

@@ -2,9 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
-use crate::{Causaloid, IntoEffectValue, PropagatingEffect, UncertainParameter};
-use crate::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
+use crate::{Causaloid, PropagatingEffect, UncertainParameter};
+use std::fmt::Debug;
+use std::marker::PhantomData;
 mod display;
 mod eval;
 mod getter;
@@ -27,49 +27,41 @@ mod getter;
 /// within a causal state machine (CSM). The CSM evaluates states, and when conditions are met,
 /// fires the associated actions.
 ///
-#[allow(clippy::type_complexity)]
 #[derive(Clone, Debug)]
-pub struct CausalState<I, O, D, S, T, ST, SYM, VS, VT>
+pub struct CausalState<I, O, C>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    I: Default,
+    O: Default + Debug,
+    C: Clone,
 {
     /// Unique identifier for the state
     id: usize,
     /// Version number for tracking changes to the state
     version: usize,
     /// Numerical data used for state evaluation
-    data: PropagatingEffect,
-    /// Reference to a causaloid that defines when this state is active
-    causaloid: Causaloid<I, O, D, S, T, ST, SYM, VS, VT>,
+    data: PropagatingEffect<I>,
+    /// The `Causaloid` managed by this state.
+    ///
+    /// This represents the active causal unit (logic) currently associated with
+    /// the state machine's execution context.
+    causaloid: Causaloid<I, O, (), C>,
     /// Optional parameters for evaluating uncertain effects.
     uncertain_parameter: Option<UncertainParameter>,
+    /// PhantomData to bind generic type `C`.
+    _phantom: PhantomData<C>,
 }
 
-impl<I, O, D, S, T, ST, SYM, VS, VT> CausalState<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, C> CausalState<I, O, C>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    I: Default,
+    O: Default + Debug,
+    C: Clone,
 {
     pub fn new(
         id: usize,
         version: usize,
-        data: PropagatingEffect,
-        causaloid: Causaloid<I, O, D, S, T, ST, SYM, VS, VT>,
+        data: PropagatingEffect<I>,
+        causaloid: Causaloid<I, O, (), C>,
         uncertain_parameter: Option<UncertainParameter>,
     ) -> Self {
         Self {
@@ -78,6 +70,7 @@ where
             data,
             causaloid,
             uncertain_parameter,
+            _phantom: PhantomData,
         }
     }
 }

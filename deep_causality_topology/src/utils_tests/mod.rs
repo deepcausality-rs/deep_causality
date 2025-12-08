@@ -4,7 +4,6 @@
  */
 
 //! Test utilities for deep_causality_topology tests
-
 use crate::{Simplex, SimplicialComplex, Skeleton};
 use deep_causality_num::Zero;
 use deep_causality_sparse::CsrMatrix;

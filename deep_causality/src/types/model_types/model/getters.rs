@@ -2,26 +2,20 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
-use crate::{
-    Assumption, Causaloid, Context, Datable, IntoEffectValue, Model, SpaceTemporal, Spatial,
-    Symbolic, Temporal,
-};
+use crate::{Assumption, Causaloid, Model};
+use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
-#[allow(clippy::type_complexity)]
-impl<I, O, D, S, T, ST, SYM, VS, VT> Model<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, C> Model<I, O, C>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    I: Default,
+    O: Default + Debug,
+    C: Clone,
 {
+    pub fn id(&self) -> u64 {
+        self.id
+    }
+
     pub fn author(&self) -> &str {
         &self.author
     }
@@ -30,15 +24,18 @@ where
         &self.description
     }
 
-    pub fn assumptions(&self) -> &Option<Arc<Vec<Assumption>>> {
-        &self.assumptions
+    pub fn assumptions(&self) -> Option<&Arc<Vec<Assumption>>> {
+        self.assumptions.as_ref()
     }
 
-    pub fn causaloid(&self) -> &Arc<Causaloid<I, O, D, S, T, ST, SYM, VS, VT>> {
+    /// Returns a reference to the root `Causaloid` of the model.
+    ///
+    /// The `Causaloid` encapsulates the core causal logic of the model.
+    pub fn causaloid(&self) -> &Arc<Causaloid<I, O, (), Arc<RwLock<C>>>> {
         &self.causaloid
     }
 
-    pub fn context(&self) -> &Option<Arc<RwLock<Context<D, S, T, ST, SYM, VS, VT>>>> {
-        &self.context
+    pub fn context(&self) -> Option<&Arc<RwLock<C>>> {
+        self.context.as_ref()
     }
 }

@@ -24,7 +24,7 @@ mod identifiable;
 /// * `T`: The type of the data payload. It must be a simple, copyable, and comparable
 ///   type, satisfying the `Default + Copy + Clone + Hash + Eq + PartialEq` bounds.
 ///
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct Data<T>
 where
     T: Default + Copy + Clone + PartialEq,

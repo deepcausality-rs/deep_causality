@@ -1,0 +1,38 @@
+load("@rules_rust//rust:defs.bzl", "rust_test_suite")
+
+rust_test_suite(
+    name = "types/effect_data",
+    srcs = glob([
+        "types/effect_data/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_effects",
+        # Internal dependencies
+        "//deep_causality_multivector",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_test_suite(
+    name = "types_causal/numeric_value",
+    srcs = glob([
+        "types/numeric_value/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_effects",
+        # Internal dependencies
+        "//deep_causality_multivector",
+        "//deep_causality_tensor",
+    ],
+)

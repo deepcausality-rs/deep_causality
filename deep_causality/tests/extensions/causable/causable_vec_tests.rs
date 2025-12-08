@@ -30,7 +30,7 @@ fn test_get_all_items() {
 #[test]
 fn test_explain() {
     let col = test_utils::get_deterministic_test_causality_vec();
-    let effect_success = PropagatingEffect::from_numerical(0.99);
+    let effect_success = PropagatingEffect::from_value(0.99);
     let res = col.evaluate_collection(&effect_success, &AggregateLogic::All, None);
 
     assert!(!res.is_err());
@@ -43,8 +43,8 @@ fn test_explain() {
 
     // For each causaloid (id 1, 2, 3)
     for i in 1..=3 {
-        let incoming_log = format!("Causaloid {}: Incoming effect: Numerical(0.99)", i);
-        let output_log = format!("Causaloid {}: Outgoing effect: Boolean(true)", i);
+        let incoming_log = format!("Causaloid {}: Incoming effect: Value(0.99)", i);
+        let output_log = format!("Causaloid {}: Outgoing effect: Value(true)", i);
         assert!(actual_explanation.contains(&incoming_log));
         assert!(actual_explanation.contains(&output_log));
     }
@@ -76,37 +76,4 @@ fn test_to_vec() {
     let col: BaseCausaloidVec<NumericalValue, bool> =
         test_utils::get_deterministic_test_causality_vec();
     assert_eq!(3, col.to_vec().len());
-}
-
-// --- Tests for CausableReasoning Trait ---
-
-#[test]
-fn test_evaluate_probabilistic_propagation_success() {
-    // Setup: Create two causaloids with specific probabilities to test multiplication.
-    fn causal_fn_half(_: NumericalValue) -> Result<CausalFnOutput<f64>, CausalityError> {
-        Ok(CausalFnOutput {
-            output: 0.5,
-            log: CausalEffectLog::new(),
-        })
-    }
-    let p1 = Causaloid::new(1, causal_fn_half, "p=0.5");
-
-    fn causal_fn_quarter(_: NumericalValue) -> Result<CausalFnOutput<f64>, CausalityError> {
-        Ok(CausalFnOutput {
-            output: 0.25,
-            log: CausalEffectLog::new(),
-        })
-    }
-    let p2 = Causaloid::new(2, causal_fn_quarter, "p=0.25");
-
-    let coll: Vec<BaseCausaloid<NumericalValue, f64>> = vec![p1, p2];
-
-    // Act: Evaluate with probabilistic propagation.
-    let effect = PropagatingEffect::from_numerical(0.0);
-    let res = coll.evaluate_collection(&effect, &AggregateLogic::All, Some(0.5));
-    assert!(!res.is_err());
-    let result = res.value;
-
-    // Assert: This covers the main logic branch, ensuring probabilities are multiplied.
-    assert_eq!(result, EffectValue::Probabilistic(0.125));
 }

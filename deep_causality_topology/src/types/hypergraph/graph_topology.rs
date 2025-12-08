@@ -2,10 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
 use crate::{GraphTopology, Hypergraph, TopologyError};
-use alloc::collections::BTreeSet;
-use alloc::vec::Vec;
+use std::collections::BTreeSet;
 
 impl<T> GraphTopology for Hypergraph<T> {
     fn num_nodes(&self) -> usize {

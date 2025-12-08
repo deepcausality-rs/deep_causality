@@ -14,7 +14,7 @@ const LARGE: usize = 10_000;
 
 fn small_linear_graph_benchmark(criterion: &mut Criterion) {
     let g = test_utils_graph::build_linear_graph(SMALL);
-    let evidence = PropagatingEffect::from_numerical(0.99);
+    let evidence = PropagatingEffect::from_effect_value(EffectValue::Value(0.99));
     let root_index = g.get_root_index().unwrap();
 
     criterion.bench_function(
@@ -40,7 +40,7 @@ fn small_linear_graph_benchmark(criterion: &mut Criterion) {
 
 fn medium_linear_graph_benchmark(criterion: &mut Criterion) {
     let g = test_utils_graph::build_linear_graph(MEDIUM);
-    let evidence = PropagatingEffect::from_numerical(0.99);
+    let evidence = PropagatingEffect::from_effect_value(EffectValue::Value(0.99));
     let root_index = g.get_root_index().unwrap();
 
     criterion.bench_function(
@@ -66,7 +66,7 @@ fn medium_linear_graph_benchmark(criterion: &mut Criterion) {
 
 fn large_linear_graph_benchmark(criterion: &mut Criterion) {
     let g = test_utils_graph::build_linear_graph(LARGE);
-    let evidence = PropagatingEffect::from_numerical(0.99);
+    let evidence = PropagatingEffect::from_effect_value(EffectValue::Value(0.99));
     let root_index = g.get_root_index().unwrap();
 
     criterion.bench_function(

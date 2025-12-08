@@ -1,156 +1,113 @@
-/*
- * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
- */
-use crate::{
-    CausalEffectLog, CausalMonad, CausalPropagatingEffect, CausalityError, Causaloid, Datable,
-    EffectValue, IntoEffectValue, SpaceTemporal, Spatial, Symbolic, Temporal,
-};
-use deep_causality_haft::MonadEffect3;
+use crate::{CausalityError, Causaloid};
+use deep_causality_core::{EffectValue, PropagatingEffect};
+use deep_causality_haft::LogAddEntry;
+use std::fmt::Debug;
 
-/// Represents the first step in a `Causaloid::Singleton` monadic chain.
-///
-/// This function attempts to convert a generic `EffectValue` into the specific
-/// input type `I` required by the causaloid.
-///
-/// # Arguments
-/// * `effect_val`: The `EffectValue` from the previous step.
-/// * `id`: The ID of the causaloid for logging purposes.
-///
-/// # Returns
-/// A new `CausalPropagatingEffect` containing either the successfully converted
-/// value of type `I` or an error.
-///
-/// # Log Provenance
-/// This effect only contains logs generated during this specific operation.
-/// It is the responsibility of the calling `bind` function to merge these logs
-/// with the preceding log history.
-pub(super) fn convert_input<I>(
-    effect_val: EffectValue,
-    id: u64,
-) -> CausalPropagatingEffect<I, CausalityError, CausalEffectLog>
-where
-    I: IntoEffectValue + Default,
-{
-    let mut logs = CausalEffectLog::new();
-    logs.add_entry(&format!(
-        "Causaloid {}: Incoming effect: {:?}",
-        id, effect_val
-    ));
-
-    match I::try_from_effect_value(effect_val) {
-        Ok(val) => {
-            let mut monad = CausalMonad::pure(val);
-            monad.logs = logs;
-            monad
-        }
-        Err(e) => {
-            logs.add_entry(&format!("Causaloid {}: Input conversion failed: {}", id, e));
-            CausalPropagatingEffect {
-                value: I::default(),
-                error: Some(e),
-                logs,
-            }
-        }
-    }
-}
-
-/// Represents the second step in a `Causaloid::Singleton` monadic chain.
+/// Represents the execution step in a `Causaloid::Singleton` monadic chain.
 ///
 /// This function executes the core causal function (`causal_fn` or `context_causal_fn`)
 /// of the causaloid.
 ///
 /// # Arguments
-/// * `input`: The specific input value of type `I`, successfully converted from the previous step.
+/// * `input`: The specific input value of type `I`.
 /// * `causaloid`: A reference to the causaloid containing the function to execute.
 ///
 /// # Returns
-/// A new `CausalPropagatingEffect` containing either the resulting output
+/// A `PropagatingEffect` containing either the resulting output
 /// value of type `O` or an error.
-///
-/// # Log Provenance
-/// This effect only contains logs generated during this specific operation.
-/// It is the responsibility of the calling `bind` function to merge these logs
-/// with the preceding log history.
-pub(super) fn execute_causal_logic<I, O, D, S, T, ST, SYM, VS, VT>(
+pub(super) fn execute_causal_logic<I, O, PS, C>(
     input: I,
-    causaloid: &Causaloid<I, O, D, S, T, ST, SYM, VS, VT>,
-) -> CausalPropagatingEffect<O, CausalityError, CausalEffectLog>
+    causaloid: &Causaloid<I, O, PS, C>,
+) -> PropagatingEffect<O>
 where
-    I: IntoEffectValue + Default,
-    O: IntoEffectValue + Default,
-    D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    I: Default + Clone,
+    O: Default + Clone + Debug,
+    PS: Default + Clone,
+    C: Clone,
 {
-    let result = if let Some(context_fn) = causaloid.context_causal_fn {
+    if let Some(context_fn) = &causaloid.context_causal_fn {
         if let Some(context) = causaloid.context.as_ref() {
-            context_fn(input, context)
+            // context_fn signature: fn(EffectValue<I>, PS, Option<C>) -> PropagatingProcess<O, PS, C>
+            // We invoke it with default state and the context.
+            // The result is PropagatingProcess<O, PS, C>.
+            // We need to convert it to PropagatingEffect<O>.
+
+            let ev = EffectValue::from(input);
+            let process = context_fn(ev, PS::default(), Some(context.clone()));
+
+            // Convert PropagatingProcess to PropagatingEffect, preserving logs.
+            let mut effect = match process.value.into_value() {
+                Some(val) => PropagatingEffect::pure(val),
+                None => {
+                    let error = process.error.unwrap_or_else(|| {
+                        CausalityError(deep_causality_core::CausalityErrorEnum::Custom(
+                            "execute_causal_logic: context_fn returned None value and no error"
+                                .into(),
+                        ))
+                    });
+                    PropagatingEffect::from_error(error)
+                }
+            };
+            effect.logs = process.logs;
+            effect
         } else {
-            Err(CausalityError(
-                "Causaloid::evaluate: context is None".into(),
+            PropagatingEffect::from_error(CausalityError(
+                deep_causality_core::CausalityErrorEnum::Custom(
+                    "Causaloid::evaluate: context is None".into(),
+                ),
             ))
         }
-    } else if let Some(causal_fn) = causaloid.causal_fn {
+    } else if let Some(causal_fn) = &causaloid.causal_fn {
         causal_fn(input)
     } else {
         let err_msg = format!(
             "Causaloid {} is missing both causal_fn and context_causal_fn",
             causaloid.id
         );
-        Err(CausalityError(err_msg))
-    };
-
-    match result {
-        Ok(causal_fn_output) => {
-            // Create a new effect with the output value and the log from the causal function.
-            CausalPropagatingEffect {
-                value: causal_fn_output.output,
-                error: None,
-                logs: causal_fn_output.log,
-            }
-        }
-        Err(e) => CausalPropagatingEffect {
-            value: O::default(),
-            error: Some(e.clone()),
-            logs: format!("Causaloid {}: Causal function failed: {}", causaloid.id, e).into(),
-        },
+        PropagatingEffect::from_error(CausalityError(
+            deep_causality_core::CausalityErrorEnum::Custom(err_msg),
+        ))
     }
 }
 
-/// Represents the final step in a `Causaloid::Singleton` monadic chain.
-///
-/// This function converts the specific output type `O` from the causal function
-/// back into a generic `EffectValue`.
+/// Logs the input to a causaloid.
 ///
 /// # Arguments
-/// * `output`: The specific output value of type `O` from the previous step.
-/// * `id`: The ID of the causaloid for logging purposes.
+/// * `input`: The input value of type `I`.
+/// * `id`: The unique identifier of the causaloid.
 ///
 /// # Returns
-/// A new `CausalPropagatingEffect` containing the final `EffectValue`.
-///
-/// # Log Provenance
-/// This effect contains the log message for this specific operation. It is the
-/// responsibility of the calling `bind` function to merge this log with the
-/// preceding log history.
-pub(super) fn convert_output<O>(
-    output: O,
-    id: u64,
-) -> CausalPropagatingEffect<EffectValue, CausalityError, CausalEffectLog>
+/// A `PropagatingEffect` containing the input value and a log entry recording it.
+pub(super) fn log_input<I>(input: I, id: u64) -> PropagatingEffect<I>
 where
-    O: IntoEffectValue,
+    I: Debug + Clone + Default,
 {
-    let effect_value = output.into_effect_value();
+    let mut effect = PropagatingEffect::pure(input.clone());
+    // Format must match expectation: "Causaloid {}: Incoming effect: {:?}"
+    let ev = EffectValue::from(input);
+    effect
+        .logs
+        .add_entry(&format!("Causaloid {}: Incoming effect: {:?}", id, ev));
+    effect
+}
 
-    let mut monad = CausalMonad::pure(effect_value.clone());
-    monad.logs.add_entry(&format!(
-        "Causaloid {}: Outgoing effect: {:?}",
-        id, effect_value
-    ));
-    monad
+/// Logs the output from a causaloid.
+///
+/// # Arguments
+/// * `output`: The output value of type `O`.
+/// * `id`: The unique identifier of the causaloid.
+///
+/// # Returns
+/// A `PropagatingEffect` containing the output value and a log entry recording it.
+pub(super) fn log_output<O>(output: O, id: u64) -> PropagatingEffect<O>
+where
+    O: Debug + Clone + Default,
+{
+    let mut effect = PropagatingEffect::pure(output.clone());
+    // Format must match expectation: "Causaloid {}: Outgoing effect: {:?}"
+    let ev = EffectValue::from(output);
+    effect
+        .logs
+        .add_entry(&format!("Causaloid {}: Outgoing effect: {:?}", id, ev));
+    effect
 }

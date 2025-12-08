@@ -10,6 +10,17 @@ use deep_causality_haft::{Applicative, Functor, Monad};
 fn main() {
     println!("--- PropagatingEffect Example ---");
 
+    // --------------------------------------------------------------------------------------------
+    // ENGINEERING VALUE: Pure Functional Pipelines
+    //
+    // `PropagatingEffect` allows you to chain pure functions together in a way that automatically:
+    // 1. **Short-circuits on Error**: If step A fails, step B acts as a no-op loop-through.
+    // 2. **Logs Execution**: Every step is recorded in `EffectLog` (not shown here for brevity
+    //    but present in the struct).
+    //
+    // This replaces "if err != nil { return err }" boilerplate with declarative `bind` or `map`.
+    // --------------------------------------------------------------------------------------------
+
     // 1. Create a pure effect (Success)
     // PropagatingEffect is a type alias for CausalEffectPropagationProcess with unit state/context.
     let effect_a: PropagatingEffect<i32> = PropagatingEffectWitness::pure(10);

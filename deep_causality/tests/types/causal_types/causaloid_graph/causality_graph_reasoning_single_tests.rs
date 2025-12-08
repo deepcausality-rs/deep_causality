@@ -4,21 +4,25 @@
  */
 
 use deep_causality::utils_test::test_utils;
-use deep_causality::*;
+use deep_causality::{
+    BaseCausalGraph, CausableGraph, CausaloidGraph, EffectValue, MonadicCausableGraphReasoning,
+    PropagatingEffect,
+};
 
 #[test]
 fn test_evaluate_single_cause_success() {
     let mut g = CausaloidGraph::new(0);
-    let causaloid = test_utils::get_test_causaloid_deterministic(0);
+    // Use bool->bool causaloid to satisfy MonadicCausableGraphReasoning trait bounds (V -> V)
+    let causaloid = test_utils::get_test_causaloid_deterministic_input_output();
     let index = g.add_causaloid(causaloid).expect("Failed to add causaloid");
     g.freeze(); // Reasoning requires a frozen graph
 
     // Evaluate the node using the high-level graph API.
-    let effect = PropagatingEffect::from_numerical(0.99);
+    let effect = PropagatingEffect::from_value(true);
     let res = g.evaluate_single_cause(index, &effect);
     dbg!(&res);
     assert!(res.is_ok());
-    assert_eq!(res.value, EffectValue::Boolean(true));
+    assert_eq!(res.value, EffectValue::Value(false)); // Inverts input
 }
 
 #[test]
@@ -28,16 +32,17 @@ fn test_evaluate_single_causaloid_not_found_error() {
     let non_existent_index = 99;
     g.freeze(); // Reasoning requires a frozen graph
 
-    let effect = PropagatingEffect::from_numerical(0.99);
+    let effect = PropagatingEffect::from_value(true);
     let res = g.evaluate_single_cause(non_existent_index, &effect);
     dbg!(&res);
 
+    assert!(res.is_err());
     assert!(res.is_err());
     assert!(
         res.error
             .unwrap()
             .to_string()
-            .contains("CausalityError: Causaloid with index 99 not found in graph"),
+            .contains("Causaloid with index 99 not found in graph"),
     );
 }
 
@@ -51,10 +56,10 @@ fn test_evaluate_single_eval_error() {
         .expect("Failed to add causaloid");
     g.freeze(); // Reasoning requires a frozen graph
 
-    let effect = PropagatingEffect::from_boolean(false);
+    let effect = PropagatingEffect::from_value(false);
     let res = g.evaluate_single_cause(index, &effect);
     dbg!(&res);
 
     assert!(res.is_err());
-    assert_eq!(res.error.unwrap().to_string(), "CausalityError: Test error");
+    assert!(res.error.unwrap().to_string().contains("Test error"));
 }

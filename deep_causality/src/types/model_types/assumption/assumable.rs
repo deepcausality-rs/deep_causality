@@ -18,7 +18,7 @@ impl Assumable for Assumption {
         *self.assumption_valid.read().unwrap()
     }
 
-    fn verify_assumption(&self, data: &[PropagatingEffect]) -> Result<bool, AssumptionError> {
+    fn verify_assumption(&self, data: &[PropagatingEffect<f64>]) -> Result<bool, AssumptionError> {
         let res = (self.assumption_fn)(data)?;
 
         let mut guard_tested = self.assumption_tested.write().unwrap();

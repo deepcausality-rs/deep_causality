@@ -3,31 +3,21 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{
-    CSM, CSMMap, CausalAction, CausalState, Datable, IntoEffectValue, SpaceTemporal, Spatial,
-    StateAction, Symbolic, Temporal, UpdateError,
-};
+use crate::{CSM, CSMMap, CausalAction, CausalState, CsmEvaluable, StateAction, UpdateError};
 use std::fmt::Debug;
 
-#[allow(clippy::type_complexity)]
-impl<I, O, D, S, T, ST, SYM, VS, VT> CSM<I, O, D, S, T, ST, SYM, VS, VT>
+impl<I, O, C> CSM<I, O, C>
 where
-    I: IntoEffectValue,
-    O: IntoEffectValue,
-    D: Datable + Clone + Debug,
-    S: Spatial<VS> + Clone + Debug,
-    T: Temporal<VT> + Clone + Debug,
-    ST: SpaceTemporal<VS, VT> + Clone + Debug,
-    SYM: Symbolic + Clone + Debug,
-    VS: Clone + Debug,
-    VT: Clone + Debug,
+    I: Default + Clone,
+    O: CsmEvaluable + Default + Debug + Clone,
+    C: Clone,
 {
     /// Updates a causal state with a new state at the index position idx.
     /// Returns UpdateError if the update operation failed.
     pub fn update_single_state(
         &self,
         idx: usize,
-        state_action: StateAction<I, O, D, S, T, ST, SYM, VS, VT>,
+        state_action: StateAction<I, O, C>,
     ) -> Result<(), UpdateError> {
         // Check if the key exists, if not return error
         if !self.state_actions.read().unwrap().contains_key(&idx) {
@@ -50,7 +40,7 @@ where
     /// Returns UpdateError if the update operation failed.
     pub fn update_all_states(
         &self,
-        state_actions: &[(&CausalState<I, O, D, S, T, ST, SYM, VS, VT>, &CausalAction)],
+        state_actions: &[(&CausalState<I, O, C>, &CausalAction)],
     ) -> Result<(), UpdateError> {
         let mut state_map = CSMMap::with_capacity(state_actions.len());
 

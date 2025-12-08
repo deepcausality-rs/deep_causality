@@ -192,6 +192,28 @@ fn main() {
 }
 ```
 
+
+### Intervention & Counterfactuals
+
+DeepCausality Core supports **Causal Interventions** (Pearl's "Do-calculus"). You can intervene on a running process to override values and simulate counterfactual scenarios ("What if X had been Y?").
+
+The `Intervenable` trait adds the `.intervene(value)` method to both `PropagatingEffect` and `PropagatingProcess`.
+
+```rust
+use deep_causality_core::{PropagatingEffectWitness, Intervenable};
+
+// 1. Create a factual effect
+let effect = PropagatingEffectWitness::pure(10);
+
+// 2. Intervene to force a new value (Counterfactual)
+// This preserves logs and error states but overrides the value.
+let counterfactual = effect.intervene(42);
+```
+
+See the examples for more details:
+*   [Stateless Intervention](examples/propagating_effect_counterfactual.rs)
+*   [Stateful Intervention](examples/propagating_process_counterfactual.rs)
+
 ## non-std Support
 
 To use this crate in a bare-metal `no_std` environment:
