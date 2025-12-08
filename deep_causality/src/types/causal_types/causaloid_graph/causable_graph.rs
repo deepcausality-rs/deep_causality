@@ -4,13 +4,11 @@
  */
 use ultragraph::{GraphMut, GraphView};
 
-use crate::CausableGraph;
-use crate::MonadicCausable;
-use crate::MonadicCausableGraphReasoning;
+use crate::{CausableGraph, MonadicCausable, MonadicCausableGraphReasoning};
 use crate::{CausalGraphIndexError, CausalityGraphError, Causaloid, CausaloidGraph};
 use std::fmt::Debug;
 
-// Marker trait to add default impl from
+// Marker trait to add default impl from MonadicCausableGraphReasoning
 impl<V, PS, C> MonadicCausableGraphReasoning<V, PS, C> for CausaloidGraph<Causaloid<V, V, PS, C>>
 where
     V: Default + Clone + Send + Sync + 'static + Debug,
