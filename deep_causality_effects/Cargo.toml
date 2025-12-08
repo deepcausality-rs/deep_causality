@@ -17,4 +17,4 @@ deep_causality_topology = { path = "../deep_causality_topology", version = "0.1"
 
 
 [dev-dependencies]
-criterion = { version = "0.8.0" }
+criterion = { version = "0.8.1" }

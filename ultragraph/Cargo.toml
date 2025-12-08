@@ -19,7 +19,7 @@ exclude = ["*.bazel", "*/*.bazel", "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.
 
 
 [dev-dependencies]
-criterion = { version = "0.8.0" }
+criterion = { version = "0.8.1" }
 deep_causality_rand = { path = "../deep_causality_rand" }
 
 
