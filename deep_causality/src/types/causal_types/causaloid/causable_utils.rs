@@ -1,5 +1,6 @@
 use crate::{CausalityError, Causaloid};
 use deep_causality_core::{EffectValue, PropagatingEffect};
+use deep_causality_haft::LogAddEntry;
 use std::fmt::Debug;
 
 /// Represents the execution step in a `Causaloid::Singleton` monadic chain.
@@ -66,4 +67,46 @@ where
             deep_causality_core::CausalityErrorEnum::Custom(err_msg),
         ))
     }
+}
+
+/// Logs the input to a causaloid.
+///
+/// # Arguments
+/// * `input`: The input value of type `I`.
+/// * `id`: The unique identifier of the causaloid.
+///
+/// # Returns
+/// A `PropagatingEffect` containing the input value and a log entry recording it.
+pub(super) fn log_input<I>(input: I, id: u64) -> PropagatingEffect<I>
+where
+    I: Debug + Clone + Default,
+{
+    let mut effect = PropagatingEffect::pure(input.clone());
+    // Format must match expectation: "Causaloid {}: Incoming effect: {:?}"
+    let ev = EffectValue::from(input);
+    effect
+        .logs
+        .add_entry(&format!("Causaloid {}: Incoming effect: {:?}", id, ev));
+    effect
+}
+
+/// Logs the output from a causaloid.
+///
+/// # Arguments
+/// * `output`: The output value of type `O`.
+/// * `id`: The unique identifier of the causaloid.
+///
+/// # Returns
+/// A `PropagatingEffect` containing the output value and a log entry recording it.
+pub(super) fn log_output<O>(output: O, id: u64) -> PropagatingEffect<O>
+where
+    O: Debug + Clone + Default,
+{
+    let mut effect = PropagatingEffect::pure(output.clone());
+    // Format must match expectation: "Causaloid {}: Outgoing effect: {:?}"
+    let ev = EffectValue::from(output);
+    effect
+        .logs
+        .add_entry(&format!("Causaloid {}: Outgoing effect: {:?}", id, ev));
+    effect
 }

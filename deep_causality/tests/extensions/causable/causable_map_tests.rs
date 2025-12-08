@@ -121,12 +121,12 @@ fn test_explain() {
     dbg!(&log);
 
     let expected_final_value = "Final Value: Value(true)";
-    assert!(actual_explanation.contains(&expected_final_value));
+    assert!(actual_explanation.contains(expected_final_value));
 
     // For each causaloid (id 1, 2, 3)
     for i in 1..=3 {
-        let incoming_log = format!("Causaloid {}: Incoming effect: Numerical(0.99)", i);
-        let output_log = format!("Causaloid {}: Outgoing effect: Boolean(true)", i);
+        let incoming_log = format!("Causaloid {}: Incoming effect: Value(0.99)", i);
+        let output_log = format!("Causaloid {}: Outgoing effect: Value(true)", i);
         assert!(actual_explanation.contains(&incoming_log));
         assert!(actual_explanation.contains(&output_log));
     }

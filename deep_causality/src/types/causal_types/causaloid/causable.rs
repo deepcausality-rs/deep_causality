@@ -50,7 +50,7 @@ where
 #[allow(clippy::type_complexity)]
 impl<I, O, PS, C> MonadicCausable<I, O> for Causaloid<I, O, PS, C>
 where
-    I: Default + Clone + Send + Sync + 'static,
+    I: Default + Clone + Send + Sync + 'static + Debug,
     O: Default + Debug + Clone + Send + Sync + 'static,
     PS: Default + Clone + Send + Sync + 'static,
     C: Clone + Send + Sync + 'static,
@@ -74,18 +74,24 @@ where
         match self.causal_type {
             CausaloidType::Singleton => {
                 // For a Singleton, the evaluation is a monadic chain of operations:
-                // 1. Execute the causal logic with the input.
+                // 1. Log the input.
+                // 2. Execute the causal logic.
+                // 3. Log the output.
                 // The `bind` operations ensure that logs are aggregated and errors short-circuit.
                 incoming_effect
                     .clone()
-                    .bind(|effect_value, _, _| match effect_value.into_value() {
-                        Some(input) => causable_utils::execute_causal_logic(input, self),
-                        None => PropagatingEffect::from_error(CausalityError(
-                            deep_causality_core::CausalityErrorEnum::Custom(
-                                "Cannot evaluate: input value is None".into(),
-                            ),
-                        )),
-                    })
+                    .bind_or_error(
+                        |input, _, _| causable_utils::log_input(input, self.id),
+                        "Cannot evaluate: input value is None",
+                    )
+                    .bind_or_error(
+                        |input, _, _| causable_utils::execute_causal_logic(input, self),
+                        "Cannot evaluate: input value after logging is None",
+                    )
+                    .bind_or_error(
+                        |output, _, _| causable_utils::log_output(output, self.id),
+                        "Cannot log output: output value is None",
+                    )
             }
 
             CausaloidType::Collection => {

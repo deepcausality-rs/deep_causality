@@ -43,8 +43,8 @@ fn test_explain() {
 
     // For each causaloid (id 1, 2, 3)
     for i in 1..=3 {
-        let incoming_log = format!("Causaloid {}: Incoming effect: Numerical(0.99)", i);
-        let output_log = format!("Causaloid {}: Outgoing effect: Boolean(true)", i);
+        let incoming_log = format!("Causaloid {}: Incoming effect: Value(0.99)", i);
+        let output_log = format!("Causaloid {}: Outgoing effect: Value(true)", i);
         assert!(actual_explanation.contains(&incoming_log));
         assert!(actual_explanation.contains(&output_log));
     }
@@ -77,4 +77,3 @@ fn test_to_vec() {
         test_utils::get_deterministic_test_causality_vec();
     assert_eq!(3, col.to_vec().len());
 }
-
