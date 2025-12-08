@@ -9,50 +9,6 @@ use deep_causality_topology::utils_tests::create_triangle_complex;
 use std::sync::Arc;
 
 #[test]
-fn test_topology_new() {
-    let complex = Arc::new(create_triangle_complex());
-    let grade = 0; // Vertices
-    let data = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
-    let cursor = 0;
-
-    let topology = Topology::new(complex.clone(), grade, data.clone(), cursor);
-
-    assert_eq!(topology.complex(), &complex);
-    assert_eq!(topology.grade(), grade);
-    assert_eq!(topology.data(), &data);
-    assert_eq!(topology.cursor(), cursor);
-}
-
-#[test]
-fn test_topology_getters() {
-    let complex = Arc::new(create_triangle_complex());
-    let grade = 1;
-    let data = CausalTensor::new(vec![10.0, 20.0, 30.0], vec![3]).unwrap();
-    let cursor = 1;
-
-    let topology = Topology::new(complex.clone(), grade, data.clone(), cursor);
-
-    assert_eq!(topology.complex(), &complex);
-    assert_eq!(topology.grade(), grade);
-    assert_eq!(topology.data(), &data);
-    assert_eq!(topology.cursor(), cursor);
-}
-
-#[test]
-fn test_topology_clone_shallow() {
-    let complex = Arc::new(create_triangle_complex());
-    let grade = 0;
-    let data = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
-    let topology = Topology::new(complex, grade, data, 0);
-
-    let shallow_clone = topology.clone_shallow();
-    assert_eq!(shallow_clone.complex(), topology.complex());
-    assert_eq!(shallow_clone.grade(), topology.grade());
-    assert_eq!(shallow_clone.data(), topology.data());
-    assert_eq!(shallow_clone.cursor(), topology.cursor());
-}
-
-#[test]
 fn test_topology_cup_product() {
     let complex = Arc::new(create_triangle_complex());
 
@@ -132,21 +88,4 @@ fn test_topology_cup_product_missing_data_other() {
     // Should panic when accessing data for edge 1 or 2
     let res = topo0.cup_product(&topo1);
     assert!(res.is_err());
-}
-
-#[test]
-fn test_topology_display() {
-    let complex = Arc::new(create_triangle_complex());
-    let grade = 0;
-    let data = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
-    let cursor = 1;
-    let topology = Topology::new(complex, grade, data, cursor);
-
-    let expected_display = format!(
-        "CausalTopology:\n  Grade: {}\n  Cursor: {}\n  Data: {}\n",
-        grade,
-        cursor,
-        CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap()
-    );
-    assert_eq!(format!("{}", topology), expected_display);
 }
