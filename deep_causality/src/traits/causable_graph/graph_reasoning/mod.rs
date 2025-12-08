@@ -139,15 +139,12 @@ where
             match &result_effect.value {
                 // Adaptive reasoning:
                 EffectValue::RelayTo(target_index, inner_effect) => {
-                    // If a RelayTo effect is returned, clear the queue and add the target_index
-                    // with the inner_effect as the new starting point for traversal.
-                    queue.clear();
-                    // Also clear visited to allow re-visiting nodes in the new path.
+                    // Reset traversal state to follow the relayed path exclusively.
                     visited.fill(false);
+                    queue.clear();
 
                     let target_idx = *target_index;
 
-                    // Validate target_index before proceeding
                     if !self.contains_causaloid(target_idx) {
                         let mut err_effect = last_propagated_effect.clone();
 
@@ -159,14 +156,11 @@ where
                         return err_effect;
                     }
 
-                    if !visited[target_idx] {
-                        visited[target_idx] = true;
-                        // carry over logs into the relayed inner effect
-                        // inner_effect is Box<PropagatingEffect<V>>? Or just PropagatingEffect<V>?
-                        let mut relayed = *inner_effect.clone(); // Deref box
-                        relayed.logs.append(&mut last_propagated_effect.logs);
-                        queue.push_back((target_idx, relayed));
-                    }
+                    visited[target_idx] = true;
+
+                    let mut relayed = *inner_effect.clone();
+                    relayed.logs.append(&mut last_propagated_effect.logs);
+                    queue.push_back((target_idx, relayed));
                 }
                 _ => {
                     let children = match self.get_graph().outbound_edges(current_index) {

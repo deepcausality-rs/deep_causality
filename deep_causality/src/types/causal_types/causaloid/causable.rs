@@ -96,26 +96,28 @@ where
             }
 
             CausaloidType::Collection => {
-                // Collection evaluation requires O: Aggregatable + Send + Sync + Debug + 'static.
-                // This base implementation returns an error; use specialized methods for collections.
-                PropagatingEffect::from_error(CausalityError(
+                // Preserve incoming logs and include a precise error message.
+                let mut effect = PropagatingEffect::from_error(CausalityError(
                     deep_causality_core::CausalityErrorEnum::Custom(
-                        "Collection evaluation requires specialized trait bounds (Aggregatable). \
-                         Use evaluate_collection method on the causal_coll directly."
+                        "Collection evaluation is not available in this build; \
+                         use specialized collection evaluation APIs."
                             .into(),
                     ),
-                ))
+                ));
+                effect.logs = incoming_effect.logs.clone();
+                effect
             }
             CausaloidType::Graph => {
-                // Graph evaluation requires specialized trait bounds.
-                // This base implementation returns an error; use specialized methods for graphs.
-                PropagatingEffect::from_error(CausalityError(
+                // Preserve incoming logs and include a precise error message.
+                let mut effect = PropagatingEffect::from_error(CausalityError(
                     deep_causality_core::CausalityErrorEnum::Custom(
-                        "Graph evaluation requires specialized trait bounds. \
-                         Use evaluate_subgraph_from_cause on the causal_graph directly."
+                        "Graph evaluation is not available in this build; \
+                         use specialized graph evaluation APIs."
                             .into(),
                     ),
-                ))
+                ));
+                effect.logs = incoming_effect.logs.clone();
+                effect
             }
         }
     }

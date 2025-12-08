@@ -61,9 +61,7 @@ where
         let initial_effect: PropagatingEffect<Vec<EffectValue<O>>> = CausalMonad::pure(Vec::new());
 
         let final_effect = items.into_iter().fold(initial_effect, |acc_effect, item| {
-            acc_effect.bind(|acc_values_effect_value, _, _| {
-                // acc_values_effect_value is EffectValue<Vec<EffectValue<O>>>
-                // We need to extract the Vec from it
+            acc_effect.bind(|acc_values_effect_value, acc_state, acc_ctx| {
                 let mut acc_values = match acc_values_effect_value.into_value() {
                     Some(v) => v,
                     None => {
@@ -74,10 +72,26 @@ where
                         return PropagatingEffect::from_error(err);
                     }
                 };
-                let item_effect = item.evaluate(incoming_effect); // item_effect is PropagatingEffect<O>
-                // Use bind to extract the value and transform the result
+                let mut item_effect = item.evaluate(incoming_effect); // PropagatingEffect<O>
+
+                // If the item effect is an error, append its logs to the accumulator logs before returning.
+                if item_effect.is_err() {
+                    let mut combined: PropagatingEffect<Vec<EffectValue<O>>> =
+                        CausalMonad::pure(Vec::new());
+                    combined.state = acc_state;
+                    combined.context = acc_ctx;
+                    // Note: acc_effect.logs are already merged by bind, but we capture for explicit safety
+                    combined.logs.append(&mut item_effect.logs);
+                    return PropagatingEffect {
+                        value: Default::default(),
+                        state: combined.state,
+                        context: combined.context,
+                        error: item_effect.error.take(),
+                        logs: combined.logs,
+                    };
+                }
+
                 item_effect.bind(|item_value, _, _| {
-                    // item_value is EffectValue<O>
                     acc_values.push(item_value);
                     CausalMonad::pure(acc_values)
                 })
@@ -85,6 +99,11 @@ where
         });
 
         // 2. Bind the final aggregation logic.
+        // Note: `bind` passes logs from `final_effect` to the returned effect automatically
+        // via log aggregation in `bind` implementation. We capture carried_logs explicitly
+        // to ensure they are preserved even when we create new effects.
+        let mut carried_logs = final_effect.logs.clone();
+
         final_effect.bind(|effect_values_effect_value, _, _| {
             // effect_values_effect_value is EffectValue<Vec<EffectValue<O>>>
             // We need to extract the Vec from it
@@ -94,7 +113,9 @@ where
                     let err = CausalityError(CausalityErrorEnum::Custom(
                         "No effect values collected".to_string(),
                     ));
-                    return PropagatingEffect::from_error(err);
+                    let mut err_eff = PropagatingEffect::from_error(err);
+                    err_eff.logs.append(&mut carried_logs);
+                    return err_eff;
                 }
             };
             // 3. Delegate to the robust aggregation helper.
@@ -104,21 +125,25 @@ where
                 threshold_value,
             ) {
                 Ok(aggregated_value) => {
-                    // aggregated_value is EffectValue<O>.
-                    // We need to return PropagatingEffect<O>.
-                    // If aggregated_value is Value(v), we return pure(v).
-                    match aggregated_value {
+                    // Preserve logs from the aggregation pipeline
+                    let mut out = match aggregated_value {
                         EffectValue::Value(v) => CausalMonad::pure(v),
                         _ => {
-                            // This case shouldn't happen for aggregation result usually.
-                            // We can construct PropagatingEffect with this value.
                             let mut eff = CausalMonad::pure(O::default());
                             eff.value = aggregated_value;
                             eff
                         }
-                    }
+                    };
+                    // Append previously accumulated logs
+                    out.logs.append(&mut carried_logs);
+                    out
                 }
-                Err(e) => PropagatingEffect::from_error(e),
+                Err(e) => {
+                    // Preserve logs on error as well
+                    let mut err_eff = PropagatingEffect::from_error(e);
+                    err_eff.logs.append(&mut carried_logs);
+                    err_eff
+                }
             }
         })
     }
