@@ -1,0 +1,36 @@
+[package]
+name = "deep_causality_physics"
+version = "0.1.0"
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+repository = "https://github.com/deepcausality/deep_causality.rs"
+authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
+description = "Standard library of physics formulas and engineering primitives for DeepCausality."
+documentation = "https://docs.rs/deep_causality"
+categories = ["science", "simulation"]
+keywords = ["physics", "causality", "simulation"]
+exclude = [
+    "*.bazel",
+    "*/*.bazel",
+    "*.bazel.*",
+    "BUILD",
+    "BUILD.bazel",
+    "MODULE.bazel",
+    ".bazelignore",
+    ".bazelrc",
+    "tests/**/*",
+]
+publish = false
+
+[features]
+default = ["std"]
+std = ["alloc", "deep_causality_core/std", "deep_causality_num/std"]
+alloc = []
+
+[dependencies]
+deep_causality_core = { path = "../deep_causality_core", version = "0.0.1" }
+deep_causality_multivector = { path = "../deep_causality_multivector", version = "0.1.3" }
+deep_causality_tensor = { path = "../deep_causality_tensor", version = "0.1.10" }
+#deep_causality_topology = { path = "../deep_causality_topology", version = "0.1.0" }
+deep_causality_num = { path = "../deep_causality_num", version = "0.1.9" }
