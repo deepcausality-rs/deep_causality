@@ -3,8 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{PhysicsError, PhysicsErrorEnum, Pressure, Temperature};
-use deep_causality_core::{CausalityError, PropagatingEffect};
+use crate::{PhysicsError, PhysicsErrorEnum, Temperature};
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 
 // Kernels
@@ -144,39 +143,4 @@ pub fn thermal_expansion_kernel(
     let identity = CausalTensor::<f64>::identity(&[3, 3])?;
     let strain = identity * val;
     Ok(strain)
-}
-
-// Wrappers
-
-/// Causal wrapper for [`hookes_law_kernel`].
-pub fn hookes_law(
-    stiffness: &CausalTensor<f64>,
-    strain: &CausalTensor<f64>,
-) -> PropagatingEffect<CausalTensor<f64>> {
-    match hookes_law_kernel(stiffness, strain) {
-        Ok(s) => PropagatingEffect::pure(s),
-        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
-    }
-}
-
-/// Causal wrapper for [`von_mises_stress_kernel`].
-pub fn von_mises_stress(stress: &CausalTensor<f64>) -> PropagatingEffect<Pressure> {
-    match von_mises_stress_kernel(stress) {
-        Ok(val) => match Pressure::new(val) {
-            Ok(p) => PropagatingEffect::pure(p),
-            Err(e) => PropagatingEffect::from_error(e.into()),
-        },
-        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
-    }
-}
-
-/// Causal wrapper for [`thermal_expansion_kernel`].
-pub fn thermal_expansion(
-    coeff: f64,
-    delta_temp: Temperature,
-) -> PropagatingEffect<CausalTensor<f64>> {
-    match thermal_expansion_kernel(coeff, delta_temp) {
-        Ok(t) => PropagatingEffect::pure(t),
-        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
-    }
 }

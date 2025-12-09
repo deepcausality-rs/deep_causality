@@ -4,7 +4,6 @@
  */
 
 use crate::error::{PhysicsError, PhysicsErrorEnum};
-use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 
 // Kernels
@@ -92,30 +91,4 @@ pub fn geodesic_deviation_kernel(
     let a_neg = a_tensor * -1.0;
 
     Ok(a_neg)
-}
-
-// Wrappers
-
-/// Causal wrapper for [`einstein_tensor_kernel`].
-pub fn einstein_tensor(
-    ricci: &CausalTensor<f64>,
-    scalar_r: f64,
-    metric: &CausalTensor<f64>,
-) -> PropagatingEffect<CausalTensor<f64>> {
-    match einstein_tensor_kernel(ricci, scalar_r, metric) {
-        Ok(g) => PropagatingEffect::pure(g),
-        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
-    }
-}
-
-/// Causal wrapper for [`geodesic_deviation_kernel`].
-pub fn geodesic_deviation(
-    riemann: &CausalTensor<f64>,
-    velocity: &CausalTensor<f64>,
-    separation: &CausalTensor<f64>,
-) -> PropagatingEffect<CausalTensor<f64>> {
-    match geodesic_deviation_kernel(riemann, velocity, separation) {
-        Ok(acc) => PropagatingEffect::pure(acc),
-        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
-    }
 }

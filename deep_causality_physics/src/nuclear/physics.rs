@@ -5,7 +5,6 @@
 
 use crate::constants::universal::SPEED_OF_LIGHT;
 use crate::{AmountOfSubstance, Energy, HalfLife, Mass, PhysicsError, Time};
-use deep_causality_core::{CausalityError, PropagatingEffect};
 
 // Kernels
 
@@ -53,23 +52,3 @@ pub fn binding_energy_kernel(mass_defect: &Mass) -> Result<Energy, PhysicsError>
 }
 
 // Wrappers
-
-/// Causal wrapper for [`radioactive_decay_kernel`].
-pub fn radioactive_decay(
-    n0: &AmountOfSubstance,
-    half_life: &HalfLife,
-    time: &Time,
-) -> PropagatingEffect<AmountOfSubstance> {
-    match radioactive_decay_kernel(n0, half_life, time) {
-        Ok(n) => PropagatingEffect::pure(n),
-        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
-    }
-}
-
-/// Causal wrapper for [`binding_energy_kernel`].
-pub fn binding_energy(mass_defect: &Mass) -> PropagatingEffect<Energy> {
-    match binding_energy_kernel(mass_defect) {
-        Ok(e) => PropagatingEffect::pure(e),
-        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
-    }
-}

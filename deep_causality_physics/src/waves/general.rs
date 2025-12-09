@@ -20,8 +20,6 @@
 //!   $$ f_{obs} = f_{src} \left( \frac{v \pm v_o}{v \mp v_s} \right) $$
 //!   where signs depend on direction (approaching vs receding).
 use crate::{Frequency, Length, PhysicsError, PhysicsErrorEnum, Speed};
-use alloc::format;
-use deep_causality_core::PropagatingEffect;
 
 // ============================================================================
 // Kernels (Pure Logic)
@@ -101,33 +99,4 @@ pub fn doppler_effect_kernel(
 
     // Construct result, validating constraints
     Frequency::new(f_obs)
-}
-
-// ============================================================================
-// Wrappers (Monadic Composition)
-// ============================================================================
-
-/// Monadic wrapper for `wave_speed_kernel`.
-///
-/// Returns a `PropagatingEffect<Speed>` usable in causal chains.
-pub fn wave_speed(frequency: &Frequency, wavelength: &Length) -> PropagatingEffect<Speed> {
-    match wave_speed_kernel(frequency, wavelength) {
-        Ok(v) => PropagatingEffect::pure(v),
-        Err(e) => PropagatingEffect::from_error(e.into()),
-    }
-}
-
-/// Monadic wrapper for `doppler_effect_kernel` (Approaching case).
-///
-/// Returns a `PropagatingEffect<Frequency>` usable in causal chains.
-pub fn doppler_effect_approaching(
-    freq_source: &Frequency,
-    wave_speed: &Speed,
-    obs_speed: &Speed,
-    src_speed: &Speed,
-) -> PropagatingEffect<Frequency> {
-    match doppler_effect_kernel(freq_source, wave_speed, obs_speed, src_speed) {
-        Ok(f) => PropagatingEffect::pure(f),
-        Err(e) => PropagatingEffect::from_error(e.into()),
-    }
 }

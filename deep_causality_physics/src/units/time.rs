@@ -12,7 +12,7 @@ pub struct Time(f64);
 impl Time {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val < 0.0 {
-             return Err(PhysicsError::new(
+            return Err(PhysicsError::new(
                 crate::error::PhysicsErrorEnum::PhysicalInvariantBroken(
                     "Time cannot be negative (relative time duration assumed positive)".into(),
                 ),

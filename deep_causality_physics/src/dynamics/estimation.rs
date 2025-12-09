@@ -4,7 +4,6 @@
  */
 
 use crate::PhysicsError;
-use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 
 /// Standard Linear Kalman Filter Update Step.
@@ -27,126 +26,74 @@ use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 ///
 /// # Returns
 /// * `PropagatingEffect<(CausalTensor<f64>, CausalTensor<f64>)>` - Tuple of (Updated State, Updated Covariance).
-pub fn kalman_filter_linear(
+pub fn kalman_filter_linear_kernel(
     x_pred: &CausalTensor<f64>,
     p_pred: &CausalTensor<f64>,
     measurement: &CausalTensor<f64>,
     measurement_matrix: &CausalTensor<f64>,
     measurement_noise: &CausalTensor<f64>,
     _process_noise: &CausalTensor<f64>,
-) -> PropagatingEffect<(CausalTensor<f64>, CausalTensor<f64>)> {
+) -> Result<(CausalTensor<f64>, CausalTensor<f64>), PhysicsError> {
     // 1. Innovation (Residual): y = z - H * x
     // H * x
-    let hx = match measurement_matrix.matmul(x_pred) {
-        Ok(res) => res,
-        Err(e) => {
-            return PropagatingEffect::from_error(CausalityError::from(PhysicsError::from(e)));
-        }
-    };
+    let hx = measurement_matrix
+        .matmul(x_pred)
+        .map_err(PhysicsError::from)?;
 
     // y = z - hx
-    // sub returns Self, panics on error.
+    // sub returns Self, panics on error? No, CausalTensor usually returns Result if shapes mismatch, but here we assume validation or it panics?
+    // Looking at previous code: "sub returns Self, panics on error."
+    // If it panics, we can't catch it easily without checks.
+    // Assuming tensor ops here are safe-ish or we accept panic for now if API designs it so.
+    // The previous code didn't wrap .sub() in match, so it likely returns T or panics.
+    // Wait, let's look at `measurement.sub(&hx)`.
     let y = measurement.sub(&hx);
 
     // 2. Innovation Covariance: S = H * P * H^T + R
     // H * P
-    let hp = match measurement_matrix.matmul(p_pred) {
-        Ok(res) => res,
-        Err(e) => {
-            return PropagatingEffect::from_error(CausalityError::from(PhysicsError::from(e)));
-        }
-    };
+    let hp = measurement_matrix
+        .matmul(p_pred)
+        .map_err(PhysicsError::from)?;
 
     // H^T
     let ht_op = EinSumOp::<f64>::transpose(measurement_matrix.clone(), vec![1, 0]);
-    let ht = match CausalTensor::ein_sum(&ht_op) {
-        Ok(res) => res,
-        Err(e) => {
-            return PropagatingEffect::from_error(CausalityError::from(PhysicsError::from(e)));
-        }
-    };
+    let ht = CausalTensor::ein_sum(&ht_op).map_err(PhysicsError::from)?;
 
     // (H * P) * H^T
-    let hph_t = match hp.matmul(&ht) {
-        Ok(res) => res,
-        Err(e) => {
-            return PropagatingEffect::from_error(CausalityError::from(PhysicsError::from(e)));
-        }
-    };
+    let hph_t = hp.matmul(&ht).map_err(PhysicsError::from)?;
 
     // S = ... + R
-    // add returns Self
     let s = hph_t.add(measurement_noise);
 
     // 3. Optimal Kalman Gain: K = P * H^T * S^-1
     // S^-1
-    // CausalTensor must implement inverse.
-    let s_inv = match s.inverse() {
-        Ok(res) => res,
-        Err(e) => {
-            return PropagatingEffect::from_error(CausalityError::from(PhysicsError::from(e)));
-        }
-    };
+    let s_inv = s.inverse().map_err(PhysicsError::from)?;
 
     // P * H^T
-    let pht = match p_pred.matmul(&ht) {
-        Ok(res) => res,
-        Err(e) => {
-            return PropagatingEffect::from_error(CausalityError::from(PhysicsError::from(e)));
-        }
-    };
+    let pht = p_pred.matmul(&ht).map_err(PhysicsError::from)?;
 
     // K = ... * S^-1
-    let k = match pht.matmul(&s_inv) {
-        Ok(res) => res,
-        Err(e) => {
-            return PropagatingEffect::from_error(CausalityError::from(PhysicsError::from(e)));
-        }
-    };
+    let k = pht.matmul(&s_inv).map_err(PhysicsError::from)?;
 
     // 4. State Update: x_new = x + K * y
     // K * y
-    let ky = match k.matmul(&y) {
-        Ok(res) => res,
-        Err(e) => {
-            return PropagatingEffect::from_error(CausalityError::from(PhysicsError::from(e)));
-        }
-    };
+    let ky = k.matmul(&y).map_err(PhysicsError::from)?;
 
     let x_new = x_pred.add(&ky);
 
     // 5. Covariance Update: P_new = (I - K * H) * P
     // K * H
-    let kh = match k.matmul(measurement_matrix) {
-        Ok(res) => res,
-        Err(e) => {
-            return PropagatingEffect::from_error(CausalityError::from(PhysicsError::from(e)));
-        }
-    };
+    let kh = k.matmul(measurement_matrix).map_err(PhysicsError::from)?;
 
     // I (Identity matrix matching P dimension)
-    // CausalTensor::identity(shape).
-    // Assuming P is square NxN.
     let shape = p_pred.shape();
-    // Assuming 2D for covariance. check rank?
-    // identity logic depends on tensor API.
-    let identity = match CausalTensor::identity(shape) {
-        Ok(res) => res,
-        Err(e) => {
-            return PropagatingEffect::from_error(CausalityError::from(PhysicsError::from(e)));
-        }
-    };
+    let identity = CausalTensor::identity(shape).map_err(PhysicsError::from)?;
 
     // I - KH
     let i_kh = identity.sub(&kh);
 
     // ... * P
-    let p_new = match i_kh.matmul(p_pred) {
-        Ok(res) => res,
-        Err(e) => {
-            return PropagatingEffect::from_error(CausalityError::from(PhysicsError::from(e)));
-        }
-    };
+    let p_new = i_kh.matmul(p_pred).map_err(PhysicsError::from)?;
 
-    PropagatingEffect::pure((x_new, p_new))
+    Ok((x_new, p_new))
 }

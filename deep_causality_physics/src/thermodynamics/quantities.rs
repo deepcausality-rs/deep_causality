@@ -5,8 +5,6 @@
 
 use crate::{PhysicsError, PhysicsErrorEnum};
 
-
-
 /// Entropy (J/K).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
 pub struct Entropy(f64);

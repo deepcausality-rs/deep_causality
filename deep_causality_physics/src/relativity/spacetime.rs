@@ -7,7 +7,6 @@ use crate::relativity::quantities::SpacetimeVector;
 
 use crate::error::{PhysicsError, PhysicsErrorEnum};
 use crate::quantum::quantities::PhaseAngle;
-use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
 
 // Kernels
@@ -40,16 +39,6 @@ pub fn spacetime_interval_kernel(
     Ok(x.squared_magnitude())
 }
 
-// Wrappers
-
-/// Causal wrapper for [`spacetime_interval_kernel`].
-pub fn spacetime_interval(x: &CausalMultiVector<f64>, metric: &Metric) -> PropagatingEffect<f64> {
-    match spacetime_interval_kernel(x, metric) {
-        Ok(s2) => PropagatingEffect::pure(s2),
-        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
-    }
-}
-
 /// Calculates Time Dilation Angle (Rapidity $\eta$).
 ///
 /// $\cosh(\eta) = \gamma = \frac{t_1 \cdot t_2}{|t_1| |t_2|}$.
@@ -61,11 +50,11 @@ pub fn spacetime_interval(x: &CausalMultiVector<f64>, metric: &Metric) -> Propag
 /// * `t2` - Spacetime vector 2 (Timelike).
 ///
 /// # Returns
-/// * `PropagatingEffect<PhaseAngle>` - Rapidity $\eta$.
-pub fn time_dilation_angle(
+/// * `Result<PhaseAngle, PhysicsError>` - Rapidity $\eta$.
+pub fn time_dilation_angle_kernel(
     t1: &CausalMultiVector<f64>,
     t2: &CausalMultiVector<f64>,
-) -> PropagatingEffect<PhaseAngle> {
+) -> Result<PhaseAngle, PhysicsError> {
     // Hyperbolic angle (Rapidity, eta) between two timelike vectors.
     // cosh(eta) = (t1 . t2) / (|t1| |t2|) = gamma
     // eta = acosh(gamma)
@@ -78,12 +67,11 @@ pub fn time_dilation_angle(
     let mag2 = t2.squared_magnitude().sqrt();
 
     if mag1 == 0.0 || mag2 == 0.0 {
-        return PropagatingEffect::from_error(
-            PhysicsError::new(PhysicsErrorEnum::PhysicalInvariantBroken(
+        return Err(PhysicsError::new(
+            PhysicsErrorEnum::PhysicalInvariantBroken(
                 "Zero magnitude vector in time dilation calculation".into(),
-            ))
-            .into(),
-        );
+            ),
+        ));
     }
 
     // 3. Calculate Gamma (Lorentz Factor)
@@ -97,28 +85,17 @@ pub fn time_dilation_angle(
     if gamma < 1.0 {
         // Check if close to 1.0 (parallel vectors)
         if (gamma - 1.0).abs() < 1e-6 {
-            return match PhaseAngle::new(0.0) {
-                Ok(p) => PropagatingEffect::pure(p),
-                Err(e) => PropagatingEffect::from_error(e.into()),
-            };
+            return PhaseAngle::new(0.0);
         }
         // If significantly less than 1, physical invariant broken (not timelike/causal relation)
-        return PropagatingEffect::from_error(
-            PhysicsError::new(PhysicsErrorEnum::CausalityViolation(format!(
-                "Invalid Lorentz factor < 1.0: {}",
-                gamma
-            )))
-            .into(),
-        );
+        return Err(PhysicsError::new(PhysicsErrorEnum::CausalityViolation(
+            format!("Invalid Lorentz factor < 1.0: {}", gamma),
+        )));
     }
 
     let eta = gamma.acosh();
 
-    match PhaseAngle::new(eta) {
-        Ok(p) => PropagatingEffect::pure(p),
-        Err(e) => PropagatingEffect::from_error(e.into()),
-    }
-}
+    PhaseAngle::new(eta)}
 
 /// Calculates Chronometric Volume (4-Volume) from 3 vectors?
 ///
@@ -131,14 +108,14 @@ pub fn time_dilation_angle(
 /// * `c` - 3rd Vector.
 ///
 /// # Returns
-/// * `PropagatingEffect<SpacetimeVector>` - Trivector result (wrapped).
-pub fn chronometric_volume(
+/// * `Result<SpacetimeVector, PhysicsError>` - Trivector result (wrapped).
+pub fn chronometric_volume_kernel(
     a: &CausalMultiVector<f64>,
     b: &CausalMultiVector<f64>,
     c: &CausalMultiVector<f64>,
-) -> PropagatingEffect<SpacetimeVector> {
+) -> Result<SpacetimeVector, PhysicsError> {
     // Volume formed by trivector a ^ b ^ c
     // V = a ^ b ^ c
     let v = a.outer_product(b).outer_product(c);
-    PropagatingEffect::pure(SpacetimeVector(v))
+    Ok(SpacetimeVector(v))
 }

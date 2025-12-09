@@ -5,11 +5,7 @@
 
 use crate::constants::thermodynamics::BOLTZMANN_CONSTANT;
 
-use crate::{
-    AmountOfSubstance, Efficiency, Energy, PhysicsError, Pressure, Probability, Ratio, Temperature,
-    Volume,
-};
-use deep_causality_core::{CausalityError, PropagatingEffect};
+use crate::{AmountOfSubstance, Energy, PhysicsError, Pressure, Probability, Temperature, Volume};
 use deep_causality_tensor::CausalTensor;
 
 // Kernels
@@ -87,38 +83,6 @@ pub fn carnot_efficiency_kernel(
     Ok(eff)
 }
 
-// Wrappers
-
-/// Causal wrapper for [`ideal_gas_law_kernel`]. Returns result as `Ratio` (or scalar).
-pub fn ideal_gas_law(
-    pressure: Pressure,
-    volume: Volume,
-    moles: AmountOfSubstance,
-    temp: Temperature,
-) -> PropagatingEffect<Ratio> {
-    match ideal_gas_law_kernel(pressure, volume, moles, temp) {
-        Ok(val) => match Ratio::new(val) {
-            Ok(r) => PropagatingEffect::pure(r),
-            Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
-        },
-        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
-    }
-}
-
-/// Causal wrapper for [`carnot_efficiency_kernel`].
-pub fn carnot_efficiency(
-    temp_hot: Temperature,
-    temp_cold: Temperature,
-) -> PropagatingEffect<Efficiency> {
-    match carnot_efficiency_kernel(temp_hot, temp_cold) {
-        Ok(val) => match Efficiency::new(val) {
-            Ok(eff) => PropagatingEffect::pure(eff),
-            Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
-        },
-        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
-    }
-}
-
 /// Calculates the unnormalized Boltzmann factor: $e^{-E/k_BT}$.
 ///
 /// Returns a `Probability` which clamps the value to [0, 1].
@@ -129,8 +93,11 @@ pub fn carnot_efficiency(
 /// * `temp` - Temperature $T$.
 ///
 /// # Returns
-/// * `PropagatingEffect<Probability>` - Boltzmann factor.
-pub fn boltzmann_factor(energy: Energy, temp: Temperature) -> PropagatingEffect<Probability> {
+/// * `Result<Probability, PhysicsError>` - Boltzmann factor.
+pub fn boltzmann_factor_kernel(
+    energy: Energy,
+    temp: Temperature,
+) -> Result<Probability, PhysicsError> {
     // P = exp(-E / kT)  (unnormalized factor)
     // Actually usually return probability *if* normalized, but here it's likely the factor.
     // Spec says "Boltzmann Factor -> Probability".
@@ -142,9 +109,9 @@ pub fn boltzmann_factor(energy: Energy, temp: Temperature) -> PropagatingEffect<
     let k = BOLTZMANN_CONSTANT;
 
     if t == 0.0 {
-        return PropagatingEffect::from_error(CausalityError::from(PhysicsError::new(
+        return Err(PhysicsError::new(
             crate::error::PhysicsErrorEnum::ZeroKelvinViolation,
-        )));
+        ));
     }
 
     let beta = 1.0 / (k * t);
@@ -153,11 +120,7 @@ pub fn boltzmann_factor(energy: Energy, temp: Temperature) -> PropagatingEffect<
     // Note: factor can be > 1 if E < 0. Assuming E is kinetic energy or excitation > 0.
     // Probability new() checks for [0, 1].
 
-    match Probability::new(factor) {
-        Ok(p) => PropagatingEffect::pure(p),
-        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
-    }
-}
+    Probability::new(factor)}
 
 /// Calculates Shannon Entropy: $H = -\sum p_i \ln(p_i)$.
 ///
@@ -165,8 +128,8 @@ pub fn boltzmann_factor(energy: Energy, temp: Temperature) -> PropagatingEffect<
 /// * `probs` - Probability distribution (Tensor).
 ///
 /// # Returns
-/// * `PropagatingEffect<f64>` - Entropy in nats.
-pub fn shannon_entropy(probs: &CausalTensor<f64>) -> PropagatingEffect<f64> {
+/// * `Result<f64, PhysicsError>` - Entropy in nats.
+pub fn shannon_entropy_kernel(probs: &CausalTensor<f64>) -> Result<f64, PhysicsError> {
     // H = - Sum p_i log(p_i)
     // Using as_slice() assuming it gives access to underlying data
 
@@ -177,7 +140,7 @@ pub fn shannon_entropy(probs: &CausalTensor<f64>) -> PropagatingEffect<f64> {
         .map(|&p| -p * p.ln())
         .sum();
 
-    PropagatingEffect::pure(entropy)
+    Ok(entropy)
 }
 
 /// Calculates Heat Capacity: $C = \frac{dE}{dT}$.
@@ -187,22 +150,25 @@ pub fn shannon_entropy(probs: &CausalTensor<f64>) -> PropagatingEffect<f64> {
 /// * `diff_temp` - Change in temperature $dT$.
 ///
 /// # Returns
-/// * `PropagatingEffect<f64>` - Heat capacity.
-pub fn heat_capacity(diff_energy: Energy, diff_temp: Temperature) -> PropagatingEffect<f64> {
+/// * `Result<f64, PhysicsError>` - Heat capacity.
+pub fn heat_capacity_kernel(
+    diff_energy: Energy,
+    diff_temp: Temperature,
+) -> Result<f64, PhysicsError> {
     // C = dE / dT
     let de = diff_energy.value();
     let dt = diff_temp.value();
 
     if dt == 0.0 {
-        return PropagatingEffect::from_error(CausalityError::from(PhysicsError::new(
+        return Err(PhysicsError::new(
             crate::error::PhysicsErrorEnum::PhysicalInvariantBroken(
                 "Zero temperature difference in heat capacity".into(),
             ),
-        )));
+        ));
     }
 
     let c = de / dt;
-    PropagatingEffect::pure(c)
+    Ok(c)
 }
 
 /// Calculates Partition Function: $Z = \sum e^{-E_i / k_B T}$.
@@ -212,11 +178,11 @@ pub fn heat_capacity(diff_energy: Energy, diff_temp: Temperature) -> Propagating
 /// * `temp` - Temperature $T$.
 ///
 /// # Returns
-/// * `PropagatingEffect<f64>` - Partition function $Z$.
-pub fn partition_function(
+/// * `Result<f64, PhysicsError>` - Partition function $Z$.
+pub fn partition_function_kernel(
     energies: &CausalTensor<f64>,
     temp: Temperature,
-) -> PropagatingEffect<f64> {
+) -> Result<f64, PhysicsError> {
     // Z = Sum exp(-E_i / kT)
 
     let t = temp.value();
@@ -226,9 +192,9 @@ pub fn partition_function(
     if t == 0.0 {
         // If T=0, only ground state contributes? Or undefined?
         // Let's return error.
-        return PropagatingEffect::from_error(CausalityError::from(PhysicsError::new(
+        return Err(PhysicsError::new(
             crate::error::PhysicsErrorEnum::ZeroKelvinViolation,
-        )));
+        ));
     }
 
     let beta = 1.0 / (k * t);
@@ -236,5 +202,5 @@ pub fn partition_function(
 
     let z: f64 = data.iter().map(|&e| (-beta * e).exp()).sum();
 
-    PropagatingEffect::pure(z)
+    Ok(z)
 }
