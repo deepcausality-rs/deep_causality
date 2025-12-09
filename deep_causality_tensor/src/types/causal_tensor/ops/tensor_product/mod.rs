@@ -10,7 +10,10 @@ impl<T> CausalTensor<T>
 where
     T: Ring + Copy + Default + PartialOrd,
 {
-    pub(in crate::types::causal_tensor)  fn matmul_impl(&self, rhs: &Self) -> Result<Self, CausalTensorError> {
+    pub(in crate::types::causal_tensor) fn matmul_impl(
+        &self,
+        rhs: &Self,
+    ) -> Result<Self, CausalTensorError> {
         // Construct AST for Matrix Multiplication
         let ast = EinSumOp::mat_mul(self.clone(), rhs.clone());
         // Execute via internal engine
