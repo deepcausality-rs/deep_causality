@@ -43,8 +43,15 @@ impl QuantumOps for CausalMultiVector<Complex<f64>> {
             .iter()
             .map(|c| Complex::new(c.re, -c.im))
             .collect::<Vec<_>>();
-        // Avoid panic on construction; fall back to original metric/data if creation fails
-        CausalMultiVector::new(conjugated_data, reverted.metric()).unwrap_or(reverted)
+        // Construct with the same metric; do not silently drop conjugation
+        // If this ever fails, return a zero-initialized vector with the same metric to avoid wrong math.
+        CausalMultiVector::new(conjugated_data, reverted.metric()).unwrap_or_else(|_| {
+            CausalMultiVector::new(
+                vec![Complex::new(0.0, 0.0); reverted.data().len()],
+                reverted.metric(),
+            )
+            .expect("consistent metric")
+        })
     }
 
     fn bracket(&self, other: &Self) -> Complex<f64> {
