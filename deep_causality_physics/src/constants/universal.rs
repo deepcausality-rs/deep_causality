@@ -5,7 +5,7 @@
 
 // Universal Constants (CODATA 2022)
 
-pub const G: f64 = 9.80665; // m s^2 (exact)
+pub const G: f64 = 9.80665; // m s^-2 (exact)
 pub const SPEED_OF_LIGHT: f64 = 299_792_458.0; // m s^-1 (exact)
 pub const PLANCK_CONSTANT: f64 = 6.626_070_15e-34; // J Hz^-1 (exact)
 pub const REDUCED_PLANCK_CONSTANT: f64 = 1.054_571_817e-34; // J s

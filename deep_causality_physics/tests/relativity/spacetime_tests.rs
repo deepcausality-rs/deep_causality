@@ -89,6 +89,43 @@ fn test_time_dilation_angle_zero_magnitude_error() {
     assert!(result.is_err(), "Zero magnitude should error");
 }
 
+#[test]
+fn test_time_dilation_angle_causality_violation() {
+    // Test CausalityViolation where gamma < 1.0.
+    // This occurs if vectors are in opposite light cones (one future, one past),
+    // resulting in negative dot product for timelike vectors in (+---) metric.
+    // Or if they are spacelike separated in a way that violates assumptions.
+    
+    // Future pointing:  [0.0, 1.0, 0.0, ...] (assuming index 1 is Time per other tests logic or Scalar + Time?)
+    // Wait, the previous parallel test used index 1=1.0 and index 1=2.0.
+    // Let's create two opposing vectors.
+    
+    // t1: [..., 1.0, ...]
+    let mut data1 = vec![0.0; 16];
+    data1[1] = 1.0; 
+    let t1 = CausalMultiVector::new(data1, Metric::Minkowski(4)).unwrap();
+
+    // t2: [..., -1.0, ...] (Opposite direction)
+    let mut data2 = vec![0.0; 16];
+    data2[1] = -1.0;
+    let t2 = CausalMultiVector::new(data2, Metric::Minkowski(4)).unwrap();
+
+    let result = time_dilation_angle_kernel(&t1, &t2);
+    
+    // dot = -1. mag1 = 1. mag2 = 1. gamma = -1.
+    // -1 < 1.0 -> Error.
+    assert!(result.is_err());
+    let err = result.unwrap_err();
+    match err.0 {
+        deep_causality_physics::PhysicsErrorEnum::CausalityViolation(msg) => {
+            assert!(msg.contains("Invalid Lorentz factor"));
+        }
+        _ => panic!("Expected CausalityViolation, got {:?}", err),
+    }
+}
+
+
+
 // =============================================================================
 // chronometric_volume_kernel Tests
 // =============================================================================

@@ -191,3 +191,12 @@ fn test_display() {
     );
     assert_eq!(actual, expected);
 }
+
+#[test]
+fn test_default() {
+    let state = HilbertState::default();
+    // Default implementation uses Euclidean(0) and Zero complex number
+    assert_eq!(state.mv().metric(), Metric::Euclidean(0));
+    assert_eq!(state.mv().data().len(), 1);
+    assert_eq!(state.mv().data()[0], Complex::new(0.0, 0.0));
+}
