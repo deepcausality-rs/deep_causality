@@ -69,6 +69,13 @@ fn test_half_life_new_unchecked() {
     assert!((hl.value() - 1600.0).abs() < 1e-10);
 }
 
+#[test]
+fn test_half_life_from_f64() {
+    let hl = HalfLife::new(123.0).unwrap();
+    let val: f64 = hl.into();
+    assert!((val - 123.0).abs() < 1e-10);
+}
+
 // =============================================================================
 // Activity Tests
 // =============================================================================
@@ -89,4 +96,11 @@ fn test_activity_new_negative_error() {
 fn test_activity_new_unchecked() {
     let activity = Activity::new_unchecked(1e6);
     assert!((activity.value() - 1e6).abs() < 1.0);
+}
+
+#[test]
+fn test_activity_from_f64() {
+    let activity = Activity::new(500.0).unwrap();
+    let val: f64 = activity.into();
+    assert!((val - 500.0).abs() < 1e-10);
 }

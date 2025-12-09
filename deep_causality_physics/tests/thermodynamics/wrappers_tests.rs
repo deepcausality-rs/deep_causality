@@ -5,9 +5,35 @@
 
 use deep_causality_physics::{
     AmountOfSubstance, Energy, Pressure, Temperature, Volume, boltzmann_factor, carnot_efficiency,
-    heat_capacity, ideal_gas_law, partition_function, shannon_entropy,
+    heat_capacity, heat_diffusion, ideal_gas_law, partition_function, shannon_entropy,
 };
 use deep_causality_tensor::CausalTensor;
+use deep_causality_topology::{Manifold, PointCloud};
+
+// Helper
+fn create_temp_manifold() -> Manifold<f64> {
+    let points = CausalTensor::new(
+        vec![
+            0.0, 0.0, // v0
+            1.0, 0.0, // v1
+            0.5, 0.866, // v2
+        ],
+        vec![3, 2],
+    )
+    .unwrap();
+    let point_cloud =
+        PointCloud::new(points, CausalTensor::new(vec![0.0; 3], vec![3]).unwrap(), 0).unwrap();
+    let complex = point_cloud.triangulate(1.1).unwrap();
+    let num_simplices = complex.total_simplices();
+    // Initialize with dummy temp data
+    let initial_data = vec![300.0; num_simplices];
+    Manifold::new(
+        complex,
+        CausalTensor::new(initial_data, vec![num_simplices]).unwrap(),
+        0,
+    )
+    .unwrap()
+}
 
 #[test]
 fn test_ideal_gas_law_wrapper_success() {
@@ -62,11 +88,26 @@ fn test_boltzmann_factor_wrapper_success() {
 }
 
 #[test]
+fn test_boltzmann_factor_wrapper_error() {
+    let e = Energy::new(0.0).unwrap();
+    let t = Temperature::new(0.0).unwrap(); // T=0
+    let effect = boltzmann_factor(e, t);
+    assert!(effect.is_err());
+}
+
+#[test]
 fn test_shannon_entropy_wrapper_success() {
     let probs = CausalTensor::new(vec![0.25, 0.25, 0.25, 0.25], vec![4]).unwrap();
 
     let effect = shannon_entropy(&probs);
     assert!(effect.is_ok());
+}
+
+#[test]
+fn test_shannon_entropy_wrapper_error() {
+    let probs = CausalTensor::new(vec![-0.1], vec![1]).unwrap(); // Negative prob
+    let effect = shannon_entropy(&probs);
+    assert!(effect.is_err());
 }
 
 #[test]
@@ -97,4 +138,26 @@ fn test_partition_function_wrapper_success() {
 
     let effect = partition_function(&energies, t);
     assert!(effect.is_ok());
+}
+
+#[test]
+fn test_partition_function_wrapper_error() {
+    let energies = CausalTensor::new(vec![0.0], vec![1]).unwrap();
+    let t = Temperature::new(0.0).unwrap(); // T=0
+    let effect = partition_function(&energies, t);
+    assert!(effect.is_err());
+}
+
+#[test]
+fn test_heat_diffusion_wrapper_success() {
+    let manifold = create_temp_manifold();
+    let effect = heat_diffusion(&manifold, 0.5);
+    assert!(effect.is_ok());
+}
+
+#[test]
+fn test_heat_diffusion_wrapper_error() {
+    let manifold = create_temp_manifold();
+    let effect = heat_diffusion(&manifold, -0.5); // Negative diffusivity
+    assert!(effect.is_err());
 }

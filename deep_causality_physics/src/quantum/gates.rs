@@ -43,7 +43,8 @@ impl QuantumOps for CausalMultiVector<Complex<f64>> {
             .iter()
             .map(|c| Complex::new(c.re, -c.im))
             .collect::<Vec<_>>();
-        CausalMultiVector::new(conjugated_data, reverted.metric()).expect("Metric and data should be valid")
+        CausalMultiVector::new(conjugated_data, reverted.metric())
+            .expect("Metric and data should be valid")
     }
 
     fn bracket(&self, other: &Self) -> Complex<f64> {

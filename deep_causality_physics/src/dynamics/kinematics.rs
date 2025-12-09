@@ -86,13 +86,13 @@ pub fn torque_kernel(
     // Torque = r x F (Outer product in GA gives Bivector torque)
     // T = r ^ F
     if radius.metric() != force.metric() {
-        return Err(PhysicsError::new(crate::PhysicsErrorEnum::DimensionMismatch(
-            format!(
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::DimensionMismatch(format!(
                 "Metric mismatch: {:?} != {:?}",
                 radius.metric(),
                 force.metric()
-            ),
-        )));
+            )),
+        ));
     }
     let t = radius.outer_product(force);
     Ok(PhysicalVector(t))
@@ -112,13 +112,13 @@ pub fn angular_momentum_kernel(
 ) -> Result<PhysicalVector, PhysicsError> {
     // L = r x p = r ^ p
     if radius.metric() != momentum.metric() {
-        return Err(PhysicsError::new(crate::PhysicsErrorEnum::DimensionMismatch(
-            format!(
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::DimensionMismatch(format!(
                 "Metric mismatch: {:?} != {:?}",
                 radius.metric(),
                 momentum.metric()
-            ),
-        )));
+            )),
+        ));
     }
     let l = radius.outer_product(momentum);
     Ok(PhysicalVector(l))

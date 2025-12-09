@@ -72,9 +72,13 @@ pub fn poynting_vector_kernel(
     // This is the dual of the classical vector cross product.
     // We return Energy Density Flux in this bivector form.
     if e.metric() != b.metric() {
-        return Err(PhysicsError::new(crate::PhysicsErrorEnum::DimensionMismatch(
-            format!("Metric mismatch in Poynting Vector: {:?} vs {:?}", e.metric(), b.metric()),
-        )));
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::DimensionMismatch(format!(
+                "Metric mismatch in Poynting Vector: {:?} vs {:?}",
+                e.metric(),
+                b.metric()
+            )),
+        ));
     }
     let s = e.outer_product(b);
     Ok(s)
@@ -97,9 +101,13 @@ pub fn magnetic_helicity_density_kernel(
     // This function computes the local density.
 
     if potential.metric() != field.metric() {
-        return Err(PhysicsError::new(crate::PhysicsErrorEnum::DimensionMismatch(
-            format!("Metric mismatch in Magnetic Helicity: {:?} vs {:?}", potential.metric(), field.metric()),
-        )));
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::DimensionMismatch(format!(
+                "Metric mismatch in Magnetic Helicity: {:?} vs {:?}",
+                potential.metric(),
+                field.metric()
+            )),
+        ));
     }
 
     let h_scalar_mv = potential.inner_product(field);
@@ -141,13 +149,13 @@ pub fn proca_equation_kernel(
     // Note: CausalTensor implements Add
     // Check shapes before addition (J = delta_f + m2_a)
     if delta_f.shape() != m2_a.shape() {
-        return Err(PhysicsError::new(crate::PhysicsErrorEnum::DimensionMismatch(
-            format!(
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::DimensionMismatch(format!(
                 "Shape mismatch in Proca Equation: delta F {:?} vs m^2 A {:?}",
                 delta_f.shape(),
                 m2_a.shape()
-            ),
-        )));
+            )),
+        ));
     }
     let j = delta_f + m2_a;
 

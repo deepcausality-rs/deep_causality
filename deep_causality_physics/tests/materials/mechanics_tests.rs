@@ -115,6 +115,22 @@ fn test_von_mises_stress_kernel_dimension_error() {
     }
 }
 
+#[test]
+fn test_von_mises_stress_kernel_rank_error() {
+    // Rank 3 tensor
+    let stress = CausalTensor::new(vec![0.0; 27], vec![3, 3, 3]).unwrap();
+    let result = von_mises_stress_kernel(&stress);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_von_mises_stress_kernel_shape_error() {
+    // 3x4 tensor (Rank 2 but wrong shape)
+    let stress = CausalTensor::new(vec![0.0; 12], vec![3, 4]).unwrap();
+    let result = von_mises_stress_kernel(&stress);
+    assert!(result.is_err());
+}
+
 // =============================================================================
 // thermal_expansion_kernel Tests
 // =============================================================================

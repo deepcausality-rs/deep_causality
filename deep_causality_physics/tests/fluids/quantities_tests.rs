@@ -70,6 +70,13 @@ fn test_density_new_unchecked() {
     assert!((density.value() - 7874.0).abs() < 1e-10);
 }
 
+#[test]
+fn test_density_into_f64() {
+    let density = Density::new(100.0).unwrap();
+    let val: f64 = density.into();
+    assert!((val - 100.0).abs() < 1e-10);
+}
+
 // =============================================================================
 // Viscosity Tests
 // =============================================================================
@@ -90,4 +97,11 @@ fn test_viscosity_new_negative_error() {
 fn test_viscosity_new_unchecked() {
     let visc = Viscosity::new_unchecked(1.0);
     assert!((visc.value() - 1.0).abs() < 1e-10);
+}
+
+#[test]
+fn test_viscosity_into_f64() {
+    let visc = Viscosity::new(0.005).unwrap();
+    let val: f64 = visc.into();
+    assert!((val - 0.005).abs() < 1e-10);
 }

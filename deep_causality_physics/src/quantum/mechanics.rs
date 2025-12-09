@@ -61,7 +61,8 @@ pub fn klein_gordon_kernel(
         )));
     }
     let psi_vertex_data = &psi_data.as_slice()[..vertex_count];
-    let psi_vertex_tensor = CausalTensor::new(psi_vertex_data.to_vec(), laplacian.shape().to_vec())?;
+    let psi_vertex_tensor =
+        CausalTensor::new(psi_vertex_data.to_vec(), laplacian.shape().to_vec())?;
     let m2_psi = psi_vertex_tensor * m2;
 
     // 3. Result: Delta psi + m^2 psi
@@ -110,6 +111,17 @@ pub fn expectation_value_kernel(
     state: &HilbertState,
     operator: &Operator,
 ) -> Result<f64, PhysicsError> {
+    // Check metric compatibility
+    if state.mv().metric() != operator.mv().metric() {
+        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+            format!(
+                "Metric mismatch in Expectation Value: {:?} vs {:?}",
+                state.mv().metric(),
+                operator.mv().metric()
+            ),
+        )));
+    }
+
     // Implementation delegated to QuantumOps trait method which wraps inner logic
     let val = state.mv().expectation_value(operator.mv());
     // Real part is the observable value if operator is Hermitian
@@ -127,6 +139,16 @@ pub fn expectation_value_kernel(
 pub fn apply_gate_kernel(state: &HilbertState, gate: &Gate) -> Result<HilbertState, PhysicsError> {
     // New State = Gate * State
     // Need underlying multiplication.
+    if state.mv().metric() != gate.mv().metric() {
+        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+            format!(
+                "Metric mismatch in Apply Gate: {:?} vs {:?}",
+                state.mv().metric(),
+                gate.mv().metric()
+            ),
+        )));
+    }
+
     let new_inner = gate.mv().geometric_product(state.mv());
     // Wrap back in HilbertState
     Ok(HilbertState::from_multivector(new_inner))
@@ -145,6 +167,16 @@ pub fn commutator_kernel(a: &Operator, b: &Operator) -> Result<HilbertState, Phy
     // Operators are HilbertStates wrapping CausalMultiVector<Complex<f64>>
     let a_mv = a.mv();
     let b_mv = b.mv();
+
+    if a_mv.metric() != b_mv.metric() {
+        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+            format!(
+                "Metric mismatch in Commutator: {:?} vs {:?}",
+                a_mv.metric(),
+                b_mv.metric()
+            ),
+        )));
+    }
 
     let ab = a_mv.geometric_product(b_mv);
     let ba = b_mv.geometric_product(a_mv);
@@ -211,6 +243,16 @@ pub fn haruna_hadamard_gate_kernel(
     let a_complex = CausalMultiVectorWitness::fmap(field_a.clone(), |x| Complex::new(x, 0.0));
     let b_complex = CausalMultiVectorWitness::fmap(field_b.clone(), |x| Complex::new(x, 0.0));
 
+    if a_complex.metric() != b_complex.metric() {
+        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+            format!(
+                "Metric mismatch in Haruna Hadamard: {:?} vs {:?}",
+                a_complex.metric(),
+                b_complex.metric()
+            ),
+        )));
+    }
+
     let result = gates_haruna::logical_hadamard(&a_complex, &b_complex);
 
     Ok(HilbertState::from_multivector(result))
@@ -225,6 +267,16 @@ pub fn haruna_cz_gate_kernel(
 ) -> Result<Operator, PhysicsError> {
     let a1_complex = CausalMultiVectorWitness::fmap(field_a1.clone(), |x| Complex::new(x, 0.0));
     let a2_complex = CausalMultiVectorWitness::fmap(field_a2.clone(), |x| Complex::new(x, 0.0));
+
+    if a1_complex.metric() != a2_complex.metric() {
+        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+            format!(
+                "Metric mismatch in Haruna CZ: {:?} vs {:?}",
+                a1_complex.metric(),
+                a2_complex.metric()
+            ),
+        )));
+    }
 
     let result = gates_haruna::logical_cz(&a1_complex, &a2_complex);
 

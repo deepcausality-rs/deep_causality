@@ -70,9 +70,13 @@ fn test_klein_gordon_kernel_valid() {
     // Previously caused shape mismatch, now should work by slicing.
     let manifold = create_simple_manifold();
     let mass = 1.0;
-    
+
     let result = klein_gordon_kernel(&manifold, mass);
-    assert!(result.is_ok(), "Klein-Gordon kernel failed: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Klein-Gordon kernel failed: {:?}",
+        result.err()
+    );
 }
 
 // =============================================================================

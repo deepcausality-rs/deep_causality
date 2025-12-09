@@ -49,13 +49,13 @@ pub fn kalman_filter_linear_kernel(
     // Wait, let's look at `measurement.sub(&hx)`.
     // Check shapes before subtraction
     if measurement.shape() != hx.shape() {
-        return Err(PhysicsError::new(crate::PhysicsErrorEnum::DimensionMismatch(
-            format!(
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::DimensionMismatch(format!(
                 "Measurement shape {:?} != prediction shape {:?}",
                 measurement.shape(),
                 hx.shape()
-            ),
-        )));
+            )),
+        ));
     }
     let y = measurement.sub(&hx);
 
@@ -74,13 +74,13 @@ pub fn kalman_filter_linear_kernel(
 
     // S = ... + R
     if hph_t.shape() != measurement_noise.shape() {
-        return Err(PhysicsError::new(crate::PhysicsErrorEnum::DimensionMismatch(
-            format!(
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::DimensionMismatch(format!(
                 "Innovation covariance shape {:?} != measurement noise shape {:?}",
                 hph_t.shape(),
                 measurement_noise.shape()
-            ),
-        )));
+            )),
+        ));
     }
     let s = hph_t.add(measurement_noise);
 
@@ -99,13 +99,13 @@ pub fn kalman_filter_linear_kernel(
     let ky = k.matmul(&y).map_err(PhysicsError::from)?;
 
     if x_pred.shape() != ky.shape() {
-        return Err(PhysicsError::new(crate::PhysicsErrorEnum::DimensionMismatch(
-            format!(
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::DimensionMismatch(format!(
                 "State shape {:?} != update shape {:?}",
                 x_pred.shape(),
                 ky.shape()
-            ),
-        )));
+            )),
+        ));
     }
     let x_new = x_pred.add(&ky);
 
@@ -119,13 +119,13 @@ pub fn kalman_filter_linear_kernel(
 
     // I - KH
     if identity.shape() != kh.shape() {
-        return Err(PhysicsError::new(crate::PhysicsErrorEnum::DimensionMismatch(
-            format!(
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::DimensionMismatch(format!(
                 "Identity shape {:?} != KH shape {:?}",
                 identity.shape(),
                 kh.shape()
-            ),
-        )));
+            )),
+        ));
     }
     let i_kh = identity.sub(&kh);
 

@@ -119,7 +119,7 @@ fn test_kalman_filter_linear_wrapper_success() {
 fn test_kalman_filter_linear_wrapper_error() {
     // Dimension mismatch error
     let x_pred = CausalTensor::new(vec![10.0], vec![1, 1]).unwrap();
-    let p_pred = CausalTensor::new(vec![5.0], vec![1, 1]).unwrap(); 
+    let p_pred = CausalTensor::new(vec![5.0], vec![1, 1]).unwrap();
     // Measurement has wrong dimension [2,1] vs state [1,1]
     let measurement = CausalTensor::new(vec![12.0, 13.0], vec![2, 1]).unwrap();
     let h = CausalTensor::new(vec![1.0], vec![1, 1]).unwrap();
@@ -139,9 +139,10 @@ fn test_torque_wrapper_error_propagation() {
     // Create mismatching metrics to force an error in outer product
     let radius = CausalMultiVector::new(vec![1.0, 0.0], Metric::Euclidean(1)).unwrap();
     let force = CausalMultiVector::new(
-        vec![0.0, 1.0, 0.0, 0.0], 
-        Metric::Euclidean(2) // Different metric/dimension
-    ).unwrap();
+        vec![0.0, 1.0, 0.0, 0.0],
+        Metric::Euclidean(2), // Different metric/dimension
+    )
+    .unwrap();
 
     let effect = torque(&radius, &force);
     assert!(effect.is_err());
@@ -150,10 +151,7 @@ fn test_torque_wrapper_error_propagation() {
 #[test]
 fn test_angular_momentum_wrapper_error_propagation() {
     let radius = CausalMultiVector::new(vec![1.0, 0.0], Metric::Euclidean(1)).unwrap();
-    let momentum = CausalMultiVector::new(
-        vec![0.0, 1.0, 0.0, 0.0], 
-        Metric::Euclidean(2)
-    ).unwrap();
+    let momentum = CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
 
     let effect = angular_momentum(&radius, &momentum);
     assert!(effect.is_err());

@@ -75,7 +75,7 @@ fn test_radioactive_decay_zero_half_life() {
 
     let result = radioactive_decay_kernel(&n0, &half_life, &time);
     assert!(result.is_err());
-    
+
     match result {
         Err(e) => match e.0 {
             deep_causality_physics::PhysicsErrorEnum::Singularity(_) => assert!(true),

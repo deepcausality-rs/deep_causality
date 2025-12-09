@@ -27,6 +27,14 @@ pub fn heat_diffusion_kernel(
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     // Heat Eq: du/dt = - alpha * Laplacian(u)
 
+    if diffusivity < 0.0 {
+        return Err(PhysicsError::new(
+            crate::error::PhysicsErrorEnum::PhysicalInvariantBroken(
+                "Negative diffusivity violates second law of thermodynamics".into(),
+            ),
+        ));
+    }
+
     // 1. Compute Laplacian
     let laplacian = temp_manifold.laplacian(0);
 
@@ -161,7 +169,26 @@ pub fn shannon_entropy_kernel(probs: &CausalTensor<f64>) -> Result<f64, PhysicsE
     // H = - Sum p_i log(p_i)
     // Using as_slice() assuming it gives access to underlying data
 
+    // Using as_slice() assuming it gives access to underlying data
     let data = probs.as_slice();
+
+    if data.is_empty() {
+        return Err(PhysicsError::new(
+            crate::error::PhysicsErrorEnum::DimensionMismatch("Probability tensor is empty".into()),
+        ));
+    }
+
+    // Validate sum of probabilities ~ 1? Or just values?
+    // Shannon entropy requires p >= 0.
+    // Check for negative probabilities?
+    if data.iter().any(|&p| p < 0.0) {
+        return Err(PhysicsError::new(
+            crate::error::PhysicsErrorEnum::NormalizationError(
+                "Negative probability in Shannon Entropy".into(),
+            ),
+        ));
+    }
+
     let entropy: f64 = data
         .iter()
         .filter(|&&p| p > 0.0) // lim x->0 x log x = 0. Exclude 0 and negative.

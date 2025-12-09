@@ -143,3 +143,90 @@ fn test_partition_function_kernel_valid() {
     let z = result.unwrap();
     assert!(z > 0.0);
 }
+
+#[test]
+fn test_partition_function_kernel_error() {
+    let energies = CausalTensor::new(vec![0.0], vec![1]).unwrap();
+    let t = Temperature::new(0.0).unwrap(); // T=0 error
+
+    let result = partition_function_kernel(&energies, t);
+    assert!(result.is_err());
+}
+
+// =============================================================================
+// boltzmann_factor_kernel Tests (Error Case)
+// =============================================================================
+
+#[test]
+fn test_boltzmann_factor_kernel_error() {
+    let e = Energy::new(0.0).unwrap();
+    let t = Temperature::new(0.0).unwrap(); // T=0 error
+
+    let result = boltzmann_factor_kernel(e, t);
+    assert!(result.is_err());
+}
+
+// =============================================================================
+// shannon_entropy_kernel Tests (Error Case)
+// =============================================================================
+
+#[test]
+fn test_shannon_entropy_kernel_error() {
+    // Negative probability
+    let probs = CausalTensor::new(vec![0.5, -0.1], vec![2]).unwrap();
+    let result = shannon_entropy_kernel(&probs);
+    assert!(result.is_err());
+
+    // Empty tensor
+    let empty_probs = CausalTensor::new(vec![], vec![0]).unwrap();
+    let result_empty = shannon_entropy_kernel(&empty_probs);
+    assert!(result_empty.is_err());
+}
+
+// =============================================================================
+// heat_diffusion_kernel Tests
+// =============================================================================
+use deep_causality_physics::heat_diffusion_kernel;
+use deep_causality_topology::{Manifold, PointCloud};
+
+// Helper to create a simple manifold for heat diffusion (Vertices only for 0-form)
+// Using same structure as creating a simple manifold in other tests
+fn create_temp_manifold() -> Manifold<f64> {
+    let points = CausalTensor::new(
+        vec![
+            0.0, 0.0, // v0
+            1.0, 0.0, // v1
+            0.5, 0.866, // v2
+        ],
+        vec![3, 2],
+    )
+    .unwrap();
+    let point_cloud =
+        PointCloud::new(points, CausalTensor::new(vec![0.0; 3], vec![3]).unwrap(), 0).unwrap();
+    let complex = point_cloud.triangulate(1.1).unwrap();
+    let num_simplices = complex.total_simplices();
+    // Initialize with dummy temp data
+    let initial_data = vec![300.0; num_simplices];
+    Manifold::new(
+        complex,
+        CausalTensor::new(initial_data, vec![num_simplices]).unwrap(),
+        0,
+    )
+    .unwrap()
+}
+
+#[test]
+fn test_heat_diffusion_kernel_valid() {
+    let manifold = create_temp_manifold();
+    let diffusivity = 0.5;
+    let result = heat_diffusion_kernel(&manifold, diffusivity);
+    assert!(result.is_ok());
+}
+
+#[test]
+fn test_heat_diffusion_kernel_negative_diffusivity_error() {
+    let manifold = create_temp_manifold();
+    let diffusivity = -0.5; // Invalid
+    let result = heat_diffusion_kernel(&manifold, diffusivity);
+    assert!(result.is_err());
+}
