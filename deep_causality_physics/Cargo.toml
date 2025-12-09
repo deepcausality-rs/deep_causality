@@ -34,3 +34,4 @@ deep_causality_multivector = { path = "../deep_causality_multivector", version =
 deep_causality_tensor = { path = "../deep_causality_tensor", version = "0.1.10" }
 deep_causality_topology = { path = "../deep_causality_topology", version = "0.1.0" }
 deep_causality_num = { path = "../deep_causality_num", version = "0.1.9" }
+deep_causality_haft = { path = "../deep_causality_haft", version = "0.2" }

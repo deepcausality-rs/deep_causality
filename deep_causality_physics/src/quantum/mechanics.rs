@@ -4,17 +4,18 @@
  */
 
 use crate::QuantumOps;
+use crate::quantum::gates_haruna;
 use crate::{PhysicsError, PhysicsErrorEnum};
+use deep_causality_haft::Functor;
 use deep_causality_multivector::MultiVector;
-use deep_causality_multivector::{CausalMultiVector, HilbertState};
+use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorWitness, HilbertState};
+use deep_causality_num::Complex;
 use deep_causality_num::DivisionAlgebra;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::Manifold;
 
 pub type Operator = HilbertState;
 pub type Gate = HilbertState;
-
-// Kernels
 
 /// Calculates the Klein-Gordon operator action: $(\Delta + m^2)\psi$.
 ///
@@ -140,15 +141,6 @@ pub fn commutator_kernel(a: &Operator, b: &Operator) -> Result<HilbertState, Phy
     Ok(HilbertState::from_multivector(commutator))
 }
 
-/// Stub: Haruna's Gate (Theoretical Non-Linear Operator).
-///
-/// This is a placeholder for theoretical unified field operators.
-pub fn haruna_s_gate_kernel(_field: &CausalMultiVector<f64>) -> Result<Operator, PhysicsError> {
-    Err(PhysicsError::new(PhysicsErrorEnum::Singularity(
-        "Haruna's Gate not yet implemented (requires Non-Linear Quantum extension)".into(),
-    )))
-}
-
 /// Calculates Quantum Fidelity: $F = |\langle \psi_{\text{ideal}} | \psi_{\text{actual}} \rangle|^2$.
 ///
 /// # Arguments
@@ -161,4 +153,77 @@ pub fn fidelity_kernel(ideal: &HilbertState, actual: &HilbertState) -> Result<f6
     // F = |<ideal|actual>|^2
     // Reuse born_probability_kernel logic
     born_probability_kernel(actual, ideal)
+}
+
+/// Implements Haruna's Logical S-Gate.
+///
+/// Uses the Gauge Field Formalism to compute $S(\gamma) = \exp(i \frac{\pi}{2} a(\gamma)^2)$.
+pub fn haruna_s_gate_kernel(field: &CausalMultiVector<f64>) -> Result<Operator, PhysicsError> {
+    // Convert real field to complex for quantum gate calculation
+    let field_complex = CausalMultiVectorWitness::fmap(field.clone(), |x| Complex::new(x, 0.0));
+
+    // Compute Logical S Gate
+    let result = gates_haruna::logical_s(&field_complex);
+
+    Ok(HilbertState::from_multivector(result))
+}
+
+/// Implements Haruna's Logical Z-Gate.
+///
+/// Uses the Gauge Field Formalism to compute $Z(\gamma) = \exp(i \pi a(\gamma))$.
+pub fn haruna_z_gate_kernel(field: &CausalMultiVector<f64>) -> Result<Operator, PhysicsError> {
+    let field_complex = CausalMultiVectorWitness::fmap(field.clone(), |x| Complex::new(x, 0.0));
+    let result = gates_haruna::logical_z(&field_complex);
+
+    Ok(HilbertState::from_multivector(result))
+}
+
+/// Implements Haruna's Logical X-Gate.
+///
+/// Uses the Gauge Field Formalism to compute $X(\tilde{\gamma}) = \exp(i \pi b(\tilde{\gamma}))$.
+pub fn haruna_x_gate_kernel(field: &CausalMultiVector<f64>) -> Result<Operator, PhysicsError> {
+    let field_complex = CausalMultiVectorWitness::fmap(field.clone(), |x| Complex::new(x, 0.0));
+    let result = gates_haruna::logical_x(&field_complex);
+
+    Ok(HilbertState::from_multivector(result))
+}
+
+/// Implements Haruna's Logical Hadamard Gate.
+///
+/// $H(\gamma) = e^{-i \frac{\pi}{4}} S(\gamma) \exp(i \frac{\pi}{2} b^2) S(\gamma)$.
+pub fn haruna_hadamard_gate_kernel(
+    field_a: &CausalMultiVector<f64>,
+    field_b: &CausalMultiVector<f64>,
+) -> Result<Operator, PhysicsError> {
+    let a_complex = CausalMultiVectorWitness::fmap(field_a.clone(), |x| Complex::new(x, 0.0));
+    let b_complex = CausalMultiVectorWitness::fmap(field_b.clone(), |x| Complex::new(x, 0.0));
+
+    let result = gates_haruna::logical_hadamard(&a_complex, &b_complex);
+
+    Ok(HilbertState::from_multivector(result))
+}
+
+/// Implements Haruna's Logical CZ Gate.
+///
+/// $CZ(\gamma_1, \gamma_2) = \exp(i \pi a(\gamma_1) a(\gamma_2))$.
+pub fn haruna_cz_gate_kernel(
+    field_a1: &CausalMultiVector<f64>,
+    field_a2: &CausalMultiVector<f64>,
+) -> Result<Operator, PhysicsError> {
+    let a1_complex = CausalMultiVectorWitness::fmap(field_a1.clone(), |x| Complex::new(x, 0.0));
+    let a2_complex = CausalMultiVectorWitness::fmap(field_a2.clone(), |x| Complex::new(x, 0.0));
+
+    let result = gates_haruna::logical_cz(&a1_complex, &a2_complex);
+
+    Ok(HilbertState::from_multivector(result))
+}
+
+/// Implements Haruna's Logical T-Gate.
+///
+/// $T(\gamma) = \exp(i \pi (\frac{1}{2} a^3 - \frac{3}{4} a^2 + \frac{1}{2} a))$.
+pub fn haruna_t_gate_kernel(field: &CausalMultiVector<f64>) -> Result<Operator, PhysicsError> {
+    let field_complex = CausalMultiVectorWitness::fmap(field.clone(), |x| Complex::new(x, 0.0));
+    let result = gates_haruna::logical_t(&field_complex);
+
+    Ok(HilbertState::from_multivector(result))
 }

@@ -4,11 +4,13 @@
  */
 
 pub(crate) mod gates;
+pub(crate) mod gates_haruna;
 pub(crate) mod mechanics;
 pub(crate) mod quantities;
 pub(crate) mod wrappers;
 
 pub use gates::*;
+pub use gates_haruna::*;
 pub use mechanics::*;
 pub use quantities::*;
 pub use wrappers::*;

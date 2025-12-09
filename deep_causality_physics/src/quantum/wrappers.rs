@@ -69,6 +69,52 @@ pub fn haruna_s_gate(field: &CausalMultiVector<f64>) -> PropagatingEffect<Operat
     }
 }
 
+/// Causal wrapper for [`mechanics::haruna_z_gate_kernel`].
+pub fn haruna_z_gate(field: &CausalMultiVector<f64>) -> PropagatingEffect<Operator> {
+    match mechanics::haruna_z_gate_kernel(field) {
+        Ok(val) => PropagatingEffect::pure(val),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`mechanics::haruna_x_gate_kernel`].
+pub fn haruna_x_gate(field: &CausalMultiVector<f64>) -> PropagatingEffect<Operator> {
+    match mechanics::haruna_x_gate_kernel(field) {
+        Ok(val) => PropagatingEffect::pure(val),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`mechanics::haruna_hadamard_gate_kernel`].
+pub fn haruna_hadamard_gate(
+    field_a: &CausalMultiVector<f64>,
+    field_b: &CausalMultiVector<f64>,
+) -> PropagatingEffect<Operator> {
+    match mechanics::haruna_hadamard_gate_kernel(field_a, field_b) {
+        Ok(val) => PropagatingEffect::pure(val),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`mechanics::haruna_cz_gate_kernel`].
+pub fn haruna_cz_gate(
+    field_a1: &CausalMultiVector<f64>,
+    field_a2: &CausalMultiVector<f64>,
+) -> PropagatingEffect<Operator> {
+    match mechanics::haruna_cz_gate_kernel(field_a1, field_a2) {
+        Ok(val) => PropagatingEffect::pure(val),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`mechanics::haruna_t_gate_kernel`].
+pub fn haruna_t_gate(field: &CausalMultiVector<f64>) -> PropagatingEffect<Operator> {
+    match mechanics::haruna_t_gate_kernel(field) {
+        Ok(val) => PropagatingEffect::pure(val),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
 /// Causal wrapper for [`mechanics::fidelity_kernel`].
 pub fn fidelity(ideal: &HilbertState, actual: &HilbertState) -> PropagatingEffect<Probability> {
     match mechanics::fidelity_kernel(ideal, actual) {
