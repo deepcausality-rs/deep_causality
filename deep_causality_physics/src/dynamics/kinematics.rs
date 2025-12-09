@@ -44,10 +44,24 @@ pub fn kinetic_energy_kernel(
     mass: Mass,
     velocity: &CausalMultiVector<f64>,
 ) -> Result<f64, PhysicsError> {
-    // KE = 0.5 * m * v^2
-    // v^2 in GA is v * v = |v|^2 (scalar) for vectors
+    // Ensure physically meaningful squared speed
     let v_sq = velocity.squared_magnitude();
-    let e = 0.5 * mass.value() * v_sq;
+    if !v_sq.is_finite() {
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::NumericalInstability(
+                "Velocity squared magnitude is not finite".into(),
+            ),
+        ));
+    }
+    if v_sq < -1e-12 {
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::PhysicalInvariantBroken(
+                "Negative squared speed in kinetic energy calculation".into(),
+            ),
+        ));
+    }
+    let v_sq_clamped = if v_sq < 0.0 { 0.0 } else { v_sq };
+    let e = 0.5 * mass.value() * v_sq_clamped;
     Ok(e)
 }
 

@@ -219,6 +219,13 @@ where
                 self.metric, rhs.metric
             );
         }
+        if self.data.len() != rhs.data.len() {
+            panic!(
+                "Data length mismatch in addition: {} vs {}",
+                self.data.len(),
+                rhs.data.len()
+            );
+        }
         for (a, b) in self.data.iter_mut().zip(rhs.data.iter()) {
             *a += *b;
         }
@@ -234,6 +241,13 @@ where
             panic!(
                 "Dimension mismatch in addition: {:?} vs {:?}",
                 self.metric, rhs.metric
+            );
+        }
+        if self.data.len() != rhs.data.len() {
+            panic!(
+                "Data length mismatch in addition: {} vs {}",
+                self.data.len(),
+                rhs.data.len()
             );
         }
         for (a, b) in self.data.iter_mut().zip(rhs.data.iter()) {

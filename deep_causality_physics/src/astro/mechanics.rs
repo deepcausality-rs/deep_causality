@@ -20,17 +20,16 @@ pub fn orbital_velocity_kernel(
     mass_primary: &Mass,
     radius: &Length,
 ) -> Result<Speed, PhysicsError> {
-    // v = sqrt(GM / r)
-    // v = sqrt(GM / r)
-    let gm = NEWTONIAN_CONSTANT_OF_GRAVITATION * mass_primary.value();
-    if radius.value() == 0.0 {
+    let r = radius.value();
+    if r <= 0.0 {
         return Err(PhysicsError::new(
             crate::error::PhysicsErrorEnum::MetricSingularity(
-                "Zero radius in orbital velocity".into(),
+                "Non-positive radius in orbital velocity".into(),
             ),
         ));
     }
-    let v = (gm / radius.value()).sqrt();
+    let gm = NEWTONIAN_CONSTANT_OF_GRAVITATION * mass_primary.value();
+    let v = (gm / r).sqrt();
     Speed::new(v)
 }
 

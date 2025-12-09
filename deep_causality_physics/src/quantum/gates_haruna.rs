@@ -20,7 +20,7 @@ use core::f64::consts::PI;
 /// * If `a` or `b` are Pauli operators (eigenvalues $\pm 1$), the polynomial coefficients
 ///   implemented here for T and S gates will not yield standard phases.
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::{Complex, One};
+use deep_causality_num::{Complex, DivisionAlgebra, One};
 
 /// Helper function to compute the exponential of a multivector: $e^A = \sum A^n/n!$
 /// Uses Taylor series expansion.
@@ -30,9 +30,11 @@ fn exp(mv: &CausalMultiVector<Complex<f64>>) -> CausalMultiVector<Complex<f64>> 
     let mut term = CausalMultiVector::scalar(one_complex, mv.metric());
     let mut sum = term.clone();
 
-    // 2. Taylor Series
-    // Limit iterations for performance. 25 terms is usually sufficient for reasonable norms.
-    for n in 1..25 {
+    // Tolerance and safety cap
+    let tol = 1e-12;
+    let max_iters = 64;
+
+    for n in 1..=max_iters {
         // term_n = term_{n-1} * mv * (1/n)
         let n_inv = Complex::new(1.0 / (n as f64), 0.0);
 
@@ -41,8 +43,27 @@ fn exp(mv: &CausalMultiVector<Complex<f64>>) -> CausalMultiVector<Complex<f64>> 
         // In-place scalar multiplication
         term *= n_inv;
 
+        let prev = sum.clone();
         // Update sum in place
         sum += &term;
+
+        // Early stop if incremental improvement is below tolerance
+        // Compare scalar norms to detect convergence
+        // We assume CausalMultiVector has l2_norm or similar:
+        // If not, we use squared_magnitude().sqrt() or fail and fix.
+        // User specified l2_norm() which is not available directly.
+        // We compute L2 norm of the difference vector components.
+        let diff = &sum - &prev;
+        let delta = diff
+            .data()
+            .iter()
+            .map(|c| c.norm_sqr())
+            .sum::<f64>()
+            .sqrt();
+            
+        if delta < tol {
+            break;
+        }
     }
     sum
 }

@@ -55,55 +55,69 @@ pub fn time_dilation_angle_kernel(
     t1: &CausalMultiVector<f64>,
     t2: &CausalMultiVector<f64>,
 ) -> Result<PhaseAngle, PhysicsError> {
-    // Hyperbolic angle (Rapidity, eta) between two timelike vectors.
-    // cosh(eta) = (t1 . t2) / (|t1| |t2|) = gamma
-    // eta = acosh(gamma)
-
-    // 1. Calculate Dot Product
-    let dot = t1
-        .inner_product(t2)
-        .data()
-        .first()
-        .copied()
-        .ok_or_else(|| {
-            PhysicsError::new(PhysicsErrorEnum::PhysicalInvariantBroken(
-                "Inner product did not yield a scalar value".into(),
-            ))
-        })?; // Scalar
-
-    // 2. Calculate Magnitudes
-    let mag1 = t1.squared_magnitude().sqrt();
-    let mag2 = t2.squared_magnitude().sqrt();
-
-    if mag1 == 0.0 || mag2 == 0.0 {
-        return Err(PhysicsError::new(
-            PhysicsErrorEnum::PhysicalInvariantBroken(
-                "Zero magnitude vector in time dilation calculation".into(),
-            ),
-        ));
+    // Ensure compatible Minkowski metric
+    if t1.metric() != t2.metric() {
+        return Err(PhysicsError::new(PhysicsErrorEnum::MetricSingularity(
+            "Metric mismatch between vectors".into(),
+        )));
+    }
+    if let deep_causality_multivector::Metric::Minkowski(_) = t1.metric() {
+    } else {
+        return Err(PhysicsError::new(PhysicsErrorEnum::MetricSingularity(
+            "Time dilation requires Minkowski metric".into(),
+        )));
     }
 
-    // 3. Calculate Gamma (Lorentz Factor)
-    // For timelike vectors in (+---) metric, t^2 > 0.
-    // inner product should be positive for future-pointing timelike vectors.
-    let gamma = dot / (mag1 * mag2);
+    // Inner product must yield a scalar
+    let inner = t1.inner_product(t2);
+    if inner.data().is_empty() {
+        return Err(PhysicsError::new(PhysicsErrorEnum::PhysicalInvariantBroken(
+            "Inner product did not yield any data".into(),
+        )));
+    }
+    
+    // Verify that non-scalar components (index > 0) are effectively zero
+    // In dense representation (e.g. 16 dims), inner product of vectors should be scalar (index 0).
+    let non_scalar_magnitude: f64 = inner.data().iter().skip(1).map(|v| v.abs()).sum();
+    if non_scalar_magnitude > 1e-9 {
+         return Err(PhysicsError::new(PhysicsErrorEnum::PhysicalInvariantBroken(
+            format!("Inner product did not yield scalar grade (non-scalar mag: {})", non_scalar_magnitude).into(),
+        )));
+    }
 
-    // 4. Calculate Rapidity eta
-    // Gamma must be >= 1.0 for valid acosh.
-    // Floating point errors might produce 0.999999.
+    let dot = inner.data()[0];
+
+    // Timelike check: squared magnitudes strictly positive in (+---)
+    let s1 = t1.squared_magnitude();
+    let s2 = t2.squared_magnitude();
+    if !(s1 > 0.0 && s2 > 0.0) {
+        return Err(PhysicsError::new(PhysicsErrorEnum::CausalityViolation(
+            "Non-timelike vector encountered".into(),
+        )));
+    }
+    let mag1 = s1.sqrt();
+    let mag2 = s2.sqrt();
+
+    let denom = mag1 * mag2;
+    if denom == 0.0 || !denom.is_finite() {
+        return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
+            "Invalid normalization in gamma computation".into(),
+        )));
+    }
+
+    // Clamp gamma to handle floating-point noise
+    let mut gamma = dot / denom;
+    let eps = 1e-9;
+    if gamma < 1.0 && (1.0 - gamma) <= eps {
+        gamma = 1.0;
+    }
     if gamma < 1.0 {
-        // Check if close to 1.0 (parallel vectors)
-        if (gamma - 1.0).abs() < 1e-6 {
-            return PhaseAngle::new(0.0);
-        }
-        // If significantly less than 1, physical invariant broken (not timelike/causal relation)
         return Err(PhysicsError::new(PhysicsErrorEnum::CausalityViolation(
             format!("Invalid Lorentz factor < 1.0: {}", gamma),
         )));
     }
 
     let eta = gamma.acosh();
-
     PhaseAngle::new(eta)
 }
 

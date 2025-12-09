@@ -36,7 +36,11 @@ fn test_orbital_velocity_kernel_zero_radius_error() {
     let err = result.unwrap_err();
     match &err.0 {
         PhysicsErrorEnum::MetricSingularity(msg) => {
-            assert!(msg.contains("Zero radius"));
+            assert!(
+                msg.contains("Non-positive radius") || msg.contains("Zero radius"),
+                "Expected error about radius, got: {}",
+                msg
+            );
         }
         _ => panic!("Expected MetricSingularity error"),
     }

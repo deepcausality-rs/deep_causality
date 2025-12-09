@@ -140,10 +140,27 @@ pub fn proca_equation_kernel(
     // 1. Compute delta F (codifferential of 2-form)
     let delta_f = field_manifold.codifferential(2);
 
-    // 2. Compute m^2 A
+    // 2. Compute m^2 A (ensure it's a 1-form tensor compatible with delta F)
     let m2 = mass * mass;
-    let a_tensor = potential_manifold.data(); // Access underlying data
-    let m2_a = a_tensor.clone() * m2;
+    let a_full = potential_manifold.data(); // underlying data tensor
+
+    // Build an A tensor on the same shape as delta_f (1-form domain)
+    let a_shape = delta_f.shape().to_vec();
+    let needed_len = delta_f.len();
+    if a_full.len() < needed_len {
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::DimensionMismatch(
+                format!(
+                    "Proca: potential data shorter than 1-form domain: {} < {}",
+                    a_full.len(),
+                    needed_len
+                ),
+            ),
+        ));
+    }
+    let a_1form = CausalTensor::new(a_full.as_slice()[..needed_len].to_vec(), a_shape)?;
+
+    let m2_a = a_1form * m2;
 
     // 3. Sum: J = delta F + m^2 A
     // Note: CausalTensor implements Add

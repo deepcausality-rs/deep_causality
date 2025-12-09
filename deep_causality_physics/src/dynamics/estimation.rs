@@ -109,7 +109,9 @@ pub fn kalman_filter_linear_kernel(
     }
     let x_new = x_pred.add(&ky);
 
-    // 5. Covariance Update: P_new = (I - K * H) * P
+    // 5. Covariance Update (Joseph form):
+    // P_new = (I - K H) P (I - K H)^T + K R K^T
+
     // K * H
     let kh = k.matmul(measurement_matrix).map_err(PhysicsError::from)?;
 
@@ -130,7 +132,27 @@ pub fn kalman_filter_linear_kernel(
     let i_kh = identity.sub(&kh);
 
     // ... * P
-    let p_new = i_kh.matmul(p_pred).map_err(PhysicsError::from)?;
+    // (I - K H) P
+    let left = i_kh.matmul(p_pred).map_err(PhysicsError::from)?;
+
+    // (I - K H)^T
+    let i_kh_t = {
+        let op_t = EinSumOp::<f64>::transpose(i_kh.clone(), vec![1, 0]);
+        CausalTensor::ein_sum(&op_t).map_err(PhysicsError::from)?
+    };
+
+    // (I - K H) P (I - K H)^T
+    let joseph_main = left.matmul(&i_kh_t).map_err(PhysicsError::from)?;
+
+    // K R K^T
+    let kt = {
+        let op_t = EinSumOp::<f64>::transpose(k.clone(), vec![1, 0]);
+        CausalTensor::ein_sum(&op_t).map_err(PhysicsError::from)?
+    };
+    let kr = k.matmul(measurement_noise).map_err(PhysicsError::from)?;
+    let krkt = kr.matmul(&kt).map_err(PhysicsError::from)?;
+
+    let p_new = joseph_main.add(&krkt);
 
     Ok((x_new, p_new))
 }

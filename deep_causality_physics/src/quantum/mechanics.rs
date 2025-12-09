@@ -84,12 +84,22 @@ pub fn born_probability_kernel(
     state: &HilbertState,
     basis: &HilbertState,
 ) -> Result<f64, PhysicsError> {
+    // Ensure the states live in the same Hilbert space (metric/dimension)
+    if state.mv().metric() != basis.mv().metric() {
+        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+            format!(
+                "Metric mismatch in Born Probability: {:?} vs {:?}",
+                state.mv().metric(),
+                basis.mv().metric()
+            ),
+        )));
+    }
+
     // Probability P = |<basis|state>|^2
     let amplitude = state.mv().bracket(basis.mv());
     let p = amplitude.norm_sqr();
 
     // Validate
-    // Relaxed epsilon for floating point arithmetic in complex scenarios
     if !(-1e-9..=1.000001).contains(&p) {
         return Err(PhysicsError::new(PhysicsErrorEnum::NormalizationError(
             format!("Born probability out of bounds: {}", p),

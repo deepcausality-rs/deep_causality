@@ -108,12 +108,14 @@ fn test_lorenz_gauge_kernel_valid() {
 // This test documents the current behavior.
 
 #[test]
-fn test_proca_equation_kernel_error_on_shape_mismatch() {
-    // Both manifolds have vertices + edges + faces, causing shape mismatch
+fn test_proca_equation_kernel_valid() {
+    // Both manifolds have vertices + edges + faces.
+    // Previous behavior: Mismatch between total data length and 1-form length caused error.
+    // New behavior: logic slices the potential data to match, so this should pass.
     let field_manifold = create_simple_manifold();
     let potential_manifold = create_simple_manifold();
     let mass = 0.5;
-    // This used to panic, now returns PhysicsError::DimensionMismatch
+    
     let result = proca_equation_kernel(&field_manifold, &potential_manifold, mass);
-    assert!(result.is_err());
+    assert!(result.is_ok(), "Proca kernel failed: {:?}", result.err());
 }

@@ -22,15 +22,34 @@ pub fn einstein_tensor_kernel(
     scalar_r: f64,
     metric: &CausalTensor<f64>,
 ) -> Result<CausalTensor<f64>, PhysicsError> {
+    // Validate ranks and shapes
+    if ricci.num_dim() != 2 || metric.num_dim() != 2 {
+        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+            format!(
+                "Einstein tensor requires rank-2 tensors. Got ranks: ricci={}, metric={}",
+                ricci.num_dim(),
+                metric.num_dim()
+            ),
+        )));
+    }
+    if ricci.shape() != metric.shape() {
+        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+            format!(
+                "Ricci and metric shapes must match. Got {:?} vs {:?}",
+                ricci.shape(),
+                metric.shape()
+            ),
+        )));
+    }
+    if ricci.shape().len() == 2 && ricci.shape()[0] != ricci.shape()[1] {
+        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+            format!("Ricci tensor must be square. Got {:?}", ricci.shape()),
+        )));
+    }
+
     // G_uv = R_uv - 0.5 * R * g_uv
-
-    // 0.5 * R
     let half_r = 0.5 * scalar_r;
-
-    // 0.5 * R * g_uv
     let term2 = metric.clone() * half_r;
-
-    // R_uv - term2
     let g = ricci.clone() - term2;
     Ok(g)
 }
