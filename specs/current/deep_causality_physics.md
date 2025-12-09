@@ -58,7 +58,8 @@ deep_causality_physics/
 │   ├── dynamics/
 │   │   ├── mod.rs
 │   │   ├── quantities.rs   # Mass, Speed, Acceleration, Force, Torque
-│   │   └── kinematics.rs   
+│   │   ├── kinematics.rs
+│   │   └── estimation.rs   # Kalman Filter, Estimation Algorithms   
 │   ├── thermodynamics/     
 │   │   ├── mod.rs
 │   │   ├── quantities.rs   # Temperature, Entropy
@@ -332,6 +333,18 @@ pub fn sprt_confidence(prob_one: Probability, prob_zero: Probability) -> Propaga
 pub fn torque(radius: &MultiVector, force: &MultiVector) -> PropagatingEffect<MultiVector>; // Bivector torque
 pub fn angular_momentum(radius: &MultiVector, momentum: &MultiVector) -> PropagatingEffect<MultiVector>;
 pub fn rotational_kinetic_energy(inertia: MomentOfInertia, omega: Frequency) -> PropagatingEffect<Energy>;
+
+// Estimation (New from Geometric Tilt Migration)
+// Standard Linear Kalman Filter Step
+// Returns: (State Estimate, Covariance Estimate)
+pub fn kalman_filter_linear(
+    x_pred: &CausalTensor<f64>, // Predicted State
+    p_pred: &CausalTensor<f64>, // Predicted Covariance
+    measurement: &CausalTensor<f64>, // Measurement (z)
+    measurement_matrix: &CausalTensor<f64>, // H
+    measurement_noise: &CausalTensor<f64>, // R
+    process_noise: &CausalTensor<f64> // Q
+) -> PropagatingEffect<(CausalTensor<f64>, CausalTensor<f64>)>;
 ```
 
 ---
@@ -441,7 +454,8 @@ This section details the roadmap for replacing manual physics implementations in
 | `differential_field.rs` | Manual Heat Eq: `u - dt * L * u` | (Optional) `thermodynamics::heat_diffusion` | Consider adding specific solver helper if recurring. |
 | `grmhd_example/model.rs` | `compute_lorentz_force_internal` | `electromagnetism::lorentz_force(j, b)` | Eliminates custom helper function. |
 | `grmhd_example/model.rs` | Manual G_uv calculation | `relativity::einstein_tensor(...)` | |
-| `geometric_tilt_estimator.rs` | Manual angle calculations | `relativity::time_dilation_angle` or `waves::phase_velocity` | Depending on context (Rotational vs Relativistic). |
+| `geometric_tilt_example.rs` | Manual angle calculations | `relativity::time_dilation_angle` or `waves::phase_velocity` | Depending on context (Rotational vs Relativistic). |
+| `geometric_tilt_example/model.rs` | `kalman_update` (Manual Impl) | `dynamics::kalman_filter_linear(...)` | Replaces verbose matrix algebra with standard call. |
 
 ### 7.3. Action Steps
 
