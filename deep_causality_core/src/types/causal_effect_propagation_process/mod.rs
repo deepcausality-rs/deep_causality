@@ -8,10 +8,10 @@ use deep_causality_haft::{LogAppend, MonadEffect5};
 
 mod display;
 mod explain;
+mod getters;
 pub mod hkt;
 mod intervenable;
 mod predicates;
-mod getters;
 
 /// The fundamental unit of causal computation in DeepCausality.
 ///

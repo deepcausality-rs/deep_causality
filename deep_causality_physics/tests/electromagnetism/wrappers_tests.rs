@@ -154,8 +154,12 @@ fn test_proca_equation_wrapper_success() {
     let potential = create_simple_manifold(); // full simplex data
 
     let effect = proca_equation(&field, &potential, 0.5);
-    
-    assert!(effect.is_ok(), "Proca should succeed now with internal slicing logic: {:?}", effect.error());
+
+    assert!(
+        effect.is_ok(),
+        "Proca should succeed now with internal slicing logic: {:?}",
+        effect.error()
+    );
 }
 
 #[test]
@@ -164,12 +168,12 @@ fn test_proca_equation_wrapper_error_propagation() {
     // we need to construct a scenario that legitimately fails to test error propagation.
     // However, the wrapper just delegates. If we want to test that errors propagate,
     // we can use invalid inputs that trigger error inside validity checks (e.g. NaN mass?? or empty manifold?)
-    
+
     // For now, let's keep it verifying SUCCESS because the previous "failure" was due to a bug we fixed.
     // If we really want to test error propagation, we'd need to mock an internal failure.
     // Let's just update this to confirm success as well, or remove it if redundant.
     // I'll update it to check a valid case for now to verify consistent behavior.
-    
+
     let field = create_simple_manifold();
     let potential = create_simple_manifold();
 

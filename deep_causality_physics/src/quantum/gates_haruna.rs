@@ -54,13 +54,8 @@ fn exp(mv: &CausalMultiVector<Complex<f64>>) -> CausalMultiVector<Complex<f64>> 
         // User specified l2_norm() which is not available directly.
         // We compute L2 norm of the difference vector components.
         let diff = &sum - &prev;
-        let delta = diff
-            .data()
-            .iter()
-            .map(|c| c.norm_sqr())
-            .sum::<f64>()
-            .sqrt();
-            
+        let delta = diff.data().iter().map(|c| c.norm_sqr()).sum::<f64>().sqrt();
+
         if delta < tol {
             break;
         }

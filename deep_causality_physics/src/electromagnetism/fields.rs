@@ -149,13 +149,11 @@ pub fn proca_equation_kernel(
     let needed_len = delta_f.len();
     if a_full.len() < needed_len {
         return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::DimensionMismatch(
-                format!(
-                    "Proca: potential data shorter than 1-form domain: {} < {}",
-                    a_full.len(),
-                    needed_len
-                ),
-            ),
+            crate::PhysicsErrorEnum::DimensionMismatch(format!(
+                "Proca: potential data shorter than 1-form domain: {} < {}",
+                a_full.len(),
+                needed_len
+            )),
         ));
     }
     let a_1form = CausalTensor::new(a_full.as_slice()[..needed_len].to_vec(), a_shape)?;

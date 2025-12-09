@@ -3,9 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-
 use deep_causality_core::{CausalEffectPropagationProcess, EffectValue};
-
 
 #[test]
 fn test_causal_effect_propagation_process_getters() {

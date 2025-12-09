@@ -96,20 +96,19 @@ fn test_kalman_filter_innovation_covariance_shape_mismatch() {
     }
 }
 
-
 #[test]
 fn test_kalman_filter_state_update_shape_mismatch() {
     // Attempt to trigger Line 102: x_pred.shape() != ky.shape()
     // We try to trigger a mismatch by passing inputs that are compatible for matmul but produce unexpected output shape.
     // Given the tensor library's strictness, this is hard to trigger without hitting earlier error.
     // However, we construct a case that fails validation either at Line 51 or Line 102, covering the logic path.
-    
+
     // x_pred [1] (Rank 1)
     // H [1, 1], z [1, 1]
     // This triggers "measurement [1,1] != hx [1]" at Line 51 first.
     // This effectively tests that shape mismatches are caught.
-    
-    let x_pred = CausalTensor::new(vec![10.0], vec![1]).unwrap(); 
+
+    let x_pred = CausalTensor::new(vec![10.0], vec![1]).unwrap();
     let p_pred = CausalTensor::new(vec![1.0], vec![1, 1]).unwrap();
     let measurement = CausalTensor::new(vec![12.0], vec![1, 1]).unwrap();
     let h = CausalTensor::new(vec![1.0], vec![1, 1]).unwrap();
@@ -156,11 +155,11 @@ fn test_kalman_filter_identity_shape_mismatch() {
     //
     // However, we will add this test case to verify that *some* shape error is returned,
     // demonstrating that the function is robust against non-square inputs.
-    
+
     let x_pred = CausalTensor::new(vec![10.0, 20.0], vec![2, 1]).unwrap();
     let p_pred = CausalTensor::new(vec![1.0, 0.0], vec![2, 1]).unwrap(); // Non-square P
     let measurement = CausalTensor::new(vec![12.0], vec![1, 1]).unwrap();
-    let h = CausalTensor::new(vec![1.0, 1.0], vec![1, 2]).unwrap(); 
+    let h = CausalTensor::new(vec![1.0, 1.0], vec![1, 2]).unwrap();
     let r = CausalTensor::new(vec![1.0], vec![1, 1]).unwrap();
     let q = CausalTensor::new(vec![0.0], vec![1, 1]).unwrap();
 

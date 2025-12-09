@@ -115,7 +115,7 @@ fn test_proca_equation_kernel_valid() {
     let field_manifold = create_simple_manifold();
     let potential_manifold = create_simple_manifold();
     let mass = 0.5;
-    
+
     let result = proca_equation_kernel(&field_manifold, &potential_manifold, mass);
     assert!(result.is_ok(), "Proca kernel failed: {:?}", result.err());
 }

@@ -71,18 +71,23 @@ pub fn time_dilation_angle_kernel(
     // Inner product must yield a scalar
     let inner = t1.inner_product(t2);
     if inner.data().is_empty() {
-        return Err(PhysicsError::new(PhysicsErrorEnum::PhysicalInvariantBroken(
-            "Inner product did not yield any data".into(),
-        )));
+        return Err(PhysicsError::new(
+            PhysicsErrorEnum::PhysicalInvariantBroken(
+                "Inner product did not yield any data".into(),
+            ),
+        ));
     }
-    
+
     // Verify that non-scalar components (index > 0) are effectively zero
     // In dense representation (e.g. 16 dims), inner product of vectors should be scalar (index 0).
     let non_scalar_magnitude: f64 = inner.data().iter().skip(1).map(|v| v.abs()).sum();
     if non_scalar_magnitude > 1e-9 {
-         return Err(PhysicsError::new(PhysicsErrorEnum::PhysicalInvariantBroken(
-            format!("Inner product did not yield scalar grade (non-scalar mag: {})", non_scalar_magnitude).into(),
-        )));
+        return Err(PhysicsError::new(
+            PhysicsErrorEnum::PhysicalInvariantBroken(format!(
+                "Inner product did not yield scalar grade (non-scalar mag: {})",
+                non_scalar_magnitude
+            )),
+        ));
     }
 
     let dot = inner.data()[0];
