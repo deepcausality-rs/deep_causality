@@ -2,8 +2,21 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalTensor, CausalTensorError};
+use crate::{CausalTensor, CausalTensorError, EinSumOp};
+use deep_causality_num::Ring;
 use std::ops::Mul;
+
+impl<T> CausalTensor<T>
+where
+    T: Ring + Copy + Default + PartialOrd,
+{
+    pub(in crate::types::causal_tensor)  fn matmul_impl(&self, rhs: &Self) -> Result<Self, CausalTensorError> {
+        // Construct AST for Matrix Multiplication
+        let ast = EinSumOp::mat_mul(self.clone(), rhs.clone());
+        // Execute via internal engine
+        Self::execute_ein_sum(&ast)
+    }
+}
 
 impl<T> CausalTensor<T>
 where

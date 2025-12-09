@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{CausalTensor, CausalTensorError, EinSumAST};
-use deep_causality_num::{One, RealField, Zero};
+use deep_causality_num::{One, RealField, Ring, Zero};
 use std::iter::Sum;
 use std::ops::{Add, Div, Mul};
 
@@ -30,6 +30,12 @@ pub trait Tensor<T> {
     fn ein_sum(ast: &EinSumAST<T>) -> Result<CausalTensor<T>, CausalTensorError>
     where
         T: Clone + Default + PartialOrd + Add<Output = T> + Mul<Output = T>;
+
+    fn matmul(&self, rhs: &Self) -> Result<Self, CausalTensorError>
+    where
+        T: Ring + Copy + Default + PartialOrd,
+        Self: Sized;
+
     /// Computes the tensor product (also known as the outer product) of two `CausalTensor`s.
     ///
     /// The tensor product combines two tensors into a new tensor whose rank is the sum of

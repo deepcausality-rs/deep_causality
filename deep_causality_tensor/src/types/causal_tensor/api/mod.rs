@@ -5,8 +5,7 @@
 use crate::{CausalTensor, CausalTensorError, EinSumAST, Tensor};
 use core::iter::Sum;
 use core::ops::{Add, Div, Mul};
-use deep_causality_num::{One, RealField, Zero};
-// Added One // Added Sub, Neg
+use deep_causality_num::{One, RealField, Ring, Zero};
 
 impl<T> Tensor<T> for CausalTensor<T> {
     /// Public API for Einstein summation.
@@ -34,6 +33,14 @@ impl<T> Tensor<T> for CausalTensor<T> {
     {
         Self::execute_ein_sum(ast)
     }
+
+    fn matmul(&self, rhs: &Self) -> Result<Self, CausalTensorError>
+    where
+        T: Ring + Copy + Default + PartialOrd,
+    {
+        self.matmul_impl(rhs)
+    }
+
     /// Computes the tensor product (also known as the outer product) of two `CausalTensor`s.
     ///
     /// The tensor product combines two tensors into a new tensor whose rank is the sum of
