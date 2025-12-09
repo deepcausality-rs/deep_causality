@@ -8,3 +8,5 @@ mod gravity_tests;
 mod quantities_tests;
 #[cfg(test)]
 mod spacetime_tests;
+#[cfg(test)]
+mod wrappers_tests;

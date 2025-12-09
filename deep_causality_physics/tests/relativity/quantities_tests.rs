@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::{SpacetimeInterval, SpacetimeVector};
 use deep_causality_multivector::{CausalMultiVector, Metric};
+use deep_causality_physics::{SpacetimeInterval, SpacetimeVector};
 
 // =============================================================================
 // SpacetimeInterval Tests
@@ -52,14 +52,16 @@ fn test_spacetime_vector_default() {
 #[test]
 fn test_spacetime_vector_new_and_accessors() {
     let mv = CausalMultiVector::new(
-        vec![1.0, 2.0, 3.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        vec![
+            1.0, 2.0, 3.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ],
         Metric::Minkowski(4),
     )
     .unwrap();
     let sv = SpacetimeVector::new(mv.clone());
-    
+
     assert_eq!(sv.inner().data(), mv.data());
-    
+
     let inner = sv.into_inner();
     assert_eq!(inner.data(), mv.data());
 }

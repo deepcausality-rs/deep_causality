@@ -6,7 +6,7 @@
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{
     lorenz_gauge_kernel, magnetic_helicity_density_kernel, maxwell_gradient_kernel,
-    poynting_vector_kernel, proca_equation_kernel,
+    poynting_vector_kernel,
 };
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud};
@@ -94,22 +94,5 @@ fn test_maxwell_gradient_kernel_valid() {
 fn test_lorenz_gauge_kernel_valid() {
     let manifold = create_simple_manifold();
     let result = lorenz_gauge_kernel(&manifold);
-    assert!(result.is_ok());
-}
-
-#[test]
-#[ignore] // Proca equation requires matching manifold shapes for delta_F and m^2*A
-fn test_proca_equation_kernel_valid() {
-    let manifold = create_simple_manifold();
-    let mass = 0.5;
-    // For Proca, we need F and A manifolds potentially.
-    // The kernel takes field_manifold (F) and potential_manifold (A).
-    // In this test, we reuse the same manifold structure for simplicity of passing types,
-    // though physically F is 2-form and A is 1-form.
-    // The kernel will call codifferential/etc which relies on k-form logic.
-    // Manifold stores data for all simplices, but methods usually operate on specific grades?
-    // Let's assume the kernel handles logic correctly if data is provided.
-
-    let result = proca_equation_kernel(&manifold, &manifold, mass);
     assert!(result.is_ok());
 }

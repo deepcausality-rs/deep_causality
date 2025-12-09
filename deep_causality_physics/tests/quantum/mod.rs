@@ -10,3 +10,5 @@ mod gates_tests;
 mod mechanics_tests;
 #[cfg(test)]
 mod quantities_tests;
+#[cfg(test)]
+mod wrappers_tests;

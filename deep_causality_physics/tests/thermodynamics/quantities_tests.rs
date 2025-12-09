@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::{Efficiency, Entropy};
 use deep_causality_physics::PhysicsErrorEnum;
+use deep_causality_physics::{Efficiency, Entropy};
 
 // =============================================================================
 // Entropy Tests
@@ -65,7 +65,10 @@ fn test_efficiency_new_error_negative() {
     let eff = Efficiency::new(-0.1);
     assert!(eff.is_err());
     let err = eff.unwrap_err();
-    assert!(matches!(&err.0, PhysicsErrorEnum::PhysicalInvariantBroken(_)));
+    assert!(matches!(
+        &err.0,
+        PhysicsErrorEnum::PhysicalInvariantBroken(_)
+    ));
 }
 
 #[test]

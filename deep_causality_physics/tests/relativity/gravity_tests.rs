@@ -17,10 +17,10 @@ fn test_einstein_tensor_kernel_valid() {
     let ricci = CausalTensor::new(vec![1.0, 0.0, 0.0, 1.0], vec![2, 2]).unwrap();
     let metric = CausalTensor::new(vec![1.0, 0.0, 0.0, 1.0], vec![2, 2]).unwrap();
     let scalar_r = 2.0; // Trace of Ricci
-    
+
     let result = einstein_tensor_kernel(&ricci, scalar_r, &metric);
     assert!(result.is_ok());
-    
+
     let g = result.unwrap();
     // G = R - 0.5*2*I = I - I = 0
     assert!((g.data()[0] - 0.0).abs() < 1e-10);
@@ -32,10 +32,10 @@ fn test_einstein_tensor_kernel_flat_space() {
     let ricci = CausalTensor::new(vec![0.0, 0.0, 0.0, 0.0], vec![2, 2]).unwrap();
     let metric = CausalTensor::new(vec![1.0, 0.0, 0.0, -1.0], vec![2, 2]).unwrap();
     let scalar_r = 0.0;
-    
+
     let result = einstein_tensor_kernel(&ricci, scalar_r, &metric);
     assert!(result.is_ok());
-    
+
     let g = result.unwrap();
     // G = 0 - 0 = 0
     for val in g.data() {
@@ -55,10 +55,10 @@ fn test_geodesic_deviation_kernel_valid() {
     let riemann = CausalTensor::new(vec![0.0; 16], vec![2, 2, 2, 2]).unwrap();
     let velocity = CausalTensor::new(vec![1.0, 0.0], vec![2]).unwrap();
     let separation = CausalTensor::new(vec![0.0, 1.0], vec![2]).unwrap();
-    
+
     let result = geodesic_deviation_kernel(&riemann, &velocity, &separation);
     assert!(result.is_ok());
-    
+
     let a = result.unwrap();
     // Zero Riemann => zero deviation
     for val in a.data() {
@@ -72,7 +72,7 @@ fn test_geodesic_deviation_kernel_dimension_error() {
     let riemann = CausalTensor::new(vec![1.0; 4], vec![2, 2]).unwrap(); // Rank 2, not 4
     let velocity = CausalTensor::new(vec![1.0, 0.0], vec![2]).unwrap();
     let separation = CausalTensor::new(vec![0.0, 1.0], vec![2]).unwrap();
-    
+
     let result = geodesic_deviation_kernel(&riemann, &velocity, &separation);
     assert!(result.is_err(), "Should error on wrong Riemann rank");
 }

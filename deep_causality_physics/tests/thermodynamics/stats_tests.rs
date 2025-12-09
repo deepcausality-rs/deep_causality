@@ -4,9 +4,9 @@
  */
 
 use deep_causality_physics::{
-    boltzmann_factor_kernel, carnot_efficiency_kernel, heat_capacity_kernel,
-    ideal_gas_law_kernel, partition_function_kernel, shannon_entropy_kernel,
-    AmountOfSubstance, Energy, Pressure, Temperature, Volume,
+    AmountOfSubstance, Energy, Pressure, Temperature, Volume, boltzmann_factor_kernel,
+    carnot_efficiency_kernel, heat_capacity_kernel, ideal_gas_law_kernel,
+    partition_function_kernel, shannon_entropy_kernel,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -22,10 +22,10 @@ fn test_ideal_gas_law_kernel_valid() {
     let v = Volume::new(0.0224).unwrap(); // ~22.4 L = 0.0224 m³
     let n = AmountOfSubstance::new(1.0).unwrap(); // 1 mol
     let t = Temperature::new(273.15).unwrap(); // 0°C = 273.15K
-    
+
     let result = ideal_gas_law_kernel(p, v, n, t);
     assert!(result.is_ok());
-    
+
     let r = result.unwrap();
     // R should be close to 8.314
     assert!((r - 8.314).abs() < 0.1, "Expected R ~ 8.314, got {}", r);
@@ -37,7 +37,7 @@ fn test_ideal_gas_law_kernel_zero_moles_error() {
     let v = Volume::new(1.0).unwrap();
     let n = AmountOfSubstance::new(0.0).unwrap();
     let t = Temperature::new(300.0).unwrap();
-    
+
     let result = ideal_gas_law_kernel(p, v, n, t);
     assert!(result.is_err(), "Zero moles should error");
 }
@@ -51,10 +51,10 @@ fn test_carnot_efficiency_kernel_valid() {
     // η = 1 - Tc/Th
     let th = Temperature::new(500.0).unwrap();
     let tc = Temperature::new(300.0).unwrap();
-    
+
     let result = carnot_efficiency_kernel(th, tc);
     assert!(result.is_ok());
-    
+
     let eff = result.unwrap();
     // η = 1 - 300/500 = 0.4
     assert!((eff - 0.4).abs() < 1e-10, "Expected 0.4, got {}", eff);
@@ -64,7 +64,7 @@ fn test_carnot_efficiency_kernel_valid() {
 fn test_carnot_efficiency_kernel_cold_ge_hot_error() {
     let th = Temperature::new(300.0).unwrap();
     let tc = Temperature::new(300.0).unwrap();
-    
+
     let result = carnot_efficiency_kernel(th, tc);
     assert!(result.is_err(), "Tc >= Th should error");
 }
@@ -78,10 +78,10 @@ fn test_boltzmann_factor_kernel_ground_state() {
     // E=0 => factor = 1
     let e = Energy::new(0.0).unwrap();
     let t = Temperature::new(300.0).unwrap();
-    
+
     let result = boltzmann_factor_kernel(e, t);
     assert!(result.is_ok());
-    
+
     let p = result.unwrap();
     assert!((p.value() - 1.0).abs() < 1e-10);
 }
@@ -94,10 +94,10 @@ fn test_boltzmann_factor_kernel_ground_state() {
 fn test_shannon_entropy_kernel_uniform() {
     // Uniform distribution has max entropy
     let probs = CausalTensor::new(vec![0.25, 0.25, 0.25, 0.25], vec![4]).unwrap();
-    
+
     let result = shannon_entropy_kernel(&probs);
     assert!(result.is_ok());
-    
+
     let h = result.unwrap();
     // H = -4 * (0.25 * ln(0.25)) = ln(4) ≈ 1.386
     assert!((h - 1.386).abs() < 0.01, "Expected ~1.386, got {}", h);
@@ -111,10 +111,10 @@ fn test_shannon_entropy_kernel_uniform() {
 fn test_heat_capacity_kernel_valid() {
     let de = Energy::new(100.0).unwrap();
     let dt = Temperature::new(10.0).unwrap();
-    
+
     let result = heat_capacity_kernel(de, dt);
     assert!(result.is_ok());
-    
+
     let c = result.unwrap();
     assert!((c - 10.0).abs() < 1e-10);
 }
@@ -123,7 +123,7 @@ fn test_heat_capacity_kernel_valid() {
 fn test_heat_capacity_kernel_zero_dt_error() {
     let de = Energy::new(100.0).unwrap();
     let dt = Temperature::new(0.0).unwrap();
-    
+
     let result = heat_capacity_kernel(de, dt);
     assert!(result.is_err(), "Zero dT should error");
 }
@@ -136,10 +136,10 @@ fn test_heat_capacity_kernel_zero_dt_error() {
 fn test_partition_function_kernel_valid() {
     let energies = CausalTensor::new(vec![0.0, 1e-21, 2e-21], vec![3]).unwrap();
     let t = Temperature::new(300.0).unwrap();
-    
+
     let result = partition_function_kernel(&energies, t);
     assert!(result.is_ok());
-    
+
     let z = result.unwrap();
     assert!(z > 0.0);
 }
