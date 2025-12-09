@@ -6,8 +6,8 @@
 use deep_causality_core::CausalityError;
 use deep_causality_multivector::{CausalMultiVector, Metric};
 
+/// Electric Potential (Volts or J/C).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
 pub struct ElectricPotential(f64);
 
 impl ElectricPotential {
@@ -27,8 +27,8 @@ impl From<ElectricPotential> for f64 {
     }
 }
 
+/// Magnetic Flux (Webers).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
 pub struct MagneticFlux(f64);
 
 impl MagneticFlux {
@@ -48,9 +48,9 @@ impl From<MagneticFlux> for f64 {
     }
 }
 
-// Wrapper for CausalMultiVector to implement Default and be used in PropagatingEffect
+/// Wrapper for CausalMultiVector representing a physical field (E, B, etc.).
+/// Implements Default to return a zero vector.
 #[derive(Debug, Clone, PartialEq)]
-
 pub struct PhysicalField(pub CausalMultiVector<f64>);
 
 impl Default for PhysicalField {

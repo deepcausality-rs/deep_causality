@@ -10,6 +10,19 @@ use deep_causality_multivector::{CausalMultiVector, MultiVector};
 
 // Kernels
 
+/// Calculates the magnetic force component of the Lorentz Force: $F = J \times B$.
+///
+/// In Geometric Algebra, this is computed via the outer product $J \wedge B$, representing the
+/// force as a bivector (torque-like/plane) in this implementation.
+/// To recover the vector force in 3D, one would typically take the dual.
+///
+/// # Arguments
+/// * `j` - Current density vector $J$.
+/// * `b` - Magnetic field vector $B$.
+///
+/// # Returns
+/// * `Ok(CausalMultiVector<f64>)` - Force bivector ($J \wedge B$).
+/// * `Err(PhysicsError)` - If dimension mismatch occurs.
 pub fn lorentz_force_kernel(
     j: &CausalMultiVector<f64>,
     b: &CausalMultiVector<f64>,
@@ -18,23 +31,13 @@ pub fn lorentz_force_kernel(
     // Calculates the magnetic force density component of the Lorentz Force.
     // Full Lorentz force density: f = \rho E + J \times B
     // This kernel specifically computes the J \times B term.
-    //
-    // References:
-    // - Jackson, J. D. Classical Electrodynamics. Section 12.1.
-    // - Geometric Algebra: J \times B is the dual of the outer product part of J B?
-    //   Actually in 3D, a x b = -I (a ^ b).
-    //   CausalMultiVector::outer_product computes a ^ b (Bivector).
-    //   To get the vector force, one typically multiplies by the pseudoscalar -I inverse.
-    //   However, for this implementation we return the Bivector representation (Area/Torque-like)
-    //   or assume the user handles the dual.
-    //   Standard convention in this library: Return the Wedge Product (Bivector) and let context apply dual if needed.
-
     let f = j.outer_product(b);
     Ok(f)
 }
 
 // Wrappers
 
+/// Causal wrapper for [`lorentz_force_kernel`].
 pub fn lorentz_force(
     j: &CausalMultiVector<f64>,
     b: &CausalMultiVector<f64>,

@@ -19,8 +19,7 @@
 //!   Formula (General Longitudinal):
 //!   $$ f_{obs} = f_{src} \left( \frac{v \pm v_o}{v \mp v_s} \right) $$
 //!   where signs depend on direction (approaching vs receding).
-use crate::dynamics::quantities::{Frequency, Length, Speed};
-use crate::error::{PhysicsError, PhysicsErrorEnum};
+use crate::{Frequency, Length, PhysicsError, PhysicsErrorEnum, Speed};
 use alloc::format;
 use deep_causality_core::PropagatingEffect;
 

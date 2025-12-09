@@ -11,19 +11,29 @@ use deep_causality_multivector::{CausalMultiVector, MultiVector};
 
 // Wrappers
 
+/// Stub: Calculates the Maxwell gradient (Electromagnetic Field Tensor).
+///
+/// Currently returns the potential as-is wrapped in `PhysicalField` due to lack of spatial differentiation context.
+///
+/// # Arguments
+/// * `potential` - Electromagnetic potential vector field $A$.
+///
+/// # Returns
+/// * `PropagatingEffect<PhysicalField>` - Field tensor $F$ (Stub).
 pub fn maxwell_gradient(potential: &CausalMultiVector<f64>) -> PropagatingEffect<PhysicalField> {
     // Field Tensor F = dA (Exterior Derivative of Potential A)
     // F is a bivector (grade 2).
     // Currently, CausalMultiVector represents a value at a point, not a field over a manifold.
     // Therefore, spatial differentiation (gradient/curl) requests external context (Grid/Manifold).
     //
-    // STUB: Returns the potential as-is to satisfy type signature, or would ideally return Zero/Error.
-    // Returning Error might break pipelines relying on "pass-through" for now.
-    // We wrap it in PhysicalField just to match signature.
+    // STUB: Returns the potential as-is to satisfy type signature.
     // TODO: Implement differentiation via `deep_causality_topology` Manifolds.
     PropagatingEffect::pure(PhysicalField(potential.clone()))
 }
 
+/// Stub: Calculates the Lorenz gauge condition.
+///
+/// Returns 0.0 as a placeholder for $\nabla \cdot A + \frac{1}{c^2} \frac{\partial \phi}{\partial t} = 0$.
 pub fn lorenz_gauge(_potential: &CausalMultiVector<f64>) -> PropagatingEffect<f64> {
     // Div A + d(phi)/dt = 0
     // Scalar part of derivative.
@@ -31,6 +41,16 @@ pub fn lorenz_gauge(_potential: &CausalMultiVector<f64>) -> PropagatingEffect<f6
     PropagatingEffect::pure(0.0)
 }
 
+/// Calculates the Poynting Vector (Energy Flux): $S = E \times B$.
+///
+/// Uses the outer product $E \wedge B$ to represent flux as a bivector.
+///
+/// # Arguments
+/// * `e` - Electric field vector $E$.
+/// * `b` - Magnetic field vector $B$.
+///
+/// # Returns
+/// * `PropagatingEffect<PhysicalField>` - Poynting vector (as bivector).
 pub fn poynting_vector(
     e: &CausalMultiVector<f64>,
     b: &CausalMultiVector<f64>,
@@ -44,6 +64,14 @@ pub fn poynting_vector(
     PropagatingEffect::pure(PhysicalField(s))
 }
 
+/// Calculates Magnetic Helicity Density: $h = A \cdot B$.
+///
+/// # Arguments
+/// * `potential` - Vector potential $A$.
+/// * `field` - Magnetic field $B$.
+///
+/// # Returns
+/// * `PropagatingEffect<MagneticFlux>` - Helicity density scalar.
 pub fn magnetic_helicity_density(
     potential: &CausalMultiVector<f64>,
     field: &CausalMultiVector<f64>,

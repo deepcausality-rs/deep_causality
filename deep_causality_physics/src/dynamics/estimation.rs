@@ -5,9 +5,28 @@
 
 use crate::PhysicsError;
 use deep_causality_core::{CausalityError, PropagatingEffect};
-use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor}; // Import Tensor trait
+use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 
 /// Standard Linear Kalman Filter Update Step.
+///
+/// Implements the discrete-time Kalman filter update equations:
+///
+/// 1. Innovation Residual: $\mathbf{y} = \mathbf{z} - \mathbf{H}\hat{\mathbf{x}}$
+/// 2. Innovation Covariance: $\mathbf{S} = \mathbf{H}\mathbf{P}\mathbf{H}^T + \mathbf{R}$
+/// 3. Optimal Kalman Gain: $\mathbf{K} = \mathbf{P}\mathbf{H}^T \mathbf{S}^{-1}$
+/// 4. State Update: $\hat{\mathbf{x}}_{new} = \hat{\mathbf{x}} + \mathbf{K}\mathbf{y}$
+/// 5. Covariance Update: $\mathbf{P}_{new} = (\mathbf{I} - \mathbf{K}\mathbf{H})\mathbf{P}$
+///
+/// # Arguments
+/// * `x_pred` - Predicted state vector ($\hat{\mathbf{x}}$).
+/// * `p_pred` - Predicted estimate covariance ($\mathbf{P}$).
+/// * `measurement` - Observation vector ($\mathbf{z}$).
+/// * `measurement_matrix` - Observation model ($\mathbf{H}$).
+/// * `measurement_noise` - Observation noise covariance ($\mathbf{R}$).
+/// * `_process_noise` - Process noise covariance (unused in update step, typically used in prediction).
+///
+/// # Returns
+/// * `PropagatingEffect<(CausalTensor<f64>, CausalTensor<f64>)>` - Tuple of (Updated State, Updated Covariance).
 pub fn kalman_filter_linear(
     x_pred: &CausalTensor<f64>,
     p_pred: &CausalTensor<f64>,

@@ -4,14 +4,20 @@
  */
 
 use crate::constants::universal::SPEED_OF_LIGHT;
-use crate::dynamics::quantities::Mass;
-use crate::error::PhysicsError;
-use crate::nuclear::quantities::{AmountOfSubstance, HalfLife};
-use crate::quantum::quantities::{Energy, Time};
+use crate::{AmountOfSubstance, Energy, HalfLife, Mass, PhysicsError, Time};
 use deep_causality_core::{CausalityError, PropagatingEffect};
 
 // Kernels
 
+/// Calculates radioactive decay: $N(t) = N_0 \left(\frac{1}{2}\right)^{t / t_{1/2}}$.
+///
+/// # Arguments
+/// * `n0` - Initial amount of substance $N_0$.
+/// * `half_life` - Half-life $t_{1/2}$.
+/// * `time` - Elapsed time $t$.
+///
+/// # Returns
+/// * `Ok(AmountOfSubstance)` - Remaining amount $N(t)$.
 pub fn radioactive_decay_kernel(
     n0: &AmountOfSubstance,
     half_life: &HalfLife,
@@ -31,6 +37,13 @@ pub fn radioactive_decay_kernel(
     AmountOfSubstance::new(n)
 }
 
+/// Calculates nuclear binding energy (mass defect): $E = \Delta m c^2$.
+///
+/// # Arguments
+/// * `mass_defect` - Mass difference $\Delta m$.
+///
+/// # Returns
+/// * `Ok(Energy)` - Binding energy $E$.
 pub fn binding_energy_kernel(mass_defect: &Mass) -> Result<Energy, PhysicsError> {
     // E = m c^2
     // Mass-Energy Equivalence
@@ -41,6 +54,7 @@ pub fn binding_energy_kernel(mass_defect: &Mass) -> Result<Energy, PhysicsError>
 
 // Wrappers
 
+/// Causal wrapper for [`radioactive_decay_kernel`].
 pub fn radioactive_decay(
     n0: &AmountOfSubstance,
     half_life: &HalfLife,
@@ -52,6 +66,7 @@ pub fn radioactive_decay(
     }
 }
 
+/// Causal wrapper for [`binding_energy_kernel`].
 pub fn binding_energy(mass_defect: &Mass) -> PropagatingEffect<Energy> {
     match binding_energy_kernel(mass_defect) {
         Ok(e) => PropagatingEffect::pure(e),

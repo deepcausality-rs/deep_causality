@@ -3,14 +3,18 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::error::{PhysicsError, PhysicsErrorEnum};
+use crate::{PhysicsError, PhysicsErrorEnum};
 use alloc::format;
 
+/// Mass quantity (kg).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
 pub struct Mass(f64);
 
 impl Mass {
+    /// Creates a new `Mass` instance.
+    ///
+    /// # Errors
+    /// Returns `PhysicsError::PhysicalInvariantBroken` if `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val < 0.0 {
             return Err(PhysicsError::new(
@@ -22,6 +26,7 @@ impl Mass {
         }
         Ok(Self(val))
     }
+    /// Creates a new `Mass` instance without validation.
     pub fn new_unchecked(val: f64) -> Self {
         Self(val)
     }
@@ -35,11 +40,15 @@ impl From<Mass> for f64 {
     }
 }
 
+/// Speed quantity (scalar magnitude of velocity) (m/s).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
 pub struct Speed(f64);
 
 impl Speed {
+    /// Creates a new `Speed` instance.
+    ///
+    /// # Errors
+    /// Returns `PhysicsError::PhysicalInvariantBroken` if `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val < 0.0 {
             return Err(PhysicsError::new(
@@ -64,8 +73,9 @@ impl From<Speed> for f64 {
     }
 }
 
+/// Linear acceleration (m/s^2).
+/// Can be negative to indicate direction in 1D context.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
 pub struct Acceleration(f64);
 
 impl Acceleration {
@@ -85,8 +95,9 @@ impl From<Acceleration> for f64 {
     }
 }
 
+/// Force (N).
+/// Can be negative to indicate direction in 1D context.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
 pub struct Force(f64);
 
 impl Force {
@@ -106,8 +117,9 @@ impl From<Force> for f64 {
     }
 }
 
+/// Torque (N·m).
+/// Can be negative to indicate direction (e.g. clockwise vs counter-clockwise).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
 pub struct Torque(f64);
 impl Torque {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
@@ -126,10 +138,14 @@ impl From<Torque> for f64 {
     }
 }
 
+/// Length (m).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
 pub struct Length(f64);
 impl Length {
+    /// Creates a new `Length` instance.
+    ///
+    /// # Errors
+    /// Returns `PhysicsError::PhysicalInvariantBroken` if `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val < 0.0 {
             return Err(PhysicsError::new(
@@ -154,10 +170,14 @@ impl From<Length> for f64 {
     }
 }
 
+/// Area (m^2).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
 pub struct Area(f64);
 impl Area {
+    /// Creates a new `Area` instance.
+    ///
+    /// # Errors
+    /// Returns `PhysicsError::PhysicalInvariantBroken` if `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val < 0.0 {
             return Err(PhysicsError::new(
@@ -182,10 +202,14 @@ impl From<Area> for f64 {
     }
 }
 
+/// Volume (m^3).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
 pub struct Volume(f64);
 impl Volume {
+    /// Creates a new `Volume` instance.
+    ///
+    /// # Errors
+    /// Returns `PhysicsError::PhysicalInvariantBroken` if `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val < 0.0 {
             return Err(PhysicsError::new(
@@ -210,10 +234,14 @@ impl From<Volume> for f64 {
     }
 }
 
+/// Moment of Inertia (kg·m^2).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
 pub struct MomentOfInertia(f64);
 impl MomentOfInertia {
+    /// Creates a new `MomentOfInertia` instance.
+    ///
+    /// # Errors
+    /// Returns `PhysicsError::PhysicalInvariantBroken` if `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val < 0.0 {
             return Err(PhysicsError::new(
@@ -238,10 +266,14 @@ impl From<MomentOfInertia> for f64 {
     }
 }
 
+/// Frequency (Hz).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
 pub struct Frequency(f64);
 impl Frequency {
+    /// Creates a new `Frequency` instance.
+    ///
+    /// # Errors
+    /// Returns `PhysicsError::PhysicalInvariantBroken` if `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val < 0.0 {
             return Err(PhysicsError::new(

@@ -12,6 +12,14 @@ use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
 
 // Kernels
 
+/// Calculates the spacetime interval $s^2 = g_{\mu\nu} x^\mu x^\nu$ (squared magnitude in metric).
+///
+/// # Arguments
+/// * `x` - Spacetime vector.
+/// * `metric` - Expected metric (checked against vector's internal metric).
+///
+/// # Returns
+/// * `Ok(f64)` - Spacetime interval $s^2$.
 pub fn spacetime_interval_kernel(
     x: &CausalMultiVector<f64>,
     metric: &Metric,
@@ -34,6 +42,7 @@ pub fn spacetime_interval_kernel(
 
 // Wrappers
 
+/// Causal wrapper for [`spacetime_interval_kernel`].
 pub fn spacetime_interval(x: &CausalMultiVector<f64>, metric: &Metric) -> PropagatingEffect<f64> {
     match spacetime_interval_kernel(x, metric) {
         Ok(s2) => PropagatingEffect::pure(s2),
@@ -41,6 +50,18 @@ pub fn spacetime_interval(x: &CausalMultiVector<f64>, metric: &Metric) -> Propag
     }
 }
 
+/// Calculates Time Dilation Angle (Rapidity $\eta$).
+///
+/// $\cosh(\eta) = \gamma = \frac{t_1 \cdot t_2}{|t_1| |t_2|}$.
+///
+/// Use `PhaseAngle` here to represent the hyperbolic angle.
+///
+/// # Arguments
+/// * `t1` - Spacetime vector 1 (Timelike).
+/// * `t2` - Spacetime vector 2 (Timelike).
+///
+/// # Returns
+/// * `PropagatingEffect<PhaseAngle>` - Rapidity $\eta$.
 pub fn time_dilation_angle(
     t1: &CausalMultiVector<f64>,
     t2: &CausalMultiVector<f64>,
@@ -99,6 +120,18 @@ pub fn time_dilation_angle(
     }
 }
 
+/// Calculates Chronometric Volume (4-Volume) from 3 vectors?
+///
+/// NOTE: The implementation takes 3 vectors ($a, b, c$), effectively calculating a 3-Volume hyper-surface in Spacetime?
+/// Or if input vectors are 4D, $a \wedge b \wedge c$ is a trivector.
+///
+/// # Arguments
+/// * `a` - 1st Vector.
+/// * `b` - 2nd Vector.
+/// * `c` - 3rd Vector.
+///
+/// # Returns
+/// * `PropagatingEffect<SpacetimeVector>` - Trivector result (wrapped).
 pub fn chronometric_volume(
     a: &CausalMultiVector<f64>,
     b: &CausalMultiVector<f64>,

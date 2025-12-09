@@ -3,14 +3,14 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::error::{PhysicsError, PhysicsErrorEnum};
+use crate::{PhysicsError, PhysicsErrorEnum};
 use deep_causality_core::CausalityError;
 
 // Scalar Stress/Stiffness if needed, though mostly Tensors are used.
 // Defining them for completeness or future scalar ops.
 
+/// Scalar stress (Pascals), used for simple 1D cases or invariants (Von Mises).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
 pub struct Stress(f64);
 
 impl Stress {
@@ -27,11 +27,15 @@ impl From<Stress> for f64 {
     }
 }
 
+/// Scalar stiffness (Young's Modulus, etc.) (Pascals).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
 pub struct Stiffness(f64);
 
 impl Stiffness {
+    /// Creates a new `Stiffness` instance.
+    ///
+    /// # Errors
+    /// Returns `PhysicsError` if `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, CausalityError> {
         if val < 0.0 {
             return Err(CausalityError::from(PhysicsError::new(

@@ -5,9 +5,9 @@
 
 use crate::error::{PhysicsError, PhysicsErrorEnum};
 
+/// Amount of Substance (Moles).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
-pub struct AmountOfSubstance(f64); // Moles
+pub struct AmountOfSubstance(f64);
 
 impl AmountOfSubstance {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
@@ -31,11 +31,15 @@ impl From<AmountOfSubstance> for f64 {
     }
 }
 
+/// Half-Life (Seconds).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
 pub struct HalfLife(f64);
 
 impl HalfLife {
+    /// Creates a new `HalfLife` instance.
+    ///
+    /// # Errors
+    /// Returns `PhysicsError` if `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val < 0.0 {
             return Err(PhysicsError::new(
@@ -57,8 +61,8 @@ impl From<HalfLife> for f64 {
     }
 }
 
+/// Radioactivity (Becquerels).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
 pub struct Activity(f64);
 
 impl Activity {

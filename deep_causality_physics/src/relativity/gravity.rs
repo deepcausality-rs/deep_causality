@@ -9,6 +9,15 @@ use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 
 // Kernels
 
+/// Calculates the Einstein Tensor: $G_{\mu\nu} = R_{\mu\nu} - \frac{1}{2} R g_{\mu\nu}$.
+///
+/// # Arguments
+/// * `ricci` - Ricci curvature tensor $R_{\mu\nu}$ (Rank 2).
+/// * `scalar_r` - Ricci scalar $R$.
+/// * `metric` - Metric tensor $g_{\mu\nu}$ (Rank 2).
+///
+/// # Returns
+/// * `Ok(CausalTensor<f64>)` - Einstein tensor $G_{\mu\nu}$.
 pub fn einstein_tensor_kernel(
     ricci: &CausalTensor<f64>,
     scalar_r: f64,
@@ -27,6 +36,17 @@ pub fn einstein_tensor_kernel(
     Ok(g)
 }
 
+/// Calculates Geodesic Deviation acceleration: $A^\mu = -R^\mu_{\nu\sigma\rho} V^\nu n^\sigma V^\rho$.
+///
+/// Describes the relative acceleration of nearby geodesics.
+///
+/// # Arguments
+/// * `riemann` - Riemann curvature tensor $R^\mu_{\nu\sigma\rho}$ (Rank 4).
+/// * `velocity` - Tangent vector $V^\nu$ (Rank 1).
+/// * `separation` - Separation vector $n^\sigma$ (Rank 1).
+///
+/// # Returns
+/// * `Ok(CausalTensor<f64>)` - Relative acceleration vector $A^\mu$.
 pub fn geodesic_deviation_kernel(
     riemann: &CausalTensor<f64>,    // R^u_vsp (Rank 4)
     velocity: &CausalTensor<f64>,   // V^v (Rank 1)
@@ -76,6 +96,7 @@ pub fn geodesic_deviation_kernel(
 
 // Wrappers
 
+/// Causal wrapper for [`einstein_tensor_kernel`].
 pub fn einstein_tensor(
     ricci: &CausalTensor<f64>,
     scalar_r: f64,
@@ -87,6 +108,7 @@ pub fn einstein_tensor(
     }
 }
 
+/// Causal wrapper for [`geodesic_deviation_kernel`].
 pub fn geodesic_deviation(
     riemann: &CausalTensor<f64>,
     velocity: &CausalTensor<f64>,

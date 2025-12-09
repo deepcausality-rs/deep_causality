@@ -18,6 +18,14 @@ pub type Gate = HilbertState;
 // Kernels (Pure Math, Stack-based where possible)
 // ============================================================================
 
+/// Calculates the Born probability: $P = |\langle \text{basis} | \text{state} \rangle|^2$.
+///
+/// # Arguments
+/// * `state` - Quantum state vector $|\psi\rangle$.
+/// * `basis` - Basis vector/state $|\phi\rangle$.
+///
+/// # Returns
+/// * `Ok(f64)` - Probability $P$.
 pub fn born_probability_kernel(
     state: &HilbertState,
     basis: &HilbertState,
@@ -46,6 +54,14 @@ pub fn born_probability_kernel(
     Ok(p.clamp(0.0, 1.0))
 }
 
+/// Calculates the expectation value: $\langle A \rangle = \langle \psi | A | \psi \rangle$.
+///
+/// # Arguments
+/// * `state` - Quantum state $|\psi\rangle$.
+/// * `operator` - Observable operator $A$.
+///
+/// # Returns
+/// * `Ok(f64)` - Expectation value (Real part of complex result).
 pub fn expectation_value_kernel(
     state: &HilbertState,
     operator: &Operator,
@@ -56,6 +72,14 @@ pub fn expectation_value_kernel(
     Ok(val.re)
 }
 
+/// Applies a quantum gate to a state: $|\psi'\rangle = U |\psi\rangle$.
+///
+/// # Arguments
+/// * `state` - Initial state $|\psi\rangle$.
+/// * `gate` - Quantum gate/operator $U$.
+///
+/// # Returns
+/// * `Ok(HilbertState)` - New state $|\psi'\rangle$.
 pub fn apply_gate_kernel(state: &HilbertState, gate: &Gate) -> Result<HilbertState, PhysicsError> {
     // New State = Gate * State
     // Need underlying multiplication.
@@ -70,6 +94,7 @@ pub fn apply_gate_kernel(state: &HilbertState, gate: &Gate) -> Result<HilbertSta
 // Causal Wrappers (Monadic PropagatingEffect)
 // ============================================================================
 
+/// Causal wrapper for [`born_probability_kernel`].
 pub fn born_probability(
     state: &HilbertState,
     basis: &HilbertState,
@@ -83,6 +108,7 @@ pub fn born_probability(
     }
 }
 
+/// Causal wrapper for [`expectation_value_kernel`].
 pub fn expectation_value(state: &HilbertState, operator: &Operator) -> PropagatingEffect<f64> {
     match expectation_value_kernel(state, operator) {
         Ok(val) => PropagatingEffect::pure(val),
@@ -90,6 +116,7 @@ pub fn expectation_value(state: &HilbertState, operator: &Operator) -> Propagati
     }
 }
 
+/// Causal wrapper for [`apply_gate_kernel`].
 pub fn apply_gate(state: &HilbertState, gate: &Gate) -> PropagatingEffect<HilbertState> {
     match apply_gate_kernel(state, gate) {
         Ok(val) => PropagatingEffect::pure(val),
@@ -97,6 +124,14 @@ pub fn apply_gate(state: &HilbertState, gate: &Gate) -> PropagatingEffect<Hilber
     }
 }
 
+/// Stub: Calculates commutator $[A, B] = AB - BA$.
+///
+/// # Arguments
+/// * `a` - Operator $A$.
+/// * `b` - Operator $B$.
+///
+/// # Returns
+/// * `PropagatingEffect<HilbertState>` - Commutator result.
 pub fn commutator(
     a: &CausalMultiVector<f64>,
     b: &CausalMultiVector<f64>,
@@ -111,6 +146,7 @@ pub fn commutator(
     )))
 }
 
+/// Stub: Haruna's Gate (Theoretical).
 pub fn haruna_s_gate(field: &CausalMultiVector<f64>) -> PropagatingEffect<Operator> {
     let _ = field;
     PropagatingEffect::from_error(CausalityError::from(PhysicsError::new(
@@ -118,6 +154,9 @@ pub fn haruna_s_gate(field: &CausalMultiVector<f64>) -> PropagatingEffect<Operat
     )))
 }
 
+/// Calculates Quantum Fidelity: $F = |\langle \psi_{\text{ideal}} | \psi_{\text{actual}} \rangle|^2$.
+///
+/// Uses [`born_probability_kernel`].
 pub fn fidelity(ideal: &HilbertState, actual: &HilbertState) -> PropagatingEffect<Probability> {
     // F = |<ideal|actual>|^2
     // Reuse born_probability_kernel logic

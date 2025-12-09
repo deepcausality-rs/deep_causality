@@ -3,10 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::error::{PhysicsError, PhysicsErrorEnum};
+use crate::{PhysicsError, PhysicsErrorEnum};
 
+/// Pressure (Pascals).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
 pub struct Pressure(f64);
 
 impl Pressure {
@@ -31,8 +31,8 @@ impl From<Pressure> for f64 {
     }
 }
 
+/// Density (kg/m^3).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
 pub struct Density(f64);
 
 impl Density {
@@ -57,8 +57,8 @@ impl From<Density> for f64 {
     }
 }
 
+/// Dynamic Viscosity (Pa·s).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
 pub struct Viscosity(f64);
 
 impl Viscosity {

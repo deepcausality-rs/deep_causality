@@ -6,6 +6,7 @@
 use deep_causality_multivector::{CausalMultiVector, MultiVector};
 use deep_causality_num::Complex;
 
+/// Standard Quantum Gates interface.
 pub trait QuantumGates {
     fn gate_identity() -> Self;
     fn gate_x() -> Self;
@@ -18,18 +19,18 @@ pub trait QuantumGates {
     fn gate_cnot() -> Self;
 }
 
-/// Core Quantum State Operations
+/// Core Quantum State Operations (Dirac Notation).
 pub trait QuantumOps {
-    /// Hermitian Conjugate (Adjoint)
+    /// Hermitian Conjugate (Adjoint) $A^\dagger$.
     fn dag(&self) -> Self;
 
-    /// Inner Product (Dirac Bracket <a|b>)
+    /// Inner Product (Dirac Bracket): $\langle \phi | \psi \rangle$.
     fn bracket(&self, other: &Self) -> Complex<f64>;
 
-    /// Expectation Value <psi|A|psi>
+    /// Expectation Value: $\langle \psi | A | \psi \rangle$.
     fn expectation_value(&self, operator: &Self) -> Complex<f64>;
 
-    /// Normalize the state vector
+    /// Normalize the state vector: $|\psi\rangle / \sqrt{\langle\psi|\psi\rangle}$.
     fn normalize(&self) -> Self;
 }
 

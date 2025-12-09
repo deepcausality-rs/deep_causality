@@ -3,22 +3,28 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::error::{PhysicsError, PhysicsErrorEnum};
-use crate::fluids::quantities::Pressure;
-use crate::thermodynamics::quantities::Temperature;
+use crate::{PhysicsError, PhysicsErrorEnum, Pressure, Temperature};
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 
 // Kernels
 
+/// Calculates generalized Hooke's Law: $\sigma_{ij} = C_{ijkl} \epsilon_{kl}$.
+///
+/// Computes stress tensor from stiffness tensor (Rank 4) and strain tensor (Rank 2) via Einstein Summation.
+///
+/// # Arguments
+/// * `stiffness` - Stiffness tensor $C$ (Rank 4).
+/// * `strain` - Strain tensor $\epsilon$ (Rank 2).
+///
+/// # Returns
+/// * `Ok(CausalTensor<f64>)` - Stress tensor $\sigma$ (Rank 2).
 pub fn hookes_law_kernel(
     stiffness: &CausalTensor<f64>,
     strain: &CausalTensor<f64>,
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     // Sigma_ij = C_ijkl * Epsilon_kl
     // Stiffness C is Rank 4 [i, j, k, l]
-    // Strain E is Rank 2 [k, l]
-    // Contraction on C[2,3] and E[0,1]
     if stiffness.num_dim() != 4 || strain.num_dim() != 2 {
         return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
             format!(
@@ -41,6 +47,15 @@ pub fn hookes_law_kernel(
     Ok(res)
 }
 
+/// Calculates Von Mises Stress from a 3x3 Stress Tensor.
+///
+/// $\sigma_{vm} = \sqrt{3 J_2}$ where $J_2 = \frac{1}{2} S_{ij}S_{ij}$ is the second invariant of deviatoric stress.
+///
+/// # Arguments
+/// * `stress` - Cauchy stress tensor (3x3).
+///
+/// # Returns
+/// * `Ok(f64)` - Von Mises stress.
 pub fn von_mises_stress_kernel(stress: &CausalTensor<f64>) -> Result<f64, PhysicsError> {
     // Von Mises Stress via Deviatoric Stress Invariant J2
     // sigma_vm = sqrt(3 * J2)
@@ -112,6 +127,14 @@ pub fn von_mises_stress_kernel(stress: &CausalTensor<f64>) -> Result<f64, Physic
     Ok(vm)
 }
 
+/// Calculates thermal expansion strain: $\epsilon = \alpha \Delta T$.
+///
+/// # Arguments
+/// * `coeff` - Thermal expansion coefficient $\alpha$.
+/// * `delta_temp` - Change in temperature $\Delta T$.
+///
+/// # Returns
+/// * `Ok(CausalTensor<f64>)` - Isotropic strain tensor (3x3).
 pub fn thermal_expansion_kernel(
     coeff: f64,
     delta_temp: Temperature,
@@ -125,6 +148,7 @@ pub fn thermal_expansion_kernel(
 
 // Wrappers
 
+/// Causal wrapper for [`hookes_law_kernel`].
 pub fn hookes_law(
     stiffness: &CausalTensor<f64>,
     strain: &CausalTensor<f64>,
@@ -135,6 +159,7 @@ pub fn hookes_law(
     }
 }
 
+/// Causal wrapper for [`von_mises_stress_kernel`].
 pub fn von_mises_stress(stress: &CausalTensor<f64>) -> PropagatingEffect<Pressure> {
     match von_mises_stress_kernel(stress) {
         Ok(val) => match Pressure::new(val) {
@@ -145,6 +170,7 @@ pub fn von_mises_stress(stress: &CausalTensor<f64>) -> PropagatingEffect<Pressur
     }
 }
 
+/// Causal wrapper for [`thermal_expansion_kernel`].
 pub fn thermal_expansion(
     coeff: f64,
     delta_temp: Temperature,

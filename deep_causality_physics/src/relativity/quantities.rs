@@ -5,8 +5,8 @@
 
 use deep_causality_core::CausalityError;
 
+/// Spacetime Interval ($s^2$).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
 pub struct SpacetimeInterval(f64);
 
 impl SpacetimeInterval {
@@ -28,8 +28,10 @@ impl From<SpacetimeInterval> for f64 {
 
 use deep_causality_multivector::{CausalMultiVector, Metric};
 
+/// Wrapper for CausalMultiVector representing a vector in Spacetime.
+///
+/// Implements Default using Minkowski metric.
 #[derive(Debug, Clone, PartialEq)]
-
 pub struct SpacetimeVector(pub CausalMultiVector<f64>);
 
 impl Default for SpacetimeVector {

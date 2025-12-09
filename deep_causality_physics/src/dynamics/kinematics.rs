@@ -3,9 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::dynamics::quantities::{Frequency, Mass, MomentOfInertia};
-use crate::error::PhysicsError;
-use crate::quantum::quantities::Energy;
+use crate::units::energy::Energy;
+use crate::{Frequency, Mass, MomentOfInertia, PhysicsError};
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::Metric;
 use deep_causality_multivector::{CausalMultiVector, MultiVector};
@@ -34,17 +33,36 @@ impl PhysicalVector {
 
 // Kernels
 
+// Kernels
+
+/// Calculates translational kinetic energy: $K = \frac{1}{2} m v^2$.
+///
+/// # Arguments
+/// * `mass` - Mass of the object.
+/// * `velocity` - Velocity vector (multivector).
+///
+/// # Returns
+/// * `Ok(f64)` - Kinetic energy in Joules.
+/// * `Err(PhysicsError)` - If an error occurs (unlikely with valid inputs).
 pub fn kinetic_energy_kernel(
     mass: Mass,
     velocity: &CausalMultiVector<f64>,
 ) -> Result<f64, PhysicsError> {
     // KE = 0.5 * m * v^2
-    // v^2 in GA is v * v = |v|^2 (scalar)
+    // v^2 in GA is v * v = |v|^2 (scalar) for vectors
     let v_sq = velocity.squared_magnitude();
     let e = 0.5 * mass.value() * v_sq;
     Ok(e)
 }
 
+/// Calculates rotational kinetic energy: $K_{rot} = \frac{1}{2} I \omega^2$.
+///
+/// # Arguments
+/// * `inertia` - Moment of inertia.
+/// * `omega` - Angular frequency (magnitude of angular velocity).
+///
+/// # Returns
+/// * `Ok(f64)` - Rotational kinetic energy in Joules.
 pub fn rotational_kinetic_energy_kernel(
     inertia: MomentOfInertia,
     omega: Frequency,
@@ -57,6 +75,7 @@ pub fn rotational_kinetic_energy_kernel(
 
 // Wrappers
 
+/// Causal wrapper for [`kinetic_energy_kernel`].
 pub fn kinetic_energy(mass: Mass, velocity: &CausalMultiVector<f64>) -> PropagatingEffect<Energy> {
     match kinetic_energy_kernel(mass, velocity) {
         Ok(val) => match Energy::new(val) {
@@ -67,6 +86,7 @@ pub fn kinetic_energy(mass: Mass, velocity: &CausalMultiVector<f64>) -> Propagat
     }
 }
 
+/// Causal wrapper for [`rotational_kinetic_energy_kernel`].
 pub fn rotational_kinetic_energy(
     inertia: MomentOfInertia,
     omega: Frequency,
@@ -80,6 +100,16 @@ pub fn rotational_kinetic_energy(
     }
 }
 
+/// Calculates torque as the outer product of radius and force: $\tau = r \wedge F$.
+///
+/// In Geometric Algebra, torque is a bivector representing the plane of rotation.
+///
+/// # Arguments
+/// * `radius` - Position vector from pivot.
+/// * `force` - Force vector applied.
+///
+/// # Returns
+/// * `PropagatingEffect<PhysicalVector>` - The torque bivector wrapped in a physical vector.
 pub fn torque(
     radius: &CausalMultiVector<f64>,
     force: &CausalMultiVector<f64>,
@@ -90,6 +120,14 @@ pub fn torque(
     PropagatingEffect::pure(PhysicalVector(t))
 }
 
+/// Calculates angular momentum as the outer product of radius and linear momentum: $L = r \wedge p$.
+///
+/// # Arguments
+/// * `radius` - Position vector.
+/// * `momentum` - Linear momentum vector ($p = mv$).
+///
+/// # Returns
+/// * `PropagatingEffect<PhysicalVector>` - The angular momentum bivector.
 pub fn angular_momentum(
     radius: &CausalMultiVector<f64>,
     momentum: &CausalMultiVector<f64>,

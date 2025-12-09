@@ -3,22 +3,27 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::Efficiency;
-use crate::Ratio;
 use crate::constants::thermodynamics::BOLTZMANN_CONSTANT;
-use crate::dynamics::quantities::Volume;
-use crate::fluids::quantities::Pressure;
-use crate::nuclear::quantities::AmountOfSubstance;
-use crate::quantum::quantities::{Energy, Probability};
-use crate::thermodynamics::quantities::Temperature;
-// use crate::constants::thermodynamics::AVOGADRO_CONSTANT; // For R calculation if needed, or universal constant usage
 
-use crate::error::PhysicsError;
+use crate::{
+    AmountOfSubstance, Efficiency, Energy, PhysicsError, Pressure, Probability, Ratio, Temperature,
+    Volume,
+};
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_tensor::CausalTensor;
 
 // Kernels
 
+/// Calculates the Ideal Gas Constant $R$ from state variables: $R = \frac{PV}{nT}$.
+///
+/// # Arguments
+/// * `pressure` - Pressure $P$.
+/// * `volume` - Volume $V$.
+/// * `moles` - Amount of substance $n$.
+/// * `temp` - Temperature $T$.
+///
+/// # Returns
+/// * `Ok(f64)` - Calculated Gas Constant $R$.
 pub fn ideal_gas_law_kernel(
     pressure: Pressure,
     volume: Volume,
@@ -48,6 +53,14 @@ pub fn ideal_gas_law_kernel(
     Ok(r)
 }
 
+/// Calculates Carnot Efficiency: $\eta = 1 - \frac{T_C}{T_H}$.
+///
+/// # Arguments
+/// * `temp_hot` - Hot reservoir temperature $T_H$.
+/// * `temp_cold` - Cold reservoir temperature $T_C$.
+///
+/// # Returns
+/// * `Ok(f64)` - Efficiency $\eta$.
 pub fn carnot_efficiency_kernel(
     temp_hot: Temperature,
     temp_cold: Temperature,
@@ -76,6 +89,7 @@ pub fn carnot_efficiency_kernel(
 
 // Wrappers
 
+/// Causal wrapper for [`ideal_gas_law_kernel`]. Returns result as `Ratio` (or scalar).
 pub fn ideal_gas_law(
     pressure: Pressure,
     volume: Volume,
@@ -91,6 +105,7 @@ pub fn ideal_gas_law(
     }
 }
 
+/// Causal wrapper for [`carnot_efficiency_kernel`].
 pub fn carnot_efficiency(
     temp_hot: Temperature,
     temp_cold: Temperature,
@@ -104,6 +119,17 @@ pub fn carnot_efficiency(
     }
 }
 
+/// Calculates the unnormalized Boltzmann factor: $e^{-E/k_BT}$.
+///
+/// Returns a `Probability` which clamps the value to [0, 1].
+/// Assumes $E \ge 0$ relative to ground state.
+///
+/// # Arguments
+/// * `energy` - Energy state $E$.
+/// * `temp` - Temperature $T$.
+///
+/// # Returns
+/// * `PropagatingEffect<Probability>` - Boltzmann factor.
 pub fn boltzmann_factor(energy: Energy, temp: Temperature) -> PropagatingEffect<Probability> {
     // P = exp(-E / kT)  (unnormalized factor)
     // Actually usually return probability *if* normalized, but here it's likely the factor.
@@ -133,6 +159,13 @@ pub fn boltzmann_factor(energy: Energy, temp: Temperature) -> PropagatingEffect<
     }
 }
 
+/// Calculates Shannon Entropy: $H = -\sum p_i \ln(p_i)$.
+///
+/// # Arguments
+/// * `probs` - Probability distribution (Tensor).
+///
+/// # Returns
+/// * `PropagatingEffect<f64>` - Entropy in nats.
 pub fn shannon_entropy(probs: &CausalTensor<f64>) -> PropagatingEffect<f64> {
     // H = - Sum p_i log(p_i)
     // Using as_slice() assuming it gives access to underlying data
@@ -147,6 +180,14 @@ pub fn shannon_entropy(probs: &CausalTensor<f64>) -> PropagatingEffect<f64> {
     PropagatingEffect::pure(entropy)
 }
 
+/// Calculates Heat Capacity: $C = \frac{dE}{dT}$.
+///
+/// # Arguments
+/// * `diff_energy` - Change in energy $dE$.
+/// * `diff_temp` - Change in temperature $dT$.
+///
+/// # Returns
+/// * `PropagatingEffect<f64>` - Heat capacity.
 pub fn heat_capacity(diff_energy: Energy, diff_temp: Temperature) -> PropagatingEffect<f64> {
     // C = dE / dT
     let de = diff_energy.value();
@@ -164,6 +205,14 @@ pub fn heat_capacity(diff_energy: Energy, diff_temp: Temperature) -> Propagating
     PropagatingEffect::pure(c)
 }
 
+/// Calculates Partition Function: $Z = \sum e^{-E_i / k_B T}$.
+///
+/// # Arguments
+/// * `energies` - List of energy states (Tensor).
+/// * `temp` - Temperature $T$.
+///
+/// # Returns
+/// * `PropagatingEffect<f64>` - Partition function $Z$.
 pub fn partition_function(
     energies: &CausalTensor<f64>,
     temp: Temperature,

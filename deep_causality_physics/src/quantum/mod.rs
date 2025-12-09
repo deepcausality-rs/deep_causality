@@ -3,9 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-pub mod gates;
-pub mod mechanics;
-pub mod quantities;
+pub(crate) mod gates;
+pub(crate) mod mechanics;
+pub(crate) mod quantities;
 
 pub use gates::*;
 pub use mechanics::*;

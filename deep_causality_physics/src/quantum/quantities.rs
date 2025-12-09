@@ -6,8 +6,8 @@
 use crate::error::{PhysicsError, PhysicsErrorEnum};
 use alloc::format;
 
+/// Probability value [0, 1].
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-
 pub struct Probability(f64);
 
 impl Default for Probability {
@@ -17,6 +17,10 @@ impl Default for Probability {
 }
 
 impl Probability {
+    /// Creates a new `Probability` instance.
+    ///
+    /// # Errors
+    /// Returns `PhysicsError::NormalizationError` if `val` is not in [0, 1].
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if !(0.0..=1.0).contains(&val) {
             return Err(PhysicsError::new(PhysicsErrorEnum::NormalizationError(
@@ -38,50 +42,8 @@ impl From<Probability> for f64 {
     }
 }
 
+/// Phase Angle (Radians).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
-pub struct Energy(f64);
-
-impl Energy {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
-        Ok(Self(val))
-    }
-    pub fn new_unchecked(val: f64) -> Self {
-        Self(val)
-    }
-    pub fn value(&self) -> f64 {
-        self.0
-    }
-}
-impl From<Energy> for f64 {
-    fn from(val: Energy) -> Self {
-        val.0
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
-pub struct Time(f64);
-
-impl Time {
-    pub fn new(val: f64) -> Result<Self, PhysicsError> {
-        Ok(Self(val))
-    }
-    pub fn new_unchecked(val: f64) -> Self {
-        Self(val)
-    }
-    pub fn value(&self) -> f64 {
-        self.0
-    }
-}
-impl From<Time> for f64 {
-    fn from(val: Time) -> Self {
-        val.0
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
-
 pub struct PhaseAngle(f64);
 
 impl PhaseAngle {
