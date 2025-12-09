@@ -71,6 +71,11 @@ pub fn poynting_vector_kernel(
     // The outer product E ^ B represents the specific plane of energy flux (bivector).
     // This is the dual of the classical vector cross product.
     // We return Energy Density Flux in this bivector form.
+    if e.metric() != b.metric() {
+        return Err(PhysicsError::new(crate::PhysicsErrorEnum::DimensionMismatch(
+            format!("Metric mismatch in Poynting Vector: {:?} vs {:?}", e.metric(), b.metric()),
+        )));
+    }
     let s = e.outer_product(b);
     Ok(s)
 }
@@ -90,6 +95,12 @@ pub fn magnetic_helicity_density_kernel(
     // Helicity Density h = A . B
     // Total Helicity H is the integral of h over volume.
     // This function computes the local density.
+
+    if potential.metric() != field.metric() {
+        return Err(PhysicsError::new(crate::PhysicsErrorEnum::DimensionMismatch(
+            format!("Metric mismatch in Magnetic Helicity: {:?} vs {:?}", potential.metric(), field.metric()),
+        )));
+    }
 
     let h_scalar_mv = potential.inner_product(field);
     // Extract Grade 0 (Scalar)
@@ -128,6 +139,16 @@ pub fn proca_equation_kernel(
 
     // 3. Sum: J = delta F + m^2 A
     // Note: CausalTensor implements Add
+    // Check shapes before addition (J = delta_f + m2_a)
+    if delta_f.shape() != m2_a.shape() {
+        return Err(PhysicsError::new(crate::PhysicsErrorEnum::DimensionMismatch(
+            format!(
+                "Shape mismatch in Proca Equation: delta F {:?} vs m^2 A {:?}",
+                delta_f.shape(),
+                m2_a.shape()
+            ),
+        )));
+    }
     let j = delta_f + m2_a;
 
     Ok(j)

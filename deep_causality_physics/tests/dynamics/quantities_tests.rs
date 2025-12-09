@@ -87,6 +87,12 @@ fn test_speed_into_f64() {
     assert!((val - 299792458.0).abs() < 1.0);
 }
 
+#[test]
+fn test_speed_new_unchecked() {
+    let speed = Speed::new_unchecked(123.45);
+    assert!((speed.value() - 123.45).abs() < 1e-10);
+}
+
 // =============================================================================
 // Length Tests
 // =============================================================================
@@ -109,6 +115,19 @@ fn test_length_default() {
     assert!((length.value() - 0.0).abs() < 1e-10);
 }
 
+#[test]
+fn test_length_new_unchecked() {
+    let length = Length::new_unchecked(99.9);
+    assert!((length.value() - 99.9).abs() < 1e-10);
+}
+
+#[test]
+fn test_length_into_f64() {
+    let length = Length::new(10.0).unwrap();
+    let val: f64 = length.into();
+    assert!((val - 10.0).abs() < 1e-10);
+}
+
 // =============================================================================
 // Area Tests
 // =============================================================================
@@ -124,6 +143,19 @@ fn test_area_new_valid() {
 fn test_area_new_negative_error() {
     let area = Area::new(-10.0);
     assert!(area.is_err());
+}
+
+#[test]
+fn test_area_new_unchecked() {
+    let area = Area::new_unchecked(50.5);
+    assert!((area.value() - 50.5).abs() < 1e-10);
+}
+
+#[test]
+fn test_area_into_f64() {
+    let area = Area::new(25.0).unwrap();
+    let val: f64 = area.into();
+    assert!((val - 25.0).abs() < 1e-10);
 }
 
 // =============================================================================
@@ -142,6 +174,19 @@ fn test_volume_new_negative_error() {
     assert!(volume.is_err());
 }
 
+#[test]
+fn test_volume_new_unchecked() {
+    let volume = Volume::new_unchecked(123.0);
+    assert!((volume.value() - 123.0).abs() < 1e-10);
+}
+
+#[test]
+fn test_volume_into_f64() {
+    let volume = Volume::new(100.0).unwrap();
+    let val: f64 = volume.into();
+    assert!((val - 100.0).abs() < 1e-10);
+}
+
 // =============================================================================
 // MomentOfInertia Tests
 // =============================================================================
@@ -158,6 +203,19 @@ fn test_moment_of_inertia_new_negative_error() {
     assert!(moi.is_err());
 }
 
+#[test]
+fn test_moment_of_inertia_new_unchecked() {
+    let moi = MomentOfInertia::new_unchecked(7.5);
+    assert!((moi.value() - 7.5).abs() < 1e-10);
+}
+
+#[test]
+fn test_moment_of_inertia_into_f64() {
+    let moi = MomentOfInertia::new(2.0).unwrap();
+    let val: f64 = moi.into();
+    assert!((val - 2.0).abs() < 1e-10);
+}
+
 // =============================================================================
 // Frequency Tests
 // =============================================================================
@@ -172,6 +230,19 @@ fn test_frequency_new_valid() {
 fn test_frequency_new_negative_error() {
     let freq = Frequency::new(-1.0);
     assert!(freq.is_err());
+}
+
+#[test]
+fn test_frequency_new_unchecked() {
+    let freq = Frequency::new_unchecked(60.0);
+    assert!((freq.value() - 60.0).abs() < 1e-10);
+}
+
+#[test]
+fn test_frequency_into_f64() {
+    let freq = Frequency::new(50.0).unwrap();
+    let val: f64 = freq.into();
+    assert!((val - 50.0).abs() < 1e-10);
 }
 
 // =============================================================================
@@ -192,6 +263,19 @@ fn test_acceleration_new_negative() {
     assert!((acc.unwrap().value() - (-5.0)).abs() < 1e-10);
 }
 
+#[test]
+fn test_acceleration_new_unchecked() {
+    let acc = Acceleration::new_unchecked(-9.81);
+    assert!((acc.value() - (-9.81)).abs() < 1e-10);
+}
+
+#[test]
+fn test_acceleration_into_f64() {
+    let acc = Acceleration::new(9.8).unwrap();
+    let val: f64 = acc.into();
+    assert!((val - 9.8).abs() < 1e-10);
+}
+
 // =============================================================================
 // Force Tests (allows negative for direction)
 // =============================================================================
@@ -206,6 +290,19 @@ fn test_force_new_positive() {
 fn test_force_new_negative() {
     let force = Force::new(-50.0);
     assert!(force.is_ok());
+}
+
+#[test]
+fn test_force_new_unchecked() {
+    let force = Force::new_unchecked(-100.0);
+    assert!((force.value() - (-100.0)).abs() < 1e-10);
+}
+
+#[test]
+fn test_force_into_f64() {
+    let force = Force::new(10.0).unwrap();
+    let val: f64 = force.into();
+    assert!((val - 10.0).abs() < 1e-10);
 }
 
 // =============================================================================
@@ -223,4 +320,17 @@ fn test_torque_new_negative() {
     // Negative torque = clockwise rotation
     let torque = Torque::new(-25.0);
     assert!(torque.is_ok());
+}
+
+#[test]
+fn test_torque_new_unchecked() {
+    let torque = Torque::new_unchecked(-25.0);
+    assert!((torque.value() - (-25.0)).abs() < 1e-10);
+}
+
+#[test]
+fn test_torque_into_f64() {
+    let torque = Torque::new(50.0).unwrap();
+    let val: f64 = torque.into();
+    assert!((val - 50.0).abs() < 1e-10);
 }

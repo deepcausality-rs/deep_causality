@@ -29,6 +29,12 @@ pub fn lorentz_force_kernel(
     // Calculates the magnetic force density component of the Lorentz Force.
     // Full Lorentz force density: f = \rho E + J \times B
     // This kernel specifically computes the J \times B term.
+    // Check for metric compatibility
+    if j.metric() != b.metric() {
+        return Err(PhysicsError::new(crate::PhysicsErrorEnum::DimensionMismatch(
+            format!("Metric mismatch in Lorentz Force: {:?} vs {:?}", j.metric(), b.metric()),
+        )));
+    }
     let f = j.outer_product(b);
     Ok(f)
 }

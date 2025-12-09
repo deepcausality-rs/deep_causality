@@ -36,13 +36,14 @@ pub trait QuantumOps {
 
 impl QuantumOps for CausalMultiVector<Complex<f64>> {
     fn dag(&self) -> Self {
-        // Quantum DAG is Hermitian Conjugate.
-        // In GA over Complex numbers, this corresponds to Reversion + Complex Conjugation?
-        // Or just Reversion if coefficients are real?
-        // For now, assuming Reversion is sufficient for spatial reversal, but we need complex conjugation of coefficients too.
-        // CausalMultiVector might not support complex conjugation of coefficients easily without a map.
-        // Assuming .reversion() exists.
-        self.reversion()
+        // Quantum DAG is Hermitian Conjugate, which is reversion and complex conjugation of coefficients.
+        let reverted = self.reversion();
+        let conjugated_data = reverted
+            .data()
+            .iter()
+            .map(|c| Complex::new(c.re, -c.im))
+            .collect::<Vec<_>>();
+        CausalMultiVector::new(conjugated_data, reverted.metric()).expect("Metric and data should be valid")
     }
 
     fn bracket(&self, other: &Self) -> Complex<f64> {

@@ -60,7 +60,16 @@ pub fn time_dilation_angle_kernel(
     // eta = acosh(gamma)
 
     // 1. Calculate Dot Product
-    let dot = t1.inner_product(t2).data()[0]; // Scalar
+    let dot = t1
+        .inner_product(t2)
+        .data()
+        .get(0)
+        .copied()
+        .ok_or_else(|| {
+            PhysicsError::new(PhysicsErrorEnum::PhysicalInvariantBroken(
+                "Inner product did not yield a scalar value".into(),
+            ))
+        })?; // Scalar
 
     // 2. Calculate Magnitudes
     let mag1 = t1.squared_magnitude().sqrt();

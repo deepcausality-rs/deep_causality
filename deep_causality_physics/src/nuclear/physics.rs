@@ -26,9 +26,9 @@ pub fn radioactive_decay_kernel(
     // Decay Law using Half-Life
 
     if half_life.value() == 0.0 {
-        // Avoid division by zero, though HalfLife check usually prevents negative. 0 might be valid "instant decay"?
-        // Assume 0 half life means instant decay to 0?
-        return AmountOfSubstance::new(0.0);
+        return Err(PhysicsError::new(crate::PhysicsErrorEnum::Singularity(
+            "Half-life cannot be zero".into(),
+        )));
     }
 
     let ratio = time.value() / half_life.value();

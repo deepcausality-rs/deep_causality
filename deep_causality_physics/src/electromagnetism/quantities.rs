@@ -55,8 +55,9 @@ pub struct PhysicalField(pub CausalMultiVector<f64>);
 
 impl Default for PhysicalField {
     fn default() -> Self {
-        // Return a scalar 0 multivector with Euclidean metric
-        Self(CausalMultiVector::new(vec![0.0], Metric::Euclidean(0)).unwrap())
+        // Default to a zero vector in 3D Euclidean space.
+        // Size of 3D Euclidean multivector is 2^3 = 8.
+        Self(CausalMultiVector::new(vec![0.0; 8], Metric::Euclidean(3)).unwrap())
     }
 }
 

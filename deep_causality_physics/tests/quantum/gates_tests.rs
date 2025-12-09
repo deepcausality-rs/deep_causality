@@ -37,8 +37,9 @@ fn test_dag_hermitian_conjugate() {
     // Actually, physically, DAG should be conjugate transpose.
     // If implementation only calls reversion, let's verify that.
 
-    // Reversion of scalar 1+i is 1+i.
-    assert_eq!(dag.data()[0], Complex::new(1.0, 1.0));
+    // Correct Hermitian Conjugate should give conjugate transpose.
+    // Reversion of scalar 1+i is 1+i. Conjugate is 1-i.
+    assert_eq!(dag.data()[0], Complex::new(1.0, -1.0));
 }
 
 #[test]
@@ -51,11 +52,11 @@ fn test_bracket_inner_product() {
 
     // If dag was proper hermitian, it would be (1-i)(1+i) = 2.
 
-    // Based on implementation of Reversion only:
+    // If dag is proper hermitian:
+    // <psi|phi> = (1-i)(1+i) = 1 - i^2 = 1 + 1 = 2.
     let bracket = mv1.bracket(&mv2);
-    // (1+i)*(1+i) = 2i
-    assert!((bracket.re - 0.0).abs() < 1e-10);
-    assert!((bracket.im - 2.0).abs() < 1e-10);
+    assert!((bracket.re - 2.0).abs() < 1e-10);
+    assert!((bracket.im - 0.0).abs() < 1e-10);
 }
 
 #[test]

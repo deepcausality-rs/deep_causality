@@ -47,9 +47,22 @@ pub fn klein_gordon_kernel(
     let laplacian = psi_manifold.laplacian(0);
 
     // 2. Term B: m^2 psi
+    // 2. Term B: m^2 psi
     let m2 = mass * mass;
     let psi_data = psi_manifold.data();
-    let m2_psi = psi_data.clone() * m2;
+
+    // The laplacian is on 0-forms (vertices), so we need the 0-form part of psi.
+    // We slice psi_data to match the size of the laplacian tensor.
+    // Use len() instead of size()
+    let vertex_count = laplacian.len();
+    if psi_data.len() < vertex_count {
+        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+            "psi_data is smaller than laplacian data".to_string(),
+        )));
+    }
+    let psi_vertex_data = &psi_data.as_slice()[..vertex_count];
+    let psi_vertex_tensor = CausalTensor::new(psi_vertex_data.to_vec(), laplacian.shape().to_vec())?;
+    let m2_psi = psi_vertex_tensor * m2;
 
     // 3. Result: Delta psi + m^2 psi
     // We sum them. Ideally, for a free field, this sum is zero.

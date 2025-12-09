@@ -36,12 +36,13 @@ fn exp(mv: &CausalMultiVector<Complex<f64>>) -> CausalMultiVector<Complex<f64>> 
         // term_n = term_{n-1} * mv * (1/n)
         let n_inv = Complex::new(1.0 / (n as f64), 0.0);
 
-        // We use reference multiplication if possible, or clone.
-        // CausalMultiVector implements Mul<&CausalMultiVector> -> CausalMultiVector
+        // Update term in place to avoid cloning
         term = &term * mv;
-        term = term * n_inv; // Scalar multiplication
+        // In-place scalar multiplication
+        term *= n_inv;
 
-        sum = sum + term.clone();
+        // Update sum in place
+        sum += &term;
     }
     sum
 }

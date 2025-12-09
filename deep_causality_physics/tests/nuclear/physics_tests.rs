@@ -74,13 +74,15 @@ fn test_radioactive_decay_zero_half_life() {
     let time = Time::new(1.0).unwrap();
 
     let result = radioactive_decay_kernel(&n0, &half_life, &time);
-    assert!(result.is_ok());
-
-    let n_t = result.unwrap();
-    assert!(
-        (n_t.value() - 0.0).abs() < 1e-10,
-        "Zero half-life should give instant decay to 0"
-    );
+    assert!(result.is_err());
+    
+    match result {
+        Err(e) => match e.0 {
+            deep_causality_physics::PhysicsErrorEnum::Singularity(_) => assert!(true),
+            _ => panic!("Expected Singularity error, got {:?}", e),
+        },
+        Ok(_) => panic!("Should return error for zero half-life"),
+    }
 }
 
 /// Physics invariant: Decay is monotonically decreasing with time

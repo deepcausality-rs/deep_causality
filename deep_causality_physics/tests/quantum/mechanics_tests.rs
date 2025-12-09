@@ -65,14 +65,14 @@ fn create_real_field() -> CausalMultiVector<f64> {
 // This test documents the current behavior.
 
 #[test]
-#[should_panic(expected = "ShapeMismatch")]
-fn test_klein_gordon_kernel_panics_on_shape_mismatch() {
-    // This manifold has vertices + edges + faces, causing shape mismatch
+fn test_klein_gordon_kernel_valid() {
+    // This manifold has vertices + edges + faces.
+    // Previously caused shape mismatch, now should work by slicing.
     let manifold = create_simple_manifold();
     let mass = 1.0;
-    // This will panic because laplacian(0) returns [3] vertices
-    // but psi_data is [total_simplices] which is larger
-    let _ = klein_gordon_kernel(&manifold, mass);
+    
+    let result = klein_gordon_kernel(&manifold, mass);
+    assert!(result.is_ok(), "Klein-Gordon kernel failed: {:?}", result.err());
 }
 
 // =============================================================================

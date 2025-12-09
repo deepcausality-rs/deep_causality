@@ -5,9 +5,10 @@
 
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{
-    Frequency, Mass, MomentOfInertia, angular_momentum, kinetic_energy, rotational_kinetic_energy,
-    torque,
+    Frequency, Mass, MomentOfInertia, angular_momentum, kalman_filter_linear, kinetic_energy,
+    rotational_kinetic_energy, torque,
 };
+use deep_causality_tensor::CausalTensor;
 
 // =============================================================================
 // kinetic_energy Wrapper Tests
@@ -85,4 +86,75 @@ fn test_angular_momentum_wrapper_success() {
 
     let effect = angular_momentum(&radius, &momentum);
     assert!(effect.is_ok());
+    let effect = angular_momentum(&radius, &momentum);
+    assert!(effect.is_ok());
+}
+
+// =============================================================================
+// kalman_filter_linear Wrapper Tests
+// =============================================================================
+
+#[test]
+fn test_kalman_filter_linear_wrapper_success() {
+    // 1D Kalman Filter test
+    // State: [position]
+    let x_pred = CausalTensor::new(vec![10.0], vec![1, 1]).unwrap();
+    let p_pred = CausalTensor::new(vec![5.0], vec![1, 1]).unwrap();
+    let measurement = CausalTensor::new(vec![12.0], vec![1, 1]).unwrap();
+    let h = CausalTensor::new(vec![1.0], vec![1, 1]).unwrap();
+    let r = CausalTensor::new(vec![2.0], vec![1, 1]).unwrap();
+    let q = CausalTensor::new(vec![0.1], vec![1, 1]).unwrap();
+
+    let effect = kalman_filter_linear(&x_pred, &p_pred, &measurement, &h, &r, &q);
+    assert!(effect.is_ok());
+
+    let (x_new, p_new) = effect.value().clone().into_value().unwrap();
+    // Verify state was updated towards measurement (12.0)
+    assert!(x_new.data()[0] > 10.0);
+    // Verify covariance decreased
+    assert!(p_new.data()[0] < 5.0);
+}
+
+#[test]
+fn test_kalman_filter_linear_wrapper_error() {
+    // Dimension mismatch error
+    let x_pred = CausalTensor::new(vec![10.0], vec![1, 1]).unwrap();
+    let p_pred = CausalTensor::new(vec![5.0], vec![1, 1]).unwrap(); 
+    // Measurement has wrong dimension [2,1] vs state [1,1]
+    let measurement = CausalTensor::new(vec![12.0, 13.0], vec![2, 1]).unwrap();
+    let h = CausalTensor::new(vec![1.0], vec![1, 1]).unwrap();
+    let r = CausalTensor::new(vec![2.0], vec![1, 1]).unwrap();
+    let q = CausalTensor::new(vec![0.1], vec![1, 1]).unwrap();
+
+    let effect = kalman_filter_linear(&x_pred, &p_pred, &measurement, &h, &r, &q);
+    assert!(effect.is_err());
+}
+
+// =============================================================================
+// Error Propagation Tests for wrappers
+// =============================================================================
+
+#[test]
+fn test_torque_wrapper_error_propagation() {
+    // Create mismatching metrics to force an error in outer product
+    let radius = CausalMultiVector::new(vec![1.0, 0.0], Metric::Euclidean(1)).unwrap();
+    let force = CausalMultiVector::new(
+        vec![0.0, 1.0, 0.0, 0.0], 
+        Metric::Euclidean(2) // Different metric/dimension
+    ).unwrap();
+
+    let effect = torque(&radius, &force);
+    assert!(effect.is_err());
+}
+
+#[test]
+fn test_angular_momentum_wrapper_error_propagation() {
+    let radius = CausalMultiVector::new(vec![1.0, 0.0], Metric::Euclidean(1)).unwrap();
+    let momentum = CausalMultiVector::new(
+        vec![0.0, 1.0, 0.0, 0.0], 
+        Metric::Euclidean(2)
+    ).unwrap();
+
+    let effect = angular_momentum(&radius, &momentum);
+    assert!(effect.is_err());
 }

@@ -47,6 +47,16 @@ pub fn kalman_filter_linear_kernel(
     // Assuming tensor ops here are safe-ish or we accept panic for now if API designs it so.
     // The previous code didn't wrap .sub() in match, so it likely returns T or panics.
     // Wait, let's look at `measurement.sub(&hx)`.
+    // Check shapes before subtraction
+    if measurement.shape() != hx.shape() {
+        return Err(PhysicsError::new(crate::PhysicsErrorEnum::DimensionMismatch(
+            format!(
+                "Measurement shape {:?} != prediction shape {:?}",
+                measurement.shape(),
+                hx.shape()
+            ),
+        )));
+    }
     let y = measurement.sub(&hx);
 
     // 2. Innovation Covariance: S = H * P * H^T + R
@@ -63,6 +73,15 @@ pub fn kalman_filter_linear_kernel(
     let hph_t = hp.matmul(&ht).map_err(PhysicsError::from)?;
 
     // S = ... + R
+    if hph_t.shape() != measurement_noise.shape() {
+        return Err(PhysicsError::new(crate::PhysicsErrorEnum::DimensionMismatch(
+            format!(
+                "Innovation covariance shape {:?} != measurement noise shape {:?}",
+                hph_t.shape(),
+                measurement_noise.shape()
+            ),
+        )));
+    }
     let s = hph_t.add(measurement_noise);
 
     // 3. Optimal Kalman Gain: K = P * H^T * S^-1
@@ -79,6 +98,15 @@ pub fn kalman_filter_linear_kernel(
     // K * y
     let ky = k.matmul(&y).map_err(PhysicsError::from)?;
 
+    if x_pred.shape() != ky.shape() {
+        return Err(PhysicsError::new(crate::PhysicsErrorEnum::DimensionMismatch(
+            format!(
+                "State shape {:?} != update shape {:?}",
+                x_pred.shape(),
+                ky.shape()
+            ),
+        )));
+    }
     let x_new = x_pred.add(&ky);
 
     // 5. Covariance Update: P_new = (I - K * H) * P
@@ -90,6 +118,15 @@ pub fn kalman_filter_linear_kernel(
     let identity = CausalTensor::identity(shape).map_err(PhysicsError::from)?;
 
     // I - KH
+    if identity.shape() != kh.shape() {
+        return Err(PhysicsError::new(crate::PhysicsErrorEnum::DimensionMismatch(
+            format!(
+                "Identity shape {:?} != KH shape {:?}",
+                identity.shape(),
+                kh.shape()
+            ),
+        )));
+    }
     let i_kh = identity.sub(&kh);
 
     // ... * P
