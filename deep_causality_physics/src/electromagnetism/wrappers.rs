@@ -3,11 +3,12 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::electromagnetism::quantities::{MagneticFlux, PhysicalField};
 use crate::electromagnetism::{fields, forces};
+use crate::{MagneticFlux, PhysicalField};
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::CausalMultiVector;
-
+use deep_causality_tensor::CausalTensor;
+use deep_causality_topology::Manifold;
 // Wrappers
 
 /// Causal wrapper for [`forces::lorentz_force_kernel`].
@@ -22,16 +23,18 @@ pub fn lorentz_force(
 }
 
 /// Causal wrapper for [`fields::maxwell_gradient_kernel`].
-pub fn maxwell_gradient(potential: &CausalMultiVector<f64>) -> PropagatingEffect<PhysicalField> {
-    match fields::maxwell_gradient_kernel(potential) {
-        Ok(f) => PropagatingEffect::pure(PhysicalField(f)),
+pub fn maxwell_gradient(
+    potential_manifold: &Manifold<f64>,
+) -> PropagatingEffect<CausalTensor<f64>> {
+    match fields::maxwell_gradient_kernel(potential_manifold) {
+        Ok(f) => PropagatingEffect::pure(f),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
 }
 
 /// Causal wrapper for [`fields::lorenz_gauge_kernel`].
-pub fn lorenz_gauge(potential: &CausalMultiVector<f64>) -> PropagatingEffect<f64> {
-    match fields::lorenz_gauge_kernel(potential) {
+pub fn lorenz_gauge(potential_manifold: &Manifold<f64>) -> PropagatingEffect<CausalTensor<f64>> {
+    match fields::lorenz_gauge_kernel(potential_manifold) {
         Ok(val) => PropagatingEffect::pure(val),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }

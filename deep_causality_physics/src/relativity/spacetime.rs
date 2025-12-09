@@ -95,7 +95,8 @@ pub fn time_dilation_angle_kernel(
 
     let eta = gamma.acosh();
 
-    PhaseAngle::new(eta)}
+    PhaseAngle::new(eta)
+}
 
 /// Calculates Chronometric Volume (4-Volume) from 3 vectors?
 ///

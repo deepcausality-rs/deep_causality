@@ -120,7 +120,8 @@ pub fn boltzmann_factor_kernel(
     // Note: factor can be > 1 if E < 0. Assuming E is kinetic energy or excitation > 0.
     // Probability new() checks for [0, 1].
 
-    Probability::new(factor)}
+    Probability::new(factor)
+}
 
 /// Calculates Shannon Entropy: $H = -\sum p_i \ln(p_i)$.
 ///

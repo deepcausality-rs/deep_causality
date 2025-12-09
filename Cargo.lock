@@ -552,6 +552,7 @@ dependencies = [
  "deep_causality_multivector",
  "deep_causality_num",
  "deep_causality_tensor",
+ "deep_causality_topology",
 ]
 
 [[package]]
