@@ -3,8 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::PhysicsErrorEnum;
-use deep_causality_physics::{Efficiency, Entropy};
+use deep_causality_physics::{Efficiency, Entropy, PhysicsErrorEnum};
 
 // =============================================================================
 // Entropy Tests
