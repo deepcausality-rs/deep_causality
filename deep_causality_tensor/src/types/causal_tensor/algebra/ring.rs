@@ -48,4 +48,23 @@ where
         let data = vec![T::one(); size];
         Self::from_vec_and_shape_unchecked(data, shape)
     }
+
+    /// Creates an identity matrix (square tensor with 1s on diagonal).
+    /// Typically 2D, but can be higher dim (generalized).
+    /// For 2D: (N, N)
+    pub fn identity(shape: &[usize]) -> Result<Self, crate::CausalTensorError> {
+        if shape.len() != 2 {
+            // For now support only 2D identity
+            return Err(crate::CausalTensorError::DimensionMismatch);
+        }
+        if shape[0] != shape[1] {
+            return Err(crate::CausalTensorError::ShapeMismatch);
+        }
+        let n = shape[0];
+        let mut data = vec![T::zero(); n * n];
+        for i in 0..n {
+            data[i * n + i] = T::one();
+        }
+        Ok(Self::from_vec_and_shape_unchecked(data, shape))
+    }
 }

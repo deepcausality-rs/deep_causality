@@ -8,6 +8,7 @@ use deep_causality_haft::{LogAppend, MonadEffect5};
 
 mod display;
 mod explain;
+mod getters;
 pub mod hkt;
 mod intervenable;
 mod predicates;

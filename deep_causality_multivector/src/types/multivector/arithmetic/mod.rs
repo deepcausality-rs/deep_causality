@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{CausalMultiVector, MultiVector};
-use core::ops::{Add, AddAssign, Div, Mul, Neg, Sub, SubAssign};
+use core::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 use deep_causality_num::{Field, Zero};
 
 /// Implements component-wise addition of multivectors.
@@ -201,6 +201,68 @@ where
         CausalMultiVector {
             data,
             metric: self.metric,
+        }
+    }
+}
+// =============================================================================
+// Assignment Operators
+// =============================================================================
+
+impl<T> AddAssign for CausalMultiVector<T>
+where
+    T: AddAssign + Copy + Clone + PartialEq,
+{
+    fn add_assign(&mut self, rhs: Self) {
+        if self.metric != rhs.metric {
+            panic!(
+                "Dimension mismatch in addition: {:?} vs {:?}",
+                self.metric, rhs.metric
+            );
+        }
+        if self.data.len() != rhs.data.len() {
+            panic!(
+                "Data length mismatch in addition: {} vs {}",
+                self.data.len(),
+                rhs.data.len()
+            );
+        }
+        for (a, b) in self.data.iter_mut().zip(rhs.data.iter()) {
+            *a += *b;
+        }
+    }
+}
+
+impl<'a, T> AddAssign<&'a CausalMultiVector<T>> for CausalMultiVector<T>
+where
+    T: AddAssign + Copy + Clone + PartialEq,
+{
+    fn add_assign(&mut self, rhs: &'a CausalMultiVector<T>) {
+        if self.metric != rhs.metric {
+            panic!(
+                "Dimension mismatch in addition: {:?} vs {:?}",
+                self.metric, rhs.metric
+            );
+        }
+        if self.data.len() != rhs.data.len() {
+            panic!(
+                "Data length mismatch in addition: {} vs {}",
+                self.data.len(),
+                rhs.data.len()
+            );
+        }
+        for (a, b) in self.data.iter_mut().zip(rhs.data.iter()) {
+            *a += *b;
+        }
+    }
+}
+
+impl<T> MulAssign<T> for CausalMultiVector<T>
+where
+    T: MulAssign + Copy + Clone,
+{
+    fn mul_assign(&mut self, rhs: T) {
+        for a in self.data.iter_mut() {
+            *a *= rhs;
         }
     }
 }

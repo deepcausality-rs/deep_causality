@@ -58,6 +58,18 @@ impl HilbertState {
     }
 }
 
+impl Default for HilbertState {
+    fn default() -> Self {
+        use deep_causality_num::Zero;
+        // Default to Scalar 0 in Euclidean(0) or similar
+        let metric = Metric::Euclidean(0);
+        let data = vec![Complex::zero()];
+        let mv = CausalMultiVector::new(data, metric)
+            .unwrap_or(CausalMultiVector::unchecked(vec![Complex::zero()], metric));
+        Self { mv }
+    }
+}
+
 // Allow adding two Quantum States: |psi> + |phi> (Superposition)
 impl core::ops::Add for HilbertState {
     type Output = Self;

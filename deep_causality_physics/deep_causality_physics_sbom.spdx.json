@@ -1,0 +1,250 @@
+{
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "creationInfo": {
+    "created": "2025-12-09T05:39:09Z",
+    "creators": [
+      "Tool: cargo-sbom-v0.10.0"
+    ]
+  },
+  "dataLicense": "CC0-1.0",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_physics-e78b4dbf-5ffd-4e91-a4da-fcaff057de77",
+  "files": [
+    {
+      "SPDXID": "SPDXRef-File-deep_causality_physics",
+      "checksums": [
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "2a3abdb810ba9d41c6ca5d94cd2f91cf241b55aa"
+        }
+      ],
+      "fileName": "./Cargo.lock",
+      "fileTypes": [
+        "SOURCE",
+        "TEXT"
+      ]
+    }
+  ],
+  "name": "deep_causality_physics",
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.9",
+      "description": "Number utils for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_num",
+      "versionInfo": "0.1.9"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--topology-0.1.0",
+      "description": "Topological data structures for the DeepCausality project",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_topology",
+      "versionInfo": "0.1.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--multivector-0.1.3",
+      "description": "Multivector implementation for DeepCausality",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_multivector",
+      "versionInfo": "0.1.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.2.5",
+      "description": "HKT traits for for the deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_haft",
+      "versionInfo": "0.2.5"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--ast-0.1.3",
+      "description": "AST data structure for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_ast",
+      "versionInfo": "0.1.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--sparse-0.1.0",
+      "description": "Spare matrix data structure for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_sparse",
+      "versionInfo": "0.1.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--physics-0.1.0",
+      "description": "Standard library of physics formulas and engineering primitives for DeepCausality.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_physics",
+      "versionInfo": "0.1.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--tensor-0.1.10",
+      "description": "Tensor data structure for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_tensor",
+      "versionInfo": "0.1.10"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-libm-0.2.15",
+      "description": "libm in pure Rust",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/libm@0.2.15",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "libm",
+      "versionInfo": "0.2.15"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--core-0.0.1",
+      "description": "Core types for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_core",
+      "versionInfo": "0.0.1"
+    }
+  ],
+  "relationships": [
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.2.5",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.2.5",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--core-0.0.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.9",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--topology-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--core-0.0.1",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.1.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.9",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.1.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--core-0.0.1",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.9",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.1.10"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--sparse-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--multivector-0.1.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.1.10",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.2.5",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.15",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.1.9"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.1.10",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--physics-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.9",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.1.10",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.1.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--multivector-0.1.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--topology-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.9",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-File-deep_causality_physics",
+      "relationshipType": "DESCRIBES",
+      "spdxElementId": "SPDXRef-DOCUMENT"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--physics-0.1.0",
+      "relationshipType": "GENERATED_FROM",
+      "spdxElementId": "SPDXRef-File-deep_causality_physics"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.9",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--haft-0.2.5"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.2.5",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.1.10"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--ast-0.1.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.1.10"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.2.5",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--multivector-0.1.3"
+    }
+  ],
+  "spdxVersion": "SPDX-2.3"
+}
