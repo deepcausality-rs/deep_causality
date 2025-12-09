@@ -6,7 +6,7 @@
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{
     lorenz_gauge_kernel, magnetic_helicity_density_kernel, maxwell_gradient_kernel,
-    poynting_vector_kernel,
+    poynting_vector_kernel, proca_equation_kernel,
 };
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud};
@@ -95,4 +95,26 @@ fn test_lorenz_gauge_kernel_valid() {
     let manifold = create_simple_manifold();
     let result = lorenz_gauge_kernel(&manifold);
     assert!(result.is_ok());
+}
+
+// =============================================================================
+// Proca Equation Kernel Tests
+// =============================================================================
+
+// NOTE: The proca_equation_kernel has a known shape mismatch issue:
+// - codifferential(2) returns tensor of shape [num_1_simplices] (1-forms)
+// - potential_manifold.data() returns tensor of shape [total_simplices]
+// When the manifold has vertices/faces beyond edges, these shapes differ.
+// This test documents the current behavior.
+
+#[test]
+#[should_panic(expected = "ShapeMismatch")]
+fn test_proca_equation_kernel_panics_on_shape_mismatch() {
+    // Both manifolds have vertices + edges + faces, causing shape mismatch
+    let field_manifold = create_simple_manifold();
+    let potential_manifold = create_simple_manifold();
+    let mass = 0.5;
+    // This will panic because delta_f is sized for 1-forms
+    // but m2_a is sized for total_simplices
+    let _ = proca_equation_kernel(&field_manifold, &potential_manifold, mass);
 }
