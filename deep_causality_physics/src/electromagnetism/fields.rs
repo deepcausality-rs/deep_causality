@@ -86,7 +86,21 @@ pub fn poynting_vector_kernel(
             )),
         ));
     }
+    if e.data().iter().any(|v| !v.is_finite()) || b.data().iter().any(|v| !v.is_finite()) {
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::NumericalInstability(
+                "Non-finite input in Poynting Vector".into(),
+            ),
+        ));
+    }
     let s = e.outer_product(b);
+    if s.data().iter().any(|v| !v.is_finite()) {
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::NumericalInstability(
+                "Non-finite result in Poynting Vector".into(),
+            ),
+        ));
+    }
     Ok(s)
 }
 

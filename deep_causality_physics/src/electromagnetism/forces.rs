@@ -40,5 +40,12 @@ pub fn lorentz_force_kernel(
         ));
     }
     let f = j.outer_product(b);
+    if f.data().iter().any(|v| !v.is_finite()) {
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::NumericalInstability(
+                "Non-finite value in Lorentz force (J ∧ B)".into(),
+            ),
+        ));
+    }
     Ok(f)
 }

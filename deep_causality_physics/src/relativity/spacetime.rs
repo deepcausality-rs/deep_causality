@@ -145,6 +145,14 @@ pub fn chronometric_volume_kernel(
 ) -> Result<SpacetimeVector, PhysicsError> {
     // Volume formed by trivector a ^ b ^ c
     // V = a ^ b ^ c
+
+    // Ensure all inputs share the same metric
+    if a.metric() != b.metric() || a.metric() != c.metric() {
+        return Err(PhysicsError::new(PhysicsErrorEnum::MetricSingularity(
+            "chronometric_volume requires all vectors to share the same metric".into(),
+        )));
+    }
+
     let v = a.outer_product(b).outer_product(c);
     Ok(SpacetimeVector(v))
 }
