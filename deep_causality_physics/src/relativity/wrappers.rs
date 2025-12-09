@@ -11,8 +11,6 @@ use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_tensor::CausalTensor;
 
-// Wrappers
-
 /// Causal wrapper for [`gravity::einstein_tensor_kernel`].
 pub fn einstein_tensor(
     ricci: &CausalTensor<f64>,

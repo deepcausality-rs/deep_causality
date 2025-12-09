@@ -50,5 +50,3 @@ pub fn binding_energy_kernel(mass_defect: &Mass) -> Result<Energy, PhysicsError>
     let e = mass_defect.value() * c * c;
     Energy::new(e)
 }
-
-// Wrappers

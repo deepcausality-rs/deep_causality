@@ -6,9 +6,6 @@
 use crate::error::PhysicsError;
 use crate::{G, SPEED_OF_LIGHT};
 use crate::{Length, Mass, Speed};
-// Kernels
-
-// Kernels
 
 /// Calculates orbital velocity: $v = \sqrt{\frac{GM}{r}}$.
 ///

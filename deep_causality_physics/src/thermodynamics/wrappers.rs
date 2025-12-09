@@ -12,8 +12,6 @@ use deep_causality_tensor::CausalTensor;
 
 use deep_causality_topology::Manifold;
 
-// Wrappers
-
 /// Causal wrapper for [`stats::heat_diffusion_kernel`].
 pub fn heat_diffusion(
     temp_manifold: &Manifold<f64>,

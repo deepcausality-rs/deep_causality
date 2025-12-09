@@ -7,8 +7,6 @@ use crate::nuclear::physics;
 use crate::{AmountOfSubstance, Energy, HalfLife, Mass, Time};
 use deep_causality_core::{CausalityError, PropagatingEffect};
 
-// Wrappers
-
 /// Causal wrapper for [`physics::radioactive_decay_kernel`].
 pub fn radioactive_decay(
     n0: &AmountOfSubstance,

@@ -4,7 +4,6 @@
  */
 
 use crate::{PhysicsError, PhysicsErrorEnum};
-use deep_causality_core::CausalityError;
 
 // Scalar Stress/Stiffness if needed, though mostly Tensors are used.
 // Defining them for completeness or future scalar ops.
@@ -14,7 +13,7 @@ use deep_causality_core::CausalityError;
 pub struct Stress(f64);
 
 impl Stress {
-    pub fn new(val: f64) -> Result<Self, CausalityError> {
+    pub fn new(val: f64) -> Result<Self, PhysicsError> {
         Ok(Self(val))
     }
     pub fn value(&self) -> f64 {
@@ -36,11 +35,11 @@ impl Stiffness {
     ///
     /// # Errors
     /// Returns `PhysicsError` if `val < 0.0`.
-    pub fn new(val: f64) -> Result<Self, CausalityError> {
+    pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val < 0.0 {
-            return Err(CausalityError::from(PhysicsError::new(
+            return Err(PhysicsError::new(
                 PhysicsErrorEnum::PhysicalInvariantBroken("Negative Stiffness (Scalar)".into()),
-            )));
+            ));
         }
         Ok(Self(val))
     }

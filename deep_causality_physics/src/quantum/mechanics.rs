@@ -3,19 +3,16 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::error::{PhysicsError, PhysicsErrorEnum};
-use crate::quantum::gates::QuantumOps;
-use deep_causality_multivector::CausalMultiVector;
-use deep_causality_multivector::HilbertState; // Use upstream alias/struct
+use crate::QuantumOps;
+use crate::{PhysicsError, PhysicsErrorEnum};
 use deep_causality_multivector::MultiVector;
+use deep_causality_multivector::{CausalMultiVector, HilbertState};
 use deep_causality_num::DivisionAlgebra;
+use deep_causality_tensor::CausalTensor;
+use deep_causality_topology::Manifold;
 
 pub type Operator = HilbertState;
 pub type Gate = HilbertState;
-
-// ============================================================================
-use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::Manifold;
 
 // Kernels
 
@@ -121,7 +118,6 @@ pub fn apply_gate_kernel(state: &HilbertState, gate: &Gate) -> Result<HilbertSta
     Ok(HilbertState::from_multivector(new_inner))
 }
 
-
 /// Calculates commutator $[A, B] = AB - BA$.
 ///
 /// # Arguments
@@ -131,8 +127,6 @@ pub fn apply_gate_kernel(state: &HilbertState, gate: &Gate) -> Result<HilbertSta
 /// # Returns
 /// * `Result<HilbertState, PhysicsError>` - Commutator result.
 pub fn commutator_kernel(a: &Operator, b: &Operator) -> Result<HilbertState, PhysicsError> {
-    use deep_causality_multivector::MultiVector;
-
     // [A, B] = AB - BA
     // Operators are HilbertStates wrapping CausalMultiVector<Complex<f64>>
     let a_mv = a.mv();

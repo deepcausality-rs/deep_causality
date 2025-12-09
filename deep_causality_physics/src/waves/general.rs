@@ -21,10 +21,6 @@
 //!   where signs depend on direction (approaching vs receding).
 use crate::{Frequency, Length, PhysicsError, PhysicsErrorEnum, Speed};
 
-// ============================================================================
-// Kernels (Pure Logic)
-// ============================================================================
-
 /// Calculates the speed of a wave given its frequency and wavelength.
 ///
 /// # Arguments

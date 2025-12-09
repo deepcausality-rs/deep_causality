@@ -7,8 +7,6 @@ use crate::waves::general;
 use crate::{Frequency, Length, Speed};
 use deep_causality_core::PropagatingEffect;
 
-// Wrappers
-
 /// Monadic wrapper for [`general::wave_speed_kernel`].
 ///
 /// Returns a `PropagatingEffect<Speed>` usable in causal chains.

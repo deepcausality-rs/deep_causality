@@ -7,8 +7,6 @@ use crate::astro::mechanics;
 use crate::dynamics::{Length, Mass, Speed};
 use deep_causality_core::{CausalityError, PropagatingEffect};
 
-// Wrappers
-
 /// Causal wrapper for [`mechanics::orbital_velocity_kernel`].
 pub fn orbital_velocity(mass: &Mass, radius: &Length) -> PropagatingEffect<Speed> {
     match mechanics::orbital_velocity_kernel(mass, radius) {

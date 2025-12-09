@@ -5,8 +5,6 @@
 
 use crate::{Density, G, Length, PhysicsError, Pressure, Speed};
 
-// Kernels
-
 /// Calculates hydrostatic pressure: $P = P_0 + \rho g h$.
 ///
 /// # Arguments
@@ -65,5 +63,3 @@ pub fn bernoulli_pressure_kernel(
 
     Pressure::new(p2)
 }
-
-// Wrappers

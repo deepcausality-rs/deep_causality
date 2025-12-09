@@ -6,8 +6,6 @@
 use crate::{PhysicsError, PhysicsErrorEnum, Temperature};
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 
-// Kernels
-
 /// Calculates generalized Hooke's Law: $\sigma_{ij} = C_{ijkl} \epsilon_{kl}$.
 ///
 /// Computes stress tensor from stiffness tensor (Rank 4) and strain tensor (Rank 2) via Einstein Summation.
@@ -54,8 +52,8 @@ pub fn hookes_law_kernel(
 /// * `stress` - Cauchy stress tensor (3x3).
 ///
 /// # Returns
-/// * `Ok(f64)` - Von Mises stress.
-pub fn von_mises_stress_kernel(stress: &CausalTensor<f64>) -> Result<f64, PhysicsError> {
+/// * `Ok(Stress)` - Von Mises stress scalar.
+pub fn von_mises_stress_kernel(stress: &CausalTensor<f64>) -> Result<crate::Stress, PhysicsError> {
     // Von Mises Stress via Deviatoric Stress Invariant J2
     // sigma_vm = sqrt(3 * J2)
     // J2 = 0.5 * (S : S)
@@ -123,7 +121,7 @@ pub fn von_mises_stress_kernel(stress: &CausalTensor<f64>) -> Result<f64, Physic
     // 4. Sigma_vm
     let vm = f64::sqrt(3.0 * j2);
 
-    Ok(vm)
+    crate::Stress::new(vm)
 }
 
 /// Calculates thermal expansion strain: $\epsilon = \alpha \Delta T$.

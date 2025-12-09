@@ -7,8 +7,6 @@ use crate::fluids::mechanics;
 use crate::{Density, Length, Pressure, Speed};
 use deep_causality_core::{CausalityError, PropagatingEffect};
 
-// Wrappers
-
 /// Causal wrapper for [`mechanics::hydrostatic_pressure_kernel`].
 pub fn hydrostatic_pressure(
     p0: &Pressure,

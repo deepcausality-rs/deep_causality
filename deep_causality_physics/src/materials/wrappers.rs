@@ -4,11 +4,9 @@
  */
 
 use crate::materials::mechanics;
-use crate::{Pressure, Temperature};
+use crate::{Stress, Temperature};
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_tensor::CausalTensor;
-
-// Wrappers
 
 /// Causal wrapper for [`mechanics::hookes_law_kernel`].
 pub fn hookes_law(
@@ -22,12 +20,9 @@ pub fn hookes_law(
 }
 
 /// Causal wrapper for [`mechanics::von_mises_stress_kernel`].
-pub fn von_mises_stress(stress: &CausalTensor<f64>) -> PropagatingEffect<Pressure> {
+pub fn von_mises_stress(stress: &CausalTensor<f64>) -> PropagatingEffect<Stress> {
     match mechanics::von_mises_stress_kernel(stress) {
-        Ok(val) => match Pressure::new(val) {
-            Ok(p) => PropagatingEffect::pure(p),
-            Err(e) => PropagatingEffect::from_error(e.into()),
-        },
+        Ok(s) => PropagatingEffect::pure(s),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
 }

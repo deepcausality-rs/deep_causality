@@ -9,7 +9,6 @@ use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::Manifold;
-// Wrappers
 
 /// Causal wrapper for [`forces::lorentz_force_kernel`].
 pub fn lorentz_force(

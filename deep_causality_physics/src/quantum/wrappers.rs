@@ -4,16 +4,13 @@
  */
 
 use crate::quantum::mechanics;
-use crate::quantum::mechanics::{Gate, Operator};
-use crate::quantum::quantities::Probability;
+use crate::{Gate, Operator, Probability};
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_multivector::HilbertState; // Use upstream alias/struct
+use deep_causality_multivector::HilbertState;
 
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::Manifold;
-
-// Wrappers
 
 /// Causal wrapper for [`mechanics::klein_gordon_kernel`].
 pub fn klein_gordon(
