@@ -81,3 +81,32 @@ fn test_ref_div_scalar() {
     let res = &v / 2.0;
     assert_eq!(res.data(), &vec![1.0, 2.0, 3.0, 4.0]);
 }
+
+#[test]
+fn test_add_assign() {
+    let m = Metric::Euclidean(2);
+    let mut v1 = CausalMultiVector::new(vec![1.0, 2.0, 3.0, 4.0], m).unwrap();
+    let v2 = CausalMultiVector::new(vec![10.0, 20.0, 30.0, 40.0], m).unwrap();
+
+    v1 += v2;
+    assert_eq!(v1.data(), &vec![11.0, 22.0, 33.0, 44.0]);
+}
+
+#[test]
+fn test_add_assign_ref() {
+    let m = Metric::Euclidean(2);
+    let mut v1 = CausalMultiVector::new(vec![1.0, 2.0, 3.0, 4.0], m).unwrap();
+    let v2 = CausalMultiVector::new(vec![10.0, 20.0, 30.0, 40.0], m).unwrap();
+
+    v1 += &v2;
+    assert_eq!(v1.data(), &vec![11.0, 22.0, 33.0, 44.0]);
+}
+
+#[test]
+fn test_mul_assign() {
+    let m = Metric::Euclidean(2);
+    let mut v = CausalMultiVector::new(vec![1.0, 2.0, 3.0, 4.0], m).unwrap();
+
+    v *= 2.0;
+    assert_eq!(v.data(), &vec![2.0, 4.0, 6.0, 8.0]);
+}
