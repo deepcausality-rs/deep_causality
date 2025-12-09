@@ -3,6 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use core::f64::consts::PI;
 /// Haruna's Gauge Field Formalism for Logical Quantum Gates.
 ///
 /// Based on "Note on Logical Gates by Gauge Field Formalism of Quantum Error Correction"
@@ -20,7 +21,6 @@
 ///   implemented here for T and S gates will not yield standard phases.
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::{Complex, One};
-use core::f64::consts::PI;
 
 /// Helper function to compute the exponential of a multivector: $e^A = \sum A^n/n!$
 /// Uses Taylor series expansion.
