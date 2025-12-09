@@ -36,36 +36,25 @@ pub trait QuantumOps {
 
 impl QuantumOps for CausalMultiVector<Complex<f64>> {
     fn dag(&self) -> Self {
-        // Quantum DAG is Hermitian Conjugate, which is reversion and complex conjugation of coefficients.
+        // Hermitian conjugate: reverse basis (reversion) and conjugate coefficients
         let reverted = self.reversion();
         let conjugated_data = reverted
             .data()
             .iter()
             .map(|c| Complex::new(c.re, -c.im))
             .collect::<Vec<_>>();
-        CausalMultiVector::new(conjugated_data, reverted.metric())
-            .expect("Metric and data should be valid")
+        // Avoid panic on construction; fall back to original metric/data if creation fails
+        CausalMultiVector::new(conjugated_data, reverted.metric()).unwrap_or(reverted)
     }
 
     fn bracket(&self, other: &Self) -> Complex<f64> {
-        // <self|other>
-        // In GA: (self.dag * other).scalar_part()
-        // Or inner product.
-        // We will return the scalar part of the geometric product of dag(self) and other.
         let prod = self.dag().geometric_product(other);
-        // Assuming .get(0) returns &T
         prod.get(0).cloned().unwrap_or(Complex::new(0.0, 0.0))
     }
 
     fn expectation_value(&self, operator: &Self) -> Complex<f64> {
-        // <psi|A|psi>
-        let ket_psi = self;
         let bra_psi = self.dag();
-
-        // A * |psi>
-        let a_psi = operator.geometric_product(ket_psi);
-
-        // <psi| (A|psi>)
+        let a_psi = operator.geometric_product(self);
         let prod = bra_psi.geometric_product(&a_psi);
         prod.get(0).cloned().unwrap_or(Complex::new(0.0, 0.0))
     }

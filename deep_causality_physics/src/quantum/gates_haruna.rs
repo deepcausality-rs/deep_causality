@@ -25,6 +25,15 @@ use deep_causality_num::{Complex, DivisionAlgebra, One};
 /// Helper function to compute the exponential of a multivector: $e^A = \sum A^n/n!$
 /// Uses Taylor series expansion.
 fn exp(mv: &CausalMultiVector<Complex<f64>>) -> CausalMultiVector<Complex<f64>> {
+    // Fast path: exp(0) = I
+    if mv
+        .data()
+        .iter()
+        .all(|c| c.re.abs() < 1e-15 && c.im.abs() < 1e-15)
+    {
+        return CausalMultiVector::scalar(Complex::one(), mv.metric());
+    }
+
     // 1. Create Identity: I = scalar(1)
     let one_complex = Complex::one();
     let mut term = CausalMultiVector::scalar(one_complex, mv.metric());

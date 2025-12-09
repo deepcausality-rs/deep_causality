@@ -24,10 +24,16 @@ use deep_causality_topology::Manifold;
 pub fn maxwell_gradient_kernel(
     potential_manifold: &Manifold<f64>,
 ) -> Result<CausalTensor<f64>, PhysicsError> {
-    // F = dA (Exterior Derivative)
-    // potential_manifold contains the 1-form A.
-    // exterior_derivative(1) computes the 2-form F on the faces.
+    // F = dA (Exterior Derivative) on 1-forms -> 2-forms
     let f_tensor = potential_manifold.exterior_derivative(1);
+    // Validate that a 2-form was actually produced (non-empty, expected rank)
+    if f_tensor.is_empty() || f_tensor.shape().is_empty() {
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::DimensionMismatch(
+                "Maxwell gradient produced empty or invalid 2-form".into(),
+            ),
+        ));
+    }
     Ok(f_tensor)
 }
 
