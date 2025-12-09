@@ -108,13 +108,12 @@ fn test_lorenz_gauge_kernel_valid() {
 // This test documents the current behavior.
 
 #[test]
-#[should_panic(expected = "ShapeMismatch")]
-fn test_proca_equation_kernel_panics_on_shape_mismatch() {
+fn test_proca_equation_kernel_error_on_shape_mismatch() {
     // Both manifolds have vertices + edges + faces, causing shape mismatch
     let field_manifold = create_simple_manifold();
     let potential_manifold = create_simple_manifold();
     let mass = 0.5;
-    // This will panic because delta_f is sized for 1-forms
-    // but m2_a is sized for total_simplices
-    let _ = proca_equation_kernel(&field_manifold, &potential_manifold, mass);
+    // This used to panic, now returns PhysicsError::DimensionMismatch
+    let result = proca_equation_kernel(&field_manifold, &potential_manifold, mass);
+    assert!(result.is_err());
 }
