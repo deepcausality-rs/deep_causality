@@ -10,7 +10,21 @@ use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_multivector::HilbertState; // Use upstream alias/struct
 
+use deep_causality_tensor::CausalTensor;
+use deep_causality_topology::Manifold;
+
 // Wrappers
+
+/// Causal wrapper for [`mechanics::klein_gordon_kernel`].
+pub fn klein_gordon(
+    psi_manifold: &Manifold<f64>,
+    mass: f64,
+) -> PropagatingEffect<CausalTensor<f64>> {
+    match mechanics::klein_gordon_kernel(psi_manifold, mass) {
+        Ok(res) => PropagatingEffect::pure(res),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
 
 /// Causal wrapper for [`mechanics::born_probability_kernel`].
 pub fn born_probability(
@@ -43,12 +57,9 @@ pub fn apply_gate(state: &HilbertState, gate: &Gate) -> PropagatingEffect<Hilber
 }
 
 /// Causal wrapper for [`mechanics::commutator_kernel`].
-pub fn commutator(
-    a: &CausalMultiVector<f64>,
-    b: &CausalMultiVector<f64>,
-) -> PropagatingEffect<HilbertState> {
+pub fn commutator(a: &Operator, b: &Operator) -> PropagatingEffect<HilbertState> {
     match mechanics::commutator_kernel(a, b) {
-        Ok(val) => PropagatingEffect::pure(val),
+        Ok(res) => PropagatingEffect::pure(res),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
 }

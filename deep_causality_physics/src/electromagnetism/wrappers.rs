@@ -64,3 +64,15 @@ pub fn magnetic_helicity_density(
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
 }
+
+/// Causal wrapper for [`fields::proca_equation_kernel`].
+pub fn proca_equation(
+    field_manifold: &Manifold<f64>,
+    potential_manifold: &Manifold<f64>,
+    mass: f64,
+) -> PropagatingEffect<CausalTensor<f64>> {
+    match fields::proca_equation_kernel(field_manifold, potential_manifold, mass) {
+        Ok(j) => PropagatingEffect::pure(j),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}

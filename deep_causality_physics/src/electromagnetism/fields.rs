@@ -7,9 +7,9 @@ use deep_causality_multivector::{CausalMultiVector, MultiVector};
 
 // Kernels
 
+use crate::PhysicsError;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::Manifold;
-use crate::PhysicsError;
 
 /// Calculates the Maxwell gradient (Electromagnetic Field Tensor).
 ///
@@ -27,7 +27,6 @@ pub fn maxwell_gradient_kernel(
     // F = dA (Exterior Derivative)
     // potential_manifold contains the 1-form A.
     // exterior_derivative(1) computes the 2-form F on the faces.
-
     let f_tensor = potential_manifold.exterior_derivative(1);
     Ok(f_tensor)
 }
@@ -48,7 +47,6 @@ pub fn lorenz_gauge_kernel(
     // Div A is represented by codifferential delta(A) for a 1-form.
     // delta: k-form -> (k-1)-form.
     // Result is a 0-form (scalar field on vertices).
-
     let divergence = potential_manifold.codifferential(1);
     Ok(divergence)
 }
@@ -97,4 +95,40 @@ pub fn magnetic_helicity_density_kernel(
     // Extract Grade 0 (Scalar)
     let h_val = h_scalar_mv.data()[0];
     Ok(h_val)
+}
+
+/// Calculates the Proca Equation (Massive Electromagnetism): $\delta F + m^2 A = J$.
+///
+/// Computes the source current density 1-form $J$ given the field $F$, potential $A$, and mass $m$.
+///
+/// # Arguments
+/// * `field_manifold` - Manifold containing the field 2-form $F$ (maxwell gradient).
+/// * `potential_manifold` - Manifold containing the potential 1-form $A$.
+/// * `mass` - Mass of the photon $m$ (typically $\approx 0$, but $>0$ in Proca theory).
+///
+/// # Returns
+/// * `Result<CausalTensor<f64>, PhysicsError>` - Current density 1-form $J$.
+pub fn proca_equation_kernel(
+    field_manifold: &Manifold<f64>,
+    potential_manifold: &Manifold<f64>,
+    mass: f64,
+) -> Result<CausalTensor<f64>, PhysicsError> {
+    // Proca: delta F + m^2 A = J
+    // F is 2-form. delta F is 1-form.
+    // A is 1-form. m^2 A is 1-form.
+    // Result J is 1-form.
+
+    // 1. Compute delta F (codifferential of 2-form)
+    let delta_f = field_manifold.codifferential(2);
+
+    // 2. Compute m^2 A
+    let m2 = mass * mass;
+    let a_tensor = potential_manifold.data(); // Access underlying data
+    let m2_a = a_tensor.clone() * m2;
+
+    // 3. Sum: J = delta F + m^2 A
+    // Note: CausalTensor implements Add
+    let j = delta_f + m2_a;
+
+    Ok(j)
 }

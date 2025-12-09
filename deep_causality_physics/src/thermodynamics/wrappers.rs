@@ -10,7 +10,20 @@ use crate::{
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_tensor::CausalTensor;
 
+use deep_causality_topology::Manifold;
+
 // Wrappers
+
+/// Causal wrapper for [`stats::heat_diffusion_kernel`].
+pub fn heat_diffusion(
+    temp_manifold: &Manifold<f64>,
+    diffusivity: f64,
+) -> PropagatingEffect<CausalTensor<f64>> {
+    match stats::heat_diffusion_kernel(temp_manifold, diffusivity) {
+        Ok(t) => PropagatingEffect::pure(t),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
 
 /// Causal wrapper for [`stats::ideal_gas_law_kernel`]. Returns result as `Ratio` (or scalar).
 pub fn ideal_gas_law(

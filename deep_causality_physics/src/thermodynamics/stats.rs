@@ -7,8 +7,35 @@ use crate::constants::thermodynamics::BOLTZMANN_CONSTANT;
 
 use crate::{AmountOfSubstance, Energy, PhysicsError, Pressure, Probability, Temperature, Volume};
 use deep_causality_tensor::CausalTensor;
-
+use deep_causality_topology::Manifold;
 // Kernels
+
+/// Calculates the Heat Equation step: $\frac{\partial u}{\partial t} = \alpha \Delta u$.
+///
+/// Computes the change in temperature field $u$ due to diffusion.
+/// Note: The Laplacian returns positive $\Delta u$. Conservation requires $\frac{du}{dt} = - \alpha \Delta u$.
+///
+/// # Arguments
+/// * `temp_manifold` - Manifold containing the temperature 0-form field $u$ (on vertices).
+/// * `diffusivity` - Thermal diffusivity $\alpha$.
+///
+/// # Returns
+/// * `Result<CausalTensor<f64>, PhysicsError>` - Rate of change tensor $\frac{du}{dt}$.
+pub fn heat_diffusion_kernel(
+    temp_manifold: &Manifold<f64>,
+    diffusivity: f64,
+) -> Result<CausalTensor<f64>, PhysicsError> {
+    // Heat Eq: du/dt = - alpha * Laplacian(u)
+
+    // 1. Compute Laplacian
+    let laplacian = temp_manifold.laplacian(0);
+
+    // 2. Multiply by -alpha
+    // CausalTensor * scalar.
+    let diff_tensor = laplacian * (-diffusivity);
+
+    Ok(diff_tensor)
+}
 
 /// Calculates the Ideal Gas Constant $R$ from state variables: $R = \frac{PV}{nT}$.
 ///
