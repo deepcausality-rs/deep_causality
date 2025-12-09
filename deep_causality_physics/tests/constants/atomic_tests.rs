@@ -5,6 +5,7 @@
 use deep_causality_physics::{ATOMIC_MASS_CONSTANT, ELECTRON_MASS, PROTON_MASS};
 
 #[test]
+#[allow(clippy::assertions_on_constants)]
 fn test_atomic_constants_sanity() {
     // Electron Mass ~ 9.109e-31 kg
     assert!((ELECTRON_MASS - 9.109_383_7e-31).abs() < 1e-38);

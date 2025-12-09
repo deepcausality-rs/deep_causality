@@ -4,6 +4,7 @@
  */
 
 use deep_causality_physics::{PhaseAngle, Probability};
+use std::f64::consts::PI;
 
 // =============================================================================
 // Probability Tests
@@ -62,9 +63,9 @@ fn test_probability_into_f64() {
 
 #[test]
 fn test_phase_angle_new_valid() {
-    let angle = PhaseAngle::new(3.14159);
+    let angle = PhaseAngle::new(PI);
     assert!(angle.is_ok());
-    assert!((angle.unwrap().value() - 3.14159).abs() < 1e-10);
+    assert!((angle.unwrap().value() - PI).abs() < 1e-10);
 }
 
 #[test]

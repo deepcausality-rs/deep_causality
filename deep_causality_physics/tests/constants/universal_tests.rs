@@ -5,6 +5,7 @@
 use deep_causality_physics::{G, PLANCK_CONSTANT, SPEED_OF_LIGHT, VACUUM_ELECTRIC_PERMITTIVITY};
 
 #[test]
+#[allow(clippy::assertions_on_constants)]
 fn test_universal_constants_approx() {
     // Sanity checks against known rough values
     assert!((SPEED_OF_LIGHT - 299_792_458.0).abs() < 1e-9);
