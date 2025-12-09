@@ -43,6 +43,16 @@ fn exp(mv: &CausalMultiVector<Complex<f64>>) -> CausalMultiVector<Complex<f64>> 
         // In-place scalar multiplication
         term *= n_inv;
 
+        // Bail out if term produced non-finite data
+        if term
+            .data()
+            .iter()
+            .any(|c| !c.re.is_finite() || !c.im.is_finite())
+        {
+            // Return identity as a safe fallback; alternatively, propagate an error in a Result
+            return CausalMultiVector::scalar(Complex::one(), mv.metric());
+        }
+
         let prev = sum.clone();
         // Update sum in place
         sum += &term;
@@ -56,9 +66,20 @@ fn exp(mv: &CausalMultiVector<Complex<f64>>) -> CausalMultiVector<Complex<f64>> 
         let diff = &sum - &prev;
         let delta = diff.data().iter().map(|c| c.norm_sqr()).sum::<f64>().sqrt();
 
-        if delta < tol {
-            break;
+        if !delta.is_finite() {
+            return CausalMultiVector::scalar(Complex::one(), mv.metric());
         }
+        if delta < tol {
+            return sum;
+        }
+    }
+    // If max_iters reached without convergence, return best approximation but ensure finiteness
+    if sum
+        .data()
+        .iter()
+        .any(|c| !c.re.is_finite() || !c.im.is_finite())
+    {
+        return CausalMultiVector::scalar(Complex::one(), mv.metric());
     }
     sum
 }

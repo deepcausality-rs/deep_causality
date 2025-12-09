@@ -99,6 +99,13 @@ pub fn born_probability_kernel(
     let amplitude = state.mv().bracket(basis.mv());
     let p = amplitude.norm_sqr();
 
+    // Guard against non-finite values
+    if !p.is_finite() {
+        return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
+            format!("Born probability is not finite: {}", p),
+        )));
+    }
+
     // Validate
     if !(-1e-9..=1.000001).contains(&p) {
         return Err(PhysicsError::new(PhysicsErrorEnum::NormalizationError(
@@ -160,6 +167,18 @@ pub fn apply_gate_kernel(state: &HilbertState, gate: &Gate) -> Result<HilbertSta
     }
 
     let new_inner = gate.mv().geometric_product(state.mv());
+
+    // Validate numerical stability of resulting state
+    if new_inner
+        .data()
+        .iter()
+        .any(|c| !c.re.is_finite() || !c.im.is_finite())
+    {
+        return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
+            "Non-finite component in state after gate application".into(),
+        )));
+    }
+
     // Wrap back in HilbertState
     Ok(HilbertState::from_multivector(new_inner))
 }

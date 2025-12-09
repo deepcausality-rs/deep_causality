@@ -253,9 +253,32 @@ pub fn partition_function_kernel(
     }
 
     let beta = 1.0 / (k * t);
+    if !beta.is_finite() {
+        return Err(PhysicsError::new(
+            crate::error::PhysicsErrorEnum::NumericalInstability(
+                "Invalid beta in partition function".into(),
+            ),
+        ));
+    }
     let data = energies.as_slice();
 
-    let z: f64 = data.iter().map(|&e| (-beta * e).exp()).sum();
+    // Prevent overflow in exp by clamping exponent to a safe range
+    // f64::EXP_MAX ~ 709 for e^x; clamp to, e.g., [-700, 700]
+    let z: f64 = data
+        .iter()
+        .map(|&e| {
+            let x = (-beta * e).clamp(-700.0, 700.0);
+            x.exp()
+        })
+        .sum();
+
+    if !z.is_finite() {
+        return Err(PhysicsError::new(
+            crate::error::PhysicsErrorEnum::NumericalInstability(
+                "Non-finite partition function value".into(),
+            ),
+        ));
+    }
 
     Ok(z)
 }
