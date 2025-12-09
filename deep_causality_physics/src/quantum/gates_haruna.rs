@@ -20,7 +20,7 @@
 ///   implemented here for T and S gates will not yield standard phases.
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::{Complex, One};
-use std::f64::consts::PI;
+use core::f64::consts::PI;
 
 /// Helper function to compute the exponential of a multivector: $e^A = \sum A^n/n!$
 /// Uses Taylor series expansion.
