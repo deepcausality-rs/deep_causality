@@ -78,7 +78,7 @@ fn test_radioactive_decay_zero_half_life() {
 
     match result {
         Err(e) => match e.0 {
-            deep_causality_physics::PhysicsErrorEnum::Singularity(_) => assert!(true),
+            deep_causality_physics::PhysicsErrorEnum::Singularity(_) => (),
             _ => panic!("Expected Singularity error, got {:?}", e),
         },
         Ok(_) => panic!("Should return error for zero half-life"),

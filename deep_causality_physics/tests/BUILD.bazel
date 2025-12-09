@@ -231,6 +231,7 @@ rust_test_suite(
         "//deep_causality_physics",
         # Internal dependencies
         "//deep_causality_tensor",
+        "//deep_causality_topology",
     ],
 )
 

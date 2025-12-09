@@ -158,7 +158,6 @@ fn test_proca_equation_wrapper_success() {
     // that's hard to construct easily here.
     // Instead, let's verify that the shape mismatch (if it happens) is caught and returned as Error.
 
-    let manifold = create_simple_manifold(); // Likely causes shape mismatch
     // Because we just added the shape check, this should return Err, not Panic.
     // If by chance types align, it returns Ok.
     // We check is_err() for now as we expect mismatch on this simple manifold.
