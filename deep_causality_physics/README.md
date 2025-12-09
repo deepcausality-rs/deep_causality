@@ -1,6 +1,6 @@
 # DeepCausality Physics
 
-**Standard library of physics formulas and engineering primitives for DeepCausality.**
+**A library of physics formulas and engineering primitives for DeepCausality.**
 
 `deep_causality_physics` provides a comprehensive collection of physics kernels, causal wrappers, and physical quantities designed for use within the DeepCausality hyper-graph simulation engine. It leverages Geometric Algebra (via `deep_causality_multivector`) and Causal Tensors to model complex physical interactions with high fidelity.
 
