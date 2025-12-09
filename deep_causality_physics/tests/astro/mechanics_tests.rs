@@ -4,8 +4,8 @@
  */
 
 use deep_causality_physics::{
-    G, Length, Mass, PhysicsErrorEnum, SPEED_OF_LIGHT, escape_velocity_kernel,
-    orbital_velocity_kernel, schwarzschild_radius_kernel,
+    Length, Mass, NEWTONIAN_CONSTANT_OF_GRAVITATION, PhysicsErrorEnum, SPEED_OF_LIGHT,
+    escape_velocity_kernel, orbital_velocity_kernel, schwarzschild_radius_kernel,
 };
 
 // =============================================================================
@@ -125,8 +125,7 @@ fn test_schwarzschild_radius_kernel_valid() {
 /// Physics invariant: Schwarzschild radius of the Sun ≈ 2.95 km
 #[test]
 fn test_schwarzschild_radius_sun_known_value() {
-    // Note: The code uses G = 9.80665 (standard gravity), not the gravitational constant
-    // So we test the formula: r_s = 2GM/c² with the library's G constant
+    // So we test the formula: r_s = 2GM/c² with the library's gravitational constant
     let solar_mass = Mass::new(1.989e30).unwrap();
 
     let result = schwarzschild_radius_kernel(&solar_mass);
@@ -135,7 +134,8 @@ fn test_schwarzschild_radius_sun_known_value() {
     let r_s = result.unwrap();
 
     // Expected: 2 * G * M / c²
-    let expected = 2.0 * G * solar_mass.value() / (SPEED_OF_LIGHT * SPEED_OF_LIGHT);
+    let expected = 2.0 * NEWTONIAN_CONSTANT_OF_GRAVITATION * solar_mass.value()
+        / (SPEED_OF_LIGHT * SPEED_OF_LIGHT);
     assert!(
         (r_s.value() - expected).abs() < 1e-10,
         "Schwarzschild radius formula mismatch"

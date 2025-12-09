@@ -3,8 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::NEWTONIAN_CONSTANT_OF_GRAVITATION;
+use crate::SPEED_OF_LIGHT;
 use crate::error::PhysicsError;
-use crate::{G, SPEED_OF_LIGHT};
 use crate::{Length, Mass, Speed};
 
 /// Calculates orbital velocity: $v = \sqrt{\frac{GM}{r}}$.
@@ -20,7 +21,8 @@ pub fn orbital_velocity_kernel(
     radius: &Length,
 ) -> Result<Speed, PhysicsError> {
     // v = sqrt(GM / r)
-    let gm = G * mass_primary.value();
+    // v = sqrt(GM / r)
+    let gm = NEWTONIAN_CONSTANT_OF_GRAVITATION * mass_primary.value();
     if radius.value() == 0.0 {
         return Err(PhysicsError::new(
             crate::error::PhysicsErrorEnum::MetricSingularity(
@@ -42,7 +44,8 @@ pub fn orbital_velocity_kernel(
 /// * `Ok(Speed)` - Escape velocity $v_e$.
 pub fn escape_velocity_kernel(mass_primary: &Mass, radius: &Length) -> Result<Speed, PhysicsError> {
     // v = sqrt(2GM / r)
-    let gm = G * mass_primary.value();
+    // v = sqrt(2GM / r)
+    let gm = NEWTONIAN_CONSTANT_OF_GRAVITATION * mass_primary.value();
     if radius.value() == 0.0 {
         return Err(PhysicsError::new(
             crate::error::PhysicsErrorEnum::MetricSingularity(
@@ -63,8 +66,9 @@ pub fn escape_velocity_kernel(mass_primary: &Mass, radius: &Length) -> Result<Sp
 /// * `Ok(Length)` - Schwarzschild radius $r_s$.
 pub fn schwarzschild_radius_kernel(mass: &Mass) -> Result<Length, PhysicsError> {
     // r_s = 2GM / c^2
+    // r_s = 2GM / c^2
     let c = SPEED_OF_LIGHT;
-    let num = 2.0 * G * mass.value();
+    let num = 2.0 * NEWTONIAN_CONSTANT_OF_GRAVITATION * mass.value();
     let den = c * c;
     let r = num / den;
     Length::new(r)
