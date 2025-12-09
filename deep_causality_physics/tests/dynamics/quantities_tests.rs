@@ -4,8 +4,8 @@
  */
 
 use deep_causality_physics::{
-    Acceleration, Area, Force, Frequency, Length, Mass, MomentOfInertia,
-    Speed, Torque, Volume, PhysicsErrorEnum,
+    Acceleration, Area, Force, Frequency, Length, Mass, MomentOfInertia, PhysicsErrorEnum, Speed,
+    Torque, Volume,
 };
 
 // =============================================================================

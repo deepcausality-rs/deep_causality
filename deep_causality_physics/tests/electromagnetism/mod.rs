@@ -4,6 +4,8 @@
  */
 
 #[cfg(test)]
+pub mod fields_tests;
+#[cfg(test)]
 pub mod forces_tests;
 #[cfg(test)]
 pub mod quantities_tests;

@@ -4,8 +4,7 @@
  */
 
 use deep_causality_physics::{
-    bernoulli_pressure, hydrostatic_pressure,
-    Density, Length, Pressure, Speed,
+    Density, Length, Pressure, Speed, bernoulli_pressure, hydrostatic_pressure,
 };
 
 // =============================================================================

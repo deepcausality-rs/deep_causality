@@ -3,9 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::{
-    hookes_law, thermal_expansion, von_mises_stress, Temperature,
-};
+use deep_causality_physics::{Temperature, hookes_law, thermal_expansion, von_mises_stress};
 use deep_causality_tensor::CausalTensor;
 
 // =============================================================================
@@ -36,7 +34,11 @@ fn test_hookes_law_wrapper_error() {
 
 #[test]
 fn test_von_mises_stress_wrapper_success() {
-    let stress = CausalTensor::new(vec![100e6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], vec![3, 3]).unwrap();
+    let stress = CausalTensor::new(
+        vec![100e6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        vec![3, 3],
+    )
+    .unwrap();
 
     let effect = von_mises_stress(&stress);
     assert!(effect.is_ok());

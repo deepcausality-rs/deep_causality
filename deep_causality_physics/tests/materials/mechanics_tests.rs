@@ -4,8 +4,8 @@
  */
 
 use deep_causality_physics::{
-    hookes_law_kernel, thermal_expansion_kernel, von_mises_stress_kernel,
-    PhysicsErrorEnum, Temperature,
+    PhysicsErrorEnum, Temperature, hookes_law_kernel, thermal_expansion_kernel,
+    von_mises_stress_kernel,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -84,7 +84,8 @@ fn test_von_mises_stress_kernel_hydrostatic() {
     // Pure hydrostatic stress has zero deviatoric → zero Von Mises
     // σ = p * I (uniform pressure on diagonal)
     let p = 50e6;
-    let stress = CausalTensor::new(vec![p, 0.0, 0.0, 0.0, p, 0.0, 0.0, 0.0, p], vec![3, 3]).unwrap();
+    let stress =
+        CausalTensor::new(vec![p, 0.0, 0.0, 0.0, p, 0.0, 0.0, 0.0, p], vec![3, 3]).unwrap();
 
     let result = von_mises_stress_kernel(&stress);
     assert!(result.is_ok());

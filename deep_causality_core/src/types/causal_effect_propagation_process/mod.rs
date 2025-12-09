@@ -47,7 +47,9 @@ pub struct CausalEffectPropagationProcess<Value, State, Context, Error, Log> {
     pub logs: Log,
 }
 
-impl<Value, State, Context, Error, Log> CausalEffectPropagationProcess<Value, State, Context, Error, Log> {
+impl<Value, State, Context, Error, Log>
+    CausalEffectPropagationProcess<Value, State, Context, Error, Log>
+{
     pub fn value(&self) -> &EffectValue<Value> {
         &self.value
     }

@@ -4,8 +4,8 @@
  */
 
 use deep_causality_physics::{
-    escape_velocity_kernel, orbital_velocity_kernel, schwarzschild_radius_kernel,
-    Length, Mass, PhysicsErrorEnum, G, SPEED_OF_LIGHT,
+    G, Length, Mass, PhysicsErrorEnum, SPEED_OF_LIGHT, escape_velocity_kernel,
+    orbital_velocity_kernel, schwarzschild_radius_kernel,
 };
 
 // =============================================================================
@@ -150,7 +150,10 @@ fn test_schwarzschild_radius_kernel_zero_mass() {
     assert!(result.is_ok());
 
     let r_s = result.unwrap();
-    assert!((r_s.value() - 0.0).abs() < 1e-10, "Zero mass → zero Schwarzschild radius");
+    assert!(
+        (r_s.value() - 0.0).abs() < 1e-10,
+        "Zero mass → zero Schwarzschild radius"
+    );
 }
 
 /// Test that negative mass is rejected at the Mass type level

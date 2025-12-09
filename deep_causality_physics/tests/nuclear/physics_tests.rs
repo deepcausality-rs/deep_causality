@@ -4,8 +4,8 @@
  */
 
 use deep_causality_physics::{
-    binding_energy_kernel, radioactive_decay_kernel,
-    AmountOfSubstance, HalfLife, Mass, Time, SPEED_OF_LIGHT,
+    AmountOfSubstance, HalfLife, Mass, SPEED_OF_LIGHT, Time, binding_energy_kernel,
+    radioactive_decay_kernel,
 };
 
 // =============================================================================

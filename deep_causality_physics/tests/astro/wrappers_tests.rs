@@ -4,8 +4,7 @@
  */
 
 use deep_causality_physics::{
-    escape_velocity, orbital_velocity, schwarzschild_radius,
-    Length, Mass,
+    Length, Mass, escape_velocity, orbital_velocity, schwarzschild_radius,
 };
 
 // =============================================================================
@@ -30,7 +29,10 @@ fn test_orbital_velocity_wrapper_error() {
     let radius = Length::new(0.0).unwrap();
 
     let effect = orbital_velocity(&mass, &radius);
-    assert!(effect.is_err(), "Expected error PropagatingEffect for zero radius");
+    assert!(
+        effect.is_err(),
+        "Expected error PropagatingEffect for zero radius"
+    );
 }
 
 // =============================================================================

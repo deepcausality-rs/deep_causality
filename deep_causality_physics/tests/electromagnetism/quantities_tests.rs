@@ -87,7 +87,11 @@ fn test_physical_field_default() {
 
 #[test]
 fn test_physical_field_new_and_accessors() {
-    let mv = CausalMultiVector::new(vec![1.0, 2.0, 3.0, 4.0, 0.0, 0.0, 0.0, 0.0], Metric::Euclidean(3)).unwrap();
+    let mv = CausalMultiVector::new(
+        vec![1.0, 2.0, 3.0, 4.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
     let field = PhysicalField::new(mv.clone());
 
     assert_eq!(field.inner().data(), mv.data());
