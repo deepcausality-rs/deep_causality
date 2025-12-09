@@ -46,9 +46,25 @@ pub fn klein_gordon_kernel(
     // For 0-forms, Delta = delta d.
     let laplacian = psi_manifold.laplacian(0);
 
-    // 2. Term B: m^2 psi
+    // Validate numerical finiteness of inputs
+    if !mass.is_finite() {
+        return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
+            "Mass is not finite in Klein-Gordon".into(),
+        )));
+    }
+    if laplacian.as_slice().iter().any(|v| !v.is_finite()) {
+        return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
+            "Laplacian contains non-finite entries".into(),
+        )));
+    }
+
     // 2. Term B: m^2 psi
     let m2 = mass * mass;
+    if !m2.is_finite() {
+        return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
+            "m^2 overflowed in Klein-Gordon".into(),
+        )));
+    }
     let psi_data = psi_manifold.data();
 
     // The laplacian is on 0-forms (vertices), so we need the 0-form part of psi.
@@ -61,13 +77,28 @@ pub fn klein_gordon_kernel(
         )));
     }
     let psi_vertex_data = &psi_data.as_slice()[..vertex_count];
+    if psi_vertex_data.iter().any(|v| !v.is_finite()) {
+        return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
+            "psi data contains non-finite entries".into(),
+        )));
+    }
     let psi_vertex_tensor =
         CausalTensor::new(psi_vertex_data.to_vec(), laplacian.shape().to_vec())?;
     let m2_psi = psi_vertex_tensor * m2;
+    if m2_psi.as_slice().iter().any(|v| !v.is_finite()) {
+        return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
+            "m^2 * psi produced non-finite entries".into(),
+        )));
+    }
 
     // 3. Result: Delta psi + m^2 psi
     // We sum them. Ideally, for a free field, this sum is zero.
     let result = laplacian + m2_psi;
+    if result.as_slice().iter().any(|v| !v.is_finite()) {
+        return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
+            "Klein-Gordon result contains non-finite entries".into(),
+        )));
+    }
 
     Ok(result)
 }

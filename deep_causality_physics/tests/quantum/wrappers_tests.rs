@@ -323,6 +323,6 @@ fn test_klein_gordon_wrapper_error() {
 
     let manifold = create_simple_manifold();
     let effect = klein_gordon(&manifold, 1e200); // Massive mass
-    // It should ideally not panic. It might return OK with Infs.
-    assert!(effect.is_ok());
+    // It should return Err because m^2 overflows and we now check for finiteness.
+    assert!(effect.is_err());
 }

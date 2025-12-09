@@ -34,61 +34,57 @@ fn exp(mv: &CausalMultiVector<Complex<f64>>) -> CausalMultiVector<Complex<f64>> 
         return CausalMultiVector::scalar(Complex::one(), mv.metric());
     }
 
-    // 1. Create Identity: I = scalar(1)
+    let metric = mv.metric();
     let one_complex = Complex::one();
-    let mut term = CausalMultiVector::scalar(one_complex, mv.metric());
+    let mut term = CausalMultiVector::scalar(one_complex, metric);
     let mut sum = term.clone();
 
-    // Tolerance and safety cap
     let tol = 1e-12;
     let max_iters = 64;
 
-    for n in 1..=max_iters {
-        // term_n = term_{n-1} * mv * (1/n)
-        let n_inv = Complex::new(1.0 / (n as f64), 0.0);
+    // Simple bound to detect pathological exponents; if ||mv|| is huge, series may overflow
+    let mv_norm = mv.data().iter().map(|c| c.norm_sqr()).sum::<f64>().sqrt();
+    if !mv_norm.is_finite() || mv_norm > 1e6 {
+        // Return zero-order approximation to avoid producing NaNs downstream
+        return CausalMultiVector::scalar(Complex::one(), metric);
+    }
 
-        // Update term in place to avoid cloning
+    for n in 1..=max_iters {
+        let n_inv = Complex::new(1.0 / (n as f64), 0.0);
         term = &term * mv;
-        // In-place scalar multiplication
         term *= n_inv;
 
-        // Bail out if term produced non-finite data
         if term
             .data()
             .iter()
             .any(|c| !c.re.is_finite() || !c.im.is_finite())
         {
-            // Return identity as a safe fallback; alternatively, propagate an error in a Result
-            return CausalMultiVector::scalar(Complex::one(), mv.metric());
+            // Abort with safest finite approximation so far
+            return sum;
         }
 
         let prev = sum.clone();
-        // Update sum in place
         sum += &term;
 
-        // Early stop if incremental improvement is below tolerance
-        // Compare scalar norms to detect convergence
-        // We assume CausalMultiVector has l2_norm or similar:
-        // If not, we use squared_magnitude().sqrt() or fail and fix.
-        // User specified l2_norm() which is not available directly.
-        // We compute L2 norm of the difference vector components.
         let diff = &sum - &prev;
         let delta = diff.data().iter().map(|c| c.norm_sqr()).sum::<f64>().sqrt();
 
         if !delta.is_finite() {
-            return CausalMultiVector::scalar(Complex::one(), mv.metric());
+            return prev;
         }
         if delta < tol {
             return sum;
         }
     }
-    // If max_iters reached without convergence, return best approximation but ensure finiteness
+
+    // Ensure finiteness of result
     if sum
         .data()
         .iter()
         .any(|c| !c.re.is_finite() || !c.im.is_finite())
     {
-        return CausalMultiVector::scalar(Complex::one(), mv.metric());
+        // Fall back to the last finite partial sum (here identity if none improved)
+        return CausalMultiVector::scalar(Complex::one(), metric);
     }
     sum
 }

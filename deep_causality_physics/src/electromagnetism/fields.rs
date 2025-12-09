@@ -160,8 +160,24 @@ pub fn proca_equation_kernel(
     // 1. Compute delta F (codifferential of 2-form)
     let delta_f = field_manifold.codifferential(2);
 
+    if !mass.is_finite() {
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::NumericalInstability("Non-finite mass in Proca".into()),
+        ));
+    }
+    if delta_f.as_slice().iter().any(|v| !v.is_finite()) {
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::NumericalInstability("delta(F) has non-finite entries".into()),
+        ));
+    }
+
     // 2. Compute m^2 A (ensure it's a 1-form tensor compatible with delta F)
     let m2 = mass * mass;
+    if !m2.is_finite() {
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::NumericalInstability("m^2 overflowed in Proca".into()),
+        ));
+    }
     let a_full = potential_manifold.data(); // underlying data tensor
 
     // Build an A tensor on the same shape as delta_f (1-form domain)
@@ -176,9 +192,24 @@ pub fn proca_equation_kernel(
             )),
         ));
     }
+    if a_full.as_slice()[..needed_len]
+        .iter()
+        .any(|v| !v.is_finite())
+    {
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::NumericalInstability(
+                "A(1-form) has non-finite entries".into(),
+            ),
+        ));
+    }
     let a_1form = CausalTensor::new(a_full.as_slice()[..needed_len].to_vec(), a_shape)?;
 
     let m2_a = a_1form * m2;
+    if m2_a.as_slice().iter().any(|v| !v.is_finite()) {
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::NumericalInstability("m^2 A has non-finite entries".into()),
+        ));
+    }
 
     // 3. Sum: J = delta F + m^2 A
     // Note: CausalTensor implements Add
@@ -193,6 +224,14 @@ pub fn proca_equation_kernel(
         ));
     }
     let j = delta_f + m2_a;
+
+    if j.as_slice().iter().any(|v| !v.is_finite()) {
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::NumericalInstability(
+                "Proca current J has non-finite entries".into(),
+            ),
+        ));
+    }
 
     Ok(j)
 }
