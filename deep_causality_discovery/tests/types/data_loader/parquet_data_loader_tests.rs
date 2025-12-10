@@ -131,7 +131,7 @@ fn create_test_parquet_file(
 #[test]
 fn test_parquet_data_loader_load_error_file_not_found() {
     let loader = ParquetDataLoader;
-    let parquet_config = ParquetConfig::new(None, 1024);
+    let parquet_config = ParquetConfig::new(None, 1024, None, None, vec![]);
     let config = DataLoaderConfig::Parquet(parquet_config);
 
     let result = loader.load("non_existent_file.parquet", &config);
@@ -150,7 +150,8 @@ fn test_parquet_data_loader_load_error_invalid_config_type() {
     fs::write(file_path, "dummy content").unwrap();
 
     let loader = ParquetDataLoader;
-    let csv_config = deep_causality_discovery::CsvConfig::new(false, b',', 0, None);
+    let csv_config =
+        deep_causality_discovery::CsvConfig::new(false, b',', 0, None, None, None, vec![]);
     let config = DataLoaderConfig::Csv(csv_config);
 
     let result = loader.load(file_path, &config);
@@ -266,7 +267,7 @@ fn test_parquet_data_loader_load_success_various_types() {
     create_test_parquet_file(&file_path, schema, data.clone()).unwrap();
 
     let loader = ParquetDataLoader;
-    let parquet_config = ParquetConfig::new(None, 1024);
+    let parquet_config = ParquetConfig::new(None, 1024, None, None, vec![]);
     let config = DataLoaderConfig::Parquet(parquet_config);
 
     let result = loader.load(file_path.to_str().unwrap(), &config).unwrap();
@@ -350,7 +351,7 @@ fn test_parquet_data_loader_load_empty_file() {
     create_test_parquet_file(&file_path, schema, vec![]).unwrap();
 
     let loader = ParquetDataLoader;
-    let parquet_config = ParquetConfig::new(None, 1024);
+    let parquet_config = ParquetConfig::new(None, 1024, None, None, vec![]);
     let config = DataLoaderConfig::Parquet(parquet_config);
 
     let result = loader.load(file_path.to_str().unwrap(), &config).unwrap();
@@ -381,7 +382,7 @@ fn test_parquet_data_loader_load_error_unsupported_type() {
     create_test_parquet_file(&file_path, schema, data).unwrap();
 
     let loader = ParquetDataLoader;
-    let parquet_config = ParquetConfig::new(None, 1024);
+    let parquet_config = ParquetConfig::new(None, 1024, None, None, vec![]);
     let config = DataLoaderConfig::Parquet(parquet_config);
 
     let result = loader.load(file_path.to_str().unwrap(), &config);

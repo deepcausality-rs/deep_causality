@@ -7,7 +7,7 @@ use deep_causality_discovery::{CsvConfig, DataLoaderConfig, ParquetConfig};
 
 #[test]
 fn test_display_csv() {
-    let csv_config = CsvConfig::new(true, b',', 0, None);
+    let csv_config = CsvConfig::new(true, b',', 0, None, None, None, vec![]);
     let config = DataLoaderConfig::Csv(csv_config);
     let display = format!("{}", config);
     assert_eq!(
@@ -29,7 +29,7 @@ fn test_display_parquet() {
 
 #[test]
 fn test_clone() {
-    let csv_config = CsvConfig::new(true, b',', 0, None);
+    let csv_config = CsvConfig::new(true, b',', 0, None, None, None, vec![]);
     let config1 = DataLoaderConfig::Csv(csv_config);
     let config2 = config1.clone();
     match (config1, config2) {

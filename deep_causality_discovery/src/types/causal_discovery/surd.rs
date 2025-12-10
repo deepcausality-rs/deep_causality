@@ -21,6 +21,15 @@ impl CausalDiscovery for SurdCausalDiscovery {
         config: &CausalDiscoveryConfig,
     ) -> Result<SurdResult<f64>, CausalDiscoveryError> {
         let CausalDiscoveryConfig::Surd(surd_config) = config;
-        Ok(surd_states_cdl(&tensor, surd_config.max_order())?)
+        Self::discover_res(&tensor, surd_config)
+    }
+}
+
+impl SurdCausalDiscovery {
+    pub fn discover_res(
+        tensor: &CausalTensor<Option<f64>>,
+        config: &crate::SurdConfig,
+    ) -> Result<SurdResult<f64>, CausalDiscoveryError> {
+        Ok(surd_states_cdl(tensor, config.max_order())?)
     }
 }

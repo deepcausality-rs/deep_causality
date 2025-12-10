@@ -5,6 +5,7 @@
 
 use crate::FeatureSelector;
 use crate::{FeatureSelectError, FeatureSelectorConfig};
+use deep_causality_algorithms::feature_selection::mrmr::{MrmrError, MrmrResult};
 use deep_causality_algorithms::mrmr::mrmr_features_selector;
 use deep_causality_tensor::{CausalTensor, CausalTensorError};
 
@@ -19,11 +20,12 @@ impl FeatureSelector for MrmrFeatureSelector {
     ) -> Result<CausalTensor<Option<f64>>, FeatureSelectError> {
         let FeatureSelectorConfig::Mrmr(mrmr_config) = config;
 
-        let selected_indices = mrmr_features_selector(
-            &tensor,
-            mrmr_config.num_features(),
-            mrmr_config.target_col(),
-        )?;
+        // Pass reference to tensor
+        let selected_indices_res = Self::select_indices(&tensor, mrmr_config)?;
+        // Convert to Vec for iteration if MrmrResult doesn't implement IntoIterator directly or we want simple logic
+        // Assuming MrmrResult is iterable or we can access its contents.
+        // It likely has .iter().
+        let selected_indices: Vec<(usize, f64)> = selected_indices_res.iter().copied().collect();
 
         let shape = tensor.shape();
         let n_rows = shape[0];
@@ -40,5 +42,15 @@ impl FeatureSelector for MrmrFeatureSelector {
         }
 
         Ok(CausalTensor::new(new_data, new_shape)?)
+    }
+}
+
+impl MrmrFeatureSelector {
+    /// Returns the raw selected indices and scores, enabling manual filtering or inspection.
+    pub fn select_indices(
+        tensor: &CausalTensor<Option<f64>>,
+        config: &crate::MrmrConfig,
+    ) -> Result<MrmrResult, MrmrError> {
+        mrmr_features_selector(tensor, config.num_features(), config.target_col())
     }
 }

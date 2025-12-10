@@ -2,54 +2,41 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_discovery::{
-    AnalyzeConfig, CDL, CausalDiscoveryConfig, CdlConfig, ConsoleFormatter, CsvConfig,
-    CsvDataLoader, DataLoaderConfig, FeatureSelectorConfig, MaxOrder::Max, MrmrConfig,
-    MrmrFeatureSelector, SurdCausalDiscovery, SurdConfig, SurdResultAnalyzer,
-};
-use std::fs::File;
-use std::io::Write;
+use deep_causality_discovery::*;
+use std::{fs::File, io::Write};
 
 fn main() {
-    // 1. Prepare test data
+    // 1. Get (random test) data
     let file_path = get_test_csv_file_path();
+    let target_index = 3; // Index of the target column
 
-    // 2. Build the CDL configuration
-    let cdl_config = CdlConfig::new()
-        // Define the data loader as CSV file loader and the corresponding default CSV config
-        .with_data_loader(DataLoaderConfig::Csv(CsvConfig::default()))
-        // Define the feature selected as MRMR and set its parameters
-        .with_feature_selector(FeatureSelectorConfig::Mrmr(MrmrConfig::new(2, 3)))
-        // Define the causal discovery as SURD and set its parameters
-        .with_causal_discovery(CausalDiscoveryConfig::Surd(SurdConfig::new(Max, 3)))
-        // Define the analysis of the SURD results and set its parameters
-        .with_analysis(AnalyzeConfig::new(0.1, 0.1, 0.1));
+    // 2. Run the CDL pipeline (Monadic Flow)
+    let result_effect = CdlBuilder::build()
+        // Load Data with Inline Config
+        .bind(|cdl| cdl.load_data(&file_path, target_index, vec![]))
+        // Clean Data using the OptionNoneDataCleaner
+        .bind(|cdl| cdl.clean_data(OptionNoneDataCleaner))
+        // Feature Selection using MRMR
+        .bind(|cdl| {
+            cdl.feature_select(|tensor| {
+                //Select top 3 features, target at index 3
+                mrmr_features_selector(tensor, 3, target_index)
+            })
+        })
+        // Causal Discovery using SURD
+        .bind(|cdl| {
+            cdl.causal_discovery(|tensor| {
+                // MaxOrder the maximum order of interactions to compute between all variables.
+                surd_states_cdl(tensor, MaxOrder::Max).map_err(Into::into)
+            })
+        })
+        // Analyze Results
+        .bind(|cdl| cdl.analyze())
+        // Finalize and Format
+        .bind(|cdl| cdl.finalize());
 
-    // 3. Build the CDL pipeline
-    let discovery_process = CDL::with_config(cdl_config)
-        .load_data(CsvDataLoader, &file_path)
-        .expect("Failed to load file to start CDL process")
-        .feature_select(MrmrFeatureSelector)
-        .expect("Failed to select features")
-        .causal_discovery(SurdCausalDiscovery)
-        .expect("CausalDiscovery failed")
-        .analyze(SurdResultAnalyzer)
-        .expect("Analysis failed")
-        .finalize(ConsoleFormatter)
-        .expect("Finalization failed")
-        .build()
-        .expect("Failed to build causal discovery process");
-
-    // 4. Run the CDL pipeline & check for errors
-    let result = discovery_process.run();
-    if let Err(e) = &result {
-        dbg!(&result);
-        println!("Causa Discovery process failed with error: {}", e);
-    }
-
-    // 5. Print the result
-    let res = result.unwrap();
-    println!("Result: {}", res);
+    // 3. Print all results
+    result_effect.print_results();
 
     // Cleanup
     std::fs::remove_file(file_path).unwrap();

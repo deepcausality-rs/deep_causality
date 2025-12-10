@@ -4,31 +4,39 @@
  */
 
 use crate::types::cdl::{WithAnalysis, WithCausalResults};
-use crate::{CDL, CdlError, ProcessResultAnalyzer};
+use crate::{AnalyzeConfig, CDL, CdlBuilder, CdlEffect, ProcessResultAnalyzer, SurdResultAnalyzer};
 
 // After causal discovery is performed
 impl CDL<WithCausalResults> {
-    /// Analyzes the raw results from the discovery algorithm.
-    ///
-    /// # Arguments
-    /// * `analyzer` - An implementation of `ProcessResultAnalyzer`.
-    ///
-    /// # Returns
-    /// A `CDL` instance in the `WithAnalysis` state, or a `CdlError` if analysis fails.
-    pub fn analyze<A>(self, analyzer: A) -> Result<CDL<WithAnalysis>, CdlError>
-    where
-        A: ProcessResultAnalyzer,
-    {
+    /// Analyzes the raw results.
+    /// Uses default configuration or internal config if present.
+    pub fn analyze(self) -> CdlEffect<CDL<WithAnalysis>> {
+        // Use existing Analyzer logic
+        let analyzer = SurdResultAnalyzer;
+
+        // Use config from state or default
         let analyze_config = self
             .config
             .analyze_config()
-            .as_ref()
-            .ok_or(CdlError::MissingAnalyzeConfig)?;
+            .clone()
+            .unwrap_or_else(|| AnalyzeConfig::new(0.01, 0.01, 0.01));
 
-        let analysis = analyzer.analyze(&self.state.0, analyze_config)?;
-        Ok(CDL {
-            state: WithAnalysis(analysis),
-            config: self.config,
-        })
+        let analysis_res = analyzer.analyze(&self.state.surd_result, &analyze_config);
+
+        match analysis_res {
+            Ok(analysis) => CdlBuilder::pure(CDL {
+                state: WithAnalysis {
+                    analysis,
+                    surd_result: self.state.surd_result,
+                    selection_result: self.state.selection_result,
+                    records_count: self.state.records_count,
+                },
+                config: self.config,
+            }),
+            Err(e) => CdlEffect {
+                inner: Err(e.into()), // AnalyzeError -> CdlError
+                warnings: Default::default(),
+            },
+        }
     }
 }

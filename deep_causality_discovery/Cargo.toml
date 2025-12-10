@@ -21,14 +21,20 @@ path = "examples/main.rs"
 
 
 # Internal dependencies
-[dependencies.deep_causality_tensor]
-path = "../deep_causality_tensor"
-version = "0.1"
-
 
 [dependencies.deep_causality_algorithms]
 path = "../deep_causality_algorithms"
 version = "0.2"
+
+[dependencies.deep_causality_haft]
+path = "../deep_causality_haft"
+version = "0.2"
+
+
+[dependencies.deep_causality_tensor]
+path = "../deep_causality_tensor"
+version = "0.1"
+
 
 
 # External dependencies

@@ -23,7 +23,7 @@ fn test_csv_data_loader_load_success_no_headers() {
     let path = temp_file.path().to_str().unwrap();
 
     let loader = CsvDataLoader;
-    let csv_config = CsvConfig::new(false, b',', 0, None);
+    let csv_config = CsvConfig::new(false, b',', 0, None, None, None, vec![]);
     let config = DataLoaderConfig::Csv(csv_config);
 
     let result = loader.load(path, &config).unwrap();
@@ -40,7 +40,7 @@ fn test_csv_data_loader_load_success_with_headers() {
     let path = temp_file.path().to_str().unwrap();
 
     let loader = CsvDataLoader;
-    let csv_config = CsvConfig::new(true, b',', 0, None);
+    let csv_config = CsvConfig::new(true, b',', 0, None, None, None, vec![]);
     let config = DataLoaderConfig::Csv(csv_config);
 
     let result = loader.load(path, &config).unwrap();
@@ -57,7 +57,7 @@ fn test_csv_data_loader_load_success_with_delimiter() {
     let path = temp_file.path().to_str().unwrap();
 
     let loader = CsvDataLoader;
-    let csv_config = CsvConfig::new(false, b';', 0, None);
+    let csv_config = CsvConfig::new(false, b';', 0, None, None, None, vec![]);
     let config = DataLoaderConfig::Csv(csv_config);
 
     let result = loader.load(path, &config).unwrap();
@@ -74,7 +74,7 @@ fn test_csv_data_loader_load_success_with_skip_rows() {
     let path = temp_file.path().to_str().unwrap();
 
     let loader = CsvDataLoader;
-    let csv_config = CsvConfig::new(true, b',', 1, None);
+    let csv_config = CsvConfig::new(true, b',', 1, None, None, None, vec![]);
     let config = DataLoaderConfig::Csv(csv_config);
 
     let result = loader.load(path, &config).unwrap();
@@ -87,7 +87,7 @@ fn test_csv_data_loader_load_success_with_skip_rows() {
 #[test]
 fn test_csv_data_loader_load_error_file_not_found() {
     let loader = CsvDataLoader;
-    let csv_config = CsvConfig::new(false, b',', 0, None);
+    let csv_config = CsvConfig::new(false, b',', 0, None, None, None, vec![]);
     let config = DataLoaderConfig::Csv(csv_config);
 
     let result = loader.load("non_existent_file.csv", &config);
@@ -106,7 +106,7 @@ fn test_csv_data_loader_load_error_invalid_data_format() {
     let path = temp_file.path().to_str().unwrap();
 
     let loader = CsvDataLoader;
-    let csv_config = CsvConfig::new(false, b',', 0, None);
+    let csv_config = CsvConfig::new(false, b',', 0, None, None, None, vec![]);
     let config = DataLoaderConfig::Csv(csv_config);
 
     let result = loader.load(path, &config);
@@ -126,7 +126,8 @@ fn test_csv_data_loader_load_error_invalid_config_type() {
 
     let loader = CsvDataLoader;
     // Provide a ParquetConfig instead of CsvConfig
-    let parquet_config = deep_causality_discovery::ParquetConfig::new(None, 1024);
+    let parquet_config =
+        deep_causality_discovery::ParquetConfig::new(None, 1024, None, None, vec![]);
     let config = DataLoaderConfig::Parquet(parquet_config);
 
     let result = loader.load(path, &config);
@@ -144,7 +145,7 @@ fn test_csv_data_loader_load_empty_file() {
     let path = temp_file.path().to_str().unwrap();
 
     let loader = CsvDataLoader;
-    let csv_config = CsvConfig::new(false, b',', 0, None);
+    let csv_config = CsvConfig::new(false, b',', 0, None, None, None, vec![]);
     let config = DataLoaderConfig::Csv(csv_config);
 
     let result = loader.load(path, &config).unwrap();
@@ -161,7 +162,7 @@ fn test_csv_data_loader_load_single_row_single_column() {
     let path = temp_file.path().to_str().unwrap();
 
     let loader = CsvDataLoader;
-    let csv_config = CsvConfig::new(false, b',', 0, None);
+    let csv_config = CsvConfig::new(false, b',', 0, None, None, None, vec![]);
     let config = DataLoaderConfig::Csv(csv_config);
 
     let result = loader.load(path, &config).unwrap();
