@@ -110,44 +110,126 @@ impl<T> CdlEffect<T> {
 
 ### 3.3. `CdlEffectWitness` and `CdlBuilder`
 
-To integrate `CdlEffect` with HAFT and `deep_causality`'s conventions, we would define:
+### 3.3. `CdlEffectWitness` and `CdlBuilder`
 
-*   **`CdlEffectWitness<CdlError, CdlWarningLog>`**: An HKT witness struct (`Placeholder, CdlError, CdlWarningLog`) that implements `HKT3<CdlError, CdlWarningLog>`, specifying `type Type<T> = CdlEffect<T>;`. This fixes the error and warning log types, leaving `T` as the generic parameter.
-*   **`CdlBuilder`**: A unit struct that implements `Effect3` for `CdlEffectWitness` (fixing the error and warning types). It would then implement `Functor`, `Applicative`, and `Monad` for its `CdlEffectWitness`, defining how `fmap`, `pure`, `apply`, and `bind` behave for our custom effect.
-
-#### 3.3.1. `Monad::bind` Implementation Logic
-
-The `bind` implementation for `CdlEffect` is critical for ensuring correct short-circuiting and effect accumulation:
+To integrate `CdlEffect` with HAFT and `deep_causality`'s conventions, we define the Witness and Builder types and implement the necessary traits.
 
 ```rust
-// Conceptual Monad::bind for CdlEffectWitness
+use std::marker::PhantomData;
+
+// --- 3.3.1 CdlEffectWitness Definition ---
+
+// The Witness struct holding the fixed types (Error and WarningLog)
+// and a phantom generic placeholder.
+pub struct CdlEffectWitness<E, W_Log>(PhantomData<(E, W_Log)>);
+
+// Implement HKT3: "If you give me a T, I will give you back a CdlEffect<T> with fixed E and W_Log"
+impl<E, W_Log> HKT for CdlEffectWitness<E, W_Log> {}
+
+impl<E, W_Log> HKT3<E, W_Log, dyn Any> for CdlEffectWitness<E, W_Log>
+where
+    E: 'static,
+    W_Log: 'static,
+{
+    // The associated type that this witness "witnesses"
+    type Type<T> = CdlEffect<T>;
+}
+
+
+// --- 3.3.2 CdlBuilder Definition (Effect3) ---
+
+// The Builder struct connecting the Effect system to the Witness
+pub struct CdlBuilder;
+
+// Implement Effect3: Fixing the Error and Warning types for the system.
+impl Effect3 for CdlBuilder {
+    type Fixed1 = CdlError;
+    type Fixed2 = CdlWarningLog;
+    type HktWitness = CdlEffectWitness<Self::Fixed1, Self::Fixed2>;
+}
+```
+
+#### 3.3.3. Monad Implementation
+
+This implements `Functor`, `Applicative`, and `Monad` for the Witness, allowing `CdlEffect` to be used in generic HKT contexts.
+
+```rust
+// 1. Functor: fmap
+impl<E, W_Log> Functor<CdlEffectWitness<E, W_Log>> for CdlEffectWitness<E, W_Log>
+where
+    E: Clone,
+    W_Log: Clone, // Minimal requirement for preserving warnings
+{
+    fn fmap<A, B, F>(m_a: CdlEffect<A>, f: F) -> CdlEffect<B>
+    where
+        F: Fn(A) -> B,
+    {
+        CdlEffect {
+            inner: m_a.inner.map(f),
+            warnings: m_a.warnings, // Warnings are preserved
+        }
+    }
+}
+
+// 2. Applicative: pure and apply
+impl<E, W_Log> Applicative<CdlEffectWitness<E, W_Log>> for CdlEffectWitness<E, W_Log>
+where
+    E: Clone,
+    W_Log: Clone + LogAppend + Default,
+{
+    fn pure<T>(value: T) -> CdlEffect<T> {
+        CdlEffect {
+            inner: Ok(value),
+            warnings: W_Log::default(),
+        }
+    }
+
+    fn apply<A, B, F>(
+        f_ab: CdlEffect<F>,
+        m_a: CdlEffect<A>,
+    ) -> CdlEffect<B>
+    where
+        F: Fn(A) -> B,
+    {
+        let mut combined_warnings = f_ab.warnings;
+        // Assuming we need to clone warnings from m_a to append
+        // (In a real implementation, we might consume m_a)
+        combined_warnings.append(&mut m_a.warnings.clone());
+
+        let new_inner = match (f_ab.inner, m_a.inner) {
+            (Ok(func), Ok(val)) => Ok(func(val)),
+            (Err(e), _) => Err(e),
+            (_, Err(e)) => Err(e),
+        };
+
+        CdlEffect {
+            inner: new_inner,
+            warnings: combined_warnings,
+        }
+    }
+}
+
+// 3. Monad: bind
 impl<E, W_Log> Monad<CdlEffectWitness<E, W_Log>> for CdlEffectWitness<E, W_Log>
 where
-    E: Clone, // Errors need to be cloneable for propagation
-    W_Log: Clone + LogAppend + Default, // Warning logs need to be cloneable, appendable, and default-constructible
+    E: Clone,
+    W_Log: Clone + LogAppend + Default,
 {
-    fn bind<A, B, Func>(m_a: CdlEffect<A, E, W_Log>, mut f: Func) -> CdlEffect<B, E, W_Log>
+    fn bind<A, B, F>(m_a: CdlEffect<A>, f: F) -> CdlEffect<B>
     where
-        A: SomeValue, // Assuming A has a trait indicating it's the 'value' part
-        Func: FnMut(A) -> CdlEffect<B, E, W_Log>,
+        F: Fn(A) -> CdlEffect<B>,
     {
-        // 1. Check current state:
         match m_a.inner {
-            // If already in error state, propagate error and warnings.
             Err(e) => CdlEffect {
                 inner: Err(e),
                 warnings: m_a.warnings,
             },
-            // If success, apply function f.
             Ok(val) => {
-                let mut m_b = f(val); // Execute f(val) to get next effect.
-
-                // 2. Combine warnings:
-                // Append warnings from previous state (m_a) to new state (m_b).
+                let m_b = f(val);
                 let mut combined_warnings = m_a.warnings;
-                combined_warnings.append(&mut m_b.warnings);
+                // Append warnings from the result of the bound function
+                combined_warnings.append(&mut m_b.warnings.clone());
 
-                // 3. Return new effect with combined warnings and result from f.
                 CdlEffect {
                     inner: m_b.inner,
                     warnings: combined_warnings,
@@ -156,55 +238,11 @@ where
         }
     }
 }
-```
 
-
-This `bind` implementation ensures:
-*   Fatal errors are short-circuited efficiently.
-*   Non-fatal warnings are continuously accumulated across the entire pipeline.
-*   The `inner` Result enforces that we always have either a valid value or a fatal error.
-
-#### 3.3.2. `Applicative::apply` Implementation Logic
-
-The `apply` method combines two effects, one holding a function and another holding an argument.
-
-```rust
-// Conceptual Applicative::apply for CdlEffectWitness
-impl<E, W_Log> Applicative<CdlEffectWitness<E, W_Log>> for CdlEffectWitness<E, W_Log>
-where
-    E: Clone,
-    W_Log: Clone + LogAppend + Default,
-{
-    fn pure<T>(value: T) -> CdlEffect<T, E, W_Log> {
-        CdlEffect {
-            inner: Ok(value),
-            warnings: W_Log::default(),
-        }
-    }
-
-    fn apply<A, B, Func>(
-        mut f_ab: CdlEffect<Func, E, W_Log>,
-        mut m_a: CdlEffect<A, E, W_Log>,
-    ) -> CdlEffect<B, E, W_Log>
-    where
-        Func: FnMut(A) -> B,
-        A: Clone,
-    {
-        // 1. Combine warnings from both effects.
-        let mut combined_warnings = f_ab.warnings;
-        combined_warnings.append(&mut m_a.warnings);
-
-        // 2. Resolve Result state.
-        let new_inner = match (f_ab.inner, m_a.inner) {
-            (Ok(mut func), Ok(val)) => Ok(func(val)),
-            (Err(e), _) => Err(e),      // Function error takes precedence (arbitrary choice, or list both?)
-            (_, Err(e)) => Err(e),
-        };
-
-        CdlEffect {
-            inner: new_inner,
-            warnings: combined_warnings,
-        }
+// Impl simplified new() for builder
+impl CdlBuilder {
+    pub fn new() -> CdlEffect<CDL<NoData>> {
+         Self::pure(CDL::default())
     }
 }
 ```
