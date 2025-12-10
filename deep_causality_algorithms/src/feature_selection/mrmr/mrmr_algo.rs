@@ -1,4 +1,5 @@
 use crate::feature_selection::mrmr::mrmr_error::MrmrError;
+use crate::mrmr::mrmr_result::MrmrResult;
 use crate::mrmr::mrmr_utils;
 use deep_causality_num::{Float, FloatOption};
 use deep_causality_tensor::CausalTensor;
@@ -49,7 +50,7 @@ use rayon::prelude::*;
 /// # Returns
 ///
 /// A `Result` containing:
-/// * `Ok(Vec<(usize, f64)>)` - A vector of `(feature_index, score)` tuples, representing the indices of the selected features and their corresponding mRMR scores, ranked by their selection order.
+/// * `Ok(MrmrResult)` - A struct containing the selected features and their corresponding mRMR scores, ranked by their selection order.
 /// * `Err(MrmrError)` - An error if the input is invalid, sample size is too small, or other calculation issues occur.
 ///
 /// # Errors
@@ -80,14 +81,14 @@ use rayon::prelude::*;
 /// // The exact output may vary slightly based on floating-point precision and data, but for this example,
 /// // it typically selects features 2 and 0 (indices of the original columns).
 /// assert_eq!(selected_features_with_scores.len(), 2);
-/// // assert_eq!(selected_features_with_scores[0].0, 2); // Example expected output for index
-/// // assert!(selected_features_with_scores[0].1.is_finite()); // Example expected output for score
+/// // assert_eq!(selected_features_with_scores.features()[0].0, 2); // Example expected output for index
+/// // assert!(selected_features_with_scores.features()[0].1.is_finite()); // Example expected output for score
 /// ```
 pub fn mrmr_features_selector<T, F>(
     tensor: &CausalTensor<T>,
     num_features: usize,
     target_col: usize,
-) -> Result<Vec<(usize, f64)>, MrmrError>
+) -> Result<MrmrResult, MrmrError>
 where
     T: FloatOption<F>,
     F: Float,
@@ -351,5 +352,5 @@ where
         }
     }
 
-    Ok(selected_features_with_scores)
+    Ok(MrmrResult::new(selected_features_with_scores))
 }

@@ -10,5 +10,8 @@ pub mod mrmr_utils;
 pub use mrmr_algo::*;
 pub use mrmr_error::MrmrError;
 
+pub mod mrmr_result;
 #[cfg(test)]
 mod mrmr_utils_tests;
+
+pub use mrmr_result::MrmrResult;
