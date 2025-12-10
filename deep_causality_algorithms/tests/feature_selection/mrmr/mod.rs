@@ -8,3 +8,5 @@ mod mrmr_algo_option_tests;
 mod mrmr_algo_tests;
 #[cfg(test)]
 mod mrmr_error_tests;
+#[cfg(test)]
+mod mrmr_result_tests;

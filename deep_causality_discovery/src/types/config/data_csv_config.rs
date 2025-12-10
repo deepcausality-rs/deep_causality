@@ -12,6 +12,9 @@ pub struct CsvConfig {
     delimiter: u8,
     skip_rows: usize,
     columns: Option<Vec<String>>,
+    file_path: Option<String>,
+    target_index: Option<usize>,
+    exclude_indices: Vec<usize>,
 }
 
 impl CsvConfig {
@@ -21,12 +24,18 @@ impl CsvConfig {
         delimiter: u8,
         skip_rows: usize,
         columns: Option<Vec<String>>,
+        file_path: Option<String>,
+        target_index: Option<usize>,
+        exclude_indices: Vec<usize>,
     ) -> Self {
         Self {
             has_headers,
             delimiter,
             skip_rows,
             columns,
+            file_path,
+            target_index,
+            exclude_indices,
         }
     }
 }
@@ -38,6 +47,9 @@ impl Default for CsvConfig {
             delimiter: b',',
             skip_rows: 0,
             columns: None,
+            file_path: None,
+            target_index: None,
+            exclude_indices: vec![],
         }
     }
 }
@@ -61,6 +73,21 @@ impl CsvConfig {
     /// An optional list of column names to select. If `None`, all columns are loaded.
     pub fn columns(&self) -> &Option<Vec<String>> {
         &self.columns
+    }
+
+    /// The path to the CSV file, if known.
+    pub fn file_path(&self) -> Option<&String> {
+        self.file_path.as_ref()
+    }
+
+    /// The index of the target column.
+    pub fn target_index(&self) -> Option<usize> {
+        self.target_index
+    }
+
+    /// Indices of columns to exclude.
+    pub fn exclude_indices(&self) -> &Vec<usize> {
+        &self.exclude_indices
     }
 }
 

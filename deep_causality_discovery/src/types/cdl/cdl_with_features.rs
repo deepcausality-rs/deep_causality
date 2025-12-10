@@ -4,31 +4,33 @@
  */
 
 use crate::types::cdl::{WithCausalResults, WithFeatures};
-use crate::{CDL, CausalDiscovery, CdlError};
+use crate::{CDL, CausalDiscoveryError, CdlBuilder, CdlEffect, CdlError}; // Added CdlBuilder and Error type
+use deep_causality_algorithms::causal_discovery::surd::SurdResult;
+use deep_causality_tensor::CausalTensor;
 
 // After features are selected
 impl CDL<WithFeatures> {
     /// Runs a causal discovery algorithm on the feature-selected data.
-    ///
-    /// # Arguments
-    /// * `discovery` - An implementation of `CausalDiscovery` (e.g., `SurdCausalDiscovery`).
-    ///
-    /// # Returns
-    /// A `CDL` instance in the `WithCausalResults` state, or a `CdlError` if discovery fails.
-    pub fn causal_discovery<D>(self, discovery: D) -> Result<CDL<WithCausalResults>, CdlError>
+    pub fn causal_discovery<F>(self, discovery_fn: F) -> CdlEffect<CDL<WithCausalResults>>
     where
-        D: CausalDiscovery,
+        F: FnOnce(&CausalTensor<Option<f64>>) -> Result<SurdResult<f64>, CausalDiscoveryError>,
     {
-        let discovery_config = self
-            .config
-            .causal_discovery_config()
-            .as_ref()
-            .ok_or(CdlError::MissingCausalDiscoveryConfig)?;
+        let discovery_res = discovery_fn(&self.state.tensor);
 
-        let results = discovery.discover(self.state.0, discovery_config)?;
-        Ok(CDL {
-            state: WithCausalResults(results),
-            config: self.config,
-        })
+        match discovery_res {
+            Ok(results) => CdlBuilder::pure(CDL {
+                state: WithCausalResults {
+                    surd_result: results,
+                    selection_result: self.state.selection_result,
+                    records_count: self.state.records_count,
+                },
+                config: self.config,
+            }),
+            // Map CausalTensorError/AlgoError to CdlError
+            Err(e) => CdlEffect {
+                inner: Err(CdlError::CausalDiscoveryError(e)),
+                warnings: Default::default(),
+            },
+        }
     }
 }

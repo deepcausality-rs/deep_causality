@@ -8,7 +8,9 @@ mod traits;
 mod types;
 
 // re-exports
+pub use deep_causality_algorithms::mrmr::mrmr_features_selector;
 pub use deep_causality_algorithms::surd::MaxOrder;
+pub use deep_causality_algorithms::surd::surd_states_cdl;
 
 // Errors
 pub use crate::errors::{
@@ -38,3 +40,7 @@ pub use crate::types::data_preprocessor::data_discretizer::DataDiscretizer;
 pub use crate::types::data_preprocessor::missing_value_imputer::MissingValueImputer;
 pub use crate::types::feature_selector::mrmr::MrmrFeatureSelector;
 pub use crate::types::formatter::console_formatter::ConsoleFormatter;
+
+pub use crate::types::cdl_effect::*;
+pub use crate::types::cdl_report::*;
+pub use crate::types::cdl_warning::*;

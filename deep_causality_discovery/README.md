@@ -50,20 +50,17 @@ The workflow consists of the following sequential stages:
     CausalTensor<f64>.
   * Implementations: CsvDataLoader, ParquetDataLoader.
 
-4. Data Cleaning & Feature Selection (`feature_select`):
-  * Transition: WithData -> WithFeatures
-  * Action: This is a mandatory step that prepares the data and selects the
-    most relevant features for analysis.
-    * First, it internally uses OptionNoneDataCleaner to convert the tensor
-      to CausalTensor<Option<f64>>, which handles missing or NaN values by
-      converting them to None. This is crucial for robust statistical
-      analysis in the subsequent steps.
-    * Then, it applies a feature selection algorithm to reduce
-      dimensionality.
-  * Implementation: MrmrFeatureSelector (Minimum Redundancy Maximum
-    Relevance).
+4. Data Cleaning (`clean_data`, Optional):
+  * Transition: WithData -> WithCleanedData
+  * Action: Explicitly cleans data.
+  * Implementation: `OptionNoneDataCleaner` (converts `NaN` to `None`).
 
-5. Causal Discovery (`causal_discovery`):
+5. Feature Selection (`feature_select`):
+  * Transition: WithData or WithCleanedData -> WithFeatures
+  * Action: Selects relevant features.
+  * Implementation: MRMR Feature Selector.
+
+6. Causal Discovery (`causal_discovery`):
   * Transition: WithFeatures -> WithCausalResults
   * Action: Executes the core causal discovery algorithm on the selected
     features.
@@ -71,7 +68,7 @@ The workflow consists of the following sequential stages:
     algorithm to decompose causal influences into Synergistic, Unique, and
     Redundant (SURD) components. The output is a SurdResult<f64>.
 
-6. Analysis (`analyze`):
+7. Analysis (`analyze`):
   * Transition: WithCausalResults -> WithAnalysis
   * Action: Interprets the raw numerical output from the discovery algorithm
     into a human-readable analysis. It uses thresholds from AnalyzeConfig to
@@ -80,16 +77,14 @@ The workflow consists of the following sequential stages:
     recommendations (e.g., "Strong unique influence... Recommended: Direct
     edge in CausaloidGraph").
 
-7. Finalization (`finalize`):
+8. Finalization (`finalize`):
   * Transition: WithAnalysis -> Finalized
   * Action: Formats the analysis report into a final output string.
   * Implementation: ConsoleFormatter, which prepares the text for printing.
 
-8. Execution (`build` and `run`):
-  * The build() method is called on a Finalized pipeline to create an
-    executable CDLRunner.
-  * The run() method on the CDLRunner executes the process and returns the
-    final ProcessFormattedResult.
+9. Report (`print_results`):
+  * The `print_results()` method is called on the final `CdlEffect` to display
+    errors, warnings, or the successful analysis to the console.
 
 ## Installation
 
@@ -105,47 +100,44 @@ Here's a basic example demonstrating how to use the CDL pipeline to discover cau
 
 ```rust
 use deep_causality_discovery::*;
-use std::fs::File;
-use std::io::Write;
+use std::{fs::File, io::Write};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // 1. Prepare test data (create a dummy CSV file)
-    let csv_data =
-        "s1,s2,s3,target
-1.0,2.0,3.0,1.5
-2.0,4.1,6.0,3.6
-3.0,6.2,9.0,5.4
-4.0,8.1,12.0,7.6";
+    // 1. Prepare test data
+    let csv_data = "s1,s2,s3,target\n1.0,2.0,3.0,1.5\n2.0,4.1,6.0,3.6\n3.0,6.2,9.0,5.4\n4.0,8.1,12.0,7.6";
     let file_path = "./test_data.csv";
     let mut file = File::create(file_path)?;
     file.write_all(csv_data.as_bytes())?;
+    
+    let target_index = 3;
 
-    // 2. Build the CDL configuration
-    let cdl_config = CdlConfig::new()
-        // Define the data loader as CSV file loader and the corresponding default CSV config
-        .with_data_loader(DataLoaderConfig::Csv(CsvConfig::default()))
-        // Define the feature selected as MRMR and set its parameters
-        .with_feature_selector(FeatureSelectorConfig::Mrmr(MrmrConfig::new(2, 3)))
-        // Define the causal discovery as SURD and set its parameters
-        .with_causal_discovery(CausalDiscoveryConfig::Surd(SurdConfig::new(Max, 3)))
-        // Define the analysis of the SURD results and set its parameters
-        .with_analysis(AnalyzeConfig::new(0.1, 0.1, 0.1));
+    // 2. Run the CDL pipeline (Monadic Flow)
+    let result_effect = CdlBuilder::build()
+        // Load Data (implicitly creates Config)
+        .bind(|cdl| cdl.load_data(file_path, target_index, vec![]))
+        // Explicitly Clean Data (Optional but recommended)
+        .bind(|cdl| cdl.clean_data(OptionNoneDataCleaner))
+        // Feature Selection
+        .bind(|cdl| {
+            cdl.feature_select(|tensor| {
+                 mrmr_features_selector(tensor, 3, target_index)
+            })
+        })
+        // Causal Discovery
+        .bind(|cdl| {
+            cdl.causal_discovery(|tensor| {
+                surd_states_cdl(tensor, MaxOrder::Max).map_err(Into::into)
+            })
+        })
+        // Analyze & Finalize
+        .bind(|cdl| cdl.analyze())
+        .bind(|cdl| cdl.finalize());
 
-    // 3. Build and run the CDL pipeline
-    let discovery_process = CDL::with_config(cdl_config)
-        .load_data(CsvDataLoader, &file_path)?
-        .feature_select(MrmrFeatureSelector)?
-        .causal_discovery(SurdCausalDiscovery)?
-        .analyze(SurdResultAnalyzer)?
-        .finalize(ConsoleFormatter)?
-        .build()?;
+    // 3. Output results
+    result_effect.print_results();
 
-    let result = discovery_process.run()?;
-    println!("Causal Discovery Result: {}", result);
-
-    // 4. Clean up the dummy file
+    // 4. Cleanup
     std::fs::remove_file(file_path)?;
-
     Ok(())
 }
 ```

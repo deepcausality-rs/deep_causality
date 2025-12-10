@@ -492,6 +492,7 @@ version = "0.2.6"
 dependencies = [
  "csv",
  "deep_causality_algorithms",
+ "deep_causality_haft",
  "deep_causality_tensor",
  "parquet",
  "tempfile",

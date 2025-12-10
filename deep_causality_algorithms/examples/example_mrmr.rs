@@ -22,7 +22,5 @@ fn main() {
 
     // 3. Interpret the results
     println!("Selected features and their scores:");
-    for (index, score) in selected_features_with_scores {
-        println!("- Feature Index: {}, Importance Score: {:.4}", index, score);
-    }
+    println!("{}", selected_features_with_scores);
 }
