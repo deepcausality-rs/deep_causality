@@ -30,20 +30,54 @@ We will introduce a new core type, `CdlEffect`, which will act as our custom eff
 
 To manage accumulated warnings, we introduce a dedicated log type:
 
-```rust
-// Conceptual CdlWarningLog (similar to ModificationLog or CausalEffectLog)
-#[derive(Debug, Clone, Default)]
-pub struct CdlWarningLog {
-    pub entries: Vec<CdlWarning>, // Assuming CdlWarning is a simple enum or struct
+// CdlWarning Definition
+#[derive(Debug, Clone, PartialEq)]
+pub enum CdlWarning {
+    DataIssue(String),
+    FeatureIssue(String),
+    ModelIssue(String),
+    Generic(String),
 }
 
-impl CdlWarningLog {
-    fn append(&mut self, other: &mut Self) {
-        self.entries.extend(other.entries.drain(..));
+impl From<&str> for CdlWarning {
+    fn from(s: &str) -> Self {
+        CdlWarning::Generic(s.to_string())
     }
 }
-```
-*   `CdlWarning`: A new enum or struct defining specific warning types (e.g., `MissingHeaders`, `ColumnSkipped`).
+
+// CdlWarningLog Definition
+#[derive(Debug, Clone, Default)]
+pub struct CdlWarningLog {
+    pub entries: Vec<CdlWarning>,
+}
+
+// Implement traits from deep_causality_haft::effect_system::effect_log
+
+impl LogAddEntry for CdlWarningLog {
+    fn add_entry(&mut self, message: &str) {
+        self.entries.push(CdlWarning::from(message));
+    }
+}
+
+impl LogAppend for CdlWarningLog {
+    fn append(&mut self, other: &mut Self) {
+        self.entries.append(&mut other.entries);
+    }
+}
+
+impl LogSize for CdlWarningLog {
+    fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+
+    fn len(&self) -> usize {
+        self.entries.len()
+    }
+}
+
+// Marker trait implementation
+impl LogEffect for CdlWarningLog {}
+
 
 ### 3.2. `CdlEffect` Type Definition
 
@@ -51,21 +85,35 @@ The core `CdlEffect` structure will be:
 
 ```rust
 pub struct CdlEffect<T> { // E and W types fixed at the HKT witness level
-    pub value: Option<T>,        // The successful result of the computation. None if a fatal error occurred.
-    pub error: Option<CdlError>, // The first fatal error encountered, which short-circuits computation.
-    pub warnings: CdlWarningLog, // Accumulated warnings, non-fatal.
+    pub inner: Result<T, CdlError>, // Enforces valid state: either a Value or an Error.
+    pub warnings: CdlWarningLog,    // Accumulated warnings, always present.
+}
+
+impl<T> CdlEffect<T> {
+    /// Convenience method to print accumulated warnings.
+    /// Prints "No Warnings" if empty, typically to stdout.
+    pub fn print_warnings(&self) {
+        if self.warnings.entries.is_empty() {
+            println!("No Warnings");
+        } else {
+            println!("Pipeline Warnings:");
+            for warning in &self.warnings.entries {
+                println!(" - {:?}", warning);
+            }
+        }
+    }
 }
 ```
-*   `T`: The type of the successful result of a CDL stage (e.g., `CDL<WithData>`, `ProcessFormattedResult`).
-*   `CdlError`: The existing `CdlError` enum from `deep_causality_discovery`.
-*   `CdlWarningLog`: The newly defined log for warnings.
+*   `T`: The type of the successful result (e.g., `CDL<WithData>`).
+*   `CdlError`: The error type.
+*   `CdlWarningLog`: The accumulated warnings.
 
-### 3.3. `CdlEffectWitness` and `CdlEffectImpl`
+### 3.3. `CdlEffectWitness` and `CdlBuilder`
 
 To integrate `CdlEffect` with HAFT and `deep_causality`'s conventions, we would define:
 
 *   **`CdlEffectWitness<CdlError, CdlWarningLog>`**: An HKT witness struct (`Placeholder, CdlError, CdlWarningLog`) that implements `HKT3<CdlError, CdlWarningLog>`, specifying `type Type<T> = CdlEffect<T>;`. This fixes the error and warning log types, leaving `T` as the generic parameter.
-*   **`CdlEffectImpl`**: A unit struct that implements `Effect3` for `CdlEffectWitness` (fixing the error and warning types). It would then implement `Functor`, `Applicative`, and `Monad` for its `CdlEffectWitness`, defining how `fmap`, `pure`, `apply`, and `bind` behave for our custom effect.
+*   **`CdlBuilder`**: A unit struct that implements `Effect3` for `CdlEffectWitness` (fixing the error and warning types). It would then implement `Functor`, `Applicative`, and `Monad` for its `CdlEffectWitness`, defining how `fmap`, `pure`, `apply`, and `bind` behave for our custom effect.
 
 #### 3.3.1. `Monad::bind` Implementation Logic
 
@@ -83,52 +131,38 @@ where
         A: SomeValue, // Assuming A has a trait indicating it's the 'value' part
         Func: FnMut(A) -> CdlEffect<B, E, W_Log>,
     {
-        // 1. Short-circuit on fatal error:
-        // If the initial effect `m_a` already contains an error,
-        // prevent further computation on the value `A`.
-        // The error and accumulated warnings from `m_a` are directly propagated.
-        if m_a.error.is_some() {
-            return CdlEffect {
-                value: None, // No meaningful value on error
-                error: m_a.error,
+        // 1. Check current state:
+        match m_a.inner {
+            // If already in error state, propagate error and warnings.
+            Err(e) => CdlEffect {
+                inner: Err(e),
                 warnings: m_a.warnings,
-            };
-        }
+            },
+            // If success, apply function f.
+            Ok(val) => {
+                let mut m_b = f(val); // Execute f(val) to get next effect.
 
-        // 2. Proceed only if a valid value is present:
-        if let Some(val) = m_a.value {
-            let mut m_b = f(val); // Execute the next function `f` with the unwrapped value `A`.
+                // 2. Combine warnings:
+                // Append warnings from previous state (m_a) to new state (m_b).
+                let mut combined_warnings = m_a.warnings;
+                combined_warnings.append(&mut m_b.warnings);
 
-            // 3. Combine warnings:
-            // Append warnings from `m_a` to `m_b`'s warnings.
-            let mut combined_warnings = m_a.warnings;
-            combined_warnings.append(&mut m_b.warnings);
-
-            // 4. Construct the new CdlEffect:
-            CdlEffect {
-                value: m_b.value,   // The value from the result of `f`.
-                error: m_b.error,   // The error from the result of `f` (short-circuits next bind).
-                warnings: combined_warnings, // All warnings combined.
-            }
-        } else {
-            // This case implies `m_a.error` is `None` but `m_a.value` is `None`.
-            // This is an unexpected or invalid state for a healthy pipeline.
-            // It should ideally be an internal error or handled by the previous stage.
-            // For robustness, we propagate the current (empty) state with a new error.
-            CdlEffect {
-                value: None,
-                error: Some(E::from_string("Unexpected empty value in successful state")), // Conceptual: E needs From<String>
-                warnings: m_a.warnings,
+                // 3. Return new effect with combined warnings and result from f.
+                CdlEffect {
+                    inner: m_b.inner,
+                    warnings: combined_warnings,
+                }
             }
         }
     }
 }
 ```
 
+
 This `bind` implementation ensures:
 *   Fatal errors are short-circuited efficiently.
 *   Non-fatal warnings are continuously accumulated across the entire pipeline.
-*   The `value` field correctly reflects the presence or absence of a meaningful result.
+*   The `inner` Result enforces that we always have either a valid value or a fatal error.
 
 #### 3.3.2. `Applicative::apply` Implementation Logic
 
@@ -143,8 +177,7 @@ where
 {
     fn pure<T>(value: T) -> CdlEffect<T, E, W_Log> {
         CdlEffect {
-            value: Some(value),
-            error: None,
+            inner: Ok(value),
             warnings: W_Log::default(),
         }
     }
@@ -157,54 +190,35 @@ where
         Func: FnMut(A) -> B,
         A: Clone,
     {
-        // Combine warnings from both effects first.
+        // 1. Combine warnings from both effects.
         let mut combined_warnings = f_ab.warnings;
         combined_warnings.append(&mut m_a.warnings);
 
-        // Propagate the first error encountered.
-        if f_ab.error.is_some() {
-            return CdlEffect {
-                value: None,
-                error: f_ab.error,
-                warnings: combined_warnings,
-            };
-        }
-        if m_a.error.is_some() {
-            return CdlEffect {
-                value: None,
-                error: m_a.error,
-                warnings: combined_warnings,
-            };
-        }
+        // 2. Resolve Result state.
+        let new_inner = match (f_ab.inner, m_a.inner) {
+            (Ok(mut func), Ok(val)) => Ok(func(val)),
+            (Err(e), _) => Err(e),      // Function error takes precedence (arbitrary choice, or list both?)
+            (_, Err(e)) => Err(e),
+        };
 
-        // If both are successful, apply the function.
-        if let (Some(func), Some(val)) = (f_ab.value, m_a.value) {
-            CdlEffect {
-                value: Some(func(val)),
-                error: None,
-                warnings: combined_warnings,
-            }
-        } else {
-            // This implies no error but one or both values were None, which is an inconsistent state.
-            CdlEffect {
-                value: None,
-                error: Some(E::from_string("Inconsistent state: missing value for apply")), // Conceptual: E needs From<String>
-                warnings: combined_warnings,
-            }
+        CdlEffect {
+            inner: new_inner,
+            warnings: combined_warnings,
         }
     }
 }
 ```
+
 
 ## 4. Pipeline Flow with `CdlEffect`
 
 The CDL pipeline would be refactored to operate within this `CdlEffect` monad. Each stage would consume a `CdlEffect<CDL<CurrentState>>` and produce a `CdlEffect<CDL<NextState>>`.
 
 1.  **Initialization**:
-    The pipeline begins by lifting the initial `CDL<NoData>` state into a `CdlEffect` monad using the `pure` function provided by `CdlEffectImpl`:
-    ```rust
-    let initial_effect: CdlEffect<CDL<NoData>> = CdlEffectImpl::pure(CDL::with_config(cdl_config));
-    ```
+    // CdlBuilder::new() initializes with default configuration.
+    // Determining specific config would be done via methods on the builder or the CDL object itself before binding.
+    // For this example, we assume new() is sufficient or we can pass config to new().
+    let initial_effect: CdlEffect<CDL<NoData>> = CdlBuilder::new();
 
 2.  **Chaining Stages with `bind`**:
     Each subsequent stage would then be chained using the `bind` method. This `bind` is an explicit operation that transforms the value inside the `CdlEffect` and automatically handles the effect channels (fatal error propagation and warning accumulation).
@@ -231,24 +245,18 @@ The CDL pipeline would be refactored to operate within this `CdlEffect` monad. E
 4.  **Final Extraction**:
     At the end of the entire pipeline, the consumer retrieves the result from the final `CdlEffect` object. This involves checking the `error` field and the `warnings` log:
     ```rust
-    match final_effect.error {
-        Some(fatal_error) => {
+    match final_effect.inner {
+        Err(fatal_error) => {
             println!("--- Pipeline Failed with Fatal Error ---");
             println!("Error: {:?}", fatal_error);
         },
-        None => {
-            if let Some(result) = final_effect.value {
-                println!("Causal Discovery Result: {:?}", result);
-            } else {
-                println!("Pipeline completed but yielded no value (unexpected successful empty result).");
-            }
+        Ok(result) => {
+             println!("Causal Discovery Result: {:?}", result);
         }
     }
-    // Always report final_effect.warnings, regardless of success or failure.
-    if !final_effect.warnings.is_empty() {
-        println!("--- Warnings Encountered ---");
-        println!("{}", final_effect.warnings); // CdlWarningLog should implement Display
     }
+    // Always report warnings using the convenience method.
+    final_effect.print_warnings();
     ```
 
 ## 5. Detailed Stage-by-Stage Considerations (Conceptual)
