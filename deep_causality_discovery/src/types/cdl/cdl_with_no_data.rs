@@ -100,4 +100,58 @@ impl CDL<NoData> {
             },
         }
     }
+
+    /// Starts the pipeline by loading data using a specific `DataLoaderConfig`.
+    pub fn load_data_with_config(self, config: DataLoaderConfig) -> CdlEffect<CDL<WithData>> {
+        let mut loaded_config = self.config;
+        loaded_config = loaded_config.with_data_loader(config.clone());
+
+        let load_result: Result<CausalTensor<f64>, CdlError> = match &config {
+            DataLoaderConfig::Csv(c) => {
+                let path = c.file_path().cloned().unwrap_or_default();
+                 if path.is_empty() {
+                    return CdlEffect {
+                        inner: Err(CdlError::ReadDataError(DataLoadingError::FileNotFound(
+                            "File path missing in config".into(),
+                        ))),
+                        warnings: Default::default(),
+                    }
+                }
+                
+                let loader = CsvDataLoader;
+                loader.load(&path, &config).map_err(Into::into)
+            }
+            DataLoaderConfig::Parquet(c) => {
+                 let path = c.file_path().cloned().unwrap_or_default();
+                 if path.is_empty() {
+                     return CdlEffect {
+                        inner: Err(CdlError::ReadDataError(DataLoadingError::FileNotFound(
+                            "File path missing in config".into(),
+                        ))),
+                        warnings: Default::default(),
+                    }
+                }
+                
+                let loader = ParquetDataLoader;
+                loader.load(&path, &config).map_err(Into::into)
+            }
+        };
+
+        match load_result {
+            Ok(tensor) => {
+                let records_count = tensor.shape()[0];
+                CdlBuilder::pure(CDL {
+                    state: WithData {
+                        tensor,
+                        records_count,
+                    },
+                    config: loaded_config,
+                })
+            }
+            Err(e) => CdlEffect {
+                inner: Err(e),
+                warnings: Default::default(),
+            },
+        }
+    }
 }

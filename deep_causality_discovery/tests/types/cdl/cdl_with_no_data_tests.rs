@@ -56,3 +56,36 @@ fn test_load_data_no_extension() {
         _ => panic!("Expected ReadDataError"),
     }
 }
+
+#[test]
+fn test_load_data_with_config_csv_success() {
+    use deep_causality_discovery::{CsvConfig, DataLoaderConfig};
+    
+    let content = "a,b\n1,2";
+    let file = create_temp_file(content, ".csv");
+    let path = file.path().to_str().unwrap().to_string();
+
+    let csv_config = CsvConfig::new(
+        true, b',', 0, None, Some(path), Some(1), vec![]
+    );
+    let config = DataLoaderConfig::Csv(csv_config);
+
+    let res = CdlBuilder::build()
+        .bind(|cdl| cdl.load_data_with_config(config.clone()));
+    
+    assert!(res.inner.is_ok());
+    assert_eq!(res.inner.unwrap().state.records_count, 1);
+}
+
+#[test]
+fn test_load_data_with_config_missing_path() {
+    use deep_causality_discovery::{CsvConfig, DataLoaderConfig};
+
+    let csv_config = CsvConfig::default(); // default has no path
+    let config = DataLoaderConfig::Csv(csv_config);
+    
+    let res = CdlBuilder::build()
+        .bind(|cdl| cdl.load_data_with_config(config.clone()));
+        
+    assert!(res.inner.is_err());
+}
