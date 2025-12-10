@@ -528,3 +528,68 @@ fn main() {
 2.  **Flow Control**: Replaced `Result::expect` chaining (which panics) with `Monad::bind` (which safely propagates errors and accumulates warnings).
 3.  **Algorithms**: Replaced abstract enum variants (`FeatureSelectorConfig::Mrmr`) with direct calls to algorithm functions (`mrmr_features_selector`), increasing transparency.
 4.  **Diagnostics**: Added `print_warnings()` to explicitly surface non-fatal issues that were previously lost or required side-channel logging.
+
+## 9. Comprehensive Testing Strategy
+
+To ensure robustness and reliability, the CDL implementation must strictly adhere to the project's testing conventions as outlined in `AGENTS.md`. We aim for **100% test coverage** across all components.
+
+### 9.1. Test Structure and Organization
+
+Following the "mirroring" convention, tests will be placed in a `tests/` directory that replicates the `src/` structure.
+
+*   `src/cdl/builder.rs` -> `tests/cdl/builder/builder_tests.rs` (Tests `CdlBuilder` initialization)
+*   `src/cdl/effect_impl.rs` -> `tests/cdl/effect_hkt/effect_tests.rs` (Tests `CdlEffect` logic: bind, map, apply)
+*   `src/cdl/report.rs` -> `tests/cdl/report/report_tests.rs` (Tests `CdlReport` creation and formatting)
+*   `tests/integration_tests.rs` (Full pipeline verification)
+
+### 9.2. Unit Testing Strategy
+
+#### 9.2.1. `CdlEffect` Monad Logic
+*   **Monadic Laws**: Verify `Left Identity`, `Right Identity`, and `Associativity` for `bind`.
+*   **Effect Propagation**:
+    *   **Success Path**: Verify values transform correctly through a chain of `map` and `bind` calls.
+    *   **Error Path**: Verify that a single error in the chain short-circuits execution and is returned as the final result.
+    *   **Warning Accumulation**: Verify that warnings from *each* step are preserved and aggregated in the correct order, regardless of whether the final result is `Ok` or `Err`.
+
+#### 9.2.2. `CdlBuilder`
+*   **Initialization**: Ensure `CdlBuilder::new()` returns a clean state with no errors or warnings.
+
+#### 9.2.3. `CdlReport`
+*   **Display Formatting**: Verify that the `Display` implementation produces the exact expected string output for a given report, including proper handling of empty lists (e.g., no ignored features).
+
+### 9.3. Integration Testing with Mock Algorithms
+
+To test the CDL pipeline logic without relying on expensive real-world algorithms (like true MRMR or SURD computations) or external data files, we will use **Mock Algorithms** in our integration tests.
+
+*   **Mock Feature Selector**: A closure that returns a hardcoded list of selected features (e.g., indices `[1, 2]`) or a specific error.
+*   **Mock Causal Discovery**: A closure that returns a hardcoded `SurdResult` or error.
+
+**Example Test Scenario**:
+```rust
+#[test]
+fn test_full_pipeline_success() {
+    let pipeline = CdlBuilder::new();
+    let result = pipeline
+         // Mock Load: Returns dummy tensor
+        .bind(|_| mock_load_data()) 
+         // Mock Feature Select: Returns fixed MrmrResult
+        .bind(|t| mock_feature_select(t))
+         // Mock Causal Discovery: Returns fixed SurdResult
+        .bind(|t| mock_causal_discovery(t)) 
+        .bind(|s| mock_analyze(s))
+        .bind(|a| mock_finalize(a));
+
+    assert!(result.inner.is_ok());
+    assert_eq!(result.warnings.len(), 0);
+    // Assert specific fields in the final CdlReport match the mock data
+}
+```
+
+### 9.4. Error and Warning Scenarios
+
+We must explicitly test edge cases:
+1.  **Early Failure**: Pipeline failing at the `load_data` step. Assert subsequent steps are NOT executed.
+2.  **Mid-Pipeline Failure**: Pipeline failing at `causal_discovery`. Assert warnings from previous steps (`load_data`, `feature_select`) are still preserved in the final failure result.
+3.  **Warning-Only Run**: A pipeline that succeeds but accumulates multiple warnings (e.g., "Feature X ignored", "Low data variance"). Assert `inner` is `Ok` and `warnings` contains all messages.
+
+By decoupling the pipeline logic from the heavy numerical algorithms via closures, we can achieve 100% coverage of the CDL framework itself efficiently.
