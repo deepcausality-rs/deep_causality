@@ -356,7 +356,175 @@ The `CoMonad` trait, with its `extract` and `extend` operations, offers capabili
 ### 7.3. General Considerations
 
 *   **Customizable Error/Warning Policies**: Users could configure whether a certain type of warning should be elevated to an error, or if certain errors are degradable to warnings.
-*   **Parallel Processing Integration**: Monadic and traversable structures are well-suited for integration with asynchronous and parallel execution strategies, further leveraging Rust's concurrency features.
-*   **Advanced Reporting**: A dedicated `CdlReport` type could be created from the final `CdlEffect` to provide structured access to all accumulated information.
+*   **Parallel Processing Integration**: Parallel execution is already supported via the `parallel` feature flag, which compiles all algorithms to run in parallel using `rayon`. Monadic structures naturally compose with this existing capability.
+* 
+### 7.3. Advanced Reporting: The `CdlReport` System
+
+To provide structured, readable access to all accumulated information from the pipeline, we define a dedicated `CdlReport` type. This struct aggregates metadata and the specific result types from feature selection (`MrmrResult`) and causal discovery (`SurdResult`).
+
+#### 7.3.1. `CdlReport` Definition
+
+```rust
+use std::fmt::{self, Display, Formatter};
+use deep_causality_algorithms::feature_selection::mrmr::MrmrResult;
+use deep_causality_algorithms::causal_discovery::surd::SurdResult;
+
+/// Aggregates all significant findings from a CDL pipeline execution.
+#[derive(Debug)]
+pub struct CdlReport {
+    // 1. Data Metadata
+    pub dataset_path: String,
+    pub records_processed: usize,
+
+    // 2. Feature Selection Result
+    pub feature_selection: MrmrResult,
+
+    // 3. Causal Discovery Result (assuming f64 precision for this example)
+    pub causal_analysis: SurdResult<f64>,
+}
+
+impl Display for CdlReport {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        writeln!(f, "==========================================================")?;
+        writeln!(f, "               DEEP CAUSALITY: ANALYSIS REPORT             ")?;
+        writeln!(f, "==========================================================")?;
+        
+        writeln!(f, "\n[1] DATASET SUMMARY")?;
+        writeln!(f, "    File: .............. {}", self.dataset_path)?;
+        writeln!(f, "    Records: ........... {}", self.records_processed)?;
+
+        writeln!(f, "\n[2] FEATURE SELECTION (MRMR)")?;
+        // Delegate to MrmrResult's Display implementation
+        write!(f, "{}", self.feature_selection)?;
+
+        writeln!(f, "\n[3] CAUSAL DISCOVERY (SURD)")?;
+        // Delegate to SurdResult's Display implementation
+        write!(f, "{}", self.causal_analysis)?;
+        
+        writeln!(f, "\n==========================================================")?;
+        Ok(())
+    }
+}
+```
+
+#### 7.3.2. Integration with `finalize`
+
+The `finalize` stage of the pipeline transforms the internal `CDL` state (which holds the results from previous steps) into this user-friendly `CdlReport`.
+
+```rust
+// Conceptual implementation of finalize within the CDL pipeline
+/*
+impl CDL<Analyzed> {
+    pub fn finalize(self) -> CdlReport {
+        CdlReport {
+            dataset_path: self.config.data_path.clone(),
+            records_processed: self.data.len(),
+            // Extract the MrmrResult stored in the state (from feature_select step)
+            feature_selection: self.feature_selection_result,
+            // Extract the SurdResult stored in the state (from determine_causality/analyze step)
+            causal_analysis: self.causal_result,
+        }
+    }
+}
+*/
+```
 
 By adopting an HKT-based, monadic approach with the added power of `Traversable` and `CoMonad`, the CDL can become a more powerful, flexible, and transparent framework for causal discovery.
+
+## 8. Migration Guide: Updating Existing Examples
+
+This section demonstrates how to rewrite the existing example found in `deep_causality_discovery/examples/main.rs` to use the new HKT-based API.
+
+### 8.1. Before (Current Type-State API)
+
+The current API relies on a heavy configuration object (`CdlConfig`) and uses `Result` chaining with `.expect()` for error handling.
+
+```rust
+// deep_causality_discovery/examples/main.rs (Simplified)
+
+fn main() {
+    let file_path = "test_data.csv";
+
+    // 1. Extensive Configuration
+    let cdl_config = CdlConfig::new()
+        .with_data_loader(DataLoaderConfig::Csv(CsvConfig::default()))
+        // Config: Select 2 features, target index 3
+        .with_feature_selector(FeatureSelectorConfig::Mrmr(MrmrConfig::new(2, 3)))
+        // Config: SURD with Max order, target index 3
+        .with_causal_discovery(CausalDiscoveryConfig::Surd(SurdConfig::new(Max, 3)))
+        .with_analysis(AnalyzeConfig::new(0.1, 0.1, 0.1));
+
+    // 2. Execution with Type-State Chaining and Panic-on-Error (.expect)
+    let discovery_process = CDL::with_config(cdl_config)
+        .load_data(CsvDataLoader, &file_path).expect("Fail")
+        .feature_select(MrmrFeatureSelector).expect("Fail")
+        .causal_discovery(SurdCausalDiscovery).expect("Fail")
+        .analyze(SurdResultAnalyzer).expect("Fail")
+        .finalize(ConsoleFormatter).expect("Fail")
+        .build().expect("Fail");
+
+    // 3. Run and Handle Result
+    let result = discovery_process.run();
+    match result {
+        Ok(res) => println!("Result: {}", res),
+        Err(e) => println!("Error: {}", e),
+    }
+}
+```
+
+### 8.2. After (HKT CdlEffect API)
+
+The new API moves configuration inline for conciseness and uses monadic binding to handle errors and warnings essentially.
+
+```rust
+// New HKT-based Implementation
+
+use deep_causality_discovery::*;
+
+fn main() {
+    let file_path = "test_data.csv";
+    
+    // 1. Initialization (No complex config upfront)
+    let pipeline = CdlBuilder::new();
+
+    // 2. Monadic Chain with Inline Config
+    let effect = pipeline
+        // load_data directly takes arguments (path, target_idx, excluded_cols)
+        // Assuming target index 3, no exclusions for this simple CSV
+        .bind(|cdl| cdl.load_data(file_path, 3, vec![]))
+        
+        // feature_select takes a closure using the specific algorithm
+        // mrmr_features_selector(tensor, num_features, target_col)
+        .bind(|cdl| cdl.feature_select(|tensor| {
+            mrmr_features_selector(tensor, 2, 3)
+        }))
+        
+        // causal_discovery takes a closure using the specific algorithm
+        // surd_states_cdl(tensor, max_order)
+        .bind(|cdl| cdl.causal_discovery(|tensor| {
+             surd_states_cdl(tensor, MaxOrder::Max)
+        }))
+        
+        // analyze uses default or inline config
+        .bind(|cdl| cdl.analyze()) // Config like (0.1, 0.1, 0.1) could be passed here if needed
+        
+        // finalize converts to the output format
+        .bind(|cdl| cdl.finalize());
+
+    // 3. Explicit Effect Handling (Result + Warnings)
+    match effect.inner {
+        Ok(formatted_result) => println!("Result: {}", formatted_result),
+        Err(e) => eprintln!("Error: {}", e),
+    }
+
+    // 4. Convenience Warning Check
+    effect.print_warnings();
+}
+```
+
+### 8.3. Key Changes Summary
+
+1.  **Configuration**: Moved from a pre-built `CdlConfig` struct to *inline arguments* passed directly to the stage methods (or the algorithms they invoke). This reduces boilerplate.
+2.  **Flow Control**: Replaced `Result::expect` chaining (which panics) with `Monad::bind` (which safely propagates errors and accumulates warnings).
+3.  **Algorithms**: Replaced abstract enum variants (`FeatureSelectorConfig::Mrmr`) with direct calls to algorithm functions (`mrmr_features_selector`), increasing transparency.
+4.  **Diagnostics**: Added `print_warnings()` to explicitly surface non-fatal issues that were previously lost or required side-channel logging.

@@ -14,7 +14,7 @@ use deep_causality_discovery::*;
 We merge configuration directly into the pipeline steps for conciseness. We also inject the specific algorithms defined in the `deep_causality_algorithms` crate.
 
 ```rust
-fn run_sepsis_cdl() -> CdlEffect<ProcessFormattedResult> {
+fn run_sepsis_cdl() -> CdlEffect<CdlReport> {
     // 1. Initialize empty CDL state
     let initial_state = CdlBuilder::new();
 
@@ -65,10 +65,9 @@ fn main() {
 
     // 1. Check for Fatal Errors or Success
     match result_effect.inner {
-        Ok(formatted_result) => {
-            println!("✅ Sepsis Analysis Completed Successfully!");
-            println!("----------------------------------------");
-            println!("{}", formatted_result);
+        Ok(cdl_report) => {
+             // cdl_report implements Display, printing the formatted table
+            println!("{}", cdl_report);
         }
         Err(e) => {
             eprintln!("❌ Pipeline Failed!");
