@@ -54,13 +54,69 @@ fn test_warning_accumulation() {
 
     assert_eq!(res.inner.unwrap(), 2);
     assert_eq!(res.warnings.len(), 2);
-    // Since Vec append wraps, order might depend on impl. usually append adds to end.
-    // Check contents logic if needed, but len is good proxy.
+}
+
+#[test]
+fn test_fmap() {
+    use deep_causality_discovery::{CdlEffectWitness, CdlWarningLog};
+    use deep_causality_haft::Functor;
+
+    // Functor instance is CdlEffectWitness<CdlError, CdlWarningLog>
+
+    let eff = CdlBuilder::pure(10);
+    let mapped = CdlEffectWitness::<CdlError, CdlWarningLog>::fmap(eff, |x| x * 2);
+
+    assert_eq!(mapped.inner.unwrap(), 20);
+    assert!(mapped.warnings.is_empty());
+}
+
+#[test]
+fn test_applicative_apply() {
+    use deep_causality_discovery::{CdlEffectWitness, CdlWarningLog};
+    use deep_causality_haft::{Applicative, LogAddEntry};
+
+    let mut eff_fn = CdlBuilder::pure(|x: i32| x + 10);
+    eff_fn.warnings.add_entry("FnWarning");
+
+    let mut eff_val = CdlBuilder::pure(5);
+    eff_val.warnings.add_entry("ValWarning");
+
+    let applied = CdlEffectWitness::<CdlError, CdlWarningLog>::apply(eff_fn, eff_val);
+
+    assert_eq!(applied.inner.unwrap(), 15);
+    assert_eq!(applied.warnings.len(), 2); // Warnings combined
 }
 
 #[test]
 fn test_print_results() {
     // Just ensure it satisfies Display logic and doesn't panic
     let eff = CdlBuilder::pure("Success");
-    eff.print_results(); // stdout capture? just running it.
+    eff.print_results();
+
+    let err_eff: CdlEffect<i32> = CdlEffect {
+        inner: Err(CdlError::AnalyzeError(
+            deep_causality_discovery::AnalyzeError::AnalysisFailed("Fail".into()),
+        )),
+        warnings: Default::default(),
+    };
+    err_eff.print_results();
+}
+
+#[test]
+fn test_print_warnings() {
+    use deep_causality_haft::LogAddEntry;
+    let mut eff = CdlBuilder::pure(42);
+    eff.warnings.add_entry("Beware");
+    eff.print_warnings();
+}
+
+#[test]
+fn test_clone_debug() {
+    let eff = CdlBuilder::pure(42);
+    let cloned = eff.clone();
+    assert_eq!(cloned.inner.unwrap(), 42);
+
+    let output = format!("{:?}", eff);
+    assert!(output.contains("CdlEffect"));
+    assert!(output.contains("Ok(42)"));
 }

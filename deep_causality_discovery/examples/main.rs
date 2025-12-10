@@ -12,7 +12,7 @@ fn main() {
 
     // 2. Run the CDL pipeline (Monadic Flow)
     let result_effect = CdlBuilder::build()
-        // Load Data with Inline Config
+        // Load Data with Inline Config. For a more detailed file config, use the load_data_with_config() constructor
         .bind(|cdl| cdl.load_data(&file_path, target_index, vec![]))
         // Clean Data using the OptionNoneDataCleaner
         .bind(|cdl| cdl.clean_data(OptionNoneDataCleaner))
