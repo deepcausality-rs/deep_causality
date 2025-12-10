@@ -109,29 +109,29 @@ impl CDL<NoData> {
         let load_result: Result<CausalTensor<f64>, CdlError> = match &config {
             DataLoaderConfig::Csv(c) => {
                 let path = c.file_path().cloned().unwrap_or_default();
-                 if path.is_empty() {
+                if path.is_empty() {
                     return CdlEffect {
                         inner: Err(CdlError::ReadDataError(DataLoadingError::FileNotFound(
                             "File path missing in config".into(),
                         ))),
                         warnings: Default::default(),
-                    }
+                    };
                 }
-                
+
                 let loader = CsvDataLoader;
                 loader.load(&path, &config).map_err(Into::into)
             }
             DataLoaderConfig::Parquet(c) => {
-                 let path = c.file_path().cloned().unwrap_or_default();
-                 if path.is_empty() {
-                     return CdlEffect {
+                let path = c.file_path().cloned().unwrap_or_default();
+                if path.is_empty() {
+                    return CdlEffect {
                         inner: Err(CdlError::ReadDataError(DataLoadingError::FileNotFound(
                             "File path missing in config".into(),
                         ))),
                         warnings: Default::default(),
-                    }
+                    };
                 }
-                
+
                 let loader = ParquetDataLoader;
                 loader.load(&path, &config).map_err(Into::into)
             }

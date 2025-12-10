@@ -126,15 +126,15 @@ impl Applicative<CdlEffectWitness<CdlError, CdlWarningLog>>
 
     fn apply<A, B, Func>(
         f_ab: CdlEffect<Func>, // The container holding the function
-        m_a: CdlEffect<A>,     // The container holding the value
+        mut m_a: CdlEffect<A>, // The container holding the value
     ) -> CdlEffect<B>
     where
         Func: FnMut(A) -> B,
         A: Clone,
     {
         let mut combined_warnings = f_ab.warnings;
-        // Clone warnings from m_a to append
-        combined_warnings.append(&mut m_a.warnings.clone());
+        // Append warnings from m_a
+        combined_warnings.append(&mut m_a.warnings);
 
         let new_inner = match (f_ab.inner, m_a.inner) {
             (Ok(mut func), Ok(val)) => Ok(func(val)),
@@ -164,10 +164,10 @@ impl Monad<CdlEffectWitness<CdlError, CdlWarningLog>>
                 warnings: m_a.warnings,
             },
             Ok(val) => {
-                let m_b = f(val);
+                let mut m_b = f(val);
                 let mut combined_warnings = m_a.warnings;
                 // Append warnings from the result of the bound function
-                combined_warnings.append(&mut m_b.warnings.clone());
+                combined_warnings.append(&mut m_b.warnings);
 
                 CdlEffect {
                     inner: m_b.inner,

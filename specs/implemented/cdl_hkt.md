@@ -186,15 +186,13 @@ where
 
     fn apply<A, B, F>(
         f_ab: CdlEffect<F>,
-        m_a: CdlEffect<A>,
+        mut m_a: CdlEffect<A>,
     ) -> CdlEffect<B>
     where
         F: Fn(A) -> B,
     {
         let mut combined_warnings = f_ab.warnings;
-        // Assuming we need to clone warnings from m_a to append
-        // (In a real implementation, we might consume m_a)
-        combined_warnings.append(&mut m_a.warnings.clone());
+        combined_warnings.append(&mut m_a.warnings);
 
         let new_inner = match (f_ab.inner, m_a.inner) {
             (Ok(func), Ok(val)) => Ok(func(val)),
@@ -225,10 +223,10 @@ where
                 warnings: m_a.warnings,
             },
             Ok(val) => {
-                let m_b = f(val);
+                let mut m_b = f(val);
                 let mut combined_warnings = m_a.warnings;
                 // Append warnings from the result of the bound function
-                combined_warnings.append(&mut m_b.warnings.clone());
+                combined_warnings.append(&mut m_b.warnings);
 
                 CdlEffect {
                     inner: m_b.inner,
