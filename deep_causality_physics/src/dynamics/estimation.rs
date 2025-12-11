@@ -32,7 +32,7 @@ pub fn kalman_filter_linear_kernel(
     measurement: &CausalTensor<f64>,
     measurement_matrix: &CausalTensor<f64>,
     measurement_noise: &CausalTensor<f64>,
-    _process_noise: &CausalTensor<f64>,
+    process_noise: &CausalTensor<f64>,
 ) -> Result<(CausalTensor<f64>, CausalTensor<f64>), PhysicsError> {
     // 1. Innovation (Residual): y = z - H * x
     // H * x
@@ -145,6 +145,7 @@ pub fn kalman_filter_linear_kernel(
     let joseph_main = left.matmul(&i_kh_t).map_err(PhysicsError::from)?;
 
     // K R K^T
+    // K R K^T
     let kt = {
         let op_t = EinSumOp::<f64>::transpose(k.clone(), vec![1, 0]);
         CausalTensor::ein_sum(&op_t).map_err(PhysicsError::from)?
@@ -154,5 +155,18 @@ pub fn kalman_filter_linear_kernel(
 
     let p_new = joseph_main.add(&krkt);
 
-    Ok((x_new, p_new))
+    // 6. Process Noise Addition: P_final = P_new + Q
+    // We apply process noise here effectively preparing P for the next prediction step (or representing posterior uncertainty including process diffusion).
+    if p_new.shape() != process_noise.shape() {
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::DimensionMismatch(format!(
+                "Posterior covariance shape {:?} != process noise shape {:?}",
+                p_new.shape(),
+                process_noise.shape()
+            )),
+        ));
+    }
+    let p_final = p_new.add(process_noise);
+
+    Ok((x_new, p_final))
 }

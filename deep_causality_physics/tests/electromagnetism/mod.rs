@@ -11,3 +11,4 @@ pub mod forces_tests;
 pub mod quantities_tests;
 #[cfg(test)]
 pub mod wrappers_tests;
+mod solver_tests;
