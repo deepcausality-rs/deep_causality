@@ -24,7 +24,20 @@ impl ProcessResultAnalyzer for SurdResultAnalyzer {
 
         messages.push("--- Causal Analysis Report ---".to_string());
 
-        // Information Leak - Removed per user request ("Useless").
+        // Information Leak
+        let info_leak = surd_result.info_leak();
+        messages.push(format!("\nInformation Leak: {:.3} bits", info_leak));
+        if info_leak >= 0.5 {
+            messages.push(
+                "  (High information leak suggests significant unobserved factors or randomness.)"
+                    .to_string(),
+            );
+        } else {
+            messages.push(
+                "  (Low information leak suggests observed factors explain most of the target's behavior.)"
+                    .to_string(),
+            );
+        }
 
         // Synergistic Information
         messages.push("\n--- Synergistic Influences ---".to_string());
