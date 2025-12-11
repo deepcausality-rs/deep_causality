@@ -4,8 +4,8 @@
  */
 
 use deep_causality_physics::{
-    AmountOfSubstance, HalfLife, Mass, SPEED_OF_LIGHT, Time, binding_energy_kernel,
-    radioactive_decay_kernel,
+    AmountOfSubstance, EnergyDensity, HalfLife, Mass, SPEED_OF_LIGHT, Time, binding_energy_kernel,
+    hadronization_kernel, radioactive_decay_kernel,
 };
 
 // =============================================================================
@@ -158,4 +158,83 @@ fn test_binding_energy_mc2_formula() {
         (energy.value() - expected).abs() / expected < 1e-6,
         "E=mc² calculation mismatch"
     );
+}
+
+// =============================================================================
+// hadronization_kernel Tests
+// =============================================================================
+
+#[test]
+fn test_hadronization_kernel_valid() {
+    let densities = vec![
+        EnergyDensity::new(10.0).unwrap(),
+        EnergyDensity::new(5.0).unwrap(),
+        EnergyDensity::new(20.0).unwrap(),
+    ];
+    let threshold = 8.0;
+    let dim = 3;
+
+    let result = hadronization_kernel(&densities, threshold, dim);
+    assert!(result.is_ok());
+
+    let particles = result.unwrap();
+    // 10.0 and 20.0 are > 8.0, so 2 particles expected.
+    assert_eq!(particles.len(), 2);
+
+    // Verify properties of generated particles
+    let p1 = &particles[0];
+    let vec1 = p1.0.data();
+    // Component 1 should hold the energy density value
+    assert!((vec1[1] - 10.0).abs() < 1e-6);
+
+    let p2 = &particles[1];
+    let vec2 = p2.0.data();
+    assert!((vec2[1] - 20.0).abs() < 1e-6);
+}
+
+#[test]
+fn test_hadronization_sub_threshold() {
+    let densities = vec![
+        EnergyDensity::new(1.0).unwrap(),
+        EnergyDensity::new(5.0).unwrap(),
+    ];
+    let threshold = 10.0;
+    let dim = 3;
+
+    let result = hadronization_kernel(&densities, threshold, dim);
+    assert!(result.is_ok());
+
+    let particles = result.unwrap();
+    assert!(
+        particles.is_empty(),
+        "Should produce no particles below threshold"
+    );
+}
+
+#[test]
+fn test_hadronization_invalid_dim() {
+    let densities = vec![EnergyDensity::new(10.0).unwrap()];
+    let threshold = 5.0;
+    let dim = 0; // Invalid
+
+    let result = hadronization_kernel(&densities, threshold, dim);
+    assert!(result.is_err());
+
+    match result {
+        Err(e) => match e.0 {
+            deep_causality_physics::PhysicsErrorEnum::DimensionMismatch(_) => (),
+            _ => panic!("Expected DimensionMismatch, got {:?}", e),
+        },
+        Ok(_) => panic!("Should fail with dim=0"),
+    }
+}
+
+#[test]
+fn test_hadronization_negative_threshold() {
+    let densities = vec![EnergyDensity::new(10.0).unwrap()];
+    let threshold = -1.0; // Invalid
+    let dim = 3;
+
+    let result = hadronization_kernel(&densities, threshold, dim);
+    assert!(result.is_err());
 }
