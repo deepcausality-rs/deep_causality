@@ -107,10 +107,16 @@ fn rung2_intervention() {
     let after_risk = after.value.into_value().unwrap_or_default();
 
     println!("Before intervention (natural chain):");
-    println!("  Nicotine(0.8) → Tar(0.8) → Cancer Risk: {:.0}%", before_risk * 100.0);
+    println!(
+        "  Nicotine(0.8) → Tar(0.8) → Cancer Risk: {:.0}%",
+        before_risk * 100.0
+    );
     println!();
     println!("After intervention:");
-    println!("  Nicotine(0.8) → Tar(0.8) → [intervene(0.1)] → Cancer Risk: {:.0}%", after_risk * 100.0);
+    println!(
+        "  Nicotine(0.8) → Tar(0.8) → [intervene(0.1)] → Cancer Risk: {:.0}%",
+        after_risk * 100.0
+    );
     println!();
     println!(
         "Conclusion: Intervention CAUSES cancer risk reduction from {:.0}% to {:.0}%",
@@ -160,10 +166,16 @@ fn rung3_counterfactual() {
     let counterfactual_risk = counterfactual.value.into_value().unwrap_or_default();
 
     println!("Factual world (was a heavy smoker):");
-    println!("  Nicotine(0.8) → Tar(0.8) → Cancer Risk: {:.0}%", factual_risk * 100.0);
+    println!(
+        "  Nicotine(0.8) → Tar(0.8) → Cancer Risk: {:.0}%",
+        factual_risk * 100.0
+    );
     println!();
     println!("Counterfactual world (had they never smoked):");
-    println!("  [intervene(0.0)] → Tar(0.1) → Cancer Risk: {:.0}%", counterfactual_risk * 100.0);
+    println!(
+        "  [intervene(0.0)] → Tar(0.1) → Cancer Risk: {:.0}%",
+        counterfactual_risk * 100.0
+    );
     println!();
 
     let causal_effect = factual_risk - counterfactual_risk;
