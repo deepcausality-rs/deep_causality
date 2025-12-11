@@ -114,21 +114,6 @@ rust_test_suite(
 )
 
 rust_test_suite(
-    name = "types_numeric_value",
-    srcs = glob([
-        "types/numeric_value/*_tests.rs",
-    ]),
-    tags = [
-        "unit-test",
-    ],
-    visibility = ["//visibility:public"],
-    crate_features = ["std", "alloc"],
-    deps = [
-        "//deep_causality_core",
-    ],
-)
-
-rust_test_suite(
     name = "types_propagating_effect",
     srcs = glob([
         "types/propagating_effect/*_tests.rs",

@@ -3,5 +3,5 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-pub mod hkt;
+mod hkt;
 mod scalar_multivector;

@@ -18,7 +18,8 @@ rust_test_suite(
 rust_test_suite(
     name = "extensions",
     srcs = glob([
-        "extensions/*_tests.rs",
+        "extensions/hkt/*_tests.rs",
+        "extensions/scalar_multivector/*_tests.rs",
     ]),
     tags = [
         "unit-test",

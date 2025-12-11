@@ -3,7 +3,7 @@ load("@rules_rust//rust:defs.bzl", "rust_test_suite")
 rust_test_suite(
     name = "errors",
     srcs = glob([
-        "error/*_tests.rs",
+        "errors/*_tests.rs",
     ]),
     tags = [
         "unit-test",

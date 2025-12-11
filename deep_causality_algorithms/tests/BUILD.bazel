@@ -19,7 +19,7 @@ rust_test_suite(
 rust_test_suite(
     name = "surd",
     srcs = glob([
-        "surd/*_tests.rs",
+        "causal_discovery/surd/*_tests.rs",
     ]),
     tags = [
         "unit-test",

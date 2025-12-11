@@ -64,7 +64,7 @@ Tests targets and tags are defined in the Build.bazel file in the test folder of
 To explore all dependencies of a specific crate, run:
 
 ```bash 
-    bazel query "deps(//alias:dcl_data_structures)"
+    bazel query "deps(/dcl_data_structures)"
 ```
 
 To find all reverse dependencies, i.e. packages that depends on a specific crate, run:
