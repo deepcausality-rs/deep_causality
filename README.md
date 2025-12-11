@@ -58,205 +58,243 @@
 
 </div>
 
-# Overview
+# DeepCausality
 
-DeepCausality is a hypergeometric computational causality library that enables fast, context-aware causal reasoning over
-complex multi-stage causality models. DeepCausality pioneers uniform reasoning across deterministic and probabilistic
-modalities across static and dynamic contextual causal models. DeepCausality comprises of three core pillars:
-The Context is an explicit and dynamic hypergraph that models the operational environment, supporting non-Euclidean and
-non-linear temporal structures. The Causaloid is a polymorphic, composable unit that can encapsulate a causal function.
-The Effect Ethos is a deontic guardrail that uses a defeasible calculus to ensure a system's actions remain verifiably
-aligned with its safety and mission objectives. The DeepCausality project is hosted as a sandbox project
-in the [Linux Foundation for Data & Ai](https://landscape.lfai.foundation/).
+**A hypergeometric computational causality library for building systems that reason about cause and effect.**
 
-### The Three Pillars of DeepCausality
+DeepCausality pioneers uniform reasoning across deterministic and probabilistic modalities, supporting both static and dynamic contextual causal models. The project is hosted as a sandbox project in the [Linux Foundation for Data & AI](https://landscape.lfai.foundation/).
 
-DeepCausality comprises of three main components:
+## ✨ Key Features
 
-#### 1. The Causaloid:
+| Feature | Description |
+|---------|-------------|
+| **Effect Propagation Monads** | `PropagatingEffect` and `PropagatingProcess` for composable causal computations |
+| **Geometric Algebra** | Universal Clifford Algebra via `CausalMultiVector` for physics and quantum mechanics |
+| **Differential Topology** | `Manifold`, `SimplicialComplex`, and discrete exterior calculus |
+| **Tensor Operations** | `CausalTensor` with Einstein summation (`ein_sum`) and linear algebra |
+| **Causaloid Graphs** | Recursive, composable causal structures with graph-based reasoning |
+| **Effect Ethos** | Deontic guardrails using defeasible calculus for safe AI actions |
+| **Causal Discovery** | SURD and MRMR algorithms for learning causal structure from data |
+| **Multi-Physics** | Quantum mechanics, thermodynamics, electromagnetism, fluids, relativity |
 
-* **What it is:** A self-contained, single unit of causality.
-* **What it does:** It holds a single causal function that receives an incoming effect, runs its causal
-  function, and emits a new, outgoing effect.
+---
 
-#### 2. The Context:
+## 🏗️ Architecture
 
-* **What it is:** The explicit environment where the Causaloids operate. It holds all the factual data.
-* **What it does:** The Context is a super-flexible data structure (a hypergraph) that holds all the facts about the
-  world: the current time, sensor readings, locations on a map, etc.
+DeepCausality's architecture is built on a unified foundation: **causality as monadic dependency** (`E₂ = f(E₁)`). From this axiom, the framework derives its core abstractions.
+
+### The Causal Monad & PropagatingEffect
+
+At the heart of DeepCausality is the **Causal Monad** pattern, implemented through two primary types:
+
+| Type | Purpose | State |
+|------|---------|-------|
+| `PropagatingEffect<T>` | Stateless effect propagation | Value + Error + Log |
+| `PropagatingProcess<T>` | Stateful effect propagation | Value + State + Context + Error + Log |
+
+These monads enable **composable causal computations** where effects flow through a pipeline of transformations wth the following key properties:
+- **Error propagation**: Errors short-circuit the chain automatically
+- **Logging**: Each step can append to an audit trail
+- **Counterfactuals**: `bind` supports hypothetical "what-if" reasoning
+
+### The Three Pillars
+
+#### 1. The Causaloid
+A self-contained unit of causality that holds a causal function, receives an incoming effect, and emits a new outgoing effect. Causaloids compose into graphs for complex reasoning.
+
+#### 2. The Context
+An explicit hypergraph data structure that holds all factual data about the operational environment: sensor readings, temporal structures, spatial locations, and more.
 
 #### 3. The Effect Ethos
+A programmable deontic layer that verifies whether proposed actions align with safety and mission objectives before execution.
 
-* **What it is:** A programmable ethos, to encode and verify operational rules.
-* **What it does:** A Causaloid might reason, "Based on the data, the most logical action is X." But before action X can
-  be taken, the Effect Ethos steps in and checks against a set of rules. It answers the question: "Should this happen?"
-
-DeepCausality is a framework for building systems that can reason about cause and effect in complex, dynamic
-environments. It achieves this by treating causality as a process of **effect propagation** between simple, composable *
-*Causaloids** that operate on an explicit, flexible **Context**, all governed by a verifiable safety layer called the *
-*Effect Ethos**. For an introduction to DeepCausality, see the [introduction document](README_INTRO.md) and
-the more detailed [deep dive.](README_DEEP_DIVE.md)
-
-## The Foundation of DeepCausality
-
-DeepCausality implements the Effect Propagation Process (EPP), which uses a single axiomatic foundation of causality as
-a functional dependency (`E2 = f(E1)`). From this single axiom, it derives the context to support Euclidean,
-non-Euclidean and non-linear, structures, the causaloid for handling static and dynamic causal structures, and the
-effect ethos. The full text of the EPP monograph is accessible via the the [publication repository](https://github.com/deepcausality-rs/papers).
-
-## Why DeepCausality?
-
-1) DeepCausality is written in Rust with production-grade safety, reliability, and performance thanks to
-   its [UltraGraph backend](https://deepcausality.com/blog/announcement-ultragraph-0-8).
-2) DeepCausality provides recursive causal data structures that concisely
-   express [arbitrary complex causal structures](https://deepcausality.com/docs/concepts/#structural-conceptualization-of-causation).
-3) DeepCausality enables context awareness across complex data stored
-   in [multiple contexts](https://deepcausality.com/blog/announcement-multiple-contexts).
-
-4) DeepCausality simplifies modeling of complex tempo-spatial patterns
-   and [non-Euclidean geometries](https://deepcausality.com/blog/announcement-non-euclidean).
-5) DeepCausality supports [adaptive reasoning](https://deepcausality.com/blog/announcement-adaptive-reasoning).
-6) DeepCausality comes with Causal State Machine (CSM).
-7) DeepCausality
-   supports [programmable ethics via the EffectEthos](https://deepcausality.com/blog/announcement-effect-ethos).
-
-## 📚 Docs
-
-* [API Docs](https://docs.rs/deep_causality/0.2.4/deep_causality/)
-* [Documentation](https://deepcausality.com/docs/intro/)
-* [Changelog](CHANGELOG.md)
-* [Slides](docs/slides/LF_2023/DeepCausality.pdf)
-
-* [Introduction](https://deepcausality.com/docs/intro/)
-* [Architecture](https://deepcausality.com/docs/architecture/)
-* [Background](https://deepcausality.com/docs/background/)
-* [Concepts](https://deepcausality.com/docs/concepts/)
-
-## 🌎 Community
-
-* [Discord](https://discord.gg/Bxj9P7JXSj)
-* [GH Discussions](https://github.com/orgs/deepcausality-rs/discussions)
-* [LF Email Lists](https://deepcausality.com/community/)
+---
 
 ## 🚀 Getting Started
 
-In your project folder, just run in a terminal:
+Add DeepCausality to your project:
 
 ```bash
-cargo add deep_causality
+cargo add deep_causality_core
 ```
 
-* [Starter Example](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/starter)
-* [More Examples](examples/README.md)
-* [Tests](deep_causality/tests)
+### Counterfactual & Intervention Example
 
-## How to run the example code
+```rust
+use deep_causality_core::{Intervenable, PropagatingEffect};
+
+fn main() {
+    // Causal chain: Dose → Absorption → Metabolism → Response
+    let observed = PropagatingEffect::pure(10.0_f64)
+        .bind(|dose, _, _| PropagatingEffect::pure(dose * 0.8))   // Absorption: 8.0
+        .bind(|level, _, _| PropagatingEffect::pure(level - 2.0)) // Metabolism: 6.0
+        .bind(|level, _, _| {
+            let response = if level > 5.0 { "Effective" } else { "Ineffective" };
+            PropagatingEffect::pure(response)
+        });
+    // Result: "Effective"
+
+    // Intervention: Replace value MID-CHAIN with do(BloodLevel := 3.0)
+    let intervened = PropagatingEffect::pure(10.0_f64)
+        .bind(|dose, _, _| PropagatingEffect::pure(dose * 0.8))   // Absorption: 8.0
+        .intervene(3.0)  // ← Force BloodLevel to 3.0, preserving log
+        .bind(|level, _, _| PropagatingEffect::pure(level - 2.0)) // Metabolism: 1.0
+        .bind(|level, _, _| {
+            let response = if level > 5.0 { "Effective" } else { "Ineffective" };
+            PropagatingEffect::pure(response)
+        });
+    // Result: "Ineffective" — intervention changed the outcome
+
+    println!("Observed:   {:?}", observed.value());   // "Effective"
+    println!("Intervened: {:?}", intervened.value()); // "Ineffective"
+}
+```
+
+This demonstrates **Pearl's Ladder of Causation**:
+1. **Association** (Rung 1): Observing dose=10 correlates with "Effective"
+2. **Intervention** (Rung 2): `intervene(3.0)` forces a value mid-chain
+3. **Counterfactual** (Rung 3): Same chain, different outcome due to intervention
+
+---
+
+## 📂 Examples
+
+Run examples with:
 
 ```bash
-git clone https://github.com/deepcausality-rs/deep_causality.git
+# Classical Causality (CATE, DBN, Granger, SCM)
+cargo run -p classical_causality_examples --example scm_example
 
-cd deep_causality
+# Medicine & Life Sciences
+cargo run -p medicine_examples --example protein_folding
+cargo run -p medicine_examples --example mri_tissue_classification
 
-make example
+# Physics (Quantum, Electromagnetism, Relativity)
+cargo run -p physics_examples --example maxwell_example
+cargo run -p physics_examples --example geometric_tilt_example
+cargo run -p physics_examples --example quantum_counterfactual
+cargo run -p physics_examples --example gravitational_wave
+
+# Causal State Machine
+cargo run -p csm_examples --example csm_effect_ethos_example
 ```
 
-## 📦 Sub-Crates
+For more examples, See [examples/README.md](examples/README.md)
 
-* `deep_causality`: The main DeepCausality library.
-* `deep_causality_algorithms`: [Algorithms for causal discovery and feature selection.](deep_causality_algorithms/README.md)
-* `deep_causality_ast`: [A generic abstract syntax tree (AST).](deep_causality_ast/README.md)
-* `deep_causality_data_structures`: [Data structures for the DeepCausality library.](deep_causality_data_structures/README.md)
-* `deep_causality_discovery`: [A custom DSL for causal discovery.](deep_causality_discovery/README.md)
-* `deep_causality_haft`: [Higher-Order Abstract Functional Traits a.k.a HKT.](deep_causality_haft/README.md) 
-* `deep_causality_multivector`: [A dynamic, universal Clifford Algebra.](deep_causality_multivector/README.md)
-* `deep_causality_num`: [Generic numerical traits and numbers.](deep_causality_num/README.md)
-* `deep_causality_rand`: [Random number generator and statistical distributions.](deep_causality_rand/README.md)
-* `deep_causality_tensor`: [A custom tensor type with ein_sum arithmetic.](deep_causality_tensor/README.md)
-* `deep_causality_uncertain`: [Uncertain<T> and MaybeUncertain<T> types.](deep_causality_uncertain/README.md)
-* `ultragraph`: [A custom hyper-graph library used as a backend in the deep_causality library.](ultragraph/README.md)
+---
+
+## 📦 Crate Ecosystem
+
+### Core Framework
+| Crate | Description |
+|-------|-------------|
+| [`deep_causality`](deep_causality/README.md) | Main library with Causaloid, Context, CSM, and Model types |
+| [`deep_causality_core`](deep_causality_core/README.md) | `PropagatingEffect`, `PropagatingProcess`, and `CausalEffectSystem` |
+| [`deep_causality_ethos`](deep_causality_ethos/README.md) | Deontic reasoning with `EffectEthos` and `Teloid` |
+
+### Mathematics & Physics
+| Crate | Description |
+|-------|-------------|
+| [`deep_causality_multivector`](deep_causality_multivector/README.md) | Clifford Algebra with `CausalMultiVector` and `HilbertState` |
+| [`deep_causality_tensor`](deep_causality_tensor/README.md) | N-dimensional tensors with Einstein summation |
+| [`deep_causality_topology`](deep_causality_topology/README.md) | `Manifold`, `SimplicialComplex`, `Graph`, `Hypergraph`, `PointCloud` |
+| [`deep_causality_physics`](deep_causality_physics/README.md) | Quantum, thermodynamics, electromagnetism, fluids, relativity kernels |
+| [`deep_causality_sparse`](deep_causality_sparse/README.md) | Compressed sparse row matrices |
+| [`deep_causality_num`](deep_causality_num/README.md) | Complex numbers, division algebras, numeric traits |
+
+### Data & Algorithms
+| Crate | Description |
+|-------|-------------|
+| [`deep_causality_discovery`](deep_causality_discovery/README.md) | Causal Discovery Language (CDL) with SURD and MRMR |
+| [`deep_causality_algorithms`](deep_causality_algorithms/README.md) | Feature selection and causal discovery algorithms |
+| [`deep_causality_data_structures`](deep_causality_data_structures/README.md) | Specialized data structures |
+| [`ultragraph`](ultragraph/README.md) | High-performance hypergraph backend |
+
+### Utilities
+| Crate | Description |
+|-------|-------------|
+| [`deep_causality_haft`](deep_causality_haft/README.md) | Higher-kinded types and abstract functional types |
+| [`deep_causality_uncertain`](deep_causality_uncertain/README.md) | `Uncertain<T>` and `MaybeUncertain<T>` for uncertainty propagation |
+| [`deep_causality_rand`](deep_causality_rand/README.md) | Random number generation and statistical distributions |
+| [`deep_causality_macros`](deep_causality_macros/README.md) | Procedural macros |
+| [`deep_causality_ast`](deep_causality_ast/README.md) | Generic abstract syntax tree |
+
+---
+
+
 
 ## 🛠️ Build & Test
 
-Cargo works as expected for build, test, and examples. For best performance, 
-please build with the CPU profile that matches your platform target to enable various
-auto-SIMD optimizations. To do so, use the RUSTFLAGS as shown below:
+```bash
+# Optimized build with SIMD
+RUSTFLAGS='-C target-cpu=native' cargo build --release
 
-```bash 
-    RUSTFLAGS='-C target-cpu=native' cargo  build 
+# Run all tests
+cargo test --all
+
+# Run benchmarks
+cargo bench
 ```
 
-You get the list of all CPU targets supported by your Rust compiler by running:
+### Using Make
 
-```bash 
-    rustc --print target-list
+```bash
+make install   # Install dependencies
+make build     # Build incrementally
+make test      # Run all tests
+make example   # Run examples
+make check     # Security audit
 ```
 
-In addition to cargo, a makefile exists that abstracts over several additional tools you for linting and formatting.
-To check and install missing tools, please run the following command:
+### Using Bazel
 
-```bash 
-    make install
+The repository also supports Bazel builds. Install [bazelisk](https://github.com/bazelbuild/bazelisk) and run:
+
+```bash
+bazel build //...
+bazel test //...
 ```
 
-You find the install script in the [script folder.](build/scripts/install_deps.sh)
+---
 
-The script tests and tries to install all required developer dependencies.
-if the automatic install fails, the script will show a link with further installation instructions.
+## 📚 Documentation
 
-After all dependencies have been installed, the following commands are ready to use.
+| Resource | Link |
+|----------|------|
+| API Reference | [docs.rs/deep_causality](https://docs.rs/deep_causality/latest/deep_causality/) |
+| Introduction | [README_INTRO.md](README_INTRO.md) |
+| Deep Dive | [README_DEEP_DIVE.md](README_DEEP_DIVE.md) |
+| Architecture | [deepcausality.com/docs/architecture](https://deepcausality.com/docs/architecture/) |
+| Concepts | [deepcausality.com/docs/concepts](https://deepcausality.com/docs/concepts/) |
+| Changelog | [CHANGELOG.md](CHANGELOG.md) |
 
-```bash 
-    make build          Builds the code base incrementally (fast) for dev.
-    make bench          Runs all benchmarks across all crates.
-    make check          Checks the code base for security vulnerabilities.
-    make example        Runs the example code.
-    make fix            Fixes linting issues as reported by clippy
-    make format         Formats call code according to cargo fmt style
-    make install        Tests and installs all make script dependencies
-    make start          Starts the dev day with updating rust, pulling from git remote, and build the project
-    make test           Runs all tests across all crates.
-```
+---
 
-The scripts called by each make command are located in the [script folder.](build/scripts)
+## 👨‍💻 Contributing
 
-In addition to Cargo and related tools, the entire mono-repo is configured to build and test with Bazel.
-Please [install bazelisk ](https://github.com/bazelbuild/bazelisk) as it is the only requirement to build the repo with
-Bazel. For more details on working with Bazel, see the [Bazel](Bazel.md) document.
+Contributions are welcome! Please read:
 
-## 👨‍💻👩‍💻 Contribution
-
-Contributions are welcomed especially related to documentation, example code, and fixes.
-If unsure where to start, open an issue and ask. For more significant code contributions,
-please run make test and make check locally before opening a PR.
-
-Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in deep_causality by you,
-shall be licensed under the MIT license without additional terms or conditions.
-
-For details:
-
-* [Charta](DeepCausalityProjectCharter.pdf)
+* [Contributing Guide](CONTRIBUTING.md)
 * [Code of Conduct](CODE_OF_CONDUCT.md)
-* [Contributing](CONTRIBUTING.md)
-* [Release](RELEASE.md)
-* [Support](SUPPORT.md)
+* [Project Charter](DeepCausalityProjectCharter.pdf)
+
+```bash
+# Before submitting a PR
+make test
+make check
+```
+
+---
 
 ## 🙏 Credits
 
-The project took inspiration from several researchers and their projects in the field:
+Inspired by research from:
+* [Judea Pearl](http://bayes.cs.ucla.edu/jp_home.html) - Causal inference
+* [Lucien Hardy](https://perimeterinstitute.ca/people/lucien-hardy) - Causaloid framework
+* [Elias Bareinboim](https://causalai.net/) - Causal AI
+* [Microsoft Research](https://www.microsoft.com/en-us/research/group/causal-inference/) - Causality and ML
 
-* [Judea Pearl](http://bayes.cs.ucla.edu/jp_home.html) at UCLA
-* [Lucien Hardy](https://perimeterinstitute.ca/people/lucien-hardy) at the Perimeter Institute
-* [Kenneth O. Stanley](https://www.kenstanley.net/home)
-* [Ilya Shpitser](https://www.cs.jhu.edu/~ilyas/)
-* [Miguel Hernan](https://www.hsph.harvard.edu/miguel-hernan/), [Causal Lab](https://causalab.sph.harvard.edu/) at
-  Harvard University
-* [Elias Bareinboim](https://causalai.net/) at Columbia University
-* [Causality and Machine Learning](https://www.microsoft.com/en-us/research/group/causal-inference/) at Microsoft
-  Research
-* [Causal ML](https://github.com/uber/causalml) at uber.
-
-DeepCausality implements the following research publications:
-
+Implements research from:
 * ["An Algebraic Roadmap of Particle Theories"](docs/papers/algebraic_physics.pdf) 
 * ["A Defeasible Deontic Calculus for Resolving Norm Conflicts"](docs/papers/ddic.pdf)
 * ["NWHy: A Framework for Hypergraph Analytics"](docs/papers/nwhy.pdf)
@@ -264,29 +302,28 @@ DeepCausality implements the following research publications:
 * ["Probability Theories with Dynamic Causal Structure"](docs/papers/causaloid.pdf)
 * ["Uncertain T: A First-Order Type for Uncertain Data"](docs/papers/uncertain_t.pdf)
 
-Parts of the implementation are also inspired by:
+---
 
-* [Differentiable Types](https://github.com/tensorflow/swift/blob/main/docs/DifferentiableTypes.md)
-* [Extension Trait](http://xion.io/post/code/rust-extension-traits.html)
-* [Storage API](https://github.com/petgraph/petgraph/issues/563)
-* [gTime: Time Graph](https://youtu.be/dIeYjLtg6s4)
+## 🌐 Community
 
-Finally, inspiration, especially related to the hypergraph structure, was derived from reading
-the [Quanta Magazine](https://www.quantamagazine.org/).
+* [Discord](https://discord.gg/Bxj9P7JXSj)
+* [GitHub Discussions](https://github.com/orgs/deepcausality-rs/discussions)
+* [LF Email Lists](https://deepcausality.com/community/)
 
-## 📜 Licence
+---
+
+## 📜 License
 
 This project is licensed under the [MIT license](LICENSE).
 
-## 👮️ Security
+## 👮 Security
 
-For details about security, please read
-the [security policy](https://github.com/deepcausality-rs/deep_causality/blob/main/SECURITY.md).
+See [SECURITY.md](SECURITY.md) for security policies.
+
+---
 
 ## 🎁 Sponsors
 
 [![JetBrains logo.](https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg)](https://jb.gg/OpenSource)
 
-[JetBrains](https://www.jetbrains.com/), the premier software development IDE provider, has granted a
-free [all-product license](https://www.jetbrains.com/all/) to the DeepCausality project.
-The project team expresses its gratitude towards JetBrains generous support.
+[JetBrains](https://www.jetbrains.com/) provides the project with an all-product license.
