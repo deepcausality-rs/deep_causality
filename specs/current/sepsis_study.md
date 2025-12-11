@@ -49,6 +49,9 @@ Sepsis is a life-threatening pathology caused by a dysregulated host response to
 
 ## 2. CDL Pipeline Design
 
+> [!TIP]
+> **Parallelization**: The SURD algorithm supports parallel execution via the `--features parallel` cargo feature flag in `deep_causality_algorithms`. No additional parallel infrastructure is needed—simply enable the feature flag for significant speedup on multi-core systems.
+
 ### 2.1 High-Level Architecture
 
 ```mermaid
@@ -90,41 +93,50 @@ The CDL pipeline will be defined as a clean, composable monadic chain:
 ```rust
 use deep_causality_discovery::*;
 
+// Confound column indices to exclude
+const PATIENT_ID: usize = 42;
+const ICULOS: usize = 40;
+const UNIT1: usize = 37;
+const UNIT2: usize = 38;
+const HOSP_ADM_TIME: usize = 39;
+const TARGET_INDEX: usize = 41;  // SepsisLabel
+
 /// Main CDL pipeline for sepsis causal discovery
-fn run_sepsis_discovery(data_path: &str, cohort: Cohort) -> CdlEffect<CdlReport> {
+fn run_sepsis_discovery(data_path: &str) -> CdlEffect<CdlReport> {
+    // Exclude confounding variables
+    let exclude_indices = vec![PATIENT_ID, ICULOS, UNIT1, UNIT2, HOSP_ADM_TIME];
+    
     CdlBuilder::build()
         // Step 1: Load data with confound exclusion
-        .bind(|cdl| cdl.load_data_with_config(
-            SepsisDataConfig::new(data_path, cohort)
-                .exclude_confounds(vec!["Patient_ID", "ICULOS", "Unit1", "Unit2"])
-                .target("SepsisLabel")
-        ))
+        .bind(|cdl| cdl.load_data(data_path, TARGET_INDEX, exclude_indices.clone()))
         
-        // Step 2: Clean and impute missing values
-        .bind(|cdl| cdl.clean_data(MissingValueImputer::default()))
+        // Step 2: Clean data (converts NaN to Option::None)
+        .bind(|cdl| cdl.clean_data(OptionNoneDataCleaner))
         
-        // Step 3: Feature selection (MRMR)
+        // Step 3: Feature selection using MRMR
         .bind(|cdl| cdl.feature_select(|tensor| {
-            mrmr_features_selector(tensor, 20, cdl.config().target_index())
+            // Select top 20 features, target adjusted for excluded columns
+            mrmr_features_selector(tensor, 20, TARGET_INDEX)
         }))
         
-        // Step 4: Causal discovery (SURD)
+        // Step 4: Causal discovery using SURD
+        // MaxOrder::Max explores all interaction orders since causal structure is unknown
         .bind(|cdl| cdl.causal_discovery(|tensor| {
-            surd_states_cdl(tensor, MaxOrder::Limit(3))
+            surd_states_cdl(tensor, MaxOrder::Max).map_err(Into::into)
         }))
         
-        // Step 5: Analyze with clinical thresholds
-        .bind(|cdl| cdl.analyze_with_config(
-            AnalyzeConfig::clinical()
-                .unique_threshold(0.15)
-                .synergy_threshold(0.10)
-                .redundancy_threshold(0.05)
-        ))
+        // Step 5: Analyze results (uses default or config thresholds)
+        .bind(|cdl| cdl.analyze())
         
         // Step 6: Generate report
         .bind(|cdl| cdl.finalize())
 }
 ```
+
+> [!NOTE]
+> **Configuration**: To customize analysis thresholds, use `CdlConfig::new().with_analysis(AnalyzeConfig::new(synergy, unique, redundancy))` when building the pipeline. For this study, we recommend thresholds of `AnalyzeConfig::new(0.10, 0.15, 0.05)`.
+
+
 
 ---
 
@@ -181,17 +193,24 @@ The following fields MUST be excluded from causal analysis to prevent spurious c
 | Field | Reason for Exclusion |
 |-------|---------------------|
 | `Patient_ID` | Identifier, not a feature |
-| `ICULOS` | Consequences of sepsis, not cause |
+| `ICULOS` | Consequence of sepsis, not cause |
 | `Unit1`, `Unit2` | Selection bias (patients placed in SICU *because* of severity) |
+| `HospAdmTime` | Confounded by illness severity at admission |
 | `Hour` | Time index, handled separately with temporal windowing |
 
 ---
 
-### Phase 2: Parallel Causal Discovery
+### Phase 2: Dual-Cohort Causal Discovery
+
+> [!NOTE]
+> **Analysis Priority**: Dual-cohort analysis (sepsis vs. non-sepsis) is the **primary** approach. Temporal windowing (early vs. late ICU stay) is a **secondary** analysis to be conducted after initial results are validated.
 
 #### 3.2.1 Dual-Cohort Analysis
 
 The key insight is to run SURD on **both** sepsis and non-sepsis cohorts, then compare:
+
+> [!IMPORTANT]
+> **Proposed API Extension**: The `filter_cohort()` and `CdlBuilder::zip()` methods shown below are proposals for extending the CDL API. Until implemented, this workflow can be achieved by running two separate pipelines on pre-filtered datasets.
 
 ```rust
 fn parallel_discovery(train_data: CDL<WithData>) -> CdlEffect<DualCohortResults> {
@@ -219,7 +238,7 @@ fn parallel_discovery(train_data: CDL<WithData>) -> CdlEffect<DualCohortResults>
 ```rust
 /// SURD configuration optimized for clinical time-series
 pub struct ClinicalSurdConfig {
-    /// Maximum interaction order (recommended: 3 for interpretability)
+    /// Maximum interaction order (Max to explore full causal structure)
     max_order: MaxOrder,
     /// Minimum sample size per state (prevents overfitting)
     min_state_samples: usize,
@@ -230,7 +249,8 @@ pub struct ClinicalSurdConfig {
 impl Default for ClinicalSurdConfig {
     fn default() -> Self {
         Self {
-            max_order: MaxOrder::Limit(3),
+            // MaxOrder::Max since causal structure is unknown
+            max_order: MaxOrder::Max,
             min_state_samples: 30,
             bootstrap_iterations: 100,
         }
@@ -376,10 +396,13 @@ impl PatientContext {
 
 ### 4.1 Metrics
 
+> [!IMPORTANT]
+> **Validation Focus**: Always prioritize **sensitivity** (catching true sepsis cases) over precision. In a clinical ICU setting, missing a true sepsis case is far more harmful than a false alarm.
+
 | Metric | Target | Rationale |
 |--------|--------|-----------|
-| **Sensitivity (Recall)** | > 0.50 | Prioritize catching true sepsis cases |
-| **Precision** | > 0.30 | Acceptable false alarm rate for ICU |
+| **Sensitivity (Recall)** | > 0.50 | **Primary metric** - prioritize catching true sepsis cases |
+| **Precision** | > 0.30 | Secondary - acceptable false alarm rate for ICU |
 | **PhysioNet Utility Score** | > 0.40 | Clinical utility benchmark |
 | **Explainability** | 100% | All predictions must have causal justification |
 

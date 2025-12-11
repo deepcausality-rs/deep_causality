@@ -16,14 +16,14 @@
 
 :white_check_mark: Have the following files in GitHub:
 
-* [LICENSE.md](../LICENSE)
-* [README.md](../README.md)
-* [CONTRIBUTING.md](../CONTRIBUTING.md)
-* [CODEOWNERS](../CODEOWNERS)
-* [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md)
-* [RELEASE.md](../RELEASE.md)
-* [SUPPORT.md](../SUPPORT.md)
-* [SECURITY.md ](../SECURITY.md)
+* [LICENSE.md](../../LICENSE)
+* [README.md](../../README.md)
+* [CONTRIBUTING.md](../../CONTRIBUTING.md)
+* [CODEOWNERS](../../CODEOWNERS)
+* [CODE_OF_CONDUCT.md](../../CODE_OF_CONDUCT.md)
+* [RELEASE.md](../../RELEASE.md)
+* [SUPPORT.md](../../SUPPORT.md)
+* [SECURITY.md ](../../SECURITY.md)
 
 ## Github Community Standards
 
@@ -67,7 +67,7 @@
 
 :white_check_mark: Project license exists and is OSI-approved:
 
-* Project license: [The MIT LICENSE.md](../LICENSE)
+* Project license: [The MIT LICENSE.md](../../LICENSE)
 * OSI-approved: [The MIT License](https://opensource.org/license/mit/)
 
 :white_check_mark: Determine known components/dependencies are under a compatible license
