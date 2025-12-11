@@ -125,7 +125,7 @@ The naive approach of iterating `Complex -> Simplices -> Bones` has $O(N_{bones}
 
 ## 7. Example Usage
 
-```rust
+```
 let complex = SimplicialComplex::new_tetrahedron(); // 3D
 let geometry = ReggeGeometry::new(lengths_tensor);
 

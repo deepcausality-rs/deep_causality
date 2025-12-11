@@ -98,7 +98,7 @@ fn gaussian_determinant(mat: &mut [f64], n: usize) -> f64 {
 impl<T> PointCloud<T> {
     pub fn triangulate(&self, radius: f64) -> Result<SimplicialComplex, TopologyError> {
         if self.is_empty() {
-            return Err(TopologyError::PointCloudError("Empty Cloud".into()));
+            return Err(TopologyError::PointCloudError("Empty Cloud".to_string()));
         }
 
         let num_points = self.len();

@@ -16,7 +16,8 @@ pub struct Simplex {
 }
 
 impl Simplex {
-    pub fn new(vertices: Vec<usize>) -> Self {
+    pub fn new(mut vertices: Vec<usize>) -> Self {
+        vertices.sort_unstable();
         Self { vertices }
     }
 

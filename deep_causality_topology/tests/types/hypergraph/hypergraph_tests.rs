@@ -5,7 +5,7 @@
 
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Hypergraph, HypergraphTopology, TopologyError};
+use deep_causality_topology::{Hypergraph, HypergraphTopology, TopologyError, TopologyErrorEnum};
 
 #[test]
 fn test_hypergraph_new_success() {
@@ -41,7 +41,7 @@ fn test_hypergraph_new_data_size_mismatch() {
     let result = Hypergraph::new(incidence, data, 0);
     assert!(result.is_err());
     match result {
-        Err(TopologyError::InvalidInput(msg)) => {
+        Err(TopologyError(TopologyErrorEnum::InvalidInput(msg))) => {
             assert!(msg.contains("Data size must match"));
         }
         _ => panic!("Expected InvalidInput error"),
@@ -56,7 +56,7 @@ fn test_hypergraph_new_cursor_out_of_bounds() {
     let result = Hypergraph::new(incidence, data, 5); // cursor 5 > num_nodes 3
     assert!(result.is_err());
     match result {
-        Err(TopologyError::IndexOutOfBounds(msg)) => {
+        Err(TopologyError(TopologyErrorEnum::IndexOutOfBounds(msg))) => {
             assert!(msg.contains("cursor out of bounds"));
         }
         _ => panic!("Expected IndexOutOfBounds error"),
@@ -72,7 +72,7 @@ fn test_hypergraph_invalid_incidence_values() {
     let result = Hypergraph::new(incidence, data, 0);
     assert!(result.is_err());
     match result {
-        Err(TopologyError::HypergraphError(msg)) => {
+        Err(TopologyError(TopologyErrorEnum::HypergraphError(msg))) => {
             assert!(msg.contains("must be 0 or 1"));
         }
         _ => panic!("Expected HypergraphError"),

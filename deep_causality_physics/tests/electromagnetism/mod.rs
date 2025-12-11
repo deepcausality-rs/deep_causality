@@ -9,6 +9,6 @@ pub mod fields_tests;
 pub mod forces_tests;
 #[cfg(test)]
 pub mod quantities_tests;
+mod solver_tests;
 #[cfg(test)]
 pub mod wrappers_tests;
-mod solver_tests;

@@ -56,14 +56,17 @@ fn test_field_calculation_non_finite_input() {
     let mut d_data = vec![0.0; 16];
     d_data[2] = f64::INFINITY; // Infinite derivative
     let d = CausalMultiVector::new(d_data, metric).unwrap();
-    
+
     let mut a_data = vec![0.0; 16];
     a_data[4] = 1.0; // Finite potential
     let a = CausalMultiVector::new(a_data, metric).unwrap();
 
     // If input is infinite, geometric product will be infinite/NaN
     let result = MaxwellSolver::calculate_field_tensor(&d, &a);
-    assert!(result.is_err(), "Should detect non-finite result via validate_finiteness");
+    assert!(
+        result.is_err(),
+        "Should detect non-finite result via validate_finiteness"
+    );
 }
 
 // ============================================================================
@@ -148,11 +151,15 @@ fn test_current_density_success() {
     let f = CausalMultiVector::new(f_data, metric).unwrap();
 
     let j = MaxwellSolver::calculate_current_density(&d, &f).unwrap();
-    
+
     // Check J is e2 (index 4)
     let val = j.data()[4];
-    assert!((val - 1.0).abs() < 1e-9 || (val + 1.0).abs() < 1e-9, "Result: {:?}", j.data());
-    // Note: sign depends on metric signature/contraction order. 
+    assert!(
+        (val - 1.0).abs() < 1e-9 || (val + 1.0).abs() < 1e-9,
+        "Result: {:?}",
+        j.data()
+    );
+    // Note: sign depends on metric signature/contraction order.
     // e1 . (e1 e2) = (e1 . e1) e2 - (e1 . e2) e1 = (1) e2 - 0 = e2. (Minkowski e1 squared is +1?)
     // If (- + + +), e0^2=-1, e1^2=1. Correct.
 }
@@ -172,7 +179,7 @@ fn test_current_density_mismatch() {
 fn test_poynting_flux_success() {
     let metric = Metric::Euclidean(3);
     // S = E x B
-    // E = e1 (index 1 in 3D?) 
+    // E = e1 (index 1 in 3D?)
     // B = e2 (index 2 in 3D)
     // S = e1 ^ e2 = e12 (index 3 in 3D bitmask: 1|2=3)
 
@@ -185,7 +192,7 @@ fn test_poynting_flux_success() {
     let b = CausalMultiVector::new(b_data, metric).unwrap();
 
     let s = MaxwellSolver::calculate_poynting_flux(&e, &b).unwrap();
-    
+
     // Check index 3
     let val = s.data()[3];
     assert!((val - 1.0).abs() < 1e-9);

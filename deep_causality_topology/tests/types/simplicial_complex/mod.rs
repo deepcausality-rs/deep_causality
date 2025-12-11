@@ -4,6 +4,7 @@
  */
 
 mod base_topology_tests;
+mod builder_tests;
 mod display_tests;
 mod getters_tests;
 mod ops_boundary_tests;

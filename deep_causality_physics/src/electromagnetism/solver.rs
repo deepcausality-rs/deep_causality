@@ -164,4 +164,3 @@ impl MaxwellSolver {
         Ok(())
     }
 }
-

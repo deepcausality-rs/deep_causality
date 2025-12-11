@@ -8,10 +8,13 @@ use deep_causality_sparse::CsrMatrix;
 use crate::Skeleton;
 
 mod base_topology;
+mod builder;
 mod display;
 mod getters;
 mod ops_boundary;
 mod simplicial_topology;
+
+pub use builder::SimplicialComplexBuilder;
 
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct SimplicialComplex {

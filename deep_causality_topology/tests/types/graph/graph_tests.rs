@@ -4,7 +4,7 @@
  */
 
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Graph, TopologyError};
+use deep_causality_topology::{Graph, TopologyError, TopologyErrorEnum};
 
 #[test]
 fn test_graph_new_success() {
@@ -22,7 +22,7 @@ fn test_graph_new_zero_vertices() {
     let result = Graph::<f64>::new(0, data, 0);
     assert!(result.is_err());
     match result {
-        Err(TopologyError::InvalidInput(msg)) => {
+        Err(TopologyError(TopologyErrorEnum::InvalidInput(msg))) => {
             assert!(msg.contains("at least one vertex"));
         }
         _ => panic!("Expected InvalidInput error"),
@@ -35,7 +35,7 @@ fn test_graph_new_data_size_mismatch() {
     let result = Graph::new(3, data, 0); // 3 vertices but only 2 data points
     assert!(result.is_err());
     match result {
-        Err(TopologyError::InvalidInput(msg)) => {
+        Err(TopologyError(TopologyErrorEnum::InvalidInput(msg))) => {
             assert!(msg.contains("Data size must match"));
         }
         _ => panic!("Expected InvalidInput error"),
@@ -48,7 +48,7 @@ fn test_graph_new_cursor_out_of_bounds() {
     let result = Graph::new(3, data, 5); // cursor 5 > num_vertices 3
     assert!(result.is_err());
     match result {
-        Err(TopologyError::IndexOutOfBounds(msg)) => {
+        Err(TopologyError(TopologyErrorEnum::IndexOutOfBounds(msg))) => {
             assert!(msg.contains("cursor out of bounds"));
         }
         _ => panic!("Expected IndexOutOfBounds error"),
@@ -86,7 +86,7 @@ fn test_graph_add_edge_self_loop() {
     let result = graph.add_edge(0, 0);
     assert!(result.is_err());
     match result {
-        Err(TopologyError::GraphError(msg)) => {
+        Err(TopologyError(TopologyErrorEnum::GraphError(msg))) => {
             assert!(msg.contains("Self-loops are not allowed"));
         }
         _ => panic!("Expected GraphError"),
@@ -101,7 +101,7 @@ fn test_graph_add_edge_out_of_bounds() {
     let result = graph.add_edge(0, 5);
     assert!(result.is_err());
     match result {
-        Err(TopologyError::GraphError(msg)) => {
+        Err(TopologyError(TopologyErrorEnum::GraphError(msg))) => {
             assert!(msg.contains("out of bounds"));
         }
         _ => panic!("Expected GraphError"),
