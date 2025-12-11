@@ -49,7 +49,8 @@ where
         let mass_k = &self.complex.hodge_star_operators[k];
 
         // B_k (Boundary Operator: k -> k-1)
-        // Note: boundary_operators[k-1] maps k-simplices (cols) to k-1 simplices (rows)
+        // Convention: boundary_operators[k-1] maps k-simplices (cols) to k-1 simplices (rows)
+        // This follows the documented convention where boundary_operators[j] = ∂_{j+1}
         let boundary_k = &self.complex.boundary_operators[k - 1];
 
         // M_{k-1} (Mass Matrix for k-1 simplices)

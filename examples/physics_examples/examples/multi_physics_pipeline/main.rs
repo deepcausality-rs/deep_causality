@@ -46,8 +46,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .map(|&v| EnergyDensity::new(v * v * 100.0).unwrap_or_default())
                     .collect();
 
-                // Explicit generic not mandatory if densities is Vec.
-                // Pure wraps Vec. Vec is Default.
                 CausalEffectPropagationProcess::pure(densities)
             },
             "Failed to compute energy density",
