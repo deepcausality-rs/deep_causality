@@ -3,30 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use criterion::{Criterion, criterion_group, criterion_main};
-use deep_causality_multivector::{
-    CausalMultiVector, HilbertState, Metric, QuantumGates, QuantumOps,
-};
+use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_multivector::{MultiVector, PGA3DMultiVector};
-use deep_causality_num::Complex64;
 use std::hint::black_box;
-
-const DIM: usize = 10; // For Cl(0,10)
-const SIZE: usize = 1 << DIM; // 1024
-
-// Helper to create a HilbertState for Cl(0,10) for benchmarks
-fn create_cl0_10_hilbert_state(scalar_val: Complex64) -> HilbertState {
-    let mut data = vec![Complex64::new(0.0, 0.0); SIZE];
-    data[0] = scalar_val;
-    // Fill some other parts to make it a non-trivial state
-    if SIZE > 1 {
-        data[1] = Complex64::new(0.5, 0.5); // e1 component
-    }
-    if SIZE > 3 {
-        data[3] = Complex64::new(0.2, -0.3); // e12 component
-    }
-
-    HilbertState::new_spin10(data).unwrap()
-}
 
 fn bench_geometric_product_euclidean_2d(c: &mut Criterion) {
     let m = Metric::Euclidean(2);
@@ -67,47 +46,11 @@ fn bench_reversion_pga_3d(c: &mut Criterion) {
     });
 }
 
-// --- Quantum Ops Benchmarks ---
-
-fn bench_quantum_ops_dag(c: &mut Criterion) {
-    let state = create_cl0_10_hilbert_state(Complex64::new(1.0, 0.0));
-    c.bench_function("quantum_ops_dag", |bencher| {
-        bencher.iter(|| black_box(state.clone()).dag())
-    });
-}
-
-fn bench_quantum_ops_bracket(c: &mut Criterion) {
-    let state1 = create_cl0_10_hilbert_state(Complex64::new(1.0, 0.0));
-    let state2 = create_cl0_10_hilbert_state(Complex64::new(0.5, 0.5));
-    c.bench_function("quantum_ops_bracket", |bencher| {
-        bencher.iter(|| black_box(state1.clone()).bracket(black_box(&state2)))
-    });
-}
-
-fn bench_quantum_ops_expectation_value(c: &mut Criterion) {
-    let state = create_cl0_10_hilbert_state(Complex64::new(1.0, 0.0));
-    let operator = HilbertState::gate_z(); // Use a predefined gate as an operator
-    c.bench_function("quantum_ops_expectation_value", |bencher| {
-        bencher.iter(|| black_box(state.clone()).expectation_value(black_box(&operator)))
-    });
-}
-
-fn bench_quantum_ops_normalize(c: &mut Criterion) {
-    let state = create_cl0_10_hilbert_state(Complex64::new(2.0, 0.0)); // Unnormalized state
-    c.bench_function("quantum_ops_normalize", |bencher| {
-        bencher.iter(|| black_box(state.clone()).normalize())
-    });
-}
-
 criterion_group!(
     benches,
     bench_geometric_product_euclidean_2d,
     bench_geometric_product_pga_3d,
     bench_addition_euclidean_3d,
     bench_reversion_pga_3d,
-    bench_quantum_ops_dag,
-    bench_quantum_ops_bracket,
-    bench_quantum_ops_expectation_value,
-    bench_quantum_ops_normalize
 );
 criterion_main!(benches);

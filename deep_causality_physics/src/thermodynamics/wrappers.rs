@@ -4,12 +4,11 @@
  */
 
 use crate::thermodynamics::stats;
-use crate::{
-    AmountOfSubstance, Efficiency, Energy, Pressure, Probability, Ratio, Temperature, Volume,
-};
+use crate::{AmountOfSubstance, Efficiency, Energy, Pressure, Ratio, Temperature, Volume};
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_tensor::CausalTensor;
 
+use crate::Probability;
 use deep_causality_topology::Manifold;
 
 /// Causal wrapper for [`stats::heat_diffusion_kernel`].

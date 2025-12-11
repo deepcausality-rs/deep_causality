@@ -3,12 +3,11 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::constants::thermodynamics::BOLTZMANN_CONSTANT;
+use crate::BOLTZMANN_CONSTANT;
 
 use crate::{AmountOfSubstance, Energy, PhysicsError, Pressure, Probability, Temperature, Volume};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::Manifold;
-// Kernels
 
 /// Calculates the Heat Equation step: $\frac{\partial u}{\partial t} = \alpha \Delta u$.
 ///

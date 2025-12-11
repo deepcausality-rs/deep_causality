@@ -77,15 +77,13 @@ impl<T> Manifold<T> {
         let metric = self
             .metric
             .as_ref()
-            .ok_or(TopologyError::ManifoldError("Metric not found".into()))?;
+            .ok_or(TopologyError::ManifoldError("Metric not found"))?;
 
         let skeleton_1 = self
             .complex
             .skeletons
             .get(1)
-            .ok_or(TopologyError::DimensionMismatch(
-                "1-skeleton not found".into(),
-            ))?;
+            .ok_or(TopologyError::DimensionMismatch("1-skeleton not found"))?;
 
         let mut edge_lengths = std::collections::HashMap::new();
 
@@ -99,12 +97,13 @@ impl<T> Manifold<T> {
                 let edge_simplex = Simplex::new(vec![v1, v2]);
 
                 if let Some(edge_index) = skeleton_1.get_index(&edge_simplex) {
-                    let length = metric.edge_lengths.get(&[edge_index]).ok_or(
-                        TopologyError::IndexOutOfBounds("Edge length not found".into()),
-                    )?;
+                    let length = metric
+                        .edge_lengths
+                        .get(&[edge_index])
+                        .ok_or(TopologyError::IndexOutOfBounds("Edge length not found"))?;
                     edge_lengths.insert((v1, v2), length.powi(2));
                 } else {
-                    return Err(TopologyError::SimplexNotFound);
+                    return Err(TopologyError::SimplexNotFound());
                 }
             }
         }

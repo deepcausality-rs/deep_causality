@@ -156,3 +156,29 @@ pub fn chronometric_volume_kernel(
     let v = a.outer_product(b).outer_product(c);
     Ok(SpacetimeVector(v))
 }
+
+/// Generates a Schwarzschild-like 4D metric tensor.
+///
+/// Signature: (- + + +) standard GR convention.
+/// Returns a diagonal metric tensor.
+///
+/// # Arguments
+/// * `g_00` - Time dilation component (usually $-(1 - r_s/r)$).
+/// * `g_11` - Radial stretching component (usually $(1 - r_s/r)^{-1}$).
+/// * `g_22` - Angular component (e.g., $r^2$).
+/// * `g_33` - Angular component (e.g., $r^2 \sin^2\theta$).
+///
+/// # Returns
+/// * `Result<CausalTensor<f64>, PhysicsError>` - The metric tensor.
+pub fn generate_schwarzschild_metric(
+    g_00: f64,
+    g_11: f64,
+    g_22: f64,
+    g_33: f64,
+) -> Result<deep_causality_tensor::CausalTensor<f64>, PhysicsError> {
+    let metric_data = vec![
+        g_00, 0.0, 0.0, 0.0, 0.0, g_11, 0.0, 0.0, 0.0, 0.0, g_22, 0.0, 0.0, 0.0, 0.0, g_33,
+    ];
+
+    deep_causality_tensor::CausalTensor::new(metric_data, vec![4, 4]).map_err(PhysicsError::from)
+}

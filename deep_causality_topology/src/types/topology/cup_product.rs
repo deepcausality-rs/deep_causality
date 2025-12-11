@@ -40,7 +40,7 @@ where
         // 2. Validation
         // Ensure both fields live on the same Complex
         if !Arc::ptr_eq(&self.complex, &other.complex) {
-            return Err(TopologyError::GenericError("Complex Mismatch".into()));
+            return Err(TopologyError::GenericError("Complex Mismatch".to_string()));
         }
 
         // If grade exceeds manifold dimension, the result is zero.
@@ -89,11 +89,11 @@ where
             // to retrieve the data from the CausalTensor.
             let idx_alpha = p_skeleton
                 .get_index(&front_simplex)
-                .ok_or(TopologyError::SimplexNotFound)?;
+                .ok_or(TopologyError::SimplexNotFound())?;
 
             let idx_beta = q_skeleton
                 .get_index(&back_simplex)
-                .ok_or(TopologyError::SimplexNotFound)?;
+                .ok_or(TopologyError::SimplexNotFound())?;
 
             // 6. Fetch Values
             // self.data is a CausalTensor.

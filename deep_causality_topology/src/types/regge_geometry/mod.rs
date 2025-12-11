@@ -8,6 +8,8 @@ use deep_causality_tensor::CausalTensor;
 
 use crate::{Simplex, SimplicialComplex};
 
+mod curvature;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct ReggeGeometry {
     // Lengths of the 1-simplices (Edges)

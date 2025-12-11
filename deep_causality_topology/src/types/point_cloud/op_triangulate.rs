@@ -98,7 +98,7 @@ fn gaussian_determinant(mat: &mut [f64], n: usize) -> f64 {
 impl<T> PointCloud<T> {
     pub fn triangulate(&self, radius: f64) -> Result<SimplicialComplex, TopologyError> {
         if self.is_empty() {
-            return Err(TopologyError::PointCloudError("Empty Cloud".into()));
+            return Err(TopologyError::PointCloudError("Empty Cloud".to_string()));
         }
 
         let num_points = self.len();
@@ -169,23 +169,23 @@ impl<T> PointCloud<T> {
         let max_dim = skeletons.len() - 1;
 
         // 4. Build Boundary Operators
+        // Convention: boundary_operators[k] maps (k+1)-simplices to k-simplices
+        // boundary_operators[k] has shape (N_k x N_{k+1})
         let mut boundary_ops = Vec::new();
-        // B_0 is empty
-        boundary_ops.push(CsrMatrix::from_triplets(0, skeletons[0].simplices.len(), &[]).unwrap());
 
-        for k_dim in 1..=max_dim {
-            let rows = skeletons[k_dim - 1].simplices.len();
-            let cols = skeletons[k_dim].simplices.len();
+        for k in 0..max_dim {
+            let rows = skeletons[k].simplices.len();
+            let cols = skeletons[k + 1].simplices.len();
             let mut triplets = Vec::new();
 
-            for (col, simplex) in skeletons[k_dim].simplices.iter().enumerate() {
-                for i in 0..=k_dim {
+            for (col, simplex) in skeletons[k + 1].simplices.iter().enumerate() {
+                for i in 0..=(k + 1) {
                     // Create face by removing vertex i
                     let mut face_verts = simplex.vertices.clone();
                     face_verts.remove(i);
                     let face = Simplex::new(face_verts);
 
-                    if let Some(row) = skeletons[k_dim - 1].get_index(&face) {
+                    if let Some(row) = skeletons[k].get_index(&face) {
                         let sign = if i % 2 == 0 { 1 } else { -1 };
                         triplets.push((row, col, sign));
                     }
@@ -195,13 +195,8 @@ impl<T> PointCloud<T> {
         }
 
         // 5. Build Coboundary Operators (Transpose)
-        let mut coboundary_ops = Vec::new();
-        for k in 0..max_dim {
-            coboundary_ops.push(boundary_ops[k + 1].transpose());
-        }
-        // Final coboundary (maps to nothing)
-        coboundary_ops
-            .push(CsrMatrix::from_triplets(0, skeletons[max_dim].simplices.len(), &[]).unwrap());
+        // Convention: coboundary_operators[k] = boundary_operators[k].transpose()
+        let coboundary_ops: Vec<_> = boundary_ops.iter().map(|b| b.transpose()).collect();
 
         // 6. Build Mass Matrices (Diagonal Hodge Star) using Barycentric Dual Volumes
         // This is the scientifically critical part for diffusion.

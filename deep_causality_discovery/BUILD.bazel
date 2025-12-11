@@ -14,6 +14,7 @@ rust_library(
         # Internal dependencies
         "//deep_causality_tensor",
         "//deep_causality_algorithms",
+        "//deep_causality_haft",
         # External dependencies
         "//thirdparty/crates:csv",
         "//thirdparty/crates:parquet",

@@ -5,11 +5,12 @@
 
 //! Model types and causaloid functions for the Geometric Tilt Estimator.
 
-use crate::config::*;
+use crate::{GYRO_SCALE, MOTION_THRESHOLD, Q_DIAG, R_BASE, TILT_CORRECTION_ALPHA};
 use deep_causality::PropagatingEffect;
 use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector, MultiVectorL2Norm};
-use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
-
+use deep_causality_physics::G;
+use deep_causality_physics::kalman_filter_linear;
+use deep_causality_tensor::CausalTensor;
 // ============================================================================
 // Data Structures
 // ============================================================================
@@ -139,7 +140,7 @@ pub fn integrate_gyro(state: TiltState, sensor: &SensorData) -> PropagatingEffec
 pub fn detect_motion(state: TiltState, sensor: &SensorData) -> PropagatingEffect<TiltState> {
     let accel_magnitude =
         (sensor.accel[0].powi(2) + sensor.accel[1].powi(2) + sensor.accel[2].powi(2)).sqrt();
-    let motion_detected = (accel_magnitude - G_REF).abs() > MOTION_THRESHOLD;
+    let motion_detected = (accel_magnitude - G).abs() > MOTION_THRESHOLD;
 
     PropagatingEffect::pure(TiltState {
         motion_detected,
@@ -151,18 +152,12 @@ pub fn detect_motion(state: TiltState, sensor: &SensorData) -> PropagatingEffect
 ///
 /// Adaptive Gravity Observer that distinguishes tilting from linear acceleration.
 pub fn kalman_update(state: TiltState, sensor: &SensorData) -> PropagatingEffect<TiltState> {
-    let (covariance, gravity_body) = match (&state.covariance, &state.gravity_body) {
-        (Some(p), Some(g)) => (p.clone(), g.clone()),
-        _ => return PropagatingEffect::pure(state),
+    // Prediction Setup
+    // x_pred: current gravity estimate from prev state
+    let gravity_body = match &state.gravity_body {
+        Some(g) => g,
+        None => return PropagatingEffect::pure(state),
     };
-
-    // Measurement: accelerometer reading
-    let z = match CausalTensor::new(sensor.accel.to_vec(), vec![3, 1]) {
-        Ok(t) => t,
-        Err(_) => return PropagatingEffect::pure(state),
-    };
-
-    // Prediction: current gravity estimate
     let x_pred = CausalTensor::new(
         vec![
             gravity_body.get(1).cloned().unwrap_or(0.0),
@@ -173,23 +168,38 @@ pub fn kalman_update(state: TiltState, sensor: &SensorData) -> PropagatingEffect
     )
     .unwrap();
 
-    // Process noise Q
+    // p_pred: current covariance (no distinct prediction step for P in this model, just take P_prev)
+    let p_pred = match &state.covariance {
+        Some(p) => p.clone(),
+        None => return PropagatingEffect::pure(state),
+    };
+
+    // Process Noise Q
     let q = CausalTensor::new(
         vec![Q_DIAG, 0.0, 0.0, 0.0, Q_DIAG, 0.0, 0.0, 0.0, Q_DIAG],
         vec![3, 3],
     )
     .unwrap();
 
-    // If motion detected, skip measurement update
+    // If motion detected, we trust prediction (x_pred) + simple diffusion of P
     if state.motion_detected {
-        let p_propagated = &covariance + &q;
+        let p_propagated = &p_pred + &q;
         return PropagatingEffect::pure(TiltState {
             covariance: Some(p_propagated),
             ..state
         });
     }
 
-    // Adaptive measurement noise R based on gyro magnitude
+    // Measurement: accelerometer reading z
+    let z = match CausalTensor::new(sensor.accel.to_vec(), vec![3, 1]) {
+        Ok(t) => t,
+        Err(_) => return PropagatingEffect::pure(state),
+    };
+
+    // Measurement Matrix H = Identity (3x3)
+    let h = CausalTensor::identity(&[3, 3]).unwrap();
+
+    // Measurement Noise R (Adaptive)
     let r_effective = R_BASE * (1.0 + GYRO_SCALE * state.gyro_magnitude);
     let r = CausalTensor::new(
         vec![
@@ -207,42 +217,34 @@ pub fn kalman_update(state: TiltState, sensor: &SensorData) -> PropagatingEffect
     )
     .unwrap();
 
-    // Innovation: y = z - x_pred
-    let y = &z - &x_pred;
+    // Execute Kalman Filter Kernel using Wrapper (Update Step)
+    let kf_effect = kalman_filter_linear(&x_pred, &p_pred, &z, &h, &r, &q);
 
-    // Innovation covariance: S = P + R
-    let s = &covariance + &r;
+    // Bind result back to State
+    // PropagatingEffect is a wrapper around CausalEffectPropagationProcess.
+    // We can map over the value if it implements Functor, or just access value.
+    match kf_effect.value.into_value() {
+        Some((x_upd, p_upd)) => {
+            let metric = Metric::Euclidean(3);
+            let g_new = create_vector(x_upd.as_slice(), &metric).unwrap_or_else(|_| {
+                // Fallback if vector creation fails (which shouldn't happen)
+                let mut data = vec![0.0; 8];
+                data[1] = x_upd.as_slice().first().cloned().unwrap_or(0.0);
+                data[2] = x_upd.as_slice().get(1).cloned().unwrap_or(0.0);
+                data[3] = x_upd.as_slice().get(2).cloned().unwrap_or(0.0);
+                CausalMultiVector::new(data, metric).unwrap()
+            });
 
-    // Kalman gain: K = P * S^-1
-    let s_inv = match s.inverse() {
-        Ok(inv) => inv,
-        Err(_) => return PropagatingEffect::pure(state),
-    };
-    let k = CausalTensor::ein_sum(&EinSumOp::mat_mul(covariance.clone(), s_inv)).unwrap();
-
-    // State update: x_new = x_pred + K * y
-    let correction = CausalTensor::ein_sum(&EinSumOp::mat_mul(k.clone(), y)).unwrap();
-    let x_updated = &x_pred + &correction;
-
-    // Covariance update: P_new = (I - K) * P + Q
-    let identity = CausalTensor::new(
-        vec![1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
-        vec![3, 3],
-    )
-    .unwrap();
-    let i_minus_k = &identity - &k;
-    let p_updated = CausalTensor::ein_sum(&EinSumOp::mat_mul(i_minus_k, covariance)).unwrap();
-    let p_with_q = &p_updated + &q;
-
-    // Convert back to MultiVector
-    let metric = Metric::Euclidean(3);
-    let g_new = create_vector(x_updated.as_slice(), &metric).unwrap();
-
-    PropagatingEffect::pure(TiltState {
-        gravity_body: Some(g_new),
-        covariance: Some(p_with_q),
-        ..state
-    })
+            PropagatingEffect::pure(TiltState {
+                gravity_body: Some(g_new),
+                covariance: Some(p_upd),
+                ..state
+            })
+        }
+        None => PropagatingEffect::from_error(deep_causality::CausalityError(
+            deep_causality::CausalityErrorEnum::Custom("Kalman Filter calculation failed".into()),
+        )),
+    }
 }
 
 /// Step 4: Apply tilt correction using Geometric Algebra

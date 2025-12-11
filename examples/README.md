@@ -10,6 +10,7 @@ This directory contains examples demonstrating various features and applications
 | [CSM Examples](#csm-examples) | Causal State Machine patterns |
 | [Core Examples](#core-examples) | PropagatingEffect and PropagatingProcess fundamentals |
 | [Physics Examples](#physics-examples) | Multi-physics simulations with Geometric Algebra |
+| [Medicine Examples](#medicine-examples) | Biomedical and life sciences applications |
 | [Starter Example](#starter-example) | Basic introduction to DeepCausality |
 | [Tokio Example](#tokio-example) | Async integration with tokio runtime |
 
@@ -130,31 +131,35 @@ cargo run -p core_examples --example control_flow_strict_zst
 
 **Location:** `examples/physics_examples`
 
-Multi-physics simulations using Geometric Algebra and Tensor operations.
+Multi-physics simulations using Geometric Algebra, Tensor operations, and Topology.
 
-### Maxwell's Unification
+| Example | Domain | Command |
+|---------|--------|---------|
+| Maxwell's Unification | Electromagnetism | `cargo run -p physics_examples --example maxwell_example` |
+| GRMHD | Relativity | `cargo run -p physics_examples --example grmhd_example` |
+| Geometric Tilt | Robotics/IMU | `cargo run -p physics_examples --example geometric_tilt_example` |
+| Algebraic Scanner | Abstract Algebra | `cargo run -p physics_examples --example algebraic_scanner` |
+| Multi-Physics Pipeline | Particle Physics | `cargo run -p physics_examples --example multi_physics_pipeline` |
+| Quantum Counterfactual | Quantum | `cargo run -p physics_examples --example quantum_counterfactual` |
+| IKKT Matrix Model | Quantum Gravity | `cargo run -p physics_examples --example ikkt_matrix_model` |
+| Gravitational Wave | Relativity | `cargo run -p physics_examples --example gravitational_wave` |
 
-E and B field derivation from Vector Potential using Geometric Algebra.
+See [physics_examples/README.md](physics_examples/README.md) for detailed documentation.
 
-```bash
-cargo run -p physics_examples --example maxwell_example
-```
+---
 
-### GRMHD (General Relativistic Magnetohydrodynamics)
+## Medicine Examples
 
-Couples Tensor (GR) with MultiVector (MHD) for extreme environment simulation.
+**Location:** `examples/medicine_examples`
 
-```bash
-cargo run -p physics_examples --example grmhd_example
-```
+Biomedical and life sciences applications using causal monads.
 
-### Geometric Tilt Estimator
+| Example | Domain | Command |
+|---------|--------|---------|
+| Protein Folding | Biophysics | `cargo run -p medicine_examples --example protein_folding` |
+| MRI Tissue Classification | Medical Imaging | `cargo run -p medicine_examples --example mri_tissue_classification` |
 
-IMU sensor fusion with Adaptive Kalman Filter and Geometric Algebra rotors.
-
-```bash
-cargo run -p physics_examples --example geometric_tilt_example
-```
+See [medicine_examples/README.md](medicine_examples/README.md) for detailed documentation.
 
 ---
 

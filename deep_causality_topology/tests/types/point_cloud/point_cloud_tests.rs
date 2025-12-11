@@ -4,7 +4,7 @@
  */
 
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{PointCloud, TopologyError};
+use deep_causality_topology::{PointCloud, TopologyError, TopologyErrorEnum};
 
 #[test]
 fn test_point_cloud_new_success() {
@@ -24,7 +24,7 @@ fn test_point_cloud_new_empty_points() {
     let result = PointCloud::<f64>::new(points, metadata, 0);
     assert!(result.is_err());
     match result {
-        Err(TopologyError::InvalidInput(msg)) => {
+        Err(TopologyError(TopologyErrorEnum::InvalidInput(msg))) => {
             assert!(msg.contains("PointCloud `points` cannot be empty"));
         }
         _ => panic!("Expected InvalidInput error"),
@@ -38,7 +38,7 @@ fn test_point_cloud_new_metadata_mismatch() {
     let result = PointCloud::new(points, metadata, 0);
     assert!(result.is_err());
     match result {
-        Err(TopologyError::InvalidInput(msg)) => {
+        Err(TopologyError(TopologyErrorEnum::InvalidInput(msg))) => {
             assert!(msg.contains("Number of points and metadata items must match"));
         }
         _ => panic!("Expected InvalidInput error"),
@@ -52,7 +52,7 @@ fn test_point_cloud_new_cursor_out_of_bounds() {
     let result = PointCloud::new(points, metadata, 5); // Cursor out of bounds for 2 points
     assert!(result.is_err());
     match result {
-        Err(TopologyError::IndexOutOfBounds(msg)) => {
+        Err(TopologyError(TopologyErrorEnum::IndexOutOfBounds(msg))) => {
             assert!(msg.contains("cursor out of bounds"));
         }
         _ => panic!("Expected IndexOutOfBounds error"),

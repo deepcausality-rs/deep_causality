@@ -8,9 +8,9 @@ use deep_causality_topology::TopologyError;
 
 #[test]
 fn test_topology_error_simplex_not_found() {
-    let err = TopologyError::SimplexNotFound;
+    let err = TopologyError::SimplexNotFound();
     assert_eq!(format!("{}", err), "Simplex not found");
-    assert_eq!(err, TopologyError::SimplexNotFound);
+    assert_eq!(err, TopologyError::SimplexNotFound());
 }
 
 #[test]

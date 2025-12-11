@@ -1,0 +1,27 @@
+[package]
+name = "medicine_examples"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+
+[lib]
+path = "no_lib.rs"
+
+
+[dependencies]
+deep_causality_core = { path = "../../deep_causality_core" }
+deep_causality_physics = { path = "../../deep_causality_physics" }
+deep_causality_tensor = { path = "../../deep_causality_tensor" }
+deep_causality_topology = { path = "../../deep_causality_topology" }
+
+
+[[example]]
+name = "protein_folding"
+path = "examples/protein_folding/main.rs"
+
+[[example]]
+name = "mri_tissue_classification"
+path = "examples/mri_tissue_classification/main.rs"

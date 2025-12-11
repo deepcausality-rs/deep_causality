@@ -70,10 +70,6 @@ name = "grmhd_multivector_example"
 path = "examples/grmhd_integration.rs"
 
 [[example]]
-name = "hilbert_multivector_example"
-path = "examples/hilbert_multivector.rs"
-
-[[example]]
 name = "hkt_multivector_example"
 path = "examples/hkt_multivector.rs"
 

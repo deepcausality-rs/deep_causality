@@ -63,11 +63,10 @@ fn test_simplex_equality() {
     let s3 = Simplex::new(vec![0, 2, 1]); // Different order, but should be canonicalized
 
     assert_eq!(s1, s2);
-    // Note: Simplex::new does NOT sort vertices internally.
-    // Canonical representation relies on input being sorted.
-    // For proper comparison, vertices should always be created sorted.
-    // If s3 vertices were [0,1,2] it would be equal.
-    assert_ne!(s1, s3);
+    assert_eq!(s1, s2);
+    // Note: Simplex::new sorts vertices internally to ensure canonical representation.
+    // Even if input is unsorted, equality holds.
+    assert_eq!(s1, s3);
 }
 
 #[test]

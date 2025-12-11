@@ -4,11 +4,14 @@
  */
 
 use core::fmt;
+use std::fmt::Display;
+
 use deep_causality_multivector::CausalMultiVectorError;
 use deep_causality_tensor::CausalTensorError;
 
+//  Inner Error variant
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum TopologyError {
+pub enum TopologyErrorEnum {
     /// Error indicating a simplex was not found in the complex or skeleton.
     SimplexNotFound,
     /// Error indicating a dimension mismatch in operations.
@@ -31,27 +34,33 @@ pub enum TopologyError {
     MultivectorError(String),
     /// Error indicating a malformed or invalid input structure.
     InvalidInput(String),
+    /// Error indicating an invalid metric calculation or configuration.
+    InvalidMetric(String),
     /// General catch-all error for other topological issues.
     GenericError(String),
 }
 
-impl fmt::Display for TopologyError {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TopologyError(pub TopologyErrorEnum);
+
+impl Display for TopologyError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            TopologyError::SimplexNotFound => write!(f, "Simplex not found"),
-            TopologyError::DimensionMismatch(msg) => write!(f, "Dimension mismatch: {}", msg),
-            TopologyError::InvalidGradeOperation(msg) => {
+        match &self.0 {
+            TopologyErrorEnum::SimplexNotFound => write!(f, "Simplex not found"),
+            TopologyErrorEnum::DimensionMismatch(msg) => write!(f, "Dimension mismatch: {}", msg),
+            TopologyErrorEnum::InvalidGradeOperation(msg) => {
                 write!(f, "Invalid grade operation: {}", msg)
             }
-            TopologyError::IndexOutOfBounds(msg) => write!(f, "Index out of bounds: {}", msg),
-            TopologyError::TensorError(msg) => write!(f, "Tensor error: {}", msg),
-            TopologyError::PointCloudError(msg) => write!(f, "PointCloud error: {}", msg),
-            TopologyError::GraphError(msg) => write!(f, "Graph error: {}", msg),
-            TopologyError::HypergraphError(msg) => write!(f, "Hypergraph error: {}", msg),
-            TopologyError::ManifoldError(msg) => write!(f, "Manifold error: {}", msg),
-            TopologyError::MultivectorError(msg) => write!(f, "Multivector error: {}", msg),
-            TopologyError::InvalidInput(msg) => write!(f, "Invalid input: {}", msg),
-            TopologyError::GenericError(msg) => write!(f, "Topology error: {}", msg),
+            TopologyErrorEnum::IndexOutOfBounds(msg) => write!(f, "Index out of bounds: {}", msg),
+            TopologyErrorEnum::TensorError(msg) => write!(f, "Tensor error: {}", msg),
+            TopologyErrorEnum::PointCloudError(msg) => write!(f, "PointCloud error: {}", msg),
+            TopologyErrorEnum::GraphError(msg) => write!(f, "Graph error: {}", msg),
+            TopologyErrorEnum::HypergraphError(msg) => write!(f, "Hypergraph error: {}", msg),
+            TopologyErrorEnum::ManifoldError(msg) => write!(f, "Manifold error: {}", msg),
+            TopologyErrorEnum::MultivectorError(msg) => write!(f, "Multivector error: {}", msg),
+            TopologyErrorEnum::InvalidInput(msg) => write!(f, "Invalid input: {}", msg),
+            TopologyErrorEnum::InvalidMetric(msg) => write!(f, "Invalid metric: {}", msg),
+            TopologyErrorEnum::GenericError(msg) => write!(f, "Topology error: {}", msg),
         }
     }
 }
@@ -60,12 +69,84 @@ impl std::error::Error for TopologyError {}
 
 impl From<CausalTensorError> for TopologyError {
     fn from(err: CausalTensorError) -> Self {
-        TopologyError::TensorError(err.to_string())
+        TopologyError(TopologyErrorEnum::TensorError(err.to_string()))
     }
 }
 
 impl From<CausalMultiVectorError> for TopologyError {
     fn from(err: CausalMultiVectorError) -> Self {
-        TopologyError::MultivectorError(err.to_string())
+        TopologyError(TopologyErrorEnum::MultivectorError(err.to_string()))
+    }
+}
+
+// Constructors for convenient migration
+impl TopologyError {
+    pub fn new(variant: TopologyErrorEnum) -> Self {
+        Self(variant)
+    }
+
+    #[allow(non_snake_case)]
+    pub fn SimplexNotFound() -> Self {
+        Self(TopologyErrorEnum::SimplexNotFound)
+    }
+
+    #[allow(non_snake_case)]
+    pub fn DimensionMismatch<S: Into<String>>(msg: S) -> Self {
+        Self(TopologyErrorEnum::DimensionMismatch(msg.into()))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn InvalidGradeOperation<S: Into<String>>(msg: S) -> Self {
+        Self(TopologyErrorEnum::InvalidGradeOperation(msg.into()))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn IndexOutOfBounds<S: Into<String>>(msg: S) -> Self {
+        Self(TopologyErrorEnum::IndexOutOfBounds(msg.into()))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn TensorError<S: Into<String>>(msg: S) -> Self {
+        Self(TopologyErrorEnum::TensorError(msg.into()))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn PointCloudError<S: Into<String>>(msg: S) -> Self {
+        Self(TopologyErrorEnum::PointCloudError(msg.into()))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn GraphError<S: Into<String>>(msg: S) -> Self {
+        Self(TopologyErrorEnum::GraphError(msg.into()))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn HypergraphError<S: Into<String>>(msg: S) -> Self {
+        Self(TopologyErrorEnum::HypergraphError(msg.into()))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn ManifoldError<S: Into<String>>(msg: S) -> Self {
+        Self(TopologyErrorEnum::ManifoldError(msg.into()))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn MultivectorError<S: Into<String>>(msg: S) -> Self {
+        Self(TopologyErrorEnum::MultivectorError(msg.into()))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn InvalidInput<S: Into<String>>(msg: S) -> Self {
+        Self(TopologyErrorEnum::InvalidInput(msg.into()))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn InvalidMetric<S: Into<String>>(msg: S) -> Self {
+        Self(TopologyErrorEnum::InvalidMetric(msg.into()))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn GenericError<S: Into<String>>(msg: S) -> Self {
+        Self(TopologyErrorEnum::GenericError(msg.into()))
     }
 }

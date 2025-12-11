@@ -96,7 +96,7 @@ Type: PGA3DMultiVector
 2) Instantiate either a real, complex, or custom typed MultiVector with the metric
 3) Done
 
-```rust
+```
 use deep_causality_multivector::{RealMultiVector, Metric};
 
    // Some data 
@@ -255,7 +255,6 @@ fn main() {
 | `basic_multivector.rs`      | `CausalMultiVector` (`Euclidean(2)`)                  | Demonstrates basic geometric algebra operations (geometric, outer, inner product, inverse) in a 2D Euclidean space.                                      |
 | `clifford_mhd_mulitvector.rs` | `CausalMultiVector` (`Euclidean(3)`, `Minkowski(4)`) | Simulates Lorentz force in plasma fusio  using both Euclidean and Minkowski metrics for metric-agnostic calculations.                                    |
 | `dixon_multivector.rs`      | `DixonAlgebra` (Cl_C(6))                               | Demonstrates operations within the Dixon Algebra, including basis vector construction, geometric products, and complex scalar multiplication.            |
-| `hilbert_multivector.rs`    | `HilbertState` (Cl(0,10))                              | Demonstrates quantum gates (Pauli-X, Hadamard) and operations (Hermitian conjugate, inner product, expectation value, normalization) using HilbertState. |
 | `hkt_multivector.rs`        | `CausalMultiVector` (`Euclidean`)                      | Demonstrates Higher-Kinded Types (HKT) including Functor, Applicative, and Monad implemented for `CausalMultiVector`.                                    |
 | `pga3d_multivector.rs`      | `PGA3DMultiVector` (3D PGA)                            | Demonstrates 3D Projective Geometric Algebra (PGA) by creating a point, a translator (motor), and applying transformations.                              |
 
@@ -269,10 +268,6 @@ Performance measured on Apple M3 Max.
 | **Geometric Product** | PGA 3D | ~87.5 ns |
 | **Addition** | Euclidean 3D | ~39.1 ns |
 | **Reversion** | PGA 3D | ~37.3 ns |
-| **Quantum Ops: dag()** | Cl(0,10) | ~1.42 µs |
-| **Quantum Ops: bracket()** | Cl(0,10) | ~2.65 µs |
-| **Quantum Ops: expectation_value()** | Cl(0,10) | ~3.77 µs |
-| **Quantum Ops: normalize()** | Cl(0,10) | ~3.03 µs |
 
 To run benchmarks:
 ```bash

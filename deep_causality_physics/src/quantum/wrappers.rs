@@ -4,11 +4,12 @@
  */
 
 use crate::quantum::mechanics;
-use crate::{Gate, Operator, Probability};
+use crate::{Gate, Operator};
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_multivector::HilbertState;
 
+use crate::Probability;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::Manifold;
 

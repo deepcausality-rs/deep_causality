@@ -3,4 +3,5 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+mod curvature_tests;
 mod regge_geometry_tests;

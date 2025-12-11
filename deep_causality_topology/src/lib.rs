@@ -12,7 +12,7 @@ mod types;
 pub mod utils_tests;
 
 // Re-export errors
-pub use crate::errors::topology_error::TopologyError;
+pub use crate::errors::topology_error::{TopologyError, TopologyErrorEnum};
 
 // Re-export extensions
 pub use crate::extensions::hkt_graph::GraphWitness;
@@ -37,6 +37,6 @@ pub use crate::types::manifold::Manifold;
 pub use crate::types::point_cloud::PointCloud;
 pub use crate::types::regge_geometry::ReggeGeometry;
 pub use crate::types::simplex::Simplex;
-pub use crate::types::simplicial_complex::SimplicialComplex;
+pub use crate::types::simplicial_complex::{SimplicialComplex, SimplicialComplexBuilder};
 pub use crate::types::skeleton::Skeleton;
 pub use crate::types::topology::Topology;

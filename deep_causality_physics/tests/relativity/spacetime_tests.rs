@@ -155,3 +155,40 @@ fn test_chronometric_volume_kernel_valid() {
     let result = chronometric_volume_kernel(&a, &b, &c);
     assert!(result.is_ok());
 }
+
+// =============================================================================
+// generate_schwarzschild_metric Tests
+// =============================================================================
+
+#[test]
+fn test_schwarzschild_metric_success() {
+    let result = deep_causality_physics::generate_schwarzschild_metric(-0.5, 2.0, 10.0, 5.0);
+    assert!(result.is_ok());
+
+    let metric = result.unwrap();
+    let shape = metric.shape();
+    assert_eq!(shape, vec![4, 4]);
+
+    let data = metric.data();
+    // Check diagonal elements
+    // Index 0 (0,0) = g_00 = -0.5
+    assert!((data[0] - (-0.5)).abs() < 1e-9);
+    // Index 5 (1,1) = g_11 = 2.0
+    assert!((data[5] - 2.0).abs() < 1e-9);
+    // Index 10 (2,2) = g_22 = 10.0
+    assert!((data[10] - 10.0).abs() < 1e-9);
+    // Index 15 (3,3) = g_33 = 5.0
+    assert!((data[15] - 5.0).abs() < 1e-9);
+
+    // Check off-diagonal (e.g., index 1)
+    assert_eq!(data[1], 0.0);
+}
+
+#[test]
+fn test_schwarzschild_metric_values_check() {
+    // Ensure that inputs are exactly propagated
+    let result =
+        deep_causality_physics::generate_schwarzschild_metric(-1.0 + 1e-10, 1.0, 1.0, 1.0).unwrap();
+    let val = result.data()[0];
+    assert!((val - (-1.0 + 1e-10)).abs() < 1e-15);
+}

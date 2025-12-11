@@ -11,7 +11,9 @@ pub(crate) fn is_oriented(complex: &SimplicialComplex) -> bool {
         return true; // Points are oriented
     }
 
-    if let Some(boundary_op) = complex.boundary_operators.get(max_dim) {
+    // Convention: boundary_operators[k] maps (k+1)-simplices to k-simplices
+    // So boundary_operators[max_dim - 1] maps max_dim-simplices to (max_dim-1)-simplices
+    if let Some(boundary_op) = complex.boundary_operators.get(max_dim - 1) {
         let rows = boundary_op.shape().0;
         let row_indices = boundary_op.row_indices();
         let values = boundary_op.values();
@@ -94,7 +96,9 @@ pub(crate) fn has_boundary(complex: &SimplicialComplex) -> bool {
         return false; // Points don't have boundary in this context
     }
 
-    if let Some(boundary_op) = complex.boundary_operators.get(max_dim) {
+    // Convention: boundary_operators[k] maps (k+1)-simplices to k-simplices
+    // So boundary_operators[max_dim - 1] maps max_dim-simplices to (max_dim-1)-simplices
+    if let Some(boundary_op) = complex.boundary_operators.get(max_dim - 1) {
         let rows = boundary_op.shape().0;
         let row_indices = boundary_op.row_indices();
 
