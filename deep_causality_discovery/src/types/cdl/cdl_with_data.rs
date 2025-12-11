@@ -151,7 +151,8 @@ impl CDL<WithData> {
     /// # Arguments
     ///
     /// * `predicate` - A closure that takes a row slice `&[f64]` and returns `bool`.
-    ///                 Returns `true` to keep the row, `false` to discard it.
+    ///
+    ///  Returns `true` to keep the row, `false` to discard it.
     pub fn filter_cohort<P>(self, predicate: P) -> CdlEffect<CDL<WithData>>
     where
         P: Fn(&[f64]) -> bool,
