@@ -8,17 +8,17 @@ This document specifies a new set of physics examples to be implemented. These e
 
 ## 2. Feasibility Assessment (From Notes)
 
-| Example | Domain | Status | Gap Identified |
-| :--- | :--- | :--- | :--- |
-| **Algebraic Scanner** | Abstract Algebra | **Feasible** | None. Uses `Metric` iteration. |
+| Example                | Domain | Status | Gap Identified |
+|:-----------------------| :--- | :--- | :--- |
+| **Algebraic Scanner**  | Abstract Algebra | **Feasible** | None. Uses `Metric` iteration. |
 | **Baez/Huerta Solver** | Particle Physics | **Feasible** | None. Unit test format. |
-| **CERN Pipeline** | Multi-Physics | **Feasible** | Need to map "Hydro" to `heat_diffusion`. |
-| **GRMHD** | Relativity | **Diff Complete** | N/A |
-| **Schwarzschild** | Relativity | **Diff Complete** | N/A |
-| **Dead Qubit** | Quantum | **Feasible** | Relies on `CausalEffectPropagationProcess` state rewind. |
-| **2T-Physics** | Theoretical | **Feasible** | Uses `Metric::Custom` config. |
-| **IKKT Matrix** | Quantum Gravity | **Feasible** | Uses `commutator_kernel`. |
-| **Protein Folding** | Biotech | **Feasible** | Uses `generalized_master_equation`. |
+| **multi_physics_pipeline**                   | Multi-Physics | **Feasible** | Need to map "Hydro" to `heat_diffusion`. |
+| **GRMHD**              | Relativity | **Diff Complete** | N/A |
+| **Schwarzschild**      | Relativity | **Diff Complete** | N/A |
+| **Dead Qubit**         | Quantum | **Feasible** | Relies on `CausalEffectPropagationProcess` state rewind. |
+| **2T-Physics**         | Theoretical | **Feasible** | Uses `Metric::Custom` config. |
+| **IKKT Matrix**        | Quantum Gravity | **Feasible** | Uses `commutator_kernel`. |
+| **Protein Folding**    | Biotech | **Feasible** | Uses `generalized_master_equation`. |
 | **Gravitational Wave** | Relativity | **Feasible** | Uses `ReggeGeometry::calculate_ricci_curvature`. |
 
 ---
@@ -34,7 +34,7 @@ This document specifies a new set of physics examples to be implemented. These e
     *   Check $I \cdot I \approx -1$.
     *   **Output:** List of "Quantum Compatible" dimensions (e.g., Cl(3,0), Cl(1,3)).
 
-### 3.2. The CERN "Grand Unification" Pipeline
+### 3.2. The multi_physics_pipeline "Grand Unification" Pipeline
 *   **Goal:** Single monadic chain: QF $\to$ Hadron $\to$ Hydro $\to$ Detection.
 *   **Inputs:** High Energy Scalar Field $\phi$ (Higgs-like).
 *   **Steps:**

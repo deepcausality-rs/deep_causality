@@ -41,3 +41,14 @@ path = "examples/algebraic_scanner/main.rs"
 name = "multi_physics_pipeline"
 path = "examples/multi_physics_pipeline/main.rs"
 
+[[example]]
+name = "quantum_counterfactual"
+path = "examples/quantum_counterfactual/main.rs"
+
+[[example]]
+name = "ikkt_matrix_model"
+path = "examples/ikkt_matrix_model/main.rs"
+
+[[example]]
+name = "gravitational_wave"
+path = "examples/gravitational_wave/main.rs"

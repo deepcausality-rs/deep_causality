@@ -3,6 +3,23 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+//! # Multi-Physics Pipeline: Grand Unification
+//!
+//! Demonstrates a complete simulation chain: Quantum Field → Hadronization → Hydro → Detection.
+//!
+//! ## Key Concepts
+//! - **Klein-Gordon**: Relativistic scalar field evolution
+//! - **Hadronization**: Particle production from energy density
+//! - **Heat Diffusion**: Thermal equilibration of particle cloud
+//! - **Born Rule**: Quantum measurement probability
+//!
+//! ## APIs Demonstrated
+//! - `klein_gordon()` - Scalar field dynamics
+//! - `hadronization()` - Jet production
+//! - `heat_diffusion()` - Thermal physics
+//! - `born_probability()` - Quantum detection
+//! - `bind_or_error()` - Error-handling monadic composition
+
 use deep_causality_core::CausalEffectPropagationProcess;
 use deep_causality_multivector::{HilbertState, Metric};
 use deep_causality_num::Complex;

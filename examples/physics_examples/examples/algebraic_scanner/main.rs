@@ -3,6 +3,20 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+//! # Algebraic Scanner: Automated Theory Search
+//!
+//! Scans Clifford Algebras to find dimensions admitting complex structure (I² = -1).
+//!
+//! ## Key Concepts
+//! - **Pseudoscalar (I)**: Highest-grade element of the algebra
+//! - **Complex Structure**: When I² = -1, enabling quantum mechanics formulations
+//! - **Metric Signatures**: Euclidean Cl(n,0) vs Minkowski Cl(p,q)
+//!
+//! ## APIs Demonstrated
+//! - `CausalMultiVector::new()` - Create multivector with metric
+//! - `geometric_product()` - Compute algebraic products
+//! - `Metric::Euclidean(n)`, `Metric::Minkowski(n)` - Signature selection
+
 use deep_causality_multivector::{CausalMultiVector, Metric};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
