@@ -17,10 +17,10 @@ mod cdl_with_no_data;
 
 // Typestate structs representing the pipeline's state.
 /// Initial state of the CDL pipeline, with no data loaded.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NoData;
 /// State after data has been successfully loaded.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct WithData {
     pub tensor: CausalTensor<f64>,
     pub records_count: usize,
@@ -62,7 +62,7 @@ pub struct Finalized; // Finalize now returns CdlReport, so this might be unused
 /// `CDL` uses a typestate pattern to ensure that pipeline steps are called in a valid
 /// order at compile time. Each method consumes the `CDL` instance and returns a new
 /// one with an updated state.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CDL<State> {
     pub state: State,
     pub config: CdlConfig,
