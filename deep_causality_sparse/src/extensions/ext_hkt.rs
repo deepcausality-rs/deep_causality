@@ -4,7 +4,9 @@
  */
 
 use crate::CsrMatrix;
-use deep_causality_haft::{Applicative, BoundedAdjunction, BoundedComonad, Foldable, Functor, HKT, Monad};
+use deep_causality_haft::{
+    Applicative, BoundedAdjunction, BoundedComonad, Foldable, Functor, HKT, Monad,
+};
 use deep_causality_num::Zero;
 use std::ops::{Add, Mul};
 
@@ -31,7 +33,7 @@ impl Functor<CsrMatrixWitness> for CsrMatrixWitness {
         // For sparse matrices, we typically only map the stored values.
         // Implicit zeros remain implicit zeros (assuming f(0) is ignored or 0->0).
         let new_values: Vec<B> = m_a.values.into_iter().map(f).collect();
-        
+
         CsrMatrix {
             row_indices: m_a.row_indices,
             col_indices: m_a.col_indices,
@@ -84,9 +86,9 @@ impl Applicative<CsrMatrixWitness> for CsrMatrixWitness {
                 shape: f_a.shape,
             }
         } else {
-             // For general matrices, creating an empty matrix is the safest fallback
-             // consistent with other HKT implementations where broadcast isn't possible.
-             CsrMatrix::new()
+            // For general matrices, creating an empty matrix is the safest fallback
+            // consistent with other HKT implementations where broadcast isn't possible.
+            CsrMatrix::new()
         }
     }
 }
@@ -104,22 +106,22 @@ impl Monad<CsrMatrixWitness> for CsrMatrixWitness {
         // Then flatten/concatenate these results.
         // Similar to CausalTensor, we linearize the output into a single row vector
         // or just a 1 x N matrix to preserve the data.
-        
+
         let result_values: Vec<B> = m_a
             .values
             .into_iter()
             .flat_map(|val_a| f(val_a).values.into_iter())
             .collect();
-            
+
         let count = result_values.len();
-        
+
         // Construct a 1 x N matrix (Row Vector)
         CsrMatrix {
             row_indices: vec![0, count],
             col_indices: (0..count).collect(),
             values: result_values,
             shape: (1, count),
-        }   
+        }
     }
 }
 
@@ -132,9 +134,9 @@ impl BoundedComonad<CsrMatrixWitness> for CsrMatrixWitness {
         A: Clone,
     {
         if !fa.values.is_empty() {
-             fa.values[0].clone()
+            fa.values[0].clone()
         } else {
-             panic!("Comonad::extract cannot be called on an empty CsrMatrix");
+            panic!("Comonad::extract cannot be called on an empty CsrMatrix");
         }
     }
 
@@ -147,10 +149,8 @@ impl BoundedComonad<CsrMatrixWitness> for CsrMatrixWitness {
         // Simplified extension: apply f to the whole matrix for each non-zero element.
         // In a true spatial comonad, we'd shift the view. For general sparse matrices,
         // shifting is non-trivial. We map over indices 0..len(values) to simulate interaction.
-        let new_values: Vec<B> = (0..fa.values.len())
-            .map(|_| f(fa)) 
-            .collect();
-            
+        let new_values: Vec<B> = (0..fa.values.len()).map(|_| f(fa)).collect();
+
         CsrMatrix {
             row_indices: fa.row_indices.clone(),
             col_indices: fa.col_indices.clone(),
@@ -163,9 +163,7 @@ impl BoundedComonad<CsrMatrixWitness> for CsrMatrixWitness {
 // ----------------------------------------------------------------------------
 // Adjunction
 // ----------------------------------------------------------------------------
-impl BoundedAdjunction<CsrMatrixWitness, CsrMatrixWitness, (usize, usize)>
-    for CsrMatrixWitness
-{
+impl BoundedAdjunction<CsrMatrixWitness, CsrMatrixWitness, (usize, usize)> for CsrMatrixWitness {
     fn left_adjunct<A, B, F>(ctx: &(usize, usize), a: A, f: F) -> CsrMatrix<B>
     where
         F: Fn(CsrMatrix<A>) -> B,
@@ -194,7 +192,7 @@ impl BoundedAdjunction<CsrMatrixWitness, CsrMatrixWitness, (usize, usize)>
         // Or if ctx is (1,1), creates [[a]]
         let inner = CsrMatrix::from_triplets(ctx.0, ctx.1, &[(0, 0, a)])
             .unwrap_or_else(|_| CsrMatrix::new());
-            
+
         // Outer matrix is 1x1 wrapper
         CsrMatrix {
             row_indices: vec![0, 1],

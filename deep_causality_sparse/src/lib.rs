@@ -4,8 +4,8 @@
  */
 
 mod errors;
-mod types;
 mod extensions;
+mod types;
 
 // Sparse type
 pub use crate::errors::SparseMatrixError;

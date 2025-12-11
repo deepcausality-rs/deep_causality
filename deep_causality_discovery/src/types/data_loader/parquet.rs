@@ -43,7 +43,13 @@ impl DataLoader for ParquetDataLoader {
                     }
 
                     let val = match field {
-                        Field::Bool(v) => if *v { 1.0 } else { 0.0 },
+                        Field::Bool(v) => {
+                            if *v {
+                                1.0
+                            } else {
+                                0.0
+                            }
+                        }
                         Field::Byte(v) => *v as f64,
                         Field::Short(v) => *v as f64,
                         Field::Int(v) => *v as f64,
@@ -56,9 +62,10 @@ impl DataLoader for ParquetDataLoader {
                         Field::Double(v) => *v,
                         Field::Null => f64::NAN, // Explicitly handle Null as NaN
                         _ => {
-                            return Err(DataLoadingError::OsError(
-                                format!("Unsupported data type in column '{}' (index {}): {:?}", name, i, field)
-                            ));
+                            return Err(DataLoadingError::OsError(format!(
+                                "Unsupported data type in column '{}' (index {}): {:?}",
+                                name, i, field
+                            )));
                         }
                     };
                     row_values.push(val);
