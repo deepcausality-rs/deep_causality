@@ -52,23 +52,17 @@ fn main() {
     // Each step in the causal chain is a pure function wrapped in PropagatingEffect
     //
     // The chain represents: Config → Potential → EM Field → Gauge Check
-
     let initial_state = MaxwellState::from_config(&config);
     println!("Phase: {:.4}", initial_state.phase);
 
     // Execute the causal chain using monadic bind
-    let result: PropagatingEffect<MaxwellState> = PropagatingEffect::pure(initial_state)
-        .bind(|state, _, _| {
-            // Step 1: Compute Vector Potential
+    let result: PropagatingEffect<MaxwellState> =
+        PropagatingEffect::pure(initial_state).bind(|state, _, _| {
+            // Run causal chain
             model::compute_potential(state.into_value().unwrap_or_default())
-        })
-        .bind(|state, _, _| {
-            // Step 2: Derive EM Field F = ∇A
-            model::compute_em_field(state.into_value().unwrap_or_default())
-        })
-        .bind(|state, _, _| {
-            // Step 3: Check Lorenz Gauge
-            model::check_lorenz_gauge(state.into_value().unwrap_or_default())
+                .bind(|s, _, _| model::compute_em_field(s.into_value().unwrap_or_default()))
+                .bind(|s, _, _| model::check_lorenz_gauge(s.into_value().unwrap_or_default()))
+                .bind(|s, _, _| model::compute_poynting_flux(s.into_value().unwrap_or_default()))
         });
 
     // =========================================================================
@@ -86,18 +80,10 @@ fn main() {
 
     // Part A: Electric and Magnetic Fields
     println!("\n>> Extracted Physical Fields:");
-    println!(
-        "   Electric Field E (Time-Space Bivector): {:.4}",
-        final_state.e_field
-    );
-    println!(
-        "   Magnetic Field B (Space-Space Bivector): {:.4}",
-        final_state.b_field
-    );
-
-    // Part B: Gauge Check
-    println!("\n>> Lorenz Gauge Check:");
-    println!("   Divergence: {:.6}", final_state.divergence);
+    println!("  E-Field:         {:.4}", final_state.e_field);
+    println!("  B-Field:         {:.4}", final_state.b_field);
+    println!("  Poynting Flux:   {:.4}", final_state.poynting_flux);
+    println!("  Divergence:      {:.4e}", final_state.divergence);
     if final_state.gauge_satisfied {
         println!("   >> SUCCESS: Lorenz Gauge Satisfied (Divergence ≈ 0)");
     } else {

@@ -51,27 +51,20 @@ fn main() {
     // Execute Causal Chain via Monadic Composition
     // =========================================================================
     // The chain: GR Solver → Coupling → MHD Solver → Analysis
-
-    let initial_state = GrmhdState::new(&config);
-
-    let result: PropagatingEffect<GrmhdState> = PropagatingEffect::pure(initial_state)
+    let result: PropagatingEffect<GrmhdState> = PropagatingEffect::pure(GrmhdState::new(&config))
         .bind(|state, _, _| {
-            // Step 1: GR Solver - Calculate spacetime curvature
             println!("\n[Step 1] GR Solver: Calculating Spacetime Curvature...");
             model::calculate_curvature(state.into_value().unwrap_or_default())
         })
         .bind(|state, _, _| {
-            // Step 2: Coupling - Select appropriate metric based on curvature
             println!("\n[Step 2] Causal Coupling: Configuring MHD Solver...");
             model::select_metric(state.into_value().unwrap_or_default())
         })
         .bind(|state, _, _| {
-            // Step 3: MHD Solver - Calculate Lorentz force
             println!("\n[Step 3] MHD Solver: Calculating Plasma Confinement...");
             model::calculate_lorentz_force(state.into_value().unwrap_or_default())
         })
         .bind(|state, _, _| {
-            // Step 4: Stability Analysis
             println!("\n[Step 4] Stability Analysis...");
             model::analyze_stability(state.into_value().unwrap_or_default())
         });

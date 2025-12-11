@@ -4,9 +4,8 @@
  */
 
 use deep_causality::PropagatingEffect;
-use deep_causality_haft::Applicative;
-use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
-use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
+use deep_causality_multivector::{CausalMultiVector, Metric};
+use deep_causality_physics::{einstein_tensor, generate_schwarzschild_metric, lorentz_force};
 
 /// Configuration for the GRMHD simulation
 #[derive(Clone, Debug, Default)]
@@ -23,17 +22,13 @@ pub struct GrmhdState {
     pub current_density: f64,
     pub magnetic_field: f64,
     pub curvature_threshold: f64,
-
     // GR Results
     pub curvature_intensity: f64,
-
     // Coupling Results
     pub metric: Option<Metric>,
     pub metric_label: String,
-
     // MHD Results
     pub lorentz_force: f64,
-
     // Analysis Results
     pub stability_status: String,
 }
@@ -54,10 +49,35 @@ impl GrmhdState {
 /// Uses Tensor monad to compute the Einstein tensor from the metric.
 pub fn calculate_curvature(state: GrmhdState) -> PropagatingEffect<GrmhdState> {
     // Calculate the spacetime metric tensor (Schwarzschild-like)
-    let g_uv = calculate_spacetime_metric();
+    // Minkowski metric signature (- + + +) perturbed by gravity
+    // g_00 = -(1 - 2GM/rc^2)
+    let g_00 = -0.9; // Time dilation
+    let g_11 = 1.1; // Radial stretching
+    let g_22 = 1.0;
+    let g_33 = 1.0;
+    let g_uv =
+        generate_schwarzschild_metric(g_00, g_11, g_22, g_33).expect("Failed to generate metric");
 
-    // Calculate Einstein tensor G_uv
-    let g_tensor = calculate_einstein_tensor(&g_uv);
+    // Synthetic Ricci Tensor Construction (Proxy for example)
+    // Assumption: R_uv ~ -0.1 * g_uv, R ~ -0.4
+    // G_uv = R_uv - 0.5 * R * g_uv = -0.1g - 0.5(-0.4)g = -0.1g + 0.2g = 0.1g
+    // This matches the example's outcome (positive curvature intensity)
+    let ricci = g_uv.clone() * -0.1;
+    let scalar_r = -0.4;
+
+    // Calculate Einstein tensor G_uv using physics kernel
+    let g_tensor_wrapper = einstein_tensor(&ricci, scalar_r, &g_uv);
+
+    let g_tensor = match g_tensor_wrapper.value.into_value() {
+        Some(t) => t,
+        None => {
+            return PropagatingEffect::from_error(deep_causality::CausalityError(
+                deep_causality::CausalityErrorEnum::Custom(
+                    "Einstein Tensor calculation failed".into(),
+                ),
+            ));
+        }
+    };
 
     // Extract local curvature intensity from g_00 component
     let curvature_intensity = g_tensor.data()[0].abs();
@@ -102,14 +122,39 @@ pub fn calculate_lorentz_force(state: GrmhdState) -> PropagatingEffect<GrmhdStat
         None => return PropagatingEffect::pure(state),
     };
 
-    let force = compute_lorentz_force_internal(state.current_density, state.magnetic_field, metric);
+    // 1. Setup Plasma Current vector (J) - axis 1
+    let idx_current = 1 << 1;
+    let mut j_data = vec![0.0; 1 << metric.dimension()];
+    j_data[idx_current] = state.current_density;
+    let j_vec = CausalMultiVector::new(j_data, metric).unwrap();
 
-    println!("   -> Lorentz Force Density: {:.4}", force);
+    // 2. Setup Magnetic Field vector (B) - axis 2
+    // Note: Physics kernel expects B as a vector. J (e1) ^ B (e2) = F (e12 bivector)
+    let idx_b = 1 << 2;
+    let mut b_data = vec![0.0; 1 << metric.dimension()];
+    b_data[idx_b] = state.magnetic_field;
+    let b_vec = CausalMultiVector::new(b_data, metric).unwrap();
 
-    PropagatingEffect::pure(GrmhdState {
-        lorentz_force: force,
-        ..state
-    })
+    // 3. Compute Lorentz Force using Wrapper: F = J ^ B
+    let f_effect = lorentz_force(&j_vec, &b_vec);
+
+    match f_effect.value.into_value() {
+        Some(f_field) => {
+            // Extract force component (e12 bivector)
+            let idx_force = idx_current | idx_b;
+            let force = *f_field.0.get(idx_force).unwrap_or(&0.0);
+
+            println!("   -> Lorentz Force Bivector Intensity: {:.4}", force);
+
+            PropagatingEffect::pure(GrmhdState {
+                lorentz_force: force,
+                ..state
+            })
+        }
+        None => PropagatingEffect::from_error(deep_causality::CausalityError(
+            deep_causality::CausalityErrorEnum::Custom("Lorentz Force calculation failed".into()),
+        )),
+    }
 }
 
 /// Step 4: Stability Analysis - Determine confinement status
@@ -127,61 +172,4 @@ pub fn analyze_stability(state: GrmhdState) -> PropagatingEffect<GrmhdState> {
         stability_status: status.to_string(),
         ..state
     })
-}
-
-// =============================================================================
-// Internal Physics Functions
-// =============================================================================
-
-/// Calculate the spacetime metric tensor (Schwarzschild-like)
-fn calculate_spacetime_metric() -> CausalTensor<f64> {
-    // Minkowski metric signature (- + + +) perturbed by gravity
-    // g_00 = -(1 - 2GM/rc^2)
-    let g_00 = -0.9; // Time dilation
-    let g_11 = 1.1; // Radial stretching
-    let g_22 = 1.0;
-    let g_33 = 1.0;
-
-    let metric_data = vec![
-        g_00, 0.0, 0.0, 0.0, 0.0, g_11, 0.0, 0.0, 0.0, 0.0, g_22, 0.0, 0.0, 0.0, 0.0, g_33,
-    ];
-
-    CausalTensor::new(metric_data, vec![4, 4]).unwrap()
-}
-
-/// Calculate Einstein tensor G_uv (simplified: G_uv ~ R * g_uv)
-fn calculate_einstein_tensor(g_uv: &CausalTensor<f64>) -> CausalTensor<f64> {
-    let curvature = 0.1; // Scalar curvature R
-
-    // G_uv ~ R * g_uv (Simplified EFE LHS)
-    let scale_fn = |x: f64| x * curvature;
-    let fn_tensor = <CausalTensorWitness as Applicative<CausalTensorWitness>>::pure(scale_fn);
-
-    <CausalTensorWitness as Applicative<CausalTensorWitness>>::apply(fn_tensor, g_uv.clone())
-}
-
-/// Calculate Lorentz Force F = J · B using the appropriate metric
-fn compute_lorentz_force_internal(
-    current_density: f64,
-    magnetic_field: f64,
-    metric_signature: Metric,
-) -> f64 {
-    // 1. Setup Plasma Current (J) - flowing toroidally (X-axis)
-    let idx_current = 1 << 1;
-    let mut j_data = vec![0.0; 1 << metric_signature.dimension()];
-    j_data[idx_current] = current_density;
-    let j_vec = CausalMultiVector::new(j_data, metric_signature).unwrap();
-
-    // 2. Setup Magnetic Field (B) - applied poloidally (XY-plane)
-    let idx_field_plane = (1 << 1) | (1 << 2);
-    let mut b_data = vec![0.0; 1 << metric_signature.dimension()];
-    b_data[idx_field_plane] = magnetic_field;
-    let b_field = CausalMultiVector::new(b_data, metric_signature).unwrap();
-
-    // 3. Compute Force: F = J · B (inner product)
-    let force = j_vec.inner_product(&b_field);
-
-    // Extract force component in poloidal direction (dimension 2)
-    let idx_force = 1 << 2;
-    *force.get(idx_force).unwrap()
 }
