@@ -4,6 +4,5 @@
  */
 
 pub(crate) mod hkt;
-pub(crate) mod quantum;
 
 pub(crate) mod scalar_multivector;
