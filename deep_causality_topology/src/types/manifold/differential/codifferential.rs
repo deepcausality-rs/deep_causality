@@ -49,8 +49,8 @@ where
         let mass_k = &self.complex.hodge_star_operators[k];
 
         // B_k (Boundary Operator: k -> k-1)
-        // Note: boundary_operators[k] maps k-simplices (cols) to k-1 simplices (rows)
-        let boundary_k = &self.complex.boundary_operators[k];
+        // Note: boundary_operators[k-1] maps k-simplices (cols) to k-1 simplices (rows)
+        let boundary_k = &self.complex.boundary_operators[k - 1];
 
         // M_{k-1} (Mass Matrix for k-1 simplices)
         // We need the inverse of this. Since we store it as a diagonal CsrMatrix,

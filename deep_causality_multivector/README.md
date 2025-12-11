@@ -96,7 +96,7 @@ Type: PGA3DMultiVector
 2) Instantiate either a real, complex, or custom typed MultiVector with the metric
 3) Done
 
-```rust
+```
 use deep_causality_multivector::{RealMultiVector, Metric};
 
    // Some data 

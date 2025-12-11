@@ -1,6 +1,6 @@
 # Physics Examples Specification
 
-**Status:** Draft
+**Status:** Final
 **Context:** Demonstrating the `deep_causality_physics` crate and Causal Monad.
 
 ## 1. Overview
@@ -18,8 +18,8 @@ This document specifies a new set of physics examples to be implemented. These e
 | **Dead Qubit** | Quantum | **Feasible** | Relies on `CausalEffectPropagationProcess` state rewind. |
 | **2T-Physics** | Theoretical | **Feasible** | Uses `Metric::Custom` config. |
 | **IKKT Matrix** | Quantum Gravity | **Feasible** | Uses `commutator_kernel`. |
-| **Protein Folding** | Biotech | **Feasible** | Code provided; needs standardizing as `generalized_master_equation`. |
-| **Gravitational Wave** | Relativity | **Feasible w/ Gap** | Missing `ReggeGeometry::calculate_ricci_curvature`. |
+| **Protein Folding** | Biotech | **Feasible** | Uses `generalized_master_equation`. |
+| **Gravitational Wave** | Relativity | **Feasible** | Uses `ReggeGeometry::calculate_ricci_curvature`. |
 
 ---
 
@@ -39,9 +39,9 @@ This document specifies a new set of physics examples to be implemented. These e
 *   **Inputs:** High Energy Scalar Field $\phi$ (Higgs-like).
 *   **Steps:**
     1.  **Quantum Evolution:** `klein_gordon_kernel` evolves $\phi$.
-    2.  **Hadronization:** Transform scalar energy density to vector velocity/momentum (simulating jet formation).
-    3.  **Hydrodynamics:** Use `fluids::bernoulli_pressure_kernel` or `thermodynamics::heat_diffusion_kernel` to simulate plasma cooling/expansion.
-    4.  **Detection:** Use `born_probability_kernel` to calculate detection probability at a generic "detector" state.
+    2.  **Hadronization:** Use `hadronization(energy_density, threshold, dim)` to transform scalar field to `Vec<PhysicalVector>` (jets).
+    3.  **Hydrodynamics:** Use `heat_diffusion` to simulate thermal expansion of the jet cloud.
+    4.  **Detection:** Use `born_probability` to calculate detection probability from final state.
 *   **Showcase:** Zero-copy data transformation across 3 distinct physics modules.
 
 ### 3.3. The Quantum Counterfactual ("The Dead Qubit")
@@ -66,35 +66,20 @@ This document specifies a new set of physics examples to be implemented. These e
 ### 3.5. Protein Folding (Generalized Master Equation)
 *   **Goal:** Fast simulation with memory kernel.
 *   **Implementation:**
-    *   **State:** `MemoryState` (History of Probabilities).
-    *   **Kernel:** $K(t)$ tensor.
+    *   **State:** `Vec<Probability>` (Conformation distribution).
+    *   **Kernel:** $K(t)$ tensor (Memory Kernel).
     *   **Step:**
-        *   Markov prediction: $P' = T \cdot P$.
-        *   Memory correction: $P_{corr} = K \cdot P(t-\tau)$.
-        *   $P_{new} = P' + P_{corr}$.
-*   **Note:** Use the user-provided code, potentially adding `generalized_master_equation_kernel` to `dynamics/estimation.rs` for reuse.
+        *   Call `generalized_master_equation(state, history, markov_op, memory_kernels)`.
+        *   Result is new probability distribution $P(t+\Delta t)$.
+*   **Note:** Implementation complete in `dynamics/estimation.rs`.
 
 ### 3.6. Gravitational Wave (Regge Calculus)
 *   **Goal:** Simulate metric ripple on a simplicial complex.
 *   **Implementation:**
     *   **State:** `SimplicialComplex` (Mesh).
     *   **Dynamics:**
-        *   Calculate Deficit Angle (Ricci) $\epsilon$ at bones.
+        *   Calculate Deficit Angle (Ricci) $\epsilon$ at bones using `calculate_ricci_curvature`.
         *   Update Edge Lengths $l$ based on $\epsilon$.
         *   Propagate.
-    *   **Implementation:**
-        *   **State:** `SimplicialComplex` (Mesh).
-        *   **Dynamics:**
-            *   Calculate Deficit Angle (Ricci) $\epsilon$ at bones using `calculate_ricci_curvature`.
-            *   Update Edge Lengths $l$ based on $\epsilon$.
-            *   Propagate.
 
-## 4. Required Physics Extensions
-
-To support these examples, the following additions to `deep_causality` crates are recommended:
-
-1.  **`deep_causality_topology`**:
-    *   (Implemented) `ReggeGeometry::calculate_ricci_curvature`.
-2.  **`deep_causality_physics`**:
-    *   **Dynamics:** `generalized_master_equation_kernel` (for Protein folding).
-    *   **Nuclear/Particle:** A simple `hadronization_kernel` (Vectorization of scalar energy) would clarify the Multi-Physics example. 
+    

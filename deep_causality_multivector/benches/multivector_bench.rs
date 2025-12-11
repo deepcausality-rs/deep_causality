@@ -3,28 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use criterion::{Criterion, criterion_group, criterion_main};
-use deep_causality_multivector::{CausalMultiVector, HilbertState, Metric};
+use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_multivector::{MultiVector, PGA3DMultiVector};
-use deep_causality_num::Complex64;
 use std::hint::black_box;
-
-const DIM: usize = 10; // For Cl(0,10)
-const SIZE: usize = 1 << DIM; // 1024
-
-// Helper to create a HilbertState for Cl(0,10) for benchmarks
-fn create_cl0_10_hilbert_state(scalar_val: Complex64) -> HilbertState {
-    let mut data = vec![Complex64::new(0.0, 0.0); SIZE];
-    data[0] = scalar_val;
-    // Fill some other parts to make it a non-trivial state
-    if SIZE > 1 {
-        data[1] = Complex64::new(0.5, 0.5); // e1 component
-    }
-    if SIZE > 3 {
-        data[3] = Complex64::new(0.2, -0.3); // e12 component
-    }
-
-    HilbertState::new_spin10(data).unwrap()
-}
 
 fn bench_geometric_product_euclidean_2d(c: &mut Criterion) {
     let m = Metric::Euclidean(2);

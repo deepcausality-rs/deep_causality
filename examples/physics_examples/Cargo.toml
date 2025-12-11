@@ -11,10 +11,14 @@ path = "no_lib.rs"
 
 
 [dependencies]
-deep_causality =  { path = "../../deep_causality" }
-deep_causality_physics  =  { path = "../../deep_causality_physics" }
-deep_causality_multivector  =  { path = "../../deep_causality_multivector" }
-deep_causality_tensor  =  { path = "../../deep_causality_tensor" }
+deep_causality = { path = "../../deep_causality" }
+deep_causality_core = { path = "../../deep_causality_core" }
+deep_causality_physics = { path = "../../deep_causality_physics" }
+deep_causality_multivector = { path = "../../deep_causality_multivector" }
+deep_causality_tensor = { path = "../../deep_causality_tensor" }
+deep_causality_topology = { path = "../../deep_causality_topology" }
+deep_causality_num = { path = "../../deep_causality_num" }
+deep_causality_sparse = { path = "../../deep_causality_sparse" }
 
 
 [[example]]
@@ -28,3 +32,12 @@ path = "examples/grmhd_example/main.rs"
 [[example]]
 name = "geometric_tilt_example"
 path = "examples/geometric_tilt_example/main.rs"
+
+[[example]]
+name = "algebraic_scanner"
+path = "examples/algebraic_scanner/main.rs"
+
+[[example]]
+name = "multi_physics_pipeline"
+path = "examples/multi_physics_pipeline/main.rs"
+
