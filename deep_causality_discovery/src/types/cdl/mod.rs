@@ -32,7 +32,7 @@ pub struct WithCleanedData {
     pub records_count: usize,
 }
 /// State after feature selection has been applied.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct WithFeatures {
     pub tensor: CausalTensor<Option<f64>>,
     pub selection_result: MrmrResult,

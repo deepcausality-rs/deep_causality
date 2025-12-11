@@ -154,4 +154,17 @@ impl CDL<NoData> {
             },
         }
     }
+
+    /// Starts the pipeline with an already loaded `CausalTensor`.
+    /// This is useful when data requires custom loading logic not supported by standard loaders.
+    pub fn load_tensor(self, tensor: CausalTensor<f64>) -> CdlEffect<CDL<WithData>> {
+        let records_count = tensor.shape()[0];
+        CdlBuilder::pure(CDL {
+            state: WithData {
+                tensor,
+                records_count,
+            },
+            config: self.config,
+        })
+    }
 }

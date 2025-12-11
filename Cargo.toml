@@ -24,7 +24,6 @@ members = [
     "deep_causality_uncertain",
     "ultragraph",
     # Examples
-    "examples/case_study_icu_sepsis",
     "examples/classical_causality_examples",
     "examples/core_examples",
     "examples/csm_examples",
