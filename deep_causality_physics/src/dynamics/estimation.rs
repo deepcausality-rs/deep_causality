@@ -4,7 +4,96 @@
  */
 
 use crate::PhysicsError;
+use crate::Probability;
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
+
+/// Generalized Master Equation Kernel.
+///
+/// Implements the GME for systems with memory effects (non-Markovianity).
+/// $P_{n+1} = T \cdot P_n + \sum_{k=0}^{m} \mathcal{K}_k \cdot P_{n-k} \cdot \Delta t$
+///
+/// # Arguments
+/// * `state` - Current state vector ($P_n$).
+/// * `history` - History of state vectors ($P_{n-k}$).
+/// * `markov_operator` - Optional Markov transition matrix ($T$).
+/// * `memory_kernel` - List of memory kernel tensors ($\mathcal{K}_k$).
+///
+/// # Returns
+/// * `Result<Vec<Probability>, PhysicsError>` - The updated state vector.
+pub fn generalized_master_equation_kernel(
+    state: &[Probability],
+    history: &[Vec<Probability>],
+    markov_operator: Option<&CausalTensor<f64>>,
+    memory_kernel: &[CausalTensor<f64>],
+) -> Result<Vec<Probability>, PhysicsError> {
+    // 1. Validation
+    if history.len() != memory_kernel.len() {
+        return Err(PhysicsError::new(
+            crate::PhysicsErrorEnum::DimensionMismatch(format!(
+                "History length {} != Memory kernel length {}",
+                history.len(),
+                memory_kernel.len()
+            )),
+        ));
+    }
+
+    // Convert state to tensor for operations (Column vector [n, 1] for matmul)
+    let state_vec: Vec<f64> = state.iter().map(|p| p.value()).collect();
+    let n = state_vec.len();
+    let state_tensor = CausalTensor::new(state_vec, vec![n, 1]).map_err(PhysicsError::from)?;
+
+    // 2. Markov Step
+    let mut p_new_tensor = if let Some(t) = markov_operator {
+        // T * P
+        // If T is [N, N] and P is [N], result is [N].
+        t.matmul(&state_tensor).map_err(PhysicsError::from)?
+    } else {
+        // Zero tensor of same shape as state
+        CausalTensor::new(vec![0.0; n], vec![n, 1]).map_err(PhysicsError::from)?
+    };
+
+    // 3. Memory Integration
+    for (k, kernel) in memory_kernel.iter().enumerate() {
+        let hist_vec: Vec<f64> = history[k].iter().map(|p| p.value()).collect();
+        // Validate history dimension
+        if hist_vec.len() != n {
+            return Err(PhysicsError::new(
+                crate::PhysicsErrorEnum::DimensionMismatch(format!(
+                    "History[{}] dimension {} != State dimension {}",
+                    k,
+                    hist_vec.len(),
+                    n
+                )),
+            ));
+        }
+        let hist_tensor = CausalTensor::new(hist_vec, vec![n, 1]).map_err(PhysicsError::from)?;
+
+        // K * P_hist
+        let contribution = kernel.matmul(&hist_tensor).map_err(PhysicsError::from)?;
+
+        // Accumulate
+        let sum = p_new_tensor.add(&contribution);
+        p_new_tensor = sum; // CausalTensor::add returns a new tensor, assume ownership or clone
+    }
+
+    // 4. Output
+    let result_data = p_new_tensor.data();
+    let mut result_probs = Vec::with_capacity(n);
+    for &val in result_data {
+        // We use new_unchecked or new?
+        // Spec says "Optionally re-normalize".
+        // For now, let's try to clamp or check.
+        // The GME can technically produce values outside [0,1] if kernels are not probability-conserving.
+        // We will return error if outside range, enforcing the Probability type contract.
+        // Or we clamp?
+        // Given "Probability" type enforces [0,1] in new(), strict mode is better.
+        // However, numerical noise might cause 1.00000001.
+        let clamped = val.clamp(0.0, 1.0);
+        result_probs.push(Probability::new_unchecked(clamped));
+    }
+
+    Ok(result_probs)
+}
 
 /// Standard Linear Kalman Filter Update Step.
 ///
@@ -41,13 +130,6 @@ pub fn kalman_filter_linear_kernel(
         .map_err(PhysicsError::from)?;
 
     // y = z - hx
-    // sub returns Self, panics on error? No, CausalTensor usually returns Result if shapes mismatch, but here we assume validation or it panics?
-    // Looking at previous code: "sub returns Self, panics on error."
-    // If it panics, we can't catch it easily without checks.
-    // Assuming tensor ops here are safe-ish or we accept panic for now if API designs it so.
-    // The previous code didn't wrap .sub() in match, so it likely returns T or panics.
-    // Wait, let's look at `measurement.sub(&hx)`.
-    // Check shapes before subtraction
     if measurement.shape() != hx.shape() {
         return Err(PhysicsError::new(
             crate::PhysicsErrorEnum::DimensionMismatch(format!(

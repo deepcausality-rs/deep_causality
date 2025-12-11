@@ -82,15 +82,19 @@ This document specifies a new set of physics examples to be implemented. These e
         *   Calculate Deficit Angle (Ricci) $\epsilon$ at bones.
         *   Update Edge Lengths $l$ based on $\epsilon$.
         *   Propagate.
-    *   **Gap Requirement:** Must implement `calculate_deficit_angle` or `calculate_ricci_curvature` in `deep_causality_topology::ReggeGeometry`.
+    *   **Implementation:**
+        *   **State:** `SimplicialComplex` (Mesh).
+        *   **Dynamics:**
+            *   Calculate Deficit Angle (Ricci) $\epsilon$ at bones using `calculate_ricci_curvature`.
+            *   Update Edge Lengths $l$ based on $\epsilon$.
+            *   Propagate.
 
 ## 4. Required Physics Extensions
 
 To support these examples, the following additions to `deep_causality` crates are recommended:
 
 1.  **`deep_causality_topology`**:
-    *   `ReggeGeometry::calculate_deficit_angle` / `calculate_ricci_curvature`.
+    *   (Implemented) `ReggeGeometry::calculate_ricci_curvature`.
 2.  **`deep_causality_physics`**:
     *   **Dynamics:** `generalized_master_equation_kernel` (for Protein folding).
-    *   **Nuclear/Particle:** A simple `hadronization_kernel` (Vectorization of scalar energy) would clarify the CERN example, though manual implementation is acceptable.
-
+    *   **Nuclear/Particle:** A simple `hadronization_kernel` (Vectorization of scalar energy) would clarify the Multi-Physics example. 

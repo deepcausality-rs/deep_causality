@@ -156,3 +156,40 @@ fn test_angular_momentum_wrapper_error_propagation() {
     let effect = angular_momentum(&radius, &momentum);
     assert!(effect.is_err());
 }
+
+// =============================================================================
+// generalized_master_equation Wrapper Tests
+// =============================================================================
+
+#[test]
+fn test_generalized_master_equation_wrapper_success() {
+    use deep_causality_physics::Probability;
+    use deep_causality_physics::generalized_master_equation;
+
+    let state = vec![Probability::new(0.5).unwrap()];
+    let history: Vec<Vec<Probability>> = vec![];
+    let mk: Vec<CausalTensor<f64>> = vec![];
+
+    // Test simple identity/zero op case
+    let effect = generalized_master_equation(&state, &history, None, &mk);
+
+    assert!(effect.is_ok());
+    let res = effect.value().clone().into_value().unwrap();
+    assert_eq!(res.len(), 1);
+    assert_eq!(res[0].value(), 0.0);
+}
+
+#[test]
+fn test_generalized_master_equation_wrapper_error() {
+    use deep_causality_physics::Probability;
+    use deep_causality_physics::generalized_master_equation;
+
+    let state = vec![Probability::new(0.5).unwrap()];
+    // Error condition: History length does not match Memory Kernel length (0 != 1)
+    let history: Vec<Vec<Probability>> = vec![];
+    let k = CausalTensor::new(vec![0.1], vec![1, 1]).unwrap();
+    let mk = vec![k];
+
+    let effect = generalized_master_equation(&state, &history, None, &mk);
+    assert!(effect.is_err());
+}

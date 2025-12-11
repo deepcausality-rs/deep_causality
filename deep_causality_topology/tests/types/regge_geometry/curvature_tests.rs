@@ -6,9 +6,7 @@
 use std::f64::consts::PI;
 
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{
-    BaseTopology, ReggeGeometry, Simplex, SimplicialComplexBuilder,
-};
+use deep_causality_topology::{BaseTopology, ReggeGeometry, Simplex, SimplicialComplexBuilder};
 
 // ============================================================================
 // Tests

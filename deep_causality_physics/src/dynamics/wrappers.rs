@@ -6,7 +6,7 @@
 use crate::dynamics::estimation;
 use crate::dynamics::kinematics;
 use crate::units::energy::Energy;
-use crate::{Frequency, Mass, MomentOfInertia};
+use crate::{Frequency, Mass, MomentOfInertia, Probability};
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_tensor::CausalTensor;
@@ -75,6 +75,24 @@ pub fn angular_momentum(
     momentum: &CausalMultiVector<f64>,
 ) -> PropagatingEffect<kinematics::PhysicalVector> {
     match kinematics::angular_momentum_kernel(radius, momentum) {
+        Ok(v) => PropagatingEffect::pure(v),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+
+/// Causal wrapper for [`estimation::generalized_master_equation_kernel`].
+pub fn generalized_master_equation(
+    state: &[Probability],
+    history: &[Vec<Probability>],
+    markov_operator: Option<&CausalTensor<f64>>,
+    memory_kernel: &[CausalTensor<f64>],
+) -> PropagatingEffect<Vec<Probability>> {
+    match estimation::generalized_master_equation_kernel(
+        state,
+        history,
+        markov_operator,
+        memory_kernel,
+    ) {
         Ok(v) => PropagatingEffect::pure(v),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
