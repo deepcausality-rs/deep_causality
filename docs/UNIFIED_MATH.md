@@ -17,6 +17,7 @@ DeepCausality implements the **Witness Pattern** for its core types:
 | **Mechanics** | `CausalTensor<T>` | `CausalTensorWitness` | The Container (Data) |
 | **Algebra** | `CausalMultiVector<T>` | `CausalMultiVectorWitness` | The Transformer (Ops) |
 | **Topology** | `Manifold<T>` | `ManifoldWitness` | The Context (Space) |
+| **Structure** | `CsrMatrix<T>` | `CsrMatrixWitness` | The Network (Relations) |
 | **Causality** | `PropagatingEffect<T>` | `Effect5Witness` | The Flow (Time) |
 
 Because they all implement `Functor` and `Monad` (via `deep_causality_haft`), you can chain them.
