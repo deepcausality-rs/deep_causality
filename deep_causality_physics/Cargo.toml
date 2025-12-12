@@ -38,7 +38,7 @@ version = "0.2.4"
 
 [dependencies.deep_causality_multivector]
 path = "../deep_causality_multivector"
-version = "0.1.3"
+version = "0.2.0"
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
@@ -46,8 +46,8 @@ version = "0.1.9"
 
 [dependencies.deep_causality_tensor]
 path = "../deep_causality_tensor"
-version = "0.1.9"
+version = "0.2.0"
 
 [dependencies.deep_causality_topology]
 path = "../deep_causality_topology"
-version = "0.1.0"
+version = "0.2.0"

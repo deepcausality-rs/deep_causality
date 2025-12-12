@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_sparse-v0.1.0...deep_causality_sparse-v0.1.1) - 2025-12-12
+
+### Added
+
+- *(deep_causality_sparse)* Added HKT trait implementations for monadic composition.
+
+### Other
+
+- *(deep_causality_discovery)* Increased test coverage.
+- *(deep_causality_sparse)* Increased test coverage.
+- code formatting and linting
+
 ## [0.1.0](https://github.com/marvin-hansen/deep_causality/releases/tag/deep_causality_sparse-v0.1.0) - 2025-12-03
 
 ### Added

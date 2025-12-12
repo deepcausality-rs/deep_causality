@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.1.10...deep_causality_tensor-v0.2.0) - 2025-12-12
+
+### Added
+
+- *(deep_causality_tensor)* Added inverse, cholesky_decomposition and solve_least_squares_cholsky operations.
+
+### Fixed
+
+- fixed a number of Bazel config files.
+- *(deep_causality_tensor)* Lints and code improvements.
+- *(deep_causality_tensor)* Minor lints and code improvements.
+- *(deep_causality_tensor)* Minot lints and code improvements.
+- *(deep_causality_tensor)* Fixed permute_axes impl, fixed inverse_impl for singular matrix case, fixed solve_least_squares_cholsky_impl and fixed cholesky_decomposition_impl.
+
+### Other
+
+- Updated criterion across the repo.
+- *(deep_causality_tensor)* Added  matmul as wrapper for ein_sum.
+- *(deep_causality_tensor)* Added identity from Ring trait and matmul as wrapper for ein_sum.
+- *(deep_causality_multivector)* Improved test coverage.
+- *(deep_causality_tensor)* Improved test coverage.
+
 ## [0.1.10](https://github.com/marvin-hansen/deep_causality/compare/deep_causality_tensor-v0.1.9...deep_causality_tensor-v0.1.10) - 2025-12-03
 
 ### Added

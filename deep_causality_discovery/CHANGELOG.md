@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_discovery-v0.2.6...deep_causality_discovery-v0.3.0) - 2025-12-12
+
+### Added
+
+- *(deep_causality_discovery)* Added option to start with no data as to accomodate custom data loaders.
+- *(deep_causality_discovery)* Added cohort filtering.
+- *(deep_causality_discovery)* Improved Apply implementation by removing clone overhead.
+- *(deep_causality_discovery)* Improved API with new load_data_with_config constructor.
+- *(deep_causality_discovery)* Improved test coverage.
+- *(deep_causality_discovery)* Re-implemented CDL with HKT from haft crate. Updated tests, examples and README.md
+
+### Fixed
+
+- *(deep_causality_discovery)* Fixed SurdResultAnalyzer and related tests.
+- fixed a number of Bazel config files.
+
+### Other
+
+- *(deep_causality_discovery)* Increased test coverage.
+- Linting.
+- code formatting and linting
+- Added or updated documentation.
+- Added a lot more examples across physics and medicine.
+
 ## [0.2.6](https://github.com/marvin-hansen/deep_causality/compare/deep_causality_discovery-v0.2.5...deep_causality_discovery-v0.2.6) - 2025-12-03
 
 ### Added
