@@ -16,14 +16,14 @@ cargo run -p physics_examples --example <example_name>
 
 | Example | Domain | Description |
 |---------|--------|-------------|
-| [algebraic_scanner](examples/algebraic_scanner/README.md) | Abstract Algebra | Scans Clifford Algebras for complex structure (I²=-1) |
-| [maxwell_example](examples/maxwell_example/README.md) | Electromagnetism | Maxwell's equations via Geometric Algebra |
-| [grmhd_example](examples/grmhd_example/README.md) | Relativity | General Relativistic Magnetohydrodynamics |
-| [geometric_tilt_example](examples/geometric_tilt_example/README.md) | Robotics/IMU | Sensor fusion with Geometric Algebra |
-| [multi_physics_pipeline](examples/multi_physics_pipeline/README.md) | Particle Physics | QFT → Hadronization → Hydro → Detection |
-| [quantum_counterfactual](examples/quantum_counterfactual/README.md) | Quantum | Error correction via state rewind |
-| [ikkt_matrix_model](examples/ikkt_matrix_model/README.md) | Quantum Gravity | Emergent spacetime from matrix dynamics |
-| [gravitational_wave](examples/gravitational_wave/README.md) | Relativity | Regge Calculus on simplicial mesh |
+| [algebraic_scanner](algebraic_scanner/README.md) | Abstract Algebra | Scans Clifford Algebras for complex structure (I²=-1) |
+| [maxwell_example](maxwell_example/README.md) | Electromagnetism | Maxwell's equations via Geometric Algebra |
+| [grmhd_example](grmhd_example/README.md) | Relativity | General Relativistic Magnetohydrodynamics |
+| [geometric_tilt_example](geometric_tilt_example/README.md) | Robotics/IMU | Sensor fusion with Geometric Algebra |
+| [multi_physics_pipeline](multi_physics_pipeline/README.md) | Particle Physics | QFT → Hadronization → Hydro → Detection |
+| [quantum_counterfactual](quantum_counterfactual/README.md) | Quantum | Error correction via state rewind |
+| [ikkt_matrix_model](ikkt_matrix_model/README.md) | Quantum Gravity | Emergent spacetime from matrix dynamics |
+| [gravitational_wave](gravitational_wave/README.md) | Relativity | Regge Calculus on simplicial mesh |
 
 > **See also:** [medicine_examples](../medicine_examples/README.md) for biophysics examples (protein folding, etc.)
 

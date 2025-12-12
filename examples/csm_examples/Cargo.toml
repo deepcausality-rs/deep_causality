@@ -15,13 +15,13 @@ deep_causality_ethos =  { path = "../../deep_causality_ethos" }
 
 [[example]]
 name = "csm_example"
-path = "examples/csm_basic/main.rs"
+path = "csm_basic/main.rs"
 
 [[example]]
 name = "csm_context_example"
-path = "examples/csm_context/main.rs"
+path = "csm_context/main.rs"
 
 
 [[example]]
 name = "csm_effect_ethos_example"
-path = "examples/csm_effect_ethos/main.rs"
+path = "csm_effect_ethos/main.rs"

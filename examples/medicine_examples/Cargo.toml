@@ -22,20 +22,20 @@ deep_causality_multivector = { path = "../../deep_causality_multivector" }
 
 [[example]]
 name = "protein_folding"
-path = "examples/protein_folding/main.rs"
+path = "protein_folding/main.rs"
 
 [[example]]
 name = "mri_tissue_classification"
-path = "examples/tissue_classification/main.rs"
+path = "tissue_classification/main.rs"
 
 [[example]]
 name = "hemodynamics"
-path = "examples/aneurysm_risk/main.rs"
+path = "aneurysm_risk/main.rs"
 
 [[example]]
 name = "epilepsy"
-path = "examples/epilepsy/main.rs"
+path = "epilepsy/main.rs"
 
 [[example]]
 name = "ttfields"
-path = "examples/tumor_treatment/main.rs"
+path = "tumor_treatment/main.rs"
