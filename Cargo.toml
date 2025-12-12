@@ -29,7 +29,7 @@ members = [
     "examples/csm_examples",
     "examples/physics_examples",
     "examples/starter_example",
-    "examples/tokio_example", "examples/medicine_examples",
+    "examples/tokio_example", "examples/medicine_examples", "examples/avionics_examples",
 ]
 
 [workspace.package]

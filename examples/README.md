@@ -10,6 +10,7 @@ This directory contains examples demonstrating various features and applications
 | [CSM Examples](#csm-examples) | Causal State Machine patterns |
 | [Core Examples](#core-examples) | PropagatingEffect and PropagatingProcess fundamentals |
 | [Physics Examples](#physics-examples) | Multi-physics simulations with Geometric Algebra |
+| [Avionics Examples](#avionics-examples) | High-assurance GNC and Safety Critical Systems |
 | [Medicine Examples](#medicine-examples) | Biomedical and life sciences applications |
 | [Starter Example](#starter-example) | Basic introduction to DeepCausality |
 | [Tokio Example](#tokio-example) | Async integration with tokio runtime |
