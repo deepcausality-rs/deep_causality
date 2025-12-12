@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.11.11...deep_causality-v0.12.0) - 2025-12-12
+
+### Added
+
+- *(deep_causality)* Updated extension tests to new API.
+- *(deep_causality)* Updated extension tests to new API.
+- *(deep_causality)* Updated Error tests to new API.
+- *(deep_causality_core)* Removed unrelated types.
+- *(deep_causality)* Removed leftover legacy types that were replaced by new core crate
+- *(deep_causality)* Updated benchmarks for using functional core.
+- *(deep_causality)* Initial re-write using deep_causality_core crate for functional core.
+
+### Fixed
+
+- fixed a number of Bazel config files.
+- *(deep_causality)* Simplified type system across the entire crate further.
+- *(deep_causality)* Refactored Causaloid and replaced the previous complex implicit context with an explicit context passed through the EffectPropagtingProcess. Reduced generic type parameters from 9 to 4.
+- *(deep_causality)* Restored proper fn pointers in CausalFn and ContextualCausalFn.
+
+### Other
+
+- Added a few more medical examples.
+- Added or updated documentation.
+- Updated Project README.md
+- Updated criterion across the repo.
+- Reorganized and updated repo wide examples.
+- *(deep_causality)* Lints, fixes and code improvements.
+- *(deep_causality)* Improved test coverage.
+- *(deep_causality)* Improved test coverage.
+- *(deep_causality)* Improved test coverage.
+- *(deep_causality)* Improved test coverage.
+- *(deep_causality)* Lints, fixes and code improvements.
+- *(deep_causality)* Updated Bazel test config
+- *(deep_causality)* Updated more tests to new API.
+- *(deep_causality)* Updated more tests to new API.
+
 ## [0.11.11](https://github.com/marvin-hansen/deep_causality/compare/deep_causality-v0.11.10...deep_causality-v0.11.11) - 2025-12-03
 
 ### Added

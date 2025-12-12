@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.6](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algorithms-v0.2.5...deep_causality_algorithms-v0.2.6) - 2025-12-12
+
+### Added
+
+- *(deep_causality_algorithms)* Added dedicated MrmrResult type.  Updated all downstream usage, examples and added relevant tests.
+
+### Fixed
+
+- fixed a number of Bazel config files.
+
+### Other
+
+- Updated criterion across the repo.
+
 ## [0.2.5](https://github.com/marvin-hansen/deep_causality/compare/deep_causality_algorithms-v0.2.4...deep_causality_algorithms-v0.2.5) - 2025-12-03
 
 ### Added

@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_topology"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["The DeepCausality Authors and Contributors"]
 description = "Topological data structures for the DeepCausality project"
@@ -23,7 +23,7 @@ default-features = false
 
 [dependencies.deep_causality_sparse]
 path = "../deep_causality_sparse"
-version = "0.1.0"
+version = "0.1.1"
 default-features = false
 
 [dependencies.deep_causality_haft]
@@ -32,11 +32,11 @@ version = "0.2.4"
 
 [dependencies.deep_causality_tensor]
 path = "../deep_causality_tensor"
-version = "0.1.9"
+version = "0.2.0"
 
 [dependencies.deep_causality_multivector]
 path = "../deep_causality_multivector"
-version = "0.1.3"
+version = "0.2.0"
 
 
 [[example]]

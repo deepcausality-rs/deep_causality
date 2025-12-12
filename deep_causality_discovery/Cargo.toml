@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_discovery"
-version = "0.2.6"
+version = "0.3.0"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
@@ -33,7 +33,7 @@ version = "0.2"
 
 [dependencies.deep_causality_tensor]
 path = "../deep_causality_tensor"
-version = "0.1"
+version = "0.2"
 
 
 

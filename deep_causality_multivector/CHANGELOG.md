@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_multivector-v0.1.3...deep_causality_multivector-v0.2.0) - 2025-12-12
+
+### Added
+
+- *(deep_causality_multivector)* Removed all quantum code as it has moved into the physics crate.
+- *(deep_causality_multivector)* Added new normalize_l2 and norm_l2 as well as modulus_squared and scale_by_real methods to CausalMultiVector.
+- *(deep_causality_multivector)* Added some notes on the examples.
+- *(deep_causality_multivector)* Added new example: Optimal Estimation of the Gravity Vector
+- *(deep_causality_multivector)* Code refactoring for improved structure.
+- *(deep_causality_multivector)* Added HopfState. Added reference arithmetic. Added two new examples, maxwell and hopf fibration.
+
+### Fixed
+
+- fixed a number of Bazel config files.
+- *(deep_causality_multivector)* Lints and code improvements.
+- *(deep_causality_multivector)* Lints and code improvements.
+
+### Other
+
+- Added two new physics exmples.
+- *(deep_causality_physics)* Added various bound checks and other checks to ensure correct math.
+- *(deep_causality_physics)* Improved test coverage.
+- *(deep_causality_multivector)* Added Multivector Arithmetic Tests for assignment operators.
+- *(deep_causality_multivector)* Added default to hilbert state.
+- *(deep_causality_multivector)* Improved test coverage.
+- *(deep_causality_multivector)* code formatting.
+- *(deep_causality_multivector)* Improved test coverage.
+
 ## [0.1.3](https://github.com/marvin-hansen/deep_causality/compare/deep_causality_multivector-v0.1.2...deep_causality_multivector-v0.1.3) - 2025-12-03
 
 ### Added
