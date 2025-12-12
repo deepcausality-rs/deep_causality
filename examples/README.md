@@ -158,6 +158,9 @@ Biomedical and life sciences applications using causal monads.
 |---------|--------|---------|
 | Protein Folding | Biophysics | `cargo run -p medicine_examples --example protein_folding` |
 | MRI Tissue Classification | Medical Imaging | `cargo run -p medicine_examples --example mri_tissue_classification` |
+| Aneurysm Risk (Hemodynamics) | Cardiovascular | `cargo run -p medicine_examples --example hemodynamics` |
+| Epilepsy Virtual Resection | Neurology | `cargo run -p medicine_examples --example epilepsy` |
+| Tumor Treatment (TTFields) | Oncology | `cargo run -p medicine_examples --example ttfields` |
 
 See [medicine_examples/README.md](medicine_examples/README.md) for detailed documentation.
 

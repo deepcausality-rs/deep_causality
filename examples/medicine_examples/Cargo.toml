@@ -16,6 +16,8 @@ deep_causality_core = { path = "../../deep_causality_core" }
 deep_causality_physics = { path = "../../deep_causality_physics" }
 deep_causality_tensor = { path = "../../deep_causality_tensor" }
 deep_causality_topology = { path = "../../deep_causality_topology" }
+deep_causality_num = { path = "../../deep_causality_num" }
+deep_causality_multivector = { path = "../../deep_causality_multivector" }
 
 
 [[example]]
@@ -24,4 +26,16 @@ path = "examples/protein_folding/main.rs"
 
 [[example]]
 name = "mri_tissue_classification"
-path = "examples/mri_tissue_classification/main.rs"
+path = "examples/tissue_classification/main.rs"
+
+[[example]]
+name = "hemodynamics"
+path = "examples/aneurysm_risk/main.rs"
+
+[[example]]
+name = "epilepsy"
+path = "examples/epilepsy/main.rs"
+
+[[example]]
+name = "ttfields"
+path = "examples/tumor_treatment/main.rs"

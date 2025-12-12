@@ -1,6 +1,6 @@
-# DeepCausality: A Unified Mathematical Framework
+# DeepCausality: A Uniform Mathematical Foundation
 
-DeepCausality pioners **unifying discrete mathematics** through Category Theory.
+DeepCausality pioners **uniform discrete mathematics** through Category Theory.
 
 By treating Tensors, Geometric Algebra (Multivectors), and Topology as **composable monadic structures**, the library allows you to express complex multi-domain systems in a single flow.
 
