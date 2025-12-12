@@ -1,6 +1,0 @@
-Prediction of Sepsis
-PhysioNet Computing in Cardiology Challenge 2019
-https://www.kaggle.com/datasets/salikhussaini49/prediction-of-sepsis/data
-
-CSV was converted to a smaller Parquet file via:
-https://www.tablab.app/csv/to/parquet

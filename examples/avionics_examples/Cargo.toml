@@ -1,0 +1,28 @@
+[package]
+name = "avionics_examples"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+path = "no_lib.rs"
+
+[[example]]
+name = "magnav"
+path = "magnav/main.rs"
+
+[[example]]
+name = "geometric_tcas"
+path = "geometric_tcas/main.rs"
+
+[[example]]
+name = "hypersonic_2t"
+path = "hypersonic_2t/main.rs"
+
+
+[dependencies]
+deep_causality_core = { path = "../../deep_causality_core" }
+deep_causality_tensor = { path = "../../deep_causality_tensor" }
+deep_causality_multivector = { path = "../../deep_causality_multivector" }

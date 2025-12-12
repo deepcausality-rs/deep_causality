@@ -10,7 +10,9 @@ This directory contains examples demonstrating various features and applications
 | [CSM Examples](#csm-examples) | Causal State Machine patterns |
 | [Core Examples](#core-examples) | PropagatingEffect and PropagatingProcess fundamentals |
 | [Physics Examples](#physics-examples) | Multi-physics simulations with Geometric Algebra |
+| [Avionics Examples](#avionics-examples) | High-assurance GNC and Safety Critical Systems |
 | [Medicine Examples](#medicine-examples) | Biomedical and life sciences applications |
+| [Material Examples](#material-examples) | Material Science and Metamaterials |
 | [Starter Example](#starter-example) | Basic introduction to DeepCausality |
 | [Tokio Example](#tokio-example) | Async integration with tokio runtime |
 
@@ -20,45 +22,17 @@ This directory contains examples demonstrating various features and applications
 
 **Location:** `examples/classical_causality_examples`
 
-### CATE (Conditional Average Treatment Effect)
+Traditional causal inference methods implemented using the DeepCausality framework.
 
-Models the average effect of a treatment on a specific subgroup using contextual alternation.
+| Example | Method | Command |
+|---------|--------|---------|
+| CATE | Conditional Average Treatment Effect | `cargo run -p classical_causality_examples --example cate_example` |
+| DBN | Dynamic Bayesian Network | `cargo run -p classical_causality_examples --example dbn_example` |
+| Granger | Granger Causality Test | `cargo run -p classical_causality_examples --example granger_example` |
+| RCM | Rubin Causal Model | `cargo run -p classical_causality_examples --example rcm_example` |
+| SCM | Pearl's Ladder of Causation | `cargo run -p classical_causality_examples --example scm_example` |
 
-```bash
-cargo run -p classical_causality_examples --example cate_example
-```
-
-### DBN (Dynamic Bayesian Network)
-
-Models temporal causal processes with the "Umbrella World" scenario.
-
-```bash
-cargo run -p classical_causality_examples --example dbn_example
-```
-
-### Granger Causality
-
-Tests whether past changes in one variable predict future changes in another.
-
-```bash
-cargo run -p classical_causality_examples --example granger_example
-```
-
-### RCM (Rubin Causal Model)
-
-Demonstrates potential outcomes and Individual Treatment Effect calculation.
-
-```bash
-cargo run -p classical_causality_examples --example rcm_example
-```
-
-### SCM (Pearl's Ladder of Causation)
-
-Models all three rungs of Pearl's Ladder: Association, Intervention, and Counterfactuals.
-
-```bash
-cargo run -p classical_causality_examples --example scm_example
-```
+See [classical_causality_examples/README.md](classical_causality_examples/README.md) for detailed documentation.
 
 ---
 
@@ -66,29 +40,15 @@ cargo run -p classical_causality_examples --example scm_example
 
 **Location:** `examples/csm_examples`
 
-### CSM Basic
+Causal State Machine patterns for stateful causal reasoning.
 
-Simple industrial monitoring system with sensors and actions.
+| Example | Pattern | Command |
+|---------|---------|---------|
+| CSM Basic | Simple monitoring system | `cargo run -p csm_examples --example csm_example` |
+| CSM Context | Shared mutable state via `Arc<RwLock>` | `cargo run -p csm_examples --example csm_context_example` |
+| CSM Effect Ethos | Deontic reasoning integration | `cargo run -p csm_examples --example csm_effect_ethos_example` |
 
-```bash
-cargo run -p csm_examples --example csm_example
-```
-
-### CSM with Context
-
-Contextual causaloids with shared mutable state via `Arc<RwLock<BaseContext>>`.
-
-```bash
-cargo run -p csm_examples --example csm_context_example
-```
-
-### CSM with Effect Ethos
-
-Integrates deontic reasoning with CSM for normative action evaluation.
-
-```bash
-cargo run -p csm_examples --example csm_effect_ethos_example
-```
+See [csm_examples/README.md](csm_examples/README.md) for detailed documentation.
 
 ---
 
@@ -98,32 +58,14 @@ cargo run -p csm_examples --example csm_effect_ethos_example
 
 Fundamental examples demonstrating the monadic API.
 
-### PropagatingEffect Examples
-
-Basic monadic composition with value, error, and log propagation.
-
-```bash
-cargo run -p core_examples --example propagating_effect_example
-cargo run -p core_examples --example propagating_effect_counterfactual_example
-```
-
-### PropagatingProcess Examples
-
-Stateful monadic composition with state and context.
-
-```bash
-cargo run -p core_examples --example propagating_process_example
-cargo run -p core_examples --example propagating_process_counterfactual
-```
-
-### Control Flow Examples
-
-Builder patterns and strict ZST control flow.
-
-```bash
-cargo run -p core_examples --example control_flow_builder
-cargo run -p core_examples --example control_flow_strict_zst
-```
+| Example | Focus | Command |
+|---------|-------|---------|
+| PropagatingEffect | Basic monadic composition | `cargo run -p core_examples --example propagating_effect_example` |
+| PropagatingEffect Counterfactual | Counterfactual reasoning | `cargo run -p core_examples --example propagating_effect_counterfactual_example` |
+| PropagatingProcess | Stateful composition | `cargo run -p core_examples --example propagating_process_example` |
+| PropagatingProcess Counterfactual | Stateful counterfactuals | `cargo run -p core_examples --example propagating_process_counterfactual` |
+| Control Flow Builder | Builder patterns | `cargo run -p core_examples --example control_flow_builder` |
+| Control Flow Strict ZST | Zero-sized type control | `cargo run -p core_examples --example control_flow_strict_zst` |
 
 ---
 
@@ -148,6 +90,22 @@ See [physics_examples/README.md](physics_examples/README.md) for detailed docume
 
 ---
 
+## Avionics Examples
+
+**Location:** `examples/avionics_examples`
+
+High-assurance examples for Aerospace, Defense, and Safety Critical systems.
+
+| Example | Domain | Command |
+|---------|--------|---------|
+| MagNav | Navigation | `cargo run -p avionics_examples --example magnav` |
+| Geometric TCAS | Collision Avoidance | `cargo run -p avionics_examples --example geometric_tcas` |
+| Hypersonic 2T | Defense/Tracking | `cargo run -p avionics_examples --example hypersonic_2t` |
+
+See [avionics_examples/README.md](avionics_examples/README.md) for detailed documentation.
+
+---
+
 ## Medicine Examples
 
 **Location:** `examples/medicine_examples`
@@ -158,8 +116,27 @@ Biomedical and life sciences applications using causal monads.
 |---------|--------|---------|
 | Protein Folding | Biophysics | `cargo run -p medicine_examples --example protein_folding` |
 | MRI Tissue Classification | Medical Imaging | `cargo run -p medicine_examples --example mri_tissue_classification` |
+| Aneurysm Risk (Hemodynamics) | Cardiovascular | `cargo run -p medicine_examples --example hemodynamics` |
+| Epilepsy Virtual Resection | Neurology | `cargo run -p medicine_examples --example epilepsy` |
+| Tumor Treatment (TTFields) | Oncology | `cargo run -p medicine_examples --example ttfields` |
 
 See [medicine_examples/README.md](medicine_examples/README.md) for detailed documentation.
+
+---
+
+## Material Examples
+
+**Location:** `examples/material_examples`
+
+Material Science and Metamaterial simulations using topology, multivectors, and causal interventions.
+
+| Example | Domain | Command |
+|---------|--------|---------|
+| Hyperlens | Metamaterials | `cargo run -p material_examples --example hyperlens_example` |
+| Topological Insulator | Quantum Materials | `cargo run -p material_examples --example topological_insulator_example` |
+| Structural Health Monitor | Smart Materials | `cargo run -p material_examples --example structural_health_monitor_example` |
+
+See [material_examples/README.md](material_examples/README.md) for detailed documentation.
 
 ---
 
@@ -167,14 +144,11 @@ See [medicine_examples/README.md](medicine_examples/README.md) for detailed docu
 
 **Location:** `examples/starter_example`
 
-Basic introduction demonstrating:
-- Building and freezing a `CausaloidGraph`
-- Using `PropagatingEffect` for data/control flow
-- Graph evaluation and path explanation
+Basic introduction to DeepCausality.
 
-```bash
-cargo run -p starter_example --example starter_example
-```
+| Example | Focus | Command |
+|---------|-------|---------|
+| Starter | CausaloidGraph basics | `cargo run -p starter_example --example starter_example` |
 
 ---
 
@@ -182,14 +156,11 @@ cargo run -p starter_example --example starter_example
 
 **Location:** `examples/tokio_example`
 
-Demonstrates integration with the tokio async runtime:
-- Asynchronous causal inference
-- `EventHandler` pattern
-- `Arc<RwLock>` for shared state
+Asynchronous integration with the tokio runtime.
 
-```bash
-cargo run -p tokio_example --example tokio_example
-```
+| Example | Focus | Command |
+|---------|-------|---------|
+| Tokio | Async causal inference | `cargo run -p tokio_example --example tokio_example` |
 
 ---
 

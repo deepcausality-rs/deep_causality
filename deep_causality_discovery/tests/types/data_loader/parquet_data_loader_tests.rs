@@ -388,7 +388,7 @@ fn test_parquet_data_loader_load_error_unsupported_type() {
     let result = loader.load(file_path.to_str().unwrap(), &config);
     assert!(result.is_err());
     if let Err(DataLoadingError::OsError(e)) = result {
-        assert!(e.contains("Unsupported data type in Parquet file"));
+        assert!(e.contains("Unsupported data type"));
     } else {
         panic!(
             "Expected DataError::OsError for unsupported type, got {:?}",

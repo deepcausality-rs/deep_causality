@@ -14,10 +14,13 @@ cargo run -p medicine_examples --example <example_name>
 
 ## Examples Overview
 
-| Example | Domain | Description |
-|---------|--------|-------------|
-| [protein_folding](examples/protein_folding/README.md) | Biophysics | Non-Markovian protein dynamics with memory kernels |
-| [mri_tissue_classification](examples/mri_tissue_classification/README.md) | Medical Imaging | Topological tissue analysis for tumor detection |
+| Example                                                               | Domain | Description |
+|-----------------------------------------------------------------------|--------|-------------|
+| [aneurysm_risk](aneurysm_risk/README.md)                      | Cardiovascular | Aneurysm rupture risk via fluid fatigue accumulation |
+| [epilepsy](epilepsy/README.md)                               | Neurology | Virtual surgery planning using brain network digital twins |
+| [protein_folding](protein_folding/README.md)                 | Biophysics | Non-Markovian protein dynamics with memory kernels |
+| [tissue_classification](tissue_classification/README.md) | Medical Imaging | Topological tissue analysis for tumor detection |
+| [tumor_treatment](tumor_treatment/README.md)                 | Oncology | Optimizing TTFields therapy with Geometric Algebra |
 
 ---
 

@@ -4,8 +4,10 @@
  */
 
 mod errors;
+mod extensions;
 mod types;
 
 // Sparse type
 pub use crate::errors::SparseMatrixError;
+pub use crate::extensions::ext_hkt::CsrMatrixWitness;
 pub use crate::types::sparse_matrix::CsrMatrix;

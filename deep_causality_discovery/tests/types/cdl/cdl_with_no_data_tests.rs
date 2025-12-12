@@ -85,3 +85,45 @@ fn test_load_data_with_config_missing_path() {
 
     assert!(res.inner.is_err());
 }
+
+#[test]
+fn test_load_data_with_config_parquet_missing_path() {
+    use deep_causality_discovery::{DataLoaderConfig, ParquetConfig};
+
+    let parquet_config = ParquetConfig::default(); // default has no path
+    let config = DataLoaderConfig::Parquet(parquet_config);
+
+    let res = CdlBuilder::build().bind(|cdl| cdl.load_data_with_config(config.clone()));
+
+    assert!(res.inner.is_err());
+}
+
+#[test]
+fn test_load_data_with_config_csv_error() {
+    use deep_causality_discovery::{CsvConfig, DataLoaderConfig};
+
+    // Path pointing to non-existent file
+    let path = "non_existent_file.csv".to_string();
+    let csv_config = CsvConfig::new(true, b',', 0, None, Some(path), Some(1), vec![]);
+    let config = DataLoaderConfig::Csv(csv_config);
+
+    let res = CdlBuilder::build().bind(|cdl| cdl.load_data_with_config(config.clone()));
+
+    assert!(res.inner.is_err());
+}
+
+#[test]
+fn test_load_tensor_success() {
+    use deep_causality_tensor::CausalTensor;
+
+    // Create a 2x2 tensor
+    let tensor = CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2]).unwrap();
+
+    let res = CdlBuilder::build().bind(|cdl| cdl.load_tensor(tensor.clone()));
+
+    assert!(res.inner.is_ok());
+
+    let cdl_with_data = res.inner.unwrap();
+    assert_eq!(cdl_with_data.state.records_count, 2);
+    assert_eq!(cdl_with_data.state.tensor.shape(), &[2, 2]);
+}

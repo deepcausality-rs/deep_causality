@@ -45,3 +45,19 @@ fn test_causal_discovery_success() {
     let with_res = res.inner.unwrap();
     assert_eq!(with_res.state.records_count, 2);
 }
+
+#[test]
+fn test_causal_discovery_error() {
+    use deep_causality_discovery::CausalDiscoveryError;
+    use deep_causality_tensor::CausalTensorError;
+
+    let cdl = create_cdl_with_features();
+
+    let res = cdl.causal_discovery(|_| {
+        Err(CausalDiscoveryError::TensorError(
+            CausalTensorError::InvalidParameter("Mock Algo Failed".into()),
+        ))
+    });
+
+    assert!(res.inner.is_err());
+}

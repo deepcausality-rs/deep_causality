@@ -260,10 +260,18 @@ bazel test //...
 ## 📚 Documentation
 
 | Resource | Link |
-|----------|------|
+|-------|------|
 | API Reference | [docs.rs/deep_causality](https://docs.rs/deep_causality/latest/deep_causality/) |
-| Introduction | [README_INTRO.md](README_INTRO.md) |
-| Deep Dive | [README_DEEP_DIVE.md](README_DEEP_DIVE.md) |
+| Core | [docs/CORE.md](docs/CORE.md) |
+| HAFT | [docs/HAFT.md](docs/HAFT.md) |
+| Ethos | [docs/ETHOS.md](docs/ETHOS.md) |
+| Discovery | [docs/DISCOVERY.md](docs/DISCOVERY.md) |
+| Tensor | [docs/TENSOR.md](docs/TENSOR.md) |
+| Topology | [docs/TOPOLOGY.md](docs/TOPOLOGY.md) |
+| Physics | [docs/PHYSICS.md](docs/PHYSICS.md) |
+| Unified Math | [docs/UNIFIED_MATH.md](docs/UNIFORM_MATH.md) |
+| Introduction | [docs/INTRO.md](docs/INTRO.md) |
+| Deep Dive | [docs/DEEP_DIVE.md](docs/DEEP_DIVE.md) |
 | Architecture | [deepcausality.com/docs/architecture](https://deepcausality.com/docs/architecture/) |
 | Concepts | [deepcausality.com/docs/concepts](https://deepcausality.com/docs/concepts/) |
 | Changelog | [CHANGELOG.md](CHANGELOG.md) |

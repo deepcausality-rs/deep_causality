@@ -23,32 +23,32 @@ deep_causality_sparse = { path = "../../deep_causality_sparse" }
 
 [[example]]
 name = "maxwell_example"
-path = "examples/maxwell_example/main.rs"
+path = "maxwell_example/main.rs"
 
 [[example]]
 name = "grmhd_example"
-path = "examples/grmhd_example/main.rs"
+path = "grmhd_example/main.rs"
 
 [[example]]
 name = "geometric_tilt_example"
-path = "examples/geometric_tilt_example/main.rs"
+path = "geometric_tilt_example/main.rs"
 
 [[example]]
 name = "algebraic_scanner"
-path = "examples/algebraic_scanner/main.rs"
+path = "algebraic_scanner/main.rs"
 
 [[example]]
 name = "multi_physics_pipeline"
-path = "examples/multi_physics_pipeline/main.rs"
+path = "multi_physics_pipeline/main.rs"
 
 [[example]]
 name = "quantum_counterfactual"
-path = "examples/quantum_counterfactual/main.rs"
+path = "quantum_counterfactual/main.rs"
 
 [[example]]
 name = "ikkt_matrix_model"
-path = "examples/ikkt_matrix_model/main.rs"
+path = "ikkt_matrix_model/main.rs"
 
 [[example]]
 name = "gravitational_wave"
-path = "examples/gravitational_wave/main.rs"
+path = "gravitational_wave/main.rs"

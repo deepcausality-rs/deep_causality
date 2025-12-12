@@ -46,3 +46,22 @@ fn test_feature_select_error() {
     let res = cdl.feature_select(|_t| Err(MrmrError::InvalidInput("Err".into())));
     assert!(res.inner.is_err());
 }
+
+#[test]
+fn test_feature_select_invalid_indices_fallback() {
+    let cdl = create_cdl_with_cleaned_data();
+    // Tensor shape [2, 2]
+
+    // Select index 99 (out of bounds)
+    let res = cdl.feature_select(|_t| Ok(MrmrResult::new(vec![(99, 0.5)])));
+
+    assert!(res.inner.is_ok());
+    let with_feats = res.inner.unwrap();
+    // Shape should be [2, 1]
+    assert_eq!(with_feats.state.tensor.shape(), &[2, 1]);
+
+    let data = with_feats.state.tensor.as_slice();
+    // Should be filled with None
+    assert_eq!(data[0], None);
+    assert_eq!(data[1], None);
+}

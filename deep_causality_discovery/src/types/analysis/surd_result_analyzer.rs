@@ -25,17 +25,18 @@ impl ProcessResultAnalyzer for SurdResultAnalyzer {
         messages.push("--- Causal Analysis Report ---".to_string());
 
         // Information Leak
-        messages.push(format!(
-            "Information Leak: {:.3} bits",
-            surd_result.info_leak()
-        ));
-        if surd_result.info_leak() > 0.5 {
+        let info_leak = surd_result.info_leak();
+        messages.push(format!("\nInformation Leak: {:.3} bits", info_leak));
+        if info_leak >= 0.5 {
             messages.push(
                 "  (High information leak suggests significant unobserved factors or randomness.)"
                     .to_string(),
             );
         } else {
-            messages.push("  (Low information leak suggests observed factors explain most of the target's behavior.)".to_string());
+            messages.push(
+                "  (Low information leak suggests observed factors explain most of the target's behavior.)"
+                    .to_string(),
+            );
         }
 
         // Synergistic Information
@@ -44,7 +45,7 @@ impl ProcessResultAnalyzer for SurdResultAnalyzer {
         for (vars, &value) in surd_result.synergistic_info() {
             if value >= config.synergy_threshold() {
                 messages.push(format!(
-                    "  Strong synergy from {{{}}}: {:.3} bits. Recommended: Causaloid Collection with AggregateLogic::All (Conjunction).",
+                    "  Strong synergy from {{{}}}: {:.3} bits.",
                     format_variables(vars),
                     value
                 ));
@@ -61,7 +62,7 @@ impl ProcessResultAnalyzer for SurdResultAnalyzer {
         for (vars, &value) in surd_result.mutual_info() {
             if vars.len() == 1 && value >= config.unique_threshold() {
                 messages.push(format!(
-                    "  Strong unique influence from {{{}}}: {:.3} bits. Recommended: Direct edge in CausaloidGraph.",
+                    "  Strong unique influence from {{{}}}: {:.3} bits.",
                     format_variables(vars),
                     value
                 ));
@@ -78,7 +79,7 @@ impl ProcessResultAnalyzer for SurdResultAnalyzer {
         for (vars, &value) in surd_result.redundant_info() {
             if value >= config.redundancy_threshold() {
                 messages.push(format!(
-                    "  Strong redundant influence from {{{}}}: {:.3} bits. Recommended: Causaloid Collection with AggregateLogic::Any (Disjunction).",
+                    "  Strong redundant influence from {{{}}}: {:.3} bits.",
                     format_variables(vars),
                     value
                 ));

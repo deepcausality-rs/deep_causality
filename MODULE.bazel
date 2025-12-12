@@ -7,7 +7,7 @@ module(name = "deep_causality")
 bazel_dep(name = "aspect_bazel_lib", version = "2.22.0")
 bazel_dep(name = "bazel_skylib", version = "1.8.2")
 bazel_dep(name = "platforms", version = "1.0.0")
-bazel_dep(name = "rules_rust", version = "0.68.0")
+bazel_dep(name = "rules_rust", version = "0.68.1")
 
 ###############################################################################
 # Rust toolchain
@@ -15,7 +15,7 @@ bazel_dep(name = "rules_rust", version = "0.68.0")
 ###############################################################################
 RUST_EDITION = "2024"
 
-RUST_VERSION = "1.91.0"
+RUST_VERSION = "1.92.0"
 
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
