@@ -30,7 +30,7 @@ alloc = []
 
 [dependencies.deep_causality_core]
 path = "../deep_causality_core"
-version ="0.0.1"
+version = "0.0.2"
 
 [dependencies.deep_causality_haft]
 path = "../deep_causality_haft"
@@ -38,7 +38,7 @@ version = "0.2.4"
 
 [dependencies.deep_causality_multivector]
 path = "../deep_causality_multivector"
-version = "0.2.0"
+version = "0.2.1"
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
@@ -50,4 +50,4 @@ version = "0.2.0"
 
 [dependencies.deep_causality_topology]
 path = "../deep_causality_topology"
-version = "0.2.0"
+version = "0.2.1"
