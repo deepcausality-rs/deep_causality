@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.1.0...deep_causality_topology-v0.2.0) - 2025-12-12
+
+### Added
+
+- *(deep_causality_physics)* Added generalized_master_equation_kernel to dynamic module.
+- *(deep_causality_topology)* Added Regge Calculus Curvature and tests. Improved error handling by updating the  TopologyError.  Added SimplicialComplexBuilder for constructing correct SimplicialComplex.
+- *(deep_causality_topology)* Removed non-std config. Updated Bazel config.
+
+### Fixed
+
+- *(deep_causality_physics)* Fixed a subliminal bug around Laplacian and  Boundary Operator Indexing.
+
+### Other
+
+- Added a lot more examples across physics and medicine.
+- Added two new physics exmples.
+- *(deep_causality_topology)* Improved test coverage.
+- *(deep_causality_topology)* Improved test coverage.
+- *(deep_causality_topology)* Improved test coverage.
+- *(deep_causality_topology)* Improved test coverage.
+
 ## [0.1.0](https://github.com/marvin-hansen/deep_causality/releases/tag/deep_causality_topology-v0.1.0) - 2025-12-03
 
 ### Added

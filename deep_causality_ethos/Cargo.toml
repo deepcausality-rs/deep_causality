@@ -3,7 +3,7 @@
 
 [package]
 name = "deep_causality_ethos"
-version = "0.1.0"
+version = "0.1.1"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -37,7 +37,7 @@ exclude = [
 
 [dependencies.deep_causality]
 path = "../deep_causality"
-version = "0.11"
+version = "0.12"
 
 [dependencies.ultragraph]
 path = "../ultragraph"
