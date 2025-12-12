@@ -3,7 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Applicative, BoundedAdjunction, BoundedComonad, Foldable, Functor, Monad};
+use deep_causality_haft::{
+    Applicative, BoundedAdjunction, BoundedComonad, Foldable, Functor, Monad,
+};
 use deep_causality_sparse::{CsrMatrix, CsrMatrixWitness};
 
 #[test]
@@ -41,7 +43,7 @@ fn test_applicative_pure() {
 fn test_applicative_apply_broadcast() {
     // Function wrapped in 1x1 matrix
     let f_matrix = <CsrMatrixWitness as Applicative<CsrMatrixWitness>>::pure(|x: f64| x * 2.0);
-    
+
     // Data matrix
     let triplets = vec![(0, 0, 10.0), (0, 1, 20.0)];
     let data_matrix = CsrMatrix::from_triplets(1, 2, &triplets).unwrap();
@@ -57,15 +59,15 @@ fn test_applicative_apply_fallback() {
     // Function matrix NOT 1x1 (invalid for broadcast in this implementation)
     // We cannot construct directly due to private fields and lack of Zero/Copy/PartialEq for functions.
     // Use fmap to create it from a valid matrix.
-    
+
     let triplets = vec![(0, 0, 1.0), (0, 1, 2.0)];
     let base_matrix = CsrMatrix::from_triplets(1, 2, &triplets).unwrap();
-    
+
     let func_ptr: fn(f64) -> f64 = |x| x * 2.0;
-    
+
     // Map f64 -> fn(f64)->f64
     let f_matrix = <CsrMatrixWitness as Functor<CsrMatrixWitness>>::fmap(base_matrix, |_| func_ptr);
-    
+
     let triplets_data = vec![(0, 0, 10.0), (0, 1, 20.0)];
     let data_matrix = CsrMatrix::from_triplets(1, 2, &triplets_data).unwrap();
 
@@ -97,7 +99,7 @@ fn test_monad_bind() {
 fn test_comonad_extract() {
     let triplets = vec![(0, 0, 99.0)];
     let matrix = CsrMatrix::from_triplets(1, 1, &triplets).unwrap();
-    
+
     let val = <CsrMatrixWitness as BoundedComonad<CsrMatrixWitness>>::extract(&matrix);
     assert_eq!(val, 99.0);
 }
@@ -114,12 +116,12 @@ fn test_comonad_extend() {
     // Matrix [10.0, 20.0]
     let triplets = vec![(0, 0, 10.0), (0, 1, 20.0)];
     let matrix = CsrMatrix::from_triplets(1, 2, &triplets).unwrap();
-    
+
     // Extend: sum of all values in the matrix
     let extended = <CsrMatrixWitness as BoundedComonad<CsrMatrixWitness>>::extend(&matrix, |m| {
         m.values().iter().sum::<f64>()
     });
-    
+
     // Sum is 30.0. Since original had 2 values, we expect [30.0, 30.0].
     assert_eq!(extended.values(), &vec![30.0, 30.0]);
     assert_eq!(extended.shape(), (1, 2));
@@ -131,13 +133,17 @@ fn test_adjunction_units() {
     // ctx shape (2,2), value 5.0
     let ctx = (2, 2);
     let val = 5.0;
-    
-    let outer = <CsrMatrixWitness as BoundedAdjunction<CsrMatrixWitness, CsrMatrixWitness, (usize, usize)>>::unit(&ctx, val);
-    
+
+    let outer = <CsrMatrixWitness as BoundedAdjunction<
+        CsrMatrixWitness,
+        CsrMatrixWitness,
+        (usize, usize),
+    >>::unit(&ctx, val);
+
     // Outer should be 1x1 wrapper
     assert_eq!(outer.shape(), (1, 1));
     assert_eq!(outer.values().len(), 1);
-    
+
     let inner = &outer.values()[0];
     // Inner should be created with ctx shape (2,2) and value at 0,0
     assert_eq!(inner.shape(), (2, 2));
@@ -149,8 +155,12 @@ fn test_adjunction_unit_invalid_shape() {
     // (0,0) shape means no elements. (0,0, val) would be out of bounds.
     let ctx = (0, 0);
     let val = 5.0;
-    
-    let outer = <CsrMatrixWitness as BoundedAdjunction<CsrMatrixWitness, CsrMatrixWitness, (usize, usize)>>::unit(&ctx, val);
+
+    let outer = <CsrMatrixWitness as BoundedAdjunction<
+        CsrMatrixWitness,
+        CsrMatrixWitness,
+        (usize, usize),
+    >>::unit(&ctx, val);
     // Should contain an empty inner matrix because from_triplets failed
     let inner = &outer.values()[0];
     assert_eq!(inner.values().len(), 0);
@@ -162,9 +172,17 @@ fn test_adjunction_counit() {
     // Use unit to create the nested structure properly (bypasses direct from_triplets for outer matrix which needs Copy)
     let ctx = (1, 1);
     let val = 7.0;
-    let outer = <CsrMatrixWitness as BoundedAdjunction<CsrMatrixWitness, CsrMatrixWitness, (usize, usize)>>::unit(&ctx, val);
+    let outer = <CsrMatrixWitness as BoundedAdjunction<
+        CsrMatrixWitness,
+        CsrMatrixWitness,
+        (usize, usize),
+    >>::unit(&ctx, val);
 
-    let result = <CsrMatrixWitness as BoundedAdjunction<CsrMatrixWitness, CsrMatrixWitness, (usize, usize)>>::counit(&ctx, outer);
+    let result = <CsrMatrixWitness as BoundedAdjunction<
+        CsrMatrixWitness,
+        CsrMatrixWitness,
+        (usize, usize),
+    >>::counit(&ctx, outer);
     assert_eq!(result, 7.0);
 }
 
@@ -174,13 +192,13 @@ fn test_adjunction_left_adjunct() {
     // a = 3.0
     let ctx = (1, 1);
     let a = 3.0;
-    
-    let result_matrix = <CsrMatrixWitness as BoundedAdjunction<CsrMatrixWitness, CsrMatrixWitness, (usize, usize)>>::left_adjunct(
-        &ctx, 
-        a, 
-        |inner_mat| inner_mat.values()[0] * 10.0
-    );
-    
+
+    let result_matrix = <CsrMatrixWitness as BoundedAdjunction<
+        CsrMatrixWitness,
+        CsrMatrixWitness,
+        (usize, usize),
+    >>::left_adjunct(&ctx, a, |inner_mat| inner_mat.values()[0] * 10.0);
+
     // result_matrix should be 1x1 containing 30.0.
     assert_eq!(result_matrix.values()[0], 30.0);
 }
@@ -190,16 +208,16 @@ fn test_adjunction_right_adjunct() {
     // right_adjunct: la -> counit(fmap(la, f))
     let triplets = vec![(0, 0, 2.0)];
     let la = CsrMatrix::from_triplets(1, 1, &triplets).unwrap();
-    
+
     // f turns 2.0 into [[20.0]] (inner matrix)
     let f = |x: f64| CsrMatrix::from_triplets(1, 1, &[(0, 0, x * 10.0)]).unwrap();
-    
-    let result = <CsrMatrixWitness as BoundedAdjunction<CsrMatrixWitness, CsrMatrixWitness, (usize, usize)>>::right_adjunct(
-        &(1,1),
-        la,
-        f
-    );
-    
+
+    let result = <CsrMatrixWitness as BoundedAdjunction<
+        CsrMatrixWitness,
+        CsrMatrixWitness,
+        (usize, usize),
+    >>::right_adjunct(&(1, 1), la, f);
+
     // Result is B (f64) -> 20.0
     assert_eq!(result, 20.0);
 }
