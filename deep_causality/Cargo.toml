@@ -3,7 +3,7 @@
 
 [package]
 name = "deep_causality"
-version = "0.12.0"
+version = "0.12.1"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -51,7 +51,7 @@ version = "0.1"
 
 [dependencies.deep_causality_core]
 path = "../deep_causality_core"
-version = "0.0.1"
+version = "0.0.2"
 default-features = true
 
 [dependencies.deep_causality_data_structures]
