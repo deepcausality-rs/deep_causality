@@ -21,7 +21,6 @@ exclude = [
     ".bazelrc",
     "tests/**/*",
 ]
-publish = false
 
 [features]
 default = ["std"]
