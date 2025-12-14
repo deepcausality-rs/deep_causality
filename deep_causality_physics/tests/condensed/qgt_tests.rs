@@ -5,8 +5,8 @@
 
 use deep_causality_num::Complex;
 use deep_causality_physics::{
-    Energy, Length, QuantumEigenvector, QuantumMetric, QuantumVelocity,
-    effective_band_drude_weight_kernel, quantum_geometric_tensor_kernel,
+    effective_band_drude_weight_kernel, quantum_geometric_tensor_kernel, quasi_qgt_kernel, Energy,
+    Length, QuantumEigenvector, QuantumMetric, QuantumVelocity,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -76,6 +76,44 @@ fn test_qgt_massive_dirac_k0() {
 }
 
 #[test]
+fn test_quasi_qgt_kernel_identical_to_qgt() {
+    // quasi_qgt_kernel is a wrapper around quantum_geometric_tensor_kernel
+    // Should return identical results
+    let energies = CausalTensor::new(vec![0.0, 1.0], vec![2]).unwrap();
+    let u_data = vec![Complex::new(1.0, 0.0); 4];
+    let u = QuantumEigenvector::new(CausalTensor::new(u_data.clone(), vec![2, 2]).unwrap());
+    let v_data = vec![Complex::new(0.1, 0.2); 4];
+    let v = QuantumVelocity::new(CausalTensor::new(v_data.clone(), vec![2, 2]).unwrap());
+
+    let qgt_result = quantum_geometric_tensor_kernel(&energies, &u, &v, &v, 0, 1e-12);
+    let quasi_result = quasi_qgt_kernel(&energies, &u, &v, &v, 0, 1e-12);
+
+    assert!(qgt_result.is_ok());
+    assert!(quasi_result.is_ok());
+
+    let qgt = qgt_result.unwrap();
+    let quasi = quasi_result.unwrap();
+
+    assert!((qgt.re - quasi.re).abs() < 1e-12);
+    assert!((qgt.im - quasi.im).abs() < 1e-12);
+}
+
+#[test]
+fn test_qgt_band_1() {
+    // Test QGT for band 1 instead of band 0
+    let energies = CausalTensor::new(vec![0.0, 2.0], vec![2]).unwrap();
+    let u = QuantumEigenvector::new(
+        CausalTensor::new(vec![Complex::new(1.0, 0.0); 4], vec![2, 2]).unwrap(),
+    );
+    let v = QuantumVelocity::new(
+        CausalTensor::new(vec![Complex::new(0.5, 0.0); 4], vec![2, 2]).unwrap(),
+    );
+
+    let res = quantum_geometric_tensor_kernel(&energies, &u, &v, &v, 1, 1e-12);
+    assert!(res.is_ok());
+}
+
+#[test]
 fn test_effective_band_drude_weight_kernel_physical() {
     // Case 1: Physical units input (a=1.0)
     let energy_n = Energy::new(1.0).unwrap();
@@ -115,3 +153,106 @@ fn test_effective_band_drude_weight_kernel_dimensionless() {
     // Physical = 2.5 * a^2 = 2.5 * 4.0 = 10.0
     assert!((bdw.value() - 10.0).abs() < 1e-10);
 }
+
+// ============================================================================
+// Error Path Tests
+// ============================================================================
+
+#[test]
+fn test_qgt_error_eigenvector_not_rank2() {
+    let energies = CausalTensor::new(vec![0.0, 1.0], vec![2]).unwrap();
+    // Wrong shape: 1D instead of 2D
+    let u = QuantumEigenvector::new(CausalTensor::new(vec![Complex::new(1.0, 0.0); 4], vec![4]).unwrap());
+    let v = QuantumVelocity::new(
+        CausalTensor::new(vec![Complex::new(0.0, 0.0); 4], vec![2, 2]).unwrap(),
+    );
+
+    let res = quantum_geometric_tensor_kernel(&energies, &u, &v, &v, 0, 1e-12);
+    assert!(res.is_err());
+}
+
+#[test]
+fn test_qgt_error_band_index_out_of_bounds() {
+    let energies = CausalTensor::new(vec![0.0, 1.0], vec![2]).unwrap();
+    let u = QuantumEigenvector::new(
+        CausalTensor::new(vec![Complex::new(1.0, 0.0); 4], vec![2, 2]).unwrap(),
+    );
+    let v = QuantumVelocity::new(
+        CausalTensor::new(vec![Complex::new(0.0, 0.0); 4], vec![2, 2]).unwrap(),
+    );
+
+    // Band index 5 is out of bounds for 2 bands
+    let res = quantum_geometric_tensor_kernel(&energies, &u, &v, &v, 5, 1e-12);
+    assert!(res.is_err());
+}
+
+#[test]
+fn test_qgt_error_eigenvalues_length_mismatch() {
+    // 3 eigenvalues but 2 eigenvector columns
+    let energies = CausalTensor::new(vec![0.0, 1.0, 2.0], vec![3]).unwrap();
+    let u = QuantumEigenvector::new(
+        CausalTensor::new(vec![Complex::new(1.0, 0.0); 4], vec![2, 2]).unwrap(),
+    );
+    let v = QuantumVelocity::new(
+        CausalTensor::new(vec![Complex::new(0.0, 0.0); 4], vec![2, 2]).unwrap(),
+    );
+
+    let res = quantum_geometric_tensor_kernel(&energies, &u, &v, &v, 0, 1e-12);
+    assert!(res.is_err());
+}
+
+#[test]
+fn test_effective_band_drude_weight_error_non_finite_curvature() {
+    let energy_n = Energy::new(1.0).unwrap();
+    let energy_0 = Energy::new(0.0).unwrap();
+    let curvature = f64::INFINITY; // Non-finite
+    let metric = QuantumMetric::new(1.0).unwrap();
+    let lattice = Length::new(1.0).unwrap();
+
+    let res = effective_band_drude_weight_kernel(energy_n, energy_0, curvature, metric, lattice);
+    assert!(res.is_err());
+}
+
+#[test]
+fn test_effective_band_drude_weight_error_nan_curvature() {
+    let energy_n = Energy::new(1.0).unwrap();
+    let energy_0 = Energy::new(0.0).unwrap();
+    let curvature = f64::NAN; // Non-finite
+    let metric = QuantumMetric::new(1.0).unwrap();
+    let lattice = Length::new(1.0).unwrap();
+
+    let res = effective_band_drude_weight_kernel(energy_n, energy_0, curvature, metric, lattice);
+    assert!(res.is_err());
+}
+
+#[test]
+fn test_effective_band_drude_weight_error_negative_lattice() {
+    let energy_n = Energy::new(1.0).unwrap();
+    let energy_0 = Energy::new(0.0).unwrap();
+    let curvature = 0.5;
+    let metric = QuantumMetric::new(1.0).unwrap();
+    // Length::new validates positive, so we need to use a workaround
+    // Actually Length::new only validates >= 0, so 0 should fail in the kernel
+    let lattice = Length::new(0.0).unwrap(); // Zero should fail
+
+    let res = effective_band_drude_weight_kernel(energy_n, energy_0, curvature, metric, lattice);
+    assert!(res.is_err());
+}
+
+#[test]
+fn test_effective_band_drude_weight_zero_gap() {
+    // Same energy → zero gap
+    let energy_n = Energy::new(1.0).unwrap();
+    let energy_0 = Energy::new(1.0).unwrap();
+    let curvature = 0.5;
+    let metric = QuantumMetric::new(2.0).unwrap();
+    let lattice = Length::new(1.0).unwrap();
+
+    let res = effective_band_drude_weight_kernel(energy_n, energy_0, curvature, metric, lattice);
+    assert!(res.is_ok());
+
+    // Gap = 0, Geom = 0, Total = 0.5 * 1 = 0.5
+    let bdw = res.unwrap();
+    assert!((bdw.value() - 0.5).abs() < 1e-10);
+}
+
