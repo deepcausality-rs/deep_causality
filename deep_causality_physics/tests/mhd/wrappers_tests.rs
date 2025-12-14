@@ -5,8 +5,7 @@
 
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{
-    Density, PhysicalField, alfven_speed, magnetic_pressure,
-    magnetic_reconnection_rate,
+    Density, PhysicalField, alfven_speed, magnetic_pressure, magnetic_reconnection_rate,
 };
 
 #[test]

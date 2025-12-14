@@ -179,9 +179,9 @@ pub fn calculate_energy_momentum(state: GrmhdState) -> PropagatingEffect<GrmhdSt
     // (Indices: 0=t, 1=x, 2=y, 3=z)
     let b = state.magnetic_field;
     let mut f_data = vec![0.0; 16];
-    f_data[1 * 4 + 2] = b;  // F^12
+    f_data[4 + 2] = b; // F^12
     f_data[2 * 4 + 1] = -b; // F^21
-    
+
     let f_tensor = match CausalTensor::new(f_data, vec![4, 4]) {
         Ok(t) => t,
         Err(_) => return PropagatingEffect::pure(state),
@@ -189,20 +189,22 @@ pub fn calculate_energy_momentum(state: GrmhdState) -> PropagatingEffect<GrmhdSt
 
     // Calculate T^uv
     let t_effect = energy_momentum_tensor_em(&f_tensor, g_uv);
-    
+
     match t_effect.value.into_value() {
         Some(t_tensor) => {
             // Extract energy density T^00
             let energy_density = t_tensor.data()[0];
-             println!("   -> EM Energy Density (T^00): {:.4}", energy_density);
-             
-             PropagatingEffect::pure(GrmhdState {
-                 em_energy_density: energy_density,
-                 ..state
-             })
+            println!("   -> EM Energy Density (T^00): {:.4}", energy_density);
+
+            PropagatingEffect::pure(GrmhdState {
+                em_energy_density: energy_density,
+                ..state
+            })
         }
-         None => PropagatingEffect::from_error(deep_causality::CausalityError(
-            deep_causality::CausalityErrorEnum::Custom("Energy Momentum Tensor calculation failed".into()),
+        None => PropagatingEffect::from_error(deep_causality::CausalityError(
+            deep_causality::CausalityErrorEnum::Custom(
+                "Energy Momentum Tensor calculation failed".into(),
+            ),
         )),
     }
 }

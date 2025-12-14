@@ -77,12 +77,16 @@ Multi-physics simulations using Geometric Algebra, Tensor operations, and Topolo
 
 | Example | Domain | Command |
 |---------|--------|---------|
+| Bernoulli Flow Network | Fluid Dynamics | `cargo run -p physics_examples --example bernoulli_flow_network` |
+| Carnot Cycle Engine | Thermodynamics | `cargo run -p physics_examples --example carnot_cycle_engine` |
+| Laser Resonator Stability | Optics | `cargo run -p physics_examples --example laser_resonator_stability` |
 | Maxwell's Unification | Electromagnetism | `cargo run -p physics_examples --example maxwell_example` |
 | GRMHD | Relativity | `cargo run -p physics_examples --example grmhd_example` |
 | Geometric Tilt | Robotics/IMU | `cargo run -p physics_examples --example geometric_tilt_example` |
 | Algebraic Scanner | Abstract Algebra | `cargo run -p physics_examples --example algebraic_scanner` |
 | Multi-Physics Pipeline | Particle Physics | `cargo run -p physics_examples --example multi_physics_pipeline` |
 | Quantum Counterfactual | Quantum | `cargo run -p physics_examples --example quantum_counterfactual` |
+| Quantum Geometric Tensor | Condensed Matter | `cargo run -p physics_examples --example quantum_geometric_tensor` |
 | IKKT Matrix Model | Quantum Gravity | `cargo run -p physics_examples --example ikkt_matrix_model` |
 | Gravitational Wave | Relativity | `cargo run -p physics_examples --example gravitational_wave` |
 
