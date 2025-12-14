@@ -90,16 +90,10 @@ pub fn energy_momentum_tensor_em_kernel(
         )));
     }
 
-    // 1. Compute covariant F_alpha_beta = g_alpha_mu * g_beta_nu * F^mu_nu
-    // Lower indices.
-    // F_lower = g * F * g^T
-    // Let's use matmul: (g * F) * g
-    // g [a, m], F [m, n]. -> [a, n].
-    // Then * g [b, n]^T? -> * g [n, b]. -> [a, b].
+    // 1. Compute covariant F_αβ = g_αμ * F^μν * g_νβ
+    // In matrix notation, this is F_lower = g * F * g
     let gf = metric.matmul(em_tensor)?;
-    let metric_t_op = EinSumOp::<f64>::transpose(metric.clone(), vec![1, 0]);
-    let metric_t = CausalTensor::ein_sum(&metric_t_op)?;
-    let f_lower = gf.matmul(&metric_t)?;
+    let f_lower = gf.matmul(metric)?;
 
     // 2. Compute Scalar F^2 = F^ab * F_ab (Contraction)
     // Contract em_tensor [a, b] with f_lower [a, b]

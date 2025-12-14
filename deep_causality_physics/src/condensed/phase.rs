@@ -84,7 +84,11 @@ pub fn ginzburg_landau_free_energy_kernel(
             .sum::<f64>()
     } else {
         // A = 0 case
-        gradient_psi.data().iter().map(|c| c.norm()).sum::<f64>()
+        gradient_psi
+            .data()
+            .iter()
+            .map(|c| c.norm_sqr())
+            .sum::<f64>()
     };
 
     let total = potential_term + kinetic_norm_sq;

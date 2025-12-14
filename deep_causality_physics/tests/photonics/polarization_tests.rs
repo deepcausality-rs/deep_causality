@@ -59,14 +59,15 @@ fn test_dop() {
     // Fully polarized [1, 1, 0, 0]
     let s_data = vec![1.0, 1.0, 0.0, 0.0];
     let s_tensor = CausalTensor::new(s_data, vec![4]).unwrap();
-    let stokes = StokesVector::new(s_tensor);
+    let stokes = StokesVector::new(s_tensor).unwrap();
 
     let res = degree_of_polarization_kernel(&stokes);
     assert!(res.is_ok());
     assert!((res.unwrap().value() - 1.0).abs() < 1e-10);
 
     // Unpolarized [1, 0, 0, 0]
-    let s_unpol = StokesVector::new(CausalTensor::new(vec![1.0, 0.0, 0.0, 0.0], vec![4]).unwrap());
+    let s_unpol =
+        StokesVector::new(CausalTensor::new(vec![1.0, 0.0, 0.0, 0.0], vec![4]).unwrap()).unwrap();
     let res2 = degree_of_polarization_kernel(&s_unpol);
     assert!((res2.unwrap().value() - 0.0).abs() < 1e-10);
 }

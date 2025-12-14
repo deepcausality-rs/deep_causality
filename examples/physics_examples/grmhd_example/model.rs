@@ -184,7 +184,11 @@ pub fn calculate_energy_momentum(state: GrmhdState) -> PropagatingEffect<GrmhdSt
 
     let f_tensor = match CausalTensor::new(f_data, vec![4, 4]) {
         Ok(t) => t,
-        Err(_) => return PropagatingEffect::pure(state),
+        Err(e) => {
+            return PropagatingEffect::from_error(deep_causality::CausalityError(
+                deep_causality::CausalityErrorEnum::Custom(e.to_string()),
+            ));
+        }
     };
 
     // Calculate T^uv

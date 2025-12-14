@@ -122,7 +122,7 @@ pub fn stokes_from_jones_kernel(jones: &JonesVector) -> Result<StokesVector, Phy
     let stokes_data = vec![s0, s1, s2, s3];
     let stokes_tensor = CausalTensor::new(stokes_data, vec![4])?;
 
-    Ok(StokesVector::new(stokes_tensor))
+    StokesVector::new(stokes_tensor)
 }
 
 /// Calculates the Degree of Polarization (DOP) from a Stokes vector.

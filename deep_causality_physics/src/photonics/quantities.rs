@@ -163,9 +163,27 @@ impl JonesVector {
 pub struct StokesVector(CausalTensor<f64>);
 
 impl StokesVector {
-    pub fn new(tensor: CausalTensor<f64>) -> Self {
-        Self(tensor)
+    pub fn new(tensor: CausalTensor<f64>) -> Result<Self, PhysicsError> {
+        if tensor.shape() != [4] {
+            return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+                "StokesVector must be a 4-element tensor".into(),
+            )));
+        }
+        let s = tensor.data();
+        let s0_sq = s[0] * s[0];
+        let s_vec_sq = s[1] * s[1] + s[2] * s[2] + s[3] * s[3];
+
+        if s0_sq < s_vec_sq {
+            return Err(PhysicsError::new(
+                PhysicsErrorEnum::PhysicalInvariantBroken(
+                    "StokesVector invariant violated: S0^2 < S1^2 + S2^2 + S3^2".into(),
+                ),
+            ));
+        }
+
+        Ok(Self(tensor))
     }
+
     pub fn inner(&self) -> &CausalTensor<f64> {
         &self.0
     }

@@ -143,7 +143,8 @@ fn test_wrapper_jones_rotation() {
 #[test]
 fn test_wrapper_degree_of_polarization() {
     // Fully polarized light
-    let stokes = StokesVector::new(CausalTensor::new(vec![1.0, 1.0, 0.0, 0.0], vec![4]).unwrap());
+    let stokes =
+        StokesVector::new(CausalTensor::new(vec![1.0, 1.0, 0.0, 0.0], vec![4]).unwrap()).unwrap();
 
     let result = degree_of_polarization(&stokes);
     assert!(result.is_ok());
@@ -157,7 +158,8 @@ fn test_wrapper_degree_of_polarization() {
 #[test]
 fn test_wrapper_degree_of_polarization_partial() {
     // Partially polarized light
-    let stokes = StokesVector::new(CausalTensor::new(vec![1.0, 0.5, 0.0, 0.0], vec![4]).unwrap());
+    let stokes =
+        StokesVector::new(CausalTensor::new(vec![1.0, 0.5, 0.0, 0.0], vec![4]).unwrap()).unwrap();
 
     let result = degree_of_polarization(&stokes);
     assert!(result.is_ok());
