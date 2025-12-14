@@ -6,6 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 publish = false
 
+
 [lib]
 path = "no_lib.rs"
 
@@ -22,20 +23,44 @@ deep_causality_sparse = { path = "../../deep_causality_sparse" }
 
 
 [[example]]
-name = "maxwell_example"
-path = "maxwell_example/main.rs"
+name = "algebraic_scanner"
+path = "algebraic_scanner/main.rs"
 
 [[example]]
-name = "grmhd_example"
-path = "grmhd_example/main.rs"
+name = "bernoulli_flow_network"
+path = "bernoulli_flow_network/main.rs"
+
+[[example]]
+name = "carnot_cycle_engine"
+path = "carnot_cycle_engine/main.rs"
+
+[[example]]
+name = "event_horizon_probe"
+path = "event_horizon_probe/main.rs"
 
 [[example]]
 name = "geometric_tilt_example"
 path = "geometric_tilt_example/main.rs"
 
 [[example]]
-name = "algebraic_scanner"
-path = "algebraic_scanner/main.rs"
+name = "gravitational_wave"
+path = "gravitational_wave/main.rs"
+
+[[example]]
+name = "grmhd_example"
+path = "grmhd_example/main.rs"
+
+[[example]]
+name = "ikkt_matrix_model"
+path = "ikkt_matrix_model/main.rs"
+
+[[example]]
+name = "laser_resonator_stability"
+path = "laser_resonator_stability/main.rs"
+
+[[example]]
+name = "maxwell_example"
+path = "maxwell_example/main.rs"
 
 [[example]]
 name = "multi_physics_pipeline"
@@ -46,9 +71,5 @@ name = "quantum_counterfactual"
 path = "quantum_counterfactual/main.rs"
 
 [[example]]
-name = "ikkt_matrix_model"
-path = "ikkt_matrix_model/main.rs"
-
-[[example]]
-name = "gravitational_wave"
-path = "gravitational_wave/main.rs"
+name = "quantum_geometric_tensor"
+path = "quantum_geometric_tensor/main.rs"

@@ -21,6 +21,32 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "condensed",
+    srcs = glob([
+        "condensed/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_physics",
+        # Internal dependencies
+        "//deep_causality_core",
+        "//deep_causality_multivector",
+        "//deep_causality_haft",
+        "//deep_causality_num",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_test_suite(
     name = "constants",
     srcs = glob([
         "constants/*_tests.rs",
@@ -148,6 +174,30 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "mhd",
+    srcs = glob([
+        "mhd/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_physics",
+        # Internal dependencies
+        "//deep_causality_core",
+        "//deep_causality_multivector",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_test_suite(
     name = "nuclear",
     srcs = glob([
         "nuclear/*_tests.rs",
@@ -164,6 +214,29 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_physics",
         # Internal dependencies
+    ],
+)
+
+rust_test_suite(
+    name = "photonics",
+    srcs = glob([
+        "photonics/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_physics",
+        # Internal dependencies
+        "//deep_causality_core",
+        "//deep_causality_num",
+        "//deep_causality_tensor",
     ],
 )
 

@@ -35,3 +35,11 @@ fn test_remove_edge_err() {
     let res = context.remove_edge(1, 2);
     assert!(res.is_err());
 }
+
+#[test]
+fn test_remove_node_err() {
+    let mut context = get_context();
+    let id = 999;
+    let res = context.remove_node(id);
+    assert!(res.is_err());
+}

@@ -65,7 +65,11 @@ fn main() {
             model::calculate_lorentz_force(state.into_value().unwrap_or_default())
         })
         .bind(|state, _, _| {
-            println!("\n[Step 4] Stability Analysis...");
+            println!("\n[Step 4] GRMHD Coupling: Calculating EM Stress-Energy...");
+            model::calculate_energy_momentum(state.into_value().unwrap_or_default())
+        })
+        .bind(|state, _, _| {
+            println!("\n[Step 5] Stability Analysis...");
             model::analyze_stability(state.into_value().unwrap_or_default())
         });
 
@@ -88,8 +92,12 @@ fn main() {
     );
     println!("  Selected Metric:      {}", final_state.metric_label);
     println!("  Lorentz Force F:      {:.4}", final_state.lorentz_force);
+    println!(
+        "  EM Energy Density:    {:.4}",
+        final_state.em_energy_density
+    );
     println!("  Stability Status:     {}", final_state.stability_status);
     println!();
-    println!("Data Flow: Spacetime Geometry → Coupling → Plasma Physics");
+    println!("Data Flow: Spacetime Geometry → Coupling → Plasma Physics → Gravity Feedback");
     println!("============================================================");
 }

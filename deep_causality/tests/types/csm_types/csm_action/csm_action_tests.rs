@@ -49,3 +49,18 @@ fn test_display() {
         "CausalAction { descr: \"Test action that prints Hello State\", version: 1 }".to_string();
     assert_eq!(ca.to_string(), expected);
 }
+#[test]
+fn test_causal_action_creation() {
+    fn action_fn() -> Result<(), ActionError> {
+        Ok(())
+    }
+
+    let description = "Test Action";
+    let version = 1;
+    let action = CausalAction::new(action_fn, description, version);
+
+    // Since CausalAction fields are private/crate-visible or accessible via impl methods not fully exposed,
+    // we primarily test that construction succeeds and debug/clone work.
+    let _clone = action.clone();
+    let _debug = format!("{:?}", action);
+}

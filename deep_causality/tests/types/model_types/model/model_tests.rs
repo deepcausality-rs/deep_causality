@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::Model;
 use deep_causality::utils_test::test_utils;
+use deep_causality::{Assumption, Model};
 use std::sync::{Arc, RwLock};
 
 #[test]
@@ -132,4 +132,19 @@ fn test_assumptions() {
     assert_eq!(model.author(), author);
     assert_eq!(model.description(), description);
     assert!(model.assumptions().is_none());
+}
+
+#[test]
+fn test_model_identifiable() {
+    let id = 123;
+    let description = "test model";
+    let author = "test author";
+    let assumptions: Option<Arc<Vec<Assumption>>> = None;
+
+    // Create a simple causaloid (singleton)
+    let causaloid = Arc::new(test_utils::get_test_causaloid_deterministic(12));
+
+    let model = Model::new(id, author, description, assumptions, causaloid, None);
+
+    assert_eq!(model.id(), id);
 }

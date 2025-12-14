@@ -82,3 +82,35 @@ fn test_simplicial_complex_counit() {
     let result = SimplicialComplex::counit(&complex, chain);
     assert_eq!(result, 0.0);
 }
+
+#[test]
+fn test_simplicial_complex_right_adjunct() {
+    let complex = create_simple_complex();
+
+    // Right Adjunct: (A -> Topology<B>) -> (Chain<A> -> B)
+    // We initiate a Chain<f64> with some weights.
+    // Chain has weights at indices 0 and 2.
+    // Index 0: weight 2.0
+    // Index 2: weight 3.0
+    let size = 3;
+    let weights =
+        CsrMatrix::from_triplets(1, size, &[(0, 0, 2.0), (0, 2, 3.0)]).expect("Matrix failed");
+
+    let chain = Chain::new(complex.clone(), 0, weights);
+
+    // Define f: f64 -> Topology<f64>
+    // f(w) creates a Topology where every element is w * 10.0.
+    let f = |w: f64| -> Topology<f64> {
+        let val = w * 10.0;
+        let data = vec![val; size];
+        let tensor = deep_causality_tensor::CausalTensor::new(data, vec![size]).unwrap();
+        Topology::new(complex.clone(), 0, tensor, 0)
+    };
+
+    // Execution:
+    // i=0: weight=2.0 -> f(2.0) -> Top[20, 20, 20]. Top[0] = 20.0. Acc = 20.0.
+    // i=2: weight=3.0 -> f(3.0) -> Top[30, 30, 30]. Top[2] = 30.0. Acc = 20 + 30 = 50.0.
+    let result = SimplicialComplex::right_adjunct(&complex, chain, f);
+
+    assert_eq!(result, 50.0);
+}

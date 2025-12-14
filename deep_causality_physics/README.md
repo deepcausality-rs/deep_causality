@@ -9,16 +9,19 @@
 This crate is organized into modular domains, each providing low-level computation kernels and high-level causal wrappers:
 
 *   **🌌 Astro**: Astrophysics kernels (Schwarzschild radius, orbital velocity, luminosity, Hubble's law, etc.).
+*   **⚛️ Condensed**: Condensed matter physics (Quantum Geometry, Twistronics, Phase Field Models, e.g., Quantum Geometric Tensor, Bistritzer-MacDonald Hamiltonian, Ginzburg-Landau equations).
 *   **📐 Dynamics**: Classical mechanics (Kinematics, Newton's laws), state estimation (Kalman filters), and Euler integration.
 *   **⚡ Electromagnetism**: Maxwell's equations, Lorentz force, Poynting vectors, and gauge fields using Geometric Algebra.
 *   **💧 Fluids**: Fluid dynamics (Bernoulli's principle, Reynolds number, viscosity, pressure).
 *   **🧱 Materials**: Material science properties (Stress, Strain, Hooke's Law, Young's modulus, thermal expansion).
+*   **🧲 MHD**: Magnetohydrodynamics (Alfven waves, Magnetic Pressure, Ideal Induction on Manifolds, General Relativistic MHD, Plasma parameters).
 *   **☢️ Nuclear**: Nuclear physics (Binding energy, radioactive decay, half-life calculations).
+*   **💡 Photonics**: Ray Optics, Polarization Calculus, Gaussian Beam Optics, and Diffraction.
 *   **⚛️ Quantum**: Quantum mechanics primitives (Wavefunctions, operators, gates, expectation values, Haruna's Gauge Field gates).
 *   **🕰️ Relativity**: Special and General Relativity (Spacetime intervals, time dilation, Einstein tensor, geodesic deviation).
 *   **🔥 Thermodynamics**: Statistical mechanics (Entropy, Carnot efficiency, Ideal Gas Law, heat diffusion).
-*   **🌊 Waves**: Wave mechanics (Doppler effect, wave speed, frequency/wavelength relations).
 *   **📏 Units**: Type-safe physical units (Time, Mass, Length, ElectricCurrent, Temperature, etc.) to prevent dimensional errors.
+*   **🌊 Waves**: Wave mechanics (Doppler effect, wave speed, frequency/wavelength relations).
 
 ## 🏗️ Architecture
 

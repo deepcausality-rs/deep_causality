@@ -3,13 +3,16 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 mod astro;
+mod condensed;
 mod constants;
 mod dynamics;
 mod electromagnetism;
 mod error;
 mod fluids;
 mod materials;
+mod mhd;
 mod nuclear;
+mod photonics;
 mod quantum;
 mod relativity;
 mod thermodynamics;

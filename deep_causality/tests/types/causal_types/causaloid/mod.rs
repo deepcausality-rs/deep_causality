@@ -11,3 +11,5 @@ mod causaloid_debug_tests;
 mod causaloid_graph_tests;
 #[cfg(test)]
 mod causaloid_singleton_tests;
+#[cfg(test)]
+mod causaloid_tests;
