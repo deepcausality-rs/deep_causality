@@ -107,3 +107,5 @@ impl<T> CausalMultiVector<T> {
         (sign, a_map ^ b_map)
     }
 }
+#[cfg(test)]
+mod tests;

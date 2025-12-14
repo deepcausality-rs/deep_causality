@@ -110,3 +110,23 @@ fn test_mul_assign() {
     v *= 2.0;
     assert_eq!(v.data(), &vec![2.0, 4.0, 6.0, 8.0]);
 }
+
+#[test]
+#[should_panic(expected = "Dimension mismatch in subtraction")]
+fn test_sub_mismatch_panic() {
+    let m1 = Metric::Euclidean(2);
+    let m2 = Metric::Euclidean(3);
+    let v1 = CausalMultiVector::scalar(1.0, m1);
+    let v2 = CausalMultiVector::scalar(1.0, m2);
+    let _ = v1 - v2;
+}
+
+#[test]
+#[should_panic(expected = "Dimension mismatch in addition")]
+fn test_add_assign_mismatch_panic() {
+    let m1 = Metric::Euclidean(2);
+    let m2 = Metric::Euclidean(3);
+    let mut v1 = CausalMultiVector::scalar(1.0, m1);
+    let v2 = CausalMultiVector::scalar(1.0, m2);
+    v1 += v2;
+}
