@@ -5,8 +5,8 @@
 
 use deep_causality_num::Complex;
 use deep_causality_physics::{
-    effective_band_drude_weight_kernel, quantum_geometric_tensor_kernel, quasi_qgt_kernel, Energy,
-    Length, QuantumEigenvector, QuantumMetric, QuantumVelocity,
+    Energy, Length, QuantumEigenvector, QuantumMetric, QuantumVelocity,
+    effective_band_drude_weight_kernel, quantum_geometric_tensor_kernel, quasi_qgt_kernel,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -162,7 +162,9 @@ fn test_effective_band_drude_weight_kernel_dimensionless() {
 fn test_qgt_error_eigenvector_not_rank2() {
     let energies = CausalTensor::new(vec![0.0, 1.0], vec![2]).unwrap();
     // Wrong shape: 1D instead of 2D
-    let u = QuantumEigenvector::new(CausalTensor::new(vec![Complex::new(1.0, 0.0); 4], vec![4]).unwrap());
+    let u = QuantumEigenvector::new(
+        CausalTensor::new(vec![Complex::new(1.0, 0.0); 4], vec![4]).unwrap(),
+    );
     let v = QuantumVelocity::new(
         CausalTensor::new(vec![Complex::new(0.0, 0.0); 4], vec![2, 2]).unwrap(),
     );
@@ -255,4 +257,3 @@ fn test_effective_band_drude_weight_zero_gap() {
     let bdw = res.unwrap();
     assert!((bdw.value() - 0.5).abs() < 1e-10);
 }
-

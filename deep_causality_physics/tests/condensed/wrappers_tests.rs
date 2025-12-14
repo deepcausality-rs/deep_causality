@@ -7,11 +7,11 @@ use deep_causality_haft::Functor;
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_num::Complex;
 use deep_causality_physics::{
-    bistritzer_macdonald, cahn_hilliard_flux, effective_band_drude_weight,
+    ChemicalPotentialGradient, Concentration, Displacement, Energy, Length, Mobility, Momentum,
+    OrderParameter, QuantumEigenvector, QuantumMetric, QuantumVelocity, Ratio, Speed, Stiffness,
+    TwistAngle, bistritzer_macdonald, cahn_hilliard_flux, effective_band_drude_weight,
     foppl_von_karman_strain, foppl_von_karman_strain_simple, ginzburg_landau_free_energy,
-    quantum_geometric_tensor, quasi_qgt, ChemicalPotentialGradient, Concentration, Displacement,
-    Energy, Length, Mobility, Momentum, OrderParameter, QuantumEigenvector, QuantumMetric,
-    QuantumVelocity, Ratio, Speed, Stiffness, TwistAngle,
+    quantum_geometric_tensor, quasi_qgt,
 };
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud};
@@ -210,4 +210,3 @@ fn test_wrapper_qgt_error_propagation() {
     let effect = quantum_geometric_tensor(&energies, &u, &v, &v, 0, 1e-12);
     assert!(effect.is_err());
 }
-

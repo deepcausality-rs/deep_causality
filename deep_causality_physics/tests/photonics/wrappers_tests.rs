@@ -6,10 +6,10 @@
 use deep_causality_core::EffectValue;
 use deep_causality_num::Complex;
 use deep_causality_physics::{
-    beam_spot_size, degree_of_polarization, gaussian_q_propagation, grating_equation,
-    jones_rotation, lens_maker, ray_transfer, single_slit_irradiance, snells_law, stokes_from_jones,
     AbcdMatrix, ComplexBeamParameter, IndexOfRefraction, JonesVector, Length, RayAngle, RayHeight,
-    StokesVector, Wavelength,
+    StokesVector, Wavelength, beam_spot_size, degree_of_polarization, gaussian_q_propagation,
+    grating_equation, jones_rotation, lens_maker, ray_transfer, single_slit_irradiance, snells_law,
+    stokes_from_jones,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -95,7 +95,13 @@ fn test_wrapper_lens_maker() {
 #[test]
 fn test_wrapper_stokes_from_jones() {
     // Horizontally polarized light: [1, 0]
-    let j = JonesVector::new(CausalTensor::new(vec![Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)], vec![2]).unwrap());
+    let j = JonesVector::new(
+        CausalTensor::new(
+            vec![Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)],
+            vec![2],
+        )
+        .unwrap(),
+    );
 
     let result = stokes_from_jones(&j);
     assert!(result.is_ok());
@@ -313,4 +319,3 @@ fn test_wrappers_combined() {
     let l = Length::new(1.0).unwrap();
     assert!(single_slit_irradiance(1.0, l, a, w).is_ok());
 }
-

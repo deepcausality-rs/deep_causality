@@ -6,8 +6,8 @@ use deep_causality_haft::Functor;
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_num::Complex;
 use deep_causality_physics::{
-    cahn_hilliard_flux_kernel, ginzburg_landau_free_energy_kernel, ChemicalPotentialGradient,
-    Concentration, Mobility, OrderParameter, VectorPotential,
+    ChemicalPotentialGradient, Concentration, Mobility, OrderParameter, VectorPotential,
+    cahn_hilliard_flux_kernel, ginzburg_landau_free_energy_kernel,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -55,8 +55,13 @@ fn test_ginzburg_landau_with_vector_potential() {
     let a_field = CausalMultiVector::new(vec![0.1, 0.2, 0.3, 0.4], Metric::Euclidean(2)).unwrap();
     let vector_potential = VectorPotential::new(a_field);
 
-    let res =
-        ginzburg_landau_free_energy_kernel(psi, alpha, beta, &grad_complex, Some(&vector_potential));
+    let res = ginzburg_landau_free_energy_kernel(
+        psi,
+        alpha,
+        beta,
+        &grad_complex,
+        Some(&vector_potential),
+    );
     assert!(res.is_ok());
 }
 
@@ -202,7 +207,8 @@ fn test_cahn_hilliard_flux_multi_element() {
     let conc =
         Concentration::new(CausalTensor::new(vec![0.5, 0.25, 0.75], vec![3]).unwrap()).unwrap();
     let m = Mobility::new(1.0).unwrap();
-    let grad = ChemicalPotentialGradient::new(CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap());
+    let grad =
+        ChemicalPotentialGradient::new(CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap());
 
     let res = cahn_hilliard_flux_kernel(&conc, m, &grad);
     assert!(res.is_ok());
@@ -215,4 +221,3 @@ fn test_cahn_hilliard_flux_multi_element() {
     assert!((flux.data()[1] - (-0.375)).abs() < 1e-10);
     assert!((flux.data()[2] - (-0.5625)).abs() < 1e-10);
 }
-

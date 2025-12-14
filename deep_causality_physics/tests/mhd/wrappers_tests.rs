@@ -6,9 +6,9 @@
 use deep_causality_core::EffectValue;
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{
-    alfven_speed, debye_length, energy_momentum_tensor_em, ideal_induction, larmor_radius,
-    magnetic_pressure, magnetic_reconnection_rate, relativistic_current, resistive_diffusion,
-    Density, Diffusivity, Mass, PhysicalField, Speed, Temperature,
+    Density, Diffusivity, Mass, PhysicalField, Speed, Temperature, alfven_speed, debye_length,
+    energy_momentum_tensor_em, ideal_induction, larmor_radius, magnetic_pressure,
+    magnetic_reconnection_rate, relativistic_current, resistive_diffusion,
 };
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud};
