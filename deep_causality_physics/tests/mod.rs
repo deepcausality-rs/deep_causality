@@ -11,6 +11,7 @@ mod error;
 mod fluids;
 mod materials;
 mod nuclear;
+mod photonics;
 mod quantum;
 mod relativity;
 mod thermodynamics;

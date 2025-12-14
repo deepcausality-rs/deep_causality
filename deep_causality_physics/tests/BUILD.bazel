@@ -191,6 +191,28 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "photonics",
+    srcs = glob([
+        "photonics/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_physics",
+        # Internal dependencies
+        "//deep_causality_num",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_test_suite(
     name = "quantum",
     srcs = glob([
         "quantum/*_tests.rs",

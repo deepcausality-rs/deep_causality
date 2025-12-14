@@ -15,6 +15,7 @@ This crate is organized into modular domains, each providing low-level computati
 *   **💧 Fluids**: Fluid dynamics (Bernoulli's principle, Reynolds number, viscosity, pressure).
 *   **🧱 Materials**: Material science properties (Stress, Strain, Hooke's Law, Young's modulus, thermal expansion).
 *   **☢️ Nuclear**: Nuclear physics (Binding energy, radioactive decay, half-life calculations).
+*   **💡 Photonics**: Ray Optics, Polarization Calculus, Gaussian Beam Optics, and Diffraction.
 *   **⚛️ Quantum**: Quantum mechanics primitives (Wavefunctions, operators, gates, expectation values, Haruna's Gauge Field gates).
 *   **🕰️ Relativity**: Special and General Relativity (Spacetime intervals, time dilation, Einstein tensor, geodesic deviation).
 *   **🔥 Thermodynamics**: Statistical mechanics (Entropy, Carnot efficiency, Ideal Gas Law, heat diffusion).
