@@ -11,11 +11,13 @@
 /// * "Exact" values are defined by international agreement (SI definition).
 /// * Other values are experimental measurements with associated uncertainties (ignored here for standard f64 precision).
 pub(crate) mod atomic;
+pub(crate) mod condensed;
 pub(crate) mod electromagnetic;
 pub(crate) mod thermodynamics;
 pub(crate) mod universal;
 
 pub use atomic::*;
+pub use condensed::*;
 pub use electromagnetic::*;
 pub use thermodynamics::*;
 pub use universal::*;

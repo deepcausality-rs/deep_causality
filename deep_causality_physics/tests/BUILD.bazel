@@ -21,6 +21,29 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "condensed",
+    srcs = glob([
+        "condensed/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_physics",
+        # Internal dependencies
+        "//deep_causality_multivector",
+        "//deep_causality_num",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_test_suite(
     name = "constants",
     srcs = glob([
         "constants/*_tests.rs",
