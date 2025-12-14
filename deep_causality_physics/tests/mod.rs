@@ -10,6 +10,7 @@ mod electromagnetism;
 mod error;
 mod fluids;
 mod materials;
+mod mhd;
 mod nuclear;
 mod photonics;
 mod quantum;

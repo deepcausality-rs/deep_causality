@@ -14,6 +14,7 @@ This crate is organized into modular domains, each providing low-level computati
 *   **⚡ Electromagnetism**: Maxwell's equations, Lorentz force, Poynting vectors, and gauge fields using Geometric Algebra.
 *   **💧 Fluids**: Fluid dynamics (Bernoulli's principle, Reynolds number, viscosity, pressure).
 *   **🧱 Materials**: Material science properties (Stress, Strain, Hooke's Law, Young's modulus, thermal expansion).
+*   **🧲 MHD**: Magnetohydrodynamics (Alfven waves, Magnetic Pressure, Ideal Induction on Manifolds, General Relativistic MHD, Plasma parameters).
 *   **☢️ Nuclear**: Nuclear physics (Binding energy, radioactive decay, half-life calculations).
 *   **💡 Photonics**: Ray Optics, Polarization Calculus, Gaussian Beam Optics, and Diffraction.
 *   **⚛️ Quantum**: Quantum mechanics primitives (Wavefunctions, operators, gates, expectation values, Haruna's Gauge Field gates).

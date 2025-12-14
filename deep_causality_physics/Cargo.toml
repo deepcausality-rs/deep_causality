@@ -43,6 +43,10 @@ version = "0.2.1"
 path = "../deep_causality_num"
 version = "0.1.9"
 
+[dependencies.deep_causality_sparse]
+path = "../deep_causality_sparse"
+version = "0.1"
+
 [dependencies.deep_causality_tensor]
 path = "../deep_causality_tensor"
 version = "0.2.0"
