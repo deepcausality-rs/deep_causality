@@ -66,3 +66,71 @@ fn test_jones_vector() {
     let j = JonesVector::new(t);
     assert_eq!(j.inner().shape(), vec![2]);
 }
+
+// ===========================================================================
+// new_unchecked tests
+// ===========================================================================
+
+#[test]
+fn test_wavelength_new_unchecked() {
+    let w = Wavelength::new_unchecked(500e-9);
+    assert_eq!(w.value(), 500e-9);
+}
+
+#[test]
+fn test_numerical_aperture_new_unchecked() {
+    let na = NumericalAperture::new_unchecked(0.5);
+    assert_eq!(na.value(), 0.5);
+}
+
+#[test]
+fn test_beam_waist_new_unchecked() {
+    let w0 = BeamWaist::new_unchecked(1e-3);
+    assert_eq!(w0.value(), 1e-3);
+}
+
+#[test]
+fn test_complex_beam_parameter_new_unchecked() {
+    let q = ComplexBeamParameter::new_unchecked(Complex::new(1.0, 2.0));
+    assert_eq!(q.value(), Complex::new(1.0, 2.0));
+}
+
+// ===========================================================================
+// Default tests
+// ===========================================================================
+
+#[test]
+fn test_focal_length_default() {
+    let f: FocalLength = Default::default();
+    assert_eq!(f.value(), 0.0);
+}
+
+#[test]
+fn test_optical_power_default() {
+    let p: OpticalPower = Default::default();
+    assert_eq!(p.value(), 0.0);
+}
+
+#[test]
+fn test_wavelength_default() {
+    let w: Wavelength = Default::default();
+    assert_eq!(w.value(), 0.0);
+}
+
+#[test]
+fn test_numerical_aperture_default() {
+    let na: NumericalAperture = Default::default();
+    assert_eq!(na.value(), 0.0);
+}
+
+#[test]
+fn test_beam_waist_default() {
+    let w0: BeamWaist = Default::default();
+    assert_eq!(w0.value(), 0.0);
+}
+
+#[test]
+fn test_complex_beam_parameter_default() {
+    let q: ComplexBeamParameter = Default::default();
+    assert_eq!(q.value(), Complex::new(0.0, 0.0));
+}

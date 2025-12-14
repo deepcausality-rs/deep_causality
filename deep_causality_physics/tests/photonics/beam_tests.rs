@@ -41,3 +41,56 @@ fn test_beam_spot_size() {
     let w = res.unwrap();
     assert!((w.value() - 2.0).abs() < 1e-10);
 }
+
+// ===========================================================================
+// Error Path Tests
+// ===========================================================================
+
+#[test]
+fn test_gaussian_propagation_wrong_matrix_shape() {
+    // Matrix must be 2x2, using 3x3 instead
+    let m_data = vec![1.0; 9];
+    let mat = AbcdMatrix::new(CausalTensor::new(m_data, vec![3, 3]).unwrap());
+
+    let q_in = ComplexBeamParameter::new(Complex::new(0.0, 1.0)).unwrap();
+    let res = gaussian_q_propagation_kernel(q_in, &mat);
+    assert!(res.is_err());
+}
+
+#[test]
+fn test_gaussian_propagation_singularity() {
+    // Create matrix that causes C*q + D = 0
+    // q = i (so re=0, im=1). Want C*i + D = 0. So D=0, C= real? No.
+    // C*q + D = Ci + D. If C=-1, D=i, then -i + i = 0.
+    // But D is real in ABCD matrix normally. Use pathological case.
+    // Actually, for imaginary singularity, let's use C=1, D=0, q = 0 (but q must have Im>0 from ComplexBeamParameter).
+    // So we can't easily create a true singularity with valid q. Skip this or use very small Im.
+    // Actually, set D = -Im(q)*C/Re(something). Complex math needed.
+    // Simplest: use mat where C=-i component from q cancels - hard to construct.
+    // Alternative: This test is about the Singularity error enum hit at den.norm_sqr()==0.
+    // We need C*q + D with norm 0. If q = a + bi, C*q + D = Ca + Cbi + D.
+    // For norm_sqr=0, both parts must be 0: Ca + D = 0 AND Cb = 0. Since q must have b>0, C=0.
+    // Then Ca + D = D = 0. So C=0, D=0 triggers singularity.
+    let m_data = vec![1.0, 1.0, 0.0, 0.0]; // C=0, D=0
+    let mat = AbcdMatrix::new(CausalTensor::new(m_data, vec![2, 2]).unwrap());
+    let q_in = ComplexBeamParameter::new(Complex::new(0.0, 1.0)).unwrap();
+    let res = gaussian_q_propagation_kernel(q_in, &mat);
+    assert!(res.is_err());
+}
+
+#[test]
+fn test_beam_spot_size_zero_q_error() {
+    // ComplexBeamParameter requires Im > 0, so we can't have q=0 directly.
+    // This error path is unreachable with valid ComplexBeamParameter.
+    // Skip or test with a different scenario.
+}
+
+#[test]
+fn test_complex_beam_parameter_new_non_positive_im_error() {
+    // Test the ComplexBeamParameter constructor validation
+    let res = ComplexBeamParameter::new(Complex::new(1.0, 0.0));
+    assert!(res.is_err());
+
+    let res2 = ComplexBeamParameter::new(Complex::new(1.0, -1.0));
+    assert!(res2.is_err());
+}

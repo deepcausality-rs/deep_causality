@@ -79,3 +79,59 @@ fn test_order_parameter() {
     assert_eq!(op.value(), Complex::new(1.0, 1.0));
     assert_eq!(op.magnitude_squared(), 2.0);
 }
+
+// ===========================================================================
+// new_unchecked tests
+// ===========================================================================
+
+#[test]
+fn test_conductance_new_unchecked() {
+    let c = Conductance::new_unchecked(0.1);
+    assert_eq!(c.value(), 0.1);
+}
+
+#[test]
+fn test_mobility_new_unchecked() {
+    let m = Mobility::new_unchecked(100.0);
+    assert_eq!(m.value(), 100.0);
+}
+
+// ===========================================================================
+// Default trait tests
+// ===========================================================================
+
+#[test]
+fn test_quantum_metric_default() {
+    let qm: QuantumMetric = Default::default();
+    assert_eq!(qm.value(), 0.0);
+}
+
+#[test]
+fn test_berry_curvature_default() {
+    let bc: BerryCurvature = Default::default();
+    assert_eq!(bc.value(), 0.0);
+}
+
+#[test]
+fn test_band_drude_weight_default() {
+    let bdw: BandDrudeWeight = Default::default();
+    assert_eq!(bdw.value(), 0.0);
+}
+
+#[test]
+fn test_orbital_angular_momentum_default() {
+    let oam: OrbitalAngularMomentum = Default::default();
+    assert_eq!(oam.value(), 0.0);
+}
+
+#[test]
+fn test_conductance_default() {
+    let c: Conductance = Default::default();
+    assert_eq!(c.value(), 0.0);
+}
+
+#[test]
+fn test_mobility_default() {
+    let m: Mobility = Default::default();
+    assert_eq!(m.value(), 0.0);
+}
