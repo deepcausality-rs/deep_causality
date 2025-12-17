@@ -39,18 +39,30 @@ fn test_verify_graph_leaves_frozen_on_cycle() {
 
     // Verify initial state
     assert!(!ethos.is_frozen(), "Graph should not be frozen initially");
-    assert!(!ethos.is_verified(), "Graph should not be verified initially");
+    assert!(
+        !ethos.is_verified(),
+        "Graph should not be verified initially"
+    );
 
     // Try to verify the graph - this should detect the cycle
     let result = ethos.verify_graph();
 
     // The verification should fail with GraphIsCyclic error
     assert!(result.is_err());
-    assert!(matches!(result.unwrap_err(), DeonticError::GraphIsCyclic(_)));
+    assert!(matches!(
+        result.unwrap_err(),
+        DeonticError::GraphIsCyclic(_)
+    ));
 
     // BUG CHECK: The graph should NOT be frozen after a failed verification
-    assert!(!ethos.is_frozen(), "Graph should be unfrozen after failed verification");
+    assert!(
+        !ethos.is_frozen(),
+        "Graph should be unfrozen after failed verification"
+    );
 
     // And it's correctly not verified
-    assert!(!ethos.is_verified(), "Graph should not be verified when cycle detected");
+    assert!(
+        !ethos.is_verified(),
+        "Graph should not be verified when cycle detected"
+    );
 }

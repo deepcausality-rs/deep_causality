@@ -21,12 +21,19 @@ fn test_failed_to_add_teloid() {
 
 #[test]
 fn test_failed_to_add_edge() {
-    let error = DeonticError::FailedToAddEdge(1, 2, GraphError::EdgeCreationError { source: 1, target: 2 });
+    let error = DeonticError::FailedToAddEdge(
+        1,
+        2,
+        GraphError::EdgeCreationError {
+            source: 1,
+            target: 2,
+        },
+    );
     assert_eq!(
         format!("{}", error),
         "Edge from 1 to 2 could not be created; a node may not exist or the edge already exists."
     );
-    // Cannot clone error easily because GraphError might not implement clone? 
+    // Cannot clone error easily because GraphError might not implement clone?
     // Wait, GraphError implements Debug, Display, Error. Does it implement Clone?
     // Let's assume it does or construct fresh.
     // The previous test did error.clone().
@@ -144,19 +151,28 @@ fn test_from_graph_error() {
     // Test GraphIsFrozen
     let graph_error_frozen = GraphError::GraphIsFrozen;
     let deontic_error: DeonticError = graph_error_frozen.into();
-    assert_eq!(deontic_error, DeonticError::GraphIsFrozen(GraphError::GraphIsFrozen));
+    assert_eq!(
+        deontic_error,
+        DeonticError::GraphIsFrozen(GraphError::GraphIsFrozen)
+    );
     assert!(deontic_error.source().is_some());
 
     // Test GraphNotFrozen
     let graph_error_not_frozen = GraphError::GraphNotFrozen;
     let deontic_error: DeonticError = graph_error_not_frozen.into();
-    assert_eq!(deontic_error, DeonticError::GraphNotFrozen(GraphError::GraphNotFrozen));
+    assert_eq!(
+        deontic_error,
+        DeonticError::GraphNotFrozen(GraphError::GraphNotFrozen)
+    );
     assert!(deontic_error.source().is_some());
 
     // Test GraphContainsCycle
     let graph_error_cyclic = GraphError::GraphContainsCycle;
     let deontic_error: DeonticError = graph_error_cyclic.into();
-    assert_eq!(deontic_error, DeonticError::GraphIsCyclic(GraphError::GraphContainsCycle));
+    assert_eq!(
+        deontic_error,
+        DeonticError::GraphIsCyclic(GraphError::GraphContainsCycle)
+    );
     assert!(deontic_error.source().is_some());
 
     // Test EdgeCreationError
@@ -164,8 +180,11 @@ fn test_from_graph_error() {
         source: 1,
         target: 2,
     };
-    let deontic_error: DeonticError = graph_error_edge.clone().into();
-    assert_eq!(deontic_error, DeonticError::FailedToAddEdge(1, 2, graph_error_edge));
+    let deontic_error: DeonticError = graph_error_edge.into();
+    assert_eq!(
+        deontic_error,
+        DeonticError::FailedToAddEdge(1, 2, graph_error_edge)
+    );
     assert!(deontic_error.source().is_some());
 
     // Test other GraphError variants are wrapped

@@ -118,7 +118,10 @@ fn test_add_edge_to_frozen_graph() {
     let result_inherit = graph.add_inheritance_edge(idx1, idx2);
     let result_defeat = graph.add_defeasance_edge(idx1, idx2);
 
-    assert!(matches!(result_inherit, Err(DeonticError::GraphIsFrozen(_))));
+    assert!(matches!(
+        result_inherit,
+        Err(DeonticError::GraphIsFrozen(_))
+    ));
     assert!(matches!(result_defeat, Err(DeonticError::GraphIsFrozen(_))));
 }
 
