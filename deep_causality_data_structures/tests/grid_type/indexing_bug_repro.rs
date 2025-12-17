@@ -8,9 +8,9 @@ use deep_causality_data_structures::{PointIndex, Storage};
 #[test]
 fn test_3d_array_indexing_bug() {
     // Distinct dimensions to reveal the bug
-    const WIDTH: usize = 3;   // X
-    const HEIGHT: usize = 4;  // Y
-    const DEPTH: usize = 2;   // Z
+    const WIDTH: usize = 3; // X
+    const HEIGHT: usize = 4; // Y
+    const DEPTH: usize = 2; // Z
 
     let mut storage: [[[i32; WIDTH]; HEIGHT]; DEPTH] = [[[0; WIDTH]; HEIGHT]; DEPTH];
 
@@ -19,9 +19,9 @@ fn test_3d_array_indexing_bug() {
     storage[1][2][1] = 99;
 
     let point = PointIndex::new3d(
-        1,  // x = width
-        2,  // y = height
-        1   // z = depth
+        1, // x = width
+        2, // y = height
+        1, // z = depth
     );
 
     // This should retrieve storage[1][2][1]
@@ -33,12 +33,13 @@ fn test_3d_array_indexing_bug() {
 
 #[test]
 fn test_4d_array_indexing_bug() {
-    const WIDTH: usize = 2;   // X
-    const HEIGHT: usize = 3;  // Y
-    const DEPTH: usize = 2;   // Z
-    const TIME: usize = 2;    // T
+    const WIDTH: usize = 2; // X
+    const HEIGHT: usize = 3; // Y
+    const DEPTH: usize = 2; // Z
+    const TIME: usize = 2; // T
 
-    let mut storage: [[[[i32; WIDTH]; HEIGHT]; DEPTH]; TIME] = [[[[0; WIDTH]; HEIGHT]; DEPTH]; TIME];
+    let mut storage: [[[[i32; WIDTH]; HEIGHT]; DEPTH]; TIME] =
+        [[[[0; WIDTH]; HEIGHT]; DEPTH]; TIME];
 
     // Raw array: [time][depth][height][width]
     // Set at time=1, depth=1, height=2, width=1
@@ -48,11 +49,12 @@ fn test_4d_array_indexing_bug() {
         1, // x
         2, // y
         1, // z
-        1  // t
+        1, // t
     );
 
     // This should retrieve storage[1][1][2][1]
-    let retrieved = *<[[[[i32; WIDTH]; HEIGHT]; DEPTH]; TIME] as Storage<i32>>::get(&storage, point);
+    let retrieved =
+        *<[[[[i32; WIDTH]; HEIGHT]; DEPTH]; TIME] as Storage<i32>>::get(&storage, point);
 
     assert_eq!(retrieved, 88, "4D Indexing is incorrect");
 }
