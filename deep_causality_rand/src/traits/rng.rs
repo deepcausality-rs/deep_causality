@@ -42,7 +42,7 @@ pub trait Rng: RngCore {
         if !(0.0..=1.0).contains(&p) {
             panic!("p={} is outside range [0.0, 1.0]", p);
         }
-        self.next_u64() as f64 / (u64::MAX as f64) < p
+        self.next_u64() as f64 / (u64::MAX as f64) <= p
     }
 
     #[inline]
