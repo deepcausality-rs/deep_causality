@@ -21,6 +21,7 @@ mod display_tests;
 mod from_primitives_tests;
 #[cfg(test)]
 mod identity_tests;
+mod multiplication_bug_repro_tests;
 #[cfg(test)]
 mod neg_tests;
 #[cfg(test)]

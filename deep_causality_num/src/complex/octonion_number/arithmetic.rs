@@ -295,19 +295,18 @@ impl<F: RealField> Mul for Octonion<F> {
             - self.e4 * rhs.e1
             - self.e2 * rhs.e7
             + self.e7 * rhs.e2
-            + self.e3 * rhs.e6
-            - self.e6 * rhs.e3;
+            - self.e3 * rhs.e6
+            + self.e6 * rhs.e3;
 
         let e6_res = self.s * rhs.e6 + self.e6 * rhs.s + self.e1 * rhs.e7 - self.e7 * rhs.e1
             + self.e2 * rhs.e4
             - self.e4 * rhs.e2
-            - self.e3 * rhs.e5
-            + self.e5 * rhs.e3;
+            + self.e3 * rhs.e5
+            - self.e5 * rhs.e3;
 
-        let e7_res = self.s * rhs.e7 + self.e7 * rhs.s - self.e1 * rhs.e6
-            + self.e6 * rhs.e1
-            + self.e2 * rhs.e5
-            - self.e5 * rhs.e2
+        let e7_res = self.s * rhs.e7 + self.e7 * rhs.s - self.e1 * rhs.e6 + self.e6 * rhs.e1
+            - self.e2 * rhs.e5
+            + self.e5 * rhs.e2
             + self.e3 * rhs.e4
             - self.e4 * rhs.e3;
         Self::new(
