@@ -17,11 +17,11 @@ where
     [[[T; W]; H]; D]: Sized,
 {
     fn get(&self, p: PointIndex) -> &T {
-        &self[p.y][p.x][p.z]
+        &self[p.z][p.y][p.x]
     }
 
     fn set(&mut self, p: PointIndex, elem: T) {
-        self[p.y][p.x][p.z] = elem
+        self[p.z][p.y][p.x] = elem
     }
 
     fn height(&self) -> Option<&usize> {
