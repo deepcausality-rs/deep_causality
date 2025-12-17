@@ -39,11 +39,13 @@ impl HalfLife {
     /// Creates a new `HalfLife` instance.
     ///
     /// # Errors
-    /// Returns `PhysicsError` if `val < 0.0`.
+    /// Returns `PhysicsError` if `val <= 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
-        if val < 0.0 {
+        if val <= 0.0 {
             return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken("Negative HalfLife".into()),
+                PhysicsErrorEnum::PhysicalInvariantBroken(
+                    "HalfLife must be positive (zero implies infinite decay rate)".into(),
+                ),
             ));
         }
         Ok(Self(val))

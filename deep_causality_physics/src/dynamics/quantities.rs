@@ -14,8 +14,13 @@ impl Mass {
     /// Creates a new `Mass` instance.
     ///
     /// # Errors
-    /// Returns `PhysicsError::PhysicalInvariantBroken` if `val < 0.0`.
+    /// Returns `PhysicsError::PhysicalInvariantBroken` if `val` is not finite or `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::new(
+                PhysicsErrorEnum::PhysicalInvariantBroken(format!("Mass must be finite: {}", val)),
+            ));
+        }
         if val < 0.0 {
             return Err(PhysicsError::new(
                 PhysicsErrorEnum::PhysicalInvariantBroken(format!(
@@ -48,8 +53,13 @@ impl Speed {
     /// Creates a new `Speed` instance.
     ///
     /// # Errors
-    /// Returns `PhysicsError::PhysicalInvariantBroken` if `val < 0.0`.
+    /// Returns `PhysicsError::PhysicalInvariantBroken` if `val` is not finite or `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::new(
+                PhysicsErrorEnum::PhysicalInvariantBroken(format!("Speed must be finite: {}", val)),
+            ));
+        }
         if val < 0.0 {
             return Err(PhysicsError::new(
                 PhysicsErrorEnum::PhysicalInvariantBroken(format!(
@@ -80,6 +90,14 @@ pub struct Acceleration(f64);
 
 impl Acceleration {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::new(
+                PhysicsErrorEnum::PhysicalInvariantBroken(format!(
+                    "Acceleration must be finite: {}",
+                    val
+                )),
+            ));
+        }
         Ok(Self(val))
     }
     pub fn new_unchecked(val: f64) -> Self {
@@ -102,6 +120,11 @@ pub struct Force(f64);
 
 impl Force {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::new(
+                PhysicsErrorEnum::PhysicalInvariantBroken(format!("Force must be finite: {}", val)),
+            ));
+        }
         Ok(Self(val))
     }
     pub fn new_unchecked(val: f64) -> Self {
@@ -123,6 +146,14 @@ impl From<Force> for f64 {
 pub struct Torque(f64);
 impl Torque {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::new(
+                PhysicsErrorEnum::PhysicalInvariantBroken(format!(
+                    "Torque must be finite: {}",
+                    val
+                )),
+            ));
+        }
         Ok(Self(val))
     }
     pub fn new_unchecked(val: f64) -> Self {
@@ -145,8 +176,16 @@ impl Length {
     /// Creates a new `Length` instance.
     ///
     /// # Errors
-    /// Returns `PhysicsError::PhysicalInvariantBroken` if `val < 0.0`.
+    /// Returns `PhysicsError::PhysicalInvariantBroken` if `val` is not finite or `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::new(
+                PhysicsErrorEnum::PhysicalInvariantBroken(format!(
+                    "Length must be finite: {}",
+                    val
+                )),
+            ));
+        }
         if val < 0.0 {
             return Err(PhysicsError::new(
                 PhysicsErrorEnum::PhysicalInvariantBroken(format!(
@@ -177,8 +216,13 @@ impl Area {
     /// Creates a new `Area` instance.
     ///
     /// # Errors
-    /// Returns `PhysicsError::PhysicalInvariantBroken` if `val < 0.0`.
+    /// Returns `PhysicsError::PhysicalInvariantBroken` if `val` is not finite or `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::new(
+                PhysicsErrorEnum::PhysicalInvariantBroken(format!("Area must be finite: {}", val)),
+            ));
+        }
         if val < 0.0 {
             return Err(PhysicsError::new(
                 PhysicsErrorEnum::PhysicalInvariantBroken(format!(
@@ -209,8 +253,16 @@ impl Volume {
     /// Creates a new `Volume` instance.
     ///
     /// # Errors
-    /// Returns `PhysicsError::PhysicalInvariantBroken` if `val < 0.0`.
+    /// Returns `PhysicsError::PhysicalInvariantBroken` if `val` is not finite or `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::new(
+                PhysicsErrorEnum::PhysicalInvariantBroken(format!(
+                    "Volume must be finite: {}",
+                    val
+                )),
+            ));
+        }
         if val < 0.0 {
             return Err(PhysicsError::new(
                 PhysicsErrorEnum::PhysicalInvariantBroken(format!(
@@ -241,8 +293,16 @@ impl MomentOfInertia {
     /// Creates a new `MomentOfInertia` instance.
     ///
     /// # Errors
-    /// Returns `PhysicsError::PhysicalInvariantBroken` if `val < 0.0`.
+    /// Returns `PhysicsError::PhysicalInvariantBroken` if `val` is not finite or `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::new(
+                PhysicsErrorEnum::PhysicalInvariantBroken(format!(
+                    "MomentOfInertia must be finite: {}",
+                    val
+                )),
+            ));
+        }
         if val < 0.0 {
             return Err(PhysicsError::new(
                 PhysicsErrorEnum::PhysicalInvariantBroken(format!(
@@ -273,8 +333,16 @@ impl Frequency {
     /// Creates a new `Frequency` instance.
     ///
     /// # Errors
-    /// Returns `PhysicsError::PhysicalInvariantBroken` if `val < 0.0`.
+    /// Returns `PhysicsError::PhysicalInvariantBroken` if `val` is not finite or `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::new(
+                PhysicsErrorEnum::PhysicalInvariantBroken(format!(
+                    "Frequency must be finite: {}",
+                    val
+                )),
+            ));
+        }
         if val < 0.0 {
             return Err(PhysicsError::new(
                 PhysicsErrorEnum::PhysicalInvariantBroken(format!(

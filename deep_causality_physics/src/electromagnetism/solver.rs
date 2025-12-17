@@ -61,11 +61,14 @@ impl MaxwellSolver {
     ///
     /// # Returns
     /// * `Ok(f64)` - The scalar divergence.
+    /// * `Err(PhysicsError)` - If inputs are not pure grade-1 vectors.
     pub fn calculate_potential_divergence(
         gradient: &CausalMultiVector<f64>,
         potential: &CausalMultiVector<f64>,
     ) -> Result<f64, PhysicsError> {
         Self::validate_compatibility(gradient, potential)?;
+        Self::validate_pure_grade(gradient, 1, "gradient")?;
+        Self::validate_pure_grade(potential, 1, "potential")?;
 
         // L = d . A (Scalar part of geometric product)
         let da = gradient.inner_product(potential);
@@ -160,6 +163,27 @@ impl MaxwellSolver {
             return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
                 format!("Non-finite value detected in {}", context),
             )));
+        }
+        Ok(())
+    }
+
+    fn validate_pure_grade(
+        mv: &CausalMultiVector<f64>,
+        expected_grade: u32,
+        context: &str,
+    ) -> Result<(), PhysicsError> {
+        for (i, &val) in mv.data().iter().enumerate() {
+            if val.abs() > 1e-10 {
+                let grade = i.count_ones();
+                if grade != expected_grade {
+                    return Err(PhysicsError::new(
+                        PhysicsErrorEnum::PhysicalInvariantBroken(format!(
+                            "{} must be pure grade {} multivector, but contains grade {} at index {}",
+                            context, expected_grade, grade, i
+                        )),
+                    ));
+                }
+            }
         }
         Ok(())
     }

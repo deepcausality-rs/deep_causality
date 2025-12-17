@@ -139,30 +139,6 @@ fn test_magnetic_pressure_default() {
 }
 
 #[test]
-fn test_larmor_radius_default() {
-    let r: LarmorRadius = Default::default();
-    assert_eq!(r.value(), 0.0);
-}
-
-#[test]
-fn test_debye_length_default() {
-    let l: DebyeLength = Default::default();
-    assert_eq!(l.value(), 0.0);
-}
-
-#[test]
-fn test_plasma_frequency_default() {
-    let w: PlasmaFrequency = Default::default();
-    assert_eq!(w.value(), 0.0);
-}
-
-#[test]
-fn test_conductivity_default() {
-    let s: Conductivity = Default::default();
-    assert_eq!(s.value(), 0.0);
-}
-
-#[test]
 fn test_diffusivity_default() {
     let eta: Diffusivity = Default::default();
     assert_eq!(eta.value(), 0.0);

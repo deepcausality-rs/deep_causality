@@ -77,7 +77,7 @@ impl MagneticPressure {
 
 /// Larmor Radius ($r_L$). Gyroradius of a charged particle.
 /// Unit: Meters (m). Constraint: > 0.
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct LarmorRadius(f64);
 
 impl LarmorRadius {
@@ -97,9 +97,16 @@ impl LarmorRadius {
     }
 }
 
+impl Default for LarmorRadius {
+    /// Returns the smallest positive value that satisfies the > 0 constraint.
+    fn default() -> Self {
+        Self(f64::MIN_POSITIVE)
+    }
+}
+
 /// Debye Length ($\lambda_D$). Screening length in plasma.
 /// Unit: Meters (m). Constraint: > 0.
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct DebyeLength(f64);
 
 impl DebyeLength {
@@ -119,9 +126,16 @@ impl DebyeLength {
     }
 }
 
+impl Default for DebyeLength {
+    /// Returns the smallest positive value that satisfies the > 0 constraint.
+    fn default() -> Self {
+        Self(f64::MIN_POSITIVE)
+    }
+}
+
 /// Plasma Frequency ($\omega_{pe}$). Natural oscillation frequency.
 /// Unit: Rad/s. Constraint: > 0.
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct PlasmaFrequency(f64);
 
 impl PlasmaFrequency {
@@ -143,9 +157,16 @@ impl PlasmaFrequency {
     }
 }
 
+impl Default for PlasmaFrequency {
+    /// Returns the smallest positive value that satisfies the > 0 constraint.
+    fn default() -> Self {
+        Self(f64::MIN_POSITIVE)
+    }
+}
+
 /// Electrical Conductivity ($\sigma$).
 /// Unit: Siemens/m (S/m). Constraint: > 0.
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Conductivity(f64);
 
 impl Conductivity {
@@ -162,6 +183,13 @@ impl Conductivity {
     }
     pub fn value(&self) -> f64 {
         self.0
+    }
+}
+
+impl Default for Conductivity {
+    /// Returns the smallest positive value that satisfies the > 0 constraint.
+    fn default() -> Self {
+        Self(f64::MIN_POSITIVE)
     }
 }
 
