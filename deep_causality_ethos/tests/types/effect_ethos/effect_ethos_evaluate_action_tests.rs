@@ -29,7 +29,7 @@ fn test_evaluate_action_fails_if_not_verified() {
 
     let result = ethos.evaluate_action(&action, &context, &tags);
     assert!(result.is_err());
-    assert!(matches!(result.unwrap_err(), DeonticError::GraphIsCyclic)); // is_verified is false, so it fails this check first
+    assert!(matches!(result.unwrap_err(), DeonticError::GraphIsCyclic(_))); // is_verified is false, so it fails this check first
 }
 
 #[test]
@@ -55,7 +55,7 @@ fn test_evaluate_action_fails_if_not_frozen() {
 
     let result = ethos.evaluate_action(&action, &context, &tags);
     assert!(result.is_err());
-    assert!(matches!(result.unwrap_err(), DeonticError::GraphNotFrozen));
+    assert!(matches!(result.unwrap_err(), DeonticError::GraphNotFrozen(_)));
 }
 
 #[test]
