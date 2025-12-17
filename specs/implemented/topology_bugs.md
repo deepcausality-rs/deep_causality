@@ -600,4 +600,4 @@ impl<T> Topology<T> {
 }
 ```
 
-Note: This is a breaking API change. All call sites would need to be updated to handle the `Result`. Alternatively, for backwards compatibility, a new `try_new` method could be added while keeping the existing `new` method (though this delays fixing the root issue).
+Note: This is a breaking API change. All call sites would need to be updated to handle the `Result`. 

@@ -49,6 +49,12 @@ impl BoundedComonad<GraphWitness> for GraphWitness {
         B: Zero + Copy + Clone,
     {
         let size = fa.num_vertices;
+        // Since Graph data is typically 1D (per vertex), but could be multi-dimensional per vertex?
+        // Wait, Graph definition uses num_vertices for size.
+        // Let's check if Graph has .data with shape.
+        // Graph struct has `data: CausalTensor<T>`.
+        // So we should use fa.data.shape().to_vec().
+        let shape = fa.data.shape().to_vec();
         let mut result_vec = Vec::with_capacity(size);
 
         for i in 0..size {
@@ -60,7 +66,7 @@ impl BoundedComonad<GraphWitness> for GraphWitness {
         }
 
         let new_data =
-            CausalTensor::new(result_vec, vec![size]).expect("Data tensor creation should succeed");
+            CausalTensor::new(result_vec, shape).expect("Data tensor creation should succeed");
 
         Graph {
             num_vertices: fa.num_vertices,

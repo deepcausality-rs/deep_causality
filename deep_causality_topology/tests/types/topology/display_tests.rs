@@ -13,7 +13,7 @@ fn test_topology_display() {
     let grade = 0;
     let data = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
     let cursor = 1;
-    let topology = Topology::new(complex, grade, data, cursor);
+    let topology = Topology::new(complex, grade, data, cursor).unwrap();
 
     let display_str = format!("{}", topology);
 

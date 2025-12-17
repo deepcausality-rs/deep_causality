@@ -48,6 +48,7 @@ impl BoundedComonad<ManifoldWitness> for ManifoldWitness {
         B: Zero + Copy + Clone,
     {
         let size = fa.data.len();
+        let shape = fa.data.shape().to_vec(); // Preserve original shape
         let mut result_vec = Vec::with_capacity(size);
 
         for i in 0..size {
@@ -59,7 +60,7 @@ impl BoundedComonad<ManifoldWitness> for ManifoldWitness {
         }
 
         let new_data =
-            CausalTensor::new(result_vec, vec![size]).expect("Data tensor creation should succeed");
+            CausalTensor::new(result_vec, shape).expect("Data tensor creation should succeed");
 
         Manifold {
             complex: fa.complex.clone(),
