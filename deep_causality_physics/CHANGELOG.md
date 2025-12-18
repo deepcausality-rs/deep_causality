@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.1.1...deep_causality_physics-v0.2.0) - 2025-12-18
+
+### Fixed
+
+- *(deep_causality_physics)* Updated PhysicsError impl and usage.
+- *(deep_causality_physics)* Fixed a number of physics related bugs. Updated tests for verification.
+
+### Other
+
+- *(deep_causality_physics)* Increased test coverage.
+- *(deep_causality_physics)* Increased test coverage.
+
 ## [0.1.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.1.0...deep_causality_physics-v0.1.1) - 2025-12-14
 
 ### Added
