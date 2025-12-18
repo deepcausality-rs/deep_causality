@@ -12,6 +12,11 @@ pub struct AlfvenSpeed(f64);
 
 impl AlfvenSpeed {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Alfven Speed must be finite".into(),
+            ));
+        }
         if val < 0.0 {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Alfven Speed cannot be negative".into(),
@@ -36,6 +41,11 @@ pub struct PlasmaBeta(f64);
 
 impl PlasmaBeta {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Plasma Beta must be finite".into(),
+            ));
+        }
         if val < 0.0 {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Plasma Beta cannot be negative".into(),
@@ -58,6 +68,11 @@ pub struct MagneticPressure(f64);
 
 impl MagneticPressure {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Magnetic Pressure must be finite".into(),
+            ));
+        }
         if val < 0.0 {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Magnetic Pressure cannot be negative".into(),
@@ -80,6 +95,11 @@ pub struct LarmorRadius(f64);
 
 impl LarmorRadius {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Larmor Radius must be finite".into(),
+            ));
+        }
         if val <= 0.0 {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Larmor Radius must be positive".into(),
@@ -109,6 +129,11 @@ pub struct DebyeLength(f64);
 
 impl DebyeLength {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Debye Length must be finite".into(),
+            ));
+        }
         if val <= 0.0 {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Debye Length must be positive".into(),
@@ -138,6 +163,11 @@ pub struct PlasmaFrequency(f64);
 
 impl PlasmaFrequency {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Plasma Frequency must be finite".into(),
+            ));
+        }
         if val <= 0.0 {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Plasma Frequency must be positive".into(),
@@ -167,6 +197,11 @@ pub struct Conductivity(f64);
 
 impl Conductivity {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Conductivity must be finite".into(),
+            ));
+        }
         if val <= 0.0 {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Conductivity must be positive".into(),
@@ -196,6 +231,11 @@ pub struct Diffusivity(f64);
 
 impl Diffusivity {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
+        if !val.is_finite() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Diffusivity must be finite".into(),
+            ));
+        }
         if val < 0.0 {
             return Err(PhysicsError::PhysicalInvariantBroken(
                 "Diffusivity cannot be negative".into(),
