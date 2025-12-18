@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{PhysicsError, PhysicsErrorEnum};
+use crate::PhysicsError;
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_num::{Complex, DivisionAlgebra};
 use deep_causality_tensor::CausalTensor;
@@ -109,8 +109,8 @@ pub struct Conductance(f64);
 impl Conductance {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val < 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken("Negative Conductance".into()),
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Negative Conductance".into(),
             ));
         }
         Ok(Self(val))
@@ -138,8 +138,8 @@ impl Mobility {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         // Mobility is typically magnitude, thus non-negative.
         if val < 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken("Negative Mobility".into()),
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Negative Mobility".into(),
             ));
         }
         Ok(Self(val))
@@ -288,10 +288,8 @@ impl Concentration {
         // Concentration cannot be negative
         for &val in tensor.as_slice() {
             if val < 0.0 {
-                return Err(PhysicsError::new(
-                    PhysicsErrorEnum::PhysicalInvariantBroken(
-                        "Negative Concentration detected".into(),
-                    ),
+                return Err(PhysicsError::PhysicalInvariantBroken(
+                    "Negative Concentration detected".into(),
                 ));
             }
         }

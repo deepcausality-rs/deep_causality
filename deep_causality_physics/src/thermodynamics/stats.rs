@@ -4,7 +4,6 @@
  */
 
 use crate::BOLTZMANN_CONSTANT;
-
 use crate::{AmountOfSubstance, Energy, PhysicsError, Pressure, Probability, Temperature, Volume};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::Manifold;
@@ -27,10 +26,8 @@ pub fn heat_diffusion_kernel(
     // Heat Eq: du/dt = - alpha * Laplacian(u)
 
     if diffusivity < 0.0 {
-        return Err(PhysicsError::new(
-            crate::error::PhysicsErrorEnum::PhysicalInvariantBroken(
-                "Negative diffusivity violates second law of thermodynamics".into(),
-            ),
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "Negative diffusivity violates second law of thermodynamics".into(),
         ));
     }
 
@@ -72,10 +69,8 @@ pub fn ideal_gas_law_kernel(
     if n == 0.0 || t == 0.0 {
         // Singularity or invalid state for gas law derivation
         // Technically strict zero T is allowed only if P*V is 0
-        return Err(PhysicsError::new(
-            crate::error::PhysicsErrorEnum::Singularity(
-                "Zero moles or zero temp in ideal gas calculation".into(),
-            ),
+        return Err(PhysicsError::Singularity(
+            "Zero moles or zero temp in ideal gas calculation".into(),
         ));
     }
 
@@ -99,17 +94,13 @@ pub fn carnot_efficiency_kernel(
     let tc = temp_cold.value();
 
     if th <= 0.0 || tc < 0.0 {
-        return Err(PhysicsError::new(
-            crate::error::PhysicsErrorEnum::ZeroKelvinViolation,
-        ));
+        return Err(PhysicsError::ZeroKelvinViolation());
     }
 
     if tc >= th {
         // Not a heat engine if Tc >= Th (or strictly invalid for Carnot cycle)
-        return Err(PhysicsError::new(
-            crate::error::PhysicsErrorEnum::PhysicalInvariantBroken(
-                "Cold reservoir >= Hot reservoir".into(),
-            ),
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "Cold reservoir >= Hot reservoir".into(),
         ));
     }
 
@@ -143,9 +134,7 @@ pub fn boltzmann_factor_kernel(
     let k = BOLTZMANN_CONSTANT;
 
     if t == 0.0 {
-        return Err(PhysicsError::new(
-            crate::error::PhysicsErrorEnum::ZeroKelvinViolation,
-        ));
+        return Err(PhysicsError::ZeroKelvinViolation());
     }
 
     let beta = 1.0 / (k * t);
@@ -172,8 +161,8 @@ pub fn shannon_entropy_kernel(probs: &CausalTensor<f64>) -> Result<f64, PhysicsE
     let data = probs.as_slice();
 
     if data.is_empty() {
-        return Err(PhysicsError::new(
-            crate::error::PhysicsErrorEnum::DimensionMismatch("Probability tensor is empty".into()),
+        return Err(PhysicsError::DimensionMismatch(
+            "Probability tensor is empty".into(),
         ));
     }
 
@@ -181,10 +170,8 @@ pub fn shannon_entropy_kernel(probs: &CausalTensor<f64>) -> Result<f64, PhysicsE
     // Shannon entropy requires p >= 0.
     // Check for negative probabilities?
     if data.iter().any(|&p| p < 0.0) {
-        return Err(PhysicsError::new(
-            crate::error::PhysicsErrorEnum::NormalizationError(
-                "Negative probability in Shannon Entropy".into(),
-            ),
+        return Err(PhysicsError::NormalizationError(
+            "Negative probability in Shannon Entropy".into(),
         ));
     }
 
@@ -214,10 +201,8 @@ pub fn heat_capacity_kernel(
     let dt = diff_temp.value();
 
     if dt == 0.0 {
-        return Err(PhysicsError::new(
-            crate::error::PhysicsErrorEnum::PhysicalInvariantBroken(
-                "Zero temperature difference in heat capacity".into(),
-            ),
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "Zero temperature difference in heat capacity".into(),
         ));
     }
 
@@ -244,19 +229,13 @@ pub fn partition_function_kernel(
 
     // Check T=0 handled?
     if t == 0.0 {
-        // If T=0, only ground state contributes? Or undefined?
-        // Let's return error.
-        return Err(PhysicsError::new(
-            crate::error::PhysicsErrorEnum::ZeroKelvinViolation,
-        ));
+        return Err(PhysicsError::ZeroKelvinViolation());
     }
 
     let beta = 1.0 / (k * t);
     if !beta.is_finite() {
-        return Err(PhysicsError::new(
-            crate::error::PhysicsErrorEnum::NumericalInstability(
-                "Invalid beta in partition function".into(),
-            ),
+        return Err(PhysicsError::NumericalInstability(
+            "Invalid beta in partition function".into(),
         ));
     }
     let data = energies.as_slice();
@@ -272,10 +251,8 @@ pub fn partition_function_kernel(
         .sum();
 
     if !z.is_finite() {
-        return Err(PhysicsError::new(
-            crate::error::PhysicsErrorEnum::NumericalInstability(
-                "Non-finite partition function value".into(),
-            ),
+        return Err(PhysicsError::NumericalInstability(
+            "Non-finite partition function value".into(),
         ));
     }
 

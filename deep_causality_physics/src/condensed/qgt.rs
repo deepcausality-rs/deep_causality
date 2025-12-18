@@ -4,8 +4,8 @@
  */
 
 use crate::{
-    BandDrudeWeight, Energy, Length, PhysicsError, PhysicsErrorEnum, QuantumEigenvector,
-    QuantumMetric, QuantumVelocity,
+    BandDrudeWeight, Energy, Length, PhysicsError, QuantumEigenvector, QuantumMetric,
+    QuantumVelocity,
 };
 use deep_causality_num::Complex;
 
@@ -55,27 +55,25 @@ pub fn quantum_geometric_tensor_kernel(
 
     let shape = eigenvectors.inner().shape();
     if shape.len() != 2 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+        return Err(PhysicsError::DimensionMismatch(
             "Eigenvectors must be Rank 2".into(),
-        )));
+        ));
     }
     let basis_size = shape[0];
     let num_states = shape[1];
 
     if band_n >= num_states {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
-            format!(
-                "Band index {} out of bounds (max {})",
-                band_n,
-                num_states - 1
-            ),
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Band index {} out of bounds (max {})",
+            band_n,
+            num_states - 1
         )));
     }
 
     if energies.len() != num_states {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+        return Err(PhysicsError::DimensionMismatch(
             "Eigenvalues length mismatch".into(),
-        )));
+        ));
     }
 
     // Helper to compute matrix element <n | V | m>
@@ -179,19 +177,17 @@ pub fn effective_band_drude_weight_kernel(
     lattice_const: Length,
 ) -> Result<BandDrudeWeight, PhysicsError> {
     if !curvature_ii.is_finite() {
-        return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
+        return Err(PhysicsError::NumericalInstability(
             "Band curvature is not finite".into(),
-        )));
+        ));
     }
 
     let a = lattice_const.value();
     if a <= 0.0 {
-        return Err(PhysicsError::new(
-            PhysicsErrorEnum::PhysicalInvariantBroken(format!(
-                "Lattice constant must be positive, got {}",
-                a
-            )),
-        ));
+        return Err(PhysicsError::PhysicalInvariantBroken(format!(
+            "Lattice constant must be positive, got {}",
+            a
+        )));
     }
 
     // Energy gap scale
@@ -208,9 +204,9 @@ pub fn effective_band_drude_weight_kernel(
     let physical_weight = dimensionless_weight * scale_factor;
 
     if !physical_weight.is_finite() {
-        return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
+        return Err(PhysicsError::NumericalInstability(
             "Resulting Drude Weight is not finite".into(),
-        )));
+        ));
     }
 
     BandDrudeWeight::new(physical_weight)

@@ -11,12 +11,10 @@ pub struct PhaseAngle(f64);
 impl PhaseAngle {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
-            return Err(PhysicsError::new(
-                crate::PhysicsErrorEnum::NumericalInstability(format!(
-                    "PhaseAngle must be finite, got {}",
-                    val
-                )),
-            ));
+            return Err(PhysicsError::NumericalInstability(format!(
+                "PhaseAngle must be finite, got {}",
+                val
+            )));
         }
         Ok(Self(val))
     }

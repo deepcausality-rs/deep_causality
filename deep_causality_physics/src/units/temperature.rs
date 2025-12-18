@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{PhysicsError, PhysicsErrorEnum};
+use crate::PhysicsError;
 
 /// Absolute Temperature (Kelvin).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
@@ -17,7 +17,7 @@ impl Temperature {
     /// Returns `PhysicsError::ZeroKelvinViolation` if `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val < 0.0 {
-            return Err(PhysicsError::new(PhysicsErrorEnum::ZeroKelvinViolation));
+            return Err(PhysicsError::ZeroKelvinViolation());
         }
         Ok(Self(val))
     }

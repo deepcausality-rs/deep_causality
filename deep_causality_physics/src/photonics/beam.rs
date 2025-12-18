@@ -3,9 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::PhysicsError;
 use crate::dynamics::quantities::Length;
 use crate::photonics::quantities::{AbcdMatrix, ComplexBeamParameter, Wavelength};
-use crate::{PhysicsError, PhysicsErrorEnum};
 use deep_causality_num::{Complex, DivisionAlgebra};
 
 use std::f64::consts::PI;
@@ -26,9 +26,9 @@ pub fn gaussian_q_propagation_kernel(
 ) -> Result<ComplexBeamParameter, PhysicsError> {
     let m = matrix.inner();
     if m.shape() != [2, 2] {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+        return Err(PhysicsError::DimensionMismatch(
             "ABCD matrix must be 2x2".into(),
-        )));
+        ));
     }
 
     let d = m.data();
@@ -44,9 +44,9 @@ pub fn gaussian_q_propagation_kernel(
     let den = q * c + Complex::new(dd, 0.0);
 
     if den.norm_sqr() == 0.0 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::Singularity(
+        return Err(PhysicsError::Singularity(
             "Gaussian beam propagation singularity (denominator zero)".into(),
-        )));
+        ));
     }
 
     let q_out = num / den;
@@ -63,10 +63,8 @@ pub fn gaussian_q_propagation_kernel(
         // Technically Im(q) can be negative if we model converging wavefronts? No, wavefront is Re(1/q).
         // z_R is beam waist parameter, must be positive.
         // Let's enforce physical realizability for now.
-        return Err(PhysicsError::new(
-            PhysicsErrorEnum::PhysicalInvariantBroken(
-                "Resulting Gaussian q-parameter has non-positive imaginary part".into(),
-            ),
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "Resulting Gaussian q-parameter has non-positive imaginary part".into(),
         ));
     }
 
@@ -95,9 +93,7 @@ pub fn beam_spot_size_kernel(
     let lambda = wavelength.value();
 
     if q_val.norm_sqr() == 0.0 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::Singularity(
-            "q parameter is zero".into(),
-        )));
+        return Err(PhysicsError::Singularity("q parameter is zero".into()));
     }
 
     let inv_q = Complex::new(1.0, 0.0) / q_val;
@@ -117,12 +113,10 @@ pub fn beam_spot_size_kernel(
         // If Im(inv_q) >= 0, then z_R <= 0.
         // This should have been caught by ComplexBeamParameter invariant, but double check.
         // If z_R very small, might be 0.
-        return Err(PhysicsError::new(
-            PhysicsErrorEnum::PhysicalInvariantBroken(format!(
-                "Invalid q parameter for spot size extraction: Im(1/q) = {}",
-                im_inv_q
-            )),
-        ));
+        return Err(PhysicsError::PhysicalInvariantBroken(format!(
+            "Invalid q parameter for spot size extraction: Im(1/q) = {}",
+            im_inv_q
+        )));
     }
 
     let w_sq = -lambda / (PI * im_inv_q);

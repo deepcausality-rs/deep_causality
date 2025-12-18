@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::error::{PhysicsError, PhysicsErrorEnum};
+use crate::error::PhysicsError;
 
 /// Amount of Substance (Moles).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
@@ -12,8 +12,8 @@ pub struct AmountOfSubstance(f64);
 impl AmountOfSubstance {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val < 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken("Negative AmountOfSubstance".into()),
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Negative AmountOfSubstance".into(),
             ));
         }
         Ok(Self(val))
@@ -42,10 +42,8 @@ impl HalfLife {
     /// Returns `PhysicsError` if `val <= 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val <= 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken(
-                    "HalfLife must be positive (zero implies infinite decay rate)".into(),
-                ),
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "HalfLife must be positive (zero implies infinite decay rate)".into(),
             ));
         }
         Ok(Self(val))
@@ -70,8 +68,8 @@ pub struct Activity(f64);
 impl Activity {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val < 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken("Negative Activity".into()),
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Negative Activity".into(),
             ));
         }
         Ok(Self(val))
@@ -96,8 +94,8 @@ pub struct EnergyDensity(f64);
 impl EnergyDensity {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val < 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken("Negative EnergyDensity".into()),
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Negative EnergyDensity".into(),
             ));
         }
         Ok(Self(val))

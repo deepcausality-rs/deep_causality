@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{PhysicsError, PhysicsErrorEnum};
+use crate::PhysicsError;
 use alloc::format;
 
 /// Mass quantity (kg).
@@ -17,17 +17,16 @@ impl Mass {
     /// Returns `PhysicsError::PhysicalInvariantBroken` if `val` is not finite or `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken(format!("Mass must be finite: {}", val)),
-            ));
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "Mass must be finite: {}",
+                val
+            )));
         }
         if val < 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken(format!(
-                    "Mass cannot be negative: {}",
-                    val
-                )),
-            ));
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "Mass cannot be negative: {}",
+                val
+            )));
         }
         Ok(Self(val))
     }
@@ -56,17 +55,16 @@ impl Speed {
     /// Returns `PhysicsError::PhysicalInvariantBroken` if `val` is not finite or `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken(format!("Speed must be finite: {}", val)),
-            ));
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "Speed must be finite: {}",
+                val
+            )));
         }
         if val < 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken(format!(
-                    "Speed cannot be negative: {}",
-                    val
-                )),
-            ));
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "Speed cannot be negative: {}",
+                val
+            )));
         }
         Ok(Self(val))
     }
@@ -91,12 +89,10 @@ pub struct Acceleration(f64);
 impl Acceleration {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken(format!(
-                    "Acceleration must be finite: {}",
-                    val
-                )),
-            ));
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "Acceleration must be finite: {}",
+                val
+            )));
         }
         Ok(Self(val))
     }
@@ -121,9 +117,10 @@ pub struct Force(f64);
 impl Force {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken(format!("Force must be finite: {}", val)),
-            ));
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "Force must be finite: {}",
+                val
+            )));
         }
         Ok(Self(val))
     }
@@ -147,12 +144,10 @@ pub struct Torque(f64);
 impl Torque {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken(format!(
-                    "Torque must be finite: {}",
-                    val
-                )),
-            ));
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "Torque must be finite: {}",
+                val
+            )));
         }
         Ok(Self(val))
     }
@@ -179,20 +174,16 @@ impl Length {
     /// Returns `PhysicsError::PhysicalInvariantBroken` if `val` is not finite or `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken(format!(
-                    "Length must be finite: {}",
-                    val
-                )),
-            ));
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "Length must be finite: {}",
+                val
+            )));
         }
         if val < 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken(format!(
-                    "Length cannot be negative: {}",
-                    val
-                )),
-            ));
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "Length cannot be negative: {}",
+                val
+            )));
         }
         Ok(Self(val))
     }
@@ -219,17 +210,16 @@ impl Area {
     /// Returns `PhysicsError::PhysicalInvariantBroken` if `val` is not finite or `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken(format!("Area must be finite: {}", val)),
-            ));
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "Area must be finite: {}",
+                val
+            )));
         }
         if val < 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken(format!(
-                    "Area cannot be negative: {}",
-                    val
-                )),
-            ));
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "Area cannot be negative: {}",
+                val
+            )));
         }
         Ok(Self(val))
     }
@@ -256,20 +246,16 @@ impl Volume {
     /// Returns `PhysicsError::PhysicalInvariantBroken` if `val` is not finite or `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken(format!(
-                    "Volume must be finite: {}",
-                    val
-                )),
-            ));
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "Volume must be finite: {}",
+                val
+            )));
         }
         if val < 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken(format!(
-                    "Volume cannot be negative: {}",
-                    val
-                )),
-            ));
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "Volume cannot be negative: {}",
+                val
+            )));
         }
         Ok(Self(val))
     }
@@ -296,20 +282,16 @@ impl MomentOfInertia {
     /// Returns `PhysicsError::PhysicalInvariantBroken` if `val` is not finite or `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken(format!(
-                    "MomentOfInertia must be finite: {}",
-                    val
-                )),
-            ));
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "MomentOfInertia must be finite: {}",
+                val
+            )));
         }
         if val < 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken(format!(
-                    "MomentOfInertia cannot be negative: {}",
-                    val
-                )),
-            ));
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "MomentOfInertia cannot be negative: {}",
+                val
+            )));
         }
         Ok(Self(val))
     }
@@ -336,20 +318,16 @@ impl Frequency {
     /// Returns `PhysicsError::PhysicalInvariantBroken` if `val` is not finite or `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken(format!(
-                    "Frequency must be finite: {}",
-                    val
-                )),
-            ));
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "Frequency must be finite: {}",
+                val
+            )));
         }
         if val < 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken(format!(
-                    "Frequency cannot be negative: {}",
-                    val
-                )),
-            ));
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "Frequency cannot be negative: {}",
+                val
+            )));
         }
         Ok(Self(val))
     }

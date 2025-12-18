@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{PhysicsError, PhysicsErrorEnum};
+use crate::PhysicsError;
 
 /// Alfven Speed ($v_A$). Characteristic speed of magnetic waves in plasma.
 /// Unit: m/s. Constraint: >= 0.
@@ -13,8 +13,8 @@ pub struct AlfvenSpeed(f64);
 impl AlfvenSpeed {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val < 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken("Alfven Speed cannot be negative".into()),
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Alfven Speed cannot be negative".into(),
             ));
         }
         Ok(Self(val))
@@ -37,8 +37,8 @@ pub struct PlasmaBeta(f64);
 impl PlasmaBeta {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val < 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken("Plasma Beta cannot be negative".into()),
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Plasma Beta cannot be negative".into(),
             ));
         }
         Ok(Self(val))
@@ -59,10 +59,8 @@ pub struct MagneticPressure(f64);
 impl MagneticPressure {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val < 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken(
-                    "Magnetic Pressure cannot be negative".into(),
-                ),
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Magnetic Pressure cannot be negative".into(),
             ));
         }
         Ok(Self(val))
@@ -83,8 +81,8 @@ pub struct LarmorRadius(f64);
 impl LarmorRadius {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val <= 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken("Larmor Radius must be positive".into()),
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Larmor Radius must be positive".into(),
             ));
         }
         Ok(Self(val))
@@ -112,8 +110,8 @@ pub struct DebyeLength(f64);
 impl DebyeLength {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val <= 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken("Debye Length must be positive".into()),
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Debye Length must be positive".into(),
             ));
         }
         Ok(Self(val))
@@ -141,10 +139,8 @@ pub struct PlasmaFrequency(f64);
 impl PlasmaFrequency {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val <= 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken(
-                    "Plasma Frequency must be positive".into(),
-                ),
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Plasma Frequency must be positive".into(),
             ));
         }
         Ok(Self(val))
@@ -172,8 +168,8 @@ pub struct Conductivity(f64);
 impl Conductivity {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val <= 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken("Conductivity must be positive".into()),
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Conductivity must be positive".into(),
             ));
         }
         Ok(Self(val))
@@ -201,8 +197,8 @@ pub struct Diffusivity(f64);
 impl Diffusivity {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val < 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken("Diffusivity cannot be negative".into()),
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Diffusivity cannot be negative".into(),
             ));
         }
         Ok(Self(val))

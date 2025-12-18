@@ -3,9 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::PhysicsError;
 use crate::dynamics::quantities::Length;
 use crate::photonics::quantities::{RayAngle, Wavelength};
-use crate::{PhysicsError, PhysicsErrorEnum};
 use std::f64::consts::PI;
 
 /// Calculates the Single Slit Diffraction Irradiance.
@@ -29,8 +29,8 @@ pub fn single_slit_irradiance_kernel(
     wavelength: Wavelength,
 ) -> Result<f64, PhysicsError> {
     if i0 < 0.0 {
-        return Err(PhysicsError::new(
-            PhysicsErrorEnum::PhysicalInvariantBroken("Irradiance i0 cannot be negative".into()),
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "Irradiance i0 cannot be negative".into(),
         ));
     }
 
@@ -39,9 +39,7 @@ pub fn single_slit_irradiance_kernel(
     let angle = theta.value();
 
     if lambda == 0.0 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::Singularity(
-            "Wavelength is zero".into(),
-        )));
+        return Err(PhysicsError::Singularity("Wavelength is zero".into()));
     }
 
     let beta = (PI * a * angle.sin()) / lambda;
@@ -83,8 +81,8 @@ pub fn grating_equation_kernel(
     let theta_i = incidence.value();
 
     if d <= 0.0 {
-        return Err(PhysicsError::new(
-            PhysicsErrorEnum::PhysicalInvariantBroken("Grating pitch must be positive".into()),
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "Grating pitch must be positive".into(),
         ));
     }
 
@@ -92,12 +90,10 @@ pub fn grating_equation_kernel(
     let sin_theta_m = (m * lambda / d) + theta_i.sin();
 
     if sin_theta_m.abs() > 1.0 {
-        return Err(PhysicsError::new(
-            PhysicsErrorEnum::PhysicalInvariantBroken(format!(
-                "Diffraction order {} does not exist for this configuration (sin_theta = {})",
-                order, sin_theta_m
-            )),
-        ));
+        return Err(PhysicsError::PhysicalInvariantBroken(format!(
+            "Diffraction order {} does not exist for this configuration (sin_theta = {})",
+            order, sin_theta_m
+        )));
     }
 
     let theta_m = sin_theta_m.asin();

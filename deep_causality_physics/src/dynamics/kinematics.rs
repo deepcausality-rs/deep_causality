@@ -47,17 +47,13 @@ pub fn kinetic_energy_kernel(
     // Ensure physically meaningful squared speed
     let v_sq = velocity.squared_magnitude();
     if !v_sq.is_finite() {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::NumericalInstability(
-                "Velocity squared magnitude is not finite".into(),
-            ),
+        return Err(PhysicsError::NumericalInstability(
+            "Velocity squared magnitude is not finite".into(),
         ));
     }
     if v_sq < -1e-12 {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::PhysicalInvariantBroken(
-                "Negative squared speed in kinetic energy calculation".into(),
-            ),
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "Negative squared speed in kinetic energy calculation".into(),
         ));
     }
     let v_sq_clamped = if v_sq < 0.0 { 0.0 } else { v_sq };
@@ -100,13 +96,11 @@ pub fn torque_kernel(
     // Torque = r x F (Outer product in GA gives Bivector torque)
     // T = r ^ F
     if radius.metric() != force.metric() {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::DimensionMismatch(format!(
-                "Metric mismatch: {:?} != {:?}",
-                radius.metric(),
-                force.metric()
-            )),
-        ));
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Metric mismatch: {:?} != {:?}",
+            radius.metric(),
+            force.metric()
+        )));
     }
     let t = radius.outer_product(force);
     Ok(PhysicalVector(t))
@@ -126,13 +120,11 @@ pub fn angular_momentum_kernel(
 ) -> Result<PhysicalVector, PhysicsError> {
     // L = r x p = r ^ p
     if radius.metric() != momentum.metric() {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::DimensionMismatch(format!(
-                "Metric mismatch: {:?} != {:?}",
-                radius.metric(),
-                momentum.metric()
-            )),
-        ));
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Metric mismatch: {:?} != {:?}",
+            radius.metric(),
+            momentum.metric()
+        )));
     }
     let l = radius.outer_product(momentum);
     Ok(PhysicalVector(l))

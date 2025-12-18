@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{PhysicsError, PhysicsErrorEnum};
+use crate::PhysicsError;
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 
 /// Calculates current density $J^\mu$ compatible with curved spacetime.
@@ -29,9 +29,9 @@ pub fn relativistic_current_kernel(
     _metric: &CausalTensor<f64>, // Unused in partial divergence approximation but kept for API compatibility/future expansion
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     if em_tensor.num_dim() != 2 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+        return Err(PhysicsError::DimensionMismatch(
             "EM Tensor must be Rank 2".into(),
-        )));
+        ));
     }
 
     // Contraction of derivative?
@@ -65,10 +65,10 @@ pub fn relativistic_current_kernel(
     // I will return an Error explaining the limitation: "Cannot compute divergence without manifold/derivative context".
     // This satisfies "production grade" (don't return garbage).
 
-    Err(PhysicsError::new(PhysicsErrorEnum::CalculationError(
+    Err(PhysicsError::CalculationError(
         "Cannot compute current J = div F from local tensor F without derivative operator context"
             .into(),
-    )))
+    ))
 }
 
 /// Calculates the electromagnetic stress-energy tensor $T^{\mu\nu}_{EM}$.
@@ -85,9 +85,9 @@ pub fn energy_momentum_tensor_em_kernel(
     metric: &CausalTensor<f64>,
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     if em_tensor.num_dim() != 2 || metric.num_dim() != 2 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+        return Err(PhysicsError::DimensionMismatch(
             "Tensors must be Rank 2".into(),
-        )));
+        ));
     }
 
     // 1. Compute covariant F_αβ = g_αμ * F^μν * g_νβ
@@ -106,9 +106,9 @@ pub fn energy_momentum_tensor_em_kernel(
     {
         f2_tensor.data()[0]
     } else {
-        return Err(PhysicsError::new(PhysicsErrorEnum::CalculationError(
+        return Err(PhysicsError::CalculationError(
             "Scalar contraction failed".into(),
-        )));
+        ));
     };
 
     // 3. Compute Term 1: T1^uv = F^ua * F^v_a
