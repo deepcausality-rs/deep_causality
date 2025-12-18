@@ -5,8 +5,8 @@
 
 use deep_causality_num::Complex;
 use deep_causality_physics::{
-    BeamWaist, ComplexBeamParameter, FocalLength, JonesVector, NumericalAperture, OpticalPower,
-    Wavelength,
+    AbcdMatrix, BeamWaist, ComplexBeamParameter, FocalLength, JonesVector, NumericalAperture,
+    OpticalPower, RayAngle, RayHeight, StokesVector, Wavelength,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -133,4 +133,46 @@ fn test_beam_waist_default() {
 fn test_complex_beam_parameter_default() {
     let q: ComplexBeamParameter = Default::default();
     assert_eq!(q.value(), Complex::new(0.0, 0.0));
+}
+
+#[test]
+fn test_ray_height_default() {
+    let y: RayHeight = Default::default();
+    assert_eq!(y.value(), 0.0);
+}
+
+#[test]
+fn test_ray_angle_default() {
+    let theta: RayAngle = Default::default();
+    assert_eq!(theta.value(), 0.0);
+}
+
+#[test]
+fn test_abcd_matrix_default() {
+    let m: AbcdMatrix = Default::default();
+    assert!(m.inner().is_empty());
+}
+
+#[test]
+fn test_jones_vector_default() {
+    let j: JonesVector = Default::default();
+    assert!(j.inner().is_empty());
+}
+
+#[test]
+fn test_stokes_vector_default() {
+    let s: StokesVector = Default::default();
+    assert!(s.inner().is_empty());
+}
+
+#[test]
+fn test_ray_height_new() {
+    let y = RayHeight::new(10.0).unwrap();
+    assert_eq!(y.value(), 10.0);
+}
+
+#[test]
+fn test_ray_angle_new() {
+    let a = RayAngle::new(0.5).unwrap();
+    assert_eq!(a.value(), 0.5);
 }

@@ -55,13 +55,17 @@ where
     ) -> Result<Verdict, DeonticError> {
         // Mitigation for Risk A2: Explicitly check if the graph is frozen.
         if !self.teloid_graph.graph.is_frozen() {
-            return Err(DeonticError::GraphNotFrozen);
+            return Err(DeonticError::GraphNotFrozen(
+                ultragraph::GraphError::GraphNotFrozen,
+            ));
         }
 
         // Mitigation for Risk C3: Check if the graph has been verified for acyclicity.
         if !self.is_verified {
-            // Suggesting verification instead of just erroring out.
-            return Err(DeonticError::GraphIsCyclic);
+            // Suggesting verification instead        if !self.is_verified {
+            return Err(DeonticError::GraphIsCyclic(
+                ultragraph::GraphError::GraphContainsCycle,
+            ));
         }
 
         // Step 1: Filtering - Get a candidate set of Teloids using the provided tags.

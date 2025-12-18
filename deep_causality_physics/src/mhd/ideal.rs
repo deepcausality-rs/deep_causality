@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::mhd::quantities::{AlfvenSpeed, MagneticPressure};
-use crate::{Density, PhysicalField, PhysicsError, PhysicsErrorEnum};
+use crate::{Density, PhysicalField, PhysicsError};
 use deep_causality_multivector::MultiVector;
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
@@ -29,21 +29,21 @@ pub fn alfven_speed_kernel(
     let rho = density.value();
 
     if permeability <= 0.0 {
-        return Err(PhysicsError::new(
-            PhysicsErrorEnum::PhysicalInvariantBroken("Permeability must be positive".into()),
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "Permeability must be positive".into(),
         ));
     }
 
     if rho < 0.0 {
-        return Err(PhysicsError::new(
-            PhysicsErrorEnum::PhysicalInvariantBroken("Density cannot be negative".into()),
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "Density cannot be negative".into(),
         ));
     }
 
     if rho == 0.0 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::Singularity(
+        return Err(PhysicsError::Singularity(
             "Zero density in Alfven speed".into(),
-        )));
+        ));
     }
 
     let denom = (permeability * rho).sqrt();
@@ -68,8 +68,8 @@ pub fn magnetic_pressure_kernel(
     let b_sq = b_field.inner().squared_magnitude();
 
     if permeability <= 0.0 {
-        return Err(PhysicsError::new(
-            PhysicsErrorEnum::PhysicalInvariantBroken("Permeability must be positive".into()),
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "Permeability must be positive".into(),
         ));
     }
 
@@ -107,9 +107,9 @@ pub fn ideal_induction_kernel(
 
     // Need at least 0, 1, 2 skeletons
     if skeletons.len() < 3 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+        return Err(PhysicsError::DimensionMismatch(
             "Manifold must be at least 2D (preferably 3D) for induction".into(),
-        )));
+        ));
     }
 
     let n0 = skeletons[0].simplices().len();
@@ -118,9 +118,9 @@ pub fn ideal_induction_kernel(
 
     // Verify data lengths (Manifold enforces this on creation, but checks are cheap)
     if v_manifold.data().len() < n0 + n1 + n2 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+        return Err(PhysicsError::DimensionMismatch(
             "v_manifold data too small".into(),
-        )));
+        ));
     }
 
     // 2. Extract Data Slices
@@ -136,9 +136,9 @@ pub fn ideal_induction_kernel(
     // star_b: 2-form -> 1-form (in 3D)
     // Using hodge_star_operators[2]
     if complex.hodge_star_operators().len() <= 2 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::CalculationError(
+        return Err(PhysicsError::CalculationError(
             "Hodge star operator for 2-forms not available".into(),
-        )));
+        ));
     }
     let h_star_2 = &complex.hodge_star_operators()[2];
     let star_b_data = apply_csr_f64(h_star_2, b_slice);
@@ -155,9 +155,9 @@ pub fn ideal_induction_kernel(
     // iv_b is 1-form. d maps to 2-form.
     // Use coboundary_operators[1].
     if complex.coboundary_operators().len() <= 1 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::CalculationError(
+        return Err(PhysicsError::CalculationError(
             "Coboundary operator for 1-forms not available".into(),
-        )));
+        ));
     }
     let d_1 = &complex.coboundary_operators()[1];
     let dt_b_neg_data = apply_csr_i8_f64(d_1, &iv_b_data);
@@ -234,9 +234,9 @@ fn wedge_product_1form_1form(
 ) -> Result<Vec<f64>, PhysicsError> {
     let skeletons = complex.skeletons();
     if skeletons.len() < 3 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+        return Err(PhysicsError::DimensionMismatch(
             "Complex must have 2-simplices".into(),
-        )));
+        ));
     }
     let edges = skeletons[1].simplices();
     let faces = skeletons[2].simplices();

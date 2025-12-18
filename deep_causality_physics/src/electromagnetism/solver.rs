@@ -3,8 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::PhysicsErrorEnum;
-use crate::error::PhysicsError;
+use crate::PhysicsError;
 use deep_causality_multivector::{CausalMultiVector, MultiVector};
 
 /// A standard solver for Maxwell's Equations in Geometric Algebra.
@@ -61,20 +60,23 @@ impl MaxwellSolver {
     ///
     /// # Returns
     /// * `Ok(f64)` - The scalar divergence.
+    /// * `Err(PhysicsError)` - If inputs are not pure grade-1 vectors.
     pub fn calculate_potential_divergence(
         gradient: &CausalMultiVector<f64>,
         potential: &CausalMultiVector<f64>,
     ) -> Result<f64, PhysicsError> {
         Self::validate_compatibility(gradient, potential)?;
+        Self::validate_pure_grade(gradient, 1, "gradient")?;
+        Self::validate_pure_grade(potential, 1, "potential")?;
 
         // L = d . A (Scalar part of geometric product)
         let da = gradient.inner_product(potential);
         let scalar = *da.get(0).unwrap_or(&0.0);
 
         if !scalar.is_finite() {
-            return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
+            return Err(PhysicsError::NumericalInstability(
                 "Non-finite potential divergence".into(),
-            )));
+            ));
         }
 
         Ok(scalar)
@@ -144,12 +146,10 @@ impl MaxwellSolver {
         b: &CausalMultiVector<f64>,
     ) -> Result<(), PhysicsError> {
         if a.metric() != b.metric() {
-            return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
-                format!(
-                    "Metric mismatch in Maxwell Solver: {:?} vs {:?}",
-                    a.metric(),
-                    b.metric()
-                ),
+            return Err(PhysicsError::DimensionMismatch(format!(
+                "Metric mismatch in Maxwell Solver: {:?} vs {:?}",
+                a.metric(),
+                b.metric()
             )));
         }
         Ok(())
@@ -157,9 +157,29 @@ impl MaxwellSolver {
 
     fn validate_finiteness(mv: &CausalMultiVector<f64>, context: &str) -> Result<(), PhysicsError> {
         if mv.data().iter().any(|v| !v.is_finite()) {
-            return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
-                format!("Non-finite value detected in {}", context),
+            return Err(PhysicsError::NumericalInstability(format!(
+                "Non-finite value detected in {}",
+                context
             )));
+        }
+        Ok(())
+    }
+
+    fn validate_pure_grade(
+        mv: &CausalMultiVector<f64>,
+        expected_grade: u32,
+        context: &str,
+    ) -> Result<(), PhysicsError> {
+        for (i, &val) in mv.data().iter().enumerate() {
+            if val.abs() > 1e-10 {
+                let grade = i.count_ones();
+                if grade != expected_grade {
+                    return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                        "{} must be pure grade {} multivector, but contains grade {} at index {}",
+                        context, expected_grade, grade, i
+                    )));
+                }
+            }
         }
         Ok(())
     }

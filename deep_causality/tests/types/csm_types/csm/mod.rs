@@ -7,6 +7,6 @@
 mod csm_all_states_tests;
 #[cfg(test)]
 mod csm_constructor_tests;
-
+mod csm_id_repro;
 #[cfg(test)]
 mod csm_single_state_tests;

@@ -43,6 +43,18 @@ fn test_probability_new_error_greater_than_one() {
 }
 
 #[test]
+fn test_probability_new_nan_error() {
+    let prob = Probability::new(f64::NAN);
+    assert!(prob.is_err());
+}
+
+#[test]
+fn test_probability_new_infinity_error() {
+    let prob = Probability::new(f64::INFINITY);
+    assert!(prob.is_err());
+}
+
+#[test]
 fn test_probability_new_unchecked() {
     let prob = Probability::new_unchecked(1.5);
     // Unchecked allows invalid values
@@ -65,6 +77,18 @@ fn test_phase_angle_new_valid() {
     let angle = PhaseAngle::new(PI);
     assert!(angle.is_ok());
     assert!((angle.unwrap().value() - PI).abs() < 1e-10);
+}
+
+#[test]
+fn test_phase_angle_new_nan_error() {
+    let angle = PhaseAngle::new(f64::NAN);
+    assert!(angle.is_err());
+}
+
+#[test]
+fn test_phase_angle_new_infinity_error() {
+    let angle = PhaseAngle::new(f64::INFINITY);
+    assert!(angle.is_err());
 }
 
 #[test]

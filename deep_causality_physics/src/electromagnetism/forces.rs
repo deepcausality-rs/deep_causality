@@ -31,20 +31,16 @@ pub fn lorentz_force_kernel(
     // This kernel specifically computes the J \times B term.
     // Check for metric compatibility
     if j.metric() != b.metric() {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::DimensionMismatch(format!(
-                "Metric mismatch in Lorentz Force: {:?} vs {:?}",
-                j.metric(),
-                b.metric()
-            )),
-        ));
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Metric mismatch in Lorentz Force: {:?} vs {:?}",
+            j.metric(),
+            b.metric()
+        )));
     }
     let f = j.outer_product(b);
     if f.data().iter().any(|v| !v.is_finite()) {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::NumericalInstability(
-                "Non-finite value in Lorentz force (J ∧ B)".into(),
-            ),
+        return Err(PhysicsError::NumericalInstability(
+            "Non-finite value in Lorentz force (J ∧ B)".into(),
         ));
     }
     Ok(f)

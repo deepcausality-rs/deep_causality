@@ -79,6 +79,22 @@ fn test_klein_gordon_kernel_valid() {
     );
 }
 
+#[test]
+fn test_klein_gordon_kernel_nan_mass() {
+    let manifold = create_simple_manifold();
+    let mass = f64::NAN;
+    let result = klein_gordon_kernel(&manifold, mass);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_klein_gordon_kernel_inf_mass() {
+    let manifold = create_simple_manifold();
+    let mass = f64::INFINITY;
+    let result = klein_gordon_kernel(&manifold, mass);
+    assert!(result.is_err());
+}
+
 // =============================================================================
 // Born Probability Kernel Tests
 // =============================================================================
@@ -97,6 +113,17 @@ fn test_born_probability_kernel_normalized() {
         "Probability must be in [0,1], got {}",
         p
     );
+}
+
+#[test]
+fn test_born_probability_kernel_dimension_error() {
+    let state = create_test_state();
+    let data_wrong = vec![Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)];
+    let mv_wrong = CausalMultiVector::new(data_wrong, Metric::Euclidean(1)).unwrap();
+    let basis_wrong = HilbertState::from_multivector(mv_wrong);
+
+    let result = born_probability_kernel(&state, &basis_wrong);
+    assert!(result.is_err());
 }
 
 #[test]
@@ -141,6 +168,17 @@ fn test_expectation_value_kernel_valid() {
     assert!(result.is_ok());
 }
 
+#[test]
+fn test_expectation_value_kernel_dimension_error() {
+    let state = create_test_state();
+    let data_wrong = vec![Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)];
+    let mv_wrong = CausalMultiVector::new(data_wrong, Metric::Euclidean(1)).unwrap();
+    let operator_wrong = HilbertState::from_multivector(mv_wrong);
+
+    let result = expectation_value_kernel(&state, &operator_wrong);
+    assert!(result.is_err());
+}
+
 // =============================================================================
 // Apply Gate Kernel Tests
 // =============================================================================
@@ -154,6 +192,17 @@ fn test_apply_gate_kernel_identity() {
     assert!(result.is_ok());
 }
 
+#[test]
+fn test_apply_gate_kernel_dimension_error() {
+    let state = create_test_state();
+    let data_wrong = vec![Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)];
+    let mv_wrong = CausalMultiVector::new(data_wrong, Metric::Euclidean(1)).unwrap();
+    let gate_wrong = HilbertState::from_multivector(mv_wrong);
+
+    let result = apply_gate_kernel(&state, &gate_wrong);
+    assert!(result.is_err());
+}
+
 // =============================================================================
 // Commutator Kernel Tests
 // =============================================================================
@@ -165,6 +214,17 @@ fn test_commutator_kernel_valid() {
 
     let result = commutator_kernel(&op_a, &op_b);
     assert!(result.is_ok());
+}
+
+#[test]
+fn test_commutator_kernel_dimension_error() {
+    let op_a = create_test_state();
+    let data_wrong = vec![Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)];
+    let mv_wrong = CausalMultiVector::new(data_wrong, Metric::Euclidean(1)).unwrap();
+    let op_wrong = HilbertState::from_multivector(mv_wrong);
+
+    let result = commutator_kernel(&op_a, &op_wrong);
+    assert!(result.is_err());
 }
 
 #[test]
@@ -234,6 +294,14 @@ fn test_haruna_hadamard_gate_kernel_valid() {
     let field_b = create_real_field();
     let result = haruna_hadamard_gate_kernel(&field_a, &field_b);
     assert!(result.is_ok());
+}
+
+#[test]
+fn test_haruna_hadamard_gate_kernel_dimension_error() {
+    let field_a = create_real_field();
+    let field_wrong = CausalMultiVector::new(vec![1.0, 0.0], Metric::Euclidean(1)).unwrap();
+    let result = haruna_hadamard_gate_kernel(&field_a, &field_wrong);
+    assert!(result.is_err());
 }
 
 #[test]

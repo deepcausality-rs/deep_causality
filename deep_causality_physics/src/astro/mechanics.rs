@@ -3,10 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::NEWTONIAN_CONSTANT_OF_GRAVITATION;
-use crate::SPEED_OF_LIGHT;
-use crate::error::PhysicsError;
-use crate::{Length, Mass, Speed};
+use crate::{Length, Mass, PhysicsError, Speed};
+use crate::{NEWTONIAN_CONSTANT_OF_GRAVITATION, SPEED_OF_LIGHT};
 
 /// Calculates orbital velocity: $v = \sqrt{\frac{GM}{r}}$.
 ///
@@ -22,10 +20,8 @@ pub fn orbital_velocity_kernel(
 ) -> Result<Speed, PhysicsError> {
     let r = radius.value();
     if r <= 0.0 {
-        return Err(PhysicsError::new(
-            crate::error::PhysicsErrorEnum::MetricSingularity(
-                "Non-positive radius in orbital velocity".into(),
-            ),
+        return Err(PhysicsError::MetricSingularity(
+            "Non-positive radius in orbital velocity".into(),
         ));
     }
     let gm = NEWTONIAN_CONSTANT_OF_GRAVITATION * mass_primary.value();
@@ -46,10 +42,8 @@ pub fn escape_velocity_kernel(mass_primary: &Mass, radius: &Length) -> Result<Sp
     // v = sqrt(2GM / r)
     let gm = NEWTONIAN_CONSTANT_OF_GRAVITATION * mass_primary.value();
     if radius.value() == 0.0 {
-        return Err(PhysicsError::new(
-            crate::error::PhysicsErrorEnum::MetricSingularity(
-                "Zero radius in escape velocity".into(),
-            ),
+        return Err(PhysicsError::MetricSingularity(
+            "Zero radius in escape velocity".into(),
         ));
     }
     let v = (2.0 * gm / radius.value()).sqrt();

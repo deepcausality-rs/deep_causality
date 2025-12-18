@@ -27,7 +27,11 @@ where
         self.teloid_graph.graph.freeze();
         if self.teloid_graph.graph.has_cycle()? {
             self.is_verified = false;
-            Err(DeonticError::GraphIsCyclic)
+            // Fix: Unfreeze graph so the cycle can be fixed
+            self.teloid_graph.graph.unfreeze();
+            Err(DeonticError::GraphIsCyclic(
+                ultragraph::GraphError::GraphContainsCycle,
+            ))
         } else {
             self.is_verified = true;
             Ok(())

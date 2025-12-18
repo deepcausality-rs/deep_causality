@@ -28,10 +28,8 @@ pub fn maxwell_gradient_kernel(
     let f_tensor = potential_manifold.exterior_derivative(1);
     // Validate that a 2-form was actually produced (non-empty, expected rank)
     if f_tensor.is_empty() || f_tensor.shape().is_empty() {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::DimensionMismatch(
-                "Maxwell gradient produced empty or invalid 2-form".into(),
-            ),
+        return Err(PhysicsError::DimensionMismatch(
+            "Maxwell gradient produced empty or invalid 2-form".into(),
         ));
     }
     Ok(f_tensor)
@@ -78,27 +76,21 @@ pub fn poynting_vector_kernel(
     // This is the dual of the classical vector cross product.
     // We return Energy Density Flux in this bivector form.
     if e.metric() != b.metric() {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::DimensionMismatch(format!(
-                "Metric mismatch in Poynting Vector: {:?} vs {:?}",
-                e.metric(),
-                b.metric()
-            )),
-        ));
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Metric mismatch in Poynting Vector: {:?} vs {:?}",
+            e.metric(),
+            b.metric()
+        )));
     }
     if e.data().iter().any(|v| !v.is_finite()) || b.data().iter().any(|v| !v.is_finite()) {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::NumericalInstability(
-                "Non-finite input in Poynting Vector".into(),
-            ),
+        return Err(PhysicsError::NumericalInstability(
+            "Non-finite input in Poynting Vector".into(),
         ));
     }
     let s = e.outer_product(b);
     if s.data().iter().any(|v| !v.is_finite()) {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::NumericalInstability(
-                "Non-finite result in Poynting Vector".into(),
-            ),
+        return Err(PhysicsError::NumericalInstability(
+            "Non-finite result in Poynting Vector".into(),
         ));
     }
     Ok(s)
@@ -121,13 +113,11 @@ pub fn magnetic_helicity_density_kernel(
     // This function computes the local density.
 
     if potential.metric() != field.metric() {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::DimensionMismatch(format!(
-                "Metric mismatch in Magnetic Helicity: {:?} vs {:?}",
-                potential.metric(),
-                field.metric()
-            )),
-        ));
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Metric mismatch in Magnetic Helicity: {:?} vs {:?}",
+            potential.metric(),
+            field.metric()
+        )));
     }
 
     let h_scalar_mv = potential.inner_product(field);
@@ -161,21 +151,21 @@ pub fn proca_equation_kernel(
     let delta_f = field_manifold.codifferential(2);
 
     if !mass.is_finite() {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::NumericalInstability("Non-finite mass in Proca".into()),
+        return Err(PhysicsError::NumericalInstability(
+            "Non-finite mass in Proca".into(),
         ));
     }
     if delta_f.as_slice().iter().any(|v| !v.is_finite()) {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::NumericalInstability("delta(F) has non-finite entries".into()),
+        return Err(PhysicsError::NumericalInstability(
+            "delta(F) has non-finite entries".into(),
         ));
     }
 
     // 2. Compute m^2 A (ensure it's a 1-form tensor compatible with delta F)
     let m2 = mass * mass;
     if !m2.is_finite() {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::NumericalInstability("m^2 overflowed in Proca".into()),
+        return Err(PhysicsError::NumericalInstability(
+            "m^2 overflowed in Proca".into(),
         ));
     }
     let a_full = potential_manifold.data(); // underlying data tensor
@@ -184,30 +174,26 @@ pub fn proca_equation_kernel(
     let a_shape = delta_f.shape().to_vec();
     let needed_len = delta_f.len();
     if a_full.len() < needed_len {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::DimensionMismatch(format!(
-                "Proca: potential data shorter than 1-form domain: {} < {}",
-                a_full.len(),
-                needed_len
-            )),
-        ));
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Proca: potential data shorter than 1-form domain: {} < {}",
+            a_full.len(),
+            needed_len
+        )));
     }
     if a_full.as_slice()[..needed_len]
         .iter()
         .any(|v| !v.is_finite())
     {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::NumericalInstability(
-                "A(1-form) has non-finite entries".into(),
-            ),
+        return Err(PhysicsError::NumericalInstability(
+            "A(1-form) has non-finite entries".into(),
         ));
     }
     let a_1form = CausalTensor::new(a_full.as_slice()[..needed_len].to_vec(), a_shape)?;
 
     let m2_a = a_1form * m2;
     if m2_a.as_slice().iter().any(|v| !v.is_finite()) {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::NumericalInstability("m^2 A has non-finite entries".into()),
+        return Err(PhysicsError::NumericalInstability(
+            "m^2 A has non-finite entries".into(),
         ));
     }
 
@@ -215,21 +201,17 @@ pub fn proca_equation_kernel(
     // Note: CausalTensor implements Add
     // Check shapes before addition (J = delta_f + m2_a)
     if delta_f.shape() != m2_a.shape() {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::DimensionMismatch(format!(
-                "Shape mismatch in Proca Equation: delta F {:?} vs m^2 A {:?}",
-                delta_f.shape(),
-                m2_a.shape()
-            )),
-        ));
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Shape mismatch in Proca Equation: delta F {:?} vs m^2 A {:?}",
+            delta_f.shape(),
+            m2_a.shape()
+        )));
     }
     let j = delta_f + m2_a;
 
     if j.as_slice().iter().any(|v| !v.is_finite()) {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::NumericalInstability(
-                "Proca current J has non-finite entries".into(),
-            ),
+        return Err(PhysicsError::NumericalInstability(
+            "Proca current J has non-finite entries".into(),
         ));
     }
 

@@ -168,7 +168,9 @@ where
         child_id: TeloidID,
     ) -> Result<Self, DeonticError> {
         if self.is_frozen() {
-            return Err(DeonticError::GraphIsFrozen);
+            return Err(DeonticError::GraphIsFrozen(
+                ultragraph::GraphError::GraphIsFrozen,
+            ));
         }
 
         let parent_idx = *self
@@ -203,7 +205,9 @@ where
         defeated_id: TeloidID,
     ) -> Result<Self, DeonticError> {
         if self.is_frozen() {
-            return Err(DeonticError::GraphIsFrozen);
+            return Err(DeonticError::GraphIsFrozen(
+                ultragraph::GraphError::GraphIsFrozen,
+            ));
         }
 
         let defeater_idx = *self

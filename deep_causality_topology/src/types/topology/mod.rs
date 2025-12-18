@@ -25,18 +25,60 @@ pub struct Topology<T> {
     pub(crate) cursor: usize,
 }
 
+use crate::TopologyError;
+
 impl<T> Topology<T> {
     pub fn new(
         complex: Arc<SimplicialComplex>,
         grade: usize,
         data: CausalTensor<T>,
         cursor: usize,
-    ) -> Self {
-        Self {
+    ) -> Result<Self, TopologyError> {
+        // Validate grade
+        if grade > complex.max_simplex_dimension() {
+            return Err(TopologyError::InvalidGradeOperation(format!(
+                "grade {} exceeds max dimension {}",
+                grade,
+                complex.max_simplex_dimension()
+            )));
+        }
+
+        // Validate data/skeleton match
+        // Note: skeleton might be empty if grade exists but no simplices?
+        // complex.skeletons() returns a slice of skeletons.
+        // We need to check if grade index is valid for skeletons vector first.
+        if grade >= complex.skeletons.len() {
+            return Err(TopologyError::InvalidInput(format!(
+                "grade {} exceeds available skeletons {}",
+                grade,
+                complex.skeletons.len()
+            )));
+        }
+
+        let expected_size = complex.skeletons[grade].simplices.len();
+        if data.len() != expected_size {
+            return Err(TopologyError::InvalidInput(format!(
+                "data length {} does not match skeleton size {} for grade {}",
+                data.len(),
+                expected_size,
+                grade
+            )));
+        }
+
+        // Validate cursor bounds
+        if cursor >= data.len() && !data.is_empty() {
+            return Err(TopologyError::IndexOutOfBounds(format!(
+                "cursor {} is out of bounds for data length {}",
+                cursor,
+                data.len()
+            )));
+        }
+
+        Ok(Self {
             complex,
             grade,
             data,
             cursor,
-        }
+        })
     }
 }

@@ -53,8 +53,9 @@ fn test_half_life_new_valid() {
 
 #[test]
 fn test_half_life_new_zero() {
+    // Zero half-life is invalid because it implies infinite decay rate
     let hl = HalfLife::new(0.0);
-    assert!(hl.is_ok());
+    assert!(hl.is_err(), "Zero half-life should be rejected");
 }
 
 #[test]

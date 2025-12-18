@@ -161,3 +161,32 @@ fn test_from_triplets_unordered_input() {
     assert_eq!(matrix.col_indices(), &vec![0, 2, 1]);
     assert_eq!(matrix.row_indices(), &vec![0, 2, 3]);
 }
+
+// Tests for non-square matrices (these would fail before the fix)
+#[test]
+fn test_from_triplets_nonsquare_row_out_of_bounds() {
+    // 3x10 matrix: row 5 is out of bounds (only 3 rows)
+    let triplets = vec![(5, 1, 1.0)];
+    let err = CsrMatrix::from_triplets(3, 10, &triplets).unwrap_err();
+    // Should report index=5, size=3 (not max'd with cols)
+    assert_eq!(err, SparseMatrixError::IndexOutOfBounds(5, 3));
+}
+
+#[test]
+fn test_from_triplets_nonsquare_col_out_of_bounds() {
+    // 10x3 matrix: col 5 is out of bounds (only 3 cols)
+    let triplets = vec![(1, 5, 1.0)];
+    let err = CsrMatrix::from_triplets(10, 3, &triplets).unwrap_err();
+    // Should report index=5, size=3 (not max'd with rows)
+    assert_eq!(err, SparseMatrixError::IndexOutOfBounds(5, 3));
+}
+
+#[test]
+fn test_from_triplets_nonsquare_misleading_case() {
+    // 5x100 matrix: row 6 is out of bounds
+    // Before fix: would report IndexOutOfBounds(50, 100) - wrong!
+    // After fix: should report IndexOutOfBounds(6, 5)
+    let triplets = vec![(6, 50, 1.0)];
+    let err = CsrMatrix::from_triplets(5, 100, &triplets).unwrap_err();
+    assert_eq!(err, SparseMatrixError::IndexOutOfBounds(6, 5));
+}

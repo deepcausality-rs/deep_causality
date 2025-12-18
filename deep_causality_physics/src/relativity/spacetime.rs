@@ -5,7 +5,7 @@
 
 use crate::relativity::quantities::SpacetimeVector;
 
-use crate::error::{PhysicsError, PhysicsErrorEnum};
+use crate::error::PhysicsError;
 use crate::quantum::quantities::PhaseAngle;
 use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
 
@@ -27,12 +27,10 @@ pub fn spacetime_interval_kernel(
     // Validate that the vector's internal metric matches the context metric.
     // CausalMultiVector stores its immutable metric.
     if x.metric() != *metric {
-        return Err(PhysicsError::new(PhysicsErrorEnum::MetricSingularity(
-            format!(
-                "Spacetime Interval Metric Mismatch: Vector has {:?}, Context expects {:?}",
-                x.metric(),
-                metric
-            ),
+        return Err(PhysicsError::MetricSingularity(format!(
+            "Spacetime Interval Metric Mismatch: Vector has {:?}, Context expects {:?}",
+            x.metric(),
+            metric
         )));
     }
 
@@ -57,24 +55,22 @@ pub fn time_dilation_angle_kernel(
 ) -> Result<PhaseAngle, PhysicsError> {
     // Ensure compatible Minkowski metric
     if t1.metric() != t2.metric() {
-        return Err(PhysicsError::new(PhysicsErrorEnum::MetricSingularity(
+        return Err(PhysicsError::MetricSingularity(
             "Metric mismatch between vectors".into(),
-        )));
+        ));
     }
     if let deep_causality_multivector::Metric::Minkowski(_) = t1.metric() {
     } else {
-        return Err(PhysicsError::new(PhysicsErrorEnum::MetricSingularity(
+        return Err(PhysicsError::MetricSingularity(
             "Time dilation requires Minkowski metric".into(),
-        )));
+        ));
     }
 
     // Inner product must yield a scalar
     let inner = t1.inner_product(t2);
     if inner.data().is_empty() {
-        return Err(PhysicsError::new(
-            PhysicsErrorEnum::PhysicalInvariantBroken(
-                "Inner product did not yield any data".into(),
-            ),
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "Inner product did not yield any data".into(),
         ));
     }
 
@@ -82,12 +78,10 @@ pub fn time_dilation_angle_kernel(
     // In dense representation (e.g. 16 dims), inner product of vectors should be scalar (index 0).
     let non_scalar_magnitude: f64 = inner.data().iter().skip(1).map(|v| v.abs()).sum();
     if non_scalar_magnitude > 1e-9 {
-        return Err(PhysicsError::new(
-            PhysicsErrorEnum::PhysicalInvariantBroken(format!(
-                "Inner product did not yield scalar grade (non-scalar mag: {})",
-                non_scalar_magnitude
-            )),
-        ));
+        return Err(PhysicsError::PhysicalInvariantBroken(format!(
+            "Inner product did not yield scalar grade (non-scalar mag: {})",
+            non_scalar_magnitude
+        )));
     }
 
     let dot = inner.data()[0];
@@ -96,18 +90,18 @@ pub fn time_dilation_angle_kernel(
     let s1 = t1.squared_magnitude();
     let s2 = t2.squared_magnitude();
     if !(s1 > 0.0 && s2 > 0.0) {
-        return Err(PhysicsError::new(PhysicsErrorEnum::CausalityViolation(
+        return Err(PhysicsError::CausalityViolation(
             "Non-timelike vector encountered".into(),
-        )));
+        ));
     }
     let mag1 = s1.sqrt();
     let mag2 = s2.sqrt();
 
     let denom = mag1 * mag2;
     if denom == 0.0 || !denom.is_finite() {
-        return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
+        return Err(PhysicsError::NumericalInstability(
             "Invalid normalization in gamma computation".into(),
-        )));
+        ));
     }
 
     // Clamp gamma to handle floating-point noise
@@ -117,8 +111,9 @@ pub fn time_dilation_angle_kernel(
         gamma = 1.0;
     }
     if gamma < 1.0 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::CausalityViolation(
-            format!("Invalid Lorentz factor < 1.0: {}", gamma),
+        return Err(PhysicsError::CausalityViolation(format!(
+            "Invalid Lorentz factor < 1.0: {}",
+            gamma
         )));
     }
 
@@ -148,9 +143,9 @@ pub fn chronometric_volume_kernel(
 
     // Ensure all inputs share the same metric
     if a.metric() != b.metric() || a.metric() != c.metric() {
-        return Err(PhysicsError::new(PhysicsErrorEnum::MetricSingularity(
+        return Err(PhysicsError::MetricSingularity(
             "chronometric_volume requires all vectors to share the same metric".into(),
-        )));
+        ));
     }
 
     let v = a.outer_product(b).outer_product(c);

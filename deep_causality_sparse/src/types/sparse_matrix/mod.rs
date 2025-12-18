@@ -160,11 +160,11 @@ where
 
         // 1. Validate and filter out zero-value triplets initially
         for &(r, c, v) in triplets.iter() {
-            if r >= rows || c >= cols {
-                return Err(SparseMatrixError::IndexOutOfBounds(
-                    r.max(c),
-                    rows.max(cols),
-                ));
+            if r >= rows {
+                return Err(SparseMatrixError::IndexOutOfBounds(r, rows));
+            }
+            if c >= cols {
+                return Err(SparseMatrixError::IndexOutOfBounds(c, cols));
             }
             if v != T::zero() {
                 // Only include non-zero values
@@ -252,11 +252,11 @@ where
 
         // 1. Validate and filter out zero-value triplets initially
         for &(r, c, v) in triplets.iter() {
-            if r >= rows || c >= cols {
-                return Err(SparseMatrixError::IndexOutOfBounds(
-                    r.max(c),
-                    rows.max(cols),
-                ));
+            if r >= rows {
+                return Err(SparseMatrixError::IndexOutOfBounds(r, rows));
+            }
+            if c >= cols {
+                return Err(SparseMatrixError::IndexOutOfBounds(c, cols));
             }
             if v != zero {
                 // Only include non-zero values

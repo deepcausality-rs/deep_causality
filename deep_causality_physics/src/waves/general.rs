@@ -19,7 +19,7 @@
 //!   Formula (General Longitudinal):
 //!   $$ f_{obs} = f_{src} \left( \frac{v \pm v_o}{v \mp v_s} \right) $$
 //!   where signs depend on direction (approaching vs receding).
-use crate::{Frequency, Length, PhysicsError, PhysicsErrorEnum, Speed};
+use crate::{Frequency, Length, PhysicsError, Speed};
 
 /// Calculates the speed of a wave given its frequency and wavelength.
 ///
@@ -39,9 +39,9 @@ pub fn wave_speed_kernel(
 
     // Check for potential overflow or infinite values if required, though basic mul is usually safe.
     if v.is_infinite() {
-        return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
+        return Err(PhysicsError::NumericalInstability(
             "Wave speed calculation resulted in infinity".into(),
-        )));
+        ));
     }
 
     Speed::new(v)
@@ -81,11 +81,9 @@ pub fn doppler_effect_kernel(
 
     // Use an epsilon for float comparison to catch effective zeros
     if denominator <= 1e-9 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::MetricSingularity(
-            format!(
-                "Source speed ({}) equals or exceeds wave speed ({}) - Sonic Singularity",
-                vs, v
-            ),
+        return Err(PhysicsError::MetricSingularity(format!(
+            "Source speed ({}) equals or exceeds wave speed ({}) - Sonic Singularity",
+            vs, v
         )));
     }
 

@@ -31,9 +31,9 @@ pub fn radioactive_decay_kernel(
     time: &Time,
 ) -> Result<AmountOfSubstance, PhysicsError> {
     if half_life.value() == 0.0 {
-        return Err(PhysicsError::new(crate::PhysicsErrorEnum::Singularity(
+        return Err(PhysicsError::Singularity(
             "Radioactive half-life cannot be zero".into(),
-        )));
+        ));
     }
 
     // Calculation: N(t) = N0 * 2^(-t / t_half)
@@ -87,16 +87,14 @@ pub fn hadronization_kernel(
     dim: usize,
 ) -> Result<Vec<crate::dynamics::kinematics::PhysicalVector>, PhysicsError> {
     if dim == 0 {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::DimensionMismatch("Spatial dimension must be > 0".into()),
+        return Err(PhysicsError::DimensionMismatch(
+            "Spatial dimension must be > 0".into(),
         ));
     }
 
     if threshold < 0.0 {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::PhysicalInvariantBroken(
-                "Hadronization threshold cannot be negative".into(),
-            ),
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "Hadronization threshold cannot be negative".into(),
         ));
     }
 
@@ -127,10 +125,10 @@ pub fn hadronization_kernel(
             // Note: Metric is Copy, so it's implicitly copied here.
             let p_vec = deep_causality_multivector::CausalMultiVector::new(components, metric)
                 .map_err(|e| {
-                    PhysicsError::new(crate::PhysicsErrorEnum::NumericalInstability(format!(
+                    PhysicsError::NumericalInstability(format!(
                         "Failed to construct momentum vector: {}",
                         e
-                    )))
+                    ))
                 })?;
 
             particles.push(crate::dynamics::kinematics::PhysicalVector(p_vec));

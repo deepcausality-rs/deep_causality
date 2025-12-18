@@ -3,10 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{
-    Displacement, Energy, Momentum, PhysicsError, PhysicsErrorEnum, Ratio, Speed, Stiffness,
-    TwistAngle,
-};
+use crate::{Displacement, Energy, Momentum, PhysicsError, Ratio, Speed, Stiffness, TwistAngle};
 
 use deep_causality_num::Complex;
 use deep_causality_tensor::{CausalTensor, Tensor};
@@ -60,9 +57,9 @@ pub fn bistritzer_macdonald_kernel(
     shell_cutoff: usize,
 ) -> Result<CausalTensor<Complex<f64>>, PhysicsError> {
     if shell_cutoff != 1 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::CalculationError(
+        return Err(PhysicsError::CalculationError(
             "Only shell_cutoff=1 is currently supported".into(),
-        )));
+        ));
     }
 
     let theta = twist_angle.value();
@@ -199,9 +196,9 @@ pub fn foppl_von_karman_strain_simple_kernel(
     let nu = poisson_ratio.value();
 
     if epsilon.num_dim() != 2 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+        return Err(PhysicsError::DimensionMismatch(
             "Strain tensor must be Rank 2".into(),
-        )));
+        ));
     }
 
     // Calculate Trace: Tr(epsilon) = eps_xx + eps_yy
@@ -277,9 +274,9 @@ pub fn foppl_von_karman_strain_kernel(
 
     // 3. Total Strain Field
     if strain_linear.shape() != strain_nonlinear.shape() {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+        return Err(PhysicsError::DimensionMismatch(
             "Strain term shape mismatch between linear and non-linear components".into(),
-        )));
+        ));
     }
     let epsilon = strain_linear + strain_nonlinear;
 

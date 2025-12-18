@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{PhysicsError, PhysicsErrorEnum};
+use crate::PhysicsError;
 
 /// Pressure (Pascals).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
@@ -12,8 +12,8 @@ pub struct Pressure(f64);
 impl Pressure {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val < 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken("Negative Pressure".into()),
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Negative Pressure".into(),
             ));
         }
         Ok(Self(val))
@@ -38,8 +38,8 @@ pub struct Density(f64);
 impl Density {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val < 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken("Negative Density".into()),
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Negative Density".into(),
             ));
         }
         Ok(Self(val))
@@ -64,8 +64,8 @@ pub struct Viscosity(f64);
 impl Viscosity {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val < 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken("Negative Viscosity".into()),
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Negative Viscosity".into(),
             ));
         }
         Ok(Self(val))

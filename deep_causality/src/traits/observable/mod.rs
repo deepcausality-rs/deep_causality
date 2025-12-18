@@ -124,8 +124,11 @@ where
         target_threshold: NumericalValue,
         target_effect: NumericalValue,
     ) -> NumericalValue {
+        if self.is_empty() {
+            return 0.0;
+        }
+
         self.number_observation(target_threshold, target_effect) / self.len() as NumericalValue
-        // * (100 as NumericalValue)
     }
 
     /// Calculates the percentage of non-observations based on the criteria.

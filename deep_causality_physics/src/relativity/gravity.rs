@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::error::{PhysicsError, PhysicsErrorEnum};
+use crate::error::PhysicsError;
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 
 // Kernels
@@ -24,26 +24,23 @@ pub fn einstein_tensor_kernel(
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     // Validate ranks and shapes
     if ricci.num_dim() != 2 || metric.num_dim() != 2 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
-            format!(
-                "Einstein tensor requires rank-2 tensors. Got ranks: ricci={}, metric={}",
-                ricci.num_dim(),
-                metric.num_dim()
-            ),
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Einstein tensor requires rank-2 tensors. Got ranks: ricci={}, metric={}",
+            ricci.num_dim(),
+            metric.num_dim()
         )));
     }
     if ricci.shape() != metric.shape() {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
-            format!(
-                "Ricci and metric shapes must match. Got {:?} vs {:?}",
-                ricci.shape(),
-                metric.shape()
-            ),
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Ricci and metric shapes must match. Got {:?} vs {:?}",
+            ricci.shape(),
+            metric.shape()
         )));
     }
     if ricci.shape().len() == 2 && ricci.shape()[0] != ricci.shape()[1] {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
-            format!("Ricci tensor must be square. Got {:?}", ricci.shape()),
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Ricci tensor must be square. Got {:?}",
+            ricci.shape()
         )));
     }
 
@@ -72,13 +69,11 @@ pub fn geodesic_deviation_kernel(
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     // Validate ranks
     if riemann.num_dim() != 4 || velocity.num_dim() != 1 || separation.num_dim() != 1 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
-            format!(
-                "Geodesic Deviation requires Riemann Rank 4, Velocity Rank 1, Separation Rank 1. Got {}, {}, {}",
-                riemann.num_dim(),
-                velocity.num_dim(),
-                separation.num_dim()
-            ),
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Geodesic Deviation requires Riemann Rank 4, Velocity Rank 1, Separation Rank 1. Got {}, {}, {}",
+            riemann.num_dim(),
+            velocity.num_dim(),
+            separation.num_dim()
         )));
     }
 

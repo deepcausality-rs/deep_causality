@@ -47,6 +47,7 @@ impl BoundedComonad<PointCloudWitness> for PointCloudWitness {
         B: Zero + Copy + Clone, // As per BoundedComonad trait
     {
         let size = fa.len();
+        let shape = fa.metadata.shape().to_vec(); // Preserve original shape
         let mut result_vec = Vec::with_capacity(size);
 
         for i in 0..size {
@@ -57,8 +58,8 @@ impl BoundedComonad<PointCloudWitness> for PointCloudWitness {
             result_vec.push(val);
         }
 
-        let new_metadata = CausalTensor::new(result_vec, vec![size])
-            .expect("Metadata tensor creation should succeed");
+        let new_metadata =
+            CausalTensor::new(result_vec, shape).expect("Metadata tensor creation should succeed");
 
         PointCloud {
             points: fa.points.clone(),

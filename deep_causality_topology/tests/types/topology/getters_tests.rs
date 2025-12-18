@@ -14,7 +14,7 @@ fn test_topology_getters() {
     let data = CausalTensor::new(vec![10.0, 20.0, 30.0], vec![3]).unwrap();
     let cursor = 1;
 
-    let topology = Topology::new(complex.clone(), grade, data.clone(), cursor);
+    let topology = Topology::new(complex.clone(), grade, data.clone(), cursor).unwrap();
 
     assert_eq!(topology.complex(), &complex);
     assert_eq!(topology.grade(), grade);

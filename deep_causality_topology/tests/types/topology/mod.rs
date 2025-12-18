@@ -7,3 +7,4 @@ mod clone_tests;
 mod display_tests;
 mod getters_tests;
 mod topology_tests;
+mod validation_tests;

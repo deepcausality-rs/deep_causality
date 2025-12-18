@@ -51,6 +51,7 @@ impl BoundedComonad<TopologyWitness> for TopologyWitness {
     {
         // Use len() instead of size()
         let size = fa.data.len();
+        let shape = fa.data.shape().to_vec(); // Preserve original shape
         let mut result_vec = Vec::with_capacity(size);
 
         // OPTIMIZATION:
@@ -74,7 +75,7 @@ impl BoundedComonad<TopologyWitness> for TopologyWitness {
             complex: fa.complex.clone(),
             grade: fa.grade,
             // CausalTensor::new takes data and shape
-            data: CausalTensor::new(result_vec, vec![size]).unwrap(),
+            data: CausalTensor::new(result_vec, shape).unwrap(),
             cursor: 0,
         }
     }
