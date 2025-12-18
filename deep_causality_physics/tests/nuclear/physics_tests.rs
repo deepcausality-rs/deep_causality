@@ -68,18 +68,20 @@ fn test_radioactive_decay_zero_time() {
 
 #[test]
 fn test_radioactive_decay_zero_half_life() {
-    // Zero half-life means instant decay to 0
-    let n0 = AmountOfSubstance::new(1000.0).unwrap();
-    let half_life = HalfLife::new(0.0).unwrap();
-    let time = Time::new(1.0).unwrap();
+    // Zero half-life is now rejected at construction time
+    // This test verifies that HalfLife::new(0.0) correctly returns an error
+    let half_life_result = HalfLife::new(0.0);
+    assert!(
+        half_life_result.is_err(),
+        "Zero half-life should be rejected at construction"
+    );
 
-    let result = radioactive_decay_kernel(&n0, &half_life, &time);
-    assert!(result.is_err());
-
-    match result {
+    match half_life_result {
         Err(e) => match e.0 {
-            deep_causality_physics::PhysicsErrorEnum::Singularity(_) => (),
-            _ => panic!("Expected Singularity error, got {:?}", e),
+            deep_causality_physics::PhysicsErrorEnum::PhysicalInvariantBroken(msg) => {
+                assert!(msg.contains("positive") || msg.contains("zero"));
+            }
+            _ => panic!("Expected PhysicalInvariantBroken error, got {:?}", e),
         },
         Ok(_) => panic!("Should return error for zero half-life"),
     }

@@ -37,6 +37,13 @@ fn test_jones_rotation() {
 }
 
 #[test]
+fn test_jones_rotation_error() {
+    let m = CausalTensor::new(vec![Complex::new(1.0, 0.0)], vec![1]).unwrap();
+    let angle = RayAngle::new(0.0).unwrap();
+    assert!(jones_rotation_kernel(&m, angle).is_err());
+}
+
+#[test]
 fn test_stokes_from_jones() {
     // H = [1, 0]. Stokes = [1, 1, 0, 0]
     let j_data = vec![Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)];
@@ -55,6 +62,12 @@ fn test_stokes_from_jones() {
 }
 
 #[test]
+fn test_stokes_from_jones_error() {
+    let j = JonesVector::new(CausalTensor::new(vec![Complex::new(1.0, 0.0)], vec![1]).unwrap());
+    assert!(stokes_from_jones_kernel(&j).is_err());
+}
+
+#[test]
 fn test_dop() {
     // Fully polarized [1, 1, 0, 0]
     let s_data = vec![1.0, 1.0, 0.0, 0.0];
@@ -70,4 +83,32 @@ fn test_dop() {
         StokesVector::new(CausalTensor::new(vec![1.0, 0.0, 0.0, 0.0], vec![4]).unwrap()).unwrap();
     let res2 = degree_of_polarization_kernel(&s_unpol);
     assert!((res2.unwrap().value() - 0.0).abs() < 1e-10);
+}
+
+#[test]
+fn test_dop_errors() {
+    // S0 < 0
+    // StokesVector::new enforces S0^2 >= S1^2 + S2^2 + S3^2.
+    // If S0 < 0, S0^2 is positive. So we can have S0 = -1, S1=0,0,0.
+    // However, degree_of_polarization_kernel checks S0 <= 0.
+    let s_neg =
+        StokesVector::new(CausalTensor::new(vec![-1.0, 0.0, 0.0, 0.0], vec![4]).unwrap()).unwrap();
+    assert!(degree_of_polarization_kernel(&s_neg).is_err());
+
+    // DOP > 1
+    // This is hard because StokesVector::new also validates the invariant.
+    // But we can test the error hit in the kernel if we could bypass StokesVector::new (we can't easily).
+    // Let's assume StokesVector is valid, then DOP <= 1.
+    // However, if we use a different tensor shape, the kernel hits DimensionMismatch.
+}
+
+#[test]
+fn test_stokes_vector_new_error() {
+    // Shape error
+    let t_wrong = CausalTensor::new(vec![1.0], vec![1]).unwrap();
+    assert!(StokesVector::new(t_wrong).is_err());
+
+    // Invariant error: S0^2 < S1^2 + S2^2 + S3^2
+    let t_inv = CausalTensor::new(vec![1.0, 1.0, 1.0, 1.0], vec![4]).unwrap();
+    assert!(StokesVector::new(t_inv).is_err());
 }

@@ -47,7 +47,7 @@ fn test_add_teloid_to_frozen_graph() {
     graph.add_teloid(1).unwrap();
     graph.freeze();
     let result = graph.add_teloid(2);
-    assert!(matches!(result, Err(DeonticError::GraphIsFrozen)));
+    assert!(matches!(result, Err(DeonticError::GraphIsFrozen(_))));
 }
 
 #[test]
@@ -100,11 +100,11 @@ fn test_add_edge_non_existent_nodes() {
 
     assert!(matches!(
         result_inherit,
-        Err(DeonticError::FailedToAddEdge(0, 1))
+        Err(DeonticError::FailedToAddEdge(0, 1, _))
     ));
     assert!(matches!(
         result_defeat,
-        Err(DeonticError::FailedToAddEdge(0, 1))
+        Err(DeonticError::FailedToAddEdge(0, 1, _))
     ));
 }
 
@@ -118,8 +118,11 @@ fn test_add_edge_to_frozen_graph() {
     let result_inherit = graph.add_inheritance_edge(idx1, idx2);
     let result_defeat = graph.add_defeasance_edge(idx1, idx2);
 
-    assert!(matches!(result_inherit, Err(DeonticError::GraphIsFrozen)));
-    assert!(matches!(result_defeat, Err(DeonticError::GraphIsFrozen)));
+    assert!(matches!(
+        result_inherit,
+        Err(DeonticError::GraphIsFrozen(_))
+    ));
+    assert!(matches!(result_defeat, Err(DeonticError::GraphIsFrozen(_))));
 }
 
 #[test]

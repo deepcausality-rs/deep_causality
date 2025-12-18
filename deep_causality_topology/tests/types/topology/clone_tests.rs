@@ -12,7 +12,7 @@ fn test_topology_clone_shallow() {
     let complex = Arc::new(create_triangle_complex());
     let grade = 0;
     let data = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
-    let topology = Topology::new(complex, grade, data, 0);
+    let topology = Topology::new(complex, grade, data, 0).unwrap();
 
     let shallow_clone = topology.clone_shallow();
 

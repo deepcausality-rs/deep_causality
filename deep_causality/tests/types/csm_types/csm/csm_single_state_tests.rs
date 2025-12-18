@@ -25,7 +25,7 @@ fn add_single_state() {
     let ca2 = test_utils_csm::get_test_action();
     let state_action = (cs2, ca2);
 
-    let res = csm.add_single_state(43, state_action);
+    let res = csm.add_single_state(state_action);
     dbg!(&res);
 
     assert!(res.is_ok());
@@ -46,11 +46,11 @@ fn add_single_state_err_already_exists() {
 
     assert_eq!(csm.len(), 1);
     let data = PropagatingEffect::from_value(0.23f64);
-    let cs2 = CausalState::new(2, 2, data, causaloid, None);
+    let cs2 = CausalState::new(id, 2, data, causaloid, None);
     let ca2 = test_utils_csm::get_test_action();
     let state_action = (cs2, ca2);
 
-    let res = csm.add_single_state(id, state_action);
+    let res = csm.add_single_state(state_action);
     dbg!(&res);
 
     assert!(res.is_err());
@@ -72,7 +72,7 @@ fn update_single_state() {
     let csm = CSM::new(state_action);
     assert_eq!(csm.len(), 1);
 
-    let id = 44;
+    let id = 42; // Match existing state ID
     let version = 1;
     let data = PropagatingEffect::from_value(0.7f64);
 
@@ -83,7 +83,7 @@ fn update_single_state() {
 
     let state_action = (cs, ca);
 
-    let res = csm.update_single_state(42, state_action);
+    let res = csm.update_single_state(state_action);
     dbg!(&res);
 
     assert!(res.is_ok());
@@ -97,12 +97,13 @@ fn update_single_state_err_not_found() {
     let data = PropagatingEffect::from_value(0.23f64);
     let causaloid = test_utils::get_test_causaloid_deterministic(23);
 
-    let cs = CausalState::new(id, version, data, causaloid, None);
+    let cs = CausalState::new(id, version, data.clone(), causaloid.clone(), None);
     let ca = test_utils_csm::get_test_action();
     let state_action = &[(&cs, &ca)];
     let csm = CSM::new(state_action);
 
-    let res = csm.update_single_state(99, (cs, ca));
+    let cs_new = CausalState::new(99, version, data, causaloid, None);
+    let res = csm.update_single_state((cs_new, ca));
     dbg!(&res);
 
     assert!(res.is_err());
@@ -126,12 +127,12 @@ fn remove_single_state() {
     let ca2 = test_utils_csm::get_test_action();
     let state_action = (cs2, ca2);
 
-    let res = csm.add_single_state(43, state_action);
+    let res = csm.add_single_state(state_action);
 
     assert!(res.is_ok());
     assert_eq!(csm.len(), 2);
 
-    let res = csm.remove_single_state(43);
+    let res = csm.remove_single_state(2);
     dbg!(&res);
 
     assert!(res.is_ok());

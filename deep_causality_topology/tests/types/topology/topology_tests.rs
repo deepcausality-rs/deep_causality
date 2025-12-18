@@ -14,11 +14,11 @@ fn test_topology_cup_product() {
 
     // 0-form: scalar field on vertices
     let data0 = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
-    let topo0 = Topology::new(complex.clone(), 0, data0, 0);
+    let topo0 = Topology::new(complex.clone(), 0, data0, 0).unwrap();
 
     // 1-form: vector field on edges
     let data1 = CausalTensor::new(vec![0.5, 1.5, 2.5], vec![3]).unwrap();
-    let topo1 = Topology::new(complex.clone(), 1, data1, 0);
+    let topo1 = Topology::new(complex.clone(), 1, data1, 0).unwrap();
 
     // cup product of 0-form and 1-form should result in a 1-form
     let cup_product_result = topo0.cup_product(&topo1).unwrap();
@@ -55,37 +55,33 @@ fn test_topology_cup_product() {
 }
 
 #[test]
-#[should_panic(expected = "Data/Skeleton mismatch")]
 fn test_topology_cup_product_missing_data_self() {
     let complex = Arc::new(create_triangle_complex());
 
     // 0-form with insufficient data (only 1 value, but 3 vertices needed)
     let data0 = CausalTensor::new(vec![1.0], vec![1]).unwrap();
-    let topo0 = Topology::new(complex.clone(), 0, data0, 0);
+    // This should now fail validation
+    let topo0_result = Topology::new(complex.clone(), 0, data0, 0);
+    assert!(topo0_result.is_err());
 
-    // 1-form with correct data
-    let data1 = CausalTensor::new(vec![0.5, 1.5, 2.5], vec![3]).unwrap();
-    let topo1 = Topology::new(complex.clone(), 1, data1, 0);
-
-    // Should panic when accessing data for vertex 1 or 2
-    let res = topo0.cup_product(&topo1);
-    assert!(res.is_err());
+    // Check error message contains appropriate info
+    if let Err(e) = topo0_result {
+        let msg = e.to_string();
+        assert!(msg.contains("data length 1 does not match skeleton size 3"));
+    }
 }
 
 #[test]
-#[should_panic(expected = "Data/Skeleton mismatch")]
 fn test_topology_cup_product_missing_data_other() {
     let complex = Arc::new(create_triangle_complex());
 
     // 0-form with correct data
     let data0 = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
-    let topo0 = Topology::new(complex.clone(), 0, data0, 0);
+    let _topo0 = Topology::new(complex.clone(), 0, data0, 0).unwrap();
 
     // 1-form with insufficient data (only 1 value, but 3 edges needed)
     let data1 = CausalTensor::new(vec![0.5], vec![1]).unwrap();
-    let topo1 = Topology::new(complex.clone(), 1, data1, 0);
-
-    // Should panic when accessing data for edge 1 or 2
-    let res = topo0.cup_product(&topo1);
-    assert!(res.is_err());
+    // This should now fail validation
+    let topo1_result = Topology::new(complex.clone(), 1, data1, 0);
+    assert!(topo1_result.is_err());
 }

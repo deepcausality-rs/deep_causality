@@ -31,20 +31,28 @@ impl DataLoader for CsvDataLoader {
                 .delimiter(csv_config.delimiter())
                 .from_reader(file);
 
+            let exclude_indices = csv_config.exclude_indices();
             let mut data = Vec::new();
             let mut width = 0;
             for result in rdr.records().skip(csv_config.skip_rows()) {
                 let record = result?;
-                if width == 0 {
-                    width = record.len();
-                }
-                for field in record.iter() {
-                    data.push(
+                let mut row_values = Vec::new();
+
+                for (i, field) in record.iter().enumerate() {
+                    if exclude_indices.contains(&i) {
+                        continue;
+                    }
+                    row_values.push(
                         field
                             .parse::<f64>()
                             .map_err(|e| DataLoadingError::OsError(e.to_string()))?,
                     );
                 }
+
+                if width == 0 {
+                    width = row_values.len();
+                }
+                data.extend(row_values);
             }
 
             let height = if width == 0 { 0 } else { data.len() / width };

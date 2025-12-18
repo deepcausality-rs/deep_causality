@@ -8,6 +8,7 @@ mod grid_array_tests;
 #[cfg(test)]
 mod grid_storage_tests;
 #[cfg(test)]
+mod indexing_bug_repro;
 mod point_index_tests;
 #[cfg(test)]
 mod point_tests;

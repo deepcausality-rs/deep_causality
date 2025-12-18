@@ -90,6 +90,22 @@ fn test_time_dilation_angle_zero_magnitude_error() {
 }
 
 #[test]
+fn test_time_dilation_angle_metric_mismatch() {
+    let t1 = CausalMultiVector::new(vec![0.0; 16], Metric::Minkowski(4)).unwrap();
+    let t2 = CausalMultiVector::new(vec![0.0; 8], Metric::Euclidean(3)).unwrap();
+    let result = time_dilation_angle_kernel(&t1, &t2);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_time_dilation_angle_not_minkowski() {
+    let t1 = CausalMultiVector::new(vec![1.0, 0.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
+    let t2 = CausalMultiVector::new(vec![1.0, 0.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
+    let result = time_dilation_angle_kernel(&t1, &t2);
+    assert!(result.is_err());
+}
+
+#[test]
 fn test_time_dilation_angle_causality_violation() {
     // Test CausalityViolation where gamma < 1.0.
     // This occurs if vectors are in opposite light cones (one future, one past),
@@ -154,6 +170,15 @@ fn test_chronometric_volume_kernel_valid() {
 
     let result = chronometric_volume_kernel(&a, &b, &c);
     assert!(result.is_ok());
+}
+
+#[test]
+fn test_chronometric_volume_kernel_metric_mismatch() {
+    let a = CausalMultiVector::new(vec![0.0; 16], Metric::Minkowski(4)).unwrap();
+    let b = CausalMultiVector::new(vec![0.0; 16], Metric::Minkowski(4)).unwrap();
+    let c = CausalMultiVector::new(vec![0.0; 8], Metric::Euclidean(3)).unwrap();
+    let result = chronometric_volume_kernel(&a, &b, &c);
+    assert!(result.is_err());
 }
 
 // =============================================================================

@@ -27,6 +27,30 @@ fn test_einstein_tensor_kernel_valid() {
 }
 
 #[test]
+fn test_einstein_tensor_kernel_dimension_error() {
+    let ricci = CausalTensor::new(vec![1.0; 4], vec![2, 2]).unwrap();
+    let metric = CausalTensor::new(vec![1.0; 2], vec![2]).unwrap(); // Rank 1
+    let result = einstein_tensor_kernel(&ricci, 2.0, &metric);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_einstein_tensor_kernel_shape_mismatch() {
+    let ricci = CausalTensor::new(vec![1.0, 0.0, 0.0, 1.0], vec![2, 2]).unwrap();
+    let metric = CausalTensor::new(vec![1.0; 9], vec![3, 3]).unwrap();
+    let result = einstein_tensor_kernel(&ricci, 2.0, &metric);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_einstein_tensor_kernel_non_square() {
+    let ricci = CausalTensor::new(vec![1.0; 4], vec![1, 4]).unwrap();
+    let metric = CausalTensor::new(vec![1.0; 4], vec![1, 4]).unwrap();
+    let result = einstein_tensor_kernel(&ricci, 2.0, &metric);
+    assert!(result.is_err());
+}
+
+#[test]
 fn test_einstein_tensor_kernel_flat_space() {
     // Flat Minkowski: R_uv = 0, R = 0
     let ricci = CausalTensor::new(vec![0.0, 0.0, 0.0, 0.0], vec![2, 2]).unwrap();

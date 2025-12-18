@@ -4,7 +4,7 @@
  */
 use crate::constants::BOLTZMANN_CONSTANT;
 use crate::mhd::quantities::{DebyeLength, LarmorRadius};
-use crate::{Mass, PhysicalField, PhysicsError, PhysicsErrorEnum, Speed, Temperature};
+use crate::{Mass, PhysicalField, PhysicsError, Speed, Temperature};
 use deep_causality_multivector::MultiVector;
 
 /// Calculates the Debye Length $\lambda_D$.
@@ -25,13 +25,11 @@ pub fn debye_length_kernel(
     elementary_charge: f64,
 ) -> Result<DebyeLength, PhysicsError> {
     if density_n <= 0.0 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::Singularity(
-            "Density must be positive".into(),
-        )));
+        return Err(PhysicsError::Singularity("Density must be positive".into()));
     }
     if epsilon_0 <= 0.0 {
-        return Err(PhysicsError::new(
-            PhysicsErrorEnum::PhysicalInvariantBroken("Permittivity must be positive".into()),
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "Permittivity must be positive".into(),
         ));
     }
 
@@ -62,14 +60,14 @@ pub fn larmor_radius_kernel(
     let b_mag = b_field.inner().squared_magnitude().sqrt();
 
     if b_mag == 0.0 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::Singularity(
+        return Err(PhysicsError::Singularity(
             "Zero magnetic field leads to infinite Larmor radius".into(),
-        )));
+        ));
     }
     if charge == 0.0 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::Singularity(
+        return Err(PhysicsError::Singularity(
             "Zero charge particle moves in straight line (infinite radius)".into(),
-        )));
+        ));
     }
 
     let num = mass.value() * velocity_perp.value();

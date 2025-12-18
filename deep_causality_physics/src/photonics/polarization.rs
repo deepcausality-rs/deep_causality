@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{JonesVector, PhysicsError, PhysicsErrorEnum, Ratio, RayAngle, StokesVector};
+use crate::{JonesVector, PhysicsError, Ratio, RayAngle, StokesVector};
 use deep_causality_num::{Complex, DivisionAlgebra};
 use deep_causality_tensor::CausalTensor;
 
@@ -28,9 +28,9 @@ pub fn jones_rotation_kernel(
     angle: RayAngle,
 ) -> Result<CausalTensor<Complex<f64>>, PhysicsError> {
     if jones_matrix.shape() != [2, 2] {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+        return Err(PhysicsError::DimensionMismatch(
             "Jones matrix must be 2x2".into(),
-        )));
+        ));
     }
 
     let phi = angle.value();
@@ -98,9 +98,9 @@ pub fn jones_rotation_kernel(
 pub fn stokes_from_jones_kernel(jones: &JonesVector) -> Result<StokesVector, PhysicsError> {
     let t = jones.inner();
     if t.shape() != [2] {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+        return Err(PhysicsError::DimensionMismatch(
             "Jones vector must be length 2".into(),
-        )));
+        ));
     }
 
     let ex = t.data()[0];
@@ -137,9 +137,9 @@ pub fn stokes_from_jones_kernel(jones: &JonesVector) -> Result<StokesVector, Phy
 pub fn degree_of_polarization_kernel(stokes: &StokesVector) -> Result<Ratio, PhysicsError> {
     let t = stokes.inner();
     if t.shape() != [4] {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+        return Err(PhysicsError::DimensionMismatch(
             "Stokes vector must be length 4".into(),
-        )));
+        ));
     }
 
     let d = t.data();
@@ -152,8 +152,8 @@ pub fn degree_of_polarization_kernel(stokes: &StokesVector) -> Result<Ratio, Phy
         if s0 == 0.0 && s1 == 0.0 && s2 == 0.0 && s3 == 0.0 {
             return Ratio::new(0.0); // Zero intensity, undefined DOP, return 0
         }
-        return Err(PhysicsError::new(
-            PhysicsErrorEnum::PhysicalInvariantBroken("S0 must be positive".into()),
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "S0 must be positive".into(),
         ));
     }
 
@@ -162,12 +162,10 @@ pub fn degree_of_polarization_kernel(stokes: &StokesVector) -> Result<Ratio, Phy
 
     if dop > 1.000001 {
         // Allow tiny float error
-        return Err(PhysicsError::new(
-            PhysicsErrorEnum::PhysicalInvariantBroken(format!(
-                "DOP > 1 ({}), unphysical Stokes vector",
-                dop
-            )),
-        ));
+        return Err(PhysicsError::PhysicalInvariantBroken(format!(
+            "DOP > 1 ({}), unphysical Stokes vector",
+            dop
+        )));
     }
 
     Ratio::new(dop.min(1.0))

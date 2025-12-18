@@ -213,4 +213,12 @@ fn test_generalized_master_equation_kernel() {
     let history_empty: Vec<Vec<Probability>> = vec![];
     let res = generalized_master_equation_kernel(&state, &history_empty, None, &mk);
     assert!(res.is_err());
+
+    // Test Case 6: Validation Error (History dimension mismatch)
+    let history_wrong = vec![vec![
+        Probability::new(0.5).unwrap(),
+        Probability::new(0.5).unwrap(),
+    ]];
+    let res = generalized_master_equation_kernel(&state, &history_wrong, None, &mk);
+    assert!(res.is_err());
 }

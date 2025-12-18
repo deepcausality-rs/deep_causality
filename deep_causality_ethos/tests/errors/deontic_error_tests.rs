@@ -21,50 +21,63 @@ fn test_failed_to_add_teloid() {
 
 #[test]
 fn test_failed_to_add_edge() {
-    let error = DeonticError::FailedToAddEdge(1, 2);
+    let error = DeonticError::FailedToAddEdge(
+        1,
+        2,
+        GraphError::EdgeCreationError {
+            source: 1,
+            target: 2,
+        },
+    );
     assert_eq!(
         format!("{}", error),
         "Edge from 1 to 2 could not be created; a node may not exist or the edge already exists."
     );
+    // Cannot clone error easily because GraphError might not implement clone?
+    // Wait, GraphError implements Debug, Display, Error. Does it implement Clone?
+    // Let's assume it does or construct fresh.
+    // The previous test did error.clone().
+    // Let's check if GraphError implements Clone.
+    // Spec says DeonticError derives Clone. So GraphError MUST implement Clone.
     let cloned_error = error.clone();
     assert_eq!(error, cloned_error);
-    assert!(error.source().is_none());
+    assert!(error.source().is_some());
 }
 
 #[test]
 fn test_graph_not_frozen() {
-    let error = DeonticError::GraphNotFrozen;
+    let error = DeonticError::GraphNotFrozen(GraphError::GraphNotFrozen);
     assert_eq!(
         format!("{}", error),
         "Deontic inference failed: The TeloidGraph must be frozen before evaluation."
     );
     let cloned_error = error.clone();
     assert_eq!(error, cloned_error);
-    assert!(error.source().is_none());
+    assert!(error.source().is_some());
 }
 
 #[test]
 fn test_graph_is_frozen() {
-    let error = DeonticError::GraphIsFrozen;
+    let error = DeonticError::GraphIsFrozen(GraphError::GraphIsFrozen);
     assert_eq!(
         format!("{}", error),
         "Deontic inference failed: The TeloidGraph is frozen and cannot be modified."
     );
     let cloned_error = error.clone();
     assert_eq!(error, cloned_error);
-    assert!(error.source().is_none());
+    assert!(error.source().is_some());
 }
 
 #[test]
 fn test_graph_is_cyclic() {
-    let error = DeonticError::GraphIsCyclic;
+    let error = DeonticError::GraphIsCyclic(GraphError::GraphContainsCycle);
     assert_eq!(
         format!("{}", error),
         "Deontic inference failed: The TeloidGraph contains a cycle and is invalid."
     );
     let cloned_error = error.clone();
     assert_eq!(error, cloned_error);
-    assert!(error.source().is_none());
+    assert!(error.source().is_some());
 }
 
 #[test]
@@ -138,17 +151,29 @@ fn test_from_graph_error() {
     // Test GraphIsFrozen
     let graph_error_frozen = GraphError::GraphIsFrozen;
     let deontic_error: DeonticError = graph_error_frozen.into();
-    assert_eq!(deontic_error, DeonticError::GraphIsFrozen);
+    assert_eq!(
+        deontic_error,
+        DeonticError::GraphIsFrozen(GraphError::GraphIsFrozen)
+    );
+    assert!(deontic_error.source().is_some());
 
     // Test GraphNotFrozen
     let graph_error_not_frozen = GraphError::GraphNotFrozen;
     let deontic_error: DeonticError = graph_error_not_frozen.into();
-    assert_eq!(deontic_error, DeonticError::GraphNotFrozen);
+    assert_eq!(
+        deontic_error,
+        DeonticError::GraphNotFrozen(GraphError::GraphNotFrozen)
+    );
+    assert!(deontic_error.source().is_some());
 
     // Test GraphContainsCycle
     let graph_error_cyclic = GraphError::GraphContainsCycle;
     let deontic_error: DeonticError = graph_error_cyclic.into();
-    assert_eq!(deontic_error, DeonticError::GraphIsCyclic);
+    assert_eq!(
+        deontic_error,
+        DeonticError::GraphIsCyclic(GraphError::GraphContainsCycle)
+    );
+    assert!(deontic_error.source().is_some());
 
     // Test EdgeCreationError
     let graph_error_edge = GraphError::EdgeCreationError {
@@ -156,7 +181,11 @@ fn test_from_graph_error() {
         target: 2,
     };
     let deontic_error: DeonticError = graph_error_edge.into();
-    assert_eq!(deontic_error, DeonticError::FailedToAddEdge(1, 2));
+    assert_eq!(
+        deontic_error,
+        DeonticError::FailedToAddEdge(1, 2, graph_error_edge)
+    );
+    assert!(deontic_error.source().is_some());
 
     // Test other GraphError variants are wrapped
     let other_graph_error = GraphError::NodeNotFound(10);

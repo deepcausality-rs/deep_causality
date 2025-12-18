@@ -39,6 +39,18 @@ fn test_mass_new_negative_error() {
 }
 
 #[test]
+fn test_mass_new_nan_error() {
+    let mass = Mass::new(f64::NAN);
+    assert!(mass.is_err());
+}
+
+#[test]
+fn test_mass_new_infinity_error() {
+    let mass = Mass::new(f64::INFINITY);
+    assert!(mass.is_err());
+}
+
+#[test]
 fn test_mass_new_unchecked() {
     let mass = Mass::new_unchecked(42.0);
     assert!((mass.value() - 42.0).abs() < 1e-10);
@@ -81,6 +93,18 @@ fn test_speed_new_negative_error() {
 }
 
 #[test]
+fn test_speed_new_nan_error() {
+    let speed = Speed::new(f64::NAN);
+    assert!(speed.is_err());
+}
+
+#[test]
+fn test_speed_new_infinity_error() {
+    let speed = Speed::new(f64::INFINITY);
+    assert!(speed.is_err());
+}
+
+#[test]
 fn test_speed_into_f64() {
     let speed = Speed::new(299792458.0).unwrap();
     let val: f64 = speed.into();
@@ -106,6 +130,18 @@ fn test_length_new_valid() {
 #[test]
 fn test_length_new_negative_error() {
     let length = Length::new(-1.0);
+    assert!(length.is_err());
+}
+
+#[test]
+fn test_length_new_nan_error() {
+    let length = Length::new(f64::NAN);
+    assert!(length.is_err());
+}
+
+#[test]
+fn test_length_new_infinity_error() {
+    let length = Length::new(f64::INFINITY);
     assert!(length.is_err());
 }
 
@@ -146,6 +182,18 @@ fn test_area_new_negative_error() {
 }
 
 #[test]
+fn test_area_new_nan_error() {
+    let area = Area::new(f64::NAN);
+    assert!(area.is_err());
+}
+
+#[test]
+fn test_area_new_infinity_error() {
+    let area = Area::new(f64::INFINITY);
+    assert!(area.is_err());
+}
+
+#[test]
 fn test_area_new_unchecked() {
     let area = Area::new_unchecked(50.5);
     assert!((area.value() - 50.5).abs() < 1e-10);
@@ -171,6 +219,18 @@ fn test_volume_new_valid() {
 #[test]
 fn test_volume_new_negative_error() {
     let volume = Volume::new(-1.0);
+    assert!(volume.is_err());
+}
+
+#[test]
+fn test_volume_new_nan_error() {
+    let volume = Volume::new(f64::NAN);
+    assert!(volume.is_err());
+}
+
+#[test]
+fn test_volume_new_infinity_error() {
+    let volume = Volume::new(f64::INFINITY);
     assert!(volume.is_err());
 }
 
@@ -204,6 +264,18 @@ fn test_moment_of_inertia_new_negative_error() {
 }
 
 #[test]
+fn test_moment_of_inertia_new_nan_error() {
+    let moi = MomentOfInertia::new(f64::NAN);
+    assert!(moi.is_err());
+}
+
+#[test]
+fn test_moment_of_inertia_new_infinity_error() {
+    let moi = MomentOfInertia::new(f64::INFINITY);
+    assert!(moi.is_err());
+}
+
+#[test]
 fn test_moment_of_inertia_new_unchecked() {
     let moi = MomentOfInertia::new_unchecked(7.5);
     assert!((moi.value() - 7.5).abs() < 1e-10);
@@ -229,6 +301,18 @@ fn test_frequency_new_valid() {
 #[test]
 fn test_frequency_new_negative_error() {
     let freq = Frequency::new(-1.0);
+    assert!(freq.is_err());
+}
+
+#[test]
+fn test_frequency_new_nan_error() {
+    let freq = Frequency::new(f64::NAN);
+    assert!(freq.is_err());
+}
+
+#[test]
+fn test_frequency_new_infinity_error() {
+    let freq = Frequency::new(f64::INFINITY);
     assert!(freq.is_err());
 }
 
@@ -264,6 +348,18 @@ fn test_acceleration_new_negative() {
 }
 
 #[test]
+fn test_acceleration_new_nan_error() {
+    let acc = Acceleration::new(f64::NAN);
+    assert!(acc.is_err());
+}
+
+#[test]
+fn test_acceleration_new_infinity_error() {
+    let acc = Acceleration::new(f64::INFINITY);
+    assert!(acc.is_err());
+}
+
+#[test]
 fn test_acceleration_new_unchecked() {
     let acc = Acceleration::new_unchecked(-9.81);
     assert!((acc.value() - (-9.81)).abs() < 1e-10);
@@ -290,6 +386,18 @@ fn test_force_new_positive() {
 fn test_force_new_negative() {
     let force = Force::new(-50.0);
     assert!(force.is_ok());
+}
+
+#[test]
+fn test_force_new_nan_error() {
+    let force = Force::new(f64::NAN);
+    assert!(force.is_err());
+}
+
+#[test]
+fn test_force_new_infinity_error() {
+    let force = Force::new(f64::INFINITY);
+    assert!(force.is_err());
 }
 
 #[test]
@@ -320,6 +428,18 @@ fn test_torque_new_negative() {
     // Negative torque = clockwise rotation
     let torque = Torque::new(-25.0);
     assert!(torque.is_ok());
+}
+
+#[test]
+fn test_torque_new_nan_error() {
+    let torque = Torque::new(f64::NAN);
+    assert!(torque.is_err());
+}
+
+#[test]
+fn test_torque_new_infinity_error() {
+    let torque = Torque::new(f64::INFINITY);
+    assert!(torque.is_err());
 }
 
 #[test]

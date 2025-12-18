@@ -4,7 +4,7 @@
  */
 
 use crate::mhd::quantities::{AlfvenSpeed, Diffusivity};
-use crate::{PhysicsError, PhysicsErrorEnum, Speed};
+use crate::{PhysicsError, Speed};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::Manifold;
 
@@ -29,8 +29,8 @@ pub fn resistive_diffusion_kernel(
     let eta = diffusivity.value();
 
     if eta < 0.0 {
-        return Err(PhysicsError::new(
-            PhysicsErrorEnum::PhysicalInvariantBroken("Diffusivity cannot be negative".into()),
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "Diffusivity cannot be negative".into(),
         ));
     }
 
@@ -61,9 +61,9 @@ pub fn magnetic_reconnection_rate_kernel(
     let va = alfven_speed.value();
 
     if lundquist <= 0.0 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::Singularity(
+        return Err(PhysicsError::Singularity(
             "Lundquist number must be positive for reconnection".into(),
-        )));
+        ));
     }
 
     let vin = va / lundquist.sqrt();

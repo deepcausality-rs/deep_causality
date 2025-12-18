@@ -39,16 +39,35 @@ impl UniformSampler for UniformU32 {
     {
         let low_val = *low.borrow();
         let high_val = *high.borrow();
-        if low_val >= high_val {
+        if low_val > high_val {
             return Err(UniformDistributionError::InvalidRange);
         }
+        // Use checked_add to avoid overflow when high_val == u32::MAX
+        // If overflow occurs, use 0 as a sentinel for "full range to MAX"
+        let range_end = high_val.checked_add(1).unwrap_or(0);
         Ok(UniformU32 {
             low: low_val,
-            high: high_val + 1,
-        }) // Inclusive range
+            high: range_end,
+        })
     }
 
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
+        // Handle special case: when high == 0 and low > 0, it means we want [low, u32::MAX]
+        // (overflow wraparound from checked_add)
+        if self.high == 0 && self.low > 0 {
+            // Full range from low to u32::MAX
+            let range_size = u32::MAX - self.low + 1; // This is safe: range_size >= 1
+            if range_size == 0 {
+                // Special case: low == 0 means full u32 range, just return any value
+                return rng.next_u32();
+            }
+            return self.low.wrapping_add(rng.next_u32() % range_size);
+        }
+        // Handle single-value range (low == high means range_end == low + 1, so high - low == 1)
+        if self.high == self.low {
+            // This shouldn't happen with our new validation, but just in case
+            return self.low;
+        }
         self.low + (rng.next_u32() % (self.high - self.low))
     }
 }

@@ -28,13 +28,11 @@ pub fn generalized_master_equation_kernel(
 ) -> Result<Vec<Probability>, PhysicsError> {
     // 1. Validation
     if history.len() != memory_kernel.len() {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::DimensionMismatch(format!(
-                "History length {} != Memory kernel length {}",
-                history.len(),
-                memory_kernel.len()
-            )),
-        ));
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "History length {} != Memory kernel length {}",
+            history.len(),
+            memory_kernel.len()
+        )));
     }
 
     // Convert state to tensor for operations (Column vector [n, 1] for matmul)
@@ -57,14 +55,12 @@ pub fn generalized_master_equation_kernel(
         let hist_vec: Vec<f64> = history[k].iter().map(|p| p.value()).collect();
         // Validate history dimension
         if hist_vec.len() != n {
-            return Err(PhysicsError::new(
-                crate::PhysicsErrorEnum::DimensionMismatch(format!(
-                    "History[{}] dimension {} != State dimension {}",
-                    k,
-                    hist_vec.len(),
-                    n
-                )),
-            ));
+            return Err(PhysicsError::DimensionMismatch(format!(
+                "History[{}] dimension {} != State dimension {}",
+                k,
+                hist_vec.len(),
+                n
+            )));
         }
         let hist_tensor = CausalTensor::new(hist_vec, vec![n, 1]).map_err(PhysicsError::from)?;
 
@@ -121,7 +117,7 @@ pub fn kalman_filter_linear_kernel(
     measurement: &CausalTensor<f64>,
     measurement_matrix: &CausalTensor<f64>,
     measurement_noise: &CausalTensor<f64>,
-    process_noise: &CausalTensor<f64>,
+    _process_noise: &CausalTensor<f64>,
 ) -> Result<(CausalTensor<f64>, CausalTensor<f64>), PhysicsError> {
     // 1. Innovation (Residual): y = z - H * x
     // H * x
@@ -131,13 +127,11 @@ pub fn kalman_filter_linear_kernel(
 
     // y = z - hx
     if measurement.shape() != hx.shape() {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::DimensionMismatch(format!(
-                "Measurement shape {:?} != prediction shape {:?}",
-                measurement.shape(),
-                hx.shape()
-            )),
-        ));
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Measurement shape {:?} != prediction shape {:?}",
+            measurement.shape(),
+            hx.shape()
+        )));
     }
     let y = measurement.sub(&hx);
 
@@ -156,13 +150,11 @@ pub fn kalman_filter_linear_kernel(
 
     // S = ... + R
     if hph_t.shape() != measurement_noise.shape() {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::DimensionMismatch(format!(
-                "Innovation covariance shape {:?} != measurement noise shape {:?}",
-                hph_t.shape(),
-                measurement_noise.shape()
-            )),
-        ));
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Innovation covariance shape {:?} != measurement noise shape {:?}",
+            hph_t.shape(),
+            measurement_noise.shape()
+        )));
     }
     let s = hph_t.add(measurement_noise);
 
@@ -181,13 +173,11 @@ pub fn kalman_filter_linear_kernel(
     let ky = k.matmul(&y).map_err(PhysicsError::from)?;
 
     if x_pred.shape() != ky.shape() {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::DimensionMismatch(format!(
-                "State shape {:?} != update shape {:?}",
-                x_pred.shape(),
-                ky.shape()
-            )),
-        ));
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "State shape {:?} != update shape {:?}",
+            x_pred.shape(),
+            ky.shape()
+        )));
     }
     let x_new = x_pred.add(&ky);
 
@@ -203,13 +193,11 @@ pub fn kalman_filter_linear_kernel(
 
     // I - KH
     if identity.shape() != kh.shape() {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::DimensionMismatch(format!(
-                "Identity shape {:?} != KH shape {:?}",
-                identity.shape(),
-                kh.shape()
-            )),
-        ));
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Identity shape {:?} != KH shape {:?}",
+            identity.shape(),
+            kh.shape()
+        )));
     }
     let i_kh = identity.sub(&kh);
 
@@ -237,18 +225,5 @@ pub fn kalman_filter_linear_kernel(
 
     let p_new = joseph_main.add(&krkt);
 
-    // 6. Process Noise Addition: P_final = P_new + Q
-    // We apply process noise here effectively preparing P for the next prediction step (or representing posterior uncertainty including process diffusion).
-    if p_new.shape() != process_noise.shape() {
-        return Err(PhysicsError::new(
-            crate::PhysicsErrorEnum::DimensionMismatch(format!(
-                "Posterior covariance shape {:?} != process noise shape {:?}",
-                p_new.shape(),
-                process_noise.shape()
-            )),
-        ));
-    }
-    let p_final = p_new.add(process_noise);
-
-    Ok((x_new, p_final))
+    Ok((x_new, p_new))
 }

@@ -5,7 +5,7 @@
 
 use crate::{
     ChemicalPotentialGradient, Concentration, Energy, Mobility, OrderParameter, PhysicsError,
-    PhysicsErrorEnum, VectorPotential,
+    VectorPotential,
 };
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::{Complex, DivisionAlgebra};
@@ -56,9 +56,9 @@ pub fn ginzburg_landau_free_energy_kernel(
     let kinetic_norm_sq = if let Some(a_wrapper) = vector_potential {
         let a = a_wrapper.inner();
         if a.metric() != gradient_psi.metric() {
-            return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+            return Err(PhysicsError::DimensionMismatch(
                 "Metric mismatch between gradient and vector potential".into(),
-            )));
+            ));
         }
 
         let i_psi = Complex::new(0.0, 1.0) * val;
@@ -67,9 +67,9 @@ pub fn ginzburg_landau_free_energy_kernel(
         let grad_data = gradient_psi.data();
 
         if a_data.len() != grad_data.len() {
-            return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+            return Err(PhysicsError::DimensionMismatch(
                 "Vector size mismatch".into(),
-            )));
+            ));
         }
 
         gradient_psi
@@ -130,12 +130,10 @@ pub fn cahn_hilliard_flux_kernel(
     let m0 = mobility.value();
 
     if c_tensor.shape() != grad_mu.shape() {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
-            format!(
-                "Concentration shape {:?} != Gradient shape {:?}",
-                c_tensor.shape(),
-                grad_mu.shape()
-            ),
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Concentration shape {:?} != Gradient shape {:?}",
+            c_tensor.shape(),
+            grad_mu.shape()
         )));
     }
 
@@ -153,9 +151,9 @@ pub fn cahn_hilliard_flux_kernel(
     let g_data = grad_mu.as_slice();
 
     if m_data.len() != g_data.len() {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+        return Err(PhysicsError::DimensionMismatch(
             "Mobility field size does not match gradient field size".into(),
-        )));
+        ));
     }
 
     // Apply flux formula element-wise with stability clamping

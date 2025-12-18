@@ -10,7 +10,7 @@ authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
 description = "Spare matrix data structure for for deep_causality crate."
 documentation = "https://docs.rs/deep_causality"
 categories = ["data-structures", "science"]
-keywords = ["data-structures", "sliding-window", "grid-array"]
+keywords = ["data-structures", "sparse-matrix", "csr"]
 exclude = [
     "*.bazel",
     "*/*.bazel",

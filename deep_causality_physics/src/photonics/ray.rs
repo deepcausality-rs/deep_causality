@@ -5,7 +5,7 @@
 
 use crate::photonics::quantities::{AbcdMatrix, OpticalPower, RayAngle, RayHeight};
 
-use crate::{IndexOfRefraction, PhysicsError, PhysicsErrorEnum};
+use crate::{IndexOfRefraction, PhysicsError};
 use deep_causality_tensor::{CausalTensor, Tensor};
 
 /// Applies an ABCD matrix to a ray vector.
@@ -29,9 +29,9 @@ pub fn ray_transfer_kernel(
 ) -> Result<(RayHeight, RayAngle), PhysicsError> {
     let m = matrix.inner();
     if m.shape() != [2, 2] {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+        return Err(PhysicsError::DimensionMismatch(
             "ABCD matrix must be 2x2".into(),
-        )));
+        ));
     }
 
     let y_in = height.value();
@@ -76,10 +76,8 @@ pub fn snells_law_kernel(
     let sin_theta2 = (n1_val / n2_val) * theta1_val.sin();
 
     if sin_theta2.abs() > 1.0 {
-        return Err(PhysicsError::new(
-            PhysicsErrorEnum::PhysicalInvariantBroken(
-                "Total Internal Reflection: sin(theta2) > 1".into(),
-            ),
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "Total Internal Reflection: sin(theta2) > 1".into(),
         ));
     }
 
@@ -112,9 +110,9 @@ pub fn lens_maker_kernel(
     let n_val = n.value();
 
     if r1 == 0.0 || r2 == 0.0 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::Singularity(
+        return Err(PhysicsError::Singularity(
             "Radius of curvature cannot be zero".into(),
-        )));
+        ));
     }
 
     let power = (n_val - 1.0) * ((1.0 / r1) - (1.0 / r2));

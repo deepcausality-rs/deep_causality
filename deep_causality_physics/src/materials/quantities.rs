@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{PhysicsError, PhysicsErrorEnum};
+use crate::PhysicsError;
 
 // Scalar Stress/Stiffness if needed, though mostly Tensors are used.
 // Defining them for completeness or future scalar ops.
@@ -37,8 +37,8 @@ impl Stiffness {
     /// Returns `PhysicsError` if `val < 0.0`.
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val < 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken("Negative Stiffness (Scalar)".into()),
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Negative Stiffness (Scalar)".into(),
             ));
         }
         Ok(Self(val))
