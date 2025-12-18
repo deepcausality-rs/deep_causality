@@ -122,8 +122,13 @@ fn test_potential_divergence_non_finite() {
 
     match MaxwellSolver::calculate_potential_divergence(&d, &a) {
         Err(e) => match e.0 {
-            PhysicsErrorEnum::NumericalInstability(_) => {}
-            _ => panic!("Expected NumericalInstability, got {:?}", e),
+            // Either grade validation catches it as non-pure-vector or finiteness check catches NaN
+            PhysicsErrorEnum::NumericalInstability(_)
+            | PhysicsErrorEnum::PhysicalInvariantBroken(_) => {}
+            _ => panic!(
+                "Expected NumericalInstability or PhysicalInvariantBroken, got {:?}",
+                e
+            ),
         },
         Ok(_) => panic!("Should fail"),
     }

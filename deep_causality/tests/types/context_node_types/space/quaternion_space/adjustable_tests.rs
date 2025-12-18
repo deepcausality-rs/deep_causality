@@ -9,7 +9,7 @@ use deep_causality_data_structures::{ArrayGrid, ArrayType, PointIndex};
 #[test]
 fn test_update() {
     let mut qspace = QuaternionSpace::new(1, 1.0, 0.0, 0.0, 0.0);
-    let grid: ArrayGrid<f64, 4, 4, 4, 1> = ArrayGrid::new(ArrayType::Array4D);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array4D);
 
     grid.set(PointIndex::new4d(0, 0, 0, 0), 0.5);
     grid.set(PointIndex::new4d(0, 0, 0, 1), 0.5);
@@ -28,7 +28,7 @@ fn test_update() {
 #[test]
 fn test_adjust() {
     let mut qspace = QuaternionSpace::new(1, 1.0, 0.0, 0.0, 0.0);
-    let grid: ArrayGrid<f64, 4, 4, 4, 1> = ArrayGrid::new(ArrayType::Array4D);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array4D);
 
     grid.set(PointIndex::new4d(0, 0, 0, 0), 0.1);
     grid.set(PointIndex::new4d(0, 0, 0, 1), 0.1);
@@ -47,7 +47,7 @@ fn test_adjust() {
 #[test]
 fn test_update_w_fails_on_nan() {
     let mut qspace = QuaternionSpace::new(1, 1.0, 0.0, 0.0, 0.0);
-    let grid: ArrayGrid<f64, 4, 4, 4, 1> = ArrayGrid::new(ArrayType::Array4D);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array4D);
 
     grid.set(PointIndex::new4d(0, 0, 0, 0), f64::NAN); // w
     grid.set(PointIndex::new4d(0, 0, 0, 1), 0.0);
@@ -61,7 +61,7 @@ fn test_update_w_fails_on_nan() {
 #[test]
 fn test_update_w_fails_on_inf() {
     let mut qspace = QuaternionSpace::new(1, 1.0, 0.0, 0.0, 0.0);
-    let grid: ArrayGrid<f64, 4, 4, 4, 1> = ArrayGrid::new(ArrayType::Array4D);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array4D);
 
     grid.set(PointIndex::new4d(0, 0, 0, 0), f64::INFINITY); // w
     grid.set(PointIndex::new4d(0, 0, 0, 1), 0.0);
@@ -75,7 +75,7 @@ fn test_update_w_fails_on_inf() {
 #[test]
 fn test_update_w_fails_on_neg_inf() {
     let mut qspace = QuaternionSpace::new(1, 1.0, 0.0, 0.0, 0.0);
-    let grid: ArrayGrid<f64, 4, 4, 4, 1> = ArrayGrid::new(ArrayType::Array4D);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array4D);
 
     grid.set(PointIndex::new4d(0, 0, 0, 0), f64::NEG_INFINITY); // w
     grid.set(PointIndex::new4d(0, 0, 0, 1), 0.0);
@@ -89,7 +89,7 @@ fn test_update_w_fails_on_neg_inf() {
 #[test]
 fn test_update_x_fails_on_nan() {
     let mut qspace = QuaternionSpace::new(1, 1.0, 0.0, 0.0, 0.0);
-    let grid: ArrayGrid<f64, 4, 4, 4, 1> = ArrayGrid::new(ArrayType::Array4D);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array4D);
 
     grid.set(PointIndex::new4d(0, 0, 0, 0), 0.0);
     grid.set(PointIndex::new4d(0, 0, 0, 1), f64::NAN); // x
@@ -103,7 +103,7 @@ fn test_update_x_fails_on_nan() {
 #[test]
 fn test_update_x_fails_on_inf() {
     let mut qspace = QuaternionSpace::new(1, 1.0, 0.0, 0.0, 0.0);
-    let grid: ArrayGrid<f64, 4, 4, 4, 1> = ArrayGrid::new(ArrayType::Array4D);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array4D);
 
     grid.set(PointIndex::new4d(0, 0, 0, 0), 0.0);
     grid.set(PointIndex::new4d(0, 0, 0, 1), f64::INFINITY); // x
@@ -117,7 +117,7 @@ fn test_update_x_fails_on_inf() {
 #[test]
 fn test_update_x_fails_on_neg_inf() {
     let mut qspace = QuaternionSpace::new(1, 1.0, 0.0, 0.0, 0.0);
-    let grid: ArrayGrid<f64, 4, 4, 4, 1> = ArrayGrid::new(ArrayType::Array4D);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array4D);
 
     grid.set(PointIndex::new4d(0, 0, 0, 0), 0.0);
     grid.set(PointIndex::new4d(0, 0, 0, 1), f64::NEG_INFINITY); // x
@@ -131,7 +131,7 @@ fn test_update_x_fails_on_neg_inf() {
 #[test]
 fn test_update_y_fails_on_nan() {
     let mut qspace = QuaternionSpace::new(1, 1.0, 0.0, 0.0, 0.0);
-    let grid: ArrayGrid<f64, 4, 4, 4, 1> = ArrayGrid::new(ArrayType::Array4D);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array4D);
 
     grid.set(PointIndex::new4d(0, 0, 0, 0), 0.0);
     grid.set(PointIndex::new4d(0, 0, 0, 1), 0.0);
@@ -145,7 +145,7 @@ fn test_update_y_fails_on_nan() {
 #[test]
 fn test_update_y_fails_on_inf() {
     let mut qspace = QuaternionSpace::new(1, 1.0, 0.0, 0.0, 0.0);
-    let grid: ArrayGrid<f64, 4, 4, 4, 1> = ArrayGrid::new(ArrayType::Array4D);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array4D);
 
     grid.set(PointIndex::new4d(0, 0, 0, 0), 0.0);
     grid.set(PointIndex::new4d(0, 0, 0, 1), 0.0);
@@ -159,7 +159,7 @@ fn test_update_y_fails_on_inf() {
 #[test]
 fn test_update_y_fails_on_neg_inf() {
     let mut qspace = QuaternionSpace::new(1, 1.0, 0.0, 0.0, 0.0);
-    let grid: ArrayGrid<f64, 4, 4, 4, 1> = ArrayGrid::new(ArrayType::Array4D);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array4D);
 
     grid.set(PointIndex::new4d(0, 0, 0, 0), 0.0);
     grid.set(PointIndex::new4d(0, 0, 0, 1), 0.0);
@@ -173,7 +173,7 @@ fn test_update_y_fails_on_neg_inf() {
 #[test]
 fn test_update_z_fails_on_nan() {
     let mut qspace = QuaternionSpace::new(1, 0.1, 0.1, 0.1, 0.1);
-    let grid: ArrayGrid<f64, 4, 4, 4, 1> = ArrayGrid::new(ArrayType::Array4D);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array4D);
 
     grid.set(PointIndex::new4d(0, 0, 0, 0), 0.0);
     grid.set(PointIndex::new4d(0, 0, 0, 1), 0.0);
@@ -187,7 +187,7 @@ fn test_update_z_fails_on_nan() {
 #[test]
 fn test_update_z_fails_on_inf() {
     let mut qspace = QuaternionSpace::new(1, 0.1, 0.1, 0.1, 0.1);
-    let grid: ArrayGrid<f64, 4, 4, 4, 1> = ArrayGrid::new(ArrayType::Array4D);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array4D);
 
     grid.set(PointIndex::new4d(0, 0, 0, 0), 0.0);
     grid.set(PointIndex::new4d(0, 0, 0, 1), 0.0);
@@ -201,7 +201,7 @@ fn test_update_z_fails_on_inf() {
 #[test]
 fn test_update_z_fails_on_neg_inf() {
     let mut qspace = QuaternionSpace::new(1, 0.1, 0.1, 0.1, 0.1);
-    let grid: ArrayGrid<f64, 4, 4, 4, 1> = ArrayGrid::new(ArrayType::Array4D);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array4D);
 
     grid.set(PointIndex::new4d(0, 0, 0, 0), 0.0);
     grid.set(PointIndex::new4d(0, 0, 0, 1), 0.0);
@@ -215,7 +215,7 @@ fn test_update_z_fails_on_neg_inf() {
 #[test]
 fn test_adjust_w_fails_on_nan() {
     let mut qspace = QuaternionSpace::new(1, 1.0, 0.0, 0.0, 0.0);
-    let grid: ArrayGrid<f64, 4, 4, 4, 1> = ArrayGrid::new(ArrayType::Array4D);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array4D);
 
     grid.set(PointIndex::new4d(0, 0, 0, 0), f64::NAN); // w
     grid.set(PointIndex::new4d(0, 0, 0, 1), 0.0);
@@ -229,7 +229,7 @@ fn test_adjust_w_fails_on_nan() {
 #[test]
 fn test_adjust_x_fails_on_nan() {
     let mut qspace = QuaternionSpace::new(1, 1.0, 0.0, 0.0, 0.0);
-    let grid: ArrayGrid<f64, 4, 4, 4, 1> = ArrayGrid::new(ArrayType::Array4D);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array4D);
 
     grid.set(PointIndex::new4d(0, 0, 0, 0), 0.0);
     grid.set(PointIndex::new4d(0, 0, 0, 1), f64::NAN); // x
@@ -243,7 +243,7 @@ fn test_adjust_x_fails_on_nan() {
 #[test]
 fn test_adjust_y_fails_on_nan() {
     let mut qspace = QuaternionSpace::new(1, 1.0, 0.0, 0.0, 0.0);
-    let grid: ArrayGrid<f64, 4, 4, 4, 1> = ArrayGrid::new(ArrayType::Array4D);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array4D);
 
     grid.set(PointIndex::new4d(0, 0, 0, 0), 0.0);
     grid.set(PointIndex::new4d(0, 0, 0, 1), 0.0);
@@ -257,7 +257,7 @@ fn test_adjust_y_fails_on_nan() {
 #[test]
 fn test_adjust_z_fails_on_nan() {
     let mut qspace = QuaternionSpace::new(1, 0.1, 0.1, 0.1, 0.1);
-    let grid: ArrayGrid<f64, 4, 4, 4, 1> = ArrayGrid::new(ArrayType::Array4D);
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array4D);
 
     grid.set(PointIndex::new4d(0, 0, 0, 0), 0.0);
     grid.set(PointIndex::new4d(0, 0, 0, 1), 0.0);

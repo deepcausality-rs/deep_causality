@@ -250,6 +250,10 @@ where
     /// Lower: The lower the conjoint delta, the more the observed factors explain the observation.
     /// Therefore, the joint causal relationship is stronger as it explains more of the observation.
     fn conjoint_delta(&self) -> NumericalValue {
+        if self.is_empty() {
+            return 1.0;
+        }
+
         let one = 1.0;
         let total = self.len() as NumericalValue;
         let non_inferable = self.number_non_inferable();
@@ -304,6 +308,10 @@ where
     /// Then multiplies by 100 to get a percentage.
     ///
     fn percent_inferable(&self) -> NumericalValue {
+        if self.is_empty() {
+            return 0.0;
+        }
+
         (self.number_inferable() / self.len() as NumericalValue) * (100 as NumericalValue)
     }
 
@@ -313,6 +321,10 @@ where
     /// Then multiplies by 100 to get a percentage.
     ///
     fn percent_inverse_inferable(&self) -> NumericalValue {
+        if self.is_empty() {
+            return 0.0;
+        }
+
         (self.number_inverse_inferable() / self.len() as NumericalValue) * (100 as NumericalValue)
     }
 
@@ -322,6 +334,10 @@ where
     /// Then multiplies by 100 to get a percentage.
     ///
     fn percent_non_inferable(&self) -> NumericalValue {
+        if self.is_empty() {
+            return 0.0;
+        }
+
         (self.number_non_inferable() / self.len() as NumericalValue) * (100 as NumericalValue)
     }
 }

@@ -3,9 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::PhysicsError;
 use crate::QuantumOps;
 use crate::quantum::gates_haruna;
-use crate::{PhysicsError, PhysicsErrorEnum};
 use deep_causality_haft::Functor;
 use deep_causality_multivector::MultiVector;
 use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorWitness, HilbertState};
@@ -48,22 +48,22 @@ pub fn klein_gordon_kernel(
 
     // Validate numerical finiteness of inputs
     if !mass.is_finite() {
-        return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
+        return Err(PhysicsError::NumericalInstability(
             "Mass is not finite in Klein-Gordon".into(),
-        )));
+        ));
     }
     if laplacian.as_slice().iter().any(|v| !v.is_finite()) {
-        return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
+        return Err(PhysicsError::NumericalInstability(
             "Laplacian contains non-finite entries".into(),
-        )));
+        ));
     }
 
     // 2. Term B: m^2 psi
     let m2 = mass * mass;
     if !m2.is_finite() {
-        return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
+        return Err(PhysicsError::NumericalInstability(
             "m^2 overflowed in Klein-Gordon".into(),
-        )));
+        ));
     }
     let psi_data = psi_manifold.data();
 
@@ -72,32 +72,32 @@ pub fn klein_gordon_kernel(
     // Use len() instead of size()
     let vertex_count = laplacian.len();
     if psi_data.len() < vertex_count {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+        return Err(PhysicsError::DimensionMismatch(
             "psi_data is smaller than laplacian data".to_string(),
-        )));
+        ));
     }
     let psi_vertex_data = &psi_data.as_slice()[..vertex_count];
     if psi_vertex_data.iter().any(|v| !v.is_finite()) {
-        return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
+        return Err(PhysicsError::NumericalInstability(
             "psi data contains non-finite entries".into(),
-        )));
+        ));
     }
     let psi_vertex_tensor =
         CausalTensor::new(psi_vertex_data.to_vec(), laplacian.shape().to_vec())?;
     let m2_psi = psi_vertex_tensor * m2;
     if m2_psi.as_slice().iter().any(|v| !v.is_finite()) {
-        return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
+        return Err(PhysicsError::NumericalInstability(
             "m^2 * psi produced non-finite entries".into(),
-        )));
+        ));
     }
 
     // 3. Result: Delta psi + m^2 psi
     // We sum them. Ideally, for a free field, this sum is zero.
     let result = laplacian + m2_psi;
     if result.as_slice().iter().any(|v| !v.is_finite()) {
-        return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
+        return Err(PhysicsError::NumericalInstability(
             "Klein-Gordon result contains non-finite entries".into(),
-        )));
+        ));
     }
 
     Ok(result)
@@ -117,12 +117,10 @@ pub fn born_probability_kernel(
 ) -> Result<f64, PhysicsError> {
     // Ensure the states live in the same Hilbert space (metric/dimension)
     if state.mv().metric() != basis.mv().metric() {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
-            format!(
-                "Metric mismatch in Born Probability: {:?} vs {:?}",
-                state.mv().metric(),
-                basis.mv().metric()
-            ),
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Metric mismatch in Born Probability: {:?} vs {:?}",
+            state.mv().metric(),
+            basis.mv().metric()
         )));
     }
 
@@ -132,15 +130,17 @@ pub fn born_probability_kernel(
 
     // Guard against non-finite values
     if !p.is_finite() {
-        return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
-            format!("Born probability is not finite: {}", p),
+        return Err(PhysicsError::NumericalInstability(format!(
+            "Born probability is not finite: {}",
+            p
         )));
     }
 
     // Validate
     if !(-1e-9..=1.000001).contains(&p) {
-        return Err(PhysicsError::new(PhysicsErrorEnum::NormalizationError(
-            format!("Born probability out of bounds: {}", p),
+        return Err(PhysicsError::NormalizationError(format!(
+            "Born probability out of bounds: {}",
+            p
         )));
     }
 
@@ -161,12 +161,10 @@ pub fn expectation_value_kernel(
 ) -> Result<f64, PhysicsError> {
     // Check metric compatibility
     if state.mv().metric() != operator.mv().metric() {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
-            format!(
-                "Metric mismatch in Expectation Value: {:?} vs {:?}",
-                state.mv().metric(),
-                operator.mv().metric()
-            ),
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Metric mismatch in Expectation Value: {:?} vs {:?}",
+            state.mv().metric(),
+            operator.mv().metric()
         )));
     }
 
@@ -188,12 +186,10 @@ pub fn apply_gate_kernel(state: &HilbertState, gate: &Gate) -> Result<HilbertSta
     // New State = Gate * State
     // Need underlying multiplication.
     if state.mv().metric() != gate.mv().metric() {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
-            format!(
-                "Metric mismatch in Apply Gate: {:?} vs {:?}",
-                state.mv().metric(),
-                gate.mv().metric()
-            ),
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Metric mismatch in Apply Gate: {:?} vs {:?}",
+            state.mv().metric(),
+            gate.mv().metric()
         )));
     }
 
@@ -205,9 +201,9 @@ pub fn apply_gate_kernel(state: &HilbertState, gate: &Gate) -> Result<HilbertSta
         .iter()
         .any(|c| !c.re.is_finite() || !c.im.is_finite())
     {
-        return Err(PhysicsError::new(PhysicsErrorEnum::NumericalInstability(
+        return Err(PhysicsError::NumericalInstability(
             "Non-finite component in state after gate application".into(),
-        )));
+        ));
     }
 
     // Wrap back in HilbertState
@@ -229,12 +225,10 @@ pub fn commutator_kernel(a: &Operator, b: &Operator) -> Result<HilbertState, Phy
     let b_mv = b.mv();
 
     if a_mv.metric() != b_mv.metric() {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
-            format!(
-                "Metric mismatch in Commutator: {:?} vs {:?}",
-                a_mv.metric(),
-                b_mv.metric()
-            ),
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Metric mismatch in Commutator: {:?} vs {:?}",
+            a_mv.metric(),
+            b_mv.metric()
         )));
     }
 
@@ -304,12 +298,10 @@ pub fn haruna_hadamard_gate_kernel(
     let b_complex = CausalMultiVectorWitness::fmap(field_b.clone(), |x| Complex::new(x, 0.0));
 
     if a_complex.metric() != b_complex.metric() {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
-            format!(
-                "Metric mismatch in Haruna Hadamard: {:?} vs {:?}",
-                a_complex.metric(),
-                b_complex.metric()
-            ),
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Metric mismatch in Haruna Hadamard: {:?} vs {:?}",
+            a_complex.metric(),
+            b_complex.metric()
         )));
     }
 
@@ -329,12 +321,10 @@ pub fn haruna_cz_gate_kernel(
     let a2_complex = CausalMultiVectorWitness::fmap(field_a2.clone(), |x| Complex::new(x, 0.0));
 
     if a1_complex.metric() != a2_complex.metric() {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
-            format!(
-                "Metric mismatch in Haruna CZ: {:?} vs {:?}",
-                a1_complex.metric(),
-                a2_complex.metric()
-            ),
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Metric mismatch in Haruna CZ: {:?} vs {:?}",
+            a1_complex.metric(),
+            a2_complex.metric()
         )));
     }
 

@@ -15,19 +15,19 @@ pub enum DeonticError {
     FailedToAddTeloid,
 
     /// Failed to add edge to the graph.
-    FailedToAddEdge(usize, usize),
+    FailedToAddEdge(usize, usize, GraphError),
 
     /// An operation was attempted on a graph that was not frozen.
     /// Deontic inference requires a static, immutable graph.
-    GraphNotFrozen,
+    GraphNotFrozen(GraphError),
 
     /// An mutation operation was attempted on a graph that was frozen.
     /// Mutation requires an unfrozen graph
-    GraphIsFrozen,
+    GraphIsFrozen(GraphError),
 
     /// The TeloidGraph is invalid because it contains a cycle, which would
     /// lead to infinite loops in reasoning.
-    GraphIsCyclic,
+    GraphIsCyclic(GraphError),
 
     /// A TeloidID exists in the graph or tag index but not in the TeloidStore,
     /// indicating a critical state inconsistency.
@@ -51,6 +51,10 @@ impl Error for DeonticError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             DeonticError::GraphError(e) => Some(e),
+            DeonticError::FailedToAddEdge(_, _, e) => Some(e),
+            DeonticError::GraphNotFrozen(e) => Some(e),
+            DeonticError::GraphIsFrozen(e) => Some(e),
+            DeonticError::GraphIsCyclic(e) => Some(e),
             _ => None,
         }
     }
@@ -59,20 +63,20 @@ impl Error for DeonticError {
 impl fmt::Display for DeonticError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            DeonticError::GraphNotFrozen => {
+            DeonticError::GraphNotFrozen(_) => {
                 write!(
                     f,
                     "Deontic inference failed: The TeloidGraph must be frozen before evaluation."
                 )
             }
-            DeonticError::GraphIsFrozen => {
+            DeonticError::GraphIsFrozen(_) => {
                 write!(
                     f,
                     "Deontic inference failed: The TeloidGraph is frozen and cannot be modified."
                 )
             }
 
-            DeonticError::GraphIsCyclic => {
+            DeonticError::GraphIsCyclic(_) => {
                 write!(
                     f,
                     "Deontic inference failed: The TeloidGraph contains a cycle and is invalid."
@@ -107,7 +111,7 @@ impl fmt::Display for DeonticError {
             DeonticError::FailedToAddTeloid => {
                 write!(f, "Failed to add a new teloid to the graph.")
             }
-            DeonticError::FailedToAddEdge(source, target) => {
+            DeonticError::FailedToAddEdge(source, target, _) => {
                 write!(
                     f,
                     "Edge from {source} to {target} could not be created; a node may not exist or the edge already exists."
@@ -126,11 +130,11 @@ impl fmt::Display for DeonticError {
 impl From<GraphError> for DeonticError {
     fn from(err: GraphError) -> Self {
         match err {
-            GraphError::GraphIsFrozen => DeonticError::GraphIsFrozen,
-            GraphError::GraphNotFrozen => DeonticError::GraphNotFrozen,
-            GraphError::GraphContainsCycle => DeonticError::GraphIsCyclic,
+            GraphError::GraphIsFrozen => DeonticError::GraphIsFrozen(err),
+            GraphError::GraphNotFrozen => DeonticError::GraphNotFrozen(err),
+            GraphError::GraphContainsCycle => DeonticError::GraphIsCyclic(err),
             GraphError::EdgeCreationError { source, target } => {
-                DeonticError::FailedToAddEdge(source, target)
+                DeonticError::FailedToAddEdge(source, target, err)
             }
             _ => DeonticError::GraphError(err),
         }

@@ -38,6 +38,21 @@ fn test_alfven_speed() {
 }
 
 #[test]
+fn test_alfven_speed_errors() {
+    let b_vec = CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
+    let b_field = PhysicalField::new(b_vec);
+    let rho_valid = Density::new(1.0).unwrap();
+
+    // Permeability error
+    assert!(alfven_speed_kernel(&b_field, &rho_valid, 0.0).is_err());
+    assert!(alfven_speed_kernel(&b_field, &rho_valid, -1.0).is_err());
+
+    // Density error (zero)
+    let rho_zero = Density::new_unchecked(0.0);
+    assert!(alfven_speed_kernel(&b_field, &rho_zero, 1.0).is_err());
+}
+
+#[test]
 fn test_magnetic_pressure() {
     let b_vec = CausalMultiVector::new(vec![0.0, 2.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
     let b_field = PhysicalField::new(b_vec);
@@ -47,6 +62,13 @@ fn test_magnetic_pressure() {
     assert!(res.is_ok());
     // P = B^2 / 2mu0 = 4 / 2 = 2
     assert!((res.unwrap().value() - 2.0).abs() < 1e-10);
+}
+
+#[test]
+fn test_magnetic_pressure_error() {
+    let b_vec = CausalMultiVector::new(vec![0.0, 2.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
+    let b_field = PhysicalField::new(b_vec);
+    assert!(magnetic_pressure_kernel(&b_field, 0.0).is_err());
 }
 
 #[test]
@@ -64,4 +86,28 @@ fn test_ideal_induction() {
     for val in tensor.as_slice() {
         assert_eq!(*val, 0.0);
     }
+}
+
+#[test]
+fn test_ideal_induction_dimension_error() {
+    // Manifold with only 0 and 1 skeletons (1D manifold/graph)
+    // Points for a single line segment
+    let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0], vec![2, 2]).unwrap();
+    let point_cloud = PointCloud::new(
+        points,
+        CausalTensor::new(vec![0.0, 0.0], vec![2]).unwrap(),
+        0,
+    )
+    .unwrap();
+    let complex = point_cloud.triangulate(1.5).unwrap();
+    let num = complex.total_simplices();
+    let m = Manifold::new(
+        complex,
+        CausalTensor::new(vec![0.0; num], vec![num]).unwrap(),
+        0,
+    )
+    .unwrap();
+
+    let res = ideal_induction_kernel(&m, &m);
+    assert!(res.is_err());
 }

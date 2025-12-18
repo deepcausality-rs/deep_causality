@@ -104,7 +104,7 @@ fn test_simplicial_complex_right_adjunct() {
         let val = w * 10.0;
         let data = vec![val; size];
         let tensor = deep_causality_tensor::CausalTensor::new(data, vec![size]).unwrap();
-        Topology::new(complex.clone(), 0, tensor, 0)
+        Topology::new(complex.clone(), 0, tensor, 0).unwrap()
     };
 
     // Execution:

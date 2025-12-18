@@ -12,25 +12,26 @@ where
     O: CsmEvaluable + Default + Debug + Clone,
     C: Clone,
 {
-    /// Updates a causal state with a new state at the index position idx.
-    /// Returns UpdateError if the update operation failed.
+    /// Updates a causal state using the state's internal ID.
+    /// Returns UpdateError if the state does not exist.
     pub fn update_single_state(
         &self,
-        idx: usize,
         state_action: StateAction<I, O, C>,
     ) -> Result<(), UpdateError> {
+        let state_id = state_action.0.id();
+
         // Check if the key exists, if not return error
-        if !self.state_actions.read().unwrap().contains_key(&idx) {
+        if !self.state_actions.read().unwrap().contains_key(&state_id) {
             return Err(UpdateError(format!(
-                "State {idx} does not exist. Add it first before updating."
+                "State {state_id} does not exist. Add it first before updating."
             )));
         }
 
-        // Update state/action at the idx position
+        // Update state/action using internal ID
         self.state_actions
             .write()
             .unwrap()
-            .insert(idx, state_action);
+            .insert(state_id, state_action);
 
         Ok(())
     }

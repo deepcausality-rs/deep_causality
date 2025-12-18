@@ -40,16 +40,29 @@ impl UniformSampler for UniformU64 {
     {
         let low_val = *low.borrow();
         let high_val = *high.borrow();
-        if low_val >= high_val {
+        if low_val > high_val {
             return Err(UniformDistributionError::InvalidRange);
         }
+        // Use checked_add to avoid overflow when high_val == u64::MAX
+        let range_end = high_val.checked_add(1).unwrap_or(0);
         Ok(UniformU64 {
             low: low_val,
-            high: high_val + 1,
-        }) // Inclusive range
+            high: range_end,
+        })
     }
 
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
+        // Handle special case: when high == 0 and low > 0, it means we want [low, u64::MAX]
+        if self.high == 0 && self.low > 0 {
+            let range_size = u64::MAX - self.low + 1;
+            if range_size == 0 {
+                return rng.next_u64();
+            }
+            return self.low.wrapping_add(rng.next_u64() % range_size);
+        }
+        if self.high == self.low {
+            return self.low;
+        }
         self.low + (rng.next_u64() % (self.high - self.low))
     }
 }

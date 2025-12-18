@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{PhysicsError, PhysicsErrorEnum, Temperature};
+use crate::{PhysicsError, Temperature};
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 
 /// Calculates generalized Hooke's Law: $\sigma_{ij} = C_{ijkl} \epsilon_{kl}$.
@@ -23,12 +23,10 @@ pub fn hookes_law_kernel(
     // Sigma_ij = C_ijkl * Epsilon_kl
     // Stiffness C is Rank 4 [i, j, k, l]
     if stiffness.num_dim() != 4 || strain.num_dim() != 2 {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
-            format!(
-                "Hooke's Law requires Stiffness Rank 4 and Strain Rank 2. Got {} and {}",
-                stiffness.num_dim(),
-                strain.num_dim()
-            ),
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Hooke's Law requires Stiffness Rank 4 and Strain Rank 2. Got {} and {}",
+            stiffness.num_dim(),
+            strain.num_dim()
         )));
     }
 
@@ -61,9 +59,9 @@ pub fn von_mises_stress_kernel(stress: &CausalTensor<f64>) -> Result<crate::Stre
     // sigma_m = tr(sigma) / 3
 
     if stress.num_dim() != 2 || stress.shape() != [3, 3] {
-        return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+        return Err(PhysicsError::DimensionMismatch(
             "Von Mises requires 3x3 Stress Tensor".into(),
-        )));
+        ));
     }
 
     // 1. Calculate Mean Stress (Hydrostatic)
@@ -79,9 +77,7 @@ pub fn von_mises_stress_kernel(stress: &CausalTensor<f64>) -> Result<crate::Stre
     {
         trace_tensor.data()[0]
     } else {
-        return Err(PhysicsError::new(PhysicsErrorEnum::CalculationError(
-            "Trace failed".into(),
-        )));
+        return Err(PhysicsError::CalculationError("Trace failed".into()));
     };
 
     let sigma_m = trace_val / 3.0;
@@ -111,9 +107,9 @@ pub fn von_mises_stress_kernel(stress: &CausalTensor<f64>) -> Result<crate::Stre
         j2_tensor.data()[0]
     } else {
         // Fallback for full contraction if it didn't reduce fully (should not happen with generic contraction logic)
-        return Err(PhysicsError::new(PhysicsErrorEnum::CalculationError(
+        return Err(PhysicsError::CalculationError(
             "J2 calculation failed".into(),
-        )));
+        ));
     };
 
     let j2 = 0.5 * j2_val;

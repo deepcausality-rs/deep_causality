@@ -61,6 +61,36 @@ fn test_poynting_vector_kernel_valid() {
 }
 
 #[test]
+fn test_poynting_vector_kernel_dimension_error() {
+    let e = CausalMultiVector::new(
+        vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    let b = CausalMultiVector::new(vec![0.0, 0.0, 1.0, 0.0], Metric::Euclidean(2)).unwrap();
+
+    let result = poynting_vector_kernel(&e, &b);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_poynting_vector_kernel_nan_error() {
+    let e = CausalMultiVector::new(
+        vec![f64::NAN, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    let b = CausalMultiVector::new(
+        vec![0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+
+    let result = poynting_vector_kernel(&e, &b);
+    assert!(result.is_err());
+}
+
+#[test]
 fn test_magnetic_helicity_density_kernel_valid() {
     // h = A . B
     let a = CausalMultiVector::new(
@@ -80,6 +110,19 @@ fn test_magnetic_helicity_density_kernel_valid() {
     let h = result.unwrap();
     // Dot product of identical unit vectors is 1.0
     assert!((h - 1.0).abs() < 1e-10);
+}
+
+#[test]
+fn test_magnetic_helicity_density_error() {
+    let a = CausalMultiVector::new(
+        vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    let b = CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
+
+    let result = magnetic_helicity_density_kernel(&a, &b);
+    assert!(result.is_err());
 }
 
 #[test]
@@ -118,4 +161,24 @@ fn test_proca_equation_kernel_valid() {
 
     let result = proca_equation_kernel(&field_manifold, &potential_manifold, mass);
     assert!(result.is_ok(), "Proca kernel failed: {:?}", result.err());
+}
+
+#[test]
+fn test_proca_equation_kernel_nan_mass() {
+    let field_manifold = create_simple_manifold();
+    let potential_manifold = create_simple_manifold();
+    let mass = f64::NAN;
+
+    let result = proca_equation_kernel(&field_manifold, &potential_manifold, mass);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_proca_equation_kernel_inf_mass() {
+    let field_manifold = create_simple_manifold();
+    let potential_manifold = create_simple_manifold();
+    let mass = f64::INFINITY;
+
+    let result = proca_equation_kernel(&field_manifold, &potential_manifold, mass);
+    assert!(result.is_err());
 }

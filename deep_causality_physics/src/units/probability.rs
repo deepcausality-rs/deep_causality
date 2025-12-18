@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{PhysicsError, PhysicsErrorEnum};
+use crate::PhysicsError;
 
 /// Probability value [0, 1].
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
@@ -21,8 +21,9 @@ impl Probability {
     /// Returns `PhysicsError::NormalizationError` if `val` is not in [0, 1].
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if !(0.0..=1.0).contains(&val) {
-            return Err(PhysicsError::new(PhysicsErrorEnum::NormalizationError(
-                format!("Probability must be between 0 and 1, got {}", val),
+            return Err(PhysicsError::NormalizationError(format!(
+                "Probability must be between 0 and 1, got {}",
+                val
             )));
         }
         Ok(Self(val))

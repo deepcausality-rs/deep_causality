@@ -8,8 +8,14 @@ use deep_causality_tensor::CausalTensor;
 
 #[test]
 fn test_relativistic_current() {
-    // Current implementation returns Error due to lack of derivative context
     let em = CausalTensor::new(vec![0.0; 4], vec![2, 2]).unwrap();
+    let metric = CausalTensor::new(vec![1.0; 4], vec![2, 2]).unwrap();
+    assert!(relativistic_current_kernel(&em, &metric).is_err());
+}
+
+#[test]
+fn test_relativistic_current_dimension_error() {
+    let em = CausalTensor::new(vec![0.0; 4], vec![4]).unwrap(); // Rank 1
     let metric = CausalTensor::new(vec![1.0; 4], vec![2, 2]).unwrap();
     assert!(relativistic_current_kernel(&em, &metric).is_err());
 }
@@ -32,4 +38,11 @@ fn test_energy_momentum_tensor() {
     // T00 = 0.5 * E^2
     let t00 = t.data()[0];
     assert!((t00 - 0.5).abs() < 1e-10);
+}
+
+#[test]
+fn test_energy_momentum_tensor_dimension_error() {
+    let em = CausalTensor::new(vec![0.0; 4], vec![4]).unwrap();
+    let metric = CausalTensor::new(vec![1.0; 4], vec![2, 2]).unwrap();
+    assert!(energy_momentum_tensor_em_kernel(&em, &metric).is_err());
 }

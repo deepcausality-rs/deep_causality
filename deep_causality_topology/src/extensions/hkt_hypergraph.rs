@@ -49,6 +49,7 @@ impl BoundedComonad<HypergraphWitness> for HypergraphWitness {
         B: Zero + Copy + Clone,
     {
         let size = fa.num_nodes;
+        let shape = fa.data.shape().to_vec(); // Preserve original shape
         let mut result_vec = Vec::with_capacity(size);
 
         for i in 0..size {
@@ -60,7 +61,7 @@ impl BoundedComonad<HypergraphWitness> for HypergraphWitness {
         }
 
         let new_data =
-            CausalTensor::new(result_vec, vec![size]).expect("Data tensor creation should succeed");
+            CausalTensor::new(result_vec, shape).expect("Data tensor creation should succeed");
 
         Hypergraph {
             num_nodes: fa.num_nodes,

@@ -43,7 +43,7 @@ fn main() {
     let csm = CSM::new(state_actions);
 
     println!("Add a new sensor");
-    csm.add_single_state(EXPLOSION_SENSOR, (explosion_cs, explosion_ca))
+    csm.add_single_state((explosion_cs, explosion_ca))
         .expect("Failed to add Explosion sensor");
 
     println!("Start data feed and monitor sensors");

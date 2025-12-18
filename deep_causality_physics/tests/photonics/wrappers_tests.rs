@@ -28,6 +28,16 @@ fn test_wrapper_ray_transfer() {
 }
 
 #[test]
+fn test_wrapper_ray_transfer_error() {
+    let m = AbcdMatrix::new(CausalTensor::new(vec![1.0], vec![1]).unwrap());
+    let h = RayHeight::default();
+    let a = RayAngle::default();
+
+    let result = ray_transfer(&m, h, a);
+    assert!(result.is_err());
+}
+
+#[test]
 fn test_wrapper_ray_transfer_free_space() {
     // Free space propagation matrix: [[1, d], [0, 1]]
     let d = 0.1; // 10 cm
@@ -88,6 +98,13 @@ fn test_wrapper_lens_maker() {
     }
 }
 
+#[test]
+fn test_wrapper_lens_maker_error() {
+    let n = IndexOfRefraction::new(1.5).unwrap();
+    let result = lens_maker(n, 0.0, 0.1);
+    assert!(result.is_err());
+}
+
 // ============================================================================
 // Polarization Wrappers
 // ============================================================================
@@ -118,6 +135,13 @@ fn test_wrapper_stokes_from_jones() {
 }
 
 #[test]
+fn test_wrapper_stokes_from_jones_error() {
+    let j = JonesVector::new(CausalTensor::new(vec![Complex::new(1.0, 0.0)], vec![1]).unwrap());
+    let result = stokes_from_jones(&j);
+    assert!(result.is_err());
+}
+
+#[test]
 fn test_wrapper_jones_rotation() {
     // Identity Jones matrix
     let jones = CausalTensor::new(
@@ -138,6 +162,14 @@ fn test_wrapper_jones_rotation() {
     if let EffectValue::Value(rotated) = result.value() {
         assert_eq!(rotated.shape(), &[2, 2]);
     }
+}
+
+#[test]
+fn test_wrapper_jones_rotation_error() {
+    let m = CausalTensor::new(vec![Complex::new(1.0, 0.0)], vec![1]).unwrap();
+    let a = RayAngle::default();
+    let result = jones_rotation(&m, a);
+    assert!(result.is_err());
 }
 
 #[test]
@@ -170,6 +202,14 @@ fn test_wrapper_degree_of_polarization_partial() {
     }
 }
 
+#[test]
+fn test_wrapper_degree_of_polarization_error() {
+    let s =
+        StokesVector::new(CausalTensor::new(vec![-1.0, 0.0, 0.0, 0.0], vec![4]).unwrap()).unwrap();
+    let result = degree_of_polarization(&s);
+    assert!(result.is_err());
+}
+
 // ============================================================================
 // Gaussian Beam Wrappers
 // ============================================================================
@@ -192,6 +232,14 @@ fn test_wrapper_gaussian_q_propagation() {
 }
 
 #[test]
+fn test_wrapper_gaussian_q_propagation_error() {
+    let q = ComplexBeamParameter::new(Complex::new(0.0, 1.0)).unwrap();
+    let m = AbcdMatrix::new(CausalTensor::new(vec![1.0], vec![1]).unwrap());
+    let result = gaussian_q_propagation(q, &m);
+    assert!(result.is_err());
+}
+
+#[test]
 fn test_wrapper_beam_spot_size() {
     let q = ComplexBeamParameter::new(Complex::new(0.0, 1.0)).unwrap();
     let w = Wavelength::new(1e-6).unwrap(); // 1 μm
@@ -203,6 +251,14 @@ fn test_wrapper_beam_spot_size() {
         // At waist: w0 = sqrt(λ * z_R / π)
         assert!(spot.value() > 0.0);
     }
+}
+
+#[test]
+fn test_wrapper_beam_spot_size_error() {
+    let q = ComplexBeamParameter::new_unchecked(Complex::new(1.0, 0.0));
+    let w = Wavelength::new(1e-6).unwrap();
+    let result = beam_spot_size(q, w);
+    assert!(result.is_err());
 }
 
 // ============================================================================
@@ -240,6 +296,16 @@ fn test_wrapper_single_slit_irradiance_center() {
         // At center, I = I0
         assert!((intensity - i0).abs() < 1e-10);
     }
+}
+
+#[test]
+fn test_wrapper_single_slit_irradiance_error() {
+    let i0 = -1.0;
+    let l = Length::new(1.0).unwrap();
+    let a = RayAngle::default();
+    let w = Wavelength::new(1e-6).unwrap();
+    let result = single_slit_irradiance(i0, l, a, w);
+    assert!(result.is_err());
 }
 
 #[test]

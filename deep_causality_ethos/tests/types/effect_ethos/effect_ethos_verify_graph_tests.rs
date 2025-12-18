@@ -65,7 +65,7 @@ fn test_verify_graph_fails_on_cycle() {
     assert!(build_result.is_err());
     assert!(matches!(
         build_result.unwrap_err(),
-        DeonticError::GraphIsCyclic
+        DeonticError::GraphIsCyclic(_)
     ));
     assert!(!ethos.is_verified());
 }

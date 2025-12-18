@@ -66,7 +66,10 @@ fn test_link_inheritance_fails_if_frozen() {
     let result = ethos.link_inheritance(1, 2);
 
     assert!(result.is_err());
-    assert!(matches!(result.unwrap_err(), DeonticError::GraphIsFrozen));
+    assert!(matches!(
+        result.unwrap_err(),
+        DeonticError::GraphIsFrozen(_)
+    ));
 }
 
 #[test]
@@ -100,5 +103,8 @@ fn test_link_defeasance_fails_if_frozen() {
     let result = ethos.link_defeasance(1, 2);
 
     assert!(result.is_err());
-    assert!(matches!(result.unwrap_err(), DeonticError::GraphIsFrozen));
+    assert!(matches!(
+        result.unwrap_err(),
+        DeonticError::GraphIsFrozen(_)
+    ));
 }

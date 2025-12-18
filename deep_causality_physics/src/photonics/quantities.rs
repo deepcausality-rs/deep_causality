@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{PhysicsError, PhysicsErrorEnum};
+use crate::PhysicsError;
 use deep_causality_num::Complex;
 use deep_causality_tensor::CausalTensor;
 
@@ -43,8 +43,8 @@ pub struct Wavelength(f64);
 impl Wavelength {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val <= 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken("Wavelength must be positive".into()),
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Wavelength must be positive".into(),
             ));
         }
         Ok(Self(val))
@@ -65,10 +65,8 @@ pub struct NumericalAperture(f64);
 impl NumericalAperture {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val <= 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken(
-                    "Numerical Aperture must be positive".into(),
-                ),
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Numerical Aperture must be positive".into(),
             ));
         }
         Ok(Self(val))
@@ -89,8 +87,8 @@ pub struct BeamWaist(f64);
 impl BeamWaist {
     pub fn new(val: f64) -> Result<Self, PhysicsError> {
         if val <= 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken("Beam Waist must be positive".into()),
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Beam Waist must be positive".into(),
             ));
         }
         Ok(Self(val))
@@ -165,19 +163,17 @@ pub struct StokesVector(CausalTensor<f64>);
 impl StokesVector {
     pub fn new(tensor: CausalTensor<f64>) -> Result<Self, PhysicsError> {
         if tensor.shape() != [4] {
-            return Err(PhysicsError::new(PhysicsErrorEnum::DimensionMismatch(
+            return Err(PhysicsError::DimensionMismatch(
                 "StokesVector must be a 4-element tensor".into(),
-            )));
+            ));
         }
         let s = tensor.data();
         let s0_sq = s[0] * s[0];
         let s_vec_sq = s[1] * s[1] + s[2] * s[2] + s[3] * s[3];
 
         if s0_sq < s_vec_sq {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken(
-                    "StokesVector invariant violated: S0^2 < S1^2 + S2^2 + S3^2".into(),
-                ),
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "StokesVector invariant violated: S0^2 < S1^2 + S2^2 + S3^2".into(),
             ));
         }
 
@@ -197,10 +193,8 @@ pub struct ComplexBeamParameter(Complex<f64>);
 impl ComplexBeamParameter {
     pub fn new(val: Complex<f64>) -> Result<Self, PhysicsError> {
         if val.im <= 0.0 {
-            return Err(PhysicsError::new(
-                PhysicsErrorEnum::PhysicalInvariantBroken(
-                    "Imaginary part of q (Rayleigh range) must be positive".into(),
-                ),
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "Imaginary part of q (Rayleigh range) must be positive".into(),
             ));
         }
         Ok(Self(val))
