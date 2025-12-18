@@ -159,3 +159,27 @@ fn test_diffusivity_default() {
     let eta: Diffusivity = Default::default();
     assert_eq!(eta.value(), 0.0);
 }
+
+#[test]
+fn test_larmor_radius_default() {
+    let r: LarmorRadius = Default::default();
+    assert!(r.value() > 0.0);
+}
+
+#[test]
+fn test_debye_length_default() {
+    let l: DebyeLength = Default::default();
+    assert!(l.value() > 0.0);
+}
+
+#[test]
+fn test_plasma_frequency_default() {
+    let w: PlasmaFrequency = Default::default();
+    assert!(w.value() > 0.0);
+}
+
+#[test]
+fn test_conductivity_default() {
+    let s: Conductivity = Default::default();
+    assert!(s.value() > 0.0);
+}

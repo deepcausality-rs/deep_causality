@@ -94,3 +94,28 @@ fn test_complex_beam_parameter_new_non_positive_im_error() {
     let res2 = ComplexBeamParameter::new(Complex::new(1.0, -1.0));
     assert!(res2.is_err());
 }
+
+#[test]
+fn test_gaussian_propagation_unphysical_output_error() {
+    let q_in = ComplexBeamParameter::new(Complex::new(0.0, 1.0)).unwrap();
+    // Matrix [1, 0, 0, -1] -> q_out = -q_in = -i. Im = -1.
+    let m = CausalTensor::new(vec![1.0, 0.0, 0.0, -1.0], vec![2, 2]).unwrap();
+    let mat = AbcdMatrix::new(m);
+
+    let res = gaussian_q_propagation_kernel(q_in, &mat);
+    assert!(res.is_err());
+}
+
+#[test]
+fn test_beam_spot_size_invalid_q_error() {
+    // beam_spot_size_kernel check: if im_inv_q >= 0.0
+    // q = z + i z_R. inv_q = (z - i z_R) / (z^2 + z_R^2). Im(inv_q) = -z_R / (z^2 + z_R^2).
+    // If z_R is positive, Im(inv_q) is negative.
+    // To make Im(inv_q) >= 0, we need z_R <= 0.
+    // But ComplexBeamParameter constructor requires z_R > 0.
+    // To test this kernel's check, we must use new_unchecked or hit it via logic.
+    let q = ComplexBeamParameter::new_unchecked(Complex::new(0.0, -1.0));
+    let lambda = Wavelength::new(1.0).unwrap();
+    let res = beam_spot_size_kernel(q, lambda);
+    assert!(res.is_err());
+}

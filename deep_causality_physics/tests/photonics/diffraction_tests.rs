@@ -40,3 +40,32 @@ fn test_grating() {
     // sin theta = 1/2 = 0.5 -> theta = 30 deg = pi/6
     assert!((angle.value() - PI / 6.0).abs() < 1e-10);
 }
+
+#[test]
+fn test_single_slit_errors() {
+    let a = Length::new(1.0).unwrap();
+    let theta = RayAngle::new(0.0).unwrap();
+    let lambda_valid = Wavelength::new(1.0).unwrap();
+
+    // i0 < 0
+    assert!(single_slit_irradiance_kernel(-1.0, a, theta, lambda_valid).is_err());
+
+    // lambda = 0
+    let lambda_zero = Wavelength::new_unchecked(0.0);
+    assert!(single_slit_irradiance_kernel(1.0, a, theta, lambda_zero).is_err());
+}
+
+#[test]
+fn test_grating_errors() {
+    let pitch_valid = Length::new(1.0).unwrap();
+    let lambda = Wavelength::new(1.0).unwrap();
+    let inc = RayAngle::new(0.0).unwrap();
+
+    // pitch <= 0
+    let pitch_invalid = Length::new_unchecked(0.0);
+    assert!(grating_equation_kernel(pitch_invalid, 1, inc, lambda).is_err());
+
+    // sin_theta_m > 1
+    // m*lambda/d = 2*1/1 = 2
+    assert!(grating_equation_kernel(pitch_valid, 2, inc, lambda).is_err());
+}

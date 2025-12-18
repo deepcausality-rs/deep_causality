@@ -27,6 +27,17 @@ fn test_ray_transfer() {
 }
 
 #[test]
+fn test_ray_transfer_error() {
+    let m = CausalTensor::new(vec![1.0], vec![1]).unwrap();
+    let matrix = AbcdMatrix::new(m);
+    let h = RayHeight::new(1.0).unwrap();
+    let a = RayAngle::new(0.1).unwrap();
+
+    let res = ray_transfer_kernel(&matrix, h, a);
+    assert!(res.is_err());
+}
+
+#[test]
 fn test_snells_law() {
     let n1 = IndexOfRefraction::new(1.0).unwrap();
     let n2 = IndexOfRefraction::new(1.5).unwrap();
@@ -69,4 +80,12 @@ fn test_lens_maker() {
 
     // P = (1.5 - 1) * (1/0.5 - 1/-0.5) = 0.5 * (2 - (-2)) = 0.5 * 4 = 2.0
     assert!((p.value() - 2.0).abs() < 1e-10);
+}
+
+#[test]
+fn test_lens_maker_error() {
+    let n = IndexOfRefraction::new(1.5).unwrap();
+    // Zero radius
+    assert!(lens_maker_kernel(n, 0.0, 0.5).is_err());
+    assert!(lens_maker_kernel(n, 0.5, 0.0).is_err());
 }
