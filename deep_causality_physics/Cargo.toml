@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_physics"
-version = "0.1.1"
+version = "0.2.0"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -33,15 +33,15 @@ version = "0.0.2"
 
 [dependencies.deep_causality_haft]
 path = "../deep_causality_haft"
-version = "0.2.4"
+version = "0.2.6"
 
 [dependencies.deep_causality_multivector]
 path = "../deep_causality_multivector"
-version = "0.2.2"
+version = "0.2.3"
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
-version = "0.1.9"
+version = "0.1.10"
 
 [dependencies.deep_causality_sparse]
 path = "../deep_causality_sparse"
@@ -49,8 +49,8 @@ version = "0.1"
 
 [dependencies.deep_causality_tensor]
 path = "../deep_causality_tensor"
-version = "0.2.0"
+version = "0.2.1"
 
 [dependencies.deep_causality_topology]
 path = "../deep_causality_topology"
-version = "0.2.2"
+version = "0.2.3"

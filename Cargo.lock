@@ -319,7 +319,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality"
-version = "0.12.2"
+version = "0.13.0"
 dependencies = [
  "criterion",
  "deep_causality_ast",
@@ -332,7 +332,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_algorithms"
-version = "0.2.6"
+version = "0.2.7"
 dependencies = [
  "criterion",
  "deep_causality_num",
@@ -353,7 +353,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_data_structures"
-version = "0.10.6"
+version = "0.10.7"
 dependencies = [
  "criterion",
  "deep_causality_rand",
@@ -361,7 +361,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_discovery"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "csv",
  "deep_causality_algorithms",
@@ -383,7 +383,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_ethos"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "deep_causality",
  "ultragraph",
@@ -391,7 +391,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_haft"
-version = "0.2.5"
+version = "0.2.6"
 dependencies = [
  "deep_causality_num",
 ]
@@ -402,7 +402,7 @@ version = "0.8.11"
 
 [[package]]
 name = "deep_causality_multivector"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "criterion",
  "deep_causality_core",
@@ -413,14 +413,14 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_num"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "libm",
 ]
 
 [[package]]
 name = "deep_causality_physics"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "deep_causality_core",
  "deep_causality_haft",
@@ -433,7 +433,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_rand"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "deep_causality_num",
  "getrandom 0.3.4",
@@ -441,7 +441,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_sparse"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "criterion",
  "deep_causality_haft",
@@ -451,7 +451,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_tensor"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "criterion",
  "deep_causality_ast",
@@ -462,7 +462,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_topology"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "deep_causality_haft",
  "deep_causality_multivector",
@@ -473,7 +473,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_uncertain"
-version = "0.3.8"
+version = "0.3.9"
 dependencies = [
  "criterion",
  "deep_causality_ast",
