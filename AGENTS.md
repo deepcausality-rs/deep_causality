@@ -15,21 +15,38 @@ It uses three main components:
 
 ## Project Structure
 
-The project is a monorepo containing several sub-crates, including:
+The project is a monorepo containing 19 library crates:
 
-* `deep_causality`: The main DeepCausality library.
-* `deep_causality_algorithms`: Provides algorithms for the DeepCausality library.
-* `deep_causality_ast`: Provides utils to work on AST for the DeepCausality library.
-* `deep_causality_data_structures`: Provides data structures for the DeepCausality library.
-* `deep_causality_discovery`: A custom DSL for causal discovery.
-* `deep_causality_haft`: Higher-Order Abstract Functional Traits a.k.a HKT.
-* `deep_causality_macros`: Provides macros for the DeepCausality library (_deprecated_).
-* `deep_causality_num`: Numerical traits and utils used across the other crates.
-* `deep_causality_rand`: Random number generator and statistical distributions used in deep_causality_tensor and other
-* `deep_causality_tensor`: A custom tensor type used in deep_causality_algorithms and deep_causality_discovery crates.
-* `deep_causality_uncertain`: Provides a custom crate for handling uncertainty.
-* `examples`: A collection of example code.
-* `ultragraph`: A hyper-graph library used as a backend in the deep_causality library.
+### Core Crates
+* `deep_causality`: Computational causality library. Provides causality graph, collections, context and causal reasoning.
+* `deep_causality_core`: Core types for the deep_causality crate.
+* `deep_causality_ast`: AST data structure for the deep_causality crate.
+* `deep_causality_macros`: Custom code generation macros for DeepCausality (_deprecated_).
+
+### Data Structure Crates
+* `deep_causality_data_structures`: Data structures for deep_causality (sliding-window, grid-array).
+* `deep_causality_tensor`: Tensor data structure for deep_causality.
+* `deep_causality_sparse`: Sparse matrix data structure (CSR format) for deep_causality.
+* `ultragraph`: Hypergraph data structure used as a backend in deep_causality.
+
+### Algorithm and Discovery Crates
+* `deep_causality_algorithms`: Computational causality algorithms (SURD, MRMR) and utils.
+* `deep_causality_discovery`: Causality discovery DSL for the DeepCausality project.
+
+### Math and Numerics Crates
+* `deep_causality_num`: Numerical traits and utils used across all crates.
+* `deep_causality_rand`: Random number generator and statistical distributions.
+* `deep_causality_multivector`: Multivector implementation for geometric algebra.
+* `deep_causality_uncertain`: A first-order type for uncertain programming.
+
+### Functional Programming Crates
+* `deep_causality_haft`: Higher-Order Abstract Functional Traits (HKT).
+* `deep_causality_effects`: Effect types for heterogeneous graphs and causal collections.
+* `deep_causality_ethos`: Programmable ethics for DeepCausality.
+
+### Topology and Physics Crates
+* `deep_causality_topology`: Topological data structures (complexes, manifolds, differential geometry).
+* `deep_causality_physics`: Standard library of physics formulas and engineering primitives.
 
 
 ## Building and Running
