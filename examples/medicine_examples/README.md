@@ -17,6 +17,7 @@ cargo run -p medicine_examples --example <example_name>
 | Example                                                               | Domain | Description |
 |-----------------------------------------------------------------------|--------|-------------|
 | [aneurysm_risk](aneurysm_risk/README.md)                      | Cardiovascular | Aneurysm rupture risk via fluid fatigue accumulation |
+| [diving_decompression](diving_decompression/README.md)        | Hyperbaric | Bühlmann ZH-L16C decompression with CNS O2 toxicity |
 | [epilepsy](epilepsy/README.md)                               | Neurology | Virtual surgery planning using brain network digital twins |
 | [protein_folding](protein_folding/README.md)                 | Biophysics | Non-Markovian protein dynamics with memory kernels |
 | [tissue_classification](tissue_classification/README.md) | Medical Imaging | Topological tissue analysis for tumor detection |
