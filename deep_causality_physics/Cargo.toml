@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_physics"
-version = "0.2.0"
+version = "0.3.0"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -26,6 +26,11 @@ exclude = [
 default = ["std"]
 std = ["alloc", "deep_causality_core/std", "deep_causality_num/std"]
 alloc = []
+# Enables random number generator from the host OS for secure random numbers.
+# Enabling os-random adds an indirect depdency on getrandom and libc.
+# Disabled by default to use native Rust prng instead.
+# Also enables Lund string fragmentation for QCD hadronization.
+os-random = ["deep_causality_rand/os-random"] # required for lund hadronization
 
 [dependencies.deep_causality_core]
 path = "../deep_causality_core"
@@ -35,6 +40,10 @@ version = "0.0.2"
 path = "../deep_causality_haft"
 version = "0.2.6"
 
+[dependencies.deep_causality_metric]
+path = "../deep_causality_metric"
+version = "0.1"
+
 [dependencies.deep_causality_multivector]
 path = "../deep_causality_multivector"
 version = "0.2.3"
@@ -42,6 +51,11 @@ version = "0.2.3"
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
 version = "0.1.10"
+
+[dependencies.deep_causality_rand]
+path = "../deep_causality_rand"
+version = "0.1.7"
+optional = true
 
 [dependencies.deep_causality_sparse]
 path = "../deep_causality_sparse"

@@ -17,6 +17,7 @@ rust_library(
     deps = [
         "//deep_causality_core",
         "//deep_causality_haft",
+        "//deep_causality_metric",
         "//deep_causality_multivector",
         "//deep_causality_num",
         "//deep_causality_sparse",

@@ -3,22 +3,11 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::{energy_momentum_tensor_em_kernel, relativistic_current_kernel};
+use deep_causality_physics::energy_momentum_tensor_em_kernel;
 use deep_causality_tensor::CausalTensor;
 
-#[test]
-fn test_relativistic_current() {
-    let em = CausalTensor::new(vec![0.0; 4], vec![2, 2]).unwrap();
-    let metric = CausalTensor::new(vec![1.0; 4], vec![2, 2]).unwrap();
-    assert!(relativistic_current_kernel(&em, &metric).is_err());
-}
-
-#[test]
-fn test_relativistic_current_dimension_error() {
-    let em = CausalTensor::new(vec![0.0; 4], vec![4]).unwrap(); // Rank 1
-    let metric = CausalTensor::new(vec![1.0; 4], vec![2, 2]).unwrap();
-    assert!(relativistic_current_kernel(&em, &metric).is_err());
-}
+// Note: relativistic_current_kernel now requires Manifold<f64> and LorentzianMetric
+// See wrappers_tests.rs for Manifold-based tests
 
 #[test]
 fn test_energy_momentum_tensor() {

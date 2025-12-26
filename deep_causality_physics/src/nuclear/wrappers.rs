@@ -4,7 +4,7 @@
  */
 
 use crate::nuclear::physics;
-use crate::{AmountOfSubstance, Energy, EnergyDensity, HalfLife, Mass, PhysicalVector, Time};
+use crate::{AmountOfSubstance, Energy, HalfLife, Mass, Time};
 use deep_causality_core::{CausalityError, PropagatingEffect};
 
 /// Causal wrapper for [`physics::radioactive_decay_kernel`].
@@ -23,18 +23,6 @@ pub fn radioactive_decay(
 pub fn binding_energy(mass_defect: &Mass) -> PropagatingEffect<Energy> {
     match physics::binding_energy_kernel(mass_defect) {
         Ok(e) => PropagatingEffect::pure(e),
-        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
-    }
-}
-
-/// Causal wrapper for [`physics::hadronization_kernel`].
-pub fn hadronization(
-    energy_density: &[EnergyDensity],
-    threshold: f64,
-    dim: usize,
-) -> PropagatingEffect<Vec<PhysicalVector>> {
-    match physics::hadronization_kernel(energy_density, threshold, dim) {
-        Ok(v) => PropagatingEffect::pure(v),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
 }

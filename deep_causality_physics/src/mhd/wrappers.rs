@@ -65,11 +65,16 @@ pub fn magnetic_reconnection_rate(va: AlfvenSpeed, s: f64) -> PropagatingEffect<
 // GRMHD Wrappers
 // ============================================================================
 
-pub fn relativistic_current(
-    em: &CausalTensor<f64>,
-    metric: &CausalTensor<f64>,
+use crate::LorentzianMetric;
+
+/// Wrapper for relativistic current density calculation.
+///
+/// Computes J = ★d★F using differential forms on the manifold.
+pub fn relativistic_current<M: LorentzianMetric>(
+    em_manifold: &Manifold<f64>,
+    spacetime_metric: &M,
 ) -> PropagatingEffect<CausalTensor<f64>> {
-    match grmhd::relativistic_current_kernel(em, metric) {
+    match grmhd::relativistic_current_kernel(em_manifold, spacetime_metric) {
         Ok(j) => PropagatingEffect::pure(j),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
