@@ -34,6 +34,10 @@ version = "0.2.6"
 path = "../deep_causality_tensor"
 version = "0.2.1"
 
+[dependencies.deep_causality_metric]
+path = "../deep_causality_metric"
+version = "0.1"
+
 [dependencies.deep_causality_multivector]
 path = "../deep_causality_multivector"
 version = "0.2.3"
@@ -58,4 +62,3 @@ path = "examples/chain_algebra.rs"
 [[example]]
 name = "differential_field"
 path = "examples/differential_field.rs"
-

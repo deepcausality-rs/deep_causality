@@ -26,5 +26,5 @@ pub use crate::traits::multi_vector::MultiVector;
 pub use crate::traits::scalar_eval::ScalarEval;
 
 // Types
-pub use crate::types::metric::Metric;
 pub use crate::types::multivector::CausalMultiVector;
+pub use deep_causality_metric::Metric;

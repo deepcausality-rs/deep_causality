@@ -87,7 +87,7 @@ fn test_metric_display() {
     assert_eq!(format!("{}", Metric::PGA(3)), "PGA(3)");
     assert_eq!(
         format!("{}", Metric::Generic { p: 1, q: 2, r: 3 }),
-        "Generic(1, 2, 3)"
+        "Cl(1, 2, 3)"
     );
     assert_eq!(
         format!(

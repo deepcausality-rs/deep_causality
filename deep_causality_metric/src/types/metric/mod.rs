@@ -6,10 +6,10 @@
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
-use core::fmt;
-use core::hash::{Hash, Hasher};
-
 use crate::errors::MetricError;
+
+mod display;
+mod hash;
 
 /// Defines the metric signature of the Clifford Algebra Cl(p, q, r).
 ///
@@ -54,32 +54,6 @@ pub enum Metric {
         neg_mask: u64,
         zero_mask: u64,
     },
-}
-
-impl Hash for Metric {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        core::mem::discriminant(self).hash(state);
-        match self {
-            Metric::Euclidean(d)
-            | Metric::NonEuclidean(d)
-            | Metric::Minkowski(d)
-            | Metric::PGA(d) => d.hash(state),
-            Metric::Generic { p, q, r } => {
-                p.hash(state);
-                q.hash(state);
-                r.hash(state);
-            }
-            Metric::Custom {
-                dim,
-                neg_mask,
-                zero_mask,
-            } => {
-                dim.hash(state);
-                neg_mask.hash(state);
-                zero_mask.hash(state);
-            }
-        }
-    }
 }
 
 impl Metric {
@@ -342,18 +316,5 @@ impl Metric {
     pub fn to_signs(&self) -> Vec<i32> {
         let dim = self.dimension();
         (0..dim).map(|i| self.sign_of_sq(i)).collect()
-    }
-}
-
-impl fmt::Display for Metric {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Metric::Euclidean(d) => write!(f, "Euclidean({})", d),
-            Metric::NonEuclidean(d) => write!(f, "NonEuclidean({})", d),
-            Metric::Minkowski(d) => write!(f, "Minkowski({})", d),
-            Metric::PGA(d) => write!(f, "PGA({})", d),
-            Metric::Generic { p, q, r } => write!(f, "Cl({}, {}, {})", p, q, r),
-            Metric::Custom { dim, .. } => write!(f, "Custom({})", dim),
-        }
     }
 }

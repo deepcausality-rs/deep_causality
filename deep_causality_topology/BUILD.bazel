@@ -11,11 +11,12 @@ rust_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "//deep_causality_haft",
+        "//deep_causality_metric",
+        "//deep_causality_multivector",
         "//deep_causality_num",
         "//deep_causality_sparse",
-        "//deep_causality_haft",
         "//deep_causality_tensor",
-        "//deep_causality_multivector",
     ],
 )
 

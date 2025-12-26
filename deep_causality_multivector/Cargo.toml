@@ -44,6 +44,10 @@ version = "0.2"
 path = "../deep_causality_core"
 version = "0.0.2"
 
+[dependencies.deep_causality_metric]
+path = "../deep_causality_metric"
+version = "0.1"
+
 
 [dev-dependencies]
 criterion = { version = "0.8" }

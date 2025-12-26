@@ -33,13 +33,14 @@ It uses three main components:
 
 ## Project Structure
 
-The project is a monorepo containing 19 library crates:
+The project is a monorepo containing 20 library crates:
 
 ### Core Crates
 * `deep_causality`: Computational causality library. Provides causality graph, collections, context and causal reasoning.
 * `deep_causality_core`: Core types for the deep_causality crate.
 * `deep_causality_ast`: AST data structure for the deep_causality crate.
 * `deep_causality_macros`: Custom code generation macros for DeepCausality (_deprecated_).
+* `deep_causality_metric`: Foundational metric signatures used acros tensor, multivector, and physics. 
 
 ### Data Structure Crates
 * `deep_causality_data_structures`: Data structures for deep_causality (sliding-window, grid-array).

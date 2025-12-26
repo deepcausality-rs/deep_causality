@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_multivector::Metric;
+use deep_causality_metric::Metric;
 use deep_causality_tensor::CausalTensor;
 
 use crate::{Simplex, SimplicialComplex};

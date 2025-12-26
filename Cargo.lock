@@ -411,6 +411,7 @@ dependencies = [
  "criterion",
  "deep_causality_core",
  "deep_causality_haft",
+ "deep_causality_metric",
  "deep_causality_num",
  "deep_causality_tensor",
 ]
@@ -469,6 +470,7 @@ name = "deep_causality_topology"
 version = "0.2.3"
 dependencies = [
  "deep_causality_haft",
+ "deep_causality_metric",
  "deep_causality_multivector",
  "deep_causality_num",
  "deep_causality_sparse",
