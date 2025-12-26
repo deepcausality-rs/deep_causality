@@ -1,0 +1,52 @@
+{
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "creationInfo": {
+    "created": "2025-12-26T06:32:37Z",
+    "creators": [
+      "Tool: cargo-sbom-v0.10.0"
+    ]
+  },
+  "dataLicense": "CC0-1.0",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_metric-2f2607f4-fc4a-4a30-ac9a-9156c08553a5",
+  "files": [
+    {
+      "SPDXID": "SPDXRef-File-deep_causality_metric",
+      "checksums": [
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "458c959926db41237e59318dda7566433af236a9"
+        }
+      ],
+      "fileName": "./Cargo.lock",
+      "fileTypes": [
+        "SOURCE",
+        "TEXT"
+      ]
+    }
+  ],
+  "name": "deep_causality_metric",
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--metric-0.1.0",
+      "description": "Metric signature types and sign conventions for Clifford algebras and physics",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_metric",
+      "versionInfo": "0.1.0"
+    }
+  ],
+  "relationships": [
+    {
+      "relatedSpdxElement": "SPDXRef-File-deep_causality_metric",
+      "relationshipType": "DESCRIBES",
+      "spdxElementId": "SPDXRef-DOCUMENT"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--metric-0.1.0",
+      "relationshipType": "GENERATED_FROM",
+      "spdxElementId": "SPDXRef-File-deep_causality_metric"
+    }
+  ],
+  "spdxVersion": "SPDX-2.3"
+}

@@ -6,11 +6,10 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-
 # https://nexte.st/book/installing-from-source.html
 # cargo install cargo-nextest --locked
 
-FEATURES=unsafe RUSTFLAGS='-C target-cpu=native' cargo test --doc --release
+FEATURES=std RUSTFLAGS='-C target-cpu=native' cargo test --doc --release
 
 # https://llogiq.github.io/2017/06/01/perf-pitfalls.html
-FEATURES=unsafe RUSTFLAGS='-C target-cpu=native' cargo test
+FEATURES=std RUSTFLAGS='-C target-cpu=native' cargo test

@@ -401,6 +401,10 @@ name = "deep_causality_macros"
 version = "0.8.11"
 
 [[package]]
+name = "deep_causality_metric"
+version = "0.1.0"
+
+[[package]]
 name = "deep_causality_multivector"
 version = "0.2.3"
 dependencies = [
