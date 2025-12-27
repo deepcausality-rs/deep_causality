@@ -5,11 +5,14 @@ rust_test_suite(
     srcs = glob([
         "errors/*_tests.rs",
     ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
     tags = [
         "unit-test",
     ],
     visibility = ["//visibility:public"],
-    crate_features = ["std", "alloc"],
     deps = [
         # Crate to test
         "//deep_causality_ethos",
@@ -23,11 +26,14 @@ rust_test_suite(
     srcs = glob([
         "types/tag_index/*_tests.rs",
     ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
     tags = [
         "unit-test",
     ],
     visibility = ["//visibility:public"],
-    crate_features = ["std", "alloc"],
     deps = [
         # Crate to test
         "//deep_causality_ethos",
@@ -39,11 +45,14 @@ rust_test_suite(
     srcs = glob([
         "types/effect_ethos/*_tests.rs",
     ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
     tags = [
         "unit-test",
     ],
     visibility = ["//visibility:public"],
-    crate_features = ["std", "alloc"],
     deps = [
         # Crate to test
         "//deep_causality_ethos",
@@ -57,11 +66,14 @@ rust_test_suite(
     srcs = glob([
         "types/teloid/*_tests.rs",
     ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
     tags = [
         "unit-test",
     ],
     visibility = ["//visibility:public"],
-    crate_features = ["std", "alloc"],
     deps = [
         "//deep_causality_ethos",
         # Internal dependencies
@@ -74,11 +86,14 @@ rust_test_suite(
     srcs = glob([
         "types/teloid_graph/*_tests.rs",
     ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
     tags = [
         "unit-test",
     ],
     visibility = ["//visibility:public"],
-    crate_features = ["std", "alloc"],
     deps = [
         "//deep_causality_ethos",
         # Internal dependencies
@@ -91,11 +106,14 @@ rust_test_suite(
     srcs = glob([
         "types/teloid_modal/*_tests.rs",
     ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
     tags = [
         "unit-test",
     ],
     visibility = ["//visibility:public"],
-    crate_features = ["std", "alloc"],
     deps = [
         "//deep_causality_ethos",
         # Internal dependencies
@@ -107,11 +125,14 @@ rust_test_suite(
     srcs = glob([
         "types/teloid_relation/*_tests.rs",
     ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
     tags = [
         "unit-test",
     ],
     visibility = ["//visibility:public"],
-    crate_features = ["std", "alloc"],
     deps = [
         "//deep_causality_ethos",
         # Internal dependencies
@@ -123,11 +144,14 @@ rust_test_suite(
     srcs = glob([
         "types/teloid_store/*_tests.rs",
     ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
     tags = [
         "unit-test",
     ],
     visibility = ["//visibility:public"],
-    crate_features = ["std", "alloc"],
     deps = [
         "//deep_causality_ethos",
         # Internal dependencies
@@ -135,17 +159,19 @@ rust_test_suite(
     ],
 )
 
-
 rust_test_suite(
     name = "types_teloid_verdict",
     srcs = glob([
         "types/teloid_verdict/*_tests.rs",
     ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
     tags = [
         "unit-test",
     ],
     visibility = ["//visibility:public"],
-    crate_features = ["std", "alloc"],
     deps = [
         "//deep_causality_ethos",
         # Internal dependencies

@@ -11,9 +11,12 @@ set -o pipefail
 buildifier -r MODULE.bazel BUILD.bazel thirdparty/BUILD.bazel
 buildifier -r deep_causality/
 buildifier -r deep_causality_algorithms/
+buildifier -r deep_causality_ast/
+buildifier -r deep_causality_core/
 buildifier -r deep_causality_data_structures/
-buildifier -r deep_causality_effects/
 buildifier -r deep_causality_discovery/
+buildifier -r deep_causality_effects/
+buildifier -r deep_causality_ethos/
 buildifier -r deep_causality_haft/
 buildifier -r deep_causality_macros/
 buildifier -r deep_causality_metric/
@@ -23,6 +26,7 @@ buildifier -r deep_causality_physics/
 buildifier -r deep_causality_rand/
 buildifier -r deep_causality_sparse/
 buildifier -r deep_causality_tensor/
+buildifier -r deep_causality_topology/
 buildifier -r deep_causality_uncertain/
 buildifier -r examples/
 buildifier -r ultragraph/

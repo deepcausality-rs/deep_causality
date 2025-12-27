@@ -14,4 +14,3 @@ rust_test_suite(
         "//deep_causality_ast",
     ],
 )
-
