@@ -6,8 +6,10 @@
 
 # CausalTensor - A Flexible Tensor for Dynamic Data
 
-The CausalTensor provides a flexible, multi-dimensional array (tensor) backed by a single, contiguous `Vec<T>`. It is designed for efficient numerical computations, featuring a stride-based memory layout that supports broadcasting for
-element-wise binary operations. It offers a comprehensive API for shape manipulation, element access, and common reduction operations like `sum` and `mean`, making it a versatile tool for causal modeling and other data-intensive
+The CausalTensor provides a flexible, multi-dimensional array (tensor) backed by a single, contiguous `Vec<T>`. It is
+designed for efficient numerical computations, featuring a stride-based memory layout that supports broadcasting for
+element-wise binary operations. It offers a comprehensive API for shape manipulation, element access, and common
+reduction operations like `sum` and `mean`, making it a versatile tool for causal modeling and other data-intensive
 tasks.
 
 ## 📚 Docs
@@ -21,26 +23,26 @@ tasks.
 
 To run the examples, use `cargo run --example <example_name>`.
 
-*   **Applicative Causal Tensor**
-    ```bash
-    cargo run --example applicative_causal_tensor
-    ```
-*   **Basic Causal Tensor**
-    ```bash
-    cargo run --example causal_tensor
-    ```
-*   **Effect System Causal Tensor**
-    ```bash
-    cargo run --example effect_system_causal_tensor
-    ```
-*   **Einstein Summation Causal Tensor**
-    ```bash
-    cargo run --example ein_sum_causal_tensor
-    ```
-*   **Functor Causal Tensor**
-    ```bash
-    cargo run --example functor_causal_tensor
-    ```
+* **Applicative Causal Tensor**
+  ```bash
+  cargo run --example applicative_causal_tensor
+  ```
+* **Basic Causal Tensor**
+  ```bash
+  cargo run --example causal_tensor
+  ```
+* **Effect System Causal Tensor**
+  ```bash
+  cargo run --example effect_system_causal_tensor
+  ```
+* **Einstein Summation Causal Tensor**
+  ```bash
+  cargo run --example ein_sum_causal_tensor
+  ```
+* **Functor Causal Tensor**
+  ```bash
+  cargo run --example functor_causal_tensor
+  ```
 
 ## Usage
 
@@ -74,7 +76,7 @@ fn main() {
     // 5. Perform tensor-tensor addition with broadcasting
     let t1 = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     // A [1, 3] tensor...
-    let t2 = CausalTensor::new(vec![10, 20, 30], vec![1, 3]).unwrap(); 
+    let t2 = CausalTensor::new(vec![10, 20, 30], vec![1, 3]).unwrap();
     // ...is broadcasted across the rows of the [2, 3] tensor.
     let result = (&t1 + &t2).unwrap();
     assert_eq!(result.as_slice(), &[11, 22, 33, 14, 25, 36]);
@@ -89,7 +91,8 @@ fn main() {
 
 ## Einstein Sum (ein_sum)
 
-The `ein_sum` function provides a powerful and flexible way to perform various tensor operations, including matrix multiplication, dot products, and more, by constructing an Abstract Syntax Tree (AST) of operations.
+The `ein_sum` function provides a powerful and flexible way to perform various tensor operations, including matrix
+multiplication, dot products, and more, by constructing an Abstract Syntax Tree (AST) of operations.
 
 ```rust
 use deep_causality_tensor::CausalTensor;
@@ -111,8 +114,8 @@ fn main() {
 
     println!("Result of Matrix Multiplication:\n{:?}", result);
     // Expected: CausalTensor { data: [19.0, 22.0, 43.0, 50.0], shape: [2, 2], strides: [2, 1] }
-    
-     // Example: Dot Product
+
+    // Example: Dot Product
     let vec1_data = vec![1.0, 2.0, 3.0];
     let vec1_shape = vec![3];
     let vec1_tensor = CausalTensor::new(vec1_data, vec1_shape).unwrap();
@@ -120,17 +123,18 @@ fn main() {
     let vec2_data = vec![4.0, 5.0, 6.0];
     let vec2_shape = vec![3];
     let vec2_tensor = CausalTensor::new(vec2_data, vec2_shape).unwrap();
-    
+
     // Execute the Einstein summation for dot product 
     let result_dot_prod = CausalTensor::ein_sum(&EinSumOp::dot_prod(vec1_tensor, vec2_tensor)).unwrap();
     println!("Result of Dot Product:\n{:?}", result_dot_prod);
 }
 ```
 
+## Functional Composition
 
-## Functional Composition 
-
-Causal Tensor implements a Higher Kinded Type via the `deep_causality_haft` crate as Witness Type. When imported, the CausalTensorWitness type allows monadic composition and abstract type programming. For example, one can write generic functions that uniformly process tensors and other types:
+Causal Tensor implements a Higher Kinded Type via the `deep_causality_haft` crate as Witness Type. When imported, the
+CausalTensorWitness type allows monadic composition and abstract type programming. For example, one can write generic
+functions that uniformly process tensors and other types:
 
 ```rust
 use deep_causality_haft::{Functor, HKT, OptionWitness, ResultWitness};
@@ -168,33 +172,123 @@ fn main() {
     assert_eq!(proc_tensor.data(), &[3, 6, 9]);
 }
 ```
-Functional composition of HKS tensors works best via an effect system that captures side effects and provides detailed errors and logs for each processing step. In the example below, Tensors are composed and the container MyMonadEffect3 capture the final tensor value, optional errors, and detailed logs from each processing step. 
+
+Functional composition of HKS tensors works best via an effect system that captures side effects and provides detailed
+errors and logs for each processing step. In the example below, Tensors are composed and the container MyMonadEffect3
+capture the final tensor value, optional errors, and detailed logs from each processing step.
 
 ```rust
     // ... Truncated  
-      
-    // 4. Chain Operations using Monad::bind
-    println!("Processing steps...");
-    let final_effect = MyMonadEffect3::bind(initial_effect, step1);
-    let final_effect = MyMonadEffect3::bind(final_effect, step2);
-    let final_effect = MyMonadEffect3::bind(final_effect, step3);
 
-    println!();
-    println!("--- Final Result ---");
-    println!("Final CausalTensor: {:?}", final_effect.value);
-    println!("Error: {:?}", final_effect.error);
-    println!("Logs: {:?}", final_effect.logs);
+// 4. Chain Operations using Monad::bind
+println!("Processing steps...");
+let final_effect = MyMonadEffect3::bind(initial_effect, step1);
+let final_effect = MyMonadEffect3::bind(final_effect, step2);
+let final_effect = MyMonadEffect3::bind(final_effect, step3);
+
+println!();
+println!("--- Final Result ---");
+println!("Final CausalTensor: {:?}", final_effect.value);
+println!("Error: {:?}", final_effect.error);
+println!("Logs: {:?}", final_effect.logs);
 ```
 
-For complex data processing pipelines, these information are invaluable for debugging and optimization. Also, in case more detailed information are required i.e. processing time for each step, then an Effect Monad of arity 4 or 5 can be used to capture additional fields at each step.
+For complex data processing pipelines, these information are invaluable for debugging and optimization. Also, in case
+more detailed information are required i.e. processing time for each step, then an Effect Monad of arity 4 or 5 can be
+used to capture additional fields at each step.
 
+## GPU Acceleration (Apple Silicon)
+
+CausalTensor supports optional GPU acceleration via MLX on Apple Silicon (M1/M2/M3). Enable with the `mlx` feature flag.
+
+### Prerequisites
+
+MLX requires Xcode and the Metal Toolchain. Run the following setup steps:
+
+```bash
+# 1. Run Xcode first-launch setup (installs command-line tools)
+xcodebuild -runFirstLaunch
+
+# 2. Download the Metal Toolchain for GPU shader compilation
+xcodebuild -downloadComponent MetalToolchain
+
+# 3. Build with MLX feature enabled
+RUSTFLAGS='-C target-cpu=native' cargo build --release -p deep_causality_tensor --features mlx
+
+# 4. Run MLX tests (must use single thread due to Metal command buffer serialization)
+cargo test -p deep_causality_tensor --features mlx mlx -- --test-threads=1
+```
+
+> **Note:** MLX tests must run with `--test-threads=1` due to Metal command buffer serialization requirements.
+> Parallel test execution causes Metal assertion failures.
+
+### Enabling MLX
+
+```toml
+# Cargo.toml
+[dependencies]
+deep_causality_tensor = { version = "0.2", features = ["mlx"] }
+```
+
+### Precision vs Bulk Compute: f32 vs f64
+
+**Apple's Metal GPU does not support f64.** All GPU operations run in f32. This creates a natural separation:
+
+| Workload Type | Precision | Use |
+|---------------|-----------|-----|
+| **Precision workloads** | f64 | Accumulation over large N, small differences of large numbers, clock drift (10⁻¹⁵ scale) |
+| **Bulk compute** | f32 | Matrix multiplication, eigendecomposition, neural network inference |
+
+**Rule of thumb:** If your smallest meaningful quantity ε and largest M satisfy `log₁₀(M/ε) > 7`, use f64.
+
+### MlxCausalTensor
+
+For GPU-accelerated operations, use `MlxCausalTensor` which stores data directly in MLX's unified memory:
+
+```rust
+use deep_causality_tensor::{CausalTensor, MlxCausalTensor};
+
+// Scenario 1: Direct GPU construction (no conversion overhead)
+let mlx_a = MlxCausalTensor::new_f32(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2]) ?;
+let mlx_b = MlxCausalTensor::new_f32(vec![5.0, 6.0, 7.0, 8.0], vec![2, 2]) ?;
+let result = mlx_a.matmul( & mlx_b) ?;
+let output = result.to_causal_tensor() ?;  // Back to CausalTensor<f32>
+
+// Scenario 2: Bridge from f64 physics simulation (with downcast)
+let physics_data: CausalTensor<f64> = /* precision-critical simulation */;
+let mlx_tensor = MlxCausalTensor::from_causal_tensor_f64( & physics_data) ?;
+// GPU-accelerated matmul runs in f32
+let accelerated = mlx_tensor.matmul( & other) ?;
+```
+
+### Recommended Pattern for Physics
+
+Separate precision-critical storage from bulk compute:
+
+```rust
+// 1. Store raw data in f64 for precision
+let clock_drifts: CausalTensor<f64> = load_satellite_data();  // femtosecond precision
+
+// 2. Downcast for GPU-accelerated matrix ops
+let covariance = MlxCausalTensor::from_causal_tensor_f64( & data) ?;
+let eigenvalues = covariance.eigendecomposition() ?;
+
+// 3. Upcast results if precision needed for next stage
+let eigenvalues_f64: Vec<f64> = eigenvalues.to_causal_tensor() ?
+.data().iter().map( | & x| x as f64).collect();
+```
+
+> **Note:** The copy overhead (Rust → MLX → Rust) means MLX is most beneficial for large tensors (N > 10,000) or O(N³)
+operations where compute time dominates copy time.
 
 ## Performance
+
+### CPU Benchmarks
 
 The following benchmarks were run on a `CausalTensor` of size 100x100 (10,000 `f64` elements).
 
 | Operation                     | Time       | Notes                                      |
-|-------------------------------|------------|--------------------------------------------|
+|-------------------------------|------------|-------------------------------------------|
 | `tensor_get`                  | ~2.31 ns   | Accessing a single element.                |
 | `tensor_reshape`              | ~2.46 µs   | Metadata only, but clones data in the test.|
 | `tensor_scalar_add`           | ~4.95 µs   | Element-wise addition with a scalar.       |
@@ -202,38 +296,83 @@ The following benchmarks were run on a `CausalTensor` of size 100x100 (10,000 `f
 | `tensor_sum_full_reduction`   | ~10.56 µs  | Summing all 10,000 elements of the tensor. |
 
 ### Key Observations
-1.  **Element Access (`get`):** Access is extremely fast, demonstrating the efficiency of the stride-based index calculation.
-2.  **Shape Manipulation (`reshape`):** This operation is very fast as it only adjusts metadata (shape and strides) and clones the underlying data vector.
-3.  **Arithmetic Operations:** Performance is excellent. The optimized `binary_op` function provides efficient broadcasting for tensor-tensor operations, avoiding allocations in hot loops.
+
+1. **Element Access (`get`):** Access is extremely fast, demonstrating the efficiency of the stride-based index
+   calculation.
+2. **Shape Manipulation (`reshape`):** This operation is very fast as it only adjusts metadata (shape and strides) and
+   clones the underlying data vector.
+3. **Arithmetic Operations:** Performance is excellent. The optimized `binary_op` function provides efficient
+   broadcasting for tensor-tensor operations, avoiding allocations in hot loops.
+4. **GPU Acceleration:** MLX provides massive speedup for matrix operations, scaling with matrix size. A 2048x2048 Tensor completes matmul approximately 3000x faster with MLX acceperation. 
 
 ### Technical Details
-- Sample size: 10 measurements per benchmark
+
+- Sample size: 10 measurements per benchmark (CPU), 3 iterations (GPU)
 - All benchmarks were run with random access patterns to simulate real-world usage
 
 ### Hardware & OS
+
 - Architecture: ARM64 (Apple Silicon, M3 Max)
 - OS: macOS 15.1
+
+### MLX GPU Benchmarks (Apple Silicon)
+
+Matrix multiplication (`matmul`) benchmarks comparing CPU vs GPU on Apple Silicon M3 Max:
+
+**CPU vs GPU Comparison:**
+
+| Size | CPU (ms) | GPU (ms) | Speedup |
+|------|----------|----------|---------|
+| 128×128 | 3.0 | 0.7 | **4.5x** |
+| 256×256 | 13.4 | 0.8 | **18x** |
+| 512×512 | 98.3 | 0.8 | **127x** |
+| 1024×1024 | 1,045 | 1.5 | **709x** |
+
+**GPU-Only (sizes impractical for CPU):**
+
+| Size | Elements | GPU (ms) |
+|------|----------|----------|
+| 2048×2048 | 4M | 2.3 |
+| 4096×4096 | 16M | 13.3 |
+| 8192×8192 | 67M | 100.5 |
+
+> **Note:** GPU acceleration scales dramatically with matrix size due to O(N³) complexity.
+> Matrices >1024×1024 are impractical on CPU (>1 second per matmul).
+
+Run the benchmark: `cargo run --example mlx_tensor --features mlx --release`
 
 ## Technical Implementation
 
 ### Strides
-The core of `CausalTensor` is its stride-based memory layout. For a given shape (e.g., `[d1, d2, d3]`), the strides represent the number of elements to skip in the flat data vector to move one step along a particular dimension. For a row-major layout, the strides would be `[d2*d3, d3, 1]`. This allows the tensor to calculate the flat index for any multi-dimensional index `[i, j, k]` with a simple dot product: `i*strides[0] + j*strides[1] + k*strides[2]`.
+
+The core of `CausalTensor` is its stride-based memory layout. For a given shape (e.g., `[d1, d2, d3]`), the strides
+represent the number of elements to skip in the flat data vector to move one step along a particular dimension. For a
+row-major layout, the strides would be `[d2*d3, d3, 1]`. This allows the tensor to calculate the flat index for any
+multi-dimensional index `[i, j, k]` with a simple dot product: `i*strides[0] + j*strides[1] + k*strides[2]`.
 
 ### Broadcasting
-Binary operations support broadcasting, which follows rules similar to those in libraries like NumPy. When operating on two tensors, `CausalTensor` compares their shapes dimension by dimension (from right to left). Two dimensions are compatible if:
+
+Binary operations support broadcasting, which follows rules similar to those in libraries like NumPy. When operating on
+two tensors, `CausalTensor` compares their shapes dimension by dimension (from right to left). Two dimensions are
+compatible if:
+
 1. They are equal.
 2. One of them is 1.
 
-The smaller tensor's data is conceptually "stretched" or repeated along the dimensions where its size is 1 to match the larger tensor's shape, without actually copying the data. The optimized `binary_op` implementation achieves this by manipulating how it calculates the flat index for each tensor inside the computation loop.
+The smaller tensor's data is conceptually "stretched" or repeated along the dimensions where its size is 1 to match the
+larger tensor's shape, without actually copying the data. The optimized `binary_op` implementation achieves this by
+manipulating how it calculates the flat index for each tensor inside the computation loop.
 
 ### API Overview
+
 The `CausalTensor` API is designed to be comprehensive and intuitive:
--   **Constructor:** `CausalTensor::new(data: Vec<T>, shape: Vec<usize>)`
--   **Inspectors:** `shape()`, `num_dim()`, `len()`, `is_empty()`, `as_slice()`
--   **Indexing:** `get()`, `get_mut()`
--   **Shape Manipulation:** `reshape()`, `ravel()`
--   **Reduction Operations:** `sum_axes()`, `mean_axes()`, `arg_sort()`
--   **Arithmetic:** Overloaded `+`, `-`, `*`, `/` operators for both tensor-scalar and tensor-tensor operations.
+
+- **Constructor:** `CausalTensor::new(data: Vec<T>, shape: Vec<usize>)`
+- **Inspectors:** `shape()`, `num_dim()`, `len()`, `is_empty()`, `as_slice()`
+- **Indexing:** `get()`, `get_mut()`
+- **Shape Manipulation:** `reshape()`, `ravel()`
+- **Reduction Operations:** `sum_axes()`, `mean_axes()`, `arg_sort()`
+- **Arithmetic:** Overloaded `+`, `-`, `*`, `/` operators for both tensor-scalar and tensor-tensor operations.
 
 ## 👨‍💻👩‍💻 Contribution
 

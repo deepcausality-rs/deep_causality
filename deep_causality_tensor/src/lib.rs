@@ -8,7 +8,7 @@ mod traits;
 mod types;
 mod utils;
 
-// Causal sensor type
+// Causal tensor type
 pub use crate::errors::causal_tensor_error::CausalTensorError;
 pub use crate::errors::ein_sum_validation_error::EinSumValidationError;
 pub use crate::extensions::ext_hkt::CausalTensorWitness;
@@ -17,3 +17,9 @@ pub use crate::extensions::ext_stack::CausalTensorStackExt;
 pub use crate::traits::tensor::Tensor;
 pub use crate::types::causal_tensor::{CausalTensor, EinSumAST, EinSumOp};
 pub use crate::utils::utils_tests;
+
+// MLX acceleration types - only available on Apple Silicon with mlx feature
+#[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
+pub use crate::extensions::ext_mlx::MlxCompatible;
+#[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
+pub use types::causal_tensor::mlx::mlx_causal_tensor::MlxCausalTensor;
