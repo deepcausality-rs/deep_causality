@@ -92,7 +92,7 @@ Type: PGA3DMultiVector
 
 ## Custom Algebras
 
-1) Define a matric
+1) Define a matrix
 2) Instantiate either a real, complex, or custom typed MultiVector with the metric
 3) Done
 
