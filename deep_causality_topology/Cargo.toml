@@ -15,6 +15,10 @@ categories = ["science", "mathematics"]
 name = "deep_causality_topology"
 path = "src/lib.rs"
 
+[features]
+default = []
+mlx = ["deep_causality_tensor/mlx"]
+
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
