@@ -40,7 +40,7 @@ pub use crate::traits::{LinearAlgebraBackend, TensorBackend, TensorData};
 pub use cpu::CpuBackend;
 
 #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
-pub use mlx::MlxBackend;
+pub use mlx::{MlxBackend, MlxCausalTensor};
 
 // Re-export type aliases
 pub use aliases::{DefaultBackend, DefaultFloat, Tensor};

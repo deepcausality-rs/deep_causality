@@ -52,3 +52,7 @@ impl MlxBackend {
 }
 
 pub use crate::types::mlx_tensor::MlxTensor;
+
+/// Explicit type alias for MLX-backed CausalTensor.
+/// Use this when you specifically require GPU acceleration.
+pub type MlxCausalTensor<T> = crate::types::backend_tensor::BackendTensor<T, MlxBackend>;

@@ -234,10 +234,10 @@ deep_causality_tensor = { version = "0.2", features = ["mlx"] }
 
 **Apple's Metal GPU does not support f64.** All GPU operations run in f32. This creates a natural separation:
 
-| Workload Type | Precision | Use |
-|---------------|-----------|-----|
-| **Precision workloads** | f64 | Accumulation over large N, small differences of large numbers, clock drift (10⁻¹⁵ scale) |
-| **Bulk compute** | f32 | Matrix multiplication, eigendecomposition, neural network inference |
+| Workload Type           | Precision | Use                                                                                      |
+|-------------------------|-----------|------------------------------------------------------------------------------------------|
+| **Precision workloads** | f64       | Accumulation over large N, small differences of large numbers, clock drift (10⁻¹⁵ scale) |
+| **Bulk compute**        | f32       | Matrix multiplication, eigendecomposition, neural network inference                      |
 
 **Rule of thumb:** If your smallest meaningful quantity ε and largest M satisfy `log₁₀(M/ε) > 7`, use f64.
 
@@ -261,6 +261,14 @@ let mlx_tensor = MlxCausalTensor::from_causal_tensor_f64( & physics_data) ?;
 let accelerated = mlx_tensor.matmul( & other) ?;
 ```
 
+### Native Operations & EinSum
+
+The MLX backend provides fully native GPU configurations for:
+
+- **`ein_sum`**: Native GPU execution via recursive AST interpretation. No CPU roundtrips.
+- **Linear Algebra**: `matmul`, `svd`, `qr`, `cholesky_decomposition`, `solve_least_squares_cholsky`, `inverse`.
+- **Tensor Ops**: `slice`, `permute`, `reshape`, `broadcast`, etc.
+
 ### Recommended Pattern for Physics
 
 Separate precision-critical storage from bulk compute:
@@ -270,7 +278,7 @@ Separate precision-critical storage from bulk compute:
 let clock_drifts: CausalTensor<f64> = load_satellite_data();  // femtosecond precision
 
 // 2. Downcast for GPU-accelerated matrix ops
-let covariance = MlxCausalTensor::from_causal_tensor_f64( & data) ?;
+let covariance = MlxCausalTensor::from_causal_tensor_f64( & clock_drifts) ?;
 let eigenvalues = covariance.eigendecomposition() ?;
 
 // 3. Upcast results if precision needed for next stage
@@ -278,22 +286,23 @@ let eigenvalues_f64: Vec<f64> = eigenvalues.to_causal_tensor() ?
 .data().iter().map( | & x| x as f64).collect();
 ```
 
-> **Note:** The copy overhead (Rust → MLX → Rust) means MLX is most beneficial for large tensors (N > 10,000) or O(N³)
-operations where compute time dominates copy time.
+> **Note:** The copy overhead (Rust → MLX → Rust) means MLX is most beneficial for large tensors (N > 10,000) or complex
+> O(N³) operations where compute time dominates data transfer time. The Native `ein_sum` implementation ensures that
+> complex contraction chains remain entirely on the GPU.
 
 ## Performance
 
 ### CPU Benchmarks
 
-The following benchmarks were run on a `CausalTensor` of size 100x100 (10,000 `f64` elements).
+The following benchmarks were run on a `CausalTensor` of a small 100x100 tensor (10,000 `f64` elements).
 
-| Operation                     | Time       | Notes                                      |
-|-------------------------------|------------|-------------------------------------------|
-| `tensor_get`                  | ~2.31 ns   | Accessing a single element.                |
-| `tensor_reshape`              | ~2.46 µs   | Metadata only, but clones data in the test.|
-| `tensor_scalar_add`           | ~4.95 µs   | Element-wise addition with a scalar.       |
-| `tensor_tensor_add_broadcast` | ~46.67 µs  | Element-wise addition with broadcasting.   |
-| `tensor_sum_full_reduction`   | ~10.56 µs  | Summing all 10,000 elements of the tensor. |
+| Operation                     | Time      | Notes                                       |
+|-------------------------------|-----------|---------------------------------------------|
+| `tensor_get`                  | ~2.31 ns  | Accessing a single element.                 |
+| `tensor_reshape`              | ~2.46 µs  | Metadata only, but clones data in the test. |
+| `tensor_scalar_add`           | ~4.95 µs  | Element-wise addition with a scalar.        |
+| `tensor_tensor_add_broadcast` | ~46.67 µs | Element-wise addition with broadcasting.    |
+| `tensor_sum_full_reduction`   | ~10.56 µs | Summing all 10,000 elements of the tensor.  |
 
 ### Key Observations
 
@@ -303,7 +312,6 @@ The following benchmarks were run on a `CausalTensor` of size 100x100 (10,000 `f
    clones the underlying data vector.
 3. **Arithmetic Operations:** Performance is excellent. The optimized `binary_op` function provides efficient
    broadcasting for tensor-tensor operations, avoiding allocations in hot loops.
-4. **GPU Acceleration:** MLX provides massive speedup for matrix operations, scaling with matrix size. A 2048x2048 Tensor completes matmul approximately 3000x faster with MLX acceperation. 
 
 ### Technical Details
 
@@ -321,25 +329,23 @@ Matrix multiplication (`matmul`) benchmarks comparing CPU vs GPU on Apple Silico
 
 **CPU vs GPU Comparison:**
 
-| Size | CPU (ms) | GPU (ms) | Speedup |
-|------|----------|----------|---------|
-| 128×128 | 3.0 | 0.7 | **4.5x** |
-| 256×256 | 13.4 | 0.8 | **18x** |
-| 512×512 | 98.3 | 0.8 | **127x** |
-| 1024×1024 | 1,045 | 1.5 | **709x** |
+| Size      | CPU (ms) | GPU (ms) | Speedup    |
+|-----------|----------|----------|------------|
+| 128×128   | 1.5      | 0.23     | **6.6x**   |
+| 512×512   | 134.6    | 0.30     | **449x**   |
+| 1024×1024 | 1,217    | 0.49     | **2,484x** |
 
 **GPU-Only (sizes impractical for CPU):**
 
-| Size | Elements | GPU (ms) |
-|------|----------|----------|
-| 2048×2048 | 4M | 2.3 |
-| 4096×4096 | 16M | 13.3 |
-| 8192×8192 | 67M | 100.5 |
+| Size      | Elements | GPU (ms) |
+|-----------|----------|----------|
+| 4096×4096 | 16M      | 13.3     |
+| 8192×8192 | 67M      | 100.5    |
 
 > **Note:** GPU acceleration scales dramatically with matrix size due to O(N³) complexity.
 > Matrices >1024×1024 are impractical on CPU (>1 second per matmul).
 
-Run the benchmark: `cargo run --example mlx_tensor --features mlx --release`
+Run the benchmark: `cargo bench -p deep_causality_tensor --features mlx`
 
 ## Technical Implementation
 

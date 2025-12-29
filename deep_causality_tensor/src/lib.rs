@@ -50,3 +50,5 @@ pub use crate::utils::utils_tests;
 
 // Re-export commonly used backend types at crate root for convenience
 pub use backend::{CpuBackend, LinearAlgebraBackend, TensorBackend, TensorData};
+#[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
+pub use backend::{MlxBackend, MlxCausalTensor};

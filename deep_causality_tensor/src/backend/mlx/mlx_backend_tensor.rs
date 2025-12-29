@@ -322,45 +322,50 @@ impl TensorBackend for MlxBackend {
     fn ein_sum<T: TensorData>(
         ast: &crate::types::cpu_tensor::EinSumAST<Self::Tensor<T>>,
     ) -> Result<Self::Tensor<T>, crate::CausalTensorError> {
-        use crate::types::cpu_tensor::{EinSumAST, EinSumOp};
-        use crate::traits::LinearAlgebraBackend; // Required for MlxBackend::tensor_product
-        
+        use crate::traits::LinearAlgebraBackend;
+        use crate::types::cpu_tensor::{EinSumAST, EinSumOp}; // Required for MlxBackend::tensor_product
+
         // Helper to generate index characters for einsum
         fn get_char(i: usize) -> char {
-             if i < 26 {
-                 (b'a' + i as u8) as char
-             } else if i < 52 {
-                 (b'A' + (i - 26) as u8) as char
-             } else {
-                 panic!("Rank too high for einsum generation");
-             }
+            if i < 26 {
+                (b'a' + i as u8) as char
+            } else if i < 52 {
+                (b'A' + (i - 26) as u8) as char
+            } else {
+                panic!("Rank too high for einsum generation");
+            }
         }
-        
-        fn eval<T: TensorData>(ast: &EinSumAST<MlxTensor<T>>) -> Result<MlxTensor<T>, crate::CausalTensorError> {
+
+        fn eval<T: TensorData>(
+            ast: &EinSumAST<MlxTensor<T>>,
+        ) -> Result<MlxTensor<T>, crate::CausalTensorError> {
             let op = ast.value();
             let children = ast.children();
-            
+
             match op {
                 EinSumOp::TensorSource { tensor } => Ok(tensor.clone()),
-                
+
                 EinSumOp::Contraction { lhs_axes, rhs_axes } => {
                     let lhs = eval(&children[0])?;
                     let rhs = eval(&children[1])?;
-                    
-                    let shape_l: Vec<usize> = lhs.as_array().shape().iter().map(|&x| x as usize).collect();
-                    let shape_r: Vec<usize> = rhs.as_array().shape().iter().map(|&x| x as usize).collect();
-                    
+
+                    let shape_l: Vec<usize> =
+                        lhs.as_array().shape().iter().map(|&x| x as usize).collect();
+                    let shape_r: Vec<usize> =
+                        rhs.as_array().shape().iter().map(|&x| x as usize).collect();
+
                     // Assign chars
                     let chars_l: Vec<char> = (0..shape_l.len()).map(get_char).collect();
                     // Rhs starts after lhs to avoid collision initially
                     let offset = shape_l.len();
-                    let mut chars_r: Vec<char> = (0..shape_r.len()).map(|i| get_char(offset + i)).collect();
-                    
+                    let mut chars_r: Vec<char> =
+                        (0..shape_r.len()).map(|i| get_char(offset + i)).collect();
+
                     // Match up contracted axes
                     for (&l_idx, &r_idx) in lhs_axes.iter().zip(rhs_axes.iter()) {
                         chars_r[r_idx] = chars_l[l_idx];
                     }
-                    
+
                     // Build output chars
                     let mut chars_out = Vec::new();
                     for (i, &c) in chars_l.iter().enumerate() {
@@ -373,18 +378,19 @@ impl TensorBackend for MlxBackend {
                             chars_out.push(c);
                         }
                     }
-                    
-                    let eq = format!("{},{}->{}", 
+
+                    let eq = format!(
+                        "{},{}->{}",
                         chars_l.iter().collect::<String>(),
                         chars_r.iter().collect::<String>(),
                         chars_out.iter().collect::<String>()
                     );
-                    
+
                     let res = mlx_rs::ops::einsum(&eq, vec![lhs.as_array(), rhs.as_array()])
                         .expect("einsum contraction failed");
                     Ok(MlxTensor::new(res))
                 }
-                
+
                 EinSumOp::Reduction { axes } => {
                     let operand = eval(&children[0])?;
                     let rank = operand.as_array().ndim();
@@ -395,7 +401,8 @@ impl TensorBackend for MlxBackend {
                             chars_out.push(c);
                         }
                     }
-                     let eq = format!("{}->{}", 
+                    let eq = format!(
+                        "{}->{}",
                         chars_in.iter().collect::<String>(),
                         chars_out.iter().collect::<String>()
                     );
@@ -403,90 +410,100 @@ impl TensorBackend for MlxBackend {
                         .expect("einsum reduction failed");
                     Ok(MlxTensor::new(res))
                 }
-                
+
                 EinSumOp::MatMul => {
                     let lhs = eval(&children[0])?;
                     let rhs = eval(&children[1])?;
-                    Ok(MlxTensor::new(mlx_rs::ops::matmul(lhs.as_array(), rhs.as_array()).expect("matmul failed")))
+                    Ok(MlxTensor::new(
+                        mlx_rs::ops::matmul(lhs.as_array(), rhs.as_array()).expect("matmul failed"),
+                    ))
                 }
-                 
+
                 EinSumOp::DotProd => {
-                     let lhs = eval(&children[0])?;
-                     let rhs = eval(&children[1])?;
-                     Ok(MlxTensor::new(mlx_rs::ops::matmul(lhs.as_array(), rhs.as_array()).expect("dotprod failed")))
+                    let lhs = eval(&children[0])?;
+                    let rhs = eval(&children[1])?;
+                    Ok(MlxTensor::new(
+                        mlx_rs::ops::matmul(lhs.as_array(), rhs.as_array())
+                            .expect("dotprod failed"),
+                    ))
                 }
-                
+
                 EinSumOp::Trace { axes1, axes2 } => {
-                     let operand = eval(&children[0])?;
-                     let rank = operand.as_array().ndim();
-                     let mut chars_in: Vec<char> = (0..rank).map(get_char).collect();
-                     
-                     chars_in[*axes2] = chars_in[*axes1];
-                     
-                     let mut chars_out = Vec::new();
-                     for (i, &c) in chars_in.iter().enumerate() {
-                         if i != *axes1 && i != *axes2 {
-                             chars_out.push(c);
-                         }
-                     }
-                     
-                     let eq = format!("{}->{}", 
+                    let operand = eval(&children[0])?;
+                    let rank = operand.as_array().ndim();
+                    let mut chars_in: Vec<char> = (0..rank).map(get_char).collect();
+
+                    chars_in[*axes2] = chars_in[*axes1];
+
+                    let mut chars_out = Vec::new();
+                    for (i, &c) in chars_in.iter().enumerate() {
+                        if i != *axes1 && i != *axes2 {
+                            chars_out.push(c);
+                        }
+                    }
+
+                    let eq = format!(
+                        "{}->{}",
                         chars_in.iter().collect::<String>(),
                         chars_out.iter().collect::<String>()
-                     );
-                     let res = mlx_rs::ops::einsum(&eq, vec![operand.as_array()])
+                    );
+                    let res = mlx_rs::ops::einsum(&eq, vec![operand.as_array()])
                         .expect("einsum trace failed");
                     Ok(MlxTensor::new(res))
                 }
-                
+
                 EinSumOp::TensorProduct => {
-                     let lhs = eval(&children[0])?;
-                     let rhs = eval(&children[1])?;
-                     Ok(MlxBackend::tensor_product(&lhs, &rhs))
+                    let lhs = eval(&children[0])?;
+                    let rhs = eval(&children[1])?;
+                    Ok(MlxBackend::tensor_product(&lhs, &rhs))
                 }
-                
+
                 EinSumOp::ElementWiseProduct => {
-                     let lhs = eval(&children[0])?;
-                     let rhs = eval(&children[1])?;
-                     Ok(MlxBackend::mul(&lhs, &rhs))
+                    let lhs = eval(&children[0])?;
+                    let rhs = eval(&children[1])?;
+                    Ok(MlxBackend::mul(&lhs, &rhs))
                 }
-                
+
                 EinSumOp::Transpose { new_order } => {
                     let operand = eval(&children[0])?;
                     Ok(MlxBackend::permute(&operand, new_order))
                 }
-                
+
                 EinSumOp::DiagonalExtraction { axes1, axes2 } => {
-                     let operand = eval(&children[0])?;
-                     let rank = operand.as_array().ndim();
-                     let mut chars_in: Vec<char> = (0..rank).map(get_char).collect();
-                     
-                     chars_in[*axes2] = chars_in[*axes1];
-                     
-                     let mut chars_out = Vec::new();
-                     for (i, &c) in chars_in.iter().enumerate() {
-                         if i != *axes2 { 
-                             chars_out.push(c);
-                         }
-                     }
-                     
-                     let eq = format!("{}->{}", 
+                    let operand = eval(&children[0])?;
+                    let rank = operand.as_array().ndim();
+                    let mut chars_in: Vec<char> = (0..rank).map(get_char).collect();
+
+                    chars_in[*axes2] = chars_in[*axes1];
+
+                    let mut chars_out = Vec::new();
+                    for (i, &c) in chars_in.iter().enumerate() {
+                        if i != *axes2 {
+                            chars_out.push(c);
+                        }
+                    }
+
+                    let eq = format!(
+                        "{}->{}",
                         chars_in.iter().collect::<String>(),
                         chars_out.iter().collect::<String>()
-                     );
-                     let res = mlx_rs::ops::einsum(&eq, vec![operand.as_array()])
+                    );
+                    let res = mlx_rs::ops::einsum(&eq, vec![operand.as_array()])
                         .expect("einsum diagonal failed");
                     Ok(MlxTensor::new(res))
                 }
-                
+
                 EinSumOp::BatchMatMul => {
-                     let lhs = eval(&children[0])?;
-                     let rhs = eval(&children[1])?;
-                     Ok(MlxTensor::new(mlx_rs::ops::matmul(lhs.as_array(), rhs.as_array()).expect("batch matmul failed")))
+                    let lhs = eval(&children[0])?;
+                    let rhs = eval(&children[1])?;
+                    Ok(MlxTensor::new(
+                        mlx_rs::ops::matmul(lhs.as_array(), rhs.as_array())
+                            .expect("batch matmul failed"),
+                    ))
                 }
             }
         }
-        
+
         eval(ast)
     }
 

@@ -3,5 +3,4 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-pub(crate) mod causal_tensor_type;
-pub(crate) mod mlx_vs_cpu;
+pub mod bench_matmul;
