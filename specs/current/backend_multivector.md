@@ -58,27 +58,44 @@ impl<T> CausalMultiVector<T> {
 
 ### 2.3 Performance Analysis
 
-**Operation Count Comparison:**
+**Actual Benchmark Results (Apple Silicon M3 Max):**
 
-| Algebra    | N  | CPU Ops (4^N) | Matrix Ops (M³) | Theoretical Speedup |
-|------------|----|---------------|-----------------|---------------------|
-| Cl(2,0)    | 2  | 16            | 8               | 2×                  |
-| Cl(3,0)    | 3  | 64            | 16              | 4×                  |
-| Cl(1,3)    | 4  | 256           | 64              | 4×                  |
-| Cl(4,1)    | 5  | 1,024         | 128             | 8×                  |
-| **Cl(10)** | 10 | **1,048,576** | **32,768**      | **32×**             |
+Based on measured `CausalTensor` benchmarks comparing CPU vs MLX GPU:
 
-**Threshold Constants:**
+| Matrix Size | CPU Time  | MLX Time | Measured Speedup |
+|-------------|-----------|----------|------------------|
+| 128×128     | 1.49 ms   | 0.17 ms  | **8.5x**         |
+| 512×512     | 139.6 ms  | 0.22 ms  | **635x**         |
+| 1024×1024   | 1,087 ms  | 0.42 ms  | **2,588x**       |
+
+**Mapping to Clifford Algebras:**
+
+| Algebra    | N  | Matrix Size | Projected Speedup |
+|------------|----|-------------|-------------------|
+| Cl(2,0)    | 2  | 4×4         | ~1x (GPU overhead dominates) |
+| Cl(3,0)    | 3  | 8×8         | ~2x               |
+| Cl(1,3)    | 4  | 16×16       | ~5x               |
+| Cl(4,1)    | 5  | 32×32       | ~8x               |
+| Cl(6,0)    | 6  | 64×64       | ~15x              |
+| **Cl(10)** | 10 | 1024×1024   | **>2,500x**       |
+
+> **Key Insight:** GPU overhead is ~160 µs baseline. For small matrices (<32×32), CPU is faster.
+> For Cl(10) scale physics (1024×1024), MLX delivers >2,500x speedup over CPU.
+
+**Threshold Constants (Updated from Benchmarks):**
 
 ```rust
 /// Minimum dimension for single-operation acceleration.
+/// GPU crossover occurs around 32×32 (N=5).
 pub const DIMENSION_THRESHOLD: usize = 5;
 
 /// Minimum batch size for acceleration at dimension >= 3.
-pub const BATCH_THRESHOLD: usize = 1000;
+/// BatchMatMul: 8×64×64 gives 17x speedup, 8×128×128 gives 100x.
+pub const BATCH_THRESHOLD: usize = 8;
 
 /// Minimum field size (cells) for field-level acceleration.
-pub const FIELD_SIZE_THRESHOLD: usize = 10_000;  // ~21³ grid
+/// ~64³ grid = 262k cells maps to 512×512 matrices → 635x speedup.
+pub const FIELD_SIZE_THRESHOLD: usize = 262_144;
 
 fn should_use_backend(dim: usize, batch_size: usize) -> bool {
     dim >= DIMENSION_THRESHOLD ||
@@ -232,9 +249,19 @@ fn apply_stencil<B: TensorBackend, T: TensorData>(
 ### 5.2 MLX Backend (`f32`)
 
 * **Use Case:** High-speed MHD simulation (Hero Run).
-* **Precision:** `f32`.
+* **Precision:** `f32` (Metal GPU constraint—no f64 support).
 * **Constraint:** The user must explicitly instantiate `CausalMultiField<MlxBackend, f32>`.
-* **Warning:** Initial data provided as `f64` will be downcast.
+* **Warning:** Initial data provided as `f64` will be downcast (8 µs for 128×128, 53 µs for 1024×1024).
+
+**Measured Performance (M3 Max):**
+
+| Operation      | CPU Time  | MLX Time | Speedup      |
+|----------------|-----------|----------|--------------|
+| MatMul 1024²   | 1,087 ms  | 0.42 ms  | **2,588x**   |
+| BatchMatMul 8× | 18.14 ms  | 0.18 ms  | **100x**     |
+| Reduction 1024²| 4.68 ms   | 0.18 ms  | **26x**      |
+
+> **GPU Overhead**: ~160 µs baseline. Use CPU for matrices < 32×32.
 
 ### 5.3 CUDA Backend (Future)
 
