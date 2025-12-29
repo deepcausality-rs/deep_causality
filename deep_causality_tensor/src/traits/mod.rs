@@ -9,11 +9,11 @@
 pub(crate) mod tensor;
 
 // Backend traits
-mod linear_algebra_backend;
-mod tensor_backend;
+mod backend_linear_algebra;
+mod backend_tensor;
 mod tensor_data;
 
 // Re-export backend traits
-pub use linear_algebra_backend::LinearAlgebraBackend;
-pub use tensor_backend::TensorBackend;
+pub use backend_linear_algebra::LinearAlgebraBackend;
+pub use backend_tensor::TensorBackend;
 pub use tensor_data::TensorData;

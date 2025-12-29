@@ -11,7 +11,6 @@ mod arithmetic;
 mod display;
 mod from;
 mod getters;
-pub(crate) mod mlx;
 mod ops;
 
 pub use ops::tensor_ein_sum::ein_sum_op::{EinSumAST, EinSumOp};

@@ -24,6 +24,7 @@ pub use crate::extensions::ext_hkt::CausalTensorWitness;
 pub use crate::extensions::ext_math::CausalTensorMathExt;
 pub use crate::extensions::ext_stack::CausalTensorStackExt;
 pub use crate::traits::tensor::Tensor;
+pub use crate::types::backend_tensor::BackendTensor;
 pub use crate::types::causal_tensor::{CausalTensor, EinSumAST, EinSumOp};
 pub use crate::utils::utils_tests;
 

@@ -5,7 +5,7 @@
 
 //! LinearAlgebraBackend trait for advanced matrix operations.
 
-use super::tensor_backend::TensorBackend;
+use super::backend_tensor::TensorBackend;
 use super::tensor_data::TensorData;
 
 /// Advanced linear algebra operations.
