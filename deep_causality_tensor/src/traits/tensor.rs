@@ -154,7 +154,7 @@ where
     ///
     /// // Sum all elements: 1+2+3+4+5+6 = 21
     /// let sum_all = tensor.sum_axes(&[]).unwrap();
-    /// assert_eq!(sum_all.shape(), &[]); // Scalar result with shape [] still has one element.
+    /// assert_eq!(sum_all.shape(), &[] as &[usize]); // Scalar result with shape [] still has one element.
     /// assert_eq!(sum_all.as_slice(), &[21]);
     ///
     /// // Invalid axis
@@ -210,7 +210,7 @@ where
     ///
     /// // Mean of all elements: (1+2+3+4+5+6)/6 = 3.5
     /// let mean_all = tensor.mean_axes(&[]).unwrap();
-    /// assert_eq!(mean_all.shape(), &[]); // Scalar result
+    /// assert_eq!(mean_all.shape(), &[] as &[usize]); // Scalar result
     /// assert_eq!(mean_all.as_slice(), &[3.5]);
     /// ```
     fn mean_axes(&self, axes: &[usize]) -> Result<Self, CausalTensorError>

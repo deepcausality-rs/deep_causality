@@ -11,7 +11,7 @@
 
 mod cpu_backend_linear_algebra;
 mod cpu_backend_tensor;
-mod tensor_impl;
+mod cpu_tensor_impl;
 
 use crate::backend::Device;
 

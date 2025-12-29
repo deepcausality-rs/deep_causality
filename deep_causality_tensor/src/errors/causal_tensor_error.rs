@@ -29,6 +29,8 @@ pub enum CausalTensorError {
     /// MLX operation failed with a message.
     #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
     MlxOperationFailed(String),
+    /// Operation not implemented for this backend.
+    NotImplemented(String),
 }
 
 impl Error for CausalTensorError {}
@@ -81,6 +83,9 @@ impl std::fmt::Display for CausalTensorError {
             #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
             CausalTensorError::MlxOperationFailed(msg) => {
                 write!(f, "CausalTensorError: MLX operation failed: {}", msg)
+            }
+            CausalTensorError::NotImplemented(msg) => {
+                write!(f, "CausalTensorError: Not implemented: {}", msg)
             }
         }
     }

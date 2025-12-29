@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
 /// Defines operations between a scalar and a tensor (e.g., `scalar + tensor`).
 mod op_scalar_tensor_f32;
 mod op_scalar_tensor_f64;

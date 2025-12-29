@@ -8,10 +8,13 @@
 //! These aliases enable users to write code that automatically selects
 //! the optimal backend based on compile-time feature flags.
 
-use crate::CpuBackend;
-
 #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
 use super::MlxBackend;
+#[cfg(not(any(
+    all(feature = "mlx", target_os = "macos", target_arch = "aarch64"),
+    feature = "cuda"
+)))]
+use crate::CpuBackend;
 
 /// Default backend selection via feature flags.
 ///
