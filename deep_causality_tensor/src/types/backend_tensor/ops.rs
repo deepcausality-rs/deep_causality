@@ -218,3 +218,135 @@ impl<B: TensorBackend> Mul<BackendTensor<f32, B>> for f32 {
         rhs * self
     }
 }
+
+// --- Scalar Addition for f64 ---
+
+impl<B: TensorBackend> Add<f64> for BackendTensor<f64, B> {
+    type Output = Self;
+
+    fn add(self, rhs: f64) -> Self::Output {
+        let data: Vec<f64> = B::to_vec(&self.inner).into_iter().map(|x| x + rhs).collect();
+        Self::from_inner(B::create_from_vec(data, &B::shape(&self.inner)))
+    }
+}
+
+impl<B: TensorBackend> Add<BackendTensor<f64, B>> for f64 {
+    type Output = BackendTensor<f64, B>;
+
+    fn add(self, rhs: BackendTensor<f64, B>) -> Self::Output {
+        rhs + self
+    }
+}
+
+// --- Scalar Subtraction for f64 ---
+
+impl<B: TensorBackend> Sub<f64> for BackendTensor<f64, B> {
+    type Output = Self;
+
+    fn sub(self, rhs: f64) -> Self::Output {
+        let data: Vec<f64> = B::to_vec(&self.inner).into_iter().map(|x| x - rhs).collect();
+        Self::from_inner(B::create_from_vec(data, &B::shape(&self.inner)))
+    }
+}
+
+// --- Scalar Division for f64 ---
+
+impl<B: TensorBackend> Div<f64> for BackendTensor<f64, B> {
+    type Output = Self;
+
+    fn div(self, rhs: f64) -> Self::Output {
+        let data: Vec<f64> = B::to_vec(&self.inner).into_iter().map(|x| x / rhs).collect();
+        Self::from_inner(B::create_from_vec(data, &B::shape(&self.inner)))
+    }
+}
+
+// --- Scalar Arithmetic for f32 ---
+
+impl<B: TensorBackend> Add<f32> for BackendTensor<f32, B> {
+    type Output = Self;
+
+    fn add(self, rhs: f32) -> Self::Output {
+        let data: Vec<f32> = B::to_vec(&self.inner).into_iter().map(|x| x + rhs).collect();
+        Self::from_inner(B::create_from_vec(data, &B::shape(&self.inner)))
+    }
+}
+
+impl<B: TensorBackend> Sub<f32> for BackendTensor<f32, B> {
+    type Output = Self;
+
+    fn sub(self, rhs: f32) -> Self::Output {
+        let data: Vec<f32> = B::to_vec(&self.inner).into_iter().map(|x| x - rhs).collect();
+        Self::from_inner(B::create_from_vec(data, &B::shape(&self.inner)))
+    }
+}
+
+impl<B: TensorBackend> Div<f32> for BackendTensor<f32, B> {
+    type Output = Self;
+
+    fn div(self, rhs: f32) -> Self::Output {
+        let data: Vec<f32> = B::to_vec(&self.inner).into_iter().map(|x| x / rhs).collect();
+        Self::from_inner(B::create_from_vec(data, &B::shape(&self.inner)))
+    }
+}
+
+// --- Scalar Addition for f64 (Reference) ---
+
+impl<B: TensorBackend> Add<f64> for &BackendTensor<f64, B> {
+    type Output = BackendTensor<f64, B>;
+
+    fn add(self, rhs: f64) -> Self::Output {
+        let data: Vec<f64> = B::to_vec(&self.inner).into_iter().map(|x| x + rhs).collect();
+        BackendTensor::from_inner(B::create_from_vec(data, &B::shape(&self.inner)))
+    }
+}
+
+// --- Scalar Subtraction for f64 (Reference) ---
+
+impl<B: TensorBackend> Sub<f64> for &BackendTensor<f64, B> {
+    type Output = BackendTensor<f64, B>;
+
+    fn sub(self, rhs: f64) -> Self::Output {
+        let data: Vec<f64> = B::to_vec(&self.inner).into_iter().map(|x| x - rhs).collect();
+        BackendTensor::from_inner(B::create_from_vec(data, &B::shape(&self.inner)))
+    }
+}
+
+// --- Scalar Division for f64 (Reference) ---
+
+impl<B: TensorBackend> Div<f64> for &BackendTensor<f64, B> {
+    type Output = BackendTensor<f64, B>;
+
+    fn div(self, rhs: f64) -> Self::Output {
+        let data: Vec<f64> = B::to_vec(&self.inner).into_iter().map(|x| x / rhs).collect();
+        BackendTensor::from_inner(B::create_from_vec(data, &B::shape(&self.inner)))
+    }
+}
+
+// --- Scalar Arithmetic for f32 (Reference) ---
+
+impl<B: TensorBackend> Add<f32> for &BackendTensor<f32, B> {
+    type Output = BackendTensor<f32, B>;
+
+    fn add(self, rhs: f32) -> Self::Output {
+        let data: Vec<f32> = B::to_vec(&self.inner).into_iter().map(|x| x + rhs).collect();
+        BackendTensor::from_inner(B::create_from_vec(data, &B::shape(&self.inner)))
+    }
+}
+
+impl<B: TensorBackend> Sub<f32> for &BackendTensor<f32, B> {
+    type Output = BackendTensor<f32, B>;
+
+    fn sub(self, rhs: f32) -> Self::Output {
+        let data: Vec<f32> = B::to_vec(&self.inner).into_iter().map(|x| x - rhs).collect();
+        BackendTensor::from_inner(B::create_from_vec(data, &B::shape(&self.inner)))
+    }
+}
+
+impl<B: TensorBackend> Div<f32> for &BackendTensor<f32, B> {
+    type Output = BackendTensor<f32, B>;
+
+    fn div(self, rhs: f32) -> Self::Output {
+        let data: Vec<f32> = B::to_vec(&self.inner).into_iter().map(|x| x / rhs).collect();
+        BackendTensor::from_inner(B::create_from_vec(data, &B::shape(&self.inner)))
+    }
+}

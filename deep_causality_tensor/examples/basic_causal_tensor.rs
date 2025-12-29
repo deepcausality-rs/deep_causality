@@ -43,7 +43,7 @@ pub fn main() {
     // Tensors support element-wise arithmetic with scalars.
     println!("\n4. Tensor-Scalar Arithmetic (add 10 to each element):");
     let tensor = CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2]).unwrap();
-    let added_tensor = tensor + 10.0;
+    let added_tensor: CausalTensor<f64> = &tensor + 10.0;
     println!("   Original: {}", tensor);
     println!("   Result:   {}", added_tensor);
     assert_eq!(added_tensor.as_slice(), &[11.0, 12.0, 13.0, 14.0]);
