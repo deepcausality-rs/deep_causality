@@ -30,9 +30,7 @@ impl<T: Default> CausalTensor<T> {
     /// # Errors
     ///
     /// - `DimensionMismatch` if the tensor is not 2-dimensional
-    pub(in crate::types::causal_tensor) fn qr_impl(
-        &self,
-    ) -> Result<(Self, Self), CausalTensorError>
+    pub(in crate::types::causal_tensor) fn qr_impl(&self) -> Result<(Self, Self), CausalTensorError>
     where
         T: Clone + RealField + Zero + One + Sum + PartialEq,
     {
@@ -81,7 +79,7 @@ impl<T: Default> CausalTensor<T> {
             } else {
                 -T::one()
             };
-            v[0] = v[0] + sign * norm;
+            v[0] += sign * norm;
 
             // Normalize v
             let v_norm: T = v.iter().map(|&x| x * x).sum::<T>().sqrt();
@@ -89,7 +87,7 @@ impl<T: Default> CausalTensor<T> {
                 continue;
             }
             for x in &mut v {
-                *x = *x / v_norm;
+                *x /= v_norm;
             }
 
             // Apply Householder reflection to R: R[j:m, j:n] = R - 2*v*(v^T * R)
@@ -100,9 +98,9 @@ impl<T: Default> CausalTensor<T> {
 
                 // Update R[:, c] -= 2 * dot * v
                 let two = T::one() + T::one();
-                for i in 0..v.len() {
+                for (i, v_i) in v.iter().enumerate() {
                     let old = get_r(&r_data, j + i, c);
-                    set_r(&mut r_data, j + i, c, old - two * dot * v[i]);
+                    set_r(&mut r_data, j + i, c, old - two * dot * *v_i);
                 }
             }
 
@@ -114,9 +112,9 @@ impl<T: Default> CausalTensor<T> {
 
                 // Update Q[r, j:m] -= 2 * dot * v
                 let two = T::one() + T::one();
-                for i in 0..v.len() {
+                for (i, v_i) in v.iter().enumerate() {
                     let old = get_q(&q_data, r, j + i);
-                    set_q(&mut q_data, r, j + i, old - two * dot * v[i]);
+                    set_q(&mut q_data, r, j + i, old - two * dot * *v_i);
                 }
             }
         }

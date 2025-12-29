@@ -62,12 +62,20 @@ impl<T: Default> CausalTensor<T> {
         // Tolerance: use a small fraction (1/1000000 ≈ 1e-6)
         let mut tolerance = T::one();
         for _ in 0..6 {
-            tolerance = tolerance / (T::one() + T::one() + T::one() + T::one() + T::one() 
-                + T::one() + T::one() + T::one() + T::one() + T::one()); // divide by 10
+            tolerance /= T::one()
+                + T::one()
+                + T::one()
+                + T::one()
+                + T::one()
+                + T::one()
+                + T::one()
+                + T::one()
+                + T::one()
+                + T::one(); // divide by 10
         }
 
         // Helper functions for row-major access
-        let get_a = |data: &[T], row: usize, col: usize| data[row * n + col].clone();
+        let get_a = |data: &[T], row: usize, col: usize| data[row * n + col];
         let set_a = |data: &mut [T], row: usize, col: usize, val: T| {
             data[row * n + col] = val;
         };
@@ -80,7 +88,7 @@ impl<T: Default> CausalTensor<T> {
                     let mut val = T::one();
                     // Scale by (j+1)/(n+1) approximately
                     for _ in 0..(j + i + 1) {
-                        val = val + T::one() / (T::one() + T::one());
+                        val += T::one() / (T::one() + T::one());
                     }
                     val / (T::one() + T::one() + T::one()) // normalize roughly
                 })
@@ -90,7 +98,7 @@ impl<T: Default> CausalTensor<T> {
             let v_norm: T = v.iter().map(|&x| x * x).sum::<T>().sqrt();
             if v_norm > T::zero() {
                 for x in &mut v {
-                    *x = *x / v_norm;
+                    *x /= v_norm;
                 }
             }
 
@@ -100,9 +108,9 @@ impl<T: Default> CausalTensor<T> {
             for _iter in 0..max_iterations {
                 // u = A * v
                 let mut u: Vec<T> = vec![T::zero(); m];
-                for row in 0..m {
-                    for col in 0..n {
-                        u[row] = u[row] + get_a(&a_data, row, col) * v[col];
+                for (row, u_row) in u.iter_mut().enumerate() {
+                    for (col, v_col) in v.iter().enumerate() {
+                        *u_row += get_a(&a_data, row, col) * *v_col;
                     }
                 }
 
@@ -115,14 +123,14 @@ impl<T: Default> CausalTensor<T> {
 
                 // Normalize u
                 for x in &mut u {
-                    *x = *x / new_sigma;
+                    *x /= new_sigma;
                 }
 
                 // v = A^T * u
                 let mut new_v: Vec<T> = vec![T::zero(); n];
-                for col in 0..n {
-                    for row in 0..m {
-                        new_v[col] = new_v[col] + get_a(&a_data, row, col) * u[row];
+                for (col, new_v_col) in new_v.iter_mut().enumerate() {
+                    for (row, u_row) in u.iter().enumerate() {
+                        *new_v_col += get_a(&a_data, row, col) * *u_row;
                     }
                 }
 
@@ -130,7 +138,7 @@ impl<T: Default> CausalTensor<T> {
                 let v_norm: T = new_v.iter().map(|&x| x * x).sum::<T>().sqrt();
                 if v_norm > T::zero() {
                     for x in &mut new_v {
-                        *x = *x / v_norm;
+                        *x /= v_norm;
                     }
                 }
 
@@ -150,15 +158,15 @@ impl<T: Default> CausalTensor<T> {
             // Store u column
             // Recompute u from final v
             let mut u: Vec<T> = vec![T::zero(); m];
-            for row in 0..m {
-                for col in 0..n {
-                    u[row] = u[row] + get_a(&a_data, row, col) * v[col];
+            for (row, u_row) in u.iter_mut().enumerate() {
+                for (col, v_col) in v.iter().enumerate() {
+                    *u_row += get_a(&a_data, row, col) * *v_col;
                 }
             }
             let u_norm: T = u.iter().map(|&x| x * x).sum::<T>().sqrt();
             if u_norm > T::zero() {
                 for x in &mut u {
-                    *x = *x / u_norm;
+                    *x /= u_norm;
                 }
             }
 
@@ -172,10 +180,10 @@ impl<T: Default> CausalTensor<T> {
             }
 
             // Deflate: A = A - sigma * u * v^T
-            for row in 0..m {
-                for col in 0..n {
+            for (row, u_row) in u.iter().enumerate() {
+                for (col, v_col) in v.iter().enumerate() {
                     let old = get_a(&a_data, row, col);
-                    set_a(&mut a_data, row, col, old - sigma * u[row] * v[col]);
+                    set_a(&mut a_data, row, col, old - sigma * *u_row * *v_col);
                 }
             }
         }

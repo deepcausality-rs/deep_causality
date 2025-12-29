@@ -550,6 +550,7 @@ dependencies = [
  "deep_causality_num",
  "deep_causality_rand",
  "mlx-rs",
+ "rayon",
 ]
 
 [[package]]

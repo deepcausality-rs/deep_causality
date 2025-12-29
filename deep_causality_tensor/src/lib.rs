@@ -29,4 +29,3 @@ pub use crate::utils::utils_tests;
 
 // Re-export commonly used backend types at crate root for convenience
 pub use backend::{CpuBackend, LinearAlgebraBackend, TensorBackend, TensorData};
-

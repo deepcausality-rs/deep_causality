@@ -88,7 +88,7 @@ where
     /// # Arguments
     ///
     /// * `ranges` - A slice of `Range<usize>`, one per dimension. Each range
-    ///              specifies `start..end` indices for that dimension.
+    ///   specifies `start..end` indices for that dimension.
     ///
     /// # Returns
     ///
@@ -166,4 +166,3 @@ where
         CausalTensor::new(new_data, new_shape)
     }
 }
-

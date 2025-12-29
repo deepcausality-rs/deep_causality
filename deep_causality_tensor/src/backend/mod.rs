@@ -33,7 +33,7 @@ mod cpu;
 #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
 mod mlx;
 
-// Re-export traits from crate::traits
+// Re-export traits
 pub use crate::traits::{LinearAlgebraBackend, TensorBackend, TensorData};
 
 // Re-export backends

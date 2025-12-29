@@ -8,7 +8,7 @@
 //! These aliases enable users to write code that automatically selects
 //! the optimal backend based on compile-time feature flags.
 
-use super::CpuBackend;
+use crate::CpuBackend;
 
 #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
 use super::MlxBackend;
