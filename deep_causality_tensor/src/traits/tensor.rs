@@ -592,4 +592,20 @@ where
     where
         T: crate::backend::TensorData + RealField,
         Self: Sized;
+    /// Stacks a sequence of tensors along a new axis.
+    ///
+    /// # Arguments
+    ///
+    /// * `tensors` - A slice of tensors to stack.
+    /// * `axis` - The axis along which to stack the tensors.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// - `Ok(Self)`: The new stacked tensor.
+    /// - `Err(CausalTensorError)`: If shapes mismatch or axis is out of bounds.
+    fn stack(tensors: &[Self], axis: usize) -> Result<Self, CausalTensorError>
+    where
+        T: crate::backend::TensorData,
+        Self: Sized;
 }

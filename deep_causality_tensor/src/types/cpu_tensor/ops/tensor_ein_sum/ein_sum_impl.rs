@@ -4,7 +4,7 @@
  */
 use crate::Tensor;
 use crate::types::cpu_tensor::{EinSumAST, EinSumOp};
-use crate::{CausalTensorError, CausalTensorStackExt, EinSumValidationError, InternalCpuTensor};
+use crate::{CausalTensorError, EinSumValidationError, InternalCpuTensor};
 
 impl<T> InternalCpuTensor<T>
 where
@@ -602,6 +602,6 @@ where
         }
 
         // Stack the results back into a single tensor
-        result_batches.stack(0).map(|t| t.into_inner())
+        InternalCpuTensor::stack_impl(&result_batches, 0)
     }
 }

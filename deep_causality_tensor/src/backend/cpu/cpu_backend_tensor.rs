@@ -106,6 +106,13 @@ impl TensorBackend for CpuBackend {
             .expect("CpuBackend::slice failed")
     }
 
+    fn stack<T: TensorData>(
+        tensors: &[Self::Tensor<T>],
+        axis: usize,
+    ) -> Result<Self::Tensor<T>, CausalTensorError> {
+        InternalCpuTensor::stack_impl(tensors, axis)
+    }
+
     // --- Element-wise Arithmetic ---
 
     fn add<T: TensorData>(a: &Self::Tensor<T>, b: &Self::Tensor<T>) -> Self::Tensor<T> {

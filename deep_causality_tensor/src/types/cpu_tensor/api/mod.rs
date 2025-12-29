@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::types::cpu_tensor::EinSumAST;
-use crate::{CausalTensorError, InternalCpuTensor, Tensor};
+use crate::{CausalTensorError, InternalCpuTensor, Tensor, TensorData};
 use core::iter::Sum;
 use core::ops::{Add, Div, Mul};
 use deep_causality_num::{RealField, Zero};
@@ -534,7 +534,7 @@ where
     ///   element becomes zero or negative during computation).
     fn cholesky_decomposition(&self) -> Result<Self, CausalTensorError>
     where
-        T: crate::backend::TensorData + RealField,
+        T: TensorData + RealField,
     {
         self.cholesky_decomposition_impl()
     }
@@ -590,8 +590,16 @@ where
         b: &Self, // Observation vector (m x 1)
     ) -> Result<Self, CausalTensorError>
     where
-        T: crate::backend::TensorData + RealField,
+        T: TensorData + RealField,
     {
         Self::solve_least_squares_cholsky_impl(a, b)
+    }
+
+    fn stack(tensors: &[Self], axis: usize) -> Result<Self, CausalTensorError>
+    where
+        T: TensorData,
+        Self: Sized,
+    {
+        Self::stack_impl(tensors, axis)
     }
 }

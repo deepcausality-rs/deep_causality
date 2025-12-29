@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_tensor::{CausalTensor, CausalTensorMathExt, CausalTensorStackExt, Tensor};
+use deep_causality_tensor::{CausalTensor, CausalTensorMathExt, Tensor};
 
 pub fn main() {
     println!("\n--- CausalTensor Example ---");
@@ -119,7 +119,7 @@ pub fn main() {
     let tensors_to_stack = [tensor_a, tensor_b];
 
     // Stack along axis 0
-    let stacked_axis_0 = tensors_to_stack.stack(0).unwrap();
+    let stacked_axis_0 = CausalTensor::stack(&tensors_to_stack, 0).unwrap();
     println!(
         "   Stacked along axis 0 (new shape {{:?}}): {{}} {:?} {:?}",
         stacked_axis_0.shape(),
@@ -129,7 +129,7 @@ pub fn main() {
     assert_eq!(stacked_axis_0.as_slice(), &[1, 2, 3, 4]);
 
     // Stack along axis 1
-    let stacked_axis_1 = tensors_to_stack.stack(1).unwrap();
+    let stacked_axis_1 = CausalTensor::stack(&tensors_to_stack, 1).unwrap();
     println!(
         "   Stacked along axis 1 (new shape {{:?}}): {{}} {:?} {:?}",
         stacked_axis_1.shape(),

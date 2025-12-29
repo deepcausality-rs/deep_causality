@@ -8,10 +8,10 @@
 //! This delegates all operations to the inner InternalCpuTensor and wraps results
 //! to maintain the BackendTensor wrapper type.
 
-use crate::backend::CpuBackend;
+use crate::CpuBackend;
 use crate::types::backend_tensor::BackendTensor;
 use crate::types::cpu_tensor::EinSumAST;
-use crate::{CausalTensorError, Tensor};
+use crate::{CausalTensorError, Tensor, TensorBackend, TensorData};
 use core::iter::Sum;
 use core::ops::{Add, Div, Mul, Neg};
 use deep_causality_num::{RealField, Zero};
@@ -19,10 +19,10 @@ use deep_causality_num::{RealField, Zero};
 impl<T: Clone> Tensor<T> for BackendTensor<T, CpuBackend> {
     fn ein_sum(ast: &EinSumAST<Self>) -> Result<Self, CausalTensorError>
     where
-        T: crate::backend::TensorData,
+        T: TensorData,
     {
         // Convert AST from BackendTensor to InternalCpuTensor
-        fn convert_ast<T: crate::backend::TensorData + Clone>(
+        fn convert_ast<T: TensorData + Clone>(
             ast: &EinSumAST<BackendTensor<T, CpuBackend>>,
         ) -> EinSumAST<crate::InternalCpuTensor<T>> {
             let op = ast.value().clone().map_tensor(|t| t.into_inner());
@@ -40,7 +40,7 @@ impl<T: Clone> Tensor<T> for BackendTensor<T, CpuBackend> {
 
     fn matmul(&self, rhs: &Self) -> Result<Self, CausalTensorError>
     where
-        T: crate::backend::TensorData,
+        T: TensorData,
     {
         Tensor::matmul(&self.inner, &rhs.inner).map(Self::from_inner)
     }
@@ -124,21 +124,21 @@ impl<T: Clone> Tensor<T> for BackendTensor<T, CpuBackend> {
 
     fn inverse(&self) -> Result<Self, CausalTensorError>
     where
-        T: crate::backend::TensorData + RealField,
+        T: TensorData + RealField,
     {
         Tensor::inverse(&self.inner).map(Self::from_inner)
     }
 
     fn qr(&self) -> Result<(Self, Self), CausalTensorError>
     where
-        T: crate::backend::TensorData + Sum + RealField + Neg<Output = T>,
+        T: TensorData + Sum + RealField + Neg<Output = T>,
     {
         Tensor::qr(&self.inner).map(|(q, r)| (Self::from_inner(q), Self::from_inner(r)))
     }
 
     fn svd(&self) -> Result<(Self, Self, Self), CausalTensorError>
     where
-        T: crate::backend::TensorData + Sum + RealField,
+        T: TensorData + Sum + RealField,
     {
         Tensor::svd(&self.inner).map(|(u, s, v)| {
             (
@@ -151,16 +151,26 @@ impl<T: Clone> Tensor<T> for BackendTensor<T, CpuBackend> {
 
     fn cholesky_decomposition(&self) -> Result<Self, CausalTensorError>
     where
-        T: crate::backend::TensorData + RealField,
+        T: TensorData + RealField,
     {
         Tensor::cholesky_decomposition(&self.inner).map(Self::from_inner)
     }
 
     fn solve_least_squares_cholsky(a: &Self, b: &Self) -> Result<Self, CausalTensorError>
     where
-        T: crate::backend::TensorData + RealField,
+        T: TensorData + RealField,
     {
         crate::InternalCpuTensor::solve_least_squares_cholsky(&a.inner, &b.inner)
             .map(Self::from_inner)
+    }
+
+    fn stack(tensors: &[Self], axis: usize) -> Result<Self, CausalTensorError>
+    where
+        T: TensorData,
+        Self: Sized,
+    {
+        // Convert &[BackendTensor] to Vec<InternalCpuTensor>
+        let inner_tensors: Vec<_> = tensors.iter().map(|t| t.inner.clone()).collect();
+        CpuBackend::stack(&inner_tensors, axis).map(Self::from_inner)
     }
 }

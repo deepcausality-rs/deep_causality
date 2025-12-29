@@ -25,6 +25,8 @@ mod op_tensor_reduction_tests;
 mod op_tensor_scalar_tests;
 #[cfg(test)]
 mod op_tensor_shape_tests;
+#[cfg(test)]
+mod op_tensor_stack_tests;
 mod op_tensor_svd_tests;
 #[cfg(test)]
 mod op_tensor_tensor_tests;

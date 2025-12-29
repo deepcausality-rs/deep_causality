@@ -12,6 +12,7 @@ pub mod tensor_qr;
 pub mod tensor_reduction;
 /// Defines tensor shape manipulation operations (e.g., reshape, ravel).
 pub mod tensor_shape;
+mod tensor_stack;
 /// Cholesky decomposition and least squares solver.
 pub mod tensor_svd;
 /// Singular Value Decomposition using power iteration.

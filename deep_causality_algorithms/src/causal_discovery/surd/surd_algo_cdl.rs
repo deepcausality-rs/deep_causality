@@ -5,7 +5,7 @@
 use crate::causal_discovery::surd::surd_utils;
 use crate::causal_discovery::surd::surd_utils::surd_utils_cdl;
 use crate::causal_discovery::surd::{MaxOrder, SurdResult};
-use deep_causality_tensor::{CausalTensor, CausalTensorError, CausalTensorStackExt, Tensor};
+use deep_causality_tensor::{CausalTensor, CausalTensorError, Tensor};
 use std::collections::HashMap;
 
 #[cfg(feature = "parallel")]
@@ -302,27 +302,27 @@ pub fn surd_states_cdl(
     // --- 6. Finalize State-Dependent Maps by Stacking ---
     let causal_redundant_states = temp_causal_rd_states
         .into_iter()
-        .map(|(k, slices)| Ok((k, slices.stack(0)?)))
+        .map(|(k, slices)| Ok((k, CausalTensor::stack(&slices, 0)?)))
         .collect::<Result<_, _>>()?;
     let causal_unique_states = temp_causal_un_states
         .into_iter()
-        .map(|(k, slices)| Ok((k, slices.stack(0)?)))
+        .map(|(k, slices)| Ok((k, CausalTensor::stack(&slices, 0)?)))
         .collect::<Result<_, _>>()?;
     let causal_synergistic_states = temp_causal_sy_states
         .into_iter()
-        .map(|(k, slices)| Ok((k, slices.stack(0)?)))
+        .map(|(k, slices)| Ok((k, CausalTensor::stack(&slices, 0)?)))
         .collect::<Result<_, _>>()?;
     let non_causal_redundant_states = temp_non_causal_rd_states
         .into_iter()
-        .map(|(k, slices)| Ok((k, slices.stack(0)?)))
+        .map(|(k, slices)| Ok((k, CausalTensor::stack(&slices, 0)?)))
         .collect::<Result<_, _>>()?;
     let non_causal_unique_states = temp_non_causal_un_states
         .into_iter()
-        .map(|(k, slices)| Ok((k, slices.stack(0)?)))
+        .map(|(k, slices)| Ok((k, CausalTensor::stack(&slices, 0)?)))
         .collect::<Result<_, _>>()?;
     let non_causal_synergistic_states = temp_non_causal_sy_states
         .into_iter()
-        .map(|(k, slices)| Ok((k, slices.stack(0)?)))
+        .map(|(k, slices)| Ok((k, CausalTensor::stack(&slices, 0)?)))
         .collect::<Result<_, _>>()?;
 
     Ok(SurdResult::new(

@@ -96,6 +96,12 @@ pub trait TensorBackend: Clone + Send + Sync + 'static {
     /// Extracts a slice of the tensor.
     fn slice<T: Clone>(tensor: &Self::Tensor<T>, ranges: &[Range<usize>]) -> Self::Tensor<T>;
 
+    /// Stacks a sequence of tensors along a new axis.
+    fn stack<T: TensorData>(
+        tensors: &[Self::Tensor<T>],
+        axis: usize,
+    ) -> Result<Self::Tensor<T>, crate::CausalTensorError>;
+
     // --- Element-wise Arithmetic ---
 
     /// Element-wise addition.
