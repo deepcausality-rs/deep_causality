@@ -119,7 +119,7 @@ impl<T: core::fmt::Display + Clone, B: TensorBackend> core::fmt::Display for Bac
 // Default for CPU backend - creates empty tensor
 impl<T: Default + Clone> Default for BackendTensor<T, crate::backend::CpuBackend> {
     fn default() -> Self {
-        Self::from_inner(crate::InternalCpuTensor::new(vec![T::default()], vec![1]).unwrap())
+        Self::from_inner(crate::InternalCpuTensor::new(vec![], vec![0]).unwrap())
     }
 }
 
