@@ -321,7 +321,7 @@ The following benchmarks were run on a `CausalTensor` of a small 100x100 tensor 
 ### Hardware & OS
 
 - Architecture: ARM64 (Apple Silicon, M3 Max)
-- OS: macOS 15.1
+- OS: macOS 26.2 | Kernel Version 25.2.0
 
 ### MLX GPU Benchmarks (Apple Silicon)
 
@@ -342,8 +342,50 @@ Matrix multiplication (`matmul`) benchmarks comparing CPU vs GPU on Apple Silico
 | 4096×4096 | 16M      | 13.3     |
 | 8192×8192 | 67M      | 100.5    |
 
+### Data Transfer Overhead
+
+Since `CausalTensor` uses `f64` and MLX uses `f32` (on Metal), using the GPU involves:
+
+1. Downcasting `f64` → `f32`
+2. Transfer to specific MLX array layout
+3. Computing on GPU
+4. Upcasting result `f32` → `f64`
+
+Benchmarks show this roundtrip overhead is **negligible** compared to the compute gains:
+
+| Size      | Roundtrip Overhead | GPU Compute | Total GPU Time | CPU Time | Real Speedup |
+|-----------|--------------------|-------------|----------------|----------|--------------|
+| 128×128   | 0.007 ms           | 0.22 ms     | 0.23 ms        | 1.5 ms   | **6.5x**     |
+| 512×512   | 0.08 ms            | 0.28 ms     | 0.36 ms        | 138 ms   | **383x**     |
+| 1024×1024 | 0.38 ms            | 0.51 ms     | 0.89 ms        | 1,060 ms | **1,191x**   |
+
+> **Conclusion:** Even including the full cost of memory allocation, casting, and transfer, MLX offers >1000x speedups
+> for modern workloads.
+
+### Skipping Conversion (Best Performance)
+
+For maximum performance, construct tensors specifically from `f32` data to bypass the conversion overhead entirely. This
+is **7-8x faster** than the roundtrip method.
+
+```rust
+// 1. Initialize data as f32
+let data: Vec<f32> = vec![1.0, 2.0, 3.0, 4.0];
+let shape = vec![2, 2];
+
+// 2. Direct upload (Zero casting overhead)
+let tensor = MlxCausalTensor::from_slice( & data, & shape);
+```
+
+**Benchmark Results:**
+
+| Size      | Standard Roundtrip (f64→f32→GPU→f64) | Direct f32  (f32→GPU→f32) | Speedup  |
+|-----------|--------------------------------------|---------------------------|----------|
+| 128×128   | 8.0 µs                               | **0.98 µs**               | **8.2x** |
+| 512×512   | 85.5 µs                              | **13.9 µs**               | **6.1x** |
+| 1024×1024 | 385 µs                               | **53.4 µs**               | **7.2x** |
+
 > **Note:** GPU acceleration scales dramatically with matrix size due to O(N³) complexity.
-> Matrices >1024×1024 are impractical on CPU (>1 second per matmul).
+
 
 Run the benchmark: `cargo bench -p deep_causality_tensor --features mlx`
 

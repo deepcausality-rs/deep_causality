@@ -10,4 +10,5 @@ mod benchmarks;
 criterion_main! {
     benchmarks::causal_tensor_type::bench_causal_tensor::causal_tensor_benches,
     benchmarks::mlx_vs_cpu::bench_matmul::mlx_vs_cpu_benches,
+    benchmarks::mlx_vs_cpu::bench_roundtrip::roundtrip_benches,
 }

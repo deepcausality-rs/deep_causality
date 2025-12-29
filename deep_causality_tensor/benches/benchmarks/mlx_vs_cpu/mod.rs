@@ -4,3 +4,4 @@
  */
 
 pub mod bench_matmul;
+pub mod bench_roundtrip;
