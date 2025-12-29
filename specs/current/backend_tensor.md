@@ -264,7 +264,7 @@ pub type Tensor<T = DefaultFloat> = CausalTensor<DefaultBackend, T>;
 **Usage:**
 
 ```rust
-use deep_causality_tensor::prelude::*;
+use deep_causality_tensor::*;
 
 // User code is backend-agnostic
 let field: Tensor = Tensor::zeros(& [128, 128, 128, 4, 4]);

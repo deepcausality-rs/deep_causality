@@ -17,9 +17,3 @@ pub use crate::extensions::ext_stack::CausalTensorStackExt;
 pub use crate::traits::tensor::Tensor;
 pub use crate::types::causal_tensor::{CausalTensor, EinSumAST, EinSumOp};
 pub use crate::utils::utils_tests;
-
-// MLX acceleration types - only available on Apple Silicon with mlx feature
-#[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
-pub use crate::extensions::ext_mlx::MlxCompatible;
-#[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
-pub use types::causal_tensor::mlx::mlx_causal_tensor::MlxCausalTensor;

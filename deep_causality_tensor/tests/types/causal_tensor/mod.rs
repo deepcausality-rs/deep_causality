@@ -10,8 +10,6 @@ mod display_tests;
 mod from_tests;
 #[cfg(test)]
 mod getters_tests;
-#[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
-mod mlx_causal_tensor_tests;
 #[cfg(test)]
 mod op_scalar_tensor_tests;
 #[cfg(test)]
