@@ -47,6 +47,6 @@ pub type DefaultFloat = f64;
 /// use deep_causality_tensor::backend::Tensor;
 ///
 /// // Automatically uses CpuBackend with f64 (or MlxBackend with f32)
-/// let t = Tensor::zero(&[3, 3]);
+/// let t = Tensor::zeros(&[3, 3]);
 /// ```
 pub type Tensor = crate::CausalTensor<DefaultFloat>;

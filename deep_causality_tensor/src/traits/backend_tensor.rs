@@ -79,6 +79,9 @@ pub trait TensorBackend: Clone + Send + Sync + 'static {
     /// Returns the shape of the tensor.
     fn shape<T>(tensor: &Self::Tensor<T>) -> Vec<usize>;
 
+    /// Returns the strides of the tensor.
+    fn strides<T>(tensor: &Self::Tensor<T>) -> Vec<usize>;
+
     /// Returns the element at the specified index.
     fn get<T: Clone>(tensor: &Self::Tensor<T>, index: &[usize]) -> Option<T>;
 
@@ -134,7 +137,9 @@ pub trait TensorBackend: Clone + Send + Sync + 'static {
     fn ravel<T: Clone>(tensor: &Self::Tensor<T>) -> Self::Tensor<T>;
 
     /// Returns indices that would sort the tensor.
-    fn arg_sort<T: TensorData>(tensor: &Self::Tensor<T>) -> Vec<usize>;
+    fn arg_sort<T: TensorData>(
+        tensor: &Self::Tensor<T>,
+    ) -> Result<Vec<usize>, crate::CausalTensorError>;
 
     /// Creates a cyclically shifted view.
     fn shifted_view<T: Clone>(tensor: &Self::Tensor<T>, flat_index: usize) -> Self::Tensor<T>;

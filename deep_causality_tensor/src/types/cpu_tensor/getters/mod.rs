@@ -16,6 +16,11 @@ impl<T> InternalCpuTensor<T> {
         &self.shape
     }
 
+    /// Returns a slice representing the strides of the tensor.
+    pub fn strides(&self) -> &[usize] {
+        &self.strides
+    }
+
     /// Returns `true` if the tensor contains no elements.
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()

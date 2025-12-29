@@ -80,6 +80,10 @@ impl TensorBackend for CpuBackend {
         tensor.shape().to_vec()
     }
 
+    fn strides<T>(tensor: &Self::Tensor<T>) -> Vec<usize> {
+        tensor.strides().to_vec()
+    }
+
     fn get<T: Clone>(tensor: &Self::Tensor<T>, index: &[usize]) -> Option<T> {
         tensor.get(index).cloned()
     }
@@ -154,8 +158,8 @@ impl TensorBackend for CpuBackend {
         tensor.clone().ravel()
     }
 
-    fn arg_sort<T: TensorData>(tensor: &Self::Tensor<T>) -> Vec<usize> {
-        tensor.arg_sort().expect("CpuBackend::arg_sort failed")
+    fn arg_sort<T: TensorData>(tensor: &Self::Tensor<T>) -> Result<Vec<usize>, CausalTensorError> {
+        tensor.arg_sort()
     }
 
     fn shifted_view<T: Clone>(tensor: &Self::Tensor<T>, flat_index: usize) -> Self::Tensor<T> {

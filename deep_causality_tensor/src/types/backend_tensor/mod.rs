@@ -25,7 +25,7 @@ mod constructors;
 mod getters;
 mod ops;
 
-use crate::backend::TensorBackend;
+use crate::backend::{TensorBackend, TensorData};
 use core::fmt::Debug;
 use core::marker::PhantomData;
 
@@ -92,10 +92,27 @@ impl<T> core::ops::DerefMut for BackendTensor<T, crate::backend::CpuBackend> {
     }
 }
 
-// Display for CPU backend - delegates to InternalCpuTensor's Display impl
-impl<T: core::fmt::Display> core::fmt::Display for BackendTensor<T, crate::backend::CpuBackend> {
+// Display for BackendTensor - uniform implementation
+impl<T: core::fmt::Display + Clone, B: TensorBackend> core::fmt::Display for BackendTensor<T, B> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        core::fmt::Display::fmt(&self.inner, f)
+        write!(f, "CausalTensor {{ data: [")?;
+        let max_items = 10;
+        let data = B::to_vec(&self.inner);
+        for (i, item) in data.iter().take(max_items).enumerate() {
+            if i > 0 {
+                write!(f, ", ")?;
+            }
+            write!(f, "{}", item)?;
+        }
+        if data.len() > max_items {
+            write!(f, ", ...")?;
+        }
+        write!(
+            f,
+            "], shape: {:?}, strides: {:?} }}",
+            B::shape(&self.inner),
+            B::strides(&self.inner)
+        )
     }
 }
 
@@ -110,5 +127,25 @@ impl<T: Default + Clone> Default for BackendTensor<T, crate::backend::CpuBackend
 impl<T> From<crate::InternalCpuTensor<T>> for BackendTensor<T, crate::backend::CpuBackend> {
     fn from(inner: crate::InternalCpuTensor<T>) -> Self {
         Self::from_inner(inner)
+    }
+}
+
+// From scalar T to 0-D Tensor
+impl<T> From<T> for BackendTensor<T, crate::backend::CpuBackend>
+where
+    T: TensorData,
+{
+    fn from(scalar: T) -> Self {
+        Self::from_inner(crate::InternalCpuTensor::new(vec![scalar], vec![]).unwrap())
+    }
+}
+
+// From &T to 0-D Tensor
+impl<T> From<&T> for BackendTensor<T, crate::backend::CpuBackend>
+where
+    T: TensorData + Clone,
+{
+    fn from(scalar: &T) -> Self {
+        Self::from_inner(crate::InternalCpuTensor::new(vec![*scalar], vec![]).unwrap())
     }
 }

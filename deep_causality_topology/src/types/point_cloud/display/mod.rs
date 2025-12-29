@@ -10,7 +10,7 @@ use core::fmt::{Display, Formatter};
 
 impl<T> Display for PointCloud<T>
 where
-    T: Display,
+    T: Display + Clone,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         writeln!(f, "PointCloud:")?;

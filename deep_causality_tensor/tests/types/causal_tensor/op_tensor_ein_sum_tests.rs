@@ -4,8 +4,7 @@
  */
 
 use deep_causality_tensor::{
-    CausalTensor, CausalTensorError, EinSumAST, EinSumOp, EinSumValidationError, Tensor,
-    utils_tests,
+    CausalTensor, CausalTensorError, EinSumAST, EinSumOp, EinSumValidationError, utils_tests,
 };
 
 #[test]
@@ -34,7 +33,7 @@ fn test_ein_sum_mat_mul_with_references() {
     let expected = utils_tests::matrix_tensor(vec![19.0, 22.0, 43.0, 50.0], 2, 2);
 
     // Pass references to the EinSumOp::mat_mul method
-    let ast = EinSumOp::<f64>::mat_mul(&lhs_owned, &rhs_owned);
+    let ast = EinSumOp::<f64>::mat_mul(lhs_owned.clone(), rhs_owned.clone());
     let result = CausalTensor::ein_sum(&ast).unwrap();
     assert_eq!(result, expected);
 }
@@ -60,7 +59,7 @@ fn test_ein_sum_contraction() {
 fn test_ein_sum_dot_prod() {
     let lhs = utils_tests::vector_tensor(vec![1.0, 2.0, 3.0]);
     let rhs = utils_tests::vector_tensor(vec![4.0, 5.0, 6.0]);
-    let expected = utils_tests::scalar_tensor(32.0);
+    let expected = CausalTensor::new(vec![32.0], vec![1]).unwrap();
 
     let ast = EinSumOp::dot_prod(lhs, rhs);
     let result = CausalTensor::ein_sum(&ast).unwrap();

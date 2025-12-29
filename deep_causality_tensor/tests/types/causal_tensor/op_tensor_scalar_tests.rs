@@ -8,14 +8,14 @@ use deep_causality_tensor::CausalTensor;
 fn test_add_scalar() {
     // Test &Tensor + scalar
     let tensor1 = CausalTensor::new(vec![1, 2, 3], vec![3]).unwrap();
-    let result1 = &tensor1 + 5;
+    let result1: CausalTensor<i32> = &tensor1 + 5;
     assert_eq!(result1.as_slice(), &[6, 7, 8]);
     // Ensure original tensor is unchanged
     assert_eq!(tensor1.as_slice(), &[1, 2, 3]);
 
     // Test Tensor + scalar (consuming)
     let tensor2 = CausalTensor::new(vec![1, 2, 3], vec![3]).unwrap();
-    let result2 = tensor2 + 5;
+    let result2: CausalTensor<i32> = tensor2 + 5;
     assert_eq!(result2.as_slice(), &[6, 7, 8]);
 
     // Test Tensor += scalar (in-place)
@@ -28,14 +28,14 @@ fn test_add_scalar() {
 fn test_sub_scalar() {
     // Test &Tensor - scalar
     let tensor1 = CausalTensor::new(vec![10, 20, 30], vec![3]).unwrap();
-    let result1 = &tensor1 - 5;
+    let result1: CausalTensor<i32> = &tensor1 - 5;
     assert_eq!(result1.as_slice(), &[5, 15, 25]);
     // Ensure original tensor is unchanged
     assert_eq!(tensor1.as_slice(), &[10, 20, 30]);
 
     // Test Tensor - scalar (consuming)
     let tensor2 = CausalTensor::new(vec![10, 20, 30], vec![3]).unwrap();
-    let result2 = tensor2 - 5;
+    let result2: CausalTensor<i32> = tensor2 - 5;
     assert_eq!(result2.as_slice(), &[5, 15, 25]);
 
     // Test Tensor -= scalar (in-place)
@@ -48,14 +48,14 @@ fn test_sub_scalar() {
 fn test_mul_scalar() {
     // Test &Tensor * scalar
     let tensor1 = CausalTensor::new(vec![1, 2, 3], vec![3]).unwrap();
-    let result1 = &tensor1 * 3;
+    let result1: CausalTensor<i32> = &tensor1 * 3;
     assert_eq!(result1.as_slice(), &[3, 6, 9]);
     // Ensure original tensor is unchanged
     assert_eq!(tensor1.as_slice(), &[1, 2, 3]);
 
     // Test Tensor * scalar (consuming)
     let tensor2 = CausalTensor::new(vec![1, 2, 3], vec![3]).unwrap();
-    let result2 = tensor2 * 3;
+    let result2: CausalTensor<i32> = tensor2 * 3;
     assert_eq!(result2.as_slice(), &[3, 6, 9]);
 
     // Test Tensor *= scalar (in-place)
@@ -68,14 +68,14 @@ fn test_mul_scalar() {
 fn test_div_scalar() {
     // Test &Tensor / scalar
     let tensor1 = CausalTensor::new(vec![10, 20, 30], vec![3]).unwrap();
-    let result1 = &tensor1 / 2;
+    let result1: CausalTensor<i32> = &tensor1 / 2;
     assert_eq!(result1.as_slice(), &[5, 10, 15]);
     // Ensure original tensor is unchanged
     assert_eq!(tensor1.as_slice(), &[10, 20, 30]);
 
     // Test Tensor / scalar (consuming)
     let tensor2 = CausalTensor::new(vec![10, 20, 30], vec![3]).unwrap();
-    let result2 = tensor2 / 2;
+    let result2: CausalTensor<i32> = tensor2 / 2;
     assert_eq!(result2.as_slice(), &[5, 10, 15]);
 
     // Test Tensor /= scalar (in-place)

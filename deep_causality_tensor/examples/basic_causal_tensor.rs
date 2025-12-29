@@ -72,7 +72,7 @@ pub fn main() {
     println!("   Original 1D Tensor: {}", tensor_1d);
     let sorted_indices = tensor_1d.arg_sort();
     println!("   Sorted indices: {:?}", sorted_indices);
-    assert_eq!(sorted_indices, vec![1, 3, 0, 2, 4, 5]);
+    assert_eq!(sorted_indices.unwrap(), vec![1, 3, 0, 2, 4, 5]);
 
     // 7. Tensor-Tensor Arithmetic
     // Tensors can be added, subtracted, etc., with other tensors.

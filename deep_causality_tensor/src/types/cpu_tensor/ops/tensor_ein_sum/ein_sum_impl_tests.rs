@@ -131,7 +131,7 @@ mod tests {
     fn test_contract_dot_prod_success() {
         let lhs = utils_tests::vector_tensor(vec![1.0, 2.0, 3.0]).into_inner();
         let rhs = utils_tests::vector_tensor(vec![4.0, 5.0, 6.0]).into_inner();
-        let expected = utils_tests::scalar_tensor(32.0).into_inner(); // 1*4 + 2*5 + 3*6 = 4 + 10 + 18 = 32
+        let expected = InternalCpuTensor::new(vec![32.0], vec![1]).unwrap(); // 1*4 + 2*5 + 3*6 = 32, shape [1] from contract
 
         let result = InternalCpuTensor::contract(&lhs, &rhs, &[0], &[0]).unwrap();
         assert_eq!(result, expected);

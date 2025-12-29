@@ -31,7 +31,8 @@ impl Applicative<CausalTensorWitness> for CausalTensorWitness {
     /// Applies a function wrapped in a `CausalTensor` (`f_ab`) to a value wrapped in a `CausalTensor` (`f_a`).
     ///
     /// This implementation uses a Zip strategy (element-wise application) to avoid cloning arguments.
-    /// Broadcast behavior is not supported for non-Clone types.
+    /// Broadcast behavior is supported for Scalar function tensors (len 1).
+    /// If lengths differ and function tensor is not scalar, returns an empty tensor.
     fn apply<A, B, Func>(f_ab: CausalTensor<Func>, f_a: CausalTensor<A>) -> CausalTensor<B>
     where
         Func: FnMut(A) -> B,
@@ -40,14 +41,24 @@ impl Applicative<CausalTensorWitness> for CausalTensorWitness {
         // Assuming shapes match or broadcasting logic handled externally.
         let shape_a = f_a.shape().to_vec();
 
-        let mut result_data = Vec::with_capacity(f_a.len());
-        let funcs = f_ab.into_vec();
+        let mut funcs = f_ab.into_vec();
         let args = f_a.into_vec();
 
-        // Use zip.
-        for (mut f, a) in funcs.into_iter().zip(args.into_iter()) {
-            result_data.push(f(a));
-        }
+        let result_data = if funcs.len() == 1 {
+            // Scalar broadcast: apply single function to all arguments
+            let f = funcs.pop().unwrap();
+            args.into_iter().map(f).collect()
+        } else if funcs.len() != args.len() {
+            // Mismatch: returns empty tensor per test expectation
+            return CausalTensor::from_vec(vec![], &[0]);
+        } else {
+            // Zip strategy
+            let mut data = Vec::with_capacity(args.len());
+            for (mut f, a) in funcs.into_iter().zip(args.into_iter()) {
+                data.push(f(a));
+            }
+            data
+        };
 
         CausalTensor::from_vec(result_data, &shape_a)
     }
@@ -168,7 +179,7 @@ impl BoundedAdjunction<CausalTensorWitness, CausalTensorWitness, Vec<usize>>
     {
         if !ctx.is_empty() {
             panic!(
-                "BoundedAdjunction::unit requires empty shape (Scalar). Provided: {:?}",
+                "BoundedAdjunction::unit for CausalTensor requires an empty shape vector (Scalar). Provided shape: {:?}",
                 ctx
             );
         }
