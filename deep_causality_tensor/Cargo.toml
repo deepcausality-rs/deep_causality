@@ -28,8 +28,9 @@ exclude = [
 default = []
 # MLX acceleration for Apple Silicon (M Series).
 # Enables GPU-accelerated tensor operations via mlx-rs.
-# Note: Only builds on macOS aarch64. f64 tensors are downcast to f32 for GPU execution.
+# Note: Only builds on macOS aarch64. f64 tensors are downcast to f32 for MLX based GPU execution.
 mlx = ["dep:mlx-rs"]
+cuda =[] # future feature; will be added later.
 
 # MLX dependency - only available on macOS aarch64
 [target.'cfg(all(target_os = "macos", target_arch = "aarch64"))'.dependencies]

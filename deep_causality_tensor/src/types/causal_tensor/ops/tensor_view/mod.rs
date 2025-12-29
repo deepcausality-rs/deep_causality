@@ -3,6 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{CausalTensor, CausalTensorError};
+use core::ops::Range;
 
 impl<T> CausalTensor<T>
 where
@@ -78,4 +79,91 @@ where
             strides: self.strides.clone(),
         }
     }
+
+    /// Extracts a sub-tensor using range-based indexing for each dimension.
+    ///
+    /// This is a data-copying operation that creates a new tensor containing
+    /// elements from the specified ranges along each dimension.
+    ///
+    /// # Arguments
+    ///
+    /// * `ranges` - A slice of `Range<usize>`, one per dimension. Each range
+    ///              specifies `start..end` indices for that dimension.
+    ///
+    /// # Returns
+    ///
+    /// A new `CausalTensor` with shape determined by the range sizes.
+    ///
+    /// # Errors
+    ///
+    /// - `DimensionMismatch` if `ranges.len() != self.num_dim()`
+    /// - `IndexOutOfBounds` if any range exceeds the dimension bounds
+    pub fn range_slice_impl(
+        &self,
+        ranges: &[Range<usize>],
+    ) -> Result<CausalTensor<T>, CausalTensorError> {
+        let shape = self.shape();
+        let ndim = self.num_dim();
+
+        // --- 1. Input Validation ---
+        if ranges.len() != ndim {
+            return Err(CausalTensorError::DimensionMismatch);
+        }
+
+        for (dim, range) in ranges.iter().enumerate() {
+            if range.start > range.end {
+                return Err(CausalTensorError::IndexOutOfBounds);
+            }
+            if range.end > shape[dim] {
+                return Err(CausalTensorError::IndexOutOfBounds);
+            }
+        }
+
+        // --- 2. Calculate the new shape ---
+        let new_shape: Vec<usize> = ranges.iter().map(|r| r.end - r.start).collect();
+        let new_len: usize = new_shape.iter().product();
+
+        if new_len == 0 {
+            // Handle empty slice case
+            return CausalTensor::new(vec![], new_shape);
+        }
+
+        // --- 3. Pre-allocate output buffer ---
+        let mut new_data = Vec::with_capacity(new_len);
+
+        // --- 4. Iterate through all positions in the output tensor ---
+        // We iterate in row-major order through the output shape,
+        // mapping each output index back to the source tensor.
+        let mut output_indices = vec![0usize; ndim];
+
+        for _ in 0..new_len {
+            // Map output indices to source indices by adding range starts
+            let source_indices: Vec<usize> = output_indices
+                .iter()
+                .zip(ranges.iter())
+                .map(|(&out_idx, range)| range.start + out_idx)
+                .collect();
+
+            // Get value from source using existing infrastructure
+            if let Some(val) = self.get(&source_indices) {
+                new_data.push(val.clone());
+            } else {
+                // This should not happen if validation is correct
+                return Err(CausalTensorError::IndexOutOfBounds);
+            }
+
+            // Increment output indices in row-major order
+            for dim in (0..ndim).rev() {
+                output_indices[dim] += 1;
+                if output_indices[dim] < new_shape[dim] {
+                    break;
+                }
+                output_indices[dim] = 0;
+            }
+        }
+
+        // --- 5. Construct and return the new tensor ---
+        CausalTensor::new(new_data, new_shape)
+    }
 }
+

@@ -434,6 +434,64 @@ pub trait Tensor<T> {
         T: Clone + RealField + Zero + One + Sum + PartialEq,
         Self: Sized;
 
+    /// Computes the QR decomposition of a matrix using Householder reflections.
+    ///
+    /// For a matrix A of shape (m, n), returns (Q, R) where:
+    /// - Q has shape (m, m) and is orthogonal (Q^T * Q = I)
+    /// - R has shape (m, n) and is upper triangular
+    /// - A = Q * R
+    ///
+    /// # Usage
+    ///
+    /// QR decomposition is used for:
+    /// - Solving linear least squares problems
+    /// - Computing eigenvalues (QR algorithm)
+    /// - Orthogonalization of vectors
+    ///
+    /// # Constraints
+    ///
+    /// - The tensor must be 2-dimensional
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// - `Ok((Q, R))`: The orthogonal matrix Q and upper triangular matrix R
+    /// - `Err(CausalTensorError)`: If the tensor is not 2-dimensional
+    fn qr(&self) -> Result<(Self, Self), CausalTensorError>
+    where
+        T: Clone + Default + RealField + Zero + One + Sum + PartialEq,
+        Self: Sized;
+
+    /// Computes the Singular Value Decomposition (SVD) of a matrix.
+    ///
+    /// For a matrix A of shape (m, n), returns (U, S, Vt) where:
+    /// - U has shape (m, k) — left singular vectors (k = min(m,n))
+    /// - S has shape (k,) — singular values as a 1D vector
+    /// - Vt has shape (k, n) — right singular vectors transposed
+    /// - A ≈ U * diag(S) * Vt
+    ///
+    /// # Usage
+    ///
+    /// SVD is fundamental for:
+    /// - Matrix rank determination
+    /// - Low-rank approximation and data compression
+    /// - Principal Component Analysis (PCA)
+    /// - Solving ill-conditioned systems
+    ///
+    /// # Constraints
+    ///
+    /// - The tensor must be 2-dimensional
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// - `Ok((U, S, Vt))`: Left vectors, singular values, right vectors transposed
+    /// - `Err(CausalTensorError)`: If the tensor is not 2-dimensional
+    fn svd(&self) -> Result<(Self, Self, Self), CausalTensorError>
+    where
+        T: Clone + Default + RealField + Zero + One + Sum + PartialEq,
+        Self: Sized;
+
     /// Computes the Cholesky decomposition of a symmetric, positive-definite matrix.
     ///
     /// For a symmetric, positive-definite matrix $A$, its Cholesky decomposition is

@@ -470,6 +470,20 @@ impl<T> Tensor<T> for CausalTensor<T> {
         self.inverse_impl()
     }
 
+    fn qr(&self) -> Result<(Self, Self), CausalTensorError>
+    where
+        T: Clone + Default + RealField + Zero + One + Sum + PartialEq,
+    {
+        self.qr_impl()
+    }
+
+    fn svd(&self) -> Result<(Self, Self, Self), CausalTensorError>
+    where
+        T: Clone + Default + RealField + Zero + One + Sum + PartialEq,
+    {
+        self.svd_impl()
+    }
+
     /// Computes the Cholesky decomposition of a symmetric, positive-definite matrix.
     ///
     /// For a symmetric, positive-definite matrix $A$, its Cholesky decomposition is

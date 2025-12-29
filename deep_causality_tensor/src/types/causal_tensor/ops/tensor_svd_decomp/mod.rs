@@ -1,0 +1,189 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+//! Singular Value Decomposition (SVD) using power iteration.
+//!
+//! The SVD decomposes a matrix A into A = U * Σ * V^T where:
+//! - U contains left singular vectors (m x m orthogonal)
+//! - Σ contains singular values on the diagonal (m x n)
+//! - V^T contains right singular vectors (n x n orthogonal)
+
+use crate::{CausalTensor, CausalTensorError};
+use core::iter::Sum;
+use deep_causality_num::{One, RealField, Zero};
+
+impl<T: Default> CausalTensor<T> {
+    /// Computes the Singular Value Decomposition using power iteration.
+    ///
+    /// For a matrix A of shape (m, n), returns (U, S, Vt) where:
+    /// - U has shape (m, min(m,n)) — left singular vectors
+    /// - S has shape (min(m,n),) — singular values (as 1D vector)
+    /// - Vt has shape (min(m,n), n) — right singular vectors transposed
+    ///
+    /// # Algorithm
+    ///
+    /// Uses deflation with power iteration to find singular values and vectors
+    /// one at a time, from largest to smallest.
+    ///
+    /// # Note
+    ///
+    /// This is a basic implementation suitable for small matrices.
+    /// For large matrices, more sophisticated algorithms (Golub-Kahan, divide-and-conquer)
+    /// would be preferred.
+    ///
+    /// # Errors
+    ///
+    /// - `DimensionMismatch` if the tensor is not 2-dimensional
+    pub(in crate::types::causal_tensor) fn svd_impl(
+        &self,
+    ) -> Result<(Self, Self, Self), CausalTensorError>
+    where
+        T: Clone + RealField + Zero + One + Sum + PartialEq,
+    {
+        if self.num_dim() != 2 {
+            return Err(CausalTensorError::DimensionMismatch);
+        }
+
+        let m = self.shape()[0]; // rows
+        let n = self.shape()[1]; // cols
+        let k = m.min(n); // number of singular values
+
+        // Copy A for deflation
+        let mut a_data: Vec<T> = self.as_slice().to_vec();
+
+        // Output arrays
+        let mut u_data: Vec<T> = vec![T::zero(); m * k];
+        let mut s_data: Vec<T> = vec![T::zero(); k];
+        let mut vt_data: Vec<T> = vec![T::zero(); k * n];
+
+        let max_iterations = 100;
+        // Tolerance: use a small fraction (1/1000000 ≈ 1e-6)
+        let mut tolerance = T::one();
+        for _ in 0..6 {
+            tolerance = tolerance / (T::one() + T::one() + T::one() + T::one() + T::one() 
+                + T::one() + T::one() + T::one() + T::one() + T::one()); // divide by 10
+        }
+
+        // Helper functions for row-major access
+        let get_a = |data: &[T], row: usize, col: usize| data[row * n + col].clone();
+        let set_a = |data: &mut [T], row: usize, col: usize, val: T| {
+            data[row * n + col] = val;
+        };
+
+        // Find each singular triplet via power iteration
+        for i in 0..k {
+            // Initialize v vector with values based on index (deterministic pattern)
+            let mut v: Vec<T> = (0..n)
+                .map(|j| {
+                    let mut val = T::one();
+                    // Scale by (j+1)/(n+1) approximately
+                    for _ in 0..(j + i + 1) {
+                        val = val + T::one() / (T::one() + T::one());
+                    }
+                    val / (T::one() + T::one() + T::one()) // normalize roughly
+                })
+                .collect();
+
+            // Normalize v
+            let v_norm: T = v.iter().map(|&x| x * x).sum::<T>().sqrt();
+            if v_norm > T::zero() {
+                for x in &mut v {
+                    *x = *x / v_norm;
+                }
+            }
+
+            let mut sigma = T::zero();
+
+            // Power iteration
+            for _iter in 0..max_iterations {
+                // u = A * v
+                let mut u: Vec<T> = vec![T::zero(); m];
+                for row in 0..m {
+                    for col in 0..n {
+                        u[row] = u[row] + get_a(&a_data, row, col) * v[col];
+                    }
+                }
+
+                // sigma = ||u||
+                let new_sigma: T = u.iter().map(|&x| x * x).sum::<T>().sqrt();
+
+                if new_sigma == T::zero() {
+                    break;
+                }
+
+                // Normalize u
+                for x in &mut u {
+                    *x = *x / new_sigma;
+                }
+
+                // v = A^T * u
+                let mut new_v: Vec<T> = vec![T::zero(); n];
+                for col in 0..n {
+                    for row in 0..m {
+                        new_v[col] = new_v[col] + get_a(&a_data, row, col) * u[row];
+                    }
+                }
+
+                // Normalize v
+                let v_norm: T = new_v.iter().map(|&x| x * x).sum::<T>().sqrt();
+                if v_norm > T::zero() {
+                    for x in &mut new_v {
+                        *x = *x / v_norm;
+                    }
+                }
+
+                // Check convergence
+                let diff: T = (new_sigma - sigma).abs();
+                sigma = new_sigma;
+                v = new_v;
+
+                if diff < tolerance * sigma {
+                    break;
+                }
+            }
+
+            // Store results
+            s_data[i] = sigma;
+
+            // Store u column
+            // Recompute u from final v
+            let mut u: Vec<T> = vec![T::zero(); m];
+            for row in 0..m {
+                for col in 0..n {
+                    u[row] = u[row] + get_a(&a_data, row, col) * v[col];
+                }
+            }
+            let u_norm: T = u.iter().map(|&x| x * x).sum::<T>().sqrt();
+            if u_norm > T::zero() {
+                for x in &mut u {
+                    *x = *x / u_norm;
+                }
+            }
+
+            for row in 0..m {
+                u_data[row * k + i] = u[row];
+            }
+
+            // Store v^T row
+            for col in 0..n {
+                vt_data[i * n + col] = v[col];
+            }
+
+            // Deflate: A = A - sigma * u * v^T
+            for row in 0..m {
+                for col in 0..n {
+                    let old = get_a(&a_data, row, col);
+                    set_a(&mut a_data, row, col, old - sigma * u[row] * v[col]);
+                }
+            }
+        }
+
+        let u = CausalTensor::new(u_data, vec![m, k])?;
+        let s = CausalTensor::new(s_data, vec![k])?;
+        let vt = CausalTensor::new(vt_data, vec![k, n])?;
+
+        Ok((u, s, vt))
+    }
+}
