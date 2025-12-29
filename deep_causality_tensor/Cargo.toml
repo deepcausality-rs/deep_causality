@@ -82,11 +82,6 @@ path = "examples/einstein_field_causal_tensor.rs"
 name = "functor_causal_tensor"
 path = "examples/functor_causal_tensor.rs"
 
-[[example]]
-name = "mlx_tensor"
-path = "examples/mlx_tensor.rs"
-required-features = ["mlx"]
-
 [[bench]]
 name = "bench_causal_tensor"
 harness = false

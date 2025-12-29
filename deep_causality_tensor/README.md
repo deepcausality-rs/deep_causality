@@ -386,6 +386,54 @@ let tensor = MlxCausalTensor::from_slice( & data, & shape);
 
 > **Note:** GPU acceleration scales dramatically with matrix size due to O(N³) complexity.
 
+### Einstein Summation (EinSum) Benchmarks
+
+Native GPU execution of tensor operations via the EinSum API. All operations run entirely on GPU—no CPU roundtrips.
+
+**Matrix Operations (2D Tensors):**
+
+| Operation   | Size      | CPU Time   | GPU Time   | Speedup      |
+|-------------|-----------|------------|------------|--------------|
+| MatMul      | 128×128   | 1.49 ms    | 0.17 ms    | **8.5x**     |
+| MatMul      | 512×512   | 139.6 ms   | 0.22 ms    | **635x**     |
+| MatMul      | 1024×1024 | 1,087 ms   | 0.42 ms    | **2,588x**   |
+| Transpose   | 128×128   | 10.9 µs    | 5.6 µs     | **1.9x**     |
+| Transpose   | 512×512   | 129.4 µs   | 41.4 µs    | **3.1x**     |
+| Transpose   | 1024×1024 | 555.4 µs   | 210.9 µs   | **2.6x**     |
+| Hadamard    | 128×128   | 77.3 µs    | 156.4 µs   | 0.5x         |
+| Hadamard    | 512×512   | 1.14 ms    | 161.5 µs   | **7.1x**     |
+| Hadamard    | 1024×1024 | 4.70 ms    | 185.3 µs   | **25.4x**    |
+| Trace       | 128×128   | 7.4 µs     | 177.6 µs   | 0.04x        |
+| Trace       | 512×512   | 85.9 µs    | 175.3 µs   | 0.5x         |
+| Trace       | 1024×1024 | 400.9 µs   | 179.9 µs   | **2.2x**     |
+| Diagonal    | 128×128   | 9.2 µs     | 169.6 µs   | 0.05x        |
+| Diagonal    | 512×512   | 89.1 µs    | 166.4 µs   | 0.5x         |
+| Diagonal    | 1024×1024 | 416.5 µs   | 166.1 µs   | **2.5x**     |
+| Reduction   | 128×128   | 77.5 µs    | 164.2 µs   | 0.5x         |
+| Reduction   | 512×512   | 1.18 ms    | 164.6 µs   | **7.2x**     |
+| Reduction   | 1024×1024 | 4.68 ms    | 179.9 µs   | **26.0x**    |
+
+**Vector Operations (1D Tensors):**
+
+| Operation | Size | CPU Time | GPU Time | Speedup      |
+|-----------|------|----------|----------|--------------|
+| DotProd   | 128  | 3.5 µs   | 157.9 µs | 0.02x        |
+| DotProd   | 512  | 12.9 µs  | 161.2 µs | 0.08x        |
+| DotProd   | 1024 | 24.9 µs  | 177.4 µs | 0.14x        |
+
+**Batch Matrix Multiply (3D Tensors):**
+
+| Batch × Size | CPU Time  | GPU Time  | Speedup     |
+|--------------|-----------|-----------|-------------|
+| 8 × 32×32    | 467.1 µs  | 169.5 µs  | **2.8x**    |
+| 8 × 64×64    | 2.89 ms   | 165.3 µs  | **17.5x**   |
+| 8 × 128×128  | 18.14 ms  | 181.3 µs  | **100x**    |
+
+> **Key Insights:**
+> - **O(N³) operations** (MatMul, BatchMatMul): MLX dominates, up to 2,600x faster for 1024×1024.
+> - **O(N²) operations** (Hadamard, Reduction): MLX wins at larger sizes (≥512), ~25x faster at 1024.
+> - **O(N) operations** (Trace, Diagonal, DotProd): CPU wins for small tensors due to GPU overhead (~160 µs baseline).
+> - **Crossover point**: For most operations, GPU becomes faster around 512×512.
 
 Run the benchmark: `cargo bench -p deep_causality_tensor --features mlx`
 
