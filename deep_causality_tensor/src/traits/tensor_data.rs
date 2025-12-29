@@ -19,13 +19,7 @@ use deep_causality_num::Field;
 /// # Blanket Implementation
 ///
 /// Any type satisfying the bounds automatically implements `TensorData`.
-pub trait TensorData:
-    Field + Copy + Default + PartialOrd + Send + Sync + From<u32> + 'static
-{
-}
+pub trait TensorData: Field + Copy + Default + PartialOrd + Send + Sync + 'static {}
 
 // Blanket implementation for all qualifying types
-impl<T> TensorData for T where
-    T: Field + Copy + Default + PartialOrd + Send + Sync + From<u32> + 'static
-{
-}
+impl<T> TensorData for T where T: Field + Copy + Default + PartialOrd + Send + Sync + 'static {}

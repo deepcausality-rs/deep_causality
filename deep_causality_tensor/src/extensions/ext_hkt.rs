@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::CausalTensor;
+use crate::{CausalTensor, Tensor};
 use deep_causality_haft::{Applicative, BoundedComonad, Foldable, Functor, HKT, Monad};
 use deep_causality_num::Zero;
 
@@ -38,7 +38,7 @@ impl Applicative<CausalTensorWitness> for CausalTensorWitness {
     {
         // Zip strategy: match elements. Broadcast is not supported without Clone.
         // Assuming shapes match or broadcasting logic handled externally.
-        let shape_a = f_a.shape();
+        let shape_a = f_a.shape().to_vec();
 
         let mut result_data = Vec::with_capacity(f_a.len());
         let funcs = f_ab.into_vec();
@@ -71,7 +71,7 @@ impl Functor<CausalTensorWitness> for CausalTensorWitness {
     where
         Func: FnMut(A) -> B,
     {
-        let shape = m_a.shape(); // Extract shape before moving data
+        let shape = m_a.shape().to_vec(); // Clone shape before moving data
         let new_data = m_a.into_vec().into_iter().map(f).collect();
         CausalTensor::from_vec(new_data, &shape)
     }
@@ -104,17 +104,6 @@ impl BoundedComonad<CausalTensorWitness> for CausalTensorWitness {
         A: Clone,
     {
         if fa.ndim() == 0 && !fa.is_empty() {
-            // Access via get? OR just clone first element if we can access data.
-            // BackendTensor exposes `to_vec` (clones).
-            // But we want single element.
-            // We can use `to_vec` and take first.
-            // Or `get`. (CausalTensor impls get?)
-            // BackendTensor impls get.
-
-            // Since we have &CausalTensor, and A: Clone.
-            // We can use helper or internal access if pub.
-            // `CausalTensor` is `BackendTensor`.
-            // `BackendTensor::to_vec` works.
             let v = fa.to_vec();
             v.into_iter().next().unwrap()
         } else if fa.is_empty() {
@@ -139,7 +128,7 @@ impl BoundedComonad<CausalTensorWitness> for CausalTensorWitness {
             })
             .collect();
 
-        CausalTensor::new(&new_data, &fa.shape())
+        CausalTensor::from_slice(&new_data, fa.shape())
     }
 }
 
@@ -183,11 +172,6 @@ impl BoundedAdjunction<CausalTensorWitness, CausalTensorWitness, Vec<usize>>
                 ctx
             );
         }
-        // Need to create INNER tensor (Scalar(a))
-        // And OUTER tensor (Scalar(Inner)).
-        // Since A: Clone, we can use new or from_vec.
-        // Use from_vec for consistency where possible.
-        // But internal tensor must be created first.
         let inner = CausalTensor::from_vec(vec![a], ctx);
         CausalTensor::from_vec(vec![inner], &[])
     }

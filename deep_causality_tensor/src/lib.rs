@@ -25,9 +25,9 @@ pub use crate::extensions::ext_math::CausalTensorMathExt;
 pub use crate::extensions::ext_stack::CausalTensorStackExt;
 pub use crate::traits::tensor::Tensor;
 pub use crate::types::backend_tensor::BackendTensor;
-pub use crate::types::causal_tensor::CpuTensor;
+pub use crate::types::cpu_tensor::InternalCpuTensor;
 // Internal imports for aliasing
-use crate::types::causal_tensor::{EinSumAST as InternalEinSumAST, EinSumOp as InternalEinSumOp};
+use crate::types::cpu_tensor::{EinSumAST as InternalEinSumAST, EinSumOp as InternalEinSumOp};
 
 // --- Type Aliases ---
 

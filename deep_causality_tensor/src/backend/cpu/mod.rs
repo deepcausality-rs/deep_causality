@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! CPU Backend implementation using existing `CpuTensor<T>`.
+//! CPU Backend implementation using existing `InternalCpuTensor<T>`.
 //!
 //! This backend wraps the pure Rust tensor implementation with no external
 //! dependencies. It provides the reference implementation for correctness
@@ -11,6 +11,7 @@
 
 mod cpu_backend_linear_algebra;
 mod cpu_backend_tensor;
+mod tensor_impl;
 
 use crate::backend::Device;
 

@@ -3,4 +3,4 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 pub mod backend_tensor;
-pub mod causal_tensor;
+pub mod cpu_tensor;

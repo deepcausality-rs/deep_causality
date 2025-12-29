@@ -4,7 +4,7 @@
  */
 
 use crate::error::PhysicsError;
-use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
+use deep_causality_tensor::{CausalTensor, EinSumOp};
 
 // Kernels
 

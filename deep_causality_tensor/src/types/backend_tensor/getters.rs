@@ -4,6 +4,10 @@
  */
 
 //! Getter methods for BackendTensor.
+//!
+//! For CPU backend, most getters are accessed via Deref to InternalCpuTensor.
+//! This file defines only methods that aren't available on InternalCpuTensor
+//! or need backend-specific implementations.
 
 use super::BackendTensor;
 use crate::traits::TensorBackend;
@@ -13,43 +17,11 @@ impl<T, B: TensorBackend> BackendTensor<T, B> {
     pub fn into_vec(self) -> Vec<T> {
         B::into_vec(self.into_inner())
     }
-
-    /// Returns the shape of the tensor.
-    pub fn shape(&self) -> Vec<usize> {
-        B::shape(&self.inner)
-    }
-
-    /// Returns the number of dimensions.
-    pub fn ndim(&self) -> usize {
-        B::shape(&self.inner).len()
-    }
-
-    /// Returns the total number of elements.
-    pub fn len(&self) -> usize {
-        B::shape(&self.inner).iter().product()
-    }
-
-    /// Returns true if the tensor has no elements.
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
 }
 
 impl<T: Clone, B: TensorBackend> BackendTensor<T, B> {
     /// Downloads tensor data to a host vector.
     pub fn to_vec(&self) -> Vec<T> {
-        B::to_vec(&self.inner)
-    }
-
-    /// Returns the element at the specified index.
-    pub fn get(&self, index: &[usize]) -> Option<T> {
-        B::get(&self.inner, index)
-    }
-
-    /// Returns a slice of the data (for CPU-backed tensors).
-    ///
-    /// Note: This creates a new Vec for non-CPU backends.
-    pub fn as_slice(&self) -> Vec<T> {
         B::to_vec(&self.inner)
     }
 }

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::CausalTensorError;
-use deep_causality_num::{One, RealField, Ring, Zero};
+use deep_causality_num::{RealField, Zero};
 use std::iter::Sum;
 use std::ops::{Add, Div, Mul};
 
@@ -30,15 +30,13 @@ where
     /// # Errors
     ///
     /// Returns errors propagated from `execute_ein_sum`.
-    fn ein_sum(
-        ast: &crate::types::causal_tensor::EinSumAST<Self>,
-    ) -> Result<Self, CausalTensorError>
+    fn ein_sum(ast: &crate::types::cpu_tensor::EinSumAST<Self>) -> Result<Self, CausalTensorError>
     where
-        T: Clone + Default + PartialOrd + Add<Output = T> + Mul<Output = T>;
+        T: crate::backend::TensorData;
 
     fn matmul(&self, rhs: &Self) -> Result<Self, CausalTensorError>
     where
-        T: Ring + Copy + Default + PartialOrd,
+        T: crate::backend::TensorData,
         Self: Sized;
 
     /// Computes the tensor product (also known as the outer product) of two `CausalTensor`s.
@@ -436,7 +434,7 @@ where
     /// - `CausalTensorError::DivisionByZero`: If a pivot element is zero during elimination.
     fn inverse(&self) -> Result<Self, CausalTensorError>
     where
-        T: Clone + RealField + Zero + One + Sum + PartialEq,
+        T: crate::backend::TensorData + RealField,
         Self: Sized;
 
     /// Computes the QR decomposition of a matrix using Householder reflections.
@@ -464,7 +462,7 @@ where
     /// - `Err(CausalTensorError)`: If the tensor is not 2-dimensional
     fn qr(&self) -> Result<(Self, Self), CausalTensorError>
     where
-        T: Clone + Default + RealField + Zero + One + Sum + PartialEq,
+        T: crate::backend::TensorData + core::iter::Sum + RealField + core::ops::Neg<Output = T>,
         Self: Sized;
 
     /// Computes the Singular Value Decomposition (SVD) of a matrix.
@@ -494,7 +492,7 @@ where
     /// - `Err(CausalTensorError)`: If the tensor is not 2-dimensional
     fn svd(&self) -> Result<(Self, Self, Self), CausalTensorError>
     where
-        T: Clone + Default + RealField + Zero + One + Sum + PartialEq,
+        T: crate::backend::TensorData + core::iter::Sum + RealField,
         Self: Sized;
 
     /// Computes the Cholesky decomposition of a symmetric, positive-definite matrix.
@@ -538,7 +536,7 @@ where
     ///   element becomes zero or negative during computation).
     fn cholesky_decomposition(&self) -> Result<Self, CausalTensorError>
     where
-        T: Default + Clone + RealField + Zero + One + PartialEq,
+        T: crate::backend::TensorData + RealField,
         Self: Sized;
 
     /// Solves the Least Squares problem for $Ax = b$ using Cholesky decomposition.
@@ -592,6 +590,6 @@ where
         b: &Self, // Observation vector (m x 1)
     ) -> Result<Self, CausalTensorError>
     where
-        T: Default + Clone + RealField + Zero + One + PartialEq,
+        T: crate::backend::TensorData + RealField,
         Self: Sized;
 }

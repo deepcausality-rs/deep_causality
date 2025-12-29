@@ -2,7 +2,6 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::types::causal_tensor::CpuTensor;
 use crate::{CausalTensor, CausalTensorError, CausalTensorStackExt};
 
 impl<T> CausalTensorStackExt<T> for [CausalTensor<T>]
@@ -51,7 +50,7 @@ where
             let value = self[slice_index]
                 .get(&source_index)
                 .expect("Internal logic error: index should be valid");
-            result_data.push(value);
+            result_data.push(value.clone());
 
             // Increment the multi-dimensional index for the next output element.
             for j in (0..result_shape.len()).rev() {
@@ -63,11 +62,11 @@ where
             }
         }
 
-        Ok(CausalTensor::new(&result_data, &result_shape))
+        CausalTensor::new(result_data, result_shape)
     }
 }
 
-impl<T> CausalTensorStackExt<T> for [CpuTensor<T>]
+impl<T> CausalTensorStackExt<T> for [crate::InternalCpuTensor<T>]
 where
     T: Clone + Default + PartialOrd,
 {
@@ -101,7 +100,7 @@ where
             let value = self[slice_index]
                 .get(&source_index)
                 .expect("Internal logic error");
-            result_data.push(value.clone()); // CpuTensor::get returns Option<&T>, so we clone
+            result_data.push(value.clone()); // InternalCpuTensor::get returns Option<&T>, so we clone
 
             for j in (0..result_shape.len()).rev() {
                 current_index[j] += 1;
@@ -112,12 +111,6 @@ where
             }
         }
 
-        // Return CausalTensor (BackendTensor) because trait defines it so?
-        // Wait, trait defines `fn stack(...) -> Result<CausalTensor<T>, ...>`.
-        // CausalTensor is BackendTensor.
-        // We can wrap the result data into a BackendTensor(CpuTensor).
-        // CausalTensor::new(result_data, result_shape) works.
-        // Or construct CpuTensor and wrap.
-        Ok(CausalTensor::new(&result_data, &result_shape))
+        CausalTensor::new(result_data, result_shape)
     }
 }

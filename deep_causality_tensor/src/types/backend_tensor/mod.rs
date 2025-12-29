@@ -23,10 +23,9 @@
 
 mod constructors;
 mod getters;
-mod linear_algebra;
 mod ops;
 
-use crate::backend::{TensorBackend, TensorData};
+use crate::backend::TensorBackend;
 use core::fmt::Debug;
 use core::marker::PhantomData;
 
@@ -43,14 +42,10 @@ where
     _backend: PhantomData<B>,
 }
 
-impl<T, B> Debug for BackendTensor<T, B>
-where
-    T: TensorData + Debug,
-    B: TensorBackend,
-    B::Tensor<T>: Debug,
-{
+// Debug for CPU backend - uses InternalCpuTensor's derived Debug (only requires T: Debug)
+impl<T: Debug> Debug for BackendTensor<T, crate::backend::CpuBackend> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.debug_tuple("BackendTensor").field(&self.inner).finish()
+        f.debug_tuple("CausalTensor").field(&self.inner).finish()
     }
 }
 
@@ -74,14 +69,46 @@ impl<T, B: TensorBackend> BackendTensor<T, B> {
     }
 }
 
-// PartialEq implementation
-impl<T: TensorData + PartialEq, B: TensorBackend> PartialEq for BackendTensor<T, B> {
+// PartialEq for CPU backend - uses InternalCpuTensor's derived PartialEq (no bounds on T)
+impl<T: PartialEq> PartialEq for BackendTensor<T, crate::backend::CpuBackend> {
     fn eq(&self, other: &Self) -> bool {
-        let self_shape = B::shape(&self.inner);
-        let other_shape = B::shape(&other.inner);
-        if self_shape != other_shape {
-            return false;
-        }
-        B::to_vec(&self.inner) == B::to_vec(&other.inner)
+        self.inner == other.inner
+    }
+}
+
+// Deref to InternalCpuTensor for CPU backend.
+// This gives direct access to all InternalCpuTensor methods that return references.
+impl<T> core::ops::Deref for BackendTensor<T, crate::backend::CpuBackend> {
+    type Target = crate::InternalCpuTensor<T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl<T> core::ops::DerefMut for BackendTensor<T, crate::backend::CpuBackend> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
+    }
+}
+
+// Display for CPU backend - delegates to InternalCpuTensor's Display impl
+impl<T: core::fmt::Display> core::fmt::Display for BackendTensor<T, crate::backend::CpuBackend> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(&self.inner, f)
+    }
+}
+
+// Default for CPU backend - creates empty tensor
+impl<T: Default + Clone> Default for BackendTensor<T, crate::backend::CpuBackend> {
+    fn default() -> Self {
+        Self::from_inner(crate::InternalCpuTensor::new(vec![T::default()], vec![1]).unwrap())
+    }
+}
+
+// From<InternalCpuTensor> for convenience conversions
+impl<T> From<crate::InternalCpuTensor<T>> for BackendTensor<T, crate::backend::CpuBackend> {
+    fn from(inner: crate::InternalCpuTensor<T>) -> Self {
+        Self::from_inner(inner)
     }
 }

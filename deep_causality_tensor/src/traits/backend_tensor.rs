@@ -7,7 +7,7 @@
 
 use crate::backend::Device;
 use crate::traits::tensor_data::TensorData;
-use crate::types::causal_tensor::EinSumAST;
+use crate::types::cpu_tensor::EinSumAST;
 use core::ops::Range;
 
 /// Defines the compute backend contract for tensor operations.

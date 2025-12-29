@@ -7,11 +7,11 @@ use super::CpuBackend;
 use crate::CausalTensorError;
 use crate::backend::{Device, TensorBackend, TensorData};
 use crate::traits::tensor::Tensor;
-use crate::types::causal_tensor::{CpuTensor, EinSumAST};
+use crate::types::cpu_tensor::{EinSumAST, InternalCpuTensor};
 use core::ops::Range;
 
 impl TensorBackend for CpuBackend {
-    type Tensor<T> = CpuTensor<T>;
+    type Tensor<T> = InternalCpuTensor<T>;
 
     fn device() -> Device {
         Device::Cpu
@@ -20,23 +20,23 @@ impl TensorBackend for CpuBackend {
     // --- Creation ---
 
     fn create<T: Clone>(data: &[T], shape: &[usize]) -> Self::Tensor<T> {
-        CpuTensor::new(data.to_vec(), shape.to_vec()).expect("CpuBackend::create failed")
+        InternalCpuTensor::new(data.to_vec(), shape.to_vec()).expect("CpuBackend::create failed")
     }
 
     fn create_from_vec<T>(data: Vec<T>, shape: &[usize]) -> Self::Tensor<T> {
-        CpuTensor::new(data, shape.to_vec()).expect("CpuBackend::create_from_vec failed")
+        InternalCpuTensor::new(data, shape.to_vec()).expect("CpuBackend::create_from_vec failed")
     }
 
     fn zeros<T: TensorData>(shape: &[usize]) -> Self::Tensor<T> {
         let len = shape.iter().product();
         let data = vec![T::zero(); len];
-        CpuTensor::new(data, shape.to_vec()).expect("CpuBackend::zeros failed")
+        InternalCpuTensor::new(data, shape.to_vec()).expect("CpuBackend::zeros failed")
     }
 
     fn ones<T: TensorData>(shape: &[usize]) -> Self::Tensor<T> {
         let len = shape.iter().product();
         let data = vec![T::one(); len];
-        CpuTensor::new(data, shape.to_vec()).expect("CpuBackend::ones failed")
+        InternalCpuTensor::new(data, shape.to_vec()).expect("CpuBackend::ones failed")
     }
 
     fn from_shape_fn<T: Clone, F>(shape: &[usize], mut f: F) -> Self::Tensor<T>
@@ -63,7 +63,7 @@ impl TensorBackend for CpuBackend {
             }
         }
 
-        CpuTensor::new(data, shape.to_vec()).expect("CpuBackend::from_shape_fn failed")
+        InternalCpuTensor::new(data, shape.to_vec()).expect("CpuBackend::from_shape_fn failed")
     }
 
     // --- Data Access ---
@@ -96,11 +96,10 @@ impl TensorBackend for CpuBackend {
             .expect("CpuBackend::permute failed")
     }
 
-    fn slice<T: Clone>(_tensor: &Self::Tensor<T>, _ranges: &[Range<usize>]) -> Self::Tensor<T> {
-        // CpuTensor slice takes (axis, index), not ranges.
-
-        // Temporary: Panic "Not implemented for complex slicing"
-        todo!("CpuBackend::slice for ranges not yet implemented")
+    fn slice<T: Clone>(tensor: &Self::Tensor<T>, ranges: &[Range<usize>]) -> Self::Tensor<T> {
+        tensor
+            .range_slice_impl(ranges)
+            .expect("CpuBackend::slice failed")
     }
 
     // --- Element-wise Arithmetic ---
@@ -138,9 +137,8 @@ impl TensorBackend for CpuBackend {
         tensor.sum_axes(axes).expect("CpuBackend::sum failed")
     }
 
-    fn max<T: TensorData>(_tensor: &Self::Tensor<T>, _axes: &[usize]) -> Self::Tensor<T> {
-        // CpuTensor needs `max_axes`. Check if it exists.
-        todo!("CpuBackend::max not implemented")
+    fn max<T: TensorData>(tensor: &Self::Tensor<T>, axes: &[usize]) -> Self::Tensor<T> {
+        tensor.max_axes_impl(axes).expect("CpuBackend::max failed")
     }
 
     fn mean<T: TensorData + From<u32>>(
@@ -169,6 +167,6 @@ impl TensorBackend for CpuBackend {
     fn ein_sum<T: TensorData>(
         ast: &EinSumAST<Self::Tensor<T>>,
     ) -> Result<Self::Tensor<T>, CausalTensorError> {
-        CpuTensor::execute_ein_sum(ast)
+        InternalCpuTensor::execute_ein_sum(ast)
     }
 }

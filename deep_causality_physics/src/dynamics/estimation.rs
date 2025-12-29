@@ -68,7 +68,7 @@ pub fn generalized_master_equation_kernel(
         let contribution = kernel.matmul(&hist_tensor).map_err(PhysicsError::from)?;
 
         // Accumulate
-        let sum = p_new_tensor.add(&contribution);
+        let sum: CausalTensor<f64> = p_new_tensor.add(&contribution).into();
         p_new_tensor = sum; // CausalTensor::add returns a new tensor, assume ownership or clone
     }
 
@@ -133,7 +133,7 @@ pub fn kalman_filter_linear_kernel(
             hx.shape()
         )));
     }
-    let y = measurement.sub(&hx);
+    let y: CausalTensor<f64> = measurement.sub(&hx).into();
 
     // 2. Innovation Covariance: S = H * P * H^T + R
     // H * P
@@ -156,7 +156,7 @@ pub fn kalman_filter_linear_kernel(
             measurement_noise.shape()
         )));
     }
-    let s = hph_t.add(measurement_noise);
+    let s: CausalTensor<f64> = hph_t.add(measurement_noise).into();
 
     // 3. Optimal Kalman Gain: K = P * H^T * S^-1
     // S^-1
@@ -179,7 +179,7 @@ pub fn kalman_filter_linear_kernel(
             ky.shape()
         )));
     }
-    let x_new = x_pred.add(&ky);
+    let x_new: CausalTensor<f64> = x_pred.add(&ky).into();
 
     // 5. Covariance Update (Joseph form):
     // P_new = (I - K H) P (I - K H)^T + K R K^T
@@ -199,7 +199,7 @@ pub fn kalman_filter_linear_kernel(
             kh.shape()
         )));
     }
-    let i_kh = identity.sub(&kh);
+    let i_kh: CausalTensor<f64> = identity.sub(&kh).into();
 
     // ... * P
     // (I - K H) P
@@ -223,7 +223,7 @@ pub fn kalman_filter_linear_kernel(
     let kr = k.matmul(measurement_noise).map_err(PhysicsError::from)?;
     let krkt = kr.matmul(&kt).map_err(PhysicsError::from)?;
 
-    let p_new = joseph_main.add(&krkt);
+    let p_new: CausalTensor<f64> = joseph_main.add(&krkt).into();
 
     Ok((x_new, p_new))
 }
