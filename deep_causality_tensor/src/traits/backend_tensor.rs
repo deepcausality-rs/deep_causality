@@ -5,8 +5,9 @@
 
 //! TensorBackend trait defining the compute backend contract.
 
-use super::tensor_data::TensorData;
 use crate::backend::Device;
+use crate::traits::tensor_data::TensorData;
+use crate::types::causal_tensor::EinSumAST;
 use core::ops::Range;
 
 /// Defines the compute backend contract for tensor operations.
@@ -36,7 +37,7 @@ use core::ops::Range;
 /// ```
 pub trait TensorBackend: Clone + Send + Sync + 'static {
     /// The concrete tensor type used by this backend.
-    type Tensor<T: TensorData>: Clone + Send + Sync;
+    type Tensor<T>;
 
     /// Returns the device this backend operates on.
     fn device() -> Device;
@@ -51,7 +52,10 @@ pub trait TensorBackend: Clone + Send + Sync + 'static {
     ///
     /// # Panics
     /// Panics if `data.len() != shape.iter().product()`
-    fn create<T: TensorData>(data: &[T], shape: &[usize]) -> Self::Tensor<T>;
+    fn create<T: Clone>(data: &[T], shape: &[usize]) -> Self::Tensor<T>;
+
+    /// Creates a tensor from an owned vector.
+    fn create_from_vec<T>(data: Vec<T>, shape: &[usize]) -> Self::Tensor<T>;
 
     /// Creates a tensor filled with zeros.
     fn zeros<T: TensorData>(shape: &[usize]) -> Self::Tensor<T>;
@@ -60,28 +64,34 @@ pub trait TensorBackend: Clone + Send + Sync + 'static {
     fn ones<T: TensorData>(shape: &[usize]) -> Self::Tensor<T>;
 
     /// Creates a tensor from a function applied to each index.
-    fn from_shape_fn<T: TensorData, F>(shape: &[usize], f: F) -> Self::Tensor<T>
+    fn from_shape_fn<T: Clone, F>(shape: &[usize], f: F) -> Self::Tensor<T>
     where
         F: FnMut(&[usize]) -> T;
 
     // --- Data Access ---
 
     /// Downloads tensor data to a host vector.
-    fn to_vec<T: TensorData>(tensor: &Self::Tensor<T>) -> Vec<T>;
+    fn to_vec<T: Clone>(tensor: &Self::Tensor<T>) -> Vec<T>;
+
+    /// Consumes the tensor and returns the storage as a vector.
+    fn into_vec<T>(tensor: Self::Tensor<T>) -> Vec<T>;
 
     /// Returns the shape of the tensor.
-    fn shape<T: TensorData>(tensor: &Self::Tensor<T>) -> Vec<usize>;
+    fn shape<T>(tensor: &Self::Tensor<T>) -> Vec<usize>;
+
+    /// Returns the element at the specified index.
+    fn get<T: Clone>(tensor: &Self::Tensor<T>, index: &[usize]) -> Option<T>;
 
     // --- Shape Manipulation ---
 
     /// Reshapes the tensor without copying data (if possible).
-    fn reshape<T: TensorData>(tensor: &Self::Tensor<T>, shape: &[usize]) -> Self::Tensor<T>;
+    fn reshape<T: Clone>(tensor: &Self::Tensor<T>, shape: &[usize]) -> Self::Tensor<T>;
 
     /// Permutes the axes of the tensor.
-    fn permute<T: TensorData>(tensor: &Self::Tensor<T>, axes: &[usize]) -> Self::Tensor<T>;
+    fn permute<T: Clone>(tensor: &Self::Tensor<T>, axes: &[usize]) -> Self::Tensor<T>;
 
     /// Extracts a slice of the tensor.
-    fn slice<T: TensorData>(tensor: &Self::Tensor<T>, ranges: &[Range<usize>]) -> Self::Tensor<T>;
+    fn slice<T: Clone>(tensor: &Self::Tensor<T>, ranges: &[Range<usize>]) -> Self::Tensor<T>;
 
     // --- Element-wise Arithmetic ---
 
@@ -97,6 +107,15 @@ pub trait TensorBackend: Clone + Send + Sync + 'static {
     /// Element-wise division.
     fn div<T: TensorData>(a: &Self::Tensor<T>, b: &Self::Tensor<T>) -> Self::Tensor<T>;
 
+    /// Apply binary operation with broadcasting.
+    fn broadcast_op<T: Clone, F>(
+        lhs: &Self::Tensor<T>,
+        rhs: &Self::Tensor<T>,
+        f: F,
+    ) -> Result<Self::Tensor<T>, crate::CausalTensorError>
+    where
+        F: Fn(T, T) -> Result<T, crate::CausalTensorError>;
+
     // --- Reduction ---
 
     /// Sums elements along specified axes.
@@ -104,4 +123,26 @@ pub trait TensorBackend: Clone + Send + Sync + 'static {
 
     /// Finds maximum along specified axes.
     fn max<T: TensorData>(tensor: &Self::Tensor<T>, axes: &[usize]) -> Self::Tensor<T>;
+
+    /// Calculates the mean along specified axes.
+    fn mean<T: TensorData + From<u32>>(tensor: &Self::Tensor<T>, axes: &[usize])
+    -> Self::Tensor<T>;
+
+    // --- Advanced Shape ---
+
+    /// Flattens the tensor into a 1D vector.
+    fn ravel<T: Clone>(tensor: &Self::Tensor<T>) -> Self::Tensor<T>;
+
+    /// Returns indices that would sort the tensor.
+    fn arg_sort<T: TensorData>(tensor: &Self::Tensor<T>) -> Vec<usize>;
+
+    /// Creates a cyclically shifted view.
+    fn shifted_view<T: Clone>(tensor: &Self::Tensor<T>, flat_index: usize) -> Self::Tensor<T>;
+
+    // --- EinSum ---
+
+    /// Executes an Einstein summation operations.
+    fn ein_sum<T: TensorData>(
+        ast: &EinSumAST<Self::Tensor<T>>,
+    ) -> Result<Self::Tensor<T>, crate::CausalTensorError>;
 }

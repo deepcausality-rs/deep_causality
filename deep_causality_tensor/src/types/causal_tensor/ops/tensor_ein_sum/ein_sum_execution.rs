@@ -3,10 +3,11 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::Tensor;
-use crate::{CausalTensor, CausalTensorError, EinSumAST, EinSumOp};
+use crate::types::causal_tensor::{EinSumAST, EinSumOp};
+use crate::{CausalTensorError, CpuTensor};
 use std::ops::{Add, Mul};
 
-impl<T> CausalTensor<T>
+impl<T> CpuTensor<T>
 where
     T: Clone + Default + PartialOrd + Add<Output = T> + Mul<Output = T>,
 {
@@ -23,7 +24,7 @@ where
     /// # Returns
     ///
     /// A `Result` which is:
-    /// - `Ok(CausalTensor<T>)` containing the result of the operation defined by the AST node.
+    /// - `Ok(CpuTensor<T>)` containing the result of the operation defined by the AST node.
     /// - `Err(CausalTensorError)` if any error occurs during the execution of the current node
     ///   or its children.
     ///
@@ -33,8 +34,8 @@ where
     /// `get_unary_operand`, `contract`, `sum_axes`, `mat_mul_2d`, `tensor_product`,
     /// `element_wise_mul`, `permute_axes`, `diagonal`, and `batch_mat_mul`.
     pub(crate) fn execute_ein_sum(
-        ast: &EinSumAST<T>,
-    ) -> Result<CausalTensor<T>, CausalTensorError> {
+        ast: &EinSumAST<CpuTensor<T>>,
+    ) -> Result<CpuTensor<T>, CausalTensorError> {
         let node = ast.value();
         let children = ast.children();
 

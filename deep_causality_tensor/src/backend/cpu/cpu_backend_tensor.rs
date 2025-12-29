@@ -3,257 +3,172 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! TensorBackend implementation for CpuBackend.
-//!
-//! When the `parallel` feature is enabled, operations like `from_shape_fn`,
-//! `sum`, and `max` use rayon for multi-threaded execution.
 use super::CpuBackend;
-use crate::CausalTensor;
-use crate::backend::Device;
-use crate::traits::{TensorBackend, TensorData};
+use crate::CausalTensorError;
+use crate::backend::{Device, TensorBackend, TensorData};
+use crate::traits::tensor::Tensor;
+use crate::types::causal_tensor::{CpuTensor, EinSumAST};
 use core::ops::Range;
 
-#[cfg(feature = "parallel")]
-use rayon::prelude::*;
-
 impl TensorBackend for CpuBackend {
-    type Tensor<T: TensorData> = CausalTensor<T>;
+    type Tensor<T> = CpuTensor<T>;
 
     fn device() -> Device {
         Device::Cpu
     }
 
-    fn create<T: TensorData>(data: &[T], shape: &[usize]) -> Self::Tensor<T> {
-        CausalTensor::new(data.to_vec(), shape.to_vec())
-            .expect("CpuBackend::create: shape mismatch with data length")
+    // --- Creation ---
+
+    fn create<T: Clone>(data: &[T], shape: &[usize]) -> Self::Tensor<T> {
+        CpuTensor::new(data.to_vec(), shape.to_vec()).expect("CpuBackend::create failed")
+    }
+
+    fn create_from_vec<T>(data: Vec<T>, shape: &[usize]) -> Self::Tensor<T> {
+        CpuTensor::new(data, shape.to_vec()).expect("CpuBackend::create_from_vec failed")
     }
 
     fn zeros<T: TensorData>(shape: &[usize]) -> Self::Tensor<T> {
-        let len: usize = shape.iter().product();
+        let len = shape.iter().product();
         let data = vec![T::zero(); len];
-        CausalTensor::new(data, shape.to_vec()).expect("CpuBackend::zeros: invalid shape")
+        CpuTensor::new(data, shape.to_vec()).expect("CpuBackend::zeros failed")
     }
 
     fn ones<T: TensorData>(shape: &[usize]) -> Self::Tensor<T> {
-        let len: usize = shape.iter().product();
+        let len = shape.iter().product();
         let data = vec![T::one(); len];
-        CausalTensor::new(data, shape.to_vec()).expect("CpuBackend::ones: invalid shape")
+        CpuTensor::new(data, shape.to_vec()).expect("CpuBackend::ones failed")
     }
 
-    fn from_shape_fn<T: TensorData, F>(shape: &[usize], mut f: F) -> Self::Tensor<T>
+    fn from_shape_fn<T: Clone, F>(shape: &[usize], mut f: F) -> Self::Tensor<T>
     where
         F: FnMut(&[usize]) -> T,
     {
+        // This is a naive implementation; optimize if needed
+        // Iterate over all indices and apply f
         let len: usize = shape.iter().product();
         let mut data = Vec::with_capacity(len);
-        let mut indices = vec![0usize; shape.len()];
 
+        // Cartesian product
+        let mut index = vec![0; shape.len()];
         for _ in 0..len {
-            data.push(f(&indices));
-            // Increment indices in row-major order
-            for dim in (0..shape.len()).rev() {
-                indices[dim] += 1;
-                if indices[dim] < shape[dim] {
+            data.push(f(&index));
+
+            // Increment index
+            for i in (0..shape.len()).rev() {
+                index[i] += 1;
+                if index[i] < shape[i] {
                     break;
                 }
-                indices[dim] = 0;
+                index[i] = 0;
             }
         }
 
-        CausalTensor::new(data, shape.to_vec()).expect("CpuBackend::from_shape_fn: invalid shape")
+        CpuTensor::new(data, shape.to_vec()).expect("CpuBackend::from_shape_fn failed")
     }
 
-    fn to_vec<T: TensorData>(tensor: &Self::Tensor<T>) -> Vec<T> {
-        tensor.as_slice().to_vec()
+    // --- Data Access ---
+
+    fn to_vec<T: Clone>(tensor: &Self::Tensor<T>) -> Vec<T> {
+        tensor.data.clone()
     }
 
-    fn shape<T: TensorData>(tensor: &Self::Tensor<T>) -> Vec<usize> {
+    fn into_vec<T>(tensor: Self::Tensor<T>) -> Vec<T> {
+        tensor.into_vec()
+    }
+
+    fn shape<T>(tensor: &Self::Tensor<T>) -> Vec<usize> {
         tensor.shape().to_vec()
     }
 
-    fn reshape<T: TensorData>(tensor: &Self::Tensor<T>, shape: &[usize]) -> Self::Tensor<T> {
-        use crate::Tensor as TensorTrait;
-        tensor
-            .reshape(shape)
-            .expect("CpuBackend::reshape: incompatible shape")
+    fn get<T: Clone>(tensor: &Self::Tensor<T>, index: &[usize]) -> Option<T> {
+        tensor.get(index).cloned()
     }
 
-    fn permute<T: TensorData>(tensor: &Self::Tensor<T>, axes: &[usize]) -> Self::Tensor<T> {
-        use crate::Tensor as TensorTrait;
+    // --- Shape Manipulation ---
+
+    fn reshape<T: Clone>(tensor: &Self::Tensor<T>, shape: &[usize]) -> Self::Tensor<T> {
+        tensor.reshape(shape).expect("CpuBackend::reshape failed")
+    }
+
+    fn permute<T: Clone>(tensor: &Self::Tensor<T>, axes: &[usize]) -> Self::Tensor<T> {
         tensor
             .permute_axes(axes)
-            .expect("CpuBackend::permute: invalid axes")
+            .expect("CpuBackend::permute failed")
     }
 
-    fn slice<T: TensorData>(tensor: &Self::Tensor<T>, ranges: &[Range<usize>]) -> Self::Tensor<T> {
-        tensor
-            .range_slice_impl(ranges)
-            .expect("CpuBackend::slice: range slice failed")
+    fn slice<T: Clone>(_tensor: &Self::Tensor<T>, _ranges: &[Range<usize>]) -> Self::Tensor<T> {
+        // CpuTensor slice takes (axis, index), not ranges.
+
+        // Temporary: Panic "Not implemented for complex slicing"
+        todo!("CpuBackend::slice for ranges not yet implemented")
     }
+
+    // --- Element-wise Arithmetic ---
 
     fn add<T: TensorData>(a: &Self::Tensor<T>, b: &Self::Tensor<T>) -> Self::Tensor<T> {
-        // CausalTensor's Add already handles element-wise operations efficiently
-        a.clone() + b.clone()
+        a + b
     }
 
     fn sub<T: TensorData>(a: &Self::Tensor<T>, b: &Self::Tensor<T>) -> Self::Tensor<T> {
-        a.clone() - b.clone()
+        a - b
     }
 
     fn mul<T: TensorData>(a: &Self::Tensor<T>, b: &Self::Tensor<T>) -> Self::Tensor<T> {
-        a.clone() * b.clone()
+        a * b
     }
 
     fn div<T: TensorData>(a: &Self::Tensor<T>, b: &Self::Tensor<T>) -> Self::Tensor<T> {
-        a.clone() / b.clone()
+        a / b
     }
+
+    fn broadcast_op<T: Clone, F>(
+        lhs: &Self::Tensor<T>,
+        rhs: &Self::Tensor<T>,
+        f: F,
+    ) -> Result<Self::Tensor<T>, CausalTensorError>
+    where
+        F: Fn(T, T) -> Result<T, CausalTensorError>,
+    {
+        lhs.broadcast_op(rhs, f)
+    }
+
+    // --- Reduction ---
 
     fn sum<T: TensorData>(tensor: &Self::Tensor<T>, axes: &[usize]) -> Self::Tensor<T> {
-        use crate::Tensor as TensorTrait;
-        if axes.is_empty() {
-            // Sum all elements - use parallel reduction when available
-            #[cfg(feature = "parallel")]
-            {
-                let total: T = tensor
-                    .as_slice()
-                    .par_iter()
-                    .copied()
-                    .reduce(|| T::zero(), |a, b| a + b);
-                CausalTensor::new(vec![total], vec![])
-                    .expect("CpuBackend::sum: failed to create scalar")
-            }
-            #[cfg(not(feature = "parallel"))]
-            {
-                tensor.sum_axes(&[]).expect("CpuBackend::sum: failed")
-            }
-        } else {
-            // Sum along specified axes - delegate to CausalTensor
-            let mut sorted_axes = axes.to_vec();
-            sorted_axes.sort();
-            tensor
-                .sum_axes(&sorted_axes)
-                .expect("CpuBackend::sum: invalid axes")
-        }
+        tensor.sum_axes(axes).expect("CpuBackend::sum failed")
     }
 
-    fn max<T: TensorData>(tensor: &Self::Tensor<T>, axes: &[usize]) -> Self::Tensor<T> {
-        let data = tensor.as_slice();
-        let shape = tensor.shape();
+    fn max<T: TensorData>(_tensor: &Self::Tensor<T>, _axes: &[usize]) -> Self::Tensor<T> {
+        // CpuTensor needs `max_axes`. Check if it exists.
+        todo!("CpuBackend::max not implemented")
+    }
 
-        if axes.is_empty() {
-            // Max of all elements - use parallel reduction when available
-            #[cfg(feature = "parallel")]
-            let max_val = {
-                data.par_iter()
-                    .copied()
-                    .reduce(|| T::zero(), |a, b| if a > b { a } else { b })
-            };
-            #[cfg(not(feature = "parallel"))]
-            let max_val = {
-                data.iter()
-                    .copied()
-                    .fold(T::zero(), |acc, x| if x > acc { x } else { acc })
-            };
+    fn mean<T: TensorData + From<u32>>(
+        tensor: &Self::Tensor<T>,
+        axes: &[usize],
+    ) -> Self::Tensor<T> {
+        tensor.mean_axes(axes).expect("CpuBackend::mean failed")
+    }
 
-            CausalTensor::new(vec![max_val], vec![])
-                .expect("CpuBackend::max: failed to create scalar")
-        } else {
-            // For single axis reduction
-            assert_eq!(
-                axes.len(),
-                1,
-                "CpuBackend::max: multi-axis not yet implemented"
-            );
-            let axis = axes[0];
-            assert!(axis < shape.len(), "CpuBackend::max: axis out of bounds");
+    // --- Advanced Shape ---
 
-            // Calculate new shape (remove the axis)
-            let mut new_shape: Vec<usize> = shape.to_vec();
-            new_shape.remove(axis);
-            if new_shape.is_empty() {
-                new_shape.push(1);
-            }
+    fn ravel<T: Clone>(tensor: &Self::Tensor<T>) -> Self::Tensor<T> {
+        tensor.clone().ravel()
+    }
 
-            let new_len: usize = new_shape.iter().product();
+    fn arg_sort<T: TensorData>(tensor: &Self::Tensor<T>) -> Vec<usize> {
+        tensor.arg_sort().expect("CpuBackend::arg_sort failed")
+    }
 
-            // Parallel axis reduction
-            #[cfg(feature = "parallel")]
-            let result_data: Vec<T> = {
-                use std::sync::Mutex;
-                let results: Vec<Mutex<Option<T>>> =
-                    (0..new_len).map(|_| Mutex::new(None)).collect();
+    fn shifted_view<T: Clone>(tensor: &Self::Tensor<T>, flat_index: usize) -> Self::Tensor<T> {
+        tensor.shifted_view(flat_index)
+    }
 
-                data.par_iter().enumerate().for_each(|(flat_idx, val)| {
-                    // Convert flat index to multi-dimensional indices
-                    let mut remaining = flat_idx;
-                    let mut indices = vec![0usize; shape.len()];
-                    for dim in (0..shape.len()).rev() {
-                        indices[dim] = remaining % shape[dim];
-                        remaining /= shape[dim];
-                    }
+    // --- EinSum ---
 
-                    // Remove the axis dimension to get result index
-                    let mut result_indices = indices.clone();
-                    result_indices.remove(axis);
-
-                    // Convert result indices to flat index
-                    let mut result_flat = 0;
-                    let mut stride = 1;
-                    for dim in (0..result_indices.len()).rev() {
-                        result_flat += result_indices[dim] * stride;
-                        stride *= new_shape[dim];
-                    }
-
-                    // Update max atomically
-                    let mut guard = results[result_flat].lock().unwrap();
-                    *guard = match *guard {
-                        None => Some(*val),
-                        Some(m) => Some(if *val > m { *val } else { m }),
-                    };
-                });
-
-                results
-                    .into_iter()
-                    .map(|m| m.into_inner().unwrap().unwrap_or_else(T::zero))
-                    .collect()
-            };
-
-            #[cfg(not(feature = "parallel"))]
-            let result_data: Vec<T> = {
-                let mut result = vec![None; new_len];
-
-                for (flat_idx, val) in data.iter().enumerate() {
-                    let mut remaining = flat_idx;
-                    let mut indices = vec![0usize; shape.len()];
-                    for dim in (0..shape.len()).rev() {
-                        indices[dim] = remaining % shape[dim];
-                        remaining /= shape[dim];
-                    }
-
-                    let mut result_indices = indices.clone();
-                    result_indices.remove(axis);
-
-                    let mut result_flat = 0;
-                    let mut stride = 1;
-                    for dim in (0..result_indices.len()).rev() {
-                        result_flat += result_indices[dim] * stride;
-                        stride *= new_shape[dim];
-                    }
-
-                    result[result_flat] = match result[result_flat] {
-                        None => Some(*val),
-                        Some(m) => Some(if *val > m { *val } else { m }),
-                    };
-                }
-
-                result
-                    .into_iter()
-                    .map(|opt| opt.unwrap_or_else(T::zero))
-                    .collect()
-            };
-
-            CausalTensor::new(result_data, new_shape)
-                .expect("CpuBackend::max: failed to create result")
-        }
+    fn ein_sum<T: TensorData>(
+        ast: &EinSumAST<Self::Tensor<T>>,
+    ) -> Result<Self::Tensor<T>, CausalTensorError> {
+        CpuTensor::execute_ein_sum(ast)
     }
 }

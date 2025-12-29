@@ -3,12 +3,12 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::Tensor;
-use crate::{CausalTensor, CausalTensorError};
+use crate::{CausalTensorError, CpuTensor};
 use deep_causality_num::{RealField, Zero};
 use std::iter::Sum;
 use std::ops::{Add, Div, Mul};
 
-impl<T> CausalTensor<T>
+impl<T> CpuTensor<T>
 where
     T: Clone + Default + PartialOrd,
 {
@@ -49,7 +49,7 @@ where
                 .iter()
                 .fold(T::default(), |acc, x| acc + x.clone());
             // A scalar tensor has an empty shape `[]` but contains one data element.
-            return CausalTensor::new(vec![total_sum], vec![]);
+            return CpuTensor::new(vec![total_sum], vec![]);
         }
 
         if self.data.is_empty() {
@@ -60,7 +60,7 @@ where
                 }
             }
             // The resulting tensor should be filled with the identity element (0).
-            return Ok(CausalTensor::full(&result_shape, T::default()));
+            return Ok(CpuTensor::full(&result_shape, T::default()));
         }
 
         // Determine the shape of the output tensor by filtering out the summed axes.
@@ -72,7 +72,7 @@ where
         }
 
         // Create the result tensor, initialized to zeros.
-        let mut result_tensor = CausalTensor::full(&result_shape, T::default());
+        let mut result_tensor = CpuTensor::full(&result_shape, T::default());
 
         // Iterate through all multi-dimensional indices of the *source* tensor.
         let mut current_index = vec![0; self.num_dim()];

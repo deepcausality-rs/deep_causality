@@ -2,10 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalTensor, CausalTensorError};
+use crate::{CausalTensorError, CpuTensor};
 use deep_causality_num::{One, RealField, Zero};
 
-impl<T> CausalTensor<T> {
+impl<T> CpuTensor<T> {
     pub(in crate::types::causal_tensor) fn inverse_impl(&self) -> Result<Self, CausalTensorError>
     where
         T: Clone + RealField + Zero + One + Copy + PartialEq,

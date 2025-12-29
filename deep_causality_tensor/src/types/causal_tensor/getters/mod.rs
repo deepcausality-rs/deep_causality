@@ -4,9 +4,9 @@
  */
 mod get_ref;
 
-use crate::CausalTensor;
+use crate::CpuTensor;
 
-impl<T> CausalTensor<T> {
+impl<T> CpuTensor<T> {
     /// Returns a reference to the underlying `Vec<T>` that stores the tensor's data.
     ///
     /// The data is stored in row-major order.
@@ -14,12 +14,12 @@ impl<T> CausalTensor<T> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_tensor::CausalTensor;
+    /// use deep_causality_tensor::CpuTensor;
     ///
-    /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
+    /// let tensor = CpuTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     /// assert_eq!(tensor.data(), &vec![1, 2, 3, 4, 5, 6]);
     ///
-    /// let empty_tensor: CausalTensor<f64> = CausalTensor::new(vec![], vec![0]).unwrap();
+    /// let empty_tensor: CpuTensor<f64> = CpuTensor::new(vec![], vec![0]).unwrap();
     /// assert!(empty_tensor.data().is_empty());
     /// ```
     pub fn data(&self) -> &Vec<T> {
@@ -33,9 +33,9 @@ impl<T> CausalTensor<T> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_tensor::CausalTensor;
+    /// use deep_causality_tensor::CpuTensor;
     ///
-    /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
+    /// let tensor = CpuTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     /// assert_eq!(tensor.shape(), &[2, 3]);
     /// ```
     pub fn shape(&self) -> &[usize] {
@@ -49,12 +49,12 @@ impl<T> CausalTensor<T> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_tensor::CausalTensor;
+    /// use deep_causality_tensor::CpuTensor;
     ///
-    /// let empty_tensor: CausalTensor<i32> = CausalTensor::new(vec![], vec![0]).unwrap();
+    /// let empty_tensor: CpuTensor<i32> = CpuTensor::new(vec![], vec![0]).unwrap();
     /// assert!(empty_tensor.is_empty());
     ///
-    /// let non_empty_tensor: CausalTensor<f64> = CausalTensor::new(vec![1.0], vec![1]).unwrap();
+    /// let non_empty_tensor: CpuTensor<f64> = CpuTensor::new(vec![1.0], vec![1]).unwrap();
     /// assert!(!non_empty_tensor.is_empty());
     /// ```
     pub fn is_empty(&self) -> bool {
@@ -68,12 +68,12 @@ impl<T> CausalTensor<T> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_tensor::CausalTensor;
+    /// use deep_causality_tensor::CpuTensor;
     ///
-    /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
+    /// let tensor = CpuTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     /// assert_eq!(tensor.num_dim(), 2);
     ///
-    /// let scalar = CausalTensor::new(vec![42], vec![]).   unwrap();
+    /// let scalar = CpuTensor::new(vec![42], vec![]).   unwrap();
     /// assert_eq!(scalar.num_dim(), 0); // A scalar has 0 dimensions
     /// ```
     pub fn num_dim(&self) -> usize {
@@ -87,12 +87,12 @@ impl<T> CausalTensor<T> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_tensor::CausalTensor;
+    /// use deep_causality_tensor::CpuTensor;
     ///
-    /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
+    /// let tensor = CpuTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     /// assert_eq!(tensor.len(), 6);
     ///
-    /// let empty_tensor: CausalTensor<f64> = CausalTensor::new(vec![], vec![0]).unwrap();
+    /// let empty_tensor: CpuTensor<f64> = CpuTensor::new(vec![], vec![0]).unwrap();
     /// assert_eq!(empty_tensor.len(), 0);
     /// ```
     pub fn len(&self) -> usize {
@@ -106,9 +106,9 @@ impl<T> CausalTensor<T> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_tensor::CausalTensor;
+    /// use deep_causality_tensor::CpuTensor;
     ///
-    /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
+    /// let tensor = CpuTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     /// assert_eq!(tensor.as_slice(), &[1, 2, 3, 4, 5, 6]);
     /// ```
     pub fn as_slice(&self) -> &[T] {
@@ -126,9 +126,9 @@ impl<T> CausalTensor<T> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_tensor::CausalTensor;
+    /// use deep_causality_tensor::CpuTensor;
     ///
-    /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
+    /// let tensor = CpuTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     ///
     /// assert_eq!(tensor.get(&[0, 0]), Some(&1));
     /// assert_eq!(tensor.get(&[0, 1]), Some(&2));
@@ -158,9 +158,9 @@ impl<T> CausalTensor<T> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_tensor::CausalTensor;
+    /// use deep_causality_tensor::CpuTensor;
     ///
-    /// let mut tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
+    /// let mut tensor = CpuTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     ///
     /// if let Some(val) = tensor.get_mut(&[0, 0]) {
     ///     *val = 10;

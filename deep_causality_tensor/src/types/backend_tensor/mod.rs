@@ -26,28 +26,35 @@ mod getters;
 mod linear_algebra;
 mod ops;
 
-use crate::traits::{TensorBackend, TensorData};
+use crate::backend::{TensorBackend, TensorData};
+use core::fmt::Debug;
 use core::marker::PhantomData;
 
-/// A tensor that dispatches operations through a `TensorBackend`.
+/// A backend-agnostic tensor wrapper.
 ///
-/// This provides hardware-agnostic tensor operations by delegating to the
-/// backend's implementation, enabling the same code to run on CPU, GPU (MLX),
-/// or other accelerators.
-///
-/// # Type Parameters
-///
-/// * `T` - Element type (f32, f64, etc.)
-/// * `B` - Backend type implementing `TensorBackend`
+/// This struct wraps a backend-specific tensor implementation (`B::Tensor<T>`) and provides
+/// a unified API that delegates to the underlying backend `B`.
 #[derive(Clone)]
-pub struct BackendTensor<T: TensorData, B: TensorBackend> {
-    /// The underlying backend-specific tensor.
+pub struct BackendTensor<T, B>
+where
+    B: TensorBackend,
+{
     pub(crate) inner: B::Tensor<T>,
-    /// Phantom marker for the backend type.
     _backend: PhantomData<B>,
 }
 
-impl<T: TensorData, B: TensorBackend> BackendTensor<T, B> {
+impl<T, B> Debug for BackendTensor<T, B>
+where
+    T: TensorData + Debug,
+    B: TensorBackend,
+    B::Tensor<T>: Debug,
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_tuple("BackendTensor").field(&self.inner).finish()
+    }
+}
+
+impl<T, B: TensorBackend> BackendTensor<T, B> {
     /// Creates a `BackendTensor` from a backend-native tensor.
     pub fn from_inner(inner: B::Tensor<T>) -> Self {
         Self {
@@ -64,18 +71,6 @@ impl<T: TensorData, B: TensorBackend> BackendTensor<T, B> {
     /// Consumes self and returns the underlying backend tensor.
     pub fn into_inner(self) -> B::Tensor<T> {
         self.inner
-    }
-}
-
-// Debug implementation
-impl<T: TensorData + core::fmt::Debug, B: TensorBackend> core::fmt::Debug for BackendTensor<T, B> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let data = B::to_vec(&self.inner);
-        let shape = B::shape(&self.inner);
-        f.debug_struct("BackendTensor")
-            .field("shape", &shape)
-            .field("data", &data)
-            .finish()
     }
 }
 

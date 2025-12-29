@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::types::causal_tensor::CausalTensor;
+use crate::types::causal_tensor::CpuTensor;
 use std::ops::{Add, Div, Mul, Sub};
 
 // ############################################################################
@@ -10,19 +10,19 @@ use std::ops::{Add, Div, Mul, Sub};
 // ############################################################################
 
 // --- f32 ---
-// Implementation for `f32 + &CausalTensor<f32>`
-impl<'a> Add<&'a CausalTensor<f32>> for f32
+// Implementation for `f32 + &CpuTensor<f32>`
+impl<'a> Add<&'a CpuTensor<f32>> for f32
 where
     f32: Add<f32, Output = f32> + Clone,
 {
-    type Output = CausalTensor<f32>;
+    type Output = CpuTensor<f32>;
 
-    fn add(self, rhs: &'a CausalTensor<f32>) -> Self::Output {
+    fn add(self, rhs: &'a CpuTensor<f32>) -> Self::Output {
         let mut new_data = rhs.data.clone();
         for item in &mut new_data {
             *item = self.add(*item);
         }
-        CausalTensor {
+        CpuTensor {
             data: new_data,
             shape: rhs.shape.clone(),
             strides: rhs.strides.clone(),
@@ -30,13 +30,13 @@ where
     }
 }
 
-// Implementation for `f32 + CausalTensor<f32>` (consuming)
-impl Add<CausalTensor<f32>> for f32
+// Implementation for `f32 + CpuTensor<f32>` (consuming)
+impl Add<CpuTensor<f32>> for f32
 where
     f32: Add<f32, Output = f32> + Clone,
 {
-    type Output = CausalTensor<f32>;
-    fn add(self, rhs: CausalTensor<f32>) -> Self::Output {
+    type Output = CpuTensor<f32>;
+    fn add(self, rhs: CpuTensor<f32>) -> Self::Output {
         self.add(&rhs)
     }
 }
@@ -46,18 +46,18 @@ where
 // ############################################################################
 
 // --- f32 ---
-impl<'a> Sub<&'a CausalTensor<f32>> for f32
+impl<'a> Sub<&'a CpuTensor<f32>> for f32
 where
     f32: Sub<f32, Output = f32> + Clone,
 {
-    type Output = CausalTensor<f32>;
+    type Output = CpuTensor<f32>;
 
-    fn sub(self, rhs: &'a CausalTensor<f32>) -> Self::Output {
+    fn sub(self, rhs: &'a CpuTensor<f32>) -> Self::Output {
         let mut new_data = rhs.data.clone();
         for item in &mut new_data {
             *item = self.sub(*item);
         }
-        CausalTensor {
+        CpuTensor {
             data: new_data,
             shape: rhs.shape.clone(),
             strides: rhs.strides.clone(),
@@ -65,12 +65,12 @@ where
     }
 }
 
-impl Sub<CausalTensor<f32>> for f32
+impl Sub<CpuTensor<f32>> for f32
 where
     f32: Sub<f32, Output = f32> + Clone,
 {
-    type Output = CausalTensor<f32>;
-    fn sub(self, rhs: CausalTensor<f32>) -> Self::Output {
+    type Output = CpuTensor<f32>;
+    fn sub(self, rhs: CpuTensor<f32>) -> Self::Output {
         self.sub(&rhs)
     }
 }
@@ -80,18 +80,18 @@ where
 // ############################################################################
 
 // --- f32 ---
-impl<'a> Mul<&'a CausalTensor<f32>> for f32
+impl<'a> Mul<&'a CpuTensor<f32>> for f32
 where
     f32: Mul<f32, Output = f32> + Clone,
 {
-    type Output = CausalTensor<f32>;
+    type Output = CpuTensor<f32>;
 
-    fn mul(self, rhs: &'a CausalTensor<f32>) -> Self::Output {
+    fn mul(self, rhs: &'a CpuTensor<f32>) -> Self::Output {
         let mut new_data = rhs.data.clone();
         for item in &mut new_data {
             *item = self.mul(*item);
         }
-        CausalTensor {
+        CpuTensor {
             data: new_data,
             shape: rhs.shape.clone(),
             strides: rhs.strides.clone(),
@@ -99,12 +99,12 @@ where
     }
 }
 
-impl Mul<CausalTensor<f32>> for f32
+impl Mul<CpuTensor<f32>> for f32
 where
     f32: Mul<f32, Output = f32> + Clone,
 {
-    type Output = CausalTensor<f32>;
-    fn mul(self, rhs: CausalTensor<f32>) -> Self::Output {
+    type Output = CpuTensor<f32>;
+    fn mul(self, rhs: CpuTensor<f32>) -> Self::Output {
         self.mul(&rhs)
     }
 }
@@ -114,18 +114,18 @@ where
 // ############################################################################
 
 // --- f32 ---
-impl<'a> Div<&'a CausalTensor<f32>> for f32
+impl<'a> Div<&'a CpuTensor<f32>> for f32
 where
     f32: Div<f32, Output = f32> + Clone,
 {
-    type Output = CausalTensor<f32>;
+    type Output = CpuTensor<f32>;
 
-    fn div(self, rhs: &'a CausalTensor<f32>) -> Self::Output {
+    fn div(self, rhs: &'a CpuTensor<f32>) -> Self::Output {
         let mut new_data = rhs.data.clone();
         for item in &mut new_data {
             *item = self.div(*item);
         }
-        CausalTensor {
+        CpuTensor {
             data: new_data,
             shape: rhs.shape.clone(),
             strides: rhs.strides.clone(),
@@ -133,12 +133,12 @@ where
     }
 }
 
-impl Div<CausalTensor<f32>> for f32
+impl Div<CpuTensor<f32>> for f32
 where
     f32: Div<f32, Output = f32> + Clone,
 {
-    type Output = CausalTensor<f32>;
-    fn div(self, rhs: CausalTensor<f32>) -> Self::Output {
+    type Output = CpuTensor<f32>;
+    fn div(self, rhs: CpuTensor<f32>) -> Self::Output {
         self.div(&rhs)
     }
 }

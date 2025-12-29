@@ -9,11 +9,11 @@
 //! - Q is an orthogonal matrix (Q^T Q = I)
 //! - R is an upper triangular matrix
 
-use crate::{CausalTensor, CausalTensorError};
+use crate::{CausalTensorError, CpuTensor};
 use core::iter::Sum;
 use deep_causality_num::{One, RealField, Zero};
 
-impl<T: Default> CausalTensor<T> {
+impl<T: Default> CpuTensor<T> {
     /// Computes the QR decomposition of a matrix using Householder reflections.
     ///
     /// For a matrix A of shape (m, n), returns (Q, R) where:
@@ -119,8 +119,8 @@ impl<T: Default> CausalTensor<T> {
             }
         }
 
-        let q = CausalTensor::new(q_data, vec![m, m])?;
-        let r = CausalTensor::new(r_data, vec![m, n])?;
+        let q = CpuTensor::new(q_data, vec![m, m])?;
+        let r = CpuTensor::new(r_data, vec![m, n])?;
 
         Ok((q, r))
     }

@@ -2,12 +2,15 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalTensor, CausalTensorError, EinSumAST};
+use crate::CausalTensorError;
 use deep_causality_num::{One, RealField, Ring, Zero};
 use std::iter::Sum;
 use std::ops::{Add, Div, Mul};
 
-pub trait Tensor<T> {
+pub trait Tensor<T>: Sized
+where
+    T: Clone,
+{
     /// Public API for Einstein summation.
     ///
     /// This method serves as the entry point for performing Einstein summation operations
@@ -27,7 +30,9 @@ pub trait Tensor<T> {
     /// # Errors
     ///
     /// Returns errors propagated from `execute_ein_sum`.
-    fn ein_sum(ast: &EinSumAST<T>) -> Result<CausalTensor<T>, CausalTensorError>
+    fn ein_sum(
+        ast: &crate::types::causal_tensor::EinSumAST<Self>,
+    ) -> Result<Self, CausalTensorError>
     where
         T: Clone + Default + PartialOrd + Add<Output = T> + Mul<Output = T>;
 
@@ -85,7 +90,7 @@ pub trait Tensor<T> {
     /// assert_eq!(result_scalar_vec.shape(), &[2]);
     /// assert_eq!(result_scalar_vec.as_slice(), &[10.0, 20.0]);
     /// ```
-    fn tensor_product(&self, rhs: &CausalTensor<T>) -> Result<CausalTensor<T>, CausalTensorError>
+    fn tensor_product(&self, rhs: &Self) -> Result<Self, CausalTensorError>
     where
         T: Clone + Mul<Output = T>;
 
@@ -348,7 +353,7 @@ pub trait Tensor<T> {
     /// assert_eq!(slice_col1.shape(), &[2]);
     /// assert_eq!(slice_col1.as_slice(), &[2, 5]);
     /// ```
-    fn slice(&self, axis: usize, index: usize) -> Result<CausalTensor<T>, CausalTensorError>
+    fn slice(&self, axis: usize, index: usize) -> Result<Self, CausalTensorError>
     where
         T: Clone;
     /// Permutes the axes of the tensor according to the given new order.

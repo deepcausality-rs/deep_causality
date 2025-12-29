@@ -7,40 +7,40 @@ use crate::{CausalTensor, CausalTensorError, CausalTensorMathExt};
 impl CausalTensorMathExt<f64> for CausalTensor<f64> {
     fn log_nat(&self) -> Result<CausalTensor<f64>, CausalTensorError> {
         if self.is_empty() {
-            return CausalTensor::new(vec![], self.shape().to_vec()); // Correctly return an empty tensor
+            return Ok(CausalTensor::new(&[], &self.shape().to_vec()));
         }
-        let new_data = self.as_slice().iter().map(|&val| val.ln()).collect();
-        CausalTensor::new(new_data, self.shape().to_vec())
+        let new_data: Vec<f64> = self.as_slice().iter().map(|&val| val.ln()).collect();
+        Ok(CausalTensor::new(&new_data, &self.shape().to_vec()))
     }
 
     fn log2(&self) -> Result<CausalTensor<f64>, CausalTensorError> {
         if self.is_empty() {
-            return CausalTensor::new(vec![], self.shape().to_vec()); // Correctly return an empty tensor
+            return Ok(CausalTensor::new(&[], &self.shape().to_vec()));
         }
 
-        let new_data = self.as_slice().iter().map(|&val| val.log2()).collect();
-        CausalTensor::new(new_data, self.shape().to_vec())
+        let new_data: Vec<f64> = self.as_slice().iter().map(|&val| val.log2()).collect();
+        Ok(CausalTensor::new(&new_data, &self.shape().to_vec()))
     }
 
     fn log10(&self) -> Result<CausalTensor<f64>, CausalTensorError> {
         if self.is_empty() {
-            return CausalTensor::new(vec![], self.shape().to_vec()); // Correctly return an empty tensor
+            return Ok(CausalTensor::new(&[], &self.shape().to_vec()));
         }
 
-        let new_data = self.as_slice().iter().map(|&val| val.log10()).collect();
-        CausalTensor::new(new_data, self.shape().to_vec())
+        let new_data: Vec<f64> = self.as_slice().iter().map(|&val| val.log10()).collect();
+        Ok(CausalTensor::new(&new_data, &self.shape().to_vec()))
     }
 
     fn surd_log2(&self) -> Result<CausalTensor<f64>, CausalTensorError> {
         if self.is_empty() {
-            return CausalTensor::new(vec![], self.shape().to_vec());
+            return Ok(CausalTensor::new(&[], &self.shape().to_vec()));
         }
-        let new_data = self
+        let new_data: Vec<f64> = self
             .as_slice()
             .iter()
             .map(|&val| if val == 0.0 { 0.0 } else { val.log2() })
             .collect();
-        CausalTensor::new(new_data, self.shape().to_vec())
+        Ok(CausalTensor::new(&new_data, &self.shape().to_vec()))
     }
 
     fn safe_div(&self, rhs: &CausalTensor<f64>) -> Result<CausalTensor<f64>, CausalTensorError> {

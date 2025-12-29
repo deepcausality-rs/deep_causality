@@ -4,30 +4,30 @@
  */
 
 use crate::CausalTensorError;
-use crate::types::causal_tensor::CausalTensor;
+use crate::types::causal_tensor::CpuTensor;
 
 // Private helper methods
-impl<T> CausalTensor<T>
+impl<T> CpuTensor<T>
 where
-    T: Clone + Default + PartialOrd,
+    T: Clone,
 {
     /// Helper for element-wise binary operations with broadcasting.
     /// This function determines the broadcasted shape, iterates through the result
     /// coordinates, and applies the given operation `op`.
     pub(crate) fn broadcast_op<F, U>(
         &self,
-        rhs: &CausalTensor<U>,
+        rhs: &CpuTensor<U>,
         op: F,
     ) -> Result<Self, CausalTensorError>
     where
-        U: Clone + Default + PartialOrd,
-        T: Clone + Default + PartialOrd,
+        U: Clone,
+        T: Clone,
         F: Fn(T, U) -> Result<T, CausalTensorError>, // op now returns Result
     {
         // 1. Handle empty tensors
         if self.is_empty() && rhs.is_empty() {
             // If both are empty, the result is an empty scalar tensor
-            return CausalTensor::new(vec![], vec![0]);
+            return CpuTensor::new(vec![], vec![0]);
         }
         if self.is_empty() || rhs.is_empty() {
             // If only one is empty, it's a shape mismatch for binary ops
@@ -89,7 +89,7 @@ where
             }
         }
 
-        CausalTensor::new(result_data, result_shape)
+        CpuTensor::new(result_data, result_shape)
     }
 
     /// Calculates the flat index for a broadcasted tensor. Assumes inputs are valid.

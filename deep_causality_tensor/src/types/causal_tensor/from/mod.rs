@@ -3,25 +3,25 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::CausalTensor;
+use crate::CpuTensor;
 
-impl<T: Clone> From<T> for CausalTensor<T> {
+impl<T: Clone> From<T> for CpuTensor<T> {
     /// Creates a scalar tensor (0-dimensional) from a single value.
     fn from(item: T) -> Self {
-        CausalTensor::from_vec_and_shape_unchecked(vec![item], &[])
+        CpuTensor::from_vec_and_shape_unchecked(vec![item], &[])
     }
 }
 
-impl<'a, T: Clone> From<&'a T> for CausalTensor<T> {
+impl<'a, T: Clone> From<&'a T> for CpuTensor<T> {
     /// Creates a scalar tensor (0-dimensional) from a reference to a single value.
     fn from(item: &'a T) -> Self {
-        CausalTensor::from_vec_and_shape_unchecked(vec![item.clone()], &[])
+        CpuTensor::from_vec_and_shape_unchecked(vec![item.clone()], &[])
     }
 }
 
-impl<'a, T: Clone> From<&'a CausalTensor<T>> for CausalTensor<T> {
-    /// Creates a new `CausalTensor` by cloning an existing `CausalTensor` reference.
-    fn from(item: &'a CausalTensor<T>) -> Self {
+impl<'a, T: Clone> From<&'a CpuTensor<T>> for CpuTensor<T> {
+    /// Creates a new `CpuTensor` by cloning an existing `CpuTensor` reference.
+    fn from(item: &'a CpuTensor<T>) -> Self {
         item.clone()
     }
 }

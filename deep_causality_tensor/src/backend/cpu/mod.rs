@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! CPU Backend implementation using existing `CausalTensor<T>`.
+//! CPU Backend implementation using existing `CpuTensor<T>`.
 //!
 //! This backend wraps the pure Rust tensor implementation with no external
 //! dependencies. It provides the reference implementation for correctness
@@ -14,7 +14,7 @@ mod cpu_backend_tensor;
 
 use crate::backend::Device;
 
-/// CPU Backend using pure Rust `CausalTensor<T>`.
+/// CPU Backend using pure Rust `CpuTensor<T>`.
 ///
 /// This backend provides:
 /// - Full precision support (`f32`, `f64`, `Complex64`, etc.)

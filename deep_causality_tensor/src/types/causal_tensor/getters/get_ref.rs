@@ -2,10 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalTensor, CausalTensorError};
+use crate::{CausalTensorError, CpuTensor};
 
 // Mostly used in inverse_impl
-impl<T> CausalTensor<T> {
+impl<T> CpuTensor<T> {
     /// Returns a reference to the element at the given 2D indices with bounds checking.
     ///
     /// # Errors

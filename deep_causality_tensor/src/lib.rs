@@ -25,7 +25,28 @@ pub use crate::extensions::ext_math::CausalTensorMathExt;
 pub use crate::extensions::ext_stack::CausalTensorStackExt;
 pub use crate::traits::tensor::Tensor;
 pub use crate::types::backend_tensor::BackendTensor;
-pub use crate::types::causal_tensor::{CausalTensor, EinSumAST, EinSumOp};
+pub use crate::types::causal_tensor::CpuTensor;
+// Internal imports for aliasing
+use crate::types::causal_tensor::{EinSumAST as InternalEinSumAST, EinSumOp as InternalEinSumOp};
+
+// --- Type Aliases ---
+
+/// Default backend for CausalTensor.
+/// Defaults to CPU. Use `mlx` feature for MLX backend (when available).
+#[cfg(not(feature = "mlx"))]
+pub type DefaultBackend = backend::CpuBackend;
+
+#[cfg(feature = "mlx")]
+pub type DefaultBackend = backend::CpuBackend; // Fallback until MlxBackend is ready
+
+/// Public CausalTensor type, generic over backing data but using DefaultBackend.
+pub type CausalTensor<T> = BackendTensor<T, DefaultBackend>;
+
+/// Public EinSumOp, generic over T, matches CausalTensor<T>.
+pub type EinSumOp<T> = InternalEinSumOp<CausalTensor<T>>;
+
+/// Public EinSumAST, generic over T, matches CausalTensor<T>.
+pub type EinSumAST<T> = InternalEinSumAST<CausalTensor<T>>;
 pub use crate::utils::utils_tests;
 
 // Re-export commonly used backend types at crate root for convenience

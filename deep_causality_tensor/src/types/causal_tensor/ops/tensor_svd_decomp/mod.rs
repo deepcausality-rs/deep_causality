@@ -10,11 +10,11 @@
 //! - Σ contains singular values on the diagonal (m x n)
 //! - V^T contains right singular vectors (n x n orthogonal)
 
-use crate::{CausalTensor, CausalTensorError};
+use crate::{CausalTensorError, CpuTensor};
 use core::iter::Sum;
 use deep_causality_num::{One, RealField, Zero};
 
-impl<T: Default> CausalTensor<T> {
+impl<T: Default> CpuTensor<T> {
     /// Computes the Singular Value Decomposition using power iteration.
     ///
     /// For a matrix A of shape (m, n), returns (U, S, Vt) where:
@@ -188,9 +188,9 @@ impl<T: Default> CausalTensor<T> {
             }
         }
 
-        let u = CausalTensor::new(u_data, vec![m, k])?;
-        let s = CausalTensor::new(s_data, vec![k])?;
-        let vt = CausalTensor::new(vt_data, vec![k, n])?;
+        let u = CpuTensor::new(u_data, vec![m, k])?;
+        let s = CpuTensor::new(s_data, vec![k])?;
+        let vt = CpuTensor::new(vt_data, vec![k, n])?;
 
         Ok((u, s, vt))
     }

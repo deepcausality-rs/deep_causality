@@ -2,10 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalTensor, CausalTensorError, Tensor};
+use crate::{CausalTensorError, CpuTensor, Tensor};
 use deep_causality_num::{One, RealField, Zero};
 
-impl<T: Default> CausalTensor<T> {
+impl<T: Default> CpuTensor<T> {
     pub(in crate::types::causal_tensor) fn solve_least_squares_cholsky_impl(
         a: &Self, // Design matrix (m x n)
         b: &Self, // Observation vector (m x 1)
@@ -27,17 +27,17 @@ impl<T: Default> CausalTensor<T> {
         let a_t = a.permute_axes(&[1, 0])?;
 
         // 2. Calculate M = A^T A
-        let m_matrix = CausalTensor::mat_mul_2d(&a_t, a)?;
+        let m_matrix = CpuTensor::mat_mul_2d(&a_t, a)?;
 
         // 3. Calculate y = A^T b
-        let y_vector = CausalTensor::mat_mul_2d(&a_t, b)?;
+        let y_vector = CpuTensor::mat_mul_2d(&a_t, b)?;
 
         // 4. Cholesky decomposition of M: M = LL^T
         let l_matrix = m_matrix.cholesky_decomposition_impl()?;
 
         // 5. Solve Lz = y for z (forward substitution)
         let z_data = vec![T::zero(); n];
-        let mut z_vector = CausalTensor::from_vec_and_shape_unchecked(z_data, &[n, 1]);
+        let mut z_vector = CpuTensor::from_vec_and_shape_unchecked(z_data, &[n, 1]);
 
         for i in 0..n {
             let mut sum = T::zero();
@@ -53,7 +53,7 @@ impl<T: Default> CausalTensor<T> {
         let l_t_matrix = l_matrix.permute_axes(&[1, 0])?; // L^T
 
         let x_data = vec![T::zero(); n];
-        let mut x_vector = CausalTensor::from_vec_and_shape_unchecked(x_data, &[n, 1]);
+        let mut x_vector = CpuTensor::from_vec_and_shape_unchecked(x_data, &[n, 1]);
 
         for i in (0..n).rev() {
             let mut sum = T::zero();
@@ -83,7 +83,7 @@ impl<T: Default> CausalTensor<T> {
         }
 
         let l_data = vec![T::zero(); n * n];
-        let mut l_matrix = CausalTensor::from_vec_and_shape_unchecked(l_data, &[n, n]);
+        let mut l_matrix = CpuTensor::from_vec_and_shape_unchecked(l_data, &[n, n]);
 
         for i in 0..n {
             for j in 0..i + 1 {

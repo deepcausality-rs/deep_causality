@@ -3,9 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CausalTensor, CausalTensorError};
+use crate::{CausalTensorError, CpuTensor};
 
-impl<T> CausalTensor<T>
+impl<T> CpuTensor<T>
 where
     T: Clone,
 {

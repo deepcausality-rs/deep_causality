@@ -8,7 +8,14 @@
 use super::BackendTensor;
 use crate::traits::{TensorBackend, TensorData};
 
-impl<T: TensorData, B: TensorBackend> BackendTensor<T, B> {
+impl<T, B: TensorBackend> BackendTensor<T, B> {
+    /// Creates a tensor from an owned vector.
+    pub fn from_vec(data: Vec<T>, shape: &[usize]) -> Self {
+        Self::from_inner(B::create_from_vec(data, shape))
+    }
+}
+
+impl<T: Clone, B: TensorBackend> BackendTensor<T, B> {
     /// Creates a tensor from data with the given shape.
     ///
     /// # Arguments
@@ -21,16 +28,6 @@ impl<T: TensorData, B: TensorBackend> BackendTensor<T, B> {
         Self::from_inner(B::create(data, shape))
     }
 
-    /// Creates a tensor filled with zeros.
-    pub fn zeros(shape: &[usize]) -> Self {
-        Self::from_inner(B::zeros(shape))
-    }
-
-    /// Creates a tensor filled with ones.
-    pub fn ones(shape: &[usize]) -> Self {
-        Self::from_inner(B::ones(shape))
-    }
-
     /// Creates a tensor from a function applied to each index.
     ///
     /// # Arguments
@@ -41,5 +38,17 @@ impl<T: TensorData, B: TensorBackend> BackendTensor<T, B> {
         F: FnMut(&[usize]) -> T,
     {
         Self::from_inner(B::from_shape_fn(shape, f))
+    }
+}
+
+impl<T: TensorData, B: TensorBackend> BackendTensor<T, B> {
+    /// Creates a tensor filled with zeros.
+    pub fn zeros(shape: &[usize]) -> Self {
+        Self::from_inner(B::zeros(shape))
+    }
+
+    /// Creates a tensor filled with ones.
+    pub fn ones(shape: &[usize]) -> Self {
+        Self::from_inner(B::ones(shape))
     }
 }

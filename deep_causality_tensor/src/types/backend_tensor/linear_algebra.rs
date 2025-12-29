@@ -20,7 +20,7 @@ where
     /// For 2D tensors A (m×k) and B (k×n), computes C = A @ B resulting in shape (m×n).
     pub fn matmul(&self, rhs: &Self) -> Self
     where
-        T: Ring + Default + PartialOrd,
+        T: Ring + Copy + Default + PartialOrd,
     {
         Self::from_inner(B::matmul(&self.inner, &rhs.inner))
     }
@@ -30,7 +30,7 @@ where
     /// Returns (Q, R) where Q is orthogonal and R is upper triangular.
     pub fn qr(&self) -> (Self, Self)
     where
-        T: RealField + Sum + PartialEq,
+        T: RealField + Default + Sum + PartialEq + Copy,
     {
         let (q, r) = B::qr(&self.inner);
         (Self::from_inner(q), Self::from_inner(r))
@@ -41,7 +41,7 @@ where
     /// Returns (U, S, Vt) where A = U @ diag(S) @ Vt.
     pub fn svd(&self) -> (Self, Self, Self)
     where
-        T: RealField + Sum + PartialEq,
+        T: RealField + Default + Sum + PartialEq + Copy,
     {
         let (u, s, vt) = B::svd(&self.inner);
         (
@@ -56,8 +56,32 @@ where
     /// Returns A⁻¹ such that A @ A⁻¹ = I.
     pub fn inverse(&self) -> Self
     where
-        T: RealField + Sum + PartialEq,
+        T: RealField + Default + Sum + PartialEq + Copy,
     {
         Self::from_inner(B::inverse(&self.inner))
+    }
+
+    /// Cholesky decomposition.
+    pub fn cholesky_decomposition(&self) -> Self
+    where
+        T: RealField + Default + Sum + PartialEq + Copy,
+    {
+        Self::from_inner(B::cholesky_decomposition(&self.inner))
+    }
+
+    /// Solves linear least squares.
+    pub fn solve_least_squares_cholsky(&self, b: &Self) -> Self
+    where
+        T: RealField + Default + Sum + PartialEq + Copy,
+    {
+        Self::from_inner(B::solve_least_squares_cholsky(&self.inner, &b.inner))
+    }
+
+    /// Tensor product.
+    pub fn tensor_product(&self, rhs: &Self) -> Self
+    where
+        T: Ring + Default + PartialOrd + Copy,
+    {
+        Self::from_inner(B::tensor_product(&self.inner, &rhs.inner))
     }
 }

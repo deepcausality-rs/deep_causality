@@ -2,16 +2,20 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalTensor, CausalTensorError, EinSumAST, Tensor};
+use crate::types::causal_tensor::EinSumAST;
+use crate::{CausalTensorError, CpuTensor, Tensor};
 use core::iter::Sum;
 use core::ops::{Add, Div, Mul};
 use deep_causality_num::{One, RealField, Ring, Zero};
 
-impl<T> Tensor<T> for CausalTensor<T> {
+impl<T> Tensor<T> for CpuTensor<T>
+where
+    T: Clone,
+{
     /// Public API for Einstein summation.
     ///
     /// This method serves as the entry point for performing Einstein summation operations
-    /// on `CausalTensor`s. It takes an `EinSumAST` (Abstract Syntax Tree) as input,
+    /// on `CpuTensor`s. It takes an `EinSumAST` (Abstract Syntax Tree) as input,
     /// which defines the sequence of tensor operations to be executed.
     ///
     /// # Arguments
@@ -21,13 +25,13 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// # Returns
     ///
     /// A `Result` which is:
-    /// - `Ok(CausalTensor<T>)` containing the result of the Einstein summation.
+    /// - `Ok(CpuTensor<T>)` containing the result of the Einstein summation.
     /// - `Err(CausalTensorError)` if any error occurs during the execution of the AST.
     ///
     /// # Errors
     ///
     /// Returns errors propagated from `execute_ein_sum`.
-    fn ein_sum(ast: &EinSumAST<T>) -> Result<CausalTensor<T>, CausalTensorError>
+    fn ein_sum(ast: &EinSumAST<CpuTensor<T>>) -> Result<CpuTensor<T>, CausalTensorError>
     where
         T: Clone + Default + PartialOrd + Add<Output = T> + Mul<Output = T>,
     {
@@ -41,7 +45,7 @@ impl<T> Tensor<T> for CausalTensor<T> {
         self.matmul_impl(rhs)
     }
 
-    /// Computes the tensor product (also known as the outer product) of two `CausalTensor`s.
+    /// Computes the tensor product (also known as the outer product) of two `CpuTensor`s.
     ///
     /// The tensor product combines two tensors into a new tensor whose rank is the sum of
     /// the ranks of the input tensors, and whose shape is the concatenation of their shapes.
@@ -53,12 +57,12 @@ impl<T> Tensor<T> for CausalTensor<T> {
     ///
     /// # Arguments
     ///
-    /// * `rhs` - The right-hand side `CausalTensor`.
+    /// * `rhs` - The right-hand side `CpuTensor`.
     ///
     /// # Returns
     ///
     /// A `Result` which is:
-    /// - `Ok(CausalTensor<T>)` containing the result of the tensor product.
+    /// - `Ok(CpuTensor<T>)` containing the result of the tensor product.
     /// - `Err(CausalTensorError)` if an error occurs during the operation (e.g., memory allocation).
     ///
     /// # Errors
@@ -69,10 +73,10 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_tensor::{CausalTensor, Tensor};
+    /// use deep_causality_tensor::{CpuTensor, Tensor};
     ///
-    /// let lhs = CausalTensor::new(vec![1.0, 2.0], vec![2]).unwrap(); // Shape [2]
-    /// let rhs = CausalTensor::new(vec![3.0, 4.0, 5.0], vec![3]).unwrap(); // Shape [3]
+    /// let lhs = CpuTensor::new(vec![1.0, 2.0], vec![2]).unwrap(); // Shape [2]
+    /// let rhs = CpuTensor::new(vec![3.0, 4.0, 5.0], vec![3]).unwrap(); // Shape [3]
     ///
     /// // Expected result:
     /// // [[1*3, 1*4, 1*5],
@@ -84,13 +88,13 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// assert_eq!(result.as_slice(), &[3.0, 4.0, 5.0, 6.0, 8.0, 10.0]);
     ///
     /// // Tensor product with a scalar
-    /// let scalar = CausalTensor::new(vec![10.0], vec![]).unwrap(); // Shape []
-    /// let vector = CausalTensor::new(vec![1.0, 2.0], vec![2]).unwrap(); // Shape [2]
+    /// let scalar = CpuTensor::new(vec![10.0], vec![]).unwrap(); // Shape []
+    /// let vector = CpuTensor::new(vec![1.0, 2.0], vec![2]).unwrap(); // Shape [2]
     /// let result_scalar_vec = scalar.tensor_product(&vector).unwrap();
     /// assert_eq!(result_scalar_vec.shape(), &[2]);
     /// assert_eq!(result_scalar_vec.as_slice(), &[10.0, 20.0]);
     /// ```
-    fn tensor_product(&self, rhs: &CausalTensor<T>) -> Result<CausalTensor<T>, CausalTensorError>
+    fn tensor_product(&self, rhs: &CpuTensor<T>) -> Result<CpuTensor<T>, CausalTensorError>
     where
         T: Clone + Mul<Output = T>,
     {
@@ -140,15 +144,15 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// # Returns
     ///
     /// A `Result` which is:
-    /// - `Ok(Self)`: A new `CausalTensor` containing the sums.
+    /// - `Ok(Self)`: A new `CpuTensor` containing the sums.
     /// - `Err(CausalTensorError)`: If an invalid axis is specified.
     ///
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_tensor::{CausalTensor, Tensor};
+    /// use deep_causality_tensor::{CpuTensor, Tensor};
     ///
-    /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
+    /// let tensor = CpuTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     /// // Tensor:
     /// // [[1, 2, 3],
     /// //  [4, 5, 6]]
@@ -198,15 +202,15 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// # Returns
     ///
     /// A `Result` which is:
-    /// - `Ok(Self)`: A new `CausalTensor` containing the means.
+    /// - `Ok(Self)`: A new `CpuTensor` containing the means.
     /// - `Err(CausalTensorError)`: If an invalid axis is specified.
     ///
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_tensor::{CausalTensor, Tensor};
+    /// use deep_causality_tensor::{CpuTensor, Tensor};
     ///
-    /// let tensor = CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]).unwrap();
+    /// let tensor = CpuTensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]).unwrap();
     /// // Tensor:
     /// // [[1.0, 2.0, 3.0],
     /// //  [4.0, 5.0, 6.0]]
@@ -248,9 +252,9 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_tensor::{CausalTensor, Tensor};
+    /// use deep_causality_tensor::{CpuTensor, Tensor};
     ///
-    /// let tensor = CausalTensor::new(vec![3, 1, 4, 1, 5, 9, 2, 6], vec![8]).unwrap();
+    /// let tensor = CpuTensor::new(vec![3, 1, 4, 1, 5, 9, 2, 6], vec![8]).unwrap();
     /// let sorted_indices = tensor.arg_sort().unwrap();
     /// assert_eq!(sorted_indices, vec![1, 3, 6, 0, 2, 4, 7, 5]);
     ///
@@ -259,7 +263,7 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// assert_eq!(sorted_data, vec![1, 1, 2, 3, 4, 5, 6, 9]);
     ///
     /// // Attempting to sort a 2D tensor will result in an error
-    /// let multi_dim_tensor = CausalTensor::new(vec![1, 2, 3, 4], vec![2, 2]).unwrap();
+    /// let multi_dim_tensor = CpuTensor::new(vec![1, 2, 3, 4], vec![2, 2]).unwrap();
     /// assert!(multi_dim_tensor.arg_sort().is_err());
     /// ```
     fn arg_sort(&self) -> Result<Vec<usize>, CausalTensorError>
@@ -270,7 +274,7 @@ impl<T> Tensor<T> for CausalTensor<T> {
     }
     /// Returns a new tensor with the same data but a different shape.
     ///
-    /// This is a metadata-only operation; it creates a new `CausalTensor` with a cloned copy
+    /// This is a metadata-only operation; it creates a new `CpuTensor` with a cloned copy
     /// of the original flat data. The underlying data is *not* physically reordered or reallocated.
     /// Only the `shape` and `strides` are recomputed to reflect the new logical view.
     /// The total number of elements implied by the `new_shape` must be equal to the total number of
@@ -283,15 +287,15 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// # Returns
     ///
     /// A `Result` which is:
-    /// - `Ok(Self)`: A new `CausalTensor` with the updated shape.
+    /// - `Ok(Self)`: A new `CpuTensor` with the updated shape.
     /// - `Err(CausalTensorError)`: If the `new_shape` is incompatible (e.g., total elements don't match).
     ///
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_tensor::{CausalTensor, Tensor};
+    /// use deep_causality_tensor::{CpuTensor, Tensor};
     ///
-    /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
+    /// let tensor = CpuTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     ///
     /// // Reshape to 3x2
     /// let reshaped = tensor.reshape(&[3, 2]).unwrap();
@@ -320,9 +324,9 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_tensor::{CausalTensor, Tensor};
+    /// use deep_causality_tensor::{CpuTensor, Tensor};
     ///
-    /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
+    /// let tensor = CpuTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     /// let raveled_tensor = tensor.ravel();
     /// assert_eq!(raveled_tensor.shape(), &[6]);
     /// assert_eq!(raveled_tensor.as_slice(), &[1, 2, 3, 4, 5, 6]);
@@ -338,7 +342,7 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// This operation extracts a sub-tensor where one dimension has been fixed to a specific index.
     /// The rank (number of dimensions) of the resulting tensor will be one less than the original.
     ///
-    /// **Note:** This is a data-copying operation. It creates a new `CausalTensor` with its
+    /// **Note:** This is a data-copying operation. It creates a new `CpuTensor` with its
     /// own allocated data. A future optimization could provide a zero-copy, lifetime-bound view.
     ///
     /// # Arguments
@@ -346,15 +350,15 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// * `index` - The index at which to slice the axis.
     ///
     /// # Returns
-    /// A `Result` containing the new, sliced `CausalTensor`, or a `CausalTensorError` if
+    /// A `Result` containing the new, sliced `CpuTensor`, or a `CausalTensorError` if
     /// the axis or index is out of bounds.
     ///
     /// # Examples
     ///
     /// ```
-    /// use deep_causality_tensor::{CausalTensor, Tensor};
+    /// use deep_causality_tensor::{CpuTensor, Tensor};
     ///
-    /// let tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
+    /// let tensor = CpuTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
     /// // Tensor:
     /// // [[1, 2, 3],
     /// //  [4, 5, 6]]
@@ -374,7 +378,7 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// assert_eq!(slice_col1.shape(), &[2]);
     /// assert_eq!(slice_col1.as_slice(), &[2, 5]);
     /// ```
-    fn slice(&self, axis: usize, index: usize) -> Result<CausalTensor<T>, CausalTensorError>
+    fn slice(&self, axis: usize, index: usize) -> Result<CpuTensor<T>, CausalTensorError>
     where
         T: Clone,
     {
@@ -382,7 +386,7 @@ impl<T> Tensor<T> for CausalTensor<T> {
     }
     /// Permutes the axes of the tensor according to the given new order.
     ///
-    /// This is a metadata-only operation; it creates a new `CausalTensor` with a cloned copy
+    /// This is a metadata-only operation; it creates a new `CpuTensor` with a cloned copy
     /// of the original flat data. The underlying data is *not* physically reordered or reallocated.
     /// Only the `shape` and `strides` are recomputed to reflect the new logical axis order.
     ///
@@ -396,7 +400,7 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// # Returns
     ///
     /// A `Result` which is:
-    /// - `Ok(Self)`: A new `CausalTensor` with permuted axes.
+    /// - `Ok(Self)`: A new `CpuTensor` with permuted axes.
     /// - `Err(CausalTensorError)`: If the `axes` are invalid (e.g., wrong length, not a permutation).
     fn permute_axes(&self, axes: &[usize]) -> Result<Self, CausalTensorError>
     where
@@ -415,7 +419,7 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// * `flat_index` - The flat index in the data vector that should become the new origin.
     ///
     /// # Returns
-    /// A new `CausalTensor` with the same shape, but rotated data.
+    /// A new `CpuTensor` with the same shape, but rotated data.
     ///
     /// # Physics Note
     /// This implements Periodic Boundary Conditions (Topology of a Torus).
@@ -453,7 +457,7 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// # Returns
     ///
     /// A `Result` which is:
-    /// - `Ok(Self)`: A new `CausalTensor` representing the inverse matrix.
+    /// - `Ok(Self)`: A new `CpuTensor` representing the inverse matrix.
     /// - `Err(CausalTensorError)`: If the tensor is not a square matrix, is not 2-dimensional,
     ///   or is singular.
     ///
@@ -505,7 +509,7 @@ impl<T> Tensor<T> for CausalTensor<T> {
     ///
     /// # Constraints
     ///
-    /// - The input `CausalTensor` must represent a 2D square matrix.
+    /// - The input `CpuTensor` must represent a 2D square matrix.
     /// - The matrix must be symmetric and positive-definite. If it is not positive-definite,
     ///   the decomposition will fail (e.g., attempt to take the square root of a negative number,
     ///   or encounter a zero on the diagonal).
@@ -513,7 +517,7 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// # Returns
     ///
     /// A `Result` which is:
-    /// - `Ok(Self)`: A new `CausalTensor` representing the lower triangular Cholesky factor $L$.
+    /// - `Ok(Self)`: A new `CpuTensor` representing the lower triangular Cholesky factor $L$.
     /// - `Err(CausalTensorError)`: If input dimensions are invalid, or if the matrix is not
     ///   symmetric positive-definite.
     ///
@@ -556,8 +560,8 @@ impl<T> Tensor<T> for CausalTensor<T> {
     ///
     /// # Arguments
     ///
-    /// * `a` - The design matrix $A$ (m x n `CausalTensor`).
-    /// * `b` - The observation vector $b$ (m x 1 `CausalTensor`).
+    /// * `a` - The design matrix $A$ (m x n `CpuTensor`).
+    /// * `b` - The observation vector $b$ (m x 1 `CpuTensor`).
     ///
     /// # Constraints
     ///
@@ -568,7 +572,7 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// # Returns
     ///
     /// A `Result` which is:
-    /// - `Ok(Self)`: A new `CausalTensor` representing the solution vector $x$ (n x 1).
+    /// - `Ok(Self)`: A new `CpuTensor` representing the solution vector $x$ (n x 1).
     /// - `Err(CausalTensorError)`: If input dimensions are invalid, or if $A^T A$ is singular.
     ///
     /// # Errors

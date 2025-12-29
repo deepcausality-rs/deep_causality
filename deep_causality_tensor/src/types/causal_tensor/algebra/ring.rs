@@ -3,22 +3,22 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::CausalTensor;
+use crate::CpuTensor;
 use deep_causality_num::{Associative, Distributive, Ring};
 
 // Implement Associative marker trait
-impl<T> Associative for CausalTensor<T> where T: Associative + Copy {}
+impl<T> Associative for CpuTensor<T> where T: Associative + Copy {}
 
 // Implement Distributive marker trait
-impl<T> Distributive for CausalTensor<T> where T: Distributive + Copy {}
+impl<T> Distributive for CpuTensor<T> where T: Distributive + Copy {}
 
 // Ring is automatically implemented by blanket impl in deep_causality_num
-// because CausalTensor implements AbelianGroup, MulMonoid (via One+Associative+Mul), Distributive.
+// because CpuTensor implements AbelianGroup, MulMonoid (via One+Associative+Mul), Distributive.
 
 // Module is automatically implemented by blanket impl in deep_causality_num
-// because CausalTensor implements AbelianGroup and Mul<S>.
+// because CpuTensor implements AbelianGroup and Mul<S>.
 
-impl<T> CausalTensor<T>
+impl<T> CpuTensor<T>
 where
     T: Ring + Copy,
 {

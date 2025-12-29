@@ -67,4 +67,21 @@ pub trait LinearAlgebraBackend: TensorBackend {
     fn inverse<T>(input: &Self::Tensor<T>) -> Self::Tensor<T>
     where
         T: TensorData + deep_causality_num::RealField + core::iter::Sum + PartialEq;
+
+    /// Cholesky decomposition.
+    ///
+    /// Returns L such that A = L * L^T.
+    fn cholesky_decomposition<T>(input: &Self::Tensor<T>) -> Self::Tensor<T>
+    where
+        T: TensorData + deep_causality_num::RealField + core::iter::Sum + PartialEq;
+
+    /// Solves linear least squares using Cholesky decomposition.
+    fn solve_least_squares_cholsky<T>(a: &Self::Tensor<T>, b: &Self::Tensor<T>) -> Self::Tensor<T>
+    where
+        T: TensorData + deep_causality_num::RealField + core::iter::Sum + PartialEq;
+
+    /// Tensor product (outer product).
+    fn tensor_product<T>(lhs: &Self::Tensor<T>, rhs: &Self::Tensor<T>) -> Self::Tensor<T>
+    where
+        T: TensorData + deep_causality_num::Ring + Default + PartialOrd;
 }

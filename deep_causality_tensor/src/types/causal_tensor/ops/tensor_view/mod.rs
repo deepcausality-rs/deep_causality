@@ -2,10 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalTensor, CausalTensorError};
+use crate::{CausalTensorError, CpuTensor};
 use core::ops::Range;
 
-impl<T> CausalTensor<T>
+impl<T> CpuTensor<T>
 where
     T: Clone,
 {
@@ -13,7 +13,7 @@ where
         &self,
         axis: usize,
         index: usize,
-    ) -> Result<CausalTensor<T>, CausalTensorError> {
+    ) -> Result<CpuTensor<T>, CausalTensorError> {
         // --- 1. Input Validation ---
         if axis >= self.num_dim() {
             return Err(CausalTensorError::AxisOutOfBounds);
@@ -53,7 +53,7 @@ where
         }
 
         // --- 4. Construct and return the new tensor ---
-        CausalTensor::new(new_data, new_shape)
+        CpuTensor::new(new_data, new_shape)
     }
 
     pub(in crate::types::causal_tensor) fn shifted_view_impl(&self, flat_index: usize) -> Self
@@ -92,7 +92,7 @@ where
     ///
     /// # Returns
     ///
-    /// A new `CausalTensor` with shape determined by the range sizes.
+    /// A new `CpuTensor` with shape determined by the range sizes.
     ///
     /// # Errors
     ///
@@ -101,7 +101,7 @@ where
     pub fn range_slice_impl(
         &self,
         ranges: &[Range<usize>],
-    ) -> Result<CausalTensor<T>, CausalTensorError> {
+    ) -> Result<CpuTensor<T>, CausalTensorError> {
         let shape = self.shape();
         let ndim = self.num_dim();
 
@@ -125,7 +125,7 @@ where
 
         if new_len == 0 {
             // Handle empty slice case
-            return CausalTensor::new(vec![], new_shape);
+            return CpuTensor::new(vec![], new_shape);
         }
 
         // --- 3. Pre-allocate output buffer ---
@@ -163,6 +163,6 @@ where
         }
 
         // --- 5. Construct and return the new tensor ---
-        CausalTensor::new(new_data, new_shape)
+        CpuTensor::new(new_data, new_shape)
     }
 }

@@ -3,20 +3,20 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::CausalTensor;
+use crate::CpuTensor;
 use deep_causality_num::{AbelianGroup, AddGroup};
 
 /// Marker trait for Abelian Group.
-/// CausalTensor addition is commutative if T's addition is commutative.
-impl<T> AbelianGroup for CausalTensor<T> where
+/// CpuTensor addition is commutative if T's addition is commutative.
+impl<T> AbelianGroup for CpuTensor<T> where
     T: AbelianGroup + Copy + Default + PartialOrd + std::ops::Neg<Output = T>
 {
 }
 
 // AddGroup is automatically implemented by blanket impl in deep_causality_num
-// because CausalTensor implements Zero, Add, Sub, Neg, Clone.
+// because CpuTensor implements Zero, Add, Sub, Neg, Clone.
 
-impl<T> CausalTensor<T>
+impl<T> CpuTensor<T>
 where
     T: AddGroup + Copy + std::ops::Neg<Output = T>,
 {

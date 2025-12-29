@@ -3,31 +3,30 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::Tensor;
-use crate::{
-    CausalTensor, CausalTensorError, CausalTensorStackExt, EinSumAST, EinSumValidationError,
-};
+use crate::types::causal_tensor::EinSumAST;
+use crate::{CausalTensorError, CausalTensorStackExt, CpuTensor, EinSumValidationError};
 use std::ops::{Add, Mul};
 
-impl<T> CausalTensor<T>
+impl<T> CpuTensor<T>
 where
     T: Clone + Default + PartialOrd + Add<Output = T> + Mul<Output = T>,
 {
     /// Extracts two operands from the provided Abstract Syntax Tree (AST) children.
     ///
     /// This helper function is used to retrieve the left-hand side (LHS) and right-hand side (RHS)
-    /// `CausalTensor` operands from a slice of `EinSumAST` nodes. It expects exactly two children
+    /// `CpuTensor` operands from a slice of `EinSumAST` nodes. It expects exactly two children
     /// in the AST slice.
     ///
     /// # Arguments
     ///
-    /// * `children` - A slice of `EinSumAST<T>` representing the children nodes of an AST operation.
+    /// * `children` - A slice of `EinSumAST<CpuTensor<T>>` representing the children nodes of an AST operation.
     ///
-    /// Expected to contain exactly two elements, each resolving to a `CausalTensor<T>`.
+    /// Expected to contain exactly two elements, each resolving to a `CpuTensor<T>`.
     ///
     /// # Returns
     ///
     /// A `Result` which is:
-    /// - `Ok((CausalTensor<T>, CausalTensor<T>))` containing the LHS and RHS tensors if successful.
+    /// - `Ok((CpuTensor<T>, CpuTensor<T>))` containing the LHS and RHS tensors if successful.
     /// - `Err(CausalTensorError)` if the number of children is not two, or if `execute_ein_sum`
     ///   fails for either child.
     ///
@@ -35,10 +34,10 @@ where
     ///
     /// Returns `CausalTensorError::EinSumError(EinSumValidationError::InvalidNumberOfChildren)`
     /// if `children.len()` is not equal to 2.
-    /// Returns errors propagated from `CausalTensor::execute_ein_sum`.
+    /// Returns errors propagated from `CpuTensor::execute_ein_sum`.
     pub(in crate::types::causal_tensor) fn get_binary_operands(
-        children: &[EinSumAST<T>],
-    ) -> Result<(CausalTensor<T>, CausalTensor<T>), CausalTensorError> {
+        children: &[EinSumAST<CpuTensor<T>>],
+    ) -> Result<(CpuTensor<T>, CpuTensor<T>), CausalTensorError> {
         if children.len() != 2 {
             return Err(CausalTensorError::EinSumError(
                 EinSumValidationError::InvalidNumberOfChildren {
@@ -47,26 +46,26 @@ where
                 },
             ));
         }
-        let lhs = CausalTensor::execute_ein_sum(&children[0])?;
-        let rhs = CausalTensor::execute_ein_sum(&children[1])?;
+        let lhs = CpuTensor::execute_ein_sum(&children[0])?;
+        let rhs = CpuTensor::execute_ein_sum(&children[1])?;
         Ok((lhs, rhs))
     }
 
     /// Extracts a single operand from the provided Abstract Syntax Tree (AST) children.
     ///
-    /// This helper function is used to retrieve a single `CausalTensor` operand from a slice
+    /// This helper function is used to retrieve a single `CpuTensor` operand from a slice
     /// of `EinSumAST` nodes. It expects exactly one child in the AST slice.
     ///
     /// # Arguments
     ///
-    /// * `children` - A slice of `EinSumAST<T>` representing the children nodes of an AST operation.
+    /// * `children` - A slice of `EinSumAST<CpuTensor<T>>` representing the children nodes of an AST operation.
     ///
-    /// Expected to contain exactly one element, resolving to a `CausalTensor<T>`.
+    /// Expected to contain exactly one element, resolving to a `CpuTensor<T>`.
     ///
     /// # Returns
     ///
     /// A `Result` which is:
-    /// - `Ok(CausalTensor<T>)` containing the single operand tensor if successful.
+    /// - `Ok(CpuTensor<T>)` containing the single operand tensor if successful.
     /// - `Err(CausalTensorError)` if the number of children is not one, or if `execute_ein_sum`
     ///   fails for the child.
     ///
@@ -74,10 +73,10 @@ where
     ///
     /// Returns `CausalTensorError::EinSumError(EinSumValidationError::InvalidNumberOfChildren)`
     /// if `children.len()` is not equal to 1.
-    /// Returns errors propagated from `CausalTensor::execute_ein_sum`.
+    /// Returns errors propagated from `CpuTensor::execute_ein_sum`.
     pub(in crate::types::causal_tensor) fn get_unary_operand(
-        children: &[EinSumAST<T>],
-    ) -> Result<CausalTensor<T>, CausalTensorError> {
+        children: &[EinSumAST<CpuTensor<T>>],
+    ) -> Result<CpuTensor<T>, CausalTensorError> {
         if children.len() != 1 {
             return Err(CausalTensorError::EinSumError(
                 EinSumValidationError::InvalidNumberOfChildren {
@@ -86,10 +85,10 @@ where
                 },
             ));
         }
-        CausalTensor::execute_ein_sum(&children[0])
+        CpuTensor::execute_ein_sum(&children[0])
     }
 
-    /// Performs a generic tensor contraction between two `CausalTensor`s.
+    /// Performs a generic tensor contraction between two `CpuTensor`s.
     ///
     /// This method implements an optimized tensor contraction by leveraging permutation and
     /// reshaping operations to reduce the problem to a standard 2D matrix multiplication.
@@ -97,15 +96,15 @@ where
     ///
     /// # Arguments
     ///
-    /// * `lhs` - The left-hand side `CausalTensor`.
-    /// * `rhs` - The right-hand side `CausalTensor`.
+    /// * `lhs` - The left-hand side `CpuTensor`.
+    /// * `rhs` - The right-hand side `CpuTensor`.
     /// * `lhs_contract_axes` - A slice of `usize` indicating the axes of `lhs` to contract over.
     /// * `rhs_contract_axes` - A slice of `usize` indicating the axes of `rhs` to contract over.
     ///
     /// # Returns
     ///
     /// A `Result` which is:
-    /// - `Ok(CausalTensor<T>)` containing the result of the tensor contraction.
+    /// - `Ok(CpuTensor<T>)` containing the result of the tensor contraction.
     /// - `Err(CausalTensorError)` if validation fails or an underlying operation encounters an error.
     ///
     /// # Errors
@@ -116,11 +115,11 @@ where
     /// - The dimensions of the contracted axes in `lhs` and `rhs` do not match.
     /// - Errors are propagated from `permute_axes`, `reshape`, or `mat_mul_2d`.
     pub(in crate::types::causal_tensor) fn contract(
-        lhs: &CausalTensor<T>,
-        rhs: &CausalTensor<T>,
+        lhs: &CpuTensor<T>,
+        rhs: &CpuTensor<T>,
         lhs_contract_axes: &[usize],
         rhs_contract_axes: &[usize],
-    ) -> Result<CausalTensor<T>, CausalTensorError> {
+    ) -> Result<CpuTensor<T>, CausalTensorError> {
         // 1. Validate input axes and shapes
         if lhs_contract_axes.len() != rhs_contract_axes.len() {
             return Err(CausalTensorError::EinSumError(
@@ -196,7 +195,7 @@ where
         result_matrix.reshape(&final_shape)
     }
 
-    /// Performs 2D matrix multiplication between two `CausalTensor`s.
+    /// Performs 2D matrix multiplication between two `CpuTensor`s.
     ///
     /// This private helper function computes the matrix product of two rank-2 tensors.
     /// It validates that both input tensors are indeed 2D and that their inner dimensions
@@ -204,13 +203,13 @@ where
     ///
     /// # Arguments
     ///
-    /// * `lhs` - The left-hand side `CausalTensor` (matrix).
-    /// * `rhs` - The right-hand side `CausalTensor` (matrix).
+    /// * `lhs` - The left-hand side `CpuTensor` (matrix).
+    /// * `rhs` - The right-hand side `CpuTensor` (matrix).
     ///
     /// # Returns
     ///
     /// A `Result` which is:
-    /// - `Ok(CausalTensor<T>)` containing the resulting product matrix.
+    /// - `Ok(CpuTensor<T>)` containing the resulting product matrix.
     /// - `Err(CausalTensorError)` if validation fails.
     ///
     /// # Errors
@@ -219,9 +218,9 @@ where
     /// - Either `lhs` or `rhs` is not a 2D tensor (rank mismatch).
     /// - The inner dimensions of `lhs` and `rhs` do not match (shape mismatch).
     pub(in crate::types::causal_tensor) fn mat_mul_2d(
-        lhs: &CausalTensor<T>,
-        rhs: &CausalTensor<T>,
-    ) -> Result<CausalTensor<T>, CausalTensorError> {
+        lhs: &CpuTensor<T>,
+        rhs: &CpuTensor<T>,
+    ) -> Result<CpuTensor<T>, CausalTensorError> {
         if lhs.num_dim() != 2 {
             return Err(CausalTensorError::EinSumError(
                 EinSumValidationError::RankMismatch {
@@ -276,36 +275,36 @@ where
             }
         }
 
-        CausalTensor::new(result_data, vec![m, n])
+        CpuTensor::new(result_data, vec![m, n])
     }
 
-    /// Performs element-wise multiplication (Hadamard product) between two `CausalTensor`s.
+    /// Performs element-wise multiplication (Hadamard product) between two `CpuTensor`s.
     ///
     /// This private method multiplies corresponding elements of two tensors. It leverages
     /// the `broadcast_op` method to handle broadcasting rules if the tensor shapes are not identical.
     ///
     /// # Arguments
     ///
-    /// * `lhs` - The left-hand side `CausalTensor`.
-    /// * `rhs` - The right-hand side `CausalTensor`.
+    /// * `lhs` - The left-hand side `CpuTensor`.
+    /// * `rhs` - The right-hand side `CpuTensor`.
     ///
     /// # Returns
     ///
     /// A `Result` which is:
-    /// - `Ok(CausalTensor<T>)` containing the result of the element-wise multiplication.
+    /// - `Ok(CpuTensor<T>)` containing the result of the element-wise multiplication.
     /// - `Err(CausalTensorError)` if broadcasting fails or an element-wise operation encounters an error.
     ///
     /// # Errors
     ///
-    /// Returns errors propagated from `CausalTensor::broadcast_op`.
+    /// Returns errors propagated from `CpuTensor::broadcast_op`.
     pub(in crate::types::causal_tensor) fn element_wise_mul(
-        lhs: &CausalTensor<T>,
-        rhs: &CausalTensor<T>,
-    ) -> Result<CausalTensor<T>, CausalTensorError> {
+        lhs: &CpuTensor<T>,
+        rhs: &CpuTensor<T>,
+    ) -> Result<CpuTensor<T>, CausalTensorError> {
         lhs.broadcast_op(rhs, |a, b| Ok(a * b))
     }
 
-    /// Computes the trace of a `CausalTensor` over two specified axes.
+    /// Computes the trace of a `CpuTensor` over two specified axes.
     ///
     /// The trace operation sums the elements along the diagonal of a 2D slice
     /// defined by `axis1` and `axis2`. If the tensor has more than two dimensions,
@@ -314,14 +313,14 @@ where
     ///
     /// # Arguments
     ///
-    /// * `tensor` - The input `CausalTensor`.
+    /// * `tensor` - The input `CpuTensor`.
     /// * `axis1` - The first axis to trace over.
     /// * `axis2` - The second axis to trace over.
     ///
     /// # Returns
     ///
     /// A `Result` which is:
-    /// - `Ok(CausalTensor<T>)` containing the result of the trace operation.
+    /// - `Ok(CpuTensor<T>)` containing the result of the trace operation.
     /// - `Err(CausalTensorError)` if validation fails.
     ///
     /// # Errors
@@ -331,10 +330,10 @@ where
     /// - `axis1` and `axis2` are identical.
     /// - The dimensions of `axis1` and `axis2` are not equal (shape mismatch).
     pub(in crate::types::causal_tensor) fn trace(
-        tensor: &CausalTensor<T>,
+        tensor: &CpuTensor<T>,
         axis1: usize,
         axis2: usize,
-    ) -> Result<CausalTensor<T>, CausalTensorError> {
+    ) -> Result<CpuTensor<T>, CausalTensorError> {
         if axis1 >= tensor.num_dim() || axis2 >= tensor.num_dim() || axis1 == axis2 {
             return Err(CausalTensorError::EinSumError(
                 EinSumValidationError::InvalidAxesSpecification {
@@ -372,10 +371,10 @@ where
                 let flat_index = i * stride1 + i * stride2;
                 total_sum = total_sum + tensor.data[flat_index].clone();
             }
-            return CausalTensor::new(vec![total_sum], vec![]);
+            return CpuTensor::new(vec![total_sum], vec![]);
         }
 
-        let mut result_tensor = CausalTensor::full(&new_shape, T::default());
+        let mut result_tensor = CpuTensor::full(&new_shape, T::default());
         let diag_len = tensor.shape[axis1];
 
         let mut batch_axes = Vec::new();
@@ -420,7 +419,7 @@ where
         Ok(result_tensor)
     }
 
-    /// Extracts the diagonal elements of a `CausalTensor` over two specified axes.
+    /// Extracts the diagonal elements of a `CpuTensor` over two specified axes.
     ///
     /// This private method extracts the diagonal elements from 2D slices of the input tensor
     /// defined by `axis1` and `axis2`. The resulting tensor will have a rank reduced by one
@@ -428,14 +427,14 @@ where
     ///
     /// # Arguments
     ///
-    /// * `tensor` - The input `CausalTensor`.
+    /// * `tensor` - The input `CpuTensor`.
     /// * `axis1` - The first axis defining the 2D plane from which to extract the diagonal.
     /// * `axis2` - The second axis defining the 2D plane from which to extract the diagonal.
     ///
     /// # Returns
     ///
     /// A `Result` which is:
-    /// - `Ok(CausalTensor<T>)` containing the tensor with extracted diagonal elements.
+    /// - `Ok(CpuTensor<T>)` containing the tensor with extracted diagonal elements.
     /// - `Err(CausalTensorError)` if validation fails.
     ///
     /// # Errors
@@ -445,10 +444,10 @@ where
     /// - `axis1` and `axis2` are identical.
     /// - The dimensions of `axis1` and `axis2` are not equal (shape mismatch).
     pub(in crate::types::causal_tensor) fn diagonal(
-        tensor: &CausalTensor<T>,
+        tensor: &CpuTensor<T>,
         axis1: usize,
         axis2: usize,
-    ) -> Result<CausalTensor<T>, CausalTensorError> {
+    ) -> Result<CpuTensor<T>, CausalTensorError> {
         if axis1 >= tensor.num_dim() || axis2 >= tensor.num_dim() || axis1 == axis2 {
             return Err(CausalTensorError::EinSumError(
                 EinSumValidationError::InvalidAxesSpecification {
@@ -510,10 +509,10 @@ where
             }
         }
 
-        CausalTensor::new(result_data, new_shape)
+        CpuTensor::new(result_data, new_shape)
     }
 
-    /// Performs batch matrix multiplication between two `CausalTensor`s.
+    /// Performs batch matrix multiplication between two `CpuTensor`s.
     ///
     /// This method expects both input tensors to have at least 3 dimensions, where the first
     /// dimension represents the batch size. It performs a 2D matrix multiplication for each
@@ -521,13 +520,13 @@ where
     ///
     /// # Arguments
     ///
-    /// * `lhs` - The left-hand side `CausalTensor` with a batch dimension.
-    /// * `rhs` - The right-hand side `CausalTensor` with a batch dimension.
+    /// * `lhs` - The left-hand side `CpuTensor` with a batch dimension.
+    /// * `rhs` - The right-hand side `CpuTensor` with a batch dimension.
     ///
     /// # Returns
     ///
     /// A `Result` which is:
-    /// - `Ok(CausalTensor<T>)` containing the result of the batch matrix multiplication.
+    /// - `Ok(CpuTensor<T>)` containing the result of the batch matrix multiplication.
     /// - `Err(CausalTensorError)` if validation fails or an underlying operation encounters an error.
     ///
     /// # Errors
@@ -537,9 +536,9 @@ where
     /// - The batch sizes of `lhs` and `rhs` do not match (shape mismatch).
     /// - Errors are propagated from `slice`, `mat_mul_2d`, or `stack`.
     pub(in crate::types::causal_tensor) fn batch_mat_mul(
-        lhs: CausalTensor<T>,
-        rhs: CausalTensor<T>,
-    ) -> Result<CausalTensor<T>, CausalTensorError> {
+        lhs: CpuTensor<T>,
+        rhs: CpuTensor<T>,
+    ) -> Result<CpuTensor<T>, CausalTensorError> {
         if lhs.num_dim() < 3 {
             return Err(CausalTensorError::EinSumError(
                 EinSumValidationError::RankMismatch {
@@ -580,6 +579,6 @@ where
         }
 
         // Stack the results back into a single tensor
-        result_batches.stack(0)
+        result_batches.stack(0).map(|t| t.into_inner())
     }
 }

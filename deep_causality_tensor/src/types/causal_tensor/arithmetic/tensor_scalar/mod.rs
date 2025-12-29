@@ -2,26 +2,26 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::types::causal_tensor::CausalTensor;
+use crate::types::causal_tensor::CpuTensor;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
 // Implemented via `std::ops` traits for ergonomic use (`+`, `-`, `*`, `/`).
 
 // --- ADDITION ---
 
-// Implementation for `&CausalTensor<T> + T`
-impl<T> Add<T> for &CausalTensor<T>
+// Implementation for `&CpuTensor<T> + T`
+impl<T> Add<T> for &CpuTensor<T>
 where
     T: Add<T, Output = T> + Clone,
 {
-    type Output = CausalTensor<T>;
+    type Output = CpuTensor<T>;
 
     fn add(self, rhs: T) -> Self::Output {
         let mut new_data = self.data.clone();
         for item in &mut new_data {
             *item = item.clone().add(rhs.clone());
         }
-        CausalTensor {
+        CpuTensor {
             data: new_data,
             shape: self.shape.clone(),
             strides: self.strides.clone(),
@@ -29,19 +29,19 @@ where
     }
 }
 
-// Implementation for `CausalTensor<T> + T` (consuming)
-impl<T> Add<T> for CausalTensor<T>
+// Implementation for `CpuTensor<T> + T` (consuming)
+impl<T> Add<T> for CpuTensor<T>
 where
     T: Add<T, Output = T> + Clone,
 {
-    type Output = CausalTensor<T>;
+    type Output = CpuTensor<T>;
     fn add(self, rhs: T) -> Self::Output {
         (&self).add(rhs)
     }
 }
 
-// Implementation for `CausalTensor<T> += T` (in-place)
-impl<T> AddAssign<T> for CausalTensor<T>
+// Implementation for `CpuTensor<T> += T` (in-place)
+impl<T> AddAssign<T> for CpuTensor<T>
 where
     T: AddAssign + Clone,
 {
@@ -54,19 +54,19 @@ where
 
 // --- SUBTRACTION ---
 
-// Implementation for `&CausalTensor<T> - T`
-impl<T> Sub<T> for &CausalTensor<T>
+// Implementation for `&CpuTensor<T> - T`
+impl<T> Sub<T> for &CpuTensor<T>
 where
     T: Sub<T, Output = T> + Clone,
 {
-    type Output = CausalTensor<T>;
+    type Output = CpuTensor<T>;
 
     fn sub(self, rhs: T) -> Self::Output {
         let mut new_data = self.data.clone();
         for item in &mut new_data {
             *item = item.clone().sub(rhs.clone());
         }
-        CausalTensor {
+        CpuTensor {
             data: new_data,
             shape: self.shape.clone(),
             strides: self.strides.clone(),
@@ -74,19 +74,19 @@ where
     }
 }
 
-// Implementation for `CausalTensor<T> - T` (consuming)
-impl<T> Sub<T> for CausalTensor<T>
+// Implementation for `CpuTensor<T> - T` (consuming)
+impl<T> Sub<T> for CpuTensor<T>
 where
     T: Sub<T, Output = T> + Clone,
 {
-    type Output = CausalTensor<T>;
+    type Output = CpuTensor<T>;
     fn sub(self, rhs: T) -> Self::Output {
         (&self).sub(rhs)
     }
 }
 
-// Implementation for `CausalTensor<T> -= T` (in-place)
-impl<T> SubAssign<T> for CausalTensor<T>
+// Implementation for `CpuTensor<T> -= T` (in-place)
+impl<T> SubAssign<T> for CpuTensor<T>
 where
     T: SubAssign + Clone,
 {
@@ -99,19 +99,19 @@ where
 
 // --- MULTIPLICATION ---
 
-// Implementation for `&CausalTensor<T> * T`
-impl<T> Mul<T> for &CausalTensor<T>
+// Implementation for `&CpuTensor<T> * T`
+impl<T> Mul<T> for &CpuTensor<T>
 where
     T: Mul<T, Output = T> + Clone,
 {
-    type Output = CausalTensor<T>;
+    type Output = CpuTensor<T>;
 
     fn mul(self, rhs: T) -> Self::Output {
         let mut new_data = self.data.clone();
         for item in &mut new_data {
             *item = item.clone().mul(rhs.clone());
         }
-        CausalTensor {
+        CpuTensor {
             data: new_data,
             shape: self.shape.clone(),
             strides: self.strides.clone(),
@@ -119,19 +119,19 @@ where
     }
 }
 
-// Implementation for `CausalTensor<T> * T` (consuming)
-impl<T> Mul<T> for CausalTensor<T>
+// Implementation for `CpuTensor<T> * T` (consuming)
+impl<T> Mul<T> for CpuTensor<T>
 where
     T: Mul<T, Output = T> + Clone,
 {
-    type Output = CausalTensor<T>;
+    type Output = CpuTensor<T>;
     fn mul(self, rhs: T) -> Self::Output {
         (&self).mul(rhs)
     }
 }
 
-// Implementation for `CausalTensor<T> *= T` (in-place)
-impl<T> MulAssign<T> for CausalTensor<T>
+// Implementation for `CpuTensor<T> *= T` (in-place)
+impl<T> MulAssign<T> for CpuTensor<T>
 where
     T: MulAssign + Clone,
 {
@@ -144,19 +144,19 @@ where
 
 // --- DIVISION ---
 
-// Implementation for `&CausalTensor<T> / T`
-impl<T> Div<T> for &CausalTensor<T>
+// Implementation for `&CpuTensor<T> / T`
+impl<T> Div<T> for &CpuTensor<T>
 where
     T: Div<T, Output = T> + Clone,
 {
-    type Output = CausalTensor<T>;
+    type Output = CpuTensor<T>;
 
     fn div(self, rhs: T) -> Self::Output {
         let mut new_data = self.data.clone();
         for item in &mut new_data {
             *item = item.clone().div(rhs.clone());
         }
-        CausalTensor {
+        CpuTensor {
             data: new_data,
             shape: self.shape.clone(),
             strides: self.strides.clone(),
@@ -164,19 +164,19 @@ where
     }
 }
 
-// Implementation for `CausalTensor<T> / T` (consuming)
-impl<T> Div<T> for CausalTensor<T>
+// Implementation for `CpuTensor<T> / T` (consuming)
+impl<T> Div<T> for CpuTensor<T>
 where
     T: Div<T, Output = T> + Clone,
 {
-    type Output = CausalTensor<T>;
+    type Output = CpuTensor<T>;
     fn div(self, rhs: T) -> Self::Output {
         (&self).div(rhs)
     }
 }
 
-// Implementation for `CausalTensor<T> /= T` (in-place)
-impl<T> DivAssign<T> for CausalTensor<T>
+// Implementation for `CpuTensor<T> /= T` (in-place)
+impl<T> DivAssign<T> for CpuTensor<T>
 where
     T: DivAssign + Clone,
 {

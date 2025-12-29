@@ -3,10 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::CausalTensor;
+use crate::CpuTensor;
 use deep_causality_num::{Module, Ring};
 
-impl<T> CausalTensor<T> {
+impl<T> CpuTensor<T> {
     /// Scales the tensor by a scalar value.
     pub fn scale<S>(&self, scalar: S) -> Self
     where

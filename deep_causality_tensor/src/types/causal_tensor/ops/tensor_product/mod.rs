@@ -2,11 +2,12 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalTensor, CausalTensorError, EinSumOp};
+use crate::types::causal_tensor::EinSumOp;
+use crate::{CausalTensorError, CpuTensor};
 use deep_causality_num::Ring;
 use std::ops::Mul;
 
-impl<T> CausalTensor<T>
+impl<T> CpuTensor<T>
 where
     T: Ring + Copy + Default + PartialOrd,
 {
@@ -21,14 +22,14 @@ where
     }
 }
 
-impl<T> CausalTensor<T>
+impl<T> CpuTensor<T>
 where
     T: Clone + Mul<Output = T>,
 {
     pub(in crate::types::causal_tensor) fn tensor_product_impl(
         &self,
-        rhs: &CausalTensor<T>,
-    ) -> Result<CausalTensor<T>, CausalTensorError> {
+        rhs: &CpuTensor<T>,
+    ) -> Result<CpuTensor<T>, CausalTensorError> {
         if self.is_empty() || rhs.is_empty() {
             return Err(CausalTensorError::EmptyTensor);
         }
@@ -48,6 +49,6 @@ where
             }
         }
 
-        CausalTensor::new(result_data, result_shape)
+        CpuTensor::new(result_data, result_shape)
     }
 }

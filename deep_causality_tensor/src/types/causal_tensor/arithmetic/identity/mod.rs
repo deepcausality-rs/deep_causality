@@ -2,13 +2,13 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::CausalTensor;
+use crate::CpuTensor;
 use deep_causality_num::{One, Zero};
 
-/// Implements Zero trait for CausalTensor.
+/// Implements Zero trait for CpuTensor.
 /// Returns a scalar zero tensor (shape []).
 /// This allows broadcasting to work for addition (a + 0 = a).
-impl<T> Zero for CausalTensor<T>
+impl<T> Zero for CpuTensor<T>
 where
     T: Zero + Copy + Default + PartialOrd,
 {
@@ -22,7 +22,7 @@ where
     }
 }
 
-impl<T> One for CausalTensor<T>
+impl<T> One for CpuTensor<T>
 where
     T: One + Copy + Default + PartialOrd,
 {

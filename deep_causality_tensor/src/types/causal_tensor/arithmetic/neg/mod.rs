@@ -2,11 +2,11 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::CausalTensor;
+use crate::CpuTensor;
 use std::ops::Neg;
 
-/// Implements Neg trait for CausalTensor.
-impl<T> Neg for CausalTensor<T>
+/// Implements Neg trait for CpuTensor.
+impl<T> Neg for CpuTensor<T>
 where
     T: Neg<Output = T> + Copy + Clone,
 {
@@ -18,14 +18,14 @@ where
     }
 }
 
-impl<T> Neg for &CausalTensor<T>
+impl<T> Neg for &CpuTensor<T>
 where
     T: Neg<Output = T> + Copy + Clone,
 {
-    type Output = CausalTensor<T>;
+    type Output = CpuTensor<T>;
 
     fn neg(self) -> Self::Output {
         let data = self.data.iter().map(|x| -*x).collect();
-        CausalTensor::from_vec_and_shape_unchecked(data, self.shape())
+        CpuTensor::from_vec_and_shape_unchecked(data, self.shape())
     }
 }
