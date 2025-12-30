@@ -304,138 +304,20 @@ The following benchmarks were run on a `CausalTensor` of a small 100x100 tensor 
 | `tensor_tensor_add_broadcast` | ~46.67 µs | Element-wise addition with broadcasting.    |
 | `tensor_sum_full_reduction`   | ~10.56 µs | Summing all 10,000 elements of the tensor.  |
 
-### Key Observations
-
-1. **Element Access (`get`):** Access is extremely fast, demonstrating the efficiency of the stride-based index
-   calculation.
-2. **Shape Manipulation (`reshape`):** This operation is very fast as it only adjusts metadata (shape and strides) and
-   clones the underlying data vector.
-3. **Arithmetic Operations:** Performance is excellent. The optimized `binary_op` function provides efficient
-   broadcasting for tensor-tensor operations, avoiding allocations in hot loops.
-
-### Technical Details
-
-- Sample size: 10 measurements per benchmark (CPU), 3 iterations (GPU)
-- All benchmarks were run with random access patterns to simulate real-world usage
-
-### Hardware & OS
-
-- Architecture: ARM64 (Apple Silicon, M3 Max)
-- OS: macOS 26.2 | Kernel Version 25.2.0
-
-### MLX GPU Benchmarks (Apple Silicon)
-
-Matrix multiplication (`matmul`) benchmarks comparing CPU vs GPU on Apple Silicon M3 Max:
-
-**CPU vs GPU Comparison:**
-
-| Size      | CPU (ms) | GPU (ms) | Speedup    |
-|-----------|----------|----------|------------|
-| 128×128   | 1.5      | 0.23     | **6.6x**   |
-| 512×512   | 134.6    | 0.30     | **449x**   |
-| 1024×1024 | 1,217    | 0.49     | **2,484x** |
-
-**GPU-Only (sizes impractical for CPU):**
-
-| Size      | Elements | GPU (ms) |
-|-----------|----------|----------|
-| 4096×4096 | 16M      | 13.3     |
-| 8192×8192 | 67M      | 100.5    |
-
-### Data Transfer Overhead
-
-Since `CausalTensor` uses `f64` and MLX uses `f32` (on Metal), using the GPU involves:
-
-1. Downcasting `f64` → `f32`
-2. Transfer to specific MLX array layout
-3. Computing on GPU
-4. Upcasting result `f32` → `f64`
-
-Benchmarks show this roundtrip overhead is **negligible** compared to the compute gains:
-
-| Size      | Roundtrip Overhead | GPU Compute | Total GPU Time | CPU Time | Real Speedup |
-|-----------|--------------------|-------------|----------------|----------|--------------|
-| 128×128   | 0.007 ms           | 0.22 ms     | 0.23 ms        | 1.5 ms   | **6.5x**     |
-| 512×512   | 0.08 ms            | 0.28 ms     | 0.36 ms        | 138 ms   | **383x**     |
-| 1024×1024 | 0.38 ms            | 0.51 ms     | 0.89 ms        | 1,060 ms | **1,191x**   |
-
-> **Conclusion:** Even including the full cost of memory allocation, casting, and transfer, MLX offers >1000x speedups
-> for modern workloads.
-
-### Skipping Conversion (Best Performance)
-
-For maximum performance, construct tensors specifically from `f32` data to bypass the conversion overhead entirely. This
-is **7-8x faster** than the roundtrip method.
-
-```rust
-// 1. Initialize data as f32
-let data: Vec<f32> = vec![1.0, 2.0, 3.0, 4.0];
-let shape = vec![2, 2];
-
-// 2. Direct upload (Zero casting overhead)
-let tensor = MlxCausalTensor::from_slice( & data, & shape);
-```
-
-**Benchmark Results:**
-
-| Size      | Standard Roundtrip (f64→f32→GPU→f64) | Direct f32  (f32→GPU→f32) | Speedup  |
-|-----------|--------------------------------------|---------------------------|----------|
-| 128×128   | 8.0 µs                               | **0.98 µs**               | **8.2x** |
-| 512×512   | 85.5 µs                              | **13.9 µs**               | **6.1x** |
-| 1024×1024 | 385 µs                               | **53.4 µs**               | **7.2x** |
-
-> **Note:** GPU acceleration scales dramatically with matrix size due to O(N³) complexity.
-
-### Einstein Summation (EinSum) Benchmarks
-
-Native GPU execution of tensor operations via the EinSum API. All operations run entirely on GPU—no CPU roundtrips.
-
-**Matrix Operations (2D Tensors):**
+### CPU / GPU (MLX) Benchmarks
 
 | Operation   | Size      | CPU Time   | GPU Time   | Speedup      |
 |-------------|-----------|------------|------------|--------------|
-| MatMul      | 128×128   | 1.49 ms    | 0.17 ms    | **8.5x**     |
-| MatMul      | 512×512   | 139.6 ms   | 0.22 ms    | **635x**     |
-| MatMul      | 1024×1024 | 1,087 ms   | 0.42 ms    | **2,588x**   |
-| Transpose   | 128×128   | 10.9 µs    | 5.6 µs     | **1.9x**     |
-| Transpose   | 512×512   | 129.4 µs   | 41.4 µs    | **3.1x**     |
-| Transpose   | 1024×1024 | 555.4 µs   | 210.9 µs   | **2.6x**     |
-| Hadamard    | 128×128   | 77.3 µs    | 156.4 µs   | 0.5x         |
-| Hadamard    | 512×512   | 1.14 ms    | 161.5 µs   | **7.1x**     |
-| Hadamard    | 1024×1024 | 4.70 ms    | 185.3 µs   | **25.4x**    |
-| Trace       | 128×128   | 7.4 µs     | 177.6 µs   | 0.04x        |
-| Trace       | 512×512   | 85.9 µs    | 175.3 µs   | 0.5x         |
-| Trace       | 1024×1024 | 400.9 µs   | 179.9 µs   | **2.2x**     |
-| Diagonal    | 128×128   | 9.2 µs     | 169.6 µs   | 0.05x        |
-| Diagonal    | 512×512   | 89.1 µs    | 166.4 µs   | 0.5x         |
-| Diagonal    | 1024×1024 | 416.5 µs   | 166.1 µs   | **2.5x**     |
-| Reduction   | 128×128   | 77.5 µs    | 164.2 µs   | 0.5x         |
-| Reduction   | 512×512   | 1.18 ms    | 164.6 µs   | **7.2x**     |
-| Reduction   | 1024×1024 | 4.68 ms    | 179.9 µs   | **26.0x**    |
+| MatMul      | 128×128   | 1.50 ms    | 0.17 ms    | **8.8x**     |
+| MatMul      | 512×512   | 134.6 ms   | 0.22 ms    | **612x**     |
+| MatMul      | 1024×1024 | 1,087 ms   | 0.41 ms    | **2,651x**   |
 
-**Vector Operations (1D Tensors):**
 
-| Operation | Size | CPU Time | GPU Time | Speedup      |
-|-----------|------|----------|----------|--------------|
-| DotProd   | 128  | 3.5 µs   | 157.9 µs | 0.02x        |
-| DotProd   | 512  | 12.9 µs  | 161.2 µs | 0.08x        |
-| DotProd   | 1024 | 24.9 µs  | 177.4 µs | 0.14x        |
+**Hardware:**   
+- Architecture: ARM64 (Apple Silicon, M3 Max)
+- OS: macOS 26.2 | Kernel Version 25.2.0
 
-**Batch Matrix Multiply (3D Tensors):**
-
-| Batch × Size | CPU Time  | GPU Time  | Speedup     |
-|--------------|-----------|-----------|-------------|
-| 8 × 32×32    | 467.1 µs  | 169.5 µs  | **2.8x**    |
-| 8 × 64×64    | 2.89 ms   | 165.3 µs  | **17.5x**   |
-| 8 × 128×128  | 18.14 ms  | 181.3 µs  | **100x**    |
-
-> **Key Insights:**
-> - **O(N³) operations** (MatMul, BatchMatMul): MLX dominates, up to 2,600x faster for 1024×1024.
-> - **O(N²) operations** (Hadamard, Reduction): MLX wins at larger sizes (≥512), ~25x faster at 1024.
-> - **O(N) operations** (Trace, Diagonal, DotProd): CPU wins for small tensors due to GPU overhead (~160 µs baseline).
-> - **Crossover point**: For most operations, GPU becomes faster around 512×512.
-
-Run the benchmark: `cargo bench -p deep_causality_tensor --features mlx`
+For detailed benchmarks and a comparision to MLX / GPU, see the [BENCHMARK](README_BENCHMARKS.md) file.
 
 ## Technical Implementation
 

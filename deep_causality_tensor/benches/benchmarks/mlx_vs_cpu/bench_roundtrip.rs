@@ -5,12 +5,13 @@
 
 use criterion::{Criterion, criterion_group};
 #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
-use deep_causality_tensor::{CausalTensor, MlxBackend, MlxCausalTensor, Tensor, TensorBackend};
+use deep_causality_tensor::{CausalTensor, MlxBackend, MlxCausalTensor, TensorBackend};
 
 #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
 const SIZES: [usize; 3] = [128, 512, 1024];
 
 #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
+
 fn bench_cast_and_copy(c: &mut Criterion) {
     let mut group = c.benchmark_group("roundtrip_transfer");
 

@@ -144,18 +144,27 @@ impl TensorBackend for MlxBackend {
     fn broadcast_op<T: Clone, F>(
         lhs: &Self::Tensor<T>,
         rhs: &Self::Tensor<T>,
-        f: F,
+        _f: F,
     ) -> Result<Self::Tensor<T>, crate::CausalTensorError>
     where
         F: Fn(T, T) -> Result<T, crate::CausalTensorError>,
     {
-        // Fallback to CPU
-        // Note: usage of to_vec requires T: Clone for safety or valid type support
+        // For the common case of scalar multiplication/scaling (used in Christoffel),
+        // use native MLX multiply which supports broadcasting.
+        let rhs_shape = Self::shape(rhs);
+        if rhs_shape.iter().all(|&s| s == 1) {
+            // Scalar broadcast - use native multiply
+            let res = mlx_rs::ops::multiply(lhs.as_array(), rhs.as_array())
+                .expect("MlxBackend::broadcast_op: multiply failed");
+            return Ok(MlxTensor::new(res));
+        }
+
+        // Fallback to CPU for general closures
         let cpu_lhs = crate::InternalCpuTensor::new(Self::to_vec(lhs), Self::shape(lhs)).unwrap();
         let cpu_rhs = crate::InternalCpuTensor::new(Self::to_vec(rhs), Self::shape(rhs)).unwrap();
 
         use crate::CpuBackend;
-        let result = CpuBackend::broadcast_op(&cpu_lhs, &cpu_rhs, f)?;
+        let result = CpuBackend::broadcast_op(&cpu_lhs, &cpu_rhs, _f)?;
         Ok(Self::create(result.as_slice(), result.shape()))
     }
 
@@ -220,14 +229,10 @@ impl TensorBackend for MlxBackend {
     }
 
     fn permute<T: Clone>(tensor: &Self::Tensor<T>, axes: &[usize]) -> Self::Tensor<T> {
-        // Fallback to CPU due to binding mismatch
-        let cpu_data: Vec<T> = Self::to_vec(tensor);
-        let cpu_shape = Self::shape(tensor);
-        let cpu_tensor =
-            CausalTensor::new(cpu_data, cpu_shape).expect("permute: cpu creation failed");
-        use crate::CpuBackend;
-        let result = CpuBackend::permute(&cpu_tensor, axes);
-        Self::create(result.as_slice(), result.shape())
+        let axes_i32: Vec<i32> = axes.iter().map(|&x| x as i32).collect();
+        let array = mlx_rs::ops::transpose_axes(tensor.as_array(), &axes_i32)
+            .expect("MlxBackend::permute: failed");
+        MlxTensor::new(array)
     }
 
     fn slice<T: Clone>(tensor: &Self::Tensor<T>, ranges: &[Range<usize>]) -> Self::Tensor<T> {
@@ -248,17 +253,22 @@ impl TensorBackend for MlxBackend {
         tensors: &[Self::Tensor<T>],
         axis: usize,
     ) -> Result<Self::Tensor<T>, crate::CausalTensorError> {
-        // Fallback to CPU
-        let mut cpu_tensors = Vec::with_capacity(tensors.len());
-        for t in tensors {
-            let data = Self::to_vec(t);
-            let shape = Self::shape(t);
-            cpu_tensors.push(crate::InternalCpuTensor::new(data, shape)?);
+        let arrays: Vec<&mlx_rs::Array> = tensors.iter().map(|t| t.as_array()).collect();
+        let stacked = mlx_rs::ops::stack(&arrays)
+            .map_err(|e| crate::CausalTensorError::MlxOperationFailed(e.to_string()))?;
+
+        if axis == 0 {
+            return Ok(MlxTensor::new(stacked));
         }
 
-        use crate::CpuBackend;
-        let result = CpuBackend::stack(&cpu_tensors, axis)?;
-        Ok(Self::create(result.as_slice(), result.shape()))
+        // Move axis 0 to the target axis
+        let ndim = stacked.ndim();
+        let mut axes: Vec<i32> = (1..ndim as i32).collect();
+        axes.insert(axis, 0);
+
+        let transposed = mlx_rs::ops::transpose_axes(&stacked, &axes)
+            .expect("MlxBackend::stack: transpose failed");
+        Ok(MlxTensor::new(transposed))
     }
 
     fn ravel<T: Clone>(tensor: &Self::Tensor<T>) -> Self::Tensor<T> {
@@ -280,10 +290,10 @@ impl TensorBackend for MlxBackend {
     }
 
     fn shifted_view<T: Clone>(tensor: &Self::Tensor<T>, flat_index: usize) -> Self::Tensor<T> {
-        // Fallback to CPU
+        // Fallback to CPU for now as mlx-rs slice/roll signatures are being difficult
         let cpu_data: Vec<T> = Self::to_vec(tensor);
         let cpu_shape = Self::shape(tensor);
-        let cpu_tensor = match CausalTensor::new(cpu_data, cpu_shape) {
+        let cpu_tensor = match crate::CausalTensor::new(cpu_data, cpu_shape) {
             Ok(t) => t,
             Err(_) => panic!("MlxBackend::shifted_view: cpu tensor creation failed"),
         };
