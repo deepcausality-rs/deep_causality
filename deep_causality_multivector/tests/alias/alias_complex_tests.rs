@@ -9,13 +9,13 @@ use deep_causality_num::Complex;
 #[test]
 fn test_dixon_algebra() {
     // Dixon Algebra is Cl_C(6) -> 64 dimensions (complex)
-    let data = vec![Complex::new(0.0, 0.0); 256];
+    let data = vec![Complex::new(0.0, 0.0); 64];
     let d = DixonAlgebra::new_dixon_algebra_left(data);
 
-    assert_eq!(d.metric().dimension(), 8);
+    assert_eq!(d.metric().dimension(), 6);
     match d.metric() {
-        Metric::NonEuclidean(8) => {}
-        _ => panic!("Dixon Algebra should be Euclidean(6)"),
+        Metric::NonEuclidean(6) => {}
+        _ => panic!("Dixon Algebra should be NonEuclidean(6)"),
     }
 }
 

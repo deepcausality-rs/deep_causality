@@ -17,7 +17,6 @@ use deep_causality_num::Complex;
 // Quantum Field Theory (QFT) or exploring Beyond Standard Model (BSM) physics
 // within a computational framework.
 // -----------------------------------------------------------------------------------------
-
 fn main() {
     println!("=== Dixon Algebra (Cl_C(6)) Example ===");
     println!("This algebra operates on Octonions in particle physics models (e.g. C. Furey).");
@@ -36,7 +35,6 @@ fn main() {
     // 2. Construct Basis Vectors e1 and e2
     // e1 corresponds to index 2^0 = 1
     // e2 corresponds to index 2^1 = 2
-
     let mut e1_data = vec![Complex::new(0.0, 0.0); 64];
     e1_data[1] = Complex::new(1.0, 0.0);
     let e1 = DixonAlgebra::new_dixon_algebra_left(e1_data);
@@ -55,7 +53,6 @@ fn main() {
 
     // e1e2 should have coefficient 1.0 at index 1^2 = 3
     // e2e1 should have coefficient -1.0 at index 3
-
     println!("\nGeometric Product:");
     println!("  e1 * e2 (index 3): {}", e1e2.data()[3]);
     println!("  e2 * e1 (index 3): {}", e2e1.data()[3]);

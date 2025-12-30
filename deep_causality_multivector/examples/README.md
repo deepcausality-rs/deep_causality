@@ -4,6 +4,9 @@ This directory contains examples demonstrating the capabilities of the `CausalMu
 Each example is designed to highlight a specific engineering or scientific use case where Geometric Algebra provides a
 more robust, intuitive, or performant solution compared to traditional linear algebra.
 
+> [!NOTE]
+> **MLX Backend Support:** Examples that use non-primitive field types such as `Complex<T>`, `Octonion<T>`, or `Quaternion<T>` cannot run on the MLX backend. MLX only natively supports numeric primitives (`f32`, `f64`, `u32`, etc.). Running these examples with `--features mlx` will result in a panic during tensor creation.
+
 | File                                                           | Description                                                                                                                                                                                    | Key Concepts                                                                  |
 |----------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
 | [basic_multivector.rs](basic_multivector.rs)                   | Demonstrates the fundamental operations of Geometric Algebra, such as the geometric, outer, and inner products.                                                                                | Geometric Algebra, Geometric Product, Outer Product, Inner Product            |

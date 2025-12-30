@@ -30,9 +30,9 @@ fn main() {
     // We can inspect the coefficients.
     // e123 (14) is the homogeneous coordinate w.
     println!("  w (e123): {:.2}", p.get(14).unwrap_or(&0.0));
-    println!("  x (e032): {:.2}", p.get(13).unwrap_or(&0.0));
+    println!("  x (e032): {:.2}", -*p.get(13).unwrap_or(&0.0));
     println!("  y (e013): {:.2}", p.get(11).unwrap_or(&0.0));
-    println!("  z (e021): {:.2}", p.get(7).unwrap_or(&0.0));
+    println!("  z (e021): {:.2}", -*p.get(7).unwrap_or(&0.0));
 
     // 2. Create a translator (motor)
     // Move by vector d = (2, 0, 0) -> Shift x by +2.
@@ -42,28 +42,29 @@ fn main() {
     println!("  e01: {:.2}", t.get(3).unwrap_or(&0.0));
 
     // 3. Apply the transformation
-    // In PGA, points transform via the sandwich product (or just geometric product for single-sided if normalized?)
-    // Standard motor transformation: P' = T * P * ~T
-    // However, for simple translators acting on points, T * P is often sufficient to see the shift in the dual space representation
-    // if we interpret it correctly, but let's stick to the sandwich product P' = T P ~T for general motors.
-
+    // In PGA, points transform via the sandwich product P' = T * P * ~T
     let t_rev = t.reversion();
     let p_prime = t * p.clone() * t_rev;
 
     println!("\nTransformed Point P' = T * P * ~T:");
-    println!("  w (e123): {:.2}", p_prime.get(14).unwrap_or(&0.0));
-    println!("  x (e032): {:.2}", p_prime.get(13).unwrap_or(&0.0));
-    println!("  y (e013): {:.2}", p_prime.get(11).unwrap_or(&0.0));
-    println!("  z (e021): {:.2}", p_prime.get(7).unwrap_or(&0.0));
+    // w is index 14
+    let w_prime = *p_prime.get(14).unwrap_or(&0.0);
+    // x is index 13 (with sign flip)
+    let x_prime = -*p_prime.get(13).unwrap_or(&0.0);
+    // y is index 11
+    let y_prime = *p_prime.get(11).unwrap_or(&0.0);
+    // z is index 7 (with sign flip)
+    let z_prime = -*p_prime.get(7).unwrap_or(&0.0);
+
+    println!("  w (e123): {:.2}", w_prime);
+    println!("  x (e032): {:.2}", x_prime);
+    println!("  y (e013): {:.2}", y_prime);
+    println!("  z (e021): {:.2}", z_prime);
 
     // Expected result: (3, 2, 3)
     // x should be 1 + 2 = 3.
     // y should be 2.
     // z should be 3.
-
-    let x_prime = *p_prime.get(13).unwrap_or(&0.0);
-    let y_prime = *p_prime.get(11).unwrap_or(&0.0);
-    let z_prime = *p_prime.get(7).unwrap_or(&0.0);
 
     println!(
         "\nResult Coordinates: ({:.2}, {:.2}, {:.2})",

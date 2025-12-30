@@ -45,6 +45,26 @@ pub struct Complex<T: RealField> {
     pub im: T,
 }
 
+impl<T: RealField> Eq for Complex<T> {}
+
+impl<T: RealField> PartialOrd for Complex<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+        match self.re.partial_cmp(&other.re) {
+            Some(core::cmp::Ordering::Equal) => self.im.partial_cmp(&other.im),
+            ord => ord,
+        }
+    }
+}
+
+impl<T: RealField + Ord> Ord for Complex<T> {
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+        match self.re.cmp(&other.re) {
+            core::cmp::Ordering::Equal => self.im.cmp(&other.im),
+            ord => ord,
+        }
+    }
+}
+
 pub type Complex32 = Complex<f32>;
 pub type Complex64 = Complex<f64>;
 
