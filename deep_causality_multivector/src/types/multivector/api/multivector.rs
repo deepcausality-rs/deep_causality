@@ -21,6 +21,25 @@ impl<T> MultiVector<T> for CausalMultiVector<T> {
         self.reversion_impl()
     }
 
+    #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
+    fn squared_magnitude(&self) -> T
+    where
+        T: Field
+            + Copy
+            + Clone
+            + AddAssign
+            + SubAssign
+            + Neg<Output = T>
+            + Default
+            + PartialOrd
+            + Send
+            + Sync
+            + 'static,
+    {
+        self.squared_magnitude_impl()
+    }
+
+    #[cfg(not(all(feature = "mlx", target_os = "macos", target_arch = "aarch64")))]
     fn squared_magnitude(&self) -> T
     where
         T: Field + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
@@ -28,6 +47,27 @@ impl<T> MultiVector<T> for CausalMultiVector<T> {
         self.squared_magnitude_impl()
     }
 
+    #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
+    fn inverse(&self) -> Result<Self, CausalMultiVectorError>
+    where
+        T: Field
+            + Copy
+            + Clone
+            + Neg<Output = T>
+            + core::ops::Div<Output = T>
+            + PartialEq
+            + AddAssign
+            + SubAssign
+            + Default
+            + PartialOrd
+            + Send
+            + Sync
+            + 'static,
+    {
+        self.inverse_impl()
+    }
+
+    #[cfg(not(all(feature = "mlx", target_os = "macos", target_arch = "aarch64")))]
     fn inverse(&self) -> Result<Self, CausalMultiVectorError>
     where
         T: Field
@@ -42,6 +82,27 @@ impl<T> MultiVector<T> for CausalMultiVector<T> {
         self.inverse_impl()
     }
 
+    #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
+    fn dual(&self) -> Result<Self, CausalMultiVectorError>
+    where
+        T: Field
+            + Copy
+            + Clone
+            + Neg<Output = T>
+            + core::ops::Div<Output = T>
+            + PartialEq
+            + AddAssign
+            + SubAssign
+            + Default
+            + PartialOrd
+            + Send
+            + Sync
+            + 'static,
+    {
+        self.dual_impl()
+    }
+
+    #[cfg(not(all(feature = "mlx", target_os = "macos", target_arch = "aarch64")))]
     fn dual(&self) -> Result<Self, CausalMultiVectorError>
     where
         T: Field
@@ -56,6 +117,25 @@ impl<T> MultiVector<T> for CausalMultiVector<T> {
         self.dual_impl()
     }
 
+    #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
+    fn geometric_product(&self, rhs: &Self) -> Self
+    where
+        T: Field
+            + Copy
+            + Clone
+            + AddAssign
+            + SubAssign
+            + Neg<Output = T>
+            + Default
+            + PartialOrd
+            + Send
+            + Sync
+            + 'static,
+    {
+        self.geometric_product_impl(rhs)
+    }
+
+    #[cfg(not(all(feature = "mlx", target_os = "macos", target_arch = "aarch64")))]
     fn geometric_product(&self, rhs: &Self) -> Self
     where
         T: Field + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,

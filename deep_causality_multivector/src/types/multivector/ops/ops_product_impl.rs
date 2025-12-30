@@ -8,11 +8,56 @@ use core::ops::{AddAssign, Neg, SubAssign};
 use deep_causality_num::Field;
 
 impl<T> CausalMultiVector<T> {
-    // Threshold:
+    // Threshold for sparse algorithm (CPU-based)
     // Dim 6 = 64 components -> 4096 iterations (Dense is likely still faster than Allocator)
     // Dim 7 = 128 components -> 16,384 iterations (Sparse starts winning)
     const SPARSE_THRESHOLD: usize = 6;
 
+    // Threshold for GPU acceleration via Matrix Isomorphism
+    // Below this, CPU is faster due to GPU dispatch overhead
+    #[allow(dead_code)]
+    const GPU_DIMENSION_THRESHOLD: usize = 6;
+
+    /// Geometric product with automatic MLX acceleration for high-dimensional algebras.
+    #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
+    pub(in crate::types::multivector) fn geometric_product_impl(&self, rhs: &Self) -> Self
+    where
+        T: Field
+            + Copy
+            + Clone
+            + AddAssign
+            + SubAssign
+            + Neg<Output = T>
+            + Default
+            + PartialOrd
+            + Send
+            + Sync
+            + 'static,
+    {
+        if self.metric != rhs.metric {
+            panic!(
+                "Geometric Product Metric mismatch: {:?} vs {:?}",
+                self.metric, rhs.metric
+            );
+        }
+
+        let dim = self.metric.dimension();
+
+        // Automatic MLX acceleration for high-dimensional algebras (Dixon, etc.)
+        if dim >= Self::GPU_DIMENSION_THRESHOLD {
+            return self.geometric_product_matrix_bridge(rhs);
+        }
+
+        // CPU dispatch based on dimension threshold
+        if dim <= Self::SPARSE_THRESHOLD {
+            self.geometric_product_dense(rhs, dim)
+        } else {
+            self.geometric_product_sparse(rhs, dim)
+        }
+    }
+
+    /// Core geometric product implementation (CPU-only).
+    #[cfg(not(all(feature = "mlx", target_os = "macos", target_arch = "aarch64")))]
     pub(in crate::types::multivector) fn geometric_product_impl(&self, rhs: &Self) -> Self
     where
         T: Field + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
@@ -26,12 +71,44 @@ impl<T> CausalMultiVector<T> {
 
         let dim = self.metric.dimension();
 
-        // Dispatch based on dimension threshold
+        // CPU dispatch based on dimension threshold
         if dim <= Self::SPARSE_THRESHOLD {
             self.geometric_product_dense(rhs, dim)
         } else {
             self.geometric_product_sparse(rhs, dim)
         }
+    }
+
+    /// GPU-accelerated geometric product using Matrix Isomorphism Bridge.
+    ///
+    /// Converts coefficients to matrix representation, performs matmul on GPU,
+    /// then converts back to coefficients. Efficient for high-dimensional algebras.
+    #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
+    fn geometric_product_matrix_bridge(&self, rhs: &Self) -> Self
+    where
+        T: Field
+            + Copy
+            + Clone
+            + AddAssign
+            + SubAssign
+            + Neg<Output = T>
+            + Default
+            + PartialOrd
+            + Send
+            + Sync
+            + 'static,
+    {
+        use deep_causality_tensor::{LinearAlgebraBackend, MlxBackend};
+
+        // Convert to matrix representation on MLX
+        let m_self = self.to_matrix_on_backend::<MlxBackend>();
+        let m_rhs = rhs.to_matrix_on_backend::<MlxBackend>();
+
+        // Perform matmul on GPU
+        let m_result = MlxBackend::matmul(&m_self, &m_rhs);
+
+        // Convert back to coefficients
+        Self::from_matrix_on_backend::<MlxBackend>(m_result, self.metric)
     }
 
     // --- OPTIMIZED FOR LOW DIMENSION (No Aux Allocations) ---

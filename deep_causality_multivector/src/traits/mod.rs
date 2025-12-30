@@ -4,5 +4,6 @@
  */
 
 pub mod l2_norm;
+pub mod matrix_rep;
 pub mod multi_vector;
 pub mod scalar_eval;

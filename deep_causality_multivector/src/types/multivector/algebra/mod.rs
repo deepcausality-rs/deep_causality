@@ -115,6 +115,24 @@ where
     T: RealField + Copy,
 {
     /// Normalizes the multivector to unit magnitude.
+    #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
+    pub fn normalize(&self) -> Self
+    where
+        T: Default + PartialOrd + Send + Sync + 'static,
+    {
+        // We assume squared_magnitude_impl returns T
+        let mag_sq = self.squared_magnitude_impl();
+        if mag_sq <= T::epsilon() {
+            return self.clone();
+        }
+        let scale_factor = T::one() / mag_sq.sqrt();
+
+        // Since T: RealField, it is a Ring, so it satisfies S: Ring for scale()
+        self.scale(scale_factor)
+    }
+
+    /// Normalizes the multivector to unit magnitude.
+    #[cfg(not(all(feature = "mlx", target_os = "macos", target_arch = "aarch64")))]
     pub fn normalize(&self) -> Self {
         // We assume squared_magnitude_impl returns T
         let mag_sq = self.squared_magnitude_impl();
@@ -140,16 +158,51 @@ where
 {
     /// Computes the Lie Commutator: $[A, B] = AB - BA$.
     /// Valid for all associative algebras.
-    pub fn commutator(&self, rhs: &Self) -> Self {
+    #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
+    pub fn commutator(&self, rhs: &Self) -> Self
+    where
+        T: Default + PartialOrd + Send + Sync + 'static,
+    {
         // Reuse the geometric product logic logic
         // Commutator = Geometric(A, B) - Geometric(B, A)
         // (Optimized impl handles this in one pass, see previous optimizations)
         self.commutator_lie_impl(rhs)
     }
 
+    /// Computes the Lie Commutator: $[A, B] = AB - BA$.
+    /// Valid for all associative algebras.
+    #[cfg(not(all(feature = "mlx", target_os = "macos", target_arch = "aarch64")))]
+    pub fn commutator(&self, rhs: &Self) -> Self {
+        self.commutator_lie_impl(rhs)
+    }
+
     /// Computes the Multiplicative Inverse.
     /// $A^{-1} = \tilde{A} / |A|^2$ (For Versors).
     /// Requires Division (Field).
+    #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
+    pub fn inverse(&self) -> Result<Self, CausalMultiVectorError>
+    where
+        T: Default + PartialOrd + Send + Sync + 'static,
+    {
+        let mag_sq = self.squared_magnitude_impl();
+
+        // Check for zero divisor / null vector
+        // Note: This is a simplified inverse logic valid for Versors.
+        // General MV inversion is harder (requires matrix isomorphism).
+        if mag_sq.abs() <= T::epsilon() {
+            return Err(CausalMultiVectorError::zero_magnitude());
+        }
+
+        let conjugate = self.reversion_impl();
+        let scale = T::one() / mag_sq;
+
+        Ok(conjugate.scale(scale))
+    }
+
+    /// Computes the Multiplicative Inverse.
+    /// $A^{-1} = \tilde{A} / |A|^2$ (For Versors).
+    /// Requires Division (Field).
+    #[cfg(not(all(feature = "mlx", target_os = "macos", target_arch = "aarch64")))]
     pub fn inverse(&self) -> Result<Self, CausalMultiVectorError> {
         let mag_sq = self.squared_magnitude_impl();
 
@@ -160,14 +213,26 @@ where
             return Err(CausalMultiVectorError::zero_magnitude());
         }
 
-        let scale = T::one() / mag_sq;
         let conjugate = self.reversion_impl();
+        let scale = T::one() / mag_sq;
 
         Ok(conjugate.scale(scale))
     }
 
     /// The Geometric Product for Commutative Coefficients.
-    /// This is the standard implementation.
+    ///
+    /// With `mlx` feature on macOS aarch64: Automatically accelerates N≥6 algebras via GPU.
+    #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
+    pub fn geometric_product(&self, rhs: &Self) -> Self
+    where
+        T: Default + PartialOrd + Send + Sync + 'static,
+    {
+        self.geometric_product_impl(rhs)
+    }
+
+    /// The Geometric Product for Commutative Coefficients.
+    /// This is the standard CPU implementation.
+    #[cfg(not(all(feature = "mlx", target_os = "macos", target_arch = "aarch64")))]
     pub fn geometric_product(&self, rhs: &Self) -> Self {
         self.geometric_product_impl(rhs)
     }
