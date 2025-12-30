@@ -31,9 +31,9 @@
 //!
 //! All operations dispatch to the backend's tensor operations, enabling
 //! automatic MLX/CUDA acceleration when the appropriate feature flags are set.
-use crate::MultiVector as MultiVectorTrait;
 use crate::BatchedMatMul;
 use crate::CausalMultiField;
+use crate::MultiVector as MultiVectorTrait;
 use deep_causality_num::{RealField, Ring};
 use deep_causality_tensor::{LinearAlgebraBackend, TensorData};
 

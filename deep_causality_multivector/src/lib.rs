@@ -19,6 +19,7 @@ pub use crate::alias::{
 pub use crate::errors::causal_multivector_error::CausalMultiVectorError;
 
 // Extensions
+pub use crate::extensions::hkt_multifield::CausalMultiFieldWitness;
 pub use crate::extensions::hkt_multivector::CausalMultiVectorWitness;
 
 // Traits
@@ -67,3 +68,19 @@ pub type StandardMultiVector<T = DefaultMultivectorFloat> = CausalMultiVector<T>
 /// Alias for `CausalMultiField` using the default backend and float type.
 /// This type changes automatically based on the `mlx` feature flag.
 pub type MultiField<T = DefaultMultivectorFloat> = CausalMultiField<DefaultMultivectorBackend, T>;
+
+// === HKT Witnesses ===
+
+pub use crate::extensions::hkt_multifield::CpuMultiFieldWitness;
+
+#[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
+pub use crate::extensions::hkt_multifield::MlxMultiFieldWitness;
+
+/// Default HKT witness for MultiField operations.
+/// - `mlx` feature: Uses `MlxMultiFieldWitness` for GPU acceleration.
+/// - Default: Uses `CpuMultiFieldWitness`.
+#[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
+pub type MultiFieldWitness = crate::extensions::hkt_multifield::MlxMultiFieldWitness;
+
+#[cfg(not(all(feature = "mlx", target_os = "macos", target_arch = "aarch64")))]
+pub type MultiFieldWitness = CpuMultiFieldWitness;
