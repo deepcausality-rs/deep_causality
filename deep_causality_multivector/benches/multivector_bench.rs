@@ -81,7 +81,13 @@ fn bench_dixon_mlx(c: &mut Criterion) {
     let field_b = field_a.clone();
 
     c.bench_function("geometric_product_dixon_mlx_matrix", |bencher| {
-        bencher.iter(|| black_box(&field_a * &field_b))
+        bencher.iter(|| {
+            let result = &field_a * &field_b;
+            // Force MLX evaluation
+            use deep_causality_tensor::TensorBackend;
+            let _ = MlxBackend::to_vec(result.data());
+            black_box(result)
+        })
     });
 }
 
@@ -104,6 +110,7 @@ fn bench_cl09_cpu(c: &mut Criterion) {
 fn bench_cl09_mlx(c: &mut Criterion) {
     use deep_causality_multivector::CausalMultiField;
     use deep_causality_tensor::MlxBackend;
+    use deep_causality_tensor::TensorBackend;
 
     let m = Metric::from_signature(0, 9, 0);
     let data = vec![0.5f32; 512];
@@ -117,7 +124,12 @@ fn bench_cl09_mlx(c: &mut Criterion) {
     let field_b = field_a.clone();
 
     c.bench_function("geometric_product_cl09_mlx_matrix", |bencher| {
-        bencher.iter(|| black_box(&field_a * &field_b))
+        bencher.iter(|| {
+            let result = &field_a * &field_b;
+            // Force MLX evaluation
+            let _ = MlxBackend::to_vec(result.data());
+            black_box(result)
+        })
     });
 }
 

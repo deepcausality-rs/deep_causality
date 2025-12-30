@@ -19,7 +19,18 @@ fn bench_geometric_product_size(c: &mut Criterion, size: usize) {
     let backend_suffix = if cfg!(feature = "mlx") { "mlx" } else { "cpu" };
     let bench_name = format!("geometric_product_{}_3d_{}^3", backend_suffix, size);
 
-    c.bench_function(&bench_name, |b| b.iter(|| black_box(&field_a * &field_b)));
+    c.bench_function(&bench_name, |b| {
+        b.iter(|| {
+            let result = &field_a * &field_b;
+            #[cfg(feature = "mlx")]
+            {
+                use deep_causality_tensor::MlxBackend;
+                use deep_causality_tensor::TensorBackend;
+                let _ = MlxBackend::to_vec(result.data());
+            }
+            black_box(result)
+        })
+    });
 }
 
 fn bench_geometric_product(c: &mut Criterion) {

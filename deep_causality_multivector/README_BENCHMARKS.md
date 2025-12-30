@@ -1,75 +1,86 @@
 # DeepCausality Multivector Benchmarks
 
-This document details the performance benchmarks for the `deep_causality_multivector` crate, comparing the **Algebraic
-CPU** backend against the **Matrix MLX** backend (Apple Silicon).
+This document details the performance benchmarks for the `deep_causality_multivector` crate, comparing the standard CPU
+implementation against the hardware-accelerated MLX (Apple Silicon GPU) implementation.
 
-**Device Context:** Apple M1/M2 Max (approximate).
+## 1. CausalMultiField: Geometric Product (Grid Scaling)
 
----
+The following benchmarks measure the time to compute the geometric product of two `CausalMultiField` objects across
+different grid sizes. These tests demonstrate how GPU acceleration scales with data volume.
 
-## 1. MultiField Benchmarks
+| Grid Size | CPU Time (Standard) | MLX (GPU) Time | Speedup      |
+|:----------|:--------------------|:---------------|:-------------|
+| **4³**    | 101.78 µs           | 174.77 µs      | 0.58x        |
+| **8³**    | 797.06 µs           | 201.94 µs      | **3.9x**     |
+| **16³**   | 6.379 ms            | 265.81 µs      | **24.0x** 🚀 |
 
-*Operations on 3D Grids of Multivectors (Fields).*
+> [!NOTE]
+> **Scaling Limits**: For `CausalMultiField` operations, MLX on Apple Silicon is optimal for grids up to **128³ (~2
+million points)**. For extreme-scale physics simulations exceeding these resolutions, migration to a CUDA-based backend
+> on data center hardware (e.g., NVIDIA H100) is recommended. Note, CUDA support might get added in the future. If
+> you hit these scaling limits, please fill an issue to priotize CUDA support. 
 
-These benchmarks measure the performance of operations applied to entire tensor fields (e.g., a $4 \times 4 \times 4$
-grid of multivectors).
+### Analysis
 
-### Geometric Product Scaling (3D Grid)
-
-| Grid Size    | Cells | CPU Time (Linear) | MLX Time (Constant) | Speedup        |
-|:-------------|:------|:------------------|:--------------------|:---------------|
-| **4x4x4**    | 64    | ~135 µs           | ~0.60 µs            | **225x**       |
-| **8x8x8**    | 512   | ~1.07 ms          | ~0.61 µs            | **1754x**      |
-| **16x16x16** | 4096  | ~8.50 ms          | ~0.60 µs            | **14,166x** 🚀 |
-
-**Insight:**
-
-* **CPU:** Scales linearly $O( Cells )$. Processing 4000 cells takes ~8.5ms.
-* **MLX:** Exhibits effectively **constant time** $O(1)$ for these batch sizes, dominated by kernel launch overhead.
-  Processing 4000 cells is instant (~0.6µs).
-
-### Field Operations Performance
-
-*Field size: 4x4x4 (64 cells)*
-
-| Operation             | CPU (Default) | MLX (`--features mlx`) | Note                    |
-|:----------------------|:--------------|:-----------------------|:------------------------|
-| **Geometric Product** | ~130 µs       | ~0.60 µs               | **200x** speedup        |
-| **Gradient**          | ~160 µs       | ~1.6 ms                | Slow on MLX (overhead)  |
-| **From Coefficients** | ~9.5 µs       | ~7.6 µs                | MLX creates data faster |
-| **To Coefficients**   | ~11.8 µs      | ~221 µs                | Readback cost on MLX    |
+As the grid size increases, the massive parallel processing power of the GPU overcomes the initial kernel launch
+overhead. For a 16³ grid, the MLX implementation is **24 times faster** than the optimized CPU version.
 
 ---
 
-## 2. MultiVector Benchmarks
+## 2. Geometric Algebra Performance
 
-*Operations on Single Multivectors.*
+These benchmarks compare the algebraic geometric product (CPU) with the matrix-based geometric product (MLX GPU).
 
-These benchmarks compare the traditional **Algebraic Implementation** (iterating basis blades on CPU) against the *
-*Matrix Isomorphism Bridge** (using MLX matrices on GPU).
+| Algebra            | CPU (Algebraic) | MLX (Matrix GPU) | Speedup      |
+|:-------------------|:----------------|:-----------------|:-------------|
+| **Dixon (8D)**     | 29.34 µs        | 187.08 µs        | 0.15x        |
+| **Cl(0,9) (512D)** | 7.46 ms         | 177.23 µs        | **42.1x** 🚀 |
 
-### High-Dimensional Scaling (Single Op)
+### Analysis
 
-Comparing `Geometric Product` for increasingly complex algebras.
-
-| Algebra           | Dimensions | CPU (Algebraic) | MLX (Matrix) | Speedup        |
-|:------------------|:-----------|:----------------|:-------------|:---------------|
-| **Euclidean 2D**  | 4          | ~94 ns          | ~96 ns       | 1.0x (Parity)  |
-| **PGA 3D**        | 16         | ~100 ns         | ~90 ns       | 1.1x           |
-| **Dixon Cl(0,6)** | 64         | ~30.5 µs        | ~0.45 µs     | **68x**        |
-| **Cl(0,9)**       | 512        | ~7.36 ms        | ~0.60 µs     | **12,266x** 🤯 |
-
-> **Note:** When using `f32` floats (default for MLX feature), the CPU algebraic implementation currently regresses
-> significantly (~400x slower for Dixon). The table above compares "Best CPU" (f64, no feature) vs "Best MLX" (f32, mlx
-> feature). Even in the fairest comparison, **Matrix MLX wins by 12,000x for 512-dim algebras.**
-
-**Insight:**
-
-* **Algebraic limit:** CPU performance degrades exponentially with algebra dimension ($O(D^2)$ or worse).
-* **Matrix power:** MLX matrix multiplication handles 512-dimension algebras (equivalent to small 16x16 or 32x32
-  matrices) instantly.
-* **Threshold:** For algebras smaller than 6 dimensions (e.g. standard 3D physics), CPU is competitive. For *
-  *Hyper-dimensional physics (N > 6)**, the Matrix approach is mandatory.
+For low-dimensional algebras like Dixon (~8 dimensions), the optimized algebraic loops on the CPU are faster than the
+overhead of GPU kernel submission. However, for high-dimensional experimental algebras like **Cl(0,9)** (512
+dimensions), the MLX matrix implementation provides a massive **42x speedup**.
 
 ---
-*Benchmarks generate via `cargo bench` (CPU) and `cargo bench --features mlx` (MLX).*
+
+## 3. Basic Multivector Operations
+
+| Operation           | CPU Time (64-bit) | MLX Enabled (32-bit CPU) | Note                  |
+|:--------------------|:------------------|:-------------------------|:----------------------|
+| **Euclidean 2D GP** | 96.22 ns          | 104.01 ns                | Slight f32 regression |
+| **PGA 3D GP**       | 92.58 ns          | 99.79 ns                 | Slight f32 regression |
+| **Addition 3D**     | 42.33 ns          | 43.60 ns                 | Slight f32 regression |
+
+### The f32 vs f64 Performance Note
+
+When the `mlx` feature is enabled, the crate shifts some internal operations to `f32` to maintain compatibility with
+Metal Performance Shaders (which are optimized for 32-bit floats). As seen above, this results in a slight (~5-10%)
+performance regression on CPU-only benchmarks compared to the standard 64-bit implementation. For small multivector
+operations, the 64-bit CPU path remains the most efficient.
+
+---
+
+## 4. How Acceleration was Achieved
+
+The performance gains in the multivector crate are primarily driven by:
+
+1. **Batched Matrix Multiplication**: The `CausalMultiField` geometric product is mathematically mapped to a batched
+   matrix multiplication. This allows us to leverage MLX's highly optimized `matmul` kernels, which utilize the AMX (
+   Apple Matrix Coprocessor) and GPU execution units.
+2. **Unified Memory Architecture**: Since Apple Silicon uses unified memory, there is zero data-copying overhead when "
+   moving" data from the CPU-visible space to the GPU-visible space.
+3. **Lazy Evaluation Handling**: We ensure real-world performance by forcing MLX to materialize results during
+   benchmarking (using `to_vec`), ensuring that we measure actual computation time rather than just kernel queuing time.
+
+---
+
+## Run Benchmarks
+
+### CPU Only (64-bit)
+
+`RUSTFLAGS="-C target-cpu=native" cargo bench -p deep_causality_multivector`
+
+### GPU / MLX (32-bit)
+
+`RUSTFLAGS="-C target-cpu=native" cargo bench -p deep_causality_multivector --features mlx`
