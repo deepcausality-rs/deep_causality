@@ -9,14 +9,19 @@ mod extensions;
 mod traits;
 mod types;
 
+pub use crate::types::backend;
+pub mod alias;
 pub mod utils_tests;
 
 // Re-export errors
 pub use crate::errors::topology_error::{TopologyError, TopologyErrorEnum};
 
 // Re-export extensions
+// Re-export extensions
+pub use crate::extensions::hkt_cell_complex::CellComplexWitness;
 pub use crate::extensions::hkt_graph::GraphWitness;
 pub use crate::extensions::hkt_hypergraph::HypergraphWitness;
+pub use crate::extensions::hkt_lattice::LatticeWitness;
 pub use crate::extensions::hkt_manifold::ManifoldWitness;
 pub use crate::extensions::hkt_point_cloud::PointCloudWitness;
 pub use crate::extensions::hkt_simplicial_complex::ChainWitness;
@@ -24,15 +29,22 @@ pub use crate::extensions::hkt_topology::TopologyWitness;
 
 // Re-export traits
 pub use crate::traits::base_topology::BaseTopology;
+pub use crate::traits::cw_complex::{CWComplex, Cell};
 pub use crate::traits::graph_topology::GraphTopology;
 pub use crate::traits::hypergraph_topology::HypergraphTopology;
 pub use crate::traits::manifold_topology::ManifoldTopology;
 pub use crate::traits::simplicial_topology::SimplicialTopology;
 
 // Re-export types
+pub use crate::types::cell_complex::{BoundaryOperator, CellComplex};
 pub use crate::types::chain::Chain;
 pub use crate::types::graph::Graph;
 pub use crate::types::hypergraph::Hypergraph;
+pub use crate::types::lattice::dual_lattice::DualLattice;
+pub use crate::types::lattice::specialized::{
+    HeavyHexLattice, HoneycombLattice, KagomeLattice, TriangularLattice,
+};
+pub use crate::types::lattice::{Lattice, LatticeCell};
 pub use crate::types::manifold::Manifold;
 pub use crate::types::point_cloud::PointCloud;
 pub use crate::types::regge_geometry::ReggeGeometry;
