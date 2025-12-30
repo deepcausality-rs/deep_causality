@@ -6,3 +6,4 @@ mod arithmetic;
 mod gamma;
 mod mod_tests;
 mod ops;
+mod algebra;

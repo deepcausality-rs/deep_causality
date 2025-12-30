@@ -9,50 +9,38 @@
 //! for hardware-accelerated Clifford algebra operations.
 
 use crate::CausalMultiVector;
+use crate::types::multifield::gamma::{BackendGamma, GammaProvider};
 use deep_causality_metric::Metric;
-use deep_causality_tensor::{LinearAlgebraBackend, TensorData};
+use deep_causality_tensor::TensorData;
 use std::ops::Neg;
 
 impl<T> CausalMultiVector<T>
 where
     T: TensorData + Clone + Neg<Output = T>,
 {
-    /// Converts coefficients to Matrix Representation for a given backend.
-    ///
-    /// M(A) = Σ aᵢ Γᵢ
-    ///
-    /// where Γᵢ are the gamma matrices for the algebra.
     pub fn to_matrix_on_backend<B>(&self) -> B::Tensor<T>
     where
-        B: LinearAlgebraBackend,
+        B: GammaProvider<T>,
     {
         let n = self.metric.dimension();
-        let matrix_dim = 1usize << n.div_ceil(2);
         let num_blades = 1usize << n;
+        let matrix_dim = 1usize << n.div_ceil(2);
 
-        // Initialize result as zero matrix
-        let shape = [matrix_dim, matrix_dim];
-        let mut result = B::zeros(&shape);
+        // 1. Get coefficients as a tensor [num_blades, 1, 1]
+        // This allows broadcasting with [num_blades, D, D]
+        let coeffs_tensor = B::create(&self.data, &[num_blades, 1, 1]);
 
-        // Sum aᵢ * Γᵢ for each blade
-        for blade_idx in 0..num_blades {
-            if self.data[blade_idx].is_zero() {
-                continue;
-            }
+        // 2. Get batch of basis gammas [num_blades, matrix_dim, matrix_dim]
+        let basis_gammas = B::GammaLoader::get_basis_gammas(&self.metric);
 
-            // Get gamma matrix for this blade
-            let gamma = self.get_gamma_matrix::<B>(blade_idx);
+        // 3. Multiply: Coeffs * Basis (broadcasting handles [B,1,1] * [B,D,D])
+        let scaled = B::mul(&coeffs_tensor, &basis_gammas);
 
-            // Scale by coefficient: aᵢ * Γᵢ
-            let coeff = self.data[blade_idx];
-            let coeff_tensor = B::from_shape_fn(&[1], |_| coeff);
-            let scaled = B::mul(&gamma, &coeff_tensor);
+        // 4. Sum along the batch axis (0) to get result matrix [matrix_dim, matrix_dim]
+        let sum = B::sum(&scaled, &[0]);
 
-            // Accumulate
-            result = B::add(&result, &scaled);
-        }
-
-        result
+        // Reshape result to [D, D]
+        B::reshape(&sum, &[matrix_dim, matrix_dim])
     }
 
     /// Converts Matrix Representation back to coefficients.
@@ -60,114 +48,60 @@ where
     /// Uses trace projection: aᵢ = Tr(M · Γᵢ†) / matrix_dim
     pub fn from_matrix_on_backend<B>(matrix: B::Tensor<T>, metric: Metric) -> Self
     where
-        B: LinearAlgebraBackend,
+        B: GammaProvider<T>,
         T: Default,
     {
         let n = metric.dimension();
-        let num_blades = 1usize << n;
         let matrix_dim = 1usize << n.div_ceil(2);
 
-        let mut coeffs = vec![T::zero(); num_blades];
+        // 1. Get dual basis gammas [num_blades, D, D]
+        let dual_basis = B::GammaLoader::get_dual_basis_gammas(&metric);
 
-        // For each blade, project: aᵢ = Tr(M · Γᵢ†) / dim
-        // For each blade, project: aᵢ = Tr(M · Γᵢ†) / dim
-        // For self-adjoint gammas, Γᵢ† = Γᵢ
-        for (blade_idx, coeff) in coeffs.iter_mut().enumerate() {
-            // Get gamma matrix for this blade
-            let gamma = Self::get_gamma_matrix_static::<B>(blade_idx, metric, matrix_dim);
+        // 2. Prepare matrix for batch contraction [1, D, D]
+        let matrix_batch = B::reshape(&matrix, &[1, matrix_dim, matrix_dim]);
 
-            // Compute M · Γᵢ
-            let product = B::matmul(&matrix, &gamma);
+        // 3. Trace projection via element-wise product and sum
+        // Tr(M * G) = sum_{r,c} M_rc * (G^T)_rc
+        // dual_basis[i] already stores (Gamma_i^{-1})^T
+        let product = B::mul(&matrix_batch, &dual_basis);
 
-            // Compute trace (sum of diagonal elements)
-            let trace = Self::compute_trace::<B>(&product, matrix_dim);
+        // 4. Sum along R and C axes (1, 2) to get [num_blades]
+        let sum = B::sum(&product, &[1, 2]);
 
-            // Normalize by dimension
-            let _dim_t = T::one();
-            // Simplified: just use trace directly for now
-            *coeff = trace;
+        // 5. Normalization: divide by matrix_dim
+        // In the Brauer-Weyl construction, Tr(I) = matrix_dim
+        let mut dim_t = T::zero();
+        for _ in 0..matrix_dim {
+            dim_t = dim_t + T::one();
         }
 
+        let normalized = if !dim_t.is_zero() {
+            let scale = B::from_shape_fn(&[1], |_| T::one() / dim_t);
+            B::mul(&sum, &scale)
+        } else {
+            sum
+        };
+
+        let coeffs = B::to_vec(&normalized);
         Self::unchecked(coeffs, metric)
     }
 
     /// Gets the gamma matrix for a specific blade index.
-    fn get_gamma_matrix<B>(&self, blade_idx: usize) -> B::Tensor<T>
+    pub fn get_gamma_matrix<B>(&self, blade_idx: usize) -> B::Tensor<T>
     where
-        B: LinearAlgebraBackend,
+        B: GammaProvider<T>,
     {
         let n = self.metric.dimension();
         let matrix_dim = 1usize << n.div_ceil(2);
-        Self::get_gamma_matrix_static::<B>(blade_idx, self.metric, matrix_dim)
+
+        // We can leverage the batch loader and slice it
+        let basis_gammas = B::GammaLoader::get_basis_gammas(&self.metric);
+
+        // Slince the [num_blades, D, D] tensor to get [1, D, D] at blade_idx
+        let start = blade_idx;
+        let end = blade_idx + 1;
+        let slice = B::slice(&basis_gammas, &[start..end, 0..matrix_dim, 0..matrix_dim]);
+
+        B::reshape(&slice, &[matrix_dim, matrix_dim])
     }
-
-    /// Static version of gamma matrix generation.
-    fn get_gamma_matrix_static<B>(
-        blade_idx: usize,
-        metric: Metric,
-        matrix_dim: usize,
-    ) -> B::Tensor<T>
-    where
-        B: LinearAlgebraBackend,
-    {
-        let shape = [matrix_dim, matrix_dim];
-
-        // Generate gamma matrix for this blade
-        // For blade 0 (scalar): Identity matrix
-        // For blade with single bit set (vector): corresponding gamma matrix
-        // For higher grades: product of vector gammas
-        B::from_shape_fn(&shape, |idx| {
-            let row = idx[0];
-            let col = idx[1];
-            compute_blade_gamma_element::<T>(blade_idx, row, col, metric, matrix_dim)
-        })
-    }
-
-    /// Computes the trace of a matrix tensor.
-    fn compute_trace<B>(matrix: &B::Tensor<T>, dim: usize) -> T
-    where
-        B: LinearAlgebraBackend,
-        T: Default,
-    {
-        let data = B::to_vec(matrix);
-        let mut trace = T::zero();
-        for i in 0..dim {
-            trace = trace + data[i * dim + i];
-        }
-        trace
-    }
-}
-
-/// Computes gamma matrix element for a specific blade.
-///
-/// - Blade 0 (scalar): Identity matrix
-/// - Blade with single bit (vector): Base gamma matrix
-/// - Higher grades: Product of base gammas
-fn compute_blade_gamma_element<T: TensorData + Neg<Output = T>>(
-    blade_idx: usize,
-    row: usize,
-    col: usize,
-    metric: Metric,
-    _matrix_dim: usize,
-) -> T {
-    let _n = metric.dimension();
-
-    if blade_idx == 0 {
-        // Scalar: Identity matrix
-        return if row == col { T::one() } else { T::zero() };
-    }
-
-    let grade = blade_idx.count_ones() as usize;
-
-    if grade == 1 {
-        // Vector: Single gamma matrix
-        let vector_idx = blade_idx.trailing_zeros() as usize;
-        return crate::types::multifield::gamma::compute_gamma_element::<T>(
-            vector_idx, row, col, &metric,
-        );
-    }
-
-    // Higher grades: Need to compute product of base gammas
-    // For simplicity, return identity-like for now (Placeholder)
-    if row == col { T::one() } else { T::zero() }
 }

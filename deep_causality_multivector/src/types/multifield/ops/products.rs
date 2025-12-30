@@ -94,46 +94,6 @@ where
         wedge.hodge_dual()
     }
 
-    /// Computes the Lie bracket commutator [A, B] = AB - BA.
-    pub fn commutator_lie(&self, rhs: &Self) -> Self {
-        assert_eq!(self.metric, rhs.metric);
-        assert_eq!(self.shape, rhs.shape);
-
-        // Inline matmul
-        let ab_data = B::batched_matmul(&self.data, &rhs.data);
-        let ba_data = B::batched_matmul(&rhs.data, &self.data);
-        let result = B::sub(&ab_data, &ba_data);
-
-        Self {
-            data: result,
-            metric: self.metric,
-            dx: self.dx,
-            shape: self.shape,
-        }
-    }
-
-    /// Computes the geometric algebra commutator A × B = (AB - BA) / 2.
-    ///
-    /// This is equivalent to `outer_product` for Bivectors, but generalized.
-    pub fn commutator_geometric(&self, rhs: &Self) -> Self
-    where
-        T: Clone + deep_causality_num::Ring + Default + PartialOrd,
-    {
-        let lie = self.commutator_lie(rhs);
-
-        // Scale by 0.5
-        let half = T::one() / (T::one() + T::one());
-        let half_tensor = B::from_shape_fn(&[1], |_| half);
-        let result = B::mul(&lie.data, &half_tensor);
-
-        Self {
-            data: result,
-            metric: self.metric,
-            dx: self.dx,
-            shape: self.shape,
-        }
-    }
-
     /// Applies the Hodge dual operation.
     ///
     /// A* = A · I⁻¹ where I is the pseudoscalar.

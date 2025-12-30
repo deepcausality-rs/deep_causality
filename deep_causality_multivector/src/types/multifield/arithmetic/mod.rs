@@ -220,26 +220,3 @@ where
         }
     }
 }
-
-// === Scalar Multiplication ===
-
-impl<B, T> CausalMultiField<B, T>
-where
-    B: LinearAlgebraBackend,
-    T: TensorData,
-{
-    /// Multiplies the field by a scalar value.
-    pub fn scale(&self, scalar: T) -> Self
-    where
-        T: Clone,
-    {
-        let scalar_tensor = B::from_shape_fn(&[1], |_| scalar);
-        let result = B::mul(&self.data, &scalar_tensor);
-        Self {
-            data: result,
-            metric: self.metric,
-            dx: self.dx,
-            shape: self.shape,
-        }
-    }
-}

@@ -4,7 +4,7 @@
  */
 
 #[cfg(feature = "mlx")]
-use deep_causality_tensor::backend::MlxBackend;
+use deep_causality_tensor::MlxBackend;
 use deep_causality_tensor::{CausalTensor, CpuBackend};
 use deep_causality_topology::Graph;
 use deep_causality_topology::backend::TopologyView;

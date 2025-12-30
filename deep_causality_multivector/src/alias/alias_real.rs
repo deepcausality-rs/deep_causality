@@ -69,10 +69,6 @@ impl RealMultiVector {
     /// Mathematics/GR Convention: Space-like vectors are positive. Metric: (- + + +)
     /// This is a specialized case of Metric::Generic { p: 3, q: 1, r: 0 }.
     pub fn new_spacetime_algebra_3_1(data: Vec<f64>) -> Self {
-        // Dimension 4. Metric (- + + +). This means 1 negative, 3 positive.
-        // The Generic metric is ordered: (+, -, 0).
-        // To achieve (- + + +), we must use the Generic form,
-        // but note the signs are reversed: p=3, q=1 gives (+ + + -).
         // The Minkowski definition is a special case that handles this:
         // We will use Custom for clarity since Minkowski is hardcoded to (+---).
 

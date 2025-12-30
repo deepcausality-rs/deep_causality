@@ -50,10 +50,17 @@ impl ComplexMultiVector {
         Self::new(data, Metric::NonEuclidean(6)).unwrap()
     }
 
-    /// Cl_C(6): The algebra of the Dixon Algebra (state space), A = C*H*O ~ Cl(0, 6)
+    /// Cl_C(6): The algebra of the Dixon state space, A = C*H*O ~ Cl(0, 6)
     /// This is used to host the 64 complex components of the Standard Model generations.
-    pub fn new_dixon_algebra_left(data: Vec<Complex64>) -> Self {
+    pub fn new_dixon_state_space(data: Vec<Complex64>) -> Self {
         Self::new_complex_clifford_6(data)
+    }
+
+    /// Cl_C(8): The Left Multiplication Algebra of the Dixon Algebra, L_A ~ Cl(0, 8)
+    /// L_A = L_C * L_H * L_O ~ Cl(0, 1) * Cl(0, 2) * Cl(0, 6) ~ Cl(0, 8).
+    /// This is used to host Spin(8) triality and the Cl(6) decomposition.
+    pub fn new_dixon_algebra_left(data: Vec<Complex64>) -> Self {
+        Self::new_complex_clifford_8(data)
     }
 
     /// Cl_C(8): The Left Multiplication Algebra of the Dixon Algebra, L_A ~ Cl(0, 8)

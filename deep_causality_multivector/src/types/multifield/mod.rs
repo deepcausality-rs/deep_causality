@@ -42,8 +42,8 @@
 //! );
 //! let curl = field.curl();
 //! ```
+mod algebra;
 mod arithmetic;
-
 pub mod gamma;
 pub mod ops;
 
