@@ -49,12 +49,12 @@ impl LinearAlgebraBackend for MlxBackend {
         let shape = input.as_array().shape();
         let ndim = shape.len();
         if ndim >= 2 && shape[ndim - 1] == 4 && shape[ndim - 2] == 4 {
-             match explicit_inverse_4x4(input.as_array()) {
-                 Ok(arr) => return MlxTensor::new(arr),
-                 Err(e) => eprintln!("MLX 4x4 inverse failed, falling back to CPU: {}", e),
-             }
+            match explicit_inverse_4x4(input.as_array()) {
+                Ok(arr) => return MlxTensor::new(arr),
+                Err(e) => eprintln!("MLX 4x4 inverse failed, falling back to CPU: {}", e),
+            }
         }
-        
+
         // Fallback or non-4x4
         use mlx_rs::StreamOrDevice;
         let array = mlx_rs::linalg::inv_device(input.as_array(), StreamOrDevice::cpu())
@@ -120,7 +120,7 @@ impl LinearAlgebraBackend for MlxBackend {
 // Helper for explicit 4x4 inversion on GPU
 fn explicit_inverse_4x4(input: &mlx_rs::Array) -> Result<mlx_rs::Array, String> {
     use mlx_rs::Array;
-    use mlx_rs::ops::{add, divide, multiply, reshape, split, subtract, concatenate, transpose};
+    use mlx_rs::ops::{add, concatenate, divide, multiply, reshape, split, subtract, transpose};
 
     let shape = input.shape();
     if shape.len() < 2 {
@@ -131,7 +131,7 @@ fn explicit_inverse_4x4(input: &mlx_rs::Array) -> Result<mlx_rs::Array, String> 
     let mut flat_shape = shape.to_vec();
     flat_shape.pop();
     flat_shape.pop(); // Remove 4, 4
-    
+
     // Reshape to [Batch..., 16].
     flat_shape.push(16);
     let flattened = reshape(input, &flat_shape).map_err(|e| e.to_string())?;
@@ -151,10 +151,7 @@ fn explicit_inverse_4x4(input: &mlx_rs::Array) -> Result<mlx_rs::Array, String> 
     let div_ = |a: &Array, b: &Array| divide(a, b).unwrap();
 
     // Inverse 2x2 Helper: (a,b,c,d) -> (oa, ob, oc, od)
-    let inv_2x2 = |
-        a: &Array, b: &Array,
-        c: &Array, d: &Array
-    | -> (Array, Array, Array, Array) {
+    let inv_2x2 = |a: &Array, b: &Array, c: &Array, d: &Array| -> (Array, Array, Array, Array) {
         let det = sub_(&mul_(a, d), &mul_(b, c));
         let ones = mlx_rs::ops::ones_like(&det).unwrap();
         let inv_det = div_(&ones, &det);
@@ -171,10 +168,14 @@ fn explicit_inverse_4x4(input: &mlx_rs::Array) -> Result<mlx_rs::Array, String> 
     };
 
     // MatMul 2x2 Helper
-    let mul_2x2 = |
-        a1: &Array, b1: &Array, c1: &Array, d1: &Array,
-        a2: &Array, b2: &Array, c2: &Array, d2: &Array
-    | {
+    let mul_2x2 = |a1: &Array,
+                   b1: &Array,
+                   c1: &Array,
+                   d1: &Array,
+                   a2: &Array,
+                   b2: &Array,
+                   c2: &Array,
+                   d2: &Array| {
         let r1 = add_(&mul_(a1, a2), &mul_(b1, c2));
         let r2 = add_(&mul_(a1, b2), &mul_(b1, d2));
         let r3 = add_(&mul_(c1, a2), &mul_(d1, c2));
@@ -182,12 +183,15 @@ fn explicit_inverse_4x4(input: &mlx_rs::Array) -> Result<mlx_rs::Array, String> 
         (r1, r2, r3, r4)
     };
 
-    let sub_blocks = |
-        a1: &Array, b1: &Array, c1: &Array, d1: &Array,
-        a2: &Array, b2: &Array, c2: &Array, d2: &Array
-    | {
-        (sub_(a1, a2), sub_(b1, b2), sub_(c1, c2), sub_(d1, d2))
-    };
+    let sub_blocks =
+        |a1: &Array,
+         b1: &Array,
+         c1: &Array,
+         d1: &Array,
+         a2: &Array,
+         b2: &Array,
+         c2: &Array,
+         d2: &Array| { (sub_(a1, a2), sub_(b1, b2), sub_(c1, c2), sub_(d1, d2)) };
 
     // Define Blocks
     // A: 0,1,4,5
@@ -214,54 +218,40 @@ fn explicit_inverse_4x4(input: &mlx_rs::Array) -> Result<mlx_rs::Array, String> 
     let zero_is = sub_(&is0, &is0);
     // Use & refs for sub_blocks args (owned arrays)
     let (n_is0, n_is1, n_is2, n_is3) = sub_blocks(
-        &zero_is, &zero_is, &zero_is, &zero_is,
-        &is0, &is1, &is2, &is3
+        &zero_is, &zero_is, &zero_is, &zero_is, &is0, &is1, &is2, &is3,
     );
     // F21 = -InvS * T1.
-    let (f21_0, f21_1, f21_2, f21_3) = mul_2x2(
-        &n_is0, &n_is1, &n_is2, &n_is3, 
-        &t1_0, &t1_1, &t1_2, &t1_3
-    );
+    let (f21_0, f21_1, f21_2, f21_3) =
+        mul_2x2(&n_is0, &n_is1, &n_is2, &n_is3, &t1_0, &t1_1, &t1_2, &t1_3);
 
-    // F12 = -InvA * B * InvS. 
+    // F12 = -InvA * B * InvS.
     // Term T3 = InvA * B
-    let (t3_0, t3_1, t3_2, t3_3) = mul_2x2(
-        &ia0, &ia1, &ia2, &ia3, 
-        c(2), c(3), c(6), c(7)
-    );
+    let (t3_0, t3_1, t3_2, t3_3) = mul_2x2(&ia0, &ia1, &ia2, &ia3, c(2), c(3), c(6), c(7));
     // F12 = T3 * (-InvS)
-    let (f12_0, f12_1, f12_2, f12_3) = mul_2x2(
-        &t3_0, &t3_1, &t3_2, &t3_3, 
-        &n_is0, &n_is1, &n_is2, &n_is3
-    );
+    let (f12_0, f12_1, f12_2, f12_3) =
+        mul_2x2(&t3_0, &t3_1, &t3_2, &t3_3, &n_is0, &n_is1, &n_is2, &n_is3);
 
     // F11 = InvA - F12 * T1
-    let (term_0, term_1, term_2, term_3) = mul_2x2(
-        &f12_0, &f12_1, &f12_2, &f12_3, 
-        &t1_0, &t1_1, &t1_2, &t1_3
-    );
-    let (f11_0, f11_1, f11_2, f11_3) = sub_blocks(
-        &ia0, &ia1, &ia2, &ia3, 
-        &term_0, &term_1, &term_2, &term_3
-    );
+    let (term_0, term_1, term_2, term_3) =
+        mul_2x2(&f12_0, &f12_1, &f12_2, &f12_3, &t1_0, &t1_1, &t1_2, &t1_3);
+    let (f11_0, f11_1, f11_2, f11_3) =
+        sub_blocks(&ia0, &ia1, &ia2, &ia3, &term_0, &term_1, &term_2, &term_3);
 
     // Collect results
     let outputs = vec![
-        &f11_0, &f11_1, &f12_0, &f12_1,
-        &f11_2, &f11_3, &f12_2, &f12_3,
-        &f21_0, &f21_1, &is0, &is1,
+        &f11_0, &f11_1, &f12_0, &f12_1, &f11_2, &f11_3, &f12_2, &f12_3, &f21_0, &f21_1, &is0, &is1,
         &f21_2, &f21_3, &is2, &is3,
     ];
 
     // Reconstruct
     let concat = concatenate(&outputs).map_err(|e| e.to_string())?;
-    
+
     // Reshape [16*Batch..., 1] -> [16, Batch...] (using -1)
     let dim16 = vec![16, -1];
     let inter = reshape(&concat, &dim16).map_err(|e| e.to_string())?; // [16, B]
-    
+
     let transposed = transpose(&inter).map_err(|e| e.to_string())?; // [B, 16]
-    
+
     let final_res = reshape(&transposed, shape).map_err(|e| e.to_string())?; // [B, 4, 4]
     Ok(final_res)
 }

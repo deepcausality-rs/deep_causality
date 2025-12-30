@@ -56,28 +56,27 @@ impl<B: LinearAlgebraBackend, T: TensorData + RealField + From<f32> + core::iter
         let half = B::create(&[half_val], &[1]);
 
         // We iterate k from 0 to N-1 (gradient index)
-        for k in 0..n {
-            // Check if this coordinate dimension k corresponds to a grid dimension
-            if k < batch_rank {
-                // Perform central difference along dimension k
-                // G(x + dx)
-                let stride = strides[k];
-                let g_plus = B::shifted_view(&self.metric_tensor, stride);
+        let grid_dims = batch_rank.min(n);
+        for &stride in strides.iter().take(grid_dims) {
+            // Perform central difference along dimension k
+            // G(x + dx)
+            let g_plus = B::shifted_view(&self.metric_tensor, stride);
 
-                // G(x - dx)
-                // Shift in opposite direction
-                let g_minus = B::shifted_view(&self.metric_tensor, total_size - stride);
+            // G(x - dx)
+            // Shift in opposite direction
+            let g_minus = B::shifted_view(&self.metric_tensor, total_size - stride);
 
-                let diff = B::sub(&g_plus, &g_minus);
+            let diff = B::sub(&g_plus, &g_minus);
 
-                // Grad = (Plus - Minus) * 0.5
-                let grad = B::broadcast_op(&diff, &half, |a, b| Ok(a * b))
-                    .expect("Gradient scaling failed");
-                grads.push(grad);
-            } else {
-                // No grid dimension for this index, derivative is 0
-                grads.push(B::zeros(&shape));
-            }
+            // Grad = (Plus - Minus) * 0.5
+            let grad =
+                B::broadcast_op(&diff, &half, |a, b| Ok(a * b)).expect("Gradient scaling failed");
+            grads.push(grad);
+        }
+
+        for _ in grid_dims..n {
+            // No grid dimension for this index, derivative is 0
+            grads.push(B::zeros(&shape));
         }
 
         // Stack to create D[..., i, j, k]
