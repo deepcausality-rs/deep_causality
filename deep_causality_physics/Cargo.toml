@@ -9,7 +9,7 @@ authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
 description = "Standard library of physics formulas and engineering primitives for DeepCausality."
 documentation = "https://docs.rs/deep_causality"
 categories = ["science", "simulation"]
-keywords = ["physics", "causality", "simulation"]
+keywords = ["physics", "causality", "simulation", "science"]
 exclude = [
     "*.bazel",
     "*/*.bazel",

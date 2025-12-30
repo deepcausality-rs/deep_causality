@@ -7,10 +7,10 @@ license = { workspace = true }
 
 repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
-description = "Multivector implementation for DeepCausality"
+description = "Multivector and MultiField implementation for DeepCausality"
 documentation = "https://docs.rs/deep_causality"
-categories = ["development-tools"]
-keywords = ["HKT", "traits"]
+categories = ["data-structures", "science", "mathematics"]
+keywords = ["data-structures", "vector"]
 # Exclude all bazel files as these conflict with Bazel workspace when vendored.
 exclude = [
     "*.bazel",
