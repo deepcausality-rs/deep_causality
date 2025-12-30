@@ -10,7 +10,7 @@
 //! - Σ contains singular values on the diagonal (m x n)
 //! - V^T contains right singular vectors (n x n orthogonal)
 
-use crate::backend::TensorData;
+use crate::TensorData;
 use crate::{CausalTensorError, InternalCpuTensor};
 use core::iter::Sum;
 use deep_causality_num::RealField;

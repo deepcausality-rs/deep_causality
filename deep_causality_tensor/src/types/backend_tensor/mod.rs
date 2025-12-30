@@ -25,7 +25,7 @@ mod constructors;
 mod getters;
 mod ops;
 
-use crate::backend::{TensorBackend, TensorData};
+use crate::{TensorBackend, TensorData};
 use core::fmt::Debug;
 use core::marker::PhantomData;
 
@@ -43,7 +43,7 @@ where
 }
 
 // Debug for CPU backend - uses InternalCpuTensor's derived Debug (only requires T: Debug)
-impl<T: Debug> Debug for BackendTensor<T, crate::backend::CpuBackend> {
+impl<T: Debug> Debug for BackendTensor<T, crate::CpuBackend> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_tuple("CausalTensor").field(&self.inner).finish()
     }
@@ -70,7 +70,7 @@ impl<T, B: TensorBackend> BackendTensor<T, B> {
 }
 
 // PartialEq for CPU backend - uses InternalCpuTensor's derived PartialEq (no bounds on T)
-impl<T: PartialEq> PartialEq for BackendTensor<T, crate::backend::CpuBackend> {
+impl<T: PartialEq> PartialEq for BackendTensor<T, crate::CpuBackend> {
     fn eq(&self, other: &Self) -> bool {
         self.inner == other.inner
     }
@@ -78,7 +78,7 @@ impl<T: PartialEq> PartialEq for BackendTensor<T, crate::backend::CpuBackend> {
 
 // Deref to InternalCpuTensor for CPU backend.
 // This gives direct access to all InternalCpuTensor methods that return references.
-impl<T> core::ops::Deref for BackendTensor<T, crate::backend::CpuBackend> {
+impl<T> core::ops::Deref for BackendTensor<T, crate::CpuBackend> {
     type Target = crate::InternalCpuTensor<T>;
 
     fn deref(&self) -> &Self::Target {
@@ -86,7 +86,7 @@ impl<T> core::ops::Deref for BackendTensor<T, crate::backend::CpuBackend> {
     }
 }
 
-impl<T> core::ops::DerefMut for BackendTensor<T, crate::backend::CpuBackend> {
+impl<T> core::ops::DerefMut for BackendTensor<T, crate::CpuBackend> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.inner
     }
@@ -117,21 +117,21 @@ impl<T: core::fmt::Display + Clone, B: TensorBackend> core::fmt::Display for Bac
 }
 
 // Default for CPU backend - creates empty tensor
-impl<T: Default + Clone> Default for BackendTensor<T, crate::backend::CpuBackend> {
+impl<T: Default + Clone> Default for BackendTensor<T, crate::CpuBackend> {
     fn default() -> Self {
         Self::from_inner(crate::InternalCpuTensor::new(vec![], vec![0]).unwrap())
     }
 }
 
 // From<InternalCpuTensor> for convenience conversions
-impl<T> From<crate::InternalCpuTensor<T>> for BackendTensor<T, crate::backend::CpuBackend> {
+impl<T> From<crate::InternalCpuTensor<T>> for BackendTensor<T, crate::CpuBackend> {
     fn from(inner: crate::InternalCpuTensor<T>) -> Self {
         Self::from_inner(inner)
     }
 }
 
 // From scalar T to 0-D Tensor
-impl<T> From<T> for BackendTensor<T, crate::backend::CpuBackend>
+impl<T> From<T> for BackendTensor<T, crate::CpuBackend>
 where
     T: TensorData,
 {
@@ -141,7 +141,7 @@ where
 }
 
 // From &T to 0-D Tensor
-impl<T> From<&T> for BackendTensor<T, crate::backend::CpuBackend>
+impl<T> From<&T> for BackendTensor<T, crate::CpuBackend>
 where
     T: TensorData + Clone,
 {

@@ -17,7 +17,7 @@ mod mlx_backend_linear_algebra;
 mod mlx_backend_tensor;
 mod mlx_tensor_impl;
 
-use crate::backend::Device;
+use crate::types::backend::Device;
 
 /// Apple Silicon GPU Backend using MLX.
 ///
@@ -35,7 +35,7 @@ use crate::backend::Device;
 /// # Example
 ///
 /// ```rust,ignore
-/// use deep_causality_tensor::backend::{MlxBackend, TensorBackend};
+/// use deep_causality_tensor::{MlxBackend, TensorBackend};
 ///
 /// let data = vec![1.0f32, 2.0, 3.0, 4.0];
 /// let tensor = MlxBackend::create(&data, &[2, 2]);

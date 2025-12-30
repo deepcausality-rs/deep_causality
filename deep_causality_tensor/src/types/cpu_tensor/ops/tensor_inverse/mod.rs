@@ -5,7 +5,7 @@
 use crate::{CausalTensorError, InternalCpuTensor};
 use deep_causality_num::RealField;
 
-use crate::backend::TensorData;
+use crate::TensorData;
 
 impl<T> InternalCpuTensor<T> {
     pub(in crate::types::cpu_tensor) fn inverse_impl(&self) -> Result<Self, CausalTensorError>

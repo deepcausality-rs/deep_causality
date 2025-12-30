@@ -9,7 +9,7 @@
 //! - Q is an orthogonal matrix (Q^T Q = I)
 //! - R is an upper triangular matrix
 
-use crate::backend::TensorData;
+use crate::TensorData;
 use crate::{CausalTensorError, InternalCpuTensor};
 use core::iter::Sum;
 use deep_causality_num::RealField;

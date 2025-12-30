@@ -4,10 +4,8 @@
  */
 
 use super::CpuBackend;
-use crate::CausalTensorError;
-use crate::backend::{Device, TensorBackend, TensorData};
-use crate::traits::tensor::Tensor;
 use crate::types::cpu_tensor::{EinSumAST, InternalCpuTensor};
+use crate::{CausalTensorError, Device, Tensor, TensorBackend, TensorData};
 use core::ops::Range;
 
 impl TensorBackend for CpuBackend {

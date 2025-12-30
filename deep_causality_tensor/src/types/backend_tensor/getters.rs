@@ -10,7 +10,7 @@
 //! or need backend-specific implementations.
 
 use super::BackendTensor;
-use crate::traits::TensorBackend;
+use crate::TensorBackend;
 
 impl<T, B: TensorBackend> BackendTensor<T, B> {
     /// Consumes the tensor and returns the storage as a vector.

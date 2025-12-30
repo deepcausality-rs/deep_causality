@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::Tensor;
-use crate::backend::TensorData;
+use crate::TensorData;
 use crate::types::cpu_tensor::{EinSumAST, EinSumOp};
 use crate::{CausalTensorError, InternalCpuTensor};
 

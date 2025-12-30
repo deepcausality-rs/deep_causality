@@ -35,14 +35,14 @@ where
         ast: &EinSumAST<InternalCpuTensor<T>>,
     ) -> Result<InternalCpuTensor<T>, CausalTensorError>
     where
-        T: crate::backend::TensorData,
+        T: TensorData,
     {
         Self::execute_ein_sum(ast)
     }
 
     fn matmul(&self, rhs: &Self) -> Result<Self, CausalTensorError>
     where
-        T: crate::backend::TensorData,
+        T: TensorData,
     {
         self.matmul_impl(rhs)
     }
@@ -474,21 +474,21 @@ where
     /// - `CausalTensorError::DivisionByZero`: If a pivot element is zero during elimination.
     fn inverse(&self) -> Result<Self, CausalTensorError>
     where
-        T: crate::backend::TensorData + RealField,
+        T: TensorData + RealField,
     {
         self.inverse_impl()
     }
 
     fn qr(&self) -> Result<(Self, Self), CausalTensorError>
     where
-        T: crate::backend::TensorData + core::iter::Sum + RealField + std::ops::Neg<Output = T>,
+        T: TensorData + core::iter::Sum + RealField + std::ops::Neg<Output = T>,
     {
         self.qr_impl()
     }
 
     fn svd(&self) -> Result<(Self, Self, Self), CausalTensorError>
     where
-        T: crate::backend::TensorData + core::iter::Sum + RealField,
+        T: TensorData + core::iter::Sum + RealField,
     {
         self.svd_impl()
     }

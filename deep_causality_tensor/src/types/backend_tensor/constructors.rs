@@ -7,7 +7,7 @@
 
 use super::BackendTensor;
 use crate::CausalTensorError;
-use crate::traits::{TensorBackend, TensorData};
+use crate::{TensorBackend, TensorData};
 
 impl<T, B: TensorBackend> BackendTensor<T, B> {
     /// Creates a tensor from an owned vector (infallible).
@@ -67,7 +67,7 @@ impl<T: TensorData, B: TensorBackend> BackendTensor<T, B> {
 }
 
 // CPU-backend-specific constructors that require algebraic traits
-impl<T> BackendTensor<T, crate::backend::CpuBackend>
+impl<T> BackendTensor<T, crate::CpuBackend>
 where
     T: Clone + Copy + deep_causality_num::Ring,
 {

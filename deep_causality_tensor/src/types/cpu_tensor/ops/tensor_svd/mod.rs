@@ -5,7 +5,7 @@
 use crate::{CausalTensorError, InternalCpuTensor, Tensor};
 use deep_causality_num::RealField;
 
-use crate::backend::TensorData;
+use crate::TensorData;
 
 impl<T> InternalCpuTensor<T>
 where

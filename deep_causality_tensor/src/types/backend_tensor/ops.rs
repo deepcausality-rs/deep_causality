@@ -10,7 +10,7 @@
 //! This file provides operations not in the Tensor trait.
 
 use super::BackendTensor;
-use crate::traits::{TensorBackend, TensorData};
+use crate::{TensorBackend, TensorData};
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
 impl<T: Clone, B: TensorBackend> BackendTensor<T, B> {

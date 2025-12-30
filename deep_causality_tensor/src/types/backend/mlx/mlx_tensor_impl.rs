@@ -8,8 +8,8 @@
 //! This delegates operations to MlxBackend (implementing TensorBackend)
 //! and wraps results in BackendTensor.
 
-use crate::backend::MlxBackend;
-use crate::traits::LinearAlgebraBackend;
+use crate::LinearAlgebraBackend;
+use crate::MlxBackend;
 use crate::types::backend_tensor::BackendTensor;
 use crate::types::cpu_tensor::EinSumAST;
 use crate::{CausalTensorError, Tensor, TensorBackend, TensorData};
@@ -26,7 +26,7 @@ impl<T: TensorData + std::iter::Sum> Tensor<T> for BackendTensor<T, MlxBackend> 
         // We need to convert EinSumAST<BackendTensor<T, MlxBackend>> to EinSumAST<MlxTensor<T>>
         fn convert_ast<T: TensorData>(
             ast: &EinSumAST<BackendTensor<T, MlxBackend>>,
-        ) -> EinSumAST<crate::backend::mlx::MlxTensor<T>> {
+        ) -> EinSumAST<crate::types::backend::mlx::MlxTensor<T>> {
             let op = ast
                 .value()
                 .clone()
@@ -47,7 +47,7 @@ impl<T: TensorData + std::iter::Sum> Tensor<T> for BackendTensor<T, MlxBackend> 
     where
         T: TensorData,
     {
-        use crate::traits::LinearAlgebraBackend;
+        use crate::LinearAlgebraBackend;
         Ok(Self::from_inner(MlxBackend::matmul(
             &self.inner,
             &rhs.inner,

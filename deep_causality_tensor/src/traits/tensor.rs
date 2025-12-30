@@ -32,11 +32,11 @@ where
     /// Returns errors propagated from `execute_ein_sum`.
     fn ein_sum(ast: &crate::types::cpu_tensor::EinSumAST<Self>) -> Result<Self, CausalTensorError>
     where
-        T: crate::backend::TensorData;
+        T: crate::TensorData;
 
     fn matmul(&self, rhs: &Self) -> Result<Self, CausalTensorError>
     where
-        T: crate::backend::TensorData,
+        T: crate::TensorData,
         Self: Sized;
 
     /// Computes the tensor product (also known as the outer product) of two `CausalTensor`s.
@@ -434,7 +434,7 @@ where
     /// - `CausalTensorError::DivisionByZero`: If a pivot element is zero during elimination.
     fn inverse(&self) -> Result<Self, CausalTensorError>
     where
-        T: crate::backend::TensorData + RealField,
+        T: crate::TensorData + RealField,
         Self: Sized;
 
     /// Computes the QR decomposition of a matrix using Householder reflections.
@@ -462,7 +462,7 @@ where
     /// - `Err(CausalTensorError)`: If the tensor is not 2-dimensional
     fn qr(&self) -> Result<(Self, Self), CausalTensorError>
     where
-        T: crate::backend::TensorData + core::iter::Sum + RealField + core::ops::Neg<Output = T>,
+        T: crate::TensorData + core::iter::Sum + RealField + core::ops::Neg<Output = T>,
         Self: Sized;
 
     /// Computes the Singular Value Decomposition (SVD) of a matrix.
@@ -492,7 +492,7 @@ where
     /// - `Err(CausalTensorError)`: If the tensor is not 2-dimensional
     fn svd(&self) -> Result<(Self, Self, Self), CausalTensorError>
     where
-        T: crate::backend::TensorData + core::iter::Sum + RealField,
+        T: crate::TensorData + core::iter::Sum + RealField,
         Self: Sized;
 
     /// Computes the Cholesky decomposition of a symmetric, positive-definite matrix.
@@ -536,7 +536,7 @@ where
     ///   element becomes zero or negative during computation).
     fn cholesky_decomposition(&self) -> Result<Self, CausalTensorError>
     where
-        T: crate::backend::TensorData + RealField,
+        T: crate::TensorData + RealField,
         Self: Sized;
 
     /// Solves the Least Squares problem for $Ax = b$ using Cholesky decomposition.
@@ -590,7 +590,7 @@ where
         b: &Self, // Observation vector (m x 1)
     ) -> Result<Self, CausalTensorError>
     where
-        T: crate::backend::TensorData + RealField,
+        T: crate::TensorData + RealField,
         Self: Sized;
     /// Stacks a sequence of tensors along a new axis.
     ///
@@ -606,6 +606,6 @@ where
     /// - `Err(CausalTensorError)`: If shapes mismatch or axis is out of bounds.
     fn stack(tensors: &[Self], axis: usize) -> Result<Self, CausalTensorError>
     where
-        T: crate::backend::TensorData,
+        T: crate::TensorData,
         Self: Sized;
 }

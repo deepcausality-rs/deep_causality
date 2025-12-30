@@ -13,7 +13,7 @@ mod cpu_backend_linear_algebra;
 mod cpu_backend_tensor;
 mod cpu_tensor_impl;
 
-use crate::backend::Device;
+use crate::Device;
 
 /// CPU Backend using pure Rust `CpuTensor<T>`.
 ///
@@ -25,7 +25,7 @@ use crate::backend::Device;
 /// # Example
 ///
 /// ```rust
-/// use deep_causality_tensor::backend::{CpuBackend, TensorBackend};
+/// use deep_causality_tensor::{CpuBackend, TensorBackend};
 ///
 /// let data = vec![1.0f64, 2.0, 3.0, 4.0];
 /// let tensor = CpuBackend::create(&data, &[2, 2]);

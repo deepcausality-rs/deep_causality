@@ -5,8 +5,8 @@
 
 //! TensorBackend trait defining the compute backend contract.
 
-use crate::backend::Device;
 use crate::traits::tensor_data::TensorData;
+use crate::types::backend::Device;
 use crate::types::cpu_tensor::EinSumAST;
 use core::ops::Range;
 
@@ -28,7 +28,7 @@ use core::ops::Range;
 /// # Example
 ///
 /// ```rust
-/// use deep_causality_tensor::backend::{CpuBackend, TensorBackend};
+/// use deep_causality_tensor::{CpuBackend, TensorBackend};
 ///
 /// let data = vec![1.0f64, 2.0, 3.0, 4.0];
 /// let a = CpuBackend::create(&data, &[2, 2]);

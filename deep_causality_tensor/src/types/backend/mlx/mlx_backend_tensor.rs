@@ -7,8 +7,8 @@
 
 use super::{MlxBackend, MlxTensor};
 use crate::CausalTensor; // Use alias to avoid confusion if needed, though implicit import works
-use crate::backend::Device;
-use crate::traits::{TensorBackend, TensorData};
+use crate::types::backend::Device;
+use crate::{TensorBackend, TensorData};
 use core::ops::Range;
 
 // Implement internal helpers for MlxBackend
@@ -154,7 +154,7 @@ impl TensorBackend for MlxBackend {
         let cpu_lhs = crate::InternalCpuTensor::new(Self::to_vec(lhs), Self::shape(lhs)).unwrap();
         let cpu_rhs = crate::InternalCpuTensor::new(Self::to_vec(rhs), Self::shape(rhs)).unwrap();
 
-        use crate::backend::CpuBackend;
+        use crate::CpuBackend;
         let result = CpuBackend::broadcast_op(&cpu_lhs, &cpu_rhs, f)?;
         Ok(Self::create(result.as_slice(), result.shape()))
     }
@@ -225,7 +225,7 @@ impl TensorBackend for MlxBackend {
         let cpu_shape = Self::shape(tensor);
         let cpu_tensor =
             CausalTensor::new(cpu_data, cpu_shape).expect("permute: cpu creation failed");
-        use crate::backend::CpuBackend;
+        use crate::CpuBackend;
         let result = CpuBackend::permute(&cpu_tensor, axes);
         Self::create(result.as_slice(), result.shape())
     }
@@ -239,7 +239,7 @@ impl TensorBackend for MlxBackend {
             Err(_) => panic!("MlxBackend::slice: cpu tensor creation failed"),
         };
 
-        use crate::backend::CpuBackend;
+        use crate::CpuBackend;
         let result = CpuBackend::slice(&cpu_tensor, ranges);
         Self::create(result.as_slice(), result.shape())
     }
@@ -256,7 +256,7 @@ impl TensorBackend for MlxBackend {
             cpu_tensors.push(crate::InternalCpuTensor::new(data, shape)?);
         }
 
-        use crate::backend::CpuBackend;
+        use crate::CpuBackend;
         let result = CpuBackend::stack(&cpu_tensors, axis)?;
         Ok(Self::create(result.as_slice(), result.shape()))
     }
@@ -288,7 +288,7 @@ impl TensorBackend for MlxBackend {
             Err(_) => panic!("MlxBackend::shifted_view: cpu tensor creation failed"),
         };
 
-        use crate::backend::CpuBackend;
+        use crate::CpuBackend;
         let result = CpuBackend::shifted_view(&cpu_tensor, flat_index);
         Self::create(result.as_slice(), result.shape())
     }
@@ -314,7 +314,7 @@ impl TensorBackend for MlxBackend {
         // CausalTensor mean uses different trait or inherent impl?
         // TensorBackend has mean.
         // CpuBackend::mean
-        use crate::backend::CpuBackend;
+        use crate::CpuBackend;
         let result = CpuBackend::mean(&cpu_tensor, axes);
         Self::create(result.as_slice(), result.shape())
     }
@@ -322,7 +322,7 @@ impl TensorBackend for MlxBackend {
     fn ein_sum<T: TensorData>(
         ast: &crate::types::cpu_tensor::EinSumAST<Self::Tensor<T>>,
     ) -> Result<Self::Tensor<T>, crate::CausalTensorError> {
-        use crate::traits::LinearAlgebraBackend;
+        use crate::LinearAlgebraBackend;
         use crate::types::cpu_tensor::{EinSumAST, EinSumOp}; // Required for MlxBackend::tensor_product
 
         // Helper to generate index characters for einsum
@@ -568,7 +568,7 @@ impl TensorBackend for MlxBackend {
             let cpu_shape = Self::shape(tensor);
             let cpu_tensor = crate::InternalCpuTensor::new(cpu_data, cpu_shape)
                 .expect("MlxBackend::max: cpu tensor creation failed");
-            use crate::backend::CpuBackend;
+            use crate::CpuBackend;
             // use crate::traits::TensorBackend;
             let result_tensor = CpuBackend::max(&cpu_tensor, axes);
             return Self::create(result_tensor.as_slice(), result_tensor.shape());

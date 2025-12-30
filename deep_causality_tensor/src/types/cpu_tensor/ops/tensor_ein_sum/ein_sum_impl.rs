@@ -70,7 +70,7 @@ where
     }
 }
 
-use crate::backend::TensorData;
+use crate::TensorData;
 
 // Specialized constructions
 impl<T> InternalCpuTensor<T>

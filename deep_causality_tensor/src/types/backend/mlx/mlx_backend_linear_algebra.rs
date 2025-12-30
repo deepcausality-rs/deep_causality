@@ -6,7 +6,7 @@
 //! LinearAlgebraBackend implementation for MlxBackend.
 
 use super::{MlxBackend, MlxTensor};
-use crate::traits::{LinearAlgebraBackend, TensorData};
+use crate::{LinearAlgebraBackend, TensorData};
 use core::iter::Sum;
 use deep_causality_num::{RealField, Ring};
 

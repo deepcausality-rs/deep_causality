@@ -4,8 +4,7 @@
  */
 
 use super::CpuBackend;
-use crate::backend::{LinearAlgebraBackend, TensorData};
-use crate::traits::tensor::Tensor;
+use crate::{LinearAlgebraBackend, Tensor, TensorData};
 use deep_causality_num::{RealField, Ring};
 use std::iter::Sum;
 

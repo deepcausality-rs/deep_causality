@@ -6,7 +6,7 @@ use crate::types::cpu_tensor::EinSumOp;
 use crate::{CausalTensorError, InternalCpuTensor};
 use std::ops::Mul;
 
-use crate::backend::TensorData;
+use crate::TensorData;
 
 impl<T> InternalCpuTensor<T>
 where
