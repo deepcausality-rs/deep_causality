@@ -74,7 +74,13 @@ fn bench_christoffel(c: &mut Criterion) {
                 let manifold = ManifoldView::<TestBackend, f32>::new(metric);
 
                 b.iter(|| {
-                    let _res = manifold.compute_christoffel();
+                    let res = manifold.compute_christoffel();
+                    // Force MLX evaluation by accessing the underlying data
+                    #[cfg(feature = "mlx")]
+                    {
+                        let _ = TestBackend::to_vec(&res);
+                    }
+                    std::hint::black_box(res)
                 })
             },
         );
