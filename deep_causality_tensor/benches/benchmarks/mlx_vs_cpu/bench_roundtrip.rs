@@ -4,6 +4,7 @@
  */
 
 use criterion::{Criterion, criterion_group};
+use std::hint::black_box;
 #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
 use deep_causality_tensor::{CausalTensor, MlxBackend, MlxCausalTensor, Tensor, TensorBackend};
 
