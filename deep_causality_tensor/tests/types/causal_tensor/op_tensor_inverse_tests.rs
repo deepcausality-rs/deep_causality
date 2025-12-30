@@ -94,12 +94,33 @@ fn test_inverse_non_square_matrix_error() {
 }
 
 #[test]
-fn test_inverse_non_2d_tensor_error() {
-    let tensor = CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![4]).unwrap(); // 1D tensor
+fn test_inverse_rank_validation_and_batching() {
+    // 1D tensor should still fail with DimensionMismatch
+    let tensor = CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![4]).unwrap();
     let err = tensor.inverse().unwrap_err();
     assert_eq!(err, CausalTensorError::DimensionMismatch);
 
-    let tensor_3d = CausalTensor::new(vec![1.0; 8], vec![2, 2, 2]).unwrap(); // 3D tensor
-    let err_3d = tensor_3d.inverse().unwrap_err();
-    assert_eq!(err_3d, CausalTensorError::DimensionMismatch);
+    // 3D tensor (Rank > 2) should now work if matrices are invertible.
+    // Create a batch of two 2x2 Identity matrices.
+    // [1, 0, 0, 1] and [1, 0, 0, 1]
+    let data = vec![
+        1.0, 0.0, 0.0, 1.0, // Batch 0
+        1.0, 0.0, 0.0, 1.0, // Batch 1
+    ];
+
+    let tensor_3d = CausalTensor::new(data, vec![2, 2, 2]).unwrap(); // 3D tensor
+    let result = tensor_3d.inverse();
+
+    assert!(
+        result.is_ok(),
+        "3D batched inversion should succeed for invertible matrices"
+    );
+    let inv = result.unwrap();
+    assert_eq!(inv.shape(), &[2, 2, 2]);
+    let inv_data = inv.as_slice();
+    // Inverse of Identity is Identity.
+    let expected = [1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0];
+    for (i, val) in expected.iter().enumerate() {
+        assert_approx_eq(inv_data[i], *val, 1e-9);
+    }
 }

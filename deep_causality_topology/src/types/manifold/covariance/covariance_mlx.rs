@@ -8,7 +8,9 @@
 #![cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
 
 use crate::{Manifold, TopologyError};
-use deep_causality_tensor::MlxCausalTensor;
+use deep_causality_tensor::{
+    CausalTensorError, MlxBackend, MlxCausalTensor, Tensor, TensorBackend,
+};
 
 impl<T> Manifold<T>
 where
@@ -28,35 +30,44 @@ where
         }
 
         // Convert to f64 then downcast to f32 for GPU
-        let values: Vec<f64> = data.iter().map(|&x| x.into()).collect();
+        let values: Vec<f32> = data.iter().map(|&x| x.into() as f32).collect();
 
         // Create MLX tensor
-        let mlx_data = MlxCausalTensor::new_from_f64(&values, vec![n])
-            .map_err(|e| TopologyError::TensorError(e.to_string()))?;
+        let mlx_data = MlxCausalTensor::<f32>::new(values, vec![n])
+            .map_err(|e: CausalTensorError| TopologyError::TensorError(e.to_string()))?;
 
         // Compute mean on GPU using sum (returns f32 directly)
-        let sum_val: f32 = mlx_data
-            .sum()
-            .map_err(|e| TopologyError::TensorError(e.to_string()))?;
+        let sum_tensor = mlx_data
+            .sum_axes(&[])
+            .map_err(|e: CausalTensorError| TopologyError::TensorError(e.to_string()))?;
+
+        let sum_vec = MlxBackend::to_vec(sum_tensor.inner());
+        let sum_val = if sum_vec.is_empty() { 0.0 } else { sum_vec[0] };
+
         let mean = sum_val as f64 / n as f64;
 
         // Center the data (element-wise subtraction)
         let mean_vec = vec![mean as f32; n];
-        let mean_tensor = MlxCausalTensor::new_f32(mean_vec, vec![n])
-            .map_err(|e| TopologyError::TensorError(e.to_string()))?;
+        let mean_tensor = MlxCausalTensor::<f32>::new(mean_vec, vec![n])
+            .map_err(|e: CausalTensorError| TopologyError::TensorError(e.to_string()))?;
 
-        let centered = mlx_data
-            .sub(&mean_tensor)
-            .map_err(|e| TopologyError::TensorError(e.to_string()))?;
+        // Use standard operators (requires std::ops traits)
+        let centered = mlx_data - mean_tensor;
 
         // Compute variance: sum(centered^2) / (n-1)
-        let centered_sq = centered
-            .mul(&centered)
-            .map_err(|e| TopologyError::TensorError(e.to_string()))?;
+        let centered_sq = &centered * &centered;
 
-        let sum_sq_val: f32 = centered_sq
-            .sum()
-            .map_err(|e| TopologyError::TensorError(e.to_string()))?;
+        let sum_sq_tensor = centered_sq
+            .sum_axes(&[])
+            .map_err(|e: CausalTensorError| TopologyError::TensorError(e.to_string()))?;
+
+        let sum_sq_vec = MlxBackend::to_vec(sum_sq_tensor.inner());
+        let sum_sq_val = if sum_sq_vec.is_empty() {
+            0.0
+        } else {
+            sum_sq_vec[0]
+        };
+
         let variance = sum_sq_val as f64 / (n - 1) as f64;
 
         Ok(vec![vec![variance]])

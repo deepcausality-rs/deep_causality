@@ -57,6 +57,9 @@ version = "0.1"
 path = "../deep_causality_multivector"
 version = "0.2.3"
 
+[dev-dependencies]
+criterion = { version = "0.8.1" }
+deep_causality_rand = { path = "../deep_causality_rand" }
 
 [[example]]
 name = "basic_graph"
@@ -77,3 +80,7 @@ path = "examples/chain_algebra.rs"
 [[example]]
 name = "differential_field"
 path = "examples/differential_field.rs"
+
+[[bench]]
+name = "bench_causal_topology"
+harness = false

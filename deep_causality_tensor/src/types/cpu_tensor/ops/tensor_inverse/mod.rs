@@ -13,18 +13,49 @@ impl<T> InternalCpuTensor<T> {
         T: TensorData + RealField,
     {
         let ndim = self.ndim();
-        if ndim != 2 {
+        if ndim < 2 {
             return Err(CausalTensorError::DimensionMismatch);
         }
 
-        let rows = self.shape()[0];
-        let cols = self.shape()[1];
+        let rows = self.shape[ndim - 2];
+        let cols = self.shape[ndim - 1];
 
         if rows != cols {
             return Err(CausalTensorError::ShapeMismatch); // Not a square matrix
         }
 
-        let n = rows;
+        if ndim == 2 {
+            self.inverse_2d_impl()
+        } else {
+            // Batched Matrix Inversion
+
+            // Calculate total number of matrices in the batch
+            let batch_size: usize = self.shape.iter().take(ndim - 2).product();
+            let matrix_size = rows * cols;
+
+            // Result data
+            let mut result_data = Vec::with_capacity(self.data.len());
+
+            for b in 0..batch_size {
+                let offset = b * matrix_size;
+                let batch_slice = &self.data[offset..offset + matrix_size];
+
+                // Construct a temporary 2D tensor for this batch
+                let temp_tensor = Self::new(batch_slice.to_vec(), vec![rows, cols])?;
+                let inv_tensor = temp_tensor.inverse_2d_impl()?;
+
+                result_data.extend(inv_tensor.data);
+            }
+
+            Ok(Self::new(result_data, self.shape.clone())?)
+        }
+    }
+
+    fn inverse_2d_impl(&self) -> Result<Self, CausalTensorError>
+    where
+        T: TensorData + RealField,
+    {
+        let n = self.shape[0];
 
         // Handle 1x1 matrix case
         if n == 1 {

@@ -44,8 +44,20 @@ impl LinearAlgebraBackend for MlxBackend {
     where
         T: TensorData + RealField + Sum + PartialEq,
     {
-        // MLX linalg::inv for matrix inversion
-        let array = mlx_rs::linalg::inv(input.as_array())
+        // MLX linalg::inv is not supported on GPU yet.
+        // We implement an explicit 4x4 inverse using basic ops for the common spacetime case.
+        let shape = input.as_array().shape();
+        let ndim = shape.len();
+        if ndim >= 2 && shape[ndim - 1] == 4 && shape[ndim - 2] == 4 {
+             match explicit_inverse_4x4(input.as_array()) {
+                 Ok(arr) => return MlxTensor::new(arr),
+                 Err(e) => eprintln!("MLX 4x4 inverse failed, falling back to CPU: {}", e),
+             }
+        }
+        
+        // Fallback or non-4x4
+        use mlx_rs::StreamOrDevice;
+        let array = mlx_rs::linalg::inv_device(input.as_array(), StreamOrDevice::cpu())
             .expect("MlxBackend::inverse: matrix singular or not square");
         MlxTensor::new(array)
     }
@@ -103,4 +115,153 @@ impl LinearAlgebraBackend for MlxBackend {
 
         MlxTensor::new(res)
     }
+}
+
+// Helper for explicit 4x4 inversion on GPU
+fn explicit_inverse_4x4(input: &mlx_rs::Array) -> Result<mlx_rs::Array, String> {
+    use mlx_rs::Array;
+    use mlx_rs::ops::{add, divide, multiply, reshape, split, subtract, concatenate, transpose};
+
+    let shape = input.shape();
+    if shape.len() < 2 {
+        return Err("Rank < 2".into());
+    }
+
+    // Flatten last 2 dims (4x4) into 16
+    let mut flat_shape = shape.to_vec();
+    flat_shape.pop();
+    flat_shape.pop(); // Remove 4, 4
+    
+    // Reshape to [Batch..., 16].
+    flat_shape.push(16);
+    let flattened = reshape(input, &flat_shape).map_err(|e| e.to_string())?;
+
+    // Split into 16 components
+    let components = split(&flattened, 16, -1).map_err(|e| e.to_string())?;
+    if components.len() != 16 {
+        return Err("Split failed".into());
+    }
+
+    let c = |i: usize| &components[i];
+
+    // Helpers
+    let add_ = |a: &Array, b: &Array| add(a, b).unwrap();
+    let sub_ = |a: &Array, b: &Array| subtract(a, b).unwrap();
+    let mul_ = |a: &Array, b: &Array| multiply(a, b).unwrap();
+    let div_ = |a: &Array, b: &Array| divide(a, b).unwrap();
+
+    // Inverse 2x2 Helper: (a,b,c,d) -> (oa, ob, oc, od)
+    let inv_2x2 = |
+        a: &Array, b: &Array,
+        c: &Array, d: &Array
+    | -> (Array, Array, Array, Array) {
+        let det = sub_(&mul_(a, d), &mul_(b, c));
+        let ones = mlx_rs::ops::ones_like(&det).unwrap();
+        let inv_det = div_(&ones, &det);
+
+        let zero = sub_(&det, &det);
+        let neg_b = sub_(&zero, b);
+        let neg_c = sub_(&zero, c);
+
+        let oa = mul_(&inv_det, d);
+        let ob = mul_(&inv_det, &neg_b);
+        let oc = mul_(&inv_det, &neg_c);
+        let od = mul_(&inv_det, a);
+        (oa, ob, oc, od)
+    };
+
+    // MatMul 2x2 Helper
+    let mul_2x2 = |
+        a1: &Array, b1: &Array, c1: &Array, d1: &Array,
+        a2: &Array, b2: &Array, c2: &Array, d2: &Array
+    | {
+        let r1 = add_(&mul_(a1, a2), &mul_(b1, c2));
+        let r2 = add_(&mul_(a1, b2), &mul_(b1, d2));
+        let r3 = add_(&mul_(c1, a2), &mul_(d1, c2));
+        let r4 = add_(&mul_(c1, b2), &mul_(d1, d2));
+        (r1, r2, r3, r4)
+    };
+
+    let sub_blocks = |
+        a1: &Array, b1: &Array, c1: &Array, d1: &Array,
+        a2: &Array, b2: &Array, c2: &Array, d2: &Array
+    | {
+        (sub_(a1, a2), sub_(b1, b2), sub_(c1, c2), sub_(d1, d2))
+    };
+
+    // Define Blocks
+    // A: 0,1,4,5
+    // B: 2,3,6,7
+    // C: 8,9,12,13
+    // D: 10,11,14,15
+
+    // 1. InvA = A^-1
+    let (ia0, ia1, ia2, ia3) = inv_2x2(c(0), c(1), c(4), c(5));
+
+    // 2. T1 = C * InvA
+    let (t1_0, t1_1, t1_2, t1_3) = mul_2x2(c(8), c(9), c(12), c(13), &ia0, &ia1, &ia2, &ia3);
+
+    // 3. T2 = T1 * B
+    let (t2_0, t2_1, t2_2, t2_3) = mul_2x2(&t1_0, &t1_1, &t1_2, &t1_3, c(2), c(3), c(6), c(7));
+
+    // 4. S = D - T2
+    let (s0, s1, s2, s3) = sub_blocks(c(10), c(11), c(14), c(15), &t2_0, &t2_1, &t2_2, &t2_3);
+
+    // 5. InvS = S^-1
+    let (is0, is1, is2, is3) = inv_2x2(&s0, &s1, &s2, &s3);
+
+    // F22 = InvS
+    let zero_is = sub_(&is0, &is0);
+    // Use & refs for sub_blocks args (owned arrays)
+    let (n_is0, n_is1, n_is2, n_is3) = sub_blocks(
+        &zero_is, &zero_is, &zero_is, &zero_is,
+        &is0, &is1, &is2, &is3
+    );
+    // F21 = -InvS * T1.
+    let (f21_0, f21_1, f21_2, f21_3) = mul_2x2(
+        &n_is0, &n_is1, &n_is2, &n_is3, 
+        &t1_0, &t1_1, &t1_2, &t1_3
+    );
+
+    // F12 = -InvA * B * InvS. 
+    // Term T3 = InvA * B
+    let (t3_0, t3_1, t3_2, t3_3) = mul_2x2(
+        &ia0, &ia1, &ia2, &ia3, 
+        c(2), c(3), c(6), c(7)
+    );
+    // F12 = T3 * (-InvS)
+    let (f12_0, f12_1, f12_2, f12_3) = mul_2x2(
+        &t3_0, &t3_1, &t3_2, &t3_3, 
+        &n_is0, &n_is1, &n_is2, &n_is3
+    );
+
+    // F11 = InvA - F12 * T1
+    let (term_0, term_1, term_2, term_3) = mul_2x2(
+        &f12_0, &f12_1, &f12_2, &f12_3, 
+        &t1_0, &t1_1, &t1_2, &t1_3
+    );
+    let (f11_0, f11_1, f11_2, f11_3) = sub_blocks(
+        &ia0, &ia1, &ia2, &ia3, 
+        &term_0, &term_1, &term_2, &term_3
+    );
+
+    // Collect results
+    let outputs = vec![
+        &f11_0, &f11_1, &f12_0, &f12_1,
+        &f11_2, &f11_3, &f12_2, &f12_3,
+        &f21_0, &f21_1, &is0, &is1,
+        &f21_2, &f21_3, &is2, &is3,
+    ];
+
+    // Reconstruct
+    let concat = concatenate(&outputs).map_err(|e| e.to_string())?;
+    
+    // Reshape [16*Batch..., 1] -> [16, Batch...] (using -1)
+    let dim16 = vec![16, -1];
+    let inter = reshape(&concat, &dim16).map_err(|e| e.to_string())?; // [16, B]
+    
+    let transposed = transpose(&inter).map_err(|e| e.to_string())?; // [B, 16]
+    
+    let final_res = reshape(&transposed, shape).map_err(|e| e.to_string())?; // [B, 4, 4]
+    Ok(final_res)
 }

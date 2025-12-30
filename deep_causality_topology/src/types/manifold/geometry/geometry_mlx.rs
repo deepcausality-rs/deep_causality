@@ -8,7 +8,7 @@
 #![cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
 
 use crate::{Manifold, Simplex, TopologyError};
-use deep_causality_tensor::MlxCausalTensor;
+use deep_causality_tensor::CausalTensorError;
 
 impl<T> Manifold<T> {
     /// MLX GPU-accelerated implementation of simplex volume squared.
@@ -118,8 +118,14 @@ impl<T> Manifold<T> {
 /// For small matrices, uses LU-style computation on GPU.
 fn determinant_mlx(data: &[f64], n: usize) -> Result<f64, TopologyError> {
     // Convert to MLX tensor
-    let mlx_matrix = MlxCausalTensor::new_from_f64(data, vec![n, n])
-        .map_err(|e| TopologyError::TensorError(e.to_string()))?;
+    // Convert to MLX tensor
+    // Downcast f64 to f32 for GPU
+    let data_f32: Vec<f32> = data.iter().map(|&x| x as f32).collect();
+
+    // Create MlxTensor directly using MlxBackend to access low-level API
+    // (MlxCausalTensor is a wrapper that hides as_mlx_array)
+    use deep_causality_tensor::{MlxBackend, TensorBackend};
+    let mlx_matrix = MlxBackend::create(&data_f32, &[n, n]);
 
     // Use einsum for trace of log for determinant approximation
     // For now, use a simple product of eigenvalues approach via QR
@@ -127,7 +133,7 @@ fn determinant_mlx(data: &[f64], n: usize) -> Result<f64, TopologyError> {
 
     // Since mlx-rs may not have direct QR, we fall back to CPU for determinant
     // This is a stub for when full MLX linear algebra is available
-    let array = mlx_matrix.as_mlx_array();
+    let array = mlx_matrix.as_array();
 
     // Attempt to use MLX's linear algebra
     // For now, evaluate and extract for CPU determinant fallback
@@ -140,7 +146,7 @@ fn determinant_mlx(data: &[f64], n: usize) -> Result<f64, TopologyError> {
 
     // Fall back to CPU determinant for correctness
     let tensor = deep_causality_tensor::CausalTensor::new(f64_data, vec![n, n])
-        .map_err(|e| TopologyError::TensorError(e.to_string()))?;
+        .map_err(|e: CausalTensorError| TopologyError::TensorError(e.to_string()))?;
 
     super::geometry_cpu::determinant_cpu(&tensor)
         .map_err(|e| TopologyError::TensorError(e.to_string()))

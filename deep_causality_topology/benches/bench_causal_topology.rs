@@ -3,6 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-pub mod lattice_test;
-// pub mod lattice_cell_test;
-// pub mod specialized;
+use criterion::criterion_main;
+
+mod benchmarks;
+
+criterion_main! {
+    benchmarks::manifold_bench::manifold_benches
+}
