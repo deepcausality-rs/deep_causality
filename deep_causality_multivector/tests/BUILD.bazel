@@ -51,9 +51,11 @@ rust_test_suite(
 )
 
 rust_test_suite(
-    name = "types/metric",
+    name = "types/multifield",
     srcs = glob([
-        "types/metric/*_tests.rs",
+        "types/multifield/arithmetic/*_tests.rs",
+        "types/multifield/gamma/*_tests.rs",
+        "types/multifield/ops/*_tests.rs",
     ]),
     tags = [
         "unit-test",

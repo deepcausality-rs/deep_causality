@@ -26,9 +26,12 @@ pub use crate::traits::l2_norm::MultiVectorL2Norm;
 pub use crate::traits::matrix_rep::MatrixRep;
 pub use crate::traits::multi_vector::MultiVector;
 pub use crate::traits::scalar_eval::ScalarEval;
-
+pub use crate::types::multifield::ops::batched_matmul::BatchedMatMul;
 // Types
 pub use crate::types::multifield::CausalMultiField;
+pub use crate::types::multifield::gamma::cpu::CpuGammaLoader;
+pub use crate::types::multifield::gamma::*;
+pub use crate::types::multifield::ops::differential::Axis;
 pub use crate::types::multivector::CausalMultiVector;
 pub use deep_causality_metric::Metric;
 

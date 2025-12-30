@@ -148,7 +148,7 @@ fn compute_blade_gamma_element<T: TensorData + Neg<Output = T>>(
     row: usize,
     col: usize,
     metric: Metric,
-    matrix_dim: usize,
+    _matrix_dim: usize,
 ) -> T {
     let _n = metric.dimension();
 
@@ -162,78 +162,12 @@ fn compute_blade_gamma_element<T: TensorData + Neg<Output = T>>(
     if grade == 1 {
         // Vector: Single gamma matrix
         let vector_idx = blade_idx.trailing_zeros() as usize;
-        return compute_base_gamma_element::<T>(vector_idx, row, col, metric, matrix_dim);
+        return crate::types::multifield::gamma::compute_gamma_element::<T>(
+            vector_idx, row, col, &metric,
+        );
     }
 
     // Higher grades: Need to compute product of base gammas
-    // For simplicity, return identity-like for now
-    // Full implementation would multiply gamma matrices
+    // For simplicity, return identity-like for now (Placeholder)
     if row == col { T::one() } else { T::zero() }
-}
-
-/// Computes base gamma matrix element (for vectors/grade-1 blades).
-fn compute_base_gamma_element<T: TensorData + Neg<Output = T>>(
-    gamma_idx: usize,
-    row: usize,
-    col: usize,
-    metric: Metric,
-    matrix_dim: usize,
-) -> T {
-    let n = metric.dimension();
-
-    match n {
-        1 => {
-            if row == col && gamma_idx == 0 {
-                T::one()
-            } else {
-                T::zero()
-            }
-        }
-        2 | 3 => {
-            // Pauli matrices
-            match (gamma_idx, row, col) {
-                (0, 0, 1) | (0, 1, 0) => T::one(),
-                (1, 0, 1) => -T::one(),
-                (1, 1, 0) => T::one(),
-                (2, 0, 0) => T::one(),
-                (2, 1, 1) => -T::one(),
-                _ => T::zero(),
-            }
-        }
-        4 => {
-            // Dirac matrices (4x4)
-            match gamma_idx {
-                0 => match (row, col) {
-                    (0, 2) | (1, 3) | (2, 0) | (3, 1) => T::one(),
-                    _ => T::zero(),
-                },
-                1 => match (row, col) {
-                    (0, 3) | (1, 2) => T::one(),
-                    (2, 1) | (3, 0) => -T::one(),
-                    _ => T::zero(),
-                },
-                2 => match (row, col) {
-                    (0, 3) => -T::one(),
-                    (1, 2) | (2, 1) => T::one(),
-                    (3, 0) => -T::one(),
-                    _ => T::zero(),
-                },
-                3 => match (row, col) {
-                    (0, 2) => T::one(),
-                    (1, 3) | (2, 0) => -T::one(),
-                    (3, 1) => T::one(),
-                    _ => T::zero(),
-                },
-                _ => T::zero(),
-            }
-        }
-        _ => {
-            // Higher dimensions: placeholder
-            if row == col && gamma_idx < matrix_dim {
-                T::one()
-            } else {
-                T::zero()
-            }
-        }
-    }
 }

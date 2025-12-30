@@ -110,8 +110,16 @@ where
         let left = B::slice(&self.data, &left_ranges);
         let right = B::slice(&self.data, &right_ranges);
 
+        // DEBUG: Check that slices are non-zero
+        let left_sum: T = B::to_vec(&left).iter().fold(T::zero(), |acc, &x| acc + x);
+        let right_sum: T = B::to_vec(&right).iter().fold(T::zero(), |acc, &x| acc + x);
+
         // Compute difference
         let diff = B::sub(&right, &left);
+
+        // DEBUG: Check diff
+        let diff_sum: T = B::to_vec(&diff).iter().fold(T::zero(), |acc, &x| acc + x);
+        let _ = (left_sum, right_sum, diff_sum); // Suppress unused warning
 
         // Manual Padding Logic (Backend-agnostic)
         // 1. Permute to move differentiated axis to 0
@@ -218,6 +226,11 @@ where
         let g0_slice = B::slice(&gammas, &[0..1, 0..matrix_dim, 0..matrix_dim]);
         let g0 = B::reshape(&g0_slice, &[matrix_dim, matrix_dim]);
         let term_x = apply_gamma(&g0, dx);
+
+        // DEBUG: Check term_x at center
+        // term_x is [Nx, Ny, Nz, 4, 4].
+        // Access center? Hard without proper indexing.
+        // But we can check total sum of term_x?
 
         if n < 2 {
             return Self {

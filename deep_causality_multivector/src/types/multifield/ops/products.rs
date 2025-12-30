@@ -6,19 +6,20 @@
 //! Clifford algebra products for CausalMultiField.
 //!
 //! All products are implemented via the Matrix Isomorphism:
-//! - Geometric product → matmul
+//! - Geometric product → batched matmul
 //! - Inner product → grade-0 projection
 //! - Outer product → antisymmetrization
 //! - Commutator → AB - BA
 
 use crate::CausalMultiField;
 use crate::traits::multi_vector::MultiVector as MultiVectorTrait;
+use crate::types::multifield::ops::batched_matmul::BatchedMatMul;
 use deep_causality_num::Ring;
 use deep_causality_tensor::{LinearAlgebraBackend, TensorData};
 
 impl<B, T> CausalMultiField<B, T>
 where
-    B: LinearAlgebraBackend,
+    B: LinearAlgebraBackend + BatchedMatMul<T>,
     T: TensorData + Ring + Default + PartialOrd,
 {
     // ... geometric_product ...
@@ -35,7 +36,7 @@ where
         assert_eq!(self.metric, rhs.metric, "Metric mismatch");
         assert_eq!(self.shape, rhs.shape, "Shape mismatch");
 
-        let product_data = B::matmul(&self.data, &rhs.data);
+        let product_data = B::batched_matmul(&self.data, &rhs.data);
         let product = Self {
             data: product_data,
             metric: self.metric,
@@ -53,11 +54,11 @@ where
         T: Clone + Ring, // Retained Ring bound for T::one()
     {
         // Inline matmul logic
-        assert_eq!(self.metric, rhs.metric);
-        assert_eq!(self.shape, rhs.shape);
+        assert_eq!(self.metric, rhs.metric, "Metric mismatch");
+        assert_eq!(self.shape, rhs.shape, "Shape mismatch");
 
-        let ab_data = B::matmul(&self.data, &rhs.data);
-        let ba_data = B::matmul(&rhs.data, &self.data);
+        let ab_data = B::batched_matmul(&self.data, &rhs.data);
+        let ba_data = B::batched_matmul(&rhs.data, &self.data);
         let diff = B::sub(&ab_data, &ba_data);
 
         // Scale by 0.5
@@ -99,8 +100,8 @@ where
         assert_eq!(self.shape, rhs.shape);
 
         // Inline matmul
-        let ab_data = B::matmul(&self.data, &rhs.data);
-        let ba_data = B::matmul(&rhs.data, &self.data);
+        let ab_data = B::batched_matmul(&self.data, &rhs.data);
+        let ba_data = B::batched_matmul(&rhs.data, &self.data);
         let result = B::sub(&ab_data, &ba_data);
 
         Self {

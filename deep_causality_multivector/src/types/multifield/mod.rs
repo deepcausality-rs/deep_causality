@@ -45,7 +45,7 @@
 mod arithmetic;
 
 pub mod gamma;
-mod ops;
+pub mod ops;
 
 use deep_causality_metric::Metric;
 use deep_causality_tensor::{LinearAlgebraBackend, TensorData};
