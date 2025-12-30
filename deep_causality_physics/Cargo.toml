@@ -32,6 +32,19 @@ alloc = []
 # Also enables Lund string fragmentation for QCD hadronization.
 os-random = ["deep_causality_rand/os-random"] # required for lund hadronization
 
+# MLX acceleration for Apple Silicon (M Series).
+# Forwards to deep_causality_tensor/mlx for GPU-accelerated operations.
+# Note: Only builds on macOS aarch64. f64 downcast to f32 for GPU execution.
+mlx = ["dep:mlx-rs", "deep_causality_tensor/mlx", "deep_causality_multivector/mlx"]
+# CPU parallelism via rayon for multi-threaded tensor operations.
+parallel = ["deep_causality_tensor/parallel"]
+# Future: CUDA support
+cuda = ["deep_causality_tensor/cuda"]
+
+# MLX dependency - only available on macOS aarch64
+[target.'cfg(all(target_os = "macos", target_arch = "aarch64"))'.dependencies]
+mlx-rs = { version = "0.25.3", features = ["metal"], optional = true }
+
 [dependencies.deep_causality_core]
 path = "../deep_causality_core"
 version = "0.0.2"
