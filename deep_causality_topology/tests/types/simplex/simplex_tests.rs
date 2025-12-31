@@ -41,7 +41,7 @@ fn test_simplex_subsimplex() {
 
     // Empty subsimplex
     let empty = simplex.subsimplex(0..0);
-    assert_eq!(empty.vertices(), &vec![]);
+    assert_eq!(empty.vertices(), &Vec::<usize>::new());
 }
 
 #[test]

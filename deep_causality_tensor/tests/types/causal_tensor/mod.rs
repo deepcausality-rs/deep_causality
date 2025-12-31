@@ -7,6 +7,8 @@
 mod constructor_tests;
 #[cfg(test)]
 mod display_tests;
+#[cfg(test)]
+mod ein_sum_error_tests;
 mod from_tests;
 #[cfg(test)]
 mod getters_tests;

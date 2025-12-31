@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_sparse"
-version = "0.1.2"
+version = "0.1.3"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -29,7 +29,7 @@ std = ["deep_causality_num/default"]
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
-version = "0.1.10"
+version = "0.1.11"
 default-features = false
 
 [dependencies.deep_causality_haft]
