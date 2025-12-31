@@ -153,8 +153,14 @@ fn explicit_inverse_4x4(input: &mlx_rs::Array) -> Result<mlx_rs::Array, String> 
     // Inverse 2x2 Helper: (a,b,c,d) -> (oa, ob, oc, od)
     let inv_2x2 = |a: &Array, b: &Array, c: &Array, d: &Array| -> (Array, Array, Array, Array) {
         let det = sub_(&mul_(a, d), &mul_(b, c));
-        let ones = mlx_rs::ops::ones_like(&det).unwrap();
-        let inv_det = div_(&ones, &det);
+
+        // Prevent inf/NaN on near-singular blocks with small epsilon
+        // Create epsilon scalar and add via broadcast
+        let eps_scalar = mlx_rs::Array::from_slice(&[1e-12f32], &[1]);
+        let det_safe = add_(&det, &eps_scalar);
+
+        let ones = mlx_rs::ops::ones_like(&det_safe).unwrap();
+        let inv_det = div_(&ones, &det_safe);
 
         let zero = sub_(&det, &det);
         let neg_b = sub_(&zero, b);
@@ -215,10 +221,10 @@ fn explicit_inverse_4x4(input: &mlx_rs::Array) -> Result<mlx_rs::Array, String> 
     let (is0, is1, is2, is3) = inv_2x2(&s0, &s1, &s2, &s3);
 
     // Negate InvS for use in other blocks
-    let n_is0 = mlx_rs::ops::negative(&is0).unwrap();
-    let n_is1 = mlx_rs::ops::negative(&is1).unwrap();
-    let n_is2 = mlx_rs::ops::negative(&is2).unwrap();
-    let n_is3 = mlx_rs::ops::negative(&is3).unwrap();
+    let n_is0 = mlx_rs::ops::negative(&is0).map_err(|e| e.to_string())?;
+    let n_is1 = mlx_rs::ops::negative(&is1).map_err(|e| e.to_string())?;
+    let n_is2 = mlx_rs::ops::negative(&is2).map_err(|e| e.to_string())?;
+    let n_is3 = mlx_rs::ops::negative(&is3).map_err(|e| e.to_string())?;
     // F21 = -InvS * T1.
     let (f21_0, f21_1, f21_2, f21_3) =
         mul_2x2(&n_is0, &n_is1, &n_is2, &n_is3, &t1_0, &t1_1, &t1_2, &t1_3);

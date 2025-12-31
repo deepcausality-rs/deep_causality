@@ -149,8 +149,11 @@ impl TensorBackend for MlxBackend {
         let rhs_shape = Self::shape(rhs);
         if rhs_shape.iter().all(|&s| s == 1) {
             // Scalar broadcast - use native multiply
-            let res = mlx_rs::ops::multiply(lhs.as_array(), rhs.as_array())
-                .expect("MlxBackend::broadcast_op: multiply failed");
+            let res = mlx_rs::ops::multiply(lhs.as_array(), rhs.as_array()).map_err(|e| {
+                crate::CausalTensorError::MlxOperationFailed(format!(
+                    "MlxBackend::broadcast_op scalar multiply failed: {e}"
+                ))
+            })?;
             return Ok(MlxTensor::new(res));
         }
 
@@ -257,12 +260,20 @@ impl TensorBackend for MlxBackend {
         }
 
         // Move axis 0 to the target axis
-        let ndim = stacked.ndim();
+        let ndim = stacked.ndim() as usize;
+        if axis >= ndim {
+            return Err(crate::CausalTensorError::MlxOperationFailed(format!(
+                "MlxBackend::stack: axis {axis} out of bounds for stacked ndim {ndim}"
+            )));
+        }
         let mut axes: Vec<i32> = (1..ndim as i32).collect();
         axes.insert(axis, 0);
 
-        let transposed = mlx_rs::ops::transpose_axes(&stacked, &axes)
-            .expect("MlxBackend::stack: transpose failed");
+        let transposed = mlx_rs::ops::transpose_axes(&stacked, &axes).map_err(|e| {
+            crate::CausalTensorError::MlxOperationFailed(format!(
+                "MlxBackend::stack transpose failed: {e}"
+            ))
+        })?;
         Ok(MlxTensor::new(transposed))
     }
 

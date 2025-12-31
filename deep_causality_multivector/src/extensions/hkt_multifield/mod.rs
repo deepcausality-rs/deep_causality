@@ -115,6 +115,7 @@ impl<B: LinearAlgebraBackend> CausalMultiFieldWitness<B> {
     where
         T: TensorData
             + Clone
+            + deep_causality_num::One
             + std::ops::AddAssign
             + std::ops::SubAssign
             + std::ops::Neg<Output = T>
@@ -125,7 +126,8 @@ impl<B: LinearAlgebraBackend> CausalMultiFieldWitness<B> {
             data: vec![value],
             metric: Metric::Euclidean(0),
         };
-        CausalMultiField::from_coefficients(&[mv], [1, 1, 1], [value, value, value])
+        // Use T::one() for spacing instead of value to prevent division-by-zero
+        CausalMultiField::from_coefficients(&[mv], [1, 1, 1], [T::one(), T::one(), T::one()])
     }
 
     /// Applies a field of functions to a field of values (element-wise).
