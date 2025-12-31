@@ -4,5 +4,15 @@
  */
 
 mod backend;
-pub mod cell_complex;
-pub mod lattice;
+mod cell_complex;
+mod chain;
+mod graph;
+mod hypergraph;
+mod lattice;
+mod manifold;
+mod point_cloud;
+mod regge_geometry;
+mod simplex;
+mod simplicial_complex;
+mod skeleton;
+mod topology;

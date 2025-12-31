@@ -140,6 +140,8 @@ due to the particularities of modelling numerical properties in Rust.
 
 ## Test structure
 
+Every single test files must be registered to the correspoding mod file and that module must be registered with its higher up module. Not one test file must exists without being resistered with its mod. 
+
 The tests folder replicates the exact src folder structure, for for example:
 
 tests/errors/mod.r  # contains tests for each error type in a separate file

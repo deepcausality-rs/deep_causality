@@ -5,4 +5,5 @@
 
 mod arithmetic_tests;
 mod chain_algebra_tests;
+mod chain_scale_tests;
 mod chain_tests;
