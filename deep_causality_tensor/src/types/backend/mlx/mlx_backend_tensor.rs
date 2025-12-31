@@ -125,7 +125,12 @@ impl TensorBackend for MlxBackend {
     }
 
     fn strides<T>(tensor: &Self::Tensor<T>) -> Vec<usize> {
-        tensor.as_array().strides().to_vec()
+        tensor
+            .as_array()
+            .strides()
+            .iter()
+            .map(|&s| s as usize)
+            .collect()
     }
 
     fn get<T: Clone>(tensor: &Self::Tensor<T>, index: &[usize]) -> Option<T> {

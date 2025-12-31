@@ -282,12 +282,14 @@ where
                         }
                     }
 
-                    // Get values and accumulate
-                    if let (Some(lhs_val), Some(rhs_val)) =
-                        (lhs.get(&lhs_index), rhs.get(&rhs_index))
-                    {
-                        sum = sum + *lhs_val * *rhs_val;
-                    }
+                    // Get values and accumulate - use expect to fail fast on invalid indices
+                    let lhs_val = lhs
+                        .get(&lhs_index)
+                        .expect("Internal error: lhs index out of bounds in contraction");
+                    let rhs_val = rhs
+                        .get(&rhs_index)
+                        .expect("Internal error: rhs index out of bounds in contraction");
+                    sum = sum + *lhs_val * *rhs_val;
                 }
 
                 // Store result

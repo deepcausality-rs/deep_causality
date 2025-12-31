@@ -361,11 +361,13 @@ fn test_inverse_product_is_identity() {
     let metric = Metric::from_signature(2, 0, 0);
     let num_blades = 4;
 
-    // Create field with scalar = 3
+    // Create field with a proper versor (unit vector e1)
+    // In Euclidean space, e1 is its own inverse: e1 * e1 = 1
     let mut mvs = Vec::with_capacity(8);
     for _ in 0..8 {
         let mut data = vec![0.0f32; num_blades];
-        data[0] = 3.0;
+        // Use unit vector e1 which is a versor (invertible)
+        data[1] = 1.0; // e1 component
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
@@ -381,9 +383,19 @@ fn test_inverse_product_is_identity() {
         let scalar = mv.data()[0];
         assert!(
             (scalar - 1.0).abs() < 1e-3,
-            "A * A^-1 should be 1, got {}",
+            "A * A^-1 scalar part should be 1, got {}",
             scalar
         );
+
+        // Check that other components are near zero
+        for (i, &val) in mv.data().iter().enumerate().skip(1) {
+            assert!(
+                val.abs() < 1e-3,
+                "Non-scalar part of identity should be zero at index {}, got {}",
+                i,
+                val
+            );
+        }
     }
 }
 

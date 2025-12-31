@@ -214,12 +214,11 @@ fn explicit_inverse_4x4(input: &mlx_rs::Array) -> Result<mlx_rs::Array, String> 
     // 5. InvS = S^-1
     let (is0, is1, is2, is3) = inv_2x2(&s0, &s1, &s2, &s3);
 
-    // F22 = InvS
-    let zero_is = sub_(&is0, &is0);
-    // Use & refs for sub_blocks args (owned arrays)
-    let (n_is0, n_is1, n_is2, n_is3) = sub_blocks(
-        &zero_is, &zero_is, &zero_is, &zero_is, &is0, &is1, &is2, &is3,
-    );
+    // Negate InvS for use in other blocks
+    let n_is0 = mlx_rs::ops::negative(&is0).unwrap();
+    let n_is1 = mlx_rs::ops::negative(&is1).unwrap();
+    let n_is2 = mlx_rs::ops::negative(&is2).unwrap();
+    let n_is3 = mlx_rs::ops::negative(&is3).unwrap();
     // F21 = -InvS * T1.
     let (f21_0, f21_1, f21_2, f21_3) =
         mul_2x2(&n_is0, &n_is1, &n_is2, &n_is3, &t1_0, &t1_1, &t1_2, &t1_3);
