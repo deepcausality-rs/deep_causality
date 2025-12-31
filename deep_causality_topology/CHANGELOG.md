@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.2.3...deep_causality_topology-v0.2.4) - 2025-12-31
+
+### Added
+
+- *(deep_causality_multivector)* separated MLX code into dedicted files for better maintainabiliy.
+- *(deep_causality_multivector)* Added algebraic trait impl for MultiField.
+- *(deep_causality_topology)* Updated benchmarks.
+- *(deep_causality_topology)* Added new benchmark for multi backend support.
+- *(deep_causality_topology)* Added new lattice types and initial multi backend supporte.
+- *(deep_causality_tensor)* Fixed tests for new backend agnostic CPU impl.
+- *(deep_causality_topology)* Imlemented initial MLX acceleration. Closes #432
+- *(deep_causality_metric)* Integrated new metric crate across the repo.
+
+### Fixed
+
+- *(deep_causality_topology)* Minor fixes and lints.
+
+### Other
+
+- Lots of lints, formatting, and minor fixes.
+- Lots of lints, formatting, and minor fixes.
+- Minor lints.
+
 ## [0.2.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.2.2...deep_causality_topology-v0.2.3) - 2025-12-18
 
 ### Fixed

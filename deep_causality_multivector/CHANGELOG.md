@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_multivector-v0.2.3...deep_causality_multivector-v0.3.0) - 2025-12-31
+
+### Added
+
+- *(deep_causality_tensor)* Applied multiple lints, fixes, and code improvements.
+- *(deep_causality_tensor)* Applied multiple lints, fixes, and code improvements.
+- *(deep_causality_multivector)* separated MLX code into dedicted files for better maintainabiliy.
+- *(deep_causality_multivector)* Increased test coverage.
+- *(deep_causality_multivector)* Increased test coverage.
+- *(deep_causality_tensor)* Increased test coverage.
+- *(deep_causality_multivector)* Added HKT like implementation to CausalMultiFied.
+- *(deep_causality_multivector)* Added algebraic trait impl for MultiField.
+- *(deep_causality_multivector)* Updated and fixed sample code.
+- *(deep_causality_multivector)* Updated Benchmarks.
+- *(deep_causality_multivector)* Consolidated API in a single file.
+- *(deep_causality_multivector)* Added test coverage for the new MultiField type.
+- *(deep_causality_multivector)* Added MLX acceleation; added new MultiField type with MLX acceleration.
+- *(deep_causality_metric)* Integrated new metric crate across the repo.
+
+### Other
+
+- Lots of lints, formatting, and minor fixes.
+- Lots of lints, formatting, and minor fixes.
+- Updated keywords in Cargo.toml
+- Add new specification for cross crate hardware acceleration...
+
 ## [0.2.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_multivector-v0.2.2...deep_causality_multivector-v0.2.3) - 2025-12-18
 
 ### Other

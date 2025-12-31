@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.2.1...deep_causality_tensor-v0.3.0) - 2025-12-31
+
+### Added
+
+- *(deep_causality_tensor)* Applied multiple lints, fixes, and code improvements.
+- *(deep_causality_tensor)* Applied multiple lints, fixes, and code improvements.
+- *(deep_causality_tensor)* Applied multiple lints, fixes, and code improvements.
+- *(deep_causality_multivector)* Increased test coverage.
+- *(deep_causality_multivector)* Increased test coverage.
+- *(deep_causality_tensor)* Increased test coverage.
+- *(deep_causality_tensor)* Updated benchmarks
+- *(deep_causality_tensor)* Added black_box to benchmarks
+- *(deep_causality_topology)* Added new benchmark for multi backend support.
+- *(deep_causality_tensor)* Impvroved code organization and maintainability of the crate.
+- *(deep_causality_tensor)* Added new ein_sum benchmark and updated README.md.
+- *(deep_causality_tensor)* Fixed dowstream tests
+- *(deep_causality_tensor)* Updated new benchmark and updated README.md.
+- *(deep_causality_tensor)* Added new benchmark to compare CPU vs MLX execution.
+- *(deep_causality_tensor)* Added MLX backend.
+- *(deep_causality_tensor)* Finalized new backend agnostic CPU impl.
+- *(deep_causality_tensor)* Fixed tests for new backend agnostic CPU impl.
+- *(deep_causality_tensor)* Fixed benchmarks and code examples.
+- *(deep_causality_tensor)* Completed backed agnostic acceletation for CPU.
+- *(deep_causality_tensor)* Implemented backed agnostic acceletation for CPU.
+- *(deep_causality_tensor)* Introduced backend tensor as stub for backend specific implementations of tensor ops.
+- *(deep_causality_tensor)* Added initial MLX backend.
+- *(deep_causality_tensor)* Added initial CPU backend.
+- *(deep_causality_tensor)* Removed initial MLX acceleration as preparation for backend impl.
+- *(deep_causality_physics)* Implemented MLX acceleration to close issue #428
+
+### Fixed
+
+- *(deep_causality_topology)* Minor fixes and lints.
+
+### Other
+
+- Minor lint
+- Lots of lints, formatting, and minor fixes.
+
 ## [0.2.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.2.0...deep_causality_tensor-v0.2.1) - 2025-12-18
 
 ### Other
