@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_topology"
-version = "0.2.4"
+version = "0.2.5"
 edition = "2021"
 authors = ["The DeepCausality Authors and Contributors"]
 description = "Topological data structures for the DeepCausality project"
@@ -55,7 +55,7 @@ version = "0.1"
 
 [dependencies.deep_causality_multivector]
 path = "../deep_causality_multivector"
-version = "0.2.4"
+version = "0.2.5"
 
 [dev-dependencies]
 criterion = { version = "0.8.1" }
