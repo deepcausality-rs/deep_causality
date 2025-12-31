@@ -7,10 +7,10 @@ use criterion::{BenchmarkId, Criterion, Throughput, criterion_group};
 use deep_causality_tensor::TensorBackend;
 use deep_causality_topology::backend::ManifoldView;
 
-#[cfg(feature = "mlx")]
+#[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
 use deep_causality_tensor::MlxBackend as TestBackend;
 
-#[cfg(not(feature = "mlx"))]
+#[cfg(not(all(feature = "mlx", target_os = "macos", target_arch = "aarch64")))]
 use deep_causality_tensor::CpuBackend as TestBackend;
 
 fn generate_random_metric(
@@ -76,7 +76,7 @@ fn bench_christoffel(c: &mut Criterion) {
                 b.iter(|| {
                     let res = manifold.compute_christoffel();
                     // Force MLX evaluation by accessing the underlying data
-                    #[cfg(feature = "mlx")]
+                    #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
                     {
                         let _ = TestBackend::to_vec(&res);
                     }

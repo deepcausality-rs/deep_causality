@@ -16,13 +16,21 @@ fn bench_geometric_product_size(c: &mut Criterion, size: usize) {
     let field_a = MultiField::from_coefficients(&vec![mv.clone(); num_cells], shape, dx);
     let field_b = field_a.clone();
 
-    let backend_suffix = if cfg!(feature = "mlx") { "mlx" } else { "cpu" };
+    let backend_suffix = if cfg!(all(
+        feature = "mlx",
+        target_os = "macos",
+        target_arch = "aarch64"
+    )) {
+        "mlx"
+    } else {
+        "cpu"
+    };
     let bench_name = format!("geometric_product_{}_3d_{}^3", backend_suffix, size);
 
     c.bench_function(&bench_name, |b| {
         b.iter(|| {
             let result = &field_a * &field_b;
-            #[cfg(feature = "mlx")]
+            #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
             {
                 use deep_causality_tensor::MlxBackend;
                 use deep_causality_tensor::TensorBackend;
@@ -52,7 +60,11 @@ fn bench_gradient(c: &mut Criterion) {
 
     let field = MultiField::from_coefficients(&vec![mv; num_cells], shape, dx);
 
-    let bench_name = if cfg!(feature = "mlx") {
+    let bench_name = if cfg!(all(
+        feature = "mlx",
+        target_os = "macos",
+        target_arch = "aarch64"
+    )) {
         "multifield_gradient_mlx_3d"
     } else {
         "multifield_gradient_cpu_3d"
@@ -71,7 +83,11 @@ fn bench_conversion(c: &mut Criterion) {
 
     let data_vec = vec![mv; num_cells];
 
-    let bench_name_from = if cfg!(feature = "mlx") {
+    let bench_name_from = if cfg!(all(
+        feature = "mlx",
+        target_os = "macos",
+        target_arch = "aarch64"
+    )) {
         "multifield_from_coefficients_mlx"
     } else {
         "multifield_from_coefficients_cpu"
@@ -83,7 +99,11 @@ fn bench_conversion(c: &mut Criterion) {
 
     let field = MultiField::from_coefficients(&data_vec, shape, dx);
 
-    let bench_name_to = if cfg!(feature = "mlx") {
+    let bench_name_to = if cfg!(all(
+        feature = "mlx",
+        target_os = "macos",
+        target_arch = "aarch64"
+    )) {
         "multifield_to_coefficients_mlx"
     } else {
         "multifield_to_coefficients_cpu"
