@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2025-12-03T03:23:43Z",
+    "created": "2025-12-31T06:32:27Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_core-8596cff8-0f84-4e38-b90e-1bf376befbb7",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_core-3e11ec84-b706-4404-aa81-fdc097c4930f",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_core",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "71ed1fe493c0c6d11fa333372fe6ce6b1fe3d2f0"
+          "checksumValue": "a51087eddbed615bd2363723eaba193794671984"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -27,31 +27,31 @@
   "name": "deep_causality_core",
   "packages": [
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--core-0.0.1",
-      "description": "Core types for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_core",
-      "versionInfo": "0.0.1"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.8",
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.11",
       "description": "Number utils for for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_num",
-      "versionInfo": "0.1.8"
+      "versionInfo": "0.1.11"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.2.4",
+      "SPDXID": "SPDXRef-Package-deep--causality--core-0.0.2",
+      "description": "Core types for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_core",
+      "versionInfo": "0.0.2"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.2.7",
       "description": "HKT traits for for the deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_haft",
-      "versionInfo": "0.2.4"
+      "versionInfo": "0.2.7"
     },
     {
       "SPDXID": "SPDXRef-Package-libm-0.2.15",
@@ -72,29 +72,29 @@
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.8",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--core-0.0.2",
+      "relationshipType": "GENERATED_FROM",
+      "spdxElementId": "SPDXRef-File-deep_causality_core"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.2.7",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--haft-0.2.4"
+      "spdxElementId": "SPDXRef-Package-deep--causality--core-0.0.2"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-libm-0.2.15",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.1.8"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.2.4",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--core-0.0.1"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--core-0.0.1",
-      "relationshipType": "GENERATED_FROM",
-      "spdxElementId": "SPDXRef-File-deep_causality_core"
+      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.1.11"
     },
     {
       "relatedSpdxElement": "SPDXRef-File-deep_causality_core",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.11",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--haft-0.2.7"
     }
   ],
   "spdxVersion": "SPDX-2.3"
