@@ -282,13 +282,17 @@ where
                         }
                     }
 
-                    // Get values and accumulate - use expect to fail fast on invalid indices
-                    let lhs_val = lhs
-                        .get(&lhs_index)
-                        .expect("Internal error: lhs index out of bounds in contraction");
-                    let rhs_val = rhs
-                        .get(&rhs_index)
-                        .expect("Internal error: rhs index out of bounds in contraction");
+                    // Get values and accumulate - use Result for proper error handling
+                    let lhs_val = lhs.get(&lhs_index).ok_or_else(|| {
+                        CausalTensorError::EinSumError(EinSumValidationError::InvalidAxesSpecification {
+                            message: "Internal error: lhs index out of bounds in contraction".to_string(),
+                        })
+                    })?;
+                    let rhs_val = rhs.get(&rhs_index).ok_or_else(|| {
+                        CausalTensorError::EinSumError(EinSumValidationError::InvalidAxesSpecification {
+                            message: "Internal error: rhs index out of bounds in contraction".to_string(),
+                        })
+                    })?;
                     sum = sum + *lhs_val * *rhs_val;
                 }
 
