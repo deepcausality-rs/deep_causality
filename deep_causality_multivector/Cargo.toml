@@ -7,10 +7,10 @@ license = { workspace = true }
 
 repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
-description = "Multivector implementation for DeepCausality"
+description = "Multivector and MultiField implementation for DeepCausality"
 documentation = "https://docs.rs/deep_causality"
-categories = ["development-tools"]
-keywords = ["HKT", "traits"]
+categories = ["data-structures", "science", "mathematics"]
+keywords = ["data-structures", "vector"]
 # Exclude all bazel files as these conflict with Bazel workspace when vendored.
 exclude = [
     "*.bazel",
@@ -23,6 +23,17 @@ exclude = [
     ".bazelrc",
     "tests/**/*",
 ]
+
+[features]
+default = []
+# MLX acceleration for Apple Silicon (M Series).
+# Forwards to deep_causality_tensor/mlx for GPU-accelerated operations.
+# Note: Only builds on macOS aarch64. f64 downcast to f32 for GPU execution.
+mlx = ["deep_causality_tensor/mlx"]
+# CPU parallelism via rayon for multi-threaded tensor operations.
+parallel = ["deep_causality_tensor/parallel"]
+# Future: CUDA support
+cuda = ["deep_causality_tensor/cuda"]
 
 
 [dependencies.deep_causality_haft]
@@ -44,12 +55,20 @@ version = "0.2"
 path = "../deep_causality_core"
 version = "0.0.2"
 
+[dependencies.deep_causality_metric]
+path = "../deep_causality_metric"
+version = "0.1"
+
 
 [dev-dependencies]
 criterion = { version = "0.8" }
 
 [[bench]]
 name = "multivector_bench"
+harness = false
+
+[[bench]]
+name = "multifield_bench"
 harness = false
 
 

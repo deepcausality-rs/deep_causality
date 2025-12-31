@@ -1,8 +1,5 @@
 [advisories]
-ignore = [
-    # paste - no longer maintained
-    "RUSTSEC-2024-0436",
-]
+ignore = []
 
 [output]
 quiet = false

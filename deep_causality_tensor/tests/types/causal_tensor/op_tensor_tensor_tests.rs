@@ -81,19 +81,19 @@ fn test_owned_and_borrowed_variants_add() {
     let b = CausalTensor::new(vec![3, 4], vec![2]).unwrap();
 
     // &a + &b
-    let res1 = &a + &b;
+    let res1: CausalTensor<i32> = &a + &b;
     assert_eq!(res1.as_slice(), &[4, 6]);
 
     // a + &b
-    let res2 = a.clone() + &b;
+    let res2: CausalTensor<i32> = a.clone() + &b;
     assert_eq!(res2.as_slice(), &[4, 6]);
 
     // &a + b
-    let res3 = &a + b.clone();
+    let res3: CausalTensor<i32> = &a + b.clone();
     assert_eq!(res3.as_slice(), &[4, 6]);
 
     // a + b
-    let res4 = a + b;
+    let res4: CausalTensor<i32> = a + b;
     assert_eq!(res4.as_slice(), &[4, 6]);
 }
 
@@ -104,19 +104,19 @@ fn test_owned_and_borrowed_variants_sub() {
     let expected = vec![9, 18];
 
     // &a - &b
-    let res1 = &a - &b;
+    let res1: CausalTensor<i32> = &a - &b;
     assert_eq!(res1.as_slice(), expected.as_slice());
 
     // a - &b
-    let res2 = a.clone() - &b;
+    let res2: CausalTensor<i32> = a.clone() - &b;
     assert_eq!(res2.as_slice(), expected.as_slice());
 
     // &a - b
-    let res3 = &a - b.clone();
+    let res3: CausalTensor<i32> = &a - b.clone();
     assert_eq!(res3.as_slice(), expected.as_slice());
 
     // a - b
-    let res4 = a - b;
+    let res4: CausalTensor<i32> = a - b;
     assert_eq!(res4.as_slice(), expected.as_slice());
 }
 
@@ -127,19 +127,19 @@ fn test_owned_and_borrowed_variants_mul() {
     let expected = vec![3, 8];
 
     // &a * &b
-    let res1 = &a * &b;
+    let res1: CausalTensor<i32> = &a * &b;
     assert_eq!(res1.as_slice(), expected.as_slice());
 
     // a * &b
-    let res2 = a.clone() * &b;
+    let res2: CausalTensor<i32> = a.clone() * &b;
     assert_eq!(res2.as_slice(), expected.as_slice());
 
     // &a * b
-    let res3 = &a * b.clone();
+    let res3: CausalTensor<i32> = &a * b.clone();
     assert_eq!(res3.as_slice(), expected.as_slice());
 
     // a * b
-    let res4 = a * b;
+    let res4: CausalTensor<i32> = a * b;
     assert_eq!(res4.as_slice(), expected.as_slice());
 }
 
@@ -150,19 +150,19 @@ fn test_owned_and_borrowed_variants_div() {
     let expected = vec![5, 4];
 
     // &a / &b
-    let res1 = &a / &b;
+    let res1: CausalTensor<i32> = &a / &b;
     assert_eq!(res1.as_slice(), expected.as_slice());
 
     // a / &b
-    let res2 = a.clone() / &b;
+    let res2: CausalTensor<i32> = a.clone() / &b;
     assert_eq!(res2.as_slice(), expected.as_slice());
 
     // &a / b
-    let res3 = &a / b.clone();
+    let res3: CausalTensor<i32> = &a / b.clone();
     assert_eq!(res3.as_slice(), expected.as_slice());
 
     // a / b
-    let res4 = a / b;
+    let res4: CausalTensor<i32> = a / b;
     assert_eq!(res4.as_slice(), expected.as_slice());
 }
 

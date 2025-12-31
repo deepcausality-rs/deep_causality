@@ -4,12 +4,13 @@
  */
 
 use crate::SimplicialComplex;
-use core::fmt::{Debug, Display, Formatter};
+use core::fmt::Debug;
 use deep_causality_sparse::CsrMatrix;
 use std::sync::Arc;
 
 mod algebra;
 mod arithmetic;
+mod display;
 
 /// Represents a weighted collection of simplices.
 /// (e.g., A path is a Chain<f64> on the 1-skeleton where weights are 1.0).
@@ -43,17 +44,5 @@ impl<T> Chain<T> {
 
     pub fn weights(&self) -> &CsrMatrix<T> {
         &self.weights
-    }
-}
-
-impl<T> Display for Chain<T>
-where
-    T: Debug + Display,
-{
-    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
-        writeln!(f, "Chain:")?;
-        writeln!(f, "  Grade: {}", self.grade)?;
-        writeln!(f, "  Weights: {:?}", self.weights)?; // Using Debug for CsrMatrix
-        Ok(())
     }
 }

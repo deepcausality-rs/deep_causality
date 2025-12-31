@@ -6,6 +6,13 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-command cargo fix --lib --allow-dirty
 
-command cargo clippy --fix --allow-dirty --all-targets --all-features -- -D warnings
+# command cargo fix --lib --allow-dirty
+
+# command cargo clippy --fix --allow-dirty --all-targets -- -D warnings
+
+# fix all configured features
+command cargo fix --lib --allow-dirty --all-targets --all-features
+
+# Double check if nothing has beem missed
+command cargo clippy --all-targets --all-features -- -D warnings

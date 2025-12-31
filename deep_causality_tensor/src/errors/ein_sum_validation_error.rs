@@ -17,6 +17,8 @@ pub enum EinSumValidationError {
     ShapeMismatch { message: String },
     /// Indicates that a tensor has an unexpected rank for a given operation.
     RankMismatch { expected: usize, found: usize },
+    /// Indicates an invalid structure in the EinSum AST.
+    InvalidASTStructure { message: String },
 }
 
 impl std::fmt::Display for EinSumValidationError {
@@ -51,6 +53,13 @@ impl std::fmt::Display for EinSumValidationError {
                     f,
                     "EinSumValidationError: Rank mismatch. Expected {}, found {}",
                     expected, found
+                )
+            }
+            EinSumValidationError::InvalidASTStructure { message } => {
+                write!(
+                    f,
+                    "EinSumValidationError: Invalid AST structure: {}",
+                    message
                 )
             }
         }

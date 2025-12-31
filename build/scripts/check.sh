@@ -14,7 +14,28 @@ set -o pipefail
 cargo outdated --workspace
 
 # Scan for unused dependencies
-cargo machete deep_causality deep_causality_algorithms deep_causality_discovery deep_causality_effects deep_causality_haft deep_causality_tensor deep_causality_rand deep_causality_physics deep_causality_sparse deep_causality_num deep_causality_data_structures deep_causality_macros deep_causality_multivector deep_causality_uncertain ultragraph
+cargo machete deep_causality/
+cargo machete deep_causality_algorithms/
+cargo machete deep_causality_ast/
+cargo machete deep_causality_core/
+cargo machete deep_causality_data_structures/
+cargo machete deep_causality_discovery/
+cargo machete deep_causality_effects/
+cargo machete deep_causality_ethos/
+cargo machete deep_causality_haft/
+cargo machete deep_causality_macros/
+cargo machete deep_causality_metric/
+cargo machete deep_causality_multivector/
+cargo machete deep_causality_num/
+cargo machete deep_causality_physics/
+cargo machete deep_causality_rand/
+cargo machete deep_causality_sparse/
+cargo machete deep_causality_tensor/
+cargo machete deep_causality_topology/
+cargo machete deep_causality_uncertain/
+cargo machete examples/
+cargo machete ultragraph/
+
 
 # Scan again to report all unfixed vulnerabilities
 # install or update with cargo install cargo-audit --locked

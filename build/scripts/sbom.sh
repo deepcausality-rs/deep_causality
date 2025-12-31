@@ -17,6 +17,7 @@ CRATES=(
     "deep_causality_effects"
     "deep_causality_haft"
     "deep_causality_macros"
+    "deep_causality_metric"
     "deep_causality_multivector"
     "deep_causality_physics"
     "deep_causality_rand"

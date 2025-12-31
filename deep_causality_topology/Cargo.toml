@@ -15,6 +15,21 @@ categories = ["science", "mathematics"]
 name = "deep_causality_topology"
 path = "src/lib.rs"
 
+[features]
+# Default means CPU execution
+default = []
+# MLX acceleration for Apple Silicon (M Series).
+# Forwards to deep_causality_tensor/mlx for GPU-accelerated operations.
+# Note: Only builds on macOS aarch64. f64 downcast to f32 for GPU execution.
+mlx = ["dep:mlx-rs", "deep_causality_tensor/mlx", "deep_causality_multivector/mlx"]
+# CPU parallelism via rayon for multi-threaded tensor operations.
+parallel = ["deep_causality_tensor/parallel"]
+# Future: CUDA support
+cuda = ["deep_causality_tensor/cuda"]
+
+# MLX dependency - only available on macOS aarch64
+[target.'cfg(all(target_os = "macos", target_arch = "aarch64"))'.dependencies]
+mlx-rs = { version = "0.25.3", features = ["metal"], optional = true }
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
@@ -34,10 +49,17 @@ version = "0.2.6"
 path = "../deep_causality_tensor"
 version = "0.2.1"
 
+[dependencies.deep_causality_metric]
+path = "../deep_causality_metric"
+version = "0.1"
+
 [dependencies.deep_causality_multivector]
 path = "../deep_causality_multivector"
 version = "0.2.3"
 
+[dev-dependencies]
+criterion = { version = "0.8.1" }
+deep_causality_rand = { path = "../deep_causality_rand" }
 
 [[example]]
 name = "basic_graph"
@@ -59,3 +81,6 @@ path = "examples/chain_algebra.rs"
 name = "differential_field"
 path = "examples/differential_field.rs"
 
+[[bench]]
+name = "bench_causal_topology"
+harness = false

@@ -41,3 +41,22 @@ pub use relativity::*;
 pub use thermodynamics::*;
 pub use units::*;
 pub use waves::*;
+
+// Re-export metric types and conventions from deep_causality_metric
+pub use deep_causality_metric::{
+    // Convention trait and wrappers
+    EastCoastMetric,
+    LorentzianMetric,
+    // Constants
+    MINKOWSKI_4D,
+    // Core types
+    Metric,
+    MetricError,
+    PARTICLE_MINKOWSKI_4D,
+    // Domain-specific aliases
+    ParticleMetric,
+    PhysicsMetric,
+    RELATIVITY_MINKOWSKI_4D,
+    RelativityMetric,
+    WestCoastMetric,
+};

@@ -3,40 +3,31 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+//! Shared geometric product helper implementations.
+//! The main `geometric_product_impl` is in ops_product_cpu.rs / ops_product_mlx.rs.
+
 use crate::CausalMultiVector;
 use core::ops::{AddAssign, Neg, SubAssign};
 use deep_causality_num::Field;
 
 impl<T> CausalMultiVector<T> {
-    // Threshold:
+    // Threshold for sparse algorithm (CPU-based)
     // Dim 6 = 64 components -> 4096 iterations (Dense is likely still faster than Allocator)
     // Dim 7 = 128 components -> 16,384 iterations (Sparse starts winning)
-    const SPARSE_THRESHOLD: usize = 6;
+    pub(in crate::types::multivector) const SPARSE_THRESHOLD: usize = 6;
 
-    pub(in crate::types::multivector) fn geometric_product_impl(&self, rhs: &Self) -> Self
-    where
-        T: Field + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
-    {
-        if self.metric != rhs.metric {
-            panic!(
-                "Geometric Product Metric mismatch: {:?} vs {:?}",
-                self.metric, rhs.metric
-            );
-        }
-
-        let dim = self.metric.dimension();
-
-        // Dispatch based on dimension threshold
-        if dim <= Self::SPARSE_THRESHOLD {
-            self.geometric_product_dense(rhs, dim)
-        } else {
-            self.geometric_product_sparse(rhs, dim)
-        }
-    }
+    // Threshold for GPU acceleration via Matrix Isomorphism
+    // Below this, CPU is faster due to GPU dispatch overhead
+    #[allow(dead_code)]
+    pub(in crate::types::multivector) const GPU_DIMENSION_THRESHOLD: usize = 6;
 
     // --- OPTIMIZED FOR LOW DIMENSION (No Aux Allocations) ---
     #[inline(always)]
-    fn geometric_product_dense(&self, rhs: &Self, dim: usize) -> Self
+    pub(in crate::types::multivector) fn geometric_product_dense(
+        &self,
+        rhs: &Self,
+        dim: usize,
+    ) -> Self
     where
         T: Field + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
     {
@@ -77,7 +68,11 @@ impl<T> CausalMultiVector<T> {
     }
 
     // --- OPTIMIZED FOR HIGH DIMENSION (Sparsity & Caching) ---
-    fn geometric_product_sparse(&self, rhs: &Self, dim: usize) -> Self
+    pub(in crate::types::multivector) fn geometric_product_sparse(
+        &self,
+        rhs: &Self,
+        dim: usize,
+    ) -> Self
     where
         T: Field + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
     {

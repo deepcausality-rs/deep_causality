@@ -33,6 +33,23 @@ pub trait MultiVector<T> {
     /// Computes the squared magnitude (squared norm) of the multivector.
     ///
     /// $$ ||A||^2 = \langle A \tilde{A} \rangle_0 $$
+    #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
+    fn squared_magnitude(&self) -> T
+    where
+        T: Field
+            + Copy
+            + Clone
+            + AddAssign
+            + SubAssign
+            + Neg<Output = T>
+            + Default
+            + PartialOrd
+            + Send
+            + Sync
+            + 'static;
+
+    /// Computes the squared magnitude (squared norm) of the multivector.
+    #[cfg(not(all(feature = "mlx", target_os = "macos", target_arch = "aarch64")))]
     fn squared_magnitude(&self) -> T
     where
         T: Field + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>;
@@ -42,6 +59,26 @@ pub trait MultiVector<T> {
     /// $$ A^{-1} = \frac{\tilde{A}}{A \tilde{A}} $$
     ///
     /// Only valid if $A \tilde{A}$ is a non-zero scalar (Versor).
+    #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
+    fn inverse(&self) -> Result<Self, CausalMultiVectorError>
+    where
+        T: Field
+            + Copy
+            + Clone
+            + AddAssign
+            + SubAssign
+            + Neg<Output = T>
+            + core::ops::Div<Output = T>
+            + PartialEq
+            + Default
+            + PartialOrd
+            + Send
+            + Sync
+            + 'static,
+        Self: Sized;
+
+    /// Computes the inverse of the multivector $A^{-1}$.
+    #[cfg(not(all(feature = "mlx", target_os = "macos", target_arch = "aarch64")))]
     fn inverse(&self) -> Result<Self, CausalMultiVectorError>
     where
         T: Field
@@ -53,10 +90,31 @@ pub trait MultiVector<T> {
             + core::ops::Div<Output = T>
             + PartialEq,
         Self: Sized;
+
     /// Computes the dual of the multivector $A^*$.
     ///
     /// $$ A^* = A I^{-1} $$
     /// where $I$ is the pseudoscalar.
+    #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
+    fn dual(&self) -> Result<Self, CausalMultiVectorError>
+    where
+        T: Field
+            + Copy
+            + Clone
+            + AddAssign
+            + SubAssign
+            + Neg<Output = T>
+            + core::ops::Div<Output = T>
+            + PartialEq
+            + Default
+            + PartialOrd
+            + Send
+            + Sync
+            + 'static,
+        Self: Sized;
+
+    /// Computes the dual of the multivector $A^*$.
+    #[cfg(not(all(feature = "mlx", target_os = "macos", target_arch = "aarch64")))]
     fn dual(&self) -> Result<Self, CausalMultiVectorError>
     where
         T: Field
@@ -79,6 +137,34 @@ pub trait MultiVector<T> {
     /// $$ AB = A \cdot B + A \wedge B $$
     ///
     /// It is associative and distributive over addition.
+    ///
+    /// # MLX Acceleration
+    /// When compiled with `--features mlx` on macOS aarch64, high-dimensional
+    /// algebras (N≥6) automatically dispatch to GPU via Matrix Isomorphism.
+    #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
+    fn geometric_product(&self, rhs: &Self) -> Self
+    where
+        T: Field
+            + Copy
+            + Clone
+            + AddAssign
+            + SubAssign
+            + Neg<Output = T>
+            + Default
+            + PartialOrd
+            + Send
+            + Sync
+            + 'static;
+
+    /// Computes the Geometric Product $AB$.
+    ///
+    /// This is the fundamental operation of Clifford Algebra, combining
+    /// the inner (contraction) and outer (expansion) products.
+    ///
+    /// $$ AB = A \cdot B + A \wedge B $$
+    ///
+    /// It is associative and distributive over addition.
+    #[cfg(not(all(feature = "mlx", target_os = "macos", target_arch = "aarch64")))]
     fn geometric_product(&self, rhs: &Self) -> Self
     where
         T: Field + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>;

@@ -2,8 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalMultiVector, CausalMultiVectorError, MultiVector};
-use core::ops::{AddAssign, Neg, SubAssign};
+use crate::CausalMultiVector;
+use core::ops::Neg;
 use deep_causality_num::Field;
 
 impl<T> CausalMultiVector<T> {
@@ -47,62 +47,6 @@ impl<T> CausalMultiVector<T> {
             data: result_data,
             metric: self.metric,
         }
-    }
-    /// Computes the squared magnitude (squared norm) of the multivector.
-    ///
-    /// $$ ||A||^2 = \langle A \tilde{A} \rangle_0 $$
-    pub(in crate::types::multivector) fn squared_magnitude_impl(&self) -> T
-    where
-        T: Field + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
-    {
-        let reverse = self.reversion();
-        // We can optimize by only calculating the scalar part of the product
-        // But for simplicity/correctness, let's use the full product
-        let product = self.clone().geometric_product(&reverse);
-        product.data[0] // Scalar part
-    }
-    /// Computes the inverse of the multivector $A^{-1}$.
-    ///
-    /// $$ A^{-1} = \frac{\tilde{A}}{A \tilde{A}} $$
-    ///
-    /// Only valid if $A \tilde{A}$ is a non-zero scalar (Versor).
-    pub(in crate::types::multivector) fn inverse_impl(&self) -> Result<Self, CausalMultiVectorError>
-    where
-        T: Field
-            + Copy
-            + Clone
-            + Neg<Output = T>
-            + core::ops::Div<Output = T>
-            + PartialEq
-            + AddAssign
-            + SubAssign,
-    {
-        let sq_mag = self.squared_magnitude();
-        if sq_mag == T::zero() {
-            return Err(CausalMultiVectorError::zero_magnitude());
-        }
-
-        let reverse = self.reversion();
-        Ok(reverse / sq_mag)
-    }
-    /// Computes the dual of the multivector $A^*$.
-    ///
-    /// $$ A^* = A I^{-1} $$
-    /// where $I$ is the pseudoscalar.
-    pub(in crate::types::multivector) fn dual_impl(&self) -> Result<Self, CausalMultiVectorError>
-    where
-        T: Field
-            + Copy
-            + Clone
-            + Neg<Output = T>
-            + core::ops::Div<Output = T>
-            + PartialEq
-            + AddAssign
-            + SubAssign,
-    {
-        let pseudo = Self::pseudoscalar(self.metric);
-        let pseudo_inv = pseudo.inverse()?;
-        Ok(self.clone().geometric_product(&pseudo_inv))
     }
 }
 

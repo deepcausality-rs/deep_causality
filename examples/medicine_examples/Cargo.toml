@@ -18,23 +18,26 @@ deep_causality_tensor = { path = "../../deep_causality_tensor" }
 deep_causality_topology = { path = "../../deep_causality_topology" }
 deep_causality_num = { path = "../../deep_causality_num" }
 
-
 [[example]]
-name = "protein_folding"
-path = "protein_folding/main.rs"
-
-[[example]]
-name = "mri_tissue_classification"
-path = "tissue_classification/main.rs"
-
-[[example]]
-name = "hemodynamics"
+name = "aneurysm_risk"
 path = "aneurysm_risk/main.rs"
+
+[[example]]
+name = "diving_decompression"
+path = "diving_decompression/main.rs"
 
 [[example]]
 name = "epilepsy"
 path = "epilepsy/main.rs"
 
 [[example]]
-name = "ttfields"
+name = "protein_folding"
+path = "protein_folding/main.rs"
+
+[[example]]
+name = "tissue_classification"
+path = "tissue_classification/main.rs"
+
+[[example]]
+name = "tumor_treatment"
 path = "tumor_treatment/main.rs"

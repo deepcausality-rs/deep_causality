@@ -2,12 +2,15 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalTensor, CausalTensorError, EinSumAST};
-use deep_causality_num::{One, RealField, Ring, Zero};
+use crate::CausalTensorError;
+use deep_causality_num::{RealField, Zero};
 use std::iter::Sum;
 use std::ops::{Add, Div, Mul};
 
-pub trait Tensor<T> {
+pub trait Tensor<T>: Sized
+where
+    T: Clone,
+{
     /// Public API for Einstein summation.
     ///
     /// This method serves as the entry point for performing Einstein summation operations
@@ -27,13 +30,13 @@ pub trait Tensor<T> {
     /// # Errors
     ///
     /// Returns errors propagated from `execute_ein_sum`.
-    fn ein_sum(ast: &EinSumAST<T>) -> Result<CausalTensor<T>, CausalTensorError>
+    fn ein_sum(ast: &crate::types::cpu_tensor::EinSumAST<Self>) -> Result<Self, CausalTensorError>
     where
-        T: Clone + Default + PartialOrd + Add<Output = T> + Mul<Output = T>;
+        T: crate::TensorData;
 
     fn matmul(&self, rhs: &Self) -> Result<Self, CausalTensorError>
     where
-        T: Ring + Copy + Default + PartialOrd,
+        T: crate::TensorData,
         Self: Sized;
 
     /// Computes the tensor product (also known as the outer product) of two `CausalTensor`s.
@@ -85,7 +88,7 @@ pub trait Tensor<T> {
     /// assert_eq!(result_scalar_vec.shape(), &[2]);
     /// assert_eq!(result_scalar_vec.as_slice(), &[10.0, 20.0]);
     /// ```
-    fn tensor_product(&self, rhs: &CausalTensor<T>) -> Result<CausalTensor<T>, CausalTensorError>
+    fn tensor_product(&self, rhs: &Self) -> Result<Self, CausalTensorError>
     where
         T: Clone + Mul<Output = T>;
 
@@ -151,7 +154,7 @@ pub trait Tensor<T> {
     ///
     /// // Sum all elements: 1+2+3+4+5+6 = 21
     /// let sum_all = tensor.sum_axes(&[]).unwrap();
-    /// assert_eq!(sum_all.shape(), &[]); // Scalar result with shape [] still has one element.
+    /// assert_eq!(sum_all.shape(), &[] as &[usize]); // Scalar result with shape [] still has one element.
     /// assert_eq!(sum_all.as_slice(), &[21]);
     ///
     /// // Invalid axis
@@ -207,7 +210,7 @@ pub trait Tensor<T> {
     ///
     /// // Mean of all elements: (1+2+3+4+5+6)/6 = 3.5
     /// let mean_all = tensor.mean_axes(&[]).unwrap();
-    /// assert_eq!(mean_all.shape(), &[]); // Scalar result
+    /// assert_eq!(mean_all.shape(), &[] as &[usize]); // Scalar result
     /// assert_eq!(mean_all.as_slice(), &[3.5]);
     /// ```
     fn mean_axes(&self, axes: &[usize]) -> Result<Self, CausalTensorError>
@@ -348,7 +351,7 @@ pub trait Tensor<T> {
     /// assert_eq!(slice_col1.shape(), &[2]);
     /// assert_eq!(slice_col1.as_slice(), &[2, 5]);
     /// ```
-    fn slice(&self, axis: usize, index: usize) -> Result<CausalTensor<T>, CausalTensorError>
+    fn slice(&self, axis: usize, index: usize) -> Result<Self, CausalTensorError>
     where
         T: Clone;
     /// Permutes the axes of the tensor according to the given new order.
@@ -431,7 +434,65 @@ pub trait Tensor<T> {
     /// - `CausalTensorError::DivisionByZero`: If a pivot element is zero during elimination.
     fn inverse(&self) -> Result<Self, CausalTensorError>
     where
-        T: Clone + RealField + Zero + One + Sum + PartialEq,
+        T: crate::TensorData + RealField,
+        Self: Sized;
+
+    /// Computes the QR decomposition of a matrix using Householder reflections.
+    ///
+    /// For a matrix A of shape (m, n), returns (Q, R) where:
+    /// - Q has shape (m, m) and is orthogonal (Q^T * Q = I)
+    /// - R has shape (m, n) and is upper triangular
+    /// - A = Q * R
+    ///
+    /// # Usage
+    ///
+    /// QR decomposition is used for:
+    /// - Solving linear least squares problems
+    /// - Computing eigenvalues (QR algorithm)
+    /// - Orthogonalization of vectors
+    ///
+    /// # Constraints
+    ///
+    /// - The tensor must be 2-dimensional
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// - `Ok((Q, R))`: The orthogonal matrix Q and upper triangular matrix R
+    /// - `Err(CausalTensorError)`: If the tensor is not 2-dimensional
+    fn qr(&self) -> Result<(Self, Self), CausalTensorError>
+    where
+        T: crate::TensorData + core::iter::Sum + RealField + core::ops::Neg<Output = T>,
+        Self: Sized;
+
+    /// Computes the Singular Value Decomposition (SVD) of a matrix.
+    ///
+    /// For a matrix A of shape (m, n), returns (U, S, Vt) where:
+    /// - U has shape (m, k) — left singular vectors (k = min(m,n))
+    /// - S has shape (k,) — singular values as a 1D vector
+    /// - Vt has shape (k, n) — right singular vectors transposed
+    /// - A ≈ U * diag(S) * Vt
+    ///
+    /// # Usage
+    ///
+    /// SVD is fundamental for:
+    /// - Matrix rank determination
+    /// - Low-rank approximation and data compression
+    /// - Principal Component Analysis (PCA)
+    /// - Solving ill-conditioned systems
+    ///
+    /// # Constraints
+    ///
+    /// - The tensor must be 2-dimensional
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// - `Ok((U, S, Vt))`: Left vectors, singular values, right vectors transposed
+    /// - `Err(CausalTensorError)`: If the tensor is not 2-dimensional
+    fn svd(&self) -> Result<(Self, Self, Self), CausalTensorError>
+    where
+        T: crate::TensorData + core::iter::Sum + RealField,
         Self: Sized;
 
     /// Computes the Cholesky decomposition of a symmetric, positive-definite matrix.
@@ -475,7 +536,7 @@ pub trait Tensor<T> {
     ///   element becomes zero or negative during computation).
     fn cholesky_decomposition(&self) -> Result<Self, CausalTensorError>
     where
-        T: Default + Clone + RealField + Zero + One + PartialEq,
+        T: crate::TensorData + RealField,
         Self: Sized;
 
     /// Solves the Least Squares problem for $Ax = b$ using Cholesky decomposition.
@@ -529,6 +590,22 @@ pub trait Tensor<T> {
         b: &Self, // Observation vector (m x 1)
     ) -> Result<Self, CausalTensorError>
     where
-        T: Default + Clone + RealField + Zero + One + PartialEq,
+        T: crate::TensorData + RealField,
+        Self: Sized;
+    /// Stacks a sequence of tensors along a new axis.
+    ///
+    /// # Arguments
+    ///
+    /// * `tensors` - A slice of tensors to stack.
+    /// * `axis` - The axis along which to stack the tensors.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` which is:
+    /// - `Ok(Self)`: The new stacked tensor.
+    /// - `Err(CausalTensorError)`: If shapes mismatch or axis is out of bounds.
+    fn stack(tensors: &[Self], axis: usize) -> Result<Self, CausalTensorError>
+    where
+        T: crate::TensorData,
         Self: Sized;
 }

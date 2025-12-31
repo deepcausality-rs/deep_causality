@@ -39,6 +39,8 @@ pub enum PhysicsErrorEnum {
     NumericalInstability(String),
     /// General calculation error.
     CalculationError(String),
+    /// Metric convention error (wraps MetricError from metric crate).
+    MetricConventionError(String),
 }
 
 impl PhysicsError {
@@ -95,6 +97,11 @@ impl PhysicsError {
     pub fn CalculationError(msg: String) -> Self {
         Self(PhysicsErrorEnum::CalculationError(msg))
     }
+
+    #[allow(non_snake_case)]
+    pub fn MetricConventionError(msg: String) -> Self {
+        Self(PhysicsErrorEnum::MetricConventionError(msg))
+    }
 }
 
 // Integration with Generic CausalityError
@@ -111,6 +118,12 @@ impl From<deep_causality_tensor::CausalTensorError> for PhysicsError {
             "Tensor Error: {:?}",
             e
         )))
+    }
+}
+
+impl From<deep_causality_metric::MetricError> for PhysicsError {
+    fn from(e: deep_causality_metric::MetricError) -> Self {
+        PhysicsError::new(PhysicsErrorEnum::MetricConventionError(format!("{}", e)))
     }
 }
 
@@ -133,6 +146,9 @@ impl Display for PhysicsError {
                 write!(f, "Numerical Instability: {}", msg)
             }
             PhysicsErrorEnum::CalculationError(msg) => write!(f, "Calculation Error: {}", msg),
+            PhysicsErrorEnum::MetricConventionError(msg) => {
+                write!(f, "Metric Convention Error: {}", msg)
+            }
         }
     }
 }

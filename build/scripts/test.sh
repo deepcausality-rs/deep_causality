@@ -7,10 +7,11 @@ set -o nounset
 set -o pipefail
 
 
-# https://nexte.st/book/installing-from-source.html
-# cargo install cargo-nextest --locked
+cargo test --doc
 
-FEATURES=unsafe RUSTFLAGS='-C target-cpu=native' cargo test --doc --release
+cargo test
 
-# https://llogiq.github.io/2017/06/01/perf-pitfalls.html
-FEATURES=unsafe RUSTFLAGS='-C target-cpu=native' cargo test
+# MLX GPU acceleration can only be tested single threaded
+# because of its single command quqeue that is not threat safe.
+cargo test --doc  --features mlx
+cargo test --features mlx -- --test-threads=1

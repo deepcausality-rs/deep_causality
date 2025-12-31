@@ -10,8 +10,10 @@ publish = false
 path = "no_lib.rs"
 
 [dependencies]
-deep_causality_core =  { path = "../../deep_causality_core" }
+deep_causality_core = { path = "../../deep_causality_core" }
 deep_causality_haft = { path = "../../deep_causality_haft" }
+[features]
+strict-zst = ["deep_causality_core/strict-zst"]
 
 [[example]]
 name = "control_flow_builder"

@@ -14,8 +14,8 @@ This crate is organized into modular domains, each providing low-level computati
 *   **⚡ Electromagnetism**: Maxwell's equations, Lorentz force, Poynting vectors, and gauge fields using Geometric Algebra.
 *   **💧 Fluids**: Fluid dynamics (Bernoulli's principle, Reynolds number, viscosity, pressure).
 *   **🧱 Materials**: Material science properties (Stress, Strain, Hooke's Law, Young's modulus, thermal expansion).
-*   **🧲 MHD**: Magnetohydrodynamics (Alfven waves, Magnetic Pressure, Ideal Induction on Manifolds, General Relativistic MHD, Plasma parameters).
-*   **☢️ Nuclear**: Nuclear physics (Binding energy, radioactive decay, half-life calculations).
+*   **🧲 MHD**: Magnetohydrodynamics (Alfven waves, Magnetic Pressure, Ideal Induction on Manifolds, General Relativistic MHD with Manifold-based current computation, Plasma parameters).
+*   **☢️ Nuclear**: Nuclear physics (Binding energy, radioactive decay, PDG particle database, **Lund String Fragmentation** for QCD hadronization).
 *   **💡 Photonics**: Ray Optics, Polarization Calculus, Gaussian Beam Optics, and Diffraction.
 *   **⚛️ Quantum**: Quantum mechanics primitives (Wavefunctions, operators, gates, expectation values, Haruna's Gauge Field gates).
 *   **🕰️ Relativity**: Special and General Relativity (Spacetime intervals, time dilation, Einstein tensor, geodesic deviation).
@@ -27,13 +27,15 @@ This crate is organized into modular domains, each providing low-level computati
 
 The library follows a functional and causal architecture:
 
-1.  **Kernels (`*::mechanics`, `*::gravity`, etc.)**: Pure functions that perform the raw physical computations. They operate on `CausalTensor`, `CausalMultiVector`, or primitive types. They are stateless and side-effect free.
-    *   *Example*: `klein_gordon_kernel` computes $(\Delta + m^2)\psi$.
+1.  **Kernels (`*::mechanics`, `*::gravity`, etc.)**: Pure functions that perform the raw physical computations. They operate on `CausalTensor`, `CausalMultiVector`, `Manifold`, or primitive types. They are stateless and side-effect free.
+    *   *Example*: `klein_gordon_kernel` computes $(\\Delta + m^2)\\psi$.
 
 2.  **Wrappers (`*::wrappers`)**: Monadic wrappers that lift kernels into the `PropagatingEffect` monad. These allow physics functions to be directly embedded into `CausalEffect` functions within a DeepCausality graph.
     *   *Example*: `apply_gate` wraps `apply_gate_kernel` to validly propagate state changes in the causal graph.
 
-3.  **Quantities (`*::quantities`, `units::*`)**: Newtype wrappers (e.g., `Speed`, `Mass`, `Temperature`) that enforce physical invariants (e.g., mass cannot be negative) and type safety.
+3.  **Quantities (`*::quantities`, `units::*`)**: Newtype wrappers (e.g., `Speed`, `Mass`, `Temperature`, `FourMomentum`, `Hadron`) that enforce physical invariants (e.g., mass cannot be negative) and type safety.
+
+4.  **Metric Types**: Re-exports from `deep_causality_metric` for sign convention handling (`LorentzianMetric`, `EastCoastMetric`, `WestCoastMetric`, `PhysicsMetric`).
 
 ## 📦 Usage
 
@@ -41,7 +43,10 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-deep_causality_physics = { version = "0.1.0" }
+deep_causality_physics = { version = "0.3.0" }
+
+# For QCD hadronization (Lund string fragmentation) - use os-random feature
+# deep_causality_physics = { version = "0.3.0", features = ["os-random"] }
 ```
 
 ### Example: Relativistic Dynamics
@@ -79,6 +84,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+### Example: Lund String Fragmentation (QCD Hadronization)
+
+```rust
+use deep_causality_physics::{
+    FourMomentum, LundParameters, lund_string_fragmentation_kernel
+};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Configure Lund parameters (defaults tuned to LEP e+e- data)
+    let params = LundParameters::default();
+    
+    // Define a quark-antiquark string (e.g., from e+e- → qq̄)
+    // Quark moving in +z, antiquark in -z
+    let quark = FourMomentum::new(50.0, 0.0, 0.0, 50.0);
+    let antiquark = FourMomentum::new(50.0, 0.0, 0.0, -50.0);
+    let endpoints = vec![(quark, antiquark)];
+    
+    // Fragment the string into hadrons
+    let mut rng = rand::thread_rng();
+    let hadrons = lund_string_fragmentation_kernel(&endpoints, &params, &mut rng)?;
+    
+    println!("Produced {} hadrons:", hadrons.len());
+    for h in &hadrons {
+        println!("  PDG ID: {}, Energy: {:.2} GeV", h.pdg_id(), h.energy());
+    }
+    
+    Ok(())
+}
+```
+
 Code examples are in the [repo example folder](../examples/physics_examples). 
 
 ## 🛠️ Configuration
@@ -88,6 +123,7 @@ The crate supports `no_std` environments via feature flags.
 *   `default`: Enables `std`.
 *   `std`: Usage of standard library (includes `alloc`).
 *   `alloc`: Usage of allocation (Vec, String) without full `std`.
+*   `os-random`: Enables OS-based secure random number generator and Lund string fragmentation for QCD hadronization.
 
 ## 📜 License
 

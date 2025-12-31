@@ -5,11 +5,14 @@ rust_test_suite(
     srcs = glob([
         "errors/*_tests.rs",
     ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
     tags = [
         "unit-test",
     ],
     visibility = ["//visibility:public"],
-    crate_features = ["std", "alloc"],
     deps = [
         # Crate to test
         "//deep_causality_core",
@@ -22,11 +25,14 @@ rust_test_suite(
     srcs = glob([
         "traits/*_tests.rs",
     ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
     tags = [
         "unit-test",
     ],
     visibility = ["//visibility:public"],
-    crate_features = ["std", "alloc"],
     deps = [
         # Crate to test
         "//deep_causality_core",
@@ -39,11 +45,14 @@ rust_test_suite(
     srcs = glob([
         "types/effect_value/*_tests.rs",
     ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
     tags = [
         "unit-test",
     ],
     visibility = ["//visibility:public"],
-    crate_features = ["std", "alloc"],
     deps = [
         "//deep_causality_core",
     ],
@@ -54,11 +63,14 @@ rust_test_suite(
     srcs = glob([
         "types/effect_log/*_tests.rs",
     ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
     tags = [
         "unit-test",
     ],
     visibility = ["//visibility:public"],
-    crate_features = ["std", "alloc"],
     deps = [
         "//deep_causality_core",
         "//deep_causality_haft",
@@ -70,11 +82,14 @@ rust_test_suite(
     srcs = glob([
         "types/causal_effect_system/*_tests.rs",
     ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
     tags = [
         "unit-test",
     ],
     visibility = ["//visibility:public"],
-    crate_features = ["std", "alloc"],
     deps = [
         "//deep_causality_core",
         "//deep_causality_haft",
@@ -86,11 +101,14 @@ rust_test_suite(
     srcs = glob([
         "types/causal_effect_propagation_process/*_tests.rs",
     ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
     tags = [
         "unit-test",
     ],
     visibility = ["//visibility:public"],
-    crate_features = ["std", "alloc"],
     deps = [
         "//deep_causality_core",
         "//deep_causality_haft",
@@ -102,11 +120,14 @@ rust_test_suite(
     srcs = glob([
         "types/causal_monad/*_tests.rs",
     ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
     tags = [
         "unit-test",
     ],
     visibility = ["//visibility:public"],
-    crate_features = ["std", "alloc"],
     deps = [
         "//deep_causality_core",
         "//deep_causality_haft",
@@ -118,11 +139,14 @@ rust_test_suite(
     srcs = glob([
         "types/propagating_effect/*_tests.rs",
     ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
     tags = [
         "unit-test",
     ],
     visibility = ["//visibility:public"],
-    crate_features = ["std", "alloc"],
     deps = [
         "//deep_causality_core",
         "//deep_causality_haft",
@@ -134,11 +158,14 @@ rust_test_suite(
     srcs = glob([
         "types/builder/*_tests.rs",
     ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
     tags = [
         "unit-test",
     ],
     visibility = ["//visibility:public"],
-    crate_features = ["std", "alloc"],
     deps = [
         "//deep_causality_core",
     ],
@@ -149,11 +176,14 @@ rust_test_suite(
     srcs = glob([
         "types/propagating_process/*_tests.rs",
     ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
     tags = [
         "unit-test",
     ],
     visibility = ["//visibility:public"],
-    crate_features = ["std", "alloc"],
     deps = [
         "//deep_causality_core",
         "//deep_causality_haft",

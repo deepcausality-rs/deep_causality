@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_tensor::{CausalTensor, CausalTensorMathExt, CausalTensorStackExt, Tensor};
+use deep_causality_tensor::{CausalTensor, CausalTensorMathExt, Tensor};
 
 pub fn main() {
     println!("\n--- CausalTensor Example ---");
@@ -43,7 +43,7 @@ pub fn main() {
     // Tensors support element-wise arithmetic with scalars.
     println!("\n4. Tensor-Scalar Arithmetic (add 10 to each element):");
     let tensor = CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2]).unwrap();
-    let added_tensor = &tensor + 10.0;
+    let added_tensor: CausalTensor<f64> = &tensor + 10.0;
     println!("   Original: {}", tensor);
     println!("   Result:   {}", added_tensor);
     assert_eq!(added_tensor.as_slice(), &[11.0, 12.0, 13.0, 14.0]);
@@ -70,9 +70,9 @@ pub fn main() {
     println!("\n6. Sorting a 1D tensor:");
     let tensor_1d = CausalTensor::new(vec![3, 1, 4, 1, 5, 9], vec![6]).unwrap();
     println!("   Original 1D Tensor: {}", tensor_1d);
-    let sorted_indices = tensor_1d.arg_sort().unwrap();
+    let sorted_indices = tensor_1d.arg_sort();
     println!("   Sorted indices: {:?}", sorted_indices);
-    assert_eq!(sorted_indices, vec![1, 3, 0, 2, 4, 5]);
+    assert_eq!(sorted_indices.unwrap(), vec![1, 3, 0, 2, 4, 5]);
 
     // 7. Tensor-Tensor Arithmetic
     // Tensors can be added, subtracted, etc., with other tensors.
@@ -119,7 +119,7 @@ pub fn main() {
     let tensors_to_stack = [tensor_a, tensor_b];
 
     // Stack along axis 0
-    let stacked_axis_0 = tensors_to_stack.stack(0).unwrap();
+    let stacked_axis_0 = CausalTensor::stack(&tensors_to_stack, 0).unwrap();
     println!(
         "   Stacked along axis 0 (new shape {{:?}}): {{}} {:?} {:?}",
         stacked_axis_0.shape(),
@@ -129,7 +129,7 @@ pub fn main() {
     assert_eq!(stacked_axis_0.as_slice(), &[1, 2, 3, 4]);
 
     // Stack along axis 1
-    let stacked_axis_1 = tensors_to_stack.stack(1).unwrap();
+    let stacked_axis_1 = CausalTensor::stack(&tensors_to_stack, 1).unwrap();
     println!(
         "   Stacked along axis 1 (new shape {{:?}}): {{}} {:?} {:?}",
         stacked_axis_1.shape(),

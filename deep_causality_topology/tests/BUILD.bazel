@@ -34,7 +34,6 @@ rust_test_suite(
         "//deep_causality_haft",
         "//deep_causality_sparse",
         "//deep_causality_tensor",
-
     ],
 )
 
@@ -126,7 +125,6 @@ rust_test_suite(
     ],
 )
 
-
 rust_test_suite(
     name = "types/regge_geometry",
     srcs = glob([
@@ -209,5 +207,5 @@ rust_test_suite(
         "//deep_causality_topology",
         # Internal deps
         "//deep_causality_tensor",
-        ],
+    ],
 )

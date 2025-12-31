@@ -4,3 +4,4 @@
  */
 
 pub(crate) mod causal_tensor_type;
+pub(crate) mod mlx_vs_cpu;

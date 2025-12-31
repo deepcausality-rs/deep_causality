@@ -2,8 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use crate::CausalTensor;
 use crate::CausalTensorError;
-use crate::types::causal_tensor::CausalTensor;
 
 pub trait CausalTensorMathExt<T> {
     /// Computes the element-wise natural logarithm of the tensor.

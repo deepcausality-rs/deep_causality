@@ -3,53 +3,37 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_sparse::CsrMatrix;
+//! SimplicialComplex type for representing simplicial structures.
 
 use crate::Skeleton;
+use deep_causality_sparse::CsrMatrix;
 
-mod base_topology;
+// Submodule declarations (folder-based)
+mod api;
+mod boundary;
 mod builder;
+mod constructors;
 mod display;
 mod getters;
-mod ops_boundary;
-mod simplicial_topology;
 
+mod ops;
+mod topology;
+
+// Re-export public API
 pub use builder::SimplicialComplexBuilder;
 
+/// A simplicial complex representing a geometric structure.
+///
+/// Contains skeletons (vertices, edges, faces, etc.) and the associated
+/// boundary, coboundary, and Hodge star operators.
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct SimplicialComplex {
     /// Storage of geometric entities (Points, Lines, Triangles...)
     pub(crate) skeletons: Vec<Skeleton>,
     /// The Boundary Operators (∂).
-    /// `boundary_operators[k]` is a matrix of size `(N_k x N_{k+1})`.
-    /// It maps a `(k+1)`-chain to a `k`-chain.
-    ///
-    /// Implementation: `deep_causality_sparse::CsrMatrix<i8>`
-    /// Values are `{-1, 0, 1}` representing orientation.
     pub(crate) boundary_operators: Vec<CsrMatrix<i8>>,
-    /// The Coboundary / Adjacency Cache (Optional but recommended for Comonad speed).
-    /// Transpose of boundary operators.
-    /// coboundary[k] is a matrix of size (N_{k+1} x N_k).
-    /// Used to find "Who contains me?" efficiently.
+    /// The Coboundary / Adjacency Cache.
     pub(crate) coboundary_operators: Vec<CsrMatrix<i8>>,
     /// The Hodge Star Operators (⋆).
-    /// `hodge_star_operators[k]` is a matrix mapping k-forms to (n-k)-forms.
-    /// Its dimensions are `(N_{n-k} x N_k)`.
     pub(crate) hodge_star_operators: Vec<CsrMatrix<f64>>,
-}
-
-impl SimplicialComplex {
-    pub fn new(
-        skeletons: Vec<Skeleton>,
-        boundary_operators: Vec<CsrMatrix<i8>>,
-        coboundary_operators: Vec<CsrMatrix<i8>>,
-        hodge_star_operators: Vec<CsrMatrix<f64>>,
-    ) -> Self {
-        Self {
-            skeletons,
-            boundary_operators,
-            coboundary_operators,
-            hodge_star_operators,
-        }
-    }
 }

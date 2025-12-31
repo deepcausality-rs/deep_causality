@@ -4,7 +4,7 @@
  */
 
 use crate::CausalMultiVectorError;
-use crate::types::metric::Metric;
+use crate::Metric;
 use deep_causality_num::{Field, Zero};
 
 mod algebra;
