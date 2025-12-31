@@ -125,12 +125,7 @@ impl TensorBackend for MlxBackend {
     }
 
     fn strides<T>(tensor: &Self::Tensor<T>) -> Vec<usize> {
-        tensor
-            .as_array()
-            .strides()
-            .iter()
-            .map(|&s| s as usize)
-            .collect()
+        tensor.as_array().strides().to_vec()
     }
 
     fn get<T: Clone>(tensor: &Self::Tensor<T>, index: &[usize]) -> Option<T> {
@@ -313,7 +308,7 @@ impl TensorBackend for MlxBackend {
             return MlxTensor::new(array);
         }
 
-        // Fallback to CPU
+        // Fallback to CPU - mlx_rs doesn't support axis-based reductions
         let cpu_data: Vec<T> = Self::to_vec(tensor);
         let cpu_shape = Self::shape(tensor);
         let cpu_tensor = match CausalTensor::new(cpu_data, cpu_shape) {
@@ -321,9 +316,6 @@ impl TensorBackend for MlxBackend {
             Err(_) => panic!("MlxBackend::mean: cpu tensor creation failed"),
         };
 
-        // CausalTensor mean uses different trait or inherent impl?
-        // TensorBackend has mean.
-        // CpuBackend::mean
         use crate::CpuBackend;
         let result = CpuBackend::mean(&cpu_tensor, axes);
         Self::create(result.as_slice(), result.shape())
@@ -547,7 +539,7 @@ impl TensorBackend for MlxBackend {
                 .sum(None)
                 .expect("MlxBackend::sum: failed")
         } else {
-            // Use fallback
+            // Use fallback - mlx_rs Array::sum doesn't support axis parameter
             let cpu_data: Vec<T> = Self::to_vec(tensor);
             let cpu_shape = Self::shape(tensor);
             let cpu_tensor = match CausalTensor::new(cpu_data, cpu_shape) {
@@ -574,12 +566,12 @@ impl TensorBackend for MlxBackend {
                 .max(None)
                 .expect("MlxBackend::max: failed")
         } else {
+            // Use fallback - mlx_rs Array::max doesn't support axis parameter
             let cpu_data: Vec<T> = Self::to_vec(tensor);
             let cpu_shape = Self::shape(tensor);
             let cpu_tensor = crate::InternalCpuTensor::new(cpu_data, cpu_shape)
                 .expect("MlxBackend::max: cpu tensor creation failed");
             use crate::CpuBackend;
-            // use crate::traits::TensorBackend;
             let result_tensor = CpuBackend::max(&cpu_tensor, axes);
             return Self::create(result_tensor.as_slice(), result_tensor.shape());
         };

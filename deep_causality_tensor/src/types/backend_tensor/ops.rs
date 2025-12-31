@@ -214,34 +214,39 @@ impl<T: TensorData, B: TensorBackend> DivAssign<&Self> for BackendTensor<T, B> {
 }
 
 // --- Scalar Assignment Arithmetic ---
+// Use backend broadcast operations to stay on device (GPU for MlxBackend)
 macro_rules! impl_scalar_assign_arithmetic {
     ($($t:ty),*) => {
         $(
             impl<B: TensorBackend> AddAssign<$t> for BackendTensor<$t, B> {
                 fn add_assign(&mut self, rhs: $t) {
-                    let data: Vec<$t> = B::to_vec(&self.inner).into_iter().map(|x| x + rhs).collect();
-                    self.inner = B::create_from_vec(data, &B::shape(&self.inner));
+                    // Create scalar tensor on same device, use broadcast add
+                    let scalar_tensor = B::create(&[rhs], &[1]);
+                    self.inner = B::add(&self.inner, &scalar_tensor);
                 }
             }
 
             impl<B: TensorBackend> SubAssign<$t> for BackendTensor<$t, B> {
                 fn sub_assign(&mut self, rhs: $t) {
-                    let data: Vec<$t> = B::to_vec(&self.inner).into_iter().map(|x| x - rhs).collect();
-                    self.inner = B::create_from_vec(data, &B::shape(&self.inner));
+                    // Create scalar tensor on same device, use broadcast sub
+                    let scalar_tensor = B::create(&[rhs], &[1]);
+                    self.inner = B::sub(&self.inner, &scalar_tensor);
                 }
             }
 
             impl<B: TensorBackend> MulAssign<$t> for BackendTensor<$t, B> {
                 fn mul_assign(&mut self, rhs: $t) {
-                    let data: Vec<$t> = B::to_vec(&self.inner).into_iter().map(|x| x * rhs).collect();
-                    self.inner = B::create_from_vec(data, &B::shape(&self.inner));
+                    // Create scalar tensor on same device, use broadcast mul
+                    let scalar_tensor = B::create(&[rhs], &[1]);
+                    self.inner = B::mul(&self.inner, &scalar_tensor);
                 }
             }
 
             impl<B: TensorBackend> DivAssign<$t> for BackendTensor<$t, B> {
                 fn div_assign(&mut self, rhs: $t) {
-                    let data: Vec<$t> = B::to_vec(&self.inner).into_iter().map(|x| x / rhs).collect();
-                    self.inner = B::create_from_vec(data, &B::shape(&self.inner));
+                    // Create scalar tensor on same device, use broadcast div
+                    let scalar_tensor = B::create(&[rhs], &[1]);
+                    self.inner = B::div(&self.inner, &scalar_tensor);
                 }
             }
         )*
