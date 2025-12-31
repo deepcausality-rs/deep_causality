@@ -7,37 +7,10 @@
 //!
 //! Dispatches to CPU or MLX implementations based on feature flags and heuristics.
 
-use crate::{Manifold, Simplex, TopologyError};
+// No re-export needed for inherent impls
 
-/// Threshold for simplex dimension above which MLX is preferred.
-#[allow(dead_code)]
-const GPU_SIMPLEX_THRESHOLD: usize = 4;
+#[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
+mod geometry_mlx;
 
-impl<T> Manifold<T> {
-    /// Computes the squared volume of a k-simplex using Cayley-Menger determinant.
-    ///
-    /// GPU-accelerated when `mlx` feature is enabled and k ≥ 4.
-    ///
-    /// # Arguments
-    /// * `simplex` - The simplex to compute volume for
-    ///
-    /// # Returns
-    /// * `Ok(f64)` - The squared volume
-    /// * `Err(TopologyError)` - If metric is missing or edges not found
-    ///
-    /// # Example
-    /// ```rust,ignore
-    /// let volume_sq = manifold.simplex_volume_squared(&simplex)?;
-    /// ```
-    pub fn simplex_volume_squared(&self, simplex: &Simplex) -> Result<f64, TopologyError> {
-        #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
-        {
-            let k = simplex.vertices.len() - 1;
-            if k >= GPU_SIMPLEX_THRESHOLD {
-                return self.simplex_volume_squared_mlx(simplex);
-            }
-        }
-
-        self.simplex_volume_squared_cpu(simplex)
-    }
-}
+#[cfg(not(all(feature = "mlx", target_os = "macos", target_arch = "aarch64")))]
+mod geometry_cpu;
