@@ -5,3 +5,4 @@ comment:
 # https://docs.codecov.com/docs/ignoring-paths
 ignore:
   - "deep_causality/examples"  # ignore folders and all its contents
+  - "thirdparty"  # ignore folders and all its contents
