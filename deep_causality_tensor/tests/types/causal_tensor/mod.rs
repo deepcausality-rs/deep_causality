@@ -14,6 +14,8 @@ mod getters_tests;
 mod op_scalar_tensor_tests;
 #[cfg(test)]
 mod op_tensor_ein_sum_ast_tests;
+#[cfg(test)]
+mod ein_sum_error_tests;
 mod op_tensor_ein_sum_tests;
 #[cfg(test)]
 mod op_tensor_inverse_tests;
