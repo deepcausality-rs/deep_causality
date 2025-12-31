@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_multivector"
-version = "0.2.4"
+version = "0.2.5"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -53,7 +53,7 @@ version = "0.2"
 
 [dependencies.deep_causality_core]
 path = "../deep_causality_core"
-version = "0.0.2"
+version = "0.0.3"
 
 [dependencies.deep_causality_metric]
 path = "../deep_causality_metric"
