@@ -11,5 +11,3 @@ mod geometry_cpu;
 // MLX implementation (feature-gated)
 #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
 mod geometry_mlx;
-#[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
-pub(crate) use geometry_mlx::*;

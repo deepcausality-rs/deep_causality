@@ -6,12 +6,12 @@
 use criterion::{Criterion, criterion_group};
 #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
 use deep_causality_tensor::{CausalTensor, MlxBackend, MlxCausalTensor, TensorBackend};
+use std::hint::black_box;
 
 #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
 const SIZES: [usize; 3] = [128, 512, 1024];
 
 #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
-
 fn bench_cast_and_copy(c: &mut Criterion) {
     let mut group = c.benchmark_group("roundtrip_transfer");
 
@@ -33,7 +33,7 @@ fn bench_cast_and_copy(c: &mut Criterion) {
                     MlxCausalTensor::from_slice(&data_f32, black_box(cpu_tensor.shape()));
 
                 // 2. Force eval to ensure upload finishes
-                let _ = mlx_tensor.inner().as_array().eval().expect("eval");
+                mlx_tensor.inner().as_array().eval().expect("eval");
 
                 // 3. Back to CPU (includes f32->f64 cast)
                 let res_f32 = mlx_tensor.into_inner();
@@ -55,7 +55,7 @@ fn bench_cast_and_copy(c: &mut Criterion) {
                 let mlx_tensor = MlxCausalTensor::from_slice(black_box(&data_f32), &shape);
 
                 // 2. Force eval
-                let _ = mlx_tensor.inner().as_array().eval().expect("eval");
+                mlx_tensor.inner().as_array().eval().expect("eval");
 
                 // 3. Direct download (no cast)
                 let _res = mlx_tensor.into_inner();

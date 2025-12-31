@@ -11,5 +11,3 @@ mod covariance_cpu;
 // MLX implementation (feature-gated)
 #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
 mod covariance_mlx;
-#[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
-pub(crate) use covariance_mlx::*;

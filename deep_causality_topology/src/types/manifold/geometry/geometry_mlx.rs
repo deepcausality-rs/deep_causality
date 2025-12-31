@@ -62,7 +62,7 @@ impl<T> Manifold<T> {
         // Volume formula
         let k_fac = (1..=k).map(|i| i as f64).product::<f64>();
         let denominator = 2.0_f64.powi(k as i32) * k_fac.powi(2);
-        let sign = if k % 2 == 0 { -1.0 } else { 1.0 };
+        let sign = if k.is_multiple_of(2) { -1.0 } else { 1.0 };
 
         let vol_sq = (sign / denominator) * det;
 

@@ -5,9 +5,9 @@
 
 //! Tests for HKT operations on CausalMultiField.
 
-use deep_causality_metric::Metric;
-use deep_causality_multivector::{CausalMultiField, CausalMultiVector, MultiFieldWitness};
-use deep_causality_tensor::CpuBackend;
+use deep_causality_multivector::{
+    CausalMultiField, CausalMultiVector, DefaultMultivectorBackend, Metric, MultiFieldWitness,
+};
 
 // =============================================================================
 // fmap tests
@@ -25,8 +25,11 @@ fn test_fmap_doubles_values() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<DefaultMultivectorBackend, f32>::from_coefficients(
+        &mvs,
+        [2, 2, 2],
+        [1.0, 1.0, 1.0],
+    );
 
     let doubled = MultiFieldWitness::fmap(field.clone(), |x| x * 2.0);
 
@@ -57,8 +60,11 @@ fn test_fmap_type_conversion() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<DefaultMultivectorBackend, f32>::from_coefficients(
+        &mvs,
+        [2, 2, 2],
+        [1.0, 1.0, 1.0],
+    );
 
     // This tests that fmap can change types (f32 -> f32 in this case)
     let negated = MultiFieldWitness::fmap(field, |x| -x);
@@ -80,8 +86,11 @@ fn test_fmap_preserves_shape() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [3, 3, 3], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<DefaultMultivectorBackend, f32>::from_coefficients(
+        &mvs,
+        [3, 3, 3],
+        [1.0, 1.0, 1.0],
+    );
 
     let mapped = MultiFieldWitness::fmap(field, |x| x + 1.0);
 
@@ -147,8 +156,11 @@ fn test_extract_gets_first_scalar() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<DefaultMultivectorBackend, f32>::from_coefficients(
+        &mvs,
+        [2, 2, 2],
+        [1.0, 1.0, 1.0],
+    );
 
     let focus = MultiFieldWitness::extract(&field);
 
@@ -185,8 +197,11 @@ fn test_extend_preserves_shape() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<DefaultMultivectorBackend, f32>::from_coefficients(
+        &mvs,
+        [2, 2, 2],
+        [1.0, 1.0, 1.0],
+    );
 
     let extended = MultiFieldWitness::extend(&field, |_fa| 1.0f32);
 
@@ -205,8 +220,11 @@ fn test_extend_applies_function() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<DefaultMultivectorBackend, f32>::from_coefficients(
+        &mvs,
+        [2, 2, 2],
+        [1.0, 1.0, 1.0],
+    );
 
     // Apply a function that extracts and squares the focus
     let extended = MultiFieldWitness::extend(&field, |fa| {
@@ -238,8 +256,11 @@ fn test_functor_identity_law() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<DefaultMultivectorBackend, f32>::from_coefficients(
+        &mvs,
+        [2, 2, 2],
+        [1.0, 1.0, 1.0],
+    );
 
     let mapped = MultiFieldWitness::fmap(field.clone(), |x| x); // identity
 
@@ -266,8 +287,11 @@ fn test_functor_composition_law() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<DefaultMultivectorBackend, f32>::from_coefficients(
+        &mvs,
+        [2, 2, 2],
+        [1.0, 1.0, 1.0],
+    );
 
     let f = |x: f32| x + 1.0;
     let g = |x: f32| x * 2.0;

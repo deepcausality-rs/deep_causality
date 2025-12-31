@@ -46,15 +46,15 @@ mod mlx_gamma_tests {
 
         for gamma_idx in 0..2 {
             let mut sq = [[0.0f32; 2]; 2];
-            for r in 0..dim {
-                for c in 0..dim {
+            for (r, row) in sq.iter_mut().enumerate().take(dim) {
+                for (c, item) in row.iter_mut().enumerate().take(dim) {
                     let mut sum = 0.0f32;
                     for k in 0..dim {
                         let idx_rk = gamma_idx * dim * dim + r * dim + k;
                         let idx_kc = gamma_idx * dim * dim + k * dim + c;
                         sum += data[idx_rk] * data[idx_kc];
                     }
-                    sq[r][c] = sum;
+                    *item = sum;
                 }
             }
 
@@ -86,10 +86,10 @@ mod mlx_gamma_tests {
 
         let dim = 2;
 
-        assert!((data[0 * dim * dim + 0 * dim + 0] - 1.0).abs() < 1e-5);
-        assert!((data[0 * dim * dim + 1 * dim + 1] - 1.0).abs() < 1e-5);
-        assert!(data[0 * dim * dim + 0 * dim + 1].abs() < 1e-5);
-        assert!(data[0 * dim * dim + 1 * dim + 0].abs() < 1e-5);
+        assert!((data[0] - 1.0).abs() < 1e-5);
+        assert!((data[dim + 1] - 1.0).abs() < 1e-5);
+        assert!(data[1].abs() < 1e-5);
+        assert!(data[dim].abs() < 1e-5);
     }
 
     // =========================================================================
@@ -115,10 +115,10 @@ mod mlx_gamma_tests {
 
         let dim = 2;
 
-        assert!((data[0 * dim * dim + 0 * dim + 0] - 1.0).abs() < 1e-5);
-        assert!((data[0 * dim * dim + 1 * dim + 1] - 1.0).abs() < 1e-5);
-        assert!(data[0 * dim * dim + 0 * dim + 1].abs() < 1e-5);
-        assert!(data[0 * dim * dim + 1 * dim + 0].abs() < 1e-5);
+        assert!((data[0] - 1.0).abs() < 1e-5);
+        assert!((data[dim + 1] - 1.0).abs() < 1e-5);
+        assert!(data[1].abs() < 1e-5);
+        assert!(data[dim].abs() < 1e-5);
     }
 
     // =========================================================================

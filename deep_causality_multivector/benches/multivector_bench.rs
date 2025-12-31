@@ -74,7 +74,7 @@ fn bench_dixon_mlx(c: &mut Criterion) {
     // MLX Matrix Implementation (via MultiField 1x1x1)
     // This forces the use of the Matrix Isomorphism Bridge on the GPU/NPU
     let field_a = CausalMultiField::<MlxBackend, f32>::from_coefficients(
-        &vec![mv.clone()],
+        std::slice::from_ref(&mv),
         [1, 1, 1],
         [1.0, 1.0, 1.0],
     );
@@ -117,7 +117,7 @@ fn bench_cl09_mlx(c: &mut Criterion) {
     let mv = StandardMultiVector::unchecked(data, m);
 
     let field_a = CausalMultiField::<MlxBackend, f32>::from_coefficients(
-        &vec![mv.clone()],
+        std::slice::from_ref(&mv),
         [1, 1, 1],
         [1.0, 1.0, 1.0],
     );

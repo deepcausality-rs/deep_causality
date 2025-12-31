@@ -57,7 +57,7 @@ fn bench_matmul_mlx(c: &mut Criterion) {
             b.iter(|| {
                 let res =
                     MlxBackend::matmul(black_box(tensor_a.inner()), black_box(tensor_b.inner()));
-                let _ = res.as_array().eval().expect("eval failed");
+                res.as_array().eval().expect("eval failed");
             })
         });
     }

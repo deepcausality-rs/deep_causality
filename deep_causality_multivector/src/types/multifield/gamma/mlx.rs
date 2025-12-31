@@ -24,7 +24,7 @@ where
     fn get_gammas(metric: &Metric) -> <MlxBackend as TensorBackend>::Tensor<T> {
         let n = metric.dimension();
         // Compute matrix_dim inline to avoid type inference issues
-        let matrix_dim = 1usize << ((n + 1) / 2);
+        let matrix_dim = 1usize << n.div_ceil(2);
 
         // Create gamma matrices on GPU
         // Shape: [n, matrix_dim, matrix_dim]
@@ -44,7 +44,7 @@ where
 
     fn get_basis_gammas(metric: &Metric) -> <MlxBackend as TensorBackend>::Tensor<T> {
         let n = metric.dimension();
-        let matrix_dim = 1usize << ((n + 1) / 2);
+        let matrix_dim = 1usize << n.div_ceil(2);
         let num_blades = 1 << n;
 
         let shape = [num_blades, matrix_dim, matrix_dim];
@@ -83,7 +83,7 @@ where
 
     fn get_dual_basis_gammas(metric: &Metric) -> <MlxBackend as TensorBackend>::Tensor<T> {
         let n = metric.dimension();
-        let matrix_dim = 1usize << ((n + 1) / 2);
+        let matrix_dim = 1usize << n.div_ceil(2);
         let num_blades = 1 << n;
 
         // Compute on CPU then upload
