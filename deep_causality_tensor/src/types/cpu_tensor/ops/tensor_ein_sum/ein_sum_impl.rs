@@ -284,14 +284,20 @@ where
 
                     // Get values and accumulate - use Result for proper error handling
                     let lhs_val = lhs.get(&lhs_index).ok_or_else(|| {
-                        CausalTensorError::EinSumError(EinSumValidationError::InvalidAxesSpecification {
-                            message: "Internal error: lhs index out of bounds in contraction".to_string(),
-                        })
+                        CausalTensorError::EinSumError(
+                            EinSumValidationError::InvalidAxesSpecification {
+                                message: "Internal error: lhs index out of bounds in contraction"
+                                    .to_string(),
+                            },
+                        )
                     })?;
                     let rhs_val = rhs.get(&rhs_index).ok_or_else(|| {
-                        CausalTensorError::EinSumError(EinSumValidationError::InvalidAxesSpecification {
-                            message: "Internal error: rhs index out of bounds in contraction".to_string(),
-                        })
+                        CausalTensorError::EinSumError(
+                            EinSumValidationError::InvalidAxesSpecification {
+                                message: "Internal error: rhs index out of bounds in contraction"
+                                    .to_string(),
+                            },
+                        )
                     })?;
                     sum = sum + *lhs_val * *rhs_val;
                 }
