@@ -174,15 +174,8 @@ fn test_resistive_diffusion_wrapper() {
 
 #[test]
 fn test_relativistic_current_wrapper() {
-    // Note: relativistic_current now requires Manifold<f64> and LorentzianMetric
-    // This test is a placeholder - the full implementation requires a properly
-    // constructed manifold with EM 2-form data on 2-simplices.
-    // Testing the dimension validation would require creating a manifold
-    // without sufficient skeletons or operators.
-
-    // For now, we just verify the wrapper compiles.
-    // Comprehensive tests should be added once the physics test infrastructure
-    // supports manifold construction with proper EM field data.
+    // Note: This test is fully implemented in grmhd_tests.rs
+    // See test_relativistic_current_kernel_4d there.
 }
 
 #[test]
