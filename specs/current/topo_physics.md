@@ -498,31 +498,37 @@ impl<B: LinearAlgebraBackend, T: TensorData> GaugeManifold<B, T> {
     }
 }
 
-### 9.5 Unified GAT-Bounded HKT for Topological Physics
+# # # 9.5 Unified GAT-Bounded HKT for Topological Physics
 
-> [!IMPORTANT]
-> The **Unified HKT** system (see `hkt_gat.md`) enables a single trait hierarchy for ALL field types,
+> [ ! IMPORTANT]
+> The * * Unified HKT* * system (see `hkt_gat.md`) enables a single trait hierarchy for ALL field types,
 > from scalar fields to spinor and gauge manifolds.
 
-The key innovation: **algebraic constraints replace hardcoded bounds**.
+The key innovation: * * algebraic constraints replace hardcoded bounds* *.
 
 ```rust
 // Unified HKT — same traits for all types
 pub trait HKT {
     type Constraint: ?Sized;  // Implementor declares requirements
-    type Type<T> where T: Satisfies<Self::Constraint>;
+    type Type<T>
+    where
+        T: Satisfies<Self::Constraint>;
 }
 
 // Scalar manifold: uses Field constraint
 impl HKT for ManifoldWitness {
     type Constraint = FieldConstraint;
-    type Type<T> = Manifold<T> where T: Satisfies<FieldConstraint>;
+    type Type<T> = Manifold<T>
+    where
+        T: Satisfies<FieldConstraint>;
 }
 
 // Spinor manifold: uses TensorData constraint
 impl<B: LinearAlgebraBackend> HKT for SpinorManifoldWitness<B> {
     type Constraint = TensorDataConstraint;
-    type Type<T> = SpinorManifold<B, T> where T: Satisfies<TensorDataConstraint>;
+    type Type<T> = SpinorManifold<B, T>
+    where
+        T: Satisfies<TensorDataConstraint>;
 }
 ```
 
@@ -530,15 +536,16 @@ impl<B: LinearAlgebraBackend> HKT for SpinorManifoldWitness<B> {
 
 The constraint system mirrors abstract algebra, enabling **compile-time physics safety**:
 
-| Constraint | Allowed Types | Physics Use Case |
-|------------|---------------|------------------|
-| `AbelianGroupConstraint` | Octonions, any additive structure | Superposition, linear combinations |
-| `AssociativeRingConstraint` | Quaternions, Matrices, Clifford algebras | Rotations, gauge transformations |
-| `FieldConstraint` | Complex, Real | Standard QM, electromagnetism |
-| `RealFieldConstraint` | f32, f64 | Classical mechanics, thermodynamics |
-| `TensorDataConstraint` | All physics types + threading | Full HKT physics stack |
+| Constraint                  | Allowed Types                            | Physics Use Case                    |
+|-----------------------------|------------------------------------------|-------------------------------------|
+| `AbelianGroupConstraint`    | Octonions, any additive structure        | Superposition, linear combinations  |
+| `AssociativeRingConstraint` | Quaternions, Matrices, Clifford algebras | Rotations, gauge transformations    |
+| `FieldConstraint`           | Complex, Real                            | Standard QM, electromagnetism       |
+| `RealFieldConstraint`       | f32, f64                                 | Classical mechanics, thermodynamics |
+| `TensorDataConstraint`      | All physics types + threading            | Full HKT physics stack              |
 
 **Key insight for gauge fields:** Gauge fields use `AssociativeRingConstraint` because:
+
 - SU(N) matrices are associative but non-commutative
 - Quaternion representations (SU(2) ≅ Spin(3)) are associative rings
 - Composition of gauge transformations: `(U₁ · U₂) · U₃ = U₁ · (U₂ · U₃)`
@@ -550,10 +557,10 @@ exponentials of gauge field polynomials:
 
 ```rust
 // Logical Z gate: Z(γ) = exp(iπ a(γ))
-let z_gate = exp(&(a_gamma * Complex::i() * PI));
+let z_gate = exp( & (a_gamma * Complex::i() * PI));
 
 // Logical T gate: T(γ) = exp(iπ (½a³ - ¾a² + ½a))
-let t_gate = exp(&polynomial_in_a);
+let t_gate = exp( & polynomial_in_a);
 ```
 
 **HKT enables unified treatment:**
@@ -574,11 +581,11 @@ impl<B: LinearAlgebraBackend> CoMonad<GaugeManifoldWitness<B>> for GaugeManifold
 
 **GPU acceleration path:**
 
-| Operation | CPU | MLX/GPU | Mechanism |
-|-----------|-----|---------|-----------|
-| `exp(multivector)` | Taylor series, sequential | Batched matrix exp | Cl(p,q) → Mat rep |
-| Gauge plaquette product | 4× sequential geom_prod | Single batched matmul | Link → Matrix |
-| Field strength F_μν | Per-plaquette computation | Parallel batch | SU(N) → 2^n matrices |
+| Operation               | CPU                       | MLX/GPU               | Mechanism            |
+|-------------------------|---------------------------|-----------------------|----------------------|
+| `exp(multivector)`      | Taylor series, sequential | Batched matrix exp    | Cl(p,q) → Mat rep    |
+| Gauge plaquette product | 4× sequential geom_prod   | Single batched matmul | Link → Matrix        |
+| Field strength F_μν     | Per-plaquette computation | Parallel batch        | SU(N) → 2^n matrices |
 
 #### 9.5.3 Unified Physics Code via Satisfies<Constraint>
 
@@ -616,8 +623,8 @@ fn covariant_derivative<G, S, T>(
     spinor: &S::Type<T>,
 ) -> S::Type<T>
 where
-    G: HKT<Constraint = AssociativeRingConstraint>,  // Gauge field
-    S: HKT<Constraint = TensorDataConstraint>,        // Spinor field
+    G: HKT<Constraint=AssociativeRingConstraint>,  // Gauge field
+    S: HKT<Constraint=TensorDataConstraint>,        // Spinor field
     T: Satisfies<AssociativeRingConstraint> + Satisfies<TensorDataConstraint>,
 {
     // Type system ensures:
@@ -629,14 +636,15 @@ where
 
 ### 9.6 Performance Benefits
 
-| Operation                    | CPU    | MLX (GPU) | Speedup  |
-|:-----------------------------|-------:|----------:|:--------:|
-| Dirac operator (64³ lattice) | ~500ms | ~15ms     | **33×**  |
-| Wilson action (32⁴ lattice)  | ~2s    | ~80ms     | **25×**  |
-| Gauge force computation      | ~1s    | ~40ms     | **25×**  |
-| Haruna gate exp(A)           | ~50ms  | ~2ms      | **25×**  |
+| Operation                    |    CPU | MLX (GPU) | Speedup |
+|:-----------------------------|-------:|----------:|:-------:|
+| Dirac operator (64³ lattice) | ~500ms |     ~15ms | **33×** |
+| Wilson action (32⁴ lattice)  |    ~2s |     ~80ms | **25×** |
+| Gauge force computation      |    ~1s |     ~40ms | **25×** |
+| Haruna gate exp(A)           |  ~50ms |      ~2ms | **25×** |
 
 **Key advantage:** The Clifford algebraic constraint system ensures:
+
 1. GPU acceleration via Clifford → Matrix isomorphism
 2. Type safety via `Satisfies<AssociativeRingConstraint>`
 3. Unified API via single `CoMonad` trait
@@ -678,6 +686,7 @@ The combination of **HKT Topology** and **Unified GAT-Bounded Constraints** prod
 we have effectively **solved the metric and unit compatibility problem** across computational physics.
 
 By encoding:
+
 - **Data Constraints** (Units/Types) via `Satisfies<Constraint>`
 - **Algebraic Structure** via hierarchy (`AbelianGroup` → `Ring` → `Field`)
 - **Geometric Strictness** (Metrics) via `SpinorManifold` structure
