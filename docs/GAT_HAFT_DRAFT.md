@@ -1,241 +1,216 @@
-# DFRAFT: DeepCausality GAT-Bounded HKT: The Next Generation
+# DeepCausality Unified HKT: One Trait Hierarchy for All Types
 
-`deep_causality_haft` now supports **GAT-Bounded Higher-Kinded Types** — a principled system for constrained type
-constructors that unlocks monadic composition for physics-oriented types like `CausalMultiField`, `SpinorManifold`, and
-`GaugeManifold`.
+`deep_causality_haft` provides a **Unified Higher-Kinded Type (HKT)** system that works for *all* types — from simple `Vec<T>` to physics types requiring `TensorData` bounds — using a single trait hierarchy.
 
 ---
 
-## 🏗️ The Problem: Constrained Types Meet HKTs
+## 🏗️ The Problem: Two Worlds
 
-The original HKT system (see [HAFT.md](HAFT.md)) works beautifully for unconstrained types like `Vec<T>` or `Option<T>`.
-But physics types need **bounds**:
+Previously, HKT-based functional programming had a fundamental split:
 
-```rust
-// TensorData requires: Field + Copy + Default + Send + Sync + ...
-pub struct CausalMultiField<B: LinearAlgebraBackend, T: TensorData> {
-    ...
-}
+| World | Types | Limitation |
+|-------|-------|------------|
+| **Unbounded** | `Vec<T>`, `Option<T>` | Works for any `T` |
+| **Bounded** | `CausalTensor<T: TensorData>` | Requires specific bounds on `T` |
 
-// The HKT trait has NO bounds on T — incompatible!
-pub trait HKT {
-    type Type<T>;  // T is completely unconstrained
-}
-```
-
-**The Problem**: We can't implement `HKT` for `CausalMultiFieldWitness` because the GAT `Type<T>` must accept *any* `T`,
-but `CausalMultiField` requires `T: TensorData`.
-
-This blocked HKT-based functional programming for:
-
-- Spinor fields (Dirac equation, quantum spin)
-- Gauge fields (Yang-Mills, QCD)
-- Constrained tensor operations
+These couldn't share traits. You had `Functor` for unbounded types and `BoundedFunctor` for bounded types. **Code duplication. API fragmentation. Confusion.**
 
 ---
 
-## 🧩 The Solution: `Satisfies<Constraint>`
+## 🧩 The Solution: Unified Constraints
 
-We introduce a **constraint marker pattern** that lets the *implementor* declare what bounds their type needs:
+**Key insight**: An "unbounded" type is just a "bounded" type with `Constraint = NoConstraint`.
 
 ```rust
-// A marker trait: "T satisfies constraint C"
+// The constraint marker system
 pub trait Satisfies<C: ?Sized> {}
 
-// A marker type representing TensorData bounds
-pub struct TensorDataConstraint;
+// NoConstraint: everything satisfies it
+pub struct NoConstraint;
+impl<T> Satisfies<NoConstraint> for T {}
 
-// Blanket impl: any T: TensorData satisfies this constraint
+// TensorDataConstraint: only TensorData types satisfy it
+pub struct TensorDataConstraint;
 impl<T: TensorData> Satisfies<TensorDataConstraint> for T {}
 ```
 
-Now we define a new trait that makes the constraint **explicit**:
+Now the HKT trait is **unified**:
 
 ```rust
-pub trait BoundedHKT {
-    type Constraint: ?Sized;  // The implementor declares this
+pub trait HKT {
+    type Constraint: ?Sized;  // Implementor declares the constraint
     type Type<T>
     where
-        T: Satisfies<Self::Constraint>;  // T must satisfy it
-}
-```
-
-**Now we can implement it:**
-
-```rust
-impl<B: LinearAlgebraBackend> BoundedHKT for CausalMultiFieldWitness<B> {
-    type Constraint = TensorDataConstraint;
-    type Type<T> = CausalMultiField<B, T>
-    where
-        T: Satisfies<TensorDataConstraint>;  // ✅ Works!
+        T: Satisfies<Self::Constraint>;
 }
 ```
 
 ---
 
-## 📚 The Bounded Trait Hierarchy
+## 📚 The Unified Trait Hierarchy
 
-The full functional programming stack is now available for constrained types:
+One set of traits for all types:
 
-| Trait                | Purpose                               | Key Method                                        |
-|----------------------|---------------------------------------|---------------------------------------------------|
-| `BoundedHKT`         | Declare constraint + type constructor | `type Type<T>`                                    |
-| `BoundedFunctor`     | Transform inner values                | `fmap(fa, f) -> fb`                               |
-| `BoundedApplicative` | Lift values, apply wrapped functions  | `pure(a)`, `apply(f_ab, f_a)`                     |
-| `BoundedMonad`       | Chain computations                    | `bind(m_a, f) -> m_b`                             |
-| `BoundedComonad`     | Extract focus, extend to neighbors    | `extract(fa)`, `extend(fa, f)`                    |
-| `BoundedAdjunction`  | Translate between domains             | `unit`, `counit`, `left_adjunct`, `right_adjunct` |
+```
+HKT
+ └── Functor
+       └── Applicative
+             └── Monad
 
-### The Functor Laws Still Hold
+ └── CoMonad (parallel to Monad)
+
+Adjunction (between two HKT functors)
+```
+
+| Trait | Key Methods |
+|-------|-------------|
+| `HKT` | `type Constraint`, `type Type<T>` |
+| `Functor<F: HKT>` | `fmap(fa, f) -> fb` |
+| `Applicative<F: HKT>` | `pure(a)`, `apply(f_ab, f_a)` |
+| `Monad<F: HKT>` | `bind(m_a, f)`, `join(m_m_a)` † |
+| `CoMonad<F: HKT>` | `extract(fa)`, `extend(fa, f)`, `duplicate(fa)` † |
+| `Adjunction<L, R: HKT>` | `unit`, `counit`, `left_adjunct`, `right_adjunct` |
+
+† Default implementation provided
+
+---
+
+## 🔧 Usage Examples
+
+### Unconstrained Type: Vec
 
 ```rust
-// Identity: fmap(fa, id) == fa
-let identity = BoundedFunctor::fmap(tensor.clone(), | x| x);
-assert_eq!(identity, tensor);
+impl HKT for VecWitness {
+    type Constraint = NoConstraint;  // Everything works!
+    type Type<T> = Vec<T>
+    where
+        T: Satisfies<NoConstraint>;
+}
 
-// Composition: fmap(fa, f.compose(g)) == fmap(fmap(fa, g), f)
-let direct = BoundedFunctor::fmap(tensor.clone(), | x| (x * 2.0).sqrt());
-let composed = BoundedFunctor::fmap(
-BoundedFunctor::fmap(tensor, | x| x * 2.0),
-| x| x.sqrt()
-);
-assert_eq!(direct, composed);
+impl Functor<VecWitness> for VecWitness {
+    fn fmap<A, B, F>(fa: Vec<A>, mut f: F) -> Vec<B>
+    where
+        A: Satisfies<NoConstraint>,  // Always true
+        B: Satisfies<NoConstraint>,  // Always true
+        F: FnMut(A) -> B,
+    {
+        fa.into_iter().map(f).collect()
+    }
+}
+```
+
+### Constrained Type: CausalTensor
+
+```rust
+impl HKT for CausalTensorWitness {
+    type Constraint = TensorDataConstraint;  // Only TensorData types
+    type Type<T> = CausalTensor<T>
+    where
+        T: Satisfies<TensorDataConstraint>;
+}
+
+impl Functor<CausalTensorWitness> for CausalTensorWitness {
+    fn fmap<A, B, F>(fa: CausalTensor<A>, mut f: F) -> CausalTensor<B>
+    where
+        A: Satisfies<TensorDataConstraint>,  // A: TensorData
+        B: Satisfies<TensorDataConstraint>,  // B: TensorData
+        F: FnMut(A) -> B,
+    {
+        let shape = fa.shape().to_vec();
+        CausalTensor::new(fa.into_vec().into_iter().map(f).collect(), shape).unwrap()
+    }
+}
+```
+
+### Generic Over Any HKT
+
+```rust
+fn double_all<F: HKT>(container: F::Type<f64>) -> F::Type<f64>
+where
+    F::Type<f64>: Clone,
+    f64: Satisfies<F::Constraint>,
+    VecWitness: Functor<F>,
+{
+    Functor::<F>::fmap(container, |x| x * 2.0)
+}
+
+// Works for Vec<f64>, CausalTensor<f64>, or any other HKT with f64-compatible constraint
 ```
 
 ---
 
 ## 🔢 Standard Constraints
 
-The crate provides ready-to-use constraint markers:
-
-| Constraint             | Required Traits          | Use Case                              |
-|------------------------|--------------------------|---------------------------------------|
-| `NoConstraint`         | None (blanket `impl<T>`) | Fully polymorphic types like `Vec<T>` |
-| `NumericConstraint`    | `Zero + Copy + Clone`    | Numeric containers                    |
-| `ThreadSafeConstraint` | `Send + Sync`            | Concurrent physics                    |
-| `CloneConstraint`      | `Clone`                  | Types requiring cloning               |
-| `TensorDataConstraint` | `TensorData`             | Physics field types                   |
+| Constraint | Required Traits | Defined In |
+|------------|-----------------|------------|
+| `NoConstraint` | None | `haft` |
+| `NumericConstraint` | `Zero + Copy + Clone` | `haft` |
+| `ThreadSafeConstraint` | `Send + Sync` | `haft` |
+| `CloneConstraint` | `Clone` | `haft` |
+| `TensorDataConstraint` | `TensorData` | `tensor` |
 
 ### Creating Composite Constraints
 
-Need multiple constraints? Define your own marker:
-
 ```rust
-// A constraint requiring BOTH TensorData AND thread safety
 pub struct TensorDataThreadSafe;
-
-impl<T> Satisfies<TensorDataThreadSafe> for T
-where
-    T: TensorData + Send + Sync
-{}
+impl<T: TensorData + Send + Sync> Satisfies<TensorDataThreadSafe> for T {}
 ```
 
 ---
 
-## 🌐 Integration with Physics
+## 🌐 Physics Integration
 
-### The Comonad for Field Operations
+### CoMonad for Field Operations
 
-`BoundedComonad` is the key abstraction for **local-to-global** operations on physics fields:
+The unified `CoMonad` works for both simple containers and physics fields:
 
 ```rust
-// Heat equation: local Laplacian determines temperature evolution
-let evolved_field = BoundedComonad::extend( & temperature_field, | local_view| {
-// Extract the local temperature
-let center = BoundedComonad::extract(local_view);
-
-// Compute Laplacian from neighbors (uses coboundary operator)
-let laplacian = compute_stencil(local_view);
-
-// Return new temperature: T_new = T + dt * κ * ∇²T
-center + dt * kappa * laplacian
+// Heat diffusion on a manifold
+let evolved = CoMonad::<ManifoldWitness>::extend(&temperature_field, |local| {
+    let center = CoMonad::<ManifoldWitness>::extract(local);
+    let laplacian = compute_laplacian(local);
+    center + dt * kappa * laplacian
 });
 ```
 
-### The Adjunction for Integration/Differentiation
-
-`BoundedAdjunction` encodes the duality between chains and cochains:
+### Adjunction for Calculus
 
 ```rust
-// Integration: Chain (path) → Cochain (1-form) → Scalar
-let work = BoundedAdjunction::right_adjunct( & context, path, | point| {
-force_field.evaluate_at(point)
-});
-
-// Differentiation: Scalar field → Vector field (gradient)
-let gradient = BoundedAdjunction::left_adjunct( & context, scalar_field, | form| {
-form.boundary_operator()
-});
+// Integration (right adjunct) and differentiation (left adjunct)
+let work = Adjunction::<ChainWitness, CochainWitness, _>::right_adjunct(
+    &ctx, path, |point| force_field.at(point)
+);
 ```
 
 ---
 
-## Constraint Placement: The Orphan Rules
+## ⚠️ Orphan Rules
 
-Rust's orphan rules determine **where** you can define constraint markers.
+The crate defining the marker must define the blanket impl:
 
-**Rule**: The crate defining the marker struct must also define the blanket `impl`.
-
-| Constraint             | Must Be Defined In                           |
-|------------------------|----------------------------------------------|
-| `NumericConstraint`    | `deep_causality_haft` (owns `Satisfies`)     |
-| `TensorDataConstraint` | `deep_causality_tensor` (owns `TensorData`)  |
-| `NumericThreadSafe`    | `deep_causality_haft` (uses only std traits) |
-| `TensorDataThreadSafe` | `deep_causality_tensor` (uses `TensorData`)  |
-
-**Decision Tree:**
-
-```
-Does your constraint use only std traits (Copy, Clone, Send, Sync)?
-├── YES → Define in deep_causality_haft
-└── NO → Define in the crate that owns the required trait
-```
+| Constraint | Must Be In |
+|------------|------------|
+| `NumericConstraint` | `deep_causality_haft` |
+| `TensorDataConstraint` | `deep_causality_tensor` |
 
 ---
 
-## 🚀 Migration from Legacy Bounded Traits
+## 🎯 What Changed
 
-The old `BoundedComonad` and `BoundedAdjunction` had **hardcoded bounds**:
-
-```rust
-// OLD: Bounds embedded in the trait (not universal)
-fn extend<A, B, Func>(...) ->...
-where
-A: Zero + Copy + Clone,  // Hardcoded!
-B: Zero + Copy + Clone,  // Hardcoded!
-```
-
-The new system replaces hardcoded bounds with the `Satisfies<Constraint>` pattern:
-
-```rust
-// NEW: Bounds declared by implementor via BoundedHKT
-fn extend<A, B, Func>(...) ->...
-where
-A: Satisfies<F::Constraint> + Clone,  // From BoundedHKT
-B: Satisfies<F::Constraint>,          // From BoundedHKT
-```
-
-**Migration is complete replacement** — no backward compatibility, no feature flags.
-
----
-
-## 🎯 Summary
-
-| Before                                     | After                                             |
-|--------------------------------------------|---------------------------------------------------|
-| `HKT` — unbounded GAT                      | `BoundedHKT` — constraint declared by implementor |
-| `BoundedComonad` — hardcoded `Zero + Copy` | `BoundedComonad` — uses `Satisfies<Constraint>`   |
-| `CausalMultiField` — cannot use HKT        | `CausalMultiField` — full HKT support             |
-
-**The Result**: Physics types (`SpinorManifold`, `GaugeManifold`, `CausalMultiField`) now participate in the same
-monadic composition framework as simple containers like `Vec` and `Option`.
+| Before | After |
+|--------|-------|
+| `HKT` (unbounded) + `BoundedHKT` (proposed) | Single `HKT` with `type Constraint` |
+| `Functor` + `BoundedFunctor` | Single `Functor` |
+| `CoMonad` + `BoundedComonad` | Single `CoMonad` |
+| `Adjunction` + `BoundedAdjunction` | Single `Adjunction` |
+| Hardcoded bounds (`Zero + Copy`) | Declarative constraints |
+| `CausalMultiField` couldn't use HKT | Full HKT support ✅ |
 
 ---
 
 ## 📖 Further Reading
 
-- **[HAFT.md](HAFT.md)** — The foundational HKT witness pattern
-- **[TOPOLOGY.md](TOPOLOGY.md)** — Comonad operations on manifolds
+- **[HAFT.md](HAFT.md)** — Original HKT concepts (witness pattern)
+- **[TOPOLOGY.md](TOPOLOGY.md)** — CoMonad on manifolds
 - **[PHYSICS.md](PHYSICS.md)** — Causal effect propagation
-- **[UNIFORM_MATH.md](UNIFORM_MATH.md)** — The unified mathematical framework
 - **[specs/current/hkt_gat.md](../specs/current/hkt_gat.md)** — Full technical specification
