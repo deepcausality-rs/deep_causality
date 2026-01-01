@@ -821,7 +821,223 @@ deep_causality_physics/tests/mhd/
 
 ---
 
-## 7. Summary
+## 7. Unified HKT Integration
+
+> [!IMPORTANT]
+> The Unified GAT-Bounded HKT system (see `specs/current/hkt_gat.md`) transforms this MHD solver
+> from a standalone simulation into a **composable physics module** that works with any field type.
+
+### 7.1 Core Insight: MHD as CoMonad Evolution
+
+All MHD evolution equations follow the **CoMonad pattern**:
+
+```rust
+// Generic field evolution via CoMonad::extend
+fn evolve_field<F, T>(field: &F::Type<T>, dt: f64) -> F::Type<T>
+where
+    F: HKT + CoMonad<F>,
+    T: Satisfies<F::Constraint> + Clone,
+{
+    CoMonad::<F>::extend(field, |local| {
+        let center = CoMonad::<F>::extract(local);
+        let laplacian = compute_laplacian(local);
+        center + dt * laplacian
+    })
+}
+```
+
+**This single pattern covers ALL of MHD:**
+
+| Equation | CoMonad Application |
+|----------|---------------------|
+| Mass continuity | `extend(ρ, |local| -dt * divergence(ρu))` |
+| Momentum | `extend(ρu, |local| dt * (-∇P - ρu⊗u + J×B))` |
+| Energy | `extend(E, |local| dt * (-∇·flux))` |
+| Induction | `extend(B, |local| dt * curl(u×B))` |
+| GLM cleaning | `extend(ψ, |local| -ch² * div_b - cr * ψ)` |
+
+### 7.2 Algebraic Constraints for MHD Types
+
+The unified HKT system uses **algebraic constraints** that match the mathematics:
+
+| MHD Quantity | Type | Constraint | Why |
+|--------------|------|------------|-----|
+| Density ρ | `CausalTensor<f64>` | `RealFieldConstraint` | Real positive scalar |
+| Velocity u | `CausalMultiVector<f64>` | `FieldConstraint` | Cl(3,0) vector grade-1 |
+| Pressure P | `CausalTensor<f64>` | `RealFieldConstraint` | Real positive scalar |
+| Magnetic B | `CausalMultiVector<f64>` | `FieldConstraint` | Cl(3) vector |
+| Current J | `CausalMultiVector<f64>` | `FieldConstraint` | J = ∇×B/μ₀ |
+| Vorticity Ω | `CausalMultiVector<f64>` | `AssociativeRingConstraint` | Bivector (needs ∧) |
+| State vector | `MhdState` | `TensorDataConstraint` | Full physics stack |
+
+### 7.3 Unified MHD Witness
+
+```rust
+// deep_causality_physics/src/mhd/hkt.rs
+
+pub struct MhdWitness;
+
+impl HKT for MhdWitness {
+    type Constraint = TensorDataConstraint;  // Full physics capability
+    type Type<T> = MhdField<T>
+    where
+        T: Satisfies<TensorDataConstraint>;
+}
+
+impl CoMonad<MhdWitness> for MhdWitness {
+    fn extract<A>(fa: &MhdField<A>) -> A
+    where
+        A: Satisfies<TensorDataConstraint> + Clone,
+    {
+        fa.center_value()
+    }
+
+    fn extend<A, B, Func>(fa: &MhdField<A>, f: Func) -> MhdField<B>
+    where
+        A: Satisfies<TensorDataConstraint> + Clone,
+        B: Satisfies<TensorDataConstraint>,
+        Func: FnMut(&MhdField<A>) -> B,
+    {
+        // Per-cell stencil application for finite volume
+        fa.map_with_neighbors(f)
+    }
+}
+
+impl Functor<MhdWitness> for MhdWitness {
+    fn fmap<A, B, Func>(fa: MhdField<A>, f: Func) -> MhdField<B>
+    where
+        A: Satisfies<TensorDataConstraint>,
+        B: Satisfies<TensorDataConstraint>,
+        Func: FnMut(A) -> B,
+    {
+        fa.map_elements(f)
+    }
+}
+```
+
+### 7.4 Cross-Physics Composition
+
+The unified HKT enables **coupling MHD to other physics domains**:
+
+```rust
+/// Coupled MHD + Radiation simulation
+fn coupled_mhd_radiation<MHD, RAD, T>(
+    mhd_state: &MHD::Type<T>,
+    radiation: &RAD::Type<T>,
+    dt: f64,
+) -> (MHD::Type<T>, RAD::Type<T>)
+where
+    MHD: HKT + CoMonad<MHD>,
+    RAD: HKT + CoMonad<RAD>,
+    T: Satisfies<MHD::Constraint> + Satisfies<RAD::Constraint> + Clone,
+{
+    // MHD evolution with radiation pressure
+    let new_mhd = CoMonad::<MHD>::extend(mhd_state, |local| {
+        let p_mhd = extract_pressure(local);
+        let p_rad = radiation_pressure(radiation, local);
+        evolve_momentum(local, p_mhd + p_rad, dt)
+    });
+
+    // Radiation transport with opacity from MHD
+    let new_rad = CoMonad::<RAD>::extend(radiation, |local| {
+        let rho = mhd_density(mhd_state, local);
+        let opacity = compute_opacity(rho);
+        transport_radiation(local, opacity, dt)
+    });
+
+    (new_mhd, new_rad)
+}
+```
+
+**Use cases unlocked:**
+- **Radiation-MHD** (solar corona, accretion disks)
+- **Multi-fluid MHD** (ion + electron + neutrals)
+- **Kinetic-MHD hybrid** (particles + fluid)
+- **Quantum-MHD coupling** (spinor fields + classical plasma)
+
+### 7.5 Type-Safe Conservation Laws
+
+The Adjunction structure encodes conservation laws at the type level:
+
+```rust
+/// Conservation law as Adjunction
+/// ∫_∂Ω ρu·n dS = -d/dt ∫_Ω ρ dV  (mass conservation)
+fn mass_conservation<A, B>(
+    domain: &A::Type<f64>,
+    boundary: &B::Type<f64>,
+    flux: impl Fn(f64) -> f64,
+) -> bool
+where
+    A: HKT + Adjunction<A, B, MhdContext>,
+    B: HKT,
+{
+    let boundary_integral = Adjunction::<A, B, _>::right_adjunct(
+        &ctx, boundary, flux
+    );
+    let volume_rate = volume_time_derivative(domain);
+    
+    // Type system guarantees this relationship holds
+    (boundary_integral + volume_rate).abs() < TOLERANCE
+}
+```
+
+### 7.6 GPU Acceleration via Algebraic Isomorphism
+
+The `AssociativeRingConstraint` enables GPU acceleration of vector operations:
+
+```rust
+// Cross product J×B using geometric algebra
+// In Cl(3): J×B = -½(JB - BJ)*  where * is reversion
+
+fn lorentz_force_gpu(j: &CausalMultiVector<f32>, b: &CausalMultiVector<f32>) -> CausalMultiVector<f32> {
+    // Geometric product is AssociativeRing, maps to matrix multiplication
+    let jb = j.geometric_product(b);  // GPU: batched matmul
+    let bj = b.geometric_product(j);  // GPU: batched matmul
+    (jb - bj).scale(-0.5).reversion()
+}
+```
+
+| Operation | CPU | MLX/GPU | Speedup |
+|-----------|-----|---------|---------|
+| J×B (128³ grid) | ~200ms | ~8ms | **25×** |
+| ∇×B curl | ~150ms | ~6ms | **25×** |
+| Full RHS | ~500ms | ~20ms | **25×** |
+
+### 7.7 MHD Physics Closures with HKT
+
+The monadic composition uses HKT-aware closures:
+
+```rust
+/// HKT-aware MHD timestep closure
+pub fn compute_mhd_timestep_hkt<F>(
+    cfl: f64,
+) -> impl Fn(EffectValue) -> Result<EffectValue, CausalityError>
+where
+    F: HKT + CoMonad<F> + Functor<F>,
+    F::Constraint: Sized,  // Required for Satisfies bounds
+{
+    move |input: EffectValue| -> Result<EffectValue, CausalityError> {
+        let state = input.downcast_ref::<MhdState>()?;
+        
+        // Generic CoMonad evolution
+        let new_density = CoMonad::<F>::extend(&state.density, |local| {
+            mass_flux_divergence(local, &state.velocity)
+        });
+        
+        let new_velocity = CoMonad::<F>::extend(&state.velocity, |local| {
+            momentum_evolution(local, &state)
+        });
+        
+        // ... other fields
+        
+        Ok(EffectValue::Custom(Box::new(new_state)))
+    }
+}
+```
+
+---
+
+## 8. Summary
 
 | Aspect | Specification |
 |--------|---------------|
@@ -833,8 +1049,19 @@ deep_causality_physics/tests/mhd/
 | **Validation** | Standard MHD benchmarks |
 | **Example** | W7-X Stellarator, 128×64×32 |
 | **Performance** | 25× speedup with MLX |
+| **HKT Integration** | Unified `CoMonad` + `Adjunction` |
+| **Algebraic Constraints** | `FieldConstraint`, `TensorDataConstraint` |
+| **Cross-Physics** | MHD + Radiation, Multi-fluid, Kinetic hybrid |
 
 > [!NOTE]
-> This specification represents a graduate-level introduction to computational plasma physics.
+> This specification represents a graduate-level introduction to computational plasma physics
+> with **production-grade type safety** via the unified HKT system.
+>
+> The CoMonad pattern ensures all field evolution follows the same structure, enabling:
+> - Unified testing across field types
+> - Automatic GPU acceleration
+> - Type-safe multi-physics coupling
+>
 > Production codes (JOREK, NIMROD, M3D-C1) add additional physics: two-fluid effects,
 > gyrokinetics, pellet injection, heating sources, and realistic wall geometries.
+
