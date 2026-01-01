@@ -18,7 +18,8 @@ rust_test_suite(
 rust_test_suite(
     name = "extensions",
     srcs = glob([
-        "extensions/hkt/*_tests.rs",
+        "extensions/hkt_multifield/*_tests.rs",
+        "extensions/hkt_multivector/*_tests.rs",
         "extensions/scalar_multivector/*_tests.rs",
     ]),
     tags = [
@@ -53,9 +54,7 @@ rust_test_suite(
 rust_test_suite(
     name = "types/multifield",
     srcs = glob([
-        "types/multifield/arithmetic/*_tests.rs",
-        "types/multifield/gamma/*_tests.rs",
-        "types/multifield/ops/*_tests.rs",
+        "types/multifield/*/*_tests.rs",
     ]),
     tags = [
         "unit-test",
@@ -70,9 +69,7 @@ rust_test_suite(
 rust_test_suite(
     name = "types/multivector",
     srcs = glob([
-        "types/multivector/algebra/*_tests.rs",
-        "types/multivector/arithmetic/*_tests.rs",
-        "types/multivector/ops/*_tests.rs",
+        "types/multivector/*/*_tests.rs",
         "types/multivector/*_tests.rs",
     ]),
     tags = [

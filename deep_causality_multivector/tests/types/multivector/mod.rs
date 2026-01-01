@@ -6,5 +6,7 @@
 pub mod mod_tests;
 
 mod algebra;
+mod algebra_tests;
+mod api;
 mod arithmetic;
 mod ops;
