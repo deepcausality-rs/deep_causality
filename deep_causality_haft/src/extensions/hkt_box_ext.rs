@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Applicative, CoMonad, Foldable, Functor, HKT, Monad};
+use crate::{Applicative, CoMonad, Foldable, Functor, Monad, NoConstraint, Satisfies, HKT};
 use alloc::boxed::Box;
 
 /// `BoxWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
@@ -12,9 +12,15 @@ use alloc::boxed::Box;
 ///
 /// By implementing `HKT` for `BoxWitness`, we can write generic functions that operate
 /// on any type that has the "shape" of `Box`, without knowing the inner type `T`.
+///
+/// # Constraint
+///
+/// `BoxWitness` uses `NoConstraint`, meaning it works with any type `T`.
 pub struct BoxWitness;
 
 impl HKT for BoxWitness {
+    type Constraint = NoConstraint;
+
     /// Specifies that `BoxWitness` represents the `Box<T>` type constructor.
     type Type<T> = Box<T>;
 }
@@ -34,9 +40,11 @@ impl Functor<BoxWitness> for BoxWitness {
     /// # Returns
     ///
     /// A new `Box` with the function applied to its content.
-    fn fmap<A, B, Func>(m_a: <BoxWitness as HKT>::Type<A>, f: Func) -> <BoxWitness as HKT>::Type<B>
+    fn fmap<A, B, Func>(m_a: <BoxWitness as HKT>::Type<A>, mut f: Func) -> <BoxWitness as HKT>::Type<B>
     where
-        Func: FnOnce(A) -> B,
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
+        Func: FnMut(A) -> B,
     {
         Box::new(f(*m_a))
     }
@@ -53,7 +61,10 @@ impl Applicative<BoxWitness> for BoxWitness {
     /// # Returns
     ///
     /// `Box::new(value)`.
-    fn pure<T>(value: T) -> <BoxWitness as HKT>::Type<T> {
+    fn pure<T>(value: T) -> <BoxWitness as HKT>::Type<T>
+    where
+        T: Satisfies<NoConstraint>,
+    {
         Box::new(value)
     }
 
@@ -74,8 +85,9 @@ impl Applicative<BoxWitness> for BoxWitness {
         f_a: <BoxWitness as HKT>::Type<A>,
     ) -> <BoxWitness as HKT>::Type<B>
     where
+        A: Satisfies<NoConstraint> + Clone,
+        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
-        A: Clone,
     {
         Box::new((*f_ab)(*f_a))
     }
@@ -124,6 +136,8 @@ impl Monad<BoxWitness> for BoxWitness {
         mut f: Func,
     ) -> <BoxWitness as HKT>::Type<B>
     where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> <BoxWitness as HKT>::Type<B>,
     {
         f(*m_a)
@@ -134,13 +148,15 @@ impl Monad<BoxWitness> for BoxWitness {
 impl CoMonad<BoxWitness> for BoxWitness {
     fn extract<A>(fa: &<Self as HKT>::Type<A>) -> A
     where
-        A: Clone,
+        A: Satisfies<NoConstraint> + Clone,
     {
         *fa.clone()
     }
 
     fn extend<A, B, Func>(fa: &<Self as HKT>::Type<A>, mut f: Func) -> <Self as HKT>::Type<B>
     where
+        A: Satisfies<NoConstraint> + Clone,
+        B: Satisfies<NoConstraint>,
         Func: FnMut(&<Self as HKT>::Type<A>) -> B,
     {
         Box::new(f(fa))

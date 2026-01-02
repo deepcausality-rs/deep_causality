@@ -2,8 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Functor, HKT};
-use deep_causality_num::Zero;
+use crate::{Functor, Satisfies, HKT};
 
 /// The `CoMonad` trait represents a comonadic context, which is the dual of a `Monad`.
 ///
@@ -14,10 +13,12 @@ use deep_causality_num::Zero;
 /// Think of a `CoMonad` as a context that can be "inspected" or "observed" to yield a value,
 /// and then "extended" to produce new contexts by applying a function that observes the original context.
 ///
-/// It provides two primary operations:
-/// - `extract`: To get the current value at the "focus" of the context.
-/// - `extend`: To create a new comonadic context by applying a function that transforms
-///   the original context itself into a value, which then becomes the content of the new context.
+/// # Unified Design
+///
+/// This trait unifies the previous `CoMonad` and `BoundedComonad` traits into a single
+/// hierarchy using the constraint system. Types that need algebraic bounds (like
+/// `CausalTensor` needing `TensorData`) specify their constraint via the HKT's
+/// `Constraint` associated type.
 ///
 /// # Intuition & Analogy
 ///
@@ -39,7 +40,7 @@ use deep_causality_num::Zero;
 /// # Type Parameters
 ///
 /// *   `F`: A Higher-Kinded Type (HKT) witness that represents the type constructor
-///     (e.g., `BoxWitness`). This `F` must also be a `Functor`.
+///     (e.g., `BoxWitness`, `CausalTensorWitness`). This `F` must also be a `Functor`.
 pub trait CoMonad<F: HKT>: Functor<F> {
     /// Extracts the value at the current focus of the comonadic context.
     ///
@@ -62,10 +63,11 @@ pub trait CoMonad<F: HKT>: Functor<F> {
     ///
     /// *   `A: Clone`: The extracted value must be clonable, as `extract` takes a reference
     ///     and returns an owned value, implying a copy.
+    /// *   `A: Satisfies<F::Constraint>`: The type must satisfy the HKT's constraint.
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust
     /// use deep_causality_haft::{BoxWitness, CoMonad};
     ///
     /// let box_val = Box::new(42);
@@ -74,7 +76,7 @@ pub trait CoMonad<F: HKT>: Functor<F> {
     /// ```
     fn extract<A>(fa: &F::Type<A>) -> A
     where
-        A: Clone;
+        A: Satisfies<F::Constraint> + Clone;
 
     /// Extends the comonadic context by applying a function to its observed state.
     ///
@@ -103,7 +105,7 @@ pub trait CoMonad<F: HKT>: Functor<F> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust
     /// use deep_causality_haft::{BoxWitness, CoMonad, HKT};
     ///
     /// let box_val = Box::new(5);
@@ -120,20 +122,31 @@ pub trait CoMonad<F: HKT>: Functor<F> {
     /// ```
     fn extend<A, B, Func>(fa: &F::Type<A>, f: Func) -> F::Type<B>
     where
+        A: Satisfies<F::Constraint> + Clone,
+        B: Satisfies<F::Constraint>,
         Func: FnMut(&F::Type<A>) -> B;
-}
 
-/// A Comonad that requires its contents to satisfy algebraic bounds.
-/// Essential for structures like MultiVectors that need a 'Zero' to represent
-/// a  Physical Field Operator.
-pub trait BoundedComonad<F: HKT>: Functor<F> {
-    fn extract<A>(fa: &F::Type<A>) -> A
+    /// Duplicates the comonadic context.
+    ///
+    /// This creates a nested structure where each position contains the context
+    /// focused at that position.
+    ///
+    /// # Arguments
+    ///
+    /// *   `fa`: A reference to the comonadic context to duplicate.
+    ///
+    /// # Returns
+    ///
+    /// A nested comonadic context (`F::Type<F::Type<A>>`).
+    ///
+    /// # Default Implementation
+    ///
+    /// Uses `extend` with clone: `extend(fa, |x| x.clone())`
+    fn duplicate<A>(fa: &F::Type<A>) -> F::Type<F::Type<A>>
     where
-        A: Clone; // Extract usually requires Clone
-
-    fn extend<A, B, Func>(fa: &F::Type<A>, f: Func) -> F::Type<B>
-    where
-        Func: FnMut(&F::Type<A>) -> B,
-        A: Zero + Copy + Clone,
-        B: Zero + Copy + Clone;
+        A: Satisfies<F::Constraint> + Clone,
+        F::Type<A>: Satisfies<F::Constraint> + Clone,
+    {
+        Self::extend(fa, |x| x.clone())
+    }
 }

@@ -2,13 +2,18 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Functor, HKT};
+use crate::{Functor, Satisfies, HKT};
 
 /// The `Applicative` trait extends `Functor` by providing methods to apply a function
 /// wrapped in a context to a value wrapped in a context, and to lift a pure value
 /// into the minimal context.
 ///
 /// This trait is generic over `F`, which is a Higher-Kinded Type (HKT) witness.
+///
+/// # Constraint Support
+///
+/// Both `pure` and `apply` now require types to satisfy the HKT's constraint.
+/// This ensures type-safe lifting and application for constrained types.
 ///
 /// # Laws (Informal)
 ///
@@ -33,11 +38,9 @@ pub trait Applicative<F: HKT>: Functor<F> {
     /// # Returns
     ///
     /// An instance of `F::Type<T>` containing the `value`.
-    ///
-    /// # Examples
-    ///
-    ///
-    fn pure<T>(value: T) -> F::Type<T>;
+    fn pure<T>(value: T) -> F::Type<T>
+    where
+        T: Satisfies<F::Constraint>;
 
     /// Applies a function wrapped in a context (`f_ab`) to a value wrapped in a context (`f_a`).
     ///
@@ -60,12 +63,9 @@ pub trait Applicative<F: HKT>: Functor<F> {
     /// *   `A`: The input type of the function.
     /// *   `B`: The output type of the function.
     /// *   `Func`: The type of the function, which must be `FnMut(A) -> B`.
-    ///
-    /// # Examples
-    ///
-    ///
     fn apply<A, B, Func>(f_ab: F::Type<Func>, f_a: F::Type<A>) -> F::Type<B>
     where
-        Func: FnMut(A) -> B,
-        A: Clone;
+        A: Satisfies<F::Constraint> + Clone,
+        B: Satisfies<F::Constraint>,
+        Func: FnMut(A) -> B;
 }

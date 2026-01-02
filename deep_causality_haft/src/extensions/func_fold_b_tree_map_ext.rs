@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Foldable, Functor, HKT, HKT2, Placeholder};
+use crate::{Foldable, Functor, NoConstraint, Placeholder, Satisfies, HKT, HKT2};
 use alloc::collections::BTreeMap;
 
 /// `BTreeMapWitness<K>` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
@@ -11,6 +11,10 @@ use alloc::collections::BTreeMap;
 ///
 /// It allows `BTreeMap` to be used with generic functional programming traits like `Functor`
 /// and `Foldable` by fixing one of its type parameters.
+///
+/// # Constraint
+///
+/// `BTreeMapWitness` uses `NoConstraint`, meaning it works with any value type `V`.
 pub struct BTreeMapWitness<K>(Placeholder, K);
 
 impl<K> HKT2<K> for BTreeMapWitness<K> {
@@ -20,6 +24,8 @@ impl<K> HKT2<K> for BTreeMapWitness<K> {
 }
 
 impl<K> HKT for BTreeMapWitness<K> {
+    type Constraint = NoConstraint;
+
     /// Specifies that `BTreeMapWitness<K>` also acts as a single-parameter HKT,
     /// where the `K` parameter is considered part of the "witness" itself.
     type Type<V> = BTreeMap<K, V>;
@@ -48,6 +54,8 @@ where
         mut f: Func,
     ) -> <BTreeMapWitness<K> as HKT2<K>>::Type<B>
     where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         m_a.into_iter().map(|(k, v)| (k, f(v))).collect()

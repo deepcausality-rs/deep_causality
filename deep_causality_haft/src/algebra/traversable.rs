@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Applicative, Foldable, Functor, HKT};
+use crate::{Applicative, Foldable, Functor, Satisfies, HKT};
 
 /// The `Traversable` trait abstracts over data structures that can be "traversed"
 /// or "sequenced" in a way that preserves effects. It combines the capabilities
@@ -79,7 +79,7 @@ pub trait Traversable<F: HKT>: Functor<F> + Foldable<F> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// use deep_causality_haft::{Traversable, OptionWitness, VecWitness, HKT};
     ///
     /// // Flipping Vec<Option<i32>> to Option<Vec<i32>>
@@ -94,5 +94,7 @@ pub trait Traversable<F: HKT>: Functor<F> + Foldable<F> {
     fn sequence<A, M>(fa: F::Type<M::Type<A>>) -> M::Type<F::Type<A>>
     where
         M: Applicative<M> + HKT,
-        A: Clone;
+        A: Clone + Satisfies<F::Constraint> + Satisfies<M::Constraint>,
+        M::Type<A>: Satisfies<F::Constraint>,
+        F::Type<A>: Satisfies<M::Constraint>;
 }

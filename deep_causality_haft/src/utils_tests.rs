@@ -17,7 +17,7 @@ use alloc::vec::Vec;
 
 use crate::{
     Applicative, Effect3, Effect4, Effect5, Functor, Monad, MonadEffect3, MonadEffect4,
-    MonadEffect5,
+    MonadEffect5, NoConstraint,
 };
 use crate::{HKT, HKT3, HKT4, HKT5, Placeholder};
 
@@ -41,6 +41,7 @@ pub struct MyCustomEffectType<T, E, W> {
 pub struct MyEffectHktWitness<E, W>(Placeholder, E, W);
 
 impl<E, W> HKT for MyEffectHktWitness<E, W> {
+    type Constraint = NoConstraint;
     type Type<T> = MyCustomEffectType<T, E, W>;
 }
 
@@ -241,6 +242,7 @@ pub struct MyCustomEffectType4<T, F1, F2, F3> {
 pub struct MyEffectHktWitness4<F1, F2, F3>(Placeholder, F1, F2, F3);
 
 impl<F1, F2, F3> HKT for MyEffectHktWitness4<F1, F2, F3> {
+    type Constraint = NoConstraint;
     type Type<T> = MyCustomEffectType4<T, F1, F2, F3>;
 }
 
@@ -468,6 +470,7 @@ pub struct MyCustomEffectType5<T, F1, F2, F3, F4> {
 pub struct MyEffectHktWitness5<F1, F2, F3, F4>(Placeholder, F1, F2, F3, F4);
 
 impl<F1, F2, F3, F4> HKT for MyEffectHktWitness5<F1, F2, F3, F4> {
+    type Constraint = NoConstraint;
     type Type<T> = MyCustomEffectType5<T, F1, F2, F3, F4>;
 }
 

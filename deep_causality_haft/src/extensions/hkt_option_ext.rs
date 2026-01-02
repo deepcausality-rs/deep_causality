@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Applicative, Foldable, Functor, HKT, Monad, Traversable};
+use crate::{Applicative, Foldable, Functor, Monad, NoConstraint, Satisfies, Traversable, HKT};
 
 /// `OptionWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
 /// for the `Option<T>` type constructor. It allows `Option` to be used with generic
@@ -11,9 +11,15 @@ use crate::{Applicative, Foldable, Functor, HKT, Monad, Traversable};
 ///
 /// By implementing `HKT` for `OptionWitness`, we can write generic functions that operate
 /// on any type that has the "shape" of `Option`, without knowing the inner type `T`.
+///
+/// # Constraint
+///
+/// `OptionWitness` uses `NoConstraint`, meaning it works with any type `T`.
 pub struct OptionWitness;
 
 impl HKT for OptionWitness {
+    type Constraint = NoConstraint;
+
     /// Specifies that `OptionWitness` represents the `Option<T>` type constructor.
     type Type<T> = Option<T>;
 }
@@ -38,7 +44,9 @@ impl Functor<OptionWitness> for OptionWitness {
         f: Func,
     ) -> <OptionWitness as HKT>::Type<B>
     where
-        Func: FnOnce(A) -> B,
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
+        Func: FnMut(A) -> B,
     {
         m_a.map(f)
     }
@@ -55,7 +63,10 @@ impl Applicative<OptionWitness> for OptionWitness {
     /// # Returns
     ///
     /// `Some(value)`.
-    fn pure<T>(value: T) -> <OptionWitness as HKT>::Type<T> {
+    fn pure<T>(value: T) -> <OptionWitness as HKT>::Type<T>
+    where
+        T: Satisfies<NoConstraint>,
+    {
         Some(value)
     }
 
@@ -77,6 +88,8 @@ impl Applicative<OptionWitness> for OptionWitness {
         f_a: <OptionWitness as HKT>::Type<A>,
     ) -> <OptionWitness as HKT>::Type<B>
     where
+        A: Satisfies<NoConstraint> + Clone,
+        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         f_ab.and_then(|f| f_a.map(f))
@@ -132,6 +145,8 @@ impl Monad<OptionWitness> for OptionWitness {
         mut f: Func,
     ) -> <OptionWitness as HKT>::Type<B>
     where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> <OptionWitness as HKT>::Type<B>,
     {
         match m_a {
@@ -148,7 +163,9 @@ impl Traversable<OptionWitness> for OptionWitness {
     ) -> <M as HKT>::Type<<OptionWitness as HKT>::Type<A>>
     where
         M: Applicative<M> + HKT,
-        A: Clone,
+        A: Clone + Satisfies<NoConstraint> + Satisfies<M::Constraint>,
+        M::Type<A>: Satisfies<NoConstraint>,
+        Option<A>: Satisfies<M::Constraint>,
     {
         match fa {
             Some(m_a) => M::fmap(m_a, |a_val: A| Some(a_val)),
@@ -156,3 +173,4 @@ impl Traversable<OptionWitness> for OptionWitness {
         }
     }
 }
+

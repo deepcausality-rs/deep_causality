@@ -54,16 +54,18 @@ pub mod utils_tests;
 // ============================================================================
 
 // Core HKT Traits
+pub use crate::core::constraint::{NoConstraint, Satisfies};
+pub use crate::core::constraints::*;
 pub use crate::core::hkt::{HKT, HKT2, HKT3, HKT4, HKT5, Placeholder};
 pub use crate::core::hkt_unbound::{
     HKT2Unbound, HKT3Unbound, HKT4Unbound, HKT5Unbound, HKT6Unbound,
 };
 
 // Algebraic Traits
-pub use crate::algebra::adjunction::{Adjunction, BoundedAdjunction};
+pub use crate::algebra::adjunction::Adjunction;
 pub use crate::algebra::applicative::Applicative;
 pub use crate::algebra::bifunctor::Bifunctor;
-pub use crate::algebra::comonad::{BoundedComonad, CoMonad};
+pub use crate::algebra::comonad::CoMonad;
 pub use crate::algebra::cybernetic_loop::CyberneticLoop;
 pub use crate::algebra::foldable::Foldable;
 pub use crate::algebra::functor::Functor;

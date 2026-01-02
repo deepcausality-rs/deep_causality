@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Applicative, Foldable, Functor, HKT, Monad, Traversable};
+use crate::{Applicative, Foldable, Functor, Monad, NoConstraint, Satisfies, HKT};
 use alloc::vec;
 use alloc::vec::Vec;
 
@@ -13,7 +13,18 @@ use alloc::vec::Vec;
 ///
 /// By implementing `HKT` for `VecWitness`, we can write generic functions that operate
 /// on any type that has the "shape" of `Vec`, without knowing the inner type `T`.
+///
+/// # Constraint
+///
+/// `VecWitness` uses `NoConstraint`, meaning it works with any type `T`.
 pub struct VecWitness;
+
+impl HKT for VecWitness {
+    type Constraint = NoConstraint;
+
+    /// Specifies that `VecWitness` represents the `Vec<T>` type constructor.
+    type Type<T> = Vec<T>;
+}
 
 // Implementation of Applicative for VecWitness
 impl Applicative<VecWitness> for VecWitness {
@@ -26,7 +37,10 @@ impl Applicative<VecWitness> for VecWitness {
     /// # Returns
     ///
     /// A new `Vec` containing `value`.
-    fn pure<T>(value: T) -> <VecWitness as HKT>::Type<T> {
+    fn pure<T>(value: T) -> <VecWitness as HKT>::Type<T>
+    where
+        T: Satisfies<NoConstraint>,
+    {
         vec![value]
     }
 
@@ -48,8 +62,9 @@ impl Applicative<VecWitness> for VecWitness {
         f_a: <VecWitness as HKT>::Type<A>,
     ) -> <VecWitness as HKT>::Type<B>
     where
+        A: Satisfies<NoConstraint> + Clone,
+        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
-        A: Clone,
     {
         f_ab.into_iter()
             .flat_map(|mut f_val| {
@@ -75,8 +90,13 @@ impl Functor<VecWitness> for VecWitness {
     /// # Returns
     ///
     /// A new `Vec` with the function applied to each of its elements.
-    fn fmap<A, B, Func>(m_a: <VecWitness as HKT>::Type<A>, f: Func) -> <VecWitness as HKT>::Type<B>
+    fn fmap<A, B, Func>(
+        m_a: <VecWitness as HKT>::Type<A>,
+        f: Func,
+    ) -> <VecWitness as HKT>::Type<B>
     where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         m_a.into_iter().map(f).collect()
@@ -108,11 +128,6 @@ impl Foldable<VecWitness> for VecWitness {
     }
 }
 
-impl HKT for VecWitness {
-    /// Specifies that `VecWitness` represents the `Vec<T>` type constructor.
-    type Type<T> = Vec<T>;
-}
-
 // Implementation of Monad for VecWitness
 impl Monad<VecWitness> for VecWitness {
     /// Implements the `bind` (or `flat_map`) operation for `Vec<T>`.
@@ -129,38 +144,23 @@ impl Monad<VecWitness> for VecWitness {
     /// # Returns
     ///
     /// A new `Vec` representing the chained and flattened computation.
-    fn bind<A, B, Func>(m_a: <VecWitness as HKT>::Type<A>, f: Func) -> <VecWitness as HKT>::Type<B>
+    fn bind<A, B, Func>(
+        m_a: <VecWitness as HKT>::Type<A>,
+        f: Func,
+    ) -> <VecWitness as HKT>::Type<B>
     where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> <VecWitness as HKT>::Type<B>,
     {
         m_a.into_iter().flat_map(f).collect()
     }
 }
 
-// Implementation of Traversable for VecWitness
-impl Traversable<VecWitness> for VecWitness {
-    fn sequence<A, M>(
-        fa: <VecWitness as HKT>::Type<M::Type<A>>,
-    ) -> <M as HKT>::Type<<VecWitness as HKT>::Type<A>>
-    where
-        M: Applicative<M> + HKT,
-        A: Clone,
-    {
-        fa.into_iter()
-            .fold(M::pure(Vec::new()), |m_acc_vec, m_item| {
-                M::apply(
-                    M::apply(
-                        M::pure(|acc_vec: Vec<A>| {
-                            move |current_item: A| {
-                                let mut new_vec = acc_vec.clone();
-                                new_vec.push(current_item);
-                                new_vec
-                            }
-                        }),
-                        m_acc_vec,
-                    ),
-                    m_item,
-                )
-            })
-    }
-}
+// NOTE: Traversable implementation for VecWitness is temporarily disabled.
+// The generic `sequence` implementation using `Applicative` has issues with
+// the constraint system when `M` has a non-trivial constraint, because closures
+// cannot satisfy arbitrary constraint markers.
+//
+// TODO: Implement a specialized sequence that works with the constraint system,
+// potentially using type-erased trait objects or macro-based specialization.

@@ -3,97 +3,130 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::HKT;
+use crate::{Satisfies, HKT};
 
-use core::ops::{Add, Mul};
-use deep_causality_num::Zero;
-
-/// The `Adjunction` trait defines a pair of adjoint functors $L$ (Left) and $R$ (Right).
+/// The `Adjunction` trait defines a pair of adjoint functors `L` (Left) and `R` (Right)
+/// with an optional runtime `Context`.
 ///
 /// # Category Theory
-/// An **Adjunction** $L \dashv R$ exists between two categories $\mathcal{C}$ and $\mathcal{D}$ if there is a
-/// natural isomorphism between the set of morphisms:
-/// $$ \text{Hom}_{\mathcal{D}}(L(A), B) \cong \text{Hom}_{\mathcal{C}}(A, R(B)) $$
 ///
-/// This is one of the most profound concepts in mathematics, generalizing the idea of "opposites" or "duals".
-/// Examples include Free/Forgetful functors, Currying/Uncurrying, and Quantifiers ($\exists \dashv \text{const} \dashv \forall$).
+/// An **Adjunction** L ⊣ R exists between two categories C and D if there is a
+/// natural isomorphism between the set of morphisms:
+///
+/// ```text
+/// Hom_D(L(A), B) ≅ Hom_C(A, R(B))
+/// ```
+///
+/// This is one of the most profound concepts in mathematics, generalizing the idea
+/// of "opposites" or "duals". Examples include Free/Forgetful functors,
+/// Currying/Uncurrying, and Quantifiers (∃ ⊣ const ⊣ ∀).
+///
+/// # Unified Design
+///
+/// This trait unifies the previous `Adjunction` and `BoundedAdjunction` traits.
+/// The `Context` type parameter allows for runtime context (like Metric, Shape,
+/// or Topology) that cannot be fully captured in the static type system.
 ///
 /// # Mathematical Definition
+///
 /// The isomorphism is defined by two natural transformations:
-/// *   **Unit ($\eta$)**: $id \to R \circ L$
-/// *   **Counit ($\epsilon$)**: $L \circ R \to id$
+/// - **Unit (η)**: id → R ∘ L
+/// - **Counit (ε)**: L ∘ R → id
 ///
 /// Satisfying the triangle identities:
-/// 1.  $R(\epsilon) \circ \eta_R = id_R$
-/// 2.  $\epsilon_L \circ L(\eta) = id_L$
+/// 1. R(ε) ∘ η_R = id_R
+/// 2. ε_L ∘ L(η) = id_L
 ///
 /// # Use Cases
-/// *   **Conservation Laws**: In Discrete Exterior Calculus (DEC), the Boundary Operator ($\partial$) and Exterior Derivative ($d$) are adjoints.
-///     $\langle d\phi, J \rangle = \langle \phi, \partial J \rangle$.
-/// *   **Optimization**: Relating a constraint space (Primal) to a Lagrange multiplier space (Dual).
-pub trait Adjunction<L, R>
-where
-    L: HKT,
-    R: HKT,
-{
-    /// The Left Adjunct: $(L(A) \to B) \to (A \to R(B))$
-    /// Transforms a function on the "Left" structure to a function on the "Right" structure.
-    fn left_adjunct<A, B, F>(a: A, f: F) -> R::Type<B>
-    where
-        F: Fn(L::Type<A>) -> B;
-
-    /// The Right Adjunct: $(A \to R(B)) \to (L(A) \to B)$
-    /// Transforms a function on the "Right" structure to a function on the "Left" structure.
-    fn right_adjunct<A, B, F>(la: L::Type<A>, f: F) -> B
-    where
-        F: Fn(A) -> R::Type<B>;
-
-    /// The Unit of the Adjunction: $A \to R(L(A))$
-    /// Embeds a value into the Right-Left context.
-    fn unit<A>(a: A) -> R::Type<L::Type<A>>;
-
-    /// The Counit of the Adjunction: $L(R(B)) \to B$
-    /// Collapses the Left-Right context back to a value.
-    fn counit<B>(lrb: L::Type<R::Type<B>>) -> B;
-}
-
-/// The `BoundedAdjunction` trait defines a pair of adjoint functors $L$ (Left) and $R$ (Right)
-/// that require a runtime `Context` to operate.
 ///
-/// This is useful when the functors depend on an environment (like a Metric, Shape, or Topology)
-/// that cannot be fully captured in the static type system.
-pub trait BoundedAdjunction<L, R, Context>
+/// - **Conservation Laws**: In Discrete Exterior Calculus (DEC), the Boundary
+///   Operator (∂) and Exterior Derivative (d) are adjoints:
+///   `⟨dφ, J⟩ = ⟨φ, ∂J⟩`
+/// - **Optimization**: Relating a constraint space (Primal) to a Lagrange
+///   multiplier space (Dual).
+///
+/// # Type Parameters
+///
+/// - `L`: The left adjoint functor (HKT witness)
+/// - `R`: The right adjoint functor (HKT witness)
+/// - `Context`: Runtime context type (use `()` if no context needed)
+pub trait Adjunction<L, R, Context>
 where
     L: HKT,
     R: HKT,
 {
-    /// The Left Adjunct: $(L(A) \to B) \to (A \to R(B))$
-    /// Transforms a function on the "Left" structure to a function on the "Right" structure,
-    /// using the provided context.
-    fn left_adjunct<A, B, F>(ctx: &Context, a: A, f: F) -> R::Type<B>
-    where
-        F: Fn(L::Type<A>) -> B,
-        A: Clone + Zero + Copy + PartialEq,
-        B: Clone;
-
-    /// The Right Adjunct: $(A \to R(B)) \to (L(A) \to B)$
-    /// Transforms a function on the "Right" structure to a function on the "Left" structure,
-    /// using the provided context.
-    fn right_adjunct<A, B, F>(ctx: &Context, la: L::Type<A>, f: F) -> B
-    where
-        F: FnMut(A) -> R::Type<B>,
-        A: Clone + Zero,
-        B: Clone + Zero + Add<Output = B> + Mul<Output = B>;
-
-    /// The Unit of the Adjunction: $A \to R(L(A))$
-    /// Embeds a value into the Right-Left context, using the provided context.
+    /// The Unit of the Adjunction: A → R<L<A>>
+    ///
+    /// Embeds a value into the Right-Left context.
+    ///
+    /// # Arguments
+    ///
+    /// - `ctx`: Runtime context for the operation
+    /// - `a`: The value to embed
+    ///
+    /// # Returns
+    ///
+    /// The value embedded in the R<L<_>> structure.
     fn unit<A>(ctx: &Context, a: A) -> R::Type<L::Type<A>>
     where
-        A: Clone + Zero + Copy + PartialEq;
+        A: Satisfies<L::Constraint> + Satisfies<R::Constraint> + Clone,
+        L::Type<A>: Satisfies<R::Constraint>;
 
-    /// The Counit of the Adjunction: $L(R(B)) \to B$
-    /// Collapses the Left-Right context back to a value, using the provided context.
+    /// The Counit of the Adjunction: L<R<B>> → B
+    ///
+    /// Collapses the Left-Right context back to a value.
+    ///
+    /// # Arguments
+    ///
+    /// - `ctx`: Runtime context for the operation
+    /// - `lrb`: The nested L<R<B>> structure to collapse
+    ///
+    /// # Returns
+    ///
+    /// The extracted value of type `B`.
     fn counit<B>(ctx: &Context, lrb: L::Type<R::Type<B>>) -> B
     where
-        B: Clone + Zero + Add<Output = B> + Mul<Output = B>;
+        B: Satisfies<L::Constraint> + Satisfies<R::Constraint> + Clone,
+        R::Type<B>: Satisfies<L::Constraint>;
+
+    /// The Left Adjunct: (L<A> → B) → (A → R<B>)
+    ///
+    /// Transforms a function on the "Left" structure to a function on the "Right" structure.
+    ///
+    /// # Arguments
+    ///
+    /// - `ctx`: Runtime context for the operation
+    /// - `a`: The input value
+    /// - `f`: A function from L<A> to B
+    ///
+    /// # Returns
+    ///
+    /// The result of applying the transformed function, yielding R<B>.
+    fn left_adjunct<A, B, Func>(ctx: &Context, a: A, f: Func) -> R::Type<B>
+    where
+        A: Satisfies<L::Constraint> + Satisfies<R::Constraint> + Clone,
+        B: Satisfies<R::Constraint>,
+        L::Type<A>: Satisfies<R::Constraint>,
+        Func: Fn(L::Type<A>) -> B;
+
+    /// The Right Adjunct: (A → R<B>) → (L<A> → B)
+    ///
+    /// Transforms a function on the "Right" structure to a function on the "Left" structure.
+    ///
+    /// # Arguments
+    ///
+    /// - `ctx`: Runtime context for the operation
+    /// - `la`: The input value wrapped in L
+    /// - `f`: A function from A to R<B>
+    ///
+    /// # Returns
+    ///
+    /// The result of applying the transformed function, yielding B.
+    fn right_adjunct<A, B, Func>(ctx: &Context, la: L::Type<A>, f: Func) -> B
+    where
+        A: Satisfies<L::Constraint> + Clone,
+        B: Satisfies<L::Constraint> + Satisfies<R::Constraint>,
+        R::Type<B>: Satisfies<L::Constraint>,
+        Func: FnMut(A) -> R::Type<B>;
 }
+

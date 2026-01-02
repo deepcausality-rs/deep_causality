@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::HKT;
+use crate::{Satisfies, HKT};
 
 /// The `Foldable` trait abstracts over data structures that can be reduced to a single summary value.
 ///
@@ -45,7 +45,7 @@ pub trait Foldable<F: HKT> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust
     /// use deep_causality_haft::{Foldable, OptionWitness};
     ///
     /// let opt = Some(5);
@@ -58,5 +58,7 @@ pub trait Foldable<F: HKT> {
     /// ```
     fn fold<A, B, Func>(fa: F::Type<A>, init: B, f: Func) -> B
     where
+        A: Satisfies<F::Constraint>,
         Func: FnMut(B, A) -> B;
 }
+

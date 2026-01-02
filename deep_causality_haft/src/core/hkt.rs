@@ -33,10 +33,6 @@
 /// ```
 pub struct Placeholder;
 
-// ----------------------------------------------------
-// HKT Trait for Arity 1: Kind * -> *
-// ----------------------------------------------------
-
 /// Trait for a Higher-Kinded Type (HKT) with one type parameter (arity 1).
 ///
 /// This trait is implemented by a concrete "witness" type (e.g., `OptionWitness`)
@@ -44,17 +40,49 @@ pub struct Placeholder;
 /// The `Type<T>` associated type defines the actual type constructor, with `<T>`
 /// representing the single generic parameter that can vary.
 ///
-/// # Purpose
+/// # Unified Constraint System
 ///
-/// Enables writing generic code that can operate over different type constructors
-/// (like `Option`, `Vec`, `Result` with a fixed error type) without knowing their
-/// concrete inner type. This is a core building block for functional programming
-/// abstractions like `Functor`, `Applicative`, and `Monad` in Rust.
+/// The `Constraint` associated type declares what bounds the inner type `T` must satisfy
+/// when using functional operations like `fmap`, `bind`, etc. This enables a **single
+/// trait hierarchy** for both constrained and unconstrained types:
+///
+/// - **Unconstrained types** (like `Vec<T>`) use `type Constraint = NoConstraint;`
+/// - **Constrained types** (like `CausalTensor<T>`) use `type Constraint = TensorDataConstraint;`
+///
+/// Note: The constraint is enforced at the trait method level (Functor, Monad, etc.),
+/// not at the `Type<T>` GAT level. This allows the GAT to be used with any type,
+/// while the functional operations validate the constraints.
+///
+/// # For Unconstrained Types
+///
+/// ```rust
+/// use deep_causality_haft::{HKT, NoConstraint};
+///
+/// pub struct VecWitness;
+///
+/// impl HKT for VecWitness {
+///     type Constraint = NoConstraint;
+///     type Type<T> = Vec<T>;
+/// }
+/// ```
+///
+/// # For Constrained Types
+///
+/// ```rust,ignore
+/// impl HKT for CausalTensorWitness {
+///     type Constraint = TensorDataConstraint;
+///     type Type<T> = CausalTensor<T>;
+/// }
+/// ```
 ///
 /// # Type Parameters
 ///
 /// *   `T`: The generic type parameter that the type constructor operates on.
 pub trait HKT {
+    /// The constraint on inner types. Use `NoConstraint` for fully polymorphic.
+    /// Constraints are enforced at the trait method level, not at the GAT level.
+    type Constraint: ?Sized;
+
     /// The Generic Associated Type (GAT) that represents the type constructor.
     /// The `<T>` is the "hole" in the type constructor (e.g., `Option<T>`).
     type Type<T>;

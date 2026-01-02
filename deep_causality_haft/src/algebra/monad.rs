@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Applicative, HKT};
+use crate::{Applicative, Satisfies, HKT};
 
 /// The `Monad` trait extends `Applicative` by providing a `bind` operation
 /// for sequencing computations that produce effectful values.
@@ -12,6 +12,12 @@ use crate::{Applicative, HKT};
 /// like error handling, logging, and state management.
 ///
 /// This trait is generic over `F`, which is a Higher-Kinded Type (HKT) witness.
+///
+/// # Constraint Support
+///
+/// The `bind` function now requires both input `A` and output `B` types
+/// to satisfy the HKT's constraint. This ensures type-safe chaining for
+/// constrained types like `CausalTensor<T>` where `T: TensorData`.
 ///
 /// # Laws (Informal)
 ///
@@ -48,7 +54,7 @@ pub trait Monad<F: HKT>: Applicative<F> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust
     /// use deep_causality_haft::{Monad, OptionWitness, HKT};
     ///
     /// let opt_a: Option<<OptionWitness as HKT>::Type<i32>> = Some(Some(5));
@@ -62,6 +68,27 @@ pub trait Monad<F: HKT>: Applicative<F> {
     /// ```
     fn bind<A, B, Func>(m_a: F::Type<A>, f: Func) -> F::Type<B>
     where
-        // The function must return a new effectful type (F::Type<B>)
+        A: Satisfies<F::Constraint>,
+        B: Satisfies<F::Constraint>,
         Func: FnMut(A) -> F::Type<B>;
+
+    /// Flatten a nested structure into a single layer.
+    ///
+    /// Default implementation using `bind` with identity function.
+    ///
+    /// # Arguments
+    ///
+    /// *   `m_m_a`: A nested effectful value (`F::Type<F::Type<A>>`).
+    ///
+    /// # Returns
+    ///
+    /// A flattened effectful value (`F::Type<A>`).
+    fn join<A>(m_m_a: F::Type<F::Type<A>>) -> F::Type<A>
+    where
+        A: Satisfies<F::Constraint>,
+        F::Type<A>: Satisfies<F::Constraint>,
+    {
+        Self::bind(m_m_a, |x| x)
+    }
 }
+

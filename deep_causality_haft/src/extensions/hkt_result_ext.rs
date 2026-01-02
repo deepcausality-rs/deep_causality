@@ -2,13 +2,20 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Applicative, Foldable, Functor, HKT, HKT2, Monad, Placeholder, Traversable};
+use crate::{
+    Applicative, Foldable, Functor, Monad, NoConstraint, Placeholder, Satisfies, Traversable, HKT,
+    HKT2,
+};
 
 /// `ResultWitness<E>` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
 /// for the `Result<T, E>` type constructor, where the error type `E` is fixed.
 ///
 /// It allows `Result` to be used with generic functional programming traits like `Functor`,
 /// `Applicative`, `Foldable`, and `Monad` by fixing one of its type parameters.
+///
+/// # Constraint
+///
+/// `ResultWitness` uses `NoConstraint`, meaning it works with any type `T`.
 pub struct ResultWitness<E>(Placeholder, E);
 
 impl<E> HKT2<E> for ResultWitness<E> {
@@ -18,6 +25,8 @@ impl<E> HKT2<E> for ResultWitness<E> {
 }
 
 impl<E> HKT for ResultWitness<E> {
+    type Constraint = NoConstraint;
+
     /// Specifies that `ResultWitness<E>` also acts as a single-parameter HKT,
     /// where the `E` parameter is considered part of the "witness" itself.
     type Type<T> = Result<T, E>;
@@ -46,7 +55,9 @@ where
         f: Func,
     ) -> <ResultWitness<E> as HKT2<E>>::Type<B>
     where
-        Func: FnOnce(A) -> B,
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
+        Func: FnMut(A) -> B,
     {
         m_a.map(f)
     }
@@ -66,7 +77,10 @@ where
     /// # Returns
     ///
     /// `Ok(value)`.
-    fn pure<T>(value: T) -> <ResultWitness<E> as HKT2<E>>::Type<T> {
+    fn pure<T>(value: T) -> <ResultWitness<E> as HKT2<E>>::Type<T>
+    where
+        T: Satisfies<NoConstraint>,
+    {
         Ok(value)
     }
 
@@ -88,6 +102,8 @@ where
         f_a: <ResultWitness<E> as HKT2<E>>::Type<A>,
     ) -> <ResultWitness<E> as HKT2<E>>::Type<B>
     where
+        A: Satisfies<NoConstraint> + Clone,
+        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         match f_ab {
@@ -155,6 +171,8 @@ where
         mut f: Func,
     ) -> <ResultWitness<E> as HKT2<E>>::Type<B>
     where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> <ResultWitness<E> as HKT2<E>>::Type<B>,
     {
         match m_a {
@@ -174,7 +192,9 @@ where
     ) -> <M as HKT>::Type<<ResultWitness<E> as HKT2<E>>::Type<A>>
     where
         M: Applicative<M> + HKT,
-        A: Clone,
+        A: Clone + Satisfies<NoConstraint> + Satisfies<M::Constraint>,
+        M::Type<A>: Satisfies<NoConstraint>,
+        Result<A, E>: Satisfies<M::Constraint>,
     {
         match fa {
             Ok(m_a) => M::fmap(m_a, |a_val: A| Ok(a_val)),
