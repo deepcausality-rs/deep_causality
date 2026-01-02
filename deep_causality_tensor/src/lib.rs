@@ -25,7 +25,6 @@ pub use crate::traits::tensor_data::TensorData;
 
 // === Types ===
 pub use crate::types::backend_tensor::BackendTensor;
-pub use crate::types::constraint::TensorDataConstraint;
 pub use crate::types::cpu_tensor::InternalCpuTensor;
 pub use crate::types::cpu_tensor::{EinSumAST as GenericEinSumAST, EinSumOp as GenericEinSumOp};
 
@@ -37,6 +36,7 @@ pub use crate::types::backend::mlx::{MlxBackend, MlxCausalTensor};
 
 // === Extensions ===
 pub use crate::extensions::ext_hkt::CausalTensorWitness;
+pub use crate::extensions::ext_hkt::TensorConstraint;
 pub use crate::extensions::ext_math::CausalTensorMathExt;
 
 // === Utils (test support) ===

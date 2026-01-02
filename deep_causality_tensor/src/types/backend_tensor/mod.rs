@@ -21,6 +21,7 @@
 //! let t_gpu: BackendTensor<f64, MlxBackend> = BackendTensor::zeros(&[2, 3]);
 //! ```
 
+mod algebra;
 mod constructors;
 mod getters;
 mod ops;

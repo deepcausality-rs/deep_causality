@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{CoMonad, Functor};
+use deep_causality_haft::{Applicative, CoMonad, Functor, Monad};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_tensor::CausalTensorWitness;
 
@@ -12,9 +12,7 @@ fn main() {
 
     // Constants
     // kappa = 8 * pi * G / c^4
-    // For simplicity in this example, we use normalized units where G=1, c=1.
     let kappa = 8.0 * std::f64::consts::PI;
-    // Cosmological constant (small positive value for accelerating expansion)
     let lambda = 1e-5;
 
     println!("Constants:");
@@ -23,8 +21,6 @@ fn main() {
     println!("--------------------------------------------------");
 
     // 1. Define the Metric Tensor g_uv (4x4)
-    // We'll use a Minkowski metric signature (- + + +) as a base,
-    // slightly perturbed to make it interesting (not just flat space).
     let metric_data = vec![
         -1.0, 0.01, 0.0, 0.0, // t
         0.01, 1.0, 0.0, 0.0, // x
@@ -38,9 +34,6 @@ fn main() {
     print_tensor("Metric Tensor (g_uv)", &g_uv);
 
     // 2. Define the Ricci Tensor R_uv (4x4)
-    // The Ricci tensor represents the amount by which the volume of a geodesic ball
-    // deviates from that in Euclidean space. Calculating it from the metric involves
-    // complex derivatives (Christoffel symbols). Here we assume it's given.
     let ricci_data = vec![
         0.1, 0.005, 0.0, 0.0, // t
         0.005, 0.05, 0.0, 0.0, // x
@@ -53,117 +46,102 @@ fn main() {
     print_tensor("Ricci Tensor (R_uv)", &r_uv);
 
     // 3. Define Scalar Curvature R (Scalar)
-    // Trace of Ricci tensor w.r.t metric (R = g^uv R_uv).
-    // For this example, we just pick a value consistent with the tensors above.
     let scalar_curvature_val = 0.05;
 
-    println!("Scalar Curvature (R): {:.4}", scalar_curvature_val);
-    println!("--------------------------------------------------");
-
     // 4. Calculate Einstein Tensor G_uv = R_uv - 0.5 * R * g_uv
-    // We use HKT Functor to scale g_uv.
+    // We demonstrate Applicative for scaling and addition?
+    // Scaling is Functor.
+    // Addition is Applicative (combining two contexts).
 
     println!("Calculating Einstein Tensor G_uv...");
     println!("Formula: G_uv = R_uv + (-0.5 * R * g_uv)");
 
-    // Calculate scaling factor: -0.5 * R
     let scaling_factor = -0.5 * scalar_curvature_val;
-
-    // Scale g_uv by this factor using HKT Functor
-    // HKT Power: `fmap` transforms the structure without us writing a loop.
     let term_2 = <CausalTensorWitness as Functor<CausalTensorWitness>>::fmap(g_uv.clone(), |x| {
         x * scaling_factor
     });
 
     // G_uv = R_uv + term_2
-    // We use the standard `Add` implementation for tensor-tensor addition.
-    let g_tensor = &r_uv + &term_2;
+    // HKT Applicative: lifting addition over two tensors.
+    // We curried addition: add_func = fmap(r_uv, |a| move |b| a + b)
+    // result = apply(add_func, term_2)
+    let add_func_tensor =
+        <CausalTensorWitness as Functor<CausalTensorWitness>>::fmap(r_uv.clone(), |a: f64| {
+            Box::new(move |b: f64| a + b) as Box<dyn Fn(f64) -> f64>
+        });
+    let g_tensor =
+        <CausalTensorWitness as Applicative<CausalTensorWitness>>::apply(add_func_tensor, term_2);
 
     print_tensor("Einstein Tensor (G_uv)", &g_tensor);
 
     // 5. Add Cosmological Term: + Lambda * g_uv
-    println!("Adding Cosmological Term...");
-    println!("Formula: LHS = G_uv + (Λ * g_uv)");
-
-    // Use HKT Functor to scale g_uv by Lambda
     let lambda_term =
         <CausalTensorWitness as Functor<CausalTensorWitness>>::fmap(g_uv.clone(), |x| x * lambda);
 
     // LHS = G_uv + Lambda * g_uv
+    // Using standard addition for simplicity here, mixing styles to show interoperability.
     let lhs = &g_tensor + &lambda_term;
 
     print_tensor("LHS (G_uv + Λ * g_uv)", &lhs);
 
     // 6. Calculate Stress-Energy Tensor T_uv
-    // LHS = kappa * T_uv  =>  T_uv = LHS / kappa
-    println!("Solving for Stress-Energy Tensor T_uv...");
-    println!("Formula: T_uv = LHS / κ");
-
-    // HKT Power: `fmap` again allows us to simply divide every element by kappa.
     let t_uv = <CausalTensorWitness as Functor<CausalTensorWitness>>::fmap(lhs, |x| x / kappa);
 
-    println!("--------------------------------------------------");
     print_tensor("Stress-Energy Tensor (T_uv) Result", &t_uv);
 
-    println!("--------------------------------------------------");
-    println!("Verification:");
-    println!("Shape of T_uv: {:?}", t_uv.shape());
-    assert_eq!(t_uv.shape(), &[4, 4]);
-    println!("Calculation completed successfully.");
-
-    // 7. Advanced HKT: CoMonad
+    // 7. Advanced HKT: CoMonad (Local Analysis)
     println!("--------------------------------------------------");
     println!("7. Advanced HKT: CoMonad for Local Field Analysis");
-    println!("   CoMonad `extend` allows us to perform operations where each element's");
-    println!("   new value depends on its 'neighborhood' (context).");
-    println!(
-        "   This is ideal for calculating field gradients, smoothness, or detecting anomalies."
-    );
-
-    // Example: Detect "High Energy" regions relative to neighbors.
-    // We'll define a "smoothness" check: abs(center - neighbor).
-    // Since the tensor is flattened, we check the immediate neighbor in memory for simplicity.
+    // ... extend logic ...
     let anomaly_map = <CausalTensorWitness as CoMonad<CausalTensorWitness>>::extend(
         &t_uv,
         |view: &CausalTensor<f64>| {
             let data = view.data();
             let center = data[0];
-            // Check next neighbor (wrapping)
             let neighbor = if data.len() > 1 { data[1] } else { center };
-            // Calculate gradient/difference
             (center - neighbor).abs()
         },
     );
 
     print_tensor("Anomaly Map (Local Gradients)", &anomaly_map);
+
+    // 8. Advanced HKT: Monad (Quantization / Expansion)
+    println!("--------------------------------------------------");
+    println!("8. Advanced HKT: Monad for Quantum Fluctuations");
+    println!("   Monad `bind` allows us to replace each value with a new structure (sub-tensor)");
+    println!("   and flatten the result. We use this to simulate splitting energy levels.");
+
+    // Function: "Split each energy value E into [E - delta, E, E + delta]"
+    let fluctuation_fn = |energy: f64| {
+        let delta = energy * 0.1; // 10% fluctuation
+        // Return a tensor of 3 values
+        CausalTensor::new(vec![energy - delta, energy, energy + delta], vec![3]).unwrap()
+    };
+
+    // Bind: Apply fluctuation to every element of T_uv (flattened)
+    // For a 4x4 tensor (16 elements), this produces 16 * 3 = 48 elements.
+    let quantum_foam =
+        <CausalTensorWitness as Monad<CausalTensorWitness>>::bind(t_uv.clone(), fluctuation_fn);
+
+    println!("Original Elements: {}", t_uv.len());
+    println!("Quantum Foam Elements: {}", quantum_foam.len());
+    println!("First few fluctuations:");
+    let foam_data = quantum_foam.data();
+    for i in 0..6 {
+        print!("{:.4} ", foam_data[i]);
+    }
+    println!("...");
 }
 
 pub(crate) fn print_header() {
     println!("============================================================");
-    println!("   Einstein Field Equations with CausalTensor & HKT");
+    println!("   Einstein Field Equations with CausalTensor HKT");
     println!("============================================================");
-    println!("This example demonstrates solving the Einstein Field Equations (EFE):");
-    println!("  G_uv + Λ * g_uv = κ * T_uv");
-    println!();
-    println!("Where:");
-    println!("  G_uv = R_uv - 0.5 * R * g_uv  (Einstein Tensor)");
-    println!("  R_uv                          (Ricci Curvature Tensor)");
-    println!("  R                             (Scalar Curvature)");
-    println!("  g_uv                          (Metric Tensor)");
-    println!("  Λ                             (Cosmological Constant)");
-    println!("  κ                             (Einstein Constant)");
-    println!("  T_uv                          (Stress-Energy Tensor)");
-    println!();
-    println!("Value of HKT (Higher-Kinded Types) in this context:");
-    println!("1. Abstraction: We treat tensors as abstract contexts (Functors).");
-    println!("2. Safety: Operations are lifted into the context, handling shapes implicitly.");
-    println!("3. Composability: We chain operations (map) without manual loops.");
-    println!("4. Clarity: The code mirrors the mathematical equation structure.");
+    println!("Demonstrating Functor, Applicative, Monad, and CoMonad.");
     println!("============================================================");
     println!();
 }
 
-/// Helper function to pretty print a 2D tensor
 pub(crate) fn print_tensor(name: &str, tensor: &CausalTensor<f64>) {
     println!("{}:", name);
     let shape = tensor.shape();
