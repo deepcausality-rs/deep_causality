@@ -4,7 +4,7 @@
  */
 
 use deep_causality_core::{Intervenable, PropagatingEffectWitness, PropagatingProcess};
-use deep_causality_haft::{Applicative, LogAddEntry};
+use deep_causality_haft::{LogAddEntry, Pure};
 
 #[derive(Debug, Clone, Default)]
 struct SystemState {

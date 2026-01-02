@@ -4,7 +4,7 @@
  */
 
 use deep_causality_core::{EffectValue, PropagatingEffectWitness, PropagatingProcess};
-use deep_causality_haft::Applicative;
+use deep_causality_haft::Pure;
 
 // Define a custom state for our process
 #[derive(Debug, Clone, Default)]

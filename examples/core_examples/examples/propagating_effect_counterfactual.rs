@@ -4,7 +4,7 @@
  */
 
 use deep_causality_core::{Intervenable, PropagatingEffectWitness};
-use deep_causality_haft::{Applicative, LogAddEntry, Monad};
+use deep_causality_haft::{LogAddEntry, Monad, Pure};
 
 fn main() {
     println!("--- Counterfactual Observation (Stateless) ---");
