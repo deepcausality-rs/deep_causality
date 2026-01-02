@@ -3,36 +3,47 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CausalMultiVector, Metric, MultiVector};
-use deep_causality_haft::{Applicative, BoundedComonad, Functor, HKT, Monad};
-use deep_causality_num::Zero;
+use crate::CausalMultiVector;
+use deep_causality_haft::{
+    Adjunction, Applicative, CoMonad, Foldable, Functor, HKT, Monad, NoConstraint, Satisfies,
+};
+use deep_causality_metric::Metric;
 
 pub struct CausalMultiVectorWitness;
 
 impl HKT for CausalMultiVectorWitness {
-    type Type<A> = CausalMultiVector<A>;
+    type Constraint = NoConstraint;
+    type Type<T> = CausalMultiVector<T>;
 }
 
+// ----------------------------------------------------------------------------
+// Functor
+// ----------------------------------------------------------------------------
 impl Functor<CausalMultiVectorWitness> for CausalMultiVectorWitness {
-    fn fmap<A, B, F>(fa: CausalMultiVector<A>, f: F) -> CausalMultiVector<B>
+    fn fmap<A, B, Func>(fa: CausalMultiVector<A>, f: Func) -> CausalMultiVector<B>
     where
-        F: FnMut(A) -> B,
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
+        Func: FnMut(A) -> B,
     {
-        let new_data = fa.data.into_iter().map(f).collect();
-        CausalMultiVector {
-            data: new_data,
-            metric: fa.metric,
-        }
+        let metric = fa.metric;
+        let data = fa.data.into_iter().map(f).collect();
+        CausalMultiVector { data, metric }
     }
 }
 
+// ----------------------------------------------------------------------------
+// Applicative
+// ----------------------------------------------------------------------------
 impl Applicative<CausalMultiVectorWitness> for CausalMultiVectorWitness {
-    fn pure<T>(value: T) -> CausalMultiVector<T> {
-        // Dimension 0 = 2^0 = 1 element.
-        CausalMultiVector {
-            data: vec![value],
-            metric: Metric::Euclidean(0),
-        }
+    fn pure<T>(value: T) -> CausalMultiVector<T>
+    where
+        T: Satisfies<NoConstraint>,
+    {
+        // Default to scalar metric (Euclidean 0) since we lack context.
+        let metric = Metric::Euclidean(0);
+        let data = vec![value];
+        CausalMultiVector { data, metric }
     }
 
     fn apply<A, B, Func>(
@@ -40,160 +51,190 @@ impl Applicative<CausalMultiVectorWitness> for CausalMultiVectorWitness {
         f_a: CausalMultiVector<A>,
     ) -> CausalMultiVector<B>
     where
+        A: Satisfies<NoConstraint> + Clone,
+        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
-        A: Clone,
     {
-        // Case 1: Broadcast (Scalar Function applied to Vector)
-        if f_ab.data.len() == 1 {
-            let func = f_ab.data.into_iter().next().unwrap();
-            let new_data = f_a.data.into_iter().map(func).collect();
-            return CausalMultiVector {
-                data: new_data,
-                metric: f_a.metric,
-            };
-        }
+        let metric = f_a.metric; // Assume metric matches
 
-        // Case 2: Element-wise (Zip)
-        if f_ab.data.len() != f_a.data.len() {
+        let funcs = f_ab.data;
+        let args = f_a.data;
+
+        let data = if funcs.len() == 1 {
+            // Broadcast single function to all arguments
+            let f = funcs.into_iter().next().unwrap();
+            args.into_iter().map(f).collect()
+        } else if funcs.len() == args.len() {
+            // Zip application
+            funcs.into_iter().zip(args).map(|(mut f, a)| f(a)).collect()
+        } else {
             panic!(
-                "Applicative::apply shape mismatch: {:?} vs {:?}",
-                f_ab.metric, f_a.metric
+                "Applicative::apply shape mismatch: {} funcs vs {} args",
+                funcs.len(),
+                args.len()
             );
-        }
+        };
 
-        let new_data = f_ab
-            .data
-            .into_iter()
-            .zip(f_a.data)
-            .map(|(mut f, a)| f(a))
-            .collect();
-
-        CausalMultiVector {
-            data: new_data,
-            metric: f_a.metric,
-        }
+        CausalMultiVector { data, metric }
     }
 }
 
-impl Monad<CausalMultiVectorWitness> for CausalMultiVectorWitness {
-    fn bind<A, B, Func>(m_a: CausalMultiVector<A>, mut f: Func) -> CausalMultiVector<B>
+// ----------------------------------------------------------------------------
+// Foldable
+// ----------------------------------------------------------------------------
+impl Foldable<CausalMultiVectorWitness> for CausalMultiVectorWitness {
+    fn fold<A, B, Func>(fa: CausalMultiVector<A>, init: B, f: Func) -> B
     where
+        A: Satisfies<NoConstraint>,
+        Func: FnMut(B, A) -> B,
+    {
+        fa.data.into_iter().fold(init, f)
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Monad
+// ----------------------------------------------------------------------------
+impl Monad<CausalMultiVectorWitness> for CausalMultiVectorWitness {
+    fn bind<A, B, Func>(ma: CausalMultiVector<A>, mut f: Func) -> CausalMultiVector<B>
+    where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> CausalMultiVector<B>,
     {
-        let mut result_data = Vec::new();
-        let mut resulting_metric = Metric::Euclidean(0);
-        let mut first_run = true;
+        // Bind implies flattening.
+        let mut results = Vec::new();
+        let mut out_metric = ma.metric;
 
-        for a in m_a.data {
-            let inner_mv = f(a);
-
-            if first_run {
-                resulting_metric = m_a.metric.tensor_product(&inner_mv.metric);
-                result_data.reserve(inner_mv.data.len() * 10); // Heuristic
-                first_run = false;
-            }
-
-            result_data.extend(inner_mv.data);
+        for a in ma.data {
+            let mb = f(a);
+            out_metric = mb.metric;
+            results.extend(mb.data);
         }
 
         CausalMultiVector {
-            data: result_data,
-            metric: resulting_metric,
+            data: results,
+            metric: out_metric,
         }
     }
 }
 
-// Implementation of CoMonad for CausalMultiVectorWitness
-impl BoundedComonad<CausalMultiVectorWitness> for CausalMultiVectorWitness {
+// ----------------------------------------------------------------------------
+// CoMonad
+// ----------------------------------------------------------------------------
+impl CoMonad<CausalMultiVectorWitness> for CausalMultiVectorWitness {
     fn extract<A>(fa: &CausalMultiVector<A>) -> A
     where
-        A: Clone,
+        A: Satisfies<NoConstraint> + Clone,
     {
-        // The scalar part (coefficient of the 1 basis blade, data[0]) is the natural focus.
-        // CausalMultiVector guarantees data is never empty.
-        fa.data[0].clone()
+        // Extract scalar part (index 0)
+        fa.data.first().cloned().expect("Empty MultiVector")
     }
 
     fn extend<A, B, Func>(fa: &CausalMultiVector<A>, mut f: Func) -> CausalMultiVector<B>
     where
         Func: FnMut(&CausalMultiVector<A>) -> B,
-        A: Zero + Copy + Clone,
-        B: Zero + Copy + Clone,
+        A: Satisfies<NoConstraint> + Clone,
+        B: Satisfies<NoConstraint>,
     {
-        {
-            // Functional transformation:
-            // 1. Iterate 0..size
-            // 2. Map index -> Shifted View -> Result
-            // 3. Collect into Vec
-            let new_data: Vec<B> = (0..fa.data.len())
-                .map(|i| {
-                    // Create the permuted view (Context Shift)
-                    let permuted_view = fa.basis_shift(i);
-                    // Since map is sequential, it is safe to call mutable f
-                    f(&permuted_view)
-                })
-                .collect();
+        // Extend with cyclic rotation.
+        // For each position i, construct a view where i is the new origin (0).
+        // For a MultiVector, this is "Basis Shifting".
+        // view[k] = fa[(i + k) % N]
+        let n = fa.data.len();
+        let mut result_data = Vec::with_capacity(n);
 
-            // 3. Return MultiVector of same metric as the original MultiVector
-            CausalMultiVector::new(new_data, fa.metric).expect("Metric mismatch")
+        for i in 0..n {
+            // Create rotated view
+            let mut rotated_data = Vec::with_capacity(n);
+            for k in 0..n {
+                let idx = (i + k) % n;
+                rotated_data.push(fa.data[idx].clone());
+            }
+            let view = CausalMultiVector {
+                data: rotated_data,
+                metric: fa.metric,
+            };
+
+            result_data.push(f(&view));
+        }
+
+        CausalMultiVector {
+            data: result_data,
+            metric: fa.metric,
         }
     }
 }
 
-// Implementation of BoundedAdjunction for CausalMultiVectorWitness
-// Context is Metric, as we need it to construct new MultiVectors in 'unit'.
-use core::ops::{Add, Mul};
-use deep_causality_haft::BoundedAdjunction;
-
-impl BoundedAdjunction<CausalMultiVectorWitness, CausalMultiVectorWitness, Metric>
+// ----------------------------------------------------------------------------
+// Adjunction
+// ----------------------------------------------------------------------------
+// Context: Metric (defining the space we are adjoint to)
+impl Adjunction<CausalMultiVectorWitness, CausalMultiVectorWitness, Metric>
     for CausalMultiVectorWitness
 {
-    fn left_adjunct<A, B, F>(ctx: &Metric, a: A, f: F) -> CausalMultiVector<B>
-    where
-        F: Fn(CausalMultiVector<A>) -> B,
-        A: Clone + Zero + Copy + PartialEq,
-        B: Clone,
-    {
-        // 1. Create unit: A -> MV<MV<A>>
-        let mv_mv_a = Self::unit(ctx, a);
-
-        // 2. Map f: MV<A> -> B over MV<MV<A>> to get MV<B>
-        <Self as Functor<Self>>::fmap(mv_mv_a, f)
-    }
-
-    fn right_adjunct<A, B, F>(ctx: &Metric, la: CausalMultiVector<A>, f: F) -> B
-    where
-        F: FnMut(A) -> CausalMultiVector<B>,
-        A: Clone + Zero,
-        B: Clone + Zero + Add<Output = B> + Mul<Output = B>,
-    {
-        let mapped = <Self as Functor<Self>>::fmap(la, f);
-        Self::counit(ctx, mapped)
-    }
-
     fn unit<A>(ctx: &Metric, a: A) -> CausalMultiVector<CausalMultiVector<A>>
     where
-        A: Clone + Zero + Copy + PartialEq,
+        A: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
     {
-        // Create inner MV
-        let inner = CausalMultiVector {
-            data: vec![a],
+        // unit: a -> R(L(a))
+        // Inner MV: Context metric, contains 'a'.
+        let inner_data = vec![a];
+        let inner_mv = CausalMultiVector {
+            data: inner_data,
             metric: *ctx,
         };
 
-        // Wrap in outer MV (scalar wrapper, metric 0)
+        // Outer MV: Scalar metric, contains inner_mv.
+        let outer_data = vec![inner_mv];
         CausalMultiVector {
-            data: vec![inner],
+            data: outer_data,
             metric: Metric::Euclidean(0),
         }
     }
 
     fn counit<B>(_ctx: &Metric, lrb: CausalMultiVector<CausalMultiVector<B>>) -> B
     where
-        B: Clone + Zero + Add<Output = B> + Mul<Output = B>,
+        B: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
     {
-        // Flatten and Extract
-        let flattened = <Self as Monad<Self>>::bind(lrb, |x| x);
-        <Self as BoundedComonad<Self>>::extract(&flattened)
+        // counit: L(R(b)) -> b
+        // Flatten and extract.
+        let flattened =
+            <CausalMultiVectorWitness as Monad<CausalMultiVectorWitness>>::bind(lrb, |x| x);
+        <CausalMultiVectorWitness as CoMonad<CausalMultiVectorWitness>>::extract(&flattened)
+    }
+
+    fn left_adjunct<A, B, F>(ctx: &Metric, a: A, f: F) -> CausalMultiVector<B>
+    where
+        A: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
+        B: Satisfies<NoConstraint>,
+        F: Fn(CausalMultiVector<A>) -> B,
+    {
+        // left: a -> f(unit(a))
+        let unit_res = Self::unit(ctx, a);
+        Self::fmap(unit_res, f)
+    }
+
+    fn right_adjunct<A, B, F>(_ctx: &Metric, la: CausalMultiVector<A>, f: F) -> B
+    where
+        A: Satisfies<NoConstraint> + Clone,
+        B: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
+        F: FnMut(A) -> CausalMultiVector<B>,
+    {
+        // right: (A -> R<B>) -> (L<A> -> B)
+        // map la with f -> L<R<B>> (MV<MV<B>>)
+        // then extract manually to avoid Clone requirement of counit.
+        let mapped = Self::fmap(la, f);
+
+        // Destructure Outer MV
+        let mut outer_iter = mapped.data.into_iter();
+        if let Some(inner_mv) = outer_iter.next() {
+            // Destructure Inner MV
+            let mut inner_iter = inner_mv.data.into_iter();
+            if let Some(b) = inner_iter.next() {
+                return b;
+            }
+        }
+        panic!("Adjunction::right_adjunct resulted in empty MultiVector");
     }
 }

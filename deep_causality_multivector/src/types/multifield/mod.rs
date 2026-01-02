@@ -48,7 +48,7 @@ pub mod gamma;
 pub mod ops;
 
 use deep_causality_metric::Metric;
-use deep_causality_tensor::{LinearAlgebraBackend, TensorData};
+use deep_causality_tensor::LinearAlgebraBackend;
 
 /// A hardware-accelerated field of multivectors.
 ///
@@ -65,22 +65,22 @@ use deep_causality_tensor::{LinearAlgebraBackend, TensorData};
 ///
 /// Shape: `[Nx, Ny, Nz, Matrix_Dim, Matrix_Dim]`
 #[derive(Debug, Clone)]
-pub struct CausalMultiField<B: LinearAlgebraBackend, T: TensorData> {
+pub struct CausalMultiField<B: LinearAlgebraBackend, T> {
     /// Storage: [Nx, Ny, Nz, Matrix_Dim, Matrix_Dim]
     /// Stored entirely in Matrix Isomorphism representation on Device
-    data: B::Tensor<T>,
+    pub(crate) data: B::Tensor<T>,
 
     /// The metric signature of the underlying Clifford algebra
-    metric: Metric,
+    pub(crate) metric: Metric,
 
     /// Grid spacing for differential operators [dx, dy, dz]
-    dx: [T; 3],
+    pub(crate) dx: [T; 3],
 
     /// Grid shape [Nx, Ny, Nz]
-    shape: [usize; 3],
+    pub(crate) shape: [usize; 3],
 }
 
-impl<B: LinearAlgebraBackend, T: TensorData> CausalMultiField<B, T> {
+impl<B: LinearAlgebraBackend, T> CausalMultiField<B, T> {
     /// Returns the metric signature of the algebra.
     #[inline]
     pub fn metric(&self) -> Metric {
