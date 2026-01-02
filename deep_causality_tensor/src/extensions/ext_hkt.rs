@@ -25,7 +25,7 @@ use deep_causality_num::Complex;
 ///   Field and Ring requirements.
 pub struct TensorConstraint;
 
-// Because of Rust's Oprhan Rule,
+// Because of Rust's Oprhan Rule, these constraints must be defined locally in this crate.
 
 // --- 1. Data Types (Fields) ---
 impl Satisfies<TensorConstraint> for f32 {}
