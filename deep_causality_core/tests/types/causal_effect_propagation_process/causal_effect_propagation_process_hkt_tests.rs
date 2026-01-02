@@ -7,7 +7,7 @@ use deep_causality_core::{
     CausalEffectPropagationProcess, CausalEffectPropagationProcessWitness, CausalityError,
     EffectValue,
 };
-use deep_causality_haft::{Applicative, Functor, LogAppend, Monad};
+use deep_causality_haft::{Applicative, Functor, LogAppend, Monad, Pure};
 
 #[derive(Debug, Clone, PartialEq, Default)]
 struct TestLog(Vec<String>);

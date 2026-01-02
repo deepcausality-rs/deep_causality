@@ -7,7 +7,7 @@ use deep_causality_core::{
     CausalityError, CausalityErrorEnum, EffectLog, EffectValue, PropagatingEffect,
     PropagatingEffectWitness,
 };
-use deep_causality_haft::{Applicative, Functor, HKT, LogAddEntry, LogSize, Monad};
+use deep_causality_haft::{Applicative, Functor, HKT, LogAddEntry, LogSize, Monad, Pure};
 
 type TestPropagatingEffect<T> = PropagatingEffect<T>;
 type TestWitness = PropagatingEffectWitness<CausalityError, EffectLog>;

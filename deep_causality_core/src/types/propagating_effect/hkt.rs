@@ -16,7 +16,7 @@ use crate::{
 };
 use core::marker::PhantomData;
 use deep_causality_haft::{
-    Applicative, Functor, HKT, HKT3, LogAppend, Monad, NoConstraint, Placeholder, Satisfies,
+    Applicative, Functor, HKT, HKT3, LogAppend, Monad, NoConstraint, Placeholder, Pure, Satisfies,
 };
 
 pub struct PropagatingEffectWitness<E, L>(Placeholder, PhantomData<E>, PhantomData<L>);
@@ -71,7 +71,7 @@ impl Functor<PropagatingEffectWitness<CausalityError, EffectLog>>
     }
 }
 
-impl Applicative<PropagatingEffectWitness<CausalityError, EffectLog>>
+impl Pure<PropagatingEffectWitness<CausalityError, EffectLog>>
     for PropagatingEffectWitness<CausalityError, EffectLog>
 {
     fn pure<T>(value: T) -> <Self as HKT>::Type<T>
@@ -86,7 +86,11 @@ impl Applicative<PropagatingEffectWitness<CausalityError, EffectLog>>
             logs: EffectLog::new(),
         }
     }
+}
 
+impl Applicative<PropagatingEffectWitness<CausalityError, EffectLog>>
+    for PropagatingEffectWitness<CausalityError, EffectLog>
+{
     fn apply<A, B, Func>(
         f_ab: <Self as HKT>::Type<Func>,
         mut f_a: <Self as HKT>::Type<A>,
@@ -94,7 +98,7 @@ impl Applicative<PropagatingEffectWitness<CausalityError, EffectLog>>
     where
         A: Satisfies<<Self as HKT>::Constraint> + Clone,
         B: Satisfies<<Self as HKT>::Constraint>,
-        Func: FnMut(A) -> B,
+        Func: Satisfies<<Self as HKT>::Constraint> + FnMut(A) -> B,
     {
         let mut combined_logs = f_ab.logs;
         combined_logs.append(&mut f_a.logs);
