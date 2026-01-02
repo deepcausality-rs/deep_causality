@@ -4,19 +4,24 @@
  */
 
 use crate::Hypergraph;
-use deep_causality_haft::{BoundedComonad, Functor, HKT};
-use deep_causality_num::Zero;
+use deep_causality_haft::{CoMonad, Functor, HKT, NoConstraint, Satisfies};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 
 pub struct HypergraphWitness;
 
 impl HKT for HypergraphWitness {
-    type Type<T> = Hypergraph<T>;
+    type Constraint = NoConstraint;
+    type Type<T>
+        = Hypergraph<T>
+    where
+        T: Satisfies<NoConstraint>;
 }
 
 impl Functor<HypergraphWitness> for HypergraphWitness {
     fn fmap<A, B, F>(fa: Hypergraph<A>, f: F) -> Hypergraph<B>
     where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
         F: FnMut(A) -> B,
     {
         let new_data = CausalTensorWitness::fmap(fa.data, f);
@@ -30,10 +35,10 @@ impl Functor<HypergraphWitness> for HypergraphWitness {
     }
 }
 
-impl BoundedComonad<HypergraphWitness> for HypergraphWitness {
+impl CoMonad<HypergraphWitness> for HypergraphWitness {
     fn extract<A>(fa: &Hypergraph<A>) -> A
     where
-        A: Clone,
+        A: Satisfies<NoConstraint> + Clone,
     {
         fa.data
             .as_slice()
@@ -45,11 +50,11 @@ impl BoundedComonad<HypergraphWitness> for HypergraphWitness {
     fn extend<A, B, Func>(fa: &Hypergraph<A>, mut f: Func) -> Hypergraph<B>
     where
         Func: FnMut(&Hypergraph<A>) -> B,
-        A: Zero + Copy + Clone,
-        B: Zero + Copy + Clone,
+        A: Satisfies<NoConstraint> + Clone,
+        B: Satisfies<NoConstraint>,
     {
         let size = fa.num_nodes;
-        let shape = fa.data.shape().to_vec(); // Preserve original shape
+        let shape = fa.data.shape().to_vec();
         let mut result_vec = Vec::with_capacity(size);
 
         for i in 0..size {
@@ -60,8 +65,7 @@ impl BoundedComonad<HypergraphWitness> for HypergraphWitness {
             result_vec.push(val);
         }
 
-        let new_data =
-            CausalTensor::new(result_vec, shape).expect("Data tensor creation should succeed");
+        let new_data = CausalTensor::from_vec(result_vec, &shape);
 
         Hypergraph {
             num_nodes: fa.num_nodes,

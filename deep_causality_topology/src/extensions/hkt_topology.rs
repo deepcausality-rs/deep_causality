@@ -4,19 +4,24 @@
  */
 
 use crate::Topology;
-use deep_causality_haft::{BoundedComonad, Functor, HKT};
-use deep_causality_num::Zero;
+use deep_causality_haft::{CoMonad, Functor, HKT, NoConstraint, Satisfies};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 
 pub struct TopologyWitness;
 
 impl HKT for TopologyWitness {
-    type Type<T> = Topology<T>;
+    type Constraint = NoConstraint;
+    type Type<T>
+        = Topology<T>
+    where
+        T: Satisfies<NoConstraint>;
 }
 
 impl Functor<TopologyWitness> for TopologyWitness {
     fn fmap<A, B, F>(fa: Topology<A>, f: F) -> Topology<B>
     where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
         F: FnMut(A) -> B,
     {
         let new_data = CausalTensorWitness::fmap(fa.data, f);
@@ -29,13 +34,11 @@ impl Functor<TopologyWitness> for TopologyWitness {
     }
 }
 
-// Assuming CausalTopologyWitness is the HKT witness for CausalTopology
-impl BoundedComonad<TopologyWitness> for TopologyWitness {
+impl CoMonad<TopologyWitness> for TopologyWitness {
     fn extract<A>(fa: &Topology<A>) -> A
     where
-        A: Clone,
+        A: Satisfies<NoConstraint> + Clone,
     {
-        // Use as_slice() instead of get_flat()
         fa.data
             .as_slice()
             .get(fa.cursor)
@@ -46,27 +49,17 @@ impl BoundedComonad<TopologyWitness> for TopologyWitness {
     fn extend<A, B, Func>(fa: &Topology<A>, mut f: Func) -> Topology<B>
     where
         Func: FnMut(&Topology<A>) -> B,
-        A: Zero + Copy + Clone,
-        B: Zero + Copy + Clone,
+        A: Satisfies<NoConstraint> + Clone,
+        B: Satisfies<NoConstraint>,
     {
-        // Use len() instead of size()
         let size = fa.data.len();
-        let shape = fa.data.shape().to_vec(); // Preserve original shape
+        let shape = fa.data.shape().to_vec();
         let mut result_vec = Vec::with_capacity(size);
 
-        // OPTIMIZATION:
-        // Instead of allocating a new View struct every iteration,
-        // we keep the topology constant and only move the cursor integer.
-        // The closure `f` receives a lightweight view.
         for i in 0..size {
-            // 1. Create View centered at i
-            // We can clone 'fa' cheaply because 'complex' is Arc
-            // and 'data' is ref-counted or cloned (depending on tensor impl).
             let mut view = fa.clone_shallow();
             view.cursor = i;
 
-            // 2. Apply Physics
-            // The user's function 'f' will likely call view.laplacian() or view.neighbors()
             let val = f(&view);
             result_vec.push(val);
         }
@@ -74,8 +67,7 @@ impl BoundedComonad<TopologyWitness> for TopologyWitness {
         Topology {
             complex: fa.complex.clone(),
             grade: fa.grade,
-            // CausalTensor::new takes data and shape
-            data: CausalTensor::new(result_vec, shape).unwrap(),
+            data: CausalTensor::from_vec(result_vec, &shape),
             cursor: 0,
         }
     }

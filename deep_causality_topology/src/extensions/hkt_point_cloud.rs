@@ -4,19 +4,24 @@
  */
 
 use crate::PointCloud;
-use deep_causality_haft::{BoundedComonad, Functor, HKT};
-use deep_causality_num::Zero;
+use deep_causality_haft::{CoMonad, Functor, HKT, NoConstraint, Satisfies};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 
 pub struct PointCloudWitness;
 
 impl HKT for PointCloudWitness {
-    type Type<T> = PointCloud<T>;
+    type Constraint = NoConstraint;
+    type Type<T>
+        = PointCloud<T>
+    where
+        T: Satisfies<NoConstraint>;
 }
 
 impl Functor<PointCloudWitness> for PointCloudWitness {
     fn fmap<A, B, F>(fa: PointCloud<A>, f: F) -> PointCloud<B>
     where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
         F: FnMut(A) -> B,
     {
         let new_metadata = CausalTensorWitness::fmap(fa.metadata, f);
@@ -28,10 +33,10 @@ impl Functor<PointCloudWitness> for PointCloudWitness {
     }
 }
 
-impl BoundedComonad<PointCloudWitness> for PointCloudWitness {
+impl CoMonad<PointCloudWitness> for PointCloudWitness {
     fn extract<A>(fa: &PointCloud<A>) -> A
     where
-        A: Clone, // As per BoundedComonad trait
+        A: Satisfies<NoConstraint> + Clone,
     {
         fa.metadata
             .as_slice()
@@ -43,11 +48,11 @@ impl BoundedComonad<PointCloudWitness> for PointCloudWitness {
     fn extend<A, B, Func>(fa: &PointCloud<A>, mut f: Func) -> PointCloud<B>
     where
         Func: FnMut(&PointCloud<A>) -> B,
-        A: Zero + Copy + Clone, // As per BoundedComonad trait
-        B: Zero + Copy + Clone, // As per BoundedComonad trait
+        A: Satisfies<NoConstraint> + Clone,
+        B: Satisfies<NoConstraint>,
     {
         let size = fa.len();
-        let shape = fa.metadata.shape().to_vec(); // Preserve original shape
+        let shape = fa.metadata.shape().to_vec();
         let mut result_vec = Vec::with_capacity(size);
 
         for i in 0..size {
@@ -58,8 +63,7 @@ impl BoundedComonad<PointCloudWitness> for PointCloudWitness {
             result_vec.push(val);
         }
 
-        let new_metadata =
-            CausalTensor::new(result_vec, shape).expect("Metadata tensor creation should succeed");
+        let new_metadata = CausalTensor::from_vec(result_vec, &shape);
 
         PointCloud {
             points: fa.points.clone(),

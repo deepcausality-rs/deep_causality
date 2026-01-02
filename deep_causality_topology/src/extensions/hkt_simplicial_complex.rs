@@ -3,154 +3,124 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Chain, SimplicialComplex, Topology, TopologyWitness};
-use core::ops::{Add, Mul};
-use deep_causality_haft::{BoundedAdjunction, HKT};
-use deep_causality_num::Zero;
-use deep_causality_sparse::CsrMatrix;
-use deep_causality_tensor::CausalTensor;
+use crate::{Chain, SimplicialComplex};
+use deep_causality_haft::{
+    Adjunction, Applicative, CoMonad, Foldable, Functor, HKT, NoConstraint, Satisfies,
+};
+use deep_causality_sparse::CsrMatrixWitness;
 use std::sync::Arc;
 
 pub struct ChainWitness;
 
 impl HKT for ChainWitness {
-    type Type<T> = Chain<T>;
+    type Constraint = NoConstraint;
+    type Type<T>
+        = Chain<T>
+    where
+        T: Satisfies<NoConstraint>;
 }
 
-impl BoundedAdjunction<ChainWitness, TopologyWitness, Arc<SimplicialComplex>>
-    for SimplicialComplex
-{
-    /// Left Adjunct: (Chain<A> -> B) -> (A -> Topology<B>)
-    ///
-    /// Logic: Construct the Riesz representative of the functional `f`.
-    /// We create a CausalTopology (field) phi such that <phi, c> = f(c).
-    /// With the context, we can now allocate the topology.
-    fn left_adjunct<A, B, F>(ctx: &Arc<SimplicialComplex>, _a: A, f: F) -> Topology<B>
+// ----------------------------------------------------------------------------
+// Functor
+// ----------------------------------------------------------------------------
+impl Functor<ChainWitness> for ChainWitness {
+    fn fmap<A, B, Func>(fa: Chain<A>, f: Func) -> Chain<B>
     where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
+        Func: FnMut(A) -> B,
+    {
+        // Re-use CsrMatrix functor logic on weights
+        let new_weights = <CsrMatrixWitness as Functor<CsrMatrixWitness>>::fmap(fa.weights, f);
+
+        Chain::new(fa.complex, fa.grade, new_weights)
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Foldable
+// ----------------------------------------------------------------------------
+impl Foldable<ChainWitness> for ChainWitness {
+    fn fold<A, B, Func>(fa: Chain<A>, init: B, f: Func) -> B
+    where
+        A: Satisfies<NoConstraint>,
+        Func: FnMut(B, A) -> B,
+    {
+        // Re-use CsrMatrix foldable logic
+        <CsrMatrixWitness as Foldable<CsrMatrixWitness>>::fold(fa.weights, init, f)
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Adjunction
+// ----------------------------------------------------------------------------
+// Context: (Complex, Grade)
+impl Adjunction<ChainWitness, ChainWitness, (Arc<SimplicialComplex>, usize)> for ChainWitness {
+    fn unit<A>(ctx: &(Arc<SimplicialComplex>, usize), a: A) -> Chain<Chain<A>>
+    where
+        A: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
+    {
+        let (complex, grade) = ctx;
+
+        // Inner Chain: contains 'a' at pos 0
+        let inner_weights = <CsrMatrixWitness as Applicative<CsrMatrixWitness>>::pure(a);
+        let inner_chain = Chain::new(complex.clone(), *grade, inner_weights);
+
+        // Outer Chain: contains inner_chain at pos 0
+        let outer_weights = <CsrMatrixWitness as Applicative<CsrMatrixWitness>>::pure(inner_chain);
+        Chain::new(complex.clone(), *grade, outer_weights)
+    }
+
+    fn counit<B>(_ctx: &(Arc<SimplicialComplex>, usize), lrb: Chain<Chain<B>>) -> B
+    where
+        B: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
+    {
+        // counit: Chain<Chain<B>> -> B
+        // Extract via CsrMatrix CoMonad extract.
+        // Requires Clone on B.
+        let inner_chain = <CsrMatrixWitness as CoMonad<CsrMatrixWitness>>::extract(&lrb.weights);
+        <CsrMatrixWitness as CoMonad<CsrMatrixWitness>>::extract(&inner_chain.weights)
+    }
+
+    fn left_adjunct<A, B, F>(ctx: &(Arc<SimplicialComplex>, usize), a: A, f: F) -> Chain<B>
+    where
+        A: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
+        B: Satisfies<NoConstraint>,
         F: Fn(Chain<A>) -> B,
-        A: Zero + Clone,
-        B: Clone,
     {
-        // Practical Implementation for Spec:
-        // We construct a basis chain for each simplex, apply f, and store the result.
-
-        // Assume we are working on 0-chains for this example 'a'.
-        let skeleton = &ctx.skeletons[0];
-        let mut data = Vec::with_capacity(skeleton.simplices.len());
-
-        for _i in 0..skeleton.simplices.len() {
-            // Construct basis chain e_i
-            let weights = CsrMatrix::with_capacity(1, skeleton.simplices.len(), 0);
-            // weights.set(0, i, A::one()); // A is a type, not a value. Need a value.
-            // Since we can't create A::one(), let's assume this is a conceptual placeholder
-            // and for the implementation we just need a chain structure. The function `f`
-            // will operate on the structure, not the values inside in this case.
-            // This is a bit of a mismatch in the spec, but we can make it work
-            // by assuming the function `f` is interested in the *structure* of the chain.
-            // Let's create an empty chain for now.
-
-            let chain = Chain {
-                complex: ctx.clone(),
-                grade: 0,
-                weights,
-            };
-
-            // Apply f
-            let val = f(chain);
-            data.push(val);
-        }
-
-        Topology {
-            complex: ctx.clone(),
-            grade: 0,
-            data: CausalTensor::new(data, vec![skeleton.simplices.len()]).unwrap(),
-            cursor: 0,
-        }
+        // left: a -> f(unit(a))
+        let wrapped = Self::unit(ctx, a);
+        Self::fmap(wrapped, f)
     }
 
-    /// Right Adjunct: (A -> Topology<B>) -> (Chain<A> -> B)
-    /// Logic: Integrate the field generated by `f` over the `chain`.
-    fn right_adjunct<A, B, F>(_ctx: &Arc<SimplicialComplex>, chain: Chain<A>, mut f: F) -> B
+    fn right_adjunct<A, B, F>(_ctx: &(Arc<SimplicialComplex>, usize), la: Chain<A>, f: F) -> B
     where
-        F: FnMut(A) -> Topology<B>,
-        A: Clone + Zero,
-        B: Clone + Zero + Add<Output = B> + Mul<Output = B>,
+        A: Satisfies<NoConstraint> + Clone,
+        B: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
+        F: FnMut(A) -> Chain<B>,
     {
-        let mut total_result = B::zero();
+        // right: (A -> R<B>) -> (L<A> -> B)
+        // map la with f -> Chain<Chain<B>>
+        // then counit
+        // Implementation must avoid `B: Clone`.
+        // We calculate Chain<Chain<B>>.
+        let result_chain: Chain<Chain<B>> = Self::fmap(la, f);
 
-        for r in 0..chain.weights.shape().0 {
-            let row_start = chain.weights.row_indices()[r];
-            let row_end = chain.weights.row_indices()[r + 1];
-            for i in row_start..row_end {
-                let col = chain.weights.col_indices()[i];
-                let weight_a = &chain.weights.values()[i];
+        // We unpack result_chain manually to avoid CoMonad::extract (which requires Clone).
+        // Since we own result_chain, we can consume it.
+        // Unpack outer weights.
+        let (_, _, outer_values, _) = result_chain.weights.into_parts();
 
-                let topology = f(weight_a.clone());
-                if let Some(value_b) = topology.data.as_slice().get(col) {
-                    total_result = total_result + value_b.clone();
-                }
+        // Get first inner chain
+        if let Some(inner_chain) = outer_values.into_iter().next() {
+            // Unpack inner weights
+            let (_, _, inner_values, _) = inner_chain.weights.into_parts();
+            // Get first B
+            if let Some(val) = inner_values.into_iter().next() {
+                return val;
             }
         }
 
-        total_result
-    }
-
-    /// The Unit: A -> Topology<Chain<A>>
-    /// Logic: Embed scalar 'a' into a field of chains.
-    /// Usually this means creating a constant field or a specific distribution.
-    /// With 'ctx', we can now create the structure.
-    fn unit<A>(ctx: &Arc<SimplicialComplex>, a: A) -> Topology<Chain<A>>
-    where
-        A: Clone + Zero + Copy + PartialEq,
-    {
-        // Create a topology where every point holds a Chain containing 'a'.
-        // This is a "Diagonal" embedding.
-
-        let skeleton = &ctx.skeletons[0]; // Default to 0-skeleton
-        let size = skeleton.simplices.len();
-        let mut data = Vec::with_capacity(size);
-
-        for i in 0..size {
-            // Create a chain concentrated at i with weight a
-            let weights = CsrMatrix::from_triplets(1, size, &[(0, i, a)]).unwrap();
-
-            let chain = Chain {
-                complex: ctx.clone(),
-                grade: 0,
-                weights,
-            };
-            data.push(chain);
-        }
-
-        Topology {
-            complex: ctx.clone(),
-            grade: 0,
-            data: CausalTensor::new(data, vec![size]).unwrap(),
-            cursor: 0,
-        }
-    }
-
-    /// The Counit: Chain<Topology<B>> -> B
-    /// Logic: Integration / Pairing.
-    fn counit<B>(_ctx: &Arc<SimplicialComplex>, lrb: Chain<Topology<B>>) -> B
-    where
-        B: Clone + Zero + Add<Output = B> + Mul<Output = B>,
-    {
-        let mut total = B::zero();
-
-        for r in 0..lrb.weights.shape().0 {
-            let row_start = lrb.weights.row_indices()[r];
-            let row_end = lrb.weights.row_indices()[r + 1];
-            for i in row_start..row_end {
-                let col = lrb.weights.col_indices()[i];
-                let topology_b = &lrb.weights.values()[i];
-
-                if let Some(val) = topology_b.data.as_slice().get(col) {
-                    total = total + val.clone();
-                }
-            }
-        }
-
-        total
+        panic!("Adjunction::right_adjunct resulted in empty chain.");
     }
 }

@@ -5,14 +5,18 @@
 
 use crate::Cell;
 use crate::CellComplex;
-use deep_causality_haft::HKT;
+use deep_causality_haft::{HKT, NoConstraint, Satisfies};
 use std::sync::Arc;
 
 /// HKT witness for CellComplex<C> as a functor over field values.
 pub struct CellComplexWitness<C: Cell>(std::marker::PhantomData<C>);
 
 impl<C: Cell> HKT for CellComplexWitness<C> {
-    type Type<T> = CellField<C, T>;
+    type Constraint = NoConstraint;
+    type Type<T>
+        = CellField<C, T>
+    where
+        T: Satisfies<NoConstraint>;
 }
 
 /// A field over an arbitrary cell complex.

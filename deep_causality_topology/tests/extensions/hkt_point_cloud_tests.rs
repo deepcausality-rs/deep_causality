@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{BoundedComonad, Functor};
+use deep_causality_haft::{CoMonad, Functor};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{PointCloud, PointCloudWitness};
 

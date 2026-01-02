@@ -4,19 +4,24 @@
  */
 
 use crate::Graph;
-use deep_causality_haft::{BoundedComonad, Functor, HKT};
-use deep_causality_num::Zero;
+use deep_causality_haft::{CoMonad, Functor, HKT, NoConstraint, Satisfies};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 
 pub struct GraphWitness;
 
 impl HKT for GraphWitness {
-    type Type<T> = Graph<T>;
+    type Constraint = NoConstraint;
+    type Type<T>
+        = Graph<T>
+    where
+        T: Satisfies<NoConstraint>;
 }
 
 impl Functor<GraphWitness> for GraphWitness {
     fn fmap<A, B, F>(fa: Graph<A>, f: F) -> Graph<B>
     where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
         F: FnMut(A) -> B,
     {
         let new_data = CausalTensorWitness::fmap(fa.data, f);
@@ -30,10 +35,10 @@ impl Functor<GraphWitness> for GraphWitness {
     }
 }
 
-impl BoundedComonad<GraphWitness> for GraphWitness {
+impl CoMonad<GraphWitness> for GraphWitness {
     fn extract<A>(fa: &Graph<A>) -> A
     where
-        A: Clone,
+        A: Satisfies<NoConstraint> + Clone,
     {
         fa.data
             .as_slice()
@@ -45,15 +50,10 @@ impl BoundedComonad<GraphWitness> for GraphWitness {
     fn extend<A, B, Func>(fa: &Graph<A>, mut f: Func) -> Graph<B>
     where
         Func: FnMut(&Graph<A>) -> B,
-        A: Zero + Copy + Clone,
-        B: Zero + Copy + Clone,
+        A: Satisfies<NoConstraint> + Clone,
+        B: Satisfies<NoConstraint>,
     {
         let size = fa.num_vertices;
-        // Since Graph data is typically 1D (per vertex), but could be multi-dimensional per vertex?
-        // Wait, Graph definition uses num_vertices for size.
-        // Let's check if Graph has .data with shape.
-        // Graph struct has `data: CausalTensor<T>`.
-        // So we should use fa.data.shape().to_vec().
         let shape = fa.data.shape().to_vec();
         let mut result_vec = Vec::with_capacity(size);
 
@@ -65,8 +65,7 @@ impl BoundedComonad<GraphWitness> for GraphWitness {
             result_vec.push(val);
         }
 
-        let new_data =
-            CausalTensor::new(result_vec, shape).expect("Data tensor creation should succeed");
+        let new_data = CausalTensor::from_vec(result_vec, &shape);
 
         Graph {
             num_vertices: fa.num_vertices,

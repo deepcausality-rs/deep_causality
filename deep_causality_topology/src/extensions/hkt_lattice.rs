@@ -4,19 +4,18 @@
  */
 
 use crate::Lattice;
-use deep_causality_haft::HKT;
+use deep_causality_haft::{HKT, NoConstraint, Satisfies};
 use std::sync::Arc;
 
 /// HKT witness for Lattice<D> as a functor over field values.
 pub struct LatticeWitness<const D: usize>;
 
 impl<const D: usize> HKT for LatticeWitness<D> {
-    /// Lattice with field values of type T at each k-cell.
-    /// This requires a definition of LatticeField which maps cells to values.
-    /// For now, we define the type alias or struct here or import it.
-    /// The spec defined LatticeField. We should define it in types/lattice/lattice_field.rs?
-    /// Or inline if simple.
-    type Type<T> = LatticeField<D, T>;
+    type Constraint = NoConstraint;
+    type Type<T>
+        = LatticeField<D, T>
+    where
+        T: Satisfies<NoConstraint>;
 }
 
 /// A field assignment over lattice cells.
