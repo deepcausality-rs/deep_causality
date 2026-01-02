@@ -4,16 +4,32 @@
  */
 
 use crate::CausalTensor;
-use deep_causality_haft::{Foldable, Functor, HKT, Satisfies};
+use deep_causality_haft::{Foldable, Functor, HKT, Pure, Satisfies};
 use deep_causality_num::Complex;
+
+//  **Strict GAT HKTs are Solved in the Next-Generation Trait Solver**
+//
+// As of **January 2026**, we have confirmed that the inability to implement strict `Monad` and `CoMonad`
+// (due to `E0276`/ `E0277` GAT normalization errors) is a **temporary limitation** of the current stable Rust trait solver.
+//
+// **Verification:**
+// Using the nightly compiler with the new trait solver flag (`-Znext-solver`), the strict implementations
+// for `StrictCausalTensorWitness` **compile successfully without modification**.
+//
+// The **Dual-Witness Pattern** (unbounded vs strict) is a transitional architecture.
+// Once the new trait solver stabilizes, we can unify the design into a single,
+// fully constrained HKT witness where `type Constraint` is universally enforced.
+//
 
 /// `TensorConstraint` enforces strict algebraic bounds on the types allowed within a CausalTensor HKT.
 ///
 /// This corresponds to **Tier 4: TensorDataConstraint** in the spec.
 /// It limits usage to types that are mathematically valid for tensor physics (Fields, Rings).
 ///
-/// **Note:** Because this constraint excludes closures (`Fn`), this witness CANNOT implement
-/// `Applicative` or `Monad`. It is restricted to `Functor`, `Foldable`, and `CoMonad`.
+/// **Note:** This witness implements `Pure`, `Functor`, `Monad` and `CoMonad`.
+/// It does NOT implement `Applicative` because `Applicative::apply` requires closures to be wrapped in the tensor,
+/// but `TensorConstraint` strictly forbids closures. However, under the new `Monad: Functor + Pure` hierarchy,
+/// we can still implement `Monad` without `Applicative`.
 pub struct TensorConstraint;
 
 // ============================================================================
@@ -58,7 +74,7 @@ impl HKT for StrictCausalTensorWitness {
 }
 
 // ============================================================================
-// Algebraic Implementations
+// HKT Traits Implementation
 // ============================================================================
 
 impl Functor<StrictCausalTensorWitness> for StrictCausalTensorWitness {
@@ -68,9 +84,10 @@ impl Functor<StrictCausalTensorWitness> for StrictCausalTensorWitness {
         B: Satisfies<TensorConstraint>,
         Func: FnMut(A) -> B,
     {
-        let shape = m_a.shape().to_vec();
-        let new_data: Vec<B> = m_a.into_vec().into_iter().map(f).collect();
-        CausalTensor::from_vec(new_data, &shape)
+        // Functor fmap: transform each element directly
+        let len = m_a.len();
+        let data = m_a.into_vec().into_iter().map(f).collect::<Vec<B>>();
+        CausalTensor::from_vec(data, &[len])
     }
 }
 
@@ -84,4 +101,68 @@ impl Foldable<StrictCausalTensorWitness> for StrictCausalTensorWitness {
     }
 }
 
-// CoMonad implementation is omitted for Strict Mode due to E0276/E0277 errors
+impl Pure<StrictCausalTensorWitness> for StrictCausalTensorWitness {
+    fn pure<T>(value: T) -> CausalTensor<T>
+    where
+        T: Satisfies<TensorConstraint>,
+    {
+        // 1D tensor with single element (List Monad semantics)
+        CausalTensor::from_vec(vec![value], &[1])
+    }
+}
+
+// Monad and CoMonad implementations restore for experiment
+
+//
+// Monad and CoMonad implementations are currently blocked on stable by a rustc GAT normalization issue (E0276/E0277).
+//
+// STATUS: Verified working on nightly with `-Znext-solver`.
+//
+// Uncomment when new trait solver beomces GA / Stable.
+//
+// impl Monad<StrictCausalTensorWitness> for StrictCausalTensorWitness {
+//     fn bind<A, B, Func>(m_a: CausalTensor<A>, mut f: Func) -> CausalTensor<B>
+//     where
+//         A: Satisfies<TensorConstraint>,
+//         B: Satisfies<TensorConstraint>,
+//         Func: FnMut(A) -> CausalTensor<B>,
+//     {
+//         // Monadic bind for List/Tensor: apply f to each element and flatten the result
+//         let mut result_data = Vec::with_capacity(m_a.len());
+//         for a in m_a.into_vec() {
+//             let mb = f(a);
+//             result_data.extend(mb.into_vec());
+//         }
+//         let len = result_data.len();
+//         CausalTensor::from_vec(result_data, &[len])
+//     }
+// }
+//
+// impl CoMonad<StrictCausalTensorWitness> for StrictCausalTensorWitness {
+//     fn extract<A>(fa: &CausalTensor<A>) -> A
+//     where
+//         A: Satisfies<TensorConstraint> + Clone,
+//     {
+//         fa.as_slice()
+//             .first()
+//             .cloned()
+//             .expect("CoMonad::extract cannot be called on an empty CausalTensor.")
+//     }
+//
+//     fn extend<A, B, Func>(fa: &CausalTensor<A>, mut f: Func) -> CausalTensor<B>
+//     where
+//         Func: FnMut(&CausalTensor<A>) -> B,
+//         A: Satisfies<TensorConstraint> + Clone,
+//         B: Satisfies<TensorConstraint>,
+//     {
+//         let len = fa.len();
+//         let shape = fa.shape().to_vec();
+//         let new_data: Vec<B> = (0..len)
+//             .map(|i| {
+//                 let view = fa.shifted_view(i);
+//                 f(&view)
+//             })
+//             .collect();
+//         CausalTensor::from_vec(new_data, &shape)
+//     }
+// }

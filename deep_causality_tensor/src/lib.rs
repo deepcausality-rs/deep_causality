@@ -8,7 +8,7 @@
 //! Hardware-agnostic tensor library with backend abstraction for CPU and GPU computation.
 
 mod errors;
-mod extensions;
+pub mod extensions;
 mod traits;
 mod types;
 mod utils;
