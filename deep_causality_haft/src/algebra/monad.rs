@@ -2,34 +2,35 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Applicative, HKT, Satisfies};
+use crate::{Functor, HKT, Pure, Satisfies};
 
-/// The `Monad` trait extends `Applicative` by providing a `bind` operation
+/// The `Monad` trait extends `Functor` and `Pure` by providing the `bind` operation
 /// for sequencing computations that produce effectful values.
 ///
-/// Monads are fundamental for managing side-effects and controlling the flow
-/// of computations in a functional style, allowing for powerful abstractions
-/// like error handling, logging, and state management.
+/// # Design Note: Pure-Based Hierarchy
 ///
-/// This trait is generic over `F`, which is a Higher-Kinded Type (HKT) witness.
+/// Unlike the Haskell convention (`Monad: Applicative`), this trait extends `Functor + Pure`
+/// directly. This enables **strict constrained witnesses** (like `StrictCausalTensorWitness`)
+/// to implement `Monad` without being blocked by `Applicative`'s closure constraint.
+///
+/// Both `Applicative` and `Monad` share the same `pure` operation via the `Pure` trait.
 ///
 /// # Constraint Support
 ///
-/// The `bind` function now requires both input `A` and output `B` types
-/// to satisfy the HKT's constraint. This ensures type-safe chaining for
-/// constrained types like `CausalTensor<T>` where `T: TensorData`.
+/// The `bind` method requires types to satisfy the HKT's constraint. This ensures type-safe
+/// chaining for constrained types like `CausalTensor<T>` where `T: TensorData`.
 ///
 /// # Laws (Informal)
 ///
-/// 1.  **Left Identity**: `pure(a).bind(f) == f(a)`
-/// 2.  **Right Identity**: `m.bind(pure) == m`
-/// 3.  **Associativity**: `m.bind(|x| f(x).bind(g)) == m.bind(f).bind(g)`
+/// 1.  **Left Identity**: `bind(pure(a), f) == f(a)`
+/// 2.  **Right Identity**: `bind(m, pure) == m`
+/// 3.  **Associativity**: `bind(bind(m, f), g) == bind(m, |x| bind(f(x), g))`
 ///
 /// # Type Parameters
 ///
 /// *   `F`: A Higher-Kinded Type (HKT) witness that represents the type constructor
 ///     (e.g., `OptionWitness`, `ResultWitness<E>`, `VecWitness`).
-pub trait Monad<F: HKT>: Applicative<F> {
+pub trait Monad<F: HKT>: Functor<F> + Pure<F> {
     /// Chains a computation from an effectful value, flattening the result.
     /// This is the core sequencing operation of a Monad.
     ///

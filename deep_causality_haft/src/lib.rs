@@ -69,6 +69,7 @@ pub use crate::algebra::monad::Monad;
 pub use crate::algebra::parametric_monad::ParametricMonad;
 pub use crate::algebra::profunctor::Profunctor;
 pub use crate::algebra::promonad::Promonad;
+pub use crate::algebra::pure::Pure;
 pub use crate::algebra::riemann_map::RiemannMap;
 pub use crate::algebra::traversable::Traversable;
 

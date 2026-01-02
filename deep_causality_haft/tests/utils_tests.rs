@@ -6,7 +6,7 @@
 use deep_causality_haft::utils_tests::*;
 use deep_causality_haft::{
     Applicative, Effect3, Effect4, Effect5, Functor, HKT, HKT3, HKT4, HKT5, Monad, MonadEffect3,
-    MonadEffect4, MonadEffect5,
+    MonadEffect4, MonadEffect5, Pure,
 };
 
 // --- MyCustomEffectType (Arity 3) Tests ---

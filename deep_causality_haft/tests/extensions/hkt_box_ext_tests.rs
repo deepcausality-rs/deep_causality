@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 #![allow(clippy::borrowed_box)]
-use deep_causality_haft::{Applicative, BoxWitness, CoMonad, Foldable, Functor, HKT, Monad};
+use deep_causality_haft::{Applicative, BoxWitness, CoMonad, Foldable, Functor, HKT, Monad, Pure};
 
 // --- HKT Tests ---
 

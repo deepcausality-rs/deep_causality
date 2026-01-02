@@ -60,5 +60,6 @@ pub mod monad;
 pub mod parametric_monad;
 pub mod profunctor;
 pub mod promonad;
+pub mod pure;
 pub mod riemann_map;
 pub mod traversable;

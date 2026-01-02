@@ -17,7 +17,7 @@ use alloc::vec::Vec;
 
 use crate::{
     Applicative, Effect3, Effect4, Effect5, Functor, Monad, MonadEffect3, MonadEffect4,
-    MonadEffect5, NoConstraint,
+    MonadEffect5, NoConstraint, Pure,
 };
 use crate::{HKT, HKT3, HKT4, HKT5, Placeholder};
 
@@ -78,7 +78,7 @@ impl Functor<MyEffectHktWitness<String, String>> for MyEffectHktWitness<String, 
     }
 }
 
-impl Applicative<MyEffectHktWitness<String, String>> for MyEffectHktWitness<String, String> {
+impl Pure<MyEffectHktWitness<String, String>> for MyEffectHktWitness<String, String> {
     fn pure<T>(value: T) -> MyCustomEffectType<T, String, String> {
         MyCustomEffectType {
             value,
@@ -86,7 +86,9 @@ impl Applicative<MyEffectHktWitness<String, String>> for MyEffectHktWitness<Stri
             warnings: Vec::new(),
         }
     }
+}
 
+impl Applicative<MyEffectHktWitness<String, String>> for MyEffectHktWitness<String, String> {
     fn apply<A, B, Func>(
         mut f_ab: MyCustomEffectType<Func, String, String>,
         f_a: MyCustomEffectType<A, String, String>,
@@ -96,14 +98,14 @@ impl Applicative<MyEffectHktWitness<String, String>> for MyEffectHktWitness<Stri
     {
         if f_ab.error.is_some() {
             return MyCustomEffectType {
-                value: (f_ab.value)(f_a.value), // Dummy call to satisfy type, actual value discarded
+                value: (f_ab.value)(f_a.value),
                 error: f_ab.error,
                 warnings: f_ab.warnings,
             };
         }
         if f_a.error.is_some() {
             return MyCustomEffectType {
-                value: (f_ab.value)(f_a.value), // Dummy call to satisfy type, actual value discarded
+                value: (f_ab.value)(f_a.value),
                 error: f_a.error,
                 warnings: f_a.warnings,
             };
@@ -283,9 +285,7 @@ impl Functor<MyEffectHktWitness4<String, String, u64>>
     }
 }
 
-impl Applicative<MyEffectHktWitness4<String, String, u64>>
-    for MyEffectHktWitness4<String, String, u64>
-{
+impl Pure<MyEffectHktWitness4<String, String, u64>> for MyEffectHktWitness4<String, String, u64> {
     fn pure<T>(value: T) -> MyCustomEffectType4<T, String, String, u64> {
         MyCustomEffectType4 {
             value,
@@ -294,7 +294,11 @@ impl Applicative<MyEffectHktWitness4<String, String, u64>>
             f3: Vec::new(),
         }
     }
+}
 
+impl Applicative<MyEffectHktWitness4<String, String, u64>>
+    for MyEffectHktWitness4<String, String, u64>
+{
     fn apply<A, B, Func>(
         mut f_ab: MyCustomEffectType4<Func, String, String, u64>,
         f_a: MyCustomEffectType4<A, String, String, u64>,
@@ -304,7 +308,7 @@ impl Applicative<MyEffectHktWitness4<String, String, u64>>
     {
         if f_ab.f1.is_some() {
             return MyCustomEffectType4 {
-                value: (f_ab.value)(f_a.value), // Dummy call to satisfy type
+                value: (f_ab.value)(f_a.value),
                 f1: f_ab.f1,
                 f2: f_ab.f2,
                 f3: f_ab.f3,
@@ -312,7 +316,7 @@ impl Applicative<MyEffectHktWitness4<String, String, u64>>
         }
         if f_a.f1.is_some() {
             return MyCustomEffectType4 {
-                value: (f_ab.value)(f_a.value), // Dummy call to satisfy type
+                value: (f_ab.value)(f_a.value),
                 f1: f_a.f1,
                 f2: f_a.f2,
                 f3: f_a.f3,
@@ -513,7 +517,7 @@ impl Functor<MyEffectHktWitness5<String, String, u64, String>>
     }
 }
 
-impl Applicative<MyEffectHktWitness5<String, String, u64, String>>
+impl Pure<MyEffectHktWitness5<String, String, u64, String>>
     for MyEffectHktWitness5<String, String, u64, String>
 {
     fn pure<T>(value: T) -> MyCustomEffectType5<T, String, String, u64, String> {
@@ -525,7 +529,11 @@ impl Applicative<MyEffectHktWitness5<String, String, u64, String>>
             f4: Vec::new(),
         }
     }
+}
 
+impl Applicative<MyEffectHktWitness5<String, String, u64, String>>
+    for MyEffectHktWitness5<String, String, u64, String>
+{
     fn apply<A, B, Func>(
         mut f_ab: MyCustomEffectType5<Func, String, String, u64, String>,
         f_a: MyCustomEffectType5<A, String, String, u64, String>,
@@ -535,7 +543,7 @@ impl Applicative<MyEffectHktWitness5<String, String, u64, String>>
     {
         if f_ab.f1.is_some() {
             return MyCustomEffectType5 {
-                value: (f_ab.value)(f_a.value), // Dummy call to satisfy type
+                value: (f_ab.value)(f_a.value),
                 f1: f_ab.f1,
                 f2: f_ab.f2,
                 f3: f_ab.f3,
@@ -544,7 +552,7 @@ impl Applicative<MyEffectHktWitness5<String, String, u64, String>>
         }
         if f_a.f1.is_some() {
             return MyCustomEffectType5 {
-                value: (f_ab.value)(f_a.value), // Dummy call to satisfy type
+                value: (f_ab.value)(f_a.value),
                 f1: f_a.f1,
                 f2: f_a.f2,
                 f3: f_a.f3,

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Applicative, OptionWitness, ResultWitness};
+use deep_causality_haft::{Applicative, OptionWitness, Pure, ResultWitness};
 
 #[test]
 fn test_applicative_option() {

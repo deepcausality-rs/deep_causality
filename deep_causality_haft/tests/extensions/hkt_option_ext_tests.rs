@@ -4,7 +4,7 @@
  */
 
 use deep_causality_haft::{
-    Applicative, Foldable, Functor, HKT, Monad, OptionWitness, ResultWitness, Traversable,
+    Applicative, Foldable, Functor, HKT, Monad, OptionWitness, Pure, ResultWitness, Traversable,
 };
 
 // --- Applicative Tests ---

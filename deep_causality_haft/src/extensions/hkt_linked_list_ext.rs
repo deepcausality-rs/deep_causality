@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Applicative, Foldable, Functor, HKT, Monad, NoConstraint, Satisfies};
+use crate::{Applicative, Foldable, Functor, HKT, Monad, NoConstraint, Pure, Satisfies};
 use alloc::collections::LinkedList;
 
 /// `LinkedListWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
@@ -46,8 +46,8 @@ impl Foldable<LinkedListWitness> for LinkedListWitness {
     }
 }
 
-// Implementation of Applicative for LinkedListWitness
-impl Applicative<LinkedListWitness> for LinkedListWitness {
+// Implementation of Pure for LinkedListWitness
+impl Pure<LinkedListWitness> for LinkedListWitness {
     /// Lifts a pure value into a `LinkedList` containing only that value.
     fn pure<T>(value: T) -> LinkedList<T>
     where
@@ -57,13 +57,16 @@ impl Applicative<LinkedListWitness> for LinkedListWitness {
         list.push_back(value);
         list
     }
+}
 
+// Implementation of Applicative for LinkedListWitness
+impl Applicative<LinkedListWitness> for LinkedListWitness {
     /// Applies a list of functions to a list of values.
     fn apply<A, B, Func>(f_ab: LinkedList<Func>, f_a: LinkedList<A>) -> LinkedList<B>
     where
         A: Satisfies<NoConstraint> + Clone,
         B: Satisfies<NoConstraint>,
-        Func: FnMut(A) -> B,
+        Func: Satisfies<NoConstraint> + FnMut(A) -> B,
     {
         f_ab.into_iter()
             .flat_map(|mut f_val| {

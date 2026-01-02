@@ -3,7 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Applicative, Foldable, Functor, HKT, Monad, NoConstraint, Satisfies, Traversable};
+use crate::{
+    Applicative, Foldable, Functor, HKT, Monad, NoConstraint, Pure, Satisfies, Traversable,
+};
 
 /// `OptionWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
 /// for the `Option<T>` type constructor. It allows `Option` to be used with generic
@@ -52,8 +54,8 @@ impl Functor<OptionWitness> for OptionWitness {
     }
 }
 
-// Implementation of Applicative for OptionWitness
-impl Applicative<OptionWitness> for OptionWitness {
+// Implementation of Pure for OptionWitness
+impl Pure<OptionWitness> for OptionWitness {
     /// Lifts a pure value into a `Some` variant of `Option`.
     ///
     /// # Arguments
@@ -69,7 +71,10 @@ impl Applicative<OptionWitness> for OptionWitness {
     {
         Some(value)
     }
+}
 
+// Implementation of Applicative for OptionWitness
+impl Applicative<OptionWitness> for OptionWitness {
     /// Applies a function wrapped in an `Option` (`f_ab`) to a value wrapped in an `Option` (`f_a`).
     ///
     /// If both `f_ab` and `f_a` are `Some`, the function is applied to the value.
@@ -90,7 +95,7 @@ impl Applicative<OptionWitness> for OptionWitness {
     where
         A: Satisfies<NoConstraint> + Clone,
         B: Satisfies<NoConstraint>,
-        Func: FnMut(A) -> B,
+        Func: Satisfies<NoConstraint> + FnMut(A) -> B,
     {
         f_ab.and_then(|f| f_a.map(f))
     }

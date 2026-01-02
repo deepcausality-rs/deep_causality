@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Applicative, CoMonad, Foldable, Functor, HKT, Monad, NoConstraint, Satisfies};
+use crate::{Applicative, CoMonad, Foldable, Functor, HKT, Monad, NoConstraint, Pure, Satisfies};
 use alloc::boxed::Box;
 
 /// `BoxWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
@@ -53,36 +53,20 @@ impl Functor<BoxWitness> for BoxWitness {
     }
 }
 
-// Implementation of Applicative for BoxWitness
-impl Applicative<BoxWitness> for BoxWitness {
+// Implementation of Pure for BoxWitness
+impl Pure<BoxWitness> for BoxWitness {
     /// Lifts a pure value into a `Box`.
-    ///
-    /// # Arguments
-    ///
-    /// *   `value`: The value to wrap in a `Box`.
-    ///
-    /// # Returns
-    ///
-    /// `Box::new(value)`.
     fn pure<T>(value: T) -> <BoxWitness as HKT>::Type<T>
     where
         T: Satisfies<NoConstraint>,
     {
         Box::new(value)
     }
+}
 
+// Implementation of Applicative for BoxWitness
+impl Applicative<BoxWitness> for BoxWitness {
     /// Applies a function wrapped in a `Box` (`f_ab`) to a value wrapped in a `Box` (`f_a`).
-    ///
-    /// The function is applied to the value, and the result is wrapped in a new `Box`.
-    ///
-    /// # Arguments
-    ///
-    /// *   `f_ab`: A `Box` containing the function.
-    /// *   `f_a`: A `Box` containing the argument.
-    ///
-    /// # Returns
-    ///
-    /// A `Box` containing the result of the application.
     fn apply<A, B, Func>(
         mut f_ab: <BoxWitness as HKT>::Type<Func>,
         f_a: <BoxWitness as HKT>::Type<A>,
@@ -90,7 +74,7 @@ impl Applicative<BoxWitness> for BoxWitness {
     where
         A: Satisfies<NoConstraint> + Clone,
         B: Satisfies<NoConstraint>,
-        Func: FnMut(A) -> B,
+        Func: Satisfies<NoConstraint> + FnMut(A) -> B,
     {
         Box::new((*f_ab)(*f_a))
     }
@@ -122,18 +106,6 @@ impl Foldable<BoxWitness> for BoxWitness {
 // Implementation of Monad for BoxWitness
 impl Monad<BoxWitness> for BoxWitness {
     /// Implements the `bind` operation for `Box<T>`.
-    ///
-    /// The function `f` is applied to the value inside the `Box`,
-    /// which itself returns a new `Box`.
-    ///
-    /// # Arguments
-    ///
-    /// *   `m_a`: The initial `Box`.
-    /// *   `f`: A function that takes the inner value of `m_a` and returns a new `Box`.
-    ///
-    /// # Returns
-    ///
-    /// A new `Box` representing the chained computation.
     fn bind<A, B, Func>(
         m_a: <BoxWitness as HKT>::Type<A>,
         mut f: Func,

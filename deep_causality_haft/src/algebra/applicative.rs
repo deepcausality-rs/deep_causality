@@ -2,46 +2,37 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Functor, HKT, Satisfies};
+use crate::{Functor, HKT, Pure, Satisfies};
 
-/// The `Applicative` trait extends `Functor` by providing methods to apply a function
-/// wrapped in a context to a value wrapped in a context, and to lift a pure value
-/// into the minimal context.
+/// The `Applicative` trait extends `Functor` and `Pure` by providing the `apply` operation
+/// to apply a function wrapped in a context to a value wrapped in a context.
 ///
 /// This trait is generic over `F`, which is a Higher-Kinded Type (HKT) witness.
 ///
+/// # Hierarchy
+///
+/// `Applicative: Functor + Pure`
+///
+/// The `pure` operation is provided by the `Pure` trait, which is a supertrait.
+/// This design allows `Monad` to share the same `pure` operation without requiring
+/// `Monad: Applicative`.
+///
 /// # Constraint Support
 ///
-/// Both `pure` and `apply` now require types to satisfy the HKT's constraint.
-/// This ensures type-safe lifting and application for constrained types.
+/// The `apply` method requires types to satisfy the HKT's constraint.
+/// This ensures type-safe application for constrained types.
 ///
 /// # Laws (Informal)
 ///
-/// 1.  **Identity**: `pure(id).apply(v) == v`
-/// 2.  **Homomorphism**: `pure(f).apply(pure(x)) == pure(f(x))`
-/// 3.  **Interchange**: `u.apply(pure(y)) == pure(|f| f(y)).apply(u)`
+/// 1.  **Identity**: `apply(pure(id), v) == v`
+/// 2.  **Homomorphism**: `apply(pure(f), pure(x)) == pure(f(x))`
+/// 3.  **Interchange**: `apply(u, pure(y)) == apply(pure(|f| f(y)), u)`
 ///
 /// # Type Parameters
 ///
 /// *   `F`: A Higher-Kinded Type (HKT) witness that represents the type constructor
 ///     (e.g., `OptionWitness`, `ResultWitness<E>`).
-pub trait Applicative<F: HKT>: Functor<F> {
-    /// Lifts a pure value into the minimal applicative context `F::Type<T>`.
-    ///
-    /// This is often used to introduce a value into an effectful computation
-    /// without any side effects.
-    ///
-    /// # Arguments
-    ///
-    /// *   `value`: The pure value to lift.
-    ///
-    /// # Returns
-    ///
-    /// An instance of `F::Type<T>` containing the `value`.
-    fn pure<T>(value: T) -> F::Type<T>
-    where
-        T: Satisfies<F::Constraint>;
-
+pub trait Applicative<F: HKT>: Functor<F> + Pure<F> {
     /// Applies a function wrapped in a context (`f_ab`) to a value wrapped in a context (`f_a`).
     ///
     /// This allows sequencing computations where both the function and its argument
