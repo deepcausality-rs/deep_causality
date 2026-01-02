@@ -150,14 +150,3 @@ impl<T: Field + Copy + Send + Sync> Satisfies<FieldThreadSafe> for T {}
 /// Most restrictive standard constraint - only f32, f64.
 pub struct RealFieldThreadSafe;
 impl<T: RealField + Copy + Send + Sync> Satisfies<RealFieldThreadSafe> for T {}
-
-// ============================================================================
-// TIER 5: Legacy/Compatibility Constraints
-// ============================================================================
-
-/// Numeric types with zero element and copy semantics.
-///
-/// This constraint provides backward compatibility with the old
-/// `BoundedComonad` pattern that used `Zero + Copy` bounds.
-pub struct NumericConstraint;
-impl<T: deep_causality_num::Zero + Copy + Clone> Satisfies<NumericConstraint> for T {}
