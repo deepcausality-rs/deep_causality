@@ -57,7 +57,6 @@ version = "0.2.5"
 
 [dev-dependencies]
 criterion = { version = "0.8.1" }
-deep_causality_rand = { path = "../deep_causality_rand" }
 
 [[example]]
 name = "basic_graph"
