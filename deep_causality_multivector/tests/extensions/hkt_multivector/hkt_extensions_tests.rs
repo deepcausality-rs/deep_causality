@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::Applicative;
+use deep_causality_haft::{Applicative, Pure};
 use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorWitness, Metric};
 
 #[test]

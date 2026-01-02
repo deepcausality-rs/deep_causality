@@ -5,7 +5,7 @@
 
 //! Tests for HKT operations on CausalMultiField.
 
-use deep_causality_haft::{Applicative, CoMonad, Functor, Monad};
+use deep_causality_haft::{CoMonad, Functor, Monad, Pure};
 use deep_causality_multivector::{
     CausalMultiField, CausalMultiFieldWitness, CausalMultiVector, DefaultMultivectorBackend, Metric,
 };
@@ -138,7 +138,7 @@ fn test_factory_contains_value() {
 }
 
 #[test]
-#[should_panic(expected = "Applicative::pure for CausalMultiField requires context")]
+#[should_panic(expected = "Pure::pure for CausalMultiField requires context")]
 fn test_pure_panics_as_expected() {
     // Verify that calling pure actually panics with the documented message
     let _ = CausalMultiFieldWitness::<DefaultMultivectorBackend>::pure(42.0);

@@ -5,7 +5,7 @@
 
 use crate::CausalMultiVector;
 use deep_causality_haft::{
-    Adjunction, Applicative, CoMonad, Foldable, Functor, HKT, Monad, NoConstraint, Satisfies,
+    Adjunction, Applicative, CoMonad, Foldable, Functor, HKT, Monad, NoConstraint, Pure, Satisfies,
 };
 use deep_causality_metric::Metric;
 
@@ -33,19 +33,23 @@ impl Functor<CausalMultiVectorWitness> for CausalMultiVectorWitness {
 }
 
 // ----------------------------------------------------------------------------
-// Applicative
+// Pure
 // ----------------------------------------------------------------------------
-impl Applicative<CausalMultiVectorWitness> for CausalMultiVectorWitness {
+impl Pure<CausalMultiVectorWitness> for CausalMultiVectorWitness {
     fn pure<T>(value: T) -> CausalMultiVector<T>
     where
         T: Satisfies<NoConstraint>,
     {
-        // Default to scalar metric (Euclidean 0) since we lack context.
         let metric = Metric::Euclidean(0);
         let data = vec![value];
         CausalMultiVector { data, metric }
     }
+}
 
+// ----------------------------------------------------------------------------
+// Applicative
+// ----------------------------------------------------------------------------
+impl Applicative<CausalMultiVectorWitness> for CausalMultiVectorWitness {
     fn apply<A, B, Func>(
         f_ab: CausalMultiVector<Func>,
         f_a: CausalMultiVector<A>,
@@ -53,19 +57,16 @@ impl Applicative<CausalMultiVectorWitness> for CausalMultiVectorWitness {
     where
         A: Satisfies<NoConstraint> + Clone,
         B: Satisfies<NoConstraint>,
-        Func: FnMut(A) -> B,
+        Func: Satisfies<NoConstraint> + FnMut(A) -> B,
     {
-        let metric = f_a.metric; // Assume metric matches
-
+        let metric = f_a.metric;
         let funcs = f_ab.data;
         let args = f_a.data;
 
         let data = if funcs.len() == 1 {
-            // Broadcast single function to all arguments
             let f = funcs.into_iter().next().unwrap();
             args.into_iter().map(f).collect()
         } else if funcs.len() == args.len() {
-            // Zip application
             funcs.into_iter().zip(args).map(|(mut f, a)| f(a)).collect()
         } else {
             panic!(
@@ -102,7 +103,6 @@ impl Monad<CausalMultiVectorWitness> for CausalMultiVectorWitness {
         B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> CausalMultiVector<B>,
     {
-        // Bind implies flattening.
         let mut results = Vec::new();
         let mut out_metric = ma.metric;
 

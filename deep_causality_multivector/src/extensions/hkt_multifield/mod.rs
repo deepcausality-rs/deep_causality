@@ -4,7 +4,9 @@
  */
 
 use crate::{CausalMultiField, Metric};
-use deep_causality_haft::{Applicative, CoMonad, Functor, HKT, Monad, NoConstraint, Satisfies};
+use deep_causality_haft::{
+    Applicative, CoMonad, Functor, HKT, Monad, NoConstraint, Pure, Satisfies,
+};
 use deep_causality_tensor::LinearAlgebraBackend;
 use std::marker::PhantomData;
 
@@ -56,21 +58,26 @@ impl<B: LinearAlgebraBackend> Functor<CausalMultiFieldWitness<B>> for CausalMult
 }
 
 // ----------------------------------------------------------------------------
-// Applicative
+// Pure
 // ----------------------------------------------------------------------------
-impl<B: LinearAlgebraBackend> Applicative<CausalMultiFieldWitness<B>>
-    for CausalMultiFieldWitness<B>
-{
+impl<B: LinearAlgebraBackend> Pure<CausalMultiFieldWitness<B>> for CausalMultiFieldWitness<B> {
     fn pure<T>(_value: T) -> CausalMultiField<B, T>
     where
         T: Satisfies<NoConstraint>,
     {
         // Pure for Fields is context-dependent.
         panic!(
-            "Applicative::pure for CausalMultiField requires context (Metric/Shape) and cannot be implemented as a pure function. Use a factory method instead."
+            "Pure::pure for CausalMultiField requires context (Metric/Shape) and cannot be implemented as a pure function. Use a factory method instead."
         );
     }
+}
 
+// ----------------------------------------------------------------------------
+// Applicative
+// ----------------------------------------------------------------------------
+impl<B: LinearAlgebraBackend> Applicative<CausalMultiFieldWitness<B>>
+    for CausalMultiFieldWitness<B>
+{
     fn apply<A, C, Func>(
         ff: CausalMultiField<B, Func>,
         fa: CausalMultiField<B, A>,
@@ -78,7 +85,7 @@ impl<B: LinearAlgebraBackend> Applicative<CausalMultiFieldWitness<B>>
     where
         A: Satisfies<NoConstraint> + Clone,
         C: Satisfies<NoConstraint>,
-        Func: FnMut(A) -> C,
+        Func: Satisfies<NoConstraint> + FnMut(A) -> C,
     {
         // Intersection of fields.
         if ff.shape != fa.shape {

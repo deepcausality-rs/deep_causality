@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::Applicative;
+use deep_causality_haft::{Applicative, Pure};
 use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 
@@ -107,9 +107,9 @@ fn calculate_einstein_tensor(g_uv: &CausalTensor<f64>) -> CausalTensor<f64> {
     // G_uv ~ R * g_uv (Simplified EFE LHS)
     // Use HKT to scale the metric
     let scale_fn = |x: f64| x * curvature;
-    let fn_tensor = <CausalTensorWitness as Applicative<CausalTensorWitness>>::pure(scale_fn);
+    let fn_tensor = CausalTensorWitness::pure(scale_fn);
 
-    <CausalTensorWitness as Applicative<CausalTensorWitness>>::apply(fn_tensor, g_uv.clone())
+    CausalTensorWitness::apply(fn_tensor, g_uv.clone())
 }
 
 // --- MAGNETOHYDRODYNAMICS (MultiVector Engine) ---
