@@ -5,7 +5,7 @@
 
 use crate::Manifold;
 use deep_causality_haft::{
-    Applicative, CoMonad, Foldable, Functor, HKT, Monad, NoConstraint, Satisfies,
+    Applicative, CoMonad, Foldable, Functor, HKT, Monad, NoConstraint, Pure, Satisfies,
 };
 use deep_causality_num::Complex;
 use deep_causality_tensor::CausalTensor;
@@ -58,6 +58,21 @@ impl Foldable<ManifoldWitness> for ManifoldWitness {
     }
 }
 
+impl Pure<ManifoldWitness> for ManifoldWitness {
+    fn pure<T>(value: T) -> Manifold<T>
+    where
+        T: Satisfies<NoConstraint>,
+    {
+        let tensor = CausalTensor::from_vec(vec![value], &[1]);
+        Manifold {
+            complex: Default::default(),
+            data: tensor,
+            metric: None,
+            cursor: 0,
+        }
+    }
+}
+
 impl Monad<ManifoldWitness> for ManifoldWitness {
     fn bind<A, B, Func>(m_a: Manifold<A>, mut f: Func) -> Manifold<B>
     where
@@ -85,24 +100,11 @@ impl Monad<ManifoldWitness> for ManifoldWitness {
 }
 
 impl Applicative<ManifoldWitness> for ManifoldWitness {
-    fn pure<T>(value: T) -> Manifold<T>
-    where
-        T: Satisfies<NoConstraint>,
-    {
-        let tensor = CausalTensor::from_vec(vec![value], &[1]);
-        Manifold {
-            complex: Default::default(),
-            data: tensor,
-            metric: None,
-            cursor: 0,
-        }
-    }
-
     fn apply<A, B, Func>(f_ab: Manifold<Func>, f_a: Manifold<A>) -> Manifold<B>
     where
         A: Satisfies<NoConstraint> + Clone,
         B: Satisfies<NoConstraint>,
-        Func: FnMut(A) -> B,
+        Func: Satisfies<NoConstraint> + FnMut(A) -> B,
     {
         let shape = f_a.data.shape().to_vec();
         let funcs = f_ab.data.into_vec();

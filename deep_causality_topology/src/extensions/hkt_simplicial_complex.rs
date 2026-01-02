@@ -5,7 +5,7 @@
 
 use crate::{Chain, SimplicialComplex};
 use deep_causality_haft::{
-    Adjunction, Applicative, CoMonad, Foldable, Functor, HKT, NoConstraint, Satisfies,
+    Adjunction, CoMonad, Foldable, Functor, HKT, NoConstraint, Pure, Satisfies,
 };
 use deep_causality_sparse::CsrMatrixWitness;
 use std::sync::Arc;
@@ -63,11 +63,11 @@ impl Adjunction<ChainWitness, ChainWitness, (Arc<SimplicialComplex>, usize)> for
         let (complex, grade) = ctx;
 
         // Inner Chain: contains 'a' at pos 0
-        let inner_weights = <CsrMatrixWitness as Applicative<CsrMatrixWitness>>::pure(a);
+        let inner_weights = <CsrMatrixWitness as Pure<CsrMatrixWitness>>::pure(a);
         let inner_chain = Chain::new(complex.clone(), *grade, inner_weights);
 
         // Outer Chain: contains inner_chain at pos 0
-        let outer_weights = <CsrMatrixWitness as Applicative<CsrMatrixWitness>>::pure(inner_chain);
+        let outer_weights = <CsrMatrixWitness as Pure<CsrMatrixWitness>>::pure(inner_chain);
         Chain::new(complex.clone(), *grade, outer_weights)
     }
 
