@@ -49,7 +49,7 @@
 
 use crate::{ModelValidationError, ModificationLog};
 use deep_causality_haft::{
-    Applicative, Effect3, Functor, HKT, HKT3, LogAppend, Monad, NoConstraint, Placeholder,
+    Applicative, Effect3, Functor, HKT, HKT3, LogAppend, Monad, NoConstraint, Placeholder, Pure,
 };
 
 /// HKT witness type for the graph generatable effect system.
@@ -125,8 +125,10 @@ impl<E: Clone, L: Clone> Functor<GraphGeneratableEffectWitness<E, L>>
     }
 }
 
-impl<E: Clone, L: Clone + Default + LogAppend> Applicative<GraphGeneratableEffectWitness<E, L>>
-    for GraphGeneratableEffectWitness<E, L>
+impl<E, L> Pure<GraphGeneratableEffectWitness<E, L>> for GraphGeneratableEffectWitness<E, L>
+where
+    E: Clone,
+    L: Clone + Default + LogAppend,
 {
     fn pure<T>(value: T) -> <Self as HKT>::Type<T> {
         GraphGeneratableEffect {
@@ -135,7 +137,11 @@ impl<E: Clone, L: Clone + Default + LogAppend> Applicative<GraphGeneratableEffec
             logs: L::default(),
         }
     }
+}
 
+impl<E: Clone, L: Clone + Default + LogAppend> Applicative<GraphGeneratableEffectWitness<E, L>>
+    for GraphGeneratableEffectWitness<E, L>
+{
     fn apply<A, B, Func>(
         f_ab: <Self as HKT>::Type<Func>,
         m_a: <Self as HKT>::Type<A>,
