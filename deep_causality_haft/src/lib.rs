@@ -48,15 +48,14 @@ pub(crate) mod core;
 pub(crate) mod effect_system;
 pub(crate) mod extensions;
 pub mod utils_tests;
-
+pub mod constraints;
 // ============================================================================
 // Re-exports
 // ============================================================================
 
 // Core HKT Traits
 pub use crate::core::constraint::{NoConstraint, Satisfies};
-pub use crate::core::constraints::*;
-pub use crate::core::hkt::{HKT, HKT2, HKT3, HKT4, HKT5, Placeholder};
+pub use crate::core::hkt::{Placeholder, HKT, HKT2, HKT3, HKT4, HKT5};
 pub use crate::core::hkt_unbound::{
     HKT2Unbound, HKT3Unbound, HKT4Unbound, HKT5Unbound, HKT6Unbound,
 };

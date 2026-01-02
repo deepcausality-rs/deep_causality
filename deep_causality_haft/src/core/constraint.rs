@@ -3,27 +3,6 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Core constraint system for the unified GAT-bounded HKT hierarchy.
-//!
-//! This module provides the foundational `Satisfies` trait that enables declarative
-//! type constraints for higher-kinded types. By using this system:
-//!
-//! - **Unconstrained types** use `type Constraint = NoConstraint;`
-//! - **Constrained types** use `type Constraint = TensorDataConstraint;` (etc.)
-//!
-//! # Example
-//!
-//! ```rust
-//! use deep_causality_haft::{HKT, Satisfies, NoConstraint};
-//!
-//! pub struct VecWitness;
-//!
-//! impl HKT for VecWitness {
-//!     type Constraint = NoConstraint;
-//!     type Type<T> = Vec<T> where T: Satisfies<NoConstraint>;
-//! }
-//! ```
-
 /// Marker trait indicating that type `T` satisfies constraint `C`.
 ///
 /// This is the core abstraction that enables type-safe constraint checking

@@ -64,6 +64,5 @@
 //! *   **Arity 5**: `HKT5` (Fixed), `HKT5Unbound`
 //! *   **Arity 6**: `HKT6Unbound`
 pub mod constraint;
-pub mod constraints;
 pub mod hkt;
 pub mod hkt_unbound;

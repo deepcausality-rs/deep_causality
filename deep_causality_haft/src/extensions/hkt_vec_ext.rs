@@ -119,6 +119,7 @@ impl Foldable<VecWitness> for VecWitness {
     fn fold<A, B, Func>(fa: <VecWitness as HKT>::Type<A>, init: B, f: Func) -> B
     where
         <VecWitness as HKT>::Type<A>: IntoIterator<Item = A>,
+        A: Satisfies<NoConstraint>,
         Func: FnMut(B, A) -> B,
     {
         fa.into_iter().fold(init, f)
@@ -151,10 +152,9 @@ impl Monad<VecWitness> for VecWitness {
     }
 }
 
-// NOTE: Traversable implementation for VecWitness is temporarily disabled.
-// The generic `sequence` implementation using `Applicative` has issues with
-// the constraint system when `M` has a non-trivial constraint, because closures
-// cannot satisfy arbitrary constraint markers.
+// NOTE: Traversable is not implmented for VecWitness
 //
-// TODO: Implement a specialized sequence that works with the constraint system,
-// potentially using type-erased trait objects or macro-based specialization.
+// The standard `sequence` implementation requires wrapping closures in `M::pure`,
+// but closures cannot satisfy arbitrary `M::Constraint` bounds. Alternative
+// approaches using `M::bind` would require `M: Monad<M>` which the Traversable trait doesn't
+// require.
