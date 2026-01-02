@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, Monad};
+use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, Monad, Pure};
 use deep_causality_sparse::{CsrMatrix, CsrMatrixWitness};
 
 fn main() {

@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Adjunction, Applicative, CoMonad, Foldable, Functor, Monad};
+use deep_causality_haft::{Adjunction, Applicative, CoMonad, Foldable, Functor, Monad, Pure};
 use deep_causality_sparse::{CsrMatrix, CsrMatrixWitness};
 
 #[test]
@@ -31,7 +31,7 @@ fn test_foldable_fold() {
 
 #[test]
 fn test_applicative_pure() {
-    let matrix = <CsrMatrixWitness as Applicative<CsrMatrixWitness>>::pure(42.0);
+    let matrix = CsrMatrixWitness::pure(42.0);
 
     assert_eq!(matrix.shape(), (1, 1));
     assert_eq!(matrix.values(), &vec![42.0]);
@@ -41,7 +41,7 @@ fn test_applicative_pure() {
 fn test_applicative_apply_broadcast() {
     // Function wrapped in 1x1 matrix
     let func_ptr: fn(f64) -> f64 = |x: f64| x * 2.0;
-    let f_matrix = <CsrMatrixWitness as Applicative<CsrMatrixWitness>>::pure(func_ptr);
+    let f_matrix = CsrMatrixWitness::pure(func_ptr);
 
     // Data matrix
     let triplets = vec![(0, 0, 10.0), (0, 1, 20.0)];

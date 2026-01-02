@@ -5,7 +5,7 @@
 
 use crate::CsrMatrix;
 use deep_causality_haft::{
-    Adjunction, Applicative, CoMonad, Foldable, Functor, HKT, Monad, Satisfies,
+    Adjunction, Applicative, CoMonad, Foldable, Functor, HKT, Monad, Pure, Satisfies,
 };
 
 /// `CsrMatrixWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
@@ -64,14 +64,13 @@ impl Foldable<CsrMatrixWitness> for CsrMatrixWitness {
 }
 
 // ----------------------------------------------------------------------------
-// Applicative
+// Pure
 // ----------------------------------------------------------------------------
-impl Applicative<CsrMatrixWitness> for CsrMatrixWitness {
+impl Pure<CsrMatrixWitness> for CsrMatrixWitness {
     fn pure<T>(value: T) -> CsrMatrix<T>
     where
         T: Satisfies<deep_causality_haft::NoConstraint>,
     {
-        // Creates a 1x1 matrix containing the value at (0,0)
         CsrMatrix {
             row_indices: vec![0, 1],
             col_indices: vec![0],
@@ -79,12 +78,17 @@ impl Applicative<CsrMatrixWitness> for CsrMatrixWitness {
             shape: (1, 1),
         }
     }
+}
 
+// ----------------------------------------------------------------------------
+// Applicative
+// ----------------------------------------------------------------------------
+impl Applicative<CsrMatrixWitness> for CsrMatrixWitness {
     fn apply<A, B, Func>(funcs: CsrMatrix<Func>, args: CsrMatrix<A>) -> CsrMatrix<B>
     where
         A: Satisfies<deep_causality_haft::NoConstraint> + Clone,
         B: Satisfies<deep_causality_haft::NoConstraint>,
-        Func: FnMut(A) -> B,
+        Func: Satisfies<deep_causality_haft::NoConstraint> + FnMut(A) -> B,
     {
         // Production Grade Broadcast Logic:
         // 1. Scalar Broadcast: If funcs is 1x1, apply the single function to all elements of args.
@@ -194,12 +198,6 @@ impl Monad<CsrMatrixWitness> for CsrMatrixWitness {
         B: Satisfies<deep_causality_haft::NoConstraint>,
         Func: FnMut(A) -> CsrMatrix<B>,
     {
-        // Monadic Bind: Linearization Strategy
-        // We map each non-zero element 'a' to a Matrix<B>.
-        // We flatten all resulting values into a single sequence.
-        // The result is constructed as a 1 x TotalCount row vector.
-        // This treats the Sparse Matrix as a "Sparse Vector" for the purpose of chaining,
-        // which ensures total preservation of data returned by 'f'.
         let result_values: Vec<B> = m_a
             .values
             .into_iter()
