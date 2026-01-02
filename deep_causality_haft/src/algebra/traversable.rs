@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Applicative, Foldable, Functor, Satisfies, HKT};
+use crate::{Applicative, Foldable, Functor, HKT, Satisfies};
 
 /// The `Traversable` trait abstracts over data structures that can be "traversed"
 /// or "sequenced" in a way that preserves effects. It combines the capabilities

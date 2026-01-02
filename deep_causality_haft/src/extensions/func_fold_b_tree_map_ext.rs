@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Foldable, Functor, NoConstraint, Placeholder, Satisfies, HKT, HKT2};
+use crate::{Foldable, Functor, HKT, HKT2, NoConstraint, Placeholder, Satisfies};
 use alloc::collections::BTreeMap;
 
 /// `BTreeMapWitness<K>` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness

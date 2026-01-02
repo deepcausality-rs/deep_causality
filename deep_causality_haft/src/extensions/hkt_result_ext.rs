@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{
-    Applicative, Foldable, Functor, Monad, NoConstraint, Placeholder, Satisfies, Traversable, HKT,
-    HKT2,
+    Applicative, Foldable, Functor, HKT, HKT2, Monad, NoConstraint, Placeholder, Satisfies,
+    Traversable,
 };
 
 /// `ResultWitness<E>` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness

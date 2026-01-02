@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Applicative, CoMonad, Foldable, Functor, Monad, NoConstraint, Satisfies, HKT};
+use crate::{Applicative, CoMonad, Foldable, Functor, HKT, Monad, NoConstraint, Satisfies};
 use alloc::boxed::Box;
 
 /// `BoxWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
@@ -40,7 +40,10 @@ impl Functor<BoxWitness> for BoxWitness {
     /// # Returns
     ///
     /// A new `Box` with the function applied to its content.
-    fn fmap<A, B, Func>(m_a: <BoxWitness as HKT>::Type<A>, mut f: Func) -> <BoxWitness as HKT>::Type<B>
+    fn fmap<A, B, Func>(
+        m_a: <BoxWitness as HKT>::Type<A>,
+        mut f: Func,
+    ) -> <BoxWitness as HKT>::Type<B>
     where
         A: Satisfies<NoConstraint>,
         B: Satisfies<NoConstraint>,

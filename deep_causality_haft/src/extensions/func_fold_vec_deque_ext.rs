@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Foldable, Functor, NoConstraint, Satisfies, HKT};
+use crate::{Foldable, Functor, HKT, NoConstraint, Satisfies};
 use alloc::collections::VecDeque;
 
 /// `VecDequeWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Functor, Satisfies, HKT};
+use crate::{Functor, HKT, Satisfies};
 
 /// The `CoMonad` trait represents a comonadic context, which is the dual of a `Monad`.
 ///

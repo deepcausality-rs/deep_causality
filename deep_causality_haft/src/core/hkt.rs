@@ -19,12 +19,13 @@
 /// # Examples
 ///
 /// ```
-/// use deep_causality_haft::{HKT, Placeholder};
+/// use deep_causality_haft::{NoConstraint, HKT, Placeholder};
 ///
 /// // A witness for Option<T>
 /// pub struct OptionWitness;
 ///
 /// impl HKT for OptionWitness {
+///     type Constraint = NoConstraint;
 ///     type Type<T> = Option<T>;
 /// }
 ///

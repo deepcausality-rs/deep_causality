@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Applicative, Satisfies, HKT};
+use crate::{Applicative, HKT, Satisfies};
 
 /// The `Monad` trait extends `Applicative` by providing a `bind` operation
 /// for sequencing computations that produce effectful values.
@@ -91,4 +91,3 @@ pub trait Monad<F: HKT>: Applicative<F> {
         Self::bind(m_m_a, |x| x)
     }
 }
-

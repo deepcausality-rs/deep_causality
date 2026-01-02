@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Satisfies, HKT};
+use crate::{HKT, Satisfies};
 
 /// The `Functor` trait abstracts over types that can be mapped over.
 ///
@@ -67,4 +67,3 @@ pub trait Functor<F: HKT> {
         B: Satisfies<F::Constraint>,
         Func: FnMut(A) -> B;
 }
-

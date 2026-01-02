@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Satisfies, HKT};
+use crate::{HKT, Satisfies};
 
 /// The `Adjunction` trait defines a pair of adjoint functors `L` (Left) and `R` (Right)
 /// with an optional runtime `Context`.
@@ -129,4 +129,3 @@ where
         R::Type<B>: Satisfies<L::Constraint>,
         Func: FnMut(A) -> R::Type<B>;
 }
-

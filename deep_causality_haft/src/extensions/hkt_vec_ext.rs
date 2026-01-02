@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Applicative, Foldable, Functor, Monad, NoConstraint, Satisfies, HKT};
+use crate::{Applicative, Foldable, Functor, HKT, Monad, NoConstraint, Satisfies};
 use alloc::vec;
 use alloc::vec::Vec;
 
@@ -90,10 +90,7 @@ impl Functor<VecWitness> for VecWitness {
     /// # Returns
     ///
     /// A new `Vec` with the function applied to each of its elements.
-    fn fmap<A, B, Func>(
-        m_a: <VecWitness as HKT>::Type<A>,
-        f: Func,
-    ) -> <VecWitness as HKT>::Type<B>
+    fn fmap<A, B, Func>(m_a: <VecWitness as HKT>::Type<A>, f: Func) -> <VecWitness as HKT>::Type<B>
     where
         A: Satisfies<NoConstraint>,
         B: Satisfies<NoConstraint>,
@@ -144,10 +141,7 @@ impl Monad<VecWitness> for VecWitness {
     /// # Returns
     ///
     /// A new `Vec` representing the chained and flattened computation.
-    fn bind<A, B, Func>(
-        m_a: <VecWitness as HKT>::Type<A>,
-        f: Func,
-    ) -> <VecWitness as HKT>::Type<B>
+    fn bind<A, B, Func>(m_a: <VecWitness as HKT>::Type<A>, f: Func) -> <VecWitness as HKT>::Type<B>
     where
         A: Satisfies<NoConstraint>,
         B: Satisfies<NoConstraint>,

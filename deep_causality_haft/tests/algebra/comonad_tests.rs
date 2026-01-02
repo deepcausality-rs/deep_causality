@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{CoMonad, Functor, HKT};
+use deep_causality_haft::{CoMonad, Functor, HKT, NoConstraint, Satisfies};
 
 // Mock Identity Comonad (since standard types don't implement Comonad easily in Rust)
 #[derive(Debug, PartialEq, Clone)]
@@ -11,11 +11,14 @@ struct Identity<T>(T);
 
 struct IdentityWitness;
 impl HKT for IdentityWitness {
+    type Constraint = NoConstraint;
     type Type<T> = Identity<T>;
 }
 impl Functor<IdentityWitness> for IdentityWitness {
     fn fmap<A, B, Func>(fa: Identity<A>, mut f: Func) -> Identity<B>
     where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         Identity(f(fa.0))
@@ -24,12 +27,14 @@ impl Functor<IdentityWitness> for IdentityWitness {
 impl CoMonad<IdentityWitness> for IdentityWitness {
     fn extract<A>(wa: &Identity<A>) -> A
     where
-        A: Clone,
+        A: Satisfies<NoConstraint> + Clone,
     {
         wa.0.clone()
     }
     fn extend<A, B, Func>(wa: &Identity<A>, mut f: Func) -> Identity<B>
     where
+        A: Satisfies<NoConstraint> + Clone,
+        B: Satisfies<NoConstraint>,
         Func: FnMut(&Identity<A>) -> B,
     {
         Identity(f(wa))
