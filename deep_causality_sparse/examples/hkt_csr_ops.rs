@@ -29,7 +29,7 @@ fn main() {
     // 2. Applicative: Wrapping values
     // ------------------------------------------------------------------------
     println!("\n--- Applicative (pure & apply) ---");
-    
+
     // Pure: Lift a value into a CsrMatrix context (creates a 1x1 matrix)
     let pure_mat = CsrMatrixWitness::pure(42.0);
     println!("Pure(42.0):");
@@ -40,12 +40,12 @@ fn main() {
     // Note: Anonymous closures do not satisfy FieldConstraint unless coerced to fn ptr or Box<dyn Fn>
     let func_ptr: fn(f64) -> f64 = |x: f64| x + 10.0;
     let func_mat = CsrMatrixWitness::pure(func_ptr);
-    
+
     // Apply the function matrix to the original matrix
-    // Note: Our implementation of 'apply' for CsrMatrix broadcasts the function 
+    // Note: Our implementation of 'apply' for CsrMatrix broadcasts the function
     // if the function matrix is 1x1 (singleton).
     let added_ten = CsrMatrixWitness::apply(func_mat, doubled.clone());
-    
+
     println!("Doubled Matrix + 10.0 (via apply/broadcast):");
     print_matrix(&added_ten);
 
@@ -53,18 +53,18 @@ fn main() {
     // 3. Monad: Chaining operations
     // ------------------------------------------------------------------------
     println!("\n--- Monad (bind) ---");
-    
+
     // Bind allows us to map a value to a new Matrix and flatten the result.
     // Example: Expand each non-zero element `x` into two elements `x` and `x+0.1` in a larger row.
     let expanded = CsrMatrixWitness::bind(pure_mat, |x| {
         // Return a 1x2 matrix for each element
-        let t = vec![(0,0, x), (0,1, x + 0.1)];
+        let t = vec![(0, 0, x), (0, 1, x + 0.1)];
         CsrMatrix::from_triplets(1, 2, &t).unwrap()
     });
 
     println!("Expanded Matrix (via bind):");
     print_matrix(&expanded);
-    
+
     // ------------------------------------------------------------------------
     // 4. CoMonad: Contextual Computation
     // ------------------------------------------------------------------------
@@ -81,12 +81,12 @@ fn main() {
 
     println!("Contextual Sum (via extend):");
     print_matrix(&summed_context);
-    
+
     // ------------------------------------------------------------------------
     // 5. Foldable: Aggregation
     // ------------------------------------------------------------------------
     println!("\n--- Foldable (fold) ---");
-    let total_sum =CsrMatrixWitness::fold(expanded, 0.0, |acc, x| acc + x);
+    let total_sum = CsrMatrixWitness::fold(expanded, 0.0, |acc, x| acc + x);
     println!("Total Sum of Expanded Matrix: {}", total_sum);
 }
 

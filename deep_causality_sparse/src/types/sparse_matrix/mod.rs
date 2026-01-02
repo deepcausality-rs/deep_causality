@@ -87,6 +87,12 @@ impl<T> CsrMatrix<T> {
             shape: (rows, cols),
         }
     }
+
+    /// Consumes the matrix and returns its internal components:
+    /// `(row_indices, col_indices, values, shape)`.
+    pub fn into_parts(self) -> (Vec<usize>, Vec<usize>, Vec<T>, (usize, usize)) {
+        (self.row_indices, self.col_indices, self.values, self.shape)
+    }
 }
 impl<T> CsrMatrix<T>
 where
