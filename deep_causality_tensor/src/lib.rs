@@ -25,6 +25,7 @@ pub use crate::traits::tensor_data::TensorData;
 
 // === Types ===
 pub use crate::types::backend_tensor::BackendTensor;
+pub use crate::types::constraint::TensorDataConstraint;
 pub use crate::types::cpu_tensor::InternalCpuTensor;
 pub use crate::types::cpu_tensor::{EinSumAST as GenericEinSumAST, EinSumOp as GenericEinSumOp};
 
