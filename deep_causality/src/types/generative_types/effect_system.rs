@@ -49,7 +49,7 @@
 
 use crate::{ModelValidationError, ModificationLog};
 use deep_causality_haft::{
-    Applicative, Effect3, Functor, HKT, HKT3, LogAppend, Monad, Placeholder,
+    Applicative, Effect3, Functor, HKT, HKT3, LogAppend, Monad, NoConstraint, Placeholder,
 };
 
 /// HKT witness type for the graph generatable effect system.
@@ -87,6 +87,7 @@ pub struct GraphGeneratableEffect<T, E, L> {
 }
 
 impl<E, L> HKT for GraphGeneratableEffectWitness<E, L> {
+    type Constraint = NoConstraint;
     type Type<T> = GraphGeneratableEffect<T, E, L>;
 }
 
