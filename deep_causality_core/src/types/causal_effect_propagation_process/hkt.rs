@@ -5,7 +5,9 @@
 
 use crate::{CausalEffectPropagationProcess, EffectValue};
 use core::marker::PhantomData;
-use deep_causality_haft::{Applicative, Functor, HKT, HKT5, LogAppend, Monad, Placeholder};
+use deep_causality_haft::{
+    Applicative, Functor, HKT, HKT5, LogAppend, Monad, NoConstraint, Placeholder, Satisfies,
+};
 
 pub struct CausalEffectPropagationProcessWitness<S, C, E, L>(
     Placeholder,
@@ -22,6 +24,7 @@ impl<S, C, E, L> HKT5<S, C, E, L> for CausalEffectPropagationProcessWitness<S, C
 
 // Impl for arity-1 HKT, required by Functor/Monad bounds on Effect5
 impl<S, C, E, L> HKT for CausalEffectPropagationProcessWitness<S, C, E, L> {
+    type Constraint = NoConstraint;
     type Type<Value> = CausalEffectPropagationProcess<Value, S, C, E, L>;
 }
 
@@ -38,6 +41,8 @@ where
         f: Func,
     ) -> <CausalEffectPropagationProcessWitness<S, C, E, L> as HKT>::Type<B>
     where
+        A: Satisfies<<Self as HKT>::Constraint>,
+        B: Satisfies<<Self as HKT>::Constraint>,
         Func: FnOnce(A) -> B,
     {
         CausalEffectPropagationProcess {
@@ -61,7 +66,10 @@ where
     E: Clone,
     L: LogAppend + Clone + Default,
 {
-    fn pure<T>(value: T) -> <Self as HKT>::Type<T> {
+    fn pure<T>(value: T) -> <Self as HKT>::Type<T>
+    where
+        T: Satisfies<<Self as HKT>::Constraint>,
+    {
         CausalEffectPropagationProcess {
             value: EffectValue::Value(value),
             state: S::default(),
@@ -76,8 +84,9 @@ where
         mut f_a: <Self as HKT>::Type<A>,
     ) -> <Self as HKT>::Type<B>
     where
+        A: Satisfies<<Self as HKT>::Constraint> + Clone,
+        B: Satisfies<<Self as HKT>::Constraint>,
         Func: FnMut(A) -> B,
-        A: Clone,
     {
         let mut combined_logs = f_ab.logs;
         combined_logs.append(&mut f_a.logs);
@@ -108,6 +117,8 @@ where
 {
     fn bind<A, B, Func>(m_a: <Self as HKT>::Type<A>, mut f: Func) -> <Self as HKT>::Type<B>
     where
+        A: Satisfies<<Self as HKT>::Constraint>,
+        B: Satisfies<<Self as HKT>::Constraint>,
         Func: FnMut(A) -> <Self as HKT>::Type<B>,
     {
         if let Some(error) = m_a.error {

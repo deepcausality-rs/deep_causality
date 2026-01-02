@@ -15,11 +15,14 @@ use crate::{
     CausalEffectPropagationProcess, CausalityError, CausalityErrorEnum, EffectLog, EffectValue,
 };
 use core::marker::PhantomData;
-use deep_causality_haft::{Applicative, Functor, HKT, HKT3, LogAppend, Monad, Placeholder};
+use deep_causality_haft::{
+    Applicative, Functor, HKT, HKT3, LogAppend, Monad, NoConstraint, Placeholder, Satisfies,
+};
 
 pub struct PropagatingEffectWitness<E, L>(Placeholder, PhantomData<E>, PhantomData<L>);
 
 impl<E, L> HKT for PropagatingEffectWitness<E, L> {
+    type Constraint = NoConstraint;
     type Type<T> = CausalEffectPropagationProcess<T, (), (), E, L>;
 }
 
@@ -35,6 +38,8 @@ impl Functor<PropagatingEffectWitness<CausalityError, EffectLog>>
         f: Func,
     ) -> <PropagatingEffectWitness<CausalityError, EffectLog> as HKT>::Type<B>
     where
+        A: Satisfies<<Self as HKT>::Constraint>,
+        B: Satisfies<<Self as HKT>::Constraint>,
         Func: FnOnce(A) -> B,
     {
         if m_a.is_err() {
@@ -69,7 +74,10 @@ impl Functor<PropagatingEffectWitness<CausalityError, EffectLog>>
 impl Applicative<PropagatingEffectWitness<CausalityError, EffectLog>>
     for PropagatingEffectWitness<CausalityError, EffectLog>
 {
-    fn pure<T>(value: T) -> <Self as HKT>::Type<T> {
+    fn pure<T>(value: T) -> <Self as HKT>::Type<T>
+    where
+        T: Satisfies<<Self as HKT>::Constraint>,
+    {
         CausalEffectPropagationProcess {
             value: EffectValue::Value(value),
             state: (),
@@ -84,8 +92,9 @@ impl Applicative<PropagatingEffectWitness<CausalityError, EffectLog>>
         mut f_a: <Self as HKT>::Type<A>,
     ) -> <Self as HKT>::Type<B>
     where
+        A: Satisfies<<Self as HKT>::Constraint> + Clone,
+        B: Satisfies<<Self as HKT>::Constraint>,
         Func: FnMut(A) -> B,
-        A: Clone,
     {
         let mut combined_logs = f_ab.logs;
         combined_logs.append(&mut f_a.logs);
@@ -124,6 +133,8 @@ impl Monad<PropagatingEffectWitness<CausalityError, EffectLog>>
 {
     fn bind<A, B, Func>(m_a: <Self as HKT>::Type<A>, f: Func) -> <Self as HKT>::Type<B>
     where
+        A: Satisfies<<Self as HKT>::Constraint>,
+        B: Satisfies<<Self as HKT>::Constraint>,
         Func: FnOnce(A) -> <Self as HKT>::Type<B>,
     {
         if m_a.error.is_some() {
