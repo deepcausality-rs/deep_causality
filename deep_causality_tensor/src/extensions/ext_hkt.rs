@@ -6,7 +6,7 @@
 use crate::CausalTensor;
 use crate::traits::tensor::Tensor;
 use deep_causality_haft::{
-    Applicative, CoMonad, Foldable, Functor, HKT, Monad, NoConstraint, Satisfies,
+    Applicative, CoMonad, Foldable, Functor, HKT, Monad, NoConstraint, Pure, Satisfies,
 };
 
 // ============================================================================
@@ -47,6 +47,15 @@ impl Foldable<CausalTensorWitness> for CausalTensorWitness {
         Func: FnMut(B, A) -> B,
     {
         fa.into_vec().into_iter().fold(init, f)
+    }
+}
+
+impl Pure<CausalTensorWitness> for CausalTensorWitness {
+    fn pure<T>(value: T) -> CausalTensor<T>
+    where
+        T: Satisfies<NoConstraint>,
+    {
+        CausalTensor::from_vec(vec![value], &[1])
     }
 }
 
@@ -97,22 +106,13 @@ impl CoMonad<CausalTensorWitness> for CausalTensorWitness {
 }
 
 impl Applicative<CausalTensorWitness> for CausalTensorWitness {
-    fn pure<T>(value: T) -> CausalTensor<T>
-    where
-        T: Satisfies<NoConstraint>,
-    {
-        CausalTensor::from_vec(vec![value], &[])
-    }
-
     fn apply<A, B, Func>(f_ab: CausalTensor<Func>, f_a: CausalTensor<A>) -> CausalTensor<B>
     where
         A: Satisfies<NoConstraint> + Clone,
         B: Satisfies<NoConstraint>,
-        Func: FnMut(A) -> B,
+        Func: Satisfies<NoConstraint> + FnMut(A) -> B,
     {
         let shape = f_a.shape().to_vec();
-        // Handle broadcasting: if we have 1 function, apply to all args.
-        // If we have N functions and N args, zip them.
         let funcs = f_ab.into_vec();
         let args = f_a.into_vec();
 

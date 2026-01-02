@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Monad};
+use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Monad, Pure};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 
 // --- HKT Tests ---
@@ -25,7 +25,7 @@ fn test_hkt_causal_tensor_witness() {
 fn test_applicative_causal_tensor_pure() {
     let tensor = CausalTensorWitness::pure(42.0);
     assert_eq!(tensor.as_slice(), &[42.0]);
-    assert_eq!(tensor.shape(), &[] as &[usize]); // Scalar tensor
+    assert_eq!(tensor.shape(), &[1]); // 1D Tensor of length 1 (List Monad semantics)
 }
 
 #[test]

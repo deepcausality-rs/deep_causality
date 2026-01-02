@@ -32,15 +32,10 @@ cuda = []
 # Enables GPU-accelerated tensor operations via mlx-rs.
 # Note: Only builds on macOS aarch64. f64 tensors are downcast to f32 for MLX based GPU execution.
 mlx = ["dep:mlx-rs"]
-# CPU parallelism via rayon for multi-threaded tensor operations.
-parallel = ["dep:rayon"]
 
 # MLX dependency - only available on macOS aarch64
 [target.'cfg(all(target_os = "macos", target_arch = "aarch64"))'.dependencies]
 mlx-rs = { version = "0.25.3", features = ["metal"], optional = true }
-
-[dependencies]
-rayon = { version = "1.11", optional = true }
 
 [dependencies.deep_causality_ast]
 path = "../deep_causality_ast"
