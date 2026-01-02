@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::HKT3Unbound;
+use crate::{HKT3Unbound, Satisfies};
 
 /// The `Promonad` trait models the "fusion" or "interaction" of two contexts to produce a third.
 ///
@@ -32,8 +32,15 @@ pub trait Promonad<P: HKT3Unbound> {
         f: F,
     ) -> P::Type<C, C, C>
     where
+        A: Satisfies<P::Constraint>,
+        B: Satisfies<P::Constraint>,
+        C: Satisfies<P::Constraint>,
         F: FnMut(A, B) -> C;
 
     /// Fusion: Directly combines two raw inputs into the interaction context.
-    fn fuse<A, B, C>(input_a: A, input_b: B) -> P::Type<A, B, C>;
+    fn fuse<A, B, C>(input_a: A, input_b: B) -> P::Type<A, B, C>
+    where
+        A: Satisfies<P::Constraint>,
+        B: Satisfies<P::Constraint>,
+        C: Satisfies<P::Constraint>;
 }

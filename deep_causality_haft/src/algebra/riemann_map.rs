@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::HKT4Unbound;
+use crate::{HKT4Unbound, Satisfies};
 
 /// The `RiemannMap` trait models high-arity geometric interactions, specifically the
 /// Riemann Curvature Tensor and Scattering Matrices.
@@ -24,9 +24,19 @@ use crate::HKT4Unbound;
 pub trait RiemannMap<P: HKT4Unbound> {
     /// The Curvature Operator: $R(u, v)w \to D$
     /// Consumes two directions ($u, v$) and a vector ($w$) to measure curvature ($D$).
-    fn curvature<A, B, C, D>(tensor: P::Type<A, B, C, D>, u: A, v: B, w: C) -> D;
+    fn curvature<A, B, C, D>(tensor: P::Type<A, B, C, D>, u: A, v: B, w: C) -> D
+    where
+        A: Satisfies<P::Constraint>,
+        B: Satisfies<P::Constraint>,
+        C: Satisfies<P::Constraint>,
+        D: Satisfies<P::Constraint>;
 
     /// The Scattering Matrix: $(A, B) \to (C, D)$
     /// Models an interaction where two particles collide and produce two new states.
-    fn scatter<A, B, C, D>(interaction: P::Type<A, B, C, D>, in_1: A, in_2: B) -> (C, D);
+    fn scatter<A, B, C, D>(interaction: P::Type<A, B, C, D>, in_1: A, in_2: B) -> (C, D)
+    where
+        A: Satisfies<P::Constraint>,
+        B: Satisfies<P::Constraint>,
+        C: Satisfies<P::Constraint>,
+        D: Satisfies<P::Constraint>;
 }

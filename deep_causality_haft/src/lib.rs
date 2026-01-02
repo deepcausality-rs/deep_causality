@@ -44,21 +44,18 @@ extern crate alloc;
 
 // Module Declarations
 pub(crate) mod algebra;
-pub mod constraints;
-pub(crate) mod core;
 pub(crate) mod effect_system;
 pub(crate) mod extensions;
+pub(crate) mod hkt;
 pub mod utils_tests;
 // ============================================================================
 // Re-exports
 // ============================================================================
 
-// Core HKT Traits
-pub use crate::core::constraint::{NoConstraint, Satisfies};
-pub use crate::core::hkt::{HKT, HKT2, HKT3, HKT4, HKT5, Placeholder};
-pub use crate::core::hkt_unbound::{
-    HKT2Unbound, HKT3Unbound, HKT4Unbound, HKT5Unbound, HKT6Unbound,
-};
+// HKT Traits
+pub use crate::hkt::{HKT, HKT2, HKT3, HKT4, HKT5, Satisfies};
+pub use crate::hkt::{HKT2Unbound, HKT3Unbound, HKT4Unbound, HKT5Unbound, HKT6Unbound};
+pub use crate::hkt::{NoConstraint, Placeholder};
 
 // Algebraic Traits
 pub use crate::algebra::adjunction::Adjunction;

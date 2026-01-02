@@ -125,7 +125,7 @@ where
     fn right_adjunct<A, B, Func>(ctx: &Context, la: L::Type<A>, f: Func) -> B
     where
         A: Satisfies<L::Constraint> + Clone,
-        B: Satisfies<L::Constraint> + Satisfies<R::Constraint>,
+        B: Satisfies<L::Constraint> + Satisfies<R::Constraint> + Clone,
         R::Type<B>: Satisfies<L::Constraint>,
         Func: FnMut(A) -> R::Type<B>;
 }

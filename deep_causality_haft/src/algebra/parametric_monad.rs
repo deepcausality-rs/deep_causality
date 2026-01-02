@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::HKT3Unbound;
+use crate::{HKT3Unbound, Satisfies};
 
 /// The `ParametricMonad` (or Indexed Monad) trait allows for monadic computations where the
 /// type of the underlying state can change at each step.
@@ -24,7 +24,10 @@ use crate::HKT3Unbound;
 /// *   **Topology Rewrites**: Changing the mesh type from `Triangular` to `Hexagonal` during a simulation step.
 pub trait ParametricMonad<M: HKT3Unbound> {
     /// Injects a value into a computation that doesn't change the state type ($S \to S$).
-    fn pure<S, A>(value: A) -> M::Type<S, S, A>;
+    fn pure<S, A>(value: A) -> M::Type<S, S, A>
+    where
+        S: Satisfies<M::Constraint>,
+        A: Satisfies<M::Constraint>;
 
     /// Indexed Bind: Chains computations where the state type evolves.
     ///
@@ -36,5 +39,10 @@ pub trait ParametricMonad<M: HKT3Unbound> {
     /// A new computation transitioning $S1 \to S3$.
     fn ibind<S1, S2, S3, A, B, F>(m: M::Type<S1, S2, A>, f: F) -> M::Type<S1, S3, B>
     where
+        S1: Satisfies<M::Constraint>,
+        S2: Satisfies<M::Constraint>,
+        S3: Satisfies<M::Constraint>,
+        A: Satisfies<M::Constraint>,
+        B: Satisfies<M::Constraint>,
         F: FnMut(A) -> M::Type<S2, S3, B>;
 }

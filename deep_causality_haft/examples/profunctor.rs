@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{HKT2Unbound, Profunctor};
+use deep_causality_haft::{HKT2Unbound, NoConstraint, Profunctor};
 
 // ============================================================================
 // Domain: Search Filters
@@ -134,6 +134,7 @@ struct Function<I, O>(Box<dyn Fn(I) -> O>);
 struct FunctionWitness;
 
 impl HKT2Unbound for FunctionWitness {
+    type Constraint = NoConstraint;
     type Type<A, B> = Function<A, B>;
 }
 

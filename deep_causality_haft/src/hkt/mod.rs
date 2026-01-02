@@ -3,6 +3,106 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+//! Core Higher-Kinded Type (HKT) Machinery.
+//!
+//! This module provides the foundational traits and types required to emulate Higher-Kinded Types (HKTs)
+//! in Rust, a language that does not natively support them. It uses the "Generic Associated Types (GAT) Pattern"
+//! to achieve this.
+//!
+//! # The Problem: Missing HKTs in Rust
+//!
+//! In languages like Haskell, you can write a trait (typeclass) that is generic over a type constructor `F<_>`:
+//!
+//! ```haskell
+//! class Functor f where
+//!   fmap :: (a -> b) -> f a -> f b
+//! ```
+//!
+//! In Rust, generic parameters must be concrete types (of kind `*`), not type constructors (of kind `* -> *`).
+//! You cannot write `trait Functor<F<A>>`.
+//!
+//! # The Solution: The GAT Pattern
+//!
+//! We define a "Witness" trait (`HKT`) that acts as a proxy for the type constructor. This witness trait
+//! contains a Generic Associated Type (GAT) `Type<T>` which projects the witness back to the concrete type.
+//!
+//! ```rust,ignore
+//! pub trait HKT {
+//!     type Type<T>; // The GAT
+//! }
+//!
+//! struct OptionWitness; // The Witness
+//! impl HKT for OptionWitness {
+//!     type Type<T> = Option<T>; // The Projection
+//! }
+//! ```
+//!
+//! This allows us to write generic traits like `Functor` over the witness `F`:
+//!
+//! ```rust,ignore
+//! trait Functor<F: HKT> {
+//!     fn fmap<A, B>(fa: F::Type<A>, f: Fn(A) -> B) -> F::Type<B>;
+//! }
+//! ```
+//!
+//! # Module Contents
+//!
+//! *   [`hkt`]: Defines the standard `HKT` trait (Arity 1) and fixed-parameter HKTs (`HKT2`, `HKT3`, etc.)
+//!     where all but one parameter are fixed.
+//! *   [`hkt_unbound`]: Defines "Unbound" HKT traits (`HKT2Unbound`, `HKT3Unbound`, etc.) where
+//!     multiple parameters remain generic. This corresponds to multi-parameter type constructors
+//!     like `Result<E, T>` (Bifunctor) or `(A, B, C)` (Trifunctor).
+//!
+//! # Arity Support
+//!
+//! This crate supports HKTs up to Arity 6 (for complex effect systems).
+//!
+//! *   **Arity 1**: `HKT` (e.g., `Option<T>`, `Vec<T>`)
+//! *   **Arity 2**: `HKT2` (Fixed), `HKT2Unbound` (e.g., `Result<E, T>`)
+//! *   **Arity 3**: `HKT3` (Fixed), `HKT3Unbound` (e.g., `(A, B, C)`)
+//! *   **Arity 4**: `HKT4` (Fixed), `HKT4Unbound`
+//! *   **Arity 5**: `HKT5` (Fixed), `HKT5Unbound`
+//! *   **Arity 6**: `HKT6Unbound`
+
+/// Marker trait indicating that type `T` satisfies constraint `C`.
+///
+/// This is the core abstraction that enables type-safe constraint checking
+/// at compile time. Constraints are implemented as marker structs, and
+/// blanket implementations of `Satisfies` define which types satisfy each constraint.
+///
+/// # Design Philosophy
+///
+/// The `?Sized` bound on `C` allows for flexibility in constraint definitions,
+/// including trait objects if needed in the future.
+///
+/// # Safety
+///
+/// This trait is a pure marker and has no methods. Implementations should
+/// not have any runtime behavior.
+pub trait Satisfies<C: ?Sized> {}
+
+/// The universal constraint — every type satisfies it.
+///
+/// Use this constraint for fully polymorphic HKT implementations like
+/// `Vec`, `Option`, `Box`, etc., where no specific bounds are required
+/// on the inner type.
+///
+/// # Example
+///
+/// ```rust
+/// use deep_causality_haft::{Satisfies, NoConstraint};
+///
+/// // This blanket impl means String, Vec<u8>, custom types, etc. all satisfy NoConstraint
+/// fn accepts_any<T: Satisfies<NoConstraint>>(_: T) {}
+///
+/// accepts_any("hello");
+/// accepts_any(42);
+/// accepts_any(vec![1, 2, 3]);
+/// ```
+pub struct NoConstraint;
+
+impl<T> Satisfies<NoConstraint> for T {}
+
 // ----------------------------------------------------
 // Higher Kinded Types (HKT) Traits for Arity 1 - 5
 // ----------------------------------------------------
@@ -81,12 +181,17 @@ pub struct Placeholder;
 /// *   `T`: The generic type parameter that the type constructor operates on.
 pub trait HKT {
     /// The constraint on inner types. Use `NoConstraint` for fully polymorphic.
-    /// Constraints are enforced at the trait method level, not at the GAT level.
     type Constraint: ?Sized;
 
     /// The Generic Associated Type (GAT) that represents the type constructor.
     /// The `<T>` is the "hole" in the type constructor (e.g., `Option<T>`).
-    type Type<T>;
+    ///
+    /// The where clause ensures constraint propagation at the type level,
+    /// enabling types with inherent bounds (like `CausalMultiField`) to
+    /// participate in the unified HKT system.
+    type Type<T>
+    where
+        T: Satisfies<Self::Constraint>;
 }
 
 // ----------------------------------------------------
@@ -300,4 +405,104 @@ pub trait HKT5<F1, F2, F3, F4> {
     /// The GAT that represents the remaining type constructor.
     /// The resulting kind is `* -> *` (one hole `<T>` remaining).
     type Type<T>;
+}
+
+// ----------------------------------------------------
+// Unbound Higher Kinded Types (HKT) Traits for Arity 2 - 5
+// ----------------------------------------------------
+
+/// Trait for a Higher-Kinded Type (HKT) with two unbound generic parameters (Arity 2).
+///
+/// Unlike `HKT2`, which fixes one parameter and leaves one free (`F<T>`),
+/// `HKT2Unbound` leaves *both* parameters free (`F<A, B>`).
+///
+/// # Category Theory
+/// Corresponds to a **Bifunctor** or a type constructor $F: \mathcal{C} \times \mathcal{D} \to \mathcal{E}$.
+/// It maps a pair of objects $(A, B)$ to a new object $F(A, B)$.
+///
+/// # Examples
+/// * `Result<A, B>`
+/// * `(A, B)` (Tuple)
+/// * `Either<A, B>`
+pub trait HKT2Unbound {
+    type Constraint: ?Sized;
+    /// The Generic Associated Type representing F<A, B>
+    type Type<A, B>
+    where
+        A: Satisfies<Self::Constraint>,
+        B: Satisfies<Self::Constraint>;
+}
+
+/// Trait for a Higher-Kinded Type (HKT) with three generic parameters (Arity 3).
+///
+/// # Category Theory
+/// Corresponds to a **Trifunctor** or a type constructor $F: \mathcal{C} \times \mathcal{D} \times \mathcal{E} \to \mathcal{S}$.
+///
+/// # Examples
+/// * `(A, B, C)` (Triple)
+/// * `State<S_in, S_out, A>` (Parametric State)
+pub trait HKT3Unbound {
+    type Constraint: ?Sized;
+    type Type<A, B, C>
+    where
+        A: Satisfies<Self::Constraint>,
+        B: Satisfies<Self::Constraint>,
+        C: Satisfies<Self::Constraint>;
+}
+
+/// Trait for a Higher-Kinded Type (HKT) with four generic parameters (Arity 4).
+///
+/// # Category Theory
+/// Corresponds to a **Quadrifunctor** or a generic tensor of rank 4.
+///
+/// # Examples
+/// * `(A, B, C, D)` (Quadruple)
+/// * `RiemannTensor<A, B, C, D>`
+pub trait HKT4Unbound {
+    type Constraint: ?Sized;
+    type Type<A, B, C, D>
+    where
+        A: Satisfies<Self::Constraint>,
+        B: Satisfies<Self::Constraint>,
+        C: Satisfies<Self::Constraint>,
+        D: Satisfies<Self::Constraint>;
+}
+
+/// Trait for a Higher-Kinded Type (HKT) with five generic parameters (Arity 5).
+///
+/// # Category Theory
+/// Corresponds to a **Pentafunctor**.
+///
+/// # Examples
+/// * `(A, B, C, D, E)` (Quintuple)
+/// * `CyberneticLoop<S, B, C, A, E>`
+pub trait HKT5Unbound {
+    type Constraint: ?Sized;
+    type Type<A, B, C, D, E>
+    where
+        A: Satisfies<Self::Constraint>,
+        B: Satisfies<Self::Constraint>,
+        C: Satisfies<Self::Constraint>,
+        D: Satisfies<Self::Constraint>,
+        E: Satisfies<Self::Constraint>;
+}
+
+/// Trait for a Higher-Kinded Type (HKT) with six generic parameters (Arity 6).
+///
+/// # Category Theory
+/// Corresponds to a **Hexafunctor**.
+///
+/// # Examples
+/// * `(A, B, C, D, E, F)` (Sextuple)
+/// * `Effect5Unbound<Fixed1, Fixed2, Fixed3, S_in, S_out, A>`
+pub trait HKT6Unbound {
+    type Constraint: ?Sized;
+    type Type<A, B, C, D, E, F>
+    where
+        A: Satisfies<Self::Constraint>,
+        B: Satisfies<Self::Constraint>,
+        C: Satisfies<Self::Constraint>,
+        D: Satisfies<Self::Constraint>,
+        E: Satisfies<Self::Constraint>,
+        F: Satisfies<Self::Constraint>;
 }

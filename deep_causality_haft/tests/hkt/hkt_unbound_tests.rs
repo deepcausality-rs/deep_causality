@@ -11,12 +11,17 @@ use deep_causality_haft::*;
 
 struct ResultWitness;
 impl HKT2Unbound for ResultWitness {
+    type Constraint = NoConstraint;
     type Type<A, B> = Result<A, B>;
 }
 
 impl Bifunctor<ResultWitness> for ResultWitness {
     fn bimap<A, B, C, D, F1, F2>(fab: Result<A, B>, mut f1: F1, mut f2: F2) -> Result<C, D>
     where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
+        C: Satisfies<NoConstraint>,
+        D: Satisfies<NoConstraint>,
         F1: FnMut(A) -> C,
         F2: FnMut(B) -> D,
     {
@@ -48,18 +53,19 @@ struct FuncWrapper<A, B>(Box<dyn Fn(A) -> B>);
 
 struct FuncWitness;
 impl HKT2Unbound for FuncWitness {
+    type Constraint = NoConstraint;
     type Type<A, B> = FuncWrapper<A, B>;
 }
 
 impl Profunctor<FuncWitness> for FuncWitness {
     fn dimap<A, B, C, D, F1, F2>(pab: FuncWrapper<A, B>, f_pre: F1, f_post: F2) -> FuncWrapper<C, D>
     where
+        A: 'static + Satisfies<NoConstraint>,
+        B: 'static + Satisfies<NoConstraint>,
+        C: 'static + Satisfies<NoConstraint>,
+        D: 'static + Satisfies<NoConstraint>,
         F1: FnMut(C) -> A + 'static,
         F2: FnMut(B) -> D + 'static,
-        A: 'static,
-        B: 'static,
-        C: 'static,
-        D: 'static,
     {
         // We use RefCell to allow mutating the captured closures (f_pre, f_post)
         // inside the returned Fn closure, which is required because FuncWrapper
@@ -96,18 +102,27 @@ fn test_profunctor_func() {
 
 struct TripleWitness;
 impl HKT3Unbound for TripleWitness {
+    type Constraint = NoConstraint;
     type Type<A, B, C> = (A, B, C);
 }
 
 impl Promonad<TripleWitness> for TripleWitness {
     fn merge<A, B, C, F>(pa: (A, A, A), pb: (B, B, B), mut f: F) -> (C, C, C)
     where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
+        C: Satisfies<NoConstraint>,
         F: FnMut(A, B) -> C,
     {
         (f(pa.0, pb.0), f(pa.1, pb.1), f(pa.2, pb.2))
     }
 
-    fn fuse<A, B, C>(input_a: A, input_b: B) -> (A, B, C) {
+    fn fuse<A, B, C>(input_a: A, input_b: B) -> (A, B, C)
+    where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
+        C: Satisfies<NoConstraint>,
+    {
         // This implementation is a dummy for Tuple, as we can't invent C.
         // But for Promonad generally, it might construct an interaction context.
         // Here we just panic or use unsafe, but for test we won't call fuse directly
@@ -155,16 +170,26 @@ impl<S1, S2, A> Transition<S1, S2, A> {
 
 struct TransitionWitness;
 impl HKT3Unbound for TransitionWitness {
+    type Constraint = NoConstraint;
     type Type<A, B, C> = Transition<A, B, C>;
 }
 
 impl ParametricMonad<TransitionWitness> for TransitionWitness {
-    fn pure<S, A>(value: A) -> Transition<S, S, A> {
+    fn pure<S, A>(value: A) -> Transition<S, S, A>
+    where
+        S: Satisfies<NoConstraint>,
+        A: Satisfies<NoConstraint>,
+    {
         Transition::new(value)
     }
 
     fn ibind<S1, S2, S3, A, B, F>(m: Transition<S1, S2, A>, mut f: F) -> Transition<S1, S3, B>
     where
+        S1: Satisfies<NoConstraint>,
+        S2: Satisfies<NoConstraint>,
+        S3: Satisfies<NoConstraint>,
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
         F: FnMut(A) -> Transition<S2, S3, B>,
     {
         // Since our dummy Transition struct just holds a value and PhantomData,

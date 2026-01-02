@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::HKT5Unbound;
+use crate::{HKT5Unbound, Satisfies};
 
 /// The `CyberneticLoop` trait models a complete feedback control system involving 5 distinct components.
 ///
@@ -40,6 +40,11 @@ pub trait CyberneticLoop<P: HKT5Unbound> {
         decide_fn: FDecide,
     ) -> Result<A, E>
     where
+        S: Satisfies<P::Constraint>,
+        B: Satisfies<P::Constraint>,
+        C: Satisfies<P::Constraint>,
+        A: Satisfies<P::Constraint>,
+        E: Satisfies<P::Constraint>,
         FObserve: Fn(S, C) -> B,
         FDecide: Fn(B, C) -> A;
 }

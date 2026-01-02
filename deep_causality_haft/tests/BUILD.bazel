@@ -16,9 +16,9 @@ rust_test_suite(
 )
 
 rust_test_suite(
-    name = "core",
+    name = "hkt",
     srcs = glob([
-        "core/*_tests.rs",
+        "hkt/*_tests.rs",
     ]),
     tags = [
         "unit-test",

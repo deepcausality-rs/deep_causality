@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{HKT3Unbound, Promonad};
+use deep_causality_haft::{HKT3Unbound, NoConstraint, Promonad, Satisfies};
 
 // Simplified Triple for testing
 #[derive(Debug, PartialEq, Clone)]
@@ -11,12 +11,16 @@ struct Triple<A, B, C>(A, B, C);
 
 struct TripleWitness;
 impl HKT3Unbound for TripleWitness {
+    type Constraint = NoConstraint;
     type Type<A, B, C> = Triple<A, B, C>;
 }
 
 impl Promonad<TripleWitness> for TripleWitness {
     fn merge<A, B, C, F>(pa: Triple<A, A, A>, pb: Triple<B, B, B>, mut f: F) -> Triple<C, C, C>
     where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
+        C: Satisfies<NoConstraint>,
         F: FnMut(A, B) -> C,
     {
         // Simplified - just use first result
@@ -26,7 +30,12 @@ impl Promonad<TripleWitness> for TripleWitness {
         Triple(c1, c2, c3)
     }
 
-    fn fuse<A, B, C>(_input_a: A, _input_b: B) -> Triple<A, B, C> {
+    fn fuse<A, B, C>(_input_a: A, _input_b: B) -> Triple<A, B, C>
+    where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
+        C: Satisfies<NoConstraint>,
+    {
         // Simplified - panic for C (not used in test)
         panic!("Not implemented for test")
     }

@@ -67,5 +67,5 @@ pub trait Applicative<F: HKT>: Functor<F> {
     where
         A: Satisfies<F::Constraint> + Clone,
         B: Satisfies<F::Constraint>,
-        Func: FnMut(A) -> B;
+        Func: Satisfies<F::Constraint> + FnMut(A) -> B;
 }

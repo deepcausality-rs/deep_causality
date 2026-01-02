@@ -214,6 +214,7 @@ use crate::{Bifunctor, HKT2Unbound};
 pub struct ResultUnboundWitness;
 
 impl HKT2Unbound for ResultUnboundWitness {
+    type Constraint = NoConstraint;
     type Type<A, B> = Result<A, B>;
 }
 

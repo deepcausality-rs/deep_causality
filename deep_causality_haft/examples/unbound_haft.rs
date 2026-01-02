@@ -4,7 +4,8 @@
  */
 
 use deep_causality_haft::{
-    Bifunctor, HKT2Unbound, Profunctor, Promonad, ResultUnboundWitness, Tuple3Witness,
+    Bifunctor, HKT2Unbound, NoConstraint, Profunctor, Promonad, ResultUnboundWitness, Satisfies,
+    Tuple3Witness,
 };
 
 fn main() {
@@ -210,6 +211,7 @@ struct DataProcessor<I, O>(Box<dyn Fn(I) -> O>);
 
 struct ProcessorWitness;
 impl HKT2Unbound for ProcessorWitness {
+    type Constraint = NoConstraint;
     type Type<A, B> = DataProcessor<A, B>;
 }
 
@@ -220,12 +222,12 @@ impl Profunctor<ProcessorWitness> for ProcessorWitness {
         f_post: F2,
     ) -> DataProcessor<C, D>
     where
+        A: 'static + Satisfies<NoConstraint>,
+        B: 'static + Satisfies<NoConstraint>,
+        C: 'static + Satisfies<NoConstraint>,
+        D: 'static + Satisfies<NoConstraint>,
         F1: FnMut(C) -> A + 'static,
         F2: FnMut(B) -> D + 'static,
-        A: 'static,
-        B: 'static,
-        C: 'static,
-        D: 'static,
     {
         let inner = pab.0;
         let f_pre = std::cell::RefCell::new(f_pre);

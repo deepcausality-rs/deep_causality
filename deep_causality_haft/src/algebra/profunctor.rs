@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::HKT2Unbound;
+use crate::{HKT2Unbound, Satisfies};
 
 /// The `Profunctor` trait represents a type constructor that is contravariant in its first argument
 /// and covariant in its second argument.
@@ -33,21 +33,21 @@ pub trait Profunctor<P: HKT2Unbound> {
     /// * `f_post`: The post-processing function `B -> D`.
     fn dimap<A, B, C, D, F1, F2>(pab: P::Type<A, B>, f_pre: F1, f_post: F2) -> P::Type<C, D>
     where
+        A: 'static + Satisfies<P::Constraint>,
+        B: 'static + Satisfies<P::Constraint>,
+        C: 'static + Satisfies<P::Constraint>,
+        D: 'static + Satisfies<P::Constraint>,
         F1: FnMut(C) -> A + 'static,
-        F2: FnMut(B) -> D + 'static,
-        A: 'static,
-        B: 'static,
-        C: 'static,
-        D: 'static;
+        F2: FnMut(B) -> D + 'static;
 
     /// Map only the input (Contravariant).
     /// Equivalent to `dimap(f, id)`.
     fn lmap<A, B, C, F1>(pab: P::Type<A, B>, f_pre: F1) -> P::Type<C, B>
     where
+        A: 'static + Satisfies<P::Constraint>,
+        B: 'static + Satisfies<P::Constraint> + Clone,
+        C: 'static + Satisfies<P::Constraint>,
         F1: FnMut(C) -> A + 'static,
-        A: 'static,
-        B: 'static,
-        C: 'static,
     {
         Self::dimap(pab, f_pre, |b| b)
     }
@@ -56,10 +56,10 @@ pub trait Profunctor<P: HKT2Unbound> {
     /// Equivalent to `dimap(id, g)`.
     fn rmap<A, B, D, F2>(pab: P::Type<A, B>, f_post: F2) -> P::Type<A, D>
     where
+        A: 'static + Satisfies<P::Constraint> + Clone,
+        B: 'static + Satisfies<P::Constraint>,
+        D: 'static + Satisfies<P::Constraint>,
         F2: FnMut(B) -> D + 'static,
-        A: 'static,
-        B: 'static,
-        D: 'static,
     {
         Self::dimap(pab, |a| a, f_post)
     }
