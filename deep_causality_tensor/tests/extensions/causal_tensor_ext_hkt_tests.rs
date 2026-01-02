@@ -49,11 +49,13 @@ fn test_applicative_causal_tensor_apply_non_scalar_func() {
     // Create vector of Boxed functions
     let f_tensor = CausalTensor::from_vec(vec![f1, f2], &[2]);
 
-    let a_tensor = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
+    // Use matching shape (2 elements)
+    let a_tensor = CausalTensor::new(vec![1.0, 2.0], vec![2]).unwrap();
     let result_tensor = CausalTensorWitness::apply(f_tensor, a_tensor);
-    // Expect an empty tensor as per logic (length mismatch)
-    assert!(result_tensor.is_empty());
-    assert_eq!(result_tensor.shape(), &[0]);
+
+    // Expect correct application: [1.0 * 2.0, 2.0 * 3.0] = [2.0, 6.0]
+    assert_eq!(result_tensor.as_slice(), &[2.0, 6.0]);
+    assert_eq!(result_tensor.shape(), &[2]);
 }
 
 // --- Functor Tests ---

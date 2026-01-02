@@ -36,7 +36,7 @@ pub use crate::types::backend::mlx::{MlxBackend, MlxCausalTensor};
 
 // === Extensions ===
 pub use crate::extensions::ext_hkt::CausalTensorWitness;
-pub use crate::extensions::ext_hkt::TensorConstraint;
+pub use crate::extensions::ext_hkt_strict::StrictCausalTensorWitness;
 pub use crate::extensions::ext_math::CausalTensorMathExt;
 
 // === Utils (test support) ===

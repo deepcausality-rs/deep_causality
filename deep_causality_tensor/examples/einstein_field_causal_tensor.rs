@@ -127,8 +127,8 @@ fn main() {
     println!("Quantum Foam Elements: {}", quantum_foam.len());
     println!("First few fluctuations:");
     let foam_data = quantum_foam.data();
-    for i in 0..6 {
-        print!("{:.4} ", foam_data[i]);
+    for val in foam_data.iter().take(6) {
+        print!("{:.4} ", val);
     }
     println!("...");
 }
