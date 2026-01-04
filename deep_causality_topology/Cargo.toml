@@ -19,7 +19,8 @@ path = "src/lib.rs"
 # Default means CPU execution
 default = []
 # MLX acceleration for Apple Silicon (M Series).
-# Forwards to deep_causality_tensor/mlx for GPU-accelerated operations.
+# Forwards to deep_causality_tensor/mlx and deep_causality_multivector/mlx
+# for MLX / GPU-accelerated operations.
 # Note: Only builds on macOS aarch64. f64 downcast to f32 for GPU execution.
 mlx = ["dep:mlx-rs", "deep_causality_tensor/mlx", "deep_causality_multivector/mlx"]
 # Future: CUDA support
