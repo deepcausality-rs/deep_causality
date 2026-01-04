@@ -78,3 +78,7 @@ path = "quantum_counterfactual/main.rs"
 [[example]]
 name = "quantum_geometric_tensor"
 path = "quantum_geometric_tensor/main.rs"
+
+[[example]]
+name = "gauge_qed"
+path = "gauge_qed/main.rs"

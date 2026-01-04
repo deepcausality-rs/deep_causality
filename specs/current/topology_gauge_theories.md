@@ -356,7 +356,7 @@ impl QCD {
 
 ### 7.1 Example: QED Electromagnetic Wave
 
-**File:** `examples/physics_examples/gauge_qed.rs`
+**File:** `examples/physics_examples/gauge_qed/main.rs`
 
 ```rust
 //! QED: Propagating electromagnetic wave
