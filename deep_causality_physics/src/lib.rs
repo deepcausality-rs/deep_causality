@@ -21,6 +21,7 @@ pub(crate) mod nuclear;
 pub(crate) mod photonics;
 pub(crate) mod quantum;
 pub(crate) mod relativity;
+mod theories;
 pub(crate) mod thermodynamics;
 pub(crate) mod units;
 pub(crate) mod waves;

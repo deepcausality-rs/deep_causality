@@ -7,7 +7,6 @@ use crate::Manifold;
 use deep_causality_haft::{
     Applicative, CoMonad, Foldable, Functor, HKT, Monad, NoConstraint, Pure, Satisfies,
 };
-use deep_causality_num::Complex;
 use deep_causality_tensor::CausalTensor;
 
 // ============================================================================
@@ -169,62 +168,4 @@ impl CoMonad<ManifoldWitness> for ManifoldWitness {
     }
 }
 
-// ============================================================================
-// PART 2: Strict (Bounded) Witness - "StrictManifoldWitness"
-// Use Case: Verified Storage, optimized physics types.
-// ============================================================================
-
-#[allow(dead_code)]
-pub struct StrictManifoldWitness;
-
-pub struct ManifoldConstraint;
-
-// Allowed Types for Strict Manifold
-impl Satisfies<ManifoldConstraint> for f32 {}
-impl Satisfies<ManifoldConstraint> for f64 {}
-impl Satisfies<ManifoldConstraint> for Complex<f32> {}
-impl Satisfies<ManifoldConstraint> for Complex<f64> {}
-impl Satisfies<ManifoldConstraint> for i32 {}
-impl Satisfies<ManifoldConstraint> for i64 {}
-impl Satisfies<ManifoldConstraint> for usize {}
-impl<T> Satisfies<ManifoldConstraint> for CausalTensor<T> {}
-
-impl HKT for StrictManifoldWitness {
-    type Constraint = ManifoldConstraint;
-    type Type<T>
-        = Manifold<T>
-    where
-        T: Satisfies<ManifoldConstraint>;
-}
-
-impl Functor<StrictManifoldWitness> for StrictManifoldWitness {
-    fn fmap<A, B, Func>(m_a: Manifold<A>, f: Func) -> Manifold<B>
-    where
-        A: Satisfies<ManifoldConstraint>,
-        B: Satisfies<ManifoldConstraint>,
-        Func: FnMut(A) -> B,
-    {
-        let shape = m_a.data.shape().to_vec();
-        let new_data = m_a.data.into_vec().into_iter().map(f).collect::<Vec<B>>();
-        let new_tensor = CausalTensor::from_vec(new_data, &shape);
-
-        Manifold {
-            complex: m_a.complex,
-            data: new_tensor,
-            metric: m_a.metric,
-            cursor: m_a.cursor,
-        }
-    }
-}
-
-impl Foldable<StrictManifoldWitness> for StrictManifoldWitness {
-    fn fold<A, B, Func>(fa: Manifold<A>, init: B, f: Func) -> B
-    where
-        A: Satisfies<ManifoldConstraint>,
-        Func: FnMut(B, A) -> B,
-    {
-        fa.data.into_vec().into_iter().fold(init, f)
-    }
-}
-
-// CoMonad omitted for Strict Mode due to trait bound limitations.
+// Strict (Bounded) Witness - Postoponed until new trait solver stable.
