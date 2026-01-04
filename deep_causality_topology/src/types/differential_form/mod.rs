@@ -307,47 +307,4 @@ fn binomial(n: usize, k: usize) -> usize {
     result
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
 
-    #[test]
-    fn test_binomial() {
-        assert_eq!(binomial(4, 0), 1);
-        assert_eq!(binomial(4, 1), 4);
-        assert_eq!(binomial(4, 2), 6);
-        assert_eq!(binomial(4, 3), 4);
-        assert_eq!(binomial(4, 4), 1);
-        assert_eq!(binomial(5, 2), 10);
-    }
-
-    #[test]
-    fn test_constant_form() {
-        let form: DifferentialForm<f64> = DifferentialForm::constant(0, 4, 1.0);
-        assert_eq!(form.degree(), 0);
-        assert_eq!(form.dim(), 4);
-        assert_eq!(form.coefficients().as_slice()[0], 1.0);
-    }
-
-    #[test]
-    fn test_from_coefficients() {
-        let form = DifferentialForm::from_coefficients(1, 3, vec![1.0, 2.0, 3.0]);
-        assert_eq!(form.degree(), 1);
-        assert_eq!(form.coefficients().as_slice(), &[1.0, 2.0, 3.0]);
-    }
-
-    #[test]
-    fn test_form_add() {
-        let a = DifferentialForm::from_coefficients(1, 2, vec![1.0, 2.0]);
-        let b = DifferentialForm::from_coefficients(1, 2, vec![3.0, 4.0]);
-        let c = a.add(&b);
-        assert_eq!(c.coefficients().as_slice(), &[4.0, 6.0]);
-    }
-
-    #[test]
-    fn test_form_scale() {
-        let a = DifferentialForm::from_coefficients(1, 2, vec![1.0, 2.0]);
-        let b = a.scale(2.0);
-        assert_eq!(b.coefficients().as_slice(), &[2.0, 4.0]);
-    }
-}

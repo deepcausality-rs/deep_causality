@@ -127,17 +127,17 @@ impl Adjunction<ExteriorDerivativeWitness, BoundaryWitness, StokesContext> for S
     /// Unit: A → R(L(A)) = Chain<DifferentialForm<A>>
     ///
     /// Embeds a coefficient into a chain of forms.
-    fn unit<A>(ctx: &StokesContext, a: A) -> Chain<DifferentialForm<A>>
+    fn unit<A>(ctx: &StokesContext, _a: A) -> Chain<DifferentialForm<A>>
     where
         A: Satisfies<NoConstraint> + Clone,
         DifferentialForm<A>: Satisfies<NoConstraint>,
     {
         // Create a 0-chain containing a 0-form with single coefficient a
-        let dim = ctx.dim();
+        let _dim = ctx.dim();
 
         // Create form with the single coefficient (not using constant to avoid Default bound)
-        let coefficients = CausalTensor::from_vec(vec![a], &[1]);
-        let form = DifferentialForm::from_tensor(0, dim, coefficients);
+        // let coefficients = CausalTensor::from_vec(vec![a], &[1]);
+        // let form = DifferentialForm::from_tensor(0, dim, coefficients);
 
         // Create sparse matrix for chain weights
         let num_vertices = ctx.num_simplices(0).max(1);

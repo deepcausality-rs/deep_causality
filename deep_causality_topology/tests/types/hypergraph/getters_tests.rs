@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) "2026" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;

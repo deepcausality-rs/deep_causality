@@ -30,7 +30,7 @@ pub use crate::extensions::hkt_topology::TopologyWitness;
 pub use crate::extensions::adjunction_stokes::{
     BoundaryWitness, ExteriorDerivativeWitness, StokesAdjunction, StokesContext,
 };
-pub use crate::extensions::hkt_curvature::CurvatureTensorWitness;
+pub use crate::extensions::hkt_curvature::{CurvatureTensorWitness, TensorVector};
 pub use crate::extensions::hkt_gauge_field::GaugeFieldWitness;
 
 // Re-export traits

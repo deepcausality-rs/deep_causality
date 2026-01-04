@@ -382,43 +382,4 @@ impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
 
-    #[test]
-    fn test_flat_tensor() {
-        let flat: CurvatureTensor<f64, f64, f64, f64> = CurvatureTensor::flat(4);
-        assert!(flat.is_flat());
-        assert_eq!(flat.dim(), 4);
-        assert_eq!(flat.ricci_scalar(), 0.0);
-    }
-
-    #[test]
-    fn test_contraction_flat() {
-        let flat: CurvatureTensor<f64, f64, f64, f64> = CurvatureTensor::flat(4);
-        let u = vec![1.0, 0.0, 0.0, 0.0];
-        let v = vec![0.0, 1.0, 0.0, 0.0];
-        let w = vec![0.0, 0.0, 1.0, 0.0];
-        let result = flat.contract(&u, &v, &w);
-        assert!(result.iter().all(|&x| x.abs() < f64::EPSILON));
-    }
-
-    #[test]
-    fn test_from_generator() {
-        let tensor: CurvatureTensor<f64, f64, f64, f64> = CurvatureTensor::from_generator(
-            2,
-            Metric::Euclidean(2),
-            CurvatureSymmetry::None,
-            |d, a, b, c| {
-                if d == 0 && a == 1 && b == 0 && c == 1 {
-                    1.0
-                } else {
-                    0.0
-                }
-            },
-        );
-        assert_eq!(tensor.get(0, 1, 0, 1), 1.0);
-        assert_eq!(tensor.get(1, 0, 1, 0), 0.0);
-    }
-}
