@@ -26,7 +26,7 @@
 //! - **Real QED calculations** using deep_causality_physics
 
 use deep_causality_core::{CausalEffectPropagationProcess, EffectValue, PropagatingEffect};
-use deep_causality_physics::QED;
+use deep_causality_physics::{QED, QedOps};
 
 // =============================================================================
 // MAIN: Pipeline Composition via Causal Monad
@@ -67,7 +67,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 struct QEDState {
     /// The QED field configuration
-    qed: QED,
+    qed: Option<QED>,
     /// Field invariant F_μν F^μν
     field_invariant: f64,
     /// Dual invariant F_μν F̃^μν
@@ -93,7 +93,7 @@ struct QEDState {
 /// # Physics
 /// - Plane wave: E and B perpendicular, equal magnitude
 /// - Propagating in z-direction
-fn stage_create_plane_wave() -> PropagatingEffect<QED> {
+fn stage_create_plane_wave() -> PropagatingEffect<Option<QED>> {
     println!("Stage 1: Create Plane Wave Field");
     println!("─────────────────────────────────");
 
@@ -109,12 +109,12 @@ fn stage_create_plane_wave() -> PropagatingEffect<QED> {
             println!("  B-field:       along y-axis");
             println!("  Propagation:   z-direction\n");
 
-            CausalEffectPropagationProcess::pure(qed)
+            CausalEffectPropagationProcess::pure(Some(qed))
         }
         Err(e) => {
             println!("  [ERROR] Failed to create plane wave: {:?}", e);
             // Return default zero field
-            CausalEffectPropagationProcess::pure(QED::default())
+            CausalEffectPropagationProcess::pure(None)
         }
     }
 }
@@ -133,36 +133,40 @@ fn stage_create_plane_wave() -> PropagatingEffect<QED> {
 /// - These invariants characterize the field type
 /// - Add more invariants here (e.g., stress-energy trace)
 fn stage_compute_invariants(
-    qed: QED,
+    qed_opt: Option<QED>,
     _: (),
     _: Option<()>,
-) -> PropagatingEffect<(QED, f64, f64)> {
+) -> PropagatingEffect<(Option<QED>, f64, f64)> {
     println!("Stage 2: Compute Lorentz Invariants");
     println!("────────────────────────────────────");
 
-    let field_inv = qed.field_invariant().unwrap_or(0.0);
-    let dual_inv = qed.dual_invariant().unwrap_or(0.0);
+    if let Some(qed) = &qed_opt {
+        let field_inv = qed.field_invariant().unwrap_or(0.0);
+        let dual_inv = qed.dual_invariant().unwrap_or(0.0);
 
-    println!("  F_μν F^μν  = {:.6}  (field invariant)", field_inv);
-    println!("  F_μν F̃^μν = {:.6}  (dual invariant)", dual_inv);
+        println!("  F_μν F^μν  = {:.6}  (field invariant)", field_inv);
+        println!("  F_μν F̃^μν = {:.6}  (dual invariant)", dual_inv);
 
-    // Physical interpretation
-    if field_inv.abs() < 1e-10 {
-        println!("\n  → |E| = |B| (null field / radiation)");
-    } else if field_inv > 0.0 {
-        println!("\n  → Magnetic-dominated field");
+        // Physical interpretation
+        if field_inv.abs() < 1e-10 {
+            println!("\n  → |E| = |B| (null field / radiation)");
+        } else if field_inv > 0.0 {
+            println!("\n  → Magnetic-dominated field");
+        } else {
+            println!("\n  → Electric-dominated field");
+        }
+
+        if dual_inv.abs() < 1e-10 {
+            println!("  → E ⟂ B (CP-conserving)");
+        } else {
+            println!("  → E·B ≠ 0 (CP-violating configuration)");
+        }
+        println!();
+
+        CausalEffectPropagationProcess::pure((qed_opt, field_inv, dual_inv))
     } else {
-        println!("\n  → Electric-dominated field");
+        CausalEffectPropagationProcess::pure((None, 0.0, 0.0))
     }
-
-    if dual_inv.abs() < 1e-10 {
-        println!("  → E ⟂ B (CP-conserving)");
-    } else {
-        println!("  → E·B ≠ 0 (CP-violating configuration)");
-    }
-    println!();
-
-    CausalEffectPropagationProcess::pure((qed, field_inv, dual_inv))
 }
 
 // =============================================================================
@@ -179,27 +183,34 @@ fn stage_compute_invariants(
 /// - Modify energy scale conversions here
 /// - Add momentum density computation
 fn stage_energy_analysis(
-    (qed, field_inv, dual_inv): (QED, f64, f64),
+    (qed_opt, field_inv, dual_inv): (Option<QED>, f64, f64),
     _: (),
     _: Option<()>,
-) -> PropagatingEffect<(QED, f64, f64, f64, f64)> {
+) -> PropagatingEffect<(Option<QED>, f64, f64, f64, f64)> {
     println!("Stage 3: Energy Analysis");
     println!("────────────────────────");
 
-    let energy = qed.energy_density().unwrap_or(0.0);
-    let lagrangian = qed.lagrangian_density().unwrap_or(0.0);
+    if let Some(qed) = &qed_opt {
+        let energy = qed.energy_density().unwrap_or(0.0);
+        let lagrangian = qed.lagrangian_density().unwrap_or(0.0);
 
-    println!("  Energy density:     u = {:.6} (natural units)", energy);
-    println!("  Lagrangian density: L = {:.6} (natural units)", lagrangian);
+        println!("  Energy density:     u = {:.6} (natural units)", energy);
+        println!(
+            "  Lagrangian density: L = {:.6} (natural units)",
+            lagrangian
+        );
 
-    // Convert to SI for context (assuming E ~ 1 V/m scale)
-    let epsilon_0 = 8.854e-12; // F/m
-    let energy_si = energy * epsilon_0; // J/m³
-    println!("\n  In SI units (assuming E ~ 1 V/m scale):");
-    println!("  u ≈ {:.3e} J/m³", energy_si);
-    println!();
+        // Convert to SI for context (assuming E ~ 1 V/m scale)
+        let epsilon_0 = 8.854e-12; // F/m
+        let energy_si = energy * epsilon_0; // J/m³
+        println!("\n  In SI units (assuming E ~ 1 V/m scale):");
+        println!("  u ≈ {:.3e} J/m³", energy_si);
+        println!();
 
-    CausalEffectPropagationProcess::pure((qed, field_inv, dual_inv, energy, lagrangian))
+        CausalEffectPropagationProcess::pure((qed_opt, field_inv, dual_inv, energy, lagrangian))
+    } else {
+        CausalEffectPropagationProcess::pure((None, field_inv, dual_inv, 0.0, 0.0))
+    }
 }
 
 // =============================================================================
@@ -216,35 +227,43 @@ fn stage_energy_analysis(
 /// - Add radiation pressure computation
 /// - Add momentum flux analysis
 fn stage_poynting_radiation(
-    (qed, field_inv, dual_inv, energy, lagrangian): (QED, f64, f64, f64, f64),
+    (qed_opt, field_inv, dual_inv, energy, lagrangian): (Option<QED>, f64, f64, f64, f64),
     _: (),
     _: Option<()>,
-) -> PropagatingEffect<(QED, f64, f64, f64, f64, f64)> {
+) -> PropagatingEffect<(Option<QED>, f64, f64, f64, f64, f64)> {
     println!("Stage 4: Radiation Analysis");
     println!("───────────────────────────");
 
-    let intensity = qed.intensity().unwrap_or(0.0);
+    if let Some(qed) = &qed_opt {
+        let intensity = qed.intensity().unwrap_or(0.0);
 
-    println!("  Intensity: |S| = {:.6} (natural units)", intensity);
+        println!("  Intensity: |S| = {:.6} (natural units)", intensity);
 
-    // Poynting vector direction
-    if let Ok(s) = qed.poynting_vector() {
-        let s_data = s.data();
-        // In 3D GA, bivector components are indices 4,5,6 (xy, xz, yz)
-        if s_data.len() >= 7 {
-            println!(
-                "  S_xy = {:.4}, S_xz = {:.4}, S_yz = {:.4}",
-                s_data[4], s_data[5], s_data[6]
-            );
+        // Poynting vector direction
+        if let Ok(s) = qed.poynting_vector() {
+            let s_data = s.data();
+            // In 3D GA, bivector components are indices 4,5,6 (xy, xz, yz)
+            // But data() returns &[f64].
+            // If length is enough:
+            if s_data.len() >= 7 {
+                println!(
+                    "  S_xy = {:.4}, S_xz = {:.4}, S_yz = {:.4}",
+                    s_data[4], s_data[5], s_data[6]
+                );
+            }
         }
+
+        // Radiation pressure
+        let radiation_pressure = intensity; // P = I/c, but c=1 in natural units
+        println!("\n  Radiation pressure: P = {:.6}", radiation_pressure);
+        println!();
+
+        CausalEffectPropagationProcess::pure((
+            qed_opt, field_inv, dual_inv, energy, lagrangian, intensity,
+        ))
+    } else {
+        CausalEffectPropagationProcess::pure((None, field_inv, dual_inv, energy, lagrangian, 0.0))
     }
-
-    // Radiation pressure
-    let radiation_pressure = intensity; // P = I/c, but c=1 in natural units
-    println!("\n  Radiation pressure: P = {:.6}", radiation_pressure);
-    println!();
-
-    CausalEffectPropagationProcess::pure((qed, field_inv, dual_inv, energy, lagrangian, intensity))
 }
 
 // =============================================================================
@@ -262,15 +281,27 @@ fn stage_poynting_radiation(
 /// - Add more field classifications (near-field, etc.)
 /// - Add wave type detection
 fn stage_field_classification(
-    (qed, field_inv, dual_inv, energy, lagrangian, intensity): (QED, f64, f64, f64, f64, f64),
+    (qed_opt, field_inv, dual_inv, energy, lagrangian, intensity): (
+        Option<QED>,
+        f64,
+        f64,
+        f64,
+        f64,
+        f64,
+    ),
     _: (),
     _: Option<()>,
 ) -> PropagatingEffect<QEDState> {
     println!("Stage 5: Field Classification");
     println!("─────────────────────────────");
 
-    let is_radiation = qed.is_radiation_field();
-    let is_null = qed.is_null_field();
+    let (is_radiation, is_null) = if let Some(qed) = &qed_opt {
+        let is_rad = qed.is_radiation_field().unwrap_or(false);
+        let is_nul = qed.is_null_field().unwrap_or(false);
+        (is_rad, is_nul)
+    } else {
+        (false, false)
+    };
 
     println!("  Is radiation field (E ⟂ B):  {}", is_radiation);
     println!("  Is null field (|E| = |B|):   {}", is_null);
@@ -294,7 +325,7 @@ fn stage_field_classification(
     println!();
 
     let state = QEDState {
-        qed,
+        qed: qed_opt,
         field_invariant: field_inv,
         dual_invariant: dual_inv,
         energy_density: energy,

@@ -27,8 +27,8 @@ These are built on top of the `GaugeField<G, A, F>` infrastructure provided by `
 | Theory                 | Gauge Group          | Module Path      | Status    |
 |------------------------|----------------------|------------------|-----------|
 | **QED**                | U(1)                 | `theories::qed`  | Completed |
-| **Weak Force**         | SU(2)                | `theories::weak` | Planned   |
-| **Electroweak**        | SU(2) × U(1)         | `theories::ew`   | Planned   |
+| **Weak Force**         | SU(2)                | `theories::weak` | Completed |
+| **Electroweak**        | SU(2) × U(1)         | `theories::ew`   | Completed |
 | **QCD**                | SU(3)                | `theories::qcd`  | Planned   |
 | **Standard Model**     | SU(3) × SU(2) × U(1) | `theories::sm`   | Planned   |
 | **General Relativity** | SO(3,1) / Lorentz    | `theories::gr`   | Planned   |
@@ -198,7 +198,44 @@ assert_eq!(east.sign_of_sq(0), -1);  // time = -1 (East)
 
 ## 6. Theory Specifications
 
-### 6.1 QED (Quantum Electrodynamics)
+### 6.1 GaugeField Integration Strategy
+
+Each physics theory module wraps the generic `GaugeField<G, A, F>` topology type to provide physical semantics.
+
+#### 6.1.1 QED Integration
+*   **Leverages**: `GaugeField<U1, f64, f64>`
+*   **Uses from GaugeField**:
+    *   **Base Manifold**: Spacetime grid and metric signature (+---).
+    *   **Connection**: Identifies the 4-potential $A_\mu$.
+    *   **Curvature**: Identifies the electromagnetic field tensor $F_{\mu\nu}$.
+*   **Solves**:
+    *   **Topology**: Automates metric lowering/raising and Hodge duality for covariant formulations.
+    *   **Gauge Invariance**: Enforces U(1) symmetry constraints on data structures.
+*   **Adds**:
+    *   **Physical Interpretation**: Maps tensor components $F_{0i} \to E_i$ (Electric) and $\epsilon_{ijk}F^{jk} \to B_i$ (Magnetic).
+    *   **Dynamics**: Implements Maxwell's equations and Lorentz force coupling.
+
+#### 6.1.2 Weak Force Integration
+*   **Leverages**: `GaugeField<SU2, f64, f64>` (Algebra valued)
+*   **Uses from GaugeField**:
+    *   **Connection**: Identifies the weak isospin potential $W_\mu^a$ (3 components).
+    *   **Curvature**: Identifies field strength $W_{\mu\nu}^a$ including non-abelian self-coupling $g\epsilon_{abc}W_\mu^b W_\nu^c$.
+*   **Solves**:
+    *   **Non-Abelian Geometry**: Automatically handles the commutator term $[A, A]$ in the curvature definition $F = dA + A \wedge A$.
+*   **Adds**:
+    *   **Chirality**: Implements projection operators $P_L = (1-\gamma^5)/2$ for left-handed couplings.
+    *   **Currents**: Defines charged ($J^\mu_\pm$) and neutral ($J^\mu_0$) weak currents.
+
+#### 6.1.3 Electroweak Integration
+*   **Leverages**: Composite of `GaugeField<SU2>` and `GaugeField<U1>`.
+*   **Uses from GaugeField**: Two independent gauge bundles representing the $SU(2)_L \times U(1)_Y$ symmetry.
+*   **Solves**:
+    *   **Product Structure**: Manages disjoint metric and manifold references for the unified field.
+*   **Adds**:
+    *   **Mixing**: Implements the rotation matrix (Weinberg angle $\theta_W$) transforming gauge eigenstates ($W^3, B$) to mass eigenstates ($Z, A$).
+    *   **Symmetry Breaking**: Adds the scalar Higgs field $\phi$ and VEV $v$ to generate mass terms.
+
+### 6.2 QED (Quantum Electrodynamics)
 
 **Module:** `theories::qed`
 
@@ -234,7 +271,7 @@ compute_maxwell_coupling(j, a)
 });
 ```
 
-### 6.2 General Relativity
+### 6.3 General Relativity
 
 **Module:** `theories::gr`
 
@@ -287,7 +324,7 @@ let deviation = CurvatureTensorWitness::curvature(riemann, u, v, w);
 // deviation = tidal acceleration between nearby geodesics
 ```
 
-### 6.3 QCD (Quantum Chromodynamics)
+### 6.4 QCD (Quantum Chromodynamics)
 
 **Module:** `theories::qcd`
 
@@ -328,7 +365,7 @@ impl QCD {
 }
 ```
 
-### 6.4 Electroweak
+### 6.5 Electroweak
 
 **Module:** `theories::ew`
 
@@ -499,13 +536,14 @@ This section maps specified methods to existing `deep_causality_physics` kernels
 
 ### 9.4 New Files to Create
 
-| File Path                     | Purpose              | Status     |
-|-------------------------------|----------------------|------------|
-| `src/nuclear/qcd.rs`          | QCD-specific kernels | ✓ Created  |
-| `src/theories/mod.rs`         | Theory module root   | ✓ Created  |
-| `src/theories/qed.rs`         | QED theory wrapper   | ✓ Created  |
-| `src/theories/gr.rs`          | GR theory wrappers   | Pending    |
-| `src/theories/electroweak.rs` | Electroweak theory   | Pending    |
+| File Path                     | Purpose              | Status    |
+|-------------------------------|----------------------|-----------|
+| `src/nuclear/qcd.rs`          | QCD-specific kernels | ✓ Created |
+| `src/theories/mod.rs`         | Theory module root   | ✓ Created |
+| `src/theories/qed.rs`         | QED theory wrapper   | ✓ Created |
+| `src/theories/weak.rs`        | Weak Force wrapper   | ✓ Created |
+| `src/theories/electroweak.rs` | Electroweak theory   | ✓ Created |
+| `src/theories/gr.rs`          | GR theory wrappers   | Pending   |
 
 ### 9.5 Test Coverage
 
@@ -522,17 +560,18 @@ This section maps specified methods to existing `deep_causality_physics` kernels
 | `confinement_potential_kernel` | `tests/nuclear/qcd_tests.rs`             | ✓ Complete |
 | `running_coupling_kernel`      | `tests/nuclear/qcd_tests.rs`             | ✓ Complete |
 | QED theory wrapper             | `tests/theories/qed_tests.rs`            | ✓ Complete |
-| EW symmetry breaking           | `tests/theories/electroweak_tests.rs`    | Pending    |
+| Weak Force theory              | `tests/theories/weak_tests.rs`           | ✓ Complete |
+| EW symmetry breaking           | `tests/theories/electroweak_tests.rs`    | ✓ Complete |
 
 ### 9.6 Remaining Gaps Summary
 
 **Kernels: 100% Complete** - All identified kernel methods have been implemented.
 
-**QED Theory: 100% Complete** - QED wrapper with 26 tests implemented.
+**QED, Weak & Electroweak: 100% Complete** - Wrappers and tests implemented.
 
-**Theory Wrappers: Pending** - High-level theory APIs still needed:
+**Theory Wrappers: Pending**
+
 1. `theories/gr.rs` - GR wrapper for spacetime constructors
-2. `theories/electroweak.rs` - Electroweak with Higgs mechanism
 
 ---
 

@@ -82,3 +82,11 @@ path = "quantum_geometric_tensor/main.rs"
 [[example]]
 name = "gauge_qed"
 path = "gauge_qed/main.rs"
+
+[[example]]
+name = "gauge_weak"
+path = "gauge_weak/main.rs"
+
+[[example]]
+name = "gauge_electroweak"
+path = "gauge_electroweak/main.rs"
