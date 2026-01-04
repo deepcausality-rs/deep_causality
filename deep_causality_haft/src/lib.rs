@@ -43,35 +43,44 @@
 extern crate alloc;
 
 // Module Declarations
-pub(crate) mod algebra;
+mod alias;
 pub(crate) mod effect_system;
 pub(crate) mod extensions;
 pub(crate) mod hkt;
+pub(crate) mod traits;
 pub mod utils_tests;
 // ============================================================================
 // Re-exports
 // ============================================================================
 
-// HKT Traits
+// Aliases
+pub use alias::alias_adjunction::AliasAdjunction;
+pub use alias::alias_comonad::AliasCoMonad;
+pub use alias::alias_foldable::AliasFoldable;
+pub use alias::alias_functor::AliasFunctor;
+pub use alias::alias_monad::AliasMonad;
+pub use alias::alias_profunctor::AliasProfunctor;
+
+// HKT
 pub use crate::hkt::{HKT, HKT2, HKT3, HKT4, HKT5, Satisfies};
 pub use crate::hkt::{HKT2Unbound, HKT3Unbound, HKT4Unbound, HKT5Unbound, HKT6Unbound};
 pub use crate::hkt::{NoConstraint, Placeholder};
 
-// Algebraic Traits
-pub use crate::algebra::adjunction::Adjunction;
-pub use crate::algebra::applicative::Applicative;
-pub use crate::algebra::bifunctor::Bifunctor;
-pub use crate::algebra::comonad::CoMonad;
-pub use crate::algebra::cybernetic_loop::CyberneticLoop;
-pub use crate::algebra::foldable::Foldable;
-pub use crate::algebra::functor::Functor;
-pub use crate::algebra::monad::Monad;
-pub use crate::algebra::parametric_monad::ParametricMonad;
-pub use crate::algebra::profunctor::Profunctor;
-pub use crate::algebra::promonad::Promonad;
-pub use crate::algebra::pure::Pure;
-pub use crate::algebra::riemann_map::RiemannMap;
-pub use crate::algebra::traversable::Traversable;
+// Traits
+pub use crate::traits::adjunction::Adjunction;
+pub use crate::traits::applicative::Applicative;
+pub use crate::traits::bifunctor::Bifunctor;
+pub use crate::traits::comonad::CoMonad;
+pub use crate::traits::cybernetic_loop::CyberneticLoop;
+pub use crate::traits::foldable::Foldable;
+pub use crate::traits::functor::Functor;
+pub use crate::traits::monad::Monad;
+pub use crate::traits::parametric_monad::ParametricMonad;
+pub use crate::traits::profunctor::Profunctor;
+pub use crate::traits::promonad::Promonad;
+pub use crate::traits::pure::Pure;
+pub use crate::traits::riemann_map::RiemannMap;
+pub use crate::traits::traversable::Traversable;
 
 // Effect System Traits
 pub use crate::effect_system::effect::{Effect3, Effect4, Effect5};
