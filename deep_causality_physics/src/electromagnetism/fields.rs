@@ -111,7 +111,6 @@ pub fn magnetic_helicity_density_kernel(
     // Helicity Density h = A . B
     // Total Helicity H is the integral of h over volume.
     // This function computes the local density.
-
     if potential.metric() != field.metric() {
         return Err(PhysicsError::DimensionMismatch(format!(
             "Metric mismatch in Magnetic Helicity: {:?} vs {:?}",
@@ -216,4 +215,112 @@ pub fn proca_equation_kernel(
     }
 
     Ok(j)
+}
+
+/// Calculates the Electromagnetic Energy Density: $u = \frac{1}{2}(E^2 + B^2)$.
+///
+/// This is the $T^{00}$ component of the stress-energy tensor in natural units.
+///
+/// # Arguments
+/// * `e` - Electric field vector $E$.
+/// * `b` - Magnetic field vector $B$.
+///
+/// # Returns
+/// * `Result<f64, PhysicsError>` - Energy density scalar $u$.
+pub fn energy_density_kernel(
+    e: &CausalMultiVector<f64>,
+    b: &CausalMultiVector<f64>,
+) -> Result<f64, PhysicsError> {
+    // u = (E² + B²) / 2  (in natural units where ε₀ = μ₀ = 1)
+    // E² = |E|² = E · E (squared magnitude)
+    // B² = |B|² = B · B (squared magnitude)
+    if e.metric() != b.metric() {
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Metric mismatch in Energy Density: {:?} vs {:?}",
+            e.metric(),
+            b.metric()
+        )));
+    }
+
+    // Check for non-finite inputs
+    if e.data().iter().any(|v| !v.is_finite()) || b.data().iter().any(|v| !v.is_finite()) {
+        return Err(PhysicsError::NumericalInstability(
+            "Non-finite input in Energy Density".into(),
+        ));
+    }
+
+    // Compute squared magnitudes
+    let e_squared = e.squared_magnitude();
+    let b_squared = b.squared_magnitude();
+
+    if !e_squared.is_finite() || !b_squared.is_finite() {
+        return Err(PhysicsError::NumericalInstability(
+            "Non-finite squared magnitude in Energy Density".into(),
+        ));
+    }
+
+    // Energy density in natural units
+    let u = 0.5 * (e_squared + b_squared);
+
+    if !u.is_finite() {
+        return Err(PhysicsError::NumericalInstability(
+            "Non-finite result in Energy Density".into(),
+        ));
+    }
+
+    Ok(u)
+}
+
+/// Calculates the Electromagnetic Lagrangian Density: $\mathcal{L} = -\frac{1}{4} F_{\mu\nu} F^{\mu\nu}$.
+///
+/// In terms of E and B fields: $\mathcal{L} = \frac{1}{2}(E^2 - B^2)$ (West Coast convention).
+///
+/// # Arguments
+/// * `e` - Electric field vector $E$.
+/// * `b` - Magnetic field vector $B$.
+///
+/// # Returns
+/// * `Result<f64, PhysicsError>` - Lagrangian density scalar $\mathcal{L}$.
+pub fn lagrangian_density_kernel(
+    e: &CausalMultiVector<f64>,
+    b: &CausalMultiVector<f64>,
+) -> Result<f64, PhysicsError> {
+    // L = -¼ F_μν F^μν = ½(E² - B²)  (West Coast convention)
+    // In particle physics convention (+---), F_{0i} = E_i and F_{ij} = ε_{ijk}B_k
+    // The Lagrangian density is L = (E² - B²)/2
+    if e.metric() != b.metric() {
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Metric mismatch in Lagrangian Density: {:?} vs {:?}",
+            e.metric(),
+            b.metric()
+        )));
+    }
+
+    // Check for non-finite inputs
+    if e.data().iter().any(|v| !v.is_finite()) || b.data().iter().any(|v| !v.is_finite()) {
+        return Err(PhysicsError::NumericalInstability(
+            "Non-finite input in Lagrangian Density".into(),
+        ));
+    }
+
+    // Compute squared magnitudes
+    let e_squared = e.squared_magnitude();
+    let b_squared = b.squared_magnitude();
+
+    if !e_squared.is_finite() || !b_squared.is_finite() {
+        return Err(PhysicsError::NumericalInstability(
+            "Non-finite squared magnitude in Lagrangian Density".into(),
+        ));
+    }
+
+    // Lagrangian density (West Coast: L = (E² - B²)/2)
+    let lagrangian = 0.5 * (e_squared - b_squared);
+
+    if !lagrangian.is_finite() {
+        return Err(PhysicsError::NumericalInstability(
+            "Non-finite result in Lagrangian Density".into(),
+        ));
+    }
+
+    Ok(lagrangian)
 }

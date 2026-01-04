@@ -20,9 +20,9 @@ cargo run -p physics_examples --example <example_name>
 | [bernoulli_flow_network](bernoulli_flow_network/README.md) | Fluid Dynamics | Pipe network with Venturi effect and hydrostatic gain |
 | [carnot_cycle_engine](carnot_cycle_engine/README.md) | Thermodynamics | 4-stage heat engine at Carnot efficiency limit |
 | [laser_resonator_stability](laser_resonator_stability/README.md) | Optics | Gaussian beam propagation via ABCD matrices |
-| [maxwell_example](maxwell_example/README.md) | Electromagnetism | Maxwell's equations via Geometric Algebra |
-| [grmhd_example](grmhd_example/README.md) | Relativity | General Relativistic Magnetohydrodynamics |
-| [geometric_tilt_example](geometric_tilt_example/README.md) | Robotics/IMU | Sensor fusion with Geometric Algebra |
+| [maxwell_example](maxwell/README.md) | Electromagnetism | Maxwell's equations via Geometric Algebra |
+| [grmhd_example](grmhd/README.md) | Relativity | General Relativistic Magnetohydrodynamics |
+| [geometric_tilt_example](geometric_tilt/README.md) | Robotics/IMU | Sensor fusion with Geometric Algebra |
 | [multi_physics_pipeline](multi_physics_pipeline/README.md) | Particle Physics | QFT → Hadronization → Hydro → Detection |
 | [quantum_counterfactual](quantum_counterfactual/README.md) | Quantum | Error correction via state rewind |
 | [quantum_geometric_tensor](quantum_geometric_tensor/README.md) | Condensed Matter | QGT, quantum metric, and flat-band transport (TBG) |

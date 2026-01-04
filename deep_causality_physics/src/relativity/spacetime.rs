@@ -59,7 +59,7 @@ pub fn time_dilation_angle_kernel(
             "Metric mismatch between vectors".into(),
         ));
     }
-    if let deep_causality_multivector::Metric::Minkowski(_) = t1.metric() {
+    if let Metric::Minkowski(_) = t1.metric() {
     } else {
         return Err(PhysicsError::MetricSingularity(
             "Time dilation requires Minkowski metric".into(),
@@ -176,4 +176,182 @@ pub fn generate_schwarzschild_metric(
     ];
 
     deep_causality_tensor::CausalTensor::new(metric_data, vec![4, 4]).map_err(PhysicsError::from)
+}
+
+/// Parallel transports a vector along a discrete path using Christoffel symbols.
+///
+/// Solves: $\frac{Dv^\mu}{d\lambda} = \frac{dv^\mu}{d\lambda} + \Gamma^\mu_{\nu\rho} \frac{dx^\nu}{d\lambda} v^\rho = 0$
+///
+/// Uses Euler method for simplicity along discretized path segments.
+///
+/// # Arguments
+/// * `initial_vector` - Vector $v_0^\mu$ to transport.
+/// * `path` - List of positions along the path (each position is a slice of coordinates).
+/// * `christoffel` - Christoffel symbols $\Gamma^\mu_{\nu\rho}$ (Rank 3 tensor [dim, dim, dim]).
+///
+/// # Returns
+/// * `Ok(Vec<f64>)` - The parallel-transported vector at the end of the path.
+pub fn parallel_transport_kernel(
+    initial_vector: &[f64],
+    path: &[Vec<f64>],
+    christoffel: &deep_causality_tensor::CausalTensor<f64>,
+) -> Result<Vec<f64>, PhysicsError> {
+    if path.len() < 2 {
+        return Err(PhysicsError::DimensionMismatch(
+            "Path must have at least 2 points".into(),
+        ));
+    }
+
+    let dim = initial_vector.len();
+    if christoffel.num_dim() != 3 {
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Christoffel symbols must be rank 3, got {}",
+            christoffel.num_dim()
+        )));
+    }
+
+    let shape = christoffel.shape();
+    if shape[0] != dim || shape[1] != dim || shape[2] != dim {
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Christoffel shape {:?} incompatible with dimension {}",
+            shape, dim
+        )));
+    }
+
+    // Validate path dimensions
+    for (i, point) in path.iter().enumerate() {
+        if point.len() != dim {
+            return Err(PhysicsError::DimensionMismatch(format!(
+                "Path point {} has dimension {}, expected {}",
+                i,
+                point.len(),
+                dim
+            )));
+        }
+    }
+
+    let christoffel_data = christoffel.as_slice();
+    let mut v = initial_vector.to_vec();
+
+    // Transport along each segment
+    for i in 0..path.len() - 1 {
+        // Compute tangent vector dx^nu (difference between consecutive points)
+        let dx: Vec<f64> = path[i + 1]
+            .iter()
+            .zip(path[i].iter())
+            .map(|(x1, x0)| x1 - x0)
+            .collect();
+
+        // Update: dv^mu = -Gamma^mu_nu_rho * dx^nu * v^rho
+        let mut dv = vec![0.0; dim];
+        for mu in 0..dim {
+            for nu in 0..dim {
+                for rho in 0..dim {
+                    let gamma = christoffel_data[mu * dim * dim + nu * dim + rho];
+                    dv[mu] -= gamma * dx[nu] * v[rho];
+                }
+            }
+        }
+
+        // Euler step: v_new = v + dv
+        for mu in 0..dim {
+            v[mu] += dv[mu];
+        }
+
+        // Check for numerical instability
+        if v.iter().any(|x| !x.is_finite()) {
+            return Err(PhysicsError::NumericalInstability(format!(
+                "Parallel transport diverged at segment {}",
+                i
+            )));
+        }
+    }
+
+    Ok(v)
+}
+
+/// Computes the proper time along a discrete worldline.
+///
+/// $\tau = \int \sqrt{-g_{\mu\nu} \frac{dx^\mu}{d\lambda} \frac{dx^\nu}{d\lambda}} \, d\lambda$
+///
+/// For a discrete path, sums the proper time increments between consecutive points.
+///
+/// # Arguments
+/// * `path` - List of spacetime positions along the worldline.
+/// * `metric` - Metric tensor $g_{\mu\nu}$ (Rank 2 tensor [dim, dim]).
+///
+/// # Returns
+/// * `Ok(f64)` - Total proper time along the path.
+pub fn proper_time_kernel(
+    path: &[Vec<f64>],
+    metric: &deep_causality_tensor::CausalTensor<f64>,
+) -> Result<f64, PhysicsError> {
+    if path.len() < 2 {
+        return Ok(0.0); // No proper time for single point or empty path
+    }
+
+    if metric.num_dim() != 2 {
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Metric must be rank 2, got {}",
+            metric.num_dim()
+        )));
+    }
+
+    let shape = metric.shape();
+    let dim = shape[0];
+    if shape[1] != dim {
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Metric must be square, got {:?}",
+            shape
+        )));
+    }
+
+    // Validate path dimensions
+    for (i, point) in path.iter().enumerate() {
+        if point.len() != dim {
+            return Err(PhysicsError::DimensionMismatch(format!(
+                "Path point {} has dimension {}, expected {}",
+                i,
+                point.len(),
+                dim
+            )));
+        }
+    }
+
+    let metric_data = metric.as_slice();
+    let mut total_tau = 0.0;
+
+    for i in 0..path.len() - 1 {
+        // Compute displacement dx^mu
+        let dx: Vec<f64> = path[i + 1]
+            .iter()
+            .zip(path[i].iter())
+            .map(|(x1, x0)| x1 - x0)
+            .collect();
+
+        // Compute ds^2 = g_mu_nu dx^mu dx^nu
+        let mut ds_squared = 0.0;
+        for mu in 0..dim {
+            for nu in 0..dim {
+                let g_munu = metric_data[mu * dim + nu];
+                ds_squared += g_munu * dx[mu] * dx[nu];
+            }
+        }
+
+        // For timelike intervals: ds^2 < 0 (East Coast) or > 0 (West Coast)
+        // Proper time: d\tau = sqrt(|ds^2|) for timelike
+        // We take the absolute value to handle both conventions
+        let dtau = ds_squared.abs().sqrt();
+
+        if !dtau.is_finite() {
+            return Err(PhysicsError::NumericalInstability(format!(
+                "Non-finite proper time increment at segment {}",
+                i
+            )));
+        }
+
+        total_tau += dtau;
+    }
+
+    Ok(total_tau)
 }

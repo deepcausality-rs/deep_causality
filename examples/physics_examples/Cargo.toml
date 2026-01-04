@@ -44,8 +44,8 @@ name = "event_horizon_probe"
 path = "event_horizon_probe/main.rs"
 
 [[example]]
-name = "geometric_tilt_example"
-path = "geometric_tilt_example/main.rs"
+name = "geometric_tilt"
+path = "geometric_tilt/main.rs"
 
 [[example]]
 name = "gravitational_wave"
@@ -53,7 +53,7 @@ path = "gravitational_wave/main.rs"
 
 [[example]]
 name = "grmhd_example"
-path = "grmhd_example/main.rs"
+path = "grmhd/main.rs"
 
 [[example]]
 name = "ikkt_matrix_model"
@@ -65,7 +65,7 @@ path = "laser_resonator_stability/main.rs"
 
 [[example]]
 name = "maxwell_example"
-path = "maxwell_example/main.rs"
+path = "maxwell/main.rs"
 
 [[example]]
 name = "multi_physics_pipeline"

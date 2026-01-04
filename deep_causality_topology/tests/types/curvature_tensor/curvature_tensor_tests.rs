@@ -93,3 +93,81 @@ fn test_bianchi_check() {
     let violation = tensor.check_bianchi_identity();
     assert!(violation > 0.0);
 }
+
+// =============================================================================
+// Weyl Tensor Tests
+// =============================================================================
+
+#[test]
+fn test_weyl_tensor_flat_space() {
+    // In flat space, Weyl tensor should be zero
+    let flat: CurvatureTensor<f64, f64, f64, f64> = CurvatureTensor::flat(4);
+    let weyl = flat.weyl_tensor();
+
+    for val in weyl.iter() {
+        assert!(val.abs() < 1e-10, "Weyl should be zero in flat space");
+    }
+}
+
+#[test]
+fn test_weyl_tensor_dim_2() {
+    // In 2D, Weyl tensor is identically zero
+    let tensor: CurvatureTensor<f64, f64, f64, f64> = CurvatureTensor::from_generator(
+        2,
+        Metric::Euclidean(2),
+        CurvatureSymmetry::None,
+        |d, a, b, c| {
+            if d == 0 && a == 1 && b == 0 && c == 1 {
+                1.0
+            } else {
+                0.0
+            }
+        },
+    );
+
+    let weyl = tensor.weyl_tensor();
+    // 2^4 = 16 elements, all should be zero
+    assert_eq!(weyl.len(), 16);
+    for val in weyl.iter() {
+        assert!(val.abs() < 1e-10, "Weyl is zero in 2D");
+    }
+}
+
+#[test]
+fn test_weyl_tensor_size() {
+    // Weyl tensor should have dim^4 elements
+    let tensor: CurvatureTensor<f64, f64, f64, f64> = CurvatureTensor::flat(3);
+    let weyl = tensor.weyl_tensor();
+    assert_eq!(weyl.len(), 81); // 3^4 = 81
+}
+
+#[test]
+fn test_weyl_tensor_4d_non_trivial() {
+    // Verify Weyl tensor computation works for a non-trivial Riemann tensor
+    // Just ensure it computes without error and has finite values
+    let tensor: CurvatureTensor<f64, f64, f64, f64> = CurvatureTensor::from_generator(
+        4,
+        Metric::Minkowski(4),
+        CurvatureSymmetry::Riemann,
+        |d, a, b, c| {
+            // Some non-zero Riemann components
+            if d == 0 && a == 1 && b == 2 && c == 3 {
+                1.0
+            } else if d == 1 && a == 0 && b == 2 && c == 3 {
+                -1.0 // Antisymmetry
+            } else {
+                0.0
+            }
+        },
+    );
+
+    let weyl = tensor.weyl_tensor();
+
+    // Should have 256 elements (4^4)
+    assert_eq!(weyl.len(), 256);
+
+    // All values should be finite
+    for val in weyl.iter() {
+        assert!(val.is_finite(), "Weyl tensor should have finite values");
+    }
+}

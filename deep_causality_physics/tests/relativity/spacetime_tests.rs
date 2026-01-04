@@ -217,3 +217,164 @@ fn test_schwarzschild_metric_values_check() {
     let val = result.data()[0];
     assert!((val - (-1.0 + 1e-10)).abs() < 1e-15);
 }
+
+// =============================================================================
+// parallel_transport_kernel Tests
+// =============================================================================
+
+use deep_causality_physics::{parallel_transport_kernel, proper_time_kernel};
+use deep_causality_tensor::CausalTensor;
+
+#[test]
+fn test_parallel_transport_flat_space() {
+    // In flat space (Γ = 0), parallel transport preserves the vector
+    let initial_vector = vec![1.0, 0.0, 0.0, 0.0];
+    let path = vec![
+        vec![0.0, 0.0, 0.0, 0.0],
+        vec![1.0, 0.0, 0.0, 0.0],
+        vec![2.0, 0.0, 0.0, 0.0],
+    ];
+    let christoffel = CausalTensor::new(vec![0.0; 64], vec![4, 4, 4]).unwrap();
+
+    let result = parallel_transport_kernel(&initial_vector, &path, &christoffel);
+    assert!(result.is_ok());
+
+    let final_vector = result.unwrap();
+    assert!((final_vector[0] - 1.0).abs() < 1e-10);
+    assert!((final_vector[1] - 0.0).abs() < 1e-10);
+}
+
+#[test]
+fn test_parallel_transport_short_path_error() {
+    // Path with only 1 point should error
+    let initial_vector = vec![1.0, 0.0];
+    let path = vec![vec![0.0, 0.0]];
+    let christoffel = CausalTensor::new(vec![0.0; 8], vec![2, 2, 2]).unwrap();
+
+    let result = parallel_transport_kernel(&initial_vector, &path, &christoffel);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_parallel_transport_dimension_mismatch() {
+    let initial_vector = vec![1.0, 0.0, 0.0]; // 3D
+    let path = vec![vec![0.0, 0.0], vec![1.0, 0.0]]; // 2D path points
+    let christoffel = CausalTensor::new(vec![0.0; 27], vec![3, 3, 3]).unwrap();
+
+    let result = parallel_transport_kernel(&initial_vector, &path, &christoffel);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_parallel_transport_wrong_christoffel_rank() {
+    let initial_vector = vec![1.0, 0.0];
+    let path = vec![vec![0.0, 0.0], vec![1.0, 0.0]];
+    let christoffel = CausalTensor::new(vec![0.0; 4], vec![2, 2]).unwrap(); // Rank 2
+
+    let result = parallel_transport_kernel(&initial_vector, &path, &christoffel);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_parallel_transport_multiple_segments() {
+    // Test with multiple path segments in flat space
+    let initial_vector = vec![1.0, 2.0];
+    let path = vec![
+        vec![0.0, 0.0],
+        vec![1.0, 0.0],
+        vec![1.0, 1.0],
+        vec![0.0, 1.0],
+        vec![0.0, 0.0], // Back to start
+    ];
+    let christoffel = CausalTensor::new(vec![0.0; 8], vec![2, 2, 2]).unwrap();
+
+    let result = parallel_transport_kernel(&initial_vector, &path, &christoffel);
+    assert!(result.is_ok());
+
+    // In flat space, vector should be unchanged
+    let final_vector = result.unwrap();
+    assert!((final_vector[0] - initial_vector[0]).abs() < 1e-10);
+    assert!((final_vector[1] - initial_vector[1]).abs() < 1e-10);
+}
+
+// =============================================================================
+// proper_time_kernel Tests
+// =============================================================================
+
+#[test]
+fn test_proper_time_flat_minkowski() {
+    // Timelike path in flat Minkowski space
+    // Path along time axis: (t, 0, 0, 0) -> (t+1, 0, 0, 0)
+    let path = vec![
+        vec![0.0, 0.0, 0.0, 0.0],
+        vec![1.0, 0.0, 0.0, 0.0],
+        vec![2.0, 0.0, 0.0, 0.0],
+    ];
+    // Minkowski metric: diag(-1, 1, 1, 1)
+    let metric = CausalTensor::new(
+        vec![
+            -1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+        ],
+        vec![4, 4],
+    )
+    .unwrap();
+
+    let result = proper_time_kernel(&path, &metric);
+    assert!(result.is_ok());
+
+    let tau = result.unwrap();
+    // ds² = -dt² for purely timelike motion
+    // |ds²| = 1 for each step, so dτ = 1 per step, total = 2
+    assert!((tau - 2.0).abs() < 1e-10, "Expected τ = 2.0, got {}", tau);
+}
+
+#[test]
+fn test_proper_time_empty_path() {
+    let path: Vec<Vec<f64>> = vec![];
+    let metric = CausalTensor::new(vec![1.0, 0.0, 0.0, 1.0], vec![2, 2]).unwrap();
+
+    let result = proper_time_kernel(&path, &metric);
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap(), 0.0);
+}
+
+#[test]
+fn test_proper_time_single_point() {
+    let path = vec![vec![0.0, 0.0]];
+    let metric = CausalTensor::new(vec![1.0, 0.0, 0.0, 1.0], vec![2, 2]).unwrap();
+
+    let result = proper_time_kernel(&path, &metric);
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap(), 0.0);
+}
+
+#[test]
+fn test_proper_time_spacelike_path() {
+    // Spacelike path in Euclidean metric
+    let path = vec![vec![0.0, 0.0], vec![3.0, 4.0]]; // Distance = 5
+    let metric = CausalTensor::new(vec![1.0, 0.0, 0.0, 1.0], vec![2, 2]).unwrap();
+
+    let result = proper_time_kernel(&path, &metric);
+    assert!(result.is_ok());
+
+    let tau = result.unwrap();
+    assert!((tau - 5.0).abs() < 1e-10, "Expected τ = 5.0, got {}", tau);
+}
+
+#[test]
+fn test_proper_time_wrong_metric_rank() {
+    let path = vec![vec![0.0, 0.0], vec![1.0, 0.0]];
+    let metric = CausalTensor::new(vec![1.0, 0.0], vec![2]).unwrap(); // Rank 1
+
+    let result = proper_time_kernel(&path, &metric);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_proper_time_dimension_mismatch() {
+    let path = vec![vec![0.0, 0.0, 0.0], vec![1.0, 0.0, 0.0]]; // 3D
+    let metric = CausalTensor::new(vec![1.0, 0.0, 0.0, 1.0], vec![2, 2]).unwrap(); // 2D
+
+    let result = proper_time_kernel(&path, &metric);
+    assert!(result.is_err());
+}

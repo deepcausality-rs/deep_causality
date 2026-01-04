@@ -106,3 +106,136 @@ pub fn geodesic_deviation_kernel(
 
     Ok(a_neg)
 }
+
+/// Integrates the geodesic equation using 4th-order Runge-Kutta (RK4).
+///
+/// Solves: $\frac{d^2 x^\mu}{d\tau^2} + \Gamma^\mu_{\nu\rho} \frac{dx^\nu}{d\tau} \frac{dx^\rho}{d\tau} = 0$
+///
+/// # Arguments
+/// * `initial_position` - Initial position $x_0^\mu$ (4-vector).
+/// * `initial_velocity` - Initial 4-velocity $u_0^\mu = dx^\mu/d\tau$.
+/// * `christoffel` - Christoffel symbols $\Gamma^\mu_{\nu\rho}$ (Rank 3 tensor [dim, dim, dim]).
+/// * `proper_time_step` - Step size $d\tau$ in proper time.
+/// * `num_steps` - Number of integration steps.
+///
+/// # Returns
+/// * `Ok(Vec<(Vec<f64>, Vec<f64>)>)` - List of (position, velocity) pairs along the geodesic.
+#[allow(clippy::type_complexity)]
+pub fn geodesic_integrator_kernel(
+    initial_position: &[f64],
+    initial_velocity: &[f64],
+    christoffel: &CausalTensor<f64>,
+    proper_time_step: f64,
+    num_steps: usize,
+) -> Result<Vec<(Vec<f64>, Vec<f64>)>, PhysicsError> {
+    // Validate inputs
+    if initial_position.len() != initial_velocity.len() {
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Position and velocity must have same dimension: {} vs {}",
+            initial_position.len(),
+            initial_velocity.len()
+        )));
+    }
+
+    let dim = initial_position.len();
+    if christoffel.num_dim() != 3 {
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Christoffel symbols must be rank 3, got {}",
+            christoffel.num_dim()
+        )));
+    }
+
+    let shape = christoffel.shape();
+    if shape[0] != dim || shape[1] != dim || shape[2] != dim {
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Christoffel shape {:?} incompatible with dimension {}",
+            shape, dim
+        )));
+    }
+
+    if !proper_time_step.is_finite() || proper_time_step == 0.0 {
+        return Err(PhysicsError::NumericalInstability(
+            "Invalid proper time step".into(),
+        ));
+    }
+
+    let dt = proper_time_step;
+    let christoffel_data = christoffel.as_slice();
+
+    // Helper to compute acceleration: a^mu = -Gamma^mu_nu_rho * u^nu * u^rho
+    let compute_acceleration = |u: &[f64]| -> Vec<f64> {
+        let mut a = vec![0.0; dim];
+        for mu in 0..dim {
+            let mut acc = 0.0;
+            for nu in 0..dim {
+                for rho in 0..dim {
+                    // Index: Gamma[mu, nu, rho] = christoffel_data[mu * dim * dim + nu * dim + rho]
+                    let gamma = christoffel_data[mu * dim * dim + nu * dim + rho];
+                    acc -= gamma * u[nu] * u[rho];
+                }
+            }
+            a[mu] = acc;
+        }
+        a
+    };
+
+    // RK4 for second-order ODE split into first-order system:
+    // dx/dt = u
+    // du/dt = a(u)
+    let mut trajectory = Vec::with_capacity(num_steps + 1);
+    let mut x: Vec<f64> = initial_position.to_vec();
+    let mut u: Vec<f64> = initial_velocity.to_vec();
+
+    trajectory.push((x.clone(), u.clone()));
+
+    for _ in 0..num_steps {
+        // k1
+        let a1 = compute_acceleration(&u);
+        let k1_x: Vec<f64> = u.iter().map(|&v| v * dt).collect();
+        let k1_u: Vec<f64> = a1.iter().map(|&a| a * dt).collect();
+
+        // k2
+        let u_mid1: Vec<f64> = u
+            .iter()
+            .zip(k1_u.iter())
+            .map(|(v, k)| v + 0.5 * k)
+            .collect();
+        let a2 = compute_acceleration(&u_mid1);
+        let k2_x: Vec<f64> = u_mid1.iter().map(|&v| v * dt).collect();
+        let k2_u: Vec<f64> = a2.iter().map(|&a| a * dt).collect();
+
+        // k3
+        let u_mid2: Vec<f64> = u
+            .iter()
+            .zip(k2_u.iter())
+            .map(|(v, k)| v + 0.5 * k)
+            .collect();
+        let a3 = compute_acceleration(&u_mid2);
+        let k3_x: Vec<f64> = u_mid2.iter().map(|&v| v * dt).collect();
+        let k3_u: Vec<f64> = a3.iter().map(|&a| a * dt).collect();
+
+        // k4
+        let u_end: Vec<f64> = u.iter().zip(k3_u.iter()).map(|(v, k)| v + k).collect();
+        let a4 = compute_acceleration(&u_end);
+        let k4_x: Vec<f64> = u_end.iter().map(|&v| v * dt).collect();
+        let k4_u: Vec<f64> = a4.iter().map(|&a| a * dt).collect();
+
+        // Update
+        for i in 0..dim {
+            x[i] += (k1_x[i] + 2.0 * k2_x[i] + 2.0 * k3_x[i] + k4_x[i]) / 6.0;
+            u[i] += (k1_u[i] + 2.0 * k2_u[i] + 2.0 * k3_u[i] + k4_u[i]) / 6.0;
+        }
+
+        // Check for numerical instability
+        if x.iter().any(|v| !v.is_finite()) || u.iter().any(|v| !v.is_finite()) {
+            return Err(PhysicsError::NumericalInstability(format!(
+                "Geodesic integration diverged at step {}",
+                trajectory.len()
+            )));
+        }
+
+        trajectory.push((x.clone(), u.clone()));
+    }
+
+    Ok(trajectory)
+}

@@ -17,21 +17,21 @@ These are built on top of the `GaugeField<G, A, F>` infrastructure provided by `
 
 ### 1.1 Separation of Concerns
 
-| Crate                     | Responsibility                                    |
-|---------------------------|---------------------------------------------------|
-| `deep_causality_topology` | GaugeField struct, HKT traits, CurvatureTensor    |
-| `deep_causality_physics`  | Theory-specific implementations (QED, GR, QCD)    |
+| Crate                     | Responsibility                                 |
+|---------------------------|------------------------------------------------|
+| `deep_causality_topology` | GaugeField struct, HKT traits, CurvatureTensor |
+| `deep_causality_physics`  | Theory-specific implementations (QED, GR, QCD) |
 
 ### 1.2 Implementation Scope
 
-| Theory                 | Gauge Group          | Module Path          | Status    |
-|------------------------|----------------------|----------------------|-----------|
-| **QED**                | U(1)                 | `theories::qed`      | Planned   |
-| **Weak Force**         | SU(2)                | `theories::weak`     | Planned   |
-| **Electroweak**        | SU(2) × U(1)         | `theories::ew`       | Planned   |
-| **QCD**                | SU(3)                | `theories::qcd`      | Planned   |
-| **Standard Model**     | SU(3) × SU(2) × U(1) | `theories::sm`       | Planned   |
-| **General Relativity** | SO(3,1) / Lorentz    | `theories::gr`       | Planned   |
+| Theory                 | Gauge Group          | Module Path      | Status  |
+|------------------------|----------------------|------------------|---------|
+| **QED**                | U(1)                 | `theories::qed`  | Planned |
+| **Weak Force**         | SU(2)                | `theories::weak` | Planned |
+| **Electroweak**        | SU(2) × U(1)         | `theories::ew`   | Planned |
+| **QCD**                | SU(3)                | `theories::qcd`  | Planned |
+| **Standard Model**     | SU(3) × SU(2) × U(1) | `theories::sm`   | Planned |
+| **General Relativity** | SO(3,1) / Lorentz    | `theories::gr`   | Planned |
 
 ---
 
@@ -39,30 +39,30 @@ These are built on top of the `GaugeField<G, A, F>` infrastructure provided by `
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                       CRATE ARCHITECTURE                                 │
+│                        ARCHITECTURE                                     │
 ├─────────────────────────────────────────────────────────────────────────┤
-│                                                                          │
-│  deep_causality_physics                                                  │
+│                                                                         │
+│  deep_causality_physics                                                 │
 │  ┌────────────────────────────────────────────────────────────────────┐ │
-│  │                      theories/                                      │ │
+│  │                      theories/                                     │ │
 │  │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐       │ │
 │  │  │   qed   │ │  weak   │ │   ew    │ │   qcd   │ │   gr    │       │ │
 │  │  │  (U1)   │ │ (SU2)   │ │(SU2×U1) │ │ (SU3)   │ │(Lorentz)│       │ │
 │  │  └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘       │ │
-│  │       │           │           │           │           │             │ │
-│  │       └───────────┴───────────┼───────────┴───────────┘             │ │
-│  │                               │                                      │ │
-│  │                    uses GaugeField<G, A, F>                         │ │
-│  └───────────────────────────────┼──────────────────────────────────────┘ │
-│                                  │                                       │
+│  │       │           │           │           │           │            │ │
+│  │       └───────────┴───────────┼───────────┴───────────┘            │ │
+│  │                               │                                    │ │
+│  │                    uses GaugeField<G, A, F>                        │ │
+│  └───────────────────────────────┼────────────────────────────────────┘ │
+│                                  │                                      │
 │  ────────────────────────────────┼───────────────────────────────────── │
-│                                  ▼                                       │
-│  deep_causality_topology                                                 │
+│                                  ▼                                      │
+│  deep_causality_topology                                                │
 │  ┌────────────────────────────────────────────────────────────────────┐ │
 │  │  GaugeField<G, A, F>  │  CurvatureTensor  │  HKT Witnesses         │ │
 │  │  GaugeGroup trait     │  Adjunction d⊣∂   │  Promonad, RiemannMap  │ │
 │  └────────────────────────────────────────────────────────────────────┘ │
-│                                                                          │
+│                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -72,34 +72,34 @@ These are built on top of the `GaugeField<G, A, F>` infrastructure provided by `
 
 ### 3.1 New Files to Create
 
-| File Path                                  | Description                        |
-|--------------------------------------------|------------------------------------|
-| `src/theories/mod.rs`                      | Module root, re-exports            |
-| `src/theories/qed/mod.rs`                  | QED theory implementation          |
-| `src/theories/qed/field.rs`                | Electromagnetic field operations   |
-| `src/theories/qed/maxwell.rs`              | Maxwell equations                  |
-| `src/theories/qed/gauge_transform.rs`      | U(1) gauge transformations         |
-| `src/theories/weak/mod.rs`                 | Weak force implementation          |
-| `src/theories/weak/field.rs`               | Weak isospin field                 |
-| `src/theories/ew/mod.rs`                   | Electroweak unification            |
-| `src/theories/ew/weinberg.rs`              | Weinberg angle, symmetry breaking  |
-| `src/theories/qcd/mod.rs`                  | QCD implementation                 |
-| `src/theories/qcd/field.rs`                | Gluon field                        |
-| `src/theories/qcd/color.rs`                | Color charge algebra               |
-| `src/theories/sm/mod.rs`                   | Full Standard Model                |
-| `src/theories/gr/mod.rs`                   | General Relativity                 |
-| `src/theories/gr/spacetime.rs`             | Spacetime creation utilities       |
-| `src/theories/gr/schwarzschild.rs`         | Schwarzschild metric               |
-| `src/theories/gr/kerr.rs`                  | Kerr metric (rotating black hole)  |
-| `src/theories/gr/friedmann.rs`             | FLRW cosmology                     |
-| `src/theories/gr/geodesic.rs`              | Geodesic equation                  |
-| `src/theories/gr/einstein.rs`              | Einstein field equations           |
+| File Path                             | Description                       |
+|---------------------------------------|-----------------------------------|
+| `src/theories/mod.rs`                 | Module root, re-exports           |
+| `src/theories/qed/mod.rs`             | QED theory implementation         |
+| `src/theories/qed/field.rs`           | Electromagnetic field operations  |
+| `src/theories/qed/maxwell.rs`         | Maxwell equations                 |
+| `src/theories/qed/gauge_transform.rs` | U(1) gauge transformations        |
+| `src/theories/weak/mod.rs`            | Weak force implementation         |
+| `src/theories/weak/field.rs`          | Weak isospin field                |
+| `src/theories/ew/mod.rs`              | Electroweak unification           |
+| `src/theories/ew/weinberg.rs`         | Weinberg angle, symmetry breaking |
+| `src/theories/qcd/mod.rs`             | QCD implementation                |
+| `src/theories/qcd/field.rs`           | Gluon field                       |
+| `src/theories/qcd/color.rs`           | Color charge algebra              |
+| `src/theories/sm/mod.rs`              | Full Standard Model               |
+| `src/theories/gr/mod.rs`              | General Relativity                |
+| `src/theories/gr/spacetime.rs`        | Spacetime creation utilities      |
+| `src/theories/gr/schwarzschild.rs`    | Schwarzschild metric              |
+| `src/theories/gr/kerr.rs`             | Kerr metric (rotating black hole) |
+| `src/theories/gr/friedmann.rs`        | FLRW cosmology                    |
+| `src/theories/gr/geodesic.rs`         | Geodesic equation                 |
+| `src/theories/gr/einstein.rs`         | Einstein field equations          |
 
 ### 3.2 Files to Modify
 
-| File Path       | Changes                                           |
-|-----------------|---------------------------------------------------|
-| `src/lib.rs`    | Add `theories` module, re-export theory types     |
+| File Path    | Changes                                       |
+|--------------|-----------------------------------------------|
+| `src/lib.rs` | Add `theories` module, re-export theory types |
 
 ---
 
@@ -150,10 +150,10 @@ pub type ColorField = QCD;
 
 ### 5.1 Convention Summary
 
-| Theory        | Convention   | Signature | g_{μν}            | Crate Type           |
-|---------------|--------------|-----------|-------------------|----------------------|
-| QED, QCD, EW  | West Coast   | (+---)    | diag(1,-1,-1,-1)  | `WestCoastMetric`    |
-| GR            | East Coast   | (-+++)    | diag(-1,1,1,1)    | `EastCoastMetric`    |
+| Theory       | Convention | Signature | g_{μν}           | Metric Type       |
+|--------------|------------|-----------|------------------|-------------------|
+| QED, QCD, EW | West Coast | (+---)    | diag(1,-1,-1,-1) | `WestCoastMetric` |
+| GR           | East Coast | (-+++)    | diag(-1,1,1,1)   | `EastCoastMetric` |
 
 ### 5.2 Usage in Gauge Theories
 
@@ -163,21 +163,21 @@ use deep_causality_topology::GaugeField;
 
 // QED: West Coast convention (particle physics standard)
 let qed_metric = WestCoastMetric::minkowski_4d();
-let em_field = GaugeField::<U1, _, _>::new(
-    spacetime,
-    qed_metric.into_inner(), // Extract Metric from wrapper
-    potential,
-    field_strength,
+let em_field = GaugeField::<U1, _, _ >::new(
+spacetime,
+qed_metric.into_inner(), // Extract Metric from wrapper
+potential,
+field_strength,
 );
 assert!(em_field.is_west_coast());
 
 // GR: East Coast convention (GR textbook standard)
 let gr_metric = EastCoastMetric::minkowski_4d();
-let gravity = GaugeField::<Lorentz, _, _>::new(
-    spacetime,
-    gr_metric.into_inner(),
-    christoffel,
-    riemann,
+let gravity = GaugeField::<Lorentz, _, _ >::new(
+spacetime,
+gr_metric.into_inner(),
+christoffel,
+riemann,
 );
 assert!(gravity.is_east_coast());
 ```
@@ -202,16 +202,20 @@ assert_eq!(east.sign_of_sq(0), -1);  // time = -1 (East)
 
 **Module:** `theories::qed`
 
-#### 5.1.1 Core Operations
+#### 6.1.1 Core Operations
 
-| Function                    | Description                                      |
-|-----------------------------|--------------------------------------------------|
-| `QED::from_potential(A)`    | Create EM field from 4-potential                 |
-| `QED::field_tensor()`       | Compute F_μν = ∂_μA_ν - ∂_νA_μ                   |
-| `QED::electric_field()`     | Extract E = F_{0i} components                    |
-| `QED::magnetic_field()`     | Extract B = ε_{ijk}F_{jk}/2 components           |
-| `QED::maxwell_source(J)`    | Compute ∂_μF^μν = J^ν (using Promonad::merge)    |
-| `QED::gauge_transform(θ)`   | A' = A + ∂θ (using ParametricMonad::ibind)       |
+| Function                    | Description                                   |
+|-----------------------------|-----------------------------------------------|
+| `QED::from_potential(A)`    | Create EM field from 4-potential              |
+| `QED::field_tensor()`       | Compute F_μν = ∂_μA_ν - ∂_νA_μ                |
+| `QED::electric_field()`     | Extract E = F_{0i} components                 |
+| `QED::magnetic_field()`     | Extract B = ε_{ijk}F_{jk}/2 components        |
+| `QED::maxwell_source(J)`    | Compute ∂_μF^μν = J^ν (using Promonad::merge) |
+| `QED::gauge_transform(θ)`   | A' = A + ∂θ (using ParametricMonad::ibind)    |
+| `QED::energy_density()`     | T^{00} = (E² + B²)/2                          |
+| `QED::poynting_vector()`    | S = E × B (energy flux/momentum density)      |
+| `QED::lorentz_force(q, v)`  | F = q(E + v×B)                                |
+| `QED::lagrangian_density()` | L = -¼F_μν F^μν                               |
 
 #### 5.1.2 HKT Usage
 
@@ -224,9 +228,9 @@ let em_field: QED = create_field();
 let current: QED = create_current_density();
 
 // Promonad::merge models: Current + Potential → Field Strength
-let result = GaugeFieldWitness::merge(current, em_field, |j, a| {
-    // Maxwell: ∂_μF^μν = J^ν
-    compute_maxwell_coupling(j, a)
+let result = GaugeFieldWitness::merge(current, em_field, | j, a| {
+// Maxwell: ∂_μF^μν = J^ν
+compute_maxwell_coupling(j, a)
 });
 ```
 
@@ -234,26 +238,35 @@ let result = GaugeFieldWitness::merge(current, em_field, |j, a| {
 
 **Module:** `theories::gr`
 
-#### 5.2.1 Core Operations
+#### 6.2.1 Core Operations
 
-| Function                           | Description                                |
-|------------------------------------|--------------------------------------------|
-| `GR::from_metric(g)`               | Create GR field from metric tensor         |
-| `GR::christoffel()`                | Compute Γ^ρ_μν from metric                 |
-| `GR::riemann_tensor()`             | Compute R^ρ_σμν from Christoffel           |
-| `GR::ricci_tensor()`               | Contract R_μν = R^ρ_μρν                    |
-| `GR::ricci_scalar()`               | Trace R = g^μν R_μν                        |
-| `GR::einstein_tensor()`            | G_μν = R_μν - ½g_μν R                      |
-| `GR::geodesic_deviation(u, v, w)`  | R(u,v)w via RiemannMap::curvature          |
+| Function                          | Description                              |
+|-----------------------------------|------------------------------------------|
+| `GR::from_metric(g)`              | Create GR field from metric tensor       |
+| `GR::christoffel()`               | Compute Γ^ρ_μν from metric               |
+| `GR::riemann_tensor()`            | Compute R^ρ_σμν from Christoffel         |
+| `GR::ricci_tensor()`              | Contract R_μν = R^ρ_μρν                  |
+| `GR::ricci_scalar()`              | Trace R = g^μν R_μν                      |
+| `GR::einstein_tensor()`           | G_μν = R_μν - ½g_μν R                    |
+| `GR::weyl_tensor()`               | Traceless conformal curvature C_μνρσ     |
+| `GR::geodesic_deviation(u, v, w)` | R(u,v)w via RiemannMap::curvature        |
+| `GR::stress_energy(T)`            | Couple matter T_μν to geometry (EFE RHS) |
+| `GR::solve_geodesic(x0, v0)`      | Integrate geodesic equation numerically  |
+| `GR::proper_time(path)`           | τ = ∫√(-g_μν dx^μ dx^ν)                  |
+| `GR::parallel_transport(v, path)` | Transport vector along curve             |
+| `GR::kretschmann_scalar()`        | K = R_μνρσ R^μνρσ (curvature invariant)  |
 
-#### 5.2.2 Spacetime Constructors
+#### 6.2.2 Spacetime Constructors
 
-| Constructor                      | Description                                  |
-|----------------------------------|----------------------------------------------|
-| `Minkowski::new()`               | Flat spacetime η = diag(-1,1,1,1)            |
-| `Schwarzschild::new(M, r)`       | Spherical black hole mass M at radius r     |
-| `Kerr::new(M, a, r, θ)`          | Rotating black hole mass M, spin a          |
-| `FLRW::new(a(t), k)`             | Cosmological: scale factor a(t), curvature k|
+| Constructor                    | Description                                  |
+|--------------------------------|----------------------------------------------|
+| `Minkowski::new()`             | Flat spacetime η = diag(-1,1,1,1)            |
+| `Schwarzschild::new(M, r)`     | Spherical black hole mass M at radius r      |
+| `Kerr::new(M, a, r, θ)`        | Rotating black hole mass M, spin a           |
+| `ReissnerNordstrom::new(M, Q)` | Charged black hole mass M, charge Q          |
+| `FLRW::new(a(t), k)`           | Cosmological: scale factor a(t), curvature k |
+| `deSitter::new(Λ)`             | Maximally symmetric, positive cosmological Λ |
+| `AntiDeSitter::new(Λ)`         | Maximally symmetric, negative cosmological Λ |
 
 #### 5.2.3 HKT Usage
 
@@ -278,15 +291,20 @@ let deviation = CurvatureTensorWitness::curvature(riemann, u, v, w);
 
 **Module:** `theories::qcd`
 
-#### 5.3.1 Core Operations
+#### 6.3.1 Core Operations
 
-| Function                     | Description                                   |
-|------------------------------|-----------------------------------------------|
-| `QCD::from_gluon_field(A)`   | Create QCD field from gluon potential         |
-| `QCD::field_strength()`      | G^a_μν = ∂_μA^a_ν - ∂_νA^a_μ + f^{abc}A^b_μA^c_ν |
-| `QCD::color_charge()`        | SU(3) generator representation                |
-| `QCD::gell_mann_matrices()`  | The 8 Gell-Mann matrices λ^a                  |
-| `QCD::structure_constants()` | f^{abc} antisymmetric structure constants     |
+| Function                        | Description                                      |
+|---------------------------------|--------------------------------------------------|
+| `QCD::from_gluon_field(A)`      | Create QCD field from gluon potential            |
+| `QCD::field_strength()`         | G^a_μν = ∂_μA^a_ν - ∂_νA^a_μ + f^{abc}A^b_μA^c_ν |
+| `QCD::color_charge()`           | SU(3) generator representation                   |
+| `QCD::gell_mann_matrices()`     | The 8 Gell-Mann matrices λ^a                     |
+| `QCD::structure_constants()`    | f^{abc} antisymmetric structure constants        |
+| `QCD::wilson_loop(path)`        | Tr(P exp(∮ A)) - confinement order parameter     |
+| `QCD::covariant_derivative(ψ)`  | D_μψ = ∂_μψ + igA_μψ                             |
+| `QCD::casimir_invariant()`      | C_2 = T^a T^a (quadratic Casimir)                |
+| `QCD::confinement_potential(r)` | V(r) ∝ σr (linear confining potential)           |
+| `QCD::asymptotic_freedom(Q2)`   | α_s(Q²) running coupling                         |
 
 #### 5.3.2 Key Difference from QED
 
@@ -314,15 +332,23 @@ impl QCD {
 
 **Module:** `theories::ew`
 
-#### 5.4.1 Core Operations
+#### 6.4.1 Core Operations
 
-| Function                      | Description                                  |
-|-------------------------------|----------------------------------------------|
-| `ElectroweakField::new()`     | Combined SU(2)×U(1) field                    |
-| `ElectroweakField::weinberg_angle()` | θ_W ≈ 28.7° mixing angle              |
-| `ElectroweakField::w_bosons()`| W^+, W^-, Z^0 boson fields                   |
-| `ElectroweakField::photon()`  | Massless photon (after symmetry breaking)    |
-| `ElectroweakField::higgs()`   | Higgs field coupling                         |
+| Function                                | Description                               |
+|-----------------------------------------|-------------------------------------------|
+| `ElectroweakField::new()`               | Combined SU(2)×U(1) field                 |
+| `ElectroweakField::weinberg_angle()`    | θ_W ≈ 28.7° mixing angle                  |
+| `ElectroweakField::w_bosons()`          | W^+, W^- boson fields                     |
+| `ElectroweakField::z_boson()`           | Z^0 neutral current carrier               |
+| `ElectroweakField::photon()`            | Massless photon (after symmetry breaking) |
+| `ElectroweakField::higgs()`             | Higgs field coupling                      |
+| `ElectroweakField::weak_hypercharge()`  | Y_W = 2(Q - I_3) quantum number           |
+| `ElectroweakField::w_mass()`            | M_W ≈ 80.4 GeV                            |
+| `ElectroweakField::z_mass()`            | M_Z ≈ 91.2 GeV                            |
+| `ElectroweakField::higgs_vev()`         | v ≈ 246 GeV (vacuum expectation value)    |
+| `ElectroweakField::coupling_g()`        | SU(2) coupling constant                   |
+| `ElectroweakField::coupling_g_prime()`  | U(1) coupling constant                    |
+| `ElectroweakField::symmetry_breaking()` | Apply Higgs mechanism to generate masses  |
 
 ---
 
@@ -406,30 +432,97 @@ fn main() {
 
 ## 8. Verification Plan
 
-| Theory | Tests                                                   |
-|--------|--------------------------------------------------------|
+| Theory | Tests                                                    |
+|--------|----------------------------------------------------------|
 | QED    | Maxwell equations, E⊥B for plane waves, gauge invariance |
-| GR     | Riemann symmetries, Bianchi identity, Schwarzschild R=0 |
-| QCD    | SU(3) structure constants, gluon self-coupling          |
-| EW     | Weinberg angle, W/Z mass ratio                          |
+| GR     | Riemann symmetries, Bianchi identity, Schwarzschild R=0  |
+| QCD    | SU(3) structure constants, gluon self-coupling           |
+| EW     | Weinberg angle, W/Z mass ratio                           |
 
 ---
 
-## 9. Future Work
+## 9. Implementation Gap Analysis
 
-### 9.1 Deferred Theories
+This section maps specified methods to existing `deep_causality_physics` kernels and identifies gaps.
 
-| Theory                    | Gauge Group        | Priority |
-|---------------------------|--------------------|----------|
-| Teleparallel Gravity      | R^4                | Medium   |
-| Poincaré Gauge Theory     | ISO(3,1)           | Low      |
-| Chern-Simons              | Any                | Low      |
-| Kaluza-Klein              | U(1) from S¹       | Low      |
+### 9.1 Existing Kernels (Ready to Use)
 
-### 9.2 Extensions
+| Theory  | Specified Method       | Existing Kernel                 | Location                     |
+|---------|------------------------|---------------------------------|------------------------------|
+| **QED** | `field_tensor()`       | `maxwell_gradient_kernel`       | `electromagnetism/fields.rs` |
+| **QED** | `poynting_vector()`    | `poynting_vector_kernel`        | `electromagnetism/fields.rs` |
+| **QED** | `lorentz_force(q, v)`  | `lorentz_force_kernel`          | `electromagnetism/forces.rs` |
+| **QED** | `gauge_transform()`    | `lorenz_gauge_kernel`           | `electromagnetism/fields.rs` |
+| **GR**  | `einstein_tensor()`    | `einstein_tensor_kernel`        | `relativity/gravity.rs`      |
+| **GR**  | `geodesic_deviation()` | `geodesic_deviation_kernel`     | `relativity/gravity.rs`      |
+| **GR**  | `spacetime_interval()` | `spacetime_interval_kernel`     | `relativity/spacetime.rs`    |
+| **GR**  | Schwarzschild metric   | `generate_schwarzschild_metric` | `relativity/spacetime.rs`    |
 
-| Extension         | Description                              |
-|-------------------|------------------------------------------|
-| Spinor fields     | Dirac equation integration               |
-| Lattice QCD       | Wilson action on simplicial complex      |
-| Numerical GR      | ADM formalism, constraint evolution      |
+### 9.2 Methods with Partial Coverage (Need Wiring)
+
+| Theory  | Specified Method        | Requirements         | Action                                         |
+|---------|-------------------------|----------------------|------------------------------------------------|
+| **QED** | `energy_density()`      | T^{00} = (E² + B²)/2 | Wire from `poynting_vector_kernel` + magnitude |
+| **QED** | `lagrangian_density()`  | L = -¼F_μν F^μν      | New kernel in `electromagnetism/fields.rs`     |
+| **GR**  | `riemann_tensor()`      | From Christoffel     | Use `CurvatureTensor::from_generator()`        |
+| **GR**  | `ricci_tensor/scalar()` | Contract Riemann     | Already in `CurvatureTensor`                   |
+| **GR**  | `kretschmann_scalar()`  | K = R_μνρσ R^μνρσ    | Already in `CurvatureTensor`                   |
+| **GR**  | `weyl_tensor()`         | Traceless Riemann    | New method in `CurvatureTensor`                |
+
+### 9.3 Methods Requiring New Implementation
+
+| Theory  | Method                        | Implementation Path                                                   | Priority |
+|---------|-------------------------------|-----------------------------------------------------------------------|----------|
+| **GR**  | `solve_geodesic(x0, v0)`      | Add `geodesic_integrator_kernel` to `relativity/gravity.rs` using RK4 | High     |
+| **GR**  | `parallel_transport(v, path)` | Add `parallel_transport_kernel` to `relativity/spacetime.rs`          | High     |
+| **GR**  | `proper_time(path)`           | Add `proper_time_kernel` to `relativity/spacetime.rs`                 | Medium   |
+| **QCD** | `wilson_loop(path)`           | Add `wilson_loop_kernel` to new `nuclear/qcd.rs`                      | Medium   |
+| **QCD** | `covariant_derivative(ψ)`     | Add `covariant_derivative_kernel` to new `nuclear/qcd.rs`             | High     |
+| **QCD** | `gell_mann_matrices()`        | Add static constants to new `nuclear/qcd.rs`                          | Low      |
+| **QCD** | `structure_constants()`       | Add f^{abc} constants to new `nuclear/qcd.rs`                         | Low      |
+| **QCD** | `confinement_potential(r)`    | Add `linear_potential_kernel` to new `nuclear/qcd.rs`                 | Medium   |
+| **QCD** | `asymptotic_freedom(Q2)`      | Add `running_coupling_kernel` to new `nuclear/qcd.rs`                 | Low      |
+| **EW**  | `symmetry_breaking()`         | Add Higgs mechanism to new `theories/electroweak.rs`                  | High     |
+| **EW**  | Mass constants                | Add `W_MASS`, `Z_MASS`, `HIGGS_VEV` to `constants/`                   | Low      |
+
+### 9.4 New Files to Create
+
+| File Path                     | Purpose              | Methods                                                                                      |
+|-------------------------------|----------------------|----------------------------------------------------------------------------------------------|
+| `src/nuclear/qcd.rs`          | QCD-specific kernels | `wilson_loop_kernel`, `covariant_derivative_kernel`, Gell-Mann matrices, structure constants |
+| `src/theories/gr.rs`          | GR theory wrappers   | Spacetime constructors (Kerr, FLRW, etc.)                                                    |
+| `src/theories/qed.rs`         | QED theory wrappers  | Type alias + convenience methods                                                             |
+| `src/theories/electroweak.rs` | Electroweak theory   | Symmetry breaking, Weinberg mixing                                                           |
+
+### 9.5 Test Requirements
+
+All new kernels MUST have corresponding tests in `/tests/`:
+
+| Kernel                        | Test File                             | Test Cases                                            |
+|-------------------------------|---------------------------------------|-------------------------------------------------------|
+| `geodesic_integrator_kernel`  | `tests/relativity/gravity_tests.rs`   | Circular orbit, radial infall, null geodesic          |
+| `parallel_transport_kernel`   | `tests/relativity/spacetime_tests.rs` | Flat space (identity), Schwarzschild (frame dragging) |
+| `wilson_loop_kernel`          | `tests/nuclear/qcd_tests.rs`          | Unit path (=1), area law for confinement              |
+| `covariant_derivative_kernel` | `tests/nuclear/qcd_tests.rs`          | Pure gauge (=0), constant field                       |
+| `symmetry_breaking`           | `tests/theories/electroweak_tests.rs` | Mass generation, Goldstone absorption                 |
+
+---
+
+## 10. Future Work
+
+### 10.1 Deferred Theories
+
+| Theory                | Gauge Group  | Priority |
+|-----------------------|--------------|----------|
+| Teleparallel Gravity  | R^4          | Medium   |
+| Poincaré Gauge Theory | ISO(3,1)     | Low      |
+| Chern-Simons          | Any          | Low      |
+| Kaluza-Klein          | U(1) from S¹ | Low      |
+
+### 10.2 Extensions
+
+| Extension     | Description                         |
+|---------------|-------------------------------------|
+| Spinor fields | Dirac equation integration          |
+| Lattice QCD   | Wilson action on simplicial complex |
+| Numerical GR  | ADM formalism, constraint evolution |

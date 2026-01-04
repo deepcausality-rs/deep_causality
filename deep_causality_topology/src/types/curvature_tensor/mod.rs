@@ -337,6 +337,87 @@ impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
         einstein
     }
 
+    /// Computes the Weyl conformal curvature tensor.
+    ///
+    /// The Weyl tensor is the traceless part of the Riemann tensor,
+    /// representing the purely gravitational degrees of freedom (tidal forces).
+    ///
+    /// C_abcd = R_abcd - (2/(n-2))(g_a[c R_d]b - g_b[c R_d]a)
+    ///        + (2/((n-1)(n-2))) R g_a[c g_d]b
+    ///
+    /// where n is the dimension (must be >= 3).
+    ///
+    /// Returns a rank-4 tensor [dim, dim, dim, dim] representing C^a_bcd.
+    pub fn weyl_tensor(&self) -> Vec<f64> {
+        let n = self.dim;
+        if n < 3 {
+            // Weyl tensor is identically zero in dimensions < 3
+            return vec![0.0; n * n * n * n];
+        }
+
+        let ricci = self.ricci_tensor();
+        let r = self.ricci_scalar();
+
+        let mut weyl = vec![0.0; n * n * n * n];
+
+        // Prefactors
+        let factor1 = 2.0 / (n as f64 - 2.0);
+        let factor2 = 2.0 / ((n as f64 - 1.0) * (n as f64 - 2.0));
+
+        for a in 0..n {
+            for b in 0..n {
+                for c in 0..n {
+                    for d in 0..n {
+                        // R^a_bcd component (in the convention where first index is up)
+                        let r_abcd = self.get(a, b, c, d);
+
+                        // Metric components (using our stored metric for diagonal)
+                        // g_ac, g_bd, g_ad, g_bc
+                        let g_ac = if a == c {
+                            self.metric.sign_of_sq(a) as f64
+                        } else {
+                            0.0
+                        };
+                        let g_bd = if b == d {
+                            self.metric.sign_of_sq(b) as f64
+                        } else {
+                            0.0
+                        };
+                        let g_ad = if a == d {
+                            self.metric.sign_of_sq(a) as f64
+                        } else {
+                            0.0
+                        };
+                        let g_bc = if b == c {
+                            self.metric.sign_of_sq(b) as f64
+                        } else {
+                            0.0
+                        };
+
+                        // Ricci components R_ac, R_bd, R_ad, R_bc
+                        let r_ac = ricci[a * n + c];
+                        let r_bd = ricci[b * n + d];
+                        let r_ad = ricci[a * n + d];
+                        let r_bc = ricci[b * n + c];
+
+                        // Weyl formula:
+                        // C_abcd = R_abcd
+                        //        - (1/(n-2)) * (g_ac R_bd - g_ad R_bc - g_bc R_ad + g_bd R_ac)
+                        //        + (1/((n-1)(n-2))) * R * (g_ac g_bd - g_ad g_bc)
+                        let term1 = r_abcd;
+                        let term2 =
+                            factor1 * 0.5 * (g_ac * r_bd - g_ad * r_bc - g_bc * r_ad + g_bd * r_ac);
+                        let term3 = factor2 * 0.5 * r * (g_ac * g_bd - g_ad * g_bc);
+
+                        weyl[a * n * n * n + b * n * n + c * n + d] = term1 - term2 + term3;
+                    }
+                }
+            }
+        }
+
+        weyl
+    }
+
     /// Verifies the first Bianchi identity: R_[abc]d = 0.
     ///
     /// The cyclic sum R_abcd + R_bcad + R_cabd = 0.
