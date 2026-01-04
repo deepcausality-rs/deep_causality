@@ -1,8 +1,28 @@
 # Unified GAT-Bounded Higher-Kinded Types for Rust: Product Specification
 
-> **Product Area:** Deep Causality | **Crate:** `deep_causality_haft`  
-> **Status:** Production Planning | **Target:** Q1 2026  
-> **Classification:** Core Infrastructure | **Owner:** DeepCausality Authors
+* **Product Area:** Deep Causality
+* **Crate:** `deep_causality_haft`  
+* **Status:** Defered
+* **Target:** Jan 2026   
+* **Classification:** Core Infrastructure  
+* **Owner:** DeepCausality Authors
+
+
+Note:
+
+> **Strict GAT HKTs are Solved in the Next-Generation Trait Solver**
+
+As of **January 2026**, we have confirmed that the inability to implement strict `Monad` and `CoMonad` (due to `E0276`/ `E0277` GAT normalization errors) is a **temporary limitation** of the current stable Rust trait solver.
+
+**Verification:**
+Using the nightly compiler with the new trait solver flag (`-Znext-solver`), the strict implementations for `StrictCausalTensorWitness` **compile successfully without modification**.
+
+**Implication for DeepCausality:**
+1. The **Dual-Witness Pattern** (unbounded vs strict) is a transitional architecture.
+2. Once the new trait solver stabilizes, we can unify the design into a single, fully constrained HKT witness where `type Constraint` is universally enforced.
+3. The current codebase contains commented-out strict implementations that are "future-proof" and ready to be enabled instantly when the compiler tooling matures.
+
+For details, see hkt_gat_review.md document
 
 ---
 
