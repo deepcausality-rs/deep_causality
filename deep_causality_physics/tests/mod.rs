@@ -15,6 +15,7 @@ mod nuclear;
 mod photonics;
 mod quantum;
 mod relativity;
+mod theories;
 mod thermodynamics;
 mod units;
 mod waves;

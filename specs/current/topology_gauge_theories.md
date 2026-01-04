@@ -24,14 +24,14 @@ These are built on top of the `GaugeField<G, A, F>` infrastructure provided by `
 
 ### 1.2 Implementation Scope
 
-| Theory                 | Gauge Group          | Module Path      | Status  |
-|------------------------|----------------------|------------------|---------|
-| **QED**                | U(1)                 | `theories::qed`  | Planned |
-| **Weak Force**         | SU(2)                | `theories::weak` | Planned |
-| **Electroweak**        | SU(2) × U(1)         | `theories::ew`   | Planned |
-| **QCD**                | SU(3)                | `theories::qcd`  | Planned |
-| **Standard Model**     | SU(3) × SU(2) × U(1) | `theories::sm`   | Planned |
-| **General Relativity** | SO(3,1) / Lorentz    | `theories::gr`   | Planned |
+| Theory                 | Gauge Group          | Module Path      | Status    |
+|------------------------|----------------------|------------------|-----------|
+| **QED**                | U(1)                 | `theories::qed`  | Completed |
+| **Weak Force**         | SU(2)                | `theories::weak` | Planned   |
+| **Electroweak**        | SU(2) × U(1)         | `theories::ew`   | Planned   |
+| **QCD**                | SU(3)                | `theories::qcd`  | Planned   |
+| **Standard Model**     | SU(3) × SU(2) × U(1) | `theories::sm`   | Planned   |
+| **General Relativity** | SO(3,1) / Lorentz    | `theories::gr`   | Planned   |
 
 ---
 
@@ -356,7 +356,7 @@ impl QCD {
 
 ### 7.1 Example: QED Electromagnetic Wave
 
-**File:** `examples/gauge_qed.rs`
+**File:** `examples/physics_examples/gauge_qed.rs`
 
 ```rust
 //! QED: Propagating electromagnetic wave
@@ -391,7 +391,7 @@ fn main() {
 
 ### 7.2 Example: GR Black Hole Geodesics
 
-**File:** `examples/gauge_gr.rs`
+**File:** `examples/physics_examples/gauge_gr.rs`
 
 ```rust
 //! GR: Geodesic deviation near Schwarzschild black hole
@@ -445,66 +445,94 @@ fn main() {
 
 This section maps specified methods to existing `deep_causality_physics` kernels and identifies gaps.
 
-### 9.1 Existing Kernels (Ready to Use)
+### 9.1 Existing Kernels (Ready to Use) ✓
 
-| Theory  | Specified Method       | Existing Kernel                 | Location                     |
-|---------|------------------------|---------------------------------|------------------------------|
-| **QED** | `field_tensor()`       | `maxwell_gradient_kernel`       | `electromagnetism/fields.rs` |
-| **QED** | `poynting_vector()`    | `poynting_vector_kernel`        | `electromagnetism/fields.rs` |
-| **QED** | `lorentz_force(q, v)`  | `lorentz_force_kernel`          | `electromagnetism/forces.rs` |
-| **QED** | `gauge_transform()`    | `lorenz_gauge_kernel`           | `electromagnetism/fields.rs` |
-| **GR**  | `einstein_tensor()`    | `einstein_tensor_kernel`        | `relativity/gravity.rs`      |
-| **GR**  | `geodesic_deviation()` | `geodesic_deviation_kernel`     | `relativity/gravity.rs`      |
-| **GR**  | `spacetime_interval()` | `spacetime_interval_kernel`     | `relativity/spacetime.rs`    |
-| **GR**  | Schwarzschild metric   | `generate_schwarzschild_metric` | `relativity/spacetime.rs`    |
+| Theory  | Specified Method          | Existing Kernel                 | Location                     | Status |
+|---------|---------------------------|---------------------------------|------------------------------|--------|
+| **QED** | `field_tensor()`          | `maxwell_gradient_kernel`       | `electromagnetism/fields.rs` | ✓      |
+| **QED** | `poynting_vector()`       | `poynting_vector_kernel`        | `electromagnetism/fields.rs` | ✓      |
+| **QED** | `lorentz_force(q, v)`     | `lorentz_force_kernel`          | `electromagnetism/forces.rs` | ✓      |
+| **QED** | `gauge_transform()`       | `lorenz_gauge_kernel`           | `electromagnetism/fields.rs` | ✓      |
+| **QED** | `energy_density()`        | `energy_density_kernel`         | `electromagnetism/fields.rs` | ✓ NEW  |
+| **QED** | `lagrangian_density()`    | `lagrangian_density_kernel`     | `electromagnetism/fields.rs` | ✓ NEW  |
+| **GR**  | `einstein_tensor()`       | `einstein_tensor_kernel`        | `relativity/gravity.rs`      | ✓      |
+| **GR**  | `geodesic_deviation()`    | `geodesic_deviation_kernel`     | `relativity/gravity.rs`      | ✓      |
+| **GR**  | `spacetime_interval()`    | `spacetime_interval_kernel`     | `relativity/spacetime.rs`    | ✓      |
+| **GR**  | Schwarzschild metric      | `generate_schwarzschild_metric` | `relativity/spacetime.rs`    | ✓      |
+| **GR**  | `solve_geodesic()`        | `geodesic_integrator_kernel`    | `relativity/gravity.rs`      | ✓ NEW  |
+| **GR**  | `parallel_transport()`    | `parallel_transport_kernel`     | `relativity/spacetime.rs`    | ✓ NEW  |
+| **GR**  | `proper_time()`           | `proper_time_kernel`            | `relativity/spacetime.rs`    | ✓ NEW  |
+| **GR**  | `weyl_tensor()`           | `CurvatureTensor::weyl_tensor`  | `topology/curvature_tensor`  | ✓ NEW  |
+| **QCD** | `gell_mann_matrices()`    | `gell_mann_matrices`            | `nuclear/qcd.rs`             | ✓ NEW  |
+| **QCD** | `structure_constants()`   | `structure_constant`            | `nuclear/qcd.rs`             | ✓ NEW  |
+| **QCD** | `covariant_derivative()`  | `covariant_derivative_kernel`   | `nuclear/qcd.rs`             | ✓ NEW  |
+| **QCD** | `wilson_loop()`           | `wilson_loop_kernel`            | `nuclear/qcd.rs`             | ✓ NEW  |
+| **QCD** | `confinement_potential()` | `confinement_potential_kernel`  | `nuclear/qcd.rs`             | ✓ NEW  |
+| **QCD** | `asymptotic_freedom()`    | `running_coupling_kernel`       | `nuclear/qcd.rs`             | ✓ NEW  |
 
-### 9.2 Methods with Partial Coverage (Need Wiring)
+### 9.2 Methods with Partial Coverage (Need Wiring) ✓
 
-| Theory  | Specified Method        | Requirements         | Action                                         |
-|---------|-------------------------|----------------------|------------------------------------------------|
-| **QED** | `energy_density()`      | T^{00} = (E² + B²)/2 | Wire from `poynting_vector_kernel` + magnitude |
-| **QED** | `lagrangian_density()`  | L = -¼F_μν F^μν      | New kernel in `electromagnetism/fields.rs`     |
-| **GR**  | `riemann_tensor()`      | From Christoffel     | Use `CurvatureTensor::from_generator()`        |
-| **GR**  | `ricci_tensor/scalar()` | Contract Riemann     | Already in `CurvatureTensor`                   |
-| **GR**  | `kretschmann_scalar()`  | K = R_μνρσ R^μνρσ    | Already in `CurvatureTensor`                   |
-| **GR**  | `weyl_tensor()`         | Traceless Riemann    | New method in `CurvatureTensor`                |
+| Theory  | Specified Method        | Requirements         | Status                                       |
+|---------|-------------------------|----------------------|----------------------------------------------|
+| **QED** | `energy_density()`      | T^{00} = (E² + B²)/2 | ✓ Implemented as `energy_density_kernel`     |
+| **QED** | `lagrangian_density()`  | L = -¼F_μν F^μν      | ✓ Implemented as `lagrangian_density_kernel` |
+| **GR**  | `riemann_tensor()`      | From Christoffel     | ✓ Use `CurvatureTensor::from_generator()`    |
+| **GR**  | `ricci_tensor/scalar()` | Contract Riemann     | ✓ Already in `CurvatureTensor`               |
+| **GR**  | `kretschmann_scalar()`  | K = R_μνρσ R^μνρσ    | ✓ Already in `CurvatureTensor`               |
+| **GR**  | `weyl_tensor()`         | Traceless Riemann    | ✓ Implemented in `CurvatureTensor`           |
 
 ### 9.3 Methods Requiring New Implementation
 
-| Theory  | Method                        | Implementation Path                                                   | Priority |
-|---------|-------------------------------|-----------------------------------------------------------------------|----------|
-| **GR**  | `solve_geodesic(x0, v0)`      | Add `geodesic_integrator_kernel` to `relativity/gravity.rs` using RK4 | High     |
-| **GR**  | `parallel_transport(v, path)` | Add `parallel_transport_kernel` to `relativity/spacetime.rs`          | High     |
-| **GR**  | `proper_time(path)`           | Add `proper_time_kernel` to `relativity/spacetime.rs`                 | Medium   |
-| **QCD** | `wilson_loop(path)`           | Add `wilson_loop_kernel` to new `nuclear/qcd.rs`                      | Medium   |
-| **QCD** | `covariant_derivative(ψ)`     | Add `covariant_derivative_kernel` to new `nuclear/qcd.rs`             | High     |
-| **QCD** | `gell_mann_matrices()`        | Add static constants to new `nuclear/qcd.rs`                          | Low      |
-| **QCD** | `structure_constants()`       | Add f^{abc} constants to new `nuclear/qcd.rs`                         | Low      |
-| **QCD** | `confinement_potential(r)`    | Add `linear_potential_kernel` to new `nuclear/qcd.rs`                 | Medium   |
-| **QCD** | `asymptotic_freedom(Q2)`      | Add `running_coupling_kernel` to new `nuclear/qcd.rs`                 | Low      |
-| **EW**  | `symmetry_breaking()`         | Add Higgs mechanism to new `theories/electroweak.rs`                  | High     |
-| **EW**  | Mass constants                | Add `W_MASS`, `Z_MASS`, `HIGGS_VEV` to `constants/`                   | Low      |
+| Theory  | Method                    | Implementation Path                              | Status     |
+|---------|---------------------------|--------------------------------------------------|------------|
+| **GR**  | `solve_geodesic()`        | `geodesic_integrator_kernel`                     | ✓ Complete |
+| **GR**  | `parallel_transport()`    | `parallel_transport_kernel`                      | ✓ Complete |
+| **GR**  | `proper_time()`           | `proper_time_kernel`                             | ✓ Complete |
+| **QCD** | `wilson_loop()`           | `wilson_loop_kernel`                             | ✓ Complete |
+| **QCD** | `covariant_derivative()`  | `covariant_derivative_kernel`                    | ✓ Complete |
+| **QCD** | `gell_mann_matrices()`    | Static constants                                 | ✓ Complete |
+| **QCD** | `structure_constants()`   | f^{abc} constants                                | ✓ Complete |
+| **QCD** | `confinement_potential()` | `confinement_potential_kernel`                   | ✓ Complete |
+| **QCD** | `asymptotic_freedom()`    | `running_coupling_kernel`                        | ✓ Complete |
+| **EW**  | `symmetry_breaking()`     | Add Higgs mechanism to `theories/electroweak.rs` | Pending    |
+| **EW**  | Mass constants            | Add `W_MASS`, `Z_MASS`, `HIGGS_VEV`              | Pending    |
 
 ### 9.4 New Files to Create
 
-| File Path                     | Purpose              | Methods                                                                                      |
-|-------------------------------|----------------------|----------------------------------------------------------------------------------------------|
-| `src/nuclear/qcd.rs`          | QCD-specific kernels | `wilson_loop_kernel`, `covariant_derivative_kernel`, Gell-Mann matrices, structure constants |
-| `src/theories/gr.rs`          | GR theory wrappers   | Spacetime constructors (Kerr, FLRW, etc.)                                                    |
-| `src/theories/qed.rs`         | QED theory wrappers  | Type alias + convenience methods                                                             |
-| `src/theories/electroweak.rs` | Electroweak theory   | Symmetry breaking, Weinberg mixing                                                           |
+| File Path                     | Purpose              | Status     |
+|-------------------------------|----------------------|------------|
+| `src/nuclear/qcd.rs`          | QCD-specific kernels | ✓ Created  |
+| `src/theories/mod.rs`         | Theory module root   | ✓ Created  |
+| `src/theories/qed.rs`         | QED theory wrapper   | ✓ Created  |
+| `src/theories/gr.rs`          | GR theory wrappers   | Pending    |
+| `src/theories/electroweak.rs` | Electroweak theory   | Pending    |
 
-### 9.5 Test Requirements
+### 9.5 Test Coverage
 
-All new kernels MUST have corresponding tests in `/tests/`:
+| Kernel                         | Test File                                | Status     |
+|--------------------------------|------------------------------------------|------------|
+| `energy_density_kernel`        | `tests/electromagnetism/fields_tests.rs` | ✓ Complete |
+| `lagrangian_density_kernel`    | `tests/electromagnetism/fields_tests.rs` | ✓ Complete |
+| `geodesic_integrator_kernel`   | `tests/relativity/gravity_tests.rs`      | ✓ Complete |
+| `parallel_transport_kernel`    | `tests/relativity/spacetime_tests.rs`    | ✓ Complete |
+| `proper_time_kernel`           | `tests/relativity/spacetime_tests.rs`    | ✓ Complete |
+| `weyl_tensor`                  | `tests/types/curvature_tensor_tests.rs`  | ✓ Complete |
+| `wilson_loop_kernel`           | `tests/nuclear/qcd_tests.rs`             | ✓ Complete |
+| `covariant_derivative_kernel`  | `tests/nuclear/qcd_tests.rs`             | ✓ Complete |
+| `confinement_potential_kernel` | `tests/nuclear/qcd_tests.rs`             | ✓ Complete |
+| `running_coupling_kernel`      | `tests/nuclear/qcd_tests.rs`             | ✓ Complete |
+| QED theory wrapper             | `tests/theories/qed_tests.rs`            | ✓ Complete |
+| EW symmetry breaking           | `tests/theories/electroweak_tests.rs`    | Pending    |
 
-| Kernel                        | Test File                             | Test Cases                                            |
-|-------------------------------|---------------------------------------|-------------------------------------------------------|
-| `geodesic_integrator_kernel`  | `tests/relativity/gravity_tests.rs`   | Circular orbit, radial infall, null geodesic          |
-| `parallel_transport_kernel`   | `tests/relativity/spacetime_tests.rs` | Flat space (identity), Schwarzschild (frame dragging) |
-| `wilson_loop_kernel`          | `tests/nuclear/qcd_tests.rs`          | Unit path (=1), area law for confinement              |
-| `covariant_derivative_kernel` | `tests/nuclear/qcd_tests.rs`          | Pure gauge (=0), constant field                       |
-| `symmetry_breaking`           | `tests/theories/electroweak_tests.rs` | Mass generation, Goldstone absorption                 |
+### 9.6 Remaining Gaps Summary
+
+**Kernels: 100% Complete** - All identified kernel methods have been implemented.
+
+**QED Theory: 100% Complete** - QED wrapper with 26 tests implemented.
+
+**Theory Wrappers: Pending** - High-level theory APIs still needed:
+1. `theories/gr.rs` - GR wrapper for spacetime constructors
+2. `theories/electroweak.rs` - Electroweak with Higgs mechanism
 
 ---
 
