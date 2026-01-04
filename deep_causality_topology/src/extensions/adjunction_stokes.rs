@@ -14,7 +14,7 @@
 use crate::types::chain::Chain;
 use crate::types::differential_form::DifferentialForm;
 use crate::{BaseTopology, SimplicialComplex};
-use deep_causality_haft::{Adjunction, NoConstraint, Satisfies, HKT};
+use deep_causality_haft::{Adjunction, HKT, NoConstraint, Satisfies};
 use deep_causality_num::Float;
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;

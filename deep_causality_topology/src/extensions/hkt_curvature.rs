@@ -8,18 +8,41 @@
 //! This module provides the `CurvatureTensorWitness` type that enables `CurvatureTensor`
 //! to participate in HKT4 abstractions, along with the `RiemannMap` trait implementation.
 //!
-//! # Implementation Note
+//! # ⚠️ Unsafe Dispatch Warning
 //!
 //! The `RiemannMap` trait is generic over its input types `A, B, C, D`. However,
-//! the logic requires concrete `TensorVector` types.
+//! the implementation requires concrete `TensorVector` types for the actual tensor
+//! contraction operations.
 //!
-//! Since we cannot constrain the HKT trait's generic parameters to strict types
-//! without changing the core abstraction, and runtime checks via `Any` require
-//! static lifetimes that are overly restrictive, this implementation uses
-//! **unsafe dispatch**.
+//! Since Rust's current GAT (Generic Associated Types) implementation cannot express
+//! constraints like "A must be TensorVector" on HKT trait methods without modifying
+//! the core abstraction, this implementation uses **unsafe pointer casting**.
+//!
+//! ## Safety Contract
 //!
 //! **SAFETY:** The caller MUST ensure that `A`, `B`, `C`, and `D` are `TensorVector`.
-//! Passing any other type will result in Undefined Behavior.
+//! Passing any other type will result in **Undefined Behavior**.
+//!
+//! ## Recommendations
+//!
+//! 1. **Prefer safe alternatives**: Use `CurvatureTensor::contract()` directly when
+//!    working with concrete `&[f64]` slices instead of the HKT `curvature()` method.
+//!
+//! 2. **Type-safe wrappers**: Consider using `TensorVector` explicitly in your code:
+//!    ```ignore
+//!    use deep_causality_topology::{CurvatureTensorWitness, TensorVector};
+//!    use deep_causality_haft::RiemannMap;
+//!    
+//!    let u = TensorVector::new(&[1.0, 0.0, 0.0, 0.0]);
+//!    let v = TensorVector::new(&[0.0, 1.0, 0.0, 0.0]);
+//!    let w = TensorVector::new(&[0.0, 0.0, 1.0, 0.0]);
+//!    
+//!    // This is safe because we're using TensorVector
+//!    let result: TensorVector = CurvatureTensorWitness::curvature(tensor, u, v, w);
+//!    ```
+//!
+//! 3. **Future resolution**: This limitation may be resolved with Rust's new trait
+//!    solver (`-Ztrait-solver=next`), which enables more expressive GAT constraints.
 use crate::CurvatureTensor;
 use deep_causality_haft::{HKT4Unbound, NoConstraint, RiemannMap, Satisfies};
 

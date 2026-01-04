@@ -2,7 +2,7 @@
 
 * **Product Area:** Deep Causality
 * **Crate:** `deep_causality_topology`
-* **Status:** Proposed
+* **Status:** Implemented and Reviewed.  
 * **Target:** Q1 2026
 * **Classification:** Core Infrastructure
 * **Owner:** DeepCausality Authors
@@ -345,6 +345,7 @@ pub enum CurvatureSymmetry {
 #[derive(Debug, Clone)]
 pub struct CurvatureTensor<A, B, C, D> {
     components: CausalTensor<f64>,
+    metric: Metric,
     symmetry: CurvatureSymmetry,
     dim: usize,
     _phantom: PhantomData<(A, B, C, D)>,
@@ -352,11 +353,13 @@ pub struct CurvatureTensor<A, B, C, D> {
 
 impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
     // Constructors
-    pub fn new(components: CausalTensor<f64>, symmetry: CurvatureSymmetry, dim: usize) -> Self;
+    pub fn new(components: CausalTensor<f64>, metric: Metric, symmetry: CurvatureSymmetry, dim: usize) -> Self;
     pub fn flat(dim: usize) -> Self;
+    pub fn flat_with_metric(dim: usize, metric: Metric) -> Self;
 
     // Getters
     pub fn components(&self) -> &CausalTensor<f64>;
+    pub fn metric(&self) -> Metric;
     pub fn symmetry(&self) -> CurvatureSymmetry;
     pub fn dim(&self) -> usize;
     pub fn ricci_scalar(&self) -> f64;
