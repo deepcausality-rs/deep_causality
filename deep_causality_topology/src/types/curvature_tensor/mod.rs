@@ -243,16 +243,16 @@ impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
         let mut result = vec![0.0; self.dim];
 
         // (R(u,v)w)^d = R^d_abc u^a v^b w^c
-        for d in 0..self.dim {
+        for (d, res_val) in result.iter_mut().enumerate() {
             let mut sum = 0.0;
-            for a in 0..self.dim {
-                for b in 0..self.dim {
-                    for c in 0..self.dim {
-                        sum += self.get(d, a, b, c) * u[a] * v[b] * w[c];
+            for (a, u_val) in u.iter().enumerate() {
+                for (b, v_val) in v.iter().enumerate() {
+                    for (c, w_val) in w.iter().enumerate() {
+                        sum += self.get(d, a, b, c) * u_val * v_val * w_val;
                     }
                 }
             }
-            result[d] = sum;
+            *res_val = sum;
         }
 
         result
@@ -381,5 +381,3 @@ impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
         }
     }
 }
-
-

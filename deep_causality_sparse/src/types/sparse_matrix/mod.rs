@@ -93,10 +93,31 @@ impl<T> CsrMatrix<T> {
     pub fn into_parts(self) -> (Vec<usize>, Vec<usize>, Vec<T>, (usize, usize)) {
         (self.row_indices, self.col_indices, self.values, self.shape)
     }
+
+    /// Creates a `CsrMatrix` directly from its internal components.
+    ///
+    /// # Safety
+    ///
+    /// This function does not check if the provided indices are valid, sorted, or
+    /// if the values correspond to the CSR format requirements. Incorrect usage
+    /// may lead to panics or incorrect behavior in other methods.
+    pub unsafe fn from_parts(
+        row_indices: Vec<usize>,
+        col_indices: Vec<usize>,
+        values: Vec<T>,
+        shape: (usize, usize),
+    ) -> Self {
+        Self {
+            row_indices,
+            col_indices,
+            values,
+            shape,
+        }
+    }
 }
 impl<T> CsrMatrix<T>
 where
-    T: Copy + Zero + PartialEq,
+    T: Clone + Copy + Zero + PartialEq,
 {
     /// Creates a new `CsrMatrix` from a list of `(row, col, value)` triplets.
     ///
@@ -165,16 +186,16 @@ where
         let mut processed_triplets = Vec::with_capacity(triplets.len());
 
         // 1. Validate and filter out zero-value triplets initially
-        for &(r, c, v) in triplets.iter() {
-            if r >= rows {
-                return Err(SparseMatrixError::IndexOutOfBounds(r, rows));
+        for (r, c, v) in triplets.iter() {
+            if *r >= rows {
+                return Err(SparseMatrixError::IndexOutOfBounds(*r, rows));
             }
-            if c >= cols {
-                return Err(SparseMatrixError::IndexOutOfBounds(c, cols));
+            if *c >= cols {
+                return Err(SparseMatrixError::IndexOutOfBounds(*c, cols));
             }
-            if v != T::zero() {
+            if *v != T::zero() {
                 // Only include non-zero values
-                processed_triplets.push((r, c, v));
+                processed_triplets.push((*r, *c, *v));
             }
         }
 
@@ -231,7 +252,7 @@ where
 
 impl<T> CsrMatrix<T>
 where
-    T: Copy + PartialEq + std::ops::Add<Output = T>,
+    T: Clone + PartialEq + std::ops::Add<Output = T>,
 {
     /// Creates a new `CsrMatrix` from a list of `(row, col, value)` triplets, using an explicit zero value.
     ///
@@ -257,16 +278,16 @@ where
         let mut processed_triplets = Vec::with_capacity(triplets.len());
 
         // 1. Validate and filter out zero-value triplets initially
-        for &(r, c, v) in triplets.iter() {
-            if r >= rows {
-                return Err(SparseMatrixError::IndexOutOfBounds(r, rows));
+        for (r, c, v) in triplets.iter() {
+            if *r >= rows {
+                return Err(SparseMatrixError::IndexOutOfBounds(*r, rows));
             }
-            if c >= cols {
-                return Err(SparseMatrixError::IndexOutOfBounds(c, cols));
+            if *c >= cols {
+                return Err(SparseMatrixError::IndexOutOfBounds(*c, cols));
             }
-            if v != zero {
+            if *v != zero {
                 // Only include non-zero values
-                processed_triplets.push((r, c, v));
+                processed_triplets.push((*r, *c, v.clone()));
             }
         }
 

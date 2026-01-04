@@ -3,30 +3,33 @@
  * Copyright (c) "2026" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{GaugeField, GaugeFieldWitness, Manifold, SimplicialComplexBuilder, U1, Simplex};
+use deep_causality_topology::{
+    GaugeField, GaugeFieldWitness, Manifold, Simplex, SimplicialComplexBuilder, U1,
+};
 
 fn create_test_manifold() -> Manifold<f64> {
-  let mut builder = SimplicialComplexBuilder::new(1);
-    builder.add_simplex(Simplex::new(vec![0, 1])).expect("Failed to add simplex");
+    let mut builder = SimplicialComplexBuilder::new(1);
+    builder
+        .add_simplex(Simplex::new(vec![0, 1]))
+        .expect("Failed to add simplex");
     let complex = builder.build().expect("Failed to build complex");
-    
+
     // Create dummy data
     let data = CausalTensor::zeros(&[3]);
-    
+
     Manifold::new(complex, data, 0).expect("Failed to create manifold")
 }
 
 #[test]
 fn test_gauge_transform() {
     let manifold = create_test_manifold();
-    // U1 gauge field: exp(i alpha) -> simple phase shift if A were complex, 
+    // U1 gauge field: exp(i alpha) -> simple phase shift if A were complex,
     // but here we model A as real 1-form A' = A + d(alpha)
     // Wait, the gauge_transform implementation takes a func and MAPS it over components.
     // A' = f(A)
     // This is a simplified "parametric map" test.
-    
+
     let connection = CausalTensor::from_vec(vec![1.0, 2.0, 3.0, 4.0], &[1, 4, 1]);
     let field_strength = CausalTensor::from_vec(vec![0.0; 16], &[1, 4, 4, 1]);
 
@@ -54,8 +57,7 @@ fn test_merge_fields() {
 
     let field_a: GaugeField<U1, f64, f64> =
         GaugeField::with_default_metric(manifold.clone(), conn_a, fs.clone());
-    let field_b: GaugeField<U1, f64, f64> =
-        GaugeField::with_default_metric(manifold, conn_b, fs);
+    let field_b: GaugeField<U1, f64, f64> = GaugeField::with_default_metric(manifold, conn_b, fs);
 
     // Merge: A_new = A + B
     let merged = GaugeFieldWitness::merge_fields(&field_a, &field_b, |a, b| a + b);
@@ -73,7 +75,7 @@ fn test_abelian_field_strength() {
     // because numerical differentiation of connection on discrete manifold
     // requires more complex setup (integration with StokesAdjunction).
     // The current impl just allocates shape.
-    
+
     let connection = CausalTensor::from_vec(vec![1.0; 4], &[1, 4, 1]); // 4D
     let field_strength = CausalTensor::from_vec(vec![0.0; 16], &[1, 4, 4, 1]);
 

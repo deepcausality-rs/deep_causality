@@ -14,18 +14,14 @@
 use crate::types::chain::Chain;
 use crate::types::differential_form::DifferentialForm;
 use crate::{BaseTopology, SimplicialComplex};
-use deep_causality_haft::{Adjunction, HKT, NoConstraint, Satisfies};
+use deep_causality_haft::{Adjunction, NoConstraint, Satisfies, HKT};
+use deep_causality_num::Float;
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
+use std::collections::HashMap;
 use std::sync::Arc;
 
 /// Witness for the exterior derivative d: Ω^k → Ω^(k+1).
-///
-/// The exterior derivative maps differential forms of degree k
-/// to forms of degree k+1. It generalizes:
-/// - Gradient (0-form → 1-form)
-/// - Curl (1-form → 2-form in 3D)
-/// - Divergence (through Hodge dual)
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ExteriorDerivativeWitness;
 
@@ -38,9 +34,6 @@ impl HKT for ExteriorDerivativeWitness {
 }
 
 /// Witness for the boundary operator ∂: C_k → C_(k-1).
-///
-/// The boundary operator maps chains of degree k to chains of degree k-1.
-/// For a simplex, it returns the alternating sum of its faces.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct BoundaryWitness;
 
@@ -53,8 +46,6 @@ impl HKT for BoundaryWitness {
 }
 
 /// Context for Stokes theorem operations.
-///
-/// Provides the simplicial complex on which differential forms and chains live.
 #[derive(Debug, Clone)]
 pub struct StokesContext {
     /// The simplicial complex defining the discrete topology.
@@ -108,18 +99,6 @@ impl StokesContext {
 ///
 /// ⟨dω, C⟩ = ⟨ω, ∂C⟩
 ///
-/// Where:
-/// - ω is a k-form
-/// - C is a (k+1)-chain
-/// - ⟨·, ·⟩ is the integration pairing
-///
-/// # Corollaries
-///
-/// This single equation encodes:
-/// - Fundamental Theorem of Calculus: ∫_a^b df = f(b) - f(a)
-/// - Green's Theorem: ∮_C (P dx + Q dy) = ∬_D (∂Q/∂x - ∂P/∂y) dA
-/// - Stokes' Theorem: ∫_S (∇×F)·dS = ∮_∂S F·dl
-/// - Gauss's Theorem: ∫_V (∇·F) dV = ∯_∂V F·dS
 #[derive(Debug, Clone, Copy, Default)]
 pub struct StokesAdjunction;
 
@@ -127,21 +106,35 @@ impl Adjunction<ExteriorDerivativeWitness, BoundaryWitness, StokesContext> for S
     /// Unit: A → R(L(A)) = Chain<DifferentialForm<A>>
     ///
     /// Embeds a coefficient into a chain of forms.
-    fn unit<A>(ctx: &StokesContext, _a: A) -> Chain<DifferentialForm<A>>
+    /// Semantically, this maps a value `a` to a 0-chain where each vertex has the 0-form `a`.
+    fn unit<A>(ctx: &StokesContext, a: A) -> Chain<DifferentialForm<A>>
     where
         A: Satisfies<NoConstraint> + Clone,
         DifferentialForm<A>: Satisfies<NoConstraint>,
     {
-        // Create a 0-chain containing a 0-form with single coefficient a
-        let _dim = ctx.dim();
+        // Dimension of the complex
+        let dim = ctx.dim();
 
-        // Create form with the single coefficient (not using constant to avoid Default bound)
-        // let coefficients = CausalTensor::from_vec(vec![a], &[1]);
-        // let form = DifferentialForm::from_tensor(0, dim, coefficients);
+        // Create a 0-form with the single coefficient 'a'.
+        // This represents a constant scalar field with value 'a' at a single point,
+        // which we will distribute across the chain.
+        // Note: For a true constant form across the manifold, we'd need more structure,
+        // but for the adjunction unit, we map to a representative form.
+        let coefficients = CausalTensor::from_vec(vec![a], &[1]);
+        let form = DifferentialForm::from_tensor(0, dim, coefficients);
 
         // Create sparse matrix for chain weights
+        // We create a 0-chain (vertices) where the first vertex has weight 'form'.
+        // In a full implementation, this might distribute 'a' differently based on context,
+        // but here we establish the canonical mapping A -> Chain<Form<A>>.
+        // Create explicit vectors for 1-entry matrix
+        let row_indices = vec![0, 1]; // 1 row, start 0, end 1
+        let col_indices = vec![0]; // column 0
+        let values = vec![form]; // value
+
         let num_vertices = ctx.num_simplices(0).max(1);
-        let weights: CsrMatrix<DifferentialForm<A>> = CsrMatrix::with_capacity(1, num_vertices, 1);
+        let weights =
+            unsafe { CsrMatrix::from_parts(row_indices, col_indices, values, (1, num_vertices)) };
 
         Chain::new(ctx.complex_arc(), 0, weights)
     }
@@ -149,32 +142,27 @@ impl Adjunction<ExteriorDerivativeWitness, BoundaryWitness, StokesContext> for S
     /// Counit: L(R(B)) = DifferentialForm<Chain<B>> → B
     ///
     /// Extracts the integrated value from a form of chains.
-    fn counit<B>(ctx: &StokesContext, lrb: DifferentialForm<Chain<B>>) -> B
+    fn counit<B>(_ctx: &StokesContext, lrb: DifferentialForm<Chain<B>>) -> B
     where
         B: Satisfies<NoConstraint> + Clone,
         Chain<B>: Satisfies<NoConstraint>,
     {
-        // Integration: collapse form of chains to scalar
-        // Extract first chain, then first weight
-        if lrb.degree() == 0 && !lrb.coefficients().as_slice().is_empty() {
-            if let Some(chain) = lrb.coefficients().as_slice().first() {
-                let weights = chain.weights();
-                if !weights.values().is_empty() {
-                    return weights.values()[0].clone();
-                }
+        // Integration: collapse form of chains to scalar (B).
+        // The counit evaluation doesn't strictly depend on the topological context
+        // if we assume the form and chain already encode the necessary structure.
+
+        // Extract first chain from the form coefficients
+        if let Some(chain) = lrb.coefficients().as_slice().first() {
+            // Extract the first weight from the chain
+            if let Some(val) = chain.weights().values().first() {
+                return val.clone();
             }
         }
-        let _ = ctx;
-        // Must clone from input since we can't use Default
-        if !lrb.coefficients().as_slice().is_empty() {
-            if let Some(chain) = lrb.coefficients().as_slice().first() {
-                if !chain.weights().values().is_empty() {
-                    return chain.weights().values()[0].clone();
-                }
-            }
-        }
-        // This is a limitation - without Default, we can't produce a B from nothing
-        panic!("Counit requires at least one value in the form's chain")
+
+        // Fallback/Panic: This operation assumes the structure is populated.
+        // In a rigorous category theory implementation, types would guarantee non-empty,
+        // but here we must handle the potential runtime gap.
+        panic!("Counit requires at least one value in the form's chain to evaluate")
     }
 
     /// Left adjunct: (L(A) → B) → (A → R(B))
@@ -187,17 +175,24 @@ impl Adjunction<ExteriorDerivativeWitness, BoundaryWitness, StokesContext> for S
         DifferentialForm<A>: Satisfies<NoConstraint>,
         Func: Fn(DifferentialForm<A>) -> B,
     {
-        // Create form from a (without requiring Default)
+        // 1. Create a representative 0-form from 'a'
         let dim = ctx.dim();
         let coefficients = CausalTensor::from_vec(vec![a], &[1]);
         let form = DifferentialForm::from_tensor(0, dim, coefficients);
 
-        // Apply f to get B
-        let _b = f(form);
+        // 2. Apply the morphism f to get the result in B
+        let b = f(form);
 
-        // Create a 0-chain
+        // 3. Wrap result 'b' into a 0-chain
         let num_vertices = ctx.num_simplices(0).max(1);
-        let weights: CsrMatrix<B> = CsrMatrix::with_capacity(1, num_vertices, 1);
+
+        let row_indices = vec![0, 1];
+        let col_indices = vec![0];
+        let values = vec![b];
+
+        // Safety: We manually constructed valid CSR arrays for a 1xN matrix with 1 non-zero entry at (0,0).
+        let weights =
+            unsafe { CsrMatrix::from_parts(row_indices, col_indices, values, (1, num_vertices)) };
 
         Chain::new(ctx.complex_arc(), 0, weights)
     }
@@ -205,41 +200,45 @@ impl Adjunction<ExteriorDerivativeWitness, BoundaryWitness, StokesContext> for S
     /// Right adjunct: (A → R(B)) → (L(A) → B)
     ///
     /// Given g: A → Chain<B>, produce f: DifferentialForm<A> → B
-    fn right_adjunct<A, B, Func>(ctx: &StokesContext, la: DifferentialForm<A>, mut f: Func) -> B
+    fn right_adjunct<A, B, Func>(_ctx: &StokesContext, la: DifferentialForm<A>, mut f: Func) -> B
     where
         A: Satisfies<NoConstraint> + Clone,
         B: Satisfies<NoConstraint> + Clone,
         Chain<B>: Satisfies<NoConstraint>,
         Func: FnMut(A) -> Chain<B>,
     {
-        // Extract first coefficient from form, apply f, get first chain value
-        if la.degree() == 0 && !la.coefficients().as_slice().is_empty() {
-            if let Some(a) = la.coefficients().as_slice().first() {
-                let chain = f(a.clone());
-                if !chain.weights().values().is_empty() {
-                    return chain.weights().values()[0].clone();
-                }
+        // Extract value 'a' from the form 'la'
+        if let Some(a) = la.coefficients().as_slice().first() {
+            // Apply morphism g (here 'f') to get Chain<B>
+            let chain = f(a.clone());
+
+            // Extract 'b' from the chain
+            if let Some(b) = chain.weights().values().first() {
+                return b.clone();
             }
         }
-        let _ = ctx;
+
         panic!("Right adjunct requires at least one value in the form")
     }
 }
 
 // ============================================================================
-// Production Operations (Specialized for f64)
+// Production Operations (Generic over Float)
 // ============================================================================
 
 impl StokesAdjunction {
-    /// Applies the exterior derivative to a discrete k-form on f64 coefficients.
+    /// Applies the exterior derivative to a discrete k-form.
     ///
     /// d: Ω^k → Ω^(k+1)
     ///
     /// Uses the coboundary matrix from the simplicial complex.
-    pub fn exterior_derivative_f64(
+    pub fn exterior_derivative<T>(
         ctx: &StokesContext,
-        form: &DifferentialForm<f64>,
-    ) -> DifferentialForm<f64> {
+        form: &DifferentialForm<T>,
+    ) -> DifferentialForm<T>
+    where
+        T: Float + Default + From<f64>,
+    {
         let k = form.degree();
         let dim = ctx.dim();
 
@@ -261,11 +260,11 @@ impl StokesAdjunction {
         let shape = coboundary.shape();
         let nrows = shape.0;
 
-        let mut result_coeffs: Vec<f64> = Vec::with_capacity(nrows);
+        let mut result_coeffs: Vec<T> = Vec::with_capacity(nrows);
 
         // For each row (output simplex), compute the sum
         for row_idx in 0..nrows {
-            let mut sum = 0.0;
+            let mut sum = T::zero();
 
             // Get the row slice using CSR structure
             let row_start = coboundary.row_indices()[row_idx];
@@ -273,10 +272,14 @@ impl StokesAdjunction {
 
             for idx in row_start..row_end {
                 let col = coboundary.col_indices()[idx];
-                let sign = coboundary.values()[idx];
+                let sign = coboundary.values()[idx]; // i8, -1 or 1
 
                 if col < coeffs.len() {
-                    sum += coeffs[col] * (sign as f64);
+                    // Convert sign to T
+                    let sign_t = if sign > 0 { T::one() } else { -T::one() };
+                    // Float usually implies Add, Mul. Summing requires explicit Add.
+                    // But Float implies Num implies Add.
+                    sum = sum + (coeffs[col] * sign_t);
                 }
             }
             result_coeffs.push(sum);
@@ -285,41 +288,111 @@ impl StokesAdjunction {
         DifferentialForm::from_coefficients(k + 1, form.dim(), result_coeffs)
     }
 
-    /// Applies the boundary operator to a k-chain on f64 coefficients.
+    /// Applies the boundary operator to a k-chain.
     ///
     /// ∂: C_k → C_(k-1)
     ///
     /// Uses the boundary matrix from the simplicial complex.
-    pub fn boundary_f64(ctx: &StokesContext, chain: &Chain<f64>) -> Chain<f64> {
+    pub fn boundary<T>(ctx: &StokesContext, chain: &Chain<T>) -> Chain<T>
+    where
+        T: Float + Default,
+    {
         let k = chain.grade();
 
         // Boundary of 0-chain is empty
         if k == 0 {
-            let empty_weights: CsrMatrix<f64> = CsrMatrix::new();
+            let empty_weights: CsrMatrix<T> = CsrMatrix::new();
             return Chain::new(ctx.complex_arc(), 0, empty_weights);
         }
 
-        // Get boundary operator B_k
+        // Get boundary operator B_k: C_k -> C_{k-1}
+        // This is stored as a CsrMatrix<i8> (or similar structure in the complex)
         let boundary_ops = &ctx.complex().boundary_operators;
         if k > boundary_ops.len() {
-            let empty_weights: CsrMatrix<f64> = CsrMatrix::new();
+            let empty_weights: CsrMatrix<T> = CsrMatrix::new();
             return Chain::new(ctx.complex_arc(), k - 1, empty_weights);
         }
 
-        // Return empty for now - full implementation requires boundary matrix application
-        let empty_weights: CsrMatrix<f64> = CsrMatrix::new();
-        Chain::new(ctx.complex_arc(), k - 1, empty_weights)
+        // B_k is (N_{k-1} x N_k) matrix.
+        // chain vector is (N_k x 1).
+        // Result is (N_{k-1} x 1).
+        let boundary_op = &boundary_ops[k];
+        let shape = boundary_op.shape();
+        let nrows = shape.0; // num_(k-1)_simplices
+
+        // Chain weights are stored in a CSR matrix.
+        // We conceptually treat the chain as a column vector `v`.
+        // The boundary operation is `w = B * v`, where B is the boundary matrix.
+        // Since `B` is stored in CSR format, we can efficiently iterate over its rows.
+        // Each row `i` corresponds to a (k-1)-simplex. The non-zero entries in row `i`
+        // correspond to the k-simplices that have `i` as a face.
+        let chain_weights = chain.weights();
+        let row_indices = chain_weights.row_indices();
+        let col_indices = chain_weights.col_indices();
+        let values = chain_weights.values();
+
+        if row_indices.is_empty() {
+            let empty_weights: CsrMatrix<T> = CsrMatrix::default();
+            return Chain::new(ctx.complex_arc(), k - 1, empty_weights);
+        }
+
+        // Optimization: Collect chain weights into a HashMap for O(1) lookups during matrix multiplication.
+        // This avoids linear scanning of the sparse chain vector for every non-zero of the boundary matrix.
+        let chain_map: HashMap<usize, T> = col_indices
+            .iter()
+            .zip(values.iter())
+            .map(|(&c, v)| (c, *v))
+            .collect();
+
+        let mut result_triplets: Vec<(usize, usize, T)> = Vec::new();
+
+        // Iterate over each row of the boundary matrix (each (k-1)-simplex)
+        for row_idx in 0..nrows {
+            let mut sum = T::zero();
+            let row_start = boundary_op.row_indices()[row_idx];
+            let row_end = boundary_op.row_indices()[row_idx + 1];
+
+            // Dot product: row(B) . v
+            for idx in row_start..row_end {
+                let col = boundary_op.col_indices()[idx]; // index of k-simplex (j)
+                let sign = boundary_op.values()[idx]; // B_ij (orientation)
+
+                // If simplex `j` exists in the chain with coefficient `c_j`
+                if let Some(val) = chain_map.get(&col) {
+                    let sign_t = if sign > 0 { T::one() } else { -T::one() };
+                    sum = sum + (*val * sign_t);
+                }
+            }
+
+            if sum != T::zero() {
+                // Store result in (0, row_idx) position (vector concept)
+                // Note: Chain weights are technically stored as a 1xN matrix in this codebase,
+                // treating it as a "row" containing the coefficients.
+                // So we push to (0, row_idx).
+                result_triplets.push((0, row_idx, sum));
+            }
+        }
+
+        // Create result matrix
+        let num_k_minus_1_simplices = ctx.num_simplices(k - 1);
+        let result_matrix = CsrMatrix::from_triplets(1, num_k_minus_1_simplices, &result_triplets)
+            .unwrap_or_else(|_| CsrMatrix::new());
+
+        Chain::new(ctx.complex_arc(), k - 1, result_matrix)
     }
 
-    /// Integrates an f64 k-form over a k-chain: ⟨ω, C⟩ = ∫_C ω
-    pub fn integrate_f64(form: &DifferentialForm<f64>, chain: &Chain<f64>) -> f64 {
+    /// Integrates a k-form over a k-chain: ⟨ω, C⟩ = ∫_C ω
+    pub fn integrate<T>(form: &DifferentialForm<T>, chain: &Chain<T>) -> T
+    where
+        T: Float + Default,
+    {
         if form.degree() != chain.grade() {
-            return 0.0;
+            return T::zero();
         }
 
         let coeffs = form.coefficients().as_slice();
         let weights = chain.weights();
-        let mut result = 0.0;
+        let mut result = T::zero();
 
         // ⟨ω, C⟩ = Σ_σ c_σ ω_σ
         let col_indices = weights.col_indices();
@@ -327,7 +400,7 @@ impl StokesAdjunction {
 
         for (idx, &col) in col_indices.iter().enumerate() {
             if col < coeffs.len() {
-                result += values[idx] * coeffs[col];
+                result = result + (values[idx] * coeffs[col]);
             }
         }
 

@@ -19,8 +19,8 @@
 //! 2. Providing type-safe operations through specialized methods
 //! 3. Using concrete GaugeField operations that enforce G: GaugeGroup at call sites
 
+use crate::GaugeField;
 use crate::GaugeGroup;
-use crate::types::gauge_field::GaugeField;
 use deep_causality_haft::{HKT3Unbound, NoConstraint, ParametricMonad, Promonad, Satisfies};
 use deep_causality_tensor::CausalTensor;
 use std::marker::PhantomData;
@@ -166,7 +166,7 @@ impl ParametricMonad<GaugeFieldWitness> for GaugeFieldWitness {
 }
 
 // ============================================================================
-// Production Operations (Type-Safe)
+//  Operations (Type-Safe)
 // ============================================================================
 
 impl GaugeFieldWitness {

@@ -5,30 +5,34 @@
 
 //! HKT4 witness and RiemannMap implementation for CurvatureTensor.
 //!
-//! This module provides the RiemannMap trait implementation for CurvatureTensor,
-//! enabling curvature contraction and scattering matrix operations.
-
-use crate::types::curvature_tensor::CurvatureTensor;
+//! This module provides the `CurvatureTensorWitness` type that enables `CurvatureTensor`
+//! to participate in HKT4 abstractions, along with the `RiemannMap` trait implementation.
+//!
+//! # Implementation Note
+//!
+//! The `RiemannMap` trait is generic over its input types `A, B, C, D`. However,
+//! the logic requires concrete `TensorVector` types.
+//!
+//! Since we cannot constrain the HKT trait's generic parameters to strict types
+//! without changing the core abstraction, and runtime checks via `Any` require
+//! static lifetimes that are overly restrictive, this implementation uses
+//! **unsafe dispatch**.
+//!
+//! **SAFETY:** The caller MUST ensure that `A`, `B`, `C`, and `D` are `TensorVector`.
+//! Passing any other type will result in Undefined Behavior.
+use crate::CurvatureTensor;
 use deep_causality_haft::{HKT4Unbound, NoConstraint, RiemannMap, Satisfies};
 
-/// HKT4 witness for CurvatureTensor<A, B, C, D>.
-///
-/// This witness enables CurvatureTensor to participate in HKT4 operations
-/// like RiemannMap (curvature contraction and scattering).
-///
-/// # Type Structure
-///
-/// CurvatureTensor<A, B, C, D> where:
-/// - A: First index type (u in R(u,v)w)
-/// - B: Second index type (v)
-/// - C: Third index type (w)
-/// - D: Result index type (output direction)
-///
-/// Note: The type parameters are phantom data; actual components are f64.
+// ============================================================================
+// HKT4 Witness
+// ============================================================================
+
+/// HKT4 witness for `CurvatureTensor<A, B, C, D>`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct CurvatureTensorWitness;
 
 impl HKT4Unbound for CurvatureTensorWitness {
+    // We use NoConstraint because we are using unsafe dispatch and don't rely on Any.
     type Constraint = NoConstraint;
     type Type<A, B, C, D>
         = CurvatureTensor<A, B, C, D>
@@ -40,13 +44,10 @@ impl HKT4Unbound for CurvatureTensorWitness {
 }
 
 // ============================================================================
-// RiemannMap Implementation
+// TensorVector - Concrete Vector Type
 // ============================================================================
 
-/// Vector wrapper for RiemannMap operations.
-///
-/// Since RiemannMap expects generic types A, B, C, D as input vectors,
-/// we provide a concrete vector type for physics operations.
+/// A concrete vector type for curvature and scattering operations.
 #[derive(Debug, Clone, PartialEq)]
 pub struct TensorVector {
     /// Vector components.
@@ -55,6 +56,7 @@ pub struct TensorVector {
 
 impl TensorVector {
     /// Creates a new tensor vector from a slice.
+    #[inline]
     pub fn new(data: &[f64]) -> Self {
         Self {
             data: data.to_vec(),
@@ -62,6 +64,7 @@ impl TensorVector {
     }
 
     /// Creates a zero vector of given dimension.
+    #[inline]
     pub fn zeros(dim: usize) -> Self {
         Self {
             data: vec![0.0; dim],
@@ -69,6 +72,7 @@ impl TensorVector {
     }
 
     /// Creates a basis vector e_i.
+    #[inline]
     pub fn basis(dim: usize, i: usize) -> Self {
         let mut data = vec![0.0; dim];
         if i < dim {
@@ -78,11 +82,13 @@ impl TensorVector {
     }
 
     /// Returns the dimension.
+    #[inline]
     pub fn dim(&self) -> usize {
         self.data.len()
     }
 
     /// Returns a slice of the data.
+    #[inline]
     pub fn as_slice(&self) -> &[f64] {
         &self.data
     }
@@ -100,20 +106,17 @@ impl From<TensorVector> for Vec<f64> {
     }
 }
 
+// ============================================================================
+// RiemannMap Trait Implementation (Unsafe Dispatch)
+// ============================================================================
+
 impl RiemannMap<CurvatureTensorWitness> for CurvatureTensorWitness {
     /// Computes curvature contraction R(u,v)w.
     ///
-    /// # Mathematical Definition
+    /// # Safety
     ///
-    /// The Riemann curvature tensor measures parallel transport holonomy:
-    /// R(u,v)w = ∇_u∇_v w - ∇_v∇_u w - ∇_[u,v] w
-    ///
-    /// In components: (R(u,v)w)^d = R^d_abc u^a v^b w^c
-    ///
-    /// # Type Specialization
-    ///
-    /// This implementation works with `TensorVector` types. For other types
-    /// that implement `Into<Vec<f64>>`, convert before calling.
+    /// This generic method **unsafely casts** inputs `u`, `v`, `w` to `TensorVector`.
+    /// The caller **MUST** ensure A, B, C are `TensorVector`.
     fn curvature<A, B, C, D>(tensor: CurvatureTensor<A, B, C, D>, u: A, v: B, w: C) -> D
     where
         A: Satisfies<NoConstraint>,
@@ -121,30 +124,35 @@ impl RiemannMap<CurvatureTensorWitness> for CurvatureTensorWitness {
         C: Satisfies<NoConstraint>,
         D: Satisfies<NoConstraint>,
     {
-        // This generic implementation requires runtime type conversion.
-        // For type-safe operations, use CurvatureTensor::contract directly.
+        // SAFETY: We assume the caller respects the implicit contract that A, B, C are TensorVector.
+        // We cast the references to &TensorVector to invoke the underlying logic.
+        // Since we take arguments by value, we must be careful.
+        // TensorVector is a wrapper around Vec<f64>. If A is TensorVector, memory layout is identical.
         //
-        // The generic HKT trait signature doesn't allow us to constrain
-        // A, B, C to be specifically TensorVector. The caller must ensure
-        // proper types are used or use the concrete methods.
-        //
-        // For production use with typed vectors:
-        let _ = (tensor, u, v, w);
-        panic!(
-            "Use CurvatureTensor::contract() for curvature computation. \
-             The generic RiemannMap trait cannot be fully type-safe for tensors."
-        )
+        // NOTE: This avoids the Any/downcast overhead and static lifetime requirement.
+        unsafe {
+            let u_ptr = &u as *const A as *const TensorVector;
+            let v_ptr = &v as *const B as *const TensorVector;
+            let w_ptr = &w as *const C as *const TensorVector;
+
+            // Dispatch to safe implementation
+            let result = Self::geodesic_deviation_impl(&tensor, &*u_ptr, &*v_ptr, &*w_ptr);
+
+            // Transmute result to D
+            let result_ptr = &result as *const TensorVector as *const D;
+            // We read the D out of the result. Since result is a local variable,
+            // we must ensure it isn't dropped twice. reading moves it out.
+            let ret = std::ptr::read(result_ptr);
+            std::mem::forget(result);
+            ret
+        }
     }
 
     /// Computes S-matrix scattering: (A, B) → (C, D).
     ///
-    /// # Physics Interpretation
+    /// # Safety
     ///
-    /// Models a 2-to-2 scattering process where two incoming particles
-    /// interact and produce two outgoing particles.
-    ///
-    /// The tensor encodes the scattering amplitude:
-    /// M = ⟨out| S |in⟩ = ⟨C, D| S |A, B⟩
+    /// This method **unsafely casts** inputs to `TensorVector`.
     fn scatter<A, B, C, D>(interaction: CurvatureTensor<A, B, C, D>, in_1: A, in_2: B) -> (C, D)
     where
         A: Satisfies<NoConstraint>,
@@ -152,37 +160,37 @@ impl RiemannMap<CurvatureTensorWitness> for CurvatureTensorWitness {
         C: Satisfies<NoConstraint>,
         D: Satisfies<NoConstraint>,
     {
-        // Same limitation as curvature - the generic trait signature
-        // doesn't allow type-safe tensor operations.
-        let _ = (interaction, in_1, in_2);
-        panic!(
-            "Use specialized scattering methods for production S-matrix computation. \
-             The generic RiemannMap trait cannot be fully type-safe for tensors."
-        )
+        unsafe {
+            let in1_ptr = &in_1 as *const A as *const TensorVector;
+            let in2_ptr = &in_2 as *const B as *const TensorVector;
+
+            let (out1, out2) = Self::scatter_impl(&interaction, &*in1_ptr, &*in2_ptr);
+
+            // Transmute tuple (TensorVector, TensorVector) to (C, D).
+            // Layout of (C, D) might differ from (TensorVector, TensorVector) if C!=D?
+            let out1_ptr = &out1 as *const TensorVector as *const C;
+            let out2_ptr = &out2 as *const TensorVector as *const D;
+
+            let c = std::ptr::read(out1_ptr);
+            let d = std::ptr::read(out2_ptr);
+
+            // Ensure out1, out2 are not dropped since we moved their contents
+            std::mem::forget(out1);
+            std::mem::forget(out2);
+
+            (c, d)
+        }
     }
 }
 
 // ============================================================================
-// Concrete RiemannMap Operations (Production-Ready)
+// Private saafe implementations.
 // ============================================================================
 
 impl CurvatureTensorWitness {
-    /// Computes geodesic deviation for concrete vector types.
-    ///
-    /// This is the production-ready version of the curvature operation.
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The Riemann curvature tensor
-    /// * `u` - First loop direction
-    /// * `v` - Second loop direction
-    /// * `w` - Separation vector
-    ///
-    /// # Returns
-    ///
-    /// The geodesic deviation vector (acceleration between nearby geodesics).
-    pub fn geodesic_deviation(
-        tensor: &CurvatureTensor<TensorVector, TensorVector, TensorVector, TensorVector>,
+    /// Internal implementation of geodesic deviation.
+    fn geodesic_deviation_impl<A, B, C, D>(
+        tensor: &CurvatureTensor<A, B, C, D>,
         u: &TensorVector,
         v: &TensorVector,
         w: &TensorVector,
@@ -191,47 +199,29 @@ impl CurvatureTensorWitness {
         TensorVector::from(result)
     }
 
-    /// Computes scattering amplitude for concrete vector inputs.
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The interaction tensor
-    /// * `in_1` - First incoming state
-    /// * `in_2` - Second incoming state
-    ///
-    /// # Returns
-    ///
-    /// A tuple of (out_1, out_2) outgoing states.
-    pub fn scatter_vectors(
-        tensor: &CurvatureTensor<TensorVector, TensorVector, TensorVector, TensorVector>,
+    /// Internal implementation of scattering.
+    fn scatter_impl<A, B, C, D>(
+        tensor: &CurvatureTensor<A, B, C, D>,
         in_1: &TensorVector,
         in_2: &TensorVector,
     ) -> (TensorVector, TensorVector) {
         let dim = tensor.dim();
-
-        // S-matrix scattering: sum over internal indices
-        // out_c^μ = S^μν_αβ in_1^α in_2^β (contracted over α, β for first output)
-        // out_d^μ = S^μν_αβ in_1^α in_2^β (contracted differently for second output)
-
         let mut out_1 = vec![0.0; dim];
         let mut out_2 = vec![0.0; dim];
 
-        for c in 0..dim {
-            for d in 0..dim {
+        for (c, out1_val) in out_1.iter_mut().enumerate() {
+            for (d, out2_val) in out_2.iter_mut().enumerate() {
                 let mut amplitude = 0.0;
                 for a in 0..dim {
                     for b in 0..dim {
                         amplitude += tensor.get(c, a, b, d) * in_1.data[a] * in_2.data[b];
                     }
                 }
-                // Split amplitude between two outputs
-                out_1[c] += amplitude * 0.5;
-                out_2[d] += amplitude * 0.5;
+                *out1_val += amplitude * 0.5;
+                *out2_val += amplitude * 0.5;
             }
         }
 
         (TensorVector::from(out_1), TensorVector::from(out_2))
     }
 }
-
-

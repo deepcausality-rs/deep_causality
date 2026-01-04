@@ -67,7 +67,7 @@ fn test_ricci_tensor() {
     // R_01 = R^0_001 + R^1_011 = 0
     // R_10 = R^0_100 + R^1_110 = 0
     // R_11 = R^0_101 + R^1_111 = 1.0 + 0 = 1.0
-    
+
     assert_eq!(ricci[3], 1.0); // Index 3 is (1,1) in 2x2
     assert_eq!(ricci[0], 0.0);
 }
@@ -89,7 +89,7 @@ fn test_bianchi_check() {
             }
         },
     );
-    
+
     let violation = tensor.check_bianchi_identity();
     assert!(violation > 0.0);
 }

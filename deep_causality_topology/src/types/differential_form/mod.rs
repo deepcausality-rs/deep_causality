@@ -32,7 +32,7 @@ use std::marker::PhantomData;
 /// - 2-form: F_μν dx^μ ∧ dx^ν (e.g., electromagnetic field)
 /// - 3-form: volume element in 3D
 /// - 4-form: Hodge dual of 0-form in 4D
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DifferentialForm<T> {
     /// The form degree (0-form, 1-form, 2-form, etc.).
     degree: usize,
@@ -153,12 +153,12 @@ impl<T: Clone + Default> DifferentialForm<T> {
     /// * `degree` - The form degree
     /// * `dim` - The manifold dimension
     /// * `generator` - Function that takes index and returns coefficient
-    pub fn from_generator<F>(degree: usize, dim: usize, mut generator: F) -> Self
+    pub fn from_generator<F>(degree: usize, dim: usize, generator: F) -> Self
     where
         F: FnMut(usize) -> T,
     {
         let num_components = binomial(dim, degree).max(1);
-        let data: Vec<T> = (0..num_components).map(|i| generator(i)).collect();
+        let data: Vec<T> = (0..num_components).map(generator).collect();
         let coefficients = CausalTensor::from_vec(data, &[num_components]);
 
         Self {
@@ -238,11 +238,11 @@ impl<T> DifferentialForm<T> {
 
 impl<T: Clone> DifferentialForm<T> {
     /// Maps a function over all coefficients.
-    pub fn map<U: Clone + Default, F>(&self, mut f: F) -> DifferentialForm<U>
+    pub fn map<U: Clone + Default, F>(&self, f: F) -> DifferentialForm<U>
     where
         F: FnMut(&T) -> U,
     {
-        let new_coeffs: Vec<U> = self.coefficients.as_slice().iter().map(|x| f(x)).collect();
+        let new_coeffs: Vec<U> = self.coefficients.as_slice().iter().map(f).collect();
         let coefficients = CausalTensor::from_vec(new_coeffs, self.coefficients.shape());
 
         DifferentialForm {
@@ -306,5 +306,3 @@ fn binomial(n: usize, k: usize) -> usize {
     }
     result
 }
-
-

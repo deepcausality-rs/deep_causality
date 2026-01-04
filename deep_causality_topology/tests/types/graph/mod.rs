@@ -4,6 +4,8 @@
  */
 
 #[cfg(test)]
+mod base_topology_tests;
+#[cfg(test)]
 mod clone_tests;
 #[cfg(test)]
 mod display_tests;
