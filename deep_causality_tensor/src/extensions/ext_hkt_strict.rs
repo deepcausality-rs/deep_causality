@@ -16,10 +16,6 @@ use deep_causality_num::Complex;
 // Using the nightly compiler with the new trait solver flag (`-Znext-solver`), the strict implementations
 // for `StrictCausalTensorWitness` **compile successfully without modification**.
 //
-// The **Dual-Witness Pattern** (unbounded vs strict) is a transitional architecture.
-// Once the new trait solver stabilizes, we can unify the design into a single,
-// fully constrained HKT witness where `type Constraint` is universally enforced.
-//
 
 /// `TensorConstraint` enforces strict algebraic bounds on the types allowed within a CausalTensor HKT.
 ///
@@ -63,6 +59,9 @@ impl<T> Satisfies<TensorConstraint> for CausalTensor<T> {}
 // Strict HKT Witness
 // ============================================================================
 
+// StrictWitness implementations are currently blocked on stable
+// because of Monad / Comonad issue. See note at the bottom of the file.
+#[allow(dead_code)]
 pub struct StrictCausalTensorWitness;
 
 impl HKT for StrictCausalTensorWitness {
@@ -111,10 +110,8 @@ impl Pure<StrictCausalTensorWitness> for StrictCausalTensorWitness {
     }
 }
 
-// Monad and CoMonad implementations restore for experiment
-
-//
-// Monad and CoMonad implementations are currently blocked on stable by a rustc GAT normalization issue (E0276/E0277).
+// Monad and CoMonad implementations are currently blocked on stable
+// by multiple rustc GAT normalization issue (E0276/E0277) in the trait solver.
 //
 // STATUS: Verified working on nightly with `-Znext-solver`.
 //

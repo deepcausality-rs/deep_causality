@@ -213,4 +213,4 @@ The crate defining the marker must define the blanket impl:
 - **[HAFT.md](../../docs/HAFT.md)** — Original HKT concepts (witness pattern)
 - **[TOPOLOGY.md](../../docs/TOPOLOGY.md)** — CoMonad on manifolds
 - **[PHYSICS.md](../../docs/PHYSICS.md)** — Causal effect propagation
-- **[specs/current/hkt_gat.md](../current/hkt_gat.md)** — Full technical specification
+- **[specs/current/hkt_gat.md](hkt_gat.md)** — Full technical specification

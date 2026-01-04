@@ -1,11 +1,17 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) "2026" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::CausalTensor;
+use crate::extensions::ext_hkt_strict::StrictCausalTensorWitness;
 use deep_causality_haft::{Foldable, Functor, Pure};
-use deep_causality_tensor::CausalTensor;
-use deep_causality_tensor::extensions::ext_hkt_strict::StrictCausalTensorWitness;
+
+//  **Strict GAT HKTs are Solved in the Next-Generation Trait Solver**
+//
+// As of **January 2026**, we have confirmed that the inability to implement strict `Monad` and `CoMonad`
+// (due to `E0276`/ `E0277` GAT normalization errors) is a **temporary limitation** of the current stable Rust trait solver.
+//
 
 #[test]
 fn test_strict_pure() {

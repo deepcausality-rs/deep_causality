@@ -343,7 +343,7 @@ By encoding these relationships in the type system, we get:
 
 ---
 
-## 9. Advanced: Spinor and Gauge Manifolds
+## 9. Advanced: Gauge Manifolds
 
 ### 9.1 The Gap: Scalar vs Multivector Fields
 
