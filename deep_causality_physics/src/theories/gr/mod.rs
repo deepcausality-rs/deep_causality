@@ -46,6 +46,7 @@
 //! GR uses East Coast convention: η_μν = diag(-1, +1, +1, +1)
 mod adm_ops;
 mod adm_state;
+mod gr_lie_mapping;
 mod gr_ops;
 mod gr_ops_impl;
 mod gr_utils;
@@ -53,5 +54,6 @@ mod metrics;
 
 pub use adm_ops::*;
 pub use adm_state::*;
+pub use gr_lie_mapping::*;
 pub use gr_ops::*;
 pub use metrics::*;

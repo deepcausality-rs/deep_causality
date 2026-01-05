@@ -9,8 +9,9 @@ use deep_causality_physics::theories::gr::{
     AdmOps, AdmState, GrOps, flrw_metric_at, kerr_metric_at, minkowski_metric,
     schwarzschild_kretschmann, schwarzschild_metric_at,
 };
+use deep_causality_physics::{contract_riemann_to_lie, expand_lie_to_riemann, pair_to_lie_index};
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{GaugeField, Manifold};
+use deep_causality_topology::{GaugeField, Manifold, Simplex, SimplicialComplexBuilder};
 use std::f64::consts::PI;
 
 #[test]
@@ -132,10 +133,8 @@ fn test_adm_structures() {
 #[test]
 fn test_gr_gauge_field_integration() {
     // Construct a GR field for Schwarzschild
-    use deep_causality_topology::{Simplex, SimplicialComplexBuilder};
 
-    // Build a complex with just 1 vertex (0-simplex) to verify single-point tensor logic
-    // This ensures N=1, so tensors are [1, 4, 6] (24 elems) vs [15, 4, 6]
+    // Build a complex with 1 vertex (0-simplex)
     let mut builder = SimplicialComplexBuilder::new(0);
     builder
         .add_simplex(Simplex::new(vec![0]))
@@ -150,65 +149,53 @@ fn test_gr_gauge_field_integration() {
     let r = 10.0;
 
     // Use Metric Tensor as connection (GR expects g in connection slot)
-    // We must pad it to satisfy GaugeField SO(3,1) validation [N, 4, 6]
+    // Padded to [N, 4, 6] for GaugeField Lorentz validation
     let metric_4x4 = schwarzschild_metric_at(mass, r).unwrap();
     let m_data = metric_4x4.as_slice();
 
     // Construct padded data: 1 point, 4 rows, 6 cols.
-    // We place 4x4 metric in first 4 cols.
     let mut conn_data = vec![0.0; num_simplices * 4 * 6];
     for p in 0..num_simplices {
         for row in 0..4 {
             for col in 0..4 {
-                // Metric index: row*4 + col
-                // Connection index: p*(24) + row*6 + col
                 conn_data[p * 24 + row * 6 + col] = m_data[row * 4 + col];
             }
         }
     }
     let metric_tensor = CausalTensor::from_vec(conn_data, &[num_simplices, 4, 6]);
 
-    // Use Riemann as field strength [N, 4, 4, 6]
-    // Zeros is fine.
+    // Riemann tensor in Lie-algebra form [N, 4, 4, 6]
+    // For a proper test, we would compute this from Christoffel symbols.
+    // Here we use zeros, which should give K = 0.
     let riemann_data = vec![0.0; num_simplices * 4 * 4 * 6];
-    let riemann =
-        deep_causality_tensor::CausalTensor::from_vec(riemann_data, &[num_simplices, 4, 4, 6]);
+    let riemann = CausalTensor::from_vec(riemann_data, &[num_simplices, 4, 4, 6]);
 
-    // Topology Metric (signature/type)
     let topo_metric = EastCoastMetric::minkowski_4d().into_metric();
 
     // Create GR field
     let gravity: GR = GaugeField::new(base, topo_metric, metric_tensor, riemann).unwrap();
 
-    // Verify it implements GrOps
+    // Verify gauge group name
     assert_eq!(gravity.gauge_group_name(), "SO(3,1)");
 
-    // Test default GrOps methods (sanity checks)
+    // Test Kretschmann scalar computation - should now succeed
     let k_res = gravity.kretschmann_scalar();
+    assert!(
+        k_res.is_ok(),
+        "Kretschmann scalar should compute successfully with Lie→Geometric mapping"
+    );
 
-    // With N=1, riemann size is 96. Expected 256. Should Error.
+    // With zero Riemann tensor, K should be 0
+    let k_value = k_res.unwrap();
     assert!(
-        k_res.is_err(),
-        "Should return error for Lie Algebra curvature shape mismatch"
-    );
-    let err_msg = format!("{:?}", k_res.unwrap_err());
-    assert!(
-        err_msg.contains("DimensionMismatch"),
-        "Wrong error type: {}",
-        err_msg
-    );
-    assert!(
-        err_msg.contains("Mapping Lie Algebra"),
-        "Wrong error message: {}",
-        err_msg
+        k_value.abs() < 1e-12,
+        "Kretschmann scalar should be 0 for zero Riemann, got {}",
+        k_value
     );
 }
 
 #[test]
-#[should_panic(expected = "CurvatureTensor components must have shape")]
 fn test_geodesic_deviation_interface() {
-    use deep_causality_topology::{Simplex, SimplicialComplexBuilder};
-
     // Use N=1 for simple mocking
     let mut builder = SimplicialComplexBuilder::new(0);
     builder
@@ -221,16 +208,18 @@ fn test_geodesic_deviation_interface() {
     let base = Manifold::new(complex, data, 0).expect("Failed to create manifold");
     let dim = 4;
 
-    // Mock Metric Tensor (Identity for simplicity) padded to [1, 4, 6]
+    // Mock Metric Tensor (Minkowski-like for simplicity) padded to [1, 4, 6]
     let mut conn_data = vec![0.0; num_simplices * 4 * 6];
-    // Identity on 4x4 logic (row==col)
-    for i in 0..4 {
-        conn_data[i * 6 + i] = 1.0;
-    }
+    // East Coast signature (-1, +1, +1, +1)
+    conn_data[0] = -1.0; // g_00
+    conn_data[7] = 1.0; // g_11
+    conn_data[14] = 1.0; // g_22
+    conn_data[21] = 1.0; // g_33
     let metric_tensor = CausalTensor::from_vec(conn_data, &[num_simplices, 4, 6]);
 
-    // Riemann [1, 4, 4, 6]
-    let riemann = deep_causality_tensor::CausalTensor::from_vec(
+    // Riemann tensor in Lie-algebra form [N, 4, 4, 6]
+    // Zeros for flat spacetime - no tidal forces
+    let riemann = CausalTensor::from_vec(
         vec![0.0; num_simplices * 4 * 4 * 6],
         &[num_simplices, 4, 4, 6],
     );
@@ -241,8 +230,306 @@ fn test_geodesic_deviation_interface() {
     let velocity = vec![1.0, 0.0, 0.0, 0.0];
     let separation = vec![0.0, 1.0, 0.0, 0.0];
 
-    // Should run without error
+    // Geodesic deviation should succeed with Lie→Geometric expansion
     let deviation = gravity.geodesic_deviation(&velocity, &separation);
-    assert!(deviation.is_ok());
-    assert_eq!(deviation.unwrap().len(), dim);
+    assert!(
+        deviation.is_ok(),
+        "Geodesic deviation should compute successfully, got {:?}",
+        deviation.err()
+    );
+
+    let result = deviation.unwrap();
+    assert_eq!(result.len(), dim, "Result should have 4 components");
+
+    // For flat spacetime (zero Riemann), deviation acceleration should be zero
+    for (i, &val) in result.iter().enumerate() {
+        assert!(
+            val.abs() < 1e-12,
+            "Deviation component {} should be 0 for flat spacetime, got {}",
+            i,
+            val
+        );
+    }
+}
+
+// ============================================================================
+// Lie ↔ Geometric Mapping Tests
+// ============================================================================
+
+#[test]
+fn test_pair_to_lie_index() {
+    assert_eq!(pair_to_lie_index(0, 1), Some(0));
+    assert_eq!(pair_to_lie_index(0, 2), Some(1));
+    assert_eq!(pair_to_lie_index(0, 3), Some(2));
+    assert_eq!(pair_to_lie_index(1, 2), Some(3));
+    assert_eq!(pair_to_lie_index(1, 3), Some(4));
+    assert_eq!(pair_to_lie_index(2, 3), Some(5));
+
+    // Invalid cases
+    assert_eq!(pair_to_lie_index(1, 1), None); // diagonal
+    assert_eq!(pair_to_lie_index(2, 1), None); // wrong order
+    assert_eq!(pair_to_lie_index(4, 5), None); // out of range
+}
+
+#[test]
+fn test_lie_index_to_pair() {
+    use deep_causality_physics::theories::gr::lie_index_to_pair;
+
+    assert_eq!(lie_index_to_pair(0), Some((0, 1)));
+    assert_eq!(lie_index_to_pair(1), Some((0, 2)));
+    assert_eq!(lie_index_to_pair(2), Some((0, 3)));
+    assert_eq!(lie_index_to_pair(3), Some((1, 2)));
+    assert_eq!(lie_index_to_pair(4), Some((1, 3)));
+    assert_eq!(lie_index_to_pair(5), Some((2, 3)));
+    assert_eq!(lie_index_to_pair(6), None);
+}
+
+#[test]
+fn test_roundtrip_lie_geometric() {
+    // Create a sample Lie-algebra tensor [4, 4, 6]
+    let mut lie_data = vec![0.0; 4 * 4 * 6];
+    // Set some non-zero values
+    lie_data[6] = 1.0; // R^0_1 at (μ,ν)=(0,1)
+    lie_data[2 * 4 * 6 + 3 * 6 + 5] = 2.5; // R^2_3 at (μ,ν)=(2,3)
+
+    let lie_tensor = CausalTensor::from_vec(lie_data.clone(), &[4, 4, 6]);
+
+    // Expand to geometric
+    let riemann = expand_lie_to_riemann(&lie_tensor).unwrap();
+    assert_eq!(riemann.shape(), &[4, 4, 4, 4]);
+
+    // Contract back to Lie
+    let lie_back = contract_riemann_to_lie(&riemann).unwrap();
+    assert_eq!(lie_back.shape(), &[4, 4, 6]);
+
+    // Verify roundtrip
+    let original = lie_tensor.as_slice();
+    let recovered = lie_back.as_slice();
+    for i in 0..original.len() {
+        assert!(
+            (original[i] - recovered[i]).abs() < 1e-12,
+            "Mismatch at index {}: {} vs {}",
+            i,
+            original[i],
+            recovered[i]
+        );
+    }
+}
+
+#[test]
+fn test_antisymmetry_preserved() {
+    // Create Lie tensor with known value
+    let mut lie_data = vec![0.0; 4 * 4 * 6];
+    lie_data[0] = PI; // R^0_0 at (μ,ν)=(0,1) → lie_idx=0
+
+    let lie_tensor = CausalTensor::from_vec(lie_data, &[4, 4, 6]);
+    let riemann = expand_lie_to_riemann(&lie_tensor).unwrap();
+    let r_data = riemann.as_slice();
+
+    // R^0_0_01 should be PI
+    let r_0_0_01 = r_data[1]; // [0,0,0,1]
+    assert!((r_0_0_01 - PI).abs() < 1e-12);
+
+    // R^0_0_10 should be -PI (antisymmetry)
+    let r_0_0_10 = r_data[4]; // [0,0,1,0]
+    assert!((r_0_0_10 + PI).abs() < 1e-12);
+
+    // Diagonal should be zero
+    let r_0_0_00 = r_data[0]; // [0,0,0,0]
+    assert!(r_0_0_00.abs() < 1e-12);
+}
+
+// ============================================================================
+// Tests for Three Remaining GR Issues
+// ============================================================================
+
+#[test]
+fn test_adm_with_christoffel() {
+    // Test that ADM momentum constraint works when Christoffel symbols are provided
+    let gamma = CausalTensor::identity(&[3, 3]).unwrap();
+    let k = CausalTensor::zeros(&[3, 3]);
+    let alpha = CausalTensor::ones(&[1]);
+    let beta = CausalTensor::zeros(&[3]);
+
+    // Zero Christoffel symbols (flat space)
+    let christoffel = CausalTensor::zeros(&[3, 3, 3]);
+
+    let state = AdmState::with_christoffel(
+        gamma,
+        k,
+        alpha,
+        beta,
+        0.0, // R = 0 for flat
+        christoffel,
+    );
+
+    // Momentum constraint should now return Ok, not Err
+    let m = state.momentum_constraint(None);
+    assert!(
+        m.is_ok(),
+        "Momentum constraint should succeed with Christoffel symbols: {:?}",
+        m.err()
+    );
+
+    // For flat space with K=0, momentum constraint should be zero
+    let m_vec = m.unwrap();
+    assert_eq!(m_vec.shape(), &[3]);
+    for (i, &val) in m_vec.as_slice().iter().enumerate() {
+        assert!(
+            val.abs() < 1e-12,
+            "M_{} should be 0 for flat space with K=0, got {}",
+            i,
+            val
+        );
+    }
+}
+
+#[test]
+fn test_multipoint_expand_lie_to_riemann() {
+    use deep_causality_physics::theories::gr::expand_lie_to_riemann;
+
+    // Create a 3-point Lie tensor [3, 4, 4, 6]
+    let num_points = 3;
+    let elem_per_point = 4 * 4 * 6;
+    let mut lie_data = vec![0.0; num_points * elem_per_point];
+
+    // Set different values for each point at the same Lie index
+    for p in 0..num_points {
+        // R^0_0 at (μ,ν)=(0,1) → lie_idx=0
+        lie_data[p * elem_per_point] = (p + 1) as f64;
+    }
+
+    let lie_tensor = CausalTensor::from_vec(lie_data, &[num_points, 4, 4, 6]);
+
+    // Expand to geometric Riemann
+    let riemann = expand_lie_to_riemann(&lie_tensor).unwrap();
+
+    // Should be [3, 4, 4, 4, 4]
+    assert_eq!(riemann.shape(), &[num_points, 4, 4, 4, 4]);
+
+    // Verify each point has its correct value
+    let r_data = riemann.as_slice();
+    let elem_per_riemann = 256;
+    for p in 0..num_points {
+        // R^0_0_01 should be (p+1)
+        let r_0_0_01 = r_data[p * elem_per_riemann + 1];
+        assert!(
+            (r_0_0_01 - (p + 1) as f64).abs() < 1e-12,
+            "Point {} R^0_0_01 should be {}, got {}",
+            p,
+            p + 1,
+            r_0_0_01
+        );
+
+        // R^0_0_10 should be -(p+1) (antisymmetry)
+        let r_0_0_10 = r_data[p * elem_per_riemann + 4];
+        assert!(
+            (r_0_0_10 + (p + 1) as f64).abs() < 1e-12,
+            "Point {} R^0_0_10 should be -{}, got {}",
+            p,
+            p + 1,
+            r_0_0_10
+        );
+    }
+}
+
+#[test]
+fn test_compute_riemann_from_christoffel() {
+    use deep_causality_topology::{Simplex, SimplicialComplexBuilder};
+
+    // Build a simple complex
+    let mut builder = SimplicialComplexBuilder::new(0);
+    builder
+        .add_simplex(Simplex::new(vec![0]))
+        .expect("Failed to add simplex");
+    let complex = builder.build().expect("Failed to build complex");
+
+    let num_simplices = complex.total_simplices();
+    let data = CausalTensor::zeros(&[num_simplices]);
+    let base = Manifold::new(complex, data, 0).expect("Failed to create manifold");
+
+    // Create connection tensor (simulating Christoffel symbol data) [N, 4, 6]
+    let conn_data = vec![0.0; num_simplices * 4 * 6];
+    let connection = CausalTensor::from_vec(conn_data, &[num_simplices, 4, 6]);
+
+    // Create field strength (will be replaced by computation)
+    let fs_data = vec![0.0; num_simplices * 4 * 4 * 6];
+    let field_strength = CausalTensor::from_vec(fs_data, &[num_simplices, 4, 4, 6]);
+
+    let topo_metric = EastCoastMetric::minkowski_4d().into_metric();
+
+    // Create GR field with Christoffel in connection slot
+    let gr: GR = GaugeField::new(base, topo_metric, connection, field_strength).unwrap();
+
+    // Test that compute_riemann_from_christoffel returns the expected shape
+    let riemann = gr.compute_riemann_from_christoffel();
+
+    // Should have shape [N, 4, 4, 6]
+    assert_eq!(riemann.shape()[0], num_simplices);
+    assert_eq!(riemann.shape()[1], 4);
+    assert_eq!(riemann.shape()[2], 4);
+    assert_eq!(riemann.shape()[3], 6);
+}
+
+#[test]
+fn test_momentum_constraint_field() {
+    use deep_causality_topology::{Simplex, SimplicialComplexBuilder};
+
+    // Build a simple complex with 3 vertices (3 points for multi-point test)
+    let mut builder = SimplicialComplexBuilder::new(0);
+    builder
+        .add_simplex(Simplex::new(vec![0]))
+        .expect("add simplex");
+    builder
+        .add_simplex(Simplex::new(vec![1]))
+        .expect("add simplex");
+    builder
+        .add_simplex(Simplex::new(vec![2]))
+        .expect("add simplex");
+    let complex = builder.build().expect("build complex");
+
+    let num_simplices = complex.total_simplices();
+    let data = CausalTensor::zeros(&[num_simplices]);
+    let base = Manifold::new(complex, data, 0).expect("create manifold");
+
+    // Create 4x4 Minkowski metric: diag(-1, 1, 1, 1) for each point
+    // This provides a valid non-singular spatial 3-metric γ_ij = diag(1, 1, 1)
+    let mut metric_4x4 = vec![0.0; num_simplices * 16];
+    for p in 0..num_simplices {
+        let base_idx = p * 16;
+        metric_4x4[base_idx] = -1.0; // g_00 = -1
+        metric_4x4[base_idx + 5] = 1.0; // g_11 = 1 (γ_00)
+        metric_4x4[base_idx + 10] = 1.0; // g_22 = 1 (γ_11)
+        metric_4x4[base_idx + 15] = 1.0; // g_33 = 1 (γ_22)
+    }
+    let connection = CausalTensor::from_vec(metric_4x4, &[num_simplices, 4, 4]);
+
+    let fs_data = vec![0.0; num_simplices * 4 * 4 * 6];
+    let field_strength = CausalTensor::from_vec(fs_data, &[num_simplices, 4, 4, 6]);
+
+    let topo_metric = EastCoastMetric::minkowski_4d().into_metric();
+    let gr: GR = GaugeField::new(base, topo_metric, connection, field_strength).unwrap();
+
+    // Create extrinsic curvature K_ij = 0 (flat space)
+    let k_data = vec![0.0; num_simplices * 3 * 3];
+    let k_tensor = CausalTensor::from_vec(k_data, &[num_simplices, 3, 3]);
+
+    // Test momentum_constraint_field
+    let result = gr.momentum_constraint_field(&k_tensor, None);
+    assert!(result.is_ok(), "Expected Ok, got {:?}", result.err());
+
+    let m = result.unwrap();
+
+    // Should have shape [N, 3]
+    assert_eq!(m.shape()[0], num_simplices);
+    assert_eq!(m.shape()[1], 3);
+
+    // For flat space with K=0, momentum constraint should be zero
+    for val in m.as_slice() {
+        assert!(
+            val.abs() < 1e-12,
+            "Expected M_i = 0 for flat space with K=0, got {}",
+            val
+        );
+    }
 }

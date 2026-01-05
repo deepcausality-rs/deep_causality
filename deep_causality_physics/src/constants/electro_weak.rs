@@ -12,7 +12,7 @@
 /// ```text
 /// α = e² / (4π ℏc) ≈ 7.297 × 10⁻³ ≈ 1/137
 /// ```
-pub const ALPHA_EM: f64 = 1.0 / 137.035999084;
+pub const ALPHA_EM: f64 = 1.0 / 137.035999177;
 
 /// Electromagnetic coupling constant e = √(4πα)
 ///

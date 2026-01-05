@@ -144,4 +144,59 @@ pub trait GrOps {
     fn schwarzschild_radius(mass_kg: f64) -> f64 {
         2.0 * NEWTONIAN_CONSTANT_OF_GRAVITATION * mass_kg / (SPEED_OF_LIGHT * SPEED_OF_LIGHT)
     }
+
+    /// Computes the Riemann tensor from Christoffel symbols using the HKT witness.
+    ///
+    /// # Mathematical Definition
+    ///
+    /// Uses `GaugeFieldWitness::compute_field_strength_non_abelian` to compute:
+    /// ```text
+    /// R^ρ_σμν = ∂_μ Γ^ρ_νσ - ∂_ν Γ^ρ_μσ + Γ^ρ_μλ Γ^λ_νσ - Γ^ρ_νλ Γ^λ_μσ
+    /// ```
+    ///
+    /// # Prerequisites
+    ///
+    /// For this method to produce meaningful results, the GR field's `connection` slot
+    /// must contain Christoffel symbols (Γ^ρ_μν) rather than the metric tensor.
+    ///
+    /// # Returns
+    ///
+    /// The Riemann tensor in Lie-algebra storage form `[N, 4, 4, 6]`.
+    fn compute_riemann_from_christoffel(&self) -> CausalTensor<f64>;
+
+    /// Computes the ADM momentum constraint across all manifold points.
+    ///
+    /// # Mathematical Definition
+    ///
+    /// The momentum constraint in the 3+1 formalism is:
+    /// ```text
+    /// M_i = D_j (K^j_i - δ^j_i K) - 8πj_i
+    /// ```
+    ///
+    /// where:
+    /// - D_j is the covariant derivative on the spatial slice
+    /// - K^j_i is the extrinsic curvature (mixed indices)
+    /// - K = K^j_j is the trace (mean curvature)
+    /// - j_i is the matter momentum density
+    ///
+    /// # Implementation
+    ///
+    /// Uses the **StokesAdjunction HKT** infrastructure:
+    /// 1. The divergence D_j T^j_i is computed via the adjoint relationship d ⊣ ∂
+    /// 2. Uses `StokesAdjunction::exterior_derivative` for the derivative terms
+    /// 3. Adds Christoffel connection terms from the metric
+    ///
+    /// # Arguments
+    ///
+    /// * `extrinsic_curvature` - K_ij tensor at all manifold points, shape `[N, 3, 3]`
+    /// * `matter_momentum` - Optional momentum density j_i, shape `[N, 3]`
+    ///
+    /// # Returns
+    ///
+    /// Momentum constraint M_i at all manifold points, shape `[N, 3]`.
+    fn momentum_constraint_field(
+        &self,
+        extrinsic_curvature: &CausalTensor<f64>,
+        matter_momentum: Option<&CausalTensor<f64>>,
+    ) -> Result<CausalTensor<f64>, PhysicsError>;
 }
