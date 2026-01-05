@@ -1,5 +1,11 @@
 # General Relativity Gauge Field Pipeline
 
+## Run the example
+
+```bash
+RUSTFLAGS='-C target-cpu=native'  cargo run --example gauge_gr --release
+```
+
 This example demonstrates **General Relativity (GR)** as an SO(3,1) Lorentz gauge theory
 using the **Causal Monad** (`PropagatingEffect`) for type-safe, modular composition of
 physics stages.

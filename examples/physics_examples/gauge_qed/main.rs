@@ -35,7 +35,6 @@ use deep_causality_physics::{QED, QedOps};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("═══════════════════════════════════════════════════════════════");
     println!("  QED Electromagnetic Wave Pipeline");
-    println!("  (Modular Stages Composed via Causal Monad)");
     println!("═══════════════════════════════════════════════════════════════\n");
 
     // =========================================================================

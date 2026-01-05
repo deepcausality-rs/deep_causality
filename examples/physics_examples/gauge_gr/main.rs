@@ -22,7 +22,7 @@
 
 use deep_causality_core::{CausalEffectPropagationProcess, EffectValue, PropagatingEffect};
 use deep_causality_physics::{AdmOps, GrOps, LorentzianMetric};
-use deep_causality_physics::{AdmState, EastCoastMetric, GR};
+use deep_causality_physics::{AdmState, EastCoastMetric, GR, SPEED_OF_LIGHT as c};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{GaugeField, Manifold, Simplex, SimplicialComplexBuilder};
 use std::error::Error;
@@ -41,7 +41,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .bind_or_error(stage_curvature_invariants, "Curvature computation failed")
         .bind_or_error(stage_geodesic_analysis, "Geodesic analysis failed")
         .bind_or_error(stage_adm_formalism, "ADM formalism failed")
-        .bind_or_error(stage_horizon_detection, "Horizon detection failed");
+        .bind_or_error(stage_event_horizon_detection, "Horizon detection failed");
 
     // Extract and display final result
     print_summary(&result);
@@ -211,9 +211,11 @@ fn stage_curvature_invariants(mut input: SpaceTimeData, _: (), _: Option<()>) ->
             println!("  → Non-flat curvature: spacetime is curved");
         }
 
-        // Curvature radius (inverse sqrt of Kretschmann)
-        let curvature_radius = 1.0 / kretschmann.sqrt();
-        println!("  → Curvature radius: {:.3e} m", curvature_radius);
+        // Curvature radius from Kretschmann scalar (now using GrOps SI method)
+        // Note: We use the analytic K here, but gr.kretschmann_curvature_radius()
+        // would give the same result if Riemann was in geometric [4,4,4,4] form.
+        let curvature_radius = 1.0 / kretschmann.powf(0.25);
+        println!("  → Curvature radius: {:.3e} m (via K^{{-1/4}})", curvature_radius);
         println!();
 
         input.kretschmann = kretschmann;
@@ -248,32 +250,31 @@ fn stage_geodesic_analysis(mut input: SpaceTimeData, _: (), _: Option<()>) -> Sp
         // Separation vector (radial): ξ^μ = (0, 1, 0, 0)
         let xi = CausalTensor::from_vec(vec![0.0, 1.0, 0.0, 0.0], &[4]);
 
-        // Compute geodesic deviation
-        let deviation = match gr.geodesic_deviation(u.as_slice(), xi.as_slice()) {
+        // Compute geodesic deviation in SI units. For geometric units, use geodesic_deviation()
+        let tidal_acceleration = match gr.geodesic_deviation_si(u.as_slice(), xi.as_slice()) {
             Ok(d) => {
-                // Magnitude of acceleration
-                d.as_slice().iter().map(|x| x * x).sum::<f64>().sqrt()
+                // Magnitude of acceleration (already in m/s²)
+                d.iter().map(|x| x * x).sum::<f64>().sqrt()
             }
             Err(_) => {
-                // Analytic: radial tidal acceleration ~ M/r³
+                // Analytic fallback: radial tidal acceleration ~ c² * M/r³
                 let m = r_s / 2.0;
-                2.0 * m / (r * r * r)
+                c * c * 2.0 * m / (r * r * r)
             }
         };
 
-        println!("  Radial geodesic deviation: {:.6e}", deviation);
-
-        // Tidal force interpretation
-        let tidal_force = deviation;
-        println!("  Tidal acceleration:        {:.6e} m/s²", tidal_force);
+        // Also show the geometric deviation for reference
+        let deviation_geometric = tidal_acceleration / (c * c);
+        println!("  Geodesic deviation:      {:.6e} m⁻² (geometric)", deviation_geometric);
+        println!("  Tidal acceleration:      {:.6e} m/s² (SI)", tidal_acceleration);
 
         // Spaghettification distance (where tidal force ~ g)
         let g = 9.8; // Earth gravity
-        if tidal_force > g {
-            println!("  → Tidal force exceeds Earth gravity!");
+        if tidal_acceleration > g {
+            println!("  → Tidal force (at 1m) exceeds Earth gravity ({:.1} g)", tidal_acceleration / g);
         }
 
-        // Proper time dilation
+        input.deviation = deviation_geometric;
         let tau_ratio = f.sqrt();
         println!("\n  Proper time dilation: dτ/dt = {:.6}", tau_ratio);
         println!(
@@ -281,8 +282,6 @@ fn stage_geodesic_analysis(mut input: SpaceTimeData, _: (), _: Option<()>) -> Sp
             1.0 / tau_ratio - 1.0
         );
         println!();
-
-        input.deviation = deviation;
 
         CausalEffectPropagationProcess::pure(input)
     } else {
@@ -362,7 +361,7 @@ fn stage_adm_formalism(mut input: SpaceTimeData, _: (), _: Option<()>) -> SpaceT
 /// - Event horizon at r = r_s (g_tt = 0)
 /// - Photon sphere at r = 3M = 1.5 r_s
 /// - ISCO at r = 6M = 3 r_s
-fn stage_horizon_detection(
+fn stage_event_horizon_detection(
     input: SpaceTimeData,
     _: (),
     _: Option<()>,
@@ -469,7 +468,7 @@ fn print_summary(result: &PropagatingEffect<GRState>) {
             println!("  │  Causal Structure                                       │");
             println!("  ├─────────────────────────────────────────────────────────┤");
             println!(
-                "  │  Inside horizon:          {}                           │",
+                "  │  Inside event horizon:        {}                       │",
                 if state.inside_horizon { "Yes" } else { "No " }
             );
             println!(

@@ -65,31 +65,81 @@ pub trait GrOps {
     /// Uses `einstein_tensor_kernel`.
     fn einstein_tensor(&self) -> Result<CausalTensor<f64>, PhysicsError>;
 
-    /// Computes the Kretschmann scalar K.
+    /// Computes the Kretschmann scalar K in **geometric units**.
     ///
     /// # Mathematical Definition
     /// ```text
     /// K = R_μνρσ R^μνρσ
     /// ```
     /// For Schwarzschild: K = 48M²/r⁶
+    ///
+    /// # Units
+    /// Returns scalar curvature in **geometric units** (`m⁻⁴`).
+    /// For curvature radius in meters, use [`kretschmann_curvature_radius`].
     fn kretschmann_scalar(&self) -> Result<f64, PhysicsError>;
+
+    /// Computes the curvature radius from Kretschmann scalar in **SI units**.
+    ///
+    /// # Mathematical Definition
+    /// ```text
+    /// R_curv = K^(-1/4)
+    /// ```
+    ///
+    /// # Units
+    /// Returns curvature radius in **meters**.
+    ///
+    /// # Conversion
+    /// Takes the 4th root of 1/K to convert from `m⁻⁴` to `m`.
+    fn kretschmann_curvature_radius(&self) -> Result<f64, PhysicsError> {
+        let k = self.kretschmann_scalar()?;
+        if k <= 0.0 {
+            return Ok(f64::INFINITY); // Flat spacetime
+        }
+        Ok(1.0 / k.powf(0.25))
+    }
 
     // -------------------------------------------------------------------------
     // Geodesic Motion
     // -------------------------------------------------------------------------
 
-    /// Computes geodesic deviation (tidal acceleration).
+    /// Computes geodesic deviation (tidal acceleration) in **geometric units**.
     ///
     /// # Mathematical Definition
     /// ```text
     /// D²ξ^μ/Dτ² = R^μ_νρσ u^ν ξ^ρ u^σ
     /// ```
     /// Uses `CurvatureTensorWitness::curvature` via RiemannMap.
+    ///
+    /// # Units
+    /// Returns acceleration in **geometric units** (`m⁻²`).
+    /// For SI units (`m/s²`), use [`geodesic_deviation_si`].
     fn geodesic_deviation(
         &self,
         velocity: &[f64],
         separation: &[f64],
     ) -> Result<Vec<f64>, PhysicsError>;
+
+    /// Computes geodesic deviation (tidal acceleration) in **SI units**.
+    ///
+    /// # Mathematical Definition
+    /// ```text
+    /// a^μ = c² × R^μ_νρσ u^ν ξ^ρ u^σ
+    /// ```
+    ///
+    /// # Units
+    /// Returns acceleration in **SI units** (`m/s²`).
+    ///
+    /// # Conversion
+    /// Multiplies geometric result by `c² ≈ 8.99 × 10¹⁶ m²/s²`.
+    fn geodesic_deviation_si(
+        &self,
+        velocity: &[f64],
+        separation: &[f64],
+    ) -> Result<Vec<f64>, PhysicsError> {
+        let geometric = self.geodesic_deviation(velocity, separation)?;
+        let c2 = SPEED_OF_LIGHT * SPEED_OF_LIGHT;
+        Ok(geometric.into_iter().map(|v| v * c2).collect())
+    }
 
     /// Integrates the geodesic equation numerically.
     ///
@@ -106,14 +156,30 @@ pub trait GrOps {
         num_steps: usize,
     ) -> Result<Vec<GeodesicState>, PhysicsError>;
 
-    /// Computes proper time along a worldline.
+    /// Computes proper time along a worldline in **geometric units**.
     ///
     /// # Mathematical Definition
     /// ```text
     /// τ = ∫ √(-g_μν dx^μ dx^ν)
     /// ```
     /// Uses `proper_time_kernel`.
+    ///
+    /// # Units
+    /// Returns proper time in **geometric units** (meters).
+    /// For SI units (seconds), use [`proper_time_si`].
     fn proper_time(&self, path: &[Vec<f64>]) -> Result<f64, PhysicsError>;
+
+    /// Computes proper time along a worldline in **SI units**.
+    ///
+    /// # Units
+    /// Returns proper time in **seconds**.
+    ///
+    /// # Conversion
+    /// Divides geometric result by `c ≈ 2.998 × 10⁸ m/s`.
+    fn proper_time_si(&self, path: &[Vec<f64>]) -> Result<f64, PhysicsError> {
+        let geometric = self.proper_time(path)?;
+        Ok(geometric / SPEED_OF_LIGHT)
+    }
 
     /// Parallel transports a vector along a path.
     ///
