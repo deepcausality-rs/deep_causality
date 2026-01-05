@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2026" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 //! HKT4 witness and RiemannMap implementation for CurvatureTensor.
@@ -136,10 +136,17 @@ impl From<TensorVector> for Vec<f64> {
 impl RiemannMap<CurvatureTensorWitness> for CurvatureTensorWitness {
     /// Computes curvature contraction R(u,v)w.
     ///
-    /// # Safety
+    /// # Safety — ACKNOWLEDGED GAT Limitation
     ///
-    /// This generic method **unsafely casts** inputs `u`, `v`, `w` to `TensorVector`.
-    /// The caller **MUST** ensure A, B, C are `TensorVector`.
+    /// This generic method uses **unsafe pointer casting** to work around Rust's
+    /// current GAT (Generic Associated Types) limitations that prevent proper
+    /// type enforcement at the trait level.
+    ///
+    /// **Status:** ACKNOWLEDGED. This will be resolved when the new trait solver
+    /// (`-Ztrait-solver=next`) stabilizes, enabling proper static type checks.
+    /// See `deep_causality_tensor` HKT implementation for the same pattern.
+    ///
+    /// **SAFETY CONTRACT:** The caller **MUST** ensure A, B, C are `TensorVector`.
     fn curvature<A, B, C, D>(tensor: CurvatureTensor<A, B, C, D>, u: A, v: B, w: C) -> D
     where
         A: Satisfies<NoConstraint>,

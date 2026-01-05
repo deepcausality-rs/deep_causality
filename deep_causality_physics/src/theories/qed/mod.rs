@@ -274,8 +274,8 @@ impl QedOps for QED {
                 PhysicsError::DimensionMismatch(format!("Failed to create F tensor: {:?}", e))
             })?;
 
-        Ok(GaugeField::new(base, metric, connection, field_strength)
-            .map_err(|e| PhysicsError::TopologyError(e.to_string()))?)
+        GaugeField::new(base, metric, connection, field_strength)
+            .map_err(|e| PhysicsError::TopologyError(e.to_string()))
     }
 
     fn from_components(

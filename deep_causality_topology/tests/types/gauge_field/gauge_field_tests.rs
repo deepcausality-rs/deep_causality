@@ -31,7 +31,8 @@ fn test_gauge_field_new() {
     let field_strength = CausalTensor::from_vec(vec![0.0; 16], &[1, 4, 4, 1]);
 
     let field: GaugeField<U1, f64, f64> =
-        GaugeField::new(manifold, Metric::Minkowski(4), connection, field_strength);
+        GaugeField::new(manifold, Metric::Minkowski(4), connection, field_strength)
+            .expect("Failed to create U1 gauge field");
 
     assert_eq!(field.metric(), Metric::Minkowski(4));
     assert_eq!(field.gauge_group_name(), "U(1)");
@@ -50,20 +51,21 @@ fn test_gauge_field_with_default_metric() {
         manifold.clone(),
         connection.clone(),
         field_strength.clone(),
-    );
+    )
+    .expect("Failed to create U1 field");
 
     // U1 uses West Coast (+---)
     assert!(u1_field.is_west_coast());
     assert!(!u1_field.is_east_coast());
 
-    let gr_field: GaugeField<Lorentz, f64, f64> = GaugeField::with_default_metric(
-        manifold,
-        connection,
-        field_strength, // Dimensions match Lorentz (4D spacetime, 6D lie algebra mismatch but strictly type only checks G)
-                        // Actually Lorentz lie algebra dim is 6, so tensor shapes should ideally match,
-                        // but GaugeField constructors don't strictly validate shape vs G constants yet, relying on caller.
-                        // Ideally we should pass correct shapes.
-    );
+    // Note: This test was updated now that shape validation is in place.
+    // Lorentz has lie_algebra_dim=6, so we need correct tensor shapes.
+    let lorentz_conn = CausalTensor::from_vec(vec![1.0; 24], &[1, 4, 6]); // 4D spacetime, 6D lie algebra
+    let lorentz_fs = CausalTensor::from_vec(vec![0.0; 96], &[1, 4, 4, 6]);
+
+    let gr_field: GaugeField<Lorentz, f64, f64> =
+        GaugeField::with_default_metric(manifold, lorentz_conn, lorentz_fs)
+            .expect("Failed to create Lorentz field");
 
     // Lorentz uses East Coast (-+++)
     // assert!(gr_field.is_east_coast()); // Metric::Generic ordering is (+... -...), need custom ordering for (-+++)
@@ -81,7 +83,8 @@ fn test_gauge_field_getters() {
         Metric::Euclidean(1),
         connection,
         field_strength,
-    );
+    )
+    .expect("Failed to create U1 field");
 
     assert_eq!(field.connection().as_slice()[0], 10.0);
     assert_eq!(field.field_strength().as_slice()[0], 20.0);

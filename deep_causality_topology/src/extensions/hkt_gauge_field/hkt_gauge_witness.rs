@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{GaugeField, GaugeGroup};
+use crate::{GaugeField, GaugeGroup, TopologyError};
 use deep_causality_haft::{HKT3Unbound, NoConstraint, ParametricMonad, Promonad, Satisfies};
 use deep_causality_tensor::CausalTensor;
 use std::marker::PhantomData;
@@ -146,14 +146,24 @@ impl Promonad<GaugeFieldWitness> for GaugeFieldWitness {
     /// This models the field equation coupling where current density J
     /// and potential A combine to produce field strength F.
     ///
-    /// # Implementation
+    /// # Implementation — ACKNOWLEDGED HKT Limitation
     ///
-    /// If both inputs have data, the coupling function is applied element-wise
-    /// to produce the output. If either input is empty, an empty context is returned.
+    /// **Rust Trait Limitation:** The Promonad trait from deep_causality_haft does not
+    /// include `'static` bounds on type parameters. TypeId-based runtime type checking
+    /// requires `'static` bounds. Therefore, we cannot safely invoke the user-provided
+    /// function `f` without potentially unsound transmutation.
+    ///
+    /// **Workaround:** This implementation uses simple element-wise averaging as a
+    /// placeholder. For actual physics computations, use the type-safe `merge_fields()`
+    /// method which enforces `GaugeGroup` bounds and properly invokes the coupling function.
+    ///
+    /// **Status:** ACKNOWLEDGED. Resolution requires either:
+    /// 1. Upstream trait changes to add `'static` bounds to Promonad
+    /// 2. New trait solver (`-Ztrait-solver=next`) for better GAT support
     fn merge<A, B, C, Func>(
         pa: GaugeFieldHKT<A, A, A>,
         pb: GaugeFieldHKT<B, B, B>,
-        mut f: Func,
+        _f: Func,
     ) -> GaugeFieldHKT<C, C, C>
     where
         A: Satisfies<NoConstraint>,
@@ -166,13 +176,6 @@ impl Promonad<GaugeFieldWitness> for GaugeFieldWitness {
             return GaugeFieldHKT::empty();
         };
 
-        // For the general HKT case, we can only merge if we know the concrete types.
-        // Since A, B, C are generic and we store f64 data internally, we apply
-        // a simplified merge: average the data (placeholder for actual physics).
-        //
-        // For production physics, use `merge_fields()` which enforces GaugeGroup.
-        let _ = &mut f; // Acknowledge the function (can't invoke without concrete types)
-
         let conn_len = data_a
             .connection_data
             .len()
@@ -182,12 +185,14 @@ impl Promonad<GaugeFieldWitness> for GaugeFieldWitness {
             .len()
             .min(data_b.field_strength_data.len());
 
+        // Placeholder: element-wise average
+        // For production physics, use merge_fields() which is type-safe.
         let merged_conn: Vec<f64> = data_a
             .connection_data
             .iter()
             .zip(data_b.connection_data.iter())
             .take(conn_len)
-            .map(|(a, b)| (a + b) / 2.0) // Simple average for HKT placeholder
+            .map(|(a, b)| (a + b) / 2.0)
             .collect();
 
         let merged_fs: Vec<f64> = data_a
@@ -268,12 +273,20 @@ impl ParametricMonad<GaugeFieldWitness> for GaugeFieldWitness {
     /// Composes gauge transformations: if we have a field in gauge S1→S2
     /// and a transformation S2→S3, we get a field in gauge S1→S3.
     ///
-    /// # Implementation
+    /// # Implementation — ACKNOWLEDGED HKT Limitation
     ///
-    /// Applies the transformation function to extract and transform the data.
+    /// **Rust Trait Limitation:** The ParametricMonad trait does not include `'static`
+    /// bounds on type parameters. TypeId-based runtime type checking requires `'static`.
+    /// Therefore, we cannot safely invoke the user-provided function `f`.
+    ///
+    /// **Workaround:** This implementation propagates data unchanged. For actual physics
+    /// transformations, use the type-safe `gauge_transform()` method which enforces
+    /// `GaugeGroup` bounds and properly applies the transformation.
+    ///
+    /// **Status:** ACKNOWLEDGED. Resolution requires upstream trait changes.
     fn ibind<S1, S2, S3, A, B, Func>(
         m: GaugeFieldHKT<S1, S2, A>,
-        mut f: Func,
+        _f: Func,
     ) -> GaugeFieldHKT<S1, S3, B>
     where
         S1: Satisfies<NoConstraint>,
@@ -288,11 +301,8 @@ impl ParametricMonad<GaugeFieldWitness> for GaugeFieldWitness {
             return GaugeFieldHKT::empty();
         };
 
-        // We can't invoke f without a concrete A value.
-        // For the HKT abstraction, we propagate the data unchanged.
-        // For actual gauge transformations, use `gauge_transform()`.
-        let _ = &mut f;
-
+        // Placeholder: propagate data unchanged
+        // For production physics transformations, use gauge_transform()
         GaugeFieldHKT::from_data(
             data.connection_data.clone(),
             data.field_strength_data.clone(),
@@ -319,12 +329,12 @@ impl GaugeFieldWitness {
     ///
     /// # Returns
     ///
-    /// A new gauge field with coupled field strength.
+    /// A new gauge field with coupled field strength, or error if shape validation fails.
     pub fn merge_fields<G, A, B, F, Func>(
         current: &GaugeField<G, A, A>,
         potential: &GaugeField<G, B, B>,
         coupling: Func,
-    ) -> GaugeField<G, F, F>
+    ) -> Result<GaugeField<G, F, F>, TopologyError>
     where
         G: GaugeGroup,
         A: Clone,
@@ -373,10 +383,14 @@ impl GaugeFieldWitness {
     /// For a gauge transformation g:
     /// - Connection: A' = gAg⁻¹ + g(∂g⁻¹)
     /// - Field strength: F' = gFg⁻¹ (covariant transformation)
+    ///
+    /// # Errors
+    ///
+    /// Returns `TopologyError::GaugeFieldError` if shape validation fails.
     pub fn gauge_transform<G, A, F, Func>(
         field: &GaugeField<G, A, A>,
         transform: Func,
-    ) -> GaugeField<G, F, F>
+    ) -> Result<GaugeField<G, F, F>, TopologyError>
     where
         G: GaugeGroup,
         A: Clone,
@@ -409,7 +423,25 @@ impl GaugeFieldWitness {
 
     /// Computes field strength from connection (for abelian gauge fields).
     ///
-    /// For abelian groups: F = dA (exterior derivative of potential)
+    /// # Mathematical Definition
+    ///
+    /// For abelian groups (U(1)):
+    /// ```text
+    /// F_μν = ∂_μ A_ν - ∂_ν A_μ
+    /// ```
+    ///
+    /// This is the exterior derivative of the connection 1-form: F = dA.
+    ///
+    /// # Implementation
+    ///
+    /// Uses finite differences to approximate derivatives between adjacent
+    /// spacetime points. For single-point fields, uses the connection values
+    /// directly to construct the antisymmetric field strength tensor.
+    ///
+    /// # Returns
+    ///
+    /// - `Some(F_μν)` for abelian gauge groups
+    /// - `None` for non-abelian groups (require additional A∧A term)
     pub fn compute_field_strength_abelian<G>(
         field: &GaugeField<G, f64, f64>,
     ) -> Option<CausalTensor<f64>>
@@ -423,18 +455,80 @@ impl GaugeFieldWitness {
         // For abelian: F_μν = ∂_μA_ν - ∂_νA_μ
         let connection = field.connection();
         let dim = G::SPACETIME_DIM;
+        let lie_dim = G::LIE_ALGEBRA_DIM;
 
-        // Compute antisymmetric field strength
-        let num_points = if connection.shape().is_empty() {
+        // Get connection shape [num_points, spacetime_dim, lie_dim]
+        let conn_shape = connection.shape();
+        let num_points = if conn_shape.is_empty() {
             1
         } else {
-            connection.shape()[0]
+            conn_shape[0]
         };
-        let lie_dim = G::LIE_ALGEBRA_DIM;
 
         // F has shape [num_points, dim, dim, lie_dim]
         let total = num_points * dim * dim * lie_dim;
-        let fs_data = vec![0.0; total];
+        let mut fs_data = vec![0.0; total];
+
+        let conn_data = connection.as_slice();
+
+        // Compute antisymmetric field strength F_μν = ∂_μA_ν - ∂_νA_μ
+        // For each point, each Lie algebra index
+        for p in 0..num_points {
+            for a in 0..lie_dim {
+                for mu in 0..dim {
+                    for nu in 0..dim {
+                        // F_μν^a = ∂_μ A_ν^a - ∂_ν A_μ^a
+                        // For discrete manifold, approximate derivative using
+                        // the connection values at the current point.
+
+                        // Connection index: A_μ^a at point p
+                        // Shape [num_points, spacetime_dim, lie_dim]
+                        // Linear index: p * (dim * lie_dim) + mu * lie_dim + a
+                        let a_mu_idx = p * (dim * lie_dim) + mu * lie_dim + a;
+                        let a_nu_idx = p * (dim * lie_dim) + nu * lie_dim + a;
+
+                        let a_mu = conn_data.get(a_mu_idx).copied().unwrap_or(0.0);
+                        let a_nu = conn_data.get(a_nu_idx).copied().unwrap_or(0.0);
+
+                        // For a single-point field, we construct the antisymmetric
+                        // part from the connection components.
+                        // F_μν = A_μ - A_ν (simplified for uniform grid with unit spacing)
+                        // This gives F_μν = -F_νμ automatically.
+
+                        // More accurate: use finite difference if multiple points exist
+                        let f_mu_nu = if num_points > 1 && p < num_points - 1 {
+                            // Forward difference approximation
+                            let next_a_nu_idx = (p + 1) * (dim * lie_dim) + nu * lie_dim + a;
+                            let next_a_mu_idx = (p + 1) * (dim * lie_dim) + mu * lie_dim + a;
+
+                            let next_a_nu = conn_data.get(next_a_nu_idx).copied().unwrap_or(a_nu);
+                            let next_a_mu = conn_data.get(next_a_mu_idx).copied().unwrap_or(a_mu);
+
+                            // ∂_μ A_ν ≈ (A_ν(x+Δx_μ) - A_ν(x)) / Δx
+                            // Assuming unit spacing Δx = 1
+                            let d_mu_a_nu = next_a_nu - a_nu;
+                            let d_nu_a_mu = next_a_mu - a_mu;
+
+                            d_mu_a_nu - d_nu_a_mu
+                        } else {
+                            // For single point: antisymmetrize the connection components
+                            // This gives 0 on diagonal and ±(A_μ - A_ν) off-diagonal
+                            a_nu - a_mu
+                        };
+
+                        // Field strength index: F_μν^a at point p
+                        // Shape [num_points, dim, dim, lie_dim]
+                        // Linear index: p * (dim * dim * lie_dim) + mu * (dim * lie_dim) + nu * lie_dim + a
+                        let fs_idx =
+                            p * (dim * dim * lie_dim) + mu * (dim * lie_dim) + nu * lie_dim + a;
+
+                        if fs_idx < total {
+                            fs_data[fs_idx] = f_mu_nu;
+                        }
+                    }
+                }
+            }
+        }
 
         Some(CausalTensor::from_vec(
             fs_data,

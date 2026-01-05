@@ -34,10 +34,12 @@ fn test_gauge_transform() {
     let field_strength = CausalTensor::from_vec(vec![0.0; 16], &[1, 4, 4, 1]);
 
     let field: GaugeField<U1, f64, f64> =
-        GaugeField::with_default_metric(manifold, connection, field_strength);
+        GaugeField::with_default_metric(manifold, connection, field_strength)
+            .expect("Failed to create field");
 
     // Apply transformation A -> 2*A
-    let transformed = GaugeFieldWitness::gauge_transform(&field, |x| x * 2.0);
+    let transformed =
+        GaugeFieldWitness::gauge_transform(&field, |x| x * 2.0).expect("Transform failed");
 
     // Check transformation applied
     assert_eq!(transformed.connection().as_slice()[0], 2.0);
@@ -56,11 +58,14 @@ fn test_merge_fields() {
     let fs = CausalTensor::from_vec(vec![0.0; 4], &[1, 2, 2, 1]);
 
     let field_a: GaugeField<U1, f64, f64> =
-        GaugeField::with_default_metric(manifold.clone(), conn_a, fs.clone());
-    let field_b: GaugeField<U1, f64, f64> = GaugeField::with_default_metric(manifold, conn_b, fs);
+        GaugeField::with_default_metric(manifold.clone(), conn_a, fs.clone())
+            .expect("Failed to create field_a");
+    let field_b: GaugeField<U1, f64, f64> =
+        GaugeField::with_default_metric(manifold, conn_b, fs).expect("Failed to create field_b");
 
     // Merge: A_new = A + B
-    let merged = GaugeFieldWitness::merge_fields(&field_a, &field_b, |a, b| a + b);
+    let merged =
+        GaugeFieldWitness::merge_fields(&field_a, &field_b, |a, b| a + b).expect("Merge failed");
 
     // 1+3 = 4, 2+4 = 6
     assert_eq!(merged.connection().as_slice()[0], 4.0);
@@ -80,7 +85,8 @@ fn test_abelian_field_strength() {
     let field_strength = CausalTensor::from_vec(vec![0.0; 16], &[1, 4, 4, 1]);
 
     let field: GaugeField<U1, f64, f64> =
-        GaugeField::with_default_metric(manifold, connection, field_strength);
+        GaugeField::with_default_metric(manifold, connection, field_strength)
+            .expect("Failed to create field");
 
     let fs_opt = GaugeFieldWitness::compute_field_strength_abelian(&field);
     assert!(fs_opt.is_some());
