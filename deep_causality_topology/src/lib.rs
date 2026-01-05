@@ -27,11 +27,11 @@ pub use crate::extensions::hkt_simplicial_complex::ChainWitness;
 pub use crate::extensions::hkt_topology::TopologyWitness;
 
 // Re-export gauge field HKT extensions
-pub use crate::extensions::adjunction_stokes::{
+pub use crate::extensions::hkt_gauge_field::hkt_curvature::{CurvatureTensorWitness, TensorVector};
+pub use crate::extensions::hkt_gauge_field::hkt_gauge_witness::GaugeFieldWitness;
+pub use extensions::hkt_gauge_field::hkt_adjunction_stokes::{
     BoundaryWitness, ExteriorDerivativeWitness, StokesAdjunction, StokesContext,
 };
-pub use crate::extensions::hkt_curvature::{CurvatureTensorWitness, TensorVector};
-pub use crate::extensions::hkt_gauge_field::GaugeFieldWitness;
 
 // Re-export traits
 pub use crate::traits::base_topology::BaseTopology;

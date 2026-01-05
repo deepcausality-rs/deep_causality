@@ -3,9 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-pub mod adjunction_stokes;
 pub mod hkt_cell_complex;
-pub mod hkt_curvature;
 pub mod hkt_gauge_field;
 pub mod hkt_graph;
 pub mod hkt_hypergraph;
