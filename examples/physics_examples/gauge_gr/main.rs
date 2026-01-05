@@ -19,17 +19,19 @@
 //!     .bind_or_error(stage_adm_evolution, ...)          // ADM 3+1 formalism
 //!     .bind_or_error(stage_horizon_detection, ...)      // Event horizons
 //! ```
+
 use deep_causality_core::{CausalEffectPropagationProcess, EffectValue, PropagatingEffect};
-use deep_causality_physics::theories::gr::AdmState;
-use deep_causality_physics::{AdmOps, EastCoastMetric, GR, GrOps, LorentzianMetric};
+use deep_causality_physics::{AdmOps, GrOps, LorentzianMetric};
+use deep_causality_physics::{AdmState, EastCoastMetric, GR};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{GaugeField, Manifold, Simplex, SimplicialComplexBuilder};
+use std::error::Error;
 
 // =============================================================================
 // MAIN: Pipeline Composition via Causal Monad
 // =============================================================================
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn Error>> {
     println!("═══════════════════════════════════════════════════════════════");
     println!("  General Relativity Spacetime Analysis");
     println!("═══════════════════════════════════════════════════════════════\n");

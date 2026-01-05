@@ -20,7 +20,6 @@ deep_causality_physics = { path = "../../deep_causality_physics", features = [
 deep_causality_multivector = { path = "../../deep_causality_multivector" }
 deep_causality_tensor = { path = "../../deep_causality_tensor" }
 deep_causality_topology = { path = "../../deep_causality_topology" }
-deep_causality_metric = { path = "../../deep_causality_metric" }
 deep_causality_num = { path = "../../deep_causality_num" }
 deep_causality_sparse = { path = "../../deep_causality_sparse" }
 deep_causality_rand = { path = "../../deep_causality_rand", features = [
