@@ -535,4 +535,116 @@ impl GaugeFieldWitness {
             &[num_points, dim, dim, lie_dim],
         ))
     }
+
+    /// Computes field strength for non-abelian gauge fields (e.g. SU(2), SU(3)).
+    ///
+    /// # Mathematical Definition
+    ///
+    /// ```text
+    /// F_μν^a = ∂_μ A_ν^a - ∂_ν A_μ^a + g f^{abc} A_μ^b A_ν^c
+    /// ```
+    ///
+    /// - First two terms: Abelian derivative part
+    /// - Third term: Non-abelian self-interaction (commutator)
+    /// - g: Coupling constant
+    /// - f^{abc}: Structure constants of the Lie algebra
+    ///
+    /// # Arguments
+    ///
+    /// * `field` - The non-abelian gauge field
+    /// * `coupling` - The coupling constant g
+    ///
+    /// # Returns
+    ///
+    /// - The computed field strength tensor F_μν^a
+    pub fn compute_field_strength_non_abelian<G>(
+        field: &GaugeField<G, f64, f64>,
+        coupling: f64,
+    ) -> CausalTensor<f64>
+    where
+        G: GaugeGroup,
+    {
+        let connection = field.connection();
+        let dim = G::SPACETIME_DIM;
+        let lie_dim = G::LIE_ALGEBRA_DIM;
+
+        let conn_shape = connection.shape();
+        let num_points = if conn_shape.is_empty() {
+            1
+        } else {
+            conn_shape[0]
+        };
+
+        let total = num_points * dim * dim * lie_dim;
+        let mut fs_data = vec![0.0; total];
+        let conn_data = connection.as_slice();
+
+        for p in 0..num_points {
+            for a in 0..lie_dim {
+                for mu in 0..dim {
+                    for nu in 0..dim {
+                        // 1. Abelian part: ∂_μ A_ν^a - ∂_ν A_μ^a
+                        // -----------------------------------------
+                        let a_mu_idx = p * (dim * lie_dim) + mu * lie_dim + a;
+                        let a_nu_idx = p * (dim * lie_dim) + nu * lie_dim + a;
+
+                        let a_mu_val = conn_data.get(a_mu_idx).copied().unwrap_or(0.0);
+                        let a_nu_val = conn_data.get(a_nu_idx).copied().unwrap_or(0.0);
+
+                        let abelian_term = if num_points > 1 && p < num_points - 1 {
+                            // Forward difference approximation
+                            let next_pt_offset = dim * lie_dim;
+                            let a_nu_next = conn_data
+                                .get(a_nu_idx + next_pt_offset)
+                                .copied()
+                                .unwrap_or(a_mu_val);
+                            let a_mu_next = conn_data
+                                .get(a_mu_idx + next_pt_offset)
+                                .copied()
+                                .unwrap_or(a_nu_val);
+
+                            let d_mu_a_nu = a_nu_next - a_nu_val;
+                            let d_nu_a_mu = a_mu_next - a_mu_val;
+                            d_mu_a_nu - d_nu_a_mu
+                        } else {
+                            // Single point approx (commutator-like)
+                            a_nu_val - a_mu_val
+                        };
+
+                        // 2. Non-Abelian part: g f^{abc} A_μ^b A_ν^c
+                        // ------------------------------------------
+                        let mut non_abelian_term = 0.0;
+                        if coupling.abs() > 1e-12 {
+                            for b in 0..lie_dim {
+                                for c in 0..lie_dim {
+                                    let f_abc = G::structure_constant(a, b, c);
+                                    if f_abc.abs() > 1e-12 {
+                                        let a_mu_b = conn_data
+                                            .get(p * (dim * lie_dim) + mu * lie_dim + b)
+                                            .copied()
+                                            .unwrap_or(0.0);
+                                        let a_nu_c = conn_data
+                                            .get(p * (dim * lie_dim) + nu * lie_dim + c)
+                                            .copied()
+                                            .unwrap_or(0.0);
+
+                                        non_abelian_term += coupling * f_abc * a_mu_b * a_nu_c;
+                                    }
+                                }
+                            }
+                        }
+
+                        let f_val = abelian_term + non_abelian_term;
+                        let idx =
+                            p * (dim * dim * lie_dim) + mu * (dim * lie_dim) + nu * lie_dim + a;
+                        if idx < total {
+                            fs_data[idx] = f_val;
+                        }
+                    }
+                }
+            }
+        }
+
+        CausalTensor::from_vec(fs_data, &[num_points, dim, dim, lie_dim])
+    }
 }

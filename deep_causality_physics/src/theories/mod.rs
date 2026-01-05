@@ -13,9 +13,9 @@
 pub mod alias;
 pub mod electroweak;
 pub mod qed;
-pub mod weak;
+pub mod weak_force;
 
 pub use alias::*;
 pub use electroweak::*;
 pub use qed::*;
-pub use weak::*;
+pub use weak_force::*;

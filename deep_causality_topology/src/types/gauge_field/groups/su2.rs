@@ -35,4 +35,22 @@ impl GaugeGroup for SU2 {
     fn name() -> &'static str {
         "SU(2)"
     }
+
+    /// Returns the SU(2) structure constant ε_{abc}.
+    fn structure_constant(a: usize, b: usize, c: usize) -> f64 {
+        match (a, b, c) {
+            // Permutations of 123 (mapped to 012)
+            (0, 1, 2) => 1.0,
+            (1, 2, 0) => 1.0,
+            (2, 0, 1) => 1.0,
+
+            // Anti-permutations
+            (0, 2, 1) => -1.0,
+            (2, 1, 0) => -1.0,
+            (1, 0, 2) => -1.0,
+
+            // All others are zero
+            _ => 0.0,
+        }
+    }
 }

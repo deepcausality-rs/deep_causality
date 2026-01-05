@@ -66,4 +66,15 @@ pub trait GaugeGroup: Clone + Debug + Send + Sync + 'static {
     fn default_metric() -> Metric {
         Metric::Minkowski(Self::SPACETIME_DIM)
     }
+
+    /// Returns the structure constant f^{abc} for the Lie algebra.
+    ///
+    /// Defined by the commutator relation: [T^a, T^b] = i f^{abc} T^c
+    ///
+    /// # Default
+    /// Returns 0.0 (valid for Abelian groups like U(1)).
+    /// Overridden by non-Abelian groups (SU(2), SU(3), etc.).
+    fn structure_constant(_a: usize, _b: usize, _c: usize) -> f64 {
+        0.0
+    }
 }
