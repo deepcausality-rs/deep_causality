@@ -13,15 +13,10 @@
 //! - Mass generation and ρ-parameter
 //! - Cross-section calculations
 
-use deep_causality_metric::Metric;
-use deep_causality_physics::theories::{
-    ALPHA_EM, EM_COUPLING, ElectroweakField, ElectroweakOps, ElectroweakParams, HIGGS_MASS,
-    TOP_MASS,
-};
+use deep_causality_physics::theories::{ElectroweakField, ElectroweakOps, ElectroweakParams};
+use deep_causality_physics::{ALPHA_EM, EM_COUPLING, HIGGS_MASS, TOP_MASS};
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{
-    BaseTopology, GaugeField, Manifold, Simplex, SimplicialComplexBuilder,
-};
+use deep_causality_topology::{BaseTopology, Manifold, Simplex, SimplicialComplexBuilder};
 
 // ============================================================================
 // Test Helpers
@@ -37,10 +32,9 @@ fn create_electroweak_field() -> ElectroweakField {
     // Electroweak: SU(2)×U(1), spacetime_dim=4, lie_algebra_dim=4
     let num_points = base.len();
     let conn = CausalTensor::zeros(&[num_points, 4, 4]);
-    let strength = CausalTensor::zeros(&[num_points, 4, 4, 4]);
 
-    GaugeField::new(base, Metric::Minkowski(4), conn, strength)
-        .expect("Failed to create ElectroweakField")
+    // Use constructor from ElectroweakOps specifically for convention compliance
+    ElectroweakField::new_field(base, conn).expect("Failed to create ElectroweakField")
 }
 
 // ============================================================================

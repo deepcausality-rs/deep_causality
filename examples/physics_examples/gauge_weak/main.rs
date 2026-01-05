@@ -15,7 +15,7 @@
 //! 4. **Analysis**: Lifetime and width calculations
 
 use deep_causality_core::{CausalEffectPropagationProcess, EffectValue, PropagatingEffect};
-use deep_causality_physics::{WeakField, WeakIsospin, WeakOps};
+use deep_causality_physics::{WeakField, WeakFieldOps, WeakIsospin};
 
 // =============================================================================
 // MAIN

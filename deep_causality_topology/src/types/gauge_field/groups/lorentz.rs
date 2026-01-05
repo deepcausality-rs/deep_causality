@@ -49,9 +49,50 @@ impl GaugeGroup for Lorentz {
     /// East Coast convention (-+++) for GR.
     fn default_metric() -> Metric {
         // East Coast: time is negative, space is positive
-        // Metric::from_signature(p, q, r) where p=positive, q=negative, r=degenerate
-        // For East Coast (-+++): one negative (time), three positive (space)
-        // So we use (3, 1, 0) - three +1, one -1
+        // Metric::Generic { p, q, r } where p=positive, q=negative, r=degenerate
+        // For East Coast (-+++): three +1 (space), one -1 (time)
         Metric::Generic { p: 3, q: 1, r: 0 }
+    }
+
+    /// Returns the SO(3,1) Lorentz algebra structure constants f^{abc}.
+    ///
+    /// # Generator Ordering
+    /// Indices 0-2: Rotations J₁, J₂, J₃
+    /// Indices 3-5: Boosts K₁, K₂, K₃
+    ///
+    /// # Commutation Relations
+    /// ```text
+    /// [Jᵢ, Jⱼ] = εᵢⱼₖ Jₖ      (rotations form SO(3))
+    /// [Jᵢ, Kⱼ] = εᵢⱼₖ Kₖ      (boosts transform as vectors)
+    /// [Kᵢ, Kⱼ] = -εᵢⱼₖ Jₖ     (boosts don't close on themselves)
+    /// ```
+    fn structure_constant(a: usize, b: usize, c: usize) -> f64 {
+        // Levi-Civita helper for indices 0,1,2
+        let epsilon = |i: usize, j: usize, k: usize| -> f64 {
+            match (i, j, k) {
+                (0, 1, 2) | (1, 2, 0) | (2, 0, 1) => 1.0,
+                (0, 2, 1) | (2, 1, 0) | (1, 0, 2) => -1.0,
+                _ => 0.0,
+            }
+        };
+
+        // Check which block: J-J, J-K, K-K
+        let a_is_rotation = a < 3;
+        let b_is_rotation = b < 3;
+        let c_is_rotation = c < 3;
+
+        match (a_is_rotation, b_is_rotation, c_is_rotation) {
+            // [Jᵢ, Jⱼ] = εᵢⱼₖ Jₖ (rotation-rotation → rotation)
+            (true, true, true) => epsilon(a, b, c),
+
+            // [Jᵢ, Kⱼ] = εᵢⱼₖ Kₖ (rotation-boost → boost)
+            (true, false, false) if c >= 3 => epsilon(a, b - 3, c - 3),
+            (false, true, false) if c >= 3 => -epsilon(a - 3, b, c - 3), // antisymmetry
+
+            // [Kᵢ, Kⱼ] = -εᵢⱼₖ Jₖ (boost-boost → rotation with minus sign)
+            (false, false, true) if a >= 3 && b >= 3 => -epsilon(a - 3, b - 3, c),
+
+            _ => 0.0,
+        }
     }
 }

@@ -29,9 +29,9 @@ These are built on top of the `GaugeField<G, A, F>` infrastructure provided by `
 | **QED**                | U(1)                 | `theories::qed`  | Completed |
 | **Weak Force**         | SU(2)                | `theories::weak` | Completed |
 | **Electroweak**        | SU(2) × U(1)         | `theories::ew`   | Completed |
+| **General Relativity** | SO(3,1) / Lorentz    | `theories::gr`   | Planned   |
 | **QCD**                | SU(3)                | `theories::qcd`  | Planned   |
 | **Standard Model**     | SU(3) × SU(2) × U(1) | `theories::sm`   | Planned   |
-| **General Relativity** | SO(3,1) / Lorentz    | `theories::gr`   | Planned   |
 
 ---
 

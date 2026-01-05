@@ -18,3 +18,6 @@ Write a comprehensive report, identify gaps and document direct, specific ationa
 
 topology_gauge_theories_review.md
 for me to review
+
+TODO:  
+solving Einstein equations on complex manifolds.

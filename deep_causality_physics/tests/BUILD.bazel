@@ -288,6 +288,30 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "theories",
+    srcs = glob([
+        "theories/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_physics",
+        # Internal dependencies
+        "//deep_causality_metric",
+        "//deep_causality_multivector",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_test_suite(
     name = "thermodynamics",
     srcs = glob([
         "thermodynamics/*_tests.rs",

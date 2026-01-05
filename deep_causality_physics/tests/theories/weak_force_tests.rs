@@ -12,15 +12,12 @@
 //! - Weak isospin representations
 //! - SU(2) generators (Pauli matrices)
 
-use deep_causality_metric::Metric;
 use deep_causality_physics::theories::{
-    FERMI_CONSTANT, HIGGS_VEV, SIN2_THETA_W, W_MASS, WeakField, WeakIsospin, WeakOps, Z_MASS,
-    pauli_matrices, su2_generators,
+    WeakField, WeakFieldOps, WeakIsospin, pauli_matrices, su2_generators,
 };
+use deep_causality_physics::{FERMI_CONSTANT, HIGGS_VEV, SIN2_THETA_W, W_MASS, Z_MASS};
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{
-    BaseTopology, GaugeField, Manifold, Simplex, SimplicialComplexBuilder,
-};
+use deep_causality_topology::{BaseTopology, Manifold, Simplex, SimplicialComplexBuilder};
 
 // ============================================================================
 // Test Helpers
@@ -35,10 +32,11 @@ fn create_weak_field() -> WeakField {
 
     // SU(2): spacetime_dim=4, lie_algebra_dim=3
     let num_points = base.len();
+    // Connection shape: [num_points, spacetime_dim, lie_dim]
     let conn = CausalTensor::zeros(&[num_points, 4, 3]);
-    let strength = CausalTensor::zeros(&[num_points, 4, 4, 3]);
 
-    GaugeField::new(base, Metric::Minkowski(4), conn, strength).expect("Failed to create WeakField")
+    // Use constructor from WeakOps specifically for convention compliance
+    WeakField::new_field(base, conn).expect("Failed to create WeakField")
 }
 
 // ============================================================================

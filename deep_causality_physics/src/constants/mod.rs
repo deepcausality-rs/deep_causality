@@ -12,12 +12,16 @@
 /// * Other values are experimental measurements with associated uncertainties (ignored here for standard f64 precision).
 pub(crate) mod atomic;
 pub(crate) mod condensed;
+pub(crate) mod electro_weak;
 pub(crate) mod electromagnetic;
+pub(crate) mod particle;
 pub(crate) mod thermodynamics;
 pub(crate) mod universal;
 
 pub use atomic::*;
 pub use condensed::*;
+pub use electro_weak::*;
 pub use electromagnetic::*;
+pub use particle::*;
 pub use thermodynamics::*;
 pub use universal::*;
