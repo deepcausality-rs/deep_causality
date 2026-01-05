@@ -7,12 +7,17 @@
 // GrOps Implementation for GR (GaugeField<Lorentz, f64, f64>)
 // =============================================================================
 
+use crate::theories::gr::gr_utils;
 use crate::{
-    GR, GrOps, PhysicsError, einstein_tensor_kernel, geodesic_integrator_kernel,
+    GR, GeodesicState, GrOps, PhysicsError, einstein_tensor_kernel, geodesic_integrator_kernel,
     parallel_transport_kernel, proper_time_kernel,
 };
-use deep_causality_metric::LorentzianMetric;
+use deep_causality_haft::RiemannMap;
+use deep_causality_metric::{EastCoastMetric, LorentzianMetric};
 use deep_causality_tensor::CausalTensor;
+use deep_causality_topology::{
+    CurvatureSymmetry, CurvatureTensor, CurvatureTensorVector, CurvatureTensorWitness, TensorVector,
+};
 
 impl GrOps for GR {
     fn ricci_tensor(&self) -> Result<CausalTensor<f64>, PhysicsError> {
@@ -20,12 +25,12 @@ impl GrOps for GR {
         let dim = 4;
 
         // Use East Coast metric type info for the wrapper (needed for structure, though unused for Ricci contraction)
-        let metric_sig = deep_causality_metric::EastCoastMetric::minkowski_4d().into_metric();
+        let metric_sig = EastCoastMetric::minkowski_4d().into_metric();
 
-        let ct = deep_causality_topology::CurvatureTensor::<(), (), (), ()>::new(
+        let ct = CurvatureTensor::<(), (), (), ()>::new(
             riemann.clone(),
             metric_sig,
-            deep_causality_topology::CurvatureSymmetry::Riemann,
+            CurvatureSymmetry::Riemann,
             dim,
         );
 
@@ -38,29 +43,22 @@ impl GrOps for GR {
         let ricci = self.ricci_tensor()?;
         let ricci_data = ricci.as_slice();
 
-        // Use the DYNAMIC metric from the field for the scalar contraction
-        // (CurvatureTensor::ricci_scalar assumes static Minkowski metric, which is incorrect for GR)
+        // Use the metric from the field for the scalar contraction
         let metric = self.metric_tensor();
-        let metric_data = metric.as_slice();
         let dim = 4;
 
+        // Full 4x4 Matrix Inversion
+        let inv_metric = gr_utils::invert_4x4(metric)?;
+
         let mut scalar = 0.0;
+        // R = g^μν R_μν
         for mu in 0..dim {
             for nu in 0..dim {
-                // R = g^μν R_μν
-                // We need inverse metric g^μν.
-                // Assuming diagonal metric for basic compatibility with current tests conventions
-                // TODO: Implement full matrix inversion for off-diagonal metrics
-                if mu == nu {
-                    let g_mu_mu = metric_data.get(mu * dim + mu).copied().unwrap_or(1.0);
-                    let g_inv = if g_mu_mu.abs() > 1e-12 {
-                        1.0 / g_mu_mu
-                    } else {
-                        0.0
-                    };
-                    let r_mu_mu = ricci_data.get(mu * dim + mu).copied().unwrap_or(0.0);
-                    scalar += g_inv * r_mu_mu;
-                }
+                // Flattened index [mu, nu]
+                let idx = mu * dim + nu;
+                let g_upper = inv_metric[idx];
+                let r_lower = ricci_data.get(idx).copied().unwrap_or(0.0);
+                scalar += g_upper * r_lower;
             }
         }
 
@@ -70,19 +68,107 @@ impl GrOps for GR {
     fn einstein_tensor(&self) -> Result<CausalTensor<f64>, PhysicsError> {
         let ricci = self.ricci_tensor()?;
         let scalar = self.ricci_scalar()?;
-        // Delegate to kernel or manual construction
         einstein_tensor_kernel(&ricci, scalar, self.metric_tensor())
     }
 
     fn kretschmann_scalar(&self) -> Result<f64, PhysicsError> {
         let riemann = self.field_strength();
-        let riemann_data = riemann.as_slice();
+        let r_data = riemann.as_slice(); // R_abcd
+        let dim = 4;
 
-        // Minimal implementation assuming sum of squares usage (matching CurvatureTensor logic but locally)
-        // Note: Full Lorentzian contraction requires inverse metric raising, pending tensor algebra expansion.
+        if r_data.len() < dim * dim * dim * dim {
+            return Err(PhysicsError::DimensionMismatch(
+                "Mapping Lie Algebra curvature to Geometric curvature requires expansion.".into(),
+            ));
+        }
+
+        // 1. Get Inverse Metric
+        let metric = self.metric_tensor();
+        let inv_g = gr_utils::invert_4x4(metric)?;
+
+        // Helper to index flat 4D array
+        let idx4 = |a, b, c, d| ((a * dim + b) * dim + c) * dim + d;
+
+        // Storage for intermediate raised tensors
+        let mut r_raised = r_data.to_vec(); // Start with R_abcd
+        let mut temp = vec![0.0; dim * dim * dim * dim];
+
+        // Raise 1st index: R^a_bcd = g^am R_mbcd
+        for a in 0..dim {
+            for b in 0..dim {
+                for c in 0..dim {
+                    for d in 0..dim {
+                        let mut sum = 0.0;
+                        for m in 0..dim {
+                            // g^am * R_mbcd
+                            sum += inv_g[a * dim + m] * r_raised[idx4(m, b, c, d)];
+                        }
+                        temp[idx4(a, b, c, d)] = sum;
+                    }
+                }
+            }
+        }
+        r_raised.copy_from_slice(&temp);
+
+        // Raise 2nd index: R^ab_cd = g^bn R^a_ncd
+        for a in 0..dim {
+            for b in 0..dim {
+                for c in 0..dim {
+                    for d in 0..dim {
+                        let mut sum = 0.0;
+                        for n in 0..dim {
+                            sum += inv_g[b * dim + n] * r_raised[idx4(a, n, c, d)];
+                        }
+                        temp[idx4(a, b, c, d)] = sum;
+                    }
+                }
+            }
+        }
+        r_raised.copy_from_slice(&temp);
+
+        // Raise 3rd index: R^abc_d = g^cr R^ab_rd
+        for a in 0..dim {
+            for b in 0..dim {
+                for c in 0..dim {
+                    for d in 0..dim {
+                        let mut sum = 0.0;
+                        for r in 0..dim {
+                            sum += inv_g[c * dim + r] * r_raised[idx4(a, b, r, d)];
+                        }
+                        temp[idx4(a, b, c, d)] = sum;
+                    }
+                }
+            }
+        }
+        r_raised.copy_from_slice(&temp);
+
+        // Raise 4th index: R^abcd = g^ds R^abc_s
+        for a in 0..dim {
+            for b in 0..dim {
+                for c in 0..dim {
+                    for d in 0..dim {
+                        let mut sum = 0.0;
+                        for s in 0..dim {
+                            sum += inv_g[d * dim + s] * r_raised[idx4(a, b, c, s)];
+                        }
+                        temp[idx4(a, b, c, d)] = sum;
+                    }
+                }
+            }
+        }
+        r_raised.copy_from_slice(&temp); // Now r_raised holds R^abcd
+
+        // Final Contraction: K = R_abcd * R^abcd
         let mut k = 0.0;
-        for item in riemann_data {
-            k += item * item;
+        // Verify lengths match before iteration to prevent panic
+        if r_data.len() != r_raised.len() {
+            return Err(PhysicsError::DimensionMismatch(
+                "Riemann tensor data length mismatch".into(),
+            ));
+        }
+
+        for i in 0..r_data.len() {
+            k += r_data[i] * r_raised[i];
         }
 
         Ok(k)
@@ -95,34 +181,25 @@ impl GrOps for GR {
     ) -> Result<Vec<f64>, PhysicsError> {
         let riemann = self.field_strength();
         let dim = 4;
-        let metric_sig = deep_causality_metric::EastCoastMetric::minkowski_4d().into_metric();
+        let metric_sig = EastCoastMetric::minkowski_4d().into_metric();
 
         // Use TensorVector for HKT safety contract
-        let u = deep_causality_topology::TensorVector::new(velocity);
-        let v = deep_causality_topology::TensorVector::new(separation);
+        let u = TensorVector::new(velocity);
+        let v = TensorVector::new(separation);
         // Note: u and v are cloned for the calls as HKT consumes them by value in this specific impl
         let u_w = u.clone();
 
-        // Construct CurvatureTensor with correct phantom types for HKT witness
-        let ct = deep_causality_topology::CurvatureTensor::<
-            deep_causality_topology::TensorVector,
-            deep_causality_topology::TensorVector,
-            deep_causality_topology::TensorVector,
-            deep_causality_topology::TensorVector,
-        >::new(
+        // Construct CurvatureTensorVectorfor HKT witness
+        let ct = CurvatureTensorVector::new(
             riemann.clone(),
             metric_sig,
-            deep_causality_topology::CurvatureSymmetry::Riemann,
+            CurvatureSymmetry::Riemann,
             dim,
         );
 
-        // Use RiemannMap HKT trait via witness
+        // Use RiemannMap HKT trait via witness type
         // D^2 ξ / dτ^2 = R(u, ξ)u
-        use deep_causality_haft::RiemannMap;
-        use deep_causality_topology::CurvatureTensorWitness;
-
-        let result_vector: deep_causality_topology::TensorVector =
-            CurvatureTensorWitness::curvature(ct, u, v, u_w);
+        let result_vector = CurvatureTensorWitness::curvature(ct, u, v, u_w);
         Ok(result_vector.into())
     }
 
@@ -132,7 +209,7 @@ impl GrOps for GR {
         initial_velocity: &[f64],
         proper_time_step: f64,
         num_steps: usize,
-    ) -> Result<Vec<crate::theories::gr::GeodesicState>, PhysicsError> {
+    ) -> Result<Vec<GeodesicState>, PhysicsError> {
         geodesic_integrator_kernel(
             initial_position,
             initial_velocity,

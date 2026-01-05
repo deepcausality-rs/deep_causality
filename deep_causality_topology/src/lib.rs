@@ -60,7 +60,9 @@ pub use crate::types::skeleton::Skeleton;
 pub use crate::types::topology::Topology;
 
 // Re-export gauge field types
-pub use crate::types::curvature_tensor::{CurvatureSymmetry, CurvatureTensor};
+pub use crate::types::curvature_tensor::{
+    CurvatureSymmetry, CurvatureTensor, CurvatureTensorVector,
+};
 pub use crate::types::differential_form::DifferentialForm;
 pub use crate::types::gauge_field::groups::{Electroweak, Lorentz, SU2, SU3, StandardModel, U1};
 pub use crate::types::gauge_field::{GaugeField, GaugeGroup};

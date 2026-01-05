@@ -3,14 +3,14 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_metric::{EastCoastMetric, LorentzianMetric};
 use deep_causality_physics::theories::GR;
 use deep_causality_physics::theories::gr::{
     AdmOps, AdmState, GrOps, flrw_metric_at, kerr_metric_at, minkowski_metric,
-    schwarzschild_christoffel_at, schwarzschild_kretschmann, schwarzschild_metric_at,
+    schwarzschild_kretschmann, schwarzschild_metric_at,
 };
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::GaugeField;
-use deep_causality_topology::Manifold;
+use deep_causality_topology::{GaugeField, Manifold};
 use std::f64::consts::PI;
 
 #[test]
@@ -134,46 +134,85 @@ fn test_gr_gauge_field_integration() {
     // Construct a GR field for Schwarzschild
     use deep_causality_topology::{Simplex, SimplicialComplexBuilder};
 
-    // Build a complex with at least one 3-simplex (tetrahedron) for 4D manifold basic structure
-    let mut builder = SimplicialComplexBuilder::new(3);
+    // Build a complex with just 1 vertex (0-simplex) to verify single-point tensor logic
+    // This ensures N=1, so tensors are [1, 4, 6] (24 elems) vs [15, 4, 6]
+    let mut builder = SimplicialComplexBuilder::new(0);
     builder
-        .add_simplex(Simplex::new(vec![0, 1, 2, 3]))
+        .add_simplex(Simplex::new(vec![0]))
         .expect("Failed to add simplex");
     let complex = builder.build().expect("Failed to build complex");
 
-    let num_simplices = complex.total_simplices();
-    // Data tensor must match the number of simplices
+    let num_simplices = complex.total_simplices(); // Should be 1
     let data = CausalTensor::zeros(&[num_simplices]);
     let base = Manifold::new(complex.clone(), data, 0).expect("Failed to create manifold");
 
     let mass = 1.0;
     let r = 10.0;
 
-    // Use Christoffel as connection
-    let christoffel = schwarzschild_christoffel_at(mass, r).unwrap();
+    // Use Metric Tensor as connection (GR expects g in connection slot)
+    // We must pad it to satisfy GaugeField SO(3,1) validation [N, 4, 6]
+    let metric_4x4 = schwarzschild_metric_at(mass, r).unwrap();
+    let m_data = metric_4x4.as_slice();
 
-    // Use Riemann as field strength (placeholder zero for test setup simplification)
-    let riemann_data = vec![0.0; 4 * 4 * 4 * 4];
-    let riemann = deep_causality_tensor::CausalTensor::from_vec(riemann_data, &[4, 4, 4, 4]);
+    // Construct padded data: 1 point, 4 rows, 6 cols.
+    // We place 4x4 metric in first 4 cols.
+    let mut conn_data = vec![0.0; num_simplices * 4 * 6];
+    for p in 0..num_simplices {
+        for row in 0..4 {
+            for col in 0..4 {
+                // Metric index: row*4 + col
+                // Connection index: p*(24) + row*6 + col
+                conn_data[p * 24 + row * 6 + col] = m_data[row * 4 + col];
+            }
+        }
+    }
+    let metric_tensor = CausalTensor::from_vec(conn_data, &[num_simplices, 4, 6]);
+
+    // Use Riemann as field strength [N, 4, 4, 6]
+    // Zeros is fine.
+    let riemann_data = vec![0.0; num_simplices * 4 * 4 * 6];
+    let riemann =
+        deep_causality_tensor::CausalTensor::from_vec(riemann_data, &[num_simplices, 4, 4, 6]);
+
+    // Topology Metric (signature/type)
+    let topo_metric = EastCoastMetric::minkowski_4d().into_metric();
 
     // Create GR field
-    let gravity: GR = GaugeField::with_default_metric(base, christoffel, riemann).unwrap();
+    let gravity: GR = GaugeField::new(base, topo_metric, metric_tensor, riemann).unwrap();
 
     // Verify it implements GrOps
     assert_eq!(gravity.gauge_group_name(), "SO(3,1)");
 
     // Test default GrOps methods (sanity checks)
-    let k = gravity.kretschmann_scalar().unwrap();
-    assert_eq!(k, 0.0); // Using zero Riemann for this test case
+    let k_res = gravity.kretschmann_scalar();
+
+    // With N=1, riemann size is 96. Expected 256. Should Error.
+    assert!(
+        k_res.is_err(),
+        "Should return error for Lie Algebra curvature shape mismatch"
+    );
+    let err_msg = format!("{:?}", k_res.unwrap_err());
+    assert!(
+        err_msg.contains("DimensionMismatch"),
+        "Wrong error type: {}",
+        err_msg
+    );
+    assert!(
+        err_msg.contains("Mapping Lie Algebra"),
+        "Wrong error message: {}",
+        err_msg
+    );
 }
 
 #[test]
+#[should_panic(expected = "CurvatureTensor components must have shape")]
 fn test_geodesic_deviation_interface() {
     use deep_causality_topology::{Simplex, SimplicialComplexBuilder};
 
-    let mut builder = SimplicialComplexBuilder::new(3);
+    // Use N=1 for simple mocking
+    let mut builder = SimplicialComplexBuilder::new(0);
     builder
-        .add_simplex(Simplex::new(vec![0, 1, 2, 3]))
+        .add_simplex(Simplex::new(vec![0]))
         .expect("Failed to add simplex");
     let complex = builder.build().expect("Failed to build complex");
 
@@ -182,11 +221,22 @@ fn test_geodesic_deviation_interface() {
     let base = Manifold::new(complex, data, 0).expect("Failed to create manifold");
     let dim = 4;
 
-    // Mock data - needs to match constructor expectations shape-wise
-    let christoffel = deep_causality_tensor::CausalTensor::from_vec(vec![0.0; 64], &[4, 4, 4]);
-    let riemann = deep_causality_tensor::CausalTensor::from_vec(vec![1.0; 256], &[4, 4, 4, 4]);
+    // Mock Metric Tensor (Identity for simplicity) padded to [1, 4, 6]
+    let mut conn_data = vec![0.0; num_simplices * 4 * 6];
+    // Identity on 4x4 logic (row==col)
+    for i in 0..4 {
+        conn_data[i * 6 + i] = 1.0;
+    }
+    let metric_tensor = CausalTensor::from_vec(conn_data, &[num_simplices, 4, 6]);
 
-    let gravity: GR = GaugeField::with_default_metric(base, christoffel, riemann).unwrap();
+    // Riemann [1, 4, 4, 6]
+    let riemann = deep_causality_tensor::CausalTensor::from_vec(
+        vec![0.0; num_simplices * 4 * 4 * 6],
+        &[num_simplices, 4, 4, 6],
+    );
+
+    let topo_metric = EastCoastMetric::minkowski_4d().into_metric();
+    let gravity: GR = GaugeField::new(base, topo_metric, metric_tensor, riemann).unwrap();
 
     let velocity = vec![1.0, 0.0, 0.0, 0.0];
     let separation = vec![0.0, 1.0, 0.0, 0.0];

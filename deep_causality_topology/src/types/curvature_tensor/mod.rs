@@ -8,6 +8,7 @@
 //! The curvature tensor R^d_abc measures the holonomy of parallel transport
 //! around infinitesimal loops in a manifold.
 
+use crate::TensorVector;
 use deep_causality_metric::Metric;
 use deep_causality_tensor::CausalTensor;
 use std::marker::PhantomData;
@@ -36,6 +37,10 @@ pub enum CurvatureSymmetry {
     /// No special symmetry.
     None,
 }
+
+/// Type alias
+pub type CurvatureTensorVector =
+    CurvatureTensor<TensorVector, TensorVector, TensorVector, TensorVector>;
 
 /// A rank-4 curvature tensor for RiemannMap operations.
 ///
