@@ -41,6 +41,8 @@ pub enum PhysicsErrorEnum {
     CalculationError(String),
     /// Metric convention error (wraps MetricError from metric crate).
     MetricConventionError(String),
+    /// Topology/GaugeField structure error.
+    TopologyError(String),
 }
 
 impl PhysicsError {
@@ -102,6 +104,11 @@ impl PhysicsError {
     pub fn MetricConventionError(msg: String) -> Self {
         Self(PhysicsErrorEnum::MetricConventionError(msg))
     }
+
+    #[allow(non_snake_case)]
+    pub fn TopologyError(msg: String) -> Self {
+        Self(PhysicsErrorEnum::TopologyError(msg))
+    }
 }
 
 // Integration with Generic CausalityError
@@ -148,6 +155,9 @@ impl Display for PhysicsError {
             PhysicsErrorEnum::CalculationError(msg) => write!(f, "Calculation Error: {}", msg),
             PhysicsErrorEnum::MetricConventionError(msg) => {
                 write!(f, "Metric Convention Error: {}", msg)
+            }
+            PhysicsErrorEnum::TopologyError(msg) => {
+                write!(f, "Topology Error: {}", msg)
             }
         }
     }

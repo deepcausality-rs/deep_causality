@@ -25,6 +25,7 @@ fn create_dummy_ew_field() -> ElectroweakField {
     let strength = CausalTensor::zeros(&[num_points, 4, 4, 4]);
 
     GaugeField::new(base, Metric::Minkowski(4), conn, strength)
+        .expect("Failed to create ElectroweakField")
 }
 
 #[test]

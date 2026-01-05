@@ -28,7 +28,7 @@ fn create_dummy_weak_field() -> WeakField {
     let conn = CausalTensor::zeros(&[num_points, 4, 3]);
     let strength = CausalTensor::zeros(&[num_points, 4, 4, 3]);
 
-    GaugeField::new(base, Metric::Minkowski(4), conn, strength)
+    GaugeField::new(base, Metric::Minkowski(4), conn, strength).expect("Failed to create WeakField")
 }
 
 #[test]

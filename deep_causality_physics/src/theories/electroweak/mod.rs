@@ -97,12 +97,10 @@ impl ElectroweakOps for ElectroweakField {
         let new_strength = CausalTensor::new(mixed_strength_data, vec![num_points, dim, dim, 1])
             .map_err(|e| PhysicsError::DimensionMismatch(e.to_string()))?;
 
-        Ok(GaugeField::new(
-            self.base().clone(),
-            self.metric(),
-            new_conn,
-            new_strength,
-        ))
+        Ok(
+            GaugeField::new(self.base().clone(), self.metric(), new_conn, new_strength)
+                .map_err(|e| PhysicsError::TopologyError(e.to_string()))?,
+        )
     }
 
     fn extract_z(&self) -> Result<GaugeField<U1, f64, f64>, PhysicsError> {
@@ -143,12 +141,10 @@ impl ElectroweakOps for ElectroweakField {
         let new_strength = CausalTensor::new(mixed_strength_data, vec![num_points, dim, dim, 1])
             .map_err(|e| PhysicsError::DimensionMismatch(e.to_string()))?;
 
-        Ok(GaugeField::new(
-            self.base().clone(),
-            self.metric(),
-            new_conn,
-            new_strength,
-        ))
+        Ok(
+            GaugeField::new(self.base().clone(), self.metric(), new_conn, new_strength)
+                .map_err(|e| PhysicsError::TopologyError(e.to_string()))?,
+        )
     }
 
     fn sin2_theta_w(&self) -> f64 {
