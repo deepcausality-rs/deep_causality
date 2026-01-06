@@ -3,9 +3,11 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{
-    EM_COUPLING, EM_COUPLING_MZ, FERMI_CONSTANT, GEV2_TO_NB, GEV2_TO_PB, HIGGS_MASS, HIGGS_VEV,
+    ALPHA_EM_MZ, EM_COUPLING, FERMI_CONSTANT, GEV2_TO_NB, GEV2_TO_PB, HIGGS_MASS, HIGGS_VEV,
     PhysicsError, SIN2_THETA_W, TOP_MASS, W_MASS, Z_MASS,
 };
+
+use crate::theories::electroweak::radiative::{RadiativeCorrections, solve_w_mass};
 use std::f64::consts::PI;
 
 /// Electroweak theory configuration and symmetry breaking parameters.
@@ -39,6 +41,8 @@ pub struct ElectroweakParams {
     g: f64,
     /// U(1)_Y coupling constant g'
     g_prime: f64,
+    /// Radiative corrections container
+    corrections: Option<RadiativeCorrections>,
 }
 
 impl ElectroweakParams {
@@ -48,6 +52,7 @@ impl ElectroweakParams {
             higgs_vev,
             g,
             g_prime,
+            corrections: None,
         }
     }
 }
@@ -99,27 +104,58 @@ impl ElectroweakParams {
             higgs_vev: HIGGS_VEV,
             g: e / sin_theta,
             g_prime: e / cos_theta,
+            corrections: None,
         }
     }
 
     /// Creates Standard Model parameters using running coupling at Z pole.
     ///
     /// Uses α(M_Z) ≈ 1/128 instead of low-energy α ≈ 1/137.
-    /// This produces W and Z masses within ~1 GeV of PDG values:
-    /// - M_W ≈ 80.3 GeV (vs PDG 80.377 GeV)
-    /// - M_Z ≈ 91.6 GeV (vs PDG 91.187 GeV)
+    /// - M_W ≈ 80.37 - 80.38 GeV (Corrected)
+    /// - M_Z ≈ 91.19 GeV (PDG Input)
     pub fn standard_model_precision() -> Self {
-        let sin2 = SIN2_THETA_W;
-        let cos2 = 1.0 - sin2;
-        let sin_theta = sin2.sqrt();
+        // Use PDG values as input for precision calculation
+        let mz = Z_MASS; // 91.1876
+        let top = TOP_MASS; // 172.5
+
+        // Critical: Use ALPHA_EM_MZ (High Energy) for Mass Solver
+        let alpha_mz = ALPHA_EM_MZ;
+        // Use ALPHA_EM (Low Energy) for Delta R reporting
+        let alpha_0 = crate::constants::ALPHA_EM;
+
+        let gf = FERMI_CONSTANT; // 1.166e-5
+
+        // Solve for M_W using one-loop corrections (High Energy Input)
+        let corrections = solve_w_mass(mz, top, alpha_mz, alpha_0, gf).unwrap_or_default();
+        let mw = corrections.w_mass_corrected;
+
+        // Derive effective mixing angle from the physical masses
+        // sin²θ_eff = 1 - M_W²/M_Z² (On-shell definition compliant with Δr)
+        // Wait, NO. This logic in the comments was old.
+        // We have sin2_on_shell from mass ratio, and sin2_eff from corrections.
+        let sin2_on_shell = 1.0 - (mw * mw) / (mz * mz);
+
+        let cos2 = 1.0 - sin2_on_shell;
+        let sin_theta = sin2_on_shell.sqrt();
         let cos_theta = cos2.sqrt();
-        let e = EM_COUPLING_MZ; // Running coupling at M_Z
+        let tan_theta = sin_theta / cos_theta;
+
+        // Calculate Couplings using Renormalized Scheme
+        // g = (2 * M_W / v) * sqrt(1 - \Delta r)
+        // This gives the physical High-Energy coupling (~0.665)
+        // rather than the tree-level fitted coupling (~0.653)
+        let delta_r = corrections.delta_r;
+        let g_coupling = (2.0 * mw / HIGGS_VEV) * (1.0 - delta_r).sqrt();
+
+        // g' = g * tan(theta)
+        let g_prime_coupling = g_coupling * tan_theta;
 
         Self {
-            sin2_theta_w: sin2,
+            sin2_theta_w: sin2_on_shell,
             higgs_vev: HIGGS_VEV,
-            g: e / sin_theta,
-            g_prime: e / cos_theta,
+            g: g_coupling,
+            g_prime: g_prime_coupling,
+            corrections: Some(corrections),
         }
     }
 
@@ -140,14 +176,27 @@ impl ElectroweakParams {
             higgs_vev: HIGGS_VEV,
             g: e / sin_theta,
             g_prime: e / cos_theta,
+            corrections: None,
         })
     }
 
     pub fn w_mass_computed(&self) -> f64 {
-        self.g * self.higgs_vev / 2.0
+        // If we have radiative corrections, return the precision mass
+        if let Some(c) = self.corrections {
+            c.w_mass_corrected
+        } else {
+            // Otherwise tree level
+            self.g * self.higgs_vev / 2.0
+        }
     }
+
     pub fn z_mass_computed(&self) -> f64 {
-        self.w_mass_computed() / self.cos_theta_w()
+        if self.corrections.is_some() {
+            // For precision mode, we started with Z mass fixed
+            Z_MASS
+        } else {
+            self.w_mass_computed() / self.cos_theta_w()
+        }
     }
 
     pub fn rho_parameter(&self) -> f64 {
@@ -192,7 +241,15 @@ impl ElectroweakParams {
         Ok(sigma * GEV2_TO_PB)
     }
 
-    /// Computes the partial width for Z → f f̄ decay (tree-level).
+    /// Computes the partial width for Z → f f̄ decay.
+    ///
+    /// Uses the Fermi Constant (G_F) parametrization which implicitly includes
+    /// radiative corrections via ρ_eff.
+    ///
+    /// # Formula
+    /// ```text
+    /// Γ_f = N_c · (√(2) · G_F · M_Z³) / (12π) · (g_V² + g_A²) · ρ_eff
+    /// ```
     ///
     /// # Parameters
     /// - `is_quark`: true for quarks (adds color factor 3), false for leptons.
@@ -200,11 +257,23 @@ impl ElectroweakParams {
     /// - `q`: Charge of the fermion in units of e.
     pub fn z_partial_width_fermion(&self, is_quark: bool, i3: f64, q: f64) -> f64 {
         let mz = self.z_mass_computed();
-        let sin2 = self.sin2_theta_w();
-        let g = self.g_coupling();
-        let cos = self.cos_theta_w();
+
+        // CRITICAL: Use Effective Angle for Z decays if available (Two-Scheme Check)
+        let sin2 = if let Some(c) = self.corrections {
+            c.sin2_theta_eff
+        } else {
+            self.sin2_theta_w()
+        };
+
+        // One-Loop Effective Rho Parameter
+        let rho_eff = if let Some(c) = self.corrections {
+            1.0 + c.delta_rho
+        } else {
+            1.0
+        };
 
         // Vector and axial-vector couplings
+        // g_V = I_3 - 2 Q sin²θ_eff
         let g_a = i3;
         let g_v = i3 - 2.0 * q * sin2;
 
@@ -215,18 +284,14 @@ impl ElectroweakParams {
         let qcd_factor = if is_quark { 1.038 } else { 1.0 };
 
         // =====================================================================
-        // WIDTH CALCULATION (Tree Level)
+        // WIDTH CALCULATION (G_F Scheme)
         // =====================================================================
-        // Formula: Γ = (N_c · g² · M_Z) / (48π · cos²θ) · (gV² + gA²)
-        //
-        // Note on Scaling:
-        // The factor of 48π comes from (12π · 4), where 4 accounts for the
-        // coupling definition (g/2cosθ). Using 192π here would undercount
-        // the width by a factor of 4.
+        // The G_F formula is standard for precision widths.
+        // Pre-factor = (N_c · sqrt(2) · G_F · M_Z^3) / (12 · pi)
         // =====================================================================
-        let prefactor = nc * (g * g) * mz / (48.0 * PI * cos * cos);
+        let prefactor = nc * (2.0_f64.sqrt() * FERMI_CONSTANT * mz.powi(3)) / (12.0 * PI);
 
-        prefactor * (g_v * g_v + g_a * g_a) * qcd_factor
+        prefactor * rho_eff * (g_v * g_v + g_a * g_a) * qcd_factor
     }
 
     /// Computes the total width of the Z boson (The "Invisible Width" included).
@@ -403,5 +468,22 @@ impl ElectroweakParams {
     /// In the Standard Model at tree level, ρ = 1 exactly.
     pub fn rho_deviation(&self) -> f64 {
         (self.rho_parameter() - 1.0).abs()
+    }
+    /// Returns the effective ρ parameter including Veltman screening.
+    ///
+    /// # Definition
+    /// ```text
+    /// ρ_eff = 1 + Δρ = 1 + (3 G_F m_t²) / (8 π² √2)
+    /// ```
+    pub fn rho_effective(&self) -> f64 {
+        if let Some(c) = self.corrections {
+            1.0 + c.delta_rho
+        } else {
+            1.0
+        }
+    }
+
+    pub fn corrections(&self) -> Option<RadiativeCorrections> {
+        self.corrections
     }
 }
