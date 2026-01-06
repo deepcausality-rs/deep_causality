@@ -11,12 +11,12 @@ mod alias;
 mod cast;
 mod complex;
 pub mod float;
+mod float_double;
 mod float_option;
 mod identity;
 pub mod num;
 mod ops;
 pub mod utils_tests;
-mod float_double;
 
 // Alias types
 pub use crate::alias::{Matrix3, Vector3};
@@ -59,6 +59,7 @@ pub use crate::complex::quaternion_number::{Quaternion, Quaternion32, Quaternion
 // Float number types
 pub use crate::float::Float;
 pub use crate::float_option::FloatOption;
+pub use crate::float_double::DoubleFloat;
 
 //  General numeric traits
 pub use crate::identity::one::{ConstOne, One};

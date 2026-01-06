@@ -140,7 +140,9 @@ due to the particularities of modelling numerical properties in Rust.
 
 ## Test structure
 
-Every single test files must be registered to the correspoding mod file and that module must be registered with its higher up module. Also, ensure the folder modules are correctly declared in the Bazel configration undre crate_name/tests/BUILD.bazel. 
+Every single test files must be registered to the correspoding mod file and that module must be registered with its higher up module. ensure the corrext #[cfg(test)] annotation is set for each registeres test file. 
+
+Also, ensure the folder modules are correctly declared in the Bazel configration undre crate_name/tests/BUILD.bazel. 
 
 The tests folder replicates the exact src folder structure, for for example:
 
@@ -156,8 +158,6 @@ a source file
 is matched with the test file under the tests folder:
 
 `test/errors/normal_error/normal_error_tests.rs`
-
-Test files do not contain enclosing test modules, just the tests itself. 
 
 Shared utils used for testing are actually stored in the src tree under:
 
