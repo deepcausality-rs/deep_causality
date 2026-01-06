@@ -5,7 +5,7 @@
 
 use deep_causality_metric::{EastCoastMetric, LorentzianMetric};
 use deep_causality_physics::theories::GR;
-use deep_causality_physics::theories::gr::{
+use deep_causality_physics::theories::general_relativity::{
     AdmOps, AdmState, GrOps, flrw_metric_at, kerr_metric_at, minkowski_metric,
     schwarzschild_kretschmann, schwarzschild_metric_at,
 };
@@ -273,7 +273,7 @@ fn test_pair_to_lie_index() {
 
 #[test]
 fn test_lie_index_to_pair() {
-    use deep_causality_physics::theories::gr::lie_index_to_pair;
+    use deep_causality_physics::theories::general_relativity::lie_index_to_pair;
 
     assert_eq!(lie_index_to_pair(0), Some((0, 1)));
     assert_eq!(lie_index_to_pair(1), Some((0, 2)));
@@ -386,7 +386,7 @@ fn test_adm_with_christoffel() {
 
 #[test]
 fn test_multipoint_expand_lie_to_riemann() {
-    use deep_causality_physics::theories::gr::expand_lie_to_riemann;
+    use deep_causality_physics::theories::general_relativity::expand_lie_to_riemann;
 
     // Create a 3-point Lie tensor [3, 4, 4, 6]
     let num_points = 3;

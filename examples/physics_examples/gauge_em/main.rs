@@ -3,10 +3,10 @@
  * Copyright (c) "2026" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! # QED Electromagnetic Wave Pipeline
+//! # Gauge EM Electromagnetic Wave Pipeline
 //!
 //! Demonstrates **modular causal composition** via `CausalEffectPropagationProcess`
-//! for QED (Quantum Electrodynamics) electromagnetic wave propagation.
+//! for gauge-theoretic electromagnetic wave analysis.
 //!
 //! ## Key Design Pattern
 //!
@@ -23,10 +23,10 @@
 //! This demonstrates:
 //! - **Type-safe error propagation** through physics stages
 //! - **Decoupled physics modules** that compose seamlessly
-//! - **Real QED calculations** using deep_causality_physics
+//! - **Classical EM via gauge field formalism** using deep_causality_physics
 
 use deep_causality_core::{CausalEffectPropagationProcess, EffectValue, PropagatingEffect};
-use deep_causality_physics::{QED, QedOps};
+use deep_causality_physics::{EM, GaugeEmOps};
 
 // =============================================================================
 // MAIN: Pipeline Composition via Causal Monad
@@ -34,18 +34,11 @@ use deep_causality_physics::{QED, QedOps};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("═══════════════════════════════════════════════════════════════");
-    println!("  QED Electromagnetic Wave Pipeline");
+    println!("       Gauge EM: Relativistic Electrodynamics Pipeline");
     println!("═══════════════════════════════════════════════════════════════\n");
 
-    // =========================================================================
-    // The Causal Monad Pipeline: Each stage is a decoupled function
-    // =========================================================================
-
-    // Stage 0: Create initial plane wave field
-    let initial = stage_create_plane_wave();
-
-    // Composed pipeline using bind_or_error
-    let result = initial
+    // Composed pipeline: Each stage is a decoupled function
+    let result = stage_create_plane_wave()
         .bind_or_error(stage_compute_invariants, "Invariant computation failed")
         .bind_or_error(stage_energy_analysis, "Energy analysis failed")
         .bind_or_error(stage_poynting_radiation, "Radiation analysis failed")
@@ -58,15 +51,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // =============================================================================
-// QED State: Passed through pipeline stages
+// GaugeEM State: Passed through pipeline stages
 // =============================================================================
 
 /// Accumulated results from pipeline stages
 #[derive(Debug, Clone, Default)]
 #[allow(dead_code)]
-struct QEDState {
-    /// The QED field configuration
-    qed: Option<QED>,
+struct GaugeEMState {
+    /// The GaugeEM field configuration
+    field: Option<EM>,
     /// Field invariant F_μν F^μν
     field_invariant: f64,
     /// Dual invariant F_μν F̃^μν
@@ -92,7 +85,7 @@ struct QEDState {
 /// # Physics
 /// - Plane wave: E and B perpendicular, equal magnitude
 /// - Propagating in z-direction
-fn stage_create_plane_wave() -> PropagatingEffect<Option<QED>> {
+fn stage_create_plane_wave() -> PropagatingEffect<Option<EM>> {
     println!("Stage 1: Create Plane Wave Field");
     println!("─────────────────────────────────");
 
@@ -100,15 +93,48 @@ fn stage_create_plane_wave() -> PropagatingEffect<Option<QED>> {
     let amplitude = 1.0; // Natural units
     let polarization = 0; // x-polarization
 
-    match QED::plane_wave(amplitude, polarization) {
-        Ok(qed) => {
+    match EM::plane_wave(amplitude, polarization) {
+        Ok(em) => {
             println!("  Amplitude:     {} (natural units)", amplitude);
             println!("  Polarization:  x-polarized");
             println!("  E-field:       along x-axis");
             println!("  B-field:       along y-axis");
             println!("  Propagation:   z-direction\n");
 
-            CausalEffectPropagationProcess::pure(Some(qed))
+            // GaugeEM Gauge Theory Properties
+            println!("  ┌─ U(1) Gauge Field Structure ─────────────────────────┐");
+            println!(
+                "  │  Gauge Group:      {} (Electromagnetism)",
+                em.gauge_group_name()
+            );
+            println!(
+                "  │  Lie Algebra:      u(1), dim = {}",
+                em.lie_algebra_dim()
+            );
+            println!(
+                "  │  Abelian:          {} (F = dA, no self-interaction)",
+                em.is_abelian()
+            );
+            println!(
+                "  │  Metric:           {} (+--- West Coast / Particle Physics)",
+                if em.is_west_coast() {
+                    "Minkowski 4D"
+                } else {
+                    "Custom"
+                }
+            );
+            println!("  │  Spacetime:        {} dimensions", em.spacetime_dim());
+
+            // Field strength tensor info
+            if let Ok(f) = em.computed_field_strength() {
+                let shape = f.shape();
+                println!("  │  F_μν shape:       {:?}", shape);
+                println!("  │  Connection:       A_μ (4-potential)");
+                println!("  │  Curvature:        F_μν = ∂_μA_ν - ∂_νA_μ");
+            }
+            println!("  └────────────────────────────────────────────────────────┘\n");
+
+            CausalEffectPropagationProcess::pure(Some(em))
         }
         Err(e) => {
             println!("  [ERROR] Failed to create plane wave: {:?}", e);
@@ -132,16 +158,16 @@ fn stage_create_plane_wave() -> PropagatingEffect<Option<QED>> {
 /// - These invariants characterize the field type
 /// - Add more invariants here (e.g., stress-energy trace)
 fn stage_compute_invariants(
-    qed_opt: Option<QED>,
+    em_opt: Option<EM>,
     _: (),
     _: Option<()>,
-) -> PropagatingEffect<(Option<QED>, f64, f64)> {
+) -> PropagatingEffect<(Option<EM>, f64, f64)> {
     println!("Stage 2: Compute Lorentz Invariants");
     println!("────────────────────────────────────");
 
-    if let Some(qed) = &qed_opt {
-        let field_inv = qed.field_invariant().unwrap_or(0.0);
-        let dual_inv = qed.dual_invariant().unwrap_or(0.0);
+    if let Some(em) = &em_opt {
+        let field_inv = em.field_invariant().unwrap_or(0.0);
+        let dual_inv = em.dual_invariant().unwrap_or(0.0);
 
         println!("  F_μν F^μν  = {:.6}  (field invariant)", field_inv);
         println!("  F_μν F̃^μν = {:.6}  (dual invariant)", dual_inv);
@@ -162,7 +188,7 @@ fn stage_compute_invariants(
         }
         println!();
 
-        CausalEffectPropagationProcess::pure((qed_opt, field_inv, dual_inv))
+        CausalEffectPropagationProcess::pure((em_opt, field_inv, dual_inv))
     } else {
         CausalEffectPropagationProcess::pure((None, 0.0, 0.0))
     }
@@ -182,16 +208,16 @@ fn stage_compute_invariants(
 /// - Modify energy scale conversions here
 /// - Add momentum density computation
 fn stage_energy_analysis(
-    (qed_opt, field_inv, dual_inv): (Option<QED>, f64, f64),
+    (em_opt, field_inv, dual_inv): (Option<EM>, f64, f64),
     _: (),
     _: Option<()>,
-) -> PropagatingEffect<(Option<QED>, f64, f64, f64, f64)> {
+) -> PropagatingEffect<(Option<EM>, f64, f64, f64, f64)> {
     println!("Stage 3: Energy Analysis");
     println!("────────────────────────");
 
-    if let Some(qed) = &qed_opt {
-        let energy = qed.energy_density().unwrap_or(0.0);
-        let lagrangian = qed.lagrangian_density().unwrap_or(0.0);
+    if let Some(em) = &em_opt {
+        let energy = em.energy_density().unwrap_or(0.0);
+        let lagrangian = em.lagrangian_density().unwrap_or(0.0);
 
         println!("  Energy density:     u = {:.6} (natural units)", energy);
         println!(
@@ -206,7 +232,7 @@ fn stage_energy_analysis(
         println!("  u ≈ {:.3e} J/m³", energy_si);
         println!();
 
-        CausalEffectPropagationProcess::pure((qed_opt, field_inv, dual_inv, energy, lagrangian))
+        CausalEffectPropagationProcess::pure((em_opt, field_inv, dual_inv, energy, lagrangian))
     } else {
         CausalEffectPropagationProcess::pure((None, field_inv, dual_inv, 0.0, 0.0))
     }
@@ -226,29 +252,27 @@ fn stage_energy_analysis(
 /// - Add radiation pressure computation
 /// - Add momentum flux analysis
 fn stage_poynting_radiation(
-    (qed_opt, field_inv, dual_inv, energy, lagrangian): (Option<QED>, f64, f64, f64, f64),
+    (em_opt, field_inv, dual_inv, energy, lagrangian): (Option<EM>, f64, f64, f64, f64),
     _: (),
     _: Option<()>,
-) -> PropagatingEffect<(Option<QED>, f64, f64, f64, f64, f64)> {
+) -> PropagatingEffect<(Option<EM>, f64, f64, f64, f64, f64)> {
     println!("Stage 4: Radiation Analysis");
     println!("───────────────────────────");
 
-    if let Some(qed) = &qed_opt {
-        let intensity = qed.intensity().unwrap_or(0.0);
+    if let Some(em) = &em_opt {
+        let intensity = em.intensity().unwrap_or(0.0);
 
         println!("  Intensity: |S| = {:.6} (natural units)", intensity);
 
         // Poynting vector direction
-        if let Ok(s) = qed.poynting_vector() {
+        if let Ok(s) = em.poynting_vector() {
             let s_data = s.data();
-            // In 3D GA, bivector components are indices 4,5,6 (xy, xz, yz)
-            // But data() returns &[f64].
-            // If length is enough:
-            if s_data.len() >= 7 {
-                println!(
-                    "  S_xy = {:.4}, S_xz = {:.4}, S_yz = {:.4}",
-                    s_data[4], s_data[5], s_data[6]
-                );
+            // Poynting vector S = E × B is a 3D vector stored at indices 2, 3, 4 (x, y, z)
+            if s_data.len() >= 5 {
+                let sx = s_data.get(2).copied().unwrap_or(0.0);
+                let sy = s_data.get(3).copied().unwrap_or(0.0);
+                let sz = s_data.get(4).copied().unwrap_or(0.0);
+                println!("  S_x = {:.4}, S_y = {:.4}, S_z = {:.4}", sx, sy, sz);
             }
         }
 
@@ -258,7 +282,7 @@ fn stage_poynting_radiation(
         println!();
 
         CausalEffectPropagationProcess::pure((
-            qed_opt, field_inv, dual_inv, energy, lagrangian, intensity,
+            em_opt, field_inv, dual_inv, energy, lagrangian, intensity,
         ))
     } else {
         CausalEffectPropagationProcess::pure((None, field_inv, dual_inv, energy, lagrangian, 0.0))
@@ -280,8 +304,8 @@ fn stage_poynting_radiation(
 /// - Add more field classifications (near-field, etc.)
 /// - Add wave type detection
 fn stage_field_classification(
-    (qed_opt, field_inv, dual_inv, energy, lagrangian, intensity): (
-        Option<QED>,
+    (em_opt, field_inv, dual_inv, energy, lagrangian, intensity): (
+        Option<EM>,
         f64,
         f64,
         f64,
@@ -290,13 +314,13 @@ fn stage_field_classification(
     ),
     _: (),
     _: Option<()>,
-) -> PropagatingEffect<QEDState> {
+) -> PropagatingEffect<GaugeEMState> {
     println!("Stage 5: Field Classification");
     println!("─────────────────────────────");
 
-    let (is_radiation, is_null) = if let Some(qed) = &qed_opt {
-        let is_rad = qed.is_radiation_field().unwrap_or(false);
-        let is_nul = qed.is_null_field().unwrap_or(false);
+    let (is_radiation, is_null) = if let Some(em) = &em_opt {
+        let is_rad = em.is_radiation_field().unwrap_or(false);
+        let is_nul = em.is_null_field().unwrap_or(false);
         (is_rad, is_nul)
     } else {
         (false, false)
@@ -323,8 +347,8 @@ fn stage_field_classification(
     println!("\n  Classification: {}", field_type);
     println!();
 
-    let state = QEDState {
-        qed: qed_opt,
+    let state = GaugeEMState {
+        field: em_opt,
         field_invariant: field_inv,
         dual_invariant: dual_inv,
         energy_density: energy,
@@ -342,7 +366,7 @@ fn stage_field_classification(
 // =============================================================================
 
 /// Prints the final pipeline summary.
-fn print_summary(result: &PropagatingEffect<QEDState>) {
+fn print_summary(result: &PropagatingEffect<GaugeEMState>) {
     println!("═══════════════════════════════════════════════════════════════");
     println!("  Pipeline Summary");
     println!("═══════════════════════════════════════════════════════════════");
@@ -387,7 +411,7 @@ fn print_summary(result: &PropagatingEffect<QEDState>) {
                 if state.is_null { "Yes" } else { "No " }
             );
             println!("  └─────────────────────────────────────────────────────────┘");
-            println!("\n[SUCCESS] QED Pipeline Completed.\n");
+            println!("\n[SUCCESS] GaugeEM Pipeline Completed.\n");
         }
         _ => {
             println!("  Pipeline returned unexpected result");

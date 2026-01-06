@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{
-    ElectroweakField, ElectroweakOps, ElectroweakParams, PhysicsError, QED, SIN2_THETA_W, W_MASS,
+    EM, ElectroweakField, ElectroweakOps, ElectroweakParams, PhysicsError, SIN2_THETA_W, W_MASS,
     Z_MASS,
 };
 use deep_causality_metric::{LorentzianMetric, WestCoastMetric};
@@ -31,7 +31,7 @@ impl ElectroweakOps for ElectroweakField {
         ElectroweakParams::standard_model()
     }
 
-    fn extract_photon(&self) -> Result<QED, PhysicsError> {
+    fn extract_photon(&self) -> Result<EM, PhysicsError> {
         let params = Self::standard_model_params();
         let cos_theta = params.cos_theta_w();
         let sin_theta = params.sin_theta_w();

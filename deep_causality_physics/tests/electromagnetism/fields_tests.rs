@@ -191,17 +191,21 @@ use deep_causality_physics::{energy_density_kernel, lagrangian_density_kernel};
 
 #[test]
 fn test_energy_density_kernel_valid() {
-    // E = [0, 1, 0, 0] (unit vector in x)
-    // B = [0, 0, 1, 0] (unit vector in y)
-    // u = (E² + B²) / 2 = (1 + 1) / 2 = 1.0
+    // E = (1, 0, 0) at indices 2,3,4 (4D multivector)
+    // B = (0, 1, 0) at indices 2,3,4
+    // u = (│E│² + │B│²) / 2 = (1 + 1) / 2 = 1.0
     let e = CausalMultiVector::new(
-        vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        Metric::Euclidean(3),
+        vec![
+            0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ],
+        Metric::Euclidean(4),
     )
     .unwrap();
     let b = CausalMultiVector::new(
-        vec![0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        Metric::Euclidean(3),
+        vec![
+            0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ],
+        Metric::Euclidean(4),
     )
     .unwrap();
 
@@ -266,16 +270,20 @@ fn test_energy_density_kernel_nan_error() {
 
 #[test]
 fn test_lagrangian_density_kernel_valid() {
-    // E = [0, 1, 0, 0], B = [0, 0, 1, 0]
-    // L = (E² - B²) / 2 = (1 - 1) / 2 = 0.0
+    // E = (1, 0, 0), B = (0, 1, 0) at indices 2,3,4
+    // L = (│E│² - │B│²) / 2 = (1 - 1) / 2 = 0.0
     let e = CausalMultiVector::new(
-        vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        Metric::Euclidean(3),
+        vec![
+            0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ],
+        Metric::Euclidean(4),
     )
     .unwrap();
     let b = CausalMultiVector::new(
-        vec![0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        Metric::Euclidean(3),
+        vec![
+            0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ],
+        Metric::Euclidean(4),
     )
     .unwrap();
 
@@ -289,16 +297,20 @@ fn test_lagrangian_density_kernel_valid() {
 
 #[test]
 fn test_lagrangian_density_kernel_electric_dominated() {
-    // E = [0, 2, 0, 0], B = [0, 0, 1, 0]
-    // L = (4 - 1) / 2 = 1.5
+    // E = (2, 0, 0), B = (0, 1, 0) at indices 2,3,4
+    // L = (│E│² - │B│²) / 2 = (4 - 1) / 2 = 1.5
     let e = CausalMultiVector::new(
-        vec![0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        Metric::Euclidean(3),
+        vec![
+            0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ],
+        Metric::Euclidean(4),
     )
     .unwrap();
     let b = CausalMultiVector::new(
-        vec![0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        Metric::Euclidean(3),
+        vec![
+            0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ],
+        Metric::Euclidean(4),
     )
     .unwrap();
 
@@ -311,16 +323,20 @@ fn test_lagrangian_density_kernel_electric_dominated() {
 
 #[test]
 fn test_lagrangian_density_kernel_magnetic_dominated() {
-    // E = [0, 1, 0, 0], B = [0, 0, 2, 0]
-    // L = (1 - 4) / 2 = -1.5
+    // E = (1, 0, 0), B = (0, 2, 0) at indices 2,3,4
+    // L = (│E│² - │B│²) / 2 = (1 - 4) / 2 = -1.5
     let e = CausalMultiVector::new(
-        vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        Metric::Euclidean(3),
+        vec![
+            0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ],
+        Metric::Euclidean(4),
     )
     .unwrap();
     let b = CausalMultiVector::new(
-        vec![0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        Metric::Euclidean(3),
+        vec![
+            0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ],
+        Metric::Euclidean(4),
     )
     .unwrap();
 

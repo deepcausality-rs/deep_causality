@@ -7,11 +7,15 @@ use deep_causality_multivector::CausalMultiVector;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::Manifold;
 
-/// Operations specific to Quantum Electrodynamics (QED) — U(1) Gauge Theory.
+/// Operations for Gauge-Theoretic Electromagnetism — U(1) Gauge Field Theory.
+///
+/// This trait provides classical electromagnetic operations using the
+/// relativistic gauge field formalism. It computes E, B fields, energy density,
+/// Lorentz invariants, and radiation properties from the U(1) field strength tensor.
 ///
 /// # Mathematical Foundation
 ///
-/// QED is the U(1) gauge theory of electromagnetism. The gauge field consists of:
+/// The electromagnetic field is represented as a U(1) gauge field:
 ///
 /// ## Gauge Potential (Connection 1-form)
 /// ```text
@@ -33,7 +37,7 @@ use deep_causality_topology::Manifold;
 ///
 /// ## Metric Convention
 /// Uses West Coast signature (+---) following particle physics conventions.
-pub trait QedOps {
+pub trait GaugeEmOps {
     /// Creates a new QED field from electric and magnetic field vectors.
     ///
     /// # Mathematical Structure

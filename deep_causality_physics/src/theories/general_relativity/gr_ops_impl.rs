@@ -7,7 +7,7 @@
 // GrOps Implementation for GR (GaugeField<Lorentz, f64, f64>)
 // =============================================================================
 
-use crate::theories::gr::gr_utils;
+use crate::theories::general_relativity::gr_utils;
 use crate::{
     GR, GeodesicState, GrOps, PhysicsError, einstein_tensor_kernel, geodesic_integrator_kernel,
     parallel_transport_kernel, proper_time_kernel,
@@ -72,7 +72,7 @@ impl GrOps for GR {
     }
 
     fn kretschmann_scalar(&self) -> Result<f64, PhysicsError> {
-        use crate::theories::gr::gr_lie_mapping::expand_lie_to_riemann;
+        use crate::theories::general_relativity::gr_lie_mapping::expand_lie_to_riemann;
 
         let lie_fs = self.field_strength();
         let dim = 4;
@@ -170,7 +170,7 @@ impl GrOps for GR {
         velocity: &[f64],
         separation: &[f64],
     ) -> Result<Vec<f64>, PhysicsError> {
-        use crate::theories::gr::gr_lie_mapping::expand_lie_to_riemann;
+        use crate::theories::general_relativity::gr_lie_mapping::expand_lie_to_riemann;
 
         let lie_fs = self.field_strength();
         let dim = 4;

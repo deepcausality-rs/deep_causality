@@ -1,8 +1,14 @@
-# QED Electromagnetic Wave Pipeline
+# Gauge EM: Relativistic Electrodynamics Pipeline
 
-This example demonstrates **Quantum Electrodynamics (QED)** electromagnetic field analysis
+This example demonstrates **gauge-theoretic electromagnetism** analysis
 using the **Causal Monad** (`PropagatingEffect`) for type-safe, modular composition of
 physics stages.
+
+## Running
+
+```bash
+RUSTFLAGS='-C target-cpu=native' cargo run --example gauge_em -p physics_examples --release
+```
 
 ## Overview
 
@@ -10,7 +16,7 @@ The pipeline processes an electromagnetic plane wave through a sequence of indep
 analysis stages, each composed via `bind_or_error`:
 
 ```
-Stage 1: Create Plane Wave
+Stage 1: Create Plane Wave (with U(1) gauge field structure)
        ↓
 Stage 2: Compute Lorentz Invariants (F_μν F^μν, F_μν F̃^μν)
        ↓
@@ -24,6 +30,19 @@ Stage 5: Field Classification (radiation/null)
 ```
 
 ## Key Physics Concepts
+
+### U(1) Gauge Field Structure
+
+The electromagnetic field is represented using relativistic gauge theory:
+
+| Property | Value |
+|----------|-------|
+| Gauge Group | U(1) |
+| Lie Algebra | u(1), dim = 1 |
+| Abelian | Yes (F = dA) |
+| Connection | A_μ (4-potential) |
+| Curvature | F_μν = ∂_μA_ν - ∂_νA_μ |
+| Metric | West Coast (+---) |
 
 ### Lorentz Invariants
 
@@ -52,54 +71,7 @@ Stage 5: Field Classification (radiation/null)
 ## Running the Example
 
 ```bash
-cargo run --example gauge_qed -p physics_examples
-```
-
-## Expected Output
-
-```
-═══════════════════════════════════════════════════════════════
-  QED Electromagnetic Wave Pipeline
-  (Modular Stages Composed via Causal Monad)
-═══════════════════════════════════════════════════════════════
-
-Stage 1: Create Plane Wave Field
-─────────────────────────────────
-  Amplitude:     1 (natural units)
-  Polarization:  x-polarized
-  E-field:       along x-axis
-  B-field:       along y-axis
-  Propagation:   z-direction
-
-Stage 2: Compute Lorentz Invariants
-────────────────────────────────────
-  F_μν F^μν  = 0.000000  (field invariant)
-  F_μν F̃^μν = 0.000000  (dual invariant)
-
-  → |E| = |B| (null field / radiation)
-  → E ⟂ B (CP-conserving)
-
-Stage 3: Energy Analysis
-────────────────────────
-  Energy density:     u = 1.000000 (natural units)
-  Lagrangian density: L = 0.000000 (natural units)
-
-Stage 4: Radiation Analysis
-───────────────────────────
-  Intensity: |S| = 1.000000 (natural units)
-
-Stage 5: Field Classification
-─────────────────────────────
-  Is radiation field (E ⟂ B):  true
-  Is null field (|E| = |B|):   true
-
-  Classification: Transverse Electromagnetic (TEM) Wave
-
-═══════════════════════════════════════════════════════════════
-  Pipeline Summary
-═══════════════════════════════════════════════════════════════
-  ...
-[SUCCESS] QED Pipeline Completed.
+cargo run --example gauge_em -p physics_examples
 ```
 
 ## Design Pattern: Causal Monad
@@ -127,7 +99,7 @@ let result = create_plane_wave()
 ## Code Structure
 
 ```
-gauge_qed/
+gauge_em/
 ├── main.rs    # Pipeline composition and stage implementations
 └── README.md  # This file
 ```
@@ -141,5 +113,5 @@ gauge_qed/
 ## References
 
 - Jackson, *Classical Electrodynamics*, Chapter 6 (EM Energy and Momentum)
-- Peskin & Schroeder, *QFT*, Chapter 2 (EM Lagrangian)
-- [deep_causality_physics::QED](../../deep_causality_physics/src/theories/qed.rs)
+- Peskin & Schroeder, *QFT*, Chapter 2 (Gauge Field Formalism)
+- [deep_causality_physics::GaugeEM](../../deep_causality_physics/src/theories/gauge_em/)

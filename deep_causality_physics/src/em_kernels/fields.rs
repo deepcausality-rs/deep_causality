@@ -57,24 +57,19 @@ pub fn lorenz_gauge_kernel(
 
 /// Calculates the Poynting Vector (Energy Flux): $S = E \times B$.
 ///
-/// Uses the outer product $E \wedge B$ to represent flux as a bivector.
+/// Computes the classical 3D cross product of E and B fields.
+/// The result is returned as a 3D vector in the same multivector format.
 ///
 /// # Arguments
-/// * `e` - Electric field vector $E$.
-/// * `b` - Magnetic field vector $B$.
+/// * `e` - Electric field vector $E$ (spatial components at indices 2, 3, 4).
+/// * `b` - Magnetic field vector $B$ (spatial components at indices 2, 3, 4).
 ///
 /// # Returns
-/// * `Result<CausalMultiVector<f64>, PhysicsError>` - Poynting vector (as bivector).
+/// * `Result<CausalMultiVector<f64>, PhysicsError>` - Poynting vector $S = E \times B$.
 pub fn poynting_vector_kernel(
     e: &CausalMultiVector<f64>,
     b: &CausalMultiVector<f64>,
 ) -> Result<CausalMultiVector<f64>, PhysicsError> {
-    // S = E x B / mu0
-    // Returns the Poynting Vector (flux of energy).
-    // DeepCausality uses Geometric Algebra.
-    // The outer product E ^ B represents the specific plane of energy flux (bivector).
-    // This is the dual of the classical vector cross product.
-    // We return Energy Density Flux in this bivector form.
     if e.metric() != b.metric() {
         return Err(PhysicsError::DimensionMismatch(format!(
             "Metric mismatch in Poynting Vector: {:?} vs {:?}",
@@ -87,12 +82,16 @@ pub fn poynting_vector_kernel(
             "Non-finite input in Poynting Vector".into(),
         ));
     }
-    let s = e.outer_product(b);
+
+    // Classical cross product: S = E × B
+    let s = e.euclidean_cross_product_3d(b);
+
     if s.data().iter().any(|v| !v.is_finite()) {
         return Err(PhysicsError::NumericalInstability(
             "Non-finite result in Poynting Vector".into(),
         ));
     }
+
     Ok(s)
 }
 
@@ -249,9 +248,10 @@ pub fn energy_density_kernel(
         ));
     }
 
-    // Compute squared magnitudes
-    let e_squared = e.squared_magnitude();
-    let b_squared = b.squared_magnitude();
+    // Compute Euclidean squared magnitudes of 3D spatial vectors.
+    // We use Euclidean norm (not Lorentzian) because energy density is positive-definite.
+    let e_squared = e.euclidean_squared_magnitude_3d();
+    let b_squared = b.euclidean_squared_magnitude_3d();
 
     if !e_squared.is_finite() || !b_squared.is_finite() {
         return Err(PhysicsError::NumericalInstability(
@@ -259,7 +259,7 @@ pub fn energy_density_kernel(
         ));
     }
 
-    // Energy density in natural units
+    // Energy density in natural units: u = ½(|E|² + |B|²)
     let u = 0.5 * (e_squared + b_squared);
 
     if !u.is_finite() {
@@ -303,9 +303,9 @@ pub fn lagrangian_density_kernel(
         ));
     }
 
-    // Compute squared magnitudes
-    let e_squared = e.squared_magnitude();
-    let b_squared = b.squared_magnitude();
+    // Compute Euclidean squared magnitudes of 3D spatial vectors.
+    let e_squared = e.euclidean_squared_magnitude_3d();
+    let b_squared = b.euclidean_squared_magnitude_3d();
 
     if !e_squared.is_finite() || !b_squared.is_finite() {
         return Err(PhysicsError::NumericalInstability(

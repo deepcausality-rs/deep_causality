@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{ElectroweakParams, PhysicsError, QED};
+use crate::{EM, ElectroweakParams, PhysicsError};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{GaugeField, U1};
 
@@ -18,7 +18,7 @@ pub trait ElectroweakOps {
     /// Returns the Standard Model parameters.
     fn standard_model_params() -> ElectroweakParams;
 
-    fn extract_photon(&self) -> Result<QED, PhysicsError>;
+    fn extract_photon(&self) -> Result<EM, PhysicsError>;
     fn extract_z(&self) -> Result<GaugeField<U1, f64, f64>, PhysicsError>;
     fn sin2_theta_w(&self) -> f64;
     fn w_mass(&self) -> f64;

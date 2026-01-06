@@ -9,10 +9,14 @@ use deep_causality_topology::{Electroweak, GaugeField, Lorentz, SU2, SU3, Standa
 // Fundamental Force Type Aliases
 // ============================================================================
 
-/// Quantum Electrodynamics field (electromagnetism).
+/// Gauge-Theoretic Electromagnetism (U(1) gauge field).
+///
+/// This type represents the electromagnetic field using U(1) gauge theory
+/// formalism. It computes classical observables from the relativistic
+/// field strength tensor F_μν.
 ///
 /// Standard Convention: West Coast (+---)
-pub type QED = GaugeField<U1, f64, f64>;
+pub type EM = GaugeField<U1, f64, f64>;
 
 /// Weak force field.
 ///
@@ -43,6 +47,6 @@ pub type GR = GaugeField<Lorentz, f64, f64>;
 // Alternate Names
 // ============================================================================
 
-pub type ElectromagneticField = QED;
+pub type ElectromagneticField = EM;
 pub type GravitationalField = GR;
 pub type ColorField = QCD;

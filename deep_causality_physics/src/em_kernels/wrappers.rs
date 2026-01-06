@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::electromagnetism::{fields, forces};
 use crate::{MagneticFlux, PhysicalField};
+use crate::{fields, forces};
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_tensor::CausalTensor;

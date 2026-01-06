@@ -52,8 +52,8 @@ name = "gauge_gr"
 path = "gauge_gr/main.rs"
 
 [[example]]
-name = "gauge_qed"
-path = "gauge_qed/main.rs"
+name = "gauge_em"
+path = "gauge_em/main.rs"
 
 [[example]]
 name = "gauge_weak_force"

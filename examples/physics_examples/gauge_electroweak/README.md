@@ -13,7 +13,7 @@ like those in particle accelerators or the early universe — they merge into on
 ## Running
 
 ```bash
-cargo run --example gauge_electroweak -p physics_examples --release
+RUSTFLAGS='-C target-cpu=native' cargo run --example gauge_electroweak -p physics_examples --release
 ```
 
 ## The Four Stages Explained

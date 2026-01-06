@@ -5,8 +5,8 @@
 #[cfg(test)]
 pub mod electroweak_tests;
 #[cfg(test)]
-pub mod gr_tests;
+pub mod em_tests;
 #[cfg(test)]
-pub mod qed_tests;
+pub mod gr_tests;
 #[cfg(test)]
 pub mod weak_force_tests;

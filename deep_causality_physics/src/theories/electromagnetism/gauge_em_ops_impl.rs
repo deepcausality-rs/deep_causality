@@ -4,9 +4,9 @@
  */
 
 use crate::error::PhysicsError;
-use crate::theories::QED;
+use crate::theories::EM;
 use crate::{
-    QedOps, energy_density_kernel, lagrangian_density_kernel, lorentz_force_kernel,
+    GaugeEmOps, energy_density_kernel, lagrangian_density_kernel, lorentz_force_kernel,
     poynting_vector_kernel,
 };
 use deep_causality_metric::{LorentzianMetric, WestCoastMetric};
@@ -16,7 +16,7 @@ use deep_causality_topology::{
     BaseTopology, GaugeField, GaugeFieldWitness, Manifold, Simplex, SimplicialComplexBuilder,
 };
 
-impl QedOps for QED {
+impl GaugeEmOps for EM {
     fn from_fields(
         base: Manifold<f64>,
         electric_field: CausalMultiVector<f64>,
@@ -270,7 +270,8 @@ impl QedOps for QED {
 
     fn intensity(&self) -> Result<f64, PhysicsError> {
         let s = self.poynting_vector()?;
-        Ok(s.squared_magnitude().abs().sqrt())
+        // Compute Euclidean magnitude of 3D Poynting vector: |S| = sqrt(Sx² + Sy² + Sz²)
+        Ok(s.euclidean_magnitude_3d())
     }
 
     fn computed_field_strength(&self) -> Result<CausalTensor<f64>, PhysicsError> {

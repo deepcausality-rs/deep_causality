@@ -13,7 +13,7 @@
 //! - Physical properties (radiation fields, null fields)
 
 use deep_causality_multivector::{CausalMultiVector, MultiVector};
-use deep_causality_physics::{QED, QedOps};
+use deep_causality_physics::{EM, GaugeEmOps};
 
 // ============================================================================
 // Field Creation Tests
@@ -22,7 +22,7 @@ use deep_causality_physics::{QED, QedOps};
 #[test]
 fn test_qed_from_components() {
     // E = (1, 0, 0), B = (0, 1, 0)
-    let qed = QED::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+    let qed = EM::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0);
     assert!(qed.is_ok(), "QED creation should succeed");
 
     let field = qed.unwrap();
@@ -36,7 +36,7 @@ fn test_qed_from_components() {
 #[test]
 fn test_qed_plane_wave() {
     // Plane wave with amplitude 1.0
-    let qed = QED::plane_wave(1.0, 0);
+    let qed = EM::plane_wave(1.0, 0);
     assert!(qed.is_ok(), "Plane wave creation should succeed");
 
     let field = qed.unwrap();
@@ -58,7 +58,7 @@ fn test_qed_plane_wave() {
 fn test_qed_plane_wave_polarizations() {
     // Test polarization states 0 and 1 (most common)
     for pol in 0..2 {
-        let qed = QED::plane_wave(2.0, pol);
+        let qed = EM::plane_wave(2.0, pol);
         assert!(qed.is_ok(), "Polarization {} should succeed", pol);
 
         let field = qed.unwrap();
@@ -81,7 +81,7 @@ fn test_qed_plane_wave_polarizations() {
 #[test]
 fn test_electric_field_extraction() {
     // E = (1, 2, 3), B = (0, 0, 0)
-    let qed = QED::from_components(1.0, 2.0, 3.0, 0.0, 0.0, 0.0).unwrap();
+    let qed = EM::from_components(1.0, 2.0, 3.0, 0.0, 0.0, 0.0).unwrap();
     let e = qed.electric_field().unwrap();
 
     // Check that E is extracted correctly from F_{0i}
@@ -99,7 +99,7 @@ fn test_electric_field_extraction() {
 #[test]
 fn test_magnetic_field_extraction() {
     // E = (0, 0, 0), B = (1, 2, 3)
-    let qed = QED::from_components(0.0, 0.0, 0.0, 1.0, 2.0, 3.0).unwrap();
+    let qed = EM::from_components(0.0, 0.0, 0.0, 1.0, 2.0, 3.0).unwrap();
     let b = qed.magnetic_field().unwrap();
 
     // Check that B is extracted correctly from F_{ij}
@@ -120,7 +120,7 @@ fn test_magnetic_field_extraction() {
 #[test]
 fn test_field_invariant_null_field() {
     // Null field: |E| = |B| → I₁ = 2(|B|² - |E|²) = 0
-    let qed = QED::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
+    let qed = EM::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
 
     let invariant = qed.field_invariant().unwrap();
     assert!(
@@ -133,7 +133,7 @@ fn test_field_invariant_null_field() {
 #[test]
 fn test_field_invariant_electric_dominated() {
     // Electric dominated: |E|² > |B|² → I₁ = 2(|B|² - |E|²)
-    let qed = QED::from_components(2.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
+    let qed = EM::from_components(2.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
 
     let invariant = qed.field_invariant().unwrap();
     // With +--- metric, magnitudes have different signs
@@ -152,7 +152,7 @@ fn test_field_invariant_electric_dominated() {
 #[test]
 fn test_field_invariant_magnetic_dominated() {
     // Magnetic dominated: |B|² > |E|² → I₁ = 2(|B|² - |E|²)
-    let qed = QED::from_components(1.0, 0.0, 0.0, 0.0, 2.0, 0.0).unwrap();
+    let qed = EM::from_components(1.0, 0.0, 0.0, 0.0, 2.0, 0.0).unwrap();
 
     let invariant = qed.field_invariant().unwrap();
     // With +--- metric, verify the relationship holds
@@ -170,7 +170,7 @@ fn test_field_invariant_magnetic_dominated() {
 #[test]
 fn test_dual_invariant_orthogonal() {
     // Orthogonal fields: E ⟂ B → I₂ = -4(E·B) = 0
-    let qed = QED::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
+    let qed = EM::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
 
     let dual = qed.dual_invariant().unwrap();
     assert!(
@@ -183,7 +183,7 @@ fn test_dual_invariant_orthogonal() {
 #[test]
 fn test_dual_invariant_parallel() {
     // Parallel fields: E ∥ B → I₂ ≠ 0
-    let qed = QED::from_components(1.0, 0.0, 0.0, 1.0, 0.0, 0.0).unwrap();
+    let qed = EM::from_components(1.0, 0.0, 0.0, 1.0, 0.0, 0.0).unwrap();
 
     let dual = qed.dual_invariant().unwrap();
     // I₂ = -4(E·B) = -4(1·1) = -4 (with metric sign considerations)
@@ -200,7 +200,7 @@ fn test_dual_invariant_parallel() {
 
 #[test]
 fn test_energy_density_positive() {
-    let qed = QED::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
+    let qed = EM::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
 
     let energy = qed.energy_density().unwrap();
     // u = ½(|E|² + |B|²) — sign depends on metric convention
@@ -214,7 +214,7 @@ fn test_energy_density_positive() {
 #[test]
 fn test_lagrangian_density_null_field() {
     // Null field: L = ½(|E|² - |B|²) = 0
-    let qed = QED::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
+    let qed = EM::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
 
     let lagrangian = qed.lagrangian_density().unwrap();
     assert!(
@@ -227,7 +227,7 @@ fn test_lagrangian_density_null_field() {
 #[test]
 fn test_lagrangian_density_electric_dominated() {
     // |E| > |B| → L > 0
-    let qed = QED::from_components(2.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
+    let qed = EM::from_components(2.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
 
     let lagrangian = qed.lagrangian_density().unwrap();
     // L = ½(|E|² - |B|²) = ½(4 - 1) = 1.5 (sign depends on metric)
@@ -240,7 +240,7 @@ fn test_lagrangian_density_electric_dominated() {
 
 #[test]
 fn test_poynting_vector() {
-    let qed = QED::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
+    let qed = EM::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
 
     let s = qed.poynting_vector();
     assert!(s.is_ok(), "Poynting vector should compute successfully");
@@ -249,7 +249,7 @@ fn test_poynting_vector() {
 #[test]
 fn test_momentum_density_equals_poynting() {
     // In natural units (c = 1), g = S
-    let qed = QED::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
+    let qed = EM::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
 
     let s = qed.poynting_vector().unwrap();
     let g = qed.momentum_density().unwrap();
@@ -265,7 +265,7 @@ fn test_momentum_density_equals_poynting() {
 
 #[test]
 fn test_intensity() {
-    let qed = QED::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
+    let qed = EM::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
 
     let intensity = qed.intensity();
     assert!(intensity.is_ok(), "Intensity should compute successfully");
@@ -281,7 +281,7 @@ fn test_intensity() {
 
 #[test]
 fn test_lorentz_force_on_current() {
-    let qed = QED::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
+    let qed = EM::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
 
     // Create current density 4-vector with spatial component at index 2
     let metric = qed.electric_field().unwrap().metric();
@@ -301,14 +301,14 @@ fn test_lorentz_force_on_current() {
 #[test]
 fn test_is_radiation_field() {
     // Radiation: E ⟂ B
-    let radiation = QED::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
+    let radiation = EM::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
     assert!(
         radiation.is_radiation_field().unwrap(),
         "Orthogonal E,B should be radiation field"
     );
 
     // Not radiation: E ∥ B
-    let not_radiation = QED::from_components(1.0, 0.0, 0.0, 1.0, 0.0, 0.0).unwrap();
+    let not_radiation = EM::from_components(1.0, 0.0, 0.0, 1.0, 0.0, 0.0).unwrap();
     assert!(
         !not_radiation.is_radiation_field().unwrap(),
         "Parallel E,B should NOT be radiation field"
@@ -318,14 +318,14 @@ fn test_is_radiation_field() {
 #[test]
 fn test_is_null_field() {
     // Null: |E| = |B|
-    let null = QED::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
+    let null = EM::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
     assert!(
         null.is_null_field().unwrap(),
         "|E| = |B| should be null field"
     );
 
     // Not null: |E| ≠ |B|
-    let not_null = QED::from_components(2.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
+    let not_null = EM::from_components(2.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
     assert!(
         !not_null.is_null_field().unwrap(),
         "|E| ≠ |B| should NOT be null field"
@@ -339,7 +339,7 @@ fn test_is_null_field() {
 /// Tests computed_field_strength() which uses GaugeFieldWitness as single source of truth.
 #[test]
 fn test_computed_field_strength_shape() {
-    let qed = QED::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
+    let qed = EM::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
 
     let f = qed.computed_field_strength();
     assert!(f.is_ok(), "computed_field_strength should succeed for U(1)");
@@ -357,7 +357,7 @@ fn test_computed_field_strength_shape() {
 /// Tests the fundamental antisymmetry property: F_μν = -F_νμ
 #[test]
 fn test_computed_field_strength_antisymmetry() {
-    let qed = QED::from_components(1.0, 2.0, 3.0, 0.5, 1.5, 2.5).unwrap();
+    let qed = EM::from_components(1.0, 2.0, 3.0, 0.5, 1.5, 2.5).unwrap();
 
     let f = qed.computed_field_strength().unwrap();
     let data = f.as_slice();
@@ -398,7 +398,7 @@ fn test_computed_field_strength_antisymmetry() {
 /// Tests that diagonal elements are zero: F_μμ = 0
 #[test]
 fn test_computed_field_strength_diagonal_zero() {
-    let qed = QED::from_components(1.0, 2.0, 3.0, 0.5, 1.5, 2.5).unwrap();
+    let qed = EM::from_components(1.0, 2.0, 3.0, 0.5, 1.5, 2.5).unwrap();
 
     let f = qed.computed_field_strength().unwrap();
     let data = f.as_slice();
