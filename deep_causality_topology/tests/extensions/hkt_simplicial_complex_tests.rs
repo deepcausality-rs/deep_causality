@@ -3,7 +3,7 @@ use deep_causality_sparse::CsrMatrix;
 use deep_causality_topology::{Chain, ChainWitness, Simplex, SimplicialComplex, Skeleton};
 use std::sync::Arc;
 
-fn create_simple_complex() -> Arc<SimplicialComplex> {
+fn create_simple_complex() -> Arc<SimplicialComplex<f64>> {
     // Single triangle: {0, 1, 2}
     let vertices = vec![
         Simplex::new(vec![0]),

@@ -6,6 +6,7 @@
 use crate::Topology;
 use deep_causality_haft::{CoMonad, Functor, HKT, NoConstraint, Satisfies};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
+use std::sync::Arc;
 
 pub struct TopologyWitness;
 
@@ -24,9 +25,21 @@ impl Functor<TopologyWitness> for TopologyWitness {
         B: Satisfies<NoConstraint>,
         F: FnMut(A) -> B,
     {
+        // Map Data
         let new_data = CausalTensorWitness::fmap(fa.data, f);
+
+        // Map Complex
+        // We cannot use fa.complex.map(f) because A might not be Clone, equality of A and B is not guaranteed,
+        // and Arc prevents consuming the inner value.
+        // Thus, we reconstruct the topological structure (skeletons/boundaries) which is invariant,
+        // and drop the geometric structure (hodge operators) which depends on A.
+        let mut new_complex = crate::SimplicialComplex::<B>::default();
+        new_complex.skeletons = fa.complex.skeletons.clone();
+        new_complex.boundary_operators = fa.complex.boundary_operators.clone();
+        new_complex.coboundary_operators = fa.complex.coboundary_operators.clone();
+
         Topology {
-            complex: fa.complex,
+            complex: Arc::new(new_complex),
             grade: fa.grade,
             data: new_data,
             cursor: fa.cursor,
@@ -64,8 +77,15 @@ impl CoMonad<TopologyWitness> for TopologyWitness {
             result_vec.push(val);
         }
 
+        // Reconstruct complex for B
+        // Preserve topology from A
+        let mut new_complex = crate::SimplicialComplex::<B>::default();
+        new_complex.skeletons = fa.complex.skeletons.clone();
+        new_complex.boundary_operators = fa.complex.boundary_operators.clone();
+        new_complex.coboundary_operators = fa.complex.coboundary_operators.clone();
+
         Topology {
-            complex: fa.complex.clone(),
+            complex: Arc::new(new_complex),
             grade: fa.grade,
             data: CausalTensor::from_vec(result_vec, &shape),
             cursor: 0,

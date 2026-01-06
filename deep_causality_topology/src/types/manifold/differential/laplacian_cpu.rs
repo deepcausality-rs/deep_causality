@@ -5,28 +5,40 @@
 
 use crate::Manifold;
 
-use core::fmt::Debug;
-use deep_causality_num::{Field, FromPrimitive, Zero};
+use core::ops::Mul;
+use deep_causality_num::{Field, Float, FromPrimitive, Zero};
 use deep_causality_tensor::CausalTensor;
 
-impl<T> Manifold<T>
+impl<C, D> Manifold<C, D>
 where
-    T: Field
+    C: Field
+        + Float
         + Copy
         + FromPrimitive
-        + core::ops::Mul<f64, Output = T>
-        + core::ops::Neg<Output = T>
+        + core::ops::Neg<Output = C>
         + Default
         + PartialEq
         + Zero
-        + Debug,
+        + std::fmt::Debug
+        + From<f64>
+        + Clone,
+    D: Field
+        + Float
+        + Copy
+        + FromPrimitive
+        + core::ops::Neg<Output = D>
+        + Default
+        + PartialEq
+        + Zero
+        + std::fmt::Debug
+        + Mul<C, Output = D>,
 {
     /// Computes the Hodge-Laplacian operator `Δ` on a k-form.
     ///
     /// The Laplacian is defined as: Δ = dδ + δd
     /// where `d` is the exterior derivative and `δ` is the codifferential.
     /// It maps k-forms to k-forms.
-    pub fn laplacian(&self, k: usize) -> CausalTensor<T> {
+    pub fn laplacian(&self, k: usize) -> CausalTensor<D> {
         let n = self.complex.max_simplex_dimension();
         let current_dim_size = self.complex.skeletons()[k].simplices().len();
 
@@ -43,7 +55,7 @@ where
             temp_manifold.exterior_derivative(k - 1)
         } else {
             // If k=0, delta is 0, so d(delta) is 0
-            CausalTensor::new(vec![T::zero(); current_dim_size], vec![current_dim_size]).unwrap()
+            CausalTensor::new(vec![D::zero(); current_dim_size], vec![current_dim_size]).unwrap()
         };
 
         // 2. Term B: δ(d(ω))
@@ -57,7 +69,7 @@ where
             // Compute delta (k+1 -> k)
             temp_manifold.codifferential(k + 1)
         } else {
-            CausalTensor::new(vec![T::zero(); current_dim_size], vec![current_dim_size]).unwrap()
+            CausalTensor::new(vec![D::zero(); current_dim_size], vec![current_dim_size]).unwrap()
         };
 
         // 3. Sum: A + B
@@ -72,8 +84,8 @@ where
         let len = slice_a.len().max(slice_b.len());
 
         for i in 0..len {
-            let a = slice_a.get(i).copied().unwrap_or(T::zero());
-            let b = slice_b.get(i).copied().unwrap_or(T::zero());
+            let a = slice_a.get(i).copied().unwrap_or(D::zero());
+            let b = slice_b.get(i).copied().unwrap_or(D::zero());
             result_data.push(a + b);
         }
 

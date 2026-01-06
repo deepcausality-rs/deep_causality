@@ -25,7 +25,7 @@ use crate::{Simplex, SimplicialComplex, Skeleton, TopologyError};
 /// // Add a triangle (and implicitly its edges and vertices)
 /// builder.add_simplex(Simplex::new(vec![0, 1, 2])).expect("Failed to add simplex");
 ///
-/// let complex = builder.build().expect("Failed to build complex");
+/// let complex = builder.build::<f64>().expect("Failed to build complex");
 /// assert_eq!(complex.max_simplex_dimension(), 2);
 /// ```
 pub struct SimplicialComplexBuilder {
@@ -121,7 +121,7 @@ impl SimplicialComplexBuilder {
     /// # Returns
     /// * `Ok(SimplicialComplex)` on success.
     /// * `Err(TopologyError)` on internal inconsistency (unlikely if add_simplex logic holds).
-    pub fn build(mut self) -> Result<SimplicialComplex, TopologyError> {
+    pub fn build<T>(mut self) -> Result<SimplicialComplex<T>, TopologyError> {
         // Step 1: Sort simplices in each grade.
         // This is crucial because Skeleton::get_index relies on binary_search,
         // which requires sorted data.

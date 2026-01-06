@@ -11,9 +11,10 @@ use deep_causality_tensor::CausalTensor;
 
 use super::super::Manifold;
 
-impl<T> Manifold<T>
+impl<C, D> Manifold<C, D>
 where
-    T: Default + Copy + Clone + PartialEq + Zero,
+    C: Default + Copy + Clone + PartialEq + Zero,
+    D: Default + Copy + Clone + PartialEq + Zero,
 {
     /// Attempts to create a new `Manifold` from a `SimplicialComplex` and data.
     ///
@@ -34,8 +35,8 @@ where
     /// let manifold = Manifold::new(complex, data, 0)?;
     /// ```
     pub fn new(
-        complex: SimplicialComplex,
-        data: CausalTensor<T>,
+        complex: SimplicialComplex<C>,
+        data: CausalTensor<D>,
         cursor: usize,
     ) -> Result<Self, TopologyError> {
         Self::new_cpu(complex, data, cursor)
@@ -53,18 +54,19 @@ where
     /// * `Ok(Manifold)` - A valid manifold with metric
     /// * `Err(TopologyError)` - If validation fails
     pub fn with_metric(
-        complex: SimplicialComplex,
-        data: CausalTensor<T>,
-        metric: Option<ReggeGeometry>,
+        complex: SimplicialComplex<C>,
+        data: CausalTensor<D>,
+        metric: Option<ReggeGeometry<C>>,
         cursor: usize,
     ) -> Result<Self, TopologyError> {
         Self::with_metric_cpu(complex, data, metric, cursor)
     }
 }
 
-impl<T> Manifold<T>
+impl<C, D> Manifold<C, D>
 where
-    T: Clone,
+    C: Clone,
+    D: Clone,
 {
     /// Creates a shallow clone of the Manifold with cursor reset to 0.
     pub fn clone_shallow(&self) -> Self {

@@ -66,6 +66,25 @@ impl<T> DifferentialForm<T> {
             _phantom: PhantomData,
         }
     }
+
+    /// Creates a form from a vector of coefficients.
+    ///
+    /// # Arguments
+    ///
+    /// * `degree` - The form degree
+    /// * `dim` - The manifold dimension
+    /// * `coeffs` - The coefficient values
+    pub fn from_coefficients(degree: usize, dim: usize, coeffs: Vec<T>) -> Self {
+        let num_components = coeffs.len().max(1);
+        let coefficients = CausalTensor::from_vec(coeffs, &[num_components]);
+
+        Self {
+            degree,
+            dim,
+            coefficients,
+            _phantom: PhantomData,
+        }
+    }
 }
 
 // ============================================================================
@@ -118,25 +137,6 @@ impl<T: Clone + Default> DifferentialForm<T> {
         let num_components = binomial(dim, degree).max(1);
         let data = vec![value; num_components];
         let coefficients = CausalTensor::from_vec(data, &[num_components]);
-
-        Self {
-            degree,
-            dim,
-            coefficients,
-            _phantom: PhantomData,
-        }
-    }
-
-    /// Creates a form from a vector of coefficients.
-    ///
-    /// # Arguments
-    ///
-    /// * `degree` - The form degree
-    /// * `dim` - The manifold dimension
-    /// * `coeffs` - The coefficient values
-    pub fn from_coefficients(degree: usize, dim: usize, coeffs: Vec<T>) -> Self {
-        let num_components = coeffs.len().max(1);
-        let coefficients = CausalTensor::from_vec(coeffs, &[num_components]);
 
         Self {
             degree,
@@ -238,7 +238,7 @@ impl<T> DifferentialForm<T> {
 
 impl<T: Clone> DifferentialForm<T> {
     /// Maps a function over all coefficients.
-    pub fn map<U: Clone + Default, F>(&self, f: F) -> DifferentialForm<U>
+    pub fn map<U: Clone, F>(&self, f: F) -> DifferentialForm<U>
     where
         F: FnMut(&T) -> U,
     {

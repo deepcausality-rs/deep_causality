@@ -19,7 +19,7 @@ pub trait ElectroweakOps {
     fn standard_model_params() -> ElectroweakParams;
 
     fn extract_photon(&self) -> Result<EM, PhysicsError>;
-    fn extract_z(&self) -> Result<GaugeField<U1, f64, f64>, PhysicsError>;
+    fn extract_z(&self) -> Result<GaugeField<U1, f64, f64, f64>, PhysicsError>;
     fn sin2_theta_w(&self) -> f64;
     fn w_mass(&self) -> f64;
     fn z_mass(&self) -> f64;

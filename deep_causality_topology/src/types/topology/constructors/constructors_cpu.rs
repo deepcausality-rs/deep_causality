@@ -12,7 +12,7 @@ use std::sync::Arc;
 impl<T> Topology<T> {
     /// CPU implementation of Topology constructor.
     pub(crate) fn new_cpu(
-        complex: Arc<SimplicialComplex>,
+        complex: Arc<SimplicialComplex<T>>,
         grade: usize,
         data: CausalTensor<T>,
         cursor: usize,

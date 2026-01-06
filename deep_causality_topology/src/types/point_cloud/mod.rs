@@ -22,16 +22,16 @@ mod topology;
 ///
 /// This is a "0-Complex" that can be used to infer higher-order topological structures.
 #[derive(Debug, Clone, PartialEq)]
-pub struct PointCloud<T> {
+pub struct PointCloud<C, D> {
     /// The coordinates of the points. Typically NxM for N points in M dimensions.
-    pub(crate) points: CausalTensor<f64>,
+    pub(crate) points: CausalTensor<C>,
     /// Optional metadata associated with each point.
-    pub(crate) metadata: CausalTensor<T>,
+    pub(crate) metadata: CausalTensor<D>,
     /// The Focus (Cursor) for Comonadic extraction.
     pub(crate) cursor: usize,
 }
 
-impl<T> PointCloud<T> {
+impl<C, D> PointCloud<C, D> {
     /// Returns the number of points in the cloud.
     pub fn len(&self) -> usize {
         self.points.shape()[0]

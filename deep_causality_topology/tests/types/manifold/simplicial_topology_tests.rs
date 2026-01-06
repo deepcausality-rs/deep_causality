@@ -7,7 +7,7 @@ use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud, Simplex, SimplicialTopology};
 
 // Setup function to create a manifold from a point cloud
-fn setup_triangle_manifold() -> Manifold<f64> {
+fn setup_triangle_manifold() -> Manifold<f64, f64> {
     let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0], vec![3, 2]).unwrap();
     let metadata = CausalTensor::new(vec![1.0, 1.0, 1.0], vec![3]).unwrap();
     let point_cloud = PointCloud::new(points, metadata, 0).unwrap();

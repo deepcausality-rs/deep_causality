@@ -9,12 +9,12 @@ use deep_causality_topology::{
     BaseTopology, GaugeField, Lorentz, Manifold, Simplex, SimplicialComplexBuilder, U1,
 };
 
-fn create_test_manifold() -> Manifold<f64> {
+fn create_test_manifold() -> Manifold<f64, f64> {
     let mut builder = SimplicialComplexBuilder::new(1);
     builder
         .add_simplex(Simplex::new(vec![0, 1]))
         .expect("Failed to add simplex");
-    let complex = builder.build().expect("Failed to build complex");
+    let complex = builder.build::<f64>().expect("Failed to build complex");
 
     // Create dummy data for manifold
     let data = CausalTensor::zeros(&[3]); // 3 simplices (1 edge + 2 vertices)
@@ -30,7 +30,7 @@ fn test_gauge_field_new() {
     // 1 point, 4D spacetime, 4D spacetime, 1D lie algebra
     let field_strength = CausalTensor::from_vec(vec![0.0; 16], &[1, 4, 4, 1]);
 
-    let field: GaugeField<U1, f64, f64> =
+    let field: GaugeField<U1, f64, f64, f64> =
         GaugeField::new(manifold, Metric::Minkowski(4), connection, field_strength)
             .expect("Failed to create U1 gauge field");
 
@@ -47,7 +47,7 @@ fn test_gauge_field_with_default_metric() {
     let connection = CausalTensor::from_vec(vec![1.0; 4], &[1, 4, 1]);
     let field_strength = CausalTensor::from_vec(vec![0.0; 16], &[1, 4, 4, 1]);
 
-    let u1_field: GaugeField<U1, f64, f64> = GaugeField::with_default_metric(
+    let u1_field: GaugeField<U1, f64, f64, f64> = GaugeField::with_default_metric(
         manifold.clone(),
         connection.clone(),
         field_strength.clone(),
@@ -63,7 +63,7 @@ fn test_gauge_field_with_default_metric() {
     let lorentz_conn = CausalTensor::from_vec(vec![1.0; 24], &[1, 4, 6]); // 4D spacetime, 6D lie algebra
     let lorentz_fs = CausalTensor::from_vec(vec![0.0; 96], &[1, 4, 4, 6]);
 
-    let gr_field: GaugeField<Lorentz, f64, f64> =
+    let gr_field: GaugeField<Lorentz, f64, f64, f64> =
         GaugeField::with_default_metric(manifold, lorentz_conn, lorentz_fs)
             .expect("Failed to create Lorentz field");
 
@@ -78,7 +78,7 @@ fn test_gauge_field_getters() {
     let connection = CausalTensor::from_vec(vec![10.0], &[1, 1, 1]);
     let field_strength = CausalTensor::from_vec(vec![20.0], &[1, 1, 1, 1]);
 
-    let field: GaugeField<U1, f64, f64> = GaugeField::new(
+    let field: GaugeField<U1, f64, f64, f64> = GaugeField::new(
         manifold.clone(),
         Metric::Euclidean(1),
         connection,

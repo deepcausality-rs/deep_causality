@@ -74,7 +74,7 @@ impl ElectroweakOps for ElectroweakField {
             .map_err(|e| PhysicsError::TopologyError(e.to_string()))
     }
 
-    fn extract_z(&self) -> Result<GaugeField<U1, f64, f64>, PhysicsError> {
+    fn extract_z(&self) -> Result<GaugeField<U1, f64, f64, f64>, PhysicsError> {
         let params = Self::standard_model_params();
         let cos_theta = params.cos_theta_w();
         let sin_theta = params.sin_theta_w();

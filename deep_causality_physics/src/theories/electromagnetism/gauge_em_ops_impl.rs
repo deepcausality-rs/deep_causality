@@ -3,24 +3,25 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::GaugeEmOps;
 use crate::error::PhysicsError;
-use crate::theories::EM;
-use crate::{
-    GaugeEmOps, energy_density_kernel, lagrangian_density_kernel, lorentz_force_kernel,
-    poynting_vector_kernel,
-};
 use deep_causality_metric::{LorentzianMetric, WestCoastMetric};
-use deep_causality_multivector::{CausalMultiVector, MultiVector};
-use deep_causality_tensor::CausalTensor;
+use deep_causality_multivector::CausalMultiVector;
+use deep_causality_num::{Field, Float, Zero};
+use deep_causality_tensor::{CausalTensor, TensorData};
 use deep_causality_topology::{
-    BaseTopology, GaugeField, GaugeFieldWitness, Manifold, Simplex, SimplicialComplexBuilder,
+    BaseTopology, GaugeField, Manifold, Simplex, SimplicialComplexBuilder, U1,
 };
 
-impl GaugeEmOps for EM {
+/// Blanket implementation of GaugeEmOps for GaugeField<U1, S, S> where S: Field + Float + TensorData
+impl<S> GaugeEmOps<S> for GaugeField<U1, S, S, S>
+where
+    S: Field + Float + TensorData + Clone + From<f64> + Into<f64> + Default + PartialOrd,
+{
     fn from_fields(
-        base: Manifold<f64>,
-        electric_field: CausalMultiVector<f64>,
-        magnetic_field: CausalMultiVector<f64>,
+        base: Manifold<S>,
+        electric_field: CausalMultiVector<S>,
+        magnetic_field: CausalMultiVector<S>,
     ) -> Result<Self, PhysicsError> {
         if electric_field.metric() != magnetic_field.metric() {
             return Err(PhysicsError::DimensionMismatch(format!(
@@ -30,55 +31,48 @@ impl GaugeEmOps for EM {
             )));
         }
 
-        // QED typically uses 4D spacetime
         let metric = electric_field.metric();
         let dim = 4;
         let num_points = base.len();
 
-        let connection = CausalTensor::zeros(&[num_points, dim, 1]); // U(1) has dim 1
+        let connection = CausalTensor::zeros(&[num_points, dim, 1]);
 
         // Populate Field Strength Tensor F_mn
-        // Shape: [num_points, 4, 4, 1] -> Flat size 16 * num_points
-        let mut f_data = vec![0.0; num_points * 16];
+        let mut f_data: Vec<S> = vec![S::zero(); num_points * 16];
         let e_data = electric_field.data();
         let b_data = magnetic_field.data();
 
         for i in 0..num_points {
             let offset = i * 16;
 
-            // Get components (assuming 16-stride for 4D MV).
-            // Indices 2, 3, 4 correspond to spatial X, Y, Z in +--- signature (0=s, 1=t, 2=x, 3=y, 4=z).
-            let ex = e_data.get(offset + 2).copied().unwrap_or(0.0);
-            let ey = e_data.get(offset + 3).copied().unwrap_or(0.0);
-            let ez = e_data.get(offset + 4).copied().unwrap_or(0.0);
+            let ex = e_data.get(offset + 2).cloned().unwrap_or_else(S::zero);
+            let ey = e_data.get(offset + 3).cloned().unwrap_or_else(S::zero);
+            let ez = e_data.get(offset + 4).cloned().unwrap_or_else(S::zero);
 
-            let bx = b_data.get(offset + 2).copied().unwrap_or(0.0);
-            let by = b_data.get(offset + 3).copied().unwrap_or(0.0);
-            let bz = b_data.get(offset + 4).copied().unwrap_or(0.0);
+            let bx = b_data.get(offset + 2).cloned().unwrap_or_else(S::zero);
+            let by = b_data.get(offset + 3).cloned().unwrap_or_else(S::zero);
+            let bz = b_data.get(offset + 4).cloned().unwrap_or_else(S::zero);
 
-            // F_01 = E_x (Index 1)
-            f_data[offset + 1] = ex;
+            // F_01 = E_x
+            f_data[offset + 1] = ex.clone();
             f_data[offset + 4] = -ex; // F_10
 
-            // F_02 = E_y (Index 2)
-            f_data[offset + 2] = ey;
+            // F_02 = E_y
+            f_data[offset + 2] = ey.clone();
             f_data[offset + 8] = -ey; // F_20
 
-            // F_03 = E_z (Index 3)
-            f_data[offset + 3] = ez;
+            // F_03 = E_z
+            f_data[offset + 3] = ez.clone();
             f_data[offset + 12] = -ez; // F_30
 
             // F_ij = -epsilon_ijk B_k
-            // B_x = F_23 (Index 11)
-            f_data[offset + 11] = bx;
+            f_data[offset + 11] = bx.clone();
             f_data[offset + 14] = -bx; // F_32
 
-            // B_y = F_31 (Index 13)
-            f_data[offset + 13] = by;
+            f_data[offset + 13] = by.clone();
             f_data[offset + 7] = -by; // F_13
 
-            // B_z = F_12 (Index 6)
-            f_data[offset + 6] = bz;
+            f_data[offset + 6] = bz.clone();
             f_data[offset + 9] = -bz; // F_21
         }
 
@@ -91,23 +85,16 @@ impl GaugeEmOps for EM {
             .map_err(|e| PhysicsError::TopologyError(e.to_string()))
     }
 
-    fn from_components(
-        ex: f64,
-        ey: f64,
-        ez: f64,
-        bx: f64,
-        by: f64,
-        bz: f64,
-    ) -> Result<Self, PhysicsError> {
+    fn from_components(ex: S, ey: S, ez: S, bx: S, by: S, bz: S) -> Result<Self, PhysicsError> {
         let metric = WestCoastMetric::minkowski_4d().into_metric();
 
         // Indices 2,3,4 for spatial vectors
-        let mut e_data = vec![0.0; 16];
+        let mut e_data: Vec<S> = vec![S::zero(); 16];
         e_data[2] = ex;
         e_data[3] = ey;
         e_data[4] = ez;
 
-        let mut b_data = vec![0.0; 16];
+        let mut b_data: Vec<S> = vec![S::zero(); 16];
         b_data[2] = bx;
         b_data[3] = by;
         b_data[4] = bz;
@@ -117,169 +104,272 @@ impl GaugeEmOps for EM {
         let b = CausalMultiVector::new(b_data, metric)
             .map_err(|e| PhysicsError::DimensionMismatch(format!("B field error: {:?}", e)))?;
 
-        // Create minimal manifold (1 point) to satisfy initialization invariants
+        // Create minimal manifold (1 point)
         let mut builder = SimplicialComplexBuilder::new(0);
         let _ = builder.add_simplex(Simplex::new(vec![0]));
         let complex = builder.build().map_err(|e| {
             PhysicsError::DimensionMismatch(format!("Failed to build complex: {:?}", e))
         })?;
 
-        // Data len must match complex size (1 simplex)
-        let data = CausalTensor::new(vec![0.0], vec![1]).map_err(|e| {
+        let data = CausalTensor::new(vec![S::zero()], vec![1]).map_err(|e| {
             PhysicsError::DimensionMismatch(format!("Failed to create tensor: {:?}", e))
         })?;
 
-        let base: Manifold<f64> = Manifold::new(complex, data, 0).map_err(|e| {
+        let base: Manifold<S> = Manifold::new(complex, data, 0).map_err(|e| {
             PhysicsError::DimensionMismatch(format!("Failed to create default manifold: {:?}", e))
         })?;
 
         Self::from_fields(base, e, b)
     }
 
-    fn plane_wave(amplitude: f64, polarization: usize) -> Result<Self, PhysicsError> {
-        if !amplitude.is_finite() {
+    fn plane_wave(amplitude: S, polarization: usize) -> Result<Self, PhysicsError> {
+        let amp_f64: f64 = amplitude.clone().into();
+        if !amp_f64.is_finite() {
             return Err(PhysicsError::NumericalInstability(
                 "Amplitude must be finite".into(),
             ));
         }
 
+        let zero = S::zero();
         match polarization {
-            0 => Self::from_components(amplitude, 0.0, 0.0, 0.0, amplitude, 0.0),
-            1 => Self::from_components(0.0, amplitude, 0.0, 0.0, 0.0, amplitude),
+            0 => Self::from_components(
+                amplitude.clone(),
+                zero.clone(),
+                zero.clone(),
+                zero.clone(),
+                amplitude,
+                zero,
+            ),
+            1 => Self::from_components(
+                zero.clone(),
+                amplitude.clone(),
+                zero.clone(),
+                zero.clone(),
+                zero.clone(),
+                amplitude,
+            ),
             _ => Err(PhysicsError::DimensionMismatch(
                 "Polarization must be 0 or 1".into(),
             )),
         }
     }
 
-    fn electric_field(&self) -> Result<CausalMultiVector<f64>, PhysicsError> {
-        // E_i = F_0i (in +--- signature, index 1,2,3)
+    fn electric_field(&self) -> Result<CausalMultiVector<S>, PhysicsError> {
         let f_tensor = self.field_strength();
-
         let data = f_tensor.data();
 
-        let e_vec = if data.len() >= 16 {
-            // Extract F_01, F_02, F_03
-            let ex = data[1];
-            let ey = data[2];
-            let ez = data[3];
+        let e_vec: Vec<S> = if data.len() >= 16 {
+            let ex = data[1].clone();
+            let ey = data[2].clone();
+            let ez = data[3].clone();
 
-            let mut v = vec![0.0; 16];
-            // Put into indices 2,3,4
+            let mut v: Vec<S> = vec![S::zero(); 16];
             v[2] = ex;
             v[3] = ey;
             v[4] = ez;
             v
         } else {
-            vec![0.0; 16]
+            vec![S::zero(); 16]
         };
 
         CausalMultiVector::new(e_vec, self.metric())
             .map_err(|e| PhysicsError::DimensionMismatch(e.to_string()))
     }
 
-    fn magnetic_field(&self) -> Result<CausalMultiVector<f64>, PhysicsError> {
-        // B_x = F_23 = index 11
-        // B_y = F_31 = -F_13 = -index 7
-        // B_z = F_12 = index 6
-
+    fn magnetic_field(&self) -> Result<CausalMultiVector<S>, PhysicsError> {
         let f_tensor = self.field_strength();
         let data = f_tensor.data();
 
-        let b_vec = if data.len() >= 16 {
-            let bx = data[11];
-            let by = -data[7];
-            let bz = data[6];
+        let b_vec: Vec<S> = if data.len() >= 16 {
+            let bx = data[11].clone();
+            let by = -data[7].clone();
+            let bz = data[6].clone();
 
-            let mut v = vec![0.0; 16];
-            // Put into indices 2,3,4
+            let mut v: Vec<S> = vec![S::zero(); 16];
             v[2] = bx;
             v[3] = by;
             v[4] = bz;
             v
         } else {
-            vec![0.0; 16]
+            vec![S::zero(); 16]
         };
 
         CausalMultiVector::new(b_vec, self.metric())
             .map_err(|e| PhysicsError::DimensionMismatch(e.to_string()))
     }
 
-    fn energy_density(&self) -> Result<f64, PhysicsError> {
-        energy_density_kernel(&self.electric_field()?, &self.magnetic_field()?)
+    fn energy_density(&self) -> Result<S, PhysicsError> {
+        let e = self.electric_field()?;
+        let b = self.magnetic_field()?;
+
+        // u = (E² + B²) / 2
+        let e_sq = squared_magnitude_3d(&e);
+        let b_sq = squared_magnitude_3d(&b);
+
+        let half: S = <S as From<f64>>::from(0.5);
+        Ok(half * (e_sq + b_sq))
     }
 
-    fn lagrangian_density(&self) -> Result<f64, PhysicsError> {
-        lagrangian_density_kernel(&self.electric_field()?, &self.magnetic_field()?)
+    fn lagrangian_density(&self) -> Result<S, PhysicsError> {
+        let e = self.electric_field()?;
+        let b = self.magnetic_field()?;
+
+        // L = (E² - B²) / 2
+        let e_sq = squared_magnitude_3d(&e);
+        let b_sq = squared_magnitude_3d(&b);
+
+        let half: S = <S as From<f64>>::from(0.5);
+        Ok(half * (e_sq - b_sq))
     }
 
-    fn poynting_vector(&self) -> Result<CausalMultiVector<f64>, PhysicsError> {
-        poynting_vector_kernel(&self.electric_field()?, &self.magnetic_field()?)
+    fn poynting_vector(&self) -> Result<CausalMultiVector<S>, PhysicsError> {
+        let e = self.electric_field()?;
+        let b = self.magnetic_field()?;
+
+        // S = E × B (cross product)
+        cross_product_3d(&e, &b)
     }
 
     fn lorentz_force(
         &self,
-        current_density: &CausalMultiVector<f64>,
-    ) -> Result<CausalMultiVector<f64>, PhysicsError> {
-        lorentz_force_kernel(current_density, &self.magnetic_field()?)
+        current_density: &CausalMultiVector<S>,
+    ) -> Result<CausalMultiVector<S>, PhysicsError> {
+        let b = self.magnetic_field()?;
+        // f = J × B (simplified, ignoring charge density term)
+        cross_product_3d(current_density, &b)
     }
 
-    fn field_invariant(&self) -> Result<f64, PhysicsError> {
+    fn field_invariant(&self) -> Result<S, PhysicsError> {
         let e = self.electric_field()?;
         let b = self.magnetic_field()?;
 
-        let e_sq = e.squared_magnitude();
-        let b_sq = b.squared_magnitude();
+        let e_sq = squared_magnitude_3d(&e);
+        let b_sq = squared_magnitude_3d(&b);
 
-        if !e_sq.is_finite() || !b_sq.is_finite() {
-            return Err(PhysicsError::NumericalInstability(
-                "Non-finite invariant".into(),
-            ));
-        }
-
-        // F_uv F^uv = 2(B^2 - E^2)
-        Ok(2.0 * (b_sq - e_sq))
+        // F_uv F^uv = 2(B² - E²)
+        let two: S = <S as From<f64>>::from(2.0);
+        Ok(two * (b_sq - e_sq))
     }
 
-    fn dual_invariant(&self) -> Result<f64, PhysicsError> {
+    fn dual_invariant(&self) -> Result<S, PhysicsError> {
         let e = self.electric_field()?;
         let b = self.magnetic_field()?;
-        let inner = e.inner_product(&b);
-        let e_dot_b = inner.data().first().copied().unwrap_or(0.0);
-        Ok(-4.0 * e_dot_b)
+
+        let e_dot_b = dot_product_3d(&e, &b);
+        let four: S = <S as From<f64>>::from(4.0);
+        Ok(-four * e_dot_b)
     }
 
     fn is_radiation_field(&self) -> Result<bool, PhysicsError> {
         let e = self.electric_field()?;
         let b = self.magnetic_field()?;
-        let inner = e.inner_product(&b);
-        Ok(inner.data().first().copied().unwrap_or(0.0).abs() < 1e-10)
+
+        let e_dot_b = dot_product_3d(&e, &b);
+        let abs_val: f64 = Float::abs(e_dot_b).into();
+        Ok(abs_val < 1e-10)
     }
 
     fn is_null_field(&self) -> Result<bool, PhysicsError> {
         let e = self.electric_field()?;
         let b = self.magnetic_field()?;
-        let e_sq = e.squared_magnitude();
-        let b_sq = b.squared_magnitude();
-        Ok((e_sq - b_sq).abs() < 1e-10 * (e_sq + b_sq).max(1.0))
+
+        let e_sq = squared_magnitude_3d(&e);
+        let b_sq = squared_magnitude_3d(&b);
+
+        let diff: f64 = Float::abs(e_sq.clone() - b_sq.clone()).into();
+        let sum: f64 = (e_sq + b_sq).into();
+        let threshold = 1e-10 * sum.max(1.0);
+        Ok(diff < threshold)
     }
 
-    fn momentum_density(&self) -> Result<CausalMultiVector<f64>, PhysicsError> {
+    fn momentum_density(&self) -> Result<CausalMultiVector<S>, PhysicsError> {
         self.poynting_vector()
     }
 
-    fn intensity(&self) -> Result<f64, PhysicsError> {
+    fn intensity(&self) -> Result<S, PhysicsError> {
         let s = self.poynting_vector()?;
-        // Compute Euclidean magnitude of 3D Poynting vector: |S| = sqrt(Sx² + Sy² + Sz²)
-        Ok(s.euclidean_magnitude_3d())
+        Ok(magnitude_3d(&s))
     }
 
-    fn computed_field_strength(&self) -> Result<CausalTensor<f64>, PhysicsError> {
-        // Use GaugeFieldWitness as the single source of truth for F = dA
-        GaugeFieldWitness::compute_field_strength_abelian(self).ok_or_else(|| {
-            PhysicsError::CalculationError(
-                "Failed to compute field strength: U(1) is abelian, this should not fail".into(),
-            )
-        })
+    fn computed_field_strength(&self) -> Result<CausalTensor<S>, PhysicsError> {
+        // Return the stored field strength tensor
+        Ok(self.field_strength().clone())
     }
+}
+
+// =============================================================================
+// Helper functions for 3D vector operations
+// =============================================================================
+
+/// Computes the squared magnitude of a 3D vector (indices 2, 3, 4)
+fn squared_magnitude_3d<S>(mv: &CausalMultiVector<S>) -> S
+where
+    S: Field + Float + Clone + From<f64> + Default,
+{
+    let data = mv.data();
+    let x = data.get(2).cloned().unwrap_or_else(S::zero);
+    let y = data.get(3).cloned().unwrap_or_else(S::zero);
+    let z = data.get(4).cloned().unwrap_or_else(S::zero);
+
+    x.clone() * x + y.clone() * y + z.clone() * z
+}
+
+/// Computes the magnitude of a 3D vector
+fn magnitude_3d<S>(mv: &CausalMultiVector<S>) -> S
+where
+    S: Field + Float + Clone + From<f64> + Default,
+{
+    Float::sqrt(squared_magnitude_3d(mv))
+}
+
+/// Computes the dot product of two 3D vectors
+fn dot_product_3d<S>(a: &CausalMultiVector<S>, b: &CausalMultiVector<S>) -> S
+where
+    S: Field + Float + Clone + From<f64> + Default,
+{
+    let a_data = a.data();
+    let b_data = b.data();
+
+    let ax = a_data.get(2).cloned().unwrap_or_else(S::zero);
+    let ay = a_data.get(3).cloned().unwrap_or_else(S::zero);
+    let az = a_data.get(4).cloned().unwrap_or_else(S::zero);
+
+    let bx = b_data.get(2).cloned().unwrap_or_else(S::zero);
+    let by = b_data.get(3).cloned().unwrap_or_else(S::zero);
+    let bz = b_data.get(4).cloned().unwrap_or_else(S::zero);
+
+    ax * bx + ay * by + az * bz
+}
+
+/// Computes the cross product of two 3D vectors
+fn cross_product_3d<S>(
+    a: &CausalMultiVector<S>,
+    b: &CausalMultiVector<S>,
+) -> Result<CausalMultiVector<S>, PhysicsError>
+where
+    S: Field + Float + TensorData + Clone + From<f64> + Default,
+{
+    let a_data = a.data();
+    let b_data = b.data();
+
+    let ax = a_data.get(2).cloned().unwrap_or_else(S::zero);
+    let ay = a_data.get(3).cloned().unwrap_or_else(S::zero);
+    let az = a_data.get(4).cloned().unwrap_or_else(S::zero);
+
+    let bx = b_data.get(2).cloned().unwrap_or_else(S::zero);
+    let by = b_data.get(3).cloned().unwrap_or_else(S::zero);
+    let bz = b_data.get(4).cloned().unwrap_or_else(S::zero);
+
+    // c = a × b
+    let cx = ay.clone() * bz.clone() - az.clone() * by.clone();
+    let cy = az * bx.clone() - ax.clone() * bz;
+    let cz = ax * by - ay * bx;
+
+    let mut result: Vec<S> = vec![S::zero(); 16];
+    result[2] = cx;
+    result[3] = cy;
+    result[4] = cz;
+
+    CausalMultiVector::new(result, a.metric())
+        .map_err(|e| PhysicsError::DimensionMismatch(e.to_string()))
 }

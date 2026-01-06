@@ -7,48 +7,57 @@ use crate::Manifold;
 use deep_causality_haft::{
     Applicative, CoMonad, Foldable, Functor, HKT, Monad, NoConstraint, Pure, Satisfies,
 };
-use deep_causality_tensor::CausalTensor;
+use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
+use std::marker::PhantomData;
 
 // ============================================================================
 // PART 1: Free (Unbounded) Witness - "ManifoldWitness"
 // Use Case: General computation, chaining, dynamic pipelines.
 // ============================================================================
 
-pub struct ManifoldWitness;
+pub struct ManifoldWitness<C>(PhantomData<C>);
 
-impl HKT for ManifoldWitness {
+impl<C> HKT for ManifoldWitness<C>
+where
+    C: Satisfies<NoConstraint>,
+{
     type Constraint = NoConstraint;
     type Type<T>
-        = Manifold<T>
+        = Manifold<C, T>
     where
         T: Satisfies<NoConstraint>;
 }
 
-// --- Algebraic Implementations (Free) ---
-
-impl Functor<ManifoldWitness> for ManifoldWitness {
-    fn fmap<A, B, Func>(m_a: Manifold<A>, f: Func) -> Manifold<B>
+impl<C> Functor<ManifoldWitness<C>> for ManifoldWitness<C>
+where
+    C: Satisfies<NoConstraint> + Clone,
+{
+    fn fmap<A, B, Func>(m_a: Manifold<C, A>, mut f: Func) -> Manifold<C, B>
     where
         A: Satisfies<NoConstraint>,
         B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
-        let shape = m_a.data.shape().to_vec();
-        // Convert to vec to iterate (BackendTensor !: IntoIterator)
-        let new_data = m_a.data.into_vec().into_iter().map(f).collect::<Vec<B>>();
-        let new_tensor = CausalTensor::from_vec(new_data, &shape);
+        // 1. Map Data
+        // Capture f in a closure for data mapping
+        let new_data_tensor = CausalTensorWitness::fmap(m_a.data, |x| f(x));
 
+        // 2. Complex and Metric are INVARIANT because they depend on C, not A or B.
+        // We can just clone them.
         Manifold {
-            complex: m_a.complex,
-            data: new_tensor,
-            metric: m_a.metric,
+            complex: m_a.complex.clone(),
+            data: new_data_tensor,
+            metric: m_a.metric.clone(),
             cursor: m_a.cursor,
         }
     }
 }
 
-impl Foldable<ManifoldWitness> for ManifoldWitness {
-    fn fold<A, B, Func>(fa: Manifold<A>, init: B, f: Func) -> B
+impl<C> Foldable<ManifoldWitness<C>> for ManifoldWitness<C>
+where
+    C: Satisfies<NoConstraint>,
+{
+    fn fold<A, B, Func>(fa: Manifold<C, A>, init: B, f: Func) -> B
     where
         A: Satisfies<NoConstraint>,
         Func: FnMut(B, A) -> B,
@@ -57,8 +66,11 @@ impl Foldable<ManifoldWitness> for ManifoldWitness {
     }
 }
 
-impl Pure<ManifoldWitness> for ManifoldWitness {
-    fn pure<T>(value: T) -> Manifold<T>
+impl<C> Pure<ManifoldWitness<C>> for ManifoldWitness<C>
+where
+    C: Satisfies<NoConstraint> + Default,
+{
+    fn pure<T>(value: T) -> Manifold<C, T>
     where
         T: Satisfies<NoConstraint>,
     {
@@ -72,8 +84,11 @@ impl Pure<ManifoldWitness> for ManifoldWitness {
     }
 }
 
-impl Monad<ManifoldWitness> for ManifoldWitness {
-    fn bind<A, B, Func>(m_a: Manifold<A>, mut f: Func) -> Manifold<B>
+impl<C> Monad<ManifoldWitness<C>> for ManifoldWitness<C>
+where
+    C: Satisfies<NoConstraint> + Clone + Default,
+{
+    fn bind<A, B, Func>(m_a: Manifold<C, A>, mut f: Func) -> Manifold<C, B>
     where
         A: Satisfies<NoConstraint>,
         B: Satisfies<NoConstraint>,
@@ -89,17 +104,21 @@ impl Monad<ManifoldWitness> for ManifoldWitness {
         let new_len = result_data.len();
         let new_tensor = CausalTensor::from_vec(result_data, &[new_len]);
 
+        // We clone the input structure.
         Manifold {
-            complex: m_a.complex,
+            complex: m_a.complex.clone(),
             data: new_tensor,
-            metric: m_a.metric,
+            metric: m_a.metric.clone(),
             cursor: 0,
         }
     }
 }
 
-impl Applicative<ManifoldWitness> for ManifoldWitness {
-    fn apply<A, B, Func>(f_ab: Manifold<Func>, f_a: Manifold<A>) -> Manifold<B>
+impl<C> Applicative<ManifoldWitness<C>> for ManifoldWitness<C>
+where
+    C: Satisfies<NoConstraint> + Clone + Default,
+{
+    fn apply<A, B, Func>(f_ab: Manifold<C, Func>, f_a: Manifold<C, A>) -> Manifold<C, B>
     where
         A: Satisfies<NoConstraint> + Clone,
         B: Satisfies<NoConstraint>,
@@ -118,17 +137,21 @@ impl Applicative<ManifoldWitness> for ManifoldWitness {
 
         let new_tensor = CausalTensor::from_vec(new_data, &shape);
 
+        // Preserve topology from A
         Manifold {
-            complex: f_a.complex,
+            complex: f_a.complex.clone(),
             data: new_tensor,
-            metric: f_a.metric,
+            metric: f_a.metric.clone(),
             cursor: 0,
         }
     }
 }
 
-impl CoMonad<ManifoldWitness> for ManifoldWitness {
-    fn extract<A>(fa: &Manifold<A>) -> A
+impl<C> CoMonad<ManifoldWitness<C>> for ManifoldWitness<C>
+where
+    C: Satisfies<NoConstraint> + Clone,
+{
+    fn extract<A>(fa: &Manifold<C, A>) -> A
     where
         A: Satisfies<NoConstraint> + Clone,
     {
@@ -142,9 +165,9 @@ impl CoMonad<ManifoldWitness> for ManifoldWitness {
             .expect("Cursor out of bounds")
     }
 
-    fn extend<A, B, Func>(fa: &Manifold<A>, mut f: Func) -> Manifold<B>
+    fn extend<A, B, Func>(fa: &Manifold<C, A>, mut f: Func) -> Manifold<C, B>
     where
-        Func: FnMut(&Manifold<A>) -> B,
+        Func: FnMut(&Manifold<C, A>) -> B,
         A: Satisfies<NoConstraint> + Clone,
         B: Satisfies<NoConstraint>,
     {
@@ -152,13 +175,15 @@ impl CoMonad<ManifoldWitness> for ManifoldWitness {
         let shape = fa.data.shape().to_vec();
         let new_data: Vec<B> = (0..len)
             .map(|i| {
-                let mut view = fa.clone();
+                let mut view = fa.clone_shallow();
                 view.cursor = i;
                 f(&view)
             })
             .collect();
 
         let new_tensor = CausalTensor::from_vec(new_data, &shape);
+
+        // Preserve topology and metric from A!
         Manifold {
             complex: fa.complex.clone(),
             data: new_tensor,
@@ -167,5 +192,3 @@ impl CoMonad<ManifoldWitness> for ManifoldWitness {
         }
     }
 }
-
-// Strict (Bounded) Witness - Postoponed until new trait solver stable.

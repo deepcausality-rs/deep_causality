@@ -8,7 +8,7 @@
 use crate::SimplicialComplex;
 use core::fmt::{Display, Formatter};
 
-impl Display for SimplicialComplex {
+impl<T> Display for SimplicialComplex<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         writeln!(f, "CausalComplex:")?;
         writeln!(f, "  Number of Skeletons: {}", self.skeletons.len())?;

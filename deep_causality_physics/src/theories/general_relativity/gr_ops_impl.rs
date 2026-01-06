@@ -27,7 +27,7 @@ impl GrOps for GR {
         // Use East Coast metric type info for the wrapper (needed for structure, though unused for Ricci contraction)
         let metric_sig = EastCoastMetric::minkowski_4d().into_metric();
 
-        let ct = CurvatureTensor::<(), (), (), ()>::new(
+        let ct = CurvatureTensor::<f64, (), (), (), ()>::new(
             riemann.clone(),
             metric_sig,
             CurvatureSymmetry::Riemann,

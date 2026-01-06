@@ -5,27 +5,30 @@
 
 //! CPU implementation of geometry operations for Manifold.
 
+use deep_causality_num::{Float, Zero};
+use std::iter::Product;
+
 use crate::{Manifold, Simplex, TopologyError};
 use deep_causality_tensor::{CausalTensor, CausalTensorError};
 use std::collections::HashMap;
 
-impl<T> Manifold<T> {
+impl<C, D> Manifold<C, D>
+where
+    C: Float + Zero + Copy + PartialOrd + From<f64> + Into<f64> + Product,
+{
     /// CPU implementation of simplex volume squared calculation.
-    pub(crate) fn simplex_volume_squared_cpu(
-        &self,
-        simplex: &Simplex,
-    ) -> Result<f64, TopologyError> {
+    pub(crate) fn simplex_volume_squared_cpu(&self, simplex: &Simplex) -> Result<C, TopologyError> {
         let k = simplex.vertices.len() - 1; // k is the dimension of the simplex
 
         if k == 0 {
-            return Ok(1.0); // Volume of a point is 1 by convention
+            return Ok(<C as From<f64>>::from(1.0)); // Volume of a point is 1 by convention
         }
 
         let num_vertices = k + 1;
 
         // The Cayley-Menger matrix is (k+2)x(k+2)
         let matrix_dim = k + 2;
-        let mut cm_matrix_data = vec![0.0; matrix_dim * matrix_dim];
+        let mut cm_matrix_data = vec![C::zero(); matrix_dim * matrix_dim];
 
         // Get the squared edge lengths for the simplex
         let squared_lengths = self.get_simplex_edge_lengths_squared_cpu(simplex)?;
@@ -33,15 +36,15 @@ impl<T> Manifold<T> {
         // Fill the Cayley-Menger matrix
         // Top row and left column are 1s, except for (0,0) which is 0.
         for i in 1..matrix_dim {
-            cm_matrix_data[i] = 1.0; // First column
-            cm_matrix_data[i * matrix_dim] = 1.0; // First row
+            cm_matrix_data[i] = <C as From<f64>>::from(1.0); // First column
+            cm_matrix_data[i * matrix_dim] = <C as From<f64>>::from(1.0); // First row
         }
 
         // Fill the rest of the matrix with squared distances
         for i in 0..num_vertices {
             for j in i..num_vertices {
                 let dist_sq = if i == j {
-                    0.0
+                    C::zero()
                 } else {
                     // Find the squared length for edge (v_i, v_j)
                     let key = if simplex.vertices[i] < simplex.vertices[j] {
@@ -64,21 +67,31 @@ impl<T> Manifold<T> {
             determinant_cpu(&cm_tensor).map_err(|e| TopologyError::TensorError(e.to_string()))?;
 
         // Formula for squared k-volume
-        let k_fac = (1..=k).map(|i| i as f64).product::<f64>();
-        let denominator = 2.0_f64.powi(k as i32) * k_fac.powi(2);
-        let sign = if k.is_multiple_of(2) { -1.0 } else { 1.0 }; // (-1)^(k+1)
+        let k_fac = (1..=k)
+            .map(|i| <C as From<f64>>::from(i as f64))
+            .product::<C>();
+        let denominator = <C as From<f64>>::from(2.0f64).powi(k as i32) * k_fac.powi(2);
+        let sign = if k.is_multiple_of(2) {
+            <C as From<f64>>::from(-1.0)
+        } else {
+            <C as From<f64>>::from(1.0)
+        }; // (-1)^(k+1)
 
         let vol_sq = (sign / denominator) * det;
 
         // Due to floating point inaccuracies, result can be a tiny negative number.
-        if vol_sq < 0.0 { Ok(0.0) } else { Ok(vol_sq) }
+        if vol_sq < C::zero() {
+            Ok(C::zero())
+        } else {
+            Ok(vol_sq)
+        }
     }
 
     /// CPU implementation: get all edge lengths for a given simplex.
     fn get_simplex_edge_lengths_squared_cpu(
         &self,
         simplex: &Simplex,
-    ) -> Result<HashMap<(usize, usize), f64>, TopologyError> {
+    ) -> Result<HashMap<(usize, usize), C>, TopologyError> {
         let metric = self
             .metric
             .as_ref()
@@ -119,7 +132,10 @@ impl<T> Manifold<T> {
 }
 
 /// CPU implementation of determinant using Laplace expansion.
-pub(crate) fn determinant_cpu(matrix: &CausalTensor<f64>) -> Result<f64, CausalTensorError> {
+pub(crate) fn determinant_cpu<T>(matrix: &CausalTensor<T>) -> Result<T, CausalTensorError>
+where
+    T: Float + Zero + Copy + PartialOrd + From<f64> + Into<f64>,
+{
     let shape = matrix.shape();
     if shape.len() != 2 || shape[0] != shape[1] {
         return Err(CausalTensorError::InvalidParameter(
@@ -129,7 +145,7 @@ pub(crate) fn determinant_cpu(matrix: &CausalTensor<f64>) -> Result<f64, CausalT
     let n = shape[0];
 
     if n == 0 {
-        return Ok(1.0); // Determinant of a 0x0 matrix is 1
+        return Ok(<T as From<f64>>::from(1.0)); // Determinant of a 0x0 matrix is 1
     }
     if n == 1 {
         return Ok(matrix.as_slice()[0]);
@@ -139,9 +155,13 @@ pub(crate) fn determinant_cpu(matrix: &CausalTensor<f64>) -> Result<f64, CausalT
         return Ok(m[0] * m[3] - m[1] * m[2]);
     }
 
-    let mut det = 0.0;
+    let mut det = T::zero();
     for j1 in 0..n {
-        let sign = if j1 % 2 == 0 { 1.0 } else { -1.0 };
+        let sign = if j1 % 2 == 0 {
+            <T as From<f64>>::from(1.0)
+        } else {
+            <T as From<f64>>::from(-1.0)
+        };
 
         // Create sub-matrix (minor)
         let mut sub_matrix_data = Vec::with_capacity((n - 1) * (n - 1));
@@ -154,7 +174,7 @@ pub(crate) fn determinant_cpu(matrix: &CausalTensor<f64>) -> Result<f64, CausalT
             }
         }
         let sub_matrix = CausalTensor::new(sub_matrix_data, vec![n - 1, n - 1])?;
-        det += sign * matrix.get(&[0, j1]).unwrap() * determinant_cpu(&sub_matrix)?;
+        det = det + sign * *matrix.get(&[0, j1]).unwrap() * determinant_cpu(&sub_matrix)?;
     }
 
     Ok(det)

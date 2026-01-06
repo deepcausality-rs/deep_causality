@@ -9,13 +9,13 @@ use deep_causality_topology::{
     StokesAdjunction, StokesContext,
 };
 
-fn simple_complex() -> SimplicialComplex {
+fn simple_complex() -> SimplicialComplex<f64> {
     // Triangle: 3 vertices, 3 edges, 1 face
     let mut builder = SimplicialComplexBuilder::new(2);
     builder
         .add_simplex(Simplex::new(vec![0, 1, 2]))
         .expect("Failed to add simplex");
-    builder.build().expect("Failed to build complex")
+    builder.build::<f64>().expect("Failed to build complex")
 }
 
 #[test]

@@ -37,7 +37,7 @@ fn test_topology_extend() {
     let topology = Topology::new(complex, 0, data, 0).unwrap();
 
     // Extend: Value + Cursor
-    let extended = TopologyWitness::extend(&topology, |w| {
+    let extended = TopologyWitness::extend(&topology, |w: &Topology<f64>| {
         let val = TopologyWitness::extract(w);
         val + (w.cursor() as f64)
     });

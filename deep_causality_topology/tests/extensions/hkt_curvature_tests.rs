@@ -11,7 +11,7 @@ use deep_causality_topology::{
 
 #[test]
 fn test_geodesic_deviation_flat() {
-    let flat: CurvatureTensor<TensorVector, TensorVector, TensorVector, TensorVector> =
+    let flat: CurvatureTensor<f64, TensorVector, TensorVector, TensorVector, TensorVector> =
         CurvatureTensor::flat(4);
 
     let u = TensorVector::basis(4, 0);
@@ -39,7 +39,7 @@ fn test_tensor_vector_operations() {
 #[test]
 fn test_curved_tensor_contraction() {
     // Create a simple non-flat curvature tensor
-    let tensor: CurvatureTensor<TensorVector, TensorVector, TensorVector, TensorVector> =
+    let tensor: CurvatureTensor<f64, TensorVector, TensorVector, TensorVector, TensorVector> =
         CurvatureTensor::from_generator(
             2,
             Metric::Euclidean(2),
@@ -77,7 +77,7 @@ fn test_curved_tensor_contraction() {
 fn test_scatter_vectors() {
     // Test basic S-matrix placeholder logic
     // Interaction tensor with 1.0 everywhere
-    let tensor: CurvatureTensor<TensorVector, TensorVector, TensorVector, TensorVector> =
+    let tensor: CurvatureTensor<f64, TensorVector, TensorVector, TensorVector, TensorVector> =
         CurvatureTensor::from_generator(
             2,
             Metric::Euclidean(2),

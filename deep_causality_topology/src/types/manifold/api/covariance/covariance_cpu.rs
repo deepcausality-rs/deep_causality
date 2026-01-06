@@ -13,9 +13,9 @@ use crate::{Manifold, TopologyError};
 #[allow(dead_code)]
 const GPU_THRESHOLD: usize = 1000;
 
-impl<T> Manifold<T>
+impl<C, D> Manifold<C, D>
 where
-    T: Into<f64> + Copy,
+    D: Into<f64> + Copy,
 {
     /// Computes the covariance matrix of the field data.
     ///

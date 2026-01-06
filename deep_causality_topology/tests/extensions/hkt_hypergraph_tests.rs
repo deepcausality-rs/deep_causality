@@ -41,7 +41,7 @@ fn test_hypergraph_extend() {
 
     // Extend: Count how many hyperedges the current node belongs to
     // (This is a structural property, not dependent on data values, but shows access to structure)
-    let extended = HypergraphWitness::extend(&hypergraph, |w| {
+    let extended = HypergraphWitness::extend(&hypergraph, |w: &Hypergraph<i32>| {
         let current_node = w.cursor();
         w.hyperedges_on_node(current_node).unwrap().len() as i32
     });

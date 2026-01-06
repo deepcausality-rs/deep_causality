@@ -9,7 +9,7 @@ use deep_causality_topology::{Simplex, SimplicialComplexBuilder, SimplicialTopol
 fn test_builder_new() {
     let builder = SimplicialComplexBuilder::new(2);
     // Cannot inspect builder internals directly easily, but we can verify it builds empty.
-    let complex = builder.build().unwrap();
+    let complex = builder.build::<f64>().unwrap();
     assert_eq!(complex.max_simplex_dimension(), 2); // Complex created with dim 2 capacity
 }
 
@@ -21,7 +21,7 @@ fn test_builder_add_simplex_success() {
     // Add edge
     builder.add_simplex(Simplex::new(vec![0, 1])).unwrap();
 
-    let complex = builder.build().unwrap();
+    let complex = builder.build::<f64>().unwrap();
 
     assert!(complex.contains_simplex(&Simplex::new(vec![0])));
     assert!(complex.contains_simplex(&Simplex::new(vec![1]))); // Should be added by closure of edge
@@ -38,7 +38,7 @@ fn test_builder_add_simplex_closure() {
     // Face: [0, 1, 2]
     builder.add_simplex(Simplex::new(vec![0, 1, 2])).unwrap();
 
-    let complex = builder.build().unwrap();
+    let complex = builder.build::<f64>().unwrap();
 
     // Check counts
     assert_eq!(complex.num_simplices_at_grade(0).unwrap(), 3);
@@ -85,7 +85,7 @@ fn test_builder_build_sorting() {
     builder.add_simplex(Simplex::new(vec![2, 3])).unwrap();
     builder.add_simplex(Simplex::new(vec![0, 1])).unwrap();
 
-    let complex = builder.build().unwrap();
+    let complex = builder.build::<f64>().unwrap();
 
     let s0 = complex.get_simplex(1, 0).unwrap();
     let s1 = complex.get_simplex(1, 1).unwrap();
@@ -99,7 +99,7 @@ fn test_builder_operators_correctness() {
     // Triangle [0, 1, 2]
     let mut builder = SimplicialComplexBuilder::new(2);
     builder.add_simplex(Simplex::new(vec![0, 1, 2])).unwrap();
-    let complex = builder.build().unwrap();
+    let complex = builder.build::<f64>().unwrap();
 
     // Check Boundary D1 (Edges -> Vertices)
     // Vertices: 0, 1, 2 (Sorted)

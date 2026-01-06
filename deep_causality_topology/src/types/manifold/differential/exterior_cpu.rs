@@ -8,9 +8,10 @@ use core::fmt::Debug;
 use deep_causality_num::Field;
 use deep_causality_tensor::CausalTensor;
 
-impl<T> Manifold<T>
+impl<C, D> Manifold<C, D>
 where
-    T: Field + Copy + Default + PartialEq + core::ops::Neg<Output = T> + Debug,
+    C: Default + Copy + PartialEq + deep_causality_num::Zero,
+    D: Field + Copy + Default + PartialEq + core::ops::Neg<Output = D> + Debug,
 {
     /// Computes the exterior derivative of a k-form.
     ///
@@ -31,7 +32,7 @@ where
     ///
     /// For discrete differential forms on simplicial complexes,
     /// the exterior derivative is represented by the coboundary operator.
-    pub fn exterior_derivative(&self, k: usize) -> CausalTensor<T> {
+    pub fn exterior_derivative(&self, k: usize) -> CausalTensor<D> {
         // The exterior derivative d_k is represented by the coboundary operator C_k = B_{k+1}^T.
         if k >= self.complex.coboundary_operators.len() {
             // d of the highest dimension is zero
@@ -52,7 +53,7 @@ where
             // This handles the case where the sparse matrix might have implicit dimensions
             // essentially padding/truncating to the correct skeleton size.
             let mut corrected = result;
-            corrected.resize(next_dim_size, T::zero());
+            corrected.resize(next_dim_size, D::zero());
             return CausalTensor::new(corrected, vec![next_dim_size]).unwrap();
         }
 

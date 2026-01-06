@@ -14,15 +14,18 @@
 //! use deep_causality_topology::{GaugeField, U1, Lorentz, Manifold};
 //! use deep_causality_tensor::CausalTensor;
 //!
-//! // Create an electromagnetic (QED) gauge field
-//! let em: GaugeField<U1, f64, f64> = GaugeField::with_default_metric(
+//! // Create an electromagnetic (QED) gauge field with f64 precision
+//! let em: GaugeField<U1, f64, f64, f64> = GaugeField::with_default_metric(
 //!     spacetime,
 //!     potential,
 //!     field_strength,
 //! );
 //!
+//! // Create a high-precision EM field with DoubleFloat
+//! let em_double: GaugeField<U1, DoubleFloat, DoubleFloat, DoubleFloat> = ...;
+//!
 //! // Create a gravitational (GR) gauge field
-//! let gravity: GaugeField<Lorentz, f64, f64> = GaugeField::with_default_metric(
+//! let gravity: GaugeField<Lorentz, f64, f64, f64> = GaugeField::with_default_metric(
 //!     spacetime,
 //!     christoffel,
 //!     riemann_tensor,
@@ -37,19 +40,21 @@ pub use group::GaugeGroup;
 use crate::errors::topology_error::TopologyError;
 use crate::{BaseTopology, Manifold};
 use deep_causality_metric::Metric;
-use deep_causality_tensor::CausalTensor;
+use deep_causality_tensor::{CausalTensor, TensorData};
 use std::marker::PhantomData;
 
 /// A gauge field over a base manifold.
 ///
 /// A gauge field is a principal fiber bundle with connection, parameterized by:
 /// - A gauge group G defining the local symmetry
+/// - A base manifold scalar type T
 /// - A connection (gauge potential) A
 /// - A field strength (curvature) F
 ///
 /// # Type Parameters
 ///
 /// * `G` - The gauge group (U1, SU2, SU3, Lorentz, etc.)
+/// * `T` - The base manifold scalar type (e.g., f64, DoubleFloat)
 /// * `A` - The connection (potential) scalar type
 /// * `F` - The field strength (curvature) scalar type
 ///
@@ -74,9 +79,9 @@ use std::marker::PhantomData;
 /// | QCD    | SU(3)       | Gluon field G_μ^a | G_μν^a            |
 /// | GR     | SO(3,1)     | Christoffel Γ     | Riemann R^ρ_σμν   |
 #[derive(Debug, Clone)]
-pub struct GaugeField<G: GaugeGroup, A, F> {
+pub struct GaugeField<G: GaugeGroup, T, A, F> {
     /// Base manifold (spacetime). Private for invariant preservation.
-    base: Manifold<f64>,
+    base: Manifold<T, T>,
 
     /// Spacetime metric signature (Minkowski, Euclidean, etc.).
     metric: Metric,
@@ -97,7 +102,7 @@ pub struct GaugeField<G: GaugeGroup, A, F> {
 // Constructors
 // ============================================================================
 
-impl<G: GaugeGroup, A, F> GaugeField<G, A, F> {
+impl<G: GaugeGroup, T: TensorData, A, F> GaugeField<G, T, A, F> {
     /// Creates a new gauge field with an explicit metric.
     ///
     /// # Mathematical Definition
@@ -125,7 +130,7 @@ impl<G: GaugeGroup, A, F> GaugeField<G, A, F> {
     /// use deep_causality_metric::Metric;
     /// use deep_causality_topology::{GaugeField, U1};
     ///
-    /// let em_field = GaugeField::<U1, f64, f64>::new(
+    /// let em_field = GaugeField::<U1, f64, f64, f64>::new(
     ///     spacetime,
     ///     Metric::Minkowski(4),
     ///     potential,
@@ -133,7 +138,7 @@ impl<G: GaugeGroup, A, F> GaugeField<G, A, F> {
     /// )?;
     /// ```
     pub fn new(
-        base: Manifold<f64>,
+        base: Manifold<T, T>,
         metric: Metric,
         connection: CausalTensor<A>,
         field_strength: CausalTensor<F>,
@@ -208,7 +213,7 @@ impl<G: GaugeGroup, A, F> GaugeField<G, A, F> {
     ///
     /// Returns `TopologyError::GaugeFieldError` if tensor shapes don't match expected dimensions.
     pub fn with_default_metric(
-        base: Manifold<f64>,
+        base: Manifold<T, T>,
         connection: CausalTensor<A>,
         field_strength: CausalTensor<F>,
     ) -> Result<Self, TopologyError> {
@@ -220,10 +225,10 @@ impl<G: GaugeGroup, A, F> GaugeField<G, A, F> {
 // Getters
 // ============================================================================
 
-impl<G: GaugeGroup, A, F> GaugeField<G, A, F> {
+impl<G: GaugeGroup, T, A, F> GaugeField<G, T, A, F> {
     /// Returns a reference to the base manifold.
     #[inline]
-    pub fn base(&self) -> &Manifold<f64> {
+    pub fn base(&self) -> &Manifold<T, T> {
         &self.base
     }
 

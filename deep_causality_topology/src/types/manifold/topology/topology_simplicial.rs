@@ -4,7 +4,7 @@
  */
 use crate::{Manifold, Simplex, SimplicialTopology, TopologyError};
 
-impl<T> SimplicialTopology for Manifold<T> {
+impl<C, D> SimplicialTopology for Manifold<C, D> {
     fn max_simplex_dimension(&self) -> usize {
         self.complex
             .skeletons

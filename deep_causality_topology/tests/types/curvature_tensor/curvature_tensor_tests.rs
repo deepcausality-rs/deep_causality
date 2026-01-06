@@ -8,7 +8,7 @@ use deep_causality_topology::{CurvatureSymmetry, CurvatureTensor};
 
 #[test]
 fn test_flat_tensor() {
-    let flat: CurvatureTensor<f64, f64, f64, f64> = CurvatureTensor::flat(4);
+    let flat: CurvatureTensor<f64, f64, f64, f64, f64> = CurvatureTensor::flat(4);
     assert!(flat.is_flat());
     assert_eq!(flat.dim(), 4);
     assert_eq!(flat.ricci_scalar(), 0.0);
@@ -16,7 +16,7 @@ fn test_flat_tensor() {
 
 #[test]
 fn test_contraction_flat() {
-    let flat: CurvatureTensor<f64, f64, f64, f64> = CurvatureTensor::flat(4);
+    let flat: CurvatureTensor<f64, f64, f64, f64, f64> = CurvatureTensor::flat(4);
     let u = vec![1.0, 0.0, 0.0, 0.0];
     let v = vec![0.0, 1.0, 0.0, 0.0];
     let w = vec![0.0, 0.0, 1.0, 0.0];
@@ -26,7 +26,7 @@ fn test_contraction_flat() {
 
 #[test]
 fn test_from_generator() {
-    let tensor: CurvatureTensor<f64, f64, f64, f64> = CurvatureTensor::from_generator(
+    let tensor: CurvatureTensor<f64, f64, f64, f64, f64> = CurvatureTensor::from_generator(
         2,
         Metric::Euclidean(2),
         CurvatureSymmetry::None,
@@ -47,7 +47,7 @@ fn test_ricci_tensor() {
     // Create a tensor with R^0_101 = 1.0
     // Ricci R_μν = R^ρ_μρν
     // R_11 = R^0_101 + R^1_111 (latter 0) = 1.0
-    let tensor: CurvatureTensor<f64, f64, f64, f64> = CurvatureTensor::from_generator(
+    let tensor: CurvatureTensor<f64, f64, f64, f64, f64> = CurvatureTensor::from_generator(
         2,
         Metric::Euclidean(2),
         CurvatureSymmetry::None,
@@ -76,7 +76,7 @@ fn test_ricci_tensor() {
 fn test_bianchi_check() {
     // A tensor that violates Bianchi: R_0123 = 1, others 0.
     // Cyclic sum R_0123 + R_0231 + R_0312 = 1 + 0 + 0 = 1 != 0
-    let tensor: CurvatureTensor<f64, f64, f64, f64> = CurvatureTensor::from_generator(
+    let tensor: CurvatureTensor<f64, f64, f64, f64, f64> = CurvatureTensor::from_generator(
         4,
         Metric::Minkowski(4),
         CurvatureSymmetry::None,
@@ -101,7 +101,7 @@ fn test_bianchi_check() {
 #[test]
 fn test_weyl_tensor_flat_space() {
     // In flat space, Weyl tensor should be zero
-    let flat: CurvatureTensor<f64, f64, f64, f64> = CurvatureTensor::flat(4);
+    let flat: CurvatureTensor<f64, f64, f64, f64, f64> = CurvatureTensor::flat(4);
     let weyl = flat.weyl_tensor();
 
     for val in weyl.iter() {
@@ -112,7 +112,7 @@ fn test_weyl_tensor_flat_space() {
 #[test]
 fn test_weyl_tensor_dim_2() {
     // In 2D, Weyl tensor is identically zero
-    let tensor: CurvatureTensor<f64, f64, f64, f64> = CurvatureTensor::from_generator(
+    let tensor: CurvatureTensor<f64, f64, f64, f64, f64> = CurvatureTensor::from_generator(
         2,
         Metric::Euclidean(2),
         CurvatureSymmetry::None,
@@ -136,7 +136,7 @@ fn test_weyl_tensor_dim_2() {
 #[test]
 fn test_weyl_tensor_size() {
     // Weyl tensor should have dim^4 elements
-    let tensor: CurvatureTensor<f64, f64, f64, f64> = CurvatureTensor::flat(3);
+    let tensor: CurvatureTensor<f64, f64, f64, f64, f64> = CurvatureTensor::flat(3);
     let weyl = tensor.weyl_tensor();
     assert_eq!(weyl.len(), 81); // 3^4 = 81
 }
@@ -145,7 +145,7 @@ fn test_weyl_tensor_size() {
 fn test_weyl_tensor_4d_non_trivial() {
     // Verify Weyl tensor computation works for a non-trivial Riemann tensor
     // Just ensure it computes without error and has finite values
-    let tensor: CurvatureTensor<f64, f64, f64, f64> = CurvatureTensor::from_generator(
+    let tensor: CurvatureTensor<f64, f64, f64, f64, f64> = CurvatureTensor::from_generator(
         4,
         Metric::Minkowski(4),
         CurvatureSymmetry::Riemann,

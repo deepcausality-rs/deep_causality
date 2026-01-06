@@ -8,7 +8,7 @@
 use crate::{SimplicialComplex, TopologyError};
 use deep_causality_sparse::CsrMatrix;
 
-impl SimplicialComplex {
+impl<T> SimplicialComplex<T> {
     /// Returns the boundary operator ∂ for dimension k.
     ///
     /// The boundary operator maps (k)-chains to (k-1)-chains.

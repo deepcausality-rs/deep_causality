@@ -5,10 +5,6 @@
 
 use deep_causality_topology::{Electroweak, GaugeField, Lorentz, SU2, SU3, StandardModel, U1};
 
-// ============================================================================
-// Fundamental Force Type Aliases
-// ============================================================================
-
 /// Gauge-Theoretic Electromagnetism (U(1) gauge field).
 ///
 /// This type represents the electromagnetic field using U(1) gauge theory
@@ -16,37 +12,43 @@ use deep_causality_topology::{Electroweak, GaugeField, Lorentz, SU2, SU3, Standa
 /// field strength tensor F_μν.
 ///
 /// Standard Convention: West Coast (+---)
-pub type EM = GaugeField<U1, f64, f64>;
+///
+/// FloatType determines the numerical precision level
+/// *  7 digits precision: f32
+/// * 16 digits precision: f64
+/// * 31 digits precision: DoubleFloat:
+///
+pub type EM<FloatType> = GaugeField<U1, FloatType, FloatType, FloatType>;
 
 /// Weak force field.
 ///
 /// Standard Convention: West Coast (+---)
-pub type WeakField = GaugeField<SU2, f64, f64>;
+pub type WeakField<FloatType> = GaugeField<SU2, FloatType, FloatType, FloatType>;
 
 /// Electroweak field (unified EM + Weak).
 ///
 /// Standard Convention: West Coast (+---)
-pub type ElectroweakField = GaugeField<Electroweak, f64, f64>;
+pub type ElectroweakField<FloatType> = GaugeField<Electroweak, FloatType, FloatType, FloatType>;
 
 /// Quantum Chromodynamics field (strong force).
 ///
 /// Standard Convention: West Coast (+---)
-pub type QCD = GaugeField<SU3, f64, f64>;
+pub type QCD<FloatType> = GaugeField<SU3, FloatType, FloatType, FloatType>;
 
 /// Standard Model field (all forces except gravity).
 ///
 /// Standard Convention: West Coast (+---)
-pub type SMField = GaugeField<StandardModel, f64, f64>;
+pub type SMField<FloatType> = GaugeField<StandardModel, FloatType, FloatType, FloatType>;
 
 /// General Relativity field (gravity).
 ///
 /// Standard Convention: East Coast (-+++)
-pub type GR = GaugeField<Lorentz, f64, f64>;
+pub type GR<FloatType> = GaugeField<Lorentz, FloatType, FloatType, FloatType>;
 
 // ============================================================================
 // Alternate Names
 // ============================================================================
 
-pub type ElectromagneticField = EM;
-pub type GravitationalField = GR;
-pub type ColorField = QCD;
+pub type ElectromagneticField<FloatType> = EM<FloatType>;
+pub type GravitationalField<FloatType> = GR<FloatType>;
+pub type ColorField<FloatType> = QCD<FloatType>;

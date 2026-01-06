@@ -10,7 +10,8 @@
 
 use crate::TensorVector;
 use deep_causality_metric::Metric;
-use deep_causality_tensor::CausalTensor;
+use deep_causality_num::{Field, Float};
+use deep_causality_tensor::{CausalTensor, TensorData};
 use std::marker::PhantomData;
 
 /// Symmetry properties of curvature tensors.
@@ -38,9 +39,14 @@ pub enum CurvatureSymmetry {
     None,
 }
 
-/// Type alias
-pub type CurvatureTensorVector =
-    CurvatureTensor<TensorVector, TensorVector, TensorVector, TensorVector>;
+/// Type alias for f64-based curvature tensor
+pub type CurvatureTensorVector = CurvatureTensor<
+    f64,
+    TensorVector<f64>,
+    TensorVector<f64>,
+    TensorVector<f64>,
+    TensorVector<f64>,
+>;
 
 /// A rank-4 curvature tensor for RiemannMap operations.
 ///
@@ -49,6 +55,7 @@ pub type CurvatureTensorVector =
 ///
 /// # Type Parameters
 ///
+/// * `T` - Scalar type (e.g., f64, DoubleFloat)
 /// * `A` - First direction type (u in R(u,v)w)
 /// * `B` - Second direction type (v in R(u,v)w)
 /// * `C` - Vector being transported (w in R(u,v)w)
@@ -61,10 +68,10 @@ pub type CurvatureTensorVector =
 ///
 /// In components: (R(u,v)w)^d = R^d_abc u^a v^b w^c
 #[derive(Debug, Clone)]
-pub struct CurvatureTensor<A, B, C, D> {
+pub struct CurvatureTensor<T, A, B, C, D> {
     /// Tensor components R^d_abc.
     /// Shape: [dim, dim, dim, dim]
-    components: CausalTensor<f64>,
+    components: CausalTensor<T>,
 
     /// Spacetime metric for index raising/lowering.
     metric: Metric,
@@ -83,7 +90,10 @@ pub struct CurvatureTensor<A, B, C, D> {
 // Constructors
 // ============================================================================
 
-impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
+impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
+where
+    T: TensorData + Clone,
+{
     /// Creates a new curvature tensor from components.
     ///
     /// # Arguments
@@ -97,7 +107,7 @@ impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
     ///
     /// Panics if component shape doesn't match [dim, dim, dim, dim].
     pub fn new(
-        components: CausalTensor<f64>,
+        components: CausalTensor<T>,
         metric: Metric,
         symmetry: CurvatureSymmetry,
         dim: usize,
@@ -119,7 +129,12 @@ impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
             _phantom: PhantomData,
         }
     }
+}
 
+impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
+where
+    T: TensorData + Field + Float + Clone + From<f64> + Into<f64>,
+{
     /// Creates a flat (zero curvature) tensor with Minkowski metric.
     pub fn flat(dim: usize) -> Self {
         Self::flat_with_metric(dim, Metric::Minkowski(dim))
@@ -129,7 +144,7 @@ impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
     pub fn flat_with_metric(dim: usize, metric: Metric) -> Self {
         let shape = vec![dim, dim, dim, dim];
         let total = dim * dim * dim * dim;
-        let data = vec![0.0; total];
+        let data: Vec<T> = (0..total).map(|_| <T as From<f64>>::from(0.0)).collect();
         let components = CausalTensor::from_vec(data, &shape);
 
         Self {
@@ -156,7 +171,7 @@ impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
         mut generator: F,
     ) -> Self
     where
-        F: FnMut(usize, usize, usize, usize) -> f64,
+        F: FnMut(usize, usize, usize, usize) -> T,
     {
         let total = dim * dim * dim * dim;
         let mut data = Vec::with_capacity(total);
@@ -180,10 +195,13 @@ impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
 // Getters
 // ============================================================================
 
-impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
+impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
+where
+    T: TensorData + Clone,
+{
     /// Returns a reference to the tensor components.
     #[inline]
-    pub fn components(&self) -> &CausalTensor<f64> {
+    pub fn components(&self) -> &CausalTensor<T> {
         &self.components
     }
 
@@ -204,21 +222,27 @@ impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
     pub fn dim(&self) -> usize {
         self.dim
     }
+}
 
+impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
+where
+    T: TensorData + Field + Float + Clone + From<f64> + Into<f64>,
+{
     /// Checks if the tensor is flat (all zero).
     pub fn is_flat(&self) -> bool {
-        self.components
-            .as_slice()
-            .iter()
-            .all(|&x| x.abs() < f64::EPSILON)
+        let eps: f64 = f64::EPSILON;
+        self.components.as_slice().iter().all(|x| {
+            let val: f64 = x.clone().into();
+            val.abs() < eps
+        })
     }
 
     /// Gets component R^d_abc using row-major indexing.
     #[inline]
-    pub fn get(&self, d: usize, a: usize, b: usize, c: usize) -> f64 {
+    pub fn get(&self, d: usize, a: usize, b: usize, c: usize) -> T {
         debug_assert!(d < self.dim && a < self.dim && b < self.dim && c < self.dim);
         let idx = d * self.dim * self.dim * self.dim + a * self.dim * self.dim + b * self.dim + c;
-        self.components.as_slice()[idx]
+        self.components.as_slice()[idx].clone()
     }
 }
 
@@ -226,7 +250,10 @@ impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
 // Tensor Operations
 // ============================================================================
 
-impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
+impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
+where
+    T: TensorData + Field + Float + Clone + From<f64> + Into<f64>,
+{
     /// Contracts the curvature tensor with three vectors: R(u,v)w.
     ///
     /// Computes (R(u,v)w)^d = R^d_abc u^a v^b w^c
@@ -240,20 +267,21 @@ impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
     /// # Returns
     ///
     /// A vector representing the geodesic deviation.
-    pub fn contract(&self, u: &[f64], v: &[f64], w: &[f64]) -> Vec<f64> {
+    pub fn contract(&self, u: &[T], v: &[T], w: &[T]) -> Vec<T> {
         assert_eq!(u.len(), self.dim, "u dimension mismatch");
         assert_eq!(v.len(), self.dim, "v dimension mismatch");
         assert_eq!(w.len(), self.dim, "w dimension mismatch");
 
-        let mut result = vec![0.0; self.dim];
+        let mut result: Vec<T> = (0..self.dim).map(|_| <T as From<f64>>::from(0.0)).collect();
 
         // (R(u,v)w)^d = R^d_abc u^a v^b w^c
         for (d, res_val) in result.iter_mut().enumerate() {
-            let mut sum = 0.0;
+            let mut sum = <T as From<f64>>::from(0.0);
             for (a, u_val) in u.iter().enumerate() {
                 for (b, v_val) in v.iter().enumerate() {
                     for (c, w_val) in w.iter().enumerate() {
-                        sum += self.get(d, a, b, c) * u_val * v_val * w_val;
+                        let r = self.get(d, a, b, c);
+                        sum = sum + r * u_val.clone() * v_val.clone() * w_val.clone();
                     }
                 }
             }
@@ -266,15 +294,17 @@ impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
     /// Computes the Ricci tensor by contraction: R_μν = R^ρ_μρν.
     ///
     /// Returns a dim×dim matrix as a flat vector in row-major order.
-    pub fn ricci_tensor(&self) -> Vec<f64> {
-        let mut ricci = vec![0.0; self.dim * self.dim];
+    pub fn ricci_tensor(&self) -> Vec<T> {
+        let mut ricci: Vec<T> = (0..self.dim * self.dim)
+            .map(|_| <T as From<f64>>::from(0.0))
+            .collect();
 
         for mu in 0..self.dim {
             for nu in 0..self.dim {
-                let mut sum = 0.0;
+                let mut sum = <T as From<f64>>::from(0.0);
                 for rho in 0..self.dim {
                     // R_μν = R^ρ_μρν
-                    sum += self.get(rho, mu, rho, nu);
+                    sum = sum + self.get(rho, mu, rho, nu);
                 }
                 ricci[mu * self.dim + nu] = sum;
             }
@@ -284,14 +314,14 @@ impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
     }
 
     /// Computes the Ricci scalar R = g^μν R_μν.
-    pub fn ricci_scalar(&self) -> f64 {
+    pub fn ricci_scalar(&self) -> T {
         let ricci = self.ricci_tensor();
-        let mut scalar = 0.0;
+        let mut scalar = <T as From<f64>>::from(0.0);
 
         for mu in 0..self.dim {
             // Get metric component g^μμ (inverse metric diagonal for Minkowski-like)
-            let g_inv = self.metric.sign_of_sq(mu) as f64;
-            scalar += g_inv * ricci[mu * self.dim + mu];
+            let g_inv = <T as From<f64>>::from(self.metric.sign_of_sq(mu) as f64);
+            scalar = scalar + g_inv * ricci[mu * self.dim + mu].clone();
         }
 
         scalar
@@ -300,8 +330,8 @@ impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
     /// Computes the Kretschmann scalar K = R_abcd R^abcd.
     ///
     /// This is a curvature invariant useful for detecting singularities.
-    pub fn kretschmann_scalar(&self) -> f64 {
-        let mut k = 0.0;
+    pub fn kretschmann_scalar(&self) -> T {
+        let mut k = <T as From<f64>>::from(0.0);
 
         for a in 0..self.dim {
             for b in 0..self.dim {
@@ -310,7 +340,7 @@ impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
                         // For simplicity, use R^d_abc directly
                         // Full implementation would lower indices with metric
                         let r = self.get(d, a, b, c);
-                        k += r * r;
+                        k = k + r.clone() * r;
                     }
                 }
             }
@@ -322,20 +352,24 @@ impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
     /// Computes the Einstein tensor G_μν = R_μν - (1/2) g_μν R.
     ///
     /// Returns a dim×dim matrix as a flat vector in row-major order.
-    pub fn einstein_tensor(&self) -> Vec<f64> {
+    pub fn einstein_tensor(&self) -> Vec<T> {
         let ricci = self.ricci_tensor();
         let r = self.ricci_scalar();
-        let mut einstein = vec![0.0; self.dim * self.dim];
+        let half = <T as From<f64>>::from(0.5);
+        let mut einstein: Vec<T> = (0..self.dim * self.dim)
+            .map(|_| <T as From<f64>>::from(0.0))
+            .collect();
 
         for mu in 0..self.dim {
             for nu in 0..self.dim {
                 // g_μν for Minkowski-like metrics
                 let g_munu = if mu == nu {
-                    self.metric.sign_of_sq(mu) as f64
+                    <T as From<f64>>::from(self.metric.sign_of_sq(mu) as f64)
                 } else {
-                    0.0
+                    <T as From<f64>>::from(0.0)
                 };
-                einstein[mu * self.dim + nu] = ricci[mu * self.dim + nu] - 0.5 * g_munu * r;
+                einstein[mu * self.dim + nu] =
+                    ricci[mu * self.dim + nu].clone() - half.clone() * g_munu * r.clone();
             }
         }
 
@@ -353,21 +387,26 @@ impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
     /// where n is the dimension (must be >= 3).
     ///
     /// Returns a rank-4 tensor [dim, dim, dim, dim] representing C^a_bcd.
-    pub fn weyl_tensor(&self) -> Vec<f64> {
+    pub fn weyl_tensor(&self) -> Vec<T> {
         let n = self.dim;
         if n < 3 {
             // Weyl tensor is identically zero in dimensions < 3
-            return vec![0.0; n * n * n * n];
+            return (0..n * n * n * n)
+                .map(|_| <T as From<f64>>::from(0.0))
+                .collect();
         }
 
         let ricci = self.ricci_tensor();
         let r = self.ricci_scalar();
 
-        let mut weyl = vec![0.0; n * n * n * n];
+        let mut weyl: Vec<T> = (0..n * n * n * n)
+            .map(|_| <T as From<f64>>::from(0.0))
+            .collect();
 
         // Prefactors
-        let factor1 = 2.0 / (n as f64 - 2.0);
-        let factor2 = 2.0 / ((n as f64 - 1.0) * (n as f64 - 2.0));
+        let factor1 = <T as From<f64>>::from(2.0 / (n as f64 - 2.0));
+        let factor2 = <T as From<f64>>::from(2.0 / ((n as f64 - 1.0) * (n as f64 - 2.0)));
+        let half = <T as From<f64>>::from(0.5);
 
         for a in 0..n {
             for b in 0..n {
@@ -377,42 +416,43 @@ impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
                         let r_abcd = self.get(a, b, c, d);
 
                         // Metric components (using our stored metric for diagonal)
-                        // g_ac, g_bd, g_ad, g_bc
                         let g_ac = if a == c {
-                            self.metric.sign_of_sq(a) as f64
+                            <T as From<f64>>::from(self.metric.sign_of_sq(a) as f64)
                         } else {
-                            0.0
+                            <T as From<f64>>::from(0.0)
                         };
                         let g_bd = if b == d {
-                            self.metric.sign_of_sq(b) as f64
+                            <T as From<f64>>::from(self.metric.sign_of_sq(b) as f64)
                         } else {
-                            0.0
+                            <T as From<f64>>::from(0.0)
                         };
                         let g_ad = if a == d {
-                            self.metric.sign_of_sq(a) as f64
+                            <T as From<f64>>::from(self.metric.sign_of_sq(a) as f64)
                         } else {
-                            0.0
+                            <T as From<f64>>::from(0.0)
                         };
                         let g_bc = if b == c {
-                            self.metric.sign_of_sq(b) as f64
+                            <T as From<f64>>::from(self.metric.sign_of_sq(b) as f64)
                         } else {
-                            0.0
+                            <T as From<f64>>::from(0.0)
                         };
 
-                        // Ricci components R_ac, R_bd, R_ad, R_bc
-                        let r_ac = ricci[a * n + c];
-                        let r_bd = ricci[b * n + d];
-                        let r_ad = ricci[a * n + d];
-                        let r_bc = ricci[b * n + c];
+                        // Ricci components
+                        let r_ac = ricci[a * n + c].clone();
+                        let r_bd = ricci[b * n + d].clone();
+                        let r_ad = ricci[a * n + d].clone();
+                        let r_bc = ricci[b * n + c].clone();
 
-                        // Weyl formula:
-                        // C_abcd = R_abcd
-                        //        - (1/(n-2)) * (g_ac R_bd - g_ad R_bc - g_bc R_ad + g_bd R_ac)
-                        //        + (1/((n-1)(n-2))) * R * (g_ac g_bd - g_ad g_bc)
+                        // Weyl formula
                         let term1 = r_abcd;
-                        let term2 =
-                            factor1 * 0.5 * (g_ac * r_bd - g_ad * r_bc - g_bc * r_ad + g_bd * r_ac);
-                        let term3 = factor2 * 0.5 * r * (g_ac * g_bd - g_ad * g_bc);
+                        let term2 = factor1.clone()
+                            * half.clone()
+                            * (g_ac.clone() * r_bd - g_ad.clone() * r_bc - g_bc.clone() * r_ad
+                                + g_bd.clone() * r_ac);
+                        let term3 = factor2.clone()
+                            * half.clone()
+                            * r.clone()
+                            * (g_ac * g_bd - g_ad * g_bc);
 
                         weyl[a * n * n * n + b * n * n + c * n + d] = term1 - term2 + term3;
                     }
@@ -428,18 +468,20 @@ impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
     /// The cyclic sum R_abcd + R_bcad + R_cabd = 0.
     ///
     /// Returns the maximum violation (should be ~0 for valid Riemann tensors).
-    pub fn check_bianchi_identity(&self) -> f64 {
-        let mut max_violation: f64 = 0.0;
+    pub fn check_bianchi_identity(&self) -> T {
+        let mut max_violation = <T as From<f64>>::from(0.0);
 
         for a in 0..self.dim {
             for b in 0..self.dim {
                 for c in 0..self.dim {
                     for d in 0..self.dim {
                         // R_abcd + R_bcad + R_cabd should = 0
-                        // Using R^d_abc convention
                         let sum =
                             self.get(d, a, b, c) + self.get(d, b, c, a) + self.get(d, c, a, b);
-                        max_violation = max_violation.max(sum.abs());
+                        let abs_sum = <T as Float>::abs(sum);
+                        if abs_sum > max_violation.clone() {
+                            max_violation = abs_sum;
+                        }
                     }
                 }
             }
@@ -453,11 +495,14 @@ impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
 // Type Conversion
 // ============================================================================
 
-impl<A, B, C, D> CurvatureTensor<A, B, C, D> {
+impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
+where
+    T: TensorData + Clone,
+{
     /// Converts to a CurvatureTensor with different type parameters.
     ///
     /// This is safe because the type parameters are phantom data only.
-    pub fn cast<A2, B2, C2, D2>(self) -> CurvatureTensor<A2, B2, C2, D2> {
+    pub fn cast<A2, B2, C2, D2>(self) -> CurvatureTensor<T, A2, B2, C2, D2> {
         CurvatureTensor {
             components: self.components,
             metric: self.metric,

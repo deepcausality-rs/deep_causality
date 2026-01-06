@@ -8,12 +8,12 @@ use deep_causality_topology::{
     GaugeField, GaugeFieldWitness, Manifold, Simplex, SimplicialComplexBuilder, U1,
 };
 
-fn create_test_manifold() -> Manifold<f64> {
+fn create_test_manifold() -> Manifold<f64, f64> {
     let mut builder = SimplicialComplexBuilder::new(1);
     builder
         .add_simplex(Simplex::new(vec![0, 1]))
         .expect("Failed to add simplex");
-    let complex = builder.build().expect("Failed to build complex");
+    let complex = builder.build::<f64>().expect("Failed to build complex");
 
     // Create dummy data
     let data = CausalTensor::zeros(&[3]);
@@ -33,13 +33,13 @@ fn test_gauge_transform() {
     let connection = CausalTensor::from_vec(vec![1.0, 2.0, 3.0, 4.0], &[1, 4, 1]);
     let field_strength = CausalTensor::from_vec(vec![0.0; 16], &[1, 4, 4, 1]);
 
-    let field: GaugeField<U1, f64, f64> =
+    let field: GaugeField<U1, f64, f64, f64> =
         GaugeField::with_default_metric(manifold, connection, field_strength)
             .expect("Failed to create field");
 
     // Apply transformation A -> 2*A
     let transformed =
-        GaugeFieldWitness::gauge_transform(&field, |x| x * 2.0).expect("Transform failed");
+        GaugeFieldWitness::<f64>::gauge_transform(&field, |x| x * 2.0).expect("Transform failed");
 
     // Check transformation applied
     assert_eq!(transformed.connection().as_slice()[0], 2.0);
@@ -57,15 +57,15 @@ fn test_merge_fields() {
     // Dummy field strength
     let fs = CausalTensor::from_vec(vec![0.0; 4], &[1, 2, 2, 1]);
 
-    let field_a: GaugeField<U1, f64, f64> =
+    let field_a: GaugeField<U1, f64, f64, f64> =
         GaugeField::with_default_metric(manifold.clone(), conn_a, fs.clone())
             .expect("Failed to create field_a");
-    let field_b: GaugeField<U1, f64, f64> =
+    let field_b: GaugeField<U1, f64, f64, f64> =
         GaugeField::with_default_metric(manifold, conn_b, fs).expect("Failed to create field_b");
 
     // Merge: A_new = A + B
-    let merged =
-        GaugeFieldWitness::merge_fields(&field_a, &field_b, |a, b| a + b).expect("Merge failed");
+    let merged = GaugeFieldWitness::<f64>::merge_fields(&field_a, &field_b, |a, b| a + b)
+        .expect("Merge failed");
 
     // 1+3 = 4, 2+4 = 6
     assert_eq!(merged.connection().as_slice()[0], 4.0);
@@ -84,7 +84,7 @@ fn test_abelian_field_strength() {
     let connection = CausalTensor::from_vec(vec![1.0; 4], &[1, 4, 1]); // 4D
     let field_strength = CausalTensor::from_vec(vec![0.0; 16], &[1, 4, 4, 1]);
 
-    let field: GaugeField<U1, f64, f64> =
+    let field: GaugeField<U1, f64, f64, f64> =
         GaugeField::with_default_metric(manifold, connection, field_strength)
             .expect("Failed to create field");
 

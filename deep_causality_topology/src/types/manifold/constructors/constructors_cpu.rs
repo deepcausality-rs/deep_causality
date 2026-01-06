@@ -11,14 +11,15 @@ use deep_causality_tensor::CausalTensor;
 
 use super::super::{Manifold, utils};
 
-impl<T> Manifold<T>
+impl<C, D> Manifold<C, D>
 where
-    T: Default + Copy + Clone + PartialEq + Zero,
+    C: Default + Copy + Clone + PartialEq + Zero,
+    D: Default + Copy + Clone + PartialEq + Zero,
 {
     /// CPU implementation of Manifold constructor.
     pub(crate) fn new_cpu(
-        complex: SimplicialComplex,
-        data: CausalTensor<T>,
+        complex: SimplicialComplex<C>,
+        data: CausalTensor<D>,
         cursor: usize,
     ) -> Result<Self, TopologyError> {
         // Validation: Check data size matches complex
@@ -51,9 +52,9 @@ where
 
     /// CPU implementation of Manifold constructor with metric.
     pub(crate) fn with_metric_cpu(
-        complex: SimplicialComplex,
-        data: CausalTensor<T>,
-        metric: Option<ReggeGeometry>,
+        complex: SimplicialComplex<C>,
+        data: CausalTensor<D>,
+        metric: Option<ReggeGeometry<C>>,
         cursor: usize,
     ) -> Result<Self, TopologyError> {
         // Validation: Check data size matches complex
@@ -99,7 +100,7 @@ where
     }
 
     /// CPU implementation: check if complex satisfies manifold properties.
-    fn check_is_manifold_cpu(complex: &SimplicialComplex) -> bool {
+    fn check_is_manifold_cpu(complex: &SimplicialComplex<C>) -> bool {
         // Basic check: complex must have at least one skeleton
         if complex.skeletons.is_empty() {
             return false;
@@ -129,9 +130,10 @@ where
     }
 }
 
-impl<T> Manifold<T>
+impl<C, D> Manifold<C, D>
 where
-    T: Clone,
+    C: Clone,
+    D: Clone,
 {
     /// CPU implementation of shallow clone.
     pub(crate) fn clone_shallow_cpu(manifold: &Self) -> Self {

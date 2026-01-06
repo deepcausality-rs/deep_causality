@@ -26,7 +26,7 @@ mod ops;
 #[derive(Clone, Debug)]
 pub struct Topology<T> {
     /// Shared reference to the underlying mesh.
-    pub(crate) complex: Arc<SimplicialComplex>,
+    pub(crate) complex: Arc<SimplicialComplex<T>>,
     /// The dimension of the simplices this data lives on.
     pub(crate) grade: usize,
     /// The values (CausalTensor is essentially a dense vector here).

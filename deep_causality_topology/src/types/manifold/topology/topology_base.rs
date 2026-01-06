@@ -5,7 +5,7 @@
 
 use crate::{BaseTopology, Manifold};
 
-impl<T> BaseTopology for Manifold<T> {
+impl<C, D> BaseTopology for Manifold<C, D> {
     fn dimension(&self) -> usize {
         // The dimension of the complex is the dimension of the highest-dimensional skeleton.
         // We assume skeletons are ordered by dimension.

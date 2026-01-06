@@ -7,12 +7,13 @@ use crate::types::manifold::differential::utils_differential;
 use core::fmt::Debug;
 use core::ops::Mul;
 use core::ops::Neg;
-use deep_causality_num::{Field, FromPrimitive};
+use deep_causality_num::{Field, Float, FromPrimitive, Zero};
 use deep_causality_tensor::CausalTensor;
 
-impl<T> Manifold<T>
+impl<C, D> Manifold<C, D>
 where
-    T: Field + Copy + FromPrimitive + Mul<f64, Output = T> + Neg<Output = T> + Debug,
+    C: Float + Copy + FromPrimitive + Neg<Output = C> + Debug + Default + PartialEq + Zero,
+    D: Field + Float + Copy + FromPrimitive + Neg<Output = D> + Debug + Mul<C, Output = D>,
 {
     /// Computes the Hodge star operator on a k-form.
     ///
@@ -25,7 +26,7 @@ where
     ///
     /// # Returns
     /// A new `CausalTensor` representing the Hodge dual (n-k)-form.
-    pub fn hodge_star(&self, k: usize) -> CausalTensor<T> {
+    pub fn hodge_star(&self, k: usize) -> CausalTensor<D> {
         // Get dimension of manifold (highest skeleton dimension)
         let n = self.complex.max_simplex_dimension();
 
@@ -48,7 +49,7 @@ where
         let k_form_data = &self.data().as_slice()[offset..offset + k_count];
 
         // Apply the Hodge star operator
-        let result_data = utils_differential::apply_f64_operator(hodge_operator, k_form_data);
+        let result_data = utils_differential::apply_metric_operator(hodge_operator, k_form_data);
         let result_len = result_data.len();
 
         CausalTensor::new(result_data, vec![result_len]).expect("Failed to create dual form")

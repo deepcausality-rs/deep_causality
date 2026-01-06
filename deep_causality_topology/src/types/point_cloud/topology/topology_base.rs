@@ -6,7 +6,7 @@
 use crate::PointCloud;
 use crate::traits::base_topology::BaseTopology;
 
-impl<T> BaseTopology for PointCloud<T> {
+impl<C, D> BaseTopology for PointCloud<C, D> {
     fn dimension(&self) -> usize {
         0
     }

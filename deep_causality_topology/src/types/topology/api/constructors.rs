@@ -22,7 +22,7 @@ impl<T> Topology<T> {
     /// * `Ok(Topology)` - A valid topology field
     /// * `Err(TopologyError)` - If validation fails
     pub fn new(
-        complex: Arc<SimplicialComplex>,
+        complex: Arc<SimplicialComplex<T>>,
         grade: usize,
         data: CausalTensor<T>,
         cursor: usize,

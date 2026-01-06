@@ -36,7 +36,7 @@ fn test_graph_extend() {
 
     // Extend: sum of neighbor values (using extract on neighbors would be complex here,
     // so let's just use the graph structure available in the view)
-    let extended_graph = GraphWitness::extend(&graph, |w| {
+    let extended_graph = GraphWitness::extend(&graph, |w: &Graph<i32>| {
         let current_idx = w.cursor();
         let neighbors = w.neighbors(current_idx).unwrap();
         let mut sum = 0;

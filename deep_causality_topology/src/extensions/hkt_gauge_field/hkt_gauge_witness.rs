@@ -4,7 +4,8 @@
  */
 use crate::{GaugeField, GaugeGroup, TopologyError};
 use deep_causality_haft::{HKT3Unbound, NoConstraint, ParametricMonad, Promonad, Satisfies};
-use deep_causality_tensor::CausalTensor;
+use deep_causality_num::Field;
+use deep_causality_tensor::{CausalTensor, TensorData};
 use std::marker::PhantomData;
 
 /// HKT3 witness for GaugeField<G, A, F>.
@@ -24,7 +25,7 @@ use std::marker::PhantomData;
 /// Due to Rust's type system limitations, the HKT3Unbound implementation
 /// uses NoConstraint, but actual GaugeField construction enforces G: GaugeGroup.
 #[derive(Debug, Clone, Copy, Default)]
-pub struct GaugeFieldWitness;
+pub struct GaugeFieldWitness<T>(PhantomData<T>);
 
 /// Wrapper type for GaugeField that can be used with HKT3Unbound.
 ///
@@ -40,33 +41,33 @@ pub struct GaugeFieldWitness;
 /// **SAFETY:** Callers MUST ensure that the generic types match the stored
 /// GaugeField's type parameters. Misuse causes Undefined Behavior.
 #[derive(Debug, Clone)]
-pub struct GaugeFieldHKT<G, A, F> {
+pub struct GaugeFieldHKT<G, A, F, T> {
     /// Type-erased storage for a GaugeField.
     /// None represents an empty/identity context.
-    inner: Option<Box<GaugeFieldData>>,
-    _phantom: PhantomData<(G, A, F)>,
+    inner: Option<Box<GaugeFieldData<T>>>,
+    _phantom: PhantomData<(G, A, F, T)>,
 }
 
 /// Type-erased storage for GaugeField data.
 /// This is necessary because we can't directly store GaugeField<G, A, F>
 /// when G, A, F are generic HKT parameters.
 #[derive(Debug, Clone)]
-struct GaugeFieldData {
+struct GaugeFieldData<T> {
     /// Serialized representation of the gauge field.
     /// In production, this would be the actual tensor data.
-    connection_data: Vec<f64>,
-    field_strength_data: Vec<f64>,
+    connection_data: Vec<T>,
+    field_strength_data: Vec<T>,
     connection_shape: Vec<usize>,
     field_strength_shape: Vec<usize>,
 }
 
-impl<G, A, F> Default for GaugeFieldHKT<G, A, F> {
+impl<G, A, F, T> Default for GaugeFieldHKT<G, A, F, T> {
     fn default() -> Self {
         Self::empty()
     }
 }
 
-impl<G, A, F> GaugeFieldHKT<G, A, F> {
+impl<G, A, F, T> GaugeFieldHKT<G, A, F, T> {
     /// Creates an empty HKT wrapper (identity element).
     pub fn empty() -> Self {
         Self {
@@ -77,8 +78,8 @@ impl<G, A, F> GaugeFieldHKT<G, A, F> {
 
     /// Creates a wrapper from serialized data.
     pub fn from_data(
-        connection_data: Vec<f64>,
-        field_strength_data: Vec<f64>,
+        connection_data: Vec<T>,
+        field_strength_data: Vec<T>,
         connection_shape: Vec<usize>,
         field_strength_shape: Vec<usize>,
     ) -> Self {
@@ -99,22 +100,25 @@ impl<G, A, F> GaugeFieldHKT<G, A, F> {
     }
 
     /// Returns the connection data if present.
-    pub fn connection_data(&self) -> Option<&[f64]> {
+    pub fn connection_data(&self) -> Option<&[T]> {
         self.inner.as_ref().map(|d| d.connection_data.as_slice())
     }
 
     /// Returns the field strength data if present.
-    pub fn field_strength_data(&self) -> Option<&[f64]> {
+    pub fn field_strength_data(&self) -> Option<&[T]> {
         self.inner
             .as_ref()
             .map(|d| d.field_strength_data.as_slice())
     }
 }
 
-impl HKT3Unbound for GaugeFieldWitness {
+impl<T> HKT3Unbound for GaugeFieldWitness<T>
+where
+    T: Satisfies<NoConstraint>,
+{
     type Constraint = NoConstraint;
     type Type<A, B, C>
-        = GaugeFieldHKT<A, B, C>
+        = GaugeFieldHKT<A, B, C, T>
     where
         A: Satisfies<NoConstraint>,
         B: Satisfies<NoConstraint>,
@@ -138,7 +142,10 @@ impl HKT3Unbound for GaugeFieldWitness {
 /// The HKT trait methods operate on the type-erased `GaugeFieldData`.
 /// For strongly-typed operations with proper `GaugeGroup` constraints,
 /// use the `merge_fields()` method on `GaugeFieldWitness` instead.
-impl Promonad<GaugeFieldWitness> for GaugeFieldWitness {
+impl<T> Promonad<GaugeFieldWitness<T>> for GaugeFieldWitness<T>
+where
+    T: Field + From<f64> + Copy + Satisfies<NoConstraint>,
+{
     /// Merges two gauge field contexts using a coupling function.
     ///
     /// # Physics
@@ -161,10 +168,10 @@ impl Promonad<GaugeFieldWitness> for GaugeFieldWitness {
     /// 1. Upstream trait changes to add `'static` bounds to Promonad
     /// 2. New trait solver (`-Ztrait-solver=next`) for better GAT support
     fn merge<A, B, C, Func>(
-        pa: GaugeFieldHKT<A, A, A>,
-        pb: GaugeFieldHKT<B, B, B>,
+        pa: GaugeFieldHKT<A, A, A, T>,
+        pb: GaugeFieldHKT<B, B, B, T>,
         _f: Func,
-    ) -> GaugeFieldHKT<C, C, C>
+    ) -> GaugeFieldHKT<C, C, C, T>
     where
         A: Satisfies<NoConstraint>,
         B: Satisfies<NoConstraint>,
@@ -187,20 +194,21 @@ impl Promonad<GaugeFieldWitness> for GaugeFieldWitness {
 
         // Placeholder: element-wise average
         // For production physics, use merge_fields() which is type-safe.
-        let merged_conn: Vec<f64> = data_a
+        let two = <T as From<f64>>::from(2.0);
+        let merged_conn: Vec<T> = data_a
             .connection_data
             .iter()
             .zip(data_b.connection_data.iter())
             .take(conn_len)
-            .map(|(a, b)| (a + b) / 2.0)
+            .map(|(&a, &b)| (a + b) / two)
             .collect();
 
-        let merged_fs: Vec<f64> = data_a
+        let merged_fs: Vec<T> = data_a
             .field_strength_data
             .iter()
             .zip(data_b.field_strength_data.iter())
             .take(fs_len)
-            .map(|(a, b)| (a + b) / 2.0)
+            .map(|(&a, &b)| (a + b) / two)
             .collect();
 
         GaugeFieldHKT::from_data(
@@ -218,7 +226,7 @@ impl Promonad<GaugeFieldWitness> for GaugeFieldWitness {
     /// Creates a new HKT wrapper that conceptually contains both inputs.
     /// The actual data representation stores the inputs' type information
     /// for later use in merge operations.
-    fn fuse<A, B, C>(input_a: A, input_b: B) -> GaugeFieldHKT<A, B, C>
+    fn fuse<A, B, C>(input_a: A, input_b: B) -> GaugeFieldHKT<A, B, C, T>
     where
         A: Satisfies<NoConstraint>,
         B: Satisfies<NoConstraint>,
@@ -248,14 +256,17 @@ impl Promonad<GaugeFieldWitness> for GaugeFieldWitness {
 /// The HKT trait methods operate on the type-erased `GaugeFieldData`.
 /// For strongly-typed operations with proper `GaugeGroup` constraints,
 /// use the `gauge_transform()` method on `GaugeFieldWitness` instead.
-impl ParametricMonad<GaugeFieldWitness> for GaugeFieldWitness {
+impl<T> ParametricMonad<GaugeFieldWitness<T>> for GaugeFieldWitness<T>
+where
+    T: Satisfies<NoConstraint> + Clone,
+{
     /// Injects a value into a trivial gauge field context.
     ///
     /// # Implementation
     ///
     /// Creates an empty HKT wrapper. For injection of actual field values,
     /// use `GaugeField::new()` with proper type constraints.
-    fn pure<S, A>(value: A) -> GaugeFieldHKT<S, S, A>
+    fn pure<S, A>(value: A) -> GaugeFieldHKT<S, S, A, T>
     where
         S: Satisfies<NoConstraint>,
         A: Satisfies<NoConstraint>,
@@ -285,16 +296,16 @@ impl ParametricMonad<GaugeFieldWitness> for GaugeFieldWitness {
     ///
     /// **Status:** ACKNOWLEDGED. Resolution requires upstream trait changes.
     fn ibind<S1, S2, S3, A, B, Func>(
-        m: GaugeFieldHKT<S1, S2, A>,
+        m: GaugeFieldHKT<S1, S2, A, T>,
         _f: Func,
-    ) -> GaugeFieldHKT<S1, S3, B>
+    ) -> GaugeFieldHKT<S1, S3, B, T>
     where
         S1: Satisfies<NoConstraint>,
         S2: Satisfies<NoConstraint>,
         S3: Satisfies<NoConstraint>,
         A: Satisfies<NoConstraint>,
         B: Satisfies<NoConstraint>,
-        Func: FnMut(A) -> GaugeFieldHKT<S2, S3, B>,
+        Func: FnMut(A) -> GaugeFieldHKT<S2, S3, B, T>,
     {
         // If the input has no data, return empty (short-circuit)
         let Some(data) = &m.inner else {
@@ -316,7 +327,10 @@ impl ParametricMonad<GaugeFieldWitness> for GaugeFieldWitness {
 //  Operations (Type-Safe)
 // ============================================================================
 
-impl GaugeFieldWitness {
+impl<T> GaugeFieldWitness<T>
+where
+    T: Field + From<f64> + Copy + Satisfies<NoConstraint> + std::cmp::PartialEq,
+{
     /// Merges two gauge fields using a coupling function.
     ///
     /// This is the type-safe production version that enforces GaugeGroup bounds.
@@ -330,17 +344,18 @@ impl GaugeFieldWitness {
     /// # Returns
     ///
     /// A new gauge field with coupled field strength, or error if shape validation fails.
-    pub fn merge_fields<G, A, B, F, Func>(
-        current: &GaugeField<G, A, A>,
-        potential: &GaugeField<G, B, B>,
+    pub fn merge_fields<G, TD, A, B, F2, Func>(
+        current: &GaugeField<G, TD, A, A>,
+        potential: &GaugeField<G, TD, B, B>,
         coupling: Func,
-    ) -> Result<GaugeField<G, F, F>, TopologyError>
+    ) -> Result<GaugeField<G, TD, F2, F2>, TopologyError>
     where
         G: GaugeGroup,
+        TD: TensorData + Clone,
         A: Clone,
         B: Clone,
-        F: Clone + Default,
-        Func: Fn(&A, &B) -> F,
+        F2: Clone + Default,
+        Func: Fn(&A, &B) -> F2,
     {
         // Use the potential's base manifold and metric
         let base = potential.base().clone();
@@ -351,7 +366,7 @@ impl GaugeFieldWitness {
         let potential_conn = potential.connection();
 
         // Combine connections element-wise
-        let conn_data: Vec<F> = current_conn
+        let conn_data: Vec<F2> = current_conn
             .as_slice()
             .iter()
             .zip(potential_conn.as_slice().iter())
@@ -364,7 +379,7 @@ impl GaugeFieldWitness {
         let current_fs = current.field_strength();
         let potential_fs = potential.field_strength();
 
-        let fs_data: Vec<F> = current_fs
+        let fs_data: Vec<F2> = current_fs
             .as_slice()
             .iter()
             .zip(potential_fs.as_slice().iter())
@@ -387,21 +402,22 @@ impl GaugeFieldWitness {
     /// # Errors
     ///
     /// Returns `TopologyError::GaugeFieldError` if shape validation fails.
-    pub fn gauge_transform<G, A, F, Func>(
-        field: &GaugeField<G, A, A>,
+    pub fn gauge_transform<G, TD, A, F2, Func>(
+        field: &GaugeField<G, TD, A, A>,
         transform: Func,
-    ) -> Result<GaugeField<G, F, F>, TopologyError>
+    ) -> Result<GaugeField<G, TD, F2, F2>, TopologyError>
     where
         G: GaugeGroup,
+        TD: TensorData + Clone,
         A: Clone,
-        F: Clone + Default,
-        Func: Fn(&A) -> F,
+        F2: Clone + Default,
+        Func: Fn(&A) -> F2,
     {
         let base = field.base().clone();
         let metric = field.metric();
 
         // Transform connection
-        let conn_data: Vec<F> = field
+        let conn_data: Vec<F2> = field
             .connection()
             .as_slice()
             .iter()
@@ -410,7 +426,7 @@ impl GaugeFieldWitness {
         let connection = CausalTensor::from_vec(conn_data, field.connection().shape());
 
         // Transform field strength
-        let fs_data: Vec<F> = field
+        let fs_data: Vec<F2> = field
             .field_strength()
             .as_slice()
             .iter()
@@ -442,11 +458,12 @@ impl GaugeFieldWitness {
     ///
     /// - `Some(F_μν)` for abelian gauge groups
     /// - `None` for non-abelian groups (require additional A∧A term)
-    pub fn compute_field_strength_abelian<G>(
-        field: &GaugeField<G, f64, f64>,
-    ) -> Option<CausalTensor<f64>>
+    pub fn compute_field_strength_abelian<G, TD>(
+        field: &GaugeField<G, TD, T, T>,
+    ) -> Option<CausalTensor<T>>
     where
         G: GaugeGroup,
+        TD: TensorData + Clone,
     {
         if !G::IS_ABELIAN {
             return None;
@@ -467,7 +484,7 @@ impl GaugeFieldWitness {
 
         // F has shape [num_points, dim, dim, lie_dim]
         let total = num_points * dim * dim * lie_dim;
-        let mut fs_data = vec![0.0; total];
+        let mut fs_data = vec![T::zero(); total];
 
         let conn_data = connection.as_slice();
 
@@ -487,8 +504,8 @@ impl GaugeFieldWitness {
                         let a_mu_idx = p * (dim * lie_dim) + mu * lie_dim + a;
                         let a_nu_idx = p * (dim * lie_dim) + nu * lie_dim + a;
 
-                        let a_mu = conn_data.get(a_mu_idx).copied().unwrap_or(0.0);
-                        let a_nu = conn_data.get(a_nu_idx).copied().unwrap_or(0.0);
+                        let a_mu = conn_data.get(a_mu_idx).copied().unwrap_or(T::zero());
+                        let a_nu = conn_data.get(a_nu_idx).copied().unwrap_or(T::zero());
 
                         // For a single-point field, we construct the antisymmetric
                         // part from the connection components.
@@ -557,12 +574,13 @@ impl GaugeFieldWitness {
     /// # Returns
     ///
     /// - The computed field strength tensor F_μν^a
-    pub fn compute_field_strength_non_abelian<G>(
-        field: &GaugeField<G, f64, f64>,
-        coupling: f64,
-    ) -> CausalTensor<f64>
+    pub fn compute_field_strength_non_abelian<G, TD>(
+        field: &GaugeField<G, TD, T, T>,
+        coupling: T,
+    ) -> CausalTensor<T>
     where
         G: GaugeGroup,
+        TD: TensorData + Clone,
     {
         let connection = field.connection();
         let dim = G::SPACETIME_DIM;
@@ -576,7 +594,7 @@ impl GaugeFieldWitness {
         };
 
         let total = num_points * dim * dim * lie_dim;
-        let mut fs_data = vec![0.0; total];
+        let mut fs_data = vec![T::zero(); total];
         let conn_data = connection.as_slice();
 
         for p in 0..num_points {
@@ -588,8 +606,8 @@ impl GaugeFieldWitness {
                         let a_mu_idx = p * (dim * lie_dim) + mu * lie_dim + a;
                         let a_nu_idx = p * (dim * lie_dim) + nu * lie_dim + a;
 
-                        let a_mu_val = conn_data.get(a_mu_idx).copied().unwrap_or(0.0);
-                        let a_nu_val = conn_data.get(a_nu_idx).copied().unwrap_or(0.0);
+                        let a_mu_val = conn_data.get(a_mu_idx).copied().unwrap_or(T::zero());
+                        let a_nu_val = conn_data.get(a_nu_idx).copied().unwrap_or(T::zero());
 
                         let abelian_term = if num_points > 1 && p < num_points - 1 {
                             // Forward difference approximation
@@ -613,22 +631,25 @@ impl GaugeFieldWitness {
 
                         // 2. Non-Abelian part: g f^{abc} A_μ^b A_ν^c
                         // ------------------------------------------
-                        let mut non_abelian_term = 0.0;
-                        if coupling.abs() > 1e-12 {
+                        let mut non_abelian_term = T::zero();
+                        if coupling != T::zero() {
                             for b in 0..lie_dim {
                                 for c in 0..lie_dim {
-                                    let f_abc = G::structure_constant(a, b, c);
-                                    if f_abc.abs() > 1e-12 {
+                                    let f_abc_f64 = G::structure_constant(a, b, c);
+                                    let f_abc: T = f_abc_f64.into();
+
+                                    if f_abc != T::zero() {
                                         let a_mu_b = conn_data
                                             .get(p * (dim * lie_dim) + mu * lie_dim + b)
                                             .copied()
-                                            .unwrap_or(0.0);
+                                            .unwrap_or(T::zero());
                                         let a_nu_c = conn_data
                                             .get(p * (dim * lie_dim) + nu * lie_dim + c)
                                             .copied()
-                                            .unwrap_or(0.0);
+                                            .unwrap_or(T::zero());
 
-                                        non_abelian_term += coupling * f_abc * a_mu_b * a_nu_c;
+                                        non_abelian_term =
+                                            non_abelian_term + (coupling * f_abc * a_mu_b * a_nu_c);
                                     }
                                 }
                             }

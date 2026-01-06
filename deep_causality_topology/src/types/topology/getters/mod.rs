@@ -10,7 +10,7 @@ use deep_causality_tensor::CausalTensor;
 use std::sync::Arc;
 
 impl<T> Topology<T> {
-    pub fn complex(&self) -> &Arc<SimplicialComplex> {
+    pub fn complex(&self) -> &Arc<SimplicialComplex<T>> {
         &self.complex
     }
 

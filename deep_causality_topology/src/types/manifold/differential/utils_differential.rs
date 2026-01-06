@@ -8,12 +8,13 @@ use core::ops::Mul;
 use deep_causality_num::Field;
 use deep_causality_tensor::CausalTensor;
 
-impl<T> Manifold<T>
+impl<C, D> Manifold<C, D>
 where
-    T: Field + Default + Copy + PartialEq,
+    C: Default + Copy + PartialEq + deep_causality_num::Zero,
+    D: Field + Default + Copy + PartialEq,
 {
     /// Helper to extract data for a specific k-form from the flat storage.
-    pub(super) fn get_k_form_data(&self, k: usize) -> Vec<T> {
+    pub(super) fn get_k_form_data(&self, k: usize) -> Vec<D> {
         let mut offset = 0;
         for i in 0..k {
             if i < self.complex.skeletons().len() {
@@ -31,15 +32,18 @@ where
             self.data().as_slice()[offset..offset + size].to_vec()
         } else {
             // Return zeros if data is missing/mismatched (Graceful degradation)
-            vec![T::zero(); size]
+            vec![D::zero(); size]
         }
     }
 
     /// Helper to create a temporary manifold holding data for a specific k-form.
     /// Used to chain operators.
-    pub(super) fn create_temp_manifold(&self, k: usize, k_data: CausalTensor<T>) -> Self {
+    pub(super) fn create_temp_manifold(&self, k: usize, k_data: CausalTensor<D>) -> Self
+    where
+        C: Clone,
+    {
         let total_size = self.data().len();
-        let mut full_data = vec![T::zero(); total_size];
+        let mut full_data = vec![D::zero(); total_size];
 
         let mut offset = 0;
         for i in 0..k {
@@ -61,18 +65,18 @@ where
 }
 
 /// Helper to apply a sparse matrix operator to a vector
-pub(super) fn apply_operator<T>(matrix: &deep_causality_sparse::CsrMatrix<i8>, data: &[T]) -> Vec<T>
+pub(super) fn apply_operator<D>(matrix: &deep_causality_sparse::CsrMatrix<i8>, data: &[D]) -> Vec<D>
 where
-    T: Field + Copy + core::ops::Neg<Output = T>,
+    D: Field + Copy + core::ops::Neg<Output = D>,
 {
     let (rows, cols) = matrix.shape();
 
     if cols != data.len() {
         // Dimension mismatch, return zeros
-        return vec![T::zero(); rows];
+        return vec![D::zero(); rows];
     }
 
-    let mut result = vec![T::zero(); rows];
+    let mut result = vec![D::zero(); rows];
 
     for (row, res_val) in result.iter_mut().enumerate() {
         let row_start = matrix.row_indices()[row];
@@ -82,13 +86,13 @@ where
             let col = matrix.col_indices()[idx];
             let val = matrix.values()[idx];
 
-            // Convert i8 to T
+            // Convert i8 to D
             let coeff = if val == 0 {
-                T::zero()
+                D::zero()
             } else if val > 0 {
-                T::one()
+                D::one()
             } else {
-                T::zero() - T::one() // -1
+                D::zero() - D::one() // -1
             };
 
             *res_val = *res_val + (coeff * data[col]);
@@ -98,22 +102,23 @@ where
     result
 }
 
-/// Helper to apply a sparse matrix operator with f64 values to a vector
-pub(super) fn apply_f64_operator<T>(
-    matrix: &deep_causality_sparse::CsrMatrix<f64>,
-    data: &[T],
-) -> Vec<T>
+/// Helper to apply a sparse matrix operator with C values to a vector of D
+pub(super) fn apply_metric_operator<C, D>(
+    matrix: &deep_causality_sparse::CsrMatrix<C>,
+    data: &[D],
+) -> Vec<D>
 where
-    T: Field + Copy + Mul<f64, Output = T>,
+    C: Copy,
+    D: Field + Copy + Mul<C, Output = D>,
 {
     let (rows, cols) = matrix.shape();
 
     if cols != data.len() {
         // Dimension mismatch, return zeros
-        return vec![T::zero(); rows];
+        return vec![D::zero(); rows];
     }
 
-    let mut result = vec![T::zero(); rows];
+    let mut result = vec![D::zero(); rows];
 
     for (row, res_val) in result.iter_mut().enumerate() {
         let row_start = matrix.row_indices()[row];

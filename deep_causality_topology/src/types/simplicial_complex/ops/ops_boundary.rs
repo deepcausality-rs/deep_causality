@@ -8,10 +8,10 @@ use core::fmt::Debug;
 use deep_causality_num::Num;
 use deep_causality_sparse::CsrMatrix;
 
-impl SimplicialComplex {
+impl<T> SimplicialComplex<T> {
     /// Computes the boundary of a chain: ∂c
     /// Maps a k-chain to a (k-1)-chain.
-    pub fn boundary<T>(&self, chain: &Chain<T>) -> Chain<T>
+    pub fn boundary(&self, chain: &Chain<T>) -> Chain<T>
     where
         T: Copy + Num + Default + From<i8> + Debug,
     {
@@ -64,7 +64,7 @@ impl SimplicialComplex {
 
     /// Computes the coboundary (exterior derivative) of a cochain: dω
     /// Maps a k-cochain to a (k+1)-cochain.
-    pub fn coboundary<T>(&self, chain: &Chain<T>) -> Chain<T>
+    pub fn coboundary(&self, chain: &Chain<T>) -> Chain<T>
     where
         T: Copy + Num + Default + From<i8>,
     {

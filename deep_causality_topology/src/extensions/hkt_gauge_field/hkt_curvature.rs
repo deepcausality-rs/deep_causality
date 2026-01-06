@@ -45,6 +45,9 @@
 //!    solver (`-Ztrait-solver=next`), which enables more expressive GAT constraints.
 use crate::CurvatureTensor;
 use deep_causality_haft::{HKT4Unbound, NoConstraint, RiemannMap, Satisfies};
+use deep_causality_num::{Field, Float};
+use deep_causality_tensor::TensorData;
+use std::marker::PhantomData;
 
 // ============================================================================
 // HKT4 Witness
@@ -52,13 +55,16 @@ use deep_causality_haft::{HKT4Unbound, NoConstraint, RiemannMap, Satisfies};
 
 /// HKT4 witness for `CurvatureTensor<A, B, C, D>`.
 #[derive(Debug, Clone, Copy, Default)]
-pub struct CurvatureTensorWitness;
+pub struct CurvatureTensorWitness<T>(PhantomData<T>);
 
-impl HKT4Unbound for CurvatureTensorWitness {
+impl<T> HKT4Unbound for CurvatureTensorWitness<T>
+where
+    T: Satisfies<NoConstraint>,
+{
     // We use NoConstraint because we are using unsafe dispatch and don't rely on Any.
     type Constraint = NoConstraint;
     type Type<A, B, C, D>
-        = CurvatureTensor<A, B, C, D>
+        = CurvatureTensor<T, A, B, C, D>
     where
         A: Satisfies<NoConstraint>,
         B: Satisfies<NoConstraint>,
@@ -72,15 +78,18 @@ impl HKT4Unbound for CurvatureTensorWitness {
 
 /// A concrete vector type for curvature and scattering operations.
 #[derive(Debug, Clone, PartialEq)]
-pub struct TensorVector {
+pub struct TensorVector<T> {
     /// Vector components.
-    pub data: Vec<f64>,
+    pub data: Vec<T>,
 }
 
-impl TensorVector {
+impl<T> TensorVector<T>
+where
+    T: Field + Copy,
+{
     /// Creates a new tensor vector from a slice.
     #[inline]
-    pub fn new(data: &[f64]) -> Self {
+    pub fn new(data: &[T]) -> Self {
         Self {
             data: data.to_vec(),
         }
@@ -90,16 +99,16 @@ impl TensorVector {
     #[inline]
     pub fn zeros(dim: usize) -> Self {
         Self {
-            data: vec![0.0; dim],
+            data: vec![T::zero(); dim],
         }
     }
 
     /// Creates a basis vector e_i.
     #[inline]
     pub fn basis(dim: usize, i: usize) -> Self {
-        let mut data = vec![0.0; dim];
+        let mut data = vec![T::zero(); dim];
         if i < dim {
-            data[i] = 1.0;
+            data[i] = T::one();
         }
         Self { data }
     }
@@ -112,19 +121,19 @@ impl TensorVector {
 
     /// Returns a slice of the data.
     #[inline]
-    pub fn as_slice(&self) -> &[f64] {
+    pub fn as_slice(&self) -> &[T] {
         &self.data
     }
 }
 
-impl From<Vec<f64>> for TensorVector {
-    fn from(data: Vec<f64>) -> Self {
+impl<T> From<Vec<T>> for TensorVector<T> {
+    fn from(data: Vec<T>) -> Self {
         Self { data }
     }
 }
 
-impl From<TensorVector> for Vec<f64> {
-    fn from(v: TensorVector) -> Self {
+impl<T> From<TensorVector<T>> for Vec<T> {
+    fn from(v: TensorVector<T>) -> Self {
         v.data
     }
 }
@@ -133,7 +142,10 @@ impl From<TensorVector> for Vec<f64> {
 // RiemannMap Trait Implementation (Unsafe Dispatch)
 // ============================================================================
 
-impl RiemannMap<CurvatureTensorWitness> for CurvatureTensorWitness {
+impl<T> RiemannMap<CurvatureTensorWitness<T>> for CurvatureTensorWitness<T>
+where
+    T: TensorData + Field + Float + Clone + From<f64> + Into<f64> + Satisfies<NoConstraint>,
+{
     /// Computes curvature contraction R(u,v)w.
     ///
     /// # Safety — ACKNOWLEDGED GAT Limitation
@@ -147,7 +159,7 @@ impl RiemannMap<CurvatureTensorWitness> for CurvatureTensorWitness {
     /// See `deep_causality_tensor` HKT implementation for the same pattern.
     ///
     /// **SAFETY CONTRACT:** The caller **MUST** ensure A, B, C are `TensorVector`.
-    fn curvature<A, B, C, D>(tensor: CurvatureTensor<A, B, C, D>, u: A, v: B, w: C) -> D
+    fn curvature<A, B, C, D>(tensor: CurvatureTensor<T, A, B, C, D>, u: A, v: B, w: C) -> D
     where
         A: Satisfies<NoConstraint>,
         B: Satisfies<NoConstraint>,
@@ -161,15 +173,15 @@ impl RiemannMap<CurvatureTensorWitness> for CurvatureTensorWitness {
         //
         // NOTE: This avoids the Any/downcast overhead and static lifetime requirement.
         unsafe {
-            let u_ptr = &u as *const A as *const TensorVector;
-            let v_ptr = &v as *const B as *const TensorVector;
-            let w_ptr = &w as *const C as *const TensorVector;
+            let u_ptr = &u as *const A as *const TensorVector<T>;
+            let v_ptr = &v as *const B as *const TensorVector<T>;
+            let w_ptr = &w as *const C as *const TensorVector<T>;
 
             // Dispatch to safe implementation
             let result = Self::geodesic_deviation_impl(&tensor, &*u_ptr, &*v_ptr, &*w_ptr);
 
             // Transmute result to D
-            let result_ptr = &result as *const TensorVector as *const D;
+            let result_ptr = &result as *const TensorVector<T> as *const D;
             // We read the D out of the result. Since result is a local variable,
             // we must ensure it isn't dropped twice. reading moves it out.
             let ret = std::ptr::read(result_ptr);
@@ -183,7 +195,7 @@ impl RiemannMap<CurvatureTensorWitness> for CurvatureTensorWitness {
     /// # Safety
     ///
     /// This method **unsafely casts** inputs to `TensorVector`.
-    fn scatter<A, B, C, D>(interaction: CurvatureTensor<A, B, C, D>, in_1: A, in_2: B) -> (C, D)
+    fn scatter<A, B, C, D>(interaction: CurvatureTensor<T, A, B, C, D>, in_1: A, in_2: B) -> (C, D)
     where
         A: Satisfies<NoConstraint>,
         B: Satisfies<NoConstraint>,
@@ -191,15 +203,15 @@ impl RiemannMap<CurvatureTensorWitness> for CurvatureTensorWitness {
         D: Satisfies<NoConstraint>,
     {
         unsafe {
-            let in1_ptr = &in_1 as *const A as *const TensorVector;
-            let in2_ptr = &in_2 as *const B as *const TensorVector;
+            let in1_ptr = &in_1 as *const A as *const TensorVector<T>;
+            let in2_ptr = &in_2 as *const B as *const TensorVector<T>;
 
             let (out1, out2) = Self::scatter_impl(&interaction, &*in1_ptr, &*in2_ptr);
 
             // Transmute tuple (TensorVector, TensorVector) to (C, D).
             // Layout of (C, D) might differ from (TensorVector, TensorVector) if C!=D?
-            let out1_ptr = &out1 as *const TensorVector as *const C;
-            let out2_ptr = &out2 as *const TensorVector as *const D;
+            let out1_ptr = &out1 as *const TensorVector<T> as *const C;
+            let out2_ptr = &out2 as *const TensorVector<T> as *const D;
 
             let c = std::ptr::read(out1_ptr);
             let d = std::ptr::read(out2_ptr);
@@ -214,41 +226,47 @@ impl RiemannMap<CurvatureTensorWitness> for CurvatureTensorWitness {
 }
 
 // ============================================================================
-// Private saafe implementations.
+// Private safe implementations.
 // ============================================================================
 
-impl CurvatureTensorWitness {
+impl<T> CurvatureTensorWitness<T>
+where
+    T: TensorData + Field + Float + Clone + From<f64> + Into<f64>,
+{
     /// Internal implementation of geodesic deviation.
     fn geodesic_deviation_impl<A, B, C, D>(
-        tensor: &CurvatureTensor<A, B, C, D>,
-        u: &TensorVector,
-        v: &TensorVector,
-        w: &TensorVector,
-    ) -> TensorVector {
+        tensor: &CurvatureTensor<T, A, B, C, D>,
+        u: &TensorVector<T>,
+        v: &TensorVector<T>,
+        w: &TensorVector<T>,
+    ) -> TensorVector<T> {
         let result = tensor.contract(u.as_slice(), v.as_slice(), w.as_slice());
         TensorVector::from(result)
     }
 
     /// Internal implementation of scattering.
     fn scatter_impl<A, B, C, D>(
-        tensor: &CurvatureTensor<A, B, C, D>,
-        in_1: &TensorVector,
-        in_2: &TensorVector,
-    ) -> (TensorVector, TensorVector) {
+        tensor: &CurvatureTensor<T, A, B, C, D>,
+        in_1: &TensorVector<T>,
+        in_2: &TensorVector<T>,
+    ) -> (TensorVector<T>, TensorVector<T>) {
         let dim = tensor.dim();
-        let mut out_1 = vec![0.0; dim];
-        let mut out_2 = vec![0.0; dim];
+        let mut out_1 = vec![T::zero(); dim];
+        let mut out_2 = vec![T::zero(); dim];
+        let point_five: T = <T as From<f64>>::from(0.5);
 
         for (c, out1_val) in out_1.iter_mut().enumerate() {
             for (d, out2_val) in out_2.iter_mut().enumerate() {
-                let mut amplitude = 0.0;
+                let mut amplitude = T::zero();
                 for a in 0..dim {
                     for b in 0..dim {
-                        amplitude += tensor.get(c, a, b, d) * in_1.data[a] * in_2.data[b];
+                        // tensor.get() returns T
+                        let val = tensor.get(c, a, b, d);
+                        amplitude = amplitude + (val * in_1.data[a] * in_2.data[b]);
                     }
                 }
-                *out1_val += amplitude * 0.5;
-                *out2_val += amplitude * 0.5;
+                *out1_val = *out1_val + (amplitude * point_five);
+                *out2_val = *out2_val + (amplitude * point_five);
             }
         }
 

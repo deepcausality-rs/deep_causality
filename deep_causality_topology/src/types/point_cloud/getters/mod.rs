@@ -8,12 +8,12 @@
 use crate::PointCloud;
 use deep_causality_tensor::CausalTensor;
 
-impl<T> PointCloud<T> {
-    pub fn points(&self) -> &CausalTensor<f64> {
+impl<C, D> PointCloud<C, D> {
+    pub fn points(&self) -> &CausalTensor<C> {
         &self.points
     }
 
-    pub fn metadata(&self) -> &CausalTensor<T> {
+    pub fn metadata(&self) -> &CausalTensor<D> {
         &self.metadata
     }
 }

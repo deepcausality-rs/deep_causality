@@ -61,7 +61,7 @@
 //!
 //! The `alias` module defines the mapping between high-level theory names and generic gauge fields:
 //!
-//! * **Electromagnetism**: `GaugeField<U1, f64, f64>`
+//! * **Electromagnetism**: `GaugeField<U1, f64, f64, f64>`
 //! * **WeakField**: `GaugeField<SU2, f64, f64>`
 //! * **ElectroweakField**: `GaugeField<Electroweak, f64, f64>`
 //! * **GR**: `GaugeField<Lorentz, f64, f64>`

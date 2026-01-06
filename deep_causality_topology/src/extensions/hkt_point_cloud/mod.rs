@@ -6,35 +6,50 @@
 use crate::PointCloud;
 use deep_causality_haft::{CoMonad, Functor, HKT, NoConstraint, Satisfies};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
+use std::marker::PhantomData;
 
-pub struct PointCloudWitness;
+pub struct PointCloudWitness<C>(PhantomData<C>);
 
-impl HKT for PointCloudWitness {
+impl<C> HKT for PointCloudWitness<C>
+where
+    C: Satisfies<NoConstraint>,
+{
     type Constraint = NoConstraint;
     type Type<T>
-        = PointCloud<T>
+        = PointCloud<C, T>
     where
         T: Satisfies<NoConstraint>;
 }
 
-impl Functor<PointCloudWitness> for PointCloudWitness {
-    fn fmap<A, B, F>(fa: PointCloud<A>, f: F) -> PointCloud<B>
+impl<C> Functor<PointCloudWitness<C>> for PointCloudWitness<C>
+where
+    C: Satisfies<NoConstraint> + Clone,
+{
+    fn fmap<A, B, F>(fa: PointCloud<C, A>, f: F) -> PointCloud<C, B>
     where
         A: Satisfies<NoConstraint>,
         B: Satisfies<NoConstraint>,
         F: FnMut(A) -> B,
     {
+        // Points are invariant
+        let new_points = fa.points.clone();
+
+        // Metadata is covariant
         let new_metadata = CausalTensorWitness::fmap(fa.metadata, f);
+
         PointCloud {
-            points: fa.points.clone(),
+            points: new_points,
             metadata: new_metadata,
             cursor: fa.cursor,
         }
     }
 }
 
-impl CoMonad<PointCloudWitness> for PointCloudWitness {
-    fn extract<A>(fa: &PointCloud<A>) -> A
+impl<C> CoMonad<PointCloudWitness<C>> for PointCloudWitness<C>
+where
+    C: Satisfies<NoConstraint> + Clone,
+{
+    fn extract<A>(fa: &PointCloud<C, A>) -> A
     where
         A: Satisfies<NoConstraint> + Clone,
     {
@@ -45,9 +60,9 @@ impl CoMonad<PointCloudWitness> for PointCloudWitness {
             .expect("Cursor OOB")
     }
 
-    fn extend<A, B, Func>(fa: &PointCloud<A>, mut f: Func) -> PointCloud<B>
+    fn extend<A, B, Func>(fa: &PointCloud<C, A>, mut f: Func) -> PointCloud<C, B>
     where
-        Func: FnMut(&PointCloud<A>) -> B,
+        Func: FnMut(&PointCloud<C, A>) -> B,
         A: Satisfies<NoConstraint> + Clone,
         B: Satisfies<NoConstraint>,
     {
@@ -64,9 +79,10 @@ impl CoMonad<PointCloudWitness> for PointCloudWitness {
         }
 
         let new_metadata = CausalTensor::from_vec(result_vec, &shape);
+        let new_points = fa.points.clone();
 
         PointCloud {
-            points: fa.points.clone(),
+            points: new_points,
             metadata: new_metadata,
             cursor: 0,
         }

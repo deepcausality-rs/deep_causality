@@ -4,6 +4,7 @@
  */
 use crate::PhysicsError;
 use deep_causality_multivector::CausalMultiVector;
+use deep_causality_num::{Field, Float};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::Manifold;
 
@@ -12,6 +13,9 @@ use deep_causality_topology::Manifold;
 /// This trait provides classical electromagnetic operations using the
 /// relativistic gauge field formalism. It computes E, B fields, energy density,
 /// Lorentz invariants, and radiation properties from the U(1) field strength tensor.
+///
+/// # Type Parameter
+/// - `S`: The scalar field type (e.g., `f64`, `DoubleFloat`)
 ///
 /// # Mathematical Foundation
 ///
@@ -37,7 +41,10 @@ use deep_causality_topology::Manifold;
 ///
 /// ## Metric Convention
 /// Uses West Coast signature (+---) following particle physics conventions.
-pub trait GaugeEmOps {
+pub trait GaugeEmOps<S>
+where
+    S: Field + Float + Clone + From<f64> + Into<f64>,
+{
     /// Creates a new QED field from electric and magnetic field vectors.
     ///
     /// # Mathematical Structure
@@ -46,22 +53,15 @@ pub trait GaugeEmOps {
     /// - F_{0i} = E_i (electric field components)
     /// - F_{ij} = -ε_{ijk} B_k (magnetic field components)
     fn from_fields(
-        base: Manifold<f64>,
-        electric_field: CausalMultiVector<f64>,
-        magnetic_field: CausalMultiVector<f64>,
+        base: Manifold<S>,
+        electric_field: CausalMultiVector<S>,
+        magnetic_field: CausalMultiVector<S>,
     ) -> Result<Self, PhysicsError>
     where
         Self: Sized;
 
     /// Creates a QED field from field components in 3D Euclidean space.
-    fn from_components(
-        ex: f64,
-        ey: f64,
-        ez: f64,
-        bx: f64,
-        by: f64,
-        bz: f64,
-    ) -> Result<Self, PhysicsError>
+    fn from_components(ex: S, ey: S, ez: S, bx: S, by: S, bz: S) -> Result<Self, PhysicsError>
     where
         Self: Sized;
 
@@ -72,7 +72,7 @@ pub trait GaugeEmOps {
     /// For a plane wave propagating in direction k̂:
     /// - E ⊥ B ⊥ k̂
     /// - |E| = |B| (in natural units where c = 1)
-    fn plane_wave(amplitude: f64, polarization: usize) -> Result<Self, PhysicsError>
+    fn plane_wave(amplitude: S, polarization: usize) -> Result<Self, PhysicsError>
     where
         Self: Sized;
 
@@ -82,7 +82,7 @@ pub trait GaugeEmOps {
     /// ```text
     /// E_i = F_{0i}   for i = 1,2,3
     /// ```
-    fn electric_field(&self) -> Result<CausalMultiVector<f64>, PhysicsError>;
+    fn electric_field(&self) -> Result<CausalMultiVector<S>, PhysicsError>;
 
     /// Extracts the magnetic field vector B from the field tensor F_μν.
     ///
@@ -91,7 +91,7 @@ pub trait GaugeEmOps {
     /// B_i = ½ ε_{ijk} F^{jk}
     /// ```
     /// Equivalently: B_x = F_{23}, B_y = F_{31}, B_z = F_{12}
-    fn magnetic_field(&self) -> Result<CausalMultiVector<f64>, PhysicsError>;
+    fn magnetic_field(&self) -> Result<CausalMultiVector<S>, PhysicsError>;
 
     /// Computes the electromagnetic energy density.
     ///
@@ -99,7 +99,7 @@ pub trait GaugeEmOps {
     /// ```text
     /// u = ½(ε₀|E|² + |B|²/μ₀) = ½(|E|² + |B|²)  [natural units]
     /// ```
-    fn energy_density(&self) -> Result<f64, PhysicsError>;
+    fn energy_density(&self) -> Result<S, PhysicsError>;
 
     /// Computes the Lagrangian density.
     ///
@@ -107,7 +107,7 @@ pub trait GaugeEmOps {
     /// ```text
     /// L = -¼ F_μν F^μν = ½(|E|² - |B|²)
     /// ```
-    fn lagrangian_density(&self) -> Result<f64, PhysicsError>;
+    fn lagrangian_density(&self) -> Result<S, PhysicsError>;
 
     /// Computes the Poynting vector (energy flux).
     ///
@@ -115,7 +115,7 @@ pub trait GaugeEmOps {
     /// ```text
     /// S = (1/μ₀)(E × B) = E × B  [natural units]
     /// ```
-    fn poynting_vector(&self) -> Result<CausalMultiVector<f64>, PhysicsError>;
+    fn poynting_vector(&self) -> Result<CausalMultiVector<S>, PhysicsError>;
 
     /// Computes the Lorentz force density on a current.
     ///
@@ -126,8 +126,8 @@ pub trait GaugeEmOps {
     /// where J is the current density 4-vector.
     fn lorentz_force(
         &self,
-        current_density: &CausalMultiVector<f64>,
-    ) -> Result<CausalMultiVector<f64>, PhysicsError>;
+        current_density: &CausalMultiVector<S>,
+    ) -> Result<CausalMultiVector<S>, PhysicsError>;
 
     /// Computes the first Lorentz invariant (field invariant).
     ///
@@ -136,7 +136,7 @@ pub trait GaugeEmOps {
     /// I₁ = F_μν F^μν = 2(|B|² - |E|²)
     /// ```
     /// This quantity is unchanged under Lorentz transformations.
-    fn field_invariant(&self) -> Result<f64, PhysicsError>;
+    fn field_invariant(&self) -> Result<S, PhysicsError>;
 
     /// Computes the second Lorentz invariant (dual invariant).
     ///
@@ -145,7 +145,7 @@ pub trait GaugeEmOps {
     /// I₂ = F_μν F̃^μν = -4(E · B)
     /// ```
     /// where F̃^μν is the Hodge dual of F^μν.
-    fn dual_invariant(&self) -> Result<f64, PhysicsError>;
+    fn dual_invariant(&self) -> Result<S, PhysicsError>;
 
     /// Checks if the field is a radiation field (E ⊥ B).
     ///
@@ -170,7 +170,7 @@ pub trait GaugeEmOps {
     /// g = S/c² = ε₀(E × B) = E × B  [natural units]
     /// ```
     /// Equal to the Poynting vector in natural units.
-    fn momentum_density(&self) -> Result<CausalMultiVector<f64>, PhysicsError>;
+    fn momentum_density(&self) -> Result<CausalMultiVector<S>, PhysicsError>;
 
     /// Computes the electromagnetic intensity (|S|).
     ///
@@ -178,7 +178,7 @@ pub trait GaugeEmOps {
     /// ```text
     /// I = |S| = |E × B|
     /// ```
-    fn intensity(&self) -> Result<f64, PhysicsError>;
+    fn intensity(&self) -> Result<S, PhysicsError>;
 
     /// Computes the field strength tensor F_μν from the gauge potential A_μ.
     ///
@@ -191,5 +191,5 @@ pub trait GaugeEmOps {
     ///
     /// # Returns
     /// Field strength tensor of shape [num_points, 4, 4, 1]
-    fn computed_field_strength(&self) -> Result<CausalTensor<f64>, PhysicsError>;
+    fn computed_field_strength(&self) -> Result<CausalTensor<S>, PhysicsError>;
 }

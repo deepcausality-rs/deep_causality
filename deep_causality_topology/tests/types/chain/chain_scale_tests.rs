@@ -7,7 +7,7 @@ use deep_causality_sparse::CsrMatrix;
 use deep_causality_topology::{Chain, Simplex, SimplicialComplex, Skeleton};
 use std::sync::Arc;
 
-fn create_test_complex() -> Arc<SimplicialComplex> {
+fn create_test_complex() -> Arc<SimplicialComplex<f64>> {
     let vertices = vec![
         Simplex::new(vec![0]),
         Simplex::new(vec![1]),

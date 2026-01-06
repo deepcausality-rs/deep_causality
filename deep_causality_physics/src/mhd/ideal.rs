@@ -230,7 +230,7 @@ fn apply_csr_i8_f64(matrix: &CsrMatrix<i8>, vector: &[f64]) -> Vec<f64> {
 fn wedge_product_1form_1form(
     alpha: &[f64],
     beta: &[f64],
-    complex: &SimplicialComplex,
+    complex: &SimplicialComplex<f64>,
 ) -> Result<Vec<f64>, PhysicsError> {
     let skeletons = complex.skeletons();
     if skeletons.len() < 3 {

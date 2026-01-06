@@ -5,7 +5,7 @@
 
 use crate::{BaseTopology, SimplicialComplex};
 
-impl BaseTopology for SimplicialComplex {
+impl<T> BaseTopology for SimplicialComplex<T> {
     fn dimension(&self) -> usize {
         self.skeletons.last().map(|s| s.dim).unwrap_or(0)
     }

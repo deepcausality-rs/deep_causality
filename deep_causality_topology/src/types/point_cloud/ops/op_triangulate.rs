@@ -6,24 +6,33 @@ use crate::{PointCloud, Simplex, SimplicialComplex, Skeleton, TopologyError};
 use deep_causality_sparse::CsrMatrix;
 use std::collections::BTreeSet;
 
+use deep_causality_num::{Float, Zero};
+use std::iter::Sum;
+
 // Helper function to calculate Euclidean distance between two points
-fn euclidean_distance(p1: &[f64], p2: &[f64]) -> f64 {
+fn euclidean_distance<T>(p1: &[T], p2: &[T]) -> T
+where
+    T: Float + Sum,
+{
     p1.iter()
         .zip(p2.iter())
         .map(|(&a, &b)| (a - b).powi(2))
-        .sum::<f64>()
+        .sum::<T>()
         .sqrt()
 }
 
 /// Computes the Volume (Hypervolume) of a simplex using the Cayley-Menger Determinant.
 /// This is coordinate-system invariant and works for any dimension.
-fn simplex_volume(simplex: &Simplex, points: &[f64], dim: usize) -> f64 {
+fn simplex_volume<T>(simplex: &Simplex, points: &[T], dim: usize) -> T
+where
+    T: Float + Sum + From<f64>,
+{
     let k = simplex.vertices.len(); // k+1 vertices -> k-simplex
     if k == 0 {
-        return 0.0f64;
+        return T::zero();
     } // Empty
     if k == 1 {
-        return 1.0f64;
+        return <T as From<f64>>::from(1.0);
     } // 0-simplex (Point) has volume 1.0 by convention in DEC weights
 
     // 1-simplex (Edge)
@@ -40,7 +49,7 @@ fn simplex_volume(simplex: &Simplex, points: &[f64], dim: usize) -> f64 {
     let mut vectors = Vec::new();
     for i in 1..k {
         let vi = &points[simplex.vertices[i] * dim..(simplex.vertices[i] + 1) * dim];
-        let vec_i: Vec<f64> = vi.iter().zip(v0.iter()).map(|(a, b)| a - b).collect();
+        let vec_i: Vec<T> = vi.iter().zip(v0.iter()).map(|(&a, &b)| a - b).collect();
         vectors.push(vec_i);
     }
 
@@ -51,10 +60,10 @@ fn simplex_volume(simplex: &Simplex, points: &[f64], dim: usize) -> f64 {
 
     for i in 0..n_vecs {
         for j in 0..n_vecs {
-            let dot: f64 = vectors[i]
+            let dot: T = vectors[i]
                 .iter()
                 .zip(vectors[j].iter())
-                .map(|(a, b)| a * b)
+                .map(|(&a, &b)| a * b)
                 .sum();
             matrix_data.push(dot);
         }
@@ -63,8 +72,8 @@ fn simplex_volume(simplex: &Simplex, points: &[f64], dim: usize) -> f64 {
     // Determinant (Simplified Gaussian Elimination for N dimensions)
     let det = gaussian_determinant(&mut matrix_data, n_vecs);
 
-    if det <= 0.0 {
-        return 0.0;
+    if det <= T::zero() {
+        return T::zero();
     }
 
     let mut factorial = 1.0;
@@ -72,31 +81,38 @@ fn simplex_volume(simplex: &Simplex, points: &[f64], dim: usize) -> f64 {
         factorial *= i as f64;
     }
 
-    det.sqrt() / factorial
+    det.sqrt() / <T as From<f64>>::from(factorial)
 }
 
 // Simple in-place determinant for variable size
-fn gaussian_determinant(mat: &mut [f64], n: usize) -> f64 {
-    let mut det = 1.0;
+fn gaussian_determinant<T>(mat: &mut [T], n: usize) -> T
+where
+    T: Float + From<f64>,
+{
+    let mut det = T::one();
     for i in 0..n {
         let pivot = i * n + i;
-        if mat[pivot].abs() < 1e-12 {
-            return 0.0;
+        if mat[pivot].abs() < <T as From<f64>>::from(1e-12) {
+            return T::zero();
         }
-        det *= mat[pivot];
+        det = det * mat[pivot];
 
         for j in (i + 1)..n {
             let factor = mat[j * n + i] / mat[pivot];
             for k in i..n {
-                mat[j * n + k] -= factor * mat[i * n + k];
+                let val = mat[i * n + k]; // Copy to avoid borrow issues if needed, T is Copy
+                mat[j * n + k] = mat[j * n + k] - factor * val;
             }
         }
     }
     det
 }
 
-impl<T> PointCloud<T> {
-    pub fn triangulate(&self, radius: f64) -> Result<SimplicialComplex, TopologyError> {
+impl<T, D> PointCloud<T, D>
+where
+    T: Float + Sum + From<f64> + Zero + PartialOrd + Copy,
+{
+    pub fn triangulate(&self, radius: T) -> Result<SimplicialComplex<T>, TopologyError> {
         if self.is_empty() {
             return Err(TopologyError::PointCloudError("Empty Cloud".to_string()));
         }
@@ -203,7 +219,7 @@ impl<T> PointCloud<T> {
         // Mass_k [i,i] = Vol(Dual_i) / Vol(Primal_i)
 
         // First, compute Primal Volumes for EVERYTHING.
-        let mut primal_volumes: Vec<Vec<f64>> = Vec::new();
+        let mut primal_volumes: Vec<Vec<T>> = Vec::new();
         for skel in &skeletons {
             let vols = skel
                 .simplices
@@ -233,7 +249,7 @@ impl<T> PointCloud<T> {
                     // Vertex Mass: "Lumped" volume around the vertex.
                     // V_dual = Sum(Vol(n-simplices containing v)) / (n+1)
                     // This distributes the total volume equally to vertices.
-                    let mut dual_vol = 0.0;
+                    let mut dual_vol = T::zero();
                     let n_skel = &skeletons[max_dim];
                     let n_vols = &primal_volumes[max_dim];
 
@@ -241,20 +257,20 @@ impl<T> PointCloud<T> {
                     // For small-medium point clouds, this is acceptable.
                     for (cell_idx, cell) in n_skel.simplices.iter().enumerate() {
                         if cell.contains_vertex(&i) {
-                            dual_vol += n_vols[cell_idx];
+                            dual_vol = dual_vol + n_vols[cell_idx];
                         }
                     }
-                    dual_vol / (max_dim + 1) as f64
+                    dual_vol / <T as From<f64>>::from((max_dim + 1) as f64)
                 } else if k_dim == max_dim {
                     // Top-dimension form.
                     // Inner product <a, b> = Integral (a * b) dV
                     // Since top-forms are densities per volume, and we store integrated values,
                     // the metric term is 1/Volume.
                     // (Standard DEC derivation for diagonal star_n)
-                    if primal_vol > 1e-12 {
-                        1.0 / primal_vol
+                    if primal_vol > <T as From<f64>>::from(1e-12) {
+                        <T as From<f64>>::from(1.0) / primal_vol
                     } else {
-                        0.0
+                        T::zero()
                     }
                 } else {
                     // Intermediate dimensions (Edges in 2D/3D).
