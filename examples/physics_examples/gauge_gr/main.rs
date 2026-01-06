@@ -8,6 +8,11 @@
 //! Demonstrates **modular causal composition** via `CausalEffectPropagationProcess`
 //! for General Relativity (GR) spacetime analysis.
 //!
+//! ## Generic Float Type Support
+//!
+//! This example supports `f32`, `f64`, and `DoubleFloat` by changing the `FloatType`
+//! type alias. All numeric literals are converted using the `flt!` macro.
+//!
 //! ## Key Design Pattern
 //!
 //! Each physics stage is a **standalone function** composed via `bind_or_error`:
@@ -21,11 +26,28 @@
 //! ```
 
 use deep_causality_core::{CausalEffectPropagationProcess, EffectValue, PropagatingEffect};
+use deep_causality_num::{DoubleFloat, Float};
 use deep_causality_physics::{AdmOps, GrOps, LorentzianMetric};
-use deep_causality_physics::{AdmState, EastCoastMetric, GR, SPEED_OF_LIGHT as c};
+use deep_causality_physics::{AdmState, EastCoastMetric, GR, SPEED_OF_LIGHT};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{GaugeField, Manifold, Simplex, SimplicialComplexBuilder};
 use std::error::Error;
+
+// =============================================================================
+// FLOAT TYPE CONFIGURATION
+// =============================================================================
+
+// Change this to f32 or DoubleFloat to use different precision
+type FloatType = DoubleFloat;
+type GRTheory = GR<FloatType>;
+
+/// Macro to convert f64 literals to FloatType
+/// This enables writing `flt!(1.0)` instead of `<FloatType as From<f64>>::from(1.0)`
+macro_rules! flt {
+    ($x:expr) => {
+        <FloatType as From<f64>>::from($x)
+    };
+}
 
 // =============================================================================
 // MAIN: Pipeline Composition via Causal Monad
@@ -34,6 +56,7 @@ use std::error::Error;
 fn main() -> Result<(), Box<dyn Error>> {
     println!("═══════════════════════════════════════════════════════════════");
     println!("  General Relativity Spacetime Analysis");
+    println!("  (Float Type: {})", std::any::type_name::<FloatType>());
     println!("═══════════════════════════════════════════════════════════════\n");
 
     // Composed pipeline using bind_or_error
@@ -57,19 +80,19 @@ fn main() -> Result<(), Box<dyn Error>> {
 #[derive(Debug, Clone, Default)]
 pub struct SpaceTimeData {
     /// General Relativity gauge field
-    pub gr: Option<GR>,
+    pub gr: Option<GRTheory>,
     /// Observation radius r
-    pub r: f64,
+    pub r: FloatType,
     /// Schwarzschild radius r_s
-    pub r_s: f64,
+    pub r_s: FloatType,
     /// Kretschmann scalar
-    pub kretschmann: f64,
+    pub kretschmann: FloatType,
     /// Ricci scalar
-    pub ricci_scalar: f64,
+    pub ricci_scalar: FloatType,
     /// Geodesic deviation
-    pub deviation: f64,
+    pub deviation: FloatType,
     /// Hamiltonian constraint
-    pub h_constraint: f64,
+    pub h_constraint: FloatType,
 }
 
 /// Custom PropagatingEffect for SpaceTimeData
@@ -80,23 +103,23 @@ type SpaceTimeEffect = PropagatingEffect<SpaceTimeData>;
 #[allow(dead_code)]
 struct GRState {
     /// Mass parameter M (in geometric units, G=c=1)
-    mass: f64,
+    mass: FloatType,
     /// Schwarzschild radius r_s = 2M
-    schwarzschild_radius: f64,
+    schwarzschild_radius: FloatType,
     /// Observation radius r
-    observation_radius: f64,
+    observation_radius: FloatType,
     /// Kretschmann scalar K = R_μνρσ R^μνρσ
-    kretschmann: f64,
+    kretschmann: FloatType,
     /// Ricci scalar R = g^μν R_μν
-    ricci_scalar: f64,
+    ricci_scalar: FloatType,
     /// Geodesic deviation magnitude
-    geodesic_deviation: f64,
+    geodesic_deviation: FloatType,
     /// ADM Hamiltonian constraint H
-    hamiltonian_constraint: f64,
+    hamiltonian_constraint: FloatType,
     /// Is inside event horizon
     inside_horizon: bool,
     /// Time dilation factor √(1 - r_s/r)
-    time_dilation: f64,
+    time_dilation: FloatType,
 }
 
 // =============================================================================
@@ -116,15 +139,16 @@ fn initial_stage_create_schwarzschild() -> SpaceTimeEffect {
     println!("────────────────────────────────────────");
 
     // Black hole parameters
-    let mass_solar = 10.0; // 10 solar masses
-    let r_s = GR::schwarzschild_radius(mass_solar * 1.989e30); // kg → geometric units
+    let mass_solar: FloatType = flt!(10.0); // 10 solar masses
+    let mass_kg: FloatType = mass_solar * flt!(1.989e30); // kg
+    let r_s: FloatType = GR::schwarzschild_radius(mass_kg); // kg → geometric units
 
     // Observation point (outside horizon)
-    let r = 3.0 * r_s; // At 3 Schwarzschild radii
+    let r = flt!(3.0) * r_s; // At 3 Schwarzschild radii
 
     println!("  Mass:                {} M☉", mass_solar);
-    println!("  Schwarzschild radius: {:.3e} m", r_s);
-    println!("  Observation radius:   {:.3e} m ({:.1} r_s)", r, r / r_s);
+    println!("  Schwarzschild radius: {} m", r_s);
+    println!("  Observation radius:   {} m ({:.1} r_s)", r, (r / r_s));
 
     // Create manifold for the GR field
     let mut builder = SimplicialComplexBuilder::new(0);
@@ -134,22 +158,23 @@ fn initial_stage_create_schwarzschild() -> SpaceTimeEffect {
     let complex = builder.build().expect("build complex");
 
     let num_simplices = complex.total_simplices();
-    let data = CausalTensor::zeros(&[num_simplices]);
+    let data: CausalTensor<FloatType> = CausalTensor::zeros(&[num_simplices]);
     let base = Manifold::new(complex, data, 0).expect("create manifold");
 
     // Construct Schwarzschild metric tensor at radius r
     // g_μν = diag(-(1-r_s/r), (1-r_s/r)^{-1}, r², r²sin²θ)
-    let f = 1.0 - r_s / r; // Metric function
-    let mut metric_data = vec![0.0; 16];
-    metric_data[0] = -f; // g_tt
-    metric_data[5] = 1.0 / f; // g_rr
+    let one = flt!(1.0);
+    let f = one - r_s / r; // Metric function
+    let mut metric_data: Vec<FloatType> = vec![flt!(0.0); 16];
+    metric_data[0] = flt!(0.0) - f; // g_tt = -f
+    metric_data[5] = one / f; // g_rr
     metric_data[10] = r * r; // g_θθ
     metric_data[15] = r * r; // g_φφ (assuming θ = π/2)
 
     let connection = CausalTensor::from_vec(metric_data, &[1, 4, 4]);
 
     // Precompute curvature in Lie-algebra form [points, 4, 4, 6]
-    let mut fs_data = vec![0.0; 4 * 4 * 6];
+    let mut fs_data: Vec<FloatType> = vec![flt!(0.0); 4 * 4 * 6];
     let riemann_scale = r_s / (r * r * r);
     fs_data[0] = riemann_scale;
     let field_strength = CausalTensor::from_vec(fs_data, &[1, 4, 4, 6]);
@@ -158,8 +183,8 @@ fn initial_stage_create_schwarzschild() -> SpaceTimeEffect {
 
     match GaugeField::new(base, topo_metric, connection, field_strength) {
         Ok(gr) => {
-            println!("  Metric function:     f(r) = 1 - r_s/r = {:.6}", f);
-            println!("  Time dilation:       √f = {:.6}", f.sqrt());
+            println!("  Metric function:     f(r) = 1 - r_s/r = {:.6}", (f));
+            println!("  Time dilation:       √f = {}", (f.sqrt()));
             println!();
 
             let data = SpaceTimeData {
@@ -196,28 +221,27 @@ fn stage_curvature_invariants(mut input: SpaceTimeData, _: (), _: Option<()>) ->
         // For Schwarzschild spacetime, use the exact analytic expressions:
         // Kretschmann scalar: K = R_μνρσ R^μνρσ = 48 M²/r⁶ = 12 r_s²/r⁶
         // Ricci scalar: R = 0 (vacuum solution)
-        let m = r_s / 2.0; // M = r_s/2 in geometric units
-        let kretschmann = 48.0 * m * m / r.powi(6);
-        let ricci_scalar: f64 = 0.0; // Vacuum solution: R = 0
+        let m = r_s / flt!(2.0); // M = r_s/2 in geometric units
+        let r6 = r * r * r * r * r * r;
+        let kretschmann = flt!(48.0) * m * m / r6;
+        let ricci_scalar: FloatType = flt!(0.0); // Vacuum solution: R = 0
 
-        println!("  Kretschmann scalar: K = {:.6e} (analytic)", kretschmann);
-        println!("  Ricci scalar:       R = {:.6} (vacuum)", ricci_scalar);
+        println!("  Kretschmann scalar: K = {} (analytic)", (kretschmann));
+        println!("  Ricci scalar:       R = {} (vacuum)", (ricci_scalar));
 
         // Physical interpretation
-        if ricci_scalar.abs() < 1e-10 {
+        if (ricci_scalar).abs() < 1e-10 {
             println!("\n  → Vacuum spacetime (T_μν = 0)");
         }
-        if kretschmann > 0.0 {
+        if (kretschmann) > 0.0 {
             println!("  → Non-flat curvature: spacetime is curved");
         }
 
-        // Curvature radius from Kretschmann scalar (now using GrOps SI method)
-        // Note: We use the analytic K here, but gr.kretschmann_curvature_radius()
-        // would give the same result if Riemann was in geometric [4,4,4,4] form.
-        let curvature_radius = 1.0 / kretschmann.powf(0.25);
+        // Curvature radius from Kretschmann scalar
+        let curvature_radius = flt!(1.0) / kretschmann.powf(flt!(0.25));
         println!(
-            "  → Curvature radius: {:.3e} m (via K^{{-1/4}})",
-            curvature_radius
+            "  → Curvature radius: {} m (via K^{{-1/4}})",
+            (curvature_radius)
         );
         println!();
 
@@ -247,33 +271,37 @@ fn stage_geodesic_analysis(mut input: SpaceTimeData, _: (), _: Option<()>) -> Sp
         let r = input.r;
         let r_s = input.r_s;
         // Static observer 4-velocity: u^μ = (1/√f, 0, 0, 0)
-        let f = 1.0 - r_s / r;
-        let u = CausalTensor::from_vec(vec![1.0 / f.sqrt(), 0.0, 0.0, 0.0], &[4]);
+        let one = flt!(1.0);
+        let zero = flt!(0.0);
+        let f = one - r_s / r;
+        let u = CausalTensor::from_vec(vec![one / f.sqrt(), zero, zero, zero], &[4]);
 
         // Separation vector (radial): ξ^μ = (0, 1, 0, 0)
-        let xi = CausalTensor::from_vec(vec![0.0, 1.0, 0.0, 0.0], &[4]);
+        let xi = CausalTensor::from_vec(vec![zero, one, zero, zero], &[4]);
 
         // Compute geodesic deviation in SI units. For geometric units, use geodesic_deviation()
-        let tidal_acceleration = match gr.geodesic_deviation_si(u.as_slice(), xi.as_slice()) {
-            Ok(d) => {
-                // Magnitude of acceleration (already in m/s²)
-                d.iter().map(|x| x * x).sum::<f64>().sqrt()
-            }
-            Err(_) => {
-                // Analytic fallback: radial tidal acceleration ~ c² * M/r³
-                let m = r_s / 2.0;
-                c * c * 2.0 * m / (r * r * r)
-            }
-        };
+        let tidal_acceleration: FloatType =
+            match gr.geodesic_deviation_si(u.as_slice(), xi.as_slice()) {
+                Ok(d) => {
+                    // Magnitude of acceleration (already in m/s²)
+                    d.iter().map(|x| (*x) * (*x)).sum::<FloatType>().sqrt()
+                }
+                Err(_) => {
+                    // Analytic fallback: radial tidal acceleration ~ c² * M/r³
+                    let m = (r_s) / 2.0;
+                    let c = SPEED_OF_LIGHT;
+                    c * c * 2.0 * m / (r * r * r)
+                }
+            };
 
         // Also show the geometric deviation for reference
-        let deviation_geometric = tidal_acceleration / (c * c);
+        let deviation_geometric = tidal_acceleration / (SPEED_OF_LIGHT * SPEED_OF_LIGHT);
         println!(
-            "  Geodesic deviation:      {:.6e} m⁻² (geometric)",
+            "  Geodesic deviation:      {} m⁻² (geometric)",
             deviation_geometric
         );
         println!(
-            "  Tidal acceleration:      {:.6e} m/s² (SI)",
+            "  Tidal acceleration:      {} m/s² (SI)",
             tidal_acceleration
         );
 
@@ -288,10 +316,10 @@ fn stage_geodesic_analysis(mut input: SpaceTimeData, _: (), _: Option<()>) -> Sp
 
         input.deviation = deviation_geometric;
         let tau_ratio = f.sqrt();
-        println!("\n  Proper time dilation: dτ/dt = {:.6}", tau_ratio);
+        println!("\n  Proper time dilation: dτ/dt = {:.6}", (tau_ratio));
         println!(
             "  Gravitational redshift:  z = {:.6}",
-            1.0 / tau_ratio - 1.0
+            (one / tau_ratio - one)
         );
         println!();
 
@@ -317,11 +345,13 @@ fn stage_adm_formalism(mut input: SpaceTimeData, _: (), _: Option<()>) -> SpaceT
 
     let r = input.r;
     let r_s = input.r_s;
-    let f = 1.0 - r_s / r;
+    let one = flt!(1.0);
+    let zero = flt!(0.0);
+    let f = one - r_s / r;
 
     // Spatial 3-metric
     let gamma = CausalTensor::from_vec(
-        vec![1.0 / f, 0.0, 0.0, 0.0, r * r, 0.0, 0.0, 0.0, r * r],
+        vec![one / f, zero, zero, zero, r * r, zero, zero, zero, r * r],
         &[3, 3],
     );
 
@@ -333,18 +363,18 @@ fn stage_adm_formalism(mut input: SpaceTimeData, _: (), _: Option<()>) -> SpaceT
     let beta = CausalTensor::zeros(&[3]);
 
     // ADM state with zero spatial Ricci scalar (vacuum)
-    let adm_state = AdmState::new(gamma, k, alpha.clone(), beta, 0.0);
+    let adm_state = AdmState::new(gamma, k, alpha.clone(), beta, flt!(0.0));
 
     // Compute Hamiltonian constraint
     let h_constraint = match adm_state.hamiltonian_constraint(None) {
-        Ok(h) => h.as_slice().first().copied().unwrap_or(0.0),
-        Err(_) => 0.0,
+        Ok(h) => h.as_slice().first().copied().unwrap_or(zero),
+        Err(_) => flt!(0.0),
     };
 
-    println!("  Lapse function α:        {:.6}", alpha.as_slice()[0]);
+    println!("  Lapse function α:        {}", (alpha.as_slice()[0]));
     println!("  Shift vector β:          (0, 0, 0)");
     println!("  Extrinsic curvature K:   0 (static slice)");
-    println!("  Hamiltonian constraint:  H = {:.6e}", h_constraint);
+    println!("  Hamiltonian constraint:  H = {}", h_constraint);
 
     if h_constraint.abs() < 1e-10 {
         println!("\n  → Constraint satisfied (vacuum solution)");
@@ -352,10 +382,10 @@ fn stage_adm_formalism(mut input: SpaceTimeData, _: (), _: Option<()>) -> SpaceT
 
     // Compute mean curvature
     let mean_curv = match adm_state.mean_curvature() {
-        Ok(k) => k.as_slice().first().copied().unwrap_or(0.0),
-        Err(_) => 0.0,
+        Ok(k) => k.as_slice().first().copied().unwrap_or(zero),
+        Err(_) => flt!(0.0),
     };
-    println!("  Mean curvature K:        {:.6}", mean_curv);
+    println!("  Mean curvature K:        {}", mean_curv);
     println!();
 
     input.h_constraint = h_constraint;
@@ -384,14 +414,14 @@ fn stage_event_horizon_detection(
     let r = input.r;
     let r_s = input.r_s;
     let inside_horizon = r < r_s;
-    let in_photon_sphere = r < 1.5 * r_s;
-    let in_isco = r < 3.0 * r_s;
+    let in_photon_sphere = r < flt!(1.5) * r_s;
+    let in_isco = r < flt!(3.0) * r_s;
 
-    println!("  Event horizon (r = r_s):     {:.3e} m", r_s);
-    println!("  Photon sphere (r = 1.5 r_s): {:.3e} m", 1.5 * r_s);
-    println!("  ISCO (r = 3 r_s):            {:.3e} m", 3.0 * r_s);
+    println!("  Event horizon (r = r_s):     {} m", (r_s));
+    println!("  Photon sphere (r = 1.5 r_s): {} m", (flt!(1.5) * r_s));
+    println!("  ISCO (r = 3 r_s):            {} m", (flt!(3.0) * r_s));
     println!();
-    println!("  Current radius:              {:.3e} m", r);
+    println!("  Current radius:              {:.6e} m", (r));
     println!("  Inside event horizon:        {}", inside_horizon);
     println!("  Inside photon sphere:        {}", in_photon_sphere);
     println!("  Inside ISCO:                 {}", in_isco);
@@ -399,21 +429,26 @@ fn stage_event_horizon_detection(
     // Escape velocity
     if !inside_horizon {
         let v_escape = (r_s / r).sqrt();
-        println!("\n  Escape velocity:             {:.3} c", v_escape);
+        println!("\n  Escape velocity:             {} c", (v_escape));
     } else {
         println!("\n  → No escape possible (inside horizon)");
     }
 
     // Time dilation factor
-    let time_dilation = if r > r_s { (1.0 - r_s / r).sqrt() } else { 0.0 };
-    println!("  Time dilation factor:        {:.6}", time_dilation);
+    let one = flt!(1.0);
+    let time_dilation: FloatType = if r > r_s {
+        (one - r_s / r).sqrt()
+    } else {
+        flt!(0.0)
+    };
+    println!("  Time dilation factor:        {}", (time_dilation));
     println!();
 
     // Drop gr_opt to avoid unused warning
     let _ = input.gr;
 
     let state = GRState {
-        mass: r_s / 2.0,
+        mass: r_s / flt!(2.0),
         schwarzschild_radius: r_s,
         observation_radius: r,
         kretschmann: input.kretschmann,
@@ -444,37 +479,37 @@ fn print_summary(result: &PropagatingEffect<GRState>) {
             println!("  ├─────────────────────────────────────────────────────────┤");
             println!(
                 "  │  Mass (geometric):        {:>12.6e} m                │",
-                state.mass
+                (state.mass)
             );
             println!(
                 "  │  Schwarzschild radius:    {:>12.6e} m                │",
-                state.schwarzschild_radius
+                (state.schwarzschild_radius)
             );
             println!(
                 "  │  Observation radius:      {:>12.6e} m                │",
-                state.observation_radius
+                (state.observation_radius)
             );
             println!("  ├─────────────────────────────────────────────────────────┤");
             println!("  │  Curvature Invariants                                   │");
             println!("  ├─────────────────────────────────────────────────────────┤");
             println!(
                 "  │  Kretschmann scalar:      {:>12.6e}                  │",
-                state.kretschmann
+                (state.kretschmann)
             );
             println!(
                 "  │  Ricci scalar:            {:>12.6e}                  │",
-                state.ricci_scalar
+                (state.ricci_scalar)
             );
             println!(
                 "  │  Geodesic deviation:      {:>12.6e}                  │",
-                state.geodesic_deviation
+                (state.geodesic_deviation)
             );
             println!("  ├─────────────────────────────────────────────────────────┤");
             println!("  │  ADM Constraint                                         │");
             println!("  ├─────────────────────────────────────────────────────────┤");
             println!(
                 "  │  Hamiltonian constraint:  {:>12.6e}                  │",
-                state.hamiltonian_constraint
+                (state.hamiltonian_constraint)
             );
             println!("  ├─────────────────────────────────────────────────────────┤");
             println!("  │  Causal Structure                                       │");
@@ -485,7 +520,7 @@ fn print_summary(result: &PropagatingEffect<GRState>) {
             );
             println!(
                 "  │  Time dilation factor:    {:>12.6}                  │",
-                state.time_dilation
+                (state.time_dilation)
             );
             println!("  └─────────────────────────────────────────────────────────┘");
             println!("\n[SUCCESS] GR Pipeline Completed.\n");

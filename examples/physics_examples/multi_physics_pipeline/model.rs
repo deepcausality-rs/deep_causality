@@ -7,7 +7,7 @@ use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, Simplex, SimplicialComplex, SimplicialComplexBuilder};
 
-pub(crate) fn make_1d_manifold(data: Vec<f64>) -> Manifold<f64> {
+pub(crate) fn make_1d_manifold(data: Vec<f64>) -> Manifold<f64, f64> {
     let n = data.len(); // 10
     let mut builder = SimplicialComplexBuilder::new(1);
 
@@ -24,7 +24,7 @@ pub(crate) fn make_1d_manifold(data: Vec<f64>) -> Manifold<f64> {
     // Vertices are 0..n. Edges are 0..n-1.
     // If n=10, vertices 0..9.
     // Last edge (8, 9). Covers 9. All good.
-    let complex = builder.build().expect("Failed to build complex");
+    let complex: SimplicialComplex<f64> = builder.build().expect("Failed to build complex");
 
     // Extract computed operators
     let skeletons = complex.skeletons().clone();

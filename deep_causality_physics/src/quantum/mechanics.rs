@@ -38,7 +38,7 @@ pub type Gate = HilbertState;
 /// # Returns
 /// * `Result<CausalTensor<f64>, PhysicsError>` - The result of applying the operator $O(\psi)$.
 pub fn klein_gordon_kernel(
-    psi_manifold: &Manifold<f64>,
+    psi_manifold: &Manifold<f64, f64>,
     mass: f64,
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     // 1. Term A: Laplacian(psi) = Delta psi
@@ -52,7 +52,7 @@ pub fn klein_gordon_kernel(
             "Mass is not finite in Klein-Gordon".into(),
         ));
     }
-    if laplacian.as_slice().iter().any(|v| !v.is_finite()) {
+    if laplacian.as_slice().iter().any(|v: &f64| !v.is_finite()) {
         return Err(PhysicsError::NumericalInstability(
             "Laplacian contains non-finite entries".into(),
         ));
@@ -77,7 +77,7 @@ pub fn klein_gordon_kernel(
         ));
     }
     let psi_vertex_data = &psi_data.as_slice()[..vertex_count];
-    if psi_vertex_data.iter().any(|v| !v.is_finite()) {
+    if psi_vertex_data.iter().any(|v: &f64| !v.is_finite()) {
         return Err(PhysicsError::NumericalInstability(
             "psi data contains non-finite entries".into(),
         ));
@@ -94,7 +94,7 @@ pub fn klein_gordon_kernel(
     // 3. Result: Delta psi + m^2 psi
     // We sum them. Ideally, for a free field, this sum is zero.
     let result = laplacian + m2_psi;
-    if result.as_slice().iter().any(|v| !v.is_finite()) {
+    if result.as_slice().iter().any(|v: &f64| !v.is_finite()) {
         return Err(PhysicsError::NumericalInstability(
             "Klein-Gordon result contains non-finite entries".into(),
         ));

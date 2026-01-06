@@ -5,6 +5,7 @@
 
 use crate::DoubleFloat;
 use std::fmt;
+use std::fmt::{LowerExp, UpperExp};
 
 impl fmt::Display for DoubleFloat {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -15,5 +16,19 @@ impl fmt::Display for DoubleFloat {
         } else {
             write!(f, "{}+{}", self.hi, self.lo)
         }
+    }
+}
+
+impl LowerExp for DoubleFloat {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // Use hi component for exponential notation since it carries the magnitude
+        LowerExp::fmt(&self.hi, f)
+    }
+}
+
+impl UpperExp for DoubleFloat {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // Use hi component for exponential notation since it carries the magnitude
+        UpperExp::fmt(&self.hi, f)
     }
 }

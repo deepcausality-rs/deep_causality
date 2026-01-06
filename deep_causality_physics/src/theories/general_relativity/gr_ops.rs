@@ -7,11 +7,16 @@
 // GR Operations Trait
 // =============================================================================
 
+// =============================================================================
+// GR Operations Trait
+// =============================================================================
+
 use crate::{NEWTONIAN_CONSTANT_OF_GRAVITATION, PhysicsError, SPEED_OF_LIGHT};
+use deep_causality_num::{Field, Float};
 use deep_causality_tensor::CausalTensor;
 
 /// Represents (Position, Velocity) state vector
-pub type GeodesicState = (Vec<f64>, Vec<f64>);
+pub type GeodesicState<S> = (Vec<S>, Vec<S>);
 
 /// Operations for General Relativity — SO(3,1) Lorentz Gauge Theory.
 ///
@@ -35,7 +40,10 @@ pub type GeodesicState = (Vec<f64>, Vec<f64>);
 /// D²ξ^μ/Dτ² = R^μ_νρσ u^ν ξ^ρ u^σ
 /// ```
 /// Computed via `CurvatureTensorWitness::curvature` (RiemannMap trait).
-pub trait GrOps {
+pub trait GrOps<S>
+where
+    S: Field + Float + Clone + From<f64> + Into<f64>,
+{
     // -------------------------------------------------------------------------
     // Curvature Invariants
     // -------------------------------------------------------------------------
@@ -46,7 +54,7 @@ pub trait GrOps {
     /// ```text
     /// R_μν = R^ρ_μρν = g^ρσ R_ρμσν
     /// ```
-    fn ricci_tensor(&self) -> Result<CausalTensor<f64>, PhysicsError>;
+    fn ricci_tensor(&self) -> Result<CausalTensor<S>, PhysicsError>;
 
     /// Computes the Ricci scalar R (scalar curvature).
     ///
@@ -54,7 +62,7 @@ pub trait GrOps {
     /// ```text
     /// R = g^μν R_μν
     /// ```
-    fn ricci_scalar(&self) -> Result<f64, PhysicsError>;
+    fn ricci_scalar(&self) -> Result<S, PhysicsError>;
 
     /// Computes the Einstein tensor G_μν.
     ///
@@ -63,7 +71,7 @@ pub trait GrOps {
     /// G_μν = R_μν - ½ R g_μν
     /// ```
     /// Uses `einstein_tensor_kernel`.
-    fn einstein_tensor(&self) -> Result<CausalTensor<f64>, PhysicsError>;
+    fn einstein_tensor(&self) -> Result<CausalTensor<S>, PhysicsError>;
 
     /// Computes the Kretschmann scalar K in **geometric units**.
     ///
@@ -76,7 +84,7 @@ pub trait GrOps {
     /// # Units
     /// Returns scalar curvature in **geometric units** (`m⁻⁴`).
     /// For curvature radius in meters, use [`kretschmann_curvature_radius`].
-    fn kretschmann_scalar(&self) -> Result<f64, PhysicsError>;
+    fn kretschmann_scalar(&self) -> Result<S, PhysicsError>;
 
     /// Computes the curvature radius from Kretschmann scalar in **SI units**.
     ///
@@ -90,12 +98,14 @@ pub trait GrOps {
     ///
     /// # Conversion
     /// Takes the 4th root of 1/K to convert from `m⁻⁴` to `m`.
-    fn kretschmann_curvature_radius(&self) -> Result<f64, PhysicsError> {
+    fn kretschmann_curvature_radius(&self) -> Result<S, PhysicsError> {
         let k = self.kretschmann_scalar()?;
-        if k <= 0.0 {
-            return Ok(f64::INFINITY); // Flat spacetime
+        if k <= S::zero() {
+            return Ok(S::infinity()); // Flat spacetime
         }
-        Ok(1.0 / k.powf(0.25))
+        // 1.0 / k.powf(0.25)
+        let quart = <S as From<f64>>::from(0.25);
+        Ok(S::one() / k.powf(quart))
     }
 
     // -------------------------------------------------------------------------
@@ -113,11 +123,7 @@ pub trait GrOps {
     /// # Units
     /// Returns acceleration in **geometric units** (`m⁻²`).
     /// For SI units (`m/s²`), use [`geodesic_deviation_si`].
-    fn geodesic_deviation(
-        &self,
-        velocity: &[f64],
-        separation: &[f64],
-    ) -> Result<Vec<f64>, PhysicsError>;
+    fn geodesic_deviation(&self, velocity: &[S], separation: &[S]) -> Result<Vec<S>, PhysicsError>;
 
     /// Computes geodesic deviation (tidal acceleration) in **SI units**.
     ///
@@ -133,11 +139,12 @@ pub trait GrOps {
     /// Multiplies geometric result by `c² ≈ 8.99 × 10¹⁶ m²/s²`.
     fn geodesic_deviation_si(
         &self,
-        velocity: &[f64],
-        separation: &[f64],
-    ) -> Result<Vec<f64>, PhysicsError> {
+        velocity: &[S],
+        separation: &[S],
+    ) -> Result<Vec<S>, PhysicsError> {
         let geometric = self.geodesic_deviation(velocity, separation)?;
-        let c2 = SPEED_OF_LIGHT * SPEED_OF_LIGHT;
+        let c = <S as From<f64>>::from(SPEED_OF_LIGHT);
+        let c2 = c * c;
         Ok(geometric.into_iter().map(|v| v * c2).collect())
     }
 
@@ -150,11 +157,11 @@ pub trait GrOps {
     /// Uses `geodesic_integrator_kernel` (RK4).
     fn solve_geodesic(
         &self,
-        initial_position: &[f64],
-        initial_velocity: &[f64],
-        proper_time_step: f64,
+        initial_position: &[S],
+        initial_velocity: &[S],
+        proper_time_step: S,
         num_steps: usize,
-    ) -> Result<Vec<GeodesicState>, PhysicsError>;
+    ) -> Result<Vec<GeodesicState<S>>, PhysicsError>;
 
     /// Computes proper time along a worldline in **geometric units**.
     ///
@@ -167,7 +174,7 @@ pub trait GrOps {
     /// # Units
     /// Returns proper time in **geometric units** (meters).
     /// For SI units (seconds), use [`proper_time_si`].
-    fn proper_time(&self, path: &[Vec<f64>]) -> Result<f64, PhysicsError>;
+    fn proper_time(&self, path: &[Vec<S>]) -> Result<S, PhysicsError>;
 
     /// Computes proper time along a worldline in **SI units**.
     ///
@@ -176,9 +183,10 @@ pub trait GrOps {
     ///
     /// # Conversion
     /// Divides geometric result by `c ≈ 2.998 × 10⁸ m/s`.
-    fn proper_time_si(&self, path: &[Vec<f64>]) -> Result<f64, PhysicsError> {
+    fn proper_time_si(&self, path: &[Vec<S>]) -> Result<S, PhysicsError> {
         let geometric = self.proper_time(path)?;
-        Ok(geometric / SPEED_OF_LIGHT)
+        let c = <S as From<f64>>::from(SPEED_OF_LIGHT);
+        Ok(geometric / c)
     }
 
     /// Parallel transports a vector along a path.
@@ -190,16 +198,16 @@ pub trait GrOps {
     /// Uses `parallel_transport_kernel`.
     fn parallel_transport(
         &self,
-        initial_vector: &[f64],
-        path: &[Vec<f64>],
-    ) -> Result<Vec<f64>, PhysicsError>;
+        initial_vector: &[S],
+        path: &[Vec<S>],
+    ) -> Result<Vec<S>, PhysicsError>;
 
     // -------------------------------------------------------------------------
     // Metric Utilities
     // -------------------------------------------------------------------------
 
     /// Returns the metric tensor g_μν.
-    fn metric_tensor(&self) -> &CausalTensor<f64>;
+    fn metric_tensor(&self) -> &CausalTensor<S>;
 
     /// Computes the Schwarzschild radius for a given mass.
     ///
@@ -207,8 +215,11 @@ pub trait GrOps {
     /// ```text
     /// r_s = 2GM/c²
     /// ```
-    fn schwarzschild_radius(mass_kg: f64) -> f64 {
-        2.0 * NEWTONIAN_CONSTANT_OF_GRAVITATION * mass_kg / (SPEED_OF_LIGHT * SPEED_OF_LIGHT)
+    fn schwarzschild_radius(mass_kg: S) -> S {
+        let two = <S as From<f64>>::from(2.0);
+        let g = <S as From<f64>>::from(NEWTONIAN_CONSTANT_OF_GRAVITATION);
+        let c = <S as From<f64>>::from(SPEED_OF_LIGHT);
+        (two * g * mass_kg) / (c * c)
     }
 
     /// Computes the Riemann tensor from Christoffel symbols using the HKT witness.
@@ -228,7 +239,7 @@ pub trait GrOps {
     /// # Returns
     ///
     /// The Riemann tensor in Lie-algebra storage form `[N, 4, 4, 6]`.
-    fn compute_riemann_from_christoffel(&self) -> CausalTensor<f64>;
+    fn compute_riemann_from_christoffel(&self) -> CausalTensor<S>;
 
     /// Computes the ADM momentum constraint across all manifold points.
     ///
@@ -262,7 +273,7 @@ pub trait GrOps {
     /// Momentum constraint M_i at all manifold points, shape `[N, 3]`.
     fn momentum_constraint_field(
         &self,
-        extrinsic_curvature: &CausalTensor<f64>,
-        matter_momentum: Option<&CausalTensor<f64>>,
-    ) -> Result<CausalTensor<f64>, PhysicsError>;
+        extrinsic_curvature: &CausalTensor<S>,
+        matter_momentum: Option<&CausalTensor<S>>,
+    ) -> Result<CausalTensor<S>, PhysicsError>;
 }

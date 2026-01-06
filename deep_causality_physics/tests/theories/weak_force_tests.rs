@@ -23,7 +23,7 @@ use deep_causality_topology::{BaseTopology, Manifold, Simplex, SimplicialComplex
 // Test Helpers
 // ============================================================================
 
-fn create_weak_field() -> WeakField {
+fn create_weak_field() -> WeakField<f64> {
     let mut builder = SimplicialComplexBuilder::new(0);
     let _ = builder.add_simplex(Simplex::new(vec![0]));
     let complex = builder.build().expect("Failed to build complex");
@@ -117,7 +117,7 @@ fn test_higgs_vev() {
 #[test]
 fn test_charged_current_propagator_low_energy() {
     // At q² << M_W², D_W(q²) ≈ -1/M_W²
-    let prop = WeakField::charged_current_propagator(0.1).unwrap();
+    let prop = WeakField::<f64>::charged_current_propagator(0.1).unwrap();
     let expected = -1.0 / (W_MASS * W_MASS);
 
     assert!(
@@ -129,20 +129,20 @@ fn test_charged_current_propagator_low_energy() {
 #[test]
 fn test_charged_current_propagator_on_shell_error() {
     // At q² = M_W², propagator diverges (on-shell)
-    let result = WeakField::charged_current_propagator(W_MASS * W_MASS);
+    let result = WeakField::<f64>::charged_current_propagator(W_MASS * W_MASS);
     assert!(result.is_err(), "On-shell W should return error");
 }
 
 #[test]
 fn test_charged_current_propagator_invalid() {
-    let result = WeakField::charged_current_propagator(f64::NAN);
+    let result = WeakField::<f64>::charged_current_propagator(f64::NAN);
     assert!(result.is_err(), "NaN momentum should return error");
 }
 
 #[test]
 fn test_neutral_current_propagator_neutrino() {
     let nu = WeakIsospin::neutrino();
-    let prop = WeakField::neutral_current_propagator(0.1, &nu).unwrap();
+    let prop = WeakField::<f64>::neutral_current_propagator(0.1, &nu).unwrap();
 
     // Should be non-zero for neutrino
     assert!(prop.abs() > 0.0, "Neutrino Z propagator should be non-zero");
@@ -151,7 +151,7 @@ fn test_neutral_current_propagator_neutrino() {
 #[test]
 fn test_neutral_current_propagator_on_shell_error() {
     let nu = WeakIsospin::neutrino();
-    let result = WeakField::neutral_current_propagator(Z_MASS * Z_MASS, &nu);
+    let result = WeakField::<f64>::neutral_current_propagator(Z_MASS * Z_MASS, &nu);
     assert!(result.is_err(), "On-shell Z should return error");
 }
 
@@ -162,23 +162,23 @@ fn test_neutral_current_propagator_on_shell_error() {
 #[test]
 fn test_weak_decay_width_positive_mass() {
     // Γ = G_F² m⁵ / (192 π³)
-    let width = WeakField::weak_decay_width(1.0).unwrap();
+    let width = WeakField::<f64>::weak_decay_width(1.0).unwrap();
     assert!(width > 0.0, "Decay width should be positive");
 }
 
 #[test]
 fn test_weak_decay_width_invalid_mass() {
-    let result = WeakField::weak_decay_width(-1.0);
+    let result = WeakField::<f64>::weak_decay_width(-1.0);
     assert!(result.is_err(), "Negative mass should return error");
 
-    let result = WeakField::weak_decay_width(0.0);
+    let result = WeakField::<f64>::weak_decay_width(0.0);
     assert!(result.is_err(), "Zero mass should return error");
 }
 
 #[test]
 fn test_muon_lifetime() {
     // τ_μ ≈ 2.2 μs = 2.2 × 10⁻⁶ s
-    let lifetime = WeakField::muon_lifetime();
+    let lifetime = WeakField::<f64>::muon_lifetime();
     assert!(
         lifetime > 2.0e-6 && lifetime < 2.3e-6,
         "Muon lifetime should be ≈ 2.2 μs, got {}",
@@ -189,7 +189,7 @@ fn test_muon_lifetime() {
 #[test]
 fn test_w_boson_width() {
     // Γ_W ≈ 2.1 GeV
-    let width = WeakField::w_boson_width();
+    let width = WeakField::<f64>::w_boson_width();
     assert!(
         width > 1.5 && width < 3.0,
         "W width should be ≈ 2.1 GeV, got {}",
@@ -200,7 +200,7 @@ fn test_w_boson_width() {
 #[test]
 fn test_z_boson_width() {
     // Γ_Z ≈ 2.5 GeV
-    let width = WeakField::z_boson_width();
+    let width = WeakField::<f64>::z_boson_width();
     assert!(
         width > 2.0 && width < 3.5,
         "Z width should be ≈ 2.5 GeV, got {}",

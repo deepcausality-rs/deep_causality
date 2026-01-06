@@ -22,7 +22,7 @@ use deep_causality_topology::{BaseTopology, Manifold, Simplex, SimplicialComplex
 // Test Helpers
 // ============================================================================
 
-fn create_electroweak_field() -> ElectroweakField {
+fn create_electroweak_field() -> ElectroweakField<f64> {
     let mut builder = SimplicialComplexBuilder::new(0);
     let _ = builder.add_simplex(Simplex::new(vec![0]));
     let complex = builder.build().expect("Failed to build complex");

@@ -7,20 +7,22 @@ use crate::{
     Z_MASS,
 };
 use deep_causality_metric::{LorentzianMetric, WestCoastMetric};
-use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{BaseTopology, GaugeField, U1};
+use deep_causality_num::{Field, Float};
+use deep_causality_tensor::{CausalTensor, TensorData};
+use deep_causality_topology::{BaseTopology, GaugeField, Manifold, U1};
 
-impl ElectroweakOps for ElectroweakField {
-    fn new_field(
-        base: deep_causality_topology::Manifold<f64>,
-        connection: CausalTensor<f64>,
-    ) -> Result<Self, PhysicsError> {
+impl<S> ElectroweakOps<S> for ElectroweakField<S>
+where
+    S: Field + Float + Clone + From<f64> + Into<f64> + TensorData,
+{
+    fn new_field(base: Manifold<S, S>, connection: CausalTensor<S>) -> Result<Self, PhysicsError> {
         let metric = WestCoastMetric::minkowski_4d().into_metric();
 
         // Initial field strength
         let num_points = base.len();
         let dim = 4;
         let lie_dim = 4; // SU(2)xU(1) = 3 + 1
+        // zero() from Field trait
         let field_strength = CausalTensor::zeros(&[num_points, dim, dim, lie_dim]);
 
         GaugeField::new(base, metric, connection, field_strength)
@@ -31,10 +33,10 @@ impl ElectroweakOps for ElectroweakField {
         ElectroweakParams::standard_model()
     }
 
-    fn extract_photon(&self) -> Result<EM, PhysicsError> {
+    fn extract_photon(&self) -> Result<EM<S>, PhysicsError> {
         let params = Self::standard_model_params();
-        let cos_theta = params.cos_theta_w();
-        let sin_theta = params.sin_theta_w();
+        let cos_theta = <S as From<f64>>::from(params.cos_theta_w());
+        let sin_theta = <S as From<f64>>::from(params.sin_theta_w());
 
         let connection = self.connection();
         let field_strength = self.field_strength();
@@ -43,23 +45,23 @@ impl ElectroweakOps for ElectroweakField {
         let data = connection.data();
         let mixed_conn_data = data
             .chunks(4)
-            .map(|chunk: &[f64]| {
-                let w3 = chunk.get(2).copied().unwrap_or(0.0);
-                let b = chunk.get(3).copied().unwrap_or(0.0);
+            .map(|chunk: &[S]| {
+                let w3 = chunk.get(2).cloned().unwrap_or(S::zero());
+                let b = chunk.get(3).cloned().unwrap_or(S::zero());
                 b * cos_theta + w3 * sin_theta
             })
-            .collect::<Vec<f64>>();
+            .collect::<Vec<S>>();
 
         // Mix Field Strength
         let data = field_strength.data();
         let mixed_strength_data = data
             .chunks(4)
-            .map(|chunk: &[f64]| {
-                let w3 = chunk.get(2).copied().unwrap_or(0.0);
-                let b = chunk.get(3).copied().unwrap_or(0.0);
+            .map(|chunk: &[S]| {
+                let w3 = chunk.get(2).cloned().unwrap_or(S::zero());
+                let b = chunk.get(3).cloned().unwrap_or(S::zero());
                 b * cos_theta + w3 * sin_theta
             })
-            .collect::<Vec<f64>>();
+            .collect::<Vec<S>>();
 
         let num_points = self.base().len();
         let dim = 4;
@@ -74,10 +76,10 @@ impl ElectroweakOps for ElectroweakField {
             .map_err(|e| PhysicsError::TopologyError(e.to_string()))
     }
 
-    fn extract_z(&self) -> Result<GaugeField<U1, f64, f64, f64>, PhysicsError> {
+    fn extract_z(&self) -> Result<GaugeField<U1, S, S, S>, PhysicsError> {
         let params = Self::standard_model_params();
-        let cos_theta = params.cos_theta_w();
-        let sin_theta = params.sin_theta_w();
+        let cos_theta = <S as From<f64>>::from(params.cos_theta_w());
+        let sin_theta = <S as From<f64>>::from(params.sin_theta_w());
 
         let connection = self.connection();
         let field_strength = self.field_strength();
@@ -86,22 +88,23 @@ impl ElectroweakOps for ElectroweakField {
         let data = connection.data();
         let mixed_conn_data = data
             .chunks(4)
-            .map(|chunk: &[f64]| {
-                let w3 = chunk.get(2).copied().unwrap_or(0.0);
-                let b = chunk.get(3).copied().unwrap_or(0.0);
-                -b * sin_theta + w3 * cos_theta
+            .map(|chunk: &[S]| {
+                let w3 = chunk.get(2).cloned().unwrap_or(S::zero());
+                let b = chunk.get(3).cloned().unwrap_or(S::zero());
+                // -b * sin_theta + w3 * cos_theta
+                (S::zero() - b) * sin_theta + w3 * cos_theta
             })
-            .collect::<Vec<f64>>();
+            .collect::<Vec<S>>();
 
         let data = field_strength.data();
         let mixed_strength_data = data
             .chunks(4)
-            .map(|chunk: &[f64]| {
-                let w3 = chunk.get(2).copied().unwrap_or(0.0);
-                let b = chunk.get(3).copied().unwrap_or(0.0);
-                -b * sin_theta + w3 * cos_theta
+            .map(|chunk: &[S]| {
+                let w3 = chunk.get(2).cloned().unwrap_or(S::zero());
+                let b = chunk.get(3).cloned().unwrap_or(S::zero());
+                (S::zero() - b) * sin_theta + w3 * cos_theta
             })
-            .collect::<Vec<f64>>();
+            .collect::<Vec<S>>();
 
         let num_points = self.base().len();
         let dim = 4;
@@ -116,13 +119,13 @@ impl ElectroweakOps for ElectroweakField {
             .map_err(|e| PhysicsError::TopologyError(e.to_string()))
     }
 
-    fn sin2_theta_w(&self) -> f64 {
-        SIN2_THETA_W
+    fn sin2_theta_w(&self) -> S {
+        <S as From<f64>>::from(SIN2_THETA_W)
     }
-    fn w_mass(&self) -> f64 {
-        W_MASS
+    fn w_mass(&self) -> S {
+        <S as From<f64>>::from(W_MASS)
     }
-    fn z_mass(&self) -> f64 {
-        Z_MASS
+    fn z_mass(&self) -> S {
+        <S as From<f64>>::from(Z_MASS)
     }
 }

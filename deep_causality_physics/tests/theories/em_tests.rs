@@ -44,8 +44,8 @@ fn test_qed_plane_wave() {
     let b = field.magnetic_field().unwrap();
 
     // Plane waves have |E| = |B| in natural units
-    let e_sq = e.squared_magnitude().abs();
-    let b_sq = b.squared_magnitude().abs();
+    let e_sq: f64 = e.squared_magnitude();
+    let b_sq: f64 = b.squared_magnitude();
     assert!(
         (e_sq - b_sq).abs() < 1e-5,
         "|E|² = {} should equal |B|² = {}",
@@ -63,7 +63,8 @@ fn test_qed_plane_wave_polarizations() {
 
         let field = qed.unwrap();
         let e = field.electric_field().unwrap();
-        let e_sq = e.squared_magnitude().abs();
+        // Use Euclidean magnitude for 3D spatial vectors
+        let e_sq: f64 = e.euclidean_squared_magnitude_3d();
 
         // Amplitude 2.0 → |E|² = 4.0
         assert!(
@@ -87,9 +88,9 @@ fn test_electric_field_extraction() {
     // Check that E is extracted correctly from F_{0i}
     let data = e.data();
     // In 4D multivector with +--- signature, spatial indices are 2, 3, 4
-    let ex = data.get(2).copied().unwrap_or(0.0);
-    let ey = data.get(3).copied().unwrap_or(0.0);
-    let ez = data.get(4).copied().unwrap_or(0.0);
+    let ex: f64 = data.get(2).copied().unwrap_or(0.0);
+    let ey: f64 = data.get(3).copied().unwrap_or(0.0);
+    let ez: f64 = data.get(4).copied().unwrap_or(0.0);
 
     assert!((ex - 1.0).abs() < 1e-10, "E_x = {} should be 1.0", ex);
     assert!((ey - 2.0).abs() < 1e-10, "E_y = {} should be 2.0", ey);
@@ -108,9 +109,9 @@ fn test_magnetic_field_extraction() {
     let by = data.get(3).copied().unwrap_or(0.0);
     let bz = data.get(4).copied().unwrap_or(0.0);
 
-    assert!((bx - 1.0).abs() < 1e-10, "B_x = {} should be 1.0", bx);
-    assert!((by - 2.0).abs() < 1e-10, "B_y = {} should be 2.0", by);
-    assert!((bz - 3.0).abs() < 1e-10, "B_z = {} should be 3.0", bz);
+    assert!((bx - 1.0f64).abs() < 1e-10, "B_x = {} should be 1.0", bx);
+    assert!((by - 2.0f64).abs() < 1e-10, "B_y = {} should be 2.0", by);
+    assert!((bz - 3.0f64).abs() < 1e-10, "B_z = {} should be 3.0", bz);
 }
 
 // ============================================================================
@@ -122,7 +123,7 @@ fn test_field_invariant_null_field() {
     // Null field: |E| = |B| → I₁ = 2(|B|² - |E|²) = 0
     let qed = EM::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
 
-    let invariant = qed.field_invariant().unwrap();
+    let invariant: f64 = qed.field_invariant().unwrap();
     assert!(
         invariant.abs() < 1e-5,
         "Null field invariant I₁ = {} should be ≈ 0",
@@ -135,12 +136,11 @@ fn test_field_invariant_electric_dominated() {
     // Electric dominated: |E|² > |B|² → I₁ = 2(|B|² - |E|²)
     let qed = EM::from_components(2.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
 
-    let invariant = qed.field_invariant().unwrap();
-    // With +--- metric, magnitudes have different signs
-    // Just verify it's non-zero and has the expected relationship
+    let invariant: f64 = qed.field_invariant().unwrap();
+    // Implementation uses Euclidean magnitude for 3D spatial vectors
     let e = qed.electric_field().unwrap();
     let b = qed.magnetic_field().unwrap();
-    let expected = 2.0 * (b.squared_magnitude() - e.squared_magnitude());
+    let expected = 2.0 * (b.euclidean_squared_magnitude_3d() - e.euclidean_squared_magnitude_3d());
     assert!(
         (invariant - expected).abs() < 1e-5,
         "I₁ = {} should equal 2(B² - E²) = {}",
@@ -154,11 +154,11 @@ fn test_field_invariant_magnetic_dominated() {
     // Magnetic dominated: |B|² > |E|² → I₁ = 2(|B|² - |E|²)
     let qed = EM::from_components(1.0, 0.0, 0.0, 0.0, 2.0, 0.0).unwrap();
 
-    let invariant = qed.field_invariant().unwrap();
-    // With +--- metric, verify the relationship holds
+    let invariant: f64 = qed.field_invariant().unwrap();
+    // Implementation uses Euclidean magnitude for 3D spatial vectors
     let e = qed.electric_field().unwrap();
     let b = qed.magnetic_field().unwrap();
-    let expected = 2.0 * (b.squared_magnitude() - e.squared_magnitude());
+    let expected = 2.0 * (b.euclidean_squared_magnitude_3d() - e.euclidean_squared_magnitude_3d());
     assert!(
         (invariant - expected).abs() < 1e-5,
         "I₁ = {} should equal 2(B² - E²) = {}",
@@ -172,7 +172,7 @@ fn test_dual_invariant_orthogonal() {
     // Orthogonal fields: E ⟂ B → I₂ = -4(E·B) = 0
     let qed = EM::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
 
-    let dual = qed.dual_invariant().unwrap();
+    let dual: f64 = qed.dual_invariant().unwrap();
     assert!(
         dual.abs() < 1e-5,
         "Orthogonal field dual invariant I₂ = {} should be ≈ 0",
@@ -185,7 +185,7 @@ fn test_dual_invariant_parallel() {
     // Parallel fields: E ∥ B → I₂ ≠ 0
     let qed = EM::from_components(1.0, 0.0, 0.0, 1.0, 0.0, 0.0).unwrap();
 
-    let dual = qed.dual_invariant().unwrap();
+    let dual: f64 = qed.dual_invariant().unwrap();
     // I₂ = -4(E·B) = -4(1·1) = -4 (with metric sign considerations)
     assert!(
         dual.abs() > 0.0,
@@ -202,7 +202,7 @@ fn test_dual_invariant_parallel() {
 fn test_energy_density_positive() {
     let qed = EM::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
 
-    let energy = qed.energy_density().unwrap();
+    let energy: f64 = qed.energy_density().unwrap();
     // u = ½(|E|² + |B|²) — sign depends on metric convention
     assert!(
         energy.abs() > 0.0,
@@ -216,7 +216,7 @@ fn test_lagrangian_density_null_field() {
     // Null field: L = ½(|E|² - |B|²) = 0
     let qed = EM::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
 
-    let lagrangian = qed.lagrangian_density().unwrap();
+    let lagrangian: f64 = qed.lagrangian_density().unwrap();
     assert!(
         lagrangian.abs() < 1e-5,
         "Null field Lagrangian L = {} should be ≈ 0",
@@ -229,7 +229,7 @@ fn test_lagrangian_density_electric_dominated() {
     // |E| > |B| → L > 0
     let qed = EM::from_components(2.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();
 
-    let lagrangian = qed.lagrangian_density().unwrap();
+    let lagrangian: f64 = qed.lagrangian_density().unwrap();
     // L = ½(|E|² - |B|²) = ½(4 - 1) = 1.5 (sign depends on metric)
     assert!(
         lagrangian.abs() > 0.0,
@@ -255,8 +255,8 @@ fn test_momentum_density_equals_poynting() {
     let g = qed.momentum_density().unwrap();
 
     // They should be identical
-    let s_sq = s.squared_magnitude();
-    let g_sq = g.squared_magnitude();
+    let s_sq: f64 = s.squared_magnitude();
+    let g_sq: f64 = g.squared_magnitude();
     assert!(
         (s_sq - g_sq).abs() < 1e-10,
         "Momentum density should equal Poynting vector"
@@ -376,8 +376,8 @@ fn test_computed_field_strength_antisymmetry() {
                     let idx_nu_mu =
                         p * (dim * dim * lie_dim) + nu * (dim * lie_dim) + mu * lie_dim + a;
 
-                    let f_mu_nu = data.get(idx_mu_nu).copied().unwrap_or(0.0);
-                    let f_nu_mu = data.get(idx_nu_mu).copied().unwrap_or(0.0);
+                    let f_mu_nu: f64 = data.get(idx_mu_nu).copied().unwrap_or(0.0);
+                    let f_nu_mu: f64 = data.get(idx_nu_mu).copied().unwrap_or(0.0);
 
                     assert!(
                         (f_mu_nu + f_nu_mu).abs() < 1e-10,
@@ -412,7 +412,7 @@ fn test_computed_field_strength_diagonal_zero() {
         for a in 0..lie_dim {
             for mu in 0..dim {
                 let idx = p * (dim * dim * lie_dim) + mu * (dim * lie_dim) + mu * lie_dim + a;
-                let f_mu_mu = data.get(idx).copied().unwrap_or(0.0);
+                let f_mu_mu: f64 = data.get(idx).copied().unwrap_or(0.0);
 
                 assert!(
                     f_mu_mu.abs() < 1e-10,

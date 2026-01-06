@@ -197,7 +197,7 @@ fn test_schwarzschild_metric_success() {
     let data = metric.data();
     // Check diagonal elements
     // Index 0 (0,0) = g_00 = -0.5
-    assert!((data[0] - (-0.5)).abs() < 1e-9);
+    assert!((data[0] - (-0.5f64)).abs() < 1e-9);
     // Index 5 (1,1) = g_11 = 2.0
     assert!((data[5] - 2.0).abs() < 1e-9);
     // Index 10 (2,2) = g_22 = 10.0
@@ -215,7 +215,7 @@ fn test_schwarzschild_metric_values_check() {
     let result =
         deep_causality_physics::generate_schwarzschild_metric(-1.0 + 1e-10, 1.0, 1.0, 1.0).unwrap();
     let val = result.data()[0];
-    assert!((val - (-1.0 + 1e-10)).abs() < 1e-15);
+    assert!((val - (-1.0 + 1e-10f64)).abs() < 1e-15);
 }
 
 // =============================================================================
@@ -240,8 +240,8 @@ fn test_parallel_transport_flat_space() {
     assert!(result.is_ok());
 
     let final_vector = result.unwrap();
-    assert!((final_vector[0] - 1.0).abs() < 1e-10);
-    assert!((final_vector[1] - 0.0).abs() < 1e-10);
+    assert!((final_vector[0] - 1.0f64).abs() < 1e-10);
+    assert!((final_vector[1] - 0.0f64).abs() < 1e-10);
 }
 
 #[test]
@@ -292,7 +292,7 @@ fn test_parallel_transport_multiple_segments() {
     assert!(result.is_ok());
 
     // In flat space, vector should be unchanged
-    let final_vector = result.unwrap();
+    let final_vector: Vec<f64> = result.unwrap();
     assert!((final_vector[0] - initial_vector[0]).abs() < 1e-10);
     assert!((final_vector[1] - initial_vector[1]).abs() < 1e-10);
 }
@@ -325,7 +325,11 @@ fn test_proper_time_flat_minkowski() {
     let tau = result.unwrap();
     // ds² = -dt² for purely timelike motion
     // |ds²| = 1 for each step, so dτ = 1 per step, total = 2
-    assert!((tau - 2.0).abs() < 1e-10, "Expected τ = 2.0, got {}", tau);
+    assert!(
+        (tau - 2.0f64).abs() < 1e-10,
+        "Expected τ = 2.0, got {}",
+        tau
+    );
 }
 
 #[test]
@@ -357,7 +361,7 @@ fn test_proper_time_spacelike_path() {
     let result = proper_time_kernel(&path, &metric);
     assert!(result.is_ok());
 
-    let tau = result.unwrap();
+    let tau: f64 = result.unwrap();
     assert!((tau - 5.0).abs() < 1e-10, "Expected τ = 5.0, got {}", tau);
 }
 

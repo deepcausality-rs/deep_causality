@@ -36,7 +36,7 @@ use deep_causality_topology::Manifold;
 /// - `DimensionMismatch`: Manifold dimension < 4 or metric dimension mismatch
 /// - `CalculationError`: Missing differential operators
 pub fn relativistic_current_kernel<M: LorentzianMetric>(
-    em_manifold: &Manifold<f64>,
+    em_manifold: &Manifold<f64, f64>,
     spacetime_metric: &M,
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     let complex = em_manifold.complex();

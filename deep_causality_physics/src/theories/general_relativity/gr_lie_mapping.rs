@@ -23,6 +23,7 @@
 //! | 4         | (1, 3)                   | J₂ (rotation)|
 //! | 5         | (2, 3)                   | J₁ (rotation)|
 use crate::PhysicsError;
+use deep_causality_num::{Field, Float};
 use deep_causality_tensor::CausalTensor;
 
 /// Maps antisymmetric pair (μ, ν) to Lie algebra index.
@@ -83,9 +84,10 @@ pub fn lie_index_to_pair(lie_idx: usize) -> Option<(usize, usize)> {
 /// # Output Shapes
 /// - `[4, 4, 4, 4]` → single-point geometric Riemann
 /// - `[N, 4, 4, 4, 4]` → multi-point geometric Riemann
-pub fn expand_lie_to_riemann(
-    lie_fs: &CausalTensor<f64>,
-) -> Result<CausalTensor<f64>, PhysicsError> {
+pub fn expand_lie_to_riemann<T>(lie_fs: &CausalTensor<T>) -> Result<CausalTensor<T>, PhysicsError>
+where
+    T: Field + Float + Copy,
+{
     let shape = lie_fs.shape();
 
     // Validate input shape
@@ -117,7 +119,7 @@ pub fn expand_lie_to_riemann(
 
     // Output: [N, 4, 4, 4, 4] or [4, 4, 4, 4]
     let elem_per_riemann_point = dim * dim * dim * dim; // 256
-    let mut riemann = vec![0.0; num_points * elem_per_riemann_point];
+    let mut riemann = vec![T::zero(); num_points * elem_per_riemann_point];
 
     // Helper to index into output Riemann[p, rho, sigma, mu, nu]
     let riemann_idx = |p: usize, rho: usize, sigma: usize, mu: usize, nu: usize| {
@@ -133,7 +135,7 @@ pub fn expand_lie_to_riemann(
                     for nu in 0..dim {
                         let value = if mu == nu {
                             // Diagonal: R^ρ_σμμ = 0
-                            0.0
+                            T::zero()
                         } else if mu < nu {
                             // Upper triangular: read from Lie storage
                             if let Some(lie_idx) = pair_to_lie_index(mu, nu) {
@@ -141,9 +143,9 @@ pub fn expand_lie_to_riemann(
                                     + rho * rho_stride
                                     + sigma * sigma_stride
                                     + lie_idx;
-                                lie_data.get(flat_idx).copied().unwrap_or(0.0)
+                                lie_data.get(flat_idx).copied().unwrap_or(T::zero())
                             } else {
-                                0.0
+                                T::zero()
                             }
                         } else {
                             // Lower triangular: antisymmetry R^ρ_σνμ = -R^ρ_σμν
@@ -152,9 +154,9 @@ pub fn expand_lie_to_riemann(
                                     + rho * rho_stride
                                     + sigma * sigma_stride
                                     + lie_idx;
-                                -lie_data.get(flat_idx).copied().unwrap_or(0.0)
+                                T::zero() - lie_data.get(flat_idx).copied().unwrap_or(T::zero())
                             } else {
-                                0.0
+                                T::zero()
                             }
                         };
 
@@ -179,9 +181,12 @@ pub fn expand_lie_to_riemann(
 ///
 /// This is the inverse of `expand_lie_to_riemann`. Only stores the upper-triangular
 /// (μ < ν) components since the tensor is antisymmetric in the last two indices.
-pub fn contract_riemann_to_lie(
-    riemann: &CausalTensor<f64>,
-) -> Result<CausalTensor<f64>, PhysicsError> {
+pub fn contract_riemann_to_lie<T>(
+    riemann: &CausalTensor<T>,
+) -> Result<CausalTensor<T>, PhysicsError>
+where
+    T: Field + Float + Copy,
+{
     let shape = riemann.shape();
 
     if shape != [4, 4, 4, 4] {
@@ -196,7 +201,7 @@ pub fn contract_riemann_to_lie(
     let lie_dim = 6usize;
 
     // Output: [4, 4, 6] = 96 elements
-    let mut lie_fs = vec![0.0; dim * dim * lie_dim];
+    let mut lie_fs = vec![T::zero(); dim * dim * lie_dim];
 
     // Helper to index Riemann[rho, sigma, mu, nu]
     let riemann_idx = |rho: usize, sigma: usize, mu: usize, nu: usize| {

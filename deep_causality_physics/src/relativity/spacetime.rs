@@ -8,6 +8,7 @@ use crate::relativity::quantities::SpacetimeVector;
 use crate::error::PhysicsError;
 use crate::quantum::quantities::PhaseAngle;
 use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
+use deep_causality_num::{Field, Float};
 
 // Kernels
 
@@ -164,15 +165,33 @@ pub fn chronometric_volume_kernel(
 /// * `g_33` - Angular component (e.g., $r^2 \sin^2\theta$).
 ///
 /// # Returns
-/// * `Result<CausalTensor<f64>, PhysicsError>` - The metric tensor.
-pub fn generate_schwarzschild_metric(
-    g_00: f64,
-    g_11: f64,
-    g_22: f64,
-    g_33: f64,
-) -> Result<deep_causality_tensor::CausalTensor<f64>, PhysicsError> {
+/// * `Result<CausalTensor<T>, PhysicsError>` - The metric tensor.
+pub fn generate_schwarzschild_metric<T>(
+    g_00: T,
+    g_11: T,
+    g_22: T,
+    g_33: T,
+) -> Result<deep_causality_tensor::CausalTensor<T>, PhysicsError>
+where
+    T: Field + Float,
+{
     let metric_data = vec![
-        g_00, 0.0, 0.0, 0.0, 0.0, g_11, 0.0, 0.0, 0.0, 0.0, g_22, 0.0, 0.0, 0.0, 0.0, g_33,
+        g_00,
+        T::zero(),
+        T::zero(),
+        T::zero(),
+        T::zero(),
+        g_11,
+        T::zero(),
+        T::zero(),
+        T::zero(),
+        T::zero(),
+        g_22,
+        T::zero(),
+        T::zero(),
+        T::zero(),
+        T::zero(),
+        g_33,
     ];
 
     deep_causality_tensor::CausalTensor::new(metric_data, vec![4, 4]).map_err(PhysicsError::from)
@@ -190,12 +209,15 @@ pub fn generate_schwarzschild_metric(
 /// * `christoffel` - Christoffel symbols $\Gamma^\mu_{\nu\rho}$ (Rank 3 tensor [dim, dim, dim]).
 ///
 /// # Returns
-/// * `Ok(Vec<f64>)` - The parallel-transported vector at the end of the path.
-pub fn parallel_transport_kernel(
-    initial_vector: &[f64],
-    path: &[Vec<f64>],
-    christoffel: &deep_causality_tensor::CausalTensor<f64>,
-) -> Result<Vec<f64>, PhysicsError> {
+/// * `Ok(Vec<T>)` - The parallel-transported vector at the end of the path.
+pub fn parallel_transport_kernel<T>(
+    initial_vector: &[T],
+    path: &[Vec<T>],
+    christoffel: &deep_causality_tensor::CausalTensor<T>,
+) -> Result<Vec<T>, PhysicsError>
+where
+    T: Field + Float + From<f64> + Copy,
+{
     if path.len() < 2 {
         return Err(PhysicsError::DimensionMismatch(
             "Path must have at least 2 points".into(),
@@ -236,26 +258,26 @@ pub fn parallel_transport_kernel(
     // Transport along each segment
     for i in 0..path.len() - 1 {
         // Compute tangent vector dx^nu (difference between consecutive points)
-        let dx: Vec<f64> = path[i + 1]
+        let dx: Vec<T> = path[i + 1]
             .iter()
             .zip(path[i].iter())
-            .map(|(x1, x0)| x1 - x0)
+            .map(|(x1, x0)| *x1 - *x0)
             .collect();
 
         // Update: dv^mu = -Gamma^mu_nu_rho * dx^nu * v^rho
-        let mut dv = vec![0.0; dim];
+        let mut dv = vec![T::zero(); dim];
         for mu in 0..dim {
             for nu in 0..dim {
                 for rho in 0..dim {
                     let gamma = christoffel_data[mu * dim * dim + nu * dim + rho];
-                    dv[mu] -= gamma * dx[nu] * v[rho];
+                    dv[mu] = dv[mu] - (gamma * dx[nu] * v[rho]);
                 }
             }
         }
 
         // Euler step: v_new = v + dv
         for mu in 0..dim {
-            v[mu] += dv[mu];
+            v[mu] = v[mu] + dv[mu];
         }
 
         // Check for numerical instability
@@ -281,13 +303,16 @@ pub fn parallel_transport_kernel(
 /// * `metric` - Metric tensor $g_{\mu\nu}$ (Rank 2 tensor [dim, dim]).
 ///
 /// # Returns
-/// * `Ok(f64)` - Total proper time along the path.
-pub fn proper_time_kernel(
-    path: &[Vec<f64>],
-    metric: &deep_causality_tensor::CausalTensor<f64>,
-) -> Result<f64, PhysicsError> {
+/// * `Ok(T)` - Total proper time along the path.
+pub fn proper_time_kernel<T>(
+    path: &[Vec<T>],
+    metric: &deep_causality_tensor::CausalTensor<T>,
+) -> Result<T, PhysicsError>
+where
+    T: Field + Float + From<f64> + Copy,
+{
     if path.len() < 2 {
-        return Ok(0.0); // No proper time for single point or empty path
+        return Ok(T::zero()); // No proper time for single point or empty path
     }
 
     if metric.num_dim() != 2 {
@@ -319,22 +344,22 @@ pub fn proper_time_kernel(
     }
 
     let metric_data = metric.as_slice();
-    let mut total_tau = 0.0;
+    let mut total_tau = T::zero();
 
     for i in 0..path.len() - 1 {
         // Compute displacement dx^mu
-        let dx: Vec<f64> = path[i + 1]
+        let dx: Vec<T> = path[i + 1]
             .iter()
             .zip(path[i].iter())
-            .map(|(x1, x0)| x1 - x0)
+            .map(|(x1, x0)| *x1 - *x0)
             .collect();
 
         // Compute ds^2 = g_mu_nu dx^mu dx^nu
-        let mut ds_squared = 0.0;
+        let mut ds_squared = T::zero();
         for mu in 0..dim {
             for nu in 0..dim {
                 let g_munu = metric_data[mu * dim + nu];
-                ds_squared += g_munu * dx[mu] * dx[nu];
+                ds_squared = ds_squared + (g_munu * dx[mu] * dx[nu]);
             }
         }
 
@@ -350,7 +375,7 @@ pub fn proper_time_kernel(
             )));
         }
 
-        total_tau += dtau;
+        total_tau = total_tau + dtau;
     }
 
     Ok(total_tau)

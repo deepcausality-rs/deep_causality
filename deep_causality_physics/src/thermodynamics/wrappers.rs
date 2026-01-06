@@ -13,7 +13,7 @@ use deep_causality_topology::Manifold;
 
 /// Causal wrapper for [`stats::heat_diffusion_kernel`].
 pub fn heat_diffusion(
-    temp_manifold: &Manifold<f64>,
+    temp_manifold: &Manifold<f64, f64>,
     diffusivity: f64,
 ) -> PropagatingEffect<CausalTensor<f64>> {
     match stats::heat_diffusion_kernel(temp_manifold, diffusivity) {

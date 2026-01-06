@@ -24,14 +24,9 @@ use deep_causality_physics::ElectroweakParams;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("═══════════════════════════════════════════════════════════════");
     println!("  Electroweak Precision Pipeline (Two-Scheme: On-Shell + Effective)");
-
     println!("═══════════════════════════════════════════════════════════════\n");
 
-    // Stage 1: Initialize Standard Model
-    let initial = stage_unification();
-
-    // Pipeline
-    let result = initial
+    let result = stage_unification()
         .bind_or_error(stage_symmetry_breaking, "Symmetry breaking failed")
         .bind_or_error(stage_gauge_mixing, "Gauge mixing failed")
         .bind_or_error(stage_z_resonance, "Resonance calc failed");
@@ -75,19 +70,19 @@ fn stage_unification() -> PropagatingEffect<EwState> {
         );
         println!("  [Correction] Δr:    {:.5} (Rad. Correction)", c.delta_r);
         println!(
-            "  [Scheme 1] On-Shell: sin²θ_W = {:.4} (Masses)",
+            "  [Scheme 1] On-Shell: sin²θ_W = {} (Masses)",
             ew.sin2_theta_w()
         );
         println!(
-            "  [Scheme 2] Effective: sin²θ_eff = {:.4} (Decays)",
+            "  [Scheme 2] Effective: sin²θ_eff = {} (Decays)",
             c.sin2_theta_eff
         );
     } else {
-        println!("  Weinberg Angle:     sin²θ_W = {:.4}", ew.sin2_theta_w());
+        println!("  Weinberg Angle:     sin²θ_W = {}", ew.sin2_theta_w());
     }
-    println!("  EM Coupling (e):    {:.4}", ew.em_coupling());
-    println!("  Weak Coupling (g):  {:.4}", ew.g_coupling());
-    println!("  Hypercharge (g'):   {:.4}", ew.g_prime_coupling());
+    println!("  EM Coupling (e):    {}", ew.em_coupling());
+    println!("  Weak Coupling (g):  {}", ew.g_coupling());
+    println!("  Hypercharge (g'):   {}", ew.g_prime_coupling());
 
     println!();
 
@@ -112,23 +107,23 @@ fn stage_symmetry_breaking(mut state: EwState, _: (), _: Option<()>) -> Propagat
         state.w_mass_calc = ew.w_mass_computed();
         state.z_mass_calc = ew.z_mass_computed();
 
-        println!("  Higgs VEV (v):      {:.2} GeV", v);
-        println!("  Quartic Coupling:   λ = {:.4}", state.higgs_lambda);
-        println!("  Top Yukawa:         y_t = {:.4}", state.top_yukawa);
+        println!("  Higgs VEV (v):      {} GeV", v);
+        println!("  Quartic Coupling:   λ = {}", state.higgs_lambda);
+        println!("  Top Yukawa:         y_t = {}", state.top_yukawa);
         println!(
-            "  Tree Level M_W:     {:.2} GeV (g·v/2)",
+            "  Tree Level M_W:     {}GeV (g·v/2)",
             ew.g_coupling() * ew.higgs_vev() / 2.0
         );
         println!(
-            "  Corrected M_W:      {:.2} GeV (Loop Solver)",
+            "  Corrected M_W:      {}GeV (Loop Solver)",
             state.w_mass_calc
         );
         println!(
-            "  Generated M_W:      {:.2} GeV (from g·v/2)",
+            "  Generated M_W:      {}GeV (from g·v/2)",
             state.w_mass_calc
         );
         println!(
-            "  Generated M_Z:      {:.2} GeV (from M_W/cosθ)",
+            "  Generated M_Z:      {}GeV (from M_W/cosθ)",
             state.z_mass_calc
         );
         println!();
@@ -151,10 +146,10 @@ fn stage_gauge_mixing(mut state: EwState, _: (), _: Option<()>) -> PropagatingEf
         let prediction_match = (state.w_mass_calc - ew.w_mass()).abs() < 0.20; // 200 MeV tolerance (One-Loop Limit)
 
         println!(
-            "  ρ (computed):       {:.4} (Tree level relation)",
+            "  ρ (computed):       {} (Tree level relation)",
             rho_computed
         );
-        println!("  ρ (effective):      {:.4} (Includes Δρ loop)", rho_eff);
+        println!("  ρ (effective):      {} (Includes Δρ loop)", rho_eff);
         println!(
             "  Mass Prediction:    {}",
             if prediction_match {
@@ -165,10 +160,10 @@ fn stage_gauge_mixing(mut state: EwState, _: (), _: Option<()>) -> PropagatingEf
         );
 
         println!(
-            "  Theory M_W:         {:.3} GeV (Loop Corrected)",
+            "  Theory M_W:         {} GeV (Loop Corrected)",
             state.w_mass_calc
         );
-        println!("  PDG M_W:            {:.3} GeV", ew.w_mass());
+        println!("  PDG M_W:            {} GeV", ew.w_mass());
 
         let diff = (state.w_mass_calc - ew.w_mass()).abs();
         println!("  Difference:         {:.1} MeV", diff * 1000.0);
@@ -194,14 +189,11 @@ fn stage_z_resonance(mut state: EwState, _: (), _: Option<()>) -> PropagatingEff
         match ew.z_resonance_cross_section(mz, total_width) {
             Ok(sigma) => {
                 state.z_peak_sigma = sigma;
-                println!("  Peak Energy (M_Z):  {:.2} GeV", mz);
-                println!("  Total Width (Γ_Z):  {:.3} GeV", total_width);
-                println!("  Hadronic (Γ_had):   {:.3} GeV", hadronic_width);
-                println!(
-                    "  Invisible (Γ_inv):  {:.3} GeV (Neutrinos)",
-                    neutrino_width
-                );
-                println!("  Peak Cross-sec:     {:.2} nb", sigma);
+                println!("  Peak Energy (M_Z):  {}GeV", mz);
+                println!("  Total Width (Γ_Z):  {} GeV", total_width);
+                println!("  Hadronic (Γ_had):   {} GeV", hadronic_width);
+                println!("  Invisible (Γ_inv):  {} GeV (Neutrinos)", neutrino_width);
+                println!("  Peak Cross-sec:     {} nb", sigma);
                 println!();
             }
             Err(e) => println!("  [ERROR] Cross section failed: {:?}", e),
@@ -215,9 +207,9 @@ fn print_summary(result: &PropagatingEffect<EwState>) {
     match result.value() {
         EffectValue::Value(state) => {
             println!("[SUCCESS] One-Loop Radiative Corrections Verified.");
-            println!("  Generated W Mass:   {:.3} GeV", state.w_mass_calc);
+            println!("  Generated W Mass:   {} GeV", state.w_mass_calc);
             println!("  Precision Level:    < 20 MeV deviation (Correct for 1-Loop)");
-            println!("  Top Yukawa:         {:.3}", state.top_yukawa);
+            println!("  Top Yukawa:         {}", state.top_yukawa);
         }
 
         _ => println!("[ERROR] Pipeline failed"),

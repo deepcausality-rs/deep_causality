@@ -14,20 +14,24 @@ use crate::{
 };
 use deep_causality_haft::RiemannMap;
 use deep_causality_metric::{EastCoastMetric, LorentzianMetric};
-use deep_causality_tensor::CausalTensor;
+use deep_causality_num::{Field, Float};
+use deep_causality_tensor::{CausalTensor, TensorData};
 use deep_causality_topology::{
     CurvatureSymmetry, CurvatureTensor, CurvatureTensorVector, CurvatureTensorWitness, TensorVector,
 };
 
-impl GrOps for GR {
-    fn ricci_tensor(&self) -> Result<CausalTensor<f64>, PhysicsError> {
+impl<S> GrOps<S> for GR<S>
+where
+    S: Field + Float + Clone + From<f64> + Into<f64> + Copy + TensorData,
+{
+    fn ricci_tensor(&self) -> Result<CausalTensor<S>, PhysicsError> {
         let riemann = self.field_strength();
         let dim = 4;
 
-        // Use East Coast metric type info for the wrapper (needed for structure, though unused for Ricci contraction)
+        // Use East Coast metric type info (structure only)
         let metric_sig = EastCoastMetric::minkowski_4d().into_metric();
 
-        let ct = CurvatureTensor::<f64, (), (), (), ()>::new(
+        let ct = CurvatureTensor::<S, (), (), (), ()>::new(
             riemann.clone(),
             metric_sig,
             CurvatureSymmetry::Riemann,
@@ -38,7 +42,7 @@ impl GrOps for GR {
         Ok(CausalTensor::from_vec(ricci_data, &[dim, dim]))
     }
 
-    fn ricci_scalar(&self) -> Result<f64, PhysicsError> {
+    fn ricci_scalar(&self) -> Result<S, PhysicsError> {
         // Use CurvatureTensor for the complex Riemann->Ricci contraction
         let ricci = self.ricci_tensor()?;
         let ricci_data = ricci.as_slice();
@@ -50,28 +54,28 @@ impl GrOps for GR {
         // Full 4x4 Matrix Inversion
         let inv_metric = gr_utils::invert_4x4(metric)?;
 
-        let mut scalar = 0.0;
+        let mut scalar = S::zero();
         // R = g^μν R_μν
         for mu in 0..dim {
             for nu in 0..dim {
                 // Flattened index [mu, nu]
                 let idx = mu * dim + nu;
                 let g_upper = inv_metric[idx];
-                let r_lower = ricci_data.get(idx).copied().unwrap_or(0.0);
-                scalar += g_upper * r_lower;
+                let r_lower = ricci_data.get(idx).copied().unwrap_or(S::zero());
+                scalar = scalar + (g_upper * r_lower);
             }
         }
 
         Ok(scalar)
     }
 
-    fn einstein_tensor(&self) -> Result<CausalTensor<f64>, PhysicsError> {
+    fn einstein_tensor(&self) -> Result<CausalTensor<S>, PhysicsError> {
         let ricci = self.ricci_tensor()?;
         let scalar = self.ricci_scalar()?;
         einstein_tensor_kernel(&ricci, scalar, self.metric_tensor())
     }
 
-    fn kretschmann_scalar(&self) -> Result<f64, PhysicsError> {
+    fn kretschmann_scalar(&self) -> Result<S, PhysicsError> {
         use crate::theories::general_relativity::gr_lie_mapping::expand_lie_to_riemann;
 
         let lie_fs = self.field_strength();
@@ -90,16 +94,16 @@ impl GrOps for GR {
 
         // Storage for intermediate raised tensors
         let mut r_raised = r_data.to_vec(); // Start with R_abcd
-        let mut temp = vec![0.0; dim * dim * dim * dim];
+        let mut temp = vec![S::zero(); dim * dim * dim * dim];
 
         // Raise 1st index: R^a_bcd = g^am R_mbcd
         for a in 0..dim {
             for b in 0..dim {
                 for c in 0..dim {
                     for d in 0..dim {
-                        let mut sum = 0.0;
+                        let mut sum = S::zero();
                         for m in 0..dim {
-                            sum += inv_g[a * dim + m] * r_raised[idx4(m, b, c, d)];
+                            sum = sum + (inv_g[a * dim + m] * r_raised[idx4(m, b, c, d)]);
                         }
                         temp[idx4(a, b, c, d)] = sum;
                     }
@@ -113,9 +117,9 @@ impl GrOps for GR {
             for b in 0..dim {
                 for c in 0..dim {
                     for d in 0..dim {
-                        let mut sum = 0.0;
+                        let mut sum = S::zero();
                         for n in 0..dim {
-                            sum += inv_g[b * dim + n] * r_raised[idx4(a, n, c, d)];
+                            sum = sum + (inv_g[b * dim + n] * r_raised[idx4(a, n, c, d)]);
                         }
                         temp[idx4(a, b, c, d)] = sum;
                     }
@@ -129,9 +133,9 @@ impl GrOps for GR {
             for b in 0..dim {
                 for c in 0..dim {
                     for d in 0..dim {
-                        let mut sum = 0.0;
+                        let mut sum = S::zero();
                         for r in 0..dim {
-                            sum += inv_g[c * dim + r] * r_raised[idx4(a, b, r, d)];
+                            sum = sum + (inv_g[c * dim + r] * r_raised[idx4(a, b, r, d)]);
                         }
                         temp[idx4(a, b, c, d)] = sum;
                     }
@@ -145,9 +149,9 @@ impl GrOps for GR {
             for b in 0..dim {
                 for c in 0..dim {
                     for d in 0..dim {
-                        let mut sum = 0.0;
+                        let mut sum = S::zero();
                         for s in 0..dim {
-                            sum += inv_g[d * dim + s] * r_raised[idx4(a, b, c, s)];
+                            sum = sum + (inv_g[d * dim + s] * r_raised[idx4(a, b, c, s)]);
                         }
                         temp[idx4(a, b, c, d)] = sum;
                     }
@@ -157,19 +161,15 @@ impl GrOps for GR {
         r_raised.copy_from_slice(&temp); // Now r_raised holds R^abcd
 
         // Final Contraction: K = R_abcd * R^abcd
-        let mut k = 0.0;
+        let mut k = S::zero();
         for i in 0..r_data.len() {
-            k += r_data[i] * r_raised[i];
+            k = k + (r_data[i] * r_raised[i]);
         }
 
         Ok(k)
     }
 
-    fn geodesic_deviation(
-        &self,
-        velocity: &[f64],
-        separation: &[f64],
-    ) -> Result<Vec<f64>, PhysicsError> {
+    fn geodesic_deviation(&self, velocity: &[S], separation: &[S]) -> Result<Vec<S>, PhysicsError> {
         use crate::theories::general_relativity::gr_lie_mapping::expand_lie_to_riemann;
 
         let lie_fs = self.field_strength();
@@ -185,7 +185,8 @@ impl GrOps for GR {
         let u_w = u.clone();
 
         // Construct CurvatureTensorVector for HKT witness with geometric Riemann
-        let ct = CurvatureTensorVector::new(riemann, metric_sig, CurvatureSymmetry::Riemann, dim);
+        let ct =
+            CurvatureTensorVector::<S>::new(riemann, metric_sig, CurvatureSymmetry::Riemann, dim);
 
         // Use RiemannMap HKT trait via witness type
         // D^2 ξ / dτ^2 = R(u, ξ)u
@@ -195,11 +196,11 @@ impl GrOps for GR {
 
     fn solve_geodesic(
         &self,
-        initial_position: &[f64],
-        initial_velocity: &[f64],
-        proper_time_step: f64,
+        initial_position: &[S],
+        initial_velocity: &[S],
+        proper_time_step: S,
         num_steps: usize,
-    ) -> Result<Vec<GeodesicState>, PhysicsError> {
+    ) -> Result<Vec<GeodesicState<S>>, PhysicsError> {
         geodesic_integrator_kernel(
             initial_position,
             initial_velocity,
@@ -209,47 +210,35 @@ impl GrOps for GR {
         )
     }
 
-    fn proper_time(&self, path: &[Vec<f64>]) -> Result<f64, PhysicsError> {
+    fn proper_time(&self, path: &[Vec<S>]) -> Result<S, PhysicsError> {
         proper_time_kernel(path, self.metric_tensor())
     }
 
     fn parallel_transport(
         &self,
-        initial_vector: &[f64],
-        path: &[Vec<f64>],
-    ) -> Result<Vec<f64>, PhysicsError> {
+        initial_vector: &[S],
+        path: &[Vec<S>],
+    ) -> Result<Vec<S>, PhysicsError> {
         parallel_transport_kernel(initial_vector, path, self.connection())
     }
 
-    /// Returns the spacetime metric g_μν.
-    ///
-    /// # Implementation Note
-    ///
-    /// In the GR implementation, the metric tensor is stored in the `GaugeField`'s
-    /// `connection` slot. This is a semantic overload: for particle physics gauge
-    /// theories, connection = gauge potential (A_μ), but for GR, we store the metric
-    /// here and compute Christoffel symbols on-the-fly when needed.
-    ///
-    /// The `field_strength` slot contains the Riemann curvature tensor in Lie-algebra
-    /// representation `[points, 4, 4, 6]`, which is expanded to geometric form
-    /// `[4, 4, 4, 4]` using `expand_lie_to_riemann()` when needed.
-    fn metric_tensor(&self) -> &CausalTensor<f64> {
+    fn metric_tensor(&self) -> &CausalTensor<S> {
         self.connection()
     }
 
-    fn compute_riemann_from_christoffel(&self) -> CausalTensor<f64> {
+    fn compute_riemann_from_christoffel(&self) -> CausalTensor<S> {
         use deep_causality_topology::GaugeFieldWitness;
 
         // The coupling constant for GR is effectively 1.0
         // (structure constants encode the non-abelian part)
-        GaugeFieldWitness::compute_field_strength_non_abelian(self, 1.0)
+        GaugeFieldWitness::compute_field_strength_non_abelian(self, S::one())
     }
 
     fn momentum_constraint_field(
         &self,
-        extrinsic_curvature: &CausalTensor<f64>,
-        matter_momentum: Option<&CausalTensor<f64>>,
-    ) -> Result<CausalTensor<f64>, PhysicsError> {
+        extrinsic_curvature: &CausalTensor<S>,
+        matter_momentum: Option<&CausalTensor<S>>,
+    ) -> Result<CausalTensor<S>, PhysicsError> {
         // =========================================================================
         // PRODUCTION-GRADE IMPLEMENTATION
         // ADM Momentum Constraint: M_i = D_j(K^j_i - δ^j_i K) - 8πj_i
@@ -320,60 +309,31 @@ impl GrOps for GR {
         };
 
         // Helper: Extract γ_ij (3x3 spatial metric) from g_μν
-        let extract_spatial_metric = |p: usize| -> [[f64; 3]; 3] {
+        let extract_spatial_metric = |p: usize| -> [[S; 3]; 3] {
             let base = p * metric_stride;
 
             // If metric is 4x4 (stride=16), extract spatial components g_{i+1,j+1}
             if metric_stride >= 16 {
-                let mut gamma = [[0.0; 3]; 3];
+                let mut gamma = [[S::zero(); 3]; 3];
                 for (i, row) in gamma.iter_mut().enumerate() {
                     for (j, val) in row.iter_mut().enumerate() {
                         let idx = base + (i + 1) * 4 + (j + 1);
-                        *val =
-                            metric_4d
-                                .get(idx)
-                                .copied()
-                                .unwrap_or(if i == j { 1.0 } else { 0.0 });
+                        *val = metric_4d.get(idx).copied().unwrap_or(if i == j {
+                            S::one()
+                        } else {
+                            S::zero()
+                        });
                     }
                 }
                 gamma
             } else {
                 // Fallback: identity metric (flat space)
-                [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+                [
+                    [S::one(), S::zero(), S::zero()],
+                    [S::zero(), S::one(), S::zero()],
+                    [S::zero(), S::zero(), S::one()],
+                ]
             }
-        };
-
-        // Helper: Compute inverse of 3x3 matrix
-        let invert_3x3 = |m: [[f64; 3]; 3]| -> Result<[[f64; 3]; 3], PhysicsError> {
-            let det = m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
-                - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
-                + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
-
-            if det.abs() < 1e-14 {
-                return Err(PhysicsError::NumericalInstability(format!(
-                    "Singular spatial metric (det = {:.2e})",
-                    det
-                )));
-            }
-
-            let inv = 1.0 / det;
-            Ok([
-                [
-                    inv * (m[1][1] * m[2][2] - m[1][2] * m[2][1]),
-                    inv * (m[0][2] * m[2][1] - m[0][1] * m[2][2]),
-                    inv * (m[0][1] * m[1][2] - m[0][2] * m[1][1]),
-                ],
-                [
-                    inv * (m[1][2] * m[2][0] - m[1][0] * m[2][2]),
-                    inv * (m[0][0] * m[2][2] - m[0][2] * m[2][0]),
-                    inv * (m[0][2] * m[1][0] - m[0][0] * m[1][2]),
-                ],
-                [
-                    inv * (m[1][0] * m[2][1] - m[1][1] * m[2][0]),
-                    inv * (m[0][1] * m[2][0] - m[0][0] * m[2][1]),
-                    inv * (m[0][0] * m[1][1] - m[0][1] * m[1][0]),
-                ],
-            ])
         };
 
         // -------------------------------------------------------------------------
@@ -385,40 +345,46 @@ impl GrOps for GR {
         let complex = base_manifold.complex();
 
         // Allocate result: M_i for each point
-        let mut result = vec![0.0; num_points * 3];
+        let mut result = vec![S::zero(); num_points * 3];
 
         for p in 0..num_points {
             let k_offset = if is_batched { p * 9 } else { 0 };
 
             // Extract spatial metric and its inverse at this point
             let gamma = extract_spatial_metric(p);
-            let gamma_inv = invert_3x3(gamma)?;
+            let gamma_inv = gr_utils::invert_3x3(gamma)?;
 
             // Compute trace K = γ^ij K_ij
-            let mut k_trace = 0.0;
+            let mut k_trace = S::zero();
             for (i, row) in gamma_inv.iter().enumerate() {
                 for (j, &g_inv_ij) in row.iter().enumerate() {
-                    let k_ij = k_data.get(k_offset + i * 3 + j).copied().unwrap_or(0.0);
-                    k_trace += g_inv_ij * k_ij;
+                    let k_ij = k_data
+                        .get(k_offset + i * 3 + j)
+                        .copied()
+                        .unwrap_or(S::zero());
+                    k_trace = k_trace + g_inv_ij * k_ij;
                 }
             }
 
             // Compute mixed tensor K^j_i = γ^jk K_ki
-            let mut k_mixed = [[0.0; 3]; 3];
+            let mut k_mixed = [[S::zero(); 3]; 3];
             for (j, row) in k_mixed.iter_mut().enumerate() {
                 for (i, val) in row.iter_mut().enumerate() {
                     for (k, &g_inv_jk) in gamma_inv[j].iter().enumerate() {
-                        let k_ki = k_data.get(k_offset + k * 3 + i).copied().unwrap_or(0.0);
-                        *val += g_inv_jk * k_ki;
+                        let k_ki = k_data
+                            .get(k_offset + k * 3 + i)
+                            .copied()
+                            .unwrap_or(S::zero());
+                        *val = *val + g_inv_jk * k_ki;
                     }
                 }
             }
 
             // Compute T^j_i = K^j_i - δ^j_i K
-            let mut t_tensor = [[0.0; 3]; 3];
+            let mut t_tensor = [[S::zero(); 3]; 3];
             for j in 0..3 {
                 for i in 0..3 {
-                    let delta = if i == j { 1.0 } else { 0.0 };
+                    let delta = if i == j { S::one() } else { S::zero() };
                     t_tensor[j][i] = k_mixed[j][i] - delta * k_trace;
                 }
             }
@@ -434,12 +400,13 @@ impl GrOps for GR {
                 .collect();
 
             // Compute spatial Christoffel symbols Γ^k_ij from metric derivatives
-            let mut christoffel = [[[0.0; 3]; 3]; 3];
+            let mut christoffel = [[[S::zero(); 3]; 3]; 3];
 
             if !neighbors.is_empty() {
                 for n_idx in &neighbors {
                     let gamma_n = extract_spatial_metric(*n_idx);
-                    let weight = 1.0 / (neighbors.len() as f64);
+                    let weight = S::one() / <S as From<f64>>::from(neighbors.len() as f64);
+                    let half = <S as From<f64>>::from(0.5);
 
                     for k in 0..3 {
                         for i in 0..3 {
@@ -449,9 +416,10 @@ impl GrOps for GR {
                                     let d_gamma_il = (gamma_n[i][l] - gamma[i][l]) * weight;
                                     let d_gamma_ij = (gamma_n[i][j] - gamma[i][j]) * weight;
 
-                                    christoffel[k][i][j] += 0.5
-                                        * gamma_inv[k][l]
-                                        * (d_gamma_jl + d_gamma_il - d_gamma_ij);
+                                    christoffel[k][i][j] = christoffel[k][i][j]
+                                        + half
+                                            * gamma_inv[k][l]
+                                            * (d_gamma_jl + d_gamma_il - d_gamma_ij);
                                 }
                             }
                         }
@@ -460,58 +428,65 @@ impl GrOps for GR {
             }
 
             // Compute ∂_j T^j_i using finite differences with neighbors
-            let mut partial_div = [0.0; 3];
+            let mut partial_div = [S::zero(); 3];
 
             if !neighbors.is_empty() {
                 for n_idx in &neighbors {
                     let n_k_offset = if is_batched { n_idx * 9 } else { 0 };
                     let gamma_n = extract_spatial_metric(*n_idx);
-                    let gamma_n_inv = invert_3x3(gamma_n)?;
+                    let gamma_n_inv = gr_utils::invert_3x3(gamma_n)?;
 
                     // Compute T^j_i at neighbor
-                    let mut k_trace_n = 0.0;
+                    let mut k_trace_n = S::zero();
                     for (i, row) in gamma_n_inv.iter().enumerate() {
                         for (j, &g_n_inv_ij) in row.iter().enumerate() {
-                            let k_ij = k_data.get(n_k_offset + i * 3 + j).copied().unwrap_or(0.0);
-                            k_trace_n += g_n_inv_ij * k_ij;
+                            let k_ij = k_data
+                                .get(n_k_offset + i * 3 + j)
+                                .copied()
+                                .unwrap_or(S::zero());
+                            k_trace_n = k_trace_n + g_n_inv_ij * k_ij;
                         }
                     }
 
-                    let mut k_mixed_n = [[0.0; 3]; 3];
+                    let mut k_mixed_n = [[S::zero(); 3]; 3];
                     for (j, row) in k_mixed_n.iter_mut().enumerate() {
                         for (i, val) in row.iter_mut().enumerate() {
                             for (k, &g_n_inv_jk) in gamma_n_inv[j].iter().enumerate() {
-                                let k_ki =
-                                    k_data.get(n_k_offset + k * 3 + i).copied().unwrap_or(0.0);
-                                *val += g_n_inv_jk * k_ki;
+                                let k_ki = k_data
+                                    .get(n_k_offset + k * 3 + i)
+                                    .copied()
+                                    .unwrap_or(S::zero());
+                                *val = *val + g_n_inv_jk * k_ki;
                             }
                         }
                     }
 
-                    let mut t_n = [[0.0; 3]; 3];
+                    let mut t_n = [[S::zero(); 3]; 3];
                     for j in 0..3 {
                         for i in 0..3 {
-                            let delta = if i == j { 1.0 } else { 0.0 };
+                            let delta = if i == j { S::one() } else { S::zero() };
                             t_n[j][i] = k_mixed_n[j][i] - delta * k_trace_n;
                         }
                     }
 
-                    let weight = 1.0 / (neighbors.len() as f64);
+                    let weight = S::one() / <S as From<f64>>::from(neighbors.len() as f64);
                     for i in 0..3 {
                         for j in 0..3 {
-                            partial_div[i] += (t_n[j][i] - t_tensor[j][i]) * weight;
+                            partial_div[i] = partial_div[i] + (t_n[j][i] - t_tensor[j][i]) * weight;
                         }
                     }
                 }
             }
 
             // Compute connection terms: Γ^j_jk T^k_i - Γ^k_ji T^j_k
-            let mut connection_term = [0.0; 3];
+            let mut connection_term = [S::zero(); 3];
             for i in 0..3 {
                 for j in 0..3 {
                     for k in 0..3 {
-                        connection_term[i] += christoffel[j][j][k] * t_tensor[k][i];
-                        connection_term[i] -= christoffel[k][j][i] * t_tensor[j][k];
+                        connection_term[i] =
+                            connection_term[i] + christoffel[j][j][k] * t_tensor[k][i];
+                        connection_term[i] =
+                            connection_term[i] - christoffel[k][j][i] * t_tensor[j][k];
                     }
                 }
             }
@@ -519,14 +494,15 @@ impl GrOps for GR {
             // -------------------------------------------------------------------------
             // 4. ASSEMBLE MOMENTUM CONSTRAINT
             // -------------------------------------------------------------------------
+            let eight_pi = <S as From<f64>>::from(8.0 * std::f64::consts::PI);
+
             for i in 0..3 {
                 let j_i = match matter_momentum {
-                    Some(j) => j.as_slice().get(p * 3 + i).copied().unwrap_or(0.0),
-                    None => 0.0,
+                    Some(j) => j.as_slice().get(p * 3 + i).copied().unwrap_or(S::zero()),
+                    None => S::zero(),
                 };
 
-                result[p * 3 + i] =
-                    partial_div[i] + connection_term[i] - 8.0 * std::f64::consts::PI * j_i;
+                result[p * 3 + i] = partial_div[i] + connection_term[i] - eight_pi * j_i;
             }
         }
 

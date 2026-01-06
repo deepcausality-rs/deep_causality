@@ -119,7 +119,7 @@ fn test_adm_structures() {
         AdmState::new(gamma.clone(), k_expanding, alpha.clone(), beta.clone(), 0.0);
     let h_expanding = state_expanding.hamiltonian_constraint(None).unwrap();
     assert!(
-        (h_expanding.as_slice()[0] - 6.0).abs() < 1e-10,
+        (h_expanding.as_slice()[0] - 6.0f64).abs() < 1e-10,
         "H should be 6 for isotropic expansion with R=0"
     );
 
@@ -173,7 +173,7 @@ fn test_gr_gauge_field_integration() {
     let topo_metric = EastCoastMetric::minkowski_4d().into_metric();
 
     // Create GR field
-    let gravity: GR = GaugeField::new(base, topo_metric, metric_tensor, riemann).unwrap();
+    let gravity: GR<f64> = GaugeField::new(base, topo_metric, metric_tensor, riemann).unwrap();
 
     // Verify gauge group name
     assert_eq!(gravity.gauge_group_name(), "SO(3,1)");
@@ -225,7 +225,7 @@ fn test_geodesic_deviation_interface() {
     );
 
     let topo_metric = EastCoastMetric::minkowski_4d().into_metric();
-    let gravity: GR = GaugeField::new(base, topo_metric, metric_tensor, riemann).unwrap();
+    let gravity: GR<f64> = GaugeField::new(base, topo_metric, metric_tensor, riemann).unwrap();
 
     let velocity = vec![1.0, 0.0, 0.0, 0.0];
     let separation = vec![0.0, 1.0, 0.0, 0.0];
@@ -287,7 +287,7 @@ fn test_lie_index_to_pair() {
 #[test]
 fn test_roundtrip_lie_geometric() {
     // Create a sample Lie-algebra tensor [4, 4, 6]
-    let mut lie_data = vec![0.0; 4 * 4 * 6];
+    let mut lie_data: Vec<f64> = vec![0.0; 4 * 4 * 6];
     // Set some non-zero values
     lie_data[6] = 1.0; // R^0_1 at (μ,ν)=(0,1)
     lie_data[2 * 4 * 6 + 3 * 6 + 5] = 2.5; // R^2_3 at (μ,ν)=(2,3)
@@ -372,7 +372,7 @@ fn test_adm_with_christoffel() {
     );
 
     // For flat space with K=0, momentum constraint should be zero
-    let m_vec = m.unwrap();
+    let m_vec: CausalTensor<f64> = m.unwrap();
     assert_eq!(m_vec.shape(), &[3]);
     for (i, &val) in m_vec.as_slice().iter().enumerate() {
         assert!(
@@ -459,7 +459,7 @@ fn test_compute_riemann_from_christoffel() {
     let topo_metric = EastCoastMetric::minkowski_4d().into_metric();
 
     // Create GR field with Christoffel in connection slot
-    let gr: GR = GaugeField::new(base, topo_metric, connection, field_strength).unwrap();
+    let gr: GR<f64> = GaugeField::new(base, topo_metric, connection, field_strength).unwrap();
 
     // Test that compute_riemann_from_christoffel returns the expected shape
     let riemann = gr.compute_riemann_from_christoffel();
@@ -508,7 +508,7 @@ fn test_momentum_constraint_field() {
     let field_strength = CausalTensor::from_vec(fs_data, &[num_simplices, 4, 4, 6]);
 
     let topo_metric = EastCoastMetric::minkowski_4d().into_metric();
-    let gr: GR = GaugeField::new(base, topo_metric, connection, field_strength).unwrap();
+    let gr: GR<f64> = GaugeField::new(base, topo_metric, connection, field_strength).unwrap();
 
     // Create extrinsic curvature K_ij = 0 (flat space)
     let k_data = vec![0.0; num_simplices * 3 * 3];

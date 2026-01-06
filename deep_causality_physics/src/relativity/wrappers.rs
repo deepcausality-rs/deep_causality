@@ -24,11 +24,13 @@ pub fn einstein_tensor(
 }
 
 /// Causal wrapper for [`gravity::geodesic_deviation_kernel`].
+///
+/// Computes the geodesic deviation acceleration: A^μ = -R^μ_νσρ V^ν n^σ V^ρ
 pub fn geodesic_deviation(
     riemann: &CausalTensor<f64>,
-    velocity: &CausalTensor<f64>,
-    separation: &CausalTensor<f64>,
-) -> PropagatingEffect<CausalTensor<f64>> {
+    velocity: &[f64],
+    separation: &[f64],
+) -> PropagatingEffect<Vec<f64>> {
     match gravity::geodesic_deviation_kernel(riemann, velocity, separation) {
         Ok(acc) => PropagatingEffect::pure(acc),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),

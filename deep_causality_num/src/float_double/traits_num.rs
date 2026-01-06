@@ -170,3 +170,33 @@ impl NumCast for DoubleFloat {
         n.to_f64().map(Self::from_f64)
     }
 }
+
+// =============================================================================
+// Sum and Product
+// =============================================================================
+
+use std::iter::{Product, Sum};
+
+impl Sum for DoubleFloat {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Self::from_f64(0.0), |acc, x| acc + x)
+    }
+}
+
+impl<'a> Sum<&'a DoubleFloat> for DoubleFloat {
+    fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
+        iter.fold(Self::from_f64(0.0), |acc, x| acc + *x)
+    }
+}
+
+impl Product for DoubleFloat {
+    fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Self::from_f64(1.0), |acc, x| acc * x)
+    }
+}
+
+impl<'a> Product<&'a DoubleFloat> for DoubleFloat {
+    fn product<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
+        iter.fold(Self::from_f64(1.0), |acc, x| acc * *x)
+    }
+}

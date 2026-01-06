@@ -8,9 +8,17 @@
 //! Provides the 3+1 decomposition of spacetime for numerical relativity.
 //! Spacetime is sliced into spatial hypersurfaces Σ_t evolved by a time coordinate t.
 use crate::PhysicsError;
-use deep_causality_tensor::CausalTensor;
+use deep_causality_num::{Field, Float};
+use deep_causality_tensor::{CausalTensor, TensorData};
 
-pub trait AdmOps {
+/// ADM Formalism operations, generic over scalar type `S`.
+///
+/// # Type Parameters
+/// * `S` - Scalar type (e.g., `f32`, `f64`, `DoubleFloat`)
+pub trait AdmOps<S>
+where
+    S: Field + Float + Clone + From<f64> + Into<f64> + TensorData,
+{
     /// Computes the Hamiltonian constraint.
     ///
     /// # Mathematical Definition
@@ -23,8 +31,8 @@ pub trait AdmOps {
     /// * `matter_density` - Energy density ρ (default 0 for vacuum)
     fn hamiltonian_constraint(
         &self,
-        matter_density: Option<&CausalTensor<f64>>,
-    ) -> Result<CausalTensor<f64>, PhysicsError>;
+        matter_density: Option<&CausalTensor<S>>,
+    ) -> Result<CausalTensor<S>, PhysicsError>;
 
     /// Computes the Momentum constraint.
     ///
@@ -60,9 +68,9 @@ pub trait AdmOps {
     /// constraint evaluation, use this on a grid and add the finite-difference derivative.
     fn momentum_constraint(
         &self,
-        matter_momentum: Option<&CausalTensor<f64>>,
-    ) -> Result<CausalTensor<f64>, PhysicsError>;
+        matter_momentum: Option<&CausalTensor<S>>,
+    ) -> Result<CausalTensor<S>, PhysicsError>;
 
     /// Returns the trace of extrinsic curvature K.
-    fn mean_curvature(&self) -> Result<CausalTensor<f64>, PhysicsError>;
+    fn mean_curvature(&self) -> Result<CausalTensor<S>, PhysicsError>;
 }

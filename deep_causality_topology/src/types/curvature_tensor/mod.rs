@@ -39,14 +39,9 @@ pub enum CurvatureSymmetry {
     None,
 }
 
-/// Type alias for f64-based curvature tensor
-pub type CurvatureTensorVector = CurvatureTensor<
-    f64,
-    TensorVector<f64>,
-    TensorVector<f64>,
-    TensorVector<f64>,
-    TensorVector<f64>,
->;
+/// Type alias for generic curvature tensor
+pub type CurvatureTensorVector<T> =
+    CurvatureTensor<T, TensorVector<T>, TensorVector<T>, TensorVector<T>, TensorVector<T>>;
 
 /// A rank-4 curvature tensor for RiemannMap operations.
 ///

@@ -7,9 +7,9 @@
 // Weak Field Operations Trait
 // =============================================================================
 
-use crate::{PhysicsError, WeakIsospin};
-use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::Manifold;
+use crate::PhysicsError;
+use deep_causality_num::{Field, Float};
+use deep_causality_tensor::{CausalTensor, TensorData};
 
 /// Operations for the Weak Force — SU(2)_L gauge theory.
 ///
@@ -32,24 +32,31 @@ use deep_causality_topology::Manifold;
 /// ```text
 /// Γ = G_F² m⁵ / (192 π³)
 /// ```
-pub trait WeakFieldOps {
-    /// Creates a new Weak Field (SU(2)) with West Coast metric.
-    fn new_field(base: Manifold<f64>, connection: CausalTensor<f64>) -> Result<Self, PhysicsError>
+
+pub trait WeakFieldOps<S>
+where
+    S: Field + Float + Clone + From<f64> + Into<f64> + TensorData,
+{
+    /// Creates a new Weak Interaction Field (SU(2)) with West Coast metric.
+    fn new_field(
+        base: deep_causality_topology::Manifold<S, S>,
+        connection: CausalTensor<S>,
+    ) -> Result<Self, PhysicsError>
     where
         Self: Sized;
 
-    fn fermi_constant(&self) -> f64;
-    fn w_mass(&self) -> f64;
-    fn z_mass(&self) -> f64;
-    fn sin2_theta_w(&self) -> f64;
-    fn charged_current_propagator(momentum_transfer_sq: f64) -> Result<f64, PhysicsError>;
+    fn fermi_constant(&self) -> S;
+    fn w_mass(&self) -> S;
+    fn z_mass(&self) -> S;
+    fn sin2_theta_w(&self) -> S;
+    fn charged_current_propagator(momentum_transfer_sq: S) -> Result<S, PhysicsError>;
     fn neutral_current_propagator(
-        momentum_transfer_sq: f64,
-        fermion: &WeakIsospin,
-    ) -> Result<f64, PhysicsError>;
-    fn weak_decay_width(mass: f64) -> Result<f64, PhysicsError>;
-    fn muon_lifetime() -> f64;
-    fn w_boson_width() -> f64;
-    fn z_boson_width() -> f64;
-    fn weak_field_strength(&self) -> CausalTensor<f64>;
+        momentum_transfer_sq: S,
+        fermion: &crate::WeakIsospin,
+    ) -> Result<S, PhysicsError>;
+    fn weak_decay_width(mass: S) -> Result<S, PhysicsError>;
+    fn muon_lifetime() -> S;
+    fn w_boson_width() -> S;
+    fn z_boson_width() -> S;
+    fn weak_field_strength(&self) -> CausalTensor<S>;
 }

@@ -22,7 +22,7 @@ use deep_causality_topology::Manifold;
 /// # Returns
 /// * `Result<CausalTensor<f64>, PhysicsError>` - Field tensor $F$ (2-form) on the 2-simplices.
 pub fn maxwell_gradient_kernel(
-    potential_manifold: &Manifold<f64>,
+    potential_manifold: &Manifold<f64, f64>,
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     // F = dA (Exterior Derivative) on 1-forms -> 2-forms
     let f_tensor = potential_manifold.exterior_derivative(1);
@@ -45,7 +45,7 @@ pub fn maxwell_gradient_kernel(
 /// # Returns
 /// * `Result<CausalTensor<f64>, PhysicsError>` - Divergence scalar field (0-form) on vertices.
 pub fn lorenz_gauge_kernel(
-    potential_manifold: &Manifold<f64>,
+    potential_manifold: &Manifold<f64, f64>,
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     // Lorenz Gauge: Div A = 0
     // Div A is represented by codifferential delta(A) for a 1-form.
@@ -136,8 +136,8 @@ pub fn magnetic_helicity_density_kernel(
 /// # Returns
 /// * `Result<CausalTensor<f64>, PhysicsError>` - Current density 1-form $J$.
 pub fn proca_equation_kernel(
-    field_manifold: &Manifold<f64>,
-    potential_manifold: &Manifold<f64>,
+    field_manifold: &Manifold<f64, f64>,
+    potential_manifold: &Manifold<f64, f64>,
     mass: f64,
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     // Proca: delta F + m^2 A = J
@@ -153,7 +153,7 @@ pub fn proca_equation_kernel(
             "Non-finite mass in Proca".into(),
         ));
     }
-    if delta_f.as_slice().iter().any(|v| !v.is_finite()) {
+    if delta_f.as_slice().iter().any(|v: &f64| !v.is_finite()) {
         return Err(PhysicsError::NumericalInstability(
             "delta(F) has non-finite entries".into(),
         ));
@@ -180,7 +180,7 @@ pub fn proca_equation_kernel(
     }
     if a_full.as_slice()[..needed_len]
         .iter()
-        .any(|v| !v.is_finite())
+        .any(|v: &f64| !v.is_finite())
     {
         return Err(PhysicsError::NumericalInstability(
             "A(1-form) has non-finite entries".into(),
@@ -207,7 +207,7 @@ pub fn proca_equation_kernel(
     }
     let j = delta_f + m2_a;
 
-    if j.as_slice().iter().any(|v| !v.is_finite()) {
+    if j.as_slice().iter().any(|v: &f64| !v.is_finite()) {
         return Err(PhysicsError::NumericalInstability(
             "Proca current J has non-finite entries".into(),
         ));

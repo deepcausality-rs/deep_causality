@@ -20,7 +20,7 @@ use deep_causality_topology::Manifold;
 /// # Returns
 /// * `Result<CausalTensor<f64>, PhysicsError>` - Rate of change tensor $\frac{du}{dt}$.
 pub fn heat_diffusion_kernel(
-    temp_manifold: &Manifold<f64>,
+    temp_manifold: &Manifold<f64, f64>,
     diffusivity: f64,
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     // Heat Eq: du/dt = - alpha * Laplacian(u)

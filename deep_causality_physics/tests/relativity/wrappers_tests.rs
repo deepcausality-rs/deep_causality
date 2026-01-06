@@ -22,9 +22,11 @@ fn test_einstein_tensor_wrapper_success() {
 
 #[test]
 fn test_geodesic_deviation_wrapper_success() {
-    let riemann = CausalTensor::new(vec![0.0; 16], vec![2, 2, 2, 2]).unwrap();
-    let velocity = CausalTensor::new(vec![1.0, 0.0], vec![2]).unwrap();
-    let separation = CausalTensor::new(vec![0.0, 1.0], vec![2]).unwrap();
+    // Riemann tensor [4, 4, 4, 4]
+    let riemann = CausalTensor::new(vec![0.0f64; 256], vec![4, 4, 4, 4]).unwrap();
+    // Velocity and separation as slices
+    let velocity: [f64; 4] = [1.0, 0.0, 0.0, 0.0];
+    let separation: [f64; 4] = [0.0, 1.0, 0.0, 0.0];
 
     let effect = geodesic_deviation(&riemann, &velocity, &separation);
     assert!(effect.is_ok());
@@ -33,9 +35,9 @@ fn test_geodesic_deviation_wrapper_success() {
 #[test]
 fn test_geodesic_deviation_wrapper_error() {
     // Wrong Riemann rank should propagate error
-    let riemann = CausalTensor::new(vec![1.0; 4], vec![2, 2]).unwrap(); // Rank 2
-    let velocity = CausalTensor::new(vec![1.0, 0.0], vec![2]).unwrap();
-    let separation = CausalTensor::new(vec![0.0, 1.0], vec![2]).unwrap();
+    let riemann = CausalTensor::new(vec![1.0f64; 4], vec![2, 2]).unwrap(); // Rank 2
+    let velocity: [f64; 4] = [1.0, 0.0, 0.0, 0.0];
+    let separation: [f64; 4] = [0.0, 1.0, 0.0, 0.0];
 
     let effect = geodesic_deviation(&riemann, &velocity, &separation);
     assert!(effect.is_err());

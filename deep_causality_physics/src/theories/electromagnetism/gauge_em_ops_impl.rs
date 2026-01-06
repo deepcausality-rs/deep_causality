@@ -7,7 +7,7 @@ use crate::GaugeEmOps;
 use crate::error::PhysicsError;
 use deep_causality_metric::{LorentzianMetric, WestCoastMetric};
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::{Field, Float, Zero};
+use deep_causality_num::{Field, Float};
 use deep_causality_tensor::{CausalTensor, TensorData};
 use deep_causality_topology::{
     BaseTopology, GaugeField, Manifold, Simplex, SimplicialComplexBuilder, U1,
@@ -19,7 +19,7 @@ where
     S: Field + Float + TensorData + Clone + From<f64> + Into<f64> + Default + PartialOrd,
 {
     fn from_fields(
-        base: Manifold<S>,
+        base: Manifold<S, S>,
         electric_field: CausalMultiVector<S>,
         magnetic_field: CausalMultiVector<S>,
     ) -> Result<Self, PhysicsError> {
@@ -115,7 +115,7 @@ where
             PhysicsError::DimensionMismatch(format!("Failed to create tensor: {:?}", e))
         })?;
 
-        let base: Manifold<S> = Manifold::new(complex, data, 0).map_err(|e| {
+        let base: Manifold<S, S> = Manifold::new(complex, data, 0).map_err(|e| {
             PhysicsError::DimensionMismatch(format!("Failed to create default manifold: {:?}", e))
         })?;
 

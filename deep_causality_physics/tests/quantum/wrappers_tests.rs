@@ -13,7 +13,7 @@ use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud};
 
 // Helper to create a simple triangular manifold (Taken from fields_tests.rs)
-fn create_simple_manifold() -> Manifold<f64> {
+fn create_simple_manifold() -> Manifold<f64, f64> {
     let points = CausalTensor::new(
         vec![
             0.0, 0.0, // v0

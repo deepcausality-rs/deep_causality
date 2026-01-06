@@ -254,8 +254,8 @@ pub fn foppl_von_karman_strain_simple_kernel(
 /// # Returns
 /// *   `Result<CausalTensor<f64>, PhysicsError>` - The computed Stress Tensor field.
 pub fn foppl_von_karman_strain_kernel(
-    u_manifold: &Manifold<f64>,
-    w_manifold: &Manifold<f64>,
+    u_manifold: &Manifold<f64, f64>,
+    w_manifold: &Manifold<f64, f64>,
     youngs_modulus: Stiffness,
     poisson_ratio: Ratio,
 ) -> Result<CausalTensor<f64>, PhysicsError> {

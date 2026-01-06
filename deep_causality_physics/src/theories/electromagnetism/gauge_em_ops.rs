@@ -53,7 +53,7 @@ where
     /// - F_{0i} = E_i (electric field components)
     /// - F_{ij} = -ε_{ijk} B_k (magnetic field components)
     fn from_fields(
-        base: Manifold<S>,
+        base: Manifold<S, S>,
         electric_field: CausalMultiVector<S>,
         magnetic_field: CausalMultiVector<S>,
     ) -> Result<Self, PhysicsError>
