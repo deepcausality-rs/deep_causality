@@ -63,7 +63,8 @@ fn stage_unification() -> PropagatingEffect<EwState> {
     println!("Stage 1: Unification (Coupling Constants)");
     println!("───────────────────────────────────────");
 
-    let ew = ElectroweakParams::standard_model();
+    // Use precision mode for correct W/Z mass generation
+    let ew = ElectroweakParams::standard_model_precision();
 
     println!("  Weinberg Angle:     sin²θ_W = {:.4}", ew.sin2_theta_w());
     println!("  EM Coupling (e):    {:.4}", ew.em_coupling());
@@ -116,10 +117,20 @@ fn stage_gauge_mixing(state: EwState, _: (), _: Option<()>) -> PropagatingEffect
     println!("───────────────────────────");
 
     if let Some(ew) = state.ew {
-        let rho = ew.rho_parameter();
+        // Computed ρ uses internally generated masses (always = 1.0 at tree level)
+        let rho_computed = ew.rho_parameter_computed();
+        // PDG ρ compares computed M_W with experimental M_Z
+        let rho_pdg = ew.rho_parameter();
         let prediction_match = (state.w_mass_calc - ew.w_mass()).abs() < 1.0;
 
-        println!("  ρ parameter:        {:.4} (Tree level SM = 1.0)", rho);
+        println!(
+            "  ρ (computed):       {:.4} (Tree level SM = 1.0)",
+            rho_computed
+        );
+        println!(
+            "  ρ (vs PDG):         {:.4} (Includes radiative corrections)",
+            rho_pdg
+        );
         println!(
             "  Mass Prediction:    {}",
             if prediction_match {
@@ -141,9 +152,9 @@ fn stage_z_resonance(mut state: EwState, _: (), _: Option<()>) -> PropagatingEff
     println!("────────────────────────────────");
 
     if let Some(ew) = state.ew {
-        // Compute cross section at peak (sqrt(s) = M_Z)
-        let mz = ew.z_mass();
-        let width = 2.495; // GeV
+        // Use computed M_Z and central Z_WIDTH for consistency
+        let mz = state.z_mass_calc;
+        let width = deep_causality_physics::Z_WIDTH;
 
         match ew.z_resonance_cross_section(mz, width) {
             Ok(sigma) => {

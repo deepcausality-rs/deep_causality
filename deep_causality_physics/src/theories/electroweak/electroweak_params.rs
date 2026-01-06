@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{
-    EM_COUPLING, FERMI_CONSTANT, HIGGS_MASS, HIGGS_VEV, PhysicsError, SIN2_THETA_W, TOP_MASS,
-    W_MASS, Z_MASS,
+    EM_COUPLING, EM_COUPLING_MZ, FERMI_CONSTANT, GEV2_TO_NB, GEV2_TO_PB, HIGGS_MASS, HIGGS_VEV,
+    PhysicsError, SIN2_THETA_W, TOP_MASS, W_MASS, Z_MASS, Z_PARTIAL_WIDTH_EE, Z_PARTIAL_WIDTH_HAD,
 };
 use std::f64::consts::PI;
 
@@ -102,6 +102,27 @@ impl ElectroweakParams {
         }
     }
 
+    /// Creates Standard Model parameters using running coupling at Z pole.
+    ///
+    /// Uses α(M_Z) ≈ 1/128 instead of low-energy α ≈ 1/137.
+    /// This produces W and Z masses within ~1 GeV of PDG values:
+    /// - M_W ≈ 80.3 GeV (vs PDG 80.377 GeV)
+    /// - M_Z ≈ 91.6 GeV (vs PDG 91.187 GeV)
+    pub fn standard_model_precision() -> Self {
+        let sin2 = SIN2_THETA_W;
+        let cos2 = 1.0 - sin2;
+        let sin_theta = sin2.sqrt();
+        let cos_theta = cos2.sqrt();
+        let e = EM_COUPLING_MZ; // Running coupling at M_Z
+
+        Self {
+            sin2_theta_w: sin2,
+            higgs_vev: HIGGS_VEV,
+            g: e / sin_theta,
+            g_prime: e / cos_theta,
+        }
+    }
+
     pub fn with_mixing_angle(sin2_theta_w: f64) -> Result<Self, PhysicsError> {
         if sin2_theta_w <= 0.0 || sin2_theta_w >= 1.0 {
             return Err(PhysicsError::DimensionMismatch(format!(
@@ -135,6 +156,17 @@ impl ElectroweakParams {
         (mw * mw) / (mz * mz * self.cos2_theta_w())
     }
 
+    /// Computes ρ parameter using internally generated masses.
+    ///
+    /// Unlike `rho_parameter()` which compares with PDG masses,
+    /// this uses `w_mass_computed()` and `z_mass_computed()`,
+    /// guaranteeing ρ = 1.0 by construction (tree-level SM relation).
+    pub fn rho_parameter_computed(&self) -> f64 {
+        let mw = self.w_mass_computed();
+        let mz = self.z_mass_computed();
+        (mw * mw) / (mz * mz * self.cos2_theta_w())
+    }
+
     pub fn higgs_quartic(&self) -> f64 {
         HIGGS_MASS * HIGGS_MASS / (2.0 * self.higgs_vev * self.higgs_vev)
     }
@@ -157,33 +189,52 @@ impl ElectroweakParams {
         }
         let s = center_of_mass_energy * center_of_mass_energy;
         let sigma = FERMI_CONSTANT * FERMI_CONSTANT * s / PI;
-        let gev2_to_pb = 0.3894e6;
-        Ok(sigma * gev2_to_pb)
+        Ok(sigma * GEV2_TO_PB)
     }
 
-    /// Computes the Breit-Wigner cross section near the Z resonance.
+    /// Computes the physical Breit-Wigner cross section for e⁺e⁻ → Z → hadrons.
+    ///
+    /// Returns cross-section in **nanobarns** (nb).
+    ///
+    /// # Formula
+    /// ```text
+    /// σ(s) = (12π/M_Z²) · (s · Γ_ee · Γ_had) / ((s - M_Z²)² + s² Γ_Z² / M_Z²)
+    /// ```
+    /// At the Z pole (√s = M_Z), this gives σ_peak ≈ 41.5 nb for hadronic final states.
+    ///
+    /// # Partial Widths (PDG 2024)
+    /// - Γ_ee = 83.91 MeV (leptonic)
+    /// - Γ_had = 1744.4 MeV (hadronic)
+    /// - Γ_Z = 2495.2 MeV (total)
     pub fn z_resonance_cross_section(
         &self,
         center_of_mass_energy: f64,
         width: f64,
     ) -> Result<f64, PhysicsError> {
+        if center_of_mass_energy <= 0.0 {
+            return Err(PhysicsError::DimensionMismatch(
+                "Energy must be positive".into(),
+            ));
+        }
+
         let s = center_of_mass_energy * center_of_mass_energy;
         let mz = Z_MASS;
         let mz2 = mz * mz;
-        let gamma2 = width * width;
+        let gamma_z = width; // Total width in GeV
 
-        let denominator = (s - mz2).powi(2) + mz2 * gamma2;
-        if denominator.abs() < 1e-12 {
+        // Relativistic Breit-Wigner with s-dependent width
+        let denominator = (s - mz2).powi(2) + s * s * gamma_z * gamma_z / mz2;
+        if denominator.abs() < 1e-30 {
             return Err(PhysicsError::NumericalInstability(
                 "Singularity in cross section".into(),
             ));
         }
 
-        // Relativistic Breit-Wigner form
-        // σ(s) ∝ s / ((s - Mz²)² + Mz²Γ²)
-        // Peak normalization implies unit amplitude at resonance for shape.
-        // For physical cross-section, we need partial widths, but returning shape factor is sufficient here.
-        Ok(s / denominator)
+        // Cross-section in GeV⁻² (using Z_PARTIAL_WIDTH_EE and Z_PARTIAL_WIDTH_HAD)
+        let sigma_gev2 =
+            12.0 * PI * Z_PARTIAL_WIDTH_EE * Z_PARTIAL_WIDTH_HAD * s / (mz2 * denominator);
+
+        Ok(sigma_gev2 * GEV2_TO_NB)
     }
 
     pub fn w_mass(&self) -> f64 {

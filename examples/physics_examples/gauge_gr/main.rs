@@ -215,7 +215,10 @@ fn stage_curvature_invariants(mut input: SpaceTimeData, _: (), _: Option<()>) ->
         // Note: We use the analytic K here, but gr.kretschmann_curvature_radius()
         // would give the same result if Riemann was in geometric [4,4,4,4] form.
         let curvature_radius = 1.0 / kretschmann.powf(0.25);
-        println!("  → Curvature radius: {:.3e} m (via K^{{-1/4}})", curvature_radius);
+        println!(
+            "  → Curvature radius: {:.3e} m (via K^{{-1/4}})",
+            curvature_radius
+        );
         println!();
 
         input.kretschmann = kretschmann;
@@ -265,13 +268,22 @@ fn stage_geodesic_analysis(mut input: SpaceTimeData, _: (), _: Option<()>) -> Sp
 
         // Also show the geometric deviation for reference
         let deviation_geometric = tidal_acceleration / (c * c);
-        println!("  Geodesic deviation:      {:.6e} m⁻² (geometric)", deviation_geometric);
-        println!("  Tidal acceleration:      {:.6e} m/s² (SI)", tidal_acceleration);
+        println!(
+            "  Geodesic deviation:      {:.6e} m⁻² (geometric)",
+            deviation_geometric
+        );
+        println!(
+            "  Tidal acceleration:      {:.6e} m/s² (SI)",
+            tidal_acceleration
+        );
 
         // Spaghettification distance (where tidal force ~ g)
         let g = 9.8; // Earth gravity
         if tidal_acceleration > g {
-            println!("  → Tidal force (at 1m) exceeds Earth gravity ({:.1} g)", tidal_acceleration / g);
+            println!(
+                "  → Tidal force (at 1m) exceeds Earth gravity ({:.1} g)",
+                tidal_acceleration / g
+            );
         }
 
         input.deviation = deviation_geometric;
