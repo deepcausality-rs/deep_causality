@@ -179,11 +179,11 @@ fn test_data_discretizer_equal_frequency_strategy_by_index() {
 #[test]
 fn test_data_discretizer_equal_frequency_strategy_empty_data() {
     let discretizer = DataDiscretizer;
-    let tensor = CausalTensor::new(vec![], vec![0, 0]).unwrap();
+    let tensor = CausalTensor::new(Vec::<f64>::new(), vec![0, 0]).unwrap();
     let config = PreprocessConfig::new(BinningStrategy::EqualFrequency, 2, ColumnSelector::All);
 
     let result = discretizer.process(tensor, &config).unwrap();
-    let expected = CausalTensor::new(vec![], vec![0, 0]).unwrap();
+    let expected = CausalTensor::new(Vec::<f64>::new(), vec![0, 0]).unwrap();
     assert_eq!(result.as_slice(), expected.as_slice());
 }
 

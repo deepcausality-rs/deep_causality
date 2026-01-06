@@ -149,7 +149,7 @@ fn test_csv_data_loader_load_empty_file() {
     let config = DataLoaderConfig::Csv(csv_config);
 
     let result = loader.load(path, &config).unwrap();
-    let expected = CausalTensor::new(vec![], vec![0, 0]).unwrap();
+    let expected = CausalTensor::new(Vec::<f64>::new(), vec![0, 0]).unwrap();
 
     assert_eq!(result.as_slice(), expected.as_slice());
     assert_eq!(result.shape(), expected.shape());
