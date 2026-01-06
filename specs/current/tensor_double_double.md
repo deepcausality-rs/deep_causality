@@ -29,26 +29,29 @@ number as the unevaluated sum of two `f64`s:
 $$ x = x_{hi} + x_{lo} $$
 where $|x_{lo}| \le 0.5 \text{ulp}(x_{hi})$.
 
-### 1.3 Scope and Limitations
+### 1.3 Scope 
 
-| Integration     | Status               | Note                                                                         |
-|-----------------|----------------------|------------------------------------------------------------------------------|
-| **CPU Backend** | ✅ Supported          | Full support via `CpuBackend` and `InternalCpuTensor`.                       |
-| **MLX Backend** | ⚠️ Supported (Lossy) | Downcast to `f32` for GPU ops, upcast result. Precision loss warnings apply. |
-| **Traits**      | ✅ Supported          | Implements `Field`, `RealField`, `Float`, `Num`, `TensorData`.               |
+| Integration     | Status               | Note                                                                               |
+|-----------------|----------------------|------------------------------------------------------------------------------------|
+| **CPU Backend** | ✅ Supported          | Full support via `CpuBackend` and `InternalCpuTensor`.                             |
+| **MLX Backend** | ⚠️ Supported (Lossy) | Downcast to `f32` for GPU ops, upcast result. Precision loss warnings apply.       |
+| **Traits**      | ✅ Supported          | Implements `Field`, `RealField`, `Float`, `Num`, `TensorData`, `Debug`, `Display`. |
 
 ---
 
 ## 2. Architecture
 
+The `RealField` trait is the top-level interface for `DoubleFloat`. It aggregates a rigorous algebraic hierarchy ensuring the type behaves like a real number.
+
 ```mermaid
 classDiagram
     class DoubleFloat {
-        +f64 hi
-        +f64 lo
-        +new(hi, lo)
-        +add(other)
-        +mul(other)
+        +hi: f64
+        +lo: f64
+    }
+
+    class TensorData {
+        <<Interface>>
     }
 
     class Float {
@@ -57,19 +60,109 @@ classDiagram
         +exp()
     }
 
+    class RealField {
+        <<Interface>>
+        +nan()
+        +sin()
+        +exp()
+    }
+    
     class Field {
         <<Interface>>
-        +inv()
+    }
+    
+    class CommutativeRing {
+        <<Interface>>
+        <<Marker>>
+    }
+    
+    class Ring {
+        <<Interface>>
+        <<Marker>>
+    }
+    
+    class Distributive {
+        <<Interface>>
+        <<Marker>>
+    }
+    
+    class AbelianGroup {
+        <<Interface>>
+        <<Marker>>
+    }
+    
+    class AddGroup {
+        <<Interface>>
+    }
+    
+    class InvMonoid {
+        <<Interface>>
+        +inverse()
+    }
+    
+    class MulMonoid {
+        <<Interface>>
+    }
+    
+    class One {
+        <<Interface>>
+        +one()
     }
 
-    class TensorData {
+    class Zero {
+        <<Interface>>
+        +zero()
+    }
+
+    class Associative {
+        <<Interface>>
+        <<Marker>>
+    }
+    
+    class Commutative {
+        <<Interface>>
+        <<Marker>>
+    }
+
+    class MulMagma {
         <<Interface>>
     }
 
-    DoubleFloat ..|> Float
-    DoubleFloat ..|> Field
-    DoubleFloat ..|> TensorData
+    DoubleFloat ..|> Float  : implements
+    DoubleFloat ..|> TensorData : implements
+    DoubleFloat ..|> RealField : implements
+    
+    RealField --|> Field : extends
+    RealField --|> PartialOrd : extends
+    RealField --|> Neg : extends
+    RealField --|> Copy : extends
+    
+    Field --|> CommutativeRing : extends
+    Field --|> InvMonoid : extends
+    
+    CommutativeRing --|> Ring : extends
+    CommutativeRing --|> Commutative : extends
+    
+    Ring --|> AbelianGroup : extends
+    Ring --|> MulMonoid : extends
+    Ring --|> Distributive : extends
+    
+    AbelianGroup --|> AddGroup : extends
+    
+    AddGroup --|> Add : extends
+    AddGroup --|> Sub : extends
+    AddGroup --|> Zero : extends
+    
+    InvMonoid --|> MulMonoid : extends
+    InvMonoid --|> Div : extends
+    
+    MulMonoid --|> MulMagma : extends
+    MulMonoid --|> One : extends
+    MulMonoid --|> Associative : extends
+
+    MulMagma --|> Mul : extends
 ```
+
 
 ### 2.1 Mathematical algorithms
 
