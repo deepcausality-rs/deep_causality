@@ -152,15 +152,22 @@ fn stage_z_resonance(mut state: EwState, _: (), _: Option<()>) -> PropagatingEff
     println!("────────────────────────────────");
 
     if let Some(ew) = state.ew {
-        // Use computed M_Z and central Z_WIDTH for consistency
+        // Compute widths from first principles (The "Invariant Width" Discovery)
+        let total_width = ew.z_total_width_computed();
+        let hadronic_width = ew.z_hadronic_width_computed();
+        let neutrino_width = 3.0 * ew.z_partial_width_fermion(false, 0.5, 0.0);
         let mz = state.z_mass_calc;
-        let width = deep_causality_physics::Z_WIDTH;
 
-        match ew.z_resonance_cross_section(mz, width) {
+        match ew.z_resonance_cross_section(mz, total_width) {
             Ok(sigma) => {
                 state.z_peak_sigma = sigma;
-                println!("  Peak Energy:        {:.2} GeV", mz);
-                println!("  Z Width:            {:.3} GeV", width);
+                println!("  Peak Energy (M_Z):  {:.2} GeV", mz);
+                println!("  Total Width (Γ_Z):  {:.3} GeV", total_width);
+                println!("  Hadronic (Γ_had):   {:.3} GeV", hadronic_width);
+                println!(
+                    "  Invisible (Γ_inv):  {:.3} GeV (Neutrinos)",
+                    neutrino_width
+                );
                 println!("  Peak Cross-sec:     {:.2} nb", sigma);
                 println!();
             }

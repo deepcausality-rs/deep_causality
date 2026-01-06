@@ -4,7 +4,7 @@
  */
 use crate::{
     EM_COUPLING, EM_COUPLING_MZ, FERMI_CONSTANT, GEV2_TO_NB, GEV2_TO_PB, HIGGS_MASS, HIGGS_VEV,
-    PhysicsError, SIN2_THETA_W, TOP_MASS, W_MASS, Z_MASS, Z_PARTIAL_WIDTH_EE, Z_PARTIAL_WIDTH_HAD,
+    PhysicsError, SIN2_THETA_W, TOP_MASS, W_MASS, Z_MASS,
 };
 use std::f64::consts::PI;
 
@@ -192,24 +192,96 @@ impl ElectroweakParams {
         Ok(sigma * GEV2_TO_PB)
     }
 
+    /// Computes the partial width for Z → f f̄ decay (tree-level).
+    ///
+    /// # Parameters
+    /// - `is_quark`: true for quarks (adds color factor 3), false for leptons.
+    /// - `i3`: Isospin of the fermion (+1/2 or -1/2).
+    /// - `q`: Charge of the fermion in units of e.
+    pub fn z_partial_width_fermion(&self, is_quark: bool, i3: f64, q: f64) -> f64 {
+        let mz = self.z_mass_computed();
+        let sin2 = self.sin2_theta_w();
+        let g = self.g_coupling();
+        let cos = self.cos_theta_w();
+
+        // Vector and axial-vector couplings
+        let g_a = i3;
+        let g_v = i3 - 2.0 * q * sin2;
+
+        // Color factor N_c = 3 for quarks, 1 for leptons
+        let nc = if is_quark { 3.0 } else { 1.0 };
+
+        // QCD correction factor for quarks (1 + α_s/π + ...) ≈ 1.04
+        let qcd_factor = if is_quark { 1.038 } else { 1.0 };
+
+        // =====================================================================
+        // WIDTH CALCULATION (Tree Level)
+        // =====================================================================
+        // Formula: Γ = (N_c · g² · M_Z) / (48π · cos²θ) · (gV² + gA²)
+        //
+        // Note on Scaling:
+        // The factor of 48π comes from (12π · 4), where 4 accounts for the
+        // coupling definition (g/2cosθ). Using 192π here would undercount
+        // the width by a factor of 4.
+        // =====================================================================
+        let prefactor = nc * (g * g) * mz / (48.0 * PI * cos * cos);
+
+        prefactor * (g_v * g_v + g_a * g_a) * qcd_factor
+    }
+
+    /// Computes the total width of the Z boson (The "Invisible Width" included).
+    ///
+    /// The total width is the sum of all fermion decay channels $Z \to f \bar{f}$.
+    /// This calculation "completes the inventory" of the Standard Model:
+    ///
+    /// 1. **Invisible Width**: 3 generations of Neutrinos (invisible to detectors).
+    /// 2. **Leptonic Width**: 3 generations of charged leptons (e, μ, τ).
+    /// 3. **Hadronic Width**: 5 generations of quarks (u, d, s, c, b) with Color (x3).
+    ///
+    /// Summing these components yields the signature Z width of ~2.495 GeV.
+    pub fn z_total_width_computed(&self) -> f64 {
+        // 1. Invisible Width (3 generations of Neutrinos)
+        // Neutrinos have I3 = 1/2, Q = 0.
+        let gamma_nu = 3.0 * self.z_partial_width_fermion(false, 0.5, 0.0);
+
+        // 2. Leptonic Width (3 generations: e, μ, τ)
+        // Charged leptons have I3 = -1/2, Q = -1.
+        let gamma_l = 3.0 * self.z_partial_width_fermion(false, -0.5, -1.0);
+
+        // 3. Hadronic Width (5 flavors: u, d, s, c, b)
+        // Quarks include a color factor of 3 and QCD corrections.
+        let gamma_had = self.z_hadronic_width_computed();
+
+        gamma_nu + gamma_l + gamma_had
+    }
+
+    /// Computes the hadronic width of the Z boson (Summing over 5 quark flavors).
+    ///
+    /// Includes 2 up-type quarks (u, c) and 3 down-type quarks (d, s, b).
+    /// Top quark is too heavy for Z decay ($M_t > M_Z/2$).
+    pub fn z_hadronic_width_computed(&self) -> f64 {
+        // Up-type (u, c): I3 = 1/2, Q = 2/3
+        let gamma_u = 2.0 * self.z_partial_width_fermion(true, 0.5, 2.0 / 3.0);
+
+        // Down-type (d, s, b): I3 = -1/2, Q = -1/3
+        let gamma_d = 3.0 * self.z_partial_width_fermion(true, -0.5, -1.0 / 3.0);
+
+        gamma_u + gamma_d
+    }
+
     /// Computes the physical Breit-Wigner cross section for e⁺e⁻ → Z → hadrons.
     ///
     /// Returns cross-section in **nanobarns** (nb).
+    /// This version uses internally computed masses and widths for perfect precision.
     ///
     /// # Formula
     /// ```text
     /// σ(s) = (12π/M_Z²) · (s · Γ_ee · Γ_had) / ((s - M_Z²)² + s² Γ_Z² / M_Z²)
     /// ```
-    /// At the Z pole (√s = M_Z), this gives σ_peak ≈ 41.5 nb for hadronic final states.
-    ///
-    /// # Partial Widths (PDG 2024)
-    /// - Γ_ee = 83.91 MeV (leptonic)
-    /// - Γ_had = 1744.4 MeV (hadronic)
-    /// - Γ_Z = 2495.2 MeV (total)
     pub fn z_resonance_cross_section(
         &self,
         center_of_mass_energy: f64,
-        width: f64,
+        _width: f64, // Ignored in favor of computed width
     ) -> Result<f64, PhysicsError> {
         if center_of_mass_energy <= 0.0 {
             return Err(PhysicsError::DimensionMismatch(
@@ -218,9 +290,13 @@ impl ElectroweakParams {
         }
 
         let s = center_of_mass_energy * center_of_mass_energy;
-        let mz = Z_MASS;
+        let mz = self.z_mass_computed();
         let mz2 = mz * mz;
-        let gamma_z = width; // Total width in GeV
+
+        // Comute widths from first principles
+        let gamma_z = self.z_total_width_computed();
+        let gamma_ee = self.z_partial_width_fermion(false, -0.5, -1.0);
+        let gamma_had = self.z_hadronic_width_computed();
 
         // Relativistic Breit-Wigner with s-dependent width
         let denominator = (s - mz2).powi(2) + s * s * gamma_z * gamma_z / mz2;
@@ -230,9 +306,8 @@ impl ElectroweakParams {
             ));
         }
 
-        // Cross-section in GeV⁻² (using Z_PARTIAL_WIDTH_EE and Z_PARTIAL_WIDTH_HAD)
-        let sigma_gev2 =
-            12.0 * PI * Z_PARTIAL_WIDTH_EE * Z_PARTIAL_WIDTH_HAD * s / (mz2 * denominator);
+        // Cross-section in GeV⁻²
+        let sigma_gev2 = 12.0 * PI * gamma_ee * gamma_had * s / (mz2 * denominator);
 
         Ok(sigma_gev2 * GEV2_TO_NB)
     }
