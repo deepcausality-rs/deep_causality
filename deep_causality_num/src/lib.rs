@@ -16,6 +16,7 @@ mod identity;
 pub mod num;
 mod ops;
 pub mod utils_tests;
+mod float_double;
 
 // Alias types
 pub use crate::alias::{Matrix3, Vector3};
