@@ -9,16 +9,16 @@
 //! unevaluated sum of two `f64`s, achieving approximately 31 decimal digits
 //! of precision.
 
+mod attributes;
+mod debug;
+mod display;
+mod from;
+mod getters;
 mod ops_arithmetic;
 mod ops_comparison;
 mod traits_algebra;
 mod traits_float;
 mod traits_num;
 pub mod types;
-mod debug;
-mod display;
-mod from;
-mod getters;
-mod attributes;
 
 pub use types::DoubleFloat;

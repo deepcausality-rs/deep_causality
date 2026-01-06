@@ -6,7 +6,7 @@
 //! Trait compliance tests for `DoubleFloat`.
 
 use deep_causality_num::{
-    AbelianGroup, Associative, Commutative, DivisionAlgebra, Distributive, DoubleFloat, Field,
+    AbelianGroup, Associative, Commutative, Distributive, DivisionAlgebra, DoubleFloat, Field,
     Float, Num, NumCast, One, RealField, ToPrimitive, Zero,
 };
 
@@ -95,15 +95,12 @@ fn test_is_normal() {
 #[test]
 fn test_classify() {
     use core::num::FpCategory;
+    assert_eq!(DoubleFloat::from_f64(1.0).classify(), FpCategory::Normal);
+    assert_eq!(DoubleFloat::from_f64(0.0).classify(), FpCategory::Zero);
     assert_eq!(
-        DoubleFloat::from_f64(1.0).classify(),
-        FpCategory::Normal
+        <DoubleFloat as Float>::infinity().classify(),
+        FpCategory::Infinite
     );
-    assert_eq!(
-        DoubleFloat::from_f64(0.0).classify(),
-        FpCategory::Zero
-    );
-    assert_eq!(<DoubleFloat as Float>::infinity().classify(), FpCategory::Infinite);
     assert_eq!(<DoubleFloat as Float>::nan().classify(), FpCategory::Nan);
 }
 

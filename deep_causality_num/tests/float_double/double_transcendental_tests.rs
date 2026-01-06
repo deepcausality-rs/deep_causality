@@ -368,9 +368,18 @@ fn test_signum() {
 
 #[test]
 fn test_clamp() {
-    assert_eq!(<DoubleFloat as Float>::clamp(d(5.0), d(0.0), d(10.0)), d(5.0));
-    assert_eq!(<DoubleFloat as Float>::clamp(d(-5.0), d(0.0), d(10.0)), d(0.0));
-    assert_eq!(<DoubleFloat as Float>::clamp(d(15.0), d(0.0), d(10.0)), d(10.0));
+    assert_eq!(
+        <DoubleFloat as Float>::clamp(d(5.0), d(0.0), d(10.0)),
+        d(5.0)
+    );
+    assert_eq!(
+        <DoubleFloat as Float>::clamp(d(-5.0), d(0.0), d(10.0)),
+        d(0.0)
+    );
+    assert_eq!(
+        <DoubleFloat as Float>::clamp(d(15.0), d(0.0), d(10.0)),
+        d(10.0)
+    );
 }
 
 #[test]

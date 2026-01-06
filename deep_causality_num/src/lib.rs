@@ -58,8 +58,8 @@ pub use crate::complex::quaternion_number::{Quaternion, Quaternion32, Quaternion
 
 // Float number types
 pub use crate::float::Float;
-pub use crate::float_option::FloatOption;
 pub use crate::float_double::DoubleFloat;
+pub use crate::float_option::FloatOption;
 
 //  General numeric traits
 pub use crate::identity::one::{ConstOne, One};

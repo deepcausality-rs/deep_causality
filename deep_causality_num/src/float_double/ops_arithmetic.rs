@@ -5,8 +5,10 @@
 
 //! Arithmetic operations for `DoubleFloat` using Error-Free Transformations.
 
-use crate::float_double::types::{quick_two_sum, two_prod, two_sum, DoubleFloat};
-use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign};
+use crate::float_double::types::{DoubleFloat, quick_two_sum, two_prod, two_sum};
+use core::ops::{
+    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
+};
 
 // =============================================================================
 // Negation

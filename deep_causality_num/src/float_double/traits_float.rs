@@ -8,8 +8,8 @@
 //! Implements transcendental functions using high-precision Taylor series
 //! with range reduction techniques.
 
-use crate::float_double::types::DoubleFloat;
 use crate::Float;
+use crate::float_double::types::DoubleFloat;
 use core::num::FpCategory;
 
 // =============================================================================
@@ -394,11 +394,7 @@ impl Float for DoubleFloat {
         if other.is_nan() {
             return self;
         }
-        if self > other {
-            self
-        } else {
-            other
-        }
+        if self > other { self } else { other }
     }
 
     fn min(self, other: Self) -> Self {
@@ -408,11 +404,7 @@ impl Float for DoubleFloat {
         if other.is_nan() {
             return self;
         }
-        if self < other {
-            self
-        } else {
-            other
-        }
+        if self < other { self } else { other }
     }
 
     fn clamp(self, min: Self, max: Self) -> Self {
@@ -546,20 +538,20 @@ impl Float for DoubleFloat {
         if (self.hi() + 1.0).abs() < 1e-15 && self.lo().abs() < 1e-30 {
             return -Self::FRAC_PI_4;
         }
-        
+
         // Use argument reduction: atan(x) = 2*atan(x/(1+sqrt(1+x^2)))
         // This reduces |x| to improve Taylor series convergence
         let x = self;
         let x2 = x * x;
         let sqrt_term = (Self::from_f64(1.0) + x2).sqrt();
         let reduced = x / (Self::from_f64(1.0) + sqrt_term);
-        
+
         // Taylor series for reduced argument (converges faster)
         let y = reduced;
         let y2 = y * y;
         let mut sum = y;
         let mut term = y;
-        
+
         for i in 1..30 {
             let n = 2 * i + 1;
             term = -term * y2;
@@ -569,7 +561,7 @@ impl Float for DoubleFloat {
                 break;
             }
         }
-        
+
         // Undo the argument reduction: multiply by 2
         sum * Self::from_f64(2.0)
     }
@@ -588,7 +580,7 @@ impl Float for DoubleFloat {
 
         let ratio = self / other;
         let atan_ratio = ratio.atan();
-        
+
         // Adjust based on quadrant
         if other.hi >= 0.0 {
             atan_ratio

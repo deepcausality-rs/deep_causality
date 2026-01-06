@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::fmt;
 use crate::DoubleFloat;
+use std::fmt;
 
 impl fmt::Debug for DoubleFloat {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
