@@ -66,3 +66,7 @@ pub use crate::identity::one::{ConstOne, One};
 pub use crate::identity::zero::{ConstZero, Zero};
 pub use crate::num::Num;
 pub use crate::ops::num_ops::*;
+
+// Integer types
+mod integer;
+pub use crate::integer::{Integer, SignedInt, UnsignedInt};

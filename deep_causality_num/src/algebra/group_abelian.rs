@@ -38,6 +38,8 @@ impl AbelianGroup for u16 {}
 impl AbelianGroup for u32 {}
 impl AbelianGroup for u64 {}
 impl AbelianGroup for u128 {}
+impl AbelianGroup for isize {}
+impl AbelianGroup for usize {}
 
 // Note: Complex, Dual, and MultiVector (Vector addition) are also Abelian.
 // Impl this trait for them in their respective crates.
