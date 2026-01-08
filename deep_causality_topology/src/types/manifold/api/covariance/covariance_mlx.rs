@@ -13,7 +13,7 @@ use crate::{Manifold, TopologyError};
 #[allow(dead_code)]
 const GPU_THRESHOLD: usize = 1000;
 
-impl<T> Manifold<T>
+impl<C, T> Manifold<C, T>
 where
     T: Into<f64> + Copy,
 {

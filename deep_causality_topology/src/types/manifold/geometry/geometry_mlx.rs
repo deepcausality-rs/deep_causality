@@ -8,9 +8,13 @@
 #![cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
 
 use crate::{Manifold, Simplex, TopologyError};
+use deep_causality_num::Float;
 use deep_causality_tensor::CausalTensorError;
 
-impl<T> Manifold<T> {
+impl<T, D> Manifold<T, D>
+where
+    T: Float,
+{
     /// MLX GPU-accelerated implementation of simplex volume squared.
     ///
     /// Uses QR decomposition for determinant calculation on GPU.
@@ -102,7 +106,8 @@ impl<T> Manifold<T> {
                     let length = metric.edge_lengths.get(&[edge_index]).ok_or(
                         TopologyError::IndexOutOfBounds("Edge length not found".to_string()),
                     )?;
-                    edge_lengths.insert((v1, v2), length.powi(2));
+                    let val = length.to_f64().unwrap_or(0.0);
+                    edge_lengths.insert((v1, v2), val.powi(2));
                 } else {
                     return Err(TopologyError::SimplexNotFound());
                 }

@@ -12,7 +12,7 @@ use deep_causality_tensor::{
     CausalTensorError, MlxBackend, MlxCausalTensor, Tensor, TensorBackend,
 };
 
-impl<T> Manifold<T>
+impl<C, T> Manifold<C, T>
 where
     T: Into<f64> + Copy,
 {
@@ -30,7 +30,7 @@ where
         }
 
         // Convert to f64 then downcast to f32 for GPU
-        let values: Vec<f32> = data.iter().map(|&x| x.into() as f32).collect();
+        let values: Vec<f32> = data.iter().map(|&x: &T| x.into() as f32).collect();
 
         // Create MLX tensor
         let mlx_data = MlxCausalTensor::<f32>::new(values, vec![n])
