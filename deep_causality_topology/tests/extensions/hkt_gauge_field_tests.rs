@@ -197,8 +197,12 @@ fn test_parametric_monad_ibind_empty() {
 
 #[test]
 fn test_parametric_monad_ibind_with_data() {
-    let hkt: GaugeFieldHKT<i32, i32, f64, f64> =
-        GaugeFieldHKT::from_data(vec![1.0, 2.0], vec![3.0, 4.0], vec![1, 2, 1], vec![1, 1, 1, 2]);
+    let hkt: GaugeFieldHKT<i32, i32, f64, f64> = GaugeFieldHKT::from_data(
+        vec![1.0, 2.0],
+        vec![3.0, 4.0],
+        vec![1, 2, 1],
+        vec![1, 1, 1, 2],
+    );
 
     let result: GaugeFieldHKT<i32, i64, String, f64> =
         GaugeFieldWitness::ibind(hkt, |_x: f64| GaugeFieldHKT::empty());
@@ -352,8 +356,7 @@ fn test_gauge_rotation_invalid_shapes() {
     let conn = CausalTensor::from_vec(vec![1.0, 2.0], &[2]);
     let fs = CausalTensor::from_vec(vec![1.0], &[1]);
 
-    let (rotated_conn, rotated_fs) =
-        GaugeFieldWitness::gauge_rotation(&conn, &fs, 0, 1, 1.0, 0.0);
+    let (rotated_conn, rotated_fs) = GaugeFieldWitness::gauge_rotation(&conn, &fs, 0, 1, 1.0, 0.0);
 
     // Should return empty tensors
     assert_eq!(rotated_conn.shape(), &[0]);
@@ -367,8 +370,7 @@ fn test_gauge_rotation_invalid_indices() {
     let fs = CausalTensor::from_vec(vec![1.0; 32], &[1, 4, 4, 2]);
 
     // index_a = 5 is out of bounds for lie_dim = 2
-    let (rotated_conn, rotated_fs) =
-        GaugeFieldWitness::gauge_rotation(&conn, &fs, 5, 0, 1.0, 0.0);
+    let (rotated_conn, rotated_fs) = GaugeFieldWitness::gauge_rotation(&conn, &fs, 5, 0, 1.0, 0.0);
 
     // Should return empty tensors
     assert_eq!(rotated_conn.shape(), &[0]);

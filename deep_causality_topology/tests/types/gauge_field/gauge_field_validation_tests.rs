@@ -6,7 +6,7 @@
 use deep_causality_metric::Metric;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
-    GaugeField, GaugeGroup, Lorentz, Manifold, Simplex, SimplicialComplexBuilder, TopologyError,
+    GaugeField, GaugeGroup, Manifold, Simplex, SimplicialComplexBuilder, TopologyError,
     TopologyErrorEnum, U1,
 };
 
@@ -14,9 +14,11 @@ use deep_causality_topology::{
 fn create_test_data() -> (Manifold<f64, f64>, CausalTensor<f64>) {
     // Create a 0D manifold (single point) which is a valid manifold
     let mut builder = SimplicialComplexBuilder::new(0);
-    builder.add_simplex(Simplex::new(vec![0])).expect("Adding simplex");
+    builder
+        .add_simplex(Simplex::new(vec![0]))
+        .expect("Adding simplex");
     let complex = builder.build::<f64>().expect("Building complex");
-    
+
     // 1 simplex (vertex 0)
     let data = CausalTensor::zeros(&[1]);
     let manifold = Manifold::new(complex, data, 0).expect("Manifold");
@@ -36,12 +38,8 @@ fn test_gauge_field_new_connection_mismatch() {
     let connection = CausalTensor::zeros(&[1, 2, 1]); // Wrong shape
     let field_strength = CausalTensor::zeros(&[1, 4, 4, 1]); // Correct shape
 
-    let result: Result<GaugeField<U1, f64, f64, f64>, _> = GaugeField::new(
-        manifold,
-        Metric::Minkowski(4),
-        connection,
-        field_strength,
-    );
+    let result: Result<GaugeField<U1, f64, f64, f64>, _> =
+        GaugeField::new(manifold, Metric::Minkowski(4), connection, field_strength);
 
     assert!(result.is_err());
     match result {
@@ -59,12 +57,8 @@ fn test_gauge_field_new_field_strength_mismatch() {
     let connection = CausalTensor::zeros(&[1, 4, 1]); // Correct
     let field_strength = CausalTensor::zeros(&[1, 2, 2, 1]); // Wrong shape/elements => 4 elements
 
-    let result: Result<GaugeField<U1, f64, f64, f64>, _> = GaugeField::new(
-        manifold,
-        Metric::Minkowski(4),
-        connection,
-        field_strength,
-    );
+    let result: Result<GaugeField<U1, f64, f64, f64>, _> =
+        GaugeField::new(manifold, Metric::Minkowski(4), connection, field_strength);
 
     assert!(result.is_err());
     match result {
@@ -109,24 +103,19 @@ fn test_metric_conventions_custom() {
     // Metric::Minkowski(4) typically defaults to one convention.
     // Let's rely on what we get and verify consistency.
     let metric = Metric::Minkowski(4);
-    
-    let field = GaugeField::<U1, f64, f64, f64>::new(
-        manifold,
-        metric,
-        conn,
-        fs,
-    ).expect("Field");
+
+    let field = GaugeField::<U1, f64, f64, f64>::new(manifold, metric, conn, fs).expect("Field");
 
     // Check signatures directly
     let s0 = field.metric().sign_of_sq(0);
     let s1 = field.metric().sign_of_sq(1);
 
     if s0 == 1 && s1 == -1 {
-         assert!(field.is_west_coast());
-         assert!(!field.is_east_coast());
+        assert!(field.is_west_coast());
+        assert!(!field.is_east_coast());
     } else if s0 == -1 && s1 == 1 {
-         assert!(field.is_east_coast());
-         assert!(!field.is_west_coast());
+        assert!(field.is_east_coast());
+        assert!(!field.is_west_coast());
     } else {
         // Unknown or Euclidean
         assert!(!field.is_east_coast());

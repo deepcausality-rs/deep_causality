@@ -111,7 +111,8 @@ fn test_manifold_bind() {
     let manifold: Manifold<f64, f64> = ManifoldWitness::pure(5.0);
 
     // Bind: For each value, create a manifold with that value doubled using Pure
-    let bound: Manifold<f64, f64> = ManifoldWitness::bind(manifold, |x| ManifoldWitness::pure(x * 2.0));
+    let bound: Manifold<f64, f64> =
+        ManifoldWitness::bind(manifold, |x| ManifoldWitness::pure(x * 2.0));
 
     // The result manifold should have data from the bound operation
     assert!(bound.data().len() > 0);
@@ -135,4 +136,3 @@ fn test_manifold_apply_via_functor() {
 // with empty data, which is not possible via the public API (constructors properly validate data size).
 // The panic path in extract() is tested implicitly by attempting to extract from an out-of-bounds cursor,
 // but creating such a state is also prevented by the constructor.
-

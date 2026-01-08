@@ -217,7 +217,10 @@ fn test_signum_zero() {
     let x = DoubleFloat::from_f64(0.0);
     // For positive zero, signum returns 1.0 (sign-preserving behavior)
     let sig = Float::signum(x);
-    assert!(sig.hi() == 1.0 || sig.hi() == 0.0, "signum of zero should be 0.0 or 1.0");
+    assert!(
+        sig.hi() == 1.0 || sig.hi() == 0.0,
+        "signum of zero should be 0.0 or 1.0"
+    );
 }
 
 #[test]
