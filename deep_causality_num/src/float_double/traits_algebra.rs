@@ -11,7 +11,7 @@
 //! - `AbelianGroup`, `DivisionAlgebra`, `RealField` (algebra traits)
 //! - Marker traits (`Associative`, `Commutative`, `Distributive`)
 
-use crate::float_double::types::DoubleFloat;
+use crate::DoubleFloat;
 use crate::{
     AbelianGroup, Associative, Commutative, Distributive, DivisionAlgebra, Float, Num, One,
     RealField, Zero,

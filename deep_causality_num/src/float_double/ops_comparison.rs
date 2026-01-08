@@ -5,7 +5,7 @@
 
 //! Comparison operations for `DoubleFloat`.
 
-use crate::float_double::types::DoubleFloat;
+use crate::float_double::DoubleFloat;
 use core::cmp::Ordering;
 
 // =============================================================================
