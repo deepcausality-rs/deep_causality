@@ -15,7 +15,21 @@
 //! 4. **Resonance**: Compute Z pole cross-section
 
 use deep_causality_core::{CausalEffectPropagationProcess, EffectValue, PropagatingEffect};
+use deep_causality_num::{DoubleFloat, RealField};
 use deep_causality_physics::ElectroweakParams;
+
+// =============================================================================
+// FLOAT TYPE CONFIGURATION
+// =============================================================================
+
+type FloatType = DoubleFloat;
+
+/// Macro to convert f64 literals to target FloatType
+macro_rules! flt {
+    ($x:expr) => {
+        <FloatType as From<f64>>::from($x)
+    };
+}
 
 // =============================================================================
 // MAIN
@@ -24,6 +38,7 @@ use deep_causality_physics::ElectroweakParams;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("═══════════════════════════════════════════════════════════════");
     println!("  Electroweak Precision Pipeline (Two-Scheme: On-Shell + Effective)");
+    println!("  (Float Type: {})", std::any::type_name::<FloatType>());
     println!("═══════════════════════════════════════════════════════════════\n");
 
     let result = stage_unification()
@@ -43,13 +58,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[derive(Debug, Clone, Default)]
 #[allow(dead_code)]
 struct EwState {
-    ew: Option<ElectroweakParams>,
-    w_mass_calc: f64,
-    z_mass_calc: f64,
-    higgs_lambda: f64,
-    top_yukawa: f64,
-    z_peak_sigma: f64,
-    delta_rho: f64,
+    ew: Option<ElectroweakParams<FloatType>>,
+    w_mass_calc: FloatType,
+    z_mass_calc: FloatType,
+    higgs_lambda: FloatType,
+    top_yukawa: FloatType,
+    z_peak_sigma: FloatType,
+    delta_rho: FloatType,
 }
 
 // =============================================================================
@@ -112,7 +127,7 @@ fn stage_symmetry_breaking(mut state: EwState, _: (), _: Option<()>) -> Propagat
         println!("  Top Yukawa:         y_t = {}", state.top_yukawa);
         println!(
             "  Tree Level M_W:     {}GeV (g·v/2)",
-            ew.g_coupling() * ew.higgs_vev() / 2.0
+            ew.g_coupling() * ew.higgs_vev() / flt!(2.0)
         );
         println!(
             "  Corrected M_W:      {}GeV (Loop Solver)",
@@ -143,7 +158,7 @@ fn stage_gauge_mixing(mut state: EwState, _: (), _: Option<()>) -> PropagatingEf
         let rho_computed = ew.rho_parameter_computed();
         // Effective ρ includes Delta Rho
         let rho_eff = ew.rho_effective();
-        let prediction_match = (state.w_mass_calc - ew.w_mass()).abs() < 0.20; // 200 MeV tolerance (One-Loop Limit)
+        let prediction_match = (state.w_mass_calc - ew.w_mass()).abs() < flt!(0.20); // 200 MeV tolerance (One-Loop Limit)
 
         println!(
             "  ρ (computed):       {} (Tree level relation)",
@@ -166,10 +181,10 @@ fn stage_gauge_mixing(mut state: EwState, _: (), _: Option<()>) -> PropagatingEf
         println!("  PDG M_W:            {} GeV", ew.w_mass());
 
         let diff = (state.w_mass_calc - ew.w_mass()).abs();
-        println!("  Difference:         {:.1} MeV", diff * 1000.0);
+        println!("  Difference:         {} MeV", diff * flt!(1000.0));
 
         println!();
-        state.delta_rho = rho_eff - 1.0;
+        state.delta_rho = rho_eff - flt!(1.0);
     }
 
     CausalEffectPropagationProcess::pure(state)
@@ -183,7 +198,7 @@ fn stage_z_resonance(mut state: EwState, _: (), _: Option<()>) -> PropagatingEff
         // Compute widths from first principles (The "Invariant Width" Discovery)
         let total_width = ew.z_total_width_computed();
         let hadronic_width = ew.z_hadronic_width_computed();
-        let neutrino_width = 3.0 * ew.z_partial_width_fermion(false, 0.5, 0.0);
+        let neutrino_width = flt!(3.0) * ew.z_partial_width_fermion(false, flt!(0.5), flt!(0.0));
         let mz = state.z_mass_calc;
 
         match ew.z_resonance_cross_section(mz, total_width) {

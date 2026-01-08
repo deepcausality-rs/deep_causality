@@ -7,13 +7,14 @@ use crate::{
     Z_MASS,
 };
 use deep_causality_metric::{LorentzianMetric, WestCoastMetric};
-use deep_causality_num::{Field, Float};
+use deep_causality_num::RealField;
 use deep_causality_tensor::{CausalTensor, TensorData};
+use deep_causality_topology::GaugeFieldWitness;
 use deep_causality_topology::{BaseTopology, GaugeField, Manifold, U1};
 
 impl<S> ElectroweakOps<S> for ElectroweakField<S>
 where
-    S: Field + Float + Clone + From<f64> + Into<f64> + TensorData,
+    S: RealField + Clone + From<f64> + Into<f64> + TensorData,
 {
     fn new_field(base: Manifold<S, S>, connection: CausalTensor<S>) -> Result<Self, PhysicsError> {
         let metric = WestCoastMetric::minkowski_4d().into_metric();
@@ -29,48 +30,26 @@ where
             .map_err(|e| PhysicsError::TopologyError(e.to_string()))
     }
 
-    fn standard_model_params() -> ElectroweakParams {
+    fn standard_model_params() -> ElectroweakParams<S> {
         ElectroweakParams::standard_model()
     }
 
     fn extract_photon(&self) -> Result<EM<S>, PhysicsError> {
         let params = Self::standard_model_params();
-        let cos_theta = <S as From<f64>>::from(params.cos_theta_w());
-        let sin_theta = <S as From<f64>>::from(params.sin_theta_w());
+        let cos_theta = params.cos_theta_w();
+        let sin_theta = params.sin_theta_w();
 
-        let connection = self.connection();
-        let field_strength = self.field_strength();
-
-        // Mix Connection
-        let data = connection.data();
-        let mixed_conn_data = data
-            .chunks(4)
-            .map(|chunk: &[S]| {
-                let w3 = chunk.get(2).cloned().unwrap_or(S::zero());
-                let b = chunk.get(3).cloned().unwrap_or(S::zero());
-                b * cos_theta + w3 * sin_theta
-            })
-            .collect::<Vec<S>>();
-
-        // Mix Field Strength
-        let data = field_strength.data();
-        let mixed_strength_data = data
-            .chunks(4)
-            .map(|chunk: &[S]| {
-                let w3 = chunk.get(2).cloned().unwrap_or(S::zero());
-                let b = chunk.get(3).cloned().unwrap_or(S::zero());
-                b * cos_theta + w3 * sin_theta
-            })
-            .collect::<Vec<S>>();
-
-        let num_points = self.base().len();
-        let dim = 4;
-
-        let new_conn = CausalTensor::new(mixed_conn_data, vec![num_points, dim, 1])
-            .map_err(|e| PhysicsError::DimensionMismatch(e.to_string()))?;
-
-        let new_strength = CausalTensor::new(mixed_strength_data, vec![num_points, dim, dim, 1])
-            .map_err(|e| PhysicsError::DimensionMismatch(e.to_string()))?;
+        // Use topology gauge_rotation method from the GaugeField
+        // Photon: A_μ = W³_μ sin(θ_W) + B_μ cos(θ_W)
+        // index_a = 2 (W³), index_b = 3 (B)
+        let (new_conn, new_strength) = GaugeFieldWitness::<S>::gauge_rotation(
+            self.connection(),
+            self.field_strength(),
+            2, // W³ index
+            3, // B index
+            cos_theta,
+            sin_theta,
+        );
 
         GaugeField::new(self.base().clone(), self.metric(), new_conn, new_strength)
             .map_err(|e| PhysicsError::TopologyError(e.to_string()))
@@ -78,42 +57,22 @@ where
 
     fn extract_z(&self) -> Result<GaugeField<U1, S, S, S>, PhysicsError> {
         let params = Self::standard_model_params();
-        let cos_theta = <S as From<f64>>::from(params.cos_theta_w());
-        let sin_theta = <S as From<f64>>::from(params.sin_theta_w());
+        let cos_theta = params.cos_theta_w();
+        let sin_theta = params.sin_theta_w();
 
-        let connection = self.connection();
-        let field_strength = self.field_strength();
-
-        // Mix Connection
-        let data = connection.data();
-        let mixed_conn_data = data
-            .chunks(4)
-            .map(|chunk: &[S]| {
-                let w3 = chunk.get(2).cloned().unwrap_or(S::zero());
-                let b = chunk.get(3).cloned().unwrap_or(S::zero());
-                // -b * sin_theta + w3 * cos_theta
-                (S::zero() - b) * sin_theta + w3 * cos_theta
-            })
-            .collect::<Vec<S>>();
-
-        let data = field_strength.data();
-        let mixed_strength_data = data
-            .chunks(4)
-            .map(|chunk: &[S]| {
-                let w3 = chunk.get(2).cloned().unwrap_or(S::zero());
-                let b = chunk.get(3).cloned().unwrap_or(S::zero());
-                (S::zero() - b) * sin_theta + w3 * cos_theta
-            })
-            .collect::<Vec<S>>();
-
-        let num_points = self.base().len();
-        let dim = 4;
-
-        let new_conn = CausalTensor::new(mixed_conn_data, vec![num_points, dim, 1])
-            .map_err(|e| PhysicsError::DimensionMismatch(e.to_string()))?;
-
-        let new_strength = CausalTensor::new(mixed_strength_data, vec![num_points, dim, dim, 1])
-            .map_err(|e| PhysicsError::DimensionMismatch(e.to_string()))?;
+        // Use the topology gauge_rotation method from the GaugeField.
+        // Z_μ = W³_μ cos(θ_W) - B_μ sin(θ_W)
+        // This is equivalent to: A^a cos(θ) + A^b (-sin(θ))
+        // So we pass -sin_theta for the second component
+        let neg_sin_theta = S::zero() - sin_theta;
+        let (new_conn, new_strength) = GaugeFieldWitness::<S>::gauge_rotation(
+            self.connection(),
+            self.field_strength(),
+            2, // W³ index
+            3, // B index
+            neg_sin_theta,
+            cos_theta,
+        );
 
         GaugeField::new(self.base().clone(), self.metric(), new_conn, new_strength)
             .map_err(|e| PhysicsError::TopologyError(e.to_string()))

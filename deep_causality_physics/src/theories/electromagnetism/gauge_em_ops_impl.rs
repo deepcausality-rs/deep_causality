@@ -9,6 +9,7 @@ use deep_causality_metric::{LorentzianMetric, WestCoastMetric};
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::{Field, Float};
 use deep_causality_tensor::{CausalTensor, TensorData};
+use deep_causality_topology::GaugeFieldWitness;
 use deep_causality_topology::{
     BaseTopology, GaugeField, Manifold, Simplex, SimplicialComplexBuilder, U1,
 };
@@ -88,22 +89,6 @@ where
     fn from_components(ex: S, ey: S, ez: S, bx: S, by: S, bz: S) -> Result<Self, PhysicsError> {
         let metric = WestCoastMetric::minkowski_4d().into_metric();
 
-        // Indices 2,3,4 for spatial vectors
-        let mut e_data: Vec<S> = vec![S::zero(); 16];
-        e_data[2] = ex;
-        e_data[3] = ey;
-        e_data[4] = ez;
-
-        let mut b_data: Vec<S> = vec![S::zero(); 16];
-        b_data[2] = bx;
-        b_data[3] = by;
-        b_data[4] = bz;
-
-        let e = CausalMultiVector::new(e_data, metric)
-            .map_err(|e| PhysicsError::DimensionMismatch(format!("E field error: {:?}", e)))?;
-        let b = CausalMultiVector::new(b_data, metric)
-            .map_err(|e| PhysicsError::DimensionMismatch(format!("B field error: {:?}", e)))?;
-
         // Create minimal manifold (1 point)
         let mut builder = SimplicialComplexBuilder::new(0);
         let _ = builder.add_simplex(Simplex::new(vec![0]));
@@ -119,7 +104,18 @@ where
             PhysicsError::DimensionMismatch(format!("Failed to create default manifold: {:?}", e))
         })?;
 
-        Self::from_fields(base, e, b)
+        let num_points = 1;
+        let dim = 4;
+        let connection = CausalTensor::zeros(&[num_points, dim, 1]);
+
+        let e_vec = [ex, ey, ez];
+        let b_vec = [bx, by, bz];
+        // Use the topology method from the GaugeField to construct field strength from E/B vectors
+        let field_strength =
+            GaugeFieldWitness::<S>::field_strength_from_eb_vectors(&e_vec, &b_vec, num_points);
+
+        GaugeField::new(base, metric, connection, field_strength)
+            .map_err(|e| PhysicsError::TopologyError(e.to_string()))
     }
 
     fn plane_wave(amplitude: S, polarization: usize) -> Result<Self, PhysicsError> {

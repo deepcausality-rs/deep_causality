@@ -668,4 +668,209 @@ where
 
         CausalTensor::from_vec(fs_data, &[num_points, dim, dim, lie_dim])
     }
+
+    /// Constructs the electromagnetic field strength tensor F_μν directly from E and B vectors.
+    ///
+    /// # Mathematical Definition
+    ///
+    /// The field strength tensor is constructed as:
+    /// ```text
+    ///        ⎛  0    E_x   E_y   E_z ⎞
+    /// F_μν = ⎜-E_x   0    -B_z   B_y ⎟
+    ///        ⎜-E_y  B_z    0    -B_x ⎟
+    ///        ⎝-E_z -B_y   B_x    0   ⎠
+    /// ```
+    ///
+    /// Uses West Coast (+---) signature convention.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - Electric field components [E_x, E_y, E_z]
+    /// * `b` - Magnetic field components [B_x, B_y, B_z]
+    /// * `num_points` - Number of spacetime points (default 1)
+    ///
+    /// # Returns
+    ///
+    /// Field strength tensor of shape [num_points, 4, 4, 1] for U(1).
+    ///
+    /// # Panics
+    ///
+    /// Panics if `e` or `b` do not have exactly 3 elements.
+    pub fn field_strength_from_eb_vectors(e: &[T], b: &[T], num_points: usize) -> CausalTensor<T> {
+        assert_eq!(e.len(), 3, "Electric field must have 3 components");
+        assert_eq!(b.len(), 3, "Magnetic field must have 3 components");
+
+        let dim = 4;
+        let lie_dim = 1; // U(1)
+        let n = num_points.max(1);
+        let total = n * dim * dim * lie_dim;
+        let mut fs_data = vec![T::zero(); total];
+
+        let ex = e[0];
+        let ey = e[1];
+        let ez = e[2];
+        let bx = b[0];
+        let by = b[1];
+        let bz = b[2];
+
+        for p in 0..n {
+            let offset = p * dim * dim * lie_dim;
+
+            // F_01 = E_x, F_10 = -E_x
+            fs_data[offset + 1] = ex;
+            fs_data[offset + 4] = T::zero() - ex;
+
+            // F_02 = E_y, F_20 = -E_y
+            fs_data[offset + 2] = ey;
+            fs_data[offset + 8] = T::zero() - ey;
+
+            // F_03 = E_z, F_30 = -E_z
+            fs_data[offset + 3] = ez;
+            fs_data[offset + 12] = T::zero() - ez;
+
+            // F_ij = -epsilon_ijk B_k (matching physics convention)
+            // F_23 = B_x, F_32 = -B_x (index 23 = 2*4+3 = 11, index 32 = 3*4+2 = 14)
+            fs_data[offset + 11] = bx;
+            fs_data[offset + 14] = T::zero() - bx;
+
+            // F_31 = B_y, F_13 = -B_y (index 31 = 3*4+1 = 13, index 13 = 1*4+3 = 7)
+            fs_data[offset + 13] = by;
+            fs_data[offset + 7] = T::zero() - by;
+
+            // F_12 = B_z, F_21 = -B_z (index 12 = 1*4+2 = 6, index 21 = 2*4+1 = 9)
+            fs_data[offset + 6] = bz;
+            fs_data[offset + 9] = T::zero() - bz;
+        }
+
+        CausalTensor::from_vec(fs_data, &[n, dim, dim, lie_dim])
+    }
+
+    /// Performs a gauge rotation (Weinberg mixing) on a gauge field.
+    ///
+    /// # Mathematical Definition
+    ///
+    /// This implements the rotation that mixes gauge components:
+    /// ```text
+    /// A'_μ^a = R^a_b(θ) A_μ^b
+    /// ```
+    ///
+    /// For electroweak symmetry breaking (Weinberg mixing):
+    /// ```text
+    /// A_μ = B_μ cos(θ_W) + W³_μ sin(θ_W)   (Photon)
+    /// Z_μ = -B_μ sin(θ_W) + W³_μ cos(θ_W)  (Z boson)
+    /// ```
+    ///
+    /// # Arguments
+    ///
+    /// * `connection` - The original connection tensor [num_points, dim, lie_dim]
+    /// * `field_strength` - The original field strength tensor [num_points, dim, dim, lie_dim]
+    /// * `index_a` - First Lie algebra index to mix
+    /// * `index_b` - Second Lie algebra index to mix
+    /// * `cos_angle` - Cosine of the mixing angle
+    /// * `sin_angle` - Sine of the mixing angle
+    ///
+    /// # Returns
+    ///
+    /// Tuple of (rotated_connection, rotated_field_strength) for the first mixed component.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// // Extract photon from electroweak field (Weinberg mixing)
+    /// let cos_w = 0.8768; // cos(θ_W)
+    /// let sin_w = 0.4808; // sin(θ_W)
+    /// let (photon_conn, photon_fs) = GaugeFieldWitness::gauge_rotation(
+    ///     ew_conn, ew_fs,
+    ///     2, 3,  // W³ and B indices
+    ///     cos_w, sin_w
+    /// );
+    /// ```
+    pub fn gauge_rotation(
+        connection: &CausalTensor<T>,
+        field_strength: &CausalTensor<T>,
+        index_a: usize,
+        index_b: usize,
+        cos_angle: T,
+        sin_angle: T,
+    ) -> (CausalTensor<T>, CausalTensor<T>) {
+        let conn_shape = connection.shape();
+        let fs_shape = field_strength.shape();
+
+        // Validate shapes
+        if conn_shape.len() < 3 || fs_shape.len() < 4 {
+            // Return empty tensors on invalid input
+            return (
+                CausalTensor::from_vec(vec![], &[0]),
+                CausalTensor::from_vec(vec![], &[0]),
+            );
+        }
+
+        let num_points = conn_shape[0];
+        let dim = conn_shape[1];
+        let lie_dim = conn_shape[2];
+
+        // Validate indices
+        if index_a >= lie_dim || index_b >= lie_dim {
+            return (
+                CausalTensor::from_vec(vec![], &[0]),
+                CausalTensor::from_vec(vec![], &[0]),
+            );
+        }
+
+        // New connection has lie_dim = 1 (single gauge component after mixing)
+        let new_conn_total = num_points * dim * 1;
+        let mut new_conn_data = vec![T::zero(); new_conn_total];
+
+        let conn_data = connection.as_slice();
+
+        // A'_μ = A_μ^a cos(θ) + A_μ^b sin(θ)
+        for p in 0..num_points {
+            for mu in 0..dim {
+                let conn_a_idx = p * (dim * lie_dim) + mu * lie_dim + index_a;
+                let conn_b_idx = p * (dim * lie_dim) + mu * lie_dim + index_b;
+
+                let a_mu_a = conn_data.get(conn_a_idx).copied().unwrap_or(T::zero());
+                let a_mu_b = conn_data.get(conn_b_idx).copied().unwrap_or(T::zero());
+
+                // Mixed component: A' = A^a sin(θ) + A^b cos(θ)
+                // For photon: A = W³ sin(θ_W) + B cos(θ_W)
+                let mixed = a_mu_a * sin_angle + a_mu_b * cos_angle;
+
+                let new_idx = p * dim + mu;
+                new_conn_data[new_idx] = mixed;
+            }
+        }
+
+        // New field strength has lie_dim = 1
+        let new_fs_total = num_points * dim * dim * 1;
+        let mut new_fs_data = vec![T::zero(); new_fs_total];
+
+        let fs_data = field_strength.as_slice();
+
+        // F'_μν = F_μν^a cos(θ) + F_μν^b sin(θ)
+        for p in 0..num_points {
+            for mu in 0..dim {
+                for nu in 0..dim {
+                    let fs_a_idx =
+                        p * (dim * dim * lie_dim) + mu * (dim * lie_dim) + nu * lie_dim + index_a;
+                    let fs_b_idx =
+                        p * (dim * dim * lie_dim) + mu * (dim * lie_dim) + nu * lie_dim + index_b;
+
+                    let f_a = fs_data.get(fs_a_idx).copied().unwrap_or(T::zero());
+                    let f_b = fs_data.get(fs_b_idx).copied().unwrap_or(T::zero());
+
+                    // Mixed component
+                    let mixed = f_a * sin_angle + f_b * cos_angle;
+
+                    let new_idx = p * (dim * dim) + mu * dim + nu;
+                    new_fs_data[new_idx] = mixed;
+                }
+            }
+        }
+
+        let new_conn = CausalTensor::from_vec(new_conn_data, &[num_points, dim, 1]);
+        let new_fs = CausalTensor::from_vec(new_fs_data, &[num_points, dim, dim, 1]);
+
+        (new_conn, new_fs)
+    }
 }

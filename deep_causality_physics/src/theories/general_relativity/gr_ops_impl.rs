@@ -7,15 +7,17 @@
 // GrOps Implementation for GR (GaugeField<Lorentz, f64, f64>)
 // =============================================================================
 
+use crate::theories::general_relativity::gr_lie_mapping::expand_lie_to_riemann;
 use crate::theories::general_relativity::gr_utils;
 use crate::{
-    GR, GeodesicState, GrOps, PhysicsError, einstein_tensor_kernel, geodesic_integrator_kernel,
-    parallel_transport_kernel, proper_time_kernel,
+    GR, GeodesicState, GrOps, PhysicsError, geodesic_integrator_kernel, parallel_transport_kernel,
+    proper_time_kernel,
 };
 use deep_causality_haft::RiemannMap;
 use deep_causality_metric::{EastCoastMetric, LorentzianMetric};
 use deep_causality_num::{Field, Float};
 use deep_causality_tensor::{CausalTensor, TensorData};
+use deep_causality_topology::GaugeFieldWitness;
 use deep_causality_topology::{
     CurvatureSymmetry, CurvatureTensor, CurvatureTensorVector, CurvatureTensorWitness, TensorVector,
 };
@@ -70,108 +72,48 @@ where
     }
 
     fn einstein_tensor(&self) -> Result<CausalTensor<S>, PhysicsError> {
-        let ricci = self.ricci_tensor()?;
-        let scalar = self.ricci_scalar()?;
-        einstein_tensor_kernel(&ricci, scalar, self.metric_tensor())
+        // Use CurvatureTensor from topology for the Einstein tensor calculation
+        let riemann = self.field_strength();
+        let dim = 4;
+        let metric_sig = EastCoastMetric::minkowski_4d().into_metric();
+
+        let ct = CurvatureTensor::<S, (), (), (), ()>::new(
+            riemann.clone(),
+            metric_sig,
+            CurvatureSymmetry::Riemann,
+            dim,
+        );
+
+        // Use topology's einstein_tensor method
+        let einstein_data = ct.einstein_tensor();
+        Ok(CausalTensor::from_vec(einstein_data, &[dim, dim]))
     }
 
     fn kretschmann_scalar(&self) -> Result<S, PhysicsError> {
-        use crate::theories::general_relativity::gr_lie_mapping::expand_lie_to_riemann;
-
         let lie_fs = self.field_strength();
         let dim = 4;
+        let metric_sig = EastCoastMetric::minkowski_4d().into_metric();
 
         // Expand Lie-algebra storage [points, 4, 4, 6] to geometric [4, 4, 4, 4]
         let riemann = expand_lie_to_riemann(lie_fs)?;
-        let r_data = riemann.as_slice();
 
         // Get Inverse Metric for index raising
         let metric = self.metric_tensor();
         let inv_g = gr_utils::invert_4x4(metric)?;
 
-        // Helper to index flat 4D array
-        let idx4 = |a, b, c, d| ((a * dim + b) * dim + c) * dim + d;
+        // Create CurvatureTensor and use topology's kretschmann_scalar_with_metric
+        let ct = CurvatureTensor::<S, (), (), (), ()>::new(
+            riemann,
+            metric_sig,
+            CurvatureSymmetry::Riemann,
+            dim,
+        );
 
-        // Storage for intermediate raised tensors
-        let mut r_raised = r_data.to_vec(); // Start with R_abcd
-        let mut temp = vec![S::zero(); dim * dim * dim * dim];
-
-        // Raise 1st index: R^a_bcd = g^am R_mbcd
-        for a in 0..dim {
-            for b in 0..dim {
-                for c in 0..dim {
-                    for d in 0..dim {
-                        let mut sum = S::zero();
-                        for m in 0..dim {
-                            sum = sum + (inv_g[a * dim + m] * r_raised[idx4(m, b, c, d)]);
-                        }
-                        temp[idx4(a, b, c, d)] = sum;
-                    }
-                }
-            }
-        }
-        r_raised.copy_from_slice(&temp);
-
-        // Raise 2nd index: R^ab_cd = g^bn R^a_ncd
-        for a in 0..dim {
-            for b in 0..dim {
-                for c in 0..dim {
-                    for d in 0..dim {
-                        let mut sum = S::zero();
-                        for n in 0..dim {
-                            sum = sum + (inv_g[b * dim + n] * r_raised[idx4(a, n, c, d)]);
-                        }
-                        temp[idx4(a, b, c, d)] = sum;
-                    }
-                }
-            }
-        }
-        r_raised.copy_from_slice(&temp);
-
-        // Raise 3rd index: R^abc_d = g^cr R^ab_rd
-        for a in 0..dim {
-            for b in 0..dim {
-                for c in 0..dim {
-                    for d in 0..dim {
-                        let mut sum = S::zero();
-                        for r in 0..dim {
-                            sum = sum + (inv_g[c * dim + r] * r_raised[idx4(a, b, r, d)]);
-                        }
-                        temp[idx4(a, b, c, d)] = sum;
-                    }
-                }
-            }
-        }
-        r_raised.copy_from_slice(&temp);
-
-        // Raise 4th index: R^abcd = g^ds R^abc_s
-        for a in 0..dim {
-            for b in 0..dim {
-                for c in 0..dim {
-                    for d in 0..dim {
-                        let mut sum = S::zero();
-                        for s in 0..dim {
-                            sum = sum + (inv_g[d * dim + s] * r_raised[idx4(a, b, c, s)]);
-                        }
-                        temp[idx4(a, b, c, d)] = sum;
-                    }
-                }
-            }
-        }
-        r_raised.copy_from_slice(&temp); // Now r_raised holds R^abcd
-
-        // Final Contraction: K = R_abcd * R^abcd
-        let mut k = S::zero();
-        for i in 0..r_data.len() {
-            k = k + (r_data[i] * r_raised[i]);
-        }
-
-        Ok(k)
+        // Use topology method with the precomputed inverse metric
+        Ok(ct.kretschmann_scalar_with_metric(&inv_g))
     }
 
     fn geodesic_deviation(&self, velocity: &[S], separation: &[S]) -> Result<Vec<S>, PhysicsError> {
-        use crate::theories::general_relativity::gr_lie_mapping::expand_lie_to_riemann;
-
         let lie_fs = self.field_strength();
         let dim = 4;
         let metric_sig = EastCoastMetric::minkowski_4d().into_metric();
@@ -227,8 +169,6 @@ where
     }
 
     fn compute_riemann_from_christoffel(&self) -> CausalTensor<S> {
-        use deep_causality_topology::GaugeFieldWitness;
-
         // The coupling constant for GR is effectively 1.0
         // (structure constants encode the non-abelian part)
         GaugeFieldWitness::compute_field_strength_non_abelian(self, S::one())
@@ -240,7 +180,6 @@ where
         matter_momentum: Option<&CausalTensor<S>>,
     ) -> Result<CausalTensor<S>, PhysicsError> {
         // =========================================================================
-        // PRODUCTION-GRADE IMPLEMENTATION
         // ADM Momentum Constraint: M_i = D_j(K^j_i - δ^j_i K) - 8πj_i
         // =========================================================================
 

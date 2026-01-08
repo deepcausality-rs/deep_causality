@@ -26,11 +26,23 @@
 //! - **Classical EM via gauge field formalism** using deep_causality_physics
 
 use deep_causality_core::{CausalEffectPropagationProcess, EffectValue, PropagatingEffect};
-use deep_causality_num::{Float, Zero};
+use deep_causality_num::{DoubleFloat, Float, Zero};
 use deep_causality_physics::{EM, GaugeEmOps};
 
-type FloatType = f64;
+// =============================================================================
+// FLOAT TYPE CONFIGURATION
+// =============================================================================
+
+// Change this to f32 or DoubleFloat to use different precision
+type FloatType = DoubleFloat;
 type EmTheory = EM<FloatType>;
+
+/// Macro to convert f64 literals to FloatType
+macro_rules! flt {
+    ($x:expr) => {
+        <FloatType as From<f64>>::from($x)
+    };
+}
 
 // =============================================================================
 // MAIN: Pipeline Composition via Causal Monad
@@ -39,6 +51,7 @@ type EmTheory = EM<FloatType>;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("═══════════════════════════════════════════════════════════════");
     println!("       Gauge EM: Relativistic Electrodynamics Pipeline");
+    println!("  (Float Type: {})", std::any::type_name::<FloatType>());
     println!("═══════════════════════════════════════════════════════════════\n");
 
     // Composed pipeline: Each stage is a decoupled function
@@ -65,15 +78,15 @@ struct GaugeEMState {
     /// The GaugeEM field configuration
     field: Option<EmTheory>,
     /// Field invariant F_μν F^μν
-    field_invariant: f64,
+    field_invariant: FloatType,
     /// Dual invariant F_μν F̃^μν
-    dual_invariant: f64,
+    dual_invariant: FloatType,
     /// Energy density u = (E² + B²)/2
-    energy_density: f64,
+    energy_density: FloatType,
     /// Lagrangian density L = (E² - B²)/2
-    lagrangian_density: f64,
+    lagrangian_density: FloatType,
     /// Intensity |S|
-    intensity: f64,
+    intensity: FloatType,
     /// Is radiation field (E ⟂ B)
     is_radiation: bool,
     /// Is null field (|E| = |B|)
@@ -94,7 +107,7 @@ fn stage_create_plane_wave() -> PropagatingEffect<Option<EmTheory>> {
     println!("─────────────────────────────────");
 
     // Create a plane wave with E along x, B along y
-    let amplitude = FloatType::from(1.0); // Natural units
+    let amplitude = flt!(1.0); // Natural units
     let polarization = 0; // x-polarization
 
     match EmTheory::plane_wave(amplitude, polarization) {
@@ -165,7 +178,7 @@ fn stage_compute_invariants(
     em_opt: Option<EmTheory>,
     _: (),
     _: Option<()>,
-) -> PropagatingEffect<(Option<EmTheory>, f64, f64)> {
+) -> PropagatingEffect<(Option<EmTheory>, FloatType, FloatType)> {
     println!("Stage 2: Compute Lorentz Invariants");
     println!("────────────────────────────────────");
 
@@ -173,34 +186,28 @@ fn stage_compute_invariants(
         let field_inv = em.field_invariant().unwrap_or(FloatType::zero());
         let dual_inv = em.dual_invariant().unwrap_or(FloatType::zero());
 
-        println!(
-            "  F_μν F^μν  = {:.6}  (field invariant)",
-            to_f64(field_inv.clone())
-        );
-        println!(
-            "  F_μν F̃^μν = {:.6}  (dual invariant)",
-            to_f64(dual_inv.clone())
-        );
+        println!("  F_μν F^μν  = {}  (field invariant)", field_inv);
+        println!("  F_μν F̃^μν = {}  (dual invariant)", dual_inv);
 
         // Physical interpretation
-        if to_f64(s_abs(field_inv.clone())) < 1e-10 {
+        if s_abs(field_inv.clone()) < flt!(1e-10) {
             println!("\n  → |E| = |B| (null field / radiation)");
-        } else if to_f64(field_inv.clone()) > 0.0 {
+        } else if field_inv > flt!(0.0) {
             println!("\n  → Magnetic-dominated field");
         } else {
             println!("\n  → Electric-dominated field");
         }
 
-        if to_f64(s_abs(dual_inv.clone())) < 1e-10 {
+        if s_abs(dual_inv.clone()) < flt!(1e-10) {
             println!("  → E ⟂ B (CP-conserving)");
         } else {
             println!("  → E·B ≠ 0 (CP-violating configuration)");
         }
         println!();
 
-        CausalEffectPropagationProcess::pure((em_opt, to_f64(field_inv), to_f64(dual_inv)))
+        CausalEffectPropagationProcess::pure((em_opt, field_inv, dual_inv))
     } else {
-        CausalEffectPropagationProcess::pure((None, 0.0, 0.0))
+        CausalEffectPropagationProcess::pure((None, flt!(0.0), flt!(0.0)))
     }
 }
 
@@ -218,10 +225,10 @@ fn stage_compute_invariants(
 /// - Modify energy scale conversions here
 /// - Add momentum density computation
 fn stage_energy_analysis(
-    (em_opt, field_inv, dual_inv): (Option<EmTheory>, f64, f64),
+    (em_opt, field_inv, dual_inv): (Option<EmTheory>, FloatType, FloatType),
     _: (),
     _: Option<()>,
-) -> PropagatingEffect<(Option<EmTheory>, f64, f64, f64, f64)> {
+) -> PropagatingEffect<(Option<EmTheory>, FloatType, FloatType, FloatType, FloatType)> {
     println!("Stage 3: Energy Analysis");
     println!("────────────────────────");
 
@@ -229,29 +236,20 @@ fn stage_energy_analysis(
         let energy = em.energy_density().unwrap_or(FloatType::zero());
         let lagrangian = em.lagrangian_density().unwrap_or(FloatType::zero());
 
-        println!("  Energy density:     u = {:.6} (natural units)", energy);
-        println!(
-            "  Lagrangian density: L = {:.6} (natural units)",
-            lagrangian
-        );
+        println!("  Energy density:     u = {} (natural units)", energy);
+        println!("  Lagrangian density: L = {} (natural units)", lagrangian);
 
         // Convert to SI for context (assuming E ~ 1 V/m scale)
-        let epsilon_0 = 8.854e-12; // F/m
-        let energy_val = to_f64(energy.clone());
+        let epsilon_0 = flt!(8.854e-12); // F/m
+        let energy_val = energy.clone();
         let energy_si = energy_val * epsilon_0; // J/m³
         println!("\n  In SI units (assuming E ~ 1 V/m scale):");
         println!("  u ≈ {:.3e} J/m³", energy_si);
         println!();
 
-        CausalEffectPropagationProcess::pure((
-            em_opt,
-            field_inv,
-            dual_inv,
-            to_f64(energy),
-            to_f64(lagrangian),
-        ))
+        CausalEffectPropagationProcess::pure((em_opt, field_inv, dual_inv, energy, lagrangian))
     } else {
-        CausalEffectPropagationProcess::pure((None, field_inv, dual_inv, 0.0, 0.0))
+        CausalEffectPropagationProcess::pure((None, field_inv, dual_inv, flt!(0.0), flt!(0.0)))
     }
 }
 
@@ -269,45 +267,60 @@ fn stage_energy_analysis(
 /// - Add radiation pressure computation
 /// - Add momentum flux analysis
 fn stage_poynting_radiation(
-    (em_opt, field_inv, dual_inv, energy, lagrangian): (Option<EmTheory>, f64, f64, f64, f64),
+    (em_opt, field_inv, dual_inv, energy, lagrangian): (
+        Option<EmTheory>,
+        FloatType,
+        FloatType,
+        FloatType,
+        FloatType,
+    ),
     _: (),
     _: Option<()>,
-) -> PropagatingEffect<(Option<EmTheory>, f64, f64, f64, f64, f64)> {
+) -> PropagatingEffect<(
+    Option<EmTheory>,
+    FloatType,
+    FloatType,
+    FloatType,
+    FloatType,
+    FloatType,
+)> {
     println!("Stage 4: Radiation Analysis");
     println!("───────────────────────────");
 
     if let Some(em) = &em_opt {
         let intensity = em.intensity().unwrap_or(FloatType::zero());
 
-        println!("  Intensity: |S| = {:.6} (natural units)", intensity);
+        println!("  Intensity: |S| = {} (natural units)", intensity);
 
         // Poynting vector direction
         if let Ok(s) = em.poynting_vector() {
             let s_data = s.data();
             // Poynting vector S = E × B is a 3D vector stored at indices 2, 3, 4 (x, y, z)
             if s_data.len() >= 5 {
-                let sx = to_f64(s_data.get(2).copied().unwrap_or(FloatType::zero()));
-                let sy = to_f64(s_data.get(3).copied().unwrap_or(FloatType::zero()));
-                let sz = to_f64(s_data.get(4).copied().unwrap_or(FloatType::zero()));
+                let sx = s_data.get(2).copied().unwrap_or(FloatType::zero());
+                let sy = s_data.get(3).copied().unwrap_or(FloatType::zero());
+                let sz = s_data.get(4).copied().unwrap_or(FloatType::zero());
                 println!("  S_x = {:.4}, S_y = {:.4}, S_z = {:.4}", sx, sy, sz);
             }
         }
 
         // Radiation pressure
         let radiation_pressure = intensity; // P = I/c, but c=1 in natural units
-        println!("\n  Radiation pressure: P = {:.6}", radiation_pressure);
+        println!("\n  Radiation pressure: P = {}", radiation_pressure);
         println!();
 
         CausalEffectPropagationProcess::pure((
-            em_opt,
+            em_opt, field_inv, dual_inv, energy, lagrangian, intensity,
+        ))
+    } else {
+        CausalEffectPropagationProcess::pure((
+            None,
             field_inv,
             dual_inv,
             energy,
             lagrangian,
-            to_f64(intensity),
+            flt!(0.0),
         ))
-    } else {
-        CausalEffectPropagationProcess::pure((None, field_inv, dual_inv, energy, lagrangian, 0.0))
     }
 }
 
@@ -328,11 +341,11 @@ fn stage_poynting_radiation(
 fn stage_field_classification(
     (em_opt, field_inv, dual_inv, energy, lagrangian, intensity): (
         Option<EmTheory>,
-        f64,
-        f64,
-        f64,
-        f64,
-        f64,
+        FloatType,
+        FloatType,
+        FloatType,
+        FloatType,
+        FloatType,
     ),
     _: (),
     _: Option<()>,
@@ -358,9 +371,9 @@ fn stage_field_classification(
         "Elliptically Polarized Wave"
     } else if is_null {
         "Null Field (non-radiative)"
-    } else if field_inv > 0.0 {
+    } else if field_inv > flt!(0.0) {
         "Magnetic-Dominated Static Field"
-    } else if field_inv < 0.0 {
+    } else if field_inv < flt!(0.0) {
         "Electric-Dominated Static Field"
     } else {
         "General EM Superposition"
@@ -440,11 +453,6 @@ fn print_summary(result: &PropagatingEffect<GaugeEMState>) {
             println!("\n[WARN] Check individual stage outputs.\n");
         }
     }
-}
-
-// Helper to convert scalar to f64 for printing
-fn to_f64(x: FloatType) -> f64 {
-    x.into()
 }
 
 // Helper for abs

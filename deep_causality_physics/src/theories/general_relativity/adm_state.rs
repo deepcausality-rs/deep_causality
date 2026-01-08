@@ -4,7 +4,7 @@
  */
 
 use crate::{AdmOps, PhysicsError};
-use deep_causality_num::{Field, Float};
+use deep_causality_num::Field;
 use deep_causality_tensor::{CausalTensor, TensorData};
 use std::marker::PhantomData;
 
@@ -15,7 +15,7 @@ use std::marker::PhantomData;
 #[derive(Debug, Clone)]
 pub struct AdmState<S>
 where
-    S: Field + Float + Clone + From<f64> + Into<f64> + TensorData,
+    S: Field + Clone + From<f64> + Into<f64> + TensorData,
 {
     /// Spatial metric γ_ij (3x3 tensor)
     spatial_metric: CausalTensor<S>,
@@ -35,7 +35,7 @@ where
 
 impl<S> Default for AdmState<S>
 where
-    S: Field + Float + Clone + From<f64> + Into<f64> + TensorData,
+    S: Field + Clone + From<f64> + Into<f64> + TensorData,
 {
     fn default() -> Self {
         let zero = <S as From<f64>>::from(0.0);
@@ -53,7 +53,7 @@ where
 
 impl<S> AdmState<S>
 where
-    S: Field + Float + Clone + From<f64> + Into<f64> + TensorData,
+    S: Field + Clone + From<f64> + Into<f64> + TensorData,
 {
     pub fn spatial_metric(&self) -> &CausalTensor<S> {
         &self.spatial_metric
@@ -171,7 +171,7 @@ where
 
 impl<S> AdmOps<S> for AdmState<S>
 where
-    S: Field + Float + Clone + From<f64> + Into<f64> + TensorData,
+    S: Field + Clone + From<f64> + Into<f64> + TensorData,
 {
     fn hamiltonian_constraint(
         &self,

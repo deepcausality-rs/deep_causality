@@ -81,7 +81,7 @@ fn test_top_mass() {
 
 #[test]
 fn test_coupling_relation_e_equals_g_sin() {
-    let params = ElectroweakParams::standard_model();
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
 
     // e = g sin θ_W
     let e = params.em_coupling();
@@ -98,7 +98,7 @@ fn test_coupling_relation_e_equals_g_sin() {
 
 #[test]
 fn test_coupling_relation_e_equals_gprime_cos() {
-    let params = ElectroweakParams::standard_model();
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
 
     // e = g' cos θ_W
     let e = params.em_coupling();
@@ -115,7 +115,7 @@ fn test_coupling_relation_e_equals_gprime_cos() {
 
 #[test]
 fn test_tan_theta_relation() {
-    let params = ElectroweakParams::standard_model();
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
 
     // tan θ_W = g'/g
     let tan = params.tan_theta_w();
@@ -134,7 +134,7 @@ fn test_tan_theta_relation() {
 
 #[test]
 fn test_w_mass_computed() {
-    let params = ElectroweakParams::standard_model();
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
 
     // M_W = g v / 2
     let m_w = params.w_mass_computed();
@@ -152,7 +152,7 @@ fn test_w_mass_computed() {
 
 #[test]
 fn test_z_mass_relation() {
-    let params = ElectroweakParams::standard_model();
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
 
     // M_Z = M_W / cos θ_W
     let m_w = params.w_mass_computed();
@@ -167,7 +167,7 @@ fn test_z_mass_relation() {
 
 #[test]
 fn test_fermion_mass() {
-    let params = ElectroweakParams::standard_model();
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
 
     // m_f = y_f v / √2
     let y_top = params.top_yukawa();
@@ -187,7 +187,7 @@ fn test_fermion_mass() {
 
 #[test]
 fn test_higgs_potential_minimum() {
-    let params = ElectroweakParams::standard_model();
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
 
     // V(φ) has minimum at |φ| = v/√2
     let v_over_sqrt2 = params.higgs_vev() / 2.0_f64.sqrt();
@@ -203,7 +203,7 @@ fn test_higgs_potential_minimum() {
 
 #[test]
 fn test_symmetry_breaking_verified() {
-    let params = ElectroweakParams::standard_model();
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
 
     // VEV should satisfy potential minimum condition
     assert!(
@@ -214,7 +214,7 @@ fn test_symmetry_breaking_verified() {
 
 #[test]
 fn test_higgs_quartic() {
-    let params = ElectroweakParams::standard_model();
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
 
     // λ = M_H² / (2v²)
     let lambda = params.higgs_quartic();
@@ -236,7 +236,7 @@ fn test_higgs_quartic() {
 fn test_goldstone_count() {
     // SU(2)×U(1) → U(1)_EM: 4 - 1 = 3 Goldstones
     assert_eq!(
-        ElectroweakParams::goldstone_count(),
+        ElectroweakParams::<f64>::goldstone_count(),
         3,
         "3 Goldstones eaten by W⁺, W⁻, Z"
     );
@@ -244,7 +244,7 @@ fn test_goldstone_count() {
 
 #[test]
 fn test_gauge_boson_masses() {
-    let params = ElectroweakParams::standard_model();
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
 
     let (m_w, m_z, m_a) = params.gauge_boson_masses();
 
@@ -260,7 +260,7 @@ fn test_gauge_boson_masses() {
 
 #[test]
 fn test_rho_parameter() {
-    let params = ElectroweakParams::standard_model();
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
 
     // At tree level with exact masses, ρ = 1
     // With experimental PDG masses, small deviation expected: ρ ≈ 1.01
@@ -274,7 +274,7 @@ fn test_rho_parameter() {
 
 #[test]
 fn test_rho_deviation() {
-    let params = ElectroweakParams::standard_model();
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
 
     // With PDG masses, deviation is ~1% (radiative corrections)
     let deviation = params.rho_deviation();
@@ -324,7 +324,7 @@ fn test_extract_z() {
 
 #[test]
 fn test_neutrino_electron_cross_section() {
-    let params = ElectroweakParams::standard_model();
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
 
     // At 10 GeV
     let sigma = params.neutrino_electron_cross_section(10.0);
@@ -334,7 +334,7 @@ fn test_neutrino_electron_cross_section() {
 
 #[test]
 fn test_neutrino_electron_cross_section_invalid() {
-    let params = ElectroweakParams::standard_model();
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
 
     let result = params.neutrino_electron_cross_section(-1.0);
     assert!(result.is_err(), "Negative energy should return error");
@@ -342,7 +342,7 @@ fn test_neutrino_electron_cross_section_invalid() {
 
 #[test]
 fn test_z_resonance_cross_section() {
-    let params = ElectroweakParams::standard_model();
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
 
     // At Z pole
     let m_z = params.z_mass();

@@ -344,6 +344,119 @@ where
         k
     }
 
+    /// Computes the Kretschmann scalar K = R_abcd R^abcd with full metric index raising.
+    ///
+    /// This method performs proper index raising using the inverse metric:
+    /// ```text
+    /// R^abcd = g^am g^bn g^cr g^ds R_mnrs
+    /// K = R_abcd × R^abcd
+    /// ```
+    ///
+    /// # Arguments
+    ///
+    /// * `inverse_metric` - The inverse metric tensor g^μν as a flat [dim × dim] array
+    ///
+    /// # Returns
+    ///
+    /// The Kretschmann scalar invariant.
+    ///
+    /// # Note
+    ///
+    /// For Schwarzschild spacetime: K = 48M²/r⁶
+    pub fn kretschmann_scalar_with_metric(&self, inverse_metric: &[T]) -> T {
+        let dim = self.dim;
+        let zero = <T as From<f64>>::from(0.0);
+
+        // Validate inverse metric size
+        if inverse_metric.len() != dim * dim {
+            return zero;
+        }
+
+        // Helper to index flat 4D array: R[a,b,c,d]
+        let idx4 = |a: usize, b: usize, c: usize, d: usize| -> usize {
+            ((a * dim + b) * dim + c) * dim + d
+        };
+
+        // Helper to get inverse metric component g^{ij}
+        let g_inv = |i: usize, j: usize| -> T { inverse_metric[i * dim + j] };
+
+        // First, lower all indices of R^d_abc to get R_abcd
+        // R_abcd = g_de R^e_abc (lower the upper index)
+        // For our stored format R^d_abc, we need to contract with metric.
+        // However, since get(d, a, b, c) returns R^d_abc, we need to be careful.
+        //
+        // The Kretschmann scalar is K = R_abcd R^abcd
+        // R^abcd = g^am g^bn g^cp g^dq R_mnpq
+        //
+        // Our stored tensor is R^d_abc. To get R_abcd:
+        // R_abcd = g_de R^e_abc
+        //
+        // So: R^abcd = g^am g^bn g^cp g^dq g_qe R^e_mnp
+        //            = g^am g^bn g^cp δ^d_e R^e_mnp  (using g^dq g_qe = δ^d_e)
+        //            = g^am g^bn g^cp R^d_mnp
+        //
+        // Therefore: K = R_abcd R^abcd
+        //              = (g_ae R^e_bcd) × (g^am g^bn g^cp R^d_mnp)
+        //              = R^a_bcd × g^bn g^cp R^d_anp  (since g_ae g^am = δ^m_e)
+
+        // For efficiency, we compute R^abcd first (all indices up)
+        let total = dim * dim * dim * dim;
+        let mut r_up = vec![zero; total];
+
+        // Raise first 3 lower indices: R^abcd = g^am g^bn g^cp R^d_mnp
+        for a in 0..dim {
+            for b in 0..dim {
+                for c in 0..dim {
+                    for d in 0..dim {
+                        let mut sum = zero;
+                        for m in 0..dim {
+                            for n in 0..dim {
+                                for p in 0..dim {
+                                    // R^d_mnp from stored format
+                                    let r_d_mnp = self.get(d, m, n, p);
+                                    sum = sum + g_inv(a, m) * g_inv(b, n) * g_inv(c, p) * r_d_mnp;
+                                }
+                            }
+                        }
+                        r_up[idx4(a, b, c, d)] = sum;
+                    }
+                }
+            }
+        }
+
+        // Now compute R_abcd (all lower) for the contraction
+        // R_abcd = g_de R^e_abc
+        let mut r_down = vec![zero; total];
+        for a in 0..dim {
+            for b in 0..dim {
+                for c in 0..dim {
+                    for d in 0..dim {
+                        let mut sum = zero;
+                        for e in 0..dim {
+                            // g_de from metric (diagonal assumption for Minkowski-like)
+                            let g_de = if d == e {
+                                <T as From<f64>>::from(self.metric.sign_of_sq(d) as f64)
+                            } else {
+                                zero
+                            };
+                            let r_e_abc = self.get(e, a, b, c);
+                            sum = sum + g_de * r_e_abc;
+                        }
+                        r_down[idx4(a, b, c, d)] = sum;
+                    }
+                }
+            }
+        }
+
+        // Contract: K = R_abcd × R^abcd
+        let mut k = zero;
+        for i in 0..total {
+            k = k + r_down[i] * r_up[i];
+        }
+
+        k
+    }
+
     /// Computes the Einstein tensor G_μν = R_μν - (1/2) g_μν R.
     ///
     /// Returns a dim×dim matrix as a flat vector in row-major order.

@@ -15,7 +15,23 @@
 //! 4. **Analysis**: Lifetime and width calculations
 
 use deep_causality_core::{CausalEffectPropagationProcess, EffectValue, PropagatingEffect};
+use deep_causality_num::DoubleFloat;
 use deep_causality_physics::{WeakField, WeakFieldOps, WeakIsospin};
+
+// =============================================================================
+// FLOAT TYPE CONFIGURATION
+// =============================================================================
+
+// Change this to f32 or DoubleFloat to use different precision
+type FloatType = DoubleFloat;
+type WeakTheory = WeakField<FloatType>;
+
+/// Macro to convert f64 literals to FloatType
+macro_rules! flt {
+    ($x:expr) => {
+        <FloatType as From<f64>>::from($x)
+    };
+}
 
 // =============================================================================
 // MAIN
@@ -24,6 +40,7 @@ use deep_causality_physics::{WeakField, WeakFieldOps, WeakIsospin};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("═══════════════════════════════════════════════════════════════");
     println!("  Weak Force Analysis Pipeline (SU(2))");
+    println!("  (Float Type: {})", std::any::type_name::<FloatType>());
     println!("═══════════════════════════════════════════════════════════════\n");
 
     // Stage 1: Initialize
@@ -49,11 +66,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 struct WeakState {
     muon: Option<WeakIsospin>,
     neutrino: Option<WeakIsospin>,
-    cc_propagator: f64,
-    nc_propagator: f64,
-    muon_width: f64,
-    muon_lifetime: f64,
-    w_width: f64,
+    cc_propagator: FloatType,
+    nc_propagator: FloatType,
+    muon_width: FloatType,
+    muon_lifetime: FloatType,
+    w_width: FloatType,
 }
 
 // =============================================================================
@@ -99,8 +116,8 @@ fn stage_charged_current(
     println!("─────────────────────────────────────────────────");
 
     // Simulate W exchange at low energy (q² << M_W²)
-    let q2 = 0.01; // GeV²
-    match WeakField::charged_current_propagator(q2) {
+    let q2 = flt!(0.01); // GeV²
+    match WeakTheory::charged_current_propagator(q2) {
         Ok(prop) => {
             state.cc_propagator = prop;
             println!("  q²:            {} GeV²", q2);
@@ -126,8 +143,8 @@ fn stage_neutral_current(
 
     if let Some(nu) = state.neutrino {
         // Scattering at higher energy
-        let q2 = 100.0; // GeV²
-        match WeakField::neutral_current_propagator(q2, &nu) {
+        let q2 = flt!(100.0); // GeV²
+        match WeakTheory::neutral_current_propagator(q2, &nu) {
             Ok(prop) => {
                 state.nc_propagator = prop;
                 println!("  q²:            {} GeV²", q2);
@@ -156,16 +173,16 @@ fn stage_decay_properties(
     println!("─────────────────────────");
 
     // Muon decay
-    let m_mu = 0.10566; // GeV
-    if let Ok(width) = WeakField::weak_decay_width(m_mu) {
+    let m_mu = flt!(0.10566); // GeV
+    if let Ok(width) = WeakTheory::weak_decay_width(m_mu) {
         state.muon_width = width;
         println!("  Muon decay width: {:.4e} GeV", width);
     }
 
-    state.muon_lifetime = WeakField::muon_lifetime();
+    state.muon_lifetime = WeakTheory::muon_lifetime();
     println!("  Muon lifetime:    {:.4e} s", state.muon_lifetime);
 
-    state.w_width = WeakField::w_boson_width();
+    state.w_width = WeakTheory::w_boson_width();
     println!("  W Boson width:    {:.4} GeV", state.w_width);
     println!();
 
