@@ -14,6 +14,7 @@ rust_library(
         "//deep_causality_haft",
         "//deep_causality_metric",
         "//deep_causality_num",
+        "//deep_causality_tensor",
     ],
 )
 

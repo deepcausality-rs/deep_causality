@@ -175,7 +175,7 @@ impl NumCast for DoubleFloat {
 // Sum and Product
 // =============================================================================
 
-use std::iter::{Product, Sum};
+use core::iter::{Product, Sum};
 
 impl Sum for DoubleFloat {
     fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {

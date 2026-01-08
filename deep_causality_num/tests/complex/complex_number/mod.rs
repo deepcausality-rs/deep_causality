@@ -13,6 +13,8 @@ mod arithmetic_tests;
 #[cfg(test)]
 mod as_primitive_tests;
 #[cfg(test)]
+mod complex_field_tests;
+#[cfg(test)]
 mod complex_impl_tests;
 #[cfg(test)]
 mod constructors_tests;
@@ -28,6 +30,8 @@ mod identity_tests;
 mod neg_tests;
 #[cfg(test)]
 mod num_cast_tests;
+#[cfg(test)]
+mod ordering_tests;
 mod rotation_tests;
 #[cfg(test)]
 mod to_primitive_tests;

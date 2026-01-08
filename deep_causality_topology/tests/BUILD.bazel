@@ -34,6 +34,7 @@ rust_test_suite(
         "//deep_causality_haft",
         "//deep_causality_sparse",
         "//deep_causality_tensor",
+        "//deep_causality_metric",
     ],
 )
 

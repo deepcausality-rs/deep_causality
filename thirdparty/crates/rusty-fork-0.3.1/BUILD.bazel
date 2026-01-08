@@ -101,7 +101,7 @@ rust_library(
     deps = [
         "//thirdparty/crates/fnv-1.0.7:fnv",
         "//thirdparty/crates/quick-error-1.2.3:quick_error",
-        "//thirdparty/crates/tempfile-3.23.0:tempfile",
+        "//thirdparty/crates/tempfile-3.24.0:tempfile",
         "//thirdparty/crates/wait-timeout-0.2.1:wait_timeout",
     ],
 )

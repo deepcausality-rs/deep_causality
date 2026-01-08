@@ -4,8 +4,8 @@
  */
 
 use crate::DoubleFloat;
-use std::fmt;
-use std::fmt::{LowerExp, UpperExp};
+use core::fmt;
+use core::fmt::{LowerExp, UpperExp};
 
 impl fmt::Display for DoubleFloat {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

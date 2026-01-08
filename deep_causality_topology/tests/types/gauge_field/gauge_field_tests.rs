@@ -10,14 +10,14 @@ use deep_causality_topology::{
 };
 
 fn create_test_manifold() -> Manifold<f64, f64> {
-    let mut builder = SimplicialComplexBuilder::new(1);
+    let mut builder = SimplicialComplexBuilder::new(0);
     builder
-        .add_simplex(Simplex::new(vec![0, 1]))
+        .add_simplex(Simplex::new(vec![0]))
         .expect("Failed to add simplex");
     let complex = builder.build::<f64>().expect("Failed to build complex");
 
     // Create dummy data for manifold
-    let data = CausalTensor::zeros(&[3]); // 3 simplices (1 edge + 2 vertices)
+    let data = CausalTensor::zeros(&[1]); // 1 vertex
 
     Manifold::new(complex, data, 0).expect("Failed to create manifold")
 }
@@ -75,19 +75,20 @@ fn test_gauge_field_with_default_metric() {
 #[test]
 fn test_gauge_field_getters() {
     let manifold = create_test_manifold();
-    let connection = CausalTensor::from_vec(vec![10.0], &[1, 1, 1]);
-    let field_strength = CausalTensor::from_vec(vec![20.0], &[1, 1, 1, 1]);
+    // U1 requires spacetime_dim=4, lie_dim=1 -> connection: 4 elements, field_strength: 16 elements
+    let connection = CausalTensor::from_vec(vec![10.0, 20.0, 30.0, 40.0], &[1, 4, 1]);
+    let field_strength = CausalTensor::from_vec(vec![5.0; 16], &[1, 4, 4, 1]);
 
     let field: GaugeField<U1, f64, f64, f64> = GaugeField::new(
         manifold.clone(),
-        Metric::Euclidean(1),
+        Metric::Minkowski(4),
         connection,
         field_strength,
     )
     .expect("Failed to create U1 field");
 
     assert_eq!(field.connection().as_slice()[0], 10.0);
-    assert_eq!(field.field_strength().as_slice()[0], 20.0);
+    assert_eq!(field.field_strength().as_slice()[0], 5.0);
     // Base Check
-    assert_eq!(field.base().complex().dimension(), 1);
+    assert_eq!(field.base().complex().dimension(), 0);
 }
