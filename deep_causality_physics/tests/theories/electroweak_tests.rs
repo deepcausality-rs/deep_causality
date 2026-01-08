@@ -379,3 +379,176 @@ fn test_electroweak_field_west_coast() {
         "Electroweak should use West Coast signature"
     );
 }
+
+// ============================================================================
+// ElectroweakParams Coverage Gap Tests
+// ============================================================================
+
+#[test]
+fn test_with_mixing_angle_zero_error() {
+    let result = ElectroweakParams::<f64>::with_mixing_angle(0.0);
+    assert!(result.is_err(), "sin²θ_W = 0 should return error");
+}
+
+#[test]
+fn test_with_mixing_angle_negative_error() {
+    let result = ElectroweakParams::<f64>::with_mixing_angle(-0.1);
+    assert!(result.is_err(), "sin²θ_W < 0 should return error");
+}
+
+#[test]
+fn test_with_mixing_angle_one_error() {
+    let result = ElectroweakParams::<f64>::with_mixing_angle(1.0);
+    assert!(result.is_err(), "sin²θ_W = 1 should return error");
+}
+
+#[test]
+fn test_with_mixing_angle_greater_than_one_error() {
+    let result = ElectroweakParams::<f64>::with_mixing_angle(1.5);
+    assert!(result.is_err(), "sin²θ_W > 1 should return error");
+}
+
+#[test]
+fn test_with_mixing_angle_valid() {
+    let result = ElectroweakParams::<f64>::with_mixing_angle(0.23);
+    assert!(result.is_ok(), "Valid sin²θ_W should succeed");
+    let params = result.unwrap();
+    assert!((params.sin2_theta_w() - 0.23).abs() < 1e-10);
+}
+
+#[test]
+fn test_rho_parameter_computed() {
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
+
+    // At tree level, ρ_computed should be exactly 1.0 by construction
+    let rho = params.rho_parameter_computed();
+    assert!(
+        (rho - 1.0).abs() < 1e-6,
+        "ρ_computed = {} should be 1.0 by construction",
+        rho
+    );
+}
+
+#[test]
+fn test_rho_effective() {
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
+
+    // Without radiative corrections, ρ_eff = 1.0
+    assert_eq!(
+        params.rho_effective(),
+        1.0,
+        "ρ_eff should be 1.0 without corrections"
+    );
+
+    // With precision mode, ρ_eff = 1 + Δρ > 1
+    let precision_params = ElectroweakParams::<f64>::standard_model_precision();
+    let rho_eff = precision_params.rho_effective();
+    assert!(
+        rho_eff > 1.0,
+        "ρ_eff = {} should be > 1 with radiative corrections",
+        rho_eff
+    );
+}
+
+#[test]
+fn test_corrections_accessor() {
+    // Standard model without precision has no corrections
+    let params = ElectroweakParams::<f64>::standard_model();
+    assert!(
+        params.corrections().is_none(),
+        "Standard model should have no corrections"
+    );
+
+    // Precision mode has corrections
+    let precision_params = ElectroweakParams::<f64>::standard_model_precision();
+    let corrections = precision_params.corrections();
+    assert!(
+        corrections.is_some(),
+        "Precision mode should have corrections"
+    );
+
+    let c = corrections.unwrap();
+    assert!(c.delta_rho > 0.0, "Δρ should be positive");
+}
+
+#[test]
+fn test_z_resonance_cross_section_negative_energy_error() {
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
+    let result = params.z_resonance_cross_section(-10.0, 2.5);
+    assert!(result.is_err(), "Negative energy should return error");
+}
+
+#[test]
+fn test_z_resonance_cross_section_zero_energy_error() {
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
+    let result = params.z_resonance_cross_section(0.0, 2.5);
+    assert!(result.is_err(), "Zero energy should return error");
+}
+
+#[test]
+fn test_standard_model_precision_masses() {
+    let params = ElectroweakParams::<f64>::standard_model_precision();
+
+    // W mass should be physical (80.3 - 80.4 GeV)
+    let m_w = params.w_mass_computed();
+    assert!(
+        m_w > 80.0 && m_w < 81.0,
+        "M_W = {} should be in physical range",
+        m_w
+    );
+
+    // Z mass should be fixed at PDG value
+    let m_z = params.z_mass_computed();
+    assert!(
+        (m_z - 91.1876).abs() < 0.01,
+        "M_Z = {} should be ~91.19 GeV",
+        m_z
+    );
+}
+
+#[test]
+fn test_z_partial_width_fermion_coverage() {
+    let params = ElectroweakParams::<f64>::standard_model_precision();
+
+    // Test quark channel (with color factor and QCD corrections)
+    let gamma_u = params.z_partial_width_fermion(true, 0.5, 2.0 / 3.0);
+    assert!(gamma_u > 0.0, "Up quark width should be positive");
+
+    // Test lepton channel
+    let gamma_e = params.z_partial_width_fermion(false, -0.5, -1.0);
+    assert!(gamma_e > 0.0, "Electron width should be positive");
+
+    // Quarks should have larger width due to color factor
+    assert!(
+        gamma_u > gamma_e,
+        "Quark width {} should be > lepton width {}",
+        gamma_u,
+        gamma_e
+    );
+}
+
+#[test]
+fn test_z_total_width_computed_physical() {
+    let params = ElectroweakParams::<f64>::standard_model_precision();
+    let gamma_z = params.z_total_width_computed();
+
+    // PDG value: Γ_Z ≈ 2.4952 GeV
+    assert!(
+        gamma_z > 2.4 && gamma_z < 2.6,
+        "Γ_Z = {} should be ~2.5 GeV",
+        gamma_z
+    );
+}
+
+#[test]
+fn test_z_hadronic_width_computed() {
+    let params = ElectroweakParams::<f64>::standard_model_precision();
+    let gamma_had = params.z_hadronic_width_computed();
+
+    // Hadronic width is the dominant contribution (~1.7 GeV)
+    assert!(
+        gamma_had > 1.5 && gamma_had < 2.0,
+        "Γ_had = {} should be ~1.7 GeV",
+        gamma_had
+    );
+}

@@ -5,7 +5,7 @@
 
 //! Tests for DivisionAlgebra and RealField traits on DoubleFloat.
 
-use deep_causality_num::{DivisionAlgebra, DoubleFloat, Float, RealField};
+use deep_causality_num::{DivisionAlgebra, DoubleFloat, RealField};
 
 const EPSILON: f64 = 1e-14;
 

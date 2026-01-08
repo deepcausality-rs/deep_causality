@@ -9,4 +9,6 @@ pub mod em_tests;
 #[cfg(test)]
 pub mod gr_tests;
 #[cfg(test)]
+pub mod radiative_tests;
+#[cfg(test)]
 pub mod weak_force_tests;
