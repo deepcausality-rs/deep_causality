@@ -47,13 +47,6 @@ pub mod observable;
 // //!
 // //! `Vec<T>` and `VecDeque<T>` already cover most practical use cases effectively.
 // //!
-// //! ## Macros and Implementation Details
-// //!
-// //! Rust's default trait implementations can only rely on methods defined within the trait itself.
-// //! As such, several helper methods—such as `len`, `is_empty`, and `get_all_items`—are implemented explicitly
-// //! within each extension. These are mostly trivial and generated via compiler macros defined in the
-// //! [`deep_causality_macros`](https://docs.rs/deep_causality_macros) crate.
-// //!
 // //! ## Further Reading
 // //!
 // //! - [Extension Traits in Rust](http://xion.io/post/code/rust-extension-traits.html)
