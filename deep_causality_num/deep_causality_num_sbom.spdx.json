@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2025-12-03T03:23:43Z",
+    "created": "2026-01-08T01:40:02Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_num-5bc0baf4-7e3f-4dca-9204-dcab9dd8dcbc",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_num-357ca2cd-ca96-4c43-b615-d9d8f5ccfbc4",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_num",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "71ed1fe493c0c6d11fa333372fe6ce6b1fe3d2f0"
+          "checksumValue": "1286257a27d54d1fe55fad9650ca04c21efbe6e3"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -27,13 +27,13 @@
   "name": "deep_causality_num",
   "packages": [
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.8",
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.11",
       "description": "Number utils for for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_num",
-      "versionInfo": "0.1.8"
+      "versionInfo": "0.1.11"
     },
     {
       "SPDXID": "SPDXRef-Package-libm-0.2.15",
@@ -54,9 +54,9 @@
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.8",
-      "relationshipType": "GENERATED_FROM",
-      "spdxElementId": "SPDXRef-File-deep_causality_num"
+      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.15",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.1.11"
     },
     {
       "relatedSpdxElement": "SPDXRef-File-deep_causality_num",
@@ -64,9 +64,9 @@
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.15",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.1.8"
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.11",
+      "relationshipType": "GENERATED_FROM",
+      "spdxElementId": "SPDXRef-File-deep_causality_num"
     }
   ],
   "spdxVersion": "SPDX-2.3"

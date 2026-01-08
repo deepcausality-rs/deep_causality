@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2025-11-23T06:13:43Z",
+    "created": "2026-01-08T01:40:01Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_macros-2b5a7434-91e5-4738-9505-a1b1adcdd4ad",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_macros-00aeae71-acbf-4d68-8c5e-59781dde9e73",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_macros",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "862e08ce96bf3fc028e724506fc11a3f0a7afd7e"
+          "checksumValue": "1286257a27d54d1fe55fad9650ca04c21efbe6e3"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -27,13 +27,13 @@
   "name": "deep_causality_macros",
   "packages": [
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--macros-0.8.9",
+      "SPDXID": "SPDXRef-Package-deep--causality--macros-0.8.11",
       "description": "Costum code generation macros for the DeepCausality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_macros",
-      "versionInfo": "0.8.9"
+      "versionInfo": "0.8.11"
     }
   ],
   "relationships": [
@@ -43,7 +43,7 @@
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--macros-0.8.9",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--macros-0.8.11",
       "relationshipType": "GENERATED_FROM",
       "spdxElementId": "SPDXRef-File-deep_causality_macros"
     }

@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2025-12-03T03:23:43Z",
+    "created": "2026-01-08T01:40:01Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_haft-40a61fdf-f619-40dd-bb1e-31efcb37b56e",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_haft-1c22a64e-2edc-491e-b279-2421fae6ccee",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_haft",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "71ed1fe493c0c6d11fa333372fe6ce6b1fe3d2f0"
+          "checksumValue": "1286257a27d54d1fe55fad9650ca04c21efbe6e3"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -27,60 +27,25 @@
   "name": "deep_causality_haft",
   "packages": [
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.2.4",
+      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.2.7",
       "description": "HKT traits for for the deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_haft",
-      "versionInfo": "0.2.4"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.8",
-      "description": "Number utils for for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_num",
-      "versionInfo": "0.1.8"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-libm-0.2.15",
-      "description": "libm in pure Rust",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/libm@0.2.15",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "libm",
-      "versionInfo": "0.2.15"
+      "versionInfo": "0.2.7"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.15",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.1.8"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.8",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--haft-0.2.4"
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.2.7",
+      "relationshipType": "GENERATED_FROM",
+      "spdxElementId": "SPDXRef-File-deep_causality_haft"
     },
     {
       "relatedSpdxElement": "SPDXRef-File-deep_causality_haft",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.2.4",
-      "relationshipType": "GENERATED_FROM",
-      "spdxElementId": "SPDXRef-File-deep_causality_haft"
     }
   ],
   "spdxVersion": "SPDX-2.3"
