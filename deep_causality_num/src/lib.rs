@@ -27,7 +27,9 @@ pub use crate::algebra::algebra_assoc_div::AssociativeDivisionAlgebra;
 pub use crate::algebra::algebra_base::Algebra;
 pub use crate::algebra::algebra_div::DivisionAlgebra;
 pub use crate::algebra::algebra_properties::{Associative, Commutative, Distributive};
+pub use crate::algebra::domain_euclidean::EuclideanDomain;
 pub use crate::algebra::field::Field;
+pub use crate::algebra::field_complex::ComplexField;
 pub use crate::algebra::field_real::RealField;
 pub use crate::algebra::group::Group;
 pub use crate::algebra::group_abelian::AbelianGroup;
@@ -41,6 +43,7 @@ pub use crate::algebra::ring::Ring;
 pub use crate::algebra::ring_associative::AssociativeRing;
 pub use crate::algebra::ring_com::CommutativeRing;
 pub use crate::algebra::rotation::Rotation;
+pub use crate::algebra::semigroup::{AddSemigroup, MulSemigroup};
 
 // Casts
 pub use crate::cast::as_primitive::AsPrimitive;

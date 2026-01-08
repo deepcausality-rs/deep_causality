@@ -16,6 +16,8 @@ graph TD
     subgraph Foundational Structures
         AddMag["AddMagma"]
         MulMag["MulMagma"]
+        AddSemi["AddSemigroup"]
+        MulSemi["MulSemigroup"]
     end
 
     subgraph Additive Hierarchy
@@ -37,9 +39,14 @@ graph TD
         CommRing["CommutativeRing"]
     end
 
+    subgraph Domain Structures
+        EucDom["EuclideanDomain"]
+    end
+
     subgraph Field Structures
         Field["Field"]
         RealFld["RealField"]
+        CmplxFld["ComplexField&lt;R&gt;"]
     end
 
     subgraph Vector Structures
@@ -54,14 +61,19 @@ graph TD
         Rotation["Rotation&lt;T&gt;"]
     end
 
+    %% Semigroup path
+    AddMag --> AddSemi
+    MulMag --> MulSemi
+    Assoc --> AddSemi
+    Assoc --> MulSemi
+
     %% Additive path
-    AddMag --> AddMon
+    AddSemi --> AddMon
     AddMon --> AddGrp
     AddGrp --> AbelGrp
 
     %% Multiplicative path
-    MulMag --> MulMon
-    Assoc --> MulMon
+    MulSemi --> MulMon
     MulMon --> InvMon
     InvMon --> MulGrp
     MulGrp --> DivGrp
@@ -75,10 +87,14 @@ graph TD
     Ring --> CommRing
     Comm --> CommRing
 
+    %% Domain path
+    CommRing --> EucDom
+
     %% Field path
     CommRing --> Field
     InvMon --> Field
     Field --> RealFld
+    Field --> CmplxFld
 
     %% Module/Algebra path
     AbelGrp --> Module
@@ -93,6 +109,7 @@ graph TD
     %% RealField dependency
     RealFld --> Rotation
 ```
+
 
 ---
 
@@ -148,6 +165,35 @@ pub trait MulMagma: Mul<Output = Self> + Clone {}
 - **Closure:** $a \cdot b \in S$ for all $a, b \in S$
 
 Octonions implement `MulMagma` but not `MulMonoid` (non-associative multiplication).
+
+---
+
+### Semigroups
+
+#### AddSemigroup
+A set with an associative binary addition operation (no identity required).
+
+```rust
+pub trait AddSemigroup: Add<Output = Self> + Associative + Clone {}
+```
+
+**Laws:**
+1. **Closure:** $a + b \in S$
+2. **Associativity:** $(a + b) + c = a + (b + c)$
+
+---
+
+#### MulSemigroup
+A set with an associative binary multiplication operation (no identity required).
+
+```rust
+pub trait MulSemigroup: Mul<Output = Self> + Associative + Clone {}
+```
+
+**Hierarchy:**
+```text
+Magma (closure only) → Semigroup (+ associativity) → Monoid (+ identity)
+```
 
 ---
 
@@ -323,6 +369,56 @@ pub trait RealField: Field + PartialOrd + Neg<Output = Self> + Copy {
 - **Ordering:** `PartialOrd`
 - **Transcendentals:** `sin`, `cos`, `exp`, `ln`, `sqrt`, etc.
 - **Constants:** `pi()`, `e()`, `epsilon()`
+
+---
+
+#### ComplexField\<R\>
+A field extension over the reals with complex conjugation and component access.
+
+```rust
+pub trait ComplexField<R: Field>: Field {
+    fn real(&self) -> R;
+    fn imag(&self) -> R;
+    fn conjugate(&self) -> Self;
+    fn norm_sqr(&self) -> R;
+    fn norm(&self) -> R;
+    fn arg(&self) -> R;
+    fn from_re_im(re: R, im: R) -> Self;
+    fn i() -> Self;
+}
+```
+
+**Properties:**
+- **Conjugation:** $(z^*)^* = z$, $(zw)^* = z^* w^*$
+- **Norm:** $|z|^2 = z \cdot z^*$
+- **Decomposition:** $z = \text{re}(z) + i \cdot \text{im}(z)$
+
+> [!NOTE]
+> Quaternions and Octonions are NOT complex fields (non-commutative/non-associative).
+> They implement `DivisionAlgebra` instead.
+
+---
+
+### Domain Structures
+
+#### EuclideanDomain
+A commutative ring with well-defined Euclidean division (enables GCD algorithm).
+
+```rust
+pub trait EuclideanDomain: CommutativeRing {
+    type EuclideanValue: Ord;
+    fn euclidean_fn(&self) -> Self::EuclideanValue;
+    fn div_euclid(&self, other: &Self) -> Self;
+    fn rem_euclid(&self, other: &Self) -> Self;
+    fn gcd(&self, other: &Self) -> Self;
+    fn lcm(&self, other: &Self) -> Self;
+}
+```
+
+**Mathematical Hierarchy:**
+$$\text{Euclidean Domain} \subset \text{PID} \subset \text{UFD} \subset \text{Integral Domain}$$
+
+**Implemented for:** All primitive integer types (`i8`–`i128`, `u8`–`u128`, `isize`, `usize`)
 
 ---
 
