@@ -55,25 +55,25 @@ where
             let bz = b_data.get(offset + 4).cloned().unwrap_or_else(S::zero);
 
             // F_01 = E_x
-            f_data[offset + 1] = ex.clone();
+            f_data[offset + 1] = ex;
             f_data[offset + 4] = -ex; // F_10
 
             // F_02 = E_y
-            f_data[offset + 2] = ey.clone();
+            f_data[offset + 2] = ey;
             f_data[offset + 8] = -ey; // F_20
 
             // F_03 = E_z
-            f_data[offset + 3] = ez.clone();
+            f_data[offset + 3] = ez;
             f_data[offset + 12] = -ez; // F_30
 
             // F_ij = -epsilon_ijk B_k
-            f_data[offset + 11] = bx.clone();
+            f_data[offset + 11] = bx;
             f_data[offset + 14] = -bx; // F_32
 
-            f_data[offset + 13] = by.clone();
+            f_data[offset + 13] = by;
             f_data[offset + 7] = -by; // F_13
 
-            f_data[offset + 6] = bz.clone();
+            f_data[offset + 6] = bz;
             f_data[offset + 9] = -bz; // F_21
         }
 
@@ -119,7 +119,7 @@ where
     }
 
     fn plane_wave(amplitude: S, polarization: usize) -> Result<Self, PhysicsError> {
-        let amp_f64: f64 = amplitude.clone().into();
+        let amp_f64: f64 = amplitude.into();
         if !amp_f64.is_finite() {
             return Err(PhysicsError::NumericalInstability(
                 "Amplitude must be finite".into(),
@@ -128,22 +128,8 @@ where
 
         let zero = S::zero();
         match polarization {
-            0 => Self::from_components(
-                amplitude.clone(),
-                zero.clone(),
-                zero.clone(),
-                zero.clone(),
-                amplitude,
-                zero,
-            ),
-            1 => Self::from_components(
-                zero.clone(),
-                amplitude.clone(),
-                zero.clone(),
-                zero.clone(),
-                zero.clone(),
-                amplitude,
-            ),
+            0 => Self::from_components(amplitude, zero, zero, zero, amplitude, zero),
+            1 => Self::from_components(zero, amplitude, zero, zero, zero, amplitude),
             _ => Err(PhysicsError::DimensionMismatch(
                 "Polarization must be 0 or 1".into(),
             )),
@@ -155,9 +141,9 @@ where
         let data = f_tensor.data();
 
         let e_vec: Vec<S> = if data.len() >= 16 {
-            let ex = data[1].clone();
-            let ey = data[2].clone();
-            let ez = data[3].clone();
+            let ex = data[1];
+            let ey = data[2];
+            let ez = data[3];
 
             let mut v: Vec<S> = vec![S::zero(); 16];
             v[2] = ex;
@@ -177,9 +163,9 @@ where
         let data = f_tensor.data();
 
         let b_vec: Vec<S> = if data.len() >= 16 {
-            let bx = data[11].clone();
-            let by = -data[7].clone();
-            let bz = data[6].clone();
+            let bx = data[11];
+            let by = -data[7];
+            let bz = data[6];
 
             let mut v: Vec<S> = vec![S::zero(); 16];
             v[2] = bx;
@@ -272,7 +258,7 @@ where
         let e_sq = squared_magnitude_3d(&e);
         let b_sq = squared_magnitude_3d(&b);
 
-        let diff: f64 = Float::abs(e_sq.clone() - b_sq.clone()).into();
+        let diff: f64 = Float::abs(e_sq - b_sq).into();
         let sum: f64 = (e_sq + b_sq).into();
         let threshold = 1e-10 * sum.max(1.0);
         Ok(diff < threshold)
@@ -307,7 +293,7 @@ where
     let y = data.get(3).cloned().unwrap_or_else(S::zero);
     let z = data.get(4).cloned().unwrap_or_else(S::zero);
 
-    x.clone() * x + y.clone() * y + z.clone() * z
+    x * x + y * y + z * z
 }
 
 /// Computes the magnitude of a 3D vector
@@ -357,8 +343,8 @@ where
     let bz = b_data.get(4).cloned().unwrap_or_else(S::zero);
 
     // c = a × b
-    let cx = ay.clone() * bz.clone() - az.clone() * by.clone();
-    let cy = az * bx.clone() - ax.clone() * bz;
+    let cx = ay * bz - az * by;
+    let cy = az * bx - ax * bz;
     let cz = ax * by - ay * bx;
 
     let mut result: Vec<S> = vec![S::zero(); 16];

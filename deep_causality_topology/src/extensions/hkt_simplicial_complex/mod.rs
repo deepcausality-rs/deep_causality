@@ -33,12 +33,13 @@ impl Functor<ChainWitness> for ChainWitness {
     {
         // Re-use CsrMatrix functor logic on weights to apply f(a) -> b
         let new_weights = <CsrMatrixWitness as Functor<CsrMatrixWitness>>::fmap(fa.weights, f);
-        let mut new_complex = SimplicialComplex::<B>::default();
-        new_complex.skeletons = fa.complex.skeletons.clone();
-        new_complex.boundary_operators = fa.complex.boundary_operators.clone();
-        new_complex.coboundary_operators = fa.complex.coboundary_operators.clone();
-        // explicit empty hodge stars
-        new_complex.hodge_star_operators = Vec::new();
+        let new_complex = SimplicialComplex::<B> {
+            skeletons: fa.complex.skeletons.clone(),
+            boundary_operators: fa.complex.boundary_operators.clone(),
+            coboundary_operators: fa.complex.coboundary_operators.clone(),
+            // explicit empty hodge stars
+            hodge_star_operators: Vec::new(),
+        };
 
         Chain::new(Arc::new(new_complex), fa.grade, new_weights)
     }
@@ -77,10 +78,12 @@ where
 
         // Inner Complex: Complex<A>.
         // We construct a structural copy without hodge stars.
-        let mut complex_a = SimplicialComplex::<A>::default();
-        complex_a.skeletons = complex.skeletons.clone();
-        complex_a.boundary_operators = complex.boundary_operators.clone();
-        complex_a.coboundary_operators = complex.coboundary_operators.clone();
+        let complex_a = SimplicialComplex::<A> {
+            skeletons: complex.skeletons.clone(),
+            boundary_operators: complex.boundary_operators.clone(),
+            coboundary_operators: complex.coboundary_operators.clone(),
+            ..Default::default()
+        };
         let arc_complex_a = Arc::new(complex_a);
 
         let inner_weights = <CsrMatrixWitness as Pure<CsrMatrixWitness>>::pure(a);
@@ -88,10 +91,12 @@ where
 
         // Outer Complex: Complex<Chain<A>>.
         // Structural copy.
-        let mut complex_chain_a = SimplicialComplex::<Chain<A>>::default();
-        complex_chain_a.skeletons = complex.skeletons.clone();
-        complex_chain_a.boundary_operators = complex.boundary_operators.clone();
-        complex_chain_a.coboundary_operators = complex.coboundary_operators.clone();
+        let complex_chain_a = SimplicialComplex::<Chain<A>> {
+            skeletons: complex.skeletons.clone(),
+            boundary_operators: complex.boundary_operators.clone(),
+            coboundary_operators: complex.coboundary_operators.clone(),
+            ..Default::default()
+        };
 
         let outer_weights = <CsrMatrixWitness as Pure<CsrMatrixWitness>>::pure(inner_chain);
         Chain::new(Arc::new(complex_chain_a), *grade, outer_weights)

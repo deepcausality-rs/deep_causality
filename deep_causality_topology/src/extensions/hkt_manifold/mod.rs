@@ -32,7 +32,7 @@ impl<C> Functor<ManifoldWitness<C>> for ManifoldWitness<C>
 where
     C: Satisfies<NoConstraint> + Clone,
 {
-    fn fmap<A, B, Func>(m_a: Manifold<C, A>, mut f: Func) -> Manifold<C, B>
+    fn fmap<A, B, Func>(m_a: Manifold<C, A>, f: Func) -> Manifold<C, B>
     where
         A: Satisfies<NoConstraint>,
         B: Satisfies<NoConstraint>,
@@ -40,7 +40,7 @@ where
     {
         // 1. Map Data
         // Capture f in a closure for data mapping
-        let new_data_tensor = CausalTensorWitness::fmap(m_a.data, |x| f(x));
+        let new_data_tensor = CausalTensorWitness::fmap(m_a.data, f);
 
         // 2. Complex and Metric are INVARIANT because they depend on C, not A or B.
         // We can just clone them.

@@ -32,7 +32,6 @@ use deep_causality_tensor::{CausalTensor, TensorData};
 /// ```text
 /// Γ = G_F² m⁵ / (192 π³)
 /// ```
-
 pub trait WeakFieldOps<S>
 where
     S: Field + Float + Clone + From<f64> + Into<f64> + TensorData,

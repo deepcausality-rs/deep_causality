@@ -33,10 +33,12 @@ impl Functor<TopologyWitness> for TopologyWitness {
         // and Arc prevents consuming the inner value.
         // Thus, we reconstruct the topological structure (skeletons/boundaries) which is invariant,
         // and drop the geometric structure (hodge operators) which depends on A.
-        let mut new_complex = crate::SimplicialComplex::<B>::default();
-        new_complex.skeletons = fa.complex.skeletons.clone();
-        new_complex.boundary_operators = fa.complex.boundary_operators.clone();
-        new_complex.coboundary_operators = fa.complex.coboundary_operators.clone();
+        let new_complex = crate::SimplicialComplex::<B> {
+            skeletons: fa.complex.skeletons.clone(),
+            boundary_operators: fa.complex.boundary_operators.clone(),
+            coboundary_operators: fa.complex.coboundary_operators.clone(),
+            ..Default::default()
+        };
 
         Topology {
             complex: Arc::new(new_complex),
@@ -79,10 +81,12 @@ impl CoMonad<TopologyWitness> for TopologyWitness {
 
         // Reconstruct complex for B
         // Preserve topology from A
-        let mut new_complex = crate::SimplicialComplex::<B>::default();
-        new_complex.skeletons = fa.complex.skeletons.clone();
-        new_complex.boundary_operators = fa.complex.boundary_operators.clone();
-        new_complex.coboundary_operators = fa.complex.coboundary_operators.clone();
+        let new_complex = crate::SimplicialComplex::<B> {
+            skeletons: fa.complex.skeletons.clone(),
+            boundary_operators: fa.complex.boundary_operators.clone(),
+            coboundary_operators: fa.complex.coboundary_operators.clone(),
+            ..Default::default()
+        };
 
         Topology {
             complex: Arc::new(new_complex),

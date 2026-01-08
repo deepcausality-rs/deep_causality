@@ -120,9 +120,9 @@ where
 
     let eps = <T as From<f64>>::from(1e-14);
     if det.abs() < eps {
-        return Err(PhysicsError::NumericalInstability(format!(
-            "Singular spatial metric (det ~ 0)"
-        )));
+        return Err(PhysicsError::NumericalInstability(
+            "Singular spatial metric (det ~ 0)".to_string(),
+        ));
     }
 
     let inv = T::one() / det;

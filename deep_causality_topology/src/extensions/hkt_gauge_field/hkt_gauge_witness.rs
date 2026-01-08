@@ -818,7 +818,7 @@ where
         }
 
         // New connection has lie_dim = 1 (single gauge component after mixing)
-        let new_conn_total = num_points * dim * 1;
+        let new_conn_total = num_points * dim;
         let mut new_conn_data = vec![T::zero(); new_conn_total];
 
         let conn_data = connection.as_slice();
@@ -842,7 +842,7 @@ where
         }
 
         // New field strength has lie_dim = 1
-        let new_fs_total = num_points * dim * dim * 1;
+        let new_fs_total = num_points * dim * dim;
         let mut new_fs_data = vec![T::zero(); new_fs_total];
 
         let fs_data = field_strength.as_slice();

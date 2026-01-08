@@ -72,7 +72,7 @@ where
     }
 
     pub fn spatial_ricci_scalar(&self) -> S {
-        self.spatial_ricci_scalar.clone()
+        self.spatial_ricci_scalar
     }
 
     pub fn spatial_christoffel(&self) -> Option<&CausalTensor<S>> {
@@ -131,21 +131,20 @@ where
             ));
         }
 
-        let g00 = g[0].clone();
-        let g01 = g[1].clone();
-        let g02 = g[2].clone();
-        let g10 = g[3].clone();
-        let g11 = g[4].clone();
-        let g12 = g[5].clone();
-        let g20 = g[6].clone();
-        let g21 = g[7].clone();
-        let g22 = g[8].clone();
+        let g00 = g[0];
+        let g01 = g[1];
+        let g02 = g[2];
+        let g10 = g[3];
+        let g11 = g[4];
+        let g12 = g[5];
+        let g20 = g[6];
+        let g21 = g[7];
+        let g22 = g[8];
 
-        let det = g00.clone() * (g11.clone() * g22.clone() - g12.clone() * g21.clone())
-            - g01.clone() * (g10.clone() * g22.clone() - g12.clone() * g20.clone())
-            + g02.clone() * (g10.clone() * g21.clone() - g11.clone() * g20.clone());
+        let det = g00 * (g11 * g22 - g12 * g21) - g01 * (g10 * g22 - g12 * g20)
+            + g02 * (g10 * g21 - g11 * g20);
 
-        let det_f64: f64 = det.clone().into();
+        let det_f64: f64 = det.into();
         if det_f64.abs() < 1e-12 {
             return Err(PhysicsError::NumericalInstability(
                 "Spatial metric determinant is zero".into(),
@@ -155,14 +154,14 @@ where
         let one = <S as From<f64>>::from(1.0);
         let inv_det = one / det;
 
-        let i00 = inv_det.clone() * (g11.clone() * g22.clone() - g12.clone() * g21.clone());
-        let i01 = inv_det.clone() * (g02.clone() * g21.clone() - g01.clone() * g22.clone());
-        let i02 = inv_det.clone() * (g01.clone() * g12.clone() - g02.clone() * g11.clone());
-        let i10 = inv_det.clone() * (g12.clone() * g20.clone() - g10.clone() * g22.clone());
-        let i11 = inv_det.clone() * (g00.clone() * g22.clone() - g02.clone() * g20.clone());
-        let i12 = inv_det.clone() * (g10.clone() * g02.clone() - g00.clone() * g12.clone());
-        let i20 = inv_det.clone() * (g10.clone() * g21.clone() - g11.clone() * g20.clone());
-        let i21 = inv_det.clone() * (g20.clone() * g01.clone() - g00.clone() * g21.clone());
+        let i00 = inv_det * (g11 * g22 - g12 * g21);
+        let i01 = inv_det * (g02 * g21 - g01 * g22);
+        let i02 = inv_det * (g01 * g12 - g02 * g11);
+        let i10 = inv_det * (g12 * g20 - g10 * g22);
+        let i11 = inv_det * (g00 * g22 - g02 * g20);
+        let i12 = inv_det * (g10 * g02 - g00 * g12);
+        let i20 = inv_det * (g10 * g21 - g11 * g20);
+        let i21 = inv_det * (g20 * g01 - g00 * g21);
         let i22 = inv_det * (g00 * g11 - g01 * g10);
 
         Ok([[i00, i01, i02], [i10, i11, i12], [i20, i21, i22]])
@@ -182,18 +181,18 @@ where
         let k_tensor = self.extrinsic_curvature.as_slice();
 
         let zero = <S as From<f64>>::from(0.0);
-        let mut k_mixed_trace = zero.clone();
-        let mut k_sq_contracted = zero.clone();
+        let mut k_mixed_trace = zero;
+        let mut k_sq_contracted = zero;
 
-        let mut k_upper = [[zero.clone(); 3]; 3];
+        let mut k_upper = [[zero; 3]; 3];
 
         for i in 0..3 {
             for j in 0..3 {
-                let mut sum = zero.clone();
+                let mut sum = zero;
                 for a in 0..3 {
                     for b in 0..3 {
-                        let k_ab = k_tensor[a * 3 + b].clone();
-                        sum = sum + inv_gamma[i][a].clone() * inv_gamma[j][b].clone() * k_ab;
+                        let k_ab = k_tensor[a * 3 + b];
+                        sum = sum + inv_gamma[i][a] * inv_gamma[j][b] * k_ab;
                     }
                 }
                 k_upper[i][j] = sum;
@@ -202,30 +201,26 @@ where
 
         for i in 0..3 {
             for j in 0..3 {
-                let k_ij = k_tensor[i * 3 + j].clone();
-                k_mixed_trace = k_mixed_trace + inv_gamma[i][j].clone() * k_ij;
+                let k_ij = k_tensor[i * 3 + j];
+                k_mixed_trace = k_mixed_trace + inv_gamma[i][j] * k_ij;
             }
         }
 
         for i in 0..3 {
             for j in 0..3 {
-                let k_ij = k_tensor[i * 3 + j].clone();
-                k_sq_contracted = k_sq_contracted + k_ij * k_upper[i][j].clone();
+                let k_ij = k_tensor[i * 3 + j];
+                k_sq_contracted = k_sq_contracted + k_ij * k_upper[i][j];
             }
         }
 
-        let r = self.spatial_ricci_scalar.clone();
+        let r = self.spatial_ricci_scalar;
         let rho = match matter_density {
-            Some(t) => t
-                .as_slice()
-                .first()
-                .cloned()
-                .unwrap_or_else(|| zero.clone()),
+            Some(t) => t.as_slice().first().cloned().unwrap_or(zero),
             None => zero,
         };
 
         let pi_16 = <S as From<f64>>::from(16.0 * std::f64::consts::PI);
-        let h = r + (k_mixed_trace.clone() * k_mixed_trace) - k_sq_contracted - pi_16 * rho;
+        let h = r + (k_mixed_trace * k_mixed_trace) - k_sq_contracted - pi_16 * rho;
 
         Ok(CausalTensor::from_vec(vec![h], &[1]))
     }
@@ -258,52 +253,48 @@ where
         let one = <S as From<f64>>::from(1.0);
 
         // Compute K = trace of K^i_j
-        let mut k_trace = zero.clone();
+        let mut k_trace = zero;
         for i in 0..3 {
             for j in 0..3 {
-                k_trace = k_trace + inv_gamma[i][j].clone() * k_tensor[i * 3 + j].clone();
+                k_trace = k_trace + inv_gamma[i][j] * k_tensor[i * 3 + j];
             }
         }
 
         // Compute K^j_i = γ^jk K_ki
-        let mut k_mixed = [[zero.clone(); 3]; 3]; // K^j_i
+        let mut k_mixed = [[zero; 3]; 3]; // K^j_i
         for j in 0..3 {
             for i in 0..3 {
-                let mut sum = zero.clone();
+                let mut sum = zero;
                 for k in 0..3 {
-                    sum = sum + inv_gamma[j][k].clone() * k_tensor[k * 3 + i].clone();
+                    sum = sum + inv_gamma[j][k] * k_tensor[k * 3 + i];
                 }
                 k_mixed[j][i] = sum;
             }
         }
 
         // Compute M_i = D_j (K^j_i - δ^j_i K) - 8πj_i
-        let mut m = [zero.clone(), zero.clone(), zero.clone()];
+        let mut m = [zero, zero, zero];
 
         // Helper closures
         let gamma_trace = |k: usize| -> S {
-            let mut sum = zero.clone();
+            let mut sum = zero;
             for j in 0..3 {
-                sum = sum + gamma_data[j * 9 + j * 3 + k].clone();
+                sum = sum + gamma_data[j * 9 + j * 3 + k];
             }
             sum
         };
 
-        let gamma = |k: usize, j: usize, i: usize| -> S { gamma_data[k * 9 + j * 3 + i].clone() };
+        let gamma = |k: usize, j: usize, i: usize| -> S { gamma_data[k * 9 + j * 3 + i] };
 
-        for i in 0..3 {
+        for (i, m_i) in m.iter_mut().enumerate() {
             // T^j_i = K^j_i - δ^j_i K
             let t = |j: usize, i_inner: usize| -> S {
-                let delta = if j == i_inner {
-                    one.clone()
-                } else {
-                    zero.clone()
-                };
-                k_mixed[j][i_inner].clone() - delta * k_trace.clone()
+                let delta = if j == i_inner { one } else { zero };
+                k_mixed[j][i_inner] - delta * k_trace
             };
 
             // Connection terms: Γ^j_jk T^k_i - Γ^k_ji T^j_k
-            let mut conn_term = zero.clone();
+            let mut conn_term = zero;
             for k in 0..3 {
                 conn_term = conn_term + gamma_trace(k) * t(k, i);
             }
@@ -315,16 +306,12 @@ where
 
             // Matter momentum term
             let j_i = match matter_momentum {
-                Some(j_tensor) => j_tensor
-                    .as_slice()
-                    .get(i)
-                    .cloned()
-                    .unwrap_or_else(|| zero.clone()),
-                None => zero.clone(),
+                Some(j_tensor) => j_tensor.as_slice().get(i).cloned().unwrap_or(zero),
+                None => zero,
             };
 
             let pi_8 = <S as From<f64>>::from(8.0 * std::f64::consts::PI);
-            m[i] = conn_term - pi_8 * j_i;
+            *m_i = conn_term - pi_8 * j_i;
         }
 
         Ok(CausalTensor::from_vec(m.to_vec(), &[3]))
@@ -338,7 +325,7 @@ where
         let mut k = zero;
         for i in 0..3 {
             for j in 0..3 {
-                k = k + inv_gamma[i][j].clone() * k_tensor[i * 3 + j].clone();
+                k = k + inv_gamma[i][j] * k_tensor[i * 3 + j];
             }
         }
 

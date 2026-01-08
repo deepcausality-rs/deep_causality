@@ -227,7 +227,7 @@ where
     pub fn is_flat(&self) -> bool {
         let eps: f64 = f64::EPSILON;
         self.components.as_slice().iter().all(|x| {
-            let val: f64 = x.clone().into();
+            let val: f64 = (*x).into();
             val.abs() < eps
         })
     }
@@ -237,7 +237,7 @@ where
     pub fn get(&self, d: usize, a: usize, b: usize, c: usize) -> T {
         debug_assert!(d < self.dim && a < self.dim && b < self.dim && c < self.dim);
         let idx = d * self.dim * self.dim * self.dim + a * self.dim * self.dim + b * self.dim + c;
-        self.components.as_slice()[idx].clone()
+        self.components.as_slice()[idx]
     }
 }
 
@@ -276,7 +276,7 @@ where
                 for (b, v_val) in v.iter().enumerate() {
                     for (c, w_val) in w.iter().enumerate() {
                         let r = self.get(d, a, b, c);
-                        sum = sum + r * u_val.clone() * v_val.clone() * w_val.clone();
+                        sum = sum + r * *u_val * *v_val * *w_val;
                     }
                 }
             }
@@ -316,7 +316,7 @@ where
         for mu in 0..self.dim {
             // Get metric component g^μμ (inverse metric diagonal for Minkowski-like)
             let g_inv = <T as From<f64>>::from(self.metric.sign_of_sq(mu) as f64);
-            scalar = scalar + g_inv * ricci[mu * self.dim + mu].clone();
+            scalar = scalar + g_inv * ricci[mu * self.dim + mu];
         }
 
         scalar
@@ -335,7 +335,7 @@ where
                         // For simplicity, use R^d_abc directly
                         // Full implementation would lower indices with metric
                         let r = self.get(d, a, b, c);
-                        k = k + r.clone() * r;
+                        k = k + r * r;
                     }
                 }
             }
@@ -476,8 +476,7 @@ where
                 } else {
                     <T as From<f64>>::from(0.0)
                 };
-                einstein[mu * self.dim + nu] =
-                    ricci[mu * self.dim + nu].clone() - half.clone() * g_munu * r.clone();
+                einstein[mu * self.dim + nu] = ricci[mu * self.dim + nu] - half * g_munu * r;
             }
         }
 
@@ -546,21 +545,17 @@ where
                         };
 
                         // Ricci components
-                        let r_ac = ricci[a * n + c].clone();
-                        let r_bd = ricci[b * n + d].clone();
-                        let r_ad = ricci[a * n + d].clone();
-                        let r_bc = ricci[b * n + c].clone();
+                        let r_ac = ricci[a * n + c];
+                        let r_bd = ricci[b * n + d];
+                        let r_ad = ricci[a * n + d];
+                        let r_bc = ricci[b * n + c];
 
                         // Weyl formula
                         let term1 = r_abcd;
-                        let term2 = factor1.clone()
-                            * half.clone()
-                            * (g_ac.clone() * r_bd - g_ad.clone() * r_bc - g_bc.clone() * r_ad
-                                + g_bd.clone() * r_ac);
-                        let term3 = factor2.clone()
-                            * half.clone()
-                            * r.clone()
-                            * (g_ac * g_bd - g_ad * g_bc);
+                        let term2 = factor1
+                            * half
+                            * (g_ac * r_bd - g_ad * r_bc - g_bc * r_ad + g_bd * r_ac);
+                        let term3 = factor2 * half * r * (g_ac * g_bd - g_ad * g_bc);
 
                         weyl[a * n * n * n + b * n * n + c * n + d] = term1 - term2 + term3;
                     }
@@ -587,7 +582,7 @@ where
                         let sum =
                             self.get(d, a, b, c) + self.get(d, b, c, a) + self.get(d, c, a, b);
                         let abs_sum = <T as Float>::abs(sum);
-                        if abs_sum > max_violation.clone() {
+                        if abs_sum > max_violation {
                             max_violation = abs_sum;
                         }
                     }

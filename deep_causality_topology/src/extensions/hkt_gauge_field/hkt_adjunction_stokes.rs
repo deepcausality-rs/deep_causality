@@ -127,10 +127,12 @@ where
 
         // Chain<DifferentialForm<A>> needs a SimplicialComplex<DifferentialForm<A>>.
         // We create a structural copy with empty hodge stars.
-        let mut form_complex = SimplicialComplex::<DifferentialForm<A>>::default();
-        form_complex.skeletons = ctx.complex.skeletons.clone();
-        form_complex.boundary_operators = ctx.complex.boundary_operators.clone();
-        form_complex.coboundary_operators = ctx.complex.coboundary_operators.clone();
+        let form_complex = SimplicialComplex::<DifferentialForm<A>> {
+            skeletons: ctx.complex.skeletons.clone(),
+            boundary_operators: ctx.complex.boundary_operators.clone(),
+            coboundary_operators: ctx.complex.coboundary_operators.clone(),
+            ..Default::default()
+        };
         let arc_form_complex = Arc::new(form_complex);
 
         // Create sparse matrix for chain weights
@@ -184,10 +186,12 @@ where
 
         // 3. Wrap result 'b' into a 0-chain
         // Needs SimplicialComplex<B>
-        let mut b_complex = SimplicialComplex::<B>::default();
-        b_complex.skeletons = ctx.complex.skeletons.clone();
-        b_complex.boundary_operators = ctx.complex.boundary_operators.clone();
-        b_complex.coboundary_operators = ctx.complex.coboundary_operators.clone();
+        let b_complex = SimplicialComplex::<B> {
+            skeletons: ctx.complex.skeletons.clone(),
+            boundary_operators: ctx.complex.boundary_operators.clone(),
+            coboundary_operators: ctx.complex.coboundary_operators.clone(),
+            ..Default::default()
+        };
         let arc_b_complex = Arc::new(b_complex);
 
         // Create weights

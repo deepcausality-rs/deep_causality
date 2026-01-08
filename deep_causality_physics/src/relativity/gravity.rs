@@ -103,19 +103,19 @@ where
     let mut result = vec![T::zero(); dim];
 
     // Contract: A^mu = -R^mu_vrs * U^v * n^r * U^s
-    for mu in 0..dim {
+    for (mu, res_mu) in result.iter_mut().enumerate() {
         let mut acc = T::zero();
         for v in 0..dim {
-            for r in 0..dim {
+            for (r, n_r) in n.iter().enumerate() {
                 for s in 0..dim {
                     // R^mu_vrs at index [mu, v, r, s]
                     let idx = mu * dim * dim * dim + v * dim * dim + r * dim + s;
                     let r_component = r_data[idx];
-                    acc = acc + r_component * u[v] * n[r] * u[s];
+                    acc = acc + r_component * u[v] * *n_r * u[s];
                 }
             }
         }
-        result[mu] = T::zero() - acc; // Negate
+        *res_mu = T::zero() - acc; // Negate
     }
 
     Ok(result)
