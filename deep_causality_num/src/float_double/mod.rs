@@ -21,7 +21,6 @@ mod ops_comparison;
 mod traits_algebra;
 mod traits_float;
 mod traits_num;
-pub mod types;
 
 /// A high-precision floating point number represented as the sum of two `f64`s.
 ///

@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2026" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 //! Lorentz SO(3,1) gauge group - General Relativity.

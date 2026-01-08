@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
 //! A persistent, immutable tree data structure.
 //!
 //! This crate provides `ConstTree<T>`, a thread-safe, reference-counted,

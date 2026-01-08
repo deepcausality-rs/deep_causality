@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
 use crate::feature_selection::mrmr::mrmr_error::MrmrError;
 use deep_causality_num::{Float, FloatOption};
 use deep_causality_tensor::CausalTensor;

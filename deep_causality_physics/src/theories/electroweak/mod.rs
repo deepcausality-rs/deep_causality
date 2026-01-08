@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2026" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 //! Electroweak Theory — SU(2)_L × U(1)_Y Gauge Theory Module

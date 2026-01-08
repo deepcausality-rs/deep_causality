@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 // Feature-gated module imports - only one is compiled based on feature flag

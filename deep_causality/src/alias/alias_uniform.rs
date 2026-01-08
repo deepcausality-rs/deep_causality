@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::types::context_node_types::symbol::symbol_kind::SymbolKind;
 use crate::{

@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality_uncertain::{SampledValue, Uncertain, with_global_cache};
 use rusty_fork::rusty_fork_test;
