@@ -195,6 +195,7 @@ rust_test_suite(
         "//deep_causality_multivector",
         "//deep_causality_tensor",
         "//deep_causality_topology",
+        "//deep_causality_metric",
     ],
 )
 
@@ -290,7 +291,7 @@ rust_test_suite(
 rust_test_suite(
     name = "theories",
     srcs = glob([
-        "theories/*_tests.rs",
+        "theories/*/*_tests.rs",
     ]),
     crate_features = [
         "std",

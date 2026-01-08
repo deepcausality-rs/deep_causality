@@ -63,6 +63,9 @@ rust_test_suite(
     deps = [
         # Crate to test
         "//deep_causality_multivector",
+        "//deep_causality_tensor",
+        "//deep_causality_metric",
+        "//deep_causality_num",
     ],
 )
 
@@ -81,6 +84,8 @@ rust_test_suite(
         "//deep_causality_multivector",
         # Deps
         "//deep_causality_haft",
+        "//deep_causality_tensor",
+        "//deep_causality_metric",
         "//deep_causality_num",
     ],
 )

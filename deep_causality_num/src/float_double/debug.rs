@@ -4,7 +4,7 @@
  */
 
 use crate::DoubleFloat;
-use std::fmt;
+use core::fmt;
 
 impl fmt::Debug for DoubleFloat {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
