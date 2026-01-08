@@ -190,7 +190,7 @@ fn stage_compute_invariants(
         println!("  F_μν F̃^μν = {}  (dual invariant)", dual_inv);
 
         // Physical interpretation
-        if s_abs(field_inv.clone()) < flt!(1e-10) {
+        if s_abs(field_inv) < flt!(1e-10) {
             println!("\n  → |E| = |B| (null field / radiation)");
         } else if field_inv > flt!(0.0) {
             println!("\n  → Magnetic-dominated field");
@@ -198,7 +198,7 @@ fn stage_compute_invariants(
             println!("\n  → Electric-dominated field");
         }
 
-        if s_abs(dual_inv.clone()) < flt!(1e-10) {
+        if s_abs(dual_inv) < flt!(1e-10) {
             println!("  → E ⟂ B (CP-conserving)");
         } else {
             println!("  → E·B ≠ 0 (CP-violating configuration)");
@@ -241,7 +241,7 @@ fn stage_energy_analysis(
 
         // Convert to SI for context (assuming E ~ 1 V/m scale)
         let epsilon_0 = flt!(8.854e-12); // F/m
-        let energy_val = energy.clone();
+        let energy_val = energy;
         let energy_si = energy_val * epsilon_0; // J/m³
         println!("\n  In SI units (assuming E ~ 1 V/m scale):");
         println!("  u ≈ {:.3e} J/m³", energy_si);
