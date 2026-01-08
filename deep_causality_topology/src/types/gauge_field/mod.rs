@@ -154,7 +154,7 @@ impl<G: GaugeGroup, T: TensorData, A, F> GaugeField<G, T, A, F> {
         let expected_conn_elements = num_points * spacetime_dim * lie_dim;
         let actual_conn_elements: usize = conn_shape.iter().product();
 
-        if actual_conn_elements != expected_conn_elements && conn_shape.len() != 3 {
+        if actual_conn_elements != expected_conn_elements {
             return Err(TopologyError::GaugeFieldError(format!(
                 "Connection shape mismatch for {}: got {:?} ({} elements), \
                  expected [num_points={}, spacetime_dim={}, lie_dim={}] ({} elements)",
@@ -173,7 +173,7 @@ impl<G: GaugeGroup, T: TensorData, A, F> GaugeField<G, T, A, F> {
         let fs_shape = field_strength.shape();
         let actual_fs_elements: usize = fs_shape.iter().product();
 
-        if actual_fs_elements != expected_fs_elements && fs_shape.len() != 4 {
+        if actual_fs_elements != expected_fs_elements {
             return Err(TopologyError::GaugeFieldError(format!(
                 "Field strength shape mismatch for {}: got {:?} ({} elements), \
                  expected [num_points={}, dim={}, dim={}, lie_dim={}] ({} elements)",

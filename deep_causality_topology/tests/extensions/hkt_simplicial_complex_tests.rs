@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::Adjunction;
+use deep_causality_haft::{Adjunction, Foldable, Functor};
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_topology::{Chain, ChainWitness, Simplex, SimplicialComplex, Skeleton};
 use std::sync::Arc;
@@ -110,4 +110,95 @@ fn test_simplicial_complex_right_adjunct() {
     let result = ChainWitness::right_adjunct(&(ctx_complex, 0), chain, f);
 
     assert_eq!(result, 20.0);
+}
+
+// ============================================================================
+// Additional HKT Tests for Coverage
+// ============================================================================
+
+#[test]
+fn test_chain_functor_fmap() {
+    let complex = create_simple_complex();
+    let size = 3;
+    // Create chain with weights [1.0, 2.0, 3.0]
+    let weights = CsrMatrix::from_triplets(1, size, &[(0, 0, 1.0), (0, 1, 2.0), (0, 2, 3.0)])
+        .expect("Matrix failed");
+    let chain: Chain<f64> = Chain::new(complex, 0, weights);
+
+    // Apply fmap to double all values
+    let doubled: Chain<f64> = ChainWitness::fmap(chain, |x| x * 2.0);
+
+    // Verify doubled values
+    assert_eq!(doubled.weights().get_value_at(0, 0), 2.0);
+    assert_eq!(doubled.weights().get_value_at(0, 1), 4.0);
+    assert_eq!(doubled.weights().get_value_at(0, 2), 6.0);
+}
+
+#[test]
+fn test_chain_functor_fmap_type_change() {
+    let complex = create_simple_complex();
+    let size = 2;
+    // Create chain with f64 weights
+    let weights =
+        CsrMatrix::from_triplets(1, size, &[(0, 0, 1.5), (0, 1, 2.5)]).expect("Matrix failed");
+    let chain: Chain<f64> = Chain::new(complex, 0, weights);
+
+    // Apply fmap to convert to i32 (truncating)
+    let ints: Chain<i32> = ChainWitness::fmap(chain, |x| x as i32);
+
+    // Verify converted values
+    assert_eq!(ints.weights().get_value_at(0, 0), 1);
+    assert_eq!(ints.weights().get_value_at(0, 1), 2);
+}
+
+#[test]
+fn test_chain_foldable_fold() {
+    let complex = create_simple_complex();
+    let size = 3;
+    // Create chain with weights [1.0, 2.0, 3.0]
+    let weights = CsrMatrix::from_triplets(1, size, &[(0, 0, 1.0), (0, 1, 2.0), (0, 2, 3.0)])
+        .expect("Matrix failed");
+    let chain: Chain<f64> = Chain::new(complex, 0, weights);
+
+    // Fold to compute sum
+    let sum: f64 = ChainWitness::fold(chain, 0.0, |acc, x| acc + x);
+
+    // 1 + 2 + 3 = 6
+    assert_eq!(sum, 6.0);
+}
+
+#[test]
+fn test_chain_foldable_fold_product() {
+    let complex = create_simple_complex();
+    let size = 3;
+    // Create chain with weights [1.0, 2.0, 3.0]
+    let weights = CsrMatrix::from_triplets(1, size, &[(0, 0, 1.0), (0, 1, 2.0), (0, 2, 3.0)])
+        .expect("Matrix failed");
+    let chain: Chain<f64> = Chain::new(complex, 0, weights);
+
+    // Fold to compute product
+    let product: f64 = ChainWitness::fold(chain, 1.0, |acc, x| acc * x);
+
+    // 1 * 2 * 3 = 6
+    assert_eq!(product, 6.0);
+}
+
+#[test]
+fn test_chain_foldable_fold_to_string() {
+    let complex = create_simple_complex();
+    let size = 2;
+    let weights =
+        CsrMatrix::from_triplets(1, size, &[(0, 0, 10.0), (0, 1, 20.0)]).expect("Matrix failed");
+    let chain: Chain<f64> = Chain::new(complex, 0, weights);
+
+    // Fold to collect values as string
+    let result: String = ChainWitness::fold(chain, String::new(), |mut acc, x| {
+        if !acc.is_empty() {
+            acc.push_str(", ");
+        }
+        acc.push_str(&x.to_string());
+        acc
+    });
+
+    assert_eq!(result, "10, 20");
 }

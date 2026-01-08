@@ -4,7 +4,7 @@
  */
 use deep_causality_multivector::CausalMultiVectorError;
 use deep_causality_tensor::CausalTensorError;
-use deep_causality_topology::TopologyError;
+use deep_causality_topology::{TopologyError, TopologyErrorEnum};
 
 #[test]
 fn test_topology_error_simplex_not_found() {
@@ -122,4 +122,29 @@ fn test_topology_error_from_causal_multivector_error() {
         topology_err,
         TopologyError::MultivectorError("Dimension mismatch: expected 3, found 2".to_string())
     );
+}
+
+#[test]
+fn test_topology_error_invalid_metric() {
+    let msg = "Metric tensor is not positive definite".to_string();
+    let err = TopologyError::InvalidMetric(msg.clone());
+    assert_eq!(format!("{}", err), format!("Invalid metric: {}", msg));
+    assert_eq!(err, TopologyError::InvalidMetric(msg));
+}
+
+#[test]
+fn test_topology_error_gauge_field_error() {
+    let msg = "Connection shape mismatch".to_string();
+    let err = TopologyError::GaugeFieldError(msg.clone());
+    assert_eq!(format!("{}", err), format!("GaugeField error: {}", msg));
+    assert_eq!(err, TopologyError::GaugeFieldError(msg));
+}
+
+#[test]
+fn test_topology_error_new() {
+    let err = TopologyError::new(TopologyErrorEnum::SimplexNotFound);
+    assert_eq!(format!("{}", err), "Simplex not found");
+
+    let err2 = TopologyError::new(TopologyErrorEnum::GenericError("test".to_string()));
+    assert_eq!(format!("{}", err2), "Topology error: test");
 }

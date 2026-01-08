@@ -4,3 +4,5 @@
  */
 #[cfg(test)]
 mod gauge_field_tests;
+#[cfg(test)]
+mod gauge_field_validation_tests;
