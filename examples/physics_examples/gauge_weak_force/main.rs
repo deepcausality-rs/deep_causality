@@ -148,9 +148,9 @@ fn stage_neutral_current(
             Ok(prop) => {
                 state.nc_propagator = prop;
                 println!("  q²:            {} GeV²", q2);
-                println!("  Z Propagator:  {:.4e} GeV⁻²", prop);
-                println!("  Coupling g_V:  {:.4}", nu.vector_coupling());
-                println!("  Coupling g_A:  {:.4}", nu.axial_coupling());
+                println!("  Z Propagator:  {} GeV⁻²", prop);
+                println!("  Coupling g_V:  {}", nu.vector_coupling());
+                println!("  Coupling g_A:  {}", nu.axial_coupling());
                 println!();
                 CausalEffectPropagationProcess::pure(state)
             }
@@ -176,14 +176,14 @@ fn stage_decay_properties(
     let m_mu = flt!(0.10566); // GeV
     if let Ok(width) = WeakTheory::weak_decay_width(m_mu) {
         state.muon_width = width;
-        println!("  Muon decay width: {:.4e} GeV", width);
+        println!("  Muon decay width: {} GeV", width);
     }
 
     state.muon_lifetime = WeakTheory::muon_lifetime();
-    println!("  Muon lifetime:    {:.4e} s", state.muon_lifetime);
+    println!("  Muon lifetime:    {} s", state.muon_lifetime);
 
     state.w_width = WeakTheory::w_boson_width();
-    println!("  W Boson width:    {:.4} GeV", state.w_width);
+    println!("  W Boson width:    {} GeV", state.w_width);
     println!();
 
     CausalEffectPropagationProcess::pure(state)
@@ -193,9 +193,9 @@ fn print_summary(result: &PropagatingEffect<WeakState>) {
     match result.value() {
         EffectValue::Value(state) => {
             println!("[SUCCESS] Weak Force Analysis Complete.");
-            println!("  W Width: {:.3} GeV (PDG: ~2.085 GeV)", state.w_width);
+            println!("  W Width: {} GeV (PDG: ~2.085 GeV)", state.w_width);
             println!(
-                "  Muon Lifetime: {:.2e} s (PDG: ~2.2e-6 s)",
+                "  Muon Lifetime: {} s (PDG: ~2.2e-6 s)",
                 state.muon_lifetime
             );
         }

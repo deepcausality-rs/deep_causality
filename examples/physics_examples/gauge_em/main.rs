@@ -412,26 +412,26 @@ fn print_summary(result: &PropagatingEffect<GaugeEMState>) {
             println!("  │  Lorentz Invariants                                     │");
             println!("  ├─────────────────────────────────────────────────────────┤");
             println!(
-                "  │  F_μν F^μν  = {:>12.6}                              │",
+                "  │  F_μν F^μν  = {}                                         │",
                 state.field_invariant
             );
             println!(
-                "  │  F_μν F̃^μν = {:>12.6}                               │",
+                "  │  F_μν F̃^μν = {}                                         │",
                 state.dual_invariant
             );
             println!("  ├─────────────────────────────────────────────────────────┤");
             println!("  │  Physical Quantities                                    │");
             println!("  ├─────────────────────────────────────────────────────────┤");
             println!(
-                "  │  Energy density (u):     {:>12.6}                   │",
+                "  │  Energy density (u):     {}                              │",
                 state.energy_density
             );
             println!(
-                "  │  Lagrangian density (L): {:>12.6}                   │",
+                "  │  Lagrangian density (L): {}                              │",
                 state.lagrangian_density
             );
             println!(
-                "  │  Intensity (|S|):        {:>12.6}                   │",
+                "  │  Intensity (|S|):        {}                              │",
                 state.intensity
             );
             println!("  ├─────────────────────────────────────────────────────────┤");

@@ -25,7 +25,7 @@ This pipeline simulates:
 ## Running
 
 ```bash
-cargo run --example gauge_weak -p physics_examples
+cargo run --example gauge_weak_force -p physics_examples
 ```
 
 ## Expected Output
