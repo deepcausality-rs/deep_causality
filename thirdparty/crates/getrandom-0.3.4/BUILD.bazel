@@ -102,79 +102,79 @@ rust_library(
         "//thirdparty/crates/getrandom-0.3.4:build_script_build",
     ] + select({
         "@rules_rust//rust/platform:aarch64-apple-darwin": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(any(target_os = "macos", target_os = "openbsd", target_os = "vita", target_os = "emscripten"))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(any(target_os = "macos", target_os = "openbsd", target_os = "vita", target_os = "emscripten"))
         ],
         "@rules_rust//rust/platform:aarch64-apple-ios": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(any(target_os = "ios", target_os = "visionos", target_os = "watchos", target_os = "tvos"))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(any(target_os = "ios", target_os = "visionos", target_os = "watchos", target_os = "tvos"))
         ],
         "@rules_rust//rust/platform:aarch64-apple-ios-sim": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(any(target_os = "ios", target_os = "visionos", target_os = "watchos", target_os = "tvos"))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(any(target_os = "ios", target_os = "visionos", target_os = "watchos", target_os = "tvos"))
         ],
         "@rules_rust//rust/platform:aarch64-linux-android": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
         ],
         "@rules_rust//rust/platform:aarch64-unknown-linux-gnu": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
         ],
         "@rules_rust//rust/platform:aarch64-unknown-nixos-gnu": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
         ],
         "@rules_rust//rust/platform:aarch64-unknown-nto-qnx710": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(any(target_os = "haiku", target_os = "redox", target_os = "nto", target_os = "aix"))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(any(target_os = "haiku", target_os = "redox", target_os = "nto", target_os = "aix"))
         ],
         "@rules_rust//rust/platform:arm-unknown-linux-gnueabi": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
         ],
         "@rules_rust//rust/platform:armv7-linux-androideabi": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
         ],
         "@rules_rust//rust/platform:armv7-unknown-linux-gnueabi": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
         ],
         "@rules_rust//rust/platform:i686-apple-darwin": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(any(target_os = "macos", target_os = "openbsd", target_os = "vita", target_os = "emscripten"))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(any(target_os = "macos", target_os = "openbsd", target_os = "vita", target_os = "emscripten"))
         ],
         "@rules_rust//rust/platform:i686-linux-android": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
         ],
         "@rules_rust//rust/platform:i686-unknown-freebsd": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(any(target_os = "dragonfly", target_os = "freebsd", target_os = "hurd", target_os = "illumos", target_os = "cygwin", all(target_os = "horizon", target_arch = "arm")))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(any(target_os = "dragonfly", target_os = "freebsd", target_os = "hurd", target_os = "illumos", target_os = "cygwin", all(target_os = "horizon", target_arch = "arm")))
         ],
         "@rules_rust//rust/platform:i686-unknown-linux-gnu": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
         ],
         "@rules_rust//rust/platform:powerpc-unknown-linux-gnu": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
         ],
         "@rules_rust//rust/platform:riscv64gc-unknown-linux-gnu": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
         ],
         "@rules_rust//rust/platform:s390x-unknown-linux-gnu": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
         ],
         "@rules_rust//rust/platform:wasm32-unknown-emscripten": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(any(target_os = "macos", target_os = "openbsd", target_os = "vita", target_os = "emscripten"))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(any(target_os = "macos", target_os = "openbsd", target_os = "vita", target_os = "emscripten"))
         ],
         "@rules_rust//rust/platform:wasm32-wasip2": [
             "//thirdparty/crates/wasip2-1.0.1-wasi-0.2.4:wasip2",  # cfg(all(target_arch = "wasm32", target_os = "wasi", target_env = "p2"))
         ],
         "@rules_rust//rust/platform:x86_64-apple-darwin": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(any(target_os = "macos", target_os = "openbsd", target_os = "vita", target_os = "emscripten"))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(any(target_os = "macos", target_os = "openbsd", target_os = "vita", target_os = "emscripten"))
         ],
         "@rules_rust//rust/platform:x86_64-apple-ios": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(any(target_os = "ios", target_os = "visionos", target_os = "watchos", target_os = "tvos"))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(any(target_os = "ios", target_os = "visionos", target_os = "watchos", target_os = "tvos"))
         ],
         "@rules_rust//rust/platform:x86_64-linux-android": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
         ],
         "@rules_rust//rust/platform:x86_64-unknown-freebsd": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(any(target_os = "dragonfly", target_os = "freebsd", target_os = "hurd", target_os = "illumos", target_os = "cygwin", all(target_os = "horizon", target_arch = "arm")))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(any(target_os = "dragonfly", target_os = "freebsd", target_os = "hurd", target_os = "illumos", target_os = "cygwin", all(target_os = "horizon", target_arch = "arm")))
         ],
         "@rules_rust//rust/platform:x86_64-unknown-linux-gnu": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
         ],
         "@rules_rust//rust/platform:x86_64-unknown-nixos-gnu": [
-            "//thirdparty/crates/libc-0.2.177:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
+            "//thirdparty/crates/libc-0.2.180:libc",  # cfg(all(any(target_os = "linux", target_os = "android"), not(any(all(target_os = "linux", target_env = ""), getrandom_backend = "custom", getrandom_backend = "linux_raw", getrandom_backend = "rdrand", getrandom_backend = "rndr"))))
         ],
         "//conditions:default": [],
     }),

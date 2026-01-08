@@ -99,6 +99,6 @@ rust_library(
     deps = [
         "//thirdparty/crates/cfg-if-1.0.4:cfg_if",
         "//thirdparty/crates/num-traits-0.2.19:num_traits",
-        "//thirdparty/crates/zerocopy-0.8.30:zerocopy",
+        "//thirdparty/crates/zerocopy-0.8.33:zerocopy",
     ],
 )

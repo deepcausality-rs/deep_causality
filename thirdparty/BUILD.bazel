@@ -18,12 +18,12 @@ crates_vendor(
         "csv": crate.spec(
             default_features = False,
             package = "csv",
-            version = "1.3",
+            version = "1.4",
         ),
         "parquet": crate.spec(
             default_features = False,
             package = "parquet",
-            version = "56",
+            version = "57",
         ),
         "libm": crate.spec(
             default_features = True,
