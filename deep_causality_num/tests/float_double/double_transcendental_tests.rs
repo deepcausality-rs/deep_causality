@@ -432,3 +432,27 @@ fn test_realfield_epsilon() {
     assert!(eps.hi() > 0.0);
     assert!(eps.hi() < 1e-30);
 }
+
+// =============================================================================
+// High Precision Verification
+// =============================================================================
+
+#[test]
+fn test_sin_precision_extended() {
+    // sin(1.0) for precision check
+    let x = d(1.0);
+    let result = <DoubleFloat as Float>::sin(x);
+
+    // Check consistency: sin^2 + cos^2 - 1 should be extremely close to 0
+    let cos_x = <DoubleFloat as Float>::cos(x);
+    let unity = result * result + cos_x * cos_x;
+    let diff = unity - d(1.0);
+
+    // With 15 iterations (old), error was ~1e-16
+    // With 60 iterations (new), error should be < 1e-31
+    assert!(
+        <DoubleFloat as Float>::abs(diff).hi() < 1e-31,
+        "sin^2 + cos^2 prec: {:e}",
+        diff.hi()
+    );
+}

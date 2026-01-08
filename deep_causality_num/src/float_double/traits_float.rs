@@ -334,7 +334,7 @@ impl Float for DoubleFloat {
         let mut term = r;
         sum += term;
 
-        for i in 2..20 {
+        for i in 2..60 {
             term = term * r / Self::from_f64(i as f64);
             sum += term;
             if term.abs().hi < 1e-32 {
@@ -461,7 +461,7 @@ impl Float for DoubleFloat {
         let mut sum = x;
         let mut term = x;
 
-        for i in 1..15 {
+        for i in 1..60 {
             let n = 2 * i;
             term = -term * x2 / Self::from_f64((n * (n + 1)) as f64);
             sum += term;
@@ -489,7 +489,7 @@ impl Float for DoubleFloat {
         let mut sum = Self::from_f64(1.0);
         let mut term = Self::from_f64(1.0);
 
-        for i in 1..15 {
+        for i in 1..60 {
             let n = 2 * i;
             term = -term * x2 / Self::from_f64((n * (n - 1)) as f64);
             sum += term;
@@ -552,7 +552,7 @@ impl Float for DoubleFloat {
         let mut sum = y;
         let mut term = y;
 
-        for i in 1..30 {
+        for i in 1..80 {
             let n = 2 * i + 1;
             term = -term * y2;
             let contribution = term / Self::from_f64(n as f64);
@@ -600,7 +600,7 @@ impl Float for DoubleFloat {
         if self.abs().hi < 0.5 {
             let mut sum = self;
             let mut term = self;
-            for i in 2..20 {
+            for i in 2..60 {
                 term = term * self / Self::from_f64(i as f64);
                 sum += term;
                 if term.abs().hi < 1e-33 {
@@ -618,7 +618,7 @@ impl Float for DoubleFloat {
         if self.abs().hi < 0.5 {
             let mut sum = self;
             let mut term = self;
-            for i in 2..30 {
+            for i in 2..80 {
                 term = -term * self * Self::from_f64((i - 1) as f64) / Self::from_f64(i as f64);
                 sum += term;
                 if term.abs().hi < 1e-33 {
