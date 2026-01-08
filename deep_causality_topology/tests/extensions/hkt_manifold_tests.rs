@@ -115,7 +115,7 @@ fn test_manifold_bind() {
         ManifoldWitness::bind(manifold, |x| ManifoldWitness::pure(x * 2.0));
 
     // The result manifold should have data from the bound operation
-    assert!(bound.data().len() > 0);
+    assert!(!bound.data().is_empty());
     assert_eq!(bound.data().as_slice()[0], 10.0); // 5.0 * 2.0
 }
 

@@ -234,7 +234,7 @@ fn test_sum_owned() {
 
 #[test]
 fn test_sum_borrowed() {
-    let values = vec![
+    let values = [
         DoubleFloat::from_f64(1.0),
         DoubleFloat::from_f64(2.0),
         DoubleFloat::from_f64(3.0),
@@ -267,7 +267,7 @@ fn test_product_owned() {
 
 #[test]
 fn test_product_borrowed() {
-    let values = vec![
+    let values = [
         DoubleFloat::from_f64(2.0),
         DoubleFloat::from_f64(3.0),
         DoubleFloat::from_f64(4.0),

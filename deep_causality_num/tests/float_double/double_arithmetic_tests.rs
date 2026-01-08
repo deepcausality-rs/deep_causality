@@ -4,6 +4,7 @@
  */
 
 //! Tests for remaining arithmetic operations on DoubleFloat.
+#![allow(clippy::op_ref)]
 
 use deep_causality_num::DoubleFloat;
 

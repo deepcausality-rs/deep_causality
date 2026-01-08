@@ -174,7 +174,7 @@ fn test_promonad_merge_empty() {
 #[test]
 fn test_promonad_fuse() {
     // Fuse creates an empty wrapper (type erasure limitation)
-    let result: GaugeFieldHKT<i32, f64, String, f64> = GaugeFieldWitness::fuse(42i32, 3.14f64);
+    let result: GaugeFieldHKT<i32, f64, String, f64> = GaugeFieldWitness::fuse(42i32, 3.0f64);
     assert!(!result.has_data());
 }
 
