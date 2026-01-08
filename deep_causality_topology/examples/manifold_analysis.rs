@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use deep_causality_sparse::CsrMatrix;
@@ -45,7 +45,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let d1 = CsrMatrix::from_triplets(2, 1, &[(0, 0, -1i8), (1, 0, 1i8)])?;
 
     // 3. Create Simplicial Complex
-    let complex = SimplicialComplex::new(vec![skeleton_0, skeleton_1], vec![d1], vec![], vec![]);
+    let complex: SimplicialComplex<f64> =
+        SimplicialComplex::new(vec![skeleton_0, skeleton_1], vec![d1], vec![], vec![]);
 
     // 4. Create Manifold
     // Data for 3 simplices (2 vertices + 1 edge)

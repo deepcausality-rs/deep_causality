@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 //! The `deep_causality_haft` crate provides foundational traits and utilities for
@@ -43,36 +43,44 @@
 extern crate alloc;
 
 // Module Declarations
-pub(crate) mod algebra;
-pub(crate) mod core;
+mod alias;
 pub(crate) mod effect_system;
 pub(crate) mod extensions;
+pub(crate) mod hkt;
+pub(crate) mod traits;
 pub mod utils_tests;
-
 // ============================================================================
 // Re-exports
 // ============================================================================
 
-// Core HKT Traits
-pub use crate::core::hkt::{HKT, HKT2, HKT3, HKT4, HKT5, Placeholder};
-pub use crate::core::hkt_unbound::{
-    HKT2Unbound, HKT3Unbound, HKT4Unbound, HKT5Unbound, HKT6Unbound,
-};
+// Aliases
+pub use alias::alias_adjunction::AliasAdjunction;
+pub use alias::alias_comonad::AliasCoMonad;
+pub use alias::alias_foldable::AliasFoldable;
+pub use alias::alias_functor::AliasFunctor;
+pub use alias::alias_monad::AliasMonad;
+pub use alias::alias_profunctor::AliasProfunctor;
 
-// Algebraic Traits
-pub use crate::algebra::adjunction::{Adjunction, BoundedAdjunction};
-pub use crate::algebra::applicative::Applicative;
-pub use crate::algebra::bifunctor::Bifunctor;
-pub use crate::algebra::comonad::{BoundedComonad, CoMonad};
-pub use crate::algebra::cybernetic_loop::CyberneticLoop;
-pub use crate::algebra::foldable::Foldable;
-pub use crate::algebra::functor::Functor;
-pub use crate::algebra::monad::Monad;
-pub use crate::algebra::parametric_monad::ParametricMonad;
-pub use crate::algebra::profunctor::Profunctor;
-pub use crate::algebra::promonad::Promonad;
-pub use crate::algebra::riemann_map::RiemannMap;
-pub use crate::algebra::traversable::Traversable;
+// HKT
+pub use crate::hkt::{HKT, HKT2, HKT3, HKT4, HKT5, Satisfies};
+pub use crate::hkt::{HKT2Unbound, HKT3Unbound, HKT4Unbound, HKT5Unbound, HKT6Unbound};
+pub use crate::hkt::{NoConstraint, Placeholder};
+
+// Traits
+pub use crate::traits::adjunction::Adjunction;
+pub use crate::traits::applicative::Applicative;
+pub use crate::traits::bifunctor::Bifunctor;
+pub use crate::traits::comonad::CoMonad;
+pub use crate::traits::cybernetic_loop::CyberneticLoop;
+pub use crate::traits::foldable::Foldable;
+pub use crate::traits::functor::Functor;
+pub use crate::traits::monad::Monad;
+pub use crate::traits::parametric_monad::ParametricMonad;
+pub use crate::traits::profunctor::Profunctor;
+pub use crate::traits::promonad::Promonad;
+pub use crate::traits::pure::Pure;
+pub use crate::traits::riemann_map::RiemannMap;
+pub use crate::traits::traversable::Traversable;
 
 // Effect System Traits
 pub use crate::effect_system::effect::{Effect3, Effect4, Effect5};

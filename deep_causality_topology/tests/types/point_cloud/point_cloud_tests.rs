@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use deep_causality_tensor::CausalTensor;
@@ -21,7 +21,7 @@ fn test_point_cloud_new_success() {
 fn test_point_cloud_new_empty_points() {
     let points = CausalTensor::new(vec![], vec![0, 0]).unwrap();
     let metadata = CausalTensor::new(vec![], vec![0]).unwrap();
-    let result = PointCloud::<f64>::new(points, metadata, 0);
+    let result = PointCloud::<f64, f64>::new(points, metadata, 0);
     assert!(result.is_err());
     match result {
         Err(TopologyError(TopologyErrorEnum::InvalidInput(msg))) => {

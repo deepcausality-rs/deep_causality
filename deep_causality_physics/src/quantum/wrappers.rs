@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use crate::quantum::mechanics;
@@ -15,7 +15,7 @@ use deep_causality_topology::Manifold;
 
 /// Causal wrapper for [`mechanics::klein_gordon_kernel`].
 pub fn klein_gordon(
-    psi_manifold: &Manifold<f64>,
+    psi_manifold: &Manifold<f64, f64>,
     mass: f64,
 ) -> PropagatingEffect<CausalTensor<f64>> {
     match mechanics::klein_gordon_kernel(psi_manifold, mass) {

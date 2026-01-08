@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 //! CPU implementation of boundary operators for SimplicialComplex.
@@ -8,7 +8,7 @@
 use crate::{SimplicialComplex, TopologyError};
 use deep_causality_sparse::CsrMatrix;
 
-impl SimplicialComplex {
+impl<T> SimplicialComplex<T> {
     /// CPU implementation: returns boundary operator for dimension k.
     pub(crate) fn boundary_operator_cpu(&self, k: usize) -> Result<&CsrMatrix<i8>, TopologyError> {
         if k == 0 {

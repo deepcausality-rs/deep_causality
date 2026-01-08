@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::mhd::quantities::{AlfvenSpeed, MagneticPressure};
 use crate::{Density, PhysicalField, PhysicsError};
@@ -98,8 +98,8 @@ pub fn magnetic_pressure_kernel(
 /// *   `Result<CausalTensor<f64>, PhysicsError>` - Rate of change of B (2-form), i.e., $-\partial_t B$.
 ///     Wait, the equation is $\partial_t B = \dots$. The function returns $\partial_t B$.
 pub fn ideal_induction_kernel(
-    v_manifold: &Manifold<f64>,
-    b_manifold: &Manifold<f64>,
+    v_manifold: &Manifold<f64, f64>,
+    b_manifold: &Manifold<f64, f64>,
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     // 1. Validation
     let complex = v_manifold.complex();
@@ -230,7 +230,7 @@ fn apply_csr_i8_f64(matrix: &CsrMatrix<i8>, vector: &[f64]) -> Vec<f64> {
 fn wedge_product_1form_1form(
     alpha: &[f64],
     beta: &[f64],
-    complex: &SimplicialComplex,
+    complex: &SimplicialComplex<f64>,
 ) -> Result<Vec<f64>, PhysicsError> {
     let skeletons = complex.skeletons();
     if skeletons.len() < 3 {

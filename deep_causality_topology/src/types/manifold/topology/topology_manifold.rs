@@ -1,12 +1,12 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use crate::types::manifold::utils;
 use crate::{Manifold, ManifoldTopology};
 
-impl<T> ManifoldTopology for Manifold<T> {
+impl<C, D> ManifoldTopology for Manifold<C, D> {
     fn is_oriented(&self) -> bool {
         utils::is_oriented(&self.complex)
     }

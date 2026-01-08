@@ -1,9 +1,10 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality_haft::{
-    Applicative, Foldable, Functor, HKT, HKT2, Monad, OptionWitness, ResultWitness, Traversable,
+    Applicative, Foldable, Functor, HKT, HKT2, Monad, OptionWitness, Pure, ResultWitness,
+    Traversable,
 };
 
 // --- Applicative Tests ---

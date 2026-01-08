@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use crate::mhd::quantities::{AlfvenSpeed, Diffusivity};
@@ -23,7 +23,7 @@ use deep_causality_topology::Manifold;
 /// # Returns
 /// *   `Result<CausalTensor<f64>, PhysicsError>` - Rate of change tensor (2-form).
 pub fn resistive_diffusion_kernel(
-    b_manifold: &Manifold<f64>,
+    b_manifold: &Manifold<f64, f64>,
     diffusivity: Diffusivity,
 ) -> Result<CausalTensor<f64>, PhysicsError> {
     let eta = diffusivity.value();

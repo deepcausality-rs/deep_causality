@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::types::chain::Chain;
 use crate::types::simplicial_complex::SimplicialComplex;
@@ -20,7 +20,7 @@ where
     ///
     /// # Returns
     /// A chain with all weights set to zero.
-    pub fn zero(complex: Arc<SimplicialComplex>, grade: usize) -> Self {
+    pub fn zero(complex: Arc<SimplicialComplex<T>>, grade: usize) -> Self {
         let size = complex.skeletons[grade].simplices.len();
         // Chain is represented as a 1 x N sparse matrix (row vector)
         let weights = CsrMatrix::zero(1, size);

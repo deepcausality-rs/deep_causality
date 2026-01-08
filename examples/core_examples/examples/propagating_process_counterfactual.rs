@@ -1,10 +1,10 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use deep_causality_core::{Intervenable, PropagatingEffectWitness, PropagatingProcess};
-use deep_causality_haft::{Applicative, LogAddEntry};
+use deep_causality_haft::{LogAddEntry, Pure};
 
 #[derive(Debug, Clone, Default)]
 struct SystemState {

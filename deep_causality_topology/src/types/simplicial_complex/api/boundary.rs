@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 //! Boundary operator API for SimplicialComplex.
@@ -8,7 +8,7 @@
 use crate::{SimplicialComplex, TopologyError};
 use deep_causality_sparse::CsrMatrix;
 
-impl SimplicialComplex {
+impl<T> SimplicialComplex<T> {
     /// Returns the boundary operator ∂ for dimension k.
     ///
     /// The boundary operator maps (k)-chains to (k-1)-chains.

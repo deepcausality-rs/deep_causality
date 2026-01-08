@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use crate::{Displacement, Energy, Momentum, PhysicsError, Ratio, Speed, Stiffness, TwistAngle};
@@ -254,8 +254,8 @@ pub fn foppl_von_karman_strain_simple_kernel(
 /// # Returns
 /// *   `Result<CausalTensor<f64>, PhysicsError>` - The computed Stress Tensor field.
 pub fn foppl_von_karman_strain_kernel(
-    u_manifold: &Manifold<f64>,
-    w_manifold: &Manifold<f64>,
+    u_manifold: &Manifold<f64, f64>,
+    w_manifold: &Manifold<f64, f64>,
     youngs_modulus: Stiffness,
     poisson_ratio: Ratio,
 ) -> Result<CausalTensor<f64>, PhysicsError> {

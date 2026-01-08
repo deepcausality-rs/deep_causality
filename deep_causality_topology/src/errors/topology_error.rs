@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use core::fmt;
@@ -36,6 +36,8 @@ pub enum TopologyErrorEnum {
     InvalidInput(String),
     /// Error indicating an invalid metric calculation or configuration.
     InvalidMetric(String),
+    /// Error specific to GaugeField shape or configuration issues.
+    GaugeFieldError(String),
     /// General catch-all error for other topological issues.
     GenericError(String),
 }
@@ -60,6 +62,7 @@ impl Display for TopologyError {
             TopologyErrorEnum::MultivectorError(msg) => write!(f, "Multivector error: {}", msg),
             TopologyErrorEnum::InvalidInput(msg) => write!(f, "Invalid input: {}", msg),
             TopologyErrorEnum::InvalidMetric(msg) => write!(f, "Invalid metric: {}", msg),
+            TopologyErrorEnum::GaugeFieldError(msg) => write!(f, "GaugeField error: {}", msg),
             TopologyErrorEnum::GenericError(msg) => write!(f, "Topology error: {}", msg),
         }
     }
@@ -143,6 +146,11 @@ impl TopologyError {
     #[allow(non_snake_case)]
     pub fn InvalidMetric<S: Into<String>>(msg: S) -> Self {
         Self(TopologyErrorEnum::InvalidMetric(msg.into()))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn GaugeFieldError<S: Into<String>>(msg: S) -> Self {
+        Self(TopologyErrorEnum::GaugeFieldError(msg.into()))
     }
 
     #[allow(non_snake_case)]

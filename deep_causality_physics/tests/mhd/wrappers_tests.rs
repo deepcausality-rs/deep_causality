@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use deep_causality_core::EffectValue;
@@ -132,7 +132,7 @@ fn test_magnetic_reconnection_rate_wrapper_high_lundquist() {
 // Ideal Induction and Resistive Diffusion Wrapper Tests (Require Manifold)
 // ============================================================================
 
-fn create_test_manifold() -> Manifold<f64> {
+fn create_test_manifold() -> Manifold<f64, f64> {
     // Create a simple triangular mesh
     let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.5, 0.866], vec![3, 2]).unwrap();
     let scalar_field = CausalTensor::new(vec![0.0; 3], vec![3]).unwrap();

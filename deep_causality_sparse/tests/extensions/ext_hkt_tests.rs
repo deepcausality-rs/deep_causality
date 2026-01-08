@@ -1,11 +1,9 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{
-    Applicative, BoundedAdjunction, BoundedComonad, Foldable, Functor, Monad,
-};
+use deep_causality_haft::{Adjunction, Applicative, CoMonad, Foldable, Functor, Monad, Pure};
 use deep_causality_sparse::{CsrMatrix, CsrMatrixWitness};
 
 #[test]
@@ -33,7 +31,7 @@ fn test_foldable_fold() {
 
 #[test]
 fn test_applicative_pure() {
-    let matrix = <CsrMatrixWitness as Applicative<CsrMatrixWitness>>::pure(42.0);
+    let matrix = CsrMatrixWitness::pure(42.0);
 
     assert_eq!(matrix.shape(), (1, 1));
     assert_eq!(matrix.values(), &vec![42.0]);
@@ -42,7 +40,8 @@ fn test_applicative_pure() {
 #[test]
 fn test_applicative_apply_broadcast() {
     // Function wrapped in 1x1 matrix
-    let f_matrix = <CsrMatrixWitness as Applicative<CsrMatrixWitness>>::pure(|x: f64| x * 2.0);
+    let func_ptr: fn(f64) -> f64 = |x: f64| x * 2.0;
+    let f_matrix = CsrMatrixWitness::pure(func_ptr);
 
     // Data matrix
     let triplets = vec![(0, 0, 10.0), (0, 1, 20.0)];
@@ -55,10 +54,9 @@ fn test_applicative_apply_broadcast() {
 }
 
 #[test]
-fn test_applicative_apply_fallback() {
-    // Function matrix NOT 1x1 (invalid for broadcast in this implementation)
-    // We cannot construct directly due to private fields and lack of Zero/Copy/PartialEq for functions.
-    // Use fmap to create it from a valid matrix.
+fn test_applicative_apply_intersection() {
+    // Function matrix (1x2) - Shapes match data matrix (1x2)
+    // This triggers the intersection logic.
 
     let triplets = vec![(0, 0, 1.0), (0, 1, 2.0)];
     let base_matrix = CsrMatrix::from_triplets(1, 2, &triplets).unwrap();
@@ -73,8 +71,9 @@ fn test_applicative_apply_fallback() {
 
     let result = <CsrMatrixWitness as Applicative<CsrMatrixWitness>>::apply(f_matrix, data_matrix);
 
-    // Should return empty matrix as per fallback implementation
-    assert!(result.values().is_empty());
+    // Should return result of applying function element-wise
+    assert_eq!(result.values(), &vec![20.0, 40.0]);
+    assert_eq!(result.shape(), (1, 2));
 }
 
 #[test]
@@ -100,7 +99,7 @@ fn test_comonad_extract() {
     let triplets = vec![(0, 0, 99.0)];
     let matrix = CsrMatrix::from_triplets(1, 1, &triplets).unwrap();
 
-    let val = <CsrMatrixWitness as BoundedComonad<CsrMatrixWitness>>::extract(&matrix);
+    let val = <CsrMatrixWitness as CoMonad<CsrMatrixWitness>>::extract(&matrix);
     assert_eq!(val, 99.0);
 }
 
@@ -108,7 +107,7 @@ fn test_comonad_extract() {
 #[should_panic(expected = "Comonad::extract cannot be called on an empty CsrMatrix")]
 fn test_comonad_extract_panic() {
     let matrix: CsrMatrix<f64> = CsrMatrix::new();
-    <CsrMatrixWitness as BoundedComonad<CsrMatrixWitness>>::extract(&matrix);
+    <CsrMatrixWitness as CoMonad<CsrMatrixWitness>>::extract(&matrix);
 }
 
 #[test]
@@ -118,12 +117,14 @@ fn test_comonad_extend() {
     let matrix = CsrMatrix::from_triplets(1, 2, &triplets).unwrap();
 
     // Extend: sum of all values in the matrix
-    let extended = <CsrMatrixWitness as BoundedComonad<CsrMatrixWitness>>::extend(&matrix, |m| {
-        m.values().iter().sum::<f64>()
-    });
+    let extended =
+        <CsrMatrixWitness as CoMonad<CsrMatrixWitness>>::extend(&matrix, |m: &CsrMatrix<f64>| {
+            m.values().iter().sum::<f64>()
+        });
 
-    // Sum is 30.0. Since original had 2 values, we expect [30.0, 30.0].
-    assert_eq!(extended.values(), &vec![30.0, 30.0]);
+    // Sum is 30.0 for first element (view [10, 20]), and 20.0 for second (view [20]).
+    // Because shift_view(0, 1) crops column 0 (value 10).
+    assert_eq!(extended.values(), &vec![30.0, 20.0]);
     assert_eq!(extended.shape(), (1, 2));
 }
 
@@ -134,11 +135,10 @@ fn test_adjunction_units() {
     let ctx = (2, 2);
     let val = 5.0;
 
-    let outer = <CsrMatrixWitness as BoundedAdjunction<
-        CsrMatrixWitness,
-        CsrMatrixWitness,
-        (usize, usize),
-    >>::unit(&ctx, val);
+    let outer =
+        <CsrMatrixWitness as Adjunction<CsrMatrixWitness, CsrMatrixWitness, (usize, usize)>>::unit(
+            &ctx, val,
+        );
 
     // Outer should be 1x1 wrapper
     assert_eq!(outer.shape(), (1, 1));
@@ -156,11 +156,10 @@ fn test_adjunction_unit_invalid_shape() {
     let ctx = (0, 0);
     let val = 5.0;
 
-    let outer = <CsrMatrixWitness as BoundedAdjunction<
-        CsrMatrixWitness,
-        CsrMatrixWitness,
-        (usize, usize),
-    >>::unit(&ctx, val);
+    let outer =
+        <CsrMatrixWitness as Adjunction<CsrMatrixWitness, CsrMatrixWitness, (usize, usize)>>::unit(
+            &ctx, val,
+        );
     // Should contain an empty inner matrix because from_triplets failed
     let inner = &outer.values()[0];
     assert_eq!(inner.values().len(), 0);
@@ -172,13 +171,12 @@ fn test_adjunction_counit() {
     // Use unit to create the nested structure properly (bypasses direct from_triplets for outer matrix which needs Copy)
     let ctx = (1, 1);
     let val = 7.0;
-    let outer = <CsrMatrixWitness as BoundedAdjunction<
-        CsrMatrixWitness,
-        CsrMatrixWitness,
-        (usize, usize),
-    >>::unit(&ctx, val);
+    let outer =
+        <CsrMatrixWitness as Adjunction<CsrMatrixWitness, CsrMatrixWitness, (usize, usize)>>::unit(
+            &ctx, val,
+        );
 
-    let result = <CsrMatrixWitness as BoundedAdjunction<
+    let result = <CsrMatrixWitness as Adjunction<
         CsrMatrixWitness,
         CsrMatrixWitness,
         (usize, usize),
@@ -193,11 +191,13 @@ fn test_adjunction_left_adjunct() {
     let ctx = (1, 1);
     let a = 3.0;
 
-    let result_matrix = <CsrMatrixWitness as BoundedAdjunction<
+    let result_matrix = <CsrMatrixWitness as Adjunction<
         CsrMatrixWitness,
         CsrMatrixWitness,
         (usize, usize),
-    >>::left_adjunct(&ctx, a, |inner_mat| inner_mat.values()[0] * 10.0);
+    >>::left_adjunct(&ctx, a, |inner_mat: CsrMatrix<f64>| {
+        inner_mat.values()[0] * 10.0
+    });
 
     // result_matrix should be 1x1 containing 30.0.
     assert_eq!(result_matrix.values()[0], 30.0);
@@ -212,7 +212,7 @@ fn test_adjunction_right_adjunct() {
     // f turns 2.0 into [[20.0]] (inner matrix)
     let f = |x: f64| CsrMatrix::from_triplets(1, 1, &[(0, 0, x * 10.0)]).unwrap();
 
-    let result = <CsrMatrixWitness as BoundedAdjunction<
+    let result = <CsrMatrixWitness as Adjunction<
         CsrMatrixWitness,
         CsrMatrixWitness,
         (usize, usize),

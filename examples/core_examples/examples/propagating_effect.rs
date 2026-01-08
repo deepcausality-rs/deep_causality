@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use deep_causality_core::PropagatingEffect;
 use deep_causality_core::PropagatingEffectWitness;
-use deep_causality_haft::{Applicative, Functor, Monad};
+use deep_causality_haft::{Functor, Monad, Pure};
 
 fn main() {
     println!("--- PropagatingEffect Example ---");

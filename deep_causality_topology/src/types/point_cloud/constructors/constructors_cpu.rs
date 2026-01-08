@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 //! CPU implementation of PointCloud constructors.
@@ -9,15 +9,16 @@ use crate::{PointCloud, TopologyError};
 use deep_causality_num::Zero;
 use deep_causality_tensor::CausalTensor;
 
-impl<T> PointCloud<T> {
+impl<C, D> PointCloud<C, D> {
     /// CPU implementation of PointCloud constructor.
     pub(crate) fn new_cpu(
-        points: CausalTensor<f64>,
-        metadata: CausalTensor<T>,
+        points: CausalTensor<C>,
+        metadata: CausalTensor<D>,
         cursor: usize,
     ) -> Result<Self, TopologyError>
     where
-        T: Default + Copy + Clone + PartialEq + Zero,
+        C: Default + Copy + Clone + PartialEq + Zero,
+        D: Default + Copy + Clone + PartialEq + Zero,
     {
         if points.is_empty() || points.shape().is_empty() {
             return Err(TopologyError::InvalidInput(
@@ -45,7 +46,8 @@ impl<T> PointCloud<T> {
     /// Creates a shallow clone of the PointCloud.
     pub fn clone_shallow(&self) -> Self
     where
-        T: Clone,
+        C: Clone,
+        D: Clone,
     {
         PointCloud {
             points: self.points.clone(),

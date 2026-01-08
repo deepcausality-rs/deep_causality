@@ -1,9 +1,9 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{BoundedComonad, Functor};
+use deep_causality_haft::{CoMonad, Functor};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::utils_tests::create_triangle_complex;
 use deep_causality_topology::{Topology, TopologyWitness};
@@ -37,7 +37,7 @@ fn test_topology_extend() {
     let topology = Topology::new(complex, 0, data, 0).unwrap();
 
     // Extend: Value + Cursor
-    let extended = TopologyWitness::extend(&topology, |w| {
+    let extended = TopologyWitness::extend(&topology, |w: &Topology<f64>| {
         let val = TopologyWitness::extract(w);
         val + (w.cursor() as f64)
     });

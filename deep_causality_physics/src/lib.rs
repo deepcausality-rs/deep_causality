@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -12,7 +12,7 @@ pub(crate) mod astro;
 pub(crate) mod condensed;
 pub(crate) mod constants;
 pub(crate) mod dynamics;
-pub(crate) mod electromagnetism;
+pub(crate) mod em;
 pub(crate) mod error;
 pub(crate) mod fluids;
 pub(crate) mod materials;
@@ -21,6 +21,7 @@ pub(crate) mod nuclear;
 pub(crate) mod photonics;
 pub(crate) mod quantum;
 pub(crate) mod relativity;
+pub mod theories;
 pub(crate) mod thermodynamics;
 pub(crate) mod units;
 pub(crate) mod waves;
@@ -29,7 +30,7 @@ pub use astro::*;
 pub use condensed::*;
 pub use constants::*;
 pub use dynamics::*;
-pub use electromagnetism::*;
+pub use em::*;
 pub use error::*;
 pub use fluids::*;
 pub use materials::*;
@@ -38,6 +39,7 @@ pub use nuclear::*;
 pub use photonics::*;
 pub use quantum::*;
 pub use relativity::*;
+pub use theories::*;
 pub use thermodynamics::*;
 pub use units::*;
 pub use waves::*;

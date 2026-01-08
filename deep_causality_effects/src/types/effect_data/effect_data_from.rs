@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use crate::EffectData;
@@ -69,20 +69,20 @@ impl From<CausalTensor<f64>> for EffectData {
     }
 }
 
-impl From<PointCloud<f64>> for EffectData {
-    fn from(val: PointCloud<f64>) -> Self {
+impl From<PointCloud<f64, f64>> for EffectData {
+    fn from(val: PointCloud<f64, f64>) -> Self {
         EffectData::PointCloud(val)
     }
 }
 
-impl From<SimplicialComplex> for EffectData {
-    fn from(val: SimplicialComplex) -> Self {
+impl From<SimplicialComplex<f64>> for EffectData {
+    fn from(val: SimplicialComplex<f64>) -> Self {
         EffectData::SimplicialComplex(val)
     }
 }
 
-impl From<Manifold<f64>> for EffectData {
-    fn from(val: Manifold<f64>) -> Self {
+impl From<Manifold<f64, f64>> for EffectData {
+    fn from(val: Manifold<f64, f64>) -> Self {
         EffectData::Manifold(val)
     }
 }

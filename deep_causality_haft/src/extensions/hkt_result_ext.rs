@@ -1,14 +1,21 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Applicative, Foldable, Functor, HKT, HKT2, Monad, Placeholder, Traversable};
+use crate::{
+    Applicative, Foldable, Functor, HKT, HKT2, Monad, NoConstraint, Placeholder, Pure, Satisfies,
+    Traversable,
+};
 
 /// `ResultWitness<E>` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
 /// for the `Result<T, E>` type constructor, where the error type `E` is fixed.
 ///
 /// It allows `Result` to be used with generic functional programming traits like `Functor`,
 /// `Applicative`, `Foldable`, and `Monad` by fixing one of its type parameters.
+///
+/// # Constraint
+///
+/// `ResultWitness` uses `NoConstraint`, meaning it works with any type `T`.
 pub struct ResultWitness<E>(Placeholder, E);
 
 impl<E> HKT2<E> for ResultWitness<E> {
@@ -18,6 +25,8 @@ impl<E> HKT2<E> for ResultWitness<E> {
 }
 
 impl<E> HKT for ResultWitness<E> {
+    type Constraint = NoConstraint;
+
     /// Specifies that `ResultWitness<E>` also acts as a single-parameter HKT,
     /// where the `E` parameter is considered part of the "witness" itself.
     type Type<T> = Result<T, E>;
@@ -46,9 +55,25 @@ where
         f: Func,
     ) -> <ResultWitness<E> as HKT2<E>>::Type<B>
     where
-        Func: FnOnce(A) -> B,
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
+        Func: FnMut(A) -> B,
     {
         m_a.map(f)
+    }
+}
+
+// Implementation of Pure for ResultWitness
+impl<E> Pure<ResultWitness<E>> for ResultWitness<E>
+where
+    E: 'static + Clone,
+{
+    /// Lifts a pure value into an `Ok` variant of `Result`.
+    fn pure<T>(value: T) -> <ResultWitness<E> as HKT2<E>>::Type<T>
+    where
+        T: Satisfies<NoConstraint>,
+    {
+        Ok(value)
     }
 }
 
@@ -57,38 +82,15 @@ impl<E> Applicative<ResultWitness<E>> for ResultWitness<E>
 where
     E: 'static + Clone,
 {
-    /// Lifts a pure value into an `Ok` variant of `Result`.
-    ///
-    /// # Arguments
-    ///
-    /// *   `value`: The value to wrap in `Ok`.
-    ///
-    /// # Returns
-    ///
-    /// `Ok(value)`.
-    fn pure<T>(value: T) -> <ResultWitness<E> as HKT2<E>>::Type<T> {
-        Ok(value)
-    }
-
     /// Applies a function wrapped in a `Result` (`f_ab`) to a value wrapped in a `Result` (`f_a`).
-    ///
-    /// If both `f_ab` and `f_a` are `Ok`, the function is applied to the value.
-    /// If either is `Err`, the first encountered `Err` is propagated.
-    ///
-    /// # Arguments
-    ///
-    /// *   `f_ab`: A `Result` containing the function.
-    /// *   `f_a`: A `Result` containing the argument.
-    ///
-    /// # Returns
-    ///
-    /// A `Result` containing the result of the application, or an `Err`.
     fn apply<A, B, Func>(
         f_ab: <ResultWitness<E> as HKT2<E>>::Type<Func>,
         f_a: <ResultWitness<E> as HKT2<E>>::Type<A>,
     ) -> <ResultWitness<E> as HKT2<E>>::Type<B>
     where
-        Func: FnMut(A) -> B,
+        A: Satisfies<NoConstraint> + Clone,
+        B: Satisfies<NoConstraint>,
+        Func: Satisfies<NoConstraint> + FnMut(A) -> B,
     {
         match f_ab {
             Ok(mut f) => match f_a {
@@ -155,6 +157,8 @@ where
         mut f: Func,
     ) -> <ResultWitness<E> as HKT2<E>>::Type<B>
     where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> <ResultWitness<E> as HKT2<E>>::Type<B>,
     {
         match m_a {
@@ -174,7 +178,9 @@ where
     ) -> <M as HKT>::Type<<ResultWitness<E> as HKT2<E>>::Type<A>>
     where
         M: Applicative<M> + HKT,
-        A: Clone,
+        A: Clone + Satisfies<NoConstraint> + Satisfies<M::Constraint>,
+        M::Type<A>: Satisfies<NoConstraint>,
+        Result<A, E>: Satisfies<M::Constraint>,
     {
         match fa {
             Ok(m_a) => M::fmap(m_a, |a_val: A| Ok(a_val)),
@@ -194,6 +200,7 @@ use crate::{Bifunctor, HKT2Unbound};
 pub struct ResultUnboundWitness;
 
 impl HKT2Unbound for ResultUnboundWitness {
+    type Constraint = NoConstraint;
     type Type<A, B> = Result<A, B>;
 }
 

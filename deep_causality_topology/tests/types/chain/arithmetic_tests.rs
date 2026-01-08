@@ -1,13 +1,13 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_topology::{Chain, Simplex, SimplicialComplex, Skeleton};
 use std::sync::Arc;
 
-fn create_test_complex() -> Arc<SimplicialComplex> {
+fn create_test_complex() -> Arc<SimplicialComplex<f64>> {
     let vertices = vec![Simplex::new(vec![0]), Simplex::new(vec![1])];
     let skeleton_0 = Skeleton::new(0, vertices);
 

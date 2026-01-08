@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use std::any::Any;
@@ -39,11 +39,11 @@ pub enum EffectData {
     /// A generic CausalTensor, fixed to `f64`.
     Tensor(CausalTensor<f64>),
     /// A PointCloud (0-Complex), fixed to `f64`.
-    PointCloud(PointCloud<f64>),
+    PointCloud(PointCloud<f64, f64>),
     /// A SimplicialComplex (Higher-order structure).
-    SimplicialComplex(SimplicialComplex),
+    SimplicialComplex(SimplicialComplex<f64>),
     /// A Manifold (Valid SimplicialComplex), fixed to `f64`.
-    Manifold(Manifold<f64>),
+    Manifold(Manifold<f64, f64>),
     /// An escape hatch for storing any other type that implements `Any + Send + Sync`.
     /// Note: This uses `Arc` to support cheap cloning of the reference.
     Custom(Arc<dyn Any + Send + Sync>),

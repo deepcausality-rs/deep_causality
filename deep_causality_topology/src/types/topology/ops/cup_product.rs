@@ -1,9 +1,9 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Simplex, Topology, TopologyError};
+use crate::{Simplex, Skeleton, Topology, TopologyError};
 use core::fmt::Debug;
 use core::ops::Mul;
 use deep_causality_num::{Field, Zero};
@@ -64,7 +64,7 @@ where
         // 3. Get Skeletons
         let p_skeleton = &self.complex.skeletons()[p];
         let q_skeleton = &self.complex.skeletons()[q];
-        let target_skeleton = &self.complex.skeletons()[r];
+        let target_skeleton: &Skeleton = &self.complex.skeletons()[r];
 
         let target_count = target_skeleton.simplices().len();
         let mut result_values = Vec::with_capacity(target_count);
@@ -73,7 +73,7 @@ where
         for simplex in target_skeleton.simplices() {
             // The vertices are assumed to be sorted by the Skeleton construction.
             // vertices: [v0, v1, ..., vp, ..., v(p+q)]
-            let verts = simplex.vertices();
+            let verts: &[usize] = simplex.vertices();
 
             // Extract Faces based on Alexander-Whitney diagonal
             // Front Face (alpha): 0..=p

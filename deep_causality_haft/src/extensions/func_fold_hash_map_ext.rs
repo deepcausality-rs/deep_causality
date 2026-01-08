@@ -1,9 +1,9 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Foldable, Functor, HKT, HKT2, Placeholder};
+use crate::{Foldable, Functor, HKT, HKT2, NoConstraint, Placeholder, Satisfies};
 use std::collections::HashMap;
 use std::hash::Hash;
 
@@ -12,6 +12,10 @@ use std::hash::Hash;
 ///
 /// It allows `HashMap` to be used with generic functional programming traits like `Functor`
 /// and `Foldable` by fixing one of its type parameters.
+///
+/// # Constraint
+///
+/// `HashMapWitness` uses `NoConstraint`, meaning it works with any value type `V`.
 pub struct HashMapWitness<K>(Placeholder, K);
 
 impl<K> HKT2<K> for HashMapWitness<K> {
@@ -21,6 +25,8 @@ impl<K> HKT2<K> for HashMapWitness<K> {
 }
 
 impl<K> HKT for HashMapWitness<K> {
+    type Constraint = NoConstraint;
+
     /// Specifies that `HashMapWitness<K>` also acts as a single-parameter HKT,
     /// where the `K` parameter is considered part of the "witness" itself.
     type Type<V> = HashMap<K, V>;
@@ -49,6 +55,8 @@ where
         mut f: Func,
     ) -> <HashMapWitness<K> as HKT2<K>>::Type<B>
     where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         m_a.into_iter().map(|(k, v)| (k, f(v))).collect()

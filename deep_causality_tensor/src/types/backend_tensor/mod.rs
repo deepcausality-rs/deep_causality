@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 //! Generic tensor type that dispatches through a TensorBackend.
@@ -21,6 +21,7 @@
 //! let t_gpu: BackendTensor<f64, MlxBackend> = BackendTensor::zeros(&[2, 3]);
 //! ```
 
+mod algebra;
 mod constructors;
 mod getters;
 mod ops;

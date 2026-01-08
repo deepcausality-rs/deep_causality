@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use deep_causality_haft::{
     BTreeMapWitness, BoxWitness, Functor, HKT, HashMapWitness, LinkedListWitness, OptionWitness,
-    ResultWitness, VecDequeWitness, VecWitness,
+    ResultWitness, Satisfies, VecDequeWitness, VecWitness,
 };
 use std::collections::{BTreeMap, HashMap, LinkedList, VecDeque};
 
@@ -22,9 +22,11 @@ use std::collections::{BTreeMap, HashMap, LinkedList, VecDeque};
 // Instead of writing `anonymize_vec`, `anonymize_map`, `anonymize_option`, you write
 // ONE generic function `process_batch` that works on ALL of them.
 // This drastically reduces code duplication and ensures consistent behavior.
-fn process_batch<F, T, U>(container: F::Type<T>, transform: impl Fn(T) -> U) -> F::Type<U>
+fn process_batch<F, T, U>(container: F::Type<T>, transform: impl FnMut(T) -> U) -> F::Type<U>
 where
     F: Functor<F> + HKT,
+    T: Satisfies<F::Constraint>,
+    U: Satisfies<F::Constraint>,
 {
     F::fmap(container, transform)
 }

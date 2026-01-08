@@ -17,7 +17,6 @@ rust_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_num",
     ],
 )
 

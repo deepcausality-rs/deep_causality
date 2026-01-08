@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 //! Constructor API for SimplicialComplex.
@@ -8,7 +8,7 @@
 use crate::{SimplicialComplex, Skeleton};
 use deep_causality_sparse::CsrMatrix;
 
-impl SimplicialComplex {
+impl<T> SimplicialComplex<T> {
     /// Creates a new SimplicialComplex with the given components.
     ///
     /// # Arguments
@@ -23,7 +23,7 @@ impl SimplicialComplex {
         skeletons: Vec<Skeleton>,
         boundary_operators: Vec<CsrMatrix<i8>>,
         coboundary_operators: Vec<CsrMatrix<i8>>,
-        hodge_star_operators: Vec<CsrMatrix<f64>>,
+        hodge_star_operators: Vec<CsrMatrix<T>>,
     ) -> Self {
         Self::new_cpu(
             skeletons,

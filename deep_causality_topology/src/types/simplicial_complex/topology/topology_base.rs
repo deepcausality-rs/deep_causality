@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use crate::{BaseTopology, SimplicialComplex};
 
-impl BaseTopology for SimplicialComplex {
+impl<T> BaseTopology for SimplicialComplex<T> {
     fn dimension(&self) -> usize {
         self.skeletons.last().map(|s| s.dim).unwrap_or(0)
     }

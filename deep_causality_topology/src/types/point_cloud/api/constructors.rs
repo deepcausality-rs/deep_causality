@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 //! Constructor API for PointCloud.
@@ -9,7 +9,7 @@ use crate::{PointCloud, TopologyError};
 use deep_causality_num::Zero;
 use deep_causality_tensor::CausalTensor;
 
-impl<T> PointCloud<T> {
+impl<C, D> PointCloud<C, D> {
     /// Creates a new `PointCloud` from points and metadata tensors.
     ///
     /// # Arguments
@@ -21,12 +21,13 @@ impl<T> PointCloud<T> {
     /// * `Ok(PointCloud)` - A valid point cloud
     /// * `Err(TopologyError)` - If validation fails
     pub fn new(
-        points: CausalTensor<f64>,
-        metadata: CausalTensor<T>,
+        points: CausalTensor<C>,
+        metadata: CausalTensor<D>,
         cursor: usize,
     ) -> Result<Self, TopologyError>
     where
-        T: Default + Copy + Clone + PartialEq + Zero,
+        C: Default + Copy + Clone + PartialEq + Zero,
+        D: Default + Copy + Clone + PartialEq + Zero,
     {
         Self::new_cpu(points, metadata, cursor)
     }

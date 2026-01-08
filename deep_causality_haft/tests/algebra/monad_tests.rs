@@ -1,8 +1,8 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_haft::{Applicative, Monad, OptionWitness, ResultWitness};
+use deep_causality_haft::{Monad, OptionWitness, Pure, ResultWitness};
 
 #[test]
 fn test_monad_option() {

@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -11,6 +11,7 @@ mod alias;
 mod cast;
 mod complex;
 pub mod float;
+mod float_double;
 mod float_option;
 mod identity;
 pub mod num;
@@ -26,7 +27,9 @@ pub use crate::algebra::algebra_assoc_div::AssociativeDivisionAlgebra;
 pub use crate::algebra::algebra_base::Algebra;
 pub use crate::algebra::algebra_div::DivisionAlgebra;
 pub use crate::algebra::algebra_properties::{Associative, Commutative, Distributive};
+pub use crate::algebra::domain_euclidean::EuclideanDomain;
 pub use crate::algebra::field::Field;
+pub use crate::algebra::field_complex::ComplexField;
 pub use crate::algebra::field_real::RealField;
 pub use crate::algebra::group::Group;
 pub use crate::algebra::group_abelian::AbelianGroup;
@@ -40,6 +43,7 @@ pub use crate::algebra::ring::Ring;
 pub use crate::algebra::ring_associative::AssociativeRing;
 pub use crate::algebra::ring_com::CommutativeRing;
 pub use crate::algebra::rotation::Rotation;
+pub use crate::algebra::semigroup::{AddSemigroup, MulSemigroup};
 
 // Casts
 pub use crate::cast::as_primitive::AsPrimitive;
@@ -57,6 +61,7 @@ pub use crate::complex::quaternion_number::{Quaternion, Quaternion32, Quaternion
 
 // Float number types
 pub use crate::float::Float;
+pub use crate::float_double::DoubleFloat;
 pub use crate::float_option::FloatOption;
 
 //  General numeric traits
@@ -64,3 +69,7 @@ pub use crate::identity::one::{ConstOne, One};
 pub use crate::identity::zero::{ConstZero, Zero};
 pub use crate::num::Num;
 pub use crate::ops::num_ops::*;
+
+// Integer types
+mod integer;
+pub use crate::integer::{Integer, SignedInt, UnsignedInt};

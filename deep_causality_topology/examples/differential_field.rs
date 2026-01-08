@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud};
@@ -92,7 +92,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Verification: Total Energy Conservation?
     // In a closed system, heat spreads but sum(u_i * Mass_i) should be constant.
     // Or simply, temperature equilibrates.
-    let final_v = &manifold.data().as_slice()[0..3];
+    let final_v: &[f64] = &manifold.data().as_slice()[0..3];
     println!(
         "Final:   [{:.2}, {:.2}, {:.2}]",
         final_v[0], final_v[1], final_v[2]

@@ -1,5 +1,6 @@
 #
-# Copyright (c) "2025" . Marvin Hansen All Rights Reserved.
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
 #
 
 # bin/sh

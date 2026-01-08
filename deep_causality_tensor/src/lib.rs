@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 //! # deep_causality_tensor
@@ -8,7 +8,7 @@
 //! Hardware-agnostic tensor library with backend abstraction for CPU and GPU computation.
 
 mod errors;
-mod extensions;
+pub mod extensions;
 mod traits;
 mod types;
 mod utils;
@@ -16,6 +16,10 @@ mod utils;
 // === Errors ===
 pub use crate::errors::causal_tensor_error::CausalTensorError;
 pub use crate::errors::ein_sum_validation_error::EinSumValidationError;
+
+// === Extensions ===
+pub use crate::extensions::ext_hkt::CausalTensorWitness;
+pub use crate::extensions::ext_math::CausalTensorMathExt;
 
 // === Traits ===
 pub use crate::traits::backend_linear_algebra::LinearAlgebraBackend;
@@ -33,10 +37,6 @@ pub use crate::types::backend::Device;
 pub use crate::types::backend::cpu::CpuBackend;
 #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
 pub use crate::types::backend::mlx::{MlxBackend, MlxCausalTensor};
-
-// === Extensions ===
-pub use crate::extensions::ext_hkt::CausalTensorWitness;
-pub use crate::extensions::ext_math::CausalTensorMathExt;
 
 // === Utils (test support) ===
 pub use crate::utils::utils_tests;

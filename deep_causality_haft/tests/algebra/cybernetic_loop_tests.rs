@@ -1,9 +1,9 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{CyberneticLoop, HKT5Unbound};
+use deep_causality_haft::{CyberneticLoop, HKT5Unbound, NoConstraint, Satisfies};
 
 // Mock Cybernetic Loop Structure
 // (Sensor, Controller, Actuator, Feedback, Meta)
@@ -12,6 +12,7 @@ struct System<S, C, A, F, M>(S, C, A, F, M);
 
 struct SystemWitness;
 impl HKT5Unbound for SystemWitness {
+    type Constraint = NoConstraint;
     type Type<S, C, A, F, M> = System<S, C, A, F, M>;
 }
 
@@ -23,6 +24,11 @@ impl CyberneticLoop<SystemWitness> for SystemWitness {
         decide_fn: FDecide,
     ) -> Result<A, E>
     where
+        S: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
+        C: Satisfies<NoConstraint>,
+        A: Satisfies<NoConstraint>,
+        E: Satisfies<NoConstraint>,
         FObserve: Fn(S, C) -> B,
         FDecide: Fn(B, C) -> A,
     {

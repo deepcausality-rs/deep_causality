@@ -1,25 +1,34 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::Manifold;
 use crate::types::manifold::differential::utils_differential;
-use deep_causality_num::{Field, FromPrimitive, Zero};
+use core::ops::Mul;
+use deep_causality_num::{Field, Float, FromPrimitive, Zero};
 use deep_causality_tensor::CausalTensor;
-use std::fmt::Debug;
-use std::ops::Mul;
 
-impl<T> Manifold<T>
+impl<C, D> Manifold<C, D>
 where
-    T: Field
+    C: Float
         + Copy
         + FromPrimitive
-        + Mul<f64, Output = T>
-        + core::ops::Neg<Output = T>
+        + core::ops::Neg<Output = C>
         + Default
         + PartialEq
         + Zero
-        + Debug,
+        + std::fmt::Debug
+        + From<f64>,
+    D: Field
+        + Float
+        + Copy
+        + FromPrimitive
+        + core::ops::Neg<Output = D>
+        + Default
+        + PartialEq
+        + Zero
+        + std::fmt::Debug
+        + Mul<C, Output = D>,
 {
     /// Computes the codifferential `δ` (delta) of a k-form.
     ///
@@ -36,7 +45,7 @@ where
     ///
     /// # Returns
     /// A `CausalTensor` representing the (k-1)-form.
-    pub fn codifferential(&self, k: usize) -> CausalTensor<T> {
+    pub fn codifferential(&self, k: usize) -> CausalTensor<D> {
         if k == 0 {
             // delta of a 0-form is zero
             return CausalTensor::new(vec![], vec![0]).unwrap();
@@ -61,7 +70,7 @@ where
 
         // 3. Compute: y = M_k * omega_k
         // Element-wise multiplication since M_k is diagonal
-        let weighted_form = utils_differential::apply_f64_operator(mass_k, &k_form_data);
+        let weighted_form = utils_differential::apply_metric_operator(mass_k, &k_form_data);
 
         // 4. Compute: z = B_k * y
         // Sparse matrix multiplication
@@ -80,10 +89,10 @@ where
         // In a full implementation, we'd use a dedicated DiagonalMatrix type.
         // Here we parse the CSR structure.
         for i in 0..prev_dim_size {
-            let numerator = integrated_form.get(i).copied().unwrap_or(T::zero());
+            let numerator = integrated_form.get(i).copied().unwrap_or(D::zero());
 
             // Find diagonal value M_{ii}
-            let mut mass_val = 0.0;
+            let mut mass_val = C::zero();
             let start = mass_k_minus_1.row_indices()[i];
             let end = mass_k_minus_1.row_indices()[i + 1];
 
@@ -96,10 +105,10 @@ where
 
             // Apply Inverse Mass: 1 / M_{ii}
             // If Mass is 0 (degenerate), we effectively zero out the result to avoid NaN.
-            if mass_val.abs() > 1e-12 {
-                result_data.push(numerator * (1.0 / mass_val));
+            if mass_val.abs() > <C as From<f64>>::from(1e-12) {
+                result_data.push(numerator * (<C as From<f64>>::from(1.0) / mass_val));
             } else {
-                result_data.push(T::zero());
+                result_data.push(D::zero());
             }
         }
 

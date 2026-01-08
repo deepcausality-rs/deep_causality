@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 //! Display implementations for PointCloud.
@@ -8,9 +8,10 @@
 use crate::PointCloud;
 use core::fmt::{Display, Formatter};
 
-impl<T> Display for PointCloud<T>
+impl<C, D> Display for PointCloud<C, D>
 where
-    T: Display + Clone,
+    C: Display + Clone,
+    D: Display + Clone,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         writeln!(f, "PointCloud:")?;

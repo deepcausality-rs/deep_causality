@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use deep_causality_physics::{
@@ -11,7 +11,7 @@ use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud};
 
 // Helper
-fn create_temp_manifold() -> Manifold<f64> {
+fn create_temp_manifold() -> Manifold<f64, f64> {
     let points = CausalTensor::new(
         vec![
             0.0, 0.0, // v0

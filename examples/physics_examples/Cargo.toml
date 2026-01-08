@@ -44,8 +44,24 @@ name = "event_horizon_probe"
 path = "event_horizon_probe/main.rs"
 
 [[example]]
-name = "geometric_tilt_example"
-path = "geometric_tilt_example/main.rs"
+name = "gauge_electroweak"
+path = "gauge_electroweak/main.rs"
+
+[[example]]
+name = "gauge_gr"
+path = "gauge_gr/main.rs"
+
+[[example]]
+name = "gauge_em"
+path = "gauge_em/main.rs"
+
+[[example]]
+name = "gauge_weak_force"
+path = "gauge_weak_force/main.rs"
+
+[[example]]
+name = "geometric_tilt"
+path = "geometric_tilt/main.rs"
 
 [[example]]
 name = "gravitational_wave"
@@ -53,7 +69,7 @@ path = "gravitational_wave/main.rs"
 
 [[example]]
 name = "grmhd_example"
-path = "grmhd_example/main.rs"
+path = "grmhd/main.rs"
 
 [[example]]
 name = "ikkt_matrix_model"
@@ -65,7 +81,7 @@ path = "laser_resonator_stability/main.rs"
 
 [[example]]
 name = "maxwell_example"
-path = "maxwell_example/main.rs"
+path = "maxwell/main.rs"
 
 [[example]]
 name = "multi_physics_pipeline"
@@ -78,3 +94,4 @@ path = "quantum_counterfactual/main.rs"
 [[example]]
 name = "quantum_geometric_tensor"
 path = "quantum_geometric_tensor/main.rs"
+

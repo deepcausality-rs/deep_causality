@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use deep_causality_multivector::{CausalMultiVector, Metric};
@@ -12,7 +12,7 @@ use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud};
 
 // Helper to create a simple triangular manifold
-fn create_simple_manifold() -> Manifold<f64> {
+fn create_simple_manifold() -> Manifold<f64, f64> {
     let points = CausalTensor::new(
         vec![
             0.0, 0.0, // v0
@@ -180,5 +180,182 @@ fn test_proca_equation_kernel_inf_mass() {
     let mass = f64::INFINITY;
 
     let result = proca_equation_kernel(&field_manifold, &potential_manifold, mass);
+    assert!(result.is_err());
+}
+
+// =============================================================================
+// Energy Density Kernel Tests
+// =============================================================================
+
+use deep_causality_physics::{energy_density_kernel, lagrangian_density_kernel};
+
+#[test]
+fn test_energy_density_kernel_valid() {
+    // E = (1, 0, 0) at indices 2,3,4 (4D multivector)
+    // B = (0, 1, 0) at indices 2,3,4
+    // u = (│E│² + │B│²) / 2 = (1 + 1) / 2 = 1.0
+    let e = CausalMultiVector::new(
+        vec![
+            0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ],
+        Metric::Euclidean(4),
+    )
+    .unwrap();
+    let b = CausalMultiVector::new(
+        vec![
+            0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ],
+        Metric::Euclidean(4),
+    )
+    .unwrap();
+
+    let result = energy_density_kernel(&e, &b);
+    assert!(result.is_ok());
+
+    let u = result.unwrap();
+    assert!((u - 1.0).abs() < 1e-10, "Expected 1.0, got {}", u);
+}
+
+#[test]
+fn test_energy_density_kernel_zero_fields() {
+    let e = CausalMultiVector::new(
+        vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    let b = CausalMultiVector::new(
+        vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+
+    let result = energy_density_kernel(&e, &b);
+    assert!(result.is_ok());
+    assert!(result.unwrap().abs() < 1e-10);
+}
+
+#[test]
+fn test_energy_density_kernel_dimension_mismatch() {
+    let e = CausalMultiVector::new(
+        vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    let b = CausalMultiVector::new(vec![0.0, 0.0, 1.0, 0.0], Metric::Euclidean(2)).unwrap();
+
+    let result = energy_density_kernel(&e, &b);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_energy_density_kernel_nan_error() {
+    let e = CausalMultiVector::new(
+        vec![f64::NAN, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    let b = CausalMultiVector::new(
+        vec![0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+
+    let result = energy_density_kernel(&e, &b);
+    assert!(result.is_err());
+}
+
+// =============================================================================
+// Lagrangian Density Kernel Tests
+// =============================================================================
+
+#[test]
+fn test_lagrangian_density_kernel_valid() {
+    // E = (1, 0, 0), B = (0, 1, 0) at indices 2,3,4
+    // L = (│E│² - │B│²) / 2 = (1 - 1) / 2 = 0.0
+    let e = CausalMultiVector::new(
+        vec![
+            0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ],
+        Metric::Euclidean(4),
+    )
+    .unwrap();
+    let b = CausalMultiVector::new(
+        vec![
+            0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ],
+        Metric::Euclidean(4),
+    )
+    .unwrap();
+
+    let result = lagrangian_density_kernel(&e, &b);
+    assert!(result.is_ok());
+    assert!(
+        result.unwrap().abs() < 1e-10,
+        "Expected 0.0 for equal E and B magnitudes"
+    );
+}
+
+#[test]
+fn test_lagrangian_density_kernel_electric_dominated() {
+    // E = (2, 0, 0), B = (0, 1, 0) at indices 2,3,4
+    // L = (│E│² - │B│²) / 2 = (4 - 1) / 2 = 1.5
+    let e = CausalMultiVector::new(
+        vec![
+            0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ],
+        Metric::Euclidean(4),
+    )
+    .unwrap();
+    let b = CausalMultiVector::new(
+        vec![
+            0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ],
+        Metric::Euclidean(4),
+    )
+    .unwrap();
+
+    let result = lagrangian_density_kernel(&e, &b);
+    assert!(result.is_ok());
+
+    let l = result.unwrap();
+    assert!((l - 1.5).abs() < 1e-10, "Expected 1.5, got {}", l);
+}
+
+#[test]
+fn test_lagrangian_density_kernel_magnetic_dominated() {
+    // E = (1, 0, 0), B = (0, 2, 0) at indices 2,3,4
+    // L = (│E│² - │B│²) / 2 = (1 - 4) / 2 = -1.5
+    let e = CausalMultiVector::new(
+        vec![
+            0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ],
+        Metric::Euclidean(4),
+    )
+    .unwrap();
+    let b = CausalMultiVector::new(
+        vec![
+            0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ],
+        Metric::Euclidean(4),
+    )
+    .unwrap();
+
+    let result = lagrangian_density_kernel(&e, &b);
+    assert!(result.is_ok());
+
+    let l = result.unwrap();
+    assert!((l - (-1.5)).abs() < 1e-10, "Expected -1.5, got {}", l);
+}
+
+#[test]
+fn test_lagrangian_density_kernel_dimension_mismatch() {
+    let e = CausalMultiVector::new(
+        vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    let b = CausalMultiVector::new(vec![0.0, 0.0, 1.0, 0.0], Metric::Euclidean(2)).unwrap();
+
+    let result = lagrangian_density_kernel(&e, &b);
     assert!(result.is_err());
 }

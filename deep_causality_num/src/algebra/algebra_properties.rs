@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 // ## Summary of the "Three Markers"
@@ -30,6 +30,8 @@ impl Associative for u16 {}
 impl Associative for u32 {}
 impl Associative for u64 {}
 impl Associative for u128 {}
+impl Associative for isize {}
+impl Associative for usize {}
 
 /// Marker trait: Promises that a * b == b * a.
 /// IMPLEMENT THIS for f64, f32, Float, Complex.
@@ -48,6 +50,8 @@ impl Commutative for u16 {}
 impl Commutative for u32 {}
 impl Commutative for u64 {}
 impl Commutative for u128 {}
+impl Commutative for isize {}
+impl Commutative for usize {}
 
 /// Marker trait: Promises that a * (b + c)  == (a * b) + (a * c).
 pub trait Distributive {}
@@ -63,3 +67,5 @@ impl Distributive for u16 {}
 impl Distributive for u32 {}
 impl Distributive for u64 {}
 impl Distributive for u128 {}
+impl Distributive for isize {}
+impl Distributive for usize {}

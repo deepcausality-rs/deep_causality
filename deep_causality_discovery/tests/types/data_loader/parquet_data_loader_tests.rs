@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use deep_causality_discovery::{
@@ -355,7 +355,7 @@ fn test_parquet_data_loader_load_empty_file() {
     let config = DataLoaderConfig::Parquet(parquet_config);
 
     let result = loader.load(file_path.to_str().unwrap(), &config).unwrap();
-    let expected = CausalTensor::new(vec![], vec![0, 0]).unwrap();
+    let expected = CausalTensor::new(Vec::<f64>::new(), vec![0, 0]).unwrap();
 
     assert_eq!(result.as_slice(), expected.as_slice());
     assert_eq!(result.shape(), expected.shape());

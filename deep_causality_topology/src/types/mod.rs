@@ -1,11 +1,14 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 pub mod backend;
 pub mod cell_complex;
 pub mod chain;
+pub mod curvature_tensor;
+pub mod differential_form;
+pub mod gauge_field;
 pub mod graph;
 pub mod hypergraph;
 pub mod lattice;

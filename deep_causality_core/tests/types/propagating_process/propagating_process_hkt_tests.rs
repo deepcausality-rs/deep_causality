@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 #![allow(unused_imports)]
@@ -201,7 +201,7 @@ fn test_applicative_pure() {
         TestContext,
         CausalityError,
         EffectLog,
-    > = <PropagatingProcessWitness<TestState, TestContext> as Applicative<_>>::pure(100);
+    > = CausalEffectPropagationProcess::pure(100);
 
     assert_eq!(process.value, EffectValue::Value(100));
     assert_eq!(process.state, TestState::default());

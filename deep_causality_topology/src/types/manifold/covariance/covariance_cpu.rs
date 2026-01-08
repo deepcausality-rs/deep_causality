@@ -1,15 +1,15 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 //! CPU implementation of covariance analysis for Manifold fields.
 
 use crate::{Manifold, TopologyError};
 
-impl<T> Manifold<T>
+impl<C, D> Manifold<C, D>
 where
-    T: Into<f64> + Copy,
+    D: Into<f64> + Copy,
 {
     /// CPU implementation of covariance matrix computation.
     ///
@@ -25,7 +25,7 @@ where
         }
 
         // Convert to f64
-        let values: Vec<f64> = data.iter().map(|&x| x.into()).collect();
+        let values: Vec<f64> = data.iter().map(|&x: &D| x.into()).collect();
 
         // Compute mean
         let mean: f64 = values.iter().sum::<f64>() / n as f64;

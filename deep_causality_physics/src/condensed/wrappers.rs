@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use crate::condensed::moire;
@@ -127,8 +127,8 @@ pub fn foppl_von_karman_strain_simple(
 
 /// Wrapper for [`moire::foppl_von_karman_strain_kernel`].
 pub fn foppl_von_karman_strain(
-    u_manifold: &Manifold<f64>,
-    w_manifold: &Manifold<f64>,
+    u_manifold: &Manifold<f64, f64>,
+    w_manifold: &Manifold<f64, f64>,
     youngs_modulus: Stiffness,
     poisson_ratio: Ratio,
 ) -> PropagatingEffect<CausalTensor<f64>> {

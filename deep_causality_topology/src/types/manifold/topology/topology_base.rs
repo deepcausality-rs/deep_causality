@@ -1,11 +1,11 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use crate::{BaseTopology, Manifold};
 
-impl<T> BaseTopology for Manifold<T> {
+impl<C, D> BaseTopology for Manifold<C, D> {
     fn dimension(&self) -> usize {
         // The dimension of the complex is the dimension of the highest-dimensional skeleton.
         // We assume skeletons are ordered by dimension.

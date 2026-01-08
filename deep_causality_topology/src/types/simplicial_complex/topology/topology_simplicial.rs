@@ -1,10 +1,10 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use crate::{Simplex, SimplicialComplex, SimplicialTopology, TopologyError};
-impl SimplicialTopology for SimplicialComplex {
+impl<T> SimplicialTopology for SimplicialComplex<T> {
     fn max_simplex_dimension(&self) -> usize {
         self.skeletons.iter().map(|s| s.dim).max().unwrap_or(0)
     }

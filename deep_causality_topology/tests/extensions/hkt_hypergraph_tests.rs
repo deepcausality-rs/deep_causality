@@ -1,9 +1,9 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{BoundedComonad, Functor};
+use deep_causality_haft::{CoMonad, Functor};
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Hypergraph, HypergraphTopology, HypergraphWitness};
@@ -41,7 +41,7 @@ fn test_hypergraph_extend() {
 
     // Extend: Count how many hyperedges the current node belongs to
     // (This is a structural property, not dependent on data values, but shows access to structure)
-    let extended = HypergraphWitness::extend(&hypergraph, |w| {
+    let extended = HypergraphWitness::extend(&hypergraph, |w: &Hypergraph<i32>| {
         let current_node = w.cursor();
         w.hyperedges_on_node(current_node).unwrap().len() as i32
     });

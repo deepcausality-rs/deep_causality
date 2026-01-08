@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 extern crate core;
 
@@ -17,7 +17,6 @@ pub mod utils_tests;
 pub use crate::errors::topology_error::{TopologyError, TopologyErrorEnum};
 
 // Re-export extensions
-// Re-export extensions
 pub use crate::extensions::hkt_cell_complex::CellComplexWitness;
 pub use crate::extensions::hkt_graph::GraphWitness;
 pub use crate::extensions::hkt_hypergraph::HypergraphWitness;
@@ -26,6 +25,13 @@ pub use crate::extensions::hkt_manifold::ManifoldWitness;
 pub use crate::extensions::hkt_point_cloud::PointCloudWitness;
 pub use crate::extensions::hkt_simplicial_complex::ChainWitness;
 pub use crate::extensions::hkt_topology::TopologyWitness;
+
+// Re-export gauge field HKT extensions
+pub use crate::extensions::hkt_gauge_field::hkt_curvature::{CurvatureTensorWitness, TensorVector};
+pub use crate::extensions::hkt_gauge_field::hkt_gauge_witness::GaugeFieldWitness;
+pub use extensions::hkt_gauge_field::hkt_adjunction_stokes::{
+    BoundaryWitness, ExteriorDerivativeWitness, StokesAdjunction, StokesContext,
+};
 
 // Re-export traits
 pub use crate::traits::base_topology::BaseTopology;
@@ -52,3 +58,11 @@ pub use crate::types::simplex::Simplex;
 pub use crate::types::simplicial_complex::{SimplicialComplex, SimplicialComplexBuilder};
 pub use crate::types::skeleton::Skeleton;
 pub use crate::types::topology::Topology;
+
+// Re-export gauge field types
+pub use crate::types::curvature_tensor::{
+    CurvatureSymmetry, CurvatureTensor, CurvatureTensorVector,
+};
+pub use crate::types::differential_form::DifferentialForm;
+pub use crate::types::gauge_field::groups::{Electroweak, Lorentz, SU2, SU3, StandardModel, U1};
+pub use crate::types::gauge_field::{GaugeField, GaugeGroup};

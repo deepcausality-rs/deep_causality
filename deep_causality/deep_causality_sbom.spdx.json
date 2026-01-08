@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2025-12-31T06:32:27Z",
+    "created": "2026-01-08T01:40:01Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality-16dbbdff-1f33-476f-a8e9-39129090549b",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality-94da863c-33a4-4d75-9970-d8b3ee0f2dac",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "a51087eddbed615bd2363723eaba193794671984"
+          "checksumValue": "1286257a27d54d1fe55fad9650ca04c21efbe6e3"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -27,29 +27,41 @@
   "name": "deep_causality",
   "packages": [
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--uncertain-0.3.10",
-      "description": "A First-Order Type for Uncertain Programming for the DeepCausality project.'",
+      "SPDXID": "SPDXRef-Package-deep--causality--ast-0.1.4",
+      "description": "AST data structure for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
-      "name": "deep_causality_uncertain",
-      "versionInfo": "0.3.10"
+      "name": "deep_causality_ast",
+      "versionInfo": "0.1.4"
     },
     {
-      "SPDXID": "SPDXRef-Package-getrandom-0.3.4",
-      "description": "A small cross-platform library for retrieving random data from system source",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/getrandom@0.3.4",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "getrandom",
-      "versionInfo": "0.3.4"
+      "SPDXID": "SPDXRef-Package-deep--causality-0.13.1",
+      "description": "Computational causality library. Provides causality graph, collections, context and causal reasoning.",
+      "downloadLocation": "NONE",
+      "homepage": "https://deepcausality.com/about/",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality",
+      "versionInfo": "0.13.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--core-0.0.3",
+      "description": "Core types for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_core",
+      "versionInfo": "0.0.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.11",
+      "description": "Number utils for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_num",
+      "versionInfo": "0.1.11"
     },
     {
       "SPDXID": "SPDXRef-Package-cfg-if-1.0.4",
@@ -68,22 +80,36 @@
       "versionInfo": "1.0.4"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--rand-0.1.8",
-      "description": "Random number utils for for deep_causality crate.",
-      "downloadLocation": "NONE",
+      "SPDXID": "SPDXRef-Package-libm-0.2.15",
+      "description": "libm in pure Rust",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/libm@0.2.15",
+          "referenceType": "purl"
+        }
+      ],
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
-      "name": "deep_causality_rand",
-      "versionInfo": "0.1.8"
+      "name": "libm",
+      "versionInfo": "0.2.15"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.2.7",
-      "description": "HKT traits for for the deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_haft",
-      "versionInfo": "0.2.7"
+      "SPDXID": "SPDXRef-Package-libc-0.2.178",
+      "description": "Raw FFI bindings to platform libraries like libc.",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/libc@0.2.178",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "libc",
+      "versionInfo": "0.2.178"
     },
     {
       "SPDXID": "SPDXRef-Package-r-efi-5.3.0",
@@ -103,20 +129,20 @@
       "versionInfo": "5.3.0"
     },
     {
-      "SPDXID": "SPDXRef-Package-libc-0.2.178",
-      "description": "Raw FFI bindings to platform libraries like libc.",
+      "SPDXID": "SPDXRef-Package-wasip2-1.0.1-plus-wasi-0.2.4",
+      "description": "WASIp2 API bindings for Rust",
       "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/libc@0.2.178",
+          "referenceLocator": "pkg:cargo/wasip2@1.0.1%2Bwasi-0.2.4",
           "referenceType": "purl"
         }
       ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "libc",
-      "versionInfo": "0.2.178"
+      "licenseConcluded": "Apache-2.0 OR Apache-2.0 OR MIT",
+      "licenseDeclared": "Apache-2.0 OR Apache-2.0 OR MIT",
+      "name": "wasip2",
+      "versionInfo": "1.0.1+wasi-0.2.4"
     },
     {
       "SPDXID": "SPDXRef-Package-wit-bindgen-0.46.0",
@@ -136,82 +162,13 @@
       "versionInfo": "0.46.0"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--num-0.1.11",
-      "description": "Number utils for for deep_causality crate.",
+      "SPDXID": "SPDXRef-Package-deep--causality--uncertain-0.3.10",
+      "description": "A First-Order Type for Uncertain Programming for the DeepCausality project.'",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
-      "name": "deep_causality_num",
-      "versionInfo": "0.1.11"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-libm-0.2.15",
-      "description": "libm in pure Rust",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/libm@0.2.15",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "libm",
-      "versionInfo": "0.2.15"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--data--structures-0.10.7",
-      "description": "Data structures for for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_data_structures",
-      "versionInfo": "0.10.7"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality-0.13.0",
-      "description": "Computational causality library. Provides causality graph, collections, context and causal reasoning.",
-      "downloadLocation": "NONE",
-      "homepage": "https://deepcausality.com/about/",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality",
-      "versionInfo": "0.13.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--core-0.0.2",
-      "description": "Core types for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_core",
-      "versionInfo": "0.0.2"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--ast-0.1.3",
-      "description": "AST data structure for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_ast",
-      "versionInfo": "0.1.3"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-wasip2-1.0.1-plus-wasi-0.2.4",
-      "description": "WASIp2 API bindings for Rust",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/wasip2@1.0.1%2Bwasi-0.2.4",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "Apache-2.0 OR Apache-2.0 OR MIT",
-      "licenseDeclared": "Apache-2.0 OR Apache-2.0 OR MIT",
-      "name": "wasip2",
-      "versionInfo": "1.0.1+wasi-0.2.4"
+      "name": "deep_causality_uncertain",
+      "versionInfo": "0.3.10"
     },
     {
       "SPDXID": "SPDXRef-Package-ultragraph-0.8.12",
@@ -222,23 +179,81 @@
       "licenseDeclared": "MIT",
       "name": "ultragraph",
       "versionInfo": "0.8.12"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--data--structures-0.10.8",
+      "description": "Data structures for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_data_structures",
+      "versionInfo": "0.10.8"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--rand-0.1.9",
+      "description": "Random number utils for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_rand",
+      "versionInfo": "0.1.9"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-getrandom-0.3.4",
+      "description": "A small cross-platform library for retrieving random data from system source",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/getrandom@0.3.4",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "getrandom",
+      "versionInfo": "0.3.4"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.2.7",
+      "description": "HKT traits for for the deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_haft",
+      "versionInfo": "0.2.7"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-wit-bindgen-0.46.0",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--uncertain-0.3.10",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-wasip2-1.0.1-plus-wasi-0.2.4"
+      "spdxElementId": "SPDXRef-Package-deep--causality-0.13.1"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.2.7",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality-0.13.0"
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality-0.13.1",
+      "relationshipType": "GENERATED_FROM",
+      "spdxElementId": "SPDXRef-File-deep_causality"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.11",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--rand-0.1.9",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--haft-0.2.7"
+      "spdxElementId": "SPDXRef-Package-deep--causality--uncertain-0.3.10"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-getrandom-0.3.4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.9"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--data--structures-0.10.8",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality-0.13.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--core-0.0.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality-0.13.1"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-r-efi-5.3.0",
@@ -246,69 +261,19 @@
       "spdxElementId": "SPDXRef-Package-getrandom-0.3.4"
     },
     {
-      "relatedSpdxElement": "SPDXRef-File-deep_causality",
-      "relationshipType": "DESCRIBES",
-      "spdxElementId": "SPDXRef-DOCUMENT"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--data--structures-0.10.7",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality-0.13.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.11",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--uncertain-0.3.10"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-wasip2-1.0.1-plus-wasi-0.2.4",
+      "relatedSpdxElement": "SPDXRef-Package-cfg-if-1.0.4",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-getrandom-0.3.4"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.15",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.1.11"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--uncertain-0.3.10",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality-0.13.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.11",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.8"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--rand-0.1.8",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--uncertain-0.3.10"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--ast-0.1.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality-0.13.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--core-0.0.2",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality-0.13.0"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.2.7",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--core-0.0.2"
+      "spdxElementId": "SPDXRef-Package-deep--causality-0.13.1"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-getrandom-0.3.4",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.8"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-cfg-if-1.0.4",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-getrandom-0.3.4"
+      "relatedSpdxElement": "SPDXRef-File-deep_causality",
+      "relationshipType": "DESCRIBES",
+      "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-libc-0.2.178",
@@ -316,19 +281,49 @@
       "spdxElementId": "SPDXRef-Package-getrandom-0.3.4"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality-0.13.0",
-      "relationshipType": "GENERATED_FROM",
-      "spdxElementId": "SPDXRef-File-deep_causality"
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.2.7",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--core-0.0.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.11",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--uncertain-0.3.10"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--ast-0.1.4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--uncertain-0.3.10"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.1.11",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.9"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--ast-0.1.4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality-0.13.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.15",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.1.11"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-ultragraph-0.8.12",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality-0.13.0"
+      "spdxElementId": "SPDXRef-Package-deep--causality-0.13.1"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--ast-0.1.3",
+      "relatedSpdxElement": "SPDXRef-Package-wit-bindgen-0.46.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--uncertain-0.3.10"
+      "spdxElementId": "SPDXRef-Package-wasip2-1.0.1-plus-wasi-0.2.4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-wasip2-1.0.1-plus-wasi-0.2.4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-getrandom-0.3.4"
     }
   ],
   "spdxVersion": "SPDX-2.3"

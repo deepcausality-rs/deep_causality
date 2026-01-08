@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use crate::SimplicialComplex;
@@ -16,7 +16,7 @@ mod display;
 /// (e.g., A path is a Chain<f64> on the 1-skeleton where weights are 1.0).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Chain<T> {
-    pub(crate) complex: Arc<SimplicialComplex>,
+    pub(crate) complex: Arc<SimplicialComplex<T>>,
     pub(crate) grade: usize,
     /// Sparse vector of active simplices.
     /// Reuses CsrMatrix logic (1 row, N cols) for efficient sparse operations.
@@ -24,7 +24,7 @@ pub struct Chain<T> {
 }
 
 impl<T> Chain<T> {
-    pub fn new(complex: Arc<SimplicialComplex>, grade: usize, weights: CsrMatrix<T>) -> Self {
+    pub fn new(complex: Arc<SimplicialComplex<T>>, grade: usize, weights: CsrMatrix<T>) -> Self {
         Self {
             complex,
             grade,
@@ -34,7 +34,7 @@ impl<T> Chain<T> {
 }
 
 impl<T> Chain<T> {
-    pub fn complex(&self) -> &Arc<SimplicialComplex> {
+    pub fn complex(&self) -> &Arc<SimplicialComplex<T>> {
         &self.complex
     }
 

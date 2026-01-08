@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use std::f64::consts::PI;
@@ -16,7 +16,7 @@ use deep_causality_topology::{BaseTopology, ReggeGeometry, Simplex, SimplicialCo
 fn test_2d_flat_triangle_boundary() {
     let mut builder = SimplicialComplexBuilder::new(2);
     builder.add_simplex(Simplex::new(vec![0, 1, 2])).unwrap(); // Will implicitly add edges and vertices
-    let complex = builder.build().unwrap();
+    let complex = builder.build::<f64>().unwrap();
 
     // Metric: 3 edges.
     let num_edges = complex.num_elements_at_grade(1).unwrap();
@@ -43,7 +43,7 @@ fn test_2d_flat_triangle_boundary() {
 fn test_3d_flat_tetrahedron_boundary() {
     let mut builder = SimplicialComplexBuilder::new(3);
     builder.add_simplex(Simplex::new(vec![0, 1, 2, 3])).unwrap();
-    let complex = builder.build().unwrap();
+    let complex = builder.build::<f64>().unwrap();
 
     let num_edges = complex.num_elements_at_grade(1).unwrap();
     let lengths = vec![1.0; num_edges];
@@ -75,7 +75,7 @@ fn test_2d_internal_flat_hexagon() {
         let v2 = indices[(i + 1) % 6];
         builder.add_simplex(Simplex::new(vec![0, v1, v2])).unwrap();
     }
-    let complex = builder.build().unwrap();
+    let complex = builder.build::<f64>().unwrap();
 
     let num_edges = complex.num_elements_at_grade(1).unwrap();
     let lengths = vec![1.0; num_edges];
@@ -106,7 +106,7 @@ fn test_2d_internal_positive_curvature_pentagon() {
         let v2 = indices[(i + 1) % 5];
         builder.add_simplex(Simplex::new(vec![0, v1, v2])).unwrap();
     }
-    let complex = builder.build().unwrap();
+    let complex = builder.build::<f64>().unwrap();
 
     let num_edges = complex.num_elements_at_grade(1).unwrap();
     let lengths = vec![1.0; num_edges];
@@ -129,7 +129,7 @@ fn test_2d_internal_positive_curvature_pentagon() {
 fn test_dimension_mismatch_error() {
     let mut builder = SimplicialComplexBuilder::new(1);
     builder.add_simplex(Simplex::new(vec![0, 1])).unwrap();
-    let complex = builder.build().unwrap();
+    let complex = builder.build::<f64>().unwrap();
 
     let tensor = CausalTensor::new(vec![1.0], vec![1]).unwrap();
     let geometry = ReggeGeometry::new(tensor);
@@ -157,7 +157,7 @@ fn test_manifold_error_triangle_inequality() {
     builder.add_simplex(Simplex::new(vec![0, 1, 2, 3])).unwrap();
     builder.add_simplex(Simplex::new(vec![0, 1, 3, 4])).unwrap();
     builder.add_simplex(Simplex::new(vec![0, 1, 4, 2])).unwrap();
-    let complex = builder.build().unwrap();
+    let complex = builder.build::<f64>().unwrap();
 
     let num_edges = complex.num_elements_at_grade(1).unwrap();
     let mut lengths = vec![1.0; num_edges];
@@ -245,7 +245,7 @@ fn test_3d_degenerate_tetrahedron_face() {
     builder.add_simplex(Simplex::new(vec![0, 1, 3, 4])).unwrap();
     builder.add_simplex(Simplex::new(vec![0, 1, 4, 2])).unwrap();
 
-    let complex = builder.build().unwrap();
+    let complex = builder.build::<f64>().unwrap();
 
     let num_edges = complex.num_elements_at_grade(1).unwrap();
     let mut lengths = vec![1.0; num_edges];

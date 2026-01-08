@@ -1,9 +1,10 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use deep_causality_metric::Metric;
+use deep_causality_num::{Float, Zero};
 use deep_causality_tensor::CausalTensor;
 
 use crate::{Simplex, SimplicialComplex};
@@ -11,13 +12,16 @@ use crate::{Simplex, SimplicialComplex};
 mod curvature;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct ReggeGeometry {
+pub struct ReggeGeometry<T> {
     // Lengths of the 1-simplices (Edges)
-    pub(crate) edge_lengths: CausalTensor<f64>,
+    pub(crate) edge_lengths: CausalTensor<T>,
 }
 
-impl ReggeGeometry {
-    pub fn new(edge_lengths: CausalTensor<f64>) -> Self {
+impl<T> ReggeGeometry<T>
+where
+    T: Float + Zero + Copy + PartialOrd + From<f64> + Into<f64>,
+{
+    pub fn new(edge_lengths: CausalTensor<T>) -> Self {
         ReggeGeometry { edge_lengths }
     }
 
@@ -35,7 +39,7 @@ impl ReggeGeometry {
     ///
     /// # Returns
     /// The metric signature derived from edge length geometry.
-    pub fn metric_at(&self, complex: &SimplicialComplex, grade: usize, index: usize) -> Metric {
+    pub fn metric_at(&self, complex: &SimplicialComplex<T>, grade: usize, index: usize) -> Metric {
         // 1. Retrieve the simplex
         let simplex = &complex.skeletons[grade].simplices[index];
         let n_vertices = simplex.vertices.len();
@@ -72,9 +76,9 @@ impl ReggeGeometry {
     /// Collects squared edge lengths for all edges in a simplex.
     fn collect_squared_edge_lengths(
         &self,
-        complex: &SimplicialComplex,
+        complex: &SimplicialComplex<T>,
         simplex: &Simplex,
-    ) -> Vec<f64> {
+    ) -> Vec<T> {
         let n_vertices = simplex.vertices.len();
         let mut squared_lengths = Vec::new();
 
@@ -123,7 +127,10 @@ impl ReggeGeometry {
 ///
 /// # Returns
 /// Tuple (p, q, r) representing the metric signature.
-fn compute_signature(squared_lengths: &[f64], n_vertices: usize) -> (usize, usize, usize) {
+fn compute_signature<T>(squared_lengths: &[T], n_vertices: usize) -> (usize, usize, usize)
+where
+    T: Float + Zero + Copy + PartialOrd + From<f64>,
+{
     // For a k-simplex with (k+1) vertices, the intrinsic dimension is k
     let k = n_vertices.saturating_sub(1);
 
@@ -132,7 +139,7 @@ fn compute_signature(squared_lengths: &[f64], n_vertices: usize) -> (usize, usiz
     }
 
     // Build the distance matrix D where D[i][j] = d_ij²
-    let mut d_sq = vec![vec![0.0; n_vertices]; n_vertices];
+    let mut d_sq = vec![vec![T::zero(); n_vertices]; n_vertices];
     let mut idx = 0;
 
     #[allow(clippy::needless_range_loop)]
@@ -149,7 +156,7 @@ fn compute_signature(squared_lengths: &[f64], n_vertices: usize) -> (usize, usiz
     // Build Gram matrix G where G[i][j] = (d[0][i]² + d[0][j]² - d[i][j]²) / 2
     // This is for vertices 1..n-1 (excluding vertex 0 as origin)
     let gram_dim = k; // Dimension is (n_vertices - 1)
-    let mut gram = vec![vec![0.0; gram_dim]; gram_dim];
+    let mut gram = vec![vec![T::zero(); gram_dim]; gram_dim];
 
     for i in 0..gram_dim {
         for j in 0..gram_dim {
@@ -157,7 +164,7 @@ fn compute_signature(squared_lengths: &[f64], n_vertices: usize) -> (usize, usiz
             let d_0i_sq = d_sq[0][i + 1];
             let d_0j_sq = d_sq[0][j + 1];
             let d_ij_sq = d_sq[i + 1][j + 1];
-            gram[i][j] = (d_0i_sq + d_0j_sq - d_ij_sq) / 2.0;
+            gram[i][j] = (d_0i_sq + d_0j_sq - d_ij_sq) / <T as From<f64>>::from(2.0);
         }
     }
 
@@ -165,7 +172,7 @@ fn compute_signature(squared_lengths: &[f64], n_vertices: usize) -> (usize, usiz
     let eigenvalues = compute_eigenvalues(&gram, gram_dim);
 
     // Count positive, negative, and zero eigenvalues
-    let epsilon = 1e-10; // Tolerance for zero detection
+    let epsilon = <T as From<f64>>::from(1e-10); // Tolerance for zero detection
     let mut p = 0usize;
     let mut q = 0usize;
     let mut r = 0usize;
@@ -186,7 +193,10 @@ fn compute_signature(squared_lengths: &[f64], n_vertices: usize) -> (usize, usiz
 /// Computes eigenvalues of a symmetric matrix using the Jacobi eigenvalue algorithm.
 ///
 /// This is a simple, robust algorithm suitable for small matrices (typical for simplex dimensions).
-fn compute_eigenvalues(matrix: &[Vec<f64>], n: usize) -> Vec<f64> {
+pub(crate) fn compute_eigenvalues<T>(matrix: &[Vec<T>], n: usize) -> Vec<T>
+where
+    T: Float + Zero + Copy + PartialOrd + From<f64>,
+{
     if n == 0 {
         return vec![];
     }
@@ -196,15 +206,15 @@ fn compute_eigenvalues(matrix: &[Vec<f64>], n: usize) -> Vec<f64> {
     }
 
     // Copy matrix for in-place modification
-    let mut a: Vec<Vec<f64>> = matrix.to_vec();
+    let mut a: Vec<Vec<T>> = matrix.to_vec();
 
     // Jacobi rotation method for small symmetric matrices
     let max_iterations = 100;
-    let tolerance = 1e-12;
+    let tolerance = <T as From<f64>>::from(1e-12);
 
     for _ in 0..max_iterations {
         // Find largest off-diagonal element
-        let mut max_off_diag = 0.0;
+        let mut max_off_diag = T::zero();
         let mut p = 0;
         let mut q_idx = 1;
 
@@ -226,10 +236,10 @@ fn compute_eigenvalues(matrix: &[Vec<f64>], n: usize) -> Vec<f64> {
 
         // Compute rotation angle
         let diff = a[q_idx][q_idx] - a[p][p];
-        let theta = if diff.abs() < 1e-15 {
-            std::f64::consts::FRAC_PI_4
+        let theta = if diff.abs() < <T as From<f64>>::from(1e-15) {
+            <T as From<f64>>::from(std::f64::consts::FRAC_PI_4)
         } else {
-            0.5 * (2.0 * a[p][q_idx] / diff).atan()
+            <T as From<f64>>::from(0.5) * (<T as From<f64>>::from(2.0) * a[p][q_idx] / diff).atan()
         };
 
         let cos_t = theta.cos();
@@ -240,10 +250,13 @@ fn compute_eigenvalues(matrix: &[Vec<f64>], n: usize) -> Vec<f64> {
         let a_qq = a[q_idx][q_idx];
         let a_pq = a[p][q_idx];
 
-        a[p][p] = cos_t * cos_t * a_pp - 2.0 * cos_t * sin_t * a_pq + sin_t * sin_t * a_qq;
-        a[q_idx][q_idx] = sin_t * sin_t * a_pp + 2.0 * cos_t * sin_t * a_pq + cos_t * cos_t * a_qq;
-        a[p][q_idx] = 0.0;
-        a[q_idx][p] = 0.0;
+        a[p][p] = cos_t * cos_t * a_pp - <T as From<f64>>::from(2.0) * cos_t * sin_t * a_pq
+            + sin_t * sin_t * a_qq;
+        a[q_idx][q_idx] = sin_t * sin_t * a_pp
+            + <T as From<f64>>::from(2.0) * cos_t * sin_t * a_pq
+            + cos_t * cos_t * a_qq;
+        a[p][q_idx] = T::zero();
+        a[q_idx][p] = T::zero();
 
         // Update other elements
         #[allow(clippy::needless_range_loop)]

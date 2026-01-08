@@ -1,10 +1,12 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use crate::{CDL, CdlConfig, CdlError, CdlWarningLog, NoData};
-use deep_causality_haft::{Applicative, Effect3, Functor, HKT, HKT3, LogAppend, Monad};
+use deep_causality_haft::{
+    Applicative, Effect3, Functor, HKT, HKT3, LogAppend, Monad, NoConstraint, Pure, Satisfies,
+};
 
 use std::marker::PhantomData;
 
@@ -71,6 +73,7 @@ pub struct CdlEffectWitness<E, WLog>(PhantomData<(E, WLog)>);
 
 // Implement HKT
 impl<E, WLog> HKT for CdlEffectWitness<E, WLog> {
+    type Constraint = NoConstraint;
     type Type<T> = CdlEffect<T>;
 }
 
@@ -113,17 +116,23 @@ impl Functor<CdlEffectWitness<CdlError, CdlWarningLog>>
     }
 }
 
-// 2. Applicative: pure and apply
-impl Applicative<CdlEffectWitness<CdlError, CdlWarningLog>>
-    for CdlEffectWitness<CdlError, CdlWarningLog>
-{
-    fn pure<T>(value: T) -> CdlEffect<T> {
+// 2a. Pure Implementation
+impl Pure<CdlEffectWitness<CdlError, CdlWarningLog>> for CdlEffectWitness<CdlError, CdlWarningLog> {
+    fn pure<T>(value: T) -> CdlEffect<T>
+    where
+        T: Satisfies<NoConstraint>,
+    {
         CdlEffect {
             inner: Ok(value),
             warnings: CdlWarningLog::default(),
         }
     }
+}
 
+// 2. Applicative: apply
+impl Applicative<CdlEffectWitness<CdlError, CdlWarningLog>>
+    for CdlEffectWitness<CdlError, CdlWarningLog>
+{
     fn apply<A, B, Func>(
         f_ab: CdlEffect<Func>, // The container holding the function
         mut m_a: CdlEffect<A>, // The container holding the value
@@ -131,6 +140,8 @@ impl Applicative<CdlEffectWitness<CdlError, CdlWarningLog>>
     where
         Func: FnMut(A) -> B,
         A: Clone,
+        B: Satisfies<NoConstraint>,
+        Func: Satisfies<NoConstraint>,
     {
         let mut combined_warnings = f_ab.warnings;
         // Append warnings from m_a
@@ -155,6 +166,8 @@ impl Monad<CdlEffectWitness<CdlError, CdlWarningLog>>
 {
     fn bind<A, B, Func>(m_a: CdlEffect<A>, f: Func) -> CdlEffect<B>
     where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> CdlEffect<B>,
     {
         let mut f = f;

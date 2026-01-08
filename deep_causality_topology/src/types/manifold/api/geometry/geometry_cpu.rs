@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 //! Public geometry API for Manifold.
@@ -9,7 +9,17 @@
 
 use crate::{Manifold, Simplex, TopologyError};
 
-impl<T> Manifold<T> {
+impl<C, D> Manifold<C, D>
+where
+    C: deep_causality_num::Float
+        + deep_causality_num::Zero
+        + Copy
+        + PartialOrd
+        + From<f64>
+        + Into<f64>
+        + std::iter::Product
+        + std::fmt::Debug,
+{
     /// Computes the squared volume of a k-simplex using Cayley-Menger determinant.
     ///
     /// GPU-accelerated when `mlx` feature is enabled and k ≥ 4.
@@ -27,5 +37,6 @@ impl<T> Manifold<T> {
     /// ```
     pub fn simplex_volume_squared(&self, simplex: &Simplex) -> Result<f64, TopologyError> {
         self.simplex_volume_squared_cpu(simplex)
+            .map(|v: C| v.into())
     }
 }

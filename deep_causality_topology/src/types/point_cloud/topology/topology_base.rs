@@ -1,12 +1,12 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use crate::PointCloud;
 use crate::traits::base_topology::BaseTopology;
 
-impl<T> BaseTopology for PointCloud<T> {
+impl<C, D> BaseTopology for PointCloud<C, D> {
     fn dimension(&self) -> usize {
         0
     }

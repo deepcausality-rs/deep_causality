@@ -1,6 +1,6 @@
 #
 # SPDX-License-Identifier: MIT
-# Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+# Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
 #
 
 set -o errexit
@@ -14,14 +14,15 @@ CRATES=(
     "deep_causality_core"
     "deep_causality_data_structures"
     "deep_causality_discovery"
+    "deep_causality_ethos"
     "deep_causality_effects"
     "deep_causality_haft"
     "deep_causality_macros"
     "deep_causality_metric"
     "deep_causality_multivector"
+    "deep_causality_num"
+    "deep_causality_rand"
     "deep_causality_physics"
-    "deep_causality_rand"
-    "deep_causality_rand"
     "deep_causality_sparse"
     "deep_causality_tensor"
     "deep_causality_topology"

@@ -1,9 +1,9 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{BoundedAdjunction, BoundedComonad};
+use deep_causality_haft::{Adjunction, CoMonad};
 use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorWitness, Metric};
 
 // --- BoundedComonad Tests ---

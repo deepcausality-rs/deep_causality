@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
 use crate::{GraphError, GraphView};
 
 pub trait GraphTraversal<N, W>: GraphView<N, W> {

@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 //! Display implementations for Manifold.
@@ -11,7 +11,7 @@ use crate::Manifold;
 use core::fmt;
 use std::fmt::Formatter;
 
-impl<T> fmt::Display for Manifold<T> {
+impl<C, D> fmt::Display for Manifold<C, D> {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         write!(
             f,

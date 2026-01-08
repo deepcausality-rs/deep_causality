@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 //! Getter methods for SimplicialComplex fields.
@@ -8,7 +8,7 @@
 use crate::{SimplicialComplex, Skeleton};
 use deep_causality_sparse::CsrMatrix;
 
-impl SimplicialComplex {
+impl<T> SimplicialComplex<T> {
     /// Returns the total count of all geometric entities (simplices) in the complex.
     pub fn total_simplices(&self) -> usize {
         self.skeletons.iter().map(|s| s.simplices.len()).sum()
@@ -35,7 +35,7 @@ impl SimplicialComplex {
     }
 
     /// Returns a reference to all Hodge star operators.
-    pub fn hodge_star_operators(&self) -> &Vec<CsrMatrix<f64>> {
+    pub fn hodge_star_operators(&self) -> &Vec<CsrMatrix<T>> {
         &self.hodge_star_operators
     }
 }

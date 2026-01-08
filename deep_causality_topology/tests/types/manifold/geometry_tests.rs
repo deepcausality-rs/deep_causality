@@ -1,13 +1,13 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry};
+use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry, Simplex};
 
 // Helper to create a manifold with a known metric i.e. Regge geometry
-fn setup_manifold_with_metric() -> Manifold<f64> {
+fn setup_manifold_with_metric() -> Manifold<f64, f64> {
     // Create a single triangle (0-1-2) with known edge lengths.
     // Let's use a 3-4-5 right triangle for easy area calculation.
     // Lengths: 0-1 = 3, 0-2 = 4, 1-2 = 5 (hypotenuse)
@@ -71,7 +71,7 @@ fn test_simplex_volume_squared_1d() {
     let s1 = manifold.complex().skeletons()[1]
         .simplices()
         .iter()
-        .find(|s| s.vertices().contains(&0) && s.vertices().contains(&1))
+        .find(|s: &&Simplex| s.vertices().contains(&0) && s.vertices().contains(&1))
         .unwrap()
         .clone();
 
@@ -82,7 +82,7 @@ fn test_simplex_volume_squared_1d() {
     let s2 = manifold.complex().skeletons()[1]
         .simplices()
         .iter()
-        .find(|s| s.vertices().contains(&0) && s.vertices().contains(&2))
+        .find(|s: &&Simplex| s.vertices().contains(&0) && s.vertices().contains(&2))
         .unwrap()
         .clone();
     let vol_sq2 = manifold.simplex_volume_squared(&s2).unwrap();

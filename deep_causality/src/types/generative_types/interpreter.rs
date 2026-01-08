@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 //! # Interpreter Module
@@ -35,7 +35,7 @@ use crate::{
 };
 
 use crate::{ContextuableGraph, Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
-use deep_causality_haft::{Applicative, Effect3, Monad};
+use deep_causality_haft::{Effect3, Monad, Pure};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
@@ -204,7 +204,7 @@ impl Interpreter {
                 // Use a monadic fold to execute children in sequence.
                 // `bind` will handle error short-circuiting and log aggregation.
                 op_node.children().iter().fold(
-                    <Witness as Applicative<Witness>>::pure(state), // Start with the current state in a pure effect
+                    <Witness as Pure<Witness>>::pure(state), // Start with the current state in a pure effect
                     |acc_effect, child_node| {
                         <Witness as Monad<Witness>>::bind(acc_effect, |current_state| {
                             self.walk(child_node, current_state)
@@ -651,7 +651,7 @@ impl Interpreter {
                 }
             }
 
-            Operation::NoOp => <Witness as Applicative<Witness>>::pure(state), // No change, just pass state through.
+            Operation::NoOp => <Witness as Pure<Witness>>::pure(state), // No change, just pass state through.
         }
     }
 }

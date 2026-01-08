@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use std::collections::HashSet;
@@ -12,7 +12,10 @@ use crate::TopologyError;
 use crate::types::regge_geometry::ReggeGeometry;
 use crate::{Simplex, SimplicialComplex};
 
-impl ReggeGeometry {
+impl<T> ReggeGeometry<T>
+where
+    T: deep_causality_num::Float + Copy + Into<f64> + From<f64>,
+{
     /// Calculates the Ricci Curvature (Deficit Angles) for all bones in the complex.
     ///
     /// The resulting tensor contains the deficit angle $\delta$ for each $(n-2)$-simplex.
@@ -26,7 +29,7 @@ impl ReggeGeometry {
     ///   - Dimension: Number of $(n-2)$-simplices (bones).
     pub fn calculate_ricci_curvature(
         &self,
-        complex: &SimplicialComplex,
+        complex: &SimplicialComplex<T>,
     ) -> Result<CausalTensor<f64>, TopologyError> {
         let dim = complex.max_simplex_dimension();
         if dim < 2 {
@@ -124,7 +127,7 @@ impl ReggeGeometry {
     /// Computes the dihedral angle of an n-simplex at a specific (n-2)-face (bone).
     fn compute_dihedral_angle(
         &self,
-        complex: &SimplicialComplex,
+        complex: &SimplicialComplex<T>,
         simplex_n: &Simplex,
         bone: &Simplex,
     ) -> Result<f64, TopologyError> {
@@ -299,7 +302,7 @@ impl ReggeGeometry {
 
     fn get_edge_length(
         &self,
-        complex: &SimplicialComplex,
+        complex: &SimplicialComplex<T>,
         u: usize,
         v: usize,
     ) -> Result<f64, TopologyError> {
@@ -307,7 +310,8 @@ impl ReggeGeometry {
             vertices: if u < v { vec![u, v] } else { vec![v, u] },
         };
         if let Some(idx) = complex.skeletons[1].get_index(&edge) {
-            Ok(self.edge_lengths.as_slice()[idx])
+            let val: f64 = self.edge_lengths.as_slice()[idx].into();
+            Ok(val)
         } else {
             Err(TopologyError::SimplexNotFound())
         }
@@ -315,7 +319,7 @@ impl ReggeGeometry {
 
     fn simplex_area(
         &self,
-        complex: &SimplicialComplex,
+        complex: &SimplicialComplex<T>,
         a: usize,
         b: usize,
         c: usize,
@@ -337,7 +341,7 @@ impl ReggeGeometry {
 
     fn simplex_volume(
         &self,
-        complex: &SimplicialComplex,
+        complex: &SimplicialComplex<T>,
         s: &Simplex,
     ) -> Result<f64, TopologyError> {
         // Cayley-Menger for Tetrahedron

@@ -1,15 +1,15 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{BoundedComonad, Functor};
+use deep_causality_haft::{CoMonad, Functor};
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, ManifoldWitness, Simplex, SimplicialComplex, Skeleton};
 
 // Helper to create a valid manifold (line segment)
-fn create_line_manifold() -> Manifold<f64> {
+fn create_line_manifold() -> Manifold<f64, f64> {
     let vertices = vec![Simplex::new(vec![0]), Simplex::new(vec![1])];
     let skeleton_0 = Skeleton::new(0, vertices);
 

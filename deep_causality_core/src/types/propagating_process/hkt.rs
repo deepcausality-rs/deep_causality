@@ -1,15 +1,18 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use crate::{CausalityError, CausalityErrorEnum, EffectLog, EffectValue, PropagatingProcess};
 use core::marker::PhantomData;
-use deep_causality_haft::{Applicative, Functor, HKT, LogAppend, Monad, Placeholder};
+use deep_causality_haft::{
+    Applicative, Functor, HKT, LogAppend, Monad, NoConstraint, Placeholder, Pure, Satisfies,
+};
 
 pub struct PropagatingProcessWitness<S, C>(Placeholder, PhantomData<S>, PhantomData<C>);
 
 impl<S, C> HKT for PropagatingProcessWitness<S, C> {
+    type Constraint = NoConstraint;
     type Type<T> = PropagatingProcess<T, S, C>;
 }
 
@@ -23,6 +26,8 @@ where
         f: Func,
     ) -> <PropagatingProcessWitness<S, C> as HKT>::Type<B>
     where
+        A: Satisfies<<Self as HKT>::Constraint>,
+        B: Satisfies<<Self as HKT>::Constraint>,
         Func: FnOnce(A) -> B,
     {
         if m_a.error.is_some() {
@@ -54,12 +59,15 @@ where
     }
 }
 
-impl<S, C> Applicative<PropagatingProcessWitness<S, C>> for PropagatingProcessWitness<S, C>
+impl<S, C> Pure<PropagatingProcessWitness<S, C>> for PropagatingProcessWitness<S, C>
 where
     S: Clone + Default,
     C: Clone,
 {
-    fn pure<T>(value: T) -> <Self as HKT>::Type<T> {
+    fn pure<T>(value: T) -> <Self as HKT>::Type<T>
+    where
+        T: Satisfies<<Self as HKT>::Constraint>,
+    {
         PropagatingProcess {
             value: EffectValue::Value(value),
             state: S::default(),
@@ -68,14 +76,21 @@ where
             logs: EffectLog::default(),
         }
     }
+}
 
+impl<S, C> Applicative<PropagatingProcessWitness<S, C>> for PropagatingProcessWitness<S, C>
+where
+    S: Clone + Default,
+    C: Clone,
+{
     fn apply<A, B, Func>(
         f_ab: <Self as HKT>::Type<Func>,
         mut f_a: <Self as HKT>::Type<A>,
     ) -> <Self as HKT>::Type<B>
     where
-        Func: FnMut(A) -> B,
-        A: Clone,
+        A: Satisfies<<Self as HKT>::Constraint> + Clone,
+        B: Satisfies<<Self as HKT>::Constraint>,
+        Func: Satisfies<<Self as HKT>::Constraint> + FnMut(A) -> B,
     {
         let mut combined_logs = f_ab.logs;
         combined_logs.append(&mut f_a.logs);
@@ -84,7 +99,7 @@ where
         if error.is_some() {
             return PropagatingProcess {
                 value: EffectValue::None,
-                state: f_ab.state, // State from the function context is carried over
+                state: f_ab.state,
                 context: f_ab.context.or(f_a.context),
                 error,
                 logs: combined_logs,
@@ -94,14 +109,14 @@ where
         match (f_ab.value.into_value(), f_a.value.into_value()) {
             (Some(mut f), Some(a)) => PropagatingProcess {
                 value: EffectValue::Value(f(a)),
-                state: f_ab.state, // State from the function context is carried over
+                state: f_ab.state,
                 context: f_ab.context.or(f_a.context),
                 error,
                 logs: combined_logs,
             },
             _ => PropagatingProcess {
                 value: EffectValue::None,
-                state: f_ab.state, // State from the function context is carried over
+                state: f_ab.state,
                 context: f_ab.context.or(f_a.context),
                 error: Some(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
                 logs: combined_logs,
@@ -117,6 +132,8 @@ where
 {
     fn bind<A, B, Func>(m_a: <Self as HKT>::Type<A>, mut f: Func) -> <Self as HKT>::Type<B>
     where
+        A: Satisfies<<Self as HKT>::Constraint>,
+        B: Satisfies<<Self as HKT>::Constraint>,
         Func: FnMut(A) -> <Self as HKT>::Type<B>,
     {
         if let Some(error) = m_a.error {

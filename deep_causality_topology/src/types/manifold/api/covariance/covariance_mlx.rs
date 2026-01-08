@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 //! Public covariance analysis API for Manifold.
@@ -13,7 +13,7 @@ use crate::{Manifold, TopologyError};
 #[allow(dead_code)]
 const GPU_THRESHOLD: usize = 1000;
 
-impl<T> Manifold<T>
+impl<C, T> Manifold<C, T>
 where
     T: Into<f64> + Copy,
 {

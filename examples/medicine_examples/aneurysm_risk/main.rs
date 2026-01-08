@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 //! # Vascular Hemodynamics & Aneurysm Rupture Risk
@@ -110,7 +110,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Physics Kernel: Approximates Wall Shear Stress using Manifold derivatives
-fn calculate_wall_shear_stress(_manifold: &Manifold<f64>, velocities: &[Vec<f64>]) -> Vec<f64> {
+fn calculate_wall_shear_stress(
+    _manifold: &Manifold<f64, f64>,
+    velocities: &[Vec<f64>],
+) -> Vec<f64> {
     velocities
         .iter()
         .map(|v| {
@@ -126,7 +129,7 @@ fn calculate_wall_shear_stress(_manifold: &Manifold<f64>, velocities: &[Vec<f64>
 /// Helper to build a mock vessel
 fn build_mock_aneurysm(
     n: usize,
-) -> Result<(Manifold<f64>, VesselState), Box<dyn std::error::Error>> {
+) -> Result<(Manifold<f64, f64>, VesselState), Box<dyn std::error::Error>> {
     let mut positions_flat = Vec::with_capacity(n * 3);
     let mut positions_vec = Vec::with_capacity(n);
     let mut velocities = Vec::with_capacity(n);

@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 //! Test utilities for deep_causality_topology tests
@@ -13,7 +13,7 @@ use deep_causality_tensor::CausalTensor;
 /// Vertices: 0, 1, 2
 /// Edges: (0,1), (0,2), (1,2)
 /// Face: (0,1,2)
-pub fn create_triangle_complex() -> SimplicialComplex {
+pub fn create_triangle_complex() -> SimplicialComplex<f64> {
     // 0-skeleton: vertices
     let vertices = vec![
         Simplex::new(vec![0]),
@@ -79,7 +79,7 @@ where
 }
 
 /// Creates a simple line graph (2 vertices, 1 edge)
-pub fn create_line_complex() -> SimplicialComplex {
+pub fn create_line_complex() -> SimplicialComplex<f64> {
     let vertices = vec![Simplex::new(vec![0]), Simplex::new(vec![1])];
     let skeleton_0 = Skeleton::new(0, vertices);
 

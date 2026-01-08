@@ -1,13 +1,13 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_topology::{Chain, Simplex, SimplicialComplex, Skeleton};
 use std::sync::Arc;
 
 /// Helper to create a minimal simplicial complex for testing
-fn create_test_complex() -> Arc<SimplicialComplex> {
+fn create_test_complex() -> Arc<SimplicialComplex<f64>> {
     // Create a simple triangle complex:
     // Vertices: 0, 1, 2
     // Edges: (0,1), (0,2), (1,2)

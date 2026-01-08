@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 //! MLX-accelerated implementations for Tier 3 algebra operations.
@@ -147,5 +147,71 @@ where
         T: Default + PartialOrd + Send + Sync + 'static,
     {
         self.geometric_product_impl(rhs)
+    }
+
+    /// Computes the Euclidean squared magnitude of a 3D spatial vector.
+    ///
+    /// For 4D Lorentzian multivectors with spatial components at indices 2, 3, 4
+    /// (corresponding to x, y, z), this returns:
+    ///
+    /// $$ |v|^2_{\text{Euclidean}} = v_x^2 + v_y^2 + v_z^2 $$
+    ///
+    /// This differs from `squared_magnitude()` which applies the Lorentzian metric
+    /// signature, potentially yielding negative values for spatial vectors.
+    ///
+    /// # Use Case
+    /// Use this for classical EM quantities like energy density where the physical
+    /// norm must be positive-definite.
+    pub fn euclidean_squared_magnitude_3d(&self) -> T {
+        let vx = self.data.get(2).copied().unwrap_or_else(T::zero);
+        let vy = self.data.get(3).copied().unwrap_or_else(T::zero);
+        let vz = self.data.get(4).copied().unwrap_or_else(T::zero);
+        vx * vx + vy * vy + vz * vz
+    }
+
+    /// Computes the Euclidean magnitude of a 3D spatial vector.
+    ///
+    /// $$ |v|_{\text{Euclidean}} = \sqrt{v_x^2 + v_y^2 + v_z^2} $$
+    pub fn euclidean_magnitude_3d(&self) -> T {
+        self.euclidean_squared_magnitude_3d().sqrt()
+    }
+
+    /// Computes the 3D Euclidean cross product of two spatial vectors.
+    ///
+    /// For vectors with spatial components at indices 2, 3, 4 (x, y, z):
+    ///
+    /// $$ \mathbf{a} \times \mathbf{b} = (a_y b_z - a_z b_y, a_z b_x - a_x b_z, a_x b_y - a_y b_x) $$
+    ///
+    /// The result is returned in the same multivector format with the cross product
+    /// components at indices 2, 3, 4.
+    ///
+    /// # Use Case
+    /// Use this for classical EM quantities like the Poynting vector S = E × B.
+    pub fn euclidean_cross_product_3d(&self, rhs: &Self) -> Self
+    where
+        T: Default,
+    {
+        let ax = self.data.get(2).copied().unwrap_or_else(T::zero);
+        let ay = self.data.get(3).copied().unwrap_or_else(T::zero);
+        let az = self.data.get(4).copied().unwrap_or_else(T::zero);
+
+        let bx = rhs.data.get(2).copied().unwrap_or_else(T::zero);
+        let by = rhs.data.get(3).copied().unwrap_or_else(T::zero);
+        let bz = rhs.data.get(4).copied().unwrap_or_else(T::zero);
+
+        // Cross product: c = a × b
+        let cx = ay * bz - az * by;
+        let cy = az * bx - ax * bz;
+        let cz = ax * by - ay * bx;
+
+        let mut result_data = vec![T::zero(); self.data.len()];
+        result_data[2] = cx;
+        result_data[3] = cy;
+        result_data[4] = cz;
+
+        Self {
+            data: result_data,
+            metric: self.metric,
+        }
     }
 }

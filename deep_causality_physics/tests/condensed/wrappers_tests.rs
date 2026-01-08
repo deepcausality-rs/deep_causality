@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality_core::EffectValue;
 use deep_causality_haft::Functor;
@@ -126,7 +126,7 @@ fn test_wrapper_strain_simple() {
     assert!(effect.is_ok());
 }
 
-fn create_flat_manifold() -> Manifold<f64> {
+fn create_flat_manifold() -> Manifold<f64, f64> {
     let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.5, 0.866], vec![3, 2]).unwrap();
     let point_cloud =
         PointCloud::new(points, CausalTensor::new(vec![0.0; 3], vec![3]).unwrap(), 0).unwrap();

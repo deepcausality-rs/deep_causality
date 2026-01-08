@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
 use criterion::{Criterion, criterion_group, criterion_main};
 use deep_causality_metric::Metric;
 use deep_causality_multivector::{MultiField, StandardMultiVector};

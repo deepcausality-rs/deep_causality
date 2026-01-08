@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
 use crate::{CausalityError, Causaloid};
 use deep_causality_core::{EffectValue, PropagatingEffect};
 use deep_causality_haft::LogAddEntry;

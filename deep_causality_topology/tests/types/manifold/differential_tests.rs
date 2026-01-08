@@ -1,12 +1,12 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud};
 
 // Setup function to create a manifold from a point cloud
-fn setup_triangle_manifold() -> Manifold<f64> {
+fn setup_triangle_manifold() -> Manifold<f64, f64> {
     let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0], vec![3, 2]).unwrap();
     let metadata = CausalTensor::new(vec![1.0, 1.0, 1.0], vec![3]).unwrap();
     let point_cloud = PointCloud::new(points, metadata, 0).unwrap();
@@ -31,7 +31,7 @@ fn test_exterior_derivative_d0() {
     // d(f)(e12) = f(v2) - f(v1) = 30-20=10
     let expected = vec![10.0, 10.0, 20.0]; // Order depends on complex construction
     let mut actual = d0_form.as_slice().to_vec();
-    actual.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    actual.sort_by(|a: &f64, b: &f64| a.partial_cmp(b).unwrap());
     assert_eq!(actual, expected);
 }
 
@@ -56,7 +56,7 @@ fn test_exterior_derivative_nilpotency() {
     let d1_of_d0 = manifold2.exterior_derivative(1);
     // d(d(f)) should be zero
     assert_eq!(d1_of_d0.len(), 1);
-    assert!((d1_of_d0.as_slice()[0]).abs() < 1e-9);
+    assert!((d1_of_d0.as_slice()[0] as f64).abs() < 1e-9);
 }
 
 #[test]
@@ -117,7 +117,7 @@ fn test_laplacian_scalar_field_geometric() {
     //     *   $\Delta = \frac{\text{Flux}}{\text{Mass}} = \frac{-32.36}{0.1666} \approx \mathbf{-194.16}$.
     //
     let mut result = laplacian.as_slice().to_vec();
-    result.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    result.sort_by(|a: &f64, b: &f64| a.partial_cmp(b).unwrap());
 
     // Geometric values calculated via DEC (Mass Lumping):
     // v0: -194.16 (Source)

@@ -25,12 +25,65 @@
 
 [test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
 
-Custom numerical traits with default implementation and types for
-the [DeepCausality project](http://www.deepcausality.com) based on
-the [rust-num](https://github.com/rust-num/num-traits) crate. This custom implementation is free of macros,
-free of unsafe code, free of external dependencies, and compiles for std, non-std, and non-std without float support.
-This crate supports all three complex number systems: Complex, Octonion, and Quaternion, 
-which makes it suitable for scientific computing.
+## Summary
+
+A comprehensive numerical foundation library for the [DeepCausality project](http://www.deepcausality.com). This crate
+provides:
+
+- **Algebraic Traits:** A complete hierarchy of abstract algebra structures (Magma → Monoid → Group → Ring → Field) with
+  rigorous mathematical foundations
+- **Cast Traits:** Safe primitive type conversions (`AsPrimitive`, `FromPrimitive`, `ToPrimitive`, `NumCast`)
+- **Identity Traits:** Zero and One with const variants for compile-time evaluation
+- **Float Types:** Standard floating-point abstractions plus `DoubleFloat` for double-double precision arithmetic
+- **Complex Types:** Full implementations of `Complex`, `Quaternion`, and `Octonion` number systems
+
+The implementation is **macro-free**, **unsafe-free**, and **dependency-free** (with optional `libm` for no-std float
+support). Compiles for std, no-std, and no-std without float.
+
+### Algebraic Traits
+
+The algebra module provides a rigorous type-safe hierarchy of abstract algebraic structures:
+
+| Structure           | Description                                            |
+|---------------------|--------------------------------------------------------|
+| **Magma**           | Set with a closed binary operation                     |
+| **Monoid**          | Magma + associativity + identity                       |
+| **Group**           | Monoid + inverses                                      |
+| **Ring**            | Abelian group + multiplicative monoid + distributivity |
+| **Field**           | Commutative ring + multiplicative inverses             |
+| **RealField**       | Field + ordering + transcendental functions            |
+| **Module**          | Vector-like structure over a ring                      |
+| **Algebra**         | Module with bilinear product                           |
+| **DivisionAlgebra** | Algebra with inverses (Complex, Quaternion, Octonion)  |
+
+See [Algebraic Traits Reference](README_ALGEBRA_TRAITS.md) for the complete hierarchy diagram and mathematical
+documentation.
+
+### Integer Traits
+
+Type-safe abstractions over Rust's primitive integer types, extending the `Ring` algebraic structure:
+
+| Trait           | Covers               | Key Operations                                                      |
+|-----------------|----------------------|---------------------------------------------------------------------|
+| **Integer**     | All primitives       | Bit ops, checked/saturating/wrapping arithmetic, Euclidean division |
+| **SignedInt**   | `i8`–`i128`, `isize` | `abs`, `signum`, `is_negative`, `checked_neg`                       |
+| **UnsignedInt** | `u8`–`u128`, `usize` | `is_power_of_two`, `next_power_of_two`                              |
+
+### Float Types
+
+| Type            | Description                                                | Key Traits                          |
+|-----------------|------------------------------------------------------------|-------------------------------------|
+| **Float**       | Trait for `f32` and `f64`                                  | `RealField`, `Field`, `Float`       |
+| **DoubleFloat** | High-precision (~31 digits) using double-double arithmetic | `RealField`, `Field`, `Float`       |
+| **FloatOption** | Abstracts over floats and their `Option` variants          | Utility trait for nullable numerics |
+
+### Complex Types
+
+| Type           | Algebra          | Associative | Commutative | Key Traits                                       |
+|----------------|------------------|:-----------:|:-----------:|--------------------------------------------------|
+| **Complex**    | Division Algebra |      ✅      |      ✅      | `Field`, `DivisionAlgebra`, `Rotation`           |
+| **Quaternion** | Division Algebra |      ✅      |      ❌      | `AssociativeRing`, `DivisionAlgebra`, `Rotation` |
+| **Octonion**   | Division Algebra |      ❌      |      ❌      | `DivisionAlgebra` (non-associative)              |
 
 ### Numerical Traits:
 
@@ -53,19 +106,6 @@ which makes it suitable for scientific computing.
 
 * One / OneConst
 * Zero / Zero Const
-
-### Float Types
-
-* Float - implemented for f32 and f64
-* FloatOption - Abstract over float types (`f32`, `f64`) and their `Option` variants.
-
-### Complex Types
-
-This crate implements all three complex numerical types:
-
-* `Complex`
-* `Octonion`
-* `Quaternion`
 
 ## non-std support
 

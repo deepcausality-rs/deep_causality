@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use crate::mhd::quantities::{
@@ -31,8 +31,8 @@ pub fn magnetic_pressure(b: &PhysicalField, mu0: f64) -> PropagatingEffect<Magne
 }
 
 pub fn ideal_induction(
-    v: &Manifold<f64>,
-    b: &Manifold<f64>,
+    v: &Manifold<f64, f64>,
+    b: &Manifold<f64, f64>,
 ) -> PropagatingEffect<CausalTensor<f64>> {
     match ideal::ideal_induction_kernel(v, b) {
         Ok(t) => PropagatingEffect::pure(t),
@@ -45,7 +45,7 @@ pub fn ideal_induction(
 // ============================================================================
 
 pub fn resistive_diffusion(
-    b: &Manifold<f64>,
+    b: &Manifold<f64, f64>,
     eta: Diffusivity,
 ) -> PropagatingEffect<CausalTensor<f64>> {
     match resistive::resistive_diffusion_kernel(b, eta) {
@@ -71,7 +71,7 @@ use crate::LorentzianMetric;
 ///
 /// Computes J = ★d★F using differential forms on the manifold.
 pub fn relativistic_current<M: LorentzianMetric>(
-    em_manifold: &Manifold<f64>,
+    em_manifold: &Manifold<f64, f64>,
     spacetime_metric: &M,
 ) -> PropagatingEffect<CausalTensor<f64>> {
     match grmhd::relativistic_current_kernel(em_manifold, spacetime_metric) {

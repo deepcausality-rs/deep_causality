@@ -1,13 +1,13 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use deep_causality::{
     AuditableGraphGenerator, GraphGeneratableEffect, GraphGeneratableEffectWitness,
     ModelValidationError, ModificationLog, ModificationLogEntry, OpStatus,
 };
-use deep_causality_haft::{Applicative, Functor, Monad};
+use deep_causality_haft::{Applicative, Functor, Monad, Pure};
 
 // A simple test state
 #[derive(Debug, Clone, PartialEq)]
@@ -78,7 +78,7 @@ fn test_fmap_no_value_no_error() {
 #[test]
 fn test_applicative_pure() {
     let result: AuditableGraphGenerator<u32> =
-        <GraphGeneratableEffectWitness<ModelValidationError, ModificationLog> as Applicative<
+        <GraphGeneratableEffectWitness<ModelValidationError, ModificationLog> as Pure<
             GraphGeneratableEffectWitness<ModelValidationError, ModificationLog>,
         >>::pure(10);
 
@@ -222,7 +222,7 @@ fn test_applicative_apply_log_aggregation() {
 #[test]
 fn test_monad_bind_success() {
     let effect: AuditableGraphGenerator<u32> =
-        <GraphGeneratableEffectWitness<ModelValidationError, ModificationLog> as Applicative<
+        <GraphGeneratableEffectWitness<ModelValidationError, ModificationLog> as Pure<
             GraphGeneratableEffectWitness<ModelValidationError, ModificationLog>,
         >>::pure(5);
 
@@ -230,7 +230,7 @@ fn test_monad_bind_success() {
         GraphGeneratableEffectWitness<ModelValidationError, ModificationLog>,
     >>::bind(effect, |val| {
         // This function returns a new effect
-        <GraphGeneratableEffectWitness<ModelValidationError, ModificationLog> as Applicative<
+        <GraphGeneratableEffectWitness<ModelValidationError, ModificationLog> as Pure<
             GraphGeneratableEffectWitness<ModelValidationError, ModificationLog>,
         >>::pure(val * 2)
     });
@@ -243,7 +243,7 @@ fn test_monad_bind_success() {
 #[test]
 fn test_monad_bind_error_propagation() {
     let effect: AuditableGraphGenerator<u32> =
-        <GraphGeneratableEffectWitness<ModelValidationError, ModificationLog> as Applicative<
+        <GraphGeneratableEffectWitness<ModelValidationError, ModificationLog> as Pure<
             GraphGeneratableEffectWitness<ModelValidationError, ModificationLog>,
         >>::pure(5);
 
@@ -282,7 +282,7 @@ fn test_monad_bind_error_in_initial_effect() {
         GraphGeneratableEffectWitness<ModelValidationError, ModificationLog>,
     >>::bind(effect, |val| {
         // This function would normally succeed, but the initial effect had an error
-        <GraphGeneratableEffectWitness<ModelValidationError, ModificationLog> as Applicative<
+        <GraphGeneratableEffectWitness<ModelValidationError, ModificationLog> as Pure<
             GraphGeneratableEffectWitness<ModelValidationError, ModificationLog>,
         >>::pure(val * 2)
     });
@@ -356,7 +356,7 @@ fn test_monad_bind_no_value_no_error() {
     let result = <GraphGeneratableEffectWitness<ModelValidationError, ModificationLog> as Monad<
         GraphGeneratableEffectWitness<ModelValidationError, ModificationLog>,
     >>::bind(effect, |val| {
-        <GraphGeneratableEffectWitness<ModelValidationError, ModificationLog> as Applicative<
+        <GraphGeneratableEffectWitness<ModelValidationError, ModificationLog> as Pure<
             GraphGeneratableEffectWitness<ModelValidationError, ModificationLog>,
         >>::pure(val * 2)
     });
