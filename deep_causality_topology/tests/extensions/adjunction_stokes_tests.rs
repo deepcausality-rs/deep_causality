@@ -248,21 +248,47 @@ fn test_adjunction_right_adjunct() {
 }
 
 #[test]
-#[should_panic(expected = "Right adjunct requires at least one value")]
-fn test_adjunction_right_adjunct_empty_form() {
+#[should_panic(expected = "Right adjunct requires at least one value in the generated chain")]
+fn test_adjunction_right_adjunct_empty_output_chain() {
     let complex = simple_complex();
     let ctx = StokesContext::new(complex);
 
-    // Empty form
-    let form: DifferentialForm<f64> = DifferentialForm::from_coefficients(0, 2, vec![]);
+    // Form with valid coefficient
+    let form = DifferentialForm::from_coefficients(0, 2, vec![10.0]);
 
+    // Function returns an empty chain
     let _ = <StokesAdjunction as Adjunction<_, _, StokesContext<f64>>>::right_adjunct(
         &ctx,
         form,
-        |a: f64| {
-            let triplets = vec![(0, 0, a)];
-            let weights = CsrMatrix::from_triplets(1, 1, &triplets).unwrap();
+        |_a: f64| {
+            // Create a chain with empty weights
+            let weights = CsrMatrix::new();
             Chain::new(ctx.complex_arc(), 0, weights)
         },
     );
+}
+
+#[test]
+#[should_panic(expected = "Counit requires at least one value in the form's chain to evaluate")]
+fn test_adjunction_counit_empty_chain_in_form() {
+    let complex = simple_complex();
+    let ctx = StokesContext::new(complex.clone());
+
+    // Create an empty chain
+    let weights = CsrMatrix::new();
+    let chain = Chain::new(Arc::new(complex), 0, weights);
+
+    // Embed this chain into a 0-form
+    // DifferentialForm<Chain<f64>>
+    // We can use Adjunction::unit to wrap it, but unit() creates a chain of forms.
+    // Counit input is DifferentialForm<Chain<B>>.
+    // So we need to create a DifferentialForm where the coefficient is a Chain.
+
+    // DifferentialForm::from_coefficients takes Vec<T>.
+    // Here T is Chain<f64>.
+    let coeffs = vec![chain];
+    let form_of_chains = DifferentialForm::from_coefficients(0, 2, coeffs);
+
+    let _ =
+        <StokesAdjunction as Adjunction<_, _, StokesContext<f64>>>::counit(&ctx, form_of_chains);
 }

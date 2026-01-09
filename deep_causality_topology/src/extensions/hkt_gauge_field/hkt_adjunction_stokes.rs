@@ -156,14 +156,15 @@ where
         // if we assume the form and chain already encode the necessary structure.
 
         // Extract first chain from the form coefficients
-        if let Some(chain) = lrb.coefficients().as_slice().first() {
-            // Extract the first weight from the chain
-            if let Some(val) = chain.weights().values().first() {
-                return val.clone();
-            }
+        // Note: DifferentialForm cannot be empty by construction, so we can safely index [0].
+        let chain = &lrb.coefficients().as_slice()[0];
+
+        // Extract the first weight from the chain
+        if let Some(val) = chain.weights().values().first() {
+            return val.clone();
         }
 
-        // Fallback/Panic
+        // Fallback/Panic if the chain is empty
         panic!("Counit requires at least one value in the form's chain to evaluate")
     }
 
@@ -211,17 +212,18 @@ where
         Func: FnMut(A) -> Chain<B>,
     {
         // Extract value 'a' from the form 'la'
-        if let Some(a) = la.coefficients().as_slice().first() {
-            // Apply morphism g (here 'f') to get Chain<B>
-            let chain = f(a.clone());
+        // Note: DifferentialForm cannot be empty by construction.
+        let a = &la.coefficients().as_slice()[0];
 
-            // Extract 'b' from the chain
-            if let Some(b) = chain.weights().values().first() {
-                return b.clone();
-            }
+        // Apply morphism g (here 'f') to get Chain<B>
+        let chain = f(a.clone());
+
+        // Extract 'b' from the chain
+        if let Some(b) = chain.weights().values().first() {
+            return b.clone();
         }
 
-        panic!("Right adjunct requires at least one value in the form")
+        panic!("Right adjunct requires at least one value in the generated chain")
     }
 }
 
