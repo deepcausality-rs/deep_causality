@@ -337,3 +337,209 @@ fn test_weak_field_west_coast() {
         "Weak field should use West Coast signature"
     );
 }
+
+// ============================================================================
+// Additional Coverage Tests
+// ============================================================================
+
+#[test]
+fn test_weak_isospin_new_ok_path() {
+    // Valid case: I₃ = 0.5, isospin = 0.5, charge = 2/3 (up quark)
+    let result = WeakIsospin::new(0.5, 0.5, 2.0 / 3.0);
+    assert!(result.is_ok(), "Valid parameters should succeed");
+
+    let isospin = result.unwrap();
+    assert_eq!(isospin.isospin, 0.5);
+    assert_eq!(isospin.i3, 0.5);
+    // hypercharge = 2 * (charge - i3) = 2 * (2/3 - 0.5) = 2 * 1/6 = 1/3
+    assert!(
+        (isospin.hypercharge - 1.0 / 3.0).abs() < 1e-10,
+        "Hypercharge should be 1/3"
+    );
+}
+
+#[test]
+fn test_weak_isospin_new_boundary_case() {
+    // Boundary case: I₃ = I exactly
+    let result = WeakIsospin::new(0.5, 0.5, 0.0);
+    assert!(result.is_ok(), "|I₃| = I should be valid");
+
+    // Case: I₃ = -I exactly
+    let result = WeakIsospin::new(0.5, -0.5, 0.0);
+    assert!(result.is_ok(), "I₃ = -I should be valid");
+}
+
+#[test]
+fn test_weak_isospin_left_coupling() {
+    // g_L = g_V + g_A
+    let lepton = WeakIsospin::lepton_doublet();
+    let g_l = lepton.left_coupling();
+    let g_v = lepton.vector_coupling();
+    let g_a = lepton.axial_coupling();
+
+    assert!(
+        (g_l - (g_v + g_a)).abs() < 1e-10,
+        "g_L = {} should equal g_V + g_A = {}",
+        g_l,
+        g_v + g_a
+    );
+
+    // For neutrino: g_L = 2 × I₃ = 1.0
+    let nu = WeakIsospin::neutrino();
+    let nu_g_l = nu.left_coupling();
+    assert!(
+        (nu_g_l - 1.0).abs() < 1e-10,
+        "Neutrino g_L should be 1.0, got {}",
+        nu_g_l
+    );
+}
+
+#[test]
+fn test_weak_isospin_right_coupling() {
+    // g_R = g_V - g_A
+    let lepton = WeakIsospin::lepton_doublet();
+    let g_r = lepton.right_coupling();
+    let g_v = lepton.vector_coupling();
+    let g_a = lepton.axial_coupling();
+
+    assert!(
+        (g_r - (g_v - g_a)).abs() < 1e-10,
+        "g_R = {} should equal g_V - g_A = {}",
+        g_r,
+        g_v - g_a
+    );
+
+    // For right-handed fermion: g_R = -2Q sin²θ_W (since I₃=0)
+    let e_r = WeakIsospin::right_handed(-1.0);
+    let e_r_g_r = e_r.right_coupling();
+    let expected = 2.0 * SIN2_THETA_W; // -2 * (-1) * sin²θ_W = 2 sin²θ_W
+    assert!(
+        (e_r_g_r - expected).abs() < 1e-10,
+        "Right-handed e g_R = {} should be {} ",
+        e_r_g_r,
+        expected
+    );
+}
+
+#[test]
+fn test_weak_isospin_default() {
+    let default = WeakIsospin::default();
+    let lepton = WeakIsospin::lepton_doublet();
+
+    // Default should be lepton doublet
+    assert_eq!(default.isospin, lepton.isospin);
+    assert_eq!(default.i3, lepton.i3);
+    assert_eq!(default.hypercharge, lepton.hypercharge);
+}
+
+#[test]
+fn test_weak_field_ops_fermi_constant() {
+    let weak = create_weak_field();
+    let gf = weak.fermi_constant();
+
+    assert!(
+        (gf - FERMI_CONSTANT).abs() < 1e-15,
+        "fermi_constant() should return FERMI_CONSTANT"
+    );
+}
+
+#[test]
+fn test_weak_field_ops_sin2_theta_w() {
+    let weak = create_weak_field();
+    let sin2 = weak.sin2_theta_w();
+
+    assert!(
+        (sin2 - SIN2_THETA_W).abs() < 1e-15,
+        "sin2_theta_w() should return SIN2_THETA_W"
+    );
+}
+
+#[test]
+fn test_weak_field_strength() {
+    let weak = create_weak_field();
+
+    // weak_field_strength computes non-abelian field strength F_μν
+    let f = weak.weak_field_strength();
+
+    // Check shape: [num_points, dim, dim, lie_dim] = [1, 4, 4, 3]
+    assert_eq!(f.shape(), &[1, 4, 4, 3]);
+
+    // For zero connection, F = dA + [A, A] should be zero
+    // Since A = 0, both terms are zero
+    for val in f.as_slice() {
+        assert!(
+            val.abs() < 1e-10,
+            "Field strength should be 0 for zero connection"
+        );
+    }
+}
+
+#[test]
+fn test_neutral_current_propagator_nan_error() {
+    let nu = WeakIsospin::neutrino();
+    let result = WeakField::<f64>::neutral_current_propagator(f64::NAN, &nu);
+    assert!(result.is_err(), "NaN momentum should return error");
+}
+
+#[test]
+fn test_neutral_current_propagator_infinity_error() {
+    let nu = WeakIsospin::neutrino();
+    let result = WeakField::<f64>::neutral_current_propagator(f64::INFINITY, &nu);
+    assert!(result.is_err(), "Infinite momentum should return error");
+}
+
+#[test]
+fn test_weak_decay_width_nan_error() {
+    let result = WeakField::<f64>::weak_decay_width(f64::NAN);
+    assert!(result.is_err(), "NaN mass should return error");
+}
+
+#[test]
+fn test_weak_decay_width_infinity_error() {
+    let result = WeakField::<f64>::weak_decay_width(f64::INFINITY);
+    assert!(result.is_err(), "Infinite mass should return error");
+}
+
+#[test]
+fn test_right_handed_up_quark() {
+    // Right-handed up quark: I=0, I₃=0, Q=+2/3
+    let u_r = WeakIsospin::right_handed(2.0 / 3.0);
+    assert_eq!(u_r.isospin, 0.0);
+    assert_eq!(u_r.i3, 0.0);
+    // Y = 2Q = 4/3
+    assert!((u_r.hypercharge - 4.0 / 3.0).abs() < 1e-10);
+
+    // Electric charge: Q = I₃ + Y/2 = 0 + (4/3)/2 = 2/3
+    let q = u_r.electric_charge();
+    assert!(
+        (q - 2.0 / 3.0).abs() < 1e-10,
+        "Right-handed u charge should be +2/3"
+    );
+}
+
+#[test]
+fn test_weak_isospin_edge_case_singlet() {
+    // I = 0 singlet
+    let singlet = WeakIsospin::new(0.0, 0.0, 0.0);
+    assert!(singlet.is_ok(), "Singlet should be valid");
+
+    let s = singlet.unwrap();
+    assert_eq!(s.isospin, 0.0);
+    assert_eq!(s.i3, 0.0);
+    // Y = 2*(Q - I₃) = 0
+    assert_eq!(s.hypercharge, 0.0);
+}
+
+#[test]
+fn test_charged_current_propagator_high_energy() {
+    // At high energy (q² >> M_W²), propagator → 1/q²
+    let q2 = 1e6_f64; // Much larger than M_W² ≈ 6500
+    let prop = WeakField::<f64>::charged_current_propagator(q2).unwrap();
+
+    // Expected: 1/(q² - M_W²) ≈ 1/q² for large q²
+    let expected = 1.0 / q2;
+    assert!(
+        (prop - expected).abs() / expected.abs() < 0.01,
+        "High-energy propagator should approach 1/q²"
+    );
+}
