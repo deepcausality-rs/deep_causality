@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_haft-v0.2.7...deep_causality_haft-v0.3.0) - 2026-01-09
+
+### Added
+
+- *(deep_causality_haft)* Added alias for common traits to simplify usage and restructured internal code.
+- *(deep_causality_haft)* Fixed some tests. Removed dependeny on num.
+- *(deep_causality_haft)* Seperated Pure into dedicated Trait to enable Monad implementation without Applicative.
+- *(deep_causality_haft)* Completed transition to GAT based HKT.
+- *(deep_causality_haft)* Removed legacy trait bound support.
+- *(deep_causality_tensor)* Upated HKT extension to use new GAT bounded HKT.
+- *(deep_causality_haft)* Finalized implementaion of GAT bounded HKT.
+- *(deep_causality_haft)* Completed initial implementaion of GAT bounded HKT.
+- *(deep_causality_haft)* Iniital implementaion of GAT bounded HKT.
+
+### Other
+
+- *(deep_causality_haft)* increased test coverage.
+- updated project wide SBOM files.
+- updated project wide copyright note.
+
 ## [0.2.7](https://github.com/marvin-hansen/deep_causality/compare/deep_causality_haft-v0.2.6...deep_causality_haft-v0.2.7) - 2025-12-31
 
 ### Other

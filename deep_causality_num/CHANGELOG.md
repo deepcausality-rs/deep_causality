@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.12](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.1.11...deep_causality_num-v0.1.12) - 2026-01-09
+
+### Added
+
+- *(deep_causality_num)* Updated module structure
+- *(deep_causality_num)* Added some more algebra traits.
+- *(deep_causality_num)* Added integer trait and default impl.
+- *(deep_causality_num)* Refactored code structure of DoubleFloat type.
+- *(deep_causality_physics)* Completed integration of new DoubleFloat Type.
+- *(deep_causality_num)* Code formatting.
+- *(deep_causality_num)* Initial implementation of DoubleFloat type.
+- *(deep_causality_num)* Added specs for High-Precision DoubleFloat.
+
+### Fixed
+
+- *(deep_causality_num)* Fixed numerical instability in transcedental operations at the 30/21 digit.
+
+### Other
+
+- Updated Bazel build and test config.
+- repo wide lints and fixes
+- *(deep_causality_physics)* increased test coverage.
+- repo wide lints and formatting.
+- *(deep_causality_num)* increased test coverage.
+- updated project wide SBOM files.
+- updated project wide copyright note.
+
 ## [0.1.11](https://github.com/marvin-hansen/deep_causality/compare/deep_causality_num-v0.1.10...deep_causality_num-v0.1.11) - 2025-12-31
 
 ### Added
