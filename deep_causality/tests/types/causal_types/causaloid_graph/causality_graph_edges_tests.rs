@@ -3,10 +3,33 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality::utils_test::test_utils;
 use deep_causality::*;
 use ultragraph::*;
 
-use deep_causality::utils_test::test_utils;
+#[test]
+fn test_add_edge_error() {
+    let mut g = CausaloidGraph::<BaseCausaloid<NumericalValue, bool>>::new(0);
+    // Try to add edge between non-existent nodes
+    let res = g.add_edge(0, 1);
+    assert!(res.is_err());
+}
+
+#[test]
+fn test_add_edge_with_weight_error() {
+    let mut g = CausaloidGraph::<BaseCausaloid<NumericalValue, bool>>::new(0);
+    // Try to add edge between non-existent nodes
+    let res = g.add_edg_with_weight(0, 1, 10);
+    assert!(res.is_err());
+}
+
+#[test]
+fn test_remove_edge_error() {
+    let mut g = CausaloidGraph::<BaseCausaloid<NumericalValue, bool>>::new(0);
+    // Try to remove non-existent edge
+    let res = g.remove_edge(0, 1);
+    assert!(res.is_err());
+}
 
 #[test]
 fn test_new() {

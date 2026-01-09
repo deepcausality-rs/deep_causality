@@ -524,3 +524,71 @@ fn test_noop_and_sequence() {
         _ => panic!("Expected DuplicateCausaloidID"),
     }
 }
+
+#[test]
+fn test_causal_system_state_defaults() {
+    let state = CausalSystemState::<TestInput, TestOutput, TestContext>::default();
+    assert!(state.causaloids.is_empty());
+    assert!(state.contexts.is_empty());
+
+    let state_new = CausalSystemState::<TestInput, TestOutput, TestContext>::new();
+    assert!(state_new.causaloids.is_empty());
+
+    // Test Clone
+    let mut state_clone = state.clone();
+    assert!(state_clone.contexts.is_empty());
+
+    // Modify clone to ensure deep copy (though HashMap is deep copy by default)
+    state_clone
+        .contexts
+        .insert(1, BaseContext::with_capacity(1, "test", 10));
+    assert!(!state_clone.contexts.is_empty());
+    assert!(state.contexts.is_empty());
+
+    // Test Debug
+    let debug_str = format!("{:?}", state);
+    assert!(debug_str.contains("CausalSystemState"));
+    assert!(debug_str.contains("causaloids"));
+    assert!(debug_str.contains("contexts"));
+}
+
+#[test]
+fn test_interpreter_default() {
+    let interpreter = Interpreter;
+    let state = create_sys_state();
+    // Just verify it works
+    let op = Operation::NoOp;
+    let tree = OpTree::new(op);
+    let res = interpreter.execute(&tree, state);
+    assert!(res.value.is_some());
+}
+
+#[test]
+fn test_update_context_no_change() {
+    let interpreter = Interpreter::new();
+    let state = create_sys_state();
+    let id = 100;
+
+    // Add context first
+    let create_tree = OpTree::new(Operation::CreateContext {
+        id,
+        name: "Old".into(),
+        capacity: 10,
+    });
+    let state_with_ctx = interpreter
+        .execute(&create_tree, state.clone())
+        .value
+        .unwrap();
+
+    // Update with None name (no change)
+    let update_op = Operation::UpdateContext { id, new_name: None };
+    let update_tree = OpTree::new(update_op);
+    let result = interpreter.execute(&update_tree, state_with_ctx);
+
+    assert!(result.value.is_some());
+    // Name should remain "Old"
+    assert_eq!(
+        result.value.unwrap().contexts.get(&id).unwrap().name(),
+        "Old"
+    );
+}
