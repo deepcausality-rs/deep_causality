@@ -4,14 +4,14 @@
  */
 
 #[cfg(test)]
-mod causaloid_collection_tests;
+mod alias_adjunction_tests;
 #[cfg(test)]
-mod causaloid_debug_tests;
+mod alias_comonad_tests;
 #[cfg(test)]
-mod causaloid_getters_tests;
+mod alias_foldable_tests;
 #[cfg(test)]
-mod causaloid_graph_tests;
+mod alias_functor_tests;
 #[cfg(test)]
-mod causaloid_singleton_tests;
+mod alias_monad_tests;
 #[cfg(test)]
-mod causaloid_tests;
+mod alias_profunctor_tests;

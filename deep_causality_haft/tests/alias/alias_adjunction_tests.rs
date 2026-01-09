@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Adjunction, HKT, NoConstraint, Satisfies};
+use deep_causality_haft::{Adjunction, AliasAdjunction, HKT, NoConstraint, Satisfies};
 
 // Simplified Identity for testing
 #[derive(Debug, PartialEq, Clone)]
@@ -24,9 +24,6 @@ impl Adjunction<IdentityWitness, IdentityWitness, ()> for IdentityAdjunction {
         Identity<A>: Satisfies<NoConstraint>,
         F: Fn(Identity<A>) -> B,
     {
-        // For Identity adjunction, L = Id, R = Id.
-        // left_adjunct: (Id<A> -> B) -> (A -> Id<B>)
-        // conceptually: f(simplify(a)) wrapped
         let res_b = f(Identity(a));
         Identity(res_b)
     }
@@ -38,9 +35,6 @@ impl Adjunction<IdentityWitness, IdentityWitness, ()> for IdentityAdjunction {
         Identity<B>: Satisfies<NoConstraint>,
         F: FnMut(A) -> Identity<B>,
     {
-        // For Identity adjunction, L = Id, R = Id.
-        // right_adjunct: (A -> Id<B>) -> (Id<A> -> B)
-        // conceptually: unwrap(f(unwrap(la)))
         let a = la.0;
         let id_b = f(a);
         id_b.0
@@ -63,12 +57,24 @@ impl Adjunction<IdentityWitness, IdentityWitness, ()> for IdentityAdjunction {
     }
 }
 
-#[test]
-fn test_adjunction_identity() {
-    let val = 42;
-    let unit = IdentityAdjunction::unit(&(), val);
-    assert_eq!(unit, Identity(Identity(42)));
+// AliasAdjunction is automatically implemented for any Adjunction types
 
-    let counit = IdentityAdjunction::counit(&(), unit);
-    assert_eq!(counit, 42);
+#[test]
+fn test_alias_adjunction_integrate() {
+    let val = 10;
+    // integrate alias left_adjunct
+    // (L<A> -> B) -> (A -> R<B>)
+    // Here L=Id, R=Id. (Id<i32> -> i32) -> (i32 -> Id<i32>)
+    let res = IdentityAdjunction::integrate(&(), val, |x: Identity<i32>| x.0 * 2);
+    assert_eq!(res, Identity(20));
+}
+
+#[test]
+fn test_alias_adjunction_differentiate() {
+    let val = Identity(10);
+    // differentiate alias right_adjunct
+    // (A -> R<B>) -> (L<A> -> B)
+    // Here L=Id, R=Id. (i32 -> Id<i32>) -> (Id<i32> -> i32)
+    let res = IdentityAdjunction::differentiate(&(), val, |x: i32| Identity(x * 2));
+    assert_eq!(res, 20);
 }

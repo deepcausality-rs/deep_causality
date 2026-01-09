@@ -6,6 +6,12 @@
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Graph, TopologyError, TopologyErrorEnum};
 
+/// Helper to create a simple graph
+fn create_simple_graph() -> Graph<f64> {
+    let data = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
+    Graph::new(3, data, 0).unwrap()
+}
+
 #[test]
 fn test_graph_new_success() {
     let data = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
@@ -131,4 +137,131 @@ fn test_graph_neighbors() {
     assert_eq!(neighbors.len(), 2);
     assert!(neighbors.contains(&1));
     assert!(neighbors.contains(&2));
+}
+
+// =============================================================================
+// add_edge error paths
+// =============================================================================
+
+#[test]
+fn test_add_edge_success() {
+    let mut graph = create_simple_graph();
+    let result = graph.add_edge(0, 1);
+    assert!(result.is_ok());
+    assert!(result.unwrap(), "New edge should return true");
+}
+
+#[test]
+fn test_add_edge_duplicate() {
+    let mut graph = create_simple_graph();
+    graph.add_edge(0, 1).unwrap();
+
+    // Adding same edge again should return false (not an error)
+    let result = graph.add_edge(0, 1);
+    assert!(result.is_ok());
+    assert!(!result.unwrap(), "Duplicate edge should return false");
+}
+
+#[test]
+fn test_add_edge_out_of_bounds() {
+    let mut graph = create_simple_graph();
+    let result = graph.add_edge(0, 10); // v=10 is out of bounds
+
+    assert!(result.is_err());
+    match result.unwrap_err().0 {
+        TopologyErrorEnum::GraphError(msg) => {
+            assert!(
+                msg.contains("out of bounds"),
+                "Should mention out of bounds: {}",
+                msg
+            );
+        }
+        e => panic!("Expected GraphError, got {:?}", e),
+    }
+}
+
+#[test]
+fn test_add_edge_self_loop() {
+    let mut graph = create_simple_graph();
+    let result = graph.add_edge(1, 1); // Self-loop
+
+    assert!(result.is_err());
+    match result.unwrap_err().0 {
+        TopologyErrorEnum::GraphError(msg) => {
+            assert!(
+                msg.contains("Self-loops"),
+                "Should mention self-loops: {}",
+                msg
+            );
+        }
+        e => panic!("Expected GraphError, got {:?}", e),
+    }
+}
+
+// =============================================================================
+// has_edge error paths
+// =============================================================================
+
+#[test]
+fn test_has_edge_success() {
+    let mut graph = create_simple_graph();
+    graph.add_edge(0, 2).unwrap();
+
+    assert!(graph.has_edge(0, 2).unwrap());
+    assert!(!graph.has_edge(0, 1).unwrap());
+}
+
+#[test]
+fn test_has_edge_out_of_bounds() {
+    let graph = create_simple_graph();
+    let result = graph.has_edge(100, 0);
+
+    assert!(result.is_err());
+    match result.unwrap_err().0 {
+        TopologyErrorEnum::GraphError(msg) => {
+            assert!(msg.contains("out of bounds"));
+        }
+        e => panic!("Expected GraphError, got {:?}", e),
+    }
+}
+
+// =============================================================================
+// neighbors error paths
+// =============================================================================
+
+#[test]
+fn test_neighbors_success() {
+    let mut graph = create_simple_graph();
+    graph.add_edge(0, 1).unwrap();
+    graph.add_edge(0, 2).unwrap();
+
+    let neighbors = graph.neighbors(0).unwrap();
+    assert_eq!(neighbors.len(), 2);
+}
+
+#[test]
+fn test_neighbors_out_of_bounds() {
+    let graph = create_simple_graph();
+    let result = graph.neighbors(50);
+
+    assert!(result.is_err());
+    match result.unwrap_err().0 {
+        TopologyErrorEnum::GraphError(msg) => {
+            assert!(msg.contains("out of bounds"));
+        }
+        e => panic!("Expected GraphError, got {:?}", e),
+    }
+}
+
+// =============================================================================
+// Display and other coverage
+// =============================================================================
+
+#[test]
+fn test_graph_display() {
+    let graph = create_simple_graph();
+    let display_str = format!("{}", graph);
+
+    assert!(display_str.contains("Graph"));
+    assert!(display_str.contains("3")); // num vertices
 }

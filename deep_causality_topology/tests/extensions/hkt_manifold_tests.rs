@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{CoMonad, Foldable, Functor, Monad, Pure};
+use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, Monad, Pure};
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, ManifoldWitness, Simplex, SimplicialComplex, Skeleton};
@@ -119,6 +119,33 @@ fn test_manifold_bind() {
     assert_eq!(bound.data().as_slice()[0], 10.0); // 5.0 * 2.0
 }
 
+// ============================================================================
+// Applicative Tests - Covering apply() branches
+// ============================================================================
+
+#[test]
+fn test_manifold_applicative_single_func() {
+    // Test the `funcs.len() == 1` branch in Applicative::apply
+    // Create a manifold with a single function using Pure (avoids trait bounds issue)
+    let func_manifold: Manifold<f64, fn(f64) -> f64> = ManifoldWitness::pure(|x: f64| x * 3.0);
+
+    // Create a data manifold with multiple values
+    let complex = create_line_manifold().complex().clone();
+    let data = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
+    let data_manifold = Manifold::new(complex, data, 0).unwrap();
+
+    // Apply single function to all values
+    let result: Manifold<f64, f64> = ManifoldWitness::apply(func_manifold, data_manifold);
+
+    // Single func applied to all: [1*3, 2*3, 3*3] = [3, 6, 9]
+    assert_eq!(result.data().as_slice(), &[3.0, 6.0, 9.0]);
+}
+
+// Note: Multi-func Applicative test removed because fn(f64)->f64 doesn't implement
+// the Copy/Default/Zero traits required by Manifold::new. The single-func test
+// covers the primary apply path, and the multi-func (zip) branch would require
+// a different approach to construct the function manifold.
+
 #[test]
 fn test_manifold_apply_via_functor() {
     // Since Applicative requires constructing a Manifold<Func>, which needs private field access,
@@ -131,8 +158,3 @@ fn test_manifold_apply_via_functor() {
     let mapped = ManifoldWitness::fmap(manifold, |x| x * x);
     assert_eq!(mapped.data().as_slice(), &[1.0, 4.0, 9.0]);
 }
-
-// Note: test_manifold_extract_empty_panics removed because it requires direct Manifold struct construction
-// with empty data, which is not possible via the public API (constructors properly validate data size).
-// The panic path in extract() is tested implicitly by attempting to extract from an out-of-bounds cursor,
-// but creating such a state is also prevented by the constructor.

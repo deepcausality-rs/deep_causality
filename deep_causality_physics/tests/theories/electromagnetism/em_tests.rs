@@ -12,6 +12,7 @@
 //! - Field strength computation via GaugeFieldWitness (HKT)
 //! - Physical properties (radiation fields, null fields)
 
+use deep_causality_metric::LorentzianMetric;
 use deep_causality_multivector::{CausalMultiVector, MultiVector};
 use deep_causality_physics::{EM, GaugeEmOps};
 
@@ -573,5 +574,133 @@ fn test_momentum_density_equals_poynting_scaled() {
     assert!(
         (s_mag - g_mag).abs() < 1e-10,
         "Momentum density should equal Poynting vector"
+    );
+}
+
+// ============================================================================
+// Error Path and Edge Case Coverage Tests
+// ============================================================================
+
+#[test]
+fn test_plane_wave_nan_amplitude_error() {
+    let result = EM::plane_wave(f64::NAN, 0);
+    assert!(result.is_err(), "NaN amplitude should return error");
+}
+
+#[test]
+fn test_plane_wave_infinity_amplitude_error() {
+    let result = EM::plane_wave(f64::INFINITY, 0);
+    assert!(result.is_err(), "Infinite amplitude should return error");
+}
+
+#[test]
+fn test_plane_wave_neg_infinity_amplitude_error() {
+    let result = EM::plane_wave(f64::NEG_INFINITY, 0);
+    assert!(
+        result.is_err(),
+        "Negative infinite amplitude should return error"
+    );
+}
+
+#[test]
+fn test_plane_wave_invalid_polarization_error() {
+    // Polarization must be 0 or 1
+    let result = EM::plane_wave(1.0, 2);
+    assert!(result.is_err(), "Polarization 2 should return error");
+
+    let result = EM::plane_wave(1.0, 100);
+    assert!(result.is_err(), "Polarization 100 should return error");
+}
+
+#[test]
+fn test_plane_wave_polarization_zero() {
+    // Explicit test for polarization 0 path
+    let wave = EM::plane_wave(3.0, 0);
+    assert!(wave.is_ok(), "Polarization 0 should succeed");
+
+    let field = wave.unwrap();
+    let e = field.electric_field().unwrap();
+    let data = e.data();
+
+    // Polarization 0: E_x = amplitude, E_y = E_z = 0
+    let ex: f64 = data.get(2).copied().unwrap_or(0.0);
+    assert!((ex - 3.0).abs() < 1e-10, "E_x should be 3.0 for pol=0");
+}
+
+#[test]
+fn test_plane_wave_polarization_one() {
+    // Explicit test for polarization 1 path
+    let wave = EM::plane_wave(4.0, 1);
+    assert!(wave.is_ok(), "Polarization 1 should succeed");
+
+    let field = wave.unwrap();
+    let e = field.electric_field().unwrap();
+    let data = e.data();
+
+    // Polarization 1: E_y = amplitude, E_x = E_z = 0
+    let ey: f64 = data.get(3).copied().unwrap_or(0.0);
+    assert!((ey - 4.0).abs() < 1e-10, "E_y should be 4.0 for pol=1");
+}
+
+#[test]
+fn test_from_fields_creates_valid_field() {
+    use deep_causality_metric::WestCoastMetric;
+    use deep_causality_tensor::CausalTensor;
+    use deep_causality_topology::{Manifold, Simplex, SimplicialComplexBuilder};
+
+    // Create a minimal manifold
+    let mut builder = SimplicialComplexBuilder::new(0);
+    let _ = builder.add_simplex(Simplex::new(vec![0]));
+    let complex = builder.build().unwrap();
+    let data = CausalTensor::new(vec![0.0], vec![1]).unwrap();
+    let base: Manifold<f64, f64> = Manifold::new(complex, data, 0).unwrap();
+
+    // Create E and B multivectors with same metric
+    let metric = WestCoastMetric::minkowski_4d().into_metric();
+    let mut e_data = vec![0.0; 16];
+    e_data[2] = 1.0; // E_x
+    let e_field = CausalMultiVector::new(e_data, metric).unwrap();
+
+    let mut b_data = vec![0.0; 16];
+    b_data[3] = 1.0; // B_y
+    let b_field = CausalMultiVector::new(b_data, metric).unwrap();
+
+    let result = EM::from_fields(base, e_field, b_field);
+    assert!(
+        result.is_ok(),
+        "from_fields with valid inputs should succeed"
+    );
+
+    let field = result.unwrap();
+    assert!(field.is_abelian(), "EM field should be abelian");
+}
+
+#[test]
+fn test_from_fields_metric_mismatch_error() {
+    use deep_causality_metric::{EastCoastMetric, WestCoastMetric};
+    use deep_causality_tensor::CausalTensor;
+    use deep_causality_topology::{Manifold, Simplex, SimplicialComplexBuilder};
+
+    // Create a minimal manifold
+    let mut builder = SimplicialComplexBuilder::new(0);
+    let _ = builder.add_simplex(Simplex::new(vec![0]));
+    let complex = builder.build().unwrap();
+    let data = CausalTensor::new(vec![0.0], vec![1]).unwrap();
+    let base: Manifold<f64, f64> = Manifold::new(complex, data, 0).unwrap();
+
+    // Create E and B with DIFFERENT metrics
+    let west_metric = WestCoastMetric::minkowski_4d().into_metric();
+    let east_metric = EastCoastMetric::minkowski_4d().into_metric();
+
+    let e_data = vec![0.0; 16];
+    let e_field = CausalMultiVector::new(e_data, west_metric).unwrap();
+
+    let b_data = vec![0.0; 16];
+    let b_field = CausalMultiVector::new(b_data, east_metric).unwrap();
+
+    let result = EM::from_fields(base, e_field, b_field);
+    assert!(
+        result.is_err(),
+        "from_fields with mismatched metrics should return error"
     );
 }

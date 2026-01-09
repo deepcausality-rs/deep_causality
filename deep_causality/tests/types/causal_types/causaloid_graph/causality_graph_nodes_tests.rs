@@ -158,3 +158,38 @@ fn test_get_graph() {
     assert_eq!(graph.number_edges(), 0);
     assert_eq!(graph.number_nodes(), 0);
 }
+
+#[test]
+fn test_contains_root_causaloid_empty() {
+    let g = CausaloidGraph::<BaseCausaloid<NumericalValue, bool>>::new(0);
+    assert!(!g.contains_root_causaloid());
+}
+
+#[test]
+fn test_get_root_causaloid_empty() {
+    let g = CausaloidGraph::<BaseCausaloid<NumericalValue, bool>>::new(0);
+    assert!(g.get_root_causaloid().is_none());
+}
+
+#[test]
+fn test_is_empty_and_clear() {
+    let mut g = CausaloidGraph::new(0);
+    assert!(g.is_empty());
+
+    let causaloid = test_utils::get_test_causaloid_deterministic(1);
+    g.add_causaloid(causaloid).unwrap();
+    assert!(!g.is_empty());
+    assert_eq!(g.size(), 1);
+    assert_eq!(g.number_nodes(), 1);
+
+    g.clear();
+    assert!(g.is_empty());
+    assert_eq!(g.size(), 0);
+}
+
+#[test]
+fn test_remove_causaloid_error() {
+    let mut g = CausaloidGraph::<BaseCausaloid<NumericalValue, bool>>::new(0);
+    let res = g.remove_causaloid(99); // Invalid index
+    assert!(res.is_err());
+}
