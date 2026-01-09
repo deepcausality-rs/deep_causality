@@ -14,5 +14,7 @@ mod monad_tests;
 mod parametric_monad_tests;
 mod profunctor_tests;
 mod promonad_tests;
+#[cfg(test)]
+mod pure_tests;
 mod riemann_map_tests;
 mod traversable_tests;

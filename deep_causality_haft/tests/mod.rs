@@ -4,6 +4,7 @@
  */
 
 mod algebra;
+mod alias;
 mod effect_system;
 mod extensions;
 mod hkt;
