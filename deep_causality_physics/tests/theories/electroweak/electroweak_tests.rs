@@ -552,3 +552,261 @@ fn test_z_hadronic_width_computed() {
         gamma_had
     );
 }
+
+// ============================================================================
+// Additional Coverage Tests
+// ============================================================================
+
+#[test]
+fn test_electroweak_params_new_constructor() {
+    // Test the explicit constructor
+    let sin2 = 0.23;
+    let vev = 246.0;
+    let g = 0.65;
+    let g_prime = 0.35;
+
+    let params = ElectroweakParams::<f64>::new(sin2, vev, g, g_prime);
+
+    assert!((params.sin2_theta_w() - sin2).abs() < 1e-10);
+    assert!((params.higgs_vev() - vev).abs() < 1e-10);
+    assert!((params.g_coupling() - g).abs() < 1e-10);
+    assert!((params.g_prime_coupling() - g_prime).abs() < 1e-10);
+}
+
+#[test]
+fn test_z_coupling() {
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
+
+    // g_Z = g / cos(θ_W)
+    let g_z = params.z_coupling();
+    let g = params.g_coupling();
+    let cos = params.cos_theta_w();
+
+    assert!(
+        (g_z - g / cos).abs() < 1e-10,
+        "g_Z = {} should equal g / cos(θ_W) = {}",
+        g_z,
+        g / cos
+    );
+
+    // g_Z should be larger than g (since cos < 1)
+    assert!(g_z > g, "g_Z should be > g");
+}
+
+#[test]
+fn test_cos2_theta_w() {
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
+
+    // cos²θ_W = 1 - sin²θ_W
+    let sin2 = params.sin2_theta_w();
+    let cos2 = params.cos2_theta_w();
+
+    assert!(
+        (cos2 + sin2 - 1.0).abs() < 1e-10,
+        "sin² + cos² should equal 1"
+    );
+
+    // cos²θ_W ≈ 0.77 for SM
+    assert!(
+        cos2 > 0.75 && cos2 < 0.80,
+        "cos²θ_W = {} should be ~0.77",
+        cos2
+    );
+}
+
+#[test]
+fn test_w_mass_constant() {
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
+
+    // w_mass() returns the PDG constant value
+    let m_w = params.w_mass();
+    assert!(
+        m_w > 80.0 && m_w < 81.0,
+        "W mass constant = {} should be ~80.4 GeV",
+        m_w
+    );
+}
+
+#[test]
+fn test_z_mass_constant() {
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
+
+    // z_mass() returns the PDG constant value
+    let m_z = params.z_mass();
+    assert!(
+        (m_z - 91.1876).abs() < 0.1,
+        "Z mass constant = {} should be ~91.19 GeV",
+        m_z
+    );
+}
+
+#[test]
+fn test_top_yukawa() {
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
+
+    // y_t = √2 m_t / v ≈ 1.0
+    let y_t = params.top_yukawa();
+    let expected = (2.0_f64).sqrt() * TOP_MASS / params.higgs_vev();
+
+    assert!(
+        (y_t - expected).abs() < 1e-6,
+        "y_t = {} should equal √2 m_t / v = {}",
+        y_t,
+        expected
+    );
+
+    // Top yukawa should be close to 1 (strongly coupled)
+    assert!(y_t > 0.9 && y_t < 1.1, "y_t = {} should be ~1.0", y_t);
+}
+
+#[test]
+fn test_neutrino_electron_cross_section_zero_energy_error() {
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
+
+    let result = params.neutrino_electron_cross_section(0.0);
+    assert!(result.is_err(), "Zero energy should return error");
+}
+
+#[test]
+fn test_electroweak_ops_sin2_theta_w() {
+    let ew = create_electroweak_field();
+
+    // Test ElectroweakOps trait method sin2_theta_w
+    let sin2 = ew.sin2_theta_w();
+    assert!(
+        sin2 > 0.22 && sin2 < 0.24,
+        "sin²θ_W from field = {} should be ~0.231",
+        sin2
+    );
+}
+
+#[test]
+fn test_electroweak_ops_w_mass() {
+    let ew = create_electroweak_field();
+
+    // Test ElectroweakOps trait method w_mass
+    let m_w = ew.w_mass();
+    assert!(
+        m_w > 80.0 && m_w < 81.0,
+        "M_W from field = {} should be ~80.4 GeV",
+        m_w
+    );
+}
+
+#[test]
+fn test_electroweak_ops_z_mass() {
+    let ew = create_electroweak_field();
+
+    // Test ElectroweakOps trait method z_mass
+    let m_z = ew.z_mass();
+    assert!(
+        (m_z - 91.1876).abs() < 0.1,
+        "M_Z from field = {} should be ~91.19 GeV",
+        m_z
+    );
+}
+
+#[test]
+fn test_w_mass_computed_with_precision() {
+    // Precision mode uses radiative corrections
+    let params = ElectroweakParams::<f64>::standard_model_precision();
+
+    // w_mass_computed should return the corrected mass
+    let m_w = params.w_mass_computed();
+    assert!(
+        m_w > 80.3 && m_w < 80.5,
+        "M_W corrected = {} should be ~80.38 GeV",
+        m_w
+    );
+}
+
+#[test]
+fn test_z_mass_computed_with_precision() {
+    // Precision mode returns the input Z mass (PDG value)
+    let params = ElectroweakParams::<f64>::standard_model_precision();
+
+    let m_z = params.z_mass_computed();
+    assert!(
+        (m_z - 91.1876).abs() < 0.001,
+        "M_Z computed = {} should be exactly 91.1876 GeV",
+        m_z
+    );
+}
+
+#[test]
+fn test_z_partial_width_without_corrections() {
+    // Standard model without precision should use tree-level angle
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
+
+    // Neutrino width (invisible channel)
+    let gamma_nu = params.z_partial_width_fermion(false, 0.5, 0.0);
+    assert!(gamma_nu > 0.0, "Neutrino width should be positive");
+
+    // For neutrinos (Q=0), g_V = g_A = I3/2, so width is non-zero
+    assert!(
+        gamma_nu > 0.15 && gamma_nu < 0.20,
+        "Γ_ν = {} should be ~0.167 GeV",
+        gamma_nu
+    );
+}
+
+#[test]
+fn test_yukawa_coupling() {
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
+
+    // Test roundtrip: mass -> yukawa -> mass
+    let test_mass = 100.0; // GeV
+    let yukawa = params.yukawa_coupling(test_mass);
+    let recovered_mass = params.fermion_mass(yukawa);
+
+    assert!(
+        (recovered_mass - test_mass).abs() < 1e-10,
+        "Roundtrip mass = {} should equal original {}",
+        recovered_mass,
+        test_mass
+    );
+}
+
+#[test]
+fn test_higgs_potential_values() {
+    let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
+
+    // Test potential at various field values
+    let v = params.higgs_vev();
+
+    // At large |φ|, potential should be positive (quartic dominates)
+    let v_large = params.higgs_potential(v * 2.0);
+    assert!(v_large > 0.0, "V(2v) should be positive");
+
+    // Potential increases symmetrically from minimum
+    let v_half = params.higgs_potential(v / 4.0);
+    let v_min = params.higgs_potential(v / (2.0_f64).sqrt());
+    assert!(
+        v_half > v_min,
+        "V(v/4) = {} should be > V(v/√2) = {}",
+        v_half,
+        v_min
+    );
+}
+
+#[test]
+fn test_standard_model_precision_couplings() {
+    let params = ElectroweakParams::<f64>::standard_model_precision();
+
+    // g coupling should be in physical range (~0.65)
+    let g = params.g_coupling();
+    assert!(g > 0.64 && g < 0.68, "g = {} should be ~0.65", g);
+
+    // g' coupling should be smaller (~0.35)
+    let g_prime = params.g_prime_coupling();
+    assert!(
+        g_prime > 0.33 && g_prime < 0.37,
+        "g' = {} should be ~0.35",
+        g_prime
+    );
+
+    // Check relations still hold
+    let e = params.em_coupling();
+    let sin = params.sin_theta_w();
+    assert!((e - g * sin).abs() < 1e-3, "e = g sin θ_W should hold");
+}
