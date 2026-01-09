@@ -3,11 +3,13 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_haft::Adjunction;
 use deep_causality_sparse::CsrMatrix;
 use deep_causality_topology::{
-    Chain, DifferentialForm, Simplex, SimplicialComplex, SimplicialComplexBuilder,
+    BaseTopology, Chain, DifferentialForm, Simplex, SimplicialComplex, SimplicialComplexBuilder,
     StokesAdjunction, StokesContext,
 };
+use std::sync::Arc;
 
 fn simple_complex() -> SimplicialComplex<f64> {
     // Triangle: 3 vertices, 3 edges, 1 face
@@ -29,6 +31,33 @@ fn test_stokes_context_new() {
     assert_eq!(ctx.num_simplices(1), 3);
     // Faces: (0,1,2)
     assert_eq!(ctx.num_simplices(2), 1);
+}
+
+#[test]
+fn test_stokes_context_from_arc() {
+    let complex = simple_complex();
+    let arc_complex = Arc::new(complex);
+    let ctx = StokesContext::from_arc(arc_complex);
+    assert_eq!(ctx.dim(), 2);
+}
+
+#[test]
+fn test_stokes_context_complex_arc() {
+    let complex = simple_complex();
+    let ctx = StokesContext::new(complex);
+    let arc = ctx.complex_arc();
+    assert_eq!(arc.dimension(), 2);
+}
+
+#[test]
+fn test_num_simplices_out_of_bounds() {
+    let complex = simple_complex();
+    let ctx = StokesContext::new(complex);
+
+    // k=3 is beyond the 2D complex, should return 0
+    assert_eq!(ctx.num_simplices(3), 0);
+    assert_eq!(ctx.num_simplices(10), 0);
+    assert_eq!(ctx.num_simplices(100), 0);
 }
 
 #[test]
@@ -74,6 +103,20 @@ fn test_exterior_derivative_top_form() {
 }
 
 #[test]
+fn test_exterior_derivative_beyond_coboundary() {
+    let complex = simple_complex();
+    let ctx = StokesContext::new(complex);
+
+    // 3-form on 2D complex (beyond dim)
+    let form = DifferentialForm::from_coefficients(3, 2, vec![1.0]);
+
+    let dform = StokesAdjunction::exterior_derivative(&ctx, &form);
+
+    // Should return zero form
+    assert_eq!(dform.degree(), 4);
+}
+
+#[test]
 fn test_boundary_placeholder() {
     // Current boundary implementation returns empty/zero chain placeholder
     let complex = simple_complex();
@@ -81,8 +124,145 @@ fn test_boundary_placeholder() {
 
     // Create dummy chain
     let weights: CsrMatrix<f64> = CsrMatrix::new();
-    let chain = Chain::new(std::sync::Arc::new(complex), 1, weights);
+    let chain = Chain::new(Arc::new(complex), 1, weights);
 
     let boundary = StokesAdjunction::boundary(&ctx, &chain);
     assert_eq!(boundary.grade(), 0);
+}
+
+#[test]
+fn test_boundary_0_chain() {
+    let complex = simple_complex();
+    let ctx = StokesContext::new(complex.clone());
+
+    // 0-chain (vertices) - boundary should be empty
+    let weights: CsrMatrix<f64> = CsrMatrix::new();
+    let chain = Chain::new(Arc::new(complex), 0, weights);
+
+    let boundary = StokesAdjunction::boundary(&ctx, &chain);
+    assert_eq!(boundary.grade(), 0);
+}
+
+#[test]
+fn test_boundary_k_exceeds_operators() {
+    let complex = simple_complex();
+    let ctx = StokesContext::new(complex.clone());
+
+    // k > boundary_ops.len()
+    let weights: CsrMatrix<f64> = CsrMatrix::new();
+    let chain = Chain::new(Arc::new(complex), 10, weights);
+
+    let boundary = StokesAdjunction::boundary(&ctx, &chain);
+    assert_eq!(boundary.grade(), 9);
+}
+
+#[test]
+fn test_integrate_grade_mismatch() {
+    let complex = simple_complex();
+
+    // 0-form
+    let form = DifferentialForm::from_coefficients(0, 2, vec![1.0, 2.0, 3.0]);
+
+    // 1-chain (grade mismatch)
+    let weights: CsrMatrix<f64> = CsrMatrix::new();
+    let chain = Chain::new(Arc::new(complex), 1, weights);
+
+    // Should return zero due to grade mismatch
+    let result = StokesAdjunction::integrate(&form, &chain);
+    assert_eq!(result, 0.0);
+}
+
+#[test]
+fn test_integrate_matching_grade() {
+    let complex = simple_complex();
+
+    // 0-form on vertices
+    let form = DifferentialForm::from_coefficients(0, 2, vec![1.0, 2.0, 3.0]);
+
+    // 0-chain matching grade
+    let triplets = vec![(0, 0, 1.0), (0, 1, 1.0), (0, 2, 1.0)];
+    let weights = CsrMatrix::from_triplets(1, 3, &triplets).unwrap();
+    let chain = Chain::new(Arc::new(complex), 0, weights);
+
+    // Integrate: sum of form values weighted by chain
+    let result = StokesAdjunction::integrate(&form, &chain);
+    assert_eq!(result, 6.0); // 1*1 + 1*2 + 1*3 = 6
+}
+
+// =============================================================================
+// Adjunction Trait Tests
+// =============================================================================
+
+#[test]
+fn test_adjunction_unit() {
+    let complex = simple_complex();
+    let ctx = StokesContext::new(complex);
+
+    // Unit: A → R(L(A)) = Chain<DifferentialForm<A>>
+    let chain = <StokesAdjunction as Adjunction<_, _, StokesContext<f64>>>::unit(&ctx, 42.0f64);
+
+    // Should produce a chain of grade 0
+    assert_eq!(chain.grade(), 0);
+}
+
+#[test]
+fn test_adjunction_left_adjunct() {
+    let complex = simple_complex();
+    let ctx = StokesContext::new(complex);
+
+    // left_adjunct: (L(A) → B) → (A → R(B))
+    // Given f: DifferentialForm<A> → B, produce g: A → Chain<B>
+    let chain = <StokesAdjunction as Adjunction<_, _, StokesContext<f64>>>::left_adjunct(
+        &ctx,
+        5.0f64,
+        |form: DifferentialForm<f64>| {
+            // Sum all coefficients
+            form.coefficients().as_slice().iter().sum::<f64>()
+        },
+    );
+
+    assert_eq!(chain.grade(), 0);
+}
+
+#[test]
+fn test_adjunction_right_adjunct() {
+    let complex = simple_complex();
+    let ctx = StokesContext::new(complex);
+
+    // Create a form with some coefficients
+    let form = DifferentialForm::from_coefficients(0, 2, vec![10.0]);
+
+    // right_adjunct: (A → R(B)) → (L(A) → B)
+    let result = <StokesAdjunction as Adjunction<_, _, StokesContext<f64>>>::right_adjunct(
+        &ctx,
+        form,
+        |a: f64| {
+            // Create a chain with the value
+            let triplets = vec![(0, 0, a * 2.0)];
+            let weights = CsrMatrix::from_triplets(1, 1, &triplets).unwrap();
+            Chain::new(ctx.complex_arc(), 0, weights)
+        },
+    );
+
+    assert_eq!(result, 20.0); // 10.0 * 2.0
+}
+
+#[test]
+#[should_panic(expected = "Right adjunct requires at least one value")]
+fn test_adjunction_right_adjunct_empty_form() {
+    let complex = simple_complex();
+    let ctx = StokesContext::new(complex);
+
+    // Empty form
+    let form: DifferentialForm<f64> = DifferentialForm::from_coefficients(0, 2, vec![]);
+
+    let _ = <StokesAdjunction as Adjunction<_, _, StokesContext<f64>>>::right_adjunct(
+        &ctx,
+        form,
+        |a: f64| {
+            let triplets = vec![(0, 0, a)];
+            let weights = CsrMatrix::from_triplets(1, 1, &triplets).unwrap();
+            Chain::new(ctx.complex_arc(), 0, weights)
+        },
+    );
 }
