@@ -4,9 +4,22 @@
  */
 
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::Topology;
 use deep_causality_topology::utils_tests::create_triangle_complex;
+use deep_causality_topology::{PointCloud, Topology};
 use std::sync::Arc;
+
+/// Helper to create a simple topology
+fn create_simple_topology() -> Topology<f64> {
+    let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0], vec![3, 2]).unwrap();
+    let metadata = CausalTensor::new(vec![1.0, 1.0, 1.0], vec![3]).unwrap();
+    let point_cloud = PointCloud::new(points, metadata, 0).unwrap();
+    let complex = point_cloud.triangulate(1.2).unwrap();
+
+    // Values for 3 vertices (grade 0)
+    let data = CausalTensor::new(vec![10.0, 20.0, 30.0], vec![3]).unwrap();
+
+    Topology::new(Arc::new(complex), 0, data, 0).unwrap()
+}
 
 #[test]
 fn test_topology_cup_product() {
@@ -84,4 +97,44 @@ fn test_topology_cup_product_missing_data_other() {
     // This should now fail validation
     let topo1_result = Topology::new(complex.clone(), 1, data1, 0);
     assert!(topo1_result.is_err());
+}
+
+// =============================================================================
+// Constructor and validation tests
+// =============================================================================
+
+#[test]
+fn test_topology_new_success() {
+    let topology = create_simple_topology();
+    assert_eq!(topology.grade(), 0);
+}
+
+#[test]
+fn test_topology_grade_getter() {
+    let topology = create_simple_topology();
+    assert_eq!(topology.grade(), 0, "Grade should be 0 for vertex data");
+}
+
+#[test]
+fn test_topology_data_getter() {
+    let topology = create_simple_topology();
+    let data = topology.data();
+    assert_eq!(data.len(), 3, "Should have 3 data values");
+}
+
+#[test]
+fn test_topology_complex_getter() {
+    let topology = create_simple_topology();
+    let complex = topology.complex();
+    assert!(!complex.skeletons().is_empty());
+}
+
+// =============================================================================
+// Cup product edge cases
+// =============================================================================
+
+#[test]
+fn test_topology_cursor() {
+    let topology = create_simple_topology();
+    assert_eq!(topology.cursor(), 0);
 }

@@ -4,7 +4,7 @@
  */
 
 use deep_causality_topology::utils_tests::create_triangle_complex;
-use deep_causality_topology::{Simplex, SimplicialTopology};
+use deep_causality_topology::{Simplex, SimplicialComplexBuilder, SimplicialTopology};
 
 #[test]
 fn test_simplicial_complex_new() {
@@ -70,4 +70,82 @@ fn test_simplicial_topology_contains_simplex() {
     // Empty simplex
     let empty = Simplex::new(vec![]);
     assert!(!complex.contains_simplex(&empty));
+}
+
+#[test]
+fn test_skeletons_getter() {
+    let mut builder = SimplicialComplexBuilder::new(1);
+    builder.add_simplex(Simplex::new(vec![0])).unwrap();
+    builder.add_simplex(Simplex::new(vec![1])).unwrap();
+    builder.add_simplex(Simplex::new(vec![0, 1])).unwrap();
+    let complex = builder.build::<f64>().unwrap();
+
+    let skeletons = complex.skeletons();
+    assert_eq!(skeletons.len(), 2); // 0-skeleton and 1-skeleton
+}
+
+#[test]
+fn test_boundary_operators() {
+    let mut builder = SimplicialComplexBuilder::new(1);
+    builder.add_simplex(Simplex::new(vec![0])).unwrap();
+    builder.add_simplex(Simplex::new(vec![1])).unwrap();
+    builder.add_simplex(Simplex::new(vec![0, 1])).unwrap();
+    let complex = builder.build::<f64>().unwrap();
+
+    let boundary_ops = complex.boundary_operators();
+    // Should have boundary operator for 1-skeleton
+    assert!(!boundary_ops.is_empty());
+}
+
+#[test]
+fn test_coboundary_operators() {
+    let mut builder = SimplicialComplexBuilder::new(1);
+    builder.add_simplex(Simplex::new(vec![0])).unwrap();
+    builder.add_simplex(Simplex::new(vec![1])).unwrap();
+    builder.add_simplex(Simplex::new(vec![0, 1])).unwrap();
+    let complex = builder.build::<f64>().unwrap();
+
+    let coboundary_ops = complex.coboundary_operators();
+    // Should have coboundary operator
+    assert!(!coboundary_ops.is_empty());
+}
+
+// =============================================================================
+// Simplex vertices tests
+// =============================================================================
+
+#[test]
+fn test_simplex_vertices() {
+    let simplex = Simplex::new(vec![0, 1, 2]);
+    let vertices = simplex.vertices();
+
+    assert_eq!(vertices.len(), 3);
+    assert!(vertices.contains(&0));
+    assert!(vertices.contains(&1));
+    assert!(vertices.contains(&2));
+}
+
+// =============================================================================
+// Complex operations
+// =============================================================================
+
+#[test]
+fn test_max_simplex_dimension() {
+    let mut builder = SimplicialComplexBuilder::new(2);
+    builder.add_simplex(Simplex::new(vec![0, 1, 2])).unwrap();
+    let complex = builder.build::<f64>().unwrap();
+
+    assert_eq!(complex.max_simplex_dimension(), 2);
+}
+
+#[test]
+fn test_num_simplices_by_grade() {
+    let mut builder = SimplicialComplexBuilder::new(1);
+    builder.add_simplex(Simplex::new(vec![0])).unwrap();
+    builder.add_simplex(Simplex::new(vec![1])).unwrap();
+    builder.add_simplex(Simplex::new(vec![0, 1])).unwrap();
+    let complex = builder.build::<f64>().unwrap();
+
+    assert_eq!(complex.num_simplices_at_grade(0).unwrap(), 2);
+    assert_eq!(complex.num_simplices_at_grade(1).unwrap(), 1);
 }
