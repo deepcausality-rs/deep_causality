@@ -1,20 +1,23 @@
 # DeepCausality Core Concepts
 
-This document explains the fundamental concepts in `deep_causality_core`, the foundational crate for causal computation in DeepCausality.
+This document explains the fundamental concepts in `deep_causality_core`, the foundational crate for causal computation
+in DeepCausality.
 
 ---
 
 ## Overview
 
-`deep_causality_core` provides a **monadic framework** for building causal reasoning systems. At its heart is the idea that causality can be modeled as a functional dependency:
+`deep_causality_core` provides a **monadic framework** for building causal reasoning systems. At its heart is the idea
+that causality can be modeled as a functional dependency:
 
 ```
 E₂ = f(E₁)
 ```
 
-Where an **effect** `E₂` is produced by applying a causal function `f` to an incoming effect `E₁`. The core crate provides types and traits to:
+Where an **effect** `E₂` is produced by applying a causal function `f` to an incoming effect `E₁`. The core crate
+provides types and traits to:
 
-1. **Propagate effects** through chains of causal functions
+1. **Propagate effects** through chains of causal functionsl
 2. **Handle errors** automatically (short-circuiting)
 3. **Maintain audit logs** for explainability
 4. **Support interventions** for counterfactual reasoning
@@ -24,7 +27,8 @@ Where an **effect** `E₂` is produced by applying a causal function `f` to an i
 
 ## The Causal Monad Pattern
 
-A **monad** is a design pattern from functional programming that allows composable, chainable computations. In DeepCausality, the monad pattern enables:
+A **monad** is a design pattern from functional programming that allows composable, chainable computations. In
+DeepCausality, the monad pattern enables:
 
 - **Composition**: Chain multiple causal steps with `bind`
 - **Error Propagation**: Errors automatically short-circuit subsequent steps
@@ -33,11 +37,11 @@ A **monad** is a design pattern from functional programming that allows composab
 
 ### Core Operations
 
-| Operation | Description |
-|-----------|-------------|
-| `pure(value)` | Lifts a plain value into the monadic context |
-| `bind(f)` | Chains a computation, passing value/state/context to `f` |
-| `intervene(new_value)` | Forces a new value mid-chain (for counterfactuals) |
+| Operation              | Description                                              |
+|------------------------|----------------------------------------------------------|
+| `pure(value)`          | Lifts a plain value into the monadic context             |
+| `bind(f)`              | Chains a computation, passing value/state/context to `f` |
+| `intervene(new_value)` | Forces a new value mid-chain (for counterfactuals)       |
 
 ---
 
@@ -45,13 +49,13 @@ A **monad** is a design pattern from functional programming that allows composab
 
 This is the **fundamental type** in `deep_causality_core`. It's a 5-arity container that unifies:
 
-| Field | Type Parameter | Description |
-|-------|----------------|-------------|
-| `value` | `V` | The primary data being transformed (wrapped in `EffectValue<V>`) |
-| `state` | `S` | Mutable state that evolves through the chain (Markovian) |
-| `context` | `C` | Read-only configuration or environment data |
-| `error` | `E` | Error state that short-circuits further computation |
-| `logs` | `L` | Append-only audit history |
+| Field     | Type Parameter | Description                                                      |
+|-----------|----------------|------------------------------------------------------------------|
+| `value`   | `V`            | The primary data being transformed (wrapped in `EffectValue<V>`) |
+| `state`   | `S`            | Mutable state that evolves through the chain (Markovian)         |
+| `context` | `C`            | Read-only configuration or environment data                      |
+| `error`   | `E`            | Error state that short-circuits further computation              |
+| `logs`    | `L`            | Append-only audit history                                        |
 
 ### Why 5 Parameters?
 
@@ -72,46 +76,52 @@ To simplify common use cases, two type aliases are provided:
 ### `PropagatingEffect<T>` — Stateless Effects
 
 ```rust
-pub type PropagatingEffect<T> = 
-    CausalEffectPropagationProcess<T, (), (), CausalityError, EffectLog>;
+pub type PropagatingEffect<T> =
+CausalEffectPropagationProcess<T, (), (), CausalityError, EffectLog>;
 ```
 
 Use when:
+
 - You don't need state across steps
 - You don't need external context
 - You want simple, functional transformations
 
 **Example:**
+
 ```rust
 use deep_causality_core::PropagatingEffect;
 
 let result = PropagatingEffect::pure(10.0)
-    .bind(|val, _, _| PropagatingEffect::pure(val.into_value().unwrap() * 2.0))
-    .bind(|val, _, _| PropagatingEffect::pure(val.into_value().unwrap() + 5.0));
+.bind( | val, _, _ | PropagatingEffect::pure(val.into_value().unwrap() * 2.0))
+.bind( | val, _, _ | PropagatingEffect::pure(val.into_value().unwrap() + 5.0));
 // Result: 25.0
 ```
 
 ### `PropagatingProcess<T, S, C>` — Stateful Processes
 
 ```rust
-pub type PropagatingProcess<T, S, C> = 
-    CausalEffectPropagationProcess<T, S, C, CausalityError, EffectLog>;
+pub type PropagatingProcess<T, S, C> =
+CausalEffectPropagationProcess<T, S, C, CausalityError, EffectLog>;
 ```
 
 Use when:
+
 - You need to accumulate state (Markov property)
 - You need global configuration
 - You're building complex, multi-stage pipelines
 
 **Example:**
+
 ```rust
 use deep_causality_core::PropagatingProcess;
 
 #[derive(Clone, Default)]
-struct RiskState { total_risk: f64 }
+struct RiskState {
+    total_risk: f64
+}
 
-let process: PropagatingProcess<f64, RiskState, ()> = 
-    PropagatingProcess::pure(0.5);
+let process: PropagatingProcess<f64, RiskState, () > =
+PropagatingProcess::pure(0.5);
 ```
 
 ---
@@ -120,13 +130,13 @@ let process: PropagatingProcess<f64, RiskState, ()> =
 
 `EffectValue` wraps the actual data being propagated. It's an enum with variants for different scenarios:
 
-| Variant | Description |
-|---------|-------------|
-| `None` | Absence of a value (like `Option::None`) |
-| `Value(T)` | A concrete value of type `T` |
-| `ContextualLink(id1, id2)` | Reference to data in a Context |
-| `RelayTo(index, effect)` | Dispatch command for adaptive routing |
-| `Map(HashMap)` | Collection of named sub-effects |
+| Variant                    | Description                              |
+|----------------------------|------------------------------------------|
+| `None`                     | Absence of a value (like `Option::None`) |
+| `Value(T)`                 | A concrete value of type `T`             |
+| `ContextualLink(id1, id2)` | Reference to data in a Context           |
+| `RelayTo(index, effect)`   | Dispatch command for adaptive routing    |
+| `Map(HashMap)`             | Collection of named sub-effects          |
 
 ### Common Pattern
 
@@ -170,7 +180,8 @@ The `Intervenable` trait enables **intervention**, a key operation for counterfa
 
 ### What is Intervention?
 
-In causal inference, an **intervention** forces a variable to a specific value, breaking its natural dependencies. This is Pearl's `do()` operator.
+In causal inference, an **intervention** forces a variable to a specific value, breaking its natural dependencies. This
+is Pearl's `do()` operator.
 
 ### The `intervene()` Method
 
@@ -181,6 +192,7 @@ pub trait Intervenable<T> {
 ```
 
 **Behavior:**
+
 1. **Replaces** the current value with `new_value`
 2. **Preserves** the log history (adds intervention marker)
 3. **Propagates** any existing error (intervention can't fix errors)
@@ -192,13 +204,13 @@ use deep_causality_core::{Intervenable, PropagatingEffect};
 
 // Factual: Natural causal chain
 let factual = PropagatingEffect::pure(0.8)
-    .bind(|x, _, _| PropagatingEffect::pure(x.into_value().unwrap() * 2.0));
+.bind( | x, _, _ | PropagatingEffect::pure(x.into_value().unwrap() * 2.0));
 // Result: 1.6
 
 // Counterfactual: What if the input had been 0.2?
 let counterfactual = PropagatingEffect::pure(0.8)
-    .intervene(0.2)  // Force value to 0.2
-    .bind(|x, _, _| PropagatingEffect::pure(x.into_value().unwrap() * 2.0));
+.intervene(0.2)  // Force value to 0.2
+.bind( | x, _, _ | PropagatingEffect::pure(x.into_value().unwrap() * 2.0));
 // Result: 0.4
 
 // Causal effect = Factual - Counterfactual = 1.2
@@ -210,10 +222,10 @@ let counterfactual = PropagatingEffect::pure(0.8)
 
 `CausalMonad` implements the `MonadEffect5` trait from `deep_causality_haft`, providing:
 
-| Method | Description |
-|--------|-------------|
-| `pure(value)` | Lifts a value into `CausalEffectPropagationProcess` |
-| `bind(process, f)` | Chains a function, handling errors and logs |
+| Method             | Description                                         |
+|--------------------|-----------------------------------------------------|
+| `pure(value)`      | Lifts a value into `CausalEffectPropagationProcess` |
+| `bind(process, f)` | Chains a function, handling errors and logs         |
 
 ### Higher-Kinded Types (HKT)
 
@@ -244,6 +256,7 @@ pub enum CausalityErrorEnum {
 ### Error Propagation
 
 When an error occurs:
+
 1. The error is stored in the `error` field
 2. Subsequent `bind()` calls **skip** execution
 3. Logs are **preserved** up to the error point
@@ -251,13 +264,13 @@ When an error occurs:
 
 ```rust
 let result = PropagatingEffect::pure(10)
-    .bind(|_, _, _| PropagatingEffect::from_error(
-        CausalityError::new(CausalityErrorEnum::Custom("Failed".into()))
-    ))
-    .bind(|x, _, _| {
-        // This never executes!
-        PropagatingEffect::pure(x.into_value().unwrap() * 2)
-    });
+.bind( | _, _, _ | PropagatingEffect::from_error(
+CausalityError::new(CausalityErrorEnum::Custom("Failed".into()))
+))
+.bind( | x, _, _ | {
+// This never executes!
+PropagatingEffect::pure(x.into_value().unwrap() * 2)
+});
 
 // result.error is Some(...)
 // result.logs contains entries up to failure
@@ -271,10 +284,10 @@ A common pattern is to unwrap `EffectValue` and error if it's `None`:
 
 ```rust
 let result = PropagatingEffect::pure(Some(42))
-    .bind_or_error(|val, _, _| {
-        // val is already unwrapped from EffectValue!
-        PropagatingEffect::pure(val * 2)
-    }, "Expected a value, got None");
+.bind_or_error( | val, _, _ | {
+// val is already unwrapped from EffectValue!
+PropagatingEffect::pure(val * 2)
+}, "Expected a value, got None");
 ```
 
 This avoids manual pattern matching on every step.
@@ -289,10 +302,10 @@ For complex graphs, `deep_causality_core` provides a builder pattern:
 use deep_causality_core::{ControlFlowBuilder, ExecutableNode, NodeType};
 
 let graph = ControlFlowBuilder::new()
-    .add_node(ExecutableNode::new(0, NodeType::Start, my_start_fn))
-    .add_node(ExecutableNode::new(1, NodeType::Process, my_process_fn))
-    .add_edge(0, 1)
-    .build();
+.add_node(ExecutableNode::new(0, NodeType::Start, my_start_fn))
+.add_node(ExecutableNode::new(1, NodeType::Process, my_process_fn))
+.add_edge(0, 1)
+.build();
 ```
 
 This is useful for constructing explicit causal graphs at runtime.
@@ -301,16 +314,16 @@ This is useful for constructing explicit causal graphs at runtime.
 
 ## Summary
 
-| Concept | Type/Trait | Purpose |
-|---------|------------|---------|
-| Core Container | `CausalEffectPropagationProcess` | 5-arity monad (V, S, C, E, L) |
-| Stateless Alias | `PropagatingEffect<T>` | Simple functional chains |
-| Stateful Alias | `PropagatingProcess<T, S, C>` | Markovian processes |
-| Payload | `EffectValue<T>` | Wrapped value with dispatch variants |
-| Audit Log | `EffectLog` | Timestamped operation history |
-| Monad Impl | `CausalMonad` | `pure` and `bind` operations |
-| Intervention | `Intervenable` | Counterfactual `do()` operator |
-| Errors | `CausalityError` | Short-circuiting error propagation |
+| Concept         | Type/Trait                       | Purpose                              |
+|-----------------|----------------------------------|--------------------------------------|
+| Core Container  | `CausalEffectPropagationProcess` | 5-arity monad (V, S, C, E, L)        |
+| Stateless Alias | `PropagatingEffect<T>`           | Simple functional chains             |
+| Stateful Alias  | `PropagatingProcess<T, S, C>`    | Markovian processes                  |
+| Payload         | `EffectValue<T>`                 | Wrapped value with dispatch variants |
+| Audit Log       | `EffectLog`                      | Timestamped operation history        |
+| Monad Impl      | `CausalMonad`                    | `pure` and `bind` operations         |
+| Intervention    | `Intervenable`                   | Counterfactual `do()` operator       |
+| Errors          | `CausalityError`                 | Short-circuiting error propagation   |
 
 ---
 
