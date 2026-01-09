@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_discovery-v0.3.2...deep_causality_discovery-v0.3.3) - 2026-01-09
+
+### Added
+
+- *(deep_causality_num)* Fixed downstrem type annotation issues.
+- *(deep_causality_sparse)* Finalized HKT extension to use new GAT bounded HKT.
+
+### Other
+
+- Updated depenencies and vendored dependencies.
+- updated project wide SBOM files.
+- updated project wide copyright note.
+- Migrated to dedicted pure HKT trait.
+
 ## [0.3.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_discovery-v0.3.1...deep_causality_discovery-v0.3.2) - 2025-12-31
 
 ### Other

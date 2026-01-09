@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.2.5...deep_causality_topology-v0.3.0) - 2026-01-09
+
+### Added
+
+- *(deep_causality_topology)* Fixed a number of lints
+- *(deep_causality_topology)* Fixed MLX gated impl to use new manifold generics.
+- *(deep_causality_physics)* Expanded gauge field usage for calculations in all gauge theories. Made ADM ops generic over Field. Updated examples. Added docs.
+- *(deep_causality_physics)* Completed integration of new DoubleFloat Type.
+- *(deep_causality_topology)* Fixed some tests.
+- *(deep_causality_topology)* Made all topology types and extensions generic to work with new DoubleFloat Type.
+- *(deep_causality_physics)* Updated and improved Gauge based GR theory.
+- *(deep_causality_physics)* Implemented Gauge GR theory.
+- *(deep_causality_physics)* Immproved Electroweak implementation.
+- *(deep_causality_physics)* Immproved QED implementation.
+- *(deep_causality_topology)* Restructed hkt modules for better code organization.
+- *(deep_causality_physics)* Implemented kerneles required for implementing subsequent gauge theories.
+- *(deep_causality_topology)* Finalized and reviewed Gauge Field and related types.
+- *(deep_causality_topology)* Implemented HKT traits for Gauge Field and related types.
+- *(deep_causality_topology)* Completed implementation. Added tests.
+- *(deep_causality_topology)* Initial implementation of Gauge Field.
+- *(deep_causality_topology)* Removed unused dependency.
+- *(deep_causality_multivector)* Migrated to dedicted pure HKT trait.
+- *(deep_causality_topology)* Completed transition to GAT based HKT.
+
+### Other
+
+- *(deep_causality_topology)* Fixed some tests.
+- *(deep_causality_physics)* increased test coverage.
+- *(deep_causality_topology)* increased test coverage.
+- Updated Bazel build and test config.
+- repo wide lints and fixes
+- repo wide lints and formatting.
+- *(deep_causality_num)* increased test coverage.
+- updated project wide SBOM files.
+- updated project wide copyright note.
+- Addes specs for gauge fiels. Prepared implementation.
+- Migrated to dedicted pure HKT trait.
+
 ## [0.2.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.2.4...deep_causality_topology-v0.2.5) - 2025-12-31
 
 ### Other

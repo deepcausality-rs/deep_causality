@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_sparse-v0.1.3...deep_causality_sparse-v0.1.4) - 2026-01-09
+
+### Added
+
+- *(deep_causality_topology)* Implemented HKT traits for Gauge Field and related types.
+- *(deep_causality_sparse)* Migrated to dedicted pure HKT trait.
+- *(deep_causality_sparse)* Completed transition to GAT based HKT.
+- *(deep_causality_sparse)* Finalized HKT extension to use new GAT bounded HKT.
+
+### Other
+
+- updated project wide SBOM files.
+- updated project wide copyright note.
+
 ## [0.1.3](https://github.com/marvin-hansen/deep_causality/compare/deep_causality_sparse-v0.1.2...deep_causality_sparse-v0.1.3) - 2025-12-31
 
 ### Other

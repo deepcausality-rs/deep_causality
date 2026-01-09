@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_multivector-v0.2.5...deep_causality_multivector-v0.3.0) - 2026-01-09
+
+### Added
+
+- *(deep_causality_physics)* Renamed qed to electromagnetism. Fixed a number of issues and updated example.
+- *(deep_causality_multivector)* Migrated to dedicted pure HKT trait.
+- *(deep_causality_multivector)* Completed transition to GAT based HKT.
+
+### Other
+
+- Updated Bazel build and test config.
+- updated project wide SBOM files.
+- updated project wide copyright note.
+- Removed unused feature flag.
+
 ## [0.2.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_multivector-v0.2.4...deep_causality_multivector-v0.2.5) - 2025-12-31
 
 ### Other
