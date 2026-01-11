@@ -67,6 +67,21 @@ pub trait GaugeGroup: Clone + Debug + Send + Sync + 'static {
         Metric::Minkowski(Self::SPACETIME_DIM)
     }
 
+    /// Returns the matrix dimension N for representation as N×N matrices.
+    ///
+    /// For SU(N), this is N (the fundamental representation dimension).
+    /// For U(1), this is 1.
+    /// For SO(3,1), this is 4.
+    ///
+    /// Default implementation computes N from LIE_ALGEBRA_DIM assuming SU(N):
+    /// LIE_ALGEBRA_DIM = N² - 1, so N = √(LIE_ALGEBRA_DIM + 1)
+    fn matrix_dim() -> usize {
+        // Default: assumes SU(N) where dim = N² - 1
+        // N = sqrt(dim + 1), rounded
+        let n_sq = Self::LIE_ALGEBRA_DIM + 1;
+        (n_sq as f64).sqrt().round() as usize
+    }
+
     /// Returns the structure constant f^{abc} for the Lie algebra.
     ///
     /// Defined by the commutator relation: [T^a, T^b] = i f^{abc} T^c

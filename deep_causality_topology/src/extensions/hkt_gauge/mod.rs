@@ -22,3 +22,4 @@
 pub mod hkt_adjunction_stokes;
 pub mod hkt_curvature;
 pub mod hkt_gauge_witness;
+pub mod hkt_lattice_gauge;

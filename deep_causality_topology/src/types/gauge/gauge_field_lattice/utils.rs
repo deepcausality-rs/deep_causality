@@ -1,0 +1,19 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+use crate::{GaugeGroup, LatticeCell, LatticeGaugeField, LinkVariable};
+
+impl<G: GaugeGroup, const D: usize, T> LatticeGaugeField<G, D, T> {
+    /// Get a link, returning identity if not found.
+    pub(crate) fn get_link_or_identity(&self, edge: &LatticeCell<D>) -> LinkVariable<G, T>
+    where
+        T: Clone + Default + From<f64>,
+    {
+        self.links
+            .get(edge)
+            .cloned()
+            .unwrap_or_else(LinkVariable::identity)
+    }
+}

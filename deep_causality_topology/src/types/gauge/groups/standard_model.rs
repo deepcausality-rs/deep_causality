@@ -8,7 +8,7 @@
 //! The Standard Model group combines all three gauge interactions.
 //! It has 12 generators (8 from SU(3) + 3 from SU(2) + 1 from U(1)).
 
-use crate::types::gauge_field::group::GaugeGroup;
+use crate::traits::gauge_group::GaugeGroup;
 
 /// Standard Model SU(3)×SU(2)×U(1) gauge group marker.
 ///

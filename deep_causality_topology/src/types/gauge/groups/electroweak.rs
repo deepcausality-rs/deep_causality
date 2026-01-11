@@ -8,7 +8,7 @@
 //! The electroweak group combines weak isospin SU(2) and weak hypercharge U(1).
 //! It has four generators (three from SU(2) + one from U(1)).
 
-use crate::types::gauge_field::group::GaugeGroup;
+use crate::traits::gauge_group::GaugeGroup;
 
 /// Electroweak SU(2)×U(1) gauge group marker.
 ///

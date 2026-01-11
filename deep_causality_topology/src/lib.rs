@@ -14,6 +14,7 @@ pub mod alias;
 pub mod utils_tests;
 
 // Re-export errors
+pub use crate::errors::link_variable_error::LinkVariableError;
 pub use crate::errors::topology_error::{TopologyError, TopologyErrorEnum};
 
 // Re-export extensions
@@ -27,15 +28,16 @@ pub use crate::extensions::hkt_simplicial_complex::ChainWitness;
 pub use crate::extensions::hkt_topology::TopologyWitness;
 
 // Re-export gauge field HKT extensions
-pub use crate::extensions::hkt_gauge_field::hkt_curvature::{CurvatureTensorWitness, TensorVector};
-pub use crate::extensions::hkt_gauge_field::hkt_gauge_witness::{GaugeFieldHKT, GaugeFieldWitness};
-pub use extensions::hkt_gauge_field::hkt_adjunction_stokes::{
+pub use crate::extensions::hkt_gauge::hkt_curvature::{CurvatureTensorWitness, TensorVector};
+pub use crate::extensions::hkt_gauge::hkt_gauge_witness::{GaugeFieldHKT, GaugeFieldWitness};
+pub use crate::extensions::hkt_gauge::hkt_lattice_gauge::LatticeGaugeFieldWitness;
+pub use extensions::hkt_gauge::hkt_adjunction_stokes::{
     BoundaryWitness, ExteriorDerivativeWitness, StokesAdjunction, StokesContext,
 };
-
 // Re-export traits
 pub use crate::traits::base_topology::BaseTopology;
 pub use crate::traits::cw_complex::{CWComplex, Cell};
+pub use crate::traits::gauge_group::GaugeGroup;
 pub use crate::traits::graph_topology::GraphTopology;
 pub use crate::traits::hypergraph_topology::HypergraphTopology;
 pub use crate::traits::manifold_topology::ManifoldTopology;
@@ -64,5 +66,5 @@ pub use crate::types::curvature_tensor::{
     CurvatureSymmetry, CurvatureTensor, CurvatureTensorVector,
 };
 pub use crate::types::differential_form::DifferentialForm;
-pub use crate::types::gauge_field::groups::{Electroweak, Lorentz, SU2, SU3, StandardModel, U1};
-pub use crate::types::gauge_field::{GaugeField, GaugeGroup};
+pub use crate::types::gauge::groups::{Electroweak, Lorentz, SU2, SU3, StandardModel, U1};
+pub use crate::types::gauge::{GaugeField, LatticeGaugeField, LinkVariable};

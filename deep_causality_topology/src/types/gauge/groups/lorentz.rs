@@ -8,7 +8,7 @@
 //! The Lorentz group has six generators (3 rotations + 3 boosts).
 //! When used as a gauge group, it provides the frame bundle for spacetime.
 
-use crate::types::gauge_field::group::GaugeGroup;
+use crate::traits::gauge_group::GaugeGroup;
 use deep_causality_metric::Metric;
 
 /// Lorentz SO(3,1) gauge group marker.
@@ -52,6 +52,11 @@ impl GaugeGroup for Lorentz {
         // Metric::Generic { p, q, r } where p=positive, q=negative, r=degenerate
         // For East Coast (-+++): three +1 (space), one -1 (time)
         Metric::Generic { p: 3, q: 1, r: 0 }
+    }
+
+    /// SO(3,1) acts on 4D spacetime, so matrices are 4×4.
+    fn matrix_dim() -> usize {
+        4
     }
 
     /// Returns the SO(3,1) Lorentz algebra structure constants f^{abc}.

@@ -38,6 +38,8 @@ pub enum TopologyErrorEnum {
     InvalidMetric(String),
     /// Error specific to GaugeField shape or configuration issues.
     GaugeFieldError(String),
+    /// Error specific to LatticeGaugeField operations.
+    LatticeGaugeError(String),
     /// General catch-all error for other topological issues.
     GenericError(String),
 }
@@ -63,6 +65,9 @@ impl Display for TopologyError {
             TopologyErrorEnum::InvalidInput(msg) => write!(f, "Invalid input: {}", msg),
             TopologyErrorEnum::InvalidMetric(msg) => write!(f, "Invalid metric: {}", msg),
             TopologyErrorEnum::GaugeFieldError(msg) => write!(f, "GaugeField error: {}", msg),
+            TopologyErrorEnum::LatticeGaugeError(msg) => {
+                write!(f, "LatticeGaugeField error: {}", msg)
+            }
             TopologyErrorEnum::GenericError(msg) => write!(f, "Topology error: {}", msg),
         }
     }
@@ -151,6 +156,11 @@ impl TopologyError {
     #[allow(non_snake_case)]
     pub fn GaugeFieldError<S: Into<String>>(msg: S) -> Self {
         Self(TopologyErrorEnum::GaugeFieldError(msg.into()))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn LatticeGaugeError<S: Into<String>>(msg: S) -> Self {
+        Self(TopologyErrorEnum::LatticeGaugeError(msg.into()))
     }
 
     #[allow(non_snake_case)]

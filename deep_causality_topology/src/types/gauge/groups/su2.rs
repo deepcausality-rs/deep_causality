@@ -8,7 +8,7 @@
 //! The SU(2) group has three generators (W+, W-, Z before symmetry breaking).
 //! It is non-abelian, so the field strength includes self-interaction: F = dA + A∧A.
 
-use crate::types::gauge_field::group::GaugeGroup;
+use crate::traits::gauge_group::GaugeGroup;
 
 /// SU(2) gauge group marker.
 ///

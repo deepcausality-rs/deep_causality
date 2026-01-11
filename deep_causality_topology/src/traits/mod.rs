@@ -43,6 +43,7 @@
 
 pub mod base_topology;
 pub mod cw_complex;
+pub mod gauge_group;
 pub mod graph_topology;
 pub mod hypergraph_topology;
 pub mod manifold_topology;

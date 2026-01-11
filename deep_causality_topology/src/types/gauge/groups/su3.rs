@@ -8,7 +8,7 @@
 //! The SU(3) group has eight generators (eight gluons).
 //! It is non-abelian, so gluons interact with each other.
 
-use crate::types::gauge_field::group::GaugeGroup;
+use crate::traits::gauge_group::GaugeGroup;
 
 /// SU(3) gauge group marker.
 ///
