@@ -8,7 +8,7 @@ pub mod cell_complex;
 pub mod chain;
 pub mod curvature_tensor;
 pub mod differential_form;
-pub mod gauge_field;
+pub mod gauge;
 pub mod graph;
 pub mod hypergraph;
 pub mod lattice;

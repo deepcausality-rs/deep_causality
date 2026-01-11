@@ -8,7 +8,7 @@ mod cell_complex;
 mod chain;
 mod curvature_tensor;
 mod differential_form;
-mod gauge_field;
+mod gauge;
 mod graph;
 mod hypergraph;
 mod lattice;

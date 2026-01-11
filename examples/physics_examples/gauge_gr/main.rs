@@ -20,7 +20,6 @@ use deep_causality_physics::{AdmState, EastCoastMetric, GR, SPEED_OF_LIGHT};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{GaugeField, Manifold, Simplex, SimplicialComplexBuilder};
 use std::error::Error;
-
 // =============================================================================
 // FLOAT TYPE CONFIGURATION
 // =============================================================================

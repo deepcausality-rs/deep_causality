@@ -11,7 +11,6 @@ use deep_causality_physics::theories::general_relativity::{GrOps, schwarzschild_
 use deep_causality_physics::{NEWTONIAN_CONSTANT_OF_GRAVITATION, SPEED_OF_LIGHT};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{GaugeField, Manifold, Simplex, SimplicialComplexBuilder};
-
 // ============================================================================
 // GR Gauge Field Integration Tests
 // ============================================================================

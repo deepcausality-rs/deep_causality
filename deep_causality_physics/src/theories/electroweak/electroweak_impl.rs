@@ -9,8 +9,7 @@ use crate::{
 use deep_causality_metric::{LorentzianMetric, WestCoastMetric};
 use deep_causality_num::RealField;
 use deep_causality_tensor::{CausalTensor, TensorData};
-use deep_causality_topology::GaugeFieldWitness;
-use deep_causality_topology::{BaseTopology, GaugeField, Manifold, U1};
+use deep_causality_topology::{BaseTopology, GaugeField, GaugeFieldWitness, Manifold, U1};
 
 impl<S> ElectroweakOps<S> for ElectroweakField<S>
 where
