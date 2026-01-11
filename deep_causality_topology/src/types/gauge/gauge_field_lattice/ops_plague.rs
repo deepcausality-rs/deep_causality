@@ -9,6 +9,7 @@
 //! and rectangles (1x2 loops) used in actions and observables.
 
 use crate::{CWComplex, GaugeGroup, LatticeCell, LatticeGaugeField, LinkVariable, TopologyError};
+use deep_causality_num::Float;
 use deep_causality_tensor::TensorData;
 
 impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
@@ -46,7 +47,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         nu: usize,
     ) -> Result<LinkVariable<G, T>, TopologyError>
     where
-        T: From<f64>,
+        T: Float,
     {
         if mu >= D || nu >= D || mu == nu {
             return Err(TopologyError::LatticeGaugeError(format!(
@@ -121,7 +122,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         nu: usize,
     ) -> Result<LinkVariable<G, T>, TopologyError>
     where
-        T: From<f64>,
+        T: Float,
     {
         if mu >= D || nu >= D || mu == nu {
             return Err(TopologyError::LatticeGaugeError(format!(
@@ -187,12 +188,14 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Returns error if plaquette computation fails.
     pub fn try_average_plaquette(&self) -> Result<T, TopologyError>
     where
-        T: From<f64>,
+        T: Float,
     {
         let n = G::matrix_dim();
-        let n_t = T::from(n as f64);
+        let n_t = T::from(n as f64).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert matrix dimension to T".to_string())
+        })?;
 
-        let mut sum = T::from(0.0);
+        let mut sum = T::zero();
         let mut count = 0usize;
 
         // Sum over all sites and all planes μ < ν
@@ -209,11 +212,13 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         }
 
         if count == 0 {
-            return Ok(T::from(1.0));
+            return Ok(T::one());
         }
 
         // Average = sum / (count * N)
-        let count_t = T::from(count as f64);
+        let count_t = T::from(count as f64).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert count to T".to_string())
+        })?;
         Ok(sum / (count_t * n_t))
     }
 }

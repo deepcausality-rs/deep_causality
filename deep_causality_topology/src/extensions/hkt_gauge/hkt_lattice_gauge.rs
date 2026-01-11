@@ -26,6 +26,7 @@
 
 use crate::{GaugeGroup, Lattice, LatticeGaugeField, LinkVariable, TopologyError};
 use deep_causality_haft::{Applicative, Functor, HKT, Monad, NoConstraint, Pure, Satisfies};
+use deep_causality_num::Float;
 use deep_causality_tensor::TensorData;
 use std::collections::HashMap;
 use std::marker::PhantomData;
@@ -305,7 +306,7 @@ impl<G: GaugeGroup, const D: usize> LatticeGaugeFieldWitness<G, D> {
         beta: T,
     ) -> Result<LatticeGaugeField<G, D, T>, TopologyError>
     where
-        T: TensorData + From<f64>,
+        T: TensorData + Float,
     {
         LatticeGaugeField::try_identity(lattice, beta)
     }

@@ -9,6 +9,7 @@
 //! These actions reduce discretization errors from $O(a^2)$ to $O(a^4)$ or better.
 
 use crate::{CWComplex, GaugeGroup, LatticeGaugeField, TopologyError};
+use deep_causality_num::Float;
 use deep_causality_tensor::TensorData;
 
 /// Coefficients for improved gauge actions.
@@ -20,26 +21,53 @@ pub struct ActionCoeffs<T> {
     pub c1: T,
 }
 
-impl<T: From<f64> + Clone> ActionCoeffs<T> {
+impl<T> ActionCoeffs<T>
+where
+    T: Float,
+{
     /// Tree-level Symanzik: c_1 = -1/12.
-    pub fn symanzik() -> Self {
-        let c1 = T::from(-1.0 / 12.0);
-        let c0 = T::from(1.0 + 8.0 / 12.0); // c_0 = 1 - 8*c_1
-        Self { c0, c1 }
+    ///
+    /// # Errors
+    ///
+    /// Returns error if numerical type conversion fails.
+    pub fn try_symanzik() -> Result<Self, TopologyError> {
+        let c1 = T::from(-1.0 / 12.0).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert c1 coefficient to T".to_string())
+        })?;
+        let c0 = T::from(1.0 + 8.0 / 12.0).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert c0 coefficient to T".to_string())
+        })?; // c_0 = 1 - 8*c_1
+        Ok(Self { c0, c1 })
     }
 
     /// Iwasaki: c_1 = -0.331.
-    pub fn iwasaki() -> Self {
-        let c1 = T::from(-0.331);
-        let c0 = T::from(1.0 + 8.0 * 0.331);
-        Self { c0, c1 }
+    ///
+    /// # Errors
+    ///
+    /// Returns error if numerical type conversion fails.
+    pub fn try_iwasaki() -> Result<Self, TopologyError> {
+        let c1 = T::from(-0.331).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert c1 coefficient to T".to_string())
+        })?;
+        let c0 = T::from(1.0 + 8.0 * 0.331).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert c0 coefficient to T".to_string())
+        })?;
+        Ok(Self { c0, c1 })
     }
 
     /// DBW2: c_1 = -1.4088.
-    pub fn dbw2() -> Self {
-        let c1 = T::from(-1.4088);
-        let c0 = T::from(1.0 + 8.0 * 1.4088);
-        Self { c0, c1 }
+    ///
+    /// # Errors
+    ///
+    /// Returns error if numerical type conversion fails.
+    pub fn try_dbw2() -> Result<Self, TopologyError> {
+        let c1 = T::from(-1.4088).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert c1 coefficient to T".to_string())
+        })?;
+        let c0 = T::from(1.0 + 8.0 * 1.4088).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert c0 coefficient to T".to_string())
+        })?;
+        Ok(Self { c0, c1 })
     }
 
     /// Custom coefficients.
@@ -80,14 +108,16 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Returns error if plaquette/rectangle computation fails.
     pub fn try_improved_action(&self, coeffs: &ActionCoeffs<T>) -> Result<T, TopologyError>
     where
-        T: From<f64>,
+        T: Float,
     {
         let n = G::matrix_dim();
-        let n_t = T::from(n as f64);
-        let one = T::from(1.0);
+        let n_t = T::from(n as f64).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert matrix dimension to T".to_string())
+        })?;
+        let one = T::one();
 
-        let mut plaq_sum = T::from(0.0);
-        let mut rect_sum = T::from(0.0);
+        let mut plaq_sum = T::zero();
+        let mut rect_sum = T::zero();
 
         // Plaquettes (1×1) and Rectangles (1×2)
         for site_cell in self.lattice.cells(0) {

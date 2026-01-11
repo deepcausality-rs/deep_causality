@@ -9,9 +9,9 @@
 //! to reduce ultraviolet fluctuations and enhance the signal of long-range physics.
 
 use crate::{GaugeGroup, LatticeGaugeField, TopologyError};
+use deep_causality_num::Float;
 use deep_causality_tensor::TensorData;
 use std::collections::HashMap;
-
 // ============================================================================
 // Smearing Algorithms
 // ============================================================================
@@ -75,7 +75,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Returns error if smearing computation fails.
     pub fn try_smear(&self, params: &SmearingParams<T>) -> Result<Self, TopologyError>
     where
-        T: From<f64> + PartialOrd + Clone,
+        T: Float,
     {
         if D <= 1 {
             return Err(TopologyError::LatticeGaugeError(
@@ -85,8 +85,14 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
 
         let mut current = self.clone();
         let alpha = params.alpha;
-        let one_minus_alpha = T::from(1.0) - alpha;
-        let staple_weight = alpha / T::from(2.0 * (D - 1) as f64);
+        let one = T::from(1.0).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert 1.0 to T".to_string())
+        })?;
+        let one_minus_alpha = one - alpha;
+        let staple_divisor = T::from(2.0 * (D - 1) as f64).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert staple divisor to T".to_string())
+        })?;
+        let staple_weight = alpha / staple_divisor;
 
         for _step in 0..params.n_steps {
             let mut new_links = HashMap::new();

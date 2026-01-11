@@ -77,9 +77,8 @@ pub trait GaugeGroup: Clone + Debug + Send + Sync + 'static {
     /// LIE_ALGEBRA_DIM = N² - 1, so N = √(LIE_ALGEBRA_DIM + 1)
     fn matrix_dim() -> usize {
         // Default: assumes SU(N) where dim = N² - 1
-        // N = sqrt(dim + 1), rounded
-        let n_sq = Self::LIE_ALGEBRA_DIM + 1;
         // Integer sqrt with exact validation (avoids floating-point rounding issues).
+        let n_sq = Self::LIE_ALGEBRA_DIM + 1;
         let n = (n_sq as f64).sqrt() as usize;
         let n = if (n + 1) * (n + 1) <= n_sq { n + 1 } else { n };
 

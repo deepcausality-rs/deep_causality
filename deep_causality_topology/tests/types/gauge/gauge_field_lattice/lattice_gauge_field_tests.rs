@@ -548,14 +548,14 @@ fn test_lattice_gauge_field_find_t0_not_reached() {
 fn test_action_coeffs_constructors() {
     use deep_causality_topology::ActionCoeffs;
 
-    let sym = ActionCoeffs::<f64>::symanzik();
+    let sym = ActionCoeffs::<f64>::try_symanzik().unwrap();
     assert!((sym.c1 - (-1.0 / 12.0)).abs() < 1e-10);
     assert!((sym.c0 - (1.0 + 8.0 / 12.0)).abs() < 1e-10);
 
-    let iwa = ActionCoeffs::<f64>::iwasaki();
+    let iwa = ActionCoeffs::<f64>::try_iwasaki().unwrap();
     assert!((iwa.c1 - (-0.331)).abs() < 1e-10);
 
-    let dbw2 = ActionCoeffs::<f64>::dbw2();
+    let dbw2 = ActionCoeffs::<f64>::try_dbw2().unwrap();
     assert!((dbw2.c1 - (-1.4088)).abs() < 1e-10);
 
     let cust = ActionCoeffs::<f64>::custom(0.6, 0.05);
@@ -568,7 +568,7 @@ fn test_lattice_gauge_field_try_improved_action_identity() {
 
     let lattice = create_test_lattice();
     let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
-    let coeffs = ActionCoeffs::symanzik();
+    let coeffs = ActionCoeffs::try_symanzik().unwrap();
 
     // For identity field, both plaquette and rectangle traces are N=1
     // S_plaq = 0, S_rect = 0
@@ -589,7 +589,7 @@ fn test_lattice_gauge_field_try_improved_action_random() {
     let field: LatticeGaugeField<U1, 2, f64> =
         LatticeGaugeField::try_random(lattice, 6.0, &mut rng).unwrap();
 
-    let coeffs = ActionCoeffs::symanzik();
+    let coeffs = ActionCoeffs::try_symanzik().unwrap();
     let action = field.try_improved_action(&coeffs);
 
     assert!(action.is_ok());

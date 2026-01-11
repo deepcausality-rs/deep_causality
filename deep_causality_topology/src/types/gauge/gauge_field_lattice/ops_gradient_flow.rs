@@ -9,9 +9,9 @@
 //! towards the stationary points of the action. Used for scale setting and renormalization.
 
 use crate::{CWComplex, GaugeGroup, LatticeGaugeField, TopologyError};
+use deep_causality_num::Float;
 use deep_causality_tensor::TensorData;
 use std::collections::HashMap;
-
 // ============================================================================
 // Gradient Flow (Section 13)
 // ============================================================================
@@ -78,10 +78,10 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Returns error if flow computation fails.
     pub fn try_flow(&self, params: &FlowParams<T>) -> Result<Self, TopologyError>
     where
-        T: From<f64> + PartialOrd,
+        T: Float,
     {
         let mut current = self.clone();
-        let zero = T::from(0.0);
+        let zero = T::zero();
         if params.epsilon <= zero {
             return Err(TopologyError::LatticeGaugeError(
                 "Flow epsilon must be > 0".to_string(),
@@ -111,11 +111,13 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Single Euler step of gradient flow.
     fn try_euler_step(&self, epsilon: &T) -> Result<Self, TopologyError>
     where
-        T: From<f64> + PartialOrd,
+        T: Float,
     {
         let mut new_links = HashMap::new();
         let n = G::matrix_dim();
-        let n_t = T::from(n as f64);
+        let n_t = T::from(n as f64).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert matrix dimension to T".to_string())
+        })?;
 
         for (edge, u) in self.links.iter() {
             // Compute staple and force
@@ -125,7 +127,9 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
 
             // Force: F = β (U·V† - (1/N) Tr(U·V†) I) / N
             // For flow: we use simplified form proportional to staple
-            let neg_eps = T::from(-1.0) * *epsilon;
+            let neg_eps = T::from(-1.0).ok_or_else(|| {
+                TopologyError::LatticeGaugeError("Failed to convert -1.0 to T".to_string())
+            })? * *epsilon;
             let update = u_v_dag.scale(&neg_eps).scale(&(self.beta / n_t));
 
             // U' = U + ε F, then project
@@ -202,12 +206,20 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Finally, project back to SU(N) group manifold.
     fn try_rk3_step(&self, epsilon: &T) -> Result<Self, TopologyError>
     where
-        T: From<f64> + PartialOrd,
+        T: Float,
     {
-        let three_quarters = T::from(0.75);
-        let one_quarter = T::from(0.25);
-        let one_third = T::from(1.0 / 3.0);
-        let two_thirds = T::from(2.0 / 3.0);
+        let three_quarters = T::from(0.75).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert 0.75 to T".to_string())
+        })?;
+        let one_quarter = T::from(0.25).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert 0.25 to T".to_string())
+        })?;
+        let one_third = T::from(1.0 / 3.0).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert 1/3 to T".to_string())
+        })?;
+        let two_thirds = T::from(2.0 / 3.0).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert 2/3 to T".to_string())
+        })?;
 
         // Stage 1: U1 = Euler(U0)
         // Note: try_euler_step does projection, but for RK intermediate
@@ -244,7 +256,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Project whole field to SU(N).
     fn project_to_group(&self) -> Result<Self, TopologyError>
     where
-        T: From<f64> + PartialOrd,
+        T: Float,
     {
         let mut new_links = HashMap::new();
         for (cell, link) in self.links.iter() {
@@ -279,13 +291,15 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Returns error if computation fails.
     pub fn try_energy_density(&self) -> Result<T, TopologyError>
     where
-        T: From<f64>,
+        T: Float,
     {
         let n = G::matrix_dim();
-        let n_t = T::from(n as f64);
-        let one = T::from(1.0);
+        let n_t = T::from(n as f64).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert matrix dimension to T".to_string())
+        })?;
+        let one = T::one();
 
-        let mut sum = T::from(0.0);
+        let mut sum = T::zero();
         let mut count = 0usize;
 
         for site_cell in self.lattice.cells(0) {
@@ -302,10 +316,13 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         }
 
         if count == 0 {
-            return Ok(T::from(0.0));
+            return Ok(T::zero());
         }
 
-        Ok(sum / T::from(count as f64))
+        let count_t = T::from(count as f64).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert count to T".to_string())
+        })?;
+        Ok(sum / count_t)
     }
 
     /// Compute t² E(t) for scale setting.
@@ -317,7 +334,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Returns error if computation fails.
     pub fn try_t2_energy(&self, t: T) -> Result<T, TopologyError>
     where
-        T: From<f64>,
+        T: Float,
     {
         let e = self.try_energy_density()?;
         Ok(t * t * e)
@@ -362,11 +379,13 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// - t² E(t) never reaches 0.3 within t_max
     pub fn try_find_t0(&self, params: &FlowParams<T>) -> Result<T, TopologyError>
     where
-        T: From<f64> + PartialOrd,
+        T: Float,
     {
-        let target = T::from(0.3);
+        let target = T::from(0.3).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert 0.3 to T".to_string())
+        })?;
         let mut current = self.clone();
-        let mut t = T::from(0.0);
+        let mut t = T::zero();
         let epsilon = params.epsilon;
 
         let mut prev_t = t;
@@ -389,9 +408,10 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
                 let dt = t - prev_t;
                 let d_t2e = t2e - prev_t2e;
 
-                if d_t2e == T::from(0.0) {
+                if d_t2e == T::zero() {
                     return Ok(prev_t);
                 }
+
                 let ratio = (target - prev_t2e) / d_t2e;
                 return Ok(prev_t + ratio * dt);
             }

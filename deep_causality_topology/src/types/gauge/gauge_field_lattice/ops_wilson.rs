@@ -8,6 +8,7 @@
 //! Implements the standard Wilson gauge action and Wilson/Polyakov loop observables.
 
 use crate::{CWComplex, GaugeGroup, LatticeCell, LatticeGaugeField, TopologyError};
+use deep_causality_num::Float;
 use deep_causality_tensor::TensorData;
 
 // ============================================================================
@@ -34,13 +35,15 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Returns error if plaquette computation fails.
     pub fn try_wilson_action(&self) -> Result<T, TopologyError>
     where
-        T: From<f64>,
+        T: Float,
     {
         let n = G::matrix_dim();
-        let n_t = T::from(n as f64);
-        let one = T::from(1.0);
+        let n_t = T::from(n as f64).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert matrix dimension to T".to_string())
+        })?;
+        let one = T::one();
 
-        let mut action = T::from(0.0);
+        let mut action = T::zero();
 
         // Sum over all sites and all planes μ < ν
         for site_cell in self.lattice.cells(0) {
@@ -86,11 +89,13 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         nu: usize,
     ) -> Result<T, TopologyError>
     where
-        T: From<f64>,
+        T: Float,
     {
         let n = G::matrix_dim();
-        let n_t = T::from(n as f64);
-        let one = T::from(1.0);
+        let n_t = T::from(n as f64).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert matrix dimension to T".to_string())
+        })?;
+        let one = T::one();
 
         let plaq = self.try_plaquette(site, mu, nu)?;
         let tr = plaq.re_trace();
@@ -152,7 +157,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         t: usize,
     ) -> Result<T, TopologyError>
     where
-        T: From<f64>,
+        T: Float,
     {
         if r_dir >= D || t_dir >= D || r_dir == t_dir {
             return Err(TopologyError::LatticeGaugeError(format!(
@@ -169,7 +174,9 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
 
         let shape = self.lattice.shape();
         let n = G::matrix_dim();
-        let n_t = T::from(n as f64);
+        let n_t = T::from(n as f64).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert matrix dimension to T".to_string())
+        })?;
 
         // Start with identity
         let mut result = self.get_link_or_identity(&LatticeCell::edge(*corner, r_dir));
@@ -254,7 +261,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         temporal_dir: usize,
     ) -> Result<T, TopologyError>
     where
-        T: From<f64>,
+        T: Float,
     {
         if temporal_dir >= D {
             return Err(TopologyError::LatticeGaugeError(format!(
@@ -266,7 +273,9 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         let shape = self.lattice.shape();
         let nt = shape[temporal_dir];
         let n = G::matrix_dim();
-        let n_t = T::from(n as f64);
+        let n_t = T::from(n as f64).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert matrix dimension to T".to_string())
+        })?;
 
         let mut pos = *spatial_site;
 
@@ -304,9 +313,9 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Returns error if computation fails.
     pub fn try_average_polyakov_loop(&self, temporal_dir: usize) -> Result<T, TopologyError>
     where
-        T: From<f64>,
+        T: Float,
     {
-        let mut sum = T::from(0.0);
+        let mut sum = T::zero();
         let mut count = 0usize;
 
         for site_cell in self.lattice.cells(0) {
@@ -317,9 +326,12 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         }
 
         if count == 0 {
-            return Ok(T::from(0.0));
+            return Ok(T::zero());
         }
 
-        Ok(sum / T::from(count as f64))
+        let count_t = T::from(count as f64).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert count to T".to_string())
+        })?;
+        Ok(sum / count_t)
     }
 }

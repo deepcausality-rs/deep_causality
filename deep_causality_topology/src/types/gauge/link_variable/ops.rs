@@ -1,4 +1,10 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
 use crate::{GaugeGroup, LinkVariable, LinkVariableError};
+use deep_causality_num::Float;
 use deep_causality_tensor::{CausalTensor, TensorData};
 use std::marker::PhantomData;
 
@@ -252,46 +258,55 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
     /// Returns `LinkVariableError::NumericalError` for other numerical issues.
     pub fn project_sun(&self) -> Result<Self, LinkVariableError>
     where
-        T: From<f64>,
+        T: Float,
     {
         // For real matrices, polar decomposition: U = M (M^T M)^{-1/2}
         // We use iterative Newton-Schulz iteration:
         // X_{k+1} = 0.5 * X_k (3I - X_k^T X_k)
         // Converges to U where M = UP, P positive semi-definite
 
-        let _n = G::matrix_dim();
         let mut x = self.clone();
+        let epsilon = T::from(1e-24).ok_or_else(|| {
+            LinkVariableError::NumericalError("Failed to convert 1e-24 to T".to_string())
+        })?;
 
         // Normalize by Frobenius norm for numerical stability
         let norm_sq = self.frobenius_norm_sq();
-        let _one = T::from(1.0);
-        let zero = T::from(0.0);
+        let zero = T::zero();
 
         if norm_sq.partial_cmp(&zero) != Some(std::cmp::Ordering::Greater) {
             // Zero matrix - return identity
             return Self::try_identity();
         }
 
+        // Apply normalization to improve Newton-Schulz stability
+        let one: T = T::one();
+        let inv_norm = T::from(one / norm_sq.sqrt()).unwrap();
+        x = x.scale(&inv_norm);
+
         // Newton-Schulz iteration (typically converges in 10-20 iterations)
         let max_iter = 50;
-        let three = T::from(3.0);
-        let half = T::from(0.5);
+        let three = T::from(3.0).ok_or_else(|| {
+            LinkVariableError::NumericalError("Failed to convert 3.0 to T".to_string())
+        })?;
+        let half = T::from(0.5).ok_or_else(|| {
+            LinkVariableError::NumericalError("Failed to convert 0.5 to T".to_string())
+        })?;
 
         for _ in 0..max_iter {
             let x_dag = x.dagger();
             let xdx = x_dag.mul(&x);
 
-            // Check convergence before next iteration
             // Check convergence before next iteration (compute_identity_deviation returns ||X-I||_F^2)
             let residual_sq = compute_identity_deviation::<G, T>(&xdx)?;
-            if residual_sq < T::from(1e-24) {
+            if residual_sq < epsilon {
                 break;
             }
 
             // 3I - X†X
             let identity = Self::try_identity()?;
             let three_i = identity.scale(&three);
-            let diff = three_i.try_add(&xdx.scale(&T::from(-1.0)))?;
+            let diff = three_i.try_add(&xdx.scale(&T::from(-1.0).unwrap()))?;
 
             // X_{k+1} = 0.5 * X * diff
             x = x.mul(&diff).scale(&half);
@@ -310,12 +325,12 @@ fn compute_identity_deviation<G: GaugeGroup, T>(
     x: &LinkVariable<G, T>,
 ) -> Result<T, LinkVariableError>
 where
-    T: TensorData + From<f64>,
+    T: Float,
 {
     let n = G::matrix_dim();
     let slice = x.as_slice();
-    let mut sum = T::from(0.0);
-    let one = T::from(1.0);
+    let mut sum = T::zero();
+    let one = T::one();
 
     for i in 0..n {
         for j in 0..n {

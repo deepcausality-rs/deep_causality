@@ -20,9 +20,11 @@ use crate::errors::topology_error::TopologyError;
 use crate::traits::cw_complex::CWComplex;
 use crate::types::gauge::link_variable::LinkVariable;
 use crate::{GaugeGroup, Lattice, LatticeCell};
+use deep_causality_num::Float;
 use deep_causality_tensor::TensorData;
 use std::collections::HashMap;
 use std::sync::Arc;
+
 mod display;
 mod getters;
 pub mod ops_actions;
@@ -75,7 +77,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Returns `TopologyError` if link creation fails.
     pub fn try_identity(lattice: Arc<Lattice<D>>, beta: T) -> Result<Self, TopologyError>
     where
-        T: From<f64>,
+        T: Float,
     {
         let mut links = HashMap::new();
 
@@ -99,7 +101,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Panics if link creation fails (should not happen for valid lattice).
     pub fn identity(lattice: Arc<Lattice<D>>, beta: T) -> Self
     where
-        T: From<f64>,
+        T: Float,
     {
         Self::try_identity(lattice, beta)
             .unwrap_or_else(|e| panic!("Identity field creation failed: {}", e))
@@ -172,7 +174,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     ) -> Result<Self, TopologyError>
     where
         R: deep_causality_rand::Rng,
-        T: From<f64> + PartialOrd,
+        T: Float,
     {
         let mut links = HashMap::new();
 
@@ -198,7 +200,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     pub fn random<R>(lattice: Arc<Lattice<D>>, beta: T, rng: &mut R) -> Self
     where
         R: deep_causality_rand::Rng,
-        T: From<f64> + PartialOrd,
+        T: Float,
     {
         Self::try_random(lattice, beta, rng)
             .unwrap_or_else(|e| panic!("Random field creation failed: {}", e))

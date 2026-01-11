@@ -9,6 +9,7 @@
 //! importance sampling gauge configurations according to the Boltzmann weight.
 
 use crate::{GaugeGroup, LatticeCell, LatticeGaugeField, LinkVariable, TopologyError};
+use deep_causality_num::Float;
 use deep_causality_tensor::TensorData;
 
 // ============================================================================
@@ -56,8 +57,14 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     ) -> Result<bool, TopologyError>
     where
         R: deep_causality_rand::Rng,
-        T: From<f64> + Into<f64> + PartialOrd + std::fmt::Debug,
+        T: Float,
     {
+        if epsilon <= T::zero() {
+            return Err(TopologyError::LatticeGaugeError(
+                "Invalid Metropolis epsilon: (must be > 0)".to_string(),
+            ));
+        }
+
         // Get current link
         let current = self.get_link_or_identity(edge);
 
@@ -71,19 +78,22 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         let delta_s = self.try_local_action_change(edge, &proposed)?;
 
         // Metropolis accept/reject
-        let accept = if delta_s < T::from(0.0) {
+        let accept = if delta_s < T::zero() {
             // Always accept if action decreases
             true
         } else {
             // Accept with probability exp(-ΔS)
-            let r: f64 = rng.random();
+            let rnd: f64 = rng.random();
+            let r = T::from(rnd).ok_or_else(|| {
+                TopologyError::LatticeGaugeError("Failed to convert random value to T".to_string())
+            })?;
 
-            let delta_s_f64: f64 = delta_s.into();
+            // let delta_s_f64: f64 = delta_s.into();
 
-            if !delta_s_f64.is_finite() || delta_s_f64.is_nan() {
+            if !delta_s.is_finite() || delta_s.is_nan() {
                 false // Reject NaN/Inf actions
             } else {
-                r < (-delta_s_f64).exp()
+                r < (-delta_s).exp()
             }
         };
 
@@ -123,7 +133,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     pub fn try_metropolis_sweep<R>(&mut self, epsilon: T, rng: &mut R) -> Result<f64, TopologyError>
     where
         R: deep_causality_rand::Rng,
-        T: From<f64> + Into<f64> + PartialOrd + std::fmt::Debug,
+        T: Float,
     {
         let edges: Vec<_> = self.links.keys().cloned().collect();
         let total = edges.len();
@@ -153,7 +163,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     ) -> Result<LinkVariable<G, T>, TopologyError>
     where
         R: deep_causality_rand::Rng,
-        T: From<f64> + PartialOrd,
+        T: Float,
     {
         // Start with identity
         let result = LinkVariable::<G, T>::try_identity().map_err(TopologyError::from)?;
@@ -166,7 +176,13 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         for i in 0..n {
             for j in 0..n {
                 let r: f64 = rng.random();
-                let perturbation = epsilon * T::from(2.0 * r - 1.0);
+                let diff = 2.0 * r - 1.0;
+                let perturbation_val = T::from(diff).ok_or_else(|| {
+                    TopologyError::LatticeGaugeError(
+                        "Failed to convert perturbation to T".to_string(),
+                    )
+                })?;
+                let perturbation = epsilon * perturbation_val;
                 new_data[i * n + j] = new_data[i * n + j] + perturbation;
             }
         }

@@ -329,13 +329,6 @@ fn test_link_variable_try_random_su2() {
 }
 
 #[test]
-fn test_link_variable_random_convenience() {
-    let mut rng = deep_causality_rand::rng();
-    let link: LinkVariable<SU2, f64> = LinkVariable::random(&mut rng);
-    assert_eq!(link.as_slice().len(), 4);
-}
-
-#[test]
 fn test_link_variable_random_u1() {
     let mut rng = deep_causality_rand::rng();
     let link: LinkVariable<U1, f64> =
@@ -343,17 +336,6 @@ fn test_link_variable_random_u1() {
 
     // U1 is 1x1
     assert_eq!(link.as_slice().len(), 1);
-}
-
-#[test]
-fn test_link_variable_random_different_each_time() {
-    let mut rng = deep_causality_rand::rng();
-    let link1: LinkVariable<SU2, f64> = LinkVariable::random(&mut rng);
-    let link2: LinkVariable<SU2, f64> = LinkVariable::random(&mut rng);
-
-    // Should be different (with high probability)
-    let diff = link1.as_slice()[0] - link2.as_slice()[0];
-    assert!(diff.abs() > 1e-10, "Random links should differ");
 }
 
 // ============================================================================

@@ -9,6 +9,7 @@
 //! and local action changes.
 
 use crate::{GaugeGroup, LatticeCell, LatticeGaugeField, LinkVariable, TopologyError};
+use deep_causality_num::Float;
 use deep_causality_tensor::TensorData;
 
 // ============================================================================
@@ -43,7 +44,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Returns error if staple computation fails.
     pub fn try_staple(&self, edge: &LatticeCell<D>) -> Result<LinkVariable<G, T>, TopologyError>
     where
-        T: From<f64>,
+        T: Float,
     {
         let site = *edge.position();
         let mu = edge.orientation().trailing_zeros() as usize;
@@ -127,13 +128,15 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         new_link: &LinkVariable<G, T>,
     ) -> Result<T, TopologyError>
     where
-        T: From<f64>,
+        T: Float,
     {
         let old_link = self.get_link_or_identity(edge);
         let staple = self.try_staple(edge)?;
 
         let n = G::matrix_dim();
-        let n_t = T::from(n as f64);
+        let n_t = T::from(n as f64).ok_or_else(|| {
+            TopologyError::LatticeGaugeError("Failed to convert matrix dimension to T".to_string())
+        })?;
 
         // ΔS = β * (Re[Tr(U·V†)] - Re[Tr(U'·V†)]) / N
         // (This is the change in action, negative means lower action)

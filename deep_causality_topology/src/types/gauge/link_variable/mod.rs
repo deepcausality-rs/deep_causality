@@ -10,6 +10,7 @@
 //!
 
 use crate::{GaugeGroup, LinkVariableError};
+use deep_causality_num::Float;
 use deep_causality_tensor::{CausalTensor, TensorData};
 use std::marker::PhantomData;
 
@@ -55,17 +56,17 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
     /// Returns `LinkVariableError::TensorCreation` if matrix allocation fails.
     pub fn try_identity() -> Result<Self, LinkVariableError>
     where
-        T: From<f64>,
+        T: Float,
     {
         let n = G::matrix_dim();
         if n == 0 {
             return Err(LinkVariableError::InvalidDimension(n));
         }
 
-        let mut data = vec![T::from(0.0); n * n];
+        let mut data = vec![T::zero(); n * n];
         // Set diagonal to 1
         for i in 0..n {
-            data[i * n + i] = T::from(1.0);
+            data[i * n + i] = T::one();
         }
 
         CausalTensor::new(data, vec![n, n])
@@ -86,7 +87,7 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
     /// Panics if tensor creation fails (should never happen for valid groups).
     pub fn identity() -> Self
     where
-        T: From<f64>,
+        T: Float,
     {
         Self::try_identity()
             .unwrap_or_else(|e| panic!("Identity matrix creation failed for {}: {}", G::name(), e))
@@ -140,14 +141,14 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
     /// Returns error if tensor creation fails.
     pub fn try_zero() -> Result<Self, LinkVariableError>
     where
-        T: From<f64>,
+        T: Float,
     {
         let n = G::matrix_dim();
         if n == 0 {
             return Err(LinkVariableError::InvalidDimension(n));
         }
 
-        let data = vec![T::from(0.0); n * n];
+        let data = vec![T::zero(); n * n];
         CausalTensor::new(data, vec![n, n])
             .map(|tensor| Self {
                 data: tensor,
@@ -202,7 +203,7 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
     pub fn try_random<R>(rng: &mut R) -> Result<Self, LinkVariableError>
     where
         R: deep_causality_rand::Rng,
-        T: From<f64> + PartialOrd,
+        T: Float,
     {
         let n = G::matrix_dim();
         if n == 0 {
@@ -215,7 +216,7 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
             // Generate uniform in [0, 1), scale to [-0.5, 0.5)
             // Smaller range ensures initial matrix is within Newton-Schulz convergence radius
             let val: f64 = rng.random();
-            data.push(T::from(val - 0.5));
+            data.push(T::from(val - 0.5).unwrap());
         }
 
         let tensor = CausalTensor::new(data, vec![n, n])
@@ -228,21 +229,5 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
 
         // Project to SU(N) to ensure unitarity and det = 1
         random_matrix.project_sun()
-    }
-
-    /// Create a random link variable (convenience method).
-    ///
-    /// See [`try_random`](Self::try_random) for details.
-    ///
-    /// # Panics
-    ///
-    /// Panics if random matrix creation or SU(N) projection fails.
-    pub fn random<R>(rng: &mut R) -> Self
-    where
-        R: deep_causality_rand::Rng,
-        T: From<f64> + PartialOrd,
-    {
-        Self::try_random(rng)
-            .unwrap_or_else(|e| panic!("Random link creation failed for {}: {}", G::name(), e))
     }
 }

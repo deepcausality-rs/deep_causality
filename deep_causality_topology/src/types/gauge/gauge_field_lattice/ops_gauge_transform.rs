@@ -9,6 +9,7 @@
 
 use crate::traits::cw_complex::CWComplex;
 use crate::{GaugeGroup, LatticeGaugeField, LinkVariable, TopologyError};
+use deep_causality_num::Float;
 use deep_causality_tensor::TensorData;
 
 // ============================================================================
@@ -58,7 +59,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     pub fn try_gauge_transform<F>(&mut self, gauge_fn: F) -> Result<(), TopologyError>
     where
         F: Fn(&[usize; D]) -> LinkVariable<G, T>,
-        T: From<f64>,
+        T: Float,
     {
         use std::collections::HashMap;
 
@@ -100,7 +101,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     pub fn try_random_gauge_transform<R>(&mut self, rng: &mut R) -> Result<(), TopologyError>
     where
         R: deep_causality_rand::Rng,
-        T: From<f64> + PartialOrd,
+        T: Float,
     {
         use std::collections::HashMap;
 
