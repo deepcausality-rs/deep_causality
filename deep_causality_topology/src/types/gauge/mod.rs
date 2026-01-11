@@ -34,7 +34,7 @@
 
 pub mod gauge_field;
 pub mod gauge_field_lattice;
-pub mod groups;
+pub mod gauge_groups;
 pub mod link_variable;
 
 pub use gauge_field::GaugeField;

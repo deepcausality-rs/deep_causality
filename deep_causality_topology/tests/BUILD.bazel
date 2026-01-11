@@ -56,6 +56,59 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "types/curvature_tensor",
+    srcs = glob([
+        "types/curvature_tensor/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_topology",
+        # Internal deps
+        "//deep_causality_metric",
+    ],
+)
+
+rust_test_suite(
+    name = "types/differential_form",
+    srcs = glob([
+        "types/differential_form/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_topology",
+        # Internal deps
+        "//deep_causality_metric",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_test_suite(
+    name = "types/gauge",
+    srcs = glob([
+        "types/gauge/*/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_topology",
+        # Internal deps
+        "//deep_causality_metric",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_test_suite(
     name = "types/graph",
     srcs = glob([
         "types/graph/*_tests.rs",
@@ -88,6 +141,22 @@ rust_test_suite(
         # Internal deps
         "//deep_causality_sparse",
         "//deep_causality_tensor",
+    ],
+)
+
+rust_test_suite(
+    name = "types/lattice",
+    srcs = glob([
+        "types/lattice/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_topology",
+        # Internal deps
     ],
 )
 
