@@ -84,8 +84,8 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         }
 
         let mut current = self.clone();
-        let alpha = params.alpha.clone();
-        let one_minus_alpha = T::from(1.0) - alpha.clone();
+        let alpha = params.alpha;
+        let one_minus_alpha = T::from(1.0) - alpha;
         let staple_weight = alpha / T::from(2.0 * (D - 1) as f64);
 
         for _step in 0..params.n_steps {
