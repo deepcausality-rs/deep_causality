@@ -11,6 +11,27 @@
 //!
 //! This provides approximately 106 bits of significand (~31 decimal digits) while
 //! maintaining the same exponent range as `f64`.
+//!
+//! # DoubleFloat vs f128 Comparison
+//!
+//! | Aspect | DoubleFloat | f128 (IEEE binary128) |
+//! |--------|-------------|----------------------|
+//! | Mantissa | 106 bits | 112 bits |
+//! | Precision | ~32 decimal digits (10⁻³¹) | ~34 decimal digits (10⁻³⁴) |
+//! | Speed | ~2-4× slower than f64 | ~10-100× slower (software emulated) |
+//! | Hardware support | None (pure software) | Very rare (POWER9, some ARMs) |
+//! | Rust status | **Available now** | Nightly only |
+//!
+//! DoubleFloat provides precision comparable to f128 (~2 fewer digits) while
+//! being significantly faster on most hardware since it uses native f64 FMA operations.
+//!
+//! # Physical Scale Context
+//!
+//! | Type | Precision | Scale |
+//! |------|-----------|-------|
+//! | f64 | ~15 digits | 10⁻¹⁵ (femto) — Proton size |
+//! | **DoubleFloat** | **~32 digits** | **10⁻³¹ (quecto)** — Near Planck length |
+//! | f128 | ~34 digits | 10⁻³⁴ — Planck length (10⁻³⁵) |
 mod attributes;
 mod debug;
 mod display;
