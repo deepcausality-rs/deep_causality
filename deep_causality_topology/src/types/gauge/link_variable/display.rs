@@ -5,8 +5,14 @@
 
 use crate::{GaugeGroup, LinkVariable};
 
-impl<G: GaugeGroup, T: std::fmt::Display + Clone> std::fmt::Display for LinkVariable<G, T> {
+impl<G: GaugeGroup, T: std::fmt::Debug + Clone> std::fmt::Display for LinkVariable<G, T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "LinkVariable<{}>({})  ", G::name(), G::matrix_dim())
+        write!(
+            f,
+            "LinkVariable<{}>(N={}, data={:?})",
+            G::name(),
+            G::matrix_dim(),
+            self.data.as_slice()
+        )
     }
 }

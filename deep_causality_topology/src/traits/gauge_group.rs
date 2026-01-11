@@ -77,12 +77,24 @@ pub trait GaugeGroup: Clone + Debug + Send + Sync + 'static {
     /// LIE_ALGEBRA_DIM = N² - 1, so N = √(LIE_ALGEBRA_DIM + 1)
     fn matrix_dim() -> usize {
         // Default: assumes SU(N) where dim = N² - 1
-        // Integer sqrt with exact validation (avoids floating-point rounding issues).
+        // Use a wider integer type to avoid overflow in squaring.
         let n_sq = Self::LIE_ALGEBRA_DIM + 1;
-        let n = (n_sq as f64).sqrt() as usize;
-        let n = if (n + 1) * (n + 1) <= n_sq { n + 1 } else { n };
+        let n_sq_wide = n_sq as u128;
 
-        if n > 0 && n * n == n_sq { n } else { 0 }
+        // Integer sqrt seed (still OK as a seed), then validate using wide squares.
+        let mut n = (n_sq as f64).sqrt() as usize;
+
+        let n1_sq = ((n as u128) + 1).saturating_mul((n as u128) + 1);
+        if n1_sq <= n_sq_wide {
+            n += 1;
+        }
+
+        let n_sq_check = (n as u128).saturating_mul(n as u128);
+        if n > 0 && n_sq_check == n_sq_wide {
+            n
+        } else {
+            0
+        }
     }
 
     /// Returns the structure constant f^{abc} for the Lie algebra.

@@ -381,6 +381,18 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     where
         T: Float,
     {
+        let zero = T::zero();
+        if params.epsilon <= zero {
+            return Err(TopologyError::LatticeGaugeError(
+                "Flow epsilon must be > 0".to_string(),
+            ));
+        }
+        if params.t_max < zero {
+            return Err(TopologyError::LatticeGaugeError(
+                "Flow t_max must be >= 0".to_string(),
+            ));
+        }
+
         let target = T::from(0.3).ok_or_else(|| {
             TopologyError::LatticeGaugeError("Failed to convert 0.3 to T".to_string())
         })?;
