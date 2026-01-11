@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_physics"
-version = "0.3.1"
+version = "0.4.0"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -45,11 +45,11 @@ mlx-rs = { version = "0.25.3", features = ["metal"], optional = true }
 
 [dependencies.deep_causality_core]
 path = "../deep_causality_core"
-version = "0.0.3"
+version = "0.0.4"
 
 [dependencies.deep_causality_haft]
 path = "../deep_causality_haft"
-version = "0.2.7"
+version = "0.3.0"
 
 [dependencies.deep_causality_metric]
 path = "../deep_causality_metric"
@@ -57,15 +57,15 @@ version = "0.1"
 
 [dependencies.deep_causality_multivector]
 path = "../deep_causality_multivector"
-version = "0.2.5"
+version = "0.3.0"
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
-version = "0.1.11"
+version = "0.1.12"
 
 [dependencies.deep_causality_rand]
 path = "../deep_causality_rand"
-version = "0.1.9"
+version = "0.1.10"
 optional = true
 
 [dependencies.deep_causality_sparse]
@@ -74,8 +74,8 @@ version = "0.1"
 
 [dependencies.deep_causality_tensor]
 path = "../deep_causality_tensor"
-version = "0.2.2"
+version = "0.3.0"
 
 [dependencies.deep_causality_topology]
 path = "../deep_causality_topology"
-version = "0.2.5"
+version = "0.3.0"

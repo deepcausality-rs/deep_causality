@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.2.2...deep_causality_tensor-v0.3.0) - 2026-01-09
+
+### Added
+
+- *(deep_causality_tensor)* Disabled strict Witness pattern and with it proper GAT bounded HKT due to issue in trait solver.
+- *(deep_causality_tensor)* Identified root cause of failing GAT normalization errors a compiler bugs. Documented the issue for now.
+- *(deep_causality_tensor)* Completed transition to GAT based HKT.
+- *(deep_causality_sparse)* Finalized HKT extension to use new GAT bounded HKT.
+- *(deep_causality_tensor)* Finalized HKT extension to use new GAT bounded HKT.
+- *(deep_causality_tensor)* Upated HKT extension to use new GAT bounded HKT.
+
+### Other
+
+- updated project wide SBOM files.
+- updated project wide copyright note.
+- Removed unused feature flag.
+
 ## [0.2.2](https://github.com/marvin-hansen/deep_causality/compare/deep_causality_tensor-v0.2.1...deep_causality_tensor-v0.2.2) - 2025-12-31
 
 ### Added
