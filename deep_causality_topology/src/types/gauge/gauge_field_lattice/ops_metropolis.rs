@@ -56,7 +56,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     ) -> Result<bool, TopologyError>
     where
         R: deep_causality_rand::Rng,
-        T: From<f64> + PartialOrd + std::fmt::Debug,
+        T: From<f64> + Into<f64> + PartialOrd + std::fmt::Debug,
     {
         // Get current link
         let current = self.get_link_or_identity(edge);
@@ -77,14 +77,11 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         } else {
             // Accept with probability exp(-ΔS)
             let r: f64 = rng.random();
-            // Use debug formatting as a robust fallback for conversion if direct cast isn't available
-            // This works for f64, f32, and DoubleFloat (which implements Debug/Display)
-            let delta_s_f64 = format!("{:?}", delta_s)
-                .parse::<f64>()
-                .unwrap_or(f64::INFINITY); // Fail safe to reject if parsing fails
 
-            if delta_s_f64.is_nan() {
-                false // Reject NaN actions
+            let delta_s_f64: f64 = delta_s.into();
+
+            if !delta_s_f64.is_finite() || delta_s_f64.is_nan() {
+                false // Reject NaN/Inf actions
             } else {
                 r < (-delta_s_f64).exp()
             }
@@ -126,7 +123,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     pub fn try_metropolis_sweep<R>(&mut self, epsilon: T, rng: &mut R) -> Result<f64, TopologyError>
     where
         R: deep_causality_rand::Rng,
-        T: From<f64> + PartialOrd + std::fmt::Debug,
+        T: From<f64> + Into<f64> + PartialOrd + std::fmt::Debug,
     {
         let edges: Vec<_> = self.links.keys().cloned().collect();
         let total = edges.len();

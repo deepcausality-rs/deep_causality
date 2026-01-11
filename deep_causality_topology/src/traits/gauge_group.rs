@@ -79,7 +79,9 @@ pub trait GaugeGroup: Clone + Debug + Send + Sync + 'static {
         // Default: assumes SU(N) where dim = N² - 1
         // N = sqrt(dim + 1), rounded
         let n_sq = Self::LIE_ALGEBRA_DIM + 1;
-        (n_sq as f64).sqrt().round() as usize
+        let n = (n_sq as f64).sqrt().round() as usize;
+
+        if n > 0 && n * n == n_sq { n } else { 0 }
     }
 
     /// Returns the structure constant f^{abc} for the Lie algebra.

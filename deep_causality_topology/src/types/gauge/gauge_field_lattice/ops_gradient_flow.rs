@@ -81,7 +81,19 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         T: From<f64> + PartialOrd,
     {
         let mut current = self.clone();
-        let mut t = T::from(0.0);
+        let zero = T::from(0.0);
+        if params.epsilon <= zero {
+            return Err(TopologyError::LatticeGaugeError(
+                "Flow epsilon must be > 0".to_string(),
+            ));
+        }
+        if params.t_max < zero {
+            return Err(TopologyError::LatticeGaugeError(
+                "Flow t_max must be >= 0".to_string(),
+            ));
+        }
+
+        let mut t = zero;
         let epsilon = params.epsilon;
 
         // Integrate from t=0 to t=t_max
@@ -378,6 +390,14 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
                 // t₀ ≈ prev_t + (target - prev_t2e) * ε / (t2e - prev_t2e)
                 let dt = t - prev_t;
                 let d_t2e = t2e - prev_t2e;
+
+                if d_t2e == T::from(0.0) {
+                    return Ok(prev_t);
+                }
+
+                if d_t2e == T::from(0.0) {
+                    return Ok(prev_t);
+                }
                 let ratio = (target - prev_t2e) / d_t2e;
                 return Ok(prev_t + ratio * dt);
             }

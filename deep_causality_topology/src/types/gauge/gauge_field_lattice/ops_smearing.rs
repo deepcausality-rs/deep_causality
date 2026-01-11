@@ -75,11 +75,17 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Returns error if smearing computation fails.
     pub fn try_smear(&self, params: &SmearingParams<T>) -> Result<Self, TopologyError>
     where
-        T: From<f64> + PartialOrd,
+        T: From<f64> + PartialOrd + Clone,
     {
+        if D <= 1 {
+            return Err(TopologyError::LatticeGaugeError(
+                "Smearing requires D >= 2".to_string(),
+            ));
+        }
+
         let mut current = self.clone();
-        let alpha = params.alpha;
-        let one_minus_alpha = T::from(1.0) - alpha;
+        let alpha = params.alpha.clone();
+        let one_minus_alpha = T::from(1.0) - alpha.clone();
         let staple_weight = alpha / T::from(2.0 * (D - 1) as f64);
 
         for _step in 0..params.n_steps {
