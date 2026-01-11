@@ -4,13 +4,11 @@
  */
 
 use crate::{GaugeGroup, LatticeCell, LatticeGaugeField, LinkVariable};
+use deep_causality_tensor::TensorData;
 
-impl<G: GaugeGroup, const D: usize, T> LatticeGaugeField<G, D, T> {
+impl<G: GaugeGroup, const D: usize, T: TensorData + From<f64>> LatticeGaugeField<G, D, T> {
     /// Get a link, returning identity if not found.
-    pub(crate) fn get_link_or_identity(&self, edge: &LatticeCell<D>) -> LinkVariable<G, T>
-    where
-        T: Clone + Default + From<f64>,
-    {
+    pub(crate) fn get_link_or_identity(&self, edge: &LatticeCell<D>) -> LinkVariable<G, T> {
         self.links
             .get(edge)
             .cloned()

@@ -9,12 +9,13 @@
 //! importance sampling gauge configurations according to the Boltzmann weight.
 
 use crate::{GaugeGroup, LatticeCell, LatticeGaugeField, LinkVariable, TopologyError};
+use deep_causality_tensor::TensorData;
 
 // ============================================================================
 // Metropolis Updates
 // ============================================================================
 
-impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, T> {
+impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Perform a single Metropolis update on a link.
     ///
     /// Proposes a random modification to link U and accepts or rejects
@@ -55,21 +56,13 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     ) -> Result<bool, TopologyError>
     where
         R: deep_causality_rand::Rng,
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>
-            + PartialOrd
-            + std::fmt::Debug,
+        T: From<f64> + PartialOrd + std::fmt::Debug,
     {
         // Get current link
         let current = self.get_link_or_identity(edge);
 
         // Generate a small random perturbation
-        let perturbation = self.generate_small_su_n_update(epsilon.clone(), rng)?;
+        let perturbation = self.generate_small_su_n_update(epsilon, rng)?;
 
         // Propose: U' = R · U
         let proposed = perturbation.mul(&current);
@@ -133,15 +126,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     pub fn try_metropolis_sweep<R>(&mut self, epsilon: T, rng: &mut R) -> Result<f64, TopologyError>
     where
         R: deep_causality_rand::Rng,
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>
-            + PartialOrd
-            + std::fmt::Debug, // Added Debug bound for conversion fallback
+        T: From<f64> + PartialOrd + std::fmt::Debug,
     {
         let edges: Vec<_> = self.links.keys().cloned().collect();
         let total = edges.len();
@@ -153,7 +138,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
         let mut accepted = 0usize;
 
         for edge in edges {
-            if self.try_metropolis_update(&edge, epsilon.clone(), rng)? {
+            if self.try_metropolis_update(&edge, epsilon, rng)? {
                 accepted += 1;
             }
         }
@@ -171,14 +156,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     ) -> Result<LinkVariable<G, T>, TopologyError>
     where
         R: deep_causality_rand::Rng,
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>
-            + PartialOrd,
+        T: From<f64> + PartialOrd,
     {
         // Start with identity
         let result = LinkVariable::<G, T>::try_identity().map_err(TopologyError::from)?;
@@ -191,8 +169,8 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
         for i in 0..n {
             for j in 0..n {
                 let r: f64 = rng.random();
-                let perturbation = epsilon.clone() * T::from(2.0 * r - 1.0);
-                new_data[i * n + j] = new_data[i * n + j].clone() + perturbation;
+                let perturbation = epsilon * T::from(2.0 * r - 1.0);
+                new_data[i * n + j] = new_data[i * n + j] + perturbation;
             }
         }
 

@@ -9,12 +9,13 @@
 
 use crate::traits::cw_complex::CWComplex;
 use crate::{GaugeGroup, LatticeGaugeField, LinkVariable, TopologyError};
+use deep_causality_tensor::TensorData;
 
 // ============================================================================
 // Gauge Transformations
 // ============================================================================
 
-impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, T> {
+impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Apply a gauge transformation to the field.
     ///
     /// A gauge transformation rotates link variables according to:
@@ -57,11 +58,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     pub fn try_gauge_transform<F>(&mut self, gauge_fn: F) -> Result<(), TopologyError>
     where
         F: Fn(&[usize; D]) -> LinkVariable<G, T>,
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>,
+        T: From<f64>,
     {
         // Clone shape upfront to avoid borrow conflict
         let shape: [usize; D] = *self.lattice.shape();
@@ -95,14 +92,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     pub fn try_random_gauge_transform<R>(&mut self, rng: &mut R) -> Result<(), TopologyError>
     where
         R: deep_causality_rand::Rng,
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>
-            + PartialOrd,
+        T: From<f64> + PartialOrd,
     {
         use std::collections::HashMap;
 

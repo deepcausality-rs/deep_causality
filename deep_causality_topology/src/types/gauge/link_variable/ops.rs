@@ -1,13 +1,8 @@
-/*
- * SPDX-License-Identifier: MIT
- * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
- */
-
 use crate::{GaugeGroup, LinkVariable, LinkVariableError};
-use deep_causality_tensor::CausalTensor;
+use deep_causality_tensor::{CausalTensor, TensorData};
 use std::marker::PhantomData;
 
-impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
+impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
     /// Hermitian conjugate U†.
     ///
     /// For real matrices, this is the transpose.
@@ -20,10 +15,7 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
     /// # Errors
     ///
     /// Returns error if tensor creation fails.
-    pub fn try_dagger(&self) -> Result<Self, LinkVariableError>
-    where
-        T: Clone,
-    {
+    pub fn try_dagger(&self) -> Result<Self, LinkVariableError> {
         let n = G::matrix_dim();
         let slice = self.data.as_slice();
         let mut result = vec![T::default(); n * n];
@@ -31,7 +23,7 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
         // Transpose (for real matrices, dagger = transpose)
         for i in 0..n {
             for j in 0..n {
-                result[j * n + i] = slice[i * n + j].clone();
+                result[j * n + i] = slice[i * n + j];
             }
         }
 
@@ -46,10 +38,7 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
     /// Hermitian conjugate U† (convenience method).
     ///
     /// For real matrices, this is the transpose.
-    pub fn dagger(&self) -> Self
-    where
-        T: Clone,
-    {
+    pub fn dagger(&self) -> Self {
         // This is a simple memory operation that cannot fail for valid LinkVariable
         let n = G::matrix_dim();
         let slice = self.data.as_slice();
@@ -57,7 +46,7 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
 
         for i in 0..n {
             for j in 0..n {
-                result[j * n + i] = slice[i * n + j].clone();
+                result[j * n + i] = slice[i * n + j];
             }
         }
 
@@ -84,10 +73,7 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
     /// # Errors
     ///
     /// Returns error if tensor creation fails.
-    pub fn try_mul(&self, other: &Self) -> Result<Self, LinkVariableError>
-    where
-        T: Clone + std::ops::Mul<Output = T> + std::ops::Add<Output = T>,
-    {
+    pub fn try_mul(&self, other: &Self) -> Result<Self, LinkVariableError> {
         let n = G::matrix_dim();
         let a = self.data.as_slice();
         let b = other.data.as_slice();
@@ -98,7 +84,7 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
             for j in 0..n {
                 let mut sum = T::default();
                 for k in 0..n {
-                    let prod = a[i * n + k].clone() * b[k * n + j].clone();
+                    let prod = a[i * n + k] * b[k * n + j];
                     sum = sum + prod;
                 }
                 result[i * n + j] = sum;
@@ -114,10 +100,7 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
     }
 
     /// Group multiplication: self * other (convenience method).
-    pub fn mul(&self, other: &Self) -> Self
-    where
-        T: Clone + std::ops::Mul<Output = T> + std::ops::Add<Output = T>,
-    {
+    pub fn mul(&self, other: &Self) -> Self {
         let n = G::matrix_dim();
         let a = self.data.as_slice();
         let b = other.data.as_slice();
@@ -127,7 +110,7 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
             for j in 0..n {
                 let mut sum = T::default();
                 for k in 0..n {
-                    let prod = a[i * n + k].clone() * b[k * n + j].clone();
+                    let prod = a[i * n + k] * b[k * n + j];
                     sum = sum + prod;
                 }
                 result[i * n + j] = sum;
@@ -146,17 +129,14 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
     /// # Errors
     ///
     /// Returns error if tensor creation fails.
-    pub fn try_add(&self, other: &Self) -> Result<Self, LinkVariableError>
-    where
-        T: Clone + std::ops::Add<Output = T>,
-    {
+    pub fn try_add(&self, other: &Self) -> Result<Self, LinkVariableError> {
         let n = G::matrix_dim();
         let a = self.data.as_slice();
         let b = other.data.as_slice();
         let mut result = vec![T::default(); n * n];
 
         for i in 0..(n * n) {
-            result[i] = a[i].clone() + b[i].clone();
+            result[i] = a[i] + b[i];
         }
 
         CausalTensor::new(result, vec![n, n])
@@ -168,17 +148,14 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
     }
 
     /// Matrix addition: self + other (convenience method).
-    pub fn add(&self, other: &Self) -> Self
-    where
-        T: Clone + std::ops::Add<Output = T>,
-    {
+    pub fn add(&self, other: &Self) -> Self {
         let n = G::matrix_dim();
         let a = self.data.as_slice();
         let b = other.data.as_slice();
         let mut result = vec![T::default(); n * n];
 
         for i in 0..(n * n) {
-            result[i] = a[i].clone() + b[i].clone();
+            result[i] = a[i] + b[i];
         }
 
         Self {
@@ -193,16 +170,13 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
     /// # Errors
     ///
     /// Returns error if tensor creation fails.
-    pub fn try_scale(&self, alpha: &T) -> Result<Self, LinkVariableError>
-    where
-        T: Clone + std::ops::Mul<Output = T>,
-    {
+    pub fn try_scale(&self, alpha: &T) -> Result<Self, LinkVariableError> {
         let n = G::matrix_dim();
         let a = self.data.as_slice();
         let mut result = vec![T::default(); n * n];
 
         for i in 0..(n * n) {
-            result[i] = alpha.clone() * a[i].clone();
+            result[i] = *alpha * a[i];
         }
 
         CausalTensor::new(result, vec![n, n])
@@ -214,16 +188,13 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
     }
 
     /// Scalar multiplication: α * self (convenience method).
-    pub fn scale(&self, alpha: &T) -> Self
-    where
-        T: Clone + std::ops::Mul<Output = T>,
-    {
+    pub fn scale(&self, alpha: &T) -> Self {
         let n = G::matrix_dim();
         let a = self.data.as_slice();
         let mut result = vec![T::default(); n * n];
 
         for i in 0..(n * n) {
-            result[i] = alpha.clone() * a[i].clone();
+            result[i] = *alpha * a[i];
         }
 
         Self {
@@ -234,16 +205,13 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
     }
 
     /// Trace of the matrix: Tr(U) = Σ_i U_ii.
-    pub fn trace(&self) -> T
-    where
-        T: Clone + std::ops::Add<Output = T>,
-    {
+    pub fn trace(&self) -> T {
         let n = G::matrix_dim();
         let slice = self.data.as_slice();
         let mut sum = T::default();
 
         for i in 0..n {
-            sum = sum + slice[i * n + i].clone();
+            sum = sum + slice[i * n + i];
         }
         sum
     }
@@ -252,25 +220,19 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
     ///
     /// For real T, this is identical to trace().
     #[inline]
-    pub fn re_trace(&self) -> T
-    where
-        T: Clone + std::ops::Add<Output = T>,
-    {
+    pub fn re_trace(&self) -> T {
         self.trace()
     }
 
     /// Frobenius norm squared: ||U||²_F = Tr(U†U) = Σ_{ij} |U_ij|².
     ///
     /// For real matrices: Σ_{ij} U_ij².
-    pub fn frobenius_norm_sq(&self) -> T
-    where
-        T: Clone + std::ops::Mul<Output = T> + std::ops::Add<Output = T>,
-    {
+    pub fn frobenius_norm_sq(&self) -> T {
         let slice = self.data.as_slice();
         let mut sum = T::default();
 
         for val in slice {
-            sum = sum + val.clone() * val.clone();
+            sum = sum + *val * *val;
         }
         sum
     }
@@ -290,13 +252,7 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
     /// Returns `LinkVariableError::NumericalError` for other numerical issues.
     pub fn project_sun(&self) -> Result<Self, LinkVariableError>
     where
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + From<f64>
-            + PartialOrd,
+        T: From<f64>,
     {
         // For real matrices, polar decomposition: U = M (M^T M)^{-1/2}
         // We use iterative Newton-Schulz iteration:
@@ -357,12 +313,7 @@ fn compute_identity_deviation<G: GaugeGroup, T>(
     x: &LinkVariable<G, T>,
 ) -> Result<T, LinkVariableError>
 where
-    T: Clone
-        + Default
-        + std::ops::Add<Output = T>
-        + std::ops::Sub<Output = T>
-        + std::ops::Mul<Output = T>
-        + From<f64>,
+    T: TensorData + From<f64>,
 {
     let n = G::matrix_dim();
     let slice = x.as_slice();
@@ -371,9 +322,9 @@ where
 
     for i in 0..n {
         for j in 0..n {
-            let val = slice[i * n + j].clone();
-            let diff = if i == j { val - one.clone() } else { val };
-            sum = sum + diff.clone() * diff;
+            let val = slice[i * n + j];
+            let diff = if i == j { val - one } else { val };
+            sum = sum + diff * diff;
         }
     }
 

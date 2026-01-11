@@ -8,12 +8,13 @@
 //! These methods extract continuum field theory quantities from lattice configurations.
 
 use crate::{CWComplex, GaugeGroup, LatticeGaugeField, LinkVariable, TopologyError};
+use deep_causality_tensor::TensorData;
 
 // ============================================================================
 // Continuum Limit Quantities
 // ============================================================================
 
-impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, T> {
+impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Extract the naive lattice field strength tensor F_μν.
     ///
     /// Computes an approximation to the continuum field strength from the plaquette.
@@ -61,13 +62,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
         nu: usize,
     ) -> Result<LinkVariable<G, T>, TopologyError>
     where
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>,
+        T: From<f64>,
     {
         if mu == nu {
             // F_μμ = 0 by antisymmetry
@@ -125,13 +120,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     /// Returns error if field strength computation fails.
     pub fn try_topological_charge_density(&self, site: &[usize; D]) -> Result<T, TopologyError>
     where
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>,
+        T: From<f64>,
     {
         if D < 4 {
             // Topological charge requires 4 dimensions
@@ -179,13 +168,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     /// Returns error if computation fails.
     pub fn try_topological_charge(&self) -> Result<T, TopologyError>
     where
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>,
+        T: From<f64>,
     {
         let mut total = T::from(0.0);
 

@@ -6,7 +6,7 @@
 use crate::{GaugeGroup, LinkVariable};
 use deep_causality_tensor::CausalTensor;
 
-impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
+impl<G: GaugeGroup, T> LinkVariable<G, T> {
     /// Matrix data as tensor reference.
     ///
     /// # Returns

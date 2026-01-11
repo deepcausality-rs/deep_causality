@@ -8,12 +8,13 @@
 //! Note: For robust gauge transformations with error handling, see `ops_gauge_transform.rs`.
 
 use crate::{GaugeGroup, LatticeGaugeField, LinkVariable};
+use deep_causality_tensor::TensorData;
 use std::collections::HashMap;
 
 // ============================================================================
 // Gauge Transformations
 // ============================================================================
-impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, T> {
+impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Apply a gauge transformation (infallible version).
     ///
     /// # Mathematics
@@ -34,10 +35,6 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     pub fn gauge_transform<F>(&mut self, gauge_fn: F)
     where
         F: Fn(&[usize; D]) -> LinkVariable<G, T>,
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Neg<Output = T>,
     {
         let shape = self.lattice.shape();
         let new_links: HashMap<_, _> = self

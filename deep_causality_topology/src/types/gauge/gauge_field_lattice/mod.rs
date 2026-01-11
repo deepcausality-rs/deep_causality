@@ -20,6 +20,7 @@ use crate::errors::topology_error::TopologyError;
 use crate::traits::cw_complex::CWComplex;
 use crate::types::gauge::link_variable::LinkVariable;
 use crate::{GaugeGroup, Lattice, LatticeCell};
+use deep_causality_tensor::TensorData;
 use std::collections::HashMap;
 use std::sync::Arc;
 mod display;
@@ -64,7 +65,7 @@ pub struct LatticeGaugeField<G: GaugeGroup, const D: usize, T> {
 // Constructors
 // ============================================================================
 
-impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, T> {
+impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Create with all links set to identity.
     ///
     /// This is a "cold start" configuration representing the trivial vacuum.
@@ -171,13 +172,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     ) -> Result<Self, TopologyError>
     where
         R: deep_causality_rand::Rng,
-        T: From<f64>
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + PartialOrd,
+        T: From<f64> + PartialOrd,
     {
         let mut links = HashMap::new();
 
@@ -203,13 +198,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     pub fn random<R>(lattice: Arc<Lattice<D>>, beta: T, rng: &mut R) -> Self
     where
         R: deep_causality_rand::Rng,
-        T: From<f64>
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + PartialOrd,
+        T: From<f64> + PartialOrd,
     {
         Self::try_random(lattice, beta, rng)
             .unwrap_or_else(|e| panic!("Random field creation failed: {}", e))

@@ -9,6 +9,7 @@
 //! towards the stationary points of the action. Used for scale setting and renormalization.
 
 use crate::{CWComplex, GaugeGroup, LatticeGaugeField, TopologyError};
+use deep_causality_tensor::TensorData;
 use std::collections::HashMap;
 
 // ============================================================================
@@ -46,7 +47,7 @@ impl<T: From<f64>> FlowParams<T> {
     }
 }
 
-impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, T> {
+impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Perform gradient flow integration.
     ///
     /// # Mathematics
@@ -77,18 +78,11 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     /// Returns error if flow computation fails.
     pub fn try_flow(&self, params: &FlowParams<T>) -> Result<Self, TopologyError>
     where
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>
-            + PartialOrd,
+        T: From<f64> + PartialOrd,
     {
         let mut current = self.clone();
         let mut t = T::from(0.0);
-        let epsilon = params.epsilon.clone();
+        let epsilon = params.epsilon;
 
         // Integrate from t=0 to t=t_max
         while t < params.t_max {
@@ -96,7 +90,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
                 FlowMethod::Euler => current.try_euler_step(&epsilon)?,
                 FlowMethod::RungeKutta3 => current.try_rk3_step(&epsilon)?,
             };
-            t = t + epsilon.clone();
+            t = t + epsilon;
         }
 
         Ok(current)
@@ -105,14 +99,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     /// Single Euler step of gradient flow.
     fn try_euler_step(&self, epsilon: &T) -> Result<Self, TopologyError>
     where
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>
-            + PartialOrd,
+        T: From<f64> + PartialOrd,
     {
         let mut new_links = HashMap::new();
         let n = G::matrix_dim();
@@ -126,10 +113,8 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
 
             // Force: F = β (U·V† - (1/N) Tr(U·V†) I) / N
             // For flow: we use simplified form proportional to staple
-            let neg_eps = T::from(-1.0) * epsilon.clone();
-            let update = u_v_dag
-                .scale(&neg_eps)
-                .scale(&(self.beta.clone() / n_t.clone()));
+            let neg_eps = T::from(-1.0) * *epsilon;
+            let update = u_v_dag.scale(&neg_eps).scale(&(self.beta / n_t));
 
             // U' = U + ε F, then project
             let new_u = u.add(&update);
@@ -141,21 +126,14 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
         Ok(Self {
             lattice: self.lattice.clone(),
             links: new_links,
-            beta: self.beta.clone(),
+            beta: self.beta,
         })
     }
 
     /// Single 3rd-order Runge-Kutta step of gradient flow.
     fn try_rk3_step(&self, epsilon: &T) -> Result<Self, TopologyError>
     where
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>
-            + PartialOrd,
+        T: From<f64> + PartialOrd,
     {
         // Lüscher's 3rd order RK scheme:
         // W0 = V(t)
@@ -165,13 +143,13 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
         //
         // For simplicity, we use three Euler-like steps with weights
 
-        let eps_quarter = epsilon.clone() * T::from(0.25);
+        let eps_quarter = *epsilon * T::from(0.25);
         let step1 = self.try_euler_step(&eps_quarter)?;
 
-        let eps_half = epsilon.clone() * T::from(0.5);
+        let eps_half = *epsilon * T::from(0.5);
         let step2 = step1.try_euler_step(&eps_half)?;
 
-        let eps_quarter_final = epsilon.clone() * T::from(0.25);
+        let eps_quarter_final = *epsilon * T::from(0.25);
         step2.try_euler_step(&eps_quarter_final)
     }
 
@@ -196,13 +174,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     /// Returns error if computation fails.
     pub fn try_energy_density(&self) -> Result<T, TopologyError>
     where
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>,
+        T: From<f64>,
     {
         let n = G::matrix_dim();
         let n_t = T::from(n as f64);
@@ -217,7 +189,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
                 for nu in (mu + 1)..D {
                     let plaq = self.try_plaquette(&site, mu, nu)?;
                     let tr = plaq.re_trace();
-                    let e_p = one.clone() - tr / n_t.clone();
+                    let e_p = one - tr / n_t;
                     sum = sum + e_p;
                     count += 1;
                 }
@@ -240,16 +212,10 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     /// Returns error if computation fails.
     pub fn try_t2_energy(&self, t: T) -> Result<T, TopologyError>
     where
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>,
+        T: From<f64>,
     {
         let e = self.try_energy_density()?;
-        Ok(t.clone() * t * e)
+        Ok(t * t * e)
     }
 
     /// Find t₀ scale where t² E(t) = 0.3.
@@ -291,22 +257,17 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     /// - t² E(t) never reaches 0.3 within t_max
     pub fn try_find_t0(&self, params: &FlowParams<T>) -> Result<T, TopologyError>
     where
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>
-            + PartialOrd,
+        T: From<f64> + PartialOrd,
     {
+        let _target = T::from(0.3);
+
         let target = T::from(0.3);
         let mut current = self.clone();
         let mut t = T::from(0.0);
-        let epsilon = params.epsilon.clone();
+        let epsilon = params.epsilon;
 
-        let mut prev_t = t.clone();
-        let mut prev_t2e = current.try_t2_energy(t.clone())?;
+        let mut prev_t = t;
+        let mut prev_t2e = current.try_t2_energy(t)?;
 
         // Flow until t² E(t) crosses 0.3
         while t < params.t_max {
@@ -314,21 +275,21 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
                 FlowMethod::Euler => current.try_euler_step(&epsilon)?,
                 FlowMethod::RungeKutta3 => current.try_rk3_step(&epsilon)?,
             };
-            t = t.clone() + epsilon.clone();
+            t = t + epsilon;
 
-            let t2e = current.try_t2_energy(t.clone())?;
+            let t2e = current.try_t2_energy(t)?;
 
             // Check if we crossed the target
-            if t2e >= target.clone() && prev_t2e < target.clone() {
+            if t2e >= target && prev_t2e < target {
                 // Linear interpolation to find t₀
                 // t₀ ≈ prev_t + (target - prev_t2e) * ε / (t2e - prev_t2e)
-                let dt = t.clone() - prev_t.clone();
-                let d_t2e = t2e.clone() - prev_t2e.clone();
-                let ratio = (target.clone() - prev_t2e.clone()) / d_t2e;
+                let dt = t - prev_t;
+                let d_t2e = t2e - prev_t2e;
+                let ratio = (target - prev_t2e) / d_t2e;
                 return Ok(prev_t + ratio * dt);
             }
 
-            prev_t = t.clone();
+            prev_t = t;
             prev_t2e = t2e;
         }
 

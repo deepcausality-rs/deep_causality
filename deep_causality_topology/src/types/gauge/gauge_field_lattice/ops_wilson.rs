@@ -8,11 +8,12 @@
 //! Implements the standard Wilson gauge action and Wilson/Polyakov loop observables.
 
 use crate::{CWComplex, GaugeGroup, LatticeCell, LatticeGaugeField, TopologyError};
+use deep_causality_tensor::TensorData;
 
 // ============================================================================
 // Wilson Action
 // ============================================================================
-impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, T> {
+impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Compute the global Wilson gauge action.
     ///
     /// # Mathematics
@@ -33,13 +34,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     /// Returns error if plaquette computation fails.
     pub fn try_wilson_action(&self) -> Result<T, TopologyError>
     where
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>,
+        T: From<f64>,
     {
         let n = G::matrix_dim();
         let n_t = T::from(n as f64);
@@ -55,14 +50,14 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
                     let plaq = self.try_plaquette(&site, mu, nu)?;
                     let tr = plaq.re_trace();
                     // S_p = 1 - Re[Tr(U_p)] / N
-                    let s_p = one.clone() - tr / n_t.clone();
+                    let s_p = one - tr / n_t;
                     action = action + s_p;
                 }
             }
         }
 
         // Multiply by β
-        Ok(self.beta.clone() * action)
+        Ok(self.beta * action)
     }
 
     /// Action contribution from a single plaquette.
@@ -91,13 +86,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
         nu: usize,
     ) -> Result<T, TopologyError>
     where
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>,
+        T: From<f64>,
     {
         let n = G::matrix_dim();
         let n_t = T::from(n as f64);
@@ -107,15 +96,13 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
         let tr = plaq.re_trace();
         let s_p = one - tr / n_t;
 
-        Ok(self.beta.clone() * s_p)
+        Ok(self.beta * s_p)
     }
-}
 
-// ============================================================================
-// Wilson Loops
-// ============================================================================
+    // ============================================================================
+    // Wilson Loops
+    // ============================================================================
 
-impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, T> {
     /// Compute an R×T rectangular Wilson loop.
     ///
     /// The Wilson loop is the trace of the ordered product of link variables
@@ -165,12 +152,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
         t: usize,
     ) -> Result<T, TopologyError>
     where
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>,
+        T: From<f64>,
     {
         if r_dir >= D || t_dir >= D || r_dir == t_dir {
             return Err(TopologyError::LatticeGaugeError(format!(
@@ -272,12 +254,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
         temporal_dir: usize,
     ) -> Result<T, TopologyError>
     where
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>,
+        T: From<f64>,
     {
         if temporal_dir >= D {
             return Err(TopologyError::LatticeGaugeError(format!(
@@ -327,13 +304,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     /// Returns error if computation fails.
     pub fn try_average_polyakov_loop(&self, temporal_dir: usize) -> Result<T, TopologyError>
     where
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>,
+        T: From<f64>,
     {
         let mut sum = T::from(0.0);
         let mut count = 0usize;

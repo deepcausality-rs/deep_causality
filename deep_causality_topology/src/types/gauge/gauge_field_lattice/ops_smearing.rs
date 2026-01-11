@@ -9,6 +9,7 @@
 //! to reduce ultraviolet fluctuations and enhance the signal of long-range physics.
 
 use crate::{GaugeGroup, LatticeGaugeField, TopologyError};
+use deep_causality_tensor::TensorData;
 use std::collections::HashMap;
 
 // ============================================================================
@@ -42,7 +43,7 @@ impl<T: From<f64>> SmearingParams<T> {
     }
 }
 
-impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, T> {
+impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Apply APE smearing to the gauge field.
     ///
     /// # Mathematics
@@ -74,18 +75,11 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     /// Returns error if smearing computation fails.
     pub fn try_smear(&self, params: &SmearingParams<T>) -> Result<Self, TopologyError>
     where
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>
-            + PartialOrd,
+        T: From<f64> + PartialOrd,
     {
         let mut current = self.clone();
-        let alpha = params.alpha.clone();
-        let one_minus_alpha = T::from(1.0) - alpha.clone();
+        let alpha = params.alpha;
+        let one_minus_alpha = T::from(1.0) - alpha;
         let staple_weight = alpha / T::from(2.0 * (D - 1) as f64);
 
         for _step in 0..params.n_steps {

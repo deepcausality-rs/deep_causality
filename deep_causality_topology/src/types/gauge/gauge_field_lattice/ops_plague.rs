@@ -9,8 +9,9 @@
 //! and rectangles (1x2 loops) used in actions and observables.
 
 use crate::{CWComplex, GaugeGroup, LatticeCell, LatticeGaugeField, LinkVariable, TopologyError};
+use deep_causality_tensor::TensorData;
 
-impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, T> {
+impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Compute the plaquette U_μν(n) at a given site.
     ///
     /// # Mathematics
@@ -45,11 +46,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
         nu: usize,
     ) -> Result<LinkVariable<G, T>, TopologyError>
     where
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>,
+        T: From<f64>,
     {
         if mu >= D || nu >= D || mu == nu {
             return Err(TopologyError::LatticeGaugeError(format!(
@@ -124,11 +121,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
         nu: usize,
     ) -> Result<LinkVariable<G, T>, TopologyError>
     where
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>,
+        T: From<f64>,
     {
         if mu >= D || nu >= D || mu == nu {
             return Err(TopologyError::LatticeGaugeError(format!(
@@ -194,12 +187,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     /// Returns error if plaquette computation fails.
     pub fn try_average_plaquette(&self) -> Result<T, TopologyError>
     where
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>,
+        T: From<f64>,
     {
         let n = G::matrix_dim();
         let n_t = T::from(n as f64);

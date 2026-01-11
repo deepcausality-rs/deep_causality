@@ -26,6 +26,7 @@
 
 use crate::{GaugeGroup, Lattice, LatticeGaugeField, LinkVariable, TopologyError};
 use deep_causality_haft::{Applicative, Functor, HKT, Monad, NoConstraint, Pure, Satisfies};
+use deep_causality_tensor::TensorData;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::sync::Arc;
@@ -61,7 +62,7 @@ impl<G: GaugeGroup, const D: usize> LatticeGaugeFieldWitness<G, D> {
 // ============================================================================
 
 impl<G: GaugeGroup, const D: usize> HKT for LatticeGaugeFieldWitness<G, D> {
-    type Constraint = NoConstraint;
+    type Constraint = NoConstraint; // Or TensorData if we could enforce it on HKT
     type Type<T>
         = LatticeGaugeField<G, D, T>
     where
@@ -204,12 +205,12 @@ impl<G: GaugeGroup, const D: usize> LatticeGaugeFieldWitness<G, D> {
         mut f: F,
     ) -> LatticeGaugeField<G, D, B>
     where
-        A: Clone + Default,
-        B: Clone + Default,
+        A: TensorData, // Changed from Clone + Default to TensorData
+        B: TensorData, // Changed from Clone + Default to TensorData
         F: FnMut(A) -> B,
     {
         let lattice = field.lattice_arc().clone();
-        let beta = f(field.beta().clone());
+        let beta = f(*field.beta());
 
         // Transform all link variables
         let mut new_links = HashMap::with_capacity(field.links().len());
@@ -242,7 +243,7 @@ impl<G: GaugeGroup, const D: usize> LatticeGaugeFieldWitness<G, D> {
         mut f: F,
     ) -> Result<LatticeGaugeField<G, D, T>, TopologyError>
     where
-        T: Clone + Default,
+        T: TensorData, // Changed from Clone + Default to TensorData
         F: FnMut(&T, &T) -> T,
     {
         // Validate lattice shapes match
@@ -286,10 +287,10 @@ impl<G: GaugeGroup, const D: usize> LatticeGaugeFieldWitness<G, D> {
         factor: T,
     ) -> LatticeGaugeField<G, D, T>
     where
-        T: Clone + Default + std::ops::Mul<Output = T>,
+        T: TensorData + std::ops::Mul<Output = T>,
     {
-        let factor_clone = factor.clone();
-        Self::map_field(field, move |x| x * factor_clone.clone())
+        let factor_clone = factor;
+        Self::map_field(field, move |x| x * factor_clone)
     }
 
     /// Create an identity field on the given lattice.
@@ -300,7 +301,7 @@ impl<G: GaugeGroup, const D: usize> LatticeGaugeFieldWitness<G, D> {
         beta: T,
     ) -> Result<LatticeGaugeField<G, D, T>, TopologyError>
     where
-        T: Clone + Default + From<f64>,
+        T: TensorData + From<f64>,
     {
         LatticeGaugeField::try_identity(lattice, beta)
     }
@@ -312,13 +313,14 @@ fn map_link_variable<G: GaugeGroup, A, B, F>(
     f: &mut F,
 ) -> LinkVariable<G, B>
 where
-    A: Clone + Default,
-    B: Clone + Default,
+    A: TensorData,
+    B: TensorData,
     F: FnMut(A) -> B,
 {
     let n = G::matrix_dim();
+
     let old_data = link.as_slice();
-    let new_data: Vec<B> = old_data.iter().map(|x| f(x.clone())).collect();
+    let new_data: Vec<B> = old_data.iter().map(|x| f(*x)).collect();
 
     let tensor = deep_causality_tensor::CausalTensor::new(new_data, vec![n, n])
         .unwrap_or_else(|_| panic!("LinkVariable fmap failed for {}x{} matrix", n, n));
@@ -333,7 +335,7 @@ fn zip_link_variables<G: GaugeGroup, T, F>(
     f: &mut F,
 ) -> LinkVariable<G, T>
 where
-    T: Clone + Default,
+    T: TensorData,
     F: FnMut(&T, &T) -> T,
 {
     let n = G::matrix_dim();

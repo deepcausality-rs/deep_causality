@@ -10,7 +10,7 @@
 //!
 
 use crate::{GaugeGroup, LinkVariableError};
-use deep_causality_tensor::CausalTensor;
+use deep_causality_tensor::{CausalTensor, TensorData};
 use std::marker::PhantomData;
 
 mod display;
@@ -41,7 +41,7 @@ pub struct LinkVariable<G: GaugeGroup, T> {
     _gauge: PhantomData<G>,
 }
 
-impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
+impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
     /// Create the identity link (unit element of G).
     ///
     /// Returns the N×N identity matrix for SU(N).
@@ -202,14 +202,7 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
     pub fn try_random<R>(rng: &mut R) -> Result<Self, LinkVariableError>
     where
         R: deep_causality_rand::Rng,
-        T: From<f64>
-            + Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + PartialOrd,
+        T: From<f64> + PartialOrd,
     {
         let n = G::matrix_dim();
         if n == 0 {
@@ -247,14 +240,7 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
     pub fn random<R>(rng: &mut R) -> Self
     where
         R: deep_causality_rand::Rng,
-        T: From<f64>
-            + Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + PartialOrd,
+        T: From<f64> + PartialOrd,
     {
         Self::try_random(rng)
             .unwrap_or_else(|e| panic!("Random link creation failed for {}: {}", G::name(), e))

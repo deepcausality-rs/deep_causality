@@ -9,6 +9,7 @@
 //! These actions reduce discretization errors from $O(a^2)$ to $O(a^4)$ or better.
 
 use crate::{CWComplex, GaugeGroup, LatticeGaugeField, TopologyError};
+use deep_causality_tensor::TensorData;
 
 /// Coefficients for improved gauge actions.
 #[derive(Debug, Clone, Copy)]
@@ -47,7 +48,7 @@ impl<T: From<f64> + Clone> ActionCoeffs<T> {
     }
 }
 
-impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, T> {
+impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Compute the Symanzik-improved gauge action.
     ///
     /// # Mathematics
@@ -79,13 +80,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     /// Returns error if plaquette/rectangle computation fails.
     pub fn try_improved_action(&self, coeffs: &ActionCoeffs<T>) -> Result<T, TopologyError>
     where
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>,
+        T: From<f64>,
     {
         let n = G::matrix_dim();
         let n_t = T::from(n as f64);
@@ -102,25 +97,25 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
                     // Plaquette contribution
                     let plaq = self.try_plaquette(&site, mu, nu)?;
                     let tr_plaq = plaq.re_trace();
-                    let s_plaq = one.clone() - tr_plaq / n_t.clone();
+                    let s_plaq = one - tr_plaq / n_t;
                     plaq_sum = plaq_sum + s_plaq;
 
                     // Rectangle (1×2) contribution - two orientations
                     let rect1 = self.try_rectangle(&site, mu, nu)?;
                     let tr_rect1 = rect1.re_trace();
-                    let s_rect1 = one.clone() - tr_rect1 / n_t.clone();
+                    let s_rect1 = one - tr_rect1 / n_t;
                     rect_sum = rect_sum + s_rect1;
 
                     // Rectangle (2×1) = (1×2) with swapped directions
                     let rect2 = self.try_rectangle(&site, nu, mu)?;
                     let tr_rect2 = rect2.re_trace();
-                    let s_rect2 = one.clone() - tr_rect2 / n_t.clone();
+                    let s_rect2 = one - tr_rect2 / n_t;
                     rect_sum = rect_sum + s_rect2;
                 }
             }
         }
 
         // S = β * (c_0 * plaq_sum + c_1 * rect_sum)
-        Ok(self.beta.clone() * (coeffs.c0.clone() * plaq_sum + coeffs.c1.clone() * rect_sum))
+        Ok(self.beta * (coeffs.c0 * plaq_sum + coeffs.c1 * rect_sum))
     }
 }

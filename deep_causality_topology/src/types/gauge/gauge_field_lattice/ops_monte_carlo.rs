@@ -9,11 +9,12 @@
 //! and local action changes.
 
 use crate::{GaugeGroup, LatticeCell, LatticeGaugeField, LinkVariable, TopologyError};
+use deep_causality_tensor::TensorData;
 
 // ============================================================================
 // Monte Carlo Updates
 // ============================================================================
-impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, T> {
+impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Compute the staple sum for a given link.
     ///
     /// # Mathematics
@@ -42,11 +43,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     /// Returns error if staple computation fails.
     pub fn try_staple(&self, edge: &LatticeCell<D>) -> Result<LinkVariable<G, T>, TopologyError>
     where
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>,
+        T: From<f64>,
     {
         let site = *edge.position();
         let mu = edge.orientation().trailing_zeros() as usize;
@@ -130,13 +127,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
         new_link: &LinkVariable<G, T>,
     ) -> Result<T, TopologyError>
     where
-        T: Clone
-            + std::ops::Mul<Output = T>
-            + std::ops::Add<Output = T>
-            + std::ops::Sub<Output = T>
-            + std::ops::Div<Output = T>
-            + std::ops::Neg<Output = T>
-            + From<f64>,
+        T: From<f64>,
     {
         let old_link = self.get_link_or_identity(edge);
         let staple = self.try_staple(edge)?;
@@ -146,10 +137,11 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
 
         // ΔS = β * (Re[Tr(U·V†)] - Re[Tr(U'·V†)]) / N
         // (This is the change in action, negative means lower action)
+
         let staple_dag = staple.dagger();
         let old_tr = old_link.mul(&staple_dag).re_trace();
         let new_tr = new_link.mul(&staple_dag).re_trace();
 
-        Ok(self.beta.clone() * (old_tr - new_tr) / n_t)
+        Ok(self.beta * (old_tr - new_tr) / n_t)
     }
 }
