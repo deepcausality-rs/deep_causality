@@ -37,6 +37,7 @@ mod ops_metropolis;
 mod ops_monte_carlo;
 mod ops_plague;
 mod ops_smearing;
+
 mod ops_wilson;
 mod utils;
 

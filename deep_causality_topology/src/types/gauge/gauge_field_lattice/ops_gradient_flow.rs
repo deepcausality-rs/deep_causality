@@ -301,7 +301,7 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
         }
 
         Err(TopologyError::LatticeGaugeError(
-            "t² E(t) did not reach 0.3 within t_max".to_string()
+            "t² E(t) did not reach 0.3 within t_max".to_string(),
         ))
     }
 }

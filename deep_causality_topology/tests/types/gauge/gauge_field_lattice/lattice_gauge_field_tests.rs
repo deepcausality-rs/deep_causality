@@ -429,7 +429,7 @@ fn test_lattice_gauge_field_metropolis_sweep_f64() {
     assert!(acceptance.is_ok());
 
     let rate = acceptance.unwrap();
-    assert!(rate >= 0.0 && rate <= 1.0, "Acceptance rate = {}", rate);
+    assert!((0.0..=1.0).contains(&rate), "Acceptance rate = {}", rate);
 }
 
 #[test]

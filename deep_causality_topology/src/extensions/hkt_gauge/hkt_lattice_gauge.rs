@@ -25,7 +25,7 @@
 //! - **Monad::bind**: Chain field transformations
 
 use crate::{GaugeGroup, Lattice, LatticeGaugeField, LinkVariable, TopologyError};
-use deep_causality_haft::{Functor, HKT, Monad, NoConstraint, Pure, Satisfies};
+use deep_causality_haft::{Applicative, Functor, HKT, Monad, NoConstraint, Pure, Satisfies};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::sync::Arc;
@@ -97,6 +97,38 @@ impl<G: GaugeGroup, const D: usize> Functor<LatticeGaugeFieldWitness<G, D>>
 
         // Create empty field with new beta (links cannot be transformed without Clone)
         LatticeGaugeField::from_links_unchecked(lattice, HashMap::new(), beta)
+    }
+}
+
+// ============================================================================
+// Applicative Implementation
+// ============================================================================
+
+/// Applicative implementation: apply a wrapped function to a wrapped value.
+impl<G: GaugeGroup, const D: usize> Applicative<LatticeGaugeFieldWitness<G, D>>
+    for LatticeGaugeFieldWitness<G, D>
+{
+    /// Apply a function wrapped in a field to a value wrapped in a field.
+    ///
+    /// Combines the beta parameter (function) from `fab` with the beta parameter
+    /// (value) from `fa`. Links are discarded/reset as per HKT limitation.
+    fn apply<A, B, F>(
+        fab: LatticeGaugeField<G, D, F>,
+        fa: LatticeGaugeField<G, D, A>,
+    ) -> LatticeGaugeField<G, D, B>
+    where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
+        F: FnOnce(A) -> B + Satisfies<NoConstraint>,
+    {
+        let (_lattice_f, _links_f, f_beta) = fab.into_parts();
+        let (lattice_a, _links_a, a_beta) = fa.into_parts();
+
+        // Apply function to value
+        let b_beta = f_beta(a_beta);
+
+        // Create new field
+        LatticeGaugeField::from_links_unchecked(lattice_a, HashMap::new(), b_beta)
     }
 }
 

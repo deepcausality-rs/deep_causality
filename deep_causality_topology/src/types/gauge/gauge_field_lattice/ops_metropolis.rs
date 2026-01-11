@@ -202,7 +202,6 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
 
 // Helper for f64 conversion when T: Into<f64>
 impl<G: GaugeGroup, const D: usize> LatticeGaugeField<G, D, f64> {
-
     /// Metropolis update specialized for f64.
     pub fn metropolis_update_f64<R>(
         &mut self,

@@ -13,6 +13,7 @@ mod hkt_graph_tests;
 #[cfg(test)]
 mod hkt_hypergraph_tests;
 #[cfg(test)]
+mod hkt_lattice_gauge_tests;
 mod hkt_manifold_tests;
 #[cfg(test)]
 mod hkt_point_cloud_tests;

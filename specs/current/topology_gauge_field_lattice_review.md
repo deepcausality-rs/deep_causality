@@ -190,9 +190,6 @@ smearing algorithms have partial implementations.
 | `tests/types/gauge/link_variable/`       | ✅ 30+ tests |
 | `tests/types/gauge/gauge_groups/`        | ✅           |
 
-> [!WARNING]
-> The `groups_tests.rs` file was deleted. Re-create gauge group tests.
-
 ---
 
 ## 9. Gaps Summary
