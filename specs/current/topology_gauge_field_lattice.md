@@ -661,7 +661,7 @@ impl<G: GaugeGroup, const D: usize, T> LatticeGaugeField<G, D, T> {
     /// # Arguments
     /// * `edge` - The link to update
     /// * `proposal` - Function generating a random proposal U'
-    /// * `rng` - Random number generator
+    /// * `rng` - Random number generator (from deep_causality_rand)
     ///
     /// # Returns
     /// `true` if the update was accepted, `false` otherwise.
@@ -672,14 +672,14 @@ impl<G: GaugeGroup, const D: usize, T> LatticeGaugeField<G, D, T> {
         rng: &mut R,
     ) -> bool
     where
-        R: rand::Rng,
+        R: deep_causality_rand::Rng,
         F: Fn(&LinkVariable<G, T>, &mut R) -> LinkVariable<G, T>,
         T: Clone + std::ops::Sub<Output=T> + PartialOrd + From<f64>;
 
     /// Perform a full Metropolis sweep over all links.
     pub fn metropolis_sweep<R, F>(&mut self, proposal: F, rng: &mut R) -> f64
     where
-        R: rand::Rng,
+        R: deep_causality_rand::Rng,
         F: Fn(&LinkVariable<G, T>, &mut R) -> LinkVariable<G, T>,
         T: Clone + std::ops::Sub<Output=T> + PartialOrd + From<f64>;
 }
@@ -705,13 +705,13 @@ impl<G: GaugeGroup, const D: usize, T> LatticeGaugeField<G, D, T> {
     /// Perform a heat bath update on a single link (SU(2) subgroup method).
     pub fn heat_bath_update<R>(&mut self, edge: &LatticeCell<D>, rng: &mut R)
     where
-        R: rand::Rng,
+        R: deep_causality_rand::Rng,
         T: Clone + std::ops::Mul<Output=T> + std::ops::Add<Output=T> + From<f64>;
 
     /// Perform a full heat bath sweep using Cabibbo-Marinari for SU(N).
     pub fn heat_bath_sweep<R>(&mut self, rng: &mut R) -> f64
     where
-        R: rand::Rng,
+        R: deep_causality_rand::Rng,
         T: Clone + std::ops::Mul<Output=T> + std::ops::Add<Output=T> + From<f64>;
 }
 ```

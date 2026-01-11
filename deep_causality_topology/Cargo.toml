@@ -18,6 +18,10 @@ path = "src/lib.rs"
 [features]
 # Default means CPU execution
 default = []
+# Enables random number generator from the host OS for secure random numbers.
+# Enabling os-random adds an indirect depdency on getrandom and libc.
+# Disabled by default to use native Rust prng instead.
+os-random = ["deep_causality_rand/os-random"]
 # MLX acceleration for Apple Silicon (M Series).
 # Forwards to deep_causality_tensor/mlx and deep_causality_multivector/mlx
 # for MLX / GPU-accelerated operations.
@@ -34,6 +38,10 @@ mlx-rs = { version = "0.25.3", features = ["metal"], optional = true }
 path = "../deep_causality_num"
 version = "0.1.11"
 default-features = false
+
+[dependencies.deep_causality_rand]
+path = "../deep_causality_rand"
+version = "0.1"
 
 [dependencies.deep_causality_sparse]
 path = "../deep_causality_sparse"

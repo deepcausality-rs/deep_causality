@@ -5,5 +5,5 @@
 
 mod gauge_field;
 mod gauge_field_lattice;
-mod groups;
+mod gauge_groups;
 mod link_variable;
