@@ -3,6 +3,11 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+//! Improved lattice gauge actions.
+//!
+//! Implements Symanzik-improved actions including Lüscher-Weisz, Iwasaki, and DBW2.
+//! These actions reduce discretization errors from $O(a^2)$ to $O(a^4)$ or better.
+
 use crate::{CWComplex, GaugeGroup, LatticeGaugeField, TopologyError};
 
 /// Coefficients for improved gauge actions.
@@ -43,9 +48,31 @@ impl<T: From<f64> + Clone> ActionCoeffs<T> {
 }
 
 impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, T> {
-    /// Compute Symanzik-improved action with given coefficients.
+    /// Compute the Symanzik-improved gauge action.
     ///
-    /// S = β [ c_0 Σ_□ (1 - Re[Tr(U_□)]/N) + c_1 Σ_⊟ (1 - Re[Tr(U_⊟)]/N) ]
+    /// # Mathematics
+    ///
+    /// The improved action includes both 1×1 plaquettes and 1×2 rectangles:
+    ///
+    /// $$S = \beta \left[ c_0 \sum_{plaq} \left(1 - \frac{1}{N}\text{ReTr}U_{plaq}\right)
+    ///                  + c_1 \sum_{rect} \left(1 - \frac{1}{N}\text{ReTr}U_{rect}\right) \right]$$
+    ///
+    /// Normalization: $c_0 + 8c_1 = 1$ ensures correct continuum limit.
+    ///
+    /// # Physics
+    ///
+    /// Improved actions suppress lattice artifacts (scaling violations).
+    /// - **Symanzik:** Tree-level improvement ($O(a^2)$ removed)
+    /// - **Iwasaki:** Renormalization group improved
+    /// - **DBW2:** doubly blocked Wilson 2 (better for thermodynamics)
+    ///
+    /// # Arguments
+    ///
+    /// * `coeffs` - Action coefficients ($c_0, c_1$)
+    ///
+    /// # Returns
+    ///
+    /// The total action value S.
     ///
     /// # Errors
     ///

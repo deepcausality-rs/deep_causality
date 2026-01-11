@@ -3,6 +3,11 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+//! Gradient flow evolution.
+//!
+//! Implements the Wilson flow equation to continuously smooth gauge fields
+//! towards the stationary points of the action. Used for scale setting and renormalization.
+
 use crate::{CWComplex, GaugeGroup, LatticeGaugeField, TopologyError};
 use std::collections::HashMap;
 
@@ -44,13 +49,28 @@ impl<T: From<f64>> FlowParams<T> {
 impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, T> {
     /// Perform gradient flow integration.
     ///
+    /// # Mathematics
+    ///
     /// Integrates the Wilson flow equation:
-    /// ∂V_μ(n,t)/∂t = -g₀² { ∂S/∂V_μ(n,t) } V_μ(n,t)
     ///
-    /// The derivative of the Wilson action with respect to link U is:
-    /// ∂S/∂U = β (U·V† - (1/N) Tr(U·V†) I) / N
+    /// $$\frac{\partial V_\mu(x,t)}{\partial t} = -g_0^2 \frac{\partial S_W}{\partial V_\mu(x,t)} V_\mu(x,t)$$
     ///
-    /// where V is the staple sum.
+    /// The derivative of the Wilson action is related to the staple $S_{\mu\nu}$:
+    /// $$\dot V_\mu = - \left( \nabla S_W \right) V_\mu$$
+    ///
+    /// # Physics
+    ///
+    /// Gradient flow introduces a flow time scale $t$ (dimension $[L^2]$).
+    /// Fields at flow time $t$ are effectively smeared over a radius $\sqrt{8t}$.
+    /// This defines a renormalization scheme where composite operators are finite.
+    ///
+    /// # Arguments
+    ///
+    /// * `params` - Integration parameters (step size $\epsilon$, algorithm, max time)
+    ///
+    /// # Returns
+    ///
+    /// The flowed gauge field at $t = t_{max}$.
     ///
     /// # Errors
     ///
@@ -155,9 +175,21 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
         step2.try_euler_step(&eps_quarter_final)
     }
 
-    /// Compute the energy density E = (1/V) Σ_p (1 - Re[Tr(U_p)]/N).
+    /// Compute the flow energy density E(t).
     ///
-    /// This is proportional to the action density.
+    /// # Mathematics
+    ///
+    /// $$E(t) = \frac{1}{2} \langle \text{Tr}(F_{\mu\nu} F_{\mu\nu}) \rangle
+    ///         \approx \sum_p \left(1 - \frac{1}{N}\text{ReTr} U_p\right)$$
+    ///
+    /// # Physics
+    ///
+    /// The energy density is a gauge invariant observable of dimension 4.
+    /// Under gradient flow, $\langle E(t) \rangle$ is a renormalized quantity.
+    ///
+    /// # Returns
+    ///
+    /// The average energy density.
     ///
     /// # Errors
     ///

@@ -3,22 +3,41 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+//! Plaquette and elementary loop operations.
+//!
+//! Calculates fundamental gauge invariant quantities like plaquettes (1x1 loops)
+//! and rectangles (1x2 loops) used in actions and observables.
+
 use crate::{CWComplex, GaugeGroup, LatticeCell, LatticeGaugeField, LinkVariable, TopologyError};
 
 impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, T> {
-    /// Compute the plaquette U_μν(n) at a given site in a given plane.
+    /// Compute the plaquette U_μν(n) at a given site.
     ///
-    /// Returns the ordered product of 4 links around the elementary square:
-    /// U_μν(n) = U_μ(n) U_ν(n+μ̂) U_μ†(n+ν̂) U_ν†(n)
+    /// # Mathematics
+    ///
+    /// The plaquette is the ordered product of links around a 1x1 unit square:
+    ///
+    /// $$U_{\mu\nu}(n) = U_\mu(n) U_\nu(n+\hat\mu) U_\mu^\dagger(n+\hat\nu) U_\nu^\dagger(n)$$
+    ///
+    /// # Physics
+    ///
+    /// The plaquette is the smallest gauge invariant closed loop.
+    /// It is related to the field strength tensor:
+    /// $U_{\mu\nu} = \exp(iga^2 F_{\mu\nu} + O(a^3))$
     ///
     /// # Arguments
+    ///
     /// * `site` - Base vertex position [x₀, x₁, ..., x_{D-1}]
     /// * `mu` - First direction (0 to D-1)
-    /// * `nu` - Second direction (0 to D-1), must differ from mu
+    /// * `nu` - Second direction (0 to D-1)
+    ///
+    /// # Returns
+    ///
+    /// The SU(N) matrix product around the plaquette.
     ///
     /// # Errors
     ///
-    /// Returns error if directions are invalid.
+    /// Returns error if directions are invalid (e.g. mu == nu).
     pub fn try_plaquette(
         &self,
         site: &[usize; D],
@@ -73,9 +92,27 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
         Ok(result)
     }
 
-    /// Compute the 1×2 rectangle Wilson loop at a given site.
+    /// Compute the 1×2 rectangle Wilson loop.
     ///
-    /// The rectangle extends 1 unit in direction μ and 2 units in direction ν.
+    /// # Mathematics
+    ///
+    /// The rectangle loop extends 1 unit in $\mu$ and 2 units in $\nu$.
+    /// It involves a product of 6 link variables.
+    ///
+    /// # Physics
+    ///
+    /// Rectangular loops are used in improved actions (e.g. Symanzik, Iwasaki)
+    /// to cancel $O(a^2)$ discretization errors.
+    ///
+    /// # Arguments
+    ///
+    /// * `site` - Base vertex position
+    /// * `mu` - Direction of length 1 side
+    /// * `nu` - Direction of length 2 side
+    ///
+    /// # Returns
+    ///
+    /// The SU(N) matrix product around the rectangle.
     ///
     /// # Errors
     ///
@@ -147,6 +184,10 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     /// This is related to the action density.
     /// For identity configuration, returns 1.0.
     /// For random configuration, approaches 0.0.
+    ///
+    /// # Returns
+    ///
+    /// The average normalized trace of the plaquette.
     ///
     /// # Errors
     ///

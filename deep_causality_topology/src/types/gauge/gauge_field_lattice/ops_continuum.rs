@@ -112,6 +112,14 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     /// This implementation requires D ≥ 4 for the full definition.
     /// For D < 4, returns 0.
     ///
+    /// # Arguments
+    ///
+    /// * `site` - Lattice site coordinates
+    ///
+    /// # Returns
+    ///
+    /// The topological charge density q(x).
+    ///
     /// # Errors
     ///
     /// Returns error if field strength computation fails.
@@ -161,6 +169,10 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     /// $$Q = \sum_x q(x)$$
     ///
     /// For smooth gauge configurations, Q is close to an integer.
+    ///
+    /// # Returns
+    ///
+    /// The total topological charge Q.
     ///
     /// # Errors
     ///

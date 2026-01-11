@@ -50,6 +50,10 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
     ///
     /// Returns the N×N identity matrix for SU(N).
     ///
+    /// # Returns
+    ///
+    /// Identity link variable.
+    ///
     /// # Errors
     ///
     /// Returns `LinkVariableError::TensorCreation` if matrix allocation fails.
@@ -95,7 +99,12 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
     /// Create from raw matrix data with validation.
     ///
     /// # Arguments
+    ///
     /// * `data` - Tensor of shape [N, N] for SU(N)
+    ///
+    /// # Returns
+    ///
+    /// The wrapped link variable.
     ///
     /// # Errors
     ///
@@ -175,6 +184,10 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
     /// # Arguments
     ///
     /// * `rng` - Random number generator implementing `deep_causality_rand::Rng`
+    ///
+    /// # Returns
+    ///
+    /// A random SU(N) link variable.
     ///
     /// # Errors
     ///

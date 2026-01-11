@@ -3,15 +3,30 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+//! Wilson action and observables.
+//!
+//! Implements the standard Wilson gauge action and Wilson/Polyakov loop observables.
+
 use crate::{CWComplex, GaugeGroup, LatticeCell, LatticeGaugeField, TopologyError};
 
 // ============================================================================
 // Wilson Action
 // ============================================================================
 impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, T> {
-    /// Compute the Wilson action: S = β Σ_p (1 - Re[Tr(U_p)]/N).
+    /// Compute the global Wilson gauge action.
     ///
-    /// For identity configuration, action = 0.
+    /// # Mathematics
+    ///
+    /// $$S_W = \beta \sum_{x} \sum_{\mu<\nu} \left(1 - \frac{1}{N}\text{ReTr} U_{\mu\nu}(x)\right)$$
+    ///
+    /// # Physics
+    ///
+    /// The Wilson action approaches the continuum Yang-Mills action:
+    /// $S \to \int d^4x \frac{1}{4} F_{\mu\nu}^a F^{\mu\nu}_a$ as $a \to 0$.
+    ///
+    /// # Returns
+    ///
+    /// The total action value.
     ///
     /// # Errors
     ///
@@ -51,6 +66,20 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     }
 
     /// Action contribution from a single plaquette.
+    ///
+    /// # Mathematics
+    ///
+    /// $$s_p = \beta \left(1 - \frac{1}{N}\text{ReTr} U_p\right)$$
+    ///
+    /// # Arguments
+    ///
+    /// * `site` - Plaquette location
+    /// * `mu` - First direction
+    /// * `nu` - Second direction
+    ///
+    /// # Returns
+    ///
+    /// The local action contribution.
     ///
     /// # Errors
     ///
@@ -284,6 +313,14 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
     ///
     /// The spatially averaged Polyakov loop is used to detect the
     /// confinement/deconfinement transition in finite-temperature QCD.
+    ///
+    /// # Arguments
+    ///
+    /// * `temporal_dir` - The direction treated as time
+    ///
+    /// # Returns
+    ///
+    /// The spatially averaged Polyakov loop value.
     ///
     /// # Errors
     ///

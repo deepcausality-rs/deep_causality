@@ -13,6 +13,10 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
     /// For real matrices, this is the transpose.
     /// For complex matrices, this is transpose + complex conjugate.
     ///
+    /// # Returns
+    ///
+    /// The Hermitian conjugate.
+    ///
     /// # Errors
     ///
     /// Returns error if tensor creation fails.
@@ -68,6 +72,14 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
     /// Group multiplication: self * other.
     ///
     /// Standard matrix multiplication for group elements.
+    ///
+    /// # Arguments
+    ///
+    /// * `other` - The matrix to multiply with (on the right)
+    ///
+    /// # Returns
+    ///
+    /// The product $U \cdot V$.
     ///
     /// # Errors
     ///
@@ -267,6 +279,10 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
     ///
     /// Given a general matrix M, computes U = M (M†M)^{-1/2}
     /// which is the closest unitary matrix to M in Frobenius norm.
+    ///
+    /// # Returns
+    ///
+    /// The projected SU(N) matrix.
     ///
     /// # Errors
     ///

@@ -2,17 +2,35 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+//! Gauge field operations.
+//!
+//! Includes legacy gauge transformations and staple calculations.
+//! Note: For robust gauge transformations with error handling, see `ops_gauge_transform.rs`.
 
 use crate::{GaugeGroup, LatticeGaugeField, LinkVariable};
 use std::collections::HashMap;
+
 // ============================================================================
 // Gauge Transformations
 // ============================================================================
 impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, T> {
-    /// Apply a gauge transformation: U_μ(n) → g(n) U_μ(n) g(n+μ)†.
+    /// Apply a gauge transformation (infallible version).
+    ///
+    /// # Mathematics
+    ///
+    /// $$U_\mu(x) \to \Omega(x) U_\mu(x) \Omega^\dagger(x+\hat\mu)$$
+    ///
+    /// # Physics
+    ///
+    /// Local basis rotation in the internal symmetry space.
     ///
     /// # Arguments
-    /// * `gauge_fn` - Function providing g(n) for each lattice site
+    ///
+    /// * `gauge_fn` - Closure providing $\Omega(x)$ for each site
+    ///
+    /// # Returns
+    ///
+    /// None (modifies field in-place).
     pub fn gauge_transform<F>(&mut self, gauge_fn: F)
     where
         F: Fn(&[usize; D]) -> LinkVariable<G, T>,

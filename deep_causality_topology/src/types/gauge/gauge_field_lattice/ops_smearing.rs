@@ -3,6 +3,11 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+//! Smearing algorithms for lattice gauge fields.
+//!
+//! Implements APE (Array Processor Experiment) smearing and Stout smearing
+//! to reduce ultraviolet fluctuations and enhance the signal of long-range physics.
+
 use crate::{GaugeGroup, LatticeGaugeField, TopologyError};
 use std::collections::HashMap;
 
@@ -40,12 +45,29 @@ impl<T: From<f64>> SmearingParams<T> {
 impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, T> {
     /// Apply APE smearing to the gauge field.
     ///
-    /// APE smearing replaces each link with a weighted combination of the
-    /// original link and the staple sum, projected back to SU(N):
+    /// # Mathematics
     ///
-    /// U'_μ(n) = Proj_SU(N) [ (1-α) U_μ(n) + (α/(2(D-1))) V_μ(n) ]
+    /// APE smearing replaces each link $U_\mu(x)$ with a projected average of itself
+    /// and its staples:
     ///
-    /// where V is the staple sum.
+    /// $$U'_\mu(x) = \text{Proj}_{SU(N)}\left[ (1-\alpha) U_\mu(x) + \frac{\alpha}{2(D-1)} \sum_{\nu \neq \mu} S_{\mu\nu}(x) \right]$$
+    ///
+    /// where $S_{\mu\nu}$ is the sum of forward and backward staples in the $\mu-\nu$ plane.
+    ///
+    /// # Physics
+    ///
+    /// Smearing suppresses UV fluctuations (short-distance noise) while preserving
+    /// the long-distance physical content (IR properties). It is essential for:
+    /// - Improving signal-to-noise ratio in glueball/loop operators
+    /// - Defining topological charge on the lattice
+    ///
+    /// # Arguments
+    ///
+    /// * `params` - Smearing parameters ($\alpha$, number of steps)
+    ///
+    /// # Returns
+    ///
+    /// A new `LatticeGaugeField` with smeared links.
     ///
     /// # Errors
     ///

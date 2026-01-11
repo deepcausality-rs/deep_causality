@@ -110,6 +110,16 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
 
     /// Create from explicit link data.
     ///
+    /// # Arguments
+    ///
+    /// * `lattice` - The underlying lattice structure
+    /// * `links` - Map of edge cells to link variables
+    /// * `beta` - Coupling parameter
+    ///
+    /// # Returns
+    ///
+    /// A new `LatticeGaugeField` or error if validation fails.
+    ///
     /// # Errors
     ///
     /// Returns error if links are missing for some edges.
@@ -215,6 +225,16 @@ impl<G: GaugeGroup, const D: usize, T> LatticeGaugeField<G, D, T> {
     /// Create from explicit link data without validation.
     ///
     /// This constructor has minimal bounds for HKT compatibility.
+    ///
+    /// # Arguments
+    ///
+    /// * `lattice` - The underlying lattice structure
+    /// * `links` - Map of edge cells to link variables
+    /// * `beta` - Coupling parameter
+    ///
+    /// # Returns
+    ///
+    /// A new `LatticeGaugeField`.
     pub fn from_links_unchecked(
         lattice: Arc<Lattice<D>>,
         links: HashMap<LatticeCell<D>, LinkVariable<G, T>>,

@@ -203,6 +203,22 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
 // Helper for f64 conversion when T: Into<f64>
 impl<G: GaugeGroup, const D: usize> LatticeGaugeField<G, D, f64> {
     /// Metropolis update specialized for f64.
+    ///
+    /// Significantly faster than the generic implementation when T=f64.
+    ///
+    /// # Arguments
+    ///
+    /// * `edge` - The link to update
+    /// * `epsilon` - Proposal step size
+    /// * `rng` - Random number generator
+    ///
+    /// # Returns
+    ///
+    /// `Ok(true)` if accepted, `Ok(false)` if rejected.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if update fails.
     pub fn metropolis_update_f64<R>(
         &mut self,
         edge: &LatticeCell<D>,
@@ -232,6 +248,19 @@ impl<G: GaugeGroup, const D: usize> LatticeGaugeField<G, D, f64> {
     }
 
     /// Full sweep specialized for f64.
+    ///
+    /// # Arguments
+    ///
+    /// * `epsilon` - Proposal width
+    /// * `rng` - Random number generator
+    ///
+    /// # Returns
+    ///
+    /// The acceptance rate (0.0 to 1.0).
+    ///
+    /// # Errors
+    ///
+    /// Returns error if any update fails.
     pub fn metropolis_sweep_f64<R>(
         &mut self,
         epsilon: f64,
