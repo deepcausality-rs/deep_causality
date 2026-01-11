@@ -281,23 +281,19 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
             let x_dag = x.dagger();
             let xdx = x_dag.mul(&x);
 
+            // Check convergence before next iteration
+            let residual = compute_identity_deviation::<G, T>(&xdx)?;
+            if residual < T::from(1e-12) {
+                break;
+            }
+
             // 3I - X†X
             let identity = Self::try_identity()?;
             let three_i = identity.scale(&three);
             let diff = three_i.try_add(&xdx.scale(&T::from(-1.0)))?;
 
             // X_{k+1} = 0.5 * X * diff
-            let new_x = x.mul(&diff).scale(&half);
-
-            // Check convergence: ||X†X - I||_F < ε
-            let new_xdx = new_x.dagger().mul(&new_x);
-            let residual = compute_identity_deviation::<G, T>(&new_xdx)?;
-
-            x = new_x;
-
-            if residual < T::from(1e-12) {
-                break;
-            }
+            x = x.mul(&diff).scale(&half);
         }
 
         // Ensure determinant = 1 for SU(N) by dividing by det^{1/N}

@@ -261,10 +261,14 @@ impl<G: GaugeGroup, const D: usize> LatticeGaugeFieldWitness<G, D> {
         // Combine link variables
         let mut new_links = HashMap::with_capacity(field_a.links().len());
         for (cell, link_a) in field_a.links() {
-            if let Some(link_b) = field_b.links().get(cell) {
-                let new_link = zip_link_variables::<G, T, F>(link_a, link_b, &mut f);
-                new_links.insert(cell.clone(), new_link);
-            }
+            let link_b = field_b.links().get(cell).ok_or_else(|| {
+                TopologyError::LatticeGaugeError(format!(
+                    "Missing link for cell {:?} during zip_with",
+                    cell
+                ))
+            })?;
+            let new_link = zip_link_variables::<G, T, F>(link_a, link_b, &mut f);
+            new_links.insert(cell.clone(), new_link);
         }
 
         Ok(LatticeGaugeField::from_links_unchecked(

@@ -130,27 +130,120 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         })
     }
 
-    /// Single 3rd-order Runge-Kutta step of gradient flow.
+    /// Scales the gauge field by a scalar factor.
+    ///
+    /// # Mathematics
+    ///
+    /// $$U_\mu(x) \to \alpha U_\mu(x)$$
+    ///
+    /// Note: This generally breaks unitarity (U † U = I), so the result
+    /// is no longer in SU(N). This is an intermediate operation for RK3.
+    fn try_scale(&self, factor: &T) -> Result<Self, TopologyError> {
+        let mut new_links = HashMap::new();
+        for (cell, link) in self.links.iter() {
+            let new_link = link.try_scale(factor).map_err(TopologyError::from)?;
+            new_links.insert(cell.clone(), new_link);
+        }
+        Ok(Self {
+            lattice: self.lattice.clone(),
+            links: new_links,
+            beta: self.beta, // beta doesn't really scale in this context
+        })
+    }
+
+    /// Adds two gauge fields.
+    ///
+    /// # Mathematics
+    ///
+    /// $$U_\mu(x) \to U_\mu^{(1)}(x) + U_\mu^{(2)}(x)$$
+    ///
+    /// Note: This generally breaks unitarity. Intermediate RK3 operation.
+    fn try_add(&self, other: &Self) -> Result<Self, TopologyError> {
+        let mut new_links = HashMap::new();
+        for (cell, link) in self.links.iter() {
+            if let Some(other_link) = other.links.get(cell) {
+                let new_link = link.try_add(other_link).map_err(TopologyError::from)?;
+                new_links.insert(cell.clone(), new_link);
+            } else {
+                return Err(TopologyError::LatticeGaugeError(format!(
+                    "Missing link at {:?} during add",
+                    cell
+                )));
+            }
+        }
+        Ok(Self {
+            lattice: self.lattice.clone(),
+            links: new_links,
+            beta: self.beta,
+        })
+    }
+
+    /// Single 3rd-order Strong Stability Preserving Runge-Kutta (SSP-RK3) step.
+    ///
+    /// # Mathematics
+    ///
+    /// Uses the optimal SSP-RK3 scheme:
+    /// 1. $U^{(1)} = U^{(n)} + \epsilon F(U^{(n)})$
+    /// 2. $U^{(2)} = \frac{3}{4} U^{(n)} + \frac{1}{4} (U^{(1)} + \epsilon F(U^{(1)}))$
+    /// 3. $U^{(n+1)} = \frac{1}{3} U^{(n)} + \frac{2}{3} (U^{(2)} + \epsilon F(U^{(2)}))$
+    ///
+    /// Finally, project back to SU(N) group manifold.
     fn try_rk3_step(&self, epsilon: &T) -> Result<Self, TopologyError>
     where
         T: From<f64> + PartialOrd,
     {
-        // Lüscher's 3rd order RK scheme:
-        // W0 = V(t)
-        // W1 = exp(1/4 ε Z0) W0
-        // W2 = exp(8/9 ε Z1 - 17/36 ε Z0) W1
-        // V(t+ε) = exp(3/4 ε Z2 - 8/9 ε Z1 + 17/36 ε Z0) W2
-        //
-        // For simplicity, we use three Euler-like steps with weights
+        let three_quarters = T::from(0.75);
+        let one_quarter = T::from(0.25);
+        let one_third = T::from(1.0 / 3.0);
+        let two_thirds = T::from(2.0 / 3.0);
 
-        let eps_quarter = *epsilon * T::from(0.25);
-        let step1 = self.try_euler_step(&eps_quarter)?;
+        // Stage 1: U1 = Euler(U0)
+        // Note: try_euler_step does projection, but for RK intermediate
+        // strictly speaking we might want unprojected updates.
+        // However, standard Wilson flow often projects at each substep or
+        // defines the flow on the manifold directly.
+        // For this implementation, using the Euler step (which projects)
+        // is the closest equivalent to the "tangent space" update if we
+        // consider the projection as part of the flow definition.
+        let u1 = self.try_euler_step(epsilon)?;
 
-        let eps_half = *epsilon * T::from(0.5);
-        let step2 = step1.try_euler_step(&eps_half)?;
+        // Stage 2: U2 = 3/4 U0 + 1/4 Euler(U1)
+        // We mix the fields first (breaking unitarity) then project?
+        // Or we rely on Euler steps being unitary?
+        // SSP-RK schemes usually assume linear vector space.
+        // For Lie Groups, this linear mixing is an approximation valid for small epsilon.
+        let term1 = self.try_scale(&three_quarters)?;
+        let term2 = u1.try_euler_step(epsilon)?.try_scale(&one_quarter)?;
+        let u2_unprojected = term1.try_add(&term2)?;
 
-        let eps_quarter_final = *epsilon * T::from(0.25);
-        step2.try_euler_step(&eps_quarter_final)
+        // We must project u2 back to SU(N) before calculating force for next step
+        // to maintain gauge invariance properties and stability.
+        let u2 = u2_unprojected.project_to_group()?;
+
+        // Stage 3: U_new = 1/3 U0 + 2/3 Euler(U2)
+        let term3 = self.try_scale(&one_third)?;
+        let term4 = u2.try_euler_step(epsilon)?.try_scale(&two_thirds)?;
+        let u_new_unprojected = term3.try_add(&term4)?;
+
+        // Final projection
+        u_new_unprojected.project_to_group()
+    }
+
+    /// Project whole field to SU(N).
+    fn project_to_group(&self) -> Result<Self, TopologyError>
+    where
+        T: From<f64> + PartialOrd,
+    {
+        let mut new_links = HashMap::new();
+        for (cell, link) in self.links.iter() {
+            let projected = link.project_sun().map_err(TopologyError::from)?;
+            new_links.insert(cell.clone(), projected);
+        }
+        Ok(Self {
+            lattice: self.lattice.clone(),
+            links: new_links,
+            beta: self.beta,
+        })
     }
 
     /// Compute the flow energy density E(t).

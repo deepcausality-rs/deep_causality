@@ -42,4 +42,9 @@ impl GaugeGroup for Electroweak {
     fn name() -> &'static str {
         "SU(2)×U(1)"
     }
+
+    fn matrix_dim() -> usize {
+        // SU(2) is 2×2 and U(1) is 1×1 → total 3×3 block-diagonal
+        3
+    }
 }

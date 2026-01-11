@@ -43,4 +43,9 @@ impl GaugeGroup for StandardModel {
     fn name() -> &'static str {
         "SU(3)×SU(2)×U(1)"
     }
+
+    fn matrix_dim() -> usize {
+        // SU(3) (3×3), SU(2) (2×2) and U(1) (1×1) block-diagonal → total 6×6
+        6
+    }
 }
