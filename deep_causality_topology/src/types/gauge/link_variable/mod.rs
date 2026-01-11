@@ -150,4 +150,103 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
             })
             .map_err(|e| LinkVariableError::TensorCreation(format!("{:?}", e)))
     }
+
+    /// Create a random link variable for Monte Carlo initialization.
+    ///
+    /// Generates a random group element suitable for "hot start" Monte Carlo
+    /// simulations, where configurations begin far from equilibrium.
+    ///
+    /// # Mathematics
+    ///
+    /// For SU(N), generates a random unitary matrix by:
+    /// 1. Creating a random N×N matrix M with entries uniform in [-1, 1]
+    /// 2. Projecting to SU(N) via `project_sun()` (polar decomposition)
+    ///
+    /// The resulting matrix satisfies:
+    /// - **Unitarity:** U U† = 𝟙
+    /// - **Special:** det(U) = 1 (for SU(N))
+    ///
+    /// # Physics
+    ///
+    /// Random link variables represent a "hot start" configuration for
+    /// lattice gauge theory simulations. The configuration is far from
+    /// the classical vacuum and requires thermalization before measurements.
+    ///
+    /// # Arguments
+    ///
+    /// * `rng` - Random number generator implementing `deep_causality_rand::Rng`
+    ///
+    /// # Errors
+    ///
+    /// Returns `LinkVariableError::TensorCreation` if matrix allocation fails,
+    /// or `LinkVariableError::SingularMatrix` if projection fails.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use deep_causality_topology::{LinkVariable, SU2};
+    /// use deep_causality_rand::rng;
+    ///
+    /// let mut rng = rng();
+    /// let link: LinkVariable<SU2, f64> = LinkVariable::try_random(&mut rng)?;
+    /// ```
+    pub fn try_random<R>(rng: &mut R) -> Result<Self, LinkVariableError>
+    where
+        R: deep_causality_rand::Rng,
+        T: From<f64>
+            + Clone
+            + std::ops::Mul<Output = T>
+            + std::ops::Add<Output = T>
+            + std::ops::Sub<Output = T>
+            + std::ops::Div<Output = T>
+            + std::ops::Neg<Output = T>
+            + PartialOrd,
+    {
+        let n = G::matrix_dim();
+        if n == 0 {
+            return Err(LinkVariableError::InvalidDimension(n));
+        }
+
+        // Generate random matrix with entries in [-1, 1]
+        let mut data = Vec::with_capacity(n * n);
+        for _ in 0..(n * n) {
+            // Generate uniform in [0, 1), scale to [-1, 1)
+            let val: f64 = rng.random();
+            data.push(T::from(2.0 * val - 1.0));
+        }
+
+        let tensor = CausalTensor::new(data, vec![n, n])
+            .map_err(|e| LinkVariableError::TensorCreation(format!("{:?}", e)))?;
+
+        let random_matrix = Self {
+            data: tensor,
+            _gauge: PhantomData,
+        };
+
+        // Project to SU(N) to ensure unitarity and det = 1
+        random_matrix.project_sun()
+    }
+
+    /// Create a random link variable (convenience method).
+    ///
+    /// See [`try_random`](Self::try_random) for details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if random matrix creation or SU(N) projection fails.
+    pub fn random<R>(rng: &mut R) -> Self
+    where
+        R: deep_causality_rand::Rng,
+        T: From<f64>
+            + Clone
+            + std::ops::Mul<Output = T>
+            + std::ops::Add<Output = T>
+            + std::ops::Sub<Output = T>
+            + std::ops::Div<Output = T>
+            + std::ops::Neg<Output = T>
+            + PartialOrd,
+    {
+        Self::try_random(rng)
+            .unwrap_or_else(|e| panic!("Random link creation failed for {}: {}", G::name(), e))
+    }
 }

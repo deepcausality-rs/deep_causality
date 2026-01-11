@@ -66,5 +66,6 @@ pub use crate::types::curvature_tensor::{
     CurvatureSymmetry, CurvatureTensor, CurvatureTensorVector,
 };
 pub use crate::types::differential_form::DifferentialForm;
+pub use crate::types::gauge::gauge_field_lattice::ops_gradient_flow::{FlowMethod, FlowParams};
 pub use crate::types::gauge::gauge_groups::{Electroweak, Lorentz, SU2, SU3, StandardModel, U1};
 pub use crate::types::gauge::{GaugeField, LatticeGaugeField, LinkVariable};

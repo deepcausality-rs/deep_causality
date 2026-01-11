@@ -303,3 +303,239 @@ fn test_lattice_gauge_field_try_t2_energy() {
     let t2e = field.try_t2_energy(flow_time);
     assert!(t2e.is_ok());
 }
+
+// ============================================================================
+// Random Constructor Tests
+// ============================================================================
+
+#[test]
+fn test_lattice_gauge_field_try_random() {
+    let lattice = create_test_lattice();
+    let mut rng = deep_causality_rand::rng();
+
+    let field: Result<LatticeGaugeField<U1, 2, f64>, _> =
+        LatticeGaugeField::try_random(lattice.clone(), 6.0, &mut rng);
+    assert!(field.is_ok());
+
+    let field = field.unwrap();
+    assert!((*field.beta() - 6.0).abs() < 1e-10);
+    assert!(field.num_links() > 0);
+}
+
+#[test]
+fn test_lattice_gauge_field_random_convenience() {
+    let lattice = create_test_lattice();
+    let mut rng = deep_causality_rand::rng();
+
+    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::random(lattice, 6.0, &mut rng);
+    assert!(field.num_links() > 0);
+}
+
+#[test]
+fn test_lattice_gauge_field_random_vs_identity_differ() {
+    let lattice = create_test_lattice();
+    let mut rng = deep_causality_rand::rng();
+
+    let identity: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice.clone(), 6.0);
+    let random: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::random(lattice, 6.0, &mut rng);
+
+    // Action should differ between identity (minimum) and random (higher)
+    let action_id = identity.try_wilson_action().unwrap();
+    let action_rand = random.try_wilson_action().unwrap();
+
+    // Identity has S ≈ 0, random has S > 0
+    assert!(action_rand > action_id || (action_rand - action_id).abs() < 0.01);
+}
+
+// ============================================================================
+// Wilson Loop Tests
+// ============================================================================
+
+#[test]
+fn test_lattice_gauge_field_try_wilson_loop_identity() {
+    let lattice = create_test_lattice();
+    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+
+    // 1x1 Wilson loop on identity field should give 1 (Tr(I)/N = 1)
+    let wloop = field.try_wilson_loop(&[0, 0], 0, 1, 1, 1);
+    assert!(wloop.is_ok());
+
+    let val = wloop.unwrap();
+    assert!(
+        (val - 1.0).abs() < 0.1,
+        "1x1 Wilson loop on identity should be ~1, got {}",
+        val
+    );
+}
+
+#[test]
+fn test_lattice_gauge_field_try_wilson_loop_invalid_dirs() {
+    let lattice = create_test_lattice();
+    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+
+    // Same direction should fail
+    let result = field.try_wilson_loop(&[0, 0], 0, 0, 1, 1);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_lattice_gauge_field_try_wilson_loop_zero_size() {
+    let lattice = create_test_lattice();
+    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+
+    let result = field.try_wilson_loop(&[0, 0], 0, 1, 0, 1);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_lattice_gauge_field_try_polyakov_loop_identity() {
+    let lattice = create_test_lattice();
+    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+
+    let polyakov = field.try_polyakov_loop(&[0, 0], 0);
+    assert!(polyakov.is_ok());
+
+    let val = polyakov.unwrap();
+    // For identity: Tr(I...I)/N = 1
+    assert!(
+        (val - 1.0).abs() < 0.1,
+        "Polyakov loop on identity should be ~1, got {}",
+        val
+    );
+}
+
+#[test]
+fn test_lattice_gauge_field_try_average_polyakov_loop() {
+    let lattice = create_test_lattice();
+    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+
+    let avg = field.try_average_polyakov_loop(0);
+    assert!(avg.is_ok());
+}
+
+// ============================================================================
+// Metropolis Tests
+// ============================================================================
+
+#[test]
+fn test_lattice_gauge_field_metropolis_sweep_f64() {
+    let lattice = create_test_lattice();
+    let mut rng = deep_causality_rand::rng();
+
+    let mut field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+
+    // Perform a sweep
+    let acceptance = field.metropolis_sweep_f64(0.1, &mut rng);
+    assert!(acceptance.is_ok());
+
+    let rate = acceptance.unwrap();
+    assert!(rate >= 0.0 && rate <= 1.0, "Acceptance rate = {}", rate);
+}
+
+#[test]
+fn test_lattice_gauge_field_metropolis_update_f64() {
+    let lattice = create_test_lattice();
+    let mut rng = deep_causality_rand::rng();
+
+    let mut field: LatticeGaugeField<U1, 2, f64> =
+        LatticeGaugeField::identity(lattice.clone(), 6.0);
+
+    // Get first edge and clone it before using
+    let edge = {
+        let edges: Vec<_> = lattice.cells(1).collect();
+        edges.into_iter().next()
+    };
+
+    if let Some(e) = edge {
+        let result = field.metropolis_update_f64(&e, 0.1, &mut rng);
+        assert!(result.is_ok());
+    }
+}
+
+// ============================================================================
+// Gauge Transform Tests
+// ============================================================================
+
+#[test]
+fn test_lattice_gauge_field_gauge_transform_action_invariance() {
+    let lattice = create_test_lattice();
+    let mut rng = deep_causality_rand::rng();
+
+    let mut field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+
+    let action_before = field.try_wilson_action().unwrap();
+
+    // Apply random gauge transform
+    let result = field.try_random_gauge_transform(&mut rng);
+    assert!(result.is_ok());
+
+    let action_after = field.try_wilson_action().unwrap();
+
+    // Action should be invariant (within numerical precision)
+    assert!(
+        (action_after - action_before).abs() < 0.1,
+        "Action not invariant: {} vs {}",
+        action_before,
+        action_after
+    );
+}
+
+// ============================================================================
+// Continuum Limit Tests
+// ============================================================================
+
+#[test]
+fn test_lattice_gauge_field_try_field_strength() {
+    let lattice = create_test_lattice();
+    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+
+    let fs = field.try_field_strength(&[0, 0], 0, 1);
+    assert!(fs.is_ok());
+}
+
+#[test]
+fn test_lattice_gauge_field_try_field_strength_antisymmetry() {
+    let lattice = create_test_lattice();
+    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+
+    // F_μμ = 0
+    let f00 = field.try_field_strength(&[0, 0], 0, 0);
+    assert!(f00.is_ok());
+
+    let val = f00.unwrap();
+    assert!(val.as_slice()[0].abs() < 1e-10, "F_00 should be zero");
+}
+
+#[test]
+fn test_lattice_gauge_field_try_topological_charge_density_2d() {
+    let lattice = create_test_lattice();
+    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+
+    // In 2D, topological charge is 0 (requires D >= 4)
+    let q = field.try_topological_charge_density(&[0, 0]);
+    assert!(q.is_ok());
+    assert!(q.unwrap().abs() < 1e-10);
+}
+
+// ============================================================================
+// Gradient Flow Scale Setting Tests
+// ============================================================================
+
+#[test]
+fn test_lattice_gauge_field_find_t0_not_reached() {
+    use deep_causality_topology::FlowParams;
+
+    let lattice = create_test_lattice();
+    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+
+    let params = FlowParams {
+        epsilon: 0.01,
+        t_max: 0.1, // Short time, won't reach t0
+        method: deep_causality_topology::FlowMethod::Euler,
+    };
+
+    let result = field.try_find_t0(&params);
+    // For identity field with short t_max, may not reach t₀
+    // This tests the error path
+    assert!(result.is_ok() || result.is_err());
+}

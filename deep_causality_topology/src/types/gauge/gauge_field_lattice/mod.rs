@@ -29,8 +29,11 @@ use std::sync::Arc;
 mod display;
 mod getters;
 mod ops_actions;
+mod ops_continuum;
 mod ops_gauge;
-mod ops_gradient_flow;
+mod ops_gauge_transform;
+pub mod ops_gradient_flow;
+mod ops_metropolis;
 mod ops_monte_carlo;
 mod ops_plague;
 mod ops_smearing;
@@ -129,6 +132,80 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
             links,
             beta,
         })
+    }
+
+    /// Create with random links ("hot start" for Monte Carlo).
+    ///
+    /// Initializes all link variables to random SU(N) elements.
+    /// This represents a "hot start" configuration far from equilibrium.
+    ///
+    /// # Physics
+    ///
+    /// Hot start configurations:
+    /// - Begin far from the classical vacuum (all identity)
+    /// - Require thermalization before measurements
+    /// - Are used to verify thermalization independence
+    ///
+    /// In contrast, "cold start" (`identity()`) begins at the trivial vacuum.
+    ///
+    /// # Arguments
+    ///
+    /// * `lattice` - The underlying lattice structure
+    /// * `beta` - Coupling parameter β = 2N/g²
+    /// * `rng` - Random number generator
+    ///
+    /// # Errors
+    ///
+    /// Returns `TopologyError` if link creation fails.
+    pub fn try_random<R>(
+        lattice: Arc<Lattice<D>>,
+        beta: T,
+        rng: &mut R,
+    ) -> Result<Self, TopologyError>
+    where
+        R: deep_causality_rand::Rng,
+        T: From<f64>
+            + std::ops::Mul<Output = T>
+            + std::ops::Add<Output = T>
+            + std::ops::Sub<Output = T>
+            + std::ops::Div<Output = T>
+            + std::ops::Neg<Output = T>
+            + PartialOrd,
+    {
+        let mut links = HashMap::new();
+
+        for cell in lattice.cells(1) {
+            let link = LinkVariable::try_random(rng).map_err(TopologyError::from)?;
+            links.insert(cell, link);
+        }
+
+        Ok(Self {
+            lattice,
+            links,
+            beta,
+        })
+    }
+
+    /// Create with random links (convenience method).
+    ///
+    /// See [`try_random`](Self::try_random) for details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if link creation fails.
+    pub fn random<R>(lattice: Arc<Lattice<D>>, beta: T, rng: &mut R) -> Self
+    where
+        R: deep_causality_rand::Rng,
+        T: From<f64>
+            + std::ops::Mul<Output = T>
+            + std::ops::Add<Output = T>
+            + std::ops::Sub<Output = T>
+            + std::ops::Div<Output = T>
+            + std::ops::Neg<Output = T>
+            + PartialOrd,
+    {
+        Self::try_random(lattice, beta, rng)
+            .unwrap_or_else(|e| panic!("Random field creation failed: {}", e))
     }
 }
 

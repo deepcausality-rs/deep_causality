@@ -219,4 +219,89 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
         let e = self.try_energy_density()?;
         Ok(t.clone() * t * e)
     }
+
+    /// Find t₀ scale where t² E(t) = 0.3.
+    ///
+    /// The scale t₀ provides a non-perturbative reference scale for lattice QCD,
+    /// defined by the condition $t^2 \langle E(t) \rangle |_{t=t_0} = 0.3$.
+    ///
+    /// # Physics
+    ///
+    /// The Wilson flow smooths gauge configurations, and the energy density
+    /// at flow time t is automatically renormalized at scale $\mu \sim 1/\sqrt{8t}$.
+    ///
+    /// The scale t₀ is widely used in lattice QCD for:
+    /// - Setting the lattice spacing in physical units
+    /// - Continuum extrapolations
+    /// - Comparing results between different collaborations
+    ///
+    /// Typical values: $\sqrt{8t_0} \approx 0.4$ fm in QCD.
+    ///
+    /// # Algorithm
+    ///
+    /// 1. Flow configuration forward in time
+    /// 2. Monitor t² E(t) at each step
+    /// 3. Interpolate to find t where t² E(t) = 0.3
+    ///
+    /// # Arguments
+    ///
+    /// * `params` - Flow parameters (step size, method)
+    ///
+    /// # Returns
+    ///
+    /// The flow time t₀ where t² E(t) = 0.3, or an error if the condition
+    /// is not reached within t_max.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Flow computation fails
+    /// - t² E(t) never reaches 0.3 within t_max
+    pub fn try_find_t0(&self, params: &FlowParams<T>) -> Result<T, TopologyError>
+    where
+        T: Clone
+            + std::ops::Mul<Output = T>
+            + std::ops::Add<Output = T>
+            + std::ops::Sub<Output = T>
+            + std::ops::Div<Output = T>
+            + std::ops::Neg<Output = T>
+            + From<f64>
+            + PartialOrd,
+    {
+        let target = T::from(0.3);
+        let mut current = self.clone();
+        let mut t = T::from(0.0);
+        let epsilon = params.epsilon.clone();
+
+        let mut prev_t = t.clone();
+        let mut prev_t2e = current.try_t2_energy(t.clone())?;
+
+        // Flow until t² E(t) crosses 0.3
+        while t < params.t_max {
+            current = match params.method {
+                FlowMethod::Euler => current.try_euler_step(&epsilon)?,
+                FlowMethod::RungeKutta3 => current.try_rk3_step(&epsilon)?,
+            };
+            t = t.clone() + epsilon.clone();
+
+            let t2e = current.try_t2_energy(t.clone())?;
+
+            // Check if we crossed the target
+            if t2e >= target.clone() && prev_t2e < target.clone() {
+                // Linear interpolation to find t₀
+                // t₀ ≈ prev_t + (target - prev_t2e) * ε / (t2e - prev_t2e)
+                let dt = t.clone() - prev_t.clone();
+                let d_t2e = t2e.clone() - prev_t2e.clone();
+                let ratio = (target.clone() - prev_t2e.clone()) / d_t2e;
+                return Ok(prev_t + ratio * dt);
+            }
+
+            prev_t = t.clone();
+            prev_t2e = t2e;
+        }
+
+        Err(TopologyError::LatticeGaugeError(
+            "t² E(t) did not reach 0.3 within t_max".to_string()
+        ))
+    }
 }

@@ -301,3 +301,57 @@ fn test_link_variable_error_numerical() {
     let display = format!("{}", err);
     assert!(display.contains("overflow"));
 }
+
+// ============================================================================
+// Random Constructor Tests
+// ============================================================================
+
+#[test]
+fn test_link_variable_try_random_su2() {
+    let mut rng = deep_causality_rand::rng();
+    let link: LinkVariable<SU2, f64> =
+        LinkVariable::try_random(&mut rng).expect("Should create random SU2 link");
+
+    // Should have correct size (2x2 = 4 elements)
+    assert_eq!(link.as_slice().len(), 4);
+
+    // Verify it's close to unitary: U * U† ≈ I
+    let u_dag = link.dagger();
+    let product = link.mul(&u_dag);
+
+    // Trace should be close to 2 (identity trace for 2x2)
+    let trace = product.trace();
+    assert!(
+        (trace - 2.0).abs() < 0.5,
+        "Random SU2 link should be approximately unitary, got trace = {}",
+        trace
+    );
+}
+
+#[test]
+fn test_link_variable_random_convenience() {
+    let mut rng = deep_causality_rand::rng();
+    let link: LinkVariable<SU2, f64> = LinkVariable::random(&mut rng);
+    assert_eq!(link.as_slice().len(), 4);
+}
+
+#[test]
+fn test_link_variable_random_u1() {
+    let mut rng = deep_causality_rand::rng();
+    let link: LinkVariable<U1, f64> =
+        LinkVariable::try_random(&mut rng).expect("Should create random U1 link");
+
+    // U1 is 1x1
+    assert_eq!(link.as_slice().len(), 1);
+}
+
+#[test]
+fn test_link_variable_random_different_each_time() {
+    let mut rng = deep_causality_rand::rng();
+    let link1: LinkVariable<SU2, f64> = LinkVariable::random(&mut rng);
+    let link2: LinkVariable<SU2, f64> = LinkVariable::random(&mut rng);
+
+    // Should be different (with high probability)
+    let diff = link1.as_slice()[0] - link2.as_slice()[0];
+    assert!(diff.abs() > 1e-10, "Random links should differ");
+}
