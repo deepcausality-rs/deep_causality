@@ -62,7 +62,8 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
             + std::ops::Div<Output = T>
             + std::ops::Neg<Output = T>
             + From<f64>
-            + PartialOrd,
+            + PartialOrd
+            + std::fmt::Debug,
     {
         // Get current link
         let current = self.get_link_or_identity(edge);
@@ -83,8 +84,17 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
         } else {
             // Accept with probability exp(-ΔS)
             let r: f64 = rng.random();
-            let threshold = -Self::to_f64(&delta_s);
-            r < threshold.exp()
+            // Use debug formatting as a robust fallback for conversion if direct cast isn't available
+            // This works for f64, f32, and DoubleFloat (which implements Debug/Display)
+            let delta_s_f64 = format!("{:?}", delta_s)
+                .parse::<f64>()
+                .unwrap_or(f64::INFINITY); // Fail safe to reject if parsing fails
+
+            if delta_s_f64.is_nan() {
+                false // Reject NaN actions
+            } else {
+                r < (-delta_s_f64).exp()
+            }
         };
 
         if accept {
@@ -130,10 +140,16 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
             + std::ops::Div<Output = T>
             + std::ops::Neg<Output = T>
             + From<f64>
-            + PartialOrd,
+            + PartialOrd
+            + std::fmt::Debug, // Added Debug bound for conversion fallback
     {
         let edges: Vec<_> = self.links.keys().cloned().collect();
         let total = edges.len();
+
+        if total == 0 {
+            return Ok(0.0);
+        }
+
         let mut accepted = 0usize;
 
         for edge in edges {
@@ -186,17 +202,6 @@ impl<G: GaugeGroup, const D: usize, T: Clone + Default> LatticeGaugeField<G, D, 
 
         let perturbed = LinkVariable::from_matrix_unchecked(tensor);
         perturbed.project_sun().map_err(TopologyError::from)
-    }
-
-    /// Convert T to f64 for probability calculation.
-    fn to_f64(_val: &T) -> f64
-    where
-        T: Clone + From<f64>,
-    {
-        // This is a simplified conversion - in practice would need proper trait
-        // For now, assume T can be converted via the same From<f64> mechanism
-        // by checking if val is close to known values
-        0.0 // Placeholder - actual implementation would depend on T
     }
 }
 
@@ -271,6 +276,11 @@ impl<G: GaugeGroup, const D: usize> LatticeGaugeField<G, D, f64> {
     {
         let edges: Vec<_> = self.links.keys().cloned().collect();
         let total = edges.len();
+
+        if total == 0 {
+            return Ok(0.0);
+        }
+
         let mut accepted = 0usize;
 
         for edge in edges {

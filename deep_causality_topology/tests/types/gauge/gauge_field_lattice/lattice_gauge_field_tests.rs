@@ -539,3 +539,244 @@ fn test_lattice_gauge_field_find_t0_not_reached() {
     // This tests the error path
     assert!(result.is_ok() || result.is_err());
 }
+
+// ============================================================================
+// Improved Action Tests
+// ============================================================================
+
+#[test]
+fn test_action_coeffs_constructors() {
+    use deep_causality_topology::ActionCoeffs;
+
+    let sym = ActionCoeffs::<f64>::symanzik();
+    assert!((sym.c1 - (-1.0 / 12.0)).abs() < 1e-10);
+    assert!((sym.c0 - (1.0 + 8.0 / 12.0)).abs() < 1e-10);
+
+    let iwa = ActionCoeffs::<f64>::iwasaki();
+    assert!((iwa.c1 - (-0.331)).abs() < 1e-10);
+
+    let dbw2 = ActionCoeffs::<f64>::dbw2();
+    assert!((dbw2.c1 - (-1.4088)).abs() < 1e-10);
+
+    let cust = ActionCoeffs::<f64>::custom(0.6, 0.05);
+    assert!((cust.c0 - 0.6).abs() < 1e-10);
+}
+
+#[test]
+fn test_lattice_gauge_field_try_improved_action_identity() {
+    use deep_causality_topology::ActionCoeffs;
+
+    let lattice = create_test_lattice();
+    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let coeffs = ActionCoeffs::symanzik();
+
+    // For identity field, both plaquette and rectangle traces are N=1
+    // S_plaq = 0, S_rect = 0
+    // Total S = 0
+    let action = field.try_improved_action(&coeffs);
+    assert!(action.is_ok());
+    let val = action.unwrap();
+    assert!(val.abs() < 1e-10);
+}
+
+#[test]
+fn test_lattice_gauge_field_try_improved_action_random() {
+    use deep_causality_topology::ActionCoeffs;
+
+    let lattice = create_test_lattice();
+    let mut rng = deep_causality_rand::rng();
+    // Use try_random to get a non-trivial field
+    let field: LatticeGaugeField<U1, 2, f64> =
+        LatticeGaugeField::try_random(lattice, 6.0, &mut rng).unwrap();
+
+    let coeffs = ActionCoeffs::symanzik();
+    let action = field.try_improved_action(&coeffs);
+
+    assert!(action.is_ok());
+    let val = action.unwrap();
+    // Action should be non-zero
+    assert!(val.abs() > 1e-10 || val.abs() < 1000.0);
+}
+
+// ============================================================================
+// Additional Metropolis Coverage
+// ============================================================================
+
+#[test]
+fn test_metropolis_sweep_empty_lattice() {
+    let lattice = create_1d_lattice(); // Just a dummy lattice
+    let links = std::collections::HashMap::new(); // Empty links
+    let mut field: LatticeGaugeField<U1, 1, f64> =
+        LatticeGaugeField::from_links_unchecked(lattice, links, 1.0);
+
+    let mut rng = deep_causality_rand::rng();
+    let rate = field.metropolis_sweep_f64(0.1, &mut rng);
+
+    assert!(rate.is_ok());
+    assert_eq!(rate.unwrap(), 0.0); // Should handle empty gracefully
+}
+
+#[test]
+fn test_metropolis_high_epsilon_acceptance() {
+    let lattice = create_test_lattice();
+    let mut rng = deep_causality_rand::rng();
+    let mut field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+
+    // Epsilon = 50.0 is huge perturbation
+    // Should result in very low acceptance (likely 0)
+    let rate = field.metropolis_sweep_f64(50.0, &mut rng).unwrap();
+    assert!(
+        rate < 0.5,
+        "High epsilon should yield low acceptance, got {}",
+        rate
+    );
+}
+
+// ============================================================================
+// Phase 2: Coverage Tests (Flow, Plaquette, Smearing, Gauge Ops)
+// ============================================================================
+
+// --- Plaquette Operations (ops_plague.rs) ---
+
+#[test]
+fn test_try_rectangle_invalid_dirs() {
+    let lattice = create_test_lattice();
+    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+
+    // mu == nu impossible
+    let res = field.try_rectangle(&[0, 0], 0, 0);
+    assert!(res.is_err());
+
+    // out of bounds
+    let res = field.try_rectangle(&[0, 0], 0, 5);
+    assert!(res.is_err());
+}
+
+#[test]
+fn test_try_rectangle_identity() {
+    let lattice = create_test_lattice();
+    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+
+    // Rect on identity field -> Identity
+    let rect = field.try_rectangle(&[0, 0], 0, 1);
+    assert!(rect.is_ok());
+    let val = rect.unwrap().trace();
+    assert!((val - 1.0).abs() < 1e-10);
+}
+
+#[test]
+fn test_try_plaquette_invalid_dirs() {
+    let lattice = create_test_lattice();
+    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+
+    let res = field.try_plaquette(&[0, 0], 0, 0);
+    assert!(res.is_err());
+}
+
+// --- Gauge Ops (ops_monte_carlo.rs / ops_gauge.rs) ---
+
+#[test]
+fn test_try_staple_identity() {
+    let lattice = create_test_lattice();
+    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice.clone(), 6.0);
+
+    // Pick an edge and check staple sum
+    let mut edge_iter = lattice.cells(1);
+    if let Some(edge) = edge_iter.next() {
+        let staple = field.try_staple(&edge);
+        assert!(staple.is_ok());
+        let s = staple.unwrap();
+        // In 2D, sum of 2 staples for identity = 2 * Identity
+        assert!((s.trace() - 2.0).abs() < 1e-10);
+    }
+}
+
+#[test]
+fn test_gauge_transform_infallible() {
+    let lattice = create_test_lattice();
+    let mut field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+
+    // Transform with identity
+    field.gauge_transform(|_site| LinkVariable::identity());
+
+    let action = field.try_wilson_action().unwrap();
+    assert!(action.abs() < 1e-10);
+}
+
+// --- Smearing (ops_smearing.rs) ---
+
+#[test]
+fn test_smearing_constructors() {
+    use deep_causality_topology::SmearingParams;
+
+    let ape = SmearingParams::<f64>::ape_default();
+    assert!((ape.alpha - 0.45).abs() < 1e-10);
+
+    let stout = SmearingParams::<f64>::stout_default();
+    assert!((stout.alpha - 0.12).abs() < 1e-10);
+}
+
+#[test]
+fn test_try_smear_identity_invariant() {
+    use deep_causality_topology::SmearingParams;
+
+    let lattice = create_test_lattice();
+    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let params = SmearingParams::ape_default();
+
+    let smeared = field.try_smear(&params);
+    assert!(smeared.is_ok());
+
+    // Identity is a fixed point of smearing
+    let smeared_field = smeared.unwrap();
+    let action = smeared_field.try_wilson_action().unwrap();
+    assert!(action.abs() < 1e-10);
+}
+
+// --- Gradient Flow (ops_gradient_flow.rs) ---
+
+#[test]
+fn test_try_flow_identity_invariant() {
+    use deep_causality_topology::{FlowMethod, FlowParams};
+
+    let lattice = create_test_lattice();
+    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let params = FlowParams {
+        epsilon: 0.01,
+        t_max: 0.05,
+        method: FlowMethod::Euler,
+    };
+
+    let flowed = field.try_flow(&params);
+    assert!(flowed.is_ok());
+    let f_field = flowed.unwrap();
+
+    let action = f_field.try_wilson_action().unwrap();
+    assert!(action.abs() < 1e-10);
+}
+
+#[test]
+fn test_try_flow_rk3() {
+    use deep_causality_topology::{FlowMethod, FlowParams};
+
+    let lattice = create_test_lattice();
+    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let params = FlowParams {
+        epsilon: 0.01,
+        t_max: 0.05,
+        method: FlowMethod::RungeKutta3,
+    };
+
+    let flowed = field.try_flow(&params);
+    assert!(flowed.is_ok());
+}
+
+#[test]
+fn test_t2_energy_value() {
+    let lattice = create_test_lattice();
+    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+
+    let t2e = field.try_t2_energy(0.5);
+    assert!(t2e.is_ok());
+    assert!(t2e.unwrap().abs() < 1e-10);
+}

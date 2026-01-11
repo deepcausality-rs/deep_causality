@@ -24,7 +24,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 mod display;
 mod getters;
-mod ops_actions;
+pub mod ops_actions;
 mod ops_continuum;
 mod ops_gauge;
 mod ops_gauge_transform;
