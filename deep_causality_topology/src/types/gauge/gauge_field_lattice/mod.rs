@@ -8,10 +8,6 @@
 //! A lattice gauge field assigns group-valued link variables to each edge
 //! of a discrete lattice, enabling Wilson-formulation gauge theory.
 //!
-//! This implementation follows production standards:
-//! - All fallible operations return `Result<T, TopologyError>`
-//! - No unwrap/expect calls in public API
-//! - Full mathematical implementations without placeholders
 //!
 //! # Mathematical Structure
 //!
@@ -36,7 +32,7 @@ pub mod ops_gradient_flow;
 mod ops_metropolis;
 mod ops_monte_carlo;
 mod ops_plague;
-mod ops_smearing;
+pub mod ops_smearing;
 
 mod ops_wilson;
 mod utils;

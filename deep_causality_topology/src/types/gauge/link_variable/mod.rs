@@ -8,10 +8,6 @@
 //! A link variable U_μ(x) ∈ G is an element of the gauge group assigned
 //! to the edge connecting lattice site x to x + μ̂.
 //!
-//! This implementation follows production standards:
-//! - All fallible operations return `Result<T, LinkVariableError>`
-//! - No unwrap/expect calls
-//! - Full mathematical implementations without shortcuts
 
 use crate::{GaugeGroup, LinkVariableError};
 use deep_causality_tensor::CausalTensor;
@@ -223,9 +219,10 @@ impl<G: GaugeGroup, T: Clone + Default> LinkVariable<G, T> {
         // Generate random matrix with entries in [-1, 1]
         let mut data = Vec::with_capacity(n * n);
         for _ in 0..(n * n) {
-            // Generate uniform in [0, 1), scale to [-1, 1)
+            // Generate uniform in [0, 1), scale to [-0.5, 0.5)
+            // Smaller range ensures initial matrix is within Newton-Schulz convergence radius
             let val: f64 = rng.random();
-            data.push(T::from(2.0 * val - 1.0));
+            data.push(T::from(val - 0.5));
         }
 
         let tensor = CausalTensor::new(data, vec![n, n])

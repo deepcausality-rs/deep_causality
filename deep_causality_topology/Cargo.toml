@@ -72,20 +72,29 @@ name = "basic_graph"
 path = "examples/basic_graph.rs"
 
 [[example]]
-name = "manifold_analysis"
-path = "examples/manifold_analysis.rs"
+name = "chain_algebra"
+path = "examples/chain_algebra.rs"
+
+[[example]]
+name = "complex_operators"
+path = "examples/complex_operators.rs"
+
+[[example]]
+name = "differential_field"
+path = "examples/differential_field.rs"
 
 [[example]]
 name = "hkt_graph_convolution"
 path = "examples/hkt_graph_convolution.rs"
 
 [[example]]
-name = "chain_algebra"
-path = "examples/chain_algebra.rs"
+name = "lattice_gauge_simulation"
+path = "examples/lattice_gauge_simulation.rs"
 
 [[example]]
-name = "differential_field"
-path = "examples/differential_field.rs"
+name = "manifold_analysis"
+path = "examples/manifold_analysis.rs"
+
 
 [[bench]]
 name = "bench_causal_topology"
