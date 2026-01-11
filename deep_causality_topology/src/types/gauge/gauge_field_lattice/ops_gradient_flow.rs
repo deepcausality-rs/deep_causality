@@ -364,8 +364,6 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     where
         T: From<f64> + PartialOrd,
     {
-        let _target = T::from(0.3);
-
         let target = T::from(0.3);
         let mut current = self.clone();
         let mut t = T::from(0.0);
@@ -390,10 +388,6 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
                 // t₀ ≈ prev_t + (target - prev_t2e) * ε / (t2e - prev_t2e)
                 let dt = t - prev_t;
                 let d_t2e = t2e - prev_t2e;
-
-                if d_t2e == T::from(0.0) {
-                    return Ok(prev_t);
-                }
 
                 if d_t2e == T::from(0.0) {
                     return Ok(prev_t);

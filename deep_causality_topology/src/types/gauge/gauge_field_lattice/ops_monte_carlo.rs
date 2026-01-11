@@ -85,10 +85,10 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
             let u_nu_at_n_minus_nu =
                 self.get_link_or_identity(&LatticeCell::edge(site_minus_nu, nu));
 
-            let backward = u_nu_at_n_minus_nu
+            let backward = u_nu_at_n_plus_mu_minus_nu
                 .dagger()
                 .mul(&u_mu_at_n_minus_nu.dagger())
-                .mul(&u_nu_at_n_plus_mu_minus_nu);
+                .mul(&u_nu_at_n_minus_nu);
 
             // Add staples to sum
             staple_sum = staple_sum.add(&forward);

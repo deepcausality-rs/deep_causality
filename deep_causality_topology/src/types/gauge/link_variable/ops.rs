@@ -282,8 +282,9 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
             let xdx = x_dag.mul(&x);
 
             // Check convergence before next iteration
-            let residual = compute_identity_deviation::<G, T>(&xdx)?;
-            if residual < T::from(1e-12) {
+            // Check convergence before next iteration (compute_identity_deviation returns ||X-I||_F^2)
+            let residual_sq = compute_identity_deviation::<G, T>(&xdx)?;
+            if residual_sq < T::from(1e-24) {
                 break;
             }
 

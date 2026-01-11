@@ -60,9 +60,17 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         F: Fn(&[usize; D]) -> LinkVariable<G, T>,
         T: From<f64>,
     {
+        use std::collections::HashMap;
+
         // Clone shape upfront to avoid borrow conflict
         let shape: [usize; D] = *self.lattice.shape();
         let edges: Vec<_> = self.links.keys().cloned().collect();
+
+        // Cache Ω(x) so each site uses a single gauge element during this transform
+        let mut omega_cache: HashMap<[usize; D], LinkVariable<G, T>> = HashMap::new();
+        let mut omega_at = |x: &[usize; D]| -> LinkVariable<G, T> {
+            omega_cache.entry(*x).or_insert_with(|| gauge_fn(x)).clone()
+        };
 
         for edge in edges {
             let site = *edge.position();
@@ -72,9 +80,9 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
             let mut site_plus_mu = site;
             site_plus_mu[mu] = (site_plus_mu[mu] + 1) % shape[mu];
 
-            // Get gauge elements
-            let omega_x = gauge_fn(&site);
-            let omega_x_plus_mu = gauge_fn(&site_plus_mu);
+            // Get cached gauge elements
+            let omega_x = omega_at(&site);
+            let omega_x_plus_mu = omega_at(&site_plus_mu);
 
             // U'_μ(x) = Ω(x) · U_μ(x) · Ω†(x + μ̂)
             let current = self.get_link_or_identity(&edge);
