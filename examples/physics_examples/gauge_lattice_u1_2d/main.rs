@@ -21,7 +21,7 @@
 //!
 //! M. Creutz, *Quarks, Gluons and Lattices*, Cambridge University Press (1983), Chapter 8
 
-use deep_causality_num::{DoubleFloat, Float};
+use deep_causality_num::{Complex, DoubleFloat, Float};
 use deep_causality_topology::{Lattice, LatticeGaugeField, U1};
 use std::sync::Arc;
 
@@ -155,7 +155,8 @@ fn verify_plaquette(lattice: Arc<Lattice<2>>, beta: f64, tolerance: f64) -> Veri
     let tolerance_t = flt!(tolerance);
 
     // Create identity field (cold start = trivial vacuum)
-    let field: LatticeGaugeField<U1, 2, FloatType> = LatticeGaugeField::identity(lattice, beta_t);
+    let field: LatticeGaugeField<U1, 2, Complex<FloatType>, FloatType> =
+        LatticeGaugeField::identity(lattice, beta_t);
 
     // For identity configuration, all plaquettes = I, so ⟨P⟩ = 1.0
     // This verifies the lattice structure and plaquette calculation are correct.

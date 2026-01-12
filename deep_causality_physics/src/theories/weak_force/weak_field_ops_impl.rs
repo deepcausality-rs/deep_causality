@@ -8,14 +8,14 @@ use crate::error::PhysicsError;
 use crate::theories::WeakField;
 use crate::{WeakFieldOps, WeakIsospin};
 use deep_causality_metric::{LorentzianMetric, WestCoastMetric};
-use deep_causality_num::{Field, Float};
+use deep_causality_num::{RealField, ToPrimitive};
 use deep_causality_tensor::{CausalTensor, TensorData};
 use deep_causality_topology::{BaseTopology, GaugeField, GaugeFieldWitness, Manifold};
 use std::f64::consts::PI;
 
 impl<S> WeakFieldOps<S> for WeakField<S>
 where
-    S: Field + Float + Clone + From<f64> + Into<f64> + TensorData,
+    S: RealField + ToPrimitive + From<f64> + Into<f64> + TensorData,
 {
     fn new_field(base: Manifold<S, S>, connection: CausalTensor<S>) -> Result<Self, PhysicsError> {
         // Enforce West Coast metric (+---)
@@ -45,7 +45,11 @@ where
     }
 
     fn charged_current_propagator(momentum_transfer_sq: S) -> Result<S, PhysicsError> {
-        if !momentum_transfer_sq.is_finite() {
+        if !momentum_transfer_sq
+            .to_f64()
+            .unwrap_or(f64::NAN)
+            .is_finite()
+        {
             return Err(PhysicsError::NumericalInstability(
                 "Non-finite q² in propagator".into(),
             ));
@@ -66,7 +70,11 @@ where
         momentum_transfer_sq: S,
         fermion: &WeakIsospin,
     ) -> Result<S, PhysicsError> {
-        if !momentum_transfer_sq.is_finite() {
+        if !momentum_transfer_sq
+            .to_f64()
+            .unwrap_or(f64::NAN)
+            .is_finite()
+        {
             return Err(PhysicsError::NumericalInstability(
                 "Non-finite q² in propagator".into(),
             ));
@@ -87,7 +95,7 @@ where
     }
 
     fn weak_decay_width(mass: S) -> Result<S, PhysicsError> {
-        if mass <= S::zero() || !mass.is_finite() {
+        if mass <= S::zero() || !mass.to_f64().unwrap_or(f64::NAN).is_finite() {
             return Err(PhysicsError::DimensionMismatch(format!(
                 "Mass must be positive: {:?}",
                 mass.to_f64().unwrap_or(0.0)
@@ -98,7 +106,8 @@ where
         let factor = <S as From<f64>>::from(192.0);
         let pi_3 = pi * pi * pi; // powi(3) often just multiply
 
-        Ok(g_f * g_f * mass.powi(5) / (factor * pi_3))
+        let mass_5 = mass.powf(S::from(5.0));
+        Ok(g_f * g_f * mass_5 / (factor * pi_3))
     }
 
     fn muon_lifetime() -> S {
@@ -108,7 +117,8 @@ where
         let factor = <S as From<f64>>::from(192.0);
         let pi_3 = pi * pi * pi;
 
-        let rate = g_f * g_f * m_muon.powi(5) / (factor * pi_3);
+        let m_muon_5 = m_muon.powf(S::from(5.0));
+        let rate = g_f * g_f * m_muon_5 / (factor * pi_3);
         let hbar = <S as From<f64>>::from(6.582119569e-25);
         hbar / rate
     }
@@ -118,7 +128,7 @@ where
         let w_mass = <S as From<f64>>::from(W_MASS);
         let pi = <S as From<f64>>::from(PI);
         let factor_val = <S as From<f64>>::from(6.0) * <S as From<f64>>::from(2.0).sqrt() * pi;
-        let factor = g_f * w_mass.powi(3) / factor_val;
+        let factor = g_f * w_mass.powf(S::from(3.0)) / factor_val;
 
         let channels = <S as From<f64>>::from(3.0 + 2.0 * 3.0);
         factor * channels
@@ -129,28 +139,28 @@ where
         let z_mass = <S as From<f64>>::from(Z_MASS);
         let pi = <S as From<f64>>::from(PI);
         let factor_val = <S as From<f64>>::from(6.0) * <S as From<f64>>::from(2.0).sqrt() * pi;
-        let factor = g_f * z_mass.powi(3) / factor_val;
+        let factor = g_f * z_mass.powf(S::from(3.0)) / factor_val;
 
         let mut width = S::zero();
         let nu = WeakIsospin::neutrino();
         let g_v_nu = <S as From<f64>>::from(nu.vector_coupling());
         let g_a_nu = <S as From<f64>>::from(nu.axial_coupling());
-        width = width + <S as From<f64>>::from(3.0) * (g_v_nu * g_v_nu + g_a_nu * g_a_nu);
+        width += <S as From<f64>>::from(3.0) * (g_v_nu * g_v_nu + g_a_nu * g_a_nu);
 
         let lepton = WeakIsospin::lepton_doublet();
         let g_v_l = <S as From<f64>>::from(lepton.vector_coupling());
         let g_a_l = <S as From<f64>>::from(lepton.axial_coupling());
-        width = width + <S as From<f64>>::from(3.0) * (g_v_l * g_v_l + g_a_l * g_a_l);
+        width += <S as From<f64>>::from(3.0) * (g_v_l * g_v_l + g_a_l * g_a_l);
 
         let up = WeakIsospin::up_quark();
         let g_v_u = <S as From<f64>>::from(up.vector_coupling());
         let g_a_u = <S as From<f64>>::from(up.axial_coupling());
-        width = width + <S as From<f64>>::from(6.0) * (g_v_u * g_v_u + g_a_u * g_a_u); // 2*3
+        width += <S as From<f64>>::from(6.0) * (g_v_u * g_v_u + g_a_u * g_a_u); // 2*3
 
         let down = WeakIsospin::down_quark();
         let g_v_d = <S as From<f64>>::from(down.vector_coupling());
         let g_a_d = <S as From<f64>>::from(down.axial_coupling());
-        width = width + <S as From<f64>>::from(9.0) * (g_v_d * g_v_d + g_a_d * g_a_d); // 3*3
+        width += <S as From<f64>>::from(9.0) * (g_v_d * g_v_d + g_a_d * g_a_d); // 3*3
 
         factor * width
     }

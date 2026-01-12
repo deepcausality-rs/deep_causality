@@ -730,11 +730,6 @@ fn test_boltzmann_distribution_diagnostic() {
     }
 
     // The test always passes - it's for documentation
-    assert!(
-        true,
-        "Diagnostic test: acceptance={:.2}, plaq_before={}, plaq_after={}, changed={}",
-        avg_acceptance, plaq_cold, plaq_after, plaquette_changed
-    );
 }
 
 /// Test that the equilibrium plaquette matches I₁(β)/I₀(β)

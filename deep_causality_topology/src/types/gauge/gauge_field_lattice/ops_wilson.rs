@@ -64,7 +64,7 @@ impl<
                     let tr = plaq.re_trace();
                     // S_p = 1 - Re[Tr(U_p)] / N
                     let s_p = one - tr / n_t;
-                    action = action + s_p;
+                    action += s_p;
                 }
             }
         }
@@ -339,7 +339,7 @@ impl<
         for site_cell in self.lattice.cells(0) {
             let site = *site_cell.position();
             let p = self.try_polyakov_loop(&site, temporal_dir)?;
-            sum = sum + p;
+            sum += p;
             count += 1;
         }
 

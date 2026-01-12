@@ -4,7 +4,7 @@
  */
 use crate::PhysicsError;
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::{Field, Float};
+use deep_causality_num::RealField;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::Manifold;
 
@@ -43,7 +43,7 @@ use deep_causality_topology::Manifold;
 /// Uses West Coast signature (+---) following particle physics conventions.
 pub trait GaugeEmOps<S>
 where
-    S: Field + Float + Clone + From<f64> + Into<f64>,
+    S: RealField + From<f64> + Into<f64>,
 {
     /// Creates a new QED field from electric and magnetic field vectors.
     ///

@@ -298,7 +298,7 @@ impl<
 
         for val in slice {
             // Use norm_sqr() to get real-valued squared norm |z|^2
-            sum = sum + val.norm_sqr();
+            sum += val.norm_sqr();
         }
         sum
     }

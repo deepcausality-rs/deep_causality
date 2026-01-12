@@ -112,7 +112,7 @@ impl<
                 FlowMethod::Euler => current.try_euler_step(&epsilon)?,
                 FlowMethod::RungeKutta3 => current.try_rk3_step(&epsilon)?,
             };
-            t = t + epsilon;
+            t += epsilon;
         }
 
         Ok(current)
@@ -341,7 +341,7 @@ impl<
                     let plaq = self.try_plaquette(&site, mu, nu)?;
                     let tr = plaq.re_trace();
                     let e_p = one - tr / n_t;
-                    sum = sum + e_p;
+                    sum += e_p;
                     count += 1;
                 }
             }
@@ -443,7 +443,7 @@ impl<
                 FlowMethod::Euler => current.try_euler_step(&epsilon)?,
                 FlowMethod::RungeKutta3 => current.try_rk3_step(&epsilon)?,
             };
-            t = t + epsilon;
+            t += epsilon;
 
             let t2e = current.try_t2_energy(t)?;
 

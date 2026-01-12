@@ -7,17 +7,16 @@ use crate::GaugeEmOps;
 use crate::error::PhysicsError;
 use deep_causality_metric::{LorentzianMetric, WestCoastMetric};
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::{Field, Float};
+use deep_causality_num::RealField;
 use deep_causality_tensor::{CausalTensor, TensorData};
-use deep_causality_topology::GaugeFieldWitness;
 use deep_causality_topology::{
-    BaseTopology, GaugeField, Manifold, Simplex, SimplicialComplexBuilder, U1,
+    BaseTopology, GaugeField, GaugeFieldWitness, Manifold, Simplex, SimplicialComplexBuilder, U1,
 };
 
 /// Blanket implementation of GaugeEmOps for GaugeField<U1, S, S> where S: Field + Float + TensorData
 impl<S> GaugeEmOps<S> for GaugeField<U1, S, S>
 where
-    S: Field + Float + TensorData + Clone + From<f64> + Into<f64> + Default + PartialOrd,
+    S: RealField + TensorData + From<f64> + Into<f64>,
 {
     fn from_fields(
         base: Manifold<S, S>,
@@ -247,7 +246,7 @@ where
         let b = self.magnetic_field()?;
 
         let e_dot_b = dot_product_3d(&e, &b);
-        let abs_val: f64 = Float::abs(e_dot_b).into();
+        let abs_val: f64 = e_dot_b.abs().into();
         Ok(abs_val < 1e-10)
     }
 
@@ -258,7 +257,7 @@ where
         let e_sq = squared_magnitude_3d(&e);
         let b_sq = squared_magnitude_3d(&b);
 
-        let diff: f64 = Float::abs(e_sq - b_sq).into();
+        let diff: f64 = (e_sq - b_sq).abs().into();
         let sum: f64 = (e_sq + b_sq).into();
         let threshold = 1e-10 * sum.max(1.0);
         Ok(diff < threshold)
@@ -286,7 +285,7 @@ where
 /// Computes the squared magnitude of a 3D vector (indices 2, 3, 4)
 fn squared_magnitude_3d<S>(mv: &CausalMultiVector<S>) -> S
 where
-    S: Field + Float + Clone + From<f64> + Default,
+    S: RealField + Clone + From<f64> + Default,
 {
     let data = mv.data();
     let x = data.get(2).cloned().unwrap_or_else(S::zero);
@@ -299,15 +298,15 @@ where
 /// Computes the magnitude of a 3D vector
 fn magnitude_3d<S>(mv: &CausalMultiVector<S>) -> S
 where
-    S: Field + Float + Clone + From<f64> + Default,
+    S: RealField + Clone + From<f64> + Default,
 {
-    Float::sqrt(squared_magnitude_3d(mv))
+    squared_magnitude_3d(mv).sqrt()
 }
 
 /// Computes the dot product of two 3D vectors
 fn dot_product_3d<S>(a: &CausalMultiVector<S>, b: &CausalMultiVector<S>) -> S
 where
-    S: Field + Float + Clone + From<f64> + Default,
+    S: RealField + Clone + From<f64> + Default,
 {
     let a_data = a.data();
     let b_data = b.data();
@@ -329,7 +328,7 @@ fn cross_product_3d<S>(
     b: &CausalMultiVector<S>,
 ) -> Result<CausalMultiVector<S>, PhysicsError>
 where
-    S: Field + Float + TensorData + Clone + From<f64> + Default,
+    S: RealField + TensorData + Clone + From<f64> + Default,
 {
     let a_data = a.data();
     let b_data = b.data();

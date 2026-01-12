@@ -56,6 +56,7 @@ impl<G: GaugeGroup, const D: usize, M, R> LatticeGaugeField<G, D, M, R> {
     ///
     /// Tuple of (lattice, links, beta).
     #[inline]
+    #[allow(clippy::type_complexity)]
     pub fn into_parts(
         self,
     ) -> (

@@ -137,19 +137,19 @@ impl<
                     let plaq = self.try_plaquette(&site, mu, nu)?;
                     let tr_plaq = plaq.re_trace();
                     let s_plaq = one - tr_plaq / n_t;
-                    plaq_sum = plaq_sum + s_plaq;
+                    plaq_sum += s_plaq;
 
                     // Rectangle (1×2) contribution - two orientations
                     let rect1 = self.try_rectangle(&site, mu, nu)?;
                     let tr_rect1 = rect1.re_trace();
                     let s_rect1 = one - tr_rect1 / n_t;
-                    rect_sum = rect_sum + s_rect1;
+                    rect_sum += s_rect1;
 
                     // Rectangle (2×1) = (1×2) with swapped directions
                     let rect2 = self.try_rectangle(&site, nu, mu)?;
                     let tr_rect2 = rect2.re_trace();
                     let s_rect2 = one - tr_rect2 / n_t;
-                    rect_sum = rect_sum + s_rect2;
+                    rect_sum += s_rect2;
                 }
             }
         }

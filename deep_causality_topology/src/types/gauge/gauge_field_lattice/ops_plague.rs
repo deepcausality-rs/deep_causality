@@ -231,7 +231,7 @@ impl<
                 for nu in (mu + 1)..D {
                     let plaq = self.try_plaquette(&site, mu, nu)?;
                     let tr = plaq.re_trace();
-                    sum = sum + tr;
+                    sum += tr;
                     count += 1;
                 }
             }
