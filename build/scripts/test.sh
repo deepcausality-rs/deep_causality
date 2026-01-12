@@ -7,11 +7,7 @@ set -o nounset
 set -o pipefail
 
 
-cargo test --doc
-
-cargo test
-
 # MLX GPU acceleration can only be tested single threaded
 # because of its single command quqeue that is not threat safe.
-cargo test --doc  --features mlx
-cargo test --features mlx -- --test-threads=1
+command cargo test --doc --all-features
+command cargo test --all-features -- --test-threads=1
