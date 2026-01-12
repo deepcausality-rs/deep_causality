@@ -354,10 +354,8 @@ impl<
             return Self::try_identity();
         }
 
-        // Apply normalization to improve Newton-Schulz stability
-        let _one: R = R::one();
-        // inv_norm is R TODO: check to replace f64 for R
-        let inv_norm = R::from_f64(div_f64(1.0, to_f64(norm_sq.sqrt()))).unwrap();
+        // inv_norm is R
+        let inv_norm = R::one() / norm_sq.sqrt();
         // Convert R to M for scaling
         let inv_norm_m = M::from_re_im(inv_norm, R::zero());
         x = x.scale(&inv_norm_m);
@@ -399,13 +397,80 @@ impl<
         }
 
         // Ensure determinant = 1 for SU(N) by dividing by det^{1/N}
-        // For SU(2) and SU(3) this is a standard normalization
-        // Skipped here as it requires complex arithmetic for general case
-        // (but we have complex arithmetic now!)
-        // For now, we stick to unitary projection which is sufficient for many purposes
-        // Real implementation used Newton-Schulz for Unitary part.
+        // This is only required for non-Abelian groups like SU(2), SU(3)
+        // Abelian groups like U(1) are unitary U(1) = circle group, det=u, so u/det^1 = 1 which is wrong
+        // So we only apply this if N >= 2
+        let n = G::matrix_dim();
+        if n >= 2 {
+            let det = self.try_determinant(&x)?;
+            // Compute phase factor to remove: alpha = det^{-1/N}
+            // det = r * exp(i * theta) -> because it's unitary, r=1
+            // det^{-1/N} = exp(-i * theta / N)
+
+            // arg() returns R
+            let theta = det.arg();
+            let n_r = R::from_usize(n).ok_or_else(|| {
+                LinkVariableError::NumericalError("Failed to convert N to T".to_string())
+            })?;
+            let theta_norm = theta / n_r;
+
+            // Correction factor: exp(-i * theta/N)
+            // cis(-theta) = cos(-theta) + i sin(-theta)
+            let neg_theta = -theta_norm;
+            let phase_correction = M::from_polar(R::one(), neg_theta);
+
+            // Apply correction
+            x = x.scale(&phase_correction);
+        }
 
         Ok(x)
+    }
+
+    /// Compute determinant of the matrix.
+    ///
+    /// Only implemented for N=2 and N=3.
+    fn try_determinant(&self, link: &Self) -> Result<M, LinkVariableError>
+    where
+        M: ComplexField<R>,
+    {
+        let n = G::matrix_dim();
+        let s = link.as_slice();
+
+        match n {
+            2 => {
+                // | a b |
+                // | c d |
+                // det = ad - bc
+                let a = s[0];
+                let b = s[1];
+                let c = s[2];
+                let d = s[3];
+                Ok(a * d - b * c)
+            }
+            3 => {
+                // Rule of Sarrus
+                let m00 = s[0];
+                let m01 = s[1];
+                let m02 = s[2];
+                let m10 = s[3];
+                let m11 = s[4];
+                let m12 = s[5];
+                let m20 = s[6];
+                let m21 = s[7];
+                let m22 = s[8];
+
+                let term1 = m00 * m11 * m22;
+                let term2 = m01 * m12 * m20;
+                let term3 = m02 * m10 * m21;
+
+                let term4 = m02 * m11 * m20;
+                let term5 = m01 * m10 * m22;
+                let term6 = m00 * m12 * m21;
+
+                Ok(term1 + term2 + term3 - term4 - term5 - term6)
+            }
+            _ => Err(LinkVariableError::InvalidDimension(n)),
+        }
     }
 }
 
@@ -440,12 +505,3 @@ fn self_diff_sq<M: ComplexField<R>, R: RealField>(diff: M, sum: &mut R) {
 }
 
 // Helpers for generic float math
-fn to_f64<T: ToPrimitive>(val: T) -> f64 {
-    val.to_f64().unwrap_or(0.0)
-}
-
-fn div_f64(a: f64, b: f64) -> f64 {
-    if b == 0.0 { 0.0 } else { a / b }
-}
-
-use deep_causality_num::ToPrimitive;
