@@ -2,10 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-
 use crate::{GaugeField, GaugeGroup};
+use std::fmt::{Debug, Display};
 
-impl<G: GaugeGroup, T, A, F> std::fmt::Display for GaugeField<G, T, A, F> {
+impl<G: GaugeGroup, M: Debug, R> Display for GaugeField<G, M, R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,

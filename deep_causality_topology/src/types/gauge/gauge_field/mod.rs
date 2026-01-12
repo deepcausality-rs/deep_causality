@@ -5,26 +5,26 @@
 
 use crate::{BaseTopology, GaugeGroup, Manifold, TopologyError};
 use deep_causality_metric::Metric;
-use deep_causality_tensor::{CausalTensor, TensorData};
+use deep_causality_tensor::CausalTensor;
 use std::marker::PhantomData;
 
 mod display;
 mod getters;
 
+use deep_causality_num::{Field, RealField};
+
 /// A gauge field over a base manifold.
 ///
 /// A gauge field is a principal fiber bundle with connection, parameterized by:
 /// - A gauge group G defining the local symmetry
-/// - A base manifold scalar type T
-/// - A connection (gauge potential) A
-/// - A field strength (curvature) F
+/// - A matrix element type M (e.g., Complex<f64>)
+/// - A scalar type R (e.g., f64)
 ///
 /// # Type Parameters
 ///
 /// * `G` - The gauge group (U1, SU2, SU3, Lorentz, etc.)
-/// * `T` - The base manifold scalar type (e.g., f64, DoubleFloat)
-/// * `A` - The connection (potential) scalar type
-/// * `F` - The field strength (curvature) scalar type
+/// * `M` - The matrix element type (field values)
+/// * `R` - The real scalar type (base manifold, metric)
 ///
 /// # Mathematical Structure
 ///
@@ -47,26 +47,26 @@ mod getters;
 /// | QCD    | SU(3)       | Gluon field G_μ^a | G_μν^a            |
 /// | GR     | SO(3,1)     | Christoffel Γ     | Riemann R^ρ_σμν   |
 #[derive(Debug, Clone)]
-pub struct GaugeField<G: GaugeGroup, T, A, F> {
+pub struct GaugeField<G: GaugeGroup, M, R> {
     /// Base manifold (spacetime). Private for invariant preservation.
-    base: Manifold<T, T>,
+    base: Manifold<R, R>,
 
     /// Spacetime metric signature (Minkowski, Euclidean, etc.).
     metric: Metric,
 
     /// Gauge connection (potential).
     /// Shape: [num_points, spacetime_dim, lie_algebra_dim]
-    connection: CausalTensor<A>,
+    connection: CausalTensor<M>,
 
     /// Field strength (curvature).
     /// Shape: [num_points, spacetime_dim, spacetime_dim, lie_algebra_dim]
-    field_strength: CausalTensor<F>,
+    field_strength: CausalTensor<M>,
 
     /// Gauge group marker.
     _gauge: PhantomData<G>,
 }
 
-impl<G: GaugeGroup, T: TensorData, A, F> GaugeField<G, T, A, F> {
+impl<G: GaugeGroup, M: Field, R: RealField> GaugeField<G, M, R> {
     /// Creates a new gauge field with an explicit metric.
     ///
     /// # Mathematical Definition
@@ -102,10 +102,10 @@ impl<G: GaugeGroup, T: TensorData, A, F> GaugeField<G, T, A, F> {
     /// )?;
     /// ```
     pub fn new(
-        base: Manifold<T, T>,
+        base: Manifold<R, R>,
         metric: Metric,
-        connection: CausalTensor<A>,
-        field_strength: CausalTensor<F>,
+        connection: CausalTensor<M>,
+        field_strength: CausalTensor<M>,
     ) -> Result<Self, TopologyError> {
         // Validate connection shape: [num_points, spacetime_dim, lie_algebra_dim]
         let num_points = base.len().max(1);
@@ -177,9 +177,9 @@ impl<G: GaugeGroup, T: TensorData, A, F> GaugeField<G, T, A, F> {
     ///
     /// Returns `TopologyError::GaugeFieldError` if tensor shapes don't match expected dimensions.
     pub fn with_default_metric(
-        base: Manifold<T, T>,
-        connection: CausalTensor<A>,
-        field_strength: CausalTensor<F>,
+        base: Manifold<R, R>,
+        connection: CausalTensor<M>,
+        field_strength: CausalTensor<M>,
     ) -> Result<Self, TopologyError> {
         Self::new(base, G::default_metric(), connection, field_strength)
     }

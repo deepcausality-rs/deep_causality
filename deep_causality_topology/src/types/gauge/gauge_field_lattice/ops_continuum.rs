@@ -8,14 +8,23 @@
 //! These methods extract continuum field theory quantities from lattice configurations.
 
 use crate::{CWComplex, GaugeGroup, LatticeGaugeField, LinkVariable, TopologyError};
-use deep_causality_num::Float;
+use deep_causality_num::{
+    ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
+};
 use deep_causality_tensor::TensorData;
+use std::fmt::Debug;
 
 // ============================================================================
 // Continuum Limit Quantities
 // ============================================================================
 
-impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
+impl<
+    G: GaugeGroup,
+    const D: usize,
+    M: TensorData + Debug + ComplexField<R> + DivisionAlgebra<R>,
+    R: RealField + FromPrimitive + ToPrimitive,
+> LatticeGaugeField<G, D, M, R>
+{
     /// Extract the naive lattice field strength tensor F_μν.
     ///
     /// Computes an approximation to the continuum field strength from the plaquette.
@@ -61,13 +70,14 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         site: &[usize; D],
         mu: usize,
         nu: usize,
-    ) -> Result<LinkVariable<G, T>, TopologyError>
+    ) -> Result<LinkVariable<G, M, R>, TopologyError>
     where
-        T: Float,
+        M: Field + DivisionAlgebra<R>,
+        R: RealField,
     {
         if mu == nu {
             // F_μμ = 0 by antisymmetry
-            return LinkVariable::<G, T>::try_zero().map_err(TopologyError::from);
+            return LinkVariable::<G, M, R>::try_zero().map_err(TopologyError::from);
         }
 
         // Get plaquette U_μν
@@ -75,16 +85,26 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
 
         // F_μν ≈ (U_μν - U_μν†) / 2
         // This gives the anti-Hermitian part (proportional to ia²F)
+        // F_μν ≈ (U_μν - U_μν†) / 2
+        // This gives the anti-Hermitian part (proportional to ia²F)
         let u_dag = u_munu.dagger();
-        let neg_one = T::from(-1.0).ok_or_else(|| {
-            TopologyError::LatticeGaugeError("Failed to convert -1.0 to T".to_string())
-        })?;
-        let diff = u_munu.add(&u_dag.scale(&neg_one));
-        let half = T::from(0.5).ok_or_else(|| {
-            TopologyError::LatticeGaugeError("Failed to convert 0.5 to T".to_string())
-        })?;
+        let neg_one = M::from_re_im(
+            R::from_f64(-1.0).ok_or_else(|| {
+                TopologyError::LatticeGaugeError("Failed to convert -1 to T".to_string())
+            })?,
+            R::zero(),
+        );
+        let diff = u_munu
+            .try_add(&u_dag.try_scale(&neg_one).map_err(TopologyError::from)?)
+            .map_err(TopologyError::from)?;
+        let half = M::from_re_im(
+            R::from_f64(0.5).ok_or_else(|| {
+                TopologyError::LatticeGaugeError("Failed to convert 0.5 to T".to_string())
+            })?,
+            R::zero(),
+        );
 
-        Ok(diff.scale(&half))
+        diff.try_scale(&half).map_err(TopologyError::from)
     }
 
     /// Compute the topological charge density q(x).
@@ -124,39 +144,43 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// # Errors
     ///
     /// Returns error if field strength computation fails.
-    pub fn try_topological_charge_density(&self, site: &[usize; D]) -> Result<T, TopologyError>
+    pub fn try_topological_charge_density(&self, site: &[usize; D]) -> Result<R, TopologyError>
     where
-        T: Float,
+        M: Field + DivisionAlgebra<R>,
+        R: RealField,
     {
         if D < 4 {
             // Topological charge requires 4 dimensions
-            return Ok(T::zero());
+            return Ok(R::zero());
         }
 
         // Sum over all (μ,ν,ρ,σ) with proper epsilon tensor
         // For simplicity, sum over independent pairs: (01,23), (02,13), (03,12)
-        let mut q = T::zero();
-        let normalization = T::from(1.0 / (32.0 * std::f64::consts::PI * std::f64::consts::PI))
+        let mut q = R::zero();
+        let normalization = R::from_f64(1.0 / (32.0 * std::f64::consts::PI * std::f64::consts::PI))
             .ok_or_else(|| {
                 TopologyError::LatticeGaugeError("Failed to convert normalization to T".to_string())
             })?;
 
         // F_01 * F_23
+        let _f01 = self.try_field_strength(site, 0, 1)?;
+        let _f23 = self.try_field_strength(site, 2, 3)?;
+        // F_01 * F_23
         let f01 = self.try_field_strength(site, 0, 1)?;
         let f23 = self.try_field_strength(site, 2, 3)?;
-        let prod1 = f01.mul(&f23);
+        let prod1 = f01.try_mul(&f23).map_err(TopologyError::from)?;
         q = q + prod1.re_trace();
 
         // F_02 * F_31 (note: F_31 = -F_13)
         let f02 = self.try_field_strength(site, 0, 2)?;
         let f13 = self.try_field_strength(site, 1, 3)?;
-        let prod2 = f02.mul(&f13);
+        let prod2 = f02.try_mul(&f13).map_err(TopologyError::from)?;
         q = q - prod2.re_trace(); // minus from epsilon
 
         // F_03 * F_12
         let f03 = self.try_field_strength(site, 0, 3)?;
         let f12 = self.try_field_strength(site, 1, 2)?;
-        let prod3 = f03.mul(&f12);
+        let prod3 = f03.try_mul(&f12).map_err(TopologyError::from)?;
         q = q + prod3.re_trace();
 
         Ok(normalization * q)
@@ -175,11 +199,12 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// # Errors
     ///
     /// Returns error if computation fails.
-    pub fn try_topological_charge(&self) -> Result<T, TopologyError>
+    pub fn try_topological_charge(&self) -> Result<R, TopologyError>
     where
-        T: Float,
+        M: Field + DivisionAlgebra<R>,
+        R: RealField,
     {
-        let mut total = T::zero();
+        let mut total = R::zero();
 
         for site_cell in self.lattice.cells(0) {
             let site = *site_cell.position();

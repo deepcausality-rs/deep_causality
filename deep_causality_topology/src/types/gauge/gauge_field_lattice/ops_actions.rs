@@ -9,21 +9,22 @@
 //! These actions reduce discretization errors from $O(a^2)$ to $O(a^4)$ or better.
 
 use crate::{CWComplex, GaugeGroup, LatticeGaugeField, TopologyError};
-use deep_causality_num::Float;
+use deep_causality_num::{ComplexField, DivisionAlgebra, FromPrimitive, RealField, ToPrimitive};
 use deep_causality_tensor::TensorData;
+use std::fmt::Debug;
 
 /// Coefficients for improved gauge actions.
 #[derive(Debug, Clone, Copy)]
-pub struct ActionCoeffs<T> {
+pub struct ActionCoeffs<R> {
     /// Plaquette (1×1) coefficient c_0.
-    pub c0: T,
+    pub c0: R,
     /// Rectangle (1×2) coefficient c_1.
-    pub c1: T,
+    pub c1: R,
 }
 
-impl<T> ActionCoeffs<T>
+impl<R> ActionCoeffs<R>
 where
-    T: Float,
+    R: RealField + FromPrimitive,
 {
     /// Tree-level Symanzik: c_1 = -1/12.
     ///
@@ -31,10 +32,10 @@ where
     ///
     /// Returns error if numerical type conversion fails.
     pub fn try_symanzik() -> Result<Self, TopologyError> {
-        let c1 = T::from(-1.0 / 12.0).ok_or_else(|| {
+        let c1 = R::from_f64(-1.0 / 12.0).ok_or_else(|| {
             TopologyError::LatticeGaugeError("Failed to convert c1 coefficient to T".to_string())
         })?;
-        let c0 = T::from(1.0 + 8.0 / 12.0).ok_or_else(|| {
+        let c0 = R::from_f64(1.0 + 8.0 / 12.0).ok_or_else(|| {
             TopologyError::LatticeGaugeError("Failed to convert c0 coefficient to T".to_string())
         })?; // c_0 = 1 - 8*c_1
         Ok(Self { c0, c1 })
@@ -46,10 +47,10 @@ where
     ///
     /// Returns error if numerical type conversion fails.
     pub fn try_iwasaki() -> Result<Self, TopologyError> {
-        let c1 = T::from(-0.331).ok_or_else(|| {
+        let c1 = R::from_f64(-0.331).ok_or_else(|| {
             TopologyError::LatticeGaugeError("Failed to convert c1 coefficient to T".to_string())
         })?;
-        let c0 = T::from(1.0 + 8.0 * 0.331).ok_or_else(|| {
+        let c0 = R::from_f64(1.0 + 8.0 * 0.331).ok_or_else(|| {
             TopologyError::LatticeGaugeError("Failed to convert c0 coefficient to T".to_string())
         })?;
         Ok(Self { c0, c1 })
@@ -61,22 +62,28 @@ where
     ///
     /// Returns error if numerical type conversion fails.
     pub fn try_dbw2() -> Result<Self, TopologyError> {
-        let c1 = T::from(-1.4088).ok_or_else(|| {
+        let c1 = R::from_f64(-1.4088).ok_or_else(|| {
             TopologyError::LatticeGaugeError("Failed to convert c1 coefficient to T".to_string())
         })?;
-        let c0 = T::from(1.0 + 8.0 * 1.4088).ok_or_else(|| {
+        let c0 = R::from_f64(1.0 + 8.0 * 1.4088).ok_or_else(|| {
             TopologyError::LatticeGaugeError("Failed to convert c0 coefficient to T".to_string())
         })?;
         Ok(Self { c0, c1 })
     }
 
     /// Custom coefficients.
-    pub fn custom(c0: T, c1: T) -> Self {
+    pub fn custom(c0: R, c1: R) -> Self {
         Self { c0, c1 }
     }
 }
 
-impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
+impl<
+    G: GaugeGroup,
+    const D: usize,
+    M: TensorData + Debug + ComplexField<R> + DivisionAlgebra<R>,
+    R: RealField + FromPrimitive + ToPrimitive,
+> LatticeGaugeField<G, D, M, R>
+{
     /// Compute the Symanzik-improved gauge action.
     ///
     /// # Mathematics
@@ -106,18 +113,20 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// # Errors
     ///
     /// Returns error if plaquette/rectangle computation fails.
-    pub fn try_improved_action(&self, coeffs: &ActionCoeffs<T>) -> Result<T, TopologyError>
+    /// Returns error if plaquette/rectangle computation fails.
+    pub fn try_improved_action(&self, coeffs: &ActionCoeffs<R>) -> Result<R, TopologyError>
     where
-        T: Float,
+        M: deep_causality_num::ComplexField<R>,
+        R: RealField,
     {
         let n = G::matrix_dim();
-        let n_t = T::from(n as f64).ok_or_else(|| {
+        let n_t = R::from_f64(n as f64).ok_or_else(|| {
             TopologyError::LatticeGaugeError("Failed to convert matrix dimension to T".to_string())
         })?;
-        let one = T::one();
+        let one = R::one();
 
-        let mut plaq_sum = T::zero();
-        let mut rect_sum = T::zero();
+        let mut plaq_sum = R::zero();
+        let mut rect_sum = R::zero();
 
         // Plaquettes (1×1) and Rectangles (1×2)
         for site_cell in self.lattice.cells(0) {

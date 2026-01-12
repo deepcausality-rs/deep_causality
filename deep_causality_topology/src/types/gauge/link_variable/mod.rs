@@ -9,8 +9,11 @@
 //! to the edge connecting lattice site x to x + μ̂.
 //!
 
+use crate::types::gauge::link_variable::random::RandomField;
 use crate::{GaugeGroup, LinkVariableError};
-use deep_causality_num::Float;
+use deep_causality_num::{
+    ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
+};
 use deep_causality_tensor::{CausalTensor, TensorData};
 use std::marker::PhantomData;
 
@@ -18,6 +21,7 @@ mod display;
 mod getters;
 mod ops;
 mod part_eq;
+pub(crate) mod random;
 
 /// A link variable U_μ(n) ∈ G on a lattice edge.
 ///
@@ -27,7 +31,9 @@ mod part_eq;
 /// # Type Parameters
 ///
 /// * `G` - The gauge group (U1, SU2, SU3, etc.)
-/// * `T` - Scalar type for matrix elements (typically f64 or Complex<f64>)
+/// * `G` - The gauge group (U1, SU2, SU3, etc.)
+/// * `M` - Matrix element type (Field + DivisionAlgebra<R>)
+/// * `R` - Scalar type (RealField)
 ///
 /// # Mathematical Properties
 ///
@@ -35,14 +41,15 @@ mod part_eq;
 /// - **Orientation:** U_{-μ}(n + μ̂) = U_μ(n)†
 /// - **Continuum limit:** U_μ(x) ≈ exp(ia A_μ(x))
 #[derive(Debug, Clone)]
-pub struct LinkVariable<G: GaugeGroup, T> {
+pub struct LinkVariable<G: GaugeGroup, M, R> {
     /// Matrix elements of the group element.
     /// Shape: [N, N] for SU(N) where N = matrix dimension.
-    data: CausalTensor<T>,
+    data: CausalTensor<M>,
     _gauge: PhantomData<G>,
+    _scalar: PhantomData<R>,
 }
 
-impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
+impl<G: GaugeGroup, M: TensorData, R: RealField> LinkVariable<G, M, R> {
     /// Create the identity link (unit element of G).
     ///
     /// Returns the N×N identity matrix for SU(N).
@@ -56,23 +63,24 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
     /// Returns `LinkVariableError::TensorCreation` if matrix allocation fails.
     pub fn try_identity() -> Result<Self, LinkVariableError>
     where
-        T: Float,
+        M: Field,
     {
         let n = G::matrix_dim();
         if n == 0 {
             return Err(LinkVariableError::InvalidDimension(n));
         }
 
-        let mut data = vec![T::zero(); n * n];
+        let mut data = vec![M::zero(); n * n];
         // Set diagonal to 1
         for i in 0..n {
-            data[i * n + i] = T::one();
+            data[i * n + i] = M::one();
         }
 
         CausalTensor::new(data, vec![n, n])
             .map(|tensor| Self {
                 data: tensor,
                 _gauge: PhantomData,
+                _scalar: PhantomData,
             })
             .map_err(|e| LinkVariableError::TensorCreation(format!("{:?}", e)))
     }
@@ -87,7 +95,7 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
     /// Panics if tensor creation fails (should never happen for valid groups).
     pub fn identity() -> Self
     where
-        T: Float,
+        M: Field,
     {
         Self::try_identity()
             .unwrap_or_else(|e| panic!("Identity matrix creation failed for {}: {}", G::name(), e))
@@ -107,7 +115,7 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
     ///
     /// Returns `LinkVariableError::ShapeMismatch` if tensor shape doesn't match
     /// expected [N, N] for the gauge group.
-    pub fn try_from_matrix(data: CausalTensor<T>) -> Result<Self, LinkVariableError> {
+    pub fn try_from_matrix(data: CausalTensor<M>) -> Result<Self, LinkVariableError> {
         let n = G::matrix_dim();
         let expected = vec![n, n];
         let got = data.shape().to_vec();
@@ -119,6 +127,7 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
         Ok(Self {
             data,
             _gauge: PhantomData,
+            _scalar: PhantomData,
         })
     }
 
@@ -127,10 +136,11 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
     /// # Safety
     ///
     /// Caller must ensure the tensor has correct shape [N, N].
-    pub fn from_matrix_unchecked(data: CausalTensor<T>) -> Self {
+    pub fn from_matrix_unchecked(data: CausalTensor<M>) -> Self {
         Self {
             data,
             _gauge: PhantomData,
+            _scalar: PhantomData,
         }
     }
 
@@ -141,18 +151,19 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
     /// Returns error if tensor creation fails.
     pub fn try_zero() -> Result<Self, LinkVariableError>
     where
-        T: Float,
+        M: Field,
     {
         let n = G::matrix_dim();
         if n == 0 {
             return Err(LinkVariableError::InvalidDimension(n));
         }
 
-        let data = vec![T::zero(); n * n];
+        let data = vec![M::zero(); n * n];
         CausalTensor::new(data, vec![n, n])
             .map(|tensor| Self {
                 data: tensor,
                 _gauge: PhantomData,
+                _scalar: PhantomData,
             })
             .map_err(|e| LinkVariableError::TensorCreation(format!("{:?}", e)))
     }
@@ -200,23 +211,22 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
     /// let mut rng = rng();
     /// let link: LinkVariable<SU2, f64> = LinkVariable::try_random(&mut rng)?;
     /// ```
-    pub fn try_random<R>(rng: &mut R) -> Result<Self, LinkVariableError>
+    pub fn try_random<RngType>(rng: &mut RngType) -> Result<Self, LinkVariableError>
     where
-        R: deep_causality_rand::Rng,
-        T: Float,
+        RngType: deep_causality_rand::Rng,
+        M: RandomField + DivisionAlgebra<R> + Field + ComplexField<R> + std::fmt::Debug,
+        R: RealField + FromPrimitive + ToPrimitive,
     {
         let n = G::matrix_dim();
         if n == 0 {
             return Err(LinkVariableError::InvalidDimension(n));
         }
 
-        // Generate random matrix with entries in [-1, 1]
+        // Generate random matrix with entries in [-0.5, 0.5] via RandomField
         let mut data = Vec::with_capacity(n * n);
         for _ in 0..(n * n) {
-            // Generate uniform in [0, 1), scale to [-0.5, 0.5)
-            // Smaller range ensures initial matrix is within Newton-Schulz convergence radius
-            let val: f64 = rng.random();
-            data.push(T::from(val - 0.5).unwrap());
+            let val = M::generate_uniform(rng);
+            data.push(val);
         }
 
         let tensor = CausalTensor::new(data, vec![n, n])
@@ -225,6 +235,7 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
         let random_matrix = Self {
             data: tensor,
             _gauge: PhantomData,
+            _scalar: PhantomData,
         };
 
         // Project to SU(N) to ensure unitarity and det = 1

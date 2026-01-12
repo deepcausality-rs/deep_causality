@@ -15,7 +15,7 @@ use deep_causality_topology::{
 };
 
 /// Blanket implementation of GaugeEmOps for GaugeField<U1, S, S> where S: Field + Float + TensorData
-impl<S> GaugeEmOps<S> for GaugeField<U1, S, S, S>
+impl<S> GaugeEmOps<S> for GaugeField<U1, S, S>
 where
     S: Field + Float + TensorData + Clone + From<f64> + Into<f64> + Default + PartialOrd,
 {

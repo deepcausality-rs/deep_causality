@@ -19,7 +19,7 @@ where
     /// Returns the Standard Model parameters.
     fn standard_model_params() -> ElectroweakParams<S>;
     fn extract_photon(&self) -> Result<EM<S>, PhysicsError>;
-    fn extract_z(&self) -> Result<GaugeField<U1, S, S, S>, PhysicsError>;
+    fn extract_z(&self) -> Result<GaugeField<U1, S, S>, PhysicsError>;
     fn sin2_theta_w(&self) -> S;
     fn w_mass(&self) -> S;
     fn z_mass(&self) -> S;

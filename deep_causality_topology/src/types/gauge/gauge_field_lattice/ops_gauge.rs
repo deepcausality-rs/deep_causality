@@ -8,13 +8,23 @@
 //! Note: For robust gauge transformations with error handling, see `ops_gauge_transform.rs`.
 
 use crate::{GaugeGroup, LatticeGaugeField, LinkVariable};
+use deep_causality_num::{
+    ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
+};
 use deep_causality_tensor::TensorData;
 use std::collections::HashMap;
+use std::fmt::Debug;
 
 // ============================================================================
 // Gauge Transformations
 // ============================================================================
-impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
+impl<
+    G: GaugeGroup,
+    const D: usize,
+    M: TensorData + Debug + ComplexField<R> + DivisionAlgebra<R>,
+    R: RealField + FromPrimitive + ToPrimitive,
+> LatticeGaugeField<G, D, M, R>
+{
     /// Apply a gauge transformation (infallible version).
     ///
     /// # Mathematics
@@ -34,7 +44,9 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// None (modifies field in-place).
     pub fn gauge_transform<F>(&mut self, gauge_fn: F)
     where
-        F: Fn(&[usize; D]) -> LinkVariable<G, T>,
+        F: Fn(&[usize; D]) -> LinkVariable<G, M, R>,
+        M: Field + DivisionAlgebra<R>,
+        R: RealField,
     {
         let shape = self.lattice.shape();
         let new_links: HashMap<_, _> = self
@@ -57,7 +69,10 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
                 let g_n_plus_mu_dag = gauge_fn(&site_plus_mu).dagger();
 
                 // U' = g(n) U g(n+μ)†
-                let new_u = g_n.mul(u).mul(&g_n_plus_mu_dag);
+                let new_u = g_n.try_mul(u).and_then(|tmp| tmp.try_mul(&g_n_plus_mu_dag));
+
+                // Panic on failure (infallible in theory if shapes match)
+                let new_u = new_u.expect("Gauge transform multiplication failed");
 
                 (cell.clone(), new_u)
             })

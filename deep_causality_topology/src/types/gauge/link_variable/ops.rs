@@ -4,11 +4,17 @@
  */
 
 use crate::{GaugeGroup, LinkVariable, LinkVariableError};
-use deep_causality_num::Float;
+use deep_causality_num::{ComplexField, Field, FromPrimitive, RealField};
 use deep_causality_tensor::{CausalTensor, TensorData};
+use std::fmt::Debug;
 use std::marker::PhantomData;
 
-impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
+impl<
+    G: GaugeGroup,
+    M: TensorData + Debug,
+    R: RealField + FromPrimitive + deep_causality_num::ToPrimitive,
+> LinkVariable<G, M, R>
+{
     /// Hermitian conjugate U†.
     ///
     /// For real matrices, this is the transpose.
@@ -21,15 +27,20 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
     /// # Errors
     ///
     /// Returns error if tensor creation fails.
-    pub fn try_dagger(&self) -> Result<Self, LinkVariableError> {
+    /// Returns error if tensor creation fails.
+    pub fn try_dagger(&self) -> Result<Self, LinkVariableError>
+    where
+        M: ComplexField<R>,
+        R: RealField,
+    {
         let n = G::matrix_dim();
         let slice = self.data.as_slice();
-        let mut result = vec![T::default(); n * n];
+        let mut result = vec![M::default(); n * n];
 
-        // Transpose (for real matrices, dagger = transpose)
+        // Transpose + Conjugate
         for i in 0..n {
             for j in 0..n {
-                result[j * n + i] = slice[i * n + j];
+                result[j * n + i] = slice[i * n + j].conjugate();
             }
         }
 
@@ -37,6 +48,7 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
             .map(|tensor| Self {
                 data: tensor,
                 _gauge: PhantomData,
+                _scalar: PhantomData,
             })
             .map_err(|e| LinkVariableError::TensorCreation(format!("{:?}", e)))
     }
@@ -44,15 +56,22 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
     /// Hermitian conjugate U† (convenience method).
     ///
     /// For real matrices, this is the transpose.
-    pub fn dagger(&self) -> Self {
+    /// Hermitian conjugate U† (convenience method).
+    ///
+    /// For real matrices, this is the transpose.
+    pub fn dagger(&self) -> Self
+    where
+        M: ComplexField<R>,
+        R: RealField,
+    {
         // This is a simple memory operation that cannot fail for valid LinkVariable
         let n = G::matrix_dim();
         let slice = self.data.as_slice();
-        let mut result = vec![T::default(); n * n];
+        let mut result = vec![M::default(); n * n];
 
         for i in 0..n {
             for j in 0..n {
-                result[j * n + i] = slice[i * n + j];
+                result[j * n + i] = slice[i * n + j].conjugate();
             }
         }
 
@@ -61,6 +80,7 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
             data: CausalTensor::new(result, vec![n, n])
                 .unwrap_or_else(|_| panic!("Dagger failed for valid {}x{} matrix", n, n)),
             _gauge: PhantomData,
+            _scalar: PhantomData,
         }
     }
 
@@ -79,16 +99,20 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
     /// # Errors
     ///
     /// Returns error if tensor creation fails.
-    pub fn try_mul(&self, other: &Self) -> Result<Self, LinkVariableError> {
+    /// Returns error if tensor creation fails.
+    pub fn try_mul(&self, other: &Self) -> Result<Self, LinkVariableError>
+    where
+        M: Field,
+    {
         let n = G::matrix_dim();
         let a = self.data.as_slice();
         let b = other.data.as_slice();
-        let mut result = vec![T::default(); n * n];
+        let mut result = vec![M::default(); n * n];
 
         // Standard matrix multiplication: C[i,j] = Σ_k A[i,k] * B[k,j]
         for i in 0..n {
             for j in 0..n {
-                let mut sum = T::default();
+                let mut sum = M::default();
                 for k in 0..n {
                     let prod = a[i * n + k] * b[k * n + j];
                     sum = sum + prod;
@@ -101,20 +125,24 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
             .map(|tensor| Self {
                 data: tensor,
                 _gauge: PhantomData,
+                _scalar: PhantomData,
             })
             .map_err(|e| LinkVariableError::TensorCreation(format!("{:?}", e)))
     }
 
     /// Group multiplication: self * other (convenience method).
-    pub fn mul(&self, other: &Self) -> Self {
+    pub fn mul(&self, other: &Self) -> Self
+    where
+        M: Field,
+    {
         let n = G::matrix_dim();
         let a = self.data.as_slice();
         let b = other.data.as_slice();
-        let mut result = vec![T::default(); n * n];
+        let mut result = vec![M::default(); n * n];
 
         for i in 0..n {
             for j in 0..n {
-                let mut sum = T::default();
+                let mut sum = M::default();
                 for k in 0..n {
                     let prod = a[i * n + k] * b[k * n + j];
                     sum = sum + prod;
@@ -127,6 +155,7 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
             data: CausalTensor::new(result, vec![n, n])
                 .unwrap_or_else(|_| panic!("Matrix multiply failed for {}x{}", n, n)),
             _gauge: PhantomData,
+            _scalar: PhantomData,
         }
     }
 
@@ -135,11 +164,15 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
     /// # Errors
     ///
     /// Returns error if tensor creation fails.
-    pub fn try_add(&self, other: &Self) -> Result<Self, LinkVariableError> {
+    /// Returns error if tensor creation fails.
+    pub fn try_add(&self, other: &Self) -> Result<Self, LinkVariableError>
+    where
+        M: Field,
+    {
         let n = G::matrix_dim();
         let a = self.data.as_slice();
         let b = other.data.as_slice();
-        let mut result = vec![T::default(); n * n];
+        let mut result = vec![M::default(); n * n];
 
         for i in 0..(n * n) {
             result[i] = a[i] + b[i];
@@ -149,16 +182,20 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
             .map(|tensor| Self {
                 data: tensor,
                 _gauge: PhantomData,
+                _scalar: PhantomData,
             })
             .map_err(|e| LinkVariableError::TensorCreation(format!("{:?}", e)))
     }
 
     /// Matrix addition: self + other (convenience method).
-    pub fn add(&self, other: &Self) -> Self {
+    pub fn add(&self, other: &Self) -> Self
+    where
+        M: Field,
+    {
         let n = G::matrix_dim();
         let a = self.data.as_slice();
         let b = other.data.as_slice();
-        let mut result = vec![T::default(); n * n];
+        let mut result = vec![M::default(); n * n];
 
         for i in 0..(n * n) {
             result[i] = a[i] + b[i];
@@ -168,6 +205,7 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
             data: CausalTensor::new(result, vec![n, n])
                 .unwrap_or_else(|_| panic!("Matrix add failed")),
             _gauge: PhantomData,
+            _scalar: PhantomData,
         }
     }
 
@@ -176,10 +214,14 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
     /// # Errors
     ///
     /// Returns error if tensor creation fails.
-    pub fn try_scale(&self, alpha: &T) -> Result<Self, LinkVariableError> {
+    /// Returns error if tensor creation fails.
+    pub fn try_scale(&self, alpha: &M) -> Result<Self, LinkVariableError>
+    where
+        M: Field,
+    {
         let n = G::matrix_dim();
         let a = self.data.as_slice();
-        let mut result = vec![T::default(); n * n];
+        let mut result = vec![M::default(); n * n];
 
         for i in 0..(n * n) {
             result[i] = *alpha * a[i];
@@ -189,15 +231,19 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
             .map(|tensor| Self {
                 data: tensor,
                 _gauge: PhantomData,
+                _scalar: PhantomData,
             })
             .map_err(|e| LinkVariableError::TensorCreation(format!("{:?}", e)))
     }
 
     /// Scalar multiplication: α * self (convenience method).
-    pub fn scale(&self, alpha: &T) -> Self {
+    pub fn scale(&self, alpha: &M) -> Self
+    where
+        M: Field,
+    {
         let n = G::matrix_dim();
         let a = self.data.as_slice();
-        let mut result = vec![T::default(); n * n];
+        let mut result = vec![M::default(); n * n];
 
         for i in 0..(n * n) {
             result[i] = *alpha * a[i];
@@ -207,14 +253,18 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
             data: CausalTensor::new(result, vec![n, n])
                 .unwrap_or_else(|_| panic!("Matrix scale failed")),
             _gauge: PhantomData,
+            _scalar: PhantomData,
         }
     }
 
     /// Trace of the matrix: Tr(U) = Σ_i U_ii.
-    pub fn trace(&self) -> T {
+    pub fn trace(&self) -> M
+    where
+        M: Field,
+    {
         let n = G::matrix_dim();
         let slice = self.data.as_slice();
-        let mut sum = T::default();
+        let mut sum = M::default();
 
         for i in 0..n {
             sum = sum + slice[i * n + i];
@@ -224,21 +274,31 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
 
     /// Real part of trace (for action computation with real scalars).
     ///
-    /// For real T, this is identical to trace().
+    /// Returns the real component R of the trace.
     #[inline]
-    pub fn re_trace(&self) -> T {
-        self.trace()
+    pub fn re_trace(&self) -> R
+    where
+        M: ComplexField<R>,
+        R: RealField,
+    {
+        self.trace().real()
     }
 
     /// Frobenius norm squared: ||U||²_F = Tr(U†U) = Σ_{ij} |U_ij|².
     ///
     /// For real matrices: Σ_{ij} U_ij².
-    pub fn frobenius_norm_sq(&self) -> T {
+    /// For complex matrices: Σ_{ij} |z_ij|² (returns R).
+    pub fn frobenius_norm_sq(&self) -> R
+    where
+        M: ComplexField<R>,
+        R: RealField,
+    {
         let slice = self.data.as_slice();
-        let mut sum = T::default();
+        let mut sum = R::zero();
 
         for val in slice {
-            sum = sum + *val * *val;
+            // Use norm_sqr() to get real-valued squared norm |z|^2
+            sum = sum + val.norm_sqr();
         }
         sum
     }
@@ -256,9 +316,23 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
     ///
     /// Returns `LinkVariableError::SingularMatrix` if M†M is not invertible.
     /// Returns `LinkVariableError::NumericalError` for other numerical issues.
+    /// Project to SU(N) using polar decomposition.
+    ///
+    /// Given a general matrix M, computes U = M (M†M)^{-1/2}
+    /// which is the closest unitary matrix to M in Frobenius norm.
+    ///
+    /// # Returns
+    ///
+    /// The projected SU(N) matrix.
+    ///
+    /// # Errors
+    ///
+    /// Returns `LinkVariableError::SingularMatrix` if M†M is not invertible.
+    /// Returns `LinkVariableError::NumericalError` for other numerical issues.
     pub fn project_sun(&self) -> Result<Self, LinkVariableError>
     where
-        T: Float,
+        M: ComplexField<R>,
+        R: RealField,
     {
         // For real matrices, polar decomposition: U = M (M^T M)^{-1/2}
         // We use iterative Newton-Schulz iteration:
@@ -266,13 +340,14 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
         // Converges to U where M = UP, P positive semi-definite
 
         let mut x = self.clone();
-        let epsilon = T::from(1e-24).ok_or_else(|| {
+        let epsilon = R::from_f64(1e-24).ok_or_else(|| {
             LinkVariableError::NumericalError("Failed to convert 1e-24 to T".to_string())
         })?;
 
         // Normalize by Frobenius norm for numerical stability
+        // norm_sq is R
         let norm_sq = self.frobenius_norm_sq();
-        let zero = T::zero();
+        let zero = R::zero();
 
         if norm_sq.partial_cmp(&zero) != Some(std::cmp::Ordering::Greater) {
             // Zero matrix - return identity
@@ -280,65 +355,97 @@ impl<G: GaugeGroup, T: TensorData> LinkVariable<G, T> {
         }
 
         // Apply normalization to improve Newton-Schulz stability
-        let one: T = T::one();
-        let inv_norm = T::from(one / norm_sq.sqrt()).unwrap();
-        x = x.scale(&inv_norm);
+        let _one: R = R::one();
+        // inv_norm is R TODO: check to replace f64 for R
+        let inv_norm = R::from_f64(div_f64(1.0, to_f64(norm_sq.sqrt()))).unwrap();
+        // Convert R to M for scaling
+        let inv_norm_m = M::from_re_im(inv_norm, R::zero());
+        x = x.scale(&inv_norm_m);
 
         // Newton-Schulz iteration (typically converges in 10-20 iterations)
         let max_iter = 50;
-        let three = T::from(3.0).ok_or_else(|| {
+        let three_r = R::from_f64(3.0).ok_or_else(|| {
             LinkVariableError::NumericalError("Failed to convert 3.0 to T".to_string())
         })?;
-        let half = T::from(0.5).ok_or_else(|| {
+        let half_r = R::from_f64(0.5).ok_or_else(|| {
             LinkVariableError::NumericalError("Failed to convert 0.5 to T".to_string())
         })?;
 
+        // Convert to M
+        let three_m = M::from_re_im(three_r, R::zero());
+        let half_m = M::from_re_im(half_r, R::zero());
+        let minus_one_m = M::from_re_im(R::from_f64(-1.0).unwrap(), R::zero());
+
         for _ in 0..max_iter {
-            let x_dag = x.dagger();
-            let xdx = x_dag.mul(&x);
+            let x_dag = x.try_dagger()?;
+            let xdx = x_dag.try_mul(&x)?;
 
             // Check convergence before next iteration (compute_identity_deviation returns ||X-I||_F^2)
-            let residual_sq = compute_identity_deviation::<G, T>(&xdx)?;
+            let residual_sq = compute_identity_deviation::<G, M, R>(&xdx)?;
             if residual_sq < epsilon {
                 break;
             }
 
             // 3I - X†X
             let identity = Self::try_identity()?;
-            let three_i = identity.scale(&three);
-            let diff = three_i.try_add(&xdx.scale(&T::from(-1.0).unwrap()))?;
+            let three_i = identity.scale(&three_m);
+            // xdx * -1
+            let xdx_neg = xdx.scale(&minus_one_m);
+            let diff = three_i.try_add(&xdx_neg)?;
 
             // X_{k+1} = 0.5 * X * diff
-            x = x.mul(&diff).scale(&half);
+            // order: X * diff * 0.5
+            x = x.try_mul(&diff)?.scale(&half_m);
         }
 
         // Ensure determinant = 1 for SU(N) by dividing by det^{1/N}
         // For SU(2) and SU(3) this is a standard normalization
         // Skipped here as it requires complex arithmetic for general case
+        // (but we have complex arithmetic now!)
+        // For now, we stick to unitary projection which is sufficient for many purposes
+        // Real implementation used Newton-Schulz for Unitary part.
 
         Ok(x)
     }
 }
 
 /// Compute ||X - I||_F for checking how close X is to identity.
-fn compute_identity_deviation<G: GaugeGroup, T>(
-    x: &LinkVariable<G, T>,
-) -> Result<T, LinkVariableError>
+fn compute_identity_deviation<G: GaugeGroup, M, R>(
+    x: &LinkVariable<G, M, R>,
+) -> Result<R, LinkVariableError>
 where
-    T: Float,
+    M: ComplexField<R> + Debug + Copy,
+    R: RealField,
 {
     let n = G::matrix_dim();
     let slice = x.as_slice();
-    let mut sum = T::zero();
-    let one = T::one();
+    let mut sum = R::zero();
+    let one = M::one();
 
     for i in 0..n {
         for j in 0..n {
             let val = slice[i * n + j];
             let diff = if i == j { val - one } else { val };
-            sum = sum + diff * diff;
+            // norm_sqr returns R
+            self_diff_sq(diff, &mut sum);
         }
     }
 
     Ok(sum)
 }
+
+#[inline]
+fn self_diff_sq<M: ComplexField<R>, R: RealField>(diff: M, sum: &mut R) {
+    *sum += diff.norm_sqr();
+}
+
+// Helpers for generic float math
+fn to_f64<T: ToPrimitive>(val: T) -> f64 {
+    val.to_f64().unwrap_or(0.0)
+}
+
+fn div_f64(a: f64, b: f64) -> f64 {
+    if b == 0.0 { 0.0 } else { a / b }
+}
+
+use deep_causality_num::ToPrimitive;

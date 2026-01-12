@@ -34,13 +34,14 @@
 //! - **Plaquettes:** Ordered product around elementary squares
 //! - **Wilson action:** S = β Σ_p (1 - Re[Tr(U_p)]/N)
 
-use crate::errors::topology_error::TopologyError;
-use crate::traits::cw_complex::CWComplex;
-use crate::types::gauge::link_variable::LinkVariable;
-use crate::{GaugeGroup, Lattice, LatticeCell};
-use deep_causality_num::Float;
+use crate::{CWComplex, GaugeGroup, RandomField};
+use crate::{Lattice, LatticeCell, LinkVariable, TopologyError};
+use deep_causality_num::{
+    ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
+};
 use deep_causality_tensor::TensorData;
 use std::collections::HashMap;
+use std::fmt::Debug;
 use std::sync::Arc;
 
 mod display;
@@ -67,25 +68,32 @@ mod utils;
 ///
 /// * `G` - Gauge group (U1, SU2, SU3, etc.)
 /// * `D` - Spacetime dimension
-/// * `T` - Scalar type for matrix elements
+/// * `M` - Matrix element type (Field + DivisionAlgebra<R>)
+/// * `R` - Scalar type (RealField)
 #[derive(Debug, Clone)]
-pub struct LatticeGaugeField<G: GaugeGroup, const D: usize, T> {
+pub struct LatticeGaugeField<G: GaugeGroup, const D: usize, M, R> {
     /// The underlying lattice structure.
     lattice: Arc<Lattice<D>>,
 
     /// Link variables indexed by LatticeCell (1-cells only).
     /// Key: edge cell, Value: group element
-    links: HashMap<LatticeCell<D>, LinkVariable<G, T>>,
+    links: HashMap<LatticeCell<D>, LinkVariable<G, M, R>>,
 
     /// Coupling parameter β = 2N/g².
-    beta: T,
+    beta: R,
 }
 
 // ============================================================================
 // Constructors
 // ============================================================================
 
-impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
+impl<
+    G: GaugeGroup,
+    const D: usize,
+    M: TensorData + Debug + ComplexField<R> + DivisionAlgebra<R>,
+    R: RealField + FromPrimitive + ToPrimitive,
+> LatticeGaugeField<G, D, M, R>
+{
     /// Create with all links set to identity.
     ///
     /// This is a "cold start" configuration representing the trivial vacuum.
@@ -93,9 +101,10 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// # Errors
     ///
     /// Returns `TopologyError` if link creation fails.
-    pub fn try_identity(lattice: Arc<Lattice<D>>, beta: T) -> Result<Self, TopologyError>
+    pub fn try_identity(lattice: Arc<Lattice<D>>, beta: R) -> Result<Self, TopologyError>
     where
-        T: Float,
+        M: Field,
+        R: RealField,
     {
         let mut links = HashMap::new();
 
@@ -117,9 +126,10 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// # Panics
     ///
     /// Panics if link creation fails (should not happen for valid lattice).
-    pub fn identity(lattice: Arc<Lattice<D>>, beta: T) -> Self
+    pub fn identity(lattice: Arc<Lattice<D>>, beta: R) -> Self
     where
-        T: Float,
+        M: Field,
+        R: RealField,
     {
         Self::try_identity(lattice, beta)
             .unwrap_or_else(|e| panic!("Identity field creation failed: {}", e))
@@ -142,8 +152,8 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Returns error if links are missing for some edges.
     pub fn try_from_links(
         lattice: Arc<Lattice<D>>,
-        links: HashMap<LatticeCell<D>, LinkVariable<G, T>>,
-        beta: T,
+        links: HashMap<LatticeCell<D>, LinkVariable<G, M, R>>,
+        beta: R,
     ) -> Result<Self, TopologyError> {
         // Validate that we have links for all edges
         let expected_count = lattice.num_cells(1);
@@ -185,14 +195,15 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// # Errors
     ///
     /// Returns `TopologyError` if link creation fails.
-    pub fn try_random<R>(
+    pub fn try_random<RngType>(
         lattice: Arc<Lattice<D>>,
-        beta: T,
-        rng: &mut R,
+        beta: R,
+        rng: &mut RngType,
     ) -> Result<Self, TopologyError>
     where
-        R: deep_causality_rand::Rng,
-        T: Float,
+        RngType: deep_causality_rand::Rng,
+        M: RandomField + DivisionAlgebra<R> + Field,
+        R: RealField,
     {
         let mut links = HashMap::new();
 
@@ -215,10 +226,11 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// # Panics
     ///
     /// Panics if link creation fails.
-    pub fn random<R>(lattice: Arc<Lattice<D>>, beta: T, rng: &mut R) -> Self
+    pub fn random<RngType>(lattice: Arc<Lattice<D>>, beta: R, rng: &mut RngType) -> Self
     where
-        R: deep_causality_rand::Rng,
-        T: Float,
+        RngType: deep_causality_rand::Rng,
+        M: RandomField + DivisionAlgebra<R> + Field,
+        R: RealField,
     {
         Self::try_random(lattice, beta, rng)
             .unwrap_or_else(|e| panic!("Random field creation failed: {}", e))
@@ -226,7 +238,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
 }
 
 // Separate impl block without Clone + Default bounds for HKT compatibility
-impl<G: GaugeGroup, const D: usize, T> LatticeGaugeField<G, D, T> {
+impl<G: GaugeGroup, const D: usize, M, R> LatticeGaugeField<G, D, M, R> {
     /// Create from explicit link data without validation.
     ///
     /// This constructor has minimal bounds for HKT compatibility.
@@ -242,8 +254,8 @@ impl<G: GaugeGroup, const D: usize, T> LatticeGaugeField<G, D, T> {
     /// A new `LatticeGaugeField`.
     pub fn from_links_unchecked(
         lattice: Arc<Lattice<D>>,
-        links: HashMap<LatticeCell<D>, LinkVariable<G, T>>,
-        beta: T,
+        links: HashMap<LatticeCell<D>, LinkVariable<G, M, R>>,
+        beta: R,
     ) -> Self {
         Self {
             lattice,

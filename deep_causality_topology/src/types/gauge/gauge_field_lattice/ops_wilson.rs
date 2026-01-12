@@ -8,13 +8,22 @@
 //! Implements the standard Wilson gauge action and Wilson/Polyakov loop observables.
 
 use crate::{CWComplex, GaugeGroup, LatticeCell, LatticeGaugeField, TopologyError};
-use deep_causality_num::Float;
+use deep_causality_num::{
+    ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
+};
 use deep_causality_tensor::TensorData;
+use std::fmt::Debug;
 
 // ============================================================================
 // Wilson Action
 // ============================================================================
-impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
+impl<
+    G: GaugeGroup,
+    const D: usize,
+    M: TensorData + Debug + ComplexField<R> + DivisionAlgebra<R>,
+    R: RealField + FromPrimitive + ToPrimitive,
+> LatticeGaugeField<G, D, M, R>
+{
     /// Compute the global Wilson gauge action.
     ///
     /// # Mathematics
@@ -33,17 +42,18 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// # Errors
     ///
     /// Returns error if plaquette computation fails.
-    pub fn try_wilson_action(&self) -> Result<T, TopologyError>
+    pub fn try_wilson_action(&self) -> Result<R, TopologyError>
     where
-        T: Float,
+        M: Field + DivisionAlgebra<R>,
+        R: RealField,
     {
         let n = G::matrix_dim();
-        let n_t = T::from(n as f64).ok_or_else(|| {
+        let n_t = R::from_f64(n as f64).ok_or_else(|| {
             TopologyError::LatticeGaugeError("Failed to convert matrix dimension to T".to_string())
         })?;
-        let one = T::one();
+        let one = R::one();
 
-        let mut action = T::zero();
+        let mut action = R::zero();
 
         // Sum over all sites and all planes μ < ν
         for site_cell in self.lattice.cells(0) {
@@ -87,15 +97,16 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         site: &[usize; D],
         mu: usize,
         nu: usize,
-    ) -> Result<T, TopologyError>
+    ) -> Result<R, TopologyError>
     where
-        T: Float,
+        M: Field + DivisionAlgebra<R>,
+        R: RealField,
     {
         let n = G::matrix_dim();
-        let n_t = T::from(n as f64).ok_or_else(|| {
+        let n_t = R::from_f64(n as f64).ok_or_else(|| {
             TopologyError::LatticeGaugeError("Failed to convert matrix dimension to T".to_string())
         })?;
-        let one = T::one();
+        let one = R::one();
 
         let plaq = self.try_plaquette(site, mu, nu)?;
         let tr = plaq.re_trace();
@@ -155,9 +166,10 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         t_dir: usize,
         r: usize,
         t: usize,
-    ) -> Result<T, TopologyError>
+    ) -> Result<R, TopologyError>
     where
-        T: Float,
+        M: Field + DivisionAlgebra<R>,
+        R: RealField,
     {
         if r_dir >= D || t_dir >= D || r_dir == t_dir {
             return Err(TopologyError::LatticeGaugeError(format!(
@@ -174,7 +186,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
 
         let shape = self.lattice.shape();
         let n = G::matrix_dim();
-        let n_t = T::from(n as f64).ok_or_else(|| {
+        let n_t = R::from_f64(n as f64).ok_or_else(|| {
             TopologyError::LatticeGaugeError("Failed to convert matrix dimension to T".to_string())
         })?;
 
@@ -187,7 +199,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
             if i > 0 {
                 pos[r_dir] = (pos[r_dir] + 1) % shape[r_dir];
                 let link = self.get_link_or_identity(&LatticeCell::edge(pos, r_dir));
-                result = result.mul(&link);
+                result = result.try_mul(&link).map_err(TopologyError::from)?;
             }
         }
         pos[r_dir] = (pos[r_dir] + 1) % shape[r_dir];
@@ -195,7 +207,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         // Right edge: move in t_dir (T links)
         for _ in 0..t {
             let link = self.get_link_or_identity(&LatticeCell::edge(pos, t_dir));
-            result = result.mul(&link);
+            result = result.try_mul(&link).map_err(TopologyError::from)?;
             pos[t_dir] = (pos[t_dir] + 1) % shape[t_dir];
         }
 
@@ -203,14 +215,18 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         for _ in 0..r {
             pos[r_dir] = (pos[r_dir] + shape[r_dir] - 1) % shape[r_dir];
             let link = self.get_link_or_identity(&LatticeCell::edge(pos, r_dir));
-            result = result.mul(&link.dagger());
+            result = result
+                .try_mul(&link.dagger())
+                .map_err(TopologyError::from)?;
         }
 
         // Left edge: move in -t_dir (T links, conjugated)
         for _ in 0..t {
             pos[t_dir] = (pos[t_dir] + shape[t_dir] - 1) % shape[t_dir];
             let link = self.get_link_or_identity(&LatticeCell::edge(pos, t_dir));
-            result = result.mul(&link.dagger());
+            result = result
+                .try_mul(&link.dagger())
+                .map_err(TopologyError::from)?;
         }
 
         // Return Re[Tr(W)] / N
@@ -259,9 +275,10 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         &self,
         spatial_site: &[usize; D],
         temporal_dir: usize,
-    ) -> Result<T, TopologyError>
+    ) -> Result<R, TopologyError>
     where
-        T: Float,
+        M: Field + DivisionAlgebra<R>,
+        R: RealField,
     {
         if temporal_dir >= D {
             return Err(TopologyError::LatticeGaugeError(format!(
@@ -273,7 +290,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         let shape = self.lattice.shape();
         let nt = shape[temporal_dir];
         let n = G::matrix_dim();
-        let n_t = T::from(n as f64).ok_or_else(|| {
+        let n_t = R::from_f64(n as f64).ok_or_else(|| {
             TopologyError::LatticeGaugeError("Failed to convert matrix dimension to T".to_string())
         })?;
 
@@ -286,7 +303,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         for _ in 1..nt {
             pos[temporal_dir] = (pos[temporal_dir] + 1) % shape[temporal_dir];
             let link = self.get_link_or_identity(&LatticeCell::edge(pos, temporal_dir));
-            result = result.mul(&link);
+            result = result.try_mul(&link).map_err(TopologyError::from)?;
         }
 
         // Return Re[Tr(P)] / N
@@ -311,11 +328,12 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// # Errors
     ///
     /// Returns error if computation fails.
-    pub fn try_average_polyakov_loop(&self, temporal_dir: usize) -> Result<T, TopologyError>
+    pub fn try_average_polyakov_loop(&self, temporal_dir: usize) -> Result<R, TopologyError>
     where
-        T: Float,
+        M: Field + DivisionAlgebra<R>,
+        R: RealField,
     {
-        let mut sum = T::zero();
+        let mut sum = R::zero();
         let mut count = 0usize;
 
         for site_cell in self.lattice.cells(0) {
@@ -326,10 +344,10 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         }
 
         if count == 0 {
-            return Ok(T::zero());
+            return Ok(R::zero());
         }
 
-        let count_t = T::from(count as f64).ok_or_else(|| {
+        let count_t = R::from_f64(count as f64).ok_or_else(|| {
             TopologyError::LatticeGaugeError("Failed to convert count to T".to_string())
         })?;
         Ok(sum / count_t)

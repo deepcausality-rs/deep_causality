@@ -5,7 +5,7 @@
 
 use crate::{GaugeGroup, LinkVariable};
 
-impl<G: GaugeGroup, T: std::fmt::Debug + Clone> std::fmt::Display for LinkVariable<G, T> {
+impl<G: GaugeGroup, M: std::fmt::Debug + Clone, R> std::fmt::Display for LinkVariable<G, M, R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,

@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_num::Complex;
 use deep_causality_topology::GaugeGroup;
 use deep_causality_topology::Lattice;
 use deep_causality_topology::LatticeGaugeField;
@@ -27,7 +28,7 @@ impl GaugeGroup for U1 {
 fn test_wilson_loop_invalid_dirs() {
     let shape = [4, 4];
     let lattice = Arc::new(Lattice::new(shape, [true, true]));
-    let field = LatticeGaugeField::<U1, 2, f64>::identity(lattice, 1.0);
+    let field = LatticeGaugeField::<U1, 2, Complex<f64>, f64>::identity(lattice, 1.0);
 
     let site = [0, 0];
 
@@ -44,7 +45,7 @@ fn test_wilson_loop_invalid_dirs() {
 fn test_wilson_loop_zero_size() {
     let shape = [4, 4];
     let lattice = Arc::new(Lattice::new(shape, [true, true]));
-    let field = LatticeGaugeField::<U1, 2, f64>::identity(lattice, 1.0);
+    let field = LatticeGaugeField::<U1, 2, Complex<f64>, f64>::identity(lattice, 1.0);
 
     let site = [0, 0];
     let err = field.try_wilson_loop(&site, 0, 1, 0, 1);
@@ -55,19 +56,19 @@ fn test_wilson_loop_zero_size() {
 fn test_wilson_loop_identity() {
     let shape = [4, 4];
     let lattice = Arc::new(Lattice::new(shape, [true, true]));
-    let field = LatticeGaugeField::<U1, 2, f64>::identity(lattice, 1.0);
+    let field = LatticeGaugeField::<U1, 2, Complex<f64>, f64>::identity(lattice, 1.0);
 
     let site = [0, 0];
     let w = field.try_wilson_loop(&site, 0, 1, 2, 2).unwrap();
     // Identity loop = 1.0 (after normalization 1/N)
-    assert_eq!(w, 1.0);
+    assert!((w - 1.0).abs() < 1e-10);
 }
 
 #[test]
 fn test_polyakov_loop_invalid_dir() {
     let shape = [4, 4];
     let lattice = Arc::new(Lattice::new(shape, [true, true]));
-    let field = LatticeGaugeField::<U1, 2, f64>::identity(lattice, 1.0);
+    let field = LatticeGaugeField::<U1, 2, Complex<f64>, f64>::identity(lattice, 1.0);
 
     let site = [0, 0];
     let err = field.try_polyakov_loop(&site, 99);
@@ -78,9 +79,9 @@ fn test_polyakov_loop_invalid_dir() {
 fn test_polyakov_loop_identity() {
     let shape = [4, 4];
     let lattice = Arc::new(Lattice::new(shape, [true, true]));
-    let field = LatticeGaugeField::<U1, 2, f64>::identity(lattice, 1.0);
+    let field = LatticeGaugeField::<U1, 2, Complex<f64>, f64>::identity(lattice, 1.0);
 
     let site = [0, 0];
     let p = field.try_polyakov_loop(&site, 0).unwrap();
-    assert_eq!(p, 1.0);
+    assert!((p - 1.0).abs() < 1e-10);
 }

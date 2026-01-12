@@ -196,11 +196,17 @@ impl<G: GaugeGroup, M, R> LinkVariable<G, M, R> {
 
 **Key Method Changes:**
 
-| Method          | Before                 | After                                            |
-|-----------------|------------------------|--------------------------------------------------|
-| `dagger()`      | Transpose only         | Use `DivisionAlgebra::conjugate()` per element   |
-| `re_trace()`    | `self.trace()`         | `self.trace().real()` or identity for real types |
-| `project_sun()` | Newton-Schulz on reals | Handle complex norm properly                     |
+| Method              | Before                 | After                                            |
+|---------------------|------------------------|--------------------------------------------------|
+| `dagger()`          | Transpose only         | Use `DivisionAlgebra::conjugate()` per element   |
+| `re_trace()`        | `self.trace()`         | `self.trace().real()` or identity for real types |
+| `frobenius_norm_sq` | `val * val` (sum)      | `val.norm_sqr()` (returns R, not M)              |
+| `project_sun()`     | Newton-Schulz on reals | Handle complex norm properly using R             |
+
+**Norm Handling Trap:**
+- `frobenius_norm_sq` must use `val.norm_sqr()` (from `DivisionAlgebra`) to ensure it returns a real scalar `R` (e.g., $|z|^2$).
+- Using `val * val` for complex numbers results in $z^2$ (complex), which is physically incorrect for a norm.
+- `project_sun` normalization logic must operate on `R`.
 
 **Dagger Implementation:**
 
@@ -220,7 +226,14 @@ result[j * n + i] = slice[i * n + j].conjugate();
 }
 ```
 
-#### 1.3 `gauge_field_lattice/mod.rs`
+#### 1.3 `link_variable/random.rs`
+
+**Requirement:**
+- Use `RandomField` trait to bridge `deep_causality_rand` and algebraic types.
+- `LinkVariable::try_random` requires `M: RandomField`.
+- `RandomField` implementation ensures uniform generation in $[-0.5, 0.5]$ for both real and complex components.
+
+#### 1.4 `gauge_field_lattice/mod.rs`
 
 **Current:**
 

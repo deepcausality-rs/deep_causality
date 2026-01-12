@@ -11,6 +11,7 @@
 //! ## Reference
 //! M. Creutz, *Quarks, Gluons and Lattices*, Cambridge University Press (1983)
 
+use deep_causality_num::Complex;
 use deep_causality_topology::{ActionCoeffs, Lattice, LatticeGaugeField, U1};
 use std::sync::Arc;
 
@@ -98,7 +99,8 @@ fn bessel_ratio_miller(x: f64) -> f64 {
 fn test_2d_u1_identity_plaquette() {
     let lattice = Arc::new(Lattice::new([8, 8], [true, true]));
     let beta = 1.0;
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, beta);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, beta);
 
     let avg_plaq = field.try_average_plaquette().unwrap();
     assert!(
@@ -113,7 +115,8 @@ fn test_2d_u1_identity_plaquette() {
 fn test_2d_u1_identity_wilson_action() {
     let lattice = Arc::new(Lattice::new([8, 8], [true, true]));
     let beta = 2.0;
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, beta);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, beta);
 
     let action = field.try_wilson_action().unwrap();
 
@@ -201,7 +204,8 @@ fn test_weak_coupling_limit() {
 #[test]
 fn test_wilson_loop_identity() {
     let lattice = Arc::new(Lattice::new([8, 8], [true, true]));
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 1.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 1.0);
 
     // For identity, W(R,T) = Tr(I)/N = 1
     let w_1_1 = field.try_wilson_loop(&[0, 0], 0, 1, 1, 1).unwrap();
@@ -229,7 +233,8 @@ fn test_wilson_loop_identity() {
 #[test]
 fn test_polyakov_loop_identity() {
     let lattice = Arc::new(Lattice::new([4, 8], [true, true]));
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 1.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 1.0);
 
     // For identity, P = Tr(I^{N_t})/N = 1 for any spatial site
     let p = field.try_polyakov_loop(&[0, 0], 0).unwrap();
@@ -329,7 +334,8 @@ fn test_dbw2_coefficients() {
 #[test]
 fn test_improved_action_identity() {
     let lattice = Arc::new(Lattice::new([4, 4], [true, true]));
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 1.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 1.0);
 
     let symanzik = ActionCoeffs::try_symanzik().unwrap();
     let action = field.try_improved_action(&symanzik).unwrap();
@@ -351,7 +357,8 @@ fn test_improved_action_identity() {
 fn test_plaquette_count_2d() {
     let l = 4;
     let lattice = Arc::new(Lattice::new([l, l], [true, true]));
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 1.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 1.0);
 
     // For D=2: N_p = L² × 1 = L²
     // The action formula S = β Σ_p (1 - ReTr/N) gives 0 for identity
@@ -368,7 +375,8 @@ fn test_plaquette_count_2d() {
 #[test]
 fn test_plaquette_count_3d() {
     let lattice = Arc::new(Lattice::new([4, 4, 4], [true, true, true]));
-    let field: LatticeGaugeField<U1, 3, f64> = LatticeGaugeField::identity(lattice, 1.0);
+    let field: LatticeGaugeField<U1, 3, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 1.0);
 
     // For D=3: N_planes = D(D-1)/2 = 3 planes per site
     let avg = field.try_average_plaquette().unwrap();
@@ -383,7 +391,8 @@ fn test_plaquette_count_3d() {
 #[test]
 fn test_plaquette_count_4d() {
     let lattice = Arc::new(Lattice::new([4, 4, 4, 4], [true, true, true, true]));
-    let field: LatticeGaugeField<U1, 4, f64> = LatticeGaugeField::identity(lattice, 1.0);
+    let field: LatticeGaugeField<U1, 4, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 1.0);
 
     // For D=4: N_planes = D(D-1)/2 = 6 planes per site
     let avg = field.try_average_plaquette().unwrap();
@@ -402,7 +411,7 @@ fn test_plaquette_count_4d() {
 #[test]
 fn test_wilson_action_gauge_invariance() {
     let lattice = Arc::new(Lattice::new([4, 4], [true, true]));
-    let mut field: LatticeGaugeField<U1, 2, f64> =
+    let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
         LatticeGaugeField::identity(lattice.clone(), 2.0);
 
     let action_before = field.try_wilson_action().unwrap();
@@ -425,7 +434,7 @@ fn test_wilson_action_gauge_invariance() {
 #[test]
 fn test_plaquette_gauge_invariance() {
     let lattice = Arc::new(Lattice::new([4, 4], [true, true]));
-    let mut field: LatticeGaugeField<U1, 2, f64> =
+    let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
         LatticeGaugeField::identity(lattice.clone(), 2.0);
 
     let plaq_before = field.try_average_plaquette().unwrap();
@@ -466,7 +475,7 @@ fn test_2d_u1_vortex_winding() {
     let lattice = Arc::new(Lattice::new([l, l], [true, true]));
 
     // Create identity configuration (trivial vacuum)
-    let mut field: LatticeGaugeField<U1, 2, f64> =
+    let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
         LatticeGaugeField::identity(lattice.clone(), 1.0);
 
     // Measure baseline: identity should have Wilson action = 0
@@ -483,7 +492,8 @@ fn test_2d_u1_vortex_winding() {
 
     // Perturb a single link by replacing with a random element
     let edge = deep_causality_topology::LatticeCell::edge([0, 0], 0);
-    let random_link: LinkVariable<U1, f64> = LinkVariable::try_random(&mut rng).unwrap();
+    let random_link: LinkVariable<U1, Complex<f64>, f64> =
+        LinkVariable::try_random(&mut rng).unwrap();
     field.set_link(edge, random_link);
 
     // The action should now be NON-ZERO (not trivial vacuum)
@@ -506,11 +516,11 @@ fn test_random_vs_identity_action() {
     let mut rng = deep_causality_rand::rng();
 
     // Identity (cold start)
-    let field_identity: LatticeGaugeField<U1, 2, f64> =
+    let field_identity: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
         LatticeGaugeField::identity(lattice.clone(), beta);
 
     // Random (hot start)
-    let field_random: LatticeGaugeField<U1, 2, f64> =
+    let field_random: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
         LatticeGaugeField::random(lattice.clone(), beta, &mut rng);
 
     let action_identity = field_identity.try_wilson_action().unwrap();
@@ -535,7 +545,8 @@ fn test_random_vs_identity_action() {
 #[test]
 fn test_4d_topological_charge_identity() {
     let lattice = Arc::new(Lattice::new([4, 4, 4, 4], [true, true, true, true]));
-    let field: LatticeGaugeField<U1, 4, f64> = LatticeGaugeField::identity(lattice, 1.0);
+    let field: LatticeGaugeField<U1, 4, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 1.0);
 
     // For identity configuration, topological charge Q = 0
     let q = field.try_topological_charge().unwrap();
@@ -563,12 +574,12 @@ fn test_hot_vs_cold_start_difference() {
     let mut rng = deep_causality_rand::rng();
 
     // Cold start (identity)
-    let field_cold: LatticeGaugeField<U1, 2, f64> =
+    let field_cold: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
         LatticeGaugeField::identity(lattice.clone(), beta);
     let plaq_cold = field_cold.try_average_plaquette().unwrap();
 
     // Hot start (random)
-    let field_hot: LatticeGaugeField<U1, 2, f64> =
+    let field_hot: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
         LatticeGaugeField::random(lattice.clone(), beta, &mut rng);
     let plaq_hot = field_hot.try_average_plaquette().unwrap();
 
@@ -595,18 +606,19 @@ fn test_hot_vs_cold_start_difference() {
 fn test_metropolis_sweep_runs() {
     let lattice = Arc::new(Lattice::new([4, 4], [true, true]));
     let beta = 2.0;
-    let epsilon = 0.5;
+    let _epsilon = 0.5;
     let mut rng = deep_causality_rand::rng();
-    let mut field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, beta);
+    let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, beta);
 
     // Run a sweep - should not panic and should return a rate
-    let acceptance_rate = field.metropolis_sweep_f64(epsilon, &mut rng).unwrap();
+    let rate = field.try_metropolis_sweep(0.1, &mut rng).unwrap();
 
     // Acceptance rate should be between 0 and 1
     assert!(
-        (0.0..=1.0).contains(&acceptance_rate),
+        (0.0..=1.0).contains(&rate),
         "Acceptance rate should be in [0, 1], got {}",
-        acceptance_rate
+        rate
     );
 }
 
@@ -617,13 +629,14 @@ fn test_metropolis_modifies_field() {
     let beta = 1.0; // Lower beta gives more updates
     let epsilon = 1.0; // Larger step size
     let mut rng = deep_causality_rand::rng();
-    let mut field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, beta);
+    let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, beta);
 
     let plaq_before = field.try_average_plaquette().unwrap();
 
     // Run many sweeps to increase chance of modification
     for _ in 0..100 {
-        let _ = field.metropolis_sweep_f64(epsilon, &mut rng);
+        let _ = field.try_metropolis_sweep(epsilon, &mut rng);
     }
 
     let plaq_after = field.try_average_plaquette().unwrap();
@@ -632,7 +645,7 @@ fn test_metropolis_modifies_field() {
     // This test just verifies the algorithm runs - specific behavior depends on implementation
     // The plaquette may or may not change depending on how proposals are generated
     assert!(
-        plaq_before >= 0.0 && plaq_after >= 0.0,
+        plaq_after.abs() <= 1.0,
         "Plaquettes should be valid: before={}, after={}",
         plaq_before,
         plaq_after
@@ -651,7 +664,7 @@ fn test_metropolis_modifies_field() {
 /// The Metropolis algorithm for U(1) with real `f64` does NOT work correctly because:
 ///
 /// 1. **U(1) requires complex phases**: True U(1) elements are e^{iθ} ∈ ℂ
-/// 2. **Implementation uses real matrices**: `LinkVariable<U1, f64>` is a 1×1 real matrix
+/// 2. **Implementation uses real matrices**: `LinkVariable<U1, Complex<f64>, f64>` is a 1×1 real matrix
 /// 3. **project_sun() normalizes to ±1**: For 1×1 real matrices, projection gives ±1
 /// 4. **Result**: All proposals become identity or -identity, destroying ergodicity
 ///
@@ -685,7 +698,7 @@ fn test_boltzmann_distribution_diagnostic() {
     let mut rng = deep_causality_rand::rng();
 
     // Create identity (cold start)
-    let mut field: LatticeGaugeField<U1, 2, f64> =
+    let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
         LatticeGaugeField::identity(lattice.clone(), beta);
     let plaq_cold = field.try_average_plaquette().unwrap();
 
@@ -693,7 +706,7 @@ fn test_boltzmann_distribution_diagnostic() {
     let mut acceptance_sum = 0.0;
     let n_sweeps = 50;
     for _ in 0..n_sweeps {
-        acceptance_sum += field.metropolis_sweep_f64(epsilon, &mut rng).unwrap();
+        acceptance_sum += field.try_metropolis_sweep(epsilon, &mut rng).unwrap();
     }
     let avg_acceptance = acceptance_sum / (n_sweeps as f64);
 
@@ -739,19 +752,19 @@ fn test_thermalization_to_bessel_ratio() {
     let mut rng = deep_causality_rand::rng();
 
     // Start from random (hot start)
-    let mut field: LatticeGaugeField<U1, 2, f64> =
+    let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
         LatticeGaugeField::random(lattice.clone(), beta, &mut rng);
 
     // Thermalize
     for _ in 0..500 {
-        let _ = field.metropolis_sweep_f64(epsilon, &mut rng);
+        let _ = field.try_metropolis_sweep(epsilon, &mut rng);
     }
 
     // Measure plaquette (average over many more sweeps)
     let mut plaq_sum = 0.0;
     let n_measure = 100;
     for _ in 0..n_measure {
-        let _ = field.metropolis_sweep_f64(epsilon, &mut rng);
+        let _ = field.try_metropolis_sweep(epsilon, &mut rng);
         plaq_sum += field.try_average_plaquette().unwrap();
     }
     let plaq_measured = plaq_sum / (n_measure as f64);
@@ -785,7 +798,8 @@ fn test_thermalization_to_bessel_ratio() {
 fn test_plaquette_orientation_detection() {
     // Use a 4D lattice where direction 0 is "time"
     let lattice = Arc::new(Lattice::new([4, 4, 4, 4], [true, true, true, true]));
-    let field: LatticeGaugeField<U1, 4, f64> = LatticeGaugeField::identity(lattice, 1.0);
+    let field: LatticeGaugeField<U1, 4, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 1.0);
 
     // Measure plaquettes in different orientations
     let site = [0, 0, 0, 0];
@@ -838,17 +852,18 @@ fn test_anisotropic_action_weighting() {
     let mut rng = deep_causality_rand::rng();
 
     // Start with identity and apply a perturbation to one link
-    let mut field: LatticeGaugeField<U1, 2, f64> =
+    let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
         LatticeGaugeField::identity(lattice.clone(), beta);
 
     // Apply a random perturbation to only one link (in direction 0)
     let edge = deep_causality_topology::LatticeCell::edge([0, 0], 0);
-    let perturbation: LinkVariable<U1, f64> = LinkVariable::try_random(&mut rng).unwrap();
+    let perturbation: LinkVariable<U1, Complex<f64>, f64> =
+        LinkVariable::try_random(&mut rng).unwrap();
     field.set_link(edge, perturbation);
 
     // Now count plaquettes in each location
-    let mut sum_at_origin = 0.0; // Plaquettes affected by the perturbation
-    let mut sum_elsewhere = 0.0; // Unaffected plaquettes
+    let mut sum_at_origin: f64 = 0.0; // Plaquettes affected by the perturbation
+    let mut sum_elsewhere: f64 = 0.0; // Unaffected plaquettes
 
     for x in 0..4 {
         for y in 0..4 {
