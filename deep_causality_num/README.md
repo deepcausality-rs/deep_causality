@@ -77,6 +77,27 @@ Type-safe abstractions over Rust's primitive integer types, extending the `Ring`
 | **DoubleFloat** | High-precision (~31 digits) using double-double arithmetic | `RealField`, `Field`, `Float`       |
 | **FloatOption** | Abstracts over floats and their `Option` variants          | Utility trait for nullable numerics |
 
+#### DoubleFloat vs f128 Comparison
+
+| Aspect | DoubleFloat | f128 (IEEE binary128) |
+|--------|-------------|----------------------|
+| Mantissa | 106 bits | 112 bits |
+| Precision | ~32 decimal digits (10⁻³¹) | ~34 decimal digits (10⁻³⁴) |
+| Speed | ~2-4× slower than f64 | ~10-100× slower (software emulated) |
+| Hardware support | None (pure software) | Very rare (POWER9, some ARMs) |
+| Rust status | **Available now** | Nightly only ([#116909](https://github.com/rust-lang/rust/issues/116909)) |
+
+**Physical scale context:**
+
+| Type | Precision | Scale | Physical Reference |
+|------|-----------|-------|-------------------|
+| f64 | ~15 digits | 10⁻¹⁵ (femto) | Proton size |
+| **DoubleFloat** | **~32 digits** | **10⁻³¹ (quecto)** | Near Planck length |
+| f128 | ~34 digits | 10⁻³⁴ | Planck length (10⁻³⁵) |
+
+DoubleFloat provides precision comparable to f128 while being significantly faster
+on most hardware since it uses native f64 FMA operations.
+
 ### Complex Types
 
 | Type           | Algebra          | Associative | Commutative | Key Traits                                       |

@@ -9,13 +9,22 @@
 //! and local action changes.
 
 use crate::{GaugeGroup, LatticeCell, LatticeGaugeField, LinkVariable, TopologyError};
-use deep_causality_num::Float;
+use deep_causality_num::{
+    ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
+};
 use deep_causality_tensor::TensorData;
+use std::fmt::Debug;
 
 // ============================================================================
 // Monte Carlo Updates
 // ============================================================================
-impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
+impl<
+    G: GaugeGroup,
+    const D: usize,
+    M: TensorData + Debug + ComplexField<R> + DivisionAlgebra<R>,
+    R: RealField + FromPrimitive + ToPrimitive,
+> LatticeGaugeField<G, D, M, R>
+{
     /// Compute the staple sum for a given link.
     ///
     /// # Mathematics
@@ -42,15 +51,16 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// # Errors
     ///
     /// Returns error if staple computation fails.
-    pub fn try_staple(&self, edge: &LatticeCell<D>) -> Result<LinkVariable<G, T>, TopologyError>
+    pub fn try_staple(&self, edge: &LatticeCell<D>) -> Result<LinkVariable<G, M, R>, TopologyError>
     where
-        T: Float,
+        M: Field + DivisionAlgebra<R>,
+        R: RealField,
     {
         let site = *edge.position();
         let mu = edge.orientation().trailing_zeros() as usize;
         let shape = self.lattice.shape();
 
-        let mut staple_sum = LinkVariable::<G, T>::try_zero().map_err(TopologyError::from)?;
+        let mut staple_sum = LinkVariable::<G, M, R>::try_zero().map_err(TopologyError::from)?;
 
         for nu in 0..D {
             if nu == mu {
@@ -69,8 +79,10 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
             let u_nu_at_n = self.get_link_or_identity(&LatticeCell::edge(site, nu));
 
             let forward = u_nu_at_n_plus_mu
-                .mul(&u_mu_at_n_plus_nu.dagger())
-                .mul(&u_nu_at_n.dagger());
+                .try_mul(&u_mu_at_n_plus_nu.dagger())
+                .map_err(TopologyError::from)?
+                .try_mul(&u_nu_at_n.dagger())
+                .map_err(TopologyError::from)?;
 
             // Backward staple: U_ν†(n+μ̂-ν̂) U_μ†(n-ν̂) U_ν(n-ν̂)
             let mut site_minus_nu = site;
@@ -88,12 +100,14 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
 
             let backward = u_nu_at_n_plus_mu_minus_nu
                 .dagger()
-                .mul(&u_mu_at_n_minus_nu.dagger())
-                .mul(&u_nu_at_n_minus_nu);
+                .try_mul(&u_mu_at_n_minus_nu.dagger())
+                .map_err(TopologyError::from)?
+                .try_mul(&u_nu_at_n_minus_nu)
+                .map_err(TopologyError::from)?;
 
             // Add staples to sum
-            staple_sum = staple_sum.add(&forward);
-            staple_sum = staple_sum.add(&backward);
+            staple_sum = staple_sum.try_add(&forward).map_err(TopologyError::from)?;
+            staple_sum = staple_sum.try_add(&backward).map_err(TopologyError::from)?;
         }
 
         Ok(staple_sum)
@@ -125,16 +139,17 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     pub fn try_local_action_change(
         &self,
         edge: &LatticeCell<D>,
-        new_link: &LinkVariable<G, T>,
-    ) -> Result<T, TopologyError>
+        new_link: &LinkVariable<G, M, R>,
+    ) -> Result<R, TopologyError>
     where
-        T: Float,
+        M: Field + DivisionAlgebra<R>,
+        R: RealField,
     {
         let old_link = self.get_link_or_identity(edge);
         let staple = self.try_staple(edge)?;
 
         let n = G::matrix_dim();
-        let n_t = T::from(n as f64).ok_or_else(|| {
+        let n_t = R::from_f64(n as f64).ok_or_else(|| {
             TopologyError::LatticeGaugeError("Failed to convert matrix dimension to T".to_string())
         })?;
 
@@ -142,8 +157,14 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         // (This is the change in action, negative means lower action)
 
         let staple_dag = staple.dagger();
-        let old_tr = old_link.mul(&staple_dag).re_trace();
-        let new_tr = new_link.mul(&staple_dag).re_trace();
+        let old_tr = old_link
+            .try_mul(&staple_dag)
+            .map_err(TopologyError::from)?
+            .re_trace();
+        let new_tr = new_link
+            .try_mul(&staple_dag)
+            .map_err(TopologyError::from)?
+            .re_trace();
 
         Ok(self.beta * (old_tr - new_tr) / n_t)
     }

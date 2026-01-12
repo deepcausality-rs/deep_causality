@@ -31,9 +31,6 @@ pub use crate::extensions::hkt_topology::TopologyWitness;
 pub use crate::extensions::hkt_gauge::hkt_curvature::{CurvatureTensorWitness, TensorVector};
 pub use crate::extensions::hkt_gauge::hkt_gauge_witness::{GaugeFieldHKT, GaugeFieldWitness};
 pub use crate::extensions::hkt_gauge::hkt_lattice_gauge::LatticeGaugeFieldWitness;
-pub use extensions::hkt_gauge::hkt_adjunction_stokes::{
-    BoundaryWitness, ExteriorDerivativeWitness, StokesAdjunction, StokesContext,
-};
 // Re-export traits
 pub use crate::traits::base_topology::BaseTopology;
 pub use crate::traits::cw_complex::{CWComplex, Cell};
@@ -42,6 +39,9 @@ pub use crate::traits::graph_topology::GraphTopology;
 pub use crate::traits::hypergraph_topology::HypergraphTopology;
 pub use crate::traits::manifold_topology::ManifoldTopology;
 pub use crate::traits::simplicial_topology::SimplicialTopology;
+pub use extensions::hkt_gauge::hkt_adjunction_stokes::{
+    BoundaryWitness, ExteriorDerivativeWitness, StokesAdjunction, StokesContext,
+};
 
 // Re-export types
 pub use crate::types::cell_complex::{BoundaryOperator, CellComplex};
@@ -70,4 +70,5 @@ pub use crate::types::gauge::gauge_field_lattice::ops_actions::ActionCoeffs;
 pub use crate::types::gauge::gauge_field_lattice::ops_gradient_flow::{FlowMethod, FlowParams};
 pub use crate::types::gauge::gauge_field_lattice::ops_smearing::SmearingParams;
 pub use crate::types::gauge::gauge_groups::{Electroweak, Lorentz, SU2, SU3, StandardModel, U1};
+pub use crate::types::gauge::link_variable::random::RandomField;
 pub use crate::types::gauge::{GaugeField, LatticeGaugeField, LinkVariable};

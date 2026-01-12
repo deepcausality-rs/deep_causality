@@ -5,7 +5,7 @@
 
 use crate::{GaugeGroup, LinkVariable};
 
-impl<G: GaugeGroup, T: Clone + PartialEq> PartialEq for LinkVariable<G, T> {
+impl<G: GaugeGroup, R: PartialEq, T: PartialEq> PartialEq for LinkVariable<G, R, T> {
     fn eq(&self, other: &Self) -> bool {
         self.data.as_slice() == other.data.as_slice()
     }

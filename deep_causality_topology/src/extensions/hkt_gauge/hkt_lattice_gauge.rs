@@ -26,32 +26,28 @@
 
 use crate::{GaugeGroup, Lattice, LatticeGaugeField, LinkVariable, TopologyError};
 use deep_causality_haft::{Applicative, Functor, HKT, Monad, NoConstraint, Pure, Satisfies};
-use deep_causality_num::Float;
+use deep_causality_num::{ComplexField, DivisionAlgebra, FromPrimitive, RealField, ToPrimitive};
 use deep_causality_tensor::TensorData;
 use std::collections::HashMap;
+use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::sync::Arc;
 
-/// HKT witness for LatticeGaugeField<G, D, T>.
+/// HKT witness for LatticeGaugeField<G, D, M, R>.
 ///
 /// Enables functional transformations of lattice gauge fields.
-/// The witness is parameterized by the gauge group G and dimension D,
-/// while the HKT operates over the scalar type T.
+/// The witness is parameterized by the gauge group G, dimension D, and matrix type M.
+/// The HKT operates over the scalar type R (beta parameter).
 ///
 /// # Type Parameters
 ///
 /// * `G` - Gauge group (U1, SU2, SU3, etc.)
 /// * `D` - Spacetime dimension
-///
-/// # Implementation Note
-///
-/// Due to HKT trait constraints, the Functor/Monad implementations only
-/// transform the beta parameter. For full link variable transformations,
-/// use the type-safe helper methods like `map_field()`, `zip_with()`, etc.
+/// * `M` - Matrix element type (TensorData)
 #[derive(Debug, Clone, Copy, Default)]
-pub struct LatticeGaugeFieldWitness<G: GaugeGroup, const D: usize>(PhantomData<G>);
+pub struct LatticeGaugeFieldWitness<G: GaugeGroup, const D: usize, M>(PhantomData<(G, M)>);
 
-impl<G: GaugeGroup, const D: usize> LatticeGaugeFieldWitness<G, D> {
+impl<G: GaugeGroup, const D: usize, M> LatticeGaugeFieldWitness<G, D, M> {
     /// Create a new witness.
     pub fn new() -> Self {
         Self(PhantomData)
@@ -62,12 +58,12 @@ impl<G: GaugeGroup, const D: usize> LatticeGaugeFieldWitness<G, D> {
 // HKT Implementation
 // ============================================================================
 
-impl<G: GaugeGroup, const D: usize> HKT for LatticeGaugeFieldWitness<G, D> {
-    type Constraint = NoConstraint; // Or TensorData if we could enforce it on HKT
-    type Type<T>
-        = LatticeGaugeField<G, D, T>
+impl<G: GaugeGroup, const D: usize, M: TensorData> HKT for LatticeGaugeFieldWitness<G, D, M> {
+    type Constraint = NoConstraint;
+    type Type<R>
+        = LatticeGaugeField<G, D, M, R>
     where
-        T: Satisfies<NoConstraint>;
+        R: Satisfies<NoConstraint>;
 }
 
 // ============================================================================
@@ -80,14 +76,15 @@ impl<G: GaugeGroup, const D: usize> HKT for LatticeGaugeFieldWitness<G, D> {
 ///
 /// Due to trait bound constraints, this only transforms beta.
 /// For full field transformations, use `LatticeGaugeFieldWitness::map_field()`.
-impl<G: GaugeGroup, const D: usize> Functor<LatticeGaugeFieldWitness<G, D>>
-    for LatticeGaugeFieldWitness<G, D>
+/// Functor implementation: map over the beta parameter.
+impl<G: GaugeGroup, const D: usize, M: TensorData> Functor<LatticeGaugeFieldWitness<G, D, M>>
+    for LatticeGaugeFieldWitness<G, D, M>
 {
     /// Map a function over the beta parameter of the lattice gauge field.
     ///
     /// Note: This creates an empty field with transformed beta.
     /// For full link variable transformation, use `map_field()`.
-    fn fmap<A, B, F>(fa: LatticeGaugeField<G, D, A>, mut f: F) -> LatticeGaugeField<G, D, B>
+    fn fmap<A, B, F>(fa: LatticeGaugeField<G, D, M, A>, mut f: F) -> LatticeGaugeField<G, D, M, B>
     where
         A: Satisfies<NoConstraint>,
         B: Satisfies<NoConstraint>,
@@ -107,17 +104,15 @@ impl<G: GaugeGroup, const D: usize> Functor<LatticeGaugeFieldWitness<G, D>>
 // ============================================================================
 
 /// Applicative implementation: apply a wrapped function to a wrapped value.
-impl<G: GaugeGroup, const D: usize> Applicative<LatticeGaugeFieldWitness<G, D>>
-    for LatticeGaugeFieldWitness<G, D>
+/// Applicative implementation: apply a wrapped function to a wrapped value.
+impl<G: GaugeGroup, const D: usize, M: TensorData> Applicative<LatticeGaugeFieldWitness<G, D, M>>
+    for LatticeGaugeFieldWitness<G, D, M>
 {
     /// Apply a function wrapped in a field to a value wrapped in a field.
-    ///
-    /// Combines the beta parameter (function) from `fab` with the beta parameter
-    /// (value) from `fa`. Links are discarded/reset as per HKT limitation.
     fn apply<A, B, F>(
-        fab: LatticeGaugeField<G, D, F>,
-        fa: LatticeGaugeField<G, D, A>,
-    ) -> LatticeGaugeField<G, D, B>
+        fab: LatticeGaugeField<G, D, M, F>,
+        fa: LatticeGaugeField<G, D, M, A>,
+    ) -> LatticeGaugeField<G, D, M, B>
     where
         A: Satisfies<NoConstraint>,
         B: Satisfies<NoConstraint>,
@@ -139,13 +134,14 @@ impl<G: GaugeGroup, const D: usize> Applicative<LatticeGaugeFieldWitness<G, D>>
 // ============================================================================
 
 /// Pure implementation: lift a value into a minimal field context.
-impl<G: GaugeGroup, const D: usize> Pure<LatticeGaugeFieldWitness<G, D>>
-    for LatticeGaugeFieldWitness<G, D>
+/// Pure implementation: lift a value into a minimal field context.
+impl<G: GaugeGroup, const D: usize, M: TensorData> Pure<LatticeGaugeFieldWitness<G, D, M>>
+    for LatticeGaugeFieldWitness<G, D, M>
 {
     /// Lift a value into a lattice gauge field context.
     ///
     /// Creates a minimal gauge field with no links and the given value as beta.
-    fn pure<T>(value: T) -> LatticeGaugeField<G, D, T>
+    fn pure<T>(value: T) -> LatticeGaugeField<G, D, M, T>
     where
         T: Satisfies<NoConstraint>,
     {
@@ -167,15 +163,16 @@ impl<G: GaugeGroup, const D: usize> Pure<LatticeGaugeFieldWitness<G, D>>
 ///
 /// This enables chaining gauge field operations where each step
 /// produces a new field configuration.
-impl<G: GaugeGroup, const D: usize> Monad<LatticeGaugeFieldWitness<G, D>>
-    for LatticeGaugeFieldWitness<G, D>
+/// Monad implementation: chain field transformations.
+impl<G: GaugeGroup, const D: usize, M: TensorData> Monad<LatticeGaugeFieldWitness<G, D, M>>
+    for LatticeGaugeFieldWitness<G, D, M>
 {
     /// Monadic bind for chaining lattice gauge field transformations.
-    fn bind<A, B, F>(ma: LatticeGaugeField<G, D, A>, f: F) -> LatticeGaugeField<G, D, B>
+    fn bind<A, B, F>(ma: LatticeGaugeField<G, D, M, A>, f: F) -> LatticeGaugeField<G, D, M, B>
     where
         A: Satisfies<NoConstraint>,
         B: Satisfies<NoConstraint>,
-        F: FnMut(A) -> LatticeGaugeField<G, D, B>,
+        F: FnMut(A) -> LatticeGaugeField<G, D, M, B>,
     {
         let (_lattice, _links, beta_a) = ma.into_parts();
         let mut func = f;
@@ -187,8 +184,10 @@ impl<G: GaugeGroup, const D: usize> Monad<LatticeGaugeFieldWitness<G, D>>
 // Type-Safe Operations (with proper Clone + Default bounds)
 // ============================================================================
 
-impl<G: GaugeGroup, const D: usize> LatticeGaugeFieldWitness<G, D> {
-    /// Transform a lattice gauge field by mapping over all scalars.
+impl<G: GaugeGroup, const D: usize, R: RealField + FromPrimitive + ToPrimitive>
+    LatticeGaugeFieldWitness<G, D, R>
+{
+    /// Transform a lattice gauge field by mapping over all scalars (Matrix elements).
     ///
     /// This is the production-ready method for full field transformation.
     /// Unlike the HKT Functor, this requires Clone + Default bounds.
@@ -202,25 +201,39 @@ impl<G: GaugeGroup, const D: usize> LatticeGaugeFieldWitness<G, D> {
     ///
     /// A new lattice gauge field with all values transformed.
     pub fn map_field<A, B, F>(
-        field: LatticeGaugeField<G, D, A>,
+        field: LatticeGaugeField<G, D, A, R>,
         mut f: F,
-    ) -> LatticeGaugeField<G, D, B>
+    ) -> LatticeGaugeField<G, D, B, R>
     where
-        A: TensorData, // Changed from Clone + Default to TensorData
-        B: TensorData, // Changed from Clone + Default to TensorData
+        A: TensorData + Debug + Clone,
+        B: TensorData + Debug + Clone,
         F: FnMut(A) -> B,
     {
         let lattice = field.lattice_arc().clone();
-        let beta = f(*field.beta());
+        // Beta is R. Wait, if we map scalars A->B (Matrix elements), do we change Beta?
+        // Beta is R. This function map_field transforms A to B.
+        // It keeps R fixed.
+        // If R depends on A/B underlying scalar, this might be tricky.
+        // For now, assume R is fixed (e.g. beta is a real couplings, independent of matrix repr).
+        let beta = *field.beta();
+        // But the previous implementation applied f to beta?
+        // "let beta = f(*field.beta());".
+        // This implies beta was type A?
+        // In LatticeGaugeField<G, D, T>, beta was T.
+        // Now beta is R.
+        // If map_field transforms M (A->B), it doesn't transform R.
+        // So beta remains as is.
+
+        let beta_new = beta; // Assuming R is Copy
 
         // Transform all link variables
         let mut new_links = HashMap::with_capacity(field.links().len());
         for (cell, link) in field.links().iter() {
-            let new_link = map_link_variable::<G, A, B, F>(link, &mut f);
+            let new_link = map_link_variable::<G, A, B, R, F>(link, &mut f);
             new_links.insert(cell.clone(), new_link);
         }
 
-        LatticeGaugeField::from_links_unchecked(lattice, new_links, beta)
+        LatticeGaugeField::from_links_unchecked(lattice, new_links, beta_new)
     }
 
     /// Combine two lattice gauge fields using a binary operation on scalars.
@@ -239,12 +252,12 @@ impl<G: GaugeGroup, const D: usize> LatticeGaugeFieldWitness<G, D> {
     ///
     /// Returns `TopologyError::LatticeGaugeError` if the lattices have different shapes.
     pub fn zip_with<T, F>(
-        field_a: &LatticeGaugeField<G, D, T>,
-        field_b: &LatticeGaugeField<G, D, T>,
+        field_a: &LatticeGaugeField<G, D, T, R>,
+        field_b: &LatticeGaugeField<G, D, T, R>,
         mut f: F,
-    ) -> Result<LatticeGaugeField<G, D, T>, TopologyError>
+    ) -> Result<LatticeGaugeField<G, D, T, R>, TopologyError>
     where
-        T: TensorData, // Changed from Clone + Default to TensorData
+        T: TensorData + Debug + Clone,
         F: FnMut(&T, &T) -> T,
     {
         // Validate lattice shapes match
@@ -257,7 +270,12 @@ impl<G: GaugeGroup, const D: usize> LatticeGaugeFieldWitness<G, D> {
         }
 
         let lattice = field_a.lattice_arc().clone();
-        let beta = f(field_a.beta(), field_b.beta());
+        // Beta is R. zip_with operates on T (Matrix).
+        // In previous version, beta was T, so f was applied.
+        // Here beta is R. We can't apply f(&T, &T) -> T to R and R.
+        // So we just take beta from field_a? Or average?
+        // Usually zip_with assumes same structure.
+        let beta = *field_a.beta();
 
         // Combine link variables
         let mut new_links = HashMap::with_capacity(field_a.links().len());
@@ -268,7 +286,7 @@ impl<G: GaugeGroup, const D: usize> LatticeGaugeFieldWitness<G, D> {
                     cell
                 ))
             })?;
-            let new_link = zip_link_variables::<G, T, F>(link_a, link_b, &mut f);
+            let new_link = zip_link_variables::<G, T, R, F>(link_a, link_b, &mut f);
             new_links.insert(cell.clone(), new_link);
         }
 
@@ -288,11 +306,11 @@ impl<G: GaugeGroup, const D: usize> LatticeGaugeFieldWitness<G, D> {
     ///
     /// A new lattice gauge field with scaled link variables.
     pub fn scale_field<T>(
-        field: LatticeGaugeField<G, D, T>,
+        field: LatticeGaugeField<G, D, T, R>,
         factor: T,
-    ) -> LatticeGaugeField<G, D, T>
+    ) -> LatticeGaugeField<G, D, T, R>
     where
-        T: TensorData + std::ops::Mul<Output = T>,
+        T: TensorData + Debug + Clone + std::ops::Mul<Output = T>,
     {
         let factor_clone = factor;
         Self::map_field(field, move |x| x * factor_clone)
@@ -303,23 +321,24 @@ impl<G: GaugeGroup, const D: usize> LatticeGaugeFieldWitness<G, D> {
     /// Convenience wrapper that enforces proper type constraints.
     pub fn identity_field<T>(
         lattice: Arc<Lattice<D>>,
-        beta: T,
-    ) -> Result<LatticeGaugeField<G, D, T>, TopologyError>
+        beta: R,
+    ) -> Result<LatticeGaugeField<G, D, T, R>, TopologyError>
     where
-        T: TensorData + Float,
+        T: deep_causality_num::Field + TensorData + Debug + ComplexField<R> + DivisionAlgebra<R>,
     {
         LatticeGaugeField::try_identity(lattice, beta)
     }
 }
 
 /// Map a function over all elements of a LinkVariable.
-fn map_link_variable<G: GaugeGroup, A, B, F>(
-    link: &LinkVariable<G, A>,
+fn map_link_variable<G: GaugeGroup, A, B, R, F>(
+    link: &LinkVariable<G, A, R>,
     f: &mut F,
-) -> LinkVariable<G, B>
+) -> LinkVariable<G, B, R>
 where
-    A: TensorData,
-    B: TensorData,
+    A: TensorData + Debug + Clone,
+    B: TensorData + Debug + Clone,
+    R: RealField,
     F: FnMut(A) -> B,
 {
     let n = G::matrix_dim();
@@ -334,13 +353,14 @@ where
 }
 
 /// Combine two LinkVariables element-wise using a binary function.
-fn zip_link_variables<G: GaugeGroup, T, F>(
-    link_a: &LinkVariable<G, T>,
-    link_b: &LinkVariable<G, T>,
+fn zip_link_variables<G: GaugeGroup, T, R, F>(
+    link_a: &LinkVariable<G, T, R>,
+    link_b: &LinkVariable<G, T, R>,
     f: &mut F,
-) -> LinkVariable<G, T>
+) -> LinkVariable<G, T, R>
 where
-    T: TensorData,
+    T: TensorData + Debug + Clone,
+    R: RealField,
     F: FnMut(&T, &T) -> T,
 {
     let n = G::matrix_dim();
@@ -363,7 +383,7 @@ where
 // Display
 // ============================================================================
 
-impl<G: GaugeGroup, const D: usize> std::fmt::Display for LatticeGaugeFieldWitness<G, D> {
+impl<G: GaugeGroup, const D: usize, M> std::fmt::Display for LatticeGaugeFieldWitness<G, D, M> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "LatticeGaugeFieldWitness<{}, {}D>", G::name(), D)
     }

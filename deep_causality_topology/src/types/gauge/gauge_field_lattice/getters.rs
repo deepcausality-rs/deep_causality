@@ -7,7 +7,7 @@ use crate::{GaugeGroup, Lattice, LatticeCell, LatticeGaugeField, LinkVariable};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-impl<G: GaugeGroup, const D: usize, T> LatticeGaugeField<G, D, T> {
+impl<G: GaugeGroup, const D: usize, M, R> LatticeGaugeField<G, D, M, R> {
     /// The underlying lattice (dereferenced for convenience).
     ///
     /// # Returns
@@ -34,7 +34,7 @@ impl<G: GaugeGroup, const D: usize, T> LatticeGaugeField<G, D, T> {
     ///
     /// Reference to beta.
     #[inline]
-    pub fn beta(&self) -> &T {
+    pub fn beta(&self) -> &R {
         &self.beta
     }
 
@@ -46,7 +46,7 @@ impl<G: GaugeGroup, const D: usize, T> LatticeGaugeField<G, D, T> {
     ///
     /// The beta value.
     #[inline]
-    pub fn beta_owned(self) -> T {
+    pub fn beta_owned(self) -> R {
         self.beta
     }
 
@@ -56,12 +56,13 @@ impl<G: GaugeGroup, const D: usize, T> LatticeGaugeField<G, D, T> {
     ///
     /// Tuple of (lattice, links, beta).
     #[inline]
+    #[allow(clippy::type_complexity)]
     pub fn into_parts(
         self,
     ) -> (
         Arc<Lattice<D>>,
-        HashMap<LatticeCell<D>, LinkVariable<G, T>>,
-        T,
+        HashMap<LatticeCell<D>, LinkVariable<G, M, R>>,
+        R,
     ) {
         (self.lattice, self.links, self.beta)
     }
@@ -86,7 +87,7 @@ impl<G: GaugeGroup, const D: usize, T> LatticeGaugeField<G, D, T> {
     ///
     /// Option containing reference to the link variable if present.
     #[inline]
-    pub fn link(&self, edge: &LatticeCell<D>) -> Option<&LinkVariable<G, T>> {
+    pub fn link(&self, edge: &LatticeCell<D>) -> Option<&LinkVariable<G, M, R>> {
         self.links.get(edge)
     }
 
@@ -100,7 +101,7 @@ impl<G: GaugeGroup, const D: usize, T> LatticeGaugeField<G, D, T> {
     ///
     /// Option containing mutable reference to the link variable.
     #[inline]
-    pub fn link_mut(&mut self, edge: &LatticeCell<D>) -> Option<&mut LinkVariable<G, T>> {
+    pub fn link_mut(&mut self, edge: &LatticeCell<D>) -> Option<&mut LinkVariable<G, M, R>> {
         self.links.get_mut(edge)
     }
 
@@ -110,7 +111,7 @@ impl<G: GaugeGroup, const D: usize, T> LatticeGaugeField<G, D, T> {
     ///
     /// Reference to the links map.
     #[inline]
-    pub fn links(&self) -> &HashMap<LatticeCell<D>, LinkVariable<G, T>> {
+    pub fn links(&self) -> &HashMap<LatticeCell<D>, LinkVariable<G, M, R>> {
         &self.links
     }
 
@@ -121,7 +122,7 @@ impl<G: GaugeGroup, const D: usize, T> LatticeGaugeField<G, D, T> {
     /// * `edge` - The edge cell key
     /// * `link` - The new link variable
     #[inline]
-    pub fn set_link(&mut self, edge: LatticeCell<D>, link: LinkVariable<G, T>) {
+    pub fn set_link(&mut self, edge: LatticeCell<D>, link: LinkVariable<G, M, R>) {
         self.links.insert(edge, link);
     }
 }

@@ -9,14 +9,23 @@
 
 use crate::traits::cw_complex::CWComplex;
 use crate::{GaugeGroup, LatticeGaugeField, LinkVariable, TopologyError};
-use deep_causality_num::Float;
+use deep_causality_num::{
+    ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
+};
 use deep_causality_tensor::TensorData;
+use std::fmt::Debug;
 
 // ============================================================================
 // Gauge Transformations
 // ============================================================================
 
-impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
+impl<
+    G: GaugeGroup,
+    const D: usize,
+    M: TensorData + Debug + ComplexField<R> + DivisionAlgebra<R>,
+    R: RealField + FromPrimitive + ToPrimitive,
+> LatticeGaugeField<G, D, M, R>
+{
     /// Apply a gauge transformation to the field.
     ///
     /// A gauge transformation rotates link variables according to:
@@ -58,8 +67,9 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// ```
     pub fn try_gauge_transform<F>(&mut self, gauge_fn: F) -> Result<(), TopologyError>
     where
-        F: Fn(&[usize; D]) -> LinkVariable<G, T>,
-        T: Float,
+        F: Fn(&[usize; D]) -> LinkVariable<G, M, R>,
+        M: Field + DivisionAlgebra<R>,
+        R: RealField,
     {
         use std::collections::HashMap;
 
@@ -68,8 +78,8 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         let edges: Vec<_> = self.links.keys().cloned().collect();
 
         // Cache Ω(x) so each site uses a single gauge element during this transform
-        let mut omega_cache: HashMap<[usize; D], LinkVariable<G, T>> = HashMap::new();
-        let mut omega_at = |x: &[usize; D]| -> LinkVariable<G, T> {
+        let mut omega_cache: HashMap<[usize; D], LinkVariable<G, M, R>> = HashMap::new();
+        let mut omega_at = |x: &[usize; D]| -> LinkVariable<G, M, R> {
             omega_cache.entry(*x).or_insert_with(|| gauge_fn(x)).clone()
         };
 
@@ -87,7 +97,11 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
 
             // U'_μ(x) = Ω(x) · U_μ(x) · Ω†(x + μ̂)
             let current = self.get_link_or_identity(&edge);
-            let transformed = omega_x.mul(&current).mul(&omega_x_plus_mu.dagger());
+            let transformed = omega_x
+                .try_mul(&current)
+                .map_err(TopologyError::from)?
+                .try_mul(&omega_x_plus_mu.dagger())
+                .map_err(TopologyError::from)?;
 
             self.set_link(edge, transformed);
         }
@@ -98,19 +112,23 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Apply a random gauge transformation (for testing gauge invariance).
     ///
     /// Useful for verifying that observables are gauge-invariant.
-    pub fn try_random_gauge_transform<R>(&mut self, rng: &mut R) -> Result<(), TopologyError>
+    pub fn try_random_gauge_transform<RngType>(
+        &mut self,
+        rng: &mut RngType,
+    ) -> Result<(), TopologyError>
     where
-        R: deep_causality_rand::Rng,
-        T: Float,
+        RngType: deep_causality_rand::Rng,
+        M: crate::types::gauge::link_variable::random::RandomField + DivisionAlgebra<R> + Field,
+        R: RealField,
     {
         use std::collections::HashMap;
 
         // Pre-generate gauge elements for all sites
-        let mut gauge_elements: HashMap<[usize; D], LinkVariable<G, T>> = HashMap::new();
+        let mut gauge_elements: HashMap<[usize; D], LinkVariable<G, M, R>> = HashMap::new();
 
         for site_cell in self.lattice.cells(0) {
             let site = *site_cell.position();
-            let omega = LinkVariable::<G, T>::try_random(rng).map_err(TopologyError::from)?;
+            let omega = LinkVariable::<G, M, R>::try_random(rng).map_err(TopologyError::from)?;
             gauge_elements.insert(site, omega);
         }
 

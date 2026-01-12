@@ -5,6 +5,7 @@
 use crate::{GaugeField, GaugeGroup, TopologyError};
 use deep_causality_haft::{HKT3Unbound, NoConstraint, ParametricMonad, Promonad, Satisfies};
 use deep_causality_num::Field;
+use deep_causality_num::RealField;
 use deep_causality_tensor::{CausalTensor, TensorData};
 use std::marker::PhantomData;
 
@@ -344,17 +345,17 @@ where
     /// # Returns
     ///
     /// A new gauge field with coupled field strength, or error if shape validation fails.
-    pub fn merge_fields<G, TD, A, B, F2, Func>(
-        current: &GaugeField<G, TD, A, A>,
-        potential: &GaugeField<G, TD, B, B>,
+    pub fn merge_fields<G, A, B, F2, R, Func>(
+        current: &GaugeField<G, A, R>,
+        potential: &GaugeField<G, B, R>,
         coupling: Func,
-    ) -> Result<GaugeField<G, TD, F2, F2>, TopologyError>
+    ) -> Result<GaugeField<G, F2, R>, TopologyError>
     where
         G: GaugeGroup,
-        TD: TensorData + Clone,
-        A: Clone,
-        B: Clone,
-        F2: Clone + Default,
+        A: TensorData + Clone,
+        B: TensorData + Clone,
+        F2: TensorData + Clone + Default, // Must serve as M
+        R: RealField,
         Func: Fn(&A, &B) -> F2,
     {
         // Use the potential's base manifold and metric
@@ -402,15 +403,15 @@ where
     /// # Errors
     ///
     /// Returns `TopologyError::GaugeFieldError` if shape validation fails.
-    pub fn gauge_transform<G, TD, A, F2, Func>(
-        field: &GaugeField<G, TD, A, A>,
+    pub fn gauge_transform<G, A, F2, R, Func>(
+        field: &GaugeField<G, A, R>,
         transform: Func,
-    ) -> Result<GaugeField<G, TD, F2, F2>, TopologyError>
+    ) -> Result<GaugeField<G, F2, R>, TopologyError>
     where
         G: GaugeGroup,
-        TD: TensorData + Clone,
-        A: Clone,
-        F2: Clone + Default,
+        A: TensorData + Clone,
+        F2: TensorData + Clone + Default,
+        R: RealField,
         Func: Fn(&A) -> F2,
     {
         let base = field.base().clone();
@@ -458,12 +459,13 @@ where
     ///
     /// - `Some(F_μν)` for abelian gauge groups
     /// - `None` for non-abelian groups (require additional A∧A term)
-    pub fn compute_field_strength_abelian<G, TD>(
-        field: &GaugeField<G, TD, T, T>,
+    pub fn compute_field_strength_abelian<G, R>(
+        field: &GaugeField<G, T, R>,
     ) -> Option<CausalTensor<T>>
     where
         G: GaugeGroup,
-        TD: TensorData + Clone,
+        T: TensorData, // T is from impl bounds
+        R: RealField,
     {
         if !G::IS_ABELIAN {
             return None;
@@ -574,13 +576,14 @@ where
     /// # Returns
     ///
     /// - The computed field strength tensor F_μν^a
-    pub fn compute_field_strength_non_abelian<G, TD>(
-        field: &GaugeField<G, TD, T, T>,
+    pub fn compute_field_strength_non_abelian<G, R>(
+        field: &GaugeField<G, T, R>,
         coupling: T,
     ) -> CausalTensor<T>
     where
         G: GaugeGroup,
-        TD: TensorData + Clone,
+        T: TensorData,
+        R: Field,
     {
         let connection = field.connection();
         let dim = G::SPACETIME_DIM;

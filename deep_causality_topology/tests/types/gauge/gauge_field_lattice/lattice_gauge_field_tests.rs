@@ -8,6 +8,7 @@
 //! Covers constructors, plaquettes, Wilson action, Monte Carlo methods,
 //! and gradient flow.
 
+use deep_causality_num::Complex;
 use deep_causality_topology::{CWComplex, Lattice, LatticeGaugeField, LinkVariable, U1};
 use std::sync::Arc;
 
@@ -32,7 +33,7 @@ fn create_1d_lattice() -> Arc<Lattice<1>> {
 #[test]
 fn test_lattice_gauge_field_try_identity() {
     let lattice = create_test_lattice();
-    let field: Result<LatticeGaugeField<U1, 2, f64>, _> =
+    let field: Result<LatticeGaugeField<U1, 2, Complex<f64>, f64>, _> =
         LatticeGaugeField::try_identity(lattice, 6.0);
     assert!(field.is_ok());
     let field = field.unwrap();
@@ -42,7 +43,8 @@ fn test_lattice_gauge_field_try_identity() {
 #[test]
 fn test_lattice_gauge_field_identity_convenience() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
     assert!((*field.beta() - 6.0).abs() < 1e-10);
 }
 
@@ -53,11 +55,11 @@ fn test_lattice_gauge_field_try_from_links_valid() {
 
     // Add identity links for all edges
     for cell in lattice.cells(1) {
-        let link: LinkVariable<U1, f64> = LinkVariable::identity();
+        let link: LinkVariable<U1, Complex<f64>, f64> = LinkVariable::identity();
         links.insert(cell, link);
     }
 
-    let field: Result<LatticeGaugeField<U1, 1, f64>, _> =
+    let field: Result<LatticeGaugeField<U1, 1, Complex<f64>, f64>, _> =
         LatticeGaugeField::try_from_links(lattice, links, 1.0);
     assert!(field.is_ok());
 }
@@ -67,7 +69,7 @@ fn test_lattice_gauge_field_try_from_links_missing() {
     let lattice = create_1d_lattice();
     let links = std::collections::HashMap::new(); // Empty links
 
-    let field: Result<LatticeGaugeField<U1, 1, f64>, _> =
+    let field: Result<LatticeGaugeField<U1, 1, Complex<f64>, f64>, _> =
         LatticeGaugeField::try_from_links(lattice, links, 1.0);
     assert!(field.is_err());
 }
@@ -76,7 +78,7 @@ fn test_lattice_gauge_field_try_from_links_missing() {
 fn test_lattice_gauge_field_from_links_unchecked() {
     let lattice = create_1d_lattice();
     let links = std::collections::HashMap::new();
-    let field: LatticeGaugeField<U1, 1, f64> =
+    let field: LatticeGaugeField<U1, 1, Complex<f64>, f64> =
         LatticeGaugeField::from_links_unchecked(lattice, links, 2.0);
     assert!((*field.beta() - 2.0).abs() < 1e-10);
 }
@@ -88,14 +90,16 @@ fn test_lattice_gauge_field_from_links_unchecked() {
 #[test]
 fn test_lattice_gauge_field_lattice() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice.clone(), 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice.clone(), 6.0);
     assert_eq!(field.lattice().shape(), &[2, 2]);
 }
 
 #[test]
 fn test_lattice_gauge_field_lattice_arc() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice.clone(), 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice.clone(), 6.0);
     let arc = field.lattice_arc();
     assert_eq!(arc.shape(), &[2, 2]);
 }
@@ -103,21 +107,24 @@ fn test_lattice_gauge_field_lattice_arc() {
 #[test]
 fn test_lattice_gauge_field_beta() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 5.5);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 5.5);
     assert!((*field.beta() - 5.5).abs() < 1e-10);
 }
 
 #[test]
 fn test_lattice_gauge_field_num_links() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
     assert!(field.num_links() > 0);
 }
 
 #[test]
 fn test_lattice_gauge_field_link() {
     let lattice = create_1d_lattice();
-    let field: LatticeGaugeField<U1, 1, f64> = LatticeGaugeField::identity(lattice.clone(), 6.0);
+    let field: LatticeGaugeField<U1, 1, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice.clone(), 6.0);
 
     let edges: Vec<_> = lattice.cells(1).collect();
     if !edges.is_empty() {
@@ -129,7 +136,7 @@ fn test_lattice_gauge_field_link() {
 #[test]
 fn test_lattice_gauge_field_link_mut() {
     let lattice = create_1d_lattice();
-    let mut field: LatticeGaugeField<U1, 1, f64> =
+    let mut field: LatticeGaugeField<U1, 1, Complex<f64>, f64> =
         LatticeGaugeField::identity(lattice.clone(), 6.0);
 
     let edges: Vec<_> = lattice.cells(1).collect();
@@ -142,7 +149,8 @@ fn test_lattice_gauge_field_link_mut() {
 #[test]
 fn test_lattice_gauge_field_links() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
     let links = field.links();
     assert!(!links.is_empty());
 }
@@ -150,12 +158,12 @@ fn test_lattice_gauge_field_links() {
 #[test]
 fn test_lattice_gauge_field_set_link() {
     let lattice = create_1d_lattice();
-    let mut field: LatticeGaugeField<U1, 1, f64> =
+    let mut field: LatticeGaugeField<U1, 1, Complex<f64>, f64> =
         LatticeGaugeField::identity(lattice.clone(), 6.0);
 
     let edges: Vec<_> = lattice.cells(1).collect();
     if !edges.is_empty() {
-        let new_link: LinkVariable<U1, f64> = LinkVariable::identity();
+        let new_link: LinkVariable<U1, Complex<f64>, f64> = LinkVariable::identity();
         field.set_link(edges[0].clone(), new_link);
         assert!(field.link(&edges[0]).is_some());
     }
@@ -168,7 +176,8 @@ fn test_lattice_gauge_field_set_link() {
 #[test]
 fn test_lattice_gauge_field_beta_owned() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 7.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 7.0);
     let beta = field.beta_owned();
     assert!((beta - 7.0).abs() < 1e-10);
 }
@@ -176,7 +185,8 @@ fn test_lattice_gauge_field_beta_owned() {
 #[test]
 fn test_lattice_gauge_field_into_parts() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 8.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 8.0);
     let (lat, links, beta) = field.into_parts();
     assert_eq!(lat.shape(), &[2, 2]);
     assert!(!links.is_empty());
@@ -190,18 +200,20 @@ fn test_lattice_gauge_field_into_parts() {
 #[test]
 fn test_lattice_gauge_field_try_plaquette_identity() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
 
     let result = field.try_plaquette(&[0, 0], 0, 1);
     assert!(result.is_ok());
     let plaq = result.unwrap();
-    assert!((plaq.trace() - 1.0).abs() < 1e-10);
+    assert!((plaq.trace() - Complex::new(1.0, 0.0)).norm() < 1e-10);
 }
 
 #[test]
 fn test_lattice_gauge_field_try_average_plaquette() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
 
     let avg = field.try_average_plaquette();
     assert!(avg.is_ok());
@@ -216,7 +228,8 @@ fn test_lattice_gauge_field_try_average_plaquette() {
 #[test]
 fn test_lattice_gauge_field_try_wilson_action_identity() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
 
     let action = field.try_wilson_action();
     assert!(action.is_ok());
@@ -227,7 +240,8 @@ fn test_lattice_gauge_field_try_wilson_action_identity() {
 #[test]
 fn test_lattice_gauge_field_try_plaquette_action() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
 
     let action = field.try_plaquette_action(&[0, 0], 0, 1);
     assert!(action.is_ok());
@@ -242,7 +256,8 @@ fn test_lattice_gauge_field_try_plaquette_action() {
 #[test]
 fn test_lattice_gauge_field_display() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
     let display = format!("{}", field);
     assert!(display.contains("LatticeGaugeField"));
     assert!(display.contains("U(1)"));
@@ -255,7 +270,8 @@ fn test_lattice_gauge_field_display() {
 #[test]
 fn test_lattice_gauge_field_try_staple() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice.clone(), 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice.clone(), 6.0);
 
     let edges: Vec<_> = lattice.cells(1).collect();
     if !edges.is_empty() {
@@ -267,8 +283,9 @@ fn test_lattice_gauge_field_try_staple() {
 #[test]
 fn test_lattice_gauge_field_try_local_action_change() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice.clone(), 6.0);
-    let new_link: LinkVariable<U1, f64> = LinkVariable::identity();
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice.clone(), 6.0);
+    let new_link: LinkVariable<U1, Complex<f64>, f64> = LinkVariable::identity();
 
     let edges: Vec<_> = lattice.cells(1).collect();
     if !edges.is_empty() {
@@ -286,7 +303,8 @@ fn test_lattice_gauge_field_try_local_action_change() {
 #[test]
 fn test_lattice_gauge_field_try_energy_density() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
 
     let energy = field.try_energy_density();
     assert!(energy.is_ok());
@@ -297,7 +315,8 @@ fn test_lattice_gauge_field_try_energy_density() {
 #[test]
 fn test_lattice_gauge_field_try_t2_energy() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
     let flow_time = 0.1;
 
     let t2e = field.try_t2_energy(flow_time);
@@ -313,7 +332,7 @@ fn test_lattice_gauge_field_try_random() {
     let lattice = create_test_lattice();
     let mut rng = deep_causality_rand::rng();
 
-    let field: Result<LatticeGaugeField<U1, 2, f64>, _> =
+    let field: Result<LatticeGaugeField<U1, 2, Complex<f64>, f64>, _> =
         LatticeGaugeField::try_random(lattice.clone(), 6.0, &mut rng);
     assert!(field.is_ok());
 
@@ -327,7 +346,8 @@ fn test_lattice_gauge_field_random_convenience() {
     let lattice = create_test_lattice();
     let mut rng = deep_causality_rand::rng();
 
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::random(lattice, 6.0, &mut rng);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::random(lattice, 6.0, &mut rng);
     assert!(field.num_links() > 0);
 }
 
@@ -336,8 +356,10 @@ fn test_lattice_gauge_field_random_vs_identity_differ() {
     let lattice = create_test_lattice();
     let mut rng = deep_causality_rand::rng();
 
-    let identity: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice.clone(), 6.0);
-    let random: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::random(lattice, 6.0, &mut rng);
+    let identity: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice.clone(), 6.0);
+    let random: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::random(lattice, 6.0, &mut rng);
 
     // Action should differ between identity (minimum) and random (higher)
     let action_id = identity.try_wilson_action().unwrap();
@@ -354,7 +376,8 @@ fn test_lattice_gauge_field_random_vs_identity_differ() {
 #[test]
 fn test_lattice_gauge_field_try_wilson_loop_identity() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
 
     // 1x1 Wilson loop on identity field should give 1 (Tr(I)/N = 1)
     let wloop = field.try_wilson_loop(&[0, 0], 0, 1, 1, 1);
@@ -371,7 +394,8 @@ fn test_lattice_gauge_field_try_wilson_loop_identity() {
 #[test]
 fn test_lattice_gauge_field_try_wilson_loop_invalid_dirs() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
 
     // Same direction should fail
     let result = field.try_wilson_loop(&[0, 0], 0, 0, 1, 1);
@@ -381,7 +405,8 @@ fn test_lattice_gauge_field_try_wilson_loop_invalid_dirs() {
 #[test]
 fn test_lattice_gauge_field_try_wilson_loop_zero_size() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
 
     let result = field.try_wilson_loop(&[0, 0], 0, 1, 0, 1);
     assert!(result.is_err());
@@ -390,7 +415,8 @@ fn test_lattice_gauge_field_try_wilson_loop_zero_size() {
 #[test]
 fn test_lattice_gauge_field_try_polyakov_loop_identity() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
 
     let polyakov = field.try_polyakov_loop(&[0, 0], 0);
     assert!(polyakov.is_ok());
@@ -407,7 +433,8 @@ fn test_lattice_gauge_field_try_polyakov_loop_identity() {
 #[test]
 fn test_lattice_gauge_field_try_average_polyakov_loop() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
 
     let avg = field.try_average_polyakov_loop(0);
     assert!(avg.is_ok());
@@ -422,10 +449,11 @@ fn test_lattice_gauge_field_metropolis_sweep_f64() {
     let lattice = create_test_lattice();
     let mut rng = deep_causality_rand::rng();
 
-    let mut field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
 
     // Perform a sweep
-    let acceptance = field.metropolis_sweep_f64(0.1, &mut rng);
+    let acceptance = field.try_metropolis_sweep(0.1, &mut rng);
     assert!(acceptance.is_ok());
 
     let rate = acceptance.unwrap();
@@ -437,7 +465,7 @@ fn test_lattice_gauge_field_metropolis_update_f64() {
     let lattice = create_test_lattice();
     let mut rng = deep_causality_rand::rng();
 
-    let mut field: LatticeGaugeField<U1, 2, f64> =
+    let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
         LatticeGaugeField::identity(lattice.clone(), 6.0);
 
     // Get first edge and clone it before using
@@ -447,7 +475,7 @@ fn test_lattice_gauge_field_metropolis_update_f64() {
     };
 
     if let Some(e) = edge {
-        let result = field.metropolis_update_f64(&e, 0.1, &mut rng);
+        let result = field.try_metropolis_update(&e, 0.1, &mut rng);
         assert!(result.is_ok());
     }
 }
@@ -461,7 +489,8 @@ fn test_lattice_gauge_field_gauge_transform_action_invariance() {
     let lattice = create_test_lattice();
     let mut rng = deep_causality_rand::rng();
 
-    let mut field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
 
     let action_before = field.try_wilson_action().unwrap();
 
@@ -487,7 +516,8 @@ fn test_lattice_gauge_field_gauge_transform_action_invariance() {
 #[test]
 fn test_lattice_gauge_field_try_field_strength() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
 
     let fs = field.try_field_strength(&[0, 0], 0, 1);
     assert!(fs.is_ok());
@@ -496,20 +526,22 @@ fn test_lattice_gauge_field_try_field_strength() {
 #[test]
 fn test_lattice_gauge_field_try_field_strength_antisymmetry() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
 
     // F_μμ = 0
     let f00 = field.try_field_strength(&[0, 0], 0, 0);
     assert!(f00.is_ok());
 
     let val = f00.unwrap();
-    assert!(val.as_slice()[0].abs() < 1e-10, "F_00 should be zero");
+    assert!(val.as_slice()[0].norm() < 1e-10, "F_00 should be zero");
 }
 
 #[test]
 fn test_lattice_gauge_field_try_topological_charge_density_2d() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
 
     // In 2D, topological charge is 0 (requires D >= 4)
     let q = field.try_topological_charge_density(&[0, 0]);
@@ -526,7 +558,8 @@ fn test_lattice_gauge_field_find_t0_not_reached() {
     use deep_causality_topology::FlowParams;
 
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
 
     let params = FlowParams {
         epsilon: 0.01,
@@ -567,7 +600,8 @@ fn test_lattice_gauge_field_try_improved_action_identity() {
     use deep_causality_topology::ActionCoeffs;
 
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
     let coeffs = ActionCoeffs::try_symanzik().unwrap();
 
     // For identity field, both plaquette and rectangle traces are N=1
@@ -586,7 +620,7 @@ fn test_lattice_gauge_field_try_improved_action_random() {
     let lattice = create_test_lattice();
     let mut rng = deep_causality_rand::rng();
     // Use try_random to get a non-trivial field
-    let field: LatticeGaugeField<U1, 2, f64> =
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
         LatticeGaugeField::try_random(lattice, 6.0, &mut rng).unwrap();
 
     let coeffs = ActionCoeffs::try_symanzik().unwrap();
@@ -606,11 +640,11 @@ fn test_lattice_gauge_field_try_improved_action_random() {
 fn test_metropolis_sweep_empty_lattice() {
     let lattice = create_1d_lattice(); // Just a dummy lattice
     let links = std::collections::HashMap::new(); // Empty links
-    let mut field: LatticeGaugeField<U1, 1, f64> =
+    let mut field: LatticeGaugeField<U1, 1, Complex<f64>, f64> =
         LatticeGaugeField::from_links_unchecked(lattice, links, 1.0);
 
     let mut rng = deep_causality_rand::rng();
-    let rate = field.metropolis_sweep_f64(0.1, &mut rng);
+    let rate = field.try_metropolis_sweep(0.1, &mut rng);
 
     assert!(rate.is_ok());
     assert_eq!(rate.unwrap(), 0.0); // Should handle empty gracefully
@@ -620,12 +654,13 @@ fn test_metropolis_sweep_empty_lattice() {
 fn test_metropolis_high_epsilon_acceptance() {
     let lattice = create_test_lattice();
     let mut rng = deep_causality_rand::rng();
-    let mut field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
 
     // Epsilon = 50.0 is a large perturbation
     // For U(1) gauge group, action changes are bounded (phases wrap around),
     // so acceptance rate is probabilistic and not necessarily very low.
-    let rate = field.metropolis_sweep_f64(50.0, &mut rng).unwrap();
+    let rate = field.try_metropolis_sweep(50.0, &mut rng).unwrap();
     assert!(
         (0.0..=1.0).contains(&rate),
         "Acceptance rate should be in [0, 1], got {}",
@@ -642,7 +677,8 @@ fn test_metropolis_high_epsilon_acceptance() {
 #[test]
 fn test_try_rectangle_invalid_dirs() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
 
     // mu == nu impossible
     let res = field.try_rectangle(&[0, 0], 0, 0);
@@ -656,19 +692,21 @@ fn test_try_rectangle_invalid_dirs() {
 #[test]
 fn test_try_rectangle_identity() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
 
     // Rect on identity field -> Identity
     let rect = field.try_rectangle(&[0, 0], 0, 1);
     assert!(rect.is_ok());
     let val = rect.unwrap().trace();
-    assert!((val - 1.0).abs() < 1e-10);
+    assert!((val - Complex::new(1.0, 0.0)).norm() < 1e-10);
 }
 
 #[test]
 fn test_try_plaquette_invalid_dirs() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
 
     let res = field.try_plaquette(&[0, 0], 0, 0);
     assert!(res.is_err());
@@ -679,7 +717,8 @@ fn test_try_plaquette_invalid_dirs() {
 #[test]
 fn test_try_staple_identity() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice.clone(), 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice.clone(), 6.0);
 
     // Pick an edge and check staple sum
     let mut edge_iter = lattice.cells(1);
@@ -688,14 +727,15 @@ fn test_try_staple_identity() {
         assert!(staple.is_ok());
         let s = staple.unwrap();
         // In 2D, sum of 2 staples for identity = 2 * Identity
-        assert!((s.trace() - 2.0).abs() < 1e-10);
+        assert!((s.trace() - Complex::new(2.0, 0.0)).norm() < 1e-10);
     }
 }
 
 #[test]
 fn test_gauge_transform_infallible() {
     let lattice = create_test_lattice();
-    let mut field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
 
     // Transform with identity
     field.gauge_transform(|_site| LinkVariable::identity());
@@ -722,7 +762,8 @@ fn test_try_smear_identity_invariant() {
     use deep_causality_topology::SmearingParams;
 
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
     let params = SmearingParams::ape_default();
 
     let smeared = field.try_smear(&params);
@@ -741,7 +782,8 @@ fn test_try_flow_identity_invariant() {
     use deep_causality_topology::{FlowMethod, FlowParams};
 
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
     let params = FlowParams {
         epsilon: 0.01,
         t_max: 0.05,
@@ -761,7 +803,8 @@ fn test_try_flow_rk3() {
     use deep_causality_topology::{FlowMethod, FlowParams};
 
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
     let params = FlowParams {
         epsilon: 0.01,
         t_max: 0.05,
@@ -775,7 +818,8 @@ fn test_try_flow_rk3() {
 #[test]
 fn test_t2_energy_value() {
     let lattice = create_test_lattice();
-    let field: LatticeGaugeField<U1, 2, f64> = LatticeGaugeField::identity(lattice, 6.0);
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 6.0);
 
     let t2e = field.try_t2_energy(0.5);
     assert!(t2e.is_ok());

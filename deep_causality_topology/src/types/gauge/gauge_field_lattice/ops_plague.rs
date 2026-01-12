@@ -9,10 +9,19 @@
 //! and rectangles (1x2 loops) used in actions and observables.
 
 use crate::{CWComplex, GaugeGroup, LatticeCell, LatticeGaugeField, LinkVariable, TopologyError};
-use deep_causality_num::Float;
+use deep_causality_num::{
+    ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
+};
 use deep_causality_tensor::TensorData;
+use std::fmt::Debug;
 
-impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
+impl<
+    G: GaugeGroup,
+    const D: usize,
+    M: TensorData + Debug + ComplexField<R> + DivisionAlgebra<R>,
+    R: RealField + FromPrimitive + ToPrimitive,
+> LatticeGaugeField<G, D, M, R>
+{
     /// Compute the plaquette U_μν(n) at a given site.
     ///
     /// # Mathematics
@@ -45,9 +54,10 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         site: &[usize; D],
         mu: usize,
         nu: usize,
-    ) -> Result<LinkVariable<G, T>, TopologyError>
+    ) -> Result<LinkVariable<G, M, R>, TopologyError>
     where
-        T: Float,
+        M: Field + DivisionAlgebra<R>,
+        R: RealField,
     {
         if mu >= D || nu >= D || mu == nu {
             return Err(TopologyError::LatticeGaugeError(format!(
@@ -81,11 +91,12 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         let u4 = self.get_link_or_identity(&edge4);
 
         // Plaquette = U_μ(n) U_ν(n+μ̂) U_μ†(n+ν̂) U_ν†(n)
-        let u1_u2 = u1.mul(&u2);
+        // Plaquette = U_μ(n) U_ν(n+μ̂) U_μ†(n+ν̂) U_ν†(n)
+        let u1_u2 = u1.try_mul(&u2).map_err(TopologyError::from)?;
         let u3_dag = u3.dagger();
         let u4_dag = u4.dagger();
-        let u1_u2_u3dag = u1_u2.mul(&u3_dag);
-        let result = u1_u2_u3dag.mul(&u4_dag);
+        let u1_u2_u3dag = u1_u2.try_mul(&u3_dag).map_err(TopologyError::from)?;
+        let result = u1_u2_u3dag.try_mul(&u4_dag).map_err(TopologyError::from)?;
 
         Ok(result)
     }
@@ -120,9 +131,10 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         site: &[usize; D],
         mu: usize,
         nu: usize,
-    ) -> Result<LinkVariable<G, T>, TopologyError>
+    ) -> Result<LinkVariable<G, M, R>, TopologyError>
     where
-        T: Float,
+        M: Field + DivisionAlgebra<R>,
+        R: RealField,
     {
         if mu >= D || nu >= D || mu == nu {
             return Err(TopologyError::LatticeGaugeError(format!(
@@ -137,38 +149,51 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
         // Forward: U_μ(n), U_ν(n+μ̂), U_ν(n+μ̂+ν̂)
         // Backward: U_μ†(n+2ν̂), U_ν†(n+ν̂), U_ν†(n)
 
+        let _pos = *site;
         let mut pos = *site;
-        let mut result = LinkVariable::<G, T>::identity();
+        let mut result = LinkVariable::<G, M, R>::identity();
 
         // Step 1: n → n+μ̂
         let edge1 = LatticeCell::edge(pos, mu);
-        result = result.mul(&self.get_link_or_identity(&edge1));
+        result = result
+            .try_mul(&self.get_link_or_identity(&edge1))
+            .map_err(TopologyError::from)?;
         pos[mu] = (pos[mu] + 1) % shape[mu];
 
         // Step 2: n+μ̂ → n+μ̂+ν̂
         let edge2 = LatticeCell::edge(pos, nu);
-        result = result.mul(&self.get_link_or_identity(&edge2));
+        result = result
+            .try_mul(&self.get_link_or_identity(&edge2))
+            .map_err(TopologyError::from)?;
         pos[nu] = (pos[nu] + 1) % shape[nu];
 
         // Step 3: n+μ̂+ν̂ → n+μ̂+2ν̂
         let edge3 = LatticeCell::edge(pos, nu);
-        result = result.mul(&self.get_link_or_identity(&edge3));
+        result = result
+            .try_mul(&self.get_link_or_identity(&edge3))
+            .map_err(TopologyError::from)?;
         pos[nu] = (pos[nu] + 1) % shape[nu];
 
         // Step 4: n+μ̂+2ν̂ → n+2ν̂ (backward in μ)
         pos[mu] = (pos[mu] + shape[mu] - 1) % shape[mu];
         let edge4 = LatticeCell::edge(pos, mu);
-        result = result.mul(&self.get_link_or_identity(&edge4).dagger());
+        result = result
+            .try_mul(&self.get_link_or_identity(&edge4).dagger())
+            .map_err(TopologyError::from)?;
 
         // Step 5: n+2ν̂ → n+ν̂ (backward in ν)
         pos[nu] = (pos[nu] + shape[nu] - 1) % shape[nu];
         let edge5 = LatticeCell::edge(pos, nu);
-        result = result.mul(&self.get_link_or_identity(&edge5).dagger());
+        result = result
+            .try_mul(&self.get_link_or_identity(&edge5).dagger())
+            .map_err(TopologyError::from)?;
 
         // Step 6: n+ν̂ → n (backward in ν)
         pos[nu] = (pos[nu] + shape[nu] - 1) % shape[nu];
         let edge6 = LatticeCell::edge(pos, nu);
-        result = result.mul(&self.get_link_or_identity(&edge6).dagger());
+        result = result
+            .try_mul(&self.get_link_or_identity(&edge6).dagger())
+            .map_err(TopologyError::from)?;
 
         Ok(result)
     }
@@ -186,16 +211,17 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// # Errors
     ///
     /// Returns error if plaquette computation fails.
-    pub fn try_average_plaquette(&self) -> Result<T, TopologyError>
+    pub fn try_average_plaquette(&self) -> Result<R, TopologyError>
     where
-        T: Float,
+        M: Field + DivisionAlgebra<R>,
+        R: RealField,
     {
         let n = G::matrix_dim();
-        let n_t = T::from(n as f64).ok_or_else(|| {
+        let n_t = R::from_f64(n as f64).ok_or_else(|| {
             TopologyError::LatticeGaugeError("Failed to convert matrix dimension to T".to_string())
         })?;
 
-        let mut sum = T::zero();
+        let mut sum = R::zero();
         let mut count = 0usize;
 
         // Sum over all sites and all planes μ < ν
@@ -205,18 +231,18 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
                 for nu in (mu + 1)..D {
                     let plaq = self.try_plaquette(&site, mu, nu)?;
                     let tr = plaq.re_trace();
-                    sum = sum + tr;
+                    sum += tr;
                     count += 1;
                 }
             }
         }
 
         if count == 0 {
-            return Ok(T::one());
+            return Ok(R::one());
         }
 
         // Average = sum / (count * N)
-        let count_t = T::from(count as f64).ok_or_else(|| {
+        let count_t = R::from_f64(count as f64).ok_or_else(|| {
             TopologyError::LatticeGaugeError("Failed to convert count to T".to_string())
         })?;
         Ok(sum / (count_t * n_t))

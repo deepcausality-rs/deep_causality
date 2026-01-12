@@ -35,7 +35,7 @@ fn test_gauge_transform() {
     let connection = CausalTensor::from_vec(vec![1.0, 2.0, 3.0, 4.0], &[1, 4, 1]);
     let field_strength = CausalTensor::from_vec(vec![0.0; 16], &[1, 4, 4, 1]);
 
-    let field: GaugeField<U1, f64, f64, f64> =
+    let field: GaugeField<U1, f64, f64> =
         GaugeField::with_default_metric(manifold, connection, field_strength)
             .expect("Failed to create field");
 
@@ -59,10 +59,10 @@ fn test_merge_fields() {
     // Dummy field strength
     let fs = CausalTensor::from_vec(vec![0.0; 16], &[1, 4, 4, 1]);
 
-    let field_a: GaugeField<U1, f64, f64, f64> =
+    let field_a: GaugeField<U1, f64, f64> =
         GaugeField::with_default_metric(manifold.clone(), conn_a, fs.clone())
             .expect("Failed to create field_a");
-    let field_b: GaugeField<U1, f64, f64, f64> =
+    let field_b: GaugeField<U1, f64, f64> =
         GaugeField::with_default_metric(manifold, conn_b, fs).expect("Failed to create field_b");
 
     // Merge: A_new = A + B
@@ -86,7 +86,7 @@ fn test_abelian_field_strength() {
     let connection = CausalTensor::from_vec(vec![1.0; 4], &[1, 4, 1]); // 4D
     let field_strength = CausalTensor::from_vec(vec![0.0; 16], &[1, 4, 4, 1]);
 
-    let field: GaugeField<U1, f64, f64, f64> =
+    let field: GaugeField<U1, f64, f64> =
         GaugeField::with_default_metric(manifold, connection, field_strength)
             .expect("Failed to create field");
 
@@ -230,7 +230,7 @@ fn test_compute_field_strength_non_abelian() {
     // Field strength shape: [num_points, dim, dim, lie_dim]
     let fs = CausalTensor::zeros(&[num_points, dim, dim, lie_dim]);
 
-    let field: GaugeField<SU2, f64, f64, f64> =
+    let field: GaugeField<SU2, f64, f64> =
         GaugeField::with_default_metric(manifold, connection, fs).expect("Failed to create field");
 
     // Compute with coupling constant g = 1.0

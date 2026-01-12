@@ -37,20 +37,6 @@ fn test_gauge_field_display() {
     let complex = builder.build::<f64>().unwrap();
 
     let _num_points = 2; // Vertices usually determine 'num_points' for gauge field
-    // (Gauge field lives on vertices usually, or links on edges.
-    // GaugeField struct description: "num_points" usually refers to base.len() which might be number of max simplices or vertices depending on implementation.
-    // GaugeField::new uses `base.len()`.
-    // Manifold::len() usually delegates to BaseTopology::len() or complex.len().
-    // If it's total simplices, then 3.
-    // Let's assume points means vertices for field definition.
-    // BUT GaugeField::new code (viewed earlier): "let num_points = base.len().max(1);"
-    // If base.len() is total simplices (3), then I need 3*4*1 = 12 connection elements?
-    // Let's check `GaugeField::new` again or try and see error.
-    // Usually GaugeField is defined on *points* (sites).
-
-    // Let's try matching base.len().
-    // SimplicialComplex::len() returns total number of simplices?
-    // Let's assume len() = 3.
 
     // If base.len() = 3
     let num_elements = 3;
@@ -69,7 +55,7 @@ fn test_gauge_field_display() {
     // But it should be.
     let base = Manifold::<f64, f64>::new(complex, mf_tensor, 0).unwrap();
 
-    let gf = GaugeField::<TestGroup, f64, f64, f64>::new(base, metric, conn, fs).unwrap();
+    let gf = GaugeField::<TestGroup, f64, f64>::new(base, metric, conn, fs).unwrap();
 
     let output = format!("{}", gf);
     assert!(output.contains("GaugeField<TestGroup>"));

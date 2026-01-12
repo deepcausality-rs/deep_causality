@@ -54,7 +54,7 @@ where
             .map_err(|e| PhysicsError::TopologyError(e.to_string()))
     }
 
-    fn extract_z(&self) -> Result<GaugeField<U1, S, S, S>, PhysicsError> {
+    fn extract_z(&self) -> Result<GaugeField<U1, S, S>, PhysicsError> {
         let params = Self::standard_model_params();
         let cos_theta = params.cos_theta_w();
         let sin_theta = params.sin_theta_w();

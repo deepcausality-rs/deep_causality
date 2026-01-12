@@ -18,32 +18,32 @@ use deep_causality_topology::{Electroweak, GaugeField, Lorentz, SU2, SU3, Standa
 /// * 16 digits precision: f64
 /// * 31 digits precision: DoubleFloat:
 ///
-pub type EM<FloatType> = GaugeField<U1, FloatType, FloatType, FloatType>;
+pub type EM<FloatType> = GaugeField<U1, FloatType, FloatType>;
 
 /// Weak force field.
 ///
 /// Standard Convention: West Coast (+---)
-pub type WeakField<FloatType> = GaugeField<SU2, FloatType, FloatType, FloatType>;
+pub type WeakField<FloatType> = GaugeField<SU2, FloatType, FloatType>;
 
 /// Electroweak field (unified EM + Weak).
 ///
 /// Standard Convention: West Coast (+---)
-pub type ElectroweakField<FloatType> = GaugeField<Electroweak, FloatType, FloatType, FloatType>;
+pub type ElectroweakField<FloatType> = GaugeField<Electroweak, FloatType, FloatType>;
 
 /// Quantum Chromodynamics field (strong force).
 ///
 /// Standard Convention: West Coast (+---)
-pub type QCD<FloatType> = GaugeField<SU3, FloatType, FloatType, FloatType>;
+pub type QCD<FloatType> = GaugeField<SU3, FloatType, FloatType>;
 
 /// Standard Model field (all forces except gravity).
 ///
 /// Standard Convention: West Coast (+---)
-pub type SMField<FloatType> = GaugeField<StandardModel, FloatType, FloatType, FloatType>;
+pub type SMField<FloatType> = GaugeField<StandardModel, FloatType, FloatType>;
 
 /// General Relativity field (gravity).
 ///
 /// Standard Convention: East Coast (-+++)
-pub type GR<FloatType> = GaugeField<Lorentz, FloatType, FloatType, FloatType>;
+pub type GR<FloatType> = GaugeField<Lorentz, FloatType, FloatType>;
 
 // ============================================================================
 // Alternate Names

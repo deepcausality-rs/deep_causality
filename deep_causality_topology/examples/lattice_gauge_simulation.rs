@@ -20,6 +20,7 @@
 //!    - APE Smearing
 //!    - Wilson Gradient Flow (computing t0 scale)
 
+use deep_causality_num::Complex;
 use deep_causality_rand::rng;
 use deep_causality_topology::{
     FlowParams, GaugeGroup, Lattice, LatticeGaugeField, SU3, SmearingParams,
@@ -48,7 +49,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut rng = rng();
 
     // Create random configuration (Hot Start)
-    let mut field = LatticeGaugeField::<SU3, D, f64>::try_random(lattice.clone(), BETA, &mut rng)?;
+    let mut field = LatticeGaugeField::<SU3, D, Complex<f64>, f64>::try_random(
+        lattice.clone(),
+        BETA,
+        &mut rng,
+    )?;
 
     let initial_plaq = field.try_average_plaquette()?;
     println!(
@@ -63,7 +68,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let epsilon = 0.2; // Proposal width
 
     for i in 1..=thermal_sweeps {
-        let acceptance = field.metropolis_sweep_f64(epsilon, &mut rng)?;
+        let acceptance = field.try_metropolis_sweep(epsilon, &mut rng)?;
         let plaq = field.try_average_plaquette()?;
         if i % 2 == 0 {
             println!(

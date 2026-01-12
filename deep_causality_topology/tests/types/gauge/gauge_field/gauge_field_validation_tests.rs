@@ -38,7 +38,7 @@ fn test_gauge_field_new_connection_mismatch() {
     let connection = CausalTensor::zeros(&[1, 2, 1]); // Wrong shape
     let field_strength = CausalTensor::zeros(&[1, 4, 4, 1]); // Correct shape
 
-    let result: Result<GaugeField<U1, f64, f64, f64>, _> =
+    let result: Result<GaugeField<U1, f64, f64>, _> =
         GaugeField::new(manifold, Metric::Minkowski(4), connection, field_strength);
 
     assert!(result.is_err());
@@ -57,7 +57,7 @@ fn test_gauge_field_new_field_strength_mismatch() {
     let connection = CausalTensor::zeros(&[1, 4, 1]); // Correct
     let field_strength = CausalTensor::zeros(&[1, 2, 2, 1]); // Wrong shape/elements => 4 elements
 
-    let result: Result<GaugeField<U1, f64, f64, f64>, _> =
+    let result: Result<GaugeField<U1, f64, f64>, _> =
         GaugeField::new(manifold, Metric::Minkowski(4), connection, field_strength);
 
     assert!(result.is_err());
@@ -104,7 +104,7 @@ fn test_metric_conventions_custom() {
     // Let's rely on what we get and verify consistency.
     let metric = Metric::Minkowski(4);
 
-    let field = GaugeField::<U1, f64, f64, f64>::new(manifold, metric, conn, fs).expect("Field");
+    let field = GaugeField::<U1, f64, f64>::new(manifold, metric, conn, fs).expect("Field");
 
     // Check signatures directly
     let s0 = field.metric().sign_of_sq(0);

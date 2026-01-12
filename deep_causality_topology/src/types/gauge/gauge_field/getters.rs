@@ -7,14 +7,14 @@ use crate::{GaugeField, GaugeGroup, Manifold};
 use deep_causality_metric::Metric;
 use deep_causality_tensor::CausalTensor;
 
-impl<G: GaugeGroup, T, A, F> GaugeField<G, T, A, F> {
+impl<G: GaugeGroup, M, R> GaugeField<G, M, R> {
     /// Returns a reference to the base manifold.
     ///
     /// # Returns
     ///
     /// Reference to the underlying spacetime manifold.
     #[inline]
-    pub fn base(&self) -> &Manifold<T, T> {
+    pub fn base(&self) -> &Manifold<R, R> {
         &self.base
     }
 
@@ -34,7 +34,7 @@ impl<G: GaugeGroup, T, A, F> GaugeField<G, T, A, F> {
     ///
     /// The connection tensor $A_\mu$.
     #[inline]
-    pub fn connection(&self) -> &CausalTensor<A> {
+    pub fn connection(&self) -> &CausalTensor<M> {
         &self.connection
     }
 
@@ -44,7 +44,7 @@ impl<G: GaugeGroup, T, A, F> GaugeField<G, T, A, F> {
     ///
     /// The curvature tensor $F_{\mu\nu}$.
     #[inline]
-    pub fn field_strength(&self) -> &CausalTensor<F> {
+    pub fn field_strength(&self) -> &CausalTensor<M> {
         &self.field_strength
     }
 

@@ -9,9 +9,12 @@
 //! towards the stationary points of the action. Used for scale setting and renormalization.
 
 use crate::{CWComplex, GaugeGroup, LatticeGaugeField, TopologyError};
-use deep_causality_num::Float;
+use deep_causality_num::{
+    ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
+};
 use deep_causality_tensor::TensorData;
 use std::collections::HashMap;
+use std::fmt::Debug;
 // ============================================================================
 // Gradient Flow (Section 13)
 // ============================================================================
@@ -27,27 +30,33 @@ pub enum FlowMethod {
 
 /// Gradient flow parameters.
 #[derive(Debug, Clone)]
-pub struct FlowParams<T> {
+pub struct FlowParams<R> {
     /// Flow time step ε.
-    pub epsilon: T,
-    /// Target flow time t.
-    pub t_max: T,
+    pub epsilon: R,
+    /// Maximum flow time.
+    pub t_max: R,
     /// Integration method.
     pub method: FlowMethod,
 }
 
-impl<T: From<f64>> FlowParams<T> {
+impl<R: RealField + From<f64>> FlowParams<R> {
     /// Default flow parameters.
     pub fn default_params() -> Self {
         Self {
-            epsilon: T::from(0.01),
-            t_max: T::from(1.0),
+            epsilon: R::from(0.01),
+            t_max: R::from(1.0),
             method: FlowMethod::RungeKutta3,
         }
     }
 }
 
-impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
+impl<
+    G: GaugeGroup,
+    const D: usize,
+    M: TensorData + Debug + ComplexField<R> + DivisionAlgebra<R>,
+    R: RealField + FromPrimitive + ToPrimitive,
+> LatticeGaugeField<G, D, M, R>
+{
     /// Perform gradient flow integration.
     ///
     /// # Mathematics
@@ -76,12 +85,13 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// # Errors
     ///
     /// Returns error if flow computation fails.
-    pub fn try_flow(&self, params: &FlowParams<T>) -> Result<Self, TopologyError>
+    pub fn try_flow(&self, params: &FlowParams<R>) -> Result<Self, TopologyError>
     where
-        T: Float,
+        M: Field + DivisionAlgebra<R> + ComplexField<R>,
+        R: RealField,
     {
         let mut current = self.clone();
-        let zero = T::zero();
+        let zero = R::zero();
         if params.epsilon <= zero {
             return Err(TopologyError::LatticeGaugeError(
                 "Flow epsilon must be > 0".to_string(),
@@ -102,20 +112,21 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
                 FlowMethod::Euler => current.try_euler_step(&epsilon)?,
                 FlowMethod::RungeKutta3 => current.try_rk3_step(&epsilon)?,
             };
-            t = t + epsilon;
+            t += epsilon;
         }
 
         Ok(current)
     }
 
     /// Single Euler step of gradient flow.
-    fn try_euler_step(&self, epsilon: &T) -> Result<Self, TopologyError>
+    fn try_euler_step(&self, epsilon: &R) -> Result<Self, TopologyError>
     where
-        T: Float,
+        M: Field + DivisionAlgebra<R> + ComplexField<R>,
+        R: RealField,
     {
         let mut new_links = HashMap::new();
         let n = G::matrix_dim();
-        let n_t = T::from(n as f64).ok_or_else(|| {
+        let n_t = R::from_f64(n as f64).ok_or_else(|| {
             TopologyError::LatticeGaugeError("Failed to convert matrix dimension to T".to_string())
         })?;
 
@@ -127,13 +138,19 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
 
             // Force: F = β (U·V† - (1/N) Tr(U·V†) I) / N
             // For flow: we use simplified form proportional to staple
-            let neg_eps = T::from(-1.0).ok_or_else(|| {
+            let neg_eps = R::from_f64(-1.0).ok_or_else(|| {
                 TopologyError::LatticeGaugeError("Failed to convert -1.0 to T".to_string())
             })? * *epsilon;
-            let update = u_v_dag.scale(&neg_eps).scale(&(self.beta / n_t));
+            let neg_eps_m = M::from_re_im(neg_eps, R::zero());
+            let beta_norm_m = M::from_re_im(self.beta / n_t, R::zero());
+            let update = u_v_dag
+                .try_scale(&neg_eps_m)
+                .map_err(TopologyError::from)?
+                .try_scale(&beta_norm_m)
+                .map_err(TopologyError::from)?;
 
             // U' = U + ε F, then project
-            let new_u = u.add(&update);
+            let new_u = u.try_add(&update).map_err(TopologyError::from)?;
             let projected = new_u.project_sun().map_err(TopologyError::from)?;
 
             new_links.insert(edge.clone(), projected);
@@ -154,7 +171,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     ///
     /// Note: This generally breaks unitarity (U † U = I), so the result
     /// is no longer in SU(N). This is an intermediate operation for RK3.
-    fn try_scale(&self, factor: &T) -> Result<Self, TopologyError> {
+    fn try_scale(&self, factor: &M) -> Result<Self, TopologyError> {
         let mut new_links = HashMap::new();
         for (cell, link) in self.links.iter() {
             let new_link = link.try_scale(factor).map_err(TopologyError::from)?;
@@ -204,22 +221,35 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// 3. $U^{(n+1)} = \frac{1}{3} U^{(n)} + \frac{2}{3} (U^{(2)} + \epsilon F(U^{(2)}))$
     ///
     /// Finally, project back to SU(N) group manifold.
-    fn try_rk3_step(&self, epsilon: &T) -> Result<Self, TopologyError>
+    fn try_rk3_step(&self, epsilon: &R) -> Result<Self, TopologyError>
     where
-        T: Float,
+        M: Field + DivisionAlgebra<R> + ComplexField<R>,
+        R: RealField,
     {
-        let three_quarters = T::from(0.75).ok_or_else(|| {
-            TopologyError::LatticeGaugeError("Failed to convert 0.75 to T".to_string())
-        })?;
-        let one_quarter = T::from(0.25).ok_or_else(|| {
-            TopologyError::LatticeGaugeError("Failed to convert 0.25 to T".to_string())
-        })?;
-        let one_third = T::from(1.0 / 3.0).ok_or_else(|| {
-            TopologyError::LatticeGaugeError("Failed to convert 1/3 to T".to_string())
-        })?;
-        let two_thirds = T::from(2.0 / 3.0).ok_or_else(|| {
-            TopologyError::LatticeGaugeError("Failed to convert 2/3 to T".to_string())
-        })?;
+        let three_quarters = M::from_re_im(
+            R::from_f64(0.75).ok_or_else(|| {
+                TopologyError::LatticeGaugeError("Failed to convert 0.75 to T".to_string())
+            })?,
+            R::zero(),
+        );
+        let one_quarter = M::from_re_im(
+            R::from_f64(0.25).ok_or_else(|| {
+                TopologyError::LatticeGaugeError("Failed to convert 0.25 to T".to_string())
+            })?,
+            R::zero(),
+        );
+        let one_third = M::from_re_im(
+            R::from_f64(1.0 / 3.0).ok_or_else(|| {
+                TopologyError::LatticeGaugeError("Failed to convert 1/3 to T".to_string())
+            })?,
+            R::zero(),
+        );
+        let two_thirds = M::from_re_im(
+            R::from_f64(2.0 / 3.0).ok_or_else(|| {
+                TopologyError::LatticeGaugeError("Failed to convert 2/3 to T".to_string())
+            })?,
+            R::zero(),
+        );
 
         // Stage 1: U1 = Euler(U0)
         // Note: try_euler_step does projection, but for RK intermediate
@@ -256,7 +286,8 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Project whole field to SU(N).
     fn project_to_group(&self) -> Result<Self, TopologyError>
     where
-        T: Float,
+        M: Field + DivisionAlgebra<R> + ComplexField<R>,
+        R: RealField,
     {
         let mut new_links = HashMap::new();
         for (cell, link) in self.links.iter() {
@@ -289,17 +320,18 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// # Errors
     ///
     /// Returns error if computation fails.
-    pub fn try_energy_density(&self) -> Result<T, TopologyError>
+    pub fn try_energy_density(&self) -> Result<R, TopologyError>
     where
-        T: Float,
+        M: Field + DivisionAlgebra<R>,
+        R: RealField,
     {
         let n = G::matrix_dim();
-        let n_t = T::from(n as f64).ok_or_else(|| {
+        let n_t = R::from_f64(n as f64).ok_or_else(|| {
             TopologyError::LatticeGaugeError("Failed to convert matrix dimension to T".to_string())
         })?;
-        let one = T::one();
+        let one = R::one();
 
-        let mut sum = T::zero();
+        let mut sum = R::zero();
         let mut count = 0usize;
 
         for site_cell in self.lattice.cells(0) {
@@ -309,17 +341,17 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
                     let plaq = self.try_plaquette(&site, mu, nu)?;
                     let tr = plaq.re_trace();
                     let e_p = one - tr / n_t;
-                    sum = sum + e_p;
+                    sum += e_p;
                     count += 1;
                 }
             }
         }
 
         if count == 0 {
-            return Ok(T::zero());
+            return Ok(R::zero());
         }
 
-        let count_t = T::from(count as f64).ok_or_else(|| {
+        let count_t = R::from_f64(count as f64).ok_or_else(|| {
             TopologyError::LatticeGaugeError("Failed to convert count to T".to_string())
         })?;
         Ok(sum / count_t)
@@ -332,9 +364,10 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// # Errors
     ///
     /// Returns error if computation fails.
-    pub fn try_t2_energy(&self, t: T) -> Result<T, TopologyError>
+    pub fn try_t2_energy(&self, t: R) -> Result<R, TopologyError>
     where
-        T: Float,
+        M: Field + DivisionAlgebra<R>,
+        R: RealField,
     {
         let e = self.try_energy_density()?;
         Ok(t * t * e)
@@ -377,11 +410,12 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
     /// Returns error if:
     /// - Flow computation fails
     /// - t² E(t) never reaches 0.3 within t_max
-    pub fn try_find_t0(&self, params: &FlowParams<T>) -> Result<T, TopologyError>
+    pub fn try_find_t0(&self, params: &FlowParams<R>) -> Result<R, TopologyError>
     where
-        T: Float,
+        M: Field + DivisionAlgebra<R> + ComplexField<R>,
+        R: RealField,
     {
-        let zero = T::zero();
+        let zero = R::zero();
         if params.epsilon <= zero {
             return Err(TopologyError::LatticeGaugeError(
                 "Flow epsilon must be > 0".to_string(),
@@ -393,11 +427,11 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
             ));
         }
 
-        let target = T::from(0.3).ok_or_else(|| {
+        let target = R::from_f64(0.3).ok_or_else(|| {
             TopologyError::LatticeGaugeError("Failed to convert 0.3 to T".to_string())
         })?;
         let mut current = self.clone();
-        let mut t = T::zero();
+        let mut t = R::zero();
         let epsilon = params.epsilon;
 
         let mut prev_t = t;
@@ -409,7 +443,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
                 FlowMethod::Euler => current.try_euler_step(&epsilon)?,
                 FlowMethod::RungeKutta3 => current.try_rk3_step(&epsilon)?,
             };
-            t = t + epsilon;
+            t += epsilon;
 
             let t2e = current.try_t2_energy(t)?;
 
@@ -420,7 +454,7 @@ impl<G: GaugeGroup, const D: usize, T: TensorData> LatticeGaugeField<G, D, T> {
                 let dt = t - prev_t;
                 let d_t2e = t2e - prev_t2e;
 
-                if d_t2e == T::zero() {
+                if d_t2e == R::zero() {
                     return Ok(prev_t);
                 }
 
