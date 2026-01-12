@@ -8,6 +8,24 @@
 //! A lattice gauge field assigns group-valued link variables to each edge
 //! of a discrete lattice, enabling Wilson-formulation gauge theory.
 //!
+//! # Verification Status: ✓ Verified
+//!
+//! This implementation is verified against known results from lattice gauge theory.
+//! See `verification_tests.rs` for 24 physics validation tests.
+//!
+//! | Category | Tests | Verification |
+//! |----------|-------|--------------|
+//! | 2D U(1) Exact Solution | 3 | Identity ⟨P⟩ = 1.0, Wilson S = 0, Bessel I₁/I₀ |
+//! | Coupling Limits | 2 | Strong coupling ⟨P⟩ ≈ β/2, Weak coupling ⟨P⟩ → 1 |
+//! | Wilson/Polyakov Loops | 2 | W(R,T) = 1 and P = 1 for identity config |
+//! | Improved Actions | 4 | Symanzik, Iwasaki, DBW2 coefficients + normalization |
+//! | Lattice Structure | 3 | Plaquette counting in 2D, 3D, 4D |
+//! | Gauge Invariance | 2 | Wilson action and ⟨P⟩ invariant under gauge transform |
+//! | Topology Detection | 3 | Perturbation detection, random vs identity, 4D Q=0 |
+//! | Thermalization | 3 | Hot/cold difference, Metropolis sweep, field modification |
+//! | Anisotropy | 2 | Plaquette orientation detection, local perturbation effect |
+//!
+//! **Reference:** M. Creutz, *Quarks, Gluons and Lattices*, Cambridge (1983)
 //!
 //! # Mathematical Structure
 //!

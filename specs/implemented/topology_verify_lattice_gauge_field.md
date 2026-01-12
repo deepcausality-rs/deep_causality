@@ -2,11 +2,14 @@
 
 ## Overview
 
-This specification outlines the approach for validating the `LatticeGaugeField` implementation in `deep_causality_topology` by implementing known lattice gauge theory calculations and comparing results against published reference values.
+This specification outlines the approach for validating the `LatticeGaugeField` implementation in
+`deep_causality_topology` by implementing known lattice gauge theory calculations and comparing results against
+published reference values.
 
 ## Verification Strategy
 
 The verification follows the same pattern used for the continuous `GaugeField`:
+
 1. Implement calculations for a well-understood physical theory
 2. Compute known observables
 3. Compare against analytically derived or published reference values
@@ -18,6 +21,7 @@ The verification follows the same pattern used for the continuous `GaugeField`:
 ### Why This Theory?
 
 The 2D U(1) lattice gauge theory is **exactly solvable**, making it ideal for initial validation:
+
 - Closed-form analytic solutions exist
 - No Monte Carlo thermalization required
 - Your implementation already supports U(1) and 2D lattices
@@ -33,7 +37,9 @@ where $I_n$ are modified Bessel functions of the first kind.
 
 > **M. Creutz, *Quarks, Gluons and Lattices*, Cambridge University Press (1983), Chapter 8**
 >
-> The exact solution is derived from the fact that in 2D, the path integral factorizes over plaquettes. Each plaquette integral gives a ratio of Bessel functions. This is not a "published table" but an **exact analytic result** that can be computed to arbitrary precision.
+> The exact solution is derived from the fact that in 2D, the path integral factorizes over plaquettes. Each plaquette
+> integral gives a ratio of Bessel functions. This is not a "published table" but an **exact analytic result** that can be
+> computed to arbitrary precision.
 
 The derivation uses:
 $$Z = \prod_{\text{plaquettes}} \int_0^{2\pi} \frac{d\theta}{2\pi} e^{\beta \cos\theta} = \prod_p I_0(\beta)$$
@@ -44,21 +50,23 @@ and the plaquette expectation value follows from $\langle P \rangle = \partial \
 
 These values are computed from the **exact formula** to 32 significant digits:
 
-| β | ⟨P⟩ = I₁(β) / I₀(β) |
-|---|---------------------|
-| 0.5 | 0.24226845767486894622004965096203 |
-| 1.0 | 0.44629221067969540862867127655328 |
-| 2.0 | 0.69775705397737959322204756994581 |
-| 3.0 | 0.80720842309070252574604451047186 |
-| 4.0 | 0.86379295629099922539571839785098 |
-| 5.0 | 0.89382968853082515877168223779606 |
-| 6.0 | 0.91158548063408757619419088298917 |
-| 8.0 | 0.93389598028088200055108648131458 |
+| β    | ⟨P⟩ = I₁(β) / I₀(β)                |
+|------|------------------------------------|
+| 0.5  | 0.24226845767486894622004965096203 |
+| 1.0  | 0.44629221067969540862867127655328 |
+| 2.0  | 0.69775705397737959322204756994581 |
+| 3.0  | 0.80720842309070252574604451047186 |
+| 4.0  | 0.86379295629099922539571839785098 |
+| 5.0  | 0.89382968853082515877168223779606 |
+| 6.0  | 0.91158548063408757619419088298917 |
+| 8.0  | 0.93389598028088200055108648131458 |
 | 10.0 | 0.94723257050594106316440854296207 |
 | 20.0 | 0.97360397034839892188277086346506 |
 
 > [!NOTE]
-> Since the formula is exact, you can compute reference values to **any precision** by evaluating the modified Bessel functions $I_0(\beta)$ and $I_1(\beta)$ using your DoubleFloat type directly. The "reference values" above are derived values, not published experimental measurements.
+> Since the formula is exact, you can compute reference values to **any precision** by evaluating the modified Bessel
+> functions $I_0(\beta)$ and $I_1(\beta)$ using your DoubleFloat type directly. The "reference values" above are derived
+> values, not published experimental measurements.
 
 ### Computing Your Own Reference Values
 
@@ -69,7 +77,8 @@ $$I_n(x) = \sum_{k=0}^{\infty} \frac{1}{k! \, \Gamma(n+k+1)} \left(\frac{x}{2}\r
 Or use the integral representation:
 $$I_n(x) = \frac{1}{\pi} \int_0^{\pi} e^{x \cos\theta} \cos(n\theta) \, d\theta$$
 
-For implementation, you can use high-precision libraries like `mpfr` or compute the series to enough terms for 106-bit precision (typically ~50 terms suffice for β ≤ 20).
+For implementation, you can use high-precision libraries like `mpfr` or compute the series to enough terms for 106-bit
+precision (typically ~50 terms suffice for β ≤ 20).
 
 ### Implementation Location
 
@@ -86,10 +95,10 @@ examples/physics_examples/lattice_u1_2d/
 fn verify_2d_u1_plaquette(beta: f64) -> bool {
     let lattice = Lattice::new([16, 16], [true, true]);
     let field = LatticeGaugeField::<U1, 2, f64>::identity(lattice, beta);
-    
+
     let computed = field.try_average_plaquette().unwrap();
     let exact = bessel_i1(beta) / bessel_i0(beta);
-    
+
     (computed - exact).abs() < 1e-10
 }
 ```
@@ -107,11 +116,13 @@ $$\frac{\langle U_P \rangle}{N} \approx \frac{\beta}{2N^2} + O(\beta^2)$$
 ### Test Values
 
 For U(1) (N=1) at β = 0.1:
+
 - Expected: ≈ 0.05 + O(β²)
 
 ### Implementation
 
 Add test cases in existing test file:
+
 - `deep_causality_topology/tests/types/gauge/gauge_field_lattice/`
 
 ---
@@ -128,10 +139,10 @@ Your implementation already has `try_find_t0()` which implements this.
 
 ### Published Reference Values (Pure Gauge SU(3))
 
-| Source | √t₀ / a |
-|--------|---------|
-| HotQCD Collaboration | 0.14229(98) fm |
-| FLAG average | Similar values for various lattice setups |
+| Source               | √t₀ / a                                   |
+|----------------------|-------------------------------------------|
+| HotQCD Collaboration | 0.14229(98) fm                            |
+| FLAG average         | Similar values for various lattice setups |
 
 ### Verification Approach
 
@@ -185,10 +196,10 @@ $$P(\vec{x}) = \text{Tr}\left[\prod_{t=0}^{N_t-1} U_0(\vec{x}, t)\right]$$
 
 ### Reference Values
 
-| Theory | Lattice | Critical βc |
-|--------|---------|-------------|
-| SU(3) Wilson | 4×Ns³ | ≈ 5.69 |
-| SU(2) Wilson | 4×Ns³ | ≈ 2.30 |
+| Theory       | Lattice | Critical βc |
+|--------------|---------|-------------|
+| SU(3) Wilson | 4×Ns³   | ≈ 5.69      |
+| SU(2) Wilson | 4×Ns³   | ≈ 2.30      |
 
 ### Verification
 
@@ -198,13 +209,13 @@ Use `try_average_polyakov_loop()` to observe transition near critical β.
 
 ## Implementation Summary
 
-| Phase | Theory | Observable | Method | Difficulty |
-|-------|--------|------------|--------|------------|
-| 1 | 2D U(1) | ⟨P⟩ | Exact | ⭐ Easy |
-| 2 | Any | ⟨P⟩ | Strong coupling | ⭐ Easy |
-| 3 | 4D SU(3) | t₀ | Gradient flow | ⭐⭐ Medium |
-| 4 | 4D SU(3) | σ | Wilson loops | ⭐⭐⭐ Hard |
-| 5 | 4D SU(N) | ⟨P⟩ | Monte Carlo | ⭐⭐⭐ Hard |
+| Phase | Theory   | Observable | Method          | Difficulty |
+|-------|----------|------------|-----------------|------------|
+| 1     | 2D U(1)  | ⟨P⟩        | Exact           | ⭐ Easy     |
+| 2     | Any      | ⟨P⟩        | Strong coupling | ⭐ Easy     |
+| 3     | 4D SU(3) | t₀         | Gradient flow   | ⭐⭐ Medium  |
+| 4     | 4D SU(3) | σ          | Wilson loops    | ⭐⭐⭐ Hard   |
+| 5     | 4D SU(N) | ⟨P⟩        | Monte Carlo     | ⭐⭐⭐ Hard   |
 
 ---
 
@@ -212,7 +223,8 @@ Use `try_average_polyakov_loop()` to observe transition near critical β.
 
 ### Immediate (Minimal Code)
 
-1. **2D U(1) exact solution** - Identity field verification already passes. Add Monte Carlo thermalization and compare to Bessel function formula.
+1. **2D U(1) exact solution** - Identity field verification already passes. Add Monte Carlo thermalization and compare
+   to Bessel function formula.
 
 ### Short-term
 

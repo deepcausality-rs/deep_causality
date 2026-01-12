@@ -57,6 +57,30 @@ simplicial complexes), enabling advanced reasoning about the "shape" and connect
 | **LatticeGaugeField** | Wilson-formulation lattice gauge theory.            | $U_\mu(n) \in G$            |
 | **LinkVariable**      | Group element on a lattice edge.                    | $\text{SU}(N)$ Element      |
 
+## Lattice Gauge Field Verification ✓
+
+The `LatticeGaugeField` implementation is verified against known results from lattice gauge theory
+(M. Creutz, *Quarks, Gluons and Lattices*, Cambridge 1983).
+
+**24 Physics Verification Tests:**
+
+| Category | Tests | Verification |
+|----------|-------|--------------|
+| **2D U(1) Exact Solution** | 3 | Identity ⟨P⟩ = 1.0, Wilson S = 0, Bessel I₁/I₀ algorithm agreement |
+| **Coupling Limits** | 2 | Strong coupling ⟨P⟩ ≈ β/2, Weak coupling ⟨P⟩ → 1 |
+| **Wilson/Polyakov Loops** | 2 | W(R,T) = 1 and P = 1 for identity configuration |
+| **Improved Actions** | 4 | Symanzik (c₁=-1/12), Iwasaki (c₁=-0.331), DBW2 (c₁=-1.4088), normalization c₀+8c₁=1 |
+| **Lattice Structure** | 3 | Plaquette counting correct in 2D, 3D, 4D |
+| **Gauge Invariance** | 2 | Wilson action and ⟨P⟩ invariant under random gauge transforms |
+| **Topology Detection** | 3 | Perturbation detection, random vs identity action, 4D topological charge Q=0 |
+| **Thermalization** | 3 | Hot/cold start difference, Metropolis sweep runs, field modification |
+| **Anisotropy** | 2 | Plaquette orientation detection (temporal vs spatial), local perturbation effect |
+
+Run verification tests:
+```bash
+cargo test -p deep_causality_topology verification_tests --release
+```
+
 ## Usage
 
 Add this crate to your `Cargo.toml`:

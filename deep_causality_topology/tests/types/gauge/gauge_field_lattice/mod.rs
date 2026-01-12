@@ -11,4 +11,6 @@ mod lattice_gauge_field_tests;
 #[cfg(test)]
 mod metropolis_tests;
 #[cfg(test)]
+mod verification_tests;
+#[cfg(test)]
 mod wilson_tests;
