@@ -113,13 +113,13 @@ impl RealField for DoubleFloat {
     }
 
     #[inline]
-    fn abs(self) -> Self {
-        <Self as Float>::abs(self)
+    fn sqrt(self) -> Self {
+        <Self as Float>::sqrt(self)
     }
 
     #[inline]
-    fn sqrt(self) -> Self {
-        <Self as Float>::sqrt(self)
+    fn abs(self) -> Self {
+        <Self as Float>::abs(self)
     }
 
     #[inline]
@@ -190,6 +190,11 @@ impl RealField for DoubleFloat {
     #[inline]
     fn tanh(self) -> Self {
         <Self as Float>::tanh(self)
+    }
+
+    #[inline]
+    fn atan(self) -> Self {
+        <Self as Float>::atan(self)
     }
 
     #[inline]
