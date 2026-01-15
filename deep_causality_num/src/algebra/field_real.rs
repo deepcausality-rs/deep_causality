@@ -155,7 +155,7 @@ pub trait RealField:
     /// range [-pi/2, pi/2];
     ///
     /// ```
-    /// use deep_causality_num::Float;
+    /// use deep_causality_num::RealField;
     ///
     /// let f = 1.0;
     ///
