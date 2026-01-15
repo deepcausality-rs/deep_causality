@@ -151,6 +151,21 @@ pub trait RealField:
     /// ```
     fn tanh(self) -> Self;
 
+    /// Computes the arctangent of a number. Return value is in radians in the
+    /// range [-pi/2, pi/2];
+    ///
+    /// ```
+    /// use deep_causality_num::Float;
+    ///
+    /// let f = 1.0;
+    ///
+    /// // atan(tan(1))
+    /// let abs_difference = (f.tan().atan() - 1.0).abs();
+    ///
+    /// assert!(abs_difference < 1e-10);
+    /// ```
+    fn atan(self) -> Self;
+
     /// Computes the four-quadrant arctangent of `self` (y) and `other` (x).
     /// # Example
     /// ```
@@ -399,6 +414,10 @@ impl RealField for f32 {
     fn epsilon() -> Self {
         f32::EPSILON
     }
+
+    fn atan(self) -> Self {
+        f32::atan(self)
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -577,5 +596,9 @@ impl RealField for f64 {
     #[inline]
     fn epsilon() -> Self {
         f64::EPSILON
+    }
+
+    fn atan(self) -> Self {
+        f64::atan(self)
     }
 }

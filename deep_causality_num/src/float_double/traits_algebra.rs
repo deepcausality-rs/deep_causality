@@ -211,4 +211,8 @@ impl RealField for DoubleFloat {
     fn epsilon() -> Self {
         Self::EPSILON
     }
+
+    fn atan(self) -> Self {
+        <Self as Float>::atan(self)
+    }
 }
