@@ -92,10 +92,10 @@ At the heart of DeepCausality is the **Causal Monad** pattern, implemented throu
 | `PropagatingEffect<T>` | Stateless effect propagation | Value + Error + Log |
 | `PropagatingProcess<T>` | Stateful effect propagation | Value + State + Context + Error + Log |
 
-These monads enable **composable causal computations** where effects flow through a pipeline of transformations wth the following key properties:
-- **Error propagation**: Errors short-circuit the chain automatically
-- **Logging**: Each step can append to an audit trail
-- **Counterfactuals**: `bind` supports hypothetical "what-if" reasoning
+These monads enable **composable causal computations** where effects flow through a pipeline of transformations with the following key properties:
+- **Error propagation**: Errors short-circuit the chain automatically.
+- **Logging**: Each step can append to an audit trail.
+- **Counterfactuals**: `bind` supports hypothetical "what-if" reasoning.
 
 ### The Three Pillars
 
