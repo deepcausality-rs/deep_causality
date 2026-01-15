@@ -415,6 +415,7 @@ impl RealField for f32 {
         f32::EPSILON
     }
 
+    #[inline]
     fn atan(self) -> Self {
         f32::atan(self)
     }
