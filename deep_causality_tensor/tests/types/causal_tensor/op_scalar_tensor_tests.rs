@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality_tensor::CausalTensor;
 
@@ -16,11 +16,11 @@ macro_rules! test_scalar_tensor_ops_for_type {
                 let t = CausalTensor::new(vec![1, 2, 3], vec![3]).unwrap();
 
                 // Test scalar + &tensor
-                let res1: CausalTensor<$ty> = s + &t;
+                let res1 = s + &t;
                 assert_eq!(res1.as_slice(), &[11, 12, 13]);
 
                 // Test scalar + tensor
-                let res2: CausalTensor<$ty> = s + t;
+                let res2 = s + t;
                 assert_eq!(res2.as_slice(), &[11, 12, 13]);
             }
 
@@ -30,11 +30,11 @@ macro_rules! test_scalar_tensor_ops_for_type {
                 let t = CausalTensor::new(vec![1, 2, 3], vec![3]).unwrap();
 
                 // Test scalar - &tensor
-                let res1: CausalTensor<$ty> = s - &t;
+                let res1 = s - &t;
                 assert_eq!(res1.as_slice(), &[9, 8, 7]);
 
                 // Test scalar - tensor
-                let res2: CausalTensor<$ty> = s - t;
+                let res2 = s - t;
                 assert_eq!(res2.as_slice(), &[9, 8, 7]);
             }
 
@@ -44,11 +44,11 @@ macro_rules! test_scalar_tensor_ops_for_type {
                 let t = CausalTensor::new(vec![1, 2, 3], vec![3]).unwrap();
 
                 // Test scalar * &tensor
-                let res1: CausalTensor<$ty> = s * &t;
+                let res1 = s * &t;
                 assert_eq!(res1.as_slice(), &[3, 6, 9]);
 
                 // Test scalar * tensor
-                let res2: CausalTensor<$ty> = s * t;
+                let res2 = s * t;
                 assert_eq!(res2.as_slice(), &[3, 6, 9]);
             }
 
@@ -58,11 +58,11 @@ macro_rules! test_scalar_tensor_ops_for_type {
                 let t = CausalTensor::new(vec![2, 3, 4], vec![3]).unwrap();
 
                 // Test scalar / &tensor
-                let res1: CausalTensor<$ty> = s / &t;
+                let res1 = s / &t;
                 assert_eq!(res1.as_slice(), &[6, 4, 3]);
 
                 // Test scalar / tensor
-                let res2: CausalTensor<$ty> = s / t;
+                let res2 = s / t;
                 assert_eq!(res2.as_slice(), &[6, 4, 3]);
             }
         }

@@ -3,13 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Tests for gamma module functions: compute_gamma_element and from_data_helper.
+//! Tests for gamma module functions: compute_gamma_element.
 
 #![allow(clippy::needless_range_loop)]
 
 use deep_causality_metric::Metric;
-use deep_causality_multivector::{compute_gamma_element, from_data_helper};
-use deep_causality_tensor::{CpuBackend, TensorBackend};
+use deep_causality_multivector::compute_gamma_element;
 
 // =============================================================================
 // compute_gamma_element() tests
@@ -163,70 +162,4 @@ fn test_compute_gamma_element_cl3_gamma0() {
         }
     }
     assert!(has_nonzero, "Gamma_0 should have non-zero elements");
-}
-
-// =============================================================================
-// from_data_helper() tests
-// =============================================================================
-
-#[test]
-fn test_from_data_helper_creates_tensor_with_correct_shape() {
-    let data = vec![1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0];
-    let shape = [2, 3];
-
-    let tensor = from_data_helper::<CpuBackend, f32>(&data, &shape);
-    let result_shape = CpuBackend::shape(&tensor);
-
-    assert_eq!(result_shape, vec![2, 3]);
-}
-
-#[test]
-fn test_from_data_helper_preserves_values() {
-    let data = vec![1.0f32, 2.0, 3.0, 4.0];
-    let shape = [2, 2];
-
-    let tensor = from_data_helper::<CpuBackend, f32>(&data, &shape);
-    let result: Vec<f32> = CpuBackend::to_vec(&tensor);
-
-    assert_eq!(result, data);
-}
-
-#[test]
-fn test_from_data_helper_1d_tensor() {
-    let data = vec![1.0f32, 2.0, 3.0];
-    let shape = [3];
-
-    let tensor = from_data_helper::<CpuBackend, f32>(&data, &shape);
-    let result: Vec<f32> = CpuBackend::to_vec(&tensor);
-
-    assert_eq!(result, data);
-}
-
-#[test]
-fn test_from_data_helper_3d_tensor() {
-    let data: Vec<f32> = (0..24).map(|i| i as f32).collect();
-    let shape = [2, 3, 4];
-
-    let tensor = from_data_helper::<CpuBackend, f32>(&data, &shape);
-    let result_shape = CpuBackend::shape(&tensor);
-    let result: Vec<f32> = CpuBackend::to_vec(&tensor);
-
-    assert_eq!(result_shape, vec![2, 3, 4]);
-    assert_eq!(result.len(), 24);
-}
-
-#[test]
-fn test_from_data_helper_pads_with_zeros_if_data_short() {
-    // If data is shorter than shape requires, zeros should fill the rest
-    let data = vec![1.0f32, 2.0];
-    let shape = [2, 2]; // Requires 4 elements
-
-    let tensor = from_data_helper::<CpuBackend, f32>(&data, &shape);
-    let result: Vec<f32> = CpuBackend::to_vec(&tensor);
-
-    assert_eq!(result.len(), 4);
-    assert_eq!(result[0], 1.0);
-    assert_eq!(result[1], 2.0);
-    assert_eq!(result[2], 0.0); // Padded with zero
-    assert_eq!(result[3], 0.0); // Padded with zero
 }

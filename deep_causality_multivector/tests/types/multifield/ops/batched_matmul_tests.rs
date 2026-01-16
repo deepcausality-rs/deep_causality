@@ -6,202 +6,87 @@
 //! Tests for BatchedMatMul trait implementations.
 
 use deep_causality_multivector::BatchedMatMul;
-use deep_causality_tensor::{CpuBackend, TensorBackend};
-
-// =============================================================================
-// CpuBackend BatchedMatMul tests
-// =============================================================================
+use deep_causality_tensor::CausalTensor;
 
 #[test]
-fn test_batched_matmul_2d_fallback() {
-    // 2D tensors should fall back to regular matmul
-    let a = CpuBackend::from_shape_fn(&[2, 2], |idx| (idx[0] * 2 + idx[1] + 1) as f32);
-    let b = CpuBackend::from_shape_fn(
-        &[2, 2],
-        |idx| {
-            if idx[0] == idx[1] { 1.0f32 } else { 0.0f32 }
-        },
-    ); // Identity
+fn test_batched_matmul_rank_2_fallback() {
+    // Rank 2 tensor (just a matrix) - should use standard matmul fallback
+    let shape = [2, 2];
 
-    let c = CpuBackend::batched_matmul(&a, &b);
-    let result = CpuBackend::to_vec(&c);
-    let original = CpuBackend::to_vec(&a);
+    // A = [[1, 2], [3, 4]]
+    let data_a = vec![1.0, 2.0, 3.0, 4.0];
+    let tensor_a = CausalTensor::<f32>::from_slice(&data_a, &shape);
 
-    // A * I = A
-    for (r, o) in result.iter().zip(original.iter()) {
-        assert!((r - o).abs() < 1e-5, "A * I = A failed: {} != {}", r, o);
+    // B = [[1, 0], [0, 1]] (Identity)
+    let data_b = vec![1.0, 0.0, 0.0, 1.0];
+    let tensor_b = CausalTensor::<f32>::from_slice(&data_b, &shape);
+
+    let result = tensor_a.batched_matmul(&tensor_b);
+
+    assert_eq!(*result.shape(), shape);
+
+    let res_data = CausalTensor::to_vec(result);
+    // Should be equal to A
+    assert_eq!(res_data, vec![1.0, 2.0, 3.0, 4.0]);
+}
+
+#[test]
+fn test_batched_matmul_rank_3() {
+    // Shape [2, 2, 2] -> Batch size 2, 2x2 matrices
+    let shape = [2, 2, 2];
+
+    // Batch 0: Identity, Batch 1: 2*Identity
+    let data_a = vec![
+        1.0, 0.0, 0.0, 1.0, // Batch 0
+        2.0, 0.0, 0.0, 2.0, // Batch 1
+    ];
+    let tensor_a = CausalTensor::<f32>::from_slice(&data_a, &shape);
+
+    // B: Scale factor matrix
+    // Batch 0: [[2, 0], [0, 2]], Batch 1: [[3, 0], [0, 3]]
+    let data_b = vec![
+        2.0, 0.0, 0.0, 2.0, // Batch 0
+        3.0, 0.0, 0.0, 3.0, // Batch 1
+    ];
+    let tensor_b = CausalTensor::<f32>::from_slice(&data_b, &shape);
+
+    let result = tensor_a.batched_matmul(&tensor_b);
+
+    assert_eq!(*result.shape(), shape);
+
+    let res_data = CausalTensor::to_vec(result);
+
+    // Expected:
+    // Batch 0: I * 2I = 2I -> [2, 0, 0, 2]
+    // Batch 1: 2I * 3I = 6I -> [6, 0, 0, 6]
+    let expected = [2.0, 0.0, 0.0, 2.0, 6.0, 0.0, 0.0, 6.0];
+
+    for (val, exp) in res_data.iter().zip(expected.iter()) {
+        assert!((val - exp).abs() < 1e-5, "Expected {}, got {}", exp, val);
     }
 }
 
 #[test]
-fn test_batched_matmul_3d_single_batch() {
-    // [1, 2, 2] tensors - single batch
-    let a = CpuBackend::from_shape_fn(&[1, 2, 2], |idx| (idx[1] * 2 + idx[2] + 1) as f32);
-    let b = CpuBackend::from_shape_fn(
-        &[1, 2, 2],
-        |idx| {
-            if idx[1] == idx[2] { 1.0f32 } else { 0.0f32 }
-        },
-    );
+fn test_batched_matmul_rank_4() {
+    // Shape [2, 2, 2, 2] -> Batch dimensions [2, 2], so 4 effective batches of 2x2 matrices
+    let shape = [2, 2, 2, 2];
 
-    let c = CpuBackend::batched_matmul(&a, &b);
-    let shape = CpuBackend::shape(&c);
+    // Create tensors filled with 1.0 everywhere
+    // [ [1, 1], [1, 1] ] * [ [1, 1], [1, 1] ] = [ [2, 2], [2, 2] ]
+    let size = 16; // 2*2*2*2
+    let data = vec![1.0; size];
 
-    assert_eq!(shape, vec![1, 2, 2]);
-}
+    let tensor_a = CausalTensor::<f32>::from_slice(&data, &shape);
+    let tensor_b = CausalTensor::<f32>::from_slice(&data, &shape); // Same
 
-#[test]
-fn test_batched_matmul_3d_multiple_batches() {
-    // [3, 2, 2] tensors - three batches
-    let a = CpuBackend::from_shape_fn(&[3, 2, 2], |idx| (idx[0] * 4 + idx[1] * 2 + idx[2]) as f32);
-    let b = CpuBackend::from_shape_fn(
-        &[3, 2, 2],
-        |idx| {
-            if idx[1] == idx[2] { 1.0f32 } else { 0.0f32 }
-        },
-    ); // Identity in each batch
+    let result = tensor_a.batched_matmul(&tensor_b);
 
-    let c = CpuBackend::batched_matmul(&a, &b);
-    let shape = CpuBackend::shape(&c);
-    let result = CpuBackend::to_vec(&c);
-    let original = CpuBackend::to_vec(&a);
+    assert_eq!(*result.shape(), shape);
 
-    assert_eq!(shape, vec![3, 2, 2]);
+    let res_data = CausalTensor::to_vec(result);
 
-    // Since B is identity in each batch, C should equal A
-    for (r, o) in result.iter().zip(original.iter()) {
-        assert!((r - o).abs() < 1e-5);
-    }
-}
-
-#[test]
-fn test_batched_matmul_5d_field_shape() {
-    // [2, 2, 2, 2, 2] - typical CausalMultiField shape
-    let a = CpuBackend::from_shape_fn(&[2, 2, 2, 2, 2], |idx| {
-        if idx[3] == idx[4] { 1.0f32 } else { 0.0f32 }
-    }); // Identity matrices
-    let b = CpuBackend::from_shape_fn(&[2, 2, 2, 2, 2], |idx| {
-        if idx[3] == idx[4] { 1.0f32 } else { 0.0f32 }
-    });
-
-    let c = CpuBackend::batched_matmul(&a, &b);
-    let shape = CpuBackend::shape(&c);
-    let result = CpuBackend::to_vec(&c);
-
-    assert_eq!(shape, vec![2, 2, 2, 2, 2]);
-
-    // I * I = I, so check diagonal elements are 1
-    // Total elements: 2*2*2*2*2 = 32
-    // Identity matrices mean [i,j,k,r,c] has 1 when r==c
-    for idx0 in 0..2 {
-        for idx1 in 0..2 {
-            for idx2 in 0..2 {
-                for r in 0..2 {
-                    for c in 0..2 {
-                        let linear = idx0 * 16 + idx1 * 8 + idx2 * 4 + r * 2 + c;
-                        if r == c {
-                            assert!(
-                                (result[linear] - 1.0).abs() < 1e-5,
-                                "Diagonal should be 1 at ({},{},{},{},{})",
-                                idx0,
-                                idx1,
-                                idx2,
-                                r,
-                                c
-                            );
-                        } else {
-                            assert!(
-                                result[linear].abs() < 1e-5,
-                                "Off-diagonal should be 0 at ({},{},{},{},{})",
-                                idx0,
-                                idx1,
-                                idx2,
-                                r,
-                                c
-                            );
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-#[test]
-fn test_batched_matmul_associativity() {
-    // (A * B) * C = A * (B * C)
-    let a = CpuBackend::from_shape_fn(&[2, 2, 2], |idx| {
-        (idx[0] * 4 + idx[1] * 2 + idx[2] + 1) as f32
-    });
-    let b = CpuBackend::from_shape_fn(&[2, 2, 2], |idx| {
-        ((idx[0] * 4 + idx[1] * 2 + idx[2]) % 3 + 1) as f32
-    });
-    let c = CpuBackend::from_shape_fn(&[2, 2, 2], |idx| {
-        ((idx[0] * 4 + idx[1] * 2 + idx[2]) % 5 + 1) as f32
-    });
-
-    let ab = CpuBackend::batched_matmul(&a, &b);
-    let ab_c = CpuBackend::batched_matmul(&ab, &c);
-
-    let bc = CpuBackend::batched_matmul(&b, &c);
-    let a_bc = CpuBackend::batched_matmul(&a, &bc);
-
-    let lhs = CpuBackend::to_vec(&ab_c);
-    let rhs = CpuBackend::to_vec(&a_bc);
-
-    for (l, r) in lhs.iter().zip(rhs.iter()) {
-        assert!((l - r).abs() < 1e-3, "Associativity failed: {} != {}", l, r);
-    }
-}
-
-// =============================================================================
-// MlxBackend BatchedMatMul tests
-// =============================================================================
-
-#[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
-mod mlx_batched_matmul_tests {
-    use super::*;
-    use deep_causality_tensor::MlxBackend;
-
-    #[test]
-    fn test_mlx_batched_matmul_delegates_to_matmul() {
-        // MLX should just call regular matmul (which supports broadcasting)
-        let a = MlxBackend::from_shape_fn(&[2, 2, 2], |idx| {
-            (idx[0] * 4 + idx[1] * 2 + idx[2] + 1) as f32
-        });
-        let b =
-            MlxBackend::from_shape_fn(
-                &[2, 2, 2],
-                |idx| {
-                    if idx[1] == idx[2] { 1.0f32 } else { 0.0f32 }
-                },
-            );
-
-        let c = MlxBackend::batched_matmul(&a, &b);
-        let shape = MlxBackend::shape(&c);
-
-        assert_eq!(shape, vec![2, 2, 2]);
-    }
-
-    #[test]
-    fn test_mlx_batched_matmul_identity() {
-        let a = MlxBackend::from_shape_fn(&[2, 2, 2], |idx| {
-            (idx[0] * 4 + idx[1] * 2 + idx[2] + 1) as f32
-        });
-        let identity =
-            MlxBackend::from_shape_fn(
-                &[2, 2, 2],
-                |idx| {
-                    if idx[1] == idx[2] { 1.0f32 } else { 0.0f32 }
-                },
-            );
-
-        let c = MlxBackend::batched_matmul(&a, &identity);
-        let result = MlxBackend::to_vec(&c);
-        let original = MlxBackend::to_vec(&a);
-
-        for (r, o) in result.iter().zip(original.iter()) {
-            assert!((r - o).abs() < 1e-5);
-        }
+    // Every element should be 2.0
+    for val in res_data {
+        assert!((val - 2.0).abs() < 1e-5);
     }
 }

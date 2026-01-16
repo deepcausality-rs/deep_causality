@@ -12,6 +12,7 @@ impl fmt::Display for Metric {
             Metric::Euclidean(d) => write!(f, "Euclidean({})", d),
             Metric::NonEuclidean(d) => write!(f, "NonEuclidean({})", d),
             Metric::Minkowski(d) => write!(f, "Minkowski({})", d),
+            Metric::Lorentzian(d) => write!(f, "Lorentzian({})", d),
             Metric::PGA(d) => write!(f, "PGA({})", d),
             Metric::Generic { p, q, r } => write!(f, "Cl({}, {}, {})", p, q, r),
             Metric::Custom { dim, .. } => write!(f, "Custom({})", dim),

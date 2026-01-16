@@ -16,7 +16,6 @@
 use deep_causality_metric::Metric;
 use deep_causality_multivector::{CausalMultiField, CausalMultiVector};
 use deep_causality_num::Zero;
-use deep_causality_tensor::CpuBackend;
 
 // =============================================================================
 // scale() tests
@@ -25,7 +24,7 @@ use deep_causality_tensor::CpuBackend;
 #[test]
 fn test_scale_by_zero() {
     let metric = Metric::from_signature(3, 0, 0);
-    let field = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
 
     let scaled = field.scale(0.0);
 
@@ -44,8 +43,7 @@ fn test_scale_by_one() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
     let scaled = field.scale(1.0);
 
     let orig_coeffs = field.to_coefficients();
@@ -70,8 +68,7 @@ fn test_scale_by_two() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
     let scaled = field.scale(2.0);
 
     let orig_coeffs = field.to_coefficients();
@@ -101,8 +98,7 @@ fn test_scale_by_negative() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
     let scaled = field.scale(-1.0);
 
     let orig_coeffs = field.to_coefficients();
@@ -127,8 +123,8 @@ fn test_scale_by_negative() {
 #[test]
 fn test_commutator_lie_returns_field() {
     let metric = Metric::from_signature(3, 0, 0);
-    let a = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
-    let b = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let b = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
 
     let comm = a.commutator_lie(&b);
 
@@ -139,8 +135,8 @@ fn test_commutator_lie_returns_field() {
 #[test]
 fn test_commutator_lie_self_is_zero() {
     let metric = Metric::from_signature(3, 0, 0);
-    let a = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
-    let a2 = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let a2 = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
 
     let comm = a.commutator_lie(&a2);
 
@@ -164,10 +160,8 @@ fn test_commutator_lie_antisymmetric() {
         mvs_b.push(CausalMultiVector::unchecked(data_b, metric));
     }
 
-    let a =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs_a, [2, 2, 2], [1.0, 1.0, 1.0]);
-    let b =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs_b, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::from_coefficients(&mvs_a, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let b = CausalMultiField::<f32>::from_coefficients(&mvs_b, [2, 2, 2], [1.0, 1.0, 1.0]);
 
     let ab = a.commutator_lie(&b);
     let ba = b.commutator_lie(&a);
@@ -194,8 +188,8 @@ fn test_commutator_lie_metric_mismatch() {
     let metric1 = Metric::from_signature(3, 0, 0);
     let metric2 = Metric::from_signature(2, 0, 0);
 
-    let a = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric1, [1.0, 1.0, 1.0]);
-    let b = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric2, [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::ones([2, 2, 2], metric1, [1.0, 1.0, 1.0]);
+    let b = CausalMultiField::<f32>::ones([2, 2, 2], metric2, [1.0, 1.0, 1.0]);
 
     let _ = a.commutator_lie(&b);
 }
@@ -220,10 +214,8 @@ fn test_commutator_geometric_is_half_lie() {
         mvs_b.push(CausalMultiVector::unchecked(data_b, metric));
     }
 
-    let a =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs_a, [2, 2, 2], [1.0, 1.0, 1.0]);
-    let b =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs_b, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::from_coefficients(&mvs_a, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let b = CausalMultiField::<f32>::from_coefficients(&mvs_b, [2, 2, 2], [1.0, 1.0, 1.0]);
 
     let lie = a.commutator_lie(&b);
     let geo = a.commutator_geometric(&b);
@@ -262,8 +254,7 @@ fn test_normalize_returns_field() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
     let normalized = field.normalize();
 
     assert_eq!(normalized.metric(), metric);
@@ -284,22 +275,17 @@ fn test_normalize_unit_magnitude() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
     let normalized = field.normalize();
-    let norm_coeffs = normalized.to_coefficients();
 
-    // Each normalized multivector should have unit magnitude
-    for mv in &norm_coeffs {
-        // For a pure vector e1, |e1|^2 = e1^2 = 1 in Euclidean metric
-        // After normalization, coefficient should be 1
-        let e1_coeff = mv.data()[1];
-        assert!(
-            (e1_coeff.abs() - 1.0).abs() < 1e-4,
-            "Normalized e1 should have magnitude 1, got {}",
-            e1_coeff
-        );
-    }
+    // Verify global normalization
+    // squared_magnitude() sums over all elements
+    let mag_sq = normalized.squared_magnitude();
+    assert!(
+        (mag_sq - 1.0).abs() < 1e-4,
+        "Normalized field should have unit global magnitude, got {}",
+        mag_sq
+    );
 }
 
 // =============================================================================
@@ -319,9 +305,8 @@ fn test_inverse_returns_field() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
-    let inverse = field.inverse().expect("Inversion should succeed");
+    let field = CausalMultiField::<f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let inverse = field.inverse();
 
     assert_eq!(inverse.metric(), metric);
     assert_eq!(*inverse.shape(), [2, 2, 2]);
@@ -340,9 +325,8 @@ fn test_inverse_of_scalar() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
-    let inverse = field.inverse().expect("Inversion should succeed");
+    let field = CausalMultiField::<f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let inverse = field.inverse();
     let inv_coeffs = inverse.to_coefficients();
 
     // Inverse of scalar 2 should be 0.5
@@ -371,9 +355,8 @@ fn test_inverse_product_is_identity() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
-    let inverse = field.inverse().expect("Inversion should succeed");
+    let field = CausalMultiField::<f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let inverse = field.inverse();
 
     // A * A^{-1} should be identity (scalar = 1)
     let product = field * inverse;
@@ -406,7 +389,7 @@ fn test_inverse_product_is_identity() {
 #[test]
 fn test_reversion_returns_field() {
     let metric = Metric::from_signature(3, 0, 0);
-    let field = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
 
     let rev = field.reversion();
 
@@ -426,8 +409,7 @@ fn test_reversion_of_scalar_unchanged() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
     let rev = field.reversion();
 
     let orig_coeffs = field.to_coefficients();
@@ -454,8 +436,7 @@ fn test_reversion_of_vector_unchanged() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
     let rev = field.reversion();
 
     let orig_coeffs = field.to_coefficients();
@@ -482,8 +463,7 @@ fn test_reversion_of_bivector_negated() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
     let rev = field.reversion();
 
     let orig_coeffs = field.to_coefficients();
@@ -505,80 +485,72 @@ fn test_reversion_of_bivector_negated() {
 // =============================================================================
 
 #[test]
-fn test_squared_magnitude_returns_tensor() {
-    let metric = Metric::from_signature(2, 0, 0);
-    let num_blades = 4;
+fn test_squared_magnitude_of_zeros() {
+    let metric = Metric::from_signature(3, 0, 0);
+    let field = CausalMultiField::<f32>::zeros([2, 2, 2], metric, [1.0, 1.0, 1.0]);
 
-    let mut mvs = Vec::with_capacity(8);
-    for i in 0..8 {
-        let mut data = vec![0.0f32; num_blades];
-        data[0] = (i + 1) as f32;
-        mvs.push(CausalMultiVector::unchecked(data, metric));
-    }
-
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
-    let mag_sq = field.squared_magnitude();
-
-    use deep_causality_tensor::TensorBackend;
-    let shape = CpuBackend::shape(&mag_sq);
-    assert_eq!(shape, vec![2, 2, 2]);
+    assert_eq!(field.squared_magnitude(), 0.0);
 }
 
 #[test]
-fn test_squared_magnitude_of_scalar() {
+fn test_squared_magnitude_single_element() {
     let metric = Metric::from_signature(2, 0, 0);
     let num_blades = 4;
+    let shape = [1, 1, 1]; // Single cell
 
-    // Scalar 3 has magnitude 3, squared magnitude 9
-    let mut mvs = Vec::with_capacity(8);
-    for _ in 0..8 {
-        let mut data = vec![0.0f32; num_blades];
-        data[0] = 3.0;
-        mvs.push(CausalMultiVector::unchecked(data, metric));
-    }
+    let mut data = vec![0.0f32; num_blades];
+    data[0] = 3.0; // Scalar = 3
+    let mv = CausalMultiVector::unchecked(data, metric);
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
-    let mag_sq = field.squared_magnitude();
+    let field = CausalMultiField::<f32>::from_coefficients(&[mv], shape, [1.0, 1.0, 1.0]);
 
-    use deep_causality_tensor::TensorBackend;
-    let values = CpuBackend::to_vec(&mag_sq);
-
-    for val in values {
-        assert!(
-            (val - 9.0).abs() < 1e-4,
-            "Squared magnitude of 3 should be 9, got {}",
-            val
-        );
-    }
+    // Matrix representation of scalar 3 in Cl(2) is 3*I (2x2)
+    // Frobenius norm squared: 3^2 + 0 + 0 + 3^2 = 9 + 9 = 18
+    assert!((field.squared_magnitude() - 18.0).abs() < 1e-5);
 }
 
 #[test]
-fn test_squared_magnitude_of_unit_vector() {
-    let metric = Metric::from_signature(2, 0, 0); // Euclidean
+fn test_squared_magnitude_scaling() {
+    let metric = Metric::from_signature(2, 0, 0);
+    let shape = [1, 1, 1];
+    let num_blades = 4;
+    let mut data = vec![0.0f32; num_blades];
+    data[0] = 1.0;
+
+    let mv = CausalMultiVector::unchecked(data, metric);
+    let field = CausalMultiField::<f32>::from_coefficients(&[mv], shape, [1.0, 1.0, 1.0]);
+
+    let mag_1 = field.squared_magnitude();
+
+    let field_2 = field.scale(2.0);
+    let mag_2 = field_2.squared_magnitude();
+
+    // ||2x||^2 = 4 * ||x||^2
+    assert!((mag_2 - 4.0 * mag_1).abs() < 1e-5);
+}
+
+#[test]
+fn test_squared_magnitude_field_sum() {
+    let metric = Metric::from_signature(2, 0, 0);
+    // 2 cells
+    let shape = [2, 1, 1];
     let num_blades = 4;
 
-    // Unit vector e1 has magnitude 1, squared magnitude 1
-    let mut mvs = Vec::with_capacity(8);
-    for _ in 0..8 {
-        let mut data = vec![0.0f32; num_blades];
-        data[1] = 1.0; // e1
-        mvs.push(CausalMultiVector::unchecked(data, metric));
-    }
+    let mut mvs = Vec::with_capacity(2);
+    // Cell 0: Scalar 1 -> MagSq = 1^2+1^2 = 2
+    let mut d0 = vec![0.0f32; num_blades];
+    d0[0] = 1.0;
+    mvs.push(CausalMultiVector::unchecked(d0, metric));
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
-    let mag_sq = field.squared_magnitude();
+    // Cell 1: Scalar 2 -> MagSq = 2^2+2^2 = 8
+    let mut d1 = vec![0.0f32; num_blades];
+    d1[0] = 2.0;
+    mvs.push(CausalMultiVector::unchecked(d1, metric));
 
-    use deep_causality_tensor::TensorBackend;
-    let values = CpuBackend::to_vec(&mag_sq);
+    let field = CausalMultiField::<f32>::from_coefficients(&mvs, shape, [1.0, 1.0, 1.0]);
 
-    for val in values {
-        assert!(
-            (val - 1.0).abs() < 1e-4,
-            "Squared magnitude of unit e1 should be 1, got {}",
-            val
-        );
-    }
+    let mag = field.squared_magnitude();
+
+    // Total = 2 + 8 = 10
+    assert!((mag - 10.0).abs() < 1e-5, "Expected 10.0, got {}", mag);
 }

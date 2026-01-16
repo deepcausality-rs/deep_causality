@@ -39,7 +39,7 @@ use crate::{Lattice, LatticeCell, LinkVariable, TopologyError};
 use deep_causality_num::{
     ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
 };
-use deep_causality_tensor::TensorData;
+// use deep_causality_tensor::TensorData; // Removed
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::Arc;
@@ -68,7 +68,7 @@ mod utils;
 ///
 /// * `G` - Gauge group (U1, SU2, SU3, etc.)
 /// * `D` - Spacetime dimension
-/// * `M` - Matrix element type (Field + DivisionAlgebra<R>)
+/// * `M` - Matrix element type (Field + `DivisionAlgebra<R>`)
 /// * `R` - Scalar type (RealField)
 #[derive(Debug, Clone)]
 pub struct LatticeGaugeField<G: GaugeGroup, const D: usize, M, R> {
@@ -90,7 +90,16 @@ pub struct LatticeGaugeField<G: GaugeGroup, const D: usize, M, R> {
 impl<
     G: GaugeGroup,
     const D: usize,
-    M: TensorData + Debug + ComplexField<R> + DivisionAlgebra<R>,
+    M: Field
+        + Copy
+        + Default
+        + PartialOrd
+        + Send
+        + Sync
+        + 'static
+        + Debug
+        + ComplexField<R>
+        + DivisionAlgebra<R>,
     R: RealField + FromPrimitive + ToPrimitive,
 > LatticeGaugeField<G, D, M, R>
 {

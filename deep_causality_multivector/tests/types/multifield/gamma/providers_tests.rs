@@ -3,84 +3,42 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Tests for GammaProvider trait implementations.
+//! Tests for gamma matrix functions.
+//!
+//! NOTE: The backend-specific GammaProvider tests have been removed as the
+//! backend abstraction layer has been simplified. The gamma functions now
+//! return CausalTensor<T> directly. See cpu_tests.rs for the updated tests.
 
 use deep_causality_metric::Metric;
-use deep_causality_multivector::{BackendGamma, CpuGammaLoader, GammaProvider};
-use deep_causality_tensor::{CpuBackend, TensorBackend};
-
-// =============================================================================
-// CpuBackend GammaProvider tests
-// =============================================================================
+use deep_causality_multivector::{get_basis_gammas, get_dual_basis_gammas, get_gammas};
 
 #[test]
-fn test_cpu_backend_implements_gamma_provider() {
-    // Verify CpuBackend implements GammaProvider<f32>
-    fn assert_gamma_provider<B: GammaProvider<f32>>() {}
-    assert_gamma_provider::<CpuBackend>();
-}
-
-#[test]
-fn test_cpu_backend_implements_gamma_provider_f64() {
-    // Verify CpuBackend implements GammaProvider<f64>
-    fn assert_gamma_provider<B: GammaProvider<f64>>() {}
-    assert_gamma_provider::<CpuBackend>();
-}
-
-#[test]
-fn test_cpu_gamma_loader_accessible_via_provider() {
-    let metric = Metric::from_signature(3, 0, 0);
-
-    // Access gamma matrices through BackendGamma with explicit type params
-    let gammas = <CpuGammaLoader as BackendGamma<CpuBackend, f32>>::get_gammas(&metric);
-    let shape = CpuBackend::shape(&gammas);
-
-    assert_eq!(shape, vec![3, 4, 4]);
-}
-
-#[test]
-fn test_cpu_basis_gammas_via_provider() {
+fn test_gammas_consistency_cl2() {
     let metric = Metric::from_signature(2, 0, 0);
 
-    let basis = <CpuGammaLoader as BackendGamma<CpuBackend, f32>>::get_basis_gammas(&metric);
-    let shape = CpuBackend::shape(&basis);
+    // All gamma functions should work with f32 and f64
+    let gammas_f32 = get_gammas::<f32>(&metric);
+    let gammas_f64 = get_gammas::<f64>(&metric);
 
-    assert_eq!(shape, vec![4, 2, 2]);
+    assert_eq!(gammas_f32.shape(), gammas_f64.shape());
 }
 
 #[test]
-fn test_cpu_dual_basis_via_provider() {
+fn test_basis_gammas_consistency_cl2() {
     let metric = Metric::from_signature(2, 0, 0);
 
-    let dual = <CpuGammaLoader as BackendGamma<CpuBackend, f32>>::get_dual_basis_gammas(&metric);
-    let shape = CpuBackend::shape(&dual);
+    let basis_f32 = get_basis_gammas::<f32>(&metric);
+    let basis_f64 = get_basis_gammas::<f64>(&metric);
 
-    assert_eq!(shape, vec![4, 2, 2]);
+    assert_eq!(basis_f32.shape(), basis_f64.shape());
 }
 
-// =============================================================================
-// MlxBackend GammaProvider tests
-// =============================================================================
+#[test]
+fn test_dual_basis_gammas_consistency_cl2() {
+    let metric = Metric::from_signature(2, 0, 0);
 
-#[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
-mod mlx_provider_tests {
-    use super::*;
-    use deep_causality_multivector::MlxGammaLoader;
-    use deep_causality_tensor::MlxBackend;
+    let dual_f32 = get_dual_basis_gammas::<f32>(&metric);
+    let dual_f64 = get_dual_basis_gammas::<f64>(&metric);
 
-    #[test]
-    fn test_mlx_backend_implements_gamma_provider() {
-        fn assert_gamma_provider<B: GammaProvider<f32>>() {}
-        assert_gamma_provider::<MlxBackend>();
-    }
-
-    #[test]
-    fn test_mlx_gamma_loader_accessible_via_provider() {
-        let metric = Metric::from_signature(3, 0, 0);
-
-        let gammas = <MlxGammaLoader as BackendGamma<MlxBackend, f32>>::get_gammas(&metric);
-        let shape = MlxBackend::shape(&gammas);
-
-        assert_eq!(shape, vec![3, 4, 4]);
-    }
+    assert_eq!(dual_f32.shape(), dual_f64.shape());
 }

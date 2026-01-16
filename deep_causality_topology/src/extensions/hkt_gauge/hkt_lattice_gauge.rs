@@ -26,8 +26,10 @@
 
 use crate::{GaugeGroup, Lattice, LatticeGaugeField, LinkVariable, TopologyError};
 use deep_causality_haft::{Applicative, Functor, HKT, Monad, NoConstraint, Pure, Satisfies};
-use deep_causality_num::{ComplexField, DivisionAlgebra, FromPrimitive, RealField, ToPrimitive};
-use deep_causality_tensor::TensorData;
+use deep_causality_num::{
+    ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
+};
+// use deep_causality_tensor::TensorData; // Removed
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -58,7 +60,10 @@ impl<G: GaugeGroup, const D: usize, M> LatticeGaugeFieldWitness<G, D, M> {
 // HKT Implementation
 // ============================================================================
 
-impl<G: GaugeGroup, const D: usize, M: TensorData> HKT for LatticeGaugeFieldWitness<G, D, M> {
+impl<G: GaugeGroup, const D: usize, M> HKT for LatticeGaugeFieldWitness<G, D, M>
+where
+    M: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
+{
     type Constraint = NoConstraint;
     type Type<R>
         = LatticeGaugeField<G, D, M, R>
@@ -77,8 +82,10 @@ impl<G: GaugeGroup, const D: usize, M: TensorData> HKT for LatticeGaugeFieldWitn
 /// Due to trait bound constraints, this only transforms beta.
 /// For full field transformations, use `LatticeGaugeFieldWitness::map_field()`.
 /// Functor implementation: map over the beta parameter.
-impl<G: GaugeGroup, const D: usize, M: TensorData> Functor<LatticeGaugeFieldWitness<G, D, M>>
+impl<G: GaugeGroup, const D: usize, M> Functor<LatticeGaugeFieldWitness<G, D, M>>
     for LatticeGaugeFieldWitness<G, D, M>
+where
+    M: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
 {
     /// Map a function over the beta parameter of the lattice gauge field.
     ///
@@ -105,8 +112,10 @@ impl<G: GaugeGroup, const D: usize, M: TensorData> Functor<LatticeGaugeFieldWitn
 
 /// Applicative implementation: apply a wrapped function to a wrapped value.
 /// Applicative implementation: apply a wrapped function to a wrapped value.
-impl<G: GaugeGroup, const D: usize, M: TensorData> Applicative<LatticeGaugeFieldWitness<G, D, M>>
+impl<G: GaugeGroup, const D: usize, M> Applicative<LatticeGaugeFieldWitness<G, D, M>>
     for LatticeGaugeFieldWitness<G, D, M>
+where
+    M: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
 {
     /// Apply a function wrapped in a field to a value wrapped in a field.
     fn apply<A, B, F>(
@@ -135,8 +144,10 @@ impl<G: GaugeGroup, const D: usize, M: TensorData> Applicative<LatticeGaugeField
 
 /// Pure implementation: lift a value into a minimal field context.
 /// Pure implementation: lift a value into a minimal field context.
-impl<G: GaugeGroup, const D: usize, M: TensorData> Pure<LatticeGaugeFieldWitness<G, D, M>>
+impl<G: GaugeGroup, const D: usize, M> Pure<LatticeGaugeFieldWitness<G, D, M>>
     for LatticeGaugeFieldWitness<G, D, M>
+where
+    M: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
 {
     /// Lift a value into a lattice gauge field context.
     ///
@@ -164,8 +175,10 @@ impl<G: GaugeGroup, const D: usize, M: TensorData> Pure<LatticeGaugeFieldWitness
 /// This enables chaining gauge field operations where each step
 /// produces a new field configuration.
 /// Monad implementation: chain field transformations.
-impl<G: GaugeGroup, const D: usize, M: TensorData> Monad<LatticeGaugeFieldWitness<G, D, M>>
+impl<G: GaugeGroup, const D: usize, M> Monad<LatticeGaugeFieldWitness<G, D, M>>
     for LatticeGaugeFieldWitness<G, D, M>
+where
+    M: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
 {
     /// Monadic bind for chaining lattice gauge field transformations.
     fn bind<A, B, F>(ma: LatticeGaugeField<G, D, M, A>, f: F) -> LatticeGaugeField<G, D, M, B>
@@ -205,8 +218,8 @@ impl<G: GaugeGroup, const D: usize, R: RealField + FromPrimitive + ToPrimitive>
         mut f: F,
     ) -> LatticeGaugeField<G, D, B, R>
     where
-        A: TensorData + Debug + Clone,
-        B: TensorData + Debug + Clone,
+        A: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Debug + Clone,
+        B: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Debug + Clone,
         F: FnMut(A) -> B,
     {
         let lattice = field.lattice_arc().clone();
@@ -257,7 +270,7 @@ impl<G: GaugeGroup, const D: usize, R: RealField + FromPrimitive + ToPrimitive>
         mut f: F,
     ) -> Result<LatticeGaugeField<G, D, T, R>, TopologyError>
     where
-        T: TensorData + Debug + Clone,
+        T: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Debug + Clone,
         F: FnMut(&T, &T) -> T,
     {
         // Validate lattice shapes match
@@ -310,7 +323,16 @@ impl<G: GaugeGroup, const D: usize, R: RealField + FromPrimitive + ToPrimitive>
         factor: T,
     ) -> LatticeGaugeField<G, D, T, R>
     where
-        T: TensorData + Debug + Clone + std::ops::Mul<Output = T>,
+        T: Field
+            + Copy
+            + Default
+            + PartialOrd
+            + Send
+            + Sync
+            + 'static
+            + Debug
+            + Clone
+            + std::ops::Mul<Output = T>,
     {
         let factor_clone = factor;
         Self::map_field(field, move |x| x * factor_clone)
@@ -324,7 +346,16 @@ impl<G: GaugeGroup, const D: usize, R: RealField + FromPrimitive + ToPrimitive>
         beta: R,
     ) -> Result<LatticeGaugeField<G, D, T, R>, TopologyError>
     where
-        T: deep_causality_num::Field + TensorData + Debug + ComplexField<R> + DivisionAlgebra<R>,
+        T: deep_causality_num::Field
+            + Copy
+            + Default
+            + PartialOrd
+            + Send
+            + Sync
+            + 'static
+            + Debug
+            + ComplexField<R>
+            + DivisionAlgebra<R>,
     {
         LatticeGaugeField::try_identity(lattice, beta)
     }
@@ -336,8 +367,8 @@ fn map_link_variable<G: GaugeGroup, A, B, R, F>(
     f: &mut F,
 ) -> LinkVariable<G, B, R>
 where
-    A: TensorData + Debug + Clone,
-    B: TensorData + Debug + Clone,
+    A: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Debug + Clone,
+    B: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Debug + Clone,
     R: RealField,
     F: FnMut(A) -> B,
 {
@@ -359,7 +390,7 @@ fn zip_link_variables<G: GaugeGroup, T, R, F>(
     f: &mut F,
 ) -> LinkVariable<G, T, R>
 where
-    T: TensorData + Debug + Clone,
+    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Debug + Clone,
     R: RealField,
     F: FnMut(&T, &T) -> T,
 {

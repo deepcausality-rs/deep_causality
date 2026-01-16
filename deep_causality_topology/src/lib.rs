@@ -9,7 +9,6 @@ mod extensions;
 mod traits;
 mod types;
 
-pub use crate::types::backend;
 pub mod alias;
 pub mod utils_tests;
 

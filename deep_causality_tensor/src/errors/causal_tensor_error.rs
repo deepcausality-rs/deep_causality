@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::EinSumValidationError;
 use std::error::Error;
@@ -20,17 +20,6 @@ pub enum CausalTensorError {
     IndexOutOfBounds, // Added for out-of-bounds access errors
     /// Encapsulates errors specific to EinSum AST validation and execution.
     EinSumError(EinSumValidationError),
-    /// MLX array conversion failed.
-    #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
-    MlxConversionFailed,
-    /// MLX evaluation failed.
-    #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
-    MlxEvalFailed,
-    /// MLX operation failed with a message.
-    #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
-    MlxOperationFailed(String),
-    /// Operation not implemented for this backend.
-    NotImplemented(String),
 }
 
 impl Error for CausalTensorError {}
@@ -71,21 +60,6 @@ impl std::fmt::Display for CausalTensorError {
             }
             CausalTensorError::EinSumError(e) => {
                 write!(f, "CausalTensorError: EinSumError: {}", e)
-            }
-            #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
-            CausalTensorError::MlxConversionFailed => {
-                write!(f, "CausalTensorError: MLX array conversion failed")
-            }
-            #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
-            CausalTensorError::MlxEvalFailed => {
-                write!(f, "CausalTensorError: MLX evaluation failed")
-            }
-            #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
-            CausalTensorError::MlxOperationFailed(msg) => {
-                write!(f, "CausalTensorError: MLX operation failed: {}", msg)
-            }
-            CausalTensorError::NotImplemented(msg) => {
-                write!(f, "CausalTensorError: Not implemented: {}", msg)
             }
         }
     }

@@ -68,7 +68,7 @@ pub fn generalized_master_equation_kernel(
         let contribution = kernel.matmul(&hist_tensor).map_err(PhysicsError::from)?;
 
         // Accumulate
-        let sum: CausalTensor<f64> = p_new_tensor.add(&contribution).into();
+        let sum: CausalTensor<f64> = p_new_tensor.add(&contribution);
         p_new_tensor = sum; // CausalTensor::add returns a new tensor, assume ownership or clone
     }
 
@@ -76,14 +76,6 @@ pub fn generalized_master_equation_kernel(
     let result_data = p_new_tensor.data();
     let mut result_probs = Vec::with_capacity(n);
     for &val in result_data {
-        // We use new_unchecked or new?
-        // Spec says "Optionally re-normalize".
-        // For now, let's try to clamp or check.
-        // The GME can technically produce values outside [0,1] if kernels are not probability-conserving.
-        // We will return error if outside range, enforcing the Probability type contract.
-        // Or we clamp?
-        // Given "Probability" type enforces [0,1] in new(), strict mode is better.
-        // However, numerical noise might cause 1.00000001.
         let clamped = val.clamp(0.0, 1.0);
         result_probs.push(Probability::new_unchecked(clamped));
     }
@@ -119,7 +111,6 @@ pub fn kalman_filter_linear_kernel(
     measurement_noise: &CausalTensor<f64>,
     _process_noise: &CausalTensor<f64>,
 ) -> Result<(CausalTensor<f64>, CausalTensor<f64>), PhysicsError> {
-    // 1. Innovation (Residual): y = z - H * x
     // H * x
     let hx = measurement_matrix
         .matmul(x_pred)
@@ -133,9 +124,8 @@ pub fn kalman_filter_linear_kernel(
             hx.shape()
         )));
     }
-    let y: CausalTensor<f64> = measurement.sub(&hx).into();
+    let y: CausalTensor<f64> = measurement.sub(&hx);
 
-    // 2. Innovation Covariance: S = H * P * H^T + R
     // H * P
     let hp = measurement_matrix
         .matmul(p_pred)
@@ -156,9 +146,8 @@ pub fn kalman_filter_linear_kernel(
             measurement_noise.shape()
         )));
     }
-    let s: CausalTensor<f64> = hph_t.add(measurement_noise).into();
+    let s: CausalTensor<f64> = hph_t.add(measurement_noise);
 
-    // 3. Optimal Kalman Gain: K = P * H^T * S^-1
     // S^-1
     let s_inv = s.inverse().map_err(PhysicsError::from)?;
 
@@ -168,7 +157,6 @@ pub fn kalman_filter_linear_kernel(
     // K = ... * S^-1
     let k = pht.matmul(&s_inv).map_err(PhysicsError::from)?;
 
-    // 4. State Update: x_new = x + K * y
     // K * y
     let ky = k.matmul(&y).map_err(PhysicsError::from)?;
 
@@ -179,10 +167,7 @@ pub fn kalman_filter_linear_kernel(
             ky.shape()
         )));
     }
-    let x_new: CausalTensor<f64> = x_pred.add(&ky).into();
-
-    // 5. Covariance Update (Joseph form):
-    // P_new = (I - K H) P (I - K H)^T + K R K^T
+    let x_new: CausalTensor<f64> = x_pred.add(&ky);
 
     // K * H
     let kh = k.matmul(measurement_matrix).map_err(PhysicsError::from)?;
@@ -199,9 +184,8 @@ pub fn kalman_filter_linear_kernel(
             kh.shape()
         )));
     }
-    let i_kh: CausalTensor<f64> = identity.sub(&kh).into();
+    let i_kh: CausalTensor<f64> = identity.sub(&kh);
 
-    // ... * P
     // (I - K H) P
     let left = i_kh.matmul(p_pred).map_err(PhysicsError::from)?;
 
@@ -215,7 +199,6 @@ pub fn kalman_filter_linear_kernel(
     let joseph_main = left.matmul(&i_kh_t).map_err(PhysicsError::from)?;
 
     // K R K^T
-    // K R K^T
     let kt = {
         let op_t = EinSumOp::<f64>::transpose(k.clone(), vec![1, 0]);
         CausalTensor::ein_sum(&op_t).map_err(PhysicsError::from)?
@@ -223,7 +206,7 @@ pub fn kalman_filter_linear_kernel(
     let kr = k.matmul(measurement_noise).map_err(PhysicsError::from)?;
     let krkt = kr.matmul(&kt).map_err(PhysicsError::from)?;
 
-    let p_new: CausalTensor<f64> = joseph_main.add(&krkt).into();
+    let p_new: CausalTensor<f64> = joseph_main.add(&krkt);
 
     Ok((x_new, p_new))
 }

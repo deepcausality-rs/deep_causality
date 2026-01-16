@@ -34,6 +34,11 @@ pub enum Metric {
     /// Also known as: Weinberg, Particle Physics, "mostly minus"
     Minkowski(usize),
 
+    /// East Coast Lorentzian: e₀² = -1, others = +1.
+    /// Signature: (N-1, 1, 0)
+    /// Also known as: GR, "mostly plus"
+    Lorentzian(usize),
+
     /// Projective Geometric Algebra (PGA).
     /// Convention: e₀² = 0 (degenerate), others +1.
     /// Signature: (N-1, 0, 1) where the *first* vector is the zero vector.
@@ -63,6 +68,7 @@ impl Metric {
             Metric::Euclidean(d)
             | Metric::NonEuclidean(d)
             | Metric::Minkowski(d)
+            | Metric::Lorentzian(d)
             | Metric::PGA(d) => *d,
             Metric::Generic { p, q, r } => p + q + r,
             Metric::Custom { dim, .. } => *dim,
@@ -86,6 +92,15 @@ impl Metric {
                     1
                 } else {
                     -1
+                }
+            }
+
+            // Lorentzian (East Coast): e0 is Time (-), e1..eN are Space (+)
+            Metric::Lorentzian(_) => {
+                if i == 0 {
+                    -1
+                } else {
+                    1
                 }
             }
 
@@ -137,6 +152,7 @@ impl Metric {
             Metric::Euclidean(n) => (*n, 0, 0),
             Metric::NonEuclidean(n) => (0, *n, 0),
             Metric::Minkowski(n) => (1, n.saturating_sub(1), 0),
+            Metric::Lorentzian(n) => (n.saturating_sub(1), 1, 0),
             Metric::PGA(n) => (n.saturating_sub(1), 0, 1),
             Metric::Generic { p, q, r } => (*p, *q, *r),
             Metric::Custom {
@@ -261,6 +277,8 @@ impl Metric {
             Metric::NonEuclidean(n)
         } else if p == 1 && r == 0 && q == n.saturating_sub(1) {
             Metric::Minkowski(n)
+        } else if q == 1 && r == 0 && p == n.saturating_sub(1) {
+            Metric::Lorentzian(n)
         } else if q == 0 && r == 1 && p == n.saturating_sub(1) {
             Metric::PGA(n)
         } else {

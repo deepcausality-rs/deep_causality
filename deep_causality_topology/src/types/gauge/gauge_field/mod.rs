@@ -17,7 +17,7 @@ use deep_causality_num::{Field, RealField};
 ///
 /// A gauge field is a principal fiber bundle with connection, parameterized by:
 /// - A gauge group G defining the local symmetry
-/// - A matrix element type M (e.g., Complex<f64>)
+/// - A matrix element type M (e.g., `Complex<f64>`)
 /// - A scalar type R (e.g., f64)
 ///
 /// # Type Parameters

@@ -13,7 +13,7 @@ mod arithmetic;
 mod display;
 
 /// Represents a weighted collection of simplices.
-/// (e.g., A path is a Chain<f64> on the 1-skeleton where weights are 1.0).
+/// (e.g., A path is a `Chain<f64>` on the 1-skeleton where weights are 1.0).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Chain<T> {
     pub(crate) complex: Arc<SimplicialComplex<T>>,

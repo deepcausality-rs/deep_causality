@@ -13,6 +13,7 @@ impl Hash for Metric {
             Metric::Euclidean(d)
             | Metric::NonEuclidean(d)
             | Metric::Minkowski(d)
+            | Metric::Lorentzian(d)
             | Metric::PGA(d) => d.hash(state),
             Metric::Generic { p, q, r } => {
                 p.hash(state);

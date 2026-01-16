@@ -3,265 +3,345 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CausalMultiField, Metric};
+//! HKT (Higher-Kinded Types) implementation for CausalMultiField.
+//!
+//! # ⚠️ Unsafe Dispatch Warning
+//!
+//! This module uses **unsafe pointer casting** to work around Rust's current GAT
+//! (Generic Associated Types) limitations that prevent proper type enforcement
+//! at the trait level.
+//!
+//! **Status:** This is a temporary workaround until the new trait solver
+//! (`-Ztrait-solver=next`) stabilizes in Rust stable, which will enable proper
+//! static type constraints on HKT trait methods.
+//!
+//! ## Safety Contract
+//!
+//! **SAFETY:** The caller MUST ensure that `A` and `C` types match the concrete
+//! type `T` used when constructing `CausalMultiFieldWitness<T>`.
+//! Passing any other type will result in **Undefined Behavior**.
+//!
+//! ## Recommendations
+//!
+//! 1. **Prefer safe alternatives**: Use `CausalMultiField` methods directly
+//!    (`scale`, `to_coefficients`, `from_coefficients`) when possible.
+//!
+//! 2. **Type-safe usage**: Always use matching types:
+//!    ```ignore
+//!    use deep_causality_multivector::{CausalMultiFieldWitness, CausalMultiField};
+//!    use deep_causality_haft::Functor;
+//!    
+//!    let field: CausalMultiField<f64> = /* ... */;
+//!    // Use CausalMultiFieldWitness<f64> for f64 fields
+//!    let scaled: CausalMultiField<f64> = CausalMultiFieldWitness::<f64>::fmap(field, |x| x * 2.0);
+//!    ```
+//!
+//! 3. **Future resolution**: This limitation will be resolved when the new trait
+//!    solver stabilizes, enabling proper generic constraints.
+
+use crate::CausalMultiField;
 use deep_causality_haft::{
     Applicative, CoMonad, Functor, HKT, Monad, NoConstraint, Pure, Satisfies,
 };
-use deep_causality_tensor::LinearAlgebraBackend;
+use deep_causality_metric::Metric;
+use deep_causality_num::Field;
+use deep_causality_tensor::CausalTensor;
 use std::marker::PhantomData;
 
-pub struct CausalMultiFieldWitness<B: LinearAlgebraBackend>(PhantomData<B>);
+/// HKT witness for `CausalMultiField<T>`.
+///
+/// The type parameter `T` specifies the concrete coefficient type (e.g., `f64`, `f32`).
+/// All HKT operations assume the generic type parameters match `T`.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct CausalMultiFieldWitness<T>(PhantomData<T>);
 
-impl<B: LinearAlgebraBackend> HKT for CausalMultiFieldWitness<B> {
-    type Constraint = NoConstraint;
-    type Type<T> = CausalMultiField<B, T>;
+impl<T> CausalMultiFieldWitness<T> {
+    /// Creates a new witness.
+    pub fn new() -> Self {
+        Self(PhantomData)
+    }
 }
 
-// ----------------------------------------------------------------------------
-// Functor
-// ----------------------------------------------------------------------------
-impl<B: LinearAlgebraBackend> Functor<CausalMultiFieldWitness<B>> for CausalMultiFieldWitness<B> {
-    fn fmap<A, C, Func>(fa: CausalMultiField<B, A>, mut f: Func) -> CausalMultiField<B, C>
+impl<T> HKT for CausalMultiFieldWitness<T>
+where
+    T: Satisfies<NoConstraint>,
+{
+    type Constraint = NoConstraint;
+    type Type<A> = CausalMultiField<A>;
+}
+
+// ============================================================================
+// Functor Implementation (Unsafe Dispatch)
+// ============================================================================
+
+impl<T> Functor<CausalMultiFieldWitness<T>> for CausalMultiFieldWitness<T>
+where
+    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Satisfies<NoConstraint>,
+{
+    /// Maps a function over the field coefficients.
+    ///
+    /// # Safety — ACKNOWLEDGED GAT Limitation
+    ///
+    /// This method uses **unsafe pointer casting** to work around Rust's
+    /// current GAT limitations. This will be resolved when the new trait
+    /// solver (`-Ztrait-solver=next`) stabilizes.
+    ///
+    /// **SAFETY CONTRACT:** The caller **MUST** ensure A and C are the same as T.
+    fn fmap<A, C, Func>(fa: CausalMultiField<A>, mut f: Func) -> CausalMultiField<C>
     where
         A: Satisfies<NoConstraint>,
         C: Satisfies<NoConstraint>,
         Func: FnMut(A) -> C,
     {
-        // Copy generic parameters
-        let metric = fa.metric;
-        let shape = fa.shape;
+        // SAFETY: We assume A and C are T. Memory layout is identical.
+        unsafe {
+            let fa_ptr = &fa as *const CausalMultiField<A> as *const CausalMultiField<T>;
+            let fa_concrete = &*fa_ptr;
 
-        // Map grid spacing (dx)
-        let dx_iter = fa.dx.into_iter();
-        let mut new_dx_vec: Vec<C> = dx_iter.map(&mut f).collect();
-        let dx: [C; 3] = [
-            new_dx_vec.remove(0),
-            new_dx_vec.remove(0),
-            new_dx_vec.remove(0),
-        ];
+            // Extract data and apply function
+            let data_vec = fa_concrete.data().as_slice();
+            let transformed: Vec<T> = data_vec
+                .iter()
+                .map(|x| {
+                    // Transmute T -> A, apply f, transmute result -> T
+                    let a_val = std::mem::transmute_copy::<T, A>(x);
+                    let c_val = f(a_val);
+                    std::mem::transmute_copy::<C, T>(&c_val)
+                })
+                .collect();
 
-        // Map tensor data
-        let data_shape = B::shape(&fa.data);
-        let vec_a = B::into_vec(fa.data);
-        let vec_c: Vec<C> = vec_a.into_iter().map(&mut f).collect();
+            // Copy dx (same type T)
+            let dx = *fa_concrete.dx();
 
-        // Reconstruct tensor
-        let data = B::create_from_vec(vec_c, &data_shape);
+            // Build result
+            let new_tensor = CausalTensor::from_slice(&transformed, fa_concrete.data().shape());
+            let result = CausalMultiField::<T> {
+                data: new_tensor,
+                metric: fa_concrete.metric(),
+                dx,
+                shape: *fa_concrete.shape(),
+            };
 
-        CausalMultiField {
-            data,
-            metric,
-            dx,
-            shape,
+            // Transmute to CausalMultiField<C>
+            let result_ptr = &result as *const CausalMultiField<T> as *const CausalMultiField<C>;
+            let ret = std::ptr::read(result_ptr);
+            std::mem::forget(result);
+            // std::mem::forget(fa); // Do not forget the input `fa`, let it drop naturally.
+            ret
         }
     }
 }
 
-// ----------------------------------------------------------------------------
-// Pure
-// ----------------------------------------------------------------------------
-impl<B: LinearAlgebraBackend> Pure<CausalMultiFieldWitness<B>> for CausalMultiFieldWitness<B> {
-    fn pure<T>(_value: T) -> CausalMultiField<B, T>
+// ============================================================================
+// Pure Implementation
+// ============================================================================
+
+impl<T> Pure<CausalMultiFieldWitness<T>> for CausalMultiFieldWitness<T>
+where
+    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Satisfies<NoConstraint>,
+{
+    /// Creates a field with all coefficients set to the given value.
+    ///
+    /// Note: Uses default metric (4D Lorentzian), shape `[1,1,1]`, and unit grid spacing.
+    /// For specific configurations, use `CausalMultiField::zeros()` or other factory methods.
+    fn pure<A>(value: A) -> CausalMultiField<A>
     where
-        T: Satisfies<NoConstraint>,
+        A: Satisfies<NoConstraint>,
     {
-        // Pure for Fields is context-dependent.
-        panic!(
-            "Pure::pure for CausalMultiField requires context (Metric/Shape) and cannot be implemented as a pure function. Use a factory method instead."
-        );
+        // SAFETY: We assume A is T.
+        unsafe {
+            let val_ptr = &value as *const A as *const T;
+            let val_t = *val_ptr;
+
+            // Use 4D Lorentzian metric (1 timelike + 3 spacelike)
+            let metric = Metric::from_signature(1, 3, 0);
+            let shape = [1, 1, 1];
+            let dx = [T::one(), T::one(), T::one()];
+
+            let matrix_dim = 1 << (metric.dimension().div_ceil(2));
+            let total_size = shape[0] * shape[1] * shape[2] * matrix_dim * matrix_dim;
+            let data = vec![val_t; total_size];
+            let tensor = CausalTensor::from_slice(
+                &data,
+                &[shape[0], shape[1], shape[2], matrix_dim, matrix_dim],
+            );
+
+            let result = CausalMultiField::<T> {
+                data: tensor,
+                metric,
+                dx,
+                shape,
+            };
+
+            let result_ptr = &result as *const CausalMultiField<T> as *const CausalMultiField<A>;
+            let ret = std::ptr::read(result_ptr);
+            std::mem::forget(result);
+            // std::mem::forget(value); // This causes a memory leak.
+            ret
+        }
     }
 }
 
-// ----------------------------------------------------------------------------
-// Applicative
-// ----------------------------------------------------------------------------
-impl<B: LinearAlgebraBackend> Applicative<CausalMultiFieldWitness<B>>
-    for CausalMultiFieldWitness<B>
+// ============================================================================
+// Applicative Implementation
+// ============================================================================
+
+impl<T> Applicative<CausalMultiFieldWitness<T>> for CausalMultiFieldWitness<T>
+where
+    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Satisfies<NoConstraint>,
 {
+    /// Applies a field of functions to a field of values.
+    ///
+    /// # Note
+    ///
+    /// This is not meaningful for CausalMultiField because we can't store
+    /// functions in a tensor. Use `fmap` for function application.
     fn apply<A, C, Func>(
-        ff: CausalMultiField<B, Func>,
-        fa: CausalMultiField<B, A>,
-    ) -> CausalMultiField<B, C>
+        _ff: CausalMultiField<Func>,
+        _fa: CausalMultiField<A>,
+    ) -> CausalMultiField<C>
     where
         A: Satisfies<NoConstraint> + Clone,
         C: Satisfies<NoConstraint>,
         Func: Satisfies<NoConstraint> + FnMut(A) -> C,
     {
-        // Intersection of fields.
-        if ff.shape != fa.shape {
-            panic!(
-                "Applicative::apply: Shape mismatch {:?} vs {:?}",
-                ff.shape, fa.shape
-            );
-        }
-        if ff.metric != fa.metric {
-            panic!("Applicative::apply: Metric mismatch");
-        }
-
-        let fa_shape = fa.shape;
-        let fa_metric = fa.metric;
-        let tensor_shape = B::shape(&fa.data);
-
-        // Calculate new dx by applying function dx to argument dx.
-        let ff_dx = ff.dx.into_iter();
-        let fa_dx = fa.dx.into_iter();
-
-        let mut new_dx_vec: Vec<C> = ff_dx.zip(fa_dx).map(|(mut f, a)| f(a)).collect();
-        let dx: [C; 3] = [
-            new_dx_vec.remove(0),
-            new_dx_vec.remove(0),
-            new_dx_vec.remove(0),
-        ];
-
-        // Apply on tensor data
-        // Capture shape before consuming
-
-        let vec_f = B::into_vec(ff.data);
-        let vec_a = B::into_vec(fa.data);
-
-        if vec_f.len() != vec_a.len() {
-            panic!("Applicative::apply: Data length mismatch implies internal inconsistency.");
-        }
-
-        let vec_c: Vec<C> = vec_f
-            .into_iter()
-            .zip(vec_a)
-            .map(|(mut f, a)| f(a))
-            .collect();
-        let data = B::create_from_vec(vec_c, &tensor_shape);
-
-        CausalMultiField {
-            data,
-            metric: fa_metric,
-            dx,
-            shape: fa_shape,
-        }
+        // Applicative for fields of functions is not meaningful for CausalMultiField
+        // because we can't store functions in a tensor.
+        panic!(
+            "CausalMultiField::apply is not supported. \
+             Use fmap for function application over field values."
+        );
     }
 }
 
-// ----------------------------------------------------------------------------
-// Monad
-// ----------------------------------------------------------------------------
-impl<B: LinearAlgebraBackend> Monad<CausalMultiFieldWitness<B>> for CausalMultiFieldWitness<B> {
-    fn bind<A, C, Func>(ma: CausalMultiField<B, A>, mut f: Func) -> CausalMultiField<B, C>
+// ============================================================================
+// Monad Implementation (Unsafe Dispatch)
+// ============================================================================
+
+impl<T> Monad<CausalMultiFieldWitness<T>> for CausalMultiFieldWitness<T>
+where
+    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Satisfies<NoConstraint>,
+{
+    /// Monadic bind for CausalMultiField.
+    ///
+    /// Note: This extracts the first coefficient, applies f, and returns the result.
+    /// For proper field composition, use matrix multiplication via `*` operator.
+    fn bind<A, C, Func>(ma: CausalMultiField<A>, mut f: Func) -> CausalMultiField<C>
     where
         A: Satisfies<NoConstraint>,
         C: Satisfies<NoConstraint>,
-        Func: FnMut(A) -> CausalMultiField<B, C>,
+        Func: FnMut(A) -> CausalMultiField<C>,
     {
-        // Bind flattens the result.
-        let vec_a = B::into_vec(ma.data);
-        if vec_a.is_empty() {
-            panic!("Cannot bind empty field");
-        }
+        // SAFETY: We assume A and C are T.
+        unsafe {
+            let ma_ptr = &ma as *const CausalMultiField<A> as *const CausalMultiField<T>;
+            let ma_concrete = &*ma_ptr;
 
-        let mut result_data = Vec::new();
-        // We use a safe default via Option.
-        let mut captured_dx: Option<[C; 3]> = None;
-        let mut captured_metric: Option<Metric> = None;
-
-        for a in vec_a {
-            let mc = f(a);
-            if captured_dx.is_none() {
-                let CausalMultiField {
-                    data,
-                    metric,
-                    dx,
-                    shape: _,
-                } = mc;
-                captured_metric = Some(metric);
-                captured_dx = Some(dx);
-                result_data.extend(B::into_vec(data));
-            } else {
-                // For subsequent items, we ignore metadata inconsistencies
-                // and just take data.
-                result_data.extend(B::into_vec(mc.data));
+            // Extract first coefficient and apply f
+            let data_vec = ma_concrete.data().as_slice();
+            if let Some(&first_val) = data_vec.first() {
+                let a_val = std::mem::transmute_copy::<T, A>(&first_val);
+                let result = f(a_val);
+                // std::mem::forget(ma); // This causes a memory leak.
+                return result;
             }
-        }
 
-        let count = result_data.len();
-        let new_shape = [count, 1, 1];
+            // Empty field - return a zero field
+            let metric = ma_concrete.metric();
+            let shape = *ma_concrete.shape();
+            let dx = *ma_concrete.dx();
+            let matrix_dim = 1 << (metric.dimension().div_ceil(2));
+            let total_size = shape[0] * shape[1] * shape[2] * matrix_dim * matrix_dim;
+            let data = vec![T::zero(); total_size];
+            let tensor = CausalTensor::from_slice(
+                &data,
+                &[shape[0], shape[1], shape[2], matrix_dim, matrix_dim],
+            );
 
-        let dx = captured_dx.expect("Bind resulted in no data");
-        let metric = captured_metric.unwrap();
+            let result = CausalMultiField::<T> {
+                data: tensor,
+                metric,
+                dx,
+                shape,
+            };
 
-        let final_tensor = B::create_from_vec(result_data, &[count]);
-
-        CausalMultiField {
-            data: final_tensor,
-            metric,
-            dx,
-            shape: new_shape,
+            let result_ptr = &result as *const CausalMultiField<T> as *const CausalMultiField<C>;
+            let ret = std::ptr::read(result_ptr);
+            std::mem::forget(result);
+            // std::mem::forget(ma); // This causes a memory leak.
+            ret
         }
     }
 }
 
-// ----------------------------------------------------------------------------
-// CoMonad
-// ----------------------------------------------------------------------------
-impl<B: LinearAlgebraBackend> CoMonad<CausalMultiFieldWitness<B>> for CausalMultiFieldWitness<B> {
-    fn extract<A>(fa: &CausalMultiField<B, A>) -> A
+// ============================================================================
+// CoMonad Implementation (Unsafe Dispatch)
+// ============================================================================
+
+impl<T> CoMonad<CausalMultiFieldWitness<T>> for CausalMultiFieldWitness<T>
+where
+    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Satisfies<NoConstraint>,
+{
+    /// Extracts the "focus" value from the field.
+    ///
+    /// Returns the first coefficient (scalar part at origin).
+    fn extract<A>(fa: &CausalMultiField<A>) -> A
     where
         A: Satisfies<NoConstraint> + Clone,
     {
-        // Extract value at origin (0,0,0) index [0...]
-        let shape = B::shape(&fa.data);
-        let zeros = vec![0; shape.len()];
-        B::get(&fa.data, &zeros).expect("Empty field in extract")
+        // SAFETY: We assume A is T.
+        unsafe {
+            let fa_ptr = fa as *const CausalMultiField<A> as *const CausalMultiField<T>;
+            let fa_concrete = &*fa_ptr;
+
+            let data_vec = fa_concrete.data().as_slice();
+            let first_val = data_vec.first().copied().unwrap_or_else(T::zero);
+
+            std::mem::transmute_copy::<T, A>(&first_val)
+        }
     }
 
-    fn extend<A, C, Func>(fa: &CausalMultiField<B, A>, mut f: Func) -> CausalMultiField<B, C>
+    /// Extends a local computation to the entire field.
+    ///
+    /// Applies the function to the field and broadcasts the result.
+    fn extend<A, C, Func>(fa: &CausalMultiField<A>, mut f: Func) -> CausalMultiField<C>
     where
         A: Satisfies<NoConstraint> + Clone,
         C: Satisfies<NoConstraint>,
-        Func: FnMut(&CausalMultiField<B, A>) -> C,
+        Func: FnMut(&CausalMultiField<A>) -> C,
     {
-        // Extend: Spatial convolution.
-        // Helper to lift a scalar 'a' to a field view.
-        let mut map_scalar = |val: A| -> C {
-            let scalar_shape = vec![1; B::shape(&fa.data).len()];
-            let t_data = B::create_from_vec(vec![val.clone()], &scalar_shape);
+        // For extend, we apply f to the entire field and use the result
+        // as a constant field.
+        unsafe {
+            let c_val = f(fa);
+            let c_t = std::mem::transmute_copy::<C, T>(&c_val);
 
-            // Temp dx: uniform [val, val, val]
-            let temp_dx = [val.clone(), val.clone(), val.clone()];
-            let field = CausalMultiField {
-                data: t_data,
-                metric: fa.metric,
-                dx: temp_dx,
-                shape: [1, 1, 1],
+            let fa_ptr = fa as *const CausalMultiField<A> as *const CausalMultiField<T>;
+            let fa_concrete = &*fa_ptr;
+
+            let metric = fa_concrete.metric();
+            let shape = *fa_concrete.shape();
+            let dx = *fa_concrete.dx();
+            let matrix_dim = 1 << (metric.dimension().div_ceil(2));
+            let total_size = shape[0] * shape[1] * shape[2] * matrix_dim * matrix_dim;
+            let data = vec![c_t; total_size];
+            let tensor = CausalTensor::from_slice(
+                &data,
+                &[shape[0], shape[1], shape[2], matrix_dim, matrix_dim],
+            );
+
+            let result = CausalMultiField::<T> {
+                data: tensor,
+                metric,
+                dx,
+                shape,
             };
-            f(&field)
-        };
 
-        let mut d_iter = fa.dx.iter();
-        let d0 = map_scalar(d_iter.next().unwrap().clone());
-        let d1 = map_scalar(d_iter.next().unwrap().clone());
-        let d2 = map_scalar(d_iter.next().unwrap().clone());
-        let final_dx = [d0, d1, d2];
-
-        // 2. Convolve Data
-        let tensor_shape = B::shape(&fa.data);
-        let num_elements: usize = tensor_shape.iter().product();
-        let mut result_vec = Vec::with_capacity(num_elements);
-
-        for i in 0..num_elements {
-            let shifted_data = B::shifted_view(&fa.data, i);
-            let view = CausalMultiField {
-                data: shifted_data,
-                metric: fa.metric,
-                dx: fa.dx.clone(),
-                shape: fa.shape,
-            };
-            result_vec.push(f(&view));
-        }
-
-        let new_data = B::create_from_vec(result_vec, &tensor_shape);
-
-        CausalMultiField {
-            data: new_data,
-            metric: fa.metric,
-            dx: final_dx,
-            shape: fa.shape,
+            let result_ptr = &result as *const CausalMultiField<T> as *const CausalMultiField<C>;
+            let ret = std::ptr::read(result_ptr);
+            std::mem::forget(result);
+            std::mem::forget(c_val);
+            ret
         }
     }
 }

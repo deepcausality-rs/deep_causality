@@ -5,12 +5,12 @@
 
 //! Differential operators for CausalMultiField.
 //!
-//! Implements curl, divergence, and gradient using central-difference stencils
-//! via backend slicing operations.
+//! Implements curl, divergence, and gradient using central-difference stencils.
 
 use crate::CausalMultiField;
-use deep_causality_num::Ring;
-use deep_causality_tensor::{LinearAlgebraBackend, TensorData};
+use crate::types::multifield::ops::gamma;
+use deep_causality_num::{Field, Ring};
+use deep_causality_tensor::{CausalTensor, Tensor};
 
 /// Axis enumeration for differential operators.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -26,20 +26,17 @@ impl Axis {
     }
 }
 
-impl<B, T> CausalMultiField<B, T>
+impl<T> CausalMultiField<T>
 where
-    B: LinearAlgebraBackend,
-    T: TensorData + Clone,
+    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
 {
     /// Computes the curl: ∇ × F.
     ///
     /// Returns the grade-2 component of the gradient ∇F.
     pub fn curl(&self) -> Self
     where
-        T: Ring + Default + PartialOrd + std::ops::Div<Output = T>,
-        B: crate::types::multifield::gamma::GammaProvider<T>,
+        T: Ring + std::ops::Neg<Output = T>,
     {
-        // Curl is the bivector part (Grade 2) of the gradient
         self.gradient().grade_project(2)
     }
 
@@ -48,10 +45,8 @@ where
     /// Returns the scalar part (Grade 0) of the gradient ∇F.
     pub fn divergence(&self) -> Self
     where
-        T: Ring + Default + PartialOrd + std::ops::Div<Output = T>,
-        B: crate::types::multifield::gamma::GammaProvider<T>,
+        T: Ring + std::ops::Neg<Output = T>,
     {
-        // Divergence is the scalar part (Grade 0) of the gradient
         self.gradient().grade_project(0)
     }
 
@@ -60,8 +55,7 @@ where
     /// Returns the full geometric derivative field (all grades).
     pub fn gradient(&self) -> Self
     where
-        T: Ring + Default + PartialOrd + std::ops::Div<Output = T>,
-        B: crate::types::multifield::gamma::GammaProvider<T>,
+        T: Ring + std::ops::Neg<Output = T>,
     {
         let dx = self.partial_derivative(Axis::X);
         let dy = self.partial_derivative(Axis::Y);
@@ -73,164 +67,117 @@ where
     /// Computes the partial derivative along a given axis.
     ///
     /// Uses central difference: ∂F/∂x ≈ (F[x+1] - F[x-1]) / (2dx)
-    pub fn partial_derivative(&self, axis: Axis) -> B::Tensor<T>
+    ///
+    /// This implementation works on the flat data vector to avoid
+    /// needing range-based slice operations.
+    pub fn partial_derivative(&self, axis: Axis) -> CausalTensor<T>
     where
-        T: Ring + Default + PartialOrd + std::ops::Div<Output = T>,
+        T: Ring,
     {
-        let idx = axis.index();
-        let n = self.shape[idx];
+        let axis_idx = axis.index();
+        let n = self.shape[axis_idx];
 
         if n < 3 {
-            // Cannot compute central difference with fewer than 3 points
-            // Return zero tensor if not enough points
-            return B::zeros(B::shape(&self.data).as_slice());
+            return CausalTensor::<T>::zeros(self.data.shape());
         }
 
-        // Get the full tensor shape
-        let shape = B::shape(&self.data);
+        let shape = self.data.shape().to_vec();
+        let total_elements: usize = shape.iter().product();
 
-        // Build slice ranges for forward and backward shifts
-        let mut left_ranges = Vec::with_capacity(shape.len());
-        let mut right_ranges = Vec::with_capacity(shape.len());
-
-        // We assume 3D spatial dims are 0,1,2 for fields.
-        for (i, &dim) in shape.iter().enumerate() {
-            if i == idx {
-                // Axis to differentiate: shift by 1
-                left_ranges.push(0..dim - 2);
-                right_ranges.push(2..dim);
-            } else {
-                left_ranges.push(0..dim);
-                right_ranges.push(0..dim);
-            }
+        // Compute strides for indexing
+        let mut strides = vec![1usize; shape.len()];
+        for i in (0..shape.len() - 1).rev() {
+            strides[i] = strides[i + 1] * shape[i + 1];
         }
 
-        // Slice to get shifted views
-        // Note: backend slice logic usually takes range array.
-        let left = B::slice(&self.data, &left_ranges);
-        let right = B::slice(&self.data, &right_ranges);
-
-        // DEBUG: Check that slices are non-zero
-        let left_sum: T = B::to_vec(&left).iter().fold(T::zero(), |acc, &x| acc + x);
-        let right_sum: T = B::to_vec(&right).iter().fold(T::zero(), |acc, &x| acc + x);
-
-        // Compute difference
-        let diff = B::sub(&right, &left);
-
-        // DEBUG: Check diff
-        let diff_sum: T = B::to_vec(&diff).iter().fold(T::zero(), |acc, &x| acc + x);
-        let _ = (left_sum, right_sum, diff_sum); // Suppress unused warning
-
-        // Manual Padding Logic (Backend-agnostic)
-        // 1. Permute to move differentiated axis to 0
-        let rank = shape.len();
-        let mut perm_indices: Vec<usize> = (0..rank).collect();
-        // swap idx and 0? No, remove idx and insert at 0.
-        perm_indices.remove(idx);
-        perm_indices.insert(0, idx);
-
-        // permute diff
-        let diff_perm = B::permute(&diff, &perm_indices);
-
-        // 2. Download to vec
-        let diff_vec = B::to_vec(&diff_perm);
-
-        // 3. Pad
-        // Current shape[idx] is N-2. Original is N.
-        // Shape of permuted is [N-2, Rest...].
-        // Block size = Rest... product.
-        let block_size = diff_vec.len() / (shape[idx] - 2);
-
-        let pad_block = vec![T::zero(); block_size];
-
-        let mut padded_vec = Vec::with_capacity(diff_vec.len() + 2 * block_size);
-        padded_vec.extend_from_slice(&pad_block);
-        padded_vec.extend_from_slice(&diff_vec);
-        padded_vec.extend_from_slice(&pad_block);
-
-        // 4. Create new tensor [N, Rest...]
-        let mut new_shape_perm = B::shape(&diff_perm);
-        new_shape_perm[0] = shape[idx]; // Restore N
-
-        let padded_perm = B::create_from_vec(padded_vec, &new_shape_perm);
-
-        // 5. Permute back
-        // Invert permutation.
-        // Original: perm_indices maps New[i] -> Old[perm_indices[i]].
-        // We want: Old[k] -> New[?].
-        // We map 0 -> idx.
-        // We moved idx to 0. Rest shifted.
-        // Inverse permutation:
-        let mut inv_perm = vec![0; rank];
-        for (i, &p) in perm_indices.iter().enumerate() {
-            inv_perm[p] = i;
-        }
-
-        let padded = B::permute(&padded_perm, &inv_perm);
-
-        // Scale by 1/(2*dx)
-        let two_dx = self.dx[idx] + self.dx[idx];
+        let data_vec = self.data.clone().to_vec();
+        let axis_stride = strides[axis_idx];
+        let two_dx = self.dx[axis_idx] + self.dx[axis_idx];
         let inv_two_dx = T::one() / two_dx;
-        let scale_tensor = B::from_shape_fn(&[1], |_| inv_two_dx);
 
-        B::mul(&padded, &scale_tensor)
+        // Compute central differences
+        let mut result_vec = vec![T::zero(); total_elements];
+
+        for (flat_idx, val) in result_vec.iter_mut().enumerate() {
+            // Convert flat index to multi-index
+            let mut multi_idx = vec![0usize; shape.len()];
+            let mut remainder = flat_idx;
+            for d in 0..shape.len() {
+                multi_idx[d] = remainder / strides[d];
+                remainder %= strides[d];
+            }
+
+            let i = multi_idx[axis_idx];
+
+            // Central difference: skip boundaries
+            if i >= 1 && i < n - 1 {
+                // Calculate indices for i+1 and i-1
+                let forward_idx = flat_idx + axis_stride;
+                let backward_idx = flat_idx - axis_stride;
+
+                let diff = data_vec[forward_idx] - data_vec[backward_idx];
+                *val = diff * inv_two_dx;
+            }
+            // Boundary points (i=0 or i=n-1) are left as zero
+        }
+
+        CausalTensor::from_slice(&result_vec, &shape)
     }
 
     /// Constructs gradient from partial derivatives.
-    ///
-    /// ∇F = ∑ γ_i ∂_i F
-    fn construct_gradient(&self, dx: &B::Tensor<T>, dy: &B::Tensor<T>, dz: &B::Tensor<T>) -> Self
+    fn construct_gradient(
+        &self,
+        dx: &CausalTensor<T>,
+        dy: &CausalTensor<T>,
+        dz: &CausalTensor<T>,
+    ) -> Self
     where
-        T: Ring + Default + PartialOrd,
-        B: crate::types::multifield::gamma::GammaProvider<T>,
+        T: Ring + std::ops::Neg<Output = T>,
     {
-        use crate::types::multifield::gamma::BackendGamma;
-
         let n = self.metric.dimension();
-        let gammas = B::GammaLoader::get_gammas(&self.metric);
+        let gammas = gamma::get_gammas::<T>(&self.metric);
         let matrix_dim = Self::compute_matrix_dim(n);
 
-        // We assume 3D spatial gradient (x, y, z) mapped to indices 0, 1, 2.
-
-        // Helper for batched matmul: Gamma [D,D] * dx [Batch, D, D]
-        let apply_gamma = |g: &B::Tensor<T>, t: &B::Tensor<T>| -> B::Tensor<T> {
-            let shape_t = B::shape(t);
-            // Assume t is [Nx, Ny, Nz, D, D]
-            // Flatten spatial: [Batch, D, D]
+        // Applies gamma matrix to a field tensor
+        let apply_gamma = |gamma_idx: usize, t: &CausalTensor<T>| -> CausalTensor<T> {
+            let shape_t = t.shape().to_vec();
             let batch_size = shape_t[0] * shape_t[1] * shape_t[2];
 
-            let t_flat = B::reshape(t, &[batch_size, matrix_dim, matrix_dim]);
+            // Get gamma matrix for this index
+            let gamma_mat = gammas.slice(0, gamma_idx).expect("slice gamma failed");
+            let gamma_data = gamma_mat.to_vec();
 
-            // Permute [1, 0, 2] -> [D, Batch, D]
-            let t_perm = B::permute(&t_flat, &[1, 0, 2]);
+            // Get field data
+            let t_flat = t
+                .reshape(&[batch_size, matrix_dim, matrix_dim])
+                .expect("reshape failed");
+            let t_data = t_flat.to_vec();
 
-            // Reshape -> [D, Batch*D]
-            let t_mat = B::reshape(&t_perm, &[matrix_dim, batch_size * matrix_dim]);
+            // Perform batched matrix multiplication manually
+            let mut result_data = vec![T::zero(); batch_size * matrix_dim * matrix_dim];
 
-            // Matmul Gamma * T_mat -> [D, Batch*D]
-            let res_mat = B::matmul(g, &t_mat);
+            for b in 0..batch_size {
+                for i in 0..matrix_dim {
+                    for j in 0..matrix_dim {
+                        let mut sum = T::zero();
+                        for k in 0..matrix_dim {
+                            let g_ik = gamma_data[i * matrix_dim + k];
+                            let t_kj = t_data[b * matrix_dim * matrix_dim + k * matrix_dim + j];
+                            sum = sum + g_ik * t_kj;
+                        }
+                        result_data[b * matrix_dim * matrix_dim + i * matrix_dim + j] = sum;
+                    }
+                }
+            }
 
-            // Reshape back -> [D, Batch, D]
-            let res_perm = B::reshape(&res_mat, &[matrix_dim, batch_size, matrix_dim]);
-
-            // Permute back -> [Batch, D, D]
-            let res_flat = B::permute(&res_perm, &[1, 0, 2]);
-
-            // Define original shape for final result
-            // [Nx, Ny, Nz, D, D]
+            let result_flat =
+                CausalTensor::from_slice(&result_data, &[batch_size, matrix_dim, matrix_dim]);
             let orig_shape = [shape_t[0], shape_t[1], shape_t[2], matrix_dim, matrix_dim];
-            B::reshape(&res_flat, &orig_shape)
+            result_flat.reshape(&orig_shape).expect("reshape failed")
         };
 
-        // 1. Term X: dx * Gamma_0
-        let g0_slice = B::slice(&gammas, &[0..1, 0..matrix_dim, 0..matrix_dim]);
-        let g0 = B::reshape(&g0_slice, &[matrix_dim, matrix_dim]);
-        let term_x = apply_gamma(&g0, dx);
-
-        // DEBUG: Check term_x at center
-        // term_x is [Nx, Ny, Nz, 4, 4].
-        // Access center? Hard without proper indexing.
-        // But we can check total sum of term_x?
+        // Term X: dx * Gamma_0
+        let term_x = apply_gamma(0, dx);
 
         if n < 2 {
             return Self {
@@ -241,12 +188,9 @@ where
             };
         }
 
-        // 2. Term Y: dy * Gamma_1
-        let g1_slice = B::slice(&gammas, &[1..2, 0..matrix_dim, 0..matrix_dim]);
-        let g1 = B::reshape(&g1_slice, &[matrix_dim, matrix_dim]);
-        let term_y = apply_gamma(&g1, dy);
-
-        let sum_xy = B::add(&term_x, &term_y);
+        // Term Y: dy * Gamma_1
+        let term_y = apply_gamma(1, dy);
+        let sum_xy = &term_x + &term_y;
 
         if n < 3 {
             return Self {
@@ -257,12 +201,9 @@ where
             };
         }
 
-        // 3. Term Z: dz * Gamma_2
-        let g2_slice = B::slice(&gammas, &[2..3, 0..matrix_dim, 0..matrix_dim]);
-        let g2 = B::reshape(&g2_slice, &[matrix_dim, matrix_dim]);
-        let term_z = apply_gamma(&g2, dz);
-
-        let result = B::add(&sum_xy, &term_z);
+        // Term Z: dz * Gamma_2
+        let term_z = apply_gamma(2, dz);
+        let result = &sum_xy + &term_z;
 
         Self {
             data: result,

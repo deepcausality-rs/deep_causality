@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
 use deep_causality_tensor::CausalTensor;
@@ -24,7 +24,7 @@ fn test_from_ref_t_for_causal_tensor() {
 #[test]
 fn test_from_ref_causal_tensor_for_causal_tensor() {
     let original_tensor = CausalTensor::new(vec![1, 2, 3], vec![3]).unwrap();
-    let cloned_tensor = CausalTensor::from(original_tensor.clone());
+    let cloned_tensor = CausalTensor::from(&original_tensor);
     assert_eq!(cloned_tensor.data(), &[1, 2, 3]);
     assert_eq!(cloned_tensor.shape(), &[3]);
     assert_eq!(original_tensor, cloned_tensor);

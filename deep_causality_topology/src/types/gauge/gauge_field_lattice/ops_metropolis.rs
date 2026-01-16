@@ -13,7 +13,7 @@ use crate::{GaugeGroup, LatticeCell, LatticeGaugeField, LinkVariable, TopologyEr
 use deep_causality_num::{
     ComplexField, DivisionAlgebra, Field, Float, FromPrimitive, RealField, ToPrimitive,
 };
-use deep_causality_tensor::TensorData;
+// use deep_causality_tensor::TensorData; // Removed
 use std::fmt::Debug;
 
 // ============================================================================
@@ -23,7 +23,16 @@ use std::fmt::Debug;
 impl<
     G: GaugeGroup,
     const D: usize,
-    M: TensorData + Debug + ComplexField<R> + DivisionAlgebra<R>,
+    M: Field
+        + Copy
+        + Default
+        + PartialOrd
+        + Send
+        + Sync
+        + 'static
+        + Debug
+        + ComplexField<R>
+        + DivisionAlgebra<R>,
     R: RealField + FromPrimitive + ToPrimitive + Float,
 > LatticeGaugeField<G, D, M, R>
 {
@@ -35,16 +44,16 @@ impl<
     /// # Algorithm
     ///
     /// 1. Propose: U' = R · U where R is a random SU(N) element near identity
-    /// 2. Compute: ΔS = S[U'] - S[U] using the local action change
+    /// 2. Compute: ΔS = `S[U'] - S[U]` using the local action change
     /// 3. Accept with probability: min(1, e^{-ΔS})
     ///
     /// # Mathematics
     ///
     /// The Metropolis algorithm satisfies detailed balance:
     ///
-    /// $$P[U] \cdot T(U \to U') = P[U'] \cdot T(U' \to U)$$
+    /// $$`P[U] \cdot T(U \to U') = P[U'] \cdot T(U' \to U)`$$
     ///
-    /// where $P[U] \propto e^{-S[U]}$ is the Boltzmann distribution.
+    /// where `$P[U] \propto e^{-S[U]}$` is the Boltzmann distribution.
     ///
     /// # Arguments
     ///

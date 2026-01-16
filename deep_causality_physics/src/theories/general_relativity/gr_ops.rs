@@ -83,7 +83,7 @@ where
     ///
     /// # Units
     /// Returns scalar curvature in **geometric units** (`m⁻⁴`).
-    /// For curvature radius in meters, use [`kretschmann_curvature_radius`].
+    /// For curvature radius in meters, use [`Self::kretschmann_curvature_radius`].
     fn kretschmann_scalar(&self) -> Result<S, PhysicsError>;
 
     /// Computes the curvature radius from Kretschmann scalar in **SI units**.
@@ -122,7 +122,7 @@ where
     ///
     /// # Units
     /// Returns acceleration in **geometric units** (`m⁻²`).
-    /// For SI units (`m/s²`), use [`geodesic_deviation_si`].
+    /// For SI units (`m/s²`), use [`Self::geodesic_deviation_si`].
     fn geodesic_deviation(&self, velocity: &[S], separation: &[S]) -> Result<Vec<S>, PhysicsError>;
 
     /// Computes geodesic deviation (tidal acceleration) in **SI units**.
@@ -173,7 +173,7 @@ where
     ///
     /// # Units
     /// Returns proper time in **geometric units** (meters).
-    /// For SI units (seconds), use [`proper_time_si`].
+    /// For SI units (seconds), use [`Self::proper_time_si`].
     fn proper_time(&self, path: &[Vec<S>]) -> Result<S, PhysicsError>;
 
     /// Computes proper time along a worldline in **SI units**.

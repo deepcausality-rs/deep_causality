@@ -131,7 +131,7 @@ impl Interpreter {
     /// Executes an operation tree, producing an auditable result.
     ///
     /// This is the main entry point for executing operations. It initializes
-    /// the effect system and delegates to [`walk`](Self::walk) for recursive execution.
+    /// the effect system and delegates to `walk` for recursive execution.
     ///
     /// # Arguments
     ///

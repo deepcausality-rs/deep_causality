@@ -5,7 +5,7 @@
 
 use crate::error::PhysicsError;
 use deep_causality_num::{Field, Float};
-use deep_causality_tensor::{CausalTensor, TensorData};
+use deep_causality_tensor::CausalTensor;
 
 // Kernels
 
@@ -24,7 +24,7 @@ pub fn einstein_tensor_kernel<T>(
     metric: &CausalTensor<T>,
 ) -> Result<CausalTensor<T>, PhysicsError>
 where
-    T: Field + Float + From<f64> + TensorData,
+    T: Field + Float + From<f64>,
 {
     // Validate ranks and shapes
     if ricci.num_dim() != 2 || metric.num_dim() != 2 {
@@ -57,7 +57,7 @@ where
     let term2 = CausalTensor::from_vec(term2_data, metric.shape());
 
     // R_uv - term2
-    let result = ricci.clone() - term2;
+    let result = ricci - term2;
 
     Ok(result)
 }
@@ -67,7 +67,7 @@ where
 /// Computes contraction directly without einsum for generic T compatibility.
 ///
 /// # Arguments
-/// * `riemann` - Riemann curvature tensor $R^\mu_{\nu\sigma\rho}$ (Rank 4, shape [4,4,4,4]).
+/// * `riemann` - Riemann curvature tensor $R^\mu_{\nu\sigma\rho}$ (Rank 4, shape `[4,4,4,4]`).
 /// * `u` - Velocity vector $V^\nu$ (length 4).
 /// * `n` - Separation vector $n^\sigma$ (length 4).
 ///
@@ -79,7 +79,7 @@ pub fn geodesic_deviation_kernel<T>(
     n: &[T],
 ) -> Result<Vec<T>, PhysicsError>
 where
-    T: Field + Float + From<f64> + TensorData,
+    T: Field + Float + From<f64>,
 {
     // A^u = - R^u_vrs U^v n^r U^s
     // Direct contraction without einsum for generic T
@@ -143,7 +143,7 @@ pub fn geodesic_integrator_kernel<T>(
     num_steps: usize,
 ) -> Result<Vec<(Vec<T>, Vec<T>)>, PhysicsError>
 where
-    T: Field + Float + From<f64> + Copy + TensorData,
+    T: Field + Float + From<f64> + Copy,
 {
     // Validate inputs
     if initial_position.len() != initial_velocity.len() {

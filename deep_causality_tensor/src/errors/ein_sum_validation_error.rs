@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use std::error::Error;
 
@@ -17,8 +17,6 @@ pub enum EinSumValidationError {
     ShapeMismatch { message: String },
     /// Indicates that a tensor has an unexpected rank for a given operation.
     RankMismatch { expected: usize, found: usize },
-    /// Indicates an invalid structure in the EinSum AST.
-    InvalidASTStructure { message: String },
 }
 
 impl std::fmt::Display for EinSumValidationError {
@@ -53,13 +51,6 @@ impl std::fmt::Display for EinSumValidationError {
                     f,
                     "EinSumValidationError: Rank mismatch. Expected {}, found {}",
                     expected, found
-                )
-            }
-            EinSumValidationError::InvalidASTStructure { message } => {
-                write!(
-                    f,
-                    "EinSumValidationError: Invalid AST structure: {}",
-                    message
                 )
             }
         }

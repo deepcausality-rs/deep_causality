@@ -5,20 +5,19 @@
 
 //! Conversions between CausalMultiField and other representations.
 //!
-//! - `from_coefficients`: Upload from CPU CausalMultiVector collection
-//! - `to_coefficients`: Download to CPU CausalMultiVector collection
+//! - `from_coefficients`: Create from CausalMultiVector collection
+//! - `to_coefficients`: Extract CausalMultiVector collection
 //! - Factory methods: `zeros`, `ones`
 
-use crate::CausalMultiField;
-use crate::CausalMultiVector;
-use crate::types::multifield::gamma::BackendGamma;
+use crate::types::multifield::ops::gamma;
+use crate::{CausalMultiField, CausalMultiVector};
 use deep_causality_metric::Metric;
-use deep_causality_tensor::{LinearAlgebraBackend, TensorData};
+use deep_causality_num::Field;
+use deep_causality_tensor::{CausalTensor, Tensor};
 
-impl<B, T> CausalMultiField<B, T>
+impl<T> CausalMultiField<T>
 where
-    B: LinearAlgebraBackend,
-    T: TensorData,
+    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
 {
     /// Creates a field filled with zero multivectors.
     ///
@@ -26,13 +25,10 @@ where
     /// * `shape` - Grid dimensions [Nx, Ny, Nz]
     /// * `metric` - The metric signature of the algebra
     /// * `dx` - Grid spacing [dx, dy, dz]
-    pub fn zeros(shape: [usize; 3], metric: Metric, dx: [T; 3]) -> Self
-    where
-        T: Clone,
-    {
+    pub fn zeros(shape: [usize; 3], metric: Metric, dx: [T; 3]) -> Self {
         let matrix_dim = Self::compute_matrix_dim(metric.dimension());
         let full_shape = [shape[0], shape[1], shape[2], matrix_dim, matrix_dim];
-        let data = B::zeros(&full_shape);
+        let data = CausalTensor::<T>::zeros(&full_shape);
 
         Self {
             data,
@@ -45,15 +41,12 @@ where
     /// Creates a field filled with identity matrices (scalar 1).
     ///
     /// Each cell contains the identity element of the algebra.
-    pub fn ones(shape: [usize; 3], metric: Metric, dx: [T; 3]) -> Self
-    where
-        T: Clone,
-    {
+    pub fn ones(shape: [usize; 3], metric: Metric, dx: [T; 3]) -> Self {
         let matrix_dim = Self::compute_matrix_dim(metric.dimension());
         let full_shape = [shape[0], shape[1], shape[2], matrix_dim, matrix_dim];
 
         // Create identity matrices for each cell
-        let data = B::from_shape_fn(&full_shape, |idx| {
+        let data = CausalTensor::<T>::from_shape_fn(&full_shape, |idx| {
             // Identity matrix: 1 on diagonal, 0 elsewhere
             if idx[3] == idx[4] {
                 T::one()
@@ -72,17 +65,13 @@ where
 
     /// Creates a field from a collection of CausalMultiVectors.
     ///
-    /// The multivectors are converted to Matrix Representation and uploaded to the backend.
-    /// Uses vectorized operations for efficiency.
-    ///
     /// # Arguments
     /// * `mvs` - Flat array of multivectors in row-major order
     /// * `shape` - Grid dimensions [Nx, Ny, Nz]
     /// * `dx` - Grid spacing [dx, dy, dz]
     pub fn from_coefficients(mvs: &[CausalMultiVector<T>], shape: [usize; 3], dx: [T; 3]) -> Self
     where
-        T: Clone + Default + PartialOrd,
-        B: crate::types::multifield::gamma::GammaProvider<T>,
+        T: std::ops::Neg<Output = T>,
     {
         let expected_len = shape[0] * shape[1] * shape[2];
         assert_eq!(
@@ -99,8 +88,6 @@ where
 
         let metric = mvs[0].metric();
         let matrix_dim = Self::compute_matrix_dim(metric.dimension());
-
-        // 1. Upload coefficients to backend tensor [TotalCells, NumBlades]
         let num_blades = 1 << metric.dimension();
 
         // Flatten all multivector data into a single vector
@@ -110,21 +97,21 @@ where
         }
 
         let coeffs_shape = [mvs.len(), num_blades];
-        let coeffs_tensor =
-            crate::types::multifield::gamma::from_data_helper::<B, T>(&flat_data, &coeffs_shape);
+        let coeffs_tensor = CausalTensor::from_slice(&flat_data, &coeffs_shape);
 
-        // 2. Generate all basis matrices Γ_I on backend [NumBlades, MatrixDim, MatrixDim]
-        // reshaping to [NumBlades, MatrixDim * MatrixDim] for matmul
-        let basis_tensor = B::GammaLoader::get_basis_gammas(&metric);
-        let basis_flat = B::reshape(&basis_tensor, &[num_blades, matrix_dim * matrix_dim]);
+        // Generate all basis matrices Γ_I [NumBlades, MatrixDim, MatrixDim]
+        let basis_tensor = gamma::get_basis_gammas::<T>(&metric);
+        let basis_flat = basis_tensor
+            .reshape(&[num_blades, matrix_dim * matrix_dim])
+            .expect("reshape failed");
 
-        // 3. Compute M = Σ c_I Γ_I via Matrix Multiplication
+        // Compute M = Σ c_I Γ_I via Matrix Multiplication
         // [Batch, Blades] @ [Blades, D*D] -> [Batch, D*D]
-        let matrices_flat = B::matmul(&coeffs_tensor, &basis_flat);
+        let matrices_flat = coeffs_tensor.matmul(&basis_flat).expect("matmul failed");
 
-        // 4. Reshape to [Nx, Ny, Nz, D, D]
+        // Reshape to [Nx, Ny, Nz, D, D]
         let full_shape = [shape[0], shape[1], shape[2], matrix_dim, matrix_dim];
-        let data = B::reshape(&matrices_flat, &full_shape);
+        let data = matrices_flat.reshape(&full_shape).expect("reshape failed");
 
         Self {
             data,
@@ -137,20 +124,15 @@ where
     /// Downloads the field to a collection of CausalMultiVectors.
     ///
     /// Converts from Matrix Representation back to coefficient form using trace projection.
-    /// c_I = (1/d) * Tr(M * Γ_I⁻¹)
     pub fn to_coefficients(&self) -> Vec<CausalMultiVector<T>>
     where
-        T: Clone + Default + PartialOrd + std::ops::Div<Output = T>, // Removed FromPrimitive
-        B: crate::types::multifield::gamma::GammaProvider<T>,
+        T: std::ops::Neg<Output = T>,
     {
-        use crate::types::multifield::gamma::BackendGamma;
-
         let num_cells = self.num_cells();
         let num_blades = 1 << self.metric.dimension();
         let matrix_dim = Self::compute_matrix_dim(self.metric.dimension());
 
-        // Convert matrix_dim (which is 2^k) to T using Ring arithmetic
-        // matrix_dim = 2^exponent
+        // Convert matrix_dim to T using Ring arithmetic
         let exponent = self.metric.dimension().div_ceil(2);
         let mut d_val = T::one();
         let two = T::one() + T::one();
@@ -161,31 +143,32 @@ where
 
         let scale = T::one() / d_val;
 
-        // 1. Flatten field data to [Batch, D*D]
-        let field_flat = B::reshape(&self.data, &[num_cells, matrix_dim * matrix_dim]);
+        // Flatten field data to [Batch, D*D]
+        let field_flat = self
+            .data
+            .reshape(&[num_cells, matrix_dim * matrix_dim])
+            .expect("reshape failed");
 
-        // 2. Generate inverse basis matrices (Γ_I)⁻¹
-        // We use (Γ_I)⁻¹^T for the dot product projection form: Tr(A B) = vec(A) . vec(B^T)
-        let basis_dual_tensor = B::GammaLoader::get_dual_basis_gammas(&self.metric); // [NumBlades, D, D]
-
-        // We need [D*D, NumBlades] for the multiplication M @ Basis
-        // Reshape basis duals to [NumBlades, D*D]
-        let basis_dual_flat =
-            B::reshape(&basis_dual_tensor, &[num_blades, matrix_dim * matrix_dim]);
+        // Generate inverse basis matrices (Γ_I)⁻¹
+        let basis_dual_tensor = gamma::get_dual_basis_gammas::<T>(&self.metric);
+        let basis_dual_flat = basis_dual_tensor
+            .reshape(&[num_blades, matrix_dim * matrix_dim])
+            .expect("reshape failed");
 
         // Transpose to [D*D, NumBlades]
-        // Use permute if transpose is not available
-        let basis_dual_t = B::permute(&basis_dual_flat, &[1, 0]);
+        let basis_dual_t = basis_dual_flat
+            .permute_axes(&[1, 0])
+            .expect("permute failed");
 
-        // 3. Project: Coeffs = Field @ BasisDual_T
-        let coeffs_raw = B::matmul(&field_flat, &basis_dual_t);
+        // Project: Coeffs = Field @ BasisDual_T
+        let coeffs_raw = field_flat.matmul(&basis_dual_t).expect("matmul failed");
 
-        // 4. Scale by 1/d
-        let scale_tensor = B::from_shape_fn(&[1], |_| scale);
-        let coeffs = B::mul(&coeffs_raw, &scale_tensor);
+        // Scale by 1/d
+        let scale_tensor = CausalTensor::<T>::from_shape_fn(&[1], |_| scale);
+        let coeffs = &coeffs_raw * &scale_tensor;
 
-        // 5. Download and chunk into Multivectors
-        let flat_coeffs = B::to_vec(&coeffs);
+        // Download and chunk into Multivectors
+        let flat_coeffs = coeffs.into_vec();
 
         flat_coeffs
             .chunks(num_blades)

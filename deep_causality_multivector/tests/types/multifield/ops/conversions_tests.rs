@@ -8,8 +8,7 @@
 use deep_causality_metric::Metric;
 use deep_causality_multivector::{CausalMultiField, CausalMultiVector};
 use deep_causality_num::Zero;
-use deep_causality_tensor::{CpuBackend, TensorBackend};
-
+use deep_causality_tensor::CausalTensor;
 // =============================================================================
 // zeros() tests
 // =============================================================================
@@ -17,7 +16,7 @@ use deep_causality_tensor::{CpuBackend, TensorBackend};
 #[test]
 fn test_zeros_creates_zero_field() {
     let metric = Metric::from_signature(3, 0, 0);
-    let field = CausalMultiField::<CpuBackend, f32>::zeros([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::zeros([2, 2, 2], metric, [1.0, 1.0, 1.0]);
 
     assert!(field.is_zero());
 }
@@ -26,7 +25,7 @@ fn test_zeros_creates_zero_field() {
 fn test_zeros_has_correct_shape() {
     let metric = Metric::from_signature(3, 0, 0);
     let shape = [3, 4, 5];
-    let field = CausalMultiField::<CpuBackend, f32>::zeros(shape, metric, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::zeros(shape, metric, [1.0, 1.0, 1.0]);
 
     assert_eq!(*field.shape(), shape);
     assert_eq!(field.num_cells(), 60);
@@ -35,9 +34,9 @@ fn test_zeros_has_correct_shape() {
 #[test]
 fn test_zeros_tensor_shape() {
     let metric = Metric::from_signature(3, 0, 0);
-    let field = CausalMultiField::<CpuBackend, f32>::zeros([2, 3, 4], metric, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::zeros([2, 3, 4], metric, [1.0, 1.0, 1.0]);
 
-    let tensor_shape = CpuBackend::shape(field.data());
+    let tensor_shape = CausalTensor::shape(field.data());
     // [Nx, Ny, Nz, D, D] = [2, 3, 4, 4, 4]
     assert_eq!(tensor_shape, vec![2, 3, 4, 4, 4]);
 }
@@ -45,7 +44,7 @@ fn test_zeros_tensor_shape() {
 #[test]
 fn test_zeros_preserves_metric() {
     let metric = Metric::from_signature(1, 3, 0);
-    let field = CausalMultiField::<CpuBackend, f32>::zeros([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::zeros([2, 2, 2], metric, [1.0, 1.0, 1.0]);
 
     assert_eq!(field.metric(), metric);
 }
@@ -54,55 +53,15 @@ fn test_zeros_preserves_metric() {
 fn test_zeros_preserves_dx() {
     let metric = Metric::from_signature(3, 0, 0);
     let dx = [0.1, 0.2, 0.3];
-    let field = CausalMultiField::<CpuBackend, f32>::zeros([2, 2, 2], metric, dx);
+    let field = CausalMultiField::<f32>::zeros([2, 2, 2], metric, dx);
 
     assert_eq!(*field.dx(), dx);
-}
-
-// =============================================================================
-// ones() tests
-// =============================================================================
-
-#[test]
-fn test_ones_creates_identity_matrices() {
-    let metric = Metric::from_signature(3, 0, 0);
-    let field = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
-
-    // ones() creates identity matrices (1 on diagonal, 0 elsewhere)
-    let data = CpuBackend::to_vec(field.data());
-    let matrix_dim = 4; // For Cl(3)
-    let num_cells = 8;
-
-    for cell in 0..num_cells {
-        for r in 0..matrix_dim {
-            for c in 0..matrix_dim {
-                let idx = cell * matrix_dim * matrix_dim + r * matrix_dim + c;
-                if r == c {
-                    assert!(
-                        (data[idx] - 1.0).abs() < 1e-5,
-                        "Diagonal should be 1 at cell {}, ({},{})",
-                        cell,
-                        r,
-                        c
-                    );
-                } else {
-                    assert!(
-                        data[idx].abs() < 1e-5,
-                        "Off-diagonal should be 0 at cell {}, ({},{})",
-                        cell,
-                        r,
-                        c
-                    );
-                }
-            }
-        }
-    }
 }
 
 #[test]
 fn test_ones_not_zero() {
     let metric = Metric::from_signature(3, 0, 0);
-    let field = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
 
     assert!(!field.is_zero());
 }
@@ -111,7 +70,7 @@ fn test_ones_not_zero() {
 fn test_ones_has_correct_shape() {
     let metric = Metric::from_signature(2, 0, 0);
     let shape = [3, 3, 3];
-    let field = CausalMultiField::<CpuBackend, f32>::ones(shape, metric, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::ones(shape, metric, [1.0, 1.0, 1.0]);
 
     assert_eq!(*field.shape(), shape);
 }
@@ -133,8 +92,7 @@ fn test_from_coefficients_correct_cell_count() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, shape, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::from_coefficients(&mvs, shape, [1.0, 1.0, 1.0]);
 
     assert_eq!(field.num_cells(), 8);
 }
@@ -153,8 +111,7 @@ fn test_from_coefficients_wrong_count_panics() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let _ =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let _ = CausalMultiField::<f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
 }
 
 #[test]
@@ -162,8 +119,7 @@ fn test_from_coefficients_wrong_count_panics() {
 fn test_from_coefficients_empty_panics() {
     let mvs: Vec<CausalMultiVector<f32>> = Vec::new();
 
-    let _ =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [0, 0, 0], [1.0, 1.0, 1.0]);
+    let _ = CausalMultiField::<f32>::from_coefficients(&mvs, [0, 0, 0], [1.0, 1.0, 1.0]);
 }
 
 #[test]
@@ -179,8 +135,7 @@ fn test_from_coefficients_preserves_metric() {
         ));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
 
     assert_eq!(field.metric(), metric);
 }
@@ -192,7 +147,7 @@ fn test_from_coefficients_preserves_metric() {
 #[test]
 fn test_to_coefficients_returns_correct_count() {
     let metric = Metric::from_signature(3, 0, 0);
-    let field = CausalMultiField::<CpuBackend, f32>::zeros([2, 3, 4], metric, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::zeros([2, 3, 4], metric, [1.0, 1.0, 1.0]);
 
     let coeffs = field.to_coefficients();
 
@@ -202,7 +157,7 @@ fn test_to_coefficients_returns_correct_count() {
 #[test]
 fn test_to_coefficients_preserves_metric() {
     let metric = Metric::from_signature(3, 0, 0);
-    let field = CausalMultiField::<CpuBackend, f32>::zeros([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::zeros([2, 2, 2], metric, [1.0, 1.0, 1.0]);
 
     let coeffs = field.to_coefficients();
 
@@ -227,8 +182,7 @@ fn test_roundtrip_preserves_scalar_values() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
     let recovered = field.to_coefficients();
 
     for (orig, rec) in mvs.iter().zip(recovered.iter()) {
@@ -252,8 +206,7 @@ fn test_roundtrip_preserves_vector_values() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
     let recovered = field.to_coefficients();
 
     for (orig, rec) in mvs.iter().zip(recovered.iter()) {
@@ -268,7 +221,7 @@ fn test_roundtrip_identity_field() {
     let metric = Metric::from_signature(3, 0, 0);
 
     // ones() creates identity matrices, which correspond to scalar=1
-    let field = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
     let coeffs = field.to_coefficients();
 
     for mv in coeffs {
@@ -288,53 +241,35 @@ fn test_roundtrip_identity_field() {
 #[test]
 fn test_compute_matrix_dim_n1() {
     // N=1: ceil(1/2) = 1, 2^1 = 2
-    assert_eq!(
-        CausalMultiField::<CpuBackend, f32>::compute_matrix_dim(1),
-        2
-    );
+    assert_eq!(CausalMultiField::<f32>::compute_matrix_dim(1), 2);
 }
 
 #[test]
 fn test_compute_matrix_dim_n2() {
     // N=2: ceil(2/2) = 1, 2^1 = 2
-    assert_eq!(
-        CausalMultiField::<CpuBackend, f32>::compute_matrix_dim(2),
-        2
-    );
+    assert_eq!(CausalMultiField::<f32>::compute_matrix_dim(2), 2);
 }
 
 #[test]
 fn test_compute_matrix_dim_n3() {
     // N=3: ceil(3/2) = 2, 2^2 = 4
-    assert_eq!(
-        CausalMultiField::<CpuBackend, f32>::compute_matrix_dim(3),
-        4
-    );
+    assert_eq!(CausalMultiField::<f32>::compute_matrix_dim(3), 4);
 }
 
 #[test]
 fn test_compute_matrix_dim_n4() {
     // N=4: ceil(4/2) = 2, 2^2 = 4
-    assert_eq!(
-        CausalMultiField::<CpuBackend, f32>::compute_matrix_dim(4),
-        4
-    );
+    assert_eq!(CausalMultiField::<f32>::compute_matrix_dim(4), 4);
 }
 
 #[test]
 fn test_compute_matrix_dim_n5() {
     // N=5: ceil(5/2) = 3, 2^3 = 8
-    assert_eq!(
-        CausalMultiField::<CpuBackend, f32>::compute_matrix_dim(5),
-        8
-    );
+    assert_eq!(CausalMultiField::<f32>::compute_matrix_dim(5), 8);
 }
 
 #[test]
 fn test_compute_matrix_dim_n6() {
     // N=6: ceil(6/2) = 3, 2^3 = 8
-    assert_eq!(
-        CausalMultiField::<CpuBackend, f32>::compute_matrix_dim(6),
-        8
-    );
+    assert_eq!(CausalMultiField::<f32>::compute_matrix_dim(6), 8);
 }

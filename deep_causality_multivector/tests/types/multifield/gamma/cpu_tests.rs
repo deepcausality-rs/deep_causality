@@ -3,13 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Tests for CpuGammaLoader implementing BackendGamma trait.
+//! Tests for gamma functions with CausalTensor output.
 
 #![allow(clippy::needless_range_loop)] // Matrix indexing is clearer with explicit loops
 
 use deep_causality_metric::Metric;
-use deep_causality_multivector::{BackendGamma, CpuGammaLoader};
-use deep_causality_tensor::{CpuBackend, TensorBackend};
+use deep_causality_multivector::{get_basis_gammas, get_dual_basis_gammas, get_gammas};
 
 // =============================================================================
 // get_gammas() tests
@@ -19,41 +18,41 @@ use deep_causality_tensor::{CpuBackend, TensorBackend};
 fn test_get_gammas_shape_cl2() {
     // Cl(2,0,0): N=2, matrix_dim=2
     let metric = Metric::from_signature(2, 0, 0);
-    let gammas = <CpuGammaLoader as BackendGamma<CpuBackend, f32>>::get_gammas(&metric);
-    let shape = CpuBackend::shape(&gammas);
+    let gammas = get_gammas::<f32>(&metric);
+    let shape = gammas.shape();
 
     // Shape: [N, matrix_dim, matrix_dim] = [2, 2, 2]
-    assert_eq!(shape, vec![2, 2, 2]);
+    assert_eq!(shape, &[2, 2, 2]);
 }
 
 #[test]
 fn test_get_gammas_shape_cl3() {
     // Cl(3,0,0): N=3, matrix_dim=4
     let metric = Metric::from_signature(3, 0, 0);
-    let gammas = <CpuGammaLoader as BackendGamma<CpuBackend, f32>>::get_gammas(&metric);
-    let shape = CpuBackend::shape(&gammas);
+    let gammas = get_gammas::<f32>(&metric);
+    let shape = gammas.shape();
 
     // Shape: [N, matrix_dim, matrix_dim] = [3, 4, 4]
-    assert_eq!(shape, vec![3, 4, 4]);
+    assert_eq!(shape, &[3, 4, 4]);
 }
 
 #[test]
 fn test_get_gammas_shape_cl4() {
     // Cl(4,0,0): N=4, matrix_dim=4
     let metric = Metric::from_signature(4, 0, 0);
-    let gammas = <CpuGammaLoader as BackendGamma<CpuBackend, f32>>::get_gammas(&metric);
-    let shape = CpuBackend::shape(&gammas);
+    let gammas = get_gammas::<f32>(&metric);
+    let shape = gammas.shape();
 
     // Shape: [N, matrix_dim, matrix_dim] = [4, 4, 4]
-    assert_eq!(shape, vec![4, 4, 4]);
+    assert_eq!(shape, &[4, 4, 4]);
 }
 
 #[test]
 fn test_get_gammas_clifford_identity_cl2() {
     // Verify γ_i^2 = +1 for Euclidean Cl(2,0,0)
     let metric = Metric::from_signature(2, 0, 0);
-    let gammas = <CpuGammaLoader as BackendGamma<CpuBackend, f32>>::get_gammas(&metric);
-    let data: Vec<f32> = CpuBackend::to_vec(&gammas);
+    let gammas = get_gammas::<f32>(&metric);
+    let data = gammas.to_vec();
 
     let dim = 2;
     // data layout: [gamma_idx, row, col]
@@ -106,8 +105,8 @@ fn test_get_gammas_clifford_identity_cl2() {
 fn test_get_gammas_anticommutator_cl2() {
     // Verify γ_0 γ_1 + γ_1 γ_0 = 0 for Cl(2,0,0)
     let metric = Metric::from_signature(2, 0, 0);
-    let gammas = <CpuGammaLoader as BackendGamma<CpuBackend, f32>>::get_gammas(&metric);
-    let data: Vec<f32> = CpuBackend::to_vec(&gammas);
+    let gammas = get_gammas::<f32>(&metric);
+    let data = gammas.to_vec();
 
     let dim = 2;
     let cell_size = dim * dim; // 4
@@ -164,28 +163,28 @@ fn test_get_gammas_anticommutator_cl2() {
 fn test_get_basis_gammas_shape_cl2() {
     // Cl(2,0,0): 2^2=4 blades, matrix_dim=2
     let metric = Metric::from_signature(2, 0, 0);
-    let basis = <CpuGammaLoader as BackendGamma<CpuBackend, f32>>::get_basis_gammas(&metric);
-    let shape = CpuBackend::shape(&basis);
+    let basis = get_basis_gammas::<f32>(&metric);
+    let shape = basis.shape();
 
-    assert_eq!(shape, vec![4, 2, 2]);
+    assert_eq!(shape, &[4, 2, 2]);
 }
 
 #[test]
 fn test_get_basis_gammas_shape_cl3() {
     // Cl(3,0,0): 2^3=8 blades, matrix_dim=4
     let metric = Metric::from_signature(3, 0, 0);
-    let basis = <CpuGammaLoader as BackendGamma<CpuBackend, f32>>::get_basis_gammas(&metric);
-    let shape = CpuBackend::shape(&basis);
+    let basis = get_basis_gammas::<f32>(&metric);
+    let shape = basis.shape();
 
-    assert_eq!(shape, vec![8, 4, 4]);
+    assert_eq!(shape, &[8, 4, 4]);
 }
 
 #[test]
 fn test_get_basis_gammas_identity_blade_is_identity_matrix() {
     // Blade 0 (empty product) should be identity matrix
     let metric = Metric::from_signature(2, 0, 0);
-    let basis = <CpuGammaLoader as BackendGamma<CpuBackend, f32>>::get_basis_gammas(&metric);
-    let data: Vec<f32> = CpuBackend::to_vec(&basis);
+    let basis = get_basis_gammas::<f32>(&metric);
+    let data = basis.to_vec();
 
     // Blade 0 at indices [0, r, c] with dim=2
     // Check diagonal is 1: data[0] = (0,0), data[3] = (1,1)
@@ -201,11 +200,11 @@ fn test_get_basis_gammas_identity_blade_is_identity_matrix() {
 fn test_get_basis_gammas_blade1_equals_gamma0() {
     // Blade 1 (bit pattern 0b01) = γ_0
     let metric = Metric::from_signature(2, 0, 0);
-    let gammas = <CpuGammaLoader as BackendGamma<CpuBackend, f32>>::get_gammas(&metric);
-    let basis = <CpuGammaLoader as BackendGamma<CpuBackend, f32>>::get_basis_gammas(&metric);
+    let gammas = get_gammas::<f32>(&metric);
+    let basis = get_basis_gammas::<f32>(&metric);
 
-    let gamma_data: Vec<f32> = CpuBackend::to_vec(&gammas);
-    let basis_data: Vec<f32> = CpuBackend::to_vec(&basis);
+    let gamma_data = gammas.to_vec();
+    let basis_data = basis.to_vec();
 
     let dim = 2;
     let cell_size = dim * dim;
@@ -233,27 +232,27 @@ fn test_get_basis_gammas_blade1_equals_gamma0() {
 #[test]
 fn test_get_dual_basis_gammas_shape_cl2() {
     let metric = Metric::from_signature(2, 0, 0);
-    let dual = <CpuGammaLoader as BackendGamma<CpuBackend, f32>>::get_dual_basis_gammas(&metric);
-    let shape = CpuBackend::shape(&dual);
+    let dual = get_dual_basis_gammas::<f32>(&metric);
+    let shape = dual.shape();
 
-    assert_eq!(shape, vec![4, 2, 2]);
+    assert_eq!(shape, &[4, 2, 2]);
 }
 
 #[test]
 fn test_get_dual_basis_gammas_shape_cl3() {
     let metric = Metric::from_signature(3, 0, 0);
-    let dual = <CpuGammaLoader as BackendGamma<CpuBackend, f32>>::get_dual_basis_gammas(&metric);
-    let shape = CpuBackend::shape(&dual);
+    let dual = get_dual_basis_gammas::<f32>(&metric);
+    let shape = dual.shape();
 
-    assert_eq!(shape, vec![8, 4, 4]);
+    assert_eq!(shape, &[8, 4, 4]);
 }
 
 #[test]
 fn test_get_dual_basis_gammas_identity_blade_dual_is_identity() {
     // Dual of identity blade should be identity
     let metric = Metric::from_signature(2, 0, 0);
-    let dual = <CpuGammaLoader as BackendGamma<CpuBackend, f32>>::get_dual_basis_gammas(&metric);
-    let data: Vec<f32> = CpuBackend::to_vec(&dual);
+    let dual = get_dual_basis_gammas::<f32>(&metric);
+    let data = dual.to_vec();
 
     // Blade 0 dual: data[0]=(0,0), data[3]=(1,1) should be 1
     // data[1]=(0,1), data[2]=(1,0) should be 0
@@ -267,11 +266,11 @@ fn test_get_dual_basis_gammas_identity_blade_dual_is_identity() {
 fn test_dual_basis_orthogonality_cl2() {
     // Tr(Γ_I Γ_J^{-1}) = D δ_{IJ}
     let metric = Metric::from_signature(2, 0, 0);
-    let basis = <CpuGammaLoader as BackendGamma<CpuBackend, f32>>::get_basis_gammas(&metric);
-    let dual = <CpuGammaLoader as BackendGamma<CpuBackend, f32>>::get_dual_basis_gammas(&metric);
+    let basis = get_basis_gammas::<f32>(&metric);
+    let dual = get_dual_basis_gammas::<f32>(&metric);
 
-    let basis_data: Vec<f32> = CpuBackend::to_vec(&basis);
-    let dual_data: Vec<f32> = CpuBackend::to_vec(&dual);
+    let basis_data = basis.to_vec();
+    let dual_data = dual.to_vec();
 
     let dim = 2;
     let cell_size = dim * dim;

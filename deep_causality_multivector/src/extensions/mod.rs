@@ -6,4 +6,5 @@
 pub(crate) mod hkt_multivector;
 
 pub(crate) mod hkt_multifield;
+pub(crate) mod scalar_eval;
 pub(crate) mod scalar_multivector;

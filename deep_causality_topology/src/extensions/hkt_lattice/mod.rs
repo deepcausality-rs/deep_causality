@@ -7,7 +7,7 @@ use crate::Lattice;
 use deep_causality_haft::{HKT, NoConstraint, Satisfies};
 use std::sync::Arc;
 
-/// HKT witness for Lattice<D> as a functor over field values.
+/// HKT witness for `Lattice<D>` as a functor over field values.
 pub struct LatticeWitness<const D: usize>;
 
 impl<const D: usize> HKT for LatticeWitness<D> {

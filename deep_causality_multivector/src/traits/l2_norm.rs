@@ -10,7 +10,7 @@ pub trait MultiVectorL2Norm<T>
 where
     T: Field + Copy + std::iter::Sum,
 {
-    /// Returns the Real magnitude type (e.g. f64 for Complex<f64>)
+    /// Returns the Real magnitude type (e.g. f64 for `Complex<f64>`)
     type Output: RealField + Copy;
 
     /// Computes the L2 norm (Euclidean length) of the multivector's coefficient vector.

@@ -9,8 +9,8 @@
 //! These actions reduce discretization errors from $O(a^2)$ to $O(a^4)$ or better.
 
 use crate::{CWComplex, GaugeGroup, LatticeGaugeField, TopologyError};
+use deep_causality_num::Field; // TensorData removed
 use deep_causality_num::{ComplexField, DivisionAlgebra, FromPrimitive, RealField, ToPrimitive};
-use deep_causality_tensor::TensorData;
 use std::fmt::Debug;
 
 /// Coefficients for improved gauge actions.
@@ -80,7 +80,16 @@ where
 impl<
     G: GaugeGroup,
     const D: usize,
-    M: TensorData + Debug + ComplexField<R> + DivisionAlgebra<R>,
+    M: Field
+        + Copy
+        + Default
+        + PartialOrd
+        + Send
+        + Sync
+        + 'static
+        + Debug
+        + ComplexField<R>
+        + DivisionAlgebra<R>,
     R: RealField + FromPrimitive + ToPrimitive,
 > LatticeGaugeField<G, D, M, R>
 {

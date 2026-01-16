@@ -16,7 +16,7 @@ use crate::{
 use deep_causality_haft::RiemannMap;
 use deep_causality_metric::{EastCoastMetric, LorentzianMetric};
 use deep_causality_num::{Field, Float};
-use deep_causality_tensor::{CausalTensor, TensorData};
+use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::GaugeFieldWitness;
 use deep_causality_topology::{
     CurvatureSymmetry, CurvatureTensor, CurvatureTensorVector, CurvatureTensorWitness, TensorVector,
@@ -24,7 +24,7 @@ use deep_causality_topology::{
 
 impl<S> GrOps<S> for GR<S>
 where
-    S: Field + Float + Clone + From<f64> + Into<f64> + Copy + TensorData,
+    S: Field + Float + Clone + From<f64> + Into<f64> + Copy,
 {
     fn ricci_tensor(&self) -> Result<CausalTensor<S>, PhysicsError> {
         let riemann = self.field_strength();

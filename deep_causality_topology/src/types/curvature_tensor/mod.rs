@@ -11,7 +11,7 @@
 use crate::TensorVector;
 use deep_causality_metric::Metric;
 use deep_causality_num::{Field, Float};
-use deep_causality_tensor::{CausalTensor, TensorData};
+use deep_causality_tensor::CausalTensor;
 use std::marker::PhantomData;
 
 /// Symmetry properties of curvature tensors.
@@ -24,7 +24,7 @@ pub enum CurvatureSymmetry {
     /// - R_abcd = -R_bacd (antisymmetric in first pair)
     /// - R_abcd = -R_abdc (antisymmetric in second pair)
     /// - R_abcd = R_cdab (pair exchange)
-    /// - R_[abc]d = 0 (first Bianchi identity)
+    /// - `R_[abc]d = 0` (first Bianchi identity)
     Riemann,
 
     /// Weyl tensor (traceless part of Riemann).
@@ -59,7 +59,7 @@ pub type CurvatureTensorVector<T> =
 /// # Mathematical Definition
 ///
 /// The Riemann curvature tensor measures parallel transport holonomy:
-/// R(u,v)w = ∇_u∇_v w - ∇_v∇_u w - ∇_[u,v] w
+/// R(u,v)w = ∇_u∇_v w - ∇_v∇_u w - `∇_[u,v] w`
 ///
 /// In components: (R(u,v)w)^d = R^d_abc u^a v^b w^c
 #[derive(Debug, Clone)]
@@ -87,7 +87,7 @@ pub struct CurvatureTensor<T, A, B, C, D> {
 
 impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
 where
-    T: TensorData + Clone,
+    T: Field + Copy + PartialOrd,
 {
     /// Creates a new curvature tensor from components.
     ///
@@ -128,7 +128,7 @@ where
 
 impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
 where
-    T: TensorData + Field + Float + Clone + From<f64> + Into<f64>,
+    T: Field + Copy + Default + PartialOrd + Float + From<f64> + Into<f64>,
 {
     /// Creates a flat (zero curvature) tensor with Minkowski metric.
     pub fn flat(dim: usize) -> Self {
@@ -192,7 +192,7 @@ where
 
 impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
 where
-    T: TensorData + Clone,
+    T: Field + Copy + PartialOrd + Clone,
 {
     /// Returns a reference to the tensor components.
     #[inline]
@@ -221,7 +221,7 @@ where
 
 impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
 where
-    T: TensorData + Field + Float + Clone + From<f64> + Into<f64>,
+    T: Field + Copy + PartialOrd + Float + From<f64> + Into<f64>,
 {
     /// Checks if the tensor is flat (all zero).
     pub fn is_flat(&self) -> bool {
@@ -247,7 +247,7 @@ where
 
 impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
 where
-    T: TensorData + Field + Float + Clone + From<f64> + Into<f64>,
+    T: Field + Copy + PartialOrd + Float + From<f64> + Into<f64>,
 {
     /// Contracts the curvature tensor with three vectors: R(u,v)w.
     ///
@@ -566,7 +566,7 @@ where
         weyl
     }
 
-    /// Verifies the first Bianchi identity: R_[abc]d = 0.
+    /// Verifies the first Bianchi identity: `R_[abc]d = 0`.
     ///
     /// The cyclic sum R_abcd + R_bcad + R_cabd = 0.
     ///
@@ -600,7 +600,7 @@ where
 
 impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
 where
-    T: TensorData + Clone,
+    T: Field + Copy + Default + PartialOrd + Clone,
 {
     /// Converts to a CurvatureTensor with different type parameters.
     ///

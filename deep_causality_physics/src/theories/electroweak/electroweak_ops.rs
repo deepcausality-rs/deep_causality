@@ -4,12 +4,12 @@
  */
 use crate::{EM, ElectroweakParams, PhysicsError};
 use deep_causality_num::RealField;
-use deep_causality_tensor::{CausalTensor, TensorData};
+use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{GaugeField, Manifold, U1};
 
 pub trait ElectroweakOps<S>
 where
-    S: RealField + Clone + From<f64> + Into<f64> + TensorData,
+    S: RealField + Clone + From<f64> + Into<f64>,
 {
     /// Creates a new Electroweak Field (SU(2) x U(1)) with West Coast metric.
     fn new_field(base: Manifold<S, S>, connection: CausalTensor<S>) -> Result<Self, PhysicsError>
