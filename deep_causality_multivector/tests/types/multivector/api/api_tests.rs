@@ -64,3 +64,29 @@ fn test_api_delegation() {
     let bs = mv.basis_shift(0);
     assert!(!bs.data().is_empty());
 }
+
+#[test]
+fn test_inverse() {
+    let metric = Metric::Euclidean(2);
+
+    // 1. Scalar inversion
+    // 2.0 -> 0.5
+    let data_scalar = vec![2.0, 0.0, 0.0, 0.0];
+    let mv_scalar = CausalMultiVector::new(data_scalar, metric).unwrap();
+    let inv_scalar = mv_scalar.inverse().expect("Scalar should be invertible");
+    assert_eq!(inv_scalar.data()[0], 0.5);
+
+    // 2. Vector inversion
+    // For Euclidean vector v, v^2 = |v|^2. v^{-1} = v / |v|^2.
+    // Let v = e1. |v|^2 = 1. v^{-1} = e1 / 1 = e1.
+    let data_vec = vec![0.0, 1.0, 0.0, 0.0]; // e1
+    let mv_vec = CausalMultiVector::new(data_vec, metric).unwrap();
+    let inv_vec = mv_vec.inverse().expect("Unit vector should be invertible");
+    assert_eq!(inv_vec.data(), &[0.0, 1.0, 0.0, 0.0]);
+
+    // 3. Zero vector (not invertible)
+    let data_zero = vec![0.0; 4];
+    let mv_zero = CausalMultiVector::new(data_zero, metric).unwrap();
+    let result = mv_zero.inverse();
+    assert!(result.is_err());
+}
