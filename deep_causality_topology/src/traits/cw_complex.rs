@@ -7,7 +7,7 @@ use deep_causality_sparse::CsrMatrix;
 use std::hash::Hash;
 
 /// Marker trait for cell types in a CW complex.
-pub trait Cell: Clone + Eq + Hash + Send + Sync + 'static {
+pub trait Cell: Clone + Eq + Hash {
     /// Dimension of this cell.
     fn dim(&self) -> usize;
 

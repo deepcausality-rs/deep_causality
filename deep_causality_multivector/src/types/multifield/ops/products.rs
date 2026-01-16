@@ -19,7 +19,7 @@ use deep_causality_tensor::CausalTensor;
 
 impl<T> CausalMultiField<T>
 where
-    T: Field + Ring + Copy + Default + PartialOrd + Send + Sync + 'static,
+    T: Field + Ring + Copy + Default + PartialOrd,
     CausalTensor<T>: BatchedMatMul<T>,
 {
     /// Computes the inner product (grade-0 projection of geometric product).

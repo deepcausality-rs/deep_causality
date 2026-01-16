@@ -17,7 +17,7 @@ use deep_causality_tensor::{CausalTensor, Tensor};
 
 impl<T> CausalMultiField<T>
 where
-    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
+    T: Field + Copy + Default + PartialOrd,
 {
     /// Creates a field filled with zero multivectors.
     ///

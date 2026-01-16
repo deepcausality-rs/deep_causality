@@ -31,7 +31,7 @@ use deep_causality_tensor::CausalTensor;
 
 impl<T> CausalMultiField<T>
 where
-    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
+    T: Field + Copy + Default + PartialOrd,
 {
     /// Scales the field by a scalar: `result = scalar * self`.
     ///
@@ -56,7 +56,7 @@ where
 
 impl<T> CausalMultiField<T>
 where
-    T: Field + RealField + Copy + Default + PartialOrd + Send + Sync + 'static,
+    T: Field + RealField + Copy + Default + PartialOrd,
 {
     /// Normalizes the field: `result = self / ||self||`.
     ///
@@ -90,7 +90,7 @@ where
 
 impl<T> CausalMultiField<T>
 where
-    T: Field + Copy + Default + PartialOrd + Send + Sync + std::ops::Neg<Output = T> + 'static,
+    T: Field + Copy + Default + PartialOrd + std::ops::Neg<Output = T> + 'static,
 {
     /// Computes the reversion (reversal) of the field.
     ///
@@ -124,7 +124,7 @@ where
 
 impl<T> CausalMultiField<T>
 where
-    T: Field + Ring + Copy + Default + PartialOrd + Send + Sync + 'static,
+    T: Field + Ring + Copy + Default + PartialOrd,
     CausalTensor<T>: BatchedMatMul<T>,
 {
     /// Computes the Lie commutator: `[A, B] = AB - BA`.

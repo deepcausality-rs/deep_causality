@@ -76,7 +76,7 @@ where
 
 impl<T> Functor<CausalMultiFieldWitness<T>> for CausalMultiFieldWitness<T>
 where
-    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Satisfies<NoConstraint>,
+    T: Field + Copy + Default + PartialOrd + Satisfies<NoConstraint>,
 {
     /// Maps a function over the field coefficients.
     ///
@@ -138,7 +138,7 @@ where
 
 impl<T> Pure<CausalMultiFieldWitness<T>> for CausalMultiFieldWitness<T>
 where
-    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Satisfies<NoConstraint>,
+    T: Field + Copy + Default + PartialOrd + Satisfies<NoConstraint>,
 {
     /// Creates a field with all coefficients set to the given value.
     ///
@@ -188,7 +188,7 @@ where
 
 impl<T> Applicative<CausalMultiFieldWitness<T>> for CausalMultiFieldWitness<T>
 where
-    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Satisfies<NoConstraint>,
+    T: Field + Copy + Default + PartialOrd + Satisfies<NoConstraint>,
 {
     /// Applies a field of functions to a field of values.
     ///
@@ -220,7 +220,7 @@ where
 
 impl<T> Monad<CausalMultiFieldWitness<T>> for CausalMultiFieldWitness<T>
 where
-    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Satisfies<NoConstraint>,
+    T: Field + Copy + Default + PartialOrd + Satisfies<NoConstraint>,
 {
     /// Monadic bind for CausalMultiField.
     ///
@@ -280,7 +280,7 @@ where
 
 impl<T> CoMonad<CausalMultiFieldWitness<T>> for CausalMultiFieldWitness<T>
 where
-    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Satisfies<NoConstraint>,
+    T: Field + Copy + Default + PartialOrd + Satisfies<NoConstraint>,
 {
     /// Extracts the "focus" value from the field.
     ///

@@ -28,7 +28,7 @@ impl Axis {
 
 impl<T> CausalMultiField<T>
 where
-    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
+    T: Field + Copy + Default + PartialOrd,
 {
     /// Computes the curl: ∇ × F.
     ///

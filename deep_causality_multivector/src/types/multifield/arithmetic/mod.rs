@@ -15,7 +15,7 @@ use std::ops::{Add, Mul, Neg, Sub};
 
 impl<T> Zero for CausalMultiField<T>
 where
-    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Zero + Neg<Output = T>,
+    T: Field + Copy + Default + PartialOrd + Zero + Neg<Output = T>,
 {
     fn zero() -> Self {
         panic!(
@@ -34,7 +34,7 @@ where
 
 impl<T> Add for CausalMultiField<T>
 where
-    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
+    T: Field + Copy + Default + PartialOrd,
 {
     type Output = Self;
 
@@ -55,7 +55,7 @@ where
 
 impl<T> Add for &CausalMultiField<T>
 where
-    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
+    T: Field + Copy + Default + PartialOrd,
 {
     type Output = CausalMultiField<T>;
 
@@ -78,7 +78,7 @@ where
 
 impl<T> Sub for CausalMultiField<T>
 where
-    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
+    T: Field + Copy + Default + PartialOrd,
 {
     type Output = Self;
 
@@ -99,7 +99,7 @@ where
 
 impl<T> Sub for &CausalMultiField<T>
 where
-    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
+    T: Field + Copy + Default + PartialOrd,
 {
     type Output = CausalMultiField<T>;
 
@@ -122,7 +122,7 @@ where
 
 impl<T> Neg for CausalMultiField<T>
 where
-    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Neg<Output = T>,
+    T: Field + Copy + Default + PartialOrd + Neg<Output = T>,
 {
     type Output = Self;
 
@@ -144,7 +144,7 @@ where
 
 impl<T> Mul for CausalMultiField<T>
 where
-    T: Field + Ring + Copy + Default + PartialOrd + Send + Sync + 'static,
+    T: Field + Ring + Copy + Default + PartialOrd,
     CausalTensor<T>: BatchedMatMul<T>,
 {
     type Output = Self;
@@ -166,7 +166,7 @@ where
 
 impl<T> Mul for &CausalMultiField<T>
 where
-    T: Field + Ring + Copy + Default + PartialOrd + Send + Sync + 'static,
+    T: Field + Ring + Copy + Default + PartialOrd,
     CausalTensor<T>: BatchedMatMul<T>,
 {
     type Output = CausalMultiField<T>;
@@ -188,7 +188,7 @@ where
 
 impl<T> Mul<&CausalMultiField<T>> for CausalMultiField<T>
 where
-    T: Field + Ring + Copy + Default + PartialOrd + Send + Sync + 'static,
+    T: Field + Ring + Copy + Default + PartialOrd,
     CausalTensor<T>: BatchedMatMul<T>,
 {
     type Output = CausalMultiField<T>;

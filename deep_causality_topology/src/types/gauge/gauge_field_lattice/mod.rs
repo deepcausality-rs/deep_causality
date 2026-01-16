@@ -90,16 +90,7 @@ pub struct LatticeGaugeField<G: GaugeGroup, const D: usize, M, R> {
 impl<
     G: GaugeGroup,
     const D: usize,
-    M: Field
-        + Copy
-        + Default
-        + PartialOrd
-        + Send
-        + Sync
-        + 'static
-        + Debug
-        + ComplexField<R>
-        + DivisionAlgebra<R>,
+    M: Field + Copy + Default + PartialOrd + Debug + ComplexField<R> + DivisionAlgebra<R>,
     R: RealField + FromPrimitive + ToPrimitive,
 > LatticeGaugeField<G, D, M, R>
 {

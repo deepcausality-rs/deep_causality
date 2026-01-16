@@ -124,7 +124,7 @@ where
 /// and D is the matrix dimension.
 pub fn get_gammas<T>(metric: &Metric) -> CausalTensor<T>
 where
-    T: Field + Copy + Default + PartialOrd + Send + Sync + std::ops::Neg<Output = T>,
+    T: Field + Copy + Default + PartialOrd + std::ops::Neg<Output = T>,
 {
     let n = metric.dimension();
     let dim = matrix_dim(n);
@@ -140,7 +140,7 @@ where
 /// Returns a tensor of shape [2^N, D, D] containing the matrix for each blade.
 pub fn get_basis_gammas<T>(metric: &Metric) -> CausalTensor<T>
 where
-    T: Field + Copy + Default + PartialOrd + Send + Sync + std::ops::Neg<Output = T>,
+    T: Field + Copy + Default + PartialOrd + std::ops::Neg<Output = T>,
 {
     let n = metric.dimension();
     let num_blades = num_blades(n);
@@ -202,7 +202,7 @@ where
 /// Returns a tensor of shape [2^N, D, D] containing the dual (inverse transpose) of each blade matrix.
 pub fn get_dual_basis_gammas<T>(metric: &Metric) -> CausalTensor<T>
 where
-    T: Field + Copy + Default + PartialOrd + Send + Sync + std::ops::Neg<Output = T>,
+    T: Field + Copy + Default + PartialOrd + std::ops::Neg<Output = T>,
 {
     let n = metric.dimension();
     let num_blades = num_blades(n);

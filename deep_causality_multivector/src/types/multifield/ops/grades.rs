@@ -13,7 +13,7 @@ use deep_causality_num::Field;
 
 impl<T> CausalMultiField<T>
 where
-    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
+    T: Field + Copy + Default + PartialOrd,
 {
     /// Projects the field onto grade k: ⟨F⟩_k.
     ///

@@ -17,7 +17,7 @@ use std::ops::Neg;
 
 impl<T> CausalMultiVector<T>
 where
-    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Neg<Output = T>,
+    T: Field + Copy + Default + PartialOrd + Neg<Output = T>,
 {
     /// Converts this multivector to matrix representation.
     pub fn to_matrix(&self) -> CausalTensor<T> {

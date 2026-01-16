@@ -49,9 +49,7 @@ pub struct LinkVariable<G: GaugeGroup, M, R> {
     _scalar: PhantomData<R>,
 }
 
-impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd + Send + Sync + 'static, R: RealField>
-    LinkVariable<G, M, R>
-{
+impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVariable<G, M, R> {
     /// Create the identity link (unit element of G).
     ///
     /// Returns the N×N identity matrix for SU(N).
