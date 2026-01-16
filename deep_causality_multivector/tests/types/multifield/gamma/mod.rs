@@ -3,6 +3,5 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 mod cpu_tests;
-mod mlx_tests;
 mod mod_tests;
 mod providers_tests;

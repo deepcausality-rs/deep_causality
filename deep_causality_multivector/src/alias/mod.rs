@@ -7,7 +7,6 @@ mod alias_hilbert_state;
 mod alias_hopf_state;
 mod alias_pga3d;
 mod alias_real;
-pub mod multifield_aliases;
 
 use crate::CausalMultiVector;
 use deep_causality_num::Complex64;
@@ -22,4 +21,3 @@ pub type RealMultiVector = CausalMultiVector<f64>;
 
 pub use alias_hilbert_state::HilbertState;
 pub use alias_hopf_state::HopfState;
-pub use multifield_aliases::{DefaultMultiFieldBackend, DefaultMultiFieldFloat};

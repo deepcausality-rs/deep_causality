@@ -23,10 +23,10 @@ default = []
 # Disabled by default to use native Rust prng instead.
 os-random = ["deep_causality_rand/os-random"]
 # MLX acceleration for Apple Silicon (M Series).
-# Forwards to deep_causality_tensor/mlx and deep_causality_multivector/mlx
+# Forwards to deep_causality_tensor/mlx
 # for MLX / GPU-accelerated operations.
 # Note: Only builds on macOS aarch64. f64 downcast to f32 for GPU execution.
-mlx = ["dep:mlx-rs", "deep_causality_tensor/mlx", "deep_causality_multivector/mlx"]
+mlx = ["dep:mlx-rs", "deep_causality_tensor/mlx"]
 # Future: CUDA support
 cuda = ["deep_causality_tensor/cuda"]
 

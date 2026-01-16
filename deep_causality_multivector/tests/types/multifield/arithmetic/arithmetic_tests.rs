@@ -8,7 +8,6 @@
 use deep_causality_metric::Metric;
 use deep_causality_multivector::{CausalMultiField, CausalMultiVector};
 use deep_causality_num::Zero;
-use deep_causality_tensor::CpuBackend;
 
 // =============================================================================
 // Zero trait tests
@@ -17,7 +16,7 @@ use deep_causality_tensor::CpuBackend;
 #[test]
 fn test_is_zero_on_zeros_field() {
     let metric = Metric::from_signature(3, 0, 0);
-    let field = CausalMultiField::<CpuBackend, f32>::zeros([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::zeros([2, 2, 2], metric, [1.0, 1.0, 1.0]);
 
     assert!(field.is_zero());
 }
@@ -25,7 +24,7 @@ fn test_is_zero_on_zeros_field() {
 #[test]
 fn test_is_zero_on_ones_field() {
     let metric = Metric::from_signature(3, 0, 0);
-    let field = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
 
     assert!(!field.is_zero());
 }
@@ -42,8 +41,7 @@ fn test_is_zero_on_nonzero_from_coefficients() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
 
     assert!(!field.is_zero());
 }
@@ -51,7 +49,7 @@ fn test_is_zero_on_nonzero_from_coefficients() {
 #[test]
 #[should_panic(expected = "requires shape and metric")]
 fn test_zero_trait_panics() {
-    let _: CausalMultiField<CpuBackend, f32> = Zero::zero();
+    let _: CausalMultiField<f32> = Zero::zero();
 }
 
 // =============================================================================
@@ -61,8 +59,8 @@ fn test_zero_trait_panics() {
 #[test]
 fn test_add_owned_owned() {
     let metric = Metric::from_signature(3, 0, 0);
-    let a = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
-    let b = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let b = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
 
     let c = a + b;
 
@@ -76,10 +74,10 @@ fn test_add_owned_owned() {
 #[test]
 fn test_add_owned_ref() {
     let metric = Metric::from_signature(3, 0, 0);
-    let a = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
-    let b = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let b = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
 
-    let c = a + &b;
+    let c = a + b;
 
     assert!(!c.is_zero());
 }
@@ -87,8 +85,8 @@ fn test_add_owned_ref() {
 #[test]
 fn test_add_identity_zeros() {
     let metric = Metric::from_signature(3, 0, 0);
-    let a = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
-    let zeros = CausalMultiField::<CpuBackend, f32>::zeros([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let zeros = CausalMultiField::<f32>::zeros([2, 2, 2], metric, [1.0, 1.0, 1.0]);
 
     let a_before = a.to_coefficients();
     let c = a + zeros;
@@ -108,8 +106,8 @@ fn test_add_metric_mismatch_panics() {
     let metric1 = Metric::from_signature(3, 0, 0);
     let metric2 = Metric::from_signature(2, 0, 0);
 
-    let a = CausalMultiField::<CpuBackend, f32>::zeros([2, 2, 2], metric1, [1.0, 1.0, 1.0]);
-    let b = CausalMultiField::<CpuBackend, f32>::zeros([2, 2, 2], metric2, [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::zeros([2, 2, 2], metric1, [1.0, 1.0, 1.0]);
+    let b = CausalMultiField::<f32>::zeros([2, 2, 2], metric2, [1.0, 1.0, 1.0]);
 
     let _ = a + b;
 }
@@ -119,8 +117,8 @@ fn test_add_metric_mismatch_panics() {
 fn test_add_shape_mismatch_panics() {
     let metric = Metric::from_signature(3, 0, 0);
 
-    let a = CausalMultiField::<CpuBackend, f32>::zeros([2, 2, 2], metric, [1.0, 1.0, 1.0]);
-    let b = CausalMultiField::<CpuBackend, f32>::zeros([3, 3, 3], metric, [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::zeros([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let b = CausalMultiField::<f32>::zeros([3, 3, 3], metric, [1.0, 1.0, 1.0]);
 
     let _ = a + b;
 }
@@ -132,8 +130,8 @@ fn test_add_shape_mismatch_panics() {
 #[test]
 fn test_sub_owned_owned() {
     let metric = Metric::from_signature(3, 0, 0);
-    let a = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
-    let b = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let b = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
 
     let c = a - b;
 
@@ -144,10 +142,10 @@ fn test_sub_owned_owned() {
 #[test]
 fn test_sub_owned_ref() {
     let metric = Metric::from_signature(3, 0, 0);
-    let a = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
-    let b = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let b = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
 
-    let c = a - &b;
+    let c = a - b;
 
     assert!(c.is_zero());
 }
@@ -155,8 +153,8 @@ fn test_sub_owned_ref() {
 #[test]
 fn test_sub_identity_zeros() {
     let metric = Metric::from_signature(3, 0, 0);
-    let a = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
-    let zeros = CausalMultiField::<CpuBackend, f32>::zeros([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let zeros = CausalMultiField::<f32>::zeros([2, 2, 2], metric, [1.0, 1.0, 1.0]);
 
     let a_before = a.to_coefficients();
     let c = a - zeros;
@@ -176,8 +174,8 @@ fn test_sub_metric_mismatch_panics() {
     let metric1 = Metric::from_signature(3, 0, 0);
     let metric2 = Metric::from_signature(2, 0, 0);
 
-    let a = CausalMultiField::<CpuBackend, f32>::zeros([2, 2, 2], metric1, [1.0, 1.0, 1.0]);
-    let b = CausalMultiField::<CpuBackend, f32>::zeros([2, 2, 2], metric2, [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::zeros([2, 2, 2], metric1, [1.0, 1.0, 1.0]);
+    let b = CausalMultiField::<f32>::zeros([2, 2, 2], metric2, [1.0, 1.0, 1.0]);
 
     let _ = a - b;
 }
@@ -187,8 +185,8 @@ fn test_sub_metric_mismatch_panics() {
 fn test_sub_shape_mismatch_panics() {
     let metric = Metric::from_signature(3, 0, 0);
 
-    let a = CausalMultiField::<CpuBackend, f32>::zeros([2, 2, 2], metric, [1.0, 1.0, 1.0]);
-    let b = CausalMultiField::<CpuBackend, f32>::zeros([3, 3, 3], metric, [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::zeros([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let b = CausalMultiField::<f32>::zeros([3, 3, 3], metric, [1.0, 1.0, 1.0]);
 
     let _ = a - b;
 }
@@ -209,8 +207,7 @@ fn test_neg_produces_negation() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let a =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
     let neg_a = -a;
 
     let neg_coeffs = neg_a.to_coefficients();
@@ -240,8 +237,7 @@ fn test_double_negation() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let a =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
     let a_orig = a.to_coefficients();
 
     let neg_neg_a = -(-a);
@@ -263,7 +259,7 @@ fn test_double_negation() {
 #[test]
 fn test_neg_zeros() {
     let metric = Metric::from_signature(3, 0, 0);
-    let zeros = CausalMultiField::<CpuBackend, f32>::zeros([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let zeros = CausalMultiField::<f32>::zeros([2, 2, 2], metric, [1.0, 1.0, 1.0]);
 
     let neg_zeros = -zeros;
 
@@ -278,8 +274,8 @@ fn test_neg_zeros() {
 #[test]
 fn test_mul_ones_ones() {
     let metric = Metric::from_signature(3, 0, 0);
-    let a = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
-    let b = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let b = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
 
     let c = a * b;
 
@@ -290,8 +286,8 @@ fn test_mul_ones_ones() {
 #[test]
 fn test_mul_owned_ref() {
     let metric = Metric::from_signature(3, 0, 0);
-    let a = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
-    let b = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let b = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
 
     let c = a * &b;
 
@@ -301,8 +297,8 @@ fn test_mul_owned_ref() {
 #[test]
 fn test_mul_ref_ref() {
     let metric = Metric::from_signature(3, 0, 0);
-    let a = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
-    let b = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let b = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
 
     let c = &a * &b;
 
@@ -312,8 +308,8 @@ fn test_mul_ref_ref() {
 #[test]
 fn test_mul_zeros_annihilates() {
     let metric = Metric::from_signature(3, 0, 0);
-    let a = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
-    let zeros = CausalMultiField::<CpuBackend, f32>::zeros([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let zeros = CausalMultiField::<f32>::zeros([2, 2, 2], metric, [1.0, 1.0, 1.0]);
 
     let c = a * zeros;
 
@@ -327,8 +323,8 @@ fn test_mul_metric_mismatch_panics() {
     let metric1 = Metric::from_signature(3, 0, 0);
     let metric2 = Metric::from_signature(2, 0, 0);
 
-    let a = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric1, [1.0, 1.0, 1.0]);
-    let b = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric2, [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::ones([2, 2, 2], metric1, [1.0, 1.0, 1.0]);
+    let b = CausalMultiField::<f32>::ones([2, 2, 2], metric2, [1.0, 1.0, 1.0]);
 
     let _ = a * b;
 }
@@ -338,8 +334,8 @@ fn test_mul_metric_mismatch_panics() {
 fn test_mul_shape_mismatch_panics() {
     let metric = Metric::from_signature(3, 0, 0);
 
-    let a = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
-    let b = CausalMultiField::<CpuBackend, f32>::ones([3, 3, 3], metric, [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let b = CausalMultiField::<f32>::ones([3, 3, 3], metric, [1.0, 1.0, 1.0]);
 
     let _ = a * b;
 }
@@ -351,7 +347,7 @@ fn test_mul_shape_mismatch_panics() {
 #[test]
 fn test_scale_by_zero() {
     let metric = Metric::from_signature(3, 0, 0);
-    let a = CausalMultiField::<CpuBackend, f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::ones([2, 2, 2], metric, [1.0, 1.0, 1.0]);
 
     let scaled = a.scale(0.0);
 
@@ -370,8 +366,7 @@ fn test_scale_by_one() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let a =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
     let a_orig = a.to_coefficients();
 
     let scaled = a.scale(1.0);
@@ -397,8 +392,7 @@ fn test_scale_by_two() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let a =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
 
     let scaled = a.scale(2.0);
     let scaled_coeffs = scaled.to_coefficients();
@@ -427,8 +421,7 @@ fn test_scale_by_negative() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let a =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
+    let a = CausalMultiField::<f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
 
     let scaled = a.scale(-1.0);
     let scaled_coeffs = scaled.to_coefficients();

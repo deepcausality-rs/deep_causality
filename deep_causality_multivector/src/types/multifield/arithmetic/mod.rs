@@ -3,51 +3,55 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Ring and Module trait implementations for CausalMultiField.
-//!
-// These implementations dispatch to the backend for all operations,
-// using the Matrix Isomorphism representation.
+//! Arithmetic operators for CausalMultiField.
 
 use super::CausalMultiField;
 use crate::types::multifield::ops::batched_matmul::BatchedMatMul;
-use deep_causality_num::{Ring, Zero};
-use deep_causality_tensor::{LinearAlgebraBackend, TensorData};
+use deep_causality_num::{Field, Ring, Zero};
+use deep_causality_tensor::CausalTensor;
 use std::ops::{Add, Mul, Neg, Sub};
 
 // === Zero Implementation ===
 
-impl<B, T> Zero for CausalMultiField<B, T>
+impl<T> Zero for CausalMultiField<T>
 where
-    B: LinearAlgebraBackend,
-    T: TensorData + Zero,
+    T: Field
+        + Copy
+        + Default
+        + PartialOrd
+        + Send
+        + Sync
+        + 'static
+        + Zero
+        + std::ops::Neg<Output = T>,
 {
     fn zero() -> Self {
         panic!(
-            "CausalMultiField::zero() requires shape and metric - use CausalMultiField::zeros() instead"
-        );
+            "CausalMultiField::zero() requires context (Metric/Shape/Dx). Use zeros() factory method instead."
+        )
     }
 
     fn is_zero(&self) -> bool {
-        // Check if all elements are zero by summing and comparing
-        let data_vec = B::to_vec(&self.data);
-        data_vec.iter().all(|x| x.is_zero())
+        // Download and check all coefficients
+        let mvs = self.to_coefficients();
+        mvs.iter().all(|mv| mv.data.iter().all(|c| c.is_zero()))
     }
 }
 
 // === Add Implementation ===
 
-impl<B, T> Add for CausalMultiField<B, T>
+impl<T> Add for CausalMultiField<T>
 where
-    B: LinearAlgebraBackend,
-    T: TensorData,
+    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
 {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        assert_eq!(self.metric, rhs.metric, "Metric mismatch in add");
-        assert_eq!(self.shape, rhs.shape, "Shape mismatch in add");
+        assert_eq!(self.metric, rhs.metric, "Metrics must match for addition");
+        assert_eq!(self.shape, rhs.shape, "Shapes must match for addition");
 
-        let result = B::add(&self.data, &rhs.data);
+        let result = &self.data + &rhs.data;
+
         Self {
             data: result,
             metric: self.metric,
@@ -57,19 +61,19 @@ where
     }
 }
 
-impl<B, T> Add<&Self> for CausalMultiField<B, T>
+impl<T> Add for &CausalMultiField<T>
 where
-    B: LinearAlgebraBackend,
-    T: TensorData,
+    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
 {
-    type Output = Self;
+    type Output = CausalMultiField<T>;
 
-    fn add(self, rhs: &Self) -> Self::Output {
-        assert_eq!(self.metric, rhs.metric, "Metric mismatch in add");
-        assert_eq!(self.shape, rhs.shape, "Shape mismatch in add");
+    fn add(self, rhs: Self) -> Self::Output {
+        assert_eq!(self.metric, rhs.metric, "Metrics must match for addition");
+        assert_eq!(self.shape, rhs.shape, "Shapes must match for addition");
 
-        let result = B::add(&self.data, &rhs.data);
-        Self {
+        let result = &self.data + &rhs.data;
+
+        CausalMultiField {
             data: result,
             metric: self.metric,
             dx: self.dx,
@@ -80,18 +84,21 @@ where
 
 // === Sub Implementation ===
 
-impl<B, T> Sub for CausalMultiField<B, T>
+impl<T> Sub for CausalMultiField<T>
 where
-    B: LinearAlgebraBackend,
-    T: TensorData,
+    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
 {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        assert_eq!(self.metric, rhs.metric, "Metric mismatch in sub");
-        assert_eq!(self.shape, rhs.shape, "Shape mismatch in sub");
+        assert_eq!(
+            self.metric, rhs.metric,
+            "Metrics must match for subtraction"
+        );
+        assert_eq!(self.shape, rhs.shape, "Shapes must match for subtraction");
 
-        let result = B::sub(&self.data, &rhs.data);
+        let result = &self.data - &rhs.data;
+
         Self {
             data: result,
             metric: self.metric,
@@ -101,19 +108,22 @@ where
     }
 }
 
-impl<B, T> Sub<&Self> for CausalMultiField<B, T>
+impl<T> Sub for &CausalMultiField<T>
 where
-    B: LinearAlgebraBackend,
-    T: TensorData,
+    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
 {
-    type Output = Self;
+    type Output = CausalMultiField<T>;
 
-    fn sub(self, rhs: &Self) -> Self::Output {
-        assert_eq!(self.metric, rhs.metric, "Metric mismatch in sub");
-        assert_eq!(self.shape, rhs.shape, "Shape mismatch in sub");
+    fn sub(self, rhs: Self) -> Self::Output {
+        assert_eq!(
+            self.metric, rhs.metric,
+            "Metrics must match for subtraction"
+        );
+        assert_eq!(self.shape, rhs.shape, "Shapes must match for subtraction");
 
-        let result = B::sub(&self.data, &rhs.data);
-        Self {
+        let result = &self.data - &rhs.data;
+
+        CausalMultiField {
             data: result,
             metric: self.metric,
             dx: self.dx,
@@ -124,17 +134,17 @@ where
 
 // === Neg Implementation ===
 
-impl<B, T> Neg for CausalMultiField<B, T>
+impl<T> Neg for CausalMultiField<T>
 where
-    B: LinearAlgebraBackend,
-    T: TensorData + Neg<Output = T>,
+    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Neg<Output = T>,
 {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
-        // Negate by multiplying with -1 tensor
-        let neg_one = B::from_shape_fn(&[1], |_| -T::one());
-        let result = B::mul(&self.data, &neg_one);
+        let neg_one = -T::one();
+        let neg_tensor = CausalTensor::<T>::from_shape_fn(&[1], |_| neg_one);
+        let result = &self.data * &neg_tensor;
+
         Self {
             data: result,
             metric: self.metric,
@@ -144,74 +154,83 @@ where
     }
 }
 
-// === Mul (Geometric Product) Implementation ===
+// === Mul Implementation (Geometric Product) ===
 
-impl<B, T> Mul for CausalMultiField<B, T>
+impl<T> Mul for CausalMultiField<T>
 where
-    B: LinearAlgebraBackend + BatchedMatMul<T>,
-    T: TensorData + Ring + Default + PartialOrd,
+    T: Field + Ring + Copy + Default + PartialOrd + Send + Sync + 'static,
+    CausalTensor<T>: BatchedMatMul<T>,
 {
     type Output = Self;
-
-    /// Geometric product of two multifields.
-    ///
-    /// Since data is stored in Matrix Representation, this is a direct matmul.
-    fn mul(self, rhs: Self) -> Self::Output {
-        assert_eq!(
-            self.metric, rhs.metric,
-            "Metric mismatch in geometric product"
-        );
-        assert_eq!(self.shape, rhs.shape, "Shape mismatch in geometric product");
-
-        let result = B::batched_matmul(&self.data, &rhs.data);
-        Self {
-            data: result,
-            metric: self.metric,
-            dx: self.dx,
-            shape: self.shape,
-        }
-    }
-}
-
-impl<B, T> Mul<&Self> for CausalMultiField<B, T>
-where
-    B: LinearAlgebraBackend + BatchedMatMul<T>,
-    T: TensorData + Ring + Default + PartialOrd,
-{
-    type Output = Self;
-
-    fn mul(self, rhs: &Self) -> Self::Output {
-        assert_eq!(
-            self.metric, rhs.metric,
-            "Metric mismatch in geometric product"
-        );
-        assert_eq!(self.shape, rhs.shape, "Shape mismatch in geometric product");
-
-        let result = B::batched_matmul(&self.data, &rhs.data);
-        Self {
-            data: result,
-            metric: self.metric,
-            dx: self.dx,
-            shape: self.shape,
-        }
-    }
-}
-
-impl<B, T> Mul for &CausalMultiField<B, T>
-where
-    B: LinearAlgebraBackend + BatchedMatMul<T>,
-    T: TensorData + Ring + Default + PartialOrd,
-{
-    type Output = CausalMultiField<B, T>;
 
     fn mul(self, rhs: Self) -> Self::Output {
         assert_eq!(
             self.metric, rhs.metric,
-            "Metric mismatch in geometric product"
+            "Metrics must match for multiplication"
         );
-        assert_eq!(self.shape, rhs.shape, "Shape mismatch in geometric product");
+        assert_eq!(
+            self.shape, rhs.shape,
+            "Shapes must match for multiplication"
+        );
 
-        let result = B::batched_matmul(&self.data, &rhs.data);
+        let result = self.data.batched_matmul(&rhs.data);
+
+        Self {
+            data: result,
+            metric: self.metric,
+            dx: self.dx,
+            shape: self.shape,
+        }
+    }
+}
+
+impl<T> Mul for &CausalMultiField<T>
+where
+    T: Field + Ring + Copy + Default + PartialOrd + Send + Sync + 'static,
+    CausalTensor<T>: BatchedMatMul<T>,
+{
+    type Output = CausalMultiField<T>;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        assert_eq!(
+            self.metric, rhs.metric,
+            "Metrics must match for multiplication"
+        );
+        assert_eq!(
+            self.shape, rhs.shape,
+            "Shapes must match for multiplication"
+        );
+
+        let result = self.data.batched_matmul(&rhs.data);
+
+        CausalMultiField {
+            data: result,
+            metric: self.metric,
+            dx: self.dx,
+            shape: self.shape,
+        }
+    }
+}
+
+impl<T> Mul<&CausalMultiField<T>> for CausalMultiField<T>
+where
+    T: Field + Ring + Copy + Default + PartialOrd + Send + Sync + 'static,
+    CausalTensor<T>: BatchedMatMul<T>,
+{
+    type Output = CausalMultiField<T>;
+
+    fn mul(self, rhs: &CausalMultiField<T>) -> Self::Output {
+        assert_eq!(
+            self.metric, rhs.metric,
+            "Metrics must match for multiplication"
+        );
+        assert_eq!(
+            self.shape, rhs.shape,
+            "Shapes must match for multiplication"
+        );
+
+        let result = self.data.batched_matmul(&rhs.data);
+
         CausalMultiField {
             data: result,
             metric: self.metric,

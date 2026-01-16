@@ -150,31 +150,7 @@ where
     }
 }
 
-/// Geometric product via `*` operator (MLX-accelerated for N≥6).
-#[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
-impl<T> Mul for CausalMultiVector<T>
-where
-    T: Field
-        + Copy
-        + Clone
-        + AddAssign
-        + SubAssign
-        + Neg<Output = T>
-        + Default
-        + PartialOrd
-        + Send
-        + Sync
-        + 'static,
-{
-    type Output = Self;
-
-    fn mul(self, rhs: Self) -> Self::Output {
-        self.geometric_product(&rhs)
-    }
-}
-
 /// Geometric product via `*` operator (CPU-only).
-#[cfg(not(all(feature = "mlx", target_os = "macos", target_arch = "aarch64")))]
 impl<T> Mul for CausalMultiVector<T>
 where
     T: Field + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
@@ -186,31 +162,7 @@ where
     }
 }
 
-/// Reference geometric product `&A * &B` (MLX-accelerated for N≥6).
-#[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
-impl<'b, T> Mul<&'b CausalMultiVector<T>> for &CausalMultiVector<T>
-where
-    T: Field
-        + Copy
-        + Clone
-        + AddAssign
-        + SubAssign
-        + Neg<Output = T>
-        + Default
-        + PartialOrd
-        + Send
-        + Sync
-        + 'static,
-{
-    type Output = CausalMultiVector<T>;
-
-    fn mul(self, rhs: &'b CausalMultiVector<T>) -> Self::Output {
-        self.geometric_product(rhs)
-    }
-}
-
 /// Reference geometric product `&A * &B` (CPU-only).
-#[cfg(not(all(feature = "mlx", target_os = "macos", target_arch = "aarch64")))]
 impl<'b, T> Mul<&'b CausalMultiVector<T>> for &CausalMultiVector<T>
 where
     T: Field + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,

@@ -50,7 +50,7 @@ fn test_axis_clone() {
 fn test_partial_derivative_returns_zeros_for_small_grid() {
     let metric = Metric::from_signature(3, 0, 0);
     // Grid with n < 3 along X axis
-    let field = CausalMultiField::<CpuBackend, f32>::ones([2, 4, 4], metric, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::ones([2, 4, 4], metric, [1.0, 1.0, 1.0]);
 
     let deriv = field.partial_derivative(Axis::X);
     let deriv_vec: Vec<f32> = CpuBackend::to_vec(&deriv);
@@ -72,8 +72,7 @@ fn test_partial_derivative_constant_field() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [4, 4, 4], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::from_coefficients(&mvs, [4, 4, 4], [1.0, 1.0, 1.0]);
 
     let deriv_x = field.partial_derivative(Axis::X);
     let deriv_vec: Vec<f32> = CpuBackend::to_vec(&deriv_x);
@@ -105,8 +104,7 @@ fn test_partial_derivative_linear_x_field() {
         }
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [4, 4, 4], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::from_coefficients(&mvs, [4, 4, 4], [1.0, 1.0, 1.0]);
 
     let deriv_x = field.partial_derivative(Axis::X);
     let deriv_shape = CpuBackend::shape(&deriv_x);
@@ -118,7 +116,7 @@ fn test_partial_derivative_linear_x_field() {
 #[test]
 fn test_partial_derivative_preserves_tensor_shape() {
     let metric = Metric::from_signature(3, 0, 0);
-    let field = CausalMultiField::<CpuBackend, f32>::ones([4, 5, 6], metric, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::ones([4, 5, 6], metric, [1.0, 1.0, 1.0]);
 
     let deriv_x = field.partial_derivative(Axis::X);
     let deriv_y = field.partial_derivative(Axis::Y);
@@ -141,7 +139,7 @@ fn test_partial_derivative_preserves_tensor_shape() {
 #[test]
 fn test_gradient_returns_field() {
     let metric = Metric::from_signature(3, 0, 0);
-    let field = CausalMultiField::<CpuBackend, f32>::ones([4, 4, 4], metric, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::ones([4, 4, 4], metric, [1.0, 1.0, 1.0]);
 
     let grad = field.gradient();
 
@@ -152,7 +150,7 @@ fn test_gradient_returns_field() {
 #[test]
 fn test_gradient_of_zeros_is_zeros() {
     let metric = Metric::from_signature(3, 0, 0);
-    let field = CausalMultiField::<CpuBackend, f32>::zeros([4, 4, 4], metric, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::zeros([4, 4, 4], metric, [1.0, 1.0, 1.0]);
 
     let grad = field.gradient();
 
@@ -178,8 +176,7 @@ fn test_gradient_constant_field_is_zero() {
         mvs.push(CausalMultiVector::unchecked(data, metric));
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [4, 4, 4], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::from_coefficients(&mvs, [4, 4, 4], [1.0, 1.0, 1.0]);
 
     let grad = field.gradient();
     let coeffs = grad.to_coefficients();
@@ -220,8 +217,7 @@ fn test_gradient_of_linear_x_gives_e1() {
         }
     }
 
-    let field =
-        CausalMultiField::<CpuBackend, f32>::from_coefficients(&mvs, [4, 4, 4], [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::from_coefficients(&mvs, [4, 4, 4], [1.0, 1.0, 1.0]);
     let grad = field.gradient();
     let grad_coeffs = grad.to_coefficients();
 
@@ -243,7 +239,7 @@ fn test_gradient_of_linear_x_gives_e1() {
 #[test]
 fn test_curl_returns_field() {
     let metric = Metric::from_signature(3, 0, 0);
-    let field = CausalMultiField::<CpuBackend, f32>::ones([4, 4, 4], metric, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::ones([4, 4, 4], metric, [1.0, 1.0, 1.0]);
 
     let curl = field.curl();
 
@@ -254,7 +250,7 @@ fn test_curl_returns_field() {
 #[test]
 fn test_curl_of_zeros_is_zeros() {
     let metric = Metric::from_signature(3, 0, 0);
-    let field = CausalMultiField::<CpuBackend, f32>::zeros([4, 4, 4], metric, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::zeros([4, 4, 4], metric, [1.0, 1.0, 1.0]);
 
     let curl = field.curl();
     let coeffs = curl.to_coefficients();
@@ -269,7 +265,7 @@ fn test_curl_of_zeros_is_zeros() {
 #[test]
 fn test_curl_is_grade_2_projection() {
     let metric = Metric::from_signature(3, 0, 0);
-    let field = CausalMultiField::<CpuBackend, f32>::ones([4, 4, 4], metric, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::ones([4, 4, 4], metric, [1.0, 1.0, 1.0]);
 
     // Curl is defined as the bivector (grade 2) part of the gradient
     let _curl = field.curl();
@@ -283,7 +279,7 @@ fn test_curl_is_grade_2_projection() {
 #[test]
 fn test_divergence_returns_field() {
     let metric = Metric::from_signature(3, 0, 0);
-    let field = CausalMultiField::<CpuBackend, f32>::ones([4, 4, 4], metric, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::ones([4, 4, 4], metric, [1.0, 1.0, 1.0]);
 
     let div = field.divergence();
 
@@ -294,7 +290,7 @@ fn test_divergence_returns_field() {
 #[test]
 fn test_divergence_of_zeros_is_zeros() {
     let metric = Metric::from_signature(3, 0, 0);
-    let field = CausalMultiField::<CpuBackend, f32>::zeros([4, 4, 4], metric, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::zeros([4, 4, 4], metric, [1.0, 1.0, 1.0]);
 
     let div = field.divergence();
     let coeffs = div.to_coefficients();
@@ -309,7 +305,7 @@ fn test_divergence_of_zeros_is_zeros() {
 #[test]
 fn test_divergence_is_grade_0_projection() {
     let metric = Metric::from_signature(3, 0, 0);
-    let field = CausalMultiField::<CpuBackend, f32>::ones([4, 4, 4], metric, [1.0, 1.0, 1.0]);
+    let field = CausalMultiField::<f32>::ones([4, 4, 4], metric, [1.0, 1.0, 1.0]);
 
     let div = field.divergence();
     let coeffs = div.to_coefficients();

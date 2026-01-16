@@ -24,16 +24,6 @@ exclude = [
     "tests/**/*",
 ]
 
-[features]
-default = []
-# MLX acceleration for Apple Silicon (M Series).
-# Forwards to deep_causality_tensor/mlx for GPU-accelerated operations.
-# Note: Only builds on macOS aarch64. f64 downcast to f32 for GPU execution.
-mlx = ["deep_causality_tensor/mlx"]
-# Future: CUDA support
-cuda = ["deep_causality_tensor/cuda"]
-
-
 [dependencies.deep_causality_haft]
 path = "../deep_causality_haft"
 version = "0.3"

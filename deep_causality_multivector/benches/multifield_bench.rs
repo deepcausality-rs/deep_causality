@@ -5,7 +5,7 @@
 
 use criterion::{Criterion, criterion_group, criterion_main};
 use deep_causality_metric::Metric;
-use deep_causality_multivector::{MultiField, StandardMultiVector};
+use deep_causality_multivector::{CausalMultiField, CausalMultiVector};
 use std::hint::black_box;
 
 fn bench_geometric_product_size(c: &mut Criterion, size: usize) {
@@ -16,31 +16,16 @@ fn bench_geometric_product_size(c: &mut Criterion, size: usize) {
     let num_cells = size * size * size;
 
     // StandardMultiVector uses the default float type
-    let mv = StandardMultiVector::unchecked(vec![0.5; 8], metric);
+    let mv = CausalMultiVector::unchecked(vec![0.5; 8], metric);
 
-    let field_a = MultiField::from_coefficients(&vec![mv.clone(); num_cells], shape, dx);
+    let field_a = CausalMultiField::from_coefficients(&vec![mv.clone(); num_cells], shape, dx);
     let field_b = field_a.clone();
 
-    let backend_suffix = if cfg!(all(
-        feature = "mlx",
-        target_os = "macos",
-        target_arch = "aarch64"
-    )) {
-        "mlx"
-    } else {
-        "cpu"
-    };
-    let bench_name = format!("geometric_product_{}_3d_{}^3", backend_suffix, size);
+    let bench_name = format!("geometric_product_3d_{}^3", size);
 
     c.bench_function(&bench_name, |b| {
         b.iter(|| {
             let result = &field_a * &field_b;
-            #[cfg(all(feature = "mlx", target_os = "macos", target_arch = "aarch64"))]
-            {
-                use deep_causality_tensor::MlxBackend;
-                use deep_causality_tensor::TensorBackend;
-                let _ = MlxBackend::to_vec(result.data());
-            }
             black_box(result)
         })
     });
@@ -61,19 +46,11 @@ fn bench_gradient(c: &mut Criterion) {
     let dx = [1.0, 1.0, 1.0];
 
     let num_cells = 64;
-    let mv = StandardMultiVector::unchecked(vec![0.5; 8], metric);
+    let mv = CausalMultiVector::unchecked(vec![0.5; 8], metric);
 
-    let field = MultiField::from_coefficients(&vec![mv; num_cells], shape, dx);
+    let field = CausalMultiField::from_coefficients(&vec![mv; num_cells], shape, dx);
 
-    let bench_name = if cfg!(all(
-        feature = "mlx",
-        target_os = "macos",
-        target_arch = "aarch64"
-    )) {
-        "multifield_gradient_mlx_3d"
-    } else {
-        "multifield_gradient_cpu_3d"
-    };
+    let bench_name = "multifield_gradient_3d";
 
     c.bench_function(bench_name, |b| b.iter(|| field.gradient()));
 }
@@ -84,35 +61,19 @@ fn bench_conversion(c: &mut Criterion) {
     let dx = [1.0, 1.0, 1.0];
 
     let num_cells = 64;
-    let mv = StandardMultiVector::unchecked(vec![0.5; 8], metric);
+    let mv = CausalMultiVector::unchecked(vec![0.5; 8], metric);
 
     let data_vec = vec![mv; num_cells];
 
-    let bench_name_from = if cfg!(all(
-        feature = "mlx",
-        target_os = "macos",
-        target_arch = "aarch64"
-    )) {
-        "multifield_from_coefficients_mlx"
-    } else {
-        "multifield_from_coefficients_cpu"
-    };
+    let bench_name_from = "multifield_from_coefficients";
 
     c.bench_function(bench_name_from, |b| {
-        b.iter(|| MultiField::from_coefficients(black_box(&data_vec), shape, dx))
+        b.iter(|| CausalMultiField::from_coefficients(black_box(&data_vec), shape, dx))
     });
 
-    let field = MultiField::from_coefficients(&data_vec, shape, dx);
+    let field = CausalMultiField::from_coefficients(&data_vec, shape, dx);
 
-    let bench_name_to = if cfg!(all(
-        feature = "mlx",
-        target_os = "macos",
-        target_arch = "aarch64"
-    )) {
-        "multifield_to_coefficients_mlx"
-    } else {
-        "multifield_to_coefficients_cpu"
-    };
+    let bench_name_to = "multifield_to_coefficients";
 
     c.bench_function(bench_name_to, |b| b.iter(|| field.to_coefficients()));
 }

@@ -3,9 +3,6 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Shared geometric product helper implementations.
-//! The main `geometric_product_impl` is in ops_product_cpu.rs / ops_product_mlx.rs.
-
 use crate::CausalMultiVector;
 use core::ops::{AddAssign, Neg, SubAssign};
 use deep_causality_num::Field;
@@ -331,6 +328,27 @@ impl<T> CausalMultiVector<T> {
         Self {
             data: scaled_data,
             metric: lie_bracket.metric,
+        }
+    }
+
+    pub(in crate::types::multivector) fn geometric_product_impl(&self, rhs: &Self) -> Self
+    where
+        T: Field + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
+    {
+        if self.metric != rhs.metric {
+            panic!(
+                "Geometric Product Metric mismatch: {:?} vs {:?}",
+                self.metric, rhs.metric
+            );
+        }
+
+        let dim = self.metric.dimension();
+
+        // CPU dispatch based on dimension threshold
+        if dim <= Self::SPARSE_THRESHOLD {
+            self.geometric_product_dense(rhs, dim)
+        } else {
+            self.geometric_product_sparse(rhs, dim)
         }
     }
 }

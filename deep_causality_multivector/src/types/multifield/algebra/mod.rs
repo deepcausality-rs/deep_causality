@@ -3,64 +3,44 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Algebraic structure implementations for CausalMultiField.
+//! Algebraic operations for CausalMultiField.
 //!
-//! This module provides algebraic trait implementations that mirror those
-//! of `CausalMultiVector`, but operate on entire spatial grids of multivectors
-//! using batched tensor operations.
+//! Implements vector space operations (scaling) and advanced algebraic operations
+//! (reversion, inverse, normalization, commutators).
 //!
 //! # Algebraic Hierarchy
 //!
-//! CausalMultiField implements a tiered set of algebraic structures:
+//! 1. **Vector Space**: `scale(scalar)` - Scalar multiplication
+//! 2. **Normed Space**: `normalize()`, `squared_magnitude()` - Length operations
+//! 3. **Algebra**: `inverse()`, `reversion()` - Algebraic inverses
+//! 4. **Lie/Geometric Algebra**: `commutator_lie()`, `commutator_geometric()` - Bracket operations
 //!
-//! ## Tier 1: Additive Structure
-//! - `Add`, `Sub`, `Neg` - Element-wise field operations
-//! - Field addition is commutative
-//!
-//! ## Tier 2: Vector Space
-//! - `scale()` - Multiply all cells by a scalar
-//!
-//! ## Tier 3: Ring Structure
-//! - `Mul` - Geometric product via batched matrix multiplication
-//! - Product is associative: `(A * B) * C = A * (B * C)`
-//!
-//! ## Tier 4: Field Operations
-//! - `normalize()`, `inverse()` - Require RealField coefficients
-//!
-//! # GPU Acceleration
-//!
-//! All operations dispatch to the backend's tensor operations, enabling
-//! automatic MLX/CUDA acceleration when the appropriate feature flags are set.
-use crate::BatchedMatMul;
+//! All operations preserve the Matrix Isomorphism: they work directly on the
+//! matrix representation, avoiding costly coefficient extraction.
+
+// Import local modules
 use crate::CausalMultiField;
-use crate::MultiVector as MultiVectorTrait;
-use deep_causality_num::{RealField, Ring};
-use deep_causality_tensor::{LinearAlgebraBackend, TensorData};
+use crate::MultiVector;
+use crate::types::multifield::ops::batched_matmul::BatchedMatMul;
+use deep_causality_num::{Field, RealField, Ring};
+use deep_causality_tensor::CausalTensor;
 
 // ============================================================================
 // TIER 2: Vector Space (Scaling)
 // ============================================================================
 
-impl<B, T> CausalMultiField<B, T>
+impl<T> CausalMultiField<T>
 where
-    B: LinearAlgebraBackend,
-    T: TensorData,
+    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static,
 {
-    /// Multiplies the entire field by a scalar value.
-    ///
-    /// This is a batched operation that scales all grid cells simultaneously.
+    /// Scales the field by a scalar: `result = scalar * self`.
     ///
     /// # Arguments
-    /// * `scalar` - The scalar multiplier
-    ///
-    /// # Returns
-    /// A new field with all cells scaled by the given value.
-    pub fn scale(&self, scalar: T) -> Self
-    where
-        T: Clone,
-    {
-        let scalar_tensor = B::from_shape_fn(&[1], |_| scalar);
-        let result = B::mul(&self.data, &scalar_tensor);
+    /// * `scalar` - The scalar value to multiply by
+    pub fn scale(&self, scalar: T) -> Self {
+        let scalar_tensor = CausalTensor::<T>::from_shape_fn(&[1], |_| scalar);
+        let result = &self.data * &scalar_tensor;
+
         Self {
             data: result,
             metric: self.metric,
@@ -71,113 +51,93 @@ where
 }
 
 // ============================================================================
-// TIER 4: Field Operations (normalize, inverse)
+// TIER 3: Normed Space (Normalize, Magnitude)
 // ============================================================================
 
-impl<B, T> CausalMultiField<B, T>
+impl<T> CausalMultiField<T>
 where
-    B: LinearAlgebraBackend + BatchedMatMul<T> + crate::types::multifield::gamma::GammaProvider<T>,
-    T: TensorData
-        + RealField
-        + Default
-        + PartialOrd
-        + Clone
-        + std::ops::AddAssign
-        + std::ops::SubAssign
-        + std::ops::Neg<Output = T>
-        + std::ops::Div<Output = T>,
+    T: Field + RealField + Copy + Default + PartialOrd + Send + Sync + 'static,
 {
-    /// Normalizes each cell in the field to unit magnitude.
+    /// Normalizes the field: `result = self / ||self||`.
     ///
-    /// For each cell, computes: `cell' = cell / |cell|`
-    ///
-    /// Cells with magnitude below epsilon are left unchanged.
+    /// Returns the field scaled to unit magnitude.
     pub fn normalize(&self) -> Self {
-        // Download to coefficients
-        let mut mvs = self.to_coefficients();
-
-        // Normalize each multivector
-        for mv in &mut mvs {
-            *mv = mv.normalize();
+        let mag_sq = self.squared_magnitude();
+        if mag_sq.is_zero() {
+            return self.clone();
         }
-
-        // Upload back
-        Self::from_coefficients(&mvs, self.shape, self.dx)
+        let mag = mag_sq.sqrt();
+        let inv_mag = T::one() / mag;
+        self.scale(inv_mag)
     }
 
-    /// Computes the multiplicative inverse of each cell in the field.
+    /// Computes the squared magnitude of the field.
     ///
-    /// For versors (products of vectors), the inverse is:
-    /// `A^{-1} = ~A / |A|^2`
-    ///
-    /// where `~A` is the reversion.
-    ///
-    /// # Returns
-    /// - `Ok(field)` if all cells are invertible
-    /// - `Err` if any cell has zero magnitude
-    pub fn inverse(&self) -> Result<Self, crate::CausalMultiVectorError> {
-        // Download to coefficients
-        let mvs = self.to_coefficients();
-
-        // Invert each multivector
-        let mut inverted = Vec::with_capacity(mvs.len());
-        for mv in mvs {
-            inverted.push(mv.inverse()?);
+    /// Uses the L2 norm of the matrix representation.
+    pub fn squared_magnitude(&self) -> T {
+        let data_vec = self.data.to_vec();
+        let mut sum = T::zero();
+        for val in data_vec {
+            sum += val * val;
         }
-
-        // Upload back
-        Ok(Self::from_coefficients(&inverted, self.shape, self.dx))
-    }
-
-    /// Computes the reversion of each cell in the field.
-    ///
-    /// The reversion operation reverses the order of basis vectors in each blade:
-    /// `~(e_1 e_2 ... e_k) = e_k ... e_2 e_1`
-    pub fn reversion(&self) -> Self {
-        // Download to coefficients
-        let mvs = self.to_coefficients();
-
-        // Revert each multivector
-        let reverted: Vec<_> = mvs.iter().map(|mv| mv.reversion()).collect();
-
-        // Upload back
-        Self::from_coefficients(&reverted, self.shape, self.dx)
-    }
-
-    /// Computes the squared magnitude of each cell in the field.
-    ///
-    /// Returns a scalar field where each value is `|cell|^2`.
-    pub fn squared_magnitude(&self) -> B::Tensor<T> {
-        // Download to coefficients
-        let mvs = self.to_coefficients();
-
-        // Compute squared magnitude for each
-        let mags: Vec<T> = mvs.iter().map(|mv| mv.squared_magnitude()).collect();
-
-        // Return as tensor [Nx, Ny, Nz]
-        B::create(&mags, &self.shape)
+        sum
     }
 }
 
 // ============================================================================
-// Lie Algebra Operations
+// TIER 4: Full Algebra (Inverse, Reversion)
 // ============================================================================
 
-impl<B, T> CausalMultiField<B, T>
+impl<T> CausalMultiField<T>
 where
-    B: LinearAlgebraBackend + BatchedMatMul<T>,
-    T: TensorData + Ring + Default + PartialOrd,
+    T: Field + Copy + Default + PartialOrd + Send + Sync + std::ops::Neg<Output = T> + 'static,
 {
-    /// Computes the Lie bracket commutator `[A, B] = AB - BA`.
+    /// Computes the reversion (reversal) of the field.
     ///
-    /// This is a batched operation performed entirely on the GPU.
+    /// The reversion is computed by extracting multivectors, applying
+    /// the reversion operation, and reconstructing.
+    pub fn reversion(&self) -> Self {
+        let mvs = self.to_coefficients();
+        let reversed: Vec<_> = mvs.iter().map(|mv| mv.reversion()).collect();
+        Self::from_coefficients(&reversed, self.shape, self.dx)
+    }
+
+    /// Computes the multiplicative inverse of the field.
+    ///
+    /// Uses matrix inverse for each cell.
+    pub fn inverse(&self) -> Self
+    where
+        T: RealField,
+    {
+        let mvs = self.to_coefficients();
+        let inverted: Vec<_> = mvs
+            .iter()
+            .map(|mv| mv.inverse().expect("Failed to invert multivector"))
+            .collect();
+        Self::from_coefficients(&inverted, self.shape, self.dx)
+    }
+}
+
+// ============================================================================
+// TIER 5: Lie Algebra / Geometric Algebra (Commutators)
+// ============================================================================
+
+impl<T> CausalMultiField<T>
+where
+    T: Field + Ring + Copy + Default + PartialOrd + Send + Sync + 'static,
+    CausalTensor<T>: BatchedMatMul<T>,
+{
+    /// Computes the Lie commutator: `[A, B] = AB - BA`.
+    ///
+    /// The Lie bracket measures the non-commutativity of the geometric product.
     pub fn commutator_lie(&self, rhs: &Self) -> Self {
         assert_eq!(self.metric, rhs.metric, "Metric mismatch");
         assert_eq!(self.shape, rhs.shape, "Shape mismatch");
 
-        let ab_data = B::batched_matmul(&self.data, &rhs.data);
-        let ba_data = B::batched_matmul(&rhs.data, &self.data);
-        let result = B::sub(&ab_data, &ba_data);
+        // AB - BA using batched matmul
+        let ab = self.data.batched_matmul(&rhs.data);
+        let ba = rhs.data.batched_matmul(&self.data);
+        let result = &ab - &ba;
 
         Self {
             data: result,
@@ -187,15 +147,27 @@ where
         }
     }
 
-    /// Computes the geometric commutator `(AB - BA) / 2`.
-    pub fn commutator_geometric(&self, rhs: &Self) -> Self
-    where
-        T: std::ops::Div<Output = T>,
-    {
-        let lie = self.commutator_lie(rhs);
+    /// Computes the geometric commutator: `(AB - BA) / 2`.
+    ///
+    /// Equivalent to the Lie commutator scaled by 1/2.
+    pub fn commutator_geometric(&self, rhs: &Self) -> Self {
+        assert_eq!(self.metric, rhs.metric, "Metric mismatch");
+        assert_eq!(self.shape, rhs.shape, "Shape mismatch");
+
+        let ab = self.data.batched_matmul(&rhs.data);
+        let ba = rhs.data.batched_matmul(&self.data);
+        let diff = &ab - &ba;
 
         // Scale by 0.5
         let half = T::one() / (T::one() + T::one());
-        lie.scale(half)
+        let half_tensor = CausalTensor::<T>::from_shape_fn(&[1], |_| half);
+        let result = &diff * &half_tensor;
+
+        Self {
+            data: result,
+            metric: self.metric,
+            dx: self.dx,
+            shape: self.shape,
+        }
     }
 }
