@@ -126,7 +126,7 @@ where
             let result_ptr = &result as *const CausalMultiField<T> as *const CausalMultiField<C>;
             let ret = std::ptr::read(result_ptr);
             std::mem::forget(result);
-            std::mem::forget(fa);
+            // std::mem::forget(fa); // Do not forget the input `fa`, let it drop naturally.
             ret
         }
     }
@@ -176,7 +176,7 @@ where
             let result_ptr = &result as *const CausalMultiField<T> as *const CausalMultiField<A>;
             let ret = std::ptr::read(result_ptr);
             std::mem::forget(result);
-            std::mem::forget(value);
+            // std::mem::forget(value); // This causes a memory leak.
             ret
         }
     }
@@ -242,7 +242,7 @@ where
             if let Some(&first_val) = data_vec.first() {
                 let a_val = std::mem::transmute_copy::<T, A>(&first_val);
                 let result = f(a_val);
-                std::mem::forget(ma);
+                // std::mem::forget(ma); // This causes a memory leak.
                 return result;
             }
 
@@ -268,7 +268,7 @@ where
             let result_ptr = &result as *const CausalMultiField<T> as *const CausalMultiField<C>;
             let ret = std::ptr::read(result_ptr);
             std::mem::forget(result);
-            std::mem::forget(ma);
+            // std::mem::forget(ma); // This causes a memory leak.
             ret
         }
     }
