@@ -9,7 +9,7 @@
 //! - `to_coefficients`: Extract CausalMultiVector collection
 //! - Factory methods: `zeros`, `ones`
 
-use crate::types::multifield::gamma;
+use crate::types::multifield::ops::gamma;
 use crate::{CausalMultiField, CausalMultiVector};
 use deep_causality_metric::Metric;
 use deep_causality_num::Field;

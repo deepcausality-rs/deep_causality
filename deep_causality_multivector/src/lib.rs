@@ -29,13 +29,13 @@ pub use crate::types::multifield::ops::batched_matmul::BatchedMatMul;
 
 // Types
 pub use crate::types::multifield::CausalMultiField;
-pub use crate::types::multifield::gamma::{
-    compute_gamma_element, get_basis_gammas, get_dual_basis_gammas, get_gammas, matrix_dim,
-    num_blades,
-};
 pub use crate::types::multifield::ops::differential::Axis;
 pub use crate::types::multivector::CausalMultiVector;
 pub use deep_causality_metric::Metric;
+pub use types::multifield::ops::gamma::{
+    compute_gamma_element, get_basis_gammas, get_dual_basis_gammas, get_gammas, matrix_dim,
+    num_blades,
+};
 
 // Tensor re-export for convenience
 pub use deep_causality_tensor::CausalTensor;

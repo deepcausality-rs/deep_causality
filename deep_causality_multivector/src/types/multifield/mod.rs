@@ -36,7 +36,6 @@
 mod algebra;
 mod api;
 mod arithmetic;
-pub mod gamma;
 pub mod ops;
 
 use deep_causality_metric::Metric;

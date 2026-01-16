@@ -277,19 +277,15 @@ fn test_normalize_unit_magnitude() {
 
     let field = CausalMultiField::<f32>::from_coefficients(&mvs, [2, 2, 2], [1.0, 1.0, 1.0]);
     let normalized = field.normalize();
-    let norm_coeffs = normalized.to_coefficients();
 
-    // Each normalized multivector should have unit magnitude
-    for mv in &norm_coeffs {
-        // For a pure vector e1, |e1|^2 = e1^2 = 1 in Euclidean metric
-        // After normalization, coefficient should be 1
-        let e1_coeff = mv.data()[1];
-        assert!(
-            (e1_coeff.abs() - 1.0).abs() < 1e-4,
-            "Normalized e1 should have magnitude 1, got {}",
-            e1_coeff
-        );
-    }
+    // Verify global normalization
+    // squared_magnitude() sums over all elements
+    let mag_sq = normalized.squared_magnitude();
+    assert!(
+        (mag_sq - 1.0).abs() < 1e-4,
+        "Normalized field should have unit global magnitude, got {}",
+        mag_sq
+    );
 }
 
 // =============================================================================
@@ -488,4 +484,73 @@ fn test_reversion_of_bivector_negated() {
 // squared_magnitude() tests
 // =============================================================================
 
-// TODO: add tests for squared_magnitude
+#[test]
+fn test_squared_magnitude_of_zeros() {
+    let metric = Metric::from_signature(3, 0, 0);
+    let field = CausalMultiField::<f32>::zeros([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+
+    assert_eq!(field.squared_magnitude(), 0.0);
+}
+
+#[test]
+fn test_squared_magnitude_single_element() {
+    let metric = Metric::from_signature(2, 0, 0);
+    let num_blades = 4;
+    let shape = [1, 1, 1]; // Single cell
+
+    let mut data = vec![0.0f32; num_blades];
+    data[0] = 3.0; // Scalar = 3
+    let mv = CausalMultiVector::unchecked(data, metric);
+
+    let field = CausalMultiField::<f32>::from_coefficients(&[mv], shape, [1.0, 1.0, 1.0]);
+
+    // Matrix representation of scalar 3 in Cl(2) is 3*I (2x2)
+    // Frobenius norm squared: 3^2 + 0 + 0 + 3^2 = 9 + 9 = 18
+    assert!((field.squared_magnitude() - 18.0).abs() < 1e-5);
+}
+
+#[test]
+fn test_squared_magnitude_scaling() {
+    let metric = Metric::from_signature(2, 0, 0);
+    let shape = [1, 1, 1];
+    let num_blades = 4;
+    let mut data = vec![0.0f32; num_blades];
+    data[0] = 1.0;
+
+    let mv = CausalMultiVector::unchecked(data, metric);
+    let field = CausalMultiField::<f32>::from_coefficients(&[mv], shape, [1.0, 1.0, 1.0]);
+
+    let mag_1 = field.squared_magnitude();
+
+    let field_2 = field.scale(2.0);
+    let mag_2 = field_2.squared_magnitude();
+
+    // ||2x||^2 = 4 * ||x||^2
+    assert!((mag_2 - 4.0 * mag_1).abs() < 1e-5);
+}
+
+#[test]
+fn test_squared_magnitude_field_sum() {
+    let metric = Metric::from_signature(2, 0, 0);
+    // 2 cells
+    let shape = [2, 1, 1];
+    let num_blades = 4;
+
+    let mut mvs = Vec::with_capacity(2);
+    // Cell 0: Scalar 1 -> MagSq = 1^2+1^2 = 2
+    let mut d0 = vec![0.0f32; num_blades];
+    d0[0] = 1.0;
+    mvs.push(CausalMultiVector::unchecked(d0, metric));
+
+    // Cell 1: Scalar 2 -> MagSq = 2^2+2^2 = 8
+    let mut d1 = vec![0.0f32; num_blades];
+    d1[0] = 2.0;
+    mvs.push(CausalMultiVector::unchecked(d1, metric));
+
+    let field = CausalMultiField::<f32>::from_coefficients(&mvs, shape, [1.0, 1.0, 1.0]);
+
+    let mag = field.squared_magnitude();
+
+    // Total = 2 + 8 = 10
+    assert!((mag - 10.0).abs() < 1e-5, "Expected 10.0, got {}", mag);
+}

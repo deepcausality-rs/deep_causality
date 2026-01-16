@@ -9,7 +9,7 @@
 //! for Clifford algebra operations.
 
 use crate::CausalMultiVector;
-use crate::types::multifield::gamma;
+use crate::types::multifield::ops::gamma;
 use deep_causality_metric::Metric;
 use deep_causality_num::Field;
 use deep_causality_tensor::{CausalTensor, Tensor};

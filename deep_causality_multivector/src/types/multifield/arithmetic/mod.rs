@@ -15,19 +15,11 @@ use std::ops::{Add, Mul, Neg, Sub};
 
 impl<T> Zero for CausalMultiField<T>
 where
-    T: Field
-        + Copy
-        + Default
-        + PartialOrd
-        + Send
-        + Sync
-        + 'static
-        + Zero
-        + std::ops::Neg<Output = T>,
+    T: Field + Copy + Default + PartialOrd + Send + Sync + 'static + Zero + Neg<Output = T>,
 {
     fn zero() -> Self {
         panic!(
-            "CausalMultiField::zero() requires context (Metric/Shape/Dx). Use zeros() factory method instead."
+            "CausalMultiField::zero() requires shape and metric (context). Use zeros() factory method instead."
         )
     }
 
@@ -47,8 +39,8 @@ where
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        assert_eq!(self.metric, rhs.metric, "Metrics must match for addition");
-        assert_eq!(self.shape, rhs.shape, "Shapes must match for addition");
+        assert_eq!(self.metric, rhs.metric, "Metric mismatch");
+        assert_eq!(self.shape, rhs.shape, "Shape mismatch");
 
         let result = &self.data + &rhs.data;
 
@@ -68,8 +60,8 @@ where
     type Output = CausalMultiField<T>;
 
     fn add(self, rhs: Self) -> Self::Output {
-        assert_eq!(self.metric, rhs.metric, "Metrics must match for addition");
-        assert_eq!(self.shape, rhs.shape, "Shapes must match for addition");
+        assert_eq!(self.metric, rhs.metric, "Metric mismatch");
+        assert_eq!(self.shape, rhs.shape, "Shape mismatch");
 
         let result = &self.data + &rhs.data;
 
@@ -91,11 +83,8 @@ where
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        assert_eq!(
-            self.metric, rhs.metric,
-            "Metrics must match for subtraction"
-        );
-        assert_eq!(self.shape, rhs.shape, "Shapes must match for subtraction");
+        assert_eq!(self.metric, rhs.metric, "Metric mismatch");
+        assert_eq!(self.shape, rhs.shape, "Shape mismatch");
 
         let result = &self.data - &rhs.data;
 
@@ -115,11 +104,8 @@ where
     type Output = CausalMultiField<T>;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        assert_eq!(
-            self.metric, rhs.metric,
-            "Metrics must match for subtraction"
-        );
-        assert_eq!(self.shape, rhs.shape, "Shapes must match for subtraction");
+        assert_eq!(self.metric, rhs.metric, "Metric mismatch");
+        assert_eq!(self.shape, rhs.shape, "Shape mismatch");
 
         let result = &self.data - &rhs.data;
 
@@ -164,14 +150,8 @@ where
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        assert_eq!(
-            self.metric, rhs.metric,
-            "Metrics must match for multiplication"
-        );
-        assert_eq!(
-            self.shape, rhs.shape,
-            "Shapes must match for multiplication"
-        );
+        assert_eq!(self.metric, rhs.metric, "Metric mismatch");
+        assert_eq!(self.shape, rhs.shape, "Shape mismatch");
 
         let result = self.data.batched_matmul(&rhs.data);
 
@@ -192,14 +172,8 @@ where
     type Output = CausalMultiField<T>;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        assert_eq!(
-            self.metric, rhs.metric,
-            "Metrics must match for multiplication"
-        );
-        assert_eq!(
-            self.shape, rhs.shape,
-            "Shapes must match for multiplication"
-        );
+        assert_eq!(self.metric, rhs.metric, "Metric mismatch");
+        assert_eq!(self.shape, rhs.shape, "Shape mismatch");
 
         let result = self.data.batched_matmul(&rhs.data);
 
@@ -220,14 +194,8 @@ where
     type Output = CausalMultiField<T>;
 
     fn mul(self, rhs: &CausalMultiField<T>) -> Self::Output {
-        assert_eq!(
-            self.metric, rhs.metric,
-            "Metrics must match for multiplication"
-        );
-        assert_eq!(
-            self.shape, rhs.shape,
-            "Shapes must match for multiplication"
-        );
+        assert_eq!(self.metric, rhs.metric, "Metric mismatch");
+        assert_eq!(self.shape, rhs.shape, "Shape mismatch");
 
         let result = self.data.batched_matmul(&rhs.data);
 

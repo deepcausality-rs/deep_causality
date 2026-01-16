@@ -5,5 +5,6 @@
 pub mod batched_matmul;
 mod conversions;
 pub mod differential;
+pub mod gamma;
 mod grades;
 mod products;

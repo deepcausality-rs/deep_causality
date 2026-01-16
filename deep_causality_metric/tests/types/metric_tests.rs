@@ -408,3 +408,60 @@ fn test_metric_eq() {
     assert_ne!(Metric::Euclidean(3), Metric::Euclidean(4));
     assert_ne!(Metric::Euclidean(4), Metric::Minkowski(4));
 }
+
+// =============================================================================
+// Lorentzian tests
+// =============================================================================
+
+#[test]
+fn test_lorentzian_dimension() {
+    assert_eq!(Metric::Lorentzian(4).dimension(), 4);
+}
+
+#[test]
+fn test_lorentzian_signs() {
+    // East Coast: (-+++)
+    let m = Metric::Lorentzian(4);
+    assert_eq!(m.sign_of_sq(0), -1); // time
+    assert_eq!(m.sign_of_sq(1), 1); // space
+    assert_eq!(m.sign_of_sq(2), 1);
+    assert_eq!(m.sign_of_sq(3), 1);
+}
+
+#[test]
+fn test_lorentzian_signature() {
+    // Lorentzian(4) is (-+++) = (3, 1, 0)
+    // p=3 (+1s), q=1 (-1s), r=0
+    assert_eq!(Metric::Lorentzian(4).signature(), (3, 1, 0));
+}
+
+#[test]
+fn test_from_signature_lorentzian() {
+    // p=3, q=1, r=0 -> Lorentzian(4)
+    let m = Metric::from_signature(3, 1, 0);
+    assert_eq!(m, Metric::Lorentzian(4));
+}
+
+#[test]
+fn test_display_lorentzian() {
+    let m = Metric::Lorentzian(4);
+    assert_eq!(format!("{}", m), "Lorentzian(4)");
+}
+
+#[test]
+fn test_flip_minkowski_to_lorentzian() {
+    // Minkowski (+---) -> Lorentzian (-+++)
+    let m = Metric::Minkowski(4);
+    let flipped = m.flip_time_space();
+
+    // Note: flip_time_space currently generic Custom,
+    // but we verify signs match Lorentzian
+    let lorentzian = Metric::Lorentzian(4);
+
+    assert_eq!(flipped.dimension(), lorentzian.dimension());
+    assert_eq!(flipped.signature(), lorentzian.signature());
+
+    for i in 0..4 {
+        assert_eq!(flipped.sign_of_sq(i), lorentzian.sign_of_sq(i));
+    }
+}
