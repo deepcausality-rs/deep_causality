@@ -45,7 +45,7 @@ where
     /// # Implementation
     ///
     /// This method requires spatial Christoffel symbols ^(3)Γ^k_ij to compute the
-    /// covariant derivative D_j. Use [`AdmState::with_christoffel()`] to provide them.
+    /// covariant derivative D_j. Use `AdmState::with_christoffel()` to provide them.
     ///
     /// ## Why Spatial Christoffel Symbols?
     ///

@@ -27,7 +27,7 @@ use crate::PhysicsError;
 /// For simplicity, we store only the real parts since most components are real.
 /// Non-zero imaginary parts are handled via the structure constants.
 ///
-/// Returns: 8 matrices, each as [3][3] = 9 real values (imaginary handled separately).
+/// Returns: 8 matrices, each as `[3][3]` = 9 real values (imaginary handled separately).
 pub fn gell_mann_matrices() -> [[f64; 9]; 8] {
     // λ_1: off-diagonal in (1,2) positions
     let lambda1 = [0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];

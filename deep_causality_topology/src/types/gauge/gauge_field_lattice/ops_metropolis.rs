@@ -44,16 +44,16 @@ impl<
     /// # Algorithm
     ///
     /// 1. Propose: U' = R · U where R is a random SU(N) element near identity
-    /// 2. Compute: ΔS = S[U'] - S[U] using the local action change
+    /// 2. Compute: ΔS = `S[U'] - S[U]` using the local action change
     /// 3. Accept with probability: min(1, e^{-ΔS})
     ///
     /// # Mathematics
     ///
     /// The Metropolis algorithm satisfies detailed balance:
     ///
-    /// $$P[U] \cdot T(U \to U') = P[U'] \cdot T(U' \to U)$$
+    /// $$`P[U] \cdot T(U \to U') = P[U'] \cdot T(U' \to U)`$$
     ///
-    /// where $P[U] \propto e^{-S[U]}$ is the Boltzmann distribution.
+    /// where `$P[U] \propto e^{-S[U]}$` is the Boltzmann distribution.
     ///
     /// # Arguments
     ///

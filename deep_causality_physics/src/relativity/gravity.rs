@@ -67,7 +67,7 @@ where
 /// Computes contraction directly without einsum for generic T compatibility.
 ///
 /// # Arguments
-/// * `riemann` - Riemann curvature tensor $R^\mu_{\nu\sigma\rho}$ (Rank 4, shape [4,4,4,4]).
+/// * `riemann` - Riemann curvature tensor $R^\mu_{\nu\sigma\rho}$ (Rank 4, shape `[4,4,4,4]`).
 /// * `u` - Velocity vector $V^\nu$ (length 4).
 /// * `n` - Separation vector $n^\sigma$ (length 4).
 ///

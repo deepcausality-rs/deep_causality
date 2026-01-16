@@ -142,7 +142,7 @@ where
 {
     /// Creates a field with all coefficients set to the given value.
     ///
-    /// Note: Uses default metric (4D Lorentzian), shape [1,1,1], and unit grid spacing.
+    /// Note: Uses default metric (4D Lorentzian), shape `[1,1,1]`, and unit grid spacing.
     /// For specific configurations, use `CausalMultiField::zeros()` or other factory methods.
     fn pure<A>(value: A) -> CausalMultiField<A>
     where

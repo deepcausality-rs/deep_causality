@@ -32,7 +32,7 @@ pub(crate) mod random;
 ///
 /// * `G` - The gauge group (U1, SU2, SU3, etc.)
 /// * `G` - The gauge group (U1, SU2, SU3, etc.)
-/// * `M` - Matrix element type (Field + DivisionAlgebra<R>)
+/// * `M` - Matrix element type (Field + `DivisionAlgebra<R>`)
 /// * `R` - Scalar type (RealField)
 ///
 /// # Mathematical Properties

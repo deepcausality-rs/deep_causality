@@ -108,7 +108,7 @@ impl<T> Adjunction<ExteriorDerivativeWitness, BoundaryWitness, StokesContext<T>>
 where
     T: Satisfies<NoConstraint>,
 {
-    /// Unit: A → R(L(A)) = Chain<DifferentialForm<A>>
+    /// Unit: `A → R(L(A)) = Chain<DifferentialForm<A>>`
     ///
     /// Embeds a coefficient into a chain of forms.
     /// Semantically, this maps a value `a` to a 0-chain where each vertex has the 0-form `a`.
@@ -143,7 +143,7 @@ where
         Chain::new(arc_form_complex, 0, inner_weights)
     }
 
-    /// Counit: L(R(B)) = DifferentialForm<Chain<B>> → B
+    /// Counit: `L(R(B)) = DifferentialForm<Chain<B>> → B`
     ///
     /// Extracts the integrated value from a form of chains.
     fn counit<B>(_ctx: &StokesContext<T>, lrb: DifferentialForm<Chain<B>>) -> B
@@ -170,7 +170,7 @@ where
 
     /// Left adjunct: (L(A) → B) → (A → R(B))
     ///
-    /// Given f: DifferentialForm<A> → B, produce g: A → Chain<B>
+    /// Given `f: DifferentialForm<A> → B`, produce `g: A → Chain<B>`
     fn left_adjunct<A, B, Func>(ctx: &StokesContext<T>, a: A, f: Func) -> Chain<B>
     where
         A: Satisfies<NoConstraint> + Clone,
@@ -203,7 +203,7 @@ where
 
     /// Right adjunct: (A → R(B)) → (L(A) → B)
     ///
-    /// Given g: A → Chain<B>, produce f: DifferentialForm<A> → B
+    /// Given `g: A → Chain<B>`, produce `f: DifferentialForm<A> → B`
     fn right_adjunct<A, B, Func>(_ctx: &StokesContext<T>, la: DifferentialForm<A>, mut f: Func) -> B
     where
         A: Satisfies<NoConstraint> + Clone,

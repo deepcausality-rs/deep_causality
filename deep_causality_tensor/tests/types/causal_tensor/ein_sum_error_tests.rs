@@ -5,7 +5,10 @@
 
 //! Tests for error paths in ein_sum_impl.rs
 
-use deep_causality_tensor::{CausalTensor, CausalTensorError, EinSumAST, EinSumOp, EinSumValidationError, utils_tests, Tensor};
+use deep_causality_tensor::{
+    CausalTensor, CausalTensorError, EinSumAST, EinSumOp, EinSumValidationError, Tensor,
+    utils_tests,
+};
 
 // ============================================================================
 // Contraction error tests

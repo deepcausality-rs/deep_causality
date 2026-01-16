@@ -375,7 +375,6 @@ dependencies = [
 name = "deep_causality_effects"
 version = "0.0.4"
 dependencies = [
- "criterion",
  "deep_causality_multivector",
  "deep_causality_tensor",
  "deep_causality_topology",

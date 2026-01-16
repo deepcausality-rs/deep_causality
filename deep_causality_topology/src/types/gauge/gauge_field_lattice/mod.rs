@@ -68,7 +68,7 @@ mod utils;
 ///
 /// * `G` - Gauge group (U1, SU2, SU3, etc.)
 /// * `D` - Spacetime dimension
-/// * `M` - Matrix element type (Field + DivisionAlgebra<R>)
+/// * `M` - Matrix element type (Field + `DivisionAlgebra<R>`)
 /// * `R` - Scalar type (RealField)
 #[derive(Debug, Clone)]
 pub struct LatticeGaugeField<G: GaugeGroup, const D: usize, M, R> {

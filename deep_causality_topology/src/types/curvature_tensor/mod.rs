@@ -24,7 +24,7 @@ pub enum CurvatureSymmetry {
     /// - R_abcd = -R_bacd (antisymmetric in first pair)
     /// - R_abcd = -R_abdc (antisymmetric in second pair)
     /// - R_abcd = R_cdab (pair exchange)
-    /// - R_[abc]d = 0 (first Bianchi identity)
+    /// - `R_[abc]d = 0` (first Bianchi identity)
     Riemann,
 
     /// Weyl tensor (traceless part of Riemann).
@@ -59,7 +59,7 @@ pub type CurvatureTensorVector<T> =
 /// # Mathematical Definition
 ///
 /// The Riemann curvature tensor measures parallel transport holonomy:
-/// R(u,v)w = ∇_u∇_v w - ∇_v∇_u w - ∇_[u,v] w
+/// R(u,v)w = ∇_u∇_v w - ∇_v∇_u w - `∇_[u,v] w`
 ///
 /// In components: (R(u,v)w)^d = R^d_abc u^a v^b w^c
 #[derive(Debug, Clone)]
@@ -566,7 +566,7 @@ where
         weyl
     }
 
-    /// Verifies the first Bianchi identity: R_[abc]d = 0.
+    /// Verifies the first Bianchi identity: `R_[abc]d = 0`.
     ///
     /// The cyclic sum R_abcd + R_bcad + R_cabd = 0.
     ///
